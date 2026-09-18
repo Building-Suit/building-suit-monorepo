@@ -9,8 +9,8 @@
   },
   "products": {
     "ledger-suit": {
-      "organizationId": null,
-      "ownerEmail": null,
+      "organizationId": "auaofeuhjvxwkekatkzo",
+      "ownerEmail": "ledger@building-suit.com",
       "managementRole": "Owner",
       "plan": "Free",
       "schema": "public",
@@ -22,19 +22,19 @@
         "emailInboxUrl": "http://127.0.0.1:60324"
       },
       "production": {
-        "projectRef": null,
-        "appUrl": null,
+        "projectRef": "iwuexcumwgacpbzctloi",
+        "appUrl": "https://ledger.building-suit.com",
         "status": "manual configuration pending"
       },
       "staging": {
-        "projectRef": null,
-        "appUrl": null,
+        "projectRef": "yqculoltqsyfastmihmu",
+        "appUrl": "https://stg.ledger.building-suit.com",
         "status": "manual configuration pending"
       }
     },
     "shop-suit": {
-      "organizationId": null,
-      "ownerEmail": null,
+      "organizationId": "rfolwdswbxddqtqaombc",
+      "ownerEmail": "shop@building-suit.com",
       "managementRole": "Owner",
       "plan": "Free",
       "schema": "public",
@@ -46,14 +46,14 @@
         "emailInboxUrl": "http://127.0.0.1:61324"
       },
       "production": {
-        "projectRef": null,
-        "appUrl": null,
-        "status": "manual configuration pending"
+        "projectRef": "fgdzjnsbcxfbiuogbmom",
+        "appUrl": "https://shop.building-suit.com",
+        "status": "project verified healthy; app environment configured; migration credentials pending"
       },
       "staging": {
-        "projectRef": null,
-        "appUrl": null,
-        "status": "manual configuration pending"
+        "projectRef": "jvvelvftpfnlogalgxgv",
+        "appUrl": "https://stg.shop.building-suit.com",
+        "status": "project verified healthy; app environment configured; migration credentials pending"
       }
     }
   },
