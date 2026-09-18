@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
+const confirmation = useConfirmation()
 
 definePageMeta({ layout: 'default', middleware: ['auth'] })
 
@@ -19,14 +20,13 @@ const { current, currentId, isOwner, loading: shopLoading } = useShop()
 const isArabic = computed(() => locale.value === 'ar')
 const search = ref('')
 const editingId = ref<string | null>(null)
-const showForm = ref(false)
-const saving = ref(false)
 const archivingId = ref<string | null>(null)
 const actionError = ref('')
 const form = reactive({
   name: '', description: '', price: 0,
   discountType: 'amount' as 'amount' | 'percent', discountValue: 0,
 })
+const { visible: showForm, pending: saving, dirty: formDirty } = useRecordAction(() => form)
 
 const copy = computed(() => isArabic.value ? {
   title: 'الخدمات', subtitle: 'أضف خدمات متجرك وأسعارها وخصوماتها الافتراضية.',
@@ -155,7 +155,7 @@ async function save() {
 
 async function archive(service: Service) {
   if (!currentId.value || archivingId.value || !isOwner.value) return
-  if (!window.confirm(copy.value.archiveConfirm)) return
+  if (!await confirmation.ask(copy.value.archiveConfirm)) return
   actionError.value = ''
   archivingId.value = service.id
   try {
@@ -176,30 +176,47 @@ async function archive(service: Service) {
   <div class="space-y-6">
     <header class="flex flex-wrap items-end justify-between gap-4">
       <div><h1 class="text-3xl font-extrabold tracking-tight">{{ copy.title }}</h1><p class="mt-2 text-sm text-muted-foreground">{{ copy.subtitle }}</p></div>
-      <button v-if="current && isOwner" type="button" class="rounded-xl bg-[#d89b42] px-4 py-2.5 text-sm font-bold text-[#0b0b0d]" @click="openCreate">{{ copy.add }}</button>
+      <button v-if="current && isOwner" type="button" class="ls-btn ls-btn-primary" @click="openCreate">{{ copy.add }}</button>
     </header>
 
-    <div v-if="!current && !shopLoading" class="rounded-2xl border border-border bg-card p-8 text-center text-sm"><p>{{ copy.noShop }}</p><NuxtLink to="/dashboard" class="mt-3 inline-block font-bold text-[#a86c1c] underline">{{ copy.dashboard }}</NuxtLink></div>
+    <div v-if="!current && !shopLoading" class="rounded-2xl border border-border bg-card p-8 text-center text-sm"><p>{{ copy.noShop }}</p><NuxtLink to="/dashboard" class="mt-3 inline-block font-bold text-[var(--bs-link)] underline">{{ copy.dashboard }}</NuxtLink></div>
     <template v-else-if="current">
-      <p class="rounded-xl border border-[var(--bs-info)]/25 bg-[var(--bs-info-bg)] p-4 text-sm dark:bg-[var(--bs-info-bg-dark)]">{{ copy.saleLater }}</p>
-      <p v-if="actionError && !showForm" role="alert" class="rounded-xl bg-[var(--bs-error-bg)] p-3 text-sm text-[var(--bs-error-fg)]">{{ actionError }}</p>
+      <p class="rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm dark:bg-[var(--bs-status-info-bg)]">{{ copy.saleLater }}</p>
+      <p v-if="actionError && !showForm" role="alert" class="rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm text-[var(--bs-status-error)]">{{ actionError }}</p>
 
-      <form v-if="showForm" class="grid gap-4 rounded-2xl border border-border bg-card p-5 sm:grid-cols-2" @submit.prevent="save">
-        <p v-if="actionError" role="alert" class="rounded-xl bg-[var(--bs-error-bg)] p-3 text-sm text-[var(--bs-error-fg)] sm:col-span-2">{{ actionError }}</p>
-        <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ copy.name }}<input v-model="form.name" type="text" minlength="2" maxlength="160" required class="h-11 w-full rounded-lg border border-input bg-background px-3 font-normal"></label>
-        <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ copy.description }}<textarea v-model="form.description" maxlength="1000" rows="2" class="w-full rounded-lg border border-input bg-background px-3 py-2 font-normal" /></label>
-        <label class="space-y-2 text-sm font-bold">{{ copy.price }}<input v-model.number="form.price" type="number" min="0" max="999999999.99" step="0.01" required class="h-11 w-full rounded-lg border border-input bg-background px-3 font-normal"></label>
-        <label class="space-y-2 text-sm font-bold">{{ copy.discountType }}<select v-model="form.discountType" class="h-11 w-full rounded-lg border border-input bg-background px-3 font-normal"><option value="amount">{{ copy.amount }}</option><option value="percent">{{ copy.percent }}</option></select></label>
-        <label class="space-y-2 text-sm font-bold">{{ copy.discountValue }}<input v-model.number="form.discountValue" type="number" min="0" step="0.01" required class="h-11 w-full rounded-lg border border-input bg-background px-3 font-normal"></label>
-        <div class="flex items-end gap-2"><button type="submit" class="h-11 rounded-lg bg-[#d89b42] px-4 text-sm font-bold text-[#0b0b0d] disabled:opacity-60" :disabled="saving">{{ saving ? copy.saving : copy.save }}</button><button type="button" class="h-11 rounded-lg border border-border px-4 text-sm font-bold" :disabled="saving" @click="resetForm">{{ copy.cancel }}</button></div>
-      </form>
+      <BsDialog v-model:visible="showForm" :title="editingId ? copy.edit : copy.add" :dirty="formDirty" :pending="saving"><template #default="{ close }"><form class="grid gap-4 sm:grid-cols-2" @submit.prevent="save">
+        <p v-if="actionError" role="alert" class="rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm text-[var(--bs-status-error)] sm:col-span-2">{{ actionError }}</p>
+        <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ copy.name }}<input v-model="form.name" type="text" minlength="2" maxlength="160" required class="ls-input"></label>
+        <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ copy.description }}<textarea v-model="form.description" maxlength="1000" rows="2" class="ls-input" /></label>
+        <label class="space-y-2 text-sm font-bold">{{ copy.price }}<input v-model.number="form.price" type="number" min="0" max="999999999.99" step="0.01" required class="ls-input"></label>
+        <label class="space-y-2 text-sm font-bold">{{ copy.discountType }}<select v-model="form.discountType" class="ls-input"><option value="amount">{{ copy.amount }}</option><option value="percent">{{ copy.percent }}</option></select></label>
+        <label class="space-y-2 text-sm font-bold">{{ copy.discountValue }}<input v-model.number="form.discountValue" type="number" min="0" step="0.01" required class="ls-input"></label>
+        <div class="flex items-end gap-2"><button type="submit" class="ls-btn ls-btn-primary" :disabled="saving">{{ saving ? copy.saving : copy.save }}</button><button type="button" class="ls-btn" :disabled="saving" @click="close">{{ copy.cancel }}</button></div>
+      </form></template></BsDialog>
 
       <section class="rounded-2xl border border-border bg-card p-5">
-        <input v-model="search" type="search" :placeholder="copy.search" class="mb-4 h-11 w-full max-w-sm rounded-lg border border-input bg-background px-3 text-sm">
+        <input v-model="search" type="search" :placeholder="copy.search" class="ls-input">
         <p v-if="pending" class="text-sm text-muted-foreground">{{ isArabic ? 'جاري التحميل...' : 'Loading...' }}</p>
         <div v-else-if="error" class="text-sm"><p>{{ copy.readError }}</p><button type="button" class="mt-2 font-bold underline" @click="refresh()">{{ copy.retry }}</button></div>
         <p v-else-if="!filteredServices.length" class="py-8 text-center text-sm text-muted-foreground">{{ services.length ? copy.noResults : copy.empty }}</p>
-        <div v-else class="overflow-x-auto"><table class="w-full min-w-[34rem] text-sm"><thead><tr class="border-b border-border text-muted-foreground"><th class="py-3 text-start">{{ copy.name }}</th><th class="py-3 text-end">{{ copy.price }}</th><th class="py-3 text-end">{{ copy.net }}</th><th class="py-3 text-end">{{ copy.edit }}</th></tr></thead><tbody><tr v-for="service in filteredServices" :key="service.id" class="border-b border-border last:border-0"><td class="py-3 font-semibold">{{ service.name }}<p v-if="service.description" class="text-xs font-normal text-muted-foreground">{{ service.description }}</p></td><td class="py-3 text-end">{{ money(Number(service.base_sale_price)) }}</td><td class="py-3 text-end">{{ money(netPrice(service)) }}</td><td class="space-x-2 py-3 text-end"><button v-if="isOwner" type="button" class="font-bold text-[#a86c1c]" @click="openEdit(service)">{{ copy.edit }}</button><button v-if="isOwner" type="button" class="font-bold text-[var(--bs-error)]" :disabled="archivingId === service.id" @click="archive(service)">{{ copy.archive }}</button></td></tr></tbody></table></div>
+        <div v-else class="overflow-x-auto"><BsDataTable :value="filteredServices" data-key="id" :row-class="() => 'border-b border-border last:border-0'">
+  <Column header-class="py-3 text-start" body-class="py-3 font-semibold">
+    <template #header>{{ copy.name }}</template>
+    <template #body="{ data: service }">{{ service.name }}<p v-if="service.description" class="text-xs font-normal text-muted-foreground">{{ service.description }}</p></template>
+  </Column>
+  <Column header-class="py-3 text-end" body-class="py-3 text-end">
+    <template #header>{{ copy.price }}</template>
+    <template #body="{ data: service }">{{ money(Number(service.base_sale_price)) }}</template>
+  </Column>
+  <Column header-class="py-3 text-end" body-class="py-3 text-end">
+    <template #header>{{ copy.net }}</template>
+    <template #body="{ data: service }">{{ money(netPrice(service)) }}</template>
+  </Column>
+  <Column header-class="py-3 text-end" body-class="space-x-2 py-3 text-end">
+    <template #header>{{ copy.edit }}</template>
+    <template #body="{ data: service }"><button v-if="isOwner" type="button" class="font-bold text-[var(--bs-link)]" @click="openEdit(service)">{{ copy.edit }}</button><button v-if="isOwner" type="button" class="font-bold text-[var(--bs-status-error)]" :disabled="archivingId === service.id" @click="archive(service)">{{ copy.archive }}</button></template>
+  </Column>
+</BsDataTable></div>
       </section>
     </template>
   </div>

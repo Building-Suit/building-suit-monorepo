@@ -1,0 +1,5 @@
+export const uiMessages = {
+  en: { language: 'Language', theme: 'Theme', themeLight: 'Light', themeDark: 'Dark', themeSystem: 'System', open: 'Open navigation', close: 'Close', navigation: 'Primary navigation', cancel: 'Cancel', save: 'Save', saving: 'Saving…', confirm: 'Confirm', discard: 'Discard unsaved changes?', empty: 'No records found', loading: 'Loading…', search: 'Search', columns: 'Columns', export: 'Export CSV', retry: 'Retry', previous: 'Previous', next: 'Next', step: 'Step' },
+  ar: { language: 'اللغة', theme: 'المظهر', themeLight: 'فاتح', themeDark: 'داكن', themeSystem: 'النظام', open: 'فتح القائمة', close: 'إغلاق', navigation: 'القائمة الرئيسية', cancel: 'إلغاء', save: 'حفظ', saving: 'جارٍ الحفظ…', confirm: 'تأكيد', discard: 'تجاهل التغييرات غير المحفوظة؟', empty: 'لا توجد سجلات', loading: 'جارٍ التحميل…', search: 'بحث', columns: 'الأعمدة', export: 'تصدير CSV', retry: 'إعادة المحاولة', previous: 'السابق', next: 'التالي', step: 'الخطوة' },
+} as const
+export type UiMessageKey = keyof typeof uiMessages.en

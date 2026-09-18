@@ -1,0 +1,1 @@
+export default defineNuxtConfig({ extends: ['@building-suit/nuxt-layer'], i18n: { baseUrl: process.env.DOCS_URL || 'http://localhost:3002', defaultLocale: 'en', locales: [{ code: 'en', language: 'en-US', file: 'en.json' }, { code: 'ar', language: 'ar-EG', dir: 'rtl', file: 'ar.json' }] } })

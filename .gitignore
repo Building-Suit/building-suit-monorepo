@@ -16,3 +16,6 @@ supabase/.branches/
 .local/
 *.log
 .DS_Store
+
+apps/building-suit-docs/app/generated/
+apps/building-suit-docs/public/sources/

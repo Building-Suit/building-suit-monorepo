@@ -188,6 +188,7 @@ async function archiveAccount(row: BalanceRow) {
   await refreshNuxtData('org:account-balances')
   await refreshNuxtData('org:accounts')
 }
+const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Boolean(editorOpen.value)))
 </script>
 
 <template>
@@ -254,23 +255,14 @@ async function archiveAccount(row: BalanceRow) {
         />
 
         <div v-else class="overflow-x-auto">
-          <table class="ls-table">
-            <caption class="sr-only">{{ t('accounts.caption', { group: activeGroup.label }) }}</caption>
-            <thead>
-              <tr>
-                <th scope="col">{{ t('accounts.code') }}</th>
-                <th scope="col">{{ t('accounts.account') }}</th>
-                <th scope="col">{{ t('accounts.currency') }}</th>
-                <th scope="col" class="text-end">{{ t('accounts.entries') }}</th>
-                <th scope="col" class="text-end">{{ t('accounts.balance') }}</th>
-                <th v-if="can('accounts.update')" scope="col"><span class="sr-only">{{ t('accounts.actions') }}</span></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="account in activeGroup.rows" :key="account.account_id">
-                <td class="font-mono text-xs text-fg-muted" dir="ltr">{{ account.code || t('common.dash') }}</td>
-                <td>
-                  <span :class="{ 'ps-4': account.parent_account_id, 'font-semibold': activeGroup.parentIds.has(account.account_id) }">
+          <BsDataTable :value="activeGroup.rows" data-key="account_id" :label="t('accounts.caption', { group: activeGroup.label })">
+  <Column body-class="font-mono text-xs text-fg-muted">
+    <template #header>{{ t('accounts.code') }}</template>
+    <template #body="{ data: account }"><div dir="ltr">{{ account.code || t('common.dash') }}</div></template>
+  </Column>
+  <Column >
+    <template #header>{{ t('accounts.account') }}</template>
+    <template #body="{ data: account }"><span :class="{ 'ps-4': account.parent_account_id, 'font-semibold': activeGroup.parentIds.has(account.account_id) }">
                     {{ account.name }}
                   </span>
                   <span v-if="account.is_archived" class="ls-badge ms-2 bg-[var(--bs-surface-muted)] text-fg-muted">
@@ -278,32 +270,36 @@ async function archiveAccount(row: BalanceRow) {
                   </span>
                   <span v-else-if="account.is_liquid" class="ls-badge ms-2 bg-[var(--bs-status-info-bg)] text-[var(--bs-status-info)]">
                     {{ t('accounts.liquid') }}
-                  </span>
-                </td>
-                <td class="text-fg-muted" dir="ltr">{{ account.currency }}</td>
-                <td class="ls-num text-fg-muted">{{ account.entry_count }}</td>
-                <td class="ls-num">
-                  <MoneyText :amount-minor="account.balance_minor" />
-                </td>
-                <td v-if="can('accounts.update')" class="whitespace-nowrap text-end">
-                  <button type="button" class="ls-btn ls-btn-sm" @click="openEdit(account)">{{ t('accounts.edit') }}</button>
+                  </span></template>
+  </Column>
+  <Column body-class="text-fg-muted">
+    <template #header>{{ t('accounts.currency') }}</template>
+    <template #body="{ data: account }"><div dir="ltr">{{ account.currency }}</div></template>
+  </Column>
+  <Column header-class="text-end" body-class="ls-num text-fg-muted">
+    <template #header>{{ t('accounts.entries') }}</template>
+    <template #body="{ data: account }">{{ account.entry_count }}</template>
+  </Column>
+  <Column header-class="text-end" body-class="ls-num">
+    <template #header>{{ t('accounts.balance') }}</template>
+    <template #body="{ data: account }"><MoneyText :amount-minor="account.balance_minor" /></template>
+  </Column>
+  <Column v-if="can('accounts.update')" body-class="whitespace-nowrap text-end">
+    <template #header><span class="sr-only">{{ t('accounts.actions') }}</span></template>
+    <template #body="{ data: account }"><button type="button" class="ls-btn ls-btn-sm" @click="openEdit(account)">{{ t('accounts.edit') }}</button>
                   <button
                     v-if="can('accounts.archive') && !account.is_archived"
                     type="button" class="ls-btn ls-btn-sm ms-1" @click="archiveAccount(account)"
-                  >{{ t('accounts.archive') }}</button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                  >{{ t('accounts.archive') }}</button></template>
+  </Column>
+</BsDataTable>
         </div>
     </section>
-
-    <Teleport to="body">
-      <div v-if="editorOpen" class="fixed inset-0 z-50 grid place-items-center ls-scrim p-4" role="dialog" aria-modal="true" @click.self="editorOpen = false">
-        <form class="ls-modal-panel ls-card w-full max-w-lg space-y-4 p-6 shadow-overlay" @submit.prevent="saveAccount">
+      <BsDialog v-if="editorOpen" :visible="true" :title="editing ? t('accounts.edit') : t('accounts.add')" :aria-label="editing ? t('accounts.edit') : t('accounts.add')" :show-header="false" size="md" :dirty="overlayDirty0" :pending="submitting" @update:visible="value => { if (!value) editorOpen = false }"><template #default="{ close: dismiss }">
+<form class="space-y-4 p-6" @submit.prevent="saveAccount">
           <div class="flex items-center justify-between">
             <h2 class="text-lg font-bold">{{ editing ? t('accounts.edit') : t('accounts.add') }}</h2>
-            <button type="button" class="ls-btn ls-btn-sm" :aria-label="t('common.close')" @click="editorOpen = false"><AppIcon name="close" /></button>
+            <button type="button" class="ls-btn ls-btn-sm" :aria-label="t('common.close')" @click="dismiss"><AppIcon name="close" /></button>
           </div>
           <QuotaUsageMeter v-if="!editing" quota-key="max_accounts" compact />
           <FloatingField :label="t('accounts.name')"><input id="account-name" v-model="form.name" class="ls-input" required></FloatingField>
@@ -321,9 +317,8 @@ async function archiveAccount(row: BalanceRow) {
             <p v-else class="text-sm text-fg-muted">{{ t('accounts.multiCurrencyUpgrade') }}</p>
           </template>
           <p v-if="editorError" class="ls-error" role="alert">{{ editorError }}</p>
-          <div class="flex justify-end gap-2"><button type="button" class="ls-btn" @click="editorOpen = false">{{ t('common.cancel') }}</button><button class="ls-btn ls-btn-primary" :disabled="submitting">{{ submitting ? t('common.saving') : t('common.save') }}</button></div>
+          <div class="flex justify-end gap-2"><button type="button" class="ls-btn" @click="dismiss">{{ t('common.cancel') }}</button><button class="ls-btn ls-btn-primary" :disabled="submitting">{{ submitting ? t('common.saving') : t('common.save') }}</button></div>
         </form>
-      </div>
-    </Teleport>
+</template></BsDialog>
   </div>
 </template>

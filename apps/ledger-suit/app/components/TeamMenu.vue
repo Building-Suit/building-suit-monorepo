@@ -51,16 +51,16 @@ async function invite() {
   catch (error) { errorMessage.value = describeError(error) }
   finally { pending.value = false }
 }
+const { dirty: overlayDirty0 } = useRecordAction(() => ({ email: email.value, role: role.value }), computed(() => Boolean(open.value)))
 </script>
 <template>
   <div v-if="can('members.invite')">
     <button v-if="showTrigger" type="button" class="ls-btn ls-btn-sm w-full" @click="show">{{ t('org.invite') }}</button>
-    <Teleport to="body">
-      <div v-if="open" class="fixed inset-0 z-[70] grid place-items-center ls-scrim p-4" role="dialog" aria-modal="true" @click.self="close">
-        <form class="ls-modal-panel ls-card w-full max-w-lg space-y-4 p-6 shadow-overlay" @submit.prevent="invite">
+      <BsDialog v-if="open" :visible="true" :title="t('org.invite')" :aria-label="t('org.invite')" :show-header="false" size="md" :dirty="overlayDirty0" :pending="pending" @update:visible="value => { if (!value) close() }"><template #default="{ close: dismiss }">
+<form class="space-y-4 p-6" @submit.prevent="invite">
           <div class="flex justify-between">
             <h2 class="text-lg font-bold">{{ t('org.invite') }}</h2>
-            <button type="button" class="ls-btn ls-btn-sm" :aria-label="t('common.close')" @click="close"><AppIcon name="close" /></button>
+            <button type="button" class="ls-btn ls-btn-sm" :aria-label="t('common.close')" @click="dismiss"><AppIcon name="close" /></button>
           </div>
           <p class="text-sm leading-6 text-fg-muted">{{ t('access.inviteDescription') }}</p>
           <QuotaUsageMeter quota-key="max_members" compact />
@@ -73,7 +73,6 @@ async function invite() {
           <button class="ls-btn ls-btn-primary w-full" :disabled="pending">{{ pending ? t('onboarding.sendingOtp') : t('org.createInvite') }}</button>
           <p v-if="errorMessage" class="ls-error">{{ errorMessage }}</p>
         </form>
-      </div>
-    </Teleport>
+</template></BsDialog>
   </div>
 </template>

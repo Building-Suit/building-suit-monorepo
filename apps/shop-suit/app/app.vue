@@ -19,4 +19,5 @@ useHead(() => ({
   <NuxtLayout>
     <NuxtPage />
   </NuxtLayout>
+  <BsConfirmHost />
 </template>

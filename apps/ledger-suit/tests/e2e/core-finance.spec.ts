@@ -91,8 +91,10 @@ test('owner can review members, role permissions and invitations', async ({ page
   await expect(newRole.getByRole('table')).toBeVisible()
   await expect(newRole.locator('fieldset')).toHaveCount(0)
   const permissionRows = await newRole.getByRole('row').allTextContents()
-  expect(permissionRows.indexOf('Transactions')).toBeLessThan(permissionRows.indexOf('Ledger'))
-  expect(permissionRows.indexOf('Ledger')).toBeLessThan(permissionRows.indexOf('Operations'))
+  const groupIndex = (label: string) => permissionRows.findIndex(text => text.trim().startsWith(`${label} /`))
+  expect(groupIndex('Transactions')).toBeGreaterThanOrEqual(0)
+  expect(groupIndex('Transactions')).toBeLessThan(groupIndex('Ledger'))
+  expect(groupIndex('Ledger')).toBeLessThan(groupIndex('Operations'))
   await newRole.getByRole('button', { name: 'Close' }).click()
 
   await page.getByRole('tab', { name: /Invitations/ }).click()

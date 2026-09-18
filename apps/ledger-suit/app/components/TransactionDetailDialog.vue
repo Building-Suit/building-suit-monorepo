@@ -185,19 +185,12 @@ async function reverse() {
     reversing.value = false
   }
 }
+const { dirty: overlayDirty0 } = useRecordAction(() => ({ reason: reason.value, selectedTagId: selectedTagId.value }), computed(() => Boolean(props.transactionId)))
 </script>
 
 <template>
-  <Teleport to="body">
-    <div
-      v-if="transactionId"
-      class="fixed inset-0 z-50 grid place-items-center ls-scrim p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="transaction-detail-title"
-      @click.self="emit('close')"
-    >
-      <div class="ls-modal-panel ls-card flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden shadow-overlay">
+    <BsDialog v-if="transactionId" :visible="true" :title="transaction?.description || t('detail.title')" :aria-label="transaction?.description || t('detail.title')" :show-header="false" size="md" :dirty="overlayDirty0" :pending="reversing || uploading" @update:visible="value => { if (!value) emit('close') }"><template #default="{ close: dismiss }">
+<div class="flex flex-col overflow-hidden">
         <header class="flex items-start justify-between gap-3 border-b border-[var(--bs-border)] px-6 py-4">
           <div class="min-w-0">
             <h2 id="transaction-detail-title" class="truncate text-base font-bold">
@@ -208,7 +201,7 @@ async function reverse() {
               <span v-if="transaction?.type">{{ t(`types.${transaction.type}`) }}</span>
             </p>
           </div>
-          <button type="button" class="ls-btn ls-btn-sm" :aria-label="t('common.close')" @click="emit('close')"><AppIcon name="close" /></button>
+          <button type="button" class="ls-btn ls-btn-sm" :aria-label="t('common.close')" @click="dismiss"><AppIcon name="close" /></button>
         </header>
 
         <div class="min-h-0 flex-1 space-y-6 overflow-y-auto px-6 py-4">
@@ -247,31 +240,23 @@ async function reverse() {
 
           <section aria-labelledby="journal-heading">
             <h3 id="journal-heading" class="mb-2 text-sm font-bold">{{ t('detail.journal') }}</h3>
-            <table class="ls-table">
-              <thead>
-                <tr>
-                  <th scope="col">{{ t('detail.account') }}</th>
-                  <th scope="col" class="text-end">{{ t('detail.debit') }}</th>
-                  <th scope="col" class="text-end">{{ t('detail.credit') }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(entry, index) in entries" :key="entry.entry_id ?? index">
-                  <td>
-                    <span class="block">{{ entry.account_name }}</span>
-                    <span v-if="entry.memo" class="block text-xs text-fg-muted">{{ entry.memo }}</span>
-                  </td>
-                  <td class="ls-num">
-                    <MoneyText v-if="entry.side === 'debit'" :amount-minor="entry.amount_minor" :currency="entry.currency_code" />
-                    <span v-else class="text-fg-disabled">{{ t('common.dash') }}</span>
-                  </td>
-                  <td class="ls-num">
-                    <MoneyText v-if="entry.side === 'credit'" :amount-minor="entry.amount_minor" :currency="entry.currency_code" />
-                    <span v-else class="text-fg-disabled">{{ t('common.dash') }}</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <BsDataTable :value="entries">
+  <Column >
+    <template #header>{{ t('detail.account') }}</template>
+    <template #body="{ data: entry }"><span class="block">{{ entry.account_name }}</span>
+                    <span v-if="entry.memo" class="block text-xs text-fg-muted">{{ entry.memo }}</span></template>
+  </Column>
+  <Column header-class="text-end" body-class="ls-num">
+    <template #header>{{ t('detail.debit') }}</template>
+    <template #body="{ data: entry }"><MoneyText v-if="entry.side === 'debit'" :amount-minor="entry.amount_minor" :currency="entry.currency_code" />
+                    <span v-else class="text-fg-disabled">{{ t('common.dash') }}</span></template>
+  </Column>
+  <Column header-class="text-end" body-class="ls-num">
+    <template #header>{{ t('detail.credit') }}</template>
+    <template #body="{ data: entry }"><MoneyText v-if="entry.side === 'credit'" :amount-minor="entry.amount_minor" :currency="entry.currency_code" />
+                    <span v-else class="text-fg-disabled">{{ t('common.dash') }}</span></template>
+  </Column>
+</BsDataTable>
           </section>
 
           <section aria-labelledby="tags-heading">
@@ -321,6 +306,5 @@ async function reverse() {
           <button type="button" class="ls-btn" @click="confirming = true">{{ t('detail.reverseAction') }}</button>
         </footer>
       </div>
-    </div>
-  </Teleport>
+</template></BsDialog>
 </template>

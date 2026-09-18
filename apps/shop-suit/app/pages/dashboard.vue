@@ -132,48 +132,65 @@ async function createShop() {
   <div class="space-y-8">
     <section v-if="!current" class="mx-auto max-w-3xl pt-6 lg:pt-12">
       <div class="overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
-        <div class="border-b border-border bg-[#0b0b0d] p-6 text-white sm:p-8">
-          <div class="mb-5 grid size-12 place-items-center rounded-2xl border border-[#d89b42]/30 bg-[#141416]"><Icon name="lucide:store" class="size-6 text-[#ebb45a]" /></div>
+        <div class="border-b border-border bg-[var(--bs-deep-structure-navy)] p-6 text-white sm:p-8">
+          <div class="mb-5 grid size-12 place-items-center rounded-2xl border border-[var(--bs-accent)]/30 bg-[var(--bs-primary)]"><AppIcon name="store" class="size-6 text-[var(--bs-highlight-gold)]" /></div>
           <h1 class="text-2xl font-extrabold sm:text-3xl">{{ copy.setupTitle }}</h1>
           <p class="mt-2 max-w-xl text-sm leading-6 text-white/60">{{ copy.setupBody }}</p>
         </div>
         <form class="space-y-6 p-6 sm:p-8" @submit.prevent="createShop">
-          <p v-if="setupError" role="alert" class="rounded-xl border border-[var(--bs-error)]/30 bg-[var(--bs-error-bg)] p-3 text-sm text-[var(--bs-error-fg)]">{{ setupError }}</p>
-          <div class="space-y-2"><label for="shop-name" class="text-sm font-bold">{{ copy.shopName }}</label><input id="shop-name" v-model="setupName" type="text" minlength="2" maxlength="120" required class="h-12 w-full rounded-xl border border-input bg-background px-4 outline-none focus:border-[#d89b42]"></div>
+          <p v-if="setupError" role="alert" class="rounded-xl border border-[var(--bs-status-error)]/30 bg-[var(--bs-status-error-bg)] p-3 text-sm text-[var(--bs-status-error)]">{{ setupError }}</p>
+          <div class="space-y-2"><label for="shop-name" class="text-sm font-bold">{{ copy.shopName }}</label><input id="shop-name" v-model="setupName" type="text" minlength="2" maxlength="120" required class="ls-input"></div>
           <fieldset class="space-y-3">
             <legend class="text-sm font-bold">{{ copy.plan }}</legend>
             <p v-if="plansPending" class="text-sm text-muted-foreground">{{ copy.loadingPlans }}</p>
-            <p v-else-if="plansError" role="alert" class="text-sm text-[var(--bs-error)]">{{ copy.loadFailed }} <button type="button" class="underline" @click="refreshPlans()">{{ copy.retry }}</button></p>
+            <p v-else-if="plansError" role="alert" class="text-sm text-[var(--bs-status-error)]">{{ copy.loadFailed }} <button type="button" class="underline" @click="refreshPlans()">{{ copy.retry }}</button></p>
             <p v-else-if="!selectablePlans.length" class="text-sm text-muted-foreground">{{ copy.noPlans }}</p>
             <div v-else class="grid gap-3 sm:grid-cols-2">
-              <label v-for="plan in selectablePlans" :key="plan.id" class="cursor-pointer rounded-2xl border p-4 transition" :class="selectedPlan === plan.slug ? 'border-[#d89b42] bg-[#d89b42]/5 ring-2 ring-[#d89b42]/15' : 'border-border bg-background hover:border-muted-foreground/50'">
+              <label v-for="plan in selectablePlans" :key="plan.id" class="cursor-pointer rounded-2xl border p-4 transition" :class="selectedPlan === plan.slug ? 'border-[var(--bs-accent)] bg-[var(--bs-accent)]/5 ring-2 ring-[var(--bs-accent)]/15' : 'border-border bg-background hover:border-muted-foreground/50'">
                 <input v-model="selectedPlan" type="radio" name="plan" :value="plan.slug" class="sr-only">
-                <div class="flex items-start justify-between gap-3"><div><p class="font-extrabold">{{ plan.name }}</p><p class="mt-1 text-xs text-muted-foreground">{{ plan.trial_days }} {{ isArabic ? 'يوم تجربة' : 'day trial' }}</p></div><p class="text-sm font-extrabold text-[#a86c1c]">{{ money(plan.price_amount, plan.currency) }}</p></div>
+                <div class="flex items-start justify-between gap-3"><div><p class="font-extrabold">{{ plan.name }}</p><p class="mt-1 text-xs text-muted-foreground">{{ plan.trial_days }} {{ isArabic ? 'يوم تجربة' : 'day trial' }}</p></div><p class="text-sm font-extrabold text-[var(--bs-link)]">{{ money(plan.price_amount, plan.currency) }}</p></div>
               </label>
             </div>
           </fieldset>
-          <button type="submit" class="flex h-12 w-full items-center justify-center rounded-xl bg-[#141416] px-5 text-sm font-bold text-white disabled:opacity-60 dark:bg-[#d89b42] dark:text-[#0b0b0d]" :disabled="setupPending || !selectablePlans.length">{{ setupPending ? copy.creating : copy.createShop }}</button>
+          <button type="submit" class="ls-btn ls-btn-primary w-full" :disabled="setupPending || !selectablePlans.length">{{ setupPending ? copy.creating : copy.createShop }}</button>
         </form>
       </div>
     </section>
 
     <template v-else>
-      <header class="flex flex-wrap items-end justify-between gap-4"><div><p class="mb-1 text-xs font-bold uppercase tracking-[0.16em] text-[#a86c1c]">{{ current.name }}</p><h1 class="text-3xl font-extrabold tracking-tight">{{ copy.title }}</h1><p class="mt-2 text-sm text-muted-foreground">{{ copy.subtitle }}</p></div><span class="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-bold">{{ isOwner ? copy.owner : copy.employee }}</span></header>
+      <header class="flex flex-wrap items-end justify-between gap-4"><div><p class="mb-1 text-xs font-bold uppercase tracking-[0.16em] text-[var(--bs-link)]">{{ current.name }}</p><h1 class="text-3xl font-extrabold tracking-tight">{{ copy.title }}</h1><p class="mt-2 text-sm text-muted-foreground">{{ copy.subtitle }}</p></div><span class="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-bold">{{ isOwner ? copy.owner : copy.employee }}</span></header>
       <section v-if="isOwner" class="rounded-2xl border border-border bg-card p-5">
         <h2 class="font-extrabold">{{ copy.planStatus }}</h2>
-        <p v-if="subscriptionError" role="alert" class="mt-3 text-sm text-[var(--bs-error)]">{{ copy.loadFailed }} <button type="button" class="underline" @click="refreshSubscription()">{{ copy.retry }}</button></p>
+        <p v-if="subscriptionError" role="alert" class="mt-3 text-sm text-[var(--bs-status-error)]">{{ copy.loadFailed }} <button type="button" class="underline" @click="refreshSubscription()">{{ copy.retry }}</button></p>
         <div v-else-if="subscription" class="mt-3 flex flex-wrap gap-x-8 gap-y-2 text-sm"><p><span class="text-muted-foreground">{{ currentPlan?.name || copy.plan }}:</span> <strong>{{ subscription.status }}</strong></p><p v-if="subscription.trial_end_at"><span class="text-muted-foreground">{{ copy.trialEnds }}:</span> {{ formatDate(subscription.trial_end_at) }}</p><p v-else-if="subscription.current_period_end"><span class="text-muted-foreground">{{ copy.periodEnds }}:</span> {{ formatDate(subscription.current_period_end) }}</p></div>
         <p v-else class="mt-3 text-sm text-muted-foreground">{{ copy.loadFailed }}</p>
       </section>
       <section class="overflow-hidden rounded-2xl border border-border bg-card">
         <div class="border-b border-border px-5 py-4"><h2 class="font-extrabold">{{ copy.recentInvoices }}</h2></div>
         <div v-if="invoicesPending" class="space-y-3 p-5"><div v-for="index in 3" :key="index" class="h-11 animate-pulse rounded-lg bg-muted" /></div>
-        <p v-else-if="invoicesError" role="alert" class="p-5 text-sm text-[var(--bs-error)]">{{ copy.loadFailed }} <button type="button" class="underline" @click="refreshInvoices()">{{ copy.retry }}</button></p>
-        <div v-else-if="invoices?.length" class="overflow-x-auto"><table class="w-full min-w-[38rem] text-sm"><thead class="bg-muted/50 text-xs text-muted-foreground"><tr><th class="px-5 py-3 text-start">{{ copy.date }}</th><th class="px-5 py-3 text-start">{{ copy.invoiceNumber }}</th><th class="px-5 py-3 text-start">{{ copy.client }}</th><th class="px-5 py-3 text-end">{{ copy.amount }}</th></tr></thead><tbody><tr v-for="invoice in invoices" :key="invoice.id" class="border-t border-border"><td class="px-5 py-4">{{ formatDate(invoice.created_at) }}</td><td class="px-5 py-4 font-semibold">{{ invoice.invoice_number }}</td><td class="px-5 py-4">{{ invoice.client_name_snapshot || '—' }}</td><td class="px-5 py-4 text-end font-bold">{{ money(Number(invoice.total_amount)) }}</td></tr></tbody></table></div>
+        <p v-else-if="invoicesError" role="alert" class="p-5 text-sm text-[var(--bs-status-error)]">{{ copy.loadFailed }} <button type="button" class="underline" @click="refreshInvoices()">{{ copy.retry }}</button></p>
+        <div v-else-if="invoices?.length" class="overflow-x-auto"><BsDataTable :value="invoices" data-key="id" :row-class="() => 'border-t border-border'">
+  <Column header-class="px-5 py-3 text-start" body-class="px-5 py-4">
+    <template #header>{{ copy.date }}</template>
+    <template #body="{ data: invoice }">{{ formatDate(invoice.created_at) }}</template>
+  </Column>
+  <Column header-class="px-5 py-3 text-start" body-class="px-5 py-4 font-semibold">
+    <template #header>{{ copy.invoiceNumber }}</template>
+    <template #body="{ data: invoice }">{{ invoice.invoice_number }}</template>
+  </Column>
+  <Column header-class="px-5 py-3 text-start" body-class="px-5 py-4">
+    <template #header>{{ copy.client }}</template>
+    <template #body="{ data: invoice }">{{ invoice.client_name_snapshot || '—' }}</template>
+  </Column>
+  <Column header-class="px-5 py-3 text-end" body-class="px-5 py-4 text-end font-bold">
+    <template #header>{{ copy.amount }}</template>
+    <template #body="{ data: invoice }">{{ money(Number(invoice.total_amount)) }}</template>
+  </Column>
+</BsDataTable></div>
         <p v-else class="p-8 text-center text-sm text-muted-foreground">{{ copy.noInvoices }}</p>
       </section>
     </template>
 
-    <section class="rounded-2xl border border-border bg-card p-5 sm:p-6"><h2 class="text-lg font-extrabold">{{ copy.reviewTitle }}</h2><div class="mt-4 grid gap-4 sm:grid-cols-2"><div class="rounded-xl border border-[var(--bs-success)]/25 bg-[var(--bs-success-bg)] p-4 dark:bg-[var(--bs-success-bg-dark)]"><p class="text-sm font-bold text-[var(--bs-success-fg)] dark:text-[var(--bs-success-dark)]">{{ copy.ready }}</p><p class="mt-2 text-sm leading-6">{{ copy.readyBody }}</p></div><div class="rounded-xl border border-[var(--bs-warning)]/25 bg-[var(--bs-warning-bg)] p-4 dark:bg-[var(--bs-warning-bg-dark)]"><p class="text-sm font-bold text-[var(--bs-warning-fg)] dark:text-[var(--bs-warning-dark)]">{{ copy.next }}</p><p class="mt-2 text-sm leading-6">{{ copy.nextBody }}</p></div></div></section>
+    <section class="rounded-2xl border border-border bg-card p-5 sm:p-6"><h2 class="text-lg font-extrabold">{{ copy.reviewTitle }}</h2><div class="mt-4 grid gap-4 sm:grid-cols-2"><div class="rounded-xl border border-[var(--bs-status-success)]/25 bg-[var(--bs-status-success-bg)] p-4 dark:bg-[var(--bs-status-success-bg)]"><p class="text-sm font-bold text-[var(--bs-status-success)] dark:text-[var(--bs-status-success)]">{{ copy.ready }}</p><p class="mt-2 text-sm leading-6">{{ copy.readyBody }}</p></div><div class="rounded-xl border border-[var(--bs-status-warning)]/25 bg-[var(--bs-status-warning-bg)] p-4 dark:bg-[var(--bs-status-warning-bg)]"><p class="text-sm font-bold text-[var(--bs-status-warning)] dark:text-[var(--bs-status-warning)]">{{ copy.next }}</p><p class="mt-2 text-sm leading-6">{{ copy.nextBody }}</p></div></div></section>
   </div>
 </template>

@@ -1,0 +1,10 @@
+{
+  "name": "@building-suit/design-tokens",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./tokens.json",
+    "./css": "./generated/tokens.css"
+  }
+}

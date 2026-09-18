@@ -141,41 +141,37 @@ watch(currentId, () => fetchRows(), { immediate: true })
 
     <template v-else-if="rows.length">
       <div class="ls-card overflow-x-auto">
-        <table class="ls-table">
-          <thead>
-            <tr>
-              <th>{{ t('audit.date') }}</th>
-              <th>{{ t('audit.actor') }}</th>
-              <th>{{ t('audit.activity') }}</th>
-              <th>{{ t('audit.record') }}</th>
-              <th>{{ t('audit.changes') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="row in rows" :key="row.id">
-              <td class="whitespace-nowrap">{{ formatTimestamp(row.created_at) }}</td>
-              <td dir="ltr">{{ row.actor_email || t('audit.system') }}</td>
-              <td>
-                <p class="font-medium">{{ activityLabel(row) }}</p>
-                <p class="text-xs text-fg-muted" dir="ltr">{{ row.action }}</p>
-              </td>
-              <td>
-                <p>{{ entityLabel(row.entity_type) }}</p>
-                <p v-if="row.entity_id" class="text-xs text-fg-muted" dir="ltr">{{ row.entity_id }}</p>
-              </td>
-              <td>
-                <details>
+        <BsDataTable :value="rows" data-key="id">
+  <Column body-class="whitespace-nowrap">
+    <template #header>{{ t('audit.date') }}</template>
+    <template #body="{ data: row }">{{ formatTimestamp(row.created_at) }}</template>
+  </Column>
+  <Column >
+    <template #header>{{ t('audit.actor') }}</template>
+    <template #body="{ data: row }"><div dir="ltr">{{ row.actor_email || t('audit.system') }}</div></template>
+  </Column>
+  <Column >
+    <template #header>{{ t('audit.activity') }}</template>
+    <template #body="{ data: row }"><p class="font-medium">{{ activityLabel(row) }}</p>
+                <p class="text-xs text-fg-muted" dir="ltr">{{ row.action }}</p></template>
+  </Column>
+  <Column >
+    <template #header>{{ t('audit.record') }}</template>
+    <template #body="{ data: row }"><p>{{ entityLabel(row.entity_type) }}</p>
+                <p v-if="row.entity_id" class="text-xs text-fg-muted" dir="ltr">{{ row.entity_id }}</p></template>
+  </Column>
+  <Column >
+    <template #header>{{ t('audit.changes') }}</template>
+    <template #body="{ data: row }"><details>
                   <summary class="cursor-pointer text-link">{{ t('audit.viewChanges') }}</summary>
                   <div class="mt-3 grid min-w-80 gap-3 text-xs">
                     <div><p class="font-semibold">{{ t('audit.before') }}</p><pre class="mt-1 overflow-auto rounded-control bg-background p-2" dir="ltr">{{ jsonText(row.before_state) }}</pre></div>
                     <div><p class="font-semibold">{{ t('audit.after') }}</p><pre class="mt-1 overflow-auto rounded-control bg-background p-2" dir="ltr">{{ jsonText(row.after_state) }}</pre></div>
                     <div><p class="font-semibold">{{ t('audit.metadata') }}</p><pre class="mt-1 overflow-auto rounded-control bg-background p-2" dir="ltr">{{ jsonText(row.metadata) }}</pre></div>
                   </div>
-                </details>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                </details></template>
+  </Column>
+</BsDataTable>
       </div>
 
       <div v-if="hasMore" class="flex justify-center">

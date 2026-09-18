@@ -1,0 +1,7 @@
+# Product app
+
+Generated from the maintained Building Suit app template. The root workspace discovers `apps/*`; run `pnpm install` to register dependencies and `pnpm setup` to prepare generated types.
+
+The starter uses shared tokens, icons, settings, confirmations and the application shell. Set the product name/content in `i18n/locales`, supply approved brand assets and navigation, and reuse `BsLandingPage`, `BsMarketingLayout`, `BsAuthLayout` and `BsSignupWizard` for the corresponding routes.
+
+No authentication or database access is enabled by scaffolding. Before adding protected features, configure the shared identity strategy, product/tenant adapter, server authorization, environment map and callback allowlists described in `docs/architecture/identity.md`. Never treat the demonstration shell as an authenticated boundary. Use approved API contracts through the single root Supabase project. Add tests and deployment configuration appropriate to the requested product scope.

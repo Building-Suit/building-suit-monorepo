@@ -28,4 +28,5 @@ useHead(() => ({
       <NuxtPage :transition="{ name: 'ls-page', mode: 'out-in' }" />
     </NuxtLayout>
   </div>
+  <BsConfirmHost />
 </template>

@@ -404,24 +404,17 @@ async function submit() {
 }
 
 
+const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Boolean(open.value)))
 </script>
 
 <template>
-  <Teleport to="body">
-    <div
-      v-if="open"
-      class="fixed inset-0 z-50 flex items-end justify-center ls-scrim p-0 sm:items-center sm:p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="add-transaction-title"
-      @click.self="close()"
-    >
-      <div class="ls-modal-panel ls-card flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-b-none shadow-overlay sm:rounded-modal">
+    <BsDialog v-if="open" :visible="true" :title="t(`add.flows.${flow}`)" :aria-label="t(`add.flows.${flow}`)" :show-header="false" size="md" :dirty="overlayDirty0" :pending="submitting" @update:visible="value => { if (!value) close() }"><template #default="{ close: dismiss }">
+<div class="flex flex-col overflow-hidden rounded-b-none sm:rounded-modal">
         <header class="flex items-center justify-between border-b border-[var(--bs-border)] px-6 py-4">
           <h2 id="add-transaction-title" class="text-base font-bold">
             {{ t(`add.flows.${flow}`) }}
           </h2>
-          <button type="button" class="ls-btn ls-btn-sm" :aria-label="t('common.close')" @click="close()">
+          <button type="button" class="ls-btn ls-btn-sm" :aria-label="t('common.close')" @click="dismiss">
             <AppIcon name="close" />
           </button>
         </header>
@@ -735,7 +728,7 @@ async function submit() {
         </form>
 
         <footer class="flex items-center justify-end gap-2 border-t border-[var(--bs-border)] px-6 py-4">
-          <button type="button" class="ls-btn" @click="close()">{{ t('common.cancel') }}</button>
+          <button type="button" class="ls-btn" @click="dismiss">{{ t('common.cancel') }}</button>
           <button
             type="button"
             class="ls-btn ls-btn-accent"
@@ -746,6 +739,5 @@ async function submit() {
           </button>
         </footer>
       </div>
-    </div>
-  </Teleport>
+</template></BsDialog>
 </template>

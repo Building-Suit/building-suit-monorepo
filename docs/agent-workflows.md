@@ -13,7 +13,7 @@ Use these workflows to navigate, maintain and extend the repository. Select only
 
 ## 2. Add or change a product feature
 
-1. Locate the owning product's feature module, routes, requirements and tests.
+1. Locate the owning product's pages, composables, requirements and tests.
 2. Use shared shell or marketing/auth templates, with product navigation, content, permissions and translations supplied through configuration.
 3. Compose forms/pages from shared UI, `BsDataTable` and record-action controllers.
 4. Put product validation, orchestration and repository/RPC adapters in the feature. Keep business rules out of generic UI.
@@ -41,7 +41,7 @@ Use these workflows to navigate, maintain and extend the repository. Select only
 
 ## 5. Evolve a database schema or API contract
 
-1. Read `supabase/AGENTS.md`, the owning domain's contracts and the maintained environment/deployment runbook.
+1. Read `supabase/AGENTS.md`, the owning domain's contracts and `docs/architecture/environments.json` and the maintained database runbook in `docs/shared/database.md`.
 2. Verify the target environment/ref and inspect relevant applied history, schema definitions and callers.
 3. Design the requested change with compatibility, data handling, privileges, RLS, function/view dependencies and risk-appropriate recovery.
 4. Create a new forward migration using documented tooling. Do not modify applied files or bypass versioned deployment.
@@ -71,7 +71,7 @@ Use these workflows to navigate, maintain and extend the repository. Select only
 ## 8. Add a new platform
 
 1. Confirm the requested scope, content, domain ownership and existing shared capabilities.
-2. Use the maintained `tooling/new-platform` generator, inspect its output and register the workspace app.
+2. Run `pnpm new:platform <slug> "Product name" --dry-run` to inspect the maintained template, then run without `--dry-run` and use `pnpm install` and `pnpm setup` to register/prepare the app.
 3. Configure brand assets/content, navigation, translations, tenant/profile adapter and onboarding requirements.
 4. Reuse shared templates, PrimeVue components, table and UX controllers. Add shared capabilities only for concrete requirements.
 5. Define product contracts and owned private/API schemas through the database workflow; preserve global identity and separate portal authorization.

@@ -149,7 +149,7 @@ test('legacy compatibility subscriptions remain informational and cannot enter S
 
 test('plan-change consequences and provider handoff are localized under RTL', async ({ page, context }) => {
   await context.addCookies([
-    { name: 'ledger-suit-locale', value: 'ar', domain: '127.0.0.1', path: '/' },
+    { name: 'building-suit-locale', value: 'ar', domain: '127.0.0.1', path: '/' },
     { name: 'i18n_redirected', value: 'ar', domain: '127.0.0.1', path: '/' },
   ])
   await mockPlanChange(page)

@@ -1,81 +1,15 @@
-import tailwindcss from '@tailwindcss/vite'
-
 export default defineNuxtConfig({
+  extends: ['@building-suit/nuxt-layer'],
+  modules: ['@nuxtjs/supabase'],
   compatibilityDate: '2026-08-30',
   devtools: { enabled: true },
 
   app: {
     head: {
-      // Runs before first paint so a refresh shows the stored theme's very
-      // first frame instead of flashing another mode first. The same logic
-      // lives in app/composables/useTheme.ts — keep the two in sync.
-      script: [
-        {
-          innerHTML: [
-            'try{',
-            "var t=localStorage.getItem('ledger-suit.theme');",
-            `if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t)}`,
-            'else{document.documentElement.removeAttribute(\'data-theme\')}',
-            '}catch(e){}',
-          ].join(''),
-          tagPosition: 'head',
-        },
-      ],
       link: [
         { rel: 'icon', type: 'image/svg+xml', href: '/brand/ledger-suit-app-icon.svg' },
       ],
     },
-  },
-
-  modules: ['@nuxtjs/supabase', '@nuxtjs/i18n', '@nuxt/eslint', '@primevue/nuxt-module'],
-
-  // PrimeVue owns component behavior and accessibility; Ledger Suit's
-  // Tailwind classes and Building Suit tokens continue to own presentation.
-  // Components and their composables are auto-imported by the official module.
-  // Toast and confirmation services are registered automatically when their
-  // corresponding components are available through the module.
-  primevue: {
-    options: {
-      unstyled: true,
-    },
-    // Keep auto-imports intentional. Later steps can extend this list when a
-    // product requirement calls for another PrimeVue primitive.
-    components: {
-      include: [
-        'InputText',
-        'InputNumber',
-        'Textarea',
-        'Select',
-        'MultiSelect',
-        'DatePicker',
-        'Checkbox',
-        'RadioButton',
-        'ToggleSwitch',
-        'FloatLabel',
-        'Dialog',
-        'Drawer',
-        'Popover',
-        'Menu',
-        'DataTable',
-        'Column',
-        'Paginator',
-        'FileUpload',
-        'Toast',
-        'ConfirmDialog',
-        'ProgressBar',
-        'Tag',
-        'Badge',
-        'Button',
-        'Tree',
-        'Accordion',
-      ],
-    },
-  },
-
-  css: ['~/assets/css/main.css'],
-
-  vite: {
-    plugins: [tailwindcss()],
   },
 
   // Only the publishable (anon) key ever reaches the browser. The service role
@@ -107,7 +41,7 @@ export default defineNuxtConfig({
     ],
     detectBrowserLanguage: {
       useCookie: true,
-      cookieKey: 'ledger-suit-locale',
+      cookieKey: 'building-suit-locale',
       alwaysRedirect: false,
       fallbackLocale: 'en',
     },

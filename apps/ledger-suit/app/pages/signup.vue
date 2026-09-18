@@ -11,21 +11,17 @@ const { currentId, loadOrganizations } = useTenant()
 
 useHead({ title: () => `${t('onboarding.title')} · ${t('app.name')}` })
 
-const step = ref(1)
+const { step, advance, back } = useSignupWizard(2)
 const pending = ref(false)
 const errorMessage = ref('')
 const awaitingOtp = ref(false)
 const otp = ref('')
-const otpExpiresAt = ref(0)
-const resendAvailableAt = ref(0)
-const now = ref(Date.now())
+const { expiresAt: otpExpiresAt, resendAt: resendAvailableAt, expiresIn: otpExpiresIn, resendIn, start: startVerification, format: formatCountdown } = useVerificationTimer()
 const hydrated = ref(false)
 const consentAccepted = ref(false)
 const provisionedOrganizationId = ref<string | null>(null)
 const existingAccountOnboarding = ref(false)
 const ONBOARDING_STORAGE_KEY = 'ledger-suit.pending-onboarding'
-const OTP_EXPIRY_SECONDS = 60 * 60
-const RESEND_SECONDS = 60
 type BusinessType = Database['public']['Enums']['organization_business_type']
 const form = reactive({
   fullName: '', phone: '', jobTitle: '', email: '', password: '',
@@ -43,8 +39,6 @@ const countries = [
 ]
 const supportedCurrencies = ['EGP', 'SAR', 'AED', 'USD', 'GBP', 'EUR'] as const
 const businessTypes: BusinessType[] = ['sole_proprietorship', 'partnership', 'limited_liability', 'corporation', 'nonprofit', 'other']
-const otpExpiresIn = computed(() => Math.max(0, Math.ceil((otpExpiresAt.value - now.value) / 1000)))
-const resendIn = computed(() => Math.max(0, Math.ceil((resendAvailableAt.value - now.value) / 1000)))
 const otpExpired = computed(() => awaitingOtp.value && otpExpiresIn.value === 0)
 
 const submitButtonText = computed(() => {
@@ -89,11 +83,6 @@ function restoreFromUserMetadata(authenticatedUser: { email?: string; user_metad
   if (typeof pendingOnboarding.tax_identifier === 'string') form.taxIdentifier = pendingOnboarding.tax_identifier
 }
 
-function formatCountdown(seconds: number) {
-  const minutes = Math.floor(seconds / 60).toString().padStart(2, '0')
-  const remainder = (seconds % 60).toString().padStart(2, '0')
-  return `${minutes}:${remainder}`
-}
 
 function savePendingOnboarding() {
   if (!import.meta.client) return
@@ -111,11 +100,10 @@ function clearPendingOnboarding() {
 }
 
 function showOtpVerification() {
-  now.value = Date.now()
+
   awaitingOtp.value = true
   otp.value = ''
-  otpExpiresAt.value = now.value + OTP_EXPIRY_SECONDS * 1000
-  resendAvailableAt.value = now.value + RESEND_SECONDS * 1000
+  startVerification()
   savePendingOnboarding()
 }
 
@@ -155,7 +143,7 @@ async function next() {
       }
     }
 
-    step.value++
+    await advance()
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : t('errors.generic')
   } finally {
@@ -333,11 +321,9 @@ async function resendOtp() {
   finally { pending.value = false }
 }
 
-let timer: ReturnType<typeof setInterval> | undefined
 onMounted(() => {
   restore()
   hydrated.value = true
-  timer = setInterval(() => (now.value = Date.now()), 1000)
   const stored = sessionStorage.getItem(ONBOARDING_STORAGE_KEY)
   if (stored) {
     try {
@@ -358,7 +344,6 @@ onMounted(() => {
 
   void restoreAuthenticatedOnboarding()
 })
-onBeforeUnmount(() => clearInterval(timer))
 
 async function restoreAuthenticatedOnboarding() {
   const { data } = await supabase.auth.getUser()
@@ -391,26 +376,12 @@ async function restoreAuthenticatedOnboarding() {
 </script>
 
 <template>
-  <main class="min-h-dvh bg-background px-4 py-6 lg:px-8">
-    <div class="mx-auto max-w-6xl">
-      <header class="flex items-center justify-between gap-4"><NuxtLink to="/" class="inline-flex" :aria-label="t('marketing.home')">
-        <AppLogo class="h-14 w-auto max-w-52" />
-      </NuxtLink>
-      <div class="flex items-center gap-2"><SettingsMenu /><NuxtLink to="/login" class="ls-btn ls-btn-sm">{{ t('auth.signIn') }}</NuxtLink></div></header>
+  <BsAuthLayout :product-name="t('app.name')" :home-label="t('marketing.home')" :title="t('onboarding.title')" :description="t('onboarding.subtitle')" wide>
+    <template #logo="{ tone }"><AppLogo :tone="tone" class="h-auto w-56" /></template>
+        <form v-if="!awaitingOtp" class="ls-auth-card w-full p-6 sm:p-8" :data-hydrated="hydrated" @submit.prevent="step === 1 ? next() : finishOnboarding()">
+          <header class="mb-6 space-y-2"><h1 class="text-xl font-bold">{{ t('onboarding.title') }}</h1><p class="text-sm text-fg-muted">{{ t('onboarding.noCardTrial') }}</p></header>
+          <BsSignupWizard :step="step" :steps="[1, 2].map(index => ({ title: t(`onboarding.steps.${index}.title`), body: t(`onboarding.steps.${index}.body`) }))" :pending="pending" @back="back">
 
-      <div class="mx-auto mt-12 grid max-w-5xl gap-8 lg:grid-cols-[.72fr_1.28fr]">
-        <aside class="ls-brand-hero rounded-modal p-8 lg:sticky lg:top-6 lg:self-start">
-          <p class="ls-brand-hero-muted text-xs font-bold uppercase tracking-[.2em]">{{ t('onboarding.eyebrow') }}</p>
-          <h1 class="mt-4 text-3xl font-black tracking-[-.04em]">{{ t('onboarding.title') }}</h1>
-          <p class="ls-brand-hero-muted mt-3 text-sm leading-6">{{ t('onboarding.subtitle') }}</p>
-          <p class="mt-5 rounded-control border border-[var(--bs-steel-border)] p-3 text-sm font-semibold">{{ t('onboarding.noCardTrial') }}</p>
-          <ol class="mt-8 space-y-6">
-            <li v-for="index in 2" :key="index" class="flex gap-3" :class="index > step ? 'opacity-40' : ''"><span class="grid size-8 shrink-0 place-items-center rounded-full border border-[var(--bs-steel-border)] text-xs font-bold" :class="index === step ? 'bg-[var(--bs-premium-gold)] text-[var(--bs-deep-structure-navy)]' : ''">{{ index }}</span><div><p class="font-bold">{{ t(`onboarding.steps.${index}.title`) }}</p><p class="ls-brand-hero-muted text-xs">{{ t(`onboarding.steps.${index}.body`) }}</p></div></li>
-          </ol>
-        </aside>
-
-        <form v-if="!awaitingOtp" class="ls-card p-6 sm:p-8" :data-hydrated="hydrated" @submit.prevent="step === 1 ? next() : finishOnboarding()">
-          <div class="mb-8 flex items-center justify-between"><div><p class="text-xs font-bold text-fg-muted">{{ t('onboarding.stepCount', { step }) }}</p><h2 class="mt-1 text-2xl font-black">{{ t(`onboarding.steps.${step}.title`) }}</h2></div><button v-if="step > 1" type="button" class="ls-btn ls-btn-sm" @click="step--">{{ t('common.back') }}</button></div>
 
           <div v-if="step === 1" class="grid gap-4 sm:grid-cols-2">
             <FloatingField class="sm:col-span-2" :label="t('onboarding.fullName')"><input id="owner-name" v-model="form.fullName" class="ls-input" autocomplete="name" required></FloatingField>
@@ -451,9 +422,10 @@ async function restoreAuthenticatedOnboarding() {
           <p v-if="errorMessage" class="ls-error mt-6" role="alert">{{ errorMessage }}</p>
           <button type="submit" class="ls-btn ls-btn-primary mt-8 w-full" :disabled="pending || (step === 2 && !consentAccepted)">{{ submitButtonText }}</button>
           <p v-if="step === 2" class="mt-3 text-center text-xs text-fg-muted">{{ t('onboarding.noCardRequired') }}</p>
+          </BsSignupWizard>
         </form>
 
-        <form v-else class="ls-card p-6 sm:p-8" :data-hydrated="hydrated" @submit.prevent="verifyOtpAndContinue">
+        <form v-else class="ls-auth-card w-full p-6 sm:p-8" :data-hydrated="hydrated" @submit.prevent="verifyOtpAndContinue">
           <div class="mx-auto max-w-lg text-center">
             <div class="mx-auto grid size-14 place-items-center rounded-full bg-surface-muted text-primary"><AppIcon name="mail" :size="28" /></div>
             <p class="mt-6 text-xs font-bold uppercase tracking-[.18em] text-fg-muted">{{ t('onboarding.otpEyebrow') }}</p>
@@ -491,10 +463,6 @@ async function restoreAuthenticatedOnboarding() {
           </div>
         </form>
 
-        <p class="text-center text-xs text-fg-muted lg:col-start-2">
-          <NuxtLink to="/contact" class="font-semibold hover:text-fg">{{ t('marketing.contact') }}</NuxtLink>
-        </p>
-      </div>
-    </div>
-  </main>
+    <template #legal><p class="mt-4 text-sm text-fg-muted"><NuxtLink to="/login" class="underline">{{ t('auth.signIn') }}</NuxtLink> · <NuxtLink to="/contact" class="underline">{{ t('marketing.contact') }}</NuxtLink></p></template>
+  </BsAuthLayout>
 </template>

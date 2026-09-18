@@ -98,24 +98,24 @@ const bars = computed(() =>
       <!-- Its own scroll container: wide content must never make the page
            scroll horizontally, and Arabic headers are wider than the English. -->
       <div class="mt-2 overflow-x-auto">
-        <table class="ls-table">
-        <thead>
-          <tr>
-            <th scope="col">{{ t('dashboard.month') }}</th>
-            <th scope="col" class="text-end">{{ t('dashboard.revenue') }}</th>
-            <th scope="col" class="text-end">{{ t('dashboard.expenses') }}</th>
-            <th scope="col" class="text-end">{{ t('dashboard.net') }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="bar in bars" :key="`${bar.month}-row`">
-            <td>{{ bar.label }}</td>
-            <td class="ls-num"><MoneyText :amount-minor="bar.revenue" /></td>
-            <td class="ls-num"><MoneyText :amount-minor="bar.expense" /></td>
-            <td class="ls-num"><MoneyText :amount-minor="bar.net" signed /></td>
-            </tr>
-          </tbody>
-        </table>
+        <BsDataTable :value="bars">
+  <Column >
+    <template #header>{{ t('dashboard.month') }}</template>
+    <template #body="{ data: bar }">{{ bar.label }}</template>
+  </Column>
+  <Column header-class="text-end" body-class="ls-num">
+    <template #header>{{ t('dashboard.revenue') }}</template>
+    <template #body="{ data: bar }"><MoneyText :amount-minor="bar.revenue" /></template>
+  </Column>
+  <Column header-class="text-end" body-class="ls-num">
+    <template #header>{{ t('dashboard.expenses') }}</template>
+    <template #body="{ data: bar }"><MoneyText :amount-minor="bar.expense" /></template>
+  </Column>
+  <Column header-class="text-end" body-class="ls-num">
+    <template #header>{{ t('dashboard.net') }}</template>
+    <template #body="{ data: bar }"><MoneyText :amount-minor="bar.net" signed /></template>
+  </Column>
+</BsDataTable>
       </div>
     </details>
   </div>

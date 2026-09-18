@@ -1,0 +1,13 @@
+packages:
+  - apps/*
+  - packages/*
+onlyBuiltDependencies:
+  - esbuild
+  - unrs-resolver
+  - '@parcel/watcher'
+# The Supabase module imports h3 without declaring it. Keep its server helpers
+# on the same request API as the pinned Nuxt/Nitro runtime.
+packageExtensions:
+  '@nuxtjs/supabase@1.6.2':
+    dependencies:
+      h3: 1.15.11

@@ -2,7 +2,7 @@
 
 **Reviewed:** 2026-09-18.  
 **Destination:** `/home/tareq/Dev/building-suit-monorepo`.  
-**Status:** Planning complete; application copying, implementation, and database migration have not started.  
+**Status:** Local workspace/UI implementation and verification are complete at the recorded checkpoint; hosted database/identity cutover is blocked on verified Ledger environment access and domains. Current evidence is in `docs/work-packages/STATUS.md`.
 **Outcome:** Two independently deployable products that share Building Suit's design system, Ledger's requested layouts, common implementation patterns, and one Supabase project per environment, without altering the original source projects or redesigning existing business tables.
 
 ## 1. Scope and non-negotiable limits

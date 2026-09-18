@@ -219,6 +219,7 @@ async function reviewChange(planKey: LaunchPlanKey) {
     reviewingPlan.value = null
   }
 }
+
 </script>
 
 <template>
@@ -361,10 +362,8 @@ async function reviewChange(planKey: LaunchPlanKey) {
     <p v-if="surface === 'checkout'" class="text-center text-xs text-fg-muted">{{ t('billing.paymentRequired') }}</p>
     <p v-if="surface === 'manage' && compatibilityPlanCurrent" class="rounded-card border border-[var(--bs-border-strong)] p-4 text-sm text-fg-muted" role="note">{{ t('billing.planChange.legacyGrandfathered') }}</p>
     <p v-if="errorMessage" class="ls-error" role="alert">{{ errorMessage }}</p>
-
-    <Teleport to="body">
-      <div v-if="planImpact" class="fixed inset-0 z-[80] grid place-items-center ls-scrim p-4" role="dialog" aria-modal="true" :aria-labelledby="'plan-change-title'" @click.self="planImpact = null">
-        <section class="ls-card max-h-[90vh] w-full max-w-3xl overflow-y-auto p-6" data-testid="plan-change-impact">
+      <BsDialog v-if="planImpact" :visible="true" :title="t('billing.planChange.title')" :aria-label="t('billing.planChange.title')" :show-header="false" size="md" @update:visible="value => { if (!value) planImpact = null }"><template #default="{ close: dismiss }">
+<section class="ls-card max-h-[90vh] w-full max-w-3xl overflow-y-auto p-6" data-testid="plan-change-impact">
           <div class="flex items-start justify-between gap-4">
             <div>
               <h2 id="plan-change-title" class="text-xl font-black">{{ t('billing.planChange.title') }}</h2>
@@ -373,7 +372,7 @@ async function reviewChange(planKey: LaunchPlanKey) {
                 target: t(`billing.plans.${planImpact.target_plan_key}.name`),
               }) }}</p>
             </div>
-            <button type="button" class="ls-btn-icon" :aria-label="t('common.close')" @click="planImpact = null"><AppIcon name="close" :size="20" /></button>
+            <button type="button" class="ls-btn-icon" :aria-label="t('common.close')" @click="dismiss"><AppIcon name="close" :size="20" /></button>
           </div>
 
           <div class="mt-5 rounded-card bg-surface-muted p-4 text-sm">
@@ -422,10 +421,9 @@ async function reviewChange(planKey: LaunchPlanKey) {
           <p v-else class="mt-6 text-sm text-fg-muted">{{ t('billing.planChange.noChange') }}</p>
 
           <div class="mt-6 flex justify-end">
-            <button type="button" class="ls-btn ls-btn-primary" @click="planImpact = null">{{ t('common.close') }}</button>
+            <button type="button" class="ls-btn ls-btn-primary" @click="dismiss">{{ t('common.close') }}</button>
           </div>
         </section>
-      </div>
-    </Teleport>
+</template></BsDialog>
   </div>
 </template>

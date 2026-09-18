@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
+const confirmation = useConfirmation()
 
 definePageMeta({ layout: 'default', middleware: ['auth'] })
 
@@ -20,13 +21,12 @@ const { locale } = useI18n()
 const { current, currentId, isOwner, loading: shopLoading } = useShop()
 const isArabic = computed(() => locale.value === 'ar')
 const search = ref('')
-const showForm = ref(false)
-const saving = ref(false)
 const voidingId = ref<string | null>(null)
 const editingId = ref<string | null>(null)
 const requestId = ref<string | null>(null)
 const actionError = ref('')
 const form = reactive({ title: '', amount: 0, category: '', date: '', notes: '' })
+const { visible: showForm, pending: saving, dirty: formDirty } = useRecordAction(() => form)
 
 function localToday() {
   const now = new Date()
@@ -198,7 +198,7 @@ async function save() {
 
 async function voidExpense(expense: Expense) {
   if (!currentId.value || !isOwner.value || voidingId.value) return
-  if (!window.confirm(copy.value.voidConfirm)) return
+  if (!await confirmation.ask(copy.value.voidConfirm)) return
   actionError.value = ''
   voidingId.value = expense.id
   try {
@@ -219,27 +219,52 @@ async function voidExpense(expense: Expense) {
   <div class="space-y-6">
     <header class="flex flex-wrap items-end justify-between gap-4">
       <div><h1 class="text-3xl font-extrabold tracking-tight">{{ copy.title }}</h1><p class="mt-2 text-sm text-muted-foreground">{{ copy.subtitle }}</p></div>
-      <button v-if="current && isOwner" type="button" class="rounded-xl bg-[#d89b42] px-4 py-2.5 text-sm font-bold text-[#0b0b0d]" @click="openCreate">{{ copy.add }}</button>
+      <button v-if="current && isOwner" type="button" class="ls-btn ls-btn-primary" @click="openCreate">{{ copy.add }}</button>
     </header>
-    <div v-if="!current && !shopLoading" class="rounded-2xl border border-border bg-card p-8 text-center text-sm"><p>{{ copy.noShop }}</p><NuxtLink to="/dashboard" class="mt-3 inline-block font-bold text-[#a86c1c] underline">{{ copy.dashboard }}</NuxtLink></div>
+    <div v-if="!current && !shopLoading" class="rounded-2xl border border-border bg-card p-8 text-center text-sm"><p>{{ copy.noShop }}</p><NuxtLink to="/dashboard" class="mt-3 inline-block font-bold text-[var(--bs-link)] underline">{{ copy.dashboard }}</NuxtLink></div>
     <template v-else-if="current">
-      <p class="rounded-xl border border-[var(--bs-info)]/25 bg-[var(--bs-info-bg)] p-4 text-sm dark:bg-[var(--bs-info-bg-dark)]">{{ copy.otherLater }}</p>
-      <p v-if="actionError && !showForm" role="alert" class="rounded-xl bg-[var(--bs-error-bg)] p-3 text-sm text-[var(--bs-error-fg)]">{{ actionError }}</p>
-      <form v-if="showForm" class="grid gap-4 rounded-2xl border border-border bg-card p-5 sm:grid-cols-2" @submit.prevent="save">
-        <p v-if="actionError" role="alert" class="rounded-xl bg-[var(--bs-error-bg)] p-3 text-sm text-[var(--bs-error-fg)] sm:col-span-2">{{ actionError }}</p>
-        <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ copy.name }}<input v-model="form.title" type="text" minlength="2" maxlength="160" required class="h-11 w-full rounded-lg border border-input bg-background px-3 font-normal"></label>
-        <label class="space-y-2 text-sm font-bold">{{ copy.amount }}<input v-model.number="form.amount" type="number" min="0.01" max="999999999.99" step="0.01" required class="h-11 w-full rounded-lg border border-input bg-background px-3 font-normal"></label>
-        <label class="space-y-2 text-sm font-bold">{{ copy.date }}<input v-model="form.date" type="date" required class="h-11 w-full rounded-lg border border-input bg-background px-3 font-normal"></label>
-        <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ copy.category }}<input v-model="form.category" type="text" list="shop-expense-categories" minlength="2" maxlength="80" required :placeholder="copy.categoryHint" class="h-11 w-full rounded-lg border border-input bg-background px-3 font-normal"><datalist id="shop-expense-categories"><option v-for="category in categories" :key="category.id" :value="category.name" /></datalist></label>
-        <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ copy.notes }}<textarea v-model="form.notes" rows="2" maxlength="1000" class="w-full rounded-lg border border-input bg-background px-3 py-2 font-normal" /></label>
-        <div class="flex items-end gap-2 sm:col-span-2"><button type="submit" class="h-11 rounded-lg bg-[#d89b42] px-4 text-sm font-bold text-[#0b0b0d] disabled:opacity-60" :disabled="saving">{{ saving ? copy.saving : copy.save }}</button><button type="button" class="h-11 rounded-lg border border-border px-4 text-sm font-bold" :disabled="saving" @click="resetForm">{{ copy.cancel }}</button></div>
-      </form>
+      <p class="rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm dark:bg-[var(--bs-status-info-bg)]">{{ copy.otherLater }}</p>
+      <p v-if="actionError && !showForm" role="alert" class="rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm text-[var(--bs-status-error)]">{{ actionError }}</p>
+      <BsDialog v-model:visible="showForm" :title="editingId ? copy.edit : copy.add" :dirty="formDirty" :pending="saving"><template #default="{ close }"><form class="grid gap-4 sm:grid-cols-2" @submit.prevent="save">
+        <p v-if="actionError" role="alert" class="rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm text-[var(--bs-status-error)] sm:col-span-2">{{ actionError }}</p>
+        <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ copy.name }}<input v-model="form.title" type="text" minlength="2" maxlength="160" required class="ls-input"></label>
+        <label class="space-y-2 text-sm font-bold">{{ copy.amount }}<input v-model.number="form.amount" type="number" min="0.01" max="999999999.99" step="0.01" required class="ls-input"></label>
+        <label class="space-y-2 text-sm font-bold">{{ copy.date }}<input v-model="form.date" type="date" required class="ls-input"></label>
+        <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ copy.category }}<input v-model="form.category" type="text" list="shop-expense-categories" minlength="2" maxlength="80" required :placeholder="copy.categoryHint" class="ls-input"><datalist id="shop-expense-categories"><option v-for="category in categories" :key="category.id" :value="category.name" /></datalist></label>
+        <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ copy.notes }}<textarea v-model="form.notes" rows="2" maxlength="1000" class="ls-input" /></label>
+        <div class="flex items-end gap-2 sm:col-span-2"><button type="submit" class="ls-btn ls-btn-primary" :disabled="saving">{{ saving ? copy.saving : copy.save }}</button><button type="button" class="ls-btn" :disabled="saving" @click="close">{{ copy.cancel }}</button></div>
+      </form></template></BsDialog>
       <section class="rounded-2xl border border-border bg-card p-5">
-        <div class="mb-4 flex flex-wrap items-center justify-between gap-3"><h2 class="text-sm font-bold">{{ copy.recent }}</h2><input v-model="search" type="search" :placeholder="copy.search" class="h-10 w-full max-w-xs rounded-lg border border-input bg-background px-3 text-sm"></div>
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-3"><h2 class="text-sm font-bold">{{ copy.recent }}</h2><input v-model="search" type="search" :placeholder="copy.search" class="ls-input"></div>
         <p v-if="pending" class="text-sm text-muted-foreground">{{ isArabic ? 'جاري التحميل...' : 'Loading...' }}</p>
         <div v-else-if="error" class="text-sm"><p>{{ copy.readError }}</p><button type="button" class="mt-2 font-bold underline" @click="refresh()">{{ copy.retry }}</button></div>
         <p v-else-if="!filteredEntries.length" class="py-8 text-center text-sm text-muted-foreground">{{ entries.length ? copy.noResults : copy.empty }}</p>
-        <div v-else class="overflow-x-auto"><table class="w-full min-w-[42rem] text-sm"><thead><tr class="border-b border-border text-muted-foreground"><th class="py-3 text-start">{{ copy.name }}</th><th class="py-3 text-start">{{ copy.category }}</th><th class="py-3 text-start">{{ copy.date }}</th><th class="py-3 text-end">{{ copy.amount }}</th><th class="py-3 text-end">{{ copy.status }}</th><th class="py-3 text-end">{{ copy.edit }}</th></tr></thead><tbody><tr v-for="entry in filteredEntries" :key="entry.id" class="border-b border-border last:border-0"><td class="py-3 font-semibold">{{ entry.title }}<p v-if="entry.notes" class="text-xs font-normal text-muted-foreground">{{ entry.notes }}</p></td><td class="py-3">{{ entry.category_id ? categoryMap.get(entry.category_id) ?? '—' : '—' }}</td><td class="py-3">{{ displayDate(entry.expense_date) }}</td><td class="py-3 text-end">{{ money(Number(entry.amount)) }}</td><td class="py-3 text-end">{{ statusLabel(entry.status) }}</td><td class="space-x-2 py-3 text-end"><template v-if="isOwner && entry.status === 'paid'"><button type="button" class="font-bold text-[#a86c1c]" @click="openEdit(entry)">{{ copy.edit }}</button><button type="button" class="font-bold text-[var(--bs-error)]" :disabled="voidingId === entry.id" @click="voidExpense(entry)">{{ copy.void }}</button></template></td></tr></tbody></table></div>
+        <div v-else class="overflow-x-auto"><BsDataTable :value="filteredEntries" data-key="id" :row-class="() => 'border-b border-border last:border-0'">
+  <Column header-class="py-3 text-start" body-class="py-3 font-semibold">
+    <template #header>{{ copy.name }}</template>
+    <template #body="{ data: entry }">{{ entry.title }}<p v-if="entry.notes" class="text-xs font-normal text-muted-foreground">{{ entry.notes }}</p></template>
+  </Column>
+  <Column header-class="py-3 text-start" body-class="py-3">
+    <template #header>{{ copy.category }}</template>
+    <template #body="{ data: entry }">{{ entry.category_id ? categoryMap.get(entry.category_id) ?? '—' : '—' }}</template>
+  </Column>
+  <Column header-class="py-3 text-start" body-class="py-3">
+    <template #header>{{ copy.date }}</template>
+    <template #body="{ data: entry }">{{ displayDate(entry.expense_date) }}</template>
+  </Column>
+  <Column header-class="py-3 text-end" body-class="py-3 text-end">
+    <template #header>{{ copy.amount }}</template>
+    <template #body="{ data: entry }">{{ money(Number(entry.amount)) }}</template>
+  </Column>
+  <Column header-class="py-3 text-end" body-class="py-3 text-end">
+    <template #header>{{ copy.status }}</template>
+    <template #body="{ data: entry }">{{ statusLabel(entry.status) }}</template>
+  </Column>
+  <Column header-class="py-3 text-end" body-class="space-x-2 py-3 text-end">
+    <template #header>{{ copy.edit }}</template>
+    <template #body="{ data: entry }"><template v-if="isOwner && entry.status === 'paid'"><button type="button" class="font-bold text-[var(--bs-link)]" @click="openEdit(entry)">{{ copy.edit }}</button><button type="button" class="font-bold text-[var(--bs-status-error)]" :disabled="voidingId === entry.id" @click="voidExpense(entry)">{{ copy.void }}</button></template></template>
+  </Column>
+</BsDataTable></div>
       </section>
     </template>
   </div>

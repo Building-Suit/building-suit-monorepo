@@ -117,7 +117,7 @@ test('active Trial explains its benefits, limits, optional conversion, and check
 
 test('active Trial semantics are localized in Arabic under RTL', async ({ page, context }) => {
   await context.addCookies([
-    { name: 'ledger-suit-locale', value: 'ar', domain: '127.0.0.1', path: '/' },
+    { name: 'building-suit-locale', value: 'ar', domain: '127.0.0.1', path: '/' },
     { name: 'i18n_redirected', value: 'ar', domain: '127.0.0.1', path: '/' },
   ])
   await mockTrial(page, 'trialing')

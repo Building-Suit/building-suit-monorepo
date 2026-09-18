@@ -1,0 +1,5 @@
+# Product development
+
+Root `AGENTS.md` and `docs/agent-workflows.md` apply. Routes live in `app/pages`; reusable product orchestration belongs in `app/composables`, product-only components in `app/components`, and pure helpers in `app/utils` when needed.
+
+Use the shared Nuxt layer, templates, PrimeVue components, `BsDataTable`, dialogs and UX controllers. Supply product content and validation through configuration. Keep business rules and tenant/permission adapters product-owned. Use root `supabase` tooling for authorized database changes; do not create a second database runner. Verify relevant English/Arabic, themes, accessibility and backend authorization.

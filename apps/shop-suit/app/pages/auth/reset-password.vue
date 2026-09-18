@@ -32,8 +32,8 @@ async function onSubmit() {
     if (error) throw error
     done.value = true
   }
-  catch (error: any) {
-    errorMessage.value = error?.message || (isArabic.value ? 'تعذّر تغيير كلمة المرور. افتح رابط الاستعادة مرة أخرى.' : 'Unable to update the password. Open the recovery link again.')
+  catch (error: unknown) {
+    errorMessage.value = (error instanceof Error ? error.message : undefined) || (isArabic.value ? 'تعذّر تغيير كلمة المرور. افتح رابط الاستعادة مرة أخرى.' : 'Unable to update the password. Open the recovery link again.')
   }
   finally {
     pending.value = false
@@ -44,37 +44,37 @@ async function onSubmit() {
 <template>
   <section class="space-y-8">
     <div class="space-y-2">
-      <p class="text-xs font-bold uppercase tracking-[0.18em] text-[#a86c1c]">Shop Suit</p>
+      <p class="text-xs font-bold uppercase tracking-[0.18em] text-[var(--bs-link)]">Shop Suit</p>
       <h1 class="text-3xl font-extrabold tracking-tight sm:text-4xl">{{ isArabic ? 'اختار كلمة مرور جديدة' : 'Choose a new password' }}</h1>
       <p class="text-sm leading-6 text-muted-foreground">{{ isArabic ? 'اكتب كلمة المرور الجديدة مرتين للتأكيد.' : 'Enter the new password twice to confirm it.' }}</p>
     </div>
 
-    <div v-if="done" class="rounded-2xl border border-[var(--bs-success)]/30 bg-[var(--bs-success-bg)] p-5 dark:bg-[var(--bs-success-bg-dark)]">
-      <Icon name="lucide:circle-check-big" class="mb-3 size-6 text-[var(--bs-success)]" />
+    <div v-if="done" class="rounded-2xl border border-[var(--bs-status-success)]/30 bg-[var(--bs-status-success-bg)] p-5 dark:bg-[var(--bs-status-success-bg)]">
+      <AppIcon name="check" class="mb-3 size-6 text-[var(--bs-status-success)]" />
       <h2 class="font-bold">{{ isArabic ? 'تم تغيير كلمة المرور' : 'Password updated' }}</h2>
-      <NuxtLink to="/dashboard" class="mt-5 inline-flex h-11 items-center rounded-xl bg-[#141416] px-5 text-sm font-bold text-white dark:bg-[#d89b42] dark:text-[#0b0b0d]">{{ isArabic ? 'فتح Shop Suit' : 'Open Shop Suit' }}</NuxtLink>
+      <NuxtLink to="/dashboard" class="mt-5 inline-flex h-11 items-center rounded-xl bg-[var(--bs-primary)] px-5 text-sm font-bold text-white dark:bg-[var(--bs-accent)] dark:text-[var(--bs-deep-structure-navy)]">{{ isArabic ? 'فتح Shop Suit' : 'Open Shop Suit' }}</NuxtLink>
     </div>
 
-    <div v-else-if="!user" class="rounded-2xl border border-[var(--bs-warning)]/30 bg-[var(--bs-warning-bg)] p-5 dark:bg-[var(--bs-warning-bg-dark)]">
+    <div v-else-if="!user" class="rounded-2xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-5 dark:bg-[var(--bs-status-warning-bg)]">
       <p class="font-bold">{{ isArabic ? 'رابط الاستعادة غير صالح أو انتهت صلاحيته.' : 'The recovery link is invalid or expired.' }}</p>
       <NuxtLink to="/auth/forgot-password" class="mt-4 inline-block text-sm font-bold underline">{{ isArabic ? 'اطلب رابط جديد' : 'Request a new link' }}</NuxtLink>
     </div>
 
     <form v-else class="space-y-5" @submit.prevent="onSubmit">
-      <div v-if="errorMessage" class="rounded-xl border border-[var(--bs-error)]/30 bg-[var(--bs-error-bg)] px-4 py-3 text-sm text-[var(--bs-error-fg)] dark:bg-[var(--bs-error-bg-dark)] dark:text-[var(--bs-error-dark)]">{{ errorMessage }}</div>
+      <div v-if="errorMessage" class="rounded-xl border border-[var(--bs-status-error)]/30 bg-[var(--bs-status-error-bg)] px-4 py-3 text-sm text-[var(--bs-status-error)] dark:bg-[var(--bs-status-error-bg)] dark:text-[var(--bs-status-error)]">{{ errorMessage }}</div>
       <div class="space-y-2">
         <label for="new-password" class="text-sm font-semibold">{{ isArabic ? 'كلمة المرور الجديدة' : 'New password' }}</label>
         <div class="relative">
-          <Icon name="lucide:lock-keyhole" class="pointer-events-none absolute start-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <input id="new-password" v-model="password" :type="showPassword ? 'text' : 'password'" autocomplete="new-password" class="h-12 w-full rounded-xl border border-input bg-card ps-11 pe-12 text-sm outline-none focus:border-[#d89b42] focus:ring-2 focus:ring-[#d89b42]/20">
-          <button type="button" class="absolute end-2 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-lg text-muted-foreground hover:bg-muted" @click="showPassword = !showPassword"><Icon :name="showPassword ? 'lucide:eye-off' : 'lucide:eye'" class="size-4" /></button>
+          <AppIcon name="lock" class="pointer-events-none absolute start-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <input id="new-password" v-model="password" :type="showPassword ? 'text' : 'password'" autocomplete="new-password" class="ls-input">
+          <button type="button" class="ls-btn" @click="showPassword = !showPassword"><AppIcon :name="showPassword ? 'eyeOff' : 'eye'" class="size-4" /></button>
         </div>
       </div>
       <div class="space-y-2">
         <label for="confirm-password" class="text-sm font-semibold">{{ isArabic ? 'تأكيد كلمة المرور' : 'Confirm password' }}</label>
-        <input id="confirm-password" v-model="confirmPassword" :type="showPassword ? 'text' : 'password'" autocomplete="new-password" class="h-12 w-full rounded-xl border border-input bg-card px-4 text-sm outline-none focus:border-[#d89b42] focus:ring-2 focus:ring-[#d89b42]/20">
+        <input id="confirm-password" v-model="confirmPassword" :type="showPassword ? 'text' : 'password'" autocomplete="new-password" class="ls-input">
       </div>
-      <button type="submit" class="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#141416] px-5 text-sm font-bold text-white dark:bg-[#d89b42] dark:text-[#0b0b0d]" :disabled="pending"><Icon v-if="pending" name="svg-spinners:180-ring" class="size-4" />{{ isArabic ? 'حفظ كلمة المرور' : 'Save password' }}</button>
+      <button type="submit" class="ls-btn ls-btn-primary w-full" :disabled="pending"><AppIcon v-if="pending" name="automation" class="size-4" />{{ isArabic ? 'حفظ كلمة المرور' : 'Save password' }}</button>
     </form>
   </section>
 </template>

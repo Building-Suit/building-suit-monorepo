@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
+const confirmation = useConfirmation()
 
 definePageMeta({ layout: 'default', middleware: ['auth'] })
 
@@ -24,7 +25,7 @@ const productId = ref('')
 const quantity = ref(1)
 const unitCost = ref(0)
 const note = ref('')
-const pendingWrite = ref(false)
+const { visible: adjustmentOpen, pending: pendingWrite, dirty: adjustmentDirty } = useRecordAction(() => ({ mode: mode.value, productId: productId.value, quantity: quantity.value, unitCost: unitCost.value, note: note.value }))
 const actionError = ref('')
 const requestId = ref<string | null>(null)
 
@@ -113,7 +114,7 @@ async function saveAdjustment() {
     actionError.value = copy.value.invalid
     return
   }
-  if (mode.value === 'writeoff' && !window.confirm(copy.value.confirmWriteoff)) return
+  if (mode.value === 'writeoff' && !await confirmation.ask(copy.value.confirmWriteoff)) return
   actionError.value = ''
   requestId.value ||= crypto.randomUUID()
   pendingWrite.value = true
@@ -131,6 +132,7 @@ async function saveAdjustment() {
     quantity.value = 1
     unitCost.value = 0
     note.value = ''
+    adjustmentOpen.value = false
     await refresh()
   } catch (error) {
     actionError.value = readableError(error instanceof Error ? error.message : undefined)
@@ -149,30 +151,44 @@ function money(value: number) {
 <template>
   <div class="space-y-6">
     <header><h1 class="text-3xl font-extrabold tracking-tight">{{ copy.title }}</h1><p class="mt-2 text-sm text-muted-foreground">{{ copy.subtitle }}</p></header>
-    <div v-if="!current && !shopLoading" class="rounded-2xl border border-border bg-card p-8 text-center text-sm"><p>{{ copy.noShop }}</p><NuxtLink to="/dashboard" class="mt-3 inline-block font-bold text-[#a86c1c] underline">{{ copy.dashboard }}</NuxtLink></div>
+    <div v-if="!current && !shopLoading" class="rounded-2xl border border-border bg-card p-8 text-center text-sm"><p>{{ copy.noShop }}</p><NuxtLink to="/dashboard" class="mt-3 inline-block font-bold text-[var(--bs-link)] underline">{{ copy.dashboard }}</NuxtLink></div>
     <template v-else-if="current">
-      <p class="rounded-xl border border-[var(--bs-info)]/25 bg-[var(--bs-info-bg)] p-4 text-sm dark:bg-[var(--bs-info-bg-dark)]">{{ copy.manualOnly }}</p>
-      <p v-if="subscriptionError" role="alert" class="rounded-xl bg-[var(--bs-error-bg)] p-4 text-sm text-[var(--bs-error-fg)]">{{ copy.readError }}</p>
-      <p v-if="isOwner && !subscriptionError && !inventoryEnabled" class="rounded-xl border border-[var(--bs-warning)]/25 bg-[var(--bs-warning-bg)] p-4 text-sm dark:bg-[var(--bs-warning-bg-dark)]">{{ copy.planUnavailable }}</p>
+      <p class="rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm dark:bg-[var(--bs-status-info-bg)]">{{ copy.manualOnly }}</p>
+      <p v-if="subscriptionError" role="alert" class="rounded-xl bg-[var(--bs-status-error-bg)] p-4 text-sm text-[var(--bs-status-error)]">{{ copy.readError }}</p>
+      <p v-if="isOwner && !subscriptionError && !inventoryEnabled" class="rounded-xl border border-[var(--bs-status-warning)]/25 bg-[var(--bs-status-warning-bg)] p-4 text-sm dark:bg-[var(--bs-status-warning-bg)]">{{ copy.planUnavailable }}</p>
 
-      <form v-if="isOwner && inventoryEnabled && stock?.length" class="space-y-4 rounded-2xl border border-border bg-card p-5" @submit.prevent="saveAdjustment">
-        <div class="flex flex-wrap gap-2"><button type="button" class="rounded-lg border px-4 py-2 text-sm font-bold" :class="mode === 'receive' ? 'border-[#d89b42] bg-[#d89b42]/10' : 'border-border'" @click="mode = 'receive'">{{ copy.receive }}</button><button type="button" class="rounded-lg border px-4 py-2 text-sm font-bold" :class="mode === 'writeoff' ? 'border-[#d89b42] bg-[#d89b42]/10' : 'border-border'" @click="mode = 'writeoff'">{{ copy.writeoff }}</button></div>
-        <p v-if="actionError" role="alert" class="rounded-lg bg-[var(--bs-error-bg)] p-3 text-sm text-[var(--bs-error-fg)]">{{ actionError }}</p>
+      <div v-if="isOwner && inventoryEnabled && stock?.length"><button type="button" class="ls-btn ls-btn-primary" @click="mode = 'receive'; adjustmentOpen = true">{{ copy.receive }}</button><button type="button" class="ls-btn ms-2" @click="mode = 'writeoff'; adjustmentOpen = true">{{ copy.writeoff }}</button></div>
+      <BsDialog v-model:visible="adjustmentOpen" :title="mode === 'receive' ? copy.receive : copy.writeoff" :dirty="adjustmentDirty" :pending="pendingWrite"><form class="space-y-4 " @submit.prevent="saveAdjustment">
+        <div class="flex flex-wrap gap-2"><button type="button" class="ls-btn" :class="mode === 'receive' ? 'border-[var(--bs-accent)] bg-[var(--bs-accent)]/10' : 'border-border'" @click="mode = 'receive'">{{ copy.receive }}</button><button type="button" class="ls-btn" :class="mode === 'writeoff' ? 'border-[var(--bs-accent)] bg-[var(--bs-accent)]/10' : 'border-border'" @click="mode = 'writeoff'">{{ copy.writeoff }}</button></div>
+        <p v-if="actionError" role="alert" class="rounded-lg bg-[var(--bs-status-error-bg)] p-3 text-sm text-[var(--bs-status-error)]">{{ actionError }}</p>
         <div class="grid gap-4 sm:grid-cols-2">
-          <label class="space-y-2 text-sm font-bold">{{ copy.product }}<select v-model="productId" required class="h-11 w-full rounded-lg border border-input bg-background px-3 font-normal"><option v-for="row in stock" :key="row.product_id" :value="row.product_id">{{ row.name }} ({{ row.quantity_on_hand }})</option></select></label>
-          <label class="space-y-2 text-sm font-bold">{{ copy.quantity }}<input v-model.number="quantity" type="number" min="0.001" max="1000000" step="0.001" required class="h-11 w-full rounded-lg border border-input bg-background px-3 font-normal"></label>
-          <label v-if="mode === 'receive'" class="space-y-2 text-sm font-bold">{{ copy.unitCost }}<input v-model.number="unitCost" type="number" min="0" step="0.01" required class="h-11 w-full rounded-lg border border-input bg-background px-3 font-normal"></label>
-          <label class="space-y-2 text-sm font-bold" :class="mode === 'writeoff' ? 'sm:col-span-2' : ''">{{ copy.note }}<input v-model="note" type="text" maxlength="500" :required="mode === 'writeoff'" class="h-11 w-full rounded-lg border border-input bg-background px-3 font-normal"></label>
+          <label class="space-y-2 text-sm font-bold">{{ copy.product }}<select v-model="productId" required class="ls-input"><option v-for="row in stock" :key="row.product_id" :value="row.product_id">{{ row.name }} ({{ row.quantity_on_hand }})</option></select></label>
+          <label class="space-y-2 text-sm font-bold">{{ copy.quantity }}<input v-model.number="quantity" type="number" min="0.001" max="1000000" step="0.001" required class="ls-input"></label>
+          <label v-if="mode === 'receive'" class="space-y-2 text-sm font-bold">{{ copy.unitCost }}<input v-model.number="unitCost" type="number" min="0" step="0.01" required class="ls-input"></label>
+          <label class="space-y-2 text-sm font-bold" :class="mode === 'writeoff' ? 'sm:col-span-2' : ''">{{ copy.note }}<input v-model="note" type="text" maxlength="500" :required="mode === 'writeoff'" class="ls-input"></label>
         </div>
-        <button type="submit" class="h-11 rounded-lg bg-[#d89b42] px-5 text-sm font-bold text-[#0b0b0d] disabled:opacity-60" :disabled="pendingWrite">{{ pendingWrite ? copy.saving : mode === 'receive' ? copy.submitReceive : copy.submitWriteoff }}</button>
-      </form>
+        <button type="submit" class="ls-btn ls-btn-primary" :disabled="pendingWrite">{{ pendingWrite ? copy.saving : mode === 'receive' ? copy.submitReceive : copy.submitWriteoff }}</button>
+      </form></BsDialog>
 
       <div class="overflow-hidden rounded-2xl border border-border bg-card">
         <div class="border-b border-border px-5 py-4"><h2 class="font-extrabold">{{ copy.onHand }}</h2></div>
         <div v-if="pending" class="space-y-3 p-5"><div v-for="index in 3" :key="index" class="h-11 animate-pulse rounded-lg bg-muted" /></div>
-        <p v-else-if="error" role="alert" class="p-5 text-sm text-[var(--bs-error)]">{{ copy.readError }} <button type="button" class="underline" @click="refresh()">{{ copy.retry }}</button></p>
-        <div v-else-if="stock?.length" class="overflow-x-auto"><table class="w-full min-w-[30rem] text-sm"><thead class="bg-muted/50 text-xs text-muted-foreground"><tr><th class="px-5 py-3 text-start">{{ copy.product }}</th><th class="px-5 py-3 text-start">{{ copy.onHand }}</th><th class="px-5 py-3 text-end">{{ copy.price }}</th></tr></thead><tbody><tr v-for="row in stock" :key="row.product_id" class="border-t border-border"><td class="px-5 py-4 font-bold">{{ row.name }}<span v-if="row.sku" class="ms-2 text-xs font-normal text-muted-foreground">{{ row.sku }}</span></td><td class="px-5 py-4">{{ row.quantity_on_hand }}</td><td class="px-5 py-4 text-end">{{ money(Number(row.sale_price)) }}</td></tr></tbody></table></div>
-        <div v-else class="p-8 text-center text-sm text-muted-foreground"><p>{{ copy.noProducts }}</p><NuxtLink to="/products" class="mt-3 inline-block font-bold text-[#a86c1c] underline">{{ copy.products }}</NuxtLink></div>
+        <p v-else-if="error" role="alert" class="p-5 text-sm text-[var(--bs-status-error)]">{{ copy.readError }} <button type="button" class="underline" @click="refresh()">{{ copy.retry }}</button></p>
+        <div v-else-if="stock?.length" class="overflow-x-auto"><BsDataTable :value="stock" data-key="product_id" :row-class="() => 'border-t border-border'">
+  <Column header-class="px-5 py-3 text-start" body-class="px-5 py-4 font-bold">
+    <template #header>{{ copy.product }}</template>
+    <template #body="{ data: row }">{{ row.name }}<span v-if="row.sku" class="ms-2 text-xs font-normal text-muted-foreground">{{ row.sku }}</span></template>
+  </Column>
+  <Column header-class="px-5 py-3 text-start" body-class="px-5 py-4">
+    <template #header>{{ copy.onHand }}</template>
+    <template #body="{ data: row }">{{ row.quantity_on_hand }}</template>
+  </Column>
+  <Column header-class="px-5 py-3 text-end" body-class="px-5 py-4 text-end">
+    <template #header>{{ copy.price }}</template>
+    <template #body="{ data: row }">{{ money(Number(row.sale_price)) }}</template>
+  </Column>
+</BsDataTable></div>
+        <div v-else class="p-8 text-center text-sm text-muted-foreground"><p>{{ copy.noProducts }}</p><NuxtLink to="/products" class="mt-3 inline-block font-bold text-[var(--bs-link)] underline">{{ copy.products }}</NuxtLink></div>
       </div>
     </template>
   </div>

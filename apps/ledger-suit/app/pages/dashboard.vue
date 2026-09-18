@@ -187,17 +187,14 @@ const payableHint = computed(() =>
         <SectionSkeleton v-if="liquidPending" variant="table" :rows="4" />
         <section v-else class="ls-card min-w-0 p-6" aria-labelledby="cash-heading">
           <h2 id="cash-heading" class="mb-4 text-base font-bold">{{ t('dashboard.cashPosition') }}</h2>
-          <table v-if="liquid?.length" class="ls-table">
-            <caption class="sr-only">{{ t('dashboard.cashPositionCaption') }}</caption>
-            <tbody>
-              <tr v-for="(account, index) in liquid" :key="account.account_id ?? index">
-                <td>{{ account.name }}</td>
-                <td class="ls-num">
-                  <MoneyText :amount-minor="account.balance_minor" :currency="account.currency" />
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <BsDataTable v-if="liquid?.length" :value="liquid" :label="t('dashboard.cashPositionCaption')">
+  <Column >
+    <template #body="{ data: account }">{{ account.name }}</template>
+  </Column>
+  <Column body-class="ls-num">
+    <template #body="{ data: account }"><MoneyText :amount-minor="account.balance_minor" :currency="account.currency" /></template>
+  </Column>
+</BsDataTable>
           <p v-else class="text-sm text-fg-muted">{{ t('dashboard.noLiquidAccounts') }}</p>
         </section>
       </div>
@@ -205,7 +202,20 @@ const payableHint = computed(() =>
       <SectionSkeleton v-if="can('commitments.read') && commitmentsPending" variant="table" :rows="4" />
       <section v-else-if="can('commitments.read')" class="ls-card overflow-hidden" aria-labelledby="commitments-heading">
         <div class="flex items-center justify-between px-6 py-4"><h2 id="commitments-heading" class="text-base font-bold">{{ t('dashboard.commitments') }}</h2><button class="ls-btn ls-btn-sm" @click="showOperations('commitments')">{{ t('dashboard.manage') }}</button></div>
-        <div v-if="commitments.length" class="overflow-x-auto"><table class="ls-table"><tbody><tr v-for="(item, index) in commitments" :key="item.id ?? index"><td>{{ item.title }}</td><td>{{ formatDate(item.due_date, locale) }}</td><td><StatusBadge :status="item.display_status ?? 'unknown'" /></td><td class="ls-num"><MoneyText :amount-minor="item.outstanding_minor ?? 0" :currency="item.currency_code ?? undefined" /></td></tr></tbody></table></div>
+        <div v-if="commitments.length" class="overflow-x-auto"><BsDataTable :value="commitments">
+  <Column >
+    <template #body="{ data: item }">{{ item.title }}</template>
+  </Column>
+  <Column >
+    <template #body="{ data: item }">{{ formatDate(item.due_date, locale) }}</template>
+  </Column>
+  <Column >
+    <template #body="{ data: item }"><StatusBadge :status="item.display_status ?? 'unknown'" /></template>
+  </Column>
+  <Column body-class="ls-num">
+    <template #body="{ data: item }"><MoneyText :amount-minor="item.outstanding_minor ?? 0" :currency="item.currency_code ?? undefined" /></template>
+  </Column>
+</BsDataTable></div>
         <p v-else class="px-6 pb-6 text-sm text-fg-muted">{{ t('dashboard.noCommitments') }}</p>
       </section>
 
@@ -218,32 +228,32 @@ const payableHint = computed(() =>
           </NuxtLink>
         </div>
         <div class="overflow-x-auto">
-          <table class="ls-table">
-            <thead>
-              <tr>
-                <th scope="col">{{ t('transactions.date') }}</th>
-                <th scope="col">{{ t('transactions.description') }}</th>
-                <th scope="col">{{ t('transactions.category') }}</th>
-                <th scope="col">{{ t('transactions.account') }}</th>
-                <th scope="col">{{ t('transactions.status') }}</th>
-                <th scope="col" class="text-end">{{ t('transactions.amount') }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="row in recent" :key="row.id">
-                <td class="whitespace-nowrap">{{ formatDate(row.transaction_date, locale) }}</td>
-                <td class="max-w-64 truncate">{{ row.description || t('common.dash') }}</td>
-                <td>{{ row.category_name || t('common.dash') }}</td>
-                <td class="whitespace-nowrap text-fg-muted">
-                  {{ row.from_account_name }} <AppIcon name="arrowRight" :size="14" directional class="inline-block" /> {{ row.to_account_name }}
-                </td>
-                <td><StatusBadge :status="row.status" /></td>
-                <td class="ls-num">
-                  <MoneyText :amount-minor="row.amount_minor" :currency="row.currency_code" />
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <BsDataTable :value="recent" data-key="id">
+  <Column body-class="whitespace-nowrap">
+    <template #header>{{ t('transactions.date') }}</template>
+    <template #body="{ data: row }">{{ formatDate(row.transaction_date, locale) }}</template>
+  </Column>
+  <Column body-class="max-w-64 truncate">
+    <template #header>{{ t('transactions.description') }}</template>
+    <template #body="{ data: row }">{{ row.description || t('common.dash') }}</template>
+  </Column>
+  <Column >
+    <template #header>{{ t('transactions.category') }}</template>
+    <template #body="{ data: row }">{{ row.category_name || t('common.dash') }}</template>
+  </Column>
+  <Column body-class="whitespace-nowrap text-fg-muted">
+    <template #header>{{ t('transactions.account') }}</template>
+    <template #body="{ data: row }">{{ row.from_account_name }} <AppIcon name="arrowRight" :size="14" directional class="inline-block" /> {{ row.to_account_name }}</template>
+  </Column>
+  <Column >
+    <template #header>{{ t('transactions.status') }}</template>
+    <template #body="{ data: row }"><StatusBadge :status="row.status" /></template>
+  </Column>
+  <Column header-class="text-end" body-class="ls-num">
+    <template #header>{{ t('transactions.amount') }}</template>
+    <template #body="{ data: row }"><MoneyText :amount-minor="row.amount_minor" :currency="row.currency_code" /></template>
+  </Column>
+</BsDataTable>
         </div>
       </section>
     </template>

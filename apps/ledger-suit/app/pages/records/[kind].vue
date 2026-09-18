@@ -168,6 +168,7 @@ const date = (row: TransactionRow | GenericRow, key: string) => {
   const raw = value(row, key)
   return formatDate(typeof raw === 'string' ? raw.slice(0, 10) : null, locale.value)
 }
+const { dirty: overlayDirty0 } = useRecordAction(() => commitmentAction, computed(() => Boolean(commitmentAction.id)))
 </script>
 
 <template>
@@ -187,38 +188,159 @@ const date = (row: TransactionRow | GenericRow, key: string) => {
     <EmptyState v-else-if="rows.length === 0" :title="t('recordPages.empty', { item: title })" :description="t('recordPages.emptyHint')" :action-label="canCreate ? t('recordPages.add', { item: title }) : undefined" @action="addRecord" />
 
     <div v-else class="ls-card overflow-x-auto">
-      <table v-if="isTransaction" class="ls-table">
-        <caption class="sr-only">{{ title }}</caption>
-        <thead><tr><th>{{ t('transactions.date') }}</th><th>{{ t('transactions.description') }}</th><th>{{ t('transactions.category') }}</th><th>{{ t('transactions.fromTo') }}</th><th>{{ t('transactions.status') }}</th><th class="text-end">{{ t('transactions.amount') }}</th></tr></thead>
-        <tbody><tr v-for="row in rows" :key="text(row, 'id')" class="cursor-pointer hover:bg-surface-muted" @click="selectedId = text(row, 'id')"><td class="whitespace-nowrap">{{ date(row, 'transaction_date') }}</td><td>{{ text(row, 'description') }}</td><td>{{ text(row, 'category_name') }}</td><td class="whitespace-nowrap text-fg-muted">{{ text(row, 'from_account_name') }} <AppIcon name="arrowRight" :size="14" directional class="inline-block" /> {{ text(row, 'to_account_name') }}</td><td><StatusBadge :status="text(row, 'status')" /></td><td class="ls-num font-semibold"><MoneyText :amount-minor="number(row, 'amount_minor')" :currency="text(row, 'currency_code')" /></td></tr></tbody>
-      </table>
+      <BsDataTable v-if="isTransaction" :value="rows" :label="title" :row-class="() => 'cursor-pointer hover:bg-surface-muted'" @row-click="event => selectedId = text(event.data, 'id')">
+  <Column body-class="whitespace-nowrap">
+    <template #header>{{ t('transactions.date') }}</template>
+    <template #body="{ data: row }">{{ date(row, 'transaction_date') }}</template>
+  </Column>
+  <Column >
+    <template #header>{{ t('transactions.description') }}</template>
+    <template #body="{ data: row }">{{ text(row, 'description') }}</template>
+  </Column>
+  <Column >
+    <template #header>{{ t('transactions.category') }}</template>
+    <template #body="{ data: row }">{{ text(row, 'category_name') }}</template>
+  </Column>
+  <Column body-class="whitespace-nowrap text-fg-muted">
+    <template #header>{{ t('transactions.fromTo') }}</template>
+    <template #body="{ data: row }">{{ text(row, 'from_account_name') }} <AppIcon name="arrowRight" :size="14" directional class="inline-block" /> {{ text(row, 'to_account_name') }}</template>
+  </Column>
+  <Column >
+    <template #header>{{ t('transactions.status') }}</template>
+    <template #body="{ data: row }"><StatusBadge :status="text(row, 'status')" /></template>
+  </Column>
+  <Column header-class="text-end" body-class="ls-num font-semibold">
+    <template #header>{{ t('transactions.amount') }}</template>
+    <template #body="{ data: row }"><MoneyText :amount-minor="number(row, 'amount_minor')" :currency="text(row, 'currency_code')" /></template>
+  </Column>
+</BsDataTable>
 
-      <table v-else-if="kind === 'commitments'" class="ls-table"><thead><tr><th>{{ t('operations.name') }}</th><th>{{ t('recordPages.kind') }}</th><th>{{ t('add.dueDate') }}</th><th>{{ t('transactions.status') }}</th><th class="text-end">{{ t('transactions.amount') }}</th><th class="text-end">{{ t('accounts.actions') }}</th></tr></thead><tbody><tr v-for="row in rows" :key="text(row, 'id')"><td>{{ text(row, 'title') }}</td><td>{{ text(row, 'type').replaceAll('_', ' ') }}</td><td>{{ date(row, 'due_date') }}</td><td><StatusBadge :status="text(row, 'status')" /></td><td class="ls-num"><MoneyText :amount-minor="number(row, 'outstanding_minor')" :currency="text(row, 'currency_code')" /></td><td class="whitespace-nowrap text-end"><template v-if="!['paid','cancelled'].includes(text(row, 'status'))"><button v-if="can('commitments.settle')" class="ls-btn ls-btn-sm" @click="openCommitmentAction(text(row, 'id'), 'settle')">{{ t('operations.settle') }}</button><button v-if="can('commitments.update')" class="ls-btn ls-btn-sm ms-1" @click="openCommitmentAction(text(row, 'id'), 'postpone')">{{ t('operations.postpone') }}</button><button v-if="can('commitments.update')" class="ls-btn ls-btn-sm ms-1" :disabled="actionBusy" @click="cancelCommitment(text(row, 'id'))">{{ t('common.cancel') }}</button></template></td></tr></tbody></table>
+      <BsDataTable v-else-if="kind === 'commitments'" :value="rows">
+  <Column >
+    <template #header>{{ t('operations.name') }}</template>
+    <template #body="{ data: row }">{{ text(row, 'title') }}</template>
+  </Column>
+  <Column >
+    <template #header>{{ t('recordPages.kind') }}</template>
+    <template #body="{ data: row }">{{ text(row, 'type').replaceAll('_', ' ') }}</template>
+  </Column>
+  <Column >
+    <template #header>{{ t('add.dueDate') }}</template>
+    <template #body="{ data: row }">{{ date(row, 'due_date') }}</template>
+  </Column>
+  <Column >
+    <template #header>{{ t('transactions.status') }}</template>
+    <template #body="{ data: row }"><StatusBadge :status="text(row, 'status')" /></template>
+  </Column>
+  <Column header-class="text-end" body-class="ls-num">
+    <template #header>{{ t('transactions.amount') }}</template>
+    <template #body="{ data: row }"><MoneyText :amount-minor="number(row, 'outstanding_minor')" :currency="text(row, 'currency_code')" /></template>
+  </Column>
+  <Column header-class="text-end" body-class="whitespace-nowrap text-end">
+    <template #header>{{ t('accounts.actions') }}</template>
+    <template #body="{ data: row }"><template v-if="!['paid','cancelled'].includes(text(row, 'status'))"><button v-if="can('commitments.settle')" class="ls-btn ls-btn-sm" @click="openCommitmentAction(text(row, 'id'), 'settle')">{{ t('operations.settle') }}</button><button v-if="can('commitments.update')" class="ls-btn ls-btn-sm ms-1" @click="openCommitmentAction(text(row, 'id'), 'postpone')">{{ t('operations.postpone') }}</button><button v-if="can('commitments.update')" class="ls-btn ls-btn-sm ms-1" :disabled="actionBusy" @click="cancelCommitment(text(row, 'id'))">{{ t('common.cancel') }}</button></template></template>
+  </Column>
+</BsDataTable>
 
-      <table v-else-if="kind === 'recurring'" class="ls-table"><thead><tr><th>{{ t('operations.name') }}</th><th>{{ t('transactions.type') }}</th><th>{{ t('recordPages.schedule') }}</th><th>{{ t('recordPages.nextRun') }}</th><th>{{ t('transactions.status') }}</th><th class="text-end">{{ t('accounts.actions') }}</th></tr></thead><tbody><tr v-for="row in rows" :key="text(row, 'id')"><td>{{ text(row, 'name') }}</td><td>{{ t(`types.${text(row, 'transaction_type')}`) }}</td><td>{{ text(row, 'interval_count') }} × {{ text(row, 'frequency') }}</td><td>{{ date(row, 'next_run_on') }}</td><td><StatusBadge :status="text(row, 'status')" /></td><td class="text-end"><button v-if="can('recurring.manage') && text(row, 'status') === 'active'" class="ls-btn ls-btn-sm" :disabled="actionBusy" @click="setRuleStatus(text(row, 'id'), 'paused')">{{ t('operations.pause') }}</button><button v-else-if="can('recurring.manage') && ['paused','failed'].includes(text(row, 'status'))" class="ls-btn ls-btn-sm" :disabled="actionBusy" @click="setRuleStatus(text(row, 'id'), 'active')">{{ t('operations.resume') }}</button></td></tr></tbody></table>
+      <BsDataTable v-else-if="kind === 'recurring'" :value="rows">
+  <Column >
+    <template #header>{{ t('operations.name') }}</template>
+    <template #body="{ data: row }">{{ text(row, 'name') }}</template>
+  </Column>
+  <Column >
+    <template #header>{{ t('transactions.type') }}</template>
+    <template #body="{ data: row }">{{ t(`types.${text(row, 'transaction_type')}`) }}</template>
+  </Column>
+  <Column >
+    <template #header>{{ t('recordPages.schedule') }}</template>
+    <template #body="{ data: row }">{{ text(row, 'interval_count') }} × {{ text(row, 'frequency') }}</template>
+  </Column>
+  <Column >
+    <template #header>{{ t('recordPages.nextRun') }}</template>
+    <template #body="{ data: row }">{{ date(row, 'next_run_on') }}</template>
+  </Column>
+  <Column >
+    <template #header>{{ t('transactions.status') }}</template>
+    <template #body="{ data: row }"><StatusBadge :status="text(row, 'status')" /></template>
+  </Column>
+  <Column header-class="text-end" body-class="text-end">
+    <template #header>{{ t('accounts.actions') }}</template>
+    <template #body="{ data: row }"><button v-if="can('recurring.manage') && text(row, 'status') === 'active'" class="ls-btn ls-btn-sm" :disabled="actionBusy" @click="setRuleStatus(text(row, 'id'), 'paused')">{{ t('operations.pause') }}</button><button v-else-if="can('recurring.manage') && ['paused','failed'].includes(text(row, 'status'))" class="ls-btn ls-btn-sm" :disabled="actionBusy" @click="setRuleStatus(text(row, 'id'), 'active')">{{ t('operations.resume') }}</button></template>
+  </Column>
+</BsDataTable>
 
-      <table v-else-if="kind === 'counterparties'" class="ls-table"><thead><tr><th>{{ t('operations.name') }}</th><th>{{ t('recordPages.kind') }}</th><th>{{ t('auth.email') }}</th><th>{{ t('operations.phone') }}</th><th>{{ t('transactions.status') }}</th></tr></thead><tbody><tr v-for="row in rows" :key="text(row, 'id')"><td>{{ text(row, 'name') }}</td><td>{{ text(row, 'type') }}</td><td>{{ text(row, 'email') }}</td><td>{{ text(row, 'phone') }}</td><td><StatusBadge :status="value(row, 'is_archived') ? 'archived' : 'active'" /></td></tr></tbody></table>
+      <BsDataTable v-else-if="kind === 'counterparties'" :value="rows">
+  <Column >
+    <template #header>{{ t('operations.name') }}</template>
+    <template #body="{ data: row }">{{ text(row, 'name') }}</template>
+  </Column>
+  <Column >
+    <template #header>{{ t('recordPages.kind') }}</template>
+    <template #body="{ data: row }">{{ text(row, 'type') }}</template>
+  </Column>
+  <Column >
+    <template #header>{{ t('auth.email') }}</template>
+    <template #body="{ data: row }">{{ text(row, 'email') }}</template>
+  </Column>
+  <Column >
+    <template #header>{{ t('operations.phone') }}</template>
+    <template #body="{ data: row }">{{ text(row, 'phone') }}</template>
+  </Column>
+  <Column >
+    <template #header>{{ t('transactions.status') }}</template>
+    <template #body="{ data: row }"><StatusBadge :status="value(row, 'is_archived') ? 'archived' : 'active'" /></template>
+  </Column>
+</BsDataTable>
 
-      <table v-else-if="kind === 'tags'" class="ls-table"><thead><tr><th>{{ t('operations.name') }}</th><th>{{ t('recordPages.color') }}</th><th>{{ t('recordPages.created') }}</th></tr></thead><tbody><tr v-for="row in rows" :key="text(row, 'id')"><td>{{ text(row, 'name') }}</td><td><span class="inline-flex items-center gap-2"><span class="size-3 rounded-full" :style="{ backgroundColor: text(row, 'color') }" />{{ text(row, 'color') }}</span></td><td>{{ date(row, 'created_at') }}</td></tr></tbody></table>
+      <BsDataTable v-else-if="kind === 'tags'" :value="rows">
+  <Column >
+    <template #header>{{ t('operations.name') }}</template>
+    <template #body="{ data: row }">{{ text(row, 'name') }}</template>
+  </Column>
+  <Column >
+    <template #header>{{ t('recordPages.color') }}</template>
+    <template #body="{ data: row }"><span class="inline-flex items-center gap-2"><span class="size-3 rounded-full" :style="{ backgroundColor: text(row, 'color') }" />{{ text(row, 'color') }}</span></template>
+  </Column>
+  <Column >
+    <template #header>{{ t('recordPages.created') }}</template>
+    <template #body="{ data: row }">{{ date(row, 'created_at') }}</template>
+  </Column>
+</BsDataTable>
 
-      <table v-else class="ls-table"><thead><tr><th>{{ t('auth.email') }}</th><th>{{ t('recordPages.role') }}</th><th>{{ t('transactions.status') }}</th><th>{{ t('recordPages.created') }}</th><th>{{ t('recordPages.expires') }}</th></tr></thead><tbody><tr v-for="row in rows" :key="text(row, 'id')"><td>{{ text(row, 'email') }}</td><td>{{ roleLabel(text(row, 'role'), text(row, 'role_id')) }}</td><td><StatusBadge :status="text(row, 'status')" /></td><td>{{ date(row, 'created_at') }}</td><td>{{ date(row, 'expires_at') }}</td></tr></tbody></table>
+      <BsDataTable v-else :value="rows">
+  <Column >
+    <template #header>{{ t('auth.email') }}</template>
+    <template #body="{ data: row }">{{ text(row, 'email') }}</template>
+  </Column>
+  <Column >
+    <template #header>{{ t('recordPages.role') }}</template>
+    <template #body="{ data: row }">{{ roleLabel(text(row, 'role'), text(row, 'role_id')) }}</template>
+  </Column>
+  <Column >
+    <template #header>{{ t('transactions.status') }}</template>
+    <template #body="{ data: row }"><StatusBadge :status="text(row, 'status')" /></template>
+  </Column>
+  <Column >
+    <template #header>{{ t('recordPages.created') }}</template>
+    <template #body="{ data: row }">{{ date(row, 'created_at') }}</template>
+  </Column>
+  <Column >
+    <template #header>{{ t('recordPages.expires') }}</template>
+    <template #body="{ data: row }">{{ date(row, 'expires_at') }}</template>
+  </Column>
+</BsDataTable>
     </div>
 
     <p v-if="actionError && !commitmentAction.id" class="ls-error" role="alert">{{ actionError }}</p>
-
-    <Teleport to="body">
-      <Transition name="ls-modal">
-        <div v-if="commitmentAction.id" class="fixed inset-0 z-[60] grid place-items-center ls-scrim p-4" role="dialog" aria-modal="true" @click.self="commitmentAction.id = ''">
-          <form class="ls-modal-panel ls-card w-full max-w-lg space-y-4 p-6 shadow-overlay" @submit.prevent="submitCommitmentAction">
-            <div class="flex items-center justify-between"><h2 class="text-lg font-bold">{{ t(commitmentAction.mode === 'settle' ? 'operations.settle' : 'operations.postpone') }}</h2><button type="button" class="ls-btn ls-btn-sm" :aria-label="t('common.close')" @click="commitmentAction.id = ''"><AppIcon name="close" /></button></div>
+        <BsDialog v-if="commitmentAction.id" :visible="true" :title="t(commitmentAction.mode === 'settle' ? 'operations.settle' : 'operations.postpone')" :aria-label="t(commitmentAction.mode === 'settle' ? 'operations.settle' : 'operations.postpone')" :show-header="false" size="md" :dirty="overlayDirty0" @update:visible="value => { if (!value) commitmentAction.id = '' }"><template #default="{ close: dismiss }">
+<form class="space-y-4 p-6" @submit.prevent="submitCommitmentAction">
+            <div class="flex items-center justify-between"><h2 class="text-lg font-bold">{{ t(commitmentAction.mode === 'settle' ? 'operations.settle' : 'operations.postpone') }}</h2><button type="button" class="ls-btn ls-btn-sm" :aria-label="t('common.close')" @click="dismiss"><AppIcon name="close" /></button></div>
             <template v-if="commitmentAction.mode === 'settle'"><FloatingField :label="t('add.chooseAccount')"><select v-model="commitmentAction.paymentAccountId" class="ls-input" required><option value="">{{ t('add.chooseAccount') }}</option><option v-for="account in paymentAccounts" :key="account.id" :value="account.id">{{ account.name }}</option></select></FloatingField><FloatingField :label="t('operations.fullOrPartialAmount')"><input v-model="commitmentAction.amount" class="ls-input" inputmode="decimal" :placeholder="t('operations.fullOrPartialAmount')"></FloatingField></template>
             <FloatingField :label="t('add.date')"><input v-model="commitmentAction.date" type="date" class="ls-input" required></FloatingField>
             <p v-if="actionError" class="ls-error" role="alert">{{ actionError }}</p>
-            <div class="flex justify-end gap-2"><button type="button" class="ls-btn" @click="commitmentAction.id = ''">{{ t('common.cancel') }}</button><button class="ls-btn ls-btn-primary" :disabled="actionBusy">{{ t(commitmentAction.mode === 'settle' ? 'operations.convert' : 'operations.postpone') }}</button></div>
+            <div class="flex justify-end gap-2"><button type="button" class="ls-btn" @click="dismiss">{{ t('common.cancel') }}</button><button class="ls-btn ls-btn-primary" :disabled="actionBusy">{{ t(commitmentAction.mode === 'settle' ? 'operations.convert' : 'operations.postpone') }}</button></div>
           </form>
-        </div>
-      </Transition>
-    </Teleport>
+</template></BsDialog>
 
     <TransactionDetailDialog v-if="selectedId" :transaction-id="selectedId" @changed="refresh" @close="selectedId = null" />
   </div>

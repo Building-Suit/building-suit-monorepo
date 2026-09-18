@@ -250,53 +250,41 @@ const TYPES = ['income', 'expense', 'transfer', 'asset_purchase', 'liability_cre
     <div v-else class="ls-card overflow-hidden">
       <!-- Wide financial table on desktop -->
       <div class="hidden overflow-x-auto md:block">
-        <table class="ls-table">
-          <caption class="sr-only">{{ t('transactions.caption') }}</caption>
-          <thead>
-            <tr>
-              <th scope="col" :aria-sort="ariaSort('transaction_date')">
-                <button type="button" class="hover:underline" @click="toggleSort('transaction_date')">{{ t('transactions.date') }}</button>
-              </th>
-              <th scope="col">{{ t('transactions.description') }}</th>
-              <th scope="col" :aria-sort="ariaSort('type')">
-                <button type="button" class="hover:underline" @click="toggleSort('type')">{{ t('transactions.type') }}</button>
-              </th>
-              <th scope="col">{{ t('transactions.category') }}</th>
-              <th scope="col">{{ t('transactions.fromTo') }}</th>
-              <th scope="col">{{ t('transactions.counterparty') }}</th>
-              <th scope="col" :aria-sort="ariaSort('status')">
-                <button type="button" class="hover:underline" @click="toggleSort('status')">{{ t('transactions.status') }}</button>
-              </th>
-              <th scope="col" class="text-end" :aria-sort="ariaSort('amount')">
-                <button type="button" class="hover:underline" @click="toggleSort('amount')">{{ t('transactions.amount') }}</button>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="row in rows"
-              :key="row.id"
-              class="cursor-pointer hover:bg-surface-muted"
-              @click="selectedId = row.id"
-            >
-              <td class="whitespace-nowrap">{{ formatDate(row.transaction_date, locale) }}</td>
-              <td class="max-w-64">
-                <span class="block truncate">{{ row.description || t('common.dash') }}</span>
-                <span v-if="row.reference" class="block text-xs text-fg-muted">{{ row.reference }}</span>
-              </td>
-              <td class="whitespace-nowrap">{{ t(`types.${row.type}`) }}</td>
-              <td>{{ row.category_name || t('common.dash') }}</td>
-              <td class="whitespace-nowrap text-fg-muted">
-                {{ row.from_account_name || t('common.dash') }} <AppIcon name="arrowRight" :size="14" directional class="inline-block" /> {{ row.to_account_name || t('common.dash') }}
-              </td>
-              <td>{{ row.counterparty_name || t('common.dash') }}</td>
-              <td><StatusBadge :status="row.status" /></td>
-              <td class="ls-num font-semibold">
-                <MoneyText :amount-minor="row.amount_minor" :currency="row.currency_code" />
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <BsDataTable :value="rows" data-key="id" :label="t('transactions.caption')" :row-class="() => 'cursor-pointer hover:bg-surface-muted'" @row-click="event => selectedId = event.data.id">
+  <Column body-class="whitespace-nowrap" :pt="{ headerCell: { 'aria-sort': ariaSort('transaction_date') } }">
+    <template #header><button type="button" class="hover:underline" @click="toggleSort('transaction_date')">{{ t('transactions.date') }}</button></template>
+    <template #body="{ data: row }">{{ formatDate(row.transaction_date, locale) }}</template>
+  </Column>
+  <Column body-class="max-w-64">
+    <template #header>{{ t('transactions.description') }}</template>
+    <template #body="{ data: row }"><span class="block truncate">{{ row.description || t('common.dash') }}</span>
+                <span v-if="row.reference" class="block text-xs text-fg-muted">{{ row.reference }}</span></template>
+  </Column>
+  <Column body-class="whitespace-nowrap" :pt="{ headerCell: { 'aria-sort': ariaSort('type') } }">
+    <template #header><button type="button" class="hover:underline" @click="toggleSort('type')">{{ t('transactions.type') }}</button></template>
+    <template #body="{ data: row }">{{ t(`types.${row.type}`) }}</template>
+  </Column>
+  <Column >
+    <template #header>{{ t('transactions.category') }}</template>
+    <template #body="{ data: row }">{{ row.category_name || t('common.dash') }}</template>
+  </Column>
+  <Column body-class="whitespace-nowrap text-fg-muted">
+    <template #header>{{ t('transactions.fromTo') }}</template>
+    <template #body="{ data: row }">{{ row.from_account_name || t('common.dash') }} <AppIcon name="arrowRight" :size="14" directional class="inline-block" /> {{ row.to_account_name || t('common.dash') }}</template>
+  </Column>
+  <Column >
+    <template #header>{{ t('transactions.counterparty') }}</template>
+    <template #body="{ data: row }">{{ row.counterparty_name || t('common.dash') }}</template>
+  </Column>
+  <Column  :pt="{ headerCell: { 'aria-sort': ariaSort('status') } }">
+    <template #header><button type="button" class="hover:underline" @click="toggleSort('status')">{{ t('transactions.status') }}</button></template>
+    <template #body="{ data: row }"><StatusBadge :status="row.status" /></template>
+  </Column>
+  <Column header-class="text-end" body-class="ls-num font-semibold" :pt="{ headerCell: { 'aria-sort': ariaSort('amount') } }">
+    <template #header><button type="button" class="hover:underline" @click="toggleSort('amount')">{{ t('transactions.amount') }}</button></template>
+    <template #body="{ data: row }"><MoneyText :amount-minor="row.amount_minor" :currency="row.currency_code" /></template>
+  </Column>
+</BsDataTable>
       </div>
 
       <!-- Compact rows on small screens: a wide table is unusable on a phone -->

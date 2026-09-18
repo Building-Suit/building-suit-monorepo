@@ -281,31 +281,13 @@ async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_bal
           </div>
         </div>
         <div class="overflow-x-auto">
-          <table class="ls-table">
-            <thead>
-              <tr>
-                <th scope="col">{{ t('accounts.code') }}</th>
-                <th scope="col">{{ t('reports.account') }}</th>
-                <th scope="col" class="text-end">{{ t('detail.debit') }}</th>
-                <th scope="col" class="text-end">{{ t('detail.credit') }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="row in trialBalance" :key="row.account_id">
-                <td class="font-mono text-xs text-fg-muted" dir="ltr">{{ row.code || t('common.dash') }}</td>
-                <td>{{ row.name }}</td>
-                <td class="ls-num"><MoneyText :amount-minor="row.debit_minor" /></td>
-                <td class="ls-num"><MoneyText :amount-minor="row.credit_minor" /></td>
-              </tr>
-            </tbody>
-            <tfoot>
-              <tr class="font-bold">
-                <td colspan="2">{{ t('reports.total') }}</td>
-                <td class="ls-num"><MoneyText :amount-minor="trialTotals.debit" /></td>
-                <td class="ls-num"><MoneyText :amount-minor="trialTotals.credit" /></td>
-              </tr>
-            </tfoot>
-          </table>
+          <BsDataTable :value="trialBalance" data-key="account_id">
+  <Column :header="t('accounts.code')" body-class="font-mono text-xs text-fg-muted"><template #body="{ data: row }"><span dir="ltr">{{ row.code || t('common.dash') }}</span></template></Column>
+  <Column field="name" :header="t('reports.account')" />
+  <Column :header="t('detail.debit')" header-class="text-end" body-class="ls-num"><template #body="{ data: row }"><MoneyText :amount-minor="row.debit_minor" /></template></Column>
+  <Column :header="t('detail.credit')" header-class="text-end" body-class="ls-num"><template #body="{ data: row }"><MoneyText :amount-minor="row.credit_minor" /></template></Column>
+  <ColumnGroup type="footer"><Row><Column :footer="t('reports.total')" :colspan="2" /><Column footer-class="ls-num"><template #footer><MoneyText :amount-minor="trialTotals.debit" /></template></Column><Column footer-class="ls-num"><template #footer><MoneyText :amount-minor="trialTotals.credit" /></template></Column></Row></ColumnGroup>
+</BsDataTable>
         </div>
       </section>
     </section>
@@ -325,29 +307,12 @@ async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_bal
       />
 
       <div v-else class="ls-card overflow-hidden">
-        <table class="ls-table">
-          <caption class="sr-only">{{ t('reports.tabs.profitLoss') }}</caption>
-          <tbody>
-            <template v-for="section in plSections" :key="section.key">
-              <tr v-if="rowsIn(profitLoss, section.key).length" class="bg-surface-muted">
-                <th scope="colgroup">{{ t(section.labelKey) }}</th>
-                <td class="ls-num font-bold">
-                  <MoneyText :amount-minor="sectionTotal(profitLoss, section.key)" />
-                </td>
-              </tr>
-              <tr v-for="row in rowsIn(profitLoss, section.key)" :key="row.account_id ?? row.name">
-                <td class="ps-8">{{ row.name }}</td>
-                <td class="ls-num"><MoneyText :amount-minor="row.amount_minor" /></td>
-              </tr>
-            </template>
-          </tbody>
-          <tfoot>
-            <tr class="text-base font-bold">
-              <td>{{ t('reports.netProfit') }}</td>
-              <td class="ls-num"><MoneyText :amount-minor="netProfit" signed /></td>
-            </tr>
-          </tfoot>
-        </table>
+        <BsDataTable :label="t('reports.tabs.profitLoss')" :value="plSections.flatMap(section => rowsIn(profitLoss, section.key).map(row => ({ ...row, groupKey: section.key, groupLabel: section.labelKey })))" row-group-mode="subheader" group-rows-by="groupKey">
+  <Column field="name" :header="t('reports.account')" body-class="ps-8" />
+  <Column :header="t('transactions.amount')" body-class="ls-num"><template #body="{ data: row }"><MoneyText :amount-minor="row.amount_minor" /></template></Column>
+  <template #groupheader="{ data: row }"><div class="flex justify-between gap-4 bg-surface-muted font-bold"><span>{{ t(row.groupLabel) }}</span><MoneyText :amount-minor="sectionTotal(profitLoss, row.groupKey)" /></div></template>
+  <template #footer><div class="flex justify-between gap-4 text-base font-bold"><span>{{ t('reports.netProfit') }}</span><MoneyText :amount-minor="netProfit" signed /></div></template>
+</BsDataTable>
       </div>
     </section>
 
@@ -367,23 +332,11 @@ async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_bal
 
       <template v-else>
         <div class="ls-card overflow-hidden">
-          <table class="ls-table">
-            <caption class="sr-only">{{ t('reports.tabs.balanceSheet') }}</caption>
-            <tbody>
-              <template v-for="section in bsSections" :key="section.key">
-                <tr v-if="rowsIn(balanceSheet, section.key).length" class="bg-surface-muted">
-                  <th scope="colgroup">{{ t(section.labelKey) }}</th>
-                  <td class="ls-num font-bold">
-                    <MoneyText :amount-minor="sectionTotal(balanceSheet, section.key)" />
-                  </td>
-                </tr>
-                <tr v-for="row in rowsIn(balanceSheet, section.key)" :key="row.account_id ?? row.name">
-                  <td class="ps-8">{{ row.name }}</td>
-                  <td class="ls-num"><MoneyText :amount-minor="row.amount_minor" /></td>
-                </tr>
-              </template>
-            </tbody>
-          </table>
+          <BsDataTable :label="t('reports.tabs.balanceSheet')" :value="bsSections.flatMap(section => rowsIn(balanceSheet, section.key).map(row => ({ ...row, groupKey: section.key, groupLabel: section.labelKey })))" row-group-mode="subheader" group-rows-by="groupKey">
+  <Column field="name" :header="t('reports.account')" body-class="ps-8" />
+  <Column :header="t('transactions.amount')" body-class="ls-num"><template #body="{ data: row }"><MoneyText :amount-minor="row.amount_minor" /></template></Column>
+  <template #groupheader="{ data: row }"><div class="flex justify-between gap-4 bg-surface-muted font-bold"><span>{{ t(row.groupLabel) }}</span><MoneyText :amount-minor="sectionTotal(balanceSheet, row.groupKey)" /></div></template>
+</BsDataTable>
         </div>
 
         <p class="text-sm" :class="assets === liabilities + equity ? 'text-fg-muted' : 'text-[var(--bs-status-error)]'">
@@ -410,33 +363,11 @@ async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_bal
       />
 
       <div v-else class="ls-card overflow-hidden">
-        <table class="ls-table">
-          <caption class="sr-only">{{ t('reports.tabs.cashFlow') }}</caption>
-          <thead>
-            <tr>
-              <th scope="col">{{ t('reports.activity') }}</th>
-              <th scope="col" class="text-end">{{ t('reports.netMovement') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="row in cashFlow" :key="row.section">
-              <td>{{ t(`reports.cashFlowSections.${row.section}`) }}</td>
-              <td class="ls-num"><MoneyText :amount-minor="row.amount_minor" signed explicit-sign /></td>
-            </tr>
-          </tbody>
-          <tfoot>
-            <tr class="font-bold">
-              <td>{{ t('reports.netChangeInCash') }}</td>
-              <td class="ls-num">
-                <MoneyText
-                  :amount-minor="cashFlow.reduce((s, r) => s + Number(r.amount_minor), 0)"
-                  signed
-                  explicit-sign
-                />
-              </td>
-            </tr>
-          </tfoot>
-        </table>
+        <BsDataTable :value="cashFlow" data-key="section" :label="t('reports.tabs.cashFlow')">
+  <Column :header="t('reports.activity')"><template #body="{ data: row }">{{ t(`reports.cashFlowSections.${row.section}`) }}</template></Column>
+  <Column :header="t('reports.netMovement')" header-class="text-end" body-class="ls-num"><template #body="{ data: row }"><MoneyText :amount-minor="row.amount_minor" signed explicit-sign /></template></Column>
+  <template #footer><div class="flex justify-between gap-4 font-bold"><span>{{ t('reports.netChangeInCash') }}</span><MoneyText :amount-minor="cashFlow.reduce((s, r) => s + Number(r.amount_minor), 0)" signed explicit-sign /></div></template>
+</BsDataTable>
       </div>
     </section>
 
@@ -454,37 +385,34 @@ async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_bal
       />
 
       <div v-else class="ls-card overflow-x-auto">
-        <table class="ls-table">
-          <caption class="sr-only">{{ t('reports.tabs.ledger') }}</caption>
-          <thead>
-            <tr>
-              <th scope="col">{{ t('transactions.date') }}</th>
-              <th scope="col">{{ t('transactions.reference') }}</th>
-              <th scope="col">{{ t('transactions.description') }}</th>
-              <th scope="col" class="text-end">{{ t('detail.debit') }}</th>
-              <th scope="col" class="text-end">{{ t('detail.credit') }}</th>
-              <th scope="col" class="text-end">{{ t('reports.runningBalance') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="row in ledger" :key="row.entry_id">
-              <td class="whitespace-nowrap">{{ formatDate(row.entry_date, locale) }}</td>
-              <td class="text-fg-muted">{{ row.reference || t('common.dash') }}</td>
-              <td class="max-w-64 truncate">{{ row.description || row.memo || t('common.dash') }}</td>
-              <td class="ls-num">
-                <MoneyText v-if="Number(row.debit_minor)" :amount-minor="row.debit_minor" />
-                <span v-else class="text-fg-disabled">{{ t('common.dash') }}</span>
-              </td>
-              <td class="ls-num">
-                <MoneyText v-if="Number(row.credit_minor)" :amount-minor="row.credit_minor" />
-                <span v-else class="text-neutral-300">—</span>
-              </td>
-              <td class="ls-num font-semibold">
-                <MoneyText :amount-minor="row.running_balance_minor" />
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <BsDataTable :value="ledger" data-key="entry_id" :label="t('reports.tabs.ledger')">
+  <Column body-class="whitespace-nowrap">
+    <template #header>{{ t('transactions.date') }}</template>
+    <template #body="{ data: row }">{{ formatDate(row.entry_date, locale) }}</template>
+  </Column>
+  <Column body-class="text-fg-muted">
+    <template #header>{{ t('transactions.reference') }}</template>
+    <template #body="{ data: row }">{{ row.reference || t('common.dash') }}</template>
+  </Column>
+  <Column body-class="max-w-64 truncate">
+    <template #header>{{ t('transactions.description') }}</template>
+    <template #body="{ data: row }">{{ row.description || row.memo || t('common.dash') }}</template>
+  </Column>
+  <Column header-class="text-end" body-class="ls-num">
+    <template #header>{{ t('detail.debit') }}</template>
+    <template #body="{ data: row }"><MoneyText v-if="Number(row.debit_minor)" :amount-minor="row.debit_minor" />
+                <span v-else class="text-fg-disabled">{{ t('common.dash') }}</span></template>
+  </Column>
+  <Column header-class="text-end" body-class="ls-num">
+    <template #header>{{ t('detail.credit') }}</template>
+    <template #body="{ data: row }"><MoneyText v-if="Number(row.credit_minor)" :amount-minor="row.credit_minor" />
+                <span v-else class="text-neutral-300">—</span></template>
+  </Column>
+  <Column header-class="text-end" body-class="ls-num font-semibold">
+    <template #header>{{ t('reports.runningBalance') }}</template>
+    <template #body="{ data: row }"><MoneyText :amount-minor="row.running_balance_minor" /></template>
+  </Column>
+</BsDataTable>
       </div>
     </section>
   </div>

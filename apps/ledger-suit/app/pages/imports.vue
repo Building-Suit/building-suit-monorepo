@@ -277,10 +277,7 @@ async function confirmImport() {
         <section v-if="phase === 'mapping'" class="ls-card overflow-hidden">
           <div class="p-4"><h2 class="font-semibold">{{ t('imports.previewTitle') }}</h2></div>
           <div class="overflow-x-auto">
-            <table class="ls-table">
-              <thead><tr><th v-for="header in headers" :key="header">{{ header }}</th></tr></thead>
-              <tbody><tr v-for="(row, index) in previewRows" :key="index"><td v-for="header in headers" :key="header">{{ row[header] || t('common.dash') }}</td></tr></tbody>
-            </table>
+            <BsDataTable :value="previewRows"><Column v-for="header in headers" :key="header" :field="header" :header="header"><template #body="{ data: row }">{{ row[header] || t('common.dash') }}</template></Column></BsDataTable>
           </div>
           <div class="flex justify-end border-t border-[var(--bs-border)] p-4">
             <button type="button" class="ls-btn ls-btn-accent" :disabled="!requiredMappingComplete || !!busy" @click="validateImport">
@@ -316,29 +313,32 @@ async function confirmImport() {
 
           <div class="ls-card overflow-hidden">
             <div class="overflow-x-auto">
-              <table class="ls-table">
-                <caption class="sr-only">{{ t('imports.rowsCaption') }}</caption>
-                <thead>
-                  <tr>
-                    <th>{{ t('imports.row') }}</th>
-                    <th>{{ t('transactions.status') }}</th>
-                    <th>{{ t('transactions.type') }}</th>
-                    <th>{{ t('transactions.date') }}</th>
-                    <th>{{ t('transactions.amount') }}</th>
-                    <th>{{ t('imports.issue') }}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="row in displayRows" :key="row.id">
-                    <td>{{ row.rowNumber }}</td>
-                    <td><StatusBadge :status="row.status" /></td>
-                    <td>{{ row.typeValue }}</td>
-                    <td>{{ row.dateValue }}</td>
-                    <td>{{ row.amountValue }}</td>
-                    <td class="max-w-80 text-xs text-fg-muted">{{ row.issue || t('common.dash') }}</td>
-                  </tr>
-                </tbody>
-              </table>
+              <BsDataTable :value="displayRows" data-key="id" :label="t('imports.rowsCaption')">
+  <Column >
+    <template #header>{{ t('imports.row') }}</template>
+    <template #body="{ data: row }">{{ row.rowNumber }}</template>
+  </Column>
+  <Column >
+    <template #header>{{ t('transactions.status') }}</template>
+    <template #body="{ data: row }"><StatusBadge :status="row.status" /></template>
+  </Column>
+  <Column >
+    <template #header>{{ t('transactions.type') }}</template>
+    <template #body="{ data: row }">{{ row.typeValue }}</template>
+  </Column>
+  <Column >
+    <template #header>{{ t('transactions.date') }}</template>
+    <template #body="{ data: row }">{{ row.dateValue }}</template>
+  </Column>
+  <Column >
+    <template #header>{{ t('transactions.amount') }}</template>
+    <template #body="{ data: row }">{{ row.amountValue }}</template>
+  </Column>
+  <Column body-class="max-w-80 text-xs text-fg-muted">
+    <template #header>{{ t('imports.issue') }}</template>
+    <template #body="{ data: row }">{{ row.issue || t('common.dash') }}</template>
+  </Column>
+</BsDataTable>
             </div>
             <p v-if="batch.total_rows > resultRows.length" class="border-t border-[var(--bs-border)] p-3 text-xs text-fg-muted">{{ t('imports.firstRows', { count: resultRows.length }) }}</p>
           </div>

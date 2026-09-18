@@ -1,0 +1,84 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "globalEnv": [
+    "NODE_ENV",
+    "SUPABASE_URL",
+    "SUPABASE_KEY",
+    "APP_BASE_URL",
+    "APP_URL",
+    "NUXT_PUBLIC_DATA_SCHEMA",
+    "DOCS_URL"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        ".output/**"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!node_modules/**",
+        "!.nuxt/**",
+        "!.output/**",
+        "!.turbo/**",
+        "!test-results/**",
+        "!playwright-report/**",
+        "!app/generated/**",
+        "!public/sources/**",
+        ".env",
+        ".env.*"
+      ]
+    },
+    "typecheck": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!node_modules/**",
+        "!.nuxt/**",
+        "!.output/**",
+        "!.turbo/**",
+        "!test-results/**",
+        "!playwright-report/**",
+        "!app/generated/**",
+        "!public/sources/**"
+      ]
+    },
+    "lint": {
+      "outputs": [],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!node_modules/**",
+        "!.nuxt/**",
+        "!.output/**",
+        "!.turbo/**",
+        "!test-results/**",
+        "!playwright-report/**",
+        "!app/generated/**",
+        "!public/sources/**"
+      ]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "test:e2e": {
+      "cache": false
+    }
+  },
+  "globalDependencies": [
+    "packages/*/src/**",
+    "packages/*/app/**",
+    "packages/*/nuxt.config.ts",
+    "packages/design-tokens/tokens.json",
+    "packages/design-tokens/generated/**",
+    "packages/brand/assets/**",
+    "tooling/docs/**",
+    "docs/shared/**",
+    "docs/architecture/**"
+  ]
+}

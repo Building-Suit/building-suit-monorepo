@@ -2,8 +2,6 @@
 const { t } = useI18n()
 const route = useRoute()
 const open = ref(false)
-const closeButton = ref<HTMLButtonElement | null>(null)
-let previousBodyOverflow = ''
 
 const manualFlows = [
   'income',
@@ -27,30 +25,7 @@ function close() {
   open.value = false
 }
 
-function onKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape' && open.value) close()
-}
-
-watch(open, async (isOpen) => {
-  if (!import.meta.client) return
-  if (isOpen) {
-    previousBodyOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    await nextTick()
-    closeButton.value?.focus()
-  }
-  else {
-    document.body.style.overflow = previousBodyOverflow
-  }
-})
-
 watch(() => route.fullPath, close)
-
-onMounted(() => window.addEventListener('keydown', onKeydown))
-onBeforeUnmount(() => {
-  window.removeEventListener('keydown', onKeydown)
-  document.body.style.overflow = previousBodyOverflow
-})
 </script>
 
 <template>
@@ -63,25 +38,15 @@ onBeforeUnmount(() => {
     <span class="financial-map-fab-icon" aria-hidden="true"><AppIcon name="chart" :size="22" /></span>
     <span class="hidden sm:inline">{{ t('financialMap.button') }}</span>
   </button>
-
-  <Teleport to="body">
-    <Transition name="ls-modal">
-      <div
-        v-if="open"
-        class="fixed inset-0 z-[70] grid place-items-center ls-scrim p-0 sm:p-4"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="financial-map-title"
-        @click.self="close"
-      >
-        <section class="ls-modal-panel flex h-dvh w-full flex-col overflow-hidden bg-background shadow-overlay sm:h-[94dvh] sm:max-w-[1500px] sm:rounded-modal sm:border sm:border-[var(--bs-border)]">
+      <BsDialog v-if="open" :visible="true" :title="t('financialMap.title')" :aria-label="t('financialMap.title')" :show-header="false" size="lg" @update:visible="value => { if (!value) close() }"><template #default="{ close: dismiss }">
+<section class="flex h-dvh flex-col overflow-hidden bg-background sm:h-[94dvh] sm:max-w-[1500px] sm:rounded-modal sm:border sm:border-[var(--bs-border)]">
           <header class="flex shrink-0 items-start gap-4 border-b border-[var(--bs-border)] bg-surface px-4 py-4 sm:px-6">
             <div class="min-w-0 flex-1">
               <p class="text-xs font-bold uppercase tracking-[0.14em] text-primary">{{ t('financialMap.eyebrow') }}</p>
               <h2 id="financial-map-title" class="mt-1 text-xl font-bold sm:text-2xl">{{ t('financialMap.title') }}</h2>
               <p class="mt-1 max-w-4xl text-sm text-fg-muted">{{ t('financialMap.subtitle') }}</p>
             </div>
-            <button ref="closeButton" type="button" class="ls-btn ls-btn-sm shrink-0" :aria-label="t('common.close')" @click="close">
+            <button type="button" class="ls-btn ls-btn-sm shrink-0" :aria-label="t('common.close')" @click="dismiss">
               <AppIcon name="close" />
             </button>
           </header>
@@ -105,13 +70,13 @@ onBeforeUnmount(() => {
                     <span class="tree-node-number">1.2</span>
                     <h3>{{ t('financialMap.setup.accounts') }}</h3>
                     <p>{{ t('financialMap.setup.accountsHint') }}</p>
-                    <NuxtLink to="/accounts" class="tree-link" @click="close">{{ t('financialMap.setup.reviewAccounts') }} <AppIcon name="arrowRight" :size="15" directional /></NuxtLink>
+                    <NuxtLink to="/accounts" class="tree-link" @click="dismiss">{{ t('financialMap.setup.reviewAccounts') }} <AppIcon name="arrowRight" :size="15" directional /></NuxtLink>
                   </li>
                   <li class="tree-node tree-node-start">
                     <span class="tree-node-number">1.3</span>
                     <h3>{{ t('financialMap.setup.categories') }}</h3>
                     <p>{{ t('financialMap.setup.categoriesHint') }}</p>
-                    <NuxtLink to="/records/expense" class="tree-link" @click="close">{{ t('financialMap.setup.firstEntry') }} <AppIcon name="arrowRight" :size="15" directional /></NuxtLink>
+                    <NuxtLink to="/records/expense" class="tree-link" @click="dismiss">{{ t('financialMap.setup.firstEntry') }} <AppIcon name="arrowRight" :size="15" directional /></NuxtLink>
                   </li>
                 </ol>
               </section>
@@ -131,7 +96,7 @@ onBeforeUnmount(() => {
                     <div class="tree-node-icon"><AppIcon name="transactions" /></div>
                     <h3>{{ t('financialMap.manual.title') }}</h3>
                     <p>{{ t('financialMap.manual.body') }}</p>
-                    <NuxtLink to="/transactions" class="tree-link" @click="close">{{ t('financialMap.manual.link') }} <AppIcon name="arrowRight" :size="15" directional /></NuxtLink>
+                    <NuxtLink to="/transactions" class="tree-link" @click="dismiss">{{ t('financialMap.manual.link') }} <AppIcon name="arrowRight" :size="15" directional /></NuxtLink>
                   </article>
 
                   <article class="tree-node tree-node-waiting">
@@ -140,7 +105,7 @@ onBeforeUnmount(() => {
                     <h3>{{ t('financialMap.commitments.title') }}</h3>
                     <p>{{ t('financialMap.commitments.body') }}</p>
                     <div class="tree-callout">{{ t('financialMap.commitments.rule') }}</div>
-                    <NuxtLink to="/records/commitments" class="tree-link" @click="close">{{ t('financialMap.commitments.link') }} <AppIcon name="arrowRight" :size="15" directional /></NuxtLink>
+                    <NuxtLink to="/records/commitments" class="tree-link" @click="dismiss">{{ t('financialMap.commitments.link') }} <AppIcon name="arrowRight" :size="15" directional /></NuxtLink>
                   </article>
 
                   <article class="tree-node tree-node-waiting">
@@ -149,7 +114,7 @@ onBeforeUnmount(() => {
                     <h3>{{ t('financialMap.recurring.title') }}</h3>
                     <p>{{ t('financialMap.recurring.body') }}</p>
                     <div class="tree-callout">{{ t('financialMap.recurring.rule') }}</div>
-                    <NuxtLink to="/records/recurring" class="tree-link" @click="close">{{ t('financialMap.recurring.link') }} <AppIcon name="arrowRight" :size="15" directional /></NuxtLink>
+                    <NuxtLink to="/records/recurring" class="tree-link" @click="dismiss">{{ t('financialMap.recurring.link') }} <AppIcon name="arrowRight" :size="15" directional /></NuxtLink>
                   </article>
                 </div>
 
@@ -218,21 +183,21 @@ onBeforeUnmount(() => {
                 </div>
 
                 <div class="tree-branches tree-branches-four tree-numbered">
-                  <NuxtLink to="/accounts" class="tree-node tree-result" @click="close">
+                  <NuxtLink to="/accounts" class="tree-node tree-result" @click="dismiss">
                     <span class="tree-node-number">5.1</span>
                     <div class="tree-node-icon"><AppIcon name="wallet" /></div>
                     <h3>{{ t('financialMap.results.accounts.title') }}</h3>
                     <p>{{ t('financialMap.results.accounts.body') }}</p>
                     <span class="tree-link">{{ t('financialMap.results.open') }} <AppIcon name="arrowRight" :size="15" directional /></span>
                   </NuxtLink>
-                  <NuxtLink to="/dashboard" class="tree-node tree-result" @click="close">
+                  <NuxtLink to="/dashboard" class="tree-node tree-result" @click="dismiss">
                     <span class="tree-node-number">5.2</span>
                     <div class="tree-node-icon"><AppIcon name="dashboard" /></div>
                     <h3>{{ t('financialMap.results.dashboard.title') }}</h3>
                     <p>{{ t('financialMap.results.dashboard.body') }}</p>
                     <span class="tree-link">{{ t('financialMap.results.open') }} <AppIcon name="arrowRight" :size="15" directional /></span>
                   </NuxtLink>
-                  <NuxtLink to="/reports" class="tree-node tree-result" @click="close">
+                  <NuxtLink to="/reports" class="tree-node tree-result" @click="dismiss">
                     <span class="tree-node-number">5.3</span>
                     <div class="tree-node-icon"><AppIcon name="reports" /></div>
                     <h3>{{ t('financialMap.results.reports.title') }}</h3>
@@ -240,7 +205,7 @@ onBeforeUnmount(() => {
                     <div class="mt-2 flex flex-wrap gap-1.5"><span v-for="report in reports" :key="report" class="tree-pill">{{ t(`financialMap.results.reports.items.${report}`) }}</span></div>
                     <span class="tree-link">{{ t('financialMap.results.open') }} <AppIcon name="arrowRight" :size="15" directional /></span>
                   </NuxtLink>
-                  <NuxtLink to="/transactions" class="tree-node tree-result" @click="close">
+                  <NuxtLink to="/transactions" class="tree-node tree-result" @click="dismiss">
                     <span class="tree-node-number">5.4</span>
                     <div class="tree-node-icon"><AppIcon name="automation" /></div>
                     <h3>{{ t('financialMap.results.audit.title') }}</h3>
@@ -257,9 +222,7 @@ onBeforeUnmount(() => {
             </div>
           </div>
         </section>
-      </div>
-    </Transition>
-  </Teleport>
+</template></BsDialog>
 </template>
 
 <style scoped>

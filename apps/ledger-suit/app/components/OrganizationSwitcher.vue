@@ -84,12 +84,7 @@ async function createAndStartTrial() {
   }
 }
 
-function onEscape(event: KeyboardEvent) {
-  if (event.key === 'Escape' && createOpen.value) closeCreate()
-}
-
-onMounted(() => window.addEventListener('keydown', onEscape))
-onBeforeUnmount(() => window.removeEventListener('keydown', onEscape))
+const { dirty: overlayDirty0 } = useRecordAction(() => ({ name: name.value, legalName: legalName.value, currency: currency.value }), computed(() => createOpen.value))
 </script>
 
 <template>
@@ -145,25 +140,15 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onEscape))
         </button>
       </li>
     </ul>
-
-    <Teleport to="body">
-      <Transition name="ls-modal">
-        <div
-          v-if="createOpen"
-          class="fixed inset-0 z-[80] grid place-items-center ls-scrim p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="create-organization-title"
-          @click.self="closeCreate"
-        >
-          <form class="ls-modal-panel ls-card w-full max-w-lg space-y-5 p-6 shadow-overlay" @submit.prevent="createAndStartTrial">
+        <BsDialog v-if="createOpen" :visible="true" :title="t('org.createAnother')" :aria-label="t('org.createAnother')" :show-header="false" size="md" :dirty="overlayDirty0" :pending="pending" @update:visible="value => { if (!value) closeCreate() }"><template #default="{ close: dismiss }">
+<form class="space-y-5 p-6" @submit.prevent="createAndStartTrial">
             <div class="flex items-start justify-between gap-4">
               <div>
                 <p class="text-sm font-semibold text-accent">{{ t('org.additionalEyebrow') }}</p>
                 <h2 id="create-organization-title" class="mt-1 text-xl font-bold">{{ t('org.createAnother') }}</h2>
                 <p class="mt-2 text-sm text-fg-muted">{{ t('org.additionalBillingHint') }}</p>
               </div>
-              <button type="button" class="ls-btn ls-btn-sm shrink-0" :aria-label="t('common.close')" :disabled="pending" @click="closeCreate">
+              <button type="button" class="ls-btn ls-btn-sm shrink-0" :aria-label="t('common.close')" :disabled="pending" @click="dismiss">
                 <AppIcon name="close" />
               </button>
             </div>
@@ -192,8 +177,6 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onEscape))
               {{ pending ? t('onboarding.creating') : t('org.createAndStartTrial') }}
             </button>
           </form>
-        </div>
-      </Transition>
-    </Teleport>
+</template></BsDialog>
   </div>
 </template>

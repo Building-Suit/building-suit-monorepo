@@ -12,7 +12,6 @@ useHead({
 
 const email = ref('')
 const password = ref('')
-const showPassword = ref(false)
 const pending = ref(false)
 const errorMessage = ref('')
 
@@ -72,8 +71,8 @@ async function onSubmit() {
 
     await nuxtApp.runWithContext(() => navigateTo('/dashboard'))
   }
-  catch (error: any) {
-    errorMessage.value = normalizeAuthError(error?.message)
+  catch (error: unknown) {
+    errorMessage.value = normalizeAuthError(error instanceof Error ? error.message : undefined)
   }
   finally {
     pending.value = false
@@ -91,102 +90,13 @@ watchEffect(async () => {
 </script>
 
 <template>
-  <section class="space-y-8">
-    <div class="space-y-2">
-      <p class="text-xs font-bold uppercase tracking-[0.18em] text-[#a86c1c]">
-        Shop Suit
-      </p>
-      <h1 class="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-        {{ t('auth.loginTitle') }}
-      </h1>
-      <p class="max-w-md text-sm leading-6 text-muted-foreground">
-        {{ t('auth.loginSubtitle') }}
-      </p>
-    </div>
-
-    <form class="space-y-5" novalidate @submit.prevent="onSubmit">
-      <div
-        v-if="errorMessage"
-        class="rounded-xl border border-[var(--bs-error)]/30 bg-[var(--bs-error-bg)] px-4 py-3 text-sm text-[var(--bs-error-fg)] dark:bg-[var(--bs-error-bg-dark)] dark:text-[var(--bs-error-dark)]"
-        role="alert"
-      >
-        {{ errorMessage }}
-      </div>
-
-      <div class="space-y-2">
-        <label for="login-email" class="text-sm font-semibold">
-          {{ t('auth.email') }}
-        </label>
-        <div class="relative">
-          <Icon name="lucide:mail" class="pointer-events-none absolute start-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            id="login-email"
-            v-model="email"
-            type="email"
-            autocomplete="email"
-            required
-            class="h-12 w-full rounded-xl border border-input bg-card ps-11 pe-4 text-sm outline-none transition focus:border-[#d89b42] focus:ring-2 focus:ring-[#d89b42]/20"
-            :placeholder="t('auth.emailPlaceholder')"
-          >
-        </div>
-      </div>
-
-      <div class="space-y-2">
-        <div class="flex items-center justify-between gap-3">
-          <label for="login-password" class="text-sm font-semibold">
-            {{ t('auth.password') }}
-          </label>
-          <NuxtLink
-            to="/auth/forgot-password"
-            class="text-xs font-semibold text-muted-foreground transition hover:text-foreground"
-          >
-            {{ t('auth.forgotPassword') }}
-          </NuxtLink>
-        </div>
-
-        <div class="relative">
-          <Icon name="lucide:lock-keyhole" class="pointer-events-none absolute start-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            id="login-password"
-            v-model="password"
-            :type="showPassword ? 'text' : 'password'"
-            autocomplete="current-password"
-            required
-            class="h-12 w-full rounded-xl border border-input bg-card ps-11 pe-12 text-sm outline-none transition focus:border-[#d89b42] focus:ring-2 focus:ring-[#d89b42]/20"
-            :placeholder="t('auth.passwordPlaceholder')"
-          >
-          <button
-            type="button"
-            class="absolute end-2 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
-            :aria-label="showPassword ? 'Hide password' : 'Show password'"
-            @click="showPassword = !showPassword"
-          >
-            <Icon :name="showPassword ? 'lucide:eye-off' : 'lucide:eye'" class="size-4" />
-          </button>
-        </div>
-      </div>
-
-      <button
-        type="submit"
-        class="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#141416] px-5 text-sm font-bold text-white shadow-sm transition hover:bg-[#27272a] disabled:cursor-not-allowed disabled:opacity-60 dark:bg-[#d89b42] dark:text-[#0b0b0d] dark:hover:bg-[#ebb45a]"
-        :disabled="pending"
-      >
-        <Icon v-if="pending" name="svg-spinners:180-ring" class="size-4" />
-        {{ t('auth.loginAction') }}
-      </button>
-    </form>
-
-    <div class="flex items-center gap-4">
-      <div class="h-px flex-1 bg-border" />
-      <span class="text-xs text-muted-foreground">Building Suit</span>
-      <div class="h-px flex-1 bg-border" />
-    </div>
-
-    <p class="text-center text-sm text-muted-foreground">
-      {{ t('auth.noAccount') }}
-      <NuxtLink to="/auth/signup" class="font-bold text-foreground underline decoration-[#d89b42] decoration-2 underline-offset-4">
-        {{ t('auth.signupAction') }}
-      </NuxtLink>
-    </p>
-  </section>
+  <form class="ls-auth-card w-full space-y-5 p-6 text-start sm:p-8" @submit.prevent="onSubmit">
+    <div class="text-center"><p class="ls-auth-eyebrow">Shop Suit</p><h1 class="mt-2 text-xl font-extrabold tracking-[-.03em]">{{ t('auth.loginTitle') }}</h1><p class="mt-2 text-sm text-fg-muted">{{ t('auth.loginSubtitle') }}</p></div>
+    <FloatingField :label="t('auth.email')"><InputText id="login-email" v-model="email" type="email" autocomplete="email" required dir="ltr" class="ls-input" /></FloatingField>
+    <FloatingField :label="t('auth.password')"><InputText id="login-password" v-model="password" type="password" autocomplete="current-password" required dir="ltr" class="ls-input" /></FloatingField>
+    <NuxtLink to="/auth/forgot-password" class="text-xs text-fg-muted underline">{{ t('auth.forgotPassword') }}</NuxtLink>
+    <p v-if="errorMessage" role="alert" class="ls-error">{{ errorMessage }}</p>
+    <button type="submit" :disabled="pending" class="ls-btn ls-btn-primary w-full">{{ t('auth.loginAction') }}</button>
+    <p class="text-center text-sm text-fg-muted">{{ t('auth.noAccount') }} <NuxtLink to="/auth/signup" class="font-bold text-fg underline underline-offset-4">{{ t('auth.signupAction') }}</NuxtLink></p>
+  </form>
 </template>

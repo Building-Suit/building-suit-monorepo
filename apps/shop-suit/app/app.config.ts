@@ -1,6 +1,1 @@
-export default defineAppConfig({
-  icon: {
-    mode: 'css',
-    cssLayer: 'base',
-  },
-});
+export default defineAppConfig({})

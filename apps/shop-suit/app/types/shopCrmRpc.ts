@@ -1,10 +1,10 @@
 // Narrow hand-maintained RPC contract until custom-schema type generation is
 // available for the hosted shop_crm schema. SQL migrations are the source.
 export type ShopRpcDatabase = {
-  public: { Tables: {}; Views: {}; Functions: {}; Enums: {}; CompositeTypes: {} }
+  public: { Tables: Record<string, never>; Views: Record<string, never>; Functions: Record<string, never>; Enums: Record<string, never>; CompositeTypes: Record<string, never> }
   shop_crm: {
-    Tables: {}
-    Views: {}
+    Tables: Record<string, never>
+    Views: Record<string, never>
     Functions: {
       create_owner_shop: {
         Args: { p_shop_name: string; p_plan_slug: string }
@@ -23,7 +23,7 @@ export type ShopRpcDatabase = {
       }
       archive_product: {
         Args: { p_shop_id: string; p_product_id: string }
-        Returns: void
+        Returns: undefined
       }
       save_service: {
         Args: {
@@ -39,7 +39,7 @@ export type ShopRpcDatabase = {
       }
       archive_service: {
         Args: { p_shop_id: string; p_service_id: string }
-        Returns: void
+        Returns: undefined
       }
       save_expense: {
         Args: {
@@ -56,7 +56,7 @@ export type ShopRpcDatabase = {
       }
       void_expense: {
         Args: { p_shop_id: string; p_expense_id: string }
-        Returns: void
+        Returns: undefined
       }
       adjust_stock: {
         Args: {
@@ -70,7 +70,7 @@ export type ShopRpcDatabase = {
         Returns: string
       }
     }
-    Enums: {}
-    CompositeTypes: {}
+    Enums: Record<string, never>
+    CompositeTypes: Record<string, never>
   }
 }

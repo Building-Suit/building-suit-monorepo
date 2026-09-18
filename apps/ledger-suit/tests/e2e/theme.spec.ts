@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 test('the brand logo displays light logo on dark theme', async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem('ledger-suit.theme', 'dark'))
+  await page.addInitScript(() => localStorage.setItem('building-suit.theme', 'dark'))
   await page.goto('/')
 
   const root = page.locator('html')
@@ -18,7 +18,7 @@ test('the brand logo displays light logo on dark theme', async ({ page }) => {
 })
 
 test('the brand logo displays dark logo on light theme', async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem('ledger-suit.theme', 'light'))
+  await page.addInitScript(() => localStorage.setItem('building-suit.theme', 'light'))
   await page.goto('/')
 
   const root = page.locator('html')
@@ -35,7 +35,7 @@ test('the brand logo displays dark logo on light theme', async ({ page }) => {
 })
 
 test('system theme follows the emulated color scheme without a forced attribute', async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem('ledger-suit.theme', 'system'))
+  await page.addInitScript(() => localStorage.setItem('building-suit.theme', 'system'))
   await page.emulateMedia({ colorScheme: 'dark' })
   await page.goto('/')
 
@@ -51,11 +51,11 @@ test('system theme follows the emulated color scheme without a forced attribute'
 })
 
 test('a stored theme preference persists across a reload', async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem('ledger-suit.theme', 'dark'))
+  await page.addInitScript(() => localStorage.setItem('building-suit.theme', 'dark'))
   await page.goto('/')
 
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
-  await expect.poll(() => page.evaluate(() => localStorage.getItem('ledger-suit.theme'))).toBe('dark')
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('building-suit.theme'))).toBe('dark')
   await page.reload()
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
 })

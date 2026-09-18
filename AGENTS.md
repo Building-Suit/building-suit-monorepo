@@ -17,7 +17,6 @@ User instructions take priority. Scoped rules specialize these rules within thei
 | `apps/ledger-suit/` | Ledger routes, features, financial rules, content and tests |
 | `apps/shop-suit/` | Shop routes, features, inventory/shop rules, content and tests |
 | `apps/building-suit-docs/` | Building documentation, documentation rendering and component catalogue |
-| `apps/identity/`, when present | Authorization/login frontend; consult the current session architecture |
 | `packages/design-tokens/`, `packages/brand/` | Canonical tokens, generated outputs, fonts, icons and brand assets |
 | `packages/ui/`, `packages/ux/` | Shared atomic components/templates and interaction policies/controllers |
 | `packages/auth/`, `packages/data-access/`, `packages/contracts/` | Identity/session infrastructure, data-access infrastructure and typed contracts |
@@ -32,7 +31,7 @@ Use manifests, package exports and the dependency graph to find interfaces and a
 ## Architecture
 
 - Apps import shared packages. Shared packages never import apps; apps never import each other's internals.
-- Put product features under the owning app's `features/<feature>` boundary. Separate presentation, orchestration, domain rules, contracts and infrastructure where needed; do not generate empty layers.
+- Follow each app's scoped navigation rules: routes are in `app/pages`, reusable product orchestration in `app/composables`, and pure helpers in `app/utils` where present. Group cohesive features when needed. Separate presentation, orchestration, domain rules, contracts and infrastructure without generating empty layers.
 - Keep product-specific queries, RPC adapters and rules in the owning feature. Shared data-access packages provide infrastructure without implicitly accessing a product schema.
 - Use existing repository and command/query contracts. Important business writes remain authorized, atomic server/database operations.
 - Include environment, portal, user, tenant, feature and query parameters in relevant cache keys. Keep SSR state request-scoped and clear sensitive state/listeners on account, tenant or session changes.

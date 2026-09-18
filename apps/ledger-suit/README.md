@@ -1,164 +1,22 @@
 # Ledger Suit
 
-Multi-tenant financial management SaaS. Simpler than a spreadsheet to operate,
-backed by a real double-entry ledger.
+Ledger Suit is the financial application in the Building Suit workspace. Routes, organization/capability adapters and financial rules remain product-owned. The Nuxt layer supplies shared Building branding, landing/auth templates, signup navigation, application shell, tables and interaction behavior.
 
-This repository contains **Phases 1–4**: the multi-tenant accounting
-foundation, a public product site, guided owner onboarding, the four
-core-finance product pages, operational workflows, and a database-enforced
-Paymob subscription billing with a 14-day trial and Resend delivery.
+Run commands from the monorepo root:
 
----
-
-## Stack
-
-| Layer | Choice |
-|---|---|
-| Database | PostgreSQL 17 on Supabase |
-| Auth | Supabase Auth |
-| Storage | Supabase Storage, private bucket |
-| Frontend | Nuxt 4 + TypeScript + Tailwind CSS 4 |
-| Billing | Paymob Unified Checkout; database-authoritative access state |
-| Email | Resend through Supabase Edge Functions |
-
----
-
-## Quick start
-
-```bash
+```sh
 pnpm install
-cp .env.example .env
-
-pnpm db:start      # boots the local Supabase stack (needs Docker)
-pnpm db:reset      # replays every migration from empty, then seeds
-pnpm dev           # http://localhost:3000
+pnpm setup
+cp apps/ledger-suit/.env.example apps/ledger-suit/.env
+pnpm dev:ledger
+pnpm --filter @building-suit/ledger-suit build
+pnpm --filter @building-suit/ledger-suit typecheck
 ```
 
-`pnpm db:start` prints the local API URL and keys. Copy them into `.env` if they
-differ from the defaults already in `.env.example`.
+Use the root [database runbook](../../docs/shared/database.md) and [environment registry](../../docs/architecture/environments.json). Root `supabase` owns SQL, functions, templates and fixtures. There is no application-specific database deployment root.
 
-### Seeded development accounts
+The isolated local seed has Alpha Trading and Beta Supplies to exercise tenant isolation. Local fixture accounts are `owner@alpha.test`, `accountant@alpha.test`, `viewer@alpha.test`, and `owner@beta.test`, with the disposable seed password `ledgersuit`. Never use these fixtures against a hosted business database.
 
-Password for all of them: `ledgersuit`
+After building and starting the designated local backend, `pnpm --filter @building-suit/ledger-suit exec playwright test tests/e2e/core-finance.spec.ts` verifies core browser flows. The copied test configuration pins the monorepo local API and rejects other `SUPABASE_URL` values. Run relevant SQL tests through root tooling and record unrun suites.
 
-| Email | Organization | Role |
-|---|---|---|
-| `owner@alpha.test` | Alpha Trading | owner |
-| `accountant@alpha.test` | Alpha Trading | accountant |
-| `viewer@alpha.test` | Alpha Trading | viewer |
-| `owner@beta.test` | Beta Supplies | owner |
-
-Two organizations exist on purpose, so cross-tenant leaks are visible during
-development rather than only in the test suite.
-
----
-
-## Scripts
-
-| Command | What it does |
-|---|---|
-| `pnpm dev` | Nuxt dev server |
-| `pnpm build` | Production build |
-| `pnpm typecheck` | `vue-tsc` over the whole app |
-| `pnpm lint` | ESLint |
-| `pnpm test:e2e` | Playwright journeys against local Supabase |
-| `pnpm db:start` / `pnpm db:stop` | Local Supabase stack |
-| `pnpm db:reset` | Drop, replay all migrations, apply `supabase/seed.sql` |
-| `pnpm db:test` | pgTAP suite (`supabase/tests/`) |
-| `pnpm db:lint` | Supabase schema linter |
-| `pnpm db:types` | Regenerate `types/database.types.ts` from the local database |
-| `pnpm paymob:provision-plans -- --webhook-url=...` | Create or reuse the Paymob monthly/yearly plans after MOTO is enabled |
-
----
-
-## Database workflow — read this before changing the schema
-
-**The Git repository records the intended database schema.** The documented
-workflow uses linked deployment; actual target/applied versions must be verified
-separately. Treat remote data as valuable, and run resets only in newly created
-disposable local environments. See [production gates](docs/launch/PRODUCTION_CHECKLIST.md).
-
-Do:
-
-- put every schema change in a new timestamped file under `supabase/migrations/`
-- validate locally with `pnpm db:reset && pnpm db:test && pnpm db:lint`
-- commit the migration and let the linked deployment apply it
-
-Do **not**:
-
-- run `supabase db push` against the linked remote project
-- paste DDL into the Supabase SQL editor
-- edit or delete a migration that has already been applied — write a new one
-
-A migration that has shipped is history. Corrections go forward, never
-backward.
-
----
-
-## Layout
-
-```
-app/                    Nuxt application (pages, composables, utils)
-docs/                   Architecture, environment and deployment notes
-supabase/
-  migrations/           Versioned schema — the authoritative definition
-  functions/            Paymob and Resend Edge Functions
-  tests/                pgTAP: accounting integrity and tenant isolation
-  seed.sql              Development data. Fake figures only.
-types/database.types.ts Generated from the schema; do not hand-edit
-```
-
----
-
-## Historical Phase 1–4 verification claims
-
-The list below records earlier implementation claims and the historical
-107-assertion baseline. It is not Accounting V2, production or accountant
-acceptance. Current code gaps and fresh results are in
-[CURRENT_STATUS](docs/launch/CURRENT_STATUS.md) and
-[the accounting audit](docs/accounting-v2/CURRENT_STATE_AUDIT.md):
-
-- every posting produces balanced ledger entries — `SUM(debits) = SUM(credits)`
-- reversals return the affected accounts to exactly their prior balance
-- `Assets = Liabilities + Equity` holds after every operation
-- posted transactions and their ledger lines cannot be edited or deleted, **not
-  even by a database superuser** — the guard is a trigger, not a grant
-- a user who knows another organization's UUID still gets nothing: no reads, no
-  writes, no reports, no ledger, no audit log
-- a foreign account id cannot be smuggled into your own organization's posting
-- posting into a locked period is refused without `books.override_lock`
-- retrying a posting with the same idempotency key returns the original record
-- commitments support full/partial settlement, postponement, cancellation,
-  reminders and controlled automatic conversion into real ledger transactions
-- recurring occurrences are idempotent, confirmable, skippable and retryable
-- organization invitations are created and accepted through controlled RPCs
-- direct client mutation cannot bypass financial or notification workflows
-- the Dashboard, Transactions, Accounts and Reports journeys run end-to-end
-- account creation collects the owner and business profile, provisions an empty
-  user-managed chart atomically, verifies the email with an in-app six-digit OTP,
-  and starts a cardless 14-day trial
-- the public landing and three-step signup journey run end-to-end in English
-  and share the current Building Suit design tokens with the application
-- a permission-aware global add drawer reaches every supported transaction,
-  account, operational, tagging, counterparty, and team invitation workflow
-- a new organization starts with a 14-day cardless trial and requires Paymob
-  checkout after the trial expires
-- expired billing is enforced as read-only inside PostgreSQL, while tenant data
-  remains available to authorized members
-- Paymob webhook retries are idempotent and scheduled financial jobs skip
-  organizations without write access
-
-See [docs/architecture.md](docs/architecture.md) for how.
-
----
-
-## Documentation
-
-- [Current status](docs/launch/CURRENT_STATUS.md) — start here
-- [Launch master plan](docs/launch/MASTER_LAUNCH_PLAN.md)
-- [Accounting V2 master plan](docs/accounting-v2/MASTER_PLAN.md)
-
-- [Architecture](docs/architecture.md) — tenancy, ledger design, posting engine
-- [Environment variables](docs/environment.md)
-- [Deployment](docs/deployment.md)
-- [Phase 1–3 status](docs/phase-1-to-3-status.md)
+Product documentation is under `docs/`. Original standalone setup instructions are preserved in `docs/migration/source-readmes/ledger-suit.md` at the repository root as historical reference; root instructions and scoped `AGENTS.md` govern this workspace. Current integration limitations are tracked in the root implementation status, separately from future development rules.
