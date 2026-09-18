@@ -1,0 +1,10 @@
+packages:
+  - packages/*
+  - database/*
+  - apps/*
+
+onlyBuiltDependencies:
+  - '@parcel/watcher'
+  - esbuild
+  - unrs-resolver
+  - vue-demi

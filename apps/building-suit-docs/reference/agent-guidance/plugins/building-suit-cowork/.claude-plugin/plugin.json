@@ -1,0 +1,15 @@
+{
+  "name": "building-suit-cowork",
+  "version": "2.0.0",
+  "description": "Index the repository-native Building Suit design system, let Cowork design high-fidelity Pug/HTML product screens, perform visual QA, and prepare Flutter implementation evidence.",
+  "author": {
+    "name": "Building Suit"
+  },
+  "keywords": [
+    "building-suit",
+    "cowork",
+    "design-system",
+    "html-prototype",
+    "flutter-handoff"
+  ]
+}

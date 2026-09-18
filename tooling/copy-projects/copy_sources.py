@@ -17,7 +17,7 @@ def target_for(project,rel):
   if p.parts[:2]==('supabase','tests'): return ROOT/'supabase/tests/shop-suit'/Path(*p.parts[2:])
   if p.parts[0]=='supabase': return ROOT/'supabase/legacy/config/shop-suit'/Path(*p.parts[1:])
   if p.parts[0]=='.github': return ROOT/'docs/migration/source-workflows'/project/Path(*p.parts[1:])
-  if rel in ['package.json','pnpm-lock.yaml','pnpm-workspace.yaml','.npmrc']: return ROOT/'docs/migration/source-config'/project/p
+  if rel in ['package.json','pnpm-lock.yaml','pnpm-workspace.yaml','.npmrc','.gitignore']: return ROOT/'docs/migration/source-config'/project/p
   if rel=='README.md': return ROOT/'apps/shop-suit/docs/source-repository-README.md'
   return ROOT/'apps/shop-suit'/p
  if p.parts[0]=='.docs': return ROOT/'apps/building-suit-docs/content/building-suit'/Path(*p.parts[1:])
@@ -33,7 +33,7 @@ for project in ['ledger-suit','shop-suit','building-suit']:
   if f.is_symlink(): raise RuntimeError(f'Symlink requires explicit review: {project}/{rel}')
   if not f.is_file(): continue
   target=target_for(project,rel)
-  if target.exists(): raise RuntimeError(f'Refusing overwrite: {target}')
+  if target.exists() and target.read_bytes()!=f.read_bytes(): raise RuntimeError(f'Refusing overwrite: {target}')
   target.parent.mkdir(parents=True,exist_ok=True)
   shutil.copy2(f,target)
   manifest.append({'project':project,'source':rel,'destination':str(target.relative_to(ROOT)),'sha256':hashlib.sha256(f.read_bytes()).hexdigest()})

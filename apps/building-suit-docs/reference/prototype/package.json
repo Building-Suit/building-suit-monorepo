@@ -1,0 +1,23 @@
+{
+  "name": "building-suit-prototype",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Vue auth prototype for Building Suit. Componentized design-system evidence, not production app architecture.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "serve": "vite preview --host 127.0.0.1",
+    "check": "node scripts/check.mjs",
+    "verify": "npm run build && npm run check"
+  },
+  "dependencies": {
+    "@hugeicons/core-free-icons": "^4.2.1",
+    "@hugeicons/vue": "^1.0.6",
+    "vue": "^3.5.0"
+  },
+  "devDependencies": {
+    "vite": "^7.0.0"
+  }
+}

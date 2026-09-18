@@ -1,0 +1,24 @@
+{
+  "name": "buildingsuit",
+  "version": "1.0.0",
+  "private": true,
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "dev:shop-crm": "pnpm --filter @buildingsuit/shop-crm dev",
+    "build:shop-crm": "pnpm --filter @buildingsuit/shop-crm build",
+    "typecheck:shop-crm": "pnpm --filter @buildingsuit/shop-crm typecheck",
+    "supabase:deploy": "bash scripts/push-shop-crm-supabase.sh"
+  },
+  "pnpm-workspace": {
+    "packages": [
+      "packages/*",
+      "apps/*"
+    ]
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.24.0"
+}

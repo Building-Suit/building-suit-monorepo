@@ -1,0 +1,6 @@
+# Generated Cowork plugin upload packages
+dist/cowork/*.zip
+
+# Prototype dependencies and transient local output
+prototype/node_modules/
+prototype/.cache/

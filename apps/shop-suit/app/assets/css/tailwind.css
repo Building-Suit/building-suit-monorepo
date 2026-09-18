@@ -1,0 +1,408 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================================
+   BUILDING SUIT DESIGN SYSTEM — Shop Suit
+   Single source of truth for color, type, radii, motion.
+   See docs/rebuild/design-system.md for the contract.
+   ============================================================ */
+
+/* ---------- Brand fonts (self-hosted, OFL) ---------- */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url('/fonts/Manrope.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/IBMPlexSansArabic-Regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/IBMPlexSansArabic-Medium.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/IBMPlexSansArabic-SemiBold.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/IBMPlexSansArabic-Bold.ttf') format('truetype');
+}
+
+/* ---------- Tailwind theme bridge ---------- */
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary-dark: var(--primary-dark);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --font-sans: 'Manrope', 'IBM Plex Sans Arabic', 'Inter', 'Cairo', 'Tajawal', sans-serif;
+}
+
+/* ---------- Raw Building Suit palette (fixed brand values) ---------- */
+:root {
+  /* Navy / structural family */
+  --bs-building-navy: #16293b;
+  --bs-deep-structure-navy: #0d1b28;
+  --bs-midnight-background: #0a111a;
+  --bs-navy-surface: #14233a;
+  --bs-navy-surface-raised: #1b2e47;
+  --bs-steel-border: #2e3f52;
+
+  /* Gold family — premium, restrained. Never a status color. */
+  --bs-premium-gold: #d89b42;
+  --bs-highlight-gold: #ebb45a;
+  --bs-gold-700: #a86c1c;
+
+  /* Light / neutral / supporting family */
+  --bs-pearl-white: #f7f8fa;
+  --bs-soft-silver: #e2e5ea;
+  --bs-cloud-gray: #cbd2db;
+  --bs-graphite-text: #232b33;
+  --bs-slate-gray: #5a6573;
+  --bs-steel-gray: #9aa6b4;
+  --bs-slate-blue: #36506e;
+  --bs-sky-steel: #7e97b3;
+  --bs-pale-sky: #dce6f1;
+
+  /* Semantic status colors — the ONLY colors allowed to carry status meaning */
+  --bs-success: #2e9e6b;
+  --bs-success-bg: #e4f4ec;
+  --bs-success-fg: #1b6e3c;
+  --bs-warning: #e1841f;
+  --bs-warning-bg: #fbeedd;
+  --bs-warning-fg: #8a5a00;
+  --bs-error: #d14b4b;
+  --bs-error-bg: #f8e3e3;
+  --bs-error-fg: #b73636;
+  --bs-info: #2f77c9;
+  --bs-info-bg: #dce6f1;
+  --bs-info-fg: #245f9f;
+  --bs-success-dark: #46b383;
+  --bs-success-bg-dark: #18352a;
+  --bs-warning-dark: #f09a3c;
+  --bs-warning-bg-dark: #3a2a14;
+  --bs-error-dark: #e26a6a;
+  --bs-error-bg-dark: #3a1e1e;
+  --bs-info-dark: #4f92dd;
+  --bs-info-bg-dark: #15263a;
+
+  /* Semantic aliases (framework-agnostic contract) */
+  --color-surface: #ffffff;
+  --color-surface-muted: var(--bs-soft-silver);
+  --color-surface-raised: #ffffff;
+  --color-text: var(--bs-graphite-text);
+  --color-text-muted: var(--bs-slate-gray);
+  --color-accent-brand: var(--bs-premium-gold);
+  --color-interaction-accent: var(--bs-gold-700);
+}
+
+/* ---------- Light theme (default) ---------- */
+:root {
+  --radius: 0.75rem; /* 12px base; 8 = sm/md, 16 = xl (cards), 24 = dialogs */
+  --background: var(--bs-pearl-white);
+  --foreground: var(--bs-graphite-text);
+  --card: #ffffff;
+  --card-foreground: var(--bs-graphite-text);
+  --popover: #ffffff;
+  --popover-foreground: var(--bs-graphite-text);
+  --primary-dark: var(--bs-deep-structure-navy);
+  --primary: var(--bs-building-navy);
+  --primary-foreground: var(--bs-pearl-white);
+  --secondary: var(--bs-premium-gold);
+  --secondary-foreground: var(--bs-deep-structure-navy);
+  --muted: var(--bs-soft-silver);
+  --muted-foreground: var(--bs-slate-gray);
+  --accent: var(--bs-pale-sky);
+  --accent-foreground: var(--bs-building-navy);
+  --destructive: var(--bs-error);
+  --border: var(--bs-cloud-gray);
+  --input: var(--bs-cloud-gray);
+  --ring: var(--bs-gold-700);
+  --chart-1: var(--bs-building-navy);
+  --chart-2: var(--bs-premium-gold);
+  --chart-3: var(--bs-slate-blue);
+  --chart-4: var(--bs-sky-steel);
+  --chart-5: var(--bs-gold-700);
+  --sidebar: #ffffff;
+  --sidebar-foreground: var(--bs-graphite-text);
+  --sidebar-primary: var(--bs-building-navy);
+  --sidebar-primary-foreground: var(--bs-pearl-white);
+  --sidebar-accent: var(--bs-pale-sky);
+  --sidebar-accent-foreground: var(--bs-building-navy);
+  --sidebar-border: var(--bs-cloud-gray);
+  --sidebar-ring: var(--bs-gold-700);
+}
+
+/* ---------- Dark theme (Midnight / Navy surfaces) ---------- */
+.dark {
+  --background: var(--bs-midnight-background);
+  --foreground: var(--bs-pearl-white);
+  --card: var(--bs-navy-surface);
+  --card-foreground: var(--bs-pearl-white);
+  --popover: var(--bs-navy-surface);
+  --popover-foreground: var(--bs-pearl-white);
+  --primary-dark: var(--bs-deep-structure-navy);
+  --primary: var(--bs-premium-gold);
+  --primary-foreground: var(--bs-deep-structure-navy);
+  --secondary: var(--bs-highlight-gold);
+  --secondary-foreground: var(--bs-deep-structure-navy);
+  --muted: var(--bs-deep-structure-navy);
+  --muted-foreground: var(--bs-sky-steel);
+  --accent: var(--bs-navy-surface-raised);
+  --accent-foreground: var(--bs-pearl-white);
+  --destructive: var(--bs-error-dark);
+  --border: var(--bs-steel-border);
+  --input: var(--bs-steel-border);
+  --ring: var(--bs-highlight-gold);
+  --chart-1: var(--bs-highlight-gold);
+  --chart-2: var(--bs-sky-steel);
+  --chart-3: var(--bs-premium-gold);
+  --chart-4: var(--bs-navy-surface-raised);
+  --chart-5: var(--bs-steel-border);
+  --sidebar: var(--bs-navy-surface);
+  --sidebar-foreground: var(--bs-pearl-white);
+  --sidebar-primary: var(--bs-premium-gold);
+  --sidebar-primary-foreground: var(--bs-deep-structure-navy);
+  --sidebar-accent: var(--bs-navy-surface-raised);
+  --sidebar-accent-foreground: var(--bs-pearl-white);
+  --sidebar-border: var(--bs-steel-border);
+  --sidebar-ring: var(--bs-highlight-gold);
+}
+
+.dark {
+  --color-surface: var(--bs-navy-surface);
+  --color-surface-muted: var(--bs-deep-structure-navy);
+  --color-surface-raised: var(--bs-navy-surface-raised);
+  --color-text: var(--bs-pearl-white);
+  --color-text-muted: var(--bs-sky-steel);
+  --color-accent-brand: var(--bs-highlight-gold);
+  --color-interaction-accent: var(--bs-highlight-gold);
+}
+
+/* ---------- Semantic status utilities (never gold) ---------- */
+@layer components {
+  .status-success {
+    background-color: var(--bs-success-bg);
+    color: var(--bs-success-fg);
+  }
+  .status-warning {
+    background-color: var(--bs-warning-bg);
+    color: var(--bs-warning-fg);
+  }
+  .status-error {
+    background-color: var(--bs-error-bg);
+    color: var(--bs-error-fg);
+  }
+  .status-info {
+    background-color: var(--bs-info-bg);
+    color: var(--bs-info-fg);
+  }
+  .dark .status-success {
+    background-color: var(--bs-success-bg-dark);
+    color: var(--bs-success-dark);
+  }
+  .dark .status-warning {
+    background-color: var(--bs-warning-bg-dark);
+    color: var(--bs-warning-dark);
+  }
+  .dark .status-error {
+    background-color: var(--bs-error-bg-dark);
+    color: var(--bs-error-dark);
+  }
+  .dark .status-info {
+    background-color: var(--bs-info-bg-dark);
+    color: var(--bs-info-dark);
+  }
+
+  /* ---------- Typography scale (Building Suit) ---------- */
+  .text-display-sm {
+    font-size: 32px;
+    line-height: 40px;
+    font-weight: 800;
+  }
+  .text-headline-lg {
+    font-size: 26px;
+    line-height: 34px;
+    font-weight: 700;
+  }
+  .text-headline-md {
+    font-size: 22px;
+    line-height: 30px;
+    font-weight: 700;
+  }
+  .text-headline-sm {
+    font-size: 18px;
+    line-height: 26px;
+    font-weight: 600;
+  }
+  .text-title-lg {
+    font-size: 22px;
+    line-height: 30px;
+    font-weight: 700;
+  }
+  .text-title-md {
+    font-size: 18px;
+    line-height: 26px;
+    font-weight: 600;
+  }
+  .text-title-sm {
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 600;
+  }
+  .text-body-lg {
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 400;
+  }
+  .text-body-md {
+    font-size: 14px;
+    line-height: 22px;
+    font-weight: 400;
+  }
+  .text-body-sm {
+    font-size: 12px;
+    line-height: 18px;
+    font-weight: 500;
+  }
+  .text-label-lg {
+    font-size: 15px;
+    line-height: 20px;
+    font-weight: 600;
+  }
+  .text-label-md {
+    font-size: 12px;
+    line-height: 18px;
+    font-weight: 500;
+  }
+  .text-label-sm {
+    font-size: 11px;
+    line-height: 16px;
+    font-weight: 600;
+  }
+}
+
+/* ---------- Base ---------- */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    font-family: 'Manrope', 'IBM Plex Sans Arabic', 'Inter', 'Cairo', 'Tajawal', sans-serif;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: 'ss01' on;
+  }
+
+  /* Arabic: IBM Plex Sans Arabic first, roomier line-height (no clipping) */
+  [dir='rtl'] body,
+  [lang='ar'] body {
+    font-family: 'IBM Plex Sans Arabic', 'Manrope', 'Cairo', 'Tajawal', sans-serif;
+    line-height: 1.75;
+  }
+
+  /* Visible, consistent focus (gold interaction accent) */
+  :focus-visible {
+    outline: 2px solid var(--color-interaction-accent);
+    outline-offset: 2px;
+  }
+
+  /* Restrained motion; honor reduced-motion */
+  a,
+  button {
+    transition:
+      background-color 160ms ease,
+      border-color 160ms ease,
+      color 160ms ease,
+      box-shadow 160ms ease,
+      transform 160ms ease;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  /* Chrome, Edge, and Safari */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--color-interaction-accent);
+    border-radius: 9999px;
+  }
+
+  /* Firefox */
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-interaction-accent) transparent;
+  }
+}

@@ -1,0 +1,10 @@
+# Netlify deployment for the Shop CRM Nuxt (Nitro SSR) app.
+# CI builds with NITRO_PRESET=netlify, producing:
+#   .output/public  -> static assets
+#   .output/server  -> Netlify functions (SSR handler)
+[build]
+  publish = ".output/public"
+
+[functions]
+  directory = ".output/server"
+  node_bundler = "esbuild"

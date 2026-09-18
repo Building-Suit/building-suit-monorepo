@@ -1,0 +1,186 @@
+/*
+ * Building Suit — Color Tokens (CSS Custom Properties)
+ * Source of truth: 03-visual-identity/01_COLOR_SYSTEM.md
+ *
+ * Canonical color palette for web surfaces (marketing site, web app).
+ * Two layers:
+ *   1. Brand palette  — raw, fixed brand values (never change by theme).
+ *   2. Role tokens     — semantic roles that REMAP between light & dark mode.
+ *
+ * KEY RULE: the primary action color flips by mode.
+ *   Light mode → primary = Building Navy (gold fails text contrast ~2.5:1 on light).
+ *   Dark mode  → primary = Premium Gold.
+ *
+ * Usage:
+ *   color: var(--bs-text);
+ *   background: var(--bs-surface);
+ * Toggle dark mode with <html data-theme="dark"> (or prefers-color-scheme below).
+ */
+
+:root {
+  /* ---------------------------------------------------------------- */
+  /* 1. BRAND PALETTE (fixed)                                         */
+  /* ---------------------------------------------------------------- */
+
+  /* Navy family */
+  --bs-building-navy: #16293B;
+  --bs-deep-structure-navy: #0D1B28;
+  --bs-midnight-background: #0A111A;
+  --bs-navy-surface: #14233A;
+  --bs-navy-surface-raised: #1B2E47;
+  --bs-steel-border: #2E3F52;
+
+  /* Gold family */
+  --bs-premium-gold: #D89B42;
+  --bs-highlight-gold: #EBB45A;
+  --bs-gold-700: #A86C1C;
+  --bs-gold-600: #C8902F;
+  --bs-gold-500: #D89B42;
+  --bs-gold-400: #EBB45A;
+  --bs-gold-300: #F4CE86;
+
+  /* Light / silver family */
+  --bs-pearl-white: #F7F8FA;
+  --bs-soft-silver: #E2E5EA;
+  --bs-cloud-gray: #CBD2DB;
+  --bs-white: #FFFFFF;
+
+  /* Secondary blues */
+  --bs-slate-blue: #36506E;
+  --bs-sky-steel: #7E97B3;
+  --bs-pale-sky: #DCE6F1;
+
+  /* Neutrals / text */
+  --bs-graphite-text: #232B33;
+  --bs-slate-gray: #5A6573;
+  --bs-steel-gray: #9AA6B4;
+
+  /* Gradients */
+  --bs-gradient-gold: linear-gradient(135deg, #EBB45A 0%, #D89B42 50%, #A86C1C 100%);
+  --bs-gradient-navy: linear-gradient(160deg, #16293B 0%, #0D1B28 100%);
+
+  /* Semantic — base (full-saturation status colors) */
+  --bs-success: #2E9E6B;
+  --bs-success-bg: #E4F4EC;
+  --bs-warning: #E1841F;
+  --bs-warning-bg: #FBEEDD;
+  --bs-error: #D14B4B;
+  --bs-error-bg: #F8E3E3;
+  --bs-info: #2F77C9;
+  --bs-info-bg: #DCE6F1;
+
+  /* ---------------------------------------------------------------- */
+  /* 2. ROLE TOKENS — LIGHT MODE (default)                           */
+  /* ---------------------------------------------------------------- */
+
+  /* Surfaces / backgrounds */
+  --bs-background: var(--bs-pearl-white);
+  --bs-surface: var(--bs-white);
+  --bs-surface-muted: var(--bs-soft-silver);
+  --bs-surface-raised: var(--bs-white);
+
+  /* Text */
+  --bs-text: var(--bs-graphite-text);
+  --bs-text-muted: var(--bs-slate-gray);
+  --bs-text-disabled: var(--bs-steel-gray);
+  --bs-text-on-primary: var(--bs-pearl-white);
+  --bs-text-on-accent: var(--bs-deep-structure-navy);
+
+  /* Borders */
+  --bs-border: var(--bs-cloud-gray);
+  --bs-border-strong: var(--bs-slate-gray);
+
+  /* Actions */
+  --bs-primary: var(--bs-building-navy);
+  --bs-accent: var(--bs-premium-gold);
+  --bs-link: var(--bs-slate-blue);
+  --bs-focus-ring: var(--bs-premium-gold);
+
+  /* Elevation shadows */
+  --bs-shadow-1: 0 2px 8px rgba(13, 27, 40, 0.08);
+  --bs-shadow-2: 0 4px 16px rgba(13, 27, 40, 0.12);
+  --bs-shadow-3: 0 8px 24px rgba(13, 27, 40, 0.16);
+}
+
+/* ------------------------------------------------------------------ */
+/* 3. ROLE TOKENS — DARK MODE                                        */
+/* ------------------------------------------------------------------ */
+[data-theme="dark"] {
+  /* Surfaces / backgrounds */
+  --bs-background: var(--bs-midnight-background);
+  --bs-surface: var(--bs-navy-surface);
+  --bs-surface-muted: var(--bs-deep-structure-navy);
+  --bs-surface-raised: var(--bs-navy-surface-raised);
+
+  /* Text */
+  --bs-text: var(--bs-pearl-white);
+  --bs-text-muted: var(--bs-sky-steel);
+  --bs-text-disabled: #4A5A6E;
+  --bs-text-on-primary: var(--bs-deep-structure-navy);
+  --bs-text-on-accent: var(--bs-deep-structure-navy);
+
+  /* Borders */
+  --bs-border: var(--bs-steel-border);
+  --bs-border-strong: var(--bs-sky-steel);
+
+  /* Actions — primary flips to gold on dark */
+  --bs-primary: var(--bs-premium-gold);
+  --bs-accent: var(--bs-highlight-gold);
+  --bs-link: var(--bs-sky-steel);
+  --bs-focus-ring: var(--bs-highlight-gold);
+
+  /* Semantic — lightened ~10–15% for dark surfaces */
+  --bs-success: #46B383;
+  --bs-success-bg: #18352A;
+  --bs-warning: #F09A3C;
+  --bs-warning-bg: #3A2A14;
+  --bs-error: #E26A6A;
+  --bs-error-bg: #3A1E1E;
+  --bs-info: #4F92DD;
+  --bs-info-bg: #15263A;
+
+  /* Elevation shadows — deeper on dark */
+  --bs-shadow-1: 0 2px 8px rgba(0, 0, 0, 0.32);
+  --bs-shadow-2: 0 4px 16px rgba(0, 0, 0, 0.40);
+  --bs-shadow-3: 0 8px 24px rgba(0, 0, 0, 0.48);
+}
+
+/* ------------------------------------------------------------------ */
+/* 4. SYSTEM PREFERENCE FALLBACK (optional)                          */
+/* Mirrors the [data-theme="dark"] block for users without a toggle. */
+/* ------------------------------------------------------------------ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bs-background: var(--bs-midnight-background);
+    --bs-surface: var(--bs-navy-surface);
+    --bs-surface-muted: var(--bs-deep-structure-navy);
+    --bs-surface-raised: var(--bs-navy-surface-raised);
+
+    --bs-text: var(--bs-pearl-white);
+    --bs-text-muted: var(--bs-sky-steel);
+    --bs-text-disabled: #4A5A6E;
+    --bs-text-on-primary: var(--bs-deep-structure-navy);
+    --bs-text-on-accent: var(--bs-deep-structure-navy);
+
+    --bs-border: var(--bs-steel-border);
+    --bs-border-strong: var(--bs-sky-steel);
+
+    --bs-primary: var(--bs-premium-gold);
+    --bs-accent: var(--bs-highlight-gold);
+    --bs-link: var(--bs-sky-steel);
+    --bs-focus-ring: var(--bs-highlight-gold);
+
+    --bs-success: #46B383;
+    --bs-success-bg: #18352A;
+    --bs-warning: #F09A3C;
+    --bs-warning-bg: #3A2A14;
+    --bs-error: #E26A6A;
+    --bs-error-bg: #3A1E1E;
+    --bs-info: #4F92DD;
+    --bs-info-bg: #15263A;
+
+    --bs-shadow-1: 0 2px 8px rgba(0, 0, 0, 0.32);
+    --bs-shadow-2: 0 4px 16px rgba(0, 0, 0, 0.40);
+    --bs-shadow-3: 0 8px 24px rgba(0, 0, 0, 0.48);
+  }
+}

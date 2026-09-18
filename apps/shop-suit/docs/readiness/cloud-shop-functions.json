@@ -1,0 +1,66 @@
+[
+  {
+    "proname": "shop_has_feature",
+    "definition": "CREATE OR REPLACE FUNCTION public.shop_has_feature(_shop_id uuid, _feature_key text)\n RETURNS boolean\n LANGUAGE sql\n STABLE\nAS $function$\r\n  select exists (\r\n    select 1 from public.subscriptions s\r\n    join public.plans p on p.id = s.plan_id\r\n    join public.shop_memberships sm on sm.profile_id = s.profile_id\r\n    where sm.shop_id = _shop_id\r\n      and sm.role = 'owner'\r\n      and s.status in ('trialing', 'active', 'past_due')\r\n      and coalesce((p.features ->> _feature_key)::boolean, false) = true\r\n  )\r\n$function$\n"
+  },
+  {
+    "proname": "user_has_shop_permission",
+    "definition": "CREATE OR REPLACE FUNCTION public.user_has_shop_permission(_shop_id uuid, _permission_key text)\n RETURNS boolean\n LANGUAGE sql\n STABLE\nAS $function$\r\n  select\r\n    -- owner shortcut\r\n    exists (\r\n      select 1 from public.shop_memberships sm\r\n      join public.profiles p on p.id = sm.profile_id\r\n      where sm.shop_id = _shop_id\r\n        and sm.role = 'owner'\r\n        and p.user_id = auth.uid()\r\n    )\r\n\r\n    -- OR employee with permission\r\n    or exists (\r\n      select 1 from public.membership_roles mr\r\n      join public.role_permissions rp on rp.role_id = mr.role_id\r\n      join public.permissions perm on perm.id = rp.permission_id\r\n      join public.shop_memberships sm on sm.id = mr.membership_id\r\n      join public.profiles p on p.id = sm.profile_id\r\n      where sm.shop_id = _shop_id\r\n        and p.user_id = auth.uid()\r\n        and perm.key = _permission_key\r\n    )\r\n$function$\n"
+  },
+  {
+    "proname": "user_is_member_of_shop",
+    "definition": "CREATE OR REPLACE FUNCTION public.user_is_member_of_shop(_shop_id uuid)\n RETURNS boolean\n LANGUAGE sql\n STABLE\nAS $function$\r\n  select exists (\r\n    select 1 from public.shop_memberships sm\r\n    join public.profiles p on p.id = sm.profile_id\r\n    where sm.shop_id = _shop_id\r\n      and p.user_id = auth.uid()\r\n  )\r\n$function$\n"
+  },
+  {
+    "proname": "shop_has_active_subscription",
+    "definition": "CREATE OR REPLACE FUNCTION public.shop_has_active_subscription(_shop_id uuid)\n RETURNS boolean\n LANGUAGE sql\n STABLE\nAS $function$\r\n  select exists (\r\n    select 1 from public.subscriptions s\r\n    join public.shop_memberships sm on sm.profile_id = s.profile_id\r\n    where sm.shop_id = _shop_id\r\n      and sm.role = 'owner'\r\n      and s.status in ('trialing', 'active', 'past_due')\r\n  )\r\n$function$\n"
+  },
+  {
+    "proname": "return_inventory_for_invoice",
+    "definition": "CREATE OR REPLACE FUNCTION public.return_inventory_for_invoice(_invoice_id uuid, _actor_profile_id uuid)\n RETURNS void\n LANGUAGE plpgsql\nAS $function$\r\ndeclare\r\n  mov record;\r\nbegin\r\n  -- Loop through original COGS movements\r\n  for mov in\r\n    select * from public.inventory_movements\r\n    where reference_id = _invoice_id and movement_type = 'out'\r\n  loop\r\n    -- Return stock to the same batch\r\n    update public.inventory_batches\r\n    set remaining_quantity = remaining_quantity + abs(mov.quantity_change)\r\n    where id = mov.batch_id;\r\n\r\n    -- Ledger: reverse movement\r\n    insert into public.inventory_movements (\r\n      shop_id, product_id, batch_id, quantity_change, movement_type, reference_id, created_by_profile_id\r\n    ) values (\r\n      mov.shop_id, mov.product_id, mov.batch_id, abs(mov.quantity_change), 'in', _invoice_id, _actor_profile_id\r\n    );\r\n  end loop;\r\nend;\r\n$function$\n"
+  },
+  {
+    "proname": "assert_period_is_open",
+    "definition": "CREATE OR REPLACE FUNCTION public.assert_period_is_open(_shop_id uuid, _date timestamp with time zone)\n RETURNS void\n LANGUAGE plpgsql\nAS $function$\r\nbegin\r\n  if exists (\r\n    select 1 from public.accounting_periods ap\r\n    where ap.shop_id = _shop_id\r\n      and ap.is_closed = true\r\n      and _date::date between ap.period_start and ap.period_end\r\n  ) then\r\n    raise exception\r\n      'Accounting period is closed for date %',\r\n      _date::date;\r\n  end if;\r\nend;\r\n$function$\n"
+  },
+  {
+    "proname": "prevent_invoice_edit_after_issue",
+    "definition": "CREATE OR REPLACE FUNCTION public.prevent_invoice_edit_after_issue()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nbegin\r\n  if old.status = 'issued' then\r\n    raise exception 'Issued invoice are immutable';\r\n  end if;\r\n  return new;\r\nend;\r\n$function$\n"
+  },
+  {
+    "proname": "prevent_vendor_invoice_edit_after_post",
+    "definition": "CREATE OR REPLACE FUNCTION public.prevent_vendor_invoice_edit_after_post()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nbegin\r\n  if old.status = 'posted' then\r\n    raise exception 'Posted vendor invoices are immutable';\r\n  end if;\r\n  return new;\r\nend;\r\n$function$\n"
+  },
+  {
+    "proname": "prevent_inventory_movment_mutation",
+    "definition": "CREATE OR REPLACE FUNCTION public.prevent_inventory_movment_mutation()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nbegin\r\n  raise exception 'Inventory movement are immutable';\r\nend;\r\n$function$\n"
+  },
+  {
+    "proname": "prevent_payment_update",
+    "definition": "CREATE OR REPLACE FUNCTION public.prevent_payment_update()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nbegin\r\n  raise exception 'Payments cannot be modified; use void or reversal';\r\nend;\r\n$function$\n"
+  },
+  {
+    "proname": "check_invoice_period",
+    "definition": "CREATE OR REPLACE FUNCTION public.check_invoice_period()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nbegin\r\n  perform public.assert_period_is_open(\r\n    new.shop_id,\r\n    new.issued_at\r\n  );\r\n  return new;\r\nend;\r\n$function$\n"
+  },
+  {
+    "proname": "deduct_inventory_fifo",
+    "definition": "CREATE OR REPLACE FUNCTION public.deduct_inventory_fifo(_shop_id uuid, _product_id uuid, _quantity numeric, _reference_id uuid, _actor_profile_id uuid)\n RETURNS void\n LANGUAGE plpgsql\nAS $function$\r\ndeclare\r\n  remaining_qty numeric := _quantity;\r\n  batch record;\r\n  take_qty numeric;\r\nbegin\r\n  -- Loop over FIFO batches\r\n  for batch in\r\n    select * from public.inventory_batches\r\n    where shop_id = _shop_id\r\n      and product_id = _product_id\r\n      and remaining_quantity > 0\r\n    order by received_at asc\r\n    for update\r\n  loop\r\n    exit when remaining_qty <= 0;\r\n\r\n    take_qty := least(remaining_qty, batch.remaining_quantity);\r\n\r\n    -- update batch remaining quantity\r\n    update public.inventory_batches\r\n    set remaining_quantity = remaining_quantity - take_qty\r\n    where id = batch.id;\r\n\r\n\r\n    -- insert ledger movmeent\r\n    insert into public.inventory_movements (\r\n      shop_id, product_id, batch_id, quantity_change, movement_type, reference_id, created_by_profile_id\r\n    ) values (\r\n      _shop_id, _product_id, batch.id, -take_qty, 'out', _reference_id, _actor_profile_id\r\n    );\r\n\r\n    remaining_qty := remaining_qty - take_qty;\r\n  end loop;\r\n\r\n\r\n  -- if we couldn't fulfill required quantity -> rollback\r\n  if remaining_qty > 0 then\r\n    raise exception\r\n      'Insufficient stock for product % (missing %)',\r\n      _product_id, remaining_qty;\r\n  end if;\r\nend;\r\n$function$\n"
+  },
+  {
+    "proname": "issue_invoice_and_deduct_inventory",
+    "definition": "CREATE OR REPLACE FUNCTION public.issue_invoice_and_deduct_inventory(_invoice_id uuid, _actor_profile_id uuid)\n RETURNS void\n LANGUAGE plpgsql\nAS $function$\r\ndeclare\r\n  inv record;\r\n  item record;\r\nbegin\r\n  -- Lock invoice\r\n  select * into inv\r\n  from public.invoices\r\n  where id = _invoice_id\r\n  for update;\r\n\r\n  if inv.status <> 'draft' then\r\n    raise exception 'Invoice % is not in draft state', _invoice_id;\r\n  end if;\r\n\r\n  -- Process each product item\r\n  for item in\r\n    select * from public.invoice_items\r\n    where invoice_id - _invoice_id\r\n      and item_type = 'product'\r\n      and product_id is not null\r\n  loop\r\n    perform public.deduct_inventory_fifo(\r\n      inv.shop_id, item.product_id, item.quantity, inv.id, _actor_profile_id\r\n    );\r\n  end loop;\r\n\r\n  -- Mark invoice as issued\r\n  update public.invoices\r\n  set status = 'issued',\r\n    issued_at = now()\r\n  where id = _invoice_id;\r\nend;\r\n$function$\n"
+  },
+  {
+    "proname": "check_payment_period",
+    "definition": "CREATE OR REPLACE FUNCTION public.check_payment_period()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nbegin\r\n  perform public.assert_period_is_open(\r\n    new.shop_id,\r\n    new.paid_at\r\n  );\r\n  return new;\r\nend;\r\n$function$\n"
+  },
+  {
+    "proname": "check_expense_period",
+    "definition": "CREATE OR REPLACE FUNCTION public.check_expense_period()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nbegin\r\n  if new.status = paid then\r\n    perform public.assert_period_is_open(\r\n      new.shop_id,\r\n      new.expense_date\r\n    );\r\n  end if;\r\n  return new;\r\nend;\r\n$function$\n"
+  },
+  {
+    "proname": "post_vendor_invoice_and_create_batches",
+    "definition": "CREATE OR REPLACE FUNCTION public.post_vendor_invoice_and_create_batches(_vendor_invoice_id uuid, _actor_profile_id uuid)\n RETURNS void\n LANGUAGE plpgsql\nAS $function$\r\ndeclare\r\n  inv record;\r\n  item record;\r\n  batch_id uuid;\r\nbegin\r\n  -- Lock invoice\r\n  select * into inv from public.vendor_invoices\r\n  where id = _vendor_invoice_id\r\n  for update;\r\n\r\n  if inv.status <> 'draft' then\r\n    raise exception 'Vendor invoice % is not in draft state', _vendor_invoice_id;\r\n  end if;\r\n\r\n  -- Process each item\r\n  for item in\r\n    select * from public.vendor_invoice_items\r\n    where vendor_invoice_id = _vendor_invoice_id\r\n  loop\r\n    -- Create FIFO batch\r\n    insert into public.inventory_batches (\r\n      shop_id, product_id, quantity_received, remaining_quantity, unit_cost, received_at, source_type, source_id\r\n    ) values (\r\n      inv.shop_id, item.product_id, item.quantity, item.quantity, item.unit_cost, coalesce(inv.issued_at, now()), 'vendor_invoice', inv.id\r\n    ) returning id into batch_id;\r\n\r\n    -- Ledger movement\r\n    insert into public.inventory_movements (\r\n      shop_id, product_id, batch_id, quantity_change, movement_type, reference_id, created_by_profile_id\r\n    ) values (\r\n      inv.shop_id, item.product_id, batch_id, item.quantity, 'in', inv.id, _actor_profile_id\r\n    );\r\n  end loop;\r\n\r\n  -- Mark invoice as posted\r\n  update public.vendor_invoices\r\n  set status = 'posted'\r\n  where id = _vendor_invoice_id;\r\nend;\r\n$function$\n"
+  }
+]

@@ -1,0 +1,1863 @@
+{
+  "grants": [
+    {
+      "schema": "shop_crm",
+      "table": "accounting_periods",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "accounting_periods",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "cash_flow_daily",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "cash_flow_daily",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "cash_flow_monthly",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "cash_flow_monthly",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "client_balances",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "client_balances",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "clients",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "clients",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "cogs_movements",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "cogs_movements",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "daily_cogs_margin",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "daily_cogs_margin",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "dead_stock",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "dead_stock",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "expense_categories",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "expense_categories",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "expenses",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "expenses",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "inventory_aging",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "inventory_aging",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "inventory_aging_value",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "inventory_aging_value",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "inventory_batches",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "inventory_batches",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "inventory_movements",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "inventory_movements",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "inventory_stock_batches",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "inventory_stock_batches",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "inventory_turnover",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "inventory_turnover",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "invoice_balances",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "invoice_balances",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "invoice_cogs",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "invoice_cogs",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "invoice_gross_margin",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "invoice_gross_margin",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "invoice_items",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "invoice_items",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "invoice_paid_amounts",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "invoice_paid_amounts",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "invoice_product_cogs",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "invoice_product_cogs",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "invoice_product_revenue",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "invoice_product_revenue",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "invoices",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "invoices",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "membership_roles",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "membership_roles",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "monthly_cogs_margin",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "monthly_cogs_margin",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "net_profit",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "net_profit",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "payments",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "payments",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "permissions",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "permissions",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "plans",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "plans",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "portals",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "portals",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "product_average_inventory",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "product_average_inventory",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "product_last_sale",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "product_last_sale",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "product_profitability",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "product_profitability",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "product_sales_90d",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "product_sales_90d",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "products",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "products",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "profiles",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "profiles",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "role_permissions",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "role_permissions",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "roles",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "roles",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "services",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "services",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "shop_memberships",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "shop_memberships",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "shops",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "shops",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "subscriptions",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "subscriptions",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "vendor_balances",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "vendor_balances",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "vendor_invoice_balances",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "vendor_invoice_balances",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "vendor_invoice_items",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "vendor_invoice_items",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "vendor_invoice_paid_amounts",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "vendor_invoice_paid_amounts",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "vendor_invoices",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "vendor_invoices",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "vendors",
+      "role": "anon",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "schema": "shop_crm",
+      "table": "vendors",
+      "role": "authenticated",
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    }
+  ],
+  "triggers": [
+    {
+      "table": "invoices",
+      "definition": "CREATE TRIGGER trg_prevent_invoice_edit BEFORE UPDATE ON shop_crm.invoices FOR EACH ROW EXECUTE FUNCTION prevent_invoice_edit_after_issue()"
+    },
+    {
+      "table": "vendor_invoices",
+      "definition": "CREATE TRIGGER trg_prevent_vendor_invoice_edit BEFORE UPDATE ON shop_crm.vendor_invoices FOR EACH ROW EXECUTE FUNCTION prevent_vendor_invoice_edit_after_post()"
+    },
+    {
+      "table": "inventory_movements",
+      "definition": "CREATE TRIGGER trg_prevent_inventory_movement_update BEFORE DELETE OR UPDATE ON shop_crm.inventory_movements FOR EACH ROW EXECUTE FUNCTION prevent_inventory_movment_mutation()"
+    },
+    {
+      "table": "payments",
+      "definition": "CREATE TRIGGER trg_prevent_payment_update BEFORE DELETE OR UPDATE ON shop_crm.payments FOR EACH ROW EXECUTE FUNCTION prevent_payment_update()"
+    },
+    {
+      "table": "invoices",
+      "definition": "CREATE TRIGGER trg_check_invoice_period BEFORE INSERT ON shop_crm.invoices FOR EACH ROW WHEN ((new.status = 'issued'::invoice_status)) EXECUTE FUNCTION check_invoice_period()"
+    },
+    {
+      "table": "payments",
+      "definition": "CREATE TRIGGER trg_check_payment_period BEFORE INSERT ON shop_crm.payments FOR EACH ROW EXECUTE FUNCTION check_payment_period()"
+    },
+    {
+      "table": "expenses",
+      "definition": "CREATE TRIGGER trg_check_expense_period BEFORE INSERT ON shop_crm.expenses FOR EACH ROW EXECUTE FUNCTION check_expense_period()"
+    }
+  ],
+  "constraints": [
+    {
+      "name": "products_created_by_profile_id_fkey",
+      "table": "products",
+      "definition": "FOREIGN KEY (created_by_profile_id) REFERENCES shop_crm.profiles(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "products_pkey",
+      "table": "products",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "products_shop_id_fkey",
+      "table": "products",
+      "definition": "FOREIGN KEY (shop_id) REFERENCES shop_crm.shops(id) ON DELETE CASCADE"
+    },
+    {
+      "name": "shops_pkey",
+      "table": "shops",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "shops_portal_id_fkey",
+      "table": "shops",
+      "definition": "FOREIGN KEY (portal_id) REFERENCES shop_crm.portals(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "invoice_items_invoice_id_fkey",
+      "table": "invoice_items",
+      "definition": "FOREIGN KEY (invoice_id) REFERENCES shop_crm.invoices(id) ON DELETE CASCADE"
+    },
+    {
+      "name": "invoice_items_pkey",
+      "table": "invoice_items",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "inventory_movements_batch_id_fkey",
+      "table": "inventory_movements",
+      "definition": "FOREIGN KEY (batch_id) REFERENCES shop_crm.inventory_batches(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "inventory_movements_created_by_profile_id_fkey",
+      "table": "inventory_movements",
+      "definition": "FOREIGN KEY (created_by_profile_id) REFERENCES shop_crm.profiles(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "inventory_movements_pkey",
+      "table": "inventory_movements",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "inventory_movements_product_id_fkey",
+      "table": "inventory_movements",
+      "definition": "FOREIGN KEY (product_id) REFERENCES shop_crm.products(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "inventory_movements_shop_id_fkey",
+      "table": "inventory_movements",
+      "definition": "FOREIGN KEY (shop_id) REFERENCES shop_crm.shops(id) ON DELETE CASCADE"
+    },
+    {
+      "name": "portals_key_key",
+      "table": "portals",
+      "definition": "UNIQUE (key)"
+    },
+    {
+      "name": "portals_pkey",
+      "table": "portals",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "services_created_by_profile_id_fkey",
+      "table": "services",
+      "definition": "FOREIGN KEY (created_by_profile_id) REFERENCES shop_crm.profiles(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "services_default_discount_type_check",
+      "table": "services",
+      "definition": "CHECK ((default_discount_type = ANY (ARRAY['amount'::text, 'percent'::text])))"
+    },
+    {
+      "name": "services_pkey",
+      "table": "services",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "services_shop_id_fkey",
+      "table": "services",
+      "definition": "FOREIGN KEY (shop_id) REFERENCES shop_crm.shops(id) ON DELETE CASCADE"
+    },
+    {
+      "name": "permissions_pkey",
+      "table": "permissions",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "permissions_portal_id_fkey",
+      "table": "permissions",
+      "definition": "FOREIGN KEY (portal_id) REFERENCES shop_crm.portals(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "permissions_portal_id_key_key",
+      "table": "permissions",
+      "definition": "UNIQUE (portal_id, key)"
+    },
+    {
+      "name": "plans_pkey",
+      "table": "plans",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "plans_portal_id_fkey",
+      "table": "plans",
+      "definition": "FOREIGN KEY (portal_id) REFERENCES shop_crm.portals(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "plans_portal_id_slug_key",
+      "table": "plans",
+      "definition": "UNIQUE (portal_id, slug)"
+    },
+    {
+      "name": "roles_pkey",
+      "table": "roles",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "roles_shop_id_fkey",
+      "table": "roles",
+      "definition": "FOREIGN KEY (shop_id) REFERENCES shop_crm.shops(id) ON DELETE CASCADE"
+    },
+    {
+      "name": "roles_shop_id_name_key",
+      "table": "roles",
+      "definition": "UNIQUE (shop_id, name)"
+    },
+    {
+      "name": "profiles_pkey",
+      "table": "profiles",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "profiles_portal_id_fkey",
+      "table": "profiles",
+      "definition": "FOREIGN KEY (portal_id) REFERENCES shop_crm.portals(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "profiles_user_fk",
+      "table": "profiles",
+      "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+    },
+    {
+      "name": "profiles_user_id_portal_id_key",
+      "table": "profiles",
+      "definition": "UNIQUE (user_id, portal_id)"
+    },
+    {
+      "name": "accounting_periods_check",
+      "table": "accounting_periods",
+      "definition": "CHECK ((period_start <= period_end))"
+    },
+    {
+      "name": "accounting_periods_closed_by_profile_id_fkey",
+      "table": "accounting_periods",
+      "definition": "FOREIGN KEY (closed_by_profile_id) REFERENCES shop_crm.profiles(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "accounting_periods_pkey",
+      "table": "accounting_periods",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "accounting_periods_shop_id_fkey",
+      "table": "accounting_periods",
+      "definition": "FOREIGN KEY (shop_id) REFERENCES shop_crm.shops(id) ON DELETE CASCADE"
+    },
+    {
+      "name": "accounting_periods_shop_id_period_start_period_end_key",
+      "table": "accounting_periods",
+      "definition": "UNIQUE (shop_id, period_start, period_end)"
+    },
+    {
+      "name": "subscriptions_pkey",
+      "table": "subscriptions",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "subscriptions_plan_id_fkey",
+      "table": "subscriptions",
+      "definition": "FOREIGN KEY (plan_id) REFERENCES shop_crm.plans(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "subscriptions_profile_id_fkey",
+      "table": "subscriptions",
+      "definition": "FOREIGN KEY (profile_id) REFERENCES shop_crm.profiles(id) ON DELETE CASCADE"
+    },
+    {
+      "name": "subscriptions_profile_id_key",
+      "table": "subscriptions",
+      "definition": "UNIQUE (profile_id)"
+    },
+    {
+      "name": "membership_roles_membership_id_fkey",
+      "table": "membership_roles",
+      "definition": "FOREIGN KEY (membership_id) REFERENCES shop_crm.shop_memberships(id) ON DELETE CASCADE"
+    },
+    {
+      "name": "membership_roles_pkey",
+      "table": "membership_roles",
+      "definition": "PRIMARY KEY (membership_id, role_id)"
+    },
+    {
+      "name": "membership_roles_role_id_fkey",
+      "table": "membership_roles",
+      "definition": "FOREIGN KEY (role_id) REFERENCES shop_crm.roles(id) ON DELETE CASCADE"
+    },
+    {
+      "name": "vendor_invoices_created_by_profile_id_fkey",
+      "table": "vendor_invoices",
+      "definition": "FOREIGN KEY (created_by_profile_id) REFERENCES shop_crm.profiles(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "vendor_invoices_pkey",
+      "table": "vendor_invoices",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "vendor_invoices_shop_id_fkey",
+      "table": "vendor_invoices",
+      "definition": "FOREIGN KEY (shop_id) REFERENCES shop_crm.shops(id) ON DELETE CASCADE"
+    },
+    {
+      "name": "vendor_invoices_shop_id_invoice_number_key",
+      "table": "vendor_invoices",
+      "definition": "UNIQUE (shop_id, invoice_number)"
+    },
+    {
+      "name": "vendor_invoices_vendor_id_fkey",
+      "table": "vendor_invoices",
+      "definition": "FOREIGN KEY (vendor_id) REFERENCES shop_crm.vendors(id) ON DELETE SET NULL"
+    },
+    {
+      "name": "payments_amount_check",
+      "table": "payments",
+      "definition": "CHECK ((amount > (0)::numeric))"
+    },
+    {
+      "name": "payments_client_id_fkey",
+      "table": "payments",
+      "definition": "FOREIGN KEY (client_id) REFERENCES shop_crm.clients(id) ON DELETE SET NULL"
+    },
+    {
+      "name": "payments_created_by_profile_id_fkey",
+      "table": "payments",
+      "definition": "FOREIGN KEY (created_by_profile_id) REFERENCES shop_crm.profiles(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "payments_invoice_id_fkey",
+      "table": "payments",
+      "definition": "FOREIGN KEY (invoice_id) REFERENCES shop_crm.invoices(id) ON DELETE SET NULL"
+    },
+    {
+      "name": "payments_pkey",
+      "table": "payments",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "payments_shop_id_fkey",
+      "table": "payments",
+      "definition": "FOREIGN KEY (shop_id) REFERENCES shop_crm.shops(id) ON DELETE CASCADE"
+    },
+    {
+      "name": "payments_vendor_id_fkey",
+      "table": "payments",
+      "definition": "FOREIGN KEY (vendor_id) REFERENCES shop_crm.vendors(id) ON DELETE SET NULL"
+    },
+    {
+      "name": "payments_vendor_invoice_id_fkey",
+      "table": "payments",
+      "definition": "FOREIGN KEY (vendor_invoice_id) REFERENCES shop_crm.vendor_invoices(id) ON DELETE SET NULL"
+    },
+    {
+      "name": "clients_created_by_profile_id_fkey",
+      "table": "clients",
+      "definition": "FOREIGN KEY (created_by_profile_id) REFERENCES shop_crm.profiles(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "clients_pkey",
+      "table": "clients",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "clients_shop_id_fkey",
+      "table": "clients",
+      "definition": "FOREIGN KEY (shop_id) REFERENCES shop_crm.shops(id) ON DELETE CASCADE"
+    },
+    {
+      "name": "inventory_batches_check",
+      "table": "inventory_batches",
+      "definition": "CHECK ((remaining_quantity <= quantity_received))"
+    },
+    {
+      "name": "inventory_batches_pkey",
+      "table": "inventory_batches",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "inventory_batches_product_id_fkey",
+      "table": "inventory_batches",
+      "definition": "FOREIGN KEY (product_id) REFERENCES shop_crm.products(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "inventory_batches_remaining_quantity_check",
+      "table": "inventory_batches",
+      "definition": "CHECK ((remaining_quantity >= (0)::numeric))"
+    },
+    {
+      "name": "inventory_batches_shop_id_fkey",
+      "table": "inventory_batches",
+      "definition": "FOREIGN KEY (shop_id) REFERENCES shop_crm.shops(id) ON DELETE CASCADE"
+    },
+    {
+      "name": "shop_memberships_pkey",
+      "table": "shop_memberships",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "shop_memberships_profile_id_fkey",
+      "table": "shop_memberships",
+      "definition": "FOREIGN KEY (profile_id) REFERENCES shop_crm.profiles(id) ON DELETE CASCADE"
+    },
+    {
+      "name": "shop_memberships_shop_id_fkey",
+      "table": "shop_memberships",
+      "definition": "FOREIGN KEY (shop_id) REFERENCES shop_crm.shops(id) ON DELETE CASCADE"
+    },
+    {
+      "name": "shop_memberships_shop_id_profile_id_key",
+      "table": "shop_memberships",
+      "definition": "UNIQUE (shop_id, profile_id)"
+    },
+    {
+      "name": "vendor_invoice_items_pkey",
+      "table": "vendor_invoice_items",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "vendor_invoice_items_product_id_fkey",
+      "table": "vendor_invoice_items",
+      "definition": "FOREIGN KEY (product_id) REFERENCES shop_crm.products(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "vendor_invoice_items_vendor_invoice_id_fkey",
+      "table": "vendor_invoice_items",
+      "definition": "FOREIGN KEY (vendor_invoice_id) REFERENCES shop_crm.vendor_invoices(id) ON DELETE CASCADE"
+    },
+    {
+      "name": "vendors_created_by_profile_id_fkey",
+      "table": "vendors",
+      "definition": "FOREIGN KEY (created_by_profile_id) REFERENCES shop_crm.profiles(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "vendors_pkey",
+      "table": "vendors",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "vendors_shop_id_fkey",
+      "table": "vendors",
+      "definition": "FOREIGN KEY (shop_id) REFERENCES shop_crm.shops(id) ON DELETE CASCADE"
+    },
+    {
+      "name": "invoices_assigned_to_profile_id_fkey",
+      "table": "invoices",
+      "definition": "FOREIGN KEY (assigned_to_profile_id) REFERENCES shop_crm.profiles(id) ON DELETE SET NULL"
+    },
+    {
+      "name": "invoices_client_id_fkey",
+      "table": "invoices",
+      "definition": "FOREIGN KEY (client_id) REFERENCES shop_crm.clients(id) ON DELETE SET NULL"
+    },
+    {
+      "name": "invoices_created_by_profile_id_fkey",
+      "table": "invoices",
+      "definition": "FOREIGN KEY (created_by_profile_id) REFERENCES shop_crm.profiles(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "invoices_pkey",
+      "table": "invoices",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "invoices_shop_id_fkey",
+      "table": "invoices",
+      "definition": "FOREIGN KEY (shop_id) REFERENCES shop_crm.shops(id) ON DELETE CASCADE"
+    },
+    {
+      "name": "invoices_shop_id_invoice_number_key",
+      "table": "invoices",
+      "definition": "UNIQUE (shop_id, invoice_number)"
+    },
+    {
+      "name": "expenses_amount_check",
+      "table": "expenses",
+      "definition": "CHECK ((amount > (0)::numeric))"
+    },
+    {
+      "name": "expenses_category_id_fkey",
+      "table": "expenses",
+      "definition": "FOREIGN KEY (category_id) REFERENCES shop_crm.expense_categories(id) ON DELETE SET NULL"
+    },
+    {
+      "name": "expenses_created_by_profile_id_fkey",
+      "table": "expenses",
+      "definition": "FOREIGN KEY (created_by_profile_id) REFERENCES shop_crm.profiles(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "expenses_pkey",
+      "table": "expenses",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "expenses_shop_id_fkey",
+      "table": "expenses",
+      "definition": "FOREIGN KEY (shop_id) REFERENCES shop_crm.shops(id) ON DELETE CASCADE"
+    },
+    {
+      "name": "expense_categories_created_by_profile_id_fkey",
+      "table": "expense_categories",
+      "definition": "FOREIGN KEY (created_by_profile_id) REFERENCES shop_crm.profiles(id) ON DELETE RESTRICT"
+    },
+    {
+      "name": "expense_categories_pkey",
+      "table": "expense_categories",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "expense_categories_shop_id_fkey",
+      "table": "expense_categories",
+      "definition": "FOREIGN KEY (shop_id) REFERENCES shop_crm.shops(id) ON DELETE CASCADE"
+    },
+    {
+      "name": "role_permissions_permission_id_fkey",
+      "table": "role_permissions",
+      "definition": "FOREIGN KEY (permission_id) REFERENCES shop_crm.permissions(id) ON DELETE CASCADE"
+    },
+    {
+      "name": "role_permissions_pkey",
+      "table": "role_permissions",
+      "definition": "PRIMARY KEY (role_id, permission_id)"
+    },
+    {
+      "name": "role_permissions_role_id_fkey",
+      "table": "role_permissions",
+      "definition": "FOREIGN KEY (role_id) REFERENCES shop_crm.roles(id) ON DELETE CASCADE"
+    }
+  ]
+}

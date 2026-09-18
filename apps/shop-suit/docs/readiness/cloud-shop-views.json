@@ -1,0 +1,127 @@
+[
+  {
+    "name": "cash_flow_daily",
+    "options": null,
+    "definition": " SELECT shop_id,\n    day,\n    sum(net_amount) AS net_cash_flow\n   FROM ( SELECT payments.shop_id,\n            date_trunc('day'::text, payments.paid_at) AS day,\n                CASE\n                    WHEN payments.payment_direction = 'in'::payment_direction THEN payments.amount\n                    ELSE - payments.amount\n                END AS net_amount\n           FROM shop_crm.payments\n          WHERE payments.status = 'completed'::payment_status\n        UNION ALL\n         SELECT expenses.shop_id,\n            date_trunc('day'::text, expenses.paid_at) AS day,\n            - expenses.amount AS net_amount\n           FROM shop_crm.expenses\n          WHERE expenses.status = 'paid'::expense_status AND expenses.paid_at IS NOT NULL) t\n  GROUP BY shop_id, day;"
+  },
+  {
+    "name": "cash_flow_monthly",
+    "options": null,
+    "definition": " SELECT shop_id,\n    month,\n    sum(net_amount) AS net_cash_flow\n   FROM ( SELECT payments.shop_id,\n            date_trunc('month'::text, payments.paid_at) AS month,\n                CASE\n                    WHEN payments.payment_direction = 'in'::payment_direction THEN payments.amount\n                    ELSE - payments.amount\n                END AS net_amount\n           FROM shop_crm.payments\n          WHERE payments.status = 'completed'::payment_status\n        UNION ALL\n         SELECT expenses.shop_id,\n            date_trunc('month'::text, expenses.paid_at) AS month,\n            - expenses.amount AS net_amount\n           FROM shop_crm.expenses\n          WHERE expenses.status = 'paid'::expense_status AND expenses.paid_at IS NOT NULL) t\n  GROUP BY shop_id, month;"
+  },
+  {
+    "name": "client_balances",
+    "options": null,
+    "definition": " SELECT c.id AS client_id,\n    c.shop_id,\n    COALESCE(sum(i.total_amount), 0::numeric) - COALESCE(sum(p.amount), 0::numeric) AS balance\n   FROM shop_crm.clients c\n     LEFT JOIN shop_crm.invoices i ON i.client_id = c.id\n     LEFT JOIN shop_crm.payments p ON p.client_id = c.id AND p.payment_direction = 'in'::payment_direction AND p.status = 'completed'::payment_status\n  GROUP BY c.id, c.shop_id;"
+  },
+  {
+    "name": "cogs_movements",
+    "options": null,
+    "definition": " SELECT im.shop_id,\n    im.reference_id AS invoice_id,\n    im.product_id,\n    im.batch_id,\n    abs(im.quantity_change) AS quantity_sold,\n    b.unit_cost,\n    abs(im.quantity_change * b.unit_cost) AS cogs_amount,\n    im.created_at\n   FROM shop_crm.inventory_movements im\n     JOIN shop_crm.inventory_batches b ON b.id = im.batch_id\n  WHERE im.movement_type = 'out'::inventory_movement_type;"
+  },
+  {
+    "name": "daily_cogs_margin",
+    "options": null,
+    "definition": " SELECT i.shop_id,\n    date_trunc('day'::text, i.issued_at) AS day,\n    sum(ipr.product_revenue) AS revenue,\n    sum(ic.total_cogs) AS cogs,\n    sum(ipr.product_revenue) - sum(ic.total_cogs) AS gross_profit\n   FROM shop_crm.invoices i\n     JOIN shop_crm.invoice_product_revenue ipr ON ipr.invoice_id = i.id\n     JOIN shop_crm.invoice_cogs ic ON ic.invoice_id = i.id\n  GROUP BY i.shop_id, (date_trunc('day'::text, i.issued_at));"
+  },
+  {
+    "name": "dead_stock",
+    "options": null,
+    "definition": " SELECT sb.shop_id,\n    sb.product_id,\n    sum(sb.remaining_quantity) AS quantity_on_hand,\n    max(sb.received_at) AS oldest_batch_date,\n    pls.last_sold_at,\n    now() - COALESCE(pls.last_sold_at, min(sb.received_at)) AS days_since_last_sale\n   FROM shop_crm.inventory_stock_batches sb\n     LEFT JOIN shop_crm.product_last_sale pls ON pls.shop_id = sb.shop_id AND pls.product_id = sb.product_id\n  GROUP BY sb.shop_id, sb.product_id, pls.last_sold_at\n HAVING (now() - COALESCE(pls.last_sold_at, min(sb.received_at))) > '90 days'::interval;"
+  },
+  {
+    "name": "inventory_aging",
+    "options": null,
+    "definition": " SELECT shop_id,\n    product_id,\n    sum(\n        CASE\n            WHEN age_interval <= '30 days'::interval THEN remaining_quantity\n            ELSE 0::numeric\n        END) AS qty_0_30,\n    sum(\n        CASE\n            WHEN age_interval > '30 days'::interval AND age_interval <= '60 days'::interval THEN remaining_quantity\n            ELSE 0::numeric\n        END) AS qty_31_60,\n    sum(\n        CASE\n            WHEN age_interval > '60 days'::interval AND age_interval <= '90 days'::interval THEN remaining_quantity\n            ELSE 0::numeric\n        END) AS qty_61_90,\n    sum(\n        CASE\n            WHEN age_interval > '90 days'::interval THEN remaining_quantity\n            ELSE 0::numeric\n        END) AS qty_90_plus\n   FROM shop_crm.inventory_stock_batches\n  GROUP BY shop_id, product_id;"
+  },
+  {
+    "name": "inventory_aging_value",
+    "options": null,
+    "definition": " SELECT shop_id,\n    product_id,\n    sum(\n        CASE\n            WHEN age_interval <= '30 days'::interval THEN remaining_quantity * unit_cost\n            ELSE 0::numeric\n        END) AS value_0_30,\n    sum(\n        CASE\n            WHEN age_interval > '30 days'::interval AND age_interval <= '60 days'::interval THEN remaining_quantity * unit_cost\n            ELSE 0::numeric\n        END) AS value_31_60,\n    sum(\n        CASE\n            WHEN age_interval > '60 days'::interval AND age_interval <= '90 days'::interval THEN remaining_quantity * unit_cost\n            ELSE 0::numeric\n        END) AS value_61_90,\n    sum(\n        CASE\n            WHEN age_interval > '90 days'::interval THEN remaining_quantity * unit_cost\n            ELSE 0::numeric\n        END) AS value_90_plus\n   FROM shop_crm.inventory_stock_batches\n  GROUP BY shop_id, product_id;"
+  },
+  {
+    "name": "inventory_stock_batches",
+    "options": null,
+    "definition": " SELECT shop_id,\n    product_id,\n    id AS batch_id,\n    received_at,\n    unit_cost,\n    remaining_quantity,\n    now() - received_at AS age_interval\n   FROM shop_crm.inventory_batches\n  WHERE remaining_quantity > 0::numeric;"
+  },
+  {
+    "name": "inventory_turnover",
+    "options": null,
+    "definition": " SELECT s.shop_id,\n    s.product_id,\n    s.quantity_sold_90d,\n    COALESCE(ai.avg_quantity_on_hand, 0::numeric) AS avg_inventory,\n        CASE\n            WHEN COALESCE(ai.avg_quantity_on_hand, 0::numeric) = 0::numeric THEN NULL::numeric\n            ELSE s.quantity_sold_90d / ai.avg_quantity_on_hand\n        END AS turnover_ratio\n   FROM shop_crm.product_sales_90d s\n     LEFT JOIN shop_crm.product_average_inventory ai ON ai.shop_id = s.shop_id AND ai.product_id = s.product_id;"
+  },
+  {
+    "name": "invoice_balances",
+    "options": null,
+    "definition": " SELECT i.id AS invoice_id,\n    i.shop_id,\n    i.total_amount,\n    COALESCE(pa.paid_amount, 0::numeric) AS paid_amount,\n    i.total_amount - COALESCE(pa.paid_amount, 0::numeric) AS balance_due\n   FROM shop_crm.invoices i\n     LEFT JOIN shop_crm.invoice_paid_amounts pa ON pa.invoice_id = i.id;"
+  },
+  {
+    "name": "invoice_cogs",
+    "options": null,
+    "definition": " SELECT invoice_id,\n    sum(product_cogs) AS total_cogs\n   FROM shop_crm.invoice_product_cogs\n  GROUP BY invoice_id;"
+  },
+  {
+    "name": "invoice_gross_margin",
+    "options": null,
+    "definition": " SELECT i.id AS invoice_id,\n    i.shop_id,\n    COALESCE(r.product_revenue, 0::numeric) AS revenue,\n    COALESCE(c.total_cogs, 0::numeric) AS cogs,\n    COALESCE(r.product_revenue, 0::numeric) - COALESCE(c.total_cogs, 0::numeric) AS gross_profit\n   FROM shop_crm.invoices i\n     LEFT JOIN shop_crm.invoice_product_revenue r ON r.invoice_id = i.id\n     LEFT JOIN shop_crm.invoice_cogs c ON c.invoice_id = i.id;"
+  },
+  {
+    "name": "invoice_paid_amounts",
+    "options": null,
+    "definition": " SELECT i.id AS invoice_id,\n    COALESCE(sum(p.amount), 0::numeric) AS paid_amount\n   FROM shop_crm.invoices i\n     LEFT JOIN shop_crm.payments p ON p.invoice_id = i.id AND p.payment_direction = 'in'::payment_direction AND p.status = 'completed'::payment_status\n  GROUP BY i.id;"
+  },
+  {
+    "name": "invoice_product_cogs",
+    "options": null,
+    "definition": " SELECT invoice_id,\n    product_id,\n    sum(cogs_amount) AS product_cogs\n   FROM shop_crm.cogs_movements\n  GROUP BY invoice_id, product_id;"
+  },
+  {
+    "name": "invoice_product_revenue",
+    "options": null,
+    "definition": " SELECT invoice_id,\n    sum(unit_price * quantity - COALESCE(discount_amount, 0::numeric)) AS product_revenue\n   FROM shop_crm.invoice_items ii\n  WHERE item_type = 'product'::invoice_item_type\n  GROUP BY invoice_id;"
+  },
+  {
+    "name": "monthly_cogs_margin",
+    "options": null,
+    "definition": " SELECT i.shop_id,\n    date_trunc('month'::text, i.issued_at) AS month,\n    sum(ipr.product_revenue) AS revendue,\n    sum(ic.total_cogs) AS cogs,\n    sum(ipr.product_revenue) - sum(ic.total_cogs) AS gross_profit\n   FROM shop_crm.invoices i\n     JOIN shop_crm.invoice_product_revenue ipr ON ipr.invoice_id = i.id\n     JOIN shop_crm.invoice_cogs ic ON ic.invoice_id = i.id\n  GROUP BY i.shop_id, (date_trunc('month'::text, i.issued_at));"
+  },
+  {
+    "name": "net_profit",
+    "options": null,
+    "definition": " SELECT gm.shop_id,\n    gm.day,\n    gm.gross_profit - COALESCE(e.total_expenses, 0::numeric) AS net_profit\n   FROM shop_crm.daily_cogs_margin gm\n     LEFT JOIN ( SELECT expenses.shop_id,\n            date_trunc('day'::text, expenses.expense_date) AS day,\n            sum(expenses.amount) AS total_expenses\n           FROM shop_crm.expenses\n          WHERE expenses.status = 'paid'::expense_status\n          GROUP BY expenses.shop_id, (date_trunc('day'::text, expenses.expense_date))) e ON e.shop_id = gm.shop_id AND e.day = gm.day;"
+  },
+  {
+    "name": "product_average_inventory",
+    "options": null,
+    "definition": " SELECT shop_id,\n    product_id,\n    avg(remaining_quantity) AS avg_quantity_on_hand\n   FROM shop_crm.inventory_stock_batches\n  GROUP BY shop_id, product_id;"
+  },
+  {
+    "name": "product_last_sale",
+    "options": null,
+    "definition": " SELECT shop_id,\n    product_id,\n    max(created_at) AS last_sold_at\n   FROM shop_crm.inventory_movements im\n  WHERE movement_type = 'out'::inventory_movement_type\n  GROUP BY shop_id, product_id;"
+  },
+  {
+    "name": "product_profitability",
+    "options": null,
+    "definition": " SELECT ii.product_id,\n    i.shop_id,\n    sum(ii.unit_price * ii.quantity - COALESCE(ii.discount_amount, 0::numeric)) AS revenue,\n    sum(cm.cogs_amount) AS cogs,\n    sum(ii.unit_price * ii.quantity - COALESCE(ii.discount_amount, 0::numeric)) - sum(cm.cogs_amount) AS gross_profit\n   FROM shop_crm.invoice_items ii\n     JOIN shop_crm.invoices i ON i.id = ii.invoice_id\n     JOIN shop_crm.cogs_movements cm ON cm.invoice_id = ii.invoice_id AND cm.product_id = ii.product_id\n  WHERE ii.item_type = 'product'::invoice_item_type\n  GROUP BY ii.product_id, i.shop_id;"
+  },
+  {
+    "name": "product_sales_90d",
+    "options": null,
+    "definition": " SELECT shop_id,\n    product_id,\n    sum(abs(quantity_change)) AS quantity_sold_90d\n   FROM shop_crm.inventory_movements im\n  WHERE movement_type = 'out'::inventory_movement_type AND created_at >= (now() - '90 days'::interval)\n  GROUP BY shop_id, product_id;"
+  },
+  {
+    "name": "vendor_balances",
+    "options": null,
+    "definition": " SELECT v.id AS vendor_id,\n    v.shop_id,\n    COALESCE(sum(vi.total_amount), 0::numeric) - COALESCE(sum(p.amount), 0::numeric) AS balance\n   FROM shop_crm.vendors v\n     LEFT JOIN shop_crm.vendor_invoices vi ON vi.vendor_id = v.id\n     LEFT JOIN shop_crm.payments p ON p.vendor_id = v.id AND p.payment_direction = 'out'::payment_direction AND p.status = 'completed'::payment_status\n  GROUP BY v.id, v.shop_id;"
+  },
+  {
+    "name": "vendor_invoice_balances",
+    "options": null,
+    "definition": " SELECT vi.id AS vendor_invoice_id,\n    vi.shop_id,\n    vi.total_amount,\n    COALESCE(pa.paid_amount, 0::numeric) AS paid_amount,\n    vi.total_amount - COALESCE(pa.paid_amount, 0::numeric) AS balance_due\n   FROM shop_crm.vendor_invoices vi\n     LEFT JOIN shop_crm.vendor_invoice_paid_amounts pa ON pa.vendor_invoice_id = vi.id;"
+  },
+  {
+    "name": "vendor_invoice_paid_amounts",
+    "options": null,
+    "definition": " SELECT vi.id AS vendor_invoice_id,\n    COALESCE(sum(p.amount), 0::numeric) AS paid_amount\n   FROM shop_crm.vendor_invoices vi\n     LEFT JOIN shop_crm.payments p ON p.vendor_invoice_id = vi.id AND p.payment_direction = 'out'::payment_direction AND p.status = 'completed'::payment_status\n  GROUP BY vi.id;"
+  }
+]
