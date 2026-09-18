@@ -1,3 +1,5 @@
+> Historical verification checkpoint before ADR 0002. Current independent-project evidence is recorded in `independent-project-verification.md`.
+
 # Local verification checkpoint — 2026-09-19
 
 ## Passing checks

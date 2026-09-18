@@ -1,8 +1,6 @@
-// Narrow hand-maintained RPC contract until custom-schema type generation is
-// available for the hosted shop_crm schema. SQL migrations are the source.
+// Product RPC contract for the dedicated Shop project public schema.
 export type ShopRpcDatabase = {
-  public: { Tables: Record<string, never>; Views: Record<string, never>; Functions: Record<string, never>; Enums: Record<string, never>; CompositeTypes: Record<string, never> }
-  shop_crm: {
+  public: {
     Tables: Record<string, never>
     Views: Record<string, never>
     Functions: {

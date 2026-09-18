@@ -41,23 +41,23 @@ Use these workflows to navigate, maintain and extend the repository. Select only
 
 ## 5. Evolve a database schema or API contract
 
-1. Read `supabase/AGENTS.md`, the owning domain's contracts and `docs/architecture/environments.json` and the maintained database runbook in `docs/shared/database.md`.
+1. Read `apps/<product>/supabase/AGENTS.md`, the owning domain’s contracts, `docs/architecture/environments.json` and the maintained database runbook in `docs/shared/database.md`.
 2. Verify the target environment/ref and inspect relevant applied history, schema definitions and callers.
 3. Design the requested change with compatibility, data handling, privileges, RLS, function/view dependencies and risk-appropriate recovery.
-4. Create a new forward migration using documented tooling. Do not modify applied files or bypass versioned deployment.
+4. Create a new forward migration with `pnpm db <product> migration new <name>`. Business objects use that product’s `public` schema; privileged helpers remain unexposed. Do not modify applied files or bypass versioned deployment.
 5. Test in the designated safe environment, checking affected authorization, constraints, business invariants and callers.
 6. Regenerate database types, update adapters/contracts and verify affected applications.
 7. Use the environment-bound deployment workflow within current authorization. Record versions, checks and recovery instructions without sensitive data.
 
 ## 6. Change authentication, authorization or onboarding
 
-1. Identify global identity, trusted portal context, portal profile, tenant membership and permissions separately.
+1. Identify the owning product/environment’s Auth project, trusted portal context, profile, tenant membership and permissions separately. Shared UI mechanics do not imply shared identities.
 2. Read the current session architecture, credential methods, callback rules and product requirements.
 3. Update the shared auth implementation and product adapters. Keep wizard navigation/verification mechanics shared.
 4. Never infer ownership from matching unverified contacts or grant authority through user-editable metadata.
-5. Verify relevant new/existing user, second-product enrollment, invitation, incomplete onboarding, verification expiry/resend, recovery, refresh, logout and denial flows.
+5. Verify relevant new/existing user, invitation, incomplete onboarding, verification expiry/resend, recovery, refresh, logout and denial flows in the owning product.
 6. Verify account/tenant switches clear sensitive caches, listeners and draft/table state.
-7. For session handoff changes, test actual origins and the deployed strategy, including callback allowlists, replay denial, refresh, consent and logout/revocation behavior. Separate successful logins do not prove SSO.
+7. Verify that cookie prefixes, callbacks and project keys isolate products and environments. SSO/account linking is deferred; introducing it requires an explicit architecture decision and authorization.
 
 ## 7. Maintain documentation, tokens and agent guidance
 
@@ -71,10 +71,10 @@ Use these workflows to navigate, maintain and extend the repository. Select only
 ## 8. Add a new platform
 
 1. Confirm the requested scope, content, domain ownership and existing shared capabilities.
-2. Run `pnpm new:platform <slug> "Product name" --dry-run` to inspect the maintained template, then run without `--dry-run` and use `pnpm install` and `pnpm setup` to register/prepare the app.
+2. Run `pnpm new:platform <slug> "Product name" --dry-run` to inspect the maintained template, then run without `--dry-run` and use `pnpm install` and `pnpm run setup` to register/prepare the app.
 3. Configure brand assets/content, navigation, translations, tenant/profile adapter and onboarding requirements.
 4. Reuse shared templates, PrimeVue components, table and UX controllers. Add shared capabilities only for concrete requirements.
-5. Define product contracts and owned private/API schemas through the database workflow; preserve global identity and separate portal authorization.
+5. Define product contracts and an app-owned Supabase CLI root through the database workflow. Configure its own organization and production/staging pair, `public` business schema and independent Auth. Verify current provider quota/role constraints before provisioning.
 6. Add scoped agent guidance, tests, environment configuration and build/deploy integration within the requested scope.
 7. Verify the new app and affected existing consumers. Scaffolding alone does not authorize paid resources or publication.
 

@@ -710,662 +710,772 @@
   {
     "project": "ledger-suit",
     "source": "supabase/config.toml",
-    "destination": "supabase/config.toml",
-    "sha256": "b7ac98f95b455bbc28357c7ff1814cb0dd85e9e8705407d02d83f140eb2e04ea"
+    "destination": "apps/ledger-suit/supabase/config.toml",
+    "sha256": "b7ac98f95b455bbc28357c7ff1814cb0dd85e9e8705407d02d83f140eb2e04ea",
+    "initialImportDestination": "supabase/config.toml"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/functions/_shared/env.ts",
-    "destination": "supabase/functions/_shared/env.ts",
-    "sha256": "9e1b6f59af45f5e9d5fd7d2341d8f18abea6e9e64e277f1d1f1f8b0edf4d65dc"
+    "destination": "apps/ledger-suit/supabase/functions/_shared/env.ts",
+    "sha256": "9e1b6f59af45f5e9d5fd7d2341d8f18abea6e9e64e277f1d1f1f8b0edf4d65dc",
+    "initialImportDestination": "supabase/functions/_shared/env.ts"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/functions/_shared/http.ts",
-    "destination": "supabase/functions/_shared/http.ts",
-    "sha256": "e6dcd3747cef23a075485952f011f96e427c71f4841d850457f07547e0a759d1"
+    "destination": "apps/ledger-suit/supabase/functions/_shared/http.ts",
+    "sha256": "e6dcd3747cef23a075485952f011f96e427c71f4841d850457f07547e0a759d1",
+    "initialImportDestination": "supabase/functions/_shared/http.ts"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/functions/_shared/payment-confirmation.ts",
-    "destination": "supabase/functions/_shared/payment-confirmation.ts",
-    "sha256": "75f8e3d11f7518cb0686199fd84a5355e939b35c2fa23cba9707b623fbc49e56"
+    "destination": "apps/ledger-suit/supabase/functions/_shared/payment-confirmation.ts",
+    "sha256": "75f8e3d11f7518cb0686199fd84a5355e939b35c2fa23cba9707b623fbc49e56",
+    "initialImportDestination": "supabase/functions/_shared/payment-confirmation.ts"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/functions/_shared/payment-confirmation_test.ts",
-    "destination": "supabase/functions/_shared/payment-confirmation_test.ts",
-    "sha256": "18be8bb7c56bf8ad8bc645320b6a3c5ef4ed081c1f1c704399318a105f72fc0c"
+    "destination": "apps/ledger-suit/supabase/functions/_shared/payment-confirmation_test.ts",
+    "sha256": "18be8bb7c56bf8ad8bc645320b6a3c5ef4ed081c1f1c704399318a105f72fc0c",
+    "initialImportDestination": "supabase/functions/_shared/payment-confirmation_test.ts"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/functions/_shared/paymob-checkout-contract.ts",
-    "destination": "supabase/functions/_shared/paymob-checkout-contract.ts",
-    "sha256": "91052f918f1a65a022adf357c4dd5762b33e473f3c4d940eec6615a8dcbe19aa"
+    "destination": "apps/ledger-suit/supabase/functions/_shared/paymob-checkout-contract.ts",
+    "sha256": "91052f918f1a65a022adf357c4dd5762b33e473f3c4d940eec6615a8dcbe19aa",
+    "initialImportDestination": "supabase/functions/_shared/paymob-checkout-contract.ts"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/functions/_shared/paymob-checkout-contract_test.ts",
-    "destination": "supabase/functions/_shared/paymob-checkout-contract_test.ts",
-    "sha256": "bdecb4ae81e2e60dea9a4404e8cd965613f1431f466b824e23889bd30b0229d8"
+    "destination": "apps/ledger-suit/supabase/functions/_shared/paymob-checkout-contract_test.ts",
+    "sha256": "bdecb4ae81e2e60dea9a4404e8cd965613f1431f466b824e23889bd30b0229d8",
+    "initialImportDestination": "supabase/functions/_shared/paymob-checkout-contract_test.ts"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/functions/_shared/paymob-security_test.ts",
-    "destination": "supabase/functions/_shared/paymob-security_test.ts",
-    "sha256": "669a51b1f41d172b361277e0d901cacd85d44ccbeda45b6751911152c10bad6a"
+    "destination": "apps/ledger-suit/supabase/functions/_shared/paymob-security_test.ts",
+    "sha256": "669a51b1f41d172b361277e0d901cacd85d44ccbeda45b6751911152c10bad6a",
+    "initialImportDestination": "supabase/functions/_shared/paymob-security_test.ts"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/functions/_shared/paymob.ts",
-    "destination": "supabase/functions/_shared/paymob.ts",
-    "sha256": "996277981769c5a0199831a051bc6489b6a2aacf87fc4cc127fdbfa495bac8b7"
+    "destination": "apps/ledger-suit/supabase/functions/_shared/paymob.ts",
+    "sha256": "996277981769c5a0199831a051bc6489b6a2aacf87fc4cc127fdbfa495bac8b7",
+    "initialImportDestination": "supabase/functions/_shared/paymob.ts"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/functions/_shared/resend.ts",
-    "destination": "supabase/functions/_shared/resend.ts",
-    "sha256": "a15cb79e3685958661650559f233f131b76c53548356e360f181ec7f1f4d7f9b"
+    "destination": "apps/ledger-suit/supabase/functions/_shared/resend.ts",
+    "sha256": "a15cb79e3685958661650559f233f131b76c53548356e360f181ec7f1f4d7f9b",
+    "initialImportDestination": "supabase/functions/_shared/resend.ts"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/functions/paymob-checkout/index.ts",
-    "destination": "supabase/functions/paymob-checkout/index.ts",
-    "sha256": "9acff8a6dfd88d11969ad4bf25b5cf32bc9312ba7fae0c52f3acdf28b082d584"
+    "destination": "apps/ledger-suit/supabase/functions/paymob-checkout/index.ts",
+    "sha256": "9acff8a6dfd88d11969ad4bf25b5cf32bc9312ba7fae0c52f3acdf28b082d584",
+    "initialImportDestination": "supabase/functions/paymob-checkout/index.ts"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/functions/paymob-webhook/index.ts",
-    "destination": "supabase/functions/paymob-webhook/index.ts",
-    "sha256": "3bcda957c4a551516fb9ce0ac4de38c648a0020f34c0fc8843319cfc4f2a9660"
+    "destination": "apps/ledger-suit/supabase/functions/paymob-webhook/index.ts",
+    "sha256": "3bcda957c4a551516fb9ce0ac4de38c648a0020f34c0fc8843319cfc4f2a9660",
+    "initialImportDestination": "supabase/functions/paymob-webhook/index.ts"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/functions/scheduled-notifications/index.ts",
-    "destination": "supabase/functions/scheduled-notifications/index.ts",
-    "sha256": "cb1dff1629c180e82db7f0f15a2fcccd81a5e0f89d8428868f986b87cb63a7bb"
+    "destination": "apps/ledger-suit/supabase/functions/scheduled-notifications/index.ts",
+    "sha256": "cb1dff1629c180e82db7f0f15a2fcccd81a5e0f89d8428868f986b87cb63a7bb",
+    "initialImportDestination": "supabase/functions/scheduled-notifications/index.ts"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/functions/send-invitation/index.ts",
-    "destination": "supabase/functions/send-invitation/index.ts",
-    "sha256": "1d65137bb2103427e7745dd062206643d0ede542c474802ae4b2fc19c37a5355"
+    "destination": "apps/ledger-suit/supabase/functions/send-invitation/index.ts",
+    "sha256": "1d65137bb2103427e7745dd062206643d0ede542c474802ae4b2fc19c37a5355",
+    "initialImportDestination": "supabase/functions/send-invitation/index.ts"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/functions/storage-cleanup/index.ts",
-    "destination": "supabase/functions/storage-cleanup/index.ts",
-    "sha256": "07fdad18a65904f2b844a93f4886a30a12383fbb4bd1f82931631a20375e32bb"
+    "destination": "apps/ledger-suit/supabase/functions/storage-cleanup/index.ts",
+    "sha256": "07fdad18a65904f2b844a93f4886a30a12383fbb4bd1f82931631a20375e32bb",
+    "initialImportDestination": "supabase/functions/storage-cleanup/index.ts"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260830115900_verify_deployment_pipeline.sql",
-    "destination": "supabase/migrations/20260830115900_verify_deployment_pipeline.sql",
-    "sha256": "b5ccf1ce2a1ace660dd17b2c9566bbfe1aabfa05abe4541e85b03f835186f669"
+    "destination": "apps/ledger-suit/supabase/migrations/20260830115900_verify_deployment_pipeline.sql",
+    "sha256": "b5ccf1ce2a1ace660dd17b2c9566bbfe1aabfa05abe4541e85b03f835186f669",
+    "initialImportDestination": "supabase/migrations/20260830115900_verify_deployment_pipeline.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260830120000_extensions_and_shared.sql",
-    "destination": "supabase/migrations/20260830120000_extensions_and_shared.sql",
-    "sha256": "e7484d04f538a0a798b5840da92a22c9a93aa81e71d78f5f0d7464b3cecaeaa1"
+    "destination": "apps/ledger-suit/supabase/migrations/20260830120000_extensions_and_shared.sql",
+    "sha256": "e7484d04f538a0a798b5840da92a22c9a93aa81e71d78f5f0d7464b3cecaeaa1",
+    "initialImportDestination": "supabase/migrations/20260830120000_extensions_and_shared.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260830120500_profiles.sql",
-    "destination": "supabase/migrations/20260830120500_profiles.sql",
-    "sha256": "659dd80aa8587728df3098cf668ee5802e5ff2469e5d34a462545b9ab2c17d72"
+    "destination": "apps/ledger-suit/supabase/migrations/20260830120500_profiles.sql",
+    "sha256": "659dd80aa8587728df3098cf668ee5802e5ff2469e5d34a462545b9ab2c17d72",
+    "initialImportDestination": "supabase/migrations/20260830120500_profiles.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260830121000_organizations.sql",
-    "destination": "supabase/migrations/20260830121000_organizations.sql",
-    "sha256": "669b0f83f61b767959ca55a03c9689f050914bdcf5b8ac4e979c6aa901d0021a"
+    "destination": "apps/ledger-suit/supabase/migrations/20260830121000_organizations.sql",
+    "sha256": "669b0f83f61b767959ca55a03c9689f050914bdcf5b8ac4e979c6aa901d0021a",
+    "initialImportDestination": "supabase/migrations/20260830121000_organizations.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260830121500_organization_members.sql",
-    "destination": "supabase/migrations/20260830121500_organization_members.sql",
-    "sha256": "0a700f055447a543eb23fb3d42b591522ebdf6c7601ca0246c0a09c30c3de6dc"
+    "destination": "apps/ledger-suit/supabase/migrations/20260830121500_organization_members.sql",
+    "sha256": "0a700f055447a543eb23fb3d42b591522ebdf6c7601ca0246c0a09c30c3de6dc",
+    "initialImportDestination": "supabase/migrations/20260830121500_organization_members.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260830122000_authorization_helpers.sql",
-    "destination": "supabase/migrations/20260830122000_authorization_helpers.sql",
-    "sha256": "2709cea3d4aaaf762a1f85bb577e836d208594b92046da6ca594d576e60878f4"
+    "destination": "apps/ledger-suit/supabase/migrations/20260830122000_authorization_helpers.sql",
+    "sha256": "2709cea3d4aaaf762a1f85bb577e836d208594b92046da6ca594d576e60878f4",
+    "initialImportDestination": "supabase/migrations/20260830122000_authorization_helpers.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260830122500_accounting_types.sql",
-    "destination": "supabase/migrations/20260830122500_accounting_types.sql",
-    "sha256": "68845f80bf813c7d64683f65481467d6d10286da2c3ec9b18de3f004a5a99aa7"
+    "destination": "apps/ledger-suit/supabase/migrations/20260830122500_accounting_types.sql",
+    "sha256": "68845f80bf813c7d64683f65481467d6d10286da2c3ec9b18de3f004a5a99aa7",
+    "initialImportDestination": "supabase/migrations/20260830122500_accounting_types.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260830123000_accounts.sql",
-    "destination": "supabase/migrations/20260830123000_accounts.sql",
-    "sha256": "4091df79487ecc198fb12be97a8ad14a8e6a8bb3904e398e96ef5482e7b6b597"
+    "destination": "apps/ledger-suit/supabase/migrations/20260830123000_accounts.sql",
+    "sha256": "4091df79487ecc198fb12be97a8ad14a8e6a8bb3904e398e96ef5482e7b6b597",
+    "initialImportDestination": "supabase/migrations/20260830123000_accounts.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260830123500_categories.sql",
-    "destination": "supabase/migrations/20260830123500_categories.sql",
-    "sha256": "7cbc803aee5ef361d5f54f2a2a65cdae86cc0c8a59458cc8aa6bc52dfc30bc86"
+    "destination": "apps/ledger-suit/supabase/migrations/20260830123500_categories.sql",
+    "sha256": "7cbc803aee5ef361d5f54f2a2a65cdae86cc0c8a59458cc8aa6bc52dfc30bc86",
+    "initialImportDestination": "supabase/migrations/20260830123500_categories.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260830124000_counterparties.sql",
-    "destination": "supabase/migrations/20260830124000_counterparties.sql",
-    "sha256": "181596ab25e53fedf8491da82634a4c350cf8d06910a03f3ca478555df0a1998"
+    "destination": "apps/ledger-suit/supabase/migrations/20260830124000_counterparties.sql",
+    "sha256": "181596ab25e53fedf8491da82634a4c350cf8d06910a03f3ca478555df0a1998",
+    "initialImportDestination": "supabase/migrations/20260830124000_counterparties.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260830124500_transactions.sql",
-    "destination": "supabase/migrations/20260830124500_transactions.sql",
-    "sha256": "8fe0054dbddf11d69bf4b18d1f0edd09a59b7c381474e818c0eb50444e5c36ad"
+    "destination": "apps/ledger-suit/supabase/migrations/20260830124500_transactions.sql",
+    "sha256": "8fe0054dbddf11d69bf4b18d1f0edd09a59b7c381474e818c0eb50444e5c36ad",
+    "initialImportDestination": "supabase/migrations/20260830124500_transactions.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260830125000_transaction_entries.sql",
-    "destination": "supabase/migrations/20260830125000_transaction_entries.sql",
-    "sha256": "f2b436dc672aa117dd52ba1b0d02daae13d923e992254fd6e0f1bebc858dd65f"
+    "destination": "apps/ledger-suit/supabase/migrations/20260830125000_transaction_entries.sql",
+    "sha256": "f2b436dc672aa117dd52ba1b0d02daae13d923e992254fd6e0f1bebc858dd65f",
+    "initialImportDestination": "supabase/migrations/20260830125000_transaction_entries.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260830125500_audit_logs.sql",
-    "destination": "supabase/migrations/20260830125500_audit_logs.sql",
-    "sha256": "c2e29b22f75a8a76f36068eec808db4f2f465662d61e0cea7f410b99e331b74f"
+    "destination": "apps/ledger-suit/supabase/migrations/20260830125500_audit_logs.sql",
+    "sha256": "c2e29b22f75a8a76f36068eec808db4f2f465662d61e0cea7f410b99e331b74f",
+    "initialImportDestination": "supabase/migrations/20260830125500_audit_logs.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260830130000_posting_engine.sql",
-    "destination": "supabase/migrations/20260830130000_posting_engine.sql",
-    "sha256": "fba6c107c801c0bd9d889a4fb3fdfca87d2bc250cafec36c8280902a8d658d0e"
+    "destination": "apps/ledger-suit/supabase/migrations/20260830130000_posting_engine.sql",
+    "sha256": "fba6c107c801c0bd9d889a4fb3fdfca87d2bc250cafec36c8280902a8d658d0e",
+    "initialImportDestination": "supabase/migrations/20260830130000_posting_engine.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260830130500_transaction_flows.sql",
-    "destination": "supabase/migrations/20260830130500_transaction_flows.sql",
-    "sha256": "38fdd38f69a2573a4eb59f769088cbd8fae5dae52f343e3fc4c03889abb06845"
+    "destination": "apps/ledger-suit/supabase/migrations/20260830130500_transaction_flows.sql",
+    "sha256": "38fdd38f69a2573a4eb59f769088cbd8fae5dae52f343e3fc4c03889abb06845",
+    "initialImportDestination": "supabase/migrations/20260830130500_transaction_flows.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260830131000_default_chart_of_accounts.sql",
-    "destination": "supabase/migrations/20260830131000_default_chart_of_accounts.sql",
-    "sha256": "7fc149afa01594e5994a77db231fdc90d68207c7cea9f949d86fb4d7805494f8"
+    "destination": "apps/ledger-suit/supabase/migrations/20260830131000_default_chart_of_accounts.sql",
+    "sha256": "7fc149afa01594e5994a77db231fdc90d68207c7cea9f949d86fb4d7805494f8",
+    "initialImportDestination": "supabase/migrations/20260830131000_default_chart_of_accounts.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260830131500_tags_and_saved_views.sql",
-    "destination": "supabase/migrations/20260830131500_tags_and_saved_views.sql",
-    "sha256": "31de865c4a6268414b5a74bc72250c2d77e73d119e6605880b7728393118a5f0"
+    "destination": "apps/ledger-suit/supabase/migrations/20260830131500_tags_and_saved_views.sql",
+    "sha256": "31de865c4a6268414b5a74bc72250c2d77e73d119e6605880b7728393118a5f0",
+    "initialImportDestination": "supabase/migrations/20260830131500_tags_and_saved_views.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260830132000_attachments.sql",
-    "destination": "supabase/migrations/20260830132000_attachments.sql",
-    "sha256": "23125ded80e0d48a5c7225f2d37ef31ef10939243fac5d4acfea8a9ae8a48fec"
+    "destination": "apps/ledger-suit/supabase/migrations/20260830132000_attachments.sql",
+    "sha256": "23125ded80e0d48a5c7225f2d37ef31ef10939243fac5d4acfea8a9ae8a48fec",
+    "initialImportDestination": "supabase/migrations/20260830132000_attachments.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260830132500_notifications.sql",
-    "destination": "supabase/migrations/20260830132500_notifications.sql",
-    "sha256": "1591c413598edf0d3088519be0da1ef838a66c705208ba322cfd026de91b742a"
+    "destination": "apps/ledger-suit/supabase/migrations/20260830132500_notifications.sql",
+    "sha256": "1591c413598edf0d3088519be0da1ef838a66c705208ba322cfd026de91b742a",
+    "initialImportDestination": "supabase/migrations/20260830132500_notifications.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260830133000_subscriptions.sql",
-    "destination": "supabase/migrations/20260830133000_subscriptions.sql",
-    "sha256": "1d8f59e9664b55c11b6421d05f8645fc9ba03a2f7991dfdc4b2bf622b4df0ca8"
+    "destination": "apps/ledger-suit/supabase/migrations/20260830133000_subscriptions.sql",
+    "sha256": "1d8f59e9664b55c11b6421d05f8645fc9ba03a2f7991dfdc4b2bf622b4df0ca8",
+    "initialImportDestination": "supabase/migrations/20260830133000_subscriptions.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260830133500_rls_policies.sql",
-    "destination": "supabase/migrations/20260830133500_rls_policies.sql",
-    "sha256": "7e7be94bb36b2e008ee7ef4c58602639c8fe8b30347d5ff95203eb8f07aff5e5"
+    "destination": "apps/ledger-suit/supabase/migrations/20260830133500_rls_policies.sql",
+    "sha256": "7e7be94bb36b2e008ee7ef4c58602639c8fe8b30347d5ff95203eb8f07aff5e5",
+    "initialImportDestination": "supabase/migrations/20260830133500_rls_policies.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260830134000_reporting.sql",
-    "destination": "supabase/migrations/20260830134000_reporting.sql",
-    "sha256": "1a88d44ede37c96fed8780bd5974e490e115932ec2a3391c90b18f08a8217bdc"
+    "destination": "apps/ledger-suit/supabase/migrations/20260830134000_reporting.sql",
+    "sha256": "1a88d44ede37c96fed8780bd5974e490e115932ec2a3391c90b18f08a8217bdc",
+    "initialImportDestination": "supabase/migrations/20260830134000_reporting.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260830150000_transaction_queries.sql",
-    "destination": "supabase/migrations/20260830150000_transaction_queries.sql",
-    "sha256": "346d8952cd3972b2753410d87a1ecba62d61e7a921c703a0b3c0391851b5d8c8"
+    "destination": "apps/ledger-suit/supabase/migrations/20260830150000_transaction_queries.sql",
+    "sha256": "346d8952cd3972b2753410d87a1ecba62d61e7a921c703a0b3c0391851b5d8c8",
+    "initialImportDestination": "supabase/migrations/20260830150000_transaction_queries.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260831090000_commitments.sql",
-    "destination": "supabase/migrations/20260831090000_commitments.sql",
-    "sha256": "e569aa25cc00f7771f7836ad53bcb66eda67f655121b52614b550bdfdde774f0"
+    "destination": "apps/ledger-suit/supabase/migrations/20260831090000_commitments.sql",
+    "sha256": "e569aa25cc00f7771f7836ad53bcb66eda67f655121b52614b550bdfdde774f0",
+    "initialImportDestination": "supabase/migrations/20260831090000_commitments.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260831090500_commitment_functions.sql",
-    "destination": "supabase/migrations/20260831090500_commitment_functions.sql",
-    "sha256": "47c4e62ec1629b1cf0bdd01ff5607a578ae7bafff41bd12442a5f037f08f4f6e"
+    "destination": "apps/ledger-suit/supabase/migrations/20260831090500_commitment_functions.sql",
+    "sha256": "47c4e62ec1629b1cf0bdd01ff5607a578ae7bafff41bd12442a5f037f08f4f6e",
+    "initialImportDestination": "supabase/migrations/20260831090500_commitment_functions.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260831091000_recurring_rules.sql",
-    "destination": "supabase/migrations/20260831091000_recurring_rules.sql",
-    "sha256": "127791ba33dfa5229619937fbea2acbd39e77a1acb3c5c16db95e9a42526d325"
+    "destination": "apps/ledger-suit/supabase/migrations/20260831091000_recurring_rules.sql",
+    "sha256": "127791ba33dfa5229619937fbea2acbd39e77a1acb3c5c16db95e9a42526d325",
+    "initialImportDestination": "supabase/migrations/20260831091000_recurring_rules.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260831091500_recurring_functions.sql",
-    "destination": "supabase/migrations/20260831091500_recurring_functions.sql",
-    "sha256": "0d48fb19687409df4144573c98ba8b63dad9704ddbbccf5797ebd8d7b9eb12b6"
+    "destination": "apps/ledger-suit/supabase/migrations/20260831091500_recurring_functions.sql",
+    "sha256": "0d48fb19687409df4144573c98ba8b63dad9704ddbbccf5797ebd8d7b9eb12b6",
+    "initialImportDestination": "supabase/migrations/20260831091500_recurring_functions.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260831092000_phase3_rls_and_reminders.sql",
-    "destination": "supabase/migrations/20260831092000_phase3_rls_and_reminders.sql",
-    "sha256": "2e345a2320634ffa33c8324fb77c4957e68edf750bbcdcab94fba37df2161682"
+    "destination": "apps/ledger-suit/supabase/migrations/20260831092000_phase3_rls_and_reminders.sql",
+    "sha256": "2e345a2320634ffa33c8324fb77c4957e68edf750bbcdcab94fba37df2161682",
+    "initialImportDestination": "supabase/migrations/20260831092000_phase3_rls_and_reminders.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260831095604_phase1_to_phase3_hardening.sql",
-    "destination": "supabase/migrations/20260831095604_phase1_to_phase3_hardening.sql",
-    "sha256": "5bb12fde8fe78cfc866514645d4d09c910dfd4ae4af1c402433e3a11fd4b9d3f"
+    "destination": "apps/ledger-suit/supabase/migrations/20260831095604_phase1_to_phase3_hardening.sql",
+    "sha256": "5bb12fde8fe78cfc866514645d4d09c910dfd4ae4af1c402433e3a11fd4b9d3f",
+    "initialImportDestination": "supabase/migrations/20260831095604_phase1_to_phase3_hardening.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260831095606_operational_workflows.sql",
-    "destination": "supabase/migrations/20260831095606_operational_workflows.sql",
-    "sha256": "6eb3d155fd94f667b5807088aa3441fe4acde832f3203dfb37dd3a7b3b764c28"
+    "destination": "apps/ledger-suit/supabase/migrations/20260831095606_operational_workflows.sql",
+    "sha256": "6eb3d155fd94f667b5807088aa3441fe4acde832f3203dfb37dd3a7b3b764c28",
+    "initialImportDestination": "supabase/migrations/20260831095606_operational_workflows.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260831131512_phase4_stripe_subscription.sql",
-    "destination": "supabase/migrations/20260831131512_phase4_stripe_subscription.sql",
-    "sha256": "59b2f7f3d8960a68570e6ba342e146abfb94497ca3174bd4d10afe0b4815388d"
+    "destination": "apps/ledger-suit/supabase/migrations/20260831131512_phase4_stripe_subscription.sql",
+    "sha256": "59b2f7f3d8960a68570e6ba342e146abfb94497ca3174bd4d10afe0b4815388d",
+    "initialImportDestination": "supabase/migrations/20260831131512_phase4_stripe_subscription.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260901135311_signup_onboarding.sql",
-    "destination": "supabase/migrations/20260901135311_signup_onboarding.sql",
-    "sha256": "f6ddd09fb7f0ff48c129b88ed24c5d077e3e664c1bd895481d9f4179de8bd247"
+    "destination": "apps/ledger-suit/supabase/migrations/20260901135311_signup_onboarding.sql",
+    "sha256": "f6ddd09fb7f0ff48c129b88ed24c5d077e3e664c1bd895481d9f4179de8bd247",
+    "initialImportDestination": "supabase/migrations/20260901135311_signup_onboarding.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260907123339_harden_account_tenant_isolation.sql",
-    "destination": "supabase/migrations/20260907123339_harden_account_tenant_isolation.sql",
-    "sha256": "31d6f0a0df4884aebbf66a9d6f29612bfd479b7b3ed48b776f334cf070ec77ca"
+    "destination": "apps/ledger-suit/supabase/migrations/20260907123339_harden_account_tenant_isolation.sql",
+    "sha256": "31d6f0a0df4884aebbf66a9d6f29612bfd479b7b3ed48b776f334cf070ec77ca",
+    "initialImportDestination": "supabase/migrations/20260907123339_harden_account_tenant_isolation.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260908055432_workspace_access_management.sql",
-    "destination": "supabase/migrations/20260908055432_workspace_access_management.sql",
-    "sha256": "126bd3281a62a86c0e3383906c874ff6cb7d77793f1a68ef2d1bac4469001437"
+    "destination": "apps/ledger-suit/supabase/migrations/20260908055432_workspace_access_management.sql",
+    "sha256": "126bd3281a62a86c0e3383906c874ff6cb7d77793f1a68ef2d1bac4469001437",
+    "initialImportDestination": "supabase/migrations/20260908055432_workspace_access_management.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260908120000_user_managed_chart_of_accounts.sql",
-    "destination": "supabase/migrations/20260908120000_user_managed_chart_of_accounts.sql",
-    "sha256": "2cb91ab7e06f0d8f9306b73c8d0cc2ba10e6081deecd539060493152ea3672cb"
+    "destination": "apps/ledger-suit/supabase/migrations/20260908120000_user_managed_chart_of_accounts.sql",
+    "sha256": "2cb91ab7e06f0d8f9306b73c8d0cc2ba10e6081deecd539060493152ea3672cb",
+    "initialImportDestination": "supabase/migrations/20260908120000_user_managed_chart_of_accounts.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260908120853_enforce_unique_legal_business_name.sql",
-    "destination": "supabase/migrations/20260908120853_enforce_unique_legal_business_name.sql",
-    "sha256": "50c5f61069590ea3df3fe532e75e6fd100e9af421496d40b195394fc611bfc71"
+    "destination": "apps/ledger-suit/supabase/migrations/20260908120853_enforce_unique_legal_business_name.sql",
+    "sha256": "50c5f61069590ea3df3fe532e75e6fd100e9af421496d40b195394fc611bfc71",
+    "initialImportDestination": "supabase/migrations/20260908120853_enforce_unique_legal_business_name.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260908152800_onboarding_availability_checks.sql",
-    "destination": "supabase/migrations/20260908152800_onboarding_availability_checks.sql",
-    "sha256": "9da9480536ca887419543db19eb7629b42281b231146663ae75873a55aaf855e"
+    "destination": "apps/ledger-suit/supabase/migrations/20260908152800_onboarding_availability_checks.sql",
+    "sha256": "9da9480536ca887419543db19eb7629b42281b231146663ae75873a55aaf855e",
+    "initialImportDestination": "supabase/migrations/20260908152800_onboarding_availability_checks.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260908160000_update_preview_invitation.sql",
-    "destination": "supabase/migrations/20260908160000_update_preview_invitation.sql",
-    "sha256": "29e6280cb0a03942a612687e310a7a7dbd171d5f4e1cc3f6a3571a40adeae276"
+    "destination": "apps/ledger-suit/supabase/migrations/20260908160000_update_preview_invitation.sql",
+    "sha256": "29e6280cb0a03942a612687e310a7a7dbd171d5f4e1cc3f6a3571a40adeae276",
+    "initialImportDestination": "supabase/migrations/20260908160000_update_preview_invitation.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260908170000_custom_roles.sql",
-    "destination": "supabase/migrations/20260908170000_custom_roles.sql",
-    "sha256": "776d893853be4629c902638ab2d9bbc6bdd52db419149c59297f015ace0672a5"
+    "destination": "apps/ledger-suit/supabase/migrations/20260908170000_custom_roles.sql",
+    "sha256": "776d893853be4629c902638ab2d9bbc6bdd52db419149c59297f015ace0672a5",
+    "initialImportDestination": "supabase/migrations/20260908170000_custom_roles.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260909063239_editable_system_roles.sql",
-    "destination": "supabase/migrations/20260909063239_editable_system_roles.sql",
-    "sha256": "c478cba68748d237f2042e4eb9bbffa0342bce3fb89fa8c3457e3c22e454b46f"
+    "destination": "apps/ledger-suit/supabase/migrations/20260909063239_editable_system_roles.sql",
+    "sha256": "c478cba68748d237f2042e4eb9bbffa0342bce3fb89fa8c3457e3c22e454b46f",
+    "initialImportDestination": "supabase/migrations/20260909063239_editable_system_roles.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260909123128_persist_signup_onboarding.sql",
-    "destination": "supabase/migrations/20260909123128_persist_signup_onboarding.sql",
-    "sha256": "ccaaadb88e045522aba4816f184044aa2d66898776c2e2abf860214523b071d3"
+    "destination": "apps/ledger-suit/supabase/migrations/20260909123128_persist_signup_onboarding.sql",
+    "sha256": "ccaaadb88e045522aba4816f184044aa2d66898776c2e2abf860214523b071d3",
+    "initialImportDestination": "supabase/migrations/20260909123128_persist_signup_onboarding.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260909130826_resume_saved_signup.sql",
-    "destination": "supabase/migrations/20260909130826_resume_saved_signup.sql",
-    "sha256": "d382cd68bc522ef3ed3b3afbbca1902024c403cad2845e20fc84260748dc6e27"
+    "destination": "apps/ledger-suit/supabase/migrations/20260909130826_resume_saved_signup.sql",
+    "sha256": "d382cd68bc522ef3ed3b3afbbca1902024c403cad2845e20fc84260748dc6e27",
+    "initialImportDestination": "supabase/migrations/20260909130826_resume_saved_signup.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260909135009_start_cardless_trial_on_registration.sql",
-    "destination": "supabase/migrations/20260909135009_start_cardless_trial_on_registration.sql",
-    "sha256": "cb37a2847fbf696cd7808cc9ca9ed6c2ea3982bdd58448478148a5a3a29c5513"
+    "destination": "apps/ledger-suit/supabase/migrations/20260909135009_start_cardless_trial_on_registration.sql",
+    "sha256": "cb37a2847fbf696cd7808cc9ca9ed6c2ea3982bdd58448478148a5a3a29c5513",
+    "initialImportDestination": "supabase/migrations/20260909135009_start_cardless_trial_on_registration.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260909165536_support_cardless_signup.sql",
-    "destination": "supabase/migrations/20260909165536_support_cardless_signup.sql",
-    "sha256": "eeb81faa2b9d6a5d40b71f1f1f446d22820e43b548bff5cbc22b0e40d0fb13d4"
+    "destination": "apps/ledger-suit/supabase/migrations/20260909165536_support_cardless_signup.sql",
+    "sha256": "eeb81faa2b9d6a5d40b71f1f1f446d22820e43b548bff5cbc22b0e40d0fb13d4",
+    "initialImportDestination": "supabase/migrations/20260909165536_support_cardless_signup.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260909180357_restore_currency_reference_data.sql",
-    "destination": "supabase/migrations/20260909180357_restore_currency_reference_data.sql",
-    "sha256": "8dd2dcf204614f8ed1f769b726597172ebf05af2366f423a3d13ef4cba8d5a4e"
+    "destination": "apps/ledger-suit/supabase/migrations/20260909180357_restore_currency_reference_data.sql",
+    "sha256": "8dd2dcf204614f8ed1f769b726597172ebf05af2366f423a3d13ef4cba8d5a4e",
+    "initialImportDestination": "supabase/migrations/20260909180357_restore_currency_reference_data.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260909200000_limit_owned_organizations_by_plan.sql",
-    "destination": "supabase/migrations/20260909200000_limit_owned_organizations_by_plan.sql",
-    "sha256": "08c4b2da70020752d488bc06e4939e39f9f2790eb45b7b4026c9efb58d259c51"
+    "destination": "apps/ledger-suit/supabase/migrations/20260909200000_limit_owned_organizations_by_plan.sql",
+    "sha256": "08c4b2da70020752d488bc06e4939e39f9f2790eb45b7b4026c9efb58d259c51",
+    "initialImportDestination": "supabase/migrations/20260909200000_limit_owned_organizations_by_plan.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260909210000_paymob_billing.sql",
-    "destination": "supabase/migrations/20260909210000_paymob_billing.sql",
-    "sha256": "6fa686c9fb4b9a8b5ac843ddc975b4c84ddd757899ab793949892a14b5bce1d9"
+    "destination": "apps/ledger-suit/supabase/migrations/20260909210000_paymob_billing.sql",
+    "sha256": "6fa686c9fb4b9a8b5ac843ddc975b4c84ddd757899ab793949892a14b5bce1d9",
+    "initialImportDestination": "supabase/migrations/20260909210000_paymob_billing.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260911090000_launch_plan_catalog.sql",
-    "destination": "supabase/migrations/20260911090000_launch_plan_catalog.sql",
-    "sha256": "c3b935096c705c12eb213b345184ac1ea029129856936cb747d7513ad53616f0"
+    "destination": "apps/ledger-suit/supabase/migrations/20260911090000_launch_plan_catalog.sql",
+    "sha256": "c3b935096c705c12eb213b345184ac1ea029129856936cb747d7513ad53616f0",
+    "initialImportDestination": "supabase/migrations/20260911090000_launch_plan_catalog.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260911093000_plan_quota_engine.sql",
-    "destination": "supabase/migrations/20260911093000_plan_quota_engine.sql",
-    "sha256": "8ea0961e836fa60d9754a91804848d8aa0a89c2fd5fc32f0b0aeaefb92d274b9"
+    "destination": "apps/ledger-suit/supabase/migrations/20260911093000_plan_quota_engine.sql",
+    "sha256": "8ea0961e836fa60d9754a91804848d8aa0a89c2fd5fc32f0b0aeaefb92d274b9",
+    "initialImportDestination": "supabase/migrations/20260911093000_plan_quota_engine.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260911100000_subscription_readable_history.sql",
-    "destination": "supabase/migrations/20260911100000_subscription_readable_history.sql",
-    "sha256": "8e1e696b9126d4af4c6ca0fc43e0fa4f55a13dc7d2093742275d21874bd70963"
+    "destination": "apps/ledger-suit/supabase/migrations/20260911100000_subscription_readable_history.sql",
+    "sha256": "8e1e696b9126d4af4c6ca0fc43e0fa4f55a13dc7d2093742275d21874bd70963",
+    "initialImportDestination": "supabase/migrations/20260911100000_subscription_readable_history.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260911110000_member_seat_quota.sql",
-    "destination": "supabase/migrations/20260911110000_member_seat_quota.sql",
-    "sha256": "2055ae8d3ef4bfb625bd149a6aac0c1d7397ccf92ecb16c1fb6196c42b6425b7"
+    "destination": "apps/ledger-suit/supabase/migrations/20260911110000_member_seat_quota.sql",
+    "sha256": "2055ae8d3ef4bfb625bd149a6aac0c1d7397ccf92ecb16c1fb6196c42b6425b7",
+    "initialImportDestination": "supabase/migrations/20260911110000_member_seat_quota.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260911124345_account_quota_enforcement.sql",
-    "destination": "supabase/migrations/20260911124345_account_quota_enforcement.sql",
-    "sha256": "c978f2eb33f895adf6dd780f1467b71f07c6283bcbaba0eaeeb7037b99347367"
+    "destination": "apps/ledger-suit/supabase/migrations/20260911124345_account_quota_enforcement.sql",
+    "sha256": "c978f2eb33f895adf6dd780f1467b71f07c6283bcbaba0eaeeb7037b99347367",
+    "initialImportDestination": "supabase/migrations/20260911124345_account_quota_enforcement.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260911131925_counterparty_quota_enforcement.sql",
-    "destination": "supabase/migrations/20260911131925_counterparty_quota_enforcement.sql",
-    "sha256": "25a5bc1fabc51ea4e487f7d5f5c26c7d331154457c77ba36bef1f67f68ce41d4"
+    "destination": "apps/ledger-suit/supabase/migrations/20260911131925_counterparty_quota_enforcement.sql",
+    "sha256": "25a5bc1fabc51ea4e487f7d5f5c26c7d331154457c77ba36bef1f67f68ce41d4",
+    "initialImportDestination": "supabase/migrations/20260911131925_counterparty_quota_enforcement.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260911195634_recurring_rule_quota_enforcement.sql",
-    "destination": "supabase/migrations/20260911195634_recurring_rule_quota_enforcement.sql",
-    "sha256": "42339ea348a36eb639acaba65dad05dcd77f75b148343db14de956ec1020cc9e"
+    "destination": "apps/ledger-suit/supabase/migrations/20260911195634_recurring_rule_quota_enforcement.sql",
+    "sha256": "42339ea348a36eb639acaba65dad05dcd77f75b148343db14de956ec1020cc9e",
+    "initialImportDestination": "supabase/migrations/20260911195634_recurring_rule_quota_enforcement.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260911201132_custom_role_quota_enforcement.sql",
-    "destination": "supabase/migrations/20260911201132_custom_role_quota_enforcement.sql",
-    "sha256": "698e6051839b18b8b5358361d2fa798683d31a6308b22cdfe36ef0ec7f4bbcab"
+    "destination": "apps/ledger-suit/supabase/migrations/20260911201132_custom_role_quota_enforcement.sql",
+    "sha256": "698e6051839b18b8b5358361d2fa798683d31a6308b22cdfe36ef0ec7f4bbcab",
+    "initialImportDestination": "supabase/migrations/20260911201132_custom_role_quota_enforcement.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260911205305_aggregate_attachment_storage_quota.sql",
-    "destination": "supabase/migrations/20260911205305_aggregate_attachment_storage_quota.sql",
-    "sha256": "9a428600b6044fa1102544ef7751a5f650490934c3aa884b6f98a26f2dc7d9a5"
+    "destination": "apps/ledger-suit/supabase/migrations/20260911205305_aggregate_attachment_storage_quota.sql",
+    "sha256": "9a428600b6044fa1102544ef7751a5f650490934c3aa884b6f98a26f2dc7d9a5",
+    "initialImportDestination": "supabase/migrations/20260911205305_aggregate_attachment_storage_quota.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260912094117_monthly_posted_transaction_quota.sql",
-    "destination": "supabase/migrations/20260912094117_monthly_posted_transaction_quota.sql",
-    "sha256": "7ec1c05783c7d68c57f133bdcef1d0f0806b31ef22c8d7ad39c25afd65487720"
+    "destination": "apps/ledger-suit/supabase/migrations/20260912094117_monthly_posted_transaction_quota.sql",
+    "sha256": "7ec1c05783c7d68c57f133bdcef1d0f0806b31ef22c8d7ad39c25afd65487720",
+    "initialImportDestination": "supabase/migrations/20260912094117_monthly_posted_transaction_quota.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260912102128_business_multi_currency_enforcement.sql",
-    "destination": "supabase/migrations/20260912102128_business_multi_currency_enforcement.sql",
-    "sha256": "ffc5b9a7bd9c9549d6cf5d7e344b3fef754b85e0145294c8801fed2be6a67124"
+    "destination": "apps/ledger-suit/supabase/migrations/20260912102128_business_multi_currency_enforcement.sql",
+    "sha256": "ffc5b9a7bd9c9549d6cf5d7e344b3fef754b85e0145294c8801fed2be6a67124",
+    "initialImportDestination": "supabase/migrations/20260912102128_business_multi_currency_enforcement.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260912110717_csv_import_backend.sql",
-    "destination": "supabase/migrations/20260912110717_csv_import_backend.sql",
-    "sha256": "9f8f7cc613c11b83fe30ec297599022e2bcff0daa3848bb7861dd4daf8627cf3"
+    "destination": "apps/ledger-suit/supabase/migrations/20260912110717_csv_import_backend.sql",
+    "sha256": "9f8f7cc613c11b83fe30ec297599022e2bcff0daa3848bb7861dd4daf8627cf3",
+    "initialImportDestination": "supabase/migrations/20260912110717_csv_import_backend.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260912180913_financial_report_csv_exports.sql",
-    "destination": "supabase/migrations/20260912180913_financial_report_csv_exports.sql",
-    "sha256": "84a7d691efd2410cbc303d84572ec3d3f699219ed950ac6d228928b7bf5f12ac"
+    "destination": "apps/ledger-suit/supabase/migrations/20260912180913_financial_report_csv_exports.sql",
+    "sha256": "84a7d691efd2410cbc303d84572ec3d3f699219ed950ac6d228928b7bf5f12ac",
+    "initialImportDestination": "supabase/migrations/20260912180913_financial_report_csv_exports.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260912184018_audit_history_visibility_window.sql",
-    "destination": "supabase/migrations/20260912184018_audit_history_visibility_window.sql",
-    "sha256": "e9dfcf19d6e117742adecc1f5def41d3e66b38c6a367a93dd4c6f6804d4133d5"
+    "destination": "apps/ledger-suit/supabase/migrations/20260912184018_audit_history_visibility_window.sql",
+    "sha256": "e9dfcf19d6e117742adecc1f5def41d3e66b38c6a367a93dd4c6f6804d4133d5",
+    "initialImportDestination": "supabase/migrations/20260912184018_audit_history_visibility_window.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260913105458_plan_aware_paymob_checkout.sql",
-    "destination": "supabase/migrations/20260913105458_plan_aware_paymob_checkout.sql",
-    "sha256": "0c7ca97586caa8bf66c1e6b0c5550fd69adf100e9a896210e8d417de5c7af73b"
+    "destination": "apps/ledger-suit/supabase/migrations/20260913105458_plan_aware_paymob_checkout.sql",
+    "sha256": "0c7ca97586caa8bf66c1e6b0c5550fd69adf100e9a896210e8d417de5c7af73b",
+    "initialImportDestination": "supabase/migrations/20260913105458_plan_aware_paymob_checkout.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260913164343_plan_change_safety.sql",
-    "destination": "supabase/migrations/20260913164343_plan_change_safety.sql",
-    "sha256": "9065b32232ab18bf7e9cde31717419ba6e087b4bc733219274f13e9a26bd0090"
+    "destination": "apps/ledger-suit/supabase/migrations/20260913164343_plan_change_safety.sql",
+    "sha256": "9065b32232ab18bf7e9cde31717419ba6e087b4bc733219274f13e9a26bd0090",
+    "initialImportDestination": "supabase/migrations/20260913164343_plan_change_safety.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260913171823_launch_plan_concurrency_hardening.sql",
-    "destination": "supabase/migrations/20260913171823_launch_plan_concurrency_hardening.sql",
-    "sha256": "a4c5506fcfe67be71180879b4b6a7f433cb78849c209acec64c7f1af4c926776"
+    "destination": "apps/ledger-suit/supabase/migrations/20260913171823_launch_plan_concurrency_hardening.sql",
+    "sha256": "a4c5506fcfe67be71180879b4b6a7f433cb78849c209acec64c7f1af4c926776",
+    "initialImportDestination": "supabase/migrations/20260913171823_launch_plan_concurrency_hardening.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260913225446_business_level_trial.sql",
-    "destination": "supabase/migrations/20260913225446_business_level_trial.sql",
-    "sha256": "51cf3be018644ab8302e0538e6a1ceb5ed9191d23c995f42c88c165afa2d0d76"
+    "destination": "apps/ledger-suit/supabase/migrations/20260913225446_business_level_trial.sql",
+    "sha256": "51cf3be018644ab8302e0538e6a1ceb5ed9191d23c995f42c88c165afa2d0d76",
+    "initialImportDestination": "supabase/migrations/20260913225446_business_level_trial.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/migrations/20260913231456_distinguish_trial_plan_change.sql",
-    "destination": "supabase/migrations/20260913231456_distinguish_trial_plan_change.sql",
-    "sha256": "9386652c35ce83a59fde82bc2824e04134efa0299d017a26d0887c4e765cf836"
+    "destination": "apps/ledger-suit/supabase/migrations/20260913231456_distinguish_trial_plan_change.sql",
+    "sha256": "9386652c35ce83a59fde82bc2824e04134efa0299d017a26d0887c4e765cf836",
+    "initialImportDestination": "supabase/migrations/20260913231456_distinguish_trial_plan_change.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/seed.sql",
-    "destination": "supabase/seed.sql",
-    "sha256": "edca75055c56c09f41360407cae1ab639f3be991e3fdda967c1c0023c2373af1"
+    "destination": "apps/ledger-suit/supabase/seed.sql",
+    "sha256": "edca75055c56c09f41360407cae1ab639f3be991e3fdda967c1c0023c2373af1",
+    "initialImportDestination": "supabase/seed.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/templates/confirmation.html",
-    "destination": "supabase/templates/confirmation.html",
-    "sha256": "b0d55dc80caf45d35c80e35c63d8cb169e97b3667d9f1046cda3798cd5afff5e"
+    "destination": "apps/ledger-suit/supabase/templates/confirmation.html",
+    "sha256": "b0d55dc80caf45d35c80e35c63d8cb169e97b3667d9f1046cda3798cd5afff5e",
+    "initialImportDestination": "supabase/templates/confirmation.html"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/tests/01_accounting_integrity_test.sql",
-    "destination": "supabase/tests/01_accounting_integrity_test.sql",
-    "sha256": "0fc4e86510e0b5a60fc9372e84eff9159641b75d114a9f67284211eea860183b"
+    "destination": "apps/ledger-suit/supabase/tests/01_accounting_integrity_test.sql",
+    "sha256": "0fc4e86510e0b5a60fc9372e84eff9159641b75d114a9f67284211eea860183b",
+    "initialImportDestination": "supabase/tests/01_accounting_integrity_test.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/tests/02_tenant_isolation_test.sql",
-    "destination": "supabase/tests/02_tenant_isolation_test.sql",
-    "sha256": "8ed5381eeb811247b5986b7b15a87c1eef7b8c54e83a59354c8582d9f43c03a5"
+    "destination": "apps/ledger-suit/supabase/tests/02_tenant_isolation_test.sql",
+    "sha256": "8ed5381eeb811247b5986b7b15a87c1eef7b8c54e83a59354c8582d9f43c03a5",
+    "initialImportDestination": "supabase/tests/02_tenant_isolation_test.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/tests/03_commitments_and_recurring_test.sql",
-    "destination": "supabase/tests/03_commitments_and_recurring_test.sql",
-    "sha256": "c02041a64d1cc390a70334d1170225b8c66964a0e49334fff16e5aefd8e2b6c1"
+    "destination": "apps/ledger-suit/supabase/tests/03_commitments_and_recurring_test.sql",
+    "sha256": "c02041a64d1cc390a70334d1170225b8c66964a0e49334fff16e5aefd8e2b6c1",
+    "initialImportDestination": "supabase/tests/03_commitments_and_recurring_test.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/tests/04_phase_hardening_test.sql",
-    "destination": "supabase/tests/04_phase_hardening_test.sql",
-    "sha256": "decdf1d629a27819c9e5117b1c4f00ab366ee858ce1daf16d42e97f104d510e9"
+    "destination": "apps/ledger-suit/supabase/tests/04_phase_hardening_test.sql",
+    "sha256": "decdf1d629a27819c9e5117b1c4f00ab366ee858ce1daf16d42e97f104d510e9",
+    "initialImportDestination": "supabase/tests/04_phase_hardening_test.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/tests/05_phase4_billing_test.sql",
-    "destination": "supabase/tests/05_phase4_billing_test.sql",
-    "sha256": "63ce164a87c57a1ddeeacafa035443d2dc34a9e2363f49ed8100981f514427a0"
+    "destination": "apps/ledger-suit/supabase/tests/05_phase4_billing_test.sql",
+    "sha256": "63ce164a87c57a1ddeeacafa035443d2dc34a9e2363f49ed8100981f514427a0",
+    "initialImportDestination": "supabase/tests/05_phase4_billing_test.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/tests/06_signup_onboarding_test.sql",
-    "destination": "supabase/tests/06_signup_onboarding_test.sql",
-    "sha256": "7d556221722692a61ab9bd081c2557a617f2876655053f67f23fc697005176f5"
+    "destination": "apps/ledger-suit/supabase/tests/06_signup_onboarding_test.sql",
+    "sha256": "7d556221722692a61ab9bd081c2557a617f2876655053f67f23fc697005176f5",
+    "initialImportDestination": "supabase/tests/06_signup_onboarding_test.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/tests/07_workspace_access_test.sql",
-    "destination": "supabase/tests/07_workspace_access_test.sql",
-    "sha256": "b3f9126dcf78ab6d1aa3872af7173deb87bccb542a11f9149c9f4b8737bf7f04"
+    "destination": "apps/ledger-suit/supabase/tests/07_workspace_access_test.sql",
+    "sha256": "b3f9126dcf78ab6d1aa3872af7173deb87bccb542a11f9149c9f4b8737bf7f04",
+    "initialImportDestination": "supabase/tests/07_workspace_access_test.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/tests/08_editable_system_roles_test.sql",
-    "destination": "supabase/tests/08_editable_system_roles_test.sql",
-    "sha256": "8dbfa89315ef9e03d444898bc1da8a83523d82e8403c9b3bad378784906d8156"
+    "destination": "apps/ledger-suit/supabase/tests/08_editable_system_roles_test.sql",
+    "sha256": "8dbfa89315ef9e03d444898bc1da8a83523d82e8403c9b3bad378784906d8156",
+    "initialImportDestination": "supabase/tests/08_editable_system_roles_test.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/tests/09_signup_persistence_test.sql",
-    "destination": "supabase/tests/09_signup_persistence_test.sql",
-    "sha256": "c17d7aa0009d4d69c8fee33dbd9bdf263e1fca7f1deddc6cb6fe0ecf97905fee"
+    "destination": "apps/ledger-suit/supabase/tests/09_signup_persistence_test.sql",
+    "sha256": "c17d7aa0009d4d69c8fee33dbd9bdf263e1fca7f1deddc6cb6fe0ecf97905fee",
+    "initialImportDestination": "supabase/tests/09_signup_persistence_test.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/tests/10_launch_plan_catalog_test.sql",
-    "destination": "supabase/tests/10_launch_plan_catalog_test.sql",
-    "sha256": "45376966849e1b60c06be8daa2629e60125e1ddfa91e88f7c3d502c8d10ef1e0"
+    "destination": "apps/ledger-suit/supabase/tests/10_launch_plan_catalog_test.sql",
+    "sha256": "45376966849e1b60c06be8daa2629e60125e1ddfa91e88f7c3d502c8d10ef1e0",
+    "initialImportDestination": "supabase/tests/10_launch_plan_catalog_test.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/tests/11_plan_quota_engine_test.sql",
-    "destination": "supabase/tests/11_plan_quota_engine_test.sql",
-    "sha256": "e86bb748aa0f9259f410fa5927180a8ad1c0b87c1e5efc0615eca4efba76b99e"
+    "destination": "apps/ledger-suit/supabase/tests/11_plan_quota_engine_test.sql",
+    "sha256": "e86bb748aa0f9259f410fa5927180a8ad1c0b87c1e5efc0615eca4efba76b99e",
+    "initialImportDestination": "supabase/tests/11_plan_quota_engine_test.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/tests/12_subscription_readable_history_test.sql",
-    "destination": "supabase/tests/12_subscription_readable_history_test.sql",
-    "sha256": "b4c89352bc27c8a11099806c43e95339fa20ffcc6625805523dd64b692ff60a5"
+    "destination": "apps/ledger-suit/supabase/tests/12_subscription_readable_history_test.sql",
+    "sha256": "b4c89352bc27c8a11099806c43e95339fa20ffcc6625805523dd64b692ff60a5",
+    "initialImportDestination": "supabase/tests/12_subscription_readable_history_test.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/tests/13_member_seat_quota_test.sql",
-    "destination": "supabase/tests/13_member_seat_quota_test.sql",
-    "sha256": "6e84b17f19557f2e1119d34b1a517838e7059a42628f579a271b5fc9a1c0aa00"
+    "destination": "apps/ledger-suit/supabase/tests/13_member_seat_quota_test.sql",
+    "sha256": "6e84b17f19557f2e1119d34b1a517838e7059a42628f579a271b5fc9a1c0aa00",
+    "initialImportDestination": "supabase/tests/13_member_seat_quota_test.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/tests/14_account_quota_test.sql",
-    "destination": "supabase/tests/14_account_quota_test.sql",
-    "sha256": "d13de786f779d55a4a2feb5b55bd02bd991158b2c4e33dd6aab566fc44e33f7a"
+    "destination": "apps/ledger-suit/supabase/tests/14_account_quota_test.sql",
+    "sha256": "d13de786f779d55a4a2feb5b55bd02bd991158b2c4e33dd6aab566fc44e33f7a",
+    "initialImportDestination": "supabase/tests/14_account_quota_test.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/tests/15_counterparty_quota_test.sql",
-    "destination": "supabase/tests/15_counterparty_quota_test.sql",
-    "sha256": "b9e28353a27ffd33789c4a52fe497088167bbe5f0b9055f52edc578fb7006492"
+    "destination": "apps/ledger-suit/supabase/tests/15_counterparty_quota_test.sql",
+    "sha256": "b9e28353a27ffd33789c4a52fe497088167bbe5f0b9055f52edc578fb7006492",
+    "initialImportDestination": "supabase/tests/15_counterparty_quota_test.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/tests/16_recurring_rule_quota_test.sql",
-    "destination": "supabase/tests/16_recurring_rule_quota_test.sql",
-    "sha256": "f250c65407b3fb2c1caec539dfb24f6e3daaffa0d8e678ddb73bc86e9af4432c"
+    "destination": "apps/ledger-suit/supabase/tests/16_recurring_rule_quota_test.sql",
+    "sha256": "f250c65407b3fb2c1caec539dfb24f6e3daaffa0d8e678ddb73bc86e9af4432c",
+    "initialImportDestination": "supabase/tests/16_recurring_rule_quota_test.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/tests/17_custom_role_quota_test.sql",
-    "destination": "supabase/tests/17_custom_role_quota_test.sql",
-    "sha256": "f24324efff4f26f9b3d27d03f9e46768c806bf36665002701f85290d78be3837"
+    "destination": "apps/ledger-suit/supabase/tests/17_custom_role_quota_test.sql",
+    "sha256": "f24324efff4f26f9b3d27d03f9e46768c806bf36665002701f85290d78be3837",
+    "initialImportDestination": "supabase/tests/17_custom_role_quota_test.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/tests/18_storage_quota_test.sql",
-    "destination": "supabase/tests/18_storage_quota_test.sql",
-    "sha256": "15653b478c8cf8e91a6400562871f93331b4d5343aeee34a17217b4f3f8e46a9"
+    "destination": "apps/ledger-suit/supabase/tests/18_storage_quota_test.sql",
+    "sha256": "15653b478c8cf8e91a6400562871f93331b4d5343aeee34a17217b4f3f8e46a9",
+    "initialImportDestination": "supabase/tests/18_storage_quota_test.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/tests/19_monthly_transaction_quota_test.sql",
-    "destination": "supabase/tests/19_monthly_transaction_quota_test.sql",
-    "sha256": "a5bc27ddf3f891937aad76c5e8a91b7330732bb3cde2ba6c35fec28aa43d59be"
+    "destination": "apps/ledger-suit/supabase/tests/19_monthly_transaction_quota_test.sql",
+    "sha256": "a5bc27ddf3f891937aad76c5e8a91b7330732bb3cde2ba6c35fec28aa43d59be",
+    "initialImportDestination": "supabase/tests/19_monthly_transaction_quota_test.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/tests/20_business_multi_currency_test.sql",
-    "destination": "supabase/tests/20_business_multi_currency_test.sql",
-    "sha256": "33b3c5225d9aed834f74f66bd0d56259e2e22ac4b8db7c71e6719b8c9857b868"
+    "destination": "apps/ledger-suit/supabase/tests/20_business_multi_currency_test.sql",
+    "sha256": "33b3c5225d9aed834f74f66bd0d56259e2e22ac4b8db7c71e6719b8c9857b868",
+    "initialImportDestination": "supabase/tests/20_business_multi_currency_test.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/tests/21_csv_import_backend_test.sql",
-    "destination": "supabase/tests/21_csv_import_backend_test.sql",
-    "sha256": "a77590f965b5cbab01b0074c387388c001c044a7cb70e9c25783992085433ced"
+    "destination": "apps/ledger-suit/supabase/tests/21_csv_import_backend_test.sql",
+    "sha256": "a77590f965b5cbab01b0074c387388c001c044a7cb70e9c25783992085433ced",
+    "initialImportDestination": "supabase/tests/21_csv_import_backend_test.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/tests/22_financial_report_csv_exports_test.sql",
-    "destination": "supabase/tests/22_financial_report_csv_exports_test.sql",
-    "sha256": "5b40eb1ec6d484e351b040800361efc649374eb09560f33e6a663b0ba650b565"
+    "destination": "apps/ledger-suit/supabase/tests/22_financial_report_csv_exports_test.sql",
+    "sha256": "5b40eb1ec6d484e351b040800361efc649374eb09560f33e6a663b0ba650b565",
+    "initialImportDestination": "supabase/tests/22_financial_report_csv_exports_test.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/tests/23_audit_history_window_test.sql",
-    "destination": "supabase/tests/23_audit_history_window_test.sql",
-    "sha256": "3d8760969972cb33c44fbaa9339c76b95ddc9585243140e84a0316e119d09f49"
+    "destination": "apps/ledger-suit/supabase/tests/23_audit_history_window_test.sql",
+    "sha256": "3d8760969972cb33c44fbaa9339c76b95ddc9585243140e84a0316e119d09f49",
+    "initialImportDestination": "supabase/tests/23_audit_history_window_test.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/tests/24_plan_aware_paymob_checkout_test.sql",
-    "destination": "supabase/tests/24_plan_aware_paymob_checkout_test.sql",
-    "sha256": "09b290630ffaab03726806554ef5187f7c639ddabe2094e821650d5b5e592935"
+    "destination": "apps/ledger-suit/supabase/tests/24_plan_aware_paymob_checkout_test.sql",
+    "sha256": "09b290630ffaab03726806554ef5187f7c639ddabe2094e821650d5b5e592935",
+    "initialImportDestination": "supabase/tests/24_plan_aware_paymob_checkout_test.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/tests/25_plan_change_safety_test.sql",
-    "destination": "supabase/tests/25_plan_change_safety_test.sql",
-    "sha256": "e58ca7acf39f5b00b155cf7d70b4dad3b228f4ba1284b73dba936789be31d548"
+    "destination": "apps/ledger-suit/supabase/tests/25_plan_change_safety_test.sql",
+    "sha256": "e58ca7acf39f5b00b155cf7d70b4dad3b228f4ba1284b73dba936789be31d548",
+    "initialImportDestination": "supabase/tests/25_plan_change_safety_test.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/tests/26_launch_plan_hardening_test.sql",
-    "destination": "supabase/tests/26_launch_plan_hardening_test.sql",
-    "sha256": "3531b19f3b4261e36b0ab774f23341d8c22d229a24a885aff0b22cccbff2b30b"
+    "destination": "apps/ledger-suit/supabase/tests/26_launch_plan_hardening_test.sql",
+    "sha256": "3531b19f3b4261e36b0ab774f23341d8c22d229a24a885aff0b22cccbff2b30b",
+    "initialImportDestination": "supabase/tests/26_launch_plan_hardening_test.sql"
   },
   {
     "project": "ledger-suit",
     "source": "supabase/tests/27_business_level_trial_test.sql",
-    "destination": "supabase/tests/27_business_level_trial_test.sql",
-    "sha256": "569f7f99ee6b78e879dd2c5883343f0fa348a16e738f92ed2a0cefdc0cc78ea0"
+    "destination": "apps/ledger-suit/supabase/tests/27_business_level_trial_test.sql",
+    "sha256": "569f7f99ee6b78e879dd2c5883343f0fa348a16e738f92ed2a0cefdc0cc78ea0",
+    "initialImportDestination": "supabase/tests/27_business_level_trial_test.sql"
   },
   {
     "project": "ledger-suit",
@@ -2252,44 +2362,51 @@
   {
     "project": "shop-suit",
     "source": "supabase/tests/db_smoke_test.sql",
-    "destination": "supabase/tests/shop-suit/db_smoke_test.sql",
-    "sha256": "b3b673e58d8b8f6e8f25f9c0a3b7078d40185999521200866ec26f00dc8cbf3d"
+    "destination": "apps/shop-suit/supabase/tests/db_smoke_test.sql",
+    "sha256": "b3b673e58d8b8f6e8f25f9c0a3b7078d40185999521200866ec26f00dc8cbf3d",
+    "initialImportDestination": "supabase/tests/shop-suit/db_smoke_test.sql"
   },
   {
     "project": "shop-suit",
     "source": "supabase/tests/shop_crm_expense_ledger.sql",
-    "destination": "supabase/tests/shop-suit/shop_crm_expense_ledger.sql",
-    "sha256": "39052aec904a36831eaedc94a3cd8559294d17c955ad123a649a9d83222ee0ba"
+    "destination": "apps/shop-suit/supabase/tests/shop_crm_expense_ledger.sql",
+    "sha256": "39052aec904a36831eaedc94a3cd8559294d17c955ad123a649a9d83222ee0ba",
+    "initialImportDestination": "supabase/tests/shop-suit/shop_crm_expense_ledger.sql"
   },
   {
     "project": "shop-suit",
     "source": "supabase/tests/shop_crm_inventory_adjustments.sql",
-    "destination": "supabase/tests/shop-suit/shop_crm_inventory_adjustments.sql",
-    "sha256": "3c0e846f31bdb0fdf80c9940e242a8150d9c7a5d7dd0052b0598d9bd50b9912c"
+    "destination": "apps/shop-suit/supabase/tests/shop_crm_inventory_adjustments.sql",
+    "sha256": "3c0e846f31bdb0fdf80c9940e242a8150d9c7a5d7dd0052b0598d9bd50b9912c",
+    "initialImportDestination": "supabase/tests/shop-suit/shop_crm_inventory_adjustments.sql"
   },
   {
     "project": "shop-suit",
     "source": "supabase/tests/shop_crm_owner_bootstrap.sql",
-    "destination": "supabase/tests/shop-suit/shop_crm_owner_bootstrap.sql",
-    "sha256": "8dc8ca2816c82549736d91d470914c3057bd7917f5e76f96f117b1d202ae4a82"
+    "destination": "apps/shop-suit/supabase/tests/shop_crm_owner_bootstrap.sql",
+    "sha256": "8dc8ca2816c82549736d91d470914c3057bd7917f5e76f96f117b1d202ae4a82",
+    "initialImportDestination": "supabase/tests/shop-suit/shop_crm_owner_bootstrap.sql"
   },
   {
     "project": "shop-suit",
     "source": "supabase/tests/shop_crm_product_catalog.sql",
-    "destination": "supabase/tests/shop-suit/shop_crm_product_catalog.sql",
-    "sha256": "94830583a22fe8b2be50fbd8e3a52aeca82a7acd2d9954a0c4e1b1225a5c7d76"
+    "destination": "apps/shop-suit/supabase/tests/shop_crm_product_catalog.sql",
+    "sha256": "94830583a22fe8b2be50fbd8e3a52aeca82a7acd2d9954a0c4e1b1225a5c7d76",
+    "initialImportDestination": "supabase/tests/shop-suit/shop_crm_product_catalog.sql"
   },
   {
     "project": "shop-suit",
     "source": "supabase/tests/shop_crm_read_isolation.sql",
-    "destination": "supabase/tests/shop-suit/shop_crm_read_isolation.sql",
-    "sha256": "d4e467698cac676d4cca056fb8036f5e6175fcf55e9d2ecdc922a26d06c13c84"
+    "destination": "apps/shop-suit/supabase/tests/shop_crm_read_isolation.sql",
+    "sha256": "d4e467698cac676d4cca056fb8036f5e6175fcf55e9d2ecdc922a26d06c13c84",
+    "initialImportDestination": "supabase/tests/shop-suit/shop_crm_read_isolation.sql"
   },
   {
     "project": "shop-suit",
     "source": "supabase/tests/shop_crm_service_catalog.sql",
-    "destination": "supabase/tests/shop-suit/shop_crm_service_catalog.sql",
-    "sha256": "13d60a959463c701a5f3ba9d6225f017bc92e61ecfb401ab38df303fb6b70f60"
+    "destination": "apps/shop-suit/supabase/tests/shop_crm_service_catalog.sql",
+    "sha256": "13d60a959463c701a5f3ba9d6225f017bc92e61ecfb401ab38df303fb6b70f60",
+    "initialImportDestination": "supabase/tests/shop-suit/shop_crm_service_catalog.sql"
   },
   {
     "project": "building-suit",

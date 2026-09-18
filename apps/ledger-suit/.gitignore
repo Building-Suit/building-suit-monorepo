@@ -11,10 +11,11 @@ dist
 test-results
 playwright-report
 
-# Environment — only .env.example is ever committed
+# Environment — only blank .example templates are committed
 .env
 .env.*
 !.env.example
+!.env.*.example
 
 # Supabase CLI local state
 supabase/.branches

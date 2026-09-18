@@ -6,4 +6,4 @@ Root rules apply. Routes live in `app/pages`; product orchestration and database
 - Preserve organization membership, capability, plan/quota, read-only and payment-required checks. Client checks complement server authorization.
 - Use shared templates, fields, table, dialogs, wizard and confirmations. Keep Ledger currency/tenant wrappers product-owned.
 - Verify affected posting/reporting/onboarding flows against a designated test backend. Public UI checks alone cannot validate financial operations.
-- Database SQL and Edge Functions are owned by the root `supabase` project. Do not add a second migration root under this app.
+- Database SQL, Edge Functions, templates and tests are owned by this app’s `supabase/` directory. Select it from the root with `pnpm db ledger-suit <command>`. Business objects use `public`; this product has its own production/staging pair and Auth sessions.

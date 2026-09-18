@@ -11,11 +11,13 @@ playwright-report/
 !.env.example
 !.env.sample
 !.env.template
-supabase/.temp/
-supabase/.branches/
+**/supabase/.temp/
+**/supabase/.branches/
 .local/
 *.log
 .DS_Store
 
 apps/building-suit-docs/app/generated/
 apps/building-suit-docs/public/sources/
+
+!.env.*.example

@@ -15,6 +15,8 @@ export default defineNuxtConfig({
   // Only the publishable (anon) key ever reaches the browser. The service role
   // key is deliberately absent from this config — it must never be bundled.
   supabase: {
+    cookiePrefix: `bs-ledger-${process.env.APP_ENV || 'local'}-auth-token`,
+    clientOptions: { db: { schema: 'public' } },
     // Authentication and billing access are handled by the application-wide
     // entitlement middleware. The module's generic redirect cannot distinguish
     // an unpaid member from an unauthenticated visitor.

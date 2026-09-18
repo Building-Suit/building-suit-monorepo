@@ -1,7 +1,9 @@
-"""One-time, non-destructive source import. Never overwrites destination files."""
+"""Historical one-time import. Refuses to run again after the copy is recorded."""
 from pathlib import Path
 import hashlib,json,shutil,subprocess
 ROOT=Path(__file__).resolve().parents[2]
+if (ROOT/'docs/migration/copy-manifest.json').exists():
+ raise SystemExit('Source import already recorded. This historical script is not a maintenance workflow.')
 SOURCE_ROOT=ROOT.parent
 manifest=[]
 def target_for(project,rel):

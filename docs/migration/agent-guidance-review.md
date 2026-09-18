@@ -1,14 +1,16 @@
-# Agent guidance review — local structure, 2026-09-19
+# Agent guidance review — final independent-project structure, 2026-09-19
 
-Reviewed the root `AGENTS.md`, scoped rules for all three apps, UI and Supabase, and `docs/agent-workflows.md` against the implemented workspace.
+Reviewed root `AGENTS.md`, all app rules, both app-owned Supabase rules, root Supabase configuration/archive rules, shared UI rules, `docs/agent-workflows.md` and future-platform templates.
 
-- Active rules describe ordinary future development, maintenance, testing and releases. They do not require repeating source copying, repository conversion or this task's table-relocation restrictions.
-- App navigation matches actual `app/pages`, `app/composables`, `app/components`, `app/types` and `app/utils` ownership. No empty feature-layer scaffolding is required.
-- Shared UI, token, interaction, identity and data boundaries name existing packages and their current responsibilities. Rules require verifying deployed state rather than assuming the target database architecture is live.
-- Workflow commands match root scripts. The new-platform command exists and its generated app passed prepare, typecheck and build; the temporary verification app was removed afterward.
-- Database guidance points to `docs/shared/database.md` and the environment registry. No nonexistent automatic deployment workflow is claimed.
-- Root and per-app READMEs use current workspace paths/commands. Standalone setup/deployment instructions and provider-link metadata are archived as source evidence.
-- Original Building instructions remain under the documentation app's `reference/agent-guidance`; the docs app rules explicitly distinguish these from active agent instructions.
-- Rules require relevant checks, accurate reporting of unrun work, preservation of unrelated edits, and stopping when the requested scope is complete.
+- Rules describe future development, maintenance, testing and releases. They do not instruct future agents to repeat this repository copy, monorepo conversion or one-time Shop transfer.
+- App navigation matches actual routes/composables/components/types/utils. Shared packages cannot import apps, and apps cannot import each other’s internals.
+- Database ownership points to `apps/<product>/supabase`, explicit `pnpm db <product>` selection and per-product production/staging configuration. No active rule assumes a single root CLI project or private product business schemas.
+- Business objects use `public` with RLS/grants; privileged helper and provider-managed schemas retain their boundaries.
+- Identity is project-scoped. Shared auth UI does not authorize shared sessions, account linking or future SSO work automatically.
+- Environment/ref/organization/origin/key handling matches the committed templates, preflight validator and manual setup guide. No automatic hosted deployment is claimed.
+- Documented setup uses `pnpm run setup`, avoiding pnpm’s unrelated built-in `setup` command. CI and generated-app guidance use the same command.
+- Root and app READMEs, architecture decisions and the maintained plan match the actual tree. Superseded plans/rehearsals are labeled historical and excluded from active rules.
+- Complete original Building docs and old agent instructions remain preserved as evidence; documentation-app rules clearly distinguish them from current guidance.
+- Rules preserve ordinary authorized feature/schema evolution through forward migrations, require relevant verification and accurate limits, and stop at the user’s requested scope.
 
-The hosted identity/schema work remains incomplete. Review affected environment/API/session references again when those already-planned work packages are implemented; this does not add a new roadmap.
+No additional migration steps or unrelated work were inserted into future agent workflows. Hosted transfer remains a bounded manual-target-dependent task documented separately.

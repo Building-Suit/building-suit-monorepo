@@ -1,6 +1,6 @@
 # Shared platform composition
 
-Status: implemented locally for UI and workspace structure; hosted data/identity cutover pending the environment prerequisites.
+Status: UI/workspace decision implemented. Its original shared-database/global-identity direction is superseded by [ADR 0002](0002-independent-supabase-projects.md).
 
 Keep Ledger Suit and Shop Suit as separate Nuxt applications in one pnpm workspace. A shared Nuxt layer registers Building tokens, CSS, fonts, icons, atomic components and interaction infrastructure. Both apps retain routes, product copy, domain validation, tenant/subscription adapters and business commands.
 
@@ -8,6 +8,6 @@ Use PrimeVue 4.5.5 from the Ledger baseline. `BsDataTable` wraps the native Data
 
 Building's published token roles govern the palette; source app overrides do not create competing token authorities. Preserve all original Building documentation as a searchable app and expose maintained shared specs and the component catalogue beside it.
 
-Atomic Design applies to reusable presentation. Existing app/pages, app/composables and app/utils boundaries remain useful for product ownership; do not force product business models into atomic categories. Shared packages never import applications. Private schemas and the global-account/portal-profile/membership split govern the target data architecture, with deployed-state checks required before use.
+Atomic Design applies to reusable presentation. Existing app/pages, app/composables and app/utils boundaries remain useful for product ownership; do not force product business models into atomic categories. Shared packages never import applications. Each product owns an independent Supabase pair, `public` business objects and separate Auth as defined in ADR 0002, with deployed-state checks required before use.
 
-The consequence is one change point for common UI behavior and styles, independent product entry points, one build/test graph and explicit shared interfaces. A shared UI change requires checking all affected apps; a product-only change stays in its app. A single database project does not imply sharing product permissions or financial/inventory models.
+The consequence is one change point for common UI behavior and styles, independent product entry points, one build/test graph and explicit shared interfaces. A shared UI change requires checking all affected apps; a product-only change stays in its app. Shared infrastructure does not merge product permissions or financial/inventory models.

@@ -1,3 +1,4 @@
+/** Product/project-scoped identity. Never join accounts across Auth projects by UUID/email. */
 export interface PortalIdentity {
   userId: string
   portal: 'ledger-suit' | 'shop-suit'

@@ -22,7 +22,7 @@ export interface ShopMembership {
   profile_id: string
   role: string
   status: string
-  // Kept until the employee page is migrated; shop_crm does not store these
+  // Kept until the employee page is migrated; the current Shop contract does not store these
   // fields on a membership row.
   full_name: string | null
   email: string | null

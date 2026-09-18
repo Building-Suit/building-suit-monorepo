@@ -22,7 +22,8 @@ User instructions take priority. Scoped rules specialize these rules within thei
 | `packages/auth/`, `packages/data-access/`, `packages/contracts/` | Identity/session infrastructure, data-access infrastructure and typed contracts |
 | `packages/i18n/`, `packages/nuxt-layer/` | Common translations, locale behavior and Nuxt integration |
 | `packages/config/`, `packages/testing/` | Tooling presets, boundary rules and test helpers |
-| `supabase/` | Database migrations, API/private schemas, functions, templates and database tests |
+| `apps/<product>/supabase/` | Product migrations, functions, templates, configuration and database tests |
+| `supabase/` | Per-product/environment credential templates and archived source SQL |
 | `docs/shared/`, `docs/architecture/decisions/` | Shared standards and architecture decisions |
 | `tooling/` | Generators, checks and repository maintenance commands |
 
@@ -54,8 +55,8 @@ Use manifests, package exports and the dependency graph to find interfaces and a
 ## Database, identity and environments
 
 - Read the maintained environment map and verify immutable project refs before remote operations. Do not infer environment from display names, shell defaults or cached CLI links.
-- Keep records in their owning product's private schema. Expose only approved API views/RPCs with explicit grants, RLS and tenant/portal authorization.
-- Keep global identity, portal profile, tenant membership and product permissions distinct. A global session alone grants no product-domain access.
+- Each product owns a separate production/staging project pair in its own organization. Business tables and API objects use `public`, with explicit grants, RLS and tenant/portal authorization. Keep privileged helpers unexposed and provider-managed schemas intact.
+- Auth users and sessions belong to one product/environment/project. Keep profiles, tenant memberships and permissions distinct. Do not link accounts by email, reuse another project's keys or introduce shared sessions without an explicit architecture change. Cookie prefixes include product and environment.
 - Resolve trusted portal context server-side. User-editable metadata must not grant authority, ownership, subscription access or trusted client identity.
 - Preserve applied migration history. Implement authorized schema evolution through new forward migrations, with dependency review, compatible contracts, generated types and relevant tests. Existing tables and columns may evolve when the task requires it; address data integrity and compatibility explicitly.
 - Preserve financial/audit invariants. Do not replace required reversals or archival operations with destructive deletion.

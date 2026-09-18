@@ -16,7 +16,7 @@ type Expense = {
 type Category = { id: string; name: string }
 
 const supabase = useSupabaseClient()
-const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('shop_crm')
+const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
 const { locale } = useI18n()
 const { current, currentId, isOwner, loading: shopLoading } = useShop()
 const isArabic = computed(() => locale.value === 'ar')

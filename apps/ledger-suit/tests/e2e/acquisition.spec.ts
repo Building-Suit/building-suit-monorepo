@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 async function readOtp(email: string) {
-  const mailpitUrl = process.env.MAILPIT_URL ?? 'http://127.0.0.1:59324'
+  const mailpitUrl = process.env.MAILPIT_URL ?? 'http://127.0.0.1:60324'
   for (let attempt = 0; attempt < 20; attempt++) {
     const response = await fetch(`${mailpitUrl}/api/v1/search?query=${encodeURIComponent(`to:${email}`)}`)
     const inbox = await response.json() as { messages?: Array<{ ID?: string; id?: string }> }
@@ -17,7 +17,7 @@ async function readOtp(email: string) {
 }
 
 test('an invited user verifies email, creates a password, joins, and can sign in again', async ({ page, request }) => {
-  const supabaseUrl = process.env.SUPABASE_URL ?? 'http://127.0.0.1:59321'
+  const supabaseUrl = process.env.SUPABASE_URL ?? 'http://127.0.0.1:60321'
   const anonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0'
   const email = `invitee-${Date.now()}@ledgersuit.test`
   const password = 'invited-user-password'

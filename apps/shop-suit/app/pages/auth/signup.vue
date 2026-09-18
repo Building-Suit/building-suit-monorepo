@@ -2,7 +2,7 @@
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 definePageMeta({ layout: 'auth' })
 const supabase = useSupabaseClient()
-const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('shop_crm')
+const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
 const { locale, t } = useI18n()
 const { step, advance, back } = useSignupWizard(2)
 const verification = useVerificationTimer()

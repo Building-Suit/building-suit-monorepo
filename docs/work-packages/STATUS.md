@@ -1,18 +1,18 @@
 # Monorepo implementation status
 
-Checkpoint: 2026-09-19. Local workspace, shared UI and documentation are implemented and verified. Hosted database and identity integration are incomplete. [Verification evidence](../migration/verification.md) records passing checks and their limits.
+Checkpoint: 2026-09-19, updated for ADR 0002. The local monorepo and independent Supabase structure are complete. Hosted setup/Shop data transfer await the user’s manual organizations, project refs and credentials. Single Auth is explicitly deferred.
 
-| Work package | Current result |
+| Area | Result |
 |---|---|
-| WP-00: discovery | Three source repositories inventoried; target Ledger production/STG refs/access and deployment origins are still missing. |
-| WP-01: workspace | 502 files imported with provenance; one pnpm/Turbo workspace and lockfile, independent apps, functioning future-platform generator. |
-| WP-02: design and docs | Canonical Building tokens/brand resources, full preserved documentation app, extracted shared standards and live component catalogue. |
-| WP-03: shared UI | Ledger landing/auth/signup/application compositions shared by both products; atomic components, modal/confirmation/wizard/theme behavior centralized. |
-| WP-04/05: database and identity | Local Ledger and Shop recovery baselines exercised. Hosted private/API schemas, data transfer, account reconciliation and SSO remain blocked on the environment prerequisites. |
-| WP-06: product integration | All 30 product tables consume the same PrimeVue wrapper. Competing Shop UI stack removed; form styles and record dialogs aligned. Hosted API conversion remains dependent on WP-04/05. |
-| WP-07/08: automation and validation | Workspace CI implemented. Three app builds/typechecks, lint, invariants, 18 browser journeys, 678 Ledger assertions and five current Shop SQL suites pass. Hosted release/recovery and domain-isolation tests remain unrun. |
-| WP-09: acceptance | Original source preservation and current agent-guidance audit pass. Overall completion is withheld until the hosted schema/identity requirements and final environment acceptance are satisfied. |
+| Workspace and preservation | Three apps, 11 shared packages, one pnpm/Turbo graph and lockfile. All 502 source hashes and 80 historical SQL hashes unchanged. |
+| Design and documentation | Canonical Building tokens/brand resources, complete original documentation, extracted maintained specifications and live component catalogue. |
+| Shared UI/behavior | Ledger landing/auth/signup/shell reused by both products; one PrimeVue table across all 30 product tables; shared dialogs, wizard, confirmations and themes. |
+| Independent Supabase architecture | App-owned CLI roots, separate local databases, production/staging templates and explicit environment validation. Ledger and Shop business/API objects use `public`; protected helpers/provider schemas retained. |
+| Identity | Separate Auth per product/environment, distinct session-cookie namespaces and browser isolation verification. No SSO or account merging required now. |
+| Manual configuration | Four blank target slots, ignored credential files with committed templates, key/secret guide, Auth/SMTP instructions and scoped Shop transfer runbook. Requested CEO Owner plus four active Free projects remains constrained by the documented provider quota. |
+| Verification | Three builds/typechecks and lint pass; 10 unit invariants, 678 Ledger SQL assertions, five Shop SQL suites and populated relocation preservation pass. Browser evidence and inherited Shop lint limitation are recorded in the verification report. |
+| Agent guidance | Root/scoped rules, future-development workflows and starter templates reviewed against the final product-owned database structure. One-time evidence stays in migration documents. |
 
-Permanent agent rules and workflows describe future development only. The one-time migration plan, scripts, evidence and blockers remain under `PLAN.md` and `docs/migration`.
+[Current verification evidence](../migration/independent-project-verification.md). [Manual setup](../shared/supabase-manual-setup.md). [Remaining hosted prerequisites](../migration/remote-prerequisites.md).
 
-No hosted migrations, deployments or production traffic changes have occurred. Original repositories and their local databases remain untouched. Continue with the finite sequence in [remote prerequisites](../migration/remote-prerequisites.md) after target access and domains are supplied; do not add an unrelated roadmap.
+No hosted changes have occurred. Do not substitute an accessible unrelated project for a missing destination. The repository work ends here; the scoped hosted transfer can only be completed after the manually configured targets exist. This does not create a new feature roadmap.

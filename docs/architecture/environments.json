@@ -1,28 +1,73 @@
 {
-  "local": {
-    "projectId": "building-suit-monorepo",
-    "apiUrl": "http://127.0.0.1:59321",
-    "databasePort": 59322,
-    "emailInboxUrl": "http://127.0.0.1:59324",
-    "ledgerSchema": "public",
-    "shopSchema": "shop_crm",
-    "status": "isolated Ledger baseline and Shop schema recovery snapshot with nine forward source migrations initialized; hosted equivalence not certified"
+  "version": 2,
+  "architecture": "one organization and independent production/staging project pair per product; public business schema; separate Auth",
+  "management": {
+    "email": "ceo@building-suit.com",
+    "requestedRole": "Owner",
+    "requestedPlan": "Free",
+    "status": "pending manual account setup; shared Owner across four Free projects conflicts with the documented quota"
   },
-  "production": {
-    "requestedProjectName": "Ledger Suit",
-    "projectRef": null,
-    "status": "required project not accessible through the current connector; source configuration candidate recorded only in the source audit"
+  "products": {
+    "ledger-suit": {
+      "organizationId": null,
+      "ownerEmail": null,
+      "managementRole": "Owner",
+      "plan": "Free",
+      "schema": "public",
+      "cliWorkdir": "apps/ledger-suit",
+      "local": {
+        "projectId": "building-suit-ledger",
+        "apiUrl": "http://127.0.0.1:60321",
+        "databasePort": 60322,
+        "emailInboxUrl": "http://127.0.0.1:60324"
+      },
+      "production": {
+        "projectRef": null,
+        "appUrl": null,
+        "status": "manual configuration pending"
+      },
+      "staging": {
+        "projectRef": null,
+        "appUrl": null,
+        "status": "manual configuration pending"
+      }
+    },
+    "shop-suit": {
+      "organizationId": null,
+      "ownerEmail": null,
+      "managementRole": "Owner",
+      "plan": "Free",
+      "schema": "public",
+      "cliWorkdir": "apps/shop-suit",
+      "local": {
+        "projectId": "building-suit-shop",
+        "apiUrl": "http://127.0.0.1:61321",
+        "databasePort": 61322,
+        "emailInboxUrl": "http://127.0.0.1:61324"
+      },
+      "production": {
+        "projectRef": null,
+        "appUrl": null,
+        "status": "manual configuration pending"
+      },
+      "staging": {
+        "projectRef": null,
+        "appUrl": null,
+        "status": "manual configuration pending"
+      }
+    }
   },
-  "staging": {
-    "requestedProjectName": "Ledger Suit STG",
-    "projectRef": null,
-    "status": "project ref and access required"
-  },
-  "shopSource": {
-    "projectRef": "jkdncdexqcymwbihwdhp",
-    "currentDisplayName": "Building Suit",
-    "dataSchema": "shop_crm",
-    "helperSchema": "shop_private",
-    "status": "read-only discovery verified; not a destination"
+  "sources": {
+    "ledger-suit": {
+      "configuredCandidateRef": "yqculoltqsyfastmihmu",
+      "verified": false
+    },
+    "shop-suit": {
+      "projectRef": "jkdncdexqcymwbihwdhp",
+      "displayName": "Building Suit",
+      "dataSchema": "shop_crm",
+      "helperSchema": "shop_private",
+      "dedicatedTargetRequired": true
+    }
   }
 }

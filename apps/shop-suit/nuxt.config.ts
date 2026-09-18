@@ -4,10 +4,10 @@ export default defineNuxtConfig({
   runtimeConfig: { public: { appUrl: process.env.APP_URL, portalKey: 'shop-crm' } },
   supabase: {
     redirect: false,
-    // Shop Suit data belongs to the hosted shop_crm schema. Keep Auth on the
-    // same Supabase project; data queries use this schema by default.
+    // Independent product/environment session; no cross-product SSO.
+    cookiePrefix: `bs-shop-${process.env.APP_ENV || 'local'}-auth-token`,
     clientOptions: {
-      db: { schema: 'shop_crm' },
+      db: { schema: 'public' },
     },
   },
 

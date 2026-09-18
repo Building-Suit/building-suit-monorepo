@@ -7,7 +7,11 @@
     "APP_BASE_URL",
     "APP_URL",
     "NUXT_PUBLIC_DATA_SCHEMA",
-    "DOCS_URL"
+    "DOCS_URL",
+    "APP_ENV",
+    "NUXT_PUBLIC_SUPABASE_URL",
+    "NUXT_PUBLIC_SUPABASE_KEY",
+    "NUXT_PUBLIC_SUPABASE_COOKIE_PREFIX"
   ],
   "tasks": {
     "build": {

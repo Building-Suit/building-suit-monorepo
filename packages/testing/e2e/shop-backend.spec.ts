@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test('Shop signup verifies email, provisions a shop and saves through the shared record dialog', async ({ page, context }) => {
+test('Shop signup, product persistence and independent Ledger sessions', async ({ page, context }) => {
   test.skip(process.env.BUILDING_TEST_BACKEND !== '1', 'Requires the explicitly initialized disposable monorepo backend')
   test.setTimeout(60000)
   const email = `shop-${Date.now()}@building-suit.test`
@@ -16,10 +16,10 @@ test('Shop signup verifies email, provisions a shop and saves through the shared
   await expect(page.getByRole('heading', { name: 'Verify your email' })).toBeVisible()
   let otp = ''
   await expect.poll(async () => {
-    const inbox = await fetch(`http://127.0.0.1:59324/api/v1/search?query=${encodeURIComponent(`to:${email}`)}`).then(r => r.json()) as { messages?: Array<{ ID: string }> }
+    const inbox = await fetch(`http://127.0.0.1:61324/api/v1/search?query=${encodeURIComponent(`to:${email}`)}`).then(r => r.json()) as { messages?: Array<{ ID: string }> }
     const id = inbox.messages?.[0]?.ID
     if (!id) return false
-    const message = await fetch(`http://127.0.0.1:59324/api/v1/message/${id}`).then(r => r.text())
+    const message = await fetch(`http://127.0.0.1:61324/api/v1/message/${id}`).then(r => r.text())
     otp = message.match(/\b(\d{6})\b/)?.[1] || ''
     return otp.length === 6
   }).toBe(true)
@@ -37,6 +37,15 @@ test('Shop signup verifies email, provisions a shop and saves through the shared
   await expect(dialog).toHaveCount(0)
   await expect(page.getByRole('cell', { name: 'Local test product', exact: true })).toBeVisible()
   await page.screenshot({ path: '.local/screenshots/shop-products.png', fullPage: true })
+  // Cookies share a hostname across local ports; product prefixes must isolate them.
+  const ledger = await context.newPage()
+  await ledger.goto('http://127.0.0.1:4320/dashboard')
+  await expect(ledger).toHaveURL(/\/login/)
+  await expect(ledger.getByLabel('Email', { exact: true })).toBeVisible()
+  await ledger.close()
+  const cookies = await context.cookies()
+  expect(cookies.some(cookie => cookie.name.startsWith('bs-shop-local-auth-token'))).toBe(true)
+  expect(cookies.some(cookie => cookie.name.startsWith('bs-ledger-local-auth-token'))).toBe(false)
   await page.reload()
   await expect(page.getByRole('cell', { name: 'Local test product', exact: true })).toBeVisible()
 })

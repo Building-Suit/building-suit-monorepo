@@ -15,7 +15,7 @@ type StockRow = {
 type Subscription = { plan_id: string }
 
 const supabase = useSupabaseClient()
-const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('shop_crm')
+const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
 const { locale } = useI18n()
 const { current, currentId, currentMembership, isOwner, loading: shopLoading } = useShop()
 const { data: plans } = usePlans()

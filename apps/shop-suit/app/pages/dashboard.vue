@@ -7,7 +7,7 @@ type Subscription = { status: string; trial_end_at: string | null; current_perio
 type Invoice = { id: string; invoice_number: string; client_name_snapshot: string | null; total_amount: number; created_at: string }
 
 const supabase = useSupabaseClient()
-const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('shop_crm')
+const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
 const { locale } = useI18n()
 const { current, currentId, currentMembership, isOwner, reload } = useShop()
 const { data: plans, isLoading: plansPending, error: plansError, refresh: refreshPlans } = usePlans()

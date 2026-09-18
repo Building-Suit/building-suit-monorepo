@@ -20,14 +20,14 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm setup
+      - run: pnpm run setup
       - run: pnpm check
       - run: pnpm test
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm build
         env:
-          SUPABASE_URL: http://127.0.0.1:59321
+          SUPABASE_URL: http://127.0.0.1:60321
           SUPABASE_KEY: local-development-publishable-key
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e

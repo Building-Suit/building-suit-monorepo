@@ -1,23 +1,17 @@
-# Hosted migration prerequisites
+# Hosted prerequisites for the independent product pairs
 
-This document records the remaining work for this one-time consolidation. It is not a future agent workflow.
+This is a one-time setup record, not an ongoing agent workflow. ADR 0002 supersedes the previous shared database/SSO migration.
 
-The connector exposes Finance Suit (`kedjrbwnznvfqlzszawa`) and the current Shop source named Building Suit (`jkdncdexqcymwbihwdhp`). It does not expose the requested Ledger Suit production or Ledger Suit STG destinations. The Ledger source configuration points to `yqculoltqsyfastmihmu`; this is evidence of its configured backend, not verification of the intended production/staging pair. Do not substitute either accessible project as a destination.
+The requested arrangement needs two organizations and four independent project refs: Ledger production/staging and Shop production/staging. The user will enter organization IDs, owner emails, actual roles/plans, app origins and refs in the environment registry and secrets in the ignored files described in [manual setup](../shared/supabase-manual-setup.md). Resolve the documented Free/shared-Owner quota before relying on the four projects.
 
-Required inputs:
+The currently accessible Shop source is Building Suit (`jkdncdexqcymwbihwdhp`), with `shop_crm` data and `shop_private` helpers. It is a shared source, not a destination. The old Ledger configuration names `yqculoltqsyfastmihmu`, which still needs verification; do not substitute accessible Finance Suit (`kedjrbwnznvfqlzszawa`) without evidence that it is the intended product.
 
-1. Immutable refs and working access for Ledger production and Ledger STG.
-2. The production/staging origins for both apps and, if applicable, the Building account domain.
-3. Verified backup/restore points and a bounded staging test scope, obtained through the authorized services once access exists.
+The remaining hosted work is finite:
 
-With access, complete the already planned sequence:
+1. Verify the four refs, owning organizations, roles/plans, origins and credentials; compare live source/destination schema and migration histories. Check backup/restore access and scoped test authorization.
+2. Preserve Ledger’s existing public-schema contract within its own pair. Determine whether existing Ledger projects are retained or moved whole; changing organization does not require inventing new business schemas.
+3. Perform the Shop-only copy, public namespace relocation, Auth/Storage/service setup and staged acceptance in [Shop dedicated projects](shop-dedicated-projects.md). A whole-project transfer would also move unrelated Building data and is unsuitable here.
+4. Configure separate Auth callbacks, email delivery and cookies for every environment; verify each product independently. No global identity reconciliation or SSO is required.
+5. Reconcile data and business invariants, verify recovery, then switch the relevant app environment and record the deployed refs/versions.
 
-1. Capture source/destination schemas, ownership, table counts, object dependencies, Auth users/identities/hooks, functions, buckets/policies and Realtime/job configuration. Compare live deployed histories with the preserved copies.
-2. Obtain the current Shop baseline. Its current `shop_crm` migrations depend on pre-existing objects. An older schema-only recovery snapshot plus nine migrations now runs locally, but its complete live grant/service/data equivalence has not been certified. The legacy public-schema dump is not a substitute for the current source.
-3. Classify overlapping users/identities and profile references. Preserve IDs and account associations. Surface any conflict that would require changing the user's protected column/ID constraints before attempting it.
-4. Prepare forward-only, reviewable schema relocation and scoped cross-project transfer artifacts. Preserve all original migration files, columns, constraints and data. `ALTER TABLE SET SCHEMA` relocates within one project; it does not transfer Shop records between projects.
-5. Rehearse the private `ledger_suit` / `shop_suit` and API/private-helper boundaries in staging. Rewrite schema-qualified dependencies without changing business semantics, recheck privileges/RLS and validate existing callers before cutover.
-6. Implement and verify one shared-account/session strategy for the actual origins, including callbacks, logout, signup recovery, existing-user enrollment into the other portal and negative access tests.
-7. Reconcile counts/checksums and financial/inventory/audit invariants, verify rollback, then perform the authorized production sequence and final agent-guidance review.
-
-Nothing has been applied to a hosted database. `pnpm db:lint` and `pnpm db:test` are explicitly local commands; they do not validate staging or production by implication.
+No hosted changes have occurred. Setting refs/keys, passing local tests or producing a local schema is not proof of a hosted restore.

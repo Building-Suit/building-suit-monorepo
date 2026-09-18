@@ -1,13 +1,11 @@
-# Identity and session architecture
+# Independent product authentication
 
-Building Suit distinguishes one global Auth account from a portal profile, tenant membership and product permissions. The shared infrastructure contract in `packages/auth` represents those concepts separately; it does not grant domain access from the presence of a session.
+Each Ledger or Shop production/staging project has its own Supabase Auth users, identities, credentials, sessions, recovery configuration and callback allowlist. A login in one product does not authenticate the user to another product. Matching email addresses or UUIDs do not imply a shared identity.
 
-Ledger currently links `public.profiles.id` directly to `auth.users.id`. Shop's current hosted profile has its own profile ID and `user_id` link, scoped by `portal_id`. Preserve these models behind app adapters; do not silently remap IDs, merge accounts by email, or change columns to make the models look identical.
+Single Auth as a global source of truth is explicitly deferred. Do not add a central identity app, cross-product account merging, session handoff or shared parent-domain cookie while implementing ordinary features. Shared `packages/auth` helpers and shared login/signup presentation provide reusable mechanics only.
 
-The required destination has one Supabase Auth project per environment. Hosted identity consolidation and browser SSO are not implemented yet. Production/staging domains and verified destination project access are required to choose and test the session topology. One Supabase URL alone does not share browser storage across origins.
+Ledger links `public.profiles.id` to that project's `auth.users.id`. Shop retains a separate `public.profiles.id` with `user_id` and `portal_id`. Preserve these product contracts and membership/entitlement checks. User-editable metadata may carry onboarding drafts; it must not authorize ownership, membership, subscription access or trusted portal identity.
 
-The current signup UI uses shared layout/wizard/countdown infrastructure. Each app retains its existing validation and authorized provisioning RPC. Shop additionally collects its required shop name and trial plan before verification and recovers nonsecret draft details. User metadata carries draft form values only; it must never authorize portal, membership, ownership or subscription access.
+Session cookies use `bs-ledger-<environment>-auth-token` and `bs-shop-<environment>-auth-token`. Set `APP_ENV` and the matching runtime cookie prefix per deployment. Keep cookies host-only. Account/tenant changes clear that application's sensitive state and listeners. Redirects remain same-origin relative paths; tokens do not belong in URLs.
 
-Post-auth redirects use same-origin relative paths. Never place access or refresh tokens in URLs. Session changes must clear tenant-sensitive cache/state and revoke application access according to server-authoritative memberships and entitlements.
-
-The remaining cross-project identity checks and cutover steps are tracked in the migration runbook, not in permanent agent workflows.
+For Shop's move to its own project, migrate only the Auth identities referenced by Shop and their dependent records using a reviewed provider-supported procedure. Preserve user/profile IDs and password/identity associations; do not merge Ledger identities. Existing sessions need fresh authentication against the destination. Staging uses synthetic or appropriately sanitized data, never production session tokens.

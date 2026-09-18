@@ -1,3 +1,5 @@
+> Historical verification checkpoint before ADR 0002. Current independent-project evidence is recorded in `independent-project-verification.md`.
+
 # Local baseline rehearsal — 2026-09-19
 
 Only the disposable `supabase_db_building-suit-monorepo` database was written. API/DB/mail ports are 59321/59322/59324. Original projects and their local databases were not modified. This is a recovery rehearsal, not the target private-schema migration or a proof of hosted restore.

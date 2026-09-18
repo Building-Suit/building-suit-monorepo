@@ -6,14 +6,14 @@ Run commands from the monorepo root:
 
 ```sh
 pnpm install
-pnpm setup
+pnpm run setup
 cp apps/ledger-suit/.env.example apps/ledger-suit/.env
 pnpm dev:ledger
 pnpm --filter @building-suit/ledger-suit build
 pnpm --filter @building-suit/ledger-suit typecheck
 ```
 
-Use the root [database runbook](../../docs/shared/database.md) and [environment registry](../../docs/architecture/environments.json). Root `supabase` owns SQL, functions, templates and fixtures. There is no application-specific database deployment root.
+Use the root [database runbook](../../docs/shared/database.md) and [environment registry](../../docs/architecture/environments.json). This app’s `supabase/` directory owns its SQL, functions, templates and fixtures. Run `pnpm db ledger-suit start` to initialize the isolated local API on port 60321 (database 60322; email inbox 60324). Production and staging are separate Ledger projects; business objects remain in `public`. Follow the [manual key setup](../../docs/shared/supabase-manual-setup.md) for hosted configuration.
 
 The isolated local seed has Alpha Trading and Beta Supplies to exercise tenant isolation. Local fixture accounts are `owner@alpha.test`, `accountant@alpha.test`, `viewer@alpha.test`, and `owner@beta.test`, with the disposable seed password `ledgersuit`. Never use these fixtures against a hosted business database.
 
