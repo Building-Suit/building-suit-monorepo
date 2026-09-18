@@ -1,0 +1,326 @@
+<script setup lang="ts">
+import type { Database } from '~~/types/database.types'
+
+/**
+ * Transaction detail, including the journal behind it.
+ *
+ * The journal is the "advanced view" from spec section 75 — the same posting a
+ * non-accountant created without ever seeing a debit or a credit. Correcting a
+ * posted transaction is only offered as a reversal, because that is the only
+ * thing the database permits.
+ */
+
+const props = defineProps<{ transactionId: string | null }>()
+const emit = defineEmits<{ close: [], changed: [] }>()
+
+const supabase = useSupabaseClient<Database>()
+const { can, currentId } = useTenant()
+const toasts = useToasts()
+const { t, locale } = useI18n()
+const describeError = useErrorMessage()
+const { refresh: refreshPlanUsage } = usePlanUsage()
+
+const reversing = ref(false)
+const reason = ref('')
+const confirming = ref(false)
+const errorMessage = ref<string | null>(null)
+const selectedTagId = ref('')
+const uploading = ref(false)
+
+const { data: tags } = useLazyAsyncData('org:detail-tags', async () => {
+  if (!currentId.value) return []
+  const { data, error } = await supabase.from('tags').select('id,name,color').eq('organization_id', currentId.value).order('name')
+  if (error) throw error
+  return data ?? []
+}, { watch: [currentId], default: () => [] })
+
+const { data: assignedTags, refresh: refreshTags } = useLazyAsyncData('transaction-detail-tags', async () => {
+  if (!props.transactionId) return []
+  const { data, error } = await supabase.from('transaction_tags').select('tag_id,tags(id,name,color)').eq('transaction_id', props.transactionId)
+  if (error) throw error
+  return data ?? []
+}, { watch: [() => props.transactionId], default: () => [] })
+
+const { data: attachments, refresh: refreshAttachments } = useLazyAsyncData('transaction-detail-attachments', async () => {
+  if (!props.transactionId) return []
+  const { data, error } = await supabase.from('attachments').select('*').eq('entity_type', 'transaction').eq('entity_id', props.transactionId).order('created_at')
+  if (error) throw error
+  return data ?? []
+}, { watch: [() => props.transactionId], default: () => [] })
+
+async function assignTag() {
+  if (!props.transactionId || !currentId.value || !selectedTagId.value) return
+  const { data: user } = await supabase.auth.getUser()
+  const { error } = await supabase.from('transaction_tags').insert({ organization_id: currentId.value, transaction_id: props.transactionId, tag_id: selectedTagId.value, created_by: user.user?.id })
+  if (error && error.code !== '23505') return (errorMessage.value = describeError(error))
+  selectedTagId.value = ''; await refreshTags(); emit('changed')
+}
+
+async function removeTag(tagId: string) {
+  if (!props.transactionId) return
+  const { error } = await supabase.from('transaction_tags').delete().eq('transaction_id', props.transactionId).eq('tag_id', tagId)
+  if (error) return (errorMessage.value = describeError(error))
+  await refreshTags(); emit('changed')
+}
+
+async function uploadAttachment(event: Event) {
+  const file = (event.target as HTMLInputElement).files?.[0]
+  if (!file || !props.transactionId || !currentId.value) return
+  uploading.value = true; errorMessage.value = null
+  try {
+    const ext = file.name.split('.').pop()?.toLowerCase() ?? 'bin'
+    const key = `${currentId.value}/transaction/${props.transactionId}/${crypto.randomUUID()}.${ext}`
+    const { data: reservationId, error: reserveError } = await supabase.rpc('reserve_attachment_upload', {
+      p_organization_id: currentId.value,
+      p_entity_type: 'transaction',
+      p_entity_id: props.transactionId,
+      p_file_name: file.name,
+      p_mime_type: file.type,
+      p_size_bytes: file.size,
+      p_storage_key: key,
+    })
+    if (reserveError) throw reserveError
+
+    const { error: uploadError } = await supabase.storage.from('attachments').upload(key, file, {
+      contentType: file.type,
+      upsert: false,
+    })
+    if (uploadError) {
+      await supabase.rpc('abort_attachment_upload', { p_reservation_id: reservationId })
+      throw uploadError
+    }
+
+    let { error: commitError } = await supabase.rpc('commit_attachment_upload', { p_reservation_id: reservationId })
+    if (commitError) {
+      const retry = await supabase.rpc('commit_attachment_upload', { p_reservation_id: reservationId })
+      commitError = retry.error
+    }
+    if (commitError) {
+      await supabase.storage.from('attachments').remove([key])
+      await supabase.rpc('abort_attachment_upload', { p_reservation_id: reservationId })
+      throw commitError
+    }
+    await refreshAttachments(); await refreshPlanUsage(); emit('changed')
+  }
+  catch (error) { errorMessage.value = describeError(error) }
+  finally { uploading.value = false; (event.target as HTMLInputElement).value = '' }
+}
+
+async function downloadAttachment(item: NonNullable<typeof attachments.value>[number]) {
+  const { data, error } = await supabase.storage.from(item.storage_bucket).createSignedUrl(item.storage_key, 60)
+  if (error) return (errorMessage.value = describeError(error))
+  if (data.signedUrl) window.open(data.signedUrl, '_blank', 'noopener')
+}
+
+async function deleteAttachment(item: NonNullable<typeof attachments.value>[number]) {
+  const { data, error } = await supabase.rpc('begin_attachment_delete', { p_attachment_id: item.id })
+  if (error) return (errorMessage.value = describeError(error))
+  const cleanup = data?.[0]
+  if (cleanup) await supabase.storage.from(cleanup.storage_bucket).remove([cleanup.storage_key])
+  await refreshAttachments(); await refreshPlanUsage(); emit('changed')
+}
+
+const { data: detail, refresh } = useLazyAsyncData(
+  'transaction-detail',
+  async () => {
+    if (!props.transactionId) return null
+
+    const [{ data: transaction, error: txError }, { data: entries, error: entryError }] =
+      await Promise.all([
+        supabase
+          .from('transaction_summaries')
+          .select('*')
+          .eq('id', props.transactionId)
+          .maybeSingle(),
+        supabase
+          .from('ledger_entries')
+          .select('entry_id, side, amount_minor, currency_code, base_amount_minor, memo, account_code, account_name, account_type')
+          .eq('transaction_id', props.transactionId)
+          .order('side', { ascending: true }),
+      ])
+
+    if (txError) throw txError
+    if (entryError) throw entryError
+
+    return { transaction, entries: entries ?? [] }
+  },
+  { watch: [() => props.transactionId] },
+)
+
+const transaction = computed(() => detail.value?.transaction ?? null)
+const entries = computed(() => detail.value?.entries ?? [])
+
+const canReverse = computed(
+  () => can('transactions.reverse') && transaction.value?.status === 'posted',
+)
+
+async function reverse() {
+  if (!props.transactionId) return
+  if (!reason.value.trim()) {
+    errorMessage.value = t('detail.reverseReasonRequired')
+    return
+  }
+
+  reversing.value = true
+  errorMessage.value = null
+
+  try {
+    const { error } = await supabase.rpc('reverse_transaction', {
+      p_transaction_id: props.transactionId,
+      p_reason: reason.value,
+    })
+    if (error) throw error
+
+    toasts.success(t('detail.reversedTitle'), t('detail.reversedBody'))
+    confirming.value = false
+    reason.value = ''
+    await refresh()
+    await refreshPlanUsage()
+    emit('changed')
+  }
+  catch (err) {
+    errorMessage.value = describeError(err)
+  }
+  finally {
+    reversing.value = false
+  }
+}
+</script>
+
+<template>
+  <Teleport to="body">
+    <div
+      v-if="transactionId"
+      class="fixed inset-0 z-50 grid place-items-center ls-scrim p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="transaction-detail-title"
+      @click.self="emit('close')"
+    >
+      <div class="ls-modal-panel ls-card flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden shadow-overlay">
+        <header class="flex items-start justify-between gap-3 border-b border-[var(--bs-border)] px-6 py-4">
+          <div class="min-w-0">
+            <h2 id="transaction-detail-title" class="truncate text-base font-bold">
+              {{ transaction?.description || t('detail.title') }}
+            </h2>
+            <p class="mt-1 flex items-center gap-2 text-sm text-fg-muted">
+              <StatusBadge v-if="transaction?.status" :status="transaction.status" />
+              <span v-if="transaction?.type">{{ t(`types.${transaction.type}`) }}</span>
+            </p>
+          </div>
+          <button type="button" class="ls-btn ls-btn-sm" :aria-label="t('common.close')" @click="emit('close')"><AppIcon name="close" /></button>
+        </header>
+
+        <div class="min-h-0 flex-1 space-y-6 overflow-y-auto px-6 py-4">
+          <dl class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+            <div>
+              <dt class="text-fg-muted">{{ t('transactions.date') }}</dt>
+              <dd>{{ formatDate(transaction?.transaction_date, locale) }}</dd>
+            </div>
+            <div>
+              <dt class="text-fg-muted">{{ t('transactions.amount') }}</dt>
+              <dd class="font-semibold">
+                <MoneyText :amount-minor="transaction?.amount_minor" :currency="transaction?.currency_code ?? undefined" />
+              </dd>
+            </div>
+            <div>
+              <dt class="text-fg-muted">{{ t('transactions.category') }}</dt>
+              <dd>{{ transaction?.category_name || t('common.dash') }}</dd>
+            </div>
+            <div>
+              <dt class="text-fg-muted">{{ t('transactions.counterparty') }}</dt>
+              <dd>{{ transaction?.counterparty_name || t('common.dash') }}</dd>
+            </div>
+            <div>
+              <dt class="text-fg-muted">{{ t('transactions.reference') }}</dt>
+              <dd>{{ transaction?.reference || t('common.dash') }}</dd>
+            </div>
+            <div>
+              <dt class="text-fg-muted">{{ t('transactions.createdBy') }}</dt>
+              <dd>{{ transaction?.created_by_name || transaction?.created_by_email || t('common.dash') }}</dd>
+            </div>
+            <div v-if="transaction?.adjustment_reason" class="col-span-2">
+              <dt class="text-fg-muted">{{ t('detail.reason') }}</dt>
+              <dd>{{ transaction.adjustment_reason }}</dd>
+            </div>
+          </dl>
+
+          <section aria-labelledby="journal-heading">
+            <h3 id="journal-heading" class="mb-2 text-sm font-bold">{{ t('detail.journal') }}</h3>
+            <table class="ls-table">
+              <thead>
+                <tr>
+                  <th scope="col">{{ t('detail.account') }}</th>
+                  <th scope="col" class="text-end">{{ t('detail.debit') }}</th>
+                  <th scope="col" class="text-end">{{ t('detail.credit') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(entry, index) in entries" :key="entry.entry_id ?? index">
+                  <td>
+                    <span class="block">{{ entry.account_name }}</span>
+                    <span v-if="entry.memo" class="block text-xs text-fg-muted">{{ entry.memo }}</span>
+                  </td>
+                  <td class="ls-num">
+                    <MoneyText v-if="entry.side === 'debit'" :amount-minor="entry.amount_minor" :currency="entry.currency_code" />
+                    <span v-else class="text-fg-disabled">{{ t('common.dash') }}</span>
+                  </td>
+                  <td class="ls-num">
+                    <MoneyText v-if="entry.side === 'credit'" :amount-minor="entry.amount_minor" :currency="entry.currency_code" />
+                    <span v-else class="text-fg-disabled">{{ t('common.dash') }}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+
+          <section aria-labelledby="tags-heading">
+            <h3 id="tags-heading" class="mb-2 text-sm font-bold">{{ t('operations.tabs.tags') }}</h3>
+            <div class="mb-2 flex flex-wrap gap-2"><span v-for="row in assignedTags" :key="row.tag_id" class="ls-badge bg-surface-muted"><span class="me-1 inline-block h-2 w-2 rounded-full" :style="{ backgroundColor: row.tags?.color ?? 'var(--bs-slate-gray)' }" />{{ row.tags?.name }}<button v-if="can('transactions.create')" class="ms-1" :aria-label="t('common.dismiss')" @click="removeTag(row.tag_id)"><AppIcon name="close" :size="14" /></button></span></div>
+            <div v-if="can('transactions.create')" class="flex gap-2"><FloatingField class="flex-1" :label="t('operations.tabs.tags')"><select v-model="selectedTagId" class="ls-input"><option value="">{{ t('common.none') }}</option><option v-for="tag in tags" :key="tag.id" :value="tag.id">{{ tag.name }}</option></select></FloatingField><button class="ls-btn" @click="assignTag">{{ t('operations.assign') }}</button></div>
+          </section>
+
+          <section aria-labelledby="attachments-heading">
+            <div class="mb-2 flex items-center justify-between"><h3 id="attachments-heading" class="text-sm font-bold">{{ t('operations.attachments') }}</h3><label v-if="can('attachments.create')" class="ls-btn ls-btn-sm cursor-pointer">{{ uploading ? t('common.saving') : t('operations.upload') }}<input type="file" class="sr-only" accept="application/pdf,image/png,image/jpeg,image/webp" :disabled="uploading" @change="uploadAttachment"></label></div>
+            <QuotaUsageMeter v-if="can('attachments.create')" quota-key="max_storage_bytes" compact class="mb-3" />
+            <div v-if="attachments.length" class="space-y-2"><div v-for="item in attachments" :key="item.id" class="flex items-center justify-between rounded-control bg-surface-muted px-3 py-2 text-sm"><button class="truncate text-link" @click="downloadAttachment(item)">{{ item.file_name }}</button><button v-if="can('attachments.delete')" class="ls-btn ls-btn-sm" :aria-label="t('common.delete')" @click="deleteAttachment(item)"><AppIcon name="delete" :size="18" /></button></div></div><p v-else class="text-sm text-fg-muted">{{ t('operations.noAttachments') }}</p>
+          </section>
+
+          <p
+            v-if="transaction?.reversed_by_transaction_id"
+            class="rounded-control bg-[var(--bs-status-info-bg)] px-3 py-2 text-sm text-[var(--bs-status-info)]"
+          >
+            {{ t('detail.reversedNotice') }}
+          </p>
+
+          <div v-if="confirming" class="ls-card-flat space-y-3 p-4">
+            <p class="text-sm">{{ t('detail.reverseExplain') }}</p>
+            <div>
+              <label class="ls-label" for="reverse-reason">{{ t('detail.reverseReason') }}</label>
+              <input
+                id="reverse-reason"
+                v-model="reason"
+                class="ls-input"
+                :placeholder="t('detail.reverseReasonPlaceholder')"
+              >
+            </div>
+            <div class="flex justify-end gap-2">
+              <button type="button" class="ls-btn" @click="confirming = false">{{ t('common.cancel') }}</button>
+              <button type="button" class="ls-btn ls-btn-danger" :disabled="reversing" @click="reverse">
+                {{ reversing ? t('detail.reversing') : t('detail.reverseConfirm') }}
+              </button>
+            </div>
+          </div>
+
+          <p v-if="errorMessage" role="alert" class="ls-error">
+            {{ errorMessage }}
+          </p>
+        </div>
+
+        <footer v-if="canReverse && !confirming" class="border-t border-[var(--bs-border)] px-6 py-4">
+          <button type="button" class="ls-btn" @click="confirming = true">{{ t('detail.reverseAction') }}</button>
+        </footer>
+      </div>
+    </div>
+  </Teleport>
+</template>

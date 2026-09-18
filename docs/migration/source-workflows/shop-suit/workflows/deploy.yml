@@ -1,0 +1,84 @@
+name: Deploy to Netlify
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+  deploy:
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app:
+          - name: shop-crm
+            path: apps/shop-crm
+            site_id: 0906f956-d54d-4a93-8ade-3e1185cd2d2f
+            node-version: 22
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check for changes in app
+        id: check_changes
+        run: |
+          echo "Checking changes in path: ${{ matrix.app.path }}"
+          if git diff --quiet HEAD^ HEAD -- ${{ matrix.app.path }}; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        # if: steps.check_changes.outputs.changed == 'true'
+
+      - name: Install dependencies
+        # run pnpm install within the app directory by using the matrix path
+        run: pnpm install
+        # if: steps.check_changes.outputs.changed == 'true'
+
+      - name: Build
+        env:
+          # Nitro Netlify preset: emits .output/public (static) + .output/server (SSR functions)
+          NITRO_PRESET: netlify
+        run: pnpm run build:shop-crm
+        # if: steps.check_changes.outputs.changed == 'true'
+
+      - name: Deploy to Netlify
+        id: netlify_deploy
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          APP_URL: ${{ secrets.SHOP_CRM_URL }}
+          PORTAL: shop_suit
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+          STRIPE_PRICE_BASIC: ${{ secrets.STRIPE_PRICE_BASIC }}
+          STRIPE_PRICE_PRO: ${{ secrets.STRIPE_PRICE_PRO }}
+        run: |
+          npx netlify deploy \
+            --prod \
+            --cwd ${{ matrix.app.path }} \
+            --dir .output/public \
+            --functions .output/server \
+            --site ${{ matrix.app.site_id }} \
+            --auth ${{ secrets.NETLIFY_AUTH_TOKEN }}
+        # if: steps.check_changes.outputs.changed == 'true'

@@ -1,0 +1,62 @@
+const PUBLIC_PATHS = new Set([
+  '/',
+  '/login',
+  '/signup',
+  '/verify-email',
+  '/accept-invitation',
+  '/about',
+  '/contact',
+  '/terms',
+  '/privacy',
+  '/delivery-shipping',
+  '/refund-cancellation',
+])
+
+/**
+ * Keep a workspace with no subscription in the checkout journey. Lapsed
+ * subscriptions remain in the product shell so members can read accounting
+ * history; database capabilities stay authoritative for every mutation.
+ */
+export default defineNuxtRouteMiddleware(async (to) => {
+  if (PUBLIC_PATHS.has(to.path)) return
+
+  // Browser sessions are persisted in storage by the Nuxt Supabase client.
+  // During SSR there is no browser session to inspect, so leave the route
+  // blank until the client can make the authoritative entitlement decision.
+  if (import.meta.server) return
+
+  const supabase = useSupabaseClient()
+  // Immediately after sign-in, Nuxt's reactive auth user can trail the SDK by
+  // one navigation. Ask Supabase for the verified user instead of racing local
+  // storage with a fixed timeout.
+  let user = useSupabaseUser().value
+  if (!user) user = (await supabase.auth.getUser()).data.user
+  if (!user) return navigateTo('/login')
+
+  const tenant = useTenant()
+  await tenant.loadOrganizations(user.id)
+
+  // The product layout waits for billing state and therefore cannot render
+  // without a tenant. Resume the paid owner-onboarding journey instead of
+  // leaving the authenticated user on an empty product shell.
+  if (!tenant.currentId.value) {
+    return navigateTo('/signup', { replace: true })
+  }
+
+  const billing = useBilling()
+  const isCheckoutReturn = to.query.checkout === 'success'
+  await billing.load({ force: isCheckoutReturn })
+
+  if (billing.paymentRequired.value && to.path !== '/subscribe') {
+    // Older Checkout Sessions return to /billing. Preserve their success
+    // marker so the subscribe page can wait for the webhook to arrive.
+    return navigateTo({
+      path: '/subscribe',
+      query: isCheckoutReturn ? to.query : undefined,
+    }, { replace: true })
+  }
+
+  if (!billing.paymentRequired.value && to.path === '/subscribe') {
+    return navigateTo('/dashboard')
+  }
+})
