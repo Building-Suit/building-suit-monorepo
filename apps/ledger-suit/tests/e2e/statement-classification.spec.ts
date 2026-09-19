@@ -37,7 +37,7 @@ for (const locale of ['en', 'ar']) {
     const requestHeaders = await response.request().allHeaders()
     const headers = { apikey: requestHeaders.apikey!, authorization: requestHeaders.authorization! }
     const backend = new URL(response.url()).origin
-    expect(['http://127.0.0.1:60321', 'http://127.0.0.1:64321']).toContain(backend)
+    expect(['http://127.0.0.1:60321', 'http://127.0.0.1:64321', 'http://127.0.0.1:65321']).toContain(backend)
     async function rpc(method: string, data: Record<string, unknown>) {
       return page.request.post(`${backend}/rest/v1/rpc/${method}`, { headers, data })
     }
@@ -158,8 +158,8 @@ test('tenant change clears classified report and ignores the previous tenant res
   await page.route('**/rest/v1/rpc/*', async (route) => {
     const body = route.request().postData()
     if (!body?.includes(secondId)) return route.continue()
-    const response = await route.fetch({ postData: body.replaceAll(secondId, firstId) })
-    await route.fulfill({ response })
+    // Forward unrelated RPCs directly; no pending route.fetch can outlive a tenant switch.
+    await route.continue({ postData: body.replaceAll(secondId, firstId) })
   })
   let release!: () => void
   const delayed = new Promise<void>(resolve => { release = resolve })
@@ -183,4 +183,5 @@ test('tenant change clears classified report and ignores the previous tenant res
   await expect(page.getByRole('table')).toContainText('First classification')
   release()
   await expect(page.getByRole('table')).not.toContainText('Private second classification')
+  await page.unrouteAll({ behavior: 'wait' })
 })

@@ -163,6 +163,10 @@ const sortColumnPt = {
 
 const hasAccounts = computed(() => scopedBalances.value.length > 0)
 
+const activityAccountId = ref<string | null>(null)
+watch(balanceKey, () => { activityAccountId.value = null }, { flush: 'sync' })
+const canReadActivity = computed(() => can('accounts.read') && can('reports.read') && can('transactions.read'))
+
 const statementAccount = ref<BalanceRow | null>(null)
 watch(balanceKey, () => { statementAccount.value = null })
 
@@ -357,7 +361,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
     <div class="flex flex-wrap items-end gap-3">
       <div class="w-full min-w-0 sm:w-auto sm:flex-1 sm:max-w-md">
         <label for="account-search" class="mb-2 block text-sm font-semibold">{{ t('accounts.searchLabel') }}</label>
-        <input id="account-search" ref="searchInput" v-model="search" type="search" class="ls-input" :placeholder="t('accounts.searchPlaceholder')" aria-controls="accounts-table" :disabled="balancesPending || !!balancesError">
+        <input id="account-search" ref="searchInput" v-model="search" type="search" class="ls-input" :placeholder="t('accounts.searchPlaceholder')" aria-controls="accounts-table" :disabled="!hydrated || balancesPending || !!balancesError">
       </div>
       <button v-if="search" type="button" class="ls-btn" @click="clearSearch">{{ t('accounts.clearSearch') }}</button>
       <p v-if="!balancesPending && !balancesError" class="py-2 text-sm text-fg-muted" role="status" data-testid="account-result-count">
@@ -423,7 +427,8 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
           </Column>
           <Column field="name" :header="t('accounts.account')" sortable :pt="sortColumnPt">
             <template #body="{ data: account }">
-              <span :class="{ 'ps-4': account.parent_account_id, 'font-semibold': activeGroup.parentIds.has(account.account_id) }">{{ account.name }}</span>
+              <button v-if="account.account_role === 'posting' && canReadActivity" type="button" :disabled="!hydrated" class="text-start font-medium text-link hover:underline" :class="{ 'ps-4': account.parent_account_id }" @click="activityAccountId = account.account_id">{{ account.name }}</button>
+              <span v-else :class="{ 'ps-4': account.parent_account_id, 'font-semibold': activeGroup.parentIds.has(account.account_id) }">{{ account.name }}</span>
               <span v-if="account.is_archived" class="ls-badge ms-2 bg-[var(--bs-surface-muted)] text-fg-muted">{{ t('accounts.archived') }}</span>
               <span v-else-if="account.is_liquid" class="ls-badge ms-2 bg-[var(--bs-status-info-bg)] text-[var(--bs-status-info)]">{{ t('accounts.liquid') }}</span>
             </template>
@@ -478,6 +483,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
           </template>
         </BsDataTable>
     </section>
+      <AccountActivityDialog v-if="activityAccountId" :key="`${balanceKey}:${activityAccountId}`" :account-id="activityAccountId" :scope="balanceKey" @close="activityAccountId = null" />
       <AccountStatementClassificationDialog v-if="statementAccount" :key="`${balanceKey}:${statementAccount.account_id}`" :account="statementAccount" :scope="balanceKey" @close="statementAccount = null" />
       <BsDialog v-if="editorOpen" :visible="true" :title="editing ? t('accounts.edit') : t('accounts.add')" :aria-label="editing ? t('accounts.edit') : t('accounts.add')" :show-header="false" size="md" :dirty="overlayDirty0" :pending="submitting" @update:visible="value => { if (!value) editorOpen = false }"><template #default="{ close: dismiss }">
 <form class="space-y-4 p-6" @submit.prevent="saveAccount">

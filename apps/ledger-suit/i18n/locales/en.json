@@ -1218,5 +1218,24 @@
     "ACCOUNT_HAS_LEDGER_HISTORY": "This account has journal entries. Its accounting classification requires a reviewed migration.",
     "LAST_OWNER_REQUIRED": "An organization must keep at least one owner.",
     "INVALID_DATE_RANGE": "The start date must be before the end date."
+  },
+  "accountActivity": {
+    "title": "Account statement",
+    "journal": "Journal entry",
+    "back": "Back to previous view",
+    "baseCurrency": "Amounts in {currency}",
+    "apply": "Show activity",
+    "opening": "Opening balance",
+    "debits": "Period debits",
+    "credits": "Period credits",
+    "closing": "Closing balance",
+    "running": "Running balance",
+    "empty": "No posted entries in this period. The opening balance carries forward unchanged.",
+    "period": "Posted activity from {from} to {to}. Totals include the entire period.",
+    "pages": "Statement pages",
+    "showing": "{from}–{to} of {total} entries",
+    "journalHint": "Posted journal in {currency}. Select an account to explore its statement.",
+    "reversal": "This entry is part of a linked reversal. Both the original and reversal remain in the ledger.",
+    "balanced": "Journal totals"
   }
 }

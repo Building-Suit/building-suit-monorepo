@@ -43,7 +43,7 @@ for (const locale of ['en', 'ar']) {
     const backend = new URL(groupResponse.url()).origin
     // These tests may run on the normal disposable backend or the owned group
     // rehearsal backend; never issue these write requests to a hosted project.
-    expect(['http://127.0.0.1:60321', 'http://127.0.0.1:63321', 'http://127.0.0.1:64321']).toContain(backend)
+    expect(['http://127.0.0.1:60321', 'http://127.0.0.1:63321', 'http://127.0.0.1:64321', 'http://127.0.0.1:65321']).toContain(backend)
     await expect(dialog).toBeHidden()
     await expect(search).toHaveValue('hidden-during-save')
     await page.getByRole('button', { name: ar ? 'عرض الحساب المحفوظ' : 'Show saved account' }).click()
