@@ -1,10 +1,15 @@
 # Shop Suit readiness work
 
-Updated: 2026-09-18. Status: **not ready for sale**.
+Updated: 2026-09-19. Status: **not ready for sale**.
 
 This is the current implementation guide. Earlier documents under `docs/rebuild/`
 and the batch notes in the root README describe historical work; their claims of
 working features must not be treated as current verification.
+
+Current development targets the dedicated Shop projects recorded in
+`docs/architecture/environments.json`, with business objects and client RPCs in
+`public`. Records below that name `jkdncdexqcymwbihwdhp` or `shop_crm` describe
+historical pre-transfer checkpoints only; they are not active deployment targets.
 
 ## Working agreement
 
@@ -16,7 +21,8 @@ working features must not be treated as current verification.
   backend is required or permitted by the current scope.
 - Enforce permissions, subscription access, and quotas in Postgres. Hiding a button
   does not enforce a restriction.
-- Preserve existing cloud data and other applications in a shared project.
+- Preserve existing cloud data. The former shared project is source history;
+  new work belongs only in the dedicated Shop projects.
 - Carry Ledger Suit's entitlement and limit design into Shop Suit; distinguish
   reference prices from approved Shop Suit commercial terms.
 
@@ -31,7 +37,8 @@ working features must not be treated as current verification.
 - [Task 05a first-shop access and reviewable dashboard](05-owner-bootstrap.md)
 - [Task 08a owner product catalog](08a-product-catalog.md)
 - [Task 09a manual inventory](09a-manual-inventory.md)
-- [Unlinked Supabase deployment command](deploy-without-link.md)
+- [Task 09b supplier purchases](09b-supplier-purchases.md)
+- [Dedicated-project unlinked migration procedure](deploy-without-link.md)
 - [Plans and limitations reference](plans.md)
 - [Ordered task list and acceptance criteria](tasks.md)
 - [Cloud tables, columns, and policies](cloud-schema-audit.json)
@@ -151,7 +158,8 @@ stock and sales are still pending. See [Task 08a](08a-product-catalog.md).
 The Inventory page now lists stock and records manual receipts/write-offs for
 Pro owners. Idempotent requests and FIFO batch deductions are enforced in
 Postgres. The hosted rollback fixture, anonymous-denial check and Nuxt build
-passed. Supplier purchases and sales remain pending. See [Task 09a](09a-manual-inventory.md).
+passed. Supplier purchases were completed later in Task 09b; sales remain
+pending. See [Task 09a](09a-manual-inventory.md).
 
 ## Task 08b record
 
@@ -170,3 +178,15 @@ uses a request UUID so a repeated submission cannot charge twice. The hosted
 rollback fixture covered idempotency, closed periods, outsider denial and
 expired trials. Nuxt build and typecheck pass. Other income and reports remain
 pending. See [Task 11a](11a-expense-ledger.md).
+
+## Task 09b record
+
+Applied dedicated-project migration `20260919091222` to Shop Staging. The
+Purchases page creates suppliers and atomically posts Pro inventory purchases
+through authenticated RPCs in `public`. Postgres calculates totals, creates
+request-idempotent FIFO batches/movements, rejects tenant/access/period/plan
+violations and protects posted records. Unused purchases can be voided with
+preserved reversal history. The hosted rollback fixture and security advisors
+passed; the authenticated browser journey remains unobserved. Supplier payments,
+returns, reports and sales are still pending. See
+[Task 09b](09b-supplier-purchases.md).
