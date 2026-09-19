@@ -46,16 +46,23 @@ try {
   if (dryRun) { console.log(`pnpm arguments: ${JSON.stringify(command)}`) }
   else {
     if (!await exists(join(selected.path, 'node_modules', '.modules.yaml'))) throw new Error(`Dependencies missing in ${selected.path}. Run pnpm install --frozen-lockfile and pnpm run setup there, then retry.`)
-    const child = spawn('pnpm', command, { cwd: selected.path, stdio: 'inherit' })
-    const interrupt = () => child.kill('SIGINT')
-    const terminate = () => child.kill('SIGTERM')
+    const grouped = process.platform !== 'win32'
+    const child = spawn('pnpm', command, { cwd: selected.path, stdio: 'inherit', detached: grouped })
+    // pnpm may not forward termination to Nuxt. Stop the whole launched process group.
+    const stop = signal => {
+      if (!child.pid) return
+      try { if (grouped) process.kill(-child.pid, signal); else child.kill(signal) }
+      catch (error) { if (error.code !== 'ESRCH') console.error('Could not stop the dev process group.') }
+    }
+    const interrupt = () => stop('SIGINT')
+    const terminate = () => stop('SIGTERM')
     process.on('SIGINT', interrupt)
     process.on('SIGTERM', terminate)
     child.on('error', () => { console.error('Could not start pnpm in the selected worktree.'); process.exitCode = 1 })
     child.on('close', (code, signal) => {
       process.removeListener('SIGINT', interrupt)
       process.removeListener('SIGTERM', terminate)
-      process.exitCode = code ?? (signal === 'SIGINT' ? 130 : 1)
+      process.exitCode = code ?? (signal === 'SIGINT' ? 130 : signal === 'SIGTERM' ? 143 : 1)
     })
   }
 }

@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { mkdtemp, mkdir, writeFile, rm, utimes, readFile } from 'node:fs/promises'
+import { once } from 'node:events'
+import { setTimeout as delay } from 'node:timers/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { execFileSync } from 'node:child_process'
+import { execFileSync, spawn } from 'node:child_process'
 import { applications, inspectWorktrees, selectWorktree } from '../dev-worktrees.mjs'
 
 const launcher = fileURLToPath(new URL('../dev.mjs', import.meta.url))
@@ -126,4 +128,29 @@ test('launcher invokes the chosen app in its own workspace, forwards flags, and 
   assert.equal(resolve(launched.cwd), resolve(child))
   assert.deepEqual(launched.args, ['--dir', child, '--filter', '@building-suit/ledger-suit', 'dev', '--port', '3999', '--host', '127.0.0.1', '--dotenv', join(f.root, 'apps/ledger-suit/.env')])
   assert.doesNotMatch(output, /local-only|never-load/)
+})
+
+test('terminating the launcher also terminates the Nuxt descendant, not only pnpm', { skip: process.platform === 'win32' }, async t => {
+  const f = await fixture(t)
+  const bin = join(f.folder, 'bin'), ready = join(f.folder, 'ready'), stopped = join(f.folder, 'stopped')
+  await mkdir(bin)
+  await mkdir(join(f.root, 'node_modules'))
+  await writeFile(join(f.root, 'node_modules/.modules.yaml'), '')
+  const descendant = `const fs=require('fs');process.on('SIGTERM',()=>{fs.writeFileSync(process.env.STOPPED,'terminated');process.exit(0)});fs.writeFileSync(process.env.READY,'ready');setInterval(()=>{},1000)`
+  await writeFile(join(bin, 'pnpm'), `#!/usr/bin/env node\nrequire('child_process').spawn(process.execPath,['-e',${JSON.stringify(descendant)}],{stdio:'inherit'});setInterval(()=>{},1000)\n`, { mode: 0o755 })
+  const runner = spawn(process.execPath, [launcher, 'ledger', '--current'], { cwd: f.root, stdio: 'ignore', env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, READY: ready, STOPPED: stopped } })
+  t.after(() => runner.kill('SIGTERM'))
+  const waitFor = async file => {
+    for (let attempt = 0; attempt < 100; attempt++) {
+      if (await readFile(file, 'utf8').catch(() => '')) return
+      await delay(25)
+    }
+    assert.fail(`Timed out waiting for ${file}`)
+  }
+  await waitFor(ready)
+  const exited = once(runner, 'exit')
+  runner.kill('SIGTERM')
+  const [code] = await exited
+  assert.equal(code, 143)
+  await waitFor(stopped)
 })
