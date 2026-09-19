@@ -1,4 +1,35 @@
 {
+  "statementClassification": {
+    "title": "Statement presentation",
+    "hint": "Schedule how this account appears on future balance sheets. Existing entries and earlier reports keep their amounts and classification.",
+    "line": "Presentation line",
+    "choose": "Choose a presentation line",
+    "effectiveFrom": "Effective from",
+    "minimum": "Earliest allowed date: {date}.",
+    "reason": "Classification reason",
+    "reasonHint": "Explain the relevant operating cycle, maturity, cash restrictions, repayment rights or financing terms. This applies to the whole account balance.",
+    "schedule": "Schedule classification",
+    "saved": "Classification scheduled",
+    "history": "Classification history",
+    "noHistory": "No classification has been recorded. The balance remains visible as unclassified within its account type.",
+    "historyHint": "Newest decisions appear first. For the same effective date, the newest decision applies. Previous decisions remain in this history.",
+    "readOnly": "Classification history is available to read. Scheduling is unavailable for this account or your current access.",
+    "reload": "Reload history or report",
+    "reportHint": "Classification effective on {date}. Earlier dates retain their previous classification; unclassified balances remain visible.",
+    "reportError": "The balance sheet could not be loaded. Try again.",
+    "lines": {
+      "current_assets": "Current assets",
+      "property_equipment": "Property and equipment",
+      "other_non_current_assets": "Other non-current assets",
+      "current_liabilities": "Current liabilities",
+      "non_current_liabilities": "Non-current liabilities",
+      "equity": "Equity",
+      "unclassified_asset": "Unclassified assets",
+      "unclassified_liability": "Unclassified liabilities",
+      "unclassified_equity": "Unclassified equity",
+      "unclosed_profit": "Unclosed profit"
+    }
+  },
   "app": {
     "name": "Ledger Suit",
     "loading": "Loading…"
@@ -450,6 +481,12 @@
       "failed_rows": "Failed"
     },
     "errors": {
+    "INVALID_CLASSIFICATION": "Choose a compatible presentation line and enter a reason.",
+    "CLASSIFICATION_DATE_NOT_FUTURE": "Choose a date after today in the organization’s timezone.",
+    "CLASSIFICATION_DATE_ORDER": "Choose the latest scheduled date or a later date.",
+    "CLASSIFICATION_STALE": "Another classification was saved. Reload the history and review it before saving.",
+    "CLASSIFICATION_REQUEST_CONFLICT": "This save request has already been used with different details. Reload the history.",
+    "STATEMENT_CLASSIFICATION_TYPE_LOCKED": "An account with classification history cannot change its account type.",
       "noData": "The CSV must contain a header and at least one data row.",
       "headers": "CSV column names must be unique and cannot be empty.",
       "rowWidth": "A CSV row contains more values than the header.",

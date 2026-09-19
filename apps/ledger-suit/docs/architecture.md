@@ -441,6 +441,33 @@ ids.
 
 ## 12. Deliberately built for what comes next
 
+### Dated balance-sheet presentation
+
+`account_statement_classifications` stores append-only presentation decisions,
+separate from normal balance, account role and journal entries. The authorized
+`schedule_account_statement_classification` command requires an explicit line,
+reason, future organization date, request UUID and expected latest revision.
+Account row locks serialize edits; a settings row lock coordinates books locks.
+An exact retry returns the original revision. Same-date future corrections append
+a revision; historical/today changes and dates before the latest scheduled date
+are rejected. Classified accounts cannot change their account type.
+
+`report_classified_balance_sheet` wraps the existing balance-sheet calculation
+and chooses the latest effective revision at the report date. Amounts are decimal
+strings of integer minor units; the Ledger UI sums them with BigInt. Missing
+classifications remain explicit unclassified lines. Contra amounts retain their
+sign. The old report/export RPCs remain compatible. The new localized
+`export_classified_balance_sheet_csv` includes the report date, classification
+revision and effective date and retains capability and export-entitlement checks.
+
+The account dialog exposes immutable history and prospective scheduling. Report
+state is scoped by backend, product, user, organization and date, and stale
+responses/downloads are suppressed on scope changes. This package covers the
+balance sheet; P&L classification and approved historical restatement remain
+outside it. See [AS-S2-01B](accountant-system/work-packages/AS-S2-01B.md).
+
+### Remaining foundations
+
 - `transaction_entries.dimensions jsonb` — branch, project, cost centre
 - `transaction_status.pending_approval` — approval policies without reshaping
   the engine

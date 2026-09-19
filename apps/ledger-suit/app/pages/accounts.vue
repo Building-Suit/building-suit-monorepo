@@ -163,6 +163,9 @@ const sortColumnPt = {
 
 const hasAccounts = computed(() => scopedBalances.value.length > 0)
 
+const statementAccount = ref<BalanceRow | null>(null)
+watch(balanceKey, () => { statementAccount.value = null })
+
 const editorOpen = ref(false)
 const editing = ref<BalanceRow | null>(null)
 const submitting = ref(false)
@@ -450,8 +453,9 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
               </template>
             </template>
           </Column>
-          <Column v-if="can('accounts.update') || can('accounts.archive')" :header="t('accounts.actions')" body-class="whitespace-nowrap text-end">
+          <Column v-if="can('accounts.read')" :header="t('accounts.actions')" body-class="whitespace-nowrap text-end">
             <template #body="{ data: account }">
+              <button v-if="account.account_role === 'posting' && ['asset', 'liability', 'equity'].includes(account.type)" type="button" class="ls-btn ls-btn-sm me-1" @click="statementAccount = account">{{ t('statementClassification.title') }}</button>
               <button v-if="can('accounts.update')" type="button" class="ls-btn ls-btn-sm" @click="openEdit(account)">{{ t('accounts.edit') }}</button>
               <button v-if="can('accounts.archive') && !account.is_archived" type="button" class="ls-btn ls-btn-sm ms-1" @click="archiveAccount(account)">{{ t('accounts.archive') }}</button>
             </template>
@@ -474,6 +478,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
           </template>
         </BsDataTable>
     </section>
+      <AccountStatementClassificationDialog v-if="statementAccount" :key="`${balanceKey}:${statementAccount.account_id}`" :account="statementAccount" :scope="balanceKey" @close="statementAccount = null" />
       <BsDialog v-if="editorOpen" :visible="true" :title="editing ? t('accounts.edit') : t('accounts.add')" :aria-label="editing ? t('accounts.edit') : t('accounts.add')" :show-header="false" size="md" :dirty="overlayDirty0" :pending="submitting" @update:visible="value => { if (!value) editorOpen = false }"><template #default="{ close: dismiss }">
 <form class="space-y-4 p-6" @submit.prevent="saveAccount">
           <div class="flex items-center justify-between">

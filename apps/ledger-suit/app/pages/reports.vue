@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { scopedQueryKey } from '@building-suit/data-access'
 import type { Database } from '~~/types/database.types'
 
 definePageMeta({ layout: 'default' })
@@ -9,6 +10,8 @@ definePageMeta({ layout: 'default' })
  */
 
 const supabase = useSupabaseClient<Database>()
+const user = useSupabaseUser()
+const config = useRuntimeConfig()
 const route = useRoute()
 const router = useRouter()
 const { currentId, baseCurrency, can } = useTenant()
@@ -70,15 +73,33 @@ const { data: profitLoss, pending: profitLossPending } = useLazyAsyncData<Report
   return (data ?? []) as ReportRow[]
 }, { watch: [currentId, from, to], default: () => [] })
 
-const { data: balanceSheet, pending: balanceSheetPending } = useLazyAsyncData<ReportRow[]>('org:report-bs', async () => {
-  if (!currentId.value) return []
-  const { data, error } = await supabase.rpc('report_balance_sheet', {
-    p_organization_id: currentId.value,
-    p_as_of_date: asOf.value,
-  })
+interface ClassifiedRow {
+  section: string
+  account_id: string | null
+  code: string | null
+  name: string
+  amount_minor: string
+  statement_line: string
+  classification_id: string | null
+  effective_from: string | null
+  report_date: string
+}
+const reportScope = computed(() => scopedQueryKey({
+  environment: String(config.public.supabase.url), portal: 'ledger-suit',
+  userId: user.value?.id ?? '', tenantId: currentId.value ?? '',
+}, 'classified-balance-sheet', { asOf: asOf.value }))
+const balanceKey = computed(() => `org:${reportScope.value}`)
+const { data: balanceResult, pending: balanceSheetPending, error: balanceSheetError, refresh: refreshBalanceSheet } = useLazyAsyncData(balanceKey, async (_app, { signal }) => {
+  const scope = reportScope.value
+  const organizationId = currentId.value
+  if (!organizationId || !/^\d{4}-\d{2}-\d{2}$/.test(asOf.value)) return { scope, rows: [] as ClassifiedRow[] }
+  const { data, error } = await supabase.rpc('report_classified_balance_sheet', {
+    p_organization_id: organizationId, p_as_of_date: asOf.value,
+  }).abortSignal(signal)
   if (error) throw error
-  return (data ?? []) as ReportRow[]
-}, { watch: [currentId, asOf], default: () => [] })
+  return { scope, rows: (data ?? []) as ClassifiedRow[] }
+})
+const balanceSheet = computed(() => balanceResult.value?.scope === reportScope.value ? balanceResult.value.rows : [])
 
 const { data: integrity } = useLazyAsyncData('org:report-integrity', async () => {
   if (!currentId.value) return null
@@ -134,9 +155,9 @@ const costOfSales = computed(() => sectionTotal(profitLoss.value, 'cost_of_sales
 const operatingExpenses = computed(() => sectionTotal(profitLoss.value, 'operating_expenses'))
 const netProfit = computed(() => revenue.value - costOfSales.value - operatingExpenses.value)
 
-const assets = computed(() => sectionTotal(balanceSheet.value, 'asset'))
-const liabilities = computed(() => sectionTotal(balanceSheet.value, 'liability'))
-const equity = computed(() => sectionTotal(balanceSheet.value, 'equity'))
+const assets = computed(() => sumStatementAmounts(balanceSheet.value, 'asset'))
+const liabilities = computed(() => sumStatementAmounts(balanceSheet.value, 'liability'))
+const equity = computed(() => sumStatementAmounts(balanceSheet.value, 'equity'))
 
 const trialTotals = computed(() => {
   const rows = (trialBalance.value ?? []) as Array<{ debit_minor: number, credit_minor: number }>
@@ -152,11 +173,9 @@ const plSections = [
   { key: 'operating_expenses', labelKey: 'reports.operatingExpenses' },
 ]
 
-const bsSections = [
-  { key: 'asset', labelKey: 'reports.assets' },
-  { key: 'liability', labelKey: 'reports.liabilities' },
-  { key: 'equity', labelKey: 'reports.equity' },
-]
+const bsRows = computed(() => STATEMENT_LINES.flatMap(line => balanceSheet.value
+  .filter(row => row.statement_line === line)
+  .map(row => ({ ...row, displayName: row.account_id ? row.name : t('statementClassification.lines.unclosed_profit') }))))
 
 function rowsIn(rows: ReportRow[] | null, section: string) {
   return (rows ?? []).filter(r => r.section === section)
@@ -164,6 +183,7 @@ function rowsIn(rows: ReportRow[] | null, section: string) {
 
 const exportPending = ref(false)
 const exportError = ref('')
+watch(reportScope, () => { exportError.value = '' })
 
 function downloadCsv(filename: string, csv: string) {
   const url = URL.createObjectURL(new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' }))
@@ -176,10 +196,14 @@ function downloadCsv(filename: string, csv: string) {
 
 async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_balance' | 'cash_flow' | 'general_ledger') {
   if (!currentId.value || exportPending.value) return
+  const exportScope = reportScope.value
+  const exportLocale = locale.value
   exportPending.value = true
   exportError.value = ''
   try {
-    const { data, error } = await supabase.rpc('export_financial_report_csv', {
+    const { data, error } = report === 'balance_sheet'
+      ? await supabase.rpc('export_classified_balance_sheet_csv', { p_organization_id: currentId.value, p_as_of_date: asOf.value, p_locale: locale.value })
+      : await supabase.rpc('export_financial_report_csv', {
       p_organization_id: currentId.value,
       p_report: report,
       p_from_date: ['profit_loss', 'cash_flow', 'general_ledger'].includes(report) ? from.value : undefined,
@@ -188,6 +212,7 @@ async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_bal
       p_account_id: report === 'general_ledger' ? ledgerAccountId.value : undefined,
     })
     if (error) throw error
+    if (reportScope.value !== exportScope || locale.value !== exportLocale) return
     const filenames = {
       profit_loss: `profit-and-loss-${from.value}-to-${to.value}.csv`,
       balance_sheet: `balance-sheet-${asOf.value}.csv`,
@@ -198,7 +223,7 @@ async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_bal
     downloadCsv(filenames[report], data)
   }
   catch {
-    exportError.value = t('reports.exportFailed')
+    if (reportScope.value === exportScope) exportError.value = t('reports.exportFailed')
   }
   finally {
     exportPending.value = false
@@ -207,7 +232,7 @@ async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_bal
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="min-w-0 space-y-6">
     <div>
       <h1 class="text-h1 font-bold">{{ t('reports.title') }}</h1>
       <p class="mt-1 text-sm text-fg-muted">{{ t('reports.csvExports') }}</p>
@@ -215,7 +240,7 @@ async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_bal
 
     <p v-if="exportError" class="ls-error" role="alert">{{ exportError }}</p>
 
-    <div class="flex gap-1 border-b border-[var(--bs-border)]" role="tablist">
+    <div class="flex max-w-full gap-1 overflow-x-auto border-b border-[var(--bs-border)]" role="tablist">
       <button
         v-for="item in TABS"
         :key="item.key"
@@ -322,7 +347,9 @@ async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_bal
         <button v-if="can('reports.export')" type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('balance_sheet')">{{ t('common.exportCsv') }}</button>
       </div>
 
-      <SectionSkeleton v-if="balanceSheetPending" variant="table" :rows="7" />
+      <p class="text-sm text-fg-muted">{{ t('statementClassification.reportHint', { date: formatDate(asOf, locale) }) }}</p>
+      <div v-if="balanceSheetError" class="ls-error" role="alert">{{ t('statementClassification.reportError') }} <button type="button" class="ls-btn" @click="refreshBalanceSheet()">{{ t('statementClassification.reload') }}</button></div>
+      <SectionSkeleton v-else-if="balanceSheetPending" variant="table" :rows="7" />
 
       <EmptyState
         v-else-if="!balanceSheet?.length"
@@ -332,14 +359,15 @@ async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_bal
 
       <template v-else>
         <div class="ls-card overflow-hidden">
-          <BsDataTable :label="t('reports.tabs.balanceSheet')" :value="bsSections.flatMap(section => rowsIn(balanceSheet, section.key).map(row => ({ ...row, groupKey: section.key, groupLabel: section.labelKey })))" row-group-mode="subheader" group-rows-by="groupKey">
-  <Column field="name" :header="t('reports.account')" body-class="ps-8" />
+          <BsDataTable :label="t('reports.tabs.balanceSheet')" :value="bsRows" row-group-mode="subheader" group-rows-by="statement_line">
+  <Column field="displayName" :header="t('reports.account')" body-class="ps-8" />
+  <Column :header="t('statementClassification.effectiveFrom')"><template #body="{ data: row }">{{ row.effective_from ? formatDate(row.effective_from, locale) : t('common.dash') }}</template></Column>
   <Column :header="t('transactions.amount')" body-class="ls-num"><template #body="{ data: row }"><MoneyText :amount-minor="row.amount_minor" /></template></Column>
-  <template #groupheader="{ data: row }"><div class="flex justify-between gap-4 bg-surface-muted font-bold"><span>{{ t(row.groupLabel) }}</span><MoneyText :amount-minor="sectionTotal(balanceSheet, row.groupKey)" /></div></template>
+  <template #groupheader="{ data: row }"><div class="flex justify-between gap-4 bg-surface-muted font-bold"><span>{{ t(`statementClassification.lines.${row.statement_line}`) }}</span><MoneyText :amount-minor="sumStatementAmounts(balanceSheet, row.statement_line, 'statement_line')" /></div></template>
 </BsDataTable>
         </div>
 
-        <p class="text-sm" :class="assets === liabilities + equity ? 'text-fg-muted' : 'text-[var(--bs-status-error)]'">
+        <p class="text-sm" :class="BigInt(assets) === BigInt(liabilities) + BigInt(equity) ? 'text-fg-muted' : 'text-[var(--bs-status-error)]'">
           {{ t('reports.equation', {
             assets: formatMoney(assets, baseCurrency, locale),
             liabilities: formatMoney(liabilities, baseCurrency, locale),

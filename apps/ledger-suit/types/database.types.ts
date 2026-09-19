@@ -34,6 +34,70 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_statement_classifications: {
+        Row: {
+          account_id: string
+          created_at: string
+          created_by: string
+          effective_from: string
+          id: string
+          organization_id: string
+          predecessor_id: string | null
+          reason: string
+          request_id: string
+          revision: number
+          statement_line: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          created_by: string
+          effective_from: string
+          id?: string
+          organization_id: string
+          predecessor_id?: string | null
+          reason: string
+          request_id: string
+          revision?: never
+          statement_line: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          created_by?: string
+          effective_from?: string
+          id?: string
+          organization_id?: string
+          predecessor_id?: string | null
+          reason?: string
+          request_id?: string
+          revision?: never
+          statement_line?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_statement_classifications_account_fk"
+            columns: ["account_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "account_balances"
+            referencedColumns: ["account_id", "organization_id"]
+          },
+          {
+            foreignKeyName: "account_statement_classifications_account_fk"
+            columns: ["account_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "account_statement_classifications_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       accounts: {
         Row: {
           account_role: string
@@ -2714,6 +2778,10 @@ export type Database = {
         Args: { p_token: string }
         Returns: string
       }
+      account_statement_classification_context: {
+        Args: { p_account_id: string; p_organization_id: string }
+        Returns: Json
+      }
       apply_paymob_subscription_event: {
         Args: {
           p_amount_minor?: number
@@ -3005,6 +3073,14 @@ export type Database = {
         Returns: Json
       }
       delete_organization_role: { Args: { p_role_id: string }; Returns: string }
+      export_classified_balance_sheet_csv: {
+        Args: {
+          p_as_of_date?: string
+          p_locale?: string
+          p_organization_id: string
+        }
+        Returns: string
+      }
       export_financial_report_csv: {
         Args: {
           p_account_id?: string
@@ -3291,6 +3367,20 @@ export type Database = {
           section: Database["public"]["Enums"]["cash_flow_section"]
         }[]
       }
+      report_classified_balance_sheet: {
+        Args: { p_as_of_date?: string; p_organization_id: string }
+        Returns: {
+          account_id: string
+          amount_minor: string
+          classification_id: string
+          code: string
+          effective_from: string
+          name: string
+          report_date: string
+          section: string
+          statement_line: string
+        }[]
+      }
       report_general_ledger: {
         Args: {
           p_account_id: string
@@ -3399,6 +3489,18 @@ export type Database = {
           status: Database["public"]["Enums"]["occurrence_status"]
           transaction_id: string
         }[]
+      }
+      schedule_account_statement_classification: {
+        Args: {
+          p_account_id: string
+          p_effective_from: string
+          p_expected_revision_id?: string
+          p_organization_id: string
+          p_reason: string
+          p_request_id: string
+          p_statement_line: string
+        }
+        Returns: string
       }
       search_transactions: {
         Args: {

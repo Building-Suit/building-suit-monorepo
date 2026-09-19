@@ -11,13 +11,13 @@
 | الحالة | الحزمة المالكة | موضع التحقيق/التنفيذ الحالي | حدود الدليل الآلي | UAT | دليل النشر |
 |---|---|---|---|---|---|
 | ق٠١ | AS-S3-01 | posting_engine؛ 01_accounting_integrity_test.sql | توازن قاعدة موجود؛ ليس قبول المرحلة | NOT_STARTED | NOT_VERIFIED |
-| ق٠٢ | AS-S2-01 / AS-S3-03 | accounts.sql، reporting.sql | الطبيعة المقابلة غير مكتملة في الأساس | NOT_STARTED | NOT_VERIFIED |
-| ق٠٣ | AS-S2-02A ثم بقية AS-S2-02 | explicit_account_groups.sql، accounts.vue | group/posting منفذ: SQL وUI PASS؛ control/تصنيف مؤرخ باقٍ | NOT_STARTED | NOT_VERIFIED |
+| ق٠٢ | AS-S2-01 / AS-S3-03 | account_nature_and_contra_reporting.sql، dated_statement_classification.sql | الطبيعة وcontra منفذان؛ العرض المصنف يحتفظ بالإشارة. لا ادعاء اكتمال ميزان الست خانات | NOT_STARTED | NOT_VERIFIED |
+| ق٠٣ | AS-S2-02A ثم بقية AS-S2-02 | explicit_account_groups.sql، accounts.vue | group/posting منفذ: SQL وUI PASS؛ control باقٍ؛ التصنيف في AS-S2-01B يرفض group | NOT_STARTED | NOT_VERIFIED |
 | ق٠٤ | AS-S3-02 / AS-S3-03 | report_general_ledger | افتتاح بلا حركة يحتاج عقدًا واختبارًا | NOT_STARTED | NOT_VERIFIED |
 | ق٠٥ | AS-S3-02 | post_opening_balance | معالج ومطابقة مساعد غير منفذين | NOT_STARTED | NOT_VERIFIED |
 | ق٠٦ | AS-S3-02 | transaction_flows | التكرار الحالي ليس قبولًا لاستيراد الافتتاح | NOT_STARTED | NOT_VERIFIED |
-| ق٠٧ | AS-S2-02 / AS-S3-01 | app.require_account، report_general_ledger | الأرشفة تمنع كشف الدالة؛ بوابة لاحقة | NOT_STARTED | NOT_VERIFIED |
-| ق٠٨ | AS-S2-02 / AS-S6-02 | accounts، reporting | التصنيف المؤرخ غير منفذ | NOT_STARTED | NOT_VERIFIED |
+| ق٠٧ | AS-S2-02 / AS-S3-01 | account_nature_and_contra_reporting.sql، report_general_ledger | إصلاح قراءة المؤرشف موجود في حزمة الطبيعة؛ AS-S2-01B يبقي سجل التصنيف والتقرير قابلين للقراءة ويرفض كتابة جديدة للمؤرشف | NOT_STARTED | NOT_VERIFIED |
+| ق٠٨ | AS-S2-01B / AS-S2-02 / AS-S6-02 | dated_statement_classification.sql، statement-classification.spec.ts | تنفيذ جزئي: عرض مؤرخ مستقبلي دون تغيير تقارير الماضي، سجل غير قابل للمحو، CSV يطابق التاريخ. إعادة العرض التاريخية المعتمدة لم تنفذ | NOT_STARTED | NOT_VERIFIED |
 | ق٠٩ | AS-S4-01 | انظر فجوة EVIDENCE_AR.md والخطة | غير مثبت كتدفق تطبيق مكتمل | NOT_STARTED | NOT_VERIFIED |
 | ق١٠ | AS-S4-01 | انظر فجوة EVIDENCE_AR.md والخطة | غير مثبت كتدفق تطبيق مكتمل | NOT_STARTED | NOT_VERIFIED |
 | ق١١ | AS-S4-01 | انظر فجوة EVIDENCE_AR.md والخطة | غير مثبت كتدفق تطبيق مكتمل | NOT_STARTED | NOT_VERIFIED |
@@ -46,3 +46,9 @@
 ## AS-S2-02A — حسابات تجميعية صريحة
 
 تفويض AS-E02 يسمح بالتنفيذ دون انتظار المحاسب. على مصدر 7f28516: 747 assertion SQL/29 ملفًا و23 browser و28 unit PASS. منع group في RPC وINSERT/UPDATE المباشر، منع العميل من grant مباشر، فصل الصلاحية/tenant، parent posting وتوافق العقود القديمة، وصون 4 حسابات/3 معاملات/6 بنود والأرصدة والتقرير قبل وبعد. [الحزمة](work-packages/AS-S2-02A.md) و[السجل](../evidence/as-s2-02a/verification.json). ق٠٣ له دليل هندسي محدد، ولا يدعي اكتمال المراقبة أو تصنيف التاريخ أو UAT/إطلاق؛ ق٠١–ق٢٤ ليست تلقائيًا ACCEPTED.
+
+## AS-S2-01B — عرض المركز المالي المؤرخ، 2026-09-19
+
+المصدر `ea52426589880559af914ef820df79992d4cfaeb`. PASS: 795 assertion/30 SQL، و27 browser (4 جديدة +23 انحدار)، و39 unit، وcheck/lint/typecheck/build. تجربة ترحيل مستقلة حفظت 4 حسابات/3 معاملات/6 بنود والأرصدة والتقرير دون backfill. ثلاثة سيناريوهات تزامن حقيقية مرت؛ security advisors وDB lint سليمان، مع 10 تحذيرات أداء قائمة موثقة. [تفاصيل الحزمة](work-packages/AS-S2-01B.md) و[الأدلة القابلة لإعادة التشغيل](../evidence/as-s2-01b/README.md).
+
+ق٠٨ منفذ جزئيًا: نسخة عرض بتاريخ مستقبلي وسجل غير قابل للمحو وتصنيف التقرير/CSV حسب التاريخ. طبيعة الحساب وإشارة contra والتاريخ السابق محفوظة. إعادة العرض التاريخية المعتمدة وتصنيف قائمة النتيجة والتقسيم الجزئي ليست منفذة؛ لا ترقية ق٠١–ق٢٤ إلى ACCEPTED أو ادعاء UAT/نشر. اختبارات browser للتأخير/تبديل المنشأة تستخدم fixtures للعزل البصري؛ إثبات RLS والصلاحيات في SQL مستقل.
