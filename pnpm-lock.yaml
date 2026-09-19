@@ -140,6 +140,9 @@ importers:
       '@building-suit/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@building-suit/data-access':
+        specifier: workspace:*
+        version: link:../../packages/data-access
       '@building-suit/nuxt-layer':
         specifier: workspace:*
         version: link:../../packages/nuxt-layer

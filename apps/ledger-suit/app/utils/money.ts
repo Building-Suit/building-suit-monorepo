@@ -34,29 +34,32 @@ function numericLocale(locale: string): string {
 /**
  * Formats an integer minor-unit amount for display.
  *
- * `Intl.NumberFormat` takes a Number, which is why the division happens as late
- * as possible and only for presentation. Amounts beyond Number.MAX_SAFE_INTEGER
- * minor units are not representable and are reported rather than silently
- * rounded.
+ * Format the integral part as bigint and supply the exact fractional digits.
+ * This preserves precision through the full database bigint range.
  */
 export function formatMoney(
   amountMinor: number | bigint | string,
   currency: string,
   locale = 'en',
 ): string {
+  if (typeof amountMinor === 'number' && !Number.isSafeInteger(amountMinor)) {
+    throw new RangeError('Unsafe numeric amount: supply exact minor units as a string')
+  }
   const minor = BigInt(amountMinor)
   const exponent = minorUnitFor(currency)
-
-  if (minor > BigInt(Number.MAX_SAFE_INTEGER) || minor < -BigInt(Number.MAX_SAFE_INTEGER)) {
-    throw new RangeError(`Amount ${minor} exceeds the safe display range`)
-  }
-
+  const magnitude = minor < 0n ? -minor : minor
+  const scale = 10n ** BigInt(exponent)
+  const whole = magnitude / scale
+  const fraction = (magnitude % scale).toString().padStart(exponent, '0')
+  // Preserve a negative sub-unit amount's sign (for example -0.01).
+  const signedWhole = minor < 0n ? (whole === 0n ? -0 : -whole) : whole
   return new Intl.NumberFormat(numericLocale(locale), {
     style: 'currency',
     currency,
     minimumFractionDigits: exponent,
     maximumFractionDigits: exponent,
-  }).format(Number(minor) / 10 ** exponent)
+  }).formatToParts(signedWhole)
+    .map(part => part.type === 'fraction' ? fraction : part.value).join('')
 }
 
 /** Formats a percentage for the KPI deltas. */

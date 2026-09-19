@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { scopedQueryKey } from '@building-suit/data-access'
 import type { Database } from '~~/types/database.types'
 
 definePageMeta({ layout: 'default' })
@@ -9,6 +10,8 @@ definePageMeta({ layout: 'default' })
  */
 
 const supabase = useSupabaseClient<Database>()
+const user = useSupabaseUser()
+const config = useRuntimeConfig()
 const route = useRoute()
 const router = useRouter()
 const { currentId, can, baseCurrency } = useTenant()
@@ -50,20 +53,31 @@ interface BalanceRow {
   type: Database['public']['Enums']['account_type']
   subtype: string
   currency: string
-  balance_minor: number
+  normal_balance: Database['public']['Enums']['normal_balance']
+  contra_account_id: string | null
+  is_system: boolean
+  classification_locked: boolean
+  net_debit_minor: string
+  statement_balance_minor: string
   entry_count: number
   is_archived: boolean
   is_liquid: boolean
   parent_account_id: string | null
 }
 
-const { data: balances, pending: balancesPending, error: balancesError, refresh: refreshBalances } = useLazyAsyncData<BalanceRow[]>('org:account-balances', async (_app, { signal }) => {
+const balanceKey = computed(() => `org:${scopedQueryKey({
+  environment: String(config.public.supabase.url),
+  portal: 'ledger-suit', userId: user.value?.id ?? '', tenantId: currentId.value ?? '',
+}, 'account-balances')}`)
+
+const { data: balances, pending: balancesPending, error: balancesError, refresh: refreshBalances } = useLazyAsyncData<BalanceRow[]>(balanceKey, async (_app, { signal }) => {
   const organizationId = currentId.value
+  const requestKey = balanceKey.value
   if (!organizationId) return []
 
   const rows = await fetchAccountPages<BalanceRow>((from, to) => supabase
     .from('account_balances')
-    .select('organization_id, account_id, code, name, type, subtype, currency, balance_minor, entry_count, is_archived, is_liquid, parent_account_id', { count: 'exact' })
+    .select('organization_id, account_id, code, name, type, subtype, currency, normal_balance, contra_account_id, is_system, classification_locked, net_debit_minor, statement_balance_minor, entry_count, is_archived, is_liquid, parent_account_id', { count: 'exact' })
     .eq('organization_id', organizationId)
     .order('code', { ascending: true, nullsFirst: false })
     .order('account_id')
@@ -71,8 +85,8 @@ const { data: balances, pending: balancesPending, error: balancesError, refresh:
     .abortSignal(signal)
     .overrideTypes<BalanceRow[], { merge: false }>(), signal)
 
-  return currentId.value === organizationId ? rows : []
-}, { watch: [currentId], default: () => [] })
+  return balanceKey.value === requestKey ? rows : []
+}, { default: () => [] })
 
 const GROUP_TYPES: Array<BalanceRow['type']> = [
   'asset', 'liability', 'equity', 'revenue', 'expense',
@@ -101,12 +115,10 @@ const visible = computed(() =>
 const groups = computed(() =>
   GROUP_TYPES.map((type) => {
     const rows = visible.value.filter(a => a.type === type)
-    // Parents are headings; their own balance would double-count the children
-    // beneath them, so the group total sums leaves only.
+    // The view contains each account's direct entries, not rolled-up children.
+    // Include historical parent postings exactly once and subtract contra balances.
     const parentIds = new Set(rows.map(r => r.parent_account_id).filter(Boolean) as string[])
-    const total = rows
-      .filter(r => !parentIds.has(r.account_id))
-      .reduce((sum, r) => sum + Number(r.balance_minor), 0)
+    const total = rows.reduce((sum, r) => sum + BigInt(r.statement_balance_minor), 0n).toString()
 
     return { type, label: t(`accounts.groups.${type}`), rows, parentIds, total }
   }),
@@ -156,9 +168,10 @@ const submitting = ref(false)
 const editorError = ref<string | null>(null)
 const form = reactive({
   name: '', code: '', type: 'asset' as BalanceRow['type'], subtype: 'bank', currency: baseCurrency.value,
+  normalBalance: 'debit' as BalanceRow['normal_balance'], contraAccountId: '',
 })
 
-watch(currentId, () => {
+watch(balanceKey, () => {
   search.value = ''
   showArchived.value = false
   sortField.value = 'code'
@@ -167,6 +180,7 @@ watch(currentId, () => {
   editorOpen.value = false
   editing.value = null
   editorError.value = null
+  Object.assign(form, { name: '', code: '', contraAccountId: '' })
 }, { flush: 'sync' })
 
 const subtypeOptions: Record<BalanceRow['type'], string[]> = {
@@ -185,6 +199,8 @@ function openCreate() {
     type: tab.value,
     subtype: subtypeOptions[tab.value][0]!,
     currency: baseCurrency.value,
+    normalBalance: defaultAccountNature(tab.value),
+    contraAccountId: '',
   })
   editorError.value = null
   editorOpen.value = true
@@ -199,7 +215,8 @@ watch(() => route.query.create, (value) => {
 
 function openEdit(row: BalanceRow) {
   editing.value = row
-  Object.assign(form, { name: row.name, code: row.code ?? '', type: row.type, subtype: row.subtype })
+  Object.assign(form, { name: row.name, code: row.code ?? '', type: row.type, subtype: row.subtype,
+    currency: row.currency, normalBalance: row.normal_balance, contraAccountId: row.contra_account_id ?? '' })
   editorError.value = null
   editorOpen.value = true
 }
@@ -208,39 +225,70 @@ watch(() => form.type, (type) => {
   if (!subtypeOptions[type].includes(form.subtype)) form.subtype = subtypeOptions[type][0]!
 })
 
+watch(() => form.subtype, () => {
+  if (!editing.value) {
+    form.normalBalance = defaultAccountNature(form.type, form.subtype)
+    form.contraAccountId = ''
+  }
+})
+
+const natureLocked = computed(() => Boolean(editing.value && (
+  editing.value.classification_locked || editing.value.is_system
+  || scopedBalances.value.some(account => account.contra_account_id === editing.value?.account_id)
+)))
+const contraOptions = computed(() => scopedBalances.value.filter(account =>
+  account.account_id !== editing.value?.account_id && !account.is_archived
+  && !account.contra_account_id && account.type === form.type && account.currency === form.currency
+  && account.normal_balance !== form.normalBalance,
+))
+watch([() => form.normalBalance, () => form.currency], () => {
+  if (!natureLocked.value && !contraOptions.value.some(account => account.account_id === form.contraAccountId)) {
+    form.contraAccountId = ''
+  }
+})
+function accountName(id: string) {
+  return scopedBalances.value.find(account => account.account_id === id)?.name ?? t('common.dash')
+}
+
 async function saveAccount() {
-  if (!currentId.value) return
+  if (!currentId.value || submitting.value) return
   const organizationId = currentId.value
+  const requestKey = balanceKey.value
   const editedId = editing.value?.account_id
   submitting.value = true
   editorError.value = null
   try {
     const call = editing.value
-      ? supabase.rpc('update_account' as never, {
+      ? supabase.rpc('update_account', {
           p_account_id: editing.value.account_id,
           p_name: form.name,
           p_code: form.code || undefined,
-        } as never)
-      : supabase.rpc('create_account' as never, {
+          p_normal_balance: natureLocked.value ? undefined : form.normalBalance,
+          p_contra_account_id: natureLocked.value ? undefined : form.contraAccountId || undefined,
+          p_clear_contra: !natureLocked.value && !form.contraAccountId,
+        })
+      : supabase.rpc('create_account', {
           p_organization_id: organizationId,
           p_name: form.name,
           p_code: form.code || undefined,
           p_type: form.type,
-          p_subtype: form.subtype,
+          p_subtype: form.subtype as Database['public']['Enums']['account_subtype'],
           p_currency: form.currency,
-        } as never)
+          p_normal_balance: form.normalBalance,
+          p_contra_account_id: form.contraAccountId || undefined,
+        })
     const { data, error } = await call
     if (error) throw error
-    if (currentId.value !== organizationId) return
+    if (balanceKey.value !== requestKey) return
     lastSavedId.value = editedId ?? String(data)
     if (!editedId) await refreshPlanUsage()
-    if (currentId.value !== organizationId) return
+    if (balanceKey.value !== requestKey) return
     editorOpen.value = false
     toasts.success(t('accounts.saved'))
-    await refreshNuxtData('org:account-balances')
+    await refreshBalances()
     await refreshNuxtData('org:accounts')
   }
-  catch (error) { if (currentId.value === organizationId) editorError.value = describeError(error) }
+  catch (error) { if (balanceKey.value === requestKey) editorError.value = describeError(error) }
   finally { submitting.value = false }
 }
 
@@ -250,7 +298,7 @@ async function archiveAccount(row: BalanceRow) {
   if (currentId.value !== organizationId) return
   if (error) return toasts.error(t('errors.generic'), describeError(error))
   toasts.success(t('accounts.archived'))
-  await refreshNuxtData('org:account-balances')
+  await refreshBalances()
   await refreshNuxtData('org:accounts')
 }
 const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Boolean(editorOpen.value)))
@@ -365,12 +413,21 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
           <Column field="subtype" :header="t('accounts.subtype')">
             <template #body="{ data: account }">{{ t(`accounts.subtypes.${account.subtype}`) }}</template>
           </Column>
+          <Column field="normal_balance" :header="t('accounts.normalBalance')">
+            <template #body="{ data: account }">{{ t(`accounts.sides.${account.normal_balance}`) }}</template>
+          </Column>
+          <Column field="contra_account_id" :header="t('accounts.contraAccount')">
+            <template #body="{ data: account }">{{ account.contra_account_id ? accountName(account.contra_account_id) : t('common.dash') }}</template>
+          </Column>
           <Column field="currency" :header="t('accounts.currency')">
             <template #body="{ data: account }"><span class="text-fg-muted" dir="ltr">{{ account.currency }}</span></template>
           </Column>
           <Column field="entry_count" :header="t('accounts.entries')" body-class="ls-num text-fg-muted" />
-          <Column field="balance_minor" :header="t('accounts.balance')" body-class="ls-num whitespace-nowrap">
-            <template #body="{ data: account }"><MoneyText :amount-minor="account.balance_minor" /></template>
+          <Column field="net_debit_minor" :header="t('accounts.balance')" body-class="ls-num whitespace-nowrap">
+            <template #body="{ data: account }">
+              <MoneyText :amount-minor="accountBalanceDisplay(account.net_debit_minor).amount" />
+              <span class="ms-2">{{ t(`accounts.sides.${accountBalanceDisplay(account.net_debit_minor).side}`) }}</span>
+            </template>
           </Column>
           <Column v-if="can('accounts.update') || can('accounts.archive')" :header="t('accounts.actions')" body-class="whitespace-nowrap text-end">
             <template #body="{ data: account }">
@@ -417,6 +474,22 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
             </FloatingField>
             <p v-else class="text-sm text-fg-muted">{{ t('accounts.multiCurrencyUpgrade') }}</p>
           </template>
+          <FloatingField :label="t('accounts.normalBalance')">
+            <select id="account-normal-balance" v-model="form.normalBalance" class="ls-input" :disabled="natureLocked" aria-describedby="account-nature-help">
+              <option value="debit">{{ t('accounts.sides.debit') }}</option>
+              <option value="credit">{{ t('accounts.sides.credit') }}</option>
+            </select>
+          </FloatingField>
+          <p id="account-nature-help" class="text-sm text-fg-muted">{{ t('accounts.natureHint') }}</p>
+          <FloatingField :label="t('accounts.contraAccount')">
+            <select id="account-contra" v-model="form.contraAccountId" class="ls-input" :disabled="natureLocked" aria-describedby="account-contra-help">
+              <option value="">{{ t('accounts.noContra') }}</option>
+              <option v-if="natureLocked && form.contraAccountId" :value="form.contraAccountId">{{ accountName(form.contraAccountId) }}</option>
+              <option v-for="account in natureLocked ? [] : contraOptions" :key="account.account_id" :value="account.account_id">{{ account.name }}</option>
+            </select>
+          </FloatingField>
+          <p id="account-contra-help" class="text-sm text-fg-muted">{{ t('accounts.contraHint') }}</p>
+          <p v-if="natureLocked" class="text-sm text-fg-muted">{{ t('accounts.natureLocked') }}</p>
           <p v-if="editorError" class="ls-error" role="alert">{{ editorError }}</p>
           <div class="flex justify-end gap-2"><button type="button" class="ls-btn" @click="dismiss">{{ t('common.cancel') }}</button><button class="ls-btn ls-btn-primary" :disabled="submitting">{{ submitting ? t('common.saving') : t('common.save') }}</button></div>
         </form>

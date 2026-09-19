@@ -14,7 +14,7 @@ The Accounts page now supports case-insensitive name/code search, keyboard sorti
 
 Integration resolves the standalone table change through `BsDataTable` and preserves `BsDialog`/shared dirty-state behavior. Supabase paths, public-schema ownership, isolated sessions and workspace dependency versions remain the monorepo contracts. This adds no SQL migration.
 
-The accountant-system documents, Arabic Word deliverable and original UI evidence are imported. The newer plan supersedes old launch/accounting-v2 roadmaps. It remains a review plan, not an instruction to implement its entire roadmap or proof of accountant approval. The upstream commit IDs in historical documents refer to the original Ledger repository; source screenshots describe that source revision.
+The accountant-system documents, Arabic Word deliverable and original UI evidence are imported. The newer plan supersedes old launch/accounting-v2 roadmaps. On 2026-09-19 the founder authorized bounded implementation packages under this plan; see the [current implementation record](../../apps/ledger-suit/docs/accountant-system/IMPLEMENTATION_AR.md). This is not proof of accountant approval or authorization to implement every phase in one PR. The upstream commit IDs in historical documents refer to the original Ledger repository; source screenshots describe that source revision.
 
 ## Verification
 

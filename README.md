@@ -39,7 +39,7 @@ Verified production/staging refs are recorded in `docs/architecture/environments
 | `pnpm typecheck` | Check apps and imported shared TypeScript |
 | `pnpm lint` | Lint apps, shared components and tooling |
 | `pnpm check` | Check tokens, package boundaries and preserved historical SQL |
-| `pnpm test` | Test shared invariants and environment selection |
+| `pnpm test` | Test product/shared invariants and environment selection |
 | `pnpm test:e2e` | Browser suite against production builds on ports 4320–4322 |
 | `pnpm db:test` | Ledger and Shop SQL suites against their separate local databases |
 | `pnpm db <product> <command>` | Select the app-owned Supabase CLI root explicitly |
