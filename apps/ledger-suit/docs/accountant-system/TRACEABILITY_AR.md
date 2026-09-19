@@ -12,7 +12,7 @@
 |---|---|---|---|---|---|
 | ق٠١ | AS-S3-01 | posting_engine؛ 01_accounting_integrity_test.sql | توازن قاعدة موجود؛ ليس قبول المرحلة | NOT_STARTED | NOT_VERIFIED |
 | ق٠٢ | AS-S2-01 / AS-S3-03 | accounts.sql، reporting.sql | الطبيعة المقابلة غير مكتملة في الأساس | NOT_STARTED | NOT_VERIFIED |
-| ق٠٣ | AS-S2-02 | posting_engine، accounts.vue | منع التجميعي/المراقبة وتاريخ الآباء غير مكتمل | NOT_STARTED | NOT_VERIFIED |
+| ق٠٣ | AS-S2-02A ثم بقية AS-S2-02 | explicit_account_groups.sql، accounts.vue | group/posting منفذ: SQL وUI PASS؛ control/تصنيف مؤرخ باقٍ | NOT_STARTED | NOT_VERIFIED |
 | ق٠٤ | AS-S3-02 / AS-S3-03 | report_general_ledger | افتتاح بلا حركة يحتاج عقدًا واختبارًا | NOT_STARTED | NOT_VERIFIED |
 | ق٠٥ | AS-S3-02 | post_opening_balance | معالج ومطابقة مساعد غير منفذين | NOT_STARTED | NOT_VERIFIED |
 | ق٠٦ | AS-S3-02 | transaction_flows | التكرار الحالي ليس قبولًا لاستيراد الافتتاح | NOT_STARTED | NOT_VERIFIED |
@@ -42,3 +42,7 @@
 2026-09-19: REF-01–03 تمر في أربعة اختبارات Node باستخدام BigInt ووحدات صغرى؛ ليست اختبارات تقارير الإنتاج. JR-01 يغطي اختبار journal/account/back/close؛ JR-02 يغطي stable IDs والحالات والعزل؛ JR-03 يغطي أربعة اختبارات اللغة/المظهر وعينة أسماء مستقلة. يوجد اختبار تاسع لإعلان سلوك التحديث. الصور والسجل وSHA في [سجل الحزمة](work-packages/AS-S1-01.md). SQL والانحدار المرتبط بقاعدة غير مشغّلين بسبب تعارض backend؛ لا ترقية لأي ق٠١–ق٢٤ أو UAT أو نشر.
 
 استئناف 2026-09-19، 09:11 UTC: SQL أصبح PASS (27 ملفًا، 678 assertion) على نسخة محلية مستقلة ذات تاريخ مطابق للمرشح، بما فيها 01_accounting_integrity_test.sql و02_tenant_isolation_test.sql. لا يثبت ذلك اكتمال كل شروط ق٠١ أو المثال المرجعي في الإنتاج؛ بقية ق٠١–ق٢٤ وUAT والنشر لا تتغير. انحدار المتصفح الحالي ما زال NOT_RUN. [دليل SQL وبصماته](../evidence/as-s1-01/sql-verification.json).
+
+## AS-S2-02A — حسابات تجميعية صريحة
+
+تفويض AS-E02 يسمح بالتنفيذ دون انتظار المحاسب. على مصدر 7f28516: 747 assertion SQL/29 ملفًا و23 browser و28 unit PASS. منع group في RPC وINSERT/UPDATE المباشر، منع العميل من grant مباشر، فصل الصلاحية/tenant، parent posting وتوافق العقود القديمة، وصون 4 حسابات/3 معاملات/6 بنود والأرصدة والتقرير قبل وبعد. [الحزمة](work-packages/AS-S2-02A.md) و[السجل](../evidence/as-s2-02a/verification.json). ق٠٣ له دليل هندسي محدد، ولا يدعي اكتمال المراقبة أو تصنيف التاريخ أو UAT/إطلاق؛ ق٠١–ق٢٤ ليست تلقائيًا ACCEPTED.
