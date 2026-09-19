@@ -15,8 +15,10 @@ async function signIn(page: Page) {
 
 async function openImport(page: Page) {
   await signIn(page)
-  await page.getByRole('link', { name: 'Import CSV' }).click()
-  await expect(page).toHaveURL('/imports')
+  await page.getByRole('link', { name: 'Transactions', exact: true }).first().click()
+  await page.getByRole('button', { name: 'Import CSV', exact: true }).click()
+  await expect(page).toHaveURL('/transactions')
+  await expect(page.getByRole('dialog')).toBeVisible()
 }
 
 async function selectCsv(page: Page, rows: string) {
@@ -101,13 +103,13 @@ test('CSV workflow localizes invalid and duplicate issues, then posts valid rows
   await expect(page.locator('html')).toHaveAttribute('dir', 'ltr')
   await selectCsv(page, 'income,2026-09-01,100,Cash,Sales\nexpense,bad-date,20,Cash,Supplies\nincome,2026-09-01,100,Cash,Sales')
 
-  await expect(page.getByRole('row').filter({ hasText: 'bad-date' })).toContainText('Use a valid calendar date in YYYY-MM-DD format.')
-  await expect(page.getByRole('row').filter({ hasText: '2026-09-01' }).last()).toContainText('An identical transaction already exists.')
+  await expect(page.getByRole('dialog').getByRole('row').filter({ hasText: 'bad-date' })).toContainText('Use a valid calendar date in YYYY-MM-DD format.')
+  await expect(page.getByRole('dialog').getByRole('row').filter({ hasText: '2026-09-01' }).last()).toContainText('An identical transaction already exists.')
   await expect(page.getByText('raw backend detail', { exact: false })).toHaveCount(0)
   const usageCallsBeforeConfirm = usage.calls
   await page.getByRole('button', { name: 'Confirm and post valid rows' }).click()
   await expect(page.getByRole('heading', { name: 'Import results' })).toBeVisible()
-  await expect(page.getByRole('row').filter({ hasText: '2026-09-01' }).first()).toContainText('Posted')
+  await expect(page.getByRole('dialog').getByRole('row').filter({ hasText: '2026-09-01' }).first()).toContainText('Posted')
   await expect.poll(() => usage.calls).toBeGreaterThan(usageCallsBeforeConfirm)
 })
 
@@ -135,13 +137,16 @@ test('import confirmation shows usage and localizes a transaction quota failure'
 
 test('all-invalid validation offers recovery and shows a localized issue under RTL', async ({ page }) => {
   await mockImportApi(page, 'all-invalid')
-  await openImport(page)
-  await selectCsv(page, 'expense,bad-date,20,Cash,Supplies')
+  await signIn(page)
+  await page.getByRole('button', { name: 'Account menu' }).click()
+  await page.getByRole('button', { name: 'العربية', exact: true }).click()
+  await page.getByRole('button', { name: 'قائمة الحساب', exact: true }).click()
+  await page.goto('/imports')
+  await page.locator('#csv-file').setInputFiles({ name: 'invalid.csv', mimeType: 'text/csv', buffer: Buffer.from('type,date,amount,account,category\nexpense,bad-date,20,Cash,Supplies') })
+  await page.getByRole('button', { name: 'التجهيز والتحقق', exact: true }).click()
 
   await expect(page.getByRole('button', { name: 'Confirm and post valid rows' })).toHaveCount(0)
-  await expect(page.getByRole('button', { name: 'Start over' })).toBeVisible()
-  await page.getByRole('button', { name: 'Account menu' }).click()
-  await page.getByRole('button', { name: 'العربية' }).click()
+  await expect(page.getByRole('button', { name: 'البدء من جديد' })).toBeVisible()
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
   await expect(page.getByText('استخدم تاريخًا صحيحًا بالصيغة YYYY-MM-DD.')).toBeVisible()
   await expect(page.getByText('raw backend detail', { exact: false })).toHaveCount(0)
@@ -167,4 +172,73 @@ test('Solo sees an upgrade gate', async ({ page }) => {
   await openImport(page)
   await expect(page.getByRole('heading', { name: 'CSV imports are available on Starter and Business' })).toBeVisible()
   await expect(page.getByLabel('Choose CSV file')).toHaveCount(0)
+})
+
+test('modal protects an uploaded file, preserves filters and returns keyboard focus on desktop and mobile', async ({ page }) => {
+  await signIn(page)
+  await page.goto('/transactions?type=expense&q=Keepme')
+  await expect(page.locator('#type')).toBeEnabled()
+  const opener = page.getByRole('button', { name: 'Import CSV', exact: true })
+  await opener.click()
+  const dialog = page.getByRole('dialog')
+  await page.locator('#csv-file').setInputFiles({ name: 'unsaved.csv', mimeType: 'text/csv', buffer: Buffer.from('type,date,amount,account,category\nincome,2026-09-19,100,Cash,Sales') })
+  await expect(dialog.getByRole('heading', { name: 'Match CSV columns' })).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(dialog.getByRole('button', { name: 'Confirm', exact: true })).toBeVisible()
+  await dialog.getByRole('button', { name: 'Cancel', exact: true }).click()
+  await expect(dialog.getByText(/unsaved.csv/)).toBeVisible()
+  await dialog.getByRole('button', { name: 'Close import', exact: true }).click()
+  await dialog.getByRole('button', { name: 'Confirm', exact: true }).click()
+  await expect(dialog).toHaveCount(0)
+  await expect(opener).toBeFocused()
+  await expect(page.locator('#type')).toHaveValue('expense')
+  await expect(page.locator('#search')).toHaveValue('Keepme')
+  await page.setViewportSize({ width: 390, height: 844 })
+  await opener.click()
+  await expect(dialog.getByRole('heading', { name: 'Choose a CSV file' })).toBeVisible()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  await page.screenshot({ path: 'docs/evidence/as-ux-02/en-import-mobile.png', fullPage: true })
+  await page.keyboard.press('Escape')
+  await expect(dialog).toHaveCount(0)
+})
+
+test('viewer cannot import through the workspace or legacy URL', async ({ page }) => {
+  await page.goto('/login')
+  await expect(page.locator('form')).toHaveAttribute('data-hydrated', 'true')
+  await page.getByLabel('Email').fill('viewer@alpha.test')
+  await page.getByLabel('Password').fill('ledgersuit')
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click()
+  await expect(page).toHaveURL('/dashboard')
+  await page.getByRole('link', { name: 'Transactions', exact: true }).first().click()
+  await expect(page.locator('#type')).toBeEnabled()
+  await expect(page.getByRole('button', { name: 'Import CSV', exact: true })).toHaveCount(0)
+  await page.goto('/imports?type=expense')
+  await expect(page.getByRole('dialog')).toContainText('You do not have import permission')
+  await expect(page.locator('#csv-file')).toHaveCount(0)
+  await expect(page).toHaveURL('/transactions?type=expense')
+})
+
+test('leaving during staging cannot validate a late response or reopen the old modal', async ({ page }) => {
+  let release!: () => void
+  const held = new Promise<void>(resolve => { release = resolve })
+  let validated = 0
+  await page.route('**/rest/v1/rpc/create_csv_import_batch', async route => {
+    await held
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(batchId) }).catch(() => {})
+  })
+  await page.route('**/rest/v1/rpc/validate_csv_import_batch', route => { validated++; return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(batchId) }) })
+  await openImport(page)
+  await page.locator('#csv-file').setInputFiles({ name: 'delayed.csv', mimeType: 'text/csv', buffer: Buffer.from('type,date,amount,account,category\nincome,2026-09-19,100,Cash,Sales') })
+  const request = page.waitForRequest('**/rest/v1/rpc/create_csv_import_batch')
+  await page.getByRole('button', { name: 'Stage and validate', exact: true }).click()
+  await request
+  await expect(page.getByRole('button', { name: 'Close import', exact: true })).toBeDisabled()
+  await page.goto('/accounts')
+  release()
+  await expect(page.locator('#accounts-tree')).toBeVisible()
+  await page.getByRole('link', { name: 'Transactions', exact: true }).first().click()
+  await expect(page.locator('#type')).toBeEnabled()
+  await page.getByRole('button', { name: 'Import CSV', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Choose a CSV file', exact: true })).toBeVisible()
+  expect(validated).toBe(0)
 })

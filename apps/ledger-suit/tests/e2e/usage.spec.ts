@@ -133,3 +133,30 @@ test('reopening a creation surface refreshes usage for the same organization', a
   dialog = page.getByRole('dialog')
   await expect(dialog.locator('[data-quota="max_monthly_transactions"]')).toContainText('2,400 / 2,500')
 })
+
+test('reopening during an in-flight usage read requests a fresh allowance after that read', async ({ page }) => {
+  let used = 2000
+  let block = false
+  let release!: () => void
+  const hold = new Promise<void>(resolve => { release = resolve })
+  await page.route('**/rest/v1/rpc/subscription_usage_summary', async route => {
+    const snapshot = used
+    if (block) { block = false; await hold }
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(usageRows.map(row => row.quota_key === 'max_monthly_transactions' ? { ...row, used_value: snapshot } : row)) })
+  })
+  await signIn(page)
+  await page.getByRole('link', { name: 'Transactions', exact: true }).first().click()
+  await expect(page.locator('#type')).toBeEnabled()
+  block = true
+  const request = page.waitForRequest('**/rest/v1/rpc/subscription_usage_summary')
+  await page.getByRole('button', { name: 'New transaction', exact: true }).click()
+  await request
+  await expect(page.getByRole('dialog').locator('[data-quota="max_monthly_transactions"]')).toContainText('2,000 / 2,500')
+  await page.getByRole('dialog').getByRole('button', { name: 'Close', exact: true }).click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  used = 2400
+  await page.getByRole('button', { name: 'New transaction', exact: true }).click()
+  await expect(page.getByRole('dialog')).toBeVisible()
+  release()
+  await expect(page.getByRole('dialog').locator('[data-quota="max_monthly_transactions"]')).toContainText('2,400 / 2,500')
+})

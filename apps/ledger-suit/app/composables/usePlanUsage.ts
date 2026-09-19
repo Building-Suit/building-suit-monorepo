@@ -10,7 +10,8 @@ type CatalogPlan = Database['public']['Functions']['subscription_plan_catalog'][
 type JsonObject = Record<string, Json | undefined>
 const USAGE_TTL_MS = 30_000
 
-const pendingLoads = new WeakMap<object, Map<string, Promise<void>>>()
+interface PendingUsage { promise: Promise<void>, refreshRequested: boolean }
+const pendingLoads = new WeakMap<object, Map<string, PendingUsage>>()
 
 function object(value: Json | undefined): JsonObject {
   return value && typeof value === 'object' && !Array.isArray(value) ? value as JsonObject : {}
@@ -37,30 +38,39 @@ export function usePlanUsage() {
       pendingLoads.set(nuxtApp, appLoads)
     }
     const existing = appLoads.get(organizationId)
-    if (existing) return existing
+    if (existing) {
+      // A forced refresh may follow a post or reopen while an older snapshot is loading.
+      // Coalesce those requests into one follow-up read before resolving the shared promise.
+      if (force) existing.refreshRequested = true
+      return existing.promise
+    }
     if (loadedOrganizationId.value !== organizationId) {
       rows.value = []
       loadedAt.value = 0
     }
 
+    const pending: PendingUsage = { promise: Promise.resolve(), refreshRequested: false }
     const request = (async () => {
       loading.value = true
       loadError.value = false
       try {
-        const [usageResult, catalogResult] = await Promise.all([
-          supabase.rpc('subscription_usage_summary', { p_organization_id: organizationId }),
-          supabase.rpc('subscription_plan_catalog'),
-        ])
-        if (usageResult.error) throw usageResult.error
-        if (catalogResult.error) throw catalogResult.error
-        if (currentId.value !== organizationId) return
-        rows.value = (usageResult.data ?? []) as UsageRow[]
-        catalog.value = catalogResult.data ?? []
-        loadedOrganizationId.value = organizationId
-        loadedAt.value = Date.now()
+        do {
+          pending.refreshRequested = false
+          const [usageResult, catalogResult] = await Promise.all([
+            supabase.rpc('subscription_usage_summary', { p_organization_id: organizationId }),
+            supabase.rpc('subscription_plan_catalog'),
+          ])
+          if (usageResult.error) throw usageResult.error
+          if (catalogResult.error) throw catalogResult.error
+          if (currentId.value !== organizationId) return
+          rows.value = (usageResult.data ?? []) as UsageRow[]
+          catalog.value = catalogResult.data ?? []
+          loadedOrganizationId.value = organizationId
+          loadedAt.value = Date.now()
+        } while (pending.refreshRequested && currentId.value === organizationId)
       }
       catch (error) {
-        loadError.value = true
+        if (currentId.value === organizationId) loadError.value = true
         if (import.meta.dev) console.error(error)
       }
       finally {
@@ -68,7 +78,8 @@ export function usePlanUsage() {
         if (currentId.value === organizationId) loading.value = false
       }
     })()
-    appLoads.set(organizationId, request)
+    pending.promise = request
+    appLoads.set(organizationId, pending)
     return request
   }
 

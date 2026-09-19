@@ -6,15 +6,15 @@ const { start } = useAddTransaction()
 const { t, locale } = useI18n()
 const route = useRoute()
 const router = useRouter()
-const { data: importsEnabled, pending: importsPending } = usePlanFeature('imports')
 const { data: categories } = useOrgCategories()
 const { data: accounts } = useOrgAccounts()
 const { filters, sort, page, pageSize, scope, rows, total, pageCount, pending, error, validation, refresh, activeFilterCount, clearFilters, toggleSort } = useTransactionWorkspace()
+const importOpen = ref(false)
 const filtersOpen = ref(false)
 const selectedId = ref<string | null>(null)
 const hydrated = ref(false)
-onMounted(() => { hydrated.value = true; void openCreateFromRoute() })
-watch(scope, () => { selectedId.value = null; filtersOpen.value = false }, { flush: 'sync' })
+onMounted(() => { hydrated.value = true; void openCreateFromRoute(); void openImportFromRoute() })
+watch(scope, () => { importOpen.value = false; selectedId.value = null; filtersOpen.value = false }, { flush: 'sync' })
 const availableFlows = computed(() => ADD_FLOWS.filter(flow => can(FLOW_CAPABILITY[flow])))
 const canCreate = computed(() => writesAllowed.value && availableFlows.value.length > 0)
 const rangeStart = computed(() => total.value ? (page.value - 1) * pageSize + 1 : 0)
@@ -31,6 +31,13 @@ async function openCreateFromRoute() {
   await router.replace({ query })
 }
 watch(() => route.query.create, () => void openCreateFromRoute())
+async function openImportFromRoute() {
+  if (!hydrated.value || route.query.import !== '1') return
+  importOpen.value = true
+  const query = { ...route.query }; delete query.import
+  await router.replace({ query })
+}
+watch(() => route.query.import, () => void openImportFromRoute())
 function ariaSort(column: string) { return sort.column === column ? sort.direction === 'asc' ? 'ascending' : 'descending' : 'none' }
 useHead({ title: () => `${t('transactions.title')} · ${t('app.name')}` })
 </script>
@@ -40,7 +47,7 @@ useHead({ title: () => `${t('transactions.title')} · ${t('app.name')}` })
     <header class="flex flex-wrap items-start justify-between gap-4">
       <div><h1 class="text-h1 font-bold">{{ t('transactions.title') }}</h1><p class="mt-1 text-sm text-fg-muted">{{ t('transactionWorkspace.subtitle') }}</p></div>
       <div class="flex flex-wrap items-center gap-2">
-        <NuxtLink v-if="can('imports.create') && !importsPending" :to="importsEnabled ? '/imports' : '/billing'" class="ls-btn">{{ t(importsEnabled ? 'imports.entryPoint' : 'imports.upgradeEntryPoint') }}</NuxtLink>
+        <button v-if="can('imports.create') && writesAllowed" type="button" class="ls-btn" :disabled="!hydrated" @click="importOpen = true">{{ t('imports.entryPoint') }}</button>
         <button v-if="canCreate" type="button" class="ls-btn ls-btn-primary" :disabled="!hydrated" @click="addTransaction"><AppIcon name="add" :size="18" />{{ t('transactionWorkspace.new') }}</button>
       </div>
     </header>
@@ -154,6 +161,7 @@ useHead({ title: () => `${t('transactions.title')} · ${t('app.name')}` })
       </div>
     </div>
 
+    <CsvImportDialog v-model:visible="importOpen" />
     <TransactionDetailDialog
       :transaction-id="selectedId"
       @close="selectedId = null"

@@ -34,8 +34,19 @@ test('owner can download every advertised financial report as CSV', async ({ pag
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify('section,account_name,amount,currency\nrevenue,"إيراد, نقدي",100.00,EGP'),
+      body: JSON.stringify(({
+        trial_balance: 'code,account,type,debit,credit,currency\n1010,Bank,asset,100.00,0.00,EGP',
+        profit_loss: 'section,code,account,amount,currency\nrevenue,4000,Sales,100.00,EGP',
+        cash_flow: 'activity,net_movement,currency\noperating,100.00,EGP',
+        general_ledger: 'date,reference,description,memo,debit,credit,running_balance,currency\n2026-09-19,,Receipt,,100.00,0.00,100.00,EGP',
+      } as Record<string, string>)[route.request().postDataJSON().p_report]),
     })
+  })
+
+  await page.route('**/rest/v1/rpc/export_classified_balance_sheet_csv', async route => {
+    requestedReports.push('balance_sheet')
+    expect(route.request().postDataJSON().p_locale).toBe('en')
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify('report_date,presentation,account_id,code,account,amount,currency,classification_effective_from,classification_id') })
   })
 
   await page.getByRole('link', { name: 'Reports' }).click()
