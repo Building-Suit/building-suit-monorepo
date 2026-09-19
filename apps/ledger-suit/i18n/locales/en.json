@@ -112,6 +112,7 @@
     "results": {
       "open": "Open",
       "accounts": {
+    "parentAccount": "Parent account",
         "title": "Account balances",
         "body": "Live balances and entry counts are calculated from ledger lines. No separate stored balance can drift."
       },
@@ -497,6 +498,22 @@
     "reversedBody": "A reversing journal has been posted."
   },
   "accounts": {
+    "role": "Account role",
+    "roles": {
+      "posting": "Posting account",
+      "group": "Group account"
+    },
+    "roleHint": "Posting accounts receive entries. Groups organize accounts without direct entries. The role is fixed after creation.",
+    "parentGroup": "Parent group",
+    "noParent": "No parent group",
+    "groupBalance": "No direct entries",
+    "normalBalance": "Natural balance",
+    "contraAccount": "Account reduced (optional)",
+    "noContra": "No linked account",
+    "natureHint": "The expected balance side does not restrict debit or credit entries. The actual balance is shown separately.",
+    "contraHint": "Link a contra account to the account it reduces, such as accumulated depreciation to equipment. Choose the same type and currency with the opposite natural balance.",
+    "natureLocked": "Classification is protected for system accounts, accounts with entries, and accounts referenced by a contra account. Names and codes can still be edited.",
+    "sides": {"debit": "Debit", "credit": "Credit", "zero": "Zero"},
     "title": "Accounts",
     "tabsLabel": "Account types",
     "showArchived": "Show archived",
@@ -538,7 +555,7 @@
     "loadError": "Accounts could not be loaded",
     "loadErrorHint": "Check your connection and try again. No partial results are shown.",
     "retry": "Try again",
-    "totalHint": "Balances and the group total are in {currency}. Search does not change the group total.",
+    "totalHint": "Balances and the group total are in {currency}. The total includes direct parent postings and subtracts contra balances. Search does not change the total.",
     "tableScroll": "Account table — scroll horizontally for more columns",
     "noResults": "No matching accounts",
     "noResultsHint": "Try another name or code, or check the account type and archived filter.",
@@ -1125,6 +1142,12 @@
     }
   },
   "errors": {
+    "ACCOUNT_GROUP_NOT_POSTABLE": "Choose a posting account. Group accounts cannot receive journal entries or serve as a financial account.",
+    "ACCOUNT_ROLE_IMMUTABLE": "The account role is fixed after creation. Create a separate account for a different role.",
+    "ACCOUNT_PARENT_CLASSIFICATION_LOCKED": "This account has child accounts. Its type and currency must stay unchanged.",
+    "INVALID_ACCOUNT_PARENT": "Choose an active parent in the same organization, account type and currency.",
+    "ACCOUNT_CONTRA_REFERENCED": "A contra account uses this classification. Review the linked accounts before changing it.",
+    "INVALID_CONTRA_ACCOUNT": "Choose a compatible account in this organization with the same type and currency and the opposite natural balance. Contra accounts cannot reduce another contra account.",
     "generic": "Something went wrong. Please try again.",
     "LEGAL_NAME_ALREADY_EXISTS": "A business with this legal name already exists.",
     "ORGANIZATION_OWNER_LIMIT_REACHED": "Your current plan allows you to own one organization.",
@@ -1155,7 +1178,7 @@
     "INVALID_ADJUSTMENT": "A description and a reason are required.",
     "INVALID_OPENING_BALANCE": "Enter at least one non-zero opening balance.",
     "MISSING_SYSTEM_ACCOUNT": "This organization is missing a required system account.",
-    "ACCOUNT_HAS_LEDGER_HISTORY": "That account already has postings against it.",
+    "ACCOUNT_HAS_LEDGER_HISTORY": "This account has journal entries. Its accounting classification requires a reviewed migration.",
     "LAST_OWNER_REQUIRED": "An organization must keep at least one owner.",
     "INVALID_DATE_RANGE": "The start date must be before the end date."
   }

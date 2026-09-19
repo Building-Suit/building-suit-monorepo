@@ -1,0 +1,130 @@
+{
+  "task": "AS-S1-01",
+  "recordedAt": "2026-09-19T03:51:41.525855+00:00",
+  "testedSourceRevision": "a13ca461a030c45bb275ec5b3715dc30f77e97df",
+  "baseRevision": "6259188af06d6a49b03c5fe15708ea3411032113",
+  "environment": {
+    "kind": "local synthetic fixture",
+    "node": "26.8.1",
+    "pnpm": "10.33.0",
+    "browser": "Playwright Chromium",
+    "url": "http://127.0.0.1:3216"
+  },
+  "checks": {
+    "pnpm check": "PASS, 80 historical migration hashes unchanged",
+    "pnpm test": "PASS, 24 tests including four independent arithmetic tests",
+    "ledger lint": "PASS",
+    "ledger typecheck": "PASS",
+    "ledger build": "PASS",
+    "review typecheck": "PASS",
+    "review Playwright": "PASS, 9 tests, 35.9 seconds, retries 0",
+    "production output isolation": "PASS, no review fixture markers in normal Ledger output",
+    "accountant-system local links": "PASS",
+    "ledger SQL": "NOT_RUN: local backend belongs to account-nature worktree with additional migration 20260919013605",
+    "accounts/core-finance browser baseline": "NOT_RUN: same backend conflict"
+  },
+  "evidenceLimits": {
+    "arithmetic": "Reference fixture only, not production reports",
+    "browser": "Synthetic state and scope only, not RLS or live accounting",
+    "accountantUat": "NOT_STARTED",
+    "providerAutomaticBranching": "NOT_VERIFIED",
+    "published": false,
+    "merged": false,
+    "deployed": false,
+    "migrationsAddedOrApplied": []
+  },
+  "screenshots": {
+    "ar-dark-mobile.png": "e748ac8998f2479c5a61f487afd0bf33ffccd658ebf21715ecbf502428898e01",
+    "ar-light-mobile.png": "94dfb6a78264bc056461aa9ddd01f23f2e0acbf3ffd76aa42cf04d746cd0c3e8",
+    "en-account.png": "820304bd83b413367263badebdfa2a4db43c6b42128b14eea763ffc645efbb61",
+    "en-dark-mobile.png": "8c9538391de393e3ad7cb58cc44c338294bdaacf44c3dc903d20870394a9bb14",
+    "en-denied.png": "15c59a43cd4e0780618bfbf794914c313747ba486d243d42674529c656d43d61",
+    "en-empty.png": "5f0a5962adc49e28f1976a3524c49adcc6a0b9dc49bed38fe7229c2290c43bf1",
+    "en-error.png": "18ba8fee175565fd3349c8fffb1a980d24dea4af07536e73c07c63b9e1641534",
+    "en-journal.png": "ebc058a253762983cfd9983a0c3a6f914236c460ea4fb2d6bd7a500b2e172907",
+    "en-light-mobile.png": "05afec17648c2d7b44faff50b17cc22fc6dcd8d91a7e392a5e05ff0f207ea351",
+    "en-loading.png": "608ab76964c79ffa4beda439cf5eade2065ddc71e25c9c9a70e1517195a421ee",
+    "en-missing.png": "6713f88d83715e1dd0be0ab9f90fb0eb06d4b74d43a1705d183fe87e5ebd5524"
+  },
+  "resumedVerification": {
+    "recordedAt": "2026-09-19T09:11:14.708055+00:00",
+    "candidateRevision": "893215a598a8293690599f15a01e3e20993417d7",
+    "ledgerSql": {
+      "result": "PASS",
+      "testFiles": 27,
+      "assertions": 678,
+      "evidence": "sql-verification.json",
+      "sha256": "c7678d47754180e2cfc02a71cea7b35d0439fd2cc1714dc0b1d3e1691eb467e8"
+    },
+    "providerChecks": {
+      "checkedAt": "2026-09-19T09:09:39.847725+00:00",
+      "method": "Vercel CLI 58.9.0, GET /v9/projects?limit=100, scope building-suit; allowlisted metadata only",
+      "projects": [
+        {
+          "id": "prj_asaIU07YxhC51dsnfWQQPGX3UsUP",
+          "name": "shop-suit-stg",
+          "rootDirectory": "apps/shop-suit",
+          "productionBranch": "stg",
+          "repository": "Building-Suit/building-suit-monorepo",
+          "deployHookCount": 0
+        },
+        {
+          "id": "prj_VPY9PDKkvtLJhXJyQk09hoXyfCl0",
+          "name": "shop-suit",
+          "rootDirectory": "apps/shop-suit",
+          "productionBranch": "main",
+          "repository": "Building-Suit/building-suit-monorepo",
+          "deployHookCount": 0
+        },
+        {
+          "id": "prj_TrTbi25pzIWBvfnRWMfJnULjg0fY",
+          "name": "ledger-suit-stg",
+          "rootDirectory": "apps/ledger-suit",
+          "productionBranch": "stg",
+          "repository": "Building-Suit/building-suit-monorepo",
+          "deployHookCount": 0
+        },
+        {
+          "id": "prj_mu7ZRaHUNy9uAxpQhcJPNjQKtdjb",
+          "name": "ledger-suit",
+          "rootDirectory": "apps/ledger-suit",
+          "productionBranch": "main",
+          "repository": "Building-Suit/building-suit-monorepo",
+          "deployHookCount": 0
+        }
+      ],
+      "trackedDeploymentFilters": {
+        "vercel.json": {
+          "**": false,
+          "stg": true,
+          "main": true
+        },
+        "apps/ledger-suit/vercel.json": {
+          "**": false,
+          "stg": true,
+          "main": true
+        },
+        "apps/shop-suit/vercel.json": {
+          "**": false,
+          "stg": true,
+          "main": true
+        },
+        "apps/building-suit-docs/vercel.json": {
+          "**": false,
+          "stg": true,
+          "main": true
+        }
+      },
+      "result": "PASS: expected repository/app roots and production branches; feature Git deployments disabled by tracked config at those roots",
+      "supabase": {
+        "result": "BLOCKED",
+        "reason": "Connector lacks GitHub connection settings; local CLI identity cannot see registered product projects. No provider settings changed.",
+        "requiredRead": "GET /v2/organizations/{slug}/integrations/github/connections; verify project ref, repository, workdir, new_branch_per_pr=false; follow pagination",
+        "source": "https://supabase.com/docs/reference/api/v2-list-organization-github-connections"
+      }
+    },
+    "published": false,
+    "merged": false,
+    "deployed": false
+  }
+}

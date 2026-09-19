@@ -65,7 +65,7 @@ const { data: liquid, pending: liquidPending } = useLazyAsyncData('org:cash-posi
   if (!currentId.value) return []
   const { data, error } = await supabase
     .from('account_balances')
-    .select('account_id, name, currency, balance_minor, subtype')
+    .select('account_id, name, currency, net_debit_minor, subtype')
     .eq('organization_id', currentId.value)
     .eq('is_liquid', true)
     .eq('is_archived', false)
@@ -192,7 +192,7 @@ const payableHint = computed(() =>
     <template #body="{ data: account }">{{ account.name }}</template>
   </Column>
   <Column body-class="ls-num">
-    <template #body="{ data: account }"><MoneyText :amount-minor="account.balance_minor" :currency="account.currency" /></template>
+    <template #body="{ data: account }"><MoneyText :amount-minor="account.net_debit_minor" /></template>
   </Column>
 </BsDataTable>
           <p v-else class="text-sm text-fg-muted">{{ t('dashboard.noLiquidAccounts') }}</p>

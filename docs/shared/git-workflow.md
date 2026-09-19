@@ -1,6 +1,6 @@
 # Feature branches, stacked work and staging batches
 
-This is the ongoing workflow for every app, shared package and AI agent. Use short-lived feature branches and one open PR into `stg` for the **entire monorepo**, including draft PRs. Each feature has a pushed branch and an open review PR; only the active feature/batch PR targets `stg`. Other feature PRs target that branch or their dependency's branch. `main` receives release PRs from `stg`.
+This is the ongoing workflow for every app, shared package and AI agent. Use short-lived feature branches and one open PR into `stg` for the **entire monorepo**, including draft PRs. Each feature has a pushed branch and an open review PR; only the active feature/batch PR targets `stg`. Each subsequent feature starts from the latest active worktree’s committed tip and targets that parent branch, so the stack accumulates completed checkpoints across apps. `main` receives release PRs from `stg`.
 
 ## Before starting or resuming any work
 
@@ -27,33 +27,36 @@ Use `git pull --ff-only` only in a clean, appropriate feature worktree after ins
 
 | Situation | Branch and review target |
 |---|---|
-| First feature; no staging PR open | Create `codex/<app>/<feature>` from fresh `origin/stg`; push it and open the sole PR into `stg`. |
+| First feature; no active feature worktree/parent | Create `codex/<app>/<feature>` from fresh `origin/stg`; push it and open the sole PR into `stg`. An unpublished active worktree is still a parent; absence of a PR alone does not make the stack empty. |
 | Adjustment to an open feature | Reuse its worktree/branch and PR. Add commits there; update the description and validation. |
-| Another feature depends on an open feature | Create a separate branch from the parent's current fetched head; open its PR **into the parent branch**. |
-| Two independent features at once | Use separate worktrees/branches and target the same active batch branch. Branch from `origin/stg` if independence is useful; GitHub compares the feature from its merge base. Integrate reviewed changes into the batch together. |
+| Any new feature while an active worktree exists | Create a separate branch from the newest active stack leaf’s verified committed HEAD; open its PR **into that parent branch**. This is the default even across different apps. |
+| Two features at once | Checkpoint the first feature, then create the second worktree from that committed tip and target its PR at the first branch. Continue each feature in its own worktree. Bring later parent commits into the child explicitly; filesystem edits are not shared. |
 | Feature belongs to another app | Use `codex/ledger-suit/*`, `codex/shop-suit/*`, `codex/building-suit-docs/*` or `codex/shared/*`, but share the same single staging slot. |
 | Several features form one release batch | The first feature branch may become the batch, with its PR title/body updated to cover all included work. Alternatively use a short-lived `codex/batch/<topic>` seeded with the first ready feature. Never create an empty or permanent development branch just for ceremony. |
-| Feature's PR already merged/closed | Start a fresh branch from updated `origin/stg`; transfer only genuinely unmerged work after reviewing the GitHub merge. |
+| Feature’s PR already merged/closed | Retire it, refresh GitHub and choose the newest remaining active parent. Use updated `origin/stg` only when the active stack is empty; transfer only genuinely unmerged work. |
 
 ```mermaid
 flowchart LR
-  A["Ledger feature A: branch + PR"] --> B["Active batch branch"]
-  C["Shop feature B: branch + PR"] --> B
-  D["Feature C depends on A"] --> A
-  B -->|"Only one PR"| S["stg"]
+  C["Next feature C"] -->|"PR into parent"| B["Shop feature B"]
+  B -->|"PR into parent"| A["Ledger feature A / batch"]
+  A -->|"Only one PR"| S["stg"]
   S -->|"Release PR"| M["main"]
 ```
 
 For a single feature, A and the batch can be the same branch. A second app never needs a second staging PR. Keep unrelated work out of another feature's commits; a batch is an explicit collection of reviewed features, not an excuse to mix changes.
 
-Example after discovering the actual active batch branch:
+Before creating a worktree, inspect the active chain’s newest leaf, not simply the most recently created directory. Exclude retired PR branches, detached snapshots and prunable worktrees. Verify the parent’s local HEAD against its upstream and PR. Record the exact parent SHA. Existing divergent worktrees need an explicit parent choice/reconciliation; do not silently merge them or select an old merged directory merely because it exists.
+
+A new worktree inherits committed files only. If the child needs dirty parent changes, coordinate a reviewed checkpoint with the parent’s owner before branching. For independent work that can start at the existing committed tip, record the pending edits that were excluded and incorporate the parent’s later commit deliberately. Never copy, stash or commit another task’s dirty files automatically. If the parent has no PR yet, publish its reviewed committed checkpoint and open its PR (draft while validation is pending) before opening the child PR. Keep only the root of the chain targeting `stg`.
+
+Example after discovering the actual active parent worktree and verified SHA:
 
 ```sh
 # Substitute the inspected branch names; examples are not shell variables to run blindly.
-git worktree add .local/worktrees/shop-catalog -b codex/shop-suit/catalog origin/stg
+git worktree add .local/worktrees/shop-catalog -b codex/shop-suit/catalog '<verified-parent-commit-sha>'
 # Implement and verify in that worktree, then commit only the intended files.
 git push -u origin HEAD
-gh pr create --base '<active-batch-branch>' --head codex/shop-suit/catalog --body-file '<prepared-description.md>'
+gh pr create --base '<active-parent-branch>' --head codex/shop-suit/catalog --body-file '<prepared-description.md>'
 pnpm agent:pr-check '<new-PR-number>'
 ```
 

@@ -8,13 +8,13 @@
     "pnpm": "10.33.0"
   },
   "scripts": {
-    "dev:ledger": "pnpm --filter @building-suit/ledger-suit dev --port 3000",
-    "dev:shop": "pnpm --filter @building-suit/shop-suit dev --port 3001",
-    "dev:docs": "pnpm --filter @building-suit/docs dev --port 3002",
+    "dev:ledger": "node tooling/git/dev.mjs ledger",
+    "dev:shop": "node tooling/git/dev.mjs shop",
+    "dev:docs": "node tooling/git/dev.mjs docs",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint && eslint packages tooling",
-    "test": "node --test packages/*/tests/*.test.mjs tooling/database/tests/*.test.mjs tooling/git/tests/*.test.mjs",
+    "test": "node --test apps/*/tests/unit/*.test.mjs packages/*/tests/*.test.mjs tooling/database/tests/*.test.mjs tooling/git/tests/*.test.mjs",
     "tokens:generate": "node tooling/design-tokens/generate.mjs",
     "tokens:check": "node tooling/design-tokens/generate.mjs --check",
     "docs:generate": "node tooling/docs/generate.mjs",

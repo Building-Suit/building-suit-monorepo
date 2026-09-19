@@ -20,6 +20,18 @@ pnpm dev:shop    # http://localhost:3001
 pnpm dev:docs    # http://localhost:3002
 ```
 
+The root `dev:*` commands select the active worktree with the newest changes relevant to the requested app or shared packages. They print the selected branch, path and commit before starting Nuxt. Newer uncommitted edits count; equal source activity prefers the deeper stack. Merged/closed PRs, detached and prunable worktrees are excluded. With no relevant active worktree, the original (primary) checkout is served as it stands, without switching or pulling its branch.
+
+```sh
+pnpm dev:ledger --list          # inspect selection without starting a server
+pnpm dev:shop --dry-run        # show selection and launch arguments
+pnpm dev:ledger --current      # serve the checkout where this command runs
+pnpm dev:shop --worktree codex/shop-suit/my-feature
+pnpm dev:docs -- --port 3102    # forward Nuxt options
+```
+
+When other feature worktrees exist, auto selection refreshes `origin` and checks GitHub PR state, so it needs network access and an authenticated `gh`. With only the original checkout (or no other possible feature worktree), it starts directly without network access. Explicit `--current`/`--worktree` selections work offline. Selection is fixed at startup: restart the command to pick up a new worktree. Files edited inside the selected worktree still hot-reload normally. Run `pnpm install --frozen-lockfile` and `pnpm run setup` in a new worktree before serving it. Its own app `.env` takes precedence; if absent, the launcher passes the same app’s `.env` from the original checkout to Nuxt without copying it or printing values. It never selects `.env.staging` or `.env.production` automatically.
+
 Fill each ignored app `.env` with its local API URL and browser-safe publishable/anon key from that product’s CLI status. Never use secret/service-role keys in app public configuration. Both local databases initialize from their app-owned migration roots and disposable seeds.
 
 | Product | CLI root | Local API | Database | Email inbox |
@@ -39,7 +51,7 @@ Verified production/staging refs are recorded in `docs/architecture/environments
 | `pnpm typecheck` | Check apps and imported shared TypeScript |
 | `pnpm lint` | Lint apps, shared components and tooling |
 | `pnpm check` | Check tokens, package boundaries and preserved historical SQL |
-| `pnpm test` | Test shared invariants and environment selection |
+| `pnpm test` | Test product/shared invariants and environment selection |
 | `pnpm test:e2e` | Browser suite against production builds on ports 4320–4322 |
 | `pnpm db:test` | Ledger and Shop SQL suites against their separate local databases |
 | `pnpm db <product> <command>` | Select the app-owned Supabase CLI root explicitly |
@@ -62,6 +74,6 @@ Set `BUILDING_TEST_BACKEND=1` when running browser tests to include Shop signup,
 - `supabase/environments`: blank deployment credential templates; `supabase/legacy`: preserved original Shop SQL.
 - [Shared specifications](docs/shared/README.md), [agent rules](AGENTS.md), [future-development workflows](docs/agent-workflows.md), [feature branches and the single staging batch](docs/shared/git-workflow.md).
 
-Each feature has a short-lived branch and review PR. Fixes remain on that branch; dependent features stack and independent features use separate worktrees. Only one PR targets `stg` across all apps. Always check live GitHub state before continuing after a manual merge. Feature pushes receive lightweight CI; the staging candidate receives full validation. See the branch workflow for provider filters and setup requirements.
+Each feature has a short-lived branch and review PR. Fixes remain on that branch; every new feature stacks from the latest verified active worktree’s committed tip, with a separate worktree and a PR into its parent. Only one PR targets `stg` across all apps. Always check live GitHub state before continuing after a manual merge. Feature pushes receive lightweight CI; the staging candidate receives full validation. See the branch workflow for provider filters and setup requirements.
 
 The finite [implementation plan](PLAN.md), [source audit](docs/source-audit.json) and `docs/migration` record one-time work. They do not add tasks to future agent work.

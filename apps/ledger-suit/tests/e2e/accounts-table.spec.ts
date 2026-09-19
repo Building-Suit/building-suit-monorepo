@@ -12,9 +12,11 @@ async function signIn(page: Page, email = 'owner@alpha.test') {
 
 function balance(organizationId: string, index: number, overrides = {}) {
   return {
-    organization_id: organizationId, account_id: `fixture-${index}`,
+    account_role: 'posting', organization_id: organizationId, account_id: `fixture-${index}`,
     name: `Account ${String(index).padStart(4, '0')}`, code: String(index).padStart(4, '0'),
-    type: 'asset', subtype: 'bank', currency: 'EGP', balance_minor: 12345,
+    type: 'asset', subtype: 'bank', currency: 'EGP', normal_balance: 'debit',
+    contra_account_id: null, is_system: false, classification_locked: true,
+    net_debit_minor: '12345', statement_balance_minor: '12345',
     entry_count: 2, is_archived: false, is_liquid: true, parent_account_id: null,
     ...overrides,
   }

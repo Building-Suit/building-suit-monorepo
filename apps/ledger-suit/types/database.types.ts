@@ -36,9 +36,11 @@ export type Database = {
     Tables: {
       accounts: {
         Row: {
+          account_role: string
           archived_at: string | null
           cash_flow_section: Database["public"]["Enums"]["cash_flow_section"]
           code: string | null
+          contra_account_id: string | null
           created_at: string
           created_by: string | null
           currency: string
@@ -58,9 +60,11 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          account_role?: string
           archived_at?: string | null
           cash_flow_section?: Database["public"]["Enums"]["cash_flow_section"]
           code?: string | null
+          contra_account_id?: string | null
           created_at?: string
           created_by?: string | null
           currency: string
@@ -71,7 +75,7 @@ export type Database = {
           is_liquid?: boolean
           is_system?: boolean
           name: string
-          normal_balance?: Database["public"]["Enums"]["normal_balance"]
+          normal_balance: Database["public"]["Enums"]["normal_balance"]
           organization_id: string
           parent_account_id?: string | null
           subtype: Database["public"]["Enums"]["account_subtype"]
@@ -80,9 +84,11 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          account_role?: string
           archived_at?: string | null
           cash_flow_section?: Database["public"]["Enums"]["cash_flow_section"]
           code?: string | null
+          contra_account_id?: string | null
           created_at?: string
           created_by?: string | null
           currency?: string
@@ -102,6 +108,20 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "accounts_contra_same_org"
+            columns: ["contra_account_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "account_balances"
+            referencedColumns: ["account_id", "organization_id"]
+          },
+          {
+            foreignKeyName: "accounts_contra_same_org"
+            columns: ["contra_account_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id", "organization_id"]
+          },
           {
             foreignKeyName: "accounts_created_by_fkey"
             columns: ["created_by"]
@@ -2325,22 +2345,42 @@ export type Database = {
       account_balances: {
         Row: {
           account_id: string | null
+          account_role: string | null
           balance_minor: number | null
+          classification_locked: boolean | null
           code: string | null
+          contra_account_id: string | null
           credit_minor: number | null
           currency: string | null
           debit_minor: number | null
           entry_count: number | null
           is_archived: boolean | null
           is_liquid: boolean | null
+          is_system: boolean | null
           name: string | null
+          net_debit_minor: string | null
           normal_balance: Database["public"]["Enums"]["normal_balance"] | null
           organization_id: string | null
           parent_account_id: string | null
+          statement_balance_minor: string | null
           subtype: Database["public"]["Enums"]["account_subtype"] | null
           type: Database["public"]["Enums"]["account_type"] | null
         }
         Relationships: [
+          {
+            foreignKeyName: "accounts_contra_same_org"
+            columns: ["contra_account_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "account_balances"
+            referencedColumns: ["account_id", "organization_id"]
+          },
+          {
+            foreignKeyName: "accounts_contra_same_org"
+            columns: ["contra_account_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id", "organization_id"]
+          },
           {
             foreignKeyName: "accounts_currency_fkey"
             columns: ["currency"]
@@ -2832,9 +2872,12 @@ export type Database = {
       }
       create_account: {
         Args: {
+          p_account_role?: string
           p_code?: string
+          p_contra_account_id?: string
           p_currency?: string
           p_name: string
+          p_normal_balance?: Database["public"]["Enums"]["normal_balance"]
           p_organization_id: string
           p_parent_account_id?: string
           p_subtype: Database["public"]["Enums"]["account_subtype"]
@@ -3454,7 +3497,14 @@ export type Database = {
         }[]
       }
       update_account: {
-        Args: { p_account_id: string; p_code?: string; p_name: string }
+        Args: {
+          p_account_id: string
+          p_clear_contra?: boolean
+          p_code?: string
+          p_contra_account_id?: string
+          p_name: string
+          p_normal_balance?: Database["public"]["Enums"]["normal_balance"]
+        }
         Returns: string
       }
       update_commitment: {
