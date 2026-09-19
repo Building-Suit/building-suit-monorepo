@@ -33,6 +33,8 @@ Verified production/staging refs are recorded in `docs/architecture/environments
 
 | Command | Purpose |
 |---|---|
+| `pnpm agent:preflight` | Fetch and inspect worktrees, commits and live GitHub state before every task or publication |
+| `pnpm agent:pr-check <number>` | Verify the single staging PR and feature/parent chain |
 | `pnpm build` | Build all three apps |
 | `pnpm typecheck` | Check apps and imported shared TypeScript |
 | `pnpm lint` | Lint apps, shared components and tooling |
@@ -58,6 +60,8 @@ Set `BUILDING_TEST_BACKEND=1` when running browser tests to include Shop signup,
 - `packages/auth`, `packages/data-access`, `packages/contracts`: shared infrastructure with product-owned identities and contracts.
 - `packages/nuxt-layer`, `packages/config`, `packages/testing`: integration, tooling and verification.
 - `supabase/environments`: blank deployment credential templates; `supabase/legacy`: preserved original Shop SQL.
-- [Shared specifications](docs/shared/README.md), [agent rules](AGENTS.md), [future-development workflows](docs/agent-workflows.md).
+- [Shared specifications](docs/shared/README.md), [agent rules](AGENTS.md), [future-development workflows](docs/agent-workflows.md), [feature branches and the single staging batch](docs/shared/git-workflow.md).
+
+Each feature has a short-lived branch and review PR. Fixes remain on that branch; dependent features stack and independent features use separate worktrees. Only one PR targets `stg` across all apps. Always check live GitHub state before continuing after a manual merge. Feature pushes receive lightweight CI; the staging candidate receives full validation. See the branch workflow for provider filters and setup requirements.
 
 The finite [implementation plan](PLAN.md), [source audit](docs/source-audit.json) and `docs/migration` record one-time work. They do not add tasks to future agent work.

@@ -1,5 +1,6 @@
 # Shared platform specifications
 
+- [Git and staging workflow](git-workflow.md): preflight, short-lived features, stacked/parallel PRs, manual-merge recovery and deployment controls.
 - [Design system](design-system.md): tokens, branding, Atomic Design and shared templates.
 - [Interaction policy](interactions.md): record actions, dialogs, signup and feedback.
 - [Database development](database.md): product-specific local commands, environment verification and hosted release procedure.
