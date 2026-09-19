@@ -2,6 +2,8 @@
 
 Ledger Suit is the financial application in the Building Suit workspace. Routes, organization/capability adapters and financial rules remain product-owned. The Nuxt layer supplies shared Building branding, landing/auth templates, signup navigation, application shell, tables and interaction behavior.
 
+The Accounting menu opens Transactions, Accounts and Reports. Transactions combines all transaction types with search, type/status/date/account filters, optional category/amount filters, pagination, creation and CSV import. Filters survive reloads through the URL; former transaction-type `/records/:kind` bookmarks redirect to this workspace. Accounts opens an expanded hierarchy with visible accounting headings, subtotals, search that preserves ancestors, account statements and subaccount creation. The sortable Table view remains available at `/accounts?view=table`. Tree headings organize existing subtypes for navigation; dated financial-statement classifications remain separate.
+
 Run commands from the monorepo root:
 
 ```sh

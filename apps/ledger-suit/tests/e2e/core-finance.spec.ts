@@ -24,9 +24,10 @@ test('owner can navigate the grouped finance shell and open operation pages', as
 test('owner can add an account through the controlled workflow', async ({ page }) => {
   const accountName = `Playwright Bank ${Date.now()}`
   await page.getByRole('link', { name: 'Accounts' }).click()
+  await page.getByRole('button', { name: 'Table view', exact: true }).click()
   await expect(page.getByRole('tab', { name: 'Assets' })).toHaveAttribute('aria-selected', 'true')
   await page.getByRole('tab', { name: 'Liabilities' }).click()
-  await expect(page).toHaveURL(/\/accounts\?tab=liability/)
+  await expect(page).toHaveURL(/\/accounts\?.*tab=liability/)
   await page.getByRole('button', { name: 'Add account' }).first().click()
   await page.getByLabel('Account name').fill(accountName)
   await page.getByLabel('Code').fill(`PW${Date.now()}`)
@@ -38,15 +39,15 @@ test('owner can reach reports and transaction entry', async ({ page }) => {
   await page.getByRole('link', { name: 'Reports' }).click()
   await expect(page.getByRole('heading', { name: 'Reports' })).toBeVisible()
   await expect(page.getByRole('tab', { name: 'Profit & Loss' })).toBeVisible()
-  await page.getByRole('link', { name: 'Expense' }).click()
-  await page.getByRole('button', { name: 'Add Expense' }).first().click()
+  await page.getByRole('link', { name: 'Transactions', exact: true }).first().click()
+  await page.getByRole('button', { name: 'Expense', exact: true }).click()
+  await page.getByRole('button', { name: 'New transaction', exact: true }).first().click()
   await expect(page.getByRole('dialog', { name: 'Expense' })).toBeVisible()
 })
 
-test('permanent navigation exposes every creation workflow by section', async ({ page }) => {
+test('navigation keeps the accounting workspace together', async ({ page }) => {
   const navigation = page.getByRole('navigation', { name: 'Primary' }).first()
-  await expect(navigation.getByRole('heading', { name: 'Transactions' })).toBeVisible()
-  await expect(navigation.getByRole('heading', { name: 'Ledger' })).toBeVisible()
+  await expect(navigation.getByRole('heading', { name: 'Accounting' })).toBeVisible()
   await expect(navigation.getByRole('heading', { name: 'Operations' })).toBeVisible()
   await expect(navigation.getByRole('heading', { name: 'Workspace' })).toBeVisible()
   await expect(navigation.getByRole('link', { name: 'Accounts', exact: true })).toBeVisible()

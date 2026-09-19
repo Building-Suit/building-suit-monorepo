@@ -147,7 +147,9 @@ test('expired Trial keeps readable navigation and Billing checkout while mutatio
   await expect(page.getByText('You can continue viewing records, attachments, and reports.')).toBeVisible()
   await expect(page.getByRole('link', { name: 'Transactions' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Reports' })).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Expense', exact: true })).toHaveCount(0)
+  await page.getByRole('link', { name: 'Transactions', exact: true }).first().click()
+  await expect(page.locator('#type')).toBeEnabled()
+  await expect(page.getByRole('button', { name: 'New transaction', exact: true })).toHaveCount(0)
   await page.getByRole('link', { name: 'Restore subscription' }).click()
   await expect(page).toHaveURL('/billing')
 

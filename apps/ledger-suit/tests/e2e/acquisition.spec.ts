@@ -253,10 +253,12 @@ test('a lapsed workspace keeps readable history without mutation actions', async
   await expect(page.getByRole('link', { name: 'Restore subscription' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Transactions' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Reports' })).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Expense', exact: true })).toHaveCount(0)
+  await page.getByRole('link', { name: 'Transactions', exact: true }).first().click()
+  await expect(page.locator('#type')).toBeEnabled()
+  await expect(page.getByRole('button', { name: 'New transaction', exact: true })).toHaveCount(0)
 
   await page.getByRole('link', { name: 'Accounts', exact: true }).first().click()
-  await expect(page.getByRole('tab', { name: 'Assets' })).toBeVisible()
+  await expect(page.locator('#accounts-tree')).toContainText('Current assets')
   await expect(page.getByRole('button', { name: 'Add account' })).toHaveCount(0)
 })
 

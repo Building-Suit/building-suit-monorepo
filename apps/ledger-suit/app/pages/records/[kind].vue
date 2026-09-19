@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import type { Database } from '~~/types/database.types'
 
-definePageMeta({ layout: 'default' })
+definePageMeta({
+  layout: 'default',
+  middleware: (to) => {
+    const kind = String(to.params.kind)
+    if ((ADD_FLOWS as readonly string[]).includes(kind)) return navigateTo({ path: '/transactions', query: { ...to.query, type: kind } }, { replace: true })
+  },
+})
 
 type TransactionFlow = typeof ADD_FLOWS[number]
 type OperationKind = 'commitments' | 'recurring' | 'counterparties' | 'tags'
