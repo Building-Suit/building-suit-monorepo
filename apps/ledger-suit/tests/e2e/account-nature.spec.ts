@@ -55,7 +55,9 @@ for (const locale of ['en', 'ar']) {
     await expect(dialog).toBeHidden()
     // A minimal balanced journal demonstrates opposite natural sides without
     // inventing a tax rate, costing method or customer cutover policy.
-    const posted = await page.request.post('http://127.0.0.1:60321/rest/v1/rpc/create_adjustment', {
+    const backend = new URL(assetResponse.url()).origin
+    expect(['http://127.0.0.1:60321', 'http://127.0.0.1:63321']).toContain(backend)
+    const posted = await page.request.post(`${backend}/rest/v1/rpc/create_adjustment`, {
       headers,
       data: {
         p_organization_id: org, p_transaction_date: '2026-09-01',
@@ -91,7 +93,7 @@ for (const locale of ['en', 'ar']) {
 test('account totals retain parent postings, subtract contra balances and display exact large amounts', async ({ page }) => {
   await page.route('**/rest/v1/account_balances?**', async (route) => {
     const org = new URL(route.request().url()).searchParams.get('organization_id')!.slice(3)
-    const common = { organization_id: org, type: 'asset', subtype: 'equipment', currency: 'EGP',
+    const common = { account_role: 'posting', organization_id: org, type: 'asset', subtype: 'equipment', currency: 'EGP',
       is_archived: false, is_liquid: false, is_system: false, classification_locked: true, entry_count: 1,
       contra_account_id: null, parent_account_id: null, normal_balance: 'debit' }
     const rows = [
