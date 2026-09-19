@@ -26,7 +26,7 @@ try {
   if (!selected) throw new Error('Current checkout is not a registered worktree.')
   const directory = join(selected.path, 'apps', app.directory)
   if (!await exists(join(directory, 'package.json'))) throw new Error(`The selected checkout has no apps/${app.directory}.`)
-  const fallback = !currentOnly && !worktree && !selected.active
+  const fallback = !currentOnly && !worktree && !(selected.active && selected.relevant)
   console.log(`[dev:${name}] ${fallback ? 'Original checkout (no active app worktree)' : 'Selected worktree'}: ${selected.path}`)
   console.log(`[dev:${name}] Branch: ${selected.branch ?? '(detached)'} | ${selected.head.slice(0, 10)}${selected.dirty ? ` | ${selected.dirty} relevant uncommitted files` : ''}`)
   console.log(`[dev:${name}] Selection is fixed for this process; restart to select newer work.`)
