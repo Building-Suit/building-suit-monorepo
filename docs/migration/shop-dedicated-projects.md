@@ -1,6 +1,6 @@
 # One-time Shop transfer to dedicated projects
 
-This procedure is bounded to the user’s requested Shop separation. It is not an ongoing AI-agent workflow. Both destination projects and their credentials have been verified. Production now contains the verified Shop schema and scoped business/Auth data copy; Staging contains the same schema and passes its SQL tests. SMTP, application deployment and final cutover remain pending. The shared source was preserved and remained read-only throughout this transfer.
+This procedure is bounded to the user’s requested Shop separation. It is not an ongoing AI-agent workflow. Both destination projects and their credentials have been verified. Production now contains the verified Shop schema and scoped business/Auth data copy; Staging contains the same schema, the Shop portal/plan catalog and passes its SQL tests. SMTP, application deployment and final cutover remain pending. The shared source was preserved and remained read-only throughout this transfer.
 
 ## Verified setup and access — 2026-09-19
 
@@ -74,10 +74,18 @@ Completed:
 Still required:
 
 1. Configure custom SMTP and the committed confirmation template containing `{{ .Token }}` in each destination. Both currently lack custom SMTP and the OTP confirmation template; real email delivery/signup/recovery remain unverified. Provider credentials and the sending-domain setup are still needed.
-2. Configure/deploy the applications at their supplied origins, using the already-populated `.env.production` and `.env.staging` values in the hosting environment. Staging has schema only; populate an appropriate test catalog and synthetic users for browser testing. DNS, hosting and application deployment have not been changed.
+2. Configure/deploy the applications at their supplied origins, using the already-populated `.env.production` and `.env.staging` values in the hosting environment. Staging's Shop portal and plan catalog are now populated; create synthetic users for browser testing. DNS, hosting and application deployment have not been changed.
 3. Before routing real traffic to Production, stop Shop writes at the source or reconcile any changes since the verified snapshot, then repeat the source-to-target checks. Verify browser/Auth journeys with fresh destination sessions and perform the cutover. Do not blindly replay the empty-destination import against populated Production.
 
 Private catalog comparisons, sanitized command logs, Auth setting snapshots and test results are under `.local/shop-transfer/`. The completed backup/restore bundle is `.local/shop-transfer/backup-2026-09-18T233351728Z/`, including `manifest.json`, `scoped-data-and-auth.json`, schema/data dumps, `production-before-schema.sql`, guarded restore SQL and reconciliation results. The directory is owner-only and backup files use `0600`; credentials and backups remain ignored. The isolated local database `shop_transfer_rehearsal_20260919` contains schema only and is separate from both product databases. Its successful rollback rehearsal supplies restore evidence without leaving a local copy of the user's credentials/data in database tables.
+
+## Staging plan catalog follow-up — 2026-09-19
+
+The initial schema-only Staging setup left `public.portals` and `public.plans` empty, so the application's public plan query returned no plans. On the user's follow-up, initialized the `shop-crm` portal and its Basic/Pro catalog in the verified Staging project `jvvelvftpfnlogalgxgv` in one transaction. This was a data-only initialization; the three applied migration versions and existing policies/grants remain unchanged.
+
+Both plans match Production's public catalog: Basic at EGP 799 monthly and Pro at EGP 1,199 monthly, each with a 30-day trial and matching feature limits, inventory entitlement, visibility and ordering. Staging generated its own portal/plan UUIDs. Production's Stripe product/price references were not copied; those fields remain unset until a separate staging billing integration is configured. No Auth users, shops or customer records were copied.
+
+Verification used each project's publishable key and the exact selection, filters and ordering in `apps/shop-suit/app/composables/usePlans.ts`. Staging returned HTTP 200 with both plans; all public plan fields matched Production after excluding environment-specific IDs. The final Staging counts are one portal, two plans, zero Auth users and zero shops. The private initialization SQL and verification result are `.local/shop-transfer/staging-catalog.sql` and `.local/shop-transfer/staging-catalog-verification.json`.
 
 ## Source, destination and preservation
 
