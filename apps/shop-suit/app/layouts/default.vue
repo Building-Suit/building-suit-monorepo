@@ -11,12 +11,13 @@ const showErrorDetails = import.meta.dev
 const isArabic = computed(() => locale.value === 'ar')
 
 const copy = computed(() => isArabic.value
-  ? { dashboard: 'لوحة التحكم', invoices: 'الفواتير', products: 'المنتجات', services: 'الخدمات', inventory: 'المخزون', expenses: 'المصروفات', team: 'الفريق', reports: 'التقارير', soon: 'قريبًا', shop: 'المتجر', account: 'الحساب', logout: 'تسجيل الخروج', openMenu: 'فتح القائمة', closeMenu: 'إغلاق القائمة', loadFailed: 'تعذّر تحميل بيانات المتجر. حاول مرة أخرى.', retry: 'إعادة المحاولة' }
-  : { dashboard: 'Dashboard', invoices: 'Invoices', products: 'Products', services: 'Services', inventory: 'Inventory', expenses: 'Expenses', team: 'Team', reports: 'Reports', soon: 'Soon', shop: 'Shop', account: 'Account', logout: 'Sign out', openMenu: 'Open menu', closeMenu: 'Close menu', loadFailed: 'Unable to load shop data. Please try again.', retry: 'Retry' })
+  ? { dashboard: 'لوحة التحكم', invoices: 'الفواتير', products: 'المنتجات', services: 'الخدمات', inventory: 'المخزون', purchases: 'المشتريات', expenses: 'المصروفات', team: 'الفريق', reports: 'التقارير', soon: 'قريبًا', shop: 'المتجر', account: 'الحساب', logout: 'تسجيل الخروج', openMenu: 'فتح القائمة', closeMenu: 'إغلاق القائمة', loadFailed: 'تعذّر تحميل بيانات المتجر. حاول مرة أخرى.', retry: 'إعادة المحاولة' }
+  : { dashboard: 'Dashboard', invoices: 'Invoices', products: 'Products', services: 'Services', inventory: 'Inventory', purchases: 'Purchases', expenses: 'Expenses', team: 'Team', reports: 'Reports', soon: 'Soon', shop: 'Shop', account: 'Account', logout: 'Sign out', openMenu: 'Open menu', closeMenu: 'Close menu', loadFailed: 'Unable to load shop data. Please try again.', retry: 'Retry' })
 
 const links = computed(() => [
   { to: '/products', label: copy.value.products, icon: 'ledger' },
   { to: '/inventory', label: copy.value.inventory, icon: 'wallet' },
+  { to: '/purchases', label: copy.value.purchases, icon: 'cash' },
   { to: '/services', label: copy.value.services, icon: 'invoice' },
   { to: '/expenses', label: copy.value.expenses, icon: 'cash' },
 ])

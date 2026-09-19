@@ -31,7 +31,7 @@ const requestId = ref<string | null>(null)
 
 const copy = computed(() => isArabic.value ? {
   title: 'المخزون', subtitle: 'استلام يدوي وشطب كميات مع سجل دفعات وحركة محفوظة.',
-  manualOnly: 'المشتريات من الموردين والبيع الآلي من المخزون قيد العمل. هذه شاشة التعديلات اليدوية فقط.',
+  manualOnly: 'تزيد مشتريات الموردين المخزون تلقائيًا. هذه الشاشة للتعديلات اليدوية؛ الخصم الآلي عند البيع قيد العمل.',
   planUnavailable: 'المخزون غير مشمول في خطتك الحالية. يتطلب خطة Pro.',
   noShop: 'أنشئ متجرًا أولًا من لوحة التحكم.', dashboard: 'لوحة التحكم',
   noProducts: 'أضف منتجًا أولًا قبل تسجيل المخزون.', products: 'المنتجات',
@@ -45,7 +45,7 @@ const copy = computed(() => isArabic.value ? {
   confirmWriteoff: 'تأكيد شطب الكمية من المخزون؟',
 } : {
   title: 'Inventory', subtitle: 'Manual receipts and write-offs with batch and movement history.',
-  manualOnly: 'Supplier purchases and automatic stock deduction on sales are in progress. This screen handles manual adjustments only.',
+  manualOnly: 'Supplier purchases now increase stock automatically. This screen handles manual adjustments; automatic sale deductions are still in progress.',
   planUnavailable: 'Inventory is not included in your current plan. It requires Pro.',
   noShop: 'Create a shop from the dashboard first.', dashboard: 'Dashboard',
   noProducts: 'Add a product before recording stock.', products: 'Products',

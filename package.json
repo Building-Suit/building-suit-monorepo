@@ -8,9 +8,9 @@
     "pnpm": "10.33.0"
   },
   "scripts": {
-    "dev:ledger": "pnpm --filter @building-suit/ledger-suit dev --port 3000",
-    "dev:shop": "pnpm --filter @building-suit/shop-suit dev --port 3001",
-    "dev:docs": "pnpm --filter @building-suit/docs dev --port 3002",
+    "dev:ledger": "node tooling/git/dev.mjs ledger",
+    "dev:shop": "node tooling/git/dev.mjs shop",
+    "dev:docs": "node tooling/git/dev.mjs docs",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint && eslint packages tooling",
