@@ -67,6 +67,35 @@ export type ShopRpcDatabase = {
         }
         Returns: string
       }
+      create_vendor: {
+        Args: {
+          p_shop_id: string
+          p_name: string
+          p_contact_name: string | null
+          p_phone: string | null
+          p_email: string | null
+          p_address: string | null
+          p_tax_number: string | null
+          p_notes: string | null
+        }
+        Returns: string
+      }
+      create_supplier_purchase: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_vendor_id: string
+          p_invoice_number: string | null
+          p_issued_on: string
+          p_notes: string | null
+          p_items: Array<{ product_id: string; quantity: number; unit_cost: number }>
+        }
+        Returns: string
+      }
+      void_supplier_purchase: {
+        Args: { p_shop_id: string; p_purchase_id: string }
+        Returns: undefined
+      }
     }
     Enums: Record<string, never>
     CompositeTypes: Record<string, never>
