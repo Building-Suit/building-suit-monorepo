@@ -53,7 +53,7 @@
       "staging": {
         "projectRef": "jvvelvftpfnlogalgxgv",
         "appUrl": "https://stg.shop.building-suit.com",
-        "status": "public schema migrated and SQL tests passed; Auth settings verified; SMTP and app deployment pending"
+        "status": "public schema and Shop plan catalog initialized; SQL tests and public catalog query passed; SMTP and app deployment pending"
       }
     }
   },
