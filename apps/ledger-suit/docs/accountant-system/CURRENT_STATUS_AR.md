@@ -4,6 +4,7 @@
 
 - المستودع: `Building-Suit/building-suit-monorepo`.
 - الفرع: `codex/ledger-suit/accountant-system-continuation`؛ worktree: `.local/worktrees/ledger-accountant-review` داخل المستودع.
+- التزام الكود والأدلة المطابقة للشجرة المختبرة: `a13ca461a030c45bb275ec5b3715dc30f77e97df`؛ الالتزام اللاحق لتثبيت سجل التسليم وثائقي فقط.
 - الأساس وHEAD قبل التنفيذ: `6259188af06d6a49b03c5fe15708ea3411032113` من `origin/stg` بعد fetch وفحص GitHub.
 - لا PR ميزات يستهدف `stg` وقت البدء؛ PR الإصدار [#3](https://github.com/Building-Suit/building-suit-monorepo/pull/3) يستهدف `main` ولا يتغير. هدف المراجعة المتوقع `stg` مع إعادة الفحص قبل النشر.
 - المرحلة الحالية: ١، اعتماد النموذج. الحزمة الوحيدة النشطة: [AS-S1-01](work-packages/AS-S1-01.md).
@@ -11,9 +12,11 @@
 - عُثر على عمل مستقل `codex/ledger-suit/account-nature` عند `00bc4d7` خارج الأساس. لم يُنقل أو يُعدّل ولا يُعد دليل اعتماد سياسات.
 - التنفيذ جاهز للمراجعة. المرجع PASS (٤)، المتصفح الاصطناعي PASS (٩)، pnpm test PASS (٢٤)، check/lint/typecheck/build وtypecheck للنموذج PASS. المحاسب والنشر: `NOT_STARTED`.
 - التغييرات المنفذة: وثائق هذه الحزمة، توجيه محدود في AGENTS، fixture حسابي واختبار Node، نموذج قراءة اصطناعي تحت tests واختبارات Playwright. لا تغيير مشترك أو SQL.
-- فحص preflight: PASS في worktree الجديد؛ التحذيرات تخص فروعًا مدمجة محفوظة في worktrees أخرى.
+- آخر preflight: PASS عند 2026-09-19T03:49:49Z؛ stg لم يتغير، ولا PR ميزات مفتوح. التحذيرات تخص فروعًا مدمجة محفوظة في worktrees أخرى.
 - الموافقات الباقية: [AS-D01–AS-D07](DECISIONS_AR.md). لا تمنع الحزمة الآمنة الحالية؛ تمنع اعتبار المرحلة ١ مقبولة والانتقال المالي التالي.
 - الحالة المحلية: تنفيذ وأدلة محلية غير منشورة؛ لا PR أو push أو merge أو نشر تطبيق أو ترحيلات. توقيت الدليل 03:38–03:48 UTC؛ تفاصيل النتائج في سجل الحزمة.
 - SQL وانحدار Accounts/core-finance: BLOCKED، قاعدة الاختبار الحالية تخص account-nature وبها migration خارج الأساس.
 - نشر فرع المراجعة: BLOCKED بتحقق إعدادات المزودين؛ Supabase Automatic branching غير مكشوف بالأدوات، Vercel connector يفشل بخطأ عقد. إعدادات ملفات المستودع لا تثبت لوحة التحكم؛ راجع سجل الحزمة.
 - المهمة التالية بعد دليل هذه الحزمة: `AS-S1-02`، مراجعة المؤسس والمحاسب للنموذج والإجابات المسجلة. لا تبدأ المرحلة ٢ تلقائيًا.
+
+ملفات المراجعة المحلية غير المتعقبة، داخل worktree نفسه: `.local/review/AS-S1-01.bundle`، `.local/review/AS-S1-01.diff`، `.local/review/AS-S1-01-pr.md`. الفرع والالتزامات محفوظة في Git المحلي، ولم تُدفع؛ لن تظهر تلقائيًا لجهاز/جلسة لا يملك هذا المستودع. اقرأ bundle أو هذه الشجرة بدل افتراض وجود PR.
