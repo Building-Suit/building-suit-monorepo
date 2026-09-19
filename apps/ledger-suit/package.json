@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "test:e2e": "playwright test",
     "paymob:provision-plans": "deno run --allow-env=PAYMOB_BASE_URL,PAYMOB_API_KEY,PAYMOB_MOTO_INTEGRATION_ID --allow-net --env-file=.env scripts/provision-paymob-plans.ts",
-    "prepare": "nuxt prepare"
+    "prepare": "nuxt prepare",
+    "test:unit": "node --test tests/unit/*.test.mjs"
   },
   "dependencies": {
     "@fontsource-variable/manrope": "5.3.0",
@@ -30,7 +31,8 @@
     "tailwindcss": "4.3.3",
     "@nuxt/eslint": "1.17.0",
     "@building-suit/nuxt-layer": "workspace:*",
-    "@building-suit/contracts": "workspace:*"
+    "@building-suit/contracts": "workspace:*",
+    "@building-suit/data-access": "workspace:*"
   },
   "devDependencies": {
     "@playwright/test": "1.62.1",

@@ -14,7 +14,7 @@
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint && eslint packages tooling",
-    "test": "node --test packages/*/tests/*.test.mjs tooling/database/tests/*.test.mjs tooling/git/tests/*.test.mjs",
+    "test": "node --test apps/*/tests/unit/*.test.mjs packages/*/tests/*.test.mjs tooling/database/tests/*.test.mjs tooling/git/tests/*.test.mjs",
     "tokens:generate": "node tooling/design-tokens/generate.mjs",
     "tokens:check": "node tooling/design-tokens/generate.mjs --check",
     "docs:generate": "node tooling/docs/generate.mjs",

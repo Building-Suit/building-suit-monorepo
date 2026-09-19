@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /**
- * Renders an integer minor-unit amount. The division to a decimal happens here
- * and nowhere else — no component performs arithmetic on money.
+ * Renders integer minor units through the exact decimal formatter.
+ * Components do not convert financial values through floating-point arithmetic.
  */
 const props = withDefaults(defineProps<{
   amountMinor: number | string | null | undefined
@@ -21,17 +21,17 @@ const props = withDefaults(defineProps<{
 const { baseCurrency } = useTenant()
 const { locale } = useI18n()
 
-const value = computed(() => Number(props.amountMinor ?? 0))
+const value = computed(() => props.amountMinor ?? 0)
 const code = computed(() => props.currency ?? baseCurrency.value)
 
 const formatted = computed(() => {
   const text = formatMoney(value.value, code.value, locale.value)
-  return props.explicitSign && value.value > 0 ? `+${text}` : text
+  return props.explicitSign && BigInt(value.value) > 0n ? `+${text}` : text
 })
 
 const tone = computed(() => {
-  if (!props.signed || value.value === 0) return ''
-  return value.value > 0 ? 'text-[var(--bs-status-success)]' : 'text-[var(--bs-status-error)]'
+  if (!props.signed || BigInt(value.value) === 0n) return ''
+  return BigInt(value.value) > 0n ? 'text-[var(--bs-status-success)]' : 'text-[var(--bs-status-error)]'
 })
 </script>
 
