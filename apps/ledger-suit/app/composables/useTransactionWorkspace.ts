@@ -41,7 +41,7 @@ export function useTransactionWorkspace() {
   }
   readRoute()
   watch(() => route.query, () => {
-    const incoming = Object.fromEntries(Object.entries(route.query).filter(([name]) => name !== 'create'))
+    const incoming = Object.fromEntries(Object.entries(route.query).filter(([name]) => !['create', 'import'].includes(name)))
     if (Object.keys(incoming).length !== Object.keys(query.value).length || Object.entries(query.value).some(([name, value]) => incoming[name] !== value)) readRoute()
   })
   watch(() => filters.search, value => {
@@ -73,9 +73,9 @@ export function useTransactionWorkspace() {
     return next
   })
   watch(query, next => {
-    const existing = Object.fromEntries(Object.entries(route.query).filter(([key]) => !['create'].includes(key)))
+    const existing = Object.fromEntries(Object.entries(route.query).filter(([key]) => !['create', 'import'].includes(key)))
     const equal = Object.keys(existing).length === Object.keys(next).length && Object.entries(next).every(([key, value]) => existing[key] === value)
-    if (!equal) void router.replace({ query: { ...next, ...(route.query.create ? { create: route.query.create } : {}) } })
+    if (!equal) void router.replace({ query: { ...next, ...(route.query.create ? { create: route.query.create } : {}), ...(route.query.import ? { import: route.query.import } : {}) } })
   })
 
   const validation = computed(() => {

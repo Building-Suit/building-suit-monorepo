@@ -421,6 +421,53 @@
     "noMatchHint": "Try widening the date range or clearing a filter.",
     "noMatchAction": "Clear filters"
   },
+  "csv": {
+    "columns": {
+      "account_type": "Account type",
+      "type": "Transaction type",
+      "date": "Date",
+      "amount": "Amount",
+      "account": "Account",
+      "category": "Category",
+      "description": "Description",
+      "reference": "Reference",
+      "counterparty": "Counterparty",
+      "currency": "Currency",
+      "exchange_rate": "Exchange rate",
+      "section": "Section",
+      "code": "Account code",
+      "debit": "Debit",
+      "credit": "Credit",
+      "activity": "Activity",
+      "net_movement": "Net movement",
+      "memo": "Memo",
+      "running_balance": "Running balance",
+      "report_date": "Report date",
+      "presentation": "Presentation",
+      "account_id": "Account ID",
+      "classification_effective_from": "Classification effective from",
+      "classification_id": "Classification ID"
+    },
+    "example": {
+      "account": "Replace with account name or code",
+      "incomeCategory": "Replace with income category",
+      "expenseCategory": "Replace with expense category",
+      "incomeDescription": "Example income — replace this row",
+      "expenseDescription": "Example expense — replace this row"
+    },
+    "filenames": {
+      "template": "transaction-import-template",
+      "profit_loss": "profit-and-loss",
+      "balance_sheet": "balance-sheet",
+      "trial_balance": "trial-balance",
+      "cash_flow": "cash-flow",
+      "general_ledger": "general-ledger"
+    },
+    "downloadTemplate": "Download CSV template",
+    "templateHint": "The template follows your selected language. Replace the two example rows with your own transactions. Use existing account names/codes and income or expense categories. Dates: YYYY-MM-DD; amounts: 100.00. Arabic digits are also accepted.",
+    "languageHint": "Arabic and English column names are recognized automatically. Review the column mapping before validation.",
+    "close": "Close import"
+  },
   "imports": {
     "eyebrow": "Transaction import",
     "title": "Import transactions from CSV",

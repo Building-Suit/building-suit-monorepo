@@ -421,6 +421,53 @@
     "noMatchHint": "جرّب توسيع النطاق الزمني أو إزالة أحد عوامل التصفية.",
     "noMatchAction": "مسح التصفية"
   },
+  "csv": {
+    "columns": {
+      "account_type": "نوع الحساب",
+      "type": "نوع المعاملة",
+      "date": "التاريخ",
+      "amount": "المبلغ",
+      "account": "الحساب",
+      "category": "التصنيف",
+      "description": "الوصف",
+      "reference": "المرجع",
+      "counterparty": "الطرف الآخر",
+      "currency": "العملة",
+      "exchange_rate": "سعر الصرف",
+      "section": "القسم",
+      "code": "كود الحساب",
+      "debit": "مدين",
+      "credit": "دائن",
+      "activity": "النشاط",
+      "net_movement": "صافي الحركة",
+      "memo": "البيان",
+      "running_balance": "الرصيد الجاري",
+      "report_date": "تاريخ التقرير",
+      "presentation": "بند العرض",
+      "account_id": "معرف الحساب",
+      "classification_effective_from": "تاريخ سريان التصنيف",
+      "classification_id": "معرف التصنيف"
+    },
+    "example": {
+      "account": "استبدل باسم الحساب أو كوده",
+      "incomeCategory": "استبدل بتصنيف الإيراد",
+      "expenseCategory": "استبدل بتصنيف المصروف",
+      "incomeDescription": "مثال إيراد — استبدل هذا الصف",
+      "expenseDescription": "مثال مصروف — استبدل هذا الصف"
+    },
+    "filenames": {
+      "template": "قالب-استيراد-المعاملات",
+      "profit_loss": "الأرباح-والخسائر",
+      "balance_sheet": "المركز-المالي",
+      "trial_balance": "ميزان-المراجعة",
+      "cash_flow": "التدفقات-النقدية",
+      "general_ledger": "الأستاذ-العام"
+    },
+    "downloadTemplate": "تنزيل قالب CSV",
+    "templateHint": "القالب بلغة الواجهة الحالية. استبدل صفي المثال بمعاملاتك، واستخدم أسماء أو أكواد الحسابات وتصنيفات الإيراد أو المصروف الموجودة. التاريخ: YYYY-MM-DD؛ المبلغ: 100.00. تُقبل الأرقام العربية أيضًا.",
+    "languageHint": "نتعرف تلقائيًا على أسماء الأعمدة العربية والإنجليزية. راجع مطابقة الأعمدة قبل التحقق.",
+    "close": "إغلاق الاستيراد"
+  },
   "imports": {
     "eyebrow": "استيراد المعاملات",
     "title": "استيراد المعاملات من CSV",

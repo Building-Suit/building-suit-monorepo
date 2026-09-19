@@ -185,19 +185,11 @@ const exportPending = ref(false)
 const exportError = ref('')
 watch(reportScope, () => { exportError.value = '' })
 
-function downloadCsv(filename: string, csv: string) {
-  const url = URL.createObjectURL(new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' }))
-  const link = document.createElement('a')
-  link.href = url
-  link.download = filename
-  link.click()
-  URL.revokeObjectURL(url)
-}
-
 async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_balance' | 'cash_flow' | 'general_ledger') {
   if (!currentId.value || exportPending.value) return
   const exportScope = reportScope.value
   const exportLocale = locale.value
+  const exportPeriod = ['profit_loss', 'cash_flow', 'general_ledger'].includes(report) ? `${from.value}_${to.value}` : asOf.value
   exportPending.value = true
   exportError.value = ''
   try {
@@ -213,14 +205,7 @@ async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_bal
     })
     if (error) throw error
     if (reportScope.value !== exportScope || locale.value !== exportLocale) return
-    const filenames = {
-      profit_loss: `profit-and-loss-${from.value}-to-${to.value}.csv`,
-      balance_sheet: `balance-sheet-${asOf.value}.csv`,
-      trial_balance: `trial-balance-${asOf.value}.csv`,
-      cash_flow: `cash-flow-${from.value}-to-${to.value}.csv`,
-      general_ledger: `general-ledger-${from.value}-to-${to.value}.csv`,
-    }
-    downloadCsv(filenames[report], data)
+    downloadCsv(`${t(`csv.filenames.${report}`)}-${exportPeriod}.csv`, localizeReportCsv(data, report, t))
   }
   catch {
     if (reportScope.value === exportScope) exportError.value = t('reports.exportFailed')

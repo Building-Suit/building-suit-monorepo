@@ -1,0 +1,71 @@
+{
+  "package": "AS-UX-02",
+  "date": "2026-09-19",
+  "base": "1ca570993359f7a8637195e1f8e567748baaf59a",
+  "branch": "codex/ledger-suit/localized-csv",
+  "results": {
+    "unit": {
+      "passed": 49,
+      "failed": 0
+    },
+    "browser": {
+      "combined_passed": 25,
+      "readonly_passed": 2,
+      "failed": 0
+    },
+    "lint": "PASS",
+    "typecheck": "PASS",
+    "build": "PASS",
+    "workspace": "PASS",
+    "preview": "PASS",
+    "sql": "NOT_RUN; no schema changes"
+  },
+  "backend": {
+    "project": "ledger-account-activity-20260919",
+    "api": "http://127.0.0.1:65321",
+    "database_port": 65322,
+    "reset": false
+  },
+  "source_sha256": {
+    "apps/ledger-suit/app/components/CsvImportDialog.vue": "c1d48f6c68d6d015ddf912a9bac6fbe0b0f7175b79405b3425a1c97dd3bbc6f9",
+    "apps/ledger-suit/app/composables/usePlanUsage.ts": "095725bb5abc51408afca4d9cf2a08740abe79267ad1125da8ce5ad85e4b1779",
+    "apps/ledger-suit/app/composables/useTransactionWorkspace.ts": "bd440bced0874ea3efee48879cbce969e99533a818ac4a18be6258cff65fd872",
+    "apps/ledger-suit/app/pages/imports.vue": "a26e390e2d5d69204af2f53ad239797bdbf532ffcb1941b4474eb42244315964",
+    "apps/ledger-suit/app/pages/reports.vue": "dc6a11a5bf020f05aefbbf3e4572b898a35dd66a87046b478eeb44680b55aaaf",
+    "apps/ledger-suit/app/pages/transactions.vue": "ba1e45534cea9398420a23c1310a3b2108ef66194eae5cccb4cd1ec68bf1e073",
+    "apps/ledger-suit/app/utils/csv.ts": "f0b70f72e9151d4456cfcd5f8ea7c866baa49a8ced690bbf128e22bf302523cc",
+    "apps/ledger-suit/app/utils/localizedCsv.ts": "43ae76a07a4f1ba9320c7a63f711a5c32560ec94f823c9305ec6dd55c2d52489",
+    "apps/ledger-suit/i18n/locales/ar.json": "08581f1846a863105b5d6c1f6f7bea469a6c0853d47a949d33bfcd47dbf5f29a",
+    "apps/ledger-suit/i18n/locales/en.json": "036eba5075dd5f3caf9c5182172d74dcde8c26c6ea273e7a511122dc5bc193c4",
+    "apps/ledger-suit/tests/e2e/csv-import.spec.ts": "23247802abf4a03abd10c2b8f4a79eececea7a1d526208edb3fbd93be2bbe6b9",
+    "apps/ledger-suit/tests/e2e/csv-localization.spec.ts": "d2cc2db80be5fbbe0376b27464d812135f5f1c199d543b97b8eea5322c301192",
+    "apps/ledger-suit/tests/e2e/report-exports.spec.ts": "49dfe8a418d2461789b006c3c0c98abf268a469a18cf2577f5ecaff06b90cbdd",
+    "apps/ledger-suit/tests/e2e/usage.spec.ts": "2afae78affd18db66190756161a90f3bcbe4a59242c448b4db2b9738a6891c21",
+    "apps/ledger-suit/tests/unit/localized-csv.test.mjs": "1681b5dcb65dee09571f3c4681a473e5b2e86264c72f451670cec073cdda8315"
+  },
+  "log_sha256": {
+    "unit-final.log": "c6f790bee090aca439f78e72c57caa6886d7611d9d86df2e1ad21e7e55f31abf",
+    "check-final.log": "b0f68e10bb6d26ef3a164c3674c3e0a4396aa00ed1ac47566a29d9b3963024e9",
+    "lint-final.log": "9d620a2b8b1bb79c21020f829bc001f1dbd235caeeffe07d53058530668ac3f1",
+    "typecheck-final.log": "941f08cd587f378adfd9f0fa825e19e336b397483622aa3a94542957af009374",
+    "build-final.log": "fcc339b8fd70f4008a6f3c0c59b093f4031610e42d008bc92fb01e5eb78c12b8",
+    "browser-final.log": "352b6c11919ad69f55a0b87b4948f3510fc2837f70693e1064f4bedfbe081429",
+    "browser-readonly-final.log": "c40742fc17c34bc7d4197cbf0a6744119f3d320e4d8a4d73a502d6c8c388ac38",
+    "preview-verification.log": "06033778d4d5c7f47d9c48b046f4a7ca479ee70d53925865cb5575e5c8f8914e"
+  },
+  "artifact_sha256": {
+    "ar-import-modal.png": "3eb10de46401d6d60549622e29b5daa7450841994252572a277a3aa0924fb04d",
+    "en-import-mobile.png": "aa2a3e69f559ecb562a56a42d4022201908bb88394f4d5aad21c443f084a030c",
+    "en-import-modal.png": "7d332d5077a5551be90fe34acad1c9087e0c30b932101ddc882399221000b09b",
+    "preview-ar-mobile.png": "7a00a55bbd094e482f900e8dca80bde7ebc6a6077c15eb775a805ac58f33d34b",
+    "preview-ar-modal.png": "0782fd91fdfacb677a5db8948ea9fd9d832d98ee0b7119cbaebc4e2cfc9936bb",
+    "preview-en-modal.png": "c0aea6d815263cc6558049e00ff56edc38a9a6edad9f37e342f5e055be1d05f9",
+    "template-ar.csv": "1f404197a676d07eb768475cbc1c53190d830c0b9aaa490c058f3a4538572461",
+    "template-en.csv": "b70d40459c2b788a91cf8560f9c6dac60bfe89e464353a27bc980b21b7525507"
+  },
+  "approval_blockers": [],
+  "hosted_writes": false,
+  "merge": "NOT_PERFORMED",
+  "deployment": "NOT_PERFORMED",
+  "accountant_uat": "NOT_RUN"
+}
