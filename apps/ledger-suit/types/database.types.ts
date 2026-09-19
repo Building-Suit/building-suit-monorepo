@@ -36,6 +36,7 @@ export type Database = {
     Tables: {
       accounts: {
         Row: {
+          account_role: string
           archived_at: string | null
           cash_flow_section: Database["public"]["Enums"]["cash_flow_section"]
           code: string | null
@@ -59,6 +60,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          account_role?: string
           archived_at?: string | null
           cash_flow_section?: Database["public"]["Enums"]["cash_flow_section"]
           code?: string | null
@@ -82,6 +84,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          account_role?: string
           archived_at?: string | null
           cash_flow_section?: Database["public"]["Enums"]["cash_flow_section"]
           code?: string | null
@@ -2342,6 +2345,7 @@ export type Database = {
       account_balances: {
         Row: {
           account_id: string | null
+          account_role: string | null
           balance_minor: number | null
           classification_locked: boolean | null
           code: string | null
@@ -2868,6 +2872,7 @@ export type Database = {
       }
       create_account: {
         Args: {
+          p_account_role?: string
           p_code?: string
           p_contra_account_id?: string
           p_currency?: string

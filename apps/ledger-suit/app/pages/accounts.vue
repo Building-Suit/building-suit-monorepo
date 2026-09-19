@@ -53,6 +53,7 @@ interface BalanceRow {
   type: Database['public']['Enums']['account_type']
   subtype: string
   currency: string
+  account_role: 'posting' | 'group'
   normal_balance: Database['public']['Enums']['normal_balance']
   contra_account_id: string | null
   is_system: boolean
@@ -77,7 +78,7 @@ const { data: balances, pending: balancesPending, error: balancesError, refresh:
 
   const rows = await fetchAccountPages<BalanceRow>((from, to) => supabase
     .from('account_balances')
-    .select('organization_id, account_id, code, name, type, subtype, currency, normal_balance, contra_account_id, is_system, classification_locked, net_debit_minor, statement_balance_minor, entry_count, is_archived, is_liquid, parent_account_id', { count: 'exact' })
+    .select('organization_id, account_id, code, name, type, subtype, currency, account_role, normal_balance, contra_account_id, is_system, classification_locked, net_debit_minor, statement_balance_minor, entry_count, is_archived, is_liquid, parent_account_id', { count: 'exact' })
     .eq('organization_id', organizationId)
     .order('code', { ascending: true, nullsFirst: false })
     .order('account_id')
@@ -169,6 +170,7 @@ const editorError = ref<string | null>(null)
 const form = reactive({
   name: '', code: '', type: 'asset' as BalanceRow['type'], subtype: 'bank', currency: baseCurrency.value,
   normalBalance: 'debit' as BalanceRow['normal_balance'], contraAccountId: '',
+  accountRole: 'posting' as BalanceRow['account_role'], parentAccountId: '',
 })
 
 watch(balanceKey, () => {
@@ -180,7 +182,7 @@ watch(balanceKey, () => {
   editorOpen.value = false
   editing.value = null
   editorError.value = null
-  Object.assign(form, { name: '', code: '', contraAccountId: '' })
+  Object.assign(form, { name: '', code: '', contraAccountId: '', parentAccountId: '', accountRole: 'posting' })
 }, { flush: 'sync' })
 
 const subtypeOptions: Record<BalanceRow['type'], string[]> = {
@@ -200,7 +202,7 @@ function openCreate() {
     subtype: subtypeOptions[tab.value][0]!,
     currency: baseCurrency.value,
     normalBalance: defaultAccountNature(tab.value),
-    contraAccountId: '',
+    contraAccountId: '', accountRole: 'posting', parentAccountId: '',
   })
   editorError.value = null
   editorOpen.value = true
@@ -216,7 +218,8 @@ watch(() => route.query.create, (value) => {
 function openEdit(row: BalanceRow) {
   editing.value = row
   Object.assign(form, { name: row.name, code: row.code ?? '', type: row.type, subtype: row.subtype,
-    currency: row.currency, normalBalance: row.normal_balance, contraAccountId: row.contra_account_id ?? '' })
+    currency: row.currency, normalBalance: row.normal_balance, contraAccountId: row.contra_account_id ?? '',
+    accountRole: row.account_role, parentAccountId: row.parent_account_id ?? '' })
   editorError.value = null
   editorOpen.value = true
 }
@@ -233,11 +236,11 @@ watch(() => form.subtype, () => {
 })
 
 const natureLocked = computed(() => Boolean(editing.value && (
-  editing.value.classification_locked || editing.value.is_system
+  editing.value.account_role === 'group' || editing.value.classification_locked || editing.value.is_system
   || scopedBalances.value.some(account => account.contra_account_id === editing.value?.account_id)
 )))
 const contraOptions = computed(() => scopedBalances.value.filter(account =>
-  account.account_id !== editing.value?.account_id && !account.is_archived
+  account.account_role === 'posting' && account.account_id !== editing.value?.account_id && !account.is_archived
   && !account.contra_account_id && account.type === form.type && account.currency === form.currency
   && account.normal_balance !== form.normalBalance,
 ))
@@ -245,6 +248,16 @@ watch([() => form.normalBalance, () => form.currency], () => {
   if (!natureLocked.value && !contraOptions.value.some(account => account.account_id === form.contraAccountId)) {
     form.contraAccountId = ''
   }
+})
+const parentOptions = computed(() => scopedBalances.value.filter(account =>
+  account.account_role === 'group' && !account.is_archived
+  && account.type === form.type && account.currency === form.currency,
+))
+watch([() => form.type, () => form.currency], () => {
+  if (!editing.value && !parentOptions.value.some(account => account.account_id === form.parentAccountId)) form.parentAccountId = ''
+})
+watch(() => form.accountRole, (role) => {
+  if (role === 'group') form.contraAccountId = ''
 })
 function accountName(id: string) {
   return scopedBalances.value.find(account => account.account_id === id)?.name ?? t('common.dash')
@@ -275,7 +288,9 @@ async function saveAccount() {
           p_subtype: form.subtype as Database['public']['Enums']['account_subtype'],
           p_currency: form.currency,
           p_normal_balance: form.normalBalance,
-          p_contra_account_id: form.contraAccountId || undefined,
+          p_contra_account_id: form.accountRole === 'posting' ? form.contraAccountId || undefined : undefined,
+          p_account_role: form.accountRole,
+          p_parent_account_id: form.parentAccountId || undefined,
         })
     const { data, error } = await call
     if (error) throw error
@@ -286,7 +301,7 @@ async function saveAccount() {
     editorOpen.value = false
     toasts.success(t('accounts.saved'))
     await refreshBalances()
-    await refreshNuxtData('org:accounts')
+    await refreshNuxtData(['org:accounts', 'org:categories'])
   }
   catch (error) { if (balanceKey.value === requestKey) editorError.value = describeError(error) }
   finally { submitting.value = false }
@@ -299,7 +314,7 @@ async function archiveAccount(row: BalanceRow) {
   if (error) return toasts.error(t('errors.generic'), describeError(error))
   toasts.success(t('accounts.archived'))
   await refreshBalances()
-  await refreshNuxtData('org:accounts')
+  await refreshNuxtData(['org:accounts', 'org:categories'])
 }
 const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Boolean(editorOpen.value)))
 </script>
@@ -337,7 +352,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
     </div>
 
     <div class="flex flex-wrap items-end gap-3">
-      <div class="min-w-0 flex-1 sm:max-w-md">
+      <div class="w-full min-w-0 sm:w-auto sm:flex-1 sm:max-w-md">
         <label for="account-search" class="mb-2 block text-sm font-semibold">{{ t('accounts.searchLabel') }}</label>
         <input id="account-search" ref="searchInput" v-model="search" type="search" class="ls-input" :placeholder="t('accounts.searchPlaceholder')" aria-controls="accounts-table" :disabled="balancesPending || !!balancesError">
       </div>
@@ -410,6 +425,9 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
               <span v-else-if="account.is_liquid" class="ls-badge ms-2 bg-[var(--bs-status-info-bg)] text-[var(--bs-status-info)]">{{ t('accounts.liquid') }}</span>
             </template>
           </Column>
+          <Column field="account_role" :header="t('accounts.role')">
+            <template #body="{ data: account }">{{ t(`accounts.roles.${account.account_role}`) }}</template>
+          </Column>
           <Column field="subtype" :header="t('accounts.subtype')">
             <template #body="{ data: account }">{{ t(`accounts.subtypes.${account.subtype}`) }}</template>
           </Column>
@@ -425,8 +443,11 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
           <Column field="entry_count" :header="t('accounts.entries')" body-class="ls-num text-fg-muted" />
           <Column field="net_debit_minor" :header="t('accounts.balance')" body-class="ls-num whitespace-nowrap">
             <template #body="{ data: account }">
-              <MoneyText :amount-minor="accountBalanceDisplay(account.net_debit_minor).amount" />
-              <span class="ms-2">{{ t(`accounts.sides.${accountBalanceDisplay(account.net_debit_minor).side}`) }}</span>
+              <span v-if="account.account_role === 'group'" class="text-fg-muted">{{ t('accounts.groupBalance') }}</span>
+              <template v-else>
+                <MoneyText :amount-minor="accountBalanceDisplay(account.net_debit_minor).amount" />
+                <span class="ms-2">{{ t(`accounts.sides.${accountBalanceDisplay(account.net_debit_minor).side}`) }}</span>
+              </template>
             </template>
           </Column>
           <Column v-if="can('accounts.update') || can('accounts.archive')" :header="t('accounts.actions')" body-class="whitespace-nowrap text-end">
@@ -462,6 +483,13 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
           <QuotaUsageMeter v-if="!editing" quota-key="max_accounts" compact />
           <FloatingField :label="t('accounts.name')"><input id="account-name" v-model="form.name" class="ls-input" required></FloatingField>
           <FloatingField :label="t('accounts.code')"><input id="account-code" v-model="form.code" class="ls-input" dir="ltr"></FloatingField>
+          <FloatingField :label="t('accounts.role')">
+            <select id="account-role" v-model="form.accountRole" class="ls-input" :disabled="!!editing" aria-describedby="account-role-help">
+              <option value="posting">{{ t('accounts.roles.posting') }}</option>
+              <option value="group">{{ t('accounts.roles.group') }}</option>
+            </select>
+          </FloatingField>
+          <p id="account-role-help" class="text-sm text-fg-muted">{{ t('accounts.roleHint') }}</p>
           <template v-if="!editing">
             <FloatingField :label="t('accounts.type')"><select id="account-type" v-model="form.type" class="ls-input"><option v-for="type in GROUP_TYPES" :key="type" :value="type">{{ t(`accounts.groups.${type}`) }}</option></select></FloatingField>
             <FloatingField :label="t('accounts.subtype')"><select id="account-subtype" v-model="form.subtype" class="ls-input"><option v-for="subtype in subtypeOptions[form.type]" :key="subtype" :value="subtype">{{ t(`accounts.subtypes.${subtype}`) }}</option></select></FloatingField>
@@ -474,6 +502,14 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
             </FloatingField>
             <p v-else class="text-sm text-fg-muted">{{ t('accounts.multiCurrencyUpgrade') }}</p>
           </template>
+          <FloatingField v-if="!editing" :label="t('accounts.parentGroup')">
+            <select id="account-parent" v-model="form.parentAccountId" class="ls-input">
+              <option value="">{{ t('accounts.noParent') }}</option>
+              <option v-for="account in parentOptions" :key="account.account_id" :value="account.account_id">{{ account.name }}</option>
+            </select>
+          </FloatingField>
+          <p v-else-if="form.parentAccountId" class="text-sm text-fg-muted">{{ t('accounts.parentAccount') }}: {{ accountName(form.parentAccountId) }}</p>
+          <template v-if="form.accountRole === 'posting'">
           <FloatingField :label="t('accounts.normalBalance')">
             <select id="account-normal-balance" v-model="form.normalBalance" class="ls-input" :disabled="natureLocked" aria-describedby="account-nature-help">
               <option value="debit">{{ t('accounts.sides.debit') }}</option>
@@ -490,6 +526,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
           </FloatingField>
           <p id="account-contra-help" class="text-sm text-fg-muted">{{ t('accounts.contraHint') }}</p>
           <p v-if="natureLocked" class="text-sm text-fg-muted">{{ t('accounts.natureLocked') }}</p>
+          </template>
           <p v-if="editorError" class="ls-error" role="alert">{{ editorError }}</p>
           <div class="flex justify-end gap-2"><button type="button" class="ls-btn" @click="dismiss">{{ t('common.cancel') }}</button><button class="ls-btn ls-btn-primary" :disabled="submitting">{{ submitting ? t('common.saving') : t('common.save') }}</button></div>
         </form>

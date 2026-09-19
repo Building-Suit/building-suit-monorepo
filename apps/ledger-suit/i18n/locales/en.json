@@ -112,6 +112,7 @@
     "results": {
       "open": "Open",
       "accounts": {
+    "parentAccount": "Parent account",
         "title": "Account balances",
         "body": "Live balances and entry counts are calculated from ledger lines. No separate stored balance can drift."
       },
@@ -497,6 +498,15 @@
     "reversedBody": "A reversing journal has been posted."
   },
   "accounts": {
+    "role": "Account role",
+    "roles": {
+      "posting": "Posting account",
+      "group": "Group account"
+    },
+    "roleHint": "Posting accounts receive entries. Groups organize accounts without direct entries. The role is fixed after creation.",
+    "parentGroup": "Parent group",
+    "noParent": "No parent group",
+    "groupBalance": "No direct entries",
     "normalBalance": "Natural balance",
     "contraAccount": "Account reduced (optional)",
     "noContra": "No linked account",
@@ -1132,6 +1142,10 @@
     }
   },
   "errors": {
+    "ACCOUNT_GROUP_NOT_POSTABLE": "Choose a posting account. Group accounts cannot receive journal entries or serve as a financial account.",
+    "ACCOUNT_ROLE_IMMUTABLE": "The account role is fixed after creation. Create a separate account for a different role.",
+    "ACCOUNT_PARENT_CLASSIFICATION_LOCKED": "This account has child accounts. Its type and currency must stay unchanged.",
+    "INVALID_ACCOUNT_PARENT": "Choose an active parent in the same organization, account type and currency.",
     "ACCOUNT_CONTRA_REFERENCED": "A contra account uses this classification. Review the linked accounts before changing it.",
     "INVALID_CONTRA_ACCOUNT": "Choose a compatible account in this organization with the same type and currency and the opposite natural balance. Contra accounts cannot reduce another contra account.",
     "generic": "Something went wrong. Please try again.",
