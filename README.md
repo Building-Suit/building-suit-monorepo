@@ -2,7 +2,7 @@
 
 Ledger Suit, Shop Suit and the Building Suit documentation app share one pnpm/Turbo workspace, Nuxt layer, Building design tokens, Atomic Design components and interaction controllers. Original source repositories remain untouched.
 
-Each product owns an independent Supabase production/staging pair in its own organization. Business tables and API objects use `public`. Auth identities and sessions are separate; Single Auth is deferred. The local projects are configured; hosted destinations and Shop’s scoped data transfer await your manual account/project setup. See [manual Supabase setup](docs/shared/supabase-manual-setup.md) and [status](docs/work-packages/STATUS.md).
+Each product owns an independent Supabase production/staging pair in its own organization. Business tables and API objects use `public`. Auth identities and sessions are separate; Single Auth is deferred. Local projects are configured, and all four hosted project refs have been verified. Shop's Production schema and scoped data copy are verified; its Staging schema is initialized and tested. SMTP, application deployment and final cutover remain pending. See [manual Supabase setup](docs/shared/supabase-manual-setup.md), the [Shop transfer record](docs/migration/shop-dedicated-projects.md) and [status](docs/work-packages/STATUS.md).
 
 ## Development
 
@@ -27,7 +27,7 @@ Fill each ignored app `.env` with its local API URL and browser-safe publishable
 | Ledger | `apps/ledger-suit/supabase` | 60321 | 60322 | 60324 |
 | Shop | `apps/shop-suit/supabase` | 61321 | 61322 | 61324 |
 
-Production/staging refs remain blank until verified. The requested CEO Owner role across four Free projects conflicts with Supabase’s documented account quota; resolve the role/plan arrangement during [manual setup](docs/shared/supabase-manual-setup.md). No paid resources or hosted changes are created by workspace setup.
+Verified production/staging refs are recorded in `docs/architecture/environments.json`. Account membership roles, including the requested CEO Owner arrangement, still require verification against Supabase's Free-project quota rules in [manual setup](docs/shared/supabase-manual-setup.md). No paid resources or hosted changes are created by workspace setup.
 
 ## Workspace commands
 
