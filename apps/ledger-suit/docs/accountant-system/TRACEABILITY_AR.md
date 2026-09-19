@@ -18,7 +18,7 @@
 | ق٠٦ | AS-S3-02 | transaction_flows | التكرار الحالي ليس قبولًا لاستيراد الافتتاح | NOT_STARTED | NOT_VERIFIED |
 | ق٠٧ | AS-S2-02 / AS-S3-01 | app.require_account، report_general_ledger | الأرشفة تمنع كشف الدالة؛ بوابة لاحقة | NOT_STARTED | NOT_VERIFIED |
 | ق٠٨ | AS-S2-02 / AS-S6-02 | accounts، reporting | التصنيف المؤرخ غير منفذ | NOT_STARTED | NOT_VERIFIED |
-| ق٩ | AS-S4-01 | انظر فجوة EVIDENCE_AR.md والخطة | غير مثبت كتدفق تطبيق مكتمل | NOT_STARTED | NOT_VERIFIED |
+| ق٠٩ | AS-S4-01 | انظر فجوة EVIDENCE_AR.md والخطة | غير مثبت كتدفق تطبيق مكتمل | NOT_STARTED | NOT_VERIFIED |
 | ق١٠ | AS-S4-01 | انظر فجوة EVIDENCE_AR.md والخطة | غير مثبت كتدفق تطبيق مكتمل | NOT_STARTED | NOT_VERIFIED |
 | ق١١ | AS-S4-01 | انظر فجوة EVIDENCE_AR.md والخطة | غير مثبت كتدفق تطبيق مكتمل | NOT_STARTED | NOT_VERIFIED |
 | ق١٢ | AS-S4-01 | انظر فجوة EVIDENCE_AR.md والخطة | غير مثبت كتدفق تطبيق مكتمل | NOT_STARTED | NOT_VERIFIED |
@@ -35,8 +35,10 @@
 | ق٢٣ | AS-S6-01 | انظر فجوة EVIDENCE_AR.md والخطة | غير مثبت كتدفق تطبيق مكتمل | NOT_STARTED | NOT_VERIFIED |
 | ق٢٤ | AS-S7-01 | انظر فجوة EVIDENCE_AR.md والخطة | غير مثبت كتدفق تطبيق مكتمل | NOT_STARTED | NOT_VERIFIED |
 
-اختبارات SQL الحالية تُراجع كمصدر مستقل، ولا ينسب إليها نجاح جديد دون تشغيل. لا يثبت نموذج الرفض الاصطناعي RLS. نتائج التشغيل الفعلية وrevision في [الحزمة](work-packages/AS-S1-01.md).
+اختبارات SQL الحالية دليل مستقل وحدوده هي الحالات التي تتحقق منها بالفعل؛ لا يثبت نموذج الرفض الاصطناعي RLS. نتائج التشغيل الفعلية وrevision في [الحزمة](work-packages/AS-S1-01.md).
 
 ## دليل الحزمة AS-S1-01
 
 2026-09-19: REF-01–03 تمر في أربعة اختبارات Node باستخدام BigInt ووحدات صغرى؛ ليست اختبارات تقارير الإنتاج. JR-01 يغطي اختبار journal/account/back/close؛ JR-02 يغطي stable IDs والحالات والعزل؛ JR-03 يغطي أربعة اختبارات اللغة/المظهر وعينة أسماء مستقلة. يوجد اختبار تاسع لإعلان سلوك التحديث. الصور والسجل وSHA في [سجل الحزمة](work-packages/AS-S1-01.md). SQL والانحدار المرتبط بقاعدة غير مشغّلين بسبب تعارض backend؛ لا ترقية لأي ق٠١–ق٢٤ أو UAT أو نشر.
+
+استئناف 2026-09-19، 09:11 UTC: SQL أصبح PASS (27 ملفًا، 678 assertion) على نسخة محلية مستقلة ذات تاريخ مطابق للمرشح، بما فيها 01_accounting_integrity_test.sql و02_tenant_isolation_test.sql. لا يثبت ذلك اكتمال كل شروط ق٠١ أو المثال المرجعي في الإنتاج؛ بقية ق٠١–ق٢٤ وUAT والنشر لا تتغير. انحدار المتصفح الحالي ما زال NOT_RUN. [دليل SQL وبصماته](../evidence/as-s1-01/sql-verification.json).
