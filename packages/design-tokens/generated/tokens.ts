@@ -3,9 +3,9 @@ export const tokens = {
   "$schema": "https://design-tokens.github.io/community-group/format/",
   "_meta": {
     "name": "Building Suit Design Tokens",
-    "version": "1.0.0",
-    "description": "Canonical, platform-agnostic design tokens for Building Suit. The platform files (colors.css, tailwind.colors.js, flutter_colors.dart) are generated from or kept in sync with this source.",
-    "source": "03-visual-identity/01_COLOR_SYSTEM.md, 02_TYPOGRAPHY_SYSTEM.md, 04_LAYOUT_AND_SPACING.md",
+    "version": "1.1.0",
+    "description": "Canonical Building Suit tokens. Shared application colors adopt Ledger Suit’s current neutral palette; CSS, TypeScript and Tailwind references are generated from this source.",
+    "source": "Building Suit brand package; Ledger Suit app/assets/css/tokens.css at 6fb152ee72e2b6b22269230917b2f9237fc2612d (also identical in current PRs 96 and 97). See ADR 0003.",
     "keyRule": "The primary action color flips by mode: light = Building Navy, dark = Premium Gold."
   },
   "color": {
@@ -84,6 +84,18 @@ export const tokens = {
       },
       "steelGray": {
         "value": "#9AA6B4"
+      },
+      "ink": {
+        "value": "#0B0B0D"
+      },
+      "charcoal": {
+        "value": "#141416"
+      },
+      "graphite": {
+        "value": "#1C1C1F"
+      },
+      "paper": {
+        "value": "#FFFFFF"
       }
     },
     "semantic": {
@@ -147,37 +159,37 @@ export const tokens = {
     "role": {
       "light": {
         "background": {
-          "value": "{color.brand.pearlWhite}"
+          "value": "{color.gray.50}"
         },
         "surface": {
-          "value": "{color.brand.white}"
+          "value": "{color.neutral.paper}"
         },
         "surfaceMuted": {
-          "value": "{color.brand.softSilver}"
+          "value": "{color.gray.100}"
         },
         "surfaceRaised": {
-          "value": "{color.brand.white}"
+          "value": "{color.neutral.paper}"
         },
         "text": {
-          "value": "{color.neutral.graphiteText}"
+          "value": "{color.neutral.ink}"
         },
         "textMuted": {
-          "value": "{color.neutral.slateGray}"
+          "value": "{color.gray.600}"
         },
         "textDisabled": {
-          "value": "{color.neutral.steelGray}"
+          "value": "{color.gray.400}"
         },
         "textOnPrimary": {
-          "value": "{color.brand.pearlWhite}"
+          "value": "{color.neutral.paper}"
         },
         "textOnAccent": {
           "value": "{color.brand.deepStructureNavy}"
         },
         "border": {
-          "value": "{color.brand.cloudGray}"
+          "value": "{color.gray.200}"
         },
         "borderStrong": {
-          "value": "{color.neutral.slateGray}"
+          "value": "{color.gray.500}"
         },
         "primary": {
           "value": "{color.brand.buildingNavy}"
@@ -186,45 +198,54 @@ export const tokens = {
           "value": "{color.brand.premiumGold}"
         },
         "link": {
-          "value": "{color.secondary.slateBlue}"
+          "value": "{color.gray.700}"
         },
         "focusRing": {
           "value": "{color.brand.premiumGold}"
+        },
+        "primaryPressed": {
+          "value": "{color.brand.deepStructureNavy}"
+        },
+        "accentHover": {
+          "value": "{color.brand.highlightGold}"
+        },
+        "primaryHover": {
+          "value": "#1E3A50"
         }
       },
       "dark": {
         "background": {
-          "value": "{color.brand.midnightBackground}"
+          "value": "{color.neutral.ink}"
         },
         "surface": {
-          "value": "{color.brand.navySurface}"
+          "value": "{color.neutral.charcoal}"
         },
         "surfaceMuted": {
-          "value": "{color.brand.deepStructureNavy}"
+          "value": "{color.neutral.graphite}"
         },
         "surfaceRaised": {
-          "value": "{color.brand.navySurfaceRaised}"
+          "value": "{color.gray.800}"
         },
         "text": {
-          "value": "{color.brand.pearlWhite}"
+          "value": "{color.gray.50}"
         },
         "textMuted": {
-          "value": "{color.secondary.skySteel}"
+          "value": "{color.gray.400}"
         },
         "textDisabled": {
-          "value": "#4A5A6E"
+          "value": "{color.gray.600}"
         },
         "textOnPrimary": {
-          "value": "{color.brand.deepStructureNavy}"
+          "value": "{color.neutral.ink}"
         },
         "textOnAccent": {
-          "value": "{color.brand.deepStructureNavy}"
+          "value": "{color.neutral.ink}"
         },
         "border": {
-          "value": "{color.brand.steelBorder}"
+          "value": "{color.gray.800}"
         },
         "borderStrong": {
-          "value": "{color.secondary.skySteel}"
+          "value": "{color.gray.500}"
         },
         "primary": {
           "value": "{color.brand.premiumGold}"
@@ -233,11 +254,55 @@ export const tokens = {
           "value": "{color.brand.highlightGold}"
         },
         "link": {
-          "value": "{color.secondary.skySteel}"
+          "value": "{color.gray.300}"
         },
         "focusRing": {
           "value": "{color.brand.highlightGold}"
+        },
+        "primaryHover": {
+          "value": "{color.brand.highlightGold}"
+        },
+        "primaryPressed": {
+          "value": "{color.gold.600}"
+        },
+        "accentHover": {
+          "value": "{color.gold.300}"
         }
+      }
+    },
+    "gray": {
+      "50": {
+        "value": "#FAFAFA"
+      },
+      "100": {
+        "value": "#F4F4F5"
+      },
+      "200": {
+        "value": "#E4E4E7"
+      },
+      "300": {
+        "value": "#D4D4D8"
+      },
+      "400": {
+        "value": "#A1A1AA"
+      },
+      "500": {
+        "value": "#71717A"
+      },
+      "600": {
+        "value": "#52525B"
+      },
+      "700": {
+        "value": "#3F3F46"
+      },
+      "800": {
+        "value": "#27272A"
+      },
+      "900": {
+        "value": "#18181B"
+      },
+      "950": {
+        "value": "#111113"
       }
     }
   },
@@ -546,7 +611,7 @@ export const tokens = {
           "value": "{shadow.elevation3}"
         },
         "scrim": {
-          "value": "rgba(13, 27, 40, 0.48)"
+          "value": "rgba(11, 11, 13, 0.56)"
         }
       },
       "dark": {
@@ -557,7 +622,7 @@ export const tokens = {
           "value": "{shadow.elevation3Dark}"
         },
         "scrim": {
-          "value": "rgba(0, 0, 0, 0.64)"
+          "value": "rgba(0, 0, 0, 0.72)"
         }
       }
     }
