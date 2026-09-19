@@ -8,6 +8,7 @@ async function signIn(page: Page) {
   await page.getByRole('button', { name: 'Sign in', exact: true }).click()
   await expect(page).toHaveURL('/dashboard')
   await page.getByRole('link', { name: 'Accounts', exact: true }).first().click()
+  await page.getByRole('button', { name: 'Table view', exact: true }).click()
   await expect(page.getByLabel('Search accounts', { exact: true })).toBeEnabled()
 }
 

@@ -13,7 +13,7 @@ async function signIn(page: Page, email = 'owner@alpha.test') {
 for (const locale of ['en', 'ar']) {
   test(`${locale}: schedule presentation, retain previous report and export the dated classification`, async ({ page, browser }) => {
     await signIn(page)
-    await page.goto('/accounts')
+    await page.goto('/accounts?view=table')
     await expect(page.getByLabel('Search accounts', { exact: true })).toBeEnabled()
     const ar = locale === 'ar'
     if (ar) {
@@ -107,7 +107,7 @@ for (const locale of ['en', 'ar']) {
     const viewerContext = await browser.newContext({ baseURL: new URL(page.url()).origin })
     const viewer = await viewerContext.newPage()
     await signIn(viewer, 'viewer@alpha.test')
-    await viewer.goto('/accounts')
+    await viewer.goto('/accounts?view=table')
     await viewer.getByLabel('Search accounts', { exact: true }).fill(name)
     await viewer.getByRole('row').filter({ hasText: name }).getByRole('button', { name: 'Statement presentation', exact: true }).click()
     await expect(viewer.getByRole('dialog').getByRole('table')).toContainText('Property and equipment')

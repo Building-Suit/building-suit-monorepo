@@ -7,7 +7,6 @@ async function signIn(page: Page, email = 'owner@alpha.test') {
   await page.getByLabel('Password').fill('ledgersuit')
   await page.getByRole('button', { name: 'Sign in', exact: true }).click()
   await expect(page).toHaveURL('/dashboard')
-  await expect(page.getByTestId('section-skeleton')).toHaveCount(0)
 }
 
 function balance(organizationId: string, index: number, overrides = {}) {
@@ -47,6 +46,7 @@ async function fulfillPage(route: Route, rows: ReturnType<typeof balance>[]) {
 
 async function accounts(page: Page) {
   await page.getByRole('link', { name: 'Accounts', exact: true }).first().click()
+  await page.getByRole('button', { name: 'Table view', exact: true }).click()
   await expect(page.locator('main > [data-hydrated]')).toHaveAttribute('data-hydrated', 'true')
   await expect(page.getByLabel('Search accounts', { exact: true })).toBeEnabled()
 }
@@ -115,8 +115,9 @@ test('loads beyond the API cap before global name/code search and count', async 
   await page.getByLabel('Search accounts', { exact: true }).fill('1002')
   await expect(page.getByRole('table')).toContainText('Account 1002')
   await expect(page.getByTestId('account-result-count')).toHaveText('1 of 1003 Assets accounts')
-  await page.getByRole('link', { name: 'Expense', exact: true }).click()
-  await page.getByRole('button', { name: 'Add Expense' }).first().click()
+  await page.getByRole('link', { name: 'Transactions', exact: true }).first().click()
+  await page.getByRole('button', { name: 'Expense', exact: true }).click()
+  await page.getByRole('button', { name: 'New transaction', exact: true }).first().click()
   await expect(page.locator('#src option').filter({ hasText: 'Account 1002' })).toHaveCount(1)
   expect([...new Set(selectorOffsets)]).toEqual([0, 500, 1000])
 })
@@ -132,6 +133,7 @@ test('failed later page shows an actionable error, then retry loads the complete
   })
   await signIn(page)
   await page.getByRole('link', { name: 'Accounts', exact: true }).first().click()
+  await page.getByRole('button', { name: 'Table view', exact: true }).click()
   await expect(page.getByRole('alert')).toContainText('Accounts could not be loaded')
   await expect(page.getByRole('table')).toHaveCount(0)
   await expect(page.getByTestId('account-result-count')).toHaveCount(0)
@@ -154,8 +156,9 @@ test('viewer can search and sort but cannot create, edit or archive', async ({ p
 test('real create/edit/archive refresh the table and existing transaction selector without reload', async ({ page }) => {
   await signIn(page)
   // Mount the existing selector first, so this verifies cache refresh, not just a fresh page read.
-  await page.getByRole('link', { name: 'Expense', exact: true }).click()
-  await page.getByRole('button', { name: 'Add Expense' }).first().click()
+  await page.getByRole('link', { name: 'Transactions', exact: true }).first().click()
+  await page.getByRole('button', { name: 'Expense', exact: true }).click()
+  await page.getByRole('button', { name: 'New transaction', exact: true }).first().click()
   await expect(page.getByRole('dialog', { name: 'Expense' })).toBeVisible()
   await page.getByRole('dialog', { name: 'Expense' }).getByRole('button', { name: 'Close' }).click()
   await accounts(page)
@@ -178,8 +181,9 @@ test('real create/edit/archive refresh the table and existing transaction select
   await page.getByLabel('Account name', { exact: true }).fill(`${name} updated`)
   await page.getByRole('button', { name: 'Save', exact: true }).click()
   await expect(page.getByRole('table')).toContainText(`${name} updated`)
-  await page.getByRole('link', { name: 'Expense', exact: true }).click()
-  await page.getByRole('button', { name: 'Add Expense' }).first().click()
+  await page.getByRole('link', { name: 'Transactions', exact: true }).first().click()
+  await page.getByRole('button', { name: 'Expense', exact: true }).click()
+  await page.getByRole('button', { name: 'New transaction', exact: true }).first().click()
   await expect(page.locator('#src option').filter({ hasText: `${name} updated` })).toHaveCount(1)
   await page.getByRole('dialog', { name: 'Expense' }).getByRole('button', { name: 'Close' }).click()
   await accounts(page)

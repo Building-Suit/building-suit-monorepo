@@ -1,242 +1,85 @@
 <script setup lang="ts">
-import type { Database } from '~~/types/database.types'
-
 definePageMeta({ layout: 'default' })
-/**
- * The primary operational page.
- *
- * Filtering, sorting, searching and paging all happen in the database via
- * search_transactions(). The browser never holds the dataset — it holds one
- * page of it.
- */
-
-const supabase = useSupabaseClient<Database>()
-const { currentId, can, baseCurrency } = useTenant()
+const { can } = useTenant()
+const { writesAllowed } = useBilling()
 const { start } = useAddTransaction()
 const { t, locale } = useI18n()
+const route = useRoute()
+const router = useRouter()
 const { data: importsEnabled, pending: importsPending } = usePlanFeature('imports')
-
-useHead({ title: () => `${t('transactions.title')} · ${t('app.name')}` })
-
 const { data: categories } = useOrgCategories()
 const { data: accounts } = useOrgAccounts()
-
-const PAGE_SIZE = 25
-
-type TxnStatus = Database['public']['Enums']['transaction_status']
-type TxnType = Database['public']['Enums']['transaction_type']
-
-const filters = reactive({
-  search: '',
-  from: '',
-  to: '',
-  status: '' as '' | TxnStatus,
-  type: '' as '' | TxnType,
-  categoryId: '',
-  accountId: '',
-  minAmount: '',
-  maxAmount: '',
-})
-
-const sort = reactive({ column: 'transaction_date', direction: 'desc' as 'asc' | 'desc' })
-const page = ref(1)
+const { filters, sort, page, pageSize, scope, rows, total, pageCount, pending, error, validation, refresh, activeFilterCount, clearFilters, toggleSort } = useTransactionWorkspace()
 const filtersOpen = ref(false)
 const selectedId = ref<string | null>(null)
-
-// Debounced so typing in the search box does not fire a query per keystroke.
-const debouncedSearch = ref('')
-let searchTimer: ReturnType<typeof setTimeout> | undefined
-watch(() => filters.search, (value) => {
-  clearTimeout(searchTimer)
-  searchTimer = setTimeout(() => {
-    debouncedSearch.value = value
-    page.value = 1
-  }, 300)
-})
-
-// `undefined` rather than `null`: supabase-js omits undefined keys entirely,
-// so the function's own default applies instead of an explicit NULL.
-const omitIfEmpty = (value: string) => (value.trim() === '' ? undefined : value)
-
-function amountToMinor(value: string): number | undefined {
-  if (!value.trim()) return undefined
-  try {
-    return Number(parseMoneyToMinor(value, baseCurrency.value))
-  }
-  catch {
-    return undefined
-  }
+const hydrated = ref(false)
+onMounted(() => { hydrated.value = true; void openCreateFromRoute() })
+watch(scope, () => { selectedId.value = null; filtersOpen.value = false }, { flush: 'sync' })
+const availableFlows = computed(() => ADD_FLOWS.filter(flow => can(FLOW_CAPABILITY[flow])))
+const canCreate = computed(() => writesAllowed.value && availableFlows.value.length > 0)
+const rangeStart = computed(() => total.value ? (page.value - 1) * pageSize + 1 : 0)
+const rangeEnd = computed(() => Math.min(page.value * pageSize, total.value))
+const QUICK_TYPES = ['', 'income', 'expense', 'transfer', 'adjustment'] as const
+function addTransaction() {
+  const flow = availableFlows.value.find(flow => flow === filters.type) ?? (availableFlows.value.includes('expense') ? 'expense' : availableFlows.value[0])
+  if (canCreate.value && flow) start(flow)
 }
-
-type TransactionRow = Database['public']['Functions']['search_transactions']['Returns'][number]
-
-const { data: result, pending, refresh } = useLazyAsyncData('org:transactions', async () => {
-  if (!currentId.value) return { rows: [] as TransactionRow[], total: 0 }
-
-  const { data, error } = await supabase.rpc('search_transactions', {
-    p_organization_id: currentId.value,
-    p_search: omitIfEmpty(debouncedSearch.value),
-    p_from_date: omitIfEmpty(filters.from),
-    p_to_date: omitIfEmpty(filters.to),
-    p_statuses: filters.status ? [filters.status] : undefined,
-    p_types: filters.type ? [filters.type] : undefined,
-    p_category_ids: filters.categoryId ? [filters.categoryId] : undefined,
-    p_account_ids: filters.accountId ? [filters.accountId] : undefined,
-    p_min_amount_minor: amountToMinor(filters.minAmount),
-    p_max_amount_minor: amountToMinor(filters.maxAmount),
-    p_sort: sort.column,
-    p_direction: sort.direction,
-    p_limit: PAGE_SIZE,
-    p_offset: (page.value - 1) * PAGE_SIZE,
-  })
-
-  if (error) throw error
-
-  const rows = (data ?? []) as TransactionRow[]
-  // total_count is the same on every row; an empty page means zero.
-  const total = rows.length ? Number(rows[0]!.total_count) : 0
-  return { rows, total }
-}, {
-  watch: [
-    currentId,
-    debouncedSearch,
-    page,
-    () => filters.from,
-    () => filters.to,
-    () => filters.status,
-    () => filters.type,
-    () => filters.categoryId,
-    () => filters.accountId,
-    () => filters.minAmount,
-    () => filters.maxAmount,
-    () => sort.column,
-    () => sort.direction,
-  ],
-  default: () => ({ rows: [] as TransactionRow[], total: 0 }),
-})
-
-const rows = computed<TransactionRow[]>(() => result.value?.rows ?? [])
-const total = computed(() => result.value?.total ?? 0)
-const pageCount = computed(() => Math.max(1, Math.ceil(total.value / PAGE_SIZE)))
-const rangeStart = computed(() => (total.value === 0 ? 0 : (page.value - 1) * PAGE_SIZE + 1))
-const rangeEnd = computed(() => Math.min(page.value * PAGE_SIZE, total.value))
-
-const activeFilterCount = computed(() =>
-  [filters.from, filters.to, filters.status, filters.type, filters.categoryId,
-   filters.accountId, filters.minAmount, filters.maxAmount].filter(v => v !== '').length,
-)
-
-function toggleSort(column: string) {
-  if (sort.column === column) {
-    sort.direction = sort.direction === 'asc' ? 'desc' : 'asc'
-  }
-  else {
-    sort.column = column
-    sort.direction = 'desc'
-  }
-  page.value = 1
+async function openCreateFromRoute() {
+  if (!hydrated.value || route.query.create !== '1') return
+  if (canCreate.value) addTransaction()
+  const query = { ...route.query }; delete query.create
+  await router.replace({ query })
 }
-
-function clearFilters() {
-  Object.assign(filters, {
-    search: '', from: '', to: '', status: '' as const, type: '' as const,
-    categoryId: '', accountId: '', minAmount: '', maxAmount: '',
-  })
-  debouncedSearch.value = ''
-  page.value = 1
-}
-
-function ariaSort(column: string) {
-  if (sort.column !== column) return 'none'
-  return sort.direction === 'asc' ? 'ascending' : 'descending'
-}
-
-const STATUSES = ['draft', 'scheduled', 'pending', 'pending_approval', 'posted', 'voided', 'reversed', 'failed']
-const TYPES = ['income', 'expense', 'transfer', 'asset_purchase', 'liability_created',
-  'liability_payment', 'owner_contribution', 'owner_withdrawal', 'adjustment', 'opening_balance', 'reversal']
+watch(() => route.query.create, () => void openCreateFromRoute())
+function ariaSort(column: string) { return sort.column === column ? sort.direction === 'asc' ? 'ascending' : 'descending' : 'none' }
+useHead({ title: () => `${t('transactions.title')} · ${t('app.name')}` })
 </script>
 
 <template>
   <div class="space-y-4">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <h1 class="text-h1 font-bold">{{ t('transactions.title') }}</h1>
-      <div class="flex items-center gap-3">
-        <NuxtLink
-          v-if="can('imports.create') && !importsPending"
-          :to="importsEnabled ? '/imports' : '/billing'"
-          class="ls-btn ls-btn-sm"
-        >
-          {{ t(importsEnabled ? 'imports.entryPoint' : 'imports.upgradeEntryPoint') }}
-        </NuxtLink>
-        <p class="text-sm text-fg-muted">{{ t('transactions.count', total) }}</p>
+    <header class="flex flex-wrap items-start justify-between gap-4">
+      <div><h1 class="text-h1 font-bold">{{ t('transactions.title') }}</h1><p class="mt-1 text-sm text-fg-muted">{{ t('transactionWorkspace.subtitle') }}</p></div>
+      <div class="flex flex-wrap items-center gap-2">
+        <NuxtLink v-if="can('imports.create') && !importsPending" :to="importsEnabled ? '/imports' : '/billing'" class="ls-btn">{{ t(importsEnabled ? 'imports.entryPoint' : 'imports.upgradeEntryPoint') }}</NuxtLink>
+        <button v-if="canCreate" type="button" class="ls-btn ls-btn-primary" :disabled="!hydrated" @click="addTransaction"><AppIcon name="add" :size="18" />{{ t('transactionWorkspace.new') }}</button>
+      </div>
+    </header>
+
+    <div v-if="can('transactions.read')" class="ls-card space-y-4 p-4 sm:p-5">
+      <div class="flex flex-wrap gap-2" role="group" :aria-label="t('transactions.type')">
+        <button v-for="type in QUICK_TYPES" :key="type" type="button" class="ls-btn ls-btn-sm" :class="{ 'ls-btn-primary': filters.type === type }" :aria-pressed="filters.type === type" :disabled="!hydrated" @click="filters.type = type">{{ type ? t(`types.${type}`) : t('transactionWorkspace.all') }}</button>
+      </div>
+      <div class="grid items-end gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <FloatingField class="min-w-0 sm:col-span-2" :label="t('transactions.searchLabel')"><input id="search" v-model="filters.search" type="search" class="ls-input" :placeholder="t('transactions.searchPlaceholder')" :disabled="!hydrated"></FloatingField>
+        <FloatingField :label="t('transactions.type')"><select id="type" v-model="filters.type" class="ls-input" :disabled="!hydrated"><option value="">{{ t('transactionWorkspace.allTypes') }}</option><option v-for="type in TRANSACTION_TYPES" :key="type" :value="type">{{ t(`types.${type}`) }}</option></select></FloatingField>
+        <FloatingField :label="t('transactions.status')"><select id="status" v-model="filters.status" class="ls-input" :disabled="!hydrated"><option value="">{{ t('transactionWorkspace.allStatuses') }}</option><option v-for="status in TRANSACTION_STATUSES" :key="status" :value="status">{{ t(`status.${status}`) }}</option></select></FloatingField>
+        <FloatingField :label="t('transactions.fromDate')"><input id="from" v-model="filters.from" type="date" class="ls-input" :disabled="!hydrated"></FloatingField>
+        <FloatingField :label="t('transactions.toDate')"><input id="to" v-model="filters.to" type="date" :min="filters.from" class="ls-input" :disabled="!hydrated"></FloatingField>
+        <FloatingField class="sm:col-span-2" :label="t('transactions.account')"><select id="account" v-model="filters.accountId" class="ls-input" :disabled="!hydrated"><option value="">{{ t('transactionWorkspace.allAccounts') }}</option><option v-for="account in accounts" :key="account.id" :value="account.id">{{ account.name }}</option></select></FloatingField>
+      </div>
+      <div class="flex flex-wrap items-center gap-3">
+        <button type="button" class="ls-btn ls-btn-sm" :aria-expanded="filtersOpen" aria-controls="transaction-more-filters" :disabled="!hydrated" @click="filtersOpen = !filtersOpen">{{ t('transactionWorkspace.moreFilters') }}<AppIcon name="arrowDown" :size="16" /></button>
+        <button v-if="activeFilterCount" type="button" class="ls-btn ls-btn-sm" :disabled="!hydrated" @click="clearFilters">{{ t('transactionWorkspace.clearFilters', { count: activeFilterCount }) }}</button>
+        <p v-if="!pending && !error && !validation" role="status" class="ms-auto text-sm text-fg-muted">{{ t('transactions.count', total) }}</p>
+      </div>
+      <div v-if="filtersOpen" id="transaction-more-filters" class="grid gap-3 border-t border-line pt-4 sm:grid-cols-3">
+        <FloatingField :label="t('transactions.category')"><select id="category" v-model="filters.categoryId" class="ls-input"><option value="">{{ t('common.any') }}</option><option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option></select></FloatingField>
+        <FloatingField :label="t('transactions.minAmount')"><input id="min" v-model="filters.minAmount" class="ls-input" inputmode="decimal" placeholder="0.00"></FloatingField>
+        <FloatingField :label="t('transactions.maxAmount')"><input id="max" v-model="filters.maxAmount" class="ls-input" inputmode="decimal" placeholder="0.00"></FloatingField>
       </div>
     </div>
 
-    <div class="flex flex-wrap items-center gap-2">
-      <FloatingField class="min-w-48 flex-1" :label="t('transactions.searchLabel')">
-        <input
-          id="search"
-          v-model="filters.search"
-          type="search"
-          class="ls-input"
-          :placeholder="t('transactions.searchPlaceholder')"
-        >
-      </FloatingField>
-      <button
-        type="button"
-        class="ls-btn"
-        :aria-expanded="filtersOpen"
-        @click="filtersOpen = !filtersOpen"
-      >
-        {{ t('transactions.filters') }}
-        <span v-if="activeFilterCount" class="ls-badge bg-[var(--bs-primary)] text-[var(--bs-text-on-primary)]">
-          {{ activeFilterCount }}
-        </span>
-      </button>
-      <button v-if="activeFilterCount || filters.search" type="button" class="ls-btn" @click="clearFilters">
-        {{ t('common.clear') }}
-      </button>
-    </div>
-
-    <div v-if="filtersOpen" class="ls-card grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
-      <FloatingField :label="t('transactions.fromDate')"><input id="from" v-model="filters.from" type="date" class="ls-input"></FloatingField>
-      <FloatingField :label="t('transactions.toDate')"><input id="to" v-model="filters.to" type="date" class="ls-input"></FloatingField>
-      <FloatingField :label="t('transactions.status')">
-        <select id="status" v-model="filters.status" class="ls-input">
-          <option value="">{{ t('common.any') }}</option>
-          <option v-for="s in STATUSES" :key="s" :value="s">{{ t(`status.${s}`) }}</option>
-        </select>
-      </FloatingField>
-      <FloatingField :label="t('transactions.type')">
-        <select id="type" v-model="filters.type" class="ls-input">
-          <option value="">{{ t('common.any') }}</option>
-          <option v-for="type in TYPES" :key="type" :value="type">{{ t(`types.${type}`) }}</option>
-        </select>
-      </FloatingField>
-      <FloatingField :label="t('transactions.category')">
-        <select id="category" v-model="filters.categoryId" class="ls-input">
-          <option value="">{{ t('common.any') }}</option>
-          <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
-        </select>
-      </FloatingField>
-      <FloatingField :label="t('transactions.account')">
-        <select id="account" v-model="filters.accountId" class="ls-input">
-          <option value="">{{ t('common.any') }}</option>
-          <option v-for="a in accounts" :key="a.id" :value="a.id">{{ a.name }}</option>
-        </select>
-      </FloatingField>
-      <FloatingField :label="t('transactions.minAmount')"><input id="min" v-model="filters.minAmount" class="ls-input" inputmode="decimal" placeholder="0.00"></FloatingField>
-      <FloatingField :label="t('transactions.maxAmount')"><input id="max" v-model="filters.maxAmount" class="ls-input" inputmode="decimal" placeholder="0.00"></FloatingField>
-    </div>
-
-    <SectionSkeleton v-if="pending" variant="table" :rows="8" />
+    <p v-if="!can('transactions.read')" role="status" class="ls-card p-6 text-fg-muted">{{ t('transactionWorkspace.noRead') }}</p>
+    <p v-else-if="validation" role="alert" class="ls-error">{{ t(`transactionWorkspace.validation.${validation}`) }}</p>
+    <div v-else-if="error" role="alert" class="ls-card space-y-3 p-6"><h2 class="font-bold">{{ t('transactionWorkspace.loadError') }}</h2><p class="text-sm text-fg-muted">{{ t('transactionWorkspace.retryHint') }}</p><button type="button" class="ls-btn" @click="refresh()">{{ t('accounts.retry') }}</button></div>
+    <SectionSkeleton v-else-if="pending" variant="table" :rows="8" />
 
     <EmptyState
-      v-else-if="rows.length === 0 && !activeFilterCount && !debouncedSearch"
+      v-else-if="rows.length === 0 && !activeFilterCount && !filters.search"
       :title="t('transactions.emptyTitle')"
       :description="t('transactions.emptyHint')"
-      :action-label="can('transactions.create') ? t('transactions.emptyAction') : undefined"
-      @action="start('expense')"
+      :action-label="canCreate ? t('transactionWorkspace.new') : undefined"
+      @action="addTransaction"
     />
 
     <EmptyState
@@ -257,24 +100,16 @@ const TYPES = ['income', 'expense', 'transfer', 'asset_purchase', 'liability_cre
   </Column>
   <Column body-class="max-w-64">
     <template #header>{{ t('transactions.description') }}</template>
-    <template #body="{ data: row }"><span class="block truncate">{{ row.description || t('common.dash') }}</span>
-                <span v-if="row.reference" class="block text-xs text-fg-muted">{{ row.reference }}</span></template>
+    <template #body="{ data: row }"><button type="button" class="block max-w-56 truncate text-start font-semibold text-link hover:underline" @click.stop="selectedId = row.id">{{ row.description || t('common.dash') }}</button>
+                <span v-if="row.reference || row.category_name || row.counterparty_name" class="block max-w-56 truncate text-xs text-fg-muted">{{ [row.reference, row.category_name, row.counterparty_name].filter(Boolean).join(' · ') }}</span></template>
   </Column>
   <Column body-class="whitespace-nowrap" :pt="{ headerCell: { 'aria-sort': ariaSort('type') } }">
     <template #header><button type="button" class="hover:underline" @click="toggleSort('type')">{{ t('transactions.type') }}</button></template>
     <template #body="{ data: row }">{{ t(`types.${row.type}`) }}</template>
   </Column>
-  <Column >
-    <template #header>{{ t('transactions.category') }}</template>
-    <template #body="{ data: row }">{{ row.category_name || t('common.dash') }}</template>
-  </Column>
   <Column body-class="whitespace-nowrap text-fg-muted">
     <template #header>{{ t('transactions.fromTo') }}</template>
-    <template #body="{ data: row }">{{ row.from_account_name || t('common.dash') }} <AppIcon name="arrowRight" :size="14" directional class="inline-block" /> {{ row.to_account_name || t('common.dash') }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('transactions.counterparty') }}</template>
-    <template #body="{ data: row }">{{ row.counterparty_name || t('common.dash') }}</template>
+    <template #body="{ data: row }"><p class="max-w-40 truncate" :title="row.from_account_name || undefined">{{ row.from_account_name || t('common.dash') }}</p><p class="max-w-40 truncate" :title="row.to_account_name || undefined"><AppIcon name="arrowRight" :size="14" directional class="inline-block" /> {{ row.to_account_name || t('common.dash') }}</p></template>
   </Column>
   <Column  :pt="{ headerCell: { 'aria-sort': ariaSort('status') } }">
     <template #header><button type="button" class="hover:underline" @click="toggleSort('status')">{{ t('transactions.status') }}</button></template>
@@ -298,7 +133,7 @@ const TYPES = ['income', 'expense', 'transfer', 'asset_purchase', 'liability_cre
                   {{ formatDate(row.transaction_date, locale) }} · {{ row.category_name || t(`types.${row.type}`) }}
                 </p>
               </div>
-              <div class="shrink-0 text-right">
+              <div class="shrink-0 text-end">
                 <MoneyText class="text-sm font-semibold" :amount-minor="row.amount_minor" :currency="row.currency_code" />
                 <StatusBadge class="mt-1 block" :status="row.status" />
               </div>

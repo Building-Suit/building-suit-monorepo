@@ -31,12 +31,12 @@ watch(() => route.fullPath, close)
 <template>
   <button
     type="button"
-    class="financial-map-fab ls-btn ls-btn-primary fixed bottom-20 end-4 z-20 flex items-center gap-2 rounded-full px-5 py-3 font-bold shadow-raised lg:bottom-6 lg:end-6"
+    class="ls-btn ls-btn-sm"
     :aria-label="t('financialMap.open')"
     @click="show"
   >
-    <span class="financial-map-fab-icon" aria-hidden="true"><AppIcon name="chart" :size="22" /></span>
-    <span class="hidden sm:inline">{{ t('financialMap.button') }}</span>
+    <span class="inline-flex" aria-hidden="true"><AppIcon name="chart" :size="22" /></span>
+    <span class="inline">{{ t('financialMap.button') }}</span>
   </button>
       <BsDialog v-if="open" :visible="true" :title="t('financialMap.title')" :aria-label="t('financialMap.title')" :show-header="false" size="lg" @update:visible="value => { if (!value) close() }"><template #default="{ close: dismiss }">
 <section class="flex h-dvh flex-col overflow-hidden bg-background sm:h-[94dvh] sm:max-w-[1500px] sm:rounded-modal sm:border sm:border-[var(--bs-border)]">
@@ -226,28 +226,6 @@ watch(() => route.fullPath, close)
 </template>
 
 <style scoped>
-.financial-map-fab {
-  isolation: isolate;
-  box-shadow: var(--bs-elevation-3);
-  transition: box-shadow var(--bs-motion-quick), transform var(--bs-motion-quick);
-}
-
-.financial-map-fab::before {
-  position: absolute;
-  z-index: -1;
-  border: 2px solid var(--bs-primary);
-  border-radius: inherit;
-  opacity: 0;
-  content: '';
-  inset: -0.3rem;
-  animation: financial-map-ring 3s ease-out infinite;
-}
-
-.financial-map-fab-icon { display: inline-flex; animation: financial-map-icon 3s ease-in-out infinite; }
-.financial-map-fab:hover { transform: translateY(-3px); }
-.financial-map-fab:hover::before,
-.financial-map-fab:hover .financial-map-fab-icon { animation-play-state: paused; }
-
 .tree-node {
   position: relative;
   display: block;
@@ -533,25 +511,6 @@ watch(() => route.fullPath, close)
   .tree-engine-check::after,
   .tree-engine-check:nth-child(odd)::after,
   .tree-engine-check:nth-child(even)::after { inset-inline-start: -1rem; width: 1rem; }
-}
-
-@keyframes financial-map-ring {
-  0%, 55%, 100% { opacity: 0; transform: scale(1); }
-  65% { opacity: 0.35; }
-  85% { opacity: 0; transform: scale(1.12, 1.35); }
-}
-
-@keyframes financial-map-icon {
-  0%, 45%, 100% { transform: rotate(0); }
-  52% { transform: rotate(-8deg); }
-  59% { transform: rotate(8deg); }
-  66% { transform: rotate(0); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .financial-map-fab,
-  .financial-map-fab::before,
-  .financial-map-fab-icon { animation: none; }
 }
 
 :lang(ar) .tree-step,

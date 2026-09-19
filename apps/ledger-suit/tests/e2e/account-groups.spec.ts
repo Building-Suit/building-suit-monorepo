@@ -10,6 +10,7 @@ for (const locale of ['en', 'ar']) {
     await page.getByRole('button', { name: 'Sign in', exact: true }).click()
     await expect(page).toHaveURL('/dashboard')
     await page.getByRole('link', { name: 'Accounts', exact: true }).first().click()
+  await page.getByRole('button', { name: 'Table view', exact: true }).click()
     await expect(page.getByLabel('Search accounts', { exact: true })).toBeEnabled()
     if (locale === 'ar') {
       await page.getByRole('button', { name: 'Account menu', exact: true }).click()
@@ -67,8 +68,9 @@ for (const locale of ['en', 'ar']) {
     await expect(dialog).toBeHidden()
     await search.fill(childName)
     await expect(page.getByRole('table')).toContainText(ar ? 'حساب ترحيل' : 'Posting account')
-    await page.getByRole('link', { name: ar ? 'مصروف' : 'Expense', exact: true }).click()
-    await page.getByRole('button', { name: ar ? 'إضافة مصروف' : 'Add Expense' }).first().click()
+    await page.getByRole('link', { name: ar ? 'المعاملات' : 'Transactions', exact: true }).first().click()
+    await page.getByRole('button', { name: ar ? 'مصروف' : 'Expense', exact: true }).click()
+    await page.getByRole('button', { name: ar ? 'معاملة جديدة' : 'New transaction', exact: true }).first().click()
     await expect(page.locator('#src option').filter({ hasText: childName })).toHaveCount(1)
     await expect(page.locator('#src option').filter({ hasText: groupName })).toHaveCount(0)
     // The server independently rejects a tampered group account ID.
@@ -86,6 +88,7 @@ for (const locale of ['en', 'ar']) {
     expect((await rejected.json()).message).toContain('ACCOUNT_GROUP_NOT_POSTABLE')
     await page.getByRole('dialog').getByRole('button', { name: ar ? 'إغلاق' : 'Close', exact: true }).click()
     await page.getByRole('link', { name: ar ? 'الحسابات' : 'Accounts', exact: true }).first().click()
+    await page.getByRole('button', { name: ar ? 'عرض الجدول' : 'Table view', exact: true }).click()
     await search.fill(groupName)
     await page.setViewportSize({ width: 390, height: 844 })
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)

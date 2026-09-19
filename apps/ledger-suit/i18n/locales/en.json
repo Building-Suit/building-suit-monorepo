@@ -183,6 +183,7 @@
     "teamInvitations": "Access & permissions",
     "auditHistory": "Audit history",
     "groups": {
+      "finance": "Accounting",
       "transactions": "Transactions",
       "ledger": "Ledger",
       "operations": "Operations",
@@ -1237,5 +1238,60 @@
     "journalHint": "Posted journal in {currency}. Select an account to explore its statement.",
     "reversal": "This entry is part of a linked reversal. Both the original and reversal remain in the ledger.",
     "balanced": "Journal totals"
+  },
+  "accountTree": {
+    "title": "Chart of accounts",
+    "subtitle": "Follow the account hierarchy, review balances, and open any account’s activity.",
+    "hint": "Group totals in {currency} include all accounts, even when searching. Select an account to review its entries.",
+    "view": "Account view",
+    "treeView": "Tree view",
+    "tableView": "Table view",
+    "expandAll": "Expand all",
+    "collapseAll": "Collapse all",
+    "expand": "Expand {name}",
+    "collapse": "Collapse {name}",
+    "emptySection": "No accounts in this group yet",
+    "subtotal": "Group total",
+    "directBalance": "Direct balance",
+    "addChild": "Add subaccount",
+    "more": "More actions",
+    "accountCount": "{count} accounts",
+    "searchCount": "{count} accounts shown with their parent groups",
+    "sections": {
+      "currentAssets": "Current assets",
+      "fixedAssets": "Fixed assets · property and equipment",
+      "otherAssets": "Other assets",
+      "tradeLiabilities": "Trade payables",
+      "financing": "Loans and credit facilities",
+      "otherLiabilities": "Other liabilities and accruals",
+      "capital": "Capital",
+      "retainedEarnings": "Retained earnings",
+      "drawings": "Owner drawings",
+      "otherEquity": "Opening and other equity",
+      "operatingRevenue": "Operating revenue",
+      "otherRevenue": "Other income",
+      "costOfSales": "Cost of sales",
+      "operatingExpenses": "Operating expenses",
+      "financeCosts": "Finance costs",
+      "taxes": "Taxes",
+      "otherExpenses": "Other expenses"
+    }
+  },
+  "transactionWorkspace": {
+    "subtitle": "All your transactions in one place. Filter, review, or record a new entry.",
+    "new": "New transaction",
+    "all": "All transactions",
+    "allTypes": "All types",
+    "allStatuses": "All statuses",
+    "allAccounts": "All accounts",
+    "moreFilters": "More filters",
+    "clearFilters": "Clear filters ({count})",
+    "loadError": "Transactions could not be loaded",
+    "retryHint": "Your filters are saved. Try loading the list again.",
+    "noRead": "Your role does not include access to transaction history. Available actions appear above.",
+    "validation": {
+      "dates": "Enter a valid date range with the start on or before the end.",
+      "amounts": "Enter valid non-negative amounts, with the minimum no greater than the maximum."
+    }
   }
 }

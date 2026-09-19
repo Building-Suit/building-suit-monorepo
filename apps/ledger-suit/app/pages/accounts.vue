@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { scopedQueryKey } from '@building-suit/data-access'
 import type { Database } from '~~/types/database.types'
+import type { ChartAccount } from '~/utils/accountTree'
 
 definePageMeta({ layout: 'default' })
 /**
@@ -25,6 +26,8 @@ useHead({ title: () => `${t('accounts.title')} · ${t('app.name')}` })
 const hydrated = ref(false)
 onMounted(() => { hydrated.value = true })
 
+const view = computed(() => route.query.view === 'table' || (!route.query.view && route.query.tab) ? 'table' : 'tree')
+function selectView(value: 'tree' | 'table') { void router.replace({ query: { ...route.query, view: value } }) }
 const showArchived = ref(false)
 const search = ref('')
 const firstRow = ref(0)
@@ -45,26 +48,7 @@ const { data: currencies } = useLazyAsyncData<Array<{ code: string, name: string
   return data ?? []
 }, { default: () => [] })
 
-interface BalanceRow {
-  organization_id: string
-  account_id: string
-  code: string | null
-  name: string
-  type: Database['public']['Enums']['account_type']
-  subtype: string
-  currency: string
-  account_role: 'posting' | 'group'
-  normal_balance: Database['public']['Enums']['normal_balance']
-  contra_account_id: string | null
-  is_system: boolean
-  classification_locked: boolean
-  net_debit_minor: string
-  statement_balance_minor: string
-  entry_count: number
-  is_archived: boolean
-  is_liquid: boolean
-  parent_account_id: string | null
-}
+type BalanceRow = ChartAccount
 
 const balanceKey = computed(() => `org:${scopedQueryKey({
   environment: String(config.public.supabase.url),
@@ -136,6 +120,7 @@ const filteredRows = computed(() => {
 const hasArchivedInGroup = computed(() => scopedBalances.value.some(row => row.type === tab.value && row.is_archived))
 const hiddenSavedAccount = computed(() => {
   const account = scopedBalances.value.find(row => row.account_id === lastSavedId.value)
+  if (view.value === 'tree') return account && !flattenAccountTree(buildAccountTree(visible.value, t), new Set(), search.value).some(row => row.id === account.account_id) ? account : null
   return account && (filteredRows.value.length > 25 || !filteredRows.value.some(row => row.account_id === account.account_id)) ? account : null
 })
 
@@ -151,7 +136,7 @@ async function revealSavedAccount() {
   if (!account) return
   search.value = account.name
   if (account.is_archived) showArchived.value = true
-  await router.replace({ query: { ...route.query, tab: account.type } })
+  await router.replace({ query: { ...route.query, view: view.value, tab: account.type } })
   searchInput.value?.focus()
 }
 
@@ -200,16 +185,16 @@ const subtypeOptions: Record<BalanceRow['type'], string[]> = {
   expense: ['cost_of_sales', 'salaries', 'rent', 'utilities', 'marketing', 'transportation', 'software', 'professional_fees', 'bank_fees', 'interest_expense', 'depreciation', 'taxes', 'other_expense'],
 }
 
-function openCreate() {
+function openCreate(parent?: BalanceRow) {
   editing.value = null
   Object.assign(form, {
     name: '',
     code: '',
-    type: tab.value,
-    subtype: subtypeOptions[tab.value][0]!,
-    currency: baseCurrency.value,
-    normalBalance: defaultAccountNature(tab.value),
-    contraAccountId: '', accountRole: 'posting', parentAccountId: '',
+    type: parent?.type ?? tab.value,
+    subtype: parent?.subtype ?? subtypeOptions[tab.value][0]!,
+    currency: parent?.currency ?? baseCurrency.value,
+    normalBalance: defaultAccountNature(parent?.type ?? tab.value, parent?.subtype),
+    contraAccountId: '', accountRole: 'posting', parentAccountId: parent?.account_id ?? '',
   })
   editorError.value = null
   editorOpen.value = true
@@ -329,19 +314,24 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
 <template>
   <div class="space-y-6" :data-hydrated="hydrated">
     <div class="flex flex-wrap items-center justify-between gap-3">
-      <h1 class="text-h1 font-bold">{{ t('accounts.title') }}</h1>
+      <div><h1 class="text-h1 font-bold">{{ t('accounts.title') }}</h1><p class="mt-1 text-sm text-fg-muted">{{ t('accountTree.subtitle') }}</p></div>
       <div class="flex items-center gap-3">
         <label class="flex items-center gap-2 text-sm text-fg-muted">
           <input v-model="showArchived" type="checkbox" class="rounded-sm border-[var(--bs-border)]">
           {{ t('accounts.showArchived') }}
         </label>
-        <button v-if="can('accounts.create')" type="button" class="ls-btn ls-btn-primary" @click="openCreate">
+        <button v-if="can('accounts.create')" type="button" class="ls-btn ls-btn-primary" :disabled="!hydrated" @click="openCreate()">
           {{ t('accounts.add') }}
         </button>
       </div>
     </div>
 
-    <div class="flex gap-1 overflow-x-auto border-b border-[var(--bs-border)]" role="tablist" :aria-label="t('accounts.tabsLabel')">
+    <div class="flex flex-wrap gap-2" :aria-label="t('accountTree.view')" role="group">
+      <button type="button" class="ls-btn ls-btn-sm" :class="{ 'ls-btn-primary': view === 'tree' }" :aria-pressed="view === 'tree'" :disabled="!hydrated" @click="selectView('tree')">{{ t('accountTree.treeView') }}</button>
+      <button type="button" class="ls-btn ls-btn-sm" :class="{ 'ls-btn-primary': view === 'table' }" :aria-pressed="view === 'table'" :disabled="!hydrated" @click="selectView('table')">{{ t('accountTree.tableView') }}</button>
+    </div>
+
+    <div v-if="view === 'table'" class="flex gap-1 overflow-x-auto border-b border-[var(--bs-border)]" role="tablist" :aria-label="t('accounts.tabsLabel')">
       <button
         v-for="type in GROUP_TYPES"
         :id="`account-tab-${type}`"
@@ -361,11 +351,11 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
     <div class="flex flex-wrap items-end gap-3">
       <div class="w-full min-w-0 sm:w-auto sm:flex-1 sm:max-w-md">
         <label for="account-search" class="mb-2 block text-sm font-semibold">{{ t('accounts.searchLabel') }}</label>
-        <input id="account-search" ref="searchInput" v-model="search" type="search" class="ls-input" :placeholder="t('accounts.searchPlaceholder')" aria-controls="accounts-table" :disabled="!hydrated || balancesPending || !!balancesError">
+        <input id="account-search" ref="searchInput" v-model="search" type="search" class="ls-input" :placeholder="t('accounts.searchPlaceholder')" :aria-controls="view === 'tree' ? 'accounts-tree' : 'accounts-table'" :disabled="!hydrated || balancesPending || !!balancesError">
       </div>
       <button v-if="search" type="button" class="ls-btn" @click="clearSearch">{{ t('accounts.clearSearch') }}</button>
       <p v-if="!balancesPending && !balancesError" class="py-2 text-sm text-fg-muted" role="status" data-testid="account-result-count">
-        {{ t('accounts.resultCount', { count: filteredRows.length, total: activeGroup.rows.length, group: activeGroup.label }) }}
+        {{ view === 'table' ? t('accounts.resultCount', { count: filteredRows.length, total: activeGroup.rows.length, group: activeGroup.label }) : t('accountTree.accountCount', { count: visible.length }) }}
       </p>
     </div>
 
@@ -386,12 +376,14 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
     </div>
 
     <EmptyState
-      v-else-if="!hasAccounts"
+      v-else-if="!hasAccounts && view === 'table'"
       :title="t('accounts.emptyTitle')"
       :description="t('accounts.emptyHint')"
       :action-label="can('accounts.create') ? t('accounts.add') : undefined"
-      @action="openCreate"
+      @action="openCreate()"
     />
+
+    <AccountTree v-else-if="view === 'tree'" :accounts="visible" :search="search" :scope="balanceKey" :hydrated="hydrated" @activity="account => activityAccountId = account.account_id" @edit="openEdit" @archive="archiveAccount" @classify="account => statementAccount = account" @create-child="openCreate" />
 
     <section
       v-else

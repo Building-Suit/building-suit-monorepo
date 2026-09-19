@@ -1,0 +1,90 @@
+{
+  "package": "AS-UX-01",
+  "date": "2026-09-19",
+  "base": "b3c83815ee770bc1163e8d7263f53903a46b0902",
+  "branch": "codex/ledger-suit/workspace-ux",
+  "unit": {
+    "passed": 44
+  },
+  "browser": {
+    "combined": {
+      "passed": 38,
+      "failed": 1
+    },
+    "corrected_close_wait_repeat": {
+      "passed": 3,
+      "failed": 0
+    },
+    "readonly": {
+      "passed": 2,
+      "failed": 0
+    },
+    "distinct_scenarios_with_passing_evidence": 41
+  },
+  "checks": {
+    "workspace": "PASS",
+    "lint": "PASS",
+    "typecheck": "PASS",
+    "build": "PASS",
+    "preview": "PASS",
+    "sql": "NOT_RUN; no database changes"
+  },
+  "backend": {
+    "project": "ledger-account-activity-20260919",
+    "api": "http://127.0.0.1:65321",
+    "database_port": 65322,
+    "reset": false,
+    "hosted_writes": false
+  },
+  "source_sha256": {
+    "apps/ledger-suit/app/components/AccountTree.vue": "4e1551abc71259ac1b076d816acb2ca1d4bdad5c3641972b94455fef411f00a0",
+    "apps/ledger-suit/app/components/AddTransactionDialog.vue": "9d0ede960f61115d8b23a6d3dd3f32ecd968cbe25cb1dad49e9981b59421fc24",
+    "apps/ledger-suit/app/components/FinancialSystemMap.vue": "1fb8dfe996e5bfa1a5c49ad36a94d00be2f3aeff2dade09a0ba6b7543c466176",
+    "apps/ledger-suit/app/composables/useTransactionWorkspace.ts": "0f3d19b326511e2b8e9ef61ad6103100e36b4b08722d1dd2a5bb4ed1acc43ee5",
+    "apps/ledger-suit/app/layouts/default.vue": "da55f82184d7c21ad559afbf2bc9490b447511cf21bb7d689f0bd2a2b38ae76d",
+    "apps/ledger-suit/app/pages/accounts.vue": "5686cc96d8b284aa07fb6a3d3fe98fe0241e39df7ff4735ce704058f371993d6",
+    "apps/ledger-suit/app/pages/records/[kind].vue": "548da22e14bc9596e127ef7ac45631a64146624b27f4811eb12807e9134e3c7f",
+    "apps/ledger-suit/app/pages/transactions.vue": "775e107a0654d0f5d78f98147466d6e6305b1ffaab8f4e7e438db1e41bc17f93",
+    "apps/ledger-suit/app/utils/accountTree.ts": "9516bada19b13096837e99d119daaafef35537d5bd4b88e8d0b827d74c7e8e5f",
+    "apps/ledger-suit/i18n/locales/ar.json": "feed3ecee18f66066adcbf846f1047130c2edca695900b69b08658de69d08a3f",
+    "apps/ledger-suit/i18n/locales/en.json": "be0080a09c2b0e30dbf081ba343a8d547e6b8ceda54dd1a85f60e3718ceb89d3",
+    "apps/ledger-suit/tests/e2e/account-groups.spec.ts": "13c7a8fa8ac7cadaf3df34923b8c163abc7ce2a1d02536039d77e245b4a0de6f",
+    "apps/ledger-suit/tests/e2e/account-nature.spec.ts": "d832ae42b811bb21412b9300e0e810b2fea4ffa96005d6329d9d68804ab172a2",
+    "apps/ledger-suit/tests/e2e/accounts-table.spec.ts": "e91fb3ff9e6c40dc9bbe4d41b2d216141108a1cca02c39ba3b7a9e16d6a38885",
+    "apps/ledger-suit/tests/e2e/acquisition.spec.ts": "2f9c1969841fae7ec8f8a73f8675d07beddf0f325dd440eee4cacb2343acdd33",
+    "apps/ledger-suit/tests/e2e/core-finance.spec.ts": "1b31120edb3886aa5e35eaf18ae0bfba19644b8b76af3a2ec0ce74c495488a5f",
+    "apps/ledger-suit/tests/e2e/statement-classification.spec.ts": "b54867782717a990679e8697480e9f520e342c3427e6b64282959488dd60baf2",
+    "apps/ledger-suit/tests/e2e/trial-billing.spec.ts": "8908515a66a325d90d81e2d930ef701a4149f2b7feca01981404fc4e8a4417ed",
+    "apps/ledger-suit/tests/e2e/usage.spec.ts": "a89caa9368813aaa610c9909aba0428458bf9d1cca69a4b8a53060e4b1565807",
+    "apps/ledger-suit/tests/e2e/workspace-ux.spec.ts": "68c6e3098866257095ac197c58284ae6f243ba6e39ae3ab3425763f1bc15c8c7",
+    "apps/ledger-suit/tests/unit/account-tree.test.mjs": "be74dcd363ad931a8ffcaeb8c51e58a1409a0ff7eb94fc461c4ae3449cb71d44"
+  },
+  "log_sha256": {
+    "unit-final.log": "acf8e304ebf61a40fdc4b84849c3c3281df3a97f517b135b33b2c7c4da8701a0",
+    "check-final.log": "99bc1ab3a4cf3c994ba111efd15c4a956e64c7e191cf4b377a28c3b2512238fb",
+    "lint-save-refresh.log": "f2eafdba23d6a243f80a70cf744995eb89de1a189a7eacdfd9c7071f97f337ad",
+    "typecheck-save-refresh.log": "8c7d9eb646c411d669951aa3b093e34c59190e2151e548e08fe144679cf5c53e",
+    "build-save-refresh.log": "7fa32e883d662e2a660dc0715cc67997c6531b0c6f28adf22d900f1e1a24827e",
+    "browser-final.log": "e6d104a9af312eca4250cb787862f6dd19697295692dc59c1abf420bc497fb08",
+    "browser-readonly-final.log": "e5c0865b01ad5c820ec3fc4c812cf73ea467d353c76d48644c45653837204829",
+    "browser-usage-reopen.log": "4ec4aef40b34dbf77ea4e9ca19f636197bf0cd895661144bb6af8024fb19eead",
+    "preview-verification.log": "3533b2255e04faf4b0cb70cc24f42aacd02fdfcbbe79269377553d3339262384"
+  },
+  "image_sha256": {
+    "ar-mobile.png": "025ee9ea7f3d38b6fbe9cead480c6518a9a16854a99171c14d3a9a37c27d4a26",
+    "ar-transactions.png": "659a44d0c58ee19cb0a8cb4216e8a2b7f44b0f42de7272a899d32fcbeb090488",
+    "ar-tree-mobile.png": "a05539865eb7eb24fe4e9dfe16e75c78009400e9295ebba8dd82a36989ee072b",
+    "ar-tree.png": "8ed2a08407068d4f2540c215bffd127ac44da4c61bd2102e54d6c3f979dbff12",
+    "en-mobile.png": "caf5e191716ac43a785612dc69773c5e4e9e245bac65ab16874e158c544fd2f8",
+    "en-transactions.png": "6abce32772ee833f2310c67056ae849984223440c38c5007e1eb961b42131362",
+    "en-tree-mobile.png": "e3e489996121a86f877558abe285085ab80997b69cbfe620e2a48267d48c0a8b",
+    "en-tree.png": "595557b40cd29a983a4ac86be94242a8f4199e2582198a03c61a3f4cbaf28a17",
+    "preview-transactions.png": "acc568ebe2c180852ccf09600146150718256022a20169120b7ae84941083559",
+    "preview-tree-ar.png": "f8bb726a9a3a4529b5cec700f6cf37e384c29df55d74452648c6ca6ddf0f425b",
+    "preview-tree-mobile.png": "c2d83069535c3c5ea2531571efc7817ad907035a8216799287b19db9c4a779af"
+  },
+  "approval_blockers": [],
+  "accountant_uat": "NOT_RUN",
+  "merge": "NOT_PERFORMED",
+  "deployment": "NOT_PERFORMED"
+}
