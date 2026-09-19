@@ -1,6 +1,8 @@
 name: Verify workspace
 on:
   pull_request:
+    # Edited includes retargets. Revalidate the destination, even when the head SHA is unchanged.
+    types: [opened, synchronize, reopened, edited]
   push:
     branches: [main]
 concurrency:
@@ -8,8 +10,46 @@ concurrency:
   cancel-in-progress: true
 permissions:
   contents: read
+  pull-requests: read
 jobs:
+  branch-policy:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - name: Check the live PR stack and single staging slot
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: node tooling/git/check-pr.mjs "$PR_NUMBER"
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+      - run: pnpm test
   verify:
+    needs: [review, branch-policy]
+    # Stacked feature PRs get review checks and relevant local tests. Build the combined batch once.
+    if: >-
+      always() && needs.review.result == 'success' &&
+      (github.event_name == 'push' ||
+       (needs.branch-policy.result == 'success' &&
+        (github.base_ref == 'stg' || github.base_ref == 'main')))
+    concurrency:
+      group: workspace-full-validation
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -21,8 +61,6 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm run setup
-      - run: pnpm check
-      - run: pnpm test
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm build

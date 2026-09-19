@@ -2,6 +2,7 @@
 
 Root rules apply. Routes and product orchestration are under `app/pages`; tenancy and plan adapters under `app/composables`; RPC contracts under `app/types`.
 
+- Before every task, run the root `pnpm agent:preflight`. Use short-lived feature branches, keep fixes on their open PR, and follow `docs/shared/git-workflow.md` for stacks, parallel work and manual GitHub merges. There is one staging PR for the whole monorepo, not one per app.
 - Use shared templates, PrimeVue components, `BsDataTable`, `BsDialog`, wizard and confirmation controllers. Product fields and content remain app-owned.
 - Preserve shop/portal/profile distinctions, membership and subscription checks. Treat display metadata as untrusted input.
 - Catalog, inventory and expense mutations use authorized atomic RPCs. Preserve request idempotency, FIFO, closed-period and archival/void rules.

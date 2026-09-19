@@ -6,9 +6,20 @@
 2. Read this file and the more specific `AGENTS.md` files governing your changes.
 3. Select the relevant workflow in `docs/agent-workflows.md`.
 4. Read the applicable shared specification, product requirements and architecture decisions.
-5. Inspect Git status and existing implementations. Preserve unrelated user edits and keep the task bounded by the user's request.
+5. Before every new or resumed task, run `pnpm agent:preflight` and read its worktree, commit, upstream and live GitHub PR/merge results. Follow `docs/shared/git-workflow.md`; use its fallback commands in older checkouts. Preserve unrelated edits and keep the task bounded by the user's request.
 
 User instructions take priority. Scoped rules specialize these rules within their directories. Shared specifications govern common behavior; product requirements govern product-specific behavior. Resolve material conflicts explicitly. Historical plans and prototype evidence are references, not an automatic work queue.
+
+## Branches, worktrees and pull requests
+
+- Refresh `origin` and inspect GitHub before starting/resuming work and again before publishing, retargeting or merging. Manual GitHub merges are authoritative, including squash/rebase merges; never treat a stale local branch as an active feature.
+- Use one short-lived `codex/<app-or-shared>/<feature>` branch and worktree per feature. Push coherent, verified commits and maintain an open review PR. Adjustments belong on that same feature branch/PR while it is open. Do not commit directly to `main` or `stg`.
+- Keep **one open PR into `stg` across the entire monorepo**, including drafts. The first feature or a short-lived batch owns that slot. New dependent features branch from and open PRs into their parent; independent parallel features use separate worktrees and PRs into the same active batch. App ownership does not create extra staging slots.
+- Run `pnpm agent:pr-check <number>` after opening/retargeting a PR. Recheck for concurrent PR creation; repair extra staging targets without deleting their work. Include parent/batch links, scope, merge order and actual validation in PR descriptions.
+- Batch ready features and fixes into deliberate updates. Run appropriate local checks for each feature and full CI on the combined staging candidate. Follow the workflow's provider-state and five-minute staging-merge spacing rule; no direct pushes or rapid successive merges into `stg`.
+- Prefer merge commits while children depend on a branch. After any manual parent merge/closure, fetch and reconcile/retarget children before continuing. Retire completed feature branches; do not replay squash-merged work or blindly recreate deleted remote branches.
+- Preserve dirty and active worktrees. Never auto-stash, reset, delete, rebase or force-push others' work. Only rewrite a solely owned branch within current authorization, with an explicit expected remote SHA and `--force-with-lease`.
+- GitHub CI and PR rules do not control external provider events. Keep feature Git deployments disabled in app Vercel configuration and verify Supabase Automatic branching is off. Use the maintained provider setup in `docs/shared/git-workflow.md`; do not claim dashboard settings are active without checking them.
 
 ## Navigation and ownership
 
