@@ -1,0 +1,91 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+select no_plan();
+create temp table classification_ids(key text primary key,id uuid);
+grant all on classification_ids to authenticated;
+insert into classification_ids select 'org',id from public.organizations where name='Alpha Trading';
+insert into classification_ids select 'other',id from public.organizations where name='Beta Supplies';
+select set_config('request.jwt.claims','{"sub":"a0000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+set local role authenticated;
+insert into classification_ids values
+ ('asset',public.create_account((select id from classification_ids where key='org'),'=Classified equipment','asset','equipment')),
+ ('capital',public.create_account((select id from classification_ids where key='org'),'Classification capital','equity','owner_capital')),
+ ('unused',public.create_account((select id from classification_ids where key='org'),'Unused classification','asset','other_asset')),
+ ('group',public.create_account((select id from classification_ids where key='org'),'Classification group','asset','equipment',p_account_role=>'group')),
+ ('revenue',public.create_account((select id from classification_ids where key='org'),'Classification sales','revenue','service_revenue'));
+insert into classification_ids values ('contra',public.create_account((select id from classification_ids where key='org'),'Accumulated depreciation','asset','equipment',p_normal_balance=>'credit',p_contra_account_id=>(select id from classification_ids where key='asset')));
+select public.create_adjustment((select id from classification_ids where key='org'),current_date,jsonb_build_array(
+ jsonb_build_object('account_id',(select id from classification_ids where key='asset'),'side','debit','amount_minor',10000),
+ jsonb_build_object('account_id',(select id from classification_ids where key='contra'),'side','credit','amount_minor',2000),
+ jsonb_build_object('account_id',(select id from classification_ids where key='capital'),'side','credit','amount_minor',8000)), 'Classification fixture','Disposable validation');
+create temp table classification_snapshot as select * from public.report_balance_sheet((select id from classification_ids where key='org'),current_date);
+select is((select statement_line from public.report_classified_balance_sheet((select id from classification_ids where key='org'),current_date) where account_id=(select id from classification_ids where key='asset')),'unclassified_asset','Existing balance is explicit unclassified, not inferred');
+select is((select amount_minor from public.report_classified_balance_sheet((select id from classification_ids where key='org'),current_date) where account_id=(select id from classification_ids where key='contra')),'-2000','Contra effect stays negative as exact text');
+select is((public.account_statement_classification_context((select id from classification_ids where key='org'),(select id from classification_ids where key='asset'))->>'min_effective_date')::date,app.org_today((select id from classification_ids where key='org'))+1,'UI date comes from organization day');
+select throws_ok(format('select public.schedule_account_statement_classification(%L,%L,%L,%L,%L,%L)',(select id from classification_ids where key='org'),(select id from classification_ids where key='asset'),'current_assets',current_date,'Backdated',gen_random_uuid()),'22023',null,'Cannot reclassify today');
+select throws_ok(format('select public.schedule_account_statement_classification(%L,%L,%L,%L,%L,%L)',(select id from classification_ids where key='org'),(select id from classification_ids where key='asset'),'current_assets','infinity','Invalid',gen_random_uuid()),'22023',null,'Infinite effective dates rejected');
+select throws_ok(format('select public.schedule_account_statement_classification(%L,%L,%L,%L,%L,%L)',(select id from classification_ids where key='org'),(select id from classification_ids where key='asset'),'current_assets',current_date+2,' ',gen_random_uuid()),'22023',null,'Reason required');
+select throws_ok(format('select public.schedule_account_statement_classification(%L,%L,%L,%L,%L,%L)',(select id from classification_ids where key='org'),(select id from classification_ids where key='asset'),'non_current_liabilities',current_date+2,'Wrong type',gen_random_uuid()),'22023',null,'Classification cannot move asset to liabilities');
+select throws_ok(format('select public.schedule_account_statement_classification(%L,%L,%L,%L,%L,%L)',(select id from classification_ids where key='org'),(select id from classification_ids where key='group'),'property_equipment',current_date+2,'Group',gen_random_uuid()),'22023',null,'Group has no independent presentation');
+select throws_ok(format('select public.schedule_account_statement_classification(%L,%L,%L,%L,%L,%L)',(select id from classification_ids where key='org'),(select id from classification_ids where key='revenue'),'equity',current_date+2,'Income',gen_random_uuid()),'22023',null,'P&L classification is outside this API');
+insert into classification_ids values ('request',gen_random_uuid());
+insert into classification_ids values ('first',public.schedule_account_statement_classification((select id from classification_ids where key='org'),(select id from classification_ids where key='asset'),'property_equipment',current_date+2,'Equipment used in operations',(select id from classification_ids where key='request')));
+select is(public.schedule_account_statement_classification((select id from classification_ids where key='org'),(select id from classification_ids where key='asset'),'property_equipment',current_date+2,'Equipment used in operations',(select id from classification_ids where key='request')),(select id from classification_ids where key='first'),'Exact retry returns same revision');
+select throws_ok(format('select public.schedule_account_statement_classification(%L,%L,%L,%L,%L,%L)',(select id from classification_ids where key='org'),(select id from classification_ids where key='asset'),'current_assets',current_date+2,'Changed',(select id from classification_ids where key='request')),'22023',null,'Same request cannot change payload');
+select is((select count(*) from public.account_statement_classifications),1::bigint,'Retry did not duplicate history');
+reset role;
+select is((select count(*) from public.audit_logs where action='account.classification_scheduled' and entity_id=(select id from classification_ids where key='asset')),1::bigint,'Retry did not duplicate audit');
+set local role authenticated;
+select is((select statement_line from public.report_classified_balance_sheet((select id from classification_ids where key='org'),current_date+1) where account_id=(select id from classification_ids where key='asset')),'unclassified_asset','Earlier report keeps earlier classification');
+select is((select classification_id from public.report_classified_balance_sheet((select id from classification_ids where key='org'),current_date+2) where account_id=(select id from classification_ids where key='asset')),(select id from classification_ids where key='first'),'Effective date is inclusive and traceable');
+select throws_ok(format('select public.schedule_account_statement_classification(%L,%L,%L,%L,%L,%L)',(select id from classification_ids where key='org'),(select id from classification_ids where key='asset'),'current_assets',current_date+3,'Stale',gen_random_uuid()),'40001',null,'Stale editor cannot replace later history');
+insert into classification_ids values ('second',public.schedule_account_statement_classification((select id from classification_ids where key='org'),(select id from classification_ids where key='asset'),'other_non_current_assets',current_date+2,'Corrected future decision',gen_random_uuid(),(select id from classification_ids where key='first')));
+select is((select classification_id from public.report_classified_balance_sheet((select id from classification_ids where key='org'),current_date+2) where account_id=(select id from classification_ids where key='asset')),(select id from classification_ids where key='second'),'Newest revision for same future date applies');
+select is((select count(*) from public.account_statement_classifications where account_id=(select id from classification_ids where key='asset')),2::bigint,'Superseded decision remains');
+select throws_ok(format('select public.schedule_account_statement_classification(%L,%L,%L,%L,%L,%L,%L)',(select id from classification_ids where key='org'),(select id from classification_ids where key='asset'),'current_assets',current_date+1,'Out of order',gen_random_uuid(),(select id from classification_ids where key='second')),'22023',null,'Cannot insert ahead of existing timeline');
+select results_eq('select * from public.report_balance_sheet((select id from classification_ids where key=''org''),current_date)','select * from classification_snapshot','Legacy report and amounts remain exactly identical');
+select is((select sum(amount_minor::bigint)::bigint from public.report_classified_balance_sheet((select id from classification_ids where key='org'),current_date+2) where section='asset'),8000::bigint,'Classification does not change asset total or duplicate contra');
+select ok(position('Other non-current assets' in public.export_classified_balance_sheet_csv((select id from classification_ids where key='org'),current_date+2,'en'))>0,'CSV uses dated presentation');
+select ok(position('الأصول غير المتداولة الأخرى' in public.export_classified_balance_sheet_csv((select id from classification_ids where key='org'),current_date+2,'ar'))>0,'Arabic CSV labels are localized');
+select ok(position('''=Classified equipment' in public.export_classified_balance_sheet_csv((select id from classification_ids where key='org'),current_date+2,'en'))>0,'CSV neutralizes formula names');
+select ok(position((select id::text from classification_ids where key='second') in public.export_classified_balance_sheet_csv((select id from classification_ids where key='org'),current_date+2,'en'))>0,'Export records exact classification id');
+select throws_ok(format('select public.export_classified_balance_sheet_csv(%L,%L,%L)',(select id from classification_ids where key='org'),current_date,'fr'),'22023',null,'Unsupported export locale rejected');
+select ok(not has_table_privilege('authenticated','public.account_statement_classifications','INSERT'),'Client cannot insert history directly');
+select ok(not has_table_privilege('authenticated','public.account_statement_classifications','UPDATE'),'Client cannot update history');
+select ok(not has_table_privilege('authenticated','public.account_statement_classifications','DELETE'),'Client cannot delete history');
+reset role;
+select throws_ok('update public.account_statement_classifications set reason=''rewrite''','42501',null,'History mutation blocked even on privileged SQL path');
+select throws_ok('delete from public.account_statement_classifications','42501',null,'History deletion blocked on privileged SQL path');
+update public.organization_settings set books_locked_until=current_date+5 where organization_id=(select id from classification_ids where key='org');
+set local role authenticated;
+select throws_ok(format('select public.schedule_account_statement_classification(%L,%L,%L,%L,%L,%L,%L)',(select id from classification_ids where key='org'),(select id from classification_ids where key='asset'),'current_assets',current_date+4,'Locked',gen_random_uuid(),(select id from classification_ids where key='second')),'42501',null,'Locked books cannot be bypassed even by owner override capability');
+reset role;
+update public.organization_settings set books_locked_until=null where organization_id=(select id from classification_ids where key='org');
+set local role authenticated;
+select public.schedule_account_statement_classification((select id from classification_ids where key='org'),(select id from classification_ids where key='unused'),'current_assets',current_date+2,'Unused account',gen_random_uuid());
+select throws_ok(format('update public.accounts set type=%L,subtype=%L where id=%L','expense','other_expense',(select id from classification_ids where key='unused')),'23514',null,'Account type cannot invalidate presentation history');
+select public.archive_account((select id from classification_ids where key='asset'));
+select is((select amount_minor from public.report_classified_balance_sheet((select id from classification_ids where key='org'),current_date+2) where account_id=(select id from classification_ids where key='asset')),'10000','Archived account remains in historical report');
+select throws_ok(format('select public.schedule_account_statement_classification(%L,%L,%L,%L,%L,%L,%L)',(select id from classification_ids where key='org'),(select id from classification_ids where key='asset'),'current_assets',current_date+3,'Archived',gen_random_uuid(),(select id from classification_ids where key='second')),'23514',null,'Archived account cannot schedule new decision');
+select set_config('request.jwt.claims','{"sub":"a0000000-0000-4000-8000-000000000003","role":"authenticated"}',true);
+select lives_ok(format('select public.account_statement_classification_context(%L,%L)',(select id from classification_ids where key='org'),(select id from classification_ids where key='asset')),'Viewer can read history');
+select throws_ok(format('select public.schedule_account_statement_classification(%L,%L,%L,%L,%L,%L)',(select id from classification_ids where key='org'),(select id from classification_ids where key='capital'),'equity',current_date+2,'Viewer',gen_random_uuid()),'42501',null,'Viewer cannot schedule');
+select throws_ok(format('select public.export_classified_balance_sheet_csv(%L)',(select id from classification_ids where key='org')),'42501',null,'Viewer cannot export without capability');
+select set_config('request.jwt.claims','{"sub":"b0000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+select is((select count(*) from public.account_statement_classifications),0::bigint,'RLS hides another tenant history');
+select throws_ok(format('select public.account_statement_classification_context(%L,%L)',(select id from classification_ids where key='other'),(select id from classification_ids where key='asset')),'42501',null,'Cross-tenant account cannot be probed through context');
+select throws_ok(format('select public.report_classified_balance_sheet(%L)',(select id from classification_ids where key='org')),'42501',null,'Report requires same tenant');
+select throws_ok(format('select public.schedule_account_statement_classification(%L,%L,%L,%L,%L,%L)',(select id from classification_ids where key='other'),(select id from classification_ids where key='capital'),'equity',current_date+2,'Foreign',gen_random_uuid()),'42501',null,'Write checks account belongs to requested tenant');
+reset role;
+update public.subscriptions set status='cancelled',trial_ends_at=now()-interval '1 day',current_period_end=now()-interval '1 day' where organization_id=(select id from classification_ids where key='org');
+select set_config('request.jwt.claims','{"sub":"a0000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+set local role authenticated;
+select lives_ok(format('select public.report_classified_balance_sheet(%L)',(select id from classification_ids where key='org')),'Expired subscription retains report reads');
+select throws_ok(format('select public.schedule_account_statement_classification(%L,%L,%L,%L,%L,%L)',(select id from classification_ids where key='org'),(select id from classification_ids where key='capital'),'equity',current_date+2,'Expired',gen_random_uuid()),'42501',null,'Expired subscription blocks classification writes');
+select throws_ok(format('select public.export_classified_balance_sheet_csv(%L)',(select id from classification_ids where key='org')),'42501',null,'Expired subscription preserves export entitlement behavior');
+reset role;
+select ok(not has_function_privilege('anon','public.schedule_account_statement_classification(uuid,uuid,text,date,text,uuid,uuid)','EXECUTE'),'Anon cannot call write endpoint');
+select ok(not has_function_privilege('anon','public.report_classified_balance_sheet(uuid,date)','EXECUTE'),'Anon cannot read report');
+select ok(not has_function_privilege('authenticated','app.statement_line_label(text,text)','EXECUTE'),'CSV helper stays private');
+select * from finish();
+rollback;

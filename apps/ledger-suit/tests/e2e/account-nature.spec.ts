@@ -56,7 +56,7 @@ for (const locale of ['en', 'ar']) {
     // A minimal balanced journal demonstrates opposite natural sides without
     // inventing a tax rate, costing method or customer cutover policy.
     const backend = new URL(assetResponse.url()).origin
-    expect(['http://127.0.0.1:60321', 'http://127.0.0.1:63321']).toContain(backend)
+    expect(['http://127.0.0.1:60321', 'http://127.0.0.1:63321', 'http://127.0.0.1:64321']).toContain(backend)
     const posted = await page.request.post(`${backend}/rest/v1/rpc/create_adjustment`, {
       headers,
       data: {
