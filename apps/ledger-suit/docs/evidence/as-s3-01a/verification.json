@@ -1,0 +1,76 @@
+{
+  "package": "AS-S3-01A",
+  "date": "2026-09-19",
+  "branch": "codex/ledger-suit/account-activity",
+  "base_sha": "4e36a9ae3d21e8e3fd565e0b3c5cadebef69725f",
+  "source_identification": "Exact per-file hashes below; code, tests and evidence are committed together.",
+  "environment": {
+    "kind": "owned disposable local",
+    "project_id": "ledger-account-activity-20260919",
+    "api_port": 65321,
+    "db_port": 65322,
+    "preview_port": 3250,
+    "browser_test_port": 3240,
+    "supabase_cli": "2.116.0",
+    "postgres_major": 17,
+    "migration_count": 70,
+    "left_running_for_review": true
+  },
+  "checks": {
+    "workspace": "PASS; 80 historical migration hashes unchanged",
+    "unit": {
+      "status": "PASS",
+      "tests": 39
+    },
+    "ledger_lint": "PASS",
+    "ledger_typecheck": "PASS",
+    "ledger_build": "PASS",
+    "sql": {
+      "status": "PASS",
+      "files": 31,
+      "assertions": 833,
+      "new_assertions": 38,
+      "seconds": 11
+    },
+    "browser_new": {
+      "status": "PASS",
+      "tests": 3,
+      "seconds": 32.4,
+      "retries": 0
+    },
+    "browser_regressions": {
+      "status": "PASS",
+      "tests": 27,
+      "note": "All 27 passed in the combined run. One new fixture then failed because its account was beyond page one; fixed by searching. All 3 new tests rerun and passed."
+    },
+    "database_lint": "PASS; public,app; no schema errors",
+    "security_advisors": "PASS; no issues",
+    "preview": "PASS; actual Beta posting RPCs; opening 1000000 + debits 515000 - credits 120000 = closing 1395000 minor; journal opens"
+  },
+  "not_run": [
+    "accountant UAT",
+    "hosted migration",
+    "deployment",
+    "customer-scale load/recovery"
+  ],
+  "approval_blockers": [],
+  "sha256": {
+    "apps/ledger-suit/app/components/AccountActivityDialog.vue": "07b6d424217c1e6e204e5c970c848790943325b71977ef1eda2b47f3c1e05880",
+    "apps/ledger-suit/app/pages/accounts.vue": "351abd2dcad3768fee02f2ab5d723426fe63dd6c8a9a033585053537f054f554",
+    "apps/ledger-suit/types/database.types.ts": "9b2530b08238d7dc7a5fae104e916ec14f0d5aba14fdb92f9492d86c19309d87",
+    "apps/ledger-suit/supabase/migrations/20260919114443_account_activity_reader.sql": "3c7eac5f95bc1863bbaca3e39933a3e74dc287297130c76582a5a470944c1ce0",
+    "apps/ledger-suit/supabase/tests/31_account_activity_test.sql": "93b05069d615c8be93f3988654a8c49f56a9ef6ffba74060898f4d0a5a4cbd0f",
+    "apps/ledger-suit/tests/e2e/account-activity.spec.ts": "210722bfafedfcc29151750951465f4d21cf1bb70d15e71d9350d539e160d0bf",
+    "apps/ledger-suit/tests/e2e/statement-classification.spec.ts": "8c764c6eddf4847d33566233cf701dd38be46458411af78d56e0d6c731352b32",
+    "apps/ledger-suit/i18n/locales/en.json": "5acc4b3d52bf481c2f51e018665638d329c9ddce18085995b9e2c00f50268be2",
+    "apps/ledger-suit/i18n/locales/ar.json": "917ac28e61fed671d68412fbbfa80ad8e365882e7acdff04f7c3630b13bec2a9",
+    "apps/ledger-suit/docs/evidence/as-s3-01a/ar-journal.png": "f67c8c4c711f88a05fcead492741459b9662555e26f5e7430de3160ca6a7188d",
+    "apps/ledger-suit/docs/evidence/as-s3-01a/ar-mobile.png": "b9bd2628d7d4c0ac2f195ba148480525a1958e3a4003be01affc9e3c55c7736f",
+    "apps/ledger-suit/docs/evidence/as-s3-01a/ar-statement.png": "97eb5316a44bdc76ea3292a7dc465702f8103084a3c3872dc859f29d549df2b1",
+    "apps/ledger-suit/docs/evidence/as-s3-01a/en-journal.png": "f8b51987bd9e8912bf3aea2283f35ad66adc5d84d9a457c99b34f3ac0ec41f02",
+    "apps/ledger-suit/docs/evidence/as-s3-01a/en-mobile.png": "ccd2b56d66800965fab4e51217ea55cbbad5e53f199e77b76b3d9aea7e96358c",
+    "apps/ledger-suit/docs/evidence/as-s3-01a/en-statement.png": "c6ed26c2dcbb91b9205510cc9f10f3df13b7cfce957304013814410d9c23bac4",
+    "apps/ledger-suit/docs/evidence/as-s3-01a/preview-journal.png": "a03cd9409c1bd3d3ce2deced0ce94bc1bdcb3bed0d25a67d249398c5ab6bb9f4",
+    "apps/ledger-suit/docs/evidence/as-s3-01a/preview-statement.png": "f2873aee4b321cde5706ad59b50efaba1a91be7ea5d5bc16ff3a17373e406a15"
+  }
+}

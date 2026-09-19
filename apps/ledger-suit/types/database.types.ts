@@ -3204,6 +3204,21 @@ export type Database = {
           user_exists: boolean
         }[]
       }
+      read_account_activity: {
+        Args: {
+          p_account_id: string
+          p_from_date?: string
+          p_limit?: number
+          p_offset?: number
+          p_organization_id: string
+          p_to_date?: string
+        }
+        Returns: Json
+      }
+      read_activity_journal: {
+        Args: { p_organization_id: string; p_transaction_id: string }
+        Returns: Json
+      }
       record_asset_purchase: {
         Args: {
           p_amount_minor: number
