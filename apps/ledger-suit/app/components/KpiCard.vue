@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const props = withDefaults(defineProps<{
   title: string
-  amountMinor: number | null | undefined
+  amountMinor: number | string | null | undefined
   previousMinor?: number | null
   /** Which direction is good news. Expenses going up is not an improvement. */
   goodDirection?: 'up' | 'down' | 'neutral'
@@ -14,14 +14,14 @@ const props = withDefaults(defineProps<{
 
 const { t, locale } = useI18n()
 
-const current = computed(() => Number(props.amountMinor ?? 0))
+const current = computed(() => props.amountMinor ?? 0)
 
 // A percentage against a zero base is not a percentage — show nothing rather
 // than an infinity or a misleading 100%.
 const change = computed(() => {
   const previous = props.previousMinor
   if (previous === null || previous === undefined || previous === 0) return null
-  return ((current.value - previous) / Math.abs(previous)) * 100
+  return ((Number(current.value) - previous) / Math.abs(previous)) * 100
 })
 
 const tone = computed(() => {

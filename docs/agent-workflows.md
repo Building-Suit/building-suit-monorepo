@@ -5,13 +5,15 @@ Use these workflows to navigate, maintain and extend the repository. Select only
 ## 1. Start or resume a task
 
 1. Read the root README, applicable agent rules and relevant shared/product specifications.
-2. Inspect Git status, any previous task record and the existing implementation. Preserve unrelated edits.
+2. Run `pnpm agent:preflight` and inspect all worktrees, dirty files, commits, fetched upstreams, open PRs and recent/manual GitHub merges. Read [the branch workflow](shared/git-workflow.md) and reconcile stale/retired branches before editing. Preserve unrelated edits and active worktrees.
 3. Find the owning app/package/schema using the navigation map, exports and dependency graph.
 4. Identify affected consumers, environment assumptions and acceptance criteria. Search existing implementations before adding abstractions.
 5. Use documented root scripts and workspace filters; verify actual script names.
-6. Implement the requested scope, run relevant checks and update documentation. Use a short task record when a handoff is useful; small fixes do not require a new planning document.
+6. Reuse the open feature branch for adjustments. For new work, identify the newest active stack leaf, record its committed SHA and create the child worktree from that SHA. Target its PR at the parent branch; use fresh `origin/stg` only when no active parent exists. Reconcile merged/closed parents first. Dirty parent edits stay in that worktree until its owner commits a checkpoint and the child incorporates it. Implement the requested scope, run relevant checks and update documentation. Use a short task record when a handoff is useful; small fixes do not require a new planning document.
 
 ## 2. Add or change a product feature
+
+Apply workflow 1 first. Every new feature stacks on the latest verified active worktree, even when it concerns another app. Parallel features use separate worktrees along the same stack. Publish a parent checkpoint and its PR before the child PR; do not create an independent sibling from `stg` while an active parent exists. Each feature has a pushed branch and review PR, with only one monorepo PR targeting `stg`. Existing-feature fixes stay on that feature's branch.
 
 1. Locate the owning product's pages, composables, requirements and tests.
 2. Use shared shell or marketing/auth templates, with product navigation, content, permissions and translations supplied through configuration.
@@ -19,6 +21,13 @@ Use these workflows to navigate, maintain and extend the repository. Select only
 4. Put product validation, orchestration and repository/RPC adapters in the feature. Keep business rules out of generic UI.
 5. Use tenant-scoped queries and authorized atomic commands with correct cache keys, pending/error handling and invalidation.
 6. Verify the user journey, permissions/subscriptions, refresh/deep links, failure recovery and relevant invariants. Update the appropriate product/shared documentation.
+
+### Preview the work under development
+
+1. Run the owning root `dev:*` command with `--list` or `--dry-run` to inspect the selected branch/path. Selection considers changes to that app and shared packages (also maintained docs for `dev:docs`), including uncommitted files. Newer source activity wins; stack depth breaks ties.
+2. Run the same command to start Nuxt in that worktree. Prepare that worktree’s dependencies first. Its app `.env` is used when present, otherwise the original checkout’s same-app local `.env` is passed explicitly; no credentials are copied.
+3. Use `--current` or `--worktree <branch/path>` for a deliberate or offline preview. When other possible feature worktrees exist, auto mode verifies GitHub and refuses to guess when access fails; an original checkout with no other possible feature runs offline. With no relevant active feature it serves the original checkout unchanged.
+4. Confirm the printed source matches the work being reviewed. Restart the dev command after selecting a new worktree; normal edits in the selected tree hot-reload. Separate sibling worktrees are never combined by the launcher.
 
 ## 3. Add or change shared UI or interaction behavior
 
@@ -80,18 +89,18 @@ Use these workflows to navigate, maintain and extend the repository. Select only
 
 ## 9. Release a change
 
-1. Identify affected apps/packages/database objects from the dependency graph, including shared and root changes.
+1. Run the preflight again, check live PR/base/head state and the [single staging batch procedure](shared/git-workflow.md#integrate-and-release-one-batch). Incorporate only reviewed, ready features and inspect affected apps/packages/database objects, including shared and root changes.
 2. Run required CI checks; verify the artifact/commit, environment variables, project refs and callbacks.
-3. Apply database changes through the serialized environment-specific workflow and deploy affected apps in runbook order.
+3. Verify the previous staging deployment completed successfully and the five-minute minimum between staging merges. Publish/merge one combined staging batch within authorization; apply database changes through the existing serialized environment-specific deployer and deploy affected apps in runbook order. Do not add a second deployer or assume Actions concurrency serializes Vercel/Supabase integrations.
 4. Follow current authorization and the release/recovery process; green CI alone does not authorize production deployment.
-5. Verify health and affected journeys/services. Record the release or invoke the documented recovery path as needed.
+5. Verify the merged SHA, provider outcomes, health and affected journeys/services. Fetch again, retire completed branches and repair remaining stacks using the manual-merge recovery procedure. Record the release or invoke the documented recovery path as needed.
 
 ## 10. Finish or hand off
 
 1. Review the diff against scope and acceptance criteria; preserve unrelated edits.
 2. Record actual verification results and distinguish existing limitations from introduced issues.
 3. Update affected contracts, documentation and agent guidance for the next agent.
-4. For a handoff, identify exact unfinished work and blockers. Do not mark unverified requirements complete.
+4. Refresh GitHub before publishing; commit verified adjustments to the same open feature branch, push a coherent checkpoint and create/update its correctly targeted PR. Run `pnpm agent:pr-check <number>`. For a handoff, identify the worktree, branch, PR, parent/batch, base/head SHAs, exact unfinished work and blockers. Do not mark unverified requirements complete.
 5. When the requested task is complete, give a concise result and stop without generating unrelated follow-up work.
 
 ## Task record template
@@ -101,6 +110,8 @@ Use these workflows to navigate, maintain and extend the repository. Select only
 Status: in progress | complete | blocked
 Requested outcome and acceptance criteria:
 Owning apps/packages/schemas:
+Worktree, branch, PR and parent/batch PR:
+Last verified origin/stg and feature head SHAs:
 Affected consumers:
 Environment/project refs, when relevant:
 Files and contracts changed:

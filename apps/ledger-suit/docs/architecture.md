@@ -5,8 +5,8 @@ and where the boundaries sit.
 
 Audited intended code at `8de315838b0d6a23e0bf523813a29c9d9e8bd13d` on 2026-09-18;
 these are implementation descriptions, not deployed or accountant acceptance.
-See [current audit](accounting-v2/CURRENT_STATE_AUDIT.md) and
-[current status](launch/CURRENT_STATUS.md) for gaps and verification limits.
+See [current audit](accountant-system/EVIDENCE_AR.md) and
+[current plan](accountant-system/README.md) for gaps and verification limits.
 
 ---
 
@@ -441,6 +441,33 @@ ids.
 
 ## 12. Deliberately built for what comes next
 
+### Dated balance-sheet presentation
+
+`account_statement_classifications` stores append-only presentation decisions,
+separate from normal balance, account role and journal entries. The authorized
+`schedule_account_statement_classification` command requires an explicit line,
+reason, future organization date, request UUID and expected latest revision.
+Account row locks serialize edits; a settings row lock coordinates books locks.
+An exact retry returns the original revision. Same-date future corrections append
+a revision; historical/today changes and dates before the latest scheduled date
+are rejected. Classified accounts cannot change their account type.
+
+`report_classified_balance_sheet` wraps the existing balance-sheet calculation
+and chooses the latest effective revision at the report date. Amounts are decimal
+strings of integer minor units; the Ledger UI sums them with BigInt. Missing
+classifications remain explicit unclassified lines. Contra amounts retain their
+sign. The old report/export RPCs remain compatible. The new localized
+`export_classified_balance_sheet_csv` includes the report date, classification
+revision and effective date and retains capability and export-entitlement checks.
+
+The account dialog exposes immutable history and prospective scheduling. Report
+state is scoped by backend, product, user, organization and date, and stale
+responses/downloads are suppressed on scope changes. This package covers the
+balance sheet; P&L classification and approved historical restatement remain
+outside it. See [AS-S2-01B](accountant-system/work-packages/AS-S2-01B.md).
+
+### Remaining foundations
+
 - `transaction_entries.dimensions jsonb` — branch, project, cost centre
 - `transaction_status.pending_approval` — approval policies without reshaping
   the engine
@@ -449,5 +476,5 @@ ids.
 - `subscription_entitlements` — new plans are rows, not code
 
 These are foundations, not evidence of accepted period, approval or dimensions
-workflows. Accounting V2 still needs additive schema and reviewed preservation
-planning; see [domain specification](accounting-v2/ACCOUNTING_DOMAIN_SPEC.md).
+workflows. The accountant-first plan still needs additive schema and reviewed
+preservation planning; see [the new master plan](accountant-system/MASTER_PLAN_AR.md).

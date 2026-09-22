@@ -1,0 +1,234 @@
+{
+  "task": "AS-S2-01B",
+  "recordedAt": "2026-09-19T11:28:16.742436+00:00",
+  "testedSourceRevision": "ea52426589880559af914ef820df79992d4cfaeb",
+  "planRevision": "0319f4f",
+  "stgBaseRevision": "cee6b408969ef6f2ba34574e56f5dde95827ec73",
+  "reconciliationRevision": "fe2fca802a4326552511d3d562dbe2c6397bd11d",
+  "reconciliationChangesTestedTree": false,
+  "authorization": "AS-E02: founder approved implementation without accountant decisions",
+  "environment": {
+    "kind": "owned disposable local backend",
+    "projectId": "ledger-statement-classification-20260919",
+    "api": "http://127.0.0.1:64321",
+    "dbPort": 64322,
+    "app": "http://127.0.0.1:3230",
+    "postgresMajor": 17,
+    "cli": "2.116.0",
+    "node": "v26.8.1",
+    "pnpm": "10.33.0",
+    "stopped": true,
+    "volumeRetained": true
+  },
+  "checks": {
+    "workspace": "PASS: 80 historical hashes unchanged",
+    "unit": "PASS: 39",
+    "sql": "PASS: 795 assertions, 30 suites, 10s; 48 new assertions",
+    "browserFeature": "PASS: 4, 15.9s, retries 0",
+    "browserRegression": "PASS: 23, 58.8s, retries 0",
+    "lint": "PASS",
+    "typecheck": "PASS",
+    "build": "PASS",
+    "databaseSecurityAdvisors": "PASS: no warnings/errors",
+    "databaseLintPublicApp": "PASS: no schema errors",
+    "generatedTypes": "PASS: regenerated public,graphql_public matches checked source"
+  },
+  "preservation": {
+    "result": "PASS",
+    "accounts": 4,
+    "transactions": 3,
+    "entries": 6,
+    "sha256": "b2902f6c4b58cbf078e426ed321f95fcab2df17937d49da93e1e0632c681523d",
+    "reportUnchanged": true,
+    "noClassificationBackfill": true
+  },
+  "concurrency": {
+    "result": "PASS",
+    "scenarios": [
+      "competing stale editor rejected",
+      "concurrent identical retry returns one revision",
+      "pending writer observes committed books lock"
+    ],
+    "sourceNote": "Scheduling body unchanged after concurrency run; final migration rehearsal additionally verified CSV volatility declaration fix."
+  },
+  "performanceWarnings": [
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "object": "profiles"
+    },
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "object": "organization_members"
+    },
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "object": "organization_members"
+    },
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "object": "organization_invitations"
+    },
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "object": "saved_views"
+    },
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "object": "saved_views"
+    },
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "object": "saved_views"
+    },
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "object": "saved_views"
+    },
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "object": "notifications"
+    },
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "object": "profiles"
+    }
+  ],
+  "providerEvidence": {
+    "checked": "2026-09-19",
+    "ledgerPreviewCheckId": 105882885205,
+    "result": "Creating a new preview branch per PR is disabled",
+    "scope": "Ledger staging check from PR 9; not a fresh dashboard audit of all projects",
+    "vercelFeatureFilter": "preserved: only stg/main enabled"
+  },
+  "notRun": [
+    "accountant UAT",
+    "hosted migration or deployment",
+    "customer-scale load/restore exercise"
+  ],
+  "limits": [
+    "balance sheet only",
+    "prospective whole-account classification only",
+    "no approved historical restatement",
+    "no cancellation API or structured classification-factor fields",
+    "2 browser isolation tests use synthetic delayed responses; SQL validates actual authorization"
+  ],
+  "migrationHashes": {
+    "20260830115900_verify_deployment_pipeline.sql": "b5ccf1ce2a1ace660dd17b2c9566bbfe1aabfa05abe4541e85b03f835186f669",
+    "20260830120000_extensions_and_shared.sql": "e7484d04f538a0a798b5840da92a22c9a93aa81e71d78f5f0d7464b3cecaeaa1",
+    "20260830120500_profiles.sql": "659dd80aa8587728df3098cf668ee5802e5ff2469e5d34a462545b9ab2c17d72",
+    "20260830121000_organizations.sql": "669b0f83f61b767959ca55a03c9689f050914bdcf5b8ac4e979c6aa901d0021a",
+    "20260830121500_organization_members.sql": "0a700f055447a543eb23fb3d42b591522ebdf6c7601ca0246c0a09c30c3de6dc",
+    "20260830122000_authorization_helpers.sql": "2709cea3d4aaaf762a1f85bb577e836d208594b92046da6ca594d576e60878f4",
+    "20260830122500_accounting_types.sql": "68845f80bf813c7d64683f65481467d6d10286da2c3ec9b18de3f004a5a99aa7",
+    "20260830123000_accounts.sql": "4091df79487ecc198fb12be97a8ad14a8e6a8bb3904e398e96ef5482e7b6b597",
+    "20260830123500_categories.sql": "7cbc803aee5ef361d5f54f2a2a65cdae86cc0c8a59458cc8aa6bc52dfc30bc86",
+    "20260830124000_counterparties.sql": "181596ab25e53fedf8491da82634a4c350cf8d06910a03f3ca478555df0a1998",
+    "20260830124500_transactions.sql": "8fe0054dbddf11d69bf4b18d1f0edd09a59b7c381474e818c0eb50444e5c36ad",
+    "20260830125000_transaction_entries.sql": "f2b436dc672aa117dd52ba1b0d02daae13d923e992254fd6e0f1bebc858dd65f",
+    "20260830125500_audit_logs.sql": "c2e29b22f75a8a76f36068eec808db4f2f465662d61e0cea7f410b99e331b74f",
+    "20260830130000_posting_engine.sql": "fba6c107c801c0bd9d889a4fb3fdfca87d2bc250cafec36c8280902a8d658d0e",
+    "20260830130500_transaction_flows.sql": "38fdd38f69a2573a4eb59f769088cbd8fae5dae52f343e3fc4c03889abb06845",
+    "20260830131000_default_chart_of_accounts.sql": "7fc149afa01594e5994a77db231fdc90d68207c7cea9f949d86fb4d7805494f8",
+    "20260830131500_tags_and_saved_views.sql": "31de865c4a6268414b5a74bc72250c2d77e73d119e6605880b7728393118a5f0",
+    "20260830132000_attachments.sql": "23125ded80e0d48a5c7225f2d37ef31ef10939243fac5d4acfea8a9ae8a48fec",
+    "20260830132500_notifications.sql": "1591c413598edf0d3088519be0da1ef838a66c705208ba322cfd026de91b742a",
+    "20260830133000_subscriptions.sql": "1d8f59e9664b55c11b6421d05f8645fc9ba03a2f7991dfdc4b2bf622b4df0ca8",
+    "20260830133500_rls_policies.sql": "7e7be94bb36b2e008ee7ef4c58602639c8fe8b30347d5ff95203eb8f07aff5e5",
+    "20260830134000_reporting.sql": "1a88d44ede37c96fed8780bd5974e490e115932ec2a3391c90b18f08a8217bdc",
+    "20260830150000_transaction_queries.sql": "346d8952cd3972b2753410d87a1ecba62d61e7a921c703a0b3c0391851b5d8c8",
+    "20260831090000_commitments.sql": "e569aa25cc00f7771f7836ad53bcb66eda67f655121b52614b550bdfdde774f0",
+    "20260831090500_commitment_functions.sql": "47c4e62ec1629b1cf0bdd01ff5607a578ae7bafff41bd12442a5f037f08f4f6e",
+    "20260831091000_recurring_rules.sql": "127791ba33dfa5229619937fbea2acbd39e77a1acb3c5c16db95e9a42526d325",
+    "20260831091500_recurring_functions.sql": "0d48fb19687409df4144573c98ba8b63dad9704ddbbccf5797ebd8d7b9eb12b6",
+    "20260831092000_phase3_rls_and_reminders.sql": "2e345a2320634ffa33c8324fb77c4957e68edf750bbcdcab94fba37df2161682",
+    "20260831095604_phase1_to_phase3_hardening.sql": "5bb12fde8fe78cfc866514645d4d09c910dfd4ae4af1c402433e3a11fd4b9d3f",
+    "20260831095606_operational_workflows.sql": "6eb3d155fd94f667b5807088aa3441fe4acde832f3203dfb37dd3a7b3b764c28",
+    "20260831131512_phase4_stripe_subscription.sql": "59b2f7f3d8960a68570e6ba342e146abfb94497ca3174bd4d10afe0b4815388d",
+    "20260901135311_signup_onboarding.sql": "f6ddd09fb7f0ff48c129b88ed24c5d077e3e664c1bd895481d9f4179de8bd247",
+    "20260907123339_harden_account_tenant_isolation.sql": "31d6f0a0df4884aebbf66a9d6f29612bfd479b7b3ed48b776f334cf070ec77ca",
+    "20260908055432_workspace_access_management.sql": "126bd3281a62a86c0e3383906c874ff6cb7d77793f1a68ef2d1bac4469001437",
+    "20260908120000_user_managed_chart_of_accounts.sql": "2cb91ab7e06f0d8f9306b73c8d0cc2ba10e6081deecd539060493152ea3672cb",
+    "20260908120853_enforce_unique_legal_business_name.sql": "50c5f61069590ea3df3fe532e75e6fd100e9af421496d40b195394fc611bfc71",
+    "20260908152800_onboarding_availability_checks.sql": "9da9480536ca887419543db19eb7629b42281b231146663ae75873a55aaf855e",
+    "20260908160000_update_preview_invitation.sql": "29e6280cb0a03942a612687e310a7a7dbd171d5f4e1cc3f6a3571a40adeae276",
+    "20260908170000_custom_roles.sql": "776d893853be4629c902638ab2d9bbc6bdd52db419149c59297f015ace0672a5",
+    "20260909063239_editable_system_roles.sql": "c478cba68748d237f2042e4eb9bbffa0342bce3fb89fa8c3457e3c22e454b46f",
+    "20260909123128_persist_signup_onboarding.sql": "ccaaadb88e045522aba4816f184044aa2d66898776c2e2abf860214523b071d3",
+    "20260909130826_resume_saved_signup.sql": "d382cd68bc522ef3ed3b3afbbca1902024c403cad2845e20fc84260748dc6e27",
+    "20260909135009_start_cardless_trial_on_registration.sql": "cb37a2847fbf696cd7808cc9ca9ed6c2ea3982bdd58448478148a5a3a29c5513",
+    "20260909165536_support_cardless_signup.sql": "eeb81faa2b9d6a5d40b71f1f1f446d22820e43b548bff5cbc22b0e40d0fb13d4",
+    "20260909180357_restore_currency_reference_data.sql": "8dd2dcf204614f8ed1f769b726597172ebf05af2366f423a3d13ef4cba8d5a4e",
+    "20260909200000_limit_owned_organizations_by_plan.sql": "08c4b2da70020752d488bc06e4939e39f9f2790eb45b7b4026c9efb58d259c51",
+    "20260909210000_paymob_billing.sql": "6fa686c9fb4b9a8b5ac843ddc975b4c84ddd757899ab793949892a14b5bce1d9",
+    "20260911090000_launch_plan_catalog.sql": "c3b935096c705c12eb213b345184ac1ea029129856936cb747d7513ad53616f0",
+    "20260911093000_plan_quota_engine.sql": "8ea0961e836fa60d9754a91804848d8aa0a89c2fd5fc32f0b0aeaefb92d274b9",
+    "20260911100000_subscription_readable_history.sql": "8e1e696b9126d4af4c6ca0fc43e0fa4f55a13dc7d2093742275d21874bd70963",
+    "20260911110000_member_seat_quota.sql": "2055ae8d3ef4bfb625bd149a6aac0c1d7397ccf92ecb16c1fb6196c42b6425b7",
+    "20260911124345_account_quota_enforcement.sql": "c978f2eb33f895adf6dd780f1467b71f07c6283bcbaba0eaeeb7037b99347367",
+    "20260911131925_counterparty_quota_enforcement.sql": "25a5bc1fabc51ea4e487f7d5f5c26c7d331154457c77ba36bef1f67f68ce41d4",
+    "20260911195634_recurring_rule_quota_enforcement.sql": "42339ea348a36eb639acaba65dad05dcd77f75b148343db14de956ec1020cc9e",
+    "20260911201132_custom_role_quota_enforcement.sql": "698e6051839b18b8b5358361d2fa798683d31a6308b22cdfe36ef0ec7f4bbcab",
+    "20260911205305_aggregate_attachment_storage_quota.sql": "9a428600b6044fa1102544ef7751a5f650490934c3aa884b6f98a26f2dc7d9a5",
+    "20260912094117_monthly_posted_transaction_quota.sql": "7ec1c05783c7d68c57f133bdcef1d0f0806b31ef22c8d7ad39c25afd65487720",
+    "20260912102128_business_multi_currency_enforcement.sql": "ffc5b9a7bd9c9549d6cf5d7e344b3fef754b85e0145294c8801fed2be6a67124",
+    "20260912110717_csv_import_backend.sql": "9f8f7cc613c11b83fe30ec297599022e2bcff0daa3848bb7861dd4daf8627cf3",
+    "20260912180913_financial_report_csv_exports.sql": "84a7d691efd2410cbc303d84572ec3d3f699219ed950ac6d228928b7bf5f12ac",
+    "20260912184018_audit_history_visibility_window.sql": "e9dfcf19d6e117742adecc1f5def41d3e66b38c6a367a93dd4c6f6804d4133d5",
+    "20260913105458_plan_aware_paymob_checkout.sql": "0c7ca97586caa8bf66c1e6b0c5550fd69adf100e9a896210e8d417de5c7af73b",
+    "20260913164343_plan_change_safety.sql": "9065b32232ab18bf7e9cde31717419ba6e087b4bc733219274f13e9a26bd0090",
+    "20260913171823_launch_plan_concurrency_hardening.sql": "a4c5506fcfe67be71180879b4b6a7f433cb78849c209acec64c7f1af4c926776",
+    "20260913225446_business_level_trial.sql": "51cf3be018644ab8302e0538e6a1ceb5ed9191d23c995f42c88c165afa2d0d76",
+    "20260913231456_distinguish_trial_plan_change.sql": "9386652c35ce83a59fde82bc2824e04134efa0299d017a26d0887c4e765cf836",
+    "20260919013605_account_nature_and_contra_reporting.sql": "3e3d076498b597384ec5af5acdbccf13c8927d69cb8a1f5865c4058bb7011b50",
+    "20260919095839_explicit_account_groups.sql": "38d48f6f4d99e1e1c5a4c130cd5c588d90dc5027c2e99df3982046aa890aa6fc",
+    "20260919105319_dated_statement_classification.sql": "5ec49ef059e6ff4520584843f34b2180cb0bc05be24910d7f64ba9d46d168d13"
+  },
+  "sqlTestHashes": {
+    "01_accounting_integrity_test.sql": "0fc4e86510e0b5a60fc9372e84eff9159641b75d114a9f67284211eea860183b",
+    "02_tenant_isolation_test.sql": "8ed5381eeb811247b5986b7b15a87c1eef7b8c54e83a59354c8582d9f43c03a5",
+    "03_commitments_and_recurring_test.sql": "c02041a64d1cc390a70334d1170225b8c66964a0e49334fff16e5aefd8e2b6c1",
+    "04_phase_hardening_test.sql": "decdf1d629a27819c9e5117b1c4f00ab366ee858ce1daf16d42e97f104d510e9",
+    "05_phase4_billing_test.sql": "63ce164a87c57a1ddeeacafa035443d2dc34a9e2363f49ed8100981f514427a0",
+    "06_signup_onboarding_test.sql": "7d556221722692a61ab9bd081c2557a617f2876655053f67f23fc697005176f5",
+    "07_workspace_access_test.sql": "b3f9126dcf78ab6d1aa3872af7173deb87bccb542a11f9149c9f4b8737bf7f04",
+    "08_editable_system_roles_test.sql": "8dbfa89315ef9e03d444898bc1da8a83523d82e8403c9b3bad378784906d8156",
+    "09_signup_persistence_test.sql": "c17d7aa0009d4d69c8fee33dbd9bdf263e1fca7f1deddc6cb6fe0ecf97905fee",
+    "10_launch_plan_catalog_test.sql": "45376966849e1b60c06be8daa2629e60125e1ddfa91e88f7c3d502c8d10ef1e0",
+    "11_plan_quota_engine_test.sql": "e86bb748aa0f9259f410fa5927180a8ad1c0b87c1e5efc0615eca4efba76b99e",
+    "12_subscription_readable_history_test.sql": "b4c89352bc27c8a11099806c43e95339fa20ffcc6625805523dd64b692ff60a5",
+    "13_member_seat_quota_test.sql": "6e84b17f19557f2e1119d34b1a517838e7059a42628f579a271b5fc9a1c0aa00",
+    "14_account_quota_test.sql": "d13de786f779d55a4a2feb5b55bd02bd991158b2c4e33dd6aab566fc44e33f7a",
+    "15_counterparty_quota_test.sql": "b9e28353a27ffd33789c4a52fe497088167bbe5f0b9055f52edc578fb7006492",
+    "16_recurring_rule_quota_test.sql": "f250c65407b3fb2c1caec539dfb24f6e3daaffa0d8e678ddb73bc86e9af4432c",
+    "17_custom_role_quota_test.sql": "f24324efff4f26f9b3d27d03f9e46768c806bf36665002701f85290d78be3837",
+    "18_storage_quota_test.sql": "15653b478c8cf8e91a6400562871f93331b4d5343aeee34a17217b4f3f8e46a9",
+    "19_monthly_transaction_quota_test.sql": "6ca66d9754f9c81ec6e176d65518e5ccf93f6393d458056f299b40c5113c9cd4",
+    "20_business_multi_currency_test.sql": "33b3c5225d9aed834f74f66bd0d56259e2e22ac4b8db7c71e6719b8c9857b868",
+    "21_csv_import_backend_test.sql": "a77590f965b5cbab01b0074c387388c001c044a7cb70e9c25783992085433ced",
+    "22_financial_report_csv_exports_test.sql": "5b40eb1ec6d484e351b040800361efc649374eb09560f33e6a663b0ba650b565",
+    "23_audit_history_window_test.sql": "3d8760969972cb33c44fbaa9339c76b95ddc9585243140e84a0316e119d09f49",
+    "24_plan_aware_paymob_checkout_test.sql": "09b290630ffaab03726806554ef5187f7c639ddabe2094e821650d5b5e592935",
+    "25_plan_change_safety_test.sql": "e58ca7acf39f5b00b155cf7d70b4dad3b228f4ba1284b73dba936789be31d548",
+    "26_launch_plan_hardening_test.sql": "3531b19f3b4261e36b0ab774f23341d8c22d229a24a885aff0b22cccbff2b30b",
+    "27_business_level_trial_test.sql": "569f7f99ee6b78e879dd2c5883343f0fa348a16e738f92ed2a0cefdc0cc78ea0",
+    "28_account_nature_test.sql": "20eddefe4bbd1f2f632b4ab721e2dc679df9d66895e363b6111820d3c313d376",
+    "29_account_groups_test.sql": "0ecd1400517940c026522b01a3229f94f0fa1dcde6d76c4bbb65c6b73e27db9b",
+    "30_statement_classification_test.sql": "9eee33903d8c1faaa218d4df9b3c5e72356722e4ab3c7c3da1e176ff2378d8cf"
+  },
+  "screenshotHashes": {
+    "ar-report-mobile.png": "cebf9543f76485a35a60d8c58508332670133e0d0d87b5d33998be06c0fc7fa7",
+    "ar-schedule.png": "a5fb52f02d4c32a78a277630de9d3535335e976d0516a7241bfdd060187e88e4",
+    "en-report-mobile.png": "eab849e7795cc8889b0ec7342dca1d9b1f81e567522403dacde26670b951a2ac",
+    "en-schedule.png": "41ba1370a5021d84956ea6b95ed9a51df6b5fcab1147d1d416d5cb235ce4c719"
+  }
+}

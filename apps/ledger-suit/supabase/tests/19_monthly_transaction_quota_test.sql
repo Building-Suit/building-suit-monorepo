@@ -264,13 +264,14 @@ select extensions.dblink_exec('transaction_quota_1', $setup$
     (select id from public.subscription_plans where key = 'ledger_suit')
   where organization_id = '19000000-0000-4000-8000-000000000001';
   set session_replication_role = replica;
+  -- This fixture disables triggers; supply the now-explicit nature directly.
   insert into public.accounts (
-    id, organization_id, name, type, subtype, currency
+    id, organization_id, name, type, subtype, currency, normal_balance
   ) values
     ('19000000-0000-4000-8000-000000000004', '19000000-0000-4000-8000-000000000001',
-     'Race debit', 'asset', 'bank', 'EGP'),
+     'Race debit', 'asset', 'bank', 'EGP', 'debit'),
     ('19000000-0000-4000-8000-000000000005', '19000000-0000-4000-8000-000000000001',
-     'Race credit', 'revenue', 'other_income', 'EGP');
+     'Race credit', 'revenue', 'other_income', 'EGP', 'credit');
   insert into public.transactions (
     organization_id, type, status, source, transaction_date, posting_date,
     currency_code, exchange_rate, posted_at, description

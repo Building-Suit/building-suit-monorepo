@@ -48,12 +48,12 @@
       "production": {
         "projectRef": "fgdzjnsbcxfbiuogbmom",
         "appUrl": "https://shop.building-suit.com",
-        "status": "project verified healthy; app environment configured; migration credentials pending"
+        "status": "public schema and scoped business/Auth data copy verified; SMTP, app deployment and final cutover pending"
       },
       "staging": {
         "projectRef": "jvvelvftpfnlogalgxgv",
         "appUrl": "https://stg.shop.building-suit.com",
-        "status": "project verified healthy; app environment configured; migration credentials pending"
+        "status": "public schema and Shop plan catalog initialized; SQL tests and public catalog query passed; SMTP and app deployment pending"
       }
     }
   },

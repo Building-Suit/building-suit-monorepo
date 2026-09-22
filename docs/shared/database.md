@@ -22,7 +22,7 @@ The product selector passes the correct `--workdir` to the pinned CLI. Ledger us
 
 Create a forward file using `pnpm db <product> migration new <name>`. Preserve applied files. Review dependencies, RLS, explicit grants, functions, views, Storage, Realtime and business invariants. Apply local changes with `pnpm db <product> migration up --local`, generate types and check relevant app flows.
 
-The current Shop test runner executes five preserved SQL suites after substituting only the relocated schema identifier into the test input; originals stay intact. Older retired-contract suites remain historical evidence and are not the active test command.
+The current Shop test runner executes five preserved SQL suites after substituting only the relocated schema identifier into the test input, plus the dedicated-project privilege regression suite; originals stay intact. Older retired-contract suites remain historical evidence and are not the active test command.
 
 ## Hosted configuration and release
 

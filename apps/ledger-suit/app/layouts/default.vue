@@ -6,23 +6,14 @@ const PRIMARY_NAV = [
   { to: '/reports', key: 'reports', icon: 'reports' },
 ] as const
 
-const TRANSACTION_LINKS = ADD_FLOWS.map(flow => ({
-  to: `/records/${flow}`,
-  label: `add.flows.${flow}`,
-}))
-
 const NAV_GROUPS = computed(() => [
   {
-    key: 'transactions',
+    key: 'finance',
     links: [
-      ...(can('transactions.read') ? [{ to: '/transactions', label: 'nav.allTransactions' }] : []),
-      ...(can('imports.create') ? [{ to: '/imports', label: 'nav.importTransactions' }] : []),
-      ...(can('transactions.create') ? TRANSACTION_LINKS : []),
+      ...(can('transactions.read') || can('transactions.create') || can('transactions.adjust') || can('imports.create') ? [{ to: '/transactions', label: 'nav.transactions' }] : []),
+      ...(can('accounts.read') ? [{ to: '/accounts', label: 'nav.accounts' }] : []),
+      ...(can('reports.read') ? [{ to: '/reports', label: 'nav.reports' }] : []),
     ],
-  },
-  {
-    key: 'ledger',
-    links: can('accounts.read') ? [{ to: '/accounts', label: 'nav.accounts' }] : [],
   },
   {
     key: 'operations',
@@ -44,10 +35,6 @@ const NAV_GROUPS = computed(() => [
       ...(can('members.read') ? [{ to: '/team', label: 'nav.teamInvitations' }] : []),
       ...(can('audit.read') ? [{ to: '/audit', label: 'nav.auditHistory' }] : []),
     ],
-  },
-  {
-    key: 'insights',
-    links: can('reports.read') ? [{ to: '/reports', label: 'nav.reports' }] : [],
   },
 ].filter(group => group.links.length))
 
@@ -91,7 +78,8 @@ watch(currentId, async (value, previous) => {
             <NuxtLink v-if="can('billing.manage')" to="/billing" class="mt-2 inline-block text-link">{{ t('billing.fixBilling') }}</NuxtLink>
           </div>
           <slot />
+          <div class="mt-6 flex justify-end"><FinancialSystemMap /></div>
         </template>
-    <template #overlays><AddTransactionDialog /><OperationsCenter /><FinancialSystemMap /><ToastHost /></template>
+    <template #overlays><AddTransactionDialog /><OperationsCenter /><ToastHost /></template>
   </BsAppShell>
 </template>

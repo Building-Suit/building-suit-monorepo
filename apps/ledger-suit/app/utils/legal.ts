@@ -486,7 +486,7 @@ export const legalDocuments: Record<
     en: {
       title: 'Refund & Cancellation Policy',
       intro: 'This policy explains how subscription cancellation and refund requests are handled for Ledger Suit.',
-      updated: '14 September 2026',
+      updated: '22 September 2026',
       sections: [
         {
           title: 'Cancellation',
@@ -511,14 +511,16 @@ export const legalDocuments: Record<
         {
           title: 'How to request a refund or cancellation',
           paragraphs: [
-            `Email ${publicBusiness.supportEmail} from the email address associated with your Ledger Suit account. Include the organization/workspace name, payment date, amount, and payment reference if available.`,
-            'We may ask for additional information needed to verify the account and transaction before completing the request.',
+            `Email ${publicBusiness.supportEmail} from the email address associated with your Ledger Suit account. Include the organization/workspace name, payment date, amount, reason for the request, and payment reference if available.`,
+            'We normally review refund requests within 2 business days. We may ask for additional information needed to verify the account and transaction before completing the review.',
           ],
         },
         {
-          title: 'Processing time',
+          title: 'Refund processing time',
           paragraphs: [
-            'Approved refunds are submitted to the original payment method where possible. The time for the refunded amount to appear depends on the payment provider, card issuer, or bank and is outside our direct control.',
+            'Once a refund request is approved, we will initiate the refund to the original payment method within 7 business days.',
+            'After the refund has been initiated, the payment provider, card issuer, or bank may require additional processing time before the refunded amount appears in your account. Processing times may vary depending on the payment method and issuing bank.',
+            `If an approved refund has not appeared within 14 business days after approval, please contact ${publicBusiness.supportEmail} so we can investigate the transaction with the payment provider.`,
           ],
         },
         {
@@ -532,7 +534,7 @@ export const legalDocuments: Record<
     ar: {
       title: 'سياسة الاسترداد والإلغاء',
       intro: 'توضح هذه السياسة كيفية التعامل مع إلغاء اشتراك Ledger Suit وطلبات استرداد المدفوعات.',
-      updated: '14 سبتمبر 2026',
+      updated: '22 سبتمبر 2026',
       sections: [
         {
           title: 'إلغاء الاشتراك',
@@ -557,14 +559,16 @@ export const legalDocuments: Record<
         {
           title: 'طريقة طلب الإلغاء أو الاسترداد',
           paragraphs: [
-            `أرسل رسالة إلى ${publicBusiness.supportEmail} من البريد الإلكتروني المرتبط بحساب Ledger Suit، مع ذكر اسم النشاط أو مساحة العمل وتاريخ الدفع والمبلغ ومرجع العملية إن كان متاحًا.`,
-            'قد نطلب معلومات إضافية للتحقق من الحساب والمعاملة قبل إتمام الطلب.',
+            `أرسل رسالة إلى ${publicBusiness.supportEmail} من البريد الإلكتروني المرتبط بحساب Ledger Suit، مع ذكر اسم النشاط أو مساحة العمل وتاريخ الدفع والمبلغ وسبب طلب الاسترداد ومرجع العملية إن كان متاحًا.`,
+            'نقوم عادةً بمراجعة طلبات الاسترداد خلال يومي عمل. وقد نطلب معلومات إضافية للتحقق من الحساب والمعاملة قبل إتمام المراجعة.',
           ],
         },
         {
           title: 'مدة معالجة الاسترداد',
           paragraphs: [
-            'عند الموافقة على الاسترداد، يُعاد المبلغ إلى وسيلة الدفع الأصلية متى كان ذلك ممكنًا. وقد يستغرق ظهوره وقتًا إضافيًا لدى مزود الدفع أو البنك أو جهة إصدار البطاقة، وهو أمر خارج سيطرتنا المباشرة.',
+            'بعد الموافقة على طلب الاسترداد، سنقوم ببدء عملية إعادة المبلغ إلى وسيلة الدفع الأصلية خلال 7 أيام عمل.',
+            'بعد بدء عملية الاسترداد، قد يحتاج مزود الدفع أو البنك أو جهة إصدار البطاقة إلى وقت إضافي حتى يظهر المبلغ في حسابك. وقد تختلف مدة المعالجة حسب وسيلة الدفع والبنك المُصدر للبطاقة.',
+            `إذا لم يظهر مبلغ الاسترداد خلال 14 يوم عمل من تاريخ الموافقة على الطلب، يرجى التواصل معنا عبر ${publicBusiness.supportEmail} حتى نتمكن من مراجعة العملية مع مزود الدفع.`,
           ],
         },
         {

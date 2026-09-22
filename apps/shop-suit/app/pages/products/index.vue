@@ -36,7 +36,7 @@ const copy = computed(() => isArabic.value ? {
   limit: 'وصلت إلى حد المنتجات في خطتك.', duplicate: 'هذا الرمز مستخدم لمنتج نشط آخر.',
   access: 'انتهت التجربة أو ليست لديك صلاحية التعديل.',
   archiveConfirm: 'هل تريد أرشفة هذا المنتج؟ سيبقى سجلّه محفوظًا.',
-  stockLater: 'يمكنك تسجيل الكميات يدويًا في المخزون. مشتريات الموردين قيد العمل.',
+  stockLater: 'يمكنك تسجيل الكميات يدويًا في المخزون أو تسجيلها من صفحة المشتريات.',
 } : {
   title: 'Products', subtitle: 'Create your shop catalog and sale prices.',
   add: 'Add product', edit: 'Edit', archive: 'Archive', cancel: 'Cancel', save: 'Save product', saving: 'Saving...',
@@ -48,7 +48,7 @@ const copy = computed(() => isArabic.value ? {
   limit: 'Your plan product limit has been reached.', duplicate: 'Another active product already uses this SKU.',
   access: 'Your trial has ended or you do not have permission to edit.',
   archiveConfirm: 'Archive this product? Its history will be kept.',
-  stockLater: 'You can record quantities manually in Inventory. Supplier purchases are in progress.',
+  stockLater: 'Record quantities manually in Inventory or receive them through Purchases.',
 })
 
 const { data: products, pending, error, refresh } = useAsyncData(

@@ -34,11 +34,77 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_statement_classifications: {
+        Row: {
+          account_id: string
+          created_at: string
+          created_by: string
+          effective_from: string
+          id: string
+          organization_id: string
+          predecessor_id: string | null
+          reason: string
+          request_id: string
+          revision: number
+          statement_line: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          created_by: string
+          effective_from: string
+          id?: string
+          organization_id: string
+          predecessor_id?: string | null
+          reason: string
+          request_id: string
+          revision?: never
+          statement_line: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          created_by?: string
+          effective_from?: string
+          id?: string
+          organization_id?: string
+          predecessor_id?: string | null
+          reason?: string
+          request_id?: string
+          revision?: never
+          statement_line?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_statement_classifications_account_fk"
+            columns: ["account_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "account_balances"
+            referencedColumns: ["account_id", "organization_id"]
+          },
+          {
+            foreignKeyName: "account_statement_classifications_account_fk"
+            columns: ["account_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "account_statement_classifications_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       accounts: {
         Row: {
+          account_role: string
           archived_at: string | null
           cash_flow_section: Database["public"]["Enums"]["cash_flow_section"]
           code: string | null
+          contra_account_id: string | null
           created_at: string
           created_by: string | null
           currency: string
@@ -58,9 +124,11 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          account_role?: string
           archived_at?: string | null
           cash_flow_section?: Database["public"]["Enums"]["cash_flow_section"]
           code?: string | null
+          contra_account_id?: string | null
           created_at?: string
           created_by?: string | null
           currency: string
@@ -71,7 +139,7 @@ export type Database = {
           is_liquid?: boolean
           is_system?: boolean
           name: string
-          normal_balance?: Database["public"]["Enums"]["normal_balance"]
+          normal_balance: Database["public"]["Enums"]["normal_balance"]
           organization_id: string
           parent_account_id?: string | null
           subtype: Database["public"]["Enums"]["account_subtype"]
@@ -80,9 +148,11 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          account_role?: string
           archived_at?: string | null
           cash_flow_section?: Database["public"]["Enums"]["cash_flow_section"]
           code?: string | null
+          contra_account_id?: string | null
           created_at?: string
           created_by?: string | null
           currency?: string
@@ -102,6 +172,20 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "accounts_contra_same_org"
+            columns: ["contra_account_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "account_balances"
+            referencedColumns: ["account_id", "organization_id"]
+          },
+          {
+            foreignKeyName: "accounts_contra_same_org"
+            columns: ["contra_account_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id", "organization_id"]
+          },
           {
             foreignKeyName: "accounts_created_by_fkey"
             columns: ["created_by"]
@@ -2325,22 +2409,42 @@ export type Database = {
       account_balances: {
         Row: {
           account_id: string | null
+          account_role: string | null
           balance_minor: number | null
+          classification_locked: boolean | null
           code: string | null
+          contra_account_id: string | null
           credit_minor: number | null
           currency: string | null
           debit_minor: number | null
           entry_count: number | null
           is_archived: boolean | null
           is_liquid: boolean | null
+          is_system: boolean | null
           name: string | null
+          net_debit_minor: string | null
           normal_balance: Database["public"]["Enums"]["normal_balance"] | null
           organization_id: string | null
           parent_account_id: string | null
+          statement_balance_minor: string | null
           subtype: Database["public"]["Enums"]["account_subtype"] | null
           type: Database["public"]["Enums"]["account_type"] | null
         }
         Relationships: [
+          {
+            foreignKeyName: "accounts_contra_same_org"
+            columns: ["contra_account_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "account_balances"
+            referencedColumns: ["account_id", "organization_id"]
+          },
+          {
+            foreignKeyName: "accounts_contra_same_org"
+            columns: ["contra_account_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id", "organization_id"]
+          },
           {
             foreignKeyName: "accounts_currency_fkey"
             columns: ["currency"]
@@ -2674,6 +2778,10 @@ export type Database = {
         Args: { p_token: string }
         Returns: string
       }
+      account_statement_classification_context: {
+        Args: { p_account_id: string; p_organization_id: string }
+        Returns: Json
+      }
       apply_paymob_subscription_event: {
         Args: {
           p_amount_minor?: number
@@ -2832,9 +2940,12 @@ export type Database = {
       }
       create_account: {
         Args: {
+          p_account_role?: string
           p_code?: string
+          p_contra_account_id?: string
           p_currency?: string
           p_name: string
+          p_normal_balance?: Database["public"]["Enums"]["normal_balance"]
           p_organization_id: string
           p_parent_account_id?: string
           p_subtype: Database["public"]["Enums"]["account_subtype"]
@@ -2962,6 +3073,14 @@ export type Database = {
         Returns: Json
       }
       delete_organization_role: { Args: { p_role_id: string }; Returns: string }
+      export_classified_balance_sheet_csv: {
+        Args: {
+          p_as_of_date?: string
+          p_locale?: string
+          p_organization_id: string
+        }
+        Returns: string
+      }
       export_financial_report_csv: {
         Args: {
           p_account_id?: string
@@ -3084,6 +3203,21 @@ export type Database = {
           role_name_en: string
           user_exists: boolean
         }[]
+      }
+      read_account_activity: {
+        Args: {
+          p_account_id: string
+          p_from_date?: string
+          p_limit?: number
+          p_offset?: number
+          p_organization_id: string
+          p_to_date?: string
+        }
+        Returns: Json
+      }
+      read_activity_journal: {
+        Args: { p_organization_id: string; p_transaction_id: string }
+        Returns: Json
       }
       record_asset_purchase: {
         Args: {
@@ -3248,6 +3382,20 @@ export type Database = {
           section: Database["public"]["Enums"]["cash_flow_section"]
         }[]
       }
+      report_classified_balance_sheet: {
+        Args: { p_as_of_date?: string; p_organization_id: string }
+        Returns: {
+          account_id: string
+          amount_minor: string
+          classification_id: string
+          code: string
+          effective_from: string
+          name: string
+          report_date: string
+          section: string
+          statement_line: string
+        }[]
+      }
       report_general_ledger: {
         Args: {
           p_account_id: string
@@ -3357,6 +3505,18 @@ export type Database = {
           transaction_id: string
         }[]
       }
+      schedule_account_statement_classification: {
+        Args: {
+          p_account_id: string
+          p_effective_from: string
+          p_expected_revision_id?: string
+          p_organization_id: string
+          p_reason: string
+          p_request_id: string
+          p_statement_line: string
+        }
+        Returns: string
+      }
       search_transactions: {
         Args: {
           p_account_ids?: string[]
@@ -3454,7 +3614,14 @@ export type Database = {
         }[]
       }
       update_account: {
-        Args: { p_account_id: string; p_code?: string; p_name: string }
+        Args: {
+          p_account_id: string
+          p_clear_contra?: boolean
+          p_code?: string
+          p_contra_account_id?: string
+          p_name: string
+          p_normal_balance?: Database["public"]["Enums"]["normal_balance"]
+        }
         Returns: string
       }
       update_commitment: {

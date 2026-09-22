@@ -12,7 +12,10 @@ export default {
   "border": "var(--bs-border)",
   "border-strong": "var(--bs-border-strong)",
   "primary": "var(--bs-primary)",
+  "primary-hover": "var(--bs-primary-hover)",
+  "primary-pressed": "var(--bs-primary-pressed)",
   "accent": "var(--bs-accent)",
+  "accent-hover": "var(--bs-accent-hover)",
   "link": "var(--bs-link)",
   "focus-ring": "var(--bs-focus-ring)"
 }

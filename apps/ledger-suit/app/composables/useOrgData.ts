@@ -23,6 +23,7 @@ export interface AccountRow {
   is_system: boolean
   system_key: string | null
   parent_account_id: string | null
+  account_role: string
 }
 
 export interface CategoryRow {
@@ -42,17 +43,21 @@ export function useOrgAccounts() {
   const supabase = useSupabaseClient<Database>()
   const { currentId } = useTenant()
 
-  return useLazyAsyncData<AccountRow[]>('org:accounts', async () => {
-    if (!currentId.value) return []
+  return useLazyAsyncData<AccountRow[]>('org:accounts', async (_app, { signal }) => {
+    const organizationId = currentId.value
+    if (!organizationId) return []
 
-    const { data, error } = await supabase
+    const rows = await fetchAccountPages<AccountRow>((from, to) => supabase
       .from('accounts')
-      .select('organization_id, id, code, name, type, subtype, currency, is_liquid, is_archived, is_system, system_key, parent_account_id')
-      .eq('organization_id', currentId.value)
+      .select('organization_id, id, code, name, type, subtype, currency, is_liquid, is_archived, is_system, system_key, parent_account_id, account_role', { count: 'exact' })
+      .eq('organization_id', organizationId)
+      .eq('account_role', 'posting')
       .order('code', { ascending: true, nullsFirst: false })
+      .order('id')
+      .range(from, to)
+      .abortSignal(signal), signal)
 
-    if (error) throw error
-    return (data ?? []) as AccountRow[]
+    return currentId.value === organizationId ? rows : []
   }, { watch: [currentId], default: () => [] })
 }
 
@@ -98,20 +103,13 @@ export function useOrgCounterparties() {
 export function usePaymentAccounts(accounts: Ref<AccountRow[]>) {
   return computed(() =>
     accounts.value.filter(
-      a => !a.is_archived
+      a => isPostingAccount(a)
         && (a.is_liquid || ['credit_card', 'accounts_receivable', 'accounts_payable'].includes(a.subtype)),
     ),
   )
 }
 
-/** Leaf accounts of a given type — the ones it makes sense to post to. */
+/** Explicit posting roles retain legacy parent accounts with direct entries. */
 export function useAccountsOfType(accounts: Ref<AccountRow[]>, types: AccountType[]) {
-  return computed(() => {
-    const parents = new Set(
-      accounts.value.map(a => a.parent_account_id).filter(Boolean) as string[],
-    )
-    return accounts.value.filter(
-      a => types.includes(a.type) && !a.is_archived && !parents.has(a.id),
-    )
-  })
+  return computed(() => accounts.value.filter(a => types.includes(a.type) && isPostingAccount(a)))
 }

@@ -11,6 +11,7 @@ import type { Database } from '~~/types/database.types'
  */
 
 const supabase = useSupabaseClient<Database>()
+const nuxtApp = useNuxtApp()
 const { currentId, baseCurrency, can } = useTenant()
 const { open, flow, close, markChanged } = useAddTransaction()
 const toasts = useToasts()
@@ -391,7 +392,10 @@ async function submit() {
 
     await refreshPlanUsage()
     markChanged()
-    clearNuxtData(key => key.startsWith('org:') && !key.startsWith('org:record-page:'))
+    // Keep mounted account/category selectors populated after a successful post.
+    // Refresh balances and reads without clearing their currently selected options.
+    const refreshKeys = Object.keys(nuxtApp.payload.data).filter(key => key.startsWith('org:') && !key.startsWith('org:record-page:'))
+    await nuxtApp.runWithContext(() => refreshNuxtData(refreshKeys))
     toasts.success(t('add.savedTitle'), t('add.savedBody'))
     close()
   }
