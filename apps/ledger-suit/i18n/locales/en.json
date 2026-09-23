@@ -1287,6 +1287,7 @@
     "balanced": "Journal totals"
   },
   "accountTree": {
+    "actionsFor": "Actions for {name}",
     "title": "Chart of accounts",
     "subtitle": "Follow the account hierarchy, review balances, and open any account’s activity.",
     "hint": "Group totals in {currency} include all accounts, even when searching. Select an account to review its entries.",
@@ -1302,7 +1303,7 @@
     "directBalance": "Direct balance",
     "addChild": "Add subaccount",
     "more": "More actions",
-    "accountCount": "{count} accounts",
+    "accountCount": "No accounts | 1 account | {count} accounts",
     "searchCount": "{count} accounts shown with their parent groups",
     "sections": {
       "currentAssets": "Current assets",
@@ -1324,6 +1325,32 @@
       "otherExpenses": "Other expenses"
     }
   },
+  "tagsGuide": {
+    "title": "Find related transactions with Tags",
+    "body": "Tags are optional labels for a project, branch, campaign or purpose. Use the same tag on related income and expenses so you can find them together. Tags do not change your accounts, balances or financial reports.",
+    "example": "Example: label rent, supplies and sales with “Cairo branch” to find that branch’s transactions, even when they use different accounts. A transaction can have more than one tag.",
+    "steps": {
+      "create": { "title": "1. Create a label", "body": "Add a short, recognizable name here, such as Cairo branch or Website project." },
+      "assign": { "title": "2. Apply it to a transaction", "body": "Open Transactions, select a transaction, then choose a tag in its Tags section and press Assign." },
+      "find": { "title": "3. Find the related work", "body": "Use the Tag filter in Transactions, or View transactions beside any tag here. Combine it with dates, type and account." }
+    },
+    "openTransactions": "Go to Transactions",
+    "viewTransactions": "View transactions",
+    "emptyTitle": "No tags yet",
+    "emptyHint": "Start with a project or branch you want to track. You can apply its tag to existing transactions.",
+    "detailHint": "Group this transaction with related work, such as a project or branch. Labels do not affect the accounting entry.",
+    "createHint": "Choose a short label that you will recognize when filtering transactions. You can apply it to existing income and expenses.",
+    "namePlaceholder": "e.g. Cairo branch",
+    "assigned": "Assigned tags",
+    "remove": "Remove tag {name}",
+    "noneAssigned": "No tags yet. Add one to make this transaction easier to find later.",
+    "choose": "Choose a tag",
+    "noOptions": "Create your first tag from Tags in the Directory menu, then return to this transaction to apply it.",
+    "filter": "Tag",
+    "all": "All tags",
+    "selectedUnavailable": "Selected tag",
+    "loadError": "Unable to load tags. Try again."
+  },
   "transactionWorkspace": {
     "subtitle": "All your transactions in one place. Filter, review, or record a new entry.",
     "new": "New transaction",
@@ -1337,6 +1364,7 @@
     "retryHint": "Your filters are saved. Try loading the list again.",
     "noRead": "Your role does not include access to transaction history. Available actions appear above.",
     "validation": {
+      "tag": "This tag link is invalid. Clear the filters and choose a tag.",
       "dates": "Enter a valid date range with the start on or before the end.",
       "amounts": "Enter valid non-negative amounts, with the minimum no greater than the maximum."
     }

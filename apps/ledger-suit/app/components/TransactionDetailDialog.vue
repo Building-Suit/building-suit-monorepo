@@ -25,21 +25,9 @@ const reason = ref('')
 const confirming = ref(false)
 const errorMessage = ref<string | null>(null)
 const selectedTagId = ref('')
+const tagPending = ref(false)
 const uploading = ref(false)
-
-const { data: tags } = useLazyAsyncData('org:detail-tags', async () => {
-  if (!currentId.value) return []
-  const { data, error } = await supabase.from('tags').select('id,name,color').eq('organization_id', currentId.value).order('name')
-  if (error) throw error
-  return data ?? []
-}, { watch: [currentId], default: () => [] })
-
-const { data: assignedTags, refresh: refreshTags } = useLazyAsyncData('transaction-detail-tags', async () => {
-  if (!props.transactionId) return []
-  const { data, error } = await supabase.from('transaction_tags').select('tag_id,tags(id,name,color)').eq('transaction_id', props.transactionId)
-  if (error) throw error
-  return data ?? []
-}, { watch: [() => props.transactionId], default: () => [] })
+watch(() => props.transactionId, () => { selectedTagId.value = ''; tagPending.value = false }, { flush: 'sync' })
 
 const { data: attachments, refresh: refreshAttachments } = useLazyAsyncData('transaction-detail-attachments', async () => {
   if (!props.transactionId) return []
@@ -47,21 +35,6 @@ const { data: attachments, refresh: refreshAttachments } = useLazyAsyncData('tra
   if (error) throw error
   return data ?? []
 }, { watch: [() => props.transactionId], default: () => [] })
-
-async function assignTag() {
-  if (!props.transactionId || !currentId.value || !selectedTagId.value) return
-  const { data: user } = await supabase.auth.getUser()
-  const { error } = await supabase.from('transaction_tags').insert({ organization_id: currentId.value, transaction_id: props.transactionId, tag_id: selectedTagId.value, created_by: user.user?.id })
-  if (error && error.code !== '23505') return (errorMessage.value = describeError(error))
-  selectedTagId.value = ''; await refreshTags(); emit('changed')
-}
-
-async function removeTag(tagId: string) {
-  if (!props.transactionId) return
-  const { error } = await supabase.from('transaction_tags').delete().eq('transaction_id', props.transactionId).eq('tag_id', tagId)
-  if (error) return (errorMessage.value = describeError(error))
-  await refreshTags(); emit('changed')
-}
 
 async function uploadAttachment(event: Event) {
   const file = (event.target as HTMLInputElement).files?.[0]
@@ -189,7 +162,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => ({ reason: reason.value, 
 </script>
 
 <template>
-    <BsDialog v-if="transactionId" :visible="true" :title="transaction?.description || t('detail.title')" :aria-label="transaction?.description || t('detail.title')" :show-header="false" size="md" :dirty="overlayDirty0" :pending="reversing || uploading" @update:visible="value => { if (!value) emit('close') }"><template #default="{ close: dismiss }">
+    <BsDialog v-if="transactionId" :visible="true" :title="transaction?.description || t('detail.title')" :aria-label="transaction?.description || t('detail.title')" :show-header="false" size="md" :dirty="overlayDirty0" :pending="reversing || uploading || tagPending" @update:visible="value => { if (!value) emit('close') }"><template #default="{ close: dismiss }">
 <div class="flex flex-col overflow-hidden">
         <header class="flex items-start justify-between gap-3 border-b border-[var(--bs-border)] px-6 py-4">
           <div class="min-w-0">
@@ -259,11 +232,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => ({ reason: reason.value, 
 </BsDataTable>
           </section>
 
-          <section aria-labelledby="tags-heading">
-            <h3 id="tags-heading" class="mb-2 text-sm font-bold">{{ t('operations.tabs.tags') }}</h3>
-            <div class="mb-2 flex flex-wrap gap-2"><span v-for="row in assignedTags" :key="row.tag_id" class="ls-badge bg-surface-muted"><span class="me-1 inline-block h-2 w-2 rounded-full" :style="{ backgroundColor: row.tags?.color ?? 'var(--bs-slate-gray)' }" />{{ row.tags?.name }}<button v-if="can('transactions.create')" class="ms-1" :aria-label="t('common.dismiss')" @click="removeTag(row.tag_id)"><AppIcon name="close" :size="14" /></button></span></div>
-            <div v-if="can('transactions.create')" class="flex gap-2"><FloatingField class="flex-1" :label="t('operations.tabs.tags')"><select v-model="selectedTagId" class="ls-input"><option value="">{{ t('common.none') }}</option><option v-for="tag in tags" :key="tag.id" :value="tag.id">{{ tag.name }}</option></select></FloatingField><button class="ls-btn" @click="assignTag">{{ t('operations.assign') }}</button></div>
-          </section>
+          <TransactionTags v-model:selected="selectedTagId" v-model:pending="tagPending" :transaction-id="transactionId" @changed="emit('changed')" />
 
           <section aria-labelledby="attachments-heading">
             <div class="mb-2 flex items-center justify-between"><h3 id="attachments-heading" class="text-sm font-bold">{{ t('operations.attachments') }}</h3><label v-if="can('attachments.create')" class="ls-btn ls-btn-sm cursor-pointer">{{ uploading ? t('common.saving') : t('operations.upload') }}<input type="file" class="sr-only" accept="application/pdf,image/png,image/jpeg,image/webp" :disabled="uploading" @change="uploadAttachment"></label></div>

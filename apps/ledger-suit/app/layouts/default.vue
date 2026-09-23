@@ -77,9 +77,8 @@ watch(currentId, async (value, previous) => {
             <p>{{ t('billing.readOnlyBody') }}</p>
             <NuxtLink v-if="can('billing.manage')" to="/billing" class="mt-2 inline-block text-link">{{ t('billing.fixBilling') }}</NuxtLink>
           </div>
-          <slot />
-          <div class="mt-6 flex justify-end"><FinancialSystemMap /></div>
+          <div class="pb-16"><slot /></div>
         </template>
-    <template #overlays><AddTransactionDialog /><OperationsCenter /><ToastHost /></template>
+    <template #overlays><FinancialSystemMap v-if="current" /><AddTransactionDialog /><OperationsCenter /><ToastHost /></template>
   </BsAppShell>
 </template>

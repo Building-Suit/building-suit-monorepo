@@ -15,14 +15,14 @@ export function useTransactionWorkspace() {
   const supabase = useSupabaseClient<Database>()
   const { currentId, baseCurrency, can } = useTenant()
   const { revision } = useAddTransaction()
-  const filters = reactive({ search: '', from: '', to: '', status: '' as '' | Status, type: '' as '' | Type, categoryId: '', accountId: '', minAmount: '', maxAmount: '' })
+  const filters = reactive({ search: '', from: '', to: '', status: '' as '' | Status, type: '' as '' | Type, categoryId: '', tagId: '', accountId: '', minAmount: '', maxAmount: '' })
   const sort = reactive({ column: 'transaction_date', direction: 'desc' as 'asc' | 'desc' })
   const page = ref(1)
   const pageSize = 25
   const search = ref('')
   let searchTimer: ReturnType<typeof setTimeout> | undefined
   let readingRoute = false
-  const fields = { search: 'q', from: 'from', to: 'to', status: 'status', type: 'type', categoryId: 'category', accountId: 'account', minAmount: 'min', maxAmount: 'max' } as const
+  const fields = { search: 'q', from: 'from', to: 'to', status: 'status', type: 'type', categoryId: 'category', tagId: 'tag', accountId: 'account', minAmount: 'min', maxAmount: 'max' } as const
   const scope = computed(() => scopedQueryKey({ environment: String(config.public.supabase.url), portal: 'ledger-suit', userId: user.value?.id ?? '', tenantId: currentId.value ?? '' }, 'transactions'))
   const scalar = (value: unknown) => typeof value === 'string' ? value : ''
 
@@ -49,14 +49,14 @@ export function useTransactionWorkspace() {
     clearTimeout(searchTimer)
     searchTimer = setTimeout(() => { page.value = 1; search.value = value }, 300)
   }, { flush: 'sync' })
-  watch(() => [filters.from, filters.to, filters.status, filters.type, filters.categoryId, filters.accountId, filters.minAmount, filters.maxAmount, sort.column, sort.direction], () => {
+  watch(() => [filters.from, filters.to, filters.status, filters.type, filters.categoryId, filters.tagId, filters.accountId, filters.minAmount, filters.maxAmount, sort.column, sort.direction], () => {
     if (!readingRoute) page.value = 1
   }, { flush: 'sync' })
   onBeforeUnmount(() => clearTimeout(searchTimer))
 
   function clearFilters() {
     clearTimeout(searchTimer)
-    Object.assign(filters, { search: '', from: '', to: '', status: '', type: '', categoryId: '', accountId: '', minAmount: '', maxAmount: '' })
+    Object.assign(filters, { search: '', from: '', to: '', status: '', type: '', categoryId: '', tagId: '', accountId: '', minAmount: '', maxAmount: '' })
     search.value = ''
     page.value = 1
   }
@@ -79,6 +79,7 @@ export function useTransactionWorkspace() {
   })
 
   const validation = computed(() => {
+    if (filters.tagId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(filters.tagId)) return 'tag'
     const validDate = (value: string) => !value || (/^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value)
     if (!validDate(filters.from) || !validDate(filters.to) || (filters.from && filters.to && filters.from > filters.to)) return 'dates'
     try {
@@ -99,6 +100,7 @@ export function useTransactionWorkspace() {
     const { data: result, error: failure } = await supabase.rpc('search_transactions', {
       p_organization_id: org, p_search: optional(search.value), p_from_date: optional(filters.from), p_to_date: optional(filters.to),
       p_statuses: filters.status ? [filters.status] : undefined, p_types: filters.type ? [filters.type] : undefined,
+      p_tag_ids: filters.tagId ? [filters.tagId] : undefined,
       p_category_ids: filters.categoryId ? [filters.categoryId] : undefined, p_account_ids: filters.accountId ? [filters.accountId] : undefined,
       p_min_amount_minor: amount(filters.minAmount), p_max_amount_minor: amount(filters.maxAmount),
       p_sort: sort.column, p_direction: sort.direction, p_limit: pageSize, p_offset: (page.value - 1) * pageSize,
