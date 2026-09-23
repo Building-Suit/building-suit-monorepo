@@ -121,7 +121,7 @@ select throws_ok(format('select public.create_adjustment(%L, %L, %L::jsonb, %L, 
 reset role;
 select throws_ok(format('update public.accounts set currency=%L where id=%L','USD',(select id from nature_ids where key='bank')), '23514', null, 'even privileged writes cannot reclassify used currency');
 select throws_ok(format('update public.accounts set normal_balance=%L where id=%L','credit',(select id from nature_ids where key='drawings')), '23514', null, 'even privileged writes cannot reclassify used nature');
-select is(has_function_privilege('anon','public.create_account(uuid,text,public.account_type,public.account_subtype,character,text,uuid,public.normal_balance,uuid,text)','execute'), false, 'anonymous callers cannot create classified accounts');
+select is(has_function_privilege('anon','public.create_account(uuid,text,public.account_type,public.account_subtype,character,text,uuid,public.normal_balance,uuid,text,public.control_subledger_type)','execute'), false, 'anonymous callers cannot create classified accounts');
 select is(has_function_privilege('authenticated','app.guard_account_nature()','execute'), false, 'classification helper is not a public API');
 select set_config('request.jwt.claims', '{"sub":"b0000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
 -- Use a privileged synthetic insert, not a capability bypass in the product path.

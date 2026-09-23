@@ -815,6 +815,188 @@ export type Database = {
           },
         ]
       }
+      control_account_bindings: {
+        Row: {
+          account_id: string
+          created_at: string
+          created_by: string
+          organization_id: string
+          subledger_type: Database["public"]["Enums"]["control_subledger_type"]
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          created_by: string
+          organization_id: string
+          subledger_type: Database["public"]["Enums"]["control_subledger_type"]
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          created_by?: string
+          organization_id?: string
+          subledger_type?: Database["public"]["Enums"]["control_subledger_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "control_account_bindings_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "control_binding_account_same_org"
+            columns: ["account_id", "organization_id"]
+            isOneToOne: true
+            referencedRelation: "account_balances"
+            referencedColumns: ["account_id", "organization_id"]
+          },
+          {
+            foreignKeyName: "control_binding_account_same_org"
+            columns: ["account_id", "organization_id"]
+            isOneToOne: true
+            referencedRelation: "accounts"
+            referencedColumns: ["id", "organization_id"]
+          },
+        ]
+      }
+      control_adjustments: {
+        Row: {
+          control_account_id: string
+          created_at: string
+          created_by: string
+          id: string
+          idempotency_key: string
+          organization_id: string
+          reason: string
+          reconciliation_reference: string
+          reference_kind: Database["public"]["Enums"]["control_reference_kind"]
+          subledger_type: Database["public"]["Enums"]["control_subledger_type"]
+          transaction_id: string
+        }
+        Insert: {
+          control_account_id: string
+          created_at?: string
+          created_by: string
+          id?: string
+          idempotency_key: string
+          organization_id: string
+          reason: string
+          reconciliation_reference: string
+          reference_kind: Database["public"]["Enums"]["control_reference_kind"]
+          subledger_type: Database["public"]["Enums"]["control_subledger_type"]
+          transaction_id: string
+        }
+        Update: {
+          control_account_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          idempotency_key?: string
+          organization_id?: string
+          reason?: string
+          reconciliation_reference?: string
+          reference_kind?: Database["public"]["Enums"]["control_reference_kind"]
+          subledger_type?: Database["public"]["Enums"]["control_subledger_type"]
+          transaction_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "control_adjustment_account_same_org"
+            columns: ["control_account_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "control_account_bindings"
+            referencedColumns: ["account_id", "organization_id"]
+          },
+          {
+            foreignKeyName: "control_adjustment_transaction_same_org"
+            columns: ["transaction_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "transaction_summaries"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "control_adjustment_transaction_same_org"
+            columns: ["transaction_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "control_adjustments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "control_adjustments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      control_variance_explanations: {
+        Row: {
+          as_of_date: string
+          control_account_id: string
+          created_at: string
+          created_by: string
+          id: string
+          organization_id: string
+          reason: string
+          reconciliation_reference: string
+          reference_kind: Database["public"]["Enums"]["control_reference_kind"]
+        }
+        Insert: {
+          as_of_date: string
+          control_account_id: string
+          created_at?: string
+          created_by: string
+          id?: string
+          organization_id: string
+          reason: string
+          reconciliation_reference: string
+          reference_kind: Database["public"]["Enums"]["control_reference_kind"]
+        }
+        Update: {
+          as_of_date?: string
+          control_account_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          organization_id?: string
+          reason?: string
+          reconciliation_reference?: string
+          reference_kind?: Database["public"]["Enums"]["control_reference_kind"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "control_variance_account_same_org"
+            columns: ["control_account_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "control_account_bindings"
+            referencedColumns: ["account_id", "organization_id"]
+          },
+          {
+            foreignKeyName: "control_variance_explanations_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "control_variance_explanations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       counterparties: {
         Row: {
           archived_at: string | null
@@ -2589,6 +2771,10 @@ export type Database = {
           classification_locked: boolean | null
           code: string | null
           contra_account_id: string | null
+          control_binding_locked: boolean | null
+          control_subledger_type:
+            | Database["public"]["Enums"]["control_subledger_type"]
+            | null
           credit_minor: number | null
           currency: string | null
           debit_minor: number | null
@@ -3162,6 +3348,7 @@ export type Database = {
           p_account_role?: string
           p_code?: string
           p_contra_account_id?: string
+          p_control_subledger_type?: Database["public"]["Enums"]["control_subledger_type"]
           p_currency?: string
           p_name: string
           p_normal_balance?: Database["public"]["Enums"]["normal_balance"]
@@ -3208,6 +3395,22 @@ export type Database = {
           p_reminder_days_before?: number
           p_title: string
           p_type: Database["public"]["Enums"]["commitment_type"]
+        }
+        Returns: string
+      }
+      create_control_adjustment: {
+        Args: {
+          p_control_account_id: string
+          p_currency_code?: string
+          p_description: string
+          p_exchange_rate?: number
+          p_idempotency_key: string
+          p_lines: Json
+          p_organization_id: string
+          p_reason: string
+          p_reconciliation_reference: string
+          p_reference_kind: Database["public"]["Enums"]["control_reference_kind"]
+          p_transaction_date: string
         }
         Returns: string
       }
@@ -3300,6 +3503,17 @@ export type Database = {
         Returns: Json
       }
       delete_organization_role: { Args: { p_role_id: string }; Returns: string }
+      explain_control_variance: {
+        Args: {
+          p_as_of_date: string
+          p_control_account_id: string
+          p_organization_id: string
+          p_reason: string
+          p_reconciliation_reference: string
+          p_reference_kind: Database["public"]["Enums"]["control_reference_kind"]
+        }
+        Returns: string
+      }
       export_classified_balance_sheet_csv: {
         Args: {
           p_as_of_date?: string
@@ -3445,6 +3659,25 @@ export type Database = {
       read_activity_journal: {
         Args: { p_organization_id: string; p_transaction_id: string }
         Returns: Json
+      }
+      reconcile_control_accounts: {
+        Args: { p_as_of_date: string; p_organization_id: string }
+        Returns: {
+          account_code: string
+          account_name: string
+          as_of_date: string
+          control_account_id: string
+          explanation_actor_id: string
+          explanation_created_at: string
+          explanation_reason: string
+          explanation_reference: string
+          gl_balance_minor: number
+          provider_reference: string
+          status: Database["public"]["Enums"]["control_reconciliation_status"]
+          subledger_balance_minor: number
+          subledger_type: Database["public"]["Enums"]["control_subledger_type"]
+          variance_minor: number
+        }[]
       }
       record_asset_purchase: {
         Args: {
@@ -3986,6 +4219,13 @@ export type Database = {
         | "receivable"
         | "scheduled_expense"
         | "scheduled_income"
+      control_reconciliation_status:
+        | "provider_unavailable"
+        | "reconciled"
+        | "unreconciled"
+        | "explained_variance"
+      control_reference_kind: "reconciliation_case" | "subledger_record"
+      control_subledger_type: "customer" | "supplier"
       counterparty_type:
         | "customer"
         | "vendor"
@@ -4036,6 +4276,7 @@ export type Database = {
         | "opening_balance"
         | "api"
         | "year_end_close"
+        | "control_adjustment"
       transaction_status:
         | "draft"
         | "scheduled"
@@ -4250,6 +4491,14 @@ export const Constants = {
         "scheduled_expense",
         "scheduled_income",
       ],
+      control_reconciliation_status: [
+        "provider_unavailable",
+        "reconciled",
+        "unreconciled",
+        "explained_variance",
+      ],
+      control_reference_kind: ["reconciliation_case", "subledger_record"],
+      control_subledger_type: ["customer", "supplier"],
       counterparty_type: [
         "customer",
         "vendor",
@@ -4305,6 +4554,7 @@ export const Constants = {
         "opening_balance",
         "api",
         "year_end_close",
+        "control_adjustment",
       ],
       transaction_status: [
         "draft",
