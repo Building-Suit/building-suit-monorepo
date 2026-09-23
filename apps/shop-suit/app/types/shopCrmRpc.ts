@@ -146,6 +146,45 @@ export type ShopRpcDatabase = {
         Args: { p_shop_id: string; p_customer_id: string }
         Returns: undefined
       }
+      sale_access: {
+        Args: { p_shop_id: string }
+        Returns: Array<{ can_view: boolean; can_manage: boolean; can_issue: boolean }>
+      }
+      sale_catalog: {
+        Args: { p_shop_id: string }
+        Returns: unknown
+      }
+      save_sale_draft: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_invoice_id: string | null
+          p_customer_id: string | null
+          p_notes: string | null
+          p_lines: Array<{ item_type: 'product' | 'service'; source_id: string; quantity: number }>
+        }
+        Returns: string
+      }
+      issue_sale: {
+        Args: { p_request_id: string; p_shop_id: string; p_invoice_id: string }
+        Returns: string
+      }
+      list_sales: {
+        Args: {
+          p_shop_id: string
+          p_search?: string | null
+          p_status?: 'draft' | 'issued' | null
+          p_from?: string | null
+          p_to?: string | null
+          p_page?: number
+          p_page_size?: number
+        }
+        Returns: unknown
+      }
+      get_sale: {
+        Args: { p_shop_id: string; p_invoice_id: string }
+        Returns: unknown
+      }
     }
     Enums: Record<string, never>
     CompositeTypes: Record<string, never>
