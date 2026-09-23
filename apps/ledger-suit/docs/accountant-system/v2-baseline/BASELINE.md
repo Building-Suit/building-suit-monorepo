@@ -417,7 +417,7 @@ Unless a card says otherwise, discovered paths are apps/ledger-suit/app, apps/le
 - Migration/risk: forward function-contract replacement only; no tables, rows, balances or posted history are mutated. The old as-of two-column signature is removed because all known consumers migrate atomically. Hosted rollout must deploy the migration and compatible app together. Recovery is a forward compatible function correction, never ledger mutation.
 - Acceptance/tests: local disposable migration applied successfully. The focused export/nature/TB SQL set passed 85/85 (including T-TB 33/33); localized CSV unit tests passed 6/6; Ledger app targeted typecheck and changed-file lint passed. `git diff --check` passed. The focused browser specs were updated but not executed; broad SQL/browser/build/full-lint suites were intentionally unrun under the task policy.
 - Remaining limitations: no hosted/deployment evidence; no accountant/UAT acceptance; no browser screenshot/RTL interaction run; Group accounts are metadata-only in this report and are intentionally excluded from authoritative rows/totals rather than shown as duplicate rollups.
-- Git/PR: implementation commit and cumulative draft PR are recorded in section 11 after GitHub synchronization.
+- Git/PR: implementation commit d4a5354790e63e2db7516d1c93d36a092af6e14c; cumulative draft PR [#18](https://github.com/Building-Suit/building-suit-monorepo/pull/18), base `stg`, head `codex/ledger-suit/v2-baseline`.
 
 ### V2-IMP-003 — Journal identity and professional center
 
@@ -571,12 +571,12 @@ These are not silently added requirements and have no implementation priority:
 
 ## 11. Implementation checkpoint and next action
 
-- Completed cumulative stream: baseline assessment at e51435c52f8c3d36b4dccd86c1adb731dd2cb2a5; V2-IMP-001 Posting Idempotency Integrity at 7bfb37ee7326a4b8ae387dd6783b5f72cfd7a941; V2-IMP-002 Six-column Trial Balance implemented and locally verified in the next feature commit.
+- Completed cumulative stream: baseline assessment at e51435c52f8c3d36b4dccd86c1adb731dd2cb2a5; V2-IMP-001 Posting Idempotency Integrity at 7bfb37ee7326a4b8ae387dd6783b5f72cfd7a941; V2-IMP-002 Six-column Trial Balance at d4a5354790e63e2db7516d1c93d36a092af6e14c.
 - V2-IMP-001 evidence remains: additive migration 20260923134857; focused SQL evidence 142/142; no hosted application.
 - V2-IMP-002 evidence: forward migration 20260923144500; focused SQL regressions 85/85 (T-TB 33/33); localized CSV 6/6; Ledger targeted typecheck and changed-file lint passed; generated public/GraphQL database types updated; no financial rows mutated.
 - Preservation: both tasks retain the shared posted-ledger engine, double-entry enforcement, immutable correction history, organization authorization, currency/base-minor-unit rules, audit/quota behavior, and existing report/export facilities. No hosted database, merge, deployment, provider configuration or production operation occurred.
 - Unresolved risks/limits: hosted migration/app compatibility remains unverified; accountant/UAT acceptance is not started; broad suites and browser/RTL evidence remain unrun under the task-specific targeted verification policy.
-- Git/PR: V2-IMP-002 commit and the cumulative draft PR number/URL will be appended after GitHub synchronization; do not interpret their presence as deployment or acceptance.
+- Git/PR: cumulative draft PR [#18](https://github.com/Building-Suit/building-suit-monorepo/pull/18), base `stg`, head `codex/ledger-suit/v2-baseline`. Its presence is review coordination only, not deployment or acceptance.
 - Exact next ordered task: V2-IMP-003 Journal identity and professional center. Its non-numbering work can proceed from this checkpoint; V2-D03 still blocks final journal-number semantics and acceptance.
 
 This checkpoint is implementation and local-test evidence only. It must not be interpreted as deployment, hosted verification, accountant acceptance, or production readiness.
