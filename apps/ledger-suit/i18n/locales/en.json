@@ -180,6 +180,7 @@
     "importTransactions": "Import CSV",
     "accounts": "Accounts",
     "reports": "Reports",
+    "periods": "Accounting periods",
     "teamInvitations": "Access & permissions",
     "auditHistory": "Audit history",
     "groups": {
@@ -589,7 +590,41 @@
     "commitment": "Commitment",
     "reversal": "Reversal",
     "opening_balance": "Opening balance",
-    "api": "API"
+    "api": "API",
+    "year_end_close": "Year-end close"
+  },
+  "periods": {
+    "title": "Accounting Periods",
+    "subtitle": "Control posting windows, reopening, and fiscal year-end from an auditable workflow.",
+    "fiscalYear": "Fiscal Year",
+    "fiscalMonth": "The fiscal year starts in month {month}.",
+    "fiscalHint": "Changing the organization calendar does not rewrite historical journals or period boundaries.",
+    "fiscalRange": "Fiscal year {start} — {end}",
+    "fiscalYearStart": "Fiscal year start",
+    "startDate": "Period start",
+    "endDate": "Period end",
+    "create": "Create period",
+    "empty": "No accounting periods yet",
+    "emptyHint": "Create a dated period before applying a soft or hard close.",
+    "noAccess": "You do not have permission to view accounting periods.",
+    "loadFailed": "Accounting periods could not be loaded.",
+    "status": { "open": "Open", "soft_closed": "Soft Closed", "hard_closed": "Hard Closed" },
+    "softClose": "Soft Close Period",
+    "hardClose": "Hard Close Period",
+    "reopen": "Reopen Period",
+    "reason": "Transition or reopening reason",
+    "reasonHint": "Required when reopening; preserved in transition history",
+    "history": "Transition History",
+    "yearEnd": "Year-End Close",
+    "yearEndReason": "Year-end close reason",
+    "yearEndComplete": "Fiscal year closing journal created",
+    "yearEndCreated": "The balanced closing journal was posted to Retained Earnings.",
+    "closingJournal": "Closing Journal",
+    "netResult": "Net income / loss",
+    "savedTitle": "Accounting period updated",
+    "created": "The Open period was created.",
+    "transitioned": "The period is now {status}.",
+    "errorTitle": "Period action could not be completed"
   },
   "journalCenter": {
     "journalReference": "Journal reference",
@@ -613,7 +648,9 @@
     "reversalJournal": "Reversal journal",
     "reverses": "Reverses",
     "adjusts": "Adjusts",
-    "periodLocked": "This journal falls in the current locked period. Actions remain restricted unless your role can override the lock."
+    "periodLocked": "This journal falls in a legacy locked date. Existing lock permissions remain in effect.",
+    "periodSoftClosed": "This journal falls in a Soft Closed period. Normal posting and reversals are blocked; only an authorized adjustment with a reason may post.",
+    "periodHardClosed": "This journal falls in a Hard Closed period. No new posting or reversal is allowed until it is reopened to Soft Closed first."
   },
   "accounts": {
     "role": "Account role",

@@ -73,6 +73,114 @@ export type Database = {
           },
         ]
       }
+      accounting_period_transitions: {
+        Row: {
+          actor_id: string | null
+          id: number
+          new_status: Database["public"]["Enums"]["accounting_period_status"]
+          organization_id: string
+          period_id: string
+          previous_status: Database["public"]["Enums"]["accounting_period_status"]
+          reason: string | null
+          transitioned_at: string
+          year_end_close_id: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          id?: never
+          new_status: Database["public"]["Enums"]["accounting_period_status"]
+          organization_id: string
+          period_id: string
+          previous_status: Database["public"]["Enums"]["accounting_period_status"]
+          reason?: string | null
+          transitioned_at?: string
+          year_end_close_id?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          id?: never
+          new_status?: Database["public"]["Enums"]["accounting_period_status"]
+          organization_id?: string
+          period_id?: string
+          previous_status?: Database["public"]["Enums"]["accounting_period_status"]
+          reason?: string | null
+          transitioned_at?: string
+          year_end_close_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounting_period_transition_period_fk"
+            columns: ["organization_id", "period_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_periods"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "accounting_period_transition_year_end_fk"
+            columns: ["year_end_close_id"]
+            isOneToOne: false
+            referencedRelation: "fiscal_year_closes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounting_period_transitions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      accounting_periods: {
+        Row: {
+          created_at: string
+          created_by: string
+          end_date: string
+          fiscal_year_end: string
+          fiscal_year_start: string
+          id: string
+          organization_id: string
+          start_date: string
+          status: Database["public"]["Enums"]["accounting_period_status"]
+          status_changed_at: string
+          status_changed_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          end_date: string
+          fiscal_year_end: string
+          fiscal_year_start: string
+          id?: string
+          organization_id: string
+          start_date: string
+          status?: Database["public"]["Enums"]["accounting_period_status"]
+          status_changed_at?: string
+          status_changed_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          end_date?: string
+          fiscal_year_end?: string
+          fiscal_year_start?: string
+          id?: string
+          organization_id?: string
+          start_date?: string
+          status?: Database["public"]["Enums"]["accounting_period_status"]
+          status_changed_at?: string
+          status_changed_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounting_periods_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       accounts: {
         Row: {
           account_role: string
@@ -796,6 +904,95 @@ export type Database = {
           symbol?: string | null
         }
         Relationships: []
+      }
+      fiscal_year_closes: {
+        Row: {
+          closed_at: string
+          closed_by: string | null
+          closing_transaction_id: string | null
+          fiscal_year_end: string
+          fiscal_year_start: string
+          id: string
+          net_income_minor: number
+          organization_id: string
+          reason: string
+          retained_earnings_account_id: string
+        }
+        Insert: {
+          closed_at?: string
+          closed_by?: string | null
+          closing_transaction_id?: string | null
+          fiscal_year_end: string
+          fiscal_year_start: string
+          id?: string
+          net_income_minor: number
+          organization_id: string
+          reason: string
+          retained_earnings_account_id: string
+        }
+        Update: {
+          closed_at?: string
+          closed_by?: string | null
+          closing_transaction_id?: string | null
+          fiscal_year_end?: string
+          fiscal_year_start?: string
+          id?: string
+          net_income_minor?: number
+          organization_id?: string
+          reason?: string
+          retained_earnings_account_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fiscal_year_closes_closing_transaction_id_fkey"
+            columns: ["closing_transaction_id"]
+            isOneToOne: true
+            referencedRelation: "transaction_summaries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fiscal_year_closes_closing_transaction_id_fkey"
+            columns: ["closing_transaction_id"]
+            isOneToOne: true
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fiscal_year_closes_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fiscal_year_closes_retained_earnings_account_id_fkey"
+            columns: ["retained_earnings_account_id"]
+            isOneToOne: false
+            referencedRelation: "account_balances"
+            referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "fiscal_year_closes_retained_earnings_account_id_fkey"
+            columns: ["retained_earnings_account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fiscal_year_closes_retained_earnings_account_id_fkey"
+            columns: ["retained_earnings_account_id"]
+            isOneToOne: false
+            referencedRelation: "transaction_summaries"
+            referencedColumns: ["from_account_id"]
+          },
+          {
+            foreignKeyName: "fiscal_year_closes_retained_earnings_account_id_fkey"
+            columns: ["retained_earnings_account_id"]
+            isOneToOne: false
+            referencedRelation: "transaction_summaries"
+            referencedColumns: ["to_account_id"]
+          },
+        ]
       }
       import_batches: {
         Row: {
@@ -2783,6 +2980,18 @@ export type Database = {
         Args: { p_account_id: string; p_organization_id: string }
         Returns: Json
       }
+      accounting_period_context: {
+        Args: { p_date?: string; p_organization_id: string }
+        Returns: {
+          fiscal_year_end: string
+          fiscal_year_start: string
+          legacy_locked_until: string
+          period_end: string
+          period_id: string
+          period_start: string
+          period_status: Database["public"]["Enums"]["accounting_period_status"]
+        }[]
+      }
       apply_paymob_subscription_event: {
         Args: {
           p_amount_minor?: number
@@ -2885,6 +3094,15 @@ export type Database = {
           subject: string
         }[]
       }
+      close_fiscal_year: {
+        Args: {
+          p_fiscal_year_start: string
+          p_idempotency_key?: string
+          p_organization_id: string
+          p_reason: string
+        }
+        Returns: string
+      }
       commit_attachment_upload: {
         Args: { p_reservation_id: string }
         Returns: string
@@ -2951,6 +3169,14 @@ export type Database = {
           p_parent_account_id?: string
           p_subtype: Database["public"]["Enums"]["account_subtype"]
           p_type: Database["public"]["Enums"]["account_type"]
+        }
+        Returns: string
+      }
+      create_accounting_period: {
+        Args: {
+          p_end_date: string
+          p_organization_id: string
+          p_start_date: string
         }
         Returns: string
       }
@@ -3636,6 +3862,14 @@ export type Database = {
           writes_allowed: boolean
         }[]
       }
+      transition_accounting_period: {
+        Args: {
+          p_new_status: Database["public"]["Enums"]["accounting_period_status"]
+          p_period_id: string
+          p_reason?: string
+        }
+        Returns: string
+      }
       update_account: {
         Args: {
           p_account_id: string
@@ -3730,6 +3964,7 @@ export type Database = {
         | "taxes"
         | "other_expense"
       account_type: "asset" | "liability" | "equity" | "revenue" | "expense"
+      accounting_period_status: "open" | "soft_closed" | "hard_closed"
       billing_interval: "monthly" | "yearly"
       billing_status:
         | "trialing"
@@ -3800,6 +4035,7 @@ export type Database = {
         | "reversal"
         | "opening_balance"
         | "api"
+        | "year_end_close"
       transaction_status:
         | "draft"
         | "scheduled"
@@ -3989,6 +4225,7 @@ export const Constants = {
         "other_expense",
       ],
       account_type: ["asset", "liability", "equity", "revenue", "expense"],
+      accounting_period_status: ["open", "soft_closed", "hard_closed"],
       billing_interval: ["monthly", "yearly"],
       billing_status: [
         "trialing",
@@ -4067,6 +4304,7 @@ export const Constants = {
         "reversal",
         "opening_balance",
         "api",
+        "year_end_close",
       ],
       transaction_status: [
         "draft",
