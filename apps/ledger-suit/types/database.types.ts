@@ -7,31 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       account_statement_classifications: {
@@ -2212,6 +2187,7 @@ export type Database = {
           fingerprint: string | null
           id: string
           idempotency_key: string | null
+          journal_reference: string | null
           memo: string | null
           metadata: Json
           organization_id: string
@@ -2245,6 +2221,7 @@ export type Database = {
           fingerprint?: string | null
           id?: string
           idempotency_key?: string | null
+          journal_reference?: string | null
           memo?: string | null
           metadata?: Json
           organization_id: string
@@ -2278,6 +2255,7 @@ export type Database = {
           fingerprint?: string | null
           id?: string
           idempotency_key?: string | null
+          journal_reference?: string | null
           memo?: string | null
           metadata?: Json
           organization_id?: string
@@ -2661,20 +2639,26 @@ export type Database = {
           amount_minor: number | null
           attachment_count: number | null
           base_amount_minor: number | null
+          base_credit_minor: number | null
+          base_debit_minor: number | null
           category_id: string | null
           category_name: string | null
+          correction_of_transaction_id: string | null
           counterparty_id: string | null
           counterparty_name: string | null
           created_at: string | null
           created_by: string | null
           created_by_email: string | null
           created_by_name: string | null
+          credit_minor: number | null
           currency_code: string | null
+          debit_minor: number | null
           description: string | null
           exchange_rate: number | null
           from_account_id: string | null
           from_account_name: string | null
           id: string | null
+          journal_reference: string | null
           line_count: number | null
           memo: string | null
           organization_id: string | null
@@ -2686,6 +2670,9 @@ export type Database = {
           reversed_by_transaction_id: string | null
           reverses_transaction_id: string | null
           source: Database["public"]["Enums"]["transaction_source"] | null
+          source_record_id: string | null
+          source_record_kind: string | null
+          source_record_parent_id: string | null
           status: Database["public"]["Enums"]["transaction_status"] | null
           tag_ids: string[] | null
           tags: string[] | null
@@ -2701,6 +2688,20 @@ export type Database = {
             columns: ["category_id", "organization_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "transactions_correction_of_same_org"
+            columns: ["correction_of_transaction_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "transaction_summaries"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "transactions_correction_of_same_org"
+            columns: ["correction_of_transaction_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
             referencedColumns: ["id", "organization_id"]
           },
           {
@@ -3544,25 +3545,35 @@ export type Database = {
           p_organization_id: string
           p_search?: string
           p_sort?: string
+          p_sources?: Database["public"]["Enums"]["transaction_source"][]
           p_statuses?: Database["public"]["Enums"]["transaction_status"][]
           p_tag_ids?: string[]
           p_to_date?: string
           p_types?: Database["public"]["Enums"]["transaction_type"][]
         }
         Returns: {
-          amount_minor: number
           attachment_count: number
-          base_amount_minor: number
+          base_credit_minor: number
+          base_debit_minor: number
           category_name: string
+          correction_of_transaction_id: string
           counterparty_name: string
           created_by_name: string
+          credit_minor: number
           currency_code: string
+          debit_minor: number
           description: string
           from_account_name: string
           id: string
+          journal_reference: string
           possible_duplicate: boolean
           reference: string
           reversed_by_transaction_id: string
+          reverses_transaction_id: string
+          source: Database["public"]["Enums"]["transaction_source"]
+          source_record_id: string
+          source_record_kind: string
+          source_record_parent_id: string
           status: Database["public"]["Enums"]["transaction_status"]
           tags: string[]
           to_account_name: string
@@ -3935,9 +3946,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       account_subtype: [

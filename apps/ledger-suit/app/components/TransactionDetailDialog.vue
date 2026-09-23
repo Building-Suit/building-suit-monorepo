@@ -11,7 +11,7 @@ import type { Database } from '~~/types/database.types'
  */
 
 const props = defineProps<{ transactionId: string | null }>()
-const emit = defineEmits<{ close: [], changed: [] }>()
+const emit = defineEmits<{ close: [], changed: [], navigate: [id: string] }>()
 
 const supabase = useSupabaseClient<Database>()
 const { can, currentId } = useTenant()
@@ -98,7 +98,7 @@ const { data: detail, refresh } = useLazyAsyncData(
   async () => {
     if (!props.transactionId) return null
 
-    const [{ data: transaction, error: txError }, { data: entries, error: entryError }] =
+    const [{ data: transaction, error: txError }, { data: entries, error: entryError }, { data: settings, error: settingsError }] =
       await Promise.all([
         supabase
           .from('transaction_summaries')
@@ -110,22 +110,46 @@ const { data: detail, refresh } = useLazyAsyncData(
           .select('entry_id, side, amount_minor, currency_code, base_amount_minor, memo, account_code, account_name, account_type')
           .eq('transaction_id', props.transactionId)
           .order('side', { ascending: true }),
+        supabase.from('organization_settings').select('books_locked_until').eq('organization_id', currentId.value!).maybeSingle(),
       ])
 
     if (txError) throw txError
     if (entryError) throw entryError
+    if (settingsError) throw settingsError
 
-    return { transaction, entries: entries ?? [] }
+    const relationshipIds = [transaction?.reverses_transaction_id, transaction?.reversed_by_transaction_id, transaction?.correction_of_transaction_id].filter((id): id is string => Boolean(id))
+    const { data: relationships, error: relationshipError } = relationshipIds.length
+      ? await supabase.from('transaction_summaries').select('id, journal_reference, status, type').in('id', relationshipIds)
+      : { data: [], error: null }
+    if (relationshipError) throw relationshipError
+
+    return { transaction, entries: entries ?? [], settings, relationships: relationships ?? [] }
   },
   { watch: [() => props.transactionId] },
 )
 
 const transaction = computed(() => detail.value?.transaction ?? null)
 const entries = computed(() => detail.value?.entries ?? [])
+const relationships = computed(() => detail.value?.relationships ?? [])
+const relationship = (id: string | null | undefined) => relationships.value.find(item => item.id === id)
+const periodLocked = computed(() => Boolean(
+  transaction.value?.transaction_date
+  && detail.value?.settings?.books_locked_until
+  && transaction.value.transaction_date <= detail.value.settings.books_locked_until
+  && !can('books.override_lock'),
+))
 
 const canReverse = computed(
-  () => can('transactions.reverse') && transaction.value?.status === 'posted',
+  () => can('transactions.reverse') && transaction.value?.status === 'posted' && !periodLocked.value,
 )
+const sourceLink = computed(() => {
+  const transaction = detail.value?.transaction
+  if (!transaction?.source_record_kind || !transaction.source_record_parent_id) return null
+  if (transaction.source_record_kind === 'commitment') return { path: '/records/commitments', query: { item: transaction.source_record_parent_id } }
+  if (transaction.source_record_kind === 'recurring') return { path: '/records/recurring', query: { item: transaction.source_record_parent_id } }
+  if (transaction.source_record_kind === 'import') return { path: '/imports', query: { batch: transaction.source_record_parent_id } }
+  return null
+})
 
 async function reverse() {
   if (!props.transactionId) return
@@ -172,6 +196,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => ({ reason: reason.value, 
             <p class="mt-1 flex items-center gap-2 text-sm text-fg-muted">
               <StatusBadge v-if="transaction?.status" :status="transaction.status" />
               <span v-if="transaction?.type">{{ t(`types.${transaction.type}`) }}</span>
+              <span v-if="transaction?.journal_reference" class="font-semibold">{{ transaction.journal_reference }}</span>
             </p>
           </div>
           <button type="button" class="ls-btn ls-btn-sm" :aria-label="t('common.close')" @click="dismiss"><AppIcon name="close" /></button>
@@ -180,14 +205,16 @@ const { dirty: overlayDirty0 } = useRecordAction(() => ({ reason: reason.value, 
         <div class="min-h-0 flex-1 space-y-6 overflow-y-auto px-6 py-4">
           <dl class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
             <div>
-              <dt class="text-fg-muted">{{ t('transactions.date') }}</dt>
+              <dt class="text-fg-muted">{{ t('journalCenter.journalReference') }}</dt>
+              <dd class="font-semibold">{{ transaction?.journal_reference || t('common.dash') }}</dd>
+            </div>
+            <div>
+              <dt class="text-fg-muted">{{ t('journalCenter.accountingDate') }}</dt>
               <dd>{{ formatDate(transaction?.transaction_date, locale) }}</dd>
             </div>
             <div>
-              <dt class="text-fg-muted">{{ t('transactions.amount') }}</dt>
-              <dd class="font-semibold">
-                <MoneyText :amount-minor="transaction?.amount_minor" :currency="transaction?.currency_code ?? undefined" />
-              </dd>
+              <dt class="text-fg-muted">{{ t('journalCenter.source') }}</dt>
+              <dd>{{ transaction?.source ? t(`journalSources.${transaction.source}`) : t('common.dash') }}</dd>
             </div>
             <div>
               <dt class="text-fg-muted">{{ t('transactions.category') }}</dt>
@@ -208,6 +235,10 @@ const { dirty: overlayDirty0 } = useRecordAction(() => ({ reason: reason.value, 
             <div v-if="transaction?.adjustment_reason" class="col-span-2">
               <dt class="text-fg-muted">{{ t('detail.reason') }}</dt>
               <dd>{{ transaction.adjustment_reason }}</dd>
+            </div>
+            <div v-if="sourceLink" class="col-span-2">
+              <dt class="text-fg-muted">{{ t('journalCenter.sourceRecord') }}</dt>
+              <dd><NuxtLink :to="sourceLink" class="text-link hover:underline">{{ t('journalCenter.openSource') }}</NuxtLink></dd>
             </div>
           </dl>
 
@@ -230,6 +261,11 @@ const { dirty: overlayDirty0 } = useRecordAction(() => ({ reason: reason.value, 
                     <span v-else class="text-fg-disabled">{{ t('common.dash') }}</span></template>
   </Column>
 </BsDataTable>
+            <div class="mt-3 flex flex-wrap justify-between gap-3 rounded-control bg-surface-muted p-3 text-sm font-semibold">
+              <span>{{ t('journalCenter.lineTotals') }}</span>
+              <span>{{ t('detail.debit') }}: <MoneyText :amount-minor="transaction?.debit_minor" :currency="transaction?.currency_code ?? undefined" /></span>
+              <span>{{ t('detail.credit') }}: <MoneyText :amount-minor="transaction?.credit_minor" :currency="transaction?.currency_code ?? undefined" /></span>
+            </div>
           </section>
 
           <TransactionTags v-model:selected="selectedTagId" v-model:pending="tagPending" :transaction-id="transactionId" @changed="emit('changed')" />
@@ -240,12 +276,14 @@ const { dirty: overlayDirty0 } = useRecordAction(() => ({ reason: reason.value, 
             <div v-if="attachments.length" class="space-y-2"><div v-for="item in attachments" :key="item.id" class="flex items-center justify-between rounded-control bg-surface-muted px-3 py-2 text-sm"><button class="truncate text-link" @click="downloadAttachment(item)">{{ item.file_name }}</button><button v-if="can('attachments.delete')" class="ls-btn ls-btn-sm" :aria-label="t('common.delete')" @click="deleteAttachment(item)"><AppIcon name="delete" :size="18" /></button></div></div><p v-else class="text-sm text-fg-muted">{{ t('operations.noAttachments') }}</p>
           </section>
 
-          <p
-            v-if="transaction?.reversed_by_transaction_id"
-            class="rounded-control bg-[var(--bs-status-info-bg)] px-3 py-2 text-sm text-[var(--bs-status-info)]"
-          >
-            {{ t('detail.reversedNotice') }}
-          </p>
+          <section v-if="transaction?.reverses_transaction_id || transaction?.reversed_by_transaction_id || transaction?.correction_of_transaction_id" class="rounded-control bg-[var(--bs-status-info-bg)] px-3 py-3 text-sm text-[var(--bs-status-info)]" aria-labelledby="relationships-heading">
+            <h3 id="relationships-heading" class="font-bold">{{ t('journalCenter.relationships') }}</h3>
+            <p v-if="transaction?.reversed_by_transaction_id" class="mt-2">{{ t('detail.reversedNotice') }} <button type="button" class="font-semibold underline" @click="emit('navigate', transaction.reversed_by_transaction_id)">{{ t('journalCenter.reversalJournal') }} {{ relationship(transaction.reversed_by_transaction_id)?.journal_reference }}</button></p>
+            <p v-if="transaction?.reverses_transaction_id" class="mt-2">{{ t('journalCenter.reverses') }} <button type="button" class="font-semibold underline" @click="emit('navigate', transaction.reverses_transaction_id)">{{ t('journalCenter.originalJournal') }} {{ relationship(transaction.reverses_transaction_id)?.journal_reference }}</button></p>
+            <p v-if="transaction?.correction_of_transaction_id" class="mt-2">{{ t('journalCenter.adjusts') }} <button type="button" class="font-semibold underline" @click="emit('navigate', transaction.correction_of_transaction_id)">{{ relationship(transaction.correction_of_transaction_id)?.journal_reference }}</button></p>
+          </section>
+
+          <p v-if="periodLocked" class="rounded-control bg-surface-muted px-3 py-2 text-sm text-fg-muted">{{ t('journalCenter.periodLocked') }}</p>
 
           <div v-if="confirming" class="ls-card-flat space-y-3 p-4">
             <p class="text-sm">{{ t('detail.reverseExplain') }}</p>

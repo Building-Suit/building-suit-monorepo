@@ -3,9 +3,25 @@ import type { Database } from '~~/types/database.types'
 
 export const TRANSACTION_STATUSES = ['draft', 'scheduled', 'pending', 'pending_approval', 'posted', 'voided', 'reversed', 'failed'] as const
 export const TRANSACTION_TYPES = ['income', 'expense', 'transfer', 'asset_purchase', 'liability_created', 'liability_payment', 'owner_contribution', 'owner_withdrawal', 'adjustment', 'opening_balance', 'reversal'] as const
+export const TRANSACTION_SOURCES = ['manual', 'import', 'recurring', 'commitment', 'reversal', 'opening_balance', 'api'] as const
 type TransactionRow = Database['public']['Functions']['search_transactions']['Returns'][number]
 type Status = typeof TRANSACTION_STATUSES[number]
 type Type = typeof TRANSACTION_TYPES[number]
+type Source = typeof TRANSACTION_SOURCES[number]
+export type JournalFilterState = {
+  search: string
+  from: string
+  to: string
+  status: '' | Status
+  type: '' | Type
+  source: '' | Source
+  categoryId: string
+  tagId: string
+  accountId: string
+  minAmount: string
+  maxAmount: string
+}
+export type JournalSortState = { column: string, direction: 'asc' | 'desc' }
 
 export function useTransactionWorkspace() {
   const route = useRoute()
@@ -15,14 +31,14 @@ export function useTransactionWorkspace() {
   const supabase = useSupabaseClient<Database>()
   const { currentId, baseCurrency, can } = useTenant()
   const { revision } = useAddTransaction()
-  const filters = reactive({ search: '', from: '', to: '', status: '' as '' | Status, type: '' as '' | Type, categoryId: '', tagId: '', accountId: '', minAmount: '', maxAmount: '' })
+  const filters = reactive<JournalFilterState>({ search: '', from: '', to: '', status: '', type: '', source: '', categoryId: '', tagId: '', accountId: '', minAmount: '', maxAmount: '' })
   const sort = reactive({ column: 'transaction_date', direction: 'desc' as 'asc' | 'desc' })
   const page = ref(1)
   const pageSize = 25
   const search = ref('')
   let searchTimer: ReturnType<typeof setTimeout> | undefined
   let readingRoute = false
-  const fields = { search: 'q', from: 'from', to: 'to', status: 'status', type: 'type', categoryId: 'category', tagId: 'tag', accountId: 'account', minAmount: 'min', maxAmount: 'max' } as const
+  const fields = { search: 'q', from: 'from', to: 'to', status: 'status', type: 'type', source: 'source', categoryId: 'category', tagId: 'tag', accountId: 'account', minAmount: 'min', maxAmount: 'max' } as const
   const scope = computed(() => scopedQueryKey({ environment: String(config.public.supabase.url), portal: 'ledger-suit', userId: user.value?.id ?? '', tenantId: currentId.value ?? '' }, 'transactions'))
   const scalar = (value: unknown) => typeof value === 'string' ? value : ''
 
@@ -32,8 +48,9 @@ export function useTransactionWorkspace() {
     for (const [field, key] of Object.entries(fields)) Object.assign(filters, { [field]: scalar(route.query[key]) })
     if (!(TRANSACTION_STATUSES as readonly string[]).includes(filters.status)) filters.status = ''
     if (!(TRANSACTION_TYPES as readonly string[]).includes(filters.type)) filters.type = ''
+    if (!(TRANSACTION_SOURCES as readonly string[]).includes(filters.source)) filters.source = ''
     search.value = filters.search
-    sort.column = ['transaction_date', 'type', 'status', 'amount', 'created_at'].includes(scalar(route.query.sort)) ? scalar(route.query.sort) : 'transaction_date'
+    sort.column = ['transaction_date', 'journal_reference', 'type', 'source', 'status', 'debit', 'credit', 'created_at'].includes(scalar(route.query.sort)) ? scalar(route.query.sort) : 'transaction_date'
     sort.direction = route.query.direction === 'asc' ? 'asc' : 'desc'
     const requested = Number(route.query.page)
     page.value = Number.isSafeInteger(requested) && requested > 0 && requested <= 1_000_000 ? requested : 1
@@ -49,14 +66,14 @@ export function useTransactionWorkspace() {
     clearTimeout(searchTimer)
     searchTimer = setTimeout(() => { page.value = 1; search.value = value }, 300)
   }, { flush: 'sync' })
-  watch(() => [filters.from, filters.to, filters.status, filters.type, filters.categoryId, filters.tagId, filters.accountId, filters.minAmount, filters.maxAmount, sort.column, sort.direction], () => {
+  watch(() => [filters.from, filters.to, filters.status, filters.type, filters.source, filters.categoryId, filters.tagId, filters.accountId, filters.minAmount, filters.maxAmount, sort.column, sort.direction], () => {
     if (!readingRoute) page.value = 1
   }, { flush: 'sync' })
   onBeforeUnmount(() => clearTimeout(searchTimer))
 
   function clearFilters() {
     clearTimeout(searchTimer)
-    Object.assign(filters, { search: '', from: '', to: '', status: '', type: '', categoryId: '', tagId: '', accountId: '', minAmount: '', maxAmount: '' })
+    Object.assign(filters, { search: '', from: '', to: '', status: '', type: '', source: '', categoryId: '', tagId: '', accountId: '', minAmount: '', maxAmount: '' })
     search.value = ''
     page.value = 1
   }
@@ -100,6 +117,7 @@ export function useTransactionWorkspace() {
     const { data: result, error: failure } = await supabase.rpc('search_transactions', {
       p_organization_id: org, p_search: optional(search.value), p_from_date: optional(filters.from), p_to_date: optional(filters.to),
       p_statuses: filters.status ? [filters.status] : undefined, p_types: filters.type ? [filters.type] : undefined,
+      p_sources: filters.source ? [filters.source] : undefined,
       p_tag_ids: filters.tagId ? [filters.tagId] : undefined,
       p_category_ids: filters.categoryId ? [filters.categoryId] : undefined, p_account_ids: filters.accountId ? [filters.accountId] : undefined,
       p_min_amount_minor: amount(filters.minAmount), p_max_amount_minor: amount(filters.maxAmount),
@@ -119,5 +137,16 @@ export function useTransactionWorkspace() {
     if (sort.column === column) sort.direction = sort.direction === 'asc' ? 'desc' : 'asc'
     else { sort.column = column; sort.direction = 'desc' }
   }
-  return { filters, sort, page, pageSize, scope, rows, total, pageCount, pending, error, validation, refresh, activeFilterCount, clearFilters, toggleSort }
+  function snapshot() {
+    return { filters: { ...toRaw(filters) }, sort: { ...toRaw(sort) } as JournalSortState }
+  }
+  function applySnapshot(next: { filters: Partial<JournalFilterState>, sort: JournalSortState }) {
+    clearFilters()
+    Object.assign(filters, next.filters)
+    sort.column = next.sort.column
+    sort.direction = next.sort.direction
+    search.value = filters.search
+    page.value = 1
+  }
+  return { filters, sort, page, pageSize, scope, rows, total, pageCount, pending, error, validation, refresh, activeFilterCount, clearFilters, toggleSort, snapshot, applySnapshot }
 }
