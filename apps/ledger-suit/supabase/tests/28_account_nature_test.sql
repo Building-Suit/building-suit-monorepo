@@ -100,8 +100,8 @@ select is((select amount_minor from public.report_profit_and_loss((select id fro
 select is((public.check_balance_sheet_integrity((select id from nature_ids where key='org'),'2026-01-31')->>'difference_minor')::bigint, 0::bigint, 'the independent balance sheet equation reconciles');
 select is((public.dashboard_summary((select id from nature_ids where key='org'),'2026-01-31')->>'total_assets_minor')::bigint, 4150000::bigint, 'dashboard and statement agree on assets');
 select is((public.dashboard_summary((select id from nature_ids where key='org'),'2026-01-31')->>'net_profit_this_month_minor')::bigint, 250000::bigint, 'dashboard and statement agree on net profit');
-select is((select sum(debit_minor)::bigint from public.report_trial_balance((select id from nature_ids where key='org'),'2026-01-31')), 5950000::bigint, 'trial debit movement is unchanged');
-select is((select sum(credit_minor)::bigint from public.report_trial_balance((select id from nature_ids where key='org'),'2026-01-31')), 5950000::bigint, 'trial credit movement is unchanged');
+select is((select sum(period_debit_minor::bigint)::bigint from public.report_trial_balance((select id from nature_ids where key='org'),'2026-01-01','2026-01-31')), 5950000::bigint, 'trial debit movement is unchanged');
+select is((select sum(period_credit_minor::bigint)::bigint from public.report_trial_balance((select id from nature_ids where key='org'),'2026-01-01','2026-01-31')), 5950000::bigint, 'trial credit movement is unchanged');
 select is((select running_balance_minor from public.report_general_ledger((select id from nature_ids where key='org'),(select id from nature_ids where key='accumulated'),'2026-01-03','2026-01-31') limit 1), 550000::bigint, 'normal-side ledger combines prior opening and opposite-side movement');
 select throws_ok(format('select public.update_account(%L, %L, p_normal_balance=>%L)',
  (select id from nature_ids where key='accumulated'), 'Accumulated depreciation', 'debit'), '23514', null, 'posted nature cannot silently restate history');

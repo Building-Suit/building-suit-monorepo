@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Database } from '~~/types/database.types'
 
-const props = defineProps<{ accountId: string, scope: string }>()
+const props = defineProps<{ accountId: string, scope: string, initialFrom?: string, initialTo?: string }>()
 const emit = defineEmits<{ close: [] }>()
 const supabase = useSupabaseClient<Database>()
 const { currentId } = useTenant()
@@ -19,7 +19,7 @@ interface Journal {
 }
 interface Position { scroll?: number, focus?: string }
 type View = ({ kind: 'account', id: string, from: string, to: string, offset: number, data?: Activity } | { kind: 'journal', id: string, data?: Journal }) & Position
-const views = ref<View[]>([{ kind: 'account', id: props.accountId, from: '', to: '', offset: 0 }])
+const views = ref<View[]>([{ kind: 'account', id: props.accountId, from: props.initialFrom ?? '', to: props.initialTo ?? '', offset: 0 }])
 const current = computed(() => views.value.at(-1)!)
 const activity = computed(() => current.value.kind === 'account' ? current.value.data : undefined)
 const journal = computed(() => current.value.kind === 'journal' ? current.value.data : undefined)

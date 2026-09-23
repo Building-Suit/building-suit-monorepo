@@ -35,14 +35,24 @@ test('ambiguous bilingual headers require mapping; legacy machine headers still 
   assert.equal(matchCsvColumns(['type', 'نوع المعاملة'], translations).type, '')
   assert.equal(matchCsvColumns(['type', 'date', 'amount', 'account', 'category'], translations).account, 'account')
 })
-test('report localization preserves quoted names, formula protection, negative values and exact amounts', () => {
-  const input = serializeCsv([['code', 'account', 'type', 'debit', 'credit', 'currency'], ["'=1+1", 'اسم, "مركب"\nسطر', 'asset', '9007199254740993.25', '-12.50', 'EGP']])
+test('report localization preserves quoted names, formula protection and exact six-column amounts', () => {
+  const input = serializeCsv([
+    ['code', 'account', 'type', 'opening_debit', 'opening_credit', 'period_debit', 'period_credit', 'closing_debit', 'closing_credit', 'currency'],
+    ["'=1+1", 'اسم, "مركب"\nسطر', 'asset', '9007199254740993.25', '0.00', '100.00', '12.50', '9007199254741080.75', '0.00', 'EGP'],
+  ])
   for (const locale of ['en', 'ar']) {
     const t = translate(locale)
     const output = parseCsv(localizeReportCsv(input, 'trial_balance', t))
     assert.equal(output.headers[2], t('csv.columns.account_type'))
     const values = Object.values(output.rows[0])
-    assert.deepEqual(values, ["'=1+1", 'اسم, "مركب"\nسطر', t('accounts.groups.asset'), '9007199254740993.25', '-12.50', 'EGP'])
+    assert.deepEqual(values, ["'=1+1", 'اسم, "مركب"\nسطر', t('accounts.groups.asset'), '9007199254740993.25', '0.00', '100.00', '12.50', '9007199254741080.75', '0.00', 'EGP'])
+  }
+})
+test('trial balance export localizes its totals row from the same column contract', () => {
+  const input = 'code,account,type,opening_debit,opening_credit,period_debit,period_credit,closing_debit,closing_credit,currency\n,Total,,1.00,1.00,2.00,2.00,3.00,3.00,EGP'
+  for (const locale of ['en', 'ar']) {
+    const output = parseCsv(localizeReportCsv(input, 'trial_balance', translate(locale)))
+    assert.equal(output.rows[0][translate(locale)('csv.columns.account')], translate(locale)('reports.total'))
   }
 })
 test('empty reports export localized headers; all report labels and audit columns remain present', () => {

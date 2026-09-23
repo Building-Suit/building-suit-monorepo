@@ -3443,13 +3443,25 @@ export type Database = {
         }[]
       }
       report_trial_balance: {
-        Args: { p_as_of_date?: string; p_organization_id: string }
+        Args: {
+          p_from_date: string
+          p_organization_id: string
+          p_to_date: string
+        }
         Returns: {
           account_id: string
+          account_role: string
+          closing_credit_minor: string
+          closing_debit_minor: string
           code: string
-          credit_minor: number
-          debit_minor: number
+          contra_account_id: string
           name: string
+          normal_balance: Database["public"]["Enums"]["normal_balance"]
+          opening_credit_minor: string
+          opening_debit_minor: string
+          parent_account_id: string
+          period_credit_minor: string
+          period_debit_minor: string
           type: Database["public"]["Enums"]["account_type"]
         }[]
       }
