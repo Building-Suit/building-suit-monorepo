@@ -92,7 +92,7 @@ const visibleMembers = computed(() => {
 })
 
 const PERMISSION_MENU_GROUPS = [
-  { key: 'transactions', domains: ['transactions', 'attachments', 'categories', 'imports', 'exports', 'books'] },
+  { key: 'transactions', domains: ['transactions', 'attachments', 'categories', 'imports', 'opening_balances', 'exports', 'books'] },
   { key: 'ledger', domains: ['accounts'] },
   { key: 'operations', domains: ['commitments', 'recurring'] },
   { key: 'directory', domains: ['counterparties', 'tags'] },

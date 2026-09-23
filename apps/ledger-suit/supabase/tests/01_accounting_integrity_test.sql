@@ -111,16 +111,14 @@ insert into ids (key, id)
 select 'sales', c.id from public.categories c
 where c.organization_id = (select id from ids where key = 'org') and c.name = 'Sales';
 
--- 100,000.00 EGP opening bank balance.
-insert into ids (key, id)
-values ('opening', public.post_opening_balance(
-  (select id from ids where key = 'org'),
-  date '2026-01-01',
-  jsonb_build_array(jsonb_build_object(
-    'account_id', (select id from ids where key = 'bank'),
-    'amount_minor', 10000000
-  ))
-));
+-- 100,000.00 EGP opening bank balance with an explicit source equity line.
+insert into ids(key,id) select 'opening_equity',id from public.accounts
+where organization_id=(select id from ids where key='org') and system_key='opening_balance_equity';
+insert into ids(key,id) values ('opening_batch',public.create_opening_balance_batch(
+  (select id from ids where key='org'),'midyear','2026-01-01','integrity-opening.csv',jsonb_build_array(
+    jsonb_build_object('source_row',1,'source_code','BANK','source_name','Bank','debit','100000.00','credit','','account_id',(select id from ids where key='bank')),
+    jsonb_build_object('source_row',2,'source_code','EQUITY','source_name','Opening equity','debit','','credit','100000.00','account_id',(select id from ids where key='opening_equity')))));
+insert into ids(key,id) values ('opening',public.approve_opening_balance_batch((select id from ids where key='opening_batch')));
 
 select is(
   (select balance_minor from public.account_balances
@@ -135,7 +133,7 @@ select is(
    where a.organization_id = (select id from ids where key = 'org')
      and a.system_key = 'opening_balance_equity'),
   10000000::bigint,
-  'the balancing figure goes to opening balance equity, not to a plug'
+  'the explicitly imported equity line balances the opening bank balance'
 );
 
 -- Rent 15,000.00 EGP paid from the bank.

@@ -72,10 +72,12 @@ select public.create_adjustment((select value from period_ids where key='org_a')
 select public.transition_accounting_period((select value from period_ids where key='period'),'soft_closed');
 select is((select status from public.accounting_periods where id=(select value from period_ids where key='period')),
   'soft_closed'::public.accounting_period_status,'Open transitions to Soft Closed');
-select throws_ok(format($q$select public.post_opening_balance(%L,'2025-07-01',%L::jsonb,'blocked generated source')$q$,
-  (select value from period_ids where key='org_a'),jsonb_build_array(
-    jsonb_build_object('account_id',(select value from period_ids where key='cash'),'amount_minor',100))),
-  '42501','ACCOUNTING_PERIOD_SOFT_CLOSED: only authorized reasoned adjustments are allowed','normal posting is blocked in Soft Closed');
+insert into period_ids values ('soft_opening_batch',public.create_opening_balance_batch(
+  (select value from period_ids where key='org_a'),'midyear','2025-07-01','soft-closed-opening.csv',jsonb_build_array(
+    jsonb_build_object('source_row',1,'debit','1.00','credit','','account_id',(select value from period_ids where key='cash')),
+    jsonb_build_object('source_row',2,'debit','','credit','1.00','account_id',(select value from period_ids where key='retained')))));
+select ok((public.validate_opening_balance_batch((select value from period_ids where key='soft_opening_batch'))->'errors') ? 'ACCOUNTING_PERIOD_SOFT_CLOSED',
+  'normal opening posting is blocked in Soft Closed');
 select throws_ok(format($q$select public.create_adjustment(%L,'2025-07-01',%L::jsonb,'Missing reason','')$q$,
   (select value from period_ids where key='org_a'),jsonb_build_array(
     jsonb_build_object('account_id',(select value from period_ids where key='expense'),'side','debit','amount_minor',100),
