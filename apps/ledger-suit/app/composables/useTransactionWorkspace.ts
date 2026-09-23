@@ -3,7 +3,7 @@ import type { Database } from '~~/types/database.types'
 
 export const TRANSACTION_STATUSES = ['draft', 'scheduled', 'pending', 'pending_approval', 'posted', 'voided', 'reversed', 'failed'] as const
 export const TRANSACTION_TYPES = ['income', 'expense', 'transfer', 'asset_purchase', 'liability_created', 'liability_payment', 'owner_contribution', 'owner_withdrawal', 'adjustment', 'opening_balance', 'reversal'] as const
-export const TRANSACTION_SOURCES = ['manual', 'import', 'recurring', 'commitment', 'reversal', 'opening_balance', 'api'] as const
+export const TRANSACTION_SOURCES = ['manual', 'import', 'recurring', 'commitment', 'reversal', 'opening_balance', 'api', 'year_end_close'] as const
 type TransactionRow = Database['public']['Functions']['search_transactions']['Returns'][number]
 type Status = typeof TRANSACTION_STATUSES[number]
 type Type = typeof TRANSACTION_TYPES[number]

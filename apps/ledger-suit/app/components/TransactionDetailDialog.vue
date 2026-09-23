@@ -117,13 +117,20 @@ const { data: detail, refresh } = useLazyAsyncData(
     if (entryError) throw entryError
     if (settingsError) throw settingsError
 
+    const { data: periodContext, error: periodError } = transaction?.transaction_date && can('periods.read')
+      ? await supabase.rpc('accounting_period_context', {
+          p_organization_id: currentId.value!, p_date: transaction.transaction_date,
+        })
+      : { data: [], error: null }
+    if (periodError) throw periodError
+
     const relationshipIds = [transaction?.reverses_transaction_id, transaction?.reversed_by_transaction_id, transaction?.correction_of_transaction_id].filter((id): id is string => Boolean(id))
     const { data: relationships, error: relationshipError } = relationshipIds.length
       ? await supabase.from('transaction_summaries').select('id, journal_reference, status, type').in('id', relationshipIds)
       : { data: [], error: null }
     if (relationshipError) throw relationshipError
 
-    return { transaction, entries: entries ?? [], settings, relationships: relationships ?? [] }
+    return { transaction, entries: entries ?? [], settings, periodContext: periodContext?.[0] ?? null, relationships: relationships ?? [] }
   },
   { watch: [() => props.transactionId] },
 )
@@ -138,9 +145,15 @@ const periodLocked = computed(() => Boolean(
   && transaction.value.transaction_date <= detail.value.settings.books_locked_until
   && !can('books.override_lock'),
 ))
+const periodStatus = computed(() => detail.value?.periodContext?.period_status ?? null)
+const periodRestriction = computed(() => periodStatus.value === 'hard_closed'
+  ? t('journalCenter.periodHardClosed')
+  : periodStatus.value === 'soft_closed'
+    ? t('journalCenter.periodSoftClosed')
+    : periodLocked.value ? t('journalCenter.periodLocked') : '')
 
 const canReverse = computed(
-  () => can('transactions.reverse') && transaction.value?.status === 'posted' && !periodLocked.value,
+  () => can('transactions.reverse') && transaction.value?.status === 'posted' && !periodLocked.value && !periodStatus.value?.includes('closed'),
 )
 const sourceLink = computed(() => {
   const transaction = detail.value?.transaction
@@ -283,7 +296,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => ({ reason: reason.value, 
             <p v-if="transaction?.correction_of_transaction_id" class="mt-2">{{ t('journalCenter.adjusts') }} <button type="button" class="font-semibold underline" @click="emit('navigate', transaction.correction_of_transaction_id)">{{ relationship(transaction.correction_of_transaction_id)?.journal_reference }}</button></p>
           </section>
 
-          <p v-if="periodLocked" class="rounded-control bg-surface-muted px-3 py-2 text-sm text-fg-muted">{{ t('journalCenter.periodLocked') }}</p>
+          <p v-if="periodRestriction" class="rounded-control bg-surface-muted px-3 py-2 text-sm text-fg-muted">{{ periodRestriction }}</p>
 
           <div v-if="confirming" class="ls-card-flat space-y-3 p-4">
             <p class="text-sm">{{ t('detail.reverseExplain') }}</p>
