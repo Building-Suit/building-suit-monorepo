@@ -1,0 +1,575 @@
+# Ledger Suit Accounting V2 implementation baseline
+
+Task: LS-V2-BASELINE-001  
+State: AWAITING ORCHESTRATOR REVIEW — not accepted, deployed, or accountant-approved  
+Assessment date: 2026-09-23  
+Authoritative input: [Ledger_Suit_V2_Requirements.md](./Ledger_Suit_V2_Requirements.md)
+
+This is the canonical V2 requirement tracker under the existing accountant-system documentation. Older plans, screenshots, work packages, checkboxes, and the general AS-E02 founder authorization are historical evidence only. They do not change the V2 priorities, resolve the policy decisions below, prove deployment, or constitute accountant acceptance.
+
+## 1. Scope and workspace checkpoint
+
+| Item | Recorded value |
+|---|---|
+| Repository / app | Building-Suit/building-suit-monorepo / apps/ledger-suit |
+| Assessment worktree | /home/tareq/Dev/building-suit-monorepo/.local/worktrees/ledger-v2-baseline |
+| Assessment branch | codex/ledger-suit/v2-baseline |
+| Baseline commit | 1f2725c287daab6fef21c83c611cab9f58e69f3c |
+| Parent checkpoint | codex/ledger-suit/usability at the same commit; origin branch existed and was clean when the worktree was created |
+| Base relationship | At assessment start, baseline was one commit above fetched origin/stg 6e96c0ca95a954c472b8f12822839f3bf13a5bb7. During assessment, the tracking ref advanced to origin/stg 599a5ab5afc5a99d5096a3e23e7a54ffe75ced5a (merge commit message for PR #16) and contains 1f2725c as an ancestor. The assessment was not rebased because 1f2725c is the exact inspected baseline and no publication was authorized. Reconcile again before any future PR. |
+| Included pre-existing uncommitted state | None. Parent and new worktrees were clean before documentation edits. |
+| Current assessment-worktree state | Modified: apps/ledger-suit/docs/accountant-system/README.md and CURRENT_STATUS_AR.md. Untracked/new: v2-baseline/BASELINE.md and v2-baseline/Ledger_Suit_V2_Requirements.md. These are the only task changes. |
+| Excluded pending work | The primary checkout had an unrelated user modification at apps/shop-suit/docs/readiness/tasks.md; it was preserved and is not included. Other worktrees were preserved. |
+| GitHub state | Unverified: gh authentication was invalid, so live PR/merge state could not be inspected. |
+| Database ownership | apps/ledger-suit/supabase; generated types at apps/ledger-suit/types/database.types.ts |
+| Test ownership | apps/ledger-suit/supabase/tests and apps/ledger-suit/tests |
+| Runtime changes in this task | None; documentation only |
+
+### Application and package boundaries
+
+| Boundary | Effective ownership / dependency evidence |
+|---|---|
+| Ledger product | apps/ledger-suit/app/pages owns routes; app/components owns product UI; app/composables owns orchestration/data calls; app/utils owns pure product helpers. No other app internals are imported. |
+| Direct workspace packages | apps/ledger-suit/package.json:37-39 depends on @building-suit/nuxt-layer, @building-suit/contracts and @building-suit/data-access. Ledger-specific accounting queries and rules remain app-owned. |
+| Shared layer transitives | packages/nuxt-layer/package.json:25-32 supplies @building-suit/ui, @building-suit/ux, @building-suit/auth, @building-suit/brand, @building-suit/design-tokens and @building-suit/i18n, plus contracts/data-access. V2 work may extend shared contracts/components only when genuinely cross-product; shared packages must not import Ledger code or schema. |
+| Database/schema | apps/ledger-suit/supabase/migrations is the forward migration chain; functions use the private app schema and public business tables under the app’s Supabase project. apps/ledger-suit/supabase/tests contains SQL acceptance coverage. |
+| Generated/runtime contract | apps/ledger-suit/types/database.types.ts is generated output and must be regenerated from an authorized source migration, never hand-patched. |
+| Cross-application risk | New shared contracts/UI can affect Shop Suit and docs; any such implementation requires affected-consumer checks. No current V2 task may create shared authoritative balances or a schema dependency in a shared package. |
+
+The copied source contains the attachment text unchanged, with only a normalized terminal newline for the repository file. It contains exactly 138 unique requirement IDs and the expected ranges: SCOPE 7, CORE 8, COA 9, OPEN 8, JRN 8, TB 7, FS 8, AR 9, AP 9, PER 8, BANK 8, FA 9, DIM 7, TAX 7, INV 8, VAL 8, PLAN 10. No ID is missing or duplicated.
+
+## 2. How to read the assessment
+
+The status column uses only implemented, partially implemented, missing, or unverified. Implemented means repository coverage was found; it does not mean the relevant test was run, the feature was deployed, or an accountant accepted it. For process-only SCOPE, VAL, TAX, INV, and PLAN requirements, implemented means this baseline performs the requested assessment/governance action; it does not claim a runtime module exists.
+
+Every row has four independent evidence dimensions:
+
+1. Coverage: the row status and repository evidence below.
+2. Tests present: evidence key T-* or an explicit absence.
+3. Tests executed: section 5 records the command and result; a written scenario is not execution.
+4. External acceptance: deployment is unverified and accountant acceptance is not started for every product capability unless explicitly stated.
+
+For missing behavior, the ordered migration chain, app source, generated types, SQL tests, unit tests, and browser tests were inspected. For unverified behavior, the row states the smallest additional evidence required.
+
+### Evidence index
+
+| Key | Repository evidence |
+|---|---|
+| DB-AUTH | apps/ledger-suit/supabase/migrations/20260830122000_authorization_helpers.sql:284-359 — capability checks and one organization books_locked_until date |
+| DB-COA | apps/ledger-suit/supabase/migrations/20260830123000_accounts.sql:56-248; 20260919013605_account_nature_and_contra_reporting.sql:1-220; 20260919095839_explicit_account_groups.sql:1-261 — hierarchy, archive/history guards, normal nature, Contra, Group/Posting roles |
+| DB-LEDGER | apps/ledger-suit/supabase/migrations/20260830124500_transactions.sql:7-232; 20260830125000_transaction_entries.sql:8-280 — journal state, links, integer amounts, generic dimensions, immutability, deferred balance checks |
+| DB-POST | apps/ledger-suit/supabase/migrations/20260830130000_posting_engine.sql:44-820 — common account validation, draft/post/create-and-post, adjustment, reversal, void, duplicate fingerprint, optional idempotency |
+| DB-FLOWS | apps/ledger-suit/supabase/migrations/20260830130500_transaction_flows.sql:14-698 — income, expense, transfer, asset/liability/owner flows and simple opening posting all delegate to the common engine |
+| DB-RLS | apps/ledger-suit/supabase/migrations/20260830133500_rls_policies.sql:1-47 — organization/capability reads and RPC-only ledger writes |
+| DB-REPORT | apps/ledger-suit/supabase/migrations/20260830134000_reporting.sql:91-447; latest sign replacements in 20260919013605_account_nature_and_contra_reporting.sql:305-580 — two-column cumulative Trial Balance, statements, integrity, cash flow, General Ledger |
+| DB-CLASS | apps/ledger-suit/supabase/migrations/20260919105319_dated_statement_classification.sql:1-218 — append-only future Balance Sheet classifications and classified export |
+| DB-ACTIVITY | apps/ledger-suit/supabase/migrations/20260919114443_account_activity_reader.sql:2-90 — account opening/movement/closing reader and journal-line reader |
+| DB-EXPORT | apps/ledger-suit/supabase/migrations/20260912180913_financial_report_csv_exports.sql:62-162 — report exports reuse report RPCs, including the two-column Trial Balance |
+| DB-IMPORT | apps/ledger-suit/supabase/migrations/20260912110717_csv_import_backend.sql:1-640 and latest confirm function in 20260913171823_launch_plan_concurrency_hardening.sql:128-240 — generic income/expense CSV staging, validation, duplicate handling, shared posting |
+| DB-ARAP | apps/ledger-suit/supabase/migrations/20260831090000_commitments.sql:1-236; 20260831090500_commitment_functions.sql:15-186 — generic receivable/payable intentions, outstanding balance, partial settlement; settlement currently records income/expense |
+| DB-RECUR | apps/ledger-suit/supabase/migrations/20260831091500_recurring_functions.sql:91-323 — occurrence identity, shared financial flows, scheduler |
+| DB-QUOTA | apps/ledger-suit/supabase/migrations/20260912094117_monthly_posted_transaction_quota.sql:149-166 — quota effect when a transaction first becomes posted |
+| UI-COA | apps/ledger-suit/app/pages/accounts.vue:317-537; app/utils/accountTree.ts:1-110; app/components/AccountTree.vue:25-83 — hierarchy, totals, role/nature/Contra/classification editing and account activity |
+| UI-JRN | apps/ledger-suit/app/pages/transactions.vue:46-176; app/composables/useTransactionWorkspace.ts:1-123; app/components/TransactionDetailDialog.vue:96-279 — unified table, route-backed filters, lines, attachments, reversal |
+| UI-REPORT | apps/ledger-suit/app/pages/reports.vue:22-430; app/components/AccountActivityDialog.vue:46-169 — reports/export plus account-to-journal drill-down available from accounts, not report rows |
+| UI-IMPORT | apps/ledger-suit/app/components/CsvImportDialog.vue:55-381; app/pages/imports.vue:1-6 — generic transaction import, not an opening Trial Balance workflow |
+| UI-ARAP | apps/ledger-suit/app/pages/records/[kind].vue:78-365 — commitment listing, partial settlement, postpone/cancel |
+| T-CORE | apps/ledger-suit/supabase/tests/01_accounting_integrity_test.sql:95-418; 02_tenant_isolation_test.sql:1-310; 19_monthly_transaction_quota_test.sql:1-355 |
+| T-COA | apps/ledger-suit/supabase/tests/28_account_nature_test.sql:1-148; 29_account_groups_test.sql:1-90; 30_statement_classification_test.sql:1-91; 31_account_activity_test.sql:1-78; apps/ledger-suit/tests/unit/account-tree.test.mjs:9-42; apps/ledger-suit/tests/e2e/account-nature.spec.ts:1-113, account-groups.spec.ts:1-100, account-activity.spec.ts:1-149 |
+| T-IMPORT | apps/ledger-suit/supabase/tests/21_csv_import_backend_test.sql:1-329 and apps/ledger-suit/tests/e2e/csv-import.spec.ts:1-244 |
+| T-ARAP | apps/ledger-suit/supabase/tests/03_commitments_and_recurring_test.sql:1-298 |
+| T-REPORT | apps/ledger-suit/supabase/tests/22_financial_report_csv_exports_test.sql:1-188 and apps/ledger-suit/tests/e2e/report-exports.spec.ts:1-85 |
+| ABSENT-MODULES | No accounting-period/state, journal-number, bank-statement/reconciliation, asset-register/depreciation-schedule, controlled cost-center/project, tax/VAT configuration/calculation/report, or inventory-item/movement/valuation object was found across the ordered migrations, app, generated types, SQL tests, unit tests, and browser tests. The exact search command is in section 5. |
+
+Relevant database symbols traced to their latest applicable definitions include public.accounts, public.transactions, public.transaction_entries, public.commitments, public.commitment_settlements, public.saved_views, app.require_capability, app.require_account, app.create_transaction_draft, app.post_transaction, app.create_and_post, app.create_adjustment, app.reverse_transaction, app.post_opening_balance, app.search_transactions, app.trial_balance, app.profit_and_loss, app.balance_sheet, app.cash_flow_statement, app.general_ledger, app.classified_balance_sheet, app.export_financial_report_csv, app.read_account_activity, and app.read_journal_lines. Relevant interface symbols include useTransactionWorkspace, useAddTransaction, AccountTree, AccountActivityDialog, TransactionDetailDialog, and CsvImportDialog.
+
+## 3. Requirement-level traceability
+
+Columns: evidence includes code/schema/interface and tests present; acceptance/task includes the measurable criterion, proposed task, and blocking decision where applicable.
+
+### Scope and foundation
+
+| ID | Meaning | Priority | Status and reason | Evidence; gap / smallest additional evidence | Measurable acceptance; task / decision |
+|---|---|---:|---|---|---|
+| SCOPE-01 | Target monorepo Ledger app | — | implemented — assessment is scoped to apps/ledger-suit | Workspace checkpoint | Tracker names only this app; LS-V2-BASELINE-001 |
+| SCOPE-02 | Inspect effective source/schema/functions/UI/tests | — | implemented — all evidence layers and latest redefinitions were inspected | Evidence index; section 5 | Review can trace findings to ordered definitions and tests |
+| SCOPE-03 | Four-status evidence classification | — | implemented — every original ID has one allowed status | This table | 138 unique rows use only the four statuses |
+| SCOPE-04 | Accounting-only functional scope | — | implemented — tracker excludes non-accounting modules | Task inventory and approval section | No proposed task expands beyond named accounting modules |
+| SCOPE-05 | Invoices/bills only for AR/AP | — | implemented — AR/AP plans stop at accounting obligations | V2-IMP-008/009 | No sales-order/procurement/CRM/HR/payroll/POS/WMS/manufacturing capability is included |
+| SCOPE-06 | Preserve functions and history | — | implemented — preservation gates are explicit | Sections 7-9 | Every data task requires forward migration and pre/post reconciliation |
+| SCOPE-07 | Escalate unspecified policy | — | implemented — material questions are registered | V2-D01–D13 | Blocking policy is approved by named approver before dependent implementation |
+| CORE-01 | Shared double-entry engine | — | implemented — all inspected financial flows call the common posting RPCs | DB-POST; DB-FLOWS; DB-IMPORT; DB-RECUR; T-CORE | Every new source creates effects only through the common engine; all posting-source contract tests pass |
+| CORE-02 | Ledger-derived balances/statements | — | implemented — reports read posted entries and include reversal/adjustment journals | DB-LEDGER; DB-REPORT; DB-ACTIVITY; T-CORE | For a fixture including reversal/adjustment, GL, TB, statements, and account activity reconcile exactly |
+| CORE-03 | Backend accounting validation | — | implemented — deferred balance, account, state, and RPC checks are database-enforced | DB-LEDGER; DB-POST; T-CORE | Direct/API attempts at unbalanced or ineligible posting fail atomically |
+| CORE-04 | Draft/posted distinction; traceable corrections | — | implemented — posted rows/lines are immutable and reversal/adjustment links exist | DB-LEDGER; DB-POST; UI-JRN; T-CORE | Posted edits fail; correction produces linked journal with preserved original |
+| CORE-05 | Eligibility/org/permission/period on all sources | — | partially implemented — eligibility/org/capability and one lock date exist; explicit period states and concurrency do not | DB-AUTH; DB-POST; DB-RLS; DB-FLOWS; T-CORE; gap PER module | Every source is rejected in a closed period under concurrent close; V2-IMP-004 / V2-D07 |
+| CORE-06 | Duplicate-post prevention | — | partially implemented — optional keys/indexes and fingerprints exist, but a reused key is not bound to payload and check-then-insert concurrency is unsafe | DB-POST:151-180,334-421,496-580; DB-IMPORT; DB-RECUR; T-CORE | Same key+same payload returns one journal; same key+different payload conflicts; concurrent retries create one financial effect; V2-IMP-001 |
+| CORE-07 | Preserve currency/audit/attachments/recurrence/import/export/reporting | — | implemented — current facilities are present and preservation is a task gate | DB-LEDGER; DB-IMPORT; DB-RECUR; DB-EXPORT; UI-JRN | Regression suite shows no loss of supported behavior after each V2 task |
+| CORE-08 | Pre/post migration reconciliation | — | unverified — no V2 data migration occurred, so no paired evidence exists | Section 9; smallest evidence: disposable rehearsal plus signed reconciliation artifacts | Each future migration records pre/post journal counts, debit=credit, TB/statement integrity and subledger controls; every data task; V2-IMP-015 |
+
+### Chart of Accounts V2 — P0
+
+| ID | Meaning | Priority | Status and reason | Evidence; gap / smallest additional evidence | Measurable acceptance; task / decision |
+|---|---|---:|---|---|---|
+| COA-01 | Complete hierarchical tree | P0 | implemented — parent links, cycle/depth guards, tree UI and totals exist | DB-COA; UI-COA; T-COA | Create/reparent/archive fixtures retain valid hierarchy and render each account once |
+| COA-02 | Group, Control, Posting node types | P0 | partially implemented — only Group and Posting roles exist | DB-COA; UI-COA; T-COA; Control absent in ABSENT-MODULES | All three types exist with server-enforced rules; V2-IMP-005 / V2-D01 |
+| COA-03 | No Group posting; no double-counted rollups | P0 | implemented — database rejects Group accounts and tree totals avoid duplicate descendants | DB-COA; UI-COA; T-COA | Direct Group post fails; parent total equals distinct posting descendants |
+| COA-04 | Control-to-subledger association and exceptions | P0 | missing — no Control role or subledger binding exists | DB-COA; DB-ARAP; ABSENT-MODULES | Each Control account has one approved subledger; exceptional adjustment obeys policy and reconciliation; V2-IMP-005 / V2-D01 |
+| COA-05 | Contra nature and statement treatment | P0 | implemented — independent normal balance/Contra relation and report sign handling exist | DB-COA; DB-REPORT; UI-COA; T-COA | Contra fixtures reduce the intended parent/classification and remain traceable |
+| COA-06 | Expose account properties | P0 | partially implemented — UI exposes current fields but cannot expose Control | UI-COA; DB-COA; T-COA | UI/API show type, classification, nature, parent, all node roles, Contra state; V2-IMP-005 / V2-D01 |
+| COA-07 | Current/non-current and statement classes | P0 | partially implemented — dated Balance Sheet classes exist; complete statement mapping policy does not | DB-CLASS; UI-COA; T-COA | Approved mappings cover every applicable statement account and effective date; V2-IMP-007 / V2-D04 |
+| COA-08 | Safe create/edit/archive | P0 | implemented — history, cycle, role, archival and posted-history guards exist | DB-COA; UI-COA; T-COA | Invalid hierarchy/role/archive changes fail while historical journals remain readable |
+| COA-09 | Reconcile hierarchy/Control/Contra | P0 | partially implemented — hierarchy and Contra tests exist; Control does not, and the local statement-classification suite was not clean | T-COA; execution section | Clean disposable run proves hierarchy and Contra, then Control subledger=GL by date; V2-IMP-005/015 / V2-D01 |
+
+### Opening balances — P0
+
+| ID | Meaning | Priority | Status and reason | Evidence; gap / smallest additional evidence | Measurable acceptance; task / decision |
+|---|---|---:|---|---|---|
+| OPEN-01 | Explicit opening workflow | P0 | missing — only a low-level posting RPC exists | DB-FLOWS:584-698; UI-IMPORT | Accountant can create, validate, preview, approve, post, lock and correct one opening batch; V2-IMP-006 / V2-D02 |
+| OPEN-02 | Import opening TB with account mapping | P0 | missing — generic CSV supports income/expense rows only | DB-IMPORT; UI-IMPORT; T-IMPORT | Source TB maps every row to an eligible Ledger account and preserves source row identity; V2-IMP-006 / V2-D02 |
+| OPEN-03 | Cut-off date and explicit debit/credit | P0 | partially implemented — RPC has a date and signed normal-side amounts, not explicit source debit/credit columns | DB-FLOWS:584-698; T-CORE | Batch captures one approved cutoff plus separate nonnegative debit/credit per row; V2-IMP-006 / V2-D02 |
+| OPEN-04 | Validate references, eligibility, values, balance | P0 | partially implemented — account/lock/balance engine checks exist, but the RPC silently plugs imbalance to Opening Balance Equity | DB-FLOWS; DB-POST; T-CORE | Invalid/ineligible/unbalanced source batch cannot post and errors identify rows; V2-IMP-006 / V2-D02 |
+| OPEN-05 | Validation result and journal preview | P0 | missing — no opening-batch UI/model exists | UI-IMPORT; ABSENT-MODULES | Preview shows mapped lines, totals and blocking row errors before approval; V2-IMP-006 |
+| OPEN-06 | Shared-ledger traceability | P0 | implemented — accepted low-level opening posts use the engine and flow into GL/reports | DB-FLOWS; DB-POST; DB-REPORT; T-CORE | Posted opening batch is traceable by batch/source in GL, six-column TB and statements; V2-IMP-006 retains engine |
+| OPEN-07 | Controlled cutoff and duplicate protection | P0 | partially implemented — optional key/lock exists, no batch/cutoff workflow and key semantics are weak | DB-FLOWS; DB-POST; T-CORE | Repeated/concurrent import produces one batch/journal and cutoff rule is enforced; V2-IMP-001 then 006 / V2-D02 |
+| OPEN-08 | Approval, lock, correction, year/midyear rules | P0 | partially implemented — generic lock/reversal exists, not opening-specific approval/policy | DB-AUTH; DB-POST | Approved policy controls approval, lock, correction and year/midyear treatment with audit; V2-IMP-006 / V2-D02 |
+
+### Professional Journal Center — P0
+
+| ID | Meaning | Priority | Status and reason | Evidence; gap / smallest additional evidence | Measurable acceptance; task / decision |
+|---|---|---:|---|---|---|
+| JRN-01 | One all-source journal workspace | P0 | implemented — unified transactions page reads journal summaries | UI-JRN; DB-LEDGER | Fixtures from every supported source appear in one authorized workspace |
+| JRN-02 | Required header fields and debit/credit totals | P0 | partially implemented — date/description/reference/status/amount exist; number/source/separate debit-credit totals do not | UI-JRN; ABSENT-MODULES | List/detail show all required fields and totals for every journal; V2-IMP-003 / V2-D03 |
+| JRN-03 | Consistent journal numbering rules | P0 | missing — no journal-number field or policy exists | ABSENT-MODULES | Concurrent posting assigns unique monotonic policy-compliant numbers and documents gaps/reuse; V2-IMP-003 / V2-D03 |
+| JRN-04 | Accounting search/sort/filter | P0 | partially implemented — route-backed date/account/status/type/etc. exist; source and journal-number filters do not | UI-JRN | Required attributes filter/sort server-side and survive navigation; V2-IMP-003 |
+| JRN-05 | Saved views | P0 | partially implemented — saved_views table exists but no journal UI flow uses it | apps/ledger-suit/supabase/migrations/20260830131500_tags_and_saved_views.sql:59-85; UI-JRN | User can create/apply/rename/delete a saved journal filter with tenant isolation; V2-IMP-003 |
+| JRN-06 | Lines and source records | P0 | partially implemented — lines display, but source records are not consistently linked/navigable | UI-JRN; DB-ACTIVITY | Detail shows balanced lines and opens an authorized originating record; V2-IMP-003 |
+| JRN-07 | Visible reversal/adjustment relationships | P0 | partially implemented — links are stored and a notice exists, without complete bidirectional navigation | DB-LEDGER; DB-POST; UI-JRN; T-CORE | Original, reversal and adjustment navigate bidirectionally with reason/actor/time; V2-IMP-003 |
+| JRN-08 | Permission/status/period-aware actions | P0 | partially implemented — capabilities/status/basic lock apply; explicit period states are absent | DB-AUTH; DB-POST; UI-JRN | Server and UI allow each action only for matching capability, status and period; V2-IMP-003/004 / V2-D07 |
+
+### Six-column Trial Balance — P0
+
+| ID | Meaning | Priority | Status and reason | Evidence; gap / smallest additional evidence | Measurable acceptance; task / decision |
+|---|---|---:|---|---|---|
+| TB-01 | Six monetary columns | P0 | missing — current RPC/UI/export expose cumulative debit and credit only | DB-REPORT:91-125; DB-EXPORT:109-119; UI-REPORT:282-302 | Every eligible account has opening DR/CR, movement DR/CR, closing DR/CR; V2-IMP-002 |
+| TB-02 | Selected-period components | P0 | missing — only as-of date is accepted | DB-REPORT; UI-REPORT | From/to period independently calculates opening, movement and closing; V2-IMP-002 |
+| TB-03 | Per-account roll-forward equation | P0 | missing — no six-column contract/test | DB-REPORT; T-REPORT | For every row, signed close = signed open + debit movement - credit movement; V2-IMP-002 |
+| TB-04 | Column-total reconciliation | P0 | missing — no opening/period/closing total assertions | DB-REPORT; T-REPORT | Opening DR=CR, period DR=CR, closing DR=CR with zero documented variance; V2-IMP-002 |
+| TB-05 | Hierarchy and Contra without double count | P0 | partially implemented — tree/report nature exists, but six-column hierarchy/grand-total behavior is absent | DB-COA; DB-REPORT; UI-COA; T-COA | Detail/grand totals count posting entries once and present Contra balances correctly; V2-IMP-002 |
+| TB-06 | Drill-down to movements/journals | P0 | missing — report rows are static; activity drill-down only starts from Accounts | UI-REPORT; DB-ACTIVITY | Each amount opens filtered contributing movements then journal detail, preserving period; V2-IMP-002 |
+| TB-07 | Display/export same contract | P0 | implemented — current display/export reuse the same current RPC/rules, though the contract is incomplete | DB-EXPORT; UI-REPORT; T-REPORT | New six-column UI and CSV call one calculation contract and byte-level numeric fixtures agree; V2-IMP-002 |
+
+### Financial statements — P0
+
+| ID | Meaning | Priority | Status and reason | Evidence; gap / smallest additional evidence | Measurable acceptance; task / decision |
+|---|---|---:|---|---|---|
+| FS-01 | Complete Income, Balance Sheet, Cash Flow workflows | P0 | partially implemented — all three render/export, but mapping, reconciliation and drill-down are incomplete | DB-REPORT; DB-EXPORT; UI-REPORT; T-REPORT | Approved fixtures reconcile all three reports to TB/GL with drill-down; V2-IMP-007 / V2-D04 |
+| FS-02 | Current/non-current presentation | P0 | implemented — dated classified Balance Sheet supports applicable groups | DB-CLASS; UI-REPORT; T-COA | Effective-date fixtures place each applicable account in the approved current/non-current group |
+| FS-03 | Consistent classification and Contra | P0 | partially implemented — nature signs and dated BS classes exist; complete approved mappings do not | DB-REPORT; DB-CLASS; T-COA | Every statement account has approved mapping/effective history and Contra results match GL; V2-IMP-007 / V2-D04 |
+| FS-04 | Reconcile statements to TB/GL | P0 | partially implemented — integrity RPC exists but not a complete six-column/mapping reconciliation | DB-REPORT; T-CORE; T-REPORT | Income/BS/CF totals tie to six-column TB and GL for the same context with zero unexplained variance; V2-IMP-007 / V2-D04 |
+| FS-05 | Statement drill-down | P0 | missing — statement rows are not interactive | UI-REPORT; DB-ACTIVITY | Total→account→movement→journal path is authorized and reproducible; V2-IMP-007 |
+| FS-06 | Preserve report context on drill-down | P0 | missing — date/filter state is local and no statement drill-down exists | UI-REPORT | Back navigation restores report, dates, filters, focus and scroll; V2-IMP-007 |
+| FS-07 | Approved mapping/cash-flow policies | P0 | partially implemented — code classifies BS and cash flow, but no accountant-approved policy; cash flow uses a dominant-counterpart heuristic | DB-CLASS; DB-REPORT | Policy approves every mapping and line-level cash-flow treatment; V2-IMP-007 / V2-D04 |
+| FS-08 | Historical access after account changes | P0 | partially implemented — archive preserves entries; names and classification history are not complete for every permitted change | DB-COA; DB-CLASS; DB-REPORT; T-COA | Historical report as-of reproduces approved labels/classes and opens archived-account journals; V2-IMP-007 |
+
+### Receivables and payables — P0
+
+| ID | Meaning | Priority | Status and reason | Evidence; gap / smallest additional evidence | Measurable acceptance; task / decision |
+|---|---|---:|---|---|---|
+| AR-01 | Customer subledger tied to AR Control | P0 | missing — generic commitments are not a Control-account subledger | DB-ARAP; UI-ARAP; ABSENT-MODULES | Customer open items sum exactly to AR Control by date; V2-IMP-005/008 / V2-D01 |
+| AR-02 | Customer obligation attributes | P0 | partially implemented — counterparty, due date, amount/outstanding exist; issue date, invoice identity and accrual journal do not | DB-ARAP; UI-ARAP; T-ARAP | Invoice stores all fields and posts one traceable recognition journal; V2-IMP-008 / V2-D05 |
+| AR-03 | Receipt allocation | P0 | partially implemented — settlement links one cash transaction but is not an allocation subledger | DB-ARAP; UI-ARAP; T-ARAP | One/many receipts allocate to one/many open items with immutable allocation history; V2-IMP-008 / V2-D01, V2-D05 |
+| AR-04 | Partial settlement | P0 | partially implemented — outstanding arithmetic exists, but within cash-basis commitment behavior | DB-ARAP; UI-ARAP; T-ARAP | Partial receipt reduces open item and Control exactly without re-recognizing revenue; V2-IMP-008 / V2-D01, V2-D05 |
+| AR-05 | Credits/unallocated/overpay/adjust/reverse | P0 | missing — no approved models or rules | DB-ARAP; ABSENT-MODULES | Each approved case has traceable state/journal/allocation behavior; V2-IMP-008 / V2-D05 |
+| AR-06 | Customer statements | P0 | missing — no statement query/UI/test | ABSENT-MODULES | Statement roll-forward opening+charges+adjustments-receipts=closing and ties to open items; V2-IMP-008 / V2-D01, V2-D05 |
+| AR-07 | Receivables aging | P0 | missing — no buckets/due-date policy/report | ABSENT-MODULES | Approved buckets assign every outstanding amount once and sum to AR; V2-IMP-008 / V2-D01, V2-D05 |
+| AR-08 | Subledger-to-Control reconciliation | P0 | missing — neither Control nor reconciliation exists | ABSENT-MODULES | As-of subledger total equals AR Control with explicit zero/explained variance; V2-IMP-008 / V2-D01, V2-D05 |
+| AR-09 | Avoid revenue twice | P0 | missing — current settlement calls record_income, so it cannot safely follow accrual invoice recognition | DB-ARAP:161-186 | Invoice recognizes revenue once; receipt only moves cash/AR; V2-IMP-008 / V2-D05 |
+| AP-01 | Supplier subledger tied to AP Control | P0 | missing — generic commitments are not a Control-account subledger | DB-ARAP; UI-ARAP; ABSENT-MODULES | Supplier open items sum exactly to AP Control by date; V2-IMP-005/009 / V2-D01 |
+| AP-02 | Supplier obligation attributes | P0 | partially implemented — counterparty, due date, amount/outstanding exist; issue date, bill identity and accrual journal do not | DB-ARAP; UI-ARAP; T-ARAP | Bill stores all fields and posts one traceable expense/asset recognition journal; V2-IMP-009 / V2-D06 |
+| AP-03 | Payment allocation | P0 | partially implemented — settlement links one cash transaction but is not an allocation subledger | DB-ARAP; UI-ARAP; T-ARAP | One/many payments allocate to one/many bills with immutable allocation history; V2-IMP-009 / V2-D01, V2-D06 |
+| AP-04 | Partial settlement | P0 | partially implemented — outstanding arithmetic exists, but within cash-basis commitment behavior | DB-ARAP; UI-ARAP; T-ARAP | Partial payment reduces open item and Control exactly without re-recognizing expense/asset; V2-IMP-009 / V2-D01, V2-D06 |
+| AP-05 | Credits/unallocated/overpay/adjust/reverse | P0 | missing — no approved models or rules | DB-ARAP; ABSENT-MODULES | Each approved case has traceable state/journal/allocation behavior; V2-IMP-009 / V2-D06 |
+| AP-06 | Supplier statements | P0 | missing — no statement query/UI/test | ABSENT-MODULES | Statement roll-forward opening+bills+adjustments-payments=closing and ties to open items; V2-IMP-009 / V2-D01, V2-D06 |
+| AP-07 | Payables aging | P0 | missing — no buckets/due-date policy/report | ABSENT-MODULES | Approved buckets assign every outstanding amount once and sum to AP; V2-IMP-009 / V2-D01, V2-D06 |
+| AP-08 | Subledger-to-Control reconciliation | P0 | missing — neither Control nor reconciliation exists | ABSENT-MODULES | As-of subledger total equals AP Control with explicit zero/explained variance; V2-IMP-009 / V2-D01, V2-D06 |
+| AP-09 | Avoid expense/asset twice | P0 | missing — current settlement calls record_expense, so it cannot safely follow accrual bill recognition | DB-ARAP:161-186 | Bill recognizes expense/asset once; payment only moves AP/cash; V2-IMP-009 / V2-D06 |
+
+### Periods, bank reconciliation, fixed assets — P0
+
+| ID | Meaning | Priority | Status and reason | Evidence; gap / smallest additional evidence | Measurable acceptance; task / decision |
+|---|---|---:|---|---|---|
+| PER-01 | Explicit period workflow | P0 | missing — only books_locked_until exists | DB-AUTH; ABSENT-MODULES | Authorized UI/API manages dated, non-overlapping periods with audit; V2-IMP-004 / V2-D07 |
+| PER-02 | Open/Soft/Hard Closed states | P0 | missing — no period/state object | ABSENT-MODULES | All three states persist and transition only by approved rules; V2-IMP-004 / V2-D07 |
+| PER-03 | State operations/restrictions/authorization | P0 | partially implemented — lock/override capability is a foundation, not three-state policy | DB-AUTH; DB-POST; T-CORE | Policy matrix is enforced server-side and mirrored in UI; V2-IMP-004 / V2-D07 |
+| PER-04 | Restrictions on every source | P0 | partially implemented — inspected current flows inherit the basic lock, but explicit states/subledgers and close concurrency are absent | DB-POST; DB-FLOWS; DB-IMPORT; DB-RECUR | Parameterized tests cover manual/import/auto/subledger/opening/adjustment under every state; V2-IMP-004 / V2-D07 |
+| PER-05 | Controlled reopening | P0 | missing — changing lock date is not a recorded reopen workflow | DB-AUTH; ABSENT-MODULES | Only authorized actor reopens with required reason and approved transition; V2-IMP-004 / V2-D07 |
+| PER-06 | Close/reopen audit | P0 | missing — no period transition history | ABSENT-MODULES | Actor/time/reason/from/to state are immutable and queryable; V2-IMP-004 / V2-D07 |
+| PER-07 | Fiscal/year-end treatment | P0 | missing — no approved retained-earnings/close policy | ABSENT-MODULES | Approved scenario closes income to retained earnings and preserves subsequent reporting; V2-D07; V2-IMP-004 / V2-D07 |
+| PER-08 | Concurrent close/post test | P0 | missing — no shared close/post lock protocol or test | DB-POST; T-CORE | In a barrier test, either posting commits before close or is rejected; none lands after close; V2-IMP-004 / V2-D07 |
+| BANK-01 | Import statements | P0 | missing — no bank statement model/workspace/import | ABSENT-MODULES | Valid CSV fixture creates a reviewable statement without a journal; V2-IMP-010 / V2-D08 |
+| BANK-02 | Validate/deduplicate lines | P0 | missing | ABSENT-MODULES | Bad rows block completion; repeated file/line identity cannot duplicate; V2-IMP-010 / V2-D08 |
+| BANK-03 | Match existing journals without reposting | P0 | missing | ABSENT-MODULES | Matching changes links/status only; journal count and ledger totals are unchanged; V2-IMP-010 / V2-D08 |
+| BANK-04 | Matched/unmatched/unresolved states | P0 | missing | ABSENT-MODULES | Every line has one visible state and filters/totals reconcile; V2-IMP-010 / V2-D08 |
+| BANK-05 | Adjustments through engine | P0 | missing | ABSENT-MODULES; DB-POST is reusable foundation | Authorized adjustment produces one linked balanced journal via common engine; V2-IMP-010 / V2-D08 |
+| BANK-06 | Match/unmatch/correct/complete policy | P0 | missing | ABSENT-MODULES | Approved transitions and completion prerequisites are enforced; V2-D08; V2-IMP-010 / V2-D08 |
+| BANK-07 | Statement-to-ledger reconciliation | P0 | missing | ABSENT-MODULES | Statement balance = ledger balance plus/minus listed outstanding items; V2-IMP-010 / V2-D08 |
+| BANK-08 | Preserve reconciliation links/history | P0 | missing | ABSENT-MODULES | Line→match→journal/adjustment→session history remains navigable and immutable; V2-IMP-010 / V2-D08 |
+| FA-01 | Fixed-asset register | P0 | missing — only asset-purchase flow exists | DB-FLOWS:261-314; ABSENT-MODULES | Register lists each asset, status and ledger links; V2-IMP-011 / V2-D09 |
+| FA-02 | Link acquisition/accounts/records | P0 | partially implemented — purchase journal and metadata can be recorded, but no asset identity/register link | DB-FLOWS:261-314 | One asset traces to acquisition source/journal and designated asset/depreciation accounts; V2-IMP-011 / V2-D09 |
+| FA-03 | Depreciation-policy inputs | P0 | partially implemented — useful-life metadata is accepted; method/residual/register dates are not controlled | DB-FLOWS:261-314 | Required policy fields are validated and effective-dated; V2-D09; V2-IMP-011 / V2-D09 |
+| FA-04 | Depreciation schedules | P0 | missing — migration explicitly leaves depreciation outside the flow | DB-FLOWS:261-314; ABSENT-MODULES | Approved schedule exactly allocates depreciable basis over periods; V2-IMP-011 / V2-D09 |
+| FA-05 | Ledger posting/no duplicate depreciation | P0 | missing | ABSENT-MODULES; DB-POST foundation | One depreciation journal per asset/period; concurrent retry is idempotent; V2-IMP-011 / V2-D09 |
+| FA-06 | Cost/accumulated depreciation/NBV | P0 | missing | ABSENT-MODULES | Register cost - accumulated depreciation = NBV by date and ties to GL; V2-IMP-011 / V2-D09 |
+| FA-07 | Disposal/gain-loss | P0 | missing | ABSENT-MODULES | Disposal derecognizes cost/accumulated depreciation and posts approved gain/loss; V2-IMP-011 / V2-D09 |
+| FA-08 | Register-to-GL reconciliation | P0 | missing | ABSENT-MODULES | Cost and accumulated depreciation register totals equal control GL accounts; V2-IMP-011 / V2-D09 |
+| FA-09 | Acquisition/depreciation/disposal corrections | P0 | missing | ABSENT-MODULES | Approved corrections preserve originals and linked reversal/replacement journals; V2-IMP-011 / V2-D09 |
+
+### Dimensions, tax/VAT, inventory
+
+| ID | Meaning | Priority | Status and reason | Evidence; gap / smallest additional evidence | Measurable acceptance; task / decision |
+|---|---|---:|---|---|---|
+| DIM-01 | Complete cost-center/project dimensions | — | partially implemented — ledger lines have generic dimensions JSON only | DB-LEDGER:8-55; ABSENT-MODULES | Controlled dimensions, posting, reporting and reconciliation work end-to-end; V2-IMP-012 / V2-D10 |
+| DIM-02 | Maintain controlled dimension values | — | missing — no model/API/UI | ABSENT-MODULES | Authorized create/edit/archive preserves historical references; V2-IMP-012 / V2-D10 |
+| DIM-03 | Associate applicable accounting amounts | — | partially implemented — unvalidated JSON can be stored, with no controlled selection/allocation | DB-LEDGER | Eligible line amounts reference active tenant dimension values and allocation totals equal line; V2-IMP-012 / V2-D10 |
+| DIM-04 | Filter/group accounting reports | — | missing | ABSENT-MODULES | GL/TB/approved statements filter/group by each dimension; V2-IMP-012 / V2-D10 |
+| DIM-05 | Reconcile including unassigned | — | missing | ABSENT-MODULES | Assigned groups plus explicit Unassigned equal unfiltered ledger total; V2-IMP-012 / V2-D10 |
+| DIM-06 | Allocation/history rules | — | missing | ABSENT-MODULES | Approved multi-allocation and historical-change policy is auditable; V2-D10; V2-IMP-012 / V2-D10 |
+| DIM-07 | No operational project management | — | implemented — tracker limits dimensions to classification/reporting | Scope/task definition | No scheduling/resources/tasks/billing module is introduced |
+| TAX-01 | Approve jurisdictions/circumstances/scope | — | missing — tax identifiers/subtypes are not an approved scope | DB-COA; ABSENT-MODULES | Accountant+product owner approve scope backed by current authoritative regulation; V2-IMP-013 / V2-D11 |
+| TAX-02 | Configure mappings/calculations/reports | — | missing | ABSENT-MODULES | Approved examples calculate, post and report exact tax amounts; V2-IMP-013 / V2-D11 |
+| TAX-03 | Integrate documents and posting engine | — | missing | ABSENT-MODULES; DB-POST foundation | Each in-scope document creates one balanced traceable tax effect; V2-IMP-013 / V2-D11 |
+| TAX-04 | Reconcile tax report/source/GL | — | missing | ABSENT-MODULES | Tax report total equals tax-control GL and traceable source documents; V2-IMP-013 / V2-D11 |
+| TAX-05 | Policy review and regulatory verification | — | implemented — decision/dependency is explicitly registered; no legal claim is made | V2-D11; section 10 | Dated authoritative verification and accountant approval precede implementation |
+| TAX-06 | External compliance is explicit scope | — | implemented — external submission/e-invoicing is separated as approval-required | Section 10 | No external compliance integration enters a task without explicit approval |
+| TAX-07 | No unsupported compliance/completeness claim | — | implemented — this baseline labels tax runtime missing and deployment unverified | This row; section 5 | Release evidence uses scoped, jurisdiction-specific wording only after verification |
+| INV-01 | Inventory accounting beyond subtype | — | missing — only an account subtype exists | DB-COA; ABSENT-MODULES | Approved inventory accounting flow, valuation and reconciliation operate end-to-end; V2-IMP-014 / V2-D12 |
+| INV-02 | Scope/control/valuation/COGS policy | — | missing | ABSENT-MODULES | Approved policy names controls, costing, COGS and boundaries; V2-IMP-014 / V2-D12 |
+| INV-03 | Movement/valuation source to journals | — | missing | ABSENT-MODULES | Each approved source movement deterministically produces one linked journal; V2-IMP-014 / V2-D12 |
+| INV-04 | Increase/decrease/return/adjustment treatment | — | missing | ABSENT-MODULES | Approved fixtures post exact entries for every in-scope movement; V2-IMP-014 / V2-D12 |
+| INV-05 | Valuation/COGS-to-GL reconciliation | — | missing | ABSENT-MODULES | Inventory valuation and COGS totals equal designated GL accounts; V2-IMP-014 / V2-D12 |
+| INV-06 | Source-to-entry traceability | — | missing | ABSENT-MODULES | User navigates source movement↔valuation↔journal; V2-IMP-014 / V2-D12 |
+| INV-07 | Explicit costing/correction approval | — | implemented — method is not invented and decision is blocking | V2-D12 | Accountant+product owner approve costing/backdating/correction before build |
+| INV-08 | Separate from operational systems | — | implemented — task is accounting-only | Scope/task definition | No WMS/procurement/sales-order/manufacturing capability is introduced |
+
+### Validation and implementation-plan requirements
+
+| ID | Meaning | Priority | Status and reason | Evidence; gap / smallest additional evidence | Measurable acceptance; task / decision |
+|---|---|---:|---|---|---|
+| VAL-01 | Measurable criteria for every requirement | — | implemented — every row has a measurable criterion | This table | Automated check finds 138 IDs and nonempty acceptance cells |
+| VAL-02 | Test COA roles/reconciliation/Contra/classes | — | partially implemented — Group/Contra/classification tests exist; Control does not and one local suite failed | T-COA; section 5 | Clean suite covers Group/Control/Contra/classification and zero Control variance; V2-IMP-005/015 |
+| VAL-03 | Test opening/numbering/views/drill-down/six-column TB | — | partially implemented — generic import/report foundations exist; named V2 behaviors do not | T-IMPORT; T-REPORT; UI evidence | Automated DB+UI suite covers all five behaviors; V2-IMP-002/003/006/007 |
+| VAL-04 | Test AR/AP lifecycle/reconciliation | — | partially implemented — current commitment partial-settlement tests are cash-basis only | T-ARAP | Accrual, allocation, aging, correction and Control reconciliation tests pass; V2-IMP-008/009 |
+| VAL-05 | Test periods/bank/assets/dimensions/tax/inventory | — | missing — modules and their tests are absent | ABSENT-MODULES | Each approved module has accounting fixtures plus concurrency/error/UI coverage; V2-IMP-004/010-015 |
+| VAL-06 | Permission/isolation/idempotency/concurrency/history tests | — | partially implemented — permission/isolation/basic idempotency/history exist; payload conflicts and new-module concurrency do not | T-CORE; T-COA | Cross-module matrix passes, including concurrent duplicate and close/post barriers; V2-IMP-001/004/015 |
+| VAL-07 | Accountant-reviewed independent expected balances | — | missing — no V2 accountant acceptance evidence exists | Existing historical approval is not V2 UAT | Named accountant signs dated fixtures and expected reports; V2-IMP-015 |
+| VAL-08 | Separate code/test/deploy/accountant states | — | implemented — dimensions are separately recorded | Sections 2 and 5 | Tracker never derives deployment/UAT from code or test state |
+| PLAN-01 | Requirement-by-requirement evidence gap analysis | — | implemented — 138 rows reference actual objects/UI/tests | Sections 2-3 | ID audit and reviewer spot-check pass |
+| PLAN-02 | Retain/extend/introduce/investigate inventory | — | implemented | Section 4 | Each capability is assigned exactly one primary disposition |
+| PLAN-03 | Preserve P0; dependency sequence later modules separately | — | implemented — bank/assets remain P0; dimensions/tax/inventory are separate | Section 7 | Sequence labels P0 and does not invent later-module priority |
+| PLAN-04 | Separate decisions and blockers | — | implemented | Section 6 | Every blocking decision has stable ID, requirements, tasks and approver |
+| PLAN-05 | Executable work-package detail | — | implemented | Sections 7-8 | Each task records scope/deps/paths/migration/risk/acceptance/tests/recovery/review |
+| PLAN-06 | Module integration boundaries | — | implemented | Section 7 | Boundaries prohibit duplicate/disconnected balances and bypasses |
+| PLAN-07 | Rehearsal/reconciliation/recovery/regression | — | implemented | Section 9 | Every data task must attach the defined evidence before acceptance |
+| PLAN-08 | Requirement→task/test/acceptance traceability | — | implemented | This table and task registry | Every product row names task or retained evidence and criterion |
+| PLAN-09 | Separate approval-required additions | — | implemented | Section 10 | Additions are excluded from implementation until approved |
+| PLAN-10 | Planning only; no implementation/merge/deploy | — | implemented | Workspace and activity records | Diff contains documentation only; no migration/runtime/test/remote mutation |
+
+## 4. Coverage totals and implementation inventory
+
+Totals below are generated from the 138 requirement rows in this document and must be rechecked after any status edit.
+
+| Status | Count |
+|---|---:|
+| implemented | 38 |
+| partially implemented | 38 |
+| missing | 61 |
+| unverified | 1 |
+| Total | 138 |
+
+Product/process distinction: SCOPE and PLAN are assessment requirements; VAL mixes assessment and runtime acceptance; TAX-05–07, INV-07–08, and DIM-07 are governance/boundary requirements. Their completion does not make the associated runtime capability complete.
+
+| Disposition | Evidence-backed inventory |
+|---|---|
+| Retain | Shared double-entry engine; posted-entry authority; draft/posted immutability; reversal/adjustment links; organization/capability RLS; account hierarchy, Group restrictions, normal nature and Contra; current transaction center; account activity; generic commitments/recurrence/import/export/attachments/currency/audit foundations |
+| Extend | Idempotency semantics; account roles with Control; opening RPC into controlled batch workflow; transaction center into professional journal center; current two-column TB into six columns; statement classification/reconciliation/drill-down; commitments into accrual AR/AP subledgers; one lock date into period state machine; asset-purchase metadata into a fixed-asset register; generic dimensions into controlled dimensions |
+| Introduce | Journal numbering; bank statement/reconciliation domain; explicit accounting periods; Control-account bindings; opening import/mapping/approval; AR/AP allocations/statements/aging; asset schedules/disposals; tax/VAT only after approved scope; inventory accounting only after approved scope |
+| Investigate | Clean disposable reproduction of five local SQL-suite failures; live GitHub PR state; hosted/deployed schema; historical label/classification reproducibility; cash-flow mapping; all decisions V2-D01–D13; accountant fixture approval |
+
+## 5. Verification and external-state record
+
+### Commands actually executed
+
+| Working directory | Command | Exit / actual result |
+|---|---|---|
+| Repository root, then baseline worktree | pnpm agent:preflight | 1. Node v20.11.1 is below repository requirement >=22; pnpm was 10.33.0; live GitHub inspection failed because the active gh token was invalid. Local worktree/ancestry information was still inspected. |
+| Repository root | git fetch origin --prune | 0 after permission approval. origin/stg resolved to 6e96c0ca95a954c472b8f12822839f3bf13a5bb7. |
+| Baseline worktree | git rev-parse --show-toplevel; git status --short; git branch --show-current; git rev-parse HEAD; git worktree list --porcelain | 0. Confirmed the worktree, clean starting state, branch and baseline recorded in section 1. |
+| Baseline worktree | node --test apps/ledger-suit/tests/unit/*.test.mjs | 0. 6 tests, 6 passed, 0 failed. Limitation: executed on Node 20, not the repository-required Node 22+. |
+| Repository root | pnpm db ledger-suit status | 0 with permission approval for CLI telemetry state. The Ledger project was unlinked and endpoints were localhost; several local services were stopped. No hosted project was contacted. Sensitive local credentials are intentionally omitted. |
+| Baseline worktree | /home/tareq/Dev/building-suit-monorepo/node_modules/.bin/supabase --workdir /home/tareq/Dev/building-suit-monorepo/.local/worktrees/ledger-v2-baseline/apps/ledger-suit test db --local | 1. 31 files / 813 assertions reported. 26 suites passed; five suites failed or aborted: 12_subscription_readable_history (subquery returned multiple rows), 14_account_quota (fixture counts already 39/108/307 rather than 29/99/299), 19_monthly_transaction_quota (existing usage caused quota/plan mismatch), 22_financial_report_csv_exports (1 numeric-negative assertion), 30_statement_classification (1 total assertion: 163000 vs 8000). Core suites 01, 02, 03, 21, 28, 29 and 31 passed in this run. The local database was not reset, so contamination is likely for several count failures; the report does not classify all five as product regressions. |
+| Baseline worktree | rg -n --no-heading "(bank_statement\|bank_reconciliation\|reconciliation_session\|fixed_asset\|asset_register\|depreciation_schedule\|accounting_period\|period_state\|soft_closed\|hard_closed\|cost_center\|project_id\|tax_rate\|vat_rate\|inventory_item\|inventory_movement\|valuation_method\|journal_number)" apps/ledger-suit/app apps/ledger-suit/supabase/migrations apps/ledger-suit/supabase/tests apps/ledger-suit/types/database.types.ts --glob '!**/*.png' \|\| true | 0, no matches. This supports ABSENT-MODULES only together with the ordered implementation inspection; it is not used as filename-only proof. |
+
+Not run:
+
+- No browser session or interface action was executed. Static UI source and repository browser tests were inspected; local API services were stopped and dependencies were not installed in the new worktree. Reproducible future interface checks are specified per task.
+- No fresh-database test run was performed because that would require reset/migration activity expressly outside this task. The existing local database was preserved.
+- No hosted database, deployment, provider, or production verification was attempted.
+- No dependency installation/upgrade, generated runtime output, full build, lint, or typecheck was run. The worktree has no installed dependency tree and the active Node version is below the repository requirement.
+
+### Independent state dimensions
+
+| Dimension | Baseline result |
+|---|---|
+| Repository coverage | Per requirement in section 3 |
+| Tests present | Per evidence key in section 3 |
+| Tests executed | Unit suite passed; existing local SQL run was mixed as detailed above |
+| Deployed/hosted state | UNVERIFIED for every requirement |
+| Accountant acceptance | NOT STARTED for V2; no requirement is accountant-accepted by this report |
+| Migration activity | None authored, applied, rehearsed, reset, or rolled back |
+| Remote/provider activity | Git fetch only; no hosted DB access, configuration change, push, PR, merge, or deployment |
+| Reconciliation available | Existing balance/integrity/account-activity functions and tests; no V2 pre/post migration pair |
+| Reconciliation still required | Clean disposable baseline, approved expected fixtures, every future data migration pre/post comparison, subledger/register/control reconciliations, and accountant sign-off |
+
+## 6. Decision register
+
+No material policy below is decided by implementation inference. AS-E02 records broad founder authorization for historical improvement work; it is not approval evidence for these choices.
+
+| Decision | Requirements | Unresolved question / existing policy evidence | Affected tasks; blocking? | Required approver |
+|---|---|---|---|---|
+| V2-D01 Control accounts | COA-02, COA-04, COA-06, COA-09, AR-01/08, AP-01/08 | Which subledger binds to each Control account; whether direct/exception journals are forbidden or require a dedicated permission/reason/reconciliation. No approved V2 policy found. | V2-IMP-005, 008, 009; blocking | Accountant + product owner |
+| V2-D02 Opening and cutoff | OPEN-01–08 | Year-start vs midyear treatment; whether a source TB must balance without a plug; retained P&L/equity handling; approval, lock and correction rules. Existing RPC silently balances to Opening Balance Equity and is not approval evidence. | V2-IMP-006; blocking | Accountant + product owner |
+| V2-D03 Journal numbers | JRN-02–03 | Organization/fiscal-year scope, assignment moment, format, gaps after rollback, reuse prohibition and legacy records. No current number exists. | V2-IMP-003; blocking for numbering, not other center work | Accountant + product owner |
+| V2-D04 Statements and cash flow | COA-07, FS-01/03/04/07/08 | Approved statement map, effective-date/history treatment, and line-level cash-flow classification including split journals. Current dominant-counterpart heuristic is implementation, not approved policy. | V2-IMP-007; blocking | Accountant |
+| V2-D05 Receivables | AR-01–09 | Recognition timing, allocation cardinality, credits, unallocated receipts, overpayments, write-offs/adjustments and reversed allocation behavior. | V2-IMP-008; blocking | Accountant + product owner |
+| V2-D06 Payables | AP-01–09 | Recognition timing, allocation cardinality, supplier credits, unallocated payments, overpayments, expense-vs-asset bills and reversed allocations. | V2-IMP-009; blocking | Accountant + product owner |
+| V2-D07 Periods/year end | CORE-05, JRN-08, PER-01–08 | Open/Soft/Hard permissions, transition/reopen rules, fiscal calendar, retained-earnings close, late adjustments and closed-year reopening/reporting. Basic lock date is not approval. | V2-IMP-004 and every later posting module; blocking | Accountant + product owner |
+| V2-D08 Bank matching | BANK-01–08 | Matching tolerances, one-to-many/many-to-one, transfer treatment, unmatch/correction, completion/reopening and outstanding-item rules. | V2-IMP-010; blocking | Accountant + product owner |
+| V2-D09 Depreciation/assets | FA-01–09 | Methods, conventions/proration, capitalization date, residual/useful-life changes, impairment, disposal and correction policy. Useful-life metadata alone is not approval. | V2-IMP-011; blocking | Accountant + product owner |
+| V2-D10 Dimensions | DIM-01–06 | Required/optional applicability, multi-allocation cardinality, inactive values, retroactive changes and explicit Unassigned reporting. | V2-IMP-012; blocking | Accountant + product owner |
+| V2-D11 Tax/VAT | TAX-01–07 | Jurisdiction/business circumstances, current rates/rules, rounding, tax points, adjustments, document/report scope, and external compliance boundaries. Requires dated authoritative regulatory verification; no compliance claim is authorized. | V2-IMP-013; blocking | Accountant + product owner, with authoritative regulatory verification |
+| V2-D12 Inventory accounting | INV-01–07 | Source-of-truth movements, control accounts, valuation/costing, negative stock, returns, backdating and correction/revaluation treatment. | V2-IMP-014; blocking | Accountant + product owner |
+| V2-D13 Foreign-currency AR/AP | CORE-07, AR/AP if multi-currency obligations are approved | Whether obligations settle in different currencies and require realized/unrealized FX/revaluation. Current transaction currency support does not decide subledger policy. | V2-IMP-008/009 only if approved; approval-required addition | Accountant + product owner |
+
+Compact blocking questions for approvers: approve D01–D04 and D07 first because they define the ledger/control/reporting spine; approve D05/D06 before AR/AP; D08/D09 before their P0 modules; and separately decide D10–D12 without downgrading P0 bank or fixed assets.
+
+## 7. Integration boundaries and dependency-ordered task sequence
+
+These are non-negotiable preservation boundaries for every implementation task:
+
+1. Financial effects enter app.transactions/app.transaction_entries only through the common backend posting contract; a subledger/register/import/UI never maintains an independent authoritative balance.
+2. AR invoice and AP bill recognition post once. Receipt/payment allocation clears Control against cash and never records revenue/expense a second time.
+3. Bank matching links a statement line to existing journals without posting them again. Only an explicitly authorized unmatched adjustment creates a new journal through the engine.
+4. AR/AP, bank, fixed-asset, dimension, tax and inventory reports must reconcile by organization/date to designated ledger accounts; Unassigned dimension amounts are included.
+5. Every manual, import, recurring, opening, subledger, asset, tax, inventory and adjustment path enforces organization, permission, eligible account, period and idempotency inside the same database transaction.
+6. Posted history is immutable. Corrections use traceable reversal/adjustment/replacement relationships, never silent mutation.
+7. Shared packages remain app-agnostic; Ledger-owned schema/functions stay under apps/ledger-suit/supabase, with generated types regenerated from source in implementation tasks.
+
+### Sequence
+
+| Order | Task | Requirements | Dependencies / approval gate | Observable result |
+|---:|---|---|---|---|
+| 1 | V2-IMP-001 Posting idempotency integrity | CORE-06, OPEN-07, VAL-06 | None; first unblocked task | Same request is exactly-once and a conflicting reuse is rejected |
+| 2 | V2-IMP-002 Six-column Trial Balance | TB-01–07, FS-04, VAL-03 | 001 | Period TB calculates, exports, totals and drills down from one contract |
+| 3 | V2-IMP-003 Journal identity and center | JRN-01–08, VAL-03 | 001; D03 for numbering | Full headers/filters/views/relationships/actions in one workspace |
+| 4 | V2-IMP-004 Period state machine and year close | CORE-05, PER-01–08, VAL-05/06 | 001; D07 | Open/Soft/Hard rules and concurrent close/post are atomic/audited |
+| 5 | V2-IMP-005 Control-account and subledger contract | COA-02/04/06/09, AR/AP-01/08, VAL-02 | 001, 004; D01 | Control role/bindings/reconciliation and exceptional-adjustment rule |
+| 6 | V2-IMP-006 Opening migration workflow | OPEN-01–08, VAL-03 | 001, 002, 004, 005; D02 | Import/map/validate/preview/approve/post/lock/correct opening batch |
+| 7 | V2-IMP-007 Financial statements and traceability | COA-07, FS-01–08, VAL-03 | 002–005; D04 | Approved mapped statements reconcile and drill down with context |
+| 8 | V2-IMP-008 Accrual customer subledger | AR-01–09, VAL-04 | 003–005; D01, D05; D13 only if added | Invoice/open item/receipt allocation/statement/aging/Control reconciliation |
+| 9 | V2-IMP-009 Accrual supplier subledger | AP-01–09, VAL-04 | 003–005; D01, D06; D13 only if added | Bill/open item/payment allocation/statement/aging/Control reconciliation |
+| 10 | V2-IMP-010 Bank reconciliation | BANK-01–08, VAL-05 | 003–005; D08 | Statement import/match/adjust/complete with no reposting |
+| 11 | V2-IMP-011 Fixed assets | FA-01–09, VAL-05 | 003–005, 007; D09 | Register/schedule/post/dispose/reconcile to GL |
+| 12 | V2-IMP-012 Accounting dimensions | DIM-01–07, VAL-05 | 002–005; D10 | Controlled dimensions and reconciled grouped/filter reports |
+| 13 | V2-IMP-013 Approved tax/VAT scope | TAX-01–07, VAL-05 | 003–005, relevant documents; D11 + current regulatory evidence | Only approved tax scope calculates, posts, reports and reconciles |
+| 14 | V2-IMP-014 Approved inventory accounting | INV-01–08, VAL-05 | 003–005 and any approved dimension/tax dependency; D12 | Approved movement/valuation source posts and reconciles inventory/COGS |
+| 15 | V2-IMP-015 Cross-module accounting acceptance | CORE-08, COA-09, VAL-01–08 | Implemented modules and approvals | Clean rehearsal, regression, reconciliation, recovery drill and accountant UAT evidence |
+
+Dimensions, tax/VAT and inventory are sequenced separately and have no priority invented here. Bank reconciliation and fixed assets remain P0.
+
+## 8. Executable task cards
+
+Unless a card says otherwise, discovered paths are apps/ledger-suit/app, apps/ledger-suit/supabase/migrations, apps/ledger-suit/supabase/tests, apps/ledger-suit/tests, and apps/ledger-suit/types/database.types.ts. Proposed paths/objects are examples to be chosen in that task; they are not evidence that a file/object exists.
+
+### V2-IMP-001 — Posting idempotency integrity (first unblocked)
+
+- Scope/result: bind every idempotency key to a canonical posting request identity. Same organization+key+same payload returns the same journal; same key+different payload returns an explicit conflict; concurrent equal requests create exactly one journal, audit event, and quota effect.
+- Why unblocked: DB-POST, the unique key, duplicate fingerprint, audit/quota hooks and core SQL test harness already exist. This changes transaction-integrity semantics, not an unresolved accounting policy. It is the one and only first implementation task selected by this baseline.
+- Retain/extend: retain the common engine, current transaction IDs and existing valid idempotent responses; extend app.create_transaction_draft/create_and_post and all wrappers. Do not create a second posting route.
+- Paths/objects: discovered DB-POST, DB-FLOWS, DB-IMPORT, DB-RECUR, DB-QUOTA, T-CORE. Proposed forward migration adds a versioned/canonical request hash or equivalent immutable comparison and typed conflict; regenerated types and localized UI error mapping only if exposed.
+- Migration/history/cross-app risk: additive forward migration; existing keys need a nullable/versioned compatibility rule and no reinterpretation of posted history. Main risk is breaking import/recurrence/commitment retries or incrementing quota/audit twice. Shared packages must not acquire Ledger schema dependencies.
+- Acceptance/accounting: (1) same payload/key sequentially and concurrently returns one transaction ID; (2) different payload/key conflict posts nothing; (3) debit=credit and transaction/entry/audit/quota counts change once; (4) no-key legacy behavior remains documented; (5) income, expense, transfer, opening, import, recurring and commitment wrappers pass.
+- Tests/interface: database barrier/concurrency tests plus wrapper regressions; browser/API check shows a localized non-retryable conflict and no duplicate row. Run existing 01, 03, 19, 21 and affected e2e suites on a pristine disposable database.
+- Rehearsal/recovery/review: before/after counts and trial-balance/integrity snapshot; rehearse forward migration on disposable local; recovery is a forward fix/temporary affected-write block, never deletion of a posted duplicate. Review requires SQL diff, concurrency transcript, query plan/lock analysis and reconciliation artifact.
+
+### V2-IMP-002 — Six-column Trial Balance
+
+- Scope/result: one period-aware calculation contract supplies opening debit/credit, period debit/credit and closing debit/credit to UI, CSV and drill-down.
+- Dependencies/gates: V2-IMP-001; no accounting-policy gate.
+- Retain/extend: extend DB-REPORT/DB-EXPORT/UI-REPORT and reuse DB-ACTIVITY, account nature and Group rules.
+- Paths/objects: discovered reporting/export/activity functions and reports page/tests; proposed new versioned Trial Balance RPC and typed row contract, with old RPC compatibility until consumers migrate.
+- Migration/risk: forward function/type change, normally no data backfill. Risks are double-counting hierarchy, wrong Contra side, date boundaries/time zones, archived accounts and export drift.
+- Acceptance/tests: per-account signed close=open+DR-CR; all three DR/CR column pairs balance; posting details counted once; archived/Contra/hierarchy/zero-movement cases; UI=CSV for same period; amount→movement→journal preserves dates.
+- Rehearsal/recovery/review: compare old closing totals and new closing totals on fixtures/current disposable data; retain old callable contract during rollout; review includes SQL fixtures, CSV artifact and EN/AR LTR/RTL browser evidence.
+
+### V2-IMP-003 — Journal identity and professional center
+
+- Scope/result: add approved journal identity, complete header/totals/source filters, saved views, source/reversal navigation and permission/status/period-aware actions.
+- Dependencies/gates: V2-IMP-001; V2-D03 blocks number semantics. V2-IMP-004 supplies final period-aware action behavior.
+- Retain/extend: current transactions page/workspace/detail, saved_views table, journal-line reader and reversal links.
+- Paths/objects: discovered UI-JRN, DB-ACTIVITY, saved_views migration; proposed sequence/number metadata and search contract only after D03.
+- Migration/risk: additive backfill/presentation decision for legacy numbers; never renumber posted history silently. Risk is numbering under concurrent rollback and leaking source records across tenants.
+- Acceptance/tests: unique approved numbers under concurrency; all required fields/totals; route-restored source/status/account/date filters; tenant-private saved-view CRUD; authorized bidirectional source/reversal navigation; action matrix matches server.
+- Rehearsal/recovery/review: number/backfill dry run with collision/gap report; forward correction, not reuse; review includes DB concurrency, access, browser navigation, EN/AR and RTL evidence.
+
+### V2-IMP-004 — Accounting periods and closing
+
+- Scope/result: audited dated periods with Open/Soft Closed/Hard Closed transitions, permissions, reopen reason, fiscal-year treatment and an atomic close/post protocol.
+- Dependencies/gates: V2-IMP-001 and V2-D07.
+- Retain/extend: migrate the books_locked_until behavior compatibly; common posting entry point remains the enforcement boundary.
+- Paths/objects: discovered DB-AUTH/DB-POST and all flow wrappers; proposed period and transition-history tables/RPCs.
+- Migration/risk: backfill an equivalent period state from current locks without opening previously blocked dates; highest risk is a posting racing closure or incompatible existing override behavior.
+- Acceptance/tests: every source/state/role matrix; required close/reopen reason/audit; fiscal fixture; concurrency barrier proves no post commits after close; UI disables actions but server remains authoritative.
+- Rehearsal/recovery/review: snapshot lock settings and dated posting counts; disposable migration/reopen/close exercise; forward state correction under audit, no deletion. Accountant signs year-end expected entries; security review signs authorization.
+
+### V2-IMP-005 — Control-account and subledger contract
+
+- Scope/result: introduce Control role, explicit subledger binding and dated reconciliation contract, including approved exceptional adjustments.
+- Dependencies/gates: 001, 004 and V2-D01.
+- Retain/extend: existing role/history/hierarchy/nature/Contra account infrastructure.
+- Paths/objects: discovered DB-COA/UI-COA/T-COA; proposed Control binding/reconciliation objects and UI role/policy fields.
+- Migration/risk: classify existing accounts only through explicit reviewed mapping; do not infer from names. Risk is blocking legitimate historical posting or allowing bypass.
+- Acceptance/tests: Group/Control/Posting rules; bound subledger totals equal Control by date; direct Control adjustment follows approved permission/reason and appears as reconciliation item; hierarchy/Contra remain correct.
+- Rehearsal/recovery/review: dry-run candidate mapping and variance report; reversible configuration before enforcing new writes; accountant approves bindings and exception fixtures.
+
+### V2-IMP-006 — Opening-balance migration workflow
+
+- Scope/result: versioned batch upload, source-account mapping, explicit DR/CR, cutoff, validation/preview, approval, shared-ledger posting, lock and traceable correction.
+- Dependencies/gates: 001, 002, 004, 005 and V2-D02.
+- Retain/extend: CSV staging patterns and DB-FLOWS opening engine call, but remove silent policy assumptions from the user workflow.
+- Paths/objects: discovered DB-IMPORT/UI-IMPORT/DB-FLOWS; proposed opening batch/row/mapping/approval objects and focused interface.
+- Migration/risk: no existing posted opening is rewritten; link/identify legacy opening entries only with review. Risk is duplicated balances or inappropriate equity plug.
+- Acceptance/tests: invalid/unbalanced/ineligible rows block with row errors; preview totals equal eventual one journal; repeated/concurrent confirmation posts once; six-column TB/GL/statements trace batch; correction preserves original.
+- Rehearsal/recovery/review: representative year-start/midyear dry runs, pre/post TB and statements, restore copy or forward reversal plan; accountant signs mapping and expected balances.
+
+### V2-IMP-007 — Financial statements, mappings and traceability
+
+- Scope/result: approved effective-dated mapping for all statements, accurate cash-flow treatment, TB/GL reconciliation, drill-down and preserved context/history.
+- Dependencies/gates: 002–005 and V2-D04.
+- Retain/extend: current reports, dated BS classification, nature/Contra logic, account activity and exports.
+- Paths/objects: discovered DB-REPORT/DB-CLASS/DB-EXPORT/UI-REPORT; proposed versioned mapping/classification contract for uncovered statements.
+- Migration/risk: never silently remap historical periods; risk is cash-flow misclassification for split journals and changed historical labels.
+- Acceptance/tests: statements tie to TB/GL; mapped/unclassified totals explicit; split-cash fixtures; Contra cases; report→account→movement→journal→back preserves context; UI/export agree.
+- Rehearsal/recovery/review: parallel old/new outputs and variance explanation; versioned mapping rollback by forward effective record; accountant signs mappings and fixtures.
+
+### V2-IMP-008 — Accrual customer subledger
+
+- Scope/result: customer invoices/accounting obligations, open items, receipt allocation, credits/overpayments/corrections, statements, aging and AR Control reconciliation.
+- Dependencies/gates: 003–005, V2-D01 and D05; D13 only if multi-currency subledger is approved.
+- Retain/extend: counterparties and commitment concepts where compatible; do not reuse settlement behavior that records income at receipt after invoice recognition.
+- Paths/objects: discovered DB-ARAP/UI-ARAP/T-ARAP; proposed customer documents/open items/allocations/reconciliation APIs and pages.
+- Migration/risk: existing commitments need explicit classify/link/leave-legacy decision, never automatic conversion. Risk is duplicate revenue and altered outstanding history.
+- Acceptance/tests: invoice Dr AR/Cr revenue once; partial/full receipt Dr cash/Cr AR only; allocations reversible under policy; aging/statement roll forward; subledger=Control by date; isolation/permission/idempotency/concurrency.
+- Rehearsal/recovery/review: dry-run legacy mapping and variance; feature-gated cutover; forward corrections/reversals. Accountant signs invoice/receipt/credit/aging fixtures.
+
+### V2-IMP-009 — Accrual supplier subledger
+
+- Scope/result: supplier bills/open items, payment allocation, credits/overpayments/corrections, statements, aging and AP Control reconciliation.
+- Dependencies/gates: 003–005, V2-D01 and D06; D13 only if multi-currency is approved.
+- Retain/extend: counterparties/commitments where compatible; payment must not record expense/asset again.
+- Paths/objects: DB-ARAP/UI-ARAP/T-ARAP plus proposed supplier document/open-item/allocation/reconciliation interfaces.
+- Migration/risk: explicit handling of legacy payables; risk is duplicate expense/asset and wrong tax/inventory coupling.
+- Acceptance/tests: bill Dr approved expense/asset/Cr AP once; payment Dr AP/Cr cash only; allocation lifecycle, aging/statement and AP Control tie; all security/concurrency cases.
+- Rehearsal/recovery/review: legacy dry run/variance, feature-gated cutover, forward correction; accountant approves fixtures.
+
+### V2-IMP-010 — Bank reconciliation
+
+- Scope/result: statement batches/lines, validation/deduplication, match/unmatch, adjustments, completion and historical reconciliation.
+- Dependencies/gates: 003–005 and V2-D08.
+- Retain/extend: existing bank accounts, transaction search and posting engine.
+- Paths/objects: no current module (ABSENT-MODULES); proposed bank statement/reconciliation tables/RPCs/workspace/tests.
+- Migration/risk: usually additive; never infer matches that alter journals. Risk is duplicate import/reposting or lost outstanding items.
+- Acceptance/tests: duplicate file/line blocked; match leaves journal count/balances unchanged; authorized adjustment posts once; equation ties statement to ledger/outstanding; completed history remains navigable.
+- Rehearsal/recovery/review: import/match dry run on disposable data, before/after journal fingerprint; unmatch/forward correction policy; accountant approves tolerances and reconciliation fixture.
+
+### V2-IMP-011 — Fixed assets and depreciation
+
+- Scope/result: register, acquisition link, approved schedules, depreciation posting, cost/accumulated depreciation/NBV, disposal and GL reconciliation.
+- Dependencies/gates: 003–005, 007 and V2-D09.
+- Retain/extend: asset-purchase flow metadata and common engine.
+- Paths/objects: DB-FLOWS asset flow; proposed register/schedule/run/disposal/reconciliation APIs and UI.
+- Migration/risk: do not create assets automatically from historical purchases without reviewed mapping; risk is duplicated acquisition/depreciation and historical schedule drift.
+- Acceptance/tests: approved schedule math; exactly one depreciation per asset/period; NBV equation; disposal gain/loss entries; register control totals=GL; correction links preserve history.
+- Rehearsal/recovery/review: dry-run mapping/schedule through disposal, pre/post control totals, forward reversal/rebuild of unposted schedule only; accountant signs fixtures.
+
+### V2-IMP-012 — Accounting dimensions
+
+- Scope/result: controlled cost centers/projects, line allocations, historical validity, filters/groups and explicit Unassigned reconciliation.
+- Dependencies/gates: 002–005 and V2-D10.
+- Retain/extend: generic entry dimensions only through a compatible controlled transition.
+- Paths/objects: DB-LEDGER generic JSON; proposed dimension/value/allocation tables or typed schema and report filters/UI.
+- Migration/risk: old JSON cannot be assumed valid; keep it readable and map only reviewed values. Risk is totals excluding unassigned or allocations exceeding lines.
+- Acceptance/tests: allocations sum to line; inactive/historical values behave per policy; grouped+Unassigned equals unfiltered TB/GL; tenant/permission and RTL UI checks.
+- Rehearsal/recovery/review: mapping dry run/unmapped report, parallel totals, forward mapping corrections; accountant/product review.
+
+### V2-IMP-013 — Approved tax/VAT accounting
+
+- Scope/result: implement only the jurisdiction/circumstances/configuration/documents/calculation/adjustment/report scope approved in D11, through the common engine.
+- Dependencies/gates: 003–005, relevant document modules, V2-D11 and dated authoritative regulatory evidence.
+- Retain/extend: tax identifiers/account subtypes and posting engine only where the approved policy confirms them.
+- Paths/objects: no module (ABSENT-MODULES); proposed scoped tax configuration/lines/mappings/report objects.
+- Migration/risk: additive configuration with effective dates; never infer legal rates or claim compliance. Risk is incorrect liability, rounding or historical recalculation.
+- Acceptance/tests: regulator/accountant-approved examples calculate exactly; tax report=control GL=sources; adjustment/reversal/history/security; wording remains scoped.
+- Rehearsal/recovery/review: authoritative source citation/date, parallel calculation, pre/post tax-control reconciliation, forward effective-date correction; accountant and product approval.
+
+### V2-IMP-014 — Approved inventory accounting
+
+- Scope/result: connect an approved movement/valuation source to controls/COGS using the approved costing and correction policy, with traceability and reconciliation.
+- Dependencies/gates: 003–005, approved relevant tax/dimension dependencies and V2-D12.
+- Retain/extend: inventory account subtype and posting engine; no operational WMS/procurement/order/manufacturing expansion.
+- Paths/objects: no movement/valuation module (ABSENT-MODULES); proposed accounting adapter/valuation/reconciliation objects after source ownership is decided.
+- Migration/risk: no inferred opening quantity/cost; risk is backdated cost changes, duplicate COGS and divergence from source movement data.
+- Acceptance/tests: approved purchase/increase/decrease/return/adjustment fixtures; deterministic one-time journals; valuation and COGS tie to GL; source↔journal trace; historical corrections follow policy.
+- Rehearsal/recovery/review: source snapshot and valuation dry run, variance report, feature-gated posting, forward adjustment/reversal; accountant/product approval.
+
+### V2-IMP-015 — Cross-module reconciliation and accountant acceptance
+
+- Scope/result: run the complete accounting story on a clean disposable environment, rehearse migrations/recovery, verify regression/interface/accessibility/localization, and collect independent accountant acceptance.
+- Dependencies/gates: only modules actually implemented and all applicable decisions.
+- Retain/extend: existing SQL/unit/e2e suites and accountant-system evidence conventions.
+- Paths/objects: tests/evidence/docs only plus defect fixes in separately authorized tasks; no test changes that mask failures.
+- Migration/risk: representative sanitized historical dataset and fresh schema; risk is accepting isolated green tests while cross-module totals diverge.
+- Acceptance/tests: every requirement has separate code/test/deploy/UAT state; journal debits=credits; TB/GL/statements and every control/register reconcile; duplicate/close concurrency and recovery drills pass; EN/AR, RTL, responsive, permission and organization checks pass.
+- Rehearsal/recovery/review: attach exact commands/logs, pre/post artifacts, defect list, recovery timings and named accountant sign-off. Deployment remains separate authorization.
+
+## 9. Migration, reconciliation and recovery protocol
+
+Future data-affecting tasks must use new forward migrations under apps/ledger-suit/supabase/migrations. Applied migration history is immutable.
+
+Before each rehearsal, record environment identity as disposable/local, migration version, row counts and checksums appropriate to the objects, journal/entry counts, debit and credit sums by organization/currency/date, Trial Balance, Balance Sheet integrity, and relevant subledger/register/control totals. Afterward, repeat the same queries and explain every intended delta. Include archived accounts, reversals, adjustments, duplicate keys and boundary dates.
+
+Rehearsal order is fresh disposable database, representative sanitized snapshot where authorized, then separately authorized staging. No production reset or destructive fixture is permitted. Recovery must be a tested forward repair, feature/write gate, or traceable reversal as appropriate; never delete posted history or rewrite an applied migration. A rollback of application code must remain compatible with the forward schema.
+
+This baseline produced no pre/post migration reconciliation because it authored/applied no migration. Available evidence is limited to existing integrity/report/account-activity functions and their mixed local test run.
+
+## 10. Proposed scope additions requiring explicit approval
+
+These are not silently added requirements and have no implementation priority:
+
+- Foreign-currency AR/AP settlement, realized/unrealized exchange differences and revaluation (V2-D13).
+- Electronic invoicing, electronic receipts, government submission or other tax compliance integrations beyond approved accounting/reporting scope (part of V2-D11).
+- Automated bank feeds, OCR/document capture and machine-suggested matching beyond statement import/manual review.
+- Asset impairment/revaluation, component accounting or lease accounting beyond the approved fixed-asset/depreciation policy.
+- Operational inventory, warehouse, purchasing, sales-order or manufacturing features; these remain out of scope even if an accounting adapter is approved.
+
+## 11. Baseline checkpoint and next action
+
+- Coverage: 138/138 unique IDs assessed; no missing or duplicate source IDs.
+- Current pending task: LS-V2-BASELINE-001, AWAITING ORCHESTRATOR REVIEW.
+- Prior accepted V2 work: none evidenced in this orchestration stream.
+- Exact next proposed task: V2-IMP-001 Posting idempotency integrity. Do not start it as part of this baseline.
+- Blocking state for next task: none. Later tasks remain gated as recorded.
+- Remote/migration/deployment state: none performed beyond a read-only Git fetch.
+- Final ancestry observation: origin/stg is 599a5ab5afc5a99d5096a3e23e7a54ffe75ced5a and contains the inspected baseline commit; live GitHub status remains unverified because gh authentication failed.
+
+Acceptance of this documentation baseline should confirm the authoritative copy, row count/status rationale, evidence paths, decision ownership, task sequence, and selection of V2-IMP-001. It must not be interpreted as runtime acceptance or permission to implement, migrate, publish, or deploy.
