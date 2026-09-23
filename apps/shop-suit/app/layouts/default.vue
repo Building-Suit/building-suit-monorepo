@@ -19,6 +19,7 @@ const copy = computed(() => isArabic.value
 const links = computed(() => {
   const mode = current.value?.business_mode ?? 'mixed'
   return [
+    { to: '/sales', label: t('sales.title'), icon: 'invoice' },
     ...(businessModeSupportsProducts(mode) ? [
       { to: '/products', label: copy.value.products, icon: 'ledger' },
       { to: '/inventory', label: copy.value.inventory, icon: 'wallet' },
