@@ -430,7 +430,7 @@ Unless a card says otherwise, discovered paths are apps/ledger-suit/app, apps/le
 - Verification: focused Journal Center SQL 19/19; retained V2 idempotency and Trial Balance SQL 70/70; focused Chromium Journal Center 2/2 in EN/LTR and AR/RTL including narrow viewport; Ledger typecheck, changed-file lint, targeted Ledger build and `git diff --check` passed. An accidental broad browser invocation was stopped after three unrelated passes; its generated screenshots were restored and it is not acceptance evidence.
 - Acceptance: AC-1 PASS; AC-2 PASS for stable reference foundation but final approved sequential number remains gated; AC-3 PASS for UUID uniqueness/index and idempotent reuse, while sequential allocation is not implemented; AC-4 through AC-10 PASS; AC-11 PASS for the current capability/status/basic-lock model, with final period states deferred to 004; AC-12 PASS; AC-13 PASS.
 - Unresolved decision: V2-D03 remains the smallest blocker for final professional sequential numbering (organization/fiscal-year scope, assignment moment, format, gaps and legacy presentation). V2-D07 remains the blocker for the future Open/Soft/Hard period action matrix; the current inclusive lock is preserved.
-- Git/PR: implementation commit to be recorded after the required feature commit; cumulative Draft PR [#18](https://github.com/Building-Suit/building-suit-monorepo/pull/18), base `stg`, head `codex/ledger-suit/v2-baseline`.
+- Git/PR: implementation commit `b5eb65b7cd66f880ea91b871bde324ba6423cf02`; cumulative Draft PR [#18](https://github.com/Building-Suit/building-suit-monorepo/pull/18), base `stg`, head `codex/ledger-suit/v2-baseline`.
 
 ### V2-IMP-004 — Accounting periods and closing
 
