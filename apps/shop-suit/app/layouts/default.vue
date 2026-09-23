@@ -5,7 +5,7 @@ const route = useRoute()
 const supabase = useSupabaseClient()
 const nuxtApp = useNuxtApp()
 const user = useSupabaseUser()
-const { locale } = useI18n()
+const { locale, t } = useI18n()
 const { shops, current, currentId, loading, loadError, loadShops, selectShop } = useShop()
 
 const accountOpen = ref(false)
@@ -27,6 +27,7 @@ const links = computed(() => {
     ...(businessModeSupportsServices(mode) ? [
       { to: '/services', label: copy.value.services, icon: 'invoice' },
     ] : []),
+    { to: '/customers', label: t('customers.title'), icon: 'user' },
     { to: '/expenses', label: copy.value.expenses, icon: 'cash' },
     { to: '/settings', label: copy.value.settings, icon: 'settings' },
   ]
