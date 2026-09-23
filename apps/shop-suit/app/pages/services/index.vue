@@ -2,7 +2,7 @@
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 const confirmation = useConfirmation()
 
-definePageMeta({ layout: 'default', middleware: ['auth'] })
+definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
 
 type Service = {
   id: string
