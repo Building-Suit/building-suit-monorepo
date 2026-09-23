@@ -1,6 +1,5 @@
 <script setup lang="ts">
 const { t } = useI18n()
-const route = useRoute()
 const open = ref(false)
 
 const manualFlows = [
@@ -25,20 +24,21 @@ function close() {
   open.value = false
 }
 
-watch(() => route.fullPath, close)
 </script>
 
 <template>
   <button
     type="button"
-    class="ls-btn ls-btn-sm"
+    class="ls-btn financial-help"
+    data-testid="financial-help"
+    :aria-expanded="open"
     :aria-label="t('financialMap.open')"
     @click="show"
   >
     <span class="inline-flex" aria-hidden="true"><AppIcon name="chart" :size="22" /></span>
     <span class="inline">{{ t('financialMap.button') }}</span>
   </button>
-      <BsDialog v-if="open" :visible="true" :title="t('financialMap.title')" :aria-label="t('financialMap.title')" :show-header="false" size="lg" @update:visible="value => { if (!value) close() }"><template #default="{ close: dismiss }">
+      <BsDialog :visible="open" :title="t('financialMap.title')" :aria-label="t('financialMap.title')" :show-header="false" size="lg" @update:visible="value => { if (!value) close() }"><template #default="{ close: dismiss }">
 <section class="flex h-dvh flex-col overflow-hidden bg-background sm:h-[94dvh] sm:max-w-[1500px] sm:rounded-modal sm:border sm:border-[var(--bs-border)]">
           <header class="flex shrink-0 items-start gap-4 border-b border-[var(--bs-border)] bg-surface px-4 py-4 sm:px-6">
             <div class="min-w-0 flex-1">
@@ -226,6 +226,25 @@ watch(() => route.fullPath, close)
 </template>
 
 <style scoped>
+.financial-help {
+  position: fixed;
+  inset-inline-end: max(1rem, env(safe-area-inset-right));
+  inset-block-end: calc(5rem + env(safe-area-inset-bottom));
+  z-index: 25;
+  min-height: 2.75rem;
+  border-color: var(--bs-border-strong);
+  border-radius: 999px;
+  background: var(--bs-surface-raised);
+  box-shadow: var(--bs-elevation-2);
+}
+
+@media (min-width: 1024px) {
+  .financial-help {
+    inset-block-end: 1.25rem;
+    inset-inline-end: 1.5rem;
+  }
+}
+
 .tree-node {
   position: relative;
   display: block;

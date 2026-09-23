@@ -8,6 +8,7 @@ const route = useRoute()
 const router = useRouter()
 const { data: categories } = useOrgCategories()
 const { data: accounts } = useOrgAccounts()
+const { data: tags, error: tagsError, refresh: refreshTags } = useOrgTags()
 const { filters, sort, page, pageSize, scope, rows, total, pageCount, pending, error, validation, refresh, activeFilterCount, clearFilters, toggleSort } = useTransactionWorkspace()
 const importOpen = ref(false)
 const filtersOpen = ref(false)
@@ -62,7 +63,11 @@ useHead({ title: () => `${t('transactions.title')} · ${t('app.name')}` })
         <FloatingField :label="t('transactions.status')"><select id="status" v-model="filters.status" class="ls-input" :disabled="!hydrated"><option value="">{{ t('transactionWorkspace.allStatuses') }}</option><option v-for="status in TRANSACTION_STATUSES" :key="status" :value="status">{{ t(`status.${status}`) }}</option></select></FloatingField>
         <FloatingField :label="t('transactions.fromDate')"><input id="from" v-model="filters.from" type="date" class="ls-input" :disabled="!hydrated"></FloatingField>
         <FloatingField :label="t('transactions.toDate')"><input id="to" v-model="filters.to" type="date" :min="filters.from" class="ls-input" :disabled="!hydrated"></FloatingField>
-        <FloatingField class="sm:col-span-2" :label="t('transactions.account')"><select id="account" v-model="filters.accountId" class="ls-input" :disabled="!hydrated"><option value="">{{ t('transactionWorkspace.allAccounts') }}</option><option v-for="account in accounts" :key="account.id" :value="account.id">{{ account.name }}</option></select></FloatingField>
+        <FloatingField :label="t('transactions.account')"><select id="account" v-model="filters.accountId" class="ls-input" :disabled="!hydrated"><option value="">{{ t('transactionWorkspace.allAccounts') }}</option><option v-for="account in accounts" :key="account.id" :value="account.id">{{ account.name }}</option></select></FloatingField>
+        <div v-if="can('tags.read')">
+          <FloatingField :label="t('tagsGuide.filter')"><select id="tag" v-model="filters.tagId" class="ls-input" :disabled="!hydrated || !!tagsError"><option value="">{{ t('tagsGuide.all') }}</option><option v-if="filters.tagId && !tags.some(tag => tag.id === filters.tagId)" :value="filters.tagId">{{ t('tagsGuide.selectedUnavailable') }}</option><option v-for="tag in tags" :key="tag.id" :value="tag.id">{{ tag.name }}</option></select></FloatingField>
+          <p v-if="tagsError" role="alert" class="mt-2 text-sm text-fg-muted">{{ t('tagsGuide.loadError') }} <button type="button" class="text-link underline" @click="refreshTags()">{{ t('accounts.retry') }}</button></p>
+        </div>
       </div>
       <div class="flex flex-wrap items-center gap-3">
         <button type="button" class="ls-btn ls-btn-sm" :aria-expanded="filtersOpen" aria-controls="transaction-more-filters" :disabled="!hydrated" @click="filtersOpen = !filtersOpen">{{ t('transactionWorkspace.moreFilters') }}<AppIcon name="arrowDown" :size="16" /></button>
@@ -108,7 +113,8 @@ useHead({ title: () => `${t('transactions.title')} · ${t('app.name')}` })
   <Column body-class="max-w-64">
     <template #header>{{ t('transactions.description') }}</template>
     <template #body="{ data: row }"><button type="button" class="block max-w-56 truncate text-start font-semibold text-link hover:underline" @click.stop="selectedId = row.id">{{ row.description || t('common.dash') }}</button>
-                <span v-if="row.reference || row.category_name || row.counterparty_name" class="block max-w-56 truncate text-xs text-fg-muted">{{ [row.reference, row.category_name, row.counterparty_name].filter(Boolean).join(' · ') }}</span></template>
+                <span v-if="row.reference || row.category_name || row.counterparty_name" class="block max-w-56 truncate text-xs text-fg-muted">{{ [row.reference, row.category_name, row.counterparty_name].filter(Boolean).join(' · ') }}</span>
+                <ul v-if="row.tags?.length" class="mt-2 flex flex-wrap gap-1" :aria-label="t('operations.tabs.tags')"><li v-for="tag in row.tags" :key="tag" class="rounded-control border border-line bg-surface-muted px-2 py-1 text-xs break-words">{{ tag }}</li></ul></template>
   </Column>
   <Column body-class="whitespace-nowrap" :pt="{ headerCell: { 'aria-sort': ariaSort('type') } }">
     <template #header><button type="button" class="hover:underline" @click="toggleSort('type')">{{ t('transactions.type') }}</button></template>
@@ -145,6 +151,7 @@ useHead({ title: () => `${t('transactions.title')} · ${t('app.name')}` })
                 <StatusBadge class="mt-1 block" :status="row.status" />
               </div>
             </div>
+            <span v-if="row.tags?.length" class="mt-2 flex flex-wrap gap-1"><span v-for="tag in row.tags" :key="tag" class="rounded-control border border-line bg-surface-muted px-2 py-1 text-xs break-words">{{ tag }}</span></span>
           </button>
         </li>
       </ul>

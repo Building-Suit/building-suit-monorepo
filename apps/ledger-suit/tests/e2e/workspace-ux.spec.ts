@@ -60,6 +60,7 @@ for (const locale of ['en', 'ar']) {
     await tree.getByRole('button', { name: bankName, exact: true }).click()
     await expect(page.getByRole('dialog').getByTestId('activity-closing')).toContainText('125.00')
     await page.keyboard.press('Escape')
+    await tree.getByRole('row').filter({ hasText: groupName }).locator('summary').click()
     await tree.getByRole('button', { name: ar ? 'إضافة حساب فرعي' : 'Add subaccount', exact: true }).click()
     await expect(page.getByRole('dialog').locator('#account-parent')).toHaveValue(group)
     await page.getByRole('dialog').getByRole('button', { name: ar ? 'إغلاق' : 'Close', exact: true }).click()
