@@ -62,7 +62,7 @@ const { data: balances, pending: balancesPending, error: balancesError, refresh:
 
   const rows = await fetchAccountPages<BalanceRow>((from, to) => supabase
     .from('account_balances')
-    .select('organization_id, account_id, code, name, type, subtype, currency, account_role, normal_balance, contra_account_id, is_system, classification_locked, net_debit_minor, statement_balance_minor, entry_count, is_archived, is_liquid, parent_account_id', { count: 'exact' })
+    .select('organization_id, account_id, code, name, type, subtype, currency, account_role, control_subledger_type, control_binding_locked, normal_balance, contra_account_id, is_system, classification_locked, net_debit_minor, statement_balance_minor, entry_count, is_archived, is_liquid, parent_account_id', { count: 'exact' })
     .eq('organization_id', organizationId)
     .order('code', { ascending: true, nullsFirst: false })
     .order('account_id')
@@ -163,6 +163,7 @@ const form = reactive({
   name: '', code: '', type: 'asset' as BalanceRow['type'], subtype: 'bank', currency: baseCurrency.value,
   normalBalance: 'debit' as BalanceRow['normal_balance'], contraAccountId: '',
   accountRole: 'posting' as BalanceRow['account_role'], parentAccountId: '',
+  controlSubledgerType: 'customer' as 'customer' | 'supplier',
 })
 
 watch(balanceKey, () => {
@@ -174,7 +175,7 @@ watch(balanceKey, () => {
   editorOpen.value = false
   editing.value = null
   editorError.value = null
-  Object.assign(form, { name: '', code: '', contraAccountId: '', parentAccountId: '', accountRole: 'posting' })
+  Object.assign(form, { name: '', code: '', contraAccountId: '', parentAccountId: '', accountRole: 'posting', controlSubledgerType: 'customer' })
 }, { flush: 'sync' })
 
 const subtypeOptions: Record<BalanceRow['type'], string[]> = {
@@ -194,7 +195,7 @@ function openCreate(parent?: BalanceRow) {
     subtype: parent?.subtype ?? subtypeOptions[tab.value][0]!,
     currency: parent?.currency ?? baseCurrency.value,
     normalBalance: defaultAccountNature(parent?.type ?? tab.value, parent?.subtype),
-    contraAccountId: '', accountRole: 'posting', parentAccountId: parent?.account_id ?? '',
+    contraAccountId: '', accountRole: 'posting', parentAccountId: parent?.account_id ?? '', controlSubledgerType: 'customer',
   })
   editorError.value = null
   editorOpen.value = true
@@ -211,7 +212,7 @@ function openEdit(row: BalanceRow) {
   editing.value = row
   Object.assign(form, { name: row.name, code: row.code ?? '', type: row.type, subtype: row.subtype,
     currency: row.currency, normalBalance: row.normal_balance, contraAccountId: row.contra_account_id ?? '',
-    accountRole: row.account_role, parentAccountId: row.parent_account_id ?? '' })
+    accountRole: row.account_role, parentAccountId: row.parent_account_id ?? '', controlSubledgerType: row.control_subledger_type ?? 'customer' })
   editorError.value = null
   editorOpen.value = true
 }
@@ -249,7 +250,18 @@ watch([() => form.type, () => form.currency], () => {
   if (!editing.value && !parentOptions.value.some(account => account.account_id === form.parentAccountId)) form.parentAccountId = ''
 })
 watch(() => form.accountRole, (role) => {
-  if (role === 'group') form.contraAccountId = ''
+  if (role !== 'posting') form.contraAccountId = ''
+  if (role === 'control') {
+    form.type = form.controlSubledgerType === 'customer' ? 'asset' : 'liability'
+    form.subtype = form.controlSubledgerType === 'customer' ? 'accounts_receivable' : 'accounts_payable'
+    form.normalBalance = form.controlSubledgerType === 'customer' ? 'debit' : 'credit'
+  }
+})
+watch(() => form.controlSubledgerType, (subledger) => {
+  if (form.accountRole !== 'control') return
+  form.type = subledger === 'customer' ? 'asset' : 'liability'
+  form.subtype = subledger === 'customer' ? 'accounts_receivable' : 'accounts_payable'
+  form.normalBalance = subledger === 'customer' ? 'debit' : 'credit'
 })
 function accountName(id: string) {
   return scopedBalances.value.find(account => account.account_id === id)?.name ?? t('common.dash')
@@ -282,6 +294,7 @@ async function saveAccount() {
           p_normal_balance: form.normalBalance,
           p_contra_account_id: form.accountRole === 'posting' ? form.contraAccountId || undefined : undefined,
           p_account_role: form.accountRole,
+          p_control_subledger_type: form.accountRole === 'control' ? form.controlSubledgerType : undefined,
           p_parent_account_id: form.parentAccountId || undefined,
         })
     const { data, error } = await call
@@ -419,7 +432,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
           </Column>
           <Column field="name" :header="t('accounts.account')" sortable :pt="sortColumnPt">
             <template #body="{ data: account }">
-              <button v-if="account.account_role === 'posting' && canReadActivity" type="button" :disabled="!hydrated" class="text-start font-medium text-link hover:underline" :class="{ 'ps-4': account.parent_account_id }" @click="activityAccountId = account.account_id">{{ account.name }}</button>
+              <button v-if="account.account_role !== 'group' && canReadActivity" type="button" :disabled="!hydrated" class="text-start font-medium text-link hover:underline" :class="{ 'ps-4': account.parent_account_id }" @click="activityAccountId = account.account_id">{{ account.name }}</button>
               <span v-else :class="{ 'ps-4': account.parent_account_id, 'font-semibold': activeGroup.parentIds.has(account.account_id) }">{{ account.name }}</span>
               <span v-if="account.is_archived" class="ls-badge ms-2 bg-[var(--bs-surface-muted)] text-fg-muted">{{ t('accounts.archived') }}</span>
               <span v-else-if="account.is_liquid" class="ls-badge ms-2 bg-[var(--bs-status-info-bg)] text-[var(--bs-status-info)]">{{ t('accounts.liquid') }}</span>
@@ -427,6 +440,13 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
           </Column>
           <Column field="account_role" :header="t('accounts.role')">
             <template #body="{ data: account }">{{ t(`accounts.roles.${account.account_role}`) }}</template>
+          </Column>
+          <Column field="control_subledger_type" :header="t('controls.subledgerType')">
+            <template #body="{ data: account }">
+              <span v-if="account.control_subledger_type">{{ t(`controls.subledgers.${account.control_subledger_type}`) }}</span>
+              <span v-else>{{ t('common.dash') }}</span>
+              <span v-if="account.control_binding_locked" class="ls-badge ms-2 bg-surface-muted text-fg-muted">{{ t('controls.bindingLocked') }}</span>
+            </template>
           </Column>
           <Column field="subtype" :header="t('accounts.subtype')">
             <template #body="{ data: account }">{{ t(`accounts.subtypes.${account.subtype}`) }}</template>
@@ -475,6 +495,11 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
           </template>
         </BsDataTable>
     </section>
+      <ControlReconciliationPanel
+        v-if="can('controls.reconcile') && scopedBalances.some(account => account.account_role === 'control')"
+        :accounts="scopedBalances"
+        @changed="async () => { await refreshBalances(); await refreshNuxtData(['org:accounts']) }"
+      />
       <AccountActivityDialog v-if="activityAccountId" :key="`${balanceKey}:${activityAccountId}`" :account-id="activityAccountId" :scope="balanceKey" @close="activityAccountId = null" />
       <AccountStatementClassificationDialog v-if="statementAccount" :key="`${balanceKey}:${statementAccount.account_id}`" :account="statementAccount" :scope="balanceKey" @close="statementAccount = null" />
       <BsDialog v-if="editorOpen" :visible="true" :title="editing ? t('accounts.edit') : t('accounts.add')" :aria-label="editing ? t('accounts.edit') : t('accounts.add')" :show-header="false" size="md" :dirty="overlayDirty0" :pending="submitting" @update:visible="value => { if (!value) editorOpen = false }"><template #default="{ close: dismiss }">
@@ -489,13 +514,22 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
           <FloatingField :label="t('accounts.role')">
             <select id="account-role" v-model="form.accountRole" class="ls-input" :disabled="!!editing" aria-describedby="account-role-help">
               <option value="posting">{{ t('accounts.roles.posting') }}</option>
+              <option v-if="can('controls.configure')" value="control">{{ t('accounts.roles.control') }}</option>
               <option value="group">{{ t('accounts.roles.group') }}</option>
             </select>
           </FloatingField>
           <p id="account-role-help" class="text-sm text-fg-muted">{{ t('accounts.roleHint') }}</p>
+          <FloatingField v-if="form.accountRole === 'control' && !editing" :label="t('controls.subledgerType')">
+            <select id="control-subledger-type" v-model="form.controlSubledgerType" class="ls-input" required>
+              <option value="customer">{{ t('controls.subledgers.customer') }}</option>
+              <option value="supplier">{{ t('controls.subledgers.supplier') }}</option>
+            </select>
+          </FloatingField>
+          <p v-if="form.accountRole === 'control'" class="text-sm text-fg-muted">{{ t('controls.directPostingBlocked') }}</p>
+          <p v-if="editing?.control_binding_locked" class="text-sm text-fg-muted">{{ t('controls.bindingLockedHint') }}</p>
           <template v-if="!editing">
-            <FloatingField :label="t('accounts.type')"><select id="account-type" v-model="form.type" class="ls-input"><option v-for="type in GROUP_TYPES" :key="type" :value="type">{{ t(`accounts.groups.${type}`) }}</option></select></FloatingField>
-            <FloatingField :label="t('accounts.subtype')"><select id="account-subtype" v-model="form.subtype" class="ls-input"><option v-for="subtype in subtypeOptions[form.type]" :key="subtype" :value="subtype">{{ t(`accounts.subtypes.${subtype}`) }}</option></select></FloatingField>
+            <FloatingField :label="t('accounts.type')"><select id="account-type" v-model="form.type" class="ls-input" :disabled="form.accountRole === 'control'"><option v-for="type in GROUP_TYPES" :key="type" :value="type">{{ t(`accounts.groups.${type}`) }}</option></select></FloatingField>
+            <FloatingField :label="t('accounts.subtype')"><select id="account-subtype" v-model="form.subtype" class="ls-input" :disabled="form.accountRole === 'control'"><option v-for="subtype in subtypeOptions[form.type]" :key="subtype" :value="subtype">{{ t(`accounts.subtypes.${subtype}`) }}</option></select></FloatingField>
             <FloatingField v-if="canMultiCurrency" :label="t('accounts.currency')">
               <select id="account-currency" v-model="form.currency" class="ls-input">
                 <option v-for="currency in currencies" :key="currency.code" :value="currency.code">
@@ -512,22 +546,22 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
             </select>
           </FloatingField>
           <p v-else-if="form.parentAccountId" class="text-sm text-fg-muted">{{ t('accounts.parentAccount') }}: {{ accountName(form.parentAccountId) }}</p>
-          <template v-if="form.accountRole === 'posting'">
+          <template v-if="form.accountRole !== 'group'">
           <FloatingField :label="t('accounts.normalBalance')">
-            <select id="account-normal-balance" v-model="form.normalBalance" class="ls-input" :disabled="natureLocked" aria-describedby="account-nature-help">
+            <select id="account-normal-balance" v-model="form.normalBalance" class="ls-input" :disabled="natureLocked || form.accountRole === 'control'" aria-describedby="account-nature-help">
               <option value="debit">{{ t('accounts.sides.debit') }}</option>
               <option value="credit">{{ t('accounts.sides.credit') }}</option>
             </select>
           </FloatingField>
           <p id="account-nature-help" class="text-sm text-fg-muted">{{ t('accounts.natureHint') }}</p>
-          <FloatingField :label="t('accounts.contraAccount')">
+          <FloatingField v-if="form.accountRole === 'posting'" :label="t('accounts.contraAccount')">
             <select id="account-contra" v-model="form.contraAccountId" class="ls-input" :disabled="natureLocked" aria-describedby="account-contra-help">
               <option value="">{{ t('accounts.noContra') }}</option>
               <option v-if="natureLocked && form.contraAccountId" :value="form.contraAccountId">{{ accountName(form.contraAccountId) }}</option>
               <option v-for="account in natureLocked ? [] : contraOptions" :key="account.account_id" :value="account.account_id">{{ account.name }}</option>
             </select>
           </FloatingField>
-          <p id="account-contra-help" class="text-sm text-fg-muted">{{ t('accounts.contraHint') }}</p>
+          <p v-if="form.accountRole === 'posting'" id="account-contra-help" class="text-sm text-fg-muted">{{ t('accounts.contraHint') }}</p>
           <p v-if="natureLocked" class="text-sm text-fg-muted">{{ t('accounts.natureLocked') }}</p>
           </template>
           <p v-if="editorError" class="ls-error" role="alert">{{ editorError }}</p>

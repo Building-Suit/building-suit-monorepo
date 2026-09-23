@@ -116,14 +116,14 @@ Columns: evidence includes code/schema/interface and tests present; acceptance/t
 | ID | Meaning | Priority | Status and reason | Evidence; gap / smallest additional evidence | Measurable acceptance; task / decision |
 |---|---|---:|---|---|---|
 | COA-01 | Complete hierarchical tree | P0 | implemented — parent links, cycle/depth guards, tree UI and totals exist | DB-COA; UI-COA; T-COA | Create/reparent/archive fixtures retain valid hierarchy and render each account once |
-| COA-02 | Group, Control, Posting node types | P0 | partially implemented — only Group and Posting roles exist | DB-COA; UI-COA; T-COA; Control absent in ABSENT-MODULES | All three types exist with server-enforced rules; V2-IMP-005 / V2-D01 |
+| COA-02 | Group, Control, Posting node types | P0 | implemented locally — all three explicit roles have server-enforced posting and hierarchy rules | DB-COA; UI-COA; T-COA | All three types exist with server-enforced rules; V2-IMP-005 / V2-D01 |
 | COA-03 | No Group posting; no double-counted rollups | P0 | implemented — database rejects Group accounts and tree totals avoid duplicate descendants | DB-COA; UI-COA; T-COA | Direct Group post fails; parent total equals distinct posting descendants |
-| COA-04 | Control-to-subledger association and exceptions | P0 | missing — no Control role or subledger binding exists | DB-COA; DB-ARAP; ABSENT-MODULES | Each Control account has one approved subledger; exceptional adjustment obeys policy and reconciliation; V2-IMP-005 / V2-D01 |
+| COA-04 | Control-to-subledger association and exceptions | P0 | implemented locally at contract level — immutable customer/supplier binding and dedicated exceptional-adjustment path exist; production AR/AP providers remain pending | DB-COA; DB-ARAP; T-COA | Each Control account has one approved subledger; exceptional adjustment obeys policy and reconciliation; V2-IMP-005 / V2-D01 |
 | COA-05 | Contra nature and statement treatment | P0 | implemented — independent normal balance/Contra relation and report sign handling exist | DB-COA; DB-REPORT; UI-COA; T-COA | Contra fixtures reduce the intended parent/classification and remain traceable |
-| COA-06 | Expose account properties | P0 | partially implemented — UI exposes current fields but cannot expose Control | UI-COA; DB-COA; T-COA | UI/API show type, classification, nature, parent, all node roles, Contra state; V2-IMP-005 / V2-D01 |
+| COA-06 | Expose account properties | P0 | implemented locally — API and bilingual UI expose type, classification, nature, parent, Group/Control/Posting role, Control binding/lock and Contra state | UI-COA; DB-COA; T-COA | UI/API show type, classification, nature, parent, all node roles, Contra state; V2-IMP-005 / V2-D01 |
 | COA-07 | Current/non-current and statement classes | P0 | partially implemented — dated Balance Sheet classes exist; complete statement mapping policy does not | DB-CLASS; UI-COA; T-COA | Approved mappings cover every applicable statement account and effective date; V2-IMP-007 / V2-D04 |
 | COA-08 | Safe create/edit/archive | P0 | implemented — history, cycle, role, archival and posted-history guards exist | DB-COA; UI-COA; T-COA | Invalid hierarchy/role/archive changes fail while historical journals remain readable |
-| COA-09 | Reconcile hierarchy/Control/Contra | P0 | partially implemented — hierarchy and Contra tests exist; Control does not, and the local statement-classification suite was not clean | T-COA; execution section | Clean disposable run proves hierarchy and Contra, then Control subledger=GL by date; V2-IMP-005/015 / V2-D01 |
+| COA-09 | Reconcile hierarchy/Control/Contra | P0 | partially implemented locally — hierarchy, Control contract and Contra regressions are clean; dated reconciliation reports provider-unavailable rather than a false zero until real AR/AP providers exist | T-COA; execution section | Clean disposable run proves hierarchy and Contra, then Control subledger=GL by date; V2-IMP-005/015 / V2-D01 |
 
 ### Opening balances — P0
 
@@ -341,7 +341,7 @@ No material policy below is decided by implementation inference. AS-E02 records 
 
 | Decision | Requirements | Unresolved question / existing policy evidence | Affected tasks; blocking? | Required approver |
 |---|---|---|---|---|
-| V2-D01 Control accounts | COA-02, COA-04, COA-06, COA-09, AR-01/08, AP-01/08 | Which subledger binds to each Control account; whether direct/exception journals are forbidden or require a dedicated permission/reason/reconciliation. No approved V2 policy found. | V2-IMP-005, 008, 009; blocking | Accountant + product owner |
+| V2-D01 Control accounts | COA-02, COA-04, COA-06, COA-09, AR-01/08, AP-01/08 | **APPROVED by the product owner for V2-IMP-005, 2026-09-23.** (1) Every Control account has exactly one explicit customer or supplier binding; multiple Control accounts of either type are allowed. (2) Generic/manual journals cannot post to Control; normal movement must come from its trusted linked subledger. (3) Exceptional Control adjustment uses a dedicated privilege and path with mandatory reason, reference and append-only audit evidence. (4) Dated reconciliation must be zero or explicitly explained; an unavailable provider is never represented as zero. (5) Role and binding are immutable after creation/history; replacement is archive-and-create, with no name-based legacy inference. | Implemented locally in V2-IMP-005 at contract level; no longer blocking V2-IMP-006. Real AR/AP providers remain dependencies of 008/009. | Product-owner policy approval recorded; finished implementation is not accountant UAT/acceptance |
 | V2-D02 Opening and cutoff | OPEN-01–08 | Year-start vs midyear treatment; whether a source TB must balance without a plug; retained P&L/equity handling; approval, lock and correction rules. Existing RPC silently balances to Opening Balance Equity and is not approval evidence. | V2-IMP-006; blocking | Accountant + product owner |
 | V2-D03 Journal numbers | JRN-02–03 | Organization/fiscal-year scope, assignment moment, format, gaps after rollback, reuse prohibition and legacy records. No current number exists. | V2-IMP-003; blocking for numbering, not other center work | Accountant + product owner |
 | V2-D04 Statements and cash flow | COA-07, FS-01/03/04/07/08 | Approved statement map, effective-date/history treatment, and line-level cash-flow classification including split journals. Current dominant-counterpart heuristic is implementation, not approved policy. | V2-IMP-007; blocking | Accountant |
@@ -449,13 +449,16 @@ Unless a card says otherwise, discovered paths are apps/ledger-suit/app, apps/le
 
 ### V2-IMP-005 — Control-account and subledger contract
 
-- Scope/result: introduce Control role, explicit subledger binding and dated reconciliation contract, including approved exceptional adjustments.
-- Dependencies/gates: 001, 004 and V2-D01.
-- Retain/extend: existing role/history/hierarchy/nature/Contra account infrastructure.
-- Paths/objects: discovered DB-COA/UI-COA/T-COA; proposed Control binding/reconciliation objects and UI role/policy fields.
-- Migration/risk: classify existing accounts only through explicit reviewed mapping; do not infer from names. Risk is blocking legitimate historical posting or allowing bypass.
-- Acceptance/tests: Group/Control/Posting rules; bound subledger totals equal Control by date; direct Control adjustment follows approved permission/reason and appears as reconciliation item; hierarchy/Contra remain correct.
-- Rehearsal/recovery/review: dry-run candidate mapping and variance report; reversible configuration before enforcing new writes; accountant approves bindings and exception fixtures.
+- Scope/result: implemented locally — explicit Control role; exactly one immutable customer/supplier binding per Control account; server-enforced compatible nature/classification; generic-posting exclusion; dated reconciliation; and a dedicated exceptional-adjustment contract.
+- Dependencies/gates: 001 and 004 retained; V2-D01 is approved and encoded as the five policy decisions in section 6.
+- Architecture: all writes still converge on the shared posting engine. A private server-set context permits only trusted subledger adapters or `create_control_adjustment`; the public adjustment RPC requires `controls.adjust`, period authorization, reason, reconciliation reference and idempotency. Audit/reconciliation evidence is append-only. Group remains structural; Posting remains the only generic selector role; Control participates in GL, account activity and Trial Balance.
+- Capabilities: owner/admin receive configure, adjust, reconcile and explain-variance capabilities. Accountant receives reconciliation only by default; adjustment is deliberately separate. RLS and explicit grants cover all new public objects; private helpers are revoked.
+- Reconciliation boundary: the dated RPC returns GL balance plus provider status. The current customer/supplier provider deliberately returns unavailable/null, never a synthetic zero. Real production AR/AP subledger providers do not yet exist and remain work for V2-IMP-008/009.
+- Migration/preservation: no account was reclassified or inferred from name/subtype. The observed pre/post disposable snapshot stayed at 44 Posting accounts, 3 posted journals, 6 entries and debit=credit=300 minor units. Binding/role replacement is archive-and-create.
+- Local verification: clean migration replay; Control SQL 44/44; retained account-nature 40/40, Group 29/29, posting idempotency/concurrency 37/37, six-column Trial Balance 33/33 and accounting periods 34/34 (217/217 total); unit 22/22; Chromium 2/2 in English/LTR and Arabic/RTL; Ledger typecheck, changed-file lint and production build passed. DB lint reported only the pre-existing `export_financial_report_csv` STABLE/volatile warning.
+- Acceptance: AC-1–AC-16 PASS locally. No hosted database was accessed; no deployment or merge occurred. Implementation commit: `IMPLEMENTATION_COMMIT`; cumulative Draft PR [#18](https://github.com/Building-Suit/building-suit-monorepo/pull/18).
+- Remaining limit: COA-09 is contract-complete but cannot prove a real subledger-to-Control zero until V2-IMP-008/009 provide authoritative customer/supplier ledgers.
+- Next dependency-order task: V2-IMP-006 — Opening-balance migration workflow.
 
 ### V2-IMP-006 — Opening-balance migration workflow
 
@@ -579,12 +582,11 @@ These are not silently added requirements and have no implementation priority:
 
 ## 11. Implementation checkpoint and next action
 
-- Completed cumulative stream: baseline assessment at e51435c52f8c3d36b4dccd86c1adb731dd2cb2a5; V2-IMP-001 Posting Idempotency Integrity at 7bfb37ee7326a4b8ae387dd6783b5f72cfd7a941; V2-IMP-002 Six-column Trial Balance at d4a5354790e63e2db7516d1c93d36a092af6e14c.
-- V2-IMP-001 evidence remains: additive migration 20260923134857; focused SQL evidence 142/142; no hosted application.
-- V2-IMP-002 evidence: forward migration 20260923144500; focused SQL regressions 85/85 (T-TB 33/33); localized CSV 6/6; Ledger targeted typecheck and changed-file lint passed; focused local Chromium Trial Balance verification 2/2 in English/LTR and Arabic/RTL with AC-9 and AC-11 PASS; generated public/GraphQL database types updated; no financial rows mutated.
-- Preservation: both tasks retain the shared posted-ledger engine, double-entry enforcement, immutable correction history, organization authorization, currency/base-minor-unit rules, audit/quota behavior, and existing report/export facilities. No hosted database, merge, deployment, provider configuration or production operation occurred.
-- Unresolved risks/limits: hosted migration/app compatibility remains unverified; accountant/UAT acceptance is not started; broad suites remain unrun under the task-specific targeted verification policy.
+- Completed cumulative stream: baseline assessment at e51435c52f8c3d36b4dccd86c1adb731dd2cb2a5; V2-IMP-001 at 7bfb37ee7326a4b8ae387dd6783b5f72cfd7a941; V2-IMP-002 at d4a5354790e63e2db7516d1c93d36a092af6e14c; V2-IMP-003 at ed9a81f6916e3d0f2f7a85be4e2e62bd0e413aa8; V2-IMP-004 at ccb4c96125dc90e8487682dbcf1370cc9ce1bc8c; V2-IMP-005 at `IMPLEMENTATION_COMMIT`.
+- V2-IMP-005 evidence: additive migrations `20260923183123`/`20260923183124`; 217/217 focused SQL assertions; unit 22/22; focused local Chromium 2/2 in English/LTR and Arabic/RTL; Ledger typecheck, changed-file lint and production build passed; generated database types updated. Existing rows and balanced ledger totals were unchanged across the pre/post snapshot.
+- Preservation: the cumulative stream retains the shared posted-ledger engine, double-entry enforcement, immutable correction history, organization authorization, currency/base-minor-unit rules, audit/quota behavior and existing report/export facilities. Control does not create a second ledger or a false subledger balance.
+- Unresolved risks/limits: hosted migration/app compatibility remains unverified; accountant/UAT acceptance is not started; real production AR/AP subledger providers remain absent; broad suites remain unrun under the task-specific targeted verification policy.
 - Git/PR: cumulative draft PR [#18](https://github.com/Building-Suit/building-suit-monorepo/pull/18), base `stg`, head `codex/ledger-suit/v2-baseline`. Its presence is review coordination only, not deployment or acceptance.
-- Exact next ordered task: V2-IMP-003 Journal identity and professional center. Its non-numbering work can proceed from this checkpoint; V2-D03 still blocks final journal-number semantics and acceptance.
+- Exact next ordered task: V2-IMP-006 — Opening-balance migration workflow, whose dependencies 001/002/004/005 are now locally implemented; V2-D02 remains its policy gate.
 
 This checkpoint is implementation and local-test evidence only. It must not be interpreted as deployment, hosted verification, accountant acceptance, or production readiness.

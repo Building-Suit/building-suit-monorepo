@@ -591,6 +591,7 @@
     "reversal": "Reversal",
     "opening_balance": "Opening balance",
     "api": "API",
+    "control_adjustment": "Control adjustment",
     "year_end_close": "Year-end close"
   },
   "periods": {
@@ -656,9 +657,10 @@
     "role": "Account role",
     "roles": {
       "posting": "Posting account",
+      "control": "Control account",
       "group": "Group account"
     },
-    "roleHint": "Posting accounts receive entries. Groups organize accounts without direct entries. The role is fixed after creation.",
+    "roleHint": "Posting accounts receive ordinary entries. Control accounts receive only linked-subledger entries or privileged Control adjustments. Groups are structural. The role is fixed after creation.",
     "parentGroup": "Parent group",
     "noParent": "No parent group",
     "groupBalance": "No direct entries",
@@ -758,6 +760,33 @@
       "taxes": "Taxes",
       "other_expense": "Other expense"
     }
+  },
+  "controls": {
+    "reconciliation": "Control reconciliation",
+    "reconciliationHint": "Compare each Control account's dated GL balance with its authoritative subledger. AR/AP providers are not available until their document modules are implemented.",
+    "subledger": "Subledger",
+    "subledgerType": "Subledger type",
+    "subledgers": {"customer": "Accounts receivable", "supplier": "Accounts payable"},
+    "directPostingBlocked": "Normal manual posting is blocked. Use the linked subledger or the privileged Control adjustment pathway.",
+    "bindingLocked": "Binding locked",
+    "bindingLockedHint": "This account has ledger history. Its role and subledger binding cannot be changed; archive and replace it if a different binding is required.",
+    "asOfDate": "As of date",
+    "glBalance": "GL balance",
+    "subledgerBalance": "Subledger balance",
+    "variance": "Variance",
+    "status": "Status",
+    "subledgerUnavailable": "Subledger not available",
+    "statuses": {"provider_unavailable": "Subledger not available", "reconciled": "Reconciled", "unreconciled": "Unreconciled", "explained_variance": "Explained variance"},
+    "adjust": "Control adjustment",
+    "counterpartAccount": "Posting counterpart",
+    "choosePostingAccount": "Choose a Posting account",
+    "controlSide": "Control account side",
+    "adjustmentReason": "Adjustment reason",
+    "reconciliationReference": "Reconciliation reference",
+    "adjustmentWarning": "This exceptional journal is audited. Its reason and reconciliation reference are required, and Hard Closed periods cannot be bypassed.",
+    "adjustmentRequired": "Counterpart, description, reason, and reconciliation reference are required.",
+    "amountInvalid": "Enter a valid positive amount.",
+    "adjustmentSaved": "Control adjustment posted"
   },
   "audit": {
     "title": "Audit history",
