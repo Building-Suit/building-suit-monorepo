@@ -98,7 +98,7 @@ const { data: detail, refresh } = useLazyAsyncData(
   async () => {
     if (!props.transactionId) return null
 
-    const [{ data: transaction, error: txError }, { data: entries, error: entryError }, { data: settings, error: settingsError }] =
+    const [{ data: transaction, error: txError }, { data: entries, error: entryError }, { data: settings, error: settingsError }, { data: openingBatch, error: openingError }] =
       await Promise.all([
         supabase
           .from('transaction_summaries')
@@ -111,11 +111,13 @@ const { data: detail, refresh } = useLazyAsyncData(
           .eq('transaction_id', props.transactionId)
           .order('side', { ascending: true }),
         supabase.from('organization_settings').select('books_locked_until').eq('organization_id', currentId.value!).maybeSingle(),
+        supabase.from('opening_balance_batches').select('id').or(`posted_transaction_id.eq.${props.transactionId},reversal_transaction_id.eq.${props.transactionId}`).maybeSingle(),
       ])
 
     if (txError) throw txError
     if (entryError) throw entryError
     if (settingsError) throw settingsError
+    if (openingError) throw openingError
 
     const { data: periodContext, error: periodError } = transaction?.transaction_date && can('periods.read')
       ? await supabase.rpc('accounting_period_context', {
@@ -130,7 +132,7 @@ const { data: detail, refresh } = useLazyAsyncData(
       : { data: [], error: null }
     if (relationshipError) throw relationshipError
 
-    return { transaction, entries: entries ?? [], settings, periodContext: periodContext?.[0] ?? null, relationships: relationships ?? [] }
+    return { transaction, entries: entries ?? [], settings, openingBatch, periodContext: periodContext?.[0] ?? null, relationships: relationships ?? [] }
   },
   { watch: [() => props.transactionId] },
 )
@@ -157,6 +159,7 @@ const canReverse = computed(
 )
 const sourceLink = computed(() => {
   const transaction = detail.value?.transaction
+  if (detail.value?.openingBatch?.id) return { path: '/opening-balances', query: { batch: detail.value.openingBatch.id } }
   if (!transaction?.source_record_kind || !transaction.source_record_parent_id) return null
   if (transaction.source_record_kind === 'commitment') return { path: '/records/commitments', query: { item: transaction.source_record_parent_id } }
   if (transaction.source_record_kind === 'recurring') return { path: '/records/recurring', query: { item: transaction.source_record_parent_id } }
