@@ -21,7 +21,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
-      - name: Check the live PR stack and single staging slot
+      - name: Check app-specific PR roots and parent chain
         env:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
