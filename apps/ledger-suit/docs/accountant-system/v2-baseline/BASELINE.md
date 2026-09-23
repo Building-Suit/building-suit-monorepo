@@ -69,6 +69,7 @@ For missing behavior, the ordered migration chain, app source, generated types, 
 | DB-ARAP | apps/ledger-suit/supabase/migrations/20260831090000_commitments.sql:1-236; 20260831090500_commitment_functions.sql:15-186 — generic receivable/payable intentions, outstanding balance, partial settlement; settlement currently records income/expense |
 | DB-RECUR | apps/ledger-suit/supabase/migrations/20260831091500_recurring_functions.sql:91-323 — occurrence identity, shared financial flows, scheduler |
 | DB-QUOTA | apps/ledger-suit/supabase/migrations/20260912094117_monthly_posted_transaction_quota.sql:149-166 — quota effect when a transaction first becomes posted |
+| DB-IDEMP | apps/ledger-suit/supabase/migrations/20260923134857_posting_idempotency_integrity.sql — tenant-scoped private claim ledger, canonical request fingerprints, atomic replay/conflict handling, and common posting-writer integration |
 | UI-COA | apps/ledger-suit/app/pages/accounts.vue:317-537; app/utils/accountTree.ts:1-110; app/components/AccountTree.vue:25-83 — hierarchy, totals, role/nature/Contra/classification editing and account activity |
 | UI-JRN | apps/ledger-suit/app/pages/transactions.vue:46-176; app/composables/useTransactionWorkspace.ts:1-123; app/components/TransactionDetailDialog.vue:96-279 — unified table, route-backed filters, lines, attachments, reversal |
 | UI-REPORT | apps/ledger-suit/app/pages/reports.vue:22-430; app/components/AccountActivityDialog.vue:46-169 — reports/export plus account-to-journal drill-down available from accounts, not report rows |
@@ -79,6 +80,7 @@ For missing behavior, the ordered migration chain, app source, generated types, 
 | T-IMPORT | apps/ledger-suit/supabase/tests/21_csv_import_backend_test.sql:1-329 and apps/ledger-suit/tests/e2e/csv-import.spec.ts:1-244 |
 | T-ARAP | apps/ledger-suit/supabase/tests/03_commitments_and_recurring_test.sql:1-298 |
 | T-REPORT | apps/ledger-suit/supabase/tests/22_financial_report_csv_exports_test.sql:1-188 and apps/ledger-suit/tests/e2e/report-exports.spec.ts:1-85 |
+| T-IDEMP | apps/ledger-suit/supabase/tests/32_posting_idempotency_integrity_test.sql — 37 assertions covering sequential/concurrent replay, payload conflict, failed-request recovery, canonicalization, tenant scope, legacy keys, no-key behavior, access, audit, quota, and entry cardinality |
 | ABSENT-MODULES | No accounting-period/state, journal-number, bank-statement/reconciliation, asset-register/depreciation-schedule, controlled cost-center/project, tax/VAT configuration/calculation/report, or inventory-item/movement/valuation object was found across the ordered migrations, app, generated types, SQL tests, unit tests, and browser tests. The exact search command is in section 5. |
 
 Relevant database symbols traced to their latest applicable definitions include public.accounts, public.transactions, public.transaction_entries, public.commitments, public.commitment_settlements, public.saved_views, app.require_capability, app.require_account, app.create_transaction_draft, app.post_transaction, app.create_and_post, app.create_adjustment, app.reverse_transaction, app.post_opening_balance, app.search_transactions, app.trial_balance, app.profit_and_loss, app.balance_sheet, app.cash_flow_statement, app.general_ledger, app.classified_balance_sheet, app.export_financial_report_csv, app.read_account_activity, and app.read_journal_lines. Relevant interface symbols include useTransactionWorkspace, useAddTransaction, AccountTree, AccountActivityDialog, TransactionDetailDialog, and CsvImportDialog.
@@ -103,7 +105,7 @@ Columns: evidence includes code/schema/interface and tests present; acceptance/t
 | CORE-03 | Backend accounting validation | — | implemented — deferred balance, account, state, and RPC checks are database-enforced | DB-LEDGER; DB-POST; T-CORE | Direct/API attempts at unbalanced or ineligible posting fail atomically |
 | CORE-04 | Draft/posted distinction; traceable corrections | — | implemented — posted rows/lines are immutable and reversal/adjustment links exist | DB-LEDGER; DB-POST; UI-JRN; T-CORE | Posted edits fail; correction produces linked journal with preserved original |
 | CORE-05 | Eligibility/org/permission/period on all sources | — | partially implemented — eligibility/org/capability and one lock date exist; explicit period states and concurrency do not | DB-AUTH; DB-POST; DB-RLS; DB-FLOWS; T-CORE; gap PER module | Every source is rejected in a closed period under concurrent close; V2-IMP-004 / V2-D07 |
-| CORE-06 | Duplicate-post prevention | — | partially implemented — optional keys/indexes and fingerprints exist, but a reused key is not bound to payload and check-then-insert concurrency is unsafe | DB-POST:151-180,334-421,496-580; DB-IMPORT; DB-RECUR; T-CORE | Same key+same payload returns one journal; same key+different payload conflicts; concurrent retries create one financial effect; V2-IMP-001 |
+| CORE-06 | Duplicate-post prevention | — | implemented — tenant-scoped atomic claims bind each key to a canonical logical payload; equal retries replay one result and conflicting reuse fails explicitly | DB-IDEMP; DB-POST; DB-IMPORT; DB-RECUR; DB-QUOTA; T-IDEMP; T-CORE | Same key+same payload returns one journal; same key+different payload conflicts; concurrent retries create one financial effect; V2-IMP-001 |
 | CORE-07 | Preserve currency/audit/attachments/recurrence/import/export/reporting | — | implemented — current facilities are present and preservation is a task gate | DB-LEDGER; DB-IMPORT; DB-RECUR; DB-EXPORT; UI-JRN | Regression suite shows no loss of supported behavior after each V2 task |
 | CORE-08 | Pre/post migration reconciliation | — | unverified — no V2 data migration occurred, so no paired evidence exists | Section 9; smallest evidence: disposable rehearsal plus signed reconciliation artifacts | Each future migration records pre/post journal counts, debit=credit, TB/statement integrity and subledger controls; every data task; V2-IMP-015 |
 
@@ -131,7 +133,7 @@ Columns: evidence includes code/schema/interface and tests present; acceptance/t
 | OPEN-04 | Validate references, eligibility, values, balance | P0 | partially implemented — account/lock/balance engine checks exist, but the RPC silently plugs imbalance to Opening Balance Equity | DB-FLOWS; DB-POST; T-CORE | Invalid/ineligible/unbalanced source batch cannot post and errors identify rows; V2-IMP-006 / V2-D02 |
 | OPEN-05 | Validation result and journal preview | P0 | missing — no opening-batch UI/model exists | UI-IMPORT; ABSENT-MODULES | Preview shows mapped lines, totals and blocking row errors before approval; V2-IMP-006 |
 | OPEN-06 | Shared-ledger traceability | P0 | implemented — accepted low-level opening posts use the engine and flow into GL/reports | DB-FLOWS; DB-POST; DB-REPORT; T-CORE | Posted opening batch is traceable by batch/source in GL, six-column TB and statements; V2-IMP-006 retains engine |
-| OPEN-07 | Controlled cutoff and duplicate protection | P0 | partially implemented — optional key/lock exists, no batch/cutoff workflow and key semantics are weak | DB-FLOWS; DB-POST; T-CORE | Repeated/concurrent import produces one batch/journal and cutoff rule is enforced; V2-IMP-001 then 006 / V2-D02 |
+| OPEN-07 | Controlled cutoff and duplicate protection | P0 | partially implemented — shared posting idempotency is concurrency-safe, but no opening batch/cutoff workflow exists | DB-FLOWS; DB-IDEMP; T-IDEMP; T-CORE | Repeated/concurrent import produces one batch/journal and cutoff rule is enforced; V2-IMP-006 / V2-D02 |
 | OPEN-08 | Approval, lock, correction, year/midyear rules | P0 | partially implemented — generic lock/reversal exists, not opening-specific approval/policy | DB-AUTH; DB-POST | Approved policy controls approval, lock, correction and year/midyear treatment with audit; V2-IMP-006 / V2-D02 |
 
 ### Professional Journal Center — P0
@@ -261,7 +263,7 @@ Columns: evidence includes code/schema/interface and tests present; acceptance/t
 | VAL-03 | Test opening/numbering/views/drill-down/six-column TB | — | partially implemented — generic import/report foundations exist; named V2 behaviors do not | T-IMPORT; T-REPORT; UI evidence | Automated DB+UI suite covers all five behaviors; V2-IMP-002/003/006/007 |
 | VAL-04 | Test AR/AP lifecycle/reconciliation | — | partially implemented — current commitment partial-settlement tests are cash-basis only | T-ARAP | Accrual, allocation, aging, correction and Control reconciliation tests pass; V2-IMP-008/009 |
 | VAL-05 | Test periods/bank/assets/dimensions/tax/inventory | — | missing — modules and their tests are absent | ABSENT-MODULES | Each approved module has accounting fixtures plus concurrency/error/UI coverage; V2-IMP-004/010-015 |
-| VAL-06 | Permission/isolation/idempotency/concurrency/history tests | — | partially implemented — permission/isolation/basic idempotency/history exist; payload conflicts and new-module concurrency do not | T-CORE; T-COA | Cross-module matrix passes, including concurrent duplicate and close/post barriers; V2-IMP-001/004/015 |
+| VAL-06 | Permission/isolation/idempotency/concurrency/history tests | — | partially implemented — posting replay, payload conflict, tenant isolation, failure recovery and true concurrent duplicate coverage exist; period-close and future-module concurrency remain | T-IDEMP; T-CORE; T-COA | Cross-module matrix passes, including concurrent duplicate and close/post barriers; V2-IMP-004/015 |
 | VAL-07 | Accountant-reviewed independent expected balances | — | missing — no V2 accountant acceptance evidence exists | Existing historical approval is not V2 UAT | Named accountant signs dated fixtures and expected reports; V2-IMP-015 |
 | VAL-08 | Separate code/test/deploy/accountant states | — | implemented — dimensions are separately recorded | Sections 2 and 5 | Tracker never derives deployment/UAT from code or test state |
 | PLAN-01 | Requirement-by-requirement evidence gap analysis | — | implemented — 138 rows reference actual objects/UI/tests | Sections 2-3 | ID audit and reviewer spot-check pass |
@@ -281,8 +283,8 @@ Totals below are generated from the 138 requirement rows in this document and mu
 
 | Status | Count |
 |---|---:|
-| implemented | 38 |
-| partially implemented | 38 |
+| implemented | 39 |
+| partially implemented | 37 |
 | missing | 61 |
 | unverified | 1 |
 | Total | 138 |
@@ -291,8 +293,8 @@ Product/process distinction: SCOPE and PLAN are assessment requirements; VAL mix
 
 | Disposition | Evidence-backed inventory |
 |---|---|
-| Retain | Shared double-entry engine; posted-entry authority; draft/posted immutability; reversal/adjustment links; organization/capability RLS; account hierarchy, Group restrictions, normal nature and Contra; current transaction center; account activity; generic commitments/recurrence/import/export/attachments/currency/audit foundations |
-| Extend | Idempotency semantics; account roles with Control; opening RPC into controlled batch workflow; transaction center into professional journal center; current two-column TB into six columns; statement classification/reconciliation/drill-down; commitments into accrual AR/AP subledgers; one lock date into period state machine; asset-purchase metadata into a fixed-asset register; generic dimensions into controlled dimensions |
+| Retain | Shared double-entry engine; tenant-scoped posting idempotency and canonical request binding; posted-entry authority; draft/posted immutability; reversal/adjustment links; organization/capability RLS; account hierarchy, Group restrictions, normal nature and Contra; current transaction center; account activity; generic commitments/recurrence/import/export/attachments/currency/audit foundations |
+| Extend | Account roles with Control; opening RPC into controlled batch workflow; transaction center into professional journal center; current two-column TB into six columns; statement classification/reconciliation/drill-down; commitments into accrual AR/AP subledgers; one lock date into period state machine; asset-purchase metadata into a fixed-asset register; generic dimensions into controlled dimensions |
 | Introduce | Journal numbering; bank statement/reconciliation domain; explicit accounting periods; Control-account bindings; opening import/mapping/approval; AR/AP allocations/statements/aging; asset schedules/disposals; tax/VAT only after approved scope; inventory accounting only after approved scope |
 | Investigate | Clean disposable reproduction of five local SQL-suite failures; live GitHub PR state; hosted/deployed schema; historical label/classification reproducibility; cash-flow mapping; all decisions V2-D01–D13; accountant fixture approval |
 
@@ -393,10 +395,11 @@ Unless a card says otherwise, discovered paths are apps/ledger-suit/app, apps/le
 
 ### V2-IMP-001 — Posting idempotency integrity (first unblocked)
 
+- Status: IMPLEMENTED LOCALLY / READY FOR REVIEW on 2026-09-23. It is not deployed, hosted-verified, accountant-accepted, or production-verified.
 - Scope/result: bind every idempotency key to a canonical posting request identity. Same organization+key+same payload returns the same journal; same key+different payload returns an explicit conflict; concurrent equal requests create exactly one journal, audit event, and quota effect.
 - Why unblocked: DB-POST, the unique key, duplicate fingerprint, audit/quota hooks and core SQL test harness already exist. This changes transaction-integrity semantics, not an unresolved accounting policy. It is the one and only first implementation task selected by this baseline.
 - Retain/extend: retain the common engine, current transaction IDs and existing valid idempotent responses; extend app.create_transaction_draft/create_and_post and all wrappers. Do not create a second posting route.
-- Paths/objects: discovered DB-POST, DB-FLOWS, DB-IMPORT, DB-RECUR, DB-QUOTA, T-CORE. Proposed forward migration adds a versioned/canonical request hash or equivalent immutable comparison and typed conflict; regenerated types and localized UI error mapping only if exposed.
+- Paths/objects: implemented by DB-IDEMP and T-IDEMP. New private objects are app.posting_idempotency, app.posting_request_fingerprint, app.claim_posting_idempotency, and app.complete_posting_idempotency; public.create_draft_transaction, app.create_and_post, and public.create_adjustment are redefined without changing public signatures. No generated type change is required.
 - Migration/history/cross-app risk: additive forward migration; existing keys need a nullable/versioned compatibility rule and no reinterpretation of posted history. Main risk is breaking import/recurrence/commitment retries or incrementing quota/audit twice. Shared packages must not acquire Ledger schema dependencies.
 - Acceptance/accounting: (1) same payload/key sequentially and concurrently returns one transaction ID; (2) different payload/key conflict posts nothing; (3) debit=credit and transaction/entry/audit/quota counts change once; (4) no-key legacy behavior remains documented; (5) income, expense, transfer, opening, import, recurring and commitment wrappers pass.
 - Tests/interface: database barrier/concurrency tests plus wrapper regressions; browser/API check shows a localized non-retryable conflict and no duplicate row. Run existing 01, 03, 19, 21 and affected e2e suites on a pristine disposable database.
@@ -550,7 +553,7 @@ Before each rehearsal, record environment identity as disposable/local, migratio
 
 Rehearsal order is fresh disposable database, representative sanitized snapshot where authorized, then separately authorized staging. No production reset or destructive fixture is permitted. Recovery must be a tested forward repair, feature/write gate, or traceable reversal as appropriate; never delete posted history or rewrite an applied migration. A rollback of application code must remain compatible with the forward schema.
 
-This baseline produced no pre/post migration reconciliation because it authored/applied no migration. Available evidence is limited to existing integrity/report/account-activity functions and their mixed local test run.
+The documentation-baseline phase produced no pre/post migration reconciliation because it authored/applied no migration. V2-IMP-001 subsequently applied its additive migration to a fresh disposable local database and verified journal, entry, audit, quota, conflict, tenant, failure-recovery, and concurrency outcomes. No hosted environment was contacted.
 
 ## 10. Proposed scope additions requiring explicit approval
 
@@ -562,14 +565,16 @@ These are not silently added requirements and have no implementation priority:
 - Asset impairment/revaluation, component accounting or lease accounting beyond the approved fixed-asset/depreciation policy.
 - Operational inventory, warehouse, purchasing, sales-order or manufacturing features; these remain out of scope even if an accounting adapter is approved.
 
-## 11. Baseline checkpoint and next action
+## 11. Implementation checkpoint and next action
 
-- Coverage: 138/138 unique IDs assessed; no missing or duplicate source IDs.
-- Current pending task: LS-V2-BASELINE-001, AWAITING ORCHESTRATOR REVIEW.
-- Prior accepted V2 work: none evidenced in this orchestration stream.
-- Exact next proposed task: V2-IMP-001 Posting idempotency integrity. Do not start it as part of this baseline.
-- Blocking state for next task: none. Later tasks remain gated as recorded.
-- Remote/migration/deployment state: none performed beyond a read-only Git fetch.
-- Final ancestry observation: origin/stg is 599a5ab5afc5a99d5096a3e23e7a54ffe75ced5a and contains the inspected baseline commit; live GitHub status remains unverified because gh authentication failed.
+- Task and requirements: V2-IMP-001 implements CORE-06 and the posting-idempotency foundations of OPEN-07 and VAL-06 while preserving CORE-01, CORE-03, CORE-04, CORE-05, and CORE-07 behavior.
+- Status: IMPLEMENTED LOCALLY / READY FOR REVIEW. The documentation baseline is commit e51435c52f8c3d36b4dccd86c1adb731dd2cb2a5; implementation commit is recorded in the task handoff after creation.
+- Mechanism: one private tenant-scoped claim row is inserted transactionally before financial effects. The unique organization/key constraint serializes concurrent contenders; a canonical SHA-256 fingerprint permits equal replay and rejects a different logical payload with `IDEMPOTENCY_CONFLICT`. The completed transaction link, journal entries, audit rows, and quota effect commit atomically, so failures leave no successful claim. Existing keyed history is marked `legacy` and rejected on reuse because its original logical payload cannot be proven safely.
+- Files: apps/ledger-suit/supabase/migrations/20260923134857_posting_idempotency_integrity.sql; apps/ledger-suit/supabase/tests/32_posting_idempotency_integrity_test.sql; this tracker.
+- Local migration evidence: a fresh disposable local reset applied migration 20260923134857 successfully. It was not applied to staging, production, or any hosted database.
+- Test evidence: T-IDEMP passed 37/37; T-CORE accounting integrity passed 25/25; T-ARAP/recurrence passed 23/23; DB-QUOTA regressions passed 23/23; T-IMPORT passed 34/34. Total focused SQL evidence is 142/142. Database lint reported no errors for app/public, and the migration list includes 20260923134857 locally.
+- Unresolved risks/limits: legacy keyed requests intentionally cannot be replayed because no trustworthy historical payload fingerprint exists; hosted migration/application behavior remains unverified; accountant/UAT acceptance is not started; broad UI/full-suite checks were outside this task's targeted-test policy. Future posting APIs must use the same tenant/key/fingerprint convention rather than add a parallel idempotency path.
+- Remote/provider state: the feature branch is pushed as requested. No PR, merge, deployment, hosted database operation, provider configuration change, or production verification was performed.
+- Exact next dependency-ready task: V2-IMP-002 Six-column Trial Balance. It has no remaining V2-IMP-001 dependency blocker.
 
-Acceptance of this documentation baseline should confirm the authoritative copy, row count/status rationale, evidence paths, decision ownership, task sequence, and selection of V2-IMP-001. It must not be interpreted as runtime acceptance or permission to implement, migrate, publish, or deploy.
+This checkpoint is implementation and local-test evidence only. It must not be interpreted as deployment, hosted verification, accountant acceptance, or production readiness.
