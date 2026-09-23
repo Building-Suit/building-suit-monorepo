@@ -391,12 +391,12 @@
     "noCommitments": "Nothing is due soon."
   },
   "transactions": {
-    "title": "Transactions",
+    "title": "Journal Center",
     "count": "{count} transaction | {count} transactions",
-    "searchLabel": "Search transactions",
-    "searchPlaceholder": "Search description, reference, account or counterparty",
+    "searchLabel": "Search journals",
+    "searchPlaceholder": "Search journal reference, description, document reference, account or counterparty",
     "filters": "Filters",
-    "caption": "Transactions, newest first unless re-sorted",
+    "caption": "Authoritative journals, newest first unless re-sorted",
     "date": "Date",
     "fromDate": "From date",
     "toDate": "To date",
@@ -581,6 +581,39 @@
     "reverseReasonRequired": "A reason is required so the correction stays auditable.",
     "reversedTitle": "Reversed",
     "reversedBody": "A reversing journal has been posted."
+  },
+  "journalSources": {
+    "manual": "Manual",
+    "import": "Import",
+    "recurring": "Recurring",
+    "commitment": "Commitment",
+    "reversal": "Reversal",
+    "opening_balance": "Opening balance",
+    "api": "API"
+  },
+  "journalCenter": {
+    "journalReference": "Journal reference",
+    "accountingDate": "Accounting date",
+    "source": "Source",
+    "allSources": "All sources",
+    "savedViews": "Saved views",
+    "chooseView": "Choose a saved view",
+    "viewName": "View name",
+    "saveView": "Save current view",
+    "removeView": "Remove view",
+    "viewSavedTitle": "View saved",
+    "viewSavedBody": "Your journal filters and sorting are ready to reuse.",
+    "viewError": "Saved view could not be changed",
+    "savedViewsError": "Saved views could not be loaded.",
+    "sourceRecord": "Source record",
+    "openSource": "Open associated source record",
+    "lineTotals": "Journal totals",
+    "relationships": "Journal relationships",
+    "originalJournal": "Original journal",
+    "reversalJournal": "Reversal journal",
+    "reverses": "Reverses",
+    "adjusts": "Adjusts",
+    "periodLocked": "This journal falls in the current locked period. Actions remain restricted unless your role can override the lock."
   },
   "accounts": {
     "role": "Account role",
@@ -1367,7 +1400,7 @@
     "loadError": "Unable to load tags. Try again."
   },
   "transactionWorkspace": {
-    "subtitle": "All your transactions in one place. Filter, review, or record a new entry.",
+    "subtitle": "Review every journal from the shared ledger, inspect its lines and trace it back to its source.",
     "new": "New transaction",
     "all": "All transactions",
     "allTypes": "All types",
