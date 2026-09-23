@@ -109,9 +109,9 @@ select ok(
 select ok(
   public.export_financial_report_csv(
     (select value from export_test_ids where key = 'alpha_org'),
-    'trial_balance', p_as_of_date => '2026-09-30'
+    'trial_balance', p_from_date => '2026-09-01', p_to_date => '2026-09-30'
   ) like
-  E'code,account,type,debit,credit,currency\n%',
+  E'code,account,type,opening_debit,opening_credit,period_debit,period_credit,closing_debit,closing_credit,currency\n%',
   'trial balance CSV is available');
 
 select ok(

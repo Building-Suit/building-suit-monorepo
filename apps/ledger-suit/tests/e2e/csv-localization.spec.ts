@@ -109,7 +109,7 @@ for (const language of ['en', 'ar'] as const) {
     ] as const
     for (const [tab, report, expectedHeader] of reports) {
       await page.getByRole('tab', { name: copy.reports.tabs[tab], exact: true }).click()
-      if (['profit_loss', 'cash_flow', 'general_ledger'].includes(report)) {
+      if (['profit_loss', 'trial_balance', 'cash_flow', 'general_ledger'].includes(report)) {
         await page.locator('#from').fill('2026-09-01'); await page.locator('#to').fill('2026-09-30')
       }
       else await page.locator('#asof').fill('2026-09-30')

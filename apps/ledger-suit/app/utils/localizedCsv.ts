@@ -62,7 +62,7 @@ export function csvImportTemplate(t: Translate, currency: string, date: string):
 const reportColumns: Record<CsvReport, readonly string[]> = {
   profit_loss: ['section', 'code', 'account', 'amount', 'currency'],
   balance_sheet: ['report_date', 'presentation', 'account_id', 'code', 'account', 'amount', 'currency', 'classification_effective_from', 'classification_id'],
-  trial_balance: ['code', 'account', 'type', 'debit', 'credit', 'currency'],
+  trial_balance: ['code', 'account', 'type', 'opening_debit', 'opening_credit', 'period_debit', 'period_credit', 'closing_debit', 'closing_credit', 'currency'],
   cash_flow: ['activity', 'net_movement', 'currency'],
   general_ledger: ['date', 'reference', 'description', 'memo', 'debit', 'credit', 'running_balance', 'currency'],
 }
@@ -77,6 +77,7 @@ export function localizeReportCsv(csv: string, report: CsvReport, t: Translate):
     ...parsed.rows.map(row => columns.map((column, index) => {
       const value = row[parsed.headers[index]!] ?? ''
       if (report === 'trial_balance' && column === 'type' && ['asset', 'liability', 'equity', 'revenue', 'expense'].includes(value)) return t(`accounts.groups.${value}`)
+      if (report === 'trial_balance' && column === 'account' && value === 'Total' && !row.code) return t('reports.total')
       if (report === 'profit_loss' && column === 'section') {
         const section = { revenue: 'revenue', cost_of_sales: 'costOfSales', operating_expenses: 'operatingExpenses' }[value]
         if (section) return t(`reports.${section}`)

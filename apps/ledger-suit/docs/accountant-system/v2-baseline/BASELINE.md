@@ -62,6 +62,7 @@ For missing behavior, the ordered migration chain, app source, generated types, 
 | DB-FLOWS | apps/ledger-suit/supabase/migrations/20260830130500_transaction_flows.sql:14-698 — income, expense, transfer, asset/liability/owner flows and simple opening posting all delegate to the common engine |
 | DB-RLS | apps/ledger-suit/supabase/migrations/20260830133500_rls_policies.sql:1-47 — organization/capability reads and RPC-only ledger writes |
 | DB-REPORT | apps/ledger-suit/supabase/migrations/20260830134000_reporting.sql:91-447; latest sign replacements in 20260919013605_account_nature_and_contra_reporting.sql:305-580 — two-column cumulative Trial Balance, statements, integrity, cash flow, General Ledger |
+| DB-TB | apps/ledger-suit/supabase/migrations/20260923144500_six_column_trial_balance.sql — inclusive-period six-column Trial Balance over posted entries, posting-account-only totals, hierarchy/Contra metadata, and same-RPC CSV rows/totals |
 | DB-CLASS | apps/ledger-suit/supabase/migrations/20260919105319_dated_statement_classification.sql:1-218 — append-only future Balance Sheet classifications and classified export |
 | DB-ACTIVITY | apps/ledger-suit/supabase/migrations/20260919114443_account_activity_reader.sql:2-90 — account opening/movement/closing reader and journal-line reader |
 | DB-EXPORT | apps/ledger-suit/supabase/migrations/20260912180913_financial_report_csv_exports.sql:62-162 — report exports reuse report RPCs, including the two-column Trial Balance |
@@ -80,6 +81,7 @@ For missing behavior, the ordered migration chain, app source, generated types, 
 | T-IMPORT | apps/ledger-suit/supabase/tests/21_csv_import_backend_test.sql:1-329 and apps/ledger-suit/tests/e2e/csv-import.spec.ts:1-244 |
 | T-ARAP | apps/ledger-suit/supabase/tests/03_commitments_and_recurring_test.sql:1-298 |
 | T-REPORT | apps/ledger-suit/supabase/tests/22_financial_report_csv_exports_test.sql:1-188 and apps/ledger-suit/tests/e2e/report-exports.spec.ts:1-85 |
+| T-TB | apps/ledger-suit/supabase/tests/33_six_column_trial_balance_test.sql — 33 assertions for boundaries, roll-forward, all three reconciliations, side crossing, Group/Contra rules, posted-only behavior, isolation, activity parity, and CSV parity; apps/ledger-suit/tests/unit/localized-csv.test.mjs — six-column EN/AR export contract |
 | T-IDEMP | apps/ledger-suit/supabase/tests/32_posting_idempotency_integrity_test.sql — 37 assertions covering sequential/concurrent replay, payload conflict, failed-request recovery, canonicalization, tenant scope, legacy keys, no-key behavior, access, audit, quota, and entry cardinality |
 | ABSENT-MODULES | No accounting-period/state, journal-number, bank-statement/reconciliation, asset-register/depreciation-schedule, controlled cost-center/project, tax/VAT configuration/calculation/report, or inventory-item/movement/valuation object was found across the ordered migrations, app, generated types, SQL tests, unit tests, and browser tests. The exact search command is in section 5. |
 
@@ -153,13 +155,13 @@ Columns: evidence includes code/schema/interface and tests present; acceptance/t
 
 | ID | Meaning | Priority | Status and reason | Evidence; gap / smallest additional evidence | Measurable acceptance; task / decision |
 |---|---|---:|---|---|---|
-| TB-01 | Six monetary columns | P0 | missing — current RPC/UI/export expose cumulative debit and credit only | DB-REPORT:91-125; DB-EXPORT:109-119; UI-REPORT:282-302 | Every eligible account has opening DR/CR, movement DR/CR, closing DR/CR; V2-IMP-002 |
-| TB-02 | Selected-period components | P0 | missing — only as-of date is accepted | DB-REPORT; UI-REPORT | From/to period independently calculates opening, movement and closing; V2-IMP-002 |
-| TB-03 | Per-account roll-forward equation | P0 | missing — no six-column contract/test | DB-REPORT; T-REPORT | For every row, signed close = signed open + debit movement - credit movement; V2-IMP-002 |
-| TB-04 | Column-total reconciliation | P0 | missing — no opening/period/closing total assertions | DB-REPORT; T-REPORT | Opening DR=CR, period DR=CR, closing DR=CR with zero documented variance; V2-IMP-002 |
-| TB-05 | Hierarchy and Contra without double count | P0 | partially implemented — tree/report nature exists, but six-column hierarchy/grand-total behavior is absent | DB-COA; DB-REPORT; UI-COA; T-COA | Detail/grand totals count posting entries once and present Contra balances correctly; V2-IMP-002 |
-| TB-06 | Drill-down to movements/journals | P0 | missing — report rows are static; activity drill-down only starts from Accounts | UI-REPORT; DB-ACTIVITY | Each amount opens filtered contributing movements then journal detail, preserving period; V2-IMP-002 |
-| TB-07 | Display/export same contract | P0 | implemented — current display/export reuse the same current RPC/rules, though the contract is incomplete | DB-EXPORT; UI-REPORT; T-REPORT | New six-column UI and CSV call one calculation contract and byte-level numeric fixtures agree; V2-IMP-002 |
+| TB-01 | Six monetary columns | P0 | implemented — RPC, UI and CSV expose opening DR/CR, period DR/CR and closing DR/CR | DB-TB; UI-REPORT; T-TB | Every eligible posting account has the six required non-negative monetary columns; V2-IMP-002 |
+| TB-02 | Selected-period components | P0 | implemented — one inclusive from/to contract separates pre-period opening from in-period gross movement | DB-TB; UI-REPORT; T-TB | Boundary fixtures place day-before in opening, start/end in movement and day-after outside; V2-IMP-002 |
+| TB-03 | Per-account roll-forward equation | P0 | implemented — closing is derived once as opening net plus period debit less period credit | DB-TB; T-TB | Every tested row satisfies signed close = signed open + debit movement - credit movement; V2-IMP-002 |
+| TB-04 | Column-total reconciliation | P0 | implemented — UI/footer and CSV total the authoritative posting rows | DB-TB; UI-REPORT; T-TB | Opening DR=CR, period DR=CR and closing DR=CR in the deterministic fixture; V2-IMP-002 |
+| TB-05 | Hierarchy and Contra without double count | P0 | implemented — report returns posting accounts only with parent/role/nature/Contra metadata; actual ledger position determines side | DB-COA; DB-TB; T-TB | Group parents are excluded from authoritative totals; child metadata and Contra credit positions are retained; V2-IMP-002 |
+| TB-06 | Drill-down to movements/journals | P0 | implemented — each monetary cell opens the existing posted account activity and journal path with opening, period or through-closing dates | UI-REPORT; DB-ACTIVITY; T-TB | Amount→movement→journal stays organization-authorized and uses the report context; V2-IMP-002 |
+| TB-07 | Display/export same contract | P0 | implemented — display and CSV both consume public.report_trial_balance for the same organization/from/to inputs | DB-TB; UI-REPORT; T-TB | Exact fixture rows and totals agree; localized CSV retains the same numeric cells; V2-IMP-002 |
 
 ### Financial statements — P0
 
@@ -260,7 +262,7 @@ Columns: evidence includes code/schema/interface and tests present; acceptance/t
 |---|---|---:|---|---|---|
 | VAL-01 | Measurable criteria for every requirement | — | implemented — every row has a measurable criterion | This table | Automated check finds 138 IDs and nonempty acceptance cells |
 | VAL-02 | Test COA roles/reconciliation/Contra/classes | — | partially implemented — Group/Contra/classification tests exist; Control does not and one local suite failed | T-COA; section 5 | Clean suite covers Group/Control/Contra/classification and zero Control variance; V2-IMP-005/015 |
-| VAL-03 | Test opening/numbering/views/drill-down/six-column TB | — | partially implemented — generic import/report foundations exist; named V2 behaviors do not | T-IMPORT; T-REPORT; UI evidence | Automated DB+UI suite covers all five behaviors; V2-IMP-002/003/006/007 |
+| VAL-03 | Test opening/numbering/views/drill-down/six-column TB | — | partially implemented — six-column TB reconciliation/drill-down coverage is implemented; opening import, numbering and saved-view acceptance remain future work | T-IMPORT; T-REPORT; T-TB; UI evidence | Automated DB+UI suite covers all five behaviors; V2-IMP-002/003/006/007 |
 | VAL-04 | Test AR/AP lifecycle/reconciliation | — | partially implemented — current commitment partial-settlement tests are cash-basis only | T-ARAP | Accrual, allocation, aging, correction and Control reconciliation tests pass; V2-IMP-008/009 |
 | VAL-05 | Test periods/bank/assets/dimensions/tax/inventory | — | missing — modules and their tests are absent | ABSENT-MODULES | Each approved module has accounting fixtures plus concurrency/error/UI coverage; V2-IMP-004/010-015 |
 | VAL-06 | Permission/isolation/idempotency/concurrency/history tests | — | partially implemented — posting replay, payload conflict, tenant isolation, failure recovery and true concurrent duplicate coverage exist; period-close and future-module concurrency remain | T-IDEMP; T-CORE; T-COA | Cross-module matrix passes, including concurrent duplicate and close/post barriers; V2-IMP-004/015 |
@@ -407,13 +409,15 @@ Unless a card says otherwise, discovered paths are apps/ledger-suit/app, apps/le
 
 ### V2-IMP-002 — Six-column Trial Balance
 
-- Scope/result: one period-aware calculation contract supplies opening debit/credit, period debit/credit and closing debit/credit to UI, CSV and drill-down.
+- Status: IMPLEMENTED LOCALLY / READY FOR REVIEW on 2026-09-23. It is not deployed, hosted-verified, accountant-accepted, or production-verified.
+- Scope/result: one period-aware calculation contract supplies opening debit/credit, period debit/credit and closing debit/credit to UI, CSV and drill-down. TB-01 through TB-07 are implemented in repository/local evidence.
 - Dependencies/gates: V2-IMP-001; no accounting-policy gate.
-- Retain/extend: extend DB-REPORT/DB-EXPORT/UI-REPORT and reuse DB-ACTIVITY, account nature and Group rules.
-- Paths/objects: discovered reporting/export/activity functions and reports page/tests; proposed new versioned Trial Balance RPC and typed row contract, with old RPC compatibility until consumers migrate.
-- Migration/risk: forward function/type change, normally no data backfill. Risks are double-counting hierarchy, wrong Contra side, date boundaries/time zones, archived accounts and export drift.
-- Acceptance/tests: per-account signed close=open+DR-CR; all three DR/CR column pairs balance; posting details counted once; archived/Contra/hierarchy/zero-movement cases; UI=CSV for same period; amount→movement→journal preserves dates.
-- Rehearsal/recovery/review: compare old closing totals and new closing totals on fixtures/current disposable data; retain old callable contract during rollout; review includes SQL fixtures, CSV artifact and EN/AR LTR/RTL browser evidence.
+- Retain/extend: public.report_trial_balance remains the sole UI/export calculation path, now requiring from/to dates; public.export_financial_report_csv calls it directly. AccountActivityDialog is reused for account→movement→journal drill-down. Group posting rules and actual Contra ledger signs are unchanged.
+- Paths/objects: apps/ledger-suit/supabase/migrations/20260923144500_six_column_trial_balance.sql; supabase/tests/33_six_column_trial_balance_test.sql; app/pages/reports.vue; app/components/AccountActivityDialog.vue; app/utils/localizedCsv.ts; EN/AR locale files; generated database.types.ts; focused unit/e2e contracts.
+- Migration/risk: forward function-contract replacement only; no tables, rows, balances or posted history are mutated. The old as-of two-column signature is removed because all known consumers migrate atomically. Hosted rollout must deploy the migration and compatible app together. Recovery is a forward compatible function correction, never ledger mutation.
+- Acceptance/tests: local disposable migration applied successfully. The focused export/nature/TB SQL set passed 85/85 (including T-TB 33/33); localized CSV unit tests passed 6/6; Ledger app targeted typecheck and changed-file lint passed. `git diff --check` passed. The focused browser specs were updated but not executed; broad SQL/browser/build/full-lint suites were intentionally unrun under the task policy.
+- Remaining limitations: no hosted/deployment evidence; no accountant/UAT acceptance; no browser screenshot/RTL interaction run; Group accounts are metadata-only in this report and are intentionally excluded from authoritative rows/totals rather than shown as duplicate rollups.
+- Git/PR: implementation commit and cumulative draft PR are recorded in section 11 after GitHub synchronization.
 
 ### V2-IMP-003 — Journal identity and professional center
 
@@ -567,14 +571,12 @@ These are not silently added requirements and have no implementation priority:
 
 ## 11. Implementation checkpoint and next action
 
-- Task and requirements: V2-IMP-001 implements CORE-06 and the posting-idempotency foundations of OPEN-07 and VAL-06 while preserving CORE-01, CORE-03, CORE-04, CORE-05, and CORE-07 behavior.
-- Status: IMPLEMENTED LOCALLY / READY FOR REVIEW. The documentation baseline is commit e51435c52f8c3d36b4dccd86c1adb731dd2cb2a5; implementation commit is recorded in the task handoff after creation.
-- Mechanism: one private tenant-scoped claim row is inserted transactionally before financial effects. The unique organization/key constraint serializes concurrent contenders; a canonical SHA-256 fingerprint permits equal replay and rejects a different logical payload with `IDEMPOTENCY_CONFLICT`. The completed transaction link, journal entries, audit rows, and quota effect commit atomically, so failures leave no successful claim. Existing keyed history is marked `legacy` and rejected on reuse because its original logical payload cannot be proven safely.
-- Files: apps/ledger-suit/supabase/migrations/20260923134857_posting_idempotency_integrity.sql; apps/ledger-suit/supabase/tests/32_posting_idempotency_integrity_test.sql; this tracker.
-- Local migration evidence: a fresh disposable local reset applied migration 20260923134857 successfully. It was not applied to staging, production, or any hosted database.
-- Test evidence: T-IDEMP passed 37/37; T-CORE accounting integrity passed 25/25; T-ARAP/recurrence passed 23/23; DB-QUOTA regressions passed 23/23; T-IMPORT passed 34/34. Total focused SQL evidence is 142/142. Database lint reported no errors for app/public, and the migration list includes 20260923134857 locally.
-- Unresolved risks/limits: legacy keyed requests intentionally cannot be replayed because no trustworthy historical payload fingerprint exists; hosted migration/application behavior remains unverified; accountant/UAT acceptance is not started; broad UI/full-suite checks were outside this task's targeted-test policy. Future posting APIs must use the same tenant/key/fingerprint convention rather than add a parallel idempotency path.
-- Remote/provider state: the feature branch is pushed as requested. No PR, merge, deployment, hosted database operation, provider configuration change, or production verification was performed.
-- Exact next dependency-ready task: V2-IMP-002 Six-column Trial Balance. It has no remaining V2-IMP-001 dependency blocker.
+- Completed cumulative stream: baseline assessment at e51435c52f8c3d36b4dccd86c1adb731dd2cb2a5; V2-IMP-001 Posting Idempotency Integrity at 7bfb37ee7326a4b8ae387dd6783b5f72cfd7a941; V2-IMP-002 Six-column Trial Balance implemented and locally verified in the next feature commit.
+- V2-IMP-001 evidence remains: additive migration 20260923134857; focused SQL evidence 142/142; no hosted application.
+- V2-IMP-002 evidence: forward migration 20260923144500; focused SQL regressions 85/85 (T-TB 33/33); localized CSV 6/6; Ledger targeted typecheck and changed-file lint passed; generated public/GraphQL database types updated; no financial rows mutated.
+- Preservation: both tasks retain the shared posted-ledger engine, double-entry enforcement, immutable correction history, organization authorization, currency/base-minor-unit rules, audit/quota behavior, and existing report/export facilities. No hosted database, merge, deployment, provider configuration or production operation occurred.
+- Unresolved risks/limits: hosted migration/app compatibility remains unverified; accountant/UAT acceptance is not started; broad suites and browser/RTL evidence remain unrun under the task-specific targeted verification policy.
+- Git/PR: V2-IMP-002 commit and the cumulative draft PR number/URL will be appended after GitHub synchronization; do not interpret their presence as deployment or acceptance.
+- Exact next ordered task: V2-IMP-003 Journal identity and professional center. Its non-numbering work can proceed from this checkpoint; V2-D03 still blocks final journal-number semantics and acceptance.
 
 This checkpoint is implementation and local-test evidence only. It must not be interpreted as deployment, hosted verification, accountant acceptance, or production readiness.
