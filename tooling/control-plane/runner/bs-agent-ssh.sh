@@ -52,6 +52,34 @@ case "$REQUESTED_COMMAND" in
     exec "$NODE_BIN" "$AGENT" preflight
     ;;
 
+  "bs-agent codex-status")
+    exec "$NODE_BIN" "$AGENT" codex-status
+    ;;
+
+  "bs-agent route no_ai")
+    exec "$NODE_BIN" "$AGENT" route no_ai
+    ;;
+
+  "bs-agent route fast")
+    exec "$NODE_BIN" "$AGENT" route fast
+    ;;
+
+  "bs-agent route standard")
+    exec "$NODE_BIN" "$AGENT" route standard
+    ;;
+
+  "bs-agent route deep")
+    exec "$NODE_BIN" "$AGENT" route deep
+    ;;
+
+  "bs-agent route review")
+    exec "$NODE_BIN" "$AGENT" route review
+    ;;
+
+  "bs-agent codex-smoke fast")
+    exec "$NODE_BIN" "$AGENT" codex-smoke fast
+    ;;
+
   "bs-agent pr-check "*)
     PR_NUMBER="${REQUESTED_COMMAND#bs-agent pr-check }"
 

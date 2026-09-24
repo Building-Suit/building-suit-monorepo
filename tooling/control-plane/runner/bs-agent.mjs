@@ -1,7 +1,28 @@
 #!/usr/bin/env node
 
 import { spawnSync } from 'node:child_process'
+import {
+  mkdtempSync,
+  rmSync,
+} from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+
+import {
+  getProfile,
+  listProfiles,
+  resolveProfile,
+} from '../routing/router.mjs'
+
+const automationCodexHome =
+  process.env.BS_CODEX_HOME ??
+  path.join(
+    os.homedir(),
+    'Services',
+    'building-suit-monorepo-plane',
+    'codex-home',
+  )
 
 const repoRoot = fileURLToPath(new URL('../../../', import.meta.url))
 
@@ -10,16 +31,36 @@ const githubRepository = 'Building-Suit/building-suit-monorepo'
 const [command, ...args] = process.argv.slice(2)
 
 function execute(program, programArgs = [], options = {}) {
-  const result = spawnSync(program, programArgs, {
-    cwd: options.cwd ?? repoRoot,
-    encoding: 'utf8',
-    env: {
-      ...process.env,
-      NO_COLOR: '1',
-      FORCE_COLOR: '0',
-    },
-    maxBuffer: 10 * 1024 * 1024,
-  })
+  const childEnv = {
+    ...process.env,
+    NO_COLOR: '1',
+    FORCE_COLOR: '0',
+    ...(options.env ?? {}),
+  }
+
+  for (const variable of options.unsetEnv ?? []) {
+    delete childEnv[variable]
+  }
+
+	const result = spawnSync(program, programArgs, {
+	  cwd: options.cwd ?? repoRoot,
+	  encoding: 'utf8',
+
+	  env: {
+	    ...process.env,
+	    NO_COLOR: '1',
+	    FORCE_COLOR: '0',
+	    ...(options.env ?? {}),
+	  },
+
+	  input: options.input,
+
+	  timeout: options.timeout,
+
+	  maxBuffer:
+	    options.maxBuffer ??
+	    50 * 1024 * 1024,
+	})
 
   return {
     code:
@@ -317,6 +358,358 @@ function prCheck() {
   }, result.code)
 }
 
+const codexCredentialEnvironmentVariables = [
+  'OPENAI_API_KEY',
+  'CODEX_API_KEY',
+  'CODEX_ACCESS_TOKEN',
+  'OPENAI_IDENTITY_TOKEN_FILE',
+]
+
+function codexExecutionOptions(extra = {}) {
+  return {
+    ...extra,
+
+    env: {
+      ...(extra.env ?? {}),
+
+      // Keep automated Building Suit runs isolated from the
+      // developer's personal Codex plugins, MCP servers and config.
+      CODEX_HOME: automationCodexHome,
+    },
+
+    unsetEnv: [
+      ...codexCredentialEnvironmentVariables,
+      ...(extra.unsetEnv ?? []),
+    ],
+  }
+}
+
+function discoverCodexModels() {
+  const result = execute(
+    process.execPath,
+    [
+      'tooling/control-plane/runner/codex-models.mjs',
+    ],
+    codexExecutionOptions({
+      timeout: 20_000,
+    }),
+  )
+
+  if (!successful(result)) {
+    throw new Error(
+      [
+        'Codex model discovery failed.',
+        result.stderr,
+        result.error,
+      ]
+        .filter(Boolean)
+        .join(' '),
+    )
+  }
+
+  let models
+
+  try {
+    models = JSON.parse(result.stdout)
+  }
+  catch {
+    throw new Error(
+      'Codex model discovery returned invalid JSON.',
+    )
+  }
+
+  if (
+    !Array.isArray(models) ||
+    models.length === 0
+  ) {
+    throw new Error(
+      'Codex returned no available models.',
+    )
+  }
+
+  return models
+}
+
+function resolveCodexRoute(profile) {
+  const models = discoverCodexModels()
+
+  return resolveProfile(
+    profile,
+    models,
+  )
+}
+
+function codexStatus() {
+  const version = execute(
+    'codex',
+    ['--version'],
+    codexExecutionOptions(),
+  )
+
+  if (!successful(version)) {
+    output({
+      ok: false,
+      command: 'codex-status',
+      error: 'codex_not_available',
+      details:
+        version.stderr ||
+        version.error ||
+        version.stdout,
+    }, 1)
+
+    return
+  }
+
+  const login = execute(
+    'codex',
+    [
+      'login',
+      'status',
+    ],
+    codexExecutionOptions(),
+  )
+
+  const loginOutput = [
+    login.stdout,
+    login.stderr,
+  ]
+    .filter(Boolean)
+    .join('\n')
+
+  const usingChatGPT =
+    login.code === 0 &&
+    loginOutput.includes('Logged in using ChatGPT')
+
+  const parentCredentialEnvironment =
+    Object.fromEntries(
+      codexCredentialEnvironmentVariables.map(
+        variable => [
+          variable,
+          Boolean(process.env[variable]),
+        ],
+      ),
+    )
+
+  output({
+    ok: usingChatGPT,
+
+    command: 'codex-status',
+
+    version: version.stdout,
+
+    authentication: {
+      chatgpt: usingChatGPT,
+
+      status:
+        usingChatGPT
+          ? 'chatgpt'
+          : 'unsupported_or_missing',
+
+      raw_status: loginOutput,
+    },
+
+    api_credentials: {
+      inherited_environment:
+        parentCredentialEnvironment,
+
+      stripped_for_codex_runs:
+        codexCredentialEnvironmentVariables,
+    },
+  }, usingChatGPT ? 0 : 1)
+}
+
+function routeProfile() {
+  const [profile] = args
+
+  if (!profile) {
+    output({
+      ok: false,
+      command: 'route',
+      error: 'profile_required',
+      allowed_profiles: listProfiles(),
+    }, 64)
+
+    return
+  }
+
+  try {
+    const requested = getProfile(profile)
+
+    const resolved =
+      requested.uses_codex
+        ? resolveCodexRoute(profile)
+        : resolveProfile(profile, [])
+
+    output({
+      ok: true,
+      command: 'route',
+      route: resolved,
+    })
+  }
+  catch (error) {
+    output({
+      ok: false,
+      command: 'route',
+      error: error.message,
+      allowed_profiles: listProfiles(),
+    }, 1)
+  }
+}
+
+function codexSmoke() {
+  const [profile = 'fast'] = args
+
+  let route
+
+  try {
+    route = resolveCodexRoute(profile)
+  }
+  catch (error) {
+    output({
+      ok: false,
+      command: 'codex-smoke',
+      error: error.message,
+    }, 64)
+
+    return
+  }
+
+  if (!route.uses_codex) {
+    output({
+      ok: false,
+      command: 'codex-smoke',
+      error: 'profile_does_not_use_codex',
+      profile,
+    }, 64)
+
+    return
+  }
+
+  const login = execute(
+    'codex',
+    [
+      'login',
+      'status',
+    ],
+    codexExecutionOptions(),
+  )
+
+  const loginOutput = [
+    login.stdout,
+    login.stderr,
+  ]
+    .filter(Boolean)
+    .join('\n')
+
+  if (
+    login.code !== 0 ||
+    !loginOutput.includes('Logged in using ChatGPT')
+  ) {
+    output({
+      ok: false,
+      command: 'codex-smoke',
+      error: 'chatgpt_authentication_required',
+    }, 1)
+
+    return
+  }
+
+  const temporaryDirectory = mkdtempSync(
+    path.join(
+      os.tmpdir(),
+      'building-suit-codex-smoke-',
+    ),
+  )
+
+  const startedAt = Date.now()
+
+  try {
+    const result = execute(
+      'codex',
+      [
+        'exec',
+
+        '--json',
+        '--ephemeral',
+
+        '--skip-git-repo-check',
+
+        '--sandbox',
+        'read-only',
+
+        '-C',
+        temporaryDirectory,
+
+        '--model',
+        route.model,
+
+        '-c',
+        `model_reasoning_effort="${route.reasoning_effort}"`,
+
+        [
+          'This is a Building Suit control-plane readiness probe.',
+          'Do not inspect files.',
+          'Do not execute shell commands.',
+          'Do not use tools.',
+          'Respond with exactly: CODEX_SMOKE_OK',
+        ].join(' '),
+      ],
+      codexExecutionOptions({
+        cwd: temporaryDirectory,
+      }),
+    )
+
+    const elapsedMs = Date.now() - startedAt
+
+    const markerPresent =
+      result.stdout.includes('CODEX_SMOKE_OK')
+
+    const ok =
+      successful(result) &&
+      markerPresent
+
+    const eventCount =
+      result.stdout
+        .split('\n')
+        .filter(Boolean)
+        .length
+
+    output({
+      ok,
+
+      command: 'codex-smoke',
+
+      route: {
+        profile: route.profile,
+        model: route.model,
+        reasoning_effort:
+          route.reasoning_effort,
+      },
+
+      execution: {
+        exit_code: result.code,
+        elapsed_ms: elapsedMs,
+        jsonl_event_count: eventCount,
+        marker_present: markerPresent,
+      },
+
+      stderr:
+        result.stderr
+          ? result.stderr.slice(0, 4000)
+          : '',
+    }, ok ? 0 : result.code || 1)
+  }
+  finally {
+    rmSync(
+      temporaryDirectory,
+      {
+        recursive: true,
+        force: true,
+      },
+    )
+  }
+}
+
 switch (command) {
   case 'ping':
     ping()
@@ -334,6 +727,18 @@ switch (command) {
     prCheck()
     break
 
+  case 'codex-status':
+    codexStatus()
+    break
+
+  case 'route':
+    routeProfile()
+    break
+
+  case 'codex-smoke':
+    codexSmoke()
+    break
+
   default:
     output({
       ok: false,
@@ -343,6 +748,9 @@ switch (command) {
         'repo-state',
         'preflight',
         'pr-check <number>',
+        'codex-status',
+        'route <profile>',
+        'codex-smoke <profile>',
       ],
     }, 64)
 }
