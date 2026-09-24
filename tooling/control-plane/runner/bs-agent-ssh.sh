@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+PRIMARY_CONTROL_ROOT="$HOME/Dev/building-suit-monorepo/.local/worktrees/engineering-control-plane"
+FALLBACK_CONTROL_ROOT="$HOME/Dev/building-suit-monorepo"
+
+if [[ -f "$PRIMARY_CONTROL_ROOT/tooling/control-plane/runner/bs-agent.mjs" ]]; then
+  CONTROL_ROOT="$PRIMARY_CONTROL_ROOT"
+elif [[ -f "$FALLBACK_CONTROL_ROOT/tooling/control-plane/runner/bs-agent.mjs" ]]; then
+  CONTROL_ROOT="$FALLBACK_CONTROL_ROOT"
+else
+  printf '%s\n' \
+    '{"ok":false,"error":"control_plane_runner_not_found"}'
+
+  exit 127
+fi
+
+AGENT="$CONTROL_ROOT/tooling/control-plane/runner/bs-agent.mjs"
+
+NODE_BIN="$(command -v node || true)"
+
+if [[ -z "$NODE_BIN" ]]; then
+  printf '%s\n' \
+    '{"ok":false,"error":"node_not_found"}'
+
+  exit 127
+fi
+
+REQUESTED_COMMAND="${SSH_ORIGINAL_COMMAND:-}"
+
+# n8n's SSH node requires a working directory. node-ssh prepends
+# `cd <cwd> ; ` to the requested command. We deliberately require
+# n8n to use `/` and strip only that exact known-safe prefix.
+N8N_CWD_PREFIX="cd / ; "
+
+if [[ "$REQUESTED_COMMAND" == "$N8N_CWD_PREFIX"* ]]; then
+  REQUESTED_COMMAND="${REQUESTED_COMMAND#"$N8N_CWD_PREFIX"}"
+fi
+
+case "$REQUESTED_COMMAND" in
+
+  "bs-agent ping")
+    exec "$NODE_BIN" "$AGENT" ping
+    ;;
+
+  "bs-agent repo-state")
+    exec "$NODE_BIN" "$AGENT" repo-state
+    ;;
+
+  "bs-agent preflight")
+    exec "$NODE_BIN" "$AGENT" preflight
+    ;;
+
+  "bs-agent pr-check "*)
+    PR_NUMBER="${REQUESTED_COMMAND#bs-agent pr-check }"
+
+    if [[ ! "$PR_NUMBER" =~ ^[1-9][0-9]*$ ]]; then
+      printf '%s\n' \
+        '{"ok":false,"error":"invalid_pr_number"}'
+
+      exit 64
+    fi
+
+    exec "$NODE_BIN" "$AGENT" pr-check "$PR_NUMBER"
+    ;;
+
+  *)
+    printf '%s\n' \
+      '{"ok":false,"error":"command_not_allowed"}'
+
+    exit 126
+    ;;
+
+esac
