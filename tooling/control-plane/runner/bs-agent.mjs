@@ -5,6 +5,7 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  existsSync,
   rmSync,
   writeFileSync,
 } from 'node:fs'
@@ -39,6 +40,8 @@ const repoRoot = fileURLToPath(new URL('../../../', import.meta.url))
 const githubRepository = 'Building-Suit/building-suit-monorepo'
 
 const [command, ...args] = process.argv.slice(2)
+
+const maxExecutionAttempts = 3
 
 function execute(program, programArgs = [], options = {}) {
   const childEnv = {
@@ -1546,6 +1549,1169 @@ function taskRun() {
   }
 }
 
+function latestExecution(taskId) {
+  const result =
+    controlQuery(
+      `
+        SELECT COALESCE(
+          control.latest_execution(
+            :'task_id'
+          ),
+          'null'::jsonb
+        );
+      `,
+      {
+        task_id:
+          taskId,
+      },
+    )
+
+  return parseControlJson(
+    result,
+  )
+}
+
+function beginVerification(
+  taskId,
+  executionId,
+) {
+  const result =
+    controlQuery(
+      `
+        SELECT jsonb_build_object(
+          'started',
+          control.begin_verification(
+            :'task_id',
+            :'execution_id'::bigint
+          )
+        );
+      `,
+      {
+        task_id:
+          taskId,
+
+        execution_id:
+          String(executionId),
+      },
+    )
+
+  return parseControlJson(
+    result,
+  )
+}
+
+function recordVerification(
+  executionId,
+  check,
+) {
+  const result =
+    controlQuery(
+      `
+        SELECT jsonb_build_object(
+          'verification_id',
+          control.record_verification(
+            :'execution_id'::bigint,
+            :'check_name',
+            :'command',
+            :'status',
+            NULLIF(
+              :'exit_code',
+              ''
+            )::integer,
+            :'summary',
+            :'log_path',
+            :'metadata'::jsonb
+          )
+        );
+      `,
+      {
+        execution_id:
+          String(executionId),
+
+        check_name:
+          check.name,
+
+        command:
+          check.command ?? '',
+
+        status:
+          check.status,
+
+        exit_code:
+          check.exit_code === null
+            ? ''
+            : String(
+                check.exit_code,
+              ),
+
+        summary:
+          check.summary ?? '',
+
+        log_path:
+          check.log_path ?? '',
+
+        metadata:
+          JSON.stringify({
+            required:
+              check.required,
+
+            elapsed_ms:
+              check.elapsed_ms,
+          }),
+      },
+    )
+
+  return parseControlJson(
+    result,
+  )
+}
+
+function finalizeVerification(
+  taskId,
+  executionId,
+) {
+  const result =
+    controlQuery(
+      `
+        SELECT
+          control.finish_verification(
+            :'task_id',
+            :'execution_id'::bigint
+          );
+      `,
+      {
+        task_id:
+          taskId,
+
+        execution_id:
+          String(executionId),
+      },
+    )
+
+  return parseControlJson(
+    result,
+  )
+}
+
+function taskVerify() {
+  const [taskId] = args
+
+  if (!validTaskId(taskId)) {
+    output({
+      ok: false,
+      command:
+        'task-verify',
+      error:
+        'valid_task_id_required',
+    }, 64)
+
+    return
+  }
+
+  try {
+    const packetResult =
+      controlQuery(
+        `
+          SELECT COALESCE(
+            control.task_packet(
+              :'task_id'
+            ),
+            'null'::jsonb
+          );
+        `,
+        {
+          task_id:
+            taskId,
+        },
+      )
+
+    const packet =
+      parseControlJson(
+        packetResult,
+      )
+
+    if (!packet) {
+      throw new Error(
+        `Unknown task: ${taskId}`,
+      )
+    }
+
+    const execution =
+      latestExecution(
+        taskId,
+      )
+
+    if (!execution) {
+      throw new Error(
+        `Task ${taskId} has no execution.`,
+      )
+    }
+
+    if (
+      execution.status !==
+      'succeeded'
+    ) {
+      throw new Error(
+        `Latest execution is ${execution.status}, not succeeded.`,
+      )
+    }
+
+    if (
+      !execution.worktree_path
+    ) {
+      throw new Error(
+        'Execution has no worktree path.',
+      )
+    }
+
+    const packetPath =
+      path.join(
+        execution.worktree_path,
+        '.local',
+        'agent-tasks',
+        `${taskId}.json`,
+      )
+
+    const verificationDirectory =
+      path.join(
+        execution.worktree_path,
+        '.local',
+        'agent-runs',
+        taskId,
+        'verification',
+      )
+
+    beginVerification(
+      taskId,
+      execution.execution_id,
+    )
+
+    const verifier =
+      execute(
+        process.execPath,
+        [
+          path.join(
+            repoRoot,
+            'tooling',
+            'control-plane',
+            'runner',
+            'task-verifier.mjs',
+          ),
+
+          execution.worktree_path,
+          packetPath,
+          verificationDirectory,
+        ],
+        {
+          cwd:
+            execution.worktree_path,
+
+          timeout:
+            60 * 60 * 1000,
+        },
+      )
+
+    let verification
+
+    try {
+      verification =
+        JSON.parse(
+          verifier.stdout,
+        )
+    }
+    catch {
+      verification = {
+        ok: false,
+        passed: false,
+        checks: [
+          {
+            name:
+              'verifier-infrastructure',
+
+            command:
+              null,
+
+            required:
+              true,
+
+            status:
+              'fail',
+
+            exit_code:
+              verifier.code,
+
+            summary:
+              verifier.stderr ||
+              verifier.error ||
+              verifier.stdout ||
+              'Verifier returned invalid output.',
+
+            log_path:
+              null,
+
+            elapsed_ms:
+              0,
+          },
+        ],
+      }
+    }
+
+    if (
+      !Array.isArray(
+        verification.checks,
+      ) ||
+      verification.checks.length === 0
+    ) {
+      verification.checks = [
+        {
+          name:
+            'verifier-infrastructure',
+
+          command:
+            null,
+
+          required:
+            true,
+
+          status:
+            'fail',
+
+          exit_code:
+            verifier.code,
+
+          summary:
+            verification.error ||
+            'Verifier produced no checks.',
+
+          log_path:
+            null,
+
+          elapsed_ms:
+            0,
+        },
+      ]
+    }
+
+    for (
+      const check
+      of verification.checks
+    ) {
+      recordVerification(
+        execution.execution_id,
+        check,
+      )
+    }
+
+    const finalResult =
+      finalizeVerification(
+        taskId,
+        execution.execution_id,
+      )
+
+    output({
+      ok:
+        finalResult.passed === true,
+
+      command:
+        'task-verify',
+
+      task_id:
+        taskId,
+
+      execution_id:
+        execution.execution_id,
+
+      result:
+        finalResult,
+
+      checks:
+        verification.checks.map(
+          check => ({
+            name:
+              check.name,
+
+            status:
+              check.status,
+
+            exit_code:
+              check.exit_code,
+
+            summary:
+              check.summary,
+          }),
+        ),
+    }, finalResult.passed ? 0 : 1)
+  }
+  catch (error) {
+    output({
+      ok: false,
+      command:
+        'task-verify',
+      task_id:
+        taskId,
+      error:
+        error.message,
+    }, 1)
+  }
+}
+
+function nextRetryProfile(
+  previousProfile,
+  previousAttempt,
+) {
+  const sameProfileRetry =
+    previousAttempt === 1
+
+  if (sameProfileRetry) {
+    return previousProfile
+  }
+
+  const escalation = {
+    fast:
+      'standard',
+
+    standard:
+      'deep',
+
+    deep:
+      'deep',
+
+    review:
+      'review',
+  }
+
+  const next =
+    escalation[
+      previousProfile
+    ]
+
+  if (!next) {
+    throw new Error(
+      `No retry route for profile "${previousProfile}".`,
+    )
+  }
+
+  return next
+}
+
+function retryRoute() {
+  const [
+    profile,
+    previousAttemptText,
+  ] = args
+
+  const previousAttempt =
+    Number(
+      previousAttemptText,
+    )
+
+  if (
+    !Number.isInteger(
+      previousAttempt,
+    ) ||
+    previousAttempt < 1
+  ) {
+    output({
+      ok: false,
+      command:
+        'retry-route',
+      error:
+        'valid_previous_attempt_required',
+    }, 64)
+
+    return
+  }
+
+  if (
+    previousAttempt >=
+    maxExecutionAttempts
+  ) {
+    output({
+      ok: true,
+      command:
+        'retry-route',
+
+      allowed:
+        false,
+
+      reason:
+        'retry_limit_reached',
+
+      previous_attempt:
+        previousAttempt,
+
+      max_attempts:
+        maxExecutionAttempts,
+    })
+
+    return
+  }
+
+  try {
+    output({
+      ok: true,
+
+      command:
+        'retry-route',
+
+      allowed:
+        true,
+
+      previous_profile:
+        profile,
+
+      previous_attempt:
+        previousAttempt,
+
+      next_attempt:
+        previousAttempt + 1,
+
+      next_profile:
+        nextRetryProfile(
+          profile,
+          previousAttempt,
+        ),
+    })
+  }
+  catch (error) {
+    output({
+      ok: false,
+      command:
+        'retry-route',
+      error:
+        error.message,
+    }, 64)
+  }
+}
+
+function verificationFailures(
+  executionId,
+) {
+  const result =
+    controlQuery(
+      `
+        SELECT COALESCE(
+          jsonb_agg(
+            jsonb_build_object(
+              'check_name',
+                check_name,
+
+              'status',
+                status,
+
+              'exit_code',
+                exit_code,
+
+              'summary',
+                summary,
+
+              'log_path',
+                log_path
+            )
+            ORDER BY verification_id
+          ),
+          '[]'::jsonb
+        )
+        FROM control.verification_results
+        WHERE execution_id =
+          :'execution_id'::bigint
+          AND status IN (
+            'fail',
+            'not_run'
+          );
+      `,
+      {
+        execution_id:
+          String(
+            executionId,
+          ),
+      },
+    )
+
+  return (
+    parseControlJson(
+      result,
+    ) ?? []
+  )
+}
+
+function startRetryExecution(
+  taskId,
+  route,
+) {
+  const result =
+    controlQuery(
+      `
+        SELECT
+          control.start_retry_execution(
+            :'task_id',
+            :'max_attempts'::integer,
+            :'model_profile',
+            :'model_name',
+            :'reasoning_effort'
+          );
+      `,
+      {
+        task_id:
+          taskId,
+
+        max_attempts:
+          String(
+            maxExecutionAttempts,
+          ),
+
+        model_profile:
+          route.profile,
+
+        model_name:
+          route.model,
+
+        reasoning_effort:
+          route.reasoning_effort,
+      },
+    )
+
+  return parseControlJson(
+    result,
+  )
+}
+
+function validateRetryWorktree(
+  execution,
+) {
+  if (
+    !execution.worktree_path ||
+    !existsSync(
+      execution.worktree_path,
+    )
+  ) {
+    throw new Error(
+      'Previous execution worktree no longer exists.',
+    )
+  }
+
+  const branchResult =
+    execute(
+      'git',
+      [
+        'branch',
+        '--show-current',
+      ],
+      {
+        cwd:
+          execution.worktree_path,
+      },
+    )
+
+  if (!successful(branchResult)) {
+    throw new Error(
+      'Unable to inspect retry worktree branch.',
+    )
+  }
+
+  if (
+    branchResult.stdout !==
+    execution.branch_name
+  ) {
+    throw new Error(
+      [
+        'Retry worktree branch mismatch.',
+        `Expected ${execution.branch_name},`,
+        `found ${branchResult.stdout}.`,
+      ].join(' '),
+    )
+  }
+}
+
+function taskRetry() {
+  const [taskId] = args
+
+  if (!validTaskId(taskId)) {
+    output({
+      ok: false,
+      command:
+        'task-retry',
+      error:
+        'valid_task_id_required',
+    }, 64)
+
+    return
+  }
+
+  let newExecutionId = null
+  let prompt = ''
+  let logPath = null
+  let executionFinished = false
+
+  try {
+    const packetResult =
+      controlQuery(
+        `
+          SELECT COALESCE(
+            control.task_packet(
+              :'task_id'
+            ),
+            'null'::jsonb
+          );
+        `,
+        {
+          task_id:
+            taskId,
+        },
+      )
+
+    const packet =
+      parseControlJson(
+        packetResult,
+      )
+
+    if (!packet) {
+      throw new Error(
+        `Unknown task: ${taskId}`,
+      )
+    }
+
+    if (
+      packet.task.status !==
+      'failed'
+    ) {
+      throw new Error(
+        `Task ${taskId} is ${packet.task.status}, not failed.`,
+      )
+    }
+
+    const previousExecution =
+      latestExecution(
+        taskId,
+      )
+
+    if (!previousExecution) {
+      throw new Error(
+        'Task has no previous execution.',
+      )
+    }
+
+    if (
+      previousExecution.attempt >=
+      maxExecutionAttempts
+    ) {
+      output({
+        ok: false,
+
+        command:
+          'task-retry',
+
+        task_id:
+          taskId,
+
+        error:
+          'retry_limit_reached',
+
+        previous_attempt:
+          previousExecution.attempt,
+
+        max_attempts:
+          maxExecutionAttempts,
+      }, 1)
+
+      return
+    }
+
+    validateRetryWorktree(
+      previousExecution,
+    )
+
+    const nextProfile =
+      nextRetryProfile(
+        previousExecution.model_profile,
+        previousExecution.attempt,
+      )
+
+    const route =
+      resolveCodexRoute(
+        nextProfile,
+      )
+
+    const failures =
+      verificationFailures(
+        previousExecution.execution_id,
+      )
+
+    const previousFailure =
+      {
+        execution_id:
+          previousExecution.execution_id,
+
+        attempt:
+          previousExecution.attempt,
+
+        execution_status:
+          previousExecution.status,
+
+        model_profile:
+          previousExecution.model_profile,
+
+        model_name:
+          previousExecution.model_name,
+
+        reasoning_effort:
+          previousExecution.reasoning_effort,
+
+        execution_error:
+          previousExecution.metadata?.stderr ??
+          null,
+
+        verification_failures:
+          failures,
+      }
+
+    const nextAttempt =
+      previousExecution.attempt + 1
+
+    const runDirectory =
+      path.join(
+        previousExecution.worktree_path,
+        '.local',
+        'agent-runs',
+        taskId,
+        `retry-${nextAttempt}`,
+      )
+
+    mkdirSync(
+      runDirectory,
+      {
+        recursive: true,
+      },
+    )
+
+    const failurePacketPath =
+      path.join(
+        runDirectory,
+        'failure.json',
+      )
+
+    writeFileSync(
+      failurePacketPath,
+      `${JSON.stringify(
+        previousFailure,
+        null,
+        2,
+      )}\n`,
+      {
+        mode: 0o600,
+      },
+    )
+
+    const taskPacketPath =
+      path.join(
+        previousExecution.worktree_path,
+        '.local',
+        'agent-tasks',
+        `${taskId}.json`,
+      )
+
+    if (
+      !existsSync(
+        taskPacketPath,
+      )
+    ) {
+      writeFileSync(
+        taskPacketPath,
+        `${JSON.stringify(
+          packet,
+          null,
+          2,
+        )}\n`,
+        {
+          mode: 0o600,
+        },
+      )
+    }
+
+    prompt =
+      `
+Repair Building Suit task ${taskId}.
+
+The previous implementation failed independent verification.
+
+Read:
+1. README.md
+2. AGENTS.md
+3. ${packet.suit.app_path}/AGENTS.md if it exists
+4. docs/agent-workflows.md
+5. ${taskPacketPath}
+6. ${failurePacketPath}
+
+Work in the existing task worktree.
+
+Rules:
+- Fix only the causes of the recorded failures.
+- Preserve already-correct task work.
+- Do not expand scope.
+- Do not create another branch or worktree.
+- Do not commit.
+- Do not push.
+- Do not merge.
+- Do not deploy.
+- Do not modify hosted databases.
+- Use the failure summaries first.
+- Inspect a referenced full log only when needed.
+- Run only focused local checks needed while repairing.
+- Leave final verification to the control plane.
+
+Return a concise repair summary.
+      `.trim()
+
+    const promptPath =
+      path.join(
+        runDirectory,
+        'prompt.txt',
+      )
+
+    logPath =
+      path.join(
+        runDirectory,
+        'codex.jsonl',
+      )
+
+    writeFileSync(
+      promptPath,
+      `${prompt}\n`,
+      {
+        mode: 0o600,
+      },
+    )
+
+    const retry =
+      startRetryExecution(
+        taskId,
+        route,
+      )
+
+    if (
+      retry.allowed !== true
+    ) {
+      output({
+        ok: false,
+
+        command:
+          'task-retry',
+
+        task_id:
+          taskId,
+
+        error:
+          retry.reason ??
+          'retry_not_allowed',
+
+        retry,
+      }, 1)
+
+      return
+    }
+
+    newExecutionId =
+      retry.execution_id
+
+    const startedAt =
+      Date.now()
+
+    const codexResult =
+      execute(
+        'codex',
+        [
+          'exec',
+          '--json',
+          '--ephemeral',
+
+          '--sandbox',
+          'workspace-write',
+
+          '-C',
+          retry.worktree_path,
+
+          '--model',
+          route.model,
+
+          '-c',
+          `model_reasoning_effort="${route.reasoning_effort}"`,
+
+          prompt,
+        ],
+
+        codexExecutionOptions({
+          cwd:
+            retry.worktree_path,
+
+          timeout:
+            45 * 60 * 1000,
+        }),
+      )
+
+    writeFileSync(
+      logPath,
+      `${codexResult.stdout}\n`,
+      {
+        mode: 0o600,
+      },
+    )
+
+    const elapsedMs =
+      Date.now() -
+      startedAt
+
+    const succeeded =
+      successful(
+        codexResult,
+      )
+
+    finishExecution({
+      executionId:
+        newExecutionId,
+
+      status:
+        succeeded
+          ? 'succeeded'
+          : 'failed',
+
+      promptBytes:
+        Buffer.byteLength(
+          prompt,
+          'utf8',
+        ),
+
+      outputBytes:
+        Buffer.byteLength(
+          codexResult.stdout,
+          'utf8',
+        ),
+
+      runLogPath:
+        logPath,
+
+      metadata: {
+        retry: true,
+
+        previous_execution_id:
+          previousExecution.execution_id,
+
+        elapsed_ms:
+          elapsedMs,
+
+        exit_code:
+          codexResult.code,
+
+        stderr:
+          codexResult.stderr
+            ? codexResult.stderr.slice(
+                0,
+                4000,
+              )
+            : '',
+      },
+    })
+
+    executionFinished =
+      true
+
+    output({
+      ok:
+        succeeded,
+
+      command:
+        'task-retry',
+
+      task_id:
+        taskId,
+
+      previous_execution_id:
+        previousExecution.execution_id,
+
+      execution_id:
+        newExecutionId,
+
+      attempt:
+        retry.attempt,
+
+      route: {
+        profile:
+          route.profile,
+
+        model:
+          route.model,
+
+        reasoning_effort:
+          route.reasoning_effort,
+      },
+
+      execution: {
+        exit_code:
+          codexResult.code,
+
+        elapsed_ms:
+          elapsedMs,
+
+        log_path:
+          logPath,
+      },
+    }, succeeded ? 0 : 1)
+  }
+  catch (error) {
+
+    if (
+      newExecutionId &&
+      !executionFinished
+    ) {
+      try {
+        finishExecution({
+          executionId:
+            newExecutionId,
+
+          status:
+            'failed',
+
+          promptBytes:
+            Buffer.byteLength(
+              prompt,
+              'utf8',
+            ),
+
+          outputBytes:
+            0,
+
+          runLogPath:
+            logPath ?? '',
+
+          metadata: {
+            retry: true,
+            infrastructure_error:
+              error.message,
+          },
+        })
+      }
+      catch {
+        // Preserve the original error.
+      }
+    }
+
+    output({
+      ok: false,
+
+      command:
+        'task-retry',
+
+      task_id:
+        taskId,
+
+      execution_id:
+        newExecutionId,
+
+      error:
+        error.message,
+    }, 1)
+  }
+}
+
 switch (command) {
   case 'ping':
     ping()
@@ -1599,6 +2765,18 @@ switch (command) {
     taskRun()
     break
 
+  case 'task-verify':
+    taskVerify()
+    break
+
+  case 'retry-route':
+    retryRoute()
+    break
+
+  case 'task-retry':
+    taskRetry()
+    break
+
   default:
     output({
       ok: false,
@@ -1617,6 +2795,9 @@ switch (command) {
         'task-release <task-id>',
         'task-prepare <task-id>',
         'task-run <task-id>',
+        'task-verify <task-id>',
+        'retry-route <profile> <previous-attempt>',
+        'task-retry <task-id>',
       ],
     }, 64)
 }
