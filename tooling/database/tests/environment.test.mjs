@@ -6,6 +6,7 @@ function fixture() {
     products: {
       'ledger-suit': { organizationId: 'ledger-org', production: { projectRef: 'a'.repeat(20) }, staging: { projectRef: 'b'.repeat(20) } },
       'shop-suit': { organizationId: 'shop-org', production: { projectRef: 'c'.repeat(20), appUrl: 'https://shop.example.com' }, staging: { projectRef: 'd'.repeat(20) } },
+      'inventory-suit': { organizationId: '', production: { projectRef: '', appUrl: '' }, staging: { projectRef: '', appUrl: '' } },
     },
     sources: { 'shop-suit': { projectRef: 'e'.repeat(20) } },
   }
@@ -54,4 +55,10 @@ test('rejects missing deployment credentials without printing values', () => {
   for (const key of ['SUPABASE_ACCESS_TOKEN', 'SUPABASE_DB_PASSWORD']) {
     const state = fixture(); delete state.secret[key]; assert.throws(() => verify(state))
   }
+})
+
+test('keeps an unprovisioned Inventory product distinct and refuses hosted preflight', () => {
+  const state = fixture()
+  assert.equal(state.registry.products['inventory-suit'].production.projectRef, '')
+  assert.throws(() => validateEnvironment(state.registry, 'inventory-suit', 'production', {}, {}), /verified project ref/)
 })

@@ -3,7 +3,9 @@ import { createHash } from 'node:crypto'
 import path from 'node:path'
 const root = new URL('../../', import.meta.url).pathname
 const failures = []
-const forbidden = /(?:from\s*|import\s*\()\s*['"][^'"]*(?:\/apps\/|@building-suit\/(?:ledger-suit|shop-suit))/
+const applicationPackages = ['ledger-suit', 'shop-suit', 'inventory-suit']
+const applicationImport = new RegExp(`@building-suit/(?:${applicationPackages.join('|')})`)
+const forbidden = new RegExp(`(?:from\\s*|import\\s*\\()\\s*['"][^'"]*(?:/apps/|${applicationImport.source})`)
 async function walk(relative) {
   const files = []
   for (const entry of await readdir(path.join(root, relative), { withFileTypes: true })) {
@@ -19,10 +21,10 @@ for (const file of await walk('packages')) {
   const text = await readFile(path.join(root, file), 'utf8')
   if (forbidden.test(text)) failures.push(`${file}: shared code imports an application`)
 }
-for (const app of ['ledger-suit', 'shop-suit']) for (const file of await walk(`apps/${app}/app`)) {
+for (const app of applicationPackages) for (const file of await walk(`apps/${app}/app`)) {
   const text = await readFile(path.join(root, file), 'utf8')
   if (/<table\b|<DataTable\b|role="dialog"/.test(text)) failures.push(`${file}: bypasses the shared table or dialog`)
-  if (/from\s*['"][^'"]*@building-suit\/(?:ledger-suit|shop-suit)/.test(text)) failures.push(`${file}: imports another app`)
+  if (applicationImport.test(text)) failures.push(`${file}: imports another app`)
   if (/window\.confirm\(|\bconfirm\(/.test(text)) failures.push(`${file}: bypasses shared confirmation`)
 }
 const manifest = JSON.parse(await readFile(path.join(root, 'docs/migration/copy-manifest.json'), 'utf8'))

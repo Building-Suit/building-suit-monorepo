@@ -10,6 +10,7 @@
   "scripts": {
     "dev:ledger": "node tooling/git/dev.mjs ledger",
     "dev:shop": "node tooling/git/dev.mjs shop",
+    "dev:inventory": "node tooling/git/dev.mjs inventory",
     "dev:docs": "node tooling/git/dev.mjs docs",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",

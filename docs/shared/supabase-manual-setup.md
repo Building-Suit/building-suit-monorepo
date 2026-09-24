@@ -89,7 +89,7 @@ The script reads the corresponding deployment and app files and checks refs, org
 
 ## 4. Auth, mail and function secrets
 
-In each project's Authentication settings, configure its own Site URL and exact allowed callbacks/recovery URLs for the owning app. Keep staging and production allowlists separate. Single Auth is deferred; do not point the two products at the same Auth project or share parent-domain session cookies.
+In each project's Authentication settings, configure its own Site URL and exact allowed callbacks/recovery URLs for the owning app. Keep staging and production allowlists separate. Single Auth is deferred; do not point multiple products at the same Auth project or share parent-domain session cookies.
 
 Both signup flows use a six-digit email OTP. Configure confirmation emails to include `{{ .Token }}` and preserve the existing one-hour expiry/resend behavior. New Free projects using default SMTP cannot customize their templates; configure your own SMTP provider to use the committed templates. Supabase's default SMTP also has recipient/rate restrictions, so validate real signup delivery on the actual project. [Template change](https://supabase.com/changelog/46599-changes-to-email-template-customisation-on-free-tier), [SMTP setup](https://supabase.com/docs/guides/auth/auth-smtp).
 
