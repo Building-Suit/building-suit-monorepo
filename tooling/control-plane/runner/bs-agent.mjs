@@ -3152,6 +3152,254 @@ function taskPublish() {
   }
 }
 
+function validRunId(value) {
+  return (
+    typeof value === 'string' &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
+  )
+}
+
+function workflowRunStart() {
+  const [
+    suitSlug,
+    maxTasksText,
+  ] = args
+
+  const maxTasks =
+    Number(maxTasksText)
+
+  if (
+    !validSuitSlug(suitSlug) ||
+    !Number.isInteger(maxTasks) ||
+    maxTasks < 1 ||
+    maxTasks > 15
+  ) {
+    output({
+      ok: false,
+      command: 'run-start',
+      error: 'invalid_run_parameters',
+    }, 64)
+
+    return
+  }
+
+  try {
+    const result =
+      controlQuery(
+        `
+          SELECT
+            control.start_workflow_run(
+              :'suit_slug',
+              :'max_tasks'::integer
+            );
+        `,
+        {
+          suit_slug: suitSlug,
+          max_tasks: String(maxTasks),
+        },
+      )
+
+    const run =
+      parseControlJson(result)
+
+    output({
+      ok: run?.started === true,
+      command: 'run-start',
+      run,
+    }, run?.started === true ? 0 : 1)
+  }
+  catch (error) {
+    output({
+      ok: false,
+      command: 'run-start',
+      error: error.message,
+    }, 1)
+  }
+}
+
+function workflowRunCheck() {
+  const [runId] = args
+
+  if (!validRunId(runId)) {
+    output({
+      ok: false,
+      command: 'run-check',
+      error: 'invalid_run_id',
+    }, 64)
+
+    return
+  }
+
+  try {
+    const result =
+      controlQuery(
+        `
+          SELECT
+            control.workflow_run_gate(
+              :'run_id'::uuid
+            );
+        `,
+        {
+          run_id: runId,
+        },
+      )
+
+    output({
+      ok: true,
+      command: 'run-check',
+      run: parseControlJson(result),
+    })
+  }
+  catch (error) {
+    output({
+      ok: false,
+      command: 'run-check',
+      error: error.message,
+    }, 1)
+  }
+}
+
+function workflowRunCompleteTask() {
+  const [runId] = args
+
+  if (!validRunId(runId)) {
+    output({
+      ok: false,
+      command: 'run-complete-task',
+      error: 'invalid_run_id',
+    }, 64)
+
+    return
+  }
+
+  try {
+    const result =
+      controlQuery(
+        `
+          SELECT
+            control.record_workflow_task_success(
+              :'run_id'::uuid
+            );
+        `,
+        {
+          run_id: runId,
+        },
+      )
+
+    output({
+      ok: true,
+      command: 'run-complete-task',
+      run: parseControlJson(result),
+    })
+  }
+  catch (error) {
+    output({
+      ok: false,
+      command: 'run-complete-task',
+      error: error.message,
+    }, 1)
+  }
+}
+
+function workflowRunStop() {
+  const [suitSlug] = args
+
+  if (!validSuitSlug(suitSlug)) {
+    output({
+      ok: false,
+      command: 'run-stop',
+      error: 'invalid_suit_slug',
+    }, 64)
+
+    return
+  }
+
+  try {
+    const result =
+      controlQuery(
+        `
+          SELECT
+            control.request_workflow_stop(
+              :'suit_slug'
+            );
+        `,
+        {
+          suit_slug: suitSlug,
+        },
+      )
+
+    const stop =
+      parseControlJson(result)
+
+    output({
+      ok: stop?.requested === true,
+      command: 'run-stop',
+      stop,
+    }, stop?.requested === true ? 0 : 1)
+  }
+  catch (error) {
+    output({
+      ok: false,
+      command: 'run-stop',
+      error: error.message,
+    }, 1)
+  }
+}
+
+function workflowRunFinish() {
+  const [
+    runId,
+    status,
+  ] = args
+
+  if (
+    !validRunId(runId) ||
+    ![
+      'finished',
+      'failed',
+      'cancelled',
+    ].includes(status)
+  ) {
+    output({
+      ok: false,
+      command: 'run-finish',
+      error: 'invalid_run_finish_parameters',
+    }, 64)
+
+    return
+  }
+
+  try {
+    const result =
+      controlQuery(
+        `
+          SELECT
+            control.finish_workflow_run(
+              :'run_id'::uuid,
+              :'status'
+            );
+        `,
+        {
+          run_id: runId,
+          status,
+        },
+      )
+
+    output({
+      ok: true,
+      command: 'run-finish',
+      run: parseControlJson(result),
+    })
+  }
+  catch (error) {
+    output({
+      ok: false,
+      command: 'run-finish',
+      error: error.message,
+    }, 1)
+  }
+}
+
 switch (command) {
   case 'ping':
     ping()
@@ -3221,6 +3469,26 @@ switch (command) {
     taskPublish()
     break
 
+  case 'run-start':
+    workflowRunStart()
+    break
+
+  case 'run-check':
+    workflowRunCheck()
+    break
+
+  case 'run-complete-task':
+    workflowRunCompleteTask()
+    break
+
+  case 'run-stop':
+    workflowRunStop()
+    break
+
+  case 'run-finish':
+    workflowRunFinish()
+    break
+
   default:
     output({
       ok: false,
@@ -3243,6 +3511,11 @@ switch (command) {
         'retry-route <profile> <previous-attempt>',
         'task-retry <task-id>',
         'task-publish <task-id>',
+        'run-start <suit> <max-tasks>',
+        'run-check <run-id>',
+        'run-complete-task <run-id>',
+        'run-stop <suit>',
+        'run-finish <run-id> <status>',
       ],
     }, 64)
 }

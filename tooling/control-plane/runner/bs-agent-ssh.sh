@@ -224,6 +224,87 @@ case "$REQUESTED_COMMAND" in
       "$TASK_ID"
     ;;
 
+  "bs-agent run-start "*)
+    REST="${REQUESTED_COMMAND#bs-agent run-start }"
+
+    read -r SUIT_SLUG MAX_TASKS EXTRA <<< "$REST"
+
+    if [[ -n "${EXTRA:-}" ]] \
+      || [[ ! "$SUIT_SLUG" =~ ^[a-z][a-z0-9-]{1,63}$ ]] \
+      || [[ ! "$MAX_TASKS" =~ ^(10|15)$ ]]; then
+
+      printf '%s\n' \
+        '{"ok":false,"error":"invalid_run_start"}'
+
+      exit 64
+    fi
+
+    exec "$NODE_BIN" \
+      "$AGENT" \
+      run-start \
+      "$SUIT_SLUG" \
+      "$MAX_TASKS"
+    ;;
+
+
+  "bs-agent run-check "*)
+    RUN_ID="${REQUESTED_COMMAND#bs-agent run-check }"
+
+    exec "$NODE_BIN" \
+      "$AGENT" \
+      run-check \
+      "$RUN_ID"
+    ;;
+
+
+  "bs-agent run-complete-task "*)
+    RUN_ID="${REQUESTED_COMMAND#bs-agent run-complete-task }"
+
+    exec "$NODE_BIN" \
+      "$AGENT" \
+      run-complete-task \
+      "$RUN_ID"
+    ;;
+
+
+  "bs-agent run-stop "*)
+    SUIT_SLUG="${REQUESTED_COMMAND#bs-agent run-stop }"
+
+    if [[ ! "$SUIT_SLUG" =~ ^[a-z][a-z0-9-]{1,63}$ ]]; then
+      printf '%s\n' \
+        '{"ok":false,"error":"invalid_suit_slug"}'
+
+      exit 64
+    fi
+
+    exec "$NODE_BIN" \
+      "$AGENT" \
+      run-stop \
+      "$SUIT_SLUG"
+    ;;
+
+
+  "bs-agent run-finish "*)
+    REST="${REQUESTED_COMMAND#bs-agent run-finish }"
+
+    read -r RUN_ID STATUS EXTRA <<< "$REST"
+
+    if [[ -n "${EXTRA:-}" ]] \
+      || [[ ! "$STATUS" =~ ^(finished|failed|cancelled)$ ]]; then
+
+      printf '%s\n' \
+        '{"ok":false,"error":"invalid_run_finish"}'
+
+      exit 64
+    fi
+
+    exec "$NODE_BIN" \
+      "$AGENT" \
+      run-finish \
+      "$RUN_ID" \
+      "$STATUS"
+    ;;
+
   *)
     printf '%s\n' \
       '{"ok":false,"error":"command_not_allowed"}'
