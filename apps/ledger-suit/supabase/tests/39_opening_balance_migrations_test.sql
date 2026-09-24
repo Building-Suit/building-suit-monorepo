@@ -98,7 +98,7 @@ insert into opening_ids values ('mid_batch',public.create_opening_balance_batch(
     jsonb_build_object('source_row',4,'source_code','EQ','debit','','credit','2000.00','account_id',(select value from opening_ids where key='mid_equity')))));
 select is((public.validate_opening_balance_batch((select value from opening_ids where key='mid_batch'))->>'valid')::boolean,true,'Midyear permits mapped Revenue and Expense');
 insert into opening_ids values ('mid_journal',public.approve_opening_balance_batch((select value from opening_ids where key='mid_batch')));
-select is((select sum(case when section='revenue' then amount_minor else -amount_minor end) from public.report_profit_and_loss((select value from opening_ids where key='org_mid'),'2026-01-01','2026-12-31')),400000::numeric,'Midyear imported YTD P&L remains 4,000.00');
+select is((select sum(case when section in ('operating_revenue','other_income','unclassified_revenue') then amount_minor else -amount_minor end) from public.report_profit_and_loss((select value from opening_ids where key='org_mid'),'2026-01-01','2026-12-31')),400000::numeric,'Midyear imported YTD P&L remains 4,000.00');
 
 -- Creation is allowed for pre-post review; accepting that independent boundary is not.
 insert into opening_ids values ('duplicate',public.create_opening_balance_batch(

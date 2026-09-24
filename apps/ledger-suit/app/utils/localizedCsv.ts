@@ -63,7 +63,7 @@ const reportColumns: Record<CsvReport, readonly string[]> = {
   profit_loss: ['section', 'code', 'account', 'amount', 'currency'],
   balance_sheet: ['report_date', 'presentation', 'account_id', 'code', 'account', 'amount', 'currency', 'classification_effective_from', 'classification_id'],
   trial_balance: ['code', 'account', 'type', 'opening_debit', 'opening_credit', 'period_debit', 'period_credit', 'closing_debit', 'closing_credit', 'currency'],
-  cash_flow: ['activity', 'net_movement', 'currency'],
+  cash_flow: ['line', 'account_id', 'account', 'amount', 'currency'],
   general_ledger: ['date', 'reference', 'description', 'memo', 'debit', 'credit', 'running_balance', 'currency'],
 }
 
@@ -79,10 +79,9 @@ export function localizeReportCsv(csv: string, report: CsvReport, t: Translate):
       if (report === 'trial_balance' && column === 'type' && ['asset', 'liability', 'equity', 'revenue', 'expense'].includes(value)) return t(`accounts.groups.${value}`)
       if (report === 'trial_balance' && column === 'account' && value === 'Total' && !row.code) return t('reports.total')
       if (report === 'profit_loss' && column === 'section') {
-        const section = { revenue: 'revenue', cost_of_sales: 'costOfSales', operating_expenses: 'operatingExpenses' }[value]
-        if (section) return t(`reports.${section}`)
+        if (value in { operating_revenue: 1, cost_of_sales: 1, operating_expenses: 1, other_income: 1, other_expenses: 1, unclassified_revenue: 1, unclassified_expense: 1 }) return t(`financialMapping.lines.${value}`)
       }
-      if (report === 'cash_flow' && column === 'activity' && ['operating', 'investing', 'financing', 'none'].includes(value)) return t(`reports.cashFlowSections.${value}`)
+      if (report === 'cash_flow' && column === 'line') return t(`financialMapping.cashLines.${value}`)
       return value
     })),
   ])

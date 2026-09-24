@@ -118,11 +118,11 @@ select ok(
   public.export_financial_report_csv(
     (select value from export_test_ids where key = 'alpha_org'),
     'cash_flow', '2026-09-01', '2026-09-30'
-  ) like E'%operating,-100.00,EGP%'
+  ) like E'%unclassified_cash,,,-100.00,EGP%'
   and public.export_financial_report_csv(
     (select value from export_test_ids where key = 'alpha_org'),
     'cash_flow', '2026-09-01', '2026-09-30'
-  ) not like E'%operating,''-100.00,EGP%',
+  ) not like E'%unclassified_cash,,,''-100.00,EGP%',
   'genuine negative financial amounts remain numeric');
 
 select ok(

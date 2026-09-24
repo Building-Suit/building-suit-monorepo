@@ -1,4 +1,59 @@
 {
+  "financialMapping": {
+    "reconciliationDetails": "تسوية القوائم مع الأستاذ",
+    "statementAmount": "القائمة",
+    "ledgerAmount": "الأستاذ",
+    "difference": "الفرق",
+    "grossProfit": "مجمل الربح",
+    "operatingResult": "نتيجة التشغيل",
+    "allocate": "تصنيف القيد",
+    "sourceAmount": "مبلغ القيد",
+    "previousAllocation": "التوزيع السابق",
+    "allocationMismatch": "يجب أن يساوي مجموع المبالغ قيمة القيد.",
+
+    "reconciliationWarning": "تتطلب تصنيفات القوائم أو تسوية ميزان المراجعة مراجعة.",
+    "dimension": "تصنيف القوائم المالية",
+    "dimensions": {
+      "balance_sheet": "المركز المالي",
+      "profit_loss": "الأرباح والخسائر",
+      "cash_flow": "التدفقات النقدية"
+    },
+    "hint": "يسري التصنيف من التاريخ المحدد. تبقى التقارير السابقة والقيود المرحلة دون تغيير.",
+    "incomplete": "توجد مبالغ غير مصنفة. صنّف الحسابات المعنية قبل اعتبار التقرير مكتملاً.",
+    "cashIncomplete": "تصنيف التدفقات النقدية أو تسوية الطريقة غير المباشرة غير مكتملة. راجع القيود وفارق التسوية.",
+    "cashDiagnostic": "فرق تسوية التشغيل غير المفسر: {difference}",
+    "adjustmentSources": "مصادر تسويات التشغيل",
+    "cashSources": "قيود مصادر التدفقات النقدية",
+    "lines": {
+      "operating_revenue": "إيرادات التشغيل",
+      "cost_of_sales": "تكلفة المبيعات أو الخدمات",
+      "operating_expenses": "مصروفات التشغيل",
+      "other_income": "إيرادات أخرى",
+      "other_expenses": "مصروفات أخرى",
+      "unclassified_revenue": "إيرادات غير مصنفة",
+      "unclassified_expense": "مصروفات غير مصنفة",
+      "operating": "تشغيلية",
+      "investing": "استثمارية",
+      "financing": "تمويلية",
+      "operating_noncash": "تسوية تشغيلية غير نقدية",
+      "operating_working_capital": "رأس المال العامل التشغيلي",
+      "unclassified": "غير مصنف"
+    },
+    "cashLines": {
+      "operating_adjustment": "تسوية تشغيلية",
+      "operating_adjustment_difference": "فرق تسوية التشغيل",
+      "classification_difference": "فرق التصنيف",
+      "net_profit": "صافي الربح أو الخسارة",
+      "operating_adjustments": "تسويات التشغيل",
+      "operating_cash": "صافي النقد من التشغيل",
+      "investing_cash": "صافي النقد من الاستثمار",
+      "financing_cash": "صافي النقد من التمويل",
+      "unclassified_cash": "حركة نقدية غير مصنفة",
+      "net_cash_change": "صافي التغير في النقد",
+      "opening_cash": "رصيد النقد أول المدة",
+      "closing_cash": "رصيد النقد آخر المدة"
+    }
+  },
   "statementClassification": {
     "title": "العرض في القوائم",
     "hint": "حدد عرض هذا الحساب في قوائم المركز المالي المستقبلية. تبقى مبالغ القيود وتصنيفات التقارير السابقة دون تغيير.",
@@ -426,6 +481,7 @@
   },
   "csv": {
     "columns": {
+      "line": "البند",
       "account_type": "نوع الحساب",
       "type": "نوع المعاملة",
       "date": "التاريخ",

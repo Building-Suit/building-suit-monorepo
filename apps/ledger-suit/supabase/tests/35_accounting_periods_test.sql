@@ -109,7 +109,7 @@ select is((select sum(case when side='debit' then base_amount_minor else -base_a
   0::numeric,'closing journal balances');
 select is((select sum(case when side='credit' then base_amount_minor else -base_amount_minor end) from public.transaction_entries where transaction_id=(select value from period_ids where key='year_close') and account_id=(select value from period_ids where key='retained')),
   300000::numeric,'profit increases Retained Earnings');
-select is((select sum(case when section='revenue' then amount_minor else -amount_minor end) from public.report_profit_and_loss((select value from period_ids where key='org_a'),'2025-04-01','2026-03-31')),
+select is((select sum(case when section in ('operating_revenue','other_income','unclassified_revenue') then amount_minor else -amount_minor end) from public.report_profit_and_loss((select value from period_ids where key='org_a'),'2025-04-01','2026-03-31')),
   300000::numeric,'historical P&L preserves operating result after close');
 select is(public.close_fiscal_year((select value from period_ids where key='org_a'),'2025-04-01','Annual review complete','year-close-2025'),
   (select value from period_ids where key='year_close'),'repeated year close returns the existing journal');
@@ -153,7 +153,7 @@ select is((select net_income_minor from public.fiscal_year_closes where organiza
   (-200000)::bigint,'loss year derives the expected net loss');
 select is((select sum(case when side='debit' then base_amount_minor else -base_amount_minor end) from public.transaction_entries where transaction_id=(select value from period_ids where key='loss_close') and account_id=(select value from period_ids where key='retained')),
   200000::numeric,'loss decreases Retained Earnings with a debit');
-select is((select sum(case when section='revenue' then amount_minor else -amount_minor end) from public.report_profit_and_loss((select value from period_ids where key='org_a'),'2026-04-01','2027-03-31')),
+select is((select sum(case when section in ('operating_revenue','other_income','unclassified_revenue') then amount_minor else -amount_minor end) from public.report_profit_and_loss((select value from period_ids where key='org_a'),'2026-04-01','2027-03-31')),
   (-200000)::numeric,'historical P&L preserves the net loss after close');
 select is((select sum(case when side='debit' then base_amount_minor else -base_amount_minor end) from public.transaction_entries where transaction_id=(select value from period_ids where key='loss_close')),
   0::numeric,'loss closing journal balances');

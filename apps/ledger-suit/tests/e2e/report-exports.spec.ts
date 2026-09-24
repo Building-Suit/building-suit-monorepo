@@ -36,8 +36,8 @@ test('owner can download every advertised financial report as CSV', async ({ pag
       contentType: 'application/json',
       body: JSON.stringify(({
         trial_balance: 'code,account,type,opening_debit,opening_credit,period_debit,period_credit,closing_debit,closing_credit,currency\n1010,Bank,asset,100.00,0.00,20.00,5.00,115.00,0.00,EGP\n,Total,,100.00,100.00,20.00,20.00,115.00,115.00,EGP',
-        profit_loss: 'section,code,account,amount,currency\nrevenue,4000,Sales,100.00,EGP',
-        cash_flow: 'activity,net_movement,currency\noperating,100.00,EGP',
+        profit_loss: 'section,code,account,amount,currency\noperating_revenue,4000,Sales,100.00,EGP',
+        cash_flow: 'line,account_id,account,amount,currency\nnet_profit,,,100.00,EGP\noperating_cash,,,100.00,EGP',
         general_ledger: 'date,reference,description,memo,debit,credit,running_balance,currency\n2026-09-19,,Receipt,,100.00,0.00,100.00,EGP',
       } as Record<string, string>)[route.request().postDataJSON().p_report]),
     })

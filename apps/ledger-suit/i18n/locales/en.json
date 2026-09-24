@@ -1,4 +1,59 @@
 {
+  "financialMapping": {
+    "reconciliationDetails": "Statement to ledger reconciliation",
+    "statementAmount": "Statement",
+    "ledgerAmount": "Ledger",
+    "difference": "Difference",
+    "grossProfit": "Gross profit",
+    "operatingResult": "Operating result",
+    "allocate": "Classify entry",
+    "sourceAmount": "Entry amount",
+    "previousAllocation": "Previous allocation",
+    "allocationMismatch": "Amounts must add up to the entry amount.",
+
+    "reconciliationWarning": "Statement mappings or Trial Balance reconciliation need review.",
+    "dimension": "Statement mapping",
+    "dimensions": {
+      "balance_sheet": "Balance Sheet",
+      "profit_loss": "Profit & Loss",
+      "cash_flow": "Cash Flow"
+    },
+    "hint": "Mappings take effect on the selected date. Earlier reports and posted entries remain unchanged.",
+    "incomplete": "Some statement amounts are Unclassified. Map the contributing accounts before treating this report as complete.",
+    "cashIncomplete": "Cash-flow classification or the indirect reconciliation is incomplete. Review the source entries and adjustment difference.",
+    "cashDiagnostic": "Unexplained operating adjustment difference: {difference}",
+    "adjustmentSources": "Operating adjustment sources",
+    "cashSources": "Cash-flow source entries",
+    "lines": {
+      "operating_revenue": "Operating revenue",
+      "cost_of_sales": "Cost of sales or service",
+      "operating_expenses": "Operating expenses",
+      "other_income": "Other income",
+      "other_expenses": "Other expenses",
+      "unclassified_revenue": "Unclassified revenue",
+      "unclassified_expense": "Unclassified expense",
+      "operating": "Operating",
+      "investing": "Investing",
+      "financing": "Financing",
+      "operating_noncash": "Non-cash operating adjustment",
+      "operating_working_capital": "Operating working capital",
+      "unclassified": "Unclassified"
+    },
+    "cashLines": {
+      "operating_adjustment": "Operating adjustment",
+      "operating_adjustment_difference": "Operating adjustment difference",
+      "classification_difference": "Classification difference",
+      "net_profit": "Net profit or loss",
+      "operating_adjustments": "Operating adjustments",
+      "operating_cash": "Net cash from operating activities",
+      "investing_cash": "Net cash from investing activities",
+      "financing_cash": "Net cash from financing activities",
+      "unclassified_cash": "Unclassified cash movement",
+      "net_cash_change": "Net change in cash",
+      "opening_cash": "Opening cash and equivalents",
+      "closing_cash": "Closing cash and equivalents"
+    }
+  },
   "statementClassification": {
     "title": "Statement presentation",
     "hint": "Schedule how this account appears on future balance sheets. Existing entries and earlier reports keep their amounts and classification.",
@@ -426,6 +481,7 @@
   },
   "csv": {
     "columns": {
+      "line": "Line",
       "account_type": "Account type",
       "type": "Transaction type",
       "date": "Date",
