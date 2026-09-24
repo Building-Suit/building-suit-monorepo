@@ -114,6 +114,16 @@ const { data: balanceResult, pending: balanceSheetPending, error: balanceSheetEr
 })
 const balanceSheet = computed(() => balanceResult.value?.scope === reportScope.value ? (balanceResult.value?.rows ?? []) : [])
 
+interface StatementReconciliation { profit_loss_difference_minor: number, balance_sheet_difference_minor: number, mapping_complete: boolean, accounts: Array<{ statement: string, account_id: string, statement_minor: number, ledger_minor: number, difference_minor: number }> }
+const { data: statementReconciliation } = useLazyAsyncData('org:statement-reconciliation', async () => {
+  if (!currentId.value || periodInvalid.value) return null
+  const { data, error } = await supabase.rpc('report_statement_reconciliation', {
+    p_organization_id: currentId.value, p_from_date: from.value, p_to_date: to.value, p_as_of_date: asOf.value,
+  })
+  if (error) throw error
+  return data as unknown as StatementReconciliation
+}, { watch: [currentId, from, to, asOf] })
+
 const { data: integrity } = useLazyAsyncData('org:report-integrity', async () => {
   if (!currentId.value) return null
   const { data, error } = await supabase.rpc('check_balance_sheet_integrity', {
@@ -124,15 +134,40 @@ const { data: integrity } = useLazyAsyncData('org:report-integrity', async () =>
   return data as unknown as Record<string, number | boolean | string>
 }, { watch: [currentId, asOf] })
 
-const { data: cashFlow, pending: cashFlowPending } = useLazyAsyncData('org:report-cf', async () => {
-  if (!currentId.value || periodInvalid.value) return []
-  const { data, error } = await supabase.rpc('report_cash_flow', {
-    p_organization_id: currentId.value,
-    p_from_date: from.value,
-    p_to_date: to.value,
+interface CashAdjustment { account_id: string, code: string | null, name: string, line: string, amount_minor: number }
+interface IndirectCashFlow {
+  net_profit_minor: number
+  operating_adjustments: CashAdjustment[]
+  operating_adjustments_minor: number
+  operating_cash_minor: number
+  investing_cash_minor: number
+  financing_cash_minor: number
+  unclassified_cash_minor: number
+  unclassified_entry_count: number
+  net_cash_change_minor: number
+  opening_cash_minor: number
+  closing_cash_minor: number
+  operating_adjustment_difference_minor: number
+  classification_difference_minor: number
+  classification_complete: boolean
+  reconciled: boolean
+}
+interface CashDetail { transaction_id: string, entry_id: string, account_id: string, section: string, amount_minor: number, classification_source: string }
+const { data: cashFlow, pending: cashFlowPending, refresh: refreshCashFlow } = useLazyAsyncData('org:report-cf-indirect', async () => {
+  if (!currentId.value || periodInvalid.value) return null
+  const { data, error } = await supabase.rpc('report_indirect_cash_flow', {
+    p_organization_id: currentId.value, p_from_date: from.value, p_to_date: to.value,
   })
   if (error) throw error
-  return data ?? []
+  return data as unknown as IndirectCashFlow
+}, { watch: [currentId, from, to] })
+const { data: cashDetail, refresh: refreshCashDetail } = useLazyAsyncData('org:report-cf-detail', async () => {
+  if (!currentId.value || periodInvalid.value) return [] as CashDetail[]
+  const { data, error } = await supabase.rpc('report_cash_flow_detail', {
+    p_organization_id: currentId.value, p_from_date: from.value, p_to_date: to.value,
+  })
+  if (error) throw error
+  return (data ?? []) as CashDetail[]
 }, { watch: [currentId, from, to], default: () => [] })
 
 const { data: ledger, pending: ledgerPending } = useLazyAsyncData('org:report-ledger', async () => {
@@ -182,15 +217,18 @@ const { data: trialResult, pending: trialBalancePending, error: trialBalanceErro
 const trialBalance = computed(() => trialResult.value?.scope === trialScope.value ? (trialResult.value?.rows ?? []) : [])
 
 function sectionTotal(rows: ReportRow[] | null, section: string) {
-  return (rows ?? [])
-    .filter(r => r.section === section)
-    .reduce((sum, r) => sum + Number(r.amount_minor), 0)
+  return (rows ?? []).filter(r => r.section === section)
+    .reduce((sum, r) => sum + BigInt(r.amount_minor), 0n).toString()
 }
-
-const revenue = computed(() => sectionTotal(profitLoss.value, 'revenue'))
+const revenue = computed(() => (BigInt(sectionTotal(profitLoss.value, 'operating_revenue')) + BigInt(sectionTotal(profitLoss.value, 'other_income')) + BigInt(sectionTotal(profitLoss.value, 'unclassified_revenue'))).toString())
 const costOfSales = computed(() => sectionTotal(profitLoss.value, 'cost_of_sales'))
 const operatingExpenses = computed(() => sectionTotal(profitLoss.value, 'operating_expenses'))
-const netProfit = computed(() => revenue.value - costOfSales.value - operatingExpenses.value)
+const grossProfit = computed(() => (BigInt(sectionTotal(profitLoss.value, 'operating_revenue')) - BigInt(costOfSales.value)).toString())
+const operatingResult = computed(() => (BigInt(grossProfit.value) - BigInt(operatingExpenses.value)).toString())
+const netProfit = computed(() => (BigInt(revenue.value) - BigInt(costOfSales.value) - BigInt(operatingExpenses.value)
+  - BigInt(sectionTotal(profitLoss.value, 'other_expenses')) - BigInt(sectionTotal(profitLoss.value, 'unclassified_expense'))).toString())
+const plMappingIncomplete = computed(() => (profitLoss.value ?? []).some(row => row.section.startsWith('unclassified_')))
+const bsMappingIncomplete = computed(() => balanceSheet.value.some(row => row.statement_line.startsWith('unclassified_')))
 
 const assets = computed(() => sumStatementAmounts(balanceSheet.value, 'asset'))
 const liabilities = computed(() => sumStatementAmounts(balanceSheet.value, 'liability'))
@@ -223,6 +261,7 @@ const trialTotalCells = computed(() => [
   { key: 'closingCredit', amount: trialTotals.value.closingCredit },
 ])
 
+const allocationEntry = ref<CashDetail | null>(null)
 const trialDrilldown = ref<{ accountId: string, from: string, to: string } | null>(null)
 function dayBefore(value: string) {
   const date = new Date(`${value}T00:00:00.000Z`)
@@ -238,10 +277,23 @@ function openTrialDrilldown(row: TrialBalanceRow, scope: 'opening' | 'period' | 
 }
 
 const plSections = [
-  { key: 'revenue', labelKey: 'reports.revenue' },
-  { key: 'cost_of_sales', labelKey: 'reports.costOfSales' },
-  { key: 'operating_expenses', labelKey: 'reports.operatingExpenses' },
+  { key: 'operating_revenue', labelKey: 'financialMapping.lines.operating_revenue' },
+  { key: 'cost_of_sales', labelKey: 'financialMapping.lines.cost_of_sales' },
+  { key: 'operating_expenses', labelKey: 'financialMapping.lines.operating_expenses' },
+  { key: 'other_income', labelKey: 'financialMapping.lines.other_income' },
+  { key: 'other_expenses', labelKey: 'financialMapping.lines.other_expenses' },
+  { key: 'unclassified_revenue', labelKey: 'financialMapping.lines.unclassified_revenue' },
+  { key: 'unclassified_expense', labelKey: 'financialMapping.lines.unclassified_expense' },
 ]
+function openStatementDrilldown(accountId: string | null, period: 'range' | 'asof' = 'range') {
+  if (!accountId) return
+  trialDrilldown.value = { accountId, from: period === 'asof' ? '0001-01-01' : from.value,
+    to: period === 'asof' ? asOf.value : to.value }
+}
+function accountName(accountId: string) {
+  const account = accounts.value?.find(item => item.id === accountId)
+  return account ? `${account.code ?? ''} · ${account.name}` : accountId
+}
 
 const bsRows = computed(() => STATEMENT_LINES.flatMap(line => balanceSheet.value
   .filter(row => row.statement_line === line)
@@ -343,6 +395,17 @@ async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_bal
         </p>
       </div>
 
+      <p v-if="statementReconciliation && (statementReconciliation.profit_loss_difference_minor !== 0 || statementReconciliation.balance_sheet_difference_minor !== 0 || !statementReconciliation.mapping_complete)" role="alert" class="ls-error">{{ t('financialMapping.reconciliationWarning') }}</p>
+      <details v-if="statementReconciliation?.accounts?.length" class="ls-card p-4">
+        <summary class="cursor-pointer font-semibold">{{ t('financialMapping.reconciliationDetails') }}</summary>
+        <BsDataTable :value="statementReconciliation.accounts" :label="t('financialMapping.reconciliationDetails')" class="mt-3">
+          <Column :header="t('financialMapping.dimension')"><template #body="{ data: row }">{{ t(`financialMapping.dimensions.${row.statement}`) }}</template></Column>
+          <Column :header="t('reports.account')"><template #body="{ data: row }"><button type="button" class="text-link underline" @click="openStatementDrilldown(row.account_id, row.statement === 'balance_sheet' ? 'asof' : 'range')">{{ accountName(row.account_id) }}</button></template></Column>
+          <Column :header="t('financialMapping.statementAmount')"><template #body="{ data: row }"><MoneyText :amount-minor="row.statement_minor" signed /></template></Column>
+          <Column :header="t('financialMapping.ledgerAmount')"><template #body="{ data: row }"><MoneyText :amount-minor="row.ledger_minor" signed /></template></Column>
+          <Column :header="t('financialMapping.difference')"><template #body="{ data: row }"><MoneyText :amount-minor="row.difference_minor" signed /></template></Column>
+        </BsDataTable>
+      </details>
       <SectionSkeleton v-if="balanceSheetPending || profitLossPending" variant="cards" />
       <div v-else class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard :title="t('reports.assets')" :amount-minor="assets" good-direction="neutral" />
@@ -392,13 +455,18 @@ async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_bal
         :description="t('reports.emptyRange')"
       />
 
-      <div v-else class="ls-card overflow-hidden">
+      <p v-if="plMappingIncomplete" role="alert" class="ls-error">{{ t('financialMapping.incomplete') }}</p>
+      <div v-if="profitLoss?.length" class="ls-card overflow-hidden">
         <BsDataTable :label="t('reports.tabs.profitLoss')" :value="plSections.flatMap(section => rowsIn(profitLoss, section.key).map(row => ({ ...row, groupKey: section.key, groupLabel: section.labelKey })))" row-group-mode="subheader" group-rows-by="groupKey">
-  <Column field="name" :header="t('reports.account')" body-class="ps-8" />
+  <Column :header="t('reports.account')" body-class="ps-8"><template #body="{ data: row }"><button type="button" class="text-link underline" @click="openStatementDrilldown(row.account_id)">{{ row.name }}</button></template></Column>
   <Column :header="t('transactions.amount')" body-class="ls-num"><template #body="{ data: row }"><MoneyText :amount-minor="row.amount_minor" /></template></Column>
   <template #groupheader="{ data: row }"><div class="flex justify-between gap-4 bg-surface-muted font-bold"><span>{{ t(row.groupLabel) }}</span><MoneyText :amount-minor="sectionTotal(profitLoss, row.groupKey)" /></div></template>
   <template #footer><div class="flex justify-between gap-4 text-base font-bold"><span>{{ t('reports.netProfit') }}</span><MoneyText :amount-minor="netProfit" signed /></div></template>
 </BsDataTable>
+        <dl class="grid gap-2 border-t border-line p-4 sm:grid-cols-2">
+          <div class="flex justify-between"><dt>{{ t('financialMapping.grossProfit') }}</dt><dd><MoneyText :amount-minor="grossProfit" signed /></dd></div>
+          <div class="flex justify-between"><dt>{{ t('financialMapping.operatingResult') }}</dt><dd><MoneyText :amount-minor="operatingResult" signed /></dd></div>
+        </dl>
       </div>
     </section>
 
@@ -419,9 +487,10 @@ async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_bal
       />
 
       <template v-else>
+        <p v-if="bsMappingIncomplete" role="alert" class="ls-error">{{ t('financialMapping.incomplete') }}</p>
         <div class="ls-card overflow-hidden">
           <BsDataTable :label="t('reports.tabs.balanceSheet')" :value="bsRows" row-group-mode="subheader" group-rows-by="statement_line">
-  <Column field="displayName" :header="t('reports.account')" body-class="ps-8" />
+  <Column :header="t('reports.account')" body-class="ps-8"><template #body="{ data: row }"><button v-if="row.account_id" type="button" class="text-link underline" @click="openStatementDrilldown(row.account_id, 'asof')">{{ row.displayName }}</button><span v-else>{{ row.displayName }}</span></template></Column>
   <Column :header="t('statementClassification.effectiveFrom')"><template #body="{ data: row }">{{ row.effective_from ? formatDate(row.effective_from, locale) : t('common.dash') }}</template></Column>
   <Column :header="t('transactions.amount')" body-class="ls-num"><template #body="{ data: row }"><MoneyText :amount-minor="row.amount_minor" /></template></Column>
   <template #groupheader="{ data: row }"><div class="flex justify-between gap-4 bg-surface-muted font-bold"><span>{{ t(`statementClassification.lines.${row.statement_line}`) }}</span><MoneyText :amount-minor="sumStatementAmounts(balanceSheet, row.statement_line, 'statement_line')" /></div></template>
@@ -445,18 +514,38 @@ async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_bal
       </div>
       <SectionSkeleton v-if="cashFlowPending" variant="table" :rows="5" />
 
-      <EmptyState
-        v-else-if="!cashFlow?.length"
-        :title="t('reports.emptyCashTitle')"
-        :description="t('reports.emptyCashHint')"
-      />
-
-      <div v-else class="ls-card overflow-hidden">
-        <BsDataTable :value="cashFlow" data-key="section" :label="t('reports.tabs.cashFlow')">
-  <Column :header="t('reports.activity')"><template #body="{ data: row }">{{ t(`reports.cashFlowSections.${row.section}`) }}</template></Column>
-  <Column :header="t('reports.netMovement')" header-class="text-end" body-class="ls-num"><template #body="{ data: row }"><MoneyText :amount-minor="row.amount_minor" signed explicit-sign /></template></Column>
-  <template #footer><div class="flex justify-between gap-4 font-bold"><span>{{ t('reports.netChangeInCash') }}</span><MoneyText :amount-minor="cashFlow.reduce((s, r) => s + Number(r.amount_minor), 0)" signed explicit-sign /></div></template>
-</BsDataTable>
+      <EmptyState v-else-if="!cashFlow" :title="t('reports.emptyCashTitle')" :description="t('reports.emptyCashHint')" />
+      <div v-else class="ls-card space-y-4 p-5">
+        <p v-if="!cashFlow.classification_complete || !cashFlow.reconciled" role="alert" class="ls-error">{{ t('financialMapping.cashIncomplete') }}</p>
+        <dl class="grid gap-3 sm:grid-cols-2">
+          <div
+            v-for="item in [
+            ['net_profit', cashFlow.net_profit_minor],
+            ['operating_adjustments', cashFlow.operating_adjustments_minor],
+            ['operating_cash', cashFlow.operating_cash_minor],
+            ['investing_cash', cashFlow.investing_cash_minor],
+            ['financing_cash', cashFlow.financing_cash_minor],
+            ['unclassified_cash', cashFlow.unclassified_cash_minor],
+            ['net_cash_change', cashFlow.net_cash_change_minor],
+            ['opening_cash', cashFlow.opening_cash_minor],
+            ['closing_cash', cashFlow.closing_cash_minor],
+          ]" :key="item[0]" class="flex justify-between border-b border-line py-2">
+            <dt>{{ t(`financialMapping.cashLines.${item[0]}`) }}</dt><dd><MoneyText :amount-minor="item[1]" signed /></dd>
+          </div>
+        </dl>
+        <p class="text-sm text-fg-muted">{{ t('financialMapping.cashDiagnostic', { difference: formatMoney(cashFlow.operating_adjustment_difference_minor, baseCurrency, locale) }) }}</p>
+        <h3 class="font-semibold">{{ t('financialMapping.adjustmentSources') }}</h3>
+        <BsDataTable :value="cashFlow.operating_adjustments" data-key="account_id" :label="t('financialMapping.adjustmentSources')">
+          <Column :header="t('reports.account')"><template #body="{ data: row }"><button type="button" class="text-link underline" @click="openStatementDrilldown(row.account_id)">{{ row.code }} · {{ row.name }}</button></template></Column>
+          <Column :header="t('transactions.amount')"><template #body="{ data: row }"><MoneyText :amount-minor="row.amount_minor" signed /></template></Column>
+        </BsDataTable>
+        <h3 class="font-semibold">{{ t('financialMapping.cashSources') }}</h3>
+        <BsDataTable :value="cashDetail ?? []"  :label="t('financialMapping.cashSources')">
+          <Column :header="t('reports.account')"><template #body="{ data: row }"><button type="button" class="text-link underline" @click="openStatementDrilldown(row.account_id)">{{ accountName(row.account_id) }}</button></template></Column>
+          <Column :header="t('reports.activity')"><template #body="{ data: row }">{{ t(`financialMapping.lines.${row.section}`) }}</template></Column>
+          <Column :header="t('transactions.amount')"><template #body="{ data: row }"><MoneyText :amount-minor="row.amount_minor" signed /></template></Column>
+          <Column v-if="can('accounts.update')" :header="t('financialMapping.allocate')"><template #body="{ data: row }"><button type="button" class="ls-btn ls-btn-sm" @click="allocationEntry = row">{{ t('financialMapping.allocate') }}</button></template></Column>
+        </BsDataTable>
       </div>
     </section>
 
@@ -504,6 +593,7 @@ async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_bal
 </BsDataTable>
       </div>
     </section>
+    <CashFlowAllocationDialog v-if="allocationEntry" :entry-id="allocationEntry.entry_id" :account-name="accountName(allocationEntry.account_id)" @close="allocationEntry = null" @saved="() => { refreshCashFlow(); refreshCashDetail() }" />
     <AccountActivityDialog v-if="trialDrilldown" :account-id="trialDrilldown.accountId" :scope="trialScope" :initial-from="trialDrilldown.from" :initial-to="trialDrilldown.to" @close="trialDrilldown = null" />
   </div>
 </template>

@@ -472,7 +472,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
           </Column>
           <Column v-if="can('accounts.read')" :header="t('accounts.actions')" body-class="whitespace-nowrap text-end">
             <template #body="{ data: account }">
-              <button v-if="account.account_role === 'posting' && ['asset', 'liability', 'equity'].includes(account.type)" type="button" class="ls-btn ls-btn-sm me-1" @click="statementAccount = account">{{ t('statementClassification.title') }}</button>
+              <button v-if="['posting', 'control'].includes(account.account_role)" type="button" class="ls-btn ls-btn-sm me-1" @click="statementAccount = account">{{ t('statementClassification.title') }}</button>
               <button v-if="can('accounts.update')" type="button" class="ls-btn ls-btn-sm" @click="openEdit(account)">{{ t('accounts.edit') }}</button>
               <button v-if="can('accounts.archive') && !account.is_archived" type="button" class="ls-btn ls-btn-sm ms-1" @click="archiveAccount(account)">{{ t('accounts.archive') }}</button>
             </template>

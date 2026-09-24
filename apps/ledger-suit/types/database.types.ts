@@ -7,33 +7,82 @@ export type Json =
   | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
+      account_financial_mappings: {
+        Row: {
+          account_id: string
+          created_at: string
+          created_by: string
+          dimension: string
+          effective_from: string
+          id: string
+          organization_id: string
+          predecessor_id: string | null
+          reason: string
+          request_id: string
+          revision: number
+          statement_line: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          created_by: string
+          dimension: string
+          effective_from: string
+          id?: string
+          organization_id: string
+          predecessor_id?: string | null
+          reason: string
+          request_id: string
+          revision?: never
+          statement_line: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          created_by?: string
+          dimension?: string
+          effective_from?: string
+          id?: string
+          organization_id?: string
+          predecessor_id?: string | null
+          reason?: string
+          request_id?: string
+          revision?: never
+          statement_line?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_financial_mappings_account_id_organization_id_fkey"
+            columns: ["account_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "account_balances"
+            referencedColumns: ["account_id", "organization_id"]
+          },
+          {
+            foreignKeyName: "account_financial_mappings_account_id_organization_id_fkey"
+            columns: ["account_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "account_financial_mappings_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "account_financial_mappings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       account_statement_classifications: {
         Row: {
           account_id: string
@@ -521,6 +570,101 @@ export type Database = {
           key?: string
         }
         Relationships: []
+      }
+      cash_flow_allocation_decisions: {
+        Row: {
+          created_at: string
+          created_by: string
+          entry_id: string
+          id: string
+          organization_id: string
+          predecessor_id: string | null
+          reason: string
+          request_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          entry_id: string
+          id?: string
+          organization_id: string
+          predecessor_id?: string | null
+          reason: string
+          request_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          entry_id?: string
+          id?: string
+          organization_id?: string
+          predecessor_id?: string | null
+          reason?: string
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cash_flow_allocation_decisions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_flow_allocation_decisions_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_entries"
+            referencedColumns: ["entry_id"]
+          },
+          {
+            foreignKeyName: "cash_flow_allocation_decisions_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "transaction_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_flow_allocation_decisions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_flow_allocation_decisions_predecessor_id_fkey"
+            columns: ["predecessor_id"]
+            isOneToOne: false
+            referencedRelation: "cash_flow_allocation_decisions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cash_flow_allocations: {
+        Row: {
+          amount_minor: number
+          decision_id: string
+          section: string
+        }
+        Insert: {
+          amount_minor: number
+          decision_id: string
+          section: string
+        }
+        Update: {
+          amount_minor?: number
+          decision_id?: string
+          section?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cash_flow_allocations_decision_id_fkey"
+            columns: ["decision_id"]
+            isOneToOne: false
+            referencedRelation: "cash_flow_allocation_decisions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       categories: {
         Row: {
@@ -3377,6 +3521,10 @@ export type Database = {
         Args: { p_token: string }
         Returns: string
       }
+      account_financial_mapping_context: {
+        Args: { p_account_id: string; p_organization_id: string }
+        Returns: Json
+      }
       account_statement_classification_context: {
         Args: { p_account_id: string; p_organization_id: string }
         Returns: Json
@@ -3462,6 +3610,10 @@ export type Database = {
         Args: { p_commitment_id: string; p_reason?: string }
         Returns: string
       }
+      cash_flow_allocation_context: {
+        Args: { p_entry_id: string; p_organization_id: string }
+        Returns: Json
+      }
       change_organization_base_currency: {
         Args: { p_base_currency: string; p_organization_id: string }
         Returns: string
@@ -3498,6 +3650,17 @@ export type Database = {
           recipient_name: string
           subject: string
         }[]
+      }
+      classify_cash_flow_entry: {
+        Args: {
+          p_allocations: Json
+          p_entry_id: string
+          p_expected_decision_id?: string
+          p_organization_id: string
+          p_reason: string
+          p_request_id: string
+        }
+        Returns: string
       }
       close_fiscal_year: {
         Args: {
@@ -4068,7 +4231,22 @@ export type Database = {
         }
         Returns: {
           amount_minor: number
-          section: Database["public"]["Enums"]["cash_flow_section"]
+          section: string
+        }[]
+      }
+      report_cash_flow_detail: {
+        Args: {
+          p_from_date: string
+          p_organization_id: string
+          p_to_date: string
+        }
+        Returns: {
+          account_id: string
+          amount_minor: number
+          classification_source: string
+          entry_id: string
+          section: string
+          transaction_id: string
         }[]
       }
       report_classified_balance_sheet: {
@@ -4104,6 +4282,14 @@ export type Database = {
           transaction_id: string
         }[]
       }
+      report_indirect_cash_flow: {
+        Args: {
+          p_from_date: string
+          p_organization_id: string
+          p_to_date: string
+        }
+        Returns: Json
+      }
       report_monthly_series: {
         Args: {
           p_as_of_date?: string
@@ -4130,6 +4316,15 @@ export type Database = {
           name: string
           section: string
         }[]
+      }
+      report_statement_reconciliation: {
+        Args: {
+          p_as_of_date?: string
+          p_from_date: string
+          p_organization_id: string
+          p_to_date: string
+        }
+        Returns: Json
       }
       report_trial_balance: {
         Args: {
@@ -4209,6 +4404,19 @@ export type Database = {
           status: Database["public"]["Enums"]["occurrence_status"]
           transaction_id: string
         }[]
+      }
+      schedule_account_financial_mapping: {
+        Args: {
+          p_account_id: string
+          p_dimension: string
+          p_effective_from: string
+          p_expected_revision_id?: string
+          p_organization_id: string
+          p_reason: string
+          p_request_id: string
+          p_statement_line: string
+        }
+        Returns: string
       }
       schedule_account_statement_classification: {
         Args: {
@@ -4677,9 +4885,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       account_subtype: [

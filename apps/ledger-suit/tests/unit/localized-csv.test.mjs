@@ -59,7 +59,7 @@ test('empty reports export localized headers; all report labels and audit column
   const t = translate('ar')
   const cases = [
     ['profit_loss', 'section,code,account,amount,currency\noperating_expenses,10,أتعاب,100.00,EGP', 'مصروفات التشغيل'],
-    ['cash_flow', 'activity,net_movement,currency\noperating,100.00,EGP', t('reports.cashFlowSections.operating')],
+    ['cash_flow', 'line,account_id,account,amount,currency\noperating_cash,,,100.00,EGP', t('financialMapping.cashLines.operating_cash')],
     ['general_ledger', 'date,reference,description,memo,debit,credit,running_balance,currency', t('csv.columns.running_balance')],
     ['balance_sheet', 'report_date,presentation,account_id,code,account,amount,currency,classification_effective_from,classification_id\n2026-09-19,أصول,id,100,اسم,10.00,EGP,2026-09-01,revision', t('csv.columns.classification_id')],
   ]
