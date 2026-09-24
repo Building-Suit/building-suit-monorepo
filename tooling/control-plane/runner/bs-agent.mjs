@@ -2712,6 +2712,446 @@ Return a concise repair summary.
   }
 }
 
+function taskMetadata(
+  taskId,
+) {
+  const result =
+    controlQuery(
+      `
+        SELECT COALESCE(
+          metadata,
+          '{}'::jsonb
+        )
+        FROM control.tasks
+        WHERE task_id =
+          :'task_id';
+      `,
+      {
+        task_id:
+          taskId,
+      },
+    )
+
+  return (
+    parseControlJson(
+      result,
+    ) ?? {}
+  )
+}
+
+function publicationVerification(
+  executionId,
+) {
+  const result =
+    controlQuery(
+      `
+        SELECT COALESCE(
+          jsonb_agg(
+            jsonb_build_object(
+              'check_name',
+                check_name,
+
+              'status',
+                status,
+
+              'exit_code',
+                exit_code,
+
+              'summary',
+                summary
+            )
+            ORDER BY verification_id
+          ),
+          '[]'::jsonb
+        )
+        FROM control.verification_results
+        WHERE execution_id =
+          :'execution_id'::bigint;
+      `,
+      {
+        execution_id:
+          String(
+            executionId,
+          ),
+      },
+    )
+
+  return (
+    parseControlJson(
+      result,
+    ) ?? []
+  )
+}
+
+function completePublication({
+  taskId,
+  publication,
+}) {
+  const result =
+    controlQuery(
+      `
+        SELECT
+          control.complete_publication(
+            :'task_id',
+            :'repository',
+            :'pr_number'::integer,
+            :'head_branch',
+            :'base_branch',
+            :'url',
+            :'head_sha',
+            :'is_draft'::boolean,
+            :'metadata'::jsonb
+          );
+      `,
+      {
+        task_id:
+          taskId,
+
+        repository:
+          githubRepository,
+
+        pr_number:
+          String(
+            publication.pr.number,
+          ),
+
+        head_branch:
+          publication.pr.head_branch,
+
+        base_branch:
+          publication.pr.base_branch,
+
+        url:
+          publication.pr.url,
+
+        head_sha:
+          publication.commit_sha,
+
+        is_draft:
+          publication.pr.is_draft
+            ? 'true'
+            : 'false',
+
+        metadata:
+          JSON.stringify({
+            pr_check:
+              publication.pr_check,
+
+            changed_files:
+              publication.changed_files,
+          }),
+      },
+    )
+
+  return parseControlJson(
+    result,
+  )
+}
+
+function taskPublish() {
+  const [taskId] = args
+
+  if (!validTaskId(taskId)) {
+    output({
+      ok: false,
+      command:
+        'task-publish',
+      error:
+        'valid_task_id_required',
+    }, 64)
+
+    return
+  }
+
+  try {
+
+    const packetResult =
+      controlQuery(
+        `
+          SELECT COALESCE(
+            control.task_packet(
+              :'task_id'
+            ),
+            'null'::jsonb
+          );
+        `,
+        {
+          task_id:
+            taskId,
+        },
+      )
+
+
+    const packet =
+      parseControlJson(
+        packetResult,
+      )
+
+
+    if (!packet) {
+      throw new Error(
+        `Unknown task: ${taskId}`,
+      )
+    }
+
+
+    if (
+      packet.task.status !==
+      'passed'
+    ) {
+      throw new Error(
+        `Task ${taskId} is ${packet.task.status}, not passed.`,
+      )
+    }
+
+
+    const execution =
+      latestExecution(
+        taskId,
+      )
+
+
+    if (!execution) {
+      throw new Error(
+        'Task has no execution.',
+      )
+    }
+
+
+    if (
+      execution.status !==
+      'succeeded'
+    ) {
+      throw new Error(
+        `Latest execution is ${execution.status}, not succeeded.`,
+      )
+    }
+
+
+    const verification =
+      publicationVerification(
+        execution.execution_id,
+      )
+
+
+    if (
+      verification.length === 0
+    ) {
+      throw new Error(
+        'Task has no verification evidence.',
+      )
+    }
+
+
+    const blockingVerification =
+      verification.filter(
+        check =>
+          check.status === 'fail' ||
+          check.status === 'not_run',
+      )
+
+
+    if (
+      blockingVerification.length > 0
+    ) {
+      throw new Error(
+        'Task has blocking verification results.',
+      )
+    }
+
+
+    const metadata =
+      taskMetadata(
+        taskId,
+      )
+
+
+    const configuredAllowedPaths =
+      Array.isArray(
+        metadata.allowed_paths,
+      )
+        ? metadata.allowed_paths
+        : []
+
+
+    const allowedPaths =
+      configuredAllowedPaths.length > 0
+        ? configuredAllowedPaths
+        : (
+            packet.suit.app_path
+              ? [
+                  `${packet.suit.app_path}/`,
+                ]
+              : []
+          )
+
+
+    if (
+      allowedPaths.length === 0
+    ) {
+      throw new Error(
+        'No publication scope is configured.',
+      )
+    }
+
+
+    const publicationDirectory =
+      path.join(
+        execution.worktree_path,
+        '.local',
+        'agent-runs',
+        taskId,
+        'publication',
+      )
+
+
+    mkdirSync(
+      publicationDirectory,
+      {
+        recursive: true,
+      },
+    )
+
+
+    const contextPath =
+      path.join(
+        publicationDirectory,
+        'context.json',
+      )
+
+
+    writeFileSync(
+      contextPath,
+
+      `${JSON.stringify(
+        {
+          task:
+            packet.task,
+
+          suit:
+            packet.suit,
+
+          execution,
+
+          allowed_paths:
+            allowedPaths,
+
+          requirements:
+            packet.requirements,
+
+          verification,
+        },
+        null,
+        2,
+      )}\n`,
+
+      {
+        mode: 0o600,
+      },
+    )
+
+
+    const publisher =
+      execute(
+        process.execPath,
+        [
+          path.join(
+            repoRoot,
+            'tooling',
+            'control-plane',
+            'runner',
+            'task-publisher.mjs',
+          ),
+
+          contextPath,
+        ],
+        {
+          cwd:
+            execution.worktree_path,
+
+          timeout:
+            20 * 60 * 1000,
+        },
+      )
+
+
+    let publication
+
+    try {
+      publication =
+        JSON.parse(
+          publisher.stdout,
+        )
+    }
+    catch {
+      throw new Error(
+        publisher.stderr ||
+        publisher.error ||
+        publisher.stdout ||
+        'Publisher returned invalid JSON.',
+      )
+    }
+
+
+    if (
+      !publication.ok
+    ) {
+      output({
+        ok: false,
+
+        command:
+          'task-publish',
+
+        task_id:
+          taskId,
+
+        publication,
+      }, 1)
+
+      return
+    }
+
+
+    const recorded =
+      completePublication({
+        taskId,
+        publication,
+      })
+
+
+    output({
+      ok: true,
+
+      command:
+        'task-publish',
+
+      task_id:
+        taskId,
+
+      publication,
+
+      control:
+        recorded,
+    })
+  }
+  catch (error) {
+
+    output({
+      ok: false,
+
+      command:
+        'task-publish',
+
+      task_id:
+        taskId,
+
+      error:
+        error.message,
+    }, 1)
+
+  }
+}
+
 switch (command) {
   case 'ping':
     ping()
@@ -2777,6 +3217,10 @@ switch (command) {
     taskRetry()
     break
 
+  case 'task-publish':
+    taskPublish()
+    break
+
   default:
     output({
       ok: false,
@@ -2798,6 +3242,7 @@ switch (command) {
         'task-verify <task-id>',
         'retry-route <profile> <previous-attempt>',
         'task-retry <task-id>',
+        'task-publish <task-id>',
       ],
     }, 64)
 }
