@@ -29,10 +29,25 @@ const automationCodexHome =
   )
 
 const controlDatabase = {
-  host: '127.0.0.1',
-  port: '54329',
-  database: 'building_suit_control',
-  user: 'bs_control_app',
+  host:
+    process.env.BS_CONTROL_DB_HOST ??
+    '127.0.0.1',
+
+  port:
+    process.env.BS_CONTROL_DB_PORT ??
+    '54329',
+
+  database:
+    process.env.BS_CONTROL_DB_NAME ??
+    'building_suit_control',
+
+  user:
+    process.env.BS_CONTROL_DB_USER ??
+    'bs_control_app',
+
+  sslmode:
+    process.env.BS_CONTROL_DB_SSLMODE ??
+    'prefer',
 }
 
 const repoRoot = fileURLToPath(new URL('../../../', import.meta.url))
@@ -772,6 +787,11 @@ function controlQuery(
     ],
     {
       input: `${sql.trim()}\n`,
+
+      env: {
+        PGSSLMODE:
+          controlDatabase.sslmode,
+      },
     },
   )
 }
