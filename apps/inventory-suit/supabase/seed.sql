@@ -1,0 +1,2 @@
+-- Intentionally empty. Inventory identities and business records are introduced
+-- only by authorized domain tasks after the tenant and authorization model exists.

@@ -1,7 +1,7 @@
 /** Product/project-scoped identity. Never join accounts across Auth projects by UUID/email. */
 export interface PortalIdentity {
   userId: string
-  portal: 'ledger-suit' | 'shop-suit'
+  portal: 'ledger-suit' | 'shop-suit' | 'inventory-suit'
   profileId: string | null
   memberships: ReadonlyArray<{ tenantId: string; role: string }>
 }

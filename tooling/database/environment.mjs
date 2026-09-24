@@ -29,7 +29,7 @@ export function validateEnvironment(registry, product, environment, app, secret)
   let origin
   try { origin = new URL(target.appUrl) } catch { throw new Error('Enter the verified application origin in the environment registry') }
   if (origin.protocol !== 'https:' || origin.origin !== target.appUrl) throw new Error('Hosted appUrl must be an HTTPS origin without a path or trailing slash')
-  const appOrigin = product === 'ledger-suit' ? app.APP_BASE_URL : app.APP_URL
+  const appOrigin = app[selected.appUrlVariable || 'APP_URL']
   if (appOrigin !== target.appUrl) throw new Error('Application origin does not match the selected environment')
   return `${product}/${environment}: local configuration matches. Verify live ownership, keys, migration history and backup before applying changes. No remote operation was performed.`
 }
