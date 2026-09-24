@@ -93,6 +93,73 @@ case "$REQUESTED_COMMAND" in
     exec "$NODE_BIN" "$AGENT" pr-check "$PR_NUMBER"
     ;;
 
+  "bs-agent task-next "*)
+    SUIT_SLUG="${REQUESTED_COMMAND#bs-agent task-next }"
+
+    if [[ ! "$SUIT_SLUG" =~ ^[a-z][a-z0-9-]{1,63}$ ]]; then
+      printf '%s\n' \
+        '{"ok":false,"error":"invalid_suit_slug"}'
+
+      exit 64
+    fi
+
+    exec "$NODE_BIN" \
+      "$AGENT" \
+      task-next \
+      "$SUIT_SLUG"
+    ;;
+
+
+  "bs-agent task-packet "*)
+    TASK_ID="${REQUESTED_COMMAND#bs-agent task-packet }"
+
+    if [[ ! "$TASK_ID" =~ ^[A-Z][A-Z0-9-]{2,63}$ ]]; then
+      printf '%s\n' \
+        '{"ok":false,"error":"invalid_task_id"}'
+
+      exit 64
+    fi
+
+    exec "$NODE_BIN" \
+      "$AGENT" \
+      task-packet \
+      "$TASK_ID"
+    ;;
+
+
+  "bs-agent task-claim "*)
+    SUIT_SLUG="${REQUESTED_COMMAND#bs-agent task-claim }"
+
+    if [[ ! "$SUIT_SLUG" =~ ^[a-z][a-z0-9-]{1,63}$ ]]; then
+      printf '%s\n' \
+        '{"ok":false,"error":"invalid_suit_slug"}'
+
+      exit 64
+    fi
+
+    exec "$NODE_BIN" \
+      "$AGENT" \
+      task-claim \
+      "$SUIT_SLUG"
+    ;;
+
+
+  "bs-agent task-release "*)
+    TASK_ID="${REQUESTED_COMMAND#bs-agent task-release }"
+
+    if [[ ! "$TASK_ID" =~ ^[A-Z][A-Z0-9-]{2,63}$ ]]; then
+      printf '%s\n' \
+        '{"ok":false,"error":"invalid_task_id"}'
+
+      exit 64
+    fi
+
+    exec "$NODE_BIN" \
+      "$AGENT" \
+      task-release \
+      "$TASK_ID"
+    ;;
+
   *)
     printf '%s\n' \
       '{"ok":false,"error":"command_not_allowed"}'

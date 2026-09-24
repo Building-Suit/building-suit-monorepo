@@ -24,6 +24,13 @@ const automationCodexHome =
     'codex-home',
   )
 
+const controlDatabase = {
+  host: '127.0.0.1',
+  port: '54329',
+  database: 'building_suit_control',
+  user: 'bs_control_app',
+}
+
 const repoRoot = fileURLToPath(new URL('../../../', import.meta.url))
 
 const githubRepository = 'Building-Suit/building-suit-monorepo'
@@ -42,25 +49,20 @@ function execute(program, programArgs = [], options = {}) {
     delete childEnv[variable]
   }
 
-	const result = spawnSync(program, programArgs, {
-	  cwd: options.cwd ?? repoRoot,
-	  encoding: 'utf8',
-
-	  env: {
-	    ...process.env,
-	    NO_COLOR: '1',
-	    FORCE_COLOR: '0',
-	    ...(options.env ?? {}),
-	  },
-
-	  input: options.input,
-
-	  timeout: options.timeout,
-
-	  maxBuffer:
-	    options.maxBuffer ??
-	    50 * 1024 * 1024,
-	})
+  const result = spawnSync(
+    program,
+    programArgs,
+    {
+      cwd: options.cwd ?? repoRoot,
+      encoding: 'utf8',
+      env: childEnv,
+      input: options.input,
+      timeout: options.timeout,
+      maxBuffer:
+        options.maxBuffer ??
+        50 * 1024 * 1024,
+    },
+  )
 
   return {
     code:
@@ -710,6 +712,274 @@ function codexSmoke() {
   }
 }
 
+function validTaskId(value) {
+  return (
+    typeof value === 'string' &&
+    /^[A-Z][A-Z0-9-]{2,63}$/.test(value)
+  )
+}
+
+function validSuitSlug(value) {
+  return (
+    typeof value === 'string' &&
+    /^[a-z][a-z0-9-]{1,63}$/.test(value)
+  )
+}
+
+function controlQuery(
+  sql,
+  variables = {},
+) {
+  const variableArgs = []
+
+  for (const [name, value] of Object.entries(variables)) {
+    variableArgs.push(
+      '--set',
+      `${name}=${value}`,
+    )
+  }
+
+  return execute(
+    'psql',
+    [
+      '-X',
+      '-q',
+      '-A',
+      '-t',
+
+      '-v',
+      'ON_ERROR_STOP=1',
+
+      '-h',
+      controlDatabase.host,
+
+      '-p',
+      controlDatabase.port,
+
+      '-U',
+      controlDatabase.user,
+
+      '-d',
+      controlDatabase.database,
+
+      ...variableArgs,
+    ],
+    {
+      input: `${sql.trim()}\n`,
+    },
+  )
+}
+
+function parseControlJson(result) {
+  if (!successful(result)) {
+    throw new Error(
+      result.stderr ||
+      result.error ||
+      'Control database query failed.',
+    )
+  }
+
+  if (!result.stdout) {
+    return null
+  }
+
+  return JSON.parse(result.stdout)
+}
+
+function taskNext() {
+  const [suitSlug] = args
+
+  if (!validSuitSlug(suitSlug)) {
+    output({
+      ok: false,
+      command: 'task-next',
+      error: 'valid_suit_slug_required',
+    }, 64)
+
+    return
+  }
+
+  try {
+    const result = controlQuery(
+      `
+        SELECT COALESCE(
+          jsonb_build_object(
+            'task_id', task_id,
+            'suit_slug', suit_slug,
+            'title', title,
+            'task_type', task_type,
+            'risk_level', risk_level,
+            'model_profile', model_profile,
+            'status', status,
+            'priority', priority,
+            'sequence', sequence
+          ),
+          'null'::jsonb
+        )
+        FROM control.next_ready_task(
+          :'suit_slug'
+        );
+      `,
+      {
+        suit_slug: suitSlug,
+      },
+    )
+
+    const task = parseControlJson(result)
+
+    output({
+      ok: true,
+      command: 'task-next',
+      suit_slug: suitSlug,
+      task,
+    })
+  }
+  catch (error) {
+    output({
+      ok: false,
+      command: 'task-next',
+      error: error.message,
+    }, 1)
+  }
+}
+
+function taskPacket() {
+  const [taskId] = args
+
+  if (!validTaskId(taskId)) {
+    output({
+      ok: false,
+      command: 'task-packet',
+      error: 'valid_task_id_required',
+    }, 64)
+
+    return
+  }
+
+  try {
+    const result = controlQuery(
+      `
+        SELECT COALESCE(
+          control.task_packet(
+            :'task_id'
+          ),
+          'null'::jsonb
+        );
+      `,
+      {
+        task_id: taskId,
+      },
+    )
+
+    output({
+      ok: true,
+      command: 'task-packet',
+      task_id: taskId,
+      packet:
+        parseControlJson(result),
+    })
+  }
+  catch (error) {
+    output({
+      ok: false,
+      command: 'task-packet',
+      error: error.message,
+    }, 1)
+  }
+}
+
+function taskClaim() {
+  const [suitSlug] = args
+
+  if (!validSuitSlug(suitSlug)) {
+    output({
+      ok: false,
+      command: 'task-claim',
+      error: 'valid_suit_slug_required',
+    }, 64)
+
+    return
+  }
+
+  try {
+    const result = controlQuery(
+      `
+        SELECT COALESCE(
+          control.claim_next_task(
+            :'suit_slug',
+            'runner'
+          ),
+          'null'::jsonb
+        );
+      `,
+      {
+        suit_slug: suitSlug,
+      },
+    )
+
+    output({
+      ok: true,
+      command: 'task-claim',
+      suit_slug: suitSlug,
+      packet:
+        parseControlJson(result),
+    })
+  }
+  catch (error) {
+    output({
+      ok: false,
+      command: 'task-claim',
+      error: error.message,
+    }, 1)
+  }
+}
+
+function taskRelease() {
+  const [taskId] = args
+
+  if (!validTaskId(taskId)) {
+    output({
+      ok: false,
+      command: 'task-release',
+      error: 'valid_task_id_required',
+    }, 64)
+
+    return
+  }
+
+  try {
+    const result = controlQuery(
+      `
+        SELECT jsonb_build_object(
+          'released',
+          control.release_task_claim(
+            :'task_id',
+            'runner'
+          )
+        );
+      `,
+      {
+        task_id: taskId,
+      },
+    )
+
+    output({
+      ok: true,
+      command: 'task-release',
+      task_id: taskId,
+      result:
+        parseControlJson(result),
+    })
+  }
+  catch (error) {
+    output({
+      ok: false,
+      command: 'task-release',
+      error: error.message,
+    }, 1)
+  }
+}
+
 switch (command) {
   case 'ping':
     ping()
@@ -739,6 +1009,22 @@ switch (command) {
     codexSmoke()
     break
 
+  case 'task-next':
+    taskNext()
+    break
+
+  case 'task-packet':
+    taskPacket()
+    break
+
+  case 'task-claim':
+    taskClaim()
+    break
+
+  case 'task-release':
+    taskRelease()
+    break
+
   default:
     output({
       ok: false,
@@ -751,6 +1037,10 @@ switch (command) {
         'codex-status',
         'route <profile>',
         'codex-smoke <profile>',
+        'task-next <suit>',
+        'task-packet <task-id>',
+        'task-claim <suit>',
+        'task-release <task-id>',
       ],
     }, 64)
 }
