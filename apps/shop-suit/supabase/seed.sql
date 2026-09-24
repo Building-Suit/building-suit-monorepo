@@ -10,6 +10,10 @@ from public.portals portal
 cross join (values
   ('sales.view', 'View sales and inventory traceability'),
   ('sales.manage', 'Create and edit sale drafts'),
-  ('sales.issue', 'Issue sales and deduct product inventory')
+  ('sales.issue', 'Issue sales and deduct product inventory'),
+  ('payments.view', 'View customer payments and receivables'),
+  ('payments.receive', 'Record and allocate customer receipts'),
+  ('payments.reverse', 'Reverse mistaken customer receipts'),
+  ('payments.refund', 'Record outbound customer refunds')
 ) as permission(key, description)
 where portal.key = 'shop-crm';
