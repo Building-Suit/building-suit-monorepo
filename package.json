@@ -28,6 +28,7 @@
     "db:test:ledger": "supabase --workdir apps/ledger-suit test db --local",
     "db:test:shop": "node tooling/database/test-shop-local.mjs",
     "db:test:shop:sale": "node tooling/database/test-shop-sale-local.mjs",
+    "db:test:shop:payment": "node tooling/database/test-shop-payment-local.mjs",
     "db": "node tooling/database/cli.mjs",
     "agent:preflight": "node tooling/git/preflight.mjs",
     "agent:pr-check": "node tooling/git/check-pr.mjs"
