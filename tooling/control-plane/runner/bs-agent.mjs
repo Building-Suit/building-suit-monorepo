@@ -2,8 +2,11 @@
 
 import { spawnSync } from 'node:child_process'
 import {
+  mkdirSync,
   mkdtempSync,
+  readFileSync,
   rmSync,
+  writeFileSync,
 } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
@@ -980,6 +983,569 @@ function taskRelease() {
   }
 }
 
+function runJsonHelper(
+  relativePath,
+  helperArgs = [],
+  options = {},
+) {
+  const result = execute(
+    process.execPath,
+    [
+      relativePath,
+      ...helperArgs,
+    ],
+    options,
+  )
+
+  if (!successful(result)) {
+    throw new Error(
+      result.stderr ||
+      result.error ||
+      result.stdout ||
+      `${relativePath} failed`,
+    )
+  }
+
+  return JSON.parse(
+    result.stdout,
+  )
+}
+
+function resolveStackParent(stackKey) {
+  return runJsonHelper(
+    'tooling/control-plane/runner/stack-parent.mjs',
+    [
+      stackKey,
+    ],
+  )
+}
+
+function prepareTaskWorktree(
+  taskId,
+  stackKey,
+  parentSha,
+) {
+  return runJsonHelper(
+    'tooling/control-plane/runner/task-worktree.mjs',
+    [
+      taskId,
+      stackKey,
+      parentSha,
+    ],
+  )
+}
+
+function taskPrepare() {
+  const [taskId] = args
+
+  if (!validTaskId(taskId)) {
+    output({
+      ok: false,
+      command: 'task-prepare',
+      error:
+        'valid_task_id_required',
+    }, 64)
+
+    return
+  }
+
+  try {
+    const packetResult =
+      controlQuery(
+        `
+          SELECT COALESCE(
+            control.task_packet(
+              :'task_id'
+            ),
+            'null'::jsonb
+          );
+        `,
+        {
+          task_id: taskId,
+        },
+      )
+
+    const packet =
+      parseControlJson(
+        packetResult,
+      )
+
+    if (!packet) {
+      throw new Error(
+        `Unknown task: ${taskId}`,
+      )
+    }
+
+    if (
+      packet.task.status !==
+      'in_progress'
+    ) {
+      throw new Error(
+        `Task ${taskId} must be claimed before preparation.`,
+      )
+    }
+
+    const stackKey =
+      packet.suit.stack_key
+
+    const parent =
+      resolveStackParent(
+        stackKey,
+      )
+
+    const prepared =
+      prepareTaskWorktree(
+        taskId,
+        stackKey,
+        parent.parent_sha,
+      )
+
+    output({
+      ok: true,
+      command: 'task-prepare',
+      task_id: taskId,
+      parent,
+      worktree: prepared,
+    })
+  }
+  catch (error) {
+    output({
+      ok: false,
+      command: 'task-prepare',
+      error:
+        error.message,
+    }, 1)
+  }
+}
+
+function startExecution({
+  taskId,
+  route,
+  worktree,
+  parent,
+}) {
+  const result =
+    controlQuery(
+      `
+        SELECT jsonb_build_object(
+          'execution_id',
+          control.start_execution(
+            :'task_id',
+            :'model_profile',
+            :'model_name',
+            :'reasoning_effort',
+            :'worktree_path',
+            :'branch_name',
+            :'parent_branch',
+            :'parent_sha'
+          )
+        );
+      `,
+      {
+        task_id:
+          taskId,
+
+        model_profile:
+          route.profile,
+
+        model_name:
+          route.model,
+
+        reasoning_effort:
+          route.reasoning_effort,
+
+        worktree_path:
+          worktree.worktree_path,
+
+        branch_name:
+          worktree.branch_name,
+
+        parent_branch:
+          parent.parent_branch,
+
+        parent_sha:
+          parent.parent_sha,
+      },
+    )
+
+  return parseControlJson(
+    result,
+  ).execution_id
+}
+
+function finishExecution({
+  executionId,
+  status,
+  promptBytes,
+  outputBytes,
+  runLogPath,
+  metadata = {},
+}) {
+  const result =
+    controlQuery(
+      `
+        SELECT jsonb_build_object(
+          'finished',
+          control.finish_execution(
+            :'execution_id'::bigint,
+            :'status',
+            NULL,
+            :'prompt_bytes'::bigint,
+            :'output_bytes'::bigint,
+            :'run_log_path',
+            :'metadata'::jsonb
+          )
+        );
+      `,
+      {
+        execution_id:
+          String(executionId),
+
+        status,
+
+        prompt_bytes:
+          String(promptBytes),
+
+        output_bytes:
+          String(outputBytes),
+
+        run_log_path:
+          runLogPath,
+
+        metadata:
+          JSON.stringify(metadata),
+      },
+    )
+
+  return parseControlJson(
+    result,
+  )
+}
+
+function taskRun() {
+  const [taskId] = args
+
+  if (!validTaskId(taskId)) {
+    output({
+      ok: false,
+      command: 'task-run',
+      error:
+        'valid_task_id_required',
+    }, 64)
+
+    return
+  }
+
+  let executionId = null
+
+  try {
+    const packetResult =
+      controlQuery(
+        `
+          SELECT COALESCE(
+            control.task_packet(
+              :'task_id'
+            ),
+            'null'::jsonb
+          );
+        `,
+        {
+          task_id: taskId,
+        },
+      )
+
+    const packet =
+      parseControlJson(
+        packetResult,
+      )
+
+    if (!packet) {
+      throw new Error(
+        `Unknown task: ${taskId}`,
+      )
+    }
+
+    if (
+      packet.task.status !==
+      'in_progress'
+    ) {
+      throw new Error(
+        `Task ${taskId} is not claimed.`,
+      )
+    }
+
+    const parent =
+      resolveStackParent(
+        packet.suit.stack_key,
+      )
+
+    const worktree =
+      prepareTaskWorktree(
+        taskId,
+        packet.suit.stack_key,
+        parent.parent_sha,
+      )
+
+    const route =
+      packet.task.model_profile ===
+      'no_ai'
+        ? resolveProfile(
+            'no_ai',
+            [],
+          )
+        : resolveCodexRoute(
+            packet.task.model_profile,
+          )
+
+    if (!route.uses_codex) {
+      throw new Error(
+        'task-run requires a Codex profile.',
+      )
+    }
+
+    const taskDirectory =
+      path.join(
+        worktree.worktree_path,
+        '.local',
+        'agent-tasks',
+      )
+
+    const runDirectory =
+      path.join(
+        worktree.worktree_path,
+        '.local',
+        'agent-runs',
+        taskId,
+      )
+
+    mkdirSync(
+      taskDirectory,
+      {
+        recursive: true,
+      },
+    )
+
+    mkdirSync(
+      runDirectory,
+      {
+        recursive: true,
+      },
+    )
+
+    const packetPath =
+      path.join(
+        taskDirectory,
+        `${taskId}.json`,
+      )
+
+    writeFileSync(
+      packetPath,
+      `${JSON.stringify(
+        packet,
+        null,
+        2,
+      )}\n`,
+      {
+        mode: 0o600,
+      },
+    )
+
+    const promptResult =
+      execute(
+        process.execPath,
+        [
+          path.join(
+            repoRoot,
+            'tooling',
+            'control-plane',
+            'runner',
+            'task-prompt.mjs',
+          ),
+          packetPath,
+        ],
+        {
+          cwd:
+            worktree.worktree_path,
+        },
+      )
+
+    if (!successful(promptResult)) {
+      throw new Error(
+        'Unable to build task prompt.',
+      )
+    }
+
+    const prompt =
+      promptResult.stdout
+
+    const promptPath =
+      path.join(
+        runDirectory,
+        'prompt.txt',
+      )
+
+    const logPath =
+      path.join(
+        runDirectory,
+        'codex.jsonl',
+      )
+
+    writeFileSync(
+      promptPath,
+      `${prompt}\n`,
+      {
+        mode: 0o600,
+      },
+    )
+
+    executionId =
+      startExecution({
+        taskId,
+        route,
+        worktree,
+        parent,
+      })
+
+    const startedAt =
+      Date.now()
+
+    const codexResult =
+      execute(
+        'codex',
+        [
+          'exec',
+          '--json',
+          '--ephemeral',
+
+          '--sandbox',
+          'workspace-write',
+
+          '-C',
+          worktree.worktree_path,
+
+          '--model',
+          route.model,
+
+          '-c',
+          `model_reasoning_effort="${route.reasoning_effort}"`,
+
+          prompt,
+        ],
+        codexExecutionOptions({
+          cwd:
+            worktree.worktree_path,
+
+          timeout:
+            45 * 60 * 1000,
+        }),
+      )
+
+    writeFileSync(
+      logPath,
+      `${codexResult.stdout}\n`,
+      {
+        mode: 0o600,
+      },
+    )
+
+    const elapsedMs =
+      Date.now() - startedAt
+
+    const succeeded =
+      successful(codexResult)
+
+    finishExecution({
+      executionId,
+
+      status:
+        succeeded
+          ? 'succeeded'
+          : 'failed',
+
+      promptBytes:
+        Buffer.byteLength(
+          prompt,
+          'utf8',
+        ),
+
+      outputBytes:
+        Buffer.byteLength(
+          codexResult.stdout,
+          'utf8',
+        ),
+
+      runLogPath:
+        logPath,
+
+      metadata: {
+        elapsed_ms:
+          elapsedMs,
+
+        exit_code:
+          codexResult.code,
+
+        stderr:
+          codexResult.stderr
+            ? codexResult.stderr.slice(
+                0,
+                4000,
+              )
+            : '',
+      },
+    })
+
+    output({
+      ok: succeeded,
+
+      command:
+        'task-run',
+
+      task_id:
+        taskId,
+
+      execution_id:
+        executionId,
+
+      route: {
+        profile:
+          route.profile,
+
+        model:
+          route.model,
+
+        reasoning_effort:
+          route.reasoning_effort,
+      },
+
+      parent,
+
+      worktree,
+
+      execution: {
+        exit_code:
+          codexResult.code,
+
+        elapsed_ms:
+          elapsedMs,
+
+        log_path:
+          logPath,
+      },
+    }, succeeded ? 0 : 1)
+  }
+  catch (error) {
+    output({
+      ok: false,
+      command: 'task-run',
+      task_id: taskId,
+      execution_id:
+        executionId,
+      error:
+        error.message,
+    }, 1)
+  }
+}
+
 switch (command) {
   case 'ping':
     ping()
@@ -1025,6 +1591,14 @@ switch (command) {
     taskRelease()
     break
 
+  case 'task-prepare':
+    taskPrepare()
+    break
+
+  case 'task-run':
+    taskRun()
+    break
+
   default:
     output({
       ok: false,
@@ -1041,6 +1615,8 @@ switch (command) {
         'task-packet <task-id>',
         'task-claim <suit>',
         'task-release <task-id>',
+        'task-prepare <task-id>',
+        'task-run <task-id>',
       ],
     }, 64)
 }
