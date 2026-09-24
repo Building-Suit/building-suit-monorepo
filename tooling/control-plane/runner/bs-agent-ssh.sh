@@ -2,6 +2,16 @@
 
 set -euo pipefail
 
+# The forced SSH runner loads only non-secret database routing
+# configuration from this machine. Passwords remain in ~/.pgpass.
+CONTROL_DB_ENV_FILE="$HOME/.config/building-suit-control-plane/db.env"
+
+if [[ -f "$CONTROL_DB_ENV_FILE" ]]; then
+  set -a
+  source "$CONTROL_DB_ENV_FILE"
+  set +a
+fi
+
 PRIMARY_CONTROL_ROOT="$HOME/Dev/building-suit-monorepo/.local/worktrees/engineering-control-plane"
 FALLBACK_CONTROL_ROOT="$HOME/Dev/building-suit-monorepo"
 
