@@ -6,13 +6,18 @@ create extension if not exists dblink with schema extensions;
 select plan(23);
 
 create temp table transaction_quota_ids (key text primary key, value uuid not null);
-insert into transaction_quota_ids
-select 'org', id from public.organizations where name = 'Alpha Trading';
+-- A fresh tenant avoids seed/browser postings in the quota baseline.
+insert into auth.users(id,email,raw_user_meta_data,raw_app_meta_data) values('19000000-0000-4000-8000-000000000099','monthly-quota-fixture@test.local','{}','{}');
+select set_config('request.jwt.claims','{"sub":"19000000-0000-4000-8000-000000000099","role":"authenticated"}',true);
+insert into transaction_quota_ids values ('org', public.create_organization('Monthly quota fixture','EGP'));
+create function pg_temp.source_count() returns bigint language sql as $$
+  select cardinality(enum_range(null::public.transaction_source))::bigint;
+$$;
 
 update public.subscriptions
 set plan_id = (select id from public.subscription_plans where key = 'ledger_suit')
 where organization_id = (select value from transaction_quota_ids where key = 'org');
-update public.subscription_entitlements set limit_value = 10
+update public.subscription_entitlements set limit_value = pg_temp.source_count() + 3
 where plan_id = (select id from public.subscription_plans where key = 'solo')
   and feature_key = 'max_monthly_transactions';
 
@@ -34,11 +39,11 @@ from unnest(enum_range(null::public.transaction_source)) source;
 
 select is(app.plan_quota_usage(
   (select value from transaction_quota_ids where key = 'org'),
-  'max_monthly_transactions'), 7::bigint,
+  'max_monthly_transactions'), pg_temp.source_count(),
   'all posting sources consume one business transaction each');
 select is((select count(distinct source) from public.transactions
-  where description like 'Quota source %'), 7::bigint,
-  'manual, import, recurring, commitment, reversal, opening balance, and API sources share the boundary');
+  where description like 'Quota source %'), pg_temp.source_count(),
+  'every current transaction source shares the boundary');
 select is((select timezone from app.transaction_usage_buckets
   where organization_id = (select value from transaction_quota_ids where key = 'org')
     and now() >= bucket_start and now() < bucket_end),
@@ -59,7 +64,7 @@ insert into public.transactions (
    'manual', current_date, 'EGP', 1, 'Quota voided', now());
 select is(app.plan_quota_usage(
   (select value from transaction_quota_ids where key = 'org'),
-  'max_monthly_transactions'), 7::bigint,
+  'max_monthly_transactions'), pg_temp.source_count(),
   'draft, failed, and never-posted void transactions consume nothing');
 
 insert into public.transactions (
@@ -75,14 +80,14 @@ update public.transactions set status = 'posted', posted_at = now(), posting_dat
 where id = '19000000-0000-4000-8000-000000000010';
 select is(app.plan_quota_usage(
   (select value from transaction_quota_ids where key = 'org'),
-  'max_monthly_transactions'), 8::bigint,
+  'max_monthly_transactions'), pg_temp.source_count() + 1,
   'backdated accounting dates consume the month in which posting occurs');
 
 update public.transactions set status = 'posted'
 where id = '19000000-0000-4000-8000-000000000010';
 select is(app.plan_quota_usage(
   (select value from transaction_quota_ids where key = 'org'),
-  'max_monthly_transactions'), 8::bigint,
+  'max_monthly_transactions'), pg_temp.source_count() + 1,
   'replaying an already-posted transition does not consume twice');
 
 select throws_ok($sql$
@@ -100,7 +105,7 @@ $sql$, 'P0001', 'QUOTA_ROLLBACK_TEST',
   'a failed posting rolls its bucket increment back atomically');
 select is(app.plan_quota_usage(
   (select value from transaction_quota_ids where key = 'org'),
-  'max_monthly_transactions'), 8::bigint,
+  'max_monthly_transactions'), pg_temp.source_count() + 1,
   'rolled-back postings leave usage unchanged');
 
 update public.subscriptions
@@ -112,10 +117,10 @@ insert into public.transactions (
 )
 select (select value from transaction_quota_ids where key = 'org'), 'income',
   'posted', 'manual', current_date, current_date, 'EGP', 1, now(), 'Quota boundary ' || n
-from generate_series(9, 10) n;
+from generate_series(pg_temp.source_count() + 2, pg_temp.source_count() + 3) n;
 select is(app.plan_quota_usage(
   (select value from transaction_quota_ids where key = 'org'),
-  'max_monthly_transactions'), 10::bigint,
+  'max_monthly_transactions'), pg_temp.source_count() + 3,
   'the exact monthly boundary is permitted');
 select throws_ok(
   format($sql$insert into public.transactions (
@@ -124,7 +129,7 @@ select throws_ok(
   ) values (%L, 'income', 'posted', 'manual', current_date, current_date,
     'EGP', 1, now(), 'Quota blocked')$sql$,
     (select value from transaction_quota_ids where key = 'org')),
-  'P0001', 'PLAN_TRANSACTION_LIMIT_REACHED: usage 10, requested 1, limit 10',
+  'P0001', format('PLAN_TRANSACTION_LIMIT_REACHED: usage %s, requested 1, limit %s', pg_temp.source_count() + 3, pg_temp.source_count() + 3),
   'the next posting is rejected with the stable plan error');
 
 insert into public.transactions (
@@ -142,7 +147,7 @@ select is((select used_value from app.transaction_usage_buckets
   1::bigint, 'a new workspace-calendar month starts with fresh capacity');
 select is(app.plan_quota_usage(
   (select value from transaction_quota_ids where key = 'org'),
-  'max_monthly_transactions'), 10::bigint,
+  'max_monthly_transactions'), pg_temp.source_count() + 3,
   'future-month usage does not alter the active month');
 select throws_ok(
   format($sql$update app.transaction_usage_buckets set bucket_end = bucket_end + interval '1 day'
@@ -160,13 +165,13 @@ insert into public.transactions (
 )
 select (select value from transaction_quota_ids where key = 'org'), 'income',
   'posted', 'manual', current_date, current_date, 'EGP', 1, now(), 'Quota downgrade ' || n
-from generate_series(11, 12) n;
+from generate_series(pg_temp.source_count() + 4, pg_temp.source_count() + 5) n;
 update public.subscriptions
 set plan_id = (select id from public.subscription_plans where key = 'solo')
 where organization_id = (select value from transaction_quota_ids where key = 'org');
 select is(app.plan_quota_usage(
   (select value from transaction_quota_ids where key = 'org'),
-  'max_monthly_transactions'), 12::bigint,
+  'max_monthly_transactions'), pg_temp.source_count() + 5,
   'downgrade preserves historical rows and reports over-limit usage');
 select throws_ok(
   format($sql$insert into public.transactions (
@@ -175,12 +180,17 @@ select throws_ok(
   ) values (%L, 'income', 'posted', 'manual', current_date, current_date,
     'EGP', 1, now())$sql$,
     (select value from transaction_quota_ids where key = 'org')),
-  'P0001', 'PLAN_TRANSACTION_LIMIT_REACHED: usage 12, requested 1, limit 10',
+  'P0001', format('PLAN_TRANSACTION_LIMIT_REACHED: usage %s, requested 1, limit %s', pg_temp.source_count() + 5, pg_temp.source_count() + 3),
   'an over-limit downgrade blocks only new postings');
 select is((select count(*) from public.transactions
   where organization_id = (select value from transaction_quota_ids where key = 'org')
     and posted_at is not null and posted_at <= now()),
-  12::bigint, 'quota enforcement never deletes existing transaction history');
+  pg_temp.source_count() + 5, 'quota enforcement never deletes existing transaction history');
+
+-- The remaining fixtures deliberately exercise a ten-posting limit.
+update public.subscription_entitlements set limit_value = 10
+where plan_id = (select id from public.subscription_plans where key = 'solo')
+  and feature_key = 'max_monthly_transactions';
 
 -- A timezone change may create a shortened bridge between reset boundaries,
 -- but that bridge must retain the preceding bucket's consumed allowance.

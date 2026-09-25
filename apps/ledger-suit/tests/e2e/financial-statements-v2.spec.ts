@@ -21,9 +21,15 @@ for (const locale of ['en', 'ar'] as const) {
     const request = await accountRequest
     const backend = new URL(request.url()).origin
     expect(backend).toBe('http://127.0.0.1:60321')
-    const organizationId = new URL(request.url()).searchParams.get('organization_id')!.replace('eq.', '')
     const auth = await request.allHeaders()
     const headers = { apikey: auth.apikey!, authorization: auth.authorization! }
+    const organizationId = new URL(request.url()).searchParams.get('organization_id')!.replace('eq.', '')
+    // Reconcile a period after all existing journals so seeded entries and a
+    // previous attempt's deliberately unmapped journal cannot pollute this run.
+    const latestResponse = await page.request.get(`${backend}/rest/v1/transactions?organization_id=eq.${organizationId}&select=transaction_date&order=transaction_date.desc&limit=1`, { headers })
+    expect(latestResponse.ok()).toBe(true)
+    const latest = await latestResponse.json() as Array<{ transaction_date: string }>
+    const year = Math.max(new Date().getUTCFullYear(), Number(latest[0]?.transaction_date.slice(0, 4) ?? 0)) + 1
     async function rpc(name: string, data: Record<string, unknown>) {
       const response = await page.request.post(`${backend}/rest/v1/rpc/${name}`, { headers, data: { p_organization_id: organizationId, ...data } })
       const payload = await response.json()
@@ -32,7 +38,7 @@ for (const locale of ['en', 'ar'] as const) {
     }
     const stamp = Date.now().toString().slice(-9)
     const month = locale === 'en' ? '06' : '07'
-    const date = (day: string) => `2026-${month}-${day}`
+    const date = (day: string) => `${year}-${month}-${day}`
     const cash = await rpc('create_account', { p_name: `FS cash ${stamp}`, p_type: 'asset', p_subtype: 'bank' })
     const revenue = await rpc('create_account', { p_name: `FS revenue ${stamp}`, p_type: 'revenue', p_subtype: 'service_revenue' })
     const expense = await rpc('create_account', { p_name: `FS expense ${stamp}`, p_type: 'expense', p_subtype: 'rent' })

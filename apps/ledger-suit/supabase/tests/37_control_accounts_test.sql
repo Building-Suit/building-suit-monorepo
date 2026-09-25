@@ -165,11 +165,11 @@ select throws_ok(format('update public.accounts set account_role=%L where id=%L'
 
 select is((select status from public.reconcile_control_accounts(
   (select value from control_ids where key='org'),'2030-01-31') where control_account_id=(select value from control_ids where key='ar')),
-  'provider_unavailable'::public.control_reconciliation_status,
-  'production reconciliation explicitly reports provider unavailable');
+  'unreconciled'::public.control_reconciliation_status,
+  'real AR provider exposes the unmatched Control adjustment');
 select is((select subledger_balance_minor from public.reconcile_control_accounts(
   (select value from control_ids where key='org'),'2030-01-31') where control_account_id=(select value from control_ids where key='ar')),
-  null::bigint, 'provider absence never fabricates a zero subledger balance');
+  0::bigint, 'empty authoritative AR subledger has a real zero balance');
 select is((select gl_balance_minor from public.reconcile_control_accounts(
   (select value from control_ids where key='org'),'2030-01-31') where control_account_id=(select value from control_ids where key='ar')),
   1000::bigint, 'dated reconciliation derives the Control balance from posted GL entries');

@@ -3,9 +3,10 @@ create extension if not exists pgtap with schema extensions;
 select no_plan();
 create temp table fs_ids(key text primary key,id uuid);
 grant all on fs_ids to authenticated;
-insert into fs_ids select 'org',id from public.organizations where name='Alpha Trading';
-select set_config('request.jwt.claims','{"sub":"a0000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+insert into auth.users(id,email,raw_user_meta_data,raw_app_meta_data) values('41000000-0000-4000-8000-000000000099','statement-fixture@test.local','{}','{}');
+select set_config('request.jwt.claims','{"sub":"41000000-0000-4000-8000-000000000099","role":"authenticated"}',true);
 set local role authenticated;
+insert into fs_ids values ('org',public.create_organization('Isolated financial statement fixture','EGP'));
 insert into fs_ids values
 ('cash',public.create_account((select id from fs_ids where key='org'),'FS Cash','asset','bank',p_code=>'FS100')),
 ('cash2',public.create_account((select id from fs_ids where key='org'),'FS Cash 2','asset','cash',p_code=>'FS101')),
