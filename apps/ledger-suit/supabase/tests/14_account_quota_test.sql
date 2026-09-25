@@ -22,7 +22,8 @@ select
   format('Quota account %s', account_number),
   'asset', 'cash', 'EGP',
   'a0000000-0000-4000-8000-000000000001'
-from generate_series(1, 29) account_number;
+from generate_series(1 + (select count(*)::integer from public.accounts
+  where organization_id = (select value from account_quota_ids where key = 'alpha_org')), 29) account_number;
 
 update public.accounts
 set is_archived = true, archived_at = now()
