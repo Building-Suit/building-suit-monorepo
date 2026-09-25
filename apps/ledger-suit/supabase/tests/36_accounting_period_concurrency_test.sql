@@ -4,26 +4,27 @@ create extension if not exists pgtap with schema extensions;
 create extension if not exists dblink with schema extensions;
 select plan(8);
 
+create temp table period_fixture as
+select gen_random_uuid() user_id, 'Period Race Fixture ' || gen_random_uuid()::text organization_name;
 select extensions.dblink_connect('period_setup', format(
   'host=%s port=%s dbname=postgres user=postgres password=postgres', inet_server_addr(), inet_server_port()));
-select extensions.dblink_exec('period_setup', $setup$
+select extensions.dblink_exec('period_setup', format($setup$
   insert into auth.users (
     id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
     raw_app_meta_data, raw_user_meta_data, created_at, updated_at
   ) values (
-    '36000000-0000-4000-8000-000000000001','00000000-0000-0000-0000-000000000000',
-    'authenticated','authenticated','period-race@test.local',extensions.crypt('password',extensions.gen_salt('bf')),now(),'{}','{}',now(),now()
+    %L,'00000000-0000-0000-0000-000000000000',
+    'authenticated','authenticated',%L,extensions.crypt('password',extensions.gen_salt('bf')),now(),'{}','{}',now(),now()
   );
-  set request.jwt.claims = '{"sub":"36000000-0000-4000-8000-000000000001","role":"authenticated"}';
+  set request.jwt.claims = %L;
   set role authenticated;
-  do $body$ begin perform public.create_organization('Period Race Fixture','EGP'); end $body$;
+  do $body$ begin perform public.create_organization(%L,'EGP'); end $body$;
   reset role;
-  select app.seed_chart_of_accounts((select id from public.organizations where name='Period Race Fixture'));
+  select app.seed_chart_of_accounts((select id from public.organizations where name=%L));
   insert into public.accounting_periods (
     organization_id,fiscal_year_start,fiscal_year_end,start_date,end_date,created_by,status_changed_by
   ) select id,'2026-01-01','2026-12-31','2026-01-01','2026-12-31',
-      '36000000-0000-4000-8000-000000000001','36000000-0000-4000-8000-000000000001'
-    from public.organizations where name='Period Race Fixture';
+      %L,%L from public.organizations where name=%L;
   create or replace function public.test_period_race_post(p_org uuid,p_debit uuid,p_credit uuid,p_key text)
   returns text language plpgsql security definer set search_path='' as $body$
   declare v_id uuid;
@@ -35,7 +36,10 @@ select extensions.dblink_exec('period_setup', $setup$
       p_description=>'Period race',p_idempotency_key=>p_key);
     return 'posted:'||v_id::text;
   exception when others then return sqlstate||':'||sqlerrm; end $body$;
-$setup$);
+$setup$, user_id, 'period-race-' || user_id::text || '@test.local',
+  jsonb_build_object('sub',user_id,'role','authenticated')::text,
+  organization_name, organization_name, user_id, user_id, organization_name))
+from period_fixture;
 select extensions.dblink_disconnect('period_setup');
 
 create temp table race_ids as
@@ -43,7 +47,7 @@ select o.id org,
   (select id from public.accounting_periods where organization_id=o.id) period,
   (select id from public.accounts where organization_id=o.id and type='expense' and account_role='posting' order by code limit 1) debit,
   (select id from public.accounts where organization_id=o.id and system_key='cash') credit
-from public.organizations o where o.name='Period Race Fixture';
+from public.organizations o cross join period_fixture f where o.name=f.organization_name;
 
 select extensions.dblink_connect('period_race_1', format('host=%s port=%s dbname=postgres user=postgres password=postgres',inet_server_addr(),inet_server_port()));
 select extensions.dblink_connect('period_race_2', format('host=%s port=%s dbname=postgres user=postgres password=postgres',inet_server_addr(),inet_server_port()));
