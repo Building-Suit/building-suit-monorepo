@@ -26,7 +26,7 @@
     "table:inventory": "node tooling/ui/inventory.mjs",
     "db:preflight": "node tooling/database/preflight.mjs",
     "new:platform": "node tooling/new-platform/generate.mjs",
-    "db:test:ledger": "supabase --workdir apps/ledger-suit test db --local",
+    "db:test:ledger": "supabase --workdir apps/ledger-suit db reset --local && supabase --workdir apps/ledger-suit test db --local",
     "db:test:shop": "node tooling/database/test-shop-local.mjs",
     "db": "node tooling/database/cli.mjs",
     "agent:preflight": "node tooling/git/preflight.mjs",

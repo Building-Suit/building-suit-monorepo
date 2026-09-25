@@ -558,11 +558,54 @@ const changedBrowserTests =
     : []
 
 
+let browserEnvironmentReady =
+  true
+
+
+if (
+  browserRequired &&
+  suit.slug === 'ledger-suit'
+) {
+
+  const browserDatabaseReset =
+    runCheck({
+      name:
+        'browser-database-reset',
+
+      program:
+        'pnpm',
+
+      args: [
+        'exec',
+        'supabase',
+        '--workdir',
+        'apps/ledger-suit',
+        'db',
+        'reset',
+        '--local',
+      ],
+
+      timeout:
+        15 * 60 * 1000,
+    })
+
+
+  results.push(
+    browserDatabaseReset,
+  )
+
+
+  browserEnvironmentReady =
+    browserDatabaseReset.status ===
+    'pass'
+}
+
 if (browserRequired) {
 
   if (
-    appPackage?.name &&
-    changedBrowserTests.length > 0
+   browserEnvironmentReady &&
+   appPackage?.name &&
+   changedBrowserTests.length > 0
   ) {
 
     results.push(
