@@ -213,6 +213,22 @@ case "$REQUESTED_COMMAND" in
       "$TASK_ID"
     ;;
 
+  "bs-agent task-engine "*)
+    TASK_ID="${REQUESTED_COMMAND#bs-agent task-engine }"
+
+    if [[ ! "$TASK_ID" =~ ^[A-Z][A-Z0-9-]{2,63}$ ]]; then
+      printf '%s\n' \
+        '{"ok":false,"error":"invalid_task_id"}'
+
+      exit 64
+    fi
+
+    exec "$NODE_BIN" \
+      "$AGENT" \
+      task-engine \
+      "$TASK_ID"
+    ;;
+
   "bs-agent task-publish "*)
     TASK_ID="${REQUESTED_COMMAND#bs-agent task-publish }"
 
