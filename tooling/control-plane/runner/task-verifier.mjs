@@ -467,18 +467,90 @@ const databaseChanged =
   )
 
 if (databaseChanged) {
-  const dbScripts = {
-    'ledger-suit':
-      'db:test:ledger',
 
-    'shop-suit':
-      'db:test:shop',
+  if (
+    suit.slug === 'ledger-suit'
+  ) {
+
+    results.push(
+      runCheck({
+        name:
+          'database-reset',
+
+        program:
+          'pnpm',
+
+        args: [
+          'exec',
+          'supabase',
+          '--workdir',
+          'apps/ledger-suit',
+          'db',
+          'reset',
+          '--local',
+        ],
+
+        timeout:
+          20 * 60 * 1000,
+      }),
+    )
+
+
+    if (
+      results.at(-1)?.status ===
+      'pass'
+    ) {
+
+      results.push(
+        runCheck({
+          name:
+            'database-tests',
+
+          program:
+            'pnpm',
+
+          args: [
+            'exec',
+            'supabase',
+            '--workdir',
+            'apps/ledger-suit',
+            'test',
+            'db',
+            '--local',
+          ],
+
+          timeout:
+            30 * 60 * 1000,
+        }),
+      )
+
+    }
+
   }
+  else if (
+    suit.slug === 'shop-suit'
+  ) {
 
-  const dbScript =
-    dbScripts[suit.slug]
+    results.push(
+      runCheck({
+        name:
+          'database-tests',
 
-  if (!dbScript) {
+        program:
+          'pnpm',
+
+        args: [
+          'db:test:shop',
+        ],
+
+        timeout:
+          30 * 60 * 1000,
+      }),
+    )
+
+  }
+  else {
+
     results.push({
       name:
         'database-tests',
@@ -504,25 +576,9 @@ if (databaseChanged) {
       elapsed_ms:
         0,
     })
+
   }
-  else {
-    results.push(
-      runCheck({
-        name:
-          'database-tests',
 
-        program:
-          'pnpm',
-
-        args: [
-          dbScript,
-        ],
-
-        timeout:
-          30 * 60 * 1000,
-      }),
-    )
-  }
 }
 
 const browserRequired =
