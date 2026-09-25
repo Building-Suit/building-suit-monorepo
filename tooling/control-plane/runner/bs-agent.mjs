@@ -3565,6 +3565,52 @@ function taskEngine() {
         return
       }
 
+      if (
+        action === 'task-publish' &&
+        child.payload.ok !== true
+      ) {
+
+        const publicationError =
+          child.payload.publication?.error ??
+          child.payload.error ??
+          'publication_failed'
+
+
+        const retryablePublicationError =
+          publicationError ===
+          'pr_create_failed'
+
+
+        if (
+          !retryablePublicationError ||
+          publishAttempts >= 2
+        ) {
+
+          output({
+            ok: false,
+
+            command:
+              'task-engine',
+
+            task_id:
+              taskId,
+
+            error:
+              publicationError,
+
+            stage:
+              'task-publish',
+
+            details:
+              child.payload,
+
+            trail,
+          }, 1)
+
+          return
+        }
+
+      }
 
       if (
         child.payload.ok !== true &&
