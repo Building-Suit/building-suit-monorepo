@@ -20,7 +20,7 @@ const controlRoot =
     new URL('../../../', import.meta.url),
   )
 
-const repository =
+const defaultRepository =
   'Building-Suit/building-suit-monorepo'
 
 const [contextPath] =
@@ -80,7 +80,13 @@ const {
   allowed_paths: allowedPaths,
   requirements,
   verification,
+  project = {},
+  workstream = {},
 } = context
+
+const repository =
+  project.github_repository ??
+  defaultRepository
 
 
 const worktreePath =
@@ -298,6 +304,9 @@ const liveParentResult =
       ),
 
       suit.stack_key,
+      project.local_repository_root ?? '.',
+      repository,
+      project.integration_branch ?? 'stg',
     ],
     {
       cwd:
@@ -747,14 +756,15 @@ const verificationLines =
 const parentDescription =
   liveParent.parent_pr
     ? `#${liveParent.parent_pr.number} (${liveParent.parent_branch})`
-    : `stg (${liveParent.parent_sha.slice(0, 12)})`
+    : `${project.integration_branch ?? 'stg'} (${liveParent.parent_sha.slice(0, 12)})`
 
 
 const prBody =
 `## Task
 
 - Task: \`${task.task_id}\`
-- Suit: \`${suit.slug}\`
+- Project: \`${project.slug ?? 'building-suit'}\`
+- Workstream: \`${workstream.slug ?? suit.slug}\`
 - Stack: \`${suit.stack_key}\`
 - Parent: ${parentDescription}
 

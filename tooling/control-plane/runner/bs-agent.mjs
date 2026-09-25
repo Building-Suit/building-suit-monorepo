@@ -4,7 +4,6 @@ import { spawnSync } from 'node:child_process'
 import {
   mkdirSync,
   mkdtempSync,
-  readFileSync,
   existsSync,
   rmSync,
   writeFileSync,
@@ -18,6 +17,15 @@ import {
   listProfiles,
   resolveProfile,
 } from '../routing/router.mjs'
+import {
+  profileForAttempt,
+  retryDecision,
+  validateRetryPolicy,
+} from '../lib/retry-policy.mjs'
+import {
+  redact,
+  redactText,
+} from '../lib/redaction.mjs'
 
 const automationCodexHome =
   process.env.BS_CODEX_HOME ??
@@ -30,22 +38,27 @@ const automationCodexHome =
 
 const controlDatabase = {
   host:
+    process.env.AUTOMATION_CONTROL_DB_HOST ??
     process.env.BS_CONTROL_DB_HOST ??
     '127.0.0.1',
 
   port:
+    process.env.AUTOMATION_CONTROL_DB_PORT ??
     process.env.BS_CONTROL_DB_PORT ??
     '54329',
 
   database:
+    process.env.AUTOMATION_CONTROL_DB_NAME ??
     process.env.BS_CONTROL_DB_NAME ??
     'building_suit_control',
 
   user:
+    process.env.AUTOMATION_CONTROL_DB_USER ??
     process.env.BS_CONTROL_DB_USER ??
     'bs_control_app',
 
   sslmode:
+    process.env.AUTOMATION_CONTROL_DB_SSLMODE ??
     process.env.BS_CONTROL_DB_SSLMODE ??
     'prefer',
 }
@@ -55,8 +68,6 @@ const repoRoot = fileURLToPath(new URL('../../../', import.meta.url))
 const githubRepository = 'Building-Suit/building-suit-monorepo'
 
 const [command, ...args] = process.argv.slice(2)
-
-const maxExecutionAttempts = 5
 
 function execute(program, programArgs = [], options = {}) {
   const childEnv = {
@@ -886,7 +897,7 @@ function taskPacket() {
     const result = controlQuery(
       `
         SELECT COALESCE(
-          control.task_packet(
+          control.generic_task_packet(
             :'task_id'
           ),
           'null'::jsonb
@@ -1034,11 +1045,24 @@ function runJsonHelper(
   )
 }
 
-function resolveStackParent(stackKey) {
+function projectRuntime(packet) {
+  const project = packet.project ?? {}
+  return {
+    repository_root: project.local_repository_root ?? '.',
+    worktree_root: project.worktree_root ?? '.local/worktrees',
+    github_repository: project.github_repository ?? githubRepository,
+    integration_branch: project.integration_branch ?? 'stg',
+  }
+}
+
+function resolveStackParent(stackKey, project) {
   return runJsonHelper(
     'tooling/control-plane/runner/stack-parent.mjs',
     [
       stackKey,
+      project.repository_root,
+      project.github_repository,
+      project.integration_branch,
     ],
   )
 }
@@ -1047,6 +1071,7 @@ function prepareTaskWorktree(
   taskId,
   stackKey,
   parentSha,
+  project,
 ) {
   return runJsonHelper(
     'tooling/control-plane/runner/task-worktree.mjs',
@@ -1054,6 +1079,8 @@ function prepareTaskWorktree(
       taskId,
       stackKey,
       parentSha,
+      project.repository_root,
+      project.worktree_root,
     ],
   )
 }
@@ -1077,7 +1104,7 @@ function taskPrepare() {
       controlQuery(
         `
           SELECT COALESCE(
-            control.task_packet(
+            control.generic_task_packet(
               :'task_id'
             ),
             'null'::jsonb
@@ -1111,9 +1138,13 @@ function taskPrepare() {
     const stackKey =
       packet.suit.stack_key
 
+    const project =
+      projectRuntime(packet)
+
     const parent =
       resolveStackParent(
         stackKey,
+        project,
       )
 
     const prepared =
@@ -1121,7 +1152,32 @@ function taskPrepare() {
         taskId,
         stackKey,
         parent.parent_sha,
+        project,
       )
+
+    controlQuery(
+      `
+        UPDATE control.tasks
+        SET metadata = jsonb_set(
+              metadata,
+              '{preparation}',
+              :'preparation'::jsonb,
+              true
+            ),
+            engine_stage = 'prepared'
+        WHERE task_id = :'task_id';
+        INSERT INTO control.audit_events(
+          project_id, workstream_slug, task_id, action, source, new_value
+        )
+        SELECT project_id, workstream_slug, task_id, 'task_prepared', 'runner', :'preparation'::jsonb
+        FROM control.tasks WHERE task_id = :'task_id';
+        SELECT jsonb_build_object('recorded', true);
+      `,
+      {
+        task_id: taskId,
+        preparation: JSON.stringify({ parent, worktree: prepared }),
+      },
+    )
 
     output({
       ok: true,
@@ -1146,13 +1202,14 @@ function startExecution({
   route,
   worktree,
   parent,
+  retryPolicy,
+  promptPath,
 }) {
   const result =
     controlQuery(
       `
-        SELECT jsonb_build_object(
-          'execution_id',
-          control.start_execution(
+        WITH started AS (
+          SELECT control.start_execution(
             :'task_id',
             :'model_profile',
             :'model_name',
@@ -1161,8 +1218,18 @@ function startExecution({
             :'branch_name',
             :'parent_branch',
             :'parent_sha'
-          )
-        );
+          ) AS execution_id
+        ), recorded AS (
+          UPDATE control.executions e
+          SET resolved_retry_policy = :'retry_policy'::jsonb,
+              prompt_path = :'prompt_path',
+              engine_stage = 'implementation'
+          FROM started
+          WHERE e.execution_id = started.execution_id
+          RETURNING e.execution_id
+        )
+        SELECT jsonb_build_object('execution_id', execution_id)
+        FROM recorded;
       `,
       {
         task_id:
@@ -1188,6 +1255,12 @@ function startExecution({
 
         parent_sha:
           parent.parent_sha,
+
+        retry_policy:
+          JSON.stringify(retryPolicy),
+
+        prompt_path:
+          promptPath,
       },
     )
 
@@ -1266,7 +1339,7 @@ function taskRun() {
       controlQuery(
         `
           SELECT COALESCE(
-            control.task_packet(
+            control.generic_task_packet(
               :'task_id'
             ),
             'null'::jsonb
@@ -1297,27 +1370,52 @@ function taskRun() {
       )
     }
 
+    const project =
+      projectRuntime(packet)
+
+    const prepared = packet.preparation
+
     const parent =
+      prepared?.parent ??
       resolveStackParent(
         packet.suit.stack_key,
+        project,
       )
 
     const worktree =
+      prepared?.worktree ??
       prepareTaskWorktree(
         taskId,
         packet.suit.stack_key,
         parent.parent_sha,
+        project,
+      )
+
+    if (!existsSync(worktree.worktree_path)) {
+      throw new Error(
+        'prepared_worktree_not_found',
+      )
+    }
+
+    const retryPolicy =
+      validateRetryPolicy(
+        packet.retry_policy,
+      )
+
+    const firstProfile =
+      profileForAttempt(
+        retryPolicy,
+        1,
       )
 
     const route =
-      packet.task.model_profile ===
-      'no_ai'
+      firstProfile === 'no_ai'
         ? resolveProfile(
             'no_ai',
             [],
           )
         : resolveCodexRoute(
-            packet.task.model_profile,
+            firstProfile,
           )
 
     if (!route.uses_codex) {
@@ -1427,6 +1525,8 @@ function taskRun() {
         route,
         worktree,
         parent,
+        retryPolicy,
+        promptPath,
       })
 
     const startedAt =
@@ -1517,6 +1617,15 @@ function taskRun() {
       },
     })
 
+    if (!succeeded) {
+      recordControlFailure(
+        taskId,
+        'implementation',
+        codexResult.stderr || 'codex_execution_failed',
+        { exit_code: codexResult.code, log_path: logPath },
+      )
+    }
+
     output({
       ok: succeeded,
 
@@ -1557,6 +1666,11 @@ function taskRun() {
     }, succeeded ? 0 : 1)
   }
   catch (error) {
+    recordControlFailure(
+      taskId,
+      'implementation',
+      error.message,
+    )
     output({
       ok: false,
       command: 'task-run',
@@ -1591,6 +1705,59 @@ function latestExecution(taskId) {
   )
 }
 
+function recordControlFailure(
+  taskId,
+  stage,
+  error,
+  metadata = {},
+) {
+  try {
+    const safeError = redactText(error ?? 'Unknown failure')
+    const safeMetadata = redact(metadata)
+    const execution = latestExecution(taskId)
+    const policy = resolvedRetryPolicy(taskId)
+    const decision = execution
+      ? retryDecision(policy, execution.attempt)
+      : { allowed: false }
+    const legalActions = ['inspect', 'error-bundle', 'resume']
+    if (stage === 'verification') legalActions.push('reverify')
+    if (decision.allowed) legalActions.push('retry')
+    if (stage === 'publication') legalActions.push('publish', 'reparent')
+    controlQuery(
+      `
+        INSERT INTO control.failures(
+          project_id,workstream_slug,task_id,execution_id,attempt,stage,error_code,
+          summary,raw_error,retry_available,next_profile,human_intervention_required,
+          legal_actions,metadata
+        )
+        SELECT t.project_id,t.workstream_slug,t.task_id,
+          NULLIF(:'execution_id','')::bigint,NULLIF(:'attempt','')::integer,:'stage',:'error_code',
+          :'summary',:'raw_error',:'retry_available'::boolean,NULLIF(:'next_profile',''),
+          :'human_required'::boolean,:'legal_actions'::jsonb,:'metadata'::jsonb
+        FROM control.tasks t WHERE t.task_id=:'task_id';
+        SELECT jsonb_build_object('recorded',true);
+      `,
+      {
+        task_id: taskId,
+        execution_id: execution ? String(execution.execution_id) : '',
+        attempt: execution ? String(execution.attempt) : '',
+        stage,
+        error_code: safeError.split(/\s/)[0].slice(0,120) || 'failure',
+        summary: safeError.slice(0,1000),
+        raw_error: JSON.stringify(safeMetadata).slice(0,12000),
+        retry_available: decision.allowed ? 'true' : 'false',
+        next_profile: decision.next_profile ?? '',
+        human_required: ['publication','reparent'].includes(stage) ? 'true' : 'false',
+        legal_actions: JSON.stringify(legalActions),
+        metadata: JSON.stringify(safeMetadata),
+      },
+    )
+  }
+  catch {
+    // Failure recording must not replace the original runner error.
+  }
+}
+
 function beginVerification(
   taskId,
   executionId,
@@ -1599,10 +1766,11 @@ function beginVerification(
     controlQuery(
       `
         SELECT jsonb_build_object(
-          'started',
-          control.begin_verification(
+          'verification_run_id',
+          control.start_verification_run(
             :'task_id',
-            :'execution_id'::bigint
+            :'execution_id'::bigint,
+            'runner'
           )
         );
       `,
@@ -1620,8 +1788,78 @@ function beginVerification(
   )
 }
 
+function queueVerificationChecks(
+  verificationRunId,
+) {
+  const checks = [
+    ['dependencies', 'pnpm install --frozen-lockfile --prefer-offline'],
+    ['git-diff-check', 'git diff --check'],
+    ['workspace-check', 'pnpm check'],
+    ['app-typecheck', 'project-configured typecheck'],
+    ['app-lint', 'project-configured lint'],
+    ['app-unit', 'project-configured unit tests'],
+    ['app-build', 'project-configured build'],
+    ['database-tests', 'project-configured focused database tests'],
+    ['browser-tests', 'project-configured focused browser tests'],
+  ]
+
+  for (const [name, checkCommand] of checks) {
+    controlQuery(
+      `
+        SELECT jsonb_build_object(
+          'verification_id',
+          control.queue_verification_check(
+            :'verification_run_id'::bigint,
+            :'check_name',
+            :'check_command',
+            true
+          )
+        );
+      `,
+      {
+        verification_run_id: String(verificationRunId),
+        check_name: name,
+        check_command: checkCommand,
+      },
+    )
+  }
+}
+
+function skipUnselectedVerificationChecks(
+  verificationRunId,
+  selectedNames,
+) {
+  const result = controlQuery(
+    `
+      WITH updated AS (
+        UPDATE control.verification_results
+        SET status = 'skipped',
+            summary = 'Not selected by the task-focused verification plan.',
+            started_at = COALESCE(started_at, now()),
+            finished_at = now(),
+            elapsed_ms = 0
+        WHERE verification_run_id = :'verification_run_id'::bigint
+          AND status IN ('queued','running')
+          AND NOT EXISTS (
+            SELECT 1
+            FROM jsonb_array_elements_text(:'selected_names'::jsonb) AS selected(check_name)
+            WHERE selected.check_name = verification_results.check_name
+          )
+        RETURNING verification_id
+      )
+      SELECT jsonb_build_object('skipped', count(*)) FROM updated;
+    `,
+    {
+      verification_run_id: String(verificationRunId),
+      selected_names: JSON.stringify([...selectedNames]),
+    },
+  )
+
+  return parseControlJson(result)
+}
+
 function recordVerification(
-  executionId,
+  verificationRunId,
   check,
 ) {
   const result =
@@ -1629,10 +1867,9 @@ function recordVerification(
       `
         SELECT jsonb_build_object(
           'verification_id',
-          control.record_verification(
-            :'execution_id'::bigint,
+          control.update_verification_check(
+            :'verification_run_id'::bigint,
             :'check_name',
-            :'command',
             :'status',
             NULLIF(
               :'exit_code',
@@ -1640,13 +1877,15 @@ function recordVerification(
             )::integer,
             :'summary',
             :'log_path',
-            :'metadata'::jsonb
+            :'elapsed_ms'::bigint,
+            :'command',
+            :'required'::boolean
           )
         );
       `,
       {
-        execution_id:
-          String(executionId),
+        verification_run_id:
+          String(verificationRunId),
 
         check_name:
           check.name,
@@ -1670,14 +1909,11 @@ function recordVerification(
         log_path:
           check.log_path ?? '',
 
-        metadata:
-          JSON.stringify({
-            required:
-              check.required,
+        elapsed_ms:
+          String(check.elapsed_ms ?? 0),
 
-            elapsed_ms:
-              check.elapsed_ms,
-          }),
+        required:
+          check.required === false ? 'false' : 'true',
       },
     )
 
@@ -1688,23 +1924,23 @@ function recordVerification(
 
 function finalizeVerification(
   taskId,
-  executionId,
+  verificationRunId,
 ) {
   const result =
     controlQuery(
       `
         SELECT
-          control.finish_verification(
+          control.finish_verification_run(
             :'task_id',
-            :'execution_id'::bigint
+            :'verification_run_id'::bigint
           );
       `,
       {
         task_id:
           taskId,
 
-        execution_id:
-          String(executionId),
+        verification_run_id:
+          String(verificationRunId),
       },
     )
 
@@ -1733,7 +1969,7 @@ function taskVerify() {
       controlQuery(
         `
           SELECT COALESCE(
-            control.task_packet(
+            control.generic_task_packet(
               :'task_id'
             ),
             'null'::jsonb
@@ -1801,9 +2037,17 @@ function taskVerify() {
         'verification',
       )
 
-    beginVerification(
+    const verificationRun =
+      beginVerification(
       taskId,
       execution.execution_id,
+    )
+
+    const verificationRunId =
+      verificationRun.verification_run_id
+
+    queueVerificationChecks(
+      verificationRunId,
     )
 
     const verifier =
@@ -1821,6 +2065,7 @@ function taskVerify() {
           execution.worktree_path,
           packetPath,
           verificationDirectory,
+          String(verificationRunId),
         ],
         {
           cwd:
@@ -1917,16 +2162,34 @@ function taskVerify() {
       of verification.checks
     ) {
       recordVerification(
-        execution.execution_id,
+        verificationRunId,
         check,
       )
     }
 
+    skipUnselectedVerificationChecks(
+      verificationRunId,
+      new Set(
+        verification.checks.map(
+          check => check.name,
+        ),
+      ),
+    )
+
     const finalResult =
       finalizeVerification(
         taskId,
-        execution.execution_id,
+        verificationRunId,
       )
+
+    if (!finalResult.passed) {
+      recordControlFailure(
+        taskId,
+        'verification',
+        'verification_failed',
+        { verification_run_id: verificationRunId, checks: verification.checks },
+      )
+    }
 
     output({
       ok:
@@ -1940,6 +2203,9 @@ function taskVerify() {
 
       execution_id:
         execution.execution_id,
+
+      verification_run_id:
+        verificationRunId,
 
       result:
         finalResult,
@@ -1963,6 +2229,11 @@ function taskVerify() {
     }, finalResult.passed ? 0 : 1)
   }
   catch (error) {
+    recordControlFailure(
+      taskId,
+      'verification',
+      error.message,
+    )
     output({
       ok: false,
       command:
@@ -1975,64 +2246,29 @@ function taskVerify() {
   }
 }
 
-function nextRetryProfile(
-  previousProfile,
-  previousAttempt,
+function resolvedRetryPolicy(
+  taskId,
 ) {
-  if (
-    previousProfile === 'fast'
-  ) {
+  const result = controlQuery(
+    `
+      SELECT COALESCE(
+        control.resolved_retry_policy(:'task_id'),
+        'null'::jsonb
+      );
+    `,
+    {
+      task_id: taskId,
+    },
+  )
 
-    if (
-      previousAttempt === 1
-    ) {
-      return 'fast'
-    }
-
-    if (
-      previousAttempt >= 4
-    ) {
-      return 'deep'
-    }
-
-    return 'standard'
-
-  }
-
-
-  if (
-    previousProfile === 'standard'
-  ) {
-
-    return previousAttempt >= 4
-      ? 'deep'
-      : 'standard'
-
-  }
-
-
-  if (
-    previousProfile === 'deep'
-  ) {
-    return 'deep'
-  }
-
-
-  if (
-    previousProfile === 'review'
-  ) {
-    return 'review'
-  }
-
-
-  throw new Error(
-    `No retry route for profile "${previousProfile}".`,
+  return validateRetryPolicy(
+    parseControlJson(result),
   )
 }
 
 function retryRoute() {
   const [
-    profile,
+    taskId,
     previousAttemptText,
   ] = args
 
@@ -2058,55 +2294,37 @@ function retryRoute() {
     return
   }
 
-  if (
-    previousAttempt >=
-    maxExecutionAttempts
-  ) {
-    output({
-      ok: true,
-      command:
-        'retry-route',
-
-      allowed:
-        false,
-
-      reason:
-        'retry_limit_reached',
-
-      previous_attempt:
-        previousAttempt,
-
-      max_attempts:
-        maxExecutionAttempts,
-    })
-
-    return
-  }
-
   try {
+    if (!validTaskId(taskId)) {
+      throw new Error(
+        'retry-route now requires a task ID so policy inheritance is explicit.',
+      )
+    }
+
+    const policy =
+      resolvedRetryPolicy(taskId)
+
+    const decision =
+      retryDecision(
+        policy,
+        previousAttempt,
+      )
+
     output({
       ok: true,
 
       command:
         'retry-route',
 
-      allowed:
-        true,
+      task_id:
+        taskId,
 
-      previous_profile:
-        profile,
+      policy,
 
       previous_attempt:
         previousAttempt,
 
-      next_attempt:
-        previousAttempt + 1,
-
-      next_profile:
-        nextRetryProfile(
-          profile,
-          previousAttempt,
-        ),
+      ...decision,
     })
   }
   catch (error) {
@@ -2174,27 +2392,35 @@ function verificationFailures(
 function startRetryExecution(
   taskId,
   route,
+  retryPolicy,
 ) {
   const result =
     controlQuery(
       `
-        SELECT
-          control.start_retry_execution(
+        WITH started AS (
+          SELECT control.start_retry_execution(
             :'task_id',
             :'max_attempts'::integer,
             :'model_profile',
             :'model_name',
             :'reasoning_effort'
-          );
+          ) AS payload
+        ), recorded AS (
+          UPDATE control.executions e
+          SET resolved_retry_policy = :'retry_policy'::jsonb,
+              engine_stage = 'implementation'
+          FROM started
+          WHERE e.execution_id = (started.payload->>'execution_id')::bigint
+          RETURNING e.execution_id
+        )
+        SELECT payload FROM started;
       `,
       {
         task_id:
           taskId,
 
         max_attempts:
-          String(
-            maxExecutionAttempts,
-          ),
+          String(retryPolicy.max_attempts),
 
         model_profile:
           route.profile,
@@ -2204,6 +2430,9 @@ function startRetryExecution(
 
         reasoning_effort:
           route.reasoning_effort,
+
+        retry_policy:
+          JSON.stringify(retryPolicy),
       },
     )
 
@@ -2284,7 +2513,7 @@ function taskRetry() {
       controlQuery(
         `
           SELECT COALESCE(
-            control.task_packet(
+            control.generic_task_packet(
               :'task_id'
             ),
             'null'::jsonb
@@ -2327,10 +2556,18 @@ function taskRetry() {
       )
     }
 
-    if (
-      previousExecution.attempt >=
-      maxExecutionAttempts
-    ) {
+    const retryPolicy =
+      validateRetryPolicy(
+        packet.retry_policy,
+      )
+
+    const decision =
+      retryDecision(
+        retryPolicy,
+        previousExecution.attempt,
+      )
+
+    if (!decision.allowed) {
       output({
         ok: false,
 
@@ -2347,7 +2584,10 @@ function taskRetry() {
           previousExecution.attempt,
 
         max_attempts:
-          maxExecutionAttempts,
+          retryPolicy.max_attempts,
+
+        retry_policy:
+          retryPolicy,
       }, 1)
 
       return
@@ -2358,10 +2598,7 @@ function taskRetry() {
     )
 
     const nextProfile =
-      nextRetryProfile(
-        previousExecution.model_profile,
-        previousExecution.attempt,
-      )
+      decision.next_profile
 
     const route =
       resolveCodexRoute(
@@ -2466,14 +2703,14 @@ function taskRetry() {
 
     prompt =
       `
-Repair Building Suit task ${taskId}.
+Repair ${packet.project?.display_name ?? 'registered project'} task ${taskId}.
 
 The previous implementation failed independent verification.
 
 Read:
 1. README.md
 2. AGENTS.md
-3. ${packet.suit.app_path}/AGENTS.md if it exists
+3. ${packet.workstream?.application_path ?? packet.suit.app_path}/AGENTS.md if it exists
 4. docs/agent-workflows.md
 5. ${taskPacketPath}
 6. ${failurePacketPath}
@@ -2522,6 +2759,7 @@ Return a concise repair summary.
       startRetryExecution(
         taskId,
         route,
+        retryPolicy,
       )
 
     if (
@@ -2650,6 +2888,15 @@ Return a concise repair summary.
     executionFinished =
       true
 
+    if (!succeeded) {
+      recordControlFailure(
+        taskId,
+        'repair',
+        codexResult.stderr || 'codex_repair_failed',
+        { exit_code: codexResult.code, log_path: logPath },
+      )
+    }
+
     output({
       ok:
         succeeded,
@@ -2729,6 +2976,12 @@ Return a concise repair summary.
         // Preserve the original error.
       }
     }
+
+    recordControlFailure(
+      taskId,
+      'repair',
+      error.message,
+    )
 
     output({
       ok: false,
@@ -2822,6 +3075,7 @@ function publicationVerification(
 function completePublication({
   taskId,
   publication,
+  repository,
 }) {
   const result =
     controlQuery(
@@ -2844,7 +3098,7 @@ function completePublication({
           taskId,
 
         repository:
-          githubRepository,
+          repository,
 
         pr_number:
           String(
@@ -2905,7 +3159,7 @@ function taskPublish() {
       controlQuery(
         `
           SELECT COALESCE(
-            control.task_packet(
+            control.generic_task_packet(
               :'task_id'
             ),
             'null'::jsonb
@@ -3014,7 +3268,12 @@ function taskPublish() {
       configuredAllowedPaths.length > 0
         ? configuredAllowedPaths
         : (
-            packet.suit.app_path
+            Array.isArray(
+              packet.project?.allowed_publication_paths,
+            ) &&
+            packet.project.allowed_publication_paths.length > 0
+              ? packet.project.allowed_publication_paths
+              : packet.suit.app_path
               ? [
                   `${packet.suit.app_path}/`,
                 ]
@@ -3066,6 +3325,12 @@ function taskPublish() {
 
           suit:
             packet.suit,
+
+          project:
+            packet.project,
+
+          workstream:
+            packet.workstream,
 
           execution,
 
@@ -3132,6 +3397,12 @@ function taskPublish() {
     if (
       !publication.ok
     ) {
+      recordControlFailure(
+        taskId,
+        'publication',
+        publication.error ?? 'publication_failed',
+        publication,
+      )
       output({
         ok: false,
 
@@ -3152,6 +3423,9 @@ function taskPublish() {
       completePublication({
         taskId,
         publication,
+        repository:
+          packet.project?.github_repository ??
+          githubRepository,
       })
 
 
@@ -3171,6 +3445,12 @@ function taskPublish() {
     })
   }
   catch (error) {
+
+    recordControlFailure(
+      taskId,
+      'publication',
+      error.message,
+    )
 
     output({
       ok: false,
@@ -3200,7 +3480,7 @@ function engineTaskPacket(taskId) {
     controlQuery(
       `
         SELECT COALESCE(
-          control.task_packet(
+          control.generic_task_packet(
             :'task_id'
           ),
           'null'::jsonb
@@ -3415,10 +3695,18 @@ function taskEngine() {
           )
         }
 
-        if (
-          execution.attempt >=
-          maxExecutionAttempts
-        ) {
+        const retryPolicy =
+          validateRetryPolicy(
+            packet.retry_policy,
+          )
+
+        const decision =
+          retryDecision(
+            retryPolicy,
+            execution.attempt,
+          )
+
+        if (!decision.allowed) {
           output({
             ok: false,
 
@@ -3435,7 +3723,10 @@ function taskEngine() {
               execution.attempt,
 
             max_attempts:
-              maxExecutionAttempts,
+              retryPolicy.max_attempts,
+
+            retry_policy:
+              retryPolicy,
 
             trail,
           }, 1)
@@ -3724,7 +4015,7 @@ function workflowRunStart() {
     !validSuitSlug(suitSlug) ||
     !Number.isInteger(maxTasks) ||
     maxTasks < 1 ||
-    maxTasks > 15
+    maxTasks > 1000
   ) {
     output({
       ok: false,

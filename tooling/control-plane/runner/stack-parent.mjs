@@ -4,16 +4,30 @@ import { spawnSync } from 'node:child_process'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const repoRoot =
+const controlRoot =
   fileURLToPath(
     new URL('../../../', import.meta.url),
   )
 
+const [
+  stackKey,
+  configuredRepoRoot,
+  configuredRepository,
+  configuredIntegrationBranch,
+] =
+  process.argv.slice(2)
+
+const repoRoot = path.resolve(
+  controlRoot,
+  configuredRepoRoot ?? '.',
+)
+
 const repository =
+  configuredRepository ??
   'Building-Suit/building-suit-monorepo'
 
-const [stackKey] =
-  process.argv.slice(2)
+const integrationBranch =
+  configuredIntegrationBranch ?? 'stg'
 
 function fail(message, extra = {}) {
   process.stdout.write(
@@ -110,7 +124,7 @@ if (stackPrs.length === 0) {
     'git',
     [
       'rev-parse',
-      'origin/stg',
+      `origin/${integrationBranch}`,
     ],
   )
 
@@ -118,9 +132,9 @@ if (stackPrs.length === 0) {
     `${JSON.stringify({
       ok: true,
       stack_key: stackKey,
-      parent_type: 'stg',
-      parent_branch: 'stg',
-      parent_remote_ref: 'origin/stg',
+      parent_type: 'integration',
+      parent_branch: integrationBranch,
+      parent_remote_ref: `origin/${integrationBranch}`,
       parent_sha: parentSha,
       parent_pr: null,
     })}\n`,
