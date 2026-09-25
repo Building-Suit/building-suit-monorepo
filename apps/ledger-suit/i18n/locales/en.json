@@ -237,6 +237,7 @@
     "reports": "Reports",
     "openingBalances": "Opening Balances",
     "bankReconciliation": "Bank reconciliation",
+    "fixedAssets": "Fixed assets",
     "periods": "Accounting periods",
     "teamInvitations": "Access & permissions",
     "auditHistory": "Audit history",
@@ -1725,6 +1726,24 @@
       "creditAccount": "A credit must use the original revenue account of every allocated invoice.",
       "allocation": "Enter a positive total and allocate exactly that amount."
     }
+  },
+  "assets": {
+    "title": "Fixed assets and depreciation",
+    "policy": "Assets are registered only after review of a posted acquisition journal. Depreciation starts in service, is prorated daily, and every correction preserves the original history.",
+    "register": "Register asset", "registerTitle": "Asset register", "asOf": "Balances as of", "denied": "You do not have permission to view fixed assets.", "retry": "Retry",
+    "empty": "No registered assets", "emptyHint": "Post and review an asset acquisition, then register it explicitly. Historical purchases are never converted automatically.",
+    "code": "Asset code", "name": "Asset name", "statusLabel": "Status", "status": { "active": "Active", "disposed": "Disposed", "corrected": "Corrected" },
+    "cost": "Original cost", "accumulated": "Accumulated depreciation", "nbv": "Net book value", "residual": "Residual value", "review": "Review", "actions": "Actions",
+    "life": "Useful life (months)", "lifeValue": "{months} months", "method": "Depreciation method", "methods": { "straight_line": "Straight-line", "declining_balance": "Declining balance" }, "rate": "Annual declining rate (%)",
+    "acquisitionJournal": "Acquisition journal", "acquisitionDate": "Acquisition date", "serviceDate": "Placed in service", "costAccount": "Asset cost account", "accumulatedAccount": "Accumulated depreciation account", "expenseAccount": "Depreciation expense account", "impairmentAccount": "Impairment expense account", "gainLossAccount": "Disposal gain/loss account",
+    "changePolicy": "Change policy", "impair": "Record impairment", "dispose": "Dispose asset", "registerReplacement": "Register replacement", "schedule": "Depreciation schedule", "noSchedule": "No active schedule rows.",
+    "periodStart": "Period start", "periodEnd": "Period end", "depreciation": "Depreciation", "closingNbv": "Closing NBV", "scheduleStatus": { "scheduled": "Scheduled", "posted": "Posted", "reversed": "Reversed" },
+    "post": "Post depreciation", "depreciationPosted": "Depreciation posted once through the shared ledger.",
+    "reconciliation": "Register-to-General-Ledger reconciliation", "reconciled": "Reconciled", "variance": "Variance", "account": "Account", "registerBalance": "Register balance", "glBalance": "GL balance",
+    "history": "Lifecycle and correction history", "events": { "acquisition": "Acquisition", "depreciation": "Depreciation", "impairment": "Impairment", "policy_change": "Prospective policy change", "disposal": "Disposal", "reversal": "Reversal" },
+    "journal": "Journal", "reverse": "Reverse", "proceeds": "Disposal proceeds", "proceedsAccount": "Proceeds account", "impairmentAmount": "Impairment amount", "effectiveDate": "Next open-period effective date", "date": "Accounting date", "reason": "Reviewed reason", "saved": "Fixed-asset record saved.",
+    "dialogs": { "register": "Register a reviewed asset", "dispose": "Dispose asset", "impair": "Record impairment", "policy": "Prospective depreciation change", "reverse": "Reverse lifecycle event" },
+    "errors": { "title": "Fixed-asset action failed", "load": "Could not load the fixed-asset register.", "save": "Could not save. Review the dates, values, permissions, and asset state.", "acquisition": "Select a posted acquisition journal whose asset-cost debit and date match this registration.", "accounts": "Use posting accounts in the acquisition currency. Accumulated depreciation must be a credit-nature contra account linked to the selected cost account.", "depreciationDue": "Post earlier scheduled depreciation first. Disposal will prorate the final period through its date.", "period": "The accounting date is locked or its period is closed.", "nextOpen": "Policy changes start only at the next open accounting period.", "retry": "This retry key belongs to different values. Reopen the form and retry." }
   },
   "ap": {
     "title": "Supplier payables",
