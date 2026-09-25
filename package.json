@@ -10,11 +10,12 @@
   "scripts": {
     "dev:ledger": "node tooling/git/dev.mjs ledger",
     "dev:shop": "node tooling/git/dev.mjs shop",
+    "dev:inventory": "node tooling/git/dev.mjs inventory",
     "dev:docs": "node tooling/git/dev.mjs docs",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint && eslint packages tooling",
-    "test": "node --test apps/*/tests/unit/*.test.mjs packages/*/tests/*.test.mjs tooling/database/tests/*.test.mjs tooling/git/tests/*.test.mjs",
+    "test": "node --test apps/*/tests/unit/*.test.mjs packages/*/tests/*.test.mjs tooling/control-plane/tests/*.test.mjs tooling/database/tests/*.test.mjs tooling/git/tests/*.test.mjs",
     "tokens:generate": "node tooling/design-tokens/generate.mjs",
     "tokens:check": "node tooling/design-tokens/generate.mjs --check",
     "docs:generate": "node tooling/docs/generate.mjs",
@@ -25,11 +26,13 @@
     "table:inventory": "node tooling/ui/inventory.mjs",
     "db:preflight": "node tooling/database/preflight.mjs",
     "new:platform": "node tooling/new-platform/generate.mjs",
-    "db:test:ledger": "supabase --workdir apps/ledger-suit test db --local",
+    "db:test:ledger": "supabase --workdir apps/ledger-suit db reset --local && supabase --workdir apps/ledger-suit test db --local",
     "db:test:shop": "node tooling/database/test-shop-local.mjs",
     "db": "node tooling/database/cli.mjs",
     "agent:preflight": "node tooling/git/preflight.mjs",
-    "agent:pr-check": "node tooling/git/check-pr.mjs"
+    "agent:pr-check": "node tooling/git/check-pr.mjs",
+    "automation": "node tooling/control-plane/automation.mjs",
+    "automation:n8n:export": "node tooling/control-plane/n8n/export.mjs"
   },
   "devDependencies": {
     "nuxt": "4.5.2",

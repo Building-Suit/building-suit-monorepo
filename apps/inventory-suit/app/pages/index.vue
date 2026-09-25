@@ -1,0 +1,10 @@
+<script setup lang="ts">
+const { t } = useI18n()
+useHead({ title: () => t('product.name') })
+</script>
+<template>
+  <section class="ls-card mx-auto max-w-3xl space-y-4 p-6">
+    <h1 class="text-3xl font-bold">{{ t('welcome') }}</h1>
+    <p class="text-fg-muted">{{ t('description') }}</p>
+  </section>
+</template>
