@@ -466,13 +466,46 @@ const databaseChanged =
       ),
   )
 
+const changedDatabaseTests =
+  appPath
+    ? changed
+        .filter(
+          file =>
+            file.startsWith(
+              `${appPath}/supabase/tests/`,
+            ) &&
+            /\.(?:sql|pg)$/.test(
+              file,
+            ),
+        )
+        .map(
+          file =>
+            path
+              .relative(
+                appPath,
+                file,
+              )
+              .split(
+                path.sep,
+              )
+              .join('/'),
+        )
+    : []
+
 if (databaseChanged) {
 
   if (
     suit.slug === 'ledger-suit'
   ) {
 
-    results.push(
+    const ledgerAppPath =
+      path.join(
+        worktreePath,
+        appPath,
+      )
+
+
+    const databaseReset =
       runCheck({
         name:
           'database-reset',
@@ -483,46 +516,89 @@ if (databaseChanged) {
         args: [
           'exec',
           'supabase',
-          '--workdir',
-          'apps/ledger-suit',
           'db',
           'reset',
           '--local',
         ],
 
+        cwd:
+          ledgerAppPath,
+
         timeout:
           20 * 60 * 1000,
-      }),
+      })
+
+
+    results.push(
+      databaseReset,
     )
 
 
     if (
-      results.at(-1)?.status ===
-      'pass'
+      databaseReset.status === 'pass'
     ) {
 
-      results.push(
-        runCheck({
+      if (
+        changedDatabaseTests.length > 0
+      ) {
+
+        results.push(
+          runCheck({
+            name:
+              'database-tests',
+
+            program:
+              'pnpm',
+
+            args: [
+              'exec',
+              'supabase',
+              'test',
+              'db',
+
+              ...changedDatabaseTests,
+
+              '--local',
+            ],
+
+            cwd:
+              ledgerAppPath,
+
+            timeout:
+              15 * 60 * 1000,
+          }),
+        )
+
+      }
+      else {
+
+        results.push({
           name:
             'database-tests',
 
-          program:
-            'pnpm',
+          command:
+            null,
 
-          args: [
-            'exec',
-            'supabase',
-            '--workdir',
-            'apps/ledger-suit',
-            'test',
-            'db',
-            '--local',
-          ],
+          required:
+            true,
 
-          timeout:
-            30 * 60 * 1000,
-        }),
-      )
+          status:
+            'not_run',
+
+          exit_code:
+            null,
+
+          summary:
+            'Ledger database changed but this task changed no task-specific pgTAP test.',
+
+          log_path:
+            null,
+
+          elapsed_ms:
+            0,
+        })
+
+      }
 
     }
 
