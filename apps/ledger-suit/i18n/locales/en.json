@@ -1702,5 +1702,88 @@
       "creditAccount": "A credit must use the original revenue account of every allocated invoice.",
       "allocation": "Enter a positive total and allocate exactly that amount."
     }
+  },
+  "ap": {
+    "title": "Supplier payables",
+    "policy": "Bills recognize the approved expense or asset when issued. Payments settle payables without recognizing it again. Base currency only.",
+    "from": "Statement from",
+    "asOf": "As of date",
+    "supplier": "Supplier",
+    "allSuppliers": "All suppliers",
+    "retry": "Retry",
+    "denied": "You do not have permission to view supplier payables.",
+    "setup": "Create a supplier AP Control account and a supplier before issuing a bill.",
+    "openItems": "Open bills",
+    "empty": "No records for this selection.",
+    "reference": "Document reference",
+    "issueDate": "Issue date",
+    "dueDate": "Due date",
+    "original": "Original amount",
+    "outstanding": "Outstanding",
+    "aging": "Payables aging",
+    "agingPolicy": "Due today or later is current. Overdue amounts fall into 1–30, 31–60, 61–90 or 91+ calendar days. Balances use only events effective by the selected date.",
+    "statement": "Supplier statement",
+    "chooseSupplier": "Select a supplier to see the statement.",
+    "date": "Accounting date",
+    "kind": "Document type",
+    "reversed": "Reversed",
+    "movement": "Movement",
+    "balance": "Running balance",
+    "reason": "Reason",
+    "history": "History",
+    "journal": "Journal",
+    "reverses": "Reverses document",
+    "control": "AP Control",
+    "reconciliationPolicy": "Reconciliation includes all suppliers for each Control account, regardless of the supplier filter. Variances remain visible.",
+    "legacy": "Legacy payables review",
+    "legacyPolicy": "These cash-basis commitments are excluded from accrual AP. This is a read-only review: no bill, opening balance or Control mapping is inferred. Each item requires reviewed treatment to avoid duplicate recognition.",
+    "cashSettled": "Cash already settled",
+    "cash": "Cash / bank account",
+    "expenseOrAsset": "Expense or asset account",
+    "amount": "Total amount",
+    "allocations": "Bill allocations",
+    "allocationPolicy": "Allocate the full amount across one or more bills for this supplier and Control. Unallocated payments and overpayments are rejected. Credits and corrections must use the original bill account.",
+    "noAllocationItems": "No open bills for this supplier and Control at the selected report date.",
+    "reversalPolicy": "This posts an opposite journal and reverses all linked allocations. Original documents remain immutable. Reverse settlements before reversing a bill; issue a new document for corrected allocations.",
+    "saved": "Supplier document posted.",
+    "actions": {
+      "bill": "Issue bill",
+      "payment": "Pay supplier",
+      "credit": "Record supplier credit",
+      "adjustment": "Record correction",
+      "reversal": "Reverse document"
+    },
+    "kinds": {
+      "bill": "Bill",
+      "payment": "Payment",
+      "credit": "Supplier credit",
+      "adjustment": "Correction",
+      "reversal": "Reversal"
+    },
+    "buckets": {
+      "current": "Current",
+      "1_30": "1–30 days",
+      "31_60": "31–60 days",
+      "61_90": "61–90 days",
+      "91_plus": "91+ days"
+    },
+    "totals": {
+      "opening": "Opening",
+      "bills": "Bills",
+      "adjustments": "Adjustments",
+      "payments": "Payments",
+      "closing": "Closing"
+    },
+    "errors": {
+      "load": "Could not load payables. Check the date range and try again.",
+      "save": "Could not post. Check the supplier, accounts, allocations, permissions and subscription, then retry.",
+      "overpayment": "The allocation exceeds the authoritative outstanding balance on this or a later date. Refresh and review allocations.",
+      "retryConflict": "This retry key belongs to different values. Close and reopen the form for a new document.",
+      "period": "The accounting date is locked or its period is closed.",
+      "approval": "This organization requires adjustment approval. Direct AP corrections are blocked.",
+      "reversal": "This document cannot be reversed. Check its date and existing reversals.",
+      "creditAccount": "A credit or correction must use the original expense or asset account of every allocated bill.",
+      "allocation": "Enter a positive total and allocate exactly that amount."
+    }
   }
 }
