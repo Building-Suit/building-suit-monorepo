@@ -1979,19 +1979,14 @@ function nextRetryProfile(
   previousProfile,
   previousAttempt,
 ) {
-  const sameProfileRetry =
-    previousAttempt === 1
-
-  if (sameProfileRetry) {
-    return previousProfile
-  }
-
-  const escalation = {
+  const routes = {
     fast:
-      'standard',
+      previousAttempt === 1
+        ? 'fast'
+        : 'standard',
 
     standard:
-      'deep',
+      'standard',
 
     deep:
       'deep',
@@ -2001,7 +1996,7 @@ function nextRetryProfile(
   }
 
   const next =
-    escalation[
+    routes[
       previousProfile
     ]
 
