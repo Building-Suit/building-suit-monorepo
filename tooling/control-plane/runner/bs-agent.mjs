@@ -56,7 +56,7 @@ const githubRepository = 'Building-Suit/building-suit-monorepo'
 
 const [command, ...args] = process.argv.slice(2)
 
-const maxExecutionAttempts = 3
+const maxExecutionAttempts = 5
 
 function execute(program, programArgs = [], options = {}) {
   const childEnv = {
@@ -1979,34 +1979,55 @@ function nextRetryProfile(
   previousProfile,
   previousAttempt,
 ) {
-  const routes = {
-    fast:
+  if (
+    previousProfile === 'fast'
+  ) {
+
+    if (
       previousAttempt === 1
-        ? 'fast'
-        : 'standard',
+    ) {
+      return 'fast'
+    }
 
-    standard:
-      'standard',
+    if (
+      previousAttempt >= 4
+    ) {
+      return 'deep'
+    }
 
-    deep:
-      'deep',
+    return 'standard'
 
-    review:
-      'review',
   }
 
-  const next =
-    routes[
-      previousProfile
-    ]
 
-  if (!next) {
-    throw new Error(
-      `No retry route for profile "${previousProfile}".`,
-    )
+  if (
+    previousProfile === 'standard'
+  ) {
+
+    return previousAttempt >= 4
+      ? 'deep'
+      : 'standard'
+
   }
 
-  return next
+
+  if (
+    previousProfile === 'deep'
+  ) {
+    return 'deep'
+  }
+
+
+  if (
+    previousProfile === 'review'
+  ) {
+    return 'review'
+  }
+
+
+  throw new Error(
+    `No retry route for profile "${previousProfile}".`,
+  )
 }
 
 function retryRoute() {
@@ -3252,7 +3273,7 @@ function taskEngine() {
 
     for (
       let step = 1;
-      step <= 12;
+      step <= 16;
       step++
     ) {
 
