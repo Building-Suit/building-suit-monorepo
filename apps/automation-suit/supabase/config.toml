@@ -1,7 +1,6 @@
-# Automation Suit database-only scaffold.
-# No UI, Auth, Storage, Realtime, Edge Functions, or Data API is enabled yet.
-# This directory exists only to reserve the future Automation Suit Supabase project
-# and to hold its migrations when implementation begins.
+# Automation Suit control-plane Supabase scaffold.
+# The Nuxt dashboard does NOT expose the control schema through the Data API.
+# It connects server-side through a dedicated read-only PostgreSQL role.
 
 project_id = "building-suit-automation"
 
