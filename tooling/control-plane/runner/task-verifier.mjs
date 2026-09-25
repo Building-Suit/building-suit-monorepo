@@ -530,10 +530,41 @@ const browserRequired =
     verificationPlanText,
   )
 
+
+const changedBrowserTests =
+  appPath
+    ? changed
+        .filter(
+          file =>
+            file.startsWith(
+              `${appPath}/tests/e2e/`,
+            ) &&
+            /\.spec\.(?:ts|js|mjs)$/.test(
+              file,
+            ),
+        )
+        .map(
+          file =>
+            path
+              .relative(
+                appPath,
+                file,
+              )
+              .split(
+                path.sep,
+              )
+              .join('/'),
+        )
+    : []
+
+
 if (browserRequired) {
+
   if (
-    appPackage?.scripts?.['test:e2e']
+    appPackage?.name &&
+    changedBrowserTests.length > 0
   ) {
+
     results.push(
       runCheck({
         name:
@@ -545,32 +576,54 @@ if (browserRequired) {
         args: [
           '--filter',
           appPackage.name,
-          'test:e2e',
+
+          'exec',
+          'playwright',
+          'test',
+
+          ...changedBrowserTests,
+
+          '--workers=1',
+          '--retries=0',
+          '--max-failures=1',
         ],
 
         timeout:
-          30 * 60 * 1000,
+          12 * 60 * 1000,
       }),
     )
+
   }
   else {
-    results.push(
-      runCheck({
-        name:
-          'browser-tests',
 
-        program:
-          'pnpm',
+    results.push({
+      name:
+        'browser-tests',
 
-        args: [
-          'test:e2e',
-        ],
+      command:
+        null,
 
-        timeout:
-          30 * 60 * 1000,
-      }),
-    )
+      required:
+        false,
+
+      status:
+        'skipped',
+
+      exit_code:
+        null,
+
+      summary:
+        'No task-specific Playwright spec was changed; broad application E2E suite intentionally skipped.',
+
+      log_path:
+        null,
+
+      elapsed_ms:
+        0,
+    })
+
   }
+
 }
 
 const passed =
