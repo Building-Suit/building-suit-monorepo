@@ -13,6 +13,10 @@ const NAV_GROUPS = computed(() => [
       ...(can('transactions.read') || can('transactions.create') || can('transactions.adjust') || can('imports.create') ? [{ to: '/transactions', label: 'nav.transactions' }] : []),
       ...(can('accounts.read') ? [{ to: '/accounts', label: 'nav.accounts' }] : []),
       ...(can('reports.read') ? [{ to: '/reports', label: 'nav.reports' }] : []),
+      ...(can('opening_balances.read') ? [{ to: '/opening-balances', label: 'nav.openingBalances' }] : []),
+      ...(can('ar.read') ? [{ to: '/receivables', label: 'ar.title' }] : []),
+      ...(can('ap.read') ? [{ to: '/payables', label: 'ap.title' }] : []),
+      ...(can('periods.read') ? [{ to: '/periods', label: 'nav.periods' }] : []),
     ],
   },
   {
@@ -55,6 +59,15 @@ const {
 await loadOrganizations()
 await loadBilling()
 
+const accessReady = computed(() => accessState.value !== 'loading' && !paymentRequired.value)
+// Billing may resolve on the client before hydration finishes. Keep the server's
+// initial branch until mount so Vue does not hydrate the shell into the loading
+// div and retain that div's attributes instead of the shell's grid classes.
+const initialShellReady = useState('ledger:initial-shell-ready', () => accessReady.value)
+const hydrating = ref(useNuxtApp().isHydrating)
+onMounted(() => { hydrating.value = false })
+const showShell = computed(() => hydrating.value ? initialShellReady.value : accessReady.value)
+
 
 watch(currentId, async (value, previous) => {
   if (value !== previous) await loadBilling()
@@ -63,7 +76,7 @@ watch(currentId, async (value, previous) => {
 </script>
 
 <template>
-  <div v-if="accessState === 'loading' || paymentRequired" class="min-h-dvh bg-background" aria-busy="true" />
+  <div v-if="!showShell" class="min-h-dvh bg-background" aria-busy="true" />
   <BsAppShell v-else :product-name="t('app.name')" :groups="NAV_GROUPS.map(group => ({ ...group, label: t(`nav.groups.${group.key}`), links: group.links.map(item => ({ ...item, label: t(item.label) })) }))" :mobile-links="PRIMARY_NAV.map(item => ({ ...item, label: t(`nav.${item.key}`) }))" :labels="{ close: t('nav.close'), open: t('nav.open'), navigation: t('nav.primary'), dashboard: t('nav.dashboard') }">
     <template #logo><AppLogo class="h-14 w-auto max-w-52" /></template>
     <template #header><TrialCountdown /><NotificationMenu /><AccountMenu /><OrganizationSwitcher class="w-64" /></template>

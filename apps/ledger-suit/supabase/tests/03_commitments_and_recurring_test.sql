@@ -59,12 +59,14 @@ insert into ids (key, id)
 select 'sales_cat', c.id from public.categories c
 where c.organization_id = (select id from ids where key = 'org') and c.name = 'Sales';
 
--- Fund the bank so settlements have something to draw on.
-select public.post_opening_balance(
-  (select id from ids where key = 'org'), date '2026-01-01',
-  jsonb_build_array(jsonb_build_object(
-    'account_id', (select id from ids where key = 'bank'), 'amount_minor', 50000000))
-);
+-- Fund the bank through a controlled, explicitly balanced opening batch.
+insert into ids(key,id) select 'opening_equity',id from public.accounts
+where organization_id=(select id from ids where key='org') and system_key='opening_balance_equity';
+insert into ids(key,id) values ('opening_batch',public.create_opening_balance_batch(
+  (select id from ids where key='org'),'midyear','2026-01-01','commitment-opening.csv',jsonb_build_array(
+    jsonb_build_object('source_row',1,'debit','500000.00','credit','','account_id',(select id from ids where key='bank')),
+    jsonb_build_object('source_row',2,'debit','','credit','500000.00','account_id',(select id from ids where key='opening_equity')))));
+select public.approve_opening_balance_batch((select id from ids where key='opening_batch'));
 
 -- ---------------------------------------------------------------------------
 -- Commitments are forecasting only until settled

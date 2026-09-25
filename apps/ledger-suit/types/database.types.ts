@@ -7,33 +7,82 @@ export type Json =
   | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
+      account_financial_mappings: {
+        Row: {
+          account_id: string
+          created_at: string
+          created_by: string
+          dimension: string
+          effective_from: string
+          id: string
+          organization_id: string
+          predecessor_id: string | null
+          reason: string
+          request_id: string
+          revision: number
+          statement_line: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          created_by: string
+          dimension: string
+          effective_from: string
+          id?: string
+          organization_id: string
+          predecessor_id?: string | null
+          reason: string
+          request_id: string
+          revision?: never
+          statement_line: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          created_by?: string
+          dimension?: string
+          effective_from?: string
+          id?: string
+          organization_id?: string
+          predecessor_id?: string | null
+          reason?: string
+          request_id?: string
+          revision?: never
+          statement_line?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_financial_mappings_account_id_organization_id_fkey"
+            columns: ["account_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "account_balances"
+            referencedColumns: ["account_id", "organization_id"]
+          },
+          {
+            foreignKeyName: "account_financial_mappings_account_id_organization_id_fkey"
+            columns: ["account_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "account_financial_mappings_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "account_financial_mappings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       account_statement_classifications: {
         Row: {
           account_id: string
@@ -91,6 +140,114 @@ export type Database = {
           },
           {
             foreignKeyName: "account_statement_classifications_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      accounting_period_transitions: {
+        Row: {
+          actor_id: string | null
+          id: number
+          new_status: Database["public"]["Enums"]["accounting_period_status"]
+          organization_id: string
+          period_id: string
+          previous_status: Database["public"]["Enums"]["accounting_period_status"]
+          reason: string | null
+          transitioned_at: string
+          year_end_close_id: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          id?: never
+          new_status: Database["public"]["Enums"]["accounting_period_status"]
+          organization_id: string
+          period_id: string
+          previous_status: Database["public"]["Enums"]["accounting_period_status"]
+          reason?: string | null
+          transitioned_at?: string
+          year_end_close_id?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          id?: never
+          new_status?: Database["public"]["Enums"]["accounting_period_status"]
+          organization_id?: string
+          period_id?: string
+          previous_status?: Database["public"]["Enums"]["accounting_period_status"]
+          reason?: string | null
+          transitioned_at?: string
+          year_end_close_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounting_period_transition_period_fk"
+            columns: ["organization_id", "period_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_periods"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "accounting_period_transition_year_end_fk"
+            columns: ["year_end_close_id"]
+            isOneToOne: false
+            referencedRelation: "fiscal_year_closes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounting_period_transitions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      accounting_periods: {
+        Row: {
+          created_at: string
+          created_by: string
+          end_date: string
+          fiscal_year_end: string
+          fiscal_year_start: string
+          id: string
+          organization_id: string
+          start_date: string
+          status: Database["public"]["Enums"]["accounting_period_status"]
+          status_changed_at: string
+          status_changed_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          end_date: string
+          fiscal_year_end: string
+          fiscal_year_start: string
+          id?: string
+          organization_id: string
+          start_date: string
+          status?: Database["public"]["Enums"]["accounting_period_status"]
+          status_changed_at?: string
+          status_changed_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          end_date?: string
+          fiscal_year_end?: string
+          fiscal_year_start?: string
+          id?: string
+          organization_id?: string
+          start_date?: string
+          status?: Database["public"]["Enums"]["accounting_period_status"]
+          status_changed_at?: string
+          status_changed_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounting_periods_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
@@ -414,6 +571,101 @@ export type Database = {
         }
         Relationships: []
       }
+      cash_flow_allocation_decisions: {
+        Row: {
+          created_at: string
+          created_by: string
+          entry_id: string
+          id: string
+          organization_id: string
+          predecessor_id: string | null
+          reason: string
+          request_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          entry_id: string
+          id?: string
+          organization_id: string
+          predecessor_id?: string | null
+          reason: string
+          request_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          entry_id?: string
+          id?: string
+          organization_id?: string
+          predecessor_id?: string | null
+          reason?: string
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cash_flow_allocation_decisions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_flow_allocation_decisions_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_entries"
+            referencedColumns: ["entry_id"]
+          },
+          {
+            foreignKeyName: "cash_flow_allocation_decisions_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "transaction_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_flow_allocation_decisions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_flow_allocation_decisions_predecessor_id_fkey"
+            columns: ["predecessor_id"]
+            isOneToOne: false
+            referencedRelation: "cash_flow_allocation_decisions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cash_flow_allocations: {
+        Row: {
+          amount_minor: number
+          decision_id: string
+          section: string
+        }
+        Insert: {
+          amount_minor: number
+          decision_id: string
+          section: string
+        }
+        Update: {
+          amount_minor?: number
+          decision_id?: string
+          section?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cash_flow_allocations_decision_id_fkey"
+            columns: ["decision_id"]
+            isOneToOne: false
+            referencedRelation: "cash_flow_allocation_decisions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           color: string | null
@@ -732,6 +984,188 @@ export type Database = {
           },
         ]
       }
+      control_account_bindings: {
+        Row: {
+          account_id: string
+          created_at: string
+          created_by: string
+          organization_id: string
+          subledger_type: Database["public"]["Enums"]["control_subledger_type"]
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          created_by: string
+          organization_id: string
+          subledger_type: Database["public"]["Enums"]["control_subledger_type"]
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          created_by?: string
+          organization_id?: string
+          subledger_type?: Database["public"]["Enums"]["control_subledger_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "control_account_bindings_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "control_binding_account_same_org"
+            columns: ["account_id", "organization_id"]
+            isOneToOne: true
+            referencedRelation: "account_balances"
+            referencedColumns: ["account_id", "organization_id"]
+          },
+          {
+            foreignKeyName: "control_binding_account_same_org"
+            columns: ["account_id", "organization_id"]
+            isOneToOne: true
+            referencedRelation: "accounts"
+            referencedColumns: ["id", "organization_id"]
+          },
+        ]
+      }
+      control_adjustments: {
+        Row: {
+          control_account_id: string
+          created_at: string
+          created_by: string
+          id: string
+          idempotency_key: string
+          organization_id: string
+          reason: string
+          reconciliation_reference: string
+          reference_kind: Database["public"]["Enums"]["control_reference_kind"]
+          subledger_type: Database["public"]["Enums"]["control_subledger_type"]
+          transaction_id: string
+        }
+        Insert: {
+          control_account_id: string
+          created_at?: string
+          created_by: string
+          id?: string
+          idempotency_key: string
+          organization_id: string
+          reason: string
+          reconciliation_reference: string
+          reference_kind: Database["public"]["Enums"]["control_reference_kind"]
+          subledger_type: Database["public"]["Enums"]["control_subledger_type"]
+          transaction_id: string
+        }
+        Update: {
+          control_account_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          idempotency_key?: string
+          organization_id?: string
+          reason?: string
+          reconciliation_reference?: string
+          reference_kind?: Database["public"]["Enums"]["control_reference_kind"]
+          subledger_type?: Database["public"]["Enums"]["control_subledger_type"]
+          transaction_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "control_adjustment_account_same_org"
+            columns: ["control_account_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "control_account_bindings"
+            referencedColumns: ["account_id", "organization_id"]
+          },
+          {
+            foreignKeyName: "control_adjustment_transaction_same_org"
+            columns: ["transaction_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "transaction_summaries"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "control_adjustment_transaction_same_org"
+            columns: ["transaction_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "control_adjustments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "control_adjustments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      control_variance_explanations: {
+        Row: {
+          as_of_date: string
+          control_account_id: string
+          created_at: string
+          created_by: string
+          id: string
+          organization_id: string
+          reason: string
+          reconciliation_reference: string
+          reference_kind: Database["public"]["Enums"]["control_reference_kind"]
+        }
+        Insert: {
+          as_of_date: string
+          control_account_id: string
+          created_at?: string
+          created_by: string
+          id?: string
+          organization_id: string
+          reason: string
+          reconciliation_reference: string
+          reference_kind: Database["public"]["Enums"]["control_reference_kind"]
+        }
+        Update: {
+          as_of_date?: string
+          control_account_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          organization_id?: string
+          reason?: string
+          reconciliation_reference?: string
+          reference_kind?: Database["public"]["Enums"]["control_reference_kind"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "control_variance_account_same_org"
+            columns: ["control_account_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "control_account_bindings"
+            referencedColumns: ["account_id", "organization_id"]
+          },
+          {
+            foreignKeyName: "control_variance_explanations_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "control_variance_explanations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       counterparties: {
         Row: {
           archived_at: string | null
@@ -821,6 +1255,95 @@ export type Database = {
           symbol?: string | null
         }
         Relationships: []
+      }
+      fiscal_year_closes: {
+        Row: {
+          closed_at: string
+          closed_by: string | null
+          closing_transaction_id: string | null
+          fiscal_year_end: string
+          fiscal_year_start: string
+          id: string
+          net_income_minor: number
+          organization_id: string
+          reason: string
+          retained_earnings_account_id: string
+        }
+        Insert: {
+          closed_at?: string
+          closed_by?: string | null
+          closing_transaction_id?: string | null
+          fiscal_year_end: string
+          fiscal_year_start: string
+          id?: string
+          net_income_minor: number
+          organization_id: string
+          reason: string
+          retained_earnings_account_id: string
+        }
+        Update: {
+          closed_at?: string
+          closed_by?: string | null
+          closing_transaction_id?: string | null
+          fiscal_year_end?: string
+          fiscal_year_start?: string
+          id?: string
+          net_income_minor?: number
+          organization_id?: string
+          reason?: string
+          retained_earnings_account_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fiscal_year_closes_closing_transaction_id_fkey"
+            columns: ["closing_transaction_id"]
+            isOneToOne: true
+            referencedRelation: "transaction_summaries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fiscal_year_closes_closing_transaction_id_fkey"
+            columns: ["closing_transaction_id"]
+            isOneToOne: true
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fiscal_year_closes_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fiscal_year_closes_retained_earnings_account_id_fkey"
+            columns: ["retained_earnings_account_id"]
+            isOneToOne: false
+            referencedRelation: "account_balances"
+            referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "fiscal_year_closes_retained_earnings_account_id_fkey"
+            columns: ["retained_earnings_account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fiscal_year_closes_retained_earnings_account_id_fkey"
+            columns: ["retained_earnings_account_id"]
+            isOneToOne: false
+            referencedRelation: "transaction_summaries"
+            referencedColumns: ["from_account_id"]
+          },
+          {
+            foreignKeyName: "fiscal_year_closes_retained_earnings_account_id_fkey"
+            columns: ["retained_earnings_account_id"]
+            isOneToOne: false
+            referencedRelation: "transaction_summaries"
+            referencedColumns: ["to_account_id"]
+          },
+        ]
       }
       import_batches: {
         Row: {
@@ -1062,6 +1585,196 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      opening_balance_batches: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          corrected_at: string | null
+          corrected_by: string | null
+          correction_reason: string | null
+          created_at: string
+          created_by: string
+          cutoff_date: string
+          id: string
+          migration_mode: Database["public"]["Enums"]["opening_migration_mode"]
+          organization_id: string
+          posted_transaction_id: string | null
+          reversal_transaction_id: string | null
+          revision: number
+          source_filename: string
+          status: Database["public"]["Enums"]["opening_batch_status"]
+          updated_at: string
+          validated_at: string | null
+          validation_result: Json | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          corrected_at?: string | null
+          corrected_by?: string | null
+          correction_reason?: string | null
+          created_at?: string
+          created_by: string
+          cutoff_date: string
+          id?: string
+          migration_mode: Database["public"]["Enums"]["opening_migration_mode"]
+          organization_id: string
+          posted_transaction_id?: string | null
+          reversal_transaction_id?: string | null
+          revision?: number
+          source_filename: string
+          status?: Database["public"]["Enums"]["opening_batch_status"]
+          updated_at?: string
+          validated_at?: string | null
+          validation_result?: Json | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          corrected_at?: string | null
+          corrected_by?: string | null
+          correction_reason?: string | null
+          created_at?: string
+          created_by?: string
+          cutoff_date?: string
+          id?: string
+          migration_mode?: Database["public"]["Enums"]["opening_migration_mode"]
+          organization_id?: string
+          posted_transaction_id?: string | null
+          reversal_transaction_id?: string | null
+          revision?: number
+          source_filename?: string
+          status?: Database["public"]["Enums"]["opening_batch_status"]
+          updated_at?: string
+          validated_at?: string | null
+          validation_result?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opening_balance_batches_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opening_balance_batches_corrected_by_fkey"
+            columns: ["corrected_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opening_balance_batches_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opening_balance_batches_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opening_batch_posted_transaction_org"
+            columns: ["posted_transaction_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "transaction_summaries"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "opening_batch_posted_transaction_org"
+            columns: ["posted_transaction_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "opening_batch_reversal_transaction_org"
+            columns: ["reversal_transaction_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "transaction_summaries"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "opening_batch_reversal_transaction_org"
+            columns: ["reversal_transaction_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id", "organization_id"]
+          },
+        ]
+      }
+      opening_balance_rows: {
+        Row: {
+          batch_id: string
+          credit_minor: number | null
+          debit_minor: number | null
+          id: string
+          mapped_account_id: string | null
+          organization_id: string
+          original_credit: string
+          original_debit: string
+          source_code: string | null
+          source_name: string | null
+          source_row: number
+          validation_errors: Json
+        }
+        Insert: {
+          batch_id: string
+          credit_minor?: number | null
+          debit_minor?: number | null
+          id?: string
+          mapped_account_id?: string | null
+          organization_id: string
+          original_credit?: string
+          original_debit?: string
+          source_code?: string | null
+          source_name?: string | null
+          source_row: number
+          validation_errors?: Json
+        }
+        Update: {
+          batch_id?: string
+          credit_minor?: number | null
+          debit_minor?: number | null
+          id?: string
+          mapped_account_id?: string | null
+          organization_id?: string
+          original_credit?: string
+          original_debit?: string
+          source_code?: string | null
+          source_name?: string | null
+          source_row?: number
+          validation_errors?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opening_balance_rows_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "opening_balance_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opening_balance_rows_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opening_row_batch_same_org"
+            columns: ["batch_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "opening_balance_batches"
+            referencedColumns: ["id", "organization_id"]
           },
         ]
       }
@@ -2212,6 +2925,7 @@ export type Database = {
           fingerprint: string | null
           id: string
           idempotency_key: string | null
+          journal_reference: string | null
           memo: string | null
           metadata: Json
           organization_id: string
@@ -2245,6 +2959,7 @@ export type Database = {
           fingerprint?: string | null
           id?: string
           idempotency_key?: string | null
+          journal_reference?: string | null
           memo?: string | null
           metadata?: Json
           organization_id: string
@@ -2278,6 +2993,7 @@ export type Database = {
           fingerprint?: string | null
           id?: string
           idempotency_key?: string | null
+          journal_reference?: string | null
           memo?: string | null
           metadata?: Json
           organization_id?: string
@@ -2414,6 +3130,10 @@ export type Database = {
           classification_locked: boolean | null
           code: string | null
           contra_account_id: string | null
+          control_binding_locked: boolean | null
+          control_subledger_type:
+            | Database["public"]["Enums"]["control_subledger_type"]
+            | null
           credit_minor: number | null
           currency: string | null
           debit_minor: number | null
@@ -2661,20 +3381,26 @@ export type Database = {
           amount_minor: number | null
           attachment_count: number | null
           base_amount_minor: number | null
+          base_credit_minor: number | null
+          base_debit_minor: number | null
           category_id: string | null
           category_name: string | null
+          correction_of_transaction_id: string | null
           counterparty_id: string | null
           counterparty_name: string | null
           created_at: string | null
           created_by: string | null
           created_by_email: string | null
           created_by_name: string | null
+          credit_minor: number | null
           currency_code: string | null
+          debit_minor: number | null
           description: string | null
           exchange_rate: number | null
           from_account_id: string | null
           from_account_name: string | null
           id: string | null
+          journal_reference: string | null
           line_count: number | null
           memo: string | null
           organization_id: string | null
@@ -2686,6 +3412,9 @@ export type Database = {
           reversed_by_transaction_id: string | null
           reverses_transaction_id: string | null
           source: Database["public"]["Enums"]["transaction_source"] | null
+          source_record_id: string | null
+          source_record_kind: string | null
+          source_record_parent_id: string | null
           status: Database["public"]["Enums"]["transaction_status"] | null
           tag_ids: string[] | null
           tags: string[] | null
@@ -2701,6 +3430,20 @@ export type Database = {
             columns: ["category_id", "organization_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "transactions_correction_of_same_org"
+            columns: ["correction_of_transaction_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "transaction_summaries"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "transactions_correction_of_same_org"
+            columns: ["correction_of_transaction_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
             referencedColumns: ["id", "organization_id"]
           },
           {
@@ -2778,9 +3521,25 @@ export type Database = {
         Args: { p_token: string }
         Returns: string
       }
+      account_financial_mapping_context: {
+        Args: { p_account_id: string; p_organization_id: string }
+        Returns: Json
+      }
       account_statement_classification_context: {
         Args: { p_account_id: string; p_organization_id: string }
         Returns: Json
+      }
+      accounting_period_context: {
+        Args: { p_date?: string; p_organization_id: string }
+        Returns: {
+          fiscal_year_end: string
+          fiscal_year_start: string
+          legacy_locked_until: string
+          period_end: string
+          period_id: string
+          period_start: string
+          period_status: Database["public"]["Enums"]["accounting_period_status"]
+        }[]
       }
       apply_paymob_subscription_event: {
         Args: {
@@ -2800,6 +3559,10 @@ export type Database = {
           p_subscription_id: string
         }
         Returns: boolean
+      }
+      approve_opening_balance_batch: {
+        Args: { p_batch_id: string }
+        Returns: string
       }
       archive_account: { Args: { p_account_id: string }; Returns: string }
       audit_history_window: {
@@ -2847,6 +3610,10 @@ export type Database = {
         Args: { p_commitment_id: string; p_reason?: string }
         Returns: string
       }
+      cash_flow_allocation_context: {
+        Args: { p_entry_id: string; p_organization_id: string }
+        Returns: Json
+      }
       change_organization_base_currency: {
         Args: { p_base_currency: string; p_organization_id: string }
         Returns: string
@@ -2883,6 +3650,26 @@ export type Database = {
           recipient_name: string
           subject: string
         }[]
+      }
+      classify_cash_flow_entry: {
+        Args: {
+          p_allocations: Json
+          p_entry_id: string
+          p_expected_decision_id?: string
+          p_organization_id: string
+          p_reason: string
+          p_request_id: string
+        }
+        Returns: string
+      }
+      close_fiscal_year: {
+        Args: {
+          p_fiscal_year_start: string
+          p_idempotency_key?: string
+          p_organization_id: string
+          p_reason: string
+        }
+        Returns: string
       }
       commit_attachment_upload: {
         Args: { p_reservation_id: string }
@@ -2943,6 +3730,7 @@ export type Database = {
           p_account_role?: string
           p_code?: string
           p_contra_account_id?: string
+          p_control_subledger_type?: Database["public"]["Enums"]["control_subledger_type"]
           p_currency?: string
           p_name: string
           p_normal_balance?: Database["public"]["Enums"]["normal_balance"]
@@ -2950,6 +3738,14 @@ export type Database = {
           p_parent_account_id?: string
           p_subtype: Database["public"]["Enums"]["account_subtype"]
           p_type: Database["public"]["Enums"]["account_type"]
+        }
+        Returns: string
+      }
+      create_accounting_period: {
+        Args: {
+          p_end_date: string
+          p_organization_id: string
+          p_start_date: string
         }
         Returns: string
       }
@@ -2981,6 +3777,22 @@ export type Database = {
           p_reminder_days_before?: number
           p_title: string
           p_type: Database["public"]["Enums"]["commitment_type"]
+        }
+        Returns: string
+      }
+      create_control_adjustment: {
+        Args: {
+          p_control_account_id: string
+          p_currency_code?: string
+          p_description: string
+          p_exchange_rate?: number
+          p_idempotency_key: string
+          p_lines: Json
+          p_organization_id: string
+          p_reason: string
+          p_reconciliation_reference: string
+          p_reference_kind: Database["public"]["Enums"]["control_reference_kind"]
+          p_transaction_date: string
         }
         Returns: string
       }
@@ -3017,6 +3829,16 @@ export type Database = {
           p_source?: Database["public"]["Enums"]["transaction_source"]
           p_transaction_date: string
           p_type: Database["public"]["Enums"]["transaction_type"]
+        }
+        Returns: string
+      }
+      create_opening_balance_batch: {
+        Args: {
+          p_cutoff_date: string
+          p_migration_mode: Database["public"]["Enums"]["opening_migration_mode"]
+          p_organization_id: string
+          p_rows: Json
+          p_source_filename: string
         }
         Returns: string
       }
@@ -3073,6 +3895,17 @@ export type Database = {
         Returns: Json
       }
       delete_organization_role: { Args: { p_role_id: string }; Returns: string }
+      explain_control_variance: {
+        Args: {
+          p_as_of_date: string
+          p_control_account_id: string
+          p_organization_id: string
+          p_reason: string
+          p_reconciliation_reference: string
+          p_reference_kind: Database["public"]["Enums"]["control_reference_kind"]
+        }
+        Returns: string
+      }
       export_classified_balance_sheet_csv: {
         Args: {
           p_as_of_date?: string
@@ -3218,6 +4051,25 @@ export type Database = {
       read_activity_journal: {
         Args: { p_organization_id: string; p_transaction_id: string }
         Returns: Json
+      }
+      reconcile_control_accounts: {
+        Args: { p_as_of_date: string; p_organization_id: string }
+        Returns: {
+          account_code: string
+          account_name: string
+          as_of_date: string
+          control_account_id: string
+          explanation_actor_id: string
+          explanation_created_at: string
+          explanation_reason: string
+          explanation_reference: string
+          gl_balance_minor: number
+          provider_reference: string
+          status: Database["public"]["Enums"]["control_reconciliation_status"]
+          subledger_balance_minor: number
+          subledger_type: Database["public"]["Enums"]["control_subledger_type"]
+          variance_minor: number
+        }[]
       }
       record_asset_purchase: {
         Args: {
@@ -3379,7 +4231,22 @@ export type Database = {
         }
         Returns: {
           amount_minor: number
-          section: Database["public"]["Enums"]["cash_flow_section"]
+          section: string
+        }[]
+      }
+      report_cash_flow_detail: {
+        Args: {
+          p_from_date: string
+          p_organization_id: string
+          p_to_date: string
+        }
+        Returns: {
+          account_id: string
+          amount_minor: number
+          classification_source: string
+          entry_id: string
+          section: string
+          transaction_id: string
         }[]
       }
       report_classified_balance_sheet: {
@@ -3415,6 +4282,14 @@ export type Database = {
           transaction_id: string
         }[]
       }
+      report_indirect_cash_flow: {
+        Args: {
+          p_from_date: string
+          p_organization_id: string
+          p_to_date: string
+        }
+        Returns: Json
+      }
       report_monthly_series: {
         Args: {
           p_as_of_date?: string
@@ -3442,14 +4317,35 @@ export type Database = {
           section: string
         }[]
       }
+      report_statement_reconciliation: {
+        Args: {
+          p_as_of_date?: string
+          p_from_date: string
+          p_organization_id: string
+          p_to_date: string
+        }
+        Returns: Json
+      }
       report_trial_balance: {
-        Args: { p_as_of_date?: string; p_organization_id: string }
+        Args: {
+          p_from_date: string
+          p_organization_id: string
+          p_to_date: string
+        }
         Returns: {
           account_id: string
+          account_role: string
+          closing_credit_minor: string
+          closing_debit_minor: string
           code: string
-          credit_minor: number
-          debit_minor: number
+          contra_account_id: string
           name: string
+          normal_balance: Database["public"]["Enums"]["normal_balance"]
+          opening_credit_minor: string
+          opening_debit_minor: string
+          parent_account_id: string
+          period_credit_minor: string
+          period_debit_minor: string
           type: Database["public"]["Enums"]["account_type"]
         }[]
       }
@@ -3473,6 +4369,10 @@ export type Database = {
           status: Database["public"]["Enums"]["occurrence_status"]
           transaction_id: string
         }[]
+      }
+      reverse_opening_balance_batch: {
+        Args: { p_batch_id: string; p_reason: string; p_reversal_date?: string }
+        Returns: string
       }
       reverse_transaction: {
         Args: {
@@ -3505,6 +4405,19 @@ export type Database = {
           transaction_id: string
         }[]
       }
+      schedule_account_financial_mapping: {
+        Args: {
+          p_account_id: string
+          p_dimension: string
+          p_effective_from: string
+          p_expected_revision_id?: string
+          p_organization_id: string
+          p_reason: string
+          p_request_id: string
+          p_statement_line: string
+        }
+        Returns: string
+      }
       schedule_account_statement_classification: {
         Args: {
           p_account_id: string
@@ -3532,25 +4445,35 @@ export type Database = {
           p_organization_id: string
           p_search?: string
           p_sort?: string
+          p_sources?: Database["public"]["Enums"]["transaction_source"][]
           p_statuses?: Database["public"]["Enums"]["transaction_status"][]
           p_tag_ids?: string[]
           p_to_date?: string
           p_types?: Database["public"]["Enums"]["transaction_type"][]
         }
         Returns: {
-          amount_minor: number
           attachment_count: number
-          base_amount_minor: number
+          base_credit_minor: number
+          base_debit_minor: number
           category_name: string
+          correction_of_transaction_id: string
           counterparty_name: string
           created_by_name: string
+          credit_minor: number
           currency_code: string
+          debit_minor: number
           description: string
           from_account_name: string
           id: string
+          journal_reference: string
           possible_duplicate: boolean
           reference: string
           reversed_by_transaction_id: string
+          reverses_transaction_id: string
+          source: Database["public"]["Enums"]["transaction_source"]
+          source_record_id: string
+          source_record_kind: string
+          source_record_parent_id: string
           status: Database["public"]["Enums"]["transaction_status"]
           tags: string[]
           to_account_name: string
@@ -3613,6 +4536,14 @@ export type Database = {
           writes_allowed: boolean
         }[]
       }
+      transition_accounting_period: {
+        Args: {
+          p_new_status: Database["public"]["Enums"]["accounting_period_status"]
+          p_period_id: string
+          p_reason?: string
+        }
+        Returns: string
+      }
       update_account: {
         Args: {
           p_account_id: string
@@ -3640,6 +4571,16 @@ export type Database = {
         }
         Returns: string
       }
+      update_opening_balance_batch: {
+        Args: {
+          p_batch_id: string
+          p_cutoff_date: string
+          p_migration_mode: Database["public"]["Enums"]["opening_migration_mode"]
+          p_rows: Json
+          p_source_filename: string
+        }
+        Returns: string
+      }
       update_organization_role: {
         Args: {
           p_capabilities: string[]
@@ -3660,6 +4601,10 @@ export type Database = {
       validate_csv_import_batch: {
         Args: { p_batch_id: string; p_mapping: Json }
         Returns: string
+      }
+      validate_opening_balance_batch: {
+        Args: { p_batch_id: string }
+        Returns: Json
       }
       void_transaction: {
         Args: { p_reason?: string; p_transaction_id: string }
@@ -3707,6 +4652,7 @@ export type Database = {
         | "taxes"
         | "other_expense"
       account_type: "asset" | "liability" | "equity" | "revenue" | "expense"
+      accounting_period_status: "open" | "soft_closed" | "hard_closed"
       billing_interval: "monthly" | "yearly"
       billing_status:
         | "trialing"
@@ -3728,6 +4674,13 @@ export type Database = {
         | "receivable"
         | "scheduled_expense"
         | "scheduled_income"
+      control_reconciliation_status:
+        | "provider_unavailable"
+        | "reconciled"
+        | "unreconciled"
+        | "explained_variance"
+      control_reference_kind: "reconciliation_case" | "subledger_record"
+      control_subledger_type: "customer" | "supplier"
       counterparty_type:
         | "customer"
         | "vendor"
@@ -3740,6 +4693,13 @@ export type Database = {
       membership_status: "active" | "suspended"
       normal_balance: "debit" | "credit"
       occurrence_status: "pending" | "posted" | "skipped" | "failed"
+      opening_batch_status:
+        | "draft"
+        | "invalid"
+        | "validated"
+        | "posted"
+        | "reversed"
+      opening_migration_mode: "year_start" | "midyear"
       organization_business_type:
         | "sole_proprietorship"
         | "partnership"
@@ -3777,6 +4737,8 @@ export type Database = {
         | "reversal"
         | "opening_balance"
         | "api"
+        | "year_end_close"
+        | "control_adjustment"
       transaction_status:
         | "draft"
         | "scheduled"
@@ -3923,9 +4885,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       account_subtype: [
@@ -3969,6 +4928,7 @@ export const Constants = {
         "other_expense",
       ],
       account_type: ["asset", "liability", "equity", "revenue", "expense"],
+      accounting_period_status: ["open", "soft_closed", "hard_closed"],
       billing_interval: ["monthly", "yearly"],
       billing_status: [
         "trialing",
@@ -3993,6 +4953,14 @@ export const Constants = {
         "scheduled_expense",
         "scheduled_income",
       ],
+      control_reconciliation_status: [
+        "provider_unavailable",
+        "reconciled",
+        "unreconciled",
+        "explained_variance",
+      ],
+      control_reference_kind: ["reconciliation_case", "subledger_record"],
+      control_subledger_type: ["customer", "supplier"],
       counterparty_type: [
         "customer",
         "vendor",
@@ -4006,6 +4974,14 @@ export const Constants = {
       membership_status: ["active", "suspended"],
       normal_balance: ["debit", "credit"],
       occurrence_status: ["pending", "posted", "skipped", "failed"],
+      opening_batch_status: [
+        "draft",
+        "invalid",
+        "validated",
+        "posted",
+        "reversed",
+      ],
+      opening_migration_mode: ["year_start", "midyear"],
       organization_business_type: [
         "sole_proprietorship",
         "partnership",
@@ -4047,6 +5023,8 @@ export const Constants = {
         "reversal",
         "opening_balance",
         "api",
+        "year_end_close",
+        "control_adjustment",
       ],
       transaction_status: [
         "draft",

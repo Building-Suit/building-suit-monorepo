@@ -46,18 +46,22 @@ function rowClass(row: AccountTreeRow) { return `chart-row chart-row-${row.kind}
             <div class="min-w-0 flex-1">
               <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
                 <span v-if="node.account?.code" class="rounded-control border border-line bg-surface px-2 py-0.5 font-mono text-sm text-fg-muted" dir="ltr">{{ node.account.code }}</span>
-                <button v-if="node.account?.account_role === 'posting' && canReadActivity" type="button" :disabled="!hydrated" class="chart-label text-start font-semibold text-link hover:underline" @click="emit('activity', node.account)">{{ node.label }}</button>
+                <button v-if="node.account?.account_role !== 'group' && canReadActivity" type="button" :disabled="!hydrated" class="chart-label text-start font-semibold text-link hover:underline" @click="emit('activity', node.account)">{{ node.label }}</button>
                 <span v-else class="chart-label">{{ node.label }}</span>
                 <span v-if="node.kind !== 'account' || node.children.length" class="chart-count">{{ t('accountTree.accountCount', { count: node.count }) }}</span>
                 <span v-if="node.account?.is_archived" class="ls-badge bg-surface-muted text-fg-muted">{{ t('accounts.archived') }}</span>
               </div>
-              <p v-if="node.account" class="mt-1 text-sm font-normal text-fg-muted">{{ node.account.account_role === 'group' ? t('accounts.roles.group') : t(`accounts.subtypes.${node.account.subtype}`) }}</p>
-              <details v-if="node.account && ((writesAllowed && (can('accounts.update') || (can('accounts.archive') && !node.account.is_archived) || (node.account.account_role === 'group' && can('accounts.create') && !node.account.is_archived))) || (node.account.account_role === 'posting' && ['asset', 'liability', 'equity'].includes(node.account.type)))" class="chart-actions" :aria-label="t('accountTree.actionsFor', { name: node.label })">
+              <p v-if="node.account" class="mt-1 text-sm font-normal text-fg-muted">
+                {{ t(`accounts.roles.${node.account.account_role}`) }}
+                <template v-if="node.account.control_subledger_type"> · {{ t(`controls.subledgers.${node.account.control_subledger_type}`) }}</template>
+                <template v-else-if="node.account.account_role === 'posting'"> · {{ t(`accounts.subtypes.${node.account.subtype}`) }}</template>
+              </p>
+              <details v-if="node.account && ((writesAllowed && (can('accounts.update') || (can('accounts.archive') && !node.account.is_archived) || (node.account.account_role === 'group' && can('accounts.create') && !node.account.is_archived))) || (['posting', 'control'].includes(node.account.account_role)))" class="chart-actions" :aria-label="t('accountTree.actionsFor', { name: node.label })">
                 <summary class="cursor-pointer text-sm font-medium text-link">{{ t('accountTree.more') }}</summary>
                 <div class="mt-3 flex flex-wrap gap-2 font-normal">
                   <button v-if="can('accounts.update') && writesAllowed" type="button" class="ls-btn ls-btn-sm" @click="emit('edit', node.account)">{{ t('accounts.edit') }}</button>
                   <button v-if="node.account.account_role === 'group' && !node.account.is_archived && can('accounts.create') && writesAllowed" type="button" class="ls-btn ls-btn-sm" @click="emit('createChild', node.account)">{{ t('accountTree.addChild') }}</button>
-                  <button v-if="node.account.account_role === 'posting' && ['asset', 'liability', 'equity'].includes(node.account.type)" type="button" class="ls-btn ls-btn-sm" @click="emit('classify', node.account)">{{ t('statementClassification.title') }}</button>
+                  <button v-if="['posting', 'control'].includes(node.account.account_role)" type="button" class="ls-btn ls-btn-sm" @click="emit('classify', node.account)">{{ t('statementClassification.title') }}</button>
                   <button v-if="can('accounts.archive') && !node.account.is_archived && writesAllowed" type="button" class="ls-btn ls-btn-sm" @click="emit('archive', node.account)">{{ t('accounts.archive') }}</button>
                 </div>
               </details>
@@ -67,7 +71,7 @@ function rowClass(row: AccountTreeRow) { return `chart-row chart-row-${row.kind}
       </Column>
       <Column :header="t('accounts.balance')" body-class="chart-balance-cell text-end whitespace-nowrap" header-class="text-end">
         <template #body="{ data: node }">
-          <template v-if="node.account?.account_role === 'posting' && !node.children.length">
+          <template v-if="node.account && node.account.account_role !== 'group' && !node.children.length">
             <MoneyText class="font-semibold" :amount-minor="accountBalanceDisplay(node.account.net_debit_minor).amount" />
             <p class="mt-1 text-xs font-normal text-fg-muted">{{ t(`accounts.sides.${accountBalanceDisplay(node.account.net_debit_minor).side}`) }}</p>
           </template>

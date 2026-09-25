@@ -100,8 +100,8 @@ select is((select amount_minor from public.report_profit_and_loss((select id fro
 select is((public.check_balance_sheet_integrity((select id from nature_ids where key='org'),'2026-01-31')->>'difference_minor')::bigint, 0::bigint, 'the independent balance sheet equation reconciles');
 select is((public.dashboard_summary((select id from nature_ids where key='org'),'2026-01-31')->>'total_assets_minor')::bigint, 4150000::bigint, 'dashboard and statement agree on assets');
 select is((public.dashboard_summary((select id from nature_ids where key='org'),'2026-01-31')->>'net_profit_this_month_minor')::bigint, 250000::bigint, 'dashboard and statement agree on net profit');
-select is((select sum(debit_minor)::bigint from public.report_trial_balance((select id from nature_ids where key='org'),'2026-01-31')), 5950000::bigint, 'trial debit movement is unchanged');
-select is((select sum(credit_minor)::bigint from public.report_trial_balance((select id from nature_ids where key='org'),'2026-01-31')), 5950000::bigint, 'trial credit movement is unchanged');
+select is((select sum(period_debit_minor::bigint)::bigint from public.report_trial_balance((select id from nature_ids where key='org'),'2026-01-01','2026-01-31')), 5950000::bigint, 'trial debit movement is unchanged');
+select is((select sum(period_credit_minor::bigint)::bigint from public.report_trial_balance((select id from nature_ids where key='org'),'2026-01-01','2026-01-31')), 5950000::bigint, 'trial credit movement is unchanged');
 select is((select running_balance_minor from public.report_general_ledger((select id from nature_ids where key='org'),(select id from nature_ids where key='accumulated'),'2026-01-03','2026-01-31') limit 1), 550000::bigint, 'normal-side ledger combines prior opening and opposite-side movement');
 select throws_ok(format('select public.update_account(%L, %L, p_normal_balance=>%L)',
  (select id from nature_ids where key='accumulated'), 'Accumulated depreciation', 'debit'), '23514', null, 'posted nature cannot silently restate history');
@@ -121,7 +121,7 @@ select throws_ok(format('select public.create_adjustment(%L, %L, %L::jsonb, %L, 
 reset role;
 select throws_ok(format('update public.accounts set currency=%L where id=%L','USD',(select id from nature_ids where key='bank')), '23514', null, 'even privileged writes cannot reclassify used currency');
 select throws_ok(format('update public.accounts set normal_balance=%L where id=%L','credit',(select id from nature_ids where key='drawings')), '23514', null, 'even privileged writes cannot reclassify used nature');
-select is(has_function_privilege('anon','public.create_account(uuid,text,public.account_type,public.account_subtype,character,text,uuid,public.normal_balance,uuid,text)','execute'), false, 'anonymous callers cannot create classified accounts');
+select is(has_function_privilege('anon','public.create_account(uuid,text,public.account_type,public.account_subtype,character,text,uuid,public.normal_balance,uuid,text,public.control_subledger_type)','execute'), false, 'anonymous callers cannot create classified accounts');
 select is(has_function_privilege('authenticated','app.guard_account_nature()','execute'), false, 'classification helper is not a public API');
 select set_config('request.jwt.claims', '{"sub":"b0000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
 -- Use a privileged synthetic insert, not a capability bypass in the product path.
