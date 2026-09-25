@@ -14,6 +14,7 @@ const NAV_GROUPS = computed(() => [
       ...(can('accounts.read') ? [{ to: '/accounts', label: 'nav.accounts' }] : []),
       ...(can('reports.read') ? [{ to: '/reports', label: 'nav.reports' }] : []),
       ...(can('opening_balances.read') ? [{ to: '/opening-balances', label: 'nav.openingBalances' }] : []),
+      ...(can('bank.read') ? [{ to: '/bank-reconciliation', label: 'nav.bankReconciliation' }] : []),
       ...(can('ar.read') ? [{ to: '/receivables', label: 'ar.title' }] : []),
       ...(can('ap.read') ? [{ to: '/payables', label: 'ap.title' }] : []),
       ...(can('periods.read') ? [{ to: '/periods', label: 'nav.periods' }] : []),
