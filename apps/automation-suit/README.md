@@ -1,6 +1,6 @@
 # Automation Suit dashboard
 
-Read-only Nuxt operations dashboard for the Building Suit Automation Suit control plane.
+Nuxt operations dashboard for the generic Automation Suit control plane. The initial UI is evidence-first; state-aware recovery commands are copyable for deliberate operator execution.
 
 ## Local data source
 
@@ -18,7 +18,7 @@ Browser -> Nuxt/Nitro -> `bs_dashboard_reader` -> control-plane PostgreSQL `cont
 
 ## What it shows
 
-- Suits and task progress
+- registered projects, workstreams and backward-compatible Suits
 - workflow runs
 - runner/Codex executions
 - verification evidence
@@ -27,9 +27,13 @@ Browser -> Nuxt/Nitro -> `bs_dashboard_reader` -> control-plane PostgreSQL `cont
 - task event timeline and raw diagnostic payloads
 - incident/recovery queue for failed, blocked, stale, verification, publication and retry cases
 - optional n8n runtime observations with explicit control-plane/runtime mismatch detection
+- inherited retry policies and exact per-attempt profiles
+- live verification check lifecycle
+- task detail, structured failures and diagnostic prompt generation
+- read-only normalized n8n workflow snapshots
 
 ## Safety
 
-The dashboard has no mutation API. The database role created by `sql/001_dashboard_reader.sql` is transaction-read-only and has SELECT access only.
+The dashboard database role created by `sql/001_dashboard_reader.sql` is transaction-read-only. Deliberate state changes use the generic CLI, whose backend functions validate transitions and create audit evidence.
 
 See `INSTALLATION.md` in the ZIP root for the exact local setup commands.
