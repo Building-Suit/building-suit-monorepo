@@ -17,6 +17,7 @@ const [
   worktreePath,
   packetPath,
   runDirectory,
+  verificationRunId,
 ] = process.argv.slice(2)
 
 function fail(message) {
@@ -33,10 +34,11 @@ function fail(message) {
 if (
   !worktreePath ||
   !packetPath ||
-  !runDirectory
+  !runDirectory ||
+  !/^\d+$/.test(verificationRunId ?? '')
 ) {
   fail(
-    'worktree, packet and run directory are required',
+    'worktree, packet, run directory and verification run ID are required',
   )
 }
 
@@ -62,6 +64,45 @@ const task =
 const suit =
   packet.suit
 
+const project = packet.project ?? {}
+const workstream = packet.workstream ?? {}
+const verificationConfig = {
+  ...(project.verification_config ?? {}),
+  ...(workstream.verification_config ?? {}),
+}
+
+const controlDatabase = {
+  host: process.env.AUTOMATION_CONTROL_DB_HOST ?? process.env.BS_CONTROL_DB_HOST ?? '127.0.0.1',
+  port: process.env.AUTOMATION_CONTROL_DB_PORT ?? process.env.BS_CONTROL_DB_PORT ?? '54329',
+  database: process.env.AUTOMATION_CONTROL_DB_NAME ?? process.env.BS_CONTROL_DB_NAME ?? 'building_suit_control',
+  user: process.env.AUTOMATION_CONTROL_DB_USER ?? process.env.BS_CONTROL_DB_USER ?? 'bs_control_app',
+  sslmode: process.env.AUTOMATION_CONTROL_DB_SSLMODE ?? process.env.BS_CONTROL_DB_SSLMODE ?? 'prefer',
+}
+
+function liveCheck(check) {
+  const values = {
+    run_id: verificationRunId,
+    name: check.name,
+    status: check.status,
+    exit_code: check.exit_code == null ? '' : String(check.exit_code),
+    summary: check.summary ?? '',
+    log_path: check.log_path ?? '',
+    elapsed_ms: String(check.elapsed_ms ?? 0),
+    command: check.command ?? '',
+    required: check.required === false ? 'false' : 'true',
+  }
+  const args = ['-X','-q','-A','-t','-v','ON_ERROR_STOP=1','-h',controlDatabase.host,'-p',controlDatabase.port,'-U',controlDatabase.user,'-d',controlDatabase.database]
+  for (const [key,value] of Object.entries(values)) args.push('--set',`${key}=${value}`)
+  const result = spawnSync('psql',args,{
+    encoding:'utf8',
+    env:{...process.env,PGSSLMODE:controlDatabase.sslmode},
+    input:`SELECT control.update_verification_check(:'run_id'::bigint,:'name',:'status',NULLIF(:'exit_code','')::integer,:'summary',:'log_path',:'elapsed_ms'::bigint,:'command',:'required'::boolean);\n`,
+  })
+  if (result.status !== 0) {
+    throw new Error(`live_verification_update_failed:${(result.stderr ?? '').trim()}`)
+  }
+}
+
 mkdirSync(
   runDirectory,
   {
@@ -86,6 +127,17 @@ function runCheck({
 }) {
   const started =
     Date.now()
+
+  liveCheck({
+    name,
+    command: `${program} ${args.join(' ')}`,
+    required,
+    status: 'running',
+    exit_code: null,
+    summary: 'Running',
+    log_path: null,
+    elapsed_ms: 0,
+  })
 
   const result =
     spawnSync(
@@ -170,7 +222,7 @@ function runCheck({
           'Command failed'
         )
 
-  return {
+  const check = {
     name,
     command:
       `${program} ${args.join(' ')}`,
@@ -191,6 +243,10 @@ function runCheck({
     elapsed_ms:
       Date.now() - started,
   }
+
+  liveCheck(check)
+
+  return check
 }
 
 function gitOutput(args) {
@@ -309,6 +365,7 @@ results.push(
 )
 
 const appPath =
+  workstream.application_path ??
   suit.app_path
 
 const appPackagePath =
@@ -452,6 +509,31 @@ else {
       ],
     }),
   )
+}
+
+for (const custom of verificationConfig.commands ?? []) {
+  const prefixes = Array.isArray(custom.changed_paths) ? custom.changed_paths : []
+  if (prefixes.length > 0 && ![...changedFiles].some(file => prefixes.some(prefix => file.startsWith(prefix)))) {
+    results.push({
+      name: custom.name,
+      command: [custom.program, ...(custom.args ?? [])].join(' '),
+      required: custom.required !== false,
+      status: 'skipped',
+      exit_code: null,
+      summary: 'No changed file matched this custom check.',
+      log_path: null,
+      elapsed_ms: 0,
+    })
+    continue
+  }
+  results.push(runCheck({
+    name: custom.name,
+    program: custom.program,
+    args: custom.args ?? [],
+    cwd: custom.cwd ? path.join(worktreePath, custom.cwd) : worktreePath,
+    timeout: custom.timeout_ms ?? 15 * 60 * 1000,
+    required: custom.required !== false,
+  }))
 }
 
 const changed =

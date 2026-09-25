@@ -29,6 +29,12 @@ const task =
 const suit =
   packet.suit
 
+const project =
+  packet.project ?? {}
+
+const workstream =
+  packet.workstream ?? suit
+
 const requirementIds =
   (packet.requirements ?? [])
     .map(item => item.id)
@@ -40,12 +46,12 @@ const decisionIds =
     .join(', ')
 
 const prompt = `
-Implement Building Suit task ${task.task_id}.
+Implement ${project.display_name ?? 'the registered project'} task ${task.task_id} in workstream ${workstream.slug ?? task.suit_slug}.
 
 Read, in this order:
 1. README.md
 2. AGENTS.md
-3. ${suit.app_path}/AGENTS.md if it exists
+3. ${workstream.application_path ?? suit.app_path}/AGENTS.md if it exists
 4. docs/agent-workflows.md
 5. ${packetPath}
 

@@ -17,6 +17,20 @@ const controlRoot =
     new URL('../../../', import.meta.url),
   )
 
+const [
+  taskId,
+  stackKey,
+  parentSha,
+  configuredRepositoryRoot,
+  configuredWorktreeRoot,
+] = process.argv.slice(2)
+
+const requestedRepositoryRoot =
+  path.resolve(
+    controlRoot,
+    configuredRepositoryRoot ?? '.',
+  )
+
 const commonGitDirResult =
   spawnSync(
     'git',
@@ -26,7 +40,7 @@ const commonGitDirResult =
       '--git-common-dir',
     ],
     {
-      cwd: controlRoot,
+      cwd: requestedRepositoryRoot,
       encoding: 'utf8',
     },
   )
@@ -40,14 +54,7 @@ if (commonGitDirResult.status !== 0) {
 const commonGitDir =
   commonGitDirResult.stdout.trim()
 
-const repositoryRoot =
-  path.dirname(commonGitDir)
-
-const [
-  taskId,
-  stackKey,
-  parentSha,
-] = process.argv.slice(2)
+const repositoryRoot = path.dirname(commonGitDir)
 
 function fail(message, extra = {}) {
   process.stdout.write(
@@ -90,9 +97,10 @@ const branchName =
 
 const worktreePath =
   path.join(
-    repositoryRoot,
-    '.local',
-    'worktrees',
+    path.resolve(
+      repositoryRoot,
+      configuredWorktreeRoot ?? '.local/worktrees',
+    ),
     `${stackKey}-${taskSlug}`,
   )
 

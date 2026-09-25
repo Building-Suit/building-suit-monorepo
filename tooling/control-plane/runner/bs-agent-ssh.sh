@@ -252,7 +252,7 @@ case "$REQUESTED_COMMAND" in
 
     if [[ -n "${EXTRA:-}" ]] \
       || [[ ! "$SUIT_SLUG" =~ ^[a-z][a-z0-9-]{1,63}$ ]] \
-      || [[ ! "$MAX_TASKS" =~ ^([1-9]|1[0-5])$ ]]; then
+      || [[ ! "$MAX_TASKS" =~ ^[1-9][0-9]{0,2}$ ]]; then
 
       printf '%s\n' \
         '{"ok":false,"error":"invalid_run_start"}'
