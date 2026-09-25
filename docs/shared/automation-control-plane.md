@@ -23,7 +23,7 @@ Secrets are not registry fields. Database passwords, n8n API keys and Codex auth
 
 Apply the existing migrations in numeric order to Staging, then `tooling/control-plane/sql/014_generic_automation_platform.sql`. Validate there before Production. The migration only adds/backfills objects and does not delete history. Do not apply it to a product database; it belongs to the dedicated control database.
 
-Configure the runner with `AUTOMATION_CONTROL_DB_*` variables. Legacy `BS_CONTROL_DB_*` variables remain supported. `local_repository_root` and `worktree_root` may be relative to the control-plane checkout; absolute paths require explicit validation in project configuration.
+Configure the runner with `AUTOMATION_CONTROL_DB_*` variables. Legacy `BS_CONTROL_DB_*` variables remain supported. `local_repository_root` and `worktree_root` may be relative to the control-plane checkout; absolute paths require explicit validation in project configuration. The dashboard keeps `NUXT_CONTROL_DATABASE_URL` read-only; set the separate server-only `NUXT_CONTROL_OPERATOR_DATABASE_URL` only when authenticated project/policy editing is required.
 
 ## Operator commands
 
@@ -134,7 +134,7 @@ The exporter uses the n8n public API when `N8N_API_URL` and `N8N_API_KEY` are co
 
 ## Dashboard
 
-Automation Suit exposes `/`, `/projects`, `/tasks`, `/tasks/:id`, `/runs`, `/errors`, `/policies`, and `/n8n`. Task detail shows exact attempt/policy/model/reasoning, live verification status, process/Git paths, timeline, and state-aware commands plus copyable ChatGPT/Codex diagnostic prompts. Usage is shown as unavailable unless Codex supplies it; the UI does not estimate tokens.
+Automation Suit exposes `/`, `/projects`, `/tasks`, `/tasks/:id`, `/runs`, `/errors`, `/policies`, and `/n8n`. `/projects` provides a dry-run-first registration wizard with inactive-by-default saves and secret-key rejection; `/policies` validates the exact profile count before audited saves. These mutations require the optional operator connection. Task detail shows exact attempt/policy/model/reasoning, live verification status, process/Git paths, timeline, and state-aware commands plus copyable ChatGPT/Codex diagnostic prompts. Usage is shown as unavailable unless Codex supplies it; the UI does not estimate tokens.
 
 ## Sandbox validation
 

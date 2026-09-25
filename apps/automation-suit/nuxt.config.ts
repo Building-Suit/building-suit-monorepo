@@ -3,6 +3,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     controlDatabaseUrl: process.env.NUXT_CONTROL_DATABASE_URL || '',
+    controlOperatorDatabaseUrl: process.env.NUXT_CONTROL_OPERATOR_DATABASE_URL || '',
     controlDatabaseSsl: process.env.NUXT_CONTROL_DATABASE_SSL || 'require',
     dashboardUsername: process.env.NUXT_DASHBOARD_USERNAME || '',
     dashboardPassword: process.env.NUXT_DASHBOARD_PASSWORD || '',

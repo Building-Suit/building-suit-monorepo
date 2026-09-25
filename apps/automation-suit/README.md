@@ -12,7 +12,7 @@ The service's existing runtime secrets remain in:
 /home/tareq/Services/building-suit-monorepo-plane/.env
 ```
 
-The dashboard itself stores only its dedicated reader connection in `apps/automation-suit/.env` and never exposes that connection to the browser.
+The dashboard stores its dedicated reader connection in `apps/automation-suit/.env` and never exposes it to the browser. Project/policy writes are disabled unless a separate `NUXT_CONTROL_OPERATOR_DATABASE_URL` writer connection is configured; keep that URL server-only and restrict the dashboard behind its required authentication.
 
 Browser -> Nuxt/Nitro -> `bs_dashboard_reader` -> control-plane PostgreSQL `control` schema.
 
@@ -31,9 +31,10 @@ Browser -> Nuxt/Nitro -> `bs_dashboard_reader` -> control-plane PostgreSQL `cont
 - live verification check lifecycle
 - task detail, structured failures and diagnostic prompt generation
 - read-only normalized n8n workflow snapshots
+- a validated project registration wizard and retry-policy editor when the operator writer is configured
 
 ## Safety
 
-The dashboard database role created by `sql/001_dashboard_reader.sql` is transaction-read-only. Deliberate state changes use the generic CLI, whose backend functions validate transitions and create audit evidence.
+Normal dashboard reads use the transaction-read-only role created by `sql/001_dashboard_reader.sql`. The optional operator connection is isolated from the browser and only powers validated, audited project and retry-policy saves. Task lifecycle changes continue through the generic CLI and backend transition functions.
 
 See `INSTALLATION.md` in the ZIP root for the exact local setup commands.
