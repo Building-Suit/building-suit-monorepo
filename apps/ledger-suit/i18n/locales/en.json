@@ -236,6 +236,7 @@
     "accounts": "Accounts",
     "reports": "Reports",
     "openingBalances": "Opening Balances",
+    "bankReconciliation": "Bank reconciliation",
     "periods": "Accounting periods",
     "teamInvitations": "Access & permissions",
     "auditHistory": "Audit history",
@@ -1618,6 +1619,28 @@
       "dates": "Enter a valid date range with the start on or before the end.",
       "amounts": "Enter valid non-negative amounts, with the minimum no greater than the maximum."
     }
+  },
+  "bank": {
+    "title": "Bank reconciliation",
+    "policy": "Import statement evidence, match exact same-currency totals without reposting journals, and keep every correction and completion traceable.",
+    "import": "Import statement", "template": "Download template", "denied": "You do not have permission to view bank reconciliations.",
+    "reconciliation": "Statement batch", "retry": "Retry", "empty": "No bank statements yet", "emptyHint": "Import a CSV statement to begin review. Importing never creates a journal.",
+    "complete": "Complete reconciliation", "reopen": "Reopen", "statementMismatch": "The opening balance plus valid statement lines does not equal the closing balance. Correct the source before completion.",
+    "equation": "Reconciliation equation", "equationPolicy": "Statement closing balance + explicitly listed outstanding bank movements = posted ledger balance.",
+    "statementBalance": "Statement balance", "outstandingTotal": "Outstanding items", "ledgerBalance": "Ledger balance", "difference": "Difference",
+    "statementLines": "Statement lines", "ledgerCandidates": "Posted ledger candidates", "outstanding": "Outstanding item detail", "matchHistory": "Match history", "auditHistory": "Immutable reconciliation history",
+    "noLines": "No statement lines.", "noCandidates": "No unmatched posted bank movements.", "noOutstanding": "No explicit outstanding items.", "noMatches": "No match history.",
+    "select": "Select", "selectLine": "Select statement row {row}", "selectTransaction": "Select ledger transaction {reference}", "date": "Date", "description": "Description", "reference": "Reference", "amount": "Amount", "state": "State", "actions": "Actions",
+    "correct": "Correct", "adjust": "Post adjustment", "markOutstanding": "Mark outstanding", "remove": "Remove", "unmatch": "Unmatch", "matchExact": "Match exact totals", "selectedTotals": "Selected statement and ledger totals",
+    "journal": "Journal", "reason": "Reason", "active": "Active", "unmatched": "Unmatched", "bankAccount": "Bank account", "offsetAccount": "Offset account", "file": "CSV file", "start": "Statement start", "end": "Statement end", "opening": "Opening balance", "closing": "Closing balance",
+    "saved": "Bank reconciliation updated.", "matched": "Items matched without changing the journal.", "completed": "Reconciliation completed and locked.",
+    "statuses": { "review": "In review", "completed": "Completed", "reopened": "Reopened" },
+    "lineStatuses": { "matched": "Matched", "unmatched": "Unmatched", "unresolved": "Unresolved" },
+    "validation": { "INVALID_DATE": "Invalid date", "DATE_OUTSIDE_STATEMENT": "Date outside statement", "INVALID_AMOUNT": "Invalid amount", "ZERO_AMOUNT": "Zero amount", "DESCRIPTION_REQUIRED": "Description required", "DUPLICATE_STATEMENT_LINE": "Duplicate statement line" },
+    "dialogs": { "import": "Import bank statement", "adjust": "Explicit accounting adjustment", "correct": "Correct statement line", "unmatch": "Unmatch selected group", "outstanding": "Record outstanding ledger item", "removeOutstanding": "Remove outstanding item", "reopen": "Reopen completed reconciliation" },
+    "csv": { "date": "date", "amount": "amount", "description": "description", "reference": "reference", "example": "Customer receipt" },
+    "events": { "statement": { "imported": "Statement imported" }, "line": { "corrected": "Statement line corrected" }, "match": { "created": "Match created", "removed": "Match removed" }, "outstanding": { "added": "Outstanding item added", "removed": "Outstanding item removed" }, "adjustment": { "posted": "Adjustment journal posted" }, "reconciliation": { "completed": "Reconciliation completed", "reopened": "Reconciliation reopened" } },
+    "errors": { "title": "Bank reconciliation", "load": "Could not load the reconciliation workspace.", "save": "The bank operation could not be saved. Review the selection and retry.", "duplicateFile": "This exact file was already imported.", "duplicateLine": "This statement line already exists for the bank account.", "notExact": "Selected statement and ledger totals must be exactly equal in the same currency.", "incomplete": "Resolve or match every line and fix statement validation before completion.", "notBalanced": "The reconciliation equation does not balance. List outstanding ledger items explicitly.", "period": "The adjustment date is locked or its accounting period is closed.", "approval": "This organization requires an approval workflow; direct bank adjustments are blocked.", "permission": "You do not have permission for this bank operation." }
   },
   "ar": {
     "title": "Customer receivables",
