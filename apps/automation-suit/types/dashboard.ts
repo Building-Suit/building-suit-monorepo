@@ -19,6 +19,7 @@ export interface TaskRow {
   status: string
   updated_at: string
   metadata: Record<string, JsonValue>
+  engine_stage?: string
 }
 
 export interface WorkflowRunRow {
@@ -51,10 +52,16 @@ export interface ExecutionRow {
   finished_at: string | null
   created_at: string
   metadata: Record<string, JsonValue>
+  engine_stage: string
+  resolved_retry_policy: Record<string, JsonValue>
+  prompt_path: string | null
+  run_log_path: string | null
+  usage: Record<string, JsonValue> | null
 }
 
 export interface VerificationRow {
   verification_id: number
+  verification_run_id: number | null
   execution_id: number
   task_id: string
   suit_slug: string
@@ -67,6 +74,8 @@ export interface VerificationRow {
   finished_at: string | null
   created_at: string
   metadata: Record<string, JsonValue>
+  queued_at: string | null
+  elapsed_ms: number | null
 }
 
 export interface DecisionRow {

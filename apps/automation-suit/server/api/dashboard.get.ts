@@ -106,7 +106,8 @@ export default defineEventHandler(async (event): Promise<DashboardResponse> => {
         e.execution_id, e.task_id, t.suit_slug, e.attempt, e.model_profile,
         e.model_name, e.reasoning_effort, e.status, e.worktree_path,
         e.branch_name, e.parent_branch, e.parent_sha, e.commit_sha,
-        e.started_at, e.finished_at, e.created_at, e.metadata
+        e.started_at, e.finished_at, e.created_at, e.metadata,
+        e.engine_stage,e.resolved_retry_policy,e.prompt_path,e.run_log_path,e.usage
       FROM control.executions e
       JOIN control.tasks t ON t.task_id = e.task_id
       WHERE (${suit}::text IS NULL OR t.suit_slug = ${suit})
@@ -115,9 +116,9 @@ export default defineEventHandler(async (event): Promise<DashboardResponse> => {
     `,
     sql`
       SELECT
-        v.verification_id, v.execution_id, e.task_id, t.suit_slug,
+        v.verification_id, v.verification_run_id, v.execution_id, e.task_id, t.suit_slug,
         v.check_name, v.command, v.status, v.exit_code, v.summary,
-        v.started_at, v.finished_at, v.created_at, v.metadata
+        v.queued_at,v.started_at, v.finished_at, v.elapsed_ms,v.created_at, v.metadata
       FROM control.verification_results v
       JOIN control.executions e ON e.execution_id = v.execution_id
       JOIN control.tasks t ON t.task_id = e.task_id

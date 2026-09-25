@@ -7,6 +7,12 @@ const groups = computed(() => [
     label: t('nav.operations'),
     links: [
       { to: '/', label: t('nav.dashboard') },
+      { to: '/projects', label: 'Projects' },
+      { to: '/tasks', label: 'Tasks' },
+      { to: '/runs', label: 'Runs' },
+      { to: '/errors', label: 'Errors' },
+      { to: '/policies', label: 'Policies' },
+      { to: '/n8n', label: 'n8n' },
     ],
   },
 ])
