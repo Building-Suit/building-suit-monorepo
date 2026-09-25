@@ -3167,6 +3167,476 @@ function taskPublish() {
   }
 }
 
+
+const agentScriptPath =
+  fileURLToPath(
+    import.meta.url,
+  )
+
+
+function engineTaskPacket(taskId) {
+  const result =
+    controlQuery(
+      `
+        SELECT COALESCE(
+          control.task_packet(
+            :'task_id'
+          ),
+          'null'::jsonb
+        );
+      `,
+      {
+        task_id:
+          taskId,
+      },
+    )
+
+  return parseControlJson(
+    result,
+  )
+}
+
+
+function invokeTaskAction(
+  action,
+  taskId,
+) {
+  const result =
+    execute(
+      process.execPath,
+      [
+        agentScriptPath,
+        action,
+        taskId,
+      ],
+      {
+        cwd:
+          repoRoot,
+
+        timeout:
+          70 * 60 * 1000,
+      },
+    )
+
+  return {
+    result,
+
+    payload:
+      parseJson(
+        result.stdout,
+        null,
+      ),
+  }
+}
+
+
+function taskEngine() {
+  const [taskId] = args
+
+  if (!validTaskId(taskId)) {
+    output({
+      ok: false,
+      command:
+        'task-engine',
+      error:
+        'valid_task_id_required',
+    }, 64)
+
+    return
+  }
+
+  const trail = []
+  let publishAttempts = 0
+
+  try {
+
+    for (
+      let step = 1;
+      step <= 12;
+      step++
+    ) {
+
+      const packet =
+        engineTaskPacket(
+          taskId,
+        )
+
+      if (!packet) {
+        throw new Error(
+          `Unknown task: ${taskId}`,
+        )
+      }
+
+      const status =
+        packet.task.status
+
+      const execution =
+        latestExecution(
+          taskId,
+        )
+
+
+      if (status === 'complete') {
+        output({
+          ok: true,
+
+          command:
+            'task-engine',
+
+          task_id:
+            taskId,
+
+          status:
+            'complete',
+
+          execution_id:
+            execution?.execution_id ??
+            null,
+
+          attempt:
+            execution?.attempt ??
+            null,
+
+          trail,
+        })
+
+        return
+      }
+
+
+      let action = null
+
+
+      if (status === 'in_progress') {
+
+        if (!execution) {
+          action =
+            'task-run'
+        }
+        else if (
+          execution.status ===
+          'succeeded'
+        ) {
+          action =
+            'task-verify'
+        }
+        else if (
+          execution.status ===
+          'running'
+        ) {
+          output({
+            ok: false,
+
+            command:
+              'task-engine',
+
+            task_id:
+              taskId,
+
+            error:
+              'execution_still_running',
+
+            execution_id:
+              execution.execution_id,
+
+            attempt:
+              execution.attempt,
+
+            trail,
+          }, 1)
+
+          return
+        }
+        else {
+          output({
+            ok: false,
+
+            command:
+              'task-engine',
+
+            task_id:
+              taskId,
+
+            error:
+              'inconsistent_in_progress_execution',
+
+            task_status:
+              status,
+
+            execution_status:
+              execution.status,
+
+            execution_id:
+              execution.execution_id,
+
+            trail,
+          }, 1)
+
+          return
+        }
+
+      }
+      else if (
+        status === 'verification'
+      ) {
+
+        action =
+          'task-verify'
+
+      }
+      else if (
+        status === 'failed'
+      ) {
+
+        if (!execution) {
+          throw new Error(
+            'Failed task has no execution.',
+          )
+        }
+
+        if (
+          execution.attempt >=
+          maxExecutionAttempts
+        ) {
+          output({
+            ok: false,
+
+            command:
+              'task-engine',
+
+            task_id:
+              taskId,
+
+            error:
+              'retry_limit_reached',
+
+            attempt:
+              execution.attempt,
+
+            max_attempts:
+              maxExecutionAttempts,
+
+            trail,
+          }, 1)
+
+          return
+        }
+
+        action =
+          'task-retry'
+
+      }
+      else if (
+        status === 'passed'
+      ) {
+
+        if (
+          publishAttempts >= 2
+        ) {
+          output({
+            ok: false,
+
+            command:
+              'task-engine',
+
+            task_id:
+              taskId,
+
+            error:
+              'publication_retry_exhausted',
+
+            trail,
+          }, 1)
+
+          return
+        }
+
+        publishAttempts++
+
+        action =
+          'task-publish'
+
+      }
+      else {
+
+        output({
+          ok: false,
+
+          command:
+            'task-engine',
+
+          task_id:
+            taskId,
+
+          error:
+            'task_not_resumable',
+
+          task_status:
+            status,
+
+          trail,
+        }, 1)
+
+        return
+      }
+
+
+      const before =
+        [
+          status,
+          execution?.execution_id ??
+            'none',
+          execution?.status ??
+            'none',
+          execution?.attempt ??
+            0,
+        ].join(':')
+
+
+      const child =
+        invokeTaskAction(
+          action,
+          taskId,
+        )
+
+
+      trail.push({
+        step,
+        action,
+
+        exit_code:
+          child.result.code,
+
+        ok:
+          child.payload?.ok ===
+          true,
+
+        response:
+          child.payload,
+      })
+
+
+      const afterPacket =
+        engineTaskPacket(
+          taskId,
+        )
+
+      const afterExecution =
+        latestExecution(
+          taskId,
+        )
+
+      const after =
+        [
+          afterPacket?.task?.status ??
+            'unknown',
+          afterExecution?.execution_id ??
+            'none',
+          afterExecution?.status ??
+            'none',
+          afterExecution?.attempt ??
+            0,
+        ].join(':')
+
+
+      if (
+        child.payload === null
+      ) {
+        output({
+          ok: false,
+
+          command:
+            'task-engine',
+
+          task_id:
+            taskId,
+
+          error:
+            'invalid_child_response',
+
+          action,
+
+          stderr:
+            child.result.stderr,
+
+          trail,
+        }, 1)
+
+        return
+      }
+
+
+      if (
+        child.payload.ok !== true &&
+        before === after &&
+        action !== 'task-publish'
+      ) {
+        output({
+          ok: false,
+
+          command:
+            'task-engine',
+
+          task_id:
+            taskId,
+
+          error:
+            child.payload.error ??
+            child.payload.publication?.error ??
+            'task_action_failed_without_state_transition',
+
+          stage:
+            action,
+
+          details:
+            child.payload,
+
+          trail,
+        }, 1)
+
+        return
+      }
+
+    }
+
+
+    output({
+      ok: false,
+
+      command:
+        'task-engine',
+
+      task_id:
+        taskId,
+
+      error:
+        'engine_step_limit_reached',
+
+      trail,
+    }, 1)
+
+  }
+  catch (error) {
+
+    output({
+      ok: false,
+
+      command:
+        'task-engine',
+
+      task_id:
+        taskId,
+
+      error:
+        error.message,
+
+      trail,
+    }, 1)
+
+  }
+}
+
+
 function validRunId(value) {
   return (
     typeof value === 'string' &&
@@ -3482,6 +3952,10 @@ switch (command) {
 
   case 'task-publish':
     taskPublish()
+    break
+
+  case 'task-engine':
+    taskEngine()
     break
 
   case 'run-start':
