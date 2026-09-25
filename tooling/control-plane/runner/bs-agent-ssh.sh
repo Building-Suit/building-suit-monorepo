@@ -12,14 +12,9 @@ if [[ -f "$CONTROL_DB_ENV_FILE" ]]; then
   set +a
 fi
 
-PRIMARY_CONTROL_ROOT="$HOME/Dev/building-suit-monorepo/.local/worktrees/engineering-control-plane"
-FALLBACK_CONTROL_ROOT="$HOME/Dev/building-suit-monorepo"
+CONTROL_ROOT="$HOME/Dev/building-suit-monorepo"
 
-if [[ -f "$PRIMARY_CONTROL_ROOT/tooling/control-plane/runner/bs-agent.mjs" ]]; then
-  CONTROL_ROOT="$PRIMARY_CONTROL_ROOT"
-elif [[ -f "$FALLBACK_CONTROL_ROOT/tooling/control-plane/runner/bs-agent.mjs" ]]; then
-  CONTROL_ROOT="$FALLBACK_CONTROL_ROOT"
-else
+if [[ ! -f "$CONTROL_ROOT/tooling/control-plane/runner/bs-agent.mjs" ]]; then
   printf '%s\n' \
     '{"ok":false,"error":"control_plane_runner_not_found"}'
 
@@ -241,7 +236,7 @@ case "$REQUESTED_COMMAND" in
 
     if [[ -n "${EXTRA:-}" ]] \
       || [[ ! "$SUIT_SLUG" =~ ^[a-z][a-z0-9-]{1,63}$ ]] \
-      || [[ ! "$MAX_TASKS" =~ ^(10|15)$ ]]; then
+      || [[ ! "$MAX_TASKS" =~ ^([1-9]|1[0-5])$ ]]; then
 
       printf '%s\n' \
         '{"ok":false,"error":"invalid_run_start"}'
