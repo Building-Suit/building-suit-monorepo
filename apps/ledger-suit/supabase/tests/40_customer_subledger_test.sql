@@ -23,10 +23,10 @@ create temp table ar_ids(key text primary key,id uuid);
 grant all on ar_ids to authenticated;
 grant all on sequence ar_test_number to authenticated;
 insert into auth.users(id,email,raw_user_meta_data,raw_app_meta_data) values
- ('40000000-0000-4000-8000-000000000001','ar-owner@test.local','{}','{}'),
- ('40000000-0000-4000-8000-000000000002','ar-viewer@test.local','{}','{}'),
- ('40000000-0000-4000-8000-000000000003','ar-outsider@test.local','{}','{}');
-select set_config('request.jwt.claims','{"sub":"40000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+ ('41000000-0000-4000-8000-000000000001','ar-owner@test.local','{}','{}'),
+ ('41000000-0000-4000-8000-000000000002','ar-viewer@test.local','{}','{}'),
+ ('41000000-0000-4000-8000-000000000003','ar-outsider@test.local','{}','{}');
+select set_config('request.jwt.claims','{"sub":"41000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 set local role authenticated;
 insert into ar_ids values ('org',public.create_organization('AR fixture','EGP'));
 insert into ar_ids values
@@ -88,16 +88,16 @@ select pg_temp.check_ar((select aging_bucket='91_plus' from public.read_ar_open_
 reset role;
 select pg_temp.reject_ar($q$update public.ar_documents set amount_minor=1 where id=(select id from ar_ids where key='i1')$q$,'55000','documents immutable even to table owner');
 select pg_temp.reject_ar($q$delete from public.ar_allocations where document_id=(select id from ar_ids where key='r1')$q$,'55000','allocations cannot be deleted');
-insert into public.organization_members(organization_id,user_id,role,status) values((select id from ar_ids where key='org'),'40000000-0000-4000-8000-000000000002','viewer','active');
+insert into public.organization_members(organization_id,user_id,role,status) values((select id from ar_ids where key='org'),'41000000-0000-4000-8000-000000000002','viewer','active');
 set local role authenticated;
-select set_config('request.jwt.claims','{"sub":"40000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+select set_config('request.jwt.claims','{"sub":"41000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
 select pg_temp.reject_ar($q$select pg_temp.ar_post('invoice',1,'2030-01-01','VIEWER')$q$,'42501','viewer cannot issue');
-select set_config('request.jwt.claims','{"sub":"40000000-0000-4000-8000-000000000003","role":"authenticated"}',true);
+select set_config('request.jwt.claims','{"sub":"41000000-0000-4000-8000-000000000003","role":"authenticated"}',true);
 select pg_temp.check_ar((select count(*)=0 from public.ar_documents),'RLS hides all foreign documents');
 select pg_temp.check_ar((select count(*)=0 from public.ar_allocations),'RLS hides all foreign allocations');
 select pg_temp.reject_ar($q$select public.read_ar_workspace((select id from ar_ids where key='org'),'2030-01-20','2030-01-01')$q$,'42501','foreign tenant report rejected');
 select pg_temp.reject_ar($q$select pg_temp.ar_post('invoice',1,'2030-01-01','FOREIGN')$q$,'42501','foreign tenant posting rejected');
-select set_config('request.jwt.claims','{"sub":"40000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+select set_config('request.jwt.claims','{"sub":"41000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 insert into ar_ids values ('period',public.create_accounting_period((select id from ar_ids where key='org'),'2030-02-01','2030-02-28'));
 select public.transition_accounting_period((select id from ar_ids where key='period'),'soft_closed');
 select pg_temp.reject_ar($q$select pg_temp.ar_post('invoice',1,'2030-02-01','SOFT')$q$,'42501','soft close blocks ordinary AR');
