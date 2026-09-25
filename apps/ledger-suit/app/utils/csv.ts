@@ -65,6 +65,11 @@ export function downloadCsv(filename: string, csv: string) {
   const link = document.createElement('a')
   link.href = url
   link.download = filename
+  link.hidden = true
+  document.body.append(link)
   link.click()
-  setTimeout(() => URL.revokeObjectURL(url), 1000)
+  setTimeout(() => {
+    link.remove()
+    URL.revokeObjectURL(url)
+  }, 1000)
 }

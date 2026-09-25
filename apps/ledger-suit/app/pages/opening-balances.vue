@@ -152,9 +152,14 @@ async function reverse(batch: Batch) {
 
       <section v-if="rows.length" class="ls-card space-y-4 overflow-x-auto p-5" aria-labelledby="opening-mapping">
         <h2 id="opening-mapping" class="text-h2 font-bold">3. {{ t('opening.mapping') }}</h2>
-        <table class="w-full min-w-[760px] text-sm"><thead><tr class="border-b border-line text-start"><th class="p-2">#</th><th class="p-2">{{ t('opening.sourceAccount') }}</th><th class="p-2">{{ t('opening.debit') }}</th><th class="p-2">{{ t('opening.credit') }}</th><th class="p-2">{{ t('opening.ledgerAccount') }}</th><th class="p-2">{{ t('opening.validationErrors') }}</th></tr></thead>
-          <tbody><tr v-for="row in rows" :key="row.source_row" class="border-b border-line align-top" :data-source-row="row.source_row"><td class="p-2">{{ row.source_row }}</td><td class="p-2"><strong>{{ row.source_code }}</strong><br><span class="text-fg-muted">{{ row.source_name }}</span></td><td class="p-2">{{ row.debit || '—' }}</td><td class="p-2">{{ row.credit || '—' }}</td><td class="p-2"><select v-model="row.account_id" class="ls-input min-w-64" :aria-label="`${t('opening.ledgerAccount')} ${row.source_row}`"><option :value="null">{{ t('opening.chooseAccount') }}</option><option v-for="account in accounts" :key="account.id" :value="account.id">{{ account.code }} · {{ account.name }} · {{ t(`opening.roles.${account.account_role}`) }}<template v-if="account.is_archived"> · {{ t('opening.archived') }}</template></option></select></td><td class="p-2"><ul v-if="rowErrors(row.source_row).length" class="text-danger"><li v-for="code in rowErrors(row.source_row)" :key="code">{{ validationLabel(code) }}</li></ul><span v-else-if="validation" class="text-success">{{ t('opening.valid') }}</span></td></tr></tbody>
-        </table>
+        <BsDataTable :value="rows" data-key="source_row" :label="t('opening.mapping')" :table-style="{ minWidth: '760px' }">
+          <Column field="source_row" header="#" />
+          <Column :header="t('opening.sourceAccount')"><template #body="{ data: row }"><strong>{{ row.source_code }}</strong><br><span class="text-fg-muted">{{ row.source_name }}</span></template></Column>
+          <Column :header="t('opening.debit')"><template #body="{ data: row }">{{ row.debit || '—' }}</template></Column>
+          <Column :header="t('opening.credit')"><template #body="{ data: row }">{{ row.credit || '—' }}</template></Column>
+          <Column :header="t('opening.ledgerAccount')"><template #body="{ data: row }"><select v-model="row.account_id" class="ls-input min-w-64" :aria-label="`${t('opening.ledgerAccount')} ${row.source_row}`"><option :value="null">{{ t('opening.chooseAccount') }}</option><option v-for="account in accounts" :key="account.id" :value="account.id">{{ account.code }} · {{ account.name }} · {{ t(`opening.roles.${account.account_role}`) }}<template v-if="account.is_archived"> · {{ t('opening.archived') }}</template></option></select></template></Column>
+          <Column :header="t('opening.validationErrors')"><template #body="{ data: row }"><ul v-if="rowErrors(row.source_row).length" class="text-danger"><li v-for="code in rowErrors(row.source_row)" :key="code">{{ validationLabel(code) }}</li></ul><span v-else-if="validation" class="text-success">{{ t('opening.valid') }}</span></template></Column>
+        </BsDataTable>
         <button type="button" class="ls-btn ls-btn-primary" :disabled="busy==='validate'" @click="validateBatch">{{ t('opening.validate') }}</button>
       </section>
 
@@ -167,7 +172,11 @@ async function reverse(batch: Batch) {
 
       <section v-if="validation?.preview.length" class="ls-card space-y-4 overflow-x-auto p-5" aria-labelledby="opening-preview">
         <h2 id="opening-preview" class="text-h2 font-bold">5. {{ t('opening.preview') }}</h2><p class="text-sm text-fg-muted">{{ t('opening.previewHint', { date: cutoff }) }}</p>
-        <table class="w-full min-w-[620px] text-sm"><thead><tr class="border-b border-line"><th class="p-2 text-start">{{ t('opening.ledgerAccount') }}</th><th class="p-2 text-end">{{ t('opening.debit') }}</th><th class="p-2 text-end">{{ t('opening.credit') }}</th></tr></thead><tbody><tr v-for="line in validation.preview" :key="line.row_id" class="border-b border-line"><td class="p-2">{{ line.account_code }} · {{ line.account_name }}</td><td class="p-2 text-end">{{ amount(line.debit_minor) }}</td><td class="p-2 text-end">{{ amount(line.credit_minor) }}</td></tr></tbody></table>
+        <BsDataTable :value="validation.preview" data-key="row_id" :label="t('opening.preview')" :table-style="{ minWidth: '620px' }">
+          <Column :header="t('opening.ledgerAccount')"><template #body="{ data: line }">{{ line.account_code }} · {{ line.account_name }}</template></Column>
+          <Column :header="t('opening.debit')" header-class="text-end" body-class="text-end"><template #body="{ data: line }">{{ amount(line.debit_minor) }}</template></Column>
+          <Column :header="t('opening.credit')" header-class="text-end" body-class="text-end"><template #body="{ data: line }">{{ amount(line.credit_minor) }}</template></Column>
+        </BsDataTable>
         <button v-if="can('opening_balances.approve') && !postedTransactionId" type="button" class="ls-btn ls-btn-primary" :disabled="!validation.valid || busy==='approve'" @click="approve">{{ t('opening.approve') }}</button>
         <div v-if="postedTransactionId" class="rounded-control bg-surface-muted p-4" data-opening-posted><strong>{{ t('opening.postedLocked') }}</strong><br><NuxtLink class="text-link underline" :to="{ path: '/transactions', query: { q: postedTransactionId } }">{{ t('opening.openJournal') }}</NuxtLink></div>
       </section>

@@ -72,8 +72,7 @@ for (const locale of ['en', 'ar'] as const) {
 
     const reconciliation = page.locator('section').filter({ has: page.getByRole('heading', { name: copy.controls.reconciliation }) })
     await expect(reconciliation).toContainText(controlName)
-    await expect(reconciliation).toContainText(copy.controls.subledgerUnavailable)
-    await expect(reconciliation).not.toContainText(copy.controls.statuses.reconciled)
+    await expect(reconciliation.getByRole('row').filter({ hasText: controlName })).toContainText(copy.controls.statuses.reconciled)
 
     const adjustmentButton = reconciliation.getByRole('row').filter({ hasText: controlName }).getByRole('button', { name: copy.controls.adjust, exact: true })
     await adjustmentButton.click()
@@ -88,7 +87,7 @@ for (const locale of ['en', 'ar'] as const) {
     await adjustmentDialog.getByLabel(copy.controls.reconciliationReference).fill(adjustmentReference)
     await adjustmentDialog.getByRole('button', { name: copy.common.save, exact: true }).click()
     await expect(adjustmentDialog).toBeHidden()
-    await expect(reconciliation).toContainText(copy.controls.subledgerUnavailable)
+    await expect(reconciliation.getByRole('row').filter({ hasText: controlName })).toContainText(copy.controls.statuses.unreconciled)
 
     await page.goto(`/transactions?q=${encodeURIComponent(adjustmentDescription)}`)
     const journalRow = page.getByRole('row').filter({ hasText: adjustmentDescription })
