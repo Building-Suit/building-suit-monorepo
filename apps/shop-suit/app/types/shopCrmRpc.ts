@@ -5,8 +5,12 @@ export type ShopRpcDatabase = {
     Views: Record<string, never>
     Functions: {
       create_owner_shop: {
-        Args: { p_shop_name: string; p_plan_slug: string }
+        Args: { p_shop_name: string; p_plan_slug: string; p_business_mode: 'product' | 'service' | 'mixed' }
         Returns: string
+      }
+      set_shop_business_mode: {
+        Args: { p_shop_id: string; p_business_mode: 'product' | 'service' | 'mixed' }
+        Returns: 'product' | 'service' | 'mixed'
       }
       save_product: {
         Args: {
@@ -95,6 +99,165 @@ export type ShopRpcDatabase = {
       void_supplier_purchase: {
         Args: { p_shop_id: string; p_purchase_id: string }
         Returns: undefined
+      }
+      customer_access: {
+        Args: { p_shop_id: string }
+        Returns: Array<{ can_view: boolean; can_manage: boolean }>
+      }
+      list_customers: {
+        Args: {
+          p_shop_id: string
+          p_search?: string | null
+          p_is_active?: boolean | null
+          p_page?: number
+          p_page_size?: number
+        }
+        Returns: unknown
+      }
+      get_customer: {
+        Args: { p_shop_id: string; p_customer_id: string }
+        Returns: Array<{
+          id: string
+          name: string
+          phone: string | null
+          email: string | null
+          address: string | null
+          notes: string | null
+          is_active: boolean
+          created_at: string
+          updated_at: string
+          archived_at: string | null
+          can_manage: boolean
+        }>
+      }
+      save_customer: {
+        Args: {
+          p_shop_id: string
+          p_customer_id: string | null
+          p_name: string
+          p_phone: string | null
+          p_email: string | null
+          p_address: string | null
+          p_notes: string | null
+        }
+        Returns: string
+      }
+      archive_customer: {
+        Args: { p_shop_id: string; p_customer_id: string }
+        Returns: undefined
+      }
+      sale_access: {
+        Args: { p_shop_id: string }
+        Returns: Array<{ can_view: boolean; can_manage: boolean; can_issue: boolean }>
+      }
+      sale_catalog: {
+        Args: { p_shop_id: string }
+        Returns: unknown
+      }
+      save_sale_draft: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_invoice_id: string | null
+          p_customer_id: string | null
+          p_notes: string | null
+          p_lines: Array<{ item_type: 'product' | 'service'; source_id: string; quantity: number }>
+        }
+        Returns: string
+      }
+      save_sale_draft_with_due_date: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_invoice_id: string | null
+          p_customer_id: string | null
+          p_due_date: string | null
+          p_notes: string | null
+          p_lines: Array<{ item_type: 'product' | 'service'; source_id: string; quantity: number }>
+        }
+        Returns: string
+      }
+      issue_sale: {
+        Args: { p_request_id: string; p_shop_id: string; p_invoice_id: string }
+        Returns: string
+      }
+      list_sales: {
+        Args: {
+          p_shop_id: string
+          p_search?: string | null
+          p_status?: 'draft' | 'issued' | null
+          p_from?: string | null
+          p_to?: string | null
+          p_page?: number
+          p_page_size?: number
+        }
+        Returns: unknown
+      }
+      get_sale: {
+        Args: { p_shop_id: string; p_invoice_id: string }
+        Returns: unknown
+      }
+      payment_access: {
+        Args: { p_shop_id: string }
+        Returns: Array<{ can_view: boolean; can_receive: boolean; can_reverse: boolean; can_refund: boolean }>
+      }
+      record_customer_receipt: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_customer_id: string
+          p_amount: number
+          p_paid_at: string
+          p_method: 'cash' | 'bank_transfer' | 'card' | 'wallet' | 'cheque' | 'other'
+          p_reference: string | null
+          p_notes: string | null
+          p_allocations: Array<{ invoice_id: string; amount: number }>
+        }
+        Returns: string
+      }
+      reverse_customer_receipt: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_original_payment_id: string
+          p_effective_at: string
+          p_reason: string
+          p_allocations: Array<{ allocation_id: string; amount: number }>
+        }
+        Returns: string
+      }
+      refund_customer_receipt: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_original_payment_id: string
+          p_effective_at: string
+          p_method: 'cash' | 'bank_transfer' | 'card' | 'wallet' | 'cheque' | 'other'
+          p_reference: string | null
+          p_reason: string
+          p_allocations: Array<{ allocation_id: string; amount: number }>
+        }
+        Returns: string
+      }
+      list_outstanding_invoices: {
+        Args: { p_shop_id: string; p_customer_id?: string | null; p_overdue_only?: boolean; p_page?: number; p_page_size?: number }
+        Returns: unknown
+      }
+      customer_statement: {
+        Args: { p_shop_id: string; p_customer_id: string; p_page?: number; p_page_size?: number }
+        Returns: unknown
+      }
+      checkout_customerless_sale: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_invoice_id: string
+          p_amount: number
+          p_paid_at: string
+          p_method: 'cash' | 'bank_transfer' | 'card' | 'wallet' | 'cheque' | 'other'
+          p_reference: string | null
+        }
+        Returns: string
       }
     }
     Enums: Record<string, never>

@@ -13,6 +13,7 @@ export interface ShopSummary {
   id: string
   name: string
   status: string
+  business_mode: 'product' | 'service' | 'mixed'
   created_at: string
 }
 
@@ -138,7 +139,7 @@ export function useShop() {
 
       const { data: shopRows, error: shopError } = await supabase
         .from('shops')
-        .select('id,name,status,created_at')
+        .select('id,name,status,business_mode,created_at')
         .in('id', shopIds)
         .eq('status', 'active')
         .order('created_at', { ascending: true })
@@ -178,8 +179,10 @@ export function useShop() {
   }
 
   async function reload() {
+    clearShopScopedData()
     loadedUserId.value = null
     await loadShops({ force: true })
+    await nuxtApp.runWithContext(() => refreshNuxtData())
   }
 
   return {
