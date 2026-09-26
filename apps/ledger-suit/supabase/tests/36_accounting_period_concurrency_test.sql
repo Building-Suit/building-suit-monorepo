@@ -2,7 +2,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 create extension if not exists dblink with schema extensions;
-select plan(8);
+select plan(10);
 
 create temp table period_fixture as
 select gen_random_uuid() user_id, 'Period Race Fixture ' || gen_random_uuid()::text organization_name;
@@ -70,6 +70,8 @@ select period_id from extensions.dblink_get_result('period_race_2') as result(pe
 select extensions.dblink_get_result('period_race_2');
 select is((select count(*) from public.transactions where organization_id=(select org from race_ids) and idempotency_key='race-post-first'),1::bigint,
   'posting commits once before the waiting close');
+select matches((select journal_reference from public.transactions where organization_id=(select org from race_ids) and idempotency_key='race-post-first'),
+  '^JRN-2026-[0-9]{6}$','post-first race assigns one professional journal reference');
 select is((select status from public.accounting_periods where id=(select period from race_ids)),'soft_closed'::public.accounting_period_status,
   'waiting close succeeds after the first posting commits');
 
@@ -92,6 +94,8 @@ select extensions.dblink_get_result('period_race_2');
 select ok((select outcome from rejected_outcome) like '42501:ACCOUNTING_PERIOD_SOFT_CLOSED:%','queued normal posting rechecks and is rejected after close');
 select is((select count(*) from public.transactions where organization_id=(select org from race_ids) and idempotency_key='race-close-first'),0::bigint,
   'close-first race leaves no transaction');
+select is((select count(*) from public.transactions where organization_id=(select org from race_ids) and journal_reference is not null),1::bigint,
+  'close-first race allocates no additional journal reference');
 select is((select count(*) from public.transaction_entries e join public.transactions t on t.id=e.transaction_id
   where t.organization_id=(select org from race_ids) and t.idempotency_key='race-close-first'),0::bigint,
   'close-first race leaves no entries');

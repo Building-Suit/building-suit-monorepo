@@ -58,8 +58,8 @@ insert into journal_ids values ('replay', public.create_adjustment(
 ));
 
 select is((select id from journal_ids where key='replay'), (select id from journal_ids where key='original'), 'Idempotent replay resolves to one journal');
-select ok((select journal_reference from public.transactions where id=(select id from journal_ids where key='original')) like 'JRN-%', 'Every journal has an accountant-facing immutable reference');
-select is((select length(journal_reference) from public.transactions where id=(select id from journal_ids where key='original')), 36, 'Opaque journal reference retains the full collision-safe UUID payload');
+select matches((select journal_reference from public.transactions where id=(select id from journal_ids where key='original')), '^JRN-2026-[0-9]{6}$', 'Every newly posted journal has the approved professional reference format');
+select is((select journal_reference from public.transactions where id=(select id from journal_ids where key='original')), 'JRN-2026-000001', 'The organization fiscal-year sequence starts at one');
 
 insert into journal_ids values ('second', public.create_adjustment(
   (select id from journal_ids where key='org'), date '2026-09-02',

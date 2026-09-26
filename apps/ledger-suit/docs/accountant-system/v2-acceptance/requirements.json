@@ -370,10 +370,10 @@
     {
       "id": "JRN-02",
       "requirement": "Display journal number, accounting date, description, reference, source, status, and debit/credit totals.",
-      "criterion": "List/detail expose the fields and reconcile totals to lines; opaque reference is not claimed as the approved sequential number",
-      "prior_assessment": "implemented locally except final V2-D03 number semantics — immutable reference, accounting date, description/reference, source/type/status and actual debit/credit totals are shown",
-      "prior_evidence": "UI-JRN; DB-LEDGER; T-JRN",
-      "code_implemented": "partial",
+      "criterion": "List/detail expose the fields and reconcile totals to lines; new successful posts use the approved professional number while legacy posted references remain visible",
+      "prior_assessment": "implemented locally by LS-FIX-001 at the shared posting boundary; native database and history-digest verification pending",
+      "prior_evidence": "UI-JRN; DB-LEDGER; 20260927120000_posted_journal_sequences.sql; SQL suites 34/47",
+      "code_implemented": "implemented",
       "tests_passed": "unverified",
       "deployed": "unverified",
       "accountant_accepted": "pending"
@@ -381,10 +381,10 @@
     {
       "id": "JRN-03",
       "requirement": "Provide consistent journal numbering with documented assignment and reuse rules.",
-      "criterion": "Accountant/product owner must still approve scope/year/format/assignment/gap policy before sequential numbering is implemented",
-      "prior_assessment": "safety foundation implemented locally; final policy blocked by V2-D03 — every row has a unique immutable UUID-derived reference, retries reuse it, reversals receive their own",
-      "prior_evidence": "DB-JRN; T-JRN; T-IDEMP",
-      "code_implemented": "partial",
+      "criterion": "V2-D03: organization/fiscal-year sequence at successful posting; ending-year label; six-digit fail-closed limit; gaps permitted; no reuse; retry keeps one journal; legacy references retained",
+      "prior_assessment": "implemented locally by LS-FIX-001; native two-session, close/post, probe, and preservation execution pending",
+      "prior_evidence": "20260927120000_posted_journal_sequences.sql; SQL suites 36/47/48; scripts/verify-v2-reconciliation.sql",
+      "code_implemented": "implemented",
       "tests_passed": "unverified",
       "deployed": "unverified",
       "accountant_accepted": "pending"
@@ -1350,9 +1350,9 @@
       "id": "VAL-03",
       "requirement": "Test opening-balance imports, journal numbering, saved views, report drill-down, and six-column Trial Balance reconciliation.",
       "criterion": "Automated DB+UI suite covers all five behaviors; V2-IMP-002/003/006/007",
-      "prior_assessment": "partially implemented — six-column TB reconciliation/drill-down coverage is implemented; opening import, numbering and saved-view acceptance remain future work",
-      "prior_evidence": "T-IMPORT; T-REPORT; T-TB; UI evidence",
-      "code_implemented": "unverified",
+      "prior_assessment": "implemented locally across the owning packages, including LS-FIX-001 numbering coverage; cumulative native acceptance execution remains unverified",
+      "prior_evidence": "T-IMPORT; T-REPORT; T-TB; UI evidence; LS-FIX-001 SQL suites 34/36/47/48",
+      "code_implemented": "implemented",
       "tests_passed": "unverified",
       "deployed": "unverified",
       "accountant_accepted": "pending"
