@@ -233,13 +233,13 @@ Columns: evidence includes code/schema/interface and tests present; acceptance/t
 
 | ID | Meaning | Priority | Status and reason | Evidence; gap / smallest additional evidence | Measurable acceptance; task / decision |
 |---|---|---:|---|---|---|
-| DIM-01 | Complete cost-center/project dimensions | — | partially implemented — ledger lines have generic dimensions JSON only | DB-LEDGER:8-55; ABSENT-MODULES | Controlled dimensions, posting, reporting and reconciliation work end-to-end; V2-IMP-012 / V2-D10 |
-| DIM-02 | Maintain controlled dimension values | — | missing — no model/API/UI | ABSENT-MODULES | Authorized create/edit/archive preserves historical references; V2-IMP-012 / V2-D10 |
-| DIM-03 | Associate applicable accounting amounts | — | partially implemented — unvalidated JSON can be stored, with no controlled selection/allocation | DB-LEDGER | Eligible line amounts reference active tenant dimension values and allocation totals equal line; V2-IMP-012 / V2-D10 |
-| DIM-04 | Filter/group accounting reports | — | missing | ABSENT-MODULES | GL/TB/approved statements filter/group by each dimension; V2-IMP-012 / V2-D10 |
-| DIM-05 | Reconcile including unassigned | — | missing | ABSENT-MODULES | Assigned groups plus explicit Unassigned equal unfiltered ledger total; V2-IMP-012 / V2-D10 |
-| DIM-06 | Allocation/history rules | — | missing | ABSENT-MODULES | Approved multi-allocation and historical-change policy is auditable; V2-D10; V2-IMP-012 / V2-D10 |
-| DIM-07 | No operational project management | — | implemented — tracker limits dimensions to classification/reporting | Scope/task definition | No scheduling/resources/tasks/billing module is introduced |
+| DIM-01 | Complete cost-center/project dimensions | — | implemented locally — controlled model/posting/report UI; SQL/browser pending | V2-IMP-012 migration/UI/fixtures | Controlled dimensions, posting, reporting and reconciliation work end-to-end; V2-IMP-012 / V2-D10 |
+| DIM-02 | Maintain controlled dimension values | — | implemented locally — authorized idempotent create/edit/archive; SQL pending | V2-IMP-012 SQL/UI fixtures | Authorized create/edit/archive preserves historical references; V2-IMP-012 / V2-D10 |
+| DIM-03 | Associate applicable accounting amounts | — | implemented locally — typed tenant values, exact transaction/base allocations and posting guard; SQL pending | V2-IMP-012 migration/fixtures | Eligible line amounts reference active tenant dimension values and allocation totals equal line; V2-IMP-012 / V2-D10 |
+| DIM-04 | Filter/group accounting reports | — | implemented locally — GL/TB/P&L/BS/CF scopes and value filter; SQL/browser pending | V2-IMP-012 report RPC/UI | GL/TB/approved statements filter/group by each dimension; V2-IMP-012 / V2-D10 |
+| DIM-05 | Reconcile including unassigned | — | implemented locally — explicit zero-or-populated Unassigned and returned control differences; SQL pending | V2-IMP-012 report fixture | Assigned groups plus explicit Unassigned equal unfiltered ledger total; V2-IMP-012 / V2-D10 |
+| DIM-06 | Allocation/history rules | — | implemented locally — multi-allocation, inactive rejection, immutable posted rows, untouched legacy JSON; SQL pending | V2-IMP-012 migration/fixtures | Approved multi-allocation and historical-change policy is auditable; V2-D10; V2-IMP-012 / V2-D10 |
+| DIM-07 | No operational project management | — | implemented — financial values/policies/allocations/reports only | V2-IMP-012 diff and scope record | No scheduling/resources/tasks/billing module is introduced |
 | TAX-01 | Approve jurisdictions/circumstances/scope | — | missing — tax identifiers/subtypes are not an approved scope | DB-COA; ABSENT-MODULES | Accountant+product owner approve scope backed by current authoritative regulation; V2-IMP-013 / V2-D11 |
 | TAX-02 | Configure mappings/calculations/reports | — | missing | ABSENT-MODULES | Approved examples calculate, post and report exact tax amounts; V2-IMP-013 / V2-D11 |
 | TAX-03 | Integrate documents and posting engine | — | missing | ABSENT-MODULES; DB-POST foundation | Each in-scope document creates one balanced traceable tax effect; V2-IMP-013 / V2-D11 |
@@ -264,7 +264,7 @@ Columns: evidence includes code/schema/interface and tests present; acceptance/t
 | VAL-02 | Test COA roles/reconciliation/Contra/classes | — | partially implemented — Group/Contra/classification tests exist; Control does not and one local suite failed | T-COA; section 5 | Clean suite covers Group/Control/Contra/classification and zero Control variance; V2-IMP-005/015 |
 | VAL-03 | Test opening/numbering/views/drill-down/six-column TB | — | partially implemented — six-column TB reconciliation/drill-down coverage is implemented; opening import, numbering and saved-view acceptance remain future work | T-IMPORT; T-REPORT; T-TB; UI evidence | Automated DB+UI suite covers all five behaviors; V2-IMP-002/003/006/007 |
 | VAL-04 | Test AR/AP lifecycle/reconciliation | — | partially implemented — focused accrual AR/AP SQL, unit, UI and concurrency fixtures exist; AP native SQL/concurrency/browser execution remains blocked in this worktree | V2-IMP-008/009 task records | Accrual, allocation, aging, correction and Control reconciliation tests pass; V2-IMP-008/009 |
-| VAL-05 | Test periods/bank/assets/dimensions/tax/inventory | — | partially implemented — period/bank/asset fixtures exist; asset unit passes while native SQL/concurrency/browser execution and later modules remain pending | V2-IMP-004/010/011 evidence; ABSENT-MODULES | Each approved module has accounting fixtures plus concurrency/error/UI coverage; V2-IMP-010-015 |
+| VAL-05 | Test periods/bank/assets/dimensions/tax/inventory | — | partially implemented — period/bank/asset/dimension fixtures exist; dimension unit passes while native SQL/browser execution and tax/inventory remain pending | V2-IMP-004/010/011/012 evidence; ABSENT-MODULES | Each approved module has accounting fixtures plus concurrency/error/UI coverage; V2-IMP-010-015 |
 | VAL-06 | Permission/isolation/idempotency/concurrency/history tests | — | partially implemented — posting replay/conflict, tenant isolation, failure recovery, concurrent duplicates and period close/post serialization now pass; future-module concurrency remains | T-IDEMP; T-CORE; T-COA; V2-IMP-004 SQL concurrency evidence | Cross-module matrix passes, including concurrent duplicate and close/post barriers; V2-IMP-015 |
 | VAL-07 | Accountant-reviewed independent expected balances | — | missing — no V2 accountant acceptance evidence exists | Existing historical approval is not V2 UAT | Named accountant signs dated fixtures and expected reports; V2-IMP-015 |
 | VAL-08 | Separate code/test/deploy/accountant states | — | implemented — V2-IMP-004 explicitly distinguishes local implementation/test evidence from hosted deployment and accountant acceptance | Sections 2, 5 and V2-IMP-004 | Tracker never derives deployment/UAT from code or test state |
@@ -534,11 +534,11 @@ Unless a card says otherwise, discovered paths are apps/ledger-suit/app, apps/le
 
 - Scope/result: controlled cost centers/projects, line allocations, historical validity, filters/groups and explicit Unassigned reconciliation.
 - Dependencies/gates: 002–005 and V2-D10.
-- Retain/extend: generic entry dimensions only through a compatible controlled transition.
-- Paths/objects: DB-LEDGER generic JSON; proposed dimension/value/allocation tables or typed schema and report filters/UI.
-- Migration/risk: old JSON cannot be assumed valid; keep it readable and map only reviewed values. Risk is totals excluding unassigned or allocations exceeding lines.
-- Acceptance/tests: allocations sum to line; inactive/historical values behave per policy; grouped+Unassigned equals unfiltered TB/GL; tenant/permission and RTL UI checks.
-- Rehearsal/recovery/review: mapping dry run/unmapped report, parallel totals, forward mapping corrections; accountant/product review.
+- Retain/extend: generic entry dimensions remain untouched and are counted/reported as Unassigned; controlled rows are additive.
+- Paths/objects: `20260925190000_accounting_dimensions.sql`, `44_accounting_dimensions_test.sql`, `/accounting-dimensions`, manual-journal allocation controls and focused unit/browser fixtures.
+- Migration/risk: no JSON backfill or inference; inactive values reject new use; posted allocations reject mutation. Recovery is forward-only without deleting financial history.
+- Acceptance/tests: fixtures cover exact/over allocation, inactive/history, idempotency, required contexts, grouped+Unassigned GL/TB/statements, tenant/permission and EN/AR RTL UI; native SQL/browser execution remains pending sandbox access.
+- Rehearsal/recovery/review: legacy count is the mapping dry run; grouped control differences provide parallel totals. No accountant UAT or deployment evidence exists.
 
 ### V2-IMP-013 — Approved tax/VAT accounting
 

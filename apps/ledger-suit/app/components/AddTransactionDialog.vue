@@ -23,6 +23,7 @@ const { data: accounts } = useOrgAccounts()
 const { data: categories } = useOrgCategories()
 const { data: counterparties } = useOrgCounterparties()
 const { data: canMultiCurrency } = usePlanFeature('multi_currency')
+const { workspace: dimensionWorkspace } = useAccountingDimensions()
 
 const paymentAccounts = usePaymentAccounts(accounts)
 const assetAccounts = useAccountsOfType(accounts, ['asset'])
@@ -39,6 +40,7 @@ interface JournalLine {
   accountId: string
   side: 'debit' | 'credit'
   amount: string
+  allocations: Array<{ kind: 'cost_center' | 'project', valueId: string, amount: string }>
 }
 
 const today = () => new Date().toISOString().slice(0, 10)
@@ -99,8 +101,8 @@ function resetForm() {
     destinationAmount: '',
     destinationExchangeRate: '',
     lines: [
-      { accountId: '', side: 'debit', amount: '' },
-      { accountId: '', side: 'credit', amount: '' },
+      { accountId: '', side: 'debit', amount: '', allocations: [] },
+      { accountId: '', side: 'credit', amount: '', allocations: [] },
     ],
   })
   fieldError.value = null
@@ -180,12 +182,16 @@ const adjustmentTotals = computed(() => {
 })
 
 function addLine() {
-  form.lines.push({ accountId: '', side: 'debit', amount: '' })
+  form.lines.push({ accountId: '', side: 'debit', amount: '', allocations: [] })
 }
 
 function removeLine(index: number) {
   if (form.lines.length <= 2) return
   form.lines.splice(index, 1)
+}
+
+function addAllocation(line: JournalLine, kind: 'cost_center' | 'project') {
+  line.allocations.push({ kind, valueId: '', amount: line.amount })
 }
 
 const nullable = (value: string) => (value.trim() === '' ? null : value)
@@ -365,13 +371,22 @@ async function submit() {
           return
         }
 
-        const lines = form.lines
-          .filter(l => l.accountId && l.amount.trim())
-          .map(l => ({
-            account_id: l.accountId,
-            side: l.side,
-            amount_minor: Number(parseMoneyToMinor(l.amount, baseCurrency.value)),
-          }))
+        const lines = []
+        for (const line of form.lines.filter(item => item.accountId && item.amount.trim())) {
+          const amount = parseMoneyToMinor(line.amount, baseCurrency.value)
+          const allocations = []
+          for (const kind of ['cost_center', 'project'] as const) {
+            const rows = line.allocations.filter(item => item.kind === kind && item.valueId)
+            if (!rows.length) continue
+            const parsed = rows.map(item => ({ ...item, minor: parseMoneyToMinor(item.amount, baseCurrency.value) }))
+            if (parsed.reduce((sum, item) => sum + item.minor, 0n) !== amount) {
+              fieldError.value = t('dimensions.allocationMismatch', { kind: t(`dimensions.kinds.${kind}`) })
+              return
+            }
+            allocations.push(...parsed.map(item => ({ dimension_value_id: item.valueId, amount_minor: item.minor.toString(), base_amount_minor: item.minor.toString() })))
+          }
+          lines.push({ account_id: line.accountId, side: line.side, amount_minor: amount.toString(), allocations })
+        }
 
         rpc = { fn: 'create_adjustment', args: {
           p_organization_id: org,
@@ -678,8 +693,9 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
               <div
                 v-for="(line, index) in form.lines"
                 :key="index"
-                class="grid grid-cols-[1fr_7rem_8rem_2rem] items-end gap-2"
+                class="rounded-control border border-[var(--bs-border)] p-3"
               >
+                <div class="grid grid-cols-[1fr_7rem_8rem_2rem] items-end gap-2">
                 <div>
                   <label class="sr-only" :for="`line-account-${index}`">{{ t('detail.account') }}</label>
                   <select :id="`line-account-${index}`" v-model="line.accountId" class="ls-input">
@@ -709,6 +725,15 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
                 >
                   <AppIcon name="delete" :size="18" />
                 </button>
+                </div>
+                <div v-if="can('dimensions.allocate') && dimensionWorkspace?.values.some(value => value.status==='active')" class="mt-3 space-y-2 border-t border-[var(--bs-border)] pt-3">
+                  <div class="flex flex-wrap gap-2"><button type="button" class="ls-btn ls-btn-sm" @click="addAllocation(line,'cost_center')">{{ t('dimensions.allocateKind', { kind: t('dimensions.kinds.cost_center') }) }}</button><button type="button" class="ls-btn ls-btn-sm" @click="addAllocation(line,'project')">{{ t('dimensions.allocateKind', { kind: t('dimensions.kinds.project') }) }}</button></div>
+                  <div v-for="(allocation, allocationIndex) in line.allocations" :key="allocationIndex" class="grid grid-cols-[1fr_8rem_2rem] gap-2">
+                    <select v-model="allocation.valueId" class="ls-input"><option value="">{{ t(`dimensions.kinds.${allocation.kind}`) }}</option><option v-for="value in dimensionWorkspace.values.filter(item=>item.kind===allocation.kind && item.status==='active')" :key="value.id" :value="value.id">{{ value.code }} · {{ value.name }}</option></select>
+                    <input v-model="allocation.amount" class="ls-input" inputmode="decimal" :aria-label="t('dimensions.allocationAmount')">
+                    <button type="button" class="ls-btn ls-btn-sm" :aria-label="t('dimensions.removeAllocation')" @click="line.allocations.splice(allocationIndex,1)"><AppIcon name="delete" :size="18" /></button>
+                  </div>
+                </div>
               </div>
             </div>
 
