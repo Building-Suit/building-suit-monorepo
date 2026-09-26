@@ -601,10 +601,10 @@
     {
       "id": "FS-08",
       "requirement": "Preserve access to historical financial information when accounts are archived or their permitted descriptive attributes change.",
-      "criterion": "Earlier periods retain earlier classes and archived account journals remain accessible; verify historical display labels during accountant UAT",
-      "prior_assessment": "partially implemented — effective mapping/archive history is tested; descriptive-name history after a permitted rename remains unproven",
-      "prior_evidence": "DB-COA; DB-CLASS; DB-REPORT; V2-IMP-007; T-FS",
-      "code_implemented": "partial",
+      "criterion": "Earlier periods retain earlier classes and labels, archived account journals remain accessible, and screen/export labels agree without changing amounts or links",
+      "prior_assessment": "implemented locally by LS-FIX-002 — prospective label versions feed historical statements, CSV and posted-line detail; pre-migration overwritten names remain unrecoverable",
+      "prior_evidence": "DB-COA; DB-CLASS; DB-REPORT; V2-IMP-007; migration 20260927130000; SQL 49; shared-story probe; historical-account-labels.md",
+      "code_implemented": "implemented",
       "tests_passed": "unverified",
       "deployed": "unverified",
       "accountant_accepted": "pending"

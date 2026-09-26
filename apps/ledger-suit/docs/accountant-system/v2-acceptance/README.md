@@ -1,6 +1,6 @@
 # V2-IMP-015 — cross-module acceptance review
 
-Status: **BLOCKED / acceptance incomplete**, 2026-09-26. This is an acceptance package, not a release or an accountant sign-off. No runtime code, applied migration, hosted database, deployment, commit or publication was changed.
+Status: **BLOCKED / acceptance incomplete**, 2026-09-26. This is an acceptance package, not a release or an accountant sign-off. The original V2-IMP-015 review changed no runtime code or applied environment; later LS-FIX repair entries below describe local source changes only. No hosted database, deployment, commit or publication is claimed.
 
 Reviewed checkpoint: `78cbf947e1a308d44c3b8e955ee7b38727d2605b`, branch `codex/ledger-suit/v2-imp-015`. Worktree: `.local/worktrees/ledger-suit-v2-imp-015`. Initial working tree was clean. Local `origin/stg` was `2b3b5d6c6e1493a6b0295d484c2769936805d5cf`; it is stale/unverified. Preflight failed because fetch cannot write the read-only Git metadata outside this worktree. Live PR/parent/merge state was not established. The control plane owns publication.
 
@@ -10,7 +10,7 @@ The supplied task JSON is authoritative for this task and approves V2-D03. Depen
 
 - [Requirement register](requirements.json): all 138 baseline requirements retain their measurable criteria and prior evidence, with distinct current `code_implemented`, `tests_passed`, `deployed`, and `accountant_accepted` fields. Historical assessments are explicitly separate. `unverified` does not mean missing; no whole requirement is promoted by a passing unit file.
 - [Independent worksheet](expected-balances.json): synthetic inputs and hand-specified expected results, recomputed using integer arithmetic by [the offline validator](../../../scripts/verify-v2-acceptance-artifacts.mjs). It imports no application calculation. This verifies worksheet consistency, not the application's results or an accountant's judgment.
-- [Shared-story SQL probe](../../../scripts/verify-v2-reconciliation.sql): fresh synthetic organization, real AR/AP public commands, partial settlement, duplicate retries, per-journal equality, GL/TB/Balance Sheet/P&L/Control comparisons, and rename/archive observation. All writes roll back. **Not executed.** Manual equipment/depreciation/fee entries in this probe do not establish fixed-asset or bank-module acceptance.
+- [Shared-story SQL probe](../../../scripts/verify-v2-reconciliation.sql): fresh synthetic organization, real AR/AP public commands, partial settlement, duplicate retries, per-journal equality, GL/TB/Balance Sheet/P&L/Control comparisons, and pinned pre/post rename/archive label, identity, mapping, journal and amount comparisons. All writes roll back. **Updated by LS-FIX-002 but not executed.** Manual equipment/depreciation/fee entries in this probe do not establish fixed-asset or bank-module acceptance.
 - [Migration snapshot](../../../scripts/v2-migration-snapshot.sql): read-only counts, base-currency debit/credit sums, individual imbalance count, posted identity/entry digests, dated TB/BS/P&L and Control results. **Not executed; no paired migration evidence exists.** MD5 here is a change detector, not a security signature. Requires the V2 reporting/control RPCs on both sides of the candidate migration.
 
 | Command/check actually attempted | Result |
@@ -28,6 +28,12 @@ The supplied task JSON is authoritative for this task and approves V2-D03. Depen
 | `node --check apps/ledger-suit/scripts/verify-v2-acceptance-artifacts.mjs` | Passed JavaScript syntax check |
 | JSON parsing and local acceptance README link check | Passed |
 | `git diff --check` | Passed |
+| LS-FIX-002: `pnpm --filter @building-suit/ledger-suit test:unit` | Passed all 16 current unit files, zero failed/skipped; not SQL evidence |
+| LS-FIX-002: `node apps/ledger-suit/scripts/verify-v2-acceptance-artifacts.mjs` | Passed 138-state/worksheet validation; not database or accountant evidence |
+| LS-FIX-002: `pnpm check` | Passed token outputs, workspace boundaries and historical-migration preservation check |
+| LS-FIX-002: Ledger `typecheck` / `lint` | Did not start: `nuxt` / `eslint` executables absent because `node_modules` is missing |
+| LS-FIX-002: SQL 49 and shared-story probe | Unrun: Docker denied, local port 60322 unavailable and Supabase CLI absent |
+| LS-FIX-002: generated database types | Unrun: Supabase CLI/local database unavailable; public report RPC signatures are unchanged and the new table has no client query |
 
 No fresh cumulative replay, native SQL, concurrent sessions, migration recovery drill, browser flow, responsive screenshots, sanitized customer dataset, deployment inspection or accountant acceptance was performed. No prior task's run is relabelled as this task's run. No shimmed database substitutes for native Supabase evidence. No attempt was made to modify a hosted database.
 
@@ -77,7 +83,7 @@ Existing `scripts/test-{customer-subledger,supplier-subledger,fixed-assets,inven
 | Finding | Evidence / required disposition |
 |---|---|
 | **R01 — repair implemented locally; native verification pending: JRN-02/JRN-03** | LS-FIX-001 adds forward migration `20260927120000_posted_journal_sequences.sql` at the shared transition into `posted`. New references are scoped by organization/configured fiscal year; `{FY}` is its ending year; `999999` is the fail-closed limit. Draft/failed/unposted-void records remain unnumbered, equal retry reuses one journal, independent posts serialize, reversals receive their own identity, and stored legacy posted/reversed references remain unchanged. Focused suites 34/36/47/48 and this probe cover the delta, but native database execution and the required pre/post history digest are not claimed by this source change alone. [Policy and verification contract](../../posted-journal-sequences.md). |
-| **R02 — FS-08 label limitation, not accepted** | `update_account` changes `accounts.name`; current P&L selects `a.name` rather than a dated name snapshot. Existing mapping tests verify archive/effective classification, not old display names after rename. The new probe observes the returned historical label and asserts amount/identity preservation. Native execution and explicit accountant acceptance of current-label presentation are still required, or a separately controlled history repair. No acceptance is inferred. |
+| **R02 — minimal repair implemented locally; native/accountant verification pending: FS-08** | LS-FIX-002 adds forward migration `20260927130000_historical_account_labels.sql` and product disposition R02-D01 under AS-E02. Account creation/rename appends a prospective label version; P&L, Balance Sheet, Trial Balance, their existing CSV paths and posted-line drill-down resolve the label that existed for the latest included journal line without changing report arithmetic. Existing accounts receive only the name provable at migration time; older overwritten names are not claimed as recoverable. Focused suite 49 and the updated shared-story probe pin before/after labels, IDs, exact amounts, mapping and journal/entry digests. Neither probe ran here because Docker/CLI dependencies are unavailable, and no named accountant has accepted the output. [Repair boundary and verification contract](../../historical-account-labels.md). |
 | **E01 — execution environment** | Docker socket denied; pinned dependencies/CLI unavailable. Fresh migration replay, integrated SQL/races, preservation pairs and recovery timings cannot be supplied from this run. |
 | **E02 — independent acceptance** | No named accountant, dated verdict, reviewed actual exports or signed V2 artifact. The worksheet is prepared, not accepted. |
 
