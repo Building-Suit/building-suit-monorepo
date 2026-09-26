@@ -3054,8 +3054,14 @@ function publicationVerification(
           '[]'::jsonb
         )
         FROM control.verification_results
-        WHERE execution_id =
-          :'execution_id'::bigint;
+        WHERE verification_run_id = (
+          SELECT verification_run_id
+          FROM control.verification_runs
+          WHERE execution_id =
+            :'execution_id'::bigint
+          ORDER BY verification_run_id DESC
+          LIMIT 1
+        );
       `,
       {
         execution_id:
