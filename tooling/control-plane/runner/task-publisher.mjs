@@ -233,21 +233,54 @@ for (
 
 
 function pathAllowed(file) {
+  const candidate =
+    file.replaceAll('\\\\', '/')
+
+
   return allowedPaths.some(
     configured => {
+
+      const scope =
+        configured.replaceAll(
+          '\\\\',
+          '/',
+        )
+
+
+      const hasGlob =
+        scope.includes('*') ||
+        scope.includes('?') ||
+        scope.includes('[') ||
+        scope.includes('{')
+
+
+      if (hasGlob) {
+
+        return path.matchesGlob(
+          candidate,
+          scope,
+        )
+
+      }
+
+
       const prefix =
-        configured.endsWith('/')
-          ? configured
-          : `${configured}/`
+        scope.endsWith('/')
+          ? scope
+          : `${scope}/`
+
 
       const exact =
-        configured.endsWith('/')
-          ? configured.slice(0, -1)
-          : configured
+        scope.endsWith('/')
+          ? scope.slice(0, -1)
+          : scope
+
 
       return (
-        file === exact ||
-        file.startsWith(prefix)
+        candidate === exact ||
+        candidate.startsWith(
+          prefix,
+        )
       )
     },
   )
