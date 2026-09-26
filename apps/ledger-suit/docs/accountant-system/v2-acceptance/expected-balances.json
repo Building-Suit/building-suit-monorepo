@@ -1,0 +1,106 @@
+{
+  "fixture": "V2-IMP-015-shared-story",
+  "currency": "EGP",
+  "unit": "integer minor units; positive balance = debit",
+  "from": "2036-01-01",
+  "to": "2036-01-31",
+  "provenance": "Synthetic independent worksheet, manually specified before database execution. Not derived from application reports; not accountant reviewed. Equipment/depreciation/fee here are manual accounting entries, not module acceptance.",
+  "events": [
+    {
+      "id": "capital",
+      "date": "2035-12-31",
+      "debit": "bank",
+      "credit": "capital",
+      "amount_minor": "100000"
+    },
+    {
+      "id": "invoice",
+      "date": "2036-01-02",
+      "debit": "ar",
+      "credit": "revenue",
+      "amount_minor": "30000"
+    },
+    {
+      "id": "receipt",
+      "date": "2036-01-05",
+      "debit": "bank",
+      "credit": "ar",
+      "amount_minor": "12000"
+    },
+    {
+      "id": "bill",
+      "date": "2036-01-03",
+      "debit": "expense",
+      "credit": "ap",
+      "amount_minor": "18000"
+    },
+    {
+      "id": "payment",
+      "date": "2036-01-06",
+      "debit": "ap",
+      "credit": "bank",
+      "amount_minor": "7000"
+    },
+    {
+      "id": "equipment",
+      "date": "2036-01-07",
+      "debit": "equipment",
+      "credit": "bank",
+      "amount_minor": "24000"
+    },
+    {
+      "id": "depreciation",
+      "date": "2036-01-31",
+      "debit": "depreciation",
+      "credit": "accumulated",
+      "amount_minor": "2000"
+    },
+    {
+      "id": "fee",
+      "date": "2036-01-31",
+      "debit": "fee",
+      "credit": "bank",
+      "amount_minor": "300"
+    }
+  ],
+  "expected": {
+    "journals": 8,
+    "entries": 16,
+    "posted_debits_minor": "193300",
+    "posted_credits_minor": "193300",
+    "opening_debit_minor": "100000",
+    "opening_credit_minor": "100000",
+    "period_debit_minor": "93300",
+    "period_credit_minor": "93300",
+    "closing_debit_minor": "143000",
+    "closing_credit_minor": "143000",
+    "account_balances": {
+      "bank": "80700",
+      "capital": "-100000",
+      "ar": "18000",
+      "ap": "-11000",
+      "revenue": "-30000",
+      "expense": "18000",
+      "equipment": "24000",
+      "depreciation": "2000",
+      "accumulated": "-2000",
+      "fee": "300"
+    },
+    "profit_minor": "9700",
+    "assets_minor": "120700",
+    "liabilities_minor": "11000",
+    "capital_minor": "100000",
+    "operating_cash_minor": "4700",
+    "investing_cash_minor": "-24000",
+    "financing_cash_minor": "0",
+    "opening_cash_minor": "100000",
+    "closing_cash_minor": "80700"
+  },
+  "accountant": {
+    "name": null,
+    "reviewed_at": null,
+    "verdict": "pending",
+    "signed_artifact": null,
+    "historical_label_limitation_accepted": false
+  }
+}
