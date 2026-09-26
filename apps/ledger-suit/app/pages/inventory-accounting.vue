@@ -84,7 +84,7 @@ function page(event: { first: number }) { offset.value = event.first; void load(
       </template>
     </template>
     <BsDialog v-model:visible="visible" :title="t(mode === 'control' ? 'inventory.newControl' : 'inventory.configure')" :pending="saving" :dirty="dirty" size="lg">
-      <template #default="{ close }"><form class="space-y-4 p-5" @submit.prevent="save">
+      <template #default="{ close }"><form class="space-y-4 p-5" :aria-busy="saving" @submit.prevent="save">
         <p v-if="saveError" class="ls-error" role="alert">{{ saveError }}</p>
         <FloatingField v-if="mode === 'control'" :label="t('inventory.controlName')"><input v-model="form.name" class="ls-input" required></FloatingField>
         <template v-else>
@@ -96,7 +96,7 @@ function page(event: { first: number }) { offset.value = event.first; void load(
           <FloatingField :label="t('inventory.cogs')"><select v-model="form.cogs" class="ls-input" required><option value="" /><option v-for="a in cogs" :key="a.id" :value="a.id">{{ a.code }} {{ a.name }}</option></select></FloatingField>
           <FloatingField :label="t('inventory.offset')"><select v-model="form.offset" class="ls-input" required><option value="" /><option v-for="a in offsets" :key="a.id" :value="a.id">{{ a.code }} {{ a.name }}</option></select></FloatingField>
         </template>
-        <div class="flex justify-end gap-2"><button type="button" class="ls-btn" @click="close">{{ t('common.cancel') }}</button><button class="ls-btn ls-btn-primary" :disabled="saving || readOnly">{{ t('common.save') }}</button></div>
+        <div class="flex justify-end gap-2"><button type="button" class="ls-btn" @click="close">{{ t('common.cancel') }}</button><button class="ls-btn ls-btn-primary" :disabled="saving || readOnly">{{ saving ? t('common.saving') : t('common.save') }}</button></div>
       </form></template>
     </BsDialog>
   </div>

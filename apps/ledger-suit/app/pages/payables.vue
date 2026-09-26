@@ -17,6 +17,7 @@ const capability: Record<ApKind, string> = { bill: 'ap.issue', payment: 'ap.rece
 const form = reactive({ kind: 'bill' as ApKind | 'reversal', supplier: '', control: '', offset: '', date: '', due: '', reference: '', amount: '', reason: '', key: '', document: '', allocations: {} as Record<string, string> })
 const { visible, pending: saving, dirty, open, complete } = useRecordAction(() => form)
 const formError = ref('')
+const amountError = ref('')
 const controls = computed(() => data.value?.accounts.filter(a => a.role === 'control' && a.subledger === 'supplier') ?? [])
 const offsets = computed(() => data.value?.accounts.filter(a => a.role === 'posting' && (
   form.kind === 'payment' ? ['cash', 'bank', 'mobile_wallet'].includes(a.subtype) && a.type === 'asset'
@@ -32,13 +33,25 @@ watch([currentId, () => user.value?.id], () => {
   visible.value = false
   Object.assign(form, { supplier: '', control: '', offset: '', amount: '', reason: '', reference: '', key: '', document: '', allocations: {} })
   formError.value = ''
+  amountError.value = ''
 }, { flush: 'sync' })
 function begin(kind: ApKind | 'reversal', movement?: ApMovement) {
   Object.assign(form, { kind, supplier: supplier.value, control: controls.value[0]?.id ?? '', offset: '',
     date: asOf.value, due: asOf.value, reference: '', amount: '', reason: '', key: crypto.randomUUID(),
     document: movement?.id ?? '', allocations: {} })
   formError.value = ''
+  amountError.value = ''
   open()
+}
+function moneyError(reason: 'invalid' | 'precision' | 'positive' | 'tooLarge') {
+  if (reason === 'precision') return t('ap.errors.amountPrecision', { currency: baseCurrency.value, precision: minorUnitFor(baseCurrency.value) })
+  if (reason === 'tooLarge') return t('ap.errors.amountTooLarge')
+  return t('ap.errors.amountInvalid')
+}
+function amountMinor(value = form.amount) {
+  const result = validatePositiveMoney(value, baseCurrency.value)
+  amountError.value = result.valid ? '' : moneyError(result.reason)
+  return result.valid ? result.minor : null
 }
 function failureMessage(failure: unknown) {
   const message = typeof failure === 'object' && failure !== null && 'message' in failure ? String(failure.message) : ''
@@ -48,6 +61,7 @@ function failureMessage(failure: unknown) {
   if (message.includes('AP_ADJUSTMENT_APPROVAL_REQUIRED')) return t('ap.errors.approval')
   if (message.includes('AP_INVALID_REVERSAL')) return t('ap.errors.reversal')
   if (message.includes('AP_CREDIT_ACCOUNT_MISMATCH')) return t('ap.errors.creditAccount')
+  if (message.includes('AP_ALLOCATION_AMOUNT_INVALID')) return t('ap.errors.allocationAmount')
   return t('ap.errors.save')
 }
 async function save() {
@@ -55,19 +69,21 @@ async function save() {
   const organizationId = currentId.value
   const actor = user.value?.id
   formError.value = ''
+  amountError.value = ''
   saving.value = true
   try {
     if (form.kind === 'reversal') {
       await command('reverse_ap_document', { p_document_id: form.document, p_date: form.date, p_reason: form.reason, p_idempotency_key: form.key })
     }
     else {
-      const amount = parseMoneyToMinor(form.amount, baseCurrency.value)
+      const amount = amountMinor()
+      if (amount === null) return
       const allocations = isAllocation.value ? allocationItems.value.flatMap(item => {
         const value = form.allocations[item.bill_id]?.trim()
         if (!value) return []
-        const minor = parseMoneyToMinor(value, baseCurrency.value)
-        if (minor <= 0n) throw new Error('invalid amount')
-        return [{ bill_id: item.bill_id, amount_minor: minor.toString() }]
+        const result = validatePositiveMoney(value, baseCurrency.value)
+        if (!result.valid) throw new Error('AP_ALLOCATION_AMOUNT_INVALID')
+        return [{ bill_id: item.bill_id, amount_minor: result.minor.toString() }]
       }) : []
       if (amount <= 0n || amount > 9223372036854775807n || (isAllocation.value && allocations.reduce((sum, a) => sum + BigInt(a.amount_minor), 0n) !== amount)) {
         formError.value = t('ap.errors.allocation'); return
@@ -148,7 +164,7 @@ async function save() {
     </template>
     <BsDialog v-model:visible="visible" :title="t(`ap.actions.${form.kind}`)" :pending="saving" :dirty="dirty" size="lg">
       <template #default="{ close }">
-        <form class="space-y-4 p-5" @submit.prevent="save">
+        <form class="space-y-4 p-5" :aria-busy="saving" @submit.prevent="save">
           <p v-if="formError" class="ls-error" role="alert">{{ formError }}</p>
           <p v-if="form.kind === 'reversal'" class="text-fg-muted">{{ t('ap.reversalPolicy') }}</p>
           <template v-else>
@@ -156,13 +172,14 @@ async function save() {
             <FloatingField :label="t('ap.control')"><select id="ap-control" v-model="form.control" class="ls-input" required><option v-for="a in controls" :key="a.id" :value="a.id">{{ a.name }}</option></select></FloatingField>
             <FloatingField :label="t(form.kind === 'payment' ? 'ap.cash' : 'ap.expenseOrAsset')"><select id="ap-offset" v-model="form.offset" class="ls-input" required><option value="" /><option v-for="a in offsets" :key="a.id" :value="a.id">{{ a.name }}</option></select></FloatingField>
             <FloatingField :label="t('ap.reference')"><input id="ap-reference" v-model="form.reference" class="ls-input" required></FloatingField>
-            <FloatingField :label="t('ap.amount')"><input id="ap-amount" v-model="form.amount" class="ls-input" inputmode="decimal" required></FloatingField>
+            <FloatingField :label="t('ap.amount')"><input id="ap-amount" v-model="form.amount" class="ls-input" inputmode="decimal" required :aria-invalid="Boolean(amountError)" :aria-describedby="amountError ? 'ap-amount-error' : undefined" @blur="amountMinor()"></FloatingField>
+            <p v-if="amountError" id="ap-amount-error" class="text-sm text-danger" role="alert">{{ amountError }}</p>
           </template>
           <FloatingField :label="t('ap.date')"><input id="ap-date" v-model="form.date" class="ls-input" type="date" required></FloatingField>
           <FloatingField v-if="form.kind === 'bill'" :label="t('ap.dueDate')"><input id="ap-due" v-model="form.due" class="ls-input" type="date" :min="form.date" required></FloatingField>
           <FloatingField v-if="['credit', 'adjustment', 'reversal'].includes(form.kind)" :label="t('ap.reason')"><input id="ap-reason" v-model="form.reason" class="ls-input" required></FloatingField>
           <fieldset v-if="isAllocation" class="space-y-3"><legend class="font-bold">{{ t('ap.allocations') }}</legend><p class="text-sm text-fg-muted">{{ t('ap.allocationPolicy') }}</p><p v-if="!allocationItems.length">{{ t('ap.noAllocationItems') }}</p><div v-for="item in allocationItems" :key="item.bill_id"><FloatingField :label="item.reference"><input :id="`ap-allocation-${item.bill_id}`" v-model="form.allocations[item.bill_id]" class="ls-input" inputmode="decimal"></FloatingField><p class="text-sm">{{ t('ap.outstanding') }}: <MoneyText :amount-minor="item.outstanding_minor" /></p></div></fieldset>
-          <div class="flex justify-end gap-2"><button type="button" class="ls-btn" @click="close">{{ t('common.cancel') }}</button><button type="submit" class="ls-btn ls-btn-primary" :disabled="saving || readOnly">{{ t('common.save') }}</button></div>
+          <div class="flex justify-end gap-2"><button type="button" class="ls-btn" @click="close">{{ t('common.cancel') }}</button><button type="submit" class="ls-btn ls-btn-primary" :disabled="saving || readOnly">{{ saving ? t('common.saving') : t('common.save') }}</button></div>
         </form>
       </template>
     </BsDialog>

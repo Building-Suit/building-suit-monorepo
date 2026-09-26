@@ -1142,6 +1142,7 @@
       "amountPositive": "{field} must be greater than zero.",
       "amountTooLarge": "{field} is too large.",
       "amountInvalid": "{field} is not a valid amount.",
+      "amountPrecision": "{field} supports at most {precision} decimal places for {currency}.",
       "paymentRequired": "Enter a principal, interest or fee amount.",
       "mustBalance": "Debits must equal credits before this can be posted.",
       "descriptionAndReason": "A description and a reason are both required."
@@ -1744,7 +1745,11 @@
       "approval": "This organization requires adjustment approval. Direct AR write-offs are blocked.",
       "reversal": "This document cannot be reversed. Check its date and existing reversals.",
       "creditAccount": "A credit must use the original revenue account of every allocated invoice.",
-      "allocation": "Enter a positive total and allocate exactly that amount."
+      "allocation": "Enter a positive total and allocate exactly that amount.",
+      "allocationAmount": "Each allocation must be a valid positive amount using the base-currency precision.",
+      "amountInvalid": "Enter a valid positive amount.",
+      "amountPrecision": "{currency} supports at most {precision} decimal places.",
+      "amountTooLarge": "The amount exceeds the supported ledger range."
     }
   },
   "dimensions": {
@@ -1864,7 +1869,11 @@
       "approval": "This organization requires adjustment approval. Direct AP corrections are blocked.",
       "reversal": "This document cannot be reversed. Check its date and existing reversals.",
       "creditAccount": "A credit or correction must use the original expense or asset account of every allocated bill.",
-      "allocation": "Enter a positive total and allocate exactly that amount."
+      "allocation": "Enter a positive total and allocate exactly that amount.",
+      "allocationAmount": "Each allocation must be a valid positive amount using the base-currency precision.",
+      "amountInvalid": "Enter a valid positive amount.",
+      "amountPrecision": "{currency} supports at most {precision} decimal places.",
+      "amountTooLarge": "The amount exceeds the supported ledger range."
     }
   },
   "vat": {
@@ -1883,7 +1892,7 @@
     "documents": "VAT source documents", "empty": "No VAT documents in this period.", "taxPointDate": "Tax point date", "documentDate": "Document date", "reference": "Source reference", "direction": "Tax direction", "base": "Taxable base", "tax": "VAT", "history": "Traceability", "journal": "Journal", "reverse": "Reverse", "reversalReason": "Reason for append-only reversal", "reason": "Credit reason", "original": "Original invoice", "counterparty": "Counterparty (optional)", "baseAccount": "Revenue / expense / asset account", "grossAccount": "Gross receivable / payable account", "calculatedTax": "Calculated document VAT", "outputAccountHint": "Posting liability with Taxes Payable subtype", "inputAccountHint": "Posting asset account",
     "directions": { "output": "Output", "input": "Input" },
     "kinds": { "invoice": "Invoice", "credit": "Credit", "reversal": "Reversal" },
-    "errors": { "title": "VAT action failed", "load": "Could not load the VAT workspace.", "configure": "Could not record registration. Check EGP, effective date, permissions and unused account mappings.", "save": "Could not post this scoped VAT document. Check dates, accounts, amount, permissions and registration.", "retryConflict": "This retry key belongs to different values. Reopen the form.", "period": "The tax-point accounting period is closed.", "adjustment": "The credit/reversal must exactly link an unadjusted original invoice and preserve its accounts and amount.", "effectiveDate": "No verified standard VAT rule is effective on that tax point." }
+    "errors": { "title": "VAT action failed", "load": "Could not load the VAT workspace.", "configure": "Could not record registration. Check EGP, effective date, permissions and unused account mappings.", "save": "Could not post this scoped VAT document. Check dates, accounts, amount, permissions and registration.", "retryConflict": "This retry key belongs to different values. Reopen the form.", "period": "The tax-point accounting period is closed.", "adjustment": "The credit/reversal must exactly link an unadjusted original invoice and preserve its accounts and amount.", "effectiveDate": "No verified standard VAT rule is effective on that tax point.", "amountInvalid": "Enter a valid positive taxable base.", "amountPrecision": "{currency} supports at most {precision} decimal places.", "amountTooLarge": "The taxable base exceeds the supported ledger range." }
   },
   "inventory": {
     "title": "Inventory accounting",

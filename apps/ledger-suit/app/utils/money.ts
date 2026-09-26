@@ -14,6 +14,12 @@ const MINOR_UNITS: Record<string, number> = {
   TND: 3,
 }
 
+export const MAX_DATABASE_MONEY_MINOR = 9223372036854775807n
+
+export type PositiveMoneyValidation =
+  | { valid: true, minor: bigint }
+  | { valid: false, reason: 'invalid' | 'precision' | 'positive' | 'tooLarge' }
+
 export function minorUnitFor(currency: string): number {
   return MINOR_UNITS[currency.toUpperCase()] ?? 2
 }
@@ -117,4 +123,21 @@ export function parseMoneyToMinor(input: string, currency: string): bigint {
   const minor = BigInt(whole + padded)
 
   return negative ? -minor : minor
+}
+
+/**
+ * Validates an amount intended for a positive PostgreSQL bigint money field.
+ * The parsed value remains bigint so retries and transport callers never lose
+ * cents through floating-point coercion.
+ */
+export function validatePositiveMoney(input: string, currency: string): PositiveMoneyValidation {
+  try {
+    const minor = parseMoneyToMinor(input, currency)
+    if (minor <= 0n) return { valid: false, reason: 'positive' }
+    if (minor > MAX_DATABASE_MONEY_MINOR) return { valid: false, reason: 'tooLarge' }
+    return { valid: true, minor }
+  }
+  catch (error) {
+    return { valid: false, reason: error instanceof RangeError ? 'precision' : 'invalid' }
+  }
 }

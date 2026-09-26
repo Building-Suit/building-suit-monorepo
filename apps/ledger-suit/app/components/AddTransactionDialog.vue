@@ -118,6 +118,10 @@ function accountCurrency(accountId: string) {
   return accounts.value.find(account => account.id === accountId)?.currency
 }
 
+function accountLabel(account: { code?: string | null, name: string }) {
+  return account.code ? `${account.code} · ${account.name}` : account.name
+}
+
 const effectiveCurrency = computed(() => {
   switch (flow.value) {
     case 'income': return accountCurrency(form.destinationAccountId) ?? baseCurrency.value
@@ -142,27 +146,15 @@ const isCrossCurrencyTransfer = computed(() =>
   && effectiveCurrency.value !== destinationCurrency.value,
 )
 
-function toMinor(input: string, label: string, currency = effectiveCurrency.value): number | null {
-  try {
-    const minor = parseMoneyToMinor(input, currency)
-    if (minor <= 0n) {
-      fieldError.value = t('add.validation.amountPositive', { field: label })
-      return null
-    }
-    if (minor > BigInt(Number.MAX_SAFE_INTEGER)) {
-      fieldError.value = t('add.validation.amountTooLarge', { field: label })
-      return null
-    }
-    return Number(minor)
-  }
-  catch {
-    fieldError.value = t('add.validation.amountInvalid', { field: label })
-    return null
-  }
+function toMinor(input: string, label: string, currency = effectiveCurrency.value): bigint | null {
+  const result = validatePositiveMoney(input, currency)
+  if (result.valid) return result.minor
+  fieldError.value = t(`add.validation.${result.reason === 'positive' ? 'amountPositive' : result.reason === 'tooLarge' ? 'amountTooLarge' : result.reason === 'precision' ? 'amountPrecision' : 'amountInvalid'}`, { field: label, currency, precision: minorUnitFor(currency) })
+  return null
 }
 
-function optionalMinor(input: string, label: string): number | null | undefined {
-  if (!input.trim()) return 0
+function optionalMinor(input: string, label: string): bigint | null | undefined {
+  if (!input.trim()) return 0n
   return toMinor(input, label)
 }
 
@@ -206,7 +198,7 @@ function positiveRate(input: string): number | null {
 }
 
 async function submit() {
-  if (!currentId.value) return
+  if (submitting.value || !currentId.value) return
   fieldError.value = null
   submitting.value = true
 
@@ -232,7 +224,7 @@ async function submit() {
         if (amount === null) return
         rpc = { fn: 'record_income', args: {
           ...shared,
-          p_amount_minor: amount,
+          p_amount_minor: amount.toString(),
           p_destination_account_id: form.destinationAccountId,
           p_category_id: nullable(form.categoryId),
           p_counterparty_id: nullable(form.counterpartyId),
@@ -247,7 +239,7 @@ async function submit() {
         if (amount === null) return
         rpc = { fn: 'record_expense', args: {
           ...shared,
-          p_amount_minor: amount,
+          p_amount_minor: amount.toString(),
           p_source_account_id: form.sourceAccountId,
           p_category_id: nullable(form.categoryId),
           p_counterparty_id: nullable(form.counterpartyId),
@@ -272,11 +264,11 @@ async function submit() {
         if (destinationAmount === null || destinationExchangeRate === null) return
         rpc = { fn: 'record_transfer', args: {
           ...shared,
-          p_amount_minor: amount,
+          p_amount_minor: amount.toString(),
           p_from_account_id: form.sourceAccountId,
           p_to_account_id: form.destinationAccountId,
-          p_fee_minor: fee,
-          p_destination_amount_minor: destinationAmount,
+          p_fee_minor: fee?.toString(),
+          p_destination_amount_minor: destinationAmount?.toString(),
           p_exchange_rate: exchangeRate,
           p_destination_exchange_rate: destinationExchangeRate,
         } }
@@ -288,7 +280,7 @@ async function submit() {
         if (amount === null) return
         rpc = { fn: 'record_asset_purchase', args: {
           ...shared,
-          p_amount_minor: amount,
+          p_amount_minor: amount.toString(),
           p_asset_account_id: form.assetAccountId,
           p_payment_account_id: form.sourceAccountId,
           p_counterparty_id: nullable(form.counterpartyId),
@@ -303,7 +295,7 @@ async function submit() {
         if (amount === null) return
         rpc = { fn: 'record_liability_created', args: {
           ...shared,
-          p_amount_minor: amount,
+          p_amount_minor: amount.toString(),
           p_liability_account_id: form.liabilityAccountId,
           p_destination_account_id: form.destinationAccountId,
           p_counterparty_id: nullable(form.counterpartyId),
@@ -318,7 +310,7 @@ async function submit() {
         const interest = optionalMinor(form.interest, t('add.interest'))
         const fees = optionalMinor(form.fees, t('add.fees'))
         if (principal === null || interest === null || fees === null) return
-        if ((principal ?? 0) + (interest ?? 0) + (fees ?? 0) <= 0) {
+        if ((principal ?? 0n) + (interest ?? 0n) + (fees ?? 0n) <= 0n) {
           fieldError.value = t('add.validation.paymentRequired')
           return
         }
@@ -326,9 +318,9 @@ async function submit() {
           ...shared,
           p_liability_account_id: form.liabilityAccountId,
           p_payment_account_id: form.sourceAccountId,
-          p_principal_minor: principal,
-          p_interest_minor: interest,
-          p_fees_minor: fees,
+          p_principal_minor: principal?.toString(),
+          p_interest_minor: interest?.toString(),
+          p_fees_minor: fees?.toString(),
           p_counterparty_id: nullable(form.counterpartyId),
           p_exchange_rate: exchangeRate,
         } }
@@ -340,7 +332,7 @@ async function submit() {
         if (amount === null) return
         rpc = { fn: 'record_owner_contribution', args: {
           ...shared,
-          p_amount_minor: amount,
+          p_amount_minor: amount.toString(),
           p_destination_account_id: form.destinationAccountId,
           p_equity_account_id: nullable(form.equityAccountId),
           p_exchange_rate: exchangeRate,
@@ -353,7 +345,7 @@ async function submit() {
         if (amount === null) return
         rpc = { fn: 'record_owner_withdrawal', args: {
           ...shared,
-          p_amount_minor: amount,
+          p_amount_minor: amount.toString(),
           p_source_account_id: form.sourceAccountId,
           p_drawings_account_id: nullable(form.equityAccountId),
           p_exchange_rate: exchangeRate,
@@ -447,7 +439,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
           </select>
         </div>
 
-        <form class="min-h-0 flex-1 overflow-y-auto px-6 py-4" @submit.prevent="submit">
+        <form class="min-h-0 flex-1 overflow-y-auto px-6 py-4" :aria-busy="submitting" @submit.prevent="submit">
           <QuotaUsageMeter quota-key="max_monthly_transactions" compact class="mb-4" />
           <div class="grid gap-4 sm:grid-cols-2">
             <!-- Amount: every flow except the split ones -->
@@ -486,7 +478,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
                 <label class="ls-label" for="dest">{{ t('add.receivedInto') }}</label>
                 <select id="dest" v-model="form.destinationAccountId" class="ls-input" required>
                   <option value="" disabled>{{ t('add.chooseAccount') }}</option>
-                  <option v-for="a in paymentAccounts" :key="a.id" :value="a.id">{{ a.name }}</option>
+                  <option v-for="a in paymentAccounts" :key="a.id" :value="a.id">{{ accountLabel(a) }}</option>
                 </select>
               </div>
               <div>
@@ -504,7 +496,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
                 <label class="ls-label" for="src">{{ t('add.paidFrom') }}</label>
                 <select id="src" v-model="form.sourceAccountId" class="ls-input" required>
                   <option value="" disabled>{{ t('add.chooseAccount') }}</option>
-                  <option v-for="a in paymentAccounts" :key="a.id" :value="a.id">{{ a.name }}</option>
+                  <option v-for="a in paymentAccounts" :key="a.id" :value="a.id">{{ accountLabel(a) }}</option>
                 </select>
               </div>
               <div>
@@ -522,14 +514,14 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
                 <label class="ls-label" for="src">{{ t('add.from') }}</label>
                 <select id="src" v-model="form.sourceAccountId" class="ls-input" required>
                   <option value="" disabled>{{ t('add.chooseAccount') }}</option>
-                  <option v-for="a in paymentAccounts" :key="a.id" :value="a.id">{{ a.name }}</option>
+                  <option v-for="a in paymentAccounts" :key="a.id" :value="a.id">{{ accountLabel(a) }}</option>
                 </select>
               </div>
               <div>
                 <label class="ls-label" for="dest">{{ t('add.to') }}</label>
                 <select id="dest" v-model="form.destinationAccountId" class="ls-input" required>
                   <option value="" disabled>{{ t('add.chooseAccount') }}</option>
-                  <option v-for="a in paymentAccounts" :key="a.id" :value="a.id">{{ a.name }}</option>
+                  <option v-for="a in paymentAccounts" :key="a.id" :value="a.id">{{ accountLabel(a) }}</option>
                 </select>
               </div>
               <div>
@@ -545,14 +537,14 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
                 <label class="ls-label" for="asset">{{ t('add.assetAccount') }}</label>
                 <select id="asset" v-model="form.assetAccountId" class="ls-input" required>
                   <option value="" disabled>{{ t('add.chooseAccount') }}</option>
-                  <option v-for="a in assetAccounts" :key="a.id" :value="a.id">{{ a.name }}</option>
+                  <option v-for="a in assetAccounts" :key="a.id" :value="a.id">{{ accountLabel(a) }}</option>
                 </select>
               </div>
               <div>
                 <label class="ls-label" for="src">{{ t('add.paidFrom') }}</label>
                 <select id="src" v-model="form.sourceAccountId" class="ls-input" required>
                   <option value="" disabled>{{ t('add.chooseAccount') }}</option>
-                  <option v-for="a in paymentAccounts" :key="a.id" :value="a.id">{{ a.name }}</option>
+                  <option v-for="a in paymentAccounts" :key="a.id" :value="a.id">{{ accountLabel(a) }}</option>
                 </select>
               </div>
               <div>
@@ -568,14 +560,14 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
                 <label class="ls-label" for="liab">{{ t('add.liabilityAccount') }}</label>
                 <select id="liab" v-model="form.liabilityAccountId" class="ls-input" required>
                   <option value="" disabled>{{ t('add.chooseAccount') }}</option>
-                  <option v-for="a in liabilityAccounts" :key="a.id" :value="a.id">{{ a.name }}</option>
+                  <option v-for="a in liabilityAccounts" :key="a.id" :value="a.id">{{ accountLabel(a) }}</option>
                 </select>
               </div>
               <div>
                 <label class="ls-label" for="dest">{{ t('add.receivedInto') }}</label>
                 <select id="dest" v-model="form.destinationAccountId" class="ls-input" required>
                   <option value="" disabled>{{ t('add.chooseAccount') }}</option>
-                  <option v-for="a in paymentAccounts" :key="a.id" :value="a.id">{{ a.name }}</option>
+                  <option v-for="a in paymentAccounts" :key="a.id" :value="a.id">{{ accountLabel(a) }}</option>
                 </select>
               </div>
               <div>
@@ -590,14 +582,14 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
                 <label class="ls-label" for="liab">{{ t('add.liability') }}</label>
                 <select id="liab" v-model="form.liabilityAccountId" class="ls-input" required>
                   <option value="" disabled>{{ t('add.chooseAccount') }}</option>
-                  <option v-for="a in liabilityAccounts" :key="a.id" :value="a.id">{{ a.name }}</option>
+                  <option v-for="a in liabilityAccounts" :key="a.id" :value="a.id">{{ accountLabel(a) }}</option>
                 </select>
               </div>
               <div>
                 <label class="ls-label" for="src">{{ t('add.paidFrom') }}</label>
                 <select id="src" v-model="form.sourceAccountId" class="ls-input" required>
                   <option value="" disabled>{{ t('add.chooseAccount') }}</option>
-                  <option v-for="a in paymentAccounts" :key="a.id" :value="a.id">{{ a.name }}</option>
+                  <option v-for="a in paymentAccounts" :key="a.id" :value="a.id">{{ accountLabel(a) }}</option>
                 </select>
               </div>
               <div>
@@ -621,14 +613,14 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
                 <label class="ls-label" for="dest">{{ t('add.receivedInto') }}</label>
                 <select id="dest" v-model="form.destinationAccountId" class="ls-input" required>
                   <option value="" disabled>{{ t('add.chooseAccount') }}</option>
-                  <option v-for="a in paymentAccounts" :key="a.id" :value="a.id">{{ a.name }}</option>
+                  <option v-for="a in paymentAccounts" :key="a.id" :value="a.id">{{ accountLabel(a) }}</option>
                 </select>
               </div>
               <div>
                 <label class="ls-label" for="equity">{{ t('add.equityAccount') }} ({{ t('common.optional') }})</label>
                 <select id="equity" v-model="form.equityAccountId" class="ls-input">
                   <option value="">{{ t('add.ownerCapitalDefault') }}</option>
-                  <option v-for="a in equityAccounts" :key="a.id" :value="a.id">{{ a.name }}</option>
+                  <option v-for="a in equityAccounts" :key="a.id" :value="a.id">{{ accountLabel(a) }}</option>
                 </select>
               </div>
             </template>
@@ -639,14 +631,14 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
                 <label class="ls-label" for="src">{{ t('add.takenFrom') }}</label>
                 <select id="src" v-model="form.sourceAccountId" class="ls-input" required>
                   <option value="" disabled>{{ t('add.chooseAccount') }}</option>
-                  <option v-for="a in paymentAccounts" :key="a.id" :value="a.id">{{ a.name }}</option>
+                  <option v-for="a in paymentAccounts" :key="a.id" :value="a.id">{{ accountLabel(a) }}</option>
                 </select>
               </div>
               <div>
                 <label class="ls-label" for="equity">{{ t('add.drawingsAccount') }} ({{ t('common.optional') }})</label>
                 <select id="equity" v-model="form.equityAccountId" class="ls-input">
                   <option value="">{{ t('add.ownerDrawingsDefault') }}</option>
-                  <option v-for="a in equityAccounts" :key="a.id" :value="a.id">{{ a.name }}</option>
+                  <option v-for="a in equityAccounts" :key="a.id" :value="a.id">{{ accountLabel(a) }}</option>
                 </select>
               </div>
             </template>
@@ -739,8 +731,8 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
 
             <div class="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-control bg-surface-muted px-3 py-2 text-sm">
               <span>
-                {{ t('add.debitsTotal') }} <MoneyText :amount-minor="Number(adjustmentTotals.debit)" />
-                · {{ t('add.creditsTotal') }} <MoneyText :amount-minor="Number(adjustmentTotals.credit)" />
+                {{ t('add.debitsTotal') }} <MoneyText :amount-minor="adjustmentTotals.debit" />
+                · {{ t('add.creditsTotal') }} <MoneyText :amount-minor="adjustmentTotals.credit" />
               </span>
               <span
                 class="font-semibold"
