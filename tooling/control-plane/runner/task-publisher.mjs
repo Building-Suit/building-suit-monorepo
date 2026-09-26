@@ -336,12 +336,45 @@ catch {
 }
 
 
-if (
-  liveParent.parent_branch !==
-    execution.parent_branch ||
-  liveParent.parent_sha !==
+let parentStillCurrent =
+  liveParent.parent_branch ===
+    execution.parent_branch &&
+  liveParent.parent_sha ===
     execution.parent_sha
+
+
+// Publication may already have pushed the task branch and created its
+// Draft PR before control-plane recording completed. In that case the
+// stack resolver legitimately sees THIS task's own PR as the stack leaf.
+//
+// That is not a parent change. Validate the PR's base branch and confirm
+// that the recorded parent branch still points at the execution's
+// original parent SHA.
+if (
+  !parentStillCurrent &&
+  liveParent.parent_branch ===
+    execution.branch_name &&
+  liveParent.parent_pr?.base_branch ===
+    execution.parent_branch
 ) {
+
+  const recordedParentSha =
+    requireSuccess(
+      git([
+        'rev-parse',
+        `origin/${execution.parent_branch}`,
+      ]),
+      'unable_to_read_recorded_parent',
+    )
+
+
+  parentStillCurrent =
+    recordedParentSha ===
+    execution.parent_sha
+}
+
+
+if (!parentStillCurrent) {
   fail(
     'parent_changed_since_execution',
     {

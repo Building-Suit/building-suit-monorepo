@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { DashboardResponse } from '../../types/dashboard'
+import type { DashboardResponse } from '../../../types/dashboard'
 const workstream = ref(''); const statusFilter = ref('')
 const { data, error } = await useFetch<DashboardResponse>('/api/dashboard')
 const rows = computed(() => (data.value?.tasks ?? []).filter(row => (!workstream.value || row.suit_slug === workstream.value) && (!statusFilter.value || row.status === statusFilter.value)))
