@@ -238,6 +238,7 @@
     "openingBalances": "Opening Balances",
     "bankReconciliation": "Bank reconciliation",
     "fixedAssets": "Fixed assets",
+    "accountingDimensions": "Accounting dimensions",
     "periods": "Accounting periods",
     "teamInvitations": "Access & permissions",
     "auditHistory": "Audit history",
@@ -1726,6 +1727,25 @@
       "creditAccount": "A credit must use the original revenue account of every allocated invoice.",
       "allocation": "Enter a positive total and allocate exactly that amount."
     }
+  },
+  "dimensions": {
+    "title": "Accounting dimensions",
+    "policy": "Cost centers and projects classify financial amounts only. Allocations never add tasks, schedules, resources, or operational project management.",
+    "denied": "You do not have permission to view accounting dimensions.",
+    "tabs": { "values": "Controlled values", "policies": "Account policies", "reports": "Dimension reports" },
+    "values": "Cost centers and accounting projects", "add": "Add value", "edit": "Edit", "archive": "Archive", "archiveConfirm": "Archive {name}? It will remain on historical entries but cannot be used for new postings.",
+    "saved": "Dimension value saved", "archived": "Dimension value archived", "empty": "No controlled dimension values yet.",
+    "kind": "Dimension", "kinds": { "cost_center": "Cost center", "project": "Accounting project" },
+    "code": "Code", "name": "Name", "description": "Description", "statusLabel": "Status", "status": { "active": "Active", "inactive": "Inactive" }, "actions": "Actions",
+    "legacyWarning": "{count} historical ledger line(s) contain legacy generic dimension JSON. They remain Unassigned until handled through an explicit forward correction; this screen does not assume those values are valid.",
+    "policies": "Posting-account dimension policies", "policiesHint": "Each cost-center and project context is optional unless an authorized policy makes it required. Required lines are rejected at posting time when unassigned.",
+    "account": "Posting account", "requirement": "Requirement", "requirements": { "optional": "Optional", "required": "Required" }, "policySaved": "Account dimension policy saved",
+    "reportType": "Report", "reports": { "general_ledger": "General Ledger", "trial_balance": "Trial Balance", "profit_loss": "Profit & Loss", "balance_sheet": "Balance Sheet", "cash_flow": "Cash Flow" },
+    "from": "From", "to": "To", "filter": "Filter value", "run": "Run grouped report", "grouped": "Grouped totals", "unassigned": "Unassigned",
+    "openingDebit": "Opening debit", "openingCredit": "Opening credit", "periodDebit": "Period debit", "periodCredit": "Period credit",
+    "allocateKind": "Allocate {kind}", "allocationAmount": "Allocation amount", "removeAllocation": "Remove allocation", "allocationMismatch": "{kind} allocations must add up exactly to the journal-line amount.",
+    "reconciled": "Assigned groups plus Unassigned reconcile exactly to the unfiltered ledger.", "notReconciled": "Dimension groups do not reconcile to the unfiltered ledger.",
+    "errors": { "title": "Accounting dimensions", "load": "Accounting dimensions could not be loaded.", "save": "The dimension value could not be saved.", "archive": "The value could not be archived.", "policy": "The account policy could not be saved.", "report": "The dimension report could not be loaded." }
   },
   "assets": {
     "title": "Fixed assets and depreciation",
