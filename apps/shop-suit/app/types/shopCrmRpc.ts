@@ -84,6 +84,115 @@ export type ShopRpcDatabase = {
         }
         Returns: string
       }
+      supplier_access: {
+        Args: { p_shop_id: string }
+        Returns: Array<{
+          can_view: boolean
+          can_manage_suppliers: boolean
+          can_manage_purchases: boolean
+          can_record_payment: boolean
+          can_reverse_payment: boolean
+          can_record_credit: boolean
+          can_return_stock: boolean
+        }>
+      }
+      save_vendor: {
+        Args: {
+          p_shop_id: string
+          p_vendor_id: string | null
+          p_name: string
+          p_contact_name: string | null
+          p_phone: string | null
+          p_email: string | null
+          p_address: string | null
+          p_tax_number: string | null
+          p_notes: string | null
+        }
+        Returns: string
+      }
+      archive_vendor: {
+        Args: { p_shop_id: string; p_vendor_id: string }
+        Returns: undefined
+      }
+      list_vendors: {
+        Args: {
+          p_shop_id: string
+          p_search?: string | null
+          p_is_active?: boolean | null
+          p_page?: number
+          p_page_size?: number
+        }
+        Returns: unknown
+      }
+      list_purchases: {
+        Args: {
+          p_shop_id: string
+          p_search?: string | null
+          p_vendor_id?: string | null
+          p_status?: 'draft' | 'posted' | 'void' | null
+          p_settlement?: 'unpaid' | 'partial' | 'paid' | null
+          p_from?: string | null
+          p_to?: string | null
+          p_page?: number
+          p_page_size?: number
+        }
+        Returns: unknown
+      }
+      get_purchase: {
+        Args: { p_shop_id: string; p_purchase_id: string }
+        Returns: unknown
+      }
+      record_supplier_payment: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_vendor_id: string
+          p_amount: number
+          p_paid_at: string
+          p_method: 'cash' | 'bank_transfer' | 'card' | 'wallet' | 'cheque' | 'other'
+          p_reference: string | null
+          p_notes: string | null
+          p_allocations: Array<{ vendor_invoice_id: string; amount: number }>
+        }
+        Returns: string
+      }
+      reverse_supplier_payment: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_original_payment_id: string
+          p_effective_at: string
+          p_reason: string
+          p_reference: string | null
+          p_allocations: Array<{ allocation_id: string; amount: number }>
+        }
+        Returns: string
+      }
+      record_supplier_credit: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_vendor_id: string
+          p_purchase_id: string
+          p_amount: number
+          p_effective_at: string
+          p_reason: string
+          p_reference: string | null
+        }
+        Returns: string
+      }
+      record_purchase_return: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_purchase_id: string
+          p_returned_at: string
+          p_reason: string
+          p_reference: string | null
+          p_items: Array<{ vendor_invoice_item_id: string; quantity: number }>
+        }
+        Returns: string
+      }
       create_supplier_purchase: {
         Args: {
           p_request_id: string
