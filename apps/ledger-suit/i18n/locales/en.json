@@ -239,6 +239,7 @@
     "bankReconciliation": "Bank reconciliation",
     "fixedAssets": "Fixed assets",
     "accountingDimensions": "Accounting dimensions",
+    "taxVat": "Tax / VAT",
     "periods": "Accounting periods",
     "teamInvitations": "Access & permissions",
     "auditHistory": "Audit history",
@@ -1847,5 +1848,23 @@
       "creditAccount": "A credit or correction must use the original expense or asset account of every allocated bill.",
       "allocation": "Enter a positive total and allocate exactly that amount."
     }
+  },
+  "vat": {
+    "title": "Egypt VAT accounting",
+    "policy": "Effective-dated accounting for standard domestic 14% VAT in explicitly registered Egyptian organizations.",
+    "scopeWarning": "Bounded accounting scope only. Ledger Suit does not decide registration liability or support table tax, special rates, exemptions, zero-rated exports, reverse charge, foreign-currency VAT, refunds, returns filing, e-invoice submission or e-receipt submission here.",
+    "denied": "You do not have permission to view VAT accounting.",
+    "setupTitle": "Confirm VAT registration and accounts",
+    "setupPolicy": "Only configure an organization whose Egyptian VAT registration is already established. Use new, unused EGP posting accounts so source documents reconcile exactly to the VAT control GL.",
+    "registration": "VAT registration number", "effectiveFrom": "Effective from", "outputAccount": "Output VAT account", "inputAccount": "Eligible input VAT account", "confirmRegistration": "Confirm registration and mapping",
+    "configured": "VAT registration and effective account mapping recorded.", "saved": "VAT document posted.",
+    "jurisdiction": "Jurisdiction", "egypt": "Egypt", "rate": "Configured standard rate", "evidenceDate": "Evidence verified", "from": "From tax point", "to": "To tax point", "run": "Run report",
+    "addOutput": "Post output VAT invoice", "addInput": "Post eligible input VAT bill", "addOutputCredit": "Output VAT credit", "addInputCredit": "Input VAT credit", "creditTitle": "Post linked VAT credit",
+    "reconciled": "Source VAT documents reconcile exactly to the designated VAT-control GL accounts.", "notReconciled": "VAT source and control GL differ. Review the visible differences before relying on this report.",
+    "outputVat": "Output VAT", "inputVat": "Eligible input VAT", "netVat": "Net VAT", "outputDifference": "Output difference", "inputDifference": "Input difference",
+    "documents": "VAT source documents", "empty": "No VAT documents in this period.", "taxPointDate": "Tax point date", "documentDate": "Document date", "reference": "Source reference", "direction": "Tax direction", "base": "Taxable base", "tax": "VAT", "history": "Traceability", "journal": "Journal", "reverse": "Reverse", "reversalReason": "Reason for append-only reversal", "reason": "Credit reason", "original": "Original invoice", "counterparty": "Counterparty (optional)", "baseAccount": "Revenue / expense / asset account", "grossAccount": "Gross receivable / payable account", "calculatedTax": "Calculated document VAT", "outputAccountHint": "Posting liability with Taxes Payable subtype", "inputAccountHint": "Posting asset account",
+    "directions": { "output": "Output", "input": "Input" },
+    "kinds": { "invoice": "Invoice", "credit": "Credit", "reversal": "Reversal" },
+    "errors": { "title": "VAT action failed", "load": "Could not load the VAT workspace.", "configure": "Could not record registration. Check EGP, effective date, permissions and unused account mappings.", "save": "Could not post this scoped VAT document. Check dates, accounts, amount, permissions and registration.", "retryConflict": "This retry key belongs to different values. Reopen the form.", "period": "The tax-point accounting period is closed.", "adjustment": "The credit/reversal must exactly link an unadjusted original invoice and preserve its accounts and amount.", "effectiveDate": "No verified standard VAT rule is effective on that tax point." }
   }
 }

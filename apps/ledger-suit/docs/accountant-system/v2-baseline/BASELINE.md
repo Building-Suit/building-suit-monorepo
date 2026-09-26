@@ -542,13 +542,14 @@ Unless a card says otherwise, discovered paths are apps/ledger-suit/app, apps/le
 
 ### V2-IMP-013 — Approved tax/VAT accounting
 
-- Scope/result: implement only the jurisdiction/circumstances/configuration/documents/calculation/adjustment/report scope approved in D11, through the common engine.
+- Status: IMPLEMENTED LOCALLY / VERIFICATION PARTIAL on 2026-09-26; unit/lint/type/build/boundary checks pass, while native SQL and browser execution are sandbox-blocked; not deployed, hosted-verified, filed, or accountant-UAT accepted.
+- Scope/result: Egypt-only, explicitly registered, EGP standard domestic 14% output/eligible-input VAT through one common-engine posting; all excluded circumstances remain rejected and product wording makes no broad compliance claim.
 - Dependencies/gates: 003–005, relevant document modules, V2-D11 and dated authoritative regulatory evidence.
 - Retain/extend: tax identifiers/account subtypes and posting engine only where the approved policy confirms them.
-- Paths/objects: no module (ABSENT-MODULES); proposed scoped tax configuration/lines/mappings/report objects.
-- Migration/risk: additive configuration with effective dates; never infer legal rates or claim compliance. Risk is incorrect liability, rounding or historical recalculation.
-- Acceptance/tests: regulator/accountant-approved examples calculate exactly; tax report=control GL=sources; adjustment/reversal/history/security; wording remains scoped.
-- Rehearsal/recovery/review: authoritative source citation/date, parallel calculation, pre/post tax-control reconciliation, forward effective-date correction; accountant and product approval.
+- Paths/objects: `20260926100000_approved_egypt_vat.sql`, `45_approved_egypt_vat_test.sql`, `/tax-vat`, focused unit/browser fixtures and [bounded contract/evidence record](../../tax-vat-accounting.md).
+- Migration/risk: additive append-only configuration/documents with effective dates and copied posting snapshots; no legacy inference or recalculation. Designated VAT-control accounts reject generic postings.
+- Acceptance/tests: fixtures cover 14% exact/large-value rounding, tax/document dates, one-time posting/idempotency, source=control GL, linked credits/reversals, immutable history, periods, permissions, isolation and EN/AR scoped wording.
+- Rehearsal/recovery/review: official ETA evidence is dated and linked; pre-existing history is untouched; recovery is a forward-effective profile/rule plus linked adjustment, never mutation. Accountant UAT remains separate.
 
 ### V2-IMP-014 — Approved inventory accounting
 
