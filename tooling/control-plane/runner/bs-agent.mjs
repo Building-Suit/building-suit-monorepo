@@ -3375,22 +3375,40 @@ function taskPublish() {
         ? metadata.allowed_paths
         : []
 
+    const sourceAllowedPaths =
+      Array.isArray(
+        metadata.source_allowed_paths,
+      )
+        ? metadata.source_allowed_paths
+        : []
+
 
     const allowedPaths =
       configuredAllowedPaths.length > 0
         ? configuredAllowedPaths
-        : (
-            Array.isArray(
-              packet.project?.allowed_publication_paths,
-            ) &&
-            packet.project.allowed_publication_paths.length > 0
-              ? packet.project.allowed_publication_paths
-              : packet.suit.app_path
-              ? [
-                  `${packet.suit.app_path}/`,
-                ]
-              : []
-          )
+
+        : sourceAllowedPaths.length > 0
+          ? sourceAllowedPaths
+
+          : (
+              Array.isArray(
+                packet.project
+                  ?.allowed_publication_paths,
+              ) &&
+              packet.project
+                .allowed_publication_paths
+                .length > 0
+
+                ? packet.project
+                    .allowed_publication_paths
+
+                : packet.suit.app_path
+                  ? [
+                      `${packet.suit.app_path}/`,
+                    ]
+
+                  : []
+            )
 
 
     if (
