@@ -3,15 +3,35 @@ import type { NavigationGroup, NavigationLink } from '@building-suit/contracts'
 withDefaults(defineProps<{ homePath?: string; productName: string; groups: NavigationGroup[]; mobileLinks?: NavigationLink[]; labels: { close: string; open: string; navigation: string; dashboard: string } }>(), { homePath: '/dashboard', mobileLinks: () => [] })
 const route = useRoute()
 const mobileNavOpen = ref(false)
+const menuButton = ref<HTMLButtonElement | null>(null)
+const closeButton = ref<HTMLButtonElement | null>(null)
 useTheme()
-watch(() => route.fullPath, () => { mobileNavOpen.value = false })
+watch(() => route.fullPath, () => {
+  if (mobileNavOpen.value) void closeMobileNav()
+})
 function isActive(to: string) { return route.path === to || route.path.startsWith(`${to}/`) }
+async function openMobileNav() {
+  mobileNavOpen.value = true
+  await nextTick()
+  closeButton.value?.focus()
+}
+async function closeMobileNav(restoreFocus = true) {
+  mobileNavOpen.value = false
+  if (restoreFocus) {
+    await nextTick()
+    menuButton.value?.focus()
+  }
+}
+function onKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape' && mobileNavOpen.value) void closeMobileNav()
+}
 </script>
-<template>  <div class="min-h-dvh bg-background lg:grid lg:grid-cols-[17rem_1fr] lg:gap-4 lg:p-4">
+<template>  <div class="min-h-dvh bg-background lg:grid lg:grid-cols-[17rem_1fr] lg:gap-4 lg:p-4" @keydown="onKeydown">
     <!-- Shown/hidden rather than slid off-screen with a transform: a translate
          utility that silently fails to apply leaves the drawer sitting on top
          of the page on every phone, which is exactly what happened here. -->
     <aside
+      id="bs-primary-navigation"
       class="fixed inset-y-0 start-0 z-40 w-64 border-e border-[var(--bs-border)] bg-surface lg:sticky lg:top-4 lg:block lg:h-[calc(100dvh-2rem)] lg:w-auto lg:rounded-modal lg:border lg:shadow-card"
       :class="mobileNavOpen ? 'block' : 'hidden'"
     >
@@ -21,10 +41,11 @@ function isActive(to: string) { return route.path === to || route.path.startsWit
             <slot name="logo" />
           </NuxtLink>
           <button
+            ref="closeButton"
             type="button"
             class="ls-btn ls-btn-sm lg:hidden"
             :aria-label="labels.close"
-            @click="mobileNavOpen = false"
+            @click="closeMobileNav()"
           >
             <AppIcon name="close" />
           </button>
@@ -69,23 +90,28 @@ function isActive(to: string) { return route.path === to || route.path.startsWit
       v-if="mobileNavOpen"
       class="fixed inset-0 z-30 ls-scrim lg:hidden"
       aria-hidden="true"
-      @click="mobileNavOpen = false"
+      @click="closeMobileNav()"
     />
 
     <div class="flex min-w-0 flex-col">
-      <header class="sticky top-0 z-20 flex items-center gap-3 border-b border-[var(--bs-border)] bg-surface/90 px-4 py-3 backdrop-blur lg:top-4 lg:rounded-card lg:border lg:px-6 lg:shadow-card">
+      <header class="sticky top-0 z-20 flex min-w-0 items-center gap-2 border-b border-[var(--bs-border)] bg-surface/90 px-3 py-3 backdrop-blur sm:gap-3 sm:px-4 lg:top-4 lg:rounded-card lg:border lg:px-6 lg:shadow-card">
         <button
+          ref="menuButton"
           type="button"
           class="ls-btn ls-btn-sm lg:hidden"
           :aria-label="labels.open"
-          @click="mobileNavOpen = true"
+          aria-controls="bs-primary-navigation"
+          :aria-expanded="mobileNavOpen"
+          @click="openMobileNav"
         >
           <AppIcon name="menu" />
         </button>
 
         <div class="min-w-0 flex-1" />
 
-        <slot name="header" />
+        <div class="flex min-w-0 shrink-0 items-center gap-1 sm:gap-2">
+          <slot name="header" />
+        </div>
       </header>
 
       <main class="mx-auto w-full max-w-[1280px] min-w-0 flex-1 px-4 py-6 pb-24 lg:px-8 lg:pb-6">

@@ -87,7 +87,7 @@ function downloadTemplate() { downloadCsv('bank-statement-template.csv', bankSta
 
 <template>
   <div class="space-y-6">
-    <header class="flex flex-wrap items-start justify-between gap-3"><div><h1 class="text-h1 font-bold">{{ t('bank.title') }}</h1><p class="mt-2 text-fg-muted">{{ t('bank.policy') }}</p></div><div class="flex gap-2"><button v-if="can('bank.import')" class="ls-btn" :disabled="readOnly" @click="begin('import')">{{ t('bank.import') }}</button><button class="ls-btn" @click="downloadTemplate">{{ t('bank.template') }}</button></div></header>
+    <LedgerPageHeader :title="t('bank.title')" :subtitle="t('bank.policy')" :from="current?.statement_start" :to="current?.statement_end"><template #actions><button v-if="can('bank.import')" class="ls-btn" :disabled="readOnly" @click="begin('import')">{{ t('bank.import') }}</button><button class="ls-btn" @click="downloadTemplate">{{ t('bank.template') }}</button></template></LedgerPageHeader>
     <p v-if="!can('bank.read')" role="status" class="ls-card p-5">{{ t('bank.denied') }}</p>
     <template v-else>
       <div v-if="data?.reconciliations.length" class="ls-card p-5"><FloatingField :label="t('bank.reconciliation')"><select id="bank-reconciliation" v-model="selectedId" class="ls-input"><option v-for="item in data.reconciliations" :key="item.id" :value="item.id">{{ item.file_name }} · {{ item.statement_end }} · {{ t(`bank.statuses.${item.status}`) }}</option></select></FloatingField></div>

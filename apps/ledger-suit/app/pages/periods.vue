@@ -38,6 +38,8 @@ const { data, pending, error, refresh } = useLazyAsyncData(key, async () => {
 }, { default: () => ({ periods: [] as Period[], transitions: [] as Transition[], closes: [] as YearClose[], fiscalMonth: 1 }) })
 
 const periods = computed(() => data.value?.periods ?? [])
+const today = new Date().toISOString().slice(0, 10)
+const currentPeriod = computed(() => periods.value.find(period => period.start_date <= today && period.end_date >= today))
 const transitions = computed(() => data.value?.transitions ?? [])
 const closes = computed(() => data.value?.closes ?? [])
 const fiscalMonth = computed(() => data.value?.fiscalMonth ?? 1)
@@ -112,10 +114,7 @@ async function closeYear() {
 
 <template>
   <div class="space-y-6">
-    <header>
-      <h1 class="text-h1 font-bold">{{ t('periods.title') }}</h1>
-      <p class="mt-1 text-sm text-fg-muted">{{ t('periods.subtitle') }}</p>
-    </header>
+    <LedgerPageHeader :title="t('periods.title')" :subtitle="t('periods.subtitle')" :from="currentPeriod?.start_date" :to="currentPeriod?.end_date" />
 
     <p v-if="!can('periods.read')" class="ls-card p-6 text-fg-muted" role="status">{{ t('periods.noAccess') }}</p>
     <p v-else-if="error" class="ls-error" role="alert">{{ t('periods.loadFailed') }}</p>

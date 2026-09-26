@@ -101,7 +101,7 @@ async function saveDocument() {
 
 <template>
   <div class="space-y-6">
-    <header><h1 class="text-h1 font-bold">{{ t('vat.title') }}</h1><p class="mt-2 text-fg-muted">{{ t('vat.policy') }}</p></header>
+    <LedgerPageHeader :title="t('vat.title')" :subtitle="t('vat.policy')" :from="from" :to="to" />
     <aside class="rounded-control border border-warning bg-[var(--bs-status-warning-bg)] p-4" role="note">{{ t('vat.scopeWarning') }}</aside>
     <p v-if="!can('tax.read')" class="ls-card p-5" role="status">{{ t('vat.denied') }}</p>
     <template v-else>

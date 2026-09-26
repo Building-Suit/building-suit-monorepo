@@ -248,6 +248,7 @@
       "finance": "المحاسبة",
       "transactions": "المعاملات",
       "ledger": "دفتر الأستاذ",
+      "subledgers": "الدفاتر المساعدة",
       "operations": "العمليات",
       "directory": "الدليل",
       "workspace": "مساحة العمل",
@@ -255,6 +256,13 @@
     },
     "open": "فتح القائمة",
     "close": "إغلاق القائمة"
+  },
+  "pageContext": {
+    "label": "سياق الصفحة الحالي",
+    "organization": "المؤسسة:",
+    "reportingPeriod": "الفترة:",
+    "periodValue": "{from} – {to}",
+    "asOfValue": "حتى {date}"
   },
   "auth": {
     "title": "Ledger Suit",

@@ -74,13 +74,12 @@ useHead({ title: () => `${t('transactions.title')} · ${t('app.name')}` })
 
 <template>
   <div class="space-y-4">
-    <header class="flex flex-wrap items-start justify-between gap-4">
-      <div><h1 class="text-h1 font-bold">{{ t('transactions.title') }}</h1><p class="mt-1 text-sm text-fg-muted">{{ t('transactionWorkspace.subtitle') }}</p></div>
-      <div class="flex flex-wrap items-center gap-2">
+    <LedgerPageHeader :title="t('transactions.title')" :subtitle="t('transactionWorkspace.subtitle')" :from="filters.from" :to="filters.to">
+      <template #actions>
         <button v-if="can('imports.create') && writesAllowed" type="button" class="ls-btn" :disabled="!hydrated" @click="importOpen = true">{{ t('imports.entryPoint') }}</button>
         <button v-if="canCreate" type="button" class="ls-btn ls-btn-primary" :disabled="!hydrated" @click="addTransaction"><AppIcon name="add" :size="18" />{{ t('transactionWorkspace.new') }}</button>
-      </div>
-    </header>
+      </template>
+    </LedgerPageHeader>
 
     <div v-if="can('transactions.read')" class="ls-card space-y-4 p-4 sm:p-5">
       <div class="flex flex-wrap gap-2" role="group" :aria-label="t('transactions.type')">

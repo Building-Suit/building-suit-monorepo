@@ -327,9 +327,8 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
 
 <template>
   <div class="space-y-6" :data-hydrated="hydrated">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <div><h1 class="text-h1 font-bold">{{ t('accounts.title') }}</h1><p class="mt-1 text-sm text-fg-muted">{{ t('accountTree.subtitle') }}</p></div>
-      <div class="flex items-center gap-3">
+    <LedgerPageHeader :title="t('accounts.title')" :subtitle="t('accountTree.subtitle')">
+      <template #actions>
         <label class="flex items-center gap-2 text-sm text-fg-muted">
           <input v-model="showArchived" type="checkbox" class="rounded-sm border-[var(--bs-border)]">
           {{ t('accounts.showArchived') }}
@@ -337,8 +336,8 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
         <button v-if="can('accounts.create')" type="button" class="ls-btn ls-btn-primary" :disabled="!hydrated" @click="openCreate()">
           {{ t('accounts.add') }}
         </button>
-      </div>
-    </div>
+      </template>
+    </LedgerPageHeader>
 
     <div class="flex flex-wrap gap-2" :aria-label="t('accountTree.view')" role="group">
       <button type="button" class="ls-btn ls-btn-sm" :class="{ 'ls-btn-primary': view === 'tree' }" :aria-pressed="view === 'tree'" :disabled="!hydrated" @click="selectView('tree')">{{ t('accountTree.treeView') }}</button>

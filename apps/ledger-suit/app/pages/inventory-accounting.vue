@@ -45,7 +45,7 @@ function page(event: { first: number }) { offset.value = event.first; void load(
 
 <template>
   <div class="space-y-6">
-    <header><h1 class="text-h1 font-bold">{{ t('inventory.title') }}</h1><p class="mt-2 text-fg-muted">{{ t('inventory.policy') }}</p></header>
+    <LedgerPageHeader :title="t('inventory.title')" :subtitle="t('inventory.policy')" :as-of="asOf" />
     <p class="ls-card p-4" role="note">{{ t('inventory.boundary') }}</p>
     <p v-if="!can('inventory.read')" role="status">{{ t('inventory.denied') }}</p>
     <template v-else>

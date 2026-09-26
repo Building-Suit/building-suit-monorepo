@@ -342,10 +342,13 @@ async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_bal
 
 <template>
   <div class="min-w-0 space-y-6">
-    <div>
-      <h1 class="text-h1 font-bold">{{ t('reports.title') }}</h1>
-      <p class="mt-1 text-sm text-fg-muted">{{ t('reports.csvExports') }}</p>
-    </div>
+    <LedgerPageHeader
+      :title="t('reports.title')"
+      :subtitle="t('reports.csvExports')"
+      :from="tab === 'balance-sheet' ? undefined : from"
+      :to="tab === 'balance-sheet' ? undefined : to"
+      :as-of="tab === 'balance-sheet' ? asOf : undefined"
+    />
 
     <p v-if="exportError" class="ls-error" role="alert">{{ exportError }}</p>
 

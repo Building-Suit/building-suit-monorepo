@@ -89,7 +89,7 @@ async function post(row: AssetScheduleRow) {
 
 <template>
   <div class="space-y-6">
-    <header class="flex flex-wrap items-start justify-between gap-3"><div><h1 class="text-h1 font-bold">{{ t('assets.title') }}</h1><p class="mt-2 text-fg-muted">{{ t('assets.policy') }}</p></div><button v-if="can('assets.register')" class="ls-btn ls-btn-primary" :disabled="readOnly || !data?.acquisition_journals.length" @click="begin('register')">{{ t('assets.register') }}</button></header>
+    <LedgerPageHeader :title="t('assets.title')" :subtitle="t('assets.policy')" :as-of="asOfDate"><template #actions><button v-if="can('assets.register')" class="ls-btn ls-btn-primary" :disabled="readOnly || !data?.acquisition_journals.length" @click="begin('register')">{{ t('assets.register') }}</button></template></LedgerPageHeader>
     <p v-if="!can('assets.read')" class="ls-card p-5" role="status">{{ t('assets.denied') }}</p>
     <template v-else>
       <div class="ls-card p-4"><FloatingField :label="t('assets.asOf')"><input id="assets-as-of" v-model="asOfDate" type="date" class="ls-input"></FloatingField></div>

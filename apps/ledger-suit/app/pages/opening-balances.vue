@@ -131,7 +131,7 @@ async function reverse(batch: Batch) {
 
 <template>
   <div class="space-y-6" data-opening-workflow>
-    <header><h1 class="text-h1 font-bold">{{ t('opening.title') }}</h1><p class="mt-1 text-sm text-fg-muted">{{ t('opening.subtitle') }}</p></header>
+    <LedgerPageHeader :title="t('opening.title')" :subtitle="t('opening.subtitle')" :as-of="cutoff" />
     <p v-if="!can('opening_balances.read')" class="ls-card p-6 text-fg-muted">{{ t('opening.noAccess') }}</p>
     <p v-else-if="error" class="ls-error" role="alert">{{ t('opening.loadFailed') }}</p>
     <SectionSkeleton v-else-if="pending" variant="table" :rows="5" />

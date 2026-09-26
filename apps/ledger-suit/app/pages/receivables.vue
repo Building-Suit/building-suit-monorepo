@@ -89,7 +89,7 @@ async function save() {
 
 <template>
   <div class="space-y-6">
-    <header><h1 class="text-h1 font-bold">{{ t('ar.title') }}</h1><p class="mt-2 text-fg-muted">{{ t('ar.policy') }}</p></header>
+    <LedgerPageHeader :title="t('ar.title')" :subtitle="t('ar.policy')" :from="from" :to="asOf" />
     <p v-if="!can('ar.read')" role="status" class="ls-card p-5">{{ t('ar.denied') }}</p>
     <template v-else>
       <div class="ls-card grid gap-4 p-5 sm:grid-cols-3">

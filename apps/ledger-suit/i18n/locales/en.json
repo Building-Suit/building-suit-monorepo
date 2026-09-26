@@ -248,6 +248,7 @@
       "finance": "Accounting",
       "transactions": "Transactions",
       "ledger": "Ledger",
+      "subledgers": "Subledgers",
       "operations": "Operations",
       "directory": "Directory",
       "workspace": "Workspace",
@@ -255,6 +256,13 @@
     },
     "open": "Open navigation",
     "close": "Close navigation"
+  },
+  "pageContext": {
+    "label": "Current page context",
+    "organization": "Organization:",
+    "reportingPeriod": "Period:",
+    "periodValue": "{from} – {to}",
+    "asOfValue": "As of {date}"
   },
   "auth": {
     "title": "Ledger Suit",
