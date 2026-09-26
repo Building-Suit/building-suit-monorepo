@@ -71,6 +71,57 @@ export type ShopRpcDatabase = {
         }
         Returns: string
       }
+      inventory_access: {
+        Args: { p_shop_id: string }
+        Returns: Array<{
+          can_view: boolean
+          can_manage: boolean
+          inventory_enabled: boolean
+        }>
+      }
+      set_reorder_threshold: {
+        Args: {
+          p_shop_id: string
+          p_product_id: string
+          p_threshold: number
+        }
+        Returns: undefined
+      }
+      record_stock_count: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_product_id: string
+          p_counted_quantity: number
+          p_counted_at: string
+          p_reason: string
+          p_reference: string
+          p_positive_variance_unit_cost: number | null
+        }
+        Returns: string
+      }
+      list_inventory: {
+        Args: { p_shop_id: string; p_low_stock_only?: boolean }
+        Returns: unknown
+      }
+      list_inventory_history: {
+        Args: {
+          p_shop_id: string
+          p_product_id?: string | null
+          p_page?: number
+          p_page_size?: number
+        }
+        Returns: unknown
+      }
+      list_stock_counts: {
+        Args: {
+          p_shop_id: string
+          p_product_id?: string | null
+          p_page?: number
+          p_page_size?: number
+        }
+        Returns: unknown
+      }
       create_vendor: {
         Args: {
           p_shop_id: string
