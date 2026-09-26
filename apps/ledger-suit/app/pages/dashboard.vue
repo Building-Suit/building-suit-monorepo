@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import type { Database } from '~~/types/database.types'
+import type { DashboardRpcDatabase } from '~~/types/dashboard-rpc.types'
 import type { SeriesPoint } from '~/components/RevenueExpenseChart.vue'
 
 definePageMeta({ layout: 'default' }) // Authenticated workspace route.
 
 const supabase = useSupabaseClient<Database>()
+const dashboardRpc = useSupabaseClient<DashboardRpcDatabase>()
 const { currentId, can, baseCurrency } = useTenant()
 const { start } = useAddTransaction()
 const { show: showOperations } = useOperationsCenter()
@@ -63,15 +65,13 @@ const { data: series, pending: seriesPending } = useLazyAsyncData<SeriesPoint[]>
 
 const { data: liquid, pending: liquidPending } = useLazyAsyncData('org:cash-position', async () => {
   if (!currentId.value) return []
-  const { data, error } = await supabase
-    .from('account_balances')
-    .select('account_id, name, currency, net_debit_minor, subtype')
-    .eq('organization_id', currentId.value)
-    .eq('is_liquid', true)
-    .eq('is_archived', false)
+  if (!can('accounts.read')) return []
+  const { data, error } = await dashboardRpc.rpc('dashboard_liquid_accounts', {
+    p_organization_id: currentId.value,
+  })
   if (error) throw error
   return data ?? []
-}, { watch: [currentId], default: () => [] })
+}, { watch: [currentId, () => can('accounts.read')], default: () => [] })
 
 const { data: recent, pending: recentPending } = useLazyAsyncData('org:recent-transactions', async () => {
   if (!currentId.value) return []
