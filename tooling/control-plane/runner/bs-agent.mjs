@@ -3383,32 +3383,50 @@ function taskPublish() {
         : []
 
 
-    const allowedPaths =
+    const workstreamApplicationPath =
+      packet.workstream?.application_path ??
+      packet.suit.app_path ??
+      null
+
+
+    const workstreamAllowedPaths =
+      workstreamApplicationPath
+        ? [
+            `${workstreamApplicationPath}/`,
+          ]
+        : []
+
+
+    const explicitTaskAllowedPaths =
       configuredAllowedPaths.length > 0
         ? configuredAllowedPaths
+        : sourceAllowedPaths
 
-        : sourceAllowedPaths.length > 0
-          ? sourceAllowedPaths
 
-          : (
-              Array.isArray(
-                packet.project
-                  ?.allowed_publication_paths,
-              ) &&
-              packet.project
-                .allowed_publication_paths
-                .length > 0
+    const projectAllowedPaths =
+      Array.isArray(
+        packet.project
+          ?.allowed_publication_paths,
+      )
+        ? packet.project
+            .allowed_publication_paths
+        : []
 
-                ? packet.project
-                    .allowed_publication_paths
 
-                : packet.suit.app_path
-                  ? [
-                      `${packet.suit.app_path}/`,
-                    ]
+    const allowedPaths =
+      [
+        ...new Set([
+          ...workstreamAllowedPaths,
+          ...explicitTaskAllowedPaths,
 
-                  : []
-            )
+          ...(
+            workstreamAllowedPaths.length === 0 &&
+            explicitTaskAllowedPaths.length === 0
+              ? projectAllowedPaths
+              : []
+          ),
+        ]),
+      ]
 
 
     if (
