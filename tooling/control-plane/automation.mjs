@@ -192,9 +192,9 @@ async function main() {
     const policyId = positional(0); const scope = flag('scope'); const target = flag('target')
     const statements = {
       global: `UPDATE control.platform_settings SET value=to_jsonb(:'policy'::text),updated_at=now() WHERE setting_key='global_retry_policy' RETURNING value`,
-      project: `UPDATE control.projects SET retry_policy_id=:'policy' WHERE slug=:'target' RETURNING to_jsonb(control.projects)`,
+      project: `UPDATE control.projects AS p SET retry_policy_id=:'policy' WHERE p.slug=:'target' RETURNING to_jsonb(p)`,
       workstream: `UPDATE control.workstreams w SET retry_policy_id=:'policy' FROM control.projects p WHERE w.project_id=p.project_id AND (p.slug||'/'||w.slug)=:'target' RETURNING to_jsonb(w)`,
-      task: `UPDATE control.tasks SET retry_policy_id=:'policy' WHERE task_id=:'target' RETURNING to_jsonb(control.tasks)`,
+      task: `UPDATE control.tasks AS t SET retry_policy_id=:'policy' WHERE t.task_id=:'target' RETURNING to_jsonb(t)`,
     }
     if (!statements[scope]) throw new Error('scope_must_be_global_project_workstream_or_task')
     return output({ ok: true, assignment: query(statements[scope], { policy:policyId,target:target ?? '' }) })

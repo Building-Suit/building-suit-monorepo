@@ -1205,11 +1205,12 @@ function startExecution({
   retryPolicy,
   promptPath,
 }) {
-  const result =
+  const startedResult =
     controlQuery(
       `
-        WITH started AS (
-          SELECT control.start_execution(
+        SELECT jsonb_build_object(
+          'execution_id',
+          control.start_execution(
             :'task_id',
             :'model_profile',
             :'model_name',
@@ -1218,18 +1219,8 @@ function startExecution({
             :'branch_name',
             :'parent_branch',
             :'parent_sha'
-          ) AS execution_id
-        ), recorded AS (
-          UPDATE control.executions e
-          SET resolved_retry_policy = :'retry_policy'::jsonb,
-              prompt_path = :'prompt_path',
-              engine_stage = 'implementation'
-          FROM started
-          WHERE e.execution_id = started.execution_id
-          RETURNING e.execution_id
-        )
-        SELECT jsonb_build_object('execution_id', execution_id)
-        FROM recorded;
+          )
+        );
       `,
       {
         task_id:
@@ -1255,18 +1246,81 @@ function startExecution({
 
         parent_sha:
           parent.parent_sha,
+      },
+    )
+
+
+  const started =
+    parseControlJson(
+      startedResult,
+    )
+
+
+  const executionId =
+    started?.execution_id
+
+
+  if (!executionId) {
+    throw new Error(
+      'control.start_execution returned no execution_id.',
+    )
+  }
+
+
+  const recordedResult =
+    controlQuery(
+      `
+        UPDATE control.executions
+        SET
+          resolved_retry_policy =
+            :'retry_policy'::jsonb,
+
+          prompt_path =
+            :'prompt_path',
+
+          engine_stage =
+            'implementation'
+
+        WHERE execution_id =
+          :'execution_id'::bigint
+
+        RETURNING jsonb_build_object(
+          'execution_id',
+          execution_id
+        );
+      `,
+      {
+        execution_id:
+          String(executionId),
 
         retry_policy:
-          JSON.stringify(retryPolicy),
+          JSON.stringify(
+            retryPolicy,
+          ),
 
         prompt_path:
           promptPath,
       },
     )
 
-  return parseControlJson(
-    result,
-  ).execution_id
+
+  const recorded =
+    parseControlJson(
+      recordedResult,
+    )
+
+
+  if (
+    recorded?.execution_id !==
+    executionId
+  ) {
+    throw new Error(
+      `Unable to record metadata for execution ${executionId}.`,
+    )
+  }
+
+
+  return executionId
 }
 
 function finishExecution({
@@ -2394,33 +2448,25 @@ function startRetryExecution(
   route,
   retryPolicy,
 ) {
-  const result =
+  const startedResult =
     controlQuery(
       `
-        WITH started AS (
-          SELECT control.start_retry_execution(
-            :'task_id',
-            :'max_attempts'::integer,
-            :'model_profile',
-            :'model_name',
-            :'reasoning_effort'
-          ) AS payload
-        ), recorded AS (
-          UPDATE control.executions e
-          SET resolved_retry_policy = :'retry_policy'::jsonb,
-              engine_stage = 'implementation'
-          FROM started
-          WHERE e.execution_id = (started.payload->>'execution_id')::bigint
-          RETURNING e.execution_id
-        )
-        SELECT payload FROM started;
+        SELECT control.start_retry_execution(
+          :'task_id',
+          :'max_attempts'::integer,
+          :'model_profile',
+          :'model_name',
+          :'reasoning_effort'
+        );
       `,
       {
         task_id:
           taskId,
 
         max_attempts:
-          String(retryPolicy.max_attempts),
+          String(
+            retryPolicy.max_attempts,
+          ),
 
         model_profile:
           route.profile,
@@ -2430,15 +2476,75 @@ function startRetryExecution(
 
         reasoning_effort:
           route.reasoning_effort,
-
-        retry_policy:
-          JSON.stringify(retryPolicy),
       },
     )
 
-  return parseControlJson(
-    result,
-  )
+
+  const started =
+    parseControlJson(
+      startedResult,
+    )
+
+
+  if (
+    !started ||
+    started.allowed !== true ||
+    !started.execution_id
+  ) {
+    return started
+  }
+
+
+  const recordedResult =
+    controlQuery(
+      `
+        UPDATE control.executions
+        SET
+          resolved_retry_policy =
+            :'retry_policy'::jsonb,
+
+          engine_stage =
+            'implementation'
+
+        WHERE execution_id =
+          :'execution_id'::bigint
+
+        RETURNING jsonb_build_object(
+          'execution_id',
+          execution_id
+        );
+      `,
+      {
+        execution_id:
+          String(
+            started.execution_id,
+          ),
+
+        retry_policy:
+          JSON.stringify(
+            retryPolicy,
+          ),
+      },
+    )
+
+
+  const recorded =
+    parseControlJson(
+      recordedResult,
+    )
+
+
+  if (
+    recorded?.execution_id !==
+    started.execution_id
+  ) {
+    throw new Error(
+      `Unable to record metadata for retry execution ${started.execution_id}.`,
+    )
+  }
+
+
+  return started
 }
 
 function validateRetryWorktree(
