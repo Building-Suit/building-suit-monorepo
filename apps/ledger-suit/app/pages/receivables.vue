@@ -10,6 +10,7 @@ const user = useSupabaseUser()
 const { readOnly } = useBilling()
 const toasts = useToasts()
 const { from, asOf, customer, data, pending, error, load, command } = useCustomerSubledger()
+const { density: tableDensity, hydrated: tablePreferenceHydrated } = useAccountingTablePreferences('receivables')
 useHead({ title: () => `${t('ar.title')} · ${t('app.name')}` })
 const kinds: ArKind[] = ['invoice', 'receipt', 'credit', 'adjustment']
 const capability: Record<ArKind, string> = { invoice: 'ar.issue', receipt: 'ar.receive', credit: 'ar.credit', adjustment: 'ar.adjust' }
@@ -92,10 +93,11 @@ async function save() {
     <LedgerPageHeader :title="t('ar.title')" :subtitle="t('ar.policy')" :from="from" :to="asOf" />
     <p v-if="!can('ar.read')" role="status" class="ls-card p-5">{{ t('ar.denied') }}</p>
     <template v-else>
-      <div class="ls-card grid gap-4 p-5 sm:grid-cols-3">
+      <div class="ls-card grid items-end gap-4 p-5 sm:grid-cols-3">
         <FloatingField :label="t('ar.from')"><input id="ar-from" v-model="from" class="ls-input" type="date" :max="asOf"></FloatingField>
         <FloatingField :label="t('ar.asOf')"><input id="ar-asof" v-model="asOf" class="ls-input" type="date" :min="from"></FloatingField>
         <FloatingField :label="t('ar.customer')"><select id="ar-customer-filter" v-model="customer" class="ls-input"><option value="">{{ t('ar.allCustomers') }}</option><option v-for="c in data?.customers ?? []" :key="c.id" :value="c.id">{{ c.name }}</option></select></FloatingField>
+        <AccountingTableDensity v-model="tableDensity" :disabled="!tablePreferenceHydrated" />
       </div>
       <p v-if="error" class="ls-error" role="alert">{{ t('ar.errors.load') }} <button class="ls-btn" @click="load">{{ t('ar.retry') }}</button></p>
       <SectionSkeleton v-else-if="pending" variant="table" :rows="5" />
@@ -104,9 +106,9 @@ async function save() {
         <p v-if="!controls.length" role="status" class="ls-card p-5">{{ t('ar.setup') }} <NuxtLink to="/accounts" class="text-link underline">{{ t('nav.accounts') }}</NuxtLink></p>
         <section class="ls-card overflow-hidden">
           <h2 class="p-4 text-h2 font-bold">{{ t('ar.openItems') }}</h2>
-          <BsDataTable :value="items" data-key="invoice_id" :table-props="{ 'aria-label': t('ar.openItems') }">
+          <BsDataTable :value="items" data-key="invoice_id" :density="tableDensity" sticky-header max-height="32rem" :scroll-label="t('accountingTable.receivablesScroll')" :table-props="{ 'aria-label': t('ar.openItems') }">
             <template #empty>{{ t('ar.empty') }}</template>
-            <Column field="customer_name" :header="t('ar.customer')" /><Column field="reference" :header="t('ar.reference')" />
+            <Column header-class="ls-sticky-start" body-class="ls-sticky-start"><template #header>{{ t('ar.customer') }} / {{ t('ar.reference') }}</template><template #body="{ data: row }"><span class="block font-semibold">{{ row.customer_name }}</span><span class="block text-xs text-fg-muted" dir="ltr">{{ row.reference }}</span></template></Column>
             <Column field="issue_date" :header="t('ar.issueDate')" /><Column field="due_date" :header="t('ar.dueDate')" />
             <Column :header="t('ar.original')"><template #body="{ data: row }"><MoneyText :amount-minor="row.original_minor" /></template></Column>
             <Column :header="t('ar.outstanding')"><template #body="{ data: row }"><MoneyText :amount-minor="row.outstanding_minor" /></template></Column>
@@ -119,7 +121,7 @@ async function save() {
           <p v-if="!data.statement" class="p-4 text-fg-muted">{{ t('ar.chooseCustomer') }}</p>
           <template v-else>
             <dl class="grid gap-3 p-4 sm:grid-cols-5"><div v-for="field in statementFields" :key="field"><dt>{{ t(`ar.totals.${field}`) }}</dt><dd><MoneyText :amount-minor="data.statement[`${field}_minor`]" /></dd></div></dl>
-            <BsDataTable :value="data.statement.movements" data-key="id" :table-props="{ 'aria-label': t('ar.statement') }">
+            <BsDataTable :value="data.statement.movements" data-key="id" :density="tableDensity" sticky-header max-height="32rem" :scroll-label="t('accountingTable.receivablesScroll')" :table-props="{ 'aria-label': t('ar.statement') }">
               <template #empty>{{ t('ar.empty') }}</template>
               <Column field="date" :header="t('ar.date')" /><Column field="reference" :header="t('ar.reference')" />
               <Column :header="t('ar.kind')"><template #body="{ data: row }">{{ t(`ar.kinds.${row.kind}`) }}<span v-if="row.reversed"> · {{ t('ar.reversed') }}</span></template></Column>
@@ -131,7 +133,7 @@ async function save() {
           </template>
         </section>
         <section v-if="can('controls.reconcile')" class="ls-card overflow-hidden"><h2 class="p-4 text-h2 font-bold">{{ t('controls.reconciliation') }}</h2><p class="px-4 text-sm text-fg-muted">{{ t('ar.reconciliationPolicy') }}</p>
-          <BsDataTable :value="data.reconciliation" data-key="control_account_id" :table-props="{ 'aria-label': t('controls.reconciliation') }">
+          <BsDataTable :value="data.reconciliation" data-key="control_account_id" :density="tableDensity" :table-props="{ 'aria-label': t('controls.reconciliation') }">
             <template #empty>{{ t('ar.empty') }}</template><Column field="account_name" :header="t('ar.control')" />
             <Column :header="t('controls.glBalance')"><template #body="{ data: row }"><MoneyText :amount-minor="row.gl_balance_minor" /></template></Column>
             <Column :header="t('controls.subledgerBalance')"><template #body="{ data: row }"><MoneyText :amount-minor="row.subledger_balance_minor" /></template></Column>
@@ -140,7 +142,7 @@ async function save() {
           </BsDataTable>
         </section>
         <details v-if="can('commitments.read')" class="ls-card p-4"><summary class="cursor-pointer font-bold">{{ t('ar.legacy') }}</summary><p class="my-3 text-sm text-fg-muted">{{ t('ar.legacyPolicy') }}</p>
-          <BsDataTable :value="data.legacy" data-key="commitment_id" :table-props="{ 'aria-label': t('ar.legacy') }"><template #empty>{{ t('ar.empty') }}</template><Column field="reference" :header="t('ar.reference')" /><Column :header="t('ar.original')"><template #body="{ data: row }"><MoneyText :amount-minor="row.original_minor" :currency="row.currency_code" /></template></Column><Column :header="t('ar.cashSettled')"><template #body="{ data: row }"><MoneyText :amount-minor="row.cash_settled_minor" :currency="row.currency_code" /></template></Column><Column :header="t('ar.outstanding')"><template #body="{ data: row }"><MoneyText :amount-minor="row.legacy_open_minor" :currency="row.currency_code" /></template></Column></BsDataTable>
+          <BsDataTable :value="data.legacy" data-key="commitment_id" :density="tableDensity" :table-props="{ 'aria-label': t('ar.legacy') }"><template #empty>{{ t('ar.empty') }}</template><Column field="reference" :header="t('ar.reference')" /><Column :header="t('ar.original')"><template #body="{ data: row }"><MoneyText :amount-minor="row.original_minor" :currency="row.currency_code" /></template></Column><Column :header="t('ar.cashSettled')"><template #body="{ data: row }"><MoneyText :amount-minor="row.cash_settled_minor" :currency="row.currency_code" /></template></Column><Column :header="t('ar.outstanding')"><template #body="{ data: row }"><MoneyText :amount-minor="row.legacy_open_minor" :currency="row.currency_code" /></template></Column></BsDataTable>
         </details>
       </template>
     </template>

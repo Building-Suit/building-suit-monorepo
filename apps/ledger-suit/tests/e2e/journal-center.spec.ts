@@ -66,6 +66,10 @@ for (const locale of ['en', 'ar'] as const) {
     await expect(row).toContainText('JRN-')
     await expect(row).toContainText('321.00')
     await expect(row).toContainText(copy.journalSources.manual)
+    const density = page.getByRole('group', { name: copy.accountingTable.density })
+    await density.getByRole('button', { name: copy.accountingTable.compact, exact: true }).click()
+    await expect(page.locator('section.bs-data-table--compact')).toBeVisible()
+    await expect(row).toContainText(bankName)
 
     const viewName = `${locale === 'ar' ? 'قيود سبتمبر' : 'September journals'} ${stamp}`
     await page.locator('#saved-view-name').fill(viewName)
@@ -76,6 +80,9 @@ for (const locale of ['en', 'ar'] as const) {
     await page.locator('#saved-view').selectOption({ label: viewName })
     await expect(page.locator('#status')).toHaveValue('reversed')
     await expect(page).toHaveURL(/status=reversed/)
+    await page.reload()
+    await expect(page.locator('section.bs-data-table--compact')).toBeVisible()
+    await expect(page.locator('#status')).toHaveValue('reversed')
 
     await row.getByRole('button').first().click()
     const dialog = page.getByRole('dialog')

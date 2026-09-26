@@ -66,6 +66,11 @@ for (const locale of ['en', 'ar'] as const) {
     await expect(page.getByRole('heading', { name: copy.ar.title, exact: true })).toBeVisible()
     await expect(page.locator('html')).toHaveAttribute('dir', locale === 'ar' ? 'rtl' : 'ltr')
     await expect(page.getByRole('table', { name: copy.ar.openItems })).toContainText('INV-100')
+    const density = page.getByRole('group', { name: copy.accountingTable.density })
+    await density.getByRole('button', { name: copy.accountingTable.compact, exact: true }).click()
+    const openItems = page.getByRole('table', { name: copy.ar.openItems })
+    await expect(openItems.locator('xpath=ancestor::section[contains(@class,"bs-data-table--compact")]')).toBeVisible()
+    await expect(openItems.getByRole('row').filter({ hasText: 'INV-100' })).toContainText('Customer / العميل')
     await page.locator('#ar-customer-filter').selectOption('customer')
     await expect(page.getByRole('table', { name: copy.ar.statement })).toContainText('RCPT-100')
     await expect(page.getByRole('table', { name: copy.controls.reconciliation })).toContainText(copy.controls.statuses.reconciled)
@@ -96,5 +101,6 @@ for (const locale of ['en', 'ar'] as const) {
     await expect(dialog).toBeHidden()
     await page.setViewportSize({ width: 390, height: 844 })
     await expect(page.getByRole('button', { name: copy.ar.actions.invoice, exact: true })).toBeVisible()
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   })
 }

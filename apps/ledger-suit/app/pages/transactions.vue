@@ -11,6 +11,7 @@ const { data: accounts } = useOrgAccounts()
 const { data: tags, error: tagsError, refresh: refreshTags } = useOrgTags()
 const { filters, sort, page, pageSize, scope, rows, total, pageCount, pending, error, validation, refresh, activeFilterCount, clearFilters, toggleSort, snapshot, applySnapshot } = useTransactionWorkspace()
 const { views: savedViews, pending: savedViewsPending, error: savedViewsError, save: saveView, remove: removeView } = useJournalSavedViews()
+const { density: tableDensity, hydrated: tablePreferenceHydrated } = useAccountingTablePreferences('journal-center')
 const toasts = useToasts()
 const describeError = useErrorMessage()
 const importOpen = ref(false)
@@ -139,12 +140,20 @@ useHead({ title: () => `${t('transactions.title')} · ${t('app.name')}` })
     />
 
     <div v-else class="ls-card overflow-hidden">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">
+        <AccountingTableDensity v-model="tableDensity" :disabled="!tablePreferenceHydrated" />
+        <p role="status" class="text-sm text-fg-muted">{{ t('transactions.showing', { from: rangeStart, to: rangeEnd, total }) }}</p>
+      </div>
       <!-- Wide financial table on desktop -->
-      <div class="hidden overflow-x-auto md:block">
-        <BsDataTable :value="rows" data-key="id" :label="t('transactions.caption')" :row-class="() => 'cursor-pointer hover:bg-surface-muted'" @row-click="event => selectedId = event.data.id">
-  <Column body-class="whitespace-nowrap" :pt="{ headerCell: { 'aria-sort': ariaSort('journal_reference') } }">
+      <div class="hidden md:block">
+        <BsDataTable :value="rows" data-key="id" :label="t('transactions.caption')" :density="tableDensity" sticky-header max-height="38rem" :scroll-label="t('accountingTable.journalScroll')" :row-class="() => 'cursor-pointer hover:bg-surface-muted'" @row-click="event => selectedId = event.data.id">
+  <Column header-class="ls-sticky-start" body-class="ls-sticky-start whitespace-nowrap" :pt="{ headerCell: { 'aria-sort': ariaSort('journal_reference') } }">
     <template #header><button type="button" class="hover:underline" @click="toggleSort('journal_reference')">{{ t('journalCenter.journalReference') }}</button></template>
-    <template #body="{ data: row }"><button type="button" class="font-semibold text-link hover:underline" @click.stop="selectedId = row.id">{{ row.journal_reference }}</button></template>
+    <template #body="{ data: row }">
+      <button type="button" class="font-semibold text-link hover:underline" @click.stop="selectedId = row.id">{{ row.journal_reference }}</button>
+      <p class="mt-1 max-w-48 truncate text-xs text-fg-muted" :title="row.from_account_name || undefined">{{ row.from_account_name || t('common.dash') }}</p>
+      <p class="max-w-48 truncate text-xs text-fg-muted" :title="row.to_account_name || undefined"><AppIcon name="arrowRight" :size="14" directional class="inline-block" /> {{ row.to_account_name || t('common.dash') }}</p>
+    </template>
   </Column>
   <Column body-class="whitespace-nowrap" :pt="{ headerCell: { 'aria-sort': ariaSort('transaction_date') } }">
     <template #header><button type="button" class="hover:underline" @click="toggleSort('transaction_date')">{{ t('transactions.date') }}</button></template>
@@ -160,19 +169,15 @@ useHead({ title: () => `${t('transactions.title')} · ${t('app.name')}` })
     <template #header><button type="button" class="hover:underline" @click="toggleSort('source')">{{ t('journalCenter.source') }}</button></template>
     <template #body="{ data: row }"><span>{{ t(`journalSources.${row.source}`) }}</span><span class="block text-xs text-fg-muted">{{ t(`types.${row.type}`) }}</span></template>
   </Column>
-  <Column body-class="whitespace-nowrap text-fg-muted">
-    <template #header>{{ t('transactions.fromTo') }}</template>
-    <template #body="{ data: row }"><p class="max-w-40 truncate" :title="row.from_account_name || undefined">{{ row.from_account_name || t('common.dash') }}</p><p class="max-w-40 truncate" :title="row.to_account_name || undefined"><AppIcon name="arrowRight" :size="14" directional class="inline-block" /> {{ row.to_account_name || t('common.dash') }}</p></template>
-  </Column>
   <Column  :pt="{ headerCell: { 'aria-sort': ariaSort('status') } }">
     <template #header><button type="button" class="hover:underline" @click="toggleSort('status')">{{ t('transactions.status') }}</button></template>
     <template #body="{ data: row }"><StatusBadge :status="row.status" /></template>
   </Column>
-  <Column header-class="text-end" body-class="ls-num font-semibold" :pt="{ headerCell: { 'aria-sort': ariaSort('debit') } }">
+  <Column header-class="ls-sticky-end-offset text-end" body-class="ls-sticky-end-offset ls-num font-semibold" :pt="{ headerCell: { 'aria-sort': ariaSort('debit') } }">
     <template #header><button type="button" class="hover:underline" @click="toggleSort('debit')">{{ t('detail.debit') }}</button></template>
     <template #body="{ data: row }"><MoneyText :amount-minor="row.debit_minor" :currency="row.currency_code" /></template>
   </Column>
-  <Column header-class="text-end" body-class="ls-num font-semibold" :pt="{ headerCell: { 'aria-sort': ariaSort('credit') } }">
+  <Column header-class="ls-sticky-end text-end" body-class="ls-sticky-end ls-num font-semibold" :pt="{ headerCell: { 'aria-sort': ariaSort('credit') } }">
     <template #header><button type="button" class="hover:underline" @click="toggleSort('credit')">{{ t('detail.credit') }}</button></template>
     <template #body="{ data: row }"><MoneyText :amount-minor="row.credit_minor" :currency="row.currency_code" /></template>
   </Column>
@@ -191,9 +196,9 @@ useHead({ title: () => `${t('transactions.title')} · ${t('app.name')}` })
                   {{ formatDate(row.transaction_date, locale) }} · {{ t(`journalSources.${row.source}`) }} · {{ t(`types.${row.type}`) }}
                 </p>
               </div>
-              <div class="shrink-0 text-end">
-                <p class="text-xs text-fg-muted">{{ t('detail.debit') }} / {{ t('detail.credit') }}</p>
-                <MoneyText class="text-sm font-semibold" :amount-minor="row.debit_minor" :currency="row.currency_code" />
+              <div class="shrink-0 text-end text-sm">
+                <p><span class="text-xs text-fg-muted">{{ t('detail.debit') }}</span> <MoneyText class="font-semibold" :amount-minor="row.debit_minor" :currency="row.currency_code" /></p>
+                <p><span class="text-xs text-fg-muted">{{ t('detail.credit') }}</span> <MoneyText class="font-semibold" :amount-minor="row.credit_minor" :currency="row.currency_code" /></p>
                 <StatusBadge class="mt-1 block" :status="row.status" />
               </div>
             </div>

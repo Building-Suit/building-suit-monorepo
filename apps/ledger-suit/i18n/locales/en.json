@@ -115,6 +115,15 @@
     "continue": "Continue",
     "retry": "Retry"
   },
+  "accountingTable": {
+    "density": "Table density",
+    "compact": "Compact",
+    "comfortable": "Comfortable",
+    "journalScroll": "Journal table — scroll horizontally; journal identity and debit and credit totals remain visible",
+    "trialBalanceScroll": "Trial Balance — scroll horizontally; account identity, headers, and full-report totals remain visible",
+    "receivablesScroll": "Receivables table — scroll horizontally; customer and reference remain visible",
+    "payablesScroll": "Payables table — scroll horizontally; supplier and reference remain visible"
+  },
   "financialMap": {
     "open": "Open the financial system map",
     "button": "How it works",

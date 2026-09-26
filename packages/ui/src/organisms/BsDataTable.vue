@@ -5,13 +5,22 @@ defineOptions({ inheritAttrs: false })
 const props = withDefaults(defineProps<{
   value?: object[] | null
   label?: string
+  density?: 'compact' | 'comfortable'
+  stickyHeader?: boolean
+  stickyFooter?: boolean
+  maxHeight?: string
+  scrollLabel?: string
   searchable?: boolean
   exportable?: boolean
   searchFields?: string[]
   lazy?: boolean
   loading?: boolean
   error?: string | null
-}>(), { value: () => [], label: undefined, searchable: false, exportable: false, searchFields: () => [], lazy: false, loading: false, error: null })
+}>(), {
+  value: () => [], label: undefined, density: 'comfortable', stickyHeader: false,
+  stickyFooter: false, maxHeight: undefined, scrollLabel: undefined, searchable: false,
+  exportable: false, searchFields: () => [], lazy: false, loading: false, error: null,
+})
 const emit = defineEmits<{ search: [value: string]; export: []; retry: []; 'row-click': [event: DataTableRowClickEvent] }>()
 const ui = useUiCopy()
 const slots = useSlots()
@@ -23,6 +32,11 @@ const table = ref<InstanceType<typeof DataTable> | null>(null)
 const search = ref('')
 function filters() { return props.searchable && !props.lazy ? { ...(attrs.filters as DataTableFilterMeta || {}), global: { value: search.value, matchMode: 'contains' } } : attrs.filters as DataTableFilterMeta | undefined }
 function forwardedSlots() { return Object.keys(slots).filter(key => !['default', 'empty', 'loading', 'toolbar'].includes(key)) }
+const tableContainerPt = computed(() => ({
+  class: 'overflow-auto',
+  ...(props.scrollLabel ? { tabindex: 0, role: 'region', 'aria-label': props.scrollLabel } : {}),
+  ...(props.maxHeight ? { style: { maxHeight: props.maxHeight } } : {}),
+}))
 function exportCsv() {
   if (props.lazy) emit('export')
   else table.value?.exportCSV()
@@ -31,14 +45,19 @@ watch(search, value => emit('search', value))
 defineExpose({ exportCSV: exportCsv })
 </script>
 <template>
-  <section class="bs-data-table" :aria-label="label" :aria-busy="loading">
+  <section
+    class="bs-data-table"
+    :class="[`bs-data-table--${density}`, { 'bs-data-table--sticky-header': stickyHeader, 'bs-data-table--sticky-footer': stickyFooter }]"
+    :aria-label="label"
+    :aria-busy="loading"
+  >
     <div v-if="searchable || exportable || slots.toolbar" class="flex flex-wrap items-center gap-3 border-b border-line p-3">
       <InputText v-if="searchable" v-model="search" type="search" class="ls-input max-w-sm" :aria-label="ui('search')" :placeholder="ui('search')" />
       <slot name="toolbar" />
       <button v-if="exportable" type="button" class="ls-btn ls-btn-sm ms-auto" :disabled="loading" @click="exportCsv">{{ ui('export') }}</button>
     </div>
     <div v-if="error" role="alert" class="ls-error m-4"><p>{{ error }}</p><button type="button" class="ls-btn mt-3" @click="emit('retry')">{{ ui('retry') }}</button></div>
-    <DataTable v-else ref="table" :value="value || []" :lazy="lazy" :loading="loading" :filters="filters()" :global-filter-fields="searchFields.length ? searchFields : undefined" :export-function="({ data }: { data: unknown }) => csvCell(data)" table-class="ls-table" :pt="{ root: { class: 'relative' }, pcPaginator: { root: { class: 'bs-paginator' }, content: { class: 'bs-paginator-content' }, first: { class: 'ls-btn ls-btn-sm' }, prev: { class: 'ls-btn ls-btn-sm' }, next: { class: 'ls-btn ls-btn-sm' }, last: { class: 'ls-btn ls-btn-sm' }, page: { class: 'ls-btn ls-btn-sm' }, pcRowPerPageDropdown: { root: { class: 'ls-input inline-flex w-auto items-center gap-2' }, label: { class: 'px-2' }, dropdown: { class: 'px-2' }, overlay: { class: 'ls-card p-2 shadow-overlay' }, option: { class: 'p-2' } } }, tableContainer: { class: 'overflow-auto' }, header: { class: 'p-3 border-b border-line' }, footer: { class: 'p-3 border-t border-line' }, loadingOverlay: { class: 'absolute inset-0 z-10 grid place-items-center bg-surface/80' } }" v-bind="forwardedAttrs()" @row-click="emit('row-click', $event)">
+    <DataTable v-else ref="table" :value="value || []" :lazy="lazy" :loading="loading" :filters="filters()" :global-filter-fields="searchFields.length ? searchFields : undefined" :export-function="({ data }: { data: unknown }) => csvCell(data)" table-class="ls-table" :pt="{ root: { class: 'relative' }, pcPaginator: { root: { class: 'bs-paginator' }, content: { class: 'bs-paginator-content' }, first: { class: 'ls-btn ls-btn-sm' }, prev: { class: 'ls-btn ls-btn-sm' }, next: { class: 'ls-btn ls-btn-sm' }, last: { class: 'ls-btn ls-btn-sm' }, page: { class: 'ls-btn ls-btn-sm' }, pcRowPerPageDropdown: { root: { class: 'ls-input inline-flex w-auto items-center gap-2' }, label: { class: 'px-2' }, dropdown: { class: 'px-2' }, overlay: { class: 'ls-card p-2 shadow-overlay' }, option: { class: 'p-2' } } }, tableContainer: tableContainerPt, header: { class: 'p-3 border-b border-line' }, footer: { class: 'p-3 border-t border-line' }, loadingOverlay: { class: 'absolute inset-0 z-10 grid place-items-center bg-surface/80' } }" v-bind="forwardedAttrs()" @row-click="emit('row-click', $event)">
       <slot />
       <template v-for="name in forwardedSlots()" :key="name" #[name]="scope"><slot :name="name" v-bind="scope || {}" /></template>
       <template #empty><slot name="empty"><p class="p-6 text-center text-fg-muted">{{ ui('empty') }}</p></slot></template>
@@ -54,4 +73,14 @@ defineExpose({ exportCSV: exportCsv })
 .bs-data-table [data-pc-section='sorticon'] { display: inline-block; width: 1rem; margin-inline-start: .5rem; }
 .bs-data-table tr[aria-selected='true'] { background: var(--bs-surface-muted); }
 .bs-data-table td[data-p-frozen-column='true'], .bs-data-table th[data-p-frozen-column='true'] { background: var(--bs-surface); }
+.bs-data-table--compact .ls-table th, .bs-data-table--compact .ls-table td { padding-block: var(--bs-space-1); }
+.bs-data-table--comfortable .ls-table th, .bs-data-table--comfortable .ls-table td { padding-block: var(--bs-space-2); }
+.bs-data-table--sticky-header .ls-table thead > tr > th { position: sticky; top: 0; z-index: 3; background: var(--bs-surface); }
+.bs-data-table--sticky-footer .ls-table tfoot > tr > td { position: sticky; bottom: 0; z-index: 3; background: var(--bs-surface); border-top: 1px solid var(--bs-border); }
+.bs-data-table .ls-sticky-start { position: sticky; inset-inline-start: 0; z-index: 2; min-width: 13rem; background: var(--bs-surface); box-shadow: 1px 0 0 var(--bs-border); }
+.bs-data-table .ls-sticky-end { position: sticky; inset-inline-end: 0; z-index: 2; min-width: 9rem; background: var(--bs-surface); box-shadow: -1px 0 0 var(--bs-border); }
+.bs-data-table .ls-sticky-end-offset { position: sticky; inset-inline-end: 9rem; z-index: 2; min-width: 9rem; background: var(--bs-surface); }
+.bs-data-table--sticky-header .ls-table thead > tr > .ls-sticky-start,
+.bs-data-table--sticky-header .ls-table thead > tr > .ls-sticky-end,
+.bs-data-table--sticky-header .ls-table thead > tr > .ls-sticky-end-offset { z-index: 4; }
 </style>
