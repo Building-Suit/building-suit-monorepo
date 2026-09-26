@@ -229,7 +229,7 @@ watch(() => form.subtype, () => {
 })
 
 const natureLocked = computed(() => Boolean(editing.value && (
-  editing.value.account_role === 'group' || editing.value.classification_locked || editing.value.is_system
+  editing.value.account_role === 'group' || editing.value.control_subledger_type === 'inventory' || editing.value.classification_locked || editing.value.is_system
   || scopedBalances.value.some(account => account.contra_account_id === editing.value?.account_id)
 )))
 const contraOptions = computed(() => scopedBalances.value.filter(account =>
@@ -250,6 +250,7 @@ watch([() => form.type, () => form.currency], () => {
   if (!editing.value && !parentOptions.value.some(account => account.account_id === form.parentAccountId)) form.parentAccountId = ''
 })
 watch(() => form.accountRole, (role) => {
+  if (editing.value) return
   if (role !== 'posting') form.contraAccountId = ''
   if (role === 'control') {
     form.type = form.controlSubledgerType === 'customer' ? 'asset' : 'liability'
@@ -258,7 +259,7 @@ watch(() => form.accountRole, (role) => {
   }
 })
 watch(() => form.controlSubledgerType, (subledger) => {
-  if (form.accountRole !== 'control') return
+  if (editing.value || form.accountRole !== 'control') return
   form.type = subledger === 'customer' ? 'asset' : 'liability'
   form.subtype = subledger === 'customer' ? 'accounts_receivable' : 'accounts_payable'
   form.normalBalance = subledger === 'customer' ? 'debit' : 'credit'

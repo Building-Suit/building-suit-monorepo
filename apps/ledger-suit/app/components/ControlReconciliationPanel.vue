@@ -13,7 +13,7 @@ interface ReconciliationRow {
   control_account_id: string
   account_code: string | null
   account_name: string
-  subledger_type: 'customer' | 'supplier'
+  subledger_type: 'customer' | 'supplier' | 'inventory'
   as_of_date: string
   gl_balance_minor: number
   subledger_balance_minor: number | null
@@ -70,7 +70,7 @@ const postingAccounts = computed(() => props.accounts.filter(account =>
 
 function openAdjustment(accountId: string) {
   const account = props.accounts.find(item => item.account_id === accountId) ?? null
-  if (!account) return
+  if (!account || account.control_subledger_type === 'inventory') return
   selected.value = account
   Object.assign(form, {
     date: asOfDate.value,
@@ -144,7 +144,7 @@ async function submitAdjustment() {
       <Column :header="t('controls.subledgerBalance')" body-class="ls-num"><template #body="{ data }"><MoneyText v-if="data.subledger_balance_minor !== null" :amount-minor="data.subledger_balance_minor" /><span v-else>{{ t('controls.subledgerUnavailable') }}</span></template></Column>
       <Column :header="t('controls.variance')" body-class="ls-num"><template #body="{ data }"><MoneyText v-if="data.variance_minor !== null" :amount-minor="data.variance_minor" /><span v-else>{{ t('common.dash') }}</span></template></Column>
       <Column :header="t('controls.status')"><template #body="{ data }"><span class="ls-badge bg-surface-muted">{{ t(`controls.statuses.${data.status}`) }}</span><p v-if="data.explanation_reason" class="mt-1 text-xs text-fg-muted">{{ data.explanation_reason }} · {{ data.explanation_reference }}</p></template></Column>
-      <Column v-if="can('controls.adjust')" :header="t('accounts.actions')"><template #body="{ data }"><button type="button" class="ls-btn ls-btn-sm" @click="openAdjustment(data.control_account_id)">{{ t('controls.adjust') }}</button></template></Column>
+      <Column v-if="can('controls.adjust')" :header="t('accounts.actions')"><template #body="{ data }"><NuxtLink v-if="data.subledger_type === 'inventory' && can('inventory.read')" to="/inventory-accounting" class="text-link underline">{{ t('inventory.sourceLink') }}</NuxtLink><button v-else-if="data.subledger_type !== 'inventory'" type="button" class="ls-btn ls-btn-sm" @click="openAdjustment(data.control_account_id)">{{ t('controls.adjust') }}</button></template></Column>
     </BsDataTable>
   </section>
 

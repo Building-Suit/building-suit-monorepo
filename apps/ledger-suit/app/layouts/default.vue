@@ -17,6 +17,7 @@ const NAV_GROUPS = computed(() => [
       ...(can('bank.read') ? [{ to: '/bank-reconciliation', label: 'nav.bankReconciliation' }] : []),
       ...(can('assets.read') ? [{ to: '/fixed-assets', label: 'nav.fixedAssets' }] : []),
       ...(can('dimensions.read') ? [{ to: '/accounting-dimensions', label: 'nav.accountingDimensions' }] : []),
+      ...(can('inventory.read') ? [{ to: '/inventory-accounting', label: 'nav.inventoryAccounting' }] : []),
       ...(can('tax.read') ? [{ to: '/tax-vat', label: 'nav.taxVat' }] : []),
       ...(can('ar.read') ? [{ to: '/receivables', label: 'ar.title' }] : []),
       ...(can('ap.read') ? [{ to: '/payables', label: 'ap.title' }] : []),

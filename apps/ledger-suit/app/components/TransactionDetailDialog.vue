@@ -155,12 +155,13 @@ const periodRestriction = computed(() => periodStatus.value === 'hard_closed'
     : periodLocked.value ? t('journalCenter.periodLocked') : '')
 
 const canReverse = computed(
-  () => can('transactions.reverse') && transaction.value?.status === 'posted' && !periodLocked.value && !periodStatus.value?.includes('closed'),
+  () => transaction.value?.source_record_kind !== 'inventory' && can('transactions.reverse') && transaction.value?.status === 'posted' && !periodLocked.value && !periodStatus.value?.includes('closed'),
 )
 const sourceLink = computed(() => {
   const transaction = detail.value?.transaction
   if (detail.value?.openingBatch?.id) return { path: '/opening-balances', query: { batch: detail.value.openingBatch.id } }
   if (!transaction?.source_record_kind || !transaction.source_record_parent_id) return null
+  if (transaction.source_record_kind === 'inventory') return { path: '/inventory-accounting', query: { fact: transaction.source_record_id, date: transaction.transaction_date } }
   if (transaction.source_record_kind === 'commitment') return { path: '/records/commitments', query: { item: transaction.source_record_parent_id } }
   if (transaction.source_record_kind === 'recurring') return { path: '/records/recurring', query: { item: transaction.source_record_parent_id } }
   if (transaction.source_record_kind === 'import') return { path: '/imports', query: { batch: transaction.source_record_parent_id } }

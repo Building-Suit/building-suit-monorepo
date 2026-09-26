@@ -8,7 +8,7 @@ export interface ChartAccount {
   subtype: string
   currency: string
   account_role: 'posting' | 'control' | 'group'
-  control_subledger_type: 'customer' | 'supplier' | null
+  control_subledger_type: 'customer' | 'supplier' | 'inventory' | null
   control_binding_locked: boolean
   normal_balance: 'debit' | 'credit'
   contra_account_id: string | null
