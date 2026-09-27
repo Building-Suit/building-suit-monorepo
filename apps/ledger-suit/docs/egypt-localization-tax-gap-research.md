@@ -2,6 +2,8 @@
 
 Status: **RESEARCH COMPLETE / IMPLEMENTATION NOT AUTHORIZED**, 2026-09-27.
 
+Subsequent decision: LS-D-ETA-SCOPE separately authorized only the bounded ETA domestic B2B eInvoice adapter implemented by LS-EG-002. See the [adapter contract and verification record](eta-b2b-einvoice-adapter.md). This historical gap record does not itself authorize that work, and every other gap below remains unchanged.
+
 This record compares the bounded V2-IMP-013 VAT implementation with the stated target profile: Egyptian small and medium service or trading businesses. It is a product-scope record, not tax advice, an accountant approval, a filing specification, or evidence that any organization is compliant. No tax rule, rate, return, withholding behavior, government submission, or external integration is authorized by LS-EG-001.
 
 ## Preserved implemented boundary

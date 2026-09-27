@@ -8,7 +8,7 @@ V2-D11 and the task brief authorize only organizations that explicitly confirm a
 
 It does not decide whether an organization must register. It excludes table tax, special/sector rates, exemptions, zero-rated exports, reverse charge/imported services, foreign currency, partial credits, mixed supplies, input apportionment, refunds, return preparation/filing, e-invoice submission and e-receipt submission. Product wording therefore describes bounded accounting, never statutory compliance.
 
-LS-EG-001 preserves this boundary and records additional customer-specific regimes, withholding, statutory formats, and approval gates in the dated [Egypt localization gap and decision record](egypt-localization-tax-gap-research.md). That research authorizes no additional behavior.
+LS-EG-001 preserves this boundary and records additional customer-specific regimes, withholding, statutory formats, and approval gates in the dated [Egypt localization gap and decision record](egypt-localization-tax-gap-research.md). That research authorizes no additional behavior. LS-EG-002 later received its own LS-D-ETA-SCOPE approval and adds a [separate preproduction-only ETA B2B eInvoice adapter](eta-b2b-einvoice-adapter.md). The VAT module still never submits by itself; the adapter accepts only separately supplied complete fiscal lines that reconcile exactly to this module's immutable posted amounts.
 
 ## Regulatory evidence snapshot
 
