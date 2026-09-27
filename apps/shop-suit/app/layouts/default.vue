@@ -1,31 +1,51 @@
 <script setup lang="ts">
+import { businessAreaForPath, businessModeSupportsPath, businessModeSupportsProducts, businessModeSupportsServices } from '~/utils/businessMode'
+
 const route = useRoute()
 const supabase = useSupabaseClient()
 const nuxtApp = useNuxtApp()
 const user = useSupabaseUser()
-const { locale } = useI18n()
-const { shops, currentId, loading, loadError, loadShops, selectShop } = useShop()
+const { locale, t } = useI18n()
+const { shops, current, currentId, loading, loadError, loadShops, selectShop } = useShop()
 
 const accountOpen = ref(false)
 const showErrorDetails = import.meta.dev
 const isArabic = computed(() => locale.value === 'ar')
 
 const copy = computed(() => isArabic.value
-  ? { dashboard: 'لوحة التحكم', invoices: 'الفواتير', products: 'المنتجات', services: 'الخدمات', inventory: 'المخزون', purchases: 'المشتريات', expenses: 'المصروفات', team: 'الفريق', reports: 'التقارير', soon: 'قريبًا', shop: 'المتجر', account: 'الحساب', logout: 'تسجيل الخروج', openMenu: 'فتح القائمة', closeMenu: 'إغلاق القائمة', loadFailed: 'تعذّر تحميل بيانات المتجر. حاول مرة أخرى.', retry: 'إعادة المحاولة' }
-  : { dashboard: 'Dashboard', invoices: 'Invoices', products: 'Products', services: 'Services', inventory: 'Inventory', purchases: 'Purchases', expenses: 'Expenses', team: 'Team', reports: 'Reports', soon: 'Soon', shop: 'Shop', account: 'Account', logout: 'Sign out', openMenu: 'Open menu', closeMenu: 'Close menu', loadFailed: 'Unable to load shop data. Please try again.', retry: 'Retry' })
+  ? { dashboard: 'لوحة التحكم', invoices: 'الفواتير', products: 'المنتجات', services: 'الخدمات', inventory: 'المخزون', purchases: 'المشتريات', expenses: 'المصروفات', settings: 'إعدادات النشاط', team: 'الفريق', reports: 'التقارير', soon: 'قريبًا', shop: 'المتجر', account: 'الحساب', logout: 'تسجيل الخروج', openMenu: 'فتح القائمة', closeMenu: 'إغلاق القائمة', loadFailed: 'تعذّر تحميل بيانات المتجر. حاول مرة أخرى.', retry: 'إعادة المحاولة' }
+  : { dashboard: 'Dashboard', invoices: 'Invoices', products: 'Products', services: 'Services', inventory: 'Inventory', purchases: 'Purchases', expenses: 'Expenses', settings: 'Business settings', team: 'Team', reports: 'Reports', soon: 'Soon', shop: 'Shop', account: 'Account', logout: 'Sign out', openMenu: 'Open menu', closeMenu: 'Close menu', loadFailed: 'Unable to load shop data. Please try again.', retry: 'Retry' })
 
-const links = computed(() => [
-  { to: '/products', label: copy.value.products, icon: 'ledger' },
-  { to: '/inventory', label: copy.value.inventory, icon: 'wallet' },
-  { to: '/purchases', label: copy.value.purchases, icon: 'cash' },
-  { to: '/services', label: copy.value.services, icon: 'invoice' },
-  { to: '/expenses', label: copy.value.expenses, icon: 'cash' },
-])
+const links = computed(() => {
+  const mode = current.value?.business_mode ?? 'mixed'
+  return [
+    { to: '/sales', label: t('sales.title'), icon: 'invoice' },
+    ...(businessModeSupportsProducts(mode) ? [
+      { to: '/products', label: copy.value.products, icon: 'ledger' },
+      { to: '/inventory', label: copy.value.inventory, icon: 'wallet' },
+      { to: '/purchases', label: copy.value.purchases, icon: 'cash' },
+    ] : []),
+    ...(businessModeSupportsServices(mode) ? [
+      { to: '/services', label: copy.value.services, icon: 'invoice' },
+    ] : []),
+    { to: '/customers', label: t('customers.title'), icon: 'user' },
+    { to: '/expenses', label: copy.value.expenses, icon: 'cash' },
+    { to: '/settings', label: copy.value.settings, icon: 'settings' },
+  ]
+})
 await loadShops()
 
 watch(() => route.fullPath, () => {
   accountOpen.value = false
 })
+
+watch(
+  [() => current.value?.business_mode, () => route.path],
+  ([mode, path]) => {
+    if (!mode || businessModeSupportsPath(mode, path)) return
+    void navigateTo({ path: '/dashboard', query: { modeDisabled: businessAreaForPath(path) ?? undefined } })
+  },
+)
 
 async function logout() {
   await supabase.auth.signOut()
