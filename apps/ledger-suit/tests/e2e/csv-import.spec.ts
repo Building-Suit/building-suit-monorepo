@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import type { Page } from '@playwright/test'
+import { createHash } from 'node:crypto'
 
 const batchId = '91000000-0000-4000-8000-000000000001'
 type Scenario = 'mixed' | 'all-invalid' | 'all-duplicate'
@@ -133,6 +134,65 @@ test('spreadsheet paste uses the existing staged validator and supports keyboard
   await page.getByLabel('Review rows').selectOption('issues')
   await expect(page.getByRole('dialog').getByRole('row').filter({ hasText: 'bad-date' })).toBeVisible()
   await expect(page.getByRole('dialog').getByRole('row').filter({ hasText: '2026-09-01' })).toHaveCount(0)
+})
+
+test('document proposals require human correction and reuse private attachments plus normal import validation', async ({ page }) => {
+  const state = await mockImportApi(page, 'mixed')
+  await mockTransactionUsage(page)
+  const attachmentState = { reserved: null as Record<string, unknown> | null, uploads: 0, commits: 0 }
+  const reservationId = '92000000-0000-4000-8000-000000000001'
+  await page.route('**/rest/v1/rpc/reserve_attachment_upload', async (route) => {
+    attachmentState.reserved = route.request().postDataJSON()
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(reservationId) })
+  })
+  await page.route('**/storage/v1/object/attachments/**', async (route) => {
+    attachmentState.uploads++
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ Key: route.request().url() }) })
+  })
+  await page.route('**/rest/v1/rpc/commit_attachment_upload', async (route) => {
+    attachmentState.commits++
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify('93000000-0000-4000-8000-000000000001') })
+  })
+  await openImport(page)
+
+  const document = Buffer.from('%PDF-1.7\nprivate invoice fixture')
+  const digest = createHash('sha256').update(document).digest('hex')
+  const proposal = {
+    contract: 'ledger.document-extraction.v1',
+    source: { file_name: 'invoice.pdf', sha256: digest },
+    candidates: [{
+      fields: {
+        type: { value: 'expense', confidence: 0.99, evidence: 'page 1 heading' },
+        date: { value: '2026-09-27', confidence: 0.9, evidence: 'page 1 date' },
+        amount: { value: '9007199254740993.25', confidence: 0.42, evidence: 'page 1 total' },
+        account: { value: '', confidence: null, evidence: '' },
+        category: { value: 'Supplies', confidence: 0.7, evidence: 'page 1 description' },
+      },
+      errors: [{ code: 'ACCOUNT_NOT_EXTRACTED', message: 'Select an existing payment account.' }],
+    }],
+  }
+  await page.getByLabel('Source document').setInputFiles({ name: 'invoice.pdf', mimeType: 'application/pdf', buffer: document })
+  await page.getByLabel('Extraction proposal JSON').setInputFiles({ name: 'proposal.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(proposal)) })
+  await expect(page.getByText('Low confidence · 42%')).toBeVisible()
+  await expect(page.getByText('ACCOUNT_NOT_EXTRACTED', { exact: false })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Accept proposals for import review' })).toBeDisabled()
+
+  const candidate = page.getByRole('article', { name: 'Proposed transaction 1' })
+  await candidate.getByLabel('Payment/source account *').fill('Cash')
+  await candidate.getByLabel('Amount *').fill('9007199254740993.20')
+  await page.getByLabel(/I compared every required field/).check()
+  await page.getByRole('button', { name: 'Accept proposals for import review' }).click()
+  await expect(page.getByRole('heading', { name: 'Match CSV columns' })).toBeVisible()
+  await page.getByRole('button', { name: 'Stage and validate' }).click()
+  await expect(page.getByRole('heading', { name: 'Validation complete' })).toBeVisible()
+
+  expect(state.createdRows[0].amount).toBe('9007199254740993.20')
+  expect(state.createdRows[0].__ledger_extraction_original_amount).toBe('9007199254740993.25')
+  expect(state.createdRows[0].__ledger_extraction_document_sha256).toBe(digest)
+  expect(JSON.parse(state.createdRows[0].__ledger_extraction_corrected_fields)).toEqual(['amount', 'account'])
+  expect(attachmentState.reserved).toMatchObject({ p_entity_type: 'import', p_entity_id: batchId, p_file_name: 'invoice.pdf' })
+  expect(attachmentState.uploads).toBe(1)
+  expect(attachmentState.commits).toBe(1)
 })
 
 test('import confirmation shows usage and localizes a transaction quota failure', async ({ page }) => {

@@ -2,6 +2,7 @@
 import type { Database, Json } from '~~/types/database.types'
 import type { ParsedCsv } from '~/utils/csv'
 import { parseCsv, parseSpreadsheetPaste, downloadCsv } from '~/utils/csv'
+import { documentExtractionImportFilename } from '~/utils/documentExtraction'
 
 const visible = defineModel<boolean>('visible', { default: false })
 const nuxtApp = useNuxtApp()
@@ -71,6 +72,9 @@ const mapping = reactive<Record<string, string>>(Object.fromEntries(ALL_FIELDS.m
 const batch = ref<Batch | null>(null)
 const resultRows = ref<ImportRow[]>([])
 const errorMessage = ref('')
+const extractionFile = ref<File | null>(null)
+const stagedBatchId = ref<string | null>(null)
+const extractionAttachmentCommitted = ref(false)
 const reviewFilter = ref<ReviewFilter>('all')
 const reviewPage = ref(1)
 const REVIEW_PAGE_SIZE = 100
@@ -150,6 +154,9 @@ function reset() {
   batch.value = null
   resultRows.value = []
   errorMessage.value = ''
+  extractionFile.value = null
+  stagedBatchId.value = null
+  extractionAttachmentCommitted.value = false
   reviewFilter.value = 'all'
   reviewPage.value = 1
   for (const field of ALL_FIELDS) mapping[field] = ''
@@ -207,6 +214,12 @@ function usePastedRows() {
   catch (error) { errorMessage.value = readableError(error) }
 }
 
+function useExtractedRows(payload: { parsed: ParsedCsv, file: File }) {
+  errorMessage.value = ''
+  extractionFile.value = payload.file
+  useParsedRows(payload.parsed, documentExtractionImportFilename(payload.file.name))
+}
+
 function onPasteKeydown(event: KeyboardEvent) {
   if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') usePastedRows()
 }
@@ -234,8 +247,48 @@ async function loadBatch(batchId: string, version: number, requestScope: string)
   return true
 }
 
+async function uploadImportAttachment(batchId: string, organizationId: string) {
+  const file = extractionFile.value
+  if (!file || extractionAttachmentCommitted.value) return
+  const extension = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'bin'
+  const key = `${organizationId}/import/${batchId}/${crypto.randomUUID()}.${extension}`
+  const { data: reservationId, error: reserveError } = await supabase.rpc('reserve_attachment_upload', {
+    p_organization_id: organizationId,
+    p_entity_type: 'import',
+    p_entity_id: batchId,
+    p_file_name: file.name,
+    p_mime_type: file.type,
+    p_size_bytes: file.size,
+    p_storage_key: key,
+  })
+  if (reserveError || !reservationId) throw reserveError ?? new Error('ATTACHMENT_RESERVATION_NOT_FOUND')
+
+  const { error: uploadError } = await supabase.storage.from('attachments').upload(key, file, {
+    contentType: file.type,
+    upsert: false,
+  })
+  if (uploadError) {
+    await supabase.rpc('abort_attachment_upload', { p_reservation_id: reservationId })
+    throw uploadError
+  }
+
+  let { error: commitError } = await supabase.rpc('commit_attachment_upload', { p_reservation_id: reservationId })
+  if (commitError) {
+    const retry = await supabase.rpc('commit_attachment_upload', { p_reservation_id: reservationId })
+    commitError = retry.error
+  }
+  if (commitError) {
+    await supabase.storage.from('attachments').remove([key])
+    await supabase.rpc('abort_attachment_upload', { p_reservation_id: reservationId })
+    throw commitError
+  }
+  extractionAttachmentCommitted.value = true
+  await refreshPlanUsage()
+}
+
 async function validateImport() {
   if (!currentId.value || !can('imports.create') || !writesAllowed.value || !importsEnabled.value || !requiredMappingComplete.value || busy.value) return
+  if (extractionFile.value && !can('attachments.create')) return
   const version = generation
   const requestScope = scope.value
   const organizationId = currentId.value
@@ -243,11 +296,19 @@ async function validateImport() {
   busy.value = 'validating'
   errorMessage.value = ''
   try {
-    const { data: batchId, error: createError } = await supabase.rpc('create_csv_import_batch', {
-      p_organization_id: organizationId, p_filename: filename.value, p_rows: prepared.rows as Json,
-    })
+    let batchId = stagedBatchId.value
+    if (!batchId) {
+      const { data, error: createError } = await supabase.rpc('create_csv_import_batch', {
+        p_organization_id: organizationId, p_filename: filename.value, p_rows: prepared.rows as Json,
+      })
+      if (!isCurrent(version, requestScope)) return
+      if (createError) throw createError
+      batchId = data
+      stagedBatchId.value = data
+    }
+    if (!batchId) throw new Error('IMPORT_BATCH_NOT_FOUND')
+    await uploadImportAttachment(batchId, organizationId)
     if (!isCurrent(version, requestScope)) return
-    if (createError) throw createError
     const { error: validationError } = await supabase.rpc('validate_csv_import_batch', {
       p_batch_id: batchId, p_mapping: prepared.mapping,
     })
@@ -284,7 +345,7 @@ async function confirmImport() {
   finally { if (isCurrent(version, requestScope)) busy.value = '' }
 }
 
-const { dirty, markSaved } = useRecordAction(() => ({ filename: filename.value, pasteText: pasteText.value, mapping: { ...mapping } }), visible)
+const { dirty, markSaved } = useRecordAction(() => ({ filename: filename.value, pasteText: pasteText.value, extractionFile: extractionFile.value?.name ?? '', mapping: { ...mapping } }), visible)
 onMounted(markSaved)
 </script>
 
@@ -352,6 +413,14 @@ onMounted(markSaved)
           <button type="button" class="ls-btn ls-btn-accent" :disabled="!pasteText.trim()" @click="usePastedRows">{{ t('imports.reviewPaste') }}</button>
         </div>
       </section>
+
+      <DocumentExtractionReview
+        v-if="phase === 'upload' && can('attachments.create')"
+        @accepted="useExtractedRows"
+      />
+      <p v-else-if="phase === 'upload'" class="rounded-control bg-surface-muted p-4 text-sm text-fg-muted">
+        {{ t('imports.extraction.attachmentPermissionRequired') }}
+      </p>
 
       <template v-else>
         <section v-if="phase === 'mapping'" class="ls-card p-6">
