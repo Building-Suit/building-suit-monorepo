@@ -113,6 +113,11 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+::selection {
+  background: color-mix(in oklab, var(--bs-accent) 32%, transparent);
+  color: var(--bs-text);
+}
+
 /* Keep scrollable panels visually quiet while still making the scroll position
    easy to find. Firefox uses the standard properties; WebKit covers Chromium
    and Safari. */
@@ -203,14 +208,14 @@ body {
     border: 1px solid var(--bs-border);
     background: var(--bs-surface);
     box-shadow: var(--bs-elevation-1);
-    transition: transform var(--bs-motion-standard), box-shadow var(--bs-motion-standard), border-color var(--bs-motion-quick);
+    transition: box-shadow var(--bs-motion-default), border-color var(--bs-motion-quick);
   }
 
   /* Flat variant for cards that sit inside another card. */
   .ls-card-flat {
     border-radius: var(--bs-radius-button);
     border: 1px solid var(--bs-border);
-    background: var(--bs-surface-raised);
+    background: var(--bs-surface-muted);
     box-shadow: none;
   }
 
@@ -222,7 +227,7 @@ body {
     white-space: nowrap;
     min-height: var(--bs-button-height);
     padding: var(--bs-space-3) var(--bs-space-5);
-    border: 1.5px solid var(--bs-border);
+    border: 1px solid var(--bs-border);
     border-radius: var(--bs-radius-button);
     background: var(--bs-surface);
     color: var(--bs-text);
@@ -235,15 +240,16 @@ body {
       color var(--bs-motion-quick),
       border-color var(--bs-motion-quick),
       opacity var(--bs-motion-quick),
+      box-shadow var(--bs-motion-quick),
       transform var(--bs-motion-quick);
   }
 
   .ls-btn:hover:not(:disabled) {
     background: var(--bs-surface-muted);
-    transform: translateY(-1px);
+    border-color: var(--bs-border-strong);
   }
 
-  .ls-btn:active:not(:disabled) { transform: translateY(0) scale(0.98); }
+  .ls-btn:active:not(:disabled) { transform: scale(0.985); }
 
   .ls-btn:disabled {
     cursor: not-allowed;
@@ -255,7 +261,7 @@ body {
     border-color: transparent;
     background: var(--bs-primary);
     color: var(--bs-text-on-primary);
-    box-shadow: var(--bs-elevation-1);
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, white 10%, transparent), var(--bs-elevation-1);
   }
 
   .ls-btn-primary:hover:not(:disabled) {
@@ -278,7 +284,7 @@ body {
     border-color: transparent;
     background: var(--bs-accent);
     color: var(--bs-text-on-accent);
-    box-shadow: var(--bs-elevation-1);
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, white 16%, transparent), var(--bs-elevation-1);
   }
 
   .ls-btn-accent:hover:not(:disabled) {
@@ -317,13 +323,14 @@ body {
     width: 100%;
     min-height: var(--bs-input-height);
     padding: 0 var(--bs-space-4);
-    border: 1.5px solid var(--bs-border);
+    border: 1px solid var(--bs-border);
     border-radius: var(--bs-radius-input);
     background: var(--bs-surface);
     color: var(--bs-text);
     font-size: var(--bs-type-body-m-size);
     line-height: var(--bs-type-body-m-lh);
-    transition: border-color var(--bs-motion-quick);
+    box-shadow: inset 0 1px 0 color-mix(in oklab, var(--bs-text) 2%, transparent);
+    transition: border-color var(--bs-motion-quick), box-shadow var(--bs-motion-quick), background var(--bs-motion-quick);
   }
 
   /* Shared floating-label shell. Controls retain their native semantics; the
@@ -361,6 +368,7 @@ body {
 
   .ls-input:hover:not(:disabled) {
     border-color: var(--bs-border-strong);
+    background: color-mix(in oklab, var(--bs-surface) 94%, var(--bs-surface-muted));
   }
 
   /* Focused fields use the canonical Premium Gold ring. */
@@ -425,7 +433,8 @@ body {
   /* text-align: start, not left — the table mirrors in Arabic. */
   .ls-table th {
     border-bottom: 1px solid var(--bs-border);
-    padding: var(--bs-space-2) var(--bs-space-3);
+    background: color-mix(in oklab, var(--bs-surface-muted) 78%, var(--bs-surface));
+    padding: 0.7rem var(--bs-space-3);
     text-align: start;
     color: var(--bs-text-muted);
     font-size: var(--bs-type-overline-size);
@@ -437,11 +446,15 @@ body {
 
   .ls-table td {
     border-bottom: 1px solid color-mix(in oklab, var(--bs-border) 55%, transparent);
-    padding: var(--bs-space-2) var(--bs-space-3);
+    padding: 0.72rem var(--bs-space-3);
     vertical-align: middle;
   }
 
   .ls-table tbody tr { transition: background var(--bs-motion-quick); }
+
+  .ls-table tbody tr:hover {
+    background: color-mix(in oklab, var(--bs-surface-muted) 68%, transparent);
+  }
 
   /* Figures align to the end of the column and use tabular figures so digits
      line up down the column in both directions. */
@@ -455,7 +468,8 @@ body {
     align-items: center;
     gap: var(--bs-space-3);
     min-height: var(--bs-tap-target-min);
-    border-radius: var(--bs-radius-button);
+    border-radius: 8px;
+    border-inline-start: 2px solid transparent;
     padding: var(--bs-space-2) var(--bs-space-3);
     color: var(--bs-text-muted);
     font-size: var(--bs-type-body-m-size);
@@ -467,21 +481,17 @@ body {
   }
 
   .ls-nav-link:hover {
-    background: var(--bs-surface-muted);
+    background: color-mix(in oklab, var(--bs-surface-muted) 72%, transparent);
     color: var(--bs-text);
   }
 
   /* Active navigation uses the canonical lit-gold rail. */
   .ls-nav-link-active,
   .ls-nav-link-active:hover {
-    background: color-mix(in oklab, var(--bs-accent) 16%, transparent);
+    border-inline-start-color: var(--bs-accent);
+    background: color-mix(in oklab, var(--bs-accent) 10%, var(--bs-surface));
     color: var(--bs-text);
-    box-shadow: inset 3px 0 0 0 var(--bs-accent);
-  }
-
-  [dir='rtl'] .ls-nav-link-active,
-  [dir='rtl'] .ls-nav-link-active:hover {
-    box-shadow: inset -3px 0 0 0 var(--bs-accent);
+    box-shadow: none;
   }
 
   .ls-tab {
@@ -507,23 +517,23 @@ body {
   /* Modal and drawer backdrops use the themed scrim, not an ad-hoc black. */
   .ls-scrim {
     background: var(--bs-scrim);
-    animation: ls-scrim-in var(--bs-motion-standard) both;
+    animation: ls-scrim-in var(--bs-motion-default) both;
   }
 }
 
-.ls-modal-panel { animation: ls-modal-in var(--bs-motion-standard) both; transform-origin: center; }
+.ls-modal-panel { animation: ls-modal-in var(--bs-motion-default) both; transform-origin: center; }
 
 .ls-modal-enter-active,
-.ls-modal-leave-active { transition: opacity var(--bs-motion-standard); }
+.ls-modal-leave-active { transition: opacity var(--bs-motion-default); }
 .ls-modal-enter-active .ls-modal-panel,
-.ls-modal-leave-active .ls-modal-panel { transition: transform var(--bs-motion-standard), opacity var(--bs-motion-quick); }
+.ls-modal-leave-active .ls-modal-panel { transition: transform var(--bs-motion-default), opacity var(--bs-motion-quick); }
 .ls-modal-enter-from,
 .ls-modal-leave-to { opacity: 0; }
 .ls-modal-enter-from .ls-modal-panel,
 .ls-modal-leave-to .ls-modal-panel { opacity: 0; transform: translateY(16px) scale(0.97); }
 
 .ls-page-enter-active,
-.ls-page-leave-active { transition: opacity var(--bs-motion-standard), transform var(--bs-motion-standard); }
+.ls-page-leave-active { transition: opacity var(--bs-motion-default), transform var(--bs-motion-default); }
 .ls-page-enter-from { opacity: 0; transform: translateY(8px); }
 .ls-page-leave-to { opacity: 0; transform: translateY(-4px); }
 
@@ -548,13 +558,78 @@ body {
 
 .ls-landing-hero {
   color: var(--bs-pearl-white);
-  background: var(--bs-gradient-navy);
+  background:
+    linear-gradient(128deg, color-mix(in oklab, var(--bs-building-navy) 92%, black), var(--bs-deep-structure-navy) 62%);
 }
 
 .ls-landing-hero .ls-hero-grid {
   background-image:
     linear-gradient(to right, color-mix(in oklab, var(--bs-premium-gold) 14%, transparent) 1px, transparent 1px),
     linear-gradient(to bottom, color-mix(in oklab, var(--bs-premium-gold) 14%, transparent) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: linear-gradient(to bottom, black, transparent 90%);
+}
+
+:dir(rtl) .ls-landing-hero-title {
+  max-width: 14ch;
+  font-size: clamp(2.75rem, 5vw, 5.25rem);
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}
+
+.ls-landing-orbit {
+  position: absolute;
+  inset-block-start: 8%;
+  inset-inline-end: -12rem;
+  width: min(52rem, 72vw);
+  aspect-ratio: 1;
+  border: 1px solid color-mix(in oklab, var(--bs-premium-gold) 18%, transparent);
+  border-radius: 50%;
+  box-shadow: 0 0 0 7rem color-mix(in oklab, var(--bs-premium-gold) 3%, transparent);
+  opacity: 0.72;
+}
+
+.ls-landing-preview-stage {
+  perspective: 1200px;
+  transform-style: preserve-3d;
+}
+
+.ls-landing-preview-shell {
+  position: relative;
+  z-index: 1;
+  padding: 0.55rem;
+  border: 1px solid color-mix(in oklab, var(--bs-premium-gold) 36%, var(--bs-steel-border));
+  border-radius: calc(var(--bs-radius-modal) + 6px);
+  background: color-mix(in oklab, var(--bs-navy-surface-raised) 78%, transparent);
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.34);
+}
+
+.ls-landing-preview-rule {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-block-end: 0.85rem;
+  color: var(--bs-sky-steel);
+  font-size: 0.65rem;
+  font-weight: var(--bs-weight-bold);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.ls-landing-preview-rule::before {
+  content: '';
+  width: 3rem;
+  height: 1px;
+  background: var(--bs-premium-gold);
+}
+
+.ls-landing-preview-index {
+  margin-block-start: 0.8rem;
+  text-align: end;
+  color: var(--bs-sky-steel);
+  font-size: 0.625rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.18em;
 }
 
 .ls-hero-preview {
@@ -564,7 +639,15 @@ body {
   --bs-text-muted: var(--bs-gray-400);
   --bs-border: var(--bs-gray-800);
   --bs-border-strong: var(--bs-gray-500);
+  --color-surface: var(--bs-charcoal);
+  --color-surface-muted: var(--bs-graphite);
+  --color-fg: var(--bs-gray-50);
+  --color-fg-muted: var(--bs-gray-400);
+  --color-line: var(--bs-gray-800);
   color: var(--bs-text);
+  border-color: color-mix(in oklab, var(--bs-steel-border) 72%, transparent);
+  background: var(--bs-charcoal);
+  box-shadow: none;
 }
 
 .ls-hero-preview .bg-surface-muted {
@@ -577,6 +660,227 @@ body {
 
 .ls-hero-preview .border-\[var\(--bs-border\)\] {
   border-color: var(--bs-gray-800);
+}
+
+.ls-landing-section {
+  position: relative;
+  overflow: clip;
+}
+
+.ls-landing-kicker {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--bs-text-muted);
+  font-size: var(--bs-type-overline-size);
+  line-height: var(--bs-type-overline-lh);
+  font-weight: var(--bs-weight-bold);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.ls-landing-kicker::before {
+  content: '';
+  width: 1.75rem;
+  height: 2px;
+  background: var(--bs-accent);
+}
+
+.ls-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  border-block-start: 1px solid var(--bs-border);
+  border-inline-start: 1px solid var(--bs-border);
+}
+
+.ls-feature-item {
+  grid-column: span 4;
+  min-height: 19rem;
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  border-block-end: 1px solid var(--bs-border);
+  border-inline-end: 1px solid var(--bs-border);
+  background: var(--bs-surface);
+  transition: background var(--bs-motion-default);
+}
+
+.ls-feature-item:first-child,
+.ls-feature-item:nth-child(5) {
+  grid-column: span 8;
+}
+
+.ls-feature-item:hover {
+  background: color-mix(in oklab, var(--bs-surface) 82%, var(--bs-surface-muted));
+}
+
+.ls-feature-icon {
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  border: 1px solid var(--bs-border);
+  border-radius: var(--bs-radius-button);
+  color: var(--bs-primary);
+}
+
+.ls-feature-number {
+  color: var(--bs-text-disabled);
+  font-size: 0.7rem;
+  font-weight: var(--bs-weight-bold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.12em;
+}
+
+.ls-workflow-list {
+  display: grid;
+  gap: 0;
+  padding-inline-start: 4.25rem;
+}
+
+.ls-workflow-track {
+  position: absolute;
+  inset-block: 1.5rem;
+  inset-inline-start: 1.35rem;
+  width: 1px;
+  background: var(--bs-border);
+}
+
+.ls-workflow-track > span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--bs-accent);
+  transform-origin: top;
+}
+
+.ls-workflow-step {
+  position: relative;
+  min-height: 11rem;
+  padding-block: 1.5rem 2.5rem;
+  border-block-end: 1px solid var(--bs-border);
+}
+
+.ls-workflow-step:last-child { border-block-end: 0; }
+
+.ls-workflow-marker {
+  position: absolute;
+  inset-block-start: 1.2rem;
+  inset-inline-start: -4.25rem;
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  border: 1px solid var(--bs-border-strong);
+  border-radius: 50%;
+  background: var(--bs-surface-muted);
+  color: var(--bs-text);
+  font-size: 0.7rem;
+  font-weight: var(--bs-weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.bs-marketing-header {
+  border-block-end: 1px solid transparent;
+  background: color-mix(in oklab, var(--bs-bg) 74%, transparent);
+  transition: background var(--bs-motion-default), border-color var(--bs-motion-default), box-shadow var(--bs-motion-default);
+  backdrop-filter: blur(16px) saturate(1.2);
+}
+
+.bs-marketing-header.is-elevated,
+.bs-marketing-header.is-open {
+  border-block-end-color: var(--bs-border);
+  background: color-mix(in oklab, var(--bs-bg) 94%, transparent);
+  box-shadow: var(--bs-elevation-1);
+}
+
+.bs-marketing-nav-link {
+  position: relative;
+  border-radius: 8px;
+  padding: 0.65rem 0.8rem;
+  color: var(--bs-text-muted);
+  font-weight: var(--bs-weight-semibold);
+  transition: color var(--bs-motion-quick), background var(--bs-motion-quick);
+}
+
+.bs-marketing-nav-link:hover {
+  background: var(--bs-surface-muted);
+  color: var(--bs-text);
+}
+
+.bs-marketing-mobile {
+  border-block-start: 1px solid var(--bs-border);
+  background: color-mix(in oklab, var(--bs-bg) 97%, transparent);
+  box-shadow: var(--bs-elevation-2);
+}
+
+.bs-marketing-mobile-link {
+  display: flex;
+  min-height: 3.5rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-block-end: 1px solid var(--bs-border);
+  color: var(--bs-text-muted);
+  font-weight: var(--bs-weight-semibold);
+}
+
+.bs-marketing-mobile-link:hover { color: var(--bs-text); }
+
+.bs-marketing-menu-enter-active,
+.bs-marketing-menu-leave-active { transition: opacity var(--bs-motion-default), transform var(--bs-motion-default); }
+.bs-marketing-menu-enter-from,
+.bs-marketing-menu-leave-to { opacity: 0; transform: translateY(-0.5rem); }
+
+.bs-marketing-footer {
+  background: color-mix(in oklab, var(--bs-surface-muted) 64%, var(--bs-bg));
+}
+
+/* Shared operational surfaces: quiet containment, strong table hierarchy and
+   overlays carrying the meaningful elevation. */
+.bs-data-table {
+  overflow: hidden;
+  border-radius: inherit;
+  background: var(--bs-surface);
+}
+
+.bs-data-table .ls-table tbody tr:last-child td { border-block-end: 0; }
+.bs-data-table [data-pc-name='paginator'] { background: var(--bs-surface-muted); }
+.bs-data-table [data-pc-name='paginator'] button { box-shadow: none; }
+.bs-data-table [data-pc-name='paginator'] button[aria-current='page'] { border-color: transparent; }
+
+[data-pc-name='dialog'] {
+  border-color: var(--bs-border-strong);
+  box-shadow: var(--bs-elevation-3);
+}
+
+@media (max-width: 1023px) {
+  .ls-feature-item,
+  .ls-feature-item:first-child,
+  .ls-feature-item:nth-child(5) { grid-column: span 6; }
+}
+
+@media (max-width: 639px) {
+  .ls-landing-hero h1 { letter-spacing: -0.045em; }
+  .ls-landing-preview-shell { margin-inline: -0.35rem; padding: 0.35rem; }
+  .ls-feature-grid { display: block; border-block-start: 0; }
+  .ls-feature-item {
+    min-height: 0;
+    border-block-start: 1px solid var(--bs-border);
+    border-inline-start: 1px solid var(--bs-border);
+  }
+  .ls-workflow-list { padding-inline-start: 3.5rem; }
+  .ls-workflow-marker { inset-inline-start: -3.5rem; }
+  .ls-workflow-track { inset-inline-start: 1.35rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-landing-intro],
+  [data-landing-preview],
+  [data-landing-reveal] > *,
+  [data-landing-progress] {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
+  }
 }
 
 @keyframes ls-skeleton-pulse {

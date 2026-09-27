@@ -1,0 +1,423 @@
+{
+  "environment": "disposable PGlite 0.3.16; 20-month fixture with >=5,000 journals and >=10,000 posted lines; local evidence only",
+  "migration": "20260927200000_large_ledger_read_scalability.sql",
+  "fixture": {
+    "journals": 5278,
+    "posted_lines": 10567,
+    "months": 21
+  },
+  "before": {
+    "dashboard_summary": [
+      {
+        "Plan": {
+          "Node Type": "Result",
+          "Parallel Aware": false,
+          "Async Capable": false,
+          "Startup Cost": 0,
+          "Total Cost": 0.26,
+          "Plan Rows": 1,
+          "Plan Width": 32,
+          "Actual Startup Time": 15.122,
+          "Actual Total Time": 15.123,
+          "Actual Rows": 1,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 1570,
+          "Shared Read Blocks": 0,
+          "Shared Dirtied Blocks": 0,
+          "Shared Written Blocks": 0,
+          "Local Hit Blocks": 0,
+          "Local Read Blocks": 0,
+          "Local Dirtied Blocks": 0,
+          "Local Written Blocks": 0,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        "Settings": {
+          "search_path": "public, extensions",
+          "enable_seqscan": "off"
+        },
+        "Planning": {
+          "Shared Hit Blocks": 0,
+          "Shared Read Blocks": 0,
+          "Shared Dirtied Blocks": 0,
+          "Shared Written Blocks": 0,
+          "Local Hit Blocks": 0,
+          "Local Read Blocks": 0,
+          "Local Dirtied Blocks": 0,
+          "Local Written Blocks": 0,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        "Planning Time": 0.023,
+        "Triggers": [],
+        "Execution Time": 15.141
+      }
+    ],
+    "report_monthly_series": [
+      {
+        "Plan": {
+          "Node Type": "Function Scan",
+          "Parallel Aware": false,
+          "Async Capable": false,
+          "Function Name": "report_monthly_series",
+          "Alias": "report_monthly_series",
+          "Startup Cost": 0.25,
+          "Total Cost": 10.25,
+          "Plan Rows": 1000,
+          "Plan Width": 28,
+          "Actual Startup Time": 5.641,
+          "Actual Total Time": 5.646,
+          "Actual Rows": 6,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 82,
+          "Shared Read Blocks": 0,
+          "Shared Dirtied Blocks": 0,
+          "Shared Written Blocks": 0,
+          "Local Hit Blocks": 0,
+          "Local Read Blocks": 0,
+          "Local Dirtied Blocks": 0,
+          "Local Written Blocks": 0,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        "Settings": {
+          "search_path": "public, extensions",
+          "enable_seqscan": "off"
+        },
+        "Planning": {
+          "Shared Hit Blocks": 0,
+          "Shared Read Blocks": 0,
+          "Shared Dirtied Blocks": 0,
+          "Shared Written Blocks": 0,
+          "Local Hit Blocks": 0,
+          "Local Read Blocks": 0,
+          "Local Dirtied Blocks": 0,
+          "Local Written Blocks": 0,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        "Planning Time": 0.046,
+        "Triggers": [],
+        "Execution Time": 5.688
+      }
+    ],
+    "search_transactions": [
+      {
+        "Plan": {
+          "Node Type": "Function Scan",
+          "Parallel Aware": false,
+          "Async Capable": false,
+          "Function Name": "search_transactions",
+          "Alias": "search_transactions",
+          "Startup Cost": 0.25,
+          "Total Cost": 10.25,
+          "Plan Rows": 1000,
+          "Plan Width": 509,
+          "Actual Startup Time": 161.194,
+          "Actual Total Time": 161.198,
+          "Actual Rows": 8,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 4087,
+          "Shared Read Blocks": 0,
+          "Shared Dirtied Blocks": 0,
+          "Shared Written Blocks": 0,
+          "Local Hit Blocks": 0,
+          "Local Read Blocks": 0,
+          "Local Dirtied Blocks": 0,
+          "Local Written Blocks": 0,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        "Settings": {
+          "search_path": "public, extensions",
+          "enable_seqscan": "off"
+        },
+        "Planning": {
+          "Shared Hit Blocks": 0,
+          "Shared Read Blocks": 0,
+          "Shared Dirtied Blocks": 0,
+          "Shared Written Blocks": 0,
+          "Local Hit Blocks": 0,
+          "Local Read Blocks": 0,
+          "Local Dirtied Blocks": 0,
+          "Local Written Blocks": 0,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        "Planning Time": 0.068,
+        "Triggers": [],
+        "Execution Time": 161.244
+      }
+    ],
+    "dashboard_liquid_accounts": [
+      {
+        "Plan": {
+          "Node Type": "Function Scan",
+          "Parallel Aware": false,
+          "Async Capable": false,
+          "Function Name": "dashboard_liquid_accounts",
+          "Alias": "dashboard_liquid_accounts",
+          "Startup Cost": 0.25,
+          "Total Cost": 10.25,
+          "Plan Rows": 1000,
+          "Plan Width": 116,
+          "Actual Startup Time": 6.185,
+          "Actual Total Time": 6.187,
+          "Actual Rows": 1,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 504,
+          "Shared Read Blocks": 0,
+          "Shared Dirtied Blocks": 0,
+          "Shared Written Blocks": 0,
+          "Local Hit Blocks": 0,
+          "Local Read Blocks": 0,
+          "Local Dirtied Blocks": 0,
+          "Local Written Blocks": 0,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        "Settings": {
+          "search_path": "public, extensions",
+          "enable_seqscan": "off"
+        },
+        "Planning": {
+          "Shared Hit Blocks": 0,
+          "Shared Read Blocks": 0,
+          "Shared Dirtied Blocks": 0,
+          "Shared Written Blocks": 0,
+          "Local Hit Blocks": 0,
+          "Local Read Blocks": 0,
+          "Local Dirtied Blocks": 0,
+          "Local Written Blocks": 0,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        "Planning Time": 0.029,
+        "Triggers": [],
+        "Execution Time": 6.208
+      }
+    ]
+  },
+  "after": {
+    "dashboard_summary": [
+      {
+        "Plan": {
+          "Node Type": "Result",
+          "Parallel Aware": false,
+          "Async Capable": false,
+          "Startup Cost": 0,
+          "Total Cost": 0.26,
+          "Plan Rows": 1,
+          "Plan Width": 32,
+          "Actual Startup Time": 13.769,
+          "Actual Total Time": 13.771,
+          "Actual Rows": 1,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 995,
+          "Shared Read Blocks": 0,
+          "Shared Dirtied Blocks": 0,
+          "Shared Written Blocks": 0,
+          "Local Hit Blocks": 0,
+          "Local Read Blocks": 0,
+          "Local Dirtied Blocks": 0,
+          "Local Written Blocks": 0,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        "Settings": {
+          "search_path": "public, extensions",
+          "enable_seqscan": "off"
+        },
+        "Planning": {
+          "Shared Hit Blocks": 0,
+          "Shared Read Blocks": 0,
+          "Shared Dirtied Blocks": 0,
+          "Shared Written Blocks": 0,
+          "Local Hit Blocks": 0,
+          "Local Read Blocks": 0,
+          "Local Dirtied Blocks": 0,
+          "Local Written Blocks": 0,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        "Planning Time": 0.02,
+        "Triggers": [],
+        "Execution Time": 13.787
+      }
+    ],
+    "report_monthly_series": [
+      {
+        "Plan": {
+          "Node Type": "Function Scan",
+          "Parallel Aware": false,
+          "Async Capable": false,
+          "Function Name": "report_monthly_series",
+          "Alias": "report_monthly_series",
+          "Startup Cost": 0.25,
+          "Total Cost": 10.25,
+          "Plan Rows": 1000,
+          "Plan Width": 28,
+          "Actual Startup Time": 3.974,
+          "Actual Total Time": 3.977,
+          "Actual Rows": 6,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 79,
+          "Shared Read Blocks": 0,
+          "Shared Dirtied Blocks": 0,
+          "Shared Written Blocks": 0,
+          "Local Hit Blocks": 0,
+          "Local Read Blocks": 0,
+          "Local Dirtied Blocks": 0,
+          "Local Written Blocks": 0,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        "Settings": {
+          "search_path": "public, extensions",
+          "enable_seqscan": "off"
+        },
+        "Planning": {
+          "Shared Hit Blocks": 0,
+          "Shared Read Blocks": 0,
+          "Shared Dirtied Blocks": 0,
+          "Shared Written Blocks": 0,
+          "Local Hit Blocks": 0,
+          "Local Read Blocks": 0,
+          "Local Dirtied Blocks": 0,
+          "Local Written Blocks": 0,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        "Planning Time": 0.018,
+        "Triggers": [],
+        "Execution Time": 3.997
+      }
+    ],
+    "search_transactions": [
+      {
+        "Plan": {
+          "Node Type": "Function Scan",
+          "Parallel Aware": false,
+          "Async Capable": false,
+          "Function Name": "search_transactions",
+          "Alias": "search_transactions",
+          "Startup Cost": 0.25,
+          "Total Cost": 10.25,
+          "Plan Rows": 1000,
+          "Plan Width": 509,
+          "Actual Startup Time": 21.056,
+          "Actual Total Time": 21.066,
+          "Actual Rows": 8,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 705,
+          "Shared Read Blocks": 0,
+          "Shared Dirtied Blocks": 0,
+          "Shared Written Blocks": 0,
+          "Local Hit Blocks": 0,
+          "Local Read Blocks": 0,
+          "Local Dirtied Blocks": 0,
+          "Local Written Blocks": 0,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        "Settings": {
+          "search_path": "public, extensions",
+          "enable_seqscan": "off"
+        },
+        "Planning": {
+          "Shared Hit Blocks": 0,
+          "Shared Read Blocks": 0,
+          "Shared Dirtied Blocks": 0,
+          "Shared Written Blocks": 0,
+          "Local Hit Blocks": 0,
+          "Local Read Blocks": 0,
+          "Local Dirtied Blocks": 0,
+          "Local Written Blocks": 0,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        "Planning Time": 0.051,
+        "Triggers": [],
+        "Execution Time": 21.103
+      }
+    ],
+    "dashboard_liquid_accounts": [
+      {
+        "Plan": {
+          "Node Type": "Function Scan",
+          "Parallel Aware": false,
+          "Async Capable": false,
+          "Function Name": "dashboard_liquid_accounts",
+          "Alias": "dashboard_liquid_accounts",
+          "Startup Cost": 0.25,
+          "Total Cost": 10.25,
+          "Plan Rows": 1000,
+          "Plan Width": 116,
+          "Actual Startup Time": 6.358,
+          "Actual Total Time": 6.361,
+          "Actual Rows": 1,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 292,
+          "Shared Read Blocks": 0,
+          "Shared Dirtied Blocks": 0,
+          "Shared Written Blocks": 0,
+          "Local Hit Blocks": 0,
+          "Local Read Blocks": 0,
+          "Local Dirtied Blocks": 0,
+          "Local Written Blocks": 0,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        "Settings": {
+          "search_path": "public, extensions",
+          "enable_seqscan": "off"
+        },
+        "Planning": {
+          "Shared Hit Blocks": 0,
+          "Shared Read Blocks": 0,
+          "Shared Dirtied Blocks": 0,
+          "Shared Written Blocks": 0,
+          "Local Hit Blocks": 0,
+          "Local Read Blocks": 0,
+          "Local Dirtied Blocks": 0,
+          "Local Written Blocks": 0,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        "Planning Time": 0.034,
+        "Triggers": [],
+        "Execution Time": 6.391
+      }
+    ]
+  },
+  "warm_runs_ms": {
+    "dashboard_summary": [
+      20.808,
+      21.253,
+      21.955,
+      18.474,
+      16.443
+    ],
+    "report_monthly_series": [
+      4.896,
+      4.806,
+      4.266,
+      4.305,
+      4.342
+    ],
+    "search_transactions": [
+      18.337,
+      17.486,
+      18.008,
+      17.791,
+      17.799
+    ],
+    "dashboard_liquid_accounts": [
+      7.04,
+      6.213,
+      6.75,
+      6.677,
+      7.104
+    ]
+  }
+}

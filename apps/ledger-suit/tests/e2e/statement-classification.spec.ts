@@ -72,9 +72,10 @@ for (const locale of ['en', 'ar']) {
     expect(await retry.json()).toBe(revisionId)
     const tampered = await rpc('schedule_account_statement_classification', {
       ...saved.request().postDataJSON(), p_request_id: crypto.randomUUID(), p_effective_from: context.today,
+      p_expected_revision_id: revisionId,
     })
     expect(tampered.ok()).toBe(false)
-    expect((await tampered.json()).message).toContain('CLASSIFICATION_DATE_NOT_FUTURE')
+    expect((await tampered.json()).message).toContain('CLASSIFICATION_DATE_ORDER')
     await row.getByRole('button', { name: title, exact: true }).click()
     await expect(page.getByRole('dialog').getByRole('table')).toContainText(ar ? 'الممتلكات والمعدات' : 'Property and equipment')
     await page.getByRole('dialog').getByRole('button', { name: ar ? 'إغلاق' : 'Close', exact: true }).click()

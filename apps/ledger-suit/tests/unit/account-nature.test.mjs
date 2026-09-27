@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { defaultAccountNature, accountBalanceDisplay } from '../../app/utils/accountNature.ts'
-import { formatMoney } from '../../app/utils/money.ts'
+import { formatMoney, validatePositiveMoney } from '../../app/utils/money.ts'
 
 test('drawings default to debit within equity; type defaults remain suggestions', () => {
   assert.equal(defaultAccountNature('equity', 'owner_drawings'), 'debit')
@@ -20,4 +20,11 @@ test('money display preserves every cent and the sign of sub-unit amounts', () =
   assert.equal(formatMoney('1234', 'JPY', 'en-US'), '¥1,234')
   assert.match(formatMoney('-9223372036854775807', 'EGP', 'ar'), /92,233,720,368,547,758\.07/)
   assert.throws(() => formatMoney(Number.MAX_SAFE_INTEGER + 1, 'USD'), RangeError)
+})
+test('positive money validation keeps exact bigint values and names correction reasons', () => {
+  assert.deepEqual(validatePositiveMoney('٩٢٢٣٣٧٢٠٣٦٨٥٤٧٧٥٨٫٠٧', 'USD'), { valid: true, minor: 9223372036854775807n })
+  assert.deepEqual(validatePositiveMoney('1.001', 'USD'), { valid: false, reason: 'precision' })
+  assert.deepEqual(validatePositiveMoney('0', 'USD'), { valid: false, reason: 'positive' })
+  assert.deepEqual(validatePositiveMoney('92233720368547758.08', 'USD'), { valid: false, reason: 'tooLarge' })
+  assert.deepEqual(validatePositiveMoney('not money', 'USD'), { valid: false, reason: 'invalid' })
 })

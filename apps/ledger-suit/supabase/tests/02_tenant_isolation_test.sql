@@ -8,7 +8,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(22);
+select plan(24);
 
 create temp table ids (key text primary key, id uuid);
 grant all on ids to authenticated;
@@ -65,8 +65,30 @@ insert into ids (key, id) values ('txn_a', public.record_expense(
   p_description       => 'Alpha private rent'
 ));
 
--- --- Organization Beta, owned by user B -------------------------------------
+-- A real private object and its metadata prove both halves of attachment
+-- reads. Knowing the object key must not be enough to list, sign, or download
+-- another tenant's file through the Storage API.
 reset role;
+insert into storage.objects (bucket_id, name, owner, metadata)
+values (
+  'attachments',
+  (select id::text from ids where key = 'org_a') || '/transaction/' ||
+    (select id::text from ids where key = 'txn_a') || '/private.pdf',
+  'aaaaaaaa-1111-4111-8111-111111111111',
+  '{"size":10,"mimetype":"application/pdf"}'
+);
+insert into public.attachments (
+  organization_id, entity_type, entity_id, file_name, mime_type, size_bytes,
+  storage_key, uploaded_by
+) values (
+  (select id from ids where key = 'org_a'), 'transaction',
+  (select id from ids where key = 'txn_a'), 'private.pdf', 'application/pdf', 10,
+  (select id::text from ids where key = 'org_a') || '/transaction/' ||
+    (select id::text from ids where key = 'txn_a') || '/private.pdf',
+  'aaaaaaaa-1111-4111-8111-111111111111'
+);
+
+-- --- Organization Beta, owned by user B -------------------------------------
 select set_config('request.jwt.claims',
   '{"sub":"bbbbbbbb-2222-4222-8222-222222222222","role":"authenticated"}', true);
 set local role authenticated;
@@ -141,6 +163,22 @@ select is(
    where id = (select id from ids where key = 'org_a')),
   0::bigint,
   'a user cannot read another organization''s profile'
+);
+
+select is(
+  (select count(*) from public.attachments
+   where organization_id = (select id from ids where key = 'org_a')),
+  0::bigint,
+  'a user cannot read another organization''s attachment metadata'
+);
+
+select is(
+  (select count(*) from storage.objects
+   where bucket_id = 'attachments'
+     and name = (select id::text from ids where key = 'org_a') || '/transaction/' ||
+       (select id::text from ids where key = 'txn_a') || '/private.pdf'),
+  0::bigint,
+  'a user cannot read or sign another organization''s private storage object'
 );
 
 select throws_ok(

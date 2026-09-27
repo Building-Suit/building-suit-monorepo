@@ -4,7 +4,7 @@
  * Components do not convert financial values through floating-point arithmetic.
  */
 const props = withDefaults(defineProps<{
-  amountMinor: number | string | null | undefined
+  amountMinor: number | bigint | string | null | undefined
   /** Falls back to the organization base currency when absent. */
   currency?: string | null
   /** Colour positive green and negative red. Off by default: most figures are

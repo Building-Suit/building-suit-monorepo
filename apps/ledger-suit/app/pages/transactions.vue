@@ -8,13 +8,21 @@ const route = useRoute()
 const router = useRouter()
 const { data: categories } = useOrgCategories()
 const { data: accounts } = useOrgAccounts()
-const { filters, sort, page, pageSize, scope, rows, total, pageCount, pending, error, validation, refresh, activeFilterCount, clearFilters, toggleSort } = useTransactionWorkspace()
+const { data: tags, error: tagsError, refresh: refreshTags } = useOrgTags()
+const { filters, sort, page, pageSize, scope, rows, total, pageCount, pending, error, validation, refresh, activeFilterCount, clearFilters, toggleSort, snapshot, applySnapshot } = useTransactionWorkspace()
+const { views: savedViews, pending: savedViewsPending, error: savedViewsError, save: saveView, remove: removeView } = useJournalSavedViews()
+const { density: tableDensity, hydrated: tablePreferenceHydrated } = useAccountingTablePreferences('journal-center')
+const toasts = useToasts()
+const describeError = useErrorMessage()
 const importOpen = ref(false)
 const filtersOpen = ref(false)
 const selectedId = ref<string | null>(null)
 const hydrated = ref(false)
+const savedViewId = ref('')
+const savedViewName = ref('')
+const savingView = ref(false)
 onMounted(() => { hydrated.value = true; void openCreateFromRoute(); void openImportFromRoute() })
-watch(scope, () => { importOpen.value = false; selectedId.value = null; filtersOpen.value = false }, { flush: 'sync' })
+watch(scope, () => { importOpen.value = false; selectedId.value = null; filtersOpen.value = false; savedViewId.value = ''; savedViewName.value = '' }, { flush: 'sync' })
 const availableFlows = computed(() => ADD_FLOWS.filter(flow => can(FLOW_CAPABILITY[flow])))
 const canCreate = computed(() => writesAllowed.value && availableFlows.value.length > 0)
 const rangeStart = computed(() => total.value ? (page.value - 1) * pageSize + 1 : 0)
@@ -39,18 +47,40 @@ async function openImportFromRoute() {
 }
 watch(() => route.query.import, () => void openImportFromRoute())
 function ariaSort(column: string) { return sort.column === column ? sort.direction === 'asc' ? 'ascending' : 'descending' : 'none' }
+function applySavedView() {
+  const view = savedViews.value.find(item => item.id === savedViewId.value)
+  if (view) applySnapshot(view)
+}
+watch(savedViewId, applySavedView)
+async function createSavedView() {
+  if (!savedViewName.value.trim()) return
+  savingView.value = true
+  try {
+    await saveView(savedViewName.value, snapshot())
+    savedViewName.value = ''
+    toasts.success(t('journalCenter.viewSavedTitle'), t('journalCenter.viewSavedBody'))
+  }
+  catch (failure) { toasts.error(t('journalCenter.viewError'), describeError(failure)) }
+  finally { savingView.value = false }
+}
+async function deleteSavedView() {
+  if (!savedViewId.value) return
+  savingView.value = true
+  try { await removeView(savedViewId.value); savedViewId.value = '' }
+  catch (failure) { toasts.error(t('journalCenter.viewError'), describeError(failure)) }
+  finally { savingView.value = false }
+}
 useHead({ title: () => `${t('transactions.title')} · ${t('app.name')}` })
 </script>
 
 <template>
   <div class="space-y-4">
-    <header class="flex flex-wrap items-start justify-between gap-4">
-      <div><h1 class="text-h1 font-bold">{{ t('transactions.title') }}</h1><p class="mt-1 text-sm text-fg-muted">{{ t('transactionWorkspace.subtitle') }}</p></div>
-      <div class="flex flex-wrap items-center gap-2">
+    <LedgerPageHeader :title="t('transactions.title')" :subtitle="t('transactionWorkspace.subtitle')" :from="filters.from" :to="filters.to">
+      <template #actions>
         <button v-if="can('imports.create') && writesAllowed" type="button" class="ls-btn" :disabled="!hydrated" @click="importOpen = true">{{ t('imports.entryPoint') }}</button>
         <button v-if="canCreate" type="button" class="ls-btn ls-btn-primary" :disabled="!hydrated" @click="addTransaction"><AppIcon name="add" :size="18" />{{ t('transactionWorkspace.new') }}</button>
-      </div>
-    </header>
+      </template>
+    </LedgerPageHeader>
 
     <div v-if="can('transactions.read')" class="ls-card space-y-4 p-4 sm:p-5">
       <div class="flex flex-wrap gap-2" role="group" :aria-label="t('transactions.type')">
@@ -60,9 +90,14 @@ useHead({ title: () => `${t('transactions.title')} · ${t('app.name')}` })
         <FloatingField class="min-w-0 sm:col-span-2" :label="t('transactions.searchLabel')"><input id="search" v-model="filters.search" type="search" class="ls-input" :placeholder="t('transactions.searchPlaceholder')" :disabled="!hydrated"></FloatingField>
         <FloatingField :label="t('transactions.type')"><select id="type" v-model="filters.type" class="ls-input" :disabled="!hydrated"><option value="">{{ t('transactionWorkspace.allTypes') }}</option><option v-for="type in TRANSACTION_TYPES" :key="type" :value="type">{{ t(`types.${type}`) }}</option></select></FloatingField>
         <FloatingField :label="t('transactions.status')"><select id="status" v-model="filters.status" class="ls-input" :disabled="!hydrated"><option value="">{{ t('transactionWorkspace.allStatuses') }}</option><option v-for="status in TRANSACTION_STATUSES" :key="status" :value="status">{{ t(`status.${status}`) }}</option></select></FloatingField>
+        <FloatingField :label="t('journalCenter.source')"><select id="source" v-model="filters.source" class="ls-input" :disabled="!hydrated"><option value="">{{ t('journalCenter.allSources') }}</option><option v-for="source in TRANSACTION_SOURCES" :key="source" :value="source">{{ t(`journalSources.${source}`) }}</option></select></FloatingField>
         <FloatingField :label="t('transactions.fromDate')"><input id="from" v-model="filters.from" type="date" class="ls-input" :disabled="!hydrated"></FloatingField>
         <FloatingField :label="t('transactions.toDate')"><input id="to" v-model="filters.to" type="date" :min="filters.from" class="ls-input" :disabled="!hydrated"></FloatingField>
-        <FloatingField class="sm:col-span-2" :label="t('transactions.account')"><select id="account" v-model="filters.accountId" class="ls-input" :disabled="!hydrated"><option value="">{{ t('transactionWorkspace.allAccounts') }}</option><option v-for="account in accounts" :key="account.id" :value="account.id">{{ account.name }}</option></select></FloatingField>
+        <FloatingField :label="t('transactions.account')"><select id="account" v-model="filters.accountId" class="ls-input" :disabled="!hydrated"><option value="">{{ t('transactionWorkspace.allAccounts') }}</option><option v-for="account in accounts" :key="account.id" :value="account.id">{{ account.name }}</option></select></FloatingField>
+        <div v-if="can('tags.read')">
+          <FloatingField :label="t('tagsGuide.filter')"><select id="tag" v-model="filters.tagId" class="ls-input" :disabled="!hydrated || !!tagsError"><option value="">{{ t('tagsGuide.all') }}</option><option v-if="filters.tagId && !tags.some(tag => tag.id === filters.tagId)" :value="filters.tagId">{{ t('tagsGuide.selectedUnavailable') }}</option><option v-for="tag in tags" :key="tag.id" :value="tag.id">{{ tag.name }}</option></select></FloatingField>
+          <p v-if="tagsError" role="alert" class="mt-2 text-sm text-fg-muted">{{ t('tagsGuide.loadError') }} <button type="button" class="text-link underline" @click="refreshTags()">{{ t('accounts.retry') }}</button></p>
+        </div>
       </div>
       <div class="flex flex-wrap items-center gap-3">
         <button type="button" class="ls-btn ls-btn-sm" :aria-expanded="filtersOpen" aria-controls="transaction-more-filters" :disabled="!hydrated" @click="filtersOpen = !filtersOpen">{{ t('transactionWorkspace.moreFilters') }}<AppIcon name="arrowDown" :size="16" /></button>
@@ -73,6 +108,13 @@ useHead({ title: () => `${t('transactions.title')} · ${t('app.name')}` })
         <FloatingField :label="t('transactions.category')"><select id="category" v-model="filters.categoryId" class="ls-input"><option value="">{{ t('common.any') }}</option><option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option></select></FloatingField>
         <FloatingField :label="t('transactions.minAmount')"><input id="min" v-model="filters.minAmount" class="ls-input" inputmode="decimal" placeholder="0.00"></FloatingField>
         <FloatingField :label="t('transactions.maxAmount')"><input id="max" v-model="filters.maxAmount" class="ls-input" inputmode="decimal" placeholder="0.00"></FloatingField>
+      </div>
+      <div class="grid items-end gap-3 border-t border-line pt-4 sm:grid-cols-[minmax(12rem,1fr)_minmax(12rem,1fr)_auto_auto]">
+        <FloatingField :label="t('journalCenter.savedViews')"><select id="saved-view" v-model="savedViewId" class="ls-input" :disabled="savedViewsPending || savingView"><option value="">{{ t('journalCenter.chooseView') }}</option><option v-for="view in savedViews" :key="view.id" :value="view.id">{{ view.name }}</option></select></FloatingField>
+        <FloatingField :label="t('journalCenter.viewName')"><input id="saved-view-name" v-model="savedViewName" class="ls-input" maxlength="120" :disabled="savingView" @keyup.enter="createSavedView"></FloatingField>
+        <button type="button" class="ls-btn ls-btn-sm" :disabled="savingView || !savedViewName.trim()" @click="createSavedView">{{ t('journalCenter.saveView') }}</button>
+        <button type="button" class="ls-btn ls-btn-sm" :disabled="savingView || !savedViewId" @click="deleteSavedView">{{ t('journalCenter.removeView') }}</button>
+        <p v-if="savedViewsError" role="alert" class="text-sm text-danger sm:col-span-4">{{ t('journalCenter.savedViewsError') }}</p>
       </div>
     </div>
 
@@ -98,9 +140,21 @@ useHead({ title: () => `${t('transactions.title')} · ${t('app.name')}` })
     />
 
     <div v-else class="ls-card overflow-hidden">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">
+        <AccountingTableDensity v-model="tableDensity" :disabled="!tablePreferenceHydrated" />
+        <p role="status" class="text-sm text-fg-muted">{{ t('transactions.showing', { from: rangeStart, to: rangeEnd, total }) }}</p>
+      </div>
       <!-- Wide financial table on desktop -->
-      <div class="hidden overflow-x-auto md:block">
-        <BsDataTable :value="rows" data-key="id" :label="t('transactions.caption')" :row-class="() => 'cursor-pointer hover:bg-surface-muted'" @row-click="event => selectedId = event.data.id">
+      <div class="hidden md:block">
+        <BsDataTable :value="rows" data-key="id" :label="t('transactions.caption')" :density="tableDensity" sticky-header max-height="38rem" :scroll-label="t('accountingTable.journalScroll')" :row-class="() => 'cursor-pointer hover:bg-surface-muted'" @row-click="event => selectedId = event.data.id">
+  <Column header-class="ls-sticky-start" body-class="ls-sticky-start whitespace-nowrap" :pt="{ headerCell: { 'aria-sort': ariaSort('journal_reference') } }">
+    <template #header><button type="button" class="hover:underline" @click="toggleSort('journal_reference')">{{ t('journalCenter.journalReference') }}</button></template>
+    <template #body="{ data: row }">
+      <button type="button" class="font-semibold text-link hover:underline" @click.stop="selectedId = row.id">{{ row.journal_reference }}</button>
+      <p class="mt-1 max-w-48 truncate text-xs text-fg-muted" :title="row.from_account_name || undefined">{{ row.from_account_name || t('common.dash') }}</p>
+      <p class="max-w-48 truncate text-xs text-fg-muted" :title="row.to_account_name || undefined"><AppIcon name="arrowRight" :size="14" directional class="inline-block" /> {{ row.to_account_name || t('common.dash') }}</p>
+    </template>
+  </Column>
   <Column body-class="whitespace-nowrap" :pt="{ headerCell: { 'aria-sort': ariaSort('transaction_date') } }">
     <template #header><button type="button" class="hover:underline" @click="toggleSort('transaction_date')">{{ t('transactions.date') }}</button></template>
     <template #body="{ data: row }">{{ formatDate(row.transaction_date, locale) }}</template>
@@ -108,23 +162,24 @@ useHead({ title: () => `${t('transactions.title')} · ${t('app.name')}` })
   <Column body-class="max-w-64">
     <template #header>{{ t('transactions.description') }}</template>
     <template #body="{ data: row }"><button type="button" class="block max-w-56 truncate text-start font-semibold text-link hover:underline" @click.stop="selectedId = row.id">{{ row.description || t('common.dash') }}</button>
-                <span v-if="row.reference || row.category_name || row.counterparty_name" class="block max-w-56 truncate text-xs text-fg-muted">{{ [row.reference, row.category_name, row.counterparty_name].filter(Boolean).join(' · ') }}</span></template>
+                <span v-if="row.reference || row.category_name || row.counterparty_name" class="block max-w-56 truncate text-xs text-fg-muted">{{ [row.reference, row.category_name, row.counterparty_name].filter(Boolean).join(' · ') }}</span>
+                <ul v-if="row.tags?.length" class="mt-2 flex flex-wrap gap-1" :aria-label="t('operations.tabs.tags')"><li v-for="tag in row.tags" :key="tag" class="rounded-control border border-line bg-surface-muted px-2 py-1 text-xs break-words">{{ tag }}</li></ul></template>
   </Column>
-  <Column body-class="whitespace-nowrap" :pt="{ headerCell: { 'aria-sort': ariaSort('type') } }">
-    <template #header><button type="button" class="hover:underline" @click="toggleSort('type')">{{ t('transactions.type') }}</button></template>
-    <template #body="{ data: row }">{{ t(`types.${row.type}`) }}</template>
-  </Column>
-  <Column body-class="whitespace-nowrap text-fg-muted">
-    <template #header>{{ t('transactions.fromTo') }}</template>
-    <template #body="{ data: row }"><p class="max-w-40 truncate" :title="row.from_account_name || undefined">{{ row.from_account_name || t('common.dash') }}</p><p class="max-w-40 truncate" :title="row.to_account_name || undefined"><AppIcon name="arrowRight" :size="14" directional class="inline-block" /> {{ row.to_account_name || t('common.dash') }}</p></template>
+  <Column body-class="whitespace-nowrap" :pt="{ headerCell: { 'aria-sort': ariaSort('source') } }">
+    <template #header><button type="button" class="hover:underline" @click="toggleSort('source')">{{ t('journalCenter.source') }}</button></template>
+    <template #body="{ data: row }"><span>{{ t(`journalSources.${row.source}`) }}</span><span class="block text-xs text-fg-muted">{{ t(`types.${row.type}`) }}</span></template>
   </Column>
   <Column  :pt="{ headerCell: { 'aria-sort': ariaSort('status') } }">
     <template #header><button type="button" class="hover:underline" @click="toggleSort('status')">{{ t('transactions.status') }}</button></template>
     <template #body="{ data: row }"><StatusBadge :status="row.status" /></template>
   </Column>
-  <Column header-class="text-end" body-class="ls-num font-semibold" :pt="{ headerCell: { 'aria-sort': ariaSort('amount') } }">
-    <template #header><button type="button" class="hover:underline" @click="toggleSort('amount')">{{ t('transactions.amount') }}</button></template>
-    <template #body="{ data: row }"><MoneyText :amount-minor="row.amount_minor" :currency="row.currency_code" /></template>
+  <Column header-class="ls-sticky-end-offset text-end" body-class="ls-sticky-end-offset ls-num font-semibold" :pt="{ headerCell: { 'aria-sort': ariaSort('debit') } }">
+    <template #header><button type="button" class="hover:underline" @click="toggleSort('debit')">{{ t('detail.debit') }}</button></template>
+    <template #body="{ data: row }"><MoneyText :amount-minor="row.debit_minor" :currency="row.currency_code" /></template>
+  </Column>
+  <Column header-class="ls-sticky-end text-end" body-class="ls-sticky-end ls-num font-semibold" :pt="{ headerCell: { 'aria-sort': ariaSort('credit') } }">
+    <template #header><button type="button" class="hover:underline" @click="toggleSort('credit')">{{ t('detail.credit') }}</button></template>
+    <template #body="{ data: row }"><MoneyText :amount-minor="row.credit_minor" :currency="row.currency_code" /></template>
   </Column>
 </BsDataTable>
       </div>
@@ -135,16 +190,19 @@ useHead({ title: () => `${t('transactions.title')} · ${t('app.name')}` })
           <button type="button" class="w-full px-4 py-3 text-start" @click="selectedId = row.id">
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0">
+                <p class="truncate text-xs font-semibold text-link">{{ row.journal_reference }}</p>
                 <p class="truncate text-sm font-semibold">{{ row.description || t('common.dash') }}</p>
                 <p class="mt-0.5 text-xs text-fg-muted">
-                  {{ formatDate(row.transaction_date, locale) }} · {{ row.category_name || t(`types.${row.type}`) }}
+                  {{ formatDate(row.transaction_date, locale) }} · {{ t(`journalSources.${row.source}`) }} · {{ t(`types.${row.type}`) }}
                 </p>
               </div>
-              <div class="shrink-0 text-end">
-                <MoneyText class="text-sm font-semibold" :amount-minor="row.amount_minor" :currency="row.currency_code" />
+              <div class="shrink-0 text-end text-sm">
+                <p><span class="text-xs text-fg-muted">{{ t('detail.debit') }}</span> <MoneyText class="font-semibold" :amount-minor="row.debit_minor" :currency="row.currency_code" /></p>
+                <p><span class="text-xs text-fg-muted">{{ t('detail.credit') }}</span> <MoneyText class="font-semibold" :amount-minor="row.credit_minor" :currency="row.currency_code" /></p>
                 <StatusBadge class="mt-1 block" :status="row.status" />
               </div>
             </div>
+            <span v-if="row.tags?.length" class="mt-2 flex flex-wrap gap-1"><span v-for="tag in row.tags" :key="tag" class="rounded-control border border-line bg-surface-muted px-2 py-1 text-xs break-words">{{ tag }}</span></span>
           </button>
         </li>
       </ul>
@@ -166,6 +224,7 @@ useHead({ title: () => `${t('transactions.title')} · ${t('app.name')}` })
       :transaction-id="selectedId"
       @close="selectedId = null"
       @changed="refresh()"
+      @navigate="id => selectedId = id"
     />
   </div>
 </template>

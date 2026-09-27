@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { scopedQueryKey } from '@building-suit/data-access'
 import type { Database } from '~~/types/database.types'
 
 definePageMeta({
@@ -17,6 +18,8 @@ type TransactionRow = Database['public']['Functions']['search_transactions']['Re
 
 const route = useRoute()
 const supabase = useSupabaseClient<Database>()
+const user = useSupabaseUser()
+const config = useRuntimeConfig()
 const { currentId, baseCurrency, can, roleLabel } = useTenant()
 const { writesAllowed } = useBilling()
 const { start, revision: transactionRevision } = useAddTransaction()
@@ -45,14 +48,18 @@ const title = computed(() => {
   if (isTransaction.value) return t(`add.flows.${kind.value}`)
   if (kind.value === 'invitations') return t('add.items.invitation')
   if (kind.value === 'commitments') return t('operations.tabs.commitments')
-  const itemKey = kind.value === 'counterparties' ? 'counterparty' : kind.value === 'tags' ? 'tag' : 'recurring'
+  if (kind.value === 'tags') return t('operations.tabs.tags')
+  const itemKey = kind.value === 'counterparties' ? 'counterparty' : 'recurring'
   return t(`add.items.${itemKey}`)
 })
 
 useHead({ title: () => `${title.value} · ${t('app.name')}` })
 
-const dataKey = computed(() => `org:record-page:${kind.value}`)
-const { data: rows, pending, refresh } = useLazyAsyncData<Array<TransactionRow | GenericRow>>(dataKey, async () => {
+const dataKey = computed(() => `org:${scopedQueryKey({
+  environment: String(config.public.supabase.url), portal: 'ledger-suit',
+  userId: user.value?.id ?? '', tenantId: currentId.value ?? '',
+}, `record-page:${kind.value}`)}`)
+const { data: rows, pending, error: loadError, refresh } = useLazyAsyncData<Array<TransactionRow | GenericRow>>(dataKey, async () => {
   if (!currentId.value) return []
 
   if (isTransaction.value) {
@@ -186,12 +193,22 @@ const { dirty: overlayDirty0 } = useRecordAction(() => commitmentAction, compute
         <p class="mt-1 text-sm text-fg-muted">{{ t('recordPages.count', rows.length) }}</p>
       </div>
       <button v-if="canCreate" type="button" class="ls-btn ls-btn-primary" @click="addRecord">
-        {{ t('recordPages.add', { item: title }) }}
+        {{ kind === 'tags' ? t('recordPages.addTag') : t('recordPages.add', { item: title }) }}
       </button>
     </header>
 
-    <SectionSkeleton v-if="pending" variant="table" :rows="8" />
-    <EmptyState v-else-if="rows.length === 0" :title="t('recordPages.empty', { item: title })" :description="t('recordPages.emptyHint')" :action-label="canCreate ? t('recordPages.add', { item: title }) : undefined" @action="addRecord" />
+    <section v-if="kind === 'tags'" class="ls-card space-y-5 p-5 sm:p-6" aria-labelledby="tags-guide-title">
+      <div><h2 id="tags-guide-title" class="text-lg font-bold">{{ t('tagsGuide.title') }}</h2><p class="mt-2 max-w-3xl leading-relaxed text-fg-muted">{{ t('tagsGuide.body') }}</p></div>
+      <div class="grid gap-4 md:grid-cols-3">
+        <div v-for="step in ['create', 'assign', 'find']" :key="step" class="rounded-control bg-surface-muted p-4"><h3 class="font-semibold">{{ t(`tagsGuide.steps.${step}.title`) }}</h3><p class="mt-2 text-sm leading-relaxed text-fg-muted">{{ t(`tagsGuide.steps.${step}.body`) }}</p></div>
+      </div>
+      <p class="text-sm text-fg-muted">{{ t('tagsGuide.example') }}</p>
+      <NuxtLink v-if="can('transactions.read')" to="/transactions" class="ls-btn">{{ t('tagsGuide.openTransactions') }}<AppIcon name="arrowRight" directional :size="18" /></NuxtLink>
+    </section>
+
+    <div v-if="loadError" role="alert" class="ls-card p-5"><p>{{ t('transactionWorkspace.loadError') }}</p><button type="button" class="ls-btn mt-3" @click="refresh()">{{ t('accounts.retry') }}</button></div>
+    <SectionSkeleton v-else-if="pending" variant="table" :rows="8" />
+    <EmptyState v-else-if="rows.length === 0" :title="kind === 'tags' ? t('tagsGuide.emptyTitle') : t('recordPages.empty', { item: title })" :description="t(kind === 'tags' ? 'tagsGuide.emptyHint' : 'recordPages.emptyHint')" :action-label="canCreate ? (kind === 'tags' ? t('recordPages.addTag') : t('recordPages.add', { item: title })) : undefined" @action="addRecord" />
 
     <div v-else class="ls-card overflow-x-auto">
       <BsDataTable v-if="isTransaction" :value="rows" :label="title" :row-class="() => 'cursor-pointer hover:bg-surface-muted'" @row-click="event => selectedId = text(event.data, 'id')">
@@ -298,18 +315,17 @@ const { dirty: overlayDirty0 } = useRecordAction(() => commitmentAction, compute
   </Column>
 </BsDataTable>
 
-      <BsDataTable v-else-if="kind === 'tags'" :value="rows">
+      <BsDataTable v-else-if="kind === 'tags'" :value="rows" :label="t('operations.tabs.tags')">
   <Column >
     <template #header>{{ t('operations.name') }}</template>
-    <template #body="{ data: row }">{{ text(row, 'name') }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('recordPages.color') }}</template>
-    <template #body="{ data: row }"><span class="inline-flex items-center gap-2"><span class="size-3 rounded-full" :style="{ backgroundColor: text(row, 'color') }" />{{ text(row, 'color') }}</span></template>
+    <template #body="{ data: row }"><span class="inline-flex items-center gap-2 font-semibold"><span class="size-3 shrink-0 rounded-full" aria-hidden="true" :style="{ backgroundColor: text(row, 'color') }" />{{ text(row, 'name') }}</span></template>
   </Column>
   <Column >
     <template #header>{{ t('recordPages.created') }}</template>
     <template #body="{ data: row }">{{ date(row, 'created_at') }}</template>
+  </Column>
+  <Column v-if="can('transactions.read')" :header="t('accounts.actions')" body-class="text-end">
+    <template #body="{ data: row }"><NuxtLink :to="{ path: '/transactions', query: { tag: text(row, 'id') } }" class="ls-btn ls-btn-sm">{{ t('tagsGuide.viewTransactions') }}</NuxtLink></template>
   </Column>
 </BsDataTable>
 

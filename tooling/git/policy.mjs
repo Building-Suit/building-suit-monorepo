@@ -14,27 +14,58 @@ export function parseWorktrees(output) {
   })
 }
 
+export function stackKey(branch) {
+  return branch?.match(/^codex\/([^/]+)\/.+/)?.[1] ?? null
+}
+
 export function checkPullRequestPolicy(prs, currentNumber) {
   const open = prs.filter(pr => pr.state === 'open')
   const staging = open.filter(pr => pr.base.ref === 'stg')
   const errors = []
-  if (staging.length > 1) errors.push(`Only one PR may target stg across the monorepo; found ${staging.map(pr => `#${pr.number}`).join(', ')}. Retarget extra PRs to the active batch/feature branch.`)
+  const rootsByStack = new Map()
+  for (const root of staging) {
+    const key = stackKey(root.head.ref)
+    if (!key) {
+      errors.push(`PR #${root.number} targets stg but its head branch must match codex/<stack>/<feature>.`)
+      continue
+    }
+    const repository = root.base.repo?.full_name
+    if (root.head.repo?.full_name !== repository) {
+      errors.push(`PR #${root.number} must use a branch in ${repository}; fork-based feature stacks are not supported.`)
+      continue
+    }
+    const identity = `${repository}:${key}`
+    const roots = rootsByStack.get(identity) ?? []
+    roots.push(root)
+    rootsByStack.set(identity, roots)
+  }
+  for (const roots of rootsByStack.values()) {
+    if (roots.length > 1) {
+      errors.push(`Only one active stg root is allowed for stack "${stackKey(roots[0].head.ref)}"; found ${roots.map(pr => `#${pr.number}`).join(', ')}. Retarget the newer PR to the open same-stack leaf.`)
+    }
+  }
   if (currentNumber === undefined) return errors
   const current = open.find(pr => pr.number === currentNumber)
   if (!current) return [...errors, `PR #${currentNumber} is no longer open. Fetch GitHub state before continuing.`]
-  // Production promotion has a distinct lifetime from the one staging batch.
+  // Production promotion has a distinct lifetime from app/shared feature stacks.
   if (current.base.ref === 'main') {
     if (current.head.ref !== 'stg' || current.head.repo?.full_name !== current.base.repo?.full_name) errors.push('Only the repository stg branch may open a promotion PR into main.')
     return errors
   }
+  const currentStack = stackKey(current.head.ref)
+  if (!currentStack) return [...errors, `PR #${current.number} head branch must match codex/<stack>/<feature>.`]
+  if (current.head.repo?.full_name !== current.base.repo?.full_name) return [...errors, `PR #${current.number} must use a branch in ${current.base.repo?.full_name}; fork-based feature stacks are not supported.`]
   const seen = new Set()
   let node = current
   while (node.base.ref !== 'stg') {
     if (seen.has(node.number)) return [...errors, 'The PR stack contains a cycle. Repair its bases before publishing.']
     seen.add(node.number)
     const parents = open.filter(pr => pr.head.ref === node.base.ref && pr.head.repo?.full_name === node.base.repo?.full_name)
-    if (parents.length !== 1) return [...errors, `PR #${node.number} must target an open parent PR branch or the sole stg slot. Its parent may have merged/closed; refresh and retarget without replaying merged commits.`]
-    node = parents[0]
+    if (parents.length !== 1) return [...errors, `PR #${node.number} must target an open parent PR branch in stack "${currentStack}" or stg. Its parent may have merged/closed; refresh and retarget without replaying merged commits.`]
+    const parent = parents[0]
+    const parentStack = stackKey(parent.head.ref)
+    if (parentStack !== currentStack) return [...errors, `Cross-stack parent is not allowed: PR #${node.number} belongs to stack "${currentStack}" but targets PR #${parent.number} in stack "${parentStack ?? 'invalid'}".`]
+    node = parent
   }
   return errors
 }

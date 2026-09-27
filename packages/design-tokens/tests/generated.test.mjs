@@ -11,6 +11,6 @@ test('generated CSS references existing variables and has no direct self-referen
   }
 })
 test('canonical radii survive generation without an overriding cyclic alias', () => {
-  assert.deepEqual(declarations.filter(match => match[1] === '--bs-radius-card').map(match => match[2]), ['16px'])
-  assert.deepEqual(declarations.filter(match => match[1] === '--bs-radius-modal').map(match => match[2]), ['24px'])
+  assert.deepEqual(declarations.filter(match => match[1] === '--bs-radius-card').map(match => match[2]), ['14px'])
+  assert.deepEqual(declarations.filter(match => match[1] === '--bs-radius-modal').map(match => match[2]), ['20px'])
 })

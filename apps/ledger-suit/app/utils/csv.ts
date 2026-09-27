@@ -3,8 +3,7 @@ export interface ParsedCsv {
   rows: Record<string, string>[]
 }
 
-/** Parse RFC 4180-style CSV, including quoted commas, quotes, and newlines. */
-export function parseCsv(text: string, options: { allowEmpty?: boolean } = {}): ParsedCsv {
+function parseDelimited(text: string, delimiter: ',' | '\t', options: { allowEmpty?: boolean } = {}): ParsedCsv {
   const records: string[][] = []
   let record: string[] = []
   let field = ''
@@ -24,7 +23,7 @@ export function parseCsv(text: string, options: { allowEmpty?: boolean } = {}): 
     }
 
     if (character === '"' && field === '') quoted = true
-    else if (character === ',') {
+    else if (character === delimiter) {
       record.push(field)
       field = ''
     }
@@ -55,6 +54,17 @@ export function parseCsv(text: string, options: { allowEmpty?: boolean } = {}): 
   return { headers, rows }
 }
 
+/** Parse RFC 4180-style CSV, including quoted commas, quotes, and newlines. */
+export function parseCsv(text: string, options: { allowEmpty?: boolean } = {}): ParsedCsv {
+  return parseDelimited(text, ',', options)
+}
+
+/** Parse a tab-separated range copied from a spreadsheet without coercing cell values. */
+export function parseSpreadsheetPaste(text: string): ParsedCsv {
+  if (!text.includes('\t')) throw new Error('SPREADSHEET_TABS_REQUIRED')
+  return parseDelimited(text, '\t')
+}
+
 /** Values remain strings: never round financial amounts or strip formula protection. */
 export function serializeCsv(rows: readonly (readonly string[])[]): string {
   return rows.map(row => row.map(value => /[,"\r\n]/.test(value) ? `"${value.replaceAll('"', '""')}"` : value).join(',')).join('\r\n')
@@ -65,6 +75,11 @@ export function downloadCsv(filename: string, csv: string) {
   const link = document.createElement('a')
   link.href = url
   link.download = filename
+  link.hidden = true
+  document.body.append(link)
   link.click()
-  setTimeout(() => URL.revokeObjectURL(url), 1000)
+  setTimeout(() => {
+    link.remove()
+    URL.revokeObjectURL(url)
+  }, 1000)
 }

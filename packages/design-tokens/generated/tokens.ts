@@ -434,22 +434,22 @@ export const tokens = {
   },
   "radius": {
     "chip": {
-      "value": "8px"
+      "value": "6px"
     },
     "button": {
-      "value": "12px"
+      "value": "10px"
     },
     "input": {
-      "value": "12px"
+      "value": "10px"
     },
     "card": {
-      "value": "16px"
+      "value": "14px"
     },
     "modal": {
-      "value": "24px"
+      "value": "20px"
     },
     "large": {
-      "value": "24px"
+      "value": "20px"
     },
     "full": {
       "value": "9999px"
@@ -457,22 +457,22 @@ export const tokens = {
   },
   "shadow": {
     "elevation1": {
-      "value": "0 2px 8px rgba(13, 27, 40, 0.08)"
+      "value": "0 1px 2px rgba(13, 27, 40, 0.05)"
     },
     "elevation2": {
-      "value": "0 4px 16px rgba(13, 27, 40, 0.12)"
+      "value": "0 8px 24px rgba(13, 27, 40, 0.10)"
     },
     "elevation3": {
-      "value": "0 8px 24px rgba(13, 27, 40, 0.16)"
+      "value": "0 20px 56px rgba(13, 27, 40, 0.18)"
     },
     "elevation1Dark": {
-      "value": "0 2px 8px rgba(0, 0, 0, 0.32)"
+      "value": "0 1px 2px rgba(0, 0, 0, 0.28)"
     },
     "elevation2Dark": {
-      "value": "0 4px 16px rgba(0, 0, 0, 0.40)"
+      "value": "0 10px 28px rgba(0, 0, 0, 0.36)"
     },
     "elevation3Dark": {
-      "value": "0 8px 24px rgba(0, 0, 0, 0.48)"
+      "value": "0 24px 64px rgba(0, 0, 0, 0.52)"
     }
   },
   "component": {

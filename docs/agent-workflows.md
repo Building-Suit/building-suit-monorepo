@@ -9,11 +9,11 @@ Use these workflows to navigate, maintain and extend the repository. Select only
 3. Find the owning app/package/schema using the navigation map, exports and dependency graph.
 4. Identify affected consumers, environment assumptions and acceptance criteria. Search existing implementations before adding abstractions.
 5. Use documented root scripts and workspace filters; verify actual script names.
-6. Reuse the open feature branch for adjustments. For new work, identify the newest active stack leaf, record its committed SHA and create the child worktree from that SHA. Target its PR at the parent branch; use fresh `origin/stg` only when no active parent exists. Reconcile merged/closed parents first. Dirty parent edits stay in that worktree until its owner commits a checkpoint and the child incorporates it. Implement the requested scope, run relevant checks and update documentation. Use a short task record when a handoff is useful; small fixes do not require a new planning document.
+6. Reuse the open feature branch for adjustments. For new work, derive its key from `codex/<stack>/<feature>`, identify that stack's newest active leaf, record its committed SHA and create the child worktree from that SHA. Target its PR at the same-stack parent branch; use fresh `origin/stg` only when that stack has no active parent. Reconcile merged/closed parents first. Dirty parent edits stay in that worktree until its owner commits a checkpoint and the child incorporates it. Implement the requested scope, run relevant checks and update documentation. Use a short task record when a handoff is useful; small fixes do not require a new planning document.
 
 ## 2. Add or change a product feature
 
-Apply workflow 1 first. Every new feature stacks on the latest verified active worktree, even when it concerns another app. Parallel features use separate worktrees along the same stack. Publish a parent checkpoint and its PR before the child PR; do not create an independent sibling from `stg` while an active parent exists. Each feature has a pushed branch and review PR, with only one monorepo PR targeting `stg`. Existing-feature fixes stay on that feature's branch.
+Apply workflow 1 first. Every new feature stacks on the latest verified active worktree for its own app/shared stack. Parallel features use separate worktrees; publish a same-stack parent checkpoint and its PR before the child PR. Different stacks may have independent roots targeting `stg`, but one stack may not have sibling roots or parent a feature on another stack. Existing-feature fixes stay on that feature's branch.
 
 1. Locate the owning product's pages, composables, requirements and tests.
 2. Use shared shell or marketing/auth templates, with product navigation, content, permissions and translations supplied through configuration.
@@ -89,9 +89,9 @@ Apply workflow 1 first. Every new feature stacks on the latest verified active w
 
 ## 9. Release a change
 
-1. Run the preflight again, check live PR/base/head state and the [single staging batch procedure](shared/git-workflow.md#integrate-and-release-one-batch). Incorporate only reviewed, ready features and inspect affected apps/packages/database objects, including shared and root changes.
+1. Run the preflight again, check live PR/base/head state and the [app-stack integration procedure](shared/git-workflow.md#integrate-and-release-app-stacks). Incorporate only reviewed, ready features and inspect affected apps/packages/database objects, including shared and root changes.
 2. Run required CI checks; verify the artifact/commit, environment variables, project refs and callbacks.
-3. Verify the previous staging deployment completed successfully and the five-minute minimum between staging merges. Publish/merge one combined staging batch within authorization; apply database changes through the existing serialized environment-specific deployer and deploy affected apps in runbook order. Do not add a second deployer or assume Actions concurrency serializes Vercel/Supabase integrations.
+3. Verify the previous staging deployment completed successfully and the five-minute minimum between staging merges. Publish/merge one authorized stack root at a time; apply database changes through the existing serialized environment-specific deployer and deploy affected apps in runbook order. Do not add a second deployer or assume Actions concurrency serializes Vercel/Supabase integrations.
 4. Follow current authorization and the release/recovery process; green CI alone does not authorize production deployment.
 5. Verify the merged SHA, provider outcomes, health and affected journeys/services. Fetch again, retire completed branches and repair remaining stacks using the manual-merge recovery procedure. Record the release or invoke the documented recovery path as needed.
 

@@ -188,8 +188,8 @@ select throws_ok(
       'account_id', %L, 'amount_minor', 100, 'exchange_rate', 50)))$sql$,
     (select value from multi_currency_ids where key = 'org'),
     (select value from multi_currency_ids where key = 'usd_account')),
-  'P0001', 'MULTI_CURRENCY_REQUIRES_BUSINESS: multi_currency',
-  'the opening-balance path cannot use a legacy foreign account');
+  '0A000', 'OPENING_BATCH_REQUIRED: use the controlled Opening Trial Balance workflow',
+  'the legacy opening-balance path is disabled before any foreign-account posting');
 select throws_ok(
   format($sql$select public.create_commitment(
     %L, 'payable', 'Blocked USD commitment', 100, current_date + 30, 'USD')$sql$,

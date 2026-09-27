@@ -9,7 +9,7 @@ test.beforeEach(async ({ page }) => {
   await expect(page).toHaveURL('/dashboard')
 })
 
-test('owner can download every advertised financial report as CSV', async ({ page }) => {
+test('owner can export every report and use the Excel and print/PDF formats', async ({ page }) => {
   const requestedReports: string[] = []
   await page.route('**/rest/v1/accounts?*', route => route.fulfill({
     status: 200,
@@ -35,9 +35,9 @@ test('owner can download every advertised financial report as CSV', async ({ pag
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify(({
-        trial_balance: 'code,account,type,debit,credit,currency\n1010,Bank,asset,100.00,0.00,EGP',
-        profit_loss: 'section,code,account,amount,currency\nrevenue,4000,Sales,100.00,EGP',
-        cash_flow: 'activity,net_movement,currency\noperating,100.00,EGP',
+        trial_balance: 'code,account,type,opening_debit,opening_credit,period_debit,period_credit,closing_debit,closing_credit,currency\n1010,Bank,asset,100.00,0.00,20.00,5.00,115.00,0.00,EGP\n,Total,,100.00,100.00,20.00,20.00,115.00,115.00,EGP',
+        profit_loss: 'section,code,account,amount,currency\noperating_revenue,4000,Sales,100.00,EGP',
+        cash_flow: 'line,account_id,account,amount,currency\nnet_profit,,,100.00,EGP\noperating_cash,,,100.00,EGP',
         general_ledger: 'date,reference,description,memo,debit,credit,running_balance,currency\n2026-09-19,,Receipt,,100.00,0.00,100.00,EGP',
       } as Record<string, string>)[route.request().postDataJSON().p_report]),
     })
@@ -61,7 +61,20 @@ test('owner can download every advertised financial report as CSV', async ({ pag
     expect(download.suggestedFilename()).toMatch(filename)
   }
 
-  await exportFrom('Overview', /^trial-balance-\d{4}-\d{2}-\d{2}\.csv$/)
+  await exportFrom('Overview', /^trial-balance-\d{4}-\d{2}-\d{2}_\d{4}-\d{2}-\d{2}\.csv$/)
+
+  const overview = page.getByRole('tabpanel', { name: 'Overview' })
+  const excelDownload = page.waitForEvent('download')
+  await overview.getByRole('button', { name: 'Export Excel', exact: true }).click()
+  expect((await excelDownload).suggestedFilename()).toMatch(/^trial-balance-.*\.xlsx$/)
+
+  const popupPromise = page.waitForEvent('popup')
+  await overview.getByRole('button', { name: 'Print / PDF', exact: true }).click()
+  const printable = await popupPromise
+  await expect(printable.getByRole('heading', { name: 'Trial balance' })).toBeVisible()
+  await expect(printable.locator('body')).toContainText('Alpha Trading')
+  await expect(printable.locator('body')).toContainText('EGP')
+  await expect(printable.locator('table')).toContainText('115.00')
 
   await page.getByRole('tab', { name: 'Profit & Loss' }).click()
   await exportFrom('Profit & Loss', /^profit-and-loss-.*\.csv$/)
@@ -76,6 +89,8 @@ test('owner can download every advertised financial report as CSV', async ({ pag
   await exportFrom('Ledger', /^general-ledger-.*\.csv$/)
 
   expect(requestedReports).toEqual([
+    'trial_balance',
+    'trial_balance',
     'trial_balance',
     'profit_loss',
     'balance_sheet',

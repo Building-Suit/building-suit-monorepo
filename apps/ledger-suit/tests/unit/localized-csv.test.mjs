@@ -1,11 +1,20 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { readFileSync } from 'node:fs'
-import { parseCsv, serializeCsv } from '../../app/utils/csv.ts'
+import { parseCsv, parseSpreadsheetPaste, serializeCsv } from '../../app/utils/csv.ts'
 import { CSV_IMPORT_FIELDS, csvImportTemplate, matchCsvColumns, prepareCsvImport, localizeReportCsv, normalizeCsvNumber } from '../../app/utils/localizedCsv.ts'
 const messages = Object.fromEntries(['en', 'ar'].map(locale => [locale, JSON.parse(readFileSync(new URL(`../../i18n/locales/${locale}.json`, import.meta.url), 'utf8'))]))
 const translate = locale => key => key.split('.').reduce((value, part) => value?.[part], messages[locale]) ?? key
 const translations = [translate('en'), translate('ar')]
+
+test('spreadsheet paste preserves exact cells and parses quoted tabs and newlines', () => {
+  const parsed = parseSpreadsheetPaste('type\tdate\tamount\tdescription\nإيراد\t٢٠٢٦-٠٩-١٩\t٩٠٠٧١٩٩٢٥٤٧٤٠٩٩٣٫٢٥\t"وصف\tمفصل"\nexpense\t2026-09-20\t12.50\t"two\nlines"')
+  assert.deepEqual(parsed.headers, ['type', 'date', 'amount', 'description'])
+  assert.equal(parsed.rows[0].amount, '٩٠٠٧١٩٩٢٥٤٧٤٠٩٩٣٫٢٥')
+  assert.equal(parsed.rows[0].description, 'وصف\tمفصل')
+  assert.equal(parsed.rows[1].description, 'two\nlines')
+  assert.throws(() => parseSpreadsheetPaste('type,date,amount\nincome,2026-09-19,10.00'), /SPREADSHEET_TABS_REQUIRED/)
+})
 
 test('both localized templates parse and automatically map every required and optional column', () => {
   for (const locale of ['en', 'ar']) {
@@ -35,21 +44,31 @@ test('ambiguous bilingual headers require mapping; legacy machine headers still 
   assert.equal(matchCsvColumns(['type', 'نوع المعاملة'], translations).type, '')
   assert.equal(matchCsvColumns(['type', 'date', 'amount', 'account', 'category'], translations).account, 'account')
 })
-test('report localization preserves quoted names, formula protection, negative values and exact amounts', () => {
-  const input = serializeCsv([['code', 'account', 'type', 'debit', 'credit', 'currency'], ["'=1+1", 'اسم, "مركب"\nسطر', 'asset', '9007199254740993.25', '-12.50', 'EGP']])
+test('report localization preserves quoted names, formula protection and exact six-column amounts', () => {
+  const input = serializeCsv([
+    ['code', 'account', 'type', 'opening_debit', 'opening_credit', 'period_debit', 'period_credit', 'closing_debit', 'closing_credit', 'currency'],
+    ["'=1+1", 'اسم, "مركب"\nسطر', 'asset', '9007199254740993.25', '0.00', '100.00', '12.50', '9007199254741080.75', '0.00', 'EGP'],
+  ])
   for (const locale of ['en', 'ar']) {
     const t = translate(locale)
     const output = parseCsv(localizeReportCsv(input, 'trial_balance', t))
     assert.equal(output.headers[2], t('csv.columns.account_type'))
     const values = Object.values(output.rows[0])
-    assert.deepEqual(values, ["'=1+1", 'اسم, "مركب"\nسطر', t('accounts.groups.asset'), '9007199254740993.25', '-12.50', 'EGP'])
+    assert.deepEqual(values, ["'=1+1", 'اسم, "مركب"\nسطر', t('accounts.groups.asset'), '9007199254740993.25', '0.00', '100.00', '12.50', '9007199254741080.75', '0.00', 'EGP'])
+  }
+})
+test('trial balance export localizes its totals row from the same column contract', () => {
+  const input = 'code,account,type,opening_debit,opening_credit,period_debit,period_credit,closing_debit,closing_credit,currency\n,Total,,1.00,1.00,2.00,2.00,3.00,3.00,EGP'
+  for (const locale of ['en', 'ar']) {
+    const output = parseCsv(localizeReportCsv(input, 'trial_balance', translate(locale)))
+    assert.equal(output.rows[0][translate(locale)('csv.columns.account')], translate(locale)('reports.total'))
   }
 })
 test('empty reports export localized headers; all report labels and audit columns remain present', () => {
   const t = translate('ar')
   const cases = [
     ['profit_loss', 'section,code,account,amount,currency\noperating_expenses,10,أتعاب,100.00,EGP', 'مصروفات التشغيل'],
-    ['cash_flow', 'activity,net_movement,currency\noperating,100.00,EGP', t('reports.cashFlowSections.operating')],
+    ['cash_flow', 'line,account_id,account,amount,currency\noperating_cash,,,100.00,EGP', t('financialMapping.cashLines.operating_cash')],
     ['general_ledger', 'date,reference,description,memo,debit,credit,running_balance,currency', t('csv.columns.running_balance')],
     ['balance_sheet', 'report_date,presentation,account_id,code,account,amount,currency,classification_effective_from,classification_id\n2026-09-19,أصول,id,100,اسم,10.00,EGP,2026-09-01,revision', t('csv.columns.classification_id')],
   ]
