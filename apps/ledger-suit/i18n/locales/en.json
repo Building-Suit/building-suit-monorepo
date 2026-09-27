@@ -1262,6 +1262,7 @@
     "closingCredit": "Closing Credit",
     "drilldownAmount": "View {column} activity for {account}",
     "invalidPeriod": "Choose a valid reporting period. The start date cannot be after the end date.",
+    "loadError": "The report could not be loaded.",
     "trialBalanceError": "The Trial Balance could not be loaded.",
     "inBalance": "In balance",
     "outOfBalance": "Out of balance",
