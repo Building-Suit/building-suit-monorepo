@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@building-suit/contracts": "workspace:*",
-    "@building-suit/i18n": "workspace:*"
+    "@building-suit/i18n": "workspace:*",
+    "gsap": "3.15.0"
   }
 }

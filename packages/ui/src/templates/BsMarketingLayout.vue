@@ -5,28 +5,43 @@ withDefaults(defineProps<{
   labels: { home: string; navigation: string; openApp: string; signIn: string; startTrial: string; close: string; open: string; footer: string; footerNavigation: string }
   signedIn?: boolean; loginPath?: string; signupPath?: string; dashboardPath?: string
 }>(), { signedIn: false, loginPath: '/login', signupPath: '/signup', dashboardPath: '/dashboard' })
+
 const route = useRoute()
 const hydrated = ref(false)
 const mobileNavOpen = ref(false)
+const topSentinel = ref<HTMLElement | null>(null)
+const headerElevated = ref(false)
+let topObserver: IntersectionObserver | undefined
+
 useTheme()
-onMounted(() => { hydrated.value = true })
+
+onMounted(() => {
+  hydrated.value = true
+  if (topSentinel.value) {
+    topObserver = new IntersectionObserver(([entry]) => { headerElevated.value = !entry?.isIntersecting }, { threshold: 0.01 })
+    topObserver.observe(topSentinel.value)
+  }
+})
+onBeforeUnmount(() => topObserver?.disconnect())
 watch(() => route.fullPath, () => { mobileNavOpen.value = false })
 </script>
+
 <template>
-  <div class="min-h-dvh bg-background text-fg" :data-hydrated="hydrated">
-    <header class="sticky top-0 z-30 border-b-2 border-brand-gold bg-background/90 backdrop-blur-xl">
-      <div class="mx-auto flex min-h-16 max-w-7xl items-center gap-3 px-4 lg:px-8">
+  <div class="bs-marketing min-h-dvh bg-background text-fg" :data-hydrated="hydrated">
+    <div ref="topSentinel" class="pointer-events-none absolute inset-x-0 top-0 h-px" aria-hidden="true" />
+    <header class="bs-marketing-header sticky top-0 z-30" :class="{ 'is-elevated': headerElevated, 'is-open': mobileNavOpen }">
+      <div class="mx-auto flex min-h-[4.5rem] max-w-[90rem] items-center gap-3 px-5 sm:px-8 lg:px-12">
         <NuxtLink to="/" class="inline-flex shrink-0" :aria-label="labels.home">
           <slot name="logo" />
         </NuxtLink>
 
-        <nav class="ms-auto hidden items-center gap-6 text-sm text-fg-muted xl:flex" :aria-label="labels.navigation">
-          <NuxtLink v-for="item in navigation" :key="item.to" :to="item.to" class="hover:text-fg">
+        <nav class="ms-auto hidden items-center gap-1 text-sm xl:flex" :aria-label="labels.navigation">
+          <NuxtLink v-for="item in navigation" :key="item.to" :to="item.to" class="bs-marketing-nav-link">
             {{ item.label }}
           </NuxtLink>
         </nav>
 
-        <div class="ms-auto flex items-center gap-2 xl:ms-0">
+        <div class="ms-auto flex items-center gap-2 xl:ms-3">
           <SettingsMenu />
           <NuxtLink :to="signedIn ? dashboardPath : loginPath" class="ls-btn ls-btn-sm hidden xl:inline-flex">
             {{ signedIn ? labels.openApp : labels.signIn }}
@@ -47,44 +62,43 @@ watch(() => route.fullPath, () => { mobileNavOpen.value = false })
         </div>
       </div>
 
-      <div v-show="mobileNavOpen" id="marketing-mobile-navigation" class="border-t border-[var(--bs-border)] bg-background xl:hidden">
-        <div class="mx-auto max-w-7xl px-4 py-4 lg:px-8">
-          <nav class="grid gap-1 text-sm" :aria-label="labels.navigation">
-            <NuxtLink
-              v-for="item in navigation"
-              :key="`mobile-${item.to}`"
-              :to="item.to"
-              class="rounded-control px-3 py-2 font-semibold text-fg-muted hover:bg-surface-muted hover:text-fg"
-            >
-              {{ item.label }}
-            </NuxtLink>
-          </nav>
-          <div class="mt-4 flex flex-wrap gap-2 border-t border-[var(--bs-border)] pt-4">
-            <NuxtLink :to="signedIn ? dashboardPath : loginPath" class="ls-btn ls-btn-sm">
-              {{ signedIn ? labels.openApp : labels.signIn }}
-            </NuxtLink>
-            <NuxtLink v-if="!signedIn" :to="signupPath" class="ls-btn ls-btn-primary ls-btn-sm">
-              {{ labels.startTrial }}
-            </NuxtLink>
+      <Transition name="bs-marketing-menu">
+        <div v-if="mobileNavOpen" id="marketing-mobile-navigation" class="bs-marketing-mobile xl:hidden">
+          <div class="mx-auto max-w-[90rem] px-5 py-5 sm:px-8 lg:px-12">
+            <nav class="grid text-sm" :aria-label="labels.navigation">
+              <NuxtLink v-for="item in navigation" :key="`mobile-${item.to}`" :to="item.to" class="bs-marketing-mobile-link">
+                <span>{{ item.label }}</span><AppIcon name="arrowRight" directional />
+              </NuxtLink>
+            </nav>
+            <div class="mt-5 grid grid-cols-2 gap-2 border-t border-line pt-5">
+              <NuxtLink :to="signedIn ? dashboardPath : loginPath" class="ls-btn ls-btn-sm">
+                {{ signedIn ? labels.openApp : labels.signIn }}
+              </NuxtLink>
+              <NuxtLink v-if="!signedIn" :to="signupPath" class="ls-btn ls-btn-primary ls-btn-sm">
+                {{ labels.startTrial }}
+              </NuxtLink>
+            </div>
           </div>
         </div>
-      </div>
+      </Transition>
     </header>
 
     <slot />
 
-    <footer class="border-t border-[var(--bs-border)] py-8">
-      <div class="mx-auto flex max-w-7xl flex-col gap-4 px-4 text-xs text-fg-muted lg:px-8">
-        <div class="flex flex-wrap items-center justify-between gap-4">
-          <span dir="ltr">© {{ new Date().getFullYear() }} Building Suit</span>
-          <span>{{ labels.footer }}</span>
+    <footer class="bs-marketing-footer border-t border-line">
+      <div class="mx-auto grid max-w-[90rem] gap-8 px-5 py-10 text-xs text-fg-muted sm:px-8 md:grid-cols-[1fr_auto] md:items-end lg:px-12">
+        <div>
+          <slot name="logo" />
+          <p class="mt-5 max-w-sm text-sm leading-6">{{ labels.footer }}</p>
         </div>
-
-        <nav class="flex flex-wrap gap-x-5 gap-y-2" :aria-label="labels.footerNavigation">
-          <NuxtLink v-for="item in legalLinks" :key="item.to" :to="item.to" class="hover:text-fg">
-            {{ item.label }}
-          </NuxtLink>
-        </nav>
+        <div class="md:text-end">
+          <nav class="flex flex-wrap gap-x-5 gap-y-3 md:justify-end" :aria-label="labels.footerNavigation">
+            <NuxtLink v-for="item in legalLinks" :key="item.to" :to="item.to" class="hover:text-fg">
+              {{ item.label }}
+            </NuxtLink>
+          </nav>
+          <p class="mt-5" dir="ltr">© {{ new Date().getFullYear() }} Building Suit</p>
+        </div>
       </div>
     </footer>
   </div>
