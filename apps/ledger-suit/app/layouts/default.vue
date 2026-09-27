@@ -30,6 +30,7 @@ const NAV_GROUPS = computed(() => [
   {
     key: 'insights',
     links: [
+      ...(organizations.value.length > 1 ? [{ to: '/clients', label: 'nav.clients' }] : []),
       ...(can('reports.read') ? [{ to: '/reports', label: 'nav.reports' }] : []),
       ...(can('dimensions.read') ? [{ to: '/accounting-dimensions', label: 'nav.accountingDimensions' }] : []),
     ],
@@ -59,7 +60,7 @@ const NAV_GROUPS = computed(() => [
 
 
 const { t } = useI18n()
-const { current, currentId, loadOrganizations, loading } = useTenant()
+const { current, currentId, organizations, loadOrganizations, loading } = useTenant()
 const { can } = useTenant()
 const {
   accessState,

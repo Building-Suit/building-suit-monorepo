@@ -347,6 +347,7 @@
   "nav": {
     "primary": "التنقل الرئيسي",
     "dashboard": "لوحة التحكم",
+    "clients": "محفظة العملاء",
     "transactions": "المعاملات",
     "allTransactions": "كل المعاملات",
     "importTransactions": "استيراد CSV",
@@ -583,6 +584,55 @@
     "commitments": "الالتزامات",
     "manage": "إدارة",
     "noCommitments": "لا توجد مبالغ مستحقة قريبًا."
+  },
+  "clientPortfolio": {
+    "title": "محفظة العملاء",
+    "subtitle": "راجع إشارات المحاسبة الفعلية للمنشآت التي لديك صلاحية وصول قائمة إليها.",
+    "summary": "ملخص المحفظة",
+    "searchLabel": "البحث في العملاء",
+    "searchPlaceholder": "المنشأة أو الاسم القانوني أو العملة أو الدور",
+    "healthFilter": "الحالة",
+    "refresh": "تحديث الإشارات",
+    "signalNote": "تعتمد الحالة على الفترة الحالية ومطابقة حسابات المراقبة وآخر نشاط في الأستاذ. تظل الوحدة الغائبة أو غير المقروءة غير متاحة ولا تعامل أبدًا كصفر.",
+    "loadFailed": "تعذر تحميل محفظة العملاء",
+    "loadFailedHint": "لا تظهر أي منشأة بحالة سليمة عند فشل إشاراتها. تحقق من الاتصال وأعد المحاولة.",
+    "empty": "لا توجد منشآت عملاء مصرح بها",
+    "emptyHint": "تظهر المنشآت هنا من عضوياتك النشطة القائمة.",
+    "noMatches": "لا يوجد عملاء يطابقون هذه الفلاتر",
+    "noMatchesHint": "غيّر البحث أو فلتر الحالة لعرض منشآت أخرى.",
+    "tableLabel": "محفظة صحة العملاء المصرح بها",
+    "client": "العميل",
+    "health": "الحالة",
+    "period": "الفترة الحالية",
+    "reconciliation": "مطابقة حسابات المراقبة",
+    "lastActivity": "آخر نشاط في الأستاذ",
+    "actions": "الإجراءات",
+    "openClient": "فتح العميل",
+    "opening": "جارٍ الفتح…",
+    "unavailable": "غير متاح",
+    "noActivity": "لا يوجد نشاط في الأستاذ",
+    "filters": {
+      "label": "فلاتر المحفظة",
+      "all": "كل العملاء",
+      "healthy": "سليم",
+      "needs_attention": "يحتاج انتباهًا",
+      "unavailable": "غير متاح"
+    },
+    "healthStates": {
+      "healthy": "سليم",
+      "needs_attention": "يحتاج انتباهًا",
+      "unavailable": "غير متاح"
+    },
+    "periodStates": {
+      "open": "مفتوحة",
+      "soft_closed": "إقفال مبدئي",
+      "hard_closed": "مقفلة",
+      "missing": "لا توجد فترة حالية"
+    },
+    "reconciliationStates": {
+      "reconciled": "متطابق",
+      "needs_attention": "يحتاج انتباهًا"
+    }
   },
   "transactions": {
     "title": "مركز القيود",

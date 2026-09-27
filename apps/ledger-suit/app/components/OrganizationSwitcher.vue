@@ -22,7 +22,8 @@ useClickOutside(root, () => (open.value = false))
 
 async function choose(id: string) {
   open.value = false
-  await setOrganization(id)
+  const selected = await setOrganization(id)
+  if (!selected) return
   await loadBilling()
   if (paymentRequired.value) await navigateTo('/subscribe')
   else if (route.path === '/subscribe') await navigateTo('/dashboard')

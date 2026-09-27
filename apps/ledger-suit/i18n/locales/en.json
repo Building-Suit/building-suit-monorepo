@@ -347,6 +347,7 @@
   "nav": {
     "primary": "Primary",
     "dashboard": "Dashboard",
+    "clients": "Client portfolio",
     "transactions": "Transactions",
     "allTransactions": "All transactions",
     "importTransactions": "Import CSV",
@@ -583,6 +584,55 @@
     "commitments": "Commitments",
     "manage": "Manage",
     "noCommitments": "Nothing is due soon."
+  },
+  "clientPortfolio": {
+    "title": "Client portfolio",
+    "subtitle": "Review real accounting signals across the organizations you can already access.",
+    "summary": "Portfolio summary",
+    "searchLabel": "Search clients",
+    "searchPlaceholder": "Organization, legal name, currency, or role",
+    "healthFilter": "Health",
+    "refresh": "Refresh signals",
+    "signalNote": "Health uses current-period, control-reconciliation, and latest-ledger-activity signals. A missing or unreadable module stays unavailable; it is never treated as zero.",
+    "loadFailed": "The client portfolio could not be loaded",
+    "loadFailedHint": "No client is shown as healthy when its signals fail. Check your connection and retry.",
+    "empty": "No authorized client organizations",
+    "emptyHint": "Organizations appear here from your existing active memberships.",
+    "noMatches": "No clients match these filters",
+    "noMatchesHint": "Change the search or health filter to see more organizations.",
+    "tableLabel": "Authorized client health portfolio",
+    "client": "Client",
+    "health": "Health",
+    "period": "Current period",
+    "reconciliation": "Control reconciliation",
+    "lastActivity": "Latest ledger activity",
+    "actions": "Actions",
+    "openClient": "Open client",
+    "opening": "Opening…",
+    "unavailable": "Unavailable",
+    "noActivity": "No ledger activity",
+    "filters": {
+      "label": "Portfolio filters",
+      "all": "All clients",
+      "healthy": "Healthy",
+      "needs_attention": "Needs attention",
+      "unavailable": "Unavailable"
+    },
+    "healthStates": {
+      "healthy": "Healthy",
+      "needs_attention": "Needs attention",
+      "unavailable": "Unavailable"
+    },
+    "periodStates": {
+      "open": "Open",
+      "soft_closed": "Soft closed",
+      "hard_closed": "Hard closed",
+      "missing": "No current period"
+    },
+    "reconciliationStates": {
+      "reconciled": "Reconciled",
+      "needs_attention": "Needs attention"
+    }
   },
   "transactions": {
     "title": "Journal Center",
