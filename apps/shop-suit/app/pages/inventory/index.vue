@@ -1,195 +1,182 @@
 <script setup lang="ts">
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
-const confirmation = useConfirmation()
 
+defineOptions({ name: 'InventoryIndexPage' })
 definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
 
-type StockRow = {
-  shop_id: string
-  product_id: string
-  name: string
-  sku: string | null
-  sale_price: number
-  quantity_on_hand: number
-}
-type Subscription = { plan_id: string }
+type Access = { can_view: boolean; can_manage: boolean; inventory_enabled: boolean }
+type StockRow = { product_id: string; name: string; sku: string | null; sale_price: number; is_active: boolean; reorder_threshold: number; quantity_on_hand: number; inventory_value: number; is_low_stock: boolean }
+type StockPayload = { items: StockRow[]; total_valuation: number; low_stock_count: number }
+type Movement = { id: string; event_at: string; quantity_change: number; value_change: number | null; source_type: string; reference: string; reason: string | null; actor_name: string | null }
+type StockCount = { id: string; expected_quantity: number; counted_quantity: number; variance_quantity: number; reason: string; reference: string; counted_at: string; actor_name: string | null }
+type Page<T> = { items: T[]; total: number }
 
-const supabase = useSupabaseClient()
-const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const confirmation = useConfirmation()
+const rpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
 const { locale } = useI18n()
-const { current, currentId, currentMembership, isOwner, loading: shopLoading } = useShop()
-const { data: plans } = usePlans()
-const isArabic = computed(() => locale.value === 'ar')
+const { current, currentId, loading: shopLoading } = useShop()
+const ar = computed(() => locale.value === 'ar')
+const lowOnly = ref(false)
+const actionError = ref('')
+
 const mode = ref<'receive' | 'writeoff'>('receive')
 const productId = ref('')
 const quantity = ref(1)
 const unitCost = ref(0)
-const note = ref('')
-const { visible: adjustmentOpen, pending: pendingWrite, dirty: adjustmentDirty } = useRecordAction(() => ({ mode: mode.value, productId: productId.value, quantity: quantity.value, unitCost: unitCost.value, note: note.value }))
-const actionError = ref('')
+const reason = ref('')
 const requestId = ref<string | null>(null)
+const { visible: adjustmentOpen, pending: adjustmentPending, dirty: adjustmentDirty } = useRecordAction(() => ({ mode: mode.value, productId: productId.value, quantity: quantity.value, unitCost: unitCost.value, reason: reason.value }))
 
-const copy = computed(() => isArabic.value ? {
-  title: 'المخزون', subtitle: 'استلام يدوي وشطب كميات مع سجل دفعات وحركة محفوظة.',
-  manualOnly: 'تزيد مشتريات الموردين المخزون تلقائيًا. هذه الشاشة للتعديلات اليدوية؛ الخصم الآلي عند البيع قيد العمل.',
-  planUnavailable: 'المخزون غير مشمول في خطتك الحالية. يتطلب خطة Pro.',
-  noShop: 'أنشئ متجرًا أولًا من لوحة التحكم.', dashboard: 'لوحة التحكم',
-  noProducts: 'أضف منتجًا أولًا قبل تسجيل المخزون.', products: 'المنتجات',
-  product: 'المنتج', onHand: 'الكمية المتاحة', price: 'سعر البيع',
-  receive: 'استلام مخزون', writeoff: 'شطب مخزون', quantity: 'الكمية', unitCost: 'تكلفة الوحدة',
-  note: 'السبب أو الملاحظة', submitReceive: 'تسجيل الاستلام', submitWriteoff: 'تسجيل الشطب', saving: 'جاري الحفظ...',
-  readError: 'تعذّر تحميل المخزون.', retry: 'إعادة المحاولة',
-  invalid: 'اكتب كمية صحيحة حتى 3 منازل عشرية، وتكلفة غير سالبة للاستلام، وسببًا للشطب.',
-  insufficient: 'الكمية المطلوبة أكبر من المخزون المتاح.', access: 'انتهت التجربة أو ليست لديك صلاحية التعديل.',
-  writeError: 'تعذّر تسجيل حركة المخزون.', requestConflict: 'تعارض في طلب المخزون. غيّر النموذج وحاول مرة أخرى.',
-  confirmWriteoff: 'تأكيد شطب الكمية من المخزون؟',
+const countOpen = ref(false)
+const countPending = ref(false)
+const countProductId = ref('')
+const countedQuantity = ref(0)
+const countedAt = ref(localDateTime())
+const countReason = ref('')
+const countReference = ref('')
+const countUnitCost = ref(0)
+const countRequestId = ref<string | null>(null)
+
+const thresholdOpen = ref(false)
+const thresholdPending = ref(false)
+const thresholdProductId = ref('')
+const thresholdValue = ref(0)
+const historyProductId = ref('')
+
+const text = computed(() => ar.value ? {
+  title: 'المخزون', subtitle: 'الجرد الفعلي، وتنبيهات إعادة الطلب، وسجل تصحيحات FIFO.', noShop: 'أنشئ متجرًا أولًا من لوحة التحكم.', dashboard: 'لوحة التحكم',
+  denied: 'ليست لديك صلاحية عرض المخزون.', plan: 'تعديلات المخزون تتطلب خطة Pro نشطة.', loadError: 'تعذّر تحميل المخزون.', retry: 'إعادة المحاولة', all: 'كل المخزون', lowOnly: 'منخفض المخزون',
+  totalValue: 'إجمالي قيمة المخزون', lowCount: 'منتجات منخفضة', product: 'المنتج', onHand: 'المتاح', threshold: 'حد إعادة الطلب', value: 'القيمة', actions: 'الإجراءات', low: 'منخفض', archived: 'مؤرشف',
+  receive: 'استلام يدوي', writeoff: 'شطب', count: 'تسجيل جرد', history: 'السجل', setThreshold: 'تعديل الحد', noProducts: 'لا توجد منتجات مطابقة.', products: 'المنتجات', quantity: 'الكمية', unitCost: 'تكلفة الوحدة',
+  reason: 'السبب', reference: 'المرجع', countedAt: 'وقت الجرد', expected: 'المتوقع', counted: 'المعدود', variance: 'الفرق', positiveCost: 'تكلفة وحدة الفرق الموجب', save: 'حفظ', saving: 'جاري الحفظ...', close: 'إغلاق',
+  movements: 'حركات المخزون', counts: 'سجل الجرد', date: 'التاريخ', source: 'المصدر', actor: 'المنفذ', emptyHistory: 'لا يوجد سجل بعد.', archivedHint: 'يبقى المنتج المؤرشف ظاهرًا لحفظ المخزون والقيمة والسجل.',
+  invalidAdjustment: 'أدخل كمية صحيحة حتى منزلتين وتكلفة غير سالبة وسببًا للشطب.', invalidCount: 'أدخل الكمية والسبب والمرجع؛ والفرق الموجب يحتاج تكلفة.', invalidThreshold: 'أدخل حدًا غير سالب حتى منزلتين.',
+  insufficient: 'الكمية المطلوبة أكبر من المخزون.', conflict: 'استُخدم رقم الطلب ببيانات مختلفة.', confirmWriteoff: 'تأكيد شطب الكمية؟',
+  sources: { physical_count: 'جرد فعلي', manual_receipt: 'استلام يدوي', manual_writeoff: 'شطب يدوي', purchase_return: 'مرتجع شراء', sale: 'بيع', purchase_receipt: 'استلام شراء', adjustment: 'تصحيح', in: 'إضافة', out: 'صرف' },
 } : {
-  title: 'Inventory', subtitle: 'Manual receipts and write-offs with batch and movement history.',
-  manualOnly: 'Supplier purchases now increase stock automatically. This screen handles manual adjustments; automatic sale deductions are still in progress.',
-  planUnavailable: 'Inventory is not included in your current plan. It requires Pro.',
-  noShop: 'Create a shop from the dashboard first.', dashboard: 'Dashboard',
-  noProducts: 'Add a product before recording stock.', products: 'Products',
-  product: 'Product', onHand: 'On hand', price: 'Sale price',
-  receive: 'Receive stock', writeoff: 'Write off stock', quantity: 'Quantity', unitCost: 'Unit cost',
-  note: 'Reason or note', submitReceive: 'Record receipt', submitWriteoff: 'Record write-off', saving: 'Saving...',
-  readError: 'Could not load inventory.', retry: 'Retry',
-  invalid: 'Enter a quantity up to 3 decimal places, nonnegative receipt cost, and a write-off reason.',
-  insufficient: 'The requested quantity exceeds stock on hand.', access: 'Your trial has ended or you cannot edit stock.',
-  writeError: 'Could not record the stock movement.', requestConflict: 'The stock request conflicts with an earlier one. Change the form and retry.',
-  confirmWriteoff: 'Confirm this stock write-off?',
+  title: 'Inventory', subtitle: 'Physical counts, reorder alerts, and traceable FIFO corrections.', noShop: 'Create a shop from the dashboard first.', dashboard: 'Dashboard',
+  denied: 'You do not have permission to view inventory.', plan: 'Inventory changes require an active Pro plan.', loadError: 'Could not load inventory.', retry: 'Retry', all: 'All inventory', lowOnly: 'Low stock',
+  totalValue: 'Inventory valuation', lowCount: 'Low-stock products', product: 'Product', onHand: 'On hand', threshold: 'Reorder threshold', value: 'Value', actions: 'Actions', low: 'Low stock', archived: 'Archived',
+  receive: 'Manual receipt', writeoff: 'Write off', count: 'Record count', history: 'History', setThreshold: 'Set threshold', noProducts: 'No matching products.', products: 'Products', quantity: 'Quantity', unitCost: 'Unit cost',
+  reason: 'Reason', reference: 'Reference', countedAt: 'Counted at', expected: 'Expected', counted: 'Counted', variance: 'Variance', positiveCost: 'Positive variance unit cost', save: 'Save', saving: 'Saving...', close: 'Close',
+  movements: 'Inventory movements', counts: 'Count history', date: 'Date', source: 'Source', actor: 'Actor', emptyHistory: 'No history yet.', archivedHint: 'Archived products remain visible to preserve stock, valuation, and history.',
+  invalidAdjustment: 'Enter a valid quantity with up to two decimals, nonnegative cost, and a write-off reason.', invalidCount: 'Enter the count, reason, and reference; a positive variance needs unit cost.', invalidThreshold: 'Enter a nonnegative threshold with up to two decimals.',
+  insufficient: 'The requested quantity exceeds stock.', conflict: 'The request key was used with different data.', confirmWriteoff: 'Confirm this stock write-off?',
+  sources: { physical_count: 'Physical count', manual_receipt: 'Manual receipt', manual_writeoff: 'Manual write-off', purchase_return: 'Purchase return', sale: 'Sale', purchase_receipt: 'Purchase receipt', adjustment: 'Correction', in: 'Stock in', out: 'Stock out' },
 })
 
-const { data: subscription, error: subscriptionError } = useAsyncData(
-  'shop-data:inventory-subscription', async () => {
-    if (!currentId.value || !isOwner.value || !currentMembership.value) return null
-    const { data, error } = await supabase.from('subscriptions')
-      .select('plan_id').eq('profile_id', currentMembership.value.profile_id)
-      .maybeSingle()
-    if (error) throw error
-    return data as Subscription | null
-  }, { watch: [currentId], default: () => null },
-)
-const inventoryEnabled = computed(() => {
-  if (!subscription.value) return false
-  return plans.value?.find(plan => plan.id === subscription.value?.plan_id)?.features?.inventory === true
-})
+const { data: access, error: accessError, refresh: refreshAccess } = useAsyncData('shop-data:inventory-access', async () => {
+  if (!currentId.value) return null
+  const { data, error } = await rpc.rpc('inventory_access', { p_shop_id: currentId.value })
+  if (error) throw error
+  return (data?.[0] ?? null) as Access | null
+}, { watch: [currentId], default: () => null })
 
-const { data: stock, pending, error, refresh } = useAsyncData(
-  'shop-data:product-stock', async () => {
-    if (!currentId.value) return []
-    const { data, error: queryError } = await supabase.from('product_stock')
-      .select('shop_id,product_id,name,sku,sale_price,quantity_on_hand')
-      .eq('shop_id', currentId.value).order('name', { ascending: true }).limit(1000)
-    if (queryError) throw queryError
-    return (data ?? []) as StockRow[]
-  }, { watch: [currentId], default: () => [] },
-)
+const { data: stock, pending, error, refresh } = useAsyncData('shop-data:inventory-overview', async () => {
+  if (!currentId.value || !access.value?.can_view) return emptyStock()
+  const result = await rpc.rpc('list_inventory', { p_shop_id: currentId.value, p_low_stock_only: lowOnly.value })
+  if (result.error) throw result.error
+  return (result.data ?? emptyStock()) as StockPayload
+}, { watch: [currentId, lowOnly, access], default: emptyStock })
 
-watch([mode, productId, quantity, unitCost, note, currentId], () => {
-  requestId.value = null
-  actionError.value = ''
-})
-watch(stock, rows => {
-  if (!rows?.some(row => row.product_id === productId.value)) {
-    productId.value = rows?.[0]?.product_id ?? ''
-  }
-}, { immediate: true })
+const { data: movements, pending: historyPending, error: historyError, refresh: refreshHistory } = useAsyncData('shop-data:inventory-history', async () => {
+  if (!currentId.value || !historyProductId.value) return emptyPage<Movement>()
+  const result = await rpc.rpc('list_inventory_history', { p_shop_id: currentId.value, p_product_id: historyProductId.value, p_page: 1, p_page_size: 100 })
+  if (result.error) throw result.error
+  return (result.data ?? emptyPage<Movement>()) as Page<Movement>
+}, { watch: [currentId, historyProductId], default: () => emptyPage<Movement>() })
 
-function readableError(message?: string) {
-  if (message === 'INSUFFICIENT_STOCK') return copy.value.insufficient
-  if (message === 'INVENTORY_NOT_IN_PLAN') return copy.value.planUnavailable
-  if (message === 'SHOP_SUBSCRIPTION_INACTIVE' || message === 'SHOP_PERMISSION_DENIED') return copy.value.access
-  if (message === 'STOCK_REQUEST_CONFLICT') return copy.value.requestConflict
-  return message || copy.value.writeError
-}
+const { data: counts, error: countsError, refresh: refreshCounts } = useAsyncData('shop-data:stock-count-history', async () => {
+  if (!currentId.value || !historyProductId.value) return emptyPage<StockCount>()
+  const result = await rpc.rpc('list_stock_counts', { p_shop_id: currentId.value, p_product_id: historyProductId.value, p_page: 1, p_page_size: 100 })
+  if (result.error) throw result.error
+  return (result.data ?? emptyPage<StockCount>()) as Page<StockCount>
+}, { watch: [currentId, historyProductId], default: () => emptyPage<StockCount>() })
+
+const activeStock = computed(() => stock.value.items.filter(row => row.is_active))
+const countProduct = computed(() => stock.value.items.find(row => row.product_id === countProductId.value) ?? null)
+const historyProduct = computed(() => stock.value.items.find(row => row.product_id === historyProductId.value) ?? null)
+const variance = computed(() => Number(countedQuantity.value) - Number(countProduct.value?.quantity_on_hand ?? 0))
+
+watch([mode, productId, quantity, unitCost, reason, currentId], () => { requestId.value = null; actionError.value = '' })
+watch([countProductId, countedQuantity, countedAt, countReason, countReference, countUnitCost, currentId], () => { countRequestId.value = null; actionError.value = '' })
+watch(activeStock, rows => { if (!rows.some(row => row.product_id === productId.value)) productId.value = rows[0]?.product_id ?? '' }, { immediate: true })
+
+function emptyStock(): StockPayload { return { items: [], total_valuation: 0, low_stock_count: 0 } }
+function emptyPage<T>(): Page<T> { return { items: [], total: 0 } }
+function localDateTime() { const now = new Date(); return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16) }
+function validNumber(value: number, minimum = 0) { const number = Number(value); return Number.isFinite(number) && number >= minimum && number <= 1000000 && Math.abs(Math.round(number * 100) - number * 100) < 0.000001 }
+function readableError(message?: string) { if (message === 'INSUFFICIENT_STOCK') return text.value.insufficient; if (message === 'STOCK_REQUEST_CONFLICT' || message === 'STOCK_COUNT_REQUEST_CONFLICT') return text.value.conflict; if (message === 'INVENTORY_NOT_IN_PLAN') return text.value.plan; return message || text.value.loadError }
+function money(value: number) { return new Intl.NumberFormat(ar.value ? 'ar-EG' : 'en-EG', { style: 'currency', currency: 'EGP', maximumFractionDigits: 2 }).format(Number(value)) }
+function date(value: string) { return new Intl.DateTimeFormat(ar.value ? 'ar-EG' : 'en-EG', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) }
+function source(value: string) { return text.value.sources[value as keyof typeof text.value.sources] ?? value }
+function openAdjustment(next: 'receive' | 'writeoff') { mode.value = next; productId.value = activeStock.value[0]?.product_id ?? ''; actionError.value = ''; adjustmentOpen.value = true }
+function openCount(row: StockRow) { countProductId.value = row.product_id; countedQuantity.value = Number(row.quantity_on_hand); countedAt.value = localDateTime(); countReason.value = ''; countReference.value = ''; countUnitCost.value = 0; actionError.value = ''; countOpen.value = true }
+function openThreshold(row: StockRow) { thresholdProductId.value = row.product_id; thresholdValue.value = Number(row.reorder_threshold); actionError.value = ''; thresholdOpen.value = true }
+async function refreshAll() { await refresh(); if (historyProductId.value) await Promise.all([refreshHistory(), refreshCounts()]) }
 
 async function saveAdjustment() {
-  if (!currentId.value || !isOwner.value || !inventoryEnabled.value || pendingWrite.value) return
-  const amount = Number(quantity.value)
-  const cost = Number(unitCost.value)
-  if (!productId.value || !Number.isFinite(amount) || amount <= 0 || amount > 1000000
-    || Math.abs(Math.round(amount * 1000) - amount * 1000) > 0.000001
-    || (mode.value === 'receive' && (!Number.isFinite(cost) || cost < 0 || cost > 999999999.99))
-    || (mode.value === 'writeoff' && note.value.trim().length < 3)) {
-    actionError.value = copy.value.invalid
-    return
-  }
-  if (mode.value === 'writeoff' && !await confirmation.ask(copy.value.confirmWriteoff)) return
-  actionError.value = ''
-  requestId.value ||= crypto.randomUUID()
-  pendingWrite.value = true
+  if (!currentId.value || !access.value?.can_manage || !access.value.inventory_enabled || adjustmentPending.value) return
+  const amount = Number(quantity.value); const cost = Number(unitCost.value)
+  if (!productId.value || !validNumber(amount, 0.01) || (mode.value === 'receive' && (!Number.isFinite(cost) || cost < 0)) || (mode.value === 'writeoff' && reason.value.trim().length < 3)) { actionError.value = text.value.invalidAdjustment; return }
+  if (mode.value === 'writeoff' && !await confirmation.ask(text.value.confirmWriteoff)) return
+  requestId.value ||= crypto.randomUUID(); actionError.value = ''; adjustmentPending.value = true
   try {
-    const { error: writeError } = await shopRpc.rpc('adjust_stock', {
-      p_request_id: requestId.value,
-      p_shop_id: currentId.value,
-      p_product_id: productId.value,
-      p_quantity_change: mode.value === 'receive' ? amount : -amount,
-      p_unit_cost: mode.value === 'receive' ? cost : null,
-      p_note: note.value.trim() || null,
-    })
-    if (writeError) throw writeError
-    requestId.value = null
-    quantity.value = 1
-    unitCost.value = 0
-    note.value = ''
-    adjustmentOpen.value = false
-    await refresh()
-  } catch (error) {
-    actionError.value = readableError(error instanceof Error ? error.message : undefined)
-  } finally {
-    pendingWrite.value = false
-  }
+    const result = await rpc.rpc('adjust_stock', { p_request_id: requestId.value, p_shop_id: currentId.value, p_product_id: productId.value, p_quantity_change: mode.value === 'receive' ? amount : -amount, p_unit_cost: mode.value === 'receive' ? cost : null, p_note: reason.value.trim() || null })
+    if (result.error) throw result.error
+    requestId.value = null; quantity.value = 1; unitCost.value = 0; reason.value = ''; adjustmentOpen.value = false; await refreshAll()
+  } catch (error) { actionError.value = readableError(error instanceof Error ? error.message : undefined) } finally { adjustmentPending.value = false }
 }
 
-function money(value: number) {
-  return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', {
-    style: 'currency', currency: 'EGP', maximumFractionDigits: 2,
-  }).format(value)
+async function saveCount() {
+  if (!currentId.value || !countProduct.value || !access.value?.can_manage || !access.value.inventory_enabled || countPending.value) return
+  const amount = Number(countedQuantity.value); const cost = Number(countUnitCost.value)
+  if (!validNumber(amount) || countReason.value.trim().length < 3 || !countReference.value.trim() || Number.isNaN(new Date(countedAt.value).getTime()) || (variance.value > 0 && (!Number.isFinite(cost) || cost < 0))) { actionError.value = text.value.invalidCount; return }
+  countRequestId.value ||= crypto.randomUUID(); actionError.value = ''; countPending.value = true
+  try {
+    const result = await rpc.rpc('record_stock_count', { p_request_id: countRequestId.value, p_shop_id: currentId.value, p_product_id: countProduct.value.product_id, p_counted_quantity: amount, p_counted_at: new Date(countedAt.value).toISOString(), p_reason: countReason.value.trim(), p_reference: countReference.value.trim(), p_positive_variance_unit_cost: variance.value > 0 ? cost : null })
+    if (result.error) throw result.error
+    countRequestId.value = null; countOpen.value = false; await refreshAll()
+  } catch (error) { actionError.value = readableError(error instanceof Error ? error.message : undefined) } finally { countPending.value = false }
+}
+
+async function saveThreshold() {
+  if (!currentId.value || !thresholdProductId.value || !access.value?.can_manage || !access.value.inventory_enabled || thresholdPending.value) return
+  const value = Number(thresholdValue.value); if (!validNumber(value)) { actionError.value = text.value.invalidThreshold; return }
+  actionError.value = ''; thresholdPending.value = true
+  try { const result = await rpc.rpc('set_reorder_threshold', { p_shop_id: currentId.value, p_product_id: thresholdProductId.value, p_threshold: value }); if (result.error) throw result.error; thresholdOpen.value = false; await refreshAll() }
+  catch (error) { actionError.value = readableError(error instanceof Error ? error.message : undefined) } finally { thresholdPending.value = false }
 }
 </script>
 
 <template>
   <div class="space-y-6">
-    <header><h1 class="text-3xl font-extrabold tracking-tight">{{ copy.title }}</h1><p class="mt-2 text-sm text-muted-foreground">{{ copy.subtitle }}</p></header>
-    <div v-if="!current && !shopLoading" class="rounded-2xl border border-border bg-card p-8 text-center text-sm"><p>{{ copy.noShop }}</p><NuxtLink to="/dashboard" class="mt-3 inline-block font-bold text-[var(--bs-link)] underline">{{ copy.dashboard }}</NuxtLink></div>
+    <header><h1 class="text-3xl font-extrabold tracking-tight">{{ text.title }}</h1><p class="mt-2 text-sm text-muted-foreground">{{ text.subtitle }}</p></header>
+    <div v-if="!current && !shopLoading" class="rounded-2xl border border-border bg-card p-8 text-center text-sm"><p>{{ text.noShop }}</p><NuxtLink to="/dashboard" class="mt-3 inline-block font-bold text-[var(--bs-link)] underline">{{ text.dashboard }}</NuxtLink></div>
     <template v-else-if="current">
-      <p class="rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm dark:bg-[var(--bs-status-info-bg)]">{{ copy.manualOnly }}</p>
-      <p v-if="subscriptionError" role="alert" class="rounded-xl bg-[var(--bs-status-error-bg)] p-4 text-sm text-[var(--bs-status-error)]">{{ copy.readError }}</p>
-      <p v-if="isOwner && !subscriptionError && !inventoryEnabled" class="rounded-xl border border-[var(--bs-status-warning)]/25 bg-[var(--bs-status-warning-bg)] p-4 text-sm dark:bg-[var(--bs-status-warning-bg)]">{{ copy.planUnavailable }}</p>
-
-      <div v-if="isOwner && inventoryEnabled && stock?.length"><button type="button" class="ls-btn ls-btn-primary" @click="mode = 'receive'; adjustmentOpen = true">{{ copy.receive }}</button><button type="button" class="ls-btn ms-2" @click="mode = 'writeoff'; adjustmentOpen = true">{{ copy.writeoff }}</button></div>
-      <BsDialog v-model:visible="adjustmentOpen" :title="mode === 'receive' ? copy.receive : copy.writeoff" :dirty="adjustmentDirty" :pending="pendingWrite"><form class="space-y-4 " @submit.prevent="saveAdjustment">
-        <div class="flex flex-wrap gap-2"><button type="button" class="ls-btn" :class="mode === 'receive' ? 'border-[var(--bs-accent)] bg-[var(--bs-accent)]/10' : 'border-border'" @click="mode = 'receive'">{{ copy.receive }}</button><button type="button" class="ls-btn" :class="mode === 'writeoff' ? 'border-[var(--bs-accent)] bg-[var(--bs-accent)]/10' : 'border-border'" @click="mode = 'writeoff'">{{ copy.writeoff }}</button></div>
-        <p v-if="actionError" role="alert" class="rounded-lg bg-[var(--bs-status-error-bg)] p-3 text-sm text-[var(--bs-status-error)]">{{ actionError }}</p>
-        <div class="grid gap-4 sm:grid-cols-2">
-          <label class="space-y-2 text-sm font-bold">{{ copy.product }}<select v-model="productId" required class="ls-input"><option v-for="row in stock" :key="row.product_id" :value="row.product_id">{{ row.name }} ({{ row.quantity_on_hand }})</option></select></label>
-          <label class="space-y-2 text-sm font-bold">{{ copy.quantity }}<input v-model.number="quantity" type="number" min="0.001" max="1000000" step="0.001" required class="ls-input"></label>
-          <label v-if="mode === 'receive'" class="space-y-2 text-sm font-bold">{{ copy.unitCost }}<input v-model.number="unitCost" type="number" min="0" step="0.01" required class="ls-input"></label>
-          <label class="space-y-2 text-sm font-bold" :class="mode === 'writeoff' ? 'sm:col-span-2' : ''">{{ copy.note }}<input v-model="note" type="text" maxlength="500" :required="mode === 'writeoff'" class="ls-input"></label>
-        </div>
-        <button type="submit" class="ls-btn ls-btn-primary" :disabled="pendingWrite">{{ pendingWrite ? copy.saving : mode === 'receive' ? copy.submitReceive : copy.submitWriteoff }}</button>
-      </form></BsDialog>
-
-      <div class="overflow-hidden rounded-2xl border border-border bg-card">
-        <div class="border-b border-border px-5 py-4"><h2 class="font-extrabold">{{ copy.onHand }}</h2></div>
-        <div v-if="pending" class="space-y-3 p-5"><div v-for="index in 3" :key="index" class="h-11 animate-pulse rounded-lg bg-muted" /></div>
-        <p v-else-if="error" role="alert" class="p-5 text-sm text-[var(--bs-status-error)]">{{ copy.readError }} <button type="button" class="underline" @click="refresh()">{{ copy.retry }}</button></p>
-        <div v-else-if="stock?.length" class="overflow-x-auto"><BsDataTable :value="stock" data-key="product_id" :row-class="() => 'border-t border-border'">
-  <Column header-class="px-5 py-3 text-start" body-class="px-5 py-4 font-bold">
-    <template #header>{{ copy.product }}</template>
-    <template #body="{ data: row }">{{ row.name }}<span v-if="row.sku" class="ms-2 text-xs font-normal text-muted-foreground">{{ row.sku }}</span></template>
-  </Column>
-  <Column header-class="px-5 py-3 text-start" body-class="px-5 py-4">
-    <template #header>{{ copy.onHand }}</template>
-    <template #body="{ data: row }">{{ row.quantity_on_hand }}</template>
-  </Column>
-  <Column header-class="px-5 py-3 text-end" body-class="px-5 py-4 text-end">
-    <template #header>{{ copy.price }}</template>
-    <template #body="{ data: row }">{{ money(Number(row.sale_price)) }}</template>
-  </Column>
-</BsDataTable></div>
-        <div v-else class="p-8 text-center text-sm text-muted-foreground"><p>{{ copy.noProducts }}</p><NuxtLink to="/products" class="mt-3 inline-block font-bold text-[var(--bs-link)] underline">{{ copy.products }}</NuxtLink></div>
-      </div>
+      <p v-if="accessError" role="alert" class="rounded-xl bg-[var(--bs-status-error-bg)] p-4 text-sm text-[var(--bs-status-error)]">{{ text.denied }} <button class="font-bold underline" @click="refreshAccess()">{{ text.retry }}</button></p>
+      <template v-else>
+        <p v-if="access?.can_manage && !access.inventory_enabled" class="rounded-xl border border-[var(--bs-status-warning)]/25 bg-[var(--bs-status-warning-bg)] p-4 text-sm">{{ text.plan }}</p>
+        <div class="grid gap-4 sm:grid-cols-2"><section class="rounded-2xl border border-border bg-card p-5"><p class="text-sm text-muted-foreground">{{ text.totalValue }}</p><p class="mt-2 text-2xl font-extrabold">{{ money(stock.total_valuation) }}</p></section><section class="rounded-2xl border border-border bg-card p-5"><p class="text-sm text-muted-foreground">{{ text.lowCount }}</p><p class="mt-2 text-2xl font-extrabold">{{ stock.low_stock_count }}</p></section></div>
+        <div class="flex flex-wrap items-center justify-between gap-3"><div class="flex gap-2"><button class="ls-btn" :class="!lowOnly ? 'border-[var(--bs-accent)] bg-[var(--bs-accent)]/10' : ''" @click="lowOnly = false">{{ text.all }}</button><button class="ls-btn" :class="lowOnly ? 'border-[var(--bs-accent)] bg-[var(--bs-accent)]/10' : ''" @click="lowOnly = true">{{ text.lowOnly }}</button></div><div v-if="access?.can_manage && access.inventory_enabled && activeStock.length" class="flex gap-2"><button class="ls-btn ls-btn-primary" @click="openAdjustment('receive')">{{ text.receive }}</button><button class="ls-btn" @click="openAdjustment('writeoff')">{{ text.writeoff }}</button></div></div>
+        <div class="overflow-hidden rounded-2xl border border-border bg-card"><BsDataTable :value="stock.items" data-key="product_id" :loading="pending" :error="error ? text.loadError : null" :label="text.title" :row-class="() => 'border-t border-border'" @retry="refresh()">
+          <Column header-class="px-4 py-3 text-start" body-class="px-4 py-3"><template #header>{{ text.product }}</template><template #body="{ data: row }"><p class="font-bold">{{ row.name }} <span v-if="!row.is_active" class="text-xs text-muted-foreground">({{ text.archived }})</span></p><p v-if="row.sku" class="text-xs text-muted-foreground">{{ row.sku }}</p></template></Column>
+          <Column header-class="px-4 py-3 text-end" body-class="px-4 py-3 text-end"><template #header>{{ text.onHand }}</template><template #body="{ data: row }"><span :class="row.is_low_stock ? 'font-extrabold text-[var(--bs-status-warning)]' : 'font-bold'">{{ Number(row.quantity_on_hand) }}</span><span v-if="row.is_low_stock" class="ms-2 text-xs">{{ text.low }}</span></template></Column>
+          <Column header-class="px-4 py-3 text-end" body-class="px-4 py-3 text-end"><template #header>{{ text.threshold }}</template><template #body="{ data: row }">{{ Number(row.reorder_threshold) }}</template></Column>
+          <Column header-class="px-4 py-3 text-end" body-class="px-4 py-3 text-end font-bold"><template #header>{{ text.value }}</template><template #body="{ data: row }">{{ money(row.inventory_value) }}</template></Column>
+          <Column header-class="px-4 py-3 text-end" body-class="px-4 py-3 text-end"><template #header>{{ text.actions }}</template><template #body="{ data: row }"><span class="inline-flex flex-wrap justify-end gap-3"><button class="font-bold text-[var(--bs-link)]" @click="historyProductId = row.product_id">{{ text.history }}</button><button v-if="access?.can_manage && access.inventory_enabled" class="font-bold text-[var(--bs-link)]" @click="openCount(row)">{{ text.count }}</button><button v-if="row.is_active && access?.can_manage && access.inventory_enabled" class="font-bold text-[var(--bs-link)]" @click="openThreshold(row)">{{ text.setThreshold }}</button></span></template></Column>
+          <template #empty><div class="p-8 text-center text-sm text-muted-foreground"><p>{{ text.noProducts }}</p><NuxtLink to="/products" class="mt-3 inline-block font-bold text-[var(--bs-link)] underline">{{ text.products }}</NuxtLink></div></template>
+        </BsDataTable></div>
+        <p class="text-xs text-muted-foreground">{{ text.archivedHint }}</p>
+        <section v-if="historyProduct" class="space-y-5 rounded-2xl border border-border bg-card p-5"><div class="flex items-center justify-between gap-3"><div><h2 class="text-lg font-extrabold">{{ historyProduct.name }}</h2><p class="text-sm text-muted-foreground">{{ text.history }}</p></div><button class="ls-btn ls-btn-sm" @click="historyProductId = ''">{{ text.close }}</button></div><p v-if="historyError || countsError" role="alert" class="text-sm text-[var(--bs-status-error)]">{{ text.loadError }} <button class="font-bold underline" @click="refreshHistory(); refreshCounts()">{{ text.retry }}</button></p>
+          <div class="overflow-x-auto"><h3 class="mb-3 font-bold">{{ text.movements }}</h3><BsDataTable :value="movements.items" :loading="historyPending" data-key="id" :row-class="() => 'border-t border-border'"><Column header-class="px-3 py-2 text-start" body-class="px-3 py-3"><template #header>{{ text.date }}</template><template #body="{ data: event }">{{ date(event.event_at) }}</template></Column><Column header-class="px-3 py-2 text-start" body-class="px-3 py-3"><template #header>{{ text.source }}</template><template #body="{ data: event }"><p class="font-bold">{{ source(event.source_type) }}</p><p class="text-xs text-muted-foreground">{{ event.reference }}<template v-if="event.reason"> · {{ event.reason }}</template></p></template></Column><Column header-class="px-3 py-2 text-end" body-class="px-3 py-3 text-end font-bold"><template #header>{{ text.quantity }}</template><template #body="{ data: event }">{{ Number(event.quantity_change) }}</template></Column><Column header-class="px-3 py-2 text-end" body-class="px-3 py-3 text-end"><template #header>{{ text.value }}</template><template #body="{ data: event }">{{ event.value_change == null ? '—' : money(event.value_change) }}</template></Column><Column header-class="px-3 py-2 text-start" body-class="px-3 py-3"><template #header>{{ text.actor }}</template><template #body="{ data: event }">{{ event.actor_name || '—' }}</template></Column><template #empty><p class="p-6 text-center text-sm text-muted-foreground">{{ text.emptyHistory }}</p></template></BsDataTable></div>
+          <div class="overflow-x-auto"><h3 class="mb-3 font-bold">{{ text.counts }}</h3><BsDataTable :value="counts.items" data-key="id" :row-class="() => 'border-t border-border'"><Column header-class="px-3 py-2 text-start" body-class="px-3 py-3"><template #header>{{ text.date }}</template><template #body="{ data: event }">{{ date(event.counted_at) }}</template></Column><Column header-class="px-3 py-2 text-start" body-class="px-3 py-3"><template #header>{{ text.reference }}</template><template #body="{ data: event }"><p class="font-bold">{{ event.reference }}</p><p class="text-xs text-muted-foreground">{{ event.reason }}</p></template></Column><Column header-class="px-3 py-2 text-end" body-class="px-3 py-3 text-end"><template #header>{{ text.expected }}</template><template #body="{ data: event }">{{ Number(event.expected_quantity) }}</template></Column><Column header-class="px-3 py-2 text-end" body-class="px-3 py-3 text-end"><template #header>{{ text.counted }}</template><template #body="{ data: event }">{{ Number(event.counted_quantity) }}</template></Column><Column header-class="px-3 py-2 text-end" body-class="px-3 py-3 text-end font-bold"><template #header>{{ text.variance }}</template><template #body="{ data: event }">{{ Number(event.variance_quantity) }}</template></Column></BsDataTable></div>
+        </section>
+      </template>
     </template>
+
+    <BsDialog v-model:visible="adjustmentOpen" :title="mode === 'receive' ? text.receive : text.writeoff" :dirty="adjustmentDirty" :pending="adjustmentPending"><form class="space-y-4" @submit.prevent="saveAdjustment"><p v-if="actionError" role="alert" class="rounded-lg bg-[var(--bs-status-error-bg)] p-3 text-sm text-[var(--bs-status-error)]">{{ actionError }}</p><div class="grid gap-4 sm:grid-cols-2"><label class="space-y-2 text-sm font-bold">{{ text.product }}<select v-model="productId" required class="ls-input"><option v-for="row in activeStock" :key="row.product_id" :value="row.product_id">{{ row.name }} ({{ Number(row.quantity_on_hand) }})</option></select></label><label class="space-y-2 text-sm font-bold">{{ text.quantity }}<input v-model.number="quantity" class="ls-input" type="number" min="0.01" max="1000000" step="0.01" required></label><label v-if="mode === 'receive'" class="space-y-2 text-sm font-bold">{{ text.unitCost }}<input v-model.number="unitCost" class="ls-input" type="number" min="0" step="0.01" required></label><label class="space-y-2 text-sm font-bold" :class="mode === 'writeoff' ? 'sm:col-span-2' : ''">{{ text.reason }}<input v-model="reason" class="ls-input" maxlength="500" :required="mode === 'writeoff'"></label></div><button class="ls-btn ls-btn-primary" :disabled="adjustmentPending">{{ adjustmentPending ? text.saving : text.save }}</button></form></BsDialog>
+    <BsDialog v-model:visible="countOpen" :title="text.count" :dirty="true" :pending="countPending"><form class="space-y-4" @submit.prevent="saveCount"><p v-if="actionError" role="alert" class="rounded-lg bg-[var(--bs-status-error-bg)] p-3 text-sm text-[var(--bs-status-error)]">{{ actionError }}</p><div class="rounded-xl border border-border p-3 text-sm"><p class="font-bold">{{ countProduct?.name }}</p><p class="mt-1 text-muted-foreground">{{ text.expected }}: {{ Number(countProduct?.quantity_on_hand ?? 0) }} · {{ text.variance }}: {{ variance }}</p></div><div class="grid gap-4 sm:grid-cols-2"><label class="space-y-2 text-sm font-bold">{{ text.counted }}<input v-model.number="countedQuantity" class="ls-input" type="number" min="0" max="1000000" step="0.01" required></label><label class="space-y-2 text-sm font-bold">{{ text.countedAt }}<input v-model="countedAt" class="ls-input" type="datetime-local" required></label><label v-if="variance > 0" class="space-y-2 text-sm font-bold">{{ text.positiveCost }}<input v-model.number="countUnitCost" class="ls-input" type="number" min="0" step="0.01" required></label><label class="space-y-2 text-sm font-bold">{{ text.reference }}<input v-model="countReference" class="ls-input" maxlength="200" required></label><label class="space-y-2 text-sm font-bold sm:col-span-2">{{ text.reason }}<textarea v-model="countReason" class="ls-input" minlength="3" maxlength="500" rows="2" required /></label></div><button class="ls-btn ls-btn-primary" :disabled="countPending">{{ countPending ? text.saving : text.save }}</button></form></BsDialog>
+    <BsDialog v-model:visible="thresholdOpen" :title="text.setThreshold" :dirty="true" :pending="thresholdPending"><form class="space-y-4" @submit.prevent="saveThreshold"><p v-if="actionError" role="alert" class="rounded-lg bg-[var(--bs-status-error-bg)] p-3 text-sm text-[var(--bs-status-error)]">{{ actionError }}</p><label class="space-y-2 text-sm font-bold">{{ text.threshold }}<input v-model.number="thresholdValue" class="ls-input" type="number" min="0" max="1000000" step="0.01" required></label><button class="ls-btn ls-btn-primary" :disabled="thresholdPending">{{ thresholdPending ? text.saving : text.save }}</button></form></BsDialog>
   </div>
 </template>

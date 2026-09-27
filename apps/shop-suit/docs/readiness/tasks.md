@@ -1,7 +1,7 @@
 # Shop Suit Requirements V1 — canonical implementation tracker
 
-Status: SS-PAY-001 complete; SS-PUR-002 proposed next, not started.
-Last updated: 2026-09-24.
+Status: SS-PUR-002 complete; SS-STOCK-002 implemented locally with database/browser verification pending.
+Last updated: 2026-09-27.
 
 This file is the sole canonical implementation tracker for the Shop Suit Requirements Pack V1 stream. It replaces the former coarse backlog in this path. Other files in `apps/shop-suit/docs/readiness/` and `docs/rebuild/` remain dated evidence, not parallel status authorities.
 
@@ -33,6 +33,8 @@ This file is the sole canonical implementation tracker for the Shop Suit Require
 | `SS-CUST-001` | Complete | Authorized customer create/edit/archive/detail plus server-side search/filter/pagination, bilingual UI, audited archive state and same-shop document references; focused SQL and Shop typecheck pass |
 | `SS-SALE-001` | Complete | Persisted product/service/mixed drafts, atomic issue with authoritative totals and snapshots, FIFO sale-out movements, request idempotency, race-safe numbering, paged list/detail and bilingual UI; focused SQL/concurrency evidence passes |
 | `SS-PAY-001` | Complete | Immutable customer receipts and allocations, append-only reversals/refunds, due/overdue and statements, atomic fully-paid customerless checkout, bilingual UI and focused SQL/real-concurrency evidence |
+| `SS-PUR-002` | Complete | Supplier lifecycle, payable/payment corrections, stock-safe purchase returns, complete detail/history and focused SQL/concurrency evidence |
+| `SS-STOCK-002` | Implemented; verification pending | Physical counts and FIFO corrections, low-stock thresholds/view, archived-stock visibility, valuation/history UI and focused rollback/concurrency suites; local Docker and authenticated browser verification remain unrun |
 | All later packages | Proposed only | Ordered below; none started |
 
 ## Documentation authority
@@ -80,6 +82,7 @@ Evidence codes keep the 243-row matrix readable. Each code resolves to concrete 
 - **E13** — `app/pages/customers/index.vue`, `app/pages/customers/[id].vue`, `app/layouts/default.vue`, `app/types/shopCrmRpc.ts` and `i18n/locales/{ar,en}.ts`: connected customer list/detail/create/edit/archive workflow with localized responsive states and immediate refetch after writes.
 - **E14** — `app/pages/sales/index.vue`, `app/pages/sales/[id].vue`, `app/layouts/default.vue`, `app/types/shopCrmRpc.ts` and `i18n/locales/{ar,en}.ts`: connected server-paged sale list/detail/draft/issue workflow for product, service and mixed modes with explicit payment boundaries and relevant cache refresh.
 - **E15** — `app/pages/sales/index.vue`, `app/pages/sales/[id].vue`, `app/pages/customers/[id].vue`, `app/types/shopCrmRpc.ts` and `i18n/locales/{ar,en}.ts`: connected customer receipt, reversal/refund, settlement, due/overdue, statement and fully-paid customerless checkout UI.
+- **E16** — `app/pages/inventory/index.vue`, `app/types/shopCrmRpc.ts`, `tooling/database/test-shop-stock-local.mjs` and the `db:test:shop:stock` script: connected bilingual count, threshold, low-stock, valuation and movement/count-history workflow plus its focused local runner.
 
 ### Effective database
 
@@ -98,6 +101,7 @@ Evidence codes keep the 243-row matrix readable. Each code resolves to concrete 
 - **D13** — `20260923180244_customer_management.sql`: audited client archive fields, checked customer read/write wrappers, server-side search/filter/pagination, validated invoice/payment same-shop customer keys, restrictive historical references, and continued direct-table-write denial. Existing `client_name_snapshot` and issued-invoice immutability are preserved; snapshot population stays with SS-SALE-001.
 - **D14** — `20260923185133_atomic_sale_issuance.sql`: checked sale access/catalog/list/detail/save/issue wrappers, persisted drafts, authoritative catalog pricing/discounts, immutable customer/product/service snapshots, shop-local locked numbering, request conflict records, deterministic FIFO locks, sale-out line traceability, closed-period checks and direct document/stock write denial. The legacy finalizer remains browser-revoked.
 - **D15** — `20260923201520_customer_payments.sql`: extends `payments` with customer receipt/refund classification and adds immutable allocation/adjustment/request records, derived outstanding/settlement, checked receipt/reversal/refund and statement/receivable wrappers, explicit due dates, granular payment permissions and atomic customerless sale issuance plus full allocation. Overpayment/unallocated receipt and customerless adjustment attempts are rejected.
+- **D16** — `20260926150000_stock_counts_low_stock_corrections.sql`: additive immutable physical-count and threshold audit records, same-product lock serialization, idempotent FIFO count corrections, archived-product inventory visibility, actionable low-stock view, exact remaining-layer valuation and permission-checked inventory/history/count RPCs.
 
 ### UI and verification
 
@@ -109,6 +113,7 @@ Evidence codes keep the 243-row matrix readable. Each code resolves to concrete 
 - **U6** — Customer list/detail routes use `BsDataTable`, `BsDialog`, record/confirmation controllers, server paging/search/status filters, explicit active/archive text, loading/error/empty/permission states and English/Arabic translations. Authenticated browser/mobile verification remains unrun.
 - **U7** — Sale list/detail routes use shared tables/dialog/confirmation behavior with server paging/search/date/status filters, mode-aware composition, customer/inventory drill-through, explicit deferred-payment messaging, immediate refresh and English/Arabic responsive states. Authenticated browser/mobile verification remains unrun.
 - **U8** — Sale detail exposes settlement, due/overdue and payment history with distinct receipt/reversal/refund interactions; customer detail supports multi-invoice receipt allocation, server-paged statement and authoritative outstanding documents; sale draft supports explicit nullable due date and customerless full-payment checkout. Authenticated browser/mobile verification remains unrun.
+- **U9** — Inventory exposes all/low-stock views, valuation, active/archive state, manual receipt/write-off, physical count and threshold dialogs, and traceable movement/count history in English/Arabic responsive layouts. Authenticated mobile/desktop verification remains unrun.
 - **T1** — `pnpm db:test:shop` passed all seven active rollback suites against the already-current disposable local database. A separate rollback-only execution of the historical `shop_crm_read_isolation.sql` failed only at its superseded “no readable report view” assertion because current `product_stock` is deliberately authenticated-readable; the aborted transaction rolled back. No hosted database was touched.
 - **T2** — `pnpm db shop-suit db lint --local --level warning` completed but reported one function error in `public.issue_invoice_and_deduct_inventory`.
 - **T3** — Shop typecheck, Shop lint and Shop production build passed. Build/typecheck warned only that runtime Supabase URL/key were not supplied.
@@ -119,6 +124,7 @@ Evidence codes keep the 243-row matrix readable. Each code resolves to concrete 
 - **T8** — `shop_customer_management.sql` passed as a rollback-only focused suite after applying the migration locally. It covers owner and delegated-member CRUD/archive, outsider/suspended/cross-shop denial, direct-write/private-helper boundaries, search/page/status queries, archived detail and linked invoice snapshot preservation. Shop typecheck and changed-file lint passed; authenticated browser/mobile checks were not run because no reusable authenticated fixture is available.
 - **T9** — `pnpm db:test:shop:sale` passes the rollback-only sale suite and real parallel `psql` sessions. Coverage includes product/service/mixed issue, authoritative totals, retry/conflict, insufficient-stock rollback, customer/custom-line boundaries, owner/delegated/unprivileged/suspended/outsider/cross-shop security, snapshots/immutability, stock race `5 → 4 → 1`, and two concurrent unique numbers. No hosted database was touched.
 - **T10** — `pnpm db:test:shop:payment` passes the rollback-only payment suite and real independent PostgreSQL sessions. It covers partial/full/multiple/distinct-invoice allocation, full multi-invoice refund, retry/conflict, overpayment/unallocated/sub-cent rejection, append-only partial/full adjustment, outbound refund, statement/due reconciliation, cross-shop/authorization/closed-period/direct-write denial, customerless service/product checkout with stock rollback, retry and restriction, receipt race `100 → 70 accepted → 30 outstanding` and combined adjustment race `70 → 40 accepted → 30 effective`. No hosted database was touched.
+- **T11** — `shop_stock_counts_corrections.sql` and `test-shop-stock-local.mjs` cover count retry/conflict, positive/negative/zero variance, negative prevention, immutable audit records, low-stock actionability, owner/authorized-staff/suspended/outsider/cross-shop boundaries, archived stock/history, exact FIFO valuation and a real count-versus-sale race. The sandbox could not access the local Docker database, so this evidence is implemented but not executed.
 
 
 ## Requirement summary
@@ -126,8 +132,8 @@ Evidence codes keep the 243-row matrix readable. Each code resolves to concrete 
 | Status | Count |
 |---|---:|
 | `implemented` | 83 |
-| `partially implemented` | 85 |
-| `missing` | 23 |
+| `partially implemented` | 87 |
+| `missing` | 21 |
 | `unverified` | 6 |
 | **Total** | **197** |
 
@@ -265,12 +271,12 @@ Evidence codes keep the 243-row matrix readable. Each code resolves to concrete 
 | STOCK-06 | Restore stock for returns | P0 / inventory | `missing` | E6,E8 | D5,D7,D8 | U2 | T1,T2,T4 | No supported connected “Restore stock for returns” workflow exists. | SS-SALE-001; SS-STOCK-002 | Current verified costing is FIFO. Do not change costing without an explicit decision. |
 | STOCK-07 | Product inventory history includes date, movement type, quantity, source/reference, and actor where relevant | P0 / inventory | `implemented` | E6,E8,E14 | D5,D7,D14 | U2,U7 | T1,T9 | Sale movements record timestamp, out type, signed quantity, invoice/line/batch references, actor and cost snapshot; existing receipt/adjustment history remains. | SS-STOCK-002 for broader history UI | Issued detail drills through to product inventory source. |
 | STOCK-08 | Record reasoned write-offs | P0 / inventory | `implemented` | E6,E8 | D5,D7,D8 | U2 | T1,T2,T4 | Bounded criterion evidenced for “Record reasoned write-offs”; preserve it while completing adjacent workflow. | SS-SALE-001; SS-STOCK-002 | Current verified costing is FIFO. Do not change costing without an explicit decision. |
-| STOCK-09 | Perform stock counts | P0 / inventory | `missing` | E6,E8 | D5,D7,D8 | U2 | T1,T2,T4 | No supported connected “Perform stock counts” workflow exists. | SS-SALE-001; SS-STOCK-002 | Current verified costing is FIFO. Do not change costing without an explicit decision. |
-| STOCK-10 | Keep reasons and source references | P0 / inventory | `partially implemented` | E6,E8 | D5,D7,D8 | U2 | T1,T2,T4 | Only part/foundation of “Keep reasons and source references” is connected or tested; remaining workflow/browser scope is open. | SS-SALE-001; SS-STOCK-002 | Current verified costing is FIFO. Do not change costing without an explicit decision. |
+| STOCK-09 | Perform stock counts | P0 / inventory | `partially implemented` | E6,E8,E16 | D5,D7,D8,D16 | U2,U9 | T1,T2,T4,T11 | Atomic count/correction workflow and variance history are implemented; focused SQL and authenticated browser verification remain unrun. | SS-STOCK-002 verification | Current verified costing is FIFO. |
+| STOCK-10 | Keep reasons and source references | P0 / inventory | `partially implemented` | E6,E8,E16 | D5,D7,D8,D16 | U2,U9 | T1,T2,T4,T11 | Count corrections require reason/reference and history resolves source, actor and cost; focused SQL/browser verification remains open. | SS-STOCK-002 verification | Audit rows and movements are append-only. |
 | STOCK-11 | Prevent negative stock unless an explicit approved negative-stock policy exists | P0 / inventory | `implemented` | E6,E8,E14 | D5,D7,D14 | U2,U7 | T1,T9 | Aggregated product demand is checked under deterministic locks; insufficient and concurrent sale attempts cannot make stock negative. | Preserve through every stock-changing command | No negative-stock policy is approved. |
-| STOCK-12 | Serialize concurrent stock mutation | P0 / inventory | `partially implemented` | E6,E8 | D5,D7,D8 | U2 | T1,T2,T4 | Only part/foundation of “Serialize concurrent stock mutation” is connected or tested; remaining workflow/browser scope is open. | SS-SALE-001; SS-STOCK-002 | Current verified costing is FIFO. Do not change costing without an explicit decision. |
-| STOCK-13 | Configure low-stock thresholds | P0 / inventory | `missing` | E6,E8 | D5,D7,D8 | U2 | T1,T2,T4 | No supported connected “Configure low-stock thresholds” workflow exists. | SS-SALE-001; SS-STOCK-002 | Current verified costing is FIFO. Do not change costing without an explicit decision. |
-| STOCK-14 | Report FIFO valuation and preserve costing policy | P0 / inventory | `partially implemented` | E6,E8 | D5,D7,D8 | U2 | T1,T2,T4 | Only part/foundation of “Report FIFO valuation and preserve costing policy” is connected or tested; remaining workflow/browser scope is open. | SS-SALE-001; SS-STOCK-002 | Current verified costing is FIFO. Do not change costing without an explicit decision. |
+| STOCK-12 | Serialize concurrent stock mutation | P0 / inventory | `partially implemented` | E6,E8,E16 | D5,D7,D8,D16 | U2,U9 | T1,T2,T4,T11 | Counts share the product lock used by sales, purchases, returns and manual adjustments; the real count/sale runner remains unexecuted in this sandbox. | SS-STOCK-002 verification | No negative-stock policy is approved. |
+| STOCK-13 | Configure low-stock thresholds | P0 / inventory | `partially implemented` | E6,E8,E16 | D5,D7,D8,D16 | U2,U9 | T1,T2,T4,T11 | Shop/product thresholds, immutable threshold audit and actionable active-product low-stock view are connected; browser/SQL verification remains open. | SS-STOCK-002 verification | Archived items retain history but are not actionable reorder rows. |
+| STOCK-14 | Report FIFO valuation and preserve costing policy | P0 / inventory | `partially implemented` | E6,E8,E16 | D5,D7,D8,D16 | U2,U9 | T1,T2,T4,T11 | UI/API valuation is derived exactly from remaining FIFO layers, including archived stocked products; reconciliation fixture is implemented but unrun. | SS-STOCK-002 verification | No costing policy change was introduced. |
 
 ### EXP
 

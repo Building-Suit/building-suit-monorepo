@@ -8,38 +8,49 @@ type Vendor = {
   name: string
   contact_name: string | null
   phone: string | null
+  email: string | null
+  address: string | null
+  tax_number: string | null
+  notes: string | null
+  is_active: boolean
+  payable: number
 }
 type Product = { id: string; name: string; sku: string | null }
 type Purchase = {
   id: string
-  vendor_id: string | null
-  vendor_name_snapshot: string
-  invoice_number: string | null
+  vendorId: string | null
+  vendorNameSnapshot: string
+  invoiceNumber: string | null
   status: 'draft' | 'posted' | 'void'
-  issued_at: string | null
-  total_amount: number
+  issuedAt: string | null
+  totalAmount: number
+  payable: number
+  settlementState: 'unpaid' | 'partial' | 'paid'
   notes: string | null
-  created_at: string
+  createdAt: string
 }
-type PurchaseItem = {
-  id: string
-  vendor_invoice_id: string
-  product_id: string
-  quantity: number
-  unit_cost: number
-  total_cost: number
-}
-type Subscription = { plan_id: string }
 type PurchaseLine = { key: number; productId: string; quantity: number; unitCost: number }
+type VendorPage = { items: Vendor[]; total: number }
+type PurchasePage = { items: Purchase[]; total: number; page: number; pageSize: number }
 
 const confirmation = useConfirmation()
 const supabase = useSupabaseClient()
 const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
 const { locale } = useI18n()
-const { current, currentId, currentMembership, isOwner, loading: shopLoading } = useShop()
-const { data: plans, isLoading: plansLoading } = usePlans()
+const { current, currentId, loading: shopLoading } = useShop()
 const isArabic = computed(() => locale.value === 'ar')
 const search = ref('')
+const vendorFilter = ref('')
+const statusFilter = ref<'posted' | 'void' | ''>('')
+const settlementFilter = ref<'unpaid' | 'partial' | 'paid' | ''>('')
+const fromFilter = ref('')
+const toFilter = ref('')
+const page = ref(1)
+const pageSize = 20
+const supplierSearch = ref('')
+const showArchivedSuppliers = ref(false)
+const editingVendorId = ref<string | null>(null)
+const archivingVendorId = ref<string | null>(null)
 const actionError = ref('')
 const successMessage = ref('')
 const voidingId = ref<string | null>(null)
@@ -81,7 +92,7 @@ const {
 
 const copy = computed(() => isArabic.value ? {
   title: 'المشتريات', subtitle: 'سجّل مشتريات الموردين وزِد المخزون بدُفعات FIFO محفوظة.',
-  scope: 'هذه الخطوة تشمل الموردين ومشتريات المخزون فقط. مدفوعات الموردين، مرتجعات الشراء، والتقارير غير متاحة بعد.',
+  scope: 'إدارة الموردين والمشتريات والمدفوعات والأرصدة والمرتجعات مع ربط كامل بالمخزون.',
   addSupplier: 'إضافة مورد', newPurchase: 'تسجيل مشتريات', supplier: 'المورد', supplierName: 'اسم المورد',
   contactName: 'اسم جهة الاتصال', phone: 'الهاتف', email: 'البريد الإلكتروني', address: 'العنوان',
   taxNumber: 'الرقم الضريبي', notes: 'ملاحظات', saveSupplier: 'حفظ المورد', savePurchase: 'ترحيل المشتريات',
@@ -100,9 +111,11 @@ const copy = computed(() => isArabic.value ? {
   crossReference: 'المورد أو أحد المنتجات غير متاح لهذا المتجر.', stockUsed: 'لا يمكن إلغاء المشتريات بعد استخدام جزء من مخزونها.',
   immutable: 'المشتريات المرحلة غير قابلة للتعديل.', supplierSaved: 'تم حفظ المورد.', purchaseSaved: 'تم ترحيل المشتريات وزيادة المخزون.',
   purchaseVoided: 'تم إلغاء المشتريات وتسجيل عكس المخزون.', voidConfirm: 'إلغاء هذه المشتريات وعكس مخزونها؟ لا يمكن ذلك إذا استُخدم جزء من الكمية.',
+  suppliers: 'الموردون', supplierSearch: 'ابحث عن مورد', showArchived: 'عرض المؤرشفين', edit: 'تعديل', archive: 'أرشفة', archiveConfirm: 'أرشفة هذا المورد؟ ستظل هويته التاريخية محفوظة في المشتريات.', supplierUpdated: 'تم تحديث المورد.', supplierArchived: 'تمت أرشفة المورد.',
+  settlement: 'السداد', unpaid: 'غير مدفوع', partial: 'جزئي', paid: 'مدفوع', all: 'الكل', from: 'من', to: 'إلى', previous: 'السابق', next: 'التالي', details: 'التفاصيل', payable: 'المتبقي', contact: 'الاتصال',
 } : {
   title: 'Purchases', subtitle: 'Post supplier purchases into preserved FIFO inventory batches.',
-  scope: 'This workflow covers suppliers and inventory purchases only. Supplier payments, purchase returns and reports are not available yet.',
+  scope: 'Manage suppliers, purchases, payments, credits, and returns with complete inventory drill-through.',
   addSupplier: 'Add supplier', newPurchase: 'Record purchase', supplier: 'Supplier', supplierName: 'Supplier name',
   contactName: 'Contact name', phone: 'Phone', email: 'Email', address: 'Address',
   taxNumber: 'Tax number', notes: 'Notes', saveSupplier: 'Save supplier', savePurchase: 'Post purchase',
@@ -121,81 +134,62 @@ const copy = computed(() => isArabic.value ? {
   crossReference: 'The supplier or one of the products is unavailable for this shop.', stockUsed: 'This purchase cannot be voided after some of its stock has been used.',
   immutable: 'Posted purchases cannot be edited.', supplierSaved: 'Supplier saved.', purchaseSaved: 'Purchase posted and inventory increased.',
   purchaseVoided: 'Purchase voided and inventory reversal recorded.', voidConfirm: 'Void this purchase and reverse its stock? This is unavailable after any acquired stock is used.',
+  suppliers: 'Suppliers', supplierSearch: 'Search suppliers', showArchived: 'Show archived', edit: 'Edit', archive: 'Archive', archiveConfirm: 'Archive this supplier? Historical identity remains preserved on purchases.', supplierUpdated: 'Supplier updated.', supplierArchived: 'Supplier archived.',
+  settlement: 'Settlement', unpaid: 'Unpaid', partial: 'Partial', paid: 'Paid', all: 'All', from: 'From', to: 'To', previous: 'Previous', next: 'Next', details: 'Details', payable: 'Payable', contact: 'Contact',
 })
 
-const { data: subscription, pending: subscriptionPending, error: subscriptionError } = useAsyncData(
-  'shop-data:purchases-subscription', async () => {
-    if (!currentId.value || !isOwner.value || !currentMembership.value) return null
-    const { data, error } = await supabase.from('subscriptions')
-      .select('plan_id').eq('profile_id', currentMembership.value.profile_id)
-      .maybeSingle()
+const { data: access } = useAsyncData(
+  () => `shop-data:supplier-access:${currentId.value ?? 'none'}`, async () => {
+    if (!currentId.value) return null
+    const { data, error } = await shopRpc.rpc('supplier_access', { p_shop_id: currentId.value })
     if (error) throw error
-    return data as Subscription | null
+    return data?.[0] ?? null
   }, { watch: [currentId], default: () => null },
 )
-const purchasesEnabled = computed(() => {
-  if (!subscription.value) return false
-  return plans.value?.find(plan => plan.id === subscription.value?.plan_id)?.features?.inventory === true
-})
+const canManageSuppliers = computed(() => access.value?.can_manage_suppliers === true)
+const canManagePurchases = computed(() => access.value?.can_manage_purchases === true)
 
 const { data: purchaseData, pending, error, refresh } = useAsyncData(
-  'shop-data:supplier-purchases', async () => {
+  () => `shop-data:purchases:${currentId.value ?? 'none'}:${search.value}:${vendorFilter.value}:${statusFilter.value}:${settlementFilter.value}:${fromFilter.value}:${toFilter.value}:${page.value}:${supplierSearch.value}:${showArchivedSuppliers.value}`, async () => {
     if (!currentId.value) return {
-      vendors: [] as Vendor[], products: [] as Product[], purchases: [] as Purchase[], items: [] as PurchaseItem[],
+      vendors: [] as Vendor[], activeVendors: [] as Vendor[], products: [] as Product[], purchases: [] as Purchase[], total: 0,
     }
-    const [vendorResult, productResult, purchaseResult] = await Promise.all([
-      supabase.from('vendors').select('id,name,contact_name,phone')
-        .eq('shop_id', currentId.value).eq('is_active', true).order('name').limit(500),
+    const [vendorResult, activeVendorResult, productResult, purchaseResult] = await Promise.all([
+      shopRpc.rpc('list_vendors', { p_shop_id: currentId.value, p_search: supplierSearch.value.trim() || null, p_is_active: showArchivedSuppliers.value ? null : true, p_page: 1, p_page_size: 100 }),
+      shopRpc.rpc('list_vendors', { p_shop_id: currentId.value, p_search: null, p_is_active: true, p_page: 1, p_page_size: 100 }),
       supabase.from('products').select('id,name,sku')
         .eq('shop_id', currentId.value).eq('is_active', true).order('name').limit(1000),
-      supabase.from('vendor_invoices')
-        .select('id,vendor_id,vendor_name_snapshot,invoice_number,status,issued_at,total_amount,notes,created_at')
-        .eq('shop_id', currentId.value).in('status', ['posted', 'void'])
-        .order('issued_at', { ascending: false }).limit(100),
+      shopRpc.rpc('list_purchases', { p_shop_id: currentId.value, p_search: search.value.trim() || null,
+        p_vendor_id: vendorFilter.value || null, p_status: statusFilter.value || null,
+        p_settlement: settlementFilter.value || null, p_from: fromFilter.value || null,
+        p_to: toFilter.value || null, p_page: page.value, p_page_size: pageSize }),
     ])
     if (vendorResult.error) throw vendorResult.error
+    if (activeVendorResult.error) throw activeVendorResult.error
     if (productResult.error) throw productResult.error
     if (purchaseResult.error) throw purchaseResult.error
-    const purchases = (purchaseResult.data ?? []) as Purchase[]
-    let items: PurchaseItem[] = []
-    if (purchases.length) {
-      const itemResult = await supabase.from('vendor_invoice_items')
-        .select('id,vendor_invoice_id,product_id,quantity,unit_cost,total_cost')
-        .in('vendor_invoice_id', purchases.map(purchase => purchase.id))
-      if (itemResult.error) throw itemResult.error
-      items = (itemResult.data ?? []) as PurchaseItem[]
-    }
+    const vendorPage = vendorResult.data as VendorPage
+    const activeVendorPage = activeVendorResult.data as VendorPage
+    const purchasePage = purchaseResult.data as PurchasePage
     return {
-      vendors: (vendorResult.data ?? []) as Vendor[],
+      vendors: vendorPage.items,
+      activeVendors: activeVendorPage.items,
       products: (productResult.data ?? []) as Product[],
-      purchases,
-      items,
+      purchases: purchasePage.items,
+      total: purchasePage.total,
     }
   }, {
-    watch: [currentId],
-    default: () => ({ vendors: [] as Vendor[], products: [] as Product[], purchases: [] as Purchase[], items: [] as PurchaseItem[] }),
+    watch: [currentId, search, vendorFilter, statusFilter, settlementFilter, fromFilter, toFilter, page, supplierSearch, showArchivedSuppliers],
+    default: () => ({ vendors: [] as Vendor[], activeVendors: [] as Vendor[], products: [] as Product[], purchases: [] as Purchase[], total: 0 }),
   },
 )
 
 const vendors = computed(() => purchaseData.value?.vendors ?? [])
+const activeVendors = computed(() => purchaseData.value?.activeVendors ?? [])
 const products = computed(() => purchaseData.value?.products ?? [])
 const purchases = computed(() => purchaseData.value?.purchases ?? [])
-const items = computed(() => purchaseData.value?.items ?? [])
-const productMap = computed(() => new Map(products.value.map(product => [product.id, product])))
-const itemsByPurchase = computed(() => {
-  const result = new Map<string, PurchaseItem[]>()
-  for (const item of items.value) {
-    result.set(item.vendor_invoice_id, [...(result.get(item.vendor_invoice_id) ?? []), item])
-  }
-  return result
-})
-const filteredPurchases = computed(() => {
-  const query = search.value.trim().toLocaleLowerCase()
-  if (!query) return purchases.value
-  return purchases.value.filter(purchase => [
-    purchase.vendor_name_snapshot, purchase.invoice_number, purchase.notes,
-  ].some(value => value?.toLocaleLowerCase().includes(query)))
-})
+const totalPurchases = computed(() => purchaseData.value?.total ?? 0)
+const pages = computed(() => Math.max(1, Math.ceil(totalPurchases.value / pageSize)))
 const formTotal = computed(() => purchaseForm.lines.reduce((total, line) =>
   total + (Number(line.quantity) || 0) * (Number(line.unitCost) || 0), 0))
 
@@ -206,6 +200,7 @@ watch(currentId, () => {
   successMessage.value = ''
   requestId.value = null
 })
+watch([search, vendorFilter, statusFilter, settlementFilter, fromFilter, toFilter], () => { page.value = 1 })
 watch(() => purchaseForm, () => {
   requestId.value = null
   actionError.value = ''
@@ -227,12 +222,8 @@ function displayDate(value: string | null) {
 function statusLabel(status: Purchase['status']) {
   return status === 'void' ? copy.value.voided : copy.value.posted
 }
-
-function lineSummary(purchaseId: string) {
-  return (itemsByPurchase.value.get(purchaseId) ?? []).map(item => {
-    const product = productMap.value.get(item.product_id)
-    return `${product?.name ?? '—'} × ${Number(item.quantity)}`
-  }).join(', ')
+function settlementLabel(status: Purchase['settlementState']) {
+  return copy.value[status]
 }
 
 function readableError(message?: string) {
@@ -260,7 +251,7 @@ function resetSupplier() {
 }
 
 function resetPurchase() {
-  purchaseForm.vendorId = vendors.value[0]?.id ?? ''
+  purchaseForm.vendorId = activeVendors.value[0]?.id ?? ''
   purchaseForm.invoiceNumber = ''
   purchaseForm.issuedOn = localToday()
   purchaseForm.notes = ''
@@ -270,8 +261,10 @@ function resetPurchase() {
   actionError.value = ''
 }
 
-function openSupplierForm() {
+function openSupplierForm(vendor?: Vendor) {
   resetSupplier()
+  editingVendorId.value = vendor?.id ?? null
+  if (vendor) Object.assign(supplierForm, { name: vendor.name, contactName: vendor.contact_name ?? '', phone: vendor.phone ?? '', email: vendor.email ?? '', address: vendor.address ?? '', taxNumber: vendor.tax_number ?? '', notes: vendor.notes ?? '' })
   successMessage.value = ''
   supplierOpen.value = true
 }
@@ -295,7 +288,7 @@ function removeLine(key: number) {
 }
 
 async function saveSupplier() {
-  if (!currentId.value || !isOwner.value || !purchasesEnabled.value || supplierSaving.value) return
+  if (!currentId.value || !canManageSuppliers.value || supplierSaving.value) return
   actionError.value = ''
   successMessage.value = ''
   const name = supplierForm.name.trim()
@@ -312,8 +305,9 @@ async function saveSupplier() {
   }
   supplierSaving.value = true
   try {
-    const { data, error: saveError } = await shopRpc.rpc('create_vendor', {
+    const { data, error: saveError } = await shopRpc.rpc('save_vendor', {
       p_shop_id: currentId.value,
+      p_vendor_id: editingVendorId.value,
       p_name: name,
       p_contact_name: supplierForm.contactName.trim() || null,
       p_phone: supplierForm.phone.trim() || null,
@@ -326,7 +320,8 @@ async function saveSupplier() {
     supplierOpen.value = false
     await refresh()
     purchaseForm.vendorId = data
-    successMessage.value = copy.value.supplierSaved
+    successMessage.value = editingVendorId.value ? copy.value.supplierUpdated : copy.value.supplierSaved
+    editingVendorId.value = null
   } catch (error) {
     actionError.value = readableError(error instanceof Error ? error.message : undefined)
   } finally {
@@ -335,7 +330,7 @@ async function saveSupplier() {
 }
 
 async function savePurchase() {
-  if (!currentId.value || !isOwner.value || !purchasesEnabled.value || purchaseSaving.value) return
+  if (!currentId.value || !canManagePurchases.value || purchaseSaving.value) return
   actionError.value = ''
   successMessage.value = ''
   const productIds = purchaseForm.lines.map(line => line.productId)
@@ -350,7 +345,7 @@ async function savePurchase() {
         && Number.isFinite(unitCost) && unitCost >= 0 && unitCost <= 999999999.99
         && Math.abs(Math.round(unitCost * 100) - unitCost * 100) < 0.000001
     })
-  if (!vendors.value.some(vendor => vendor.id === purchaseForm.vendorId)
+  if (!activeVendors.value.some(vendor => vendor.id === purchaseForm.vendorId)
     || !/^\d{4}-\d{2}-\d{2}$/.test(purchaseForm.issuedOn)
     || purchaseForm.invoiceNumber.trim().length > 120
     || purchaseForm.notes.trim().length > 1000 || !linesValid) {
@@ -386,7 +381,7 @@ async function savePurchase() {
 }
 
 async function voidPurchase(purchase: Purchase) {
-  if (!currentId.value || !isOwner.value || !purchasesEnabled.value || voidingId.value) return
+  if (!currentId.value || !canManagePurchases.value || voidingId.value) return
   if (!await confirmation.ask(copy.value.voidConfirm)) return
   actionError.value = ''
   successMessage.value = ''
@@ -404,13 +399,26 @@ async function voidPurchase(purchase: Purchase) {
     voidingId.value = null
   }
 }
+
+async function archiveVendor(vendor: Vendor) {
+  if (!currentId.value || !canManageSuppliers.value || archivingVendorId.value || !await confirmation.ask(copy.value.archiveConfirm)) return
+  archivingVendorId.value = vendor.id
+  actionError.value = ''
+  try {
+    const { error } = await shopRpc.rpc('archive_vendor', { p_shop_id: currentId.value, p_vendor_id: vendor.id })
+    if (error) throw error
+    await refresh()
+    successMessage.value = copy.value.supplierArchived
+  } catch (error) { actionError.value = readableError(error instanceof Error ? error.message : undefined) }
+  finally { archivingVendorId.value = null }
+}
 </script>
 
 <template>
   <div class="space-y-6">
     <header class="flex flex-wrap items-end justify-between gap-4">
       <div><h1 class="text-3xl font-extrabold tracking-tight">{{ copy.title }}</h1><p class="mt-2 text-sm text-muted-foreground">{{ copy.subtitle }}</p></div>
-      <div v-if="current && isOwner && purchasesEnabled" class="flex flex-wrap gap-2"><button type="button" class="ls-btn" @click="openSupplierForm">{{ copy.addSupplier }}</button><button type="button" class="ls-btn ls-btn-primary" :disabled="!vendors.length || !products.length" @click="openPurchaseForm">{{ copy.newPurchase }}</button></div>
+      <div v-if="current" class="flex flex-wrap gap-2"><button v-if="canManageSuppliers" type="button" class="ls-btn" @click="openSupplierForm()">{{ copy.addSupplier }}</button><button v-if="canManagePurchases" type="button" class="ls-btn ls-btn-primary" :disabled="!activeVendors.length || !products.length" @click="openPurchaseForm">{{ copy.newPurchase }}</button></div>
     </header>
 
     <div v-if="!current && !shopLoading" class="rounded-2xl border border-border bg-card p-8 text-center text-sm"><p>{{ copy.noShop }}</p><NuxtLink to="/dashboard" class="mt-3 inline-block font-bold text-[var(--bs-link)] underline">{{ copy.dashboard }}</NuxtLink></div>
@@ -418,14 +426,15 @@ async function voidPurchase(purchase: Purchase) {
       <p class="rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm dark:bg-[var(--bs-status-info-bg)]">{{ copy.scope }}</p>
       <p v-if="successMessage" role="status" class="rounded-xl bg-[var(--bs-status-success-bg)] p-4 text-sm text-[var(--bs-status-success)]">{{ successMessage }}</p>
       <p v-if="actionError && !supplierOpen && !purchaseOpen" role="alert" class="rounded-xl bg-[var(--bs-status-error-bg)] p-4 text-sm text-[var(--bs-status-error)]">{{ actionError }}</p>
-      <p v-if="subscriptionError" role="alert" class="rounded-xl bg-[var(--bs-status-error-bg)] p-4 text-sm text-[var(--bs-status-error)]">{{ copy.readError }}</p>
-      <p v-else-if="!isOwner" class="rounded-xl border border-[var(--bs-status-warning)]/25 bg-[var(--bs-status-warning-bg)] p-4 text-sm">{{ copy.permissionDenied }}</p>
-      <p v-else-if="subscriptionPending || plansLoading" class="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">{{ copy.loading }}</p>
-      <p v-else-if="!purchasesEnabled" class="rounded-xl border border-[var(--bs-status-warning)]/25 bg-[var(--bs-status-warning-bg)] p-4 text-sm">{{ copy.planUnavailable }}</p>
-      <div v-else-if="!products.length && !pending" class="rounded-xl border border-border bg-card p-5 text-sm"><p>{{ copy.noProducts }}</p><NuxtLink to="/products" class="mt-2 inline-block font-bold text-[var(--bs-link)] underline">{{ copy.products }}</NuxtLink></div>
-      <p v-else-if="!vendors.length && !pending" class="rounded-xl border border-border bg-card p-5 text-sm">{{ copy.noSuppliers }}</p>
+      <div v-if="!products.length && !pending" class="rounded-xl border border-border bg-card p-5 text-sm"><p>{{ copy.noProducts }}</p><NuxtLink to="/products" class="mt-2 inline-block font-bold text-[var(--bs-link)] underline">{{ copy.products }}</NuxtLink></div>
+      <p v-if="!activeVendors.length && !pending" class="rounded-xl border border-border bg-card p-5 text-sm">{{ copy.noSuppliers }}</p>
 
-      <BsDialog v-model:visible="supplierOpen" :title="copy.addSupplier" :dirty="supplierDirty" :pending="supplierSaving"><template #default="{ close }"><form class="grid gap-4 sm:grid-cols-2" @submit.prevent="saveSupplier">
+      <section class="rounded-2xl border border-border bg-card p-5">
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-3"><h2 class="font-extrabold">{{ copy.suppliers }}</h2><div class="flex flex-wrap items-center gap-3"><input v-model="supplierSearch" type="search" :placeholder="copy.supplierSearch" class="ls-input max-w-xs"><label class="flex items-center gap-2 text-sm font-semibold"><input v-model="showArchivedSuppliers" type="checkbox">{{ copy.showArchived }}</label></div></div>
+        <div class="overflow-x-auto"><BsDataTable :value="vendors" data-key="id" :loading="pending" :row-class="() => 'border-t border-border'"><Column header-class="px-3 py-3 text-start" body-class="px-3 py-3 font-bold"><template #header>{{ copy.supplier }}</template><template #body="{ data: vendor }">{{ vendor.name }}<span v-if="!vendor.is_active" class="ms-2 text-xs text-muted-foreground">({{ copy.voided }})</span></template></Column><Column header-class="px-3 py-3 text-start" body-class="px-3 py-3"><template #header>{{ copy.contact }}</template><template #body="{ data: vendor }"><p>{{ vendor.contact_name || '—' }}</p><p class="text-xs text-muted-foreground">{{ vendor.phone || vendor.email || '—' }}</p></template></Column><Column header-class="px-3 py-3 text-end" body-class="px-3 py-3 text-end font-bold"><template #header>{{ copy.payable }}</template><template #body="{ data: vendor }">{{ money(Number(vendor.payable)) }}</template></Column><Column header-class="px-3 py-3 text-end" body-class="px-3 py-3 text-end"><template #header>{{ copy.actions }}</template><template #body="{ data: vendor }"><span v-if="canManageSuppliers && vendor.is_active" class="inline-flex gap-3"><button class="font-bold text-[var(--bs-link)]" @click="openSupplierForm(vendor)">{{ copy.edit }}</button><button class="font-bold text-[var(--bs-status-error)]" :disabled="archivingVendorId === vendor.id" @click="archiveVendor(vendor)">{{ copy.archive }}</button></span></template></Column><template #empty><p class="p-6 text-center text-sm text-muted-foreground">{{ copy.noSuppliers }}</p></template></BsDataTable></div>
+      </section>
+
+      <BsDialog v-model:visible="supplierOpen" :title="editingVendorId ? copy.edit : copy.addSupplier" :dirty="supplierDirty" :pending="supplierSaving"><template #default="{ close }"><form class="grid gap-4 sm:grid-cols-2" @submit.prevent="saveSupplier">
         <p v-if="actionError" role="alert" class="rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm text-[var(--bs-status-error)] sm:col-span-2">{{ actionError }}</p>
         <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ copy.supplierName }}<input v-model="supplierForm.name" type="text" minlength="2" maxlength="160" required class="ls-input"></label>
         <label class="space-y-2 text-sm font-bold">{{ copy.contactName }}<input v-model="supplierForm.contactName" type="text" maxlength="160" class="ls-input"></label>
@@ -440,7 +449,7 @@ async function voidPurchase(purchase: Purchase) {
       <BsDialog v-model:visible="purchaseOpen" :title="copy.newPurchase" :dirty="purchaseDirty" :pending="purchaseSaving"><template #default="{ close }"><form class="space-y-5" @submit.prevent="savePurchase">
         <p v-if="actionError" role="alert" class="rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm text-[var(--bs-status-error)]">{{ actionError }}</p>
         <div class="grid gap-4 sm:grid-cols-2">
-          <label class="space-y-2 text-sm font-bold">{{ copy.supplier }}<select v-model="purchaseForm.vendorId" required class="ls-input"><option v-for="vendor in vendors" :key="vendor.id" :value="vendor.id">{{ vendor.name }}</option></select></label>
+          <label class="space-y-2 text-sm font-bold">{{ copy.supplier }}<select v-model="purchaseForm.vendorId" required class="ls-input"><option v-for="vendor in activeVendors" :key="vendor.id" :value="vendor.id">{{ vendor.name }}</option></select></label>
           <label class="space-y-2 text-sm font-bold">{{ copy.date }}<input v-model="purchaseForm.issuedOn" type="date" required class="ls-input"></label>
           <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ copy.invoiceNumber }} ({{ copy.optional }})<input v-model="purchaseForm.invoiceNumber" type="text" maxlength="120" class="ls-input"></label>
         </div>
@@ -458,18 +467,18 @@ async function voidPurchase(purchase: Purchase) {
       </form></template></BsDialog>
 
       <section class="rounded-2xl border border-border bg-card p-5">
-        <div class="mb-4 flex flex-wrap items-center justify-between gap-3"><h2 class="font-extrabold">{{ copy.recent }}</h2><input v-model="search" type="search" :placeholder="copy.search" class="ls-input max-w-sm"></div>
+        <div class="mb-4 space-y-3"><div class="flex flex-wrap items-center justify-between gap-3"><h2 class="font-extrabold">{{ copy.recent }}</h2><input v-model="search" type="search" :placeholder="copy.search" class="ls-input max-w-sm"></div><div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5"><select v-model="vendorFilter" class="ls-input"><option value="">{{ copy.all }} — {{ copy.supplier }}</option><option v-for="vendor in activeVendors" :key="vendor.id" :value="vendor.id">{{ vendor.name }}</option></select><select v-model="statusFilter" class="ls-input"><option value="">{{ copy.all }} — {{ copy.status }}</option><option value="posted">{{ copy.posted }}</option><option value="void">{{ copy.voided }}</option></select><select v-model="settlementFilter" class="ls-input"><option value="">{{ copy.all }} — {{ copy.settlement }}</option><option value="unpaid">{{ copy.unpaid }}</option><option value="partial">{{ copy.partial }}</option><option value="paid">{{ copy.paid }}</option></select><label class="text-xs font-bold">{{ copy.from }}<input v-model="fromFilter" type="date" class="ls-input mt-1"></label><label class="text-xs font-bold">{{ copy.to }}<input v-model="toFilter" type="date" class="ls-input mt-1"></label></div></div>
         <p v-if="pending" class="text-sm text-muted-foreground">{{ copy.loading }}</p>
         <div v-else-if="error" role="alert" class="text-sm"><p>{{ copy.readError }}</p><button type="button" class="mt-2 font-bold underline" @click="refresh()">{{ copy.retry }}</button></div>
-        <p v-else-if="!filteredPurchases.length" class="py-8 text-center text-sm text-muted-foreground">{{ purchases.length ? copy.noResults : copy.empty }}</p>
-        <div v-else class="overflow-x-auto"><BsDataTable :value="filteredPurchases" data-key="id" :row-class="() => 'border-b border-border last:border-0'">
-  <Column header-class="py-3 text-start" body-class="py-3"><template #header>{{ copy.date }}</template><template #body="{ data: purchase }">{{ displayDate(purchase.issued_at) }}</template></Column>
-  <Column header-class="py-3 text-start" body-class="py-3 font-semibold"><template #header>{{ copy.supplier }}</template><template #body="{ data: purchase }">{{ purchase.vendor_name_snapshot }}<p v-if="purchase.invoice_number" class="text-xs font-normal text-muted-foreground">{{ purchase.invoice_number }}</p></template></Column>
-  <Column header-class="py-3 text-start" body-class="max-w-xs py-3 text-sm"><template #header>{{ copy.product }}</template><template #body="{ data: purchase }">{{ lineSummary(purchase.id) }}</template></Column>
-  <Column header-class="py-3 text-end" body-class="py-3 text-end font-bold"><template #header>{{ copy.total }}</template><template #body="{ data: purchase }">{{ money(Number(purchase.total_amount)) }}</template></Column>
+        <p v-else-if="!purchases.length" class="py-8 text-center text-sm text-muted-foreground">{{ totalPurchases ? copy.noResults : copy.empty }}</p>
+        <div v-else class="overflow-x-auto"><BsDataTable :value="purchases" data-key="id" :row-class="() => 'border-b border-border last:border-0'">
+  <Column header-class="py-3 text-start" body-class="py-3"><template #header>{{ copy.date }}</template><template #body="{ data: purchase }">{{ displayDate(purchase.issuedAt) }}</template></Column>
+  <Column header-class="py-3 text-start" body-class="py-3 font-semibold"><template #header>{{ copy.supplier }}</template><template #body="{ data: purchase }"><NuxtLink :to="`/purchases/${purchase.id}`" class="text-[var(--bs-link)] hover:underline">{{ purchase.vendorNameSnapshot }}</NuxtLink><p v-if="purchase.invoiceNumber" class="text-xs font-normal text-muted-foreground">{{ purchase.invoiceNumber }}</p></template></Column>
+  <Column header-class="py-3 text-end" body-class="py-3 text-end font-bold"><template #header>{{ copy.total }}</template><template #body="{ data: purchase }">{{ money(Number(purchase.totalAmount)) }}</template></Column>
+  <Column header-class="py-3 text-end" body-class="py-3 text-end font-bold"><template #header>{{ copy.payable }}</template><template #body="{ data: purchase }">{{ money(Number(purchase.payable)) }}<p class="text-xs font-normal text-muted-foreground">{{ settlementLabel(purchase.settlementState) }}</p></template></Column>
   <Column header-class="py-3 text-end" body-class="py-3 text-end"><template #header>{{ copy.status }}</template><template #body="{ data: purchase }">{{ statusLabel(purchase.status) }}</template></Column>
-  <Column header-class="py-3 text-end" body-class="py-3 text-end"><template #header>{{ copy.actions }}</template><template #body="{ data: purchase }"><button v-if="isOwner && purchasesEnabled && purchase.status === 'posted'" type="button" class="font-bold text-[var(--bs-status-error)]" :disabled="voidingId === purchase.id" @click="voidPurchase(purchase)">{{ copy.void }}</button></template></Column>
-</BsDataTable></div>
+  <Column header-class="py-3 text-end" body-class="py-3 text-end"><template #header>{{ copy.actions }}</template><template #body="{ data: purchase }"><span class="inline-flex gap-3"><NuxtLink :to="`/purchases/${purchase.id}`" class="font-bold text-[var(--bs-link)]">{{ copy.details }}</NuxtLink><button v-if="canManagePurchases && purchase.status === 'posted' && Number(purchase.payable) === Number(purchase.totalAmount)" type="button" class="font-bold text-[var(--bs-status-error)]" :disabled="voidingId === purchase.id" @click="voidPurchase(purchase)">{{ copy.void }}</button></span></template></Column>
+</BsDataTable><div v-if="totalPurchases > pageSize" class="mt-4 flex items-center justify-between text-sm"><button class="ls-btn ls-btn-sm" :disabled="page === 1" @click="page--">{{ copy.previous }}</button><span>{{ page }} / {{ pages }}</span><button class="ls-btn ls-btn-sm" :disabled="page === pages" @click="page++">{{ copy.next }}</button></div></div>
       </section>
     </template>
   </div>
