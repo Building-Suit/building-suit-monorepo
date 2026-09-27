@@ -1,4 +1,4 @@
--- LS-PERF-001: native pgTAP coverage for the authorize-once Dashboard reads.
+-- LS-PERF-001/002: native pgTAP coverage for bounded, authorize-once reads.
 -- All fixtures are private to this transaction; never reseed the demo history.
 begin;
 create extension if not exists pgtap with schema extensions;
@@ -105,6 +105,16 @@ begin
     0::bigint, actor || ': out-of-range page is empty');
   return next is((select count(*) from app.search_transaction_page(org, p_limit => 8)),
     8::bigint, actor || ': trusted candidate boundary is accessible to members');
+  return next results_eq(
+    format('select id, total_count from app.search_recent_transaction_page(%L, 8, 0)', org),
+    format('select id, total_count from public.search_transactions(%L, p_limit => 8)', org),
+    actor || ': index-backed recent page preserves ids and exact count');
+  return next is((select array_agg(ordinal order by ordinal) from app.search_recent_transaction_page(org, 8, 0)),
+    array[1,2,3,4,5,6,7,8]::bigint[], actor || ': recent-page ordinals remain stable');
+  return next results_eq(
+    format('select id from app.search_transaction_details(%L, array(select id from app.search_recent_transaction_page(%L, 8, 0))) order by id', org, org),
+    format('select id from public.search_transactions(%L, p_limit => 8) order by id', org),
+    actor || ': trusted enrichment is bounded to the selected page');
 end;
 $checks$;
 
@@ -116,11 +126,15 @@ begin
     'sub', actor, 'role', case when anonymous then 'anon' else 'authenticated' end)::text, true);
   foreach boundary in array array[
     'public.dashboard_summary', 'public.report_monthly_series',
-    'public.dashboard_liquid_accounts', 'public.search_transactions', 'app.search_transaction_page'
+    'public.dashboard_liquid_accounts', 'public.search_transactions', 'app.search_transaction_page',
+    'app.search_recent_transaction_page', 'app.search_transaction_page_bounded'
   ] loop
     return next throws_ok(format('select * from %s(%L)', boundary, target_org),
       '42501', null, coalesce(actor::text, 'anonymous') || ': denied at ' || boundary);
   end loop;
+  return next throws_ok(
+    format('select * from app.search_transaction_details(%L, array[]::uuid[])', target_org),
+    '42501', null, coalesce(actor::text, 'anonymous') || ': denied at app.search_transaction_details');
   if not anonymous then
     return next is((select count(*) from public.transactions where organization_id = target_org),
       0::bigint, actor || ': direct journal RLS still hides the foreign tenant');
@@ -160,6 +174,12 @@ select throws_ok(format('select * from public.search_transactions(%L)',
   (select id from perf_test_ids where key = 'org')), '42501', null, 'revoked entry access denies public search');
 select throws_ok(format('select * from app.search_transaction_page(%L)',
   (select id from perf_test_ids where key = 'org')), '42501', null, 'revoked entry access denies trusted search');
+select throws_ok(format('select * from app.search_recent_transaction_page(%L)',
+  (select id from perf_test_ids where key = 'org')), '42501', null, 'revoked entry access denies recent-page helper');
+select throws_ok(format('select * from app.search_transaction_page_bounded(%L)',
+  (select id from perf_test_ids where key = 'org')), '42501', null, 'revoked entry access denies page dispatcher');
+select throws_ok(format('select * from app.search_transaction_details(%L, array[]::uuid[])',
+  (select id from perf_test_ids where key = 'org')), '42501', null, 'revoked entry access denies page enrichment');
 
 reset role;
 update public.organization_members set revoked_capabilities = array['reports.read', 'accounts.read']
