@@ -2,7 +2,7 @@
   "task": "V2-IMP-015",
   "reviewed_head": "78cbf947e1a308d44c3b8e955ee7b38727d2605b",
   "status": "blocked",
-  "note": "Prior assessment is historical, not current verification. Current code states are conservative: unverified means this review has not established the entire requirement. Unit results alone do not pass a requirement. LS-REL-001 attempted the missing native suites at candidate 26c8abd7fd3cb4eca1da0c2877027f8b809f0ea1, but SQL and browser collection were blocked by unavailable native dependencies and Docker access, and hosted deployment/schema identity could not be reached. Accountant acceptance has no sign-off. See README.md for exact execution evidence and blockers.",
+  "note": "Prior assessment is historical, not current verification. Current code states are conservative: unverified means this review has not established the entire requirement. Unit results alone do not pass a requirement. LS-REL-001 attempted the missing native suites at candidate 26c8abd7fd3cb4eca1da0c2877027f8b809f0ea1, but SQL and browser collection were blocked by unavailable native dependencies and Docker access, and hosted deployment/schema identity could not be reached. LS-OPS-001 added locally tested restore evidence/comparison and tenant portability tooling, but the native second-instance backup/restore did not start because Docker is denied and no local PostgreSQL server exists. Accountant acceptance has no sign-off. See README.md and ../../restore-retention-portability.md for exact execution evidence and blockers.",
   "release_candidate_review": {
     "task": "LS-REL-001",
     "date": "2026-09-27",
