@@ -2,6 +2,8 @@
 
 Status: **BLOCKED / acceptance incomplete**, updated 2026-09-27 by LS-REL-001. This is an acceptance package, not a release or an accountant sign-off. The original V2-IMP-015 review changed no runtime code or applied environment; later LS-FIX repair entries below describe local source changes only. LS-REL-001 made no hosted database write, deployment, commit or publication.
 
+LS-SEC-001's release-only security review is recorded in [its candidate evidence](../../evidence/ls-sec-001/README.md). It found no critical source-level authorization or secret-exposure defect and added focused foreign-tenant attachment and bank-workspace assertions, but native SQL, a generated browser bundle, the live dependency advisory service, and hosted release configuration remain unverified in this worktree. Those results do not change this package's blocked accounting/deployment/accountant states.
+
 Reviewed checkpoint: `78cbf947e1a308d44c3b8e955ee7b38727d2605b`, branch `codex/ledger-suit/v2-imp-015`. Worktree: `.local/worktrees/ledger-suit-v2-imp-015`. Initial working tree was clean. Local `origin/stg` was `2b3b5d6c6e1493a6b0295d484c2769936805d5cf`; it is stale/unverified. Preflight failed because fetch cannot write the read-only Git metadata outside this worktree. Live PR/parent/merge state was not established. The control plane owns publication.
 
 The supplied task JSON is authoritative for this task and approves V2-D03. Dependency task labels saying “complete” do not establish SQL, browser, deployment or accountant acceptance. Runtime defects must be separate controlled repair tasks; the findings below are proposed repair scopes, not externally created tasks.
