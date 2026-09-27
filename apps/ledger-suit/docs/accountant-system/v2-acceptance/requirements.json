@@ -2,7 +2,23 @@
   "task": "V2-IMP-015",
   "reviewed_head": "78cbf947e1a308d44c3b8e955ee7b38727d2605b",
   "status": "blocked",
-  "note": "Prior assessment is historical, not current verification. Current code states are conservative: unverified means this review has not established the entire requirement. Unit results alone do not pass a requirement. Deployment was not attempted or inspected. Accountant acceptance has no sign-off. See README.md for execution evidence and blockers.",
+  "note": "Prior assessment is historical, not current verification. Current code states are conservative: unverified means this review has not established the entire requirement. Unit results alone do not pass a requirement. LS-REL-001 attempted the missing native suites at candidate 26c8abd7fd3cb4eca1da0c2877027f8b809f0ea1, but SQL and browser collection were blocked by unavailable native dependencies and Docker access, and hosted deployment/schema identity could not be reached. Accountant acceptance has no sign-off. See README.md for exact execution evidence and blockers.",
+  "release_candidate_review": {
+    "task": "LS-REL-001",
+    "date": "2026-09-27",
+    "candidate_commit": "26c8abd7fd3cb4eca1da0c2877027f8b809f0ea1",
+    "integrated_v2_merge": "07dd278d8f9acb477662155031a2bcea67412026",
+    "integrated_v2_feature_tip": "17c2c1306cc48d6a4a1ecbd21452e2bcb20243eb",
+    "reviewed_feature_tip_equivalent_patch": "2e3c26bfe051d243f404caf952f67f1af2b167a5",
+    "v2_patch_id": "b294426478cfabed8b6c68aad50a01193b8daffc",
+    "migration_count": 91,
+    "latest_migration": "20260927140000_rls_aware_dashboard_reads.sql",
+    "migration_content_manifest_sha256": "5173e9b8d79387a5a07009947ceaa5d4d068978433fef65c8ec1074dce489d58",
+    "native_sql": "blocked_before_execution: pinned Supabase CLI unavailable and Docker socket permission denied",
+    "native_browser": "blocked_before_collection: workspace dependencies unavailable; system playwright reports unknown command test",
+    "hosted_staging": "unverified: staging app and configured Supabase ref were unreachable from this environment; no hosted write was attempted",
+    "accountant_accepted": "pending"
+  },
   "requirements": [
     {
       "id": "SCOPE-01",
@@ -1331,7 +1347,7 @@
       "prior_assessment": "implemented — every row has a measurable criterion",
       "prior_evidence": "This table",
       "code_implemented": "implemented",
-      "tests_passed": "unverified",
+      "tests_passed": "passed",
       "deployed": "unverified",
       "accountant_accepted": "pending"
     },
@@ -1408,7 +1424,7 @@
       "prior_assessment": "implemented — V2-IMP-004 explicitly distinguishes local implementation/test evidence from hosted deployment and accountant acceptance",
       "prior_evidence": "Sections 2, 5 and V2-IMP-004",
       "code_implemented": "implemented",
-      "tests_passed": "unverified",
+      "tests_passed": "passed",
       "deployed": "unverified",
       "accountant_accepted": "pending"
     },

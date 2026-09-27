@@ -1,10 +1,32 @@
 # V2-IMP-015 — cross-module acceptance review
 
-Status: **BLOCKED / acceptance incomplete**, 2026-09-26. This is an acceptance package, not a release or an accountant sign-off. The original V2-IMP-015 review changed no runtime code or applied environment; later LS-FIX repair entries below describe local source changes only. No hosted database, deployment, commit or publication is claimed.
+Status: **BLOCKED / acceptance incomplete**, updated 2026-09-27 by LS-REL-001. This is an acceptance package, not a release or an accountant sign-off. The original V2-IMP-015 review changed no runtime code or applied environment; later LS-FIX repair entries below describe local source changes only. LS-REL-001 made no hosted database write, deployment, commit or publication.
 
 Reviewed checkpoint: `78cbf947e1a308d44c3b8e955ee7b38727d2605b`, branch `codex/ledger-suit/v2-imp-015`. Worktree: `.local/worktrees/ledger-suit-v2-imp-015`. Initial working tree was clean. Local `origin/stg` was `2b3b5d6c6e1493a6b0295d484c2769936805d5cf`; it is stale/unverified. Preflight failed because fetch cannot write the read-only Git metadata outside this worktree. Live PR/parent/merge state was not established. The control plane owns publication.
 
 The supplied task JSON is authoritative for this task and approves V2-D03. Dependency task labels saying “complete” do not establish SQL, browser, deployment or accountant acceptance. Runtime defects must be separate controlled repair tasks; the findings below are proposed repair scopes, not externally created tasks.
+
+## LS-REL-001 release-candidate verification — blocked before native execution
+
+Candidate commit `26c8abd7fd3cb4eca1da0c2877027f8b809f0ea1` contains merge commit `07dd278d8f9acb477662155031a2bcea67412026` for PR #52 and its integrated V2 feature tip `17c2c1306cc48d6a4a1ecbd21452e2bcb20243eb`. The reviewed feature tip named by the task, `2e3c26bfe051d243f404caf952f67f1af2b167a5`, is not a literal ancestor because the integration used a different commit, but both feature commits have the same stable patch ID, `b294426478cfabed8b6c68aad50a01193b8daffc`. The candidate continues through R01, R02, Ledger UX repairs, the RLS-aware read/performance repair and the Dashboard read-failure repair.
+
+The candidate contains 91 ordered migrations through `20260927140000_rls_aware_dashboard_reads.sql`. The SHA-256 of the sorted per-file migration-content checksum manifest is `5173e9b8d79387a5a07009947ceaa5d4d068978433fef65c8ec1074dce489d58`. This identifies the local candidate only; it is not evidence that hosted staging has the same schema.
+
+| Command/check actually executed for LS-REL-001 | Result |
+|---|---|
+| `pnpm agent:preflight` | Failed, exit 1; fetch/GitHub state was not verified. Local status was clean at the start. |
+| Local ancestry plus stable patch-ID comparison | Passed: PR #52 merge and integrated feature tip are ancestors; reviewed/integrated V2 feature patches are equivalent. |
+| `pnpm install --frozen-lockfile --store-dir .local/pnpm-store` | Stopped after repeated npm DNS `EAI_AGAIN`; no lockfile change and dependency setup remains incomplete. |
+| `docker info --format '{{.ServerVersion}}'` | Failed before any container/database action: Docker socket permission denied. |
+| `pnpm db:test:ledger` | Failed before SQL execution: pinned `supabase` executable unavailable. No migration, reset or SQL suite ran. |
+| Selected 14-spec Playwright command from the integrated matrix, `--workers=1` | Failed before collection: workspace Playwright is unavailable and the system executable reports `unknown command 'test'`. |
+| `pnpm --filter @building-suit/ledger-suit test:unit` | Passed 16 files, zero failed/skipped. This is focused exact-money/presentation evidence, not native SQL/browser evidence. |
+| `node apps/ledger-suit/scripts/verify-v2-acceptance-artifacts.mjs` | Passed: 138 distinct requirement rows and exact independent eight-journal worksheet reconciliation. VAL-01's measurable-register check and VAL-08's separate-state check pass; application reports remain unverified. |
+| `pnpm check` | Passed token comparison, workspace boundaries and preservation of 80 protected historical migrations. |
+| `pnpm db:preflight ledger-suit staging` | Failed locally: the ignored `supabase/environments/ledger-suit/.env.staging` credential/configuration file is absent. Ref/key/runtime consistency therefore remains unverified. |
+| Read-only HTTP probes to `https://stg.ledger.building-suit.com` and configured staging ref `yqculoltqsyfastmihmu` | Failed before HTTP response: both hostnames were unresolvable in this environment. Login, tenant context, billing/read-only gates, workflows, deployed app commit and hosted migration version are unverified. No hosted write was attempted. |
+
+R01 remains implemented in source but native numbering/race and pre/post history-digest evidence is pending. R02 is explicitly disposed by R02-D01 as the limited prospective-history repair, but its native SQL/report comparison and accountant review remain pending. The prepared worksheet, reconciliation probe and report criteria remain the candidate artifacts for final named-accountant review; they are not signed evidence. Security, LS-OPS-001 restore, accountant acceptance and production states remain pending.
 
 ## Review artifacts and actual results
 
