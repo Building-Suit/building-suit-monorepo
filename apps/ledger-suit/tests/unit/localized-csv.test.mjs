@@ -1,11 +1,20 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { readFileSync } from 'node:fs'
-import { parseCsv, serializeCsv } from '../../app/utils/csv.ts'
+import { parseCsv, parseSpreadsheetPaste, serializeCsv } from '../../app/utils/csv.ts'
 import { CSV_IMPORT_FIELDS, csvImportTemplate, matchCsvColumns, prepareCsvImport, localizeReportCsv, normalizeCsvNumber } from '../../app/utils/localizedCsv.ts'
 const messages = Object.fromEntries(['en', 'ar'].map(locale => [locale, JSON.parse(readFileSync(new URL(`../../i18n/locales/${locale}.json`, import.meta.url), 'utf8'))]))
 const translate = locale => key => key.split('.').reduce((value, part) => value?.[part], messages[locale]) ?? key
 const translations = [translate('en'), translate('ar')]
+
+test('spreadsheet paste preserves exact cells and parses quoted tabs and newlines', () => {
+  const parsed = parseSpreadsheetPaste('type\tdate\tamount\tdescription\nإيراد\t٢٠٢٦-٠٩-١٩\t٩٠٠٧١٩٩٢٥٤٧٤٠٩٩٣٫٢٥\t"وصف\tمفصل"\nexpense\t2026-09-20\t12.50\t"two\nlines"')
+  assert.deepEqual(parsed.headers, ['type', 'date', 'amount', 'description'])
+  assert.equal(parsed.rows[0].amount, '٩٠٠٧١٩٩٢٥٤٧٤٠٩٩٣٫٢٥')
+  assert.equal(parsed.rows[0].description, 'وصف\tمفصل')
+  assert.equal(parsed.rows[1].description, 'two\nlines')
+  assert.throws(() => parseSpreadsheetPaste('type,date,amount\nincome,2026-09-19,10.00'), /SPREADSHEET_TABS_REQUIRED/)
+})
 
 test('both localized templates parse and automatically map every required and optional column', () => {
   for (const locale of ['en', 'ar']) {

@@ -4,6 +4,11 @@ export const billingIntervals = ["monthly", "yearly"] as const;
 export type LaunchPlanKey = typeof launchPlanKeys[number];
 export type BillingInterval = typeof billingIntervals[number];
 
+export const paymobFrequencyDays: Record<BillingInterval, 30 | 360> = {
+  monthly: 30,
+  yearly: 360,
+};
+
 export interface CheckoutRequest {
   organizationId: string;
   planKey: LaunchPlanKey;
@@ -54,6 +59,23 @@ export function paymobPlanId(
     throw new Error(`Paymob billing configuration is invalid: ${name}`);
   }
   return value;
+}
+
+/**
+ * Paymob subscription frequencies are fixed day counts, not calendar units.
+ * Keep the initial transaction fallback aligned with the provider until the
+ * subscription callback supplies its authoritative next_billing timestamp.
+ */
+export function paymobPeriodEnd(
+  occurredAt: string | Date,
+  interval: BillingInterval,
+): string {
+  const date = new Date(occurredAt);
+  if (Number.isNaN(date.getTime())) {
+    throw new Error("Invalid Paymob transaction timestamp");
+  }
+  date.setUTCDate(date.getUTCDate() + paymobFrequencyDays[interval]);
+  return date.toISOString();
 }
 
 function canonical(metadata: CheckoutMetadata): string {

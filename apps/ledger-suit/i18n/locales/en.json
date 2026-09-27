@@ -89,6 +89,114 @@
     "name": "Ledger Suit",
     "loading": "Loading…"
   },
+  "setupChecklist": {
+    "title": "Optional setup checklist",
+    "optional": "Guidance only",
+    "progress": "{complete} of {total} configuration areas ready",
+    "hint": "This checklist reads the current organization configuration. It never creates accounts, invites members, changes periods, or posts opening balances.",
+    "loadFailed": "The setup state could not be read. No configuration was changed.",
+    "states": {
+      "complete": "Configured",
+      "needs_attention": "Review needed",
+      "optional": "Optional",
+      "unavailable": "Not visible"
+    },
+    "items": {
+      "organization": {
+        "title": "Organization details",
+        "complete": "Legal name and base currency are recorded.",
+        "needs_attention": "The organization details are incomplete.",
+        "optional": "The organization exists.",
+        "unavailable": "Organization details are not visible.",
+        "action": "Review organization"
+      },
+      "chart": {
+        "title": "Chart and statement presentation",
+        "complete": "{count} active accounts; {mapped} accounts have statement mappings. Review suitability with your accountant.",
+        "needs_attention": "{count} active accounts; {mapped} accounts have statement mappings. Review the hierarchy and unmapped accounts.",
+        "optional": "A chart is optional until bookkeeping starts.",
+        "unavailable": "Account or mapping state is not available with your access.",
+        "action": "Review chart and templates"
+      },
+      "periods": {
+        "title": "Fiscal periods",
+        "complete": "{count} accounting periods are configured.",
+        "needs_attention": "No accounting period is configured yet.",
+        "optional": "Periods can be configured before posting.",
+        "unavailable": "Period state is not available with your access.",
+        "action": "Open period settings"
+      },
+      "opening": {
+        "title": "Opening balances",
+        "complete": "{count} accepted opening batch is locked in the ledger. | {count} accepted opening batches are locked in the ledger.",
+        "needs_attention": "Opening balances need review.",
+        "optional": "No accepted opening batch. Skip this when the organization starts with no prior balances.",
+        "unavailable": "Opening-balance state is not available with your access.",
+        "action": "Open migration workflow"
+      },
+      "team": {
+        "title": "Team access",
+        "complete": "{count} active members or a pending invitation are present.",
+        "needs_attention": "Team access needs review.",
+        "optional": "Only one active member. Invite colleagues only when needed.",
+        "unavailable": "Member and invitation state is not available with your access.",
+        "action": "Review members and invitations"
+      }
+    }
+  },
+  "chartTemplates": {
+    "title": "Reviewed chart starting points",
+    "hint": "Compare a compact services or trading structure with the organization's actual activity before creating or changing accounts.",
+    "reviewRequired": "Product-reviewed starting point — accountant review is still required",
+    "noApply": "This preview never creates, renames, maps, or overwrites accounts. Add or classify approved accounts through the existing account actions; used accounts and posted history remain untouched.",
+    "choose": "Choose chart template",
+    "preview": "Chart template preview",
+    "parent": "Parent code",
+    "presentation": "Suggested presentation",
+    "templates": {
+      "services": { "title": "Services", "description": "A minimal accrual-services structure with receivables, payables, service revenue, operating expenses, equity, and current/non-current asset groups." },
+      "trading": { "title": "Trading", "description": "The same controlled foundation plus inventory, sales revenue, and cost of sales. It does not configure inventory accounting or infer tax treatment." }
+    },
+    "accounts": {
+      "currentAssets": "Current assets",
+      "cash": "Cash and bank",
+      "receivables": "Accounts receivable control",
+      "nonCurrentAssets": "Non-current assets",
+      "equipment": "Property and equipment",
+      "currentLiabilities": "Current liabilities",
+      "payables": "Accounts payable control",
+      "equity": "Equity",
+      "retainedEarnings": "Retained earnings",
+      "revenue": "Revenue",
+      "expenses": "Expenses",
+      "operatingExpenses": "Operating expenses",
+      "serviceRevenue": "Service revenue",
+      "inventory": "Inventory",
+      "salesRevenue": "Sales revenue",
+      "costOfSales": "Cost of sales"
+    },
+    "lines": {
+      "current_assets": "Current assets",
+      "property_equipment": "Property and equipment",
+      "current_liabilities": "Current liabilities",
+      "equity": "Equity",
+      "operating_revenue": "Operating revenue",
+      "operating_expenses": "Operating expenses",
+      "cost_of_sales": "Cost of sales"
+    }
+  },
+  "demo": {
+    "invitationTitle": "Explore before creating an organization",
+    "invitationHint": "Open a synthetic, read-only accounting example. It is separate from organization creation and invitations.",
+    "open": "Open synthetic demo",
+    "title": "Synthetic Ledger demo",
+    "isolation": "This example lives only in this page's memory and has no organization identifier or database write path.",
+    "syntheticBadge": "Synthetic data · EGP",
+    "noRealOrganization": "The receipt and reset controls can affect only this isolated example. Reset cannot target a real organization.",
+    "addReceipt": "Add synthetic receipt",
+    "reset": "Reset synthetic demo",
+    "revision": "Demo changes: {revision}"
+  },
   "common": {
     "save": "Save",
     "saving": "Saving…",
@@ -114,6 +222,15 @@
     "back": "Back",
     "continue": "Continue",
     "retry": "Retry"
+  },
+  "accountingTable": {
+    "density": "Table density",
+    "compact": "Compact",
+    "comfortable": "Comfortable",
+    "journalScroll": "Journal table — scroll horizontally; journal identity and debit and credit totals remain visible",
+    "trialBalanceScroll": "Trial Balance — scroll horizontally; account identity, headers, and full-report totals remain visible",
+    "receivablesScroll": "Receivables table — scroll horizontally; customer and reference remain visible",
+    "payablesScroll": "Payables table — scroll horizontally; supplier and reference remain visible"
   },
   "financialMap": {
     "open": "Open the financial system map",
@@ -230,6 +347,7 @@
   "nav": {
     "primary": "Primary",
     "dashboard": "Dashboard",
+    "clients": "Client portfolio",
     "transactions": "Transactions",
     "allTransactions": "All transactions",
     "importTransactions": "Import CSV",
@@ -248,6 +366,7 @@
       "finance": "Accounting",
       "transactions": "Transactions",
       "ledger": "Ledger",
+      "subledgers": "Subledgers",
       "operations": "Operations",
       "directory": "Directory",
       "workspace": "Workspace",
@@ -255,6 +374,13 @@
     },
     "open": "Open navigation",
     "close": "Close navigation"
+  },
+  "pageContext": {
+    "label": "Current page context",
+    "organization": "Organization:",
+    "reportingPeriod": "Period:",
+    "periodValue": "{from} – {to}",
+    "asOfValue": "As of {date}"
   },
   "auth": {
     "title": "Ledger Suit",
@@ -446,12 +572,67 @@
     "viewAll": "View all",
     "emptyTitle": "Add your first transaction to start seeing your financial overview.",
     "emptyHint": "Record an expense or some income and the figures here fill in immediately.",
-    "emptyAction": "Add a transaction"
-    ,"upcomingCommitments": "Upcoming commitments",
+    "emptyAction": "Add a transaction",
+    "loadErrorHint": "Check your connection and try again. Empty accounting data is not shown when a read fails.",
+    "recentLoadError": "Recent transactions could not be loaded",
+    "summaryLoadError": "Key figures could not be loaded",
+    "seriesLoadError": "Revenue and expenses could not be loaded",
+    "liquidLoadError": "Cash position could not be loaded",
+    "commitmentsLoadError": "Commitments could not be loaded",
+    "upcomingCommitments": "Upcoming commitments",
     "overdueCommitments": "Overdue commitments",
     "commitments": "Commitments",
     "manage": "Manage",
     "noCommitments": "Nothing is due soon."
+  },
+  "clientPortfolio": {
+    "title": "Client portfolio",
+    "subtitle": "Review real accounting signals across the organizations you can already access.",
+    "summary": "Portfolio summary",
+    "searchLabel": "Search clients",
+    "searchPlaceholder": "Organization, legal name, currency, or role",
+    "healthFilter": "Health",
+    "refresh": "Refresh signals",
+    "signalNote": "Health uses current-period, control-reconciliation, and latest-ledger-activity signals. A missing or unreadable module stays unavailable; it is never treated as zero.",
+    "loadFailed": "The client portfolio could not be loaded",
+    "loadFailedHint": "No client is shown as healthy when its signals fail. Check your connection and retry.",
+    "empty": "No authorized client organizations",
+    "emptyHint": "Organizations appear here from your existing active memberships.",
+    "noMatches": "No clients match these filters",
+    "noMatchesHint": "Change the search or health filter to see more organizations.",
+    "tableLabel": "Authorized client health portfolio",
+    "client": "Client",
+    "health": "Health",
+    "period": "Current period",
+    "reconciliation": "Control reconciliation",
+    "lastActivity": "Latest ledger activity",
+    "actions": "Actions",
+    "openClient": "Open client",
+    "opening": "Opening…",
+    "unavailable": "Unavailable",
+    "noActivity": "No ledger activity",
+    "filters": {
+      "label": "Portfolio filters",
+      "all": "All clients",
+      "healthy": "Healthy",
+      "needs_attention": "Needs attention",
+      "unavailable": "Unavailable"
+    },
+    "healthStates": {
+      "healthy": "Healthy",
+      "needs_attention": "Needs attention",
+      "unavailable": "Unavailable"
+    },
+    "periodStates": {
+      "open": "Open",
+      "soft_closed": "Soft closed",
+      "hard_closed": "Hard closed",
+      "missing": "No current period"
+    },
+    "reconciliationStates": {
+      "reconciled": "Reconciled",
+      "needs_attention": "Needs attention"
+    }
   },
   "transactions": {
     "title": "Journal Center",
@@ -534,8 +715,8 @@
   },
   "imports": {
     "eyebrow": "Transaction import",
-    "title": "Import transactions from CSV",
-    "subtitle": "Upload a CSV, match its columns, review validation results, then confirm the rows that are ready to post.",
+    "title": "Import transactions",
+    "subtitle": "Upload a CSV or paste spreadsheet rows, match the columns, review validation results, then confirm the rows that are ready to post.",
     "entryPoint": "Import CSV",
     "upgradeEntryPoint": "Upgrade to import",
     "progress": "Import progress",
@@ -555,6 +736,51 @@
     "uploadHint": "The first row must contain column names. You will map them before anything is posted.",
     "chooseFile": "Choose CSV file",
     "formatHint": "Up to 10,000 rows and 5 MB. Supported transaction types are income and expense.",
+    "or": "or",
+    "pasteTitle": "Paste from a spreadsheet",
+    "pasteHint": "Copy a range whose first row contains column names. Tab-separated cells follow the same mapping and server validation as a CSV file. Press Ctrl+Enter or Command+Enter to continue.",
+    "pastePlaceholder": "Transaction type\tDate\tAmount\tAccount\tCategory",
+    "pasteFilename": "Pasted spreadsheet rows",
+    "reviewPaste": "Review pasted rows",
+    "extraction": {
+      "title": "Review a document extraction proposal",
+      "hint": "Pair a private PDF or image with provider-neutral JSON output, correct every proposed value, and then send the reviewed rows through the normal import validation and confirmation steps.",
+      "providerBoundaryTitle": "No extraction provider is enabled",
+      "providerBoundaryBody": "Ledger Suit does not send this document to OCR or AI services. Both files stay in your browser until you explicitly continue; the source document is then stored only as a private tenant attachment for the import batch.",
+      "documentLabel": "Source document",
+      "documentHint": "PDF, PNG, JPEG, or WebP; up to 25 MB. It is uploaded only after you accept the proposal and choose Stage and validate.",
+      "proposalLabel": "Extraction proposal JSON",
+      "proposalHint": "Use the ledger.document-extraction.v1 contract. Candidate values must be strings; confidence is optional from 0 to 1.",
+      "bytes": "bytes",
+      "candidate": "Proposed transaction {number}",
+      "noExtractionErrors": "The extraction reported no candidate-level errors. You must still compare every value with the source.",
+      "evidence": "Evidence",
+      "attestation": "I compared every required field with the source document and corrected any wrong or missing proposals. I understand the next step validates the rows but does not post them.",
+      "requiredIncomplete": "Complete transaction type, date, amount, payment/source account, and category for every proposed transaction.",
+      "reject": "Reject and clear proposal",
+      "accept": "Accept proposals for import review",
+      "sourceMismatch": "The selected document does not match the proposal source name or SHA-256 digest. Choose the matching files before continuing.",
+      "attachmentPermissionRequired": "Document extraction review requires private-attachment upload permission. CSV and spreadsheet imports remain available.",
+      "confidence": {
+        "none": "Confidence not supplied",
+        "high": "High confidence · {value}%",
+        "medium": "Medium confidence · {value}%",
+        "low": "Low confidence · {value}%"
+      },
+      "errors": {
+        "DOCUMENT_EXTRACTION_JSON_INVALID": "The proposal is not valid JSON.",
+        "DOCUMENT_EXTRACTION_CONTRACT_INVALID": "Use the ledger.document-extraction.v1 proposal contract.",
+        "DOCUMENT_EXTRACTION_CANDIDATES_INVALID": "The proposal must contain between 1 and 100 candidates.",
+        "DOCUMENT_EXTRACTION_SOURCE_INVALID": "The proposal source metadata is invalid.",
+        "DOCUMENT_EXTRACTION_CANDIDATE_INVALID": "A proposed transaction is malformed.",
+        "DOCUMENT_EXTRACTION_FIELD_INVALID": "A proposed field is malformed. Candidate values must remain strings.",
+        "DOCUMENT_EXTRACTION_CONFIDENCE_INVALID": "A confidence value must be between 0 and 1.",
+        "DOCUMENT_EXTRACTION_EVIDENCE_INVALID": "Field evidence is too long or malformed.",
+        "DOCUMENT_EXTRACTION_ERRORS_INVALID": "The proposal error details are malformed.",
+        "DOCUMENT_EXTRACTION_PROPOSAL_FILE_INVALID": "Choose a proposal JSON file no larger than 1 MB.",
+        "DOCUMENT_EXTRACTION_DOCUMENT_INVALID": "Choose a non-empty PDF, PNG, JPEG, or WebP document no larger than 25 MB."
+      }
+    },
     "mappingTitle": "Match CSV columns",
     "fileSummary": "{filename} · {count} data row | {filename} · {count} data rows",
     "changeFile": "Change file",
@@ -572,6 +798,14 @@
     "row": "Row",
     "issue": "Issue",
     "firstRows": "Showing the first {count} rows.",
+    "reviewFilter": "Review rows",
+    "reviewRange": "Showing {from}–{to} of {total}",
+    "reviewFilters": {
+      "all": "All rows ({count})",
+      "ready": "Ready or posted ({count})",
+      "issues": "Invalid or failed ({count})",
+      "duplicates": "Duplicates ({count})"
+    },
     "fields": {
       "type": "Transaction type *",
       "date": "Date *",
@@ -604,6 +838,7 @@
       "rowWidth": "A CSV row contains more values than the header.",
       "quote": "The CSV contains an unclosed quoted value.",
       "file": "Choose a CSV file no larger than 5 MB and 10,000 rows.",
+      "pasteTabs": "Copy a spreadsheet range with at least two columns, including the header row.",
       "entitlement": "This workspace plan does not include CSV imports.",
       "generic": "The import could not be completed. Review the file and try again."
     },
@@ -693,6 +928,13 @@
   "opening": {
     "title": "Opening Balances",
     "subtitle": "Import, map, validate, and approve one traceable Opening Trial Balance without a balancing plug.",
+    "guideTitle": "Before importing",
+    "guideHint": "This guidance reuses the existing chart, period, CSV mapping, validation, approval, locking, and correction workflows.",
+    "guideChart": "Review the chart hierarchy and statement classifications; a template is a starting point, not an automatic mapping.",
+    "guidePeriod": "Confirm the fiscal period and choose the correct Year Start or Midyear cut-off.",
+    "guideMapping": "Map every source row explicitly. Ledger Suit never guesses an account or creates a balancing plug.",
+    "reviewChart": "Review chart",
+    "reviewPeriods": "Review periods",
     "setup": "Migration Setup",
     "mode": "Migration Mode",
     "modes": { "year_start": "Year Start", "midyear": "Midyear" },
@@ -983,8 +1225,19 @@
   },
   "reports": {
     "title": "Reports",
-    "csvExports": "Export financial reports to CSV.",
+    "csvExports": "Export financial reports to CSV or Excel, or print them to PDF.",
     "exportFailed": "The report could not be exported. Check your access and try again.",
+    "exportExcel": "Export Excel",
+    "printPdf": "Print / PDF",
+    "popupBlocked": "Allow pop-ups to open the printable report.",
+    "preparing": "Preparing report…",
+    "organization": "Organization",
+    "currency": "Currency",
+    "generatedAt": "Generated at",
+    "period": "Period",
+    "entriesFilter": "Entries",
+    "postedOnly": "Posted entries only",
+    "mappingWarning": "Mapping warning",
     "tabs": {
       "overview": "Overview",
       "profitLoss": "Profit & Loss",
@@ -1125,6 +1378,7 @@
       "amountPositive": "{field} must be greater than zero.",
       "amountTooLarge": "{field} is too large.",
       "amountInvalid": "{field} is not a valid amount.",
+      "amountPrecision": "{field} supports at most {precision} decimal places for {currency}.",
       "paymentRequired": "Enter a principal, interest or fee amount.",
       "mustBalance": "Debits must equal credits before this can be posted.",
       "descriptionAndReason": "A description and a reason are both required."
@@ -1646,6 +1900,22 @@
     "events": { "statement": { "imported": "Statement imported" }, "line": { "corrected": "Statement line corrected" }, "match": { "created": "Match created", "removed": "Match removed" }, "outstanding": { "added": "Outstanding item added", "removed": "Outstanding item removed" }, "adjustment": { "posted": "Adjustment journal posted" }, "reconciliation": { "completed": "Reconciliation completed", "reopened": "Reconciliation reopened" } },
     "errors": { "title": "Bank reconciliation", "load": "Could not load the reconciliation workspace.", "save": "The bank operation could not be saved. Review the selection and retry.", "duplicateFile": "This exact file was already imported.", "duplicateLine": "This statement line already exists for the bank account.", "notExact": "Selected statement and ledger totals must be exactly equal in the same currency.", "incomplete": "Resolve or match every line and fix statement validation before completion.", "notBalanced": "The reconciliation equation does not balance. List outstanding ledger items explicitly.", "period": "The adjustment date is locked or its accounting period is closed.", "approval": "This organization requires an approval workflow; direct bank adjustments are blocked.", "permission": "You do not have permission for this bank operation." }
   },
+  "fx": {
+    "title": "Foreign-currency open items",
+    "policy": "Manual event-date rates only. Every posted rate and allocation is immutable, evidenced, and translated to the organization base currency.",
+    "tabs": { "item": "New obligation", "settlement": "Cross-currency settlement", "revaluation": "Revaluation", "reversal": "Correction / reversal", "mapping": "FX accounts" },
+    "mappingRequired": "Map realized and unrealized FX gain/loss accounts before posting foreign-currency activity.",
+    "mappingConfigured": "FX gain/loss mappings are configured and immutable. A reviewed forward revision is required to replace them.",
+    "realizedGain": "Realized FX gain", "realizedLoss": "Realized FX loss", "unrealizedGain": "Unrealized FX gain", "unrealizedLoss": "Unrealized FX loss",
+    "counterparty": "Counterparty", "control": "Control account", "offset": "Revenue / expense / asset account", "cash": "Cash or bank account",
+    "currency": "Currency", "documentDate": "Document and rate date", "settlementDate": "Settlement and rate date", "dueDate": "Due date", "reference": "Reference",
+    "amount": "Original amount", "gross": "Actual gross settlement", "baseRate": "Base major units per 1 foreign major unit", "rateSource": "Rate source", "rateEvidence": "Rate evidence / reference",
+    "postItem": "Post foreign-currency obligation", "postSettlement": "Post allocated settlement", "saved": "Foreign-currency evidence posted.", "reversalKind": "Evidence type", "reversalTarget": "Original evidence", "reversalDate": "Reversal date", "reversalReason": "Reviewed correction reason", "reversalPolicy": "Dependent later events must be reversed first. The original rates and amounts remain immutable.", "postReversal": "Post linked reversal",
+    "documentAmount": "Document amount extinguished", "settlementAmount": "Settlement amount consumed", "crossRate": "Settlement major units per document major unit", "conversionEvidence": "Agreed conversion evidence",
+    "expected": "Backend-reproducible amount", "minorUnits": "minor units", "closingRate": "Closing base rate", "preview": "Preview revaluation", "previewReady": "Revaluation preview is ready.", "confirm": "Confirm carry-forward revaluation",
+    "openItems": "Foreign-currency open items", "settlementHistory": "Cross-currency settlement history", "noSettlements": "No cross-currency settlements.", "allocationHistory": "Dual-currency allocation evidence", "noAllocations": "No allocation evidence.", "roundingResidual": "Visible rounding residual", "outstanding": "Outstanding original currency", "currentCarrying": "Current base carrying value", "settlementBase": "Settlement base value", "realizedDifference": "Realized FX difference", "closingBase": "Closing base value", "delta": "Revaluation difference", "empty": "No foreign-currency open items.",
+    "errors": { "load": "Could not load foreign-currency evidence.", "save": "The FX operation was rejected. Review rates, mappings, allocation evidence, permissions, dates, and open balances." }
+  },
   "ar": {
     "title": "Customer receivables",
     "policy": "Invoices recognize revenue when issued. Receipts settle receivables without recognizing revenue again. Base currency only.",
@@ -1727,7 +1997,11 @@
       "approval": "This organization requires adjustment approval. Direct AR write-offs are blocked.",
       "reversal": "This document cannot be reversed. Check its date and existing reversals.",
       "creditAccount": "A credit must use the original revenue account of every allocated invoice.",
-      "allocation": "Enter a positive total and allocate exactly that amount."
+      "allocation": "Enter a positive total and allocate exactly that amount.",
+      "allocationAmount": "Each allocation must be a valid positive amount using the base-currency precision.",
+      "amountInvalid": "Enter a valid positive amount.",
+      "amountPrecision": "{currency} supports at most {precision} decimal places.",
+      "amountTooLarge": "The amount exceeds the supported ledger range."
     }
   },
   "dimensions": {
@@ -1847,7 +2121,11 @@
       "approval": "This organization requires adjustment approval. Direct AP corrections are blocked.",
       "reversal": "This document cannot be reversed. Check its date and existing reversals.",
       "creditAccount": "A credit or correction must use the original expense or asset account of every allocated bill.",
-      "allocation": "Enter a positive total and allocate exactly that amount."
+      "allocation": "Enter a positive total and allocate exactly that amount.",
+      "allocationAmount": "Each allocation must be a valid positive amount using the base-currency precision.",
+      "amountInvalid": "Enter a valid positive amount.",
+      "amountPrecision": "{currency} supports at most {precision} decimal places.",
+      "amountTooLarge": "The amount exceeds the supported ledger range."
     }
   },
   "vat": {
@@ -1866,7 +2144,7 @@
     "documents": "VAT source documents", "empty": "No VAT documents in this period.", "taxPointDate": "Tax point date", "documentDate": "Document date", "reference": "Source reference", "direction": "Tax direction", "base": "Taxable base", "tax": "VAT", "history": "Traceability", "journal": "Journal", "reverse": "Reverse", "reversalReason": "Reason for append-only reversal", "reason": "Credit reason", "original": "Original invoice", "counterparty": "Counterparty (optional)", "baseAccount": "Revenue / expense / asset account", "grossAccount": "Gross receivable / payable account", "calculatedTax": "Calculated document VAT", "outputAccountHint": "Posting liability with Taxes Payable subtype", "inputAccountHint": "Posting asset account",
     "directions": { "output": "Output", "input": "Input" },
     "kinds": { "invoice": "Invoice", "credit": "Credit", "reversal": "Reversal" },
-    "errors": { "title": "VAT action failed", "load": "Could not load the VAT workspace.", "configure": "Could not record registration. Check EGP, effective date, permissions and unused account mappings.", "save": "Could not post this scoped VAT document. Check dates, accounts, amount, permissions and registration.", "retryConflict": "This retry key belongs to different values. Reopen the form.", "period": "The tax-point accounting period is closed.", "adjustment": "The credit/reversal must exactly link an unadjusted original invoice and preserve its accounts and amount.", "effectiveDate": "No verified standard VAT rule is effective on that tax point." }
+    "errors": { "title": "VAT action failed", "load": "Could not load the VAT workspace.", "configure": "Could not record registration. Check EGP, effective date, permissions and unused account mappings.", "save": "Could not post this scoped VAT document. Check dates, accounts, amount, permissions and registration.", "retryConflict": "This retry key belongs to different values. Reopen the form.", "period": "The tax-point accounting period is closed.", "adjustment": "The credit/reversal must exactly link an unadjusted original invoice and preserve its accounts and amount.", "effectiveDate": "No verified standard VAT rule is effective on that tax point.", "amountInvalid": "Enter a valid positive taxable base.", "amountPrecision": "{currency} supports at most {precision} decimal places.", "amountTooLarge": "The taxable base exceeds the supported ledger range." }
   },
   "inventory": {
     "title": "Inventory accounting",

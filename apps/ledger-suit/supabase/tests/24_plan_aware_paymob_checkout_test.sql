@@ -2,7 +2,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(24);
+select plan(26);
 
 create temp table checkout_ids (key text primary key, value uuid not null);
 grant all on checkout_ids to authenticated, service_role;
@@ -147,9 +147,9 @@ select is(
     p_provider_status => 'active',
     p_interval => 'yearly',
     p_plan_key => 'business',
-    p_period_start => now(),
-    p_period_end => now() + interval '1 year',
-    p_last_payment_at => now(),
+    p_period_start => '2024-02-29 12:34:56+00'::timestamptz,
+    p_period_end => '2025-02-23 12:34:56+00'::timestamptz,
+    p_last_payment_at => '2024-02-29 12:34:56+00'::timestamptz,
     p_price_id => (select price_id from checkout_snapshots where plan_key = 'business' and interval = 'yearly'),
     p_amount_minor => (select amount_minor from checkout_snapshots where plan_key = 'business' and interval = 'yearly')
   ), true, 'an inactive exact signed price snapshot still fulfills'
@@ -168,6 +168,12 @@ select is(
      'interval', 'yearly', 'provider_subscription_id', 'step17-subscription'
    ) from checkout_snapshots where plan_key = 'business' and interval = 'yearly'),
   'fulfillment persists the exact signed plan, price, interval and provider id'
+);
+select is(
+  (select current_period_end from public.subscriptions
+   where organization_id = (select value from checkout_ids where key = 'org')),
+  '2025-02-23 12:34:56+00'::timestamptz,
+  'yearly checkout persists the Paymob 360-day period across a leap-day boundary'
 );
 select is(
   public.apply_paymob_subscription_event(
@@ -253,9 +259,9 @@ select is(
     p_provider_status => 'active',
     p_interval => 'monthly',
     p_plan_key => 'starter',
-    p_period_start => now(),
-    p_period_end => now() + interval '1 month',
-    p_last_payment_at => now(),
+    p_period_start => '2028-01-31 12:34:56+00'::timestamptz,
+    p_period_end => '2028-03-01 12:34:56+00'::timestamptz,
+    p_last_payment_at => '2028-01-31 12:34:56+00'::timestamptz,
     p_price_id => (select price_id from checkout_snapshots where plan_key = 'starter' and interval = 'monthly'),
     p_amount_minor => (select amount_minor from checkout_snapshots where plan_key = 'starter' and interval = 'monthly')
   ), true, 'a later successful verified checkout applies after the decline'
@@ -268,6 +274,12 @@ select is(
   (select jsonb_build_object('plan', 'starter', 'price', price_id, 'status', 'active')
    from checkout_snapshots where plan_key = 'starter' and interval = 'monthly'),
   'successful retry binds the exact selected launch plan and price'
+);
+select is(
+  (select current_period_end from public.subscriptions
+   where organization_id = (select value from checkout_ids where key = 'trial_org')),
+  '2028-03-01 12:34:56+00'::timestamptz,
+  'monthly checkout persists the Paymob 30-day period across a month-end boundary'
 );
 
 delete from public.subscriptions

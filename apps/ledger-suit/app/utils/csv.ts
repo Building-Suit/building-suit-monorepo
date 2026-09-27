@@ -3,8 +3,7 @@ export interface ParsedCsv {
   rows: Record<string, string>[]
 }
 
-/** Parse RFC 4180-style CSV, including quoted commas, quotes, and newlines. */
-export function parseCsv(text: string, options: { allowEmpty?: boolean } = {}): ParsedCsv {
+function parseDelimited(text: string, delimiter: ',' | '\t', options: { allowEmpty?: boolean } = {}): ParsedCsv {
   const records: string[][] = []
   let record: string[] = []
   let field = ''
@@ -24,7 +23,7 @@ export function parseCsv(text: string, options: { allowEmpty?: boolean } = {}): 
     }
 
     if (character === '"' && field === '') quoted = true
-    else if (character === ',') {
+    else if (character === delimiter) {
       record.push(field)
       field = ''
     }
@@ -53,6 +52,17 @@ export function parseCsv(text: string, options: { allowEmpty?: boolean } = {}): 
     return Object.fromEntries(headers.map((header, index) => [header, values[index] ?? '']))
   })
   return { headers, rows }
+}
+
+/** Parse RFC 4180-style CSV, including quoted commas, quotes, and newlines. */
+export function parseCsv(text: string, options: { allowEmpty?: boolean } = {}): ParsedCsv {
+  return parseDelimited(text, ',', options)
+}
+
+/** Parse a tab-separated range copied from a spreadsheet without coercing cell values. */
+export function parseSpreadsheetPaste(text: string): ParsedCsv {
+  if (!text.includes('\t')) throw new Error('SPREADSHEET_TABS_REQUIRED')
+  return parseDelimited(text, '\t')
 }
 
 /** Values remain strings: never round financial amounts or strip formula protection. */

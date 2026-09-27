@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import type { Database } from '~~/types/database.types'
+import type { DashboardRpcDatabase } from '~~/types/dashboard-rpc.types'
 import type { SeriesPoint } from '~/components/RevenueExpenseChart.vue'
 
 definePageMeta({ layout: 'default' }) // Authenticated workspace route.
 
 const supabase = useSupabaseClient<Database>()
+const dashboardRpc = useSupabaseClient<DashboardRpcDatabase>()
 const { currentId, can, baseCurrency } = useTenant()
 const { start } = useAddTransaction()
 const { show: showOperations } = useOperationsCenter()
@@ -41,7 +43,7 @@ interface Summary {
 
 // Every figure below is computed by the database. Nothing on this page
 // recalculates a total from rows it fetched.
-const { data: summary, pending: summaryPending } = useLazyAsyncData<Summary | null>('org:dashboard', async () => {
+const { data: summary, pending: summaryPending, error: summaryError, refresh: refreshSummary } = useLazyAsyncData<Summary | null>('org:dashboard', async () => {
   if (!currentId.value) return null
   const { data, error } = await supabase.rpc('dashboard_summary', {
     p_organization_id: currentId.value,
@@ -50,7 +52,7 @@ const { data: summary, pending: summaryPending } = useLazyAsyncData<Summary | nu
   return data as unknown as Summary
 }, { watch: [currentId] })
 
-const { data: series, pending: seriesPending } = useLazyAsyncData<SeriesPoint[]>('org:dashboard-series', async () => {
+const { data: series, pending: seriesPending, error: seriesError, refresh: refreshSeries } = useLazyAsyncData<SeriesPoint[]>('org:dashboard-series', async () => {
   if (!currentId.value) return []
   const { data, error } = await supabase.rpc('report_monthly_series', {
     p_organization_id: currentId.value,
@@ -61,19 +63,17 @@ const { data: series, pending: seriesPending } = useLazyAsyncData<SeriesPoint[]>
   return (data ?? []) as unknown as SeriesPoint[]
 }, { watch: [currentId, months, customRange, customFrom, customTo], default: () => [] })
 
-const { data: liquid, pending: liquidPending } = useLazyAsyncData('org:cash-position', async () => {
+const { data: liquid, pending: liquidPending, error: liquidError, refresh: refreshLiquid } = useLazyAsyncData('org:cash-position', async () => {
   if (!currentId.value) return []
-  const { data, error } = await supabase
-    .from('account_balances')
-    .select('account_id, name, currency, net_debit_minor, subtype')
-    .eq('organization_id', currentId.value)
-    .eq('is_liquid', true)
-    .eq('is_archived', false)
+  if (!can('accounts.read')) return []
+  const { data, error } = await dashboardRpc.rpc('dashboard_liquid_accounts', {
+    p_organization_id: currentId.value,
+  })
   if (error) throw error
   return data ?? []
-}, { watch: [currentId], default: () => [] })
+}, { watch: [currentId, () => can('accounts.read')], default: () => [] })
 
-const { data: recent, pending: recentPending } = useLazyAsyncData('org:recent-transactions', async () => {
+const { data: recent, pending: recentPending, error: recentError, refresh: refreshRecent } = useLazyAsyncData('org:recent-transactions', async () => {
   if (!currentId.value) return []
   const { data, error } = await supabase.rpc('search_transactions', {
     p_organization_id: currentId.value,
@@ -85,7 +85,7 @@ const { data: recent, pending: recentPending } = useLazyAsyncData('org:recent-tr
 
 const hasActivity = computed(() => (recent.value?.length ?? 0) > 0)
 
-const { data: commitments, pending: commitmentsPending } = useLazyAsyncData('org:dashboard-commitments', async () => {
+const { data: commitments, pending: commitmentsPending, error: commitmentsError, refresh: refreshCommitments } = useLazyAsyncData('org:dashboard-commitments', async () => {
   if (!currentId.value || !can('commitments.read')) return []
   const { data, error } = await supabase.from('commitment_states').select('id,title,due_date,display_status,outstanding_minor,currency_code').eq('organization_id', currentId.value).in('display_status', ['due', 'due_soon', 'overdue', 'partially_paid']).order('due_date').limit(8)
   if (error) throw error
@@ -105,6 +105,7 @@ const payableHint = computed(() =>
 <template>
   <div class="space-y-8">
     <h1 class="text-h1 font-bold">{{ t('dashboard.title') }}</h1>
+    <SetupChecklist />
 
     <div v-if="recentPending" class="space-y-6">
       <SectionSkeleton variant="cards" />
@@ -112,6 +113,12 @@ const payableHint = computed(() =>
         <SectionSkeleton class="xl:col-span-2" variant="chart" />
         <SectionSkeleton variant="table" :rows="4" />
       </div>
+    </div>
+
+    <div v-else-if="recentError" class="ls-card space-y-3 p-6" role="alert">
+      <h2 class="font-bold">{{ t('dashboard.recentLoadError') }}</h2>
+      <p class="text-sm text-fg-muted">{{ t('dashboard.loadErrorHint') }}</p>
+      <button type="button" class="ls-btn" @click="refreshRecent()">{{ t('common.retry') }}</button>
     </div>
 
     <EmptyState
@@ -124,6 +131,11 @@ const payableHint = computed(() =>
 
     <template v-else>
       <SectionSkeleton v-if="summaryPending || commitmentsPending" variant="cards" />
+      <div v-else-if="summaryError" class="ls-card space-y-3 p-6" role="alert">
+        <h2 class="font-bold">{{ t('dashboard.summaryLoadError') }}</h2>
+        <p class="text-sm text-fg-muted">{{ t('dashboard.loadErrorHint') }}</p>
+        <button type="button" class="ls-btn" @click="refreshSummary()">{{ t('common.retry') }}</button>
+      </div>
       <section v-else aria-labelledby="kpis" class="space-y-3">
         <h2 id="kpis" class="sr-only">{{ t('dashboard.kpis') }}</h2>
         <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -155,13 +167,18 @@ const payableHint = computed(() =>
             good-direction="neutral"
             :hint="payableHint"
           />
-          <KpiCard v-if="can('commitments.read')" :title="t('dashboard.upcomingCommitments')" :amount-minor="upcomingCommitments" good-direction="neutral" />
-          <KpiCard v-if="can('commitments.read')" :title="t('dashboard.overdueCommitments')" :amount-minor="overdueCommitments" good-direction="down" />
+          <KpiCard v-if="can('commitments.read') && !commitmentsError" :title="t('dashboard.upcomingCommitments')" :amount-minor="upcomingCommitments" good-direction="neutral" />
+          <KpiCard v-if="can('commitments.read') && !commitmentsError" :title="t('dashboard.overdueCommitments')" :amount-minor="overdueCommitments" good-direction="down" />
         </div>
       </section>
 
       <div class="grid gap-6 xl:grid-cols-3">
         <SectionSkeleton v-if="seriesPending" class="xl:col-span-2" variant="chart" />
+        <section v-else-if="seriesError" class="ls-card space-y-3 p-6 xl:col-span-2" role="alert" aria-labelledby="series-error-heading">
+          <h2 id="series-error-heading" class="font-bold">{{ t('dashboard.seriesLoadError') }}</h2>
+          <p class="text-sm text-fg-muted">{{ t('dashboard.loadErrorHint') }}</p>
+          <button type="button" class="ls-btn" @click="refreshSeries()">{{ t('common.retry') }}</button>
+        </section>
         <section v-else class="ls-card min-w-0 p-6 xl:col-span-2" aria-labelledby="chart-heading">
           <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
             <h2 id="chart-heading" class="text-base font-bold">{{ t('dashboard.revenueVsExpenses') }}</h2>
@@ -185,6 +202,11 @@ const payableHint = computed(() =>
         </section>
 
         <SectionSkeleton v-if="liquidPending" variant="table" :rows="4" />
+        <section v-else-if="liquidError" class="ls-card space-y-3 p-6" role="alert" aria-labelledby="liquid-error-heading">
+          <h2 id="liquid-error-heading" class="font-bold">{{ t('dashboard.liquidLoadError') }}</h2>
+          <p class="text-sm text-fg-muted">{{ t('dashboard.loadErrorHint') }}</p>
+          <button type="button" class="ls-btn" @click="refreshLiquid()">{{ t('common.retry') }}</button>
+        </section>
         <section v-else class="ls-card min-w-0 p-6" aria-labelledby="cash-heading">
           <h2 id="cash-heading" class="mb-4 text-base font-bold">{{ t('dashboard.cashPosition') }}</h2>
           <BsDataTable v-if="liquid?.length" :value="liquid" :label="t('dashboard.cashPositionCaption')">
@@ -200,6 +222,11 @@ const payableHint = computed(() =>
       </div>
 
       <SectionSkeleton v-if="can('commitments.read') && commitmentsPending" variant="table" :rows="4" />
+      <section v-else-if="can('commitments.read') && commitmentsError" class="ls-card space-y-3 p-6" role="alert" aria-labelledby="commitments-error-heading">
+        <h2 id="commitments-error-heading" class="font-bold">{{ t('dashboard.commitmentsLoadError') }}</h2>
+        <p class="text-sm text-fg-muted">{{ t('dashboard.loadErrorHint') }}</p>
+        <button type="button" class="ls-btn" @click="refreshCommitments()">{{ t('common.retry') }}</button>
+      </section>
       <section v-else-if="can('commitments.read')" class="ls-card overflow-hidden" aria-labelledby="commitments-heading">
         <div class="flex items-center justify-between px-6 py-4"><h2 id="commitments-heading" class="text-base font-bold">{{ t('dashboard.commitments') }}</h2><button class="ls-btn ls-btn-sm" @click="showOperations('commitments')">{{ t('dashboard.manage') }}</button></div>
         <div v-if="commitments.length" class="overflow-x-auto"><BsDataTable :value="commitments">

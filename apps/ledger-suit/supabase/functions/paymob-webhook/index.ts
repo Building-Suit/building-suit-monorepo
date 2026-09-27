@@ -10,6 +10,7 @@ import {
 } from "../_shared/paymob.ts";
 import {
   type CheckoutMetadata,
+  paymobPeriodEnd,
   verifyCheckoutMetadata,
 } from "../_shared/paymob-checkout-contract.ts";
 import {
@@ -49,12 +50,6 @@ async function checkoutMetadata(
   const claims = record(object.payment_key_claims);
   const extra = record(claims.extra);
   return await verifyCheckoutMetadata(extra, requiredEnv("PAYMOB_HMAC_SECRET"));
-}
-
-function addInterval(date: Date, interval: "monthly" | "yearly"): string {
-  if (interval === "yearly") date.setUTCFullYear(date.getUTCFullYear() + 1);
-  else date.setUTCMonth(date.getUTCMonth() + 1);
-  return date.toISOString();
 }
 
 async function processSubscriptionCallback(
@@ -218,7 +213,7 @@ Deno.serve(async (request) => {
         p_plan_key: metadata.planKey,
         p_period_start: succeeded ? occurredAt : null,
         p_period_end: succeeded
-          ? addInterval(new Date(occurredAt), metadata.interval)
+          ? paymobPeriodEnd(occurredAt, metadata.interval)
           : null,
         p_last_payment_at: succeeded ? occurredAt : null,
         p_payment_failed_at: succeeded ? null : occurredAt,

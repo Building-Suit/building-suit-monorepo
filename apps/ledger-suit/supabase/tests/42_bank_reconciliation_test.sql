@@ -7,7 +7,8 @@ create temp table bank_values(key text primary key,value text not null);
 grant all on bank_ids,bank_values to authenticated;
 insert into auth.users(id,email,raw_user_meta_data,raw_app_meta_data) values
  ('42000000-0000-4000-8000-000000000001','bank-owner@test.local','{}','{}'),
- ('42000000-0000-4000-8000-000000000002','bank-viewer@test.local','{}','{}');
+ ('42000000-0000-4000-8000-000000000002','bank-viewer@test.local','{}','{}'),
+ ('42000000-0000-4000-8000-000000000003','bank-outsider@test.local','{}','{}');
 select set_config('request.jwt.claims','{"sub":"42000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 set local role authenticated;
 insert into bank_ids values('org',public.create_organization('Bank fixture','EGP'));
@@ -134,5 +135,9 @@ select throws_ok(format($q$select public.match_bank_items(%L,%L,array[%L]::uuid[
  (select value from bank_ids where key='org'),(select value from bank_ids where key='rec3'),(select value from bank_ids where key='fee_line'),(select value from bank_ids where key='fee_tx')),
  '42501','INSUFFICIENT_PERMISSION: bank.match is required','viewer cannot mutate reconciliation evidence');
 select lives_ok(format('select public.read_bank_reconciliation_workspace(%L,%L)',(select value from bank_ids where key='org'),(select value from bank_ids where key='rec')),'viewer can read reconciliation history');
+select set_config('request.jwt.claims','{"sub":"42000000-0000-4000-8000-000000000003","role":"authenticated"}',true);
+select is((select count(*) from public.bank_reconciliations),0::bigint,'RLS hides another tenant bank reconciliation');
+select throws_ok(format('select public.read_bank_reconciliation_workspace(%L,%L)',(select value from bank_ids where key='org'),(select value from bank_ids where key='rec')),
+ '42501','TENANT_ACCESS_DENIED: not a member of this organization','foreign tenant cannot read bank reconciliation workspace');
 select * from finish();
 rollback;

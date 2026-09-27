@@ -52,7 +52,7 @@ watch([currentId, () => user.value?.id], () => { visible.value = false; tab.valu
 
 <template>
   <div class="space-y-6">
-    <header><h1 class="text-h1 font-bold">{{ t('dimensions.title') }}</h1><p class="mt-2 text-fg-muted">{{ t('dimensions.policy') }}</p></header>
+    <LedgerPageHeader :title="t('dimensions.title')" :subtitle="t('dimensions.policy')" :from="tab === 'reports' ? reportFilter.from : undefined" :to="tab === 'reports' ? reportFilter.to : undefined" />
     <p v-if="!can('dimensions.read')" class="ls-card p-5" role="status">{{ t('dimensions.denied') }}</p>
     <template v-else>
       <nav class="flex flex-wrap gap-2" :aria-label="t('dimensions.title')"><template v-for="item in ['values','policies','reports'] as const" :key="item"><button v-if="item!=='reports' || can('reports.read')" class="ls-btn" :class="tab===item ? 'ls-btn-primary' : ''" @click="tab=item">{{ t(`dimensions.tabs.${item}`) }}</button></template></nav>

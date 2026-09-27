@@ -8,20 +8,31 @@ const PRIMARY_NAV = [
 
 const NAV_GROUPS = computed(() => [
   {
-    key: 'finance',
+    key: 'ledger',
     links: [
       ...(can('transactions.read') || can('transactions.create') || can('transactions.adjust') || can('imports.create') ? [{ to: '/transactions', label: 'nav.transactions' }] : []),
       ...(can('accounts.read') ? [{ to: '/accounts', label: 'nav.accounts' }] : []),
-      ...(can('reports.read') ? [{ to: '/reports', label: 'nav.reports' }] : []),
       ...(can('opening_balances.read') ? [{ to: '/opening-balances', label: 'nav.openingBalances' }] : []),
-      ...(can('bank.read') ? [{ to: '/bank-reconciliation', label: 'nav.bankReconciliation' }] : []),
-      ...(can('assets.read') ? [{ to: '/fixed-assets', label: 'nav.fixedAssets' }] : []),
-      ...(can('dimensions.read') ? [{ to: '/accounting-dimensions', label: 'nav.accountingDimensions' }] : []),
-      ...(can('inventory.read') ? [{ to: '/inventory-accounting', label: 'nav.inventoryAccounting' }] : []),
-      ...(can('tax.read') ? [{ to: '/tax-vat', label: 'nav.taxVat' }] : []),
+      ...(can('periods.read') ? [{ to: '/periods', label: 'nav.periods' }] : []),
+    ],
+  },
+  {
+    key: 'subledgers',
+    links: [
       ...(can('ar.read') ? [{ to: '/receivables', label: 'ar.title' }] : []),
       ...(can('ap.read') ? [{ to: '/payables', label: 'ap.title' }] : []),
-      ...(can('periods.read') ? [{ to: '/periods', label: 'nav.periods' }] : []),
+      ...(can('bank.read') ? [{ to: '/bank-reconciliation', label: 'nav.bankReconciliation' }] : []),
+      ...(can('assets.read') ? [{ to: '/fixed-assets', label: 'nav.fixedAssets' }] : []),
+      ...(can('inventory.read') ? [{ to: '/inventory-accounting', label: 'nav.inventoryAccounting' }] : []),
+      ...(can('tax.read') ? [{ to: '/tax-vat', label: 'nav.taxVat' }] : []),
+    ],
+  },
+  {
+    key: 'insights',
+    links: [
+      ...(organizations.value.length > 1 ? [{ to: '/clients', label: 'nav.clients' }] : []),
+      ...(can('reports.read') ? [{ to: '/reports', label: 'nav.reports' }] : []),
+      ...(can('dimensions.read') ? [{ to: '/accounting-dimensions', label: 'nav.accountingDimensions' }] : []),
     ],
   },
   {
@@ -49,7 +60,7 @@ const NAV_GROUPS = computed(() => [
 
 
 const { t } = useI18n()
-const { current, currentId, loadOrganizations, loading } = useTenant()
+const { current, currentId, organizations, loadOrganizations, loading } = useTenant()
 const { can } = useTenant()
 const {
   accessState,
@@ -84,7 +95,8 @@ watch(currentId, async (value, previous) => {
   <div v-if="!showShell" class="min-h-dvh bg-background" aria-busy="true" />
   <BsAppShell v-else :product-name="t('app.name')" :groups="NAV_GROUPS.map(group => ({ ...group, label: t(`nav.groups.${group.key}`), links: group.links.map(item => ({ ...item, label: t(item.label) })) }))" :mobile-links="PRIMARY_NAV.map(item => ({ ...item, label: t(`nav.${item.key}`) }))" :labels="{ close: t('nav.close'), open: t('nav.open'), navigation: t('nav.primary'), dashboard: t('nav.dashboard') }">
     <template #logo><AppLogo class="h-14 w-auto max-w-52" /></template>
-    <template #header><TrialCountdown /><NotificationMenu /><AccountMenu /><OrganizationSwitcher class="w-64" /></template>
+    <template #context><OrganizationSwitcher /></template>
+    <template #header><TrialCountdown /><NotificationMenu /><AccountMenu /></template>
         <div v-if="loading" class="text-sm text-fg-muted">{{ t('app.loading') }}</div>
 
         <OrganizationSetup v-else-if="!current" />

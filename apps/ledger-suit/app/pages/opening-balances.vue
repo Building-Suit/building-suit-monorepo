@@ -29,8 +29,15 @@ const batchId = ref<string | null>(null)
 const validation = ref<Validation | null>(null)
 const postedTransactionId = ref<string | null>(null)
 const busy = ref('')
+const uploadFailed = ref(false)
 const correctionReason = ref('')
 const correctionDate = ref('')
+
+watch(currentId, () => {
+  mode.value = 'year_start'; cutoff.value = ''; filename.value = ''; rows.value = []
+  batchId.value = null; validation.value = null; postedTransactionId.value = null
+  busy.value = ''; uploadFailed.value = false; correctionReason.value = ''; correctionDate.value = ''
+}, { flush: 'sync' })
 
 useHead({ title: () => `${t('opening.title')} · ${t('app.name')}` })
 const key = computed(() => `org:opening-balances:${currentId.value ?? ''}`)
@@ -46,7 +53,7 @@ const { data, pending, error, refresh } = useLazyAsyncData(key, async () => {
 }, { default: () => ({ accounts: [] as Account[], batches: [] as Batch[] }) })
 const accounts = computed(() => data.value?.accounts ?? [])
 const batches = computed(() => data.value?.batches ?? [])
-const amount = (value: number | string) => new Intl.NumberFormat(locale.value, { style: 'currency', currency: baseCurrency.value }).format(Number(value) / 100)
+const amount = (value: number | string) => formatMoney(value, baseCurrency.value, locale.value)
 const date = (value: string) => new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium' }).format(new Date(`${value}T12:00:00Z`))
 const rowErrors = (sourceRow: number) => validation.value?.rows.find(row => row.source_row === sourceRow)?.errors ?? []
 const validationLabel = (code: string) => t(`opening.errors.${code}`)
@@ -57,9 +64,9 @@ function labels() {
 function downloadTemplate() { downloadCsv(`${t('opening.templateFilename')}.csv`, openingBalanceTemplate(labels())) }
 
 async function selectFile(event: Event) {
+  if (busy.value) return
   const file = (event.target as HTMLInputElement).files?.[0]
   if (!file || !currentId.value) return
-  busy.value = 'upload'
   try {
     if (!file.name.toLowerCase().endsWith('.csv') || file.size > 5 * 1024 * 1024) throw new Error('OPENING_FILE_INVALID')
     const parsed = parseOpeningBalanceCsv(await file.text(), labels())
@@ -68,20 +75,30 @@ async function selectFile(event: Event) {
     validation.value = null
     postedTransactionId.value = null
     if (!cutoff.value) throw new Error('OPENING_CUTOFF_REQUIRED')
+    await uploadRows()
+  }
+  catch (failure) { uploadFailed.value = rows.value.length > 0; toasts.error(t('opening.errorTitle'), describeError(failure)) }
+}
+
+async function uploadRows() {
+  if (busy.value || !currentId.value || !cutoff.value || !filename.value || !rows.value.length) return
+  busy.value = 'upload'
+  uploadFailed.value = false
+  try {
     const { data: id, error } = await supabase.rpc('create_opening_balance_batch', {
       p_organization_id: currentId.value, p_migration_mode: mode.value,
-      p_cutoff_date: cutoff.value, p_source_filename: file.name, p_rows: parsed as unknown as Json,
+      p_cutoff_date: cutoff.value, p_source_filename: filename.value, p_rows: rows.value as unknown as Json,
     })
     if (error) throw error
     batchId.value = id
     await refresh()
   }
-  catch (failure) { rows.value = []; toasts.error(t('opening.errorTitle'), describeError(failure)) }
+  catch (failure) { uploadFailed.value = true; toasts.error(t('opening.errorTitle'), describeError(failure)) }
   finally { busy.value = '' }
 }
 
 async function validateBatch() {
-  if (!batchId.value || !cutoff.value) return
+  if (busy.value || !batchId.value || !cutoff.value) return
   busy.value = 'validate'
   try {
     const { error: updateError } = await supabase.rpc('update_opening_balance_batch', {
@@ -99,7 +116,7 @@ async function validateBatch() {
 }
 
 async function approve() {
-  if (!batchId.value || !validation.value?.valid) return
+  if (busy.value || !batchId.value || !validation.value?.valid) return
   busy.value = 'approve'
   try {
     const { data: transactionId, error } = await supabase.rpc('approve_opening_balance_batch', { p_batch_id: batchId.value })
@@ -113,7 +130,7 @@ async function approve() {
 }
 
 async function reverse(batch: Batch) {
-  if (!correctionReason.value.trim()) return
+  if (busy.value || !correctionReason.value.trim()) return
   busy.value = `reverse:${batch.id}`
   try {
     const { error } = await supabase.rpc('reverse_opening_balance_batch', {
@@ -131,11 +148,24 @@ async function reverse(batch: Batch) {
 
 <template>
   <div class="space-y-6" data-opening-workflow>
-    <header><h1 class="text-h1 font-bold">{{ t('opening.title') }}</h1><p class="mt-1 text-sm text-fg-muted">{{ t('opening.subtitle') }}</p></header>
+    <LedgerPageHeader :title="t('opening.title')" :subtitle="t('opening.subtitle')" :as-of="cutoff" />
     <p v-if="!can('opening_balances.read')" class="ls-card p-6 text-fg-muted">{{ t('opening.noAccess') }}</p>
     <p v-else-if="error" class="ls-error" role="alert">{{ t('opening.loadFailed') }}</p>
     <SectionSkeleton v-else-if="pending" variant="table" :rows="5" />
     <template v-else>
+      <section class="ls-card space-y-3 p-5" aria-labelledby="opening-readiness-guide" data-opening-readiness-guide>
+        <h2 id="opening-readiness-guide" class="text-h2 font-bold">{{ t('opening.guideTitle') }}</h2>
+        <p class="text-sm text-fg-muted">{{ t('opening.guideHint') }}</p>
+        <ul class="list-disc space-y-1 ps-5 text-sm">
+          <li>{{ t('opening.guideChart') }}</li>
+          <li>{{ t('opening.guidePeriod') }}</li>
+          <li>{{ t('opening.guideMapping') }}</li>
+        </ul>
+        <div class="flex flex-wrap gap-2">
+          <NuxtLink to="/accounts?setup=templates" class="ls-btn ls-btn-sm">{{ t('opening.reviewChart') }}</NuxtLink>
+          <NuxtLink to="/periods" class="ls-btn ls-btn-sm">{{ t('opening.reviewPeriods') }}</NuxtLink>
+        </div>
+      </section>
       <section v-if="can('opening_balances.manage')" class="ls-card space-y-5 p-5" aria-labelledby="opening-setup">
         <div><h2 id="opening-setup" class="text-h2 font-bold">1. {{ t('opening.setup') }}</h2><p class="text-sm text-fg-muted">{{ t('opening.cutoffHint') }}</p></div>
         <div class="grid gap-4 sm:grid-cols-2">
@@ -147,6 +177,7 @@ async function reverse(batch: Batch) {
           <div class="mt-3 flex flex-wrap gap-2"><label class="ls-btn ls-btn-primary cursor-pointer" for="opening-file">{{ t('opening.chooseCsv') }}</label><button type="button" class="ls-btn" @click="downloadTemplate">{{ t('opening.downloadTemplate') }}</button></div>
           <input id="opening-file" class="sr-only" type="file" accept=".csv,text/csv" :disabled="!cutoff || busy==='upload'" @change="selectFile">
           <p v-if="filename" class="mt-2 text-sm text-fg-muted">{{ filename }} · {{ t('opening.rowCount', { count: rows.length }) }}</p>
+          <button v-if="uploadFailed" type="button" class="ls-btn mt-2" :disabled="Boolean(busy)" @click="uploadRows">{{ busy === 'upload' ? t('common.saving') : t('common.retry') }}</button>
         </div>
       </section>
 
@@ -160,7 +191,7 @@ async function reverse(batch: Batch) {
           <Column :header="t('opening.ledgerAccount')"><template #body="{ data: row }"><select v-model="row.account_id" class="ls-input min-w-64" :aria-label="`${t('opening.ledgerAccount')} ${row.source_row}`"><option :value="null">{{ t('opening.chooseAccount') }}</option><option v-for="account in accounts" :key="account.id" :value="account.id">{{ account.code }} · {{ account.name }} · {{ t(`opening.roles.${account.account_role}`) }}<template v-if="account.is_archived"> · {{ t('opening.archived') }}</template></option></select></template></Column>
           <Column :header="t('opening.validationErrors')"><template #body="{ data: row }"><ul v-if="rowErrors(row.source_row).length" class="text-danger"><li v-for="code in rowErrors(row.source_row)" :key="code">{{ validationLabel(code) }}</li></ul><span v-else-if="validation" class="text-success">{{ t('opening.valid') }}</span></template></Column>
         </BsDataTable>
-        <button type="button" class="ls-btn ls-btn-primary" :disabled="busy==='validate'" @click="validateBatch">{{ t('opening.validate') }}</button>
+        <button type="button" class="ls-btn ls-btn-primary" :disabled="Boolean(busy)" @click="validateBatch">{{ busy === 'validate' ? t('common.saving') : t('opening.validate') }}</button>
       </section>
 
       <section v-if="validation" class="ls-card space-y-4 p-5" aria-labelledby="opening-validation" :data-validation="validation.valid ? 'valid' : 'invalid'">
@@ -177,7 +208,7 @@ async function reverse(batch: Batch) {
           <Column :header="t('opening.debit')" header-class="text-end" body-class="text-end"><template #body="{ data: line }">{{ amount(line.debit_minor) }}</template></Column>
           <Column :header="t('opening.credit')" header-class="text-end" body-class="text-end"><template #body="{ data: line }">{{ amount(line.credit_minor) }}</template></Column>
         </BsDataTable>
-        <button v-if="can('opening_balances.approve') && !postedTransactionId" type="button" class="ls-btn ls-btn-primary" :disabled="!validation.valid || busy==='approve'" @click="approve">{{ t('opening.approve') }}</button>
+        <button v-if="can('opening_balances.approve') && !postedTransactionId" type="button" class="ls-btn ls-btn-primary" :disabled="!validation.valid || Boolean(busy)" @click="approve">{{ busy === 'approve' ? t('common.saving') : t('opening.approve') }}</button>
         <div v-if="postedTransactionId" class="rounded-control bg-surface-muted p-4" data-opening-posted><strong>{{ t('opening.postedLocked') }}</strong><br><NuxtLink class="text-link underline" :to="{ path: '/transactions', query: { q: postedTransactionId } }">{{ t('opening.openJournal') }}</NuxtLink></div>
       </section>
 
@@ -186,7 +217,7 @@ async function reverse(batch: Batch) {
           <div v-if="batch.validation_result" class="mt-3 grid gap-2 text-sm sm:grid-cols-3"><span>{{ t('opening.rowCount', { count: (batch.validation_result as any).valid_row_count + (batch.validation_result as any).zero_row_count }) }}</span><span>{{ t('opening.debit') }}: {{ amount((batch.validation_result as any).debit_total_minor) }}</span><span>{{ t('opening.credit') }}: {{ amount((batch.validation_result as any).credit_total_minor) }}</span></div>
           <p class="mt-2 break-all text-xs text-fg-muted">{{ t('opening.creator') }}: {{ batch.created_by }}<template v-if="batch.approved_by"> · {{ t('opening.approver') }}: {{ batch.approved_by }}</template></p>
           <p v-if="batch.reversal_transaction_id" class="mt-2 text-sm">{{ t('opening.reversal') }}: <NuxtLink class="text-link underline" :to="{ path: '/transactions', query: { q: batch.reversal_transaction_id } }">{{ batch.reversal_transaction_id }}</NuxtLink> · {{ batch.correction_reason }}</p>
-          <form v-if="batch.status==='posted' && can('opening_balances.correct')" class="mt-4 grid gap-2 border-t border-line pt-4 sm:grid-cols-[2fr_1fr_auto]" @submit.prevent="reverse(batch)"><FloatingField :label="t('opening.correctionReason')"><input v-model="correctionReason" class="ls-input" required></FloatingField><FloatingField :label="t('opening.reversalDate')"><input v-model="correctionDate" class="ls-input" type="date"></FloatingField><button class="ls-btn self-end" :disabled="!correctionReason.trim() || busy===`reverse:${batch.id}`">{{ t('opening.reverse') }}</button></form>
+          <form v-if="batch.status==='posted' && can('opening_balances.correct')" class="mt-4 grid gap-2 border-t border-line pt-4 sm:grid-cols-[2fr_1fr_auto]" :aria-busy="busy===`reverse:${batch.id}`" @submit.prevent="reverse(batch)"><FloatingField :label="t('opening.correctionReason')"><input v-model="correctionReason" class="ls-input" required></FloatingField><FloatingField :label="t('opening.reversalDate')"><input v-model="correctionDate" class="ls-input" type="date"></FloatingField><button class="ls-btn self-end" :disabled="!correctionReason.trim() || Boolean(busy)">{{ busy===`reverse:${batch.id}` ? t('common.saving') : t('opening.reverse') }}</button></form>
         </article>
       </section>
     </template>

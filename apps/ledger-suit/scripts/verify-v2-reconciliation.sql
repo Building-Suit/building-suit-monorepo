@@ -88,13 +88,49 @@ select pg_temp.check_result((select sum(case when section like '%revenue%' then 
 select pg_temp.check_result((select sum(amount_minor) filter(where section='asset')=120700
  and sum(amount_minor) filter(where section in ('liability','equity'))=120700
  from public.report_balance_sheet(pg_temp.id('org'),'2036-01-31')),'assets = liabilities + equity = 120700 including Contra');
--- FS-08: preserve access/amounts and OBSERVE the descriptive-label policy.
+-- FS-08: pin the actual pre-change identity, label, amount, mapping and journal
+-- evidence, then prove that rename/archive changes only the current account.
+create temp table acceptance_fs08_before as
+select
+  r.account_id,
+  r.name,
+  r.amount_minor,
+  (select count(*) from public.account_financial_mappings h
+   where h.organization_id=pg_temp.id('org')) as mapping_count,
+  (select coalesce(md5(string_agg(to_jsonb(h)::text,'' order by h.id)),md5(''))
+   from public.account_financial_mappings h
+   where h.organization_id=pg_temp.id('org')) as mapping_digest,
+  (select md5(string_agg(to_jsonb(t)::text,'' order by t.id))
+   from public.transactions t where t.organization_id=pg_temp.id('org')) as transaction_digest,
+  (select md5(string_agg(to_jsonb(e)::text,'' order by e.id))
+   from public.transaction_entries e where e.organization_id=pg_temp.id('org')) as entry_digest
+from public.report_profit_and_loss(pg_temp.id('org'),'2036-01-01','2036-01-31') r
+where r.account_id=pg_temp.id('revenue');
+select pg_temp.check_result((select name='Acceptance revenue' and amount_minor=30000
+ from acceptance_fs08_before),'FS-08 pre-change P&L label and exact amount are pinned');
 select public.update_account(pg_temp.id('revenue'),'Acceptance revenue renamed');
 select public.archive_account(pg_temp.id('revenue'));
-select pg_temp.check_result((select amount_minor=30000 from public.report_profit_and_loss(pg_temp.id('org'),'2036-01-01','2036-01-31')
- where account_id=pg_temp.id('revenue')),'rename/archive preserves historical amount and account identity');
-select 'FS-08 observed historical label (requires explicit accountant review): '||name
- from public.report_profit_and_loss(pg_temp.id('org'),'2036-01-01','2036-01-31') where account_id=pg_temp.id('revenue');
+select pg_temp.check_result((select r.account_id=b.account_id and r.name=b.name and r.amount_minor=b.amount_minor
+ from public.report_profit_and_loss(pg_temp.id('org'),'2036-01-01','2036-01-31') r
+ cross join acceptance_fs08_before b where r.account_id=pg_temp.id('revenue')),
+ 'FS-08 rename/archive preserves historical account identity, label and exact amount');
+select pg_temp.check_result(public.export_financial_report_csv(pg_temp.id('org'),'profit_loss','2036-01-01','2036-01-31')
+ like '%Acceptance revenue,300.00,EGP%' and public.export_financial_report_csv(pg_temp.id('org'),'profit_loss','2036-01-01','2036-01-31')
+ not like '%Acceptance revenue renamed%','FS-08 screen and export retain the same historical label');
+select pg_temp.check_result((select a.name='Acceptance revenue renamed' and a.is_archived
+ from public.accounts a where a.id=pg_temp.id('revenue')),'FS-08 current account retains its renamed archived state');
+select pg_temp.check_result((select
+ (select count(*) from public.account_financial_mappings m where m.organization_id=pg_temp.id('org'))=b.mapping_count
+ and (select coalesce(md5(string_agg(to_jsonb(m)::text,'' order by m.id)),md5(''))
+      from public.account_financial_mappings m where m.organization_id=pg_temp.id('org'))=b.mapping_digest
+ from acceptance_fs08_before b),
+ 'FS-08 effective mapping set remains intact');
+select pg_temp.check_result((select md5(string_agg(to_jsonb(t)::text,'' order by t.id))=b.transaction_digest
+ from public.transactions t cross join acceptance_fs08_before b where t.organization_id=pg_temp.id('org') group by b.transaction_digest),
+ 'FS-08 rename/archive does not mutate posted journals');
+select pg_temp.check_result((select md5(string_agg(to_jsonb(e)::text,'' order by e.id))=b.entry_digest
+ from public.transaction_entries e cross join acceptance_fs08_before b where e.organization_id=pg_temp.id('org') group by b.entry_digest),
+ 'FS-08 rename/archive does not mutate posted entries or balances');
 -- Known acceptance failure at the reviewed checkpoint. Do not weaken this
 -- assertion to accommodate UUID references. Scope/year/race/legacy semantics
 -- additionally require the controlled numbering repair's native test suite.

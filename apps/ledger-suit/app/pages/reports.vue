@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { scopedQueryKey } from '@building-suit/data-access'
 import type { Database } from '~~/types/database.types'
+import type { ReportFormatMetadata } from '../utils/reportFormats'
 
 definePageMeta({ layout: 'default' })
 
@@ -14,8 +15,9 @@ const user = useSupabaseUser()
 const config = useRuntimeConfig()
 const route = useRoute()
 const router = useRouter()
-const { currentId, baseCurrency, can } = useTenant()
+const { currentId, current, baseCurrency, can } = useTenant()
 const { t, locale } = useI18n()
+const { density: tableDensity, hydrated: tablePreferenceHydrated } = useAccountingTablePreferences('financial-reports')
 
 useHead({ title: () => `${t('reports.title')} · ${t('app.name')}` })
 
@@ -307,11 +309,72 @@ const exportPending = ref(false)
 const exportError = ref('')
 watch([reportScope, trialScope], () => { exportError.value = '' })
 
-async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_balance' | 'cash_flow' | 'general_ledger') {
+type ExportReport = 'profit_loss' | 'balance_sheet' | 'trial_balance' | 'cash_flow' | 'general_ledger'
+type ExportFormat = 'csv' | 'excel' | 'print'
+
+function exportScope(report: ExportReport) {
+  return JSON.stringify({ organization: currentId.value, report, from: from.value, to: to.value, asOf: asOf.value, account: ledgerAccountId.value })
+}
+
+function exportTitle(report: ExportReport) {
+  if (report === 'trial_balance') return t('reports.trialBalance')
+  if (report === 'general_ledger') return t('reports.tabs.ledger')
+  const key = { profit_loss: 'profitLoss', balance_sheet: 'balanceSheet', cash_flow: 'cashFlow' }[report]
+  return t(`reports.tabs.${key}`)
+}
+
+function exportWarning(report: ExportReport) {
+  if (report === 'profit_loss' && plMappingIncomplete.value) return t('financialMapping.incomplete')
+  if (report === 'balance_sheet' && bsMappingIncomplete.value) return t('financialMapping.incomplete')
+  if (report === 'cash_flow' && cashFlow.value && (!cashFlow.value.classification_complete || !cashFlow.value.reconciled)) return t('financialMapping.cashIncomplete')
+  return undefined
+}
+
+function exportMetadata(report: ExportReport, exportLocale: string): ReportFormatMetadata {
+  const isBalanceSheet = report === 'balance_sheet'
+  const filters = [{
+    label: isBalanceSheet ? t('reports.asOf') : t('reports.period'),
+    value: isBalanceSheet ? formatDate(asOf.value, exportLocale) : `${formatDate(from.value, exportLocale)} – ${formatDate(to.value, exportLocale)}`,
+  }]
+  if (report === 'general_ledger') filters.push({ label: t('reports.account'), value: accountName(ledgerAccountId.value) })
+  filters.push({ label: t('reports.entriesFilter'), value: t('reports.postedOnly') })
+  return {
+    title: exportTitle(report),
+    organization: current.value?.legal_name || current.value?.name || '',
+    currency: baseCurrency.value,
+    generatedAt: new Intl.DateTimeFormat(exportLocale.startsWith('ar') ? 'ar-EG-u-nu-latn' : exportLocale, {
+      year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit',
+      timeZone: current.value?.timezone || 'UTC', timeZoneName: 'short',
+    }).format(new Date()),
+    direction: exportLocale.startsWith('ar') ? 'rtl' : 'ltr',
+    labels: {
+      organization: t('reports.organization'),
+      currency: t('reports.currency'),
+      generatedAt: t('reports.generatedAt'),
+      warning: t('reports.mappingWarning'),
+    },
+    filters,
+    warning: exportWarning(report),
+  }
+}
+
+async function exportReport(report: ExportReport, format: ExportFormat = 'csv') {
   if (!currentId.value || exportPending.value) return
-  const requestedScope = JSON.stringify({ organization: currentId.value, report, from: from.value, to: to.value, asOf: asOf.value, account: ledgerAccountId.value })
+  const printWindow = format === 'print' ? window.open('', '_blank') : null
+  if (format === 'print' && !printWindow) {
+    exportError.value = t('reports.popupBlocked')
+    return
+  }
+  if (printWindow) {
+    printWindow.opener = null
+    printWindow.document.write(`<!doctype html><html lang="${locale.value}" dir="${locale.value.startsWith('ar') ? 'rtl' : 'ltr'}"><head><meta charset="utf-8"><title>${t('reports.preparing')}</title></head><body><p>${t('reports.preparing')}</p></body></html>`)
+    printWindow.document.close()
+  }
+  const requestedScope = exportScope(report)
   const exportLocale = locale.value
   const exportPeriod = ['profit_loss', 'trial_balance', 'cash_flow', 'general_ledger'].includes(report) ? `${from.value}_${to.value}` : asOf.value
+  const filename = `${t(`csv.filenames.${report}`)}-${exportPeriod}`
+  const metadata = exportMetadata(report, exportLocale)
   exportPending.value = true
   exportError.value = ''
   try {
@@ -326,13 +389,24 @@ async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_bal
       p_account_id: report === 'general_ledger' ? ledgerAccountId.value : undefined,
     })
     if (error) throw error
-    const currentScope = JSON.stringify({ organization: currentId.value, report, from: from.value, to: to.value, asOf: asOf.value, account: ledgerAccountId.value })
-    if (currentScope !== requestedScope || locale.value !== exportLocale) return
-    downloadCsv(`${t(`csv.filenames.${report}`)}-${exportPeriod}.csv`, localizeReportCsv(data, report, t))
+    if (exportScope(report) !== requestedScope || locale.value !== exportLocale) {
+      printWindow?.close()
+      return
+    }
+    const localizedCsv = localizeReportCsv(data, report, t)
+    if (format === 'csv') downloadCsv(`${filename}.csv`, localizedCsv)
+    else if (format === 'excel') downloadReportXlsx(`${filename}.xlsx`, buildReportXlsx(localizedCsv, report, metadata))
+    else if (printWindow) {
+      printWindow.document.open()
+      printWindow.document.write(buildPrintableReportHtml(localizedCsv, report, metadata))
+      printWindow.document.close()
+      printWindow.focus()
+      printWindow.print()
+    }
   }
   catch {
-    const currentScope = JSON.stringify({ organization: currentId.value, report, from: from.value, to: to.value, asOf: asOf.value, account: ledgerAccountId.value })
-    if (currentScope === requestedScope) exportError.value = t('reports.exportFailed')
+    printWindow?.close()
+    if (exportScope(report) === requestedScope) exportError.value = t('reports.exportFailed')
   }
   finally {
     exportPending.value = false
@@ -342,10 +416,13 @@ async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_bal
 
 <template>
   <div class="min-w-0 space-y-6">
-    <div>
-      <h1 class="text-h1 font-bold">{{ t('reports.title') }}</h1>
-      <p class="mt-1 text-sm text-fg-muted">{{ t('reports.csvExports') }}</p>
-    </div>
+    <LedgerPageHeader
+      :title="t('reports.title')"
+      :subtitle="t('reports.csvExports')"
+      :from="tab === 'balance-sheet' ? undefined : from"
+      :to="tab === 'balance-sheet' ? undefined : to"
+      :as-of="tab === 'balance-sheet' ? asOf : undefined"
+    />
 
     <p v-if="exportError" class="ls-error" role="alert">{{ exportError }}</p>
 
@@ -378,6 +455,7 @@ async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_bal
           </option>
         </select>
       </FloatingField>
+      <AccountingTableDensity v-model="tableDensity" :disabled="!tablePreferenceHydrated" />
     </div>
 
     <!-- Overview -->
@@ -398,7 +476,7 @@ async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_bal
       <p v-if="statementReconciliation && (statementReconciliation.profit_loss_difference_minor !== 0 || statementReconciliation.balance_sheet_difference_minor !== 0 || !statementReconciliation.mapping_complete)" role="alert" class="ls-error">{{ t('financialMapping.reconciliationWarning') }}</p>
       <details v-if="statementReconciliation?.accounts?.length" class="ls-card p-4">
         <summary class="cursor-pointer font-semibold">{{ t('financialMapping.reconciliationDetails') }}</summary>
-        <BsDataTable :value="statementReconciliation.accounts" :label="t('financialMapping.reconciliationDetails')" class="mt-3">
+        <BsDataTable :value="statementReconciliation.accounts" :label="t('financialMapping.reconciliationDetails')" :density="tableDensity" class="mt-3">
           <Column :header="t('financialMapping.dimension')"><template #body="{ data: row }">{{ t(`financialMapping.dimensions.${row.statement}`) }}</template></Column>
           <Column :header="t('reports.account')"><template #body="{ data: row }"><button type="button" class="text-link underline" @click="openStatementDrilldown(row.account_id, row.statement === 'balance_sheet' ? 'asof' : 'range')">{{ accountName(row.account_id) }}</button></template></Column>
           <Column :header="t('financialMapping.statementAmount')"><template #body="{ data: row }"><MoneyText :amount-minor="row.statement_minor" signed /></template></Column>
@@ -420,22 +498,28 @@ async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_bal
       <EmptyState v-else-if="!trialBalance.length" :title="t('reports.emptyTitle')" :description="t('reports.emptyRange')" />
       <section v-else class="ls-card overflow-hidden" aria-labelledby="tb-heading">
         <div class="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
-          <h2 id="tb-heading" class="text-base font-bold">{{ t('reports.trialBalance') }}</h2>
+          <h2 id="tb-heading" class="text-base font-bold">{{ t('reports.trialBalance') }} · <span dir="ltr">{{ baseCurrency }}</span></h2>
           <div class="flex items-center gap-3">
             <p class="text-sm font-semibold" :class="trialBalanced ? 'text-[var(--bs-status-success)]' : 'text-[var(--bs-status-error)]'">
               {{ trialBalanced ? t('reports.inBalance') : t('reports.outOfBalance') }}
             </p>
-            <button v-if="can('reports.export')" type="button" class="ls-btn ls-btn-sm" :disabled="exportPending" @click="exportReport('trial_balance')">{{ t('common.exportCsv') }}</button>
+            <template v-if="can('reports.export')">
+              <button type="button" class="ls-btn ls-btn-sm" :disabled="exportPending" @click="exportReport('trial_balance')">{{ t('common.exportCsv') }}</button>
+              <button type="button" class="ls-btn ls-btn-sm" :disabled="exportPending" @click="exportReport('trial_balance', 'excel')">{{ t('reports.exportExcel') }}</button>
+              <button type="button" class="ls-btn ls-btn-sm" :disabled="exportPending" @click="exportReport('trial_balance', 'print')">{{ t('reports.printPdf') }}</button>
+            </template>
           </div>
         </div>
-        <div class="overflow-x-auto">
-          <BsDataTable :value="trialBalance" data-key="account_id" :label="t('reports.trialBalance')">
-  <Column :header="t('accounts.code')" body-class="font-mono text-xs text-fg-muted"><template #body="{ data: row }"><span dir="ltr">{{ row.code || t('common.dash') }}</span></template></Column>
-  <Column field="name" :header="t('reports.account')" />
+        <div>
+          <BsDataTable :value="trialBalance" data-key="account_id" :label="t('reports.trialBalance')" :density="tableDensity" sticky-header sticky-footer max-height="38rem" :scroll-label="t('accountingTable.trialBalanceScroll')">
+  <Column header-class="ls-sticky-start" body-class="ls-sticky-start">
+    <template #header>{{ t('reports.account') }}</template>
+    <template #body="{ data: row }"><span class="block font-semibold">{{ row.name }}</span><span class="block font-mono text-xs text-fg-muted" dir="ltr">{{ row.code || t('common.dash') }}</span></template>
+  </Column>
   <Column v-for="column in trialColumns" :key="column.field" :header="t(`reports.${column.label}`)" header-class="min-w-36 whitespace-nowrap text-end" body-class="ls-num whitespace-nowrap">
     <template #body="{ data: row }"><button type="button" class="rounded-control px-1 text-link hover:underline focus-visible:outline focus-visible:outline-2" :aria-label="t('reports.drilldownAmount', { column: t(`reports.${column.label}`), account: row.name })" @click="openTrialDrilldown(row, column.scope)"><MoneyText :amount-minor="row[column.field]" /></button></template>
   </Column>
-  <ColumnGroup type="footer"><Row><Column :footer="t('reports.total')" :colspan="2" /><Column v-for="total in trialTotalCells" :key="total.key" footer-class="ls-num whitespace-nowrap"><template #footer><MoneyText :amount-minor="total.amount" /></template></Column></Row></ColumnGroup>
+  <ColumnGroup type="footer"><Row><Column :footer="t('reports.total')" footer-class="ls-sticky-start font-bold" /><Column v-for="total in trialTotalCells" :key="total.key" footer-class="ls-num whitespace-nowrap"><template #footer><MoneyText :amount-minor="total.amount" /></template></Column></Row></ColumnGroup>
 </BsDataTable>
         </div>
       </section>
@@ -443,8 +527,10 @@ async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_bal
 
     <!-- Profit & Loss -->
     <section v-else-if="tab === 'profit-loss'" class="space-y-4" role="tabpanel" :aria-label="t('reports.tabs.profitLoss')">
-      <div class="flex justify-end">
-        <button v-if="can('reports.export')" type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('profit_loss')">{{ t('common.exportCsv') }}</button>
+      <div v-if="can('reports.export')" class="flex flex-wrap justify-end gap-2">
+        <button type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('profit_loss')">{{ t('common.exportCsv') }}</button>
+        <button type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('profit_loss', 'excel')">{{ t('reports.exportExcel') }}</button>
+        <button type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('profit_loss', 'print')">{{ t('reports.printPdf') }}</button>
       </div>
 
       <SectionSkeleton v-if="profitLossPending" variant="table" :rows="7" />
@@ -457,7 +543,7 @@ async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_bal
 
       <p v-if="plMappingIncomplete" role="alert" class="ls-error">{{ t('financialMapping.incomplete') }}</p>
       <div v-if="profitLoss?.length" class="ls-card overflow-hidden">
-        <BsDataTable :label="t('reports.tabs.profitLoss')" :value="plSections.flatMap(section => rowsIn(profitLoss, section.key).map(row => ({ ...row, groupKey: section.key, groupLabel: section.labelKey })))" row-group-mode="subheader" group-rows-by="groupKey">
+        <BsDataTable :label="t('reports.tabs.profitLoss')" :value="plSections.flatMap(section => rowsIn(profitLoss, section.key).map(row => ({ ...row, groupKey: section.key, groupLabel: section.labelKey })))" :density="tableDensity" row-group-mode="subheader" group-rows-by="groupKey">
   <Column :header="t('reports.account')" body-class="ps-8"><template #body="{ data: row }"><button type="button" class="text-link underline" @click="openStatementDrilldown(row.account_id)">{{ row.name }}</button></template></Column>
   <Column :header="t('transactions.amount')" body-class="ls-num"><template #body="{ data: row }"><MoneyText :amount-minor="row.amount_minor" /></template></Column>
   <template #groupheader="{ data: row }"><div class="flex justify-between gap-4 bg-surface-muted font-bold"><span>{{ t(row.groupLabel) }}</span><MoneyText :amount-minor="sectionTotal(profitLoss, row.groupKey)" /></div></template>
@@ -472,8 +558,10 @@ async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_bal
 
     <!-- Balance sheet -->
     <section v-else-if="tab === 'balance-sheet'" class="space-y-4" role="tabpanel" :aria-label="t('reports.tabs.balanceSheet')">
-      <div class="flex justify-end">
-        <button v-if="can('reports.export')" type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('balance_sheet')">{{ t('common.exportCsv') }}</button>
+      <div v-if="can('reports.export')" class="flex flex-wrap justify-end gap-2">
+        <button type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('balance_sheet')">{{ t('common.exportCsv') }}</button>
+        <button type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('balance_sheet', 'excel')">{{ t('reports.exportExcel') }}</button>
+        <button type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('balance_sheet', 'print')">{{ t('reports.printPdf') }}</button>
       </div>
 
       <p class="text-sm text-fg-muted">{{ t('statementClassification.reportHint', { date: formatDate(asOf, locale) }) }}</p>
@@ -489,7 +577,7 @@ async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_bal
       <template v-else>
         <p v-if="bsMappingIncomplete" role="alert" class="ls-error">{{ t('financialMapping.incomplete') }}</p>
         <div class="ls-card overflow-hidden">
-          <BsDataTable :label="t('reports.tabs.balanceSheet')" :value="bsRows" row-group-mode="subheader" group-rows-by="statement_line">
+          <BsDataTable :label="t('reports.tabs.balanceSheet')" :value="bsRows" :density="tableDensity" row-group-mode="subheader" group-rows-by="statement_line">
   <Column :header="t('reports.account')" body-class="ps-8"><template #body="{ data: row }"><button v-if="row.account_id" type="button" class="text-link underline" @click="openStatementDrilldown(row.account_id, 'asof')">{{ row.displayName }}</button><span v-else>{{ row.displayName }}</span></template></Column>
   <Column :header="t('statementClassification.effectiveFrom')"><template #body="{ data: row }">{{ row.effective_from ? formatDate(row.effective_from, locale) : t('common.dash') }}</template></Column>
   <Column :header="t('transactions.amount')" body-class="ls-num"><template #body="{ data: row }"><MoneyText :amount-minor="row.amount_minor" /></template></Column>
@@ -509,8 +597,10 @@ async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_bal
 
     <!-- Cash flow -->
     <section v-else-if="tab === 'cash-flow'" class="space-y-4" role="tabpanel" :aria-label="t('reports.tabs.cashFlow')">
-      <div class="flex justify-end">
-        <button v-if="can('reports.export')" type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('cash_flow')">{{ t('common.exportCsv') }}</button>
+      <div v-if="can('reports.export')" class="flex flex-wrap justify-end gap-2">
+        <button type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('cash_flow')">{{ t('common.exportCsv') }}</button>
+        <button type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('cash_flow', 'excel')">{{ t('reports.exportExcel') }}</button>
+        <button type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('cash_flow', 'print')">{{ t('reports.printPdf') }}</button>
       </div>
       <SectionSkeleton v-if="cashFlowPending" variant="table" :rows="5" />
 
@@ -535,12 +625,12 @@ async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_bal
         </dl>
         <p class="text-sm text-fg-muted">{{ t('financialMapping.cashDiagnostic', { difference: formatMoney(cashFlow.operating_adjustment_difference_minor, baseCurrency, locale) }) }}</p>
         <h3 class="font-semibold">{{ t('financialMapping.adjustmentSources') }}</h3>
-        <BsDataTable :value="cashFlow.operating_adjustments" data-key="account_id" :label="t('financialMapping.adjustmentSources')">
+        <BsDataTable :value="cashFlow.operating_adjustments" data-key="account_id" :label="t('financialMapping.adjustmentSources')" :density="tableDensity">
           <Column :header="t('reports.account')"><template #body="{ data: row }"><button type="button" class="text-link underline" @click="openStatementDrilldown(row.account_id)">{{ row.code }} · {{ row.name }}</button></template></Column>
           <Column :header="t('transactions.amount')"><template #body="{ data: row }"><MoneyText :amount-minor="row.amount_minor" signed /></template></Column>
         </BsDataTable>
         <h3 class="font-semibold">{{ t('financialMapping.cashSources') }}</h3>
-        <BsDataTable :value="cashDetail ?? []"  :label="t('financialMapping.cashSources')">
+        <BsDataTable :value="cashDetail ?? []" :label="t('financialMapping.cashSources')" :density="tableDensity">
           <Column :header="t('reports.account')"><template #body="{ data: row }"><button type="button" class="text-link underline" @click="openStatementDrilldown(row.account_id)">{{ accountName(row.account_id) }}</button></template></Column>
           <Column :header="t('reports.activity')"><template #body="{ data: row }">{{ t(`financialMapping.lines.${row.section}`) }}</template></Column>
           <Column :header="t('transactions.amount')"><template #body="{ data: row }"><MoneyText :amount-minor="row.amount_minor" signed /></template></Column>
@@ -551,8 +641,10 @@ async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_bal
 
     <!-- General ledger -->
     <section v-else class="space-y-4" role="tabpanel" :aria-label="t('reports.tabs.ledger')">
-      <div class="flex justify-end">
-        <button v-if="can('reports.export')" type="button" class="ls-btn" :disabled="exportPending || !ledgerAccountId" @click="exportReport('general_ledger')">{{ t('common.exportCsv') }}</button>
+      <div v-if="can('reports.export')" class="flex flex-wrap justify-end gap-2">
+        <button type="button" class="ls-btn" :disabled="exportPending || !ledgerAccountId" @click="exportReport('general_ledger')">{{ t('common.exportCsv') }}</button>
+        <button type="button" class="ls-btn" :disabled="exportPending || !ledgerAccountId" @click="exportReport('general_ledger', 'excel')">{{ t('reports.exportExcel') }}</button>
+        <button type="button" class="ls-btn" :disabled="exportPending || !ledgerAccountId" @click="exportReport('general_ledger', 'print')">{{ t('reports.printPdf') }}</button>
       </div>
       <SectionSkeleton v-if="ledgerPending" variant="table" :rows="8" />
 
@@ -563,7 +655,7 @@ async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_bal
       />
 
       <div v-else class="ls-card overflow-x-auto">
-        <BsDataTable :value="ledger" data-key="entry_id" :label="t('reports.tabs.ledger')">
+        <BsDataTable :value="ledger" data-key="entry_id" :label="t('reports.tabs.ledger')" :density="tableDensity">
   <Column body-class="whitespace-nowrap">
     <template #header>{{ t('transactions.date') }}</template>
     <template #body="{ data: row }">{{ formatDate(row.entry_date, locale) }}</template>

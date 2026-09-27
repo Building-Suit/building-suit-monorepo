@@ -17,6 +17,13 @@ const actionReason = reactive<Record<string, string>>({})
 const createForm = reactive({ start: '', end: '' })
 const closeForm = reactive({ fiscalYearStart: '', reason: '' })
 
+watch(currentId, () => {
+  pendingAction.value = ''
+  for (const key of Object.keys(actionReason)) Reflect.deleteProperty(actionReason, key)
+  Object.assign(createForm, { start: '', end: '' })
+  Object.assign(closeForm, { fiscalYearStart: '', reason: '' })
+}, { flush: 'sync' })
+
 useHead({ title: () => `${t('periods.title')} · ${t('app.name')}` })
 
 const key = computed(() => `org:periods:${currentId.value ?? ''}`)
@@ -38,6 +45,8 @@ const { data, pending, error, refresh } = useLazyAsyncData(key, async () => {
 }, { default: () => ({ periods: [] as Period[], transitions: [] as Transition[], closes: [] as YearClose[], fiscalMonth: 1 }) })
 
 const periods = computed(() => data.value?.periods ?? [])
+const today = new Date().toISOString().slice(0, 10)
+const currentPeriod = computed(() => periods.value.find(period => period.start_date <= today && period.end_date >= today))
 const transitions = computed(() => data.value?.transitions ?? [])
 const closes = computed(() => data.value?.closes ?? [])
 const fiscalMonth = computed(() => data.value?.fiscalMonth ?? 1)
@@ -58,7 +67,7 @@ function reopening(period: Period, target: PeriodStatus) {
 }
 
 async function createPeriod() {
-  if (!currentId.value || !createForm.start || !createForm.end) return
+  if (pendingAction.value || !currentId.value || !createForm.start || !createForm.end) return
   pendingAction.value = 'create'
   try {
     const { error } = await supabase.rpc('create_accounting_period', {
@@ -74,6 +83,7 @@ async function createPeriod() {
 }
 
 async function transition(period: Period, target: PeriodStatus) {
+  if (pendingAction.value) return
   const reason = actionReason[period.id]?.trim() ?? ''
   if (reopening(period, target) && !reason) return
   pendingAction.value = `${period.id}:${target}`
@@ -91,7 +101,7 @@ async function transition(period: Period, target: PeriodStatus) {
 }
 
 async function closeYear() {
-  if (!currentId.value || !closeForm.fiscalYearStart || !closeForm.reason.trim()) return
+  if (pendingAction.value || !currentId.value || !closeForm.fiscalYearStart || !closeForm.reason.trim()) return
   pendingAction.value = 'year-end'
   try {
     const { error } = await supabase.rpc('close_fiscal_year', {
@@ -112,10 +122,7 @@ async function closeYear() {
 
 <template>
   <div class="space-y-6">
-    <header>
-      <h1 class="text-h1 font-bold">{{ t('periods.title') }}</h1>
-      <p class="mt-1 text-sm text-fg-muted">{{ t('periods.subtitle') }}</p>
-    </header>
+    <LedgerPageHeader :title="t('periods.title')" :subtitle="t('periods.subtitle')" :from="currentPeriod?.start_date" :to="currentPeriod?.end_date" />
 
     <p v-if="!can('periods.read')" class="ls-card p-6 text-fg-muted" role="status">{{ t('periods.noAccess') }}</p>
     <p v-else-if="error" class="ls-error" role="alert">{{ t('periods.loadFailed') }}</p>
@@ -127,10 +134,10 @@ async function closeYear() {
         <p class="text-sm text-fg-muted">{{ t('periods.fiscalHint') }}</p>
       </section>
 
-      <form v-if="can('periods.manage')" class="ls-card grid gap-3 p-5 sm:grid-cols-[1fr_1fr_auto] sm:items-end" @submit.prevent="createPeriod">
+      <form v-if="can('periods.manage')" class="ls-card grid gap-3 p-5 sm:grid-cols-[1fr_1fr_auto] sm:items-end" :aria-busy="pendingAction === 'create'" @submit.prevent="createPeriod">
         <FloatingField :label="t('periods.startDate')"><input id="period-start" v-model="createForm.start" type="date" class="ls-input" required></FloatingField>
         <FloatingField :label="t('periods.endDate')"><input id="period-end" v-model="createForm.end" type="date" class="ls-input" :min="createForm.start" required></FloatingField>
-        <button class="ls-btn ls-btn-primary" :disabled="pendingAction === 'create'">{{ t('periods.create') }}</button>
+        <button class="ls-btn ls-btn-primary" :disabled="Boolean(pendingAction)">{{ pendingAction === 'create' ? t('common.saving') : t('periods.create') }}</button>
       </form>
 
       <EmptyState v-if="!periods.length" :title="t('periods.empty')" :description="t('periods.emptyHint')" />
@@ -143,8 +150,8 @@ async function closeYear() {
         <div v-if="can('periods.manage')" class="space-y-3 border-t border-line pt-4">
           <FloatingField :label="t('periods.reason')"><input :id="`reason-${period.id}`" v-model="actionReason[period.id]" class="ls-input" :placeholder="t('periods.reasonHint')"></FloatingField>
           <div class="flex flex-wrap gap-2">
-            <button v-for="target in transitionOptions(period)" :key="target" type="button" class="ls-btn" :class="{ 'ls-btn-primary': target !== 'open' }" :disabled="pendingAction === `${period.id}:${target}` || (reopening(period, target) && !actionReason[period.id]?.trim())" @click="transition(period, target)">
-              {{ target === 'soft_closed' && period.status === 'hard_closed' ? t('periods.reopen') : target === 'soft_closed' ? t('periods.softClose') : target === 'hard_closed' ? t('periods.hardClose') : t('periods.reopen') }}
+            <button v-for="target in transitionOptions(period)" :key="target" type="button" class="ls-btn" :class="{ 'ls-btn-primary': target !== 'open' }" :disabled="Boolean(pendingAction) || (reopening(period, target) && !actionReason[period.id]?.trim())" @click="transition(period, target)">
+              {{ pendingAction === `${period.id}:${target}` ? t('common.saving') : target === 'soft_closed' && period.status === 'hard_closed' ? t('periods.reopen') : target === 'soft_closed' ? t('periods.softClose') : target === 'hard_closed' ? t('periods.hardClose') : t('periods.reopen') }}
             </button>
           </div>
         </div>
@@ -166,10 +173,10 @@ async function closeYear() {
         </details>
       </section>
 
-      <form v-if="can('periods.year_end_close')" class="ls-card grid gap-3 p-5 sm:grid-cols-[1fr_2fr_auto] sm:items-end" @submit.prevent="closeYear">
+      <form v-if="can('periods.year_end_close')" class="ls-card grid gap-3 p-5 sm:grid-cols-[1fr_2fr_auto] sm:items-end" :aria-busy="pendingAction === 'year-end'" @submit.prevent="closeYear">
         <FloatingField :label="t('periods.fiscalYearStart')"><input id="year-start" v-model="closeForm.fiscalYearStart" type="date" class="ls-input" required></FloatingField>
         <FloatingField :label="t('periods.yearEndReason')"><input id="year-end-reason" v-model="closeForm.reason" class="ls-input" required></FloatingField>
-        <button class="ls-btn ls-btn-primary" :disabled="pendingAction === 'year-end' || !closeForm.reason.trim()">{{ t('periods.yearEnd') }}</button>
+        <button class="ls-btn ls-btn-primary" :disabled="Boolean(pendingAction) || !closeForm.reason.trim()">{{ pendingAction === 'year-end' ? t('common.saving') : t('periods.yearEnd') }}</button>
       </form>
     </template>
   </div>

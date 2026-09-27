@@ -28,6 +28,7 @@ export interface TenantOrganization {
 
 const STORAGE_KEY = 'ledger-suit.organization'
 const pendingLoads = new WeakMap<object, Map<string, Promise<void>>>()
+const switchVersions = new WeakMap<object, number>()
 
 export function useTenant() {
   const nuxtApp = useNuxtApp()
@@ -124,11 +125,13 @@ export function useTenant() {
 
     if (loadedUserId.value && loadedUserId.value !== userId) {
       // A second sign-in can happen without a document reload. Remove every
-      // payload belonging to the previous identity before loading the next.        // Drop the previous tenant's custom roles along with its payloads.
-        clearOrganizationData()
-        customRoleNames.value = new Map()
-        customRoleKeys.value = new Map()
-        organizations.value = []
+      // payload belonging to the previous identity before loading the next.
+      // Invalidate any organization switch that still belongs to that identity.
+      switchVersions.set(nuxtApp, (switchVersions.get(nuxtApp) ?? 0) + 1)
+      clearOrganizationData()
+      customRoleNames.value = new Map()
+      customRoleKeys.value = new Map()
+      organizations.value = []
       currentId.value = null
       capabilities.value = []
       loadedUserId.value = null
@@ -187,22 +190,41 @@ export function useTenant() {
   }
 
   async function setOrganization(id: string) {
-    if (id === currentId.value) return
+    if (!organizations.value.some(organization => organization.id === id)) return false
+
+    const version = (switchVersions.get(nuxtApp) ?? 0) + 1
+    switchVersions.set(nuxtApp, version)
+
+    // Choosing the current tenant still supersedes an older in-flight switch.
+    // That older request may already have cleared the current tenant's cache,
+    // so repopulate it before reporting the newest selection as complete.
+    if (id === currentId.value) {
+      await refreshOrganizationData()
+      return switchVersions.get(nuxtApp) === version
+    }
 
     // Drop every tenant-scoped payload before the new organization renders.
     clearOrganizationData()
-    
+
     // Fetch capabilities before changing currentId to prevent watchers from firing
     // and failing capability checks before they are ready.
-    const { data } = await supabase.rpc('my_capabilities', {
-      p_organization_id: id,
-    })
-    capabilities.value = (data as string[] | null) ?? []
+    const [capabilityResult, roleResult] = await Promise.all([
+      supabase.rpc('my_capabilities', { p_organization_id: id }),
+      supabase.from('organization_roles').select('id, key, name_en, name_ar').eq('organization_id', id),
+    ])
+    if (capabilityResult.error) throw capabilityResult.error
+    if (roleResult.error) throw roleResult.error
+    if (switchVersions.get(nuxtApp) !== version) return false
+
+    capabilities.value = (capabilityResult.data as string[] | null) ?? []
+    customRoleNames.value = new Map((roleResult.data ?? []).map(role => [role.id, { name_en: role.name_en, name_ar: role.name_ar }]))
+    customRoleKeys.value = new Map((roleResult.data ?? []).map(role => [role.id, role.key]))
 
     currentId.value = id
     organizationCookie.value = id
 
     await refreshOrganizationData()
+    return switchVersions.get(nuxtApp) === version
   }
 
   return {

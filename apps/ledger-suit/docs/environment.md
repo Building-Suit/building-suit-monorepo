@@ -110,6 +110,20 @@ pnpm paymob:provision-plans -- \
   --webhook-url=https://<project-ref>.supabase.co/functions/v1/paymob-webhook
 ```
 
+Before any customer charge, inspect an already-configured merchant without
+creating or changing plans by adding `--verify-only`:
+
+```bash
+pnpm paymob:provision-plans -- \
+  --verify-only \
+  --webhook-url=https://<project-ref>.supabase.co/functions/v1/paymob-webhook
+```
+
+Verification fails on a missing or duplicate named plan, or any mismatch in
+frequency, amount, MOTO integration, active state, transaction-amount behavior,
+or webhook URL. See [Paymob subscription verification](paymob-subscription-verification.md)
+for the required Test Mode journey and live-charge gate.
+
 The command refuses to duplicate a named plan whose settings differ and prints
 the resulting six plan IDs. Add all six IDs to Supabase Edge Function Secrets.
 `PAYMOB_API_KEY` and

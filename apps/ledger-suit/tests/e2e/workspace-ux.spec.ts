@@ -154,6 +154,47 @@ test('server filters reset pagination and errors retry without losing query; inv
   expect(calls.at(-1)?.p_to_date).not.toBe('2026-09-01')
 })
 
+test('financial dialog keeps exact values and retry identity, prevents double submit, and restores focus after discard', async ({ page }) => {
+  await signIn(page)
+  await page.getByRole('link', { name: 'Transactions', exact: true }).first().click()
+  const opener = page.getByRole('button', { name: 'New transaction', exact: true })
+  await opener.click()
+  const dialog = page.getByRole('dialog')
+
+  await dialog.locator('#amount').fill('1.001')
+  await dialog.getByRole('button', { name: 'Save', exact: true }).click()
+  await expect(dialog.getByRole('alert')).toContainText('supports at most 2 decimal places')
+
+  await dialog.locator('#amount').fill('10.00')
+  await dialog.locator('#dest').selectOption({ index: 1 })
+  await dialog.locator('#cat').selectOption({ index: 1 })
+  const attempts: Record<string, unknown>[] = []
+  await page.route('**/rest/v1/rpc/record_income', async route => {
+    attempts.push(route.request().postDataJSON())
+    await route.fulfill({ status: 500, json: { message: 'Controlled save failure' } })
+  })
+
+  await dialog.getByRole('button', { name: 'Save', exact: true }).evaluate((button: HTMLButtonElement) => { button.click(); button.click() })
+  await expect(dialog.getByRole('alert')).toBeVisible()
+  await expect.poll(() => attempts.length).toBe(1)
+  await expect(dialog.locator('#amount')).toHaveValue('10.00')
+  await dialog.getByRole('button', { name: 'Save', exact: true }).click()
+  await expect.poll(() => attempts.length).toBe(2)
+  expect(attempts[1]?.p_idempotency_key).toBe(attempts[0]?.p_idempotency_key)
+
+  await page.keyboard.press('Escape')
+  const discard = dialog.locator('[role="alert"]').filter({ hasText: 'unsaved' })
+  await expect(discard).toBeVisible()
+  await expect(discard.getByRole('button').first()).toBeFocused()
+  await page.keyboard.press('Escape')
+  await expect(discard).toHaveCount(0)
+  await expect(dialog).toBeVisible()
+  await page.keyboard.press('Escape')
+  await discard.getByRole('button').last().click()
+  await expect(dialog).toHaveCount(0)
+  await expect(opener).toBeFocused()
+})
+
 test('viewer has one transaction workspace and readable tree without write actions', async ({ page }) => {
   await signIn(page, 'viewer@alpha.test')
   await page.getByRole('link', { name: 'Transactions', exact: true }).first().click()
