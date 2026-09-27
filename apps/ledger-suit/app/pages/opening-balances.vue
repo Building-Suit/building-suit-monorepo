@@ -153,6 +153,19 @@ async function reverse(batch: Batch) {
     <p v-else-if="error" class="ls-error" role="alert">{{ t('opening.loadFailed') }}</p>
     <SectionSkeleton v-else-if="pending" variant="table" :rows="5" />
     <template v-else>
+      <section class="ls-card space-y-3 p-5" aria-labelledby="opening-readiness-guide" data-opening-readiness-guide>
+        <h2 id="opening-readiness-guide" class="text-h2 font-bold">{{ t('opening.guideTitle') }}</h2>
+        <p class="text-sm text-fg-muted">{{ t('opening.guideHint') }}</p>
+        <ul class="list-disc space-y-1 ps-5 text-sm">
+          <li>{{ t('opening.guideChart') }}</li>
+          <li>{{ t('opening.guidePeriod') }}</li>
+          <li>{{ t('opening.guideMapping') }}</li>
+        </ul>
+        <div class="flex flex-wrap gap-2">
+          <NuxtLink to="/accounts?setup=templates" class="ls-btn ls-btn-sm">{{ t('opening.reviewChart') }}</NuxtLink>
+          <NuxtLink to="/periods" class="ls-btn ls-btn-sm">{{ t('opening.reviewPeriods') }}</NuxtLink>
+        </div>
+      </section>
       <section v-if="can('opening_balances.manage')" class="ls-card space-y-5 p-5" aria-labelledby="opening-setup">
         <div><h2 id="opening-setup" class="text-h2 font-bold">1. {{ t('opening.setup') }}</h2><p class="text-sm text-fg-muted">{{ t('opening.cutoffHint') }}</p></div>
         <div class="grid gap-4 sm:grid-cols-2">

@@ -105,6 +105,7 @@ const payableHint = computed(() =>
 <template>
   <div class="space-y-8">
     <h1 class="text-h1 font-bold">{{ t('dashboard.title') }}</h1>
+    <SetupChecklist />
 
     <div v-if="recentPending" class="space-y-6">
       <SectionSkeleton variant="cards" />

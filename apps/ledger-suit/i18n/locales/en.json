@@ -89,6 +89,114 @@
     "name": "Ledger Suit",
     "loading": "Loading…"
   },
+  "setupChecklist": {
+    "title": "Optional setup checklist",
+    "optional": "Guidance only",
+    "progress": "{complete} of {total} configuration areas ready",
+    "hint": "This checklist reads the current organization configuration. It never creates accounts, invites members, changes periods, or posts opening balances.",
+    "loadFailed": "The setup state could not be read. No configuration was changed.",
+    "states": {
+      "complete": "Configured",
+      "needs_attention": "Review needed",
+      "optional": "Optional",
+      "unavailable": "Not visible"
+    },
+    "items": {
+      "organization": {
+        "title": "Organization details",
+        "complete": "Legal name and base currency are recorded.",
+        "needs_attention": "The organization details are incomplete.",
+        "optional": "The organization exists.",
+        "unavailable": "Organization details are not visible.",
+        "action": "Review organization"
+      },
+      "chart": {
+        "title": "Chart and statement presentation",
+        "complete": "{count} active accounts; {mapped} accounts have statement mappings. Review suitability with your accountant.",
+        "needs_attention": "{count} active accounts; {mapped} accounts have statement mappings. Review the hierarchy and unmapped accounts.",
+        "optional": "A chart is optional until bookkeeping starts.",
+        "unavailable": "Account or mapping state is not available with your access.",
+        "action": "Review chart and templates"
+      },
+      "periods": {
+        "title": "Fiscal periods",
+        "complete": "{count} accounting periods are configured.",
+        "needs_attention": "No accounting period is configured yet.",
+        "optional": "Periods can be configured before posting.",
+        "unavailable": "Period state is not available with your access.",
+        "action": "Open period settings"
+      },
+      "opening": {
+        "title": "Opening balances",
+        "complete": "{count} accepted opening batch is locked in the ledger. | {count} accepted opening batches are locked in the ledger.",
+        "needs_attention": "Opening balances need review.",
+        "optional": "No accepted opening batch. Skip this when the organization starts with no prior balances.",
+        "unavailable": "Opening-balance state is not available with your access.",
+        "action": "Open migration workflow"
+      },
+      "team": {
+        "title": "Team access",
+        "complete": "{count} active members or a pending invitation are present.",
+        "needs_attention": "Team access needs review.",
+        "optional": "Only one active member. Invite colleagues only when needed.",
+        "unavailable": "Member and invitation state is not available with your access.",
+        "action": "Review members and invitations"
+      }
+    }
+  },
+  "chartTemplates": {
+    "title": "Reviewed chart starting points",
+    "hint": "Compare a compact services or trading structure with the organization's actual activity before creating or changing accounts.",
+    "reviewRequired": "Product-reviewed starting point — accountant review is still required",
+    "noApply": "This preview never creates, renames, maps, or overwrites accounts. Add or classify approved accounts through the existing account actions; used accounts and posted history remain untouched.",
+    "choose": "Choose chart template",
+    "preview": "Chart template preview",
+    "parent": "Parent code",
+    "presentation": "Suggested presentation",
+    "templates": {
+      "services": { "title": "Services", "description": "A minimal accrual-services structure with receivables, payables, service revenue, operating expenses, equity, and current/non-current asset groups." },
+      "trading": { "title": "Trading", "description": "The same controlled foundation plus inventory, sales revenue, and cost of sales. It does not configure inventory accounting or infer tax treatment." }
+    },
+    "accounts": {
+      "currentAssets": "Current assets",
+      "cash": "Cash and bank",
+      "receivables": "Accounts receivable control",
+      "nonCurrentAssets": "Non-current assets",
+      "equipment": "Property and equipment",
+      "currentLiabilities": "Current liabilities",
+      "payables": "Accounts payable control",
+      "equity": "Equity",
+      "retainedEarnings": "Retained earnings",
+      "revenue": "Revenue",
+      "expenses": "Expenses",
+      "operatingExpenses": "Operating expenses",
+      "serviceRevenue": "Service revenue",
+      "inventory": "Inventory",
+      "salesRevenue": "Sales revenue",
+      "costOfSales": "Cost of sales"
+    },
+    "lines": {
+      "current_assets": "Current assets",
+      "property_equipment": "Property and equipment",
+      "current_liabilities": "Current liabilities",
+      "equity": "Equity",
+      "operating_revenue": "Operating revenue",
+      "operating_expenses": "Operating expenses",
+      "cost_of_sales": "Cost of sales"
+    }
+  },
+  "demo": {
+    "invitationTitle": "Explore before creating an organization",
+    "invitationHint": "Open a synthetic, read-only accounting example. It is separate from organization creation and invitations.",
+    "open": "Open synthetic demo",
+    "title": "Synthetic Ledger demo",
+    "isolation": "This example lives only in this page's memory and has no organization identifier or database write path.",
+    "syntheticBadge": "Synthetic data · EGP",
+    "noRealOrganization": "The receipt and reset controls can affect only this isolated example. Reset cannot target a real organization.",
+    "addReceipt": "Add synthetic receipt",
+    "reset": "Reset synthetic demo",
+    "revision": "Demo changes: {revision}"
+  },
   "common": {
     "save": "Save",
     "saving": "Saving…",
@@ -716,6 +824,13 @@
   "opening": {
     "title": "Opening Balances",
     "subtitle": "Import, map, validate, and approve one traceable Opening Trial Balance without a balancing plug.",
+    "guideTitle": "Before importing",
+    "guideHint": "This guidance reuses the existing chart, period, CSV mapping, validation, approval, locking, and correction workflows.",
+    "guideChart": "Review the chart hierarchy and statement classifications; a template is a starting point, not an automatic mapping.",
+    "guidePeriod": "Confirm the fiscal period and choose the correct Year Start or Midyear cut-off.",
+    "guideMapping": "Map every source row explicitly. Ledger Suit never guesses an account or creates a balancing plug.",
+    "reviewChart": "Review chart",
+    "reviewPeriods": "Review periods",
     "setup": "Migration Setup",
     "mode": "Migration Mode",
     "modes": { "year_start": "Year Start", "midyear": "Midyear" },

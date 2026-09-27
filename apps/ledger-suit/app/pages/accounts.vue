@@ -339,6 +339,8 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
       </template>
     </LedgerPageHeader>
 
+    <ChartTemplateReview />
+
     <div class="flex flex-wrap gap-2" :aria-label="t('accountTree.view')" role="group">
       <button type="button" class="ls-btn ls-btn-sm" :class="{ 'ls-btn-primary': view === 'tree' }" :aria-pressed="view === 'tree'" :disabled="!hydrated" @click="selectView('tree')">{{ t('accountTree.treeView') }}</button>
       <button type="button" class="ls-btn ls-btn-sm" :class="{ 'ls-btn-primary': view === 'table' }" :aria-pressed="view === 'table'" :disabled="!hydrated" @click="selectView('table')">{{ t('accountTree.tableView') }}</button>
