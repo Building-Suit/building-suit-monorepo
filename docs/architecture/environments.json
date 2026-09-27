@@ -15,6 +15,7 @@
       "plan": "Free",
       "schema": "public",
       "cliWorkdir": "apps/ledger-suit",
+      "appUrlVariable": "APP_BASE_URL",
       "local": {
         "projectId": "building-suit-ledger",
         "apiUrl": "http://127.0.0.1:60321",
@@ -39,6 +40,7 @@
       "plan": "Free",
       "schema": "public",
       "cliWorkdir": "apps/shop-suit",
+      "appUrlVariable": "APP_URL",
       "local": {
         "projectId": "building-suit-shop",
         "apiUrl": "http://127.0.0.1:61321",
@@ -54,6 +56,31 @@
         "projectRef": "jvvelvftpfnlogalgxgv",
         "appUrl": "https://stg.shop.building-suit.com",
         "status": "public schema and Shop plan catalog initialized; SQL tests and public catalog query passed; SMTP and app deployment pending"
+      }
+    },
+    "inventory-suit": {
+      "organizationId": "",
+      "ownerEmail": "",
+      "managementRole": "Owner",
+      "plan": "unprovisioned",
+      "schema": "public",
+      "cliWorkdir": "apps/inventory-suit",
+      "appUrlVariable": "APP_URL",
+      "local": {
+        "projectId": "building-suit-inventory",
+        "apiUrl": "http://127.0.0.1:62321",
+        "databasePort": 62322,
+        "emailInboxUrl": "http://127.0.0.1:62324"
+      },
+      "production": {
+        "projectRef": "",
+        "appUrl": "",
+        "status": "unprovisioned; provider identifiers intentionally blank"
+      },
+      "staging": {
+        "projectRef": "",
+        "appUrl": "",
+        "status": "unprovisioned; provider identifiers intentionally blank"
       }
     }
   },

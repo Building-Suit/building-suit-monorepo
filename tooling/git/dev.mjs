@@ -7,7 +7,7 @@ const exists = file => access(file).then(() => true, () => false)
 const [name, ...args] = process.argv.slice(2)
 try {
   const app = applications[name]
-  if (!app) throw new Error('Usage: pnpm dev:<ledger|shop|docs> [--list|--dry-run] [--current|--worktree <branch/path>] [Nuxt options]')
+  if (!app) throw new Error('Usage: pnpm dev:<ledger|shop|docs|inventory> [--list|--dry-run] [--current|--worktree <branch/path>] [Nuxt options]')
   let currentOnly = false, worktree, dryRun = false
   const forwarded = []
   for (let i = 0; i < args.length; i++) {

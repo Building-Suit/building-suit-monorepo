@@ -1,0 +1,28 @@
+{
+  "app": { "name": "Automation Suit" },
+  "nav": { "operations": "Operations", "dashboard": "Dashboard", "open": "Open navigation", "close": "Close navigation", "navigation": "Primary navigation" },
+  "dashboard": {
+    "eyebrow": "Engineering control plane",
+    "title": "Automation Suit operations",
+    "subtitle": "Read-only view of authoritative control-plane state, execution evidence, verification, publication and optional observed n8n runtime telemetry.",
+    "allSuits": "All Suits",
+    "refresh": "Refresh now",
+    "loadFailed": "Dashboard data could not be loaded",
+    "loading": "Loading Automation Suit state…",
+    "generated": "Generated",
+    "runtimeTruthOn": "Runtime telemetry is installed. Control-plane and observed n8n runtime state are evaluated separately.",
+    "runtimeTruthOff": "Runtime telemetry is not installed. This page shows control-plane truth only and will not claim that a database running row proves n8n is executing.",
+    "readOnlyFooter": "Read-only dashboard. It does not start/stop tasks, approve decisions, mutate control-plane rows, execute Codex work, merge PRs or deploy production changes."
+  },
+  "metrics": {
+    "total": "Total tasks", "finished": "Finished", "activeTasks": "In progress", "verifying": "Verifying", "blocked": "Blocked", "failed": "Failed", "ready": "Ready", "runningFlows": "Running workflows", "runningExecutions": "Running executions", "decisions": "Blocking decisions", "incidents": "Incidents", "unfinished": "Unfinished"
+  },
+  "incidents": { "title": "Incident / recovery queue", "subtitle": "Derived from control-plane evidence; recovery guidance does not mutate state.", "all": "All severities", "critical": "Critical", "warning": "Warning", "info": "Info", "empty": "No incidents match the current filter." },
+  "runtime": { "title": "Observed n8n runtime", "subtitle": "Requires the optional runtime telemetry table and n8n heartbeat writer.", "installHint": "Runtime telemetry is not installed. Apply the optional SQL and instrument BS-20 before using this section as live n8n truth.", "idle": "No n8n runtime execution is currently marked running." },
+  "runs": { "title": "Active control-plane runs", "subtitle": "Desired orchestration state from control.workflow_runs.", "idle": "No control-plane workflow run is active." },
+  "tasks": { "title": "Tasks", "subtitle": "Authoritative task graph state.", "showCompleted": "Show completed / cancelled" },
+  "verification": { "title": "Verification attention", "subtitle": "Failing or not-run verification evidence.", "empty": "No failing or not-run verification results in the current window." },
+  "decisions": { "title": "Open decisions", "subtitle": "Open canonical decisions and how many task links they block.", "empty": "No open decisions in the current filter." },
+  "executions": { "title": "Recent runner executions", "subtitle": "Codex/runner execution state persisted in Supabase." },
+  "events": { "title": "Task event timeline", "subtitle": "Recent control-plane task events and raw diagnostic payloads." }
+}

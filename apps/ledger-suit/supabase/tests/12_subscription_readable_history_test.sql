@@ -239,7 +239,8 @@ where organization_id = (select value from readable_history_ids where key = 'org
 
 select is(
   (select name from public.accounts
-   where organization_id = (select value from readable_history_ids where key = 'org')),
+   where organization_id = (select value from readable_history_ids where key = 'org')
+     and name = 'Historical bank account'),
   'Historical bank account',
   'direct account updates remain blocked by RLS'
 );

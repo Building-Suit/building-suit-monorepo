@@ -26,7 +26,7 @@ select is((select parent_account_id from public.accounts where id=(select id fro
 select is((select count(*) from public.categories where default_account_id=(select id from group_ids where key='revenue-group')), 0::bigint, 'revenue group never creates an operational category');
 select is((select system_key from public.accounts where id=(select id from group_ids where key='equity-group')), null::text, 'group never takes a posting system key');
 select throws_ok(format('select public.create_account(%L,%L,%L,%L,p_account_role=>%L)',
- (select id from group_ids where key='org'), 'Invalid role', 'asset', 'bank', 'control'), '23514', null, 'unsupported roles fail at database boundary');
+ (select id from group_ids where key='org'), 'Invalid role', 'asset', 'bank', 'invalid'), '22023', 'INVALID_ACCOUNT_ROLE', 'unsupported roles fail at database boundary');
 select throws_ok(format('update public.accounts set account_role=%L where id=%L', 'group', (select id from group_ids where key='legacy')),
  '23514', 'ACCOUNT_ROLE_IMMUTABLE: create a new account instead of changing historical meaning', 'legacy posting role cannot be converted');
 select throws_ok(format('update public.accounts set account_role=%L where id=%L', 'posting', (select id from group_ids where key='group')),
@@ -84,7 +84,7 @@ select set_config('request.jwt.claims', '{"sub":"a0000000-0000-4000-8000-0000000
 select throws_ok(format('select public.create_account(%L,%L,%L,%L,p_account_role=>%L)',
  (select id from group_ids where key='org'), 'Viewer group', 'asset', 'bank', 'group'), '42501', null, 'viewer cannot create groups');
 reset role;
-select ok(not has_function_privilege('anon', 'public.create_account(uuid,text,public.account_type,public.account_subtype,character,text,uuid,public.normal_balance,uuid,text)', 'EXECUTE'), 'anon has no create RPC grant');
+select ok(not has_function_privilege('anon', 'public.create_account(uuid,text,public.account_type,public.account_subtype,character,text,uuid,public.normal_balance,uuid,text,public.control_subledger_type)', 'EXECUTE'), 'anon has no create RPC grant');
 select ok(not has_function_privilege('authenticated', 'app.require_posting_account_reference()', 'EXECUTE'), 'trigger helper is not client-callable');
 select * from finish();
 rollback;

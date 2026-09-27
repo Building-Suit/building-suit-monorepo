@@ -15,6 +15,7 @@ export const applications = {
   ledger: { directory: 'ledger-suit', package: '@building-suit/ledger-suit', port: 3000 },
   shop: { directory: 'shop-suit', package: '@building-suit/shop-suit', port: 3001 },
   docs: { directory: 'building-suit-docs', package: '@building-suit/docs', port: 3002 },
+  inventory: { directory: 'inventory-suit', package: '@building-suit/inventory-suit', port: 3003 },
 }
 export function relevantPath(file, app) {
   return file.startsWith(`apps/${app.directory}/`) || file.startsWith('packages/') ||

@@ -1,0 +1,49 @@
+{
+  "version": 1,
+
+  "default_profile": "standard",
+
+  "no_ai_operations": [
+    "repo_state",
+    "branch_selection",
+    "pr_lookup",
+    "dependency_resolution",
+    "requirement_counting",
+    "task_selection",
+    "test_execution",
+    "ci_status",
+    "tracker_validation",
+    "release_gate"
+  ],
+
+  "fast": {
+    "risk_levels": [
+      "low"
+    ],
+
+    "preferred_task_types": [
+      "docs",
+      "maintenance"
+    ]
+  },
+
+  "deep_triggers": [
+    "financial_invariant",
+    "accounting_posting",
+    "auth",
+    "authorization",
+    "rls",
+    "security_boundary",
+    "concurrency",
+    "idempotency",
+    "destructive_migration",
+    "architecture",
+    "breaking_shared_contract"
+  ],
+
+  "review_triggers": [
+    "security_review",
+    "financial_review",
+    "architecture_review"
+  ]
+}
