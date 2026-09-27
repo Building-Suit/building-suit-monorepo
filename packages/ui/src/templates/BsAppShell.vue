@@ -88,7 +88,7 @@ function isActive(to: string) { return route.path === to || route.path.startsWit
         <slot name="header" />
       </header>
 
-      <main class="mx-auto w-full max-w-[1280px] min-w-0 flex-1 px-4 py-6 pb-24 lg:px-8 lg:pb-6">
+      <main class="mx-auto w-full max-w-[1440px] min-w-0 flex-1 px-4 py-6 pb-24 lg:px-8 lg:pb-6">
         <slot />
       </main>
     </div>

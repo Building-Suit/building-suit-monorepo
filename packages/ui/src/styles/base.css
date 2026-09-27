@@ -570,6 +570,13 @@ body {
   mask-image: linear-gradient(to bottom, black, transparent 90%);
 }
 
+:dir(rtl) .ls-landing-hero-title {
+  max-width: 14ch;
+  font-size: clamp(2.75rem, 5vw, 5.25rem);
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}
+
 .ls-landing-orbit {
   position: absolute;
   inset-block-start: 8%;

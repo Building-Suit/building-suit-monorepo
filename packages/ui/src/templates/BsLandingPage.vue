@@ -19,7 +19,7 @@ useLandingMotion(landingRoot)
             <span class="h-px w-10 bg-brand-gold" aria-hidden="true" />
             <p>{{ content.eyebrow }}</p>
           </div>
-          <h1 data-landing-intro class="max-w-[12ch] text-[clamp(2.85rem,6vw,5.9rem)] font-extrabold leading-[.98] tracking-[-.065em]">
+          <h1 data-landing-intro class="ls-landing-hero-title max-w-[12ch] text-[clamp(2.85rem,6vw,5.9rem)] font-extrabold leading-[.98] tracking-[-.065em]">
             {{ content.heroTitle }}
           </h1>
           <p data-landing-intro class="ls-brand-hero-muted mt-7 max-w-xl text-base leading-8 sm:text-lg">
