@@ -7,6 +7,8 @@ type Rpc<Args, Returns = string> = { Args: Args, Returns: Returns }
 
 export type MigrationSourceType = 'excel_csv' | 'other_system_export' | 'accountant_paper_workbook'
 export type MigrationDepth = 'fast_cutover' | 'current_fiscal_year' | 'full_history'
+export type MigrationOpenItemType = 'customer_invoice' | 'customer_credit' | 'supplier_bill' | 'supplier_credit'
+export type MigrationOpenAllocationType = 'receipt' | 'payment' | 'credit'
 
 export type MigrationRpcDatabase = { public: {
   Tables: Record<string, never>
@@ -56,5 +58,18 @@ export type MigrationRpcDatabase = { public: {
     }>
     read_migration_project: Rpc<{ p_project_id: string }, Json>
     download_migration_source: Rpc<{ p_source_revision_id: string }, string>
+    stage_migration_open_items: Rpc<{
+      p_project_id: string
+      p_staging_batch_id: string
+      p_items: Json
+      p_allocations: Json
+      p_idempotency_key: string
+    }>
+    validate_migration_open_items: Rpc<{ p_batch_id: string }, Json>
+    accept_migration_open_items: Rpc<{
+      p_batch_id: string
+      p_idempotency_key: string
+    }>
+    read_migration_open_item_batch: Rpc<{ p_batch_id: string }, Json>
   }
 } }
