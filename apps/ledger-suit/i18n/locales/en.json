@@ -1861,6 +1861,22 @@
     "events": { "statement": { "imported": "Statement imported" }, "line": { "corrected": "Statement line corrected" }, "match": { "created": "Match created", "removed": "Match removed" }, "outstanding": { "added": "Outstanding item added", "removed": "Outstanding item removed" }, "adjustment": { "posted": "Adjustment journal posted" }, "reconciliation": { "completed": "Reconciliation completed", "reopened": "Reconciliation reopened" } },
     "errors": { "title": "Bank reconciliation", "load": "Could not load the reconciliation workspace.", "save": "The bank operation could not be saved. Review the selection and retry.", "duplicateFile": "This exact file was already imported.", "duplicateLine": "This statement line already exists for the bank account.", "notExact": "Selected statement and ledger totals must be exactly equal in the same currency.", "incomplete": "Resolve or match every line and fix statement validation before completion.", "notBalanced": "The reconciliation equation does not balance. List outstanding ledger items explicitly.", "period": "The adjustment date is locked or its accounting period is closed.", "approval": "This organization requires an approval workflow; direct bank adjustments are blocked.", "permission": "You do not have permission for this bank operation." }
   },
+  "fx": {
+    "title": "Foreign-currency open items",
+    "policy": "Manual event-date rates only. Every posted rate and allocation is immutable, evidenced, and translated to the organization base currency.",
+    "tabs": { "item": "New obligation", "settlement": "Cross-currency settlement", "revaluation": "Revaluation", "reversal": "Correction / reversal", "mapping": "FX accounts" },
+    "mappingRequired": "Map realized and unrealized FX gain/loss accounts before posting foreign-currency activity.",
+    "mappingConfigured": "FX gain/loss mappings are configured and immutable. A reviewed forward revision is required to replace them.",
+    "realizedGain": "Realized FX gain", "realizedLoss": "Realized FX loss", "unrealizedGain": "Unrealized FX gain", "unrealizedLoss": "Unrealized FX loss",
+    "counterparty": "Counterparty", "control": "Control account", "offset": "Revenue / expense / asset account", "cash": "Cash or bank account",
+    "currency": "Currency", "documentDate": "Document and rate date", "settlementDate": "Settlement and rate date", "dueDate": "Due date", "reference": "Reference",
+    "amount": "Original amount", "gross": "Actual gross settlement", "baseRate": "Base major units per 1 foreign major unit", "rateSource": "Rate source", "rateEvidence": "Rate evidence / reference",
+    "postItem": "Post foreign-currency obligation", "postSettlement": "Post allocated settlement", "saved": "Foreign-currency evidence posted.", "reversalKind": "Evidence type", "reversalTarget": "Original evidence", "reversalDate": "Reversal date", "reversalReason": "Reviewed correction reason", "reversalPolicy": "Dependent later events must be reversed first. The original rates and amounts remain immutable.", "postReversal": "Post linked reversal",
+    "documentAmount": "Document amount extinguished", "settlementAmount": "Settlement amount consumed", "crossRate": "Settlement major units per document major unit", "conversionEvidence": "Agreed conversion evidence",
+    "expected": "Backend-reproducible amount", "minorUnits": "minor units", "closingRate": "Closing base rate", "preview": "Preview revaluation", "previewReady": "Revaluation preview is ready.", "confirm": "Confirm carry-forward revaluation",
+    "openItems": "Foreign-currency open items", "settlementHistory": "Cross-currency settlement history", "noSettlements": "No cross-currency settlements.", "allocationHistory": "Dual-currency allocation evidence", "noAllocations": "No allocation evidence.", "roundingResidual": "Visible rounding residual", "outstanding": "Outstanding original currency", "currentCarrying": "Current base carrying value", "settlementBase": "Settlement base value", "realizedDifference": "Realized FX difference", "closingBase": "Closing base value", "delta": "Revaluation difference", "empty": "No foreign-currency open items.",
+    "errors": { "load": "Could not load foreign-currency evidence.", "save": "The FX operation was rejected. Review rates, mappings, allocation evidence, permissions, dates, and open balances." }
+  },
   "ar": {
     "title": "Customer receivables",
     "policy": "Invoices recognize revenue when issued. Receipts settle receivables without recognizing revenue again. Base currency only.",

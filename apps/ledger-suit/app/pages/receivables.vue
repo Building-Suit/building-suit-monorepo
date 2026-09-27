@@ -107,6 +107,7 @@ async function save() {
 <template>
   <div class="space-y-6">
     <LedgerPageHeader :title="t('ar.title')" :subtitle="t('ar.policy')" :from="from" :to="asOf" />
+    <FxSubledgerPanel v-if="can('fx.read')" subledger="customer" :as-of="asOf" :read-only="readOnly" />
     <p v-if="!can('ar.read')" role="status" class="ls-card p-5">{{ t('ar.denied') }}</p>
     <template v-else>
       <div class="ls-card grid items-end gap-4 p-5 sm:grid-cols-3">
