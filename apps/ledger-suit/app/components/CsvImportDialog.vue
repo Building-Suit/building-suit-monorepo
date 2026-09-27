@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Database, Json } from '~~/types/database.types'
-import { parseCsv, downloadCsv } from '~/utils/csv'
+import type { ParsedCsv } from '~/utils/csv'
+import { parseCsv, parseSpreadsheetPaste, downloadCsv } from '~/utils/csv'
 
 const visible = defineModel<boolean>('visible', { default: false })
 const nuxtApp = useNuxtApp()
@@ -54,6 +55,7 @@ interface DisplayRow {
 }
 type Phase = 'upload' | 'mapping' | 'validated' | 'results'
 type BusyAction = '' | 'validating' | 'confirming'
+type ReviewFilter = 'all' | 'ready' | 'issues' | 'duplicates'
 
 const REQUIRED_FIELDS = CSV_REQUIRED_FIELDS
 const ALL_FIELDS = CSV_IMPORT_FIELDS
@@ -62,12 +64,16 @@ const METRICS = ['total_rows', 'valid_rows', 'invalid_rows', 'posted_rows', 'dup
 const phase = ref<Phase>('upload')
 const busy = ref<BusyAction>('')
 const filename = ref('')
+const pasteText = ref('')
 const headers = ref<string[]>([])
 const sourceRows = ref<Record<string, string>[]>([])
 const mapping = reactive<Record<string, string>>(Object.fromEntries(ALL_FIELDS.map(field => [field, ''])))
 const batch = ref<Batch | null>(null)
 const resultRows = ref<ImportRow[]>([])
 const errorMessage = ref('')
+const reviewFilter = ref<ReviewFilter>('all')
+const reviewPage = ref(1)
+const REVIEW_PAGE_SIZE = 100
 
 const previewRows = computed(() => sourceRows.value.slice(0, 5))
 const requiredMappingComplete = computed(() => REQUIRED_FIELDS.every(field => mapping[field]))
@@ -82,7 +88,23 @@ const steps = computed(() => [
   { key: 'confirmation', done: phase.value === 'results' },
   { key: 'results', done: phase.value === 'results' },
 ])
-const displayRows = computed<DisplayRow[]>(() => resultRows.value.map((row) => {
+const filteredResultRows = computed(() => resultRows.value.filter((row) => {
+  if (reviewFilter.value === 'ready') return ['valid', 'posted'].includes(row.status)
+  if (reviewFilter.value === 'issues') return ['invalid', 'failed'].includes(row.status)
+  if (reviewFilter.value === 'duplicates') return row.status === 'duplicate'
+  return true
+}))
+const reviewPageCount = computed(() => Math.max(1, Math.ceil(filteredResultRows.value.length / REVIEW_PAGE_SIZE)))
+const visibleResultRows = computed(() => filteredResultRows.value.slice((reviewPage.value - 1) * REVIEW_PAGE_SIZE, reviewPage.value * REVIEW_PAGE_SIZE))
+const reviewRangeStart = computed(() => filteredResultRows.value.length ? (reviewPage.value - 1) * REVIEW_PAGE_SIZE + 1 : 0)
+const reviewRangeEnd = computed(() => Math.min(reviewPage.value * REVIEW_PAGE_SIZE, filteredResultRows.value.length))
+const reviewCounts = computed(() => ({
+  all: resultRows.value.length,
+  ready: resultRows.value.filter(row => ['valid', 'posted'].includes(row.status)).length,
+  issues: resultRows.value.filter(row => ['invalid', 'failed'].includes(row.status)).length,
+  duplicates: resultRows.value.filter(row => row.status === 'duplicate').length,
+}))
+const displayRows = computed<DisplayRow[]>(() => visibleResultRows.value.map((row) => {
   const raw = row.raw_data
   return {
     id: row.id,
@@ -94,6 +116,7 @@ const displayRows = computed<DisplayRow[]>(() => resultRows.value.map((row) => {
     amountValue: mapping.amount ? (raw[mapping.amount] ?? '') : '',
   }
 }))
+watch(reviewFilter, () => { reviewPage.value = 1 })
 
 function localizedType(value: string) {
   const type = csvImportType(value, translations)
@@ -121,11 +144,14 @@ function reset() {
   phase.value = 'upload'
   busy.value = ''
   filename.value = ''
+  pasteText.value = ''
   headers.value = []
   sourceRows.value = []
   batch.value = null
   resultRows.value = []
   errorMessage.value = ''
+  reviewFilter.value = 'all'
+  reviewPage.value = 1
   for (const field of ALL_FIELDS) mapping[field] = ''
 }
 
@@ -140,7 +166,17 @@ function readableError(error: unknown) {
   if (message.includes('CSV_ROW_WIDTH_INVALID')) return t('imports.errors.rowWidth')
   if (message.includes('CSV_UNCLOSED_QUOTE')) return t('imports.errors.quote')
   if (message.includes('CSV_FILE_INVALID')) return t('imports.errors.file')
+  if (message.includes('SPREADSHEET_TABS_REQUIRED')) return t('imports.errors.pasteTabs')
   return describeError(error)
+}
+
+function useParsedRows(parsed: ParsedCsv, sourceName: string) {
+  if (parsed.rows.length > 10_000) throw new Error('CSV_FILE_INVALID')
+  filename.value = sourceName
+  headers.value = parsed.headers
+  sourceRows.value = parsed.rows
+  Object.assign(mapping, matchCsvColumns(parsed.headers, translations))
+  phase.value = 'mapping'
 }
 
 async function onFileSelected(event: Event) {
@@ -155,31 +191,46 @@ async function onFileSelected(event: Event) {
     }
     const text = await file.text()
     if (!isCurrent(version, requestScope)) return
-    const parsed = parseCsv(text)
-    if (parsed.rows.length > 10_000) throw new Error('CSV_FILE_INVALID')
-    filename.value = file.name
-    headers.value = parsed.headers
-    sourceRows.value = parsed.rows
-    Object.assign(mapping, matchCsvColumns(parsed.headers, translations))
-    phase.value = 'mapping'
+    useParsedRows(parseCsv(text), file.name)
   }
   catch (error) {
     if (isCurrent(version, requestScope)) errorMessage.value = readableError(error)
   }
 }
 
+function usePastedRows() {
+  errorMessage.value = ''
+  try {
+    if (new TextEncoder().encode(pasteText.value).byteLength > 5 * 1024 * 1024) throw new Error('CSV_FILE_INVALID')
+    useParsedRows(parseSpreadsheetPaste(pasteText.value), t('imports.pasteFilename'))
+  }
+  catch (error) { errorMessage.value = readableError(error) }
+}
+
+function onPasteKeydown(event: KeyboardEvent) {
+  if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') usePastedRows()
+}
+
 async function loadBatch(batchId: string, version: number, requestScope: string) {
-  const [batchResult, rowsResult] = await Promise.all([
-    supabase.from('import_batches').select('*').eq('id', batchId).abortSignal(reads.signal).single(),
-    supabase.from('import_rows')
-      .select('id,row_number,status,raw_data,error_code,transaction_id')
-      .eq('batch_id', batchId).order('row_number').range(0, 99).abortSignal(reads.signal),
-  ])
+  const batchResult = await supabase.from('import_batches').select('*').eq('id', batchId).abortSignal(reads.signal).single()
   if (!isCurrent(version, requestScope)) return false
   if (batchResult.error) throw batchResult.error
-  if (rowsResult.error) throw rowsResult.error
   batch.value = batchResult.data
-  resultRows.value = (rowsResult.data ?? []) as unknown as ImportRow[]
+  const rowRequests = []
+  for (let start = 0; start < batchResult.data.total_rows; start += 1000) {
+    rowRequests.push(supabase.from('import_rows')
+      .select('id,row_number,status,raw_data,error_code,transaction_id')
+      .eq('batch_id', batchId)
+      .order('row_number')
+      .range(start, Math.min(start + 999, batchResult.data.total_rows - 1))
+      .abortSignal(reads.signal))
+  }
+  const rowResults = await Promise.all(rowRequests)
+  if (!isCurrent(version, requestScope)) return false
+  const rowError = rowResults.find(result => result.error)?.error
+  if (rowError) throw rowError
+  resultRows.value = rowResults.flatMap(result => result.data ?? []) as unknown as ImportRow[]
+  reviewPage.value = 1
   return true
 }
 
@@ -233,7 +284,7 @@ async function confirmImport() {
   finally { if (isCurrent(version, requestScope)) busy.value = '' }
 }
 
-const { dirty, markSaved } = useRecordAction(() => ({ filename: filename.value, mapping: { ...mapping } }), visible)
+const { dirty, markSaved } = useRecordAction(() => ({ filename: filename.value, pasteText: pasteText.value, mapping: { ...mapping } }), visible)
 onMounted(markSaved)
 </script>
 
@@ -282,6 +333,24 @@ onMounted(markSaved)
         <p class="mt-2 text-sm text-fg-muted">{{ t('csv.languageHint') }}</p>
         <input id="csv-file" class="sr-only" type="file" accept=".csv,text/csv" @change="onFileSelected">
         <p class="mt-4 text-xs text-fg-muted">{{ t('imports.formatHint') }}</p>
+        <div class="my-5 flex items-center gap-3" aria-hidden="true">
+          <span class="h-px flex-1 bg-[var(--bs-border)]" />
+          <span class="text-xs font-semibold text-fg-muted">{{ t('imports.or') }}</span>
+          <span class="h-px flex-1 bg-[var(--bs-border)]" />
+        </div>
+        <label for="spreadsheet-paste" class="font-semibold">{{ t('imports.pasteTitle') }}</label>
+        <p id="spreadsheet-paste-hint" class="mt-1 text-sm text-fg-muted">{{ t('imports.pasteHint') }}</p>
+        <textarea
+          id="spreadsheet-paste"
+          v-model="pasteText"
+          class="ls-input mt-3 min-h-32 font-mono text-sm"
+          :placeholder="t('imports.pastePlaceholder')"
+          aria-describedby="spreadsheet-paste-hint"
+          @keydown="onPasteKeydown"
+        />
+        <div class="mt-3 flex justify-end">
+          <button type="button" class="ls-btn ls-btn-accent" :disabled="!pasteText.trim()" @click="usePastedRows">{{ t('imports.reviewPaste') }}</button>
+        </div>
       </section>
 
       <template v-else>
@@ -341,6 +410,17 @@ onMounted(markSaved)
           </div>
 
           <div class="ls-card overflow-hidden">
+            <div class="flex flex-wrap items-end justify-between gap-3 border-b border-[var(--bs-border)] p-4">
+              <FloatingField :label="t('imports.reviewFilter')" class="min-w-48">
+                <select v-model="reviewFilter" class="ls-input">
+                  <option value="all">{{ t('imports.reviewFilters.all', { count: reviewCounts.all }) }}</option>
+                  <option value="ready">{{ t('imports.reviewFilters.ready', { count: reviewCounts.ready }) }}</option>
+                  <option value="issues">{{ t('imports.reviewFilters.issues', { count: reviewCounts.issues }) }}</option>
+                  <option value="duplicates">{{ t('imports.reviewFilters.duplicates', { count: reviewCounts.duplicates }) }}</option>
+                </select>
+              </FloatingField>
+              <p role="status" class="text-sm text-fg-muted">{{ t('imports.reviewRange', { from: reviewRangeStart, to: reviewRangeEnd, total: filteredResultRows.length }) }}</p>
+            </div>
             <div class="overflow-x-auto">
               <BsDataTable :value="displayRows" data-key="id" :label="t('imports.rowsCaption')">
   <Column >
@@ -369,7 +449,11 @@ onMounted(markSaved)
   </Column>
 </BsDataTable>
             </div>
-            <p v-if="batch.total_rows > resultRows.length" class="border-t border-[var(--bs-border)] p-3 text-xs text-fg-muted">{{ t('imports.firstRows', { count: resultRows.length }) }}</p>
+            <div v-if="reviewPageCount > 1" class="flex items-center justify-end gap-2 border-t border-[var(--bs-border)] p-3">
+              <button type="button" class="ls-btn ls-btn-sm" :disabled="reviewPage <= 1" @click="reviewPage--">{{ t('common.previous') }}</button>
+              <span class="text-sm text-fg-muted">{{ t('transactions.page', { page: reviewPage, pages: reviewPageCount }) }}</span>
+              <button type="button" class="ls-btn ls-btn-sm" :disabled="reviewPage >= reviewPageCount" @click="reviewPage++">{{ t('common.next') }}</button>
+            </div>
           </div>
         </section>
       </template>

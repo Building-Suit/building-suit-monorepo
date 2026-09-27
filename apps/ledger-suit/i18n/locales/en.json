@@ -715,8 +715,8 @@
   },
   "imports": {
     "eyebrow": "Transaction import",
-    "title": "Import transactions from CSV",
-    "subtitle": "Upload a CSV, match its columns, review validation results, then confirm the rows that are ready to post.",
+    "title": "Import transactions",
+    "subtitle": "Upload a CSV or paste spreadsheet rows, match the columns, review validation results, then confirm the rows that are ready to post.",
     "entryPoint": "Import CSV",
     "upgradeEntryPoint": "Upgrade to import",
     "progress": "Import progress",
@@ -736,6 +736,12 @@
     "uploadHint": "The first row must contain column names. You will map them before anything is posted.",
     "chooseFile": "Choose CSV file",
     "formatHint": "Up to 10,000 rows and 5 MB. Supported transaction types are income and expense.",
+    "or": "or",
+    "pasteTitle": "Paste from a spreadsheet",
+    "pasteHint": "Copy a range whose first row contains column names. Tab-separated cells follow the same mapping and server validation as a CSV file. Press Ctrl+Enter or Command+Enter to continue.",
+    "pastePlaceholder": "Transaction type\tDate\tAmount\tAccount\tCategory",
+    "pasteFilename": "Pasted spreadsheet rows",
+    "reviewPaste": "Review pasted rows",
     "mappingTitle": "Match CSV columns",
     "fileSummary": "{filename} · {count} data row | {filename} · {count} data rows",
     "changeFile": "Change file",
@@ -753,6 +759,14 @@
     "row": "Row",
     "issue": "Issue",
     "firstRows": "Showing the first {count} rows.",
+    "reviewFilter": "Review rows",
+    "reviewRange": "Showing {from}–{to} of {total}",
+    "reviewFilters": {
+      "all": "All rows ({count})",
+      "ready": "Ready or posted ({count})",
+      "issues": "Invalid or failed ({count})",
+      "duplicates": "Duplicates ({count})"
+    },
     "fields": {
       "type": "Transaction type *",
       "date": "Date *",
@@ -785,6 +799,7 @@
       "rowWidth": "A CSV row contains more values than the header.",
       "quote": "The CSV contains an unclosed quoted value.",
       "file": "Choose a CSV file no larger than 5 MB and 10,000 rows.",
+      "pasteTabs": "Copy a spreadsheet range with at least two columns, including the header row.",
       "entitlement": "This workspace plan does not include CSV imports.",
       "generic": "The import could not be completed. Review the file and try again."
     },

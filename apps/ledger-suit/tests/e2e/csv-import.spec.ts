@@ -33,7 +33,7 @@ async function selectCsv(page: Page, rows: string) {
 }
 
 async function mockImportApi(page: Page, scenario: Scenario) {
-  const state = { confirmed: false, confirmCalls: 0 }
+  const state = { confirmed: false, confirmCalls: 0, createdRows: [] as Record<string, string>[] }
   const sourceRows = scenario === 'mixed'
     ? [
         { id: '1', row_number: 1, status: state.confirmed ? 'posted' : 'valid', raw_data: { type: 'income', date: '2026-09-01', amount: '100', account: 'Cash', category: 'Sales' }, error_code: null, error_message: null, transaction_id: state.confirmed ? 'tx-1' : null },
@@ -45,7 +45,10 @@ async function mockImportApi(page: Page, scenario: Scenario) {
       : [{ id: '1', row_number: 1, status: 'duplicate', raw_data: { type: 'income', date: '2026-09-01', amount: '100', account: 'Cash', category: 'Sales' }, error_code: 'IMPORT_ROW_DUPLICATE', error_message: 'Raw duplicate backend detail.', transaction_id: null }]
 
   await page.route('**/rest/v1/rpc/can_use_feature**', route => route.fulfill({ status: 200, contentType: 'application/json', body: 'true' }))
-  await page.route('**/rest/v1/rpc/create_csv_import_batch', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(batchId) }))
+  await page.route('**/rest/v1/rpc/create_csv_import_batch', async (route) => {
+    state.createdRows = route.request().postDataJSON().p_rows
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(batchId) })
+  })
   await page.route('**/rest/v1/rpc/validate_csv_import_batch', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(batchId) }))
   await page.route('**/rest/v1/rpc/confirm_csv_import_batch', async (route) => {
     state.confirmed = true
@@ -111,6 +114,25 @@ test('CSV workflow localizes invalid and duplicate issues, then posts valid rows
   await expect(page.getByRole('heading', { name: 'Import results' })).toBeVisible()
   await expect(page.getByRole('dialog').getByRole('row').filter({ hasText: '2026-09-01' }).first()).toContainText('Posted')
   await expect.poll(() => usage.calls).toBeGreaterThan(usageCallsBeforeConfirm)
+})
+
+test('spreadsheet paste uses the existing staged validator and supports keyboard review filters', async ({ page }) => {
+  const state = await mockImportApi(page, 'mixed')
+  await mockTransactionUsage(page)
+  await openImport(page)
+
+  const pastedAmount = '٩٠٠٧١٩٩٢٥٤٧٤٠٩٩٣٫٢٥'
+  await page.getByLabel('Paste from a spreadsheet').fill(`type\tdate\tamount\taccount\tcategory\nإيراد\t٢٠٢٦-٠٩-٠١\t${pastedAmount}\tCash\tSales`)
+  await page.getByLabel('Paste from a spreadsheet').press('Control+Enter')
+  await expect(page.getByRole('heading', { name: 'Match CSV columns' })).toBeVisible()
+  await page.getByRole('button', { name: 'Stage and validate' }).click()
+  await expect(page.getByRole('heading', { name: 'Validation complete' })).toBeVisible()
+
+  expect(state.createdRows[0].amount).toBe(pastedAmount)
+  expect(Object.values(state.createdRows[0])).toContain('9007199254740993.25')
+  await page.getByLabel('Review rows').selectOption('issues')
+  await expect(page.getByRole('dialog').getByRole('row').filter({ hasText: 'bad-date' })).toBeVisible()
+  await expect(page.getByRole('dialog').getByRole('row').filter({ hasText: '2026-09-01' })).toHaveCount(0)
 })
 
 test('import confirmation shows usage and localizes a transaction quota failure', async ({ page }) => {
