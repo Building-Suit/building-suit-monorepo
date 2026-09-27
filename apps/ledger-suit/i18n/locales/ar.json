@@ -1262,6 +1262,7 @@
     "closingCredit": "رصيد آخر المدة دائن",
     "drilldownAmount": "عرض حركة {column} لحساب {account}",
     "invalidPeriod": "اختر فترة تقرير صحيحة. لا يجوز أن يكون تاريخ البداية بعد تاريخ النهاية.",
+    "loadError": "تعذر تحميل التقرير.",
     "trialBalanceError": "تعذر تحميل ميزان المراجعة.",
     "inBalance": "متوازن",
     "outOfBalance": "غير متوازن",

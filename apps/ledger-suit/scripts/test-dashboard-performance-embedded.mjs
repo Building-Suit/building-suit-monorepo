@@ -3,7 +3,9 @@ import assert from 'node:assert/strict'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 // Optional, isolated verification dependencies; never bundled into the product.
-const require = createRequire(new URL('../../../.local/perf-validation/package.json', import.meta.url))
+const validationPackage = process.env.BUILDING_PERF_VALIDATION_PACKAGE
+  ?? new URL('../../../.local/perf-validation/package.json', import.meta.url)
+const require = createRequire(validationPackage)
 const { PGlite } = require('@electric-sql/pglite')
 const { pgcrypto } = require('@electric-sql/pglite/contrib/pgcrypto')
 const { pg_trgm } = require('@electric-sql/pglite/contrib/pg_trgm')
@@ -35,7 +37,8 @@ const requestedMigration = process.argv.find(argument => argument.startsWith('--
 const migration = requestedMigration ?? '20260927140000_rls_aware_dashboard_reads.sql'
 const largeFixture = process.argv.includes('--large')
 const perf002 = migration === '20260927200000_large_ledger_read_scalability.sql'
-if (largeFixture && !perf002) throw new Error('--large is supported only with the LS-PERF-002 migration')
+const perf003 = migration === '20260928010000_accounts_reports_large_ledger_hotfix.sql'
+if (largeFixture && !perf002 && !perf003) throw new Error('--large is supported only with an LS-PERF migration')
 const dir = 'apps/ledger-suit/supabase/migrations'
 for (const file of (await readdir(dir)).filter(x => x.endsWith('.sql') && x < migration).sort()) {
   let sql = await readFile(`${dir}/${file}`, 'utf8')
@@ -118,6 +121,39 @@ const searchArgs = [
     ['asc','desc'].map(direction => `p_sort=>'${sort}',p_direction=>'${direction}',p_limit=>4,p_offset=>2`)),
 ]
 const read = async sql => (await db.query(sql)).rows
+const reportFrom = largeFixture ? '2025-01-01' : '2026-09-01'
+const reportTo = '2026-09-20'
+const accountBalanceSql = `select organization_id,account_id,code,name,type,subtype,currency,account_role,
+  control_subledger_type,control_binding_locked,normal_balance,contra_account_id,is_system,
+  classification_locked,net_debit_minor,statement_balance_minor,entry_count,is_archived,is_liquid,parent_account_id
+  from public.account_balances where organization_id='${org}' order by code nulls last,account_id`
+const reportSnapshot = async () => ({
+  profit_loss: await read(`select * from public.report_profit_and_loss('${org}','${reportFrom}','${reportTo}')`),
+  balance_sheet: (await read(`select coalesce(jsonb_agg(to_jsonb(report)
+    order by report.section,report.statement_line,report.code nulls last,report.account_id),'[]'::jsonb) as value
+    from public.report_classified_balance_sheet('${org}','${reportTo}') report`))[0].value,
+  trial_balance: await read(`select * from public.report_trial_balance('${org}','${reportFrom}','${reportTo}')`),
+  integrity: (await read(`select public.check_balance_sheet_integrity('${org}','${reportTo}') as value`))[0].value,
+  reconciliation: (await read(`select public.report_statement_reconciliation('${org}','${reportFrom}','${reportTo}','${reportTo}') as value`))[0].value,
+  cash_flow: (await read(`select public.report_indirect_cash_flow('${org}','${reportFrom}','${reportTo}') as value`))[0].value,
+  cash_detail: await read(`select * from public.report_cash_flow_detail('${org}','${reportFrom}','${reportTo}')
+    order by transaction_id,entry_id,section`),
+  general_ledger: await read(`select * from public.report_general_ledger('${org}','${ids.bank}','${reportFrom}','${reportTo}')`),
+})
+const assertPerf003Contracts = async (accountsBefore, reportsBefore) => {
+  assert.deepEqual(await read(`select * from public.read_account_balances('${org}')`), accountsBefore,
+    'Accounts RPC exactly preserves the account_balances UI projection')
+  const reportsAfter = await reportSnapshot()
+  assert.deepEqual(reportsAfter, reportsBefore,
+    'Detailed Trial Balance, P&L, Balance Sheet, integrity, reconciliation, Cash Flow, and General Ledger remain exact')
+  const overview = (await read(`select public.report_financial_overview(
+    '${org}','${reportFrom}','${reportTo}','${reportTo}') as value`))[0].value
+  assert.deepEqual(overview.profit_loss, reportsBefore.profit_loss, 'Overview P&L matches the detailed report')
+  assert.deepEqual(overview.balance_sheet, reportsBefore.balance_sheet, 'Overview Balance Sheet matches the detailed report')
+  assert.deepEqual(overview.trial_balance, reportsBefore.trial_balance, 'Overview Trial Balance matches the detailed report')
+  assert.deepEqual(overview.integrity, reportsBefore.integrity, 'Overview integrity matches the existing contract')
+  assert.deepEqual(overview.reconciliation, reportsBefore.reconciliation, 'Overview reconciliation matches the existing contract')
+}
 const baseline = async () => ({
   summary: await read(`select public.dashboard_summary('${org}', '2026-09-20')`),
   monthly: await read(`select * from public.report_monthly_series('${org}', 6, '2026-09-20')`),
@@ -174,6 +210,26 @@ if (largeFixture) {
     }),
   ))
   await login('1')
+  const perf003AccountsBefore = perf003 ? await read(accountBalanceSql) : null
+  const perf003ReportsBefore = perf003 ? await reportSnapshot() : null
+  if (perf003) {
+    const beforeQueries = {
+      account_balances: accountBalanceSql,
+      trial_balance: `select * from public.report_trial_balance('${org}','${reportFrom}','${reportTo}')`,
+      profit_loss: `select * from public.report_profit_and_loss('${org}','${reportFrom}','${reportTo}')`,
+      balance_sheet: `select * from public.report_classified_balance_sheet('${org}','${reportTo}')`,
+      balance_sheet_integrity: `select public.check_balance_sheet_integrity('${org}','${reportTo}')`,
+      statement_reconciliation: `select public.report_statement_reconciliation('${org}','${reportFrom}','${reportTo}','${reportTo}')`,
+      general_ledger: `select * from public.report_general_ledger('${org}','${ids.bank}','${reportFrom}','${reportTo}')`,
+      cash_flow: `select public.report_indirect_cash_flow('${org}','${reportFrom}','${reportTo}')`,
+    }
+    evidence.accounts_reports = { before_plans: {}, after_plans: {}, warm_runs_ms: {} }
+    for (const [name, sql] of Object.entries(beforeQueries)) {
+      await read(sql)
+      evidence.accounts_reports.before_plans[name] = (await read(
+        `explain (analyze,buffers,settings,format json) ${sql}`))[0]['QUERY PLAN']
+    }
+  }
   const size = (await read(`select
     (select count(*) from public.transactions where organization_id='${org}') as journals,
     (select count(*) from public.transaction_entries where organization_id='${org}' and posted_at is not null) as posted_lines,
@@ -186,6 +242,7 @@ if (largeFixture) {
   await db.exec('reset role')
   await db.exec(await readFile(`${dir}/${migration}`, 'utf8'))
   await login('1')
+  if (perf003) await assertPerf003Contracts(perf003AccountsBefore, perf003ReportsBefore)
   assert.deepEqual(await captureCore(), before, 'Large fixture core read results remain exact')
   assert.deepEqual(await probe(true), accountingBefore,
     'Large fixture TB, P&L, Balance Sheet, controls, VAT, inventory and assets remain exact')
@@ -202,6 +259,28 @@ if (largeFixture) {
       const started = performance.now()
       await read(sql)
       evidence.warm_runs_ms[name].push(Number((performance.now() - started).toFixed(3)))
+    }
+  }
+  if (perf003) {
+    const perf003Queries = {
+      account_balances: `select * from public.read_account_balances('${org}')`,
+      reports_overview: `select public.report_financial_overview('${org}','${reportFrom}','${reportTo}','${reportTo}')`,
+      trial_balance: `select * from public.report_trial_balance('${org}','${reportFrom}','${reportTo}')`,
+      profit_loss: `select * from public.report_profit_and_loss('${org}','${reportFrom}','${reportTo}')`,
+      balance_sheet: `select * from public.report_classified_balance_sheet('${org}','${reportTo}')`,
+      general_ledger: `select * from public.report_general_ledger('${org}','${ids.bank}','${reportFrom}','${reportTo}')`,
+      cash_flow: `select public.report_indirect_cash_flow('${org}','${reportFrom}','${reportTo}')`,
+    }
+    for (const [name, sql] of Object.entries(perf003Queries)) {
+      await read(sql)
+      evidence.accounts_reports.after_plans[name] = (await read(
+        `explain (analyze,buffers,settings,format json) ${sql}`))[0]['QUERY PLAN']
+      evidence.accounts_reports.warm_runs_ms[name] = []
+      for (let run = 0; run < 5; run++) {
+        const started = performance.now()
+        await read(sql)
+        evidence.accounts_reports.warm_runs_ms[name].push(Number((performance.now() - started).toFixed(3)))
+      }
     }
   }
   assert.equal(afterPlans.search_transactions[0].Plan['Temp Written Blocks'], 0,
@@ -224,8 +303,10 @@ if (largeFixture) {
   await db.exec('reset role')
   assert.equal((await read(`select bool_and(relrowsecurity) as enabled from pg_class
     where oid in ('public.transactions'::regclass,'public.transaction_entries'::regclass,'public.accounts'::regclass)`))[0].enabled, true)
-  await mkdir('apps/ledger-suit/docs/evidence/ls-perf-002', { recursive: true })
-  await writeFile('apps/ledger-suit/docs/evidence/ls-perf-002/embedded-explain.json', JSON.stringify(evidence,null,2)+'\n')
+  const evidenceDirectory = perf003 ? 'apps/ledger-suit/docs/evidence/ls-perf-003'
+    : 'apps/ledger-suit/docs/evidence/ls-perf-002'
+  await mkdir(evidenceDirectory, { recursive: true })
+  await writeFile(`${evidenceDirectory}/embedded-explain.json`, JSON.stringify(evidence,null,2)+'\n')
   console.log(`PASS: representative fixture has ${size.journals} journals, ${size.posted_lines} posted lines and ${size.months} months.`)
   console.log('PASS: exact core reads/accounting snapshots, cross-tenant denial, global RLS, zero recent-8 temp spill and five warm local runs.')
   await db.close()
@@ -233,6 +314,9 @@ if (largeFixture) {
 }
 const accountingBefore = await probe(false)
 evidence.before = await capturePlans(false)
+await login('1')
+const perf003AccountsBefore = perf003 ? await read(accountBalanceSql) : null
+const perf003ReportsBefore = perf003 ? await reportSnapshot() : null
 const before = []
 for (const user of ['1','2','3']) { await login(user); before.push(await baseline()) }
 const revoked = [
@@ -263,12 +347,17 @@ for (const capabilities of revoked) {
 }
 await setRevoked([])
 await db.exec('reset role')
-const financialSnapshot = async () => read(`select jsonb_build_object(
-  'journals',(select jsonb_agg(to_jsonb(t) order by id) from public.transactions t),
-  'entries',(select jsonb_agg(to_jsonb(e) order by id) from public.transaction_entries e)
-) as snapshot`)
+const financialSnapshot = async () => {
+  await db.exec('reset role')
+  return read(`select jsonb_build_object(
+    'journals',(select jsonb_agg(to_jsonb(t) order by id) from public.transactions t),
+    'entries',(select jsonb_agg(to_jsonb(e) order by id) from public.transaction_entries e)
+  ) as snapshot`)
+}
 const history = await financialSnapshot()
 await db.exec(await readFile(`${dir}/${migration}`, 'utf8'))
+await login('1')
+if (perf003) await assertPerf003Contracts(perf003AccountsBefore, perf003ReportsBefore)
 assert.deepEqual(await financialSnapshot(), history, 'Migration leaves every journal and entry unchanged')
 for (const [index,user] of ['1','2','3'].entries()) {
   await login(user)
@@ -296,16 +385,20 @@ await setRevoked([])
 assert.deepEqual(await probe(true), accountingBefore, 'Read-only probe: TB, P&L, Balance Sheet, Controls, VAT, inventory and assets unchanged on small fixture')
 evidence.after = await capturePlans(true)
 const migrationSql = await readFile(`${dir}/${migration}`, 'utf8')
-const wrapperSql = migrationSql.split('create or replace function public.search_transactions(')[1]
-  .split('  return query\n')[1].split('\nend;')[0]
-const defaults = { p_organization_id: `'${org}'::uuid`, p_limit: '8', p_offset: '0',
-  p_sort: "'transaction_date'", p_direction: "'desc'" }
-const pageQuery = wrapperSql.replace(/\bp_\w+\b/g, name => defaults[name] ?? 'null')
-evidence.page_enrichment = (await read('explain (analyze,buffers,settings,format json) '+pageQuery))[0]['QUERY PLAN']
+if (!perf003) {
+  const wrapperSql = migrationSql.split('create or replace function public.search_transactions(')[1]
+    .split('  return query\n')[1].split('\nend;')[0]
+  const defaults = { p_organization_id: `'${org}'::uuid`, p_limit: '8', p_offset: '0',
+    p_sort: "'transaction_date'", p_direction: "'desc'" }
+  const pageQuery = wrapperSql.replace(/\bp_\w+\b/g, name => defaults[name] ?? 'null')
+  evidence.page_enrichment = (await read('explain (analyze,buffers,settings,format json) '+pageQuery))[0]['QUERY PLAN']
+}
 await mkdir('.local/perf-validation', { recursive: true })
-const evidencePath = perf002 ? '.local/perf-validation/ls-perf-002-explain.json' : '.local/perf-validation/explain.json'
+const evidencePath = perf003 ? '.local/perf-validation/ls-perf-003-dashboard-regression.json'
+  : perf002 ? '.local/perf-validation/ls-perf-002-explain.json'
+    : '.local/perf-validation/explain.json'
 await writeFile(evidencePath, JSON.stringify(evidence,null,2)+'\n')
-if (!perf002) {
+if (!perf002 && !perf003) {
   const walkPlans = plan => [plan, ...(plan.Plans ?? []).flatMap(walkPlans)]
   const nodes = walkPlans(evidence.page_enrichment[0].Plan)
   const enrichment = nodes.find(node => node['Relation Name'] === 'transactions' && node.Alias === 't')
@@ -319,10 +412,14 @@ const boundaries = [
   `public.dashboard_liquid_accounts('${org}')`, `public.search_transactions('${org}')`,
   `app.search_transaction_page('${org}')`,
 ]
-if (perf002) boundaries.push(
+if (perf002 || perf003) boundaries.push(
   `app.search_recent_transaction_page('${org}')`,
   `app.search_transaction_page_bounded('${org}')`,
   `app.search_transaction_details('${org}',array[]::uuid[])`,
+)
+if (perf003) boundaries.push(
+  `public.read_account_balances('${org}')`,
+  `public.report_financial_overview('${org}','2026-09-01','2026-09-20','2026-09-20')`,
 )
 for (const user of ['1','2','3','4']) {
   await login(user)
@@ -377,4 +474,59 @@ ${fields('t')}
 const contractPath = 'apps/ledger-suit/types/dashboard-rpc.types.ts'
 if (process.argv.includes('--generate-contract')) await writeFile(contractPath, contract)
 else assert.equal(await readFile(contractPath,'utf8'), contract, 'Client RPC contract matches migrated catalog')
+if (perf003) {
+  const accountCatalog = (await read(`select p.proargnames as names, p.proargmodes as modes,
+    array(select format_type(t,null) from unnest(p.proallargtypes) t) as types
+    from pg_proc p where p.oid='public.read_account_balances(uuid)'::regprocedure`))[0]
+  assert.ok((await read(`select to_regprocedure(
+    'public.report_financial_overview(uuid,date,date,date)') is not null as found`))[0].found)
+  const rpcTypes = {
+    uuid: 'string', text: 'string', character: 'string', bigint: 'number', boolean: 'boolean',
+    account_type: "Database['public']['Enums']['account_type']",
+    account_subtype: "Database['public']['Enums']['account_subtype']",
+    control_subledger_type: "Database['public']['Enums']['control_subledger_type']",
+    normal_balance: "Database['public']['Enums']['normal_balance']",
+  }
+  const nullableFields = new Set(['code', 'control_subledger_type', 'contra_account_id', 'parent_account_id'])
+  const accountFields = accountCatalog.names.flatMap((name,index) => {
+    if (accountCatalog.modes[index] !== 't') return []
+    const type = rpcTypes[accountCatalog.types[index]]
+    assert.ok(type, `Unsupported Accounts RPC catalog type: ${accountCatalog.types[index]}`)
+    return [`          ${name}: ${type}${nullableFields.has(name) ? ' | null' : ''}`]
+  }).join('\n')
+  const accountsReportsContract = `// Generated by scripts/test-dashboard-performance-embedded.mjs --generate-contract.
+// Source: migrated PostgreSQL catalog. Do not edit.
+import type { Database, Json } from './database.types'
+
+export type AccountsReportsRpcDatabase = {
+  public: {
+    Tables: Record<string, never>
+    Views: Record<string, never>
+    Enums: Record<string, never>
+    CompositeTypes: Record<string, never>
+    Functions: {
+      read_account_balances: {
+        Args: { p_organization_id: string }
+        Returns: {
+${accountFields}
+        }[]
+      }
+      report_financial_overview: {
+        Args: {
+          p_organization_id: string
+          p_from_date: string
+          p_to_date: string
+          p_as_of_date?: string
+        }
+        Returns: Json
+      }
+    }
+  }
+}
+`
+  const accountsReportsContractPath = 'apps/ledger-suit/types/accounts-reports-rpc.types.ts'
+  if (process.argv.includes('--generate-contract')) await writeFile(accountsReportsContractPath, accountsReportsContract)
+  else assert.equal(await readFile(accountsReportsContractPath, 'utf8'), accountsReportsContract,
+    'Accounts/Reports client RPC contract matches migrated catalog')
+}
 await db.close()
