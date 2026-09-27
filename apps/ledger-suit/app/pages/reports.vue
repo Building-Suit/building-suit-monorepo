@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { scopedQueryKey } from '@building-suit/data-access'
 import type { Database } from '~~/types/database.types'
+import type { ReportFormatMetadata } from '../utils/reportFormats'
 
 definePageMeta({ layout: 'default' })
 
@@ -14,7 +15,7 @@ const user = useSupabaseUser()
 const config = useRuntimeConfig()
 const route = useRoute()
 const router = useRouter()
-const { currentId, baseCurrency, can } = useTenant()
+const { currentId, current, baseCurrency, can } = useTenant()
 const { t, locale } = useI18n()
 const { density: tableDensity, hydrated: tablePreferenceHydrated } = useAccountingTablePreferences('financial-reports')
 
@@ -308,11 +309,72 @@ const exportPending = ref(false)
 const exportError = ref('')
 watch([reportScope, trialScope], () => { exportError.value = '' })
 
-async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_balance' | 'cash_flow' | 'general_ledger') {
+type ExportReport = 'profit_loss' | 'balance_sheet' | 'trial_balance' | 'cash_flow' | 'general_ledger'
+type ExportFormat = 'csv' | 'excel' | 'print'
+
+function exportScope(report: ExportReport) {
+  return JSON.stringify({ organization: currentId.value, report, from: from.value, to: to.value, asOf: asOf.value, account: ledgerAccountId.value })
+}
+
+function exportTitle(report: ExportReport) {
+  if (report === 'trial_balance') return t('reports.trialBalance')
+  if (report === 'general_ledger') return t('reports.tabs.ledger')
+  const key = { profit_loss: 'profitLoss', balance_sheet: 'balanceSheet', cash_flow: 'cashFlow' }[report]
+  return t(`reports.tabs.${key}`)
+}
+
+function exportWarning(report: ExportReport) {
+  if (report === 'profit_loss' && plMappingIncomplete.value) return t('financialMapping.incomplete')
+  if (report === 'balance_sheet' && bsMappingIncomplete.value) return t('financialMapping.incomplete')
+  if (report === 'cash_flow' && cashFlow.value && (!cashFlow.value.classification_complete || !cashFlow.value.reconciled)) return t('financialMapping.cashIncomplete')
+  return undefined
+}
+
+function exportMetadata(report: ExportReport, exportLocale: string): ReportFormatMetadata {
+  const isBalanceSheet = report === 'balance_sheet'
+  const filters = [{
+    label: isBalanceSheet ? t('reports.asOf') : t('reports.period'),
+    value: isBalanceSheet ? formatDate(asOf.value, exportLocale) : `${formatDate(from.value, exportLocale)} – ${formatDate(to.value, exportLocale)}`,
+  }]
+  if (report === 'general_ledger') filters.push({ label: t('reports.account'), value: accountName(ledgerAccountId.value) })
+  filters.push({ label: t('reports.entriesFilter'), value: t('reports.postedOnly') })
+  return {
+    title: exportTitle(report),
+    organization: current.value?.legal_name || current.value?.name || '',
+    currency: baseCurrency.value,
+    generatedAt: new Intl.DateTimeFormat(exportLocale.startsWith('ar') ? 'ar-EG-u-nu-latn' : exportLocale, {
+      year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit',
+      timeZone: current.value?.timezone || 'UTC', timeZoneName: 'short',
+    }).format(new Date()),
+    direction: exportLocale.startsWith('ar') ? 'rtl' : 'ltr',
+    labels: {
+      organization: t('reports.organization'),
+      currency: t('reports.currency'),
+      generatedAt: t('reports.generatedAt'),
+      warning: t('reports.mappingWarning'),
+    },
+    filters,
+    warning: exportWarning(report),
+  }
+}
+
+async function exportReport(report: ExportReport, format: ExportFormat = 'csv') {
   if (!currentId.value || exportPending.value) return
-  const requestedScope = JSON.stringify({ organization: currentId.value, report, from: from.value, to: to.value, asOf: asOf.value, account: ledgerAccountId.value })
+  const printWindow = format === 'print' ? window.open('', '_blank') : null
+  if (format === 'print' && !printWindow) {
+    exportError.value = t('reports.popupBlocked')
+    return
+  }
+  if (printWindow) {
+    printWindow.opener = null
+    printWindow.document.write(`<!doctype html><html lang="${locale.value}" dir="${locale.value.startsWith('ar') ? 'rtl' : 'ltr'}"><head><meta charset="utf-8"><title>${t('reports.preparing')}</title></head><body><p>${t('reports.preparing')}</p></body></html>`)
+    printWindow.document.close()
+  }
+  const requestedScope = exportScope(report)
   const exportLocale = locale.value
   const exportPeriod = ['profit_loss', 'trial_balance', 'cash_flow', 'general_ledger'].includes(report) ? `${from.value}_${to.value}` : asOf.value
+  const filename = `${t(`csv.filenames.${report}`)}-${exportPeriod}`
+  const metadata = exportMetadata(report, exportLocale)
   exportPending.value = true
   exportError.value = ''
   try {
@@ -327,13 +389,24 @@ async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_bal
       p_account_id: report === 'general_ledger' ? ledgerAccountId.value : undefined,
     })
     if (error) throw error
-    const currentScope = JSON.stringify({ organization: currentId.value, report, from: from.value, to: to.value, asOf: asOf.value, account: ledgerAccountId.value })
-    if (currentScope !== requestedScope || locale.value !== exportLocale) return
-    downloadCsv(`${t(`csv.filenames.${report}`)}-${exportPeriod}.csv`, localizeReportCsv(data, report, t))
+    if (exportScope(report) !== requestedScope || locale.value !== exportLocale) {
+      printWindow?.close()
+      return
+    }
+    const localizedCsv = localizeReportCsv(data, report, t)
+    if (format === 'csv') downloadCsv(`${filename}.csv`, localizedCsv)
+    else if (format === 'excel') downloadReportXlsx(`${filename}.xlsx`, buildReportXlsx(localizedCsv, report, metadata))
+    else if (printWindow) {
+      printWindow.document.open()
+      printWindow.document.write(buildPrintableReportHtml(localizedCsv, report, metadata))
+      printWindow.document.close()
+      printWindow.focus()
+      printWindow.print()
+    }
   }
   catch {
-    const currentScope = JSON.stringify({ organization: currentId.value, report, from: from.value, to: to.value, asOf: asOf.value, account: ledgerAccountId.value })
-    if (currentScope === requestedScope) exportError.value = t('reports.exportFailed')
+    printWindow?.close()
+    if (exportScope(report) === requestedScope) exportError.value = t('reports.exportFailed')
   }
   finally {
     exportPending.value = false
@@ -430,7 +503,11 @@ async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_bal
             <p class="text-sm font-semibold" :class="trialBalanced ? 'text-[var(--bs-status-success)]' : 'text-[var(--bs-status-error)]'">
               {{ trialBalanced ? t('reports.inBalance') : t('reports.outOfBalance') }}
             </p>
-            <button v-if="can('reports.export')" type="button" class="ls-btn ls-btn-sm" :disabled="exportPending" @click="exportReport('trial_balance')">{{ t('common.exportCsv') }}</button>
+            <template v-if="can('reports.export')">
+              <button type="button" class="ls-btn ls-btn-sm" :disabled="exportPending" @click="exportReport('trial_balance')">{{ t('common.exportCsv') }}</button>
+              <button type="button" class="ls-btn ls-btn-sm" :disabled="exportPending" @click="exportReport('trial_balance', 'excel')">{{ t('reports.exportExcel') }}</button>
+              <button type="button" class="ls-btn ls-btn-sm" :disabled="exportPending" @click="exportReport('trial_balance', 'print')">{{ t('reports.printPdf') }}</button>
+            </template>
           </div>
         </div>
         <div>
@@ -450,8 +527,10 @@ async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_bal
 
     <!-- Profit & Loss -->
     <section v-else-if="tab === 'profit-loss'" class="space-y-4" role="tabpanel" :aria-label="t('reports.tabs.profitLoss')">
-      <div class="flex justify-end">
-        <button v-if="can('reports.export')" type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('profit_loss')">{{ t('common.exportCsv') }}</button>
+      <div v-if="can('reports.export')" class="flex flex-wrap justify-end gap-2">
+        <button type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('profit_loss')">{{ t('common.exportCsv') }}</button>
+        <button type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('profit_loss', 'excel')">{{ t('reports.exportExcel') }}</button>
+        <button type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('profit_loss', 'print')">{{ t('reports.printPdf') }}</button>
       </div>
 
       <SectionSkeleton v-if="profitLossPending" variant="table" :rows="7" />
@@ -479,8 +558,10 @@ async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_bal
 
     <!-- Balance sheet -->
     <section v-else-if="tab === 'balance-sheet'" class="space-y-4" role="tabpanel" :aria-label="t('reports.tabs.balanceSheet')">
-      <div class="flex justify-end">
-        <button v-if="can('reports.export')" type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('balance_sheet')">{{ t('common.exportCsv') }}</button>
+      <div v-if="can('reports.export')" class="flex flex-wrap justify-end gap-2">
+        <button type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('balance_sheet')">{{ t('common.exportCsv') }}</button>
+        <button type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('balance_sheet', 'excel')">{{ t('reports.exportExcel') }}</button>
+        <button type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('balance_sheet', 'print')">{{ t('reports.printPdf') }}</button>
       </div>
 
       <p class="text-sm text-fg-muted">{{ t('statementClassification.reportHint', { date: formatDate(asOf, locale) }) }}</p>
@@ -516,8 +597,10 @@ async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_bal
 
     <!-- Cash flow -->
     <section v-else-if="tab === 'cash-flow'" class="space-y-4" role="tabpanel" :aria-label="t('reports.tabs.cashFlow')">
-      <div class="flex justify-end">
-        <button v-if="can('reports.export')" type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('cash_flow')">{{ t('common.exportCsv') }}</button>
+      <div v-if="can('reports.export')" class="flex flex-wrap justify-end gap-2">
+        <button type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('cash_flow')">{{ t('common.exportCsv') }}</button>
+        <button type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('cash_flow', 'excel')">{{ t('reports.exportExcel') }}</button>
+        <button type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('cash_flow', 'print')">{{ t('reports.printPdf') }}</button>
       </div>
       <SectionSkeleton v-if="cashFlowPending" variant="table" :rows="5" />
 
@@ -558,8 +641,10 @@ async function exportReport(report: 'profit_loss' | 'balance_sheet' | 'trial_bal
 
     <!-- General ledger -->
     <section v-else class="space-y-4" role="tabpanel" :aria-label="t('reports.tabs.ledger')">
-      <div class="flex justify-end">
-        <button v-if="can('reports.export')" type="button" class="ls-btn" :disabled="exportPending || !ledgerAccountId" @click="exportReport('general_ledger')">{{ t('common.exportCsv') }}</button>
+      <div v-if="can('reports.export')" class="flex flex-wrap justify-end gap-2">
+        <button type="button" class="ls-btn" :disabled="exportPending || !ledgerAccountId" @click="exportReport('general_ledger')">{{ t('common.exportCsv') }}</button>
+        <button type="button" class="ls-btn" :disabled="exportPending || !ledgerAccountId" @click="exportReport('general_ledger', 'excel')">{{ t('reports.exportExcel') }}</button>
+        <button type="button" class="ls-btn" :disabled="exportPending || !ledgerAccountId" @click="exportReport('general_ledger', 'print')">{{ t('reports.printPdf') }}</button>
       </div>
       <SectionSkeleton v-if="ledgerPending" variant="table" :rows="8" />
 
