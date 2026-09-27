@@ -38,24 +38,38 @@ const content = computed(() => ({
 <template>
   <BsLandingPage :content="content">
     <template #preview>
-            <div class="ls-card ls-hero-preview overflow-hidden p-3 shadow-overlay">
-              <div class="flex items-center gap-2 border-b border-[var(--bs-border)] px-3 pb-3 text-xs text-fg-muted">
-                <span class="h-2.5 w-2.5 rounded-full bg-fg" /><span class="h-2.5 w-2.5 rounded-full bg-[var(--bs-border-strong)]" /><span class="h-2.5 w-2.5 rounded-full bg-[var(--bs-border)]" />
-                <span class="ms-auto">{{ t('landing.previewLabel') }}</span>
-              </div>
-              <div class="grid gap-3 p-3 sm:grid-cols-2">
-                <div v-for="metric in ['cash','revenue','expenses','profit']" :key="metric" class="rounded-card border border-[var(--bs-border)] bg-surface-muted p-4">
-                  <p class="text-xs text-fg-muted">{{ t(`landing.metrics.${metric}`) }}</p>
-                  <p class="mt-2 text-2xl font-black" dir="ltr">{{ metric === 'cash' ? 'EGP 482,400' : metric === 'revenue' ? 'EGP 96,800' : metric === 'expenses' ? 'EGP 51,200' : 'EGP 45,600' }}</p>
-                </div>
-              </div>
-              <div class="mx-3 mb-3 rounded-card border border-[var(--bs-border)] p-4">
-                <div class="mb-6 flex items-center justify-between"><span class="font-bold">{{ t('landing.cashflowPreview') }}</span><span class="text-xs text-fg-muted">6 {{ t('landing.months') }}</span></div>
-                <div class="flex h-32 items-end gap-3" aria-hidden="true">
-                  <div v-for="height in [42, 68, 52, 84, 73, 96]" :key="height" class="flex flex-1 items-end gap-1"><span class="w-1/2 rounded-t-sm bg-fg" :style="{ height: `${height}%` }" /><span class="w-1/2 rounded-t-sm bg-[var(--bs-border-strong)]" :style="{ height: `${Math.max(24, height - 25)}%` }" /></div>
-                </div>
+      <div class="ls-hero-preview overflow-hidden rounded-modal border">
+        <div class="flex items-center gap-2 border-b border-[var(--bs-border)] px-4 py-3 text-[.65rem] text-fg-muted">
+          <span class="h-2 w-2 rounded-full bg-brand-gold" /><span class="h-2 w-2 rounded-full bg-[var(--bs-border-strong)]" /><span class="h-2 w-2 rounded-full bg-[var(--bs-border)]" />
+          <span class="ms-auto font-semibold uppercase tracking-[.12em]">{{ t('landing.previewLabel') }}</span>
+        </div>
+        <div class="grid min-h-[29rem] sm:grid-cols-[8.5rem_1fr]">
+          <div class="hidden border-e border-[var(--bs-border)] p-4 sm:block">
+            <div class="h-8 w-24 rounded-control bg-[var(--bs-border)]" />
+            <div class="mt-8 space-y-3" aria-hidden="true">
+              <span v-for="width in ['88%','72%','82%','60%','76%']" :key="width" class="block h-2 rounded-full bg-[var(--bs-border)]" :style="{ width }" />
+            </div>
+          </div>
+          <div class="min-w-0 p-4 sm:p-5">
+            <div class="mb-5 flex items-end justify-between gap-3">
+              <div><p class="text-xs text-fg-muted">{{ t('landing.previewLabel') }}</p><p class="mt-1 text-base font-bold">{{ t('landing.cashflowPreview') }}</p></div>
+              <span class="text-[.65rem] text-fg-muted">6 {{ t('landing.months') }}</span>
+            </div>
+            <div class="grid grid-cols-2 gap-px overflow-hidden rounded-control border border-[var(--bs-border)] bg-[var(--bs-border)]">
+              <div v-for="metric in ['cash','revenue','expenses','profit']" :key="metric" class="bg-surface-muted p-3 sm:p-4">
+                <p class="text-[.65rem] text-fg-muted">{{ t(`landing.metrics.${metric}`) }}</p>
+                <p class="mt-2 text-sm font-bold tabular-nums sm:text-base" dir="ltr">{{ metric === 'cash' ? 'EGP 482,400' : metric === 'revenue' ? 'EGP 96,800' : metric === 'expenses' ? 'EGP 51,200' : 'EGP 45,600' }}</p>
               </div>
             </div>
+            <div class="mt-4 border-t border-[var(--bs-border)] pt-5">
+              <div class="flex h-32 items-end gap-2" aria-hidden="true">
+                <div v-for="height in [42, 68, 52, 84, 73, 96]" :key="height" class="flex h-full flex-1 items-end gap-1"><span class="w-1/2 rounded-t-sm bg-brand-gold" :style="{ height: `${height}%` }" /><span class="w-1/2 rounded-t-sm bg-[var(--bs-border-strong)]" :style="{ height: `${Math.max(24, height - 25)}%` }" /></div>
+              </div>
+              <div class="mt-3 flex justify-between" aria-hidden="true"><span v-for="month in 6" :key="month" class="h-1 w-1 rounded-full bg-[var(--bs-border-strong)]" /></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </template>
     <template #pricing><BillingCheckout surface="public" /></template>
   </BsLandingPage>

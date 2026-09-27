@@ -13,6 +13,7 @@ const { preference, set: setTheme } = useTheme()
 
 const open = ref(false)
 const root = ref<HTMLElement | null>(null)
+const hydrated = ref(false)
 
 const position = ref<'top' | 'bottom'>('bottom')
 
@@ -95,6 +96,7 @@ function handleResize() {
 }
 
 onMounted(() => {
+  hydrated.value = true
   window.addEventListener('resize', handleResize)
 })
 
@@ -118,14 +120,14 @@ onBeforeUnmount(() => {
           v-for="option in available"
           :key="option.code"
           type="button"
-          :aria-pressed="locale === option.code"
+          :aria-pressed="hydrated && locale === option.code"
           class="flex items-center justify-between rounded-chip px-2 py-2 text-start text-sm hover:bg-surface-muted"
-          :class="{ 'bg-surface-muted font-semibold': locale === option.code }"
+          :class="{ 'bg-surface-muted font-semibold': hydrated && locale === option.code }"
           @click="setLocale(option.code as typeof locale)"
         >
           <span>{{ option.name }}</span>
           <AppIcon
-            v-if="locale === option.code"
+            v-if="hydrated && locale === option.code"
             name="check"
             class="text-[var(--bs-status-success)]"
           />
@@ -143,14 +145,14 @@ onBeforeUnmount(() => {
           v-for="option in THEMES"
           :key="option.value"
           type="button"
-          :aria-pressed="preference === option.value"
+          :aria-pressed="hydrated && preference === option.value"
           class="flex w-full items-center justify-between rounded-chip px-2 py-2 text-start text-sm hover:bg-surface-muted"
-          :class="{ 'bg-surface-muted font-semibold': preference === option.value }"
+          :class="{ 'bg-surface-muted font-semibold': hydrated && preference === option.value }"
           @click="setTheme(option.value)"
         >
           <span>{{ ui(option.labelKey) }}</span>
           <AppIcon
-            v-if="preference === option.value"
+            v-if="hydrated && preference === option.value"
             name="check"
             class="text-[var(--bs-status-success)]"
           />
@@ -198,13 +200,13 @@ onBeforeUnmount(() => {
         :key="option.code"
         type="button"
         role="menuitemradio"
-        :aria-checked="locale === option.code"
+        :aria-checked="hydrated && locale === option.code"
         class="flex w-full items-center justify-between rounded-chip px-2 py-2 text-start text-sm hover:bg-surface-muted"
         @click="setLocale(option.code as typeof locale); open = false"
       >
         <span>{{ option.name }}</span>
         <AppIcon
-          v-if="locale === option.code"
+          v-if="hydrated && locale === option.code"
           name="check"
           class="text-[var(--bs-status-success)]"
         />
@@ -221,14 +223,14 @@ onBeforeUnmount(() => {
         :key="option.value"
         type="button"
         role="menuitemradio"
-        :aria-checked="preference === option.value"
+        :aria-checked="hydrated && preference === option.value"
         class="flex w-full items-center justify-between rounded-chip px-2 py-2 text-start text-sm hover:bg-surface-muted"
         @click="setTheme(option.value)"
       >
         <span>{{ ui(option.labelKey) }}</span>
 
         <AppIcon
-          v-if="preference === option.value"
+          v-if="hydrated && preference === option.value"
           name="check"
           class="text-[var(--bs-status-success)]"
         />
