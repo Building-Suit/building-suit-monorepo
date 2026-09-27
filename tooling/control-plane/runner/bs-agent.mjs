@@ -2443,6 +2443,40 @@ function verificationFailures(
   )
 }
 
+function latestOpenControlFailure(
+  taskId,
+) {
+  const result =
+    controlQuery(
+      `
+        SELECT COALESCE(
+          (
+            SELECT to_jsonb(f)
+            FROM control.failures f
+            WHERE f.task_id =
+              :'task_id'
+              AND f.resolved_at IS NULL
+            ORDER BY
+              f.created_at DESC,
+              f.failure_id DESC
+            LIMIT 1
+          ),
+          'null'::jsonb
+        );
+      `,
+      {
+        task_id:
+          taskId,
+      },
+    )
+
+
+  return parseControlJson(
+    result,
+  )
+}
+
+
 function startRetryExecution(
   taskId,
   route,
@@ -2716,6 +2750,11 @@ function taskRetry() {
         previousExecution.execution_id,
       )
 
+    const controlFailure =
+      latestOpenControlFailure(
+        taskId,
+      )
+
     const previousFailure =
       {
         execution_id:
@@ -2742,6 +2781,9 @@ function taskRetry() {
 
         verification_failures:
           failures,
+
+        control_failure:
+          controlFailure,
       }
 
     const nextAttempt =
@@ -2807,8 +2849,59 @@ function taskRetry() {
       )
     }
 
+    const isNoPublishableChanges =
+      controlFailure?.stage ===
+        'publication' &&
+      controlFailure?.error_code ===
+        'no_publishable_changes'
+
+
     prompt =
-      `
+      isNoPublishableChanges
+        ? `
+Continue ${packet.project?.display_name ?? 'registered project'} task ${taskId}.
+
+The previous implementation completed successfully and independent verification passed, but publication found ZERO publishable Git changes.
+
+This is an implementation retry, not a verification repair.
+
+Read:
+1. README.md
+2. AGENTS.md
+3. ${packet.workstream?.application_path ?? packet.suit.app_path}/AGENTS.md if it exists
+4. docs/agent-workflows.md
+5. ${taskPacketPath}
+6. ${failurePacketPath}
+
+Work in the existing task worktree.
+
+Determine whether the task requirements and acceptance criteria are already genuinely satisfied by the existing parent code.
+
+If implementation is still required:
+- make the smallest correct implementation needed to satisfy the task;
+- add or update appropriate focused tests when required;
+- stay inside the approved task/workstream scope.
+
+If the requested behavior is already completely implemented:
+- do not create dummy files;
+- do not manufacture a meaningless diff;
+- return a concise evidence-based explanation that no code change is necessary.
+
+Rules:
+- Preserve already-correct work.
+- Do not expand scope.
+- Do not create another branch or worktree.
+- Do not commit.
+- Do not push.
+- Do not merge.
+- Do not deploy.
+- Do not modify hosted databases.
+- Leave final verification and publication to the control plane.
+
+Return a concise implementation summary.
+          `.trim()
+
+        : `
 Repair ${packet.project?.display_name ?? 'registered project'} task ${taskId}.
 
 The previous implementation failed independent verification.
@@ -2839,7 +2932,8 @@ Rules:
 - Leave final verification to the control plane.
 
 Return a concise repair summary.
-      `.trim()
+          `.trim()
+
 
     const promptPath =
       path.join(
@@ -3679,6 +3773,31 @@ function invokeTaskAction(
 }
 
 
+function handleNoPublishableChanges(
+  taskId,
+) {
+  const result =
+    controlQuery(
+      `
+        SELECT
+          control.handle_no_publishable_changes(
+            :'task_id',
+            'runner'
+          );
+      `,
+      {
+        task_id:
+          taskId,
+      },
+    )
+
+
+  return parseControlJson(
+    result,
+  )
+}
+
+
 function taskEngine() {
   const [taskId] = args
 
@@ -4034,6 +4153,100 @@ function taskEngine() {
           child.payload.publication?.error ??
           child.payload.error ??
           'publication_failed'
+
+
+        if (
+          publicationError ===
+          'no_publishable_changes'
+        ) {
+
+          const resolution =
+            handleNoPublishableChanges(
+              taskId,
+            )
+
+
+          trail.push({
+            step,
+            action:
+              'handle-no-publishable-changes',
+
+            exit_code:
+              0,
+
+            ok:
+              resolution?.action !==
+              'blocked',
+
+            response:
+              resolution,
+          })
+
+
+          if (
+            resolution?.action ===
+            'complete_no_changes'
+          ) {
+
+            output({
+              ok: true,
+
+              command:
+                'task-engine',
+
+              task_id:
+                taskId,
+
+              status:
+                'complete',
+
+              completion:
+                'no_changes',
+
+              resolution,
+
+              trail,
+            })
+
+            return
+
+          }
+
+
+          if (
+            resolution?.action ===
+            'retry'
+          ) {
+            continue
+          }
+
+
+          output({
+            ok: false,
+
+            command:
+              'task-engine',
+
+            task_id:
+              taskId,
+
+            error:
+              'repeated_no_publishable_changes',
+
+            stage:
+              'task-publish',
+
+            human_intervention_required:
+              true,
+
+            resolution,
+
+            trail,
+          }, 1)
+
+          return
+
+        }
 
 
         const retryablePublicationError =
