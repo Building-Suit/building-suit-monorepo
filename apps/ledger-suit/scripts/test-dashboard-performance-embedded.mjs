@@ -31,9 +31,11 @@ grant execute on all functions in schema auth to anon,authenticated,service_role
 set search_path=public,extensions;
 `)
 
-// Disposable embedded PostgreSQL is functional evidence only. This is not the
-// 5,276-journal reproduction database and cannot certify its latency thresholds.
-const migration = '20260927140000_rls_aware_dashboard_reads.sql'
+const requestedMigration = process.argv.find(argument => argument.startsWith('--migration='))?.split('=')[1]
+const migration = requestedMigration ?? '20260927140000_rls_aware_dashboard_reads.sql'
+const largeFixture = process.argv.includes('--large')
+const perf002 = migration === '20260927200000_large_ledger_read_scalability.sql'
+if (largeFixture && !perf002) throw new Error('--large is supported only with the LS-PERF-002 migration')
 const dir = 'apps/ledger-suit/supabase/migrations'
 for (const file of (await readdir(dir)).filter(x => x.endsWith('.sql') && x < migration).sort()) {
   let sql = await readFile(`${dir}/${file}`, 'utf8')
@@ -46,6 +48,51 @@ await db.exec(await readFile('apps/ledger-suit/scripts/fixtures/dashboard-perfor
 const org = (await db.query("select id from public.organizations where name = 'PERF Alpha'")).rows[0].id
 const otherOrg = (await db.query("select id from public.organizations where name = 'PERF Beta'")).rows[0].id
 const ids = Object.fromEntries((await db.query('select key, id from perf_ids')).rows.map(row => [row.key, row.id]))
+if (largeFixture) {
+  await db.exec(`
+    reset role;
+    create temporary table perf_large_transactions as
+    select gen_random_uuid() as id, i,
+      date '2025-01-01' + (i % 610) as transaction_date
+    from generate_series(1, 5260) i;
+    insert into public.transactions(
+      id, organization_id, type, status, source, transaction_date, posting_date,
+      currency_code, description, adjustment_reason, created_by, posted_by,
+      posted_at, created_at, updated_at
+    )
+    select id, '${org}', 'adjustment', 'draft', 'manual', transaction_date,
+      null, 'EGP', 'Large fixture journal ' || i, 'Performance fixture',
+      '51000000-0000-4000-8000-000000000001',
+      null, null, transaction_date::timestamptz + i * interval '1 millisecond',
+      transaction_date::timestamptz + i * interval '1 millisecond'
+    from perf_large_transactions;
+    insert into public.transaction_entries(
+      organization_id, transaction_id, account_id, entry_index, side,
+      amount_minor, currency_code, base_amount_minor, base_currency_code,
+      exchange_rate, entry_date, posted_at
+    )
+    select '${org}'::uuid, fixture.id,
+      case when side.entry_index = 0 then '${ids.bank}'::uuid else '${ids.equity}'::uuid end,
+      side.entry_index,
+      case when side.entry_index = 0 then 'debit'::public.entry_side else 'credit'::public.entry_side end,
+      1000 + fixture.i, 'EGP', 1000 + fixture.i, 'EGP', 1,
+      fixture.transaction_date, fixture.transaction_date::timestamptz
+    from perf_large_transactions fixture
+    cross join (values (0), (1)) side(entry_index);
+    update public.transaction_entries entry
+    set posted_at = fixture.transaction_date::timestamptz
+    from perf_large_transactions fixture
+    where entry.transaction_id = fixture.id;
+    update public.transactions transaction
+    set status = 'posted', posting_date = fixture.transaction_date,
+      posted_at = fixture.transaction_date::timestamptz,
+      posted_by = '51000000-0000-4000-8000-000000000001'
+    from perf_large_transactions fixture
+    where transaction.id = fixture.id;
+    analyze public.transactions;
+    analyze public.transaction_entries;
+  `)
+}
 const login = async (suffix) => {
   await db.exec(`reset role; select set_config('request.jwt.claims', '{"sub":"51000000-0000-4000-8000-${suffix.padStart(12, '0')}","role":"authenticated"}', false); set role authenticated;`)
 }
@@ -77,7 +124,12 @@ const baseline = async () => ({
   liquid: await read(`select account_id,name,currency,net_debit_minor,subtype from public.account_balances where organization_id='${org}' and is_liquid and not is_archived order by account_id`),
   search: await Promise.all(searchArgs.map(args => read(`select * from public.search_transactions('${org}'${args ? ',' + args : ''})`))),
 })
-const evidence = { environment: 'disposable PGlite 0.3.16; small functional fixture, NOT reproduction latency evidence' }
+const evidence = {
+  environment: largeFixture
+    ? 'disposable PGlite 0.3.16; 20-month fixture with >=5,000 journals and >=10,000 posted lines; local evidence only'
+    : 'disposable PGlite 0.3.16; small functional fixture, NOT reproduction latency evidence',
+  migration,
+}
 const capturePlans = async after => {
   await login('1')
   const queries = {
@@ -104,6 +156,80 @@ const probe = async after => {
   const values = { organization_id: org, actor_id: '51000000-0000-4000-8000-000000000001', from_date: '2026-09-01', to_date: '2026-09-20' }
   sql = sql.replace(/:'(\w+)'/g, (_,name) => `'${values[name]}'`)
   return (await db.exec(sql)).flatMap(result => result.rows).find(row => row.accounting_snapshot).accounting_snapshot
+}
+if (largeFixture) {
+  const queries = {
+    dashboard_summary: `select public.dashboard_summary('${org}', '2026-09-20')`,
+    report_monthly_series: `select * from public.report_monthly_series('${org}',6,'2026-09-20')`,
+    search_transactions: `select * from public.search_transactions('${org}',p_limit=>8)`,
+    dashboard_liquid_accounts: `select * from public.dashboard_liquid_accounts('${org}')`,
+  }
+  const captureCore = async () => Object.fromEntries(await Promise.all(
+    Object.entries(queries).map(async ([name,sql]) => [name, await read(sql)]),
+  ))
+  const captureCorePlans = async () => Object.fromEntries(await Promise.all(
+    Object.entries(queries).map(async ([name,sql]) => {
+      await read(sql)
+      return [name, (await read(`explain (analyze,buffers,settings,format json) ${sql}`))[0]['QUERY PLAN']]
+    }),
+  ))
+  await login('1')
+  const size = (await read(`select
+    (select count(*) from public.transactions where organization_id='${org}') as journals,
+    (select count(*) from public.transaction_entries where organization_id='${org}' and posted_at is not null) as posted_lines,
+    (select count(distinct date_trunc('month',transaction_date)) from public.transactions where organization_id='${org}') as months`))[0]
+  assert.ok(Number(size.journals) >= 5000 && Number(size.posted_lines) >= 10000 && Number(size.months) >= 20)
+  const accountingBefore = await probe(true)
+  await login('1')
+  const before = await captureCore()
+  const beforePlans = await captureCorePlans()
+  await db.exec('reset role')
+  await db.exec(await readFile(`${dir}/${migration}`, 'utf8'))
+  await login('1')
+  assert.deepEqual(await captureCore(), before, 'Large fixture core read results remain exact')
+  assert.deepEqual(await probe(true), accountingBefore,
+    'Large fixture TB, P&L, Balance Sheet, controls, VAT, inventory and assets remain exact')
+  await login('1')
+  const afterPlans = await captureCorePlans()
+  evidence.fixture = size
+  evidence.before = beforePlans
+  evidence.after = afterPlans
+  evidence.warm_runs_ms = {}
+  for (const [name,sql] of Object.entries(queries)) {
+    await read(sql)
+    evidence.warm_runs_ms[name] = []
+    for (let run = 0; run < 5; run++) {
+      const started = performance.now()
+      await read(sql)
+      evidence.warm_runs_ms[name].push(Number((performance.now() - started).toFixed(3)))
+    }
+  }
+  assert.equal(afterPlans.search_transactions[0].Plan['Temp Written Blocks'], 0,
+    'Large-fixture recent-8 has no temporary-disk spill')
+  for (const user of ['1','2','3','4']) {
+    await login(user)
+    for (const boundary of [
+      `public.dashboard_summary('${org}')`,
+      `public.report_monthly_series('${org}')`,
+      `public.dashboard_liquid_accounts('${org}')`,
+      `public.search_transactions('${org}')`,
+      `app.search_recent_transaction_page('${org}')`,
+      `app.search_transaction_page_bounded('${org}')`,
+      `app.search_transaction_details('${org}',array[]::uuid[])`,
+    ]) {
+      const foreignBoundary = user === '4' ? boundary : boundary.replaceAll(org, otherOrg)
+      await assert.rejects(() => read(`select * from ${foreignBoundary}`), error => error.code === '42501')
+    }
+  }
+  await db.exec('reset role')
+  assert.equal((await read(`select bool_and(relrowsecurity) as enabled from pg_class
+    where oid in ('public.transactions'::regclass,'public.transaction_entries'::regclass,'public.accounts'::regclass)`))[0].enabled, true)
+  await mkdir('apps/ledger-suit/docs/evidence/ls-perf-002', { recursive: true })
+  await writeFile('apps/ledger-suit/docs/evidence/ls-perf-002/embedded-explain.json', JSON.stringify(evidence,null,2)+'\n')
+  console.log(`PASS: representative fixture has ${size.journals} journals, ${size.posted_lines} posted lines and ${size.months} months.`)
+  console.log('PASS: exact core reads/accounting snapshots, cross-tenant denial, global RLS, zero recent-8 temp spill and five warm local runs.')
+  await db.close()
+  process.exit(0)
 }
 const accountingBefore = await probe(false)
 evidence.before = await capturePlans(false)
@@ -176,13 +302,16 @@ const defaults = { p_organization_id: `'${org}'::uuid`, p_limit: '8', p_offset: 
   p_sort: "'transaction_date'", p_direction: "'desc'" }
 const pageQuery = wrapperSql.replace(/\bp_\w+\b/g, name => defaults[name] ?? 'null')
 evidence.page_enrichment = (await read('explain (analyze,buffers,settings,format json) '+pageQuery))[0]['QUERY PLAN']
-const walkPlans = plan => [plan, ...(plan.Plans ?? []).flatMap(walkPlans)]
-const nodes = walkPlans(evidence.page_enrichment[0].Plan)
-const enrichment = nodes.find(node => node['Relation Name'] === 'transactions' && node.Alias === 't')
 await mkdir('.local/perf-validation', { recursive: true })
-await writeFile('.local/perf-validation/explain.json', JSON.stringify(evidence,null,2)+'\n')
-assert.equal(enrichment?.['Actual Loops'], 8, 'Summary transaction lookup runs exactly once per returned row')
-assert.equal(evidence.after.search_transactions[0].Plan['Temp Written Blocks'], 0, 'Small-fixture recent-8 has no temp spill')
+const evidencePath = perf002 ? '.local/perf-validation/ls-perf-002-explain.json' : '.local/perf-validation/explain.json'
+await writeFile(evidencePath, JSON.stringify(evidence,null,2)+'\n')
+if (!perf002) {
+  const walkPlans = plan => [plan, ...(plan.Plans ?? []).flatMap(walkPlans)]
+  const nodes = walkPlans(evidence.page_enrichment[0].Plan)
+  const enrichment = nodes.find(node => node['Relation Name'] === 'transactions' && node.Alias === 't')
+  assert.equal(enrichment?.['Actual Loops'], 8, 'Summary transaction lookup runs exactly once per returned row')
+}
+assert.equal(evidence.after.search_transactions[0].Plan['Temp Written Blocks'], 0, 'Recent-8 has no temp spill')
 console.log('PASS: per-member capability revocations preserve RLS masking/denial; before/after EXPLAIN (ANALYZE, BUFFERS, SETTINGS) saved.')
 console.log(`PASS: ${searchArgs.length} search variants × owner/accountant/viewer; summary, monthly series, liquid balances and exact history preservation.`)
 const boundaries = [
@@ -190,6 +319,11 @@ const boundaries = [
   `public.dashboard_liquid_accounts('${org}')`, `public.search_transactions('${org}')`,
   `app.search_transaction_page('${org}')`,
 ]
+if (perf002) boundaries.push(
+  `app.search_recent_transaction_page('${org}')`,
+  `app.search_transaction_page_bounded('${org}')`,
+  `app.search_transaction_details('${org}',array[]::uuid[])`,
+)
 for (const user of ['1','2','3','4']) {
   await login(user)
   for (const boundary of boundaries) {
