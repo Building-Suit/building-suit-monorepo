@@ -11,6 +11,9 @@ update public.transactions
 set journal_reference = null
 where status not in ('posted', 'reversed');
 
+-- Flush deferred constraint-trigger work before performing DDL on transactions.
+set constraints all immediate;
+
 create unique index transactions_org_journal_reference_key
   on public.transactions (organization_id, journal_reference)
   where journal_reference is not null;
