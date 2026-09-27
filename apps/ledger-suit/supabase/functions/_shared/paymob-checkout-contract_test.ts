@@ -2,6 +2,8 @@ import { assertEquals, assertRejects, assertThrows } from "jsr:@std/assert@1";
 import {
   assertCheckoutAccessState,
   parseCheckoutRequest,
+  paymobFrequencyDays,
+  paymobPeriodEnd,
   paymobPlanId,
   signCheckoutMetadata,
   verifyCheckoutMetadata,
@@ -34,6 +36,23 @@ Deno.test("checkout request accepts only launch plan identity and interval", () 
       "Invalid checkout request",
     );
   }
+});
+
+Deno.test("provider cadence uses exact 30 and 360 day periods at boundaries", () => {
+  assertEquals(paymobFrequencyDays, { monthly: 30, yearly: 360 });
+  assertEquals(
+    paymobPeriodEnd("2028-01-31T12:34:56.000Z", "monthly"),
+    "2028-03-01T12:34:56.000Z",
+  );
+  assertEquals(
+    paymobPeriodEnd("2024-02-29T12:34:56.000Z", "yearly"),
+    "2025-02-23T12:34:56.000Z",
+  );
+  assertThrows(
+    () => paymobPeriodEnd("not-a-date", "monthly"),
+    Error,
+    "Invalid Paymob transaction timestamp",
+  );
 });
 
 Deno.test("stale clients cannot bypass checkout access-state restrictions", () => {
