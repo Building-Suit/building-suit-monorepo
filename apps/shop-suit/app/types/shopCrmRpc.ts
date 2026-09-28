@@ -38,6 +38,39 @@ export type ShopRpcDatabase = {
         }
         Returns: unknown
       }
+      shop_billing_read: {
+        Args: { p_shop_id: string }
+        Returns: unknown
+      }
+      submit_shop_billing_notice: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_paid_amount: number
+          p_transfer_date: string
+          p_transfer_reference: string
+        }
+        Returns: string
+      }
+      platform_admin_billing_read: {
+        Args: {
+          p_resource?: 'queue' | 'configuration' | 'summary' | 'audit'
+          p_status?: 'submitted' | 'under_review' | 'approved' | 'rejected' | null
+          p_page?: number
+          p_page_size?: number
+        }
+        Returns: unknown
+      }
+      platform_admin_billing_command: {
+        Args: {
+          p_request_id: string
+          p_action: 'configure_instructions' | 'mark_under_review' | 'approve' | 'reject'
+          p_submission_id: string | null
+          p_reason: string
+          p_payload?: Record<string, unknown>
+        }
+        Returns: unknown
+      }
       set_shop_business_mode: {
         Args: { p_shop_id: string; p_business_mode: 'product' | 'service' | 'mixed' }
         Returns: 'product' | 'service' | 'mixed'

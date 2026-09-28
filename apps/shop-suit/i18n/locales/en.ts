@@ -199,7 +199,7 @@ export default defineI18nLocale(async () => ({
     noAccount: "Don't have an account?",
     signupAction: 'Create account',
     signupTitle: 'Start for free',
-    signupSubtitle: 'Try Shop CRM free for 30 days. No credit card required.',
+    signupSubtitle: 'Try Shop CRM free for 14 days. No credit card required.',
     displayName: 'Name',
     displayNamePlaceholder: 'Enter your name',
     haveAccount: 'Already have an account?',
@@ -319,7 +319,7 @@ export default defineI18nLocale(async () => ({
       "Start free, upgrade when you're ready. No hidden fees, cancel anytime.",
     notes: {
       allPlansIncludeFreeTrial:
-        'All plans include a 30-day free trial. No credit card required.',
+        'All plans include a 14-day free trial. No credit card required.',
       switchPlansAnytime: 'Switch plans anytime during your trial.',
       upgradeMidTrial:
         "Need to upgrade mid-trial? You'll start paying immediately, but keep your data.",

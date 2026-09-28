@@ -92,7 +92,7 @@ begin
 
   insert into public.shop_billing_submissions (
     shop_id, kind, status, amount, reference, metadata
-  ) values (v_shop, 'activation', 'pending', 1199, 'BILL-001', '{"channel":"bank"}');
+  ) values (v_shop, 'activation', 'submitted', 1199, 'BILL-001', '{"channel":"instapay_manual"}');
 end;
 $$;
 
@@ -149,7 +149,7 @@ begin
   v_dashboard := public.platform_admin_read('dashboard');
   v_detail := public.platform_admin_read('shop', v_shop);
   if (v_dashboard ->> 'shops')::integer < 1
-    or (v_dashboard ->> 'pendingBillingSubmissions')::integer < 1
+    or (public.platform_admin_billing_read('summary') ->> 'open')::integer < 1
     or jsonb_array_length(v_detail -> 'locations') <> 1
     or jsonb_array_length(v_detail -> 'members') <> 2
     or v_detail #>> '{owner,email}' is null then
