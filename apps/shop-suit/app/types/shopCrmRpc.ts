@@ -195,6 +195,22 @@ export type ShopRpcDatabase = {
         Args: { p_shop_id: string; p_location_id: string; p_invoice_id: string }
         Returns: unknown
       }
+      sale_correction_state: {
+        Args: { p_shop_id: string; p_location_id: string; p_invoice_id: string }
+        Returns: unknown
+      }
+      correct_location_sale: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_location_id: string
+          p_invoice_id: string
+          p_effective_at: string
+          p_reason: string
+          p_reference?: string | null
+        }
+        Returns: string
+      }
       issue_location_sale: {
         Args: { p_request_id: string; p_shop_id: string; p_location_id: string; p_invoice_id: string }
         Returns: string

@@ -19,7 +19,7 @@ if (cleanup.status !== 0) {
 const migration = spawnSync('pnpm', ['db', 'shop-suit', 'migration', 'up', '--local'], { stdio: 'inherit' })
 if (migration.status !== 0) process.exit(migration.status ?? 1)
 
-const suites = ['shop_crm_owner_bootstrap', 'shop_crm_product_catalog', 'shop_crm_inventory_adjustments', 'shop_crm_service_catalog', 'shop_crm_expense_ledger', 'shop_crm_supplier_purchases', 'shop_business_mode', 'shop_public_privileges', 'shop_safe_supported_commands', 'shop_stock_counts_corrections', 'shop_locations', 'shop_platform_admin', 'shop_billing', 'shop_team_management', 'shop_barber_service_scheduling', 'shop_appointments', 'shop_pos_checkout', 'shop_cash_shifts', 'shop_orphan_fixture_cleanup_test']
+const suites = ['shop_crm_owner_bootstrap', 'shop_crm_product_catalog', 'shop_crm_inventory_adjustments', 'shop_crm_service_catalog', 'shop_crm_expense_ledger', 'shop_crm_supplier_purchases', 'shop_business_mode', 'shop_public_privileges', 'shop_safe_supported_commands', 'shop_stock_counts_corrections', 'shop_locations', 'shop_platform_admin', 'shop_billing', 'shop_team_management', 'shop_barber_service_scheduling', 'shop_appointments', 'shop_pos_checkout', 'shop_cash_shifts', 'shop_sale_corrections', 'shop_orphan_fixture_cleanup_test']
 for (const suite of suites) {
   const sql = await readFile(new URL(`../../apps/shop-suit/supabase/tests/${suite}.sql`, import.meta.url), 'utf8')
   const isCleanupSuite = suite === 'shop_orphan_fixture_cleanup_test'
@@ -28,3 +28,9 @@ for (const suite of suites) {
   if (result.status !== 0) { console.error(`${suite}: failed\n${result.stderr || result.error}`); process.exit(1) }
   console.log(`${suite}: passed; fixtures rolled back`)
 }
+
+const correctionConcurrency = spawnSync('node', [
+  new URL('./test-shop-sale-correction-local.mjs', import.meta.url).pathname,
+  '--concurrency-only',
+], { stdio: 'inherit' })
+if (correctionConcurrency.status !== 0) process.exit(correctionConcurrency.status ?? 1)

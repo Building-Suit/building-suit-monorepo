@@ -69,6 +69,22 @@ type SaleDetail = {
   movements: SaleMovement[]
   payments: PaymentEvent[]
 }
+type SaleCorrection = {
+  id: string
+  kind: 'void' | 'full_return'
+  effectiveAt: string
+  reason: string
+  reference: string | null
+  refundAmount: number
+  restoredQuantity: number
+  createdAt: string
+  actorProfileId: string
+}
+type SaleCorrectionState = {
+  canCorrect: boolean
+  partialReturnsAvailable: false
+  correction: SaleCorrection | null
+}
 
 const route = useRoute()
 const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
@@ -94,7 +110,21 @@ const paymentReference = ref('')
 const paymentReason = ref('')
 const paymentPending = ref(false)
 const { dirty: paymentDirty } = useRecordAction(() => ({ amount: paymentAmount.value, date: paymentDate.value, method: paymentMethod.value, reference: paymentReference.value, reason: paymentReason.value }), paymentDialogOpen)
-watch([currentId, currentLocationId, saleId], () => { paymentDialog.value = null; selectedPayment.value = null; actionError.value = ''; paymentRequestId.value = null })
+const correctionOpen = ref(false)
+const correctionPending = ref(false)
+const correctionDate = ref(new Date().toISOString().slice(0, 10))
+const correctionReason = ref('')
+const correctionReference = ref('')
+const correctionRequestId = ref<string | null>(null)
+const { dirty: correctionDirty } = useRecordAction(() => ({ date: correctionDate.value, reason: correctionReason.value, reference: correctionReference.value }), correctionOpen)
+watch([currentId, currentLocationId, saleId], () => {
+  paymentDialog.value = null
+  selectedPayment.value = null
+  correctionOpen.value = false
+  actionError.value = ''
+  paymentRequestId.value = null
+  correctionRequestId.value = null
+})
 const paymentRequestId = ref<string | null>(null)
 watch([paymentAmount, paymentDate, paymentMethod, paymentReference, paymentReason], () => {
   if (!paymentPending.value) paymentRequestId.value = null
@@ -124,13 +154,77 @@ const { data: receiptSnapshot, refresh: refreshReceipt } = useAsyncData(
   }, { watch: [currentId, currentLocationId, saleId], default: () => null },
 )
 
+const { data: correctionState, pending: correctionLoading, error: correctionLoadError, refresh: refreshCorrection } = useAsyncData(
+  () => `shop-data:sale-correction:${currentId.value ?? 'none'}:${currentLocationId.value ?? 'none'}:${saleId.value}`,
+  async (): Promise<SaleCorrectionState | null> => {
+    if (!currentId.value || !currentLocationId.value || !saleId.value) return null
+    const { data, error: correctionError } = await shopRpc.rpc('sale_correction_state', {
+      p_shop_id: currentId.value,
+      p_location_id: currentLocationId.value,
+      p_invoice_id: saleId.value,
+    })
+    if (correctionError) throw correctionError
+    return data as SaleCorrectionState | null
+  }, { watch: [currentId, currentLocationId, saleId], default: () => null },
+)
+
 function readableError(message?: string) {
   if (message?.includes('INSUFFICIENT_STOCK')) return t('sales.insufficientStock')
   if (message?.includes('OUTSTANDING_SALE_REQUIRES_CUSTOMER')) return t('sales.customerRequired')
   if (message?.includes('PAYMENT_OVERPAYMENT_REJECTED')) return t('payments.overpayment')
   if (message?.includes('PAYMENT_ADJUSTMENT_EXCEEDS_EFFECTIVE_AMOUNT')) return t('payments.adjustmentExceeded')
   if (message?.includes('CUSTOMERLESS_PAYMENT_ADJUSTMENT_DEFERRED')) return t('payments.customerlessDeferred')
+  if (message?.includes('SALE_ALREADY_CORRECTED')) return t('saleCorrections.alreadyCorrected')
+  if (message?.includes('SALE_CORRECTION_REQUEST_CONFLICT')) return t('saleCorrections.requestConflict')
+  if (message?.includes('ACCOUNTING_PERIOD_CLOSED')) return t('saleCorrections.periodClosed')
+  if (message?.includes('SHOP_PERMISSION_DENIED')) return t('saleCorrections.denied')
   return t('sales.issueError')
+}
+
+function openCorrection() {
+  if (!correctionState.value?.canCorrect || correctionPending.value) return
+  actionError.value = ''
+  correctionDate.value = new Date().toISOString().slice(0, 10)
+  correctionReason.value = ''
+  correctionReference.value = ''
+  correctionRequestId.value = null
+  correctionOpen.value = true
+}
+
+async function submitCorrection() {
+  if (!currentId.value || !currentLocationId.value || !sale.value
+    || !correctionState.value?.canCorrect || correctionPending.value
+    || correctionReason.value.trim().length < 2) return
+  if (!await confirmation.ask(t('saleCorrections.confirm'))) return
+  correctionPending.value = true
+  actionError.value = ''
+  correctionRequestId.value ??= crypto.randomUUID()
+  try {
+    const { error: correctionError } = await shopRpc.rpc('correct_location_sale', {
+      p_request_id: correctionRequestId.value,
+      p_shop_id: currentId.value,
+      p_location_id: currentLocationId.value,
+      p_invoice_id: sale.value.id,
+      p_effective_at: new Date(`${correctionDate.value}T12:00:00`).toISOString(),
+      p_reason: correctionReason.value.trim(),
+      p_reference: correctionReference.value.trim() || null,
+    })
+    if (correctionError) throw correctionError
+    correctionRequestId.value = null
+    correctionOpen.value = false
+    await Promise.all([
+      refresh(), refreshCorrection(), refreshReceipt(),
+      refreshNuxtData('shop-data:sales'),
+      refreshNuxtData('shop-data:inventory-overview'),
+      refreshNuxtData('shop-data:customer-statement'),
+      refreshNuxtData('shop-data:cash-shifts'),
+    ])
+    pushToast({ tone: 'success', title: t('saleCorrections.saved') })
+  }
+  catch (correctionError) {
+    actionError.value = readableError(correctionError instanceof Error ? correctionError.message : undefined)
+  }
+  finally { correctionPending.value = false }
 }
 
 function openReceipt() {
@@ -257,12 +351,26 @@ function lineMovements(lineId: string) { return sale.value?.movements.filter(mov
     <template v-else>
       <header class="flex flex-wrap items-end justify-between gap-4">
         <div><div class="flex flex-wrap items-center gap-3"><h1 class="text-3xl font-extrabold tracking-tight">{{ sale.invoice_number || t('sales.draftNumber') }}</h1><span class="ls-badge" :class="sale.status === 'issued' ? 'bg-[var(--bs-status-success-bg)] text-fg' : 'bg-muted text-muted-foreground'">{{ t(`sales.${sale.status}`) }}</span></div><p class="mt-2 text-sm text-muted-foreground">{{ t('sales.details') }}</p></div>
-        <div class="flex flex-wrap gap-2"><template v-if="sale.status === 'draft'"><NuxtLink v-if="sale.canManage" :to="{ path: '/sales', query: { edit: sale.id } }" class="ls-btn">{{ t('sales.editDraft') }}</NuxtLink><BsButton v-if="sale.canIssue" type="button" class="ls-btn ls-btn-primary" :disabled="issuing" @click="issue">{{ issuing ? t('sales.issuing') : t('sales.issue') }}</BsButton></template><template v-else-if="receiptSnapshot"><NuxtLink :to="`/sales/${sale.id}/receipt`" class="ls-btn ls-btn-primary">{{ t('receipt.reprint') }}</NuxtLink><BsButton type="button" severity="secondary" :pending="sharingReceipt" @click="shareReceipt(receiptSnapshot)">{{ t('receipt.share') }}</BsButton></template></div>
+        <div class="flex flex-wrap gap-2"><template v-if="sale.status === 'draft'"><NuxtLink v-if="sale.canManage" :to="{ path: '/sales', query: { edit: sale.id } }" class="ls-btn">{{ t('sales.editDraft') }}</NuxtLink><BsButton v-if="sale.canIssue" type="button" class="ls-btn ls-btn-primary" :disabled="issuing" @click="issue">{{ issuing ? t('sales.issuing') : t('sales.issue') }}</BsButton></template><template v-else><BsButton v-if="correctionState?.canCorrect" type="button" severity="danger" :disabled="correctionPending" @click="openCorrection">{{ t('saleCorrections.action') }}</BsButton><template v-if="receiptSnapshot"><NuxtLink :to="`/sales/${sale.id}/receipt`" class="ls-btn ls-btn-primary">{{ t('receipt.reprint') }}</NuxtLink><BsButton type="button" severity="secondary" :pending="sharingReceipt" @click="shareReceipt(receiptSnapshot)">{{ t('receipt.share') }}</BsButton></template></template></div>
       </header>
       <p v-if="actionError" role="alert" class="rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm text-fg">{{ actionError }}</p>
       <p v-if="shareError" role="alert" class="rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm text-fg">{{ shareError }}</p>
       <p v-if="sale.status === 'issued'" class="rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm">{{ t('sales.immutable') }}</p>
       <p v-if="sale.status === 'draft'" class="rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm">{{ t('sales.paymentBoundary') }}</p>
+
+      <section v-if="sale.status === 'issued'" class="rounded-2xl border border-border bg-card p-5">
+        <h2 class="text-lg font-bold">{{ t('saleCorrections.title') }}</h2>
+        <p v-if="correctionLoading" class="mt-3 text-sm text-muted-foreground">{{ t('saleCorrections.loading') }}</p>
+        <div v-else-if="correctionLoadError" role="alert" class="mt-3 rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm"><p>{{ t('saleCorrections.loadError') }}</p><BsButton type="button" severity="secondary" class="mt-2" @click="refreshCorrection()">{{ t('common.retry') }}</BsButton></div>
+        <div v-else-if="correctionState?.correction" class="mt-4 rounded-xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-4 text-sm">
+          <p class="font-bold">{{ t(`saleCorrections.kinds.${correctionState.correction.kind}`) }}</p>
+          <p class="mt-1 text-muted-foreground">{{ formatDate(correctionState.correction.effectiveAt) }}<template v-if="correctionState.correction.reference"> · {{ correctionState.correction.reference }}</template></p>
+          <p class="mt-2 whitespace-pre-wrap">{{ correctionState.correction.reason }}</p>
+          <dl class="mt-3 grid gap-3 sm:grid-cols-2"><div><dt class="text-xs font-bold text-muted-foreground">{{ t('saleCorrections.refunded') }}</dt><dd>{{ money(Number(correctionState.correction.refundAmount)) }}</dd></div><div><dt class="text-xs font-bold text-muted-foreground">{{ t('saleCorrections.restored') }}</dt><dd>{{ Number(correctionState.correction.restoredQuantity) }}</dd></div></dl>
+        </div>
+        <p v-else-if="correctionState" class="mt-3 text-sm text-muted-foreground">{{ t(correctionState.canCorrect ? 'saleCorrections.available' : 'saleCorrections.readOnly') }}</p>
+        <p class="mt-3 text-sm text-muted-foreground">{{ t('saleCorrections.fullOnly') }}</p>
+      </section>
 
       <div class="grid gap-5 lg:grid-cols-2">
         <section class="rounded-2xl border border-border bg-card p-5"><h2 class="text-lg font-bold">{{ t('sales.customerSnapshot') }}</h2><div v-if="sale.client_name_snapshot" class="mt-4 space-y-2 text-sm"><p class="font-bold"><NuxtLink v-if="sale.client_id" :to="`/customers/${sale.client_id}`" class="text-[var(--bs-link)]">{{ sale.client_name_snapshot }}</NuxtLink><template v-else>{{ sale.client_name_snapshot }}</template></p><p>{{ sale.client_phone_snapshot || '—' }}</p><p>{{ sale.client_email_snapshot || '—' }}</p><p>{{ sale.client_address_snapshot || '—' }}</p></div><p v-else class="mt-4 text-sm text-muted-foreground">{{ t('sales.noCustomer') }}</p></section>
@@ -270,10 +378,10 @@ function lineMovements(lineId: string) { return sale.value?.movements.filter(mov
       </div>
 
       <section v-if="sale.status === 'issued'" class="rounded-2xl border border-border bg-card p-5">
-        <div class="flex flex-wrap items-start justify-between gap-4"><div><h2 class="text-lg font-bold">{{ t('payments.title') }}</h2><p class="mt-1 text-sm text-muted-foreground">{{ t(`payments.settlement.${sale.settlementState}`) }}<template v-if="sale.overdue"> · {{ t('payments.overdue') }}</template></p></div><BsButton v-if="sale.client_id && sale.outstanding > 0 && sale.canReceivePayment" type="button" class="ls-btn ls-btn-primary" @click="openReceipt">{{ t('payments.recordReceipt') }}</BsButton></div>
-        <dl class="mt-4 grid gap-4 sm:grid-cols-4"><div><dt class="text-xs font-bold text-muted-foreground">{{ t('sales.total') }}</dt><dd class="font-bold">{{ money(Number(sale.total_amount)) }}</dd></div><div><dt class="text-xs font-bold text-muted-foreground">{{ t('payments.paid') }}</dt><dd class="font-bold">{{ money(Number(sale.amountPaid)) }}</dd></div><div><dt class="text-xs font-bold text-muted-foreground">{{ t('payments.outstanding') }}</dt><dd class="font-bold">{{ money(Number(sale.outstanding)) }}</dd></div><div><dt class="text-xs font-bold text-muted-foreground">{{ t('sales.dueDate') }}</dt><dd>{{ sale.due_date || '—' }}</dd></div></dl>
+        <div class="flex flex-wrap items-start justify-between gap-4"><div><h2 class="text-lg font-bold">{{ t('payments.title') }}</h2><p class="mt-1 text-sm text-muted-foreground">{{ correctionState?.correction ? t('payments.settlement.corrected') : t(`payments.settlement.${sale.settlementState}`) }}<template v-if="sale.overdue && !correctionState?.correction"> · {{ t('payments.overdue') }}</template></p></div><BsButton v-if="sale.client_id && sale.outstanding > 0 && sale.canReceivePayment" type="button" class="ls-btn ls-btn-primary" @click="openReceipt">{{ t('payments.recordReceipt') }}</BsButton></div>
+        <dl class="mt-4 grid gap-4 sm:grid-cols-4"><div><dt class="text-xs font-bold text-muted-foreground">{{ t('sales.total') }}</dt><dd class="font-bold">{{ money(Number(sale.total_amount)) }}</dd></div><div><dt class="text-xs font-bold text-muted-foreground">{{ t('payments.paid') }}</dt><dd class="font-bold">{{ money(Number(correctionState?.correction ? correctionState.correction.refundAmount : sale.amountPaid)) }}</dd></div><div><dt class="text-xs font-bold text-muted-foreground">{{ t('payments.outstanding') }}</dt><dd class="font-bold">{{ money(Number(sale.outstanding)) }}</dd></div><div><dt class="text-xs font-bold text-muted-foreground">{{ t('sales.dueDate') }}</dt><dd>{{ sale.due_date || '—' }}</dd></div></dl>
         <p v-if="!sale.client_id" class="mt-4 rounded-xl bg-[var(--bs-status-success-bg)] p-3 text-sm text-fg">{{ t('payments.customerlessPaid') }}</p>
-        <div class="mt-5 space-y-3"><h3 class="font-bold">{{ t('payments.history') }}</h3><p v-if="!sale.payments.length" class="text-sm text-muted-foreground">{{ t('payments.empty') }}</p><article v-for="event in sale.payments" :key="event.id" class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-4 text-sm"><div><p class="font-bold">{{ t(`payments.events.${event.eventType}`) }} · {{ money(Number(event.amount)) }}</p><p class="text-muted-foreground">{{ formatDate(event.eventAt) }}<template v-if="event.method"> · {{ t(`payments.methods.${event.method}`) }}</template><template v-if="event.reference"> · {{ event.reference }}</template></p><p v-if="event.reason" class="mt-1">{{ event.reason }}</p></div><div v-if="event.eventType === 'receipt' && sale.client_id && event.remainingEffective > 0" class="flex gap-2"><BsButton v-if="sale.canReversePayment" type="button" class="ls-btn ls-btn-sm" @click="openAdjustment('reversal', event)">{{ t('payments.reverse') }}</BsButton><BsButton v-if="sale.canRefundPayment" type="button" class="ls-btn ls-btn-sm" @click="openAdjustment('refund', event)">{{ t('payments.refund') }}</BsButton></div></article></div>
+        <div class="mt-5 space-y-3"><h3 class="font-bold">{{ t('payments.history') }}</h3><p v-if="!sale.payments.length" class="text-sm text-muted-foreground">{{ t('payments.empty') }}</p><article v-for="event in sale.payments" :key="event.id" class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-4 text-sm"><div><p class="font-bold">{{ t(`payments.events.${event.eventType}`) }} · {{ money(Number(event.amount)) }}</p><p class="text-muted-foreground">{{ formatDate(event.eventAt) }}<template v-if="event.method"> · {{ t(`payments.methods.${event.method}`) }}</template><template v-if="event.reference"> · {{ event.reference }}</template></p><p v-if="event.reason" class="mt-1">{{ event.reason }}</p></div><div v-if="event.eventType === 'receipt' && sale.client_id && !correctionState?.correction && event.remainingEffective > 0" class="flex gap-2"><BsButton v-if="sale.canReversePayment" type="button" class="ls-btn ls-btn-sm" @click="openAdjustment('reversal', event)">{{ t('payments.reverse') }}</BsButton><BsButton v-if="sale.canRefundPayment" type="button" class="ls-btn ls-btn-sm" @click="openAdjustment('refund', event)">{{ t('payments.refund') }}</BsButton></div></article></div>
       </section>
 
       <section class="overflow-hidden rounded-2xl border border-border bg-card"><h2 class="border-b border-border p-5 text-lg font-bold">{{ t('sales.lines') }}</h2><div class="overflow-x-auto"><BsDataTable :value="sale.lines" data-key="id" :row-class="() => 'border-t border-border'"><Column header-class="px-5 py-3 text-start" body-class="px-5 py-4"><template #header>{{ t('sales.item') }}</template><template #body="{ data: line }"><p class="font-bold">{{ line.item_name }}</p><p class="text-xs text-muted-foreground">{{ t(`sales.${line.item_type}`) }}<template v-if="line.product_sku_snapshot"> · {{ line.product_sku_snapshot }}</template></p></template></Column><Column header-class="px-5 py-3 text-end" body-class="px-5 py-4 text-end"><template #header>{{ t('sales.quantity') }}</template><template #body="{ data: line }">{{ Number(line.quantity) }}</template></Column><Column header-class="px-5 py-3 text-end" body-class="px-5 py-4 text-end"><template #header>{{ t('sales.unitPrice') }}</template><template #body="{ data: line }">{{ money(Number(line.unit_price)) }}</template></Column><Column header-class="px-5 py-3 text-end" body-class="px-5 py-4 text-end"><template #header>{{ t('sales.discount') }}</template><template #body="{ data: line }">{{ money(Number(line.discount_amount)) }}</template></Column><Column header-class="px-5 py-3 text-end" body-class="px-5 py-4 text-end font-bold"><template #header>{{ t('sales.lineTotal') }}</template><template #body="{ data: line }">{{ money(Number(line.total_amount)) }}</template></Column></BsDataTable></div></section>
@@ -283,6 +391,10 @@ function lineMovements(lineId: string) { return sale.value?.movements.filter(mov
 
     <BsDialog v-model:visible="paymentDialogOpen" :title="paymentDialog ? t(`payments.${paymentDialog}Title`) : ''" :dirty="paymentDirty" :pending="paymentPending">
       <template #default="{ close }"><BsForm class="grid gap-4 sm:grid-cols-2" :pending="paymentPending" :error="actionError" @submit="submitPayment"><label class="space-y-2 text-sm font-bold">{{ t('payments.amount') }}<input v-model.number="paymentAmount" type="number" min="0.01" step="0.01" required class="ls-input"></label><label class="space-y-2 text-sm font-bold">{{ t('payments.date') }}<input v-model="paymentDate" type="date" required class="ls-input"></label><label v-if="paymentDialog !== 'reversal'" class="space-y-2 text-sm font-bold">{{ t('payments.method') }}<select v-model="paymentMethod" class="ls-select"><option v-for="method in ['cash','bank_transfer','card','wallet','cheque','other']" :key="method" :value="method">{{ t(`payments.methods.${method}`) }}</option></select></label><label v-if="paymentDialog !== 'reversal'" class="space-y-2 text-sm font-bold">{{ t('payments.reference') }}<input v-model="paymentReference" maxlength="200" class="ls-input"></label><label v-if="paymentDialog !== 'receipt'" class="space-y-2 text-sm font-bold sm:col-span-2">{{ t('payments.reason') }}<textarea v-model="paymentReason" minlength="2" maxlength="1000" required rows="3" class="ls-input" /></label><div class="flex gap-2 sm:col-span-2"><BsButton type="submit" class="ls-btn ls-btn-primary" :disabled="paymentPending">{{ t('payments.save') }}</BsButton><BsButton type="button" class="ls-btn" :disabled="paymentPending" @click="close">{{ t('sales.cancel') }}</BsButton></div></BsForm></template>
+    </BsDialog>
+
+    <BsDialog v-model:visible="correctionOpen" :title="t('saleCorrections.dialogTitle')" :dirty="correctionDirty" :pending="correctionPending">
+      <template #default="{ close }"><BsForm class="grid gap-4 sm:grid-cols-2" :pending="correctionPending" :error="actionError" @submit="submitCorrection"><p class="rounded-xl bg-[var(--bs-status-warning-bg)] p-3 text-sm sm:col-span-2">{{ t('saleCorrections.warning') }}</p><label class="space-y-2 text-sm font-bold">{{ t('saleCorrections.date') }}<input v-model="correctionDate" type="date" required class="ls-input"></label><label class="space-y-2 text-sm font-bold">{{ t('saleCorrections.reference') }}<input v-model="correctionReference" maxlength="200" class="ls-input"></label><label class="space-y-2 text-sm font-bold sm:col-span-2">{{ t('saleCorrections.reason') }}<textarea v-model="correctionReason" minlength="2" maxlength="1000" required rows="4" class="ls-input" /></label><div class="flex gap-2 sm:col-span-2"><BsButton type="submit" severity="danger" :disabled="correctionPending">{{ t('saleCorrections.submit') }}</BsButton><BsButton type="button" severity="secondary" :disabled="correctionPending" @click="close">{{ t('sales.cancel') }}</BsButton></div></BsForm></template>
     </BsDialog>
   </div>
 </template>

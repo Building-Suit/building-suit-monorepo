@@ -17,7 +17,7 @@ type CustomerDetail = {
   archived_at: string | null
   can_manage: boolean
 }
-type StatementEvent = { event_id: string; event_type: 'sale' | 'receipt' | 'reversal' | 'refund'; event_at: string; invoice_id: string; document_number: string; debit: number; credit: number; method: string | null; reference: string | null; running_balance: number }
+type StatementEvent = { event_id: string; event_type: 'sale' | 'receipt' | 'reversal' | 'refund' | 'void' | 'full_return'; event_at: string; invoice_id: string; document_number: string; debit: number; credit: number; method: string | null; reference: string | null; running_balance: number }
 type StatementPage = { items: StatementEvent[]; total: number; page: number; pageSize: number; outstanding: number }
 type OutstandingInvoice = { id: string; invoice_number: string; total_amount: number; outstanding: number; due_date: string | null; settlement_state: 'unpaid' | 'partial'; overdue: boolean }
 type OutstandingPage = { items: OutstandingInvoice[]; total: number }
