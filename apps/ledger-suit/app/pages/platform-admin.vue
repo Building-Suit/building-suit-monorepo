@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import type { Database } from '~~/types/database.types'
 import type { AdminResource, AdminRow } from '~/composables/usePlatformAdmin'
 
 definePageMeta({ layout: false })
 type DialogMode = 'payment' | 'access' | 'subscription' | 'support'
-const { t } = useI18n()
+const { t, te, locale } = useI18n()
 const client = useSupabaseClient()
+const catalogClient = useSupabaseClient<Database>()
 const user = useSupabaseUser()
 const { role, rows, pending, error, denied, load, review, setAccess, correctSubscription, updateSupport, receipt } = usePlatformAdmin()
 const resource = ref<AdminResource>('status')
@@ -21,6 +23,15 @@ const reason = ref('')
 const context = ref('')
 const success = ref(false)
 const receiptUrl = ref('')
+const { data: planCatalog, pending: planCatalogPending, error: planCatalogError } = await useAsyncData(
+  'launch-plan-catalog',
+  async () => {
+    const { data, error } = await catalogClient.rpc('subscription_plan_catalog')
+    if (error) throw error
+    return data
+  },
+)
+const purchasablePlans = computed(() => (planCatalog.value ?? []).filter(plan => plan.is_purchasable))
 let receiptTimer: ReturnType<typeof setTimeout> | undefined
 let commandId = ''
 let commandPayload = ''
@@ -94,6 +105,12 @@ async function submit() {
 }
 async function signOut() { close(); await client.auth.signOut(); await navigateTo('/login?operator=1') }
 function display(value: unknown) { return value === null || value === undefined ? '—' : typeof value === 'object' ? JSON.stringify(value, null, 2) : typeof value === 'boolean' ? t(value ? 'admin.yes' : 'admin.no') : String(value) }
+function planName(key: unknown) {
+  const value = String(key ?? '')
+  const translation = `billing.plans.${value}.name`
+  const catalogName = planCatalog.value?.find(plan => plan.plan_key === value)?.name
+  return locale.value === 'ar' && te(translation) ? t(translation) : catalogName ?? (te(translation) ? t(translation) : value)
+}
 </script>
 
 <template>
@@ -119,7 +136,7 @@ function display(value: unknown) { return value === null || value === undefined 
       <p v-else-if="!error && !rows.length">{{ t('admin.empty') }}</p>
       <BsDataTable v-if="rows.length && !denied" :value="rows" data-key="id" :loading="pending">
         <Column v-for="column in columns" :key="column.field" :field="column.field" :header="column.header">
-          <template #body="{ data }"><pre v-if="column.field.endsWith('_state')" class="max-w-80 overflow-auto text-xs" dir="ltr">{{ display(data[column.field]) }}</pre><span v-else class="break-words">{{ display(data[column.field]) }}</span></template>
+          <template #body="{ data }"><pre v-if="column.field.endsWith('_state')" class="max-w-80 overflow-auto text-xs" dir="ltr">{{ display(data[column.field]) }}</pre><span v-else class="break-words">{{ column.field === 'plan_key' ? planName(data[column.field]) : display(data[column.field]) }}</span></template>
         </Column>
         <Column v-if="resource === 'users' || resource === 'organizations'" :header="t('admin.memberships')"><template #body="{ data }"><button type="button" class="ls-btn" :disabled="pending" @click="inspectMemberships(data)">{{ t('admin.memberships') }}</button></template></Column>
         <Column v-if="resource === 'organizations' && isPlatformAdmin" :header="t('admin.access')"><template #body="{ data }"><button type="button" class="ls-btn" :disabled="pending" @click="open(data, 'access')">{{ data.operator_suspended ? t('admin.reactivate') : t('admin.suspend') }}</button></template></Column>
@@ -136,7 +153,7 @@ function display(value: unknown) { return value === null || value === undefined 
       <form class="space-y-4 p-4" @submit.prevent="submit">
         <p class="break-all">{{ selected?.id }}</p>
         <p v-if="dialogMode === 'support'" class="whitespace-pre-wrap rounded bg-surface-muted p-3">{{ selected?.customer_message }}</p>
-        <p v-if="dialogMode === 'subscription'">{{ t('admin.currentPlan') }}: <strong>{{ display(selected?.plan_key) }}</strong></p>
+        <p v-if="dialogMode === 'subscription'">{{ t('admin.currentPlan') }}: <strong>{{ planName(selected?.plan_key) }}</strong></p>
         <p v-if="error" role="alert" class="ls-error">{{ error }}</p>
         <template v-if="dialogMode === 'payment'">
           <button type="button" class="ls-btn" :disabled="pending" @click="inspectReceipt">{{ t('admin.inspect') }}</button>
@@ -144,7 +161,10 @@ function display(value: unknown) { return value === null || value === undefined 
           <FloatingField v-if="role === 'billing_operator' || isPlatformAdmin" :label="t('admin.action')"><select v-model="action" class="ls-input" :disabled="pending"><option v-for="state in ['under_review', 'approved', 'rejected']" :key="state" :value="state">{{ t(`billing.manual.states.${state}`) }}</option></select></FloatingField>
         </template>
         <FloatingField v-else-if="dialogMode === 'access'" :label="t('admin.action')"><select v-model="action" class="ls-input" :disabled="pending"><option value="suspend">{{ t('admin.suspend') }}</option><option value="reactivate">{{ t('admin.reactivate') }}</option></select></FloatingField>
-        <FloatingField v-else-if="dialogMode === 'subscription'" :label="t('admin.targetPlan')"><select v-model="targetPlanKey" class="ls-input" :disabled="pending"><option v-for="plan in ['solo', 'starter', 'business']" :key="plan" :value="plan">{{ plan }}</option></select></FloatingField>
+        <template v-else-if="dialogMode === 'subscription'">
+          <p v-if="planCatalogError" class="ls-error" role="alert">{{ t('billing.plans.loadFailed') }}</p>
+          <FloatingField :label="t('admin.targetPlan')"><select v-model="targetPlanKey" class="ls-input" :disabled="pending || planCatalogPending || !!planCatalogError"><option v-for="plan in purchasablePlans" :key="plan.plan_key" :value="plan.plan_key">{{ planName(plan.plan_key) }}</option></select></FloatingField>
+        </template>
         <FloatingField v-else :label="t('admin.action')"><select v-model="action" class="ls-input" :disabled="pending"><option v-for="item in ['start', 'wait_customer', 'resolve', 'close', 'reopen', 'remind']" :key="item" :value="item">{{ t(`admin.supportActions.${item}`) }}</option></select></FloatingField>
         <template v-if="dialogMode !== 'payment' || role === 'billing_operator' || isPlatformAdmin">
           <FloatingField :label="t(dialogMode === 'payment' ? 'admin.paymentReason' : 'admin.reason')"><textarea v-model="reason" class="ls-input" required maxlength="1000" :disabled="pending" /></FloatingField>

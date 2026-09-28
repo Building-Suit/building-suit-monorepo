@@ -3,6 +3,12 @@ import { expect, test, type Page } from '@playwright/test'
 const id = 'd0000000-0000-4000-8000-000000000004'
 const payment = 'd0000000-0000-4000-8000-000000000010'
 const evidence = 'd0000000-0000-4000-8000-000000000011'
+const catalog = [
+  { plan_key: 'solo', name: 'Solo', description: 'Solo', sort_order: 10, is_purchasable: true, prices: {}, entitlements: {} },
+  { plan_key: 'starter', name: 'Starter', description: 'Starter', sort_order: 20, is_purchasable: true, prices: {}, entitlements: {} },
+  { plan_key: 'business', name: 'Business', description: 'Business', sort_order: 30, is_purchasable: true, prices: {}, entitlements: {} },
+  { plan_key: 'scale', name: 'Scale', description: 'Scale', sort_order: 40, is_purchasable: false, prices: {}, entitlements: {} },
+]
 async function setup(page: Page, role: 'observer' | 'billing_operator' | 'platform_admin' | null, arabic = false) {
   const user = { id, aud: 'authenticated', role: 'authenticated', email: 'operator@example.test', app_metadata: {}, user_metadata: {} }
   const token = `${Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url')}.${Buffer.from(JSON.stringify({ sub: id, role: 'authenticated', exp: Math.floor(Date.now() / 1000) + 3600 })).toString('base64url')}.mock`
@@ -18,7 +24,9 @@ async function setup(page: Page, role: 'observer' | 'billing_operator' | 'platfo
   await page.route('**/rest/v1/**', async route => {
     const url = route.request().url()
     const args = route.request().postDataJSON()
-    if (url.endsWith('/rpc/platform_admin_read')) {
+    if (url.endsWith('/rpc/subscription_plan_catalog')) {
+      await route.fulfill({ json: catalog })
+    } else if (url.endsWith('/rpc/platform_admin_read')) {
       reads.push(args)
       const data = args.p_resource === 'identity' ? [{ id, role }]
         : args.p_resource === 'payments' ? [{ id: payment, organization_id: 'org', evidence_id: evidence, plan_key: 'solo', amount_minor: 39900, currency_code: 'EGP', status: 'submitted' }]
@@ -118,6 +126,11 @@ test('platform administrator filters companies and opens bounded controls', asyn
     page.getByRole('dialog', { name: 'Confirm', exact: true }).getByRole('button', { name: 'Confirm', exact: true }).click(),
   ])
   expect(state.commands.at(-1)).toMatchObject({ rpc: 'platform_admin_set_access', p_action: 'suspend', p_reason: 'Security hold' })
+  await page.getByRole('combobox', { name: 'Operational view' }).selectOption('subscriptions')
+  await page.getByRole('button', { name: 'Correct subscription' }).click()
+  const correction = page.getByRole('dialog')
+  await expect(correction.getByRole('combobox', { name: 'Target plan' }).locator('option')).toHaveText(['Solo', 'Starter', 'Business'])
+  await expect(correction.getByRole('combobox', { name: 'Target plan' }).locator('option')).toHaveCount(3)
   expect(state.unexpected).toEqual([])
   expect(state.errors).toEqual([])
 })

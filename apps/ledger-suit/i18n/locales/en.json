@@ -1527,7 +1527,7 @@
     "monthly": "Monthly",
     "yearly": "Yearly",
     "plans": {
-      "annualDiscount": "Annual billing includes a 32% discount.",
+      "annualDiscount": "Annual billing includes a {percent}% discount.",
       "loading": "Loading plans…",
       "loadFailed": "Plans could not be loaded.",
       "price": "EGP {amount}",
@@ -1535,21 +1535,18 @@
       "perYear": "per year",
       "discount": "{percent}% off",
       "yearlyEquivalent": "{monthlyPrice}/month · billed {yearlyPrice} per year",
-      "customPricing": "Custom pricing",
       "pricingComingSoon": "Pricing coming soon",
       "mostPopular": "Most Popular",
       "comingSoon": "Coming Soon",
       "included": "Included",
       "notIncluded": "Not included",
       "choose": "Choose {plan}",
-      "contactUs": "Contact us",
-      "solo": { "name": "Solo", "description": "Reliable core accounting for owner-managed businesses." },
-      "starter": { "name": "Starter", "description": "More capacity and CSV imports for small teams." },
-      "business": { "name": "Business", "description": "Higher limits, multi-currency, and priority support for growing teams." },
+      "solo": { "name": "Solo", "description": "For owner-managed businesses that need reliable core accounting." },
+      "starter": { "name": "Starter", "description": "For small teams that need more capacity and CSV imports." },
+      "business": { "name": "Business", "description": "For growing teams that need higher limits and multi-currency." },
       "trial": { "name": "14-Day Free Trial" },
       "ledger_suit": { "name": "Ledger Suit" },
-      "scale": { "name": "Scale", "description": "A future plan for high-volume and multi-location businesses.", "preview": "Pricing and availability will be announced before launch." },
-      "enterprise": { "name": "Enterprise", "description": "Tailored deployment and support options are coming later." },
+      "scale": { "name": "Scale", "description": "For high-volume and multi-location businesses. Coming Soon.", "preview": "Pricing and availability will be announced before launch." },
       "features": {
         "members": "{count} workspace member | {count} workspace members",
         "transactions": "{count} transactions per month",
@@ -1557,13 +1554,6 @@
         "imports": "CSV imports",
         "multiCurrency": "Multi-currency accounting",
         "prioritySupport": "Priority support"
-      },
-      "futureTitle": "Future functionality",
-      "futureBody": "These capabilities are not yet included in any paid launch plan.",
-      "future": {
-        "branches": "Multi-branch accounting — Coming Soon",
-        "analytics": "Advanced Analytics & Reporting — Coming Soon",
-        "api": "Developer API — Coming Soon"
       }
     },
     "planChange": {

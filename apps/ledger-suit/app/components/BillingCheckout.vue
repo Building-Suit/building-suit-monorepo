@@ -14,7 +14,7 @@ const manualPlan = ref<LaunchPlanKey>()
 watch([currentId, user], () => { manualOpen.value = false; manualPlan.value = undefined })
 const { rows: usageRows } = usePlanUsage()
 const { createCheckoutSession, accessState, subscription } = useBilling()
-const { t, locale } = useI18n()
+const { t, te, locale } = useI18n()
 const interval = ref<'monthly' | 'yearly'>('monthly')
 const pendingPlan = ref<LaunchPlanKey | null>(null)
 const reviewingPlan = ref<LaunchPlanKey | null>(null)
@@ -55,19 +55,6 @@ interface FeatureImpact {
   will_lose: boolean
 }
 
-const planImpact = ref<PlanChangeImpact | null>(null)
-const currentPlanKey = computed(() => usageRows.value[0]?.plan_key ?? null)
-const currentPlanKind = computed(() => {
-  if (currentPlanKey.value === null) return null
-  if (currentPlanKey.value === 'trial') return 'trial'
-  if (['solo', 'starter', 'business'].includes(currentPlanKey.value)) return 'launch'
-  if (currentPlanKey.value === 'ledger_suit' || currentPlanKey.value.startsWith('legacy_')) return 'compatibility'
-  return 'unknown'
-})
-const trialPlanCurrent = computed(() => currentPlanKind.value === 'trial')
-const launchPlanCurrent = computed(() => currentPlanKind.value === 'launch')
-const compatibilityPlanCurrent = computed(() => currentPlanKind.value === 'compatibility')
-
 const { data: catalog, pending: catalogPending, error: catalogError, refresh } = await useAsyncData(
   'launch-plan-catalog',
   async () => {
@@ -77,9 +64,21 @@ const { data: catalog, pending: catalogPending, error: catalogError, refresh } =
   },
 )
 
-const plans = computed(() => (catalog.value ?? []).filter(
-  plan => ['solo', 'starter', 'business', 'scale'].includes(plan.plan_key),
-))
+// The RPC already exposes only active public plans in authoritative display
+// order. Do not recreate a second client-side catalog allowlist here.
+const plans = computed(() => catalog.value ?? [])
+const planImpact = ref<PlanChangeImpact | null>(null)
+const currentPlanKey = computed(() => usageRows.value[0]?.plan_key ?? null)
+const currentPlanKind = computed(() => {
+  if (currentPlanKey.value === null) return null
+  if (currentPlanKey.value === 'trial') return 'trial'
+  if (plans.value.some(plan => plan.plan_key === currentPlanKey.value && plan.is_purchasable)) return 'launch'
+  if (currentPlanKey.value === 'ledger_suit' || currentPlanKey.value.startsWith('legacy_')) return 'compatibility'
+  return 'unknown'
+})
+const trialPlanCurrent = computed(() => currentPlanKind.value === 'trial')
+const launchPlanCurrent = computed(() => currentPlanKind.value === 'launch')
+const compatibilityPlanCurrent = computed(() => currentPlanKind.value === 'compatibility')
 
 function object(value: Json | undefined): JsonObject {
   return value && typeof value === 'object' && !Array.isArray(value) ? value as JsonObject : {}
@@ -108,6 +107,32 @@ function yearlyDiscount(plan: CatalogPlan): number | null {
   const original = yearlyOriginalAmount(plan)
   const yearly = priceAmount(plan, 'yearly')
   return original && yearly !== null ? Math.round((1 - yearly / original) * 100) : null
+}
+
+const annualDiscount = computed(() => {
+  const discounts = plans.value
+    .filter(plan => plan.is_purchasable)
+    .map(yearlyDiscount)
+    .filter((discount): discount is number => discount !== null)
+  const unique = [...new Set(discounts)]
+  return unique.length === 1 ? unique[0] : null
+})
+
+function planName(plan: CatalogPlan): string {
+  const key = `billing.plans.${plan.plan_key}.name`
+  return locale.value === 'ar' && te(key) ? t(key) : plan.name
+}
+
+function planDescription(plan: CatalogPlan): string {
+  const key = `billing.plans.${plan.plan_key}.description`
+  return locale.value === 'ar' && te(key) ? t(key) : plan.description
+}
+
+function planNameForKey(key: string): string {
+  const plan = plans.value.find(candidate => candidate.plan_key === key)
+  if (plan) return planName(plan)
+  const translation = `billing.plans.${key}.name`
+  return te(translation) ? t(translation) : key
 }
 
 function formatAmount(amountMinor: number): string {
@@ -183,7 +208,6 @@ function featureRows(plan: CatalogPlan) {
     { key: 'reports', included: included(plan, 'core_reports'), text: t('billing.plans.features.reports') },
     { key: 'imports', included: included(plan, 'imports'), text: t('billing.plans.features.imports') },
     { key: 'multiCurrency', included: included(plan, 'multi_currency'), text: t('billing.plans.features.multiCurrency') },
-    { key: 'prioritySupport', included: included(plan, 'priority_support'), text: t('billing.plans.features.prioritySupport') },
   ]
 }
 
@@ -261,7 +285,7 @@ async function reviewChange(planKey: LaunchPlanKey) {
           <span class="block rounded-full px-6 py-2 text-center text-sm font-semibold transition" :class="interval === 'yearly' ? 'bg-surface text-fg shadow-sm' : 'text-fg-muted'">{{ t('billing.yearly') }}</span>
         </label>
       </div>
-      <p class="mt-2 text-center text-xs text-fg-muted">{{ t('billing.plans.annualDiscount') }}</p>
+      <p v-if="annualDiscount !== null" class="mt-2 text-center text-xs text-fg-muted">{{ t('billing.plans.annualDiscount', { percent: annualDiscount }) }}</p>
     </fieldset>
 
     <div v-if="catalogPending" class="py-8 text-center text-sm text-fg-muted" role="status">{{ t('billing.plans.loading') }}</div>
@@ -279,8 +303,8 @@ async function reviewChange(planKey: LaunchPlanKey) {
       >
         <span v-if="plan.plan_key === 'starter'" class="absolute end-4 top-4 rounded-full bg-brand-gold px-2.5 py-1 text-xs font-bold text-brand-navy-deep">{{ t('billing.plans.mostPopular') }}</span>
         <span v-else-if="!plan.is_purchasable" class="absolute end-4 top-4 rounded-full bg-surface-muted px-2.5 py-1 text-xs font-bold">{{ t('billing.plans.comingSoon') }}</span>
-        <h3 class="pe-24 text-xl font-black">{{ t(`billing.plans.${plan.plan_key}.name`) }}</h3>
-        <p class="mt-2 min-h-12 text-sm text-fg-muted">{{ t(`billing.plans.${plan.plan_key}.description`) }}</p>
+        <h3 class="pe-24 text-xl font-black">{{ planName(plan) }}</h3>
+        <p class="mt-2 min-h-12 text-sm text-fg-muted">{{ planDescription(plan) }}</p>
 
         <div v-if="amount(plan) !== null" class="mt-5">
           <template v-if="interval === 'yearly'">
@@ -310,10 +334,10 @@ async function reviewChange(planKey: LaunchPlanKey) {
         <p v-else class="mt-5 flex-1 text-sm text-fg-muted">{{ t('billing.plans.scale.preview') }}</p>
 
         <button v-if="surface === 'checkout' && plan.is_purchasable" type="button" class="ls-btn ls-btn-primary mt-6 w-full" :disabled="Boolean(pendingPlan)" @click="checkout(plan.plan_key as LaunchPlanKey)">
-          {{ pendingPlan === plan.plan_key ? t('billing.openingCheckout') : t('billing.plans.choose', { plan: t(`billing.plans.${plan.plan_key}.name`) }) }}
+          {{ pendingPlan === plan.plan_key ? t('billing.openingCheckout') : t('billing.plans.choose', { plan: planName(plan) }) }}
         </button>
         <button v-else-if="surface === 'manage' && plan.is_purchasable && launchPlanCurrent" type="button" class="ls-btn mt-6 w-full" :disabled="Boolean(reviewingPlan)" @click="reviewChange(plan.plan_key as LaunchPlanKey)">
-          {{ reviewingPlan === plan.plan_key ? t('billing.planChange.reviewing') : t('billing.planChange.review', { plan: t(`billing.plans.${plan.plan_key}.name`) }) }}
+          {{ reviewingPlan === plan.plan_key ? t('billing.planChange.reviewing') : t('billing.planChange.review', { plan: planName(plan) }) }}
         </button>
         <NuxtLink v-else-if="surface === 'public' && plan.is_purchasable" to="/signup" class="ls-btn ls-btn-primary mt-6 w-full">{{ t('landing.startTrial') }}</NuxtLink>
         <button v-else-if="!plan.is_purchasable" type="button" class="ls-btn mt-6 w-full" disabled>{{ t('billing.plans.comingSoon') }}</button>
@@ -349,24 +373,6 @@ async function reviewChange(planKey: LaunchPlanKey) {
       {{ t('billing.securePayments') }}
     </section>
 
-    <section class="ls-card-flat flex flex-col gap-4 p-5 text-start sm:flex-row sm:items-center">
-      <div class="flex-1">
-        <div class="flex flex-wrap items-center gap-2"><h3 class="text-lg font-black">{{ t('billing.plans.enterprise.name') }}</h3><span class="rounded-full bg-surface-muted px-2.5 py-1 text-xs font-bold">{{ t('billing.plans.comingSoon') }}</span></div>
-        <p class="mt-1 text-sm text-fg-muted">{{ t('billing.plans.enterprise.description') }}</p>
-      </div>
-      <span class="ls-btn shrink-0 opacity-70" aria-disabled="true">{{ t('billing.plans.contactUs') }}</span>
-    </section>
-
-    <section class="rounded-card border border-dashed border-[var(--bs-border-strong)] p-5 text-start">
-      <h3 class="font-bold">{{ t('billing.plans.futureTitle') }}</h3>
-      <p class="mt-1 text-sm text-fg-muted">{{ t('billing.plans.futureBody') }}</p>
-      <ul class="mt-3 grid gap-2 text-sm sm:grid-cols-3">
-        <li>{{ t('billing.plans.future.branches') }}</li>
-        <li>{{ t('billing.plans.future.analytics') }}</li>
-        <li>{{ t('billing.plans.future.api') }}</li>
-      </ul>
-    </section>
-
     <p v-if="surface === 'checkout'" class="text-center text-xs text-fg-muted">{{ t('billing.paymentRequired') }}</p>
     <p v-if="surface === 'manage' && compatibilityPlanCurrent" class="rounded-card border border-[var(--bs-border-strong)] p-4 text-sm text-fg-muted" role="note">{{ t('billing.planChange.legacyGrandfathered') }}</p>
     <p v-if="errorMessage" class="ls-error" role="alert">{{ errorMessage }}</p>
@@ -376,8 +382,8 @@ async function reviewChange(planKey: LaunchPlanKey) {
             <div>
               <h2 id="plan-change-title" class="text-xl font-black">{{ t('billing.planChange.title') }}</h2>
               <p class="mt-1 text-sm text-fg-muted">{{ t('billing.planChange.summary', {
-                current: t(`billing.plans.${planImpact.current_plan_key}.name`),
-                target: t(`billing.plans.${planImpact.target_plan_key}.name`),
+                current: planNameForKey(planImpact.current_plan_key),
+                target: planNameForKey(planImpact.target_plan_key),
               }) }}</p>
             </div>
             <button type="button" class="ls-btn-icon" :aria-label="t('common.close')" @click="dismiss"><AppIcon name="close" :size="20" /></button>
