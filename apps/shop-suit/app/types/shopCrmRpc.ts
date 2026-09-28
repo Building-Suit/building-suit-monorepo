@@ -271,6 +271,67 @@ export type ShopRpcDatabase = {
         Args: { p_shop_id: string; p_service_id: string }
         Returns: undefined
       }
+      appointment_options: {
+        Args: { p_shop_id: string }
+        Returns: unknown
+      }
+      appointment_calendar: {
+        Args: {
+          p_shop_id: string
+          p_location_id: string
+          p_from: string
+          p_to: string
+          p_membership_id?: string | null
+        }
+        Returns: unknown
+      }
+      save_appointment: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_appointment_id: string | null
+          p_location_id: string
+          p_membership_id: string
+          p_service_id: string
+          p_starts_at: string
+          p_identity_kind: 'customer' | 'walk_in'
+          p_customer_id: string | null
+          p_walk_in_name: string | null
+          p_walk_in_phone: string | null
+          p_notes: string | null
+        }
+        Returns: string
+      }
+      transition_appointment: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_appointment_id: string
+          p_status: 'arrived' | 'waiting' | 'in_service' | 'completed' | 'cancelled' | 'no_show'
+          p_reason?: string | null
+        }
+        Returns: string
+      }
+      link_appointment_sale: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_appointment_id: string
+          p_sale_id: string
+        }
+        Returns: string
+      }
+      save_staff_schedule: {
+        Args: {
+          p_shop_id: string
+          p_location_id: string
+          p_membership_id: string
+          p_timezone: string
+          p_working_hours: Array<{ weekday: number; startsLocal: string; endsLocal: string }>
+          p_blocks: Array<{ kind: 'break' | 'time_off'; startsAt: string; endsAt: string; note: string | null }>
+        }
+        Returns: undefined
+      }
       save_expense: {
         Args: {
           p_shop_id: string

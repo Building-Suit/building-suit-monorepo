@@ -145,6 +145,18 @@ $$;
 reset role;
 
 -- The appointment invariant validates the complete shop/location/staff tuple.
+select set_config('request.jwt.claim.sub', owner_id::text, true) from shop_barber_fixture;
+set local role authenticated;
+select public.save_staff_schedule(
+  current_setting('ss_barber.shop')::uuid,
+  current_setting('ss_barber.branch')::uuid,
+  current_setting('ss_barber.staff_membership')::uuid,
+  'Africa/Cairo',
+  (select jsonb_agg(jsonb_build_object('weekday', day,
+    'startsLocal', '08:00', 'endsLocal', '20:00')) from generate_series(0, 6) day),
+  '[]'::jsonb
+);
+reset role;
 do $$
 declare v_shop uuid := current_setting('ss_barber.shop')::uuid;
   v_branch uuid := current_setting('ss_barber.branch')::uuid;
@@ -157,18 +169,26 @@ begin
   insert into public.appointments (shop_id, location_id, service_id,
     assigned_membership_id, starts_at, ends_at, created_by_profile_id)
   values (v_shop, v_branch, v_service, v_staff,
-    date_trunc('minute', now()) + interval '1 day',
-    date_trunc('minute', now()) + interval '1 day 55 minutes', v_owner_profile);
+    date_trunc('day', now()) + interval '1 day 10 hours',
+    date_trunc('day', now()) + interval '1 day 10 hours 55 minutes', v_owner_profile);
   -- Keep the staff/location tuple valid so this case isolates the service's
   -- location availability instead of the pre-existing staff assignment guard.
   insert into public.membership_location_assignments (shop_id, membership_id, location_id)
     values (v_shop, v_staff, current_setting('ss_barber.default')::uuid);
+  -- Satisfy availability at this location so the service eligibility guard is
+  -- the only invalid prerequisite for the appointment below.
+  perform public.save_staff_schedule(
+    v_shop, current_setting('ss_barber.default')::uuid, v_staff, 'Africa/Cairo',
+    (select jsonb_agg(jsonb_build_object('weekday', day,
+      'startsLocal', '08:00', 'endsLocal', '20:00')) from generate_series(0, 6) day),
+    '[]'::jsonb
+  );
   begin
     insert into public.appointments (shop_id, location_id, service_id,
       assigned_membership_id, starts_at, ends_at, created_by_profile_id)
     values (v_shop, current_setting('ss_barber.default')::uuid, v_service, v_staff,
-      date_trunc('minute', now()) + interval '2 days',
-      date_trunc('minute', now()) + interval '2 days 55 minutes', v_owner_profile);
+      date_trunc('day', now()) + interval '2 days 10 hours',
+      date_trunc('day', now()) + interval '2 days 10 hours 55 minutes', v_owner_profile);
     raise exception 'appointment accepted incompatible service location and staff';
   exception when check_violation then
     if sqlerrm <> 'APPOINTMENT_SERVICE_LOCATION_STAFF_MISMATCH' then raise; end if;
@@ -177,8 +197,8 @@ begin
     insert into public.appointments (shop_id, location_id, service_id,
       assigned_membership_id, starts_at, ends_at, created_by_profile_id)
     values (v_shop, v_branch, v_service, v_staff,
-      date_trunc('minute', now()) + interval '3 days',
-      date_trunc('minute', now()) + interval '3 days 45 minutes', v_owner_profile);
+      date_trunc('day', now()) + interval '3 days 10 hours',
+      date_trunc('day', now()) + interval '3 days 10 hours 45 minutes', v_owner_profile);
     raise exception 'appointment accepted incompatible duration';
   exception when check_violation then
     if sqlerrm <> 'APPOINTMENT_DURATION_MISMATCH' then raise; end if;
@@ -231,8 +251,8 @@ begin
       current_setting('ss_barber.branch')::uuid,
       current_setting('ss_barber.service')::uuid,
       current_setting('ss_barber.staff_membership')::uuid,
-      date_trunc('minute', now()) + interval '4 days',
-      date_trunc('minute', now()) + interval '4 days 55 minutes', v_owner_profile);
+      date_trunc('day', now()) + interval '4 days 10 hours',
+      date_trunc('day', now()) + interval '4 days 10 hours 55 minutes', v_owner_profile);
     raise exception 'suspended staff remained appointment eligible';
   exception when check_violation then
     if sqlerrm <> 'STAFF_LOCATION_ASSIGNMENT_REQUIRED' then raise; end if;

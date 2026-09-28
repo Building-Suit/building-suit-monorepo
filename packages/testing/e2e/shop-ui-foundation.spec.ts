@@ -83,12 +83,18 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) {
 }
 
 // All requests are fulfilled in the browser. No disposable or hosted DB is needed.
-async function shopFixture(page: Page) {
+async function shopFixture(page: Page, locale = 'en') {
   const calls: Array<{ name: string; args: Record<string, unknown> }> = []
   const user = { id: '00000000-0000-4000-8000-000000000001', email: 'ui@example.test', aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {} }
   const jwt = `${Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url')}.${Buffer.from(JSON.stringify({ sub: user.id, exp: Math.floor(Date.now() / 1000) + 3600, role: 'authenticated', email: user.email })).toString('base64url')}.test`
   let mode = 'mixed'
   let customerName = 'Customer fixture'
+  const appointmentStart = new Date(); appointmentStart.setHours(10, 0, 0, 0)
+  const appointmentEnd = new Date(appointmentStart.getTime() + 35 * 60_000)
+  let appointments = [
+    { id: 'appointment-1', locationId: 'location-1', staffMembershipId: 'membership-1', serviceId: 'service-1', customerId: 'customer-1', identityKind: 'customer', customerName: 'Customer fixture', customerPhone: '01000000000', status: 'booked', startsAt: appointmentStart.toISOString(), endsAt: appointmentEnd.toISOString(), notes: null, saleId: null, serviceName: 'Haircut', staffName: 'Fixture barber', history: [] },
+    { id: 'appointment-2', locationId: 'location-1', staffMembershipId: 'membership-1', serviceId: 'service-1', customerId: null, identityKind: 'walk_in', customerName: 'Waiting walk-in', customerPhone: null, status: 'waiting', startsAt: new Date(appointmentStart.getTime() + 60 * 60_000).toISOString(), endsAt: new Date(appointmentEnd.getTime() + 60 * 60_000).toISOString(), notes: null, saleId: null, serviceName: 'Haircut', staffName: 'Fixture barber', history: [] },
+  ]
   const stock = { product_id: 'product-1', name: 'Stock fixture', sku: 'SKU', is_active: true, reorder_threshold: 2, quantity_on_hand: 10, inventory_value: 100, is_low_stock: false }
   await page.route('http://127.0.0.1:61321/**', async route => {
     const url = new URL(route.request().url())
@@ -104,6 +110,7 @@ async function shopFixture(page: Page) {
       case 'profiles': data = { id: 'profile-1', status: 'active' }; break
       case 'shop_memberships': data = [{ id: 'membership-1', shop_id: 'shop-1', profile_id: 'profile-1', role: 'owner', status: 'active' }]; break
       case 'shops': data = [{ id: 'shop-1', name: 'Fixture shop', business_mode: mode, status: 'active', created_at: '2026-01-01' }]; break
+      case 'list_shop_locations': data = [{ id: 'location-1', shop_id: 'shop-1', name: 'Main location', code: 'MAIN', address: null, phone: null, status: 'active', is_default: true, archived_at: null }]; break
       case 'sale_access': data = [{ can_view: true, can_manage: true, can_issue: true }]; break
       case 'list_sales': data = { items: [], total: 0, canManage: true, canIssue: true }; break
       case 'sale_catalog': data = { businessMode: mode, canIssue: true, products: Array.from({ length: 10000 }, (_, i) => ({ id: `product-${i}`, name: `Product ${i}`, stock: 10, unitPrice: 5 })), services: [], customers: [] }; break
@@ -120,10 +127,15 @@ async function shopFixture(page: Page) {
       case 'save_customer': customerName = String(args.p_name); data = 'customer-1'; break
       case 'record_customer_receipt': data = 'receipt-1'; break
       case 'set_shop_business_mode': mode = String(args.p_business_mode); data = null; break
+      case 'appointment_options': data = { canManage: true, canManageSchedule: true, locations: [{ id: 'location-1', name: 'Main location' }], staff: [{ membershipId: 'membership-1', name: 'Fixture barber', locationIds: ['location-1'] }], services: [{ id: 'service-1', name: 'Haircut', durationMinutes: 30, cleanupMinutes: 5, locationIds: ['location-1'], staffMembershipIds: ['membership-1'] }], customers: [{ id: 'customer-1', name: customerName, phone: '01000000000' }] }; break
+      case 'appointment_calendar': data = { appointments, workingHours: Array.from({ length: 7 }, (_, weekday) => ({ membershipId: 'membership-1', weekday, startsLocal: '09:00:00', endsLocal: '18:00:00', timezone: 'Africa/Cairo' })), blocks: [] }; break
+      case 'save_appointment': appointments = [...appointments, { id: 'appointment-3', locationId: 'location-1', staffMembershipId: String(args.p_membership_id), serviceId: String(args.p_service_id), customerId: null, identityKind: 'walk_in', customerName: String(args.p_walk_in_name), customerPhone: null, status: 'booked', startsAt: String(args.p_starts_at), endsAt: new Date(new Date(String(args.p_starts_at)).getTime() + 35 * 60_000).toISOString(), notes: null, saleId: null, serviceName: 'Haircut', staffName: 'Fixture barber', history: [] }]; data = 'appointment-3'; break
+      case 'transition_appointment': appointments = appointments.map(item => item.id === args.p_appointment_id ? { ...item, status: String(args.p_status) } : item); data = args.p_appointment_id; break
+      case 'save_staff_schedule': data = null; break
     }
     await route.fulfill({ json: data })
   })
-  await page.context().addCookies([{ name: 'building-suit-locale', value: 'en', domain: '127.0.0.1', path: '/' }])
+  await page.context().addCookies([{ name: 'building-suit-locale', value: locale, domain: '127.0.0.1', path: '/' }])
   await page.goto(`${shopBaseUrl}/auth/login`)
   await waitForNuxtHydration(page)
   await page.locator('#login-email').fill(user.email)
@@ -213,4 +225,47 @@ test('Shop inventory announces loading and recovers from a read error', async ({
   await table.getByRole('button', { name: 'Retry', exact: true }).click()
   await expect(page.getByText('Stock fixture', { exact: true })).toBeVisible()
   await expect(table.getByRole('alert')).toHaveCount(0)
+})
+
+test('Shop appointment calendar supports keyboard day/week, walk-ins and queue actions', async ({ page }) => {
+  const calls = await shopFixture(page)
+  await page.setViewportSize({ width: 1024, height: 768 })
+  await page.locator('a[href="/appointments"]').first().click()
+  await expect(page.locator('html')).toHaveAttribute('dir', 'ltr')
+  await expect(page.getByRole('heading', { name: 'Appointments', exact: true })).toBeVisible()
+  const week = page.getByRole('button', { name: 'Week', exact: true })
+  await week.focus(); await page.keyboard.press('Enter')
+  await expect(week).toHaveClass(/bg-primary/)
+  await expect(page.getByText('Waiting walk-in', { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Start service', exact: true }).last().click()
+  expect(calls.some(call => call.name === 'transition_appointment' && call.args.p_status === 'in_service')).toBe(true)
+  await page.getByRole('button', { name: 'New appointment', exact: true }).click()
+  const dialog = page.getByRole('dialog')
+  await dialog.getByRole('combobox', { name: 'Service', exact: true }).click()
+  await page.getByRole('option', { name: 'Haircut', exact: true }).click()
+  await dialog.getByRole('combobox', { name: 'Staff member', exact: true }).click()
+  await page.getByRole('option', { name: 'Fixture barber', exact: true }).click()
+  await dialog.getByRole('radio', { name: 'Walk-in', exact: true }).check()
+  await dialog.getByRole('textbox', { name: 'Name', exact: true }).fill('New walk-in')
+  await dialog.locator('button[type="submit"]').click()
+  await expect(dialog).toHaveCount(0)
+  await expect(page.getByText('New walk-in', { exact: true })).toBeVisible()
+  expect(calls.some(call => call.name === 'save_appointment' && call.args.p_identity_kind === 'walk_in')).toBe(true)
+})
+
+test('Shop appointment controls remain RTL, responsive and touch-sized', async ({ page }) => {
+  await shopFixture(page, 'ar')
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto(`${shopBaseUrl}/appointments`)
+  await waitForNuxtHydration(page)
+  await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
+  await expect(page.getByRole('heading', { name: 'المواعيد', exact: true })).toBeVisible()
+  const add = page.getByRole('button', { name: 'موعد جديد', exact: true })
+  const box = await add.boundingBox()
+  expect(box!.height).toBeGreaterThanOrEqual(44)
+  await add.click()
+  await expect(page.getByRole('dialog')).toBeVisible()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('dialog')).toHaveCount(0)
 })
