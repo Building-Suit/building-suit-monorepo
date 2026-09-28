@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test('launch pricing is responsive, accurate, and distinguishes included from future features', async ({ page }) => {
+test('launch pricing is responsive, catalog-accurate, and does not advertise unenforced features', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/#pricing')
   await expect(page.locator('[data-hydrated="true"]')).toBeVisible()
@@ -31,11 +31,9 @@ test('launch pricing is responsive, accurate, and distinguishes included from fu
   await expect(scale).toContainText('Pricing coming soon')
   await expect(scale).not.toContainText('Custom pricing')
   await expect(scale.getByRole('button')).toBeDisabled()
-  await expect(pricing.getByText('Enterprise')).toBeVisible()
-  await expect(pricing.getByText('Contact us')).toBeVisible()
-  await expect(pricing.getByText('Multi-branch accounting — Coming Soon')).toBeVisible()
-  await expect(pricing.getByText('Advanced Analytics & Reporting — Coming Soon')).toBeVisible()
-  await expect(pricing.getByText('Developer API — Coming Soon')).toBeVisible()
+  await expect(pricing.getByText('Enterprise')).toHaveCount(0)
+  await expect(pricing.getByText('Priority support')).toHaveCount(0)
+  await expect(pricing.getByText('Multi-branch accounting — Coming Soon')).toHaveCount(0)
 
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
   expect(overflow).toBeLessThanOrEqual(1)
@@ -57,7 +55,7 @@ test('Arabic pricing remains localized and usable under RTL', async ({ page, con
   await pricing.getByRole('radio', { name: 'سنوي', exact: true }).check()
   await expect(pricing.locator('[data-plan="starter"]')).toContainText('٤٬٨٨٧٫٨٤ ج.م')
   await expect(pricing.locator('[data-plan="business"]')).toContainText('المحاسبة متعددة العملات')
-  await expect(pricing.getByText('المحاسبة متعددة الفروع — قريبًا')).toBeVisible()
+  await expect(pricing.getByText('دعم ذو أولوية')).toHaveCount(0)
 })
 
 test('checkout submits the selected plan and interval from the pricing card', async ({ page }) => {

@@ -3,6 +3,7 @@
 definePageMeta({ layout: false })
 
 const { t } = useI18n()
+const route = useRoute()
 useHead({ title: () => `${t('auth.signIn')} · ${t('app.name')}` })
 
 const supabase = useSupabaseClient()
@@ -41,7 +42,7 @@ async function signIn() {
     await navigateTo({ path: '/verify-email', query: { email: email.value.trim().toLowerCase() } })
   }
   else if (signInError) error.value = t('auth.failed')
-  else await navigateTo('/dashboard')
+  else await navigateTo(route.query.operator === '1' ? '/platform-admin' : '/dashboard')
 }
 </script>
 

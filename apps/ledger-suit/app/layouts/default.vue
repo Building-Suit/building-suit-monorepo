@@ -12,6 +12,7 @@ const NAV_GROUPS = computed(() => [
     links: [
       ...(can('transactions.read') || can('transactions.create') || can('transactions.adjust') || can('imports.create') ? [{ to: '/transactions', label: 'nav.transactions' }] : []),
       ...(can('accounts.read') ? [{ to: '/accounts', label: 'nav.accounts' }] : []),
+      ...(can('migrations.read') ? [{ to: '/migration-center', label: 'nav.migrationCenter' }] : []),
       ...(can('opening_balances.read') ? [{ to: '/opening-balances', label: 'nav.openingBalances' }] : []),
       ...(can('periods.read') ? [{ to: '/periods', label: 'nav.periods' }] : []),
     ],

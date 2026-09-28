@@ -69,7 +69,7 @@ insert into opening_ids values ('bad_roles',public.create_opening_balance_batch(
     jsonb_build_object('source_row',2,'debit','','credit','10.00','account_id',(select value from opening_ids where key='control')))));
 select public.validate_opening_balance_batch((select value from opening_ids where key='bad_roles'));
 select ok((select validation_errors ? 'ACCOUNT_GROUP_NOT_POSTABLE' from public.opening_balance_rows where batch_id=(select value from opening_ids where key='bad_roles') and source_row=1),'Group mapping is rejected');
-select ok((select validation_errors ? 'ACCOUNT_CONTROL_NOT_DIRECTLY_POSTABLE' from public.opening_balance_rows where batch_id=(select value from opening_ids where key='bad_roles') and source_row=2),'Control mapping is rejected without a provider');
+select ok((select not (validation_errors ? 'ACCOUNT_CONTROL_NOT_DIRECTLY_POSTABLE') from public.opening_balance_rows where batch_id=(select value from opening_ids where key='bad_roles') and source_row=2),'Correctly bound AR Control is eligible for the single Opening Trial Balance journal');
 
 insert into opening_ids values ('period_2028',public.create_accounting_period(
   (select value from opening_ids where key='org_year'),'2028-01-01','2028-12-31'));
