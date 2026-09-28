@@ -90,5 +90,16 @@ export type MigrationRpcDatabase = { public: {
       p_idempotency_key: string
     }>
     read_migration_operational_cutover: Rpc<{ p_batch_id: string }, Json>
+    list_migration_projects: Rpc<{ p_organization_id: string }, Json>
+    read_migration_center: Rpc<{ p_project_id: string }, Json>
+    review_migration_cutover: Rpc<{
+      p_project_id: string
+      p_operational_batch_id: string
+    }, Json>
+    approve_migration_cutover: Rpc<{
+      p_project_id: string
+      p_operational_batch_id: string
+      p_idempotency_key: string
+    }, Json>
   }
 } }
