@@ -1,9 +1,11 @@
 import type { Json } from '~~/types/database.types'
 import type { PlatformAdminDatabase } from '~~/types/platform-admin.types'
 
-export type AdminResource = 'users' | 'organizations' | 'subscriptions' | 'payments' | 'audit' | 'status' | 'support'
+export type AdminResource = 'users' | 'organizations' | 'memberships' | 'subscriptions' | 'payments' | 'audit' | 'status' | 'support'
 export type AdminRow = { id: string, [key: string]: Json | undefined }
 type Envelope = { ok: boolean, error?: string, data?: Json }
+export type AdminQuery = { offset?: number, search?: string, status?: string, targetId?: string }
+export type AdminCommand = { id: string, targetId: string, action?: string, targetPlanKey?: string, reason: string, context: string }
 
 export function usePlatformAdmin() {
   const client = useSupabaseClient<PlatformAdminDatabase>()
@@ -43,12 +45,16 @@ export function usePlatformAdmin() {
     if (!result.ok) throw new Error(result.error ?? 'ADMIN_FAILED')
     return result.data ?? null
   }
-  async function load(resource: AdminResource, offset = 0) {
+  async function load(resource: AdminResource, query: AdminQuery = {}) {
     rows.value = []
     const result = await run(async () => {
       const identity = await client.rpc('platform_admin_read', { p_resource: 'identity' })
       const info = unwrap(identity.data, identity.error) as Array<{ role: string }>
-      const response = await client.rpc('platform_admin_read', { p_resource: resource, p_offset: offset, p_limit: 50 })
+      const response = await client.rpc('platform_admin_read', {
+        p_resource: resource, p_offset: query.offset ?? 0, p_limit: 50,
+        p_search: query.search?.trim() || undefined, p_status: query.status || undefined,
+        p_target_id: query.targetId || undefined,
+      })
       return { role: info[0]!.role, rows: unwrap(response.data, response.error) as AdminRow[] }
     })
     if (result) { role.value = result.role; rows.value = result.rows; denied.value = false }
@@ -63,6 +69,36 @@ export function usePlatformAdmin() {
       return true
     })
   }
+  async function setAccess(command: AdminCommand) {
+    return run(async () => {
+      const result = await client.rpc('platform_admin_set_access', {
+        p_command_id: command.id, p_organization_id: command.targetId, p_action: command.action!,
+        p_reason: command.reason, p_context: command.context,
+      })
+      unwrap(result.data, result.error)
+      return true
+    })
+  }
+  async function correctSubscription(command: AdminCommand) {
+    return run(async () => {
+      const result = await client.rpc('platform_admin_correct_subscription', {
+        p_command_id: command.id, p_organization_id: command.targetId, p_target_plan_key: command.targetPlanKey!,
+        p_reason: command.reason, p_context: command.context,
+      })
+      unwrap(result.data, result.error)
+      return true
+    })
+  }
+  async function updateSupport(command: AdminCommand) {
+    return run(async () => {
+      const result = await client.rpc('platform_admin_update_support', {
+        p_command_id: command.id, p_request_id: command.targetId, p_action: command.action!,
+        p_reason: command.reason, p_context: command.context,
+      })
+      unwrap(result.data, result.error)
+      return true
+    })
+  }
   async function receipt(requestId: string) {
     return run(async () => {
       const result = await client.functions.invoke('platform-admin-receipt', { body: { requestId } })
@@ -70,5 +106,5 @@ export function usePlatformAdmin() {
       return result.data.url as string
     })
   }
-  return { role, rows, pending, error, denied, load, review, receipt }
+  return { role, rows, pending, error, denied, load, review, setAccess, correctSubscription, updateSupport, receipt }
 }

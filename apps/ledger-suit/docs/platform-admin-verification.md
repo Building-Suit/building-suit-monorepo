@@ -1,5 +1,11 @@
 # LS-ADMIN-001 — Secure operator foundation
 
+LS-ADMIN-002 extends this foundation with searchable operational projections,
+platform-admin access and subscription commands, and the support queue. See
+[the operations verification record](platform-admin-operations.md). Statements
+below describing support as unavailable or payment review as the only mutation
+describe the LS-ADMIN-001 baseline, not the current migrated schema.
+
 Implements ADM-01–04 under approved LS-D-ADMIN. Local changes only, based on `8329b33867c6ab06b4727120bec852d49e6dd7cf` on `codex/ledger-suit/ls-admin-001`. No commit, push, merge, deployment or hosted database changes. Live upstream/PR state could not be verified by preflight; no publication/base decisions were made.
 
 ## Authority and scope

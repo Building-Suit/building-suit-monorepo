@@ -8,7 +8,10 @@ export type PlatformAdminDatabase = { public: {
   Enums: Record<string, never>
   CompositeTypes: Record<string, never>
   Functions: {
-    platform_admin_read: { Args: { p_resource: string, p_offset?: number, p_limit?: number, p_target_id?: string }, Returns: Json }
+    platform_admin_read: { Args: { p_resource: string, p_offset?: number, p_limit?: number, p_target_id?: string, p_search?: string, p_status?: string }, Returns: Json }
     platform_admin_review_payment: { Args: { p_command_id: string, p_request_id: string, p_evidence_id: string, p_action: string, p_reason: string, p_context: string }, Returns: Json }
+    platform_admin_set_access: { Args: { p_command_id: string, p_organization_id: string, p_action: string, p_reason: string, p_context: string }, Returns: Json }
+    platform_admin_correct_subscription: { Args: { p_command_id: string, p_organization_id: string, p_target_plan_key: string, p_reason: string, p_context: string }, Returns: Json }
+    platform_admin_update_support: { Args: { p_command_id: string, p_request_id: string, p_action: string, p_reason: string, p_context: string }, Returns: Json }
   }
 } }
