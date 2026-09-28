@@ -8,6 +8,36 @@ export type ShopRpcDatabase = {
         Args: { p_shop_name: string; p_plan_slug: string; p_business_mode: 'product' | 'service' | 'mixed' }
         Returns: string
       }
+      platform_admin_session: {
+        Args: Record<string, never>
+        Returns: {
+          userId: string
+          role: 'observer' | 'operator'
+          canMutate: boolean
+          displayName: string | null
+        }
+      }
+      platform_admin_read: {
+        Args: {
+          p_resource: 'dashboard' | 'shops' | 'shop' | 'audit'
+          p_shop_id?: string | null
+          p_search?: string | null
+          p_status?: string | null
+          p_page?: number
+          p_page_size?: number
+        }
+        Returns: unknown
+      }
+      platform_admin_command: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_action: string
+          p_reason: string
+          p_payload?: Record<string, unknown>
+        }
+        Returns: unknown
+      }
       set_shop_business_mode: {
         Args: { p_shop_id: string; p_business_mode: 'product' | 'service' | 'mixed' }
         Returns: 'product' | 'service' | 'mixed'
