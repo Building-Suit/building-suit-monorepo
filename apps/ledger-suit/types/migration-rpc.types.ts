@@ -9,6 +9,8 @@ export type MigrationSourceType = 'excel_csv' | 'other_system_export' | 'account
 export type MigrationDepth = 'fast_cutover' | 'current_fiscal_year' | 'full_history'
 export type MigrationOpenItemType = 'customer_invoice' | 'customer_credit' | 'supplier_bill' | 'supplier_credit'
 export type MigrationOpenAllocationType = 'receipt' | 'payment' | 'credit'
+export type MigrationBankOutstandingKind = 'deposit' | 'payment'
+export type MigrationTaxDirection = 'output' | 'input'
 
 export type MigrationRpcDatabase = { public: {
   Tables: Record<string, never>
@@ -71,5 +73,22 @@ export type MigrationRpcDatabase = { public: {
       p_idempotency_key: string
     }>
     read_migration_open_item_batch: Rpc<{ p_batch_id: string }, Json>
+    stage_migration_operational_cutover: Rpc<{
+      p_project_id: string
+      p_staging_batch_id: string
+      p_applicability: Json
+      p_assets: Json
+      p_bank_positions: Json
+      p_bank_items: Json
+      p_inventory: Json
+      p_tax: Json
+      p_idempotency_key: string
+    }>
+    validate_migration_operational_cutover: Rpc<{ p_batch_id: string }, Json>
+    accept_migration_operational_cutover: Rpc<{
+      p_batch_id: string
+      p_idempotency_key: string
+    }>
+    read_migration_operational_cutover: Rpc<{ p_batch_id: string }, Json>
   }
 } }
