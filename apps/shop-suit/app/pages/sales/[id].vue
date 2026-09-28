@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
+import type { SaleReceiptSnapshot } from '~/types/receipt'
 
 definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
 
@@ -75,6 +76,7 @@ const { currentId, currentLocationId } = useShop()
 const { t, locale } = useI18n()
 const confirmation = useConfirmation()
 const { push: pushToast } = useToasts()
+const { sharing: sharingReceipt, shareError, shareReceipt } = useSaleReceiptShare()
 const saleId = computed(() => String(route.params.id ?? ''))
 const issuing = ref(false)
 const actionError = ref('')
@@ -107,6 +109,18 @@ const { data: sale, pending, error, refresh } = useAsyncData(
     })
     if (queryError) throw queryError
     return data as SaleDetail | null
+  }, { watch: [currentId, currentLocationId, saleId], default: () => null },
+)
+
+const { data: receiptSnapshot, refresh: refreshReceipt } = useAsyncData(
+  () => `shop-data:sale-receipt:${currentId.value ?? 'none'}:${currentLocationId.value ?? 'none'}:${saleId.value}`,
+  async (): Promise<SaleReceiptSnapshot | null> => {
+    if (!currentId.value || !currentLocationId.value || !saleId.value) return null
+    const { data, error: receiptError } = await shopRpc.rpc('get_location_sale_receipt', {
+      p_shop_id: currentId.value, p_location_id: currentLocationId.value, p_invoice_id: saleId.value,
+    })
+    if (receiptError) throw receiptError
+    return data as SaleReceiptSnapshot | null
   }, { watch: [currentId, currentLocationId, saleId], default: () => null },
 )
 
@@ -189,7 +203,7 @@ async function submitPayment() {
     if (result.error) throw result.error
     paymentRequestId.value = null
     paymentDialog.value = null
-    await Promise.all([refresh(), refreshNuxtData('shop-data:sales'), refreshNuxtData('shop-data:customer-statement')])
+    await Promise.all([refresh(), refreshReceipt(), refreshNuxtData('shop-data:sales'), refreshNuxtData('shop-data:customer-statement')])
     pushToast({ tone: 'success', title: t('payments.saved') })
   }
   catch (paymentError) { actionError.value = readableError(paymentError instanceof Error ? paymentError.message : undefined) }
@@ -243,9 +257,10 @@ function lineMovements(lineId: string) { return sale.value?.movements.filter(mov
     <template v-else>
       <header class="flex flex-wrap items-end justify-between gap-4">
         <div><div class="flex flex-wrap items-center gap-3"><h1 class="text-3xl font-extrabold tracking-tight">{{ sale.invoice_number || t('sales.draftNumber') }}</h1><span class="ls-badge" :class="sale.status === 'issued' ? 'bg-[var(--bs-status-success-bg)] text-fg' : 'bg-muted text-muted-foreground'">{{ t(`sales.${sale.status}`) }}</span></div><p class="mt-2 text-sm text-muted-foreground">{{ t('sales.details') }}</p></div>
-        <div v-if="sale.status === 'draft'" class="flex flex-wrap gap-2"><NuxtLink v-if="sale.canManage" :to="{ path: '/sales', query: { edit: sale.id } }" class="ls-btn">{{ t('sales.editDraft') }}</NuxtLink><BsButton v-if="sale.canIssue" type="button" class="ls-btn ls-btn-primary" :disabled="issuing" @click="issue">{{ issuing ? t('sales.issuing') : t('sales.issue') }}</BsButton></div>
+        <div class="flex flex-wrap gap-2"><template v-if="sale.status === 'draft'"><NuxtLink v-if="sale.canManage" :to="{ path: '/sales', query: { edit: sale.id } }" class="ls-btn">{{ t('sales.editDraft') }}</NuxtLink><BsButton v-if="sale.canIssue" type="button" class="ls-btn ls-btn-primary" :disabled="issuing" @click="issue">{{ issuing ? t('sales.issuing') : t('sales.issue') }}</BsButton></template><template v-else-if="receiptSnapshot"><NuxtLink :to="`/sales/${sale.id}/receipt`" class="ls-btn ls-btn-primary">{{ t('receipt.reprint') }}</NuxtLink><BsButton type="button" severity="secondary" :pending="sharingReceipt" @click="shareReceipt(receiptSnapshot)">{{ t('receipt.share') }}</BsButton></template></div>
       </header>
       <p v-if="actionError" role="alert" class="rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm text-fg">{{ actionError }}</p>
+      <p v-if="shareError" role="alert" class="rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm text-fg">{{ shareError }}</p>
       <p v-if="sale.status === 'issued'" class="rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm">{{ t('sales.immutable') }}</p>
       <p v-if="sale.status === 'draft'" class="rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm">{{ t('sales.paymentBoundary') }}</p>
 

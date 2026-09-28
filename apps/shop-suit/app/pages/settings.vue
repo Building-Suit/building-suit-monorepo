@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
+import type { ReceiptPaperSize } from '~/types/receipt'
 import type { BusinessMode } from '~/utils/businessMode'
 import { BUSINESS_MODES } from '~/utils/businessMode'
 
@@ -18,6 +19,10 @@ const successMessage = ref('')
 const locationPending = ref(false)
 const locationError = ref('')
 const locationForm = reactive({ name: '', code: '', address: '', phone: '' })
+const receiptForm = reactive({ displayName: '', address: '', phone: '', footer: '', paperSize: 'thermal_80' as ReceiptPaperSize })
+const receiptPending = ref(false)
+const receiptError = ref('')
+const receiptSuccess = ref('')
 const isArabic = computed(() => locale.value === 'ar')
 const { data: permissionAccess } = useAsyncData('shop-data:settings-permissions', async () => {
   if (!currentId.value) return { 'settings.manage': false }
@@ -28,6 +33,16 @@ const { data: permissionAccess } = useAsyncData('shop-data:settings-permissions'
   return data
 }, { watch: [currentId], default: () => ({ 'settings.manage': false }) })
 const canManage = computed(() => permissionAccess.value?.['settings.manage'] === true)
+type ReceiptSettings = { displayName: string; address: string | null; phone: string | null; footer: string | null; paperSize: ReceiptPaperSize; canManage: boolean }
+const { data: receiptSettings, pending: receiptLoading, error: receiptLoadError, refresh: refreshReceiptSettings } = useAsyncData(
+  () => `shop-data:receipt-settings:${currentId.value ?? 'none'}`,
+  async (): Promise<ReceiptSettings | null> => {
+    if (!currentId.value) return null
+    const { data, error } = await shopRpc.rpc('receipt_settings', { p_shop_id: currentId.value })
+    if (error) throw error
+    return data as ReceiptSettings
+  }, { watch: [currentId], default: () => null },
+)
 
 const copy = computed(() => isArabic.value ? {
   title: 'إعدادات النشاط', subtitle: 'اضبط مسارات العمل المناسبة لنشاطك.',
@@ -43,6 +58,10 @@ const copy = computed(() => isArabic.value ? {
   defaultLocation: 'افتراضي', archivedLocation: 'مؤرشف', locationName: 'اسم الفرع', locationCode: 'الرمز', locationAddress: 'العنوان', locationPhone: 'الهاتف',
   addLocation: 'إضافة فرع', addingLocation: 'جارٍ الإضافة…', archiveLocation: 'أرشفة', locationSaved: 'تمت إضافة الفرع.', locationFailed: 'تعذّر حفظ الفرع.',
   archiveLocationConfirm: 'أرشفة هذا الفرع؟ ستبقى المبيعات والمدفوعات والمواعيد السابقة ظاهرة في السجل والتقارير.',
+  receiptTitle: 'إعدادات الإيصال', receiptHelp: 'تُحفظ هذه البيانات داخل كل إيصال عند سداد البيعة بالكامل. التعديلات التالية لا تغيّر الإيصالات السابقة.',
+  receiptDisplayName: 'اسم النشاط على الإيصال', receiptAddress: 'عنوان النشاط', receiptPhone: 'هاتف النشاط', receiptFooter: 'رسالة أسفل الإيصال',
+  receiptPaper: 'المقاس الافتراضي', thermal80: 'حراري 80 مم', a4: 'A4 / PDF', saveReceipt: 'حفظ إعدادات الإيصال', savingReceipt: 'جارٍ الحفظ…',
+  receiptSaved: 'تم حفظ إعدادات الإيصال للمبيعات المستقبلية.', receiptFailed: 'تعذّر تحميل أو حفظ إعدادات الإيصال.', receiptOwnerOnly: 'تحتاج إلى صلاحية إدارة الإعدادات لتعديل شكل الإيصالات المستقبلية.',
 } : {
   title: 'Business settings', subtitle: 'Choose the workflows that fit this business.',
   modeTitle: 'Business operation mode', modeHelp: 'This setting controls product, stock, and service workflow visibility only. It does not change the subscription plan, quotas, or user permissions.',
@@ -57,6 +76,10 @@ const copy = computed(() => isArabic.value ? {
   defaultLocation: 'Default', archivedLocation: 'Archived', locationName: 'Location name', locationCode: 'Code', locationAddress: 'Address', locationPhone: 'Phone',
   addLocation: 'Add location', addingLocation: 'Adding…', archiveLocation: 'Archive', locationSaved: 'Location added.', locationFailed: 'Could not save the location.',
   archiveLocationConfirm: 'Archive this location? Its historical sales, payments, and appointments will remain available in history and reports.',
+  receiptTitle: 'Receipt settings', receiptHelp: 'These values are captured inside each receipt when a sale becomes fully paid. Later changes never rewrite previous receipts.',
+  receiptDisplayName: 'Business name on receipt', receiptAddress: 'Business address', receiptPhone: 'Business phone', receiptFooter: 'Receipt footer message',
+  receiptPaper: 'Default paper size', thermal80: '80 mm thermal', a4: 'A4 / PDF', saveReceipt: 'Save receipt settings', savingReceipt: 'Saving…',
+  receiptSaved: 'Receipt settings saved for future sales.', receiptFailed: 'Could not load or save receipt settings.', receiptOwnerOnly: 'Settings permission is required to change future receipt presentation.',
 })
 
 const modeOptions = computed(() => BUSINESS_MODES.map(value => ({
@@ -74,6 +97,19 @@ watch(selectedMode, () => {
   errorMessage.value = ''
   successMessage.value = ''
 })
+
+watch(receiptSettings, (settings) => {
+  if (!settings) return
+  Object.assign(receiptForm, {
+    displayName: settings.displayName,
+    address: settings.address ?? '',
+    phone: settings.phone ?? '',
+    footer: settings.footer ?? '',
+    paperSize: settings.paperSize,
+  })
+  receiptError.value = ''
+  receiptSuccess.value = ''
+}, { immediate: true })
 
 async function saveMode() {
   if (pending.value || !current.value || !canManage.value || selectedMode.value === current.value.business_mode) return
@@ -139,6 +175,29 @@ async function archiveLocation(locationId: string) {
     locationPending.value = false
   }
 }
+
+async function saveReceiptSettings() {
+  if (!currentId.value || !canManage.value || receiptPending.value || receiptForm.displayName.trim().length < 2) return
+  receiptPending.value = true
+  receiptError.value = ''
+  receiptSuccess.value = ''
+  try {
+    const { error } = await shopRpc.rpc('save_receipt_settings', {
+      p_shop_id: currentId.value,
+      p_display_name: receiptForm.displayName.trim(),
+      p_address: receiptForm.address.trim() || null,
+      p_phone: receiptForm.phone.trim() || null,
+      p_footer: receiptForm.footer.trim() || null,
+      p_paper_size: receiptForm.paperSize,
+    })
+    if (error) throw error
+    await refreshReceiptSettings()
+    receiptSuccess.value = copy.value.receiptSaved
+    success(copy.value.receiptSaved)
+  }
+  catch { receiptError.value = copy.value.receiptFailed }
+  finally { receiptPending.value = false }
+}
 </script>
 
 <template>
@@ -199,6 +258,25 @@ async function archiveLocation(locationId: string) {
         <label class="grid gap-1 text-sm"><span>{{ copy.locationPhone }}</span><input v-model="locationForm.phone" class="ls-input"></label>
         <div class="sm:col-span-2"><BsButton type="submit" :pending="locationPending" :disabled="locationForm.name.trim().length < 2">{{ locationPending ? copy.addingLocation : copy.addLocation }}</BsButton></div>
       </BsForm>
+    </section>
+
+    <section v-if="current" class="rounded-2xl border border-border bg-card p-5 sm:p-6" aria-labelledby="receipt-settings-title">
+      <h2 id="receipt-settings-title" class="text-lg font-extrabold">{{ copy.receiptTitle }}</h2>
+      <p class="mt-2 text-sm leading-6 text-muted-foreground">{{ copy.receiptHelp }}</p>
+      <p v-if="receiptLoading" role="status" class="mt-4">{{ ui('loading') }}</p>
+      <p v-else-if="receiptLoadError" role="alert" class="mt-4 text-sm text-[var(--bs-status-error)]">{{ copy.receiptFailed }} <button type="button" class="min-h-11 font-bold underline" @click="refreshReceiptSettings()">{{ ui('retry') }}</button></p>
+      <template v-else-if="receiptSettings">
+        <p v-if="!canManage" role="status" class="mt-5 rounded-xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-4 text-sm">{{ copy.receiptOwnerOnly }}</p>
+        <p v-if="receiptSuccess" role="status" class="mt-4 rounded-xl bg-[var(--bs-status-success-bg)] p-3 text-sm">{{ receiptSuccess }}</p>
+        <BsForm class="mt-5 grid gap-4 sm:grid-cols-2" :pending="receiptPending" :error="receiptError" @submit="saveReceiptSettings">
+          <label class="grid gap-1 text-sm font-bold sm:col-span-2">{{ copy.receiptDisplayName }}<input v-model="receiptForm.displayName" class="ls-input min-h-11" required minlength="2" maxlength="160" :disabled="!canManage"></label>
+          <label class="grid gap-1 text-sm font-bold">{{ copy.receiptAddress }}<input v-model="receiptForm.address" class="ls-input min-h-11" maxlength="500" :disabled="!canManage"></label>
+          <label class="grid gap-1 text-sm font-bold">{{ copy.receiptPhone }}<input v-model="receiptForm.phone" class="ls-input min-h-11" maxlength="80" dir="auto" :disabled="!canManage"></label>
+          <label class="grid gap-1 text-sm font-bold sm:col-span-2">{{ copy.receiptFooter }}<textarea v-model="receiptForm.footer" class="ls-input" rows="3" maxlength="500" :disabled="!canManage" /></label>
+          <fieldset class="sm:col-span-2" :disabled="!canManage || receiptPending"><legend class="text-sm font-bold">{{ copy.receiptPaper }}</legend><div class="mt-2 grid gap-3 sm:grid-cols-2"><label v-for="size in ['thermal_80', 'a4'] as const" :key="size" class="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border border-border p-3"><input v-model="receiptForm.paperSize" type="radio" name="receipt-paper" :value="size"><span class="font-bold">{{ size === 'thermal_80' ? copy.thermal80 : copy.a4 }}</span></label></div></fieldset>
+          <div class="sm:col-span-2"><BsButton type="submit" :pending="receiptPending" :disabled="!canManage || receiptForm.displayName.trim().length < 2">{{ receiptPending ? copy.savingReceipt : copy.saveReceipt }}</BsButton></div>
+        </BsForm>
+      </template>
     </section>
   </div>
 </template>

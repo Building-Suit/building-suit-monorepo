@@ -227,6 +227,25 @@ export type ShopRpcDatabase = {
         }
         Returns: string
       }
+      receipt_settings: {
+        Args: { p_shop_id: string }
+        Returns: unknown
+      }
+      save_receipt_settings: {
+        Args: {
+          p_shop_id: string
+          p_display_name: string
+          p_address: string | null
+          p_phone: string | null
+          p_footer: string | null
+          p_paper_size: 'thermal_80' | 'a4'
+        }
+        Returns: unknown
+      }
+      get_location_sale_receipt: {
+        Args: { p_shop_id: string; p_location_id: string; p_invoice_id: string }
+        Returns: unknown
+      }
       save_product: {
         Args: {
           p_shop_id: string

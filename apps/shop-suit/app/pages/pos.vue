@@ -154,7 +154,7 @@ async function checkout() {
     if (completed.error) throw completed.error
     const completedId = completed.data
     await Promise.all([refreshCatalog(), refreshContext(), refreshNuxtData('shop-data:sales'), refreshNuxtData('shop-data:inventory-overview'), refreshNuxtData('shop-data:recent-invoices')])
-    pushToast({ tone: 'success', title: t('pos.success') }); resetSale(); await navigateTo(`/sales/${completedId}`)
+    pushToast({ tone: 'success', title: t('pos.success') }); resetSale(); await navigateTo({ path: `/sales/${completedId}/receipt`, query: { origin: 'pos' } })
   } catch (error) { errorMessage.value = readableError(error instanceof Error ? error.message : String(error)) }
   finally { checkingOut.value = false }
 }
