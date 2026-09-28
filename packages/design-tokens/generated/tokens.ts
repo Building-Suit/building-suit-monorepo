@@ -201,7 +201,7 @@ export const tokens = {
           "value": "{color.gray.700}"
         },
         "focusRing": {
-          "value": "{color.brand.premiumGold}"
+          "value": "{color.brand.buildingNavy}"
         },
         "primaryPressed": {
           "value": "{color.brand.deepStructureNavy}"

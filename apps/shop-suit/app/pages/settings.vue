@@ -7,7 +7,9 @@ definePageMeta({ layout: 'default', middleware: ['auth'] })
 
 const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
 const { locale } = useI18n()
-const { current, isOwner, reload } = useShop()
+const { current, currentId, loading, loadError: shopError, isOwner, reload } = useShop()
+const { success } = useToasts()
+const ui = useUiCopy()
 const selectedMode = ref<BusinessMode>('mixed')
 const pending = ref(false)
 const errorMessage = ref('')
@@ -42,8 +44,9 @@ const modeOptions = computed(() => BUSINESS_MODES.map(value => ({
   body: copy.value[`${value}Body` as const],
 })))
 
-watch(() => current.value?.business_mode, (mode) => {
-  if (mode) selectedMode.value = mode
+watch([currentId, () => current.value?.business_mode], ([, mode]) => {
+  selectedMode.value = mode ?? 'mixed'
+  errorMessage.value = ''; successMessage.value = ''
 }, { immediate: true })
 
 watch(selectedMode, () => {
@@ -64,6 +67,7 @@ async function saveMode() {
     if (error) throw error
     await reload()
     successMessage.value = copy.value.success
+    success(copy.value.success)
   } catch {
     errorMessage.value = copy.value.failed
   } finally {
@@ -80,16 +84,18 @@ async function saveMode() {
       <p class="mt-2 text-sm text-muted-foreground">{{ copy.subtitle }}</p>
     </header>
 
-    <section class="rounded-2xl border border-border bg-card p-5 sm:p-6">
+    <p v-if="loading" role="status">{{ ui('loading') }}</p>
+    <div v-else-if="shopError" role="alert" class="ls-error">{{ copy.failed }} <BsButton @click="reload()">{{ ui('retry') }}</BsButton></div>
+    <p v-else-if="!current" role="status">{{ ui('empty') }}</p>
+    <section v-else class="rounded-2xl border border-border bg-card p-5 sm:p-6">
       <h2 class="text-lg font-extrabold">{{ copy.modeTitle }}</h2>
       <p class="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{{ copy.modeHelp }}</p>
 
-      <p v-if="!isOwner" role="status" class="mt-5 rounded-xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-4 text-sm text-[var(--bs-status-warning)]">{{ copy.ownerOnly }}</p>
+      <p v-if="!isOwner" role="status" class="mt-5 rounded-xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-4 text-sm text-fg">{{ copy.ownerOnly }}</p>
       <p class="mt-5 rounded-xl border border-border bg-background p-4 text-sm leading-6">{{ copy.preserve }}</p>
-      <p v-if="errorMessage" role="alert" class="mt-4 rounded-xl border border-[var(--bs-status-error)]/30 bg-[var(--bs-status-error-bg)] p-3 text-sm text-[var(--bs-status-error)]">{{ errorMessage }}</p>
-      <p v-if="successMessage" role="status" class="mt-4 rounded-xl border border-[var(--bs-status-success)]/30 bg-[var(--bs-status-success-bg)] p-3 text-sm text-[var(--bs-status-success)]">{{ successMessage }}</p>
+      <p v-if="successMessage" role="status" class="mt-4 rounded-xl border border-[var(--bs-status-success)]/30 bg-[var(--bs-status-success-bg)] p-3 text-sm text-fg">{{ successMessage }}</p>
 
-      <form class="mt-5 space-y-5" @submit.prevent="saveMode">
+      <BsForm class="mt-5 space-y-5" :pending="pending" :error="errorMessage" @submit="saveMode">
         <fieldset class="grid gap-3 md:grid-cols-3" :disabled="!isOwner || pending">
           <legend class="sr-only">{{ copy.modeTitle }}</legend>
           <label v-for="mode in modeOptions" :key="mode.value" class="cursor-pointer rounded-2xl border p-4 transition disabled:cursor-not-allowed" :class="selectedMode === mode.value ? 'border-[var(--bs-accent)] ring-2 ring-[var(--bs-accent)]/15' : 'border-border'">
@@ -100,8 +106,8 @@ async function saveMode() {
             <span class="mt-2 block text-sm leading-6 text-muted-foreground">{{ mode.body }}</span>
           </label>
         </fieldset>
-        <button type="submit" class="ls-btn ls-btn-primary" :disabled="!isOwner || pending || !current || selectedMode === current.business_mode">{{ pending ? copy.saving : copy.save }}</button>
-      </form>
+        <BsButton type="submit" class="ls-btn ls-btn-primary" :pending="pending" :disabled="!isOwner || !current || selectedMode === current.business_mode">{{ pending ? copy.saving : copy.save }}</BsButton>
+      </BsForm>
     </section>
   </div>
 </template>

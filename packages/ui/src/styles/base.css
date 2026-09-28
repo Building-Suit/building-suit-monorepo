@@ -171,6 +171,13 @@ body {
   outline-offset: var(--bs-focus-ring-offset);
 }
 
+/* Brand panels stay dark even when the surrounding application is light. */
+.ls-brand-hero :focus-visible,
+.ls-landing-hero :focus-visible,
+.ls-auth-showcase :focus-visible {
+  outline-color: var(--bs-color-role-dark-focus-ring);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -226,6 +233,7 @@ body {
     gap: var(--bs-space-2);
     white-space: nowrap;
     min-height: var(--bs-button-height);
+    min-width: var(--bs-tap-target-min);
     padding: var(--bs-space-3) var(--bs-space-5);
     border: 1px solid var(--bs-border);
     border-radius: var(--bs-radius-button);
@@ -319,6 +327,7 @@ body {
     line-height: var(--bs-type-caption-lh);
   }
 
+  .ls-select,
   .ls-input {
     width: 100%;
     min-height: var(--bs-input-height);
