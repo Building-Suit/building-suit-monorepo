@@ -9,6 +9,7 @@ export interface SubscriptionSummary {
   current_period_end: string | null
   grace_period_ends_at: string | null
   cancel_at_period_end: boolean
+  provider: string | null
   provider_status: string | null
 }
 
@@ -77,7 +78,7 @@ export function useBilling() {
           supabase.rpc('subscription_access_state', { p_organization_id: organizationId }),
           supabase
             .from('subscriptions')
-            .select('status,billing_interval,trial_ends_at,current_period_end,grace_period_ends_at,cancel_at_period_end,provider_status')
+            .select('status,billing_interval,trial_ends_at,current_period_end,grace_period_ends_at,cancel_at_period_end,provider,provider_status')
             .eq('organization_id', organizationId)
             .maybeSingle(),
         ])

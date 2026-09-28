@@ -7,7 +7,11 @@ const { compact = false, surface = 'checkout' } = defineProps<{
   surface?: 'checkout' | 'public' | 'display' | 'manage'
 }>()
 const supabase = useSupabaseClient<Database>()
-const { currentId } = useTenant()
+const { currentId, can } = useTenant()
+const user = useSupabaseUser()
+const manualOpen = ref(false)
+const manualPlan = ref<LaunchPlanKey>()
+watch([currentId, user], () => { manualOpen.value = false; manualPlan.value = undefined })
 const { rows: usageRows } = usePlanUsage()
 const { createCheckoutSession, accessState, subscription } = useBilling()
 const { t, locale } = useI18n()
@@ -242,6 +246,9 @@ async function reviewChange(planKey: LaunchPlanKey) {
       </template>
     </section>
 
+    <button v-if="['checkout', 'manage', 'display'].includes(surface) && can('billing.manage')" type="button" class="ls-btn" @click="manualPlan = undefined; manualOpen = true">{{ t('billing.manual.requests') }}</button>
+    <ManualPaymentCheckout v-if="manualOpen" :key="`${currentId}:${user?.id}`" :plan="manualPlan" :interval="interval" @close="manualOpen = false" />
+
     <fieldset class="mx-auto max-w-sm">
       <legend class="ls-label text-center">{{ t('billing.billingCycle') }}</legend>
       <div class="mx-auto grid max-w-xs grid-cols-2 rounded-full border border-[var(--bs-border)] bg-surface-muted p-1 shadow-inner" dir="ltr">
@@ -310,6 +317,7 @@ async function reviewChange(planKey: LaunchPlanKey) {
         </button>
         <NuxtLink v-else-if="surface === 'public' && plan.is_purchasable" to="/signup" class="ls-btn ls-btn-primary mt-6 w-full">{{ t('landing.startTrial') }}</NuxtLink>
         <button v-else-if="!plan.is_purchasable" type="button" class="ls-btn mt-6 w-full" disabled>{{ t('billing.plans.comingSoon') }}</button>
+        <button v-if="surface === 'checkout' && plan.is_purchasable && can('billing.manage')" type="button" class="ls-btn mt-2 w-full" @click="manualPlan = plan.plan_key as LaunchPlanKey; manualOpen = true">{{ t('billing.manual.choose') }}</button>
       </article>
     </div>
 

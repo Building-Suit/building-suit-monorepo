@@ -1487,6 +1487,33 @@
   },
   "notifications": { "title": "Notifications", "markAll": "Mark all read", "empty": "No notifications yet." },
   "billing": {
+    "manual": {
+      "openSubscription": "Open activated subscription",
+      "notConfigured": "Manual payment instructions are not available yet. Please contact support.",
+      "failed": "The receipt could not be submitted. Check the file and retry.",
+      "title": "InstaPay / manual payment",
+      "choose": "Pay by InstaPay / manual transfer",
+      "requests": "Manual payment requests",
+      "denied": "You do not have permission to manage billing.",
+      "empty": "No manual payment requests yet. Select a plan to begin.",
+      "pendingHint": "One pending request per organization. Check the plan and amount below before paying. Cancel this request before choosing a different plan. Activation follows operator approval.",
+      "reference": "Payment reference",
+      "receipt": "Receipt",
+      "fileHint": "Upload a JPEG, PNG or PDF receipt, up to 5 MiB, and enter a reason.",
+      "reason": "Submission or cancellation reason",
+      "submit": "Submit receipt for review",
+      "cancel": "Cancel payment request",
+      "history": "Review history",
+      "managed": "Paid by manual transfer. Your purchased period does not renew automatically.",
+      "states": {
+        "draft": "Awaiting receipt",
+        "submitted": "Submitted",
+        "under_review": "Under review",
+        "approved": "Approved",
+        "rejected": "Rejected — submit replacement evidence",
+        "cancelled": "Cancelled"
+      }
+    },
     "title": "Subscription",
     "subtitle": "Manage the Ledger Suit subscription for this organization.",
     "singlePlan": "Ledger Suit plans",

@@ -52,9 +52,10 @@ const currentPlanName = computed(() => {
         <div><dt class="text-xs text-fg-muted">{{ t('billing.nextDate') }}</dt><dd class="font-semibold">{{ displayDate(renewalDate) }}</dd></div>
       </dl>
 
-      <p v-if="subscription?.provider_status" class="text-sm text-fg-muted">
+      <p v-if="subscription?.provider === 'paymob'" class="text-sm text-fg-muted">
         {{ t('billing.managedByPaymob') }}
       </p>
+      <p v-if="subscription?.provider === 'manual'" class="text-sm text-fg-muted">{{ t('billing.manual.managed') }}</p>
       <div id="plans"><BillingCheckout :surface="pricingSurface" compact /></div>
     </div>
     <UsageMeters />
