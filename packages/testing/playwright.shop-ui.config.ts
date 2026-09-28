@@ -1,6 +1,9 @@
 import { defineConfig, devices } from '@playwright/test'
 import { fileURLToPath } from 'node:url'
 const root = fileURLToPath(new URL('../../', import.meta.url))
+
+process.env.BS_E2E_DOCS_URL ??= 'http://127.0.0.1:4422'
+process.env.BS_E2E_SHOP_URL ??= 'http://127.0.0.1:4421'
 export default defineConfig({
   testDir: './e2e', testMatch: 'shop-ui-foundation.spec.ts', workers: 2, retries: 0,
   reporter: 'list', outputDir: '../../test-results/shop-ui',

@@ -1,5 +1,11 @@
 import { test, expect, type Page } from '@playwright/test'
 
+const docsBaseUrl =
+  process.env.BS_E2E_DOCS_URL ?? 'http://127.0.0.1:4322'
+
+const shopBaseUrl =
+  process.env.BS_E2E_SHOP_URL ?? 'http://127.0.0.1:4321'
+
 for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) {
   test(`shared patterns: ${locale}, ${theme}, keyboard and mobile`, async ({ page, context }) => {
     const errors: string[] = []
@@ -7,7 +13,7 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) {
     await context.addCookies([{ name: 'building-suit-locale', value: locale, domain: '127.0.0.1', path: '/' }])
     await page.addInitScript(value => localStorage.setItem('building-suit.theme', value), theme)
     await page.setViewportSize({ width: 390, height: 844 })
-    await page.goto('http://127.0.0.1:4322/components')
+    await page.goto(`${docsBaseUrl}/components`)
     await expect(page.locator('html')).toHaveAttribute('dir', locale === 'ar' ? 'rtl' : 'ltr')
     await expect(page.locator('html')).toHaveAttribute('data-theme', theme)
     const patterns = page.getByTestId('foundation-patterns')
@@ -16,14 +22,14 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) {
     await page.keyboard.press('ArrowDown')
     await expect(page.getByRole('listbox')).toBeVisible()
     expect(await page.getByRole('option').count()).toBeLessThan(50)
-    const filter = page.getByRole('textbox', { name: locale === 'ar' ? 'بحث · الصنف' : 'Search · Item' })
+    const filter = page.getByRole('searchbox', { name: locale === 'ar' ? 'بحث · الصنف' : 'Search · Item' })
     await filter.fill('Item 9999')
     await expect(page.getByRole('option')).toHaveCount(1)
     await filter.press('ArrowDown')
     await filter.press('Enter')
     await expect(picker).toContainText('Item 9999')
     await picker.press('ArrowDown')
-    await page.getByRole('textbox', { name: locale === 'ar' ? 'بحث · الصنف' : 'Search · Item' }).fill('does-not-exist')
+    await page.getByRole('searchbox', { name: locale === 'ar' ? 'بحث · الصنف' : 'Search · Item' }).fill('does-not-exist')
     await expect(page.getByText(locale === 'ar' ? 'لا توجد سجلات' : 'No records found', { exact: true })).toBeVisible()
     await page.keyboard.press('Escape')
     await expect(picker).toBeFocused()
@@ -98,7 +104,7 @@ async function shopFixture(page: Page) {
     await route.fulfill({ json: data })
   })
   await page.context().addCookies([{ name: 'building-suit-locale', value: 'en', domain: '127.0.0.1', path: '/' }])
-  await page.goto('http://127.0.0.1:4321/auth/login')
+  await page.goto(`${shopBaseUrl}/auth/login`)
   await page.locator('#login-email').fill(user.email)
   await page.locator('#login-password').fill('fixture-password')
   await page.locator('form button[type="submit"]').click()
@@ -131,9 +137,10 @@ test('Shop virtualized sale picker, receipt allocations across pages, settings s
   await picker.click()
   expect(await page.getByRole('option').count()).toBeLessThan(50)
   await page.keyboard.press('Escape')
-  await expect(page.getByRole('dialog')).toBeVisible()
-  await page.keyboard.press('Escape')
-  await expect(page.getByRole('dialog')).toHaveCount(0)
+  const saleDialog = page.getByRole('dialog')
+  await expect(saleDialog).toBeVisible()
+  await saleDialog.getByRole('button', { name: 'Cancel', exact: true }).click()
+  await expect(saleDialog).toHaveCount(0)
   await page.locator('a[href="/customers"]').first().click()
   await page.getByRole('link', { name: 'Customer fixture', exact: true }).click()
   await page.getByRole('button', { name: 'Record receipt', exact: true }).click()

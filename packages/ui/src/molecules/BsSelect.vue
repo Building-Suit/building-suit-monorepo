@@ -17,13 +17,13 @@ const ui = useUiCopy()
 <template>
   <Select
     v-bind="$attrs" v-model="model" :options="options" :option-label="optionLabel" :option-value="optionValue"
-    :aria-label="label" :filter-input-props="{ 'aria-label': `${ui('search')} · ${label}` }"
+    :aria-label="label"
     :empty-message="ui('empty')" :empty-filter-message="ui('empty')"
     :virtual-scroller-options="virtual || virtualScrollerOptions ? { ...virtualScrollerOptions, itemSize: 44 } : undefined"
     :pt="{
       root: { class: 'bs-select ls-input' }, label: { class: 'bs-select-label' },
       dropdown: { class: 'bs-select-trigger' }, overlay: { class: 'bs-select-overlay ls-card shadow-overlay' },
-      header: { class: 'p-2' }, pcFilter: { root: { class: 'ls-input' } },
+      header: { class: 'p-2' }, pcFilter: { root: { class: 'ls-input', 'aria-label': ui('search') + ' · ' + label } },
       list: { class: 'm-0 p-0 list-none' }, option: { class: 'bs-select-option' },
       emptyMessage: { class: 'p-3 text-fg-muted' },
     }"
