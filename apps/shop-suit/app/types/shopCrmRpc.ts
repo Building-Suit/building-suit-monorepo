@@ -108,6 +108,54 @@ export type ShopRpcDatabase = {
         Args: { p_shop_id: string; p_membership_id: string; p_location_ids: string[] }
         Returns: undefined
       }
+      shop_team_read: {
+        Args: { p_shop_id: string }
+        Returns: unknown
+      }
+      shop_permission_access: {
+        Args: { p_shop_id: string; p_permission_keys: string[] }
+        Returns: Record<string, boolean>
+      }
+      invite_shop_member: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_email: string
+          p_display_name: string | null
+          p_role_key: string
+          p_location_ids: string[]
+        }
+        Returns: unknown
+      }
+      accept_shop_invitation: {
+        Args: { p_request_id: string; p_invitation_code: string }
+        Returns: string
+      }
+      revoke_shop_invitation: {
+        Args: { p_request_id: string; p_shop_id: string; p_invitation_id: string; p_reason?: string | null }
+        Returns: undefined
+      }
+      manage_shop_member: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_membership_id: string
+          p_action: 'suspend' | 'reactivate' | 'remove' | 'change_role' | 'assign_locations'
+          p_role_key?: string | null
+          p_location_ids?: string[] | null
+          p_reason?: string | null
+        }
+        Returns: undefined
+      }
+      transfer_shop_ownership: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_target_membership_id: string
+          p_reason: string
+        }
+        Returns: undefined
+      }
       location_operational_report: {
         Args: {
           p_shop_id: string

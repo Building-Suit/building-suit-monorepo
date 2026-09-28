@@ -18,7 +18,7 @@ type Category = { id: string; name: string }
 const supabase = useSupabaseClient()
 const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
 const { locale } = useI18n()
-const { current, currentId, isOwner, loading: shopLoading } = useShop()
+const { current, currentId, loading: shopLoading } = useShop()
 const isArabic = computed(() => locale.value === 'ar')
 const search = ref('')
 const voidingId = ref<string | null>(null)
@@ -27,6 +27,16 @@ const requestId = ref<string | null>(null)
 const actionError = ref('')
 const form = reactive({ title: '', amount: 0, category: '', date: '', notes: '' })
 const { visible: showForm, pending: saving, dirty: formDirty } = useRecordAction(() => form)
+
+const { data: permissionAccess } = useAsyncData('shop-data:expense-permissions', async () => {
+  if (!currentId.value) return { 'expenses.manage': false }
+  const { data, error } = await shopRpc.rpc('shop_permission_access', {
+    p_shop_id: currentId.value, p_permission_keys: ['expenses.manage'],
+  })
+  if (error) throw error
+  return data
+}, { watch: [currentId], default: () => ({ 'expenses.manage': false }) })
+const canManage = computed(() => permissionAccess.value?.['expenses.manage'] === true)
 
 function localToday() {
   const now = new Date()
@@ -164,7 +174,7 @@ function readableError(message?: string) {
 }
 
 async function save() {
-  if (!currentId.value || !isOwner.value || saving.value) return
+  if (!currentId.value || !canManage.value || saving.value) return
   actionError.value = ''
   const amount = Number(form.amount)
   if (form.title.trim().length < 2 || form.title.trim().length > 160
@@ -197,7 +207,7 @@ async function save() {
 }
 
 async function voidExpense(expense: Expense) {
-  if (!currentId.value || !isOwner.value || voidingId.value) return
+  if (!currentId.value || !canManage.value || voidingId.value) return
   if (!await confirmation.ask(copy.value.voidConfirm)) return
   actionError.value = ''
   voidingId.value = expense.id
@@ -219,7 +229,7 @@ async function voidExpense(expense: Expense) {
   <div class="space-y-6">
     <header class="flex flex-wrap items-end justify-between gap-4">
       <div><h1 class="text-3xl font-extrabold tracking-tight">{{ copy.title }}</h1><p class="mt-2 text-sm text-muted-foreground">{{ copy.subtitle }}</p></div>
-      <button v-if="current && isOwner" type="button" class="ls-btn ls-btn-primary" @click="openCreate">{{ copy.add }}</button>
+      <button v-if="current && canManage" type="button" class="ls-btn ls-btn-primary" @click="openCreate">{{ copy.add }}</button>
     </header>
     <div v-if="!current && !shopLoading" class="rounded-2xl border border-border bg-card p-8 text-center text-sm"><p>{{ copy.noShop }}</p><NuxtLink to="/dashboard" class="mt-3 inline-block font-bold text-[var(--bs-link)] underline">{{ copy.dashboard }}</NuxtLink></div>
     <template v-else-if="current">
@@ -262,7 +272,7 @@ async function voidExpense(expense: Expense) {
   </Column>
   <Column header-class="py-3 text-end" body-class="space-x-2 py-3 text-end">
     <template #header>{{ copy.edit }}</template>
-    <template #body="{ data: entry }"><template v-if="isOwner && entry.status === 'paid'"><button type="button" class="font-bold text-[var(--bs-link)]" @click="openEdit(entry)">{{ copy.edit }}</button><button type="button" class="font-bold text-[var(--bs-status-error)]" :disabled="voidingId === entry.id" @click="voidExpense(entry)">{{ copy.void }}</button></template></template>
+    <template #body="{ data: entry }"><template v-if="canManage && entry.status === 'paid'"><button type="button" class="font-bold text-[var(--bs-link)]" @click="openEdit(entry)">{{ copy.edit }}</button><button type="button" class="font-bold text-[var(--bs-status-error)]" :disabled="voidingId === entry.id" @click="voidExpense(entry)">{{ copy.void }}</button></template></template>
   </Column>
 </BsDataTable></div>
       </section>

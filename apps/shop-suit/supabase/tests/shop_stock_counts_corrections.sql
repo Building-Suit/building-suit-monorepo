@@ -254,7 +254,8 @@ begin
   select v_portal, permission.key, permission.description
   from (values
     ('inventory.view', 'View inventory'),
-    ('inventory.manage', 'Manage inventory')
+    ('inventory.manage', 'Manage inventory'),
+    ('inventory.adjust', 'Record stock corrections')
   ) as permission(key, description)
   on conflict (portal_id, key) do nothing;
   insert into public.profiles (id, user_id, portal_id, display_name, email_snapshot)
@@ -267,7 +268,7 @@ begin
   insert into public.role_permissions (role_id, permission_id)
   select v_role, permission.id from public.permissions permission
   where permission.portal_id = v_portal
-    and permission.key in ('inventory.view', 'inventory.manage');
+    and permission.key in ('inventory.view', 'inventory.manage', 'inventory.adjust');
   perform set_config('ss_stock.staff_membership', v_membership::text, true);
 end;
 $$;

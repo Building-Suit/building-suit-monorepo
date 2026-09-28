@@ -8,7 +8,7 @@ definePageMeta({ layout: 'default', middleware: ['auth'] })
 const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
 const confirmation = useConfirmation()
 const { locale } = useI18n()
-const { current, currentId, locations, loading, loadError: shopError, isOwner, reload, loadLocations } = useShop()
+const { current, currentId, locations, loading, loadError: shopError, reload, loadLocations } = useShop()
 const { success } = useToasts()
 const ui = useUiCopy()
 const selectedMode = ref<BusinessMode>('mixed')
@@ -19,6 +19,15 @@ const locationPending = ref(false)
 const locationError = ref('')
 const locationForm = reactive({ name: '', code: '', address: '', phone: '' })
 const isArabic = computed(() => locale.value === 'ar')
+const { data: permissionAccess } = useAsyncData('shop-data:settings-permissions', async () => {
+  if (!currentId.value) return { 'settings.manage': false }
+  const { data, error } = await shopRpc.rpc('shop_permission_access', {
+    p_shop_id: currentId.value, p_permission_keys: ['settings.manage'],
+  })
+  if (error) throw error
+  return data
+}, { watch: [currentId], default: () => ({ 'settings.manage': false }) })
+const canManage = computed(() => permissionAccess.value?.['settings.manage'] === true)
 
 const copy = computed(() => isArabic.value ? {
   title: 'إعدادات النشاط', subtitle: 'اضبط مسارات العمل المناسبة لنشاطك.',
@@ -27,7 +36,7 @@ const copy = computed(() => isArabic.value ? {
   service: 'خدمات فقط', serviceBody: 'إظهار الخدمات دون فرض إنشاء منتجات أو سجلات مخزون.',
   mixed: 'منتجات وخدمات', mixedBody: 'إظهار مسارات المنتجات والمخزون والخدمات معًا.',
   preserve: 'عند تغيير الطريقة، تظل المنتجات والخدمات والمخزون والمشتريات وكل السجلات السابقة محفوظة، وتظهر مجددًا عند إعادة تفعيل المسار.',
-  ownerOnly: 'يمكن لمالك النشاط فقط تغيير هذا الإعداد. يمكنك رؤية الطريقة الحالية دون تعديلها.',
+  ownerOnly: 'تحتاج إلى صلاحية إدارة إعدادات النشاط. يمكنك رؤية الطريقة الحالية دون تعديلها.',
   save: 'حفظ طريقة التشغيل', saving: 'جارٍ الحفظ…', success: 'تم تحديث طريقة تشغيل النشاط.',
   failed: 'تعذّر تحديث طريقة تشغيل النشاط. حاول مرة أخرى.',
   locationsTitle: 'فروع النشاط', locationsHelp: 'أضف الفرع الثاني وأدر الفروع النشطة دون حذف السجل التاريخي.',
@@ -41,7 +50,7 @@ const copy = computed(() => isArabic.value ? {
   service: 'Services only', serviceBody: 'Show services without requiring products or stock records.',
   mixed: 'Products and services', mixedBody: 'Show product, stock, and service workflows together.',
   preserve: 'Changing mode preserves all existing products, services, inventory, purchases, and historical records. They appear again when their workflow is re-enabled.',
-  ownerOnly: 'Only the business owner can change this setting. You can view the current mode without editing it.',
+  ownerOnly: 'Business-settings permission is required. You can view the current mode without editing it.',
   save: 'Save operation mode', saving: 'Saving…', success: 'Business operation mode updated.',
   failed: 'Could not update the business operation mode. Try again.',
   locationsTitle: 'Business locations', locationsHelp: 'Add the second branch and manage active locations without deleting history.',
@@ -67,7 +76,7 @@ watch(selectedMode, () => {
 })
 
 async function saveMode() {
-  if (pending.value || !current.value || !isOwner.value || selectedMode.value === current.value.business_mode) return
+  if (pending.value || !current.value || !canManage.value || selectedMode.value === current.value.business_mode) return
   pending.value = true
   errorMessage.value = ''
   successMessage.value = ''
@@ -89,7 +98,7 @@ async function saveMode() {
 
 async function addLocation() {
   const name = locationForm.name.trim()
-  if (!currentId.value || !isOwner.value || locationPending.value || name.length < 2) return
+  if (!currentId.value || !canManage.value || locationPending.value || name.length < 2) return
   locationPending.value = true
   locationError.value = ''
   try {
@@ -113,7 +122,7 @@ async function addLocation() {
 }
 
 async function archiveLocation(locationId: string) {
-  if (!currentId.value || !isOwner.value || locationPending.value
+  if (!currentId.value || !canManage.value || locationPending.value
     || !await confirmation.ask(copy.value.archiveLocationConfirm)) return
   locationPending.value = true
   locationError.value = ''
@@ -147,12 +156,12 @@ async function archiveLocation(locationId: string) {
       <h2 class="text-lg font-extrabold">{{ copy.modeTitle }}</h2>
       <p class="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{{ copy.modeHelp }}</p>
 
-      <p v-if="!isOwner" role="status" class="mt-5 rounded-xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-4 text-sm text-fg">{{ copy.ownerOnly }}</p>
+      <p v-if="!canManage" role="status" class="mt-5 rounded-xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-4 text-sm text-fg">{{ copy.ownerOnly }}</p>
       <p class="mt-5 rounded-xl border border-border bg-background p-4 text-sm leading-6">{{ copy.preserve }}</p>
       <p v-if="successMessage" role="status" class="mt-4 rounded-xl border border-[var(--bs-status-success)]/30 bg-[var(--bs-status-success-bg)] p-3 text-sm text-fg">{{ successMessage }}</p>
 
       <BsForm class="mt-5 space-y-5" :pending="pending" :error="errorMessage" @submit="saveMode">
-        <fieldset class="grid gap-3 md:grid-cols-3" :disabled="!isOwner || pending">
+        <fieldset class="grid gap-3 md:grid-cols-3" :disabled="!canManage || pending">
           <legend class="sr-only">{{ copy.modeTitle }}</legend>
           <label v-for="mode in modeOptions" :key="mode.value" class="cursor-pointer rounded-2xl border p-4 transition disabled:cursor-not-allowed" :class="selectedMode === mode.value ? 'border-[var(--bs-accent)] ring-2 ring-[var(--bs-accent)]/15' : 'border-border'">
             <span class="flex items-center gap-2">
@@ -162,7 +171,7 @@ async function archiveLocation(locationId: string) {
             <span class="mt-2 block text-sm leading-6 text-muted-foreground">{{ mode.body }}</span>
           </label>
         </fieldset>
-        <BsButton type="submit" class="ls-btn ls-btn-primary" :pending="pending" :disabled="!isOwner || !current || selectedMode === current.business_mode">{{ pending ? copy.saving : copy.save }}</BsButton>
+        <BsButton type="submit" class="ls-btn ls-btn-primary" :pending="pending" :disabled="!canManage || !current || selectedMode === current.business_mode">{{ pending ? copy.saving : copy.save }}</BsButton>
       </BsForm>
     </section>
 
@@ -179,11 +188,11 @@ async function archiveLocation(locationId: string) {
           <span class="flex items-center gap-2">
             <span v-if="location.is_default" class="rounded-full bg-muted px-2 py-1 text-xs font-bold">{{ copy.defaultLocation }}</span>
             <span v-if="location.status === 'archived'" class="rounded-full bg-muted px-2 py-1 text-xs font-bold">{{ copy.archivedLocation }}</span>
-            <BsButton v-if="isOwner && !location.is_default && location.status === 'active'" type="button" severity="secondary" :disabled="locationPending" @click="archiveLocation(location.id)">{{ copy.archiveLocation }}</BsButton>
+            <BsButton v-if="canManage && !location.is_default && location.status === 'active'" type="button" severity="secondary" :disabled="locationPending" @click="archiveLocation(location.id)">{{ copy.archiveLocation }}</BsButton>
           </span>
         </li>
       </ul>
-      <BsForm v-if="isOwner" class="mt-5 grid gap-3 sm:grid-cols-2" :pending="locationPending" :error="locationError" @submit="addLocation">
+      <BsForm v-if="canManage" class="mt-5 grid gap-3 sm:grid-cols-2" :pending="locationPending" :error="locationError" @submit="addLocation">
         <label class="grid gap-1 text-sm"><span>{{ copy.locationName }}</span><input v-model="locationForm.name" class="ls-input" required minlength="2" maxlength="120"></label>
         <label class="grid gap-1 text-sm"><span>{{ copy.locationCode }}</span><input v-model="locationForm.code" class="ls-input" maxlength="32"></label>
         <label class="grid gap-1 text-sm"><span>{{ copy.locationAddress }}</span><input v-model="locationForm.address" class="ls-input"></label>

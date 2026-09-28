@@ -352,7 +352,7 @@ do $$ begin
 end $$;
 
 -- An outsider and an unprivileged employee cannot mutate Shop A. Granting the
--- existing inventory.manage permission permits the employee, and suspension
+-- products.manage permission permits the employee, and suspension
 -- takes effect immediately without issuing a new JWT.
 select set_config('request.jwt.claim.sub', outsider_id::text, true)
 from shop_safe_fixture;
@@ -386,7 +386,7 @@ begin
   values (current_setting('ss_safe.shop_a')::uuid, v_profile, 'employee')
   returning id into v_membership;
   insert into public.permissions (portal_id, key, description)
-  select s.portal_id, 'inventory.manage', 'SS-SAFE-001 fixture'
+  select s.portal_id, 'products.manage', 'SS-SAFE-001 fixture'
   from public.shops s where s.id = current_setting('ss_safe.shop_a')::uuid
   on conflict (portal_id, key) do update set description = excluded.description
   returning id into v_permission;

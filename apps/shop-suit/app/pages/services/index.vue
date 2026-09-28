@@ -16,7 +16,7 @@ type Service = {
 const supabase = useSupabaseClient()
 const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
 const { locale } = useI18n()
-const { current, currentId, isOwner, loading: shopLoading } = useShop()
+const { current, currentId, loading: shopLoading } = useShop()
 const isArabic = computed(() => locale.value === 'ar')
 const search = ref('')
 const editingId = ref<string | null>(null)
@@ -27,6 +27,16 @@ const form = reactive({
   discountType: 'amount' as 'amount' | 'percent', discountValue: 0,
 })
 const { visible: showForm, pending: saving, dirty: formDirty } = useRecordAction(() => form)
+
+const { data: permissionAccess } = useAsyncData('shop-data:service-permissions', async () => {
+  if (!currentId.value) return { 'services.manage': false }
+  const { data, error } = await shopRpc.rpc('shop_permission_access', {
+    p_shop_id: currentId.value, p_permission_keys: ['services.manage'],
+  })
+  if (error) throw error
+  return data
+}, { watch: [currentId], default: () => ({ 'services.manage': false }) })
+const canManage = computed(() => permissionAccess.value?.['services.manage'] === true)
 
 const copy = computed(() => isArabic.value ? {
   title: 'الخدمات', subtitle: 'أضف خدمات متجرك وأسعارها وخصوماتها الافتراضية.',
@@ -123,7 +133,7 @@ function readableError(message?: string) {
 }
 
 async function save() {
-  if (!currentId.value || saving.value || !isOwner.value) return
+  if (!currentId.value || saving.value || !canManage.value) return
   actionError.value = ''
   const price = Number(form.price)
   const discount = Number(form.discountValue)
@@ -154,7 +164,7 @@ async function save() {
 }
 
 async function archive(service: Service) {
-  if (!currentId.value || archivingId.value || !isOwner.value) return
+  if (!currentId.value || archivingId.value || !canManage.value) return
   if (!await confirmation.ask(copy.value.archiveConfirm)) return
   actionError.value = ''
   archivingId.value = service.id
@@ -176,7 +186,7 @@ async function archive(service: Service) {
   <div class="space-y-6">
     <header class="flex flex-wrap items-end justify-between gap-4">
       <div><h1 class="text-3xl font-extrabold tracking-tight">{{ copy.title }}</h1><p class="mt-2 text-sm text-muted-foreground">{{ copy.subtitle }}</p></div>
-      <button v-if="current && isOwner" type="button" class="ls-btn ls-btn-primary" @click="openCreate">{{ copy.add }}</button>
+      <button v-if="current && canManage" type="button" class="ls-btn ls-btn-primary" @click="openCreate">{{ copy.add }}</button>
     </header>
 
     <div v-if="!current && !shopLoading" class="rounded-2xl border border-border bg-card p-8 text-center text-sm"><p>{{ copy.noShop }}</p><NuxtLink to="/dashboard" class="mt-3 inline-block font-bold text-[var(--bs-link)] underline">{{ copy.dashboard }}</NuxtLink></div>
@@ -214,7 +224,7 @@ async function archive(service: Service) {
   </Column>
   <Column header-class="py-3 text-end" body-class="space-x-2 py-3 text-end">
     <template #header>{{ copy.edit }}</template>
-    <template #body="{ data: service }"><button v-if="isOwner" type="button" class="font-bold text-[var(--bs-link)]" @click="openEdit(service)">{{ copy.edit }}</button><button v-if="isOwner" type="button" class="font-bold text-[var(--bs-status-error)]" :disabled="archivingId === service.id" @click="archive(service)">{{ copy.archive }}</button></template>
+    <template #body="{ data: service }"><button v-if="canManage" type="button" class="font-bold text-[var(--bs-link)]" @click="openEdit(service)">{{ copy.edit }}</button><button v-if="canManage" type="button" class="font-bold text-[var(--bs-status-error)]" :disabled="archivingId === service.id" @click="archive(service)">{{ copy.archive }}</button></template>
   </Column>
 </BsDataTable></div>
       </section>

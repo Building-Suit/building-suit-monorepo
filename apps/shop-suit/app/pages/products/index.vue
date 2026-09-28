@@ -16,7 +16,7 @@ type Product = {
 const supabase = useSupabaseClient()
 const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
 const { locale } = useI18n()
-const { current, currentId, isOwner, loading: shopLoading } = useShop()
+const { current, currentId, loading: shopLoading } = useShop()
 const isArabic = computed(() => locale.value === 'ar')
 const search = ref('')
 const editingId = ref<string | null>(null)
@@ -24,6 +24,16 @@ const archivingId = ref<string | null>(null)
 const actionError = ref('')
 const form = reactive({ name: '', sku: '', barcode: '', salePrice: 0 })
 const { visible: showForm, pending: saving, dirty: formDirty } = useRecordAction(() => form)
+
+const { data: permissionAccess } = useAsyncData('shop-data:product-permissions', async () => {
+  if (!currentId.value) return { 'products.manage': false }
+  const { data, error } = await shopRpc.rpc('shop_permission_access', {
+    p_shop_id: currentId.value, p_permission_keys: ['products.manage'],
+  })
+  if (error) throw error
+  return data
+}, { watch: [currentId], default: () => ({ 'products.manage': false }) })
+const canManage = computed(() => permissionAccess.value?.['products.manage'] === true)
 
 const copy = computed(() => isArabic.value ? {
   title: 'المنتجات', subtitle: 'أنشئ منتجات متجرك وحدد سعر البيع.',
@@ -105,7 +115,7 @@ function readableError(message?: string) {
 }
 
 async function save() {
-  if (!currentId.value || saving.value || !isOwner.value) return
+  if (!currentId.value || saving.value || !canManage.value) return
   actionError.value = ''
   const price = Number(form.salePrice)
   if (form.name.trim().length < 2 || form.name.trim().length > 160
@@ -134,7 +144,7 @@ async function save() {
 }
 
 async function archive(product: Product) {
-  if (!currentId.value || archivingId.value || !isOwner.value) return
+  if (!currentId.value || archivingId.value || !canManage.value) return
   if (!await confirmation.ask(copy.value.archiveConfirm)) return
   actionError.value = ''
   archivingId.value = product.id
@@ -163,7 +173,7 @@ function money(value: number) {
   <div class="space-y-6">
     <header class="flex flex-wrap items-end justify-between gap-4">
       <div><h1 class="text-3xl font-extrabold tracking-tight">{{ copy.title }}</h1><p class="mt-2 text-sm text-muted-foreground">{{ copy.subtitle }}</p></div>
-      <button v-if="current && isOwner" type="button" class="ls-btn ls-btn-primary" @click="openCreate">{{ copy.add }}</button>
+      <button v-if="current && canManage" type="button" class="ls-btn ls-btn-primary" @click="openCreate">{{ copy.add }}</button>
     </header>
 
     <div v-if="!current && !shopLoading" class="rounded-2xl border border-border bg-card p-8 text-center text-sm"><p>{{ copy.noShop }}</p><NuxtLink to="/dashboard" class="mt-3 inline-block font-bold text-[var(--bs-link)] underline">{{ copy.dashboard }}</NuxtLink></div>
@@ -205,7 +215,7 @@ function money(value: number) {
   </Column>
   <Column header-class="px-5 py-3 text-end" body-class="whitespace-nowrap px-5 py-4 text-end">
     <template #header/>
-    <template #body="{ data: product }"><button v-if="isOwner" type="button" class="me-3 font-semibold text-[var(--bs-link)]" @click="openEdit(product)">{{ copy.edit }}</button><button v-if="isOwner" type="button" class="font-semibold text-[var(--bs-status-error)] disabled:opacity-50" :disabled="archivingId === product.id" @click="archive(product)">{{ copy.archive }}</button></template>
+    <template #body="{ data: product }"><button v-if="canManage" type="button" class="me-3 font-semibold text-[var(--bs-link)]" @click="openEdit(product)">{{ copy.edit }}</button><button v-if="canManage" type="button" class="font-semibold text-[var(--bs-status-error)] disabled:opacity-50" :disabled="archivingId === product.id" @click="archive(product)">{{ copy.archive }}</button></template>
   </Column>
 </BsDataTable></div>
       </div>

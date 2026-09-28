@@ -40,6 +40,7 @@ historical pre-transfer checkpoints only; they are not active deployment targets
 - [Task 09b supplier purchases](09b-supplier-purchases.md)
 - [Dedicated-project unlinked migration procedure](deploy-without-link.md)
 - [Plans and limitations reference](plans.md)
+- [Team management and authorization](team-management.md)
 - [Ordered task list and acceptance criteria](tasks.md)
 - [Cloud tables, columns, and policies](cloud-schema-audit.json)
 - [Cloud constraints, triggers, and grants](cloud-schema-constraints.json)
@@ -178,6 +179,14 @@ uses a request UUID so a repeated submission cannot charge twice. The hosted
 rollback fixture covered idempotency, closed periods, outsider denial and
 expired trials. Nuxt build and typecheck pass. Other income and reports remain
 pending. See [Task 11a](11a-expense-ledger.md).
+
+## SS-TEAM-001 record
+
+Added a complete tenant team workflow with email-bound invitations, practical
+granular-permission role presets, multi-location assignment, suspended/removed
+states, immediate backend denial, last-owner continuity, atomic ownership
+transfer, immutable audit events, and a bilingual responsive `/team` page.
+Platform-admin authority remains separate. See [SS-TEAM-001](team-management.md).
 
 ## Task 09b record
 

@@ -31,6 +31,7 @@ const links = computed(() => {
     { to: '/customers', label: t('customers.title'), icon: 'user' },
     { to: '/expenses', label: copy.value.expenses, icon: 'cash' },
     { to: '/billing', label: copy.value.billing, icon: 'wallet' },
+    { to: '/team', label: copy.value.team, icon: 'user' },
     { to: '/settings', label: copy.value.settings, icon: 'settings' },
   ]
 })
