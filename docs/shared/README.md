@@ -2,6 +2,7 @@
 
 - [Git and staging workflow](git-workflow.md): preflight, short-lived features, stacked/parallel PRs, manual-merge recovery and deployment controls.
 - [Design system](design-system.md): tokens, branding, Atomic Design and shared templates.
+- [Atomic Design implementation contract](atomic-design.md): approved artifact authority, layer dependencies, package entry points and cross-product adoption rules.
 - [Interaction policy](interactions.md): record actions, dialogs, signup and feedback.
 - [Database development](database.md): product-specific local commands, environment verification and hosted release procedure.
 - [Manual Supabase setup](supabase-manual-setup.md): organizations, project refs, frontend keys, deployment secrets and Auth configuration.

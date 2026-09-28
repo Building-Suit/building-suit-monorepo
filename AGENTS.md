@@ -59,7 +59,8 @@ Use manifests, package exports and the dependency graph to find interfaces and a
 - Use canonical Building Suit tokens and brand rules: Manrope, IBM Plex Sans Arabic, Hugeicons Stroke Rounded, the approved palette and theme behavior.
 - Change reusable visual values at their token source. Do not introduce per-page palettes, competing editable token sets or manual changes to generated outputs.
 - Use PrimeVue through the shared UI package. Reuse shared landing/auth/signup templates and the authenticated shell; product configuration supplies navigation, assets and content.
-- Apply Atomic Design to shared atoms, molecules, organisms and templates. Product pages, form requirements, tenancy and financial rules remain product-owned.
+- Apply the shared [Atomic Design implementation contract](docs/shared/atomic-design.md). Any reusable or cross-product UI is implemented in `packages/ui` first: molecules compose shared atoms, organisms compose shared molecules and atoms, and products consume those library components. Do not create or retain a standalone product-local copy of shared UI or copy/paste an approved HTML artifact into an app.
+- Treat the approved-component inventory linked from that contract as the implementation map. Preserve each component's `same` or `reference` approval mode and target layer; update the inventory and shared implementation together when an approved artifact changes.
 - Use `BsDataTable` for product data tables, configured with typed columns, query adapters, capabilities and slots. Do not implement a second datagrid.
 - Use shared record-action and overlay controllers for add/edit, confirmation, validation, loading, feedback, dirty-state protection and focus. Change interaction policy centrally and verify affected consumers.
 - Keep reusable components free of product queries and hardcoded copy. Components used by multiple products belong in the shared system.

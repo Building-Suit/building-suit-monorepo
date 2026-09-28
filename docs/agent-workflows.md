@@ -31,13 +31,15 @@ Apply workflow 1 first. Every new feature stacks on the latest verified active w
 
 ## 3. Add or change shared UI or interaction behavior
 
-1. Locate the atomic component/template, token source and interaction-policy owner. Search all consumers.
-2. Extend the existing typed interface/configuration/slots where appropriate; avoid per-product forks.
-3. Change tokens at their source and regenerate outputs when visual foundations change.
-4. Implement common presentation in `packages/ui`, interaction logic in `packages/ux` and framework integration in the shared Nuxt layer.
-5. Update the component catalogue, contracts and affected consumers together.
-6. Verify relevant language/direction/theme, mobile/desktop, keyboard/focus and loading/error/empty/success/permission states in every affected product.
-7. Run affected component/browser checks and boundary/token checks. Stop when the requested change's acceptance criteria pass.
+1. Read `docs/shared/atomic-design.md` and the approved-component inventory it links. Locate the approved artifact, approval mode, target layer, token source and interaction-policy owner; search all consumers and product-local overlaps.
+2. Implement reusable presentation in `packages/ui` before changing a product consumer. Atoms do not depend on higher layers; molecules compose shared atoms; organisms compose shared molecules and atoms. Products may own feature composition and business rules, but must not copy/paste approved HTML or keep a standalone duplicate of shared UI.
+3. Treat `same` artifacts as pixel-faithful implementation targets within the contract's engineering constraints. Treat `reference` artifacts as concept and composition targets that may be adapted only for implementation, accessibility, responsiveness, localization, theming and existing shared contracts. Do not silently change an approval mode.
+4. Extend the existing typed interface/configuration/slots where appropriate; avoid per-product forks. Put shared interaction logic in `packages/ux` and framework integration in the shared Nuxt layer.
+5. Change tokens at their source and regenerate outputs when visual foundations change.
+6. Replace overlapping Ledger Suit and Shop Suit implementations with imports/consumption of the shared component. Do not import either application's internals from the library or from the other application.
+7. Update the approved-component inventory, package entry points, component catalogue, contracts and affected consumers together. An inventory target path is a contract, not evidence that the component has already been implemented.
+8. Verify relevant language/direction/theme, mobile/desktop, keyboard/focus and loading/error/empty/success/permission states in both Ledger Suit and Shop Suit when affected.
+9. Run affected component/browser checks and boundary/token checks. Stop when the requested change's acceptance criteria pass.
 
 ## 4. Fix a bug
 
