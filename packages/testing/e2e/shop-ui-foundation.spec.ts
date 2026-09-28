@@ -33,7 +33,7 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) {
     const filteredOption = page.getByRole('option', { name: 'Item 9999', exact: true })
     await filter.press('ArrowDown')
     await expect(filteredOption).toHaveAttribute('data-p-focused', 'true')
-    await filteredOption.click()
+    await filter.press('Enter')
     await expect(picker).toContainText('Item 9999')
     await picker.press('ArrowDown')
     await page.getByRole('searchbox', { name: locale === 'ar' ? 'بحث · الصنف' : 'Search · Item' }).fill('does-not-exist')
