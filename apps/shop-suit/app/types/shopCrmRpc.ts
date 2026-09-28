@@ -367,6 +367,49 @@ export type ShopRpcDatabase = {
         }
         Returns: string
       }
+      cash_shift_dashboard: {
+        Args: {
+          p_shop_id: string
+          p_location_id: string
+          p_cashier_membership_id?: string | null
+          p_page?: number
+          p_page_size?: number
+        }
+        Returns: unknown
+      }
+      open_cash_shift: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_location_id: string
+          p_register_key: string
+          p_opening_amount: number
+          p_notes?: string | null
+        }
+        Returns: string
+      }
+      record_cash_movement: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_session_id: string
+          p_kind: 'pay_in' | 'pay_out'
+          p_amount: number
+          p_reason: string
+          p_reference: string
+        }
+        Returns: string
+      }
+      close_cash_shift: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_session_id: string
+          p_counted_amount: number
+          p_notes?: string | null
+        }
+        Returns: string
+      }
       save_staff_schedule: {
         Args: {
           p_shop_id: string
