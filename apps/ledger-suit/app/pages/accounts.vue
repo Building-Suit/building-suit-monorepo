@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import { scopedQueryKey } from '@building-suit/data-access'
 import type { Database } from '~~/types/database.types'
+import type { AccountsReportsRpcDatabase } from '~~/types/accounts-reports-rpc.types'
 import type { ChartAccount } from '~/utils/accountTree'
 
 definePageMeta({ layout: 'default' })
 /**
  * Called "Accounts" for the user; internally this is the chart of accounts.
- * Balances come from public.account_balances, which derives them from posted
- * ledger entries — there is no stored balance to display.
+ * Balances come from a tenant-scoped RPC that derives them exactly from posted
+ * ledger entries — there is no stored or stale balance to display.
  */
 
 const supabase = useSupabaseClient<Database>()
+const performanceRpc = useSupabaseClient<AccountsReportsRpcDatabase>()
 const user = useSupabaseUser()
 const config = useRuntimeConfig()
 const route = useRoute()
@@ -60,15 +62,12 @@ const { data: balances, pending: balancesPending, error: balancesError, refresh:
   const requestKey = balanceKey.value
   if (!organizationId) return []
 
-  const rows = await fetchAccountPages<BalanceRow>((from, to) => supabase
-    .from('account_balances')
-    .select('organization_id, account_id, code, name, type, subtype, currency, account_role, control_subledger_type, control_binding_locked, normal_balance, contra_account_id, is_system, classification_locked, net_debit_minor, statement_balance_minor, entry_count, is_archived, is_liquid, parent_account_id', { count: 'exact' })
-    .eq('organization_id', organizationId)
-    .order('code', { ascending: true, nullsFirst: false })
-    .order('account_id')
-    .range(from, to)
+  const { data, error } = await performanceRpc
+    .rpc('read_account_balances', { p_organization_id: organizationId })
     .abortSignal(signal)
-    .overrideTypes<BalanceRow[], { merge: false }>(), signal)
+    .overrideTypes<BalanceRow[], { merge: false }>()
+  if (error) throw error
+  const rows = data ?? []
 
   return balanceKey.value === requestKey ? rows : []
 }, { default: () => [] })

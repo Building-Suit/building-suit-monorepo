@@ -53,6 +53,8 @@ test('Edge Function JWT exceptions are limited to verified webhook and service w
     ['scheduled-notifications', false],
     ['storage-cleanup', false],
     ['send-invitation', true],
+    ['manual-payment', true],
+    ['platform-admin-receipt', true],
   ])
 
   const webhook = read('supabase/functions/paymob-webhook/index.ts')
@@ -71,6 +73,8 @@ test('Edge Function JWT exceptions are limited to verified webhook and service w
 
   for (const file of [
     'supabase/functions/paymob-checkout/index.ts',
+    'supabase/functions/manual-payment/index.ts',
+    'supabase/functions/platform-admin-receipt/index.ts',
     'supabase/functions/send-invitation/index.ts',
   ]) assert.match(read(file), /authenticatedClient\(request\)/, file)
 

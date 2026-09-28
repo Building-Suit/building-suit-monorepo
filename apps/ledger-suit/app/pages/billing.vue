@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const { t, te, locale } = useI18n()
 const { accessState, subscription } = useBilling()
-const { rows: usageRows } = usePlanUsage()
+const { rows: usageRows, catalog } = usePlanUsage()
 
 useHead({ title: () => `${t('billing.title')} · ${t('app.name')}` })
 
@@ -23,7 +23,8 @@ const currentPlanName = computed(() => {
   const key = currentPlanKey.value
   if (!key) return t('billing.singlePlan')
   const translation = `billing.plans.${key}.name`
-  return te(translation) ? t(translation) : t('billing.singlePlan')
+  const catalogName = catalog.value.find(plan => plan.plan_key === key)?.name
+  return locale.value === 'ar' && te(translation) ? t(translation) : catalogName ?? (te(translation) ? t(translation) : key)
 })
 
 // The global entitlement middleware owns the initial load. Loading again from
@@ -52,9 +53,10 @@ const currentPlanName = computed(() => {
         <div><dt class="text-xs text-fg-muted">{{ t('billing.nextDate') }}</dt><dd class="font-semibold">{{ displayDate(renewalDate) }}</dd></div>
       </dl>
 
-      <p v-if="subscription?.provider_status" class="text-sm text-fg-muted">
+      <p v-if="subscription?.provider === 'paymob'" class="text-sm text-fg-muted">
         {{ t('billing.managedByPaymob') }}
       </p>
+      <p v-if="subscription?.provider === 'manual'" class="text-sm text-fg-muted">{{ t('billing.manual.managed') }}</p>
       <div id="plans"><BillingCheckout :surface="pricingSurface" compact /></div>
     </div>
     <UsageMeters />

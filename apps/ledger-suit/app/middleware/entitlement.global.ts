@@ -31,7 +31,10 @@ export default defineNuxtRouteMiddleware(async (to) => {
   // storage with a fixed timeout.
   let user = useSupabaseUser().value
   if (!user) user = (await supabase.auth.getUser()).data.user
-  if (!user) return navigateTo('/login')
+  if (!user) return navigateTo(to.path === '/platform-admin' ? '/login?operator=1' : '/login')
+
+  // Dedicated operators have no tenant or subscription. RPCs enforce authority.
+  if (to.path === '/platform-admin') return
 
   const tenant = useTenant()
   await tenant.loadOrganizations(user.id)

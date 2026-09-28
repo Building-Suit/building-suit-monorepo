@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { scopedQueryKey } from '@building-suit/data-access'
 import type { Database } from '~~/types/database.types'
+import type { AccountsReportsRpcDatabase } from '~~/types/accounts-reports-rpc.types'
 import type { ReportFormatMetadata } from '../utils/reportFormats'
 
 definePageMeta({ layout: 'default' })
@@ -11,6 +12,7 @@ definePageMeta({ layout: 'default' })
  */
 
 const supabase = useSupabaseClient<Database>()
+const performanceRpc = useSupabaseClient<AccountsReportsRpcDatabase>()
 const user = useSupabaseUser()
 const config = useRuntimeConfig()
 const route = useRoute()
@@ -52,6 +54,12 @@ const from = ref(validDate(route.query.from) ? String(route.query.from) : `${now
 const to = ref(validDate(route.query.to) ? String(route.query.to) : today)
 const asOf = ref(validDate(route.query.asOf) ? String(route.query.asOf) : today)
 const periodInvalid = computed(() => !validDate(from.value) || !validDate(to.value) || from.value > to.value)
+function scopedReportKey(feature: string, parameters: Record<string, string>) {
+  return `org:${scopedQueryKey({
+    environment: String(config.public.supabase.url), portal: 'ledger-suit',
+    userId: user.value?.id ?? '', tenantId: currentId.value ?? '',
+  }, feature, parameters)}`
+}
 
 watch([from, to, asOf], ([nextFrom, nextTo, nextAsOf]) => {
   if (!validDate(nextFrom) || !validDate(nextTo) || !validDate(nextAsOf)) return
@@ -77,8 +85,9 @@ interface ReportRow {
   amount_minor: number
 }
 
-const { data: profitLoss, pending: profitLossPending } = useLazyAsyncData<ReportRow[]>('org:report-pl', async () => {
-  if (!currentId.value || periodInvalid.value) return []
+const profitLossKey = computed(() => scopedReportKey('profit-loss', { from: from.value, to: to.value }))
+const { data: profitLossDetail, pending: profitLossDetailPending, error: profitLossError, refresh: refreshProfitLoss } = useLazyAsyncData<ReportRow[]>(profitLossKey, async () => {
+  if (tab.value !== 'profit-loss' || !currentId.value || periodInvalid.value) return []
   const { data, error } = await supabase.rpc('report_profit_and_loss', {
     p_organization_id: currentId.value,
     p_from_date: from.value,
@@ -86,7 +95,7 @@ const { data: profitLoss, pending: profitLossPending } = useLazyAsyncData<Report
   })
   if (error) throw error
   return (data ?? []) as ReportRow[]
-}, { watch: [currentId, from, to], default: () => [] })
+}, { watch: [currentId, from, to, tab], default: () => [] })
 
 interface ClassifiedRow {
   section: string
@@ -104,37 +113,19 @@ const reportScope = computed(() => scopedQueryKey({
   userId: user.value?.id ?? '', tenantId: currentId.value ?? '',
 }, 'classified-balance-sheet', { asOf: asOf.value }))
 const balanceKey = computed(() => `org:${reportScope.value}`)
-const { data: balanceResult, pending: balanceSheetPending, error: balanceSheetError, refresh: refreshBalanceSheet } = useLazyAsyncData(balanceKey, async (_app, { signal }) => {
+const { data: balanceResult, pending: balanceSheetDetailPending, error: balanceSheetError, refresh: refreshBalanceSheet } = useLazyAsyncData(balanceKey, async (_app, { signal }) => {
   const scope = reportScope.value
   const organizationId = currentId.value
-  if (!organizationId || !/^\d{4}-\d{2}-\d{2}$/.test(asOf.value)) return { scope, rows: [] as ClassifiedRow[] }
+  if (tab.value !== 'balance-sheet' || !organizationId || !/^\d{4}-\d{2}-\d{2}$/.test(asOf.value)) return { scope, rows: [] as ClassifiedRow[] }
   const { data, error } = await supabase.rpc('report_classified_balance_sheet', {
     p_organization_id: organizationId, p_as_of_date: asOf.value,
   }).abortSignal(signal)
   if (error) throw error
   return { scope, rows: (data ?? []) as ClassifiedRow[] }
-})
-const balanceSheet = computed(() => balanceResult.value?.scope === reportScope.value ? (balanceResult.value?.rows ?? []) : [])
+}, { watch: [tab] })
+const balanceSheetDetail = computed(() => balanceResult.value?.scope === reportScope.value ? (balanceResult.value?.rows ?? []) : [])
 
 interface StatementReconciliation { profit_loss_difference_minor: number, balance_sheet_difference_minor: number, mapping_complete: boolean, accounts: Array<{ statement: string, account_id: string, statement_minor: number, ledger_minor: number, difference_minor: number }> }
-const { data: statementReconciliation } = useLazyAsyncData('org:statement-reconciliation', async () => {
-  if (!currentId.value || periodInvalid.value) return null
-  const { data, error } = await supabase.rpc('report_statement_reconciliation', {
-    p_organization_id: currentId.value, p_from_date: from.value, p_to_date: to.value, p_as_of_date: asOf.value,
-  })
-  if (error) throw error
-  return data as unknown as StatementReconciliation
-}, { watch: [currentId, from, to, asOf] })
-
-const { data: integrity } = useLazyAsyncData('org:report-integrity', async () => {
-  if (!currentId.value) return null
-  const { data, error } = await supabase.rpc('check_balance_sheet_integrity', {
-    p_organization_id: currentId.value,
-    p_as_of_date: asOf.value,
-  })
-  if (error) throw error
-  return data as unknown as Record<string, number | boolean | string>
-}, { watch: [currentId, asOf] })
 
 interface CashAdjustment { account_id: string, code: string | null, name: string, line: string, amount_minor: number }
 interface IndirectCashFlow {
@@ -155,25 +146,32 @@ interface IndirectCashFlow {
   reconciled: boolean
 }
 interface CashDetail { transaction_id: string, entry_id: string, account_id: string, section: string, amount_minor: number, classification_source: string }
-const { data: cashFlow, pending: cashFlowPending, refresh: refreshCashFlow } = useLazyAsyncData('org:report-cf-indirect', async () => {
-  if (!currentId.value || periodInvalid.value) return null
+const cashFlowKey = computed(() => scopedReportKey('cash-flow', { from: from.value, to: to.value }))
+const { data: cashFlow, pending: cashFlowPending, error: cashFlowError, refresh: refreshCashFlow } = useLazyAsyncData(cashFlowKey, async () => {
+  if (tab.value !== 'cash-flow' || !currentId.value || periodInvalid.value) return null
   const { data, error } = await supabase.rpc('report_indirect_cash_flow', {
     p_organization_id: currentId.value, p_from_date: from.value, p_to_date: to.value,
   })
   if (error) throw error
   return data as unknown as IndirectCashFlow
-}, { watch: [currentId, from, to] })
-const { data: cashDetail, refresh: refreshCashDetail } = useLazyAsyncData('org:report-cf-detail', async () => {
-  if (!currentId.value || periodInvalid.value) return [] as CashDetail[]
+}, { watch: [currentId, from, to, tab] })
+const cashDetailKey = computed(() => scopedReportKey('cash-flow-detail', { from: from.value, to: to.value }))
+const { data: cashDetail, error: cashDetailError, refresh: refreshCashDetail } = useLazyAsyncData(cashDetailKey, async () => {
+  if (tab.value !== 'cash-flow' || !currentId.value || periodInvalid.value) return [] as CashDetail[]
   const { data, error } = await supabase.rpc('report_cash_flow_detail', {
     p_organization_id: currentId.value, p_from_date: from.value, p_to_date: to.value,
   })
   if (error) throw error
   return (data ?? []) as CashDetail[]
-}, { watch: [currentId, from, to], default: () => [] })
+}, { watch: [currentId, from, to, tab], default: () => [] })
+function refreshCashFlowSurface() {
+  void refreshCashFlow()
+  void refreshCashDetail()
+}
 
-const { data: ledger, pending: ledgerPending } = useLazyAsyncData('org:report-ledger', async () => {
-  if (!currentId.value || !ledgerAccountId.value || periodInvalid.value) return []
+const ledgerKey = computed(() => scopedReportKey('general-ledger', { account: ledgerAccountId.value, from: from.value, to: to.value }))
+const { data: ledger, pending: ledgerPending, error: ledgerError, refresh: refreshLedger } = useLazyAsyncData(ledgerKey, async () => {
+  if (tab.value !== 'ledger' || !currentId.value || !ledgerAccountId.value || periodInvalid.value) return []
   const { data, error } = await supabase.rpc('report_general_ledger', {
     p_organization_id: currentId.value,
     p_account_id: ledgerAccountId.value,
@@ -182,7 +180,7 @@ const { data: ledger, pending: ledgerPending } = useLazyAsyncData('org:report-le
   })
   if (error) throw error
   return data ?? []
-}, { watch: [currentId, ledgerAccountId, from, to], default: () => [] })
+}, { watch: [currentId, ledgerAccountId, from, to, tab], default: () => [] })
 
 interface TrialBalanceRow {
   account_id: string
@@ -204,19 +202,44 @@ const trialScope = computed(() => scopedQueryKey({
   environment: String(config.public.supabase.url), portal: 'ledger-suit',
   userId: user.value?.id ?? '', tenantId: currentId.value ?? '',
 }, 'trial-balance', { from: from.value, to: to.value }))
-const trialKey = computed(() => `org:${trialScope.value}`)
-const { data: trialResult, pending: trialBalancePending, error: trialBalanceError, refresh: refreshTrialBalance } = useLazyAsyncData(trialKey, async (_app, { signal }) => {
-  const scope = trialScope.value
-  if (!currentId.value || periodInvalid.value) return { scope, rows: [] as TrialBalanceRow[] }
-  const { data, error } = await supabase.rpc('report_trial_balance', {
-    p_organization_id: currentId.value,
+interface FinancialOverview {
+  profit_loss: ReportRow[]
+  balance_sheet: ClassifiedRow[]
+  trial_balance: TrialBalanceRow[]
+  integrity: Record<string, number | boolean | string>
+  reconciliation: StatementReconciliation
+}
+const overviewScope = computed(() => scopedQueryKey({
+  environment: String(config.public.supabase.url), portal: 'ledger-suit',
+  userId: user.value?.id ?? '', tenantId: currentId.value ?? '',
+}, 'financial-overview', { from: from.value, to: to.value, asOf: asOf.value }))
+const overviewKey = computed(() => `org:${overviewScope.value}`)
+const { data: overviewResult, pending: overviewPending, error: overviewError, refresh: refreshOverview } = useLazyAsyncData(overviewKey, async (_app, { signal }) => {
+  const scope = overviewScope.value
+  const organizationId = currentId.value
+  if (tab.value !== 'overview' || !organizationId || periodInvalid.value || !validDate(asOf.value)) {
+    return { scope, payload: null as FinancialOverview | null }
+  }
+  const { data, error } = await performanceRpc.rpc('report_financial_overview', {
+    p_organization_id: organizationId,
     p_from_date: from.value,
     p_to_date: to.value,
+    p_as_of_date: asOf.value,
   }).abortSignal(signal)
   if (error) throw error
-  return { scope, rows: (data ?? []) as TrialBalanceRow[] }
-})
-const trialBalance = computed(() => trialResult.value?.scope === trialScope.value ? (trialResult.value?.rows ?? []) : [])
+  return { scope, payload: data as unknown as FinancialOverview }
+}, { watch: [tab] })
+const overview = computed(() => overviewResult.value?.scope === overviewScope.value ? (overviewResult.value?.payload ?? null) : null)
+const profitLoss = computed(() => tab.value === 'overview' ? (overview.value?.profit_loss ?? []) : (profitLossDetail.value ?? []))
+const profitLossPending = computed(() => tab.value === 'overview' ? overviewPending.value : profitLossDetailPending.value)
+const balanceSheet = computed(() => tab.value === 'overview' ? (overview.value?.balance_sheet ?? []) : balanceSheetDetail.value)
+const balanceSheetPending = computed(() => tab.value === 'overview' ? overviewPending.value : balanceSheetDetailPending.value)
+const trialBalance = computed(() => overview.value?.trial_balance ?? [])
+const trialBalancePending = computed(() => overviewPending.value)
+const trialBalanceError = computed(() => overviewError.value)
+const statementReconciliation = computed(() => overview.value?.reconciliation ?? null)
+const integrity = computed(() => overview.value?.integrity ?? null)
+function refreshTrialBalance() { return refreshOverview() }
 
 function sectionTotal(rows: ReportRow[] | null, section: string) {
   return (rows ?? []).filter(r => r.section === section)
@@ -460,6 +483,11 @@ async function exportReport(report: ExportReport, format: ExportFormat = 'csv') 
 
     <!-- Overview -->
     <section v-if="tab === 'overview'" class="space-y-4" role="tabpanel" :aria-label="t('reports.tabs.overview')">
+      <div v-if="overviewError" role="alert" class="ls-card space-y-3 p-6">
+        <p>{{ t('reports.loadError') }}</p>
+        <button type="button" class="ls-btn" @click="refreshOverview()">{{ t('accounts.retry') }}</button>
+      </div>
+      <template v-else>
       <div
         v-if="integrity && integrity.balanced === false"
         class="rounded-control border border-[var(--bs-status-error)] bg-[var(--bs-status-error-bg)] px-4 py-3 text-sm text-[var(--bs-status-error)]"
@@ -523,6 +551,7 @@ async function exportReport(report: ExportReport, format: ExportFormat = 'csv') 
 </BsDataTable>
         </div>
       </section>
+      </template>
     </section>
 
     <!-- Profit & Loss -->
@@ -533,7 +562,8 @@ async function exportReport(report: ExportReport, format: ExportFormat = 'csv') 
         <button type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('profit_loss', 'print')">{{ t('reports.printPdf') }}</button>
       </div>
 
-      <SectionSkeleton v-if="profitLossPending" variant="table" :rows="7" />
+      <div v-if="profitLossError" role="alert" class="ls-card space-y-3 p-6"><p>{{ t('reports.loadError') }}</p><button type="button" class="ls-btn" @click="refreshProfitLoss()">{{ t('accounts.retry') }}</button></div>
+      <SectionSkeleton v-else-if="profitLossPending" variant="table" :rows="7" />
 
       <EmptyState
         v-else-if="!profitLoss?.length"
@@ -541,8 +571,8 @@ async function exportReport(report: ExportReport, format: ExportFormat = 'csv') 
         :description="t('reports.emptyRange')"
       />
 
-      <p v-if="plMappingIncomplete" role="alert" class="ls-error">{{ t('financialMapping.incomplete') }}</p>
-      <div v-if="profitLoss?.length" class="ls-card overflow-hidden">
+      <p v-if="!profitLossError && plMappingIncomplete" role="alert" class="ls-error">{{ t('financialMapping.incomplete') }}</p>
+      <div v-if="!profitLossError && profitLoss?.length" class="ls-card overflow-hidden">
         <BsDataTable :label="t('reports.tabs.profitLoss')" :value="plSections.flatMap(section => rowsIn(profitLoss, section.key).map(row => ({ ...row, groupKey: section.key, groupLabel: section.labelKey })))" :density="tableDensity" row-group-mode="subheader" group-rows-by="groupKey">
   <Column :header="t('reports.account')" body-class="ps-8"><template #body="{ data: row }"><button type="button" class="text-link underline" @click="openStatementDrilldown(row.account_id)">{{ row.name }}</button></template></Column>
   <Column :header="t('transactions.amount')" body-class="ls-num"><template #body="{ data: row }"><MoneyText :amount-minor="row.amount_minor" /></template></Column>
@@ -565,7 +595,7 @@ async function exportReport(report: ExportReport, format: ExportFormat = 'csv') 
       </div>
 
       <p class="text-sm text-fg-muted">{{ t('statementClassification.reportHint', { date: formatDate(asOf, locale) }) }}</p>
-      <div v-if="balanceSheetError" class="ls-error" role="alert">{{ t('statementClassification.reportError') }} <button type="button" class="ls-btn" @click="refreshBalanceSheet()">{{ t('statementClassification.reload') }}</button></div>
+      <div v-if="balanceSheetError" class="ls-card space-y-3 p-6" role="alert"><p class="ls-error">{{ t('statementClassification.reportError') }}</p><button type="button" class="ls-btn" @click="refreshBalanceSheet()">{{ t('statementClassification.reload') }}</button></div>
       <SectionSkeleton v-else-if="balanceSheetPending" variant="table" :rows="7" />
 
       <EmptyState
@@ -602,7 +632,8 @@ async function exportReport(report: ExportReport, format: ExportFormat = 'csv') 
         <button type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('cash_flow', 'excel')">{{ t('reports.exportExcel') }}</button>
         <button type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('cash_flow', 'print')">{{ t('reports.printPdf') }}</button>
       </div>
-      <SectionSkeleton v-if="cashFlowPending" variant="table" :rows="5" />
+      <div v-if="cashFlowError || cashDetailError" role="alert" class="ls-card space-y-3 p-6"><p>{{ t('reports.loadError') }}</p><button type="button" class="ls-btn" @click="refreshCashFlowSurface">{{ t('accounts.retry') }}</button></div>
+      <SectionSkeleton v-else-if="cashFlowPending" variant="table" :rows="5" />
 
       <EmptyState v-else-if="!cashFlow" :title="t('reports.emptyCashTitle')" :description="t('reports.emptyCashHint')" />
       <div v-else class="ls-card space-y-4 p-5">
@@ -646,7 +677,8 @@ async function exportReport(report: ExportReport, format: ExportFormat = 'csv') 
         <button type="button" class="ls-btn" :disabled="exportPending || !ledgerAccountId" @click="exportReport('general_ledger', 'excel')">{{ t('reports.exportExcel') }}</button>
         <button type="button" class="ls-btn" :disabled="exportPending || !ledgerAccountId" @click="exportReport('general_ledger', 'print')">{{ t('reports.printPdf') }}</button>
       </div>
-      <SectionSkeleton v-if="ledgerPending" variant="table" :rows="8" />
+      <div v-if="ledgerError" role="alert" class="ls-card space-y-3 p-6"><p>{{ t('reports.loadError') }}</p><button type="button" class="ls-btn" @click="refreshLedger()">{{ t('accounts.retry') }}</button></div>
+      <SectionSkeleton v-else-if="ledgerPending" variant="table" :rows="8" />
 
       <EmptyState
         v-else-if="!ledger?.length"

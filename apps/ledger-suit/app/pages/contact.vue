@@ -1,9 +1,29 @@
 <script setup lang="ts">
+import type { SupportRpcDatabase } from '../../types/support-rpc.types'
 import { publicBusiness } from '~/utils/legal'
 
 definePageMeta({ layout: 'marketing' })
 
 const { t, locale } = useI18n()
+const supabase = useSupabaseClient<SupportRpcDatabase>()
+const form = reactive({ category: 'general', subject: '', message: '', email: '', consent: false, honeypot: '' })
+const pending = ref(false)
+const sent = ref(false)
+const error = ref('')
+const user = useSupabaseUser()
+watch(user, value => { if (value?.email && !form.email) form.email = value.email })
+async function submit() {
+  error.value = ''; sent.value = false
+  if (!form.subject.trim() || !form.message.trim() || !form.email.trim() || !form.consent) { error.value = t('marketing.contactValidation'); return }
+  pending.value = true
+  const { error: failure } = await supabase.rpc('submit_support_request', {
+    p_category: form.category, p_subject: form.subject, p_message: form.message,
+    p_reply_email: form.email, p_consent: form.consent, p_honeypot: form.honeypot,
+  })
+  pending.value = false
+  if (failure) { error.value = failure.message.includes('RATE_LIMITED') ? t('marketing.contactRateLimited') : t('marketing.contactError'); return }
+  sent.value = true; form.subject = ''; form.message = ''; form.consent = false
+}
 
 useHead(() => ({
   title: `${t('marketing.contact')} · Ledger Suit`,
@@ -60,7 +80,21 @@ useHead(() => ({
           </div>
         </div>
 
-        <div class="px-6 py-8 sm:px-10">
+        <form class="grid gap-4 px-6 py-8 sm:px-10" @submit.prevent="submit" novalidate>
+          <h2 class="text-xl font-black">{{ t('marketing.contactFormTitle') }}</h2>
+          <p class="text-sm text-fg-muted">{{ t('marketing.contactFormIntro') }}</p>
+          <div class="grid gap-4 md:grid-cols-2">
+            <label class="grid gap-2"><span>{{ t('marketing.contactCategory') }}</span><select v-model="form.category" class="ls-input"><option value="general">{{ t('marketing.contactCategories.general') }}</option><option value="product">{{ t('marketing.contactCategories.product') }}</option><option value="billing">{{ t('marketing.contactCategories.billing') }}</option><option value="technical">{{ t('marketing.contactCategories.technical') }}</option><option value="account">{{ t('marketing.contactCategories.account') }}</option></select></label>
+            <label class="grid gap-2"><span>{{ t('marketing.contactReplyEmail') }}</span><input v-model="form.email" class="ls-input" type="email" required autocomplete="email"></label>
+          </div>
+          <label class="grid gap-2"><span>{{ t('marketing.contactSubject') }}</span><input v-model="form.subject" class="ls-input" maxlength="200" required></label>
+          <label class="grid gap-2"><span>{{ t('marketing.contactMessage') }}</span><textarea v-model="form.message" class="ls-input min-h-36" maxlength="10000" required></textarea></label>
+          <label class="hidden" aria-hidden="true"><span>Website</span><input v-model="form.honeypot" tabindex="-1" autocomplete="off"></label>
+          <label class="flex items-start gap-2"><input v-model="form.consent" type="checkbox" required><span class="text-sm">{{ t('marketing.contactConsent') }}</span></label>
+          <p v-if="error" role="alert" class="ls-error">{{ error }}</p><p v-if="sent" role="status" class="text-sm text-success">{{ t('marketing.contactSuccess') }}</p>
+          <button class="ls-btn w-fit" type="submit" :disabled="pending">{{ pending ? t('app.loading') : t('marketing.contactSubmit') }}</button>
+        </form>
+        <div class="px-6 pb-8 sm:px-10">
           <h2 class="text-xl font-black">{{ t('marketing.businessIdentity') }}</h2>
           <p class="mt-3 text-sm leading-7 text-fg-muted sm:text-base">
             <i18n-t keypath="marketing.businessIdentityBody" tag="span" scope="global">
