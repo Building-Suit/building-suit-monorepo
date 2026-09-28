@@ -165,6 +165,15 @@ export type ShopRpcDatabase = {
         }
         Returns: unknown
       }
+      shop_operating_report: {
+        Args: {
+          p_shop_id: string
+          p_location_id?: string | null
+          p_period?: 'day' | 'week' | 'month'
+          p_anchor_date?: string
+        }
+        Returns: unknown
+      }
       save_location_sale_draft: {
         Args: {
           p_request_id: string

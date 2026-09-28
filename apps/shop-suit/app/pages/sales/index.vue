@@ -48,8 +48,9 @@ const { push: pushToast } = useToasts()
 const search = ref('')
 const debouncedSearch = ref('')
 const statusFilter = ref<'all' | SaleStatus>('all')
-const fromDate = ref('')
-const toDate = ref('')
+const queryDate = (value: unknown) => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : ''
+const fromDate = ref(queryDate(route.query.from))
+const toDate = ref(queryDate(route.query.to))
 const page = ref(1)
 const pageSize = 20
 const editorOpen = ref(false)
