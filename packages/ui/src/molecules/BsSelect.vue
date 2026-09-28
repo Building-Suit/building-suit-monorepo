@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import Select from 'primevue/select'
 import type { SelectProps } from 'primevue/select'
 defineOptions({ inheritAttrs: false })
@@ -12,12 +13,19 @@ withDefaults(defineProps<{
   virtualScrollerOptions?: SelectProps['virtualScrollerOptions']
 }>(), { virtual: false, optionLabel: undefined, optionValue: undefined, virtualScrollerOptions: undefined })
 const ui = useUiCopy()
+const selectRef = ref<{ $el?: HTMLElement } | null>(null)
 
 function activateFocusedFilterOption(event: KeyboardEvent) {
   if (event.key !== 'Enter' || event.isComposing) return
 
   const input = event.target as HTMLInputElement | null
   if (input?.getAttribute('role') !== 'searchbox') return
+
+  const controlledListId = selectRef.value?.$el
+    ?.querySelector<HTMLElement>('[role="combobox"]')
+    ?.getAttribute('aria-controls')
+
+  if (!controlledListId || input.getAttribute('aria-owns') !== controlledListId) return
 
   const optionId = input.getAttribute('aria-activedescendant')
   const option = optionId ? document.getElementById(optionId) : null
@@ -28,13 +36,16 @@ function activateFocusedFilterOption(event: KeyboardEvent) {
   event.stopImmediatePropagation()
   option.click()
 }
+
+onMounted(() => document.addEventListener('keydown', activateFocusedFilterOption, true))
+onBeforeUnmount(() => document.removeEventListener('keydown', activateFocusedFilterOption, true))
 </script>
 
 <template>
   <Select
+    ref="selectRef"
     v-bind="$attrs" v-model="model" :options="options" :option-label="optionLabel" :option-value="optionValue"
     :aria-label="label"
-    @keydown.capture="activateFocusedFilterOption"
     :empty-message="ui('empty')" :empty-filter-message="ui('empty')"
     :virtual-scroller-options="virtual || virtualScrollerOptions ? { ...virtualScrollerOptions, itemSize: 44 } : undefined"
     :pt="{
