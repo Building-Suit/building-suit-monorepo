@@ -4,11 +4,11 @@ Implements BILL-MAN-01–04 and approved decision LS-D-MANUAL-PAYMENT. Changes a
 
 Customers select an approved launch plan and monthly/yearly interval in the existing checkout, then choose manual transfer. `prepare_manual_payment` resolves the existing catalog on the server and stores an immutable purchase quote, including customer-facing instructions. No amount, currency, price ID or entitlement target is accepted from the browser. One unfinished request per organization prevents competing quotes; cancel it to change plans. Unconfigured instructions fail closed.
 
-`manual-payment` authenticates the customer and checks current billing permission before accepting a receipt. It bounds the actual streamed body, checks JPEG/PNG/PDF signatures and MIME, enforces 5 MiB, computes SHA-256 and uploads a fresh object with overwrite disabled. The private `manual-payment-receipts` bucket has no browser write/delete policies. Database constraints independently check recorded size and MIME. Tenant billing managers and eligible operators can read linked receipts; unlinked uploads remain inaccessible to customers. These checks validate format signatures, not malware scanning.
+`manual-payment` authenticates the customer and checks current billing permission before accepting a receipt. It bounds the actual streamed body, checks JPEG/PNG/PDF signatures and MIME, enforces 5 MiB, computes SHA-256 and uploads a fresh object with overwrite disabled. The private `manual-payment-receipts` bucket has no browser write/delete policies. Database constraints independently check recorded size and MIME. Tenant billing managers can read linked receipts; operators use the audited `platform-admin-receipt` endpoint; unlinked uploads remain inaccessible to customers. These checks validate format signatures, not malware scanning.
 
 The state flow is `draft → submitted → under_review → approved/rejected`, with direct submitted-to-approved/rejected decisions allowed. Draft is the pre-submission quote. Rejected requests accept new evidence and return to submitted; previous files and evidence records remain. Non-approved requests can be cancelled with a reason. Evidence and history rows reject UPDATE/DELETE. An interrupted upload can retry its evidence ID with the same bytes; ambiguous failures retain objects rather than risking deletion of submitted evidence. Unlinked failed uploads require a separately reviewed retention/cleanup operation.
 
-Approval is a database command using the authenticated operator's identity. `app.manual_payment_operators` is a private allowlist, inaccessible to customers and service-role API writes. Tenant membership, request creation or evidence submission disqualifies an operator from reviewing that request. Browser service-role credentials are never used. Review requires the current evidence ID and a nonempty reason. A stale evidence decision fails.
+Approval is a database command using the authenticated operator's identity. `app.platform_operators` assigns explicit operator roles and is inaccessible to customers and service-role API writes. LS-ADMIN-001 migrates the former payment allowlist and retires that provisioning path. Any tenant membership disqualifies the dedicated operator identity globally; request creation and evidence submission remain disqualifiers in the billing implementation. Browser service-role credentials are never used. The audited `platform_admin_review_payment` command requires the current evidence ID, a nonempty reason, internal case context and a stable command UUID. A stale evidence decision fails.
 
 Approval locks the organization, request and subscription and commits the subscription, purchased dates, request state and audit history together. Replays return the existing result without another period or history row. The plan and price come from the original server quote. Manual periods are UTC calendar months/years starting at approval (or after an existing active same-plan manual period), with provider `manual` and the request UUID as source identity. There is no automatic renewal. Existing active card/other-plan subscriptions cause a conflict rather than being replaced; an in-flight Paymob success cannot overwrite an active manual period. Existing Paymob checkout signatures, cadence and webhook handling remain in place.
 
@@ -21,19 +21,19 @@ insert into app.manual_payment_configuration(singleton,instructions)
 values (true,'InstaPay recipient: YOUR_PUBLIC_RECIPIENT. Include the request reference in the transfer.')
 on conflict(singleton) do update set instructions=excluded.instructions;
 -- Use a real verified operator Auth user belonging to this Ledger environment.
-insert into app.manual_payment_operators(user_id) values ('OPERATOR_USER_UUID');
+insert into app.platform_operators(user_id,role) values ('OPERATOR_USER_UUID','billing_operator');
 ```
 
-Do not put passwords, API keys or privileged payment credentials in instructions. The operator uses a short-lived authenticated user access token via `MANUAL_PAYMENT_OPERATOR_ACCESS_TOKEN`, plus the matching `SUPABASE_URL` and `SUPABASE_ANON_KEY`. Obtain the pending request/evidence IDs through the operator's RLS-protected `manual_payment_requests` and `manual_payment_evidence` read APIs. Run from `apps/ledger-suit`:
+Do not put passwords, API keys or privileged payment credentials in instructions. The operator uses a short-lived authenticated user access token via `MANUAL_PAYMENT_OPERATOR_ACCESS_TOKEN`, plus the matching `SUPABASE_URL` and `SUPABASE_ANON_KEY`. Open `/platform-admin` with a dedicated operator account, or obtain request/evidence IDs through `platform_admin_read('payments')`. Direct operator table reads are intentionally closed. See [the operator boundary](platform-admin-verification.md) for the role matrix and audit contract. Run from `apps/ledger-suit`:
 
 ```sh
 deno run --allow-env=SUPABASE_URL,SUPABASE_ANON_KEY,MANUAL_PAYMENT_OPERATOR_ACCESS_TOKEN --allow-net scripts/review-manual-payment.ts REQUEST_UUID EVIDENCE_UUID inspect
-deno run --allow-env=SUPABASE_URL,SUPABASE_ANON_KEY,MANUAL_PAYMENT_OPERATOR_ACCESS_TOKEN --allow-net scripts/review-manual-payment.ts REQUEST_UUID EVIDENCE_UUID under_review 'Checking bank transfer'
-deno run --allow-env=SUPABASE_URL,SUPABASE_ANON_KEY,MANUAL_PAYMENT_OPERATOR_ACCESS_TOKEN --allow-net scripts/review-manual-payment.ts REQUEST_UUID EVIDENCE_UUID approved 'Transfer verified against bank record'
+deno run --allow-env=SUPABASE_URL,SUPABASE_ANON_KEY,MANUAL_PAYMENT_OPERATOR_ACCESS_TOKEN --allow-net scripts/review-manual-payment.ts REQUEST_UUID EVIDENCE_UUID under_review 'Checking bank transfer' 'Case 42' COMMAND_UUID
+deno run --allow-env=SUPABASE_URL,SUPABASE_ANON_KEY,MANUAL_PAYMENT_OPERATOR_ACCESS_TOKEN --allow-net scripts/review-manual-payment.ts REQUEST_UUID EVIDENCE_UUID approved 'Transfer verified against bank record' 'Case 42' NEW_COMMAND_UUID
 # Alternatively use rejected with a customer-readable reason.
 ```
 
-Inspect outputs include a 60-second receipt URL; do not publish or retain these in shared logs. Approval/rejection reasons appear in customer history. Resolve a subscription conflict through reviewed billing support; do not edit audited requests or remove paid periods to force approval.
+Reuse the same command UUID and exact arguments after an ambiguous network failure; use a new UUID for a changed decision. Inspect outputs include a 60-second receipt URL; do not publish or retain these in shared logs. Approval/rejection reasons appear in customer history. Resolve a subscription conflict through reviewed billing support; do not edit audited requests or remove paid periods to force approval.
 
 ## Verification
 

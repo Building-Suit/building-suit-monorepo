@@ -26,7 +26,7 @@ await sql(`
 insert into auth.users(id,email,raw_user_meta_data) values
 ('${owner}','${owner}@example.test','{"full_name":"Concurrency Owner"}'),
 ('${operator}','${operator}@example.test','{"full_name":"Concurrency Operator"}');
-insert into app.manual_payment_operators(user_id) values('${operator}');
+insert into app.platform_operators(user_id,role) values('${operator}','billing_operator');
 insert into app.manual_payment_configuration(instructions) values('Disposable test recipient') on conflict do nothing;
 ${claims(owner)}
 select public.create_organization('Manual concurrency ${request}','EGP');
@@ -37,7 +37,8 @@ select 'manual-payment-receipts',organization_id::text||'/${request}/${evidence}
 select set_config('request.jwt.claims','{"role":"service_role"}',false); set role service_role;
 select public.submit_manual_payment('${request}','${evidence}','${owner}','receipt.png',repeat('a',64),'Concurrency fixture');
 `)
-const command = `select (public.review_manual_payment('${request}','${evidence}','approved','Verified transfer')).period_end;`
+const commandId = randomUUID()
+const command = `select public.platform_admin_review_payment('${commandId}','${request}','${evidence}','approved','Verified transfer','Concurrency check');`
 let signalLocked
 const locked = new Promise(resolve => { signalLocked = resolve })
 const first = sql(`begin; ${claims(operator)} ${command} select 'APPROVAL_LOCKED'; select pg_sleep(5); commit;`, `${application}-first`, signalLocked)
@@ -54,4 +55,6 @@ assert.equal(await sql(`select count(*) from public.manual_payment_history where
 assert.equal(await sql(`select s.current_period_end=r.period_end and r.period_end=r.period_start+interval '1 month' and s.provider='manual' from public.manual_payment_requests r join public.subscriptions s using(organization_id) where r.id='${request}';`), 't')
 await sql(`${claims(operator)} ${command}`)
 assert.equal(await sql(`select count(*) from public.manual_payment_history where request_id='${request}' and after_state='approved';`), '1')
+assert.equal(await sql(`select count(*) from app.platform_operator_audit where command_id='${commandId}' and outcome='succeeded';`), '1')
+assert.equal(await sql(`select count(*) from app.platform_operator_audit where command_id='${commandId}' and outcome='replayed';`), '2')
 console.log('Two real sessions: lock contention observed, one activation, exact monthly period, replay unchanged.')
