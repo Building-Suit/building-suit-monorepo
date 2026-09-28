@@ -16,8 +16,10 @@ const ui = useUiCopy()
 function activateFocusedFilterOption(event: KeyboardEvent) {
   if (event.key !== 'Enter' || event.isComposing) return
 
-  const input = event.currentTarget as HTMLInputElement | null
-  const optionId = input?.getAttribute('aria-activedescendant')
+  const input = event.target as HTMLInputElement | null
+  if (input?.getAttribute('role') !== 'searchbox') return
+
+  const optionId = input.getAttribute('aria-activedescendant')
   const option = optionId ? document.getElementById(optionId) : null
 
   if (!(option instanceof HTMLElement) || option.getAttribute('role') !== 'option') return
@@ -32,12 +34,13 @@ function activateFocusedFilterOption(event: KeyboardEvent) {
   <Select
     v-bind="$attrs" v-model="model" :options="options" :option-label="optionLabel" :option-value="optionValue"
     :aria-label="label"
+    @keydown.capture="activateFocusedFilterOption"
     :empty-message="ui('empty')" :empty-filter-message="ui('empty')"
     :virtual-scroller-options="virtual || virtualScrollerOptions ? { ...virtualScrollerOptions, itemSize: 44 } : undefined"
     :pt="{
       root: { class: 'bs-select ls-input' }, label: { class: 'bs-select-label' },
       dropdown: { class: 'bs-select-trigger' }, overlay: { class: 'bs-select-overlay ls-card shadow-overlay' },
-      header: { class: 'p-2' }, pcFilter: { root: { class: 'ls-input', 'aria-label': ui('search') + ' · ' + label, onKeydownCapture: activateFocusedFilterOption } },
+      header: { class: 'p-2' }, pcFilter: { root: { class: 'ls-input', 'aria-label': ui('search') + ' · ' + label } },
       list: { class: 'm-0 p-0 list-none' }, option: { class: 'bs-select-option' },
       emptyMessage: { class: 'p-3 text-fg-muted' },
     }"
