@@ -6,6 +6,10 @@ const docsBaseUrl =
 const shopBaseUrl =
   process.env.BS_E2E_SHOP_URL ?? 'http://127.0.0.1:4321'
 
+async function waitForNuxtHydration(page: Page) {
+  await page.waitForFunction(() => Boolean((document.querySelector('#__nuxt') as HTMLElement & { __vue_app__?: unknown } | null)?.__vue_app__))
+}
+
 for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) {
   test(`shared patterns: ${locale}, ${theme}, keyboard and mobile`, async ({ page, context }) => {
     const errors: string[] = []
@@ -14,6 +18,7 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) {
     await page.addInitScript(value => localStorage.setItem('building-suit.theme', value), theme)
     await page.setViewportSize({ width: 390, height: 844 })
     await page.goto(`${docsBaseUrl}/components`)
+    await waitForNuxtHydration(page)
     await expect(page.locator('html')).toHaveAttribute('dir', locale === 'ar' ? 'rtl' : 'ltr')
     await expect(page.locator('html')).toHaveAttribute('data-theme', theme)
     const patterns = page.getByTestId('foundation-patterns')
@@ -30,7 +35,7 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) {
     await expect(picker).toContainText('Item 9999')
     await picker.press('ArrowDown')
     await page.getByRole('searchbox', { name: locale === 'ar' ? 'بحث · الصنف' : 'Search · Item' }).fill('does-not-exist')
-    await expect(page.getByText(locale === 'ar' ? 'لا توجد سجلات' : 'No records found', { exact: true })).toBeVisible()
+    await expect(page.getByRole('option', { name: locale === 'ar' ? 'لا توجد سجلات' : 'No records found', exact: true })).toBeVisible()
     await page.keyboard.press('Escape')
     await expect(picker).toBeFocused()
     const input = patterns.getByRole('textbox', { name: locale === 'ar' ? 'القيمة' : 'Value', exact: true })
@@ -105,9 +110,15 @@ async function shopFixture(page: Page) {
   })
   await page.context().addCookies([{ name: 'building-suit-locale', value: 'en', domain: '127.0.0.1', path: '/' }])
   await page.goto(`${shopBaseUrl}/auth/login`)
+  await waitForNuxtHydration(page)
   await page.locator('#login-email').fill(user.email)
   await page.locator('#login-password').fill('fixture-password')
+  const loginResponse = page.waitForResponse(response =>
+    response.url().startsWith('http://127.0.0.1:61321/auth/v1/token')
+    && response.request().method() === 'POST',
+  )
   await page.locator('form button[type="submit"]').click()
+  await loginResponse
   await expect(page).toHaveURL(/dashboard/)
   return calls
 }
