@@ -33,8 +33,21 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) {
     const filteredOption = page.getByRole('option', { name: 'Item 9999', exact: true })
     await filter.press('ArrowDown')
     await expect(filteredOption).toHaveAttribute('data-p-focused', 'true')
+
+    // PrimeVue's documented filter-input Enter behavior closes the popup and
+    // restores focus to the select; it is not the option-activation gesture.
     await filter.press('Enter')
+    await expect(page.getByRole('listbox')).toHaveCount(0)
+    await expect(picker).toBeFocused()
+
+    // Reopen and activate the filtered option through the option itself.
+    await picker.press('ArrowDown')
+    const reopenedFilter = page.getByRole('searchbox', { name: locale === 'ar' ? 'بحث · الصنف' : 'Search · Item' })
+    await reopenedFilter.fill('Item 9999')
+    await expect(filteredOption).toBeVisible()
+    await filteredOption.click()
     await expect(picker).toContainText('Item 9999')
+
     await picker.press('ArrowDown')
     await page.getByRole('searchbox', { name: locale === 'ar' ? 'بحث · الصنف' : 'Search · Item' }).fill('does-not-exist')
     await expect(page.getByRole('option', { name: locale === 'ar' ? 'لا توجد سجلات' : 'No records found', exact: true })).toBeVisible()
