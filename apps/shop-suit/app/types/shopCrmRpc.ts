@@ -321,6 +321,52 @@ export type ShopRpcDatabase = {
         }
         Returns: string
       }
+      pos_catalog_search: {
+        Args: {
+          p_shop_id: string
+          p_location_id: string
+          p_search?: string | null
+          p_item_type?: 'product' | 'service' | null
+          p_barcode?: string | null
+          p_page?: number
+          p_page_size?: number
+        }
+        Returns: unknown
+      }
+      pos_checkout_context: {
+        Args: { p_shop_id: string; p_location_id: string; p_customer_search?: string | null }
+        Returns: unknown
+      }
+      save_pos_sale_draft: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_location_id: string
+          p_invoice_id: string | null
+          p_staff_membership_id: string
+          p_appointment_id: string | null
+          p_customer_id: string | null
+          p_notes: string | null
+          p_lines: Array<{ item_type: 'product' | 'service'; source_id: string; quantity: number }>
+        }
+        Returns: string
+      }
+      checkout_pos_sale: {
+        Args: {
+          p_request_id: string
+          p_issue_request_id: string
+          p_payment_request_id: string
+          p_appointment_request_id: string | null
+          p_shop_id: string
+          p_location_id: string
+          p_invoice_id: string
+          p_amount: number
+          p_paid_at: string
+          p_method: 'cash' | 'bank_transfer' | 'card' | 'wallet' | 'cheque' | 'other'
+          p_reference: string | null
+        }
+        Returns: string
+      }
       save_staff_schedule: {
         Args: {
           p_shop_id: string

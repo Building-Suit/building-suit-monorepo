@@ -301,6 +301,7 @@ const weekdayNames = computed(() => Array.from({ length: 7 }, (_, weekday) => ne
               </div>
               <details v-if="appointment.history?.length" class="mt-3 text-xs"><summary class="cursor-pointer font-bold text-[var(--bs-link)]">{{ copy.history }}</summary><ol class="mt-2 space-y-1 text-muted-foreground"><li v-for="event in appointment.history" :key="`${event.occurredAt}-${event.action}`">{{ new Date(event.occurredAt).toLocaleString(isArabic ? 'ar-EG' : 'en-EG') }} · {{ copy[event.status] }}</li></ol></details>
               <NuxtLink v-if="appointment.saleId" :to="`/sales/${appointment.saleId}`" class="mt-3 inline-block font-bold text-[var(--bs-link)] underline">{{ copy.sale }}</NuxtLink>
+              <NuxtLink v-else-if="options.canManage && !['cancelled','no_show'].includes(appointment.status)" :to="{ path: '/pos', query: { appointment: appointment.id } }" class="mt-3 inline-flex min-h-11 items-center font-bold text-[var(--bs-link)] underline">{{ isArabic ? 'تحصيل الموعد' : 'Check out appointment' }}</NuxtLink>
             </li>
           </ol>
         </section>

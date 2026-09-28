@@ -13,12 +13,13 @@ const showErrorDetails = import.meta.dev
 const isArabic = computed(() => locale.value === 'ar')
 
 const copy = computed(() => isArabic.value
-  ? { dashboard: 'لوحة التحكم', invoices: 'الفواتير', products: 'المنتجات', services: 'الخدمات', appointments: 'المواعيد', inventory: 'المخزون', purchases: 'المشتريات', expenses: 'المصروفات', settings: 'إعدادات النشاط', billing: 'الاشتراك والفوترة', team: 'الفريق', reports: 'التقارير', soon: 'قريبًا', shop: 'المتجر', location: 'الفرع', account: 'الحساب', logout: 'تسجيل الخروج', openMenu: 'فتح القائمة', closeMenu: 'إغلاق القائمة', loadFailed: 'تعذّر تحميل بيانات المتجر. حاول مرة أخرى.', retry: 'إعادة المحاولة' }
-  : { dashboard: 'Dashboard', invoices: 'Invoices', products: 'Products', services: 'Services', appointments: 'Appointments', inventory: 'Inventory', purchases: 'Purchases', expenses: 'Expenses', settings: 'Business settings', billing: 'Subscription & billing', team: 'Team', reports: 'Reports', soon: 'Soon', shop: 'Shop', location: 'Location', account: 'Account', logout: 'Sign out', openMenu: 'Open menu', closeMenu: 'Close menu', loadFailed: 'Unable to load shop data. Please try again.', retry: 'Retry' })
+  ? { dashboard: 'لوحة التحكم', pos: 'نقطة البيع', invoices: 'الفواتير', products: 'المنتجات', services: 'الخدمات', appointments: 'المواعيد', inventory: 'المخزون', purchases: 'المشتريات', expenses: 'المصروفات', settings: 'إعدادات النشاط', billing: 'الاشتراك والفوترة', team: 'الفريق', reports: 'التقارير', soon: 'قريبًا', shop: 'المتجر', location: 'الفرع', account: 'الحساب', logout: 'تسجيل الخروج', openMenu: 'فتح القائمة', closeMenu: 'إغلاق القائمة', loadFailed: 'تعذّر تحميل بيانات المتجر. حاول مرة أخرى.', retry: 'إعادة المحاولة' }
+  : { dashboard: 'Dashboard', pos: 'Point of sale', invoices: 'Invoices', products: 'Products', services: 'Services', appointments: 'Appointments', inventory: 'Inventory', purchases: 'Purchases', expenses: 'Expenses', settings: 'Business settings', billing: 'Subscription & billing', team: 'Team', reports: 'Reports', soon: 'Soon', shop: 'Shop', location: 'Location', account: 'Account', logout: 'Sign out', openMenu: 'Open menu', closeMenu: 'Close menu', loadFailed: 'Unable to load shop data. Please try again.', retry: 'Retry' })
 
 const links = computed(() => {
   const mode = current.value?.business_mode ?? 'mixed'
   return [
+    { to: '/pos', label: copy.value.pos, icon: 'cash' },
     { to: '/sales', label: t('sales.title'), icon: 'invoice' },
     ...(businessModeSupportsProducts(mode) ? [
       { to: '/products', label: copy.value.products, icon: 'ledger' },
