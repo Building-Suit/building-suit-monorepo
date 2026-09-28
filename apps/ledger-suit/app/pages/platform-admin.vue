@@ -47,7 +47,7 @@ const fields: Record<AdminResource, string[]> = {
   payments: ['organization_name', 'plan_key', 'amount_minor', 'currency_code', 'status', 'evidence_id', 'period_end'],
   audit: ['occurred_at', 'actor_id', 'actor_role', 'operation', 'target_id', 'command_id', 'outcome', 'reason', 'context', 'error_code', 'before_state', 'after_state'],
   status: ['checked_at', 'pending_payments', 'unprocessed_billing_events', 'failed_billing_events', 'open_support_requests', 'suspended_organizations', 'support_reminder_delivery'],
-  support: ['organization_name', 'requester_email', 'subject', 'status', 'priority', 'reminder_count', 'reminder_delivery_status', 'updated_at'],
+  support: ['organization_name', 'requester_email', 'category', 'subject', 'customer_message', 'status', 'priority', 'reminder_count', 'reminder_delivery_status', 'updated_at'],
 }
 const filterOptions: Partial<Record<AdminResource, string[]>> = {
   users: ['active', 'suspended'], organizations: ['trial', 'active', 'past_due', 'suspended', 'cancelled', 'archived', 'read_only'],
