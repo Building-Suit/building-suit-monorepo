@@ -242,6 +242,14 @@ export type ShopRpcDatabase = {
         Args: { p_shop_id: string; p_product_id: string }
         Returns: undefined
       }
+      list_services: {
+        Args: { p_shop_id: string; p_search?: string | null; p_page?: number; p_page_size?: number }
+        Returns: unknown
+      }
+      service_scheduling_options: {
+        Args: { p_shop_id: string }
+        Returns: unknown
+      }
       save_service: {
         Args: {
           p_shop_id: string
@@ -251,6 +259,11 @@ export type ShopRpcDatabase = {
           p_base_sale_price: number
           p_discount_type: 'amount' | 'percent'
           p_discount_value: number
+          p_scheduling_enabled: boolean
+          p_duration_minutes: number | null
+          p_cleanup_minutes: number
+          p_location_ids: string[]
+          p_staff_membership_ids: string[]
         }
         Returns: string
       }
