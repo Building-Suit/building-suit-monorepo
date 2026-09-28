@@ -71,7 +71,7 @@ type SaleDetail = {
 
 const route = useRoute()
 const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
-const { currentId } = useShop()
+const { currentId, currentLocationId } = useShop()
 const { t, locale } = useI18n()
 const confirmation = useConfirmation()
 const { push: pushToast } = useToasts()
@@ -92,7 +92,7 @@ const paymentReference = ref('')
 const paymentReason = ref('')
 const paymentPending = ref(false)
 const { dirty: paymentDirty } = useRecordAction(() => ({ amount: paymentAmount.value, date: paymentDate.value, method: paymentMethod.value, reference: paymentReference.value, reason: paymentReason.value }), paymentDialogOpen)
-watch([currentId, saleId], () => { paymentDialog.value = null; selectedPayment.value = null; actionError.value = ''; paymentRequestId.value = null })
+watch([currentId, currentLocationId, saleId], () => { paymentDialog.value = null; selectedPayment.value = null; actionError.value = ''; paymentRequestId.value = null })
 const paymentRequestId = ref<string | null>(null)
 watch([paymentAmount, paymentDate, paymentMethod, paymentReference, paymentReason], () => {
   if (!paymentPending.value) paymentRequestId.value = null
@@ -101,13 +101,13 @@ watch([paymentAmount, paymentDate, paymentMethod, paymentReference, paymentReaso
 const { data: sale, pending, error, refresh } = useAsyncData(
   () => `shop-data:sale:${currentId.value ?? 'none'}:${saleId.value}`,
   async (): Promise<SaleDetail | null> => {
-    if (!currentId.value || !saleId.value) return null
-    const { data, error: queryError } = await shopRpc.rpc('get_sale', {
-      p_shop_id: currentId.value, p_invoice_id: saleId.value,
+    if (!currentId.value || !currentLocationId.value || !saleId.value) return null
+    const { data, error: queryError } = await shopRpc.rpc('get_location_sale', {
+      p_shop_id: currentId.value, p_location_id: currentLocationId.value, p_invoice_id: saleId.value,
     })
     if (queryError) throw queryError
     return data as SaleDetail | null
-  }, { watch: [currentId, saleId], default: () => null },
+  }, { watch: [currentId, currentLocationId, saleId], default: () => null },
 )
 
 function readableError(message?: string) {
@@ -145,7 +145,7 @@ function openAdjustment(kind: 'reversal' | 'refund', event: PaymentEvent) {
 }
 
 async function submitPayment() {
-  if (!currentId.value || !sale.value || !paymentDialog.value || paymentPending.value
+  if (!currentId.value || !currentLocationId.value || !sale.value || !paymentDialog.value || paymentPending.value
     || !Number.isFinite(paymentAmount.value) || paymentAmount.value <= 0) return
   if (paymentDialog.value !== 'receipt' && paymentReason.value.trim().length < 2) {
     actionError.value = t('payments.reasonRequired'); return
@@ -160,8 +160,9 @@ async function submitPayment() {
   try {
     let result
     if (paymentDialog.value === 'receipt') {
-      result = await shopRpc.rpc('record_customer_receipt', {
+      result = await shopRpc.rpc('record_location_customer_receipt', {
         p_request_id: paymentRequestId.value, p_shop_id: currentId.value,
+        p_location_id: currentLocationId.value,
         p_customer_id: sale.value.client_id!, p_amount: Number(paymentAmount.value),
         p_paid_at: effectiveAt, p_method: paymentMethod.value,
         p_reference: paymentReference.value.trim() || null, p_notes: null,
@@ -196,16 +197,17 @@ async function submitPayment() {
 }
 
 async function issue() {
-  if (!currentId.value || !sale.value || sale.value.status !== 'draft' || !sale.value.canIssue || issuing.value) return
+  if (!currentId.value || !currentLocationId.value || !sale.value || sale.value.status !== 'draft' || !sale.value.canIssue || issuing.value) return
   if (!sale.value.client_id) { actionError.value = t('sales.customerRequired'); return }
   if (!await confirmation.ask(t('sales.issueConfirm'))) return
   issuing.value = true
   actionError.value = ''
   issueRequestId.value ??= crypto.randomUUID()
   try {
-    const { error } = await shopRpc.rpc('issue_sale', {
+    const { error } = await shopRpc.rpc('issue_location_sale', {
       p_request_id: issueRequestId.value,
       p_shop_id: currentId.value,
+      p_location_id: currentLocationId.value,
       p_invoice_id: sale.value.id,
     })
     if (error) throw error

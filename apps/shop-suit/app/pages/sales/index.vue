@@ -42,7 +42,7 @@ const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
 const route = useRoute()
 const router = useRouter()
 const { t, locale } = useI18n()
-const { current, currentId, loading: shopLoading } = useShop()
+const { current, currentId, currentLocationId, loading: shopLoading } = useShop()
 const confirmation = useConfirmation()
 const { push: pushToast } = useToasts()
 const search = ref('')
@@ -74,7 +74,7 @@ watch(search, (value) => {
   searchTimer = setTimeout(() => { debouncedSearch.value = value.trim(); page.value = 1 }, 300)
 })
 watch([statusFilter, fromDate, toDate], () => { page.value = 1 })
-watch(currentId, () => { closeEditor(); page.value = 1 })
+watch([currentId, currentLocationId], () => { closeEditor(); page.value = 1 })
 watch([customerId, dueDate, notes, paymentMethod, paymentReference, lines], () => {
   if (!saving.value && !issuing.value) {
     draftRequestId.value = null
@@ -102,13 +102,14 @@ const { data: paymentAccess } = useAsyncData('shop-data:payment-access', async (
 
 const { data: salePage, pending, error, refresh } = useAsyncData(
   'shop-data:sales', async (): Promise<SalePage> => {
-    if (!currentId.value) return { items: [], total: 0, page: 1, pageSize, canManage: false, canIssue: false }
+    if (!currentId.value || !currentLocationId.value) return { items: [], total: 0, page: 1, pageSize, canManage: false, canIssue: false }
     const { data: accessRows, error: accessError } = await shopRpc.rpc('sale_access', { p_shop_id: currentId.value })
     if (accessError) throw accessError
     const access = accessRows?.[0]
     if (!access?.can_view) return { items: [], total: 0, page: page.value, pageSize, canManage: false, canIssue: false, permissionDenied: true }
-    const { data, error: listError } = await shopRpc.rpc('list_sales', {
+    const { data, error: listError } = await shopRpc.rpc('list_location_sales', {
       p_shop_id: currentId.value,
+      p_location_id: currentLocationId.value,
       p_search: debouncedSearch.value || null,
       p_status: statusFilter.value === 'all' ? null : statusFilter.value,
       p_from: fromDate.value || null,
@@ -119,7 +120,7 @@ const { data: salePage, pending, error, refresh } = useAsyncData(
     if (listError) throw listError
     return data as SalePage
   }, {
-    watch: [currentId, debouncedSearch, statusFilter, fromDate, toDate, page],
+    watch: [currentId, currentLocationId, debouncedSearch, statusFilter, fromDate, toDate, page],
     default: (): SalePage => ({ items: [], total: 0, page: 1, pageSize, canManage: false, canIssue: false }),
   },
 )
@@ -238,14 +239,15 @@ function readableError(message?: string) {
 }
 
 async function persistDraft() {
-  if (!currentId.value || saving.value || !salePage.value?.canManage || !validDraft()) return null
+  if (!currentId.value || !currentLocationId.value || saving.value || !salePage.value?.canManage || !validDraft()) return null
   saving.value = true
   editorError.value = ''
   draftRequestId.value ??= crypto.randomUUID()
   try {
-    const { data, error } = await shopRpc.rpc('save_sale_draft_with_due_date', {
+    const { data, error } = await shopRpc.rpc('save_location_sale_draft', {
       p_request_id: draftRequestId.value,
       p_shop_id: currentId.value,
+      p_location_id: currentLocationId.value,
       p_invoice_id: editingId.value,
       p_customer_id: customerId.value || null,
       p_due_date: customerId.value && dueDate.value ? dueDate.value : null,
@@ -274,7 +276,7 @@ async function saveDraft() {
 }
 
 async function issue() {
-  if (!currentId.value || issuing.value || !salePage.value?.canIssue) return
+  if (!currentId.value || !currentLocationId.value || issuing.value || !salePage.value?.canIssue) return
   if (!validDraft()) { editorError.value = t('sales.invalid'); return }
   if (!customerId.value && !paymentAccess.value.can_receive) { editorError.value = t('sales.checkoutDenied'); return }
   if (!await confirmation.ask(customerId.value ? t('sales.issueConfirm') : t('sales.checkoutConfirm'))) return
@@ -285,11 +287,12 @@ async function issue() {
   if (!customerId.value) checkoutPaidAt.value ??= new Date().toISOString()
   try {
     const { error } = customerId.value
-      ? await shopRpc.rpc('issue_sale', {
-          p_request_id: issueRequestId.value, p_shop_id: currentId.value, p_invoice_id: invoiceId,
+      ? await shopRpc.rpc('issue_location_sale', {
+          p_request_id: issueRequestId.value, p_shop_id: currentId.value, p_location_id: currentLocationId.value, p_invoice_id: invoiceId,
         })
-      : await shopRpc.rpc('checkout_customerless_sale', {
+      : await shopRpc.rpc('checkout_location_sale', {
           p_request_id: issueRequestId.value, p_shop_id: currentId.value,
+          p_location_id: currentLocationId.value,
           p_invoice_id: invoiceId, p_amount: previewTotal.value,
           p_paid_at: checkoutPaidAt.value!, p_method: paymentMethod.value,
           p_reference: paymentReference.value.trim() || null,

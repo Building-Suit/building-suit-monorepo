@@ -12,6 +12,110 @@ export type ShopRpcDatabase = {
         Args: { p_shop_id: string; p_business_mode: 'product' | 'service' | 'mixed' }
         Returns: 'product' | 'service' | 'mixed'
       }
+      list_shop_locations: {
+        Args: { p_shop_id: string }
+        Returns: Array<{
+          id: string
+          shop_id: string
+          name: string
+          code: string | null
+          address: string | null
+          phone: string | null
+          status: 'active' | 'archived'
+          is_default: boolean
+          archived_at: string | null
+        }>
+      }
+      save_shop_location: {
+        Args: {
+          p_shop_id: string
+          p_location_id: string | null
+          p_name: string
+          p_code?: string | null
+          p_address?: string | null
+          p_phone?: string | null
+        }
+        Returns: string
+      }
+      archive_shop_location: {
+        Args: { p_shop_id: string; p_location_id: string }
+        Returns: undefined
+      }
+      assign_membership_locations: {
+        Args: { p_shop_id: string; p_membership_id: string; p_location_ids: string[] }
+        Returns: undefined
+      }
+      location_operational_report: {
+        Args: {
+          p_shop_id: string
+          p_location_id?: string | null
+          p_from?: string | null
+          p_to?: string | null
+        }
+        Returns: unknown
+      }
+      save_location_sale_draft: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_location_id: string
+          p_invoice_id: string | null
+          p_customer_id: string | null
+          p_due_date: string | null
+          p_notes: string | null
+          p_lines: Array<{ item_type: 'product' | 'service'; source_id: string; quantity: number }>
+        }
+        Returns: string
+      }
+      list_location_sales: {
+        Args: {
+          p_shop_id: string
+          p_location_id: string
+          p_search?: string | null
+          p_status?: 'draft' | 'issued' | null
+          p_from?: string | null
+          p_to?: string | null
+          p_page?: number
+          p_page_size?: number
+        }
+        Returns: unknown
+      }
+      get_location_sale: {
+        Args: { p_shop_id: string; p_location_id: string; p_invoice_id: string }
+        Returns: unknown
+      }
+      issue_location_sale: {
+        Args: { p_request_id: string; p_shop_id: string; p_location_id: string; p_invoice_id: string }
+        Returns: string
+      }
+      checkout_location_sale: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_location_id: string
+          p_invoice_id: string
+          p_amount: number
+          p_paid_at: string
+          p_method: 'cash' | 'bank_transfer' | 'card' | 'wallet' | 'cheque' | 'other'
+          p_reference: string | null
+        }
+        Returns: string
+      }
+      record_location_customer_receipt: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_location_id: string
+          p_customer_id: string
+          p_amount: number
+          p_paid_at: string
+          p_method: 'cash' | 'bank_transfer' | 'card' | 'wallet' | 'cheque' | 'other'
+          p_reference: string | null
+          p_notes: string | null
+          p_allocations: Array<{ invoice_id: string; amount: number }>
+        }
+        Returns: string
+      }
       save_product: {
         Args: {
           p_shop_id: string

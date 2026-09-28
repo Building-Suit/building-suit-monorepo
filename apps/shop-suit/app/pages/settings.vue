@@ -6,14 +6,18 @@ import { BUSINESS_MODES } from '~/utils/businessMode'
 definePageMeta({ layout: 'default', middleware: ['auth'] })
 
 const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const confirmation = useConfirmation()
 const { locale } = useI18n()
-const { current, currentId, loading, loadError: shopError, isOwner, reload } = useShop()
+const { current, currentId, locations, loading, loadError: shopError, isOwner, reload, loadLocations } = useShop()
 const { success } = useToasts()
 const ui = useUiCopy()
 const selectedMode = ref<BusinessMode>('mixed')
 const pending = ref(false)
 const errorMessage = ref('')
 const successMessage = ref('')
+const locationPending = ref(false)
+const locationError = ref('')
+const locationForm = reactive({ name: '', code: '', address: '', phone: '' })
 const isArabic = computed(() => locale.value === 'ar')
 
 const copy = computed(() => isArabic.value ? {
@@ -26,6 +30,10 @@ const copy = computed(() => isArabic.value ? {
   ownerOnly: 'يمكن لمالك النشاط فقط تغيير هذا الإعداد. يمكنك رؤية الطريقة الحالية دون تعديلها.',
   save: 'حفظ طريقة التشغيل', saving: 'جارٍ الحفظ…', success: 'تم تحديث طريقة تشغيل النشاط.',
   failed: 'تعذّر تحديث طريقة تشغيل النشاط. حاول مرة أخرى.',
+  locationsTitle: 'فروع النشاط', locationsHelp: 'أضف الفرع الثاني وأدر الفروع النشطة دون حذف السجل التاريخي.',
+  defaultLocation: 'افتراضي', archivedLocation: 'مؤرشف', locationName: 'اسم الفرع', locationCode: 'الرمز', locationAddress: 'العنوان', locationPhone: 'الهاتف',
+  addLocation: 'إضافة فرع', addingLocation: 'جارٍ الإضافة…', archiveLocation: 'أرشفة', locationSaved: 'تمت إضافة الفرع.', locationFailed: 'تعذّر حفظ الفرع.',
+  archiveLocationConfirm: 'أرشفة هذا الفرع؟ ستبقى المبيعات والمدفوعات والمواعيد السابقة ظاهرة في السجل والتقارير.',
 } : {
   title: 'Business settings', subtitle: 'Choose the workflows that fit this business.',
   modeTitle: 'Business operation mode', modeHelp: 'This setting controls product, stock, and service workflow visibility only. It does not change the subscription plan, quotas, or user permissions.',
@@ -36,6 +44,10 @@ const copy = computed(() => isArabic.value ? {
   ownerOnly: 'Only the business owner can change this setting. You can view the current mode without editing it.',
   save: 'Save operation mode', saving: 'Saving…', success: 'Business operation mode updated.',
   failed: 'Could not update the business operation mode. Try again.',
+  locationsTitle: 'Business locations', locationsHelp: 'Add the second branch and manage active locations without deleting history.',
+  defaultLocation: 'Default', archivedLocation: 'Archived', locationName: 'Location name', locationCode: 'Code', locationAddress: 'Address', locationPhone: 'Phone',
+  addLocation: 'Add location', addingLocation: 'Adding…', archiveLocation: 'Archive', locationSaved: 'Location added.', locationFailed: 'Could not save the location.',
+  archiveLocationConfirm: 'Archive this location? Its historical sales, payments, and appointments will remain available in history and reports.',
 })
 
 const modeOptions = computed(() => BUSINESS_MODES.map(value => ({
@@ -74,6 +86,50 @@ async function saveMode() {
     pending.value = false
   }
 }
+
+async function addLocation() {
+  const name = locationForm.name.trim()
+  if (!currentId.value || !isOwner.value || locationPending.value || name.length < 2) return
+  locationPending.value = true
+  locationError.value = ''
+  try {
+    const { error } = await shopRpc.rpc('save_shop_location', {
+      p_shop_id: currentId.value,
+      p_location_id: null,
+      p_name: name,
+      p_code: locationForm.code.trim() || null,
+      p_address: locationForm.address.trim() || null,
+      p_phone: locationForm.phone.trim() || null,
+    })
+    if (error) throw error
+    Object.assign(locationForm, { name: '', code: '', address: '', phone: '' })
+    await loadLocations()
+    success(copy.value.locationSaved)
+  } catch {
+    locationError.value = copy.value.locationFailed
+  } finally {
+    locationPending.value = false
+  }
+}
+
+async function archiveLocation(locationId: string) {
+  if (!currentId.value || !isOwner.value || locationPending.value
+    || !await confirmation.ask(copy.value.archiveLocationConfirm)) return
+  locationPending.value = true
+  locationError.value = ''
+  try {
+    const { error } = await shopRpc.rpc('archive_shop_location', {
+      p_shop_id: currentId.value,
+      p_location_id: locationId,
+    })
+    if (error) throw error
+    await loadLocations()
+  } catch {
+    locationError.value = copy.value.locationFailed
+  } finally {
+    locationPending.value = false
+  }
+}
 </script>
 
 <template>
@@ -107,6 +163,32 @@ async function saveMode() {
           </label>
         </fieldset>
         <BsButton type="submit" class="ls-btn ls-btn-primary" :pending="pending" :disabled="!isOwner || !current || selectedMode === current.business_mode">{{ pending ? copy.saving : copy.save }}</BsButton>
+      </BsForm>
+    </section>
+
+    <section v-if="current" class="rounded-2xl border border-border bg-card p-5 sm:p-6">
+      <h2 class="text-lg font-extrabold">{{ copy.locationsTitle }}</h2>
+      <p class="mt-2 text-sm leading-6 text-muted-foreground">{{ copy.locationsHelp }}</p>
+      <p v-if="locationError" role="alert" class="mt-4 text-sm text-[var(--bs-status-error)]">{{ locationError }}</p>
+      <ul class="mt-5 divide-y divide-border rounded-xl border border-border">
+        <li v-for="location in locations" :key="location.id" class="flex items-center justify-between gap-4 p-4">
+          <span>
+            <strong class="block">{{ location.name }}</strong>
+            <span class="text-xs text-muted-foreground">{{ location.code || location.address || '—' }}</span>
+          </span>
+          <span class="flex items-center gap-2">
+            <span v-if="location.is_default" class="rounded-full bg-muted px-2 py-1 text-xs font-bold">{{ copy.defaultLocation }}</span>
+            <span v-if="location.status === 'archived'" class="rounded-full bg-muted px-2 py-1 text-xs font-bold">{{ copy.archivedLocation }}</span>
+            <BsButton v-if="isOwner && !location.is_default && location.status === 'active'" type="button" severity="secondary" :disabled="locationPending" @click="archiveLocation(location.id)">{{ copy.archiveLocation }}</BsButton>
+          </span>
+        </li>
+      </ul>
+      <BsForm v-if="isOwner" class="mt-5 grid gap-3 sm:grid-cols-2" :pending="locationPending" :error="locationError" @submit="addLocation">
+        <label class="grid gap-1 text-sm"><span>{{ copy.locationName }}</span><input v-model="locationForm.name" class="ls-input" required minlength="2" maxlength="120"></label>
+        <label class="grid gap-1 text-sm"><span>{{ copy.locationCode }}</span><input v-model="locationForm.code" class="ls-input" maxlength="32"></label>
+        <label class="grid gap-1 text-sm"><span>{{ copy.locationAddress }}</span><input v-model="locationForm.address" class="ls-input"></label>
+        <label class="grid gap-1 text-sm"><span>{{ copy.locationPhone }}</span><input v-model="locationForm.phone" class="ls-input"></label>
+        <div class="sm:col-span-2"><BsButton type="submit" :pending="locationPending" :disabled="locationForm.name.trim().length < 2">{{ locationPending ? copy.addingLocation : copy.addLocation }}</BsButton></div>
       </BsForm>
     </section>
   </div>

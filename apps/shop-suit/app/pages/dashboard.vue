@@ -12,7 +12,7 @@ const supabase = useSupabaseClient()
 const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
 const route = useRoute()
 const { locale } = useI18n()
-const { current, currentId, currentMembership, isOwner, reload } = useShop()
+const { current, currentId, currentLocationId, currentMembership, isOwner, reload } = useShop()
 const { data: plans, isLoading: plansPending, error: plansError, refresh: refreshPlans } = usePlans()
 const isArabic = computed(() => locale.value === 'ar')
 const selectablePlans = computed(() => plans.value?.filter(plan => !plan.is_coming_soon && plan.trial_days > 0) ?? [])
@@ -92,14 +92,15 @@ const { data: subscription, error: subscriptionError, refresh: refreshSubscripti
 
 const { data: invoices, pending: invoicesPending, error: invoicesError, refresh: refreshInvoices } = useAsyncData(
   'shop-data:recent-invoices', async () => {
-    if (!currentId.value) return []
+    if (!currentId.value || !currentLocationId.value) return []
     const { data, error } = await supabase.from('invoices')
       .select('id,invoice_number,client_name_snapshot,total_amount,created_at')
       .eq('shop_id', currentId.value).in('status', ['issued', 'paid'])
+      .eq('location_id', currentLocationId.value)
       .order('created_at', { ascending: false }).limit(8)
     if (error) throw error
     return (data ?? []) as Invoice[]
-  }, { watch: [currentId], default: () => [] },
+  }, { watch: [currentId, currentLocationId], default: () => [] },
 )
 
 const currentPlan = computed(() => plans.value?.find(plan => plan.id === subscription.value?.plan_id))

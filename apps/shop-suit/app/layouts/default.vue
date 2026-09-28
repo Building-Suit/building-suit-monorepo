@@ -6,15 +6,15 @@ const supabase = useSupabaseClient()
 const nuxtApp = useNuxtApp()
 const user = useSupabaseUser()
 const { locale, t } = useI18n()
-const { shops, current, currentId, loading, loadError, loadShops, selectShop } = useShop()
+const { shops, current, currentId, activeLocations, currentLocationId, loading, loadError, loadShops, selectShop, selectLocation } = useShop()
 
 const accountOpen = ref(false)
 const showErrorDetails = import.meta.dev
 const isArabic = computed(() => locale.value === 'ar')
 
 const copy = computed(() => isArabic.value
-  ? { dashboard: 'لوحة التحكم', invoices: 'الفواتير', products: 'المنتجات', services: 'الخدمات', inventory: 'المخزون', purchases: 'المشتريات', expenses: 'المصروفات', settings: 'إعدادات النشاط', team: 'الفريق', reports: 'التقارير', soon: 'قريبًا', shop: 'المتجر', account: 'الحساب', logout: 'تسجيل الخروج', openMenu: 'فتح القائمة', closeMenu: 'إغلاق القائمة', loadFailed: 'تعذّر تحميل بيانات المتجر. حاول مرة أخرى.', retry: 'إعادة المحاولة' }
-  : { dashboard: 'Dashboard', invoices: 'Invoices', products: 'Products', services: 'Services', inventory: 'Inventory', purchases: 'Purchases', expenses: 'Expenses', settings: 'Business settings', team: 'Team', reports: 'Reports', soon: 'Soon', shop: 'Shop', account: 'Account', logout: 'Sign out', openMenu: 'Open menu', closeMenu: 'Close menu', loadFailed: 'Unable to load shop data. Please try again.', retry: 'Retry' })
+  ? { dashboard: 'لوحة التحكم', invoices: 'الفواتير', products: 'المنتجات', services: 'الخدمات', inventory: 'المخزون', purchases: 'المشتريات', expenses: 'المصروفات', settings: 'إعدادات النشاط', team: 'الفريق', reports: 'التقارير', soon: 'قريبًا', shop: 'المتجر', location: 'الفرع', account: 'الحساب', logout: 'تسجيل الخروج', openMenu: 'فتح القائمة', closeMenu: 'إغلاق القائمة', loadFailed: 'تعذّر تحميل بيانات المتجر. حاول مرة أخرى.', retry: 'إعادة المحاولة' }
+  : { dashboard: 'Dashboard', invoices: 'Invoices', products: 'Products', services: 'Services', inventory: 'Inventory', purchases: 'Purchases', expenses: 'Expenses', settings: 'Business settings', team: 'Team', reports: 'Reports', soon: 'Soon', shop: 'Shop', location: 'Location', account: 'Account', logout: 'Sign out', openMenu: 'Open menu', closeMenu: 'Close menu', loadFailed: 'Unable to load shop data. Please try again.', retry: 'Retry' })
 
 const links = computed(() => {
   const mode = current.value?.business_mode ?? 'mixed'
@@ -60,6 +60,7 @@ async function logout() {
     <template #header>
       <SettingsMenu />
       <select v-if="shops.length" :value="currentId ?? ''" class="ls-select max-w-64" :aria-label="copy.shop" @change="selectShop(($event.target as HTMLSelectElement).value)"><option v-for="shop in shops" :key="shop.id" :value="shop.id">{{ shop.name }}</option></select>
+      <select v-if="activeLocations.length" :value="currentLocationId ?? ''" class="ls-select max-w-64" :aria-label="copy.location" @change="selectLocation(($event.target as HTMLSelectElement).value)"><option v-for="location in activeLocations" :key="location.id" :value="location.id">{{ location.name }}</option></select>
       <div class="relative">
         <button type="button" class="ls-btn ls-btn-sm" :aria-label="copy.account" :aria-expanded="accountOpen" @click="accountOpen = !accountOpen"><AppIcon name="user" /></button>
         <div v-if="accountOpen" class="ls-card absolute end-0 top-12 z-50 w-56 p-2 shadow-overlay"><p class="truncate px-3 py-2 text-xs">{{ user?.email }}</p><button type="button" class="ls-btn w-full" @click="logout">{{ copy.logout }}</button></div>
