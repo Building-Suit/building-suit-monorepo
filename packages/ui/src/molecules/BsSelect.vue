@@ -12,6 +12,20 @@ withDefaults(defineProps<{
   virtualScrollerOptions?: SelectProps['virtualScrollerOptions']
 }>(), { virtual: false, optionLabel: undefined, optionValue: undefined, virtualScrollerOptions: undefined })
 const ui = useUiCopy()
+
+function activateFocusedFilterOption(event: KeyboardEvent) {
+  if (event.key !== 'Enter' || event.isComposing) return
+
+  const input = event.currentTarget as HTMLInputElement | null
+  const optionId = input?.getAttribute('aria-activedescendant')
+  const option = optionId ? document.getElementById(optionId) : null
+
+  if (!(option instanceof HTMLElement) || option.getAttribute('role') !== 'option') return
+
+  event.preventDefault()
+  event.stopImmediatePropagation()
+  option.click()
+}
 </script>
 
 <template>
@@ -23,7 +37,7 @@ const ui = useUiCopy()
     :pt="{
       root: { class: 'bs-select ls-input' }, label: { class: 'bs-select-label' },
       dropdown: { class: 'bs-select-trigger' }, overlay: { class: 'bs-select-overlay ls-card shadow-overlay' },
-      header: { class: 'p-2' }, pcFilter: { root: { class: 'ls-input', 'aria-label': ui('search') + ' · ' + label } },
+      header: { class: 'p-2' }, pcFilter: { root: { class: 'ls-input', 'aria-label': ui('search') + ' · ' + label, onKeydownCapture: activateFocusedFilterOption } },
       list: { class: 'm-0 p-0 list-none' }, option: { class: 'bs-select-option' },
       emptyMessage: { class: 'p-3 text-fg-muted' },
     }"
