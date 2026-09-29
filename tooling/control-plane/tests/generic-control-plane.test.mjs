@@ -41,3 +41,32 @@ test('n8n inspection identifies hard-coded registry options and retry graphs', (
   assert.equal(inspection.compatible,false)
   assert.deepEqual(inspection.findings.map(item=>item.code).sort(),['hardcoded_registry_options','n8n_owned_retry_graph'])
 })
+
+
+test('control-plane runner preserves bounded automatic repair policy', async () => {
+  const { readFile } = await import('node:fs/promises')
+  const runner = await readFile(
+    new URL('../runner/bs-agent.mjs', import.meta.url),
+    'utf8',
+  )
+
+  assert.match(runner, /automatic_repair_stopped/)
+  assert.match(runner, /execution\.metadata\?\.retry === true/)
+  assert.match(runner, /failure_stage/)
+  assert.match(runner, /execution_error/)
+  assert.match(runner, /verification_failures/)
+  assert.match(runner, /legalActions\.push/)
+  assert.match(runner, /human_intervention_required/)
+})
+
+test('worker prompt requires full Shop database regression after database changes', async () => {
+  const { readFile } = await import('node:fs/promises')
+  const prompt = await readFile(
+    new URL('../runner/task-prompt.mjs', import.meta.url),
+    'utf8',
+  )
+
+  assert.match(prompt, /pnpm db:test:shop/)
+  assert.match(prompt, /full locally-safe regression command/)
+  assert.match(prompt, /Do not claim a check passed unless/)
+})

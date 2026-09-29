@@ -2928,8 +2928,12 @@ Rules:
 - Do not modify hosted databases.
 - Use the failure summaries first.
 - Inspect a referenced full log only when needed.
-- Run only focused local checks needed while repairing.
-- Leave final verification to the control plane.
+- Fix only the recorded verification failures without expanding task scope.
+- Re-run every recorded failed verifier command exactly when it is locally safe.
+- Do not report the repair complete while any recorded failed verifier command still fails.
+- If that verifier command exposes another failure in the same regression suite, continue repairing that suite until the command exits successfully.
+- Additional focused checks may be used for diagnosis, but they do not replace the failed verifier command.
+- Independent final verification still belongs to the control plane.
 
 Return a concise repair summary.
           `.trim()
@@ -3973,6 +3977,47 @@ function taskEngine() {
             execution.attempt,
           )
 
+        const verificationFailure =
+          execution.status === 'succeeded'
+
+        const failedChecks =
+          verificationFailure
+            ? verificationFailures(
+                execution.execution_id,
+              )
+            : []
+
+        const failureStage =
+          verificationFailure
+            ? 'verification'
+            : 'implementation'
+
+        const executionError =
+          verificationFailure
+            ? null
+            : redactText(
+                execution.metadata?.stderr ??
+                execution.metadata?.error ??
+                'implementation_failed',
+              ).slice(0, 4000)
+
+        const legalActions = [
+          'inspect',
+          'error-bundle',
+        ]
+
+        if (verificationFailure) {
+          legalActions.push(
+            'reverify',
+          )
+        }
+
+        if (decision.allowed) {
+          legalActions.push(
+            'retry',
+          )
+        }
+
         if (!decision.allowed) {
           output({
             ok: false,
@@ -3986,6 +4031,15 @@ function taskEngine() {
             error:
               'retry_limit_reached',
 
+            failure_stage:
+              failureStage,
+
+            execution_status:
+              execution.status,
+
+            execution_error:
+              executionError,
+
             attempt:
               execution.attempt,
 
@@ -3995,6 +4049,67 @@ function taskEngine() {
             retry_policy:
               retryPolicy,
 
+            verification_failures:
+              failedChecks,
+
+            legal_actions:
+              legalActions,
+
+            trail,
+          }, 1)
+
+          return
+        }
+
+        // Automatic execution gets at most one repair pass.
+        // A subsequent failure is surfaced to the operator with its real
+        // stage and evidence instead of consuming every remaining retry.
+        if (
+          execution.metadata?.retry === true
+        ) {
+          output({
+            ok: false,
+
+            command:
+              'task-engine',
+
+            task_id:
+              taskId,
+
+            error:
+              'automatic_repair_stopped',
+
+            failure_stage:
+              failureStage,
+
+            execution_status:
+              execution.status,
+
+            execution_error:
+              executionError,
+
+            attempt:
+              execution.attempt,
+
+            max_attempts:
+              retryPolicy.max_attempts,
+
+            retry_available:
+              decision.allowed,
+
+            next_profile:
+              decision.next_profile ??
+              null,
+
+            verification_failures:
+              failedChecks,
+
+            legal_actions:
+              legalActions,
+
+            human_intervention_required:
+              true,
+
             trail,
           }, 1)
 
@@ -4003,7 +4118,6 @@ function taskEngine() {
 
         action =
           'task-retry'
-
       }
       else if (
         status === 'passed'
