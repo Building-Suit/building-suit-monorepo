@@ -76,6 +76,10 @@ Rules:
 - Do not use another app's internals.
 - Do not expand scope.
 - Run locally relevant checks that are safe for this task.
+- Before reporting completion, run the full locally-safe regression command required by the task verification plan when one exists; do not substitute only a narrower newly-added test.
+- If Shop Suit Supabase schema, migrations, database tests, or database runner code changed, run 'pnpm db:test:shop' and require it to exit successfully.
+- If task-specific Playwright specs changed and browser verification is required, run those changed specs with one worker and retries disabled.
+- Do not claim a check passed unless that exact check was actually executed successfully.
 - Leave the worktree ready for independent verification.
 - Do not create a commit; the control plane owns publication.
 
