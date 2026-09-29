@@ -70,3 +70,38 @@ test('worker prompt requires full Shop database regression after database change
   assert.match(prompt, /full locally-safe regression command/)
   assert.match(prompt, /Do not claim a check passed unless/)
 })
+
+test('focused browser verification collects all failures before repair', async () => {
+  const { readFile } = await import('node:fs/promises')
+  const verifier = await readFile(
+    new URL('../runner/task-verifier.mjs', import.meta.url),
+    'utf8',
+  )
+
+  assert.match(verifier, /'--workers=1'/)
+  assert.match(verifier, /'--retries=0'/)
+  assert.doesNotMatch(verifier, /--max-failures=1/)
+})
+
+test('repair execution is gated by verifier probes', async () => {
+  const { readFile } = await import('node:fs/promises')
+
+  const verifier = await readFile(
+    new URL('../runner/task-verifier.mjs', import.meta.url),
+    'utf8',
+  )
+
+  const runner = await readFile(
+    new URL('../runner/bs-agent.mjs', import.meta.url),
+    'utf8',
+  )
+
+  assert.match(verifier, /verificationRunId === 'probe'/)
+  assert.match(verifier, /if \(verificationProbe\)/)
+
+  assert.match(runner, /maxRepairCycles/)
+  assert.match(runner, /repair-verification-/)
+  assert.match(runner, /verification_probe_passed/)
+  assert.match(runner, /latestProbe\?\.passed ===/)
+  assert.match(runner, /repair_verification_failed/)
+})

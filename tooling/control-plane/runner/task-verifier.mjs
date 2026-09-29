@@ -20,6 +20,9 @@ const [
   verificationRunId,
 ] = process.argv.slice(2)
 
+const verificationProbe =
+  verificationRunId === 'probe'
+
 function fail(message) {
   process.stdout.write(
     `${JSON.stringify({
@@ -35,7 +38,10 @@ if (
   !worktreePath ||
   !packetPath ||
   !runDirectory ||
-  !/^\d+$/.test(verificationRunId ?? '')
+  (
+    !verificationProbe &&
+    !/^\d+$/.test(verificationRunId ?? '')
+  )
 ) {
   fail(
     'worktree, packet, run directory and verification run ID are required',
@@ -80,6 +86,10 @@ const controlDatabase = {
 }
 
 function liveCheck(check) {
+  if (verificationProbe) {
+    return
+  }
+
   const values = {
     run_id: verificationRunId,
     name: check.name,
@@ -842,7 +852,6 @@ if (browserRequired) {
 
           '--workers=1',
           '--retries=0',
-          '--max-failures=1',
         ],
 
         timeout:
