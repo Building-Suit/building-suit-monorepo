@@ -119,7 +119,8 @@ function openEdit(product: Product) {
 }
 
 function readableError(message?: string) {
-  if (message === 'PRODUCT_LIMIT_REACHED') return copy.value.limit
+  const quotaMessage = planQuotaMessage(message, locale.value)
+  if (quotaMessage) return quotaMessage
   if (message === 'SHOP_SUBSCRIPTION_INACTIVE' || message === 'SHOP_PERMISSION_DENIED') return copy.value.access
   if (message?.includes('products_shop_active_sku_unique') || message?.includes('products_shop_active_barcode_unique')) return copy.value.duplicate
   return message || copy.value.writeError
@@ -149,7 +150,7 @@ async function save() {
     resetForm()
     await refresh()
   } catch (error) {
-    actionError.value = readableError(error instanceof Error ? error.message : undefined)
+    actionError.value = planQuotaMessage(error, locale.value) ?? readableError(error instanceof Error ? error.message : undefined)
   } finally {
     saving.value = false
   }

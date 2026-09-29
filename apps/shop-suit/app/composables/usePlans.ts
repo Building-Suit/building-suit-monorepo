@@ -1,7 +1,8 @@
 import { useAsyncData, useSupabaseClient } from '#imports';
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc';
+import type { PlanResourceLimits } from '~/types/plans';
 
-type PublicPlan = {
+export type PublicPlan = {
   id: string;
   name: string;
   slug: string;
@@ -10,12 +11,7 @@ type PublicPlan = {
   billing_interval: string;
   trial_days: number;
   features: { inventory?: boolean } | null;
-  resource_limits: {
-    active_locations: number | null;
-    active_members: number | null;
-    active_products: number | null;
-    active_services: number | null;
-  };
+  resource_limits: PlanResourceLimits;
   is_purchasable: boolean;
   is_coming_soon: boolean;
 };

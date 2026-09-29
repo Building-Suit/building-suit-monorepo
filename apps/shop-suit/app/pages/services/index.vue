@@ -153,7 +153,8 @@ function openEdit(service: Service) {
   showForm.value = true
 }
 function readableError(message?: string) {
-  if (message === 'SERVICE_LIMIT_REACHED') return copy.value.limit
+  const quotaMessage = planQuotaMessage(message, locale.value)
+  if (quotaMessage) return quotaMessage
   if (message === 'SHOP_SUBSCRIPTION_INACTIVE' || message === 'SHOP_PERMISSION_DENIED') return copy.value.access
   if (message === 'SERVICE_STAFF_LOCATION_MISMATCH') return copy.value.mismatch
   if (message?.startsWith('INVALID_SERVICE')) return copy.value.invalid
@@ -187,7 +188,7 @@ async function save() {
     })
     if (saveError) throw saveError
     resetForm(); await refresh(); pushToast({ tone: 'success', title: copy.value.saved })
-  } catch (caught) { actionError.value = readableError(caught instanceof Error ? caught.message : undefined) }
+  } catch (caught) { actionError.value = planQuotaMessage(caught, locale.value) ?? readableError(caught instanceof Error ? caught.message : undefined) }
   finally { saving.value = false }
 }
 async function archive(service: Service) {

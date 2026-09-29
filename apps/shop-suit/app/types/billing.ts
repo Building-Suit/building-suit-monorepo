@@ -1,3 +1,5 @@
+import type { PlanResourceKey, PlanResourceLimits, PlanUsageResource } from './plans'
+
 export type BillingSubmissionStatus = 'submitted' | 'under_review' | 'approved' | 'rejected'
 
 export type BillingSubmission = {
@@ -36,8 +38,8 @@ export type BillingPlanOption = {
   listPriceAmount: number
   effectivePriceAmount: number
   priceSource: 'catalog' | 'override'
-  resourceLimits: Record<string, number | null>
-  blockers: Array<{ resource: string, used: number, limit: number, excess: number }>
+  resourceLimits: PlanResourceLimits
+  blockers: Array<{ resource: PlanResourceKey, used: number, limit: number, excess: number }>
 }
 
 export type ShopBilling = {
@@ -79,21 +81,8 @@ export type ShopBilling = {
     products: number
     services: number
     members: number
-    limits: {
-      active_locations: number | null
-      active_members: number | null
-      active_products: number | null
-      active_services: number | null
-    }
-    resources: Array<{
-      resource: 'active_locations' | 'active_members' | 'active_products' | 'active_services'
-      used: number
-      limit: number | null
-      remaining: number | null
-      unlimited: boolean
-      atLimit: boolean
-      overLimit: boolean
-    }>
+    limits: PlanResourceLimits
+    resources: PlanUsageResource[]
   }
   submissions: BillingSubmission[]
 }

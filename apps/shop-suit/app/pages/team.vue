@@ -146,7 +146,7 @@ async function sendInvite() {
       showInvite.value = false
     }
     await refresh()
-  } catch { actionError.value = copy.value.actionFailed }
+  } catch (error) { actionError.value = planQuotaMessage(error, locale.value) ?? copy.value.actionFailed }
   finally { actionPending.value = false }
 }
 
@@ -176,7 +176,7 @@ async function saveMember() {
     showEdit.value = false
     await refresh()
     pushToast({ tone: 'success', title: copy.value.updated })
-  } catch { actionError.value = copy.value.actionFailed }
+  } catch (error) { actionError.value = planQuotaMessage(error, locale.value) ?? copy.value.actionFailed }
   finally { actionPending.value = false }
 }
 
@@ -194,7 +194,7 @@ async function memberAction(member: TeamMember, action: 'suspend' | 'reactivate'
     if (commandError) throw commandError
     await refresh()
     pushToast({ tone: 'success', title: copy.value.updated })
-  } catch { actionError.value = copy.value.actionFailed }
+  } catch (error) { actionError.value = planQuotaMessage(error, locale.value) ?? copy.value.actionFailed }
   finally { actionPending.value = false }
 }
 

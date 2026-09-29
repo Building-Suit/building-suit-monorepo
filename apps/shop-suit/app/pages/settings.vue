@@ -150,8 +150,8 @@ async function addLocation() {
     Object.assign(locationForm, { name: '', code: '', address: '', phone: '' })
     await loadLocations()
     success(copy.value.locationSaved)
-  } catch {
-    locationError.value = copy.value.locationFailed
+  } catch (error) {
+    locationError.value = planQuotaMessage(error, locale.value) ?? copy.value.locationFailed
   } finally {
     locationPending.value = false
   }
