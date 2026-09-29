@@ -282,12 +282,51 @@ export type ShopRpcDatabase = {
         }
         Returns: string
       }
+      save_product_with_category: {
+        Args: {
+          p_shop_id: string; p_product_id: string | null; p_name: string; p_sku: string | null
+          p_barcode: string | null; p_sale_price: number; p_category_id: string | null
+        }
+        Returns: string
+      }
+      list_products: {
+        Args: { p_shop_id: string; p_search?: string | null; p_category_id?: string | null; p_page?: number; p_page_size?: number }
+        Returns: unknown
+      }
+      list_catalog_categories: {
+        Args: { p_shop_id: string }
+        Returns: Array<{ id: string; name: string }>
+      }
+      save_catalog_category: {
+        Args: { p_shop_id: string; p_category_id: string | null; p_name: string }
+        Returns: string
+      }
+      set_catalog_item_category: {
+        Args: { p_shop_id: string; p_item_type: 'product' | 'service'; p_item_id: string; p_category_id: string | null }
+        Returns: undefined
+      }
+      catalog_import: {
+        Args: { p_request_id: string; p_shop_id: string; p_kind: 'products' | 'customers' | 'suppliers'; p_rows: Array<Record<string, unknown>>; p_dry_run?: boolean }
+        Returns: unknown
+      }
+      barcode_label_data: {
+        Args: { p_shop_id: string; p_search?: string | null; p_category_id?: string | null; p_page?: number; p_page_size?: number }
+        Returns: unknown
+      }
+      catalog_sales_report: {
+        Args: { p_shop_id: string; p_category_id?: string | null; p_from?: string; p_to?: string }
+        Returns: unknown
+      }
       archive_product: {
         Args: { p_shop_id: string; p_product_id: string }
         Returns: undefined
       }
       list_services: {
         Args: { p_shop_id: string; p_search?: string | null; p_page?: number; p_page_size?: number }
+        Returns: unknown
+      }
+      list_services_by_category: {
+        Args: { p_shop_id: string; p_search?: string | null; p_category_id?: string | null; p_page?: number; p_page_size?: number }
         Returns: unknown
       }
       service_scheduling_options: {
@@ -308,6 +347,15 @@ export type ShopRpcDatabase = {
           p_cleanup_minutes: number
           p_location_ids: string[]
           p_staff_membership_ids: string[]
+        }
+        Returns: string
+      }
+      save_service_with_category: {
+        Args: {
+          p_shop_id: string; p_service_id: string | null; p_name: string; p_description: string | null
+          p_base_sale_price: number; p_discount_type: 'amount' | 'percent'; p_discount_value: number
+          p_scheduling_enabled: boolean; p_duration_minutes: number | null; p_cleanup_minutes: number
+          p_location_ids: string[]; p_staff_membership_ids: string[]; p_category_id: string | null
         }
         Returns: string
       }
@@ -372,6 +420,19 @@ export type ShopRpcDatabase = {
           p_search?: string | null
           p_item_type?: 'product' | 'service' | null
           p_barcode?: string | null
+          p_page?: number
+          p_page_size?: number
+        }
+        Returns: unknown
+      }
+      pos_catalog_search_by_category: {
+        Args: {
+          p_shop_id: string
+          p_location_id: string
+          p_search?: string | null
+          p_item_type?: 'product' | 'service' | null
+          p_barcode?: string | null
+          p_category_id?: string | null
           p_page?: number
           p_page_size?: number
         }

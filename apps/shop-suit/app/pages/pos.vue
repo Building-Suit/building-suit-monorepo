@@ -10,6 +10,7 @@ type CartLine = CatalogItem & { key: string; sourceId: string; quantity: number 
 type Appointment = { id: string; staffId: string; customerId: string | null; customerName: string; startsAt: string; status: string; service: CatalogItem }
 type PosContext = { staff: Array<{ id: string; name: string }>; appointments: Appointment[]; customers: Array<{ id: string; name: string; phone: string | null }> }
 type CatalogResult = { items: CatalogItem[]; total: number; page: number; pageSize: number; businessMode: 'product' | 'service' | 'mixed'; ambiguousBarcode: boolean }
+type Category = { id: string; name: string }
 
 const rpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
 const route = useRoute()
@@ -20,6 +21,7 @@ const { push: pushToast } = useToasts()
 const catalogSearch = ref('')
 const debouncedSearch = ref('')
 const itemType = ref<'all' | 'product' | 'service'>('all')
+const categoryFilter = ref('')
 const catalogPage = ref(1)
 const customerSearch = ref('')
 const debouncedCustomerSearch = ref('')
@@ -58,18 +60,26 @@ let scanState = emptyScanState()
 watch(catalogSearch, value => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { debouncedSearch.value = value.trim(); catalogPage.value = 1 }, 250) })
 watch(customerSearch, value => { clearTimeout(customerTimer); customerTimer = setTimeout(() => { debouncedCustomerSearch.value = value.trim() }, 250) })
 watch(itemType, () => { catalogPage.value = 1 })
+watch(categoryFilter, () => { catalogPage.value = 1 })
 
 const locationChanged = computed(() => Boolean(transactionLocationId.value && currentLocationId.value !== transactionLocationId.value))
 const total = computed(() => cartTotal(lines.value))
 const selectedStaff = computed(() => context.value.staff.find(member => member.id === staffId.value))
 
+const { data: categories } = useAsyncData(() => `shop-data:pos-categories:${currentId.value ?? 'none'}`, async () => {
+  if (!currentId.value) return []
+  const { data, error } = await rpc.rpc('list_catalog_categories', { p_shop_id: currentId.value })
+  if (error) throw error
+  return data as Category[]
+}, { watch: [currentId], default: () => [] })
+
 const { data: catalog, pending: catalogPending, error: catalogError, refresh: refreshCatalog } = useAsyncData(
-  () => `shop-data:pos-catalog:${currentId.value ?? 'none'}:${currentLocationId.value ?? 'none'}:${debouncedSearch.value}:${itemType.value}:${catalogPage.value}`, async (): Promise<CatalogResult> => {
+  () => `shop-data:pos-catalog:${currentId.value ?? 'none'}:${currentLocationId.value ?? 'none'}:${debouncedSearch.value}:${itemType.value}:${categoryFilter.value}:${catalogPage.value}`, async (): Promise<CatalogResult> => {
     if (!currentId.value || !currentLocationId.value) return { items: [], total: 0, page: 1, pageSize: 30, businessMode: 'mixed', ambiguousBarcode: false }
-    const { data, error } = await rpc.rpc('pos_catalog_search', { p_shop_id: currentId.value, p_location_id: currentLocationId.value, p_search: debouncedSearch.value || null, p_item_type: itemType.value === 'all' ? null : itemType.value, p_page: catalogPage.value, p_page_size: 30 })
+    const { data, error } = await rpc.rpc('pos_catalog_search_by_category', { p_shop_id: currentId.value, p_location_id: currentLocationId.value, p_search: debouncedSearch.value || null, p_item_type: itemType.value === 'all' ? null : itemType.value, p_category_id: categoryFilter.value || null, p_page: catalogPage.value, p_page_size: 30 })
     if (error) throw error
     return data as CatalogResult
-  }, { watch: [currentId, currentLocationId, debouncedSearch, itemType, catalogPage], default: () => ({ items: [], total: 0, page: 1, pageSize: 30, businessMode: 'mixed', ambiguousBarcode: false }) },
+  }, { watch: [currentId, currentLocationId, debouncedSearch, itemType, categoryFilter, catalogPage], default: () => ({ items: [], total: 0, page: 1, pageSize: 30, businessMode: 'mixed', ambiguousBarcode: false }) },
 )
 
 const { data: context, pending: contextPending, error: contextError, refresh: refreshContext } = useAsyncData(
@@ -214,8 +224,9 @@ watch(context, value => {
       <div class="grid min-h-[calc(100vh-12rem)] gap-4 xl:grid-cols-[minmax(0,1fr)_25rem]">
         <section class="min-w-0 rounded-2xl border border-border bg-card p-4" aria-labelledby="pos-catalog-title">
           <h2 id="pos-catalog-title" tabindex="-1" class="scroll-mt-64 text-lg font-extrabold">{{ t('pos.catalog') }}</h2>
-          <div class="mt-3 grid gap-3 sm:grid-cols-[1fr_auto]">
+          <div class="mt-3 grid gap-3 sm:grid-cols-[1fr_auto_auto]">
             <input ref="catalogInput" v-model="catalogSearch" type="search" class="ls-input min-h-11" :placeholder="t('pos.search')" :aria-label="t('pos.search')">
+            <select v-model="categoryFilter" class="ls-select min-h-11" :aria-label="locale === 'ar' ? 'التصنيف' : 'Category'"><option value="">{{ locale === 'ar' ? 'كل التصنيفات' : 'All categories' }}</option><option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option></select>
             <div class="flex rounded-xl border border-border p-1" :aria-label="t('pos.catalog')" role="group"><button v-for="kind in availableItemTypes" :key="kind" type="button" class="min-h-11 rounded-lg px-3 text-sm font-bold" :class="itemType === kind ? 'bg-primary text-primary-foreground' : ''" :aria-pressed="itemType === kind" @click="itemType = kind">{{ t(`pos.${kind === 'product' ? 'products' : kind === 'service' ? 'services' : 'all'}`) }}</button></div>
           </div>
           <p v-if="scanMessage" class="mt-3 rounded-xl bg-muted p-3 text-sm">{{ scanMessage }}</p>

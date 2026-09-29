@@ -15,7 +15,10 @@ type Service = {
   cleanupMinutes: number
   locationIds: string[]
   staffMembershipIds: string[]
+  categoryId: string | null
+  categoryName: string | null
 }
+type Category = { id: string; name: string }
 type ServicePage = { items: Service[]; total: number; page: number; pageSize: number }
 type SchedulingOptions = {
   locations: Array<{ id: string; name: string }>
@@ -29,6 +32,7 @@ const { locale } = useI18n()
 const { current, currentId, loading: shopLoading } = useShop()
 const isArabic = computed(() => locale.value === 'ar')
 const search = ref('')
+const categoryFilter = ref('')
 const page = ref(1)
 const pageSize = 20
 const editingId = ref<string | null>(null)
@@ -39,6 +43,7 @@ const form = reactive({
   discountType: 'amount' as 'amount' | 'percent', discountValue: 0,
   schedulingEnabled: false, durationMinutes: 30 as number | null, cleanupMinutes: 0,
   locationIds: [] as string[], staffMembershipIds: [] as string[],
+  categoryId: '',
 })
 const { visible: showForm, pending: saving, dirty: formDirty } = useRecordAction(() => form)
 
@@ -46,7 +51,7 @@ const copy = computed(() => isArabic.value ? {
   title: 'الخدمات', subtitle: 'أدر الخدمات والأسعار، وفعّل الحجز فقط للخدمات التي تحتاج مواعيد.',
   add: 'إضافة خدمة', edit: 'تعديل', archive: 'أرشفة', cancel: 'إلغاء', save: 'حفظ الخدمة', saving: 'جاري الحفظ…',
   saved: 'تم حفظ الخدمة.', archived: 'تمت أرشفة الخدمة.', name: 'اسم الخدمة', description: 'وصف اختياري',
-  price: 'سعر البيع', discountType: 'نوع الخصم', discountValue: 'قيمة الخصم', amount: 'مبلغ', percent: 'نسبة مئوية', net: 'السعر بعد الخصم',
+  price: 'سعر البيع', discountType: 'نوع الخصم', discountValue: 'قيمة الخصم', amount: 'مبلغ', percent: 'نسبة مئوية', net: 'السعر بعد الخصم', category: 'التصنيف', allCategories: 'كل التصنيفات', import: 'الاستيراد والإعداد',
   scheduling: 'الحجز بالمواعيد', schedulingHelp: 'حدد مدة الخدمة والفروع والموظفين المؤهلين. الخدمات الأخرى تستمر دون أي تغيير.',
   duration: 'مدة الخدمة (دقيقة)', cleanup: 'وقت التجهيز/التنظيف (دقيقة)', locations: 'الفروع المتاحة', staff: 'الموظفون المؤهلون', scheduleSummary: 'مدة الحجز',
   search: 'ابحث باسم الخدمة أو الوصف', empty: 'لا توجد خدمات بعد.', noResults: 'لا توجد نتائج مطابقة.',
@@ -60,7 +65,7 @@ const copy = computed(() => isArabic.value ? {
   title: 'Services', subtitle: 'Manage services and prices, and opt only appointment-based services into scheduling.',
   add: 'Add service', edit: 'Edit', archive: 'Archive', cancel: 'Cancel', save: 'Save service', saving: 'Saving…',
   saved: 'Service saved.', archived: 'Service archived.', name: 'Service name', description: 'Optional description',
-  price: 'Sale price', discountType: 'Discount type', discountValue: 'Discount value', amount: 'Amount', percent: 'Percent', net: 'Net price',
+  price: 'Sale price', discountType: 'Discount type', discountValue: 'Discount value', amount: 'Amount', percent: 'Percent', net: 'Net price', category: 'Category', allCategories: 'All categories', import: 'Import & setup',
   scheduling: 'Appointment scheduling', schedulingHelp: 'Set service duration, available locations, and eligible staff. Other services remain unchanged.',
   duration: 'Service duration (minutes)', cleanup: 'Cleanup/buffer (minutes)', locations: 'Available locations', staff: 'Eligible staff', scheduleSummary: 'Booked time',
   search: 'Search service name or description', empty: 'No services yet.', noResults: 'No matching services.',
@@ -81,19 +86,26 @@ const { data: permissionAccess } = useAsyncData('shop-data:service-permissions',
   return data
 }, { watch: [currentId], default: () => ({ 'services.manage': false }) })
 const canManage = computed(() => permissionAccess.value?.['services.manage'] === true)
+const { data: categories } = useAsyncData(() => `shop-data:service-categories:${currentId.value ?? 'none'}`, async () => {
+  if (!currentId.value) return []
+  const { data, error } = await shopRpc.rpc('list_catalog_categories', { p_shop_id: currentId.value })
+  if (error) throw error
+  return data as Category[]
+}, { watch: [currentId], default: () => [] })
 
 const emptyPage = (): ServicePage => ({ items: [], total: 0, page: 1, pageSize })
 const emptyOptions = (): SchedulingOptions => ({ locations: [], staff: [] })
 const { data: servicesPage, pending, error, refresh } = useAsyncData(
   'shop-data:services', async (): Promise<ServicePage> => {
     if (!currentId.value) return emptyPage()
-    const { data, error: queryError } = await shopRpc.rpc('list_services', {
+    const { data, error: queryError } = await shopRpc.rpc('list_services_by_category', {
       p_shop_id: currentId.value, p_search: search.value.trim() || null,
+      p_category_id: categoryFilter.value || null,
       p_page: page.value, p_page_size: pageSize,
     })
     if (queryError) throw queryError
     return data as ServicePage
-  }, { watch: [currentId, search, page], default: emptyPage },
+  }, { watch: [currentId, search, categoryFilter, page], default: emptyPage },
 )
 const { data: schedulingOptions, pending: schedulingOptionsPending, error: schedulingOptionsError } = useAsyncData(
   'shop-data:service-scheduling-options', async (): Promise<SchedulingOptions> => {
@@ -108,7 +120,7 @@ const pageCount = computed(() => Math.max(1, Math.ceil(servicesPage.value.total 
 const readErrorMessage = computed(() => error.value instanceof Error && error.value.message.includes('SHOP_PERMISSION_DENIED')
   ? copy.value.access : copy.value.readError)
 
-watch(search, () => { page.value = 1 })
+watch([search, categoryFilter], () => { page.value = 1 })
 watch(currentId, () => { page.value = 1; resetForm() })
 
 function netPrice(service: Service) {
@@ -124,7 +136,7 @@ function resetForm() {
   showForm.value = false
   actionError.value = ''
   Object.assign(form, { name: '', description: '', price: 0, discountType: 'amount', discountValue: 0,
-    schedulingEnabled: false, durationMinutes: 30, cleanupMinutes: 0, locationIds: [], staffMembershipIds: [] })
+    schedulingEnabled: false, durationMinutes: 30, cleanupMinutes: 0, locationIds: [], staffMembershipIds: [], categoryId: '' })
 }
 function openCreate() {
   resetForm()
@@ -136,7 +148,7 @@ function openEdit(service: Service) {
   Object.assign(form, { name: service.name, description: service.description ?? '', price: Number(service.baseSalePrice),
     discountType: service.defaultDiscountType, discountValue: Number(service.defaultDiscountValue),
     schedulingEnabled: service.schedulingEnabled, durationMinutes: service.durationMinutes ?? 30,
-    cleanupMinutes: Number(service.cleanupMinutes), locationIds: [...service.locationIds], staffMembershipIds: [...service.staffMembershipIds] })
+    cleanupMinutes: Number(service.cleanupMinutes), locationIds: [...service.locationIds], staffMembershipIds: [...service.staffMembershipIds], categoryId: service.categoryId ?? '' })
   actionError.value = ''
   showForm.value = true
 }
@@ -162,7 +174,7 @@ async function save() {
   if (!isFormValid()) { actionError.value = copy.value.invalid; return }
   saving.value = true
   try {
-    const { error: saveError } = await shopRpc.rpc('save_service', {
+    const { error: saveError } = await shopRpc.rpc('save_service_with_category', {
       p_shop_id: currentId.value, p_service_id: editingId.value, p_name: form.name.trim(),
       p_description: form.description.trim() || null, p_base_sale_price: Number(form.price),
       p_discount_type: form.discountType, p_discount_value: Number(form.discountValue),
@@ -171,6 +183,7 @@ async function save() {
       p_cleanup_minutes: form.schedulingEnabled ? Number(form.cleanupMinutes) : 0,
       p_location_ids: form.schedulingEnabled ? form.locationIds : [],
       p_staff_membership_ids: form.schedulingEnabled ? form.staffMembershipIds : [],
+      p_category_id: form.categoryId || null,
     })
     if (saveError) throw saveError
     resetForm(); await refresh(); pushToast({ tone: 'success', title: copy.value.saved })
@@ -193,7 +206,7 @@ async function archive(service: Service) {
   <div class="space-y-6">
     <header class="flex flex-wrap items-end justify-between gap-4">
       <div><h1 class="text-3xl font-extrabold tracking-tight">{{ copy.title }}</h1><p class="mt-2 text-sm text-muted-foreground">{{ copy.subtitle }}</p></div>
-      <BsButton v-if="current && canManage" type="button" @click="openCreate">{{ copy.add }}</BsButton>
+      <div v-if="current" class="flex gap-2"><NuxtLink to="/catalog-import" class="ls-btn">{{ copy.import }}</NuxtLink><BsButton v-if="canManage" type="button" @click="openCreate">{{ copy.add }}</BsButton></div>
     </header>
 
     <div v-if="!current && !shopLoading" class="rounded-2xl border border-border bg-card p-8 text-center text-sm"><p>{{ copy.noShop }}</p><NuxtLink to="/dashboard" class="mt-3 inline-block font-bold text-[var(--bs-link)] underline">{{ copy.dashboard }}</NuxtLink></div>
@@ -208,6 +221,7 @@ async function archive(service: Service) {
             <label class="grid gap-2 text-sm font-bold">{{ copy.price }}<input v-model.number="form.price" type="number" min="0" max="999999999.99" step="0.01" required class="ls-input"></label>
             <label class="grid gap-2 text-sm font-bold">{{ copy.discountType }}<select v-model="form.discountType" class="ls-input"><option value="amount">{{ copy.amount }}</option><option value="percent">{{ copy.percent }}</option></select></label>
             <label class="grid gap-2 text-sm font-bold">{{ copy.discountValue }}<input v-model.number="form.discountValue" type="number" min="0" step="0.01" required class="ls-input"></label>
+            <label class="grid gap-2 text-sm font-bold sm:col-span-2">{{ copy.category }}<select v-model="form.categoryId" class="ls-select"><option value="">{{ copy.allCategories }}</option><option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option></select></label>
             <fieldset class="rounded-xl border border-border p-4 sm:col-span-2">
               <label class="flex items-center gap-3 font-bold"><input v-model="form.schedulingEnabled" type="checkbox">{{ copy.scheduling }}</label>
               <p class="mt-2 text-sm text-muted-foreground">{{ copy.schedulingHelp }}</p>
@@ -226,12 +240,13 @@ async function archive(service: Service) {
       </BsDialog>
 
       <section class="rounded-2xl border border-border bg-card p-5">
-        <input v-model="search" type="search" :placeholder="copy.search" class="ls-input" :aria-label="copy.search">
+        <div class="grid gap-3 sm:grid-cols-2"><input v-model="search" type="search" :placeholder="copy.search" class="ls-input" :aria-label="copy.search"><select v-model="categoryFilter" class="ls-select"><option value="">{{ copy.allCategories }}</option><option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option></select></div>
         <p v-if="pending" role="status" class="py-5 text-sm text-muted-foreground">{{ copy.loading }}</p>
         <div v-else-if="error" role="alert" class="py-5 text-sm"><p>{{ readErrorMessage }}</p><BsButton type="button" severity="secondary" class="mt-2" @click="refresh()">{{ copy.retry }}</BsButton></div>
         <p v-else-if="!services.length" class="py-8 text-center text-sm text-muted-foreground">{{ servicesPage.total ? copy.noResults : copy.empty }}</p>
         <div v-else class="overflow-x-auto"><BsDataTable :value="services" data-key="id" :row-class="() => 'border-b border-border last:border-0'">
           <Column header-class="py-3 text-start" body-class="py-3 font-semibold"><template #header>{{ copy.name }}</template><template #body="{ data: service }">{{ service.name }}<p v-if="service.description" class="text-xs font-normal text-muted-foreground">{{ service.description }}</p></template></Column>
+          <Column header-class="py-3 text-start" body-class="py-3"><template #header>{{ copy.category }}</template><template #body="{ data: service }">{{ service.categoryName || '—' }}</template></Column>
           <Column header-class="py-3 text-end" body-class="py-3 text-end"><template #header>{{ copy.net }}</template><template #body="{ data: service }">{{ money(netPrice(service)) }}</template></Column>
           <Column header-class="py-3 text-start" body-class="py-3 text-start"><template #header>{{ copy.scheduleSummary }}</template><template #body="{ data: service }"><span v-if="service.schedulingEnabled">{{ service.durationMinutes }} + {{ service.cleanupMinutes }} {{ isArabic ? 'دقيقة' : 'min' }}</span><span v-else>—</span></template></Column>
           <Column header-class="py-3 text-end" body-class="space-x-2 py-3 text-end"><template #header>{{ copy.edit }}</template><template #body="{ data: service }"><button v-if="canManage" type="button" class="font-bold text-[var(--bs-link)]" @click="openEdit(service)">{{ copy.edit }}</button><button v-if="canManage" type="button" class="font-bold text-[var(--bs-status-error)]" :disabled="archivingId === service.id" @click="archive(service)">{{ copy.archive }}</button></template></Column>
