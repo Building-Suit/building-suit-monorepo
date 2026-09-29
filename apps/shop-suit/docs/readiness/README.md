@@ -4,7 +4,9 @@ The bounded two-branch barber gate is maintained in the [SS-PILOT-001 runbook](.
 
 The broader small-shop gate is maintained in the [SS-MARKET-VAL-001 runbook](../SS-MARKET-VAL-001-runbook.md) and [execution evidence](../SS-MARKET-VAL-001-verification.md). General product/service/mixed marketing remains blocked pending qualification; ETA compliance and offline operation are explicitly excluded.
 
-Updated: 2026-09-19. Status: **not ready for sale**.
+The current plans lifecycle gate is maintained in the [SS-SUB-001 commercial runbook](../SS-SUB-001-runbook.md) and [candidate evidence](../SS-SUB-001-verification.md). Code-complete acceptance fixtures do not imply automated, manual, deployed, or commercially approved status; use that record for the current candidate state.
+
+Updated: 2026-09-30. Status: **not ready for sale**.
 
 This is the current implementation guide. Earlier documents under `docs/rebuild/`
 and the batch notes in the root README describe historical work; their claims of

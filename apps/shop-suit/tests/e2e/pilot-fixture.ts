@@ -78,15 +78,27 @@ export async function pilotFixture(page: Page, locale: string, role = 'owner', o
   })
   await page.context().addCookies([{ name: 'building-suit-locale', value: locale, domain: '127.0.0.1', path: '/' }])
   await page.goto('/auth/login')
-  await page.waitForFunction(() => {
-    const app = (document.querySelector('#__nuxt') as HTMLElement & {
-      __vue_app__?: { config?: { globalProperties?: { $nuxt?: { isHydrating?: boolean } } } }
-    })?.__vue_app__
-    return app?.config?.globalProperties?.$nuxt?.isHydrating === false
-  })
-  await page.locator('#login-email').fill(user.email)
-  await page.locator('#login-password').fill('fixture-password')
-  await page.locator('form button[type="submit"]').click()
+  await expect(page).toHaveURL(/\/auth\/login(?:[?#]|$)/)
+
+  // SSR-visible controls are not sufficient: wait until Vue has mounted
+  // and the form submit handler is attached before interacting.
+  const loginForm = page.locator('form')
+  const emailInput = page.locator('#login-email')
+  const passwordInput = page.locator('#login-password')
+  const submitButton = page.locator('form button[type="submit"]')
+
+  await expect(loginForm).toHaveAttribute(
+    'data-client-ready',
+    'true',
+    { timeout: 30_000 },
+  )
+  await expect(emailInput).toBeVisible()
+  await expect(passwordInput).toBeVisible()
+  await expect(submitButton).toBeEnabled()
+
+  await emailInput.fill(user.email)
+  await passwordInput.fill('fixture-password')
+  await submitButton.click()
   await expect(page).toHaveURL(/dashboard/, { timeout: 20_000 })
   await expect(page.getByRole('main').getByRole('heading', {
     name: locale === 'ar' ? 'لوحة التشغيل' : 'Operating dashboard',
