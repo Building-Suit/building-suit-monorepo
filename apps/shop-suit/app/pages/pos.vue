@@ -237,7 +237,7 @@ watch(context, value => {
           <ul v-else class="mt-3 flex-1 space-y-2 overflow-y-auto pe-1"><li v-for="(line, index) in lines" :key="line.key" class="rounded-xl border border-border p-3"><div class="flex justify-between gap-2"><strong>{{ line.name }}</strong><button type="button" class="min-h-11 px-2 text-sm font-bold text-[var(--bs-status-error)]" @click="removeLine(index)">{{ t('pos.remove') }}</button></div><div class="mt-2 flex items-center justify-between gap-3"><label class="text-xs font-bold">{{ t('pos.quantity') }}<input :value="line.quantity" type="number" min="0.001" max="1000000" step="1" class="ls-input mt-1 min-h-11 w-24" @change="setQuantity(line, Number(($event.target as HTMLInputElement).value))"></label><span class="font-extrabold">{{ money((line.unitPrice - line.discount) * line.quantity) }}</span></div></li></ul>
           <div class="mt-3 space-y-3 border-t border-border pt-3">
             <label class="grid gap-1 text-sm font-bold">{{ t('pos.appointment') }}<select :value="appointmentId" class="ls-select min-h-11" :disabled="checkingOut" @change="chooseAppointment(($event.target as HTMLSelectElement).value)"><option value="">{{ t('pos.walkIn') }}</option><option v-for="appointment in context.appointments" :key="appointment.id" :value="appointment.id">{{ appointmentLabel(appointment) }}</option></select></label>
-            <label class="grid gap-1 text-sm font-bold">{{ t('pos.staff') }}<BsSelect v-model="staffId" :label="t('pos.staff')" :options="context.staff" option-label="name" option-value="id" filter virtual :disabled="Boolean(appointmentId) || checkingOut" @change="lockLocation(); invalidateRequests()" /></label>
+            <label class="pos-staff-select grid min-w-0 gap-1 text-sm font-bold">{{ t('pos.staff') }}<BsSelect v-model="staffId" :label="t('pos.staff')" :options="context.staff" option-label="name" option-value="id" filter virtual :disabled="Boolean(appointmentId) || checkingOut" @change="lockLocation(); invalidateRequests()" /></label>
             <div><label class="text-sm font-bold" for="pos-customer">{{ t('pos.customer') }}</label><div v-if="customerId" class="mt-1 flex min-h-11 items-center justify-between rounded-xl border border-border px-3"><span>{{ customerName }}</span><button type="button" class="min-h-11 text-sm font-bold text-[var(--bs-link)]" :disabled="Boolean(appointmentId)" @click="clearCustomer">{{ t('pos.clearCustomer') }}</button></div><template v-else><input id="pos-customer" ref="customerInput" v-model="customerSearch" type="search" class="ls-input mt-1 min-h-11" :placeholder="t('pos.customerSearch')"><ul v-if="customerSearch.length >= 2 && context.customers.length" class="mt-1 max-h-32 overflow-y-auto rounded-xl border border-border bg-card p-1"><li v-for="customer in context.customers" :key="customer.id"><button type="button" class="min-h-11 w-full rounded-lg px-3 text-start text-sm hover:bg-muted" @click="chooseCustomer(customer)">{{ customer.name }} <span class="text-muted-foreground">{{ customer.phone }}</span></button></li></ul><p class="mt-1 text-xs text-muted-foreground">{{ t('pos.noCustomer') }}</p></template></div>
             <div class="grid grid-cols-2 gap-2"><label class="grid gap-1 text-sm font-bold">{{ t('pos.paymentMethod') }}<select v-model="paymentMethod" class="ls-select min-h-11"><option v-for="method in ['cash','card','bank_transfer','wallet','cheque','other']" :key="method" :value="method">{{ t(`payments.methods.${method}`) }}</option></select></label><label class="grid gap-1 text-sm font-bold">{{ t('pos.reference') }}<input v-model="paymentReference" maxlength="200" class="ls-input min-h-11"></label></div>
             <label class="grid gap-1 text-sm font-bold">{{ t('pos.notes') }}<input v-model="notes" maxlength="2000" class="ls-input min-h-11"></label>
@@ -252,3 +252,11 @@ watch(context, value => {
     </template>
   </div>
 </template>
+
+<style scoped>
+.pos-staff-select :deep(.bs-select) {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+</style>

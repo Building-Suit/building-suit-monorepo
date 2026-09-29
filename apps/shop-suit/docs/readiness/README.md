@@ -1,5 +1,7 @@
 # Shop Suit readiness work
 
+The bounded two-branch barber gate is maintained in the [SS-PILOT-001 runbook](../SS-PILOT-001-runbook.md) and [execution evidence](../SS-PILOT-001-verification.md). That gate remains blocked until its outstanding checks pass; the historical baseline below is not current pilot sign-off.
+
 Updated: 2026-09-19. Status: **not ready for sale**.
 
 This is the current implementation guide. Earlier documents under `docs/rebuild/`

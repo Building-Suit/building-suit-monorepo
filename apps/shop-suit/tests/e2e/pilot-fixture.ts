@@ -76,7 +76,12 @@ export async function pilotFixture(page: Page, locale: string, role = 'owner') {
   })
   await page.context().addCookies([{ name: 'building-suit-locale', value: locale, domain: '127.0.0.1', path: '/' }])
   await page.goto('/auth/login')
-  await page.waitForFunction(() => Boolean((document.querySelector('#__nuxt') as HTMLElement & { __vue_app__?: unknown })?.__vue_app__))
+  await page.waitForFunction(() => {
+    const app = (document.querySelector('#__nuxt') as HTMLElement & {
+      __vue_app__?: { config?: { globalProperties?: { $nuxt?: { isHydrating?: boolean } } } }
+    })?.__vue_app__
+    return app?.config?.globalProperties?.$nuxt?.isHydrating === false
+  })
   await page.locator('#login-email').fill(user.email)
   await page.locator('#login-password').fill('fixture-password')
   await page.locator('form button[type="submit"]').click()
