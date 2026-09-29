@@ -528,20 +528,42 @@ export type ShopRpcDatabase = {
       }
       save_expense: {
         Args: {
+          p_request_id: string
           p_shop_id: string
+          p_location_id: string
           p_expense_id: string | null
-          p_request_id: string | null
           p_title: string
           p_amount: number
           p_category_name: string
           p_expense_date: string
           p_notes: string | null
+          p_correction_reason?: string | null
         }
         Returns: string
       }
       void_expense: {
-        Args: { p_shop_id: string; p_expense_id: string }
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_location_id: string
+          p_expense_id: string
+          p_reason: string
+        }
         Returns: undefined
+      }
+      list_expenses: {
+        Args: {
+          p_shop_id: string
+          p_location_id: string
+          p_search?: string | null
+          p_status?: 'paid' | 'void' | null
+          p_category_id?: string | null
+          p_from?: string | null
+          p_to?: string | null
+          p_page?: number
+          p_page_size?: number
+        }
+        Returns: unknown
       }
       adjust_stock: {
         Args: {

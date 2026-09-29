@@ -67,12 +67,10 @@ begin
       jsonb_build_object('item_type','service','source_id',v_service,'quantity',0.6)));
   perform public.issue_location_sale(gen_random_uuid(), v_shop, v_branch, v_outstanding);
 
-  perform set_config('shop.location_id', v_default::text, true);
-  perform public.save_expense(v_shop, null, gen_random_uuid(), 'Default rent', 10,
-    'Rent', v_anchor, null);
-  perform set_config('shop.location_id', v_branch::text, true);
-  perform public.save_expense(v_shop, null, gen_random_uuid(), 'Branch utilities', 5,
-    'Utilities', v_anchor, null);
+  perform public.save_expense(gen_random_uuid(), v_shop, v_default, null,
+    'Default rent', 10, 'Rent', v_anchor, null, null);
+  perform public.save_expense(gen_random_uuid(), v_shop, v_branch, null,
+    'Branch utilities', 5, 'Utilities', v_anchor, null, null);
 
   v_bookable := public.save_service(v_shop, null, 'Scheduled report service', null, 25,
     'amount', 0, true, 30, 0, array[v_default], array[v_staff]);

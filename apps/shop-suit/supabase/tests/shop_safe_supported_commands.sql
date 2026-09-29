@@ -118,6 +118,7 @@ declare
   v_service uuid;
   v_vendor uuid;
   v_expense uuid;
+  v_location uuid;
   v_purchase uuid;
   v_stock_request uuid := gen_random_uuid();
   v_expense_request uuid := gen_random_uuid();
@@ -127,6 +128,8 @@ begin
   v_shop := public.create_owner_shop(
     'Safe fixture A', 'pro', 'mixed'::public.business_mode
   );
+  select id into v_location from public.shop_locations
+  where shop_id = v_shop and is_default;
   v_product := public.save_product(
     v_shop, null, 'Safe product A', 'SAFE-A', null, 10
   );
@@ -143,12 +146,12 @@ begin
     v_stock_request, v_shop, v_product, 2, 3, 'Opening stock'
   );
   v_expense := public.save_expense(
-    v_shop, null, v_expense_request, 'Safe expense', 5, 'Operations',
-    current_date, null
+    v_expense_request, v_shop, v_location, null, 'Safe expense', 5,
+    'Operations', current_date, null, null
   );
   if public.save_expense(
-      v_shop, null, v_expense_request, 'Safe expense', 5, 'Operations',
-      current_date, null
+      v_expense_request, v_shop, v_location, null, 'Safe expense', 5,
+      'Operations', current_date, null, null
     ) <> v_expense then
     raise exception 'expense retry returned a different record';
   end if;
@@ -201,11 +204,14 @@ declare
   v_service uuid;
   v_vendor uuid;
   v_expense uuid;
+  v_location uuid;
   v_purchase uuid;
 begin
   v_shop := public.create_owner_shop(
     'Safe fixture B', 'pro', 'mixed'::public.business_mode
   );
+  select id into v_location from public.shop_locations
+  where shop_id = v_shop and is_default;
   v_product := public.save_product(
     v_shop, null, 'Safe product B', 'SAFE-B', null, 11
   );
@@ -216,8 +222,8 @@ begin
     v_shop, 'Safe vendor B', null, null, null, null, null, null
   );
   v_expense := public.save_expense(
-    v_shop, null, gen_random_uuid(), 'Safe expense B', 6, 'Operations',
-    current_date, null
+    gen_random_uuid(), v_shop, v_location, null, 'Safe expense B', 6,
+    'Operations', current_date, null, null
   );
   v_purchase := public.create_supplier_purchase(
     gen_random_uuid(), v_shop, v_vendor, 'SAFE-B-1', current_date, null,
@@ -313,8 +319,10 @@ begin
 
   begin
     perform public.void_expense(
-      current_setting('ss_safe.shop_a')::uuid,
-      current_setting('ss_safe.expense_b')::uuid
+      gen_random_uuid(), current_setting('ss_safe.shop_a')::uuid,
+      (select id from public.shop_locations
+        where shop_id = current_setting('ss_safe.shop_a')::uuid and is_default),
+      current_setting('ss_safe.expense_b')::uuid, 'Cross-shop denial test'
     );
     raise exception 'cross-shop expense void accepted';
   exception when others then
