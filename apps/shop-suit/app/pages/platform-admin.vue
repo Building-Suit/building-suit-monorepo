@@ -40,7 +40,12 @@ const billingReviewOpen = ref(false)
 const billingReviewPending = ref(false)
 const billingReviewError = ref('')
 const billingReviewRequestId = ref<string | null>(null)
-const billingReview = reactive({ submission: null as PlatformBillingQueueItem | null, action: 'mark_under_review' as 'mark_under_review' | 'approve' | 'reject', reason: '', receivedAmount: 0, receivedReference: '', receivedDate: '', days: 30 })
+const billingReview = reactive({ submission: null as PlatformBillingQueueItem | null, action: 'mark_under_review' as 'mark_under_review' | 'approve' | 'reject', reason: '', receivedAmount: 0, receivedReference: '', receivedDate: '', amountOverrideReason: '' })
+const priceOverrideOpen = ref(false)
+const priceOverridePending = ref(false)
+const priceOverrideError = ref('')
+const priceOverrideRequestId = ref<string | null>(null)
+const priceOverride = reactive({ shopId: '', shopName: '', amount: 0, currency: 'EGP', effectiveFrom: '', expiresAt: '', reason: '' })
 const { visible: actionOpen, pending: actionPending, dirty: actionDirty, open: showAction, complete: completeAction } = useRecordAction(() => action)
 let searchTimer: ReturnType<typeof setTimeout> | undefined
 
@@ -82,9 +87,11 @@ watch(userId, () => {
   selectedShopId.value = null
   actionOpen.value = false
   billingReviewOpen.value = false
+  priceOverrideOpen.value = false
   billingReview.submission = null
   billingReviewRequestId.value = null
   configurationRequestId.value = null
+  priceOverrideRequestId.value = null
   billingReviewError.value = ''
   configurationError.value = ''
 }, { flush: 'sync' })
@@ -214,7 +221,7 @@ async function saveBillingConfiguration() {
 function openBillingReview(submission: PlatformBillingQueueItem, actionKey: 'mark_under_review' | 'approve' | 'reject') {
   Object.assign(billingReview, {
     submission, action: actionKey, reason: '', receivedAmount: submission.paidAmount,
-    receivedReference: submission.transferReference, receivedDate: submission.transferDate, days: 30,
+    receivedReference: submission.transferReference, receivedDate: submission.transferDate, amountOverrideReason: '',
   })
   billingReviewError.value = ''
   billingReviewRequestId.value = null
@@ -226,7 +233,8 @@ async function runBillingReview() {
   if (!session.value?.canMutate || !submission || billingReviewPending.value) return
   billingReviewError.value = ''
   if (billingReview.reason.trim().length < 2) { billingReviewError.value = copy.value.reasonRequired; return }
-  if (billingReview.action === 'approve' && (!(billingReview.receivedAmount > 0) || billingReview.receivedReference.trim().length < 2 || !billingReview.receivedDate || !Number.isInteger(billingReview.days) || billingReview.days < 1 || billingReview.days > 3660)) {
+  const amountMismatch = billingReview.receivedAmount !== submission.effectivePriceAmount || submission.paidAmount !== submission.effectivePriceAmount
+  if (billingReview.action === 'approve' && (!(billingReview.receivedAmount > 0) || billingReview.receivedReference.trim().length < 2 || !billingReview.receivedDate || (amountMismatch && billingReview.amountOverrideReason.trim().length < 2))) {
     billingReviewError.value = copy.value.approvalInvalid; return
   }
   if (billingReview.action === 'approve' && !await confirmation.ask(copy.value.approveConfirm)) return
@@ -236,7 +244,8 @@ async function runBillingReview() {
   try {
     const payload = billingReview.action === 'approve' ? {
       receivedAmount: billingReview.receivedAmount, receivedReference: billingReview.receivedReference.trim(),
-      receivedDate: billingReview.receivedDate, days: billingReview.days,
+      receivedDate: billingReview.receivedDate,
+      ...(amountMismatch ? { amountOverrideReason: billingReview.amountOverrideReason.trim() } : {}),
     } : {}
     const { error } = await rpc.rpc('platform_admin_billing_command', {
       p_request_id: requestId, p_action: billingReview.action,
@@ -252,9 +261,54 @@ async function runBillingReview() {
   finally { billingReviewPending.value = false }
 }
 
+function openPriceOverride(item: PlatformBillingQueueItem) {
+  Object.assign(priceOverride, {
+    shopId: item.shopId, shopName: item.shopName,
+    amount: item.effectivePriceAmount, currency: item.currency,
+    effectiveFrom: new Date().toISOString().slice(0, 10), expiresAt: '', reason: '',
+  })
+  priceOverrideError.value = ''
+  priceOverrideRequestId.value = null
+  priceOverrideOpen.value = true
+}
+
+async function savePriceOverride() {
+  if (!session.value?.canMutate || priceOverridePending.value) return
+  priceOverrideError.value = ''
+  if (!(priceOverride.amount > 0) || priceOverride.reason.trim().length < 2 || !priceOverride.effectiveFrom) {
+    priceOverrideError.value = copy.value.priceOverrideInvalid
+    return
+  }
+  priceOverridePending.value = true
+  const requestId = priceOverrideRequestId.value ?? globalThis.crypto.randomUUID()
+  priceOverrideRequestId.value = requestId
+  try {
+    const { error } = await rpc.rpc('platform_admin_billing_command', {
+      p_request_id: requestId, p_action: 'set_price_override', p_submission_id: null,
+      p_reason: priceOverride.reason.trim(),
+      p_payload: {
+        shopId: priceOverride.shopId, amount: priceOverride.amount,
+        currency: priceOverride.currency, effectiveFrom: priceOverride.effectiveFrom,
+        expiresAt: priceOverride.expiresAt || null,
+      },
+    })
+    if (error) throw error
+    priceOverrideRequestId.value = null
+    priceOverrideOpen.value = false
+    await Promise.all([refreshBillingQueue(), refreshBillingAudit(), refreshDetail()])
+    pushToast({ tone: 'success', title: copy.value.priceOverrideSaved })
+  }
+  catch { priceOverrideError.value = copy.value.commandFailed }
+  finally { priceOverridePending.value = false }
+}
+
 function date(value?: string | null) {
   if (!value) return '—'
   return new Intl.DateTimeFormat(isArabic.value ? 'ar-EG' : 'en-EG', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
+}
+
+function usageBlockersLabel(blockers: PlatformBillingQueueItem['usageBlockers']) {
+  return blockers.map(blocker => `${blocker.resource}: +${blocker.excess}`).join(', ')
 }
 
 function actionLabel(key: string) {
@@ -348,7 +402,7 @@ const en = {
   reason: 'Reason', reasonRequired: 'Enter an explicit reason of at least two characters.', days: 'Days', daysInvalid: 'Enter a whole number of days in the allowed range.', planSlug: 'Plan', billingReference: 'Billing reference', billingNote: 'Billing note', note: 'Support note', noteRequired: 'Enter a support note.', save: 'Apply control', cancel: 'Cancel', commandSucceeded: 'The support control was applied and audited.', commandFailed: 'The support control could not be applied.', observer: 'Read-only observer', operator: 'Platform operator',
   status: 'Status', action: 'Action', actor: 'Actor', occurred: 'Occurred', emptyBilling: 'No billing submissions.', emptySensitive: 'No sensitive events are available.', emptyNotes: 'No support notes.',
   configuration: 'InstaPay instructions', configurationHelp: 'These details are shown to Shop owners. Transfers remain manually verified.', recipientAlias: 'Recipient alias', paymentLink: 'Payment link', qrImageUrl: 'QR image URL', instructionsEn: 'English instructions', instructionsAr: 'Arabic instructions', configurationSaved: 'Payment instructions were updated and audited.',
-  expectedAmount: 'Expected', paidAmount: 'Paid', transferDate: 'Transfer date', transferReference: 'Transfer reference', receivedAmount: 'Received amount', receivedReference: 'Received reference', receivedDate: 'Received date', activationDays: 'Subscription days', review: 'Review', markUnderReview: 'Mark under review', approve: 'Approve and activate', reject: 'Reject', submitted: 'Submitted', underReview: 'Under review', approved: 'Approved', rejected: 'Rejected', approvalInvalid: 'Enter valid received payment details and subscription days.', approveConfirm: 'Approve this externally verified transfer and extend the subscription exactly once?',
+  currentPlan: 'Current plan', requestedPlan: 'Requested plan', interval: 'Term', listPrice: 'List price', effectivePrice: 'Quoted price', blockers: 'Usage blockers', noBlockers: 'None', negotiated: 'Negotiated', expectedAmount: 'Expected', paidAmount: 'Paid', transferDate: 'Transfer date', transferReference: 'Transfer reference', receivedAmount: 'Received amount', receivedReference: 'Received reference', receivedDate: 'Received date', review: 'Review', markUnderReview: 'Mark under review', approve: 'Approve and activate', reject: 'Reject', submitted: 'Submitted', underReview: 'Under review', approved: 'Approved', rejected: 'Rejected', approvalInvalid: 'Enter valid received payment details and an explicit mismatch reason when amounts differ.', amountOverrideReason: 'Amount mismatch override reason', approveConfirm: 'Approve this externally verified transfer and apply the requested plan for exactly one catalog term?', priceOverride: 'Set negotiated price', overrideAmount: 'Effective price', effectiveFrom: 'Effective date', expiresAt: 'Optional expiry', priceOverrideInvalid: 'Enter a valid positive price, effective date, and reason.', priceOverrideSaved: 'The negotiated price was appended and audited.',
   actions: { suspend_shop: 'Suspend Shop access', reactivate_shop: 'Reactivate Shop access', extend_trial: 'Extend trial', end_trial: 'End trial', activate_subscription: 'Activate subscription', extend_subscription: 'Extend subscription', suspend_subscription: 'Suspend subscription', correct_billing_metadata: 'Correct billing metadata', add_support_note: 'Add support note' },
   destructiveConfirm: { suspend_shop: 'Suspend this Shop? Tenant access will stop, but all history will be preserved.', end_trial: 'End this trial now? The Shop will become read-only.', suspend_subscription: 'Suspend this subscription? Historical reads remain available, but writes will stop.' },
 }
@@ -365,7 +419,7 @@ const ar = {
   reason: 'السبب', reasonRequired: 'اكتب سببًا صريحًا من حرفين على الأقل.', days: 'الأيام', daysInvalid: 'اكتب عددًا صحيحًا من الأيام ضمن النطاق المسموح.', planSlug: 'الخطة', billingReference: 'مرجع الفوترة', billingNote: 'ملاحظة الفوترة', note: 'ملاحظة الدعم', noteRequired: 'اكتب ملاحظة دعم.', save: 'تطبيق الإجراء', cancel: 'إلغاء', commandSucceeded: 'تم تطبيق إجراء الدعم وتسجيله.', commandFailed: 'تعذّر تطبيق إجراء الدعم.', observer: 'مراقب للقراءة فقط', operator: 'مسؤول المنصة',
   status: 'الحالة', action: 'الإجراء', actor: 'المنفذ', occurred: 'الوقت', emptyBilling: 'لا توجد طلبات فوترة.', emptySensitive: 'لا توجد أحداث حساسة.', emptyNotes: 'لا توجد ملاحظات دعم.',
   configuration: 'تعليمات InstaPay', configurationHelp: 'تظهر هذه البيانات لمالكي المتاجر وتظل التحويلات خاضعة للتحقق اليدوي.', recipientAlias: 'عنوان المستلم', paymentLink: 'رابط الدفع', qrImageUrl: 'رابط صورة QR', instructionsEn: 'التعليمات الإنجليزية', instructionsAr: 'التعليمات العربية', configurationSaved: 'تم تحديث تعليمات الدفع وتسجيلها.',
-  expectedAmount: 'المتوقع', paidAmount: 'المدفوع', transferDate: 'تاريخ التحويل', transferReference: 'مرجع التحويل', receivedAmount: 'المبلغ المستلم', receivedReference: 'المرجع المستلم', receivedDate: 'تاريخ الاستلام', activationDays: 'أيام الاشتراك', review: 'المراجعة', markUnderReview: 'بدء المراجعة', approve: 'اعتماد وتفعيل', reject: 'رفض', submitted: 'مُرسل', underReview: 'قيد المراجعة', approved: 'معتمد', rejected: 'مرفوض', approvalInvalid: 'أدخل بيانات الاستلام وأيام الاشتراك بشكل صحيح.', approveConfirm: 'اعتماد هذا التحويل المتحقق منه خارجيًا وتمديد الاشتراك مرة واحدة؟',
+  currentPlan: 'الخطة الحالية', requestedPlan: 'الخطة المطلوبة', interval: 'المدة', listPrice: 'السعر المعلن', effectivePrice: 'السعر المثبت', blockers: 'عوائق الاستخدام', noBlockers: 'لا يوجد', negotiated: 'تفاوضي', expectedAmount: 'المتوقع', paidAmount: 'المدفوع', transferDate: 'تاريخ التحويل', transferReference: 'مرجع التحويل', receivedAmount: 'المبلغ المستلم', receivedReference: 'المرجع المستلم', receivedDate: 'تاريخ الاستلام', review: 'المراجعة', markUnderReview: 'بدء المراجعة', approve: 'اعتماد وتفعيل', reject: 'رفض', submitted: 'مُرسل', underReview: 'قيد المراجعة', approved: 'معتمد', rejected: 'مرفوض', approvalInvalid: 'أدخل بيانات الاستلام الصحيحة وسببًا صريحًا عند اختلاف المبلغ.', amountOverrideReason: 'سبب تجاوز اختلاف المبلغ', approveConfirm: 'اعتماد هذا التحويل المتحقق منه وتطبيق الخطة المطلوبة لمدة تجارية واحدة؟', priceOverride: 'تعيين سعر تفاوضي', overrideAmount: 'السعر الفعلي', effectiveFrom: 'تاريخ السريان', expiresAt: 'انتهاء اختياري', priceOverrideInvalid: 'أدخل سعرًا موجبًا وتاريخ سريان وسببًا.', priceOverrideSaved: 'تمت إضافة السعر التفاوضي وتسجيله.',
   actions: { suspend_shop: 'إيقاف وصول المتجر', reactivate_shop: 'إعادة تفعيل وصول المتجر', extend_trial: 'تمديد التجربة', end_trial: 'إنهاء التجربة', activate_subscription: 'تفعيل الاشتراك', extend_subscription: 'تمديد الاشتراك', suspend_subscription: 'إيقاف الاشتراك', correct_billing_metadata: 'تصحيح بيانات الفوترة', add_support_note: 'إضافة ملاحظة دعم' },
   destructiveConfirm: { suspend_shop: 'إيقاف هذا المتجر؟ سيتوقف وصول المستأجر مع الحفاظ على كل السجل.', end_trial: 'إنهاء التجربة الآن؟ سيصبح المتجر للقراءة فقط.', suspend_subscription: 'إيقاف الاشتراك؟ ستبقى قراءة السجل متاحة وتتوقف الكتابة.' },
 }
@@ -439,8 +493,8 @@ const ar = {
         <section class="overflow-hidden rounded-2xl border border-border bg-card">
           <div class="flex flex-wrap gap-3 border-b border-border p-4"><h2 class="text-lg font-extrabold">{{ copy.billingQueue }}</h2><select v-model="billingStatus" class="ls-select ms-auto" :aria-label="copy.status"><option value="">{{ copy.allStates }}</option><option value="submitted">{{ copy.submitted }}</option><option value="under_review">{{ copy.underReview }}</option><option value="approved">{{ copy.approved }}</option><option value="rejected">{{ copy.rejected }}</option></select></div>
           <BsDataTable :value="billingQueue?.items ?? []" :loading="billingQueuePending" :error="billingQueueError ? copy.loadFailed : null" :label="copy.billingQueue" data-key="id" lazy paginator :rows="25" :first="(billingPage - 1) * 25" :total-records="billingQueue?.total ?? 0" :always-show-paginator="false" @page="handleBillingPage" @retry="refreshBillingQueue()">
-            <Column field="shopName"><template #header>{{ copy.shop }}</template></Column><Column field="status"><template #header>{{ copy.status }}</template><template #body="{ data: item }"><StatusBadge :status="item.status" /></template></Column><Column><template #header>{{ copy.expectedAmount }}</template><template #body="{ data: item }">{{ item.expectedAmount }} {{ item.currency }}</template></Column><Column><template #header>{{ copy.paidAmount }}</template><template #body="{ data: item }">{{ item.paidAmount }} {{ item.currency }}</template></Column><Column field="transferReference"><template #header>{{ copy.transferReference }}</template></Column><Column><template #header>{{ copy.transferDate }}</template><template #body="{ data: item }">{{ date(item.transferDate) }}</template></Column>
-            <Column v-if="session.canMutate"><template #header>{{ copy.review }}</template><template #body="{ data: item }"><div v-if="['submitted','under_review'].includes(item.status)" class="flex flex-wrap gap-2"><BsButton v-if="item.status === 'submitted'" class="ls-btn" @click="openBillingReview(item, 'mark_under_review')">{{ copy.markUnderReview }}</BsButton><BsButton class="ls-btn ls-btn-primary" @click="openBillingReview(item, 'approve')">{{ copy.approve }}</BsButton><BsButton class="ls-btn" @click="openBillingReview(item, 'reject')">{{ copy.reject }}</BsButton></div></template></Column>
+            <Column field="shopName"><template #header>{{ copy.shop }}</template></Column><Column field="status"><template #header>{{ copy.status }}</template><template #body="{ data: item }"><StatusBadge :status="item.status" /></template></Column><Column><template #header>{{ copy.currentPlan }}</template><template #body="{ data: item }">{{ item.currentPlanName }}</template></Column><Column><template #header>{{ copy.requestedPlan }}</template><template #body="{ data: item }">{{ item.requestedPlanName }} · {{ item.billingInterval }}</template></Column><Column><template #header>{{ copy.listPrice }}</template><template #body="{ data: item }">{{ item.listPriceAmount }} {{ item.currency }}</template></Column><Column><template #header>{{ copy.effectivePrice }}</template><template #body="{ data: item }">{{ item.effectivePriceAmount }} {{ item.currency }}<span v-if="item.priceSource === 'override'" class="ms-1 text-xs font-bold text-[var(--bs-link)]">{{ copy.negotiated }}</span></template></Column><Column><template #header>{{ copy.paidAmount }}</template><template #body="{ data: item }">{{ item.paidAmount }} {{ item.currency }}</template></Column><Column><template #header>{{ copy.blockers }}</template><template #body="{ data: item }"><span v-if="item.usageBlockers.length" class="text-[var(--bs-status-warning)]">{{ usageBlockersLabel(item.usageBlockers) }}</span><span v-else>{{ copy.noBlockers }}</span></template></Column><Column field="transferReference"><template #header>{{ copy.transferReference }}</template></Column><Column><template #header>{{ copy.transferDate }}</template><template #body="{ data: item }">{{ date(item.transferDate) }}</template></Column>
+            <Column v-if="session.canMutate"><template #header>{{ copy.review }}</template><template #body="{ data: item }"><div class="flex flex-wrap gap-2"><template v-if="['submitted','under_review'].includes(item.status)"><BsButton v-if="item.status === 'submitted'" class="ls-btn" @click="openBillingReview(item, 'mark_under_review')">{{ copy.markUnderReview }}</BsButton><BsButton class="ls-btn ls-btn-primary" :disabled="item.usageBlockers.length > 0" @click="openBillingReview(item, 'approve')">{{ copy.approve }}</BsButton><BsButton class="ls-btn" @click="openBillingReview(item, 'reject')">{{ copy.reject }}</BsButton></template><BsButton class="ls-btn" @click="openPriceOverride(item)">{{ copy.priceOverride }}</BsButton></div></template></Column>
             <template #empty><p class="p-6 text-center text-sm text-muted-foreground">{{ copy.emptyBilling }}</p></template>
           </BsDataTable>
         </section>
@@ -482,9 +536,18 @@ const ar = {
           <label class="grid gap-2 text-sm font-bold">{{ copy.receivedAmount }}<input v-model.number="billingReview.receivedAmount" class="ls-input" type="number" min="0.01" step="0.01" required></label>
           <label class="grid gap-2 text-sm font-bold">{{ copy.receivedReference }}<input v-model="billingReview.receivedReference" class="ls-input" dir="ltr" minlength="2" maxlength="200" required></label>
           <label class="grid gap-2 text-sm font-bold">{{ copy.receivedDate }}<input v-model="billingReview.receivedDate" class="ls-input" type="date" :max="new Date().toISOString().slice(0, 10)" required></label>
-          <label class="grid gap-2 text-sm font-bold">{{ copy.activationDays }}<input v-model.number="billingReview.days" class="ls-input" type="number" min="1" max="3660" step="1" required></label>
+          <label v-if="billingReview.submission && (billingReview.receivedAmount !== billingReview.submission.effectivePriceAmount || billingReview.submission.paidAmount !== billingReview.submission.effectivePriceAmount)" class="grid gap-2 text-sm font-bold">{{ copy.amountOverrideReason }}<textarea v-model="billingReview.amountOverrideReason" class="ls-input" minlength="2" maxlength="1000" required rows="3" /></label>
         </template>
         <div class="flex flex-wrap gap-2"><BsButton type="submit" class="ls-btn ls-btn-primary" :pending="billingReviewPending">{{ copy.save }}</BsButton><BsButton type="button" class="ls-btn" :disabled="billingReviewPending" @click="billingReviewOpen = false">{{ copy.cancel }}</BsButton></div>
+      </BsForm>
+    </BsDialog>
+    <BsDialog v-model:visible="priceOverrideOpen" :title="`${copy.priceOverride} · ${priceOverride.shopName}`" :pending="priceOverridePending">
+      <BsForm class="space-y-4" :pending="priceOverridePending" :error="priceOverrideError" @submit="savePriceOverride">
+        <label class="grid gap-2 text-sm font-bold">{{ copy.overrideAmount }}<input v-model.number="priceOverride.amount" class="ls-input" type="number" min="0.01" step="0.01" required></label>
+        <label class="grid gap-2 text-sm font-bold">{{ copy.effectiveFrom }}<input v-model="priceOverride.effectiveFrom" class="ls-input" type="date" required></label>
+        <label class="grid gap-2 text-sm font-bold">{{ copy.expiresAt }}<input v-model="priceOverride.expiresAt" class="ls-input" type="date" :min="priceOverride.effectiveFrom"></label>
+        <label class="grid gap-2 text-sm font-bold">{{ copy.reason }}<textarea v-model="priceOverride.reason" class="ls-input" minlength="2" maxlength="1000" required rows="3" /></label>
+        <div class="flex flex-wrap gap-2"><BsButton type="submit" class="ls-btn ls-btn-primary" :pending="priceOverridePending">{{ copy.save }}</BsButton><BsButton type="button" class="ls-btn" :disabled="priceOverridePending" @click="priceOverrideOpen = false">{{ copy.cancel }}</BsButton></div>
       </BsForm>
     </BsDialog>
   </div>

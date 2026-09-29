@@ -39,3 +39,8 @@ const planLimitConcurrency = spawnSync('node', [
   new URL('./test-shop-plan-limits-local.mjs', import.meta.url).pathname,
 ], { stdio: 'inherit' })
 if (planLimitConcurrency.status !== 0) process.exit(planLimitConcurrency.status ?? 1)
+
+const planBillingConcurrency = spawnSync('node', [
+  new URL('./test-shop-plan-billing-local.mjs', import.meta.url).pathname,
+], { stdio: 'inherit' })
+if (planBillingConcurrency.status !== 0) process.exit(planBillingConcurrency.status ?? 1)

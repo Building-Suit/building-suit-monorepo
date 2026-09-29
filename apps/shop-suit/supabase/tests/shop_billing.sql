@@ -101,6 +101,12 @@ begin
   exception when sqlstate '22023' then
     if sqlerrm <> 'BILLING_NOTICE_KEY_REUSED' then raise; end if;
   end;
+  begin
+    perform public.platform_admin_billing_command(
+      gen_random_uuid(), 'approve', v_notice, 'Owner self activation', '{}'::jsonb
+    );
+    raise exception 'owner self-activated billing';
+  exception when insufficient_privilege then null; end;
   v_notice := public.submit_shop_billing_notice(
     gen_random_uuid(), v_shop, 1199, current_date, 'IPN-SS-REJECT'
   );
@@ -109,7 +115,15 @@ end;
 $$;
 reset role;
 
--- An unrelated tenant cannot inspect or submit against the owner's Shop.
+insert into public.profiles (user_id, portal_id, display_name, email_snapshot)
+select outsider_id, (select id from public.portals where key = 'shop-crm'),
+  'Billing employee', outsider_id::text || '@ss-billing-001.invalid'
+from shop_billing_fixture;
+insert into public.shop_memberships (shop_id, profile_id, role, status)
+select current_setting('ss_billing.shop')::uuid, profile.id, 'employee', 'active'
+from public.profiles profile join shop_billing_fixture fixture on fixture.outsider_id = profile.user_id;
+
+-- A Shop employee cannot inspect owner billing or self-activate.
 select set_config('request.jwt.claim.sub', outsider_id::text, true),
   set_config('request.jwt.claim.role', 'authenticated', true)
 from shop_billing_fixture;
@@ -117,9 +131,25 @@ set local role authenticated;
 do $$
 declare v_shop uuid := current_setting('ss_billing.shop')::uuid;
 begin
-  begin perform public.shop_billing_read(v_shop); raise exception 'outsider read billing';
+  begin perform public.shop_billing_read(v_shop); raise exception 'employee read owner billing';
   exception when insufficient_privilege then null; end;
-  begin perform public.submit_shop_billing_notice(gen_random_uuid(), v_shop, 1, current_date, 'CROSS-TENANT'); raise exception 'outsider submitted billing';
+  begin perform public.submit_shop_billing_notice(gen_random_uuid(), v_shop, 1, current_date, 'EMPLOYEE'); raise exception 'employee submitted billing';
+  exception when insufficient_privilege then null; end;
+end;
+$$;
+reset role;
+
+-- An unrelated authenticated account remains isolated from the Shop.
+select set_config('request.jwt.claim.sub', observer_id::text, true),
+  set_config('request.jwt.claim.role', 'authenticated', true)
+from shop_billing_fixture;
+set local role authenticated;
+do $$
+declare v_shop uuid := current_setting('ss_billing.shop')::uuid;
+begin
+  begin perform public.shop_billing_read(v_shop); raise exception 'cross-shop billing read';
+  exception when insufficient_privilege then null; end;
+  begin perform public.submit_shop_billing_notice(gen_random_uuid(), v_shop, 1, current_date, 'CROSS-SHOP'); raise exception 'cross-shop billing submission';
   exception when insufficient_privilege then null; end;
 end;
 $$;
@@ -172,16 +202,20 @@ begin
   perform public.platform_admin_billing_command(
     (select approval_request_id from shop_billing_fixture), 'approve', v_submission,
     'Matched the external InstaPay statement',
-    jsonb_build_object('receivedAmount', 1199, 'receivedReference', 'BANK-SS-001', 'receivedDate', current_date::text, 'days', 30)
+    jsonb_build_object('receivedAmount', 1199, 'receivedReference', 'BANK-SS-001',
+      'receivedDate', current_date::text,
+      'amountOverrideReason', 'Pilot transfer includes an explicitly verified service adjustment')
   );
   v_after_end := (public.platform_admin_read('shop', v_shop) #>> '{subscription,periodEnd}')::timestamptz;
   v_replayed := public.platform_admin_billing_command(
     (select approval_request_id from shop_billing_fixture), 'approve', v_submission,
     'Matched the external InstaPay statement',
-    jsonb_build_object('receivedAmount', 1199, 'receivedReference', 'BANK-SS-001', 'receivedDate', current_date::text, 'days', 30)
+    jsonb_build_object('receivedAmount', 1199, 'receivedReference', 'BANK-SS-001',
+      'receivedDate', current_date::text,
+      'amountOverrideReason', 'Pilot transfer includes an explicitly verified service adjustment')
   );
   if not (v_replayed ->> 'replayed')::boolean
-    or v_after_end <> v_before_end + interval '30 days'
+    or v_after_end <> v_before_end + interval '1 month'
     or not exists (
       select 1 from jsonb_array_elements(public.platform_admin_billing_read('queue', 'approved') -> 'items') item
       where (item ->> 'id')::uuid = v_submission
@@ -191,7 +225,7 @@ begin
     raise exception 'approval did not activate exactly once';
   end if;
   begin
-    perform public.platform_admin_billing_command(gen_random_uuid(), 'approve', v_submission, 'Duplicate approval', jsonb_build_object('receivedAmount', 1199, 'receivedReference', 'BANK-SS-001', 'receivedDate', current_date::text, 'days', 30));
+    perform public.platform_admin_billing_command(gen_random_uuid(), 'approve', v_submission, 'Duplicate approval', jsonb_build_object('receivedAmount', 1199, 'receivedReference', 'BANK-SS-001', 'receivedDate', current_date::text, 'amountOverrideReason', 'Duplicate mismatch override'));
     raise exception 'second approval extended subscription';
   exception when sqlstate '22023' then
     if sqlerrm <> 'BILLING_NOTICE_STATE_INVALID' then raise; end if;
@@ -209,11 +243,266 @@ end;
 $$;
 reset role;
 
+-- A requested upgrade is quoted immutably and does not alter entitlements
+-- before the operator approves the externally verified transfer.
+select set_config('request.jwt.claim.sub', owner_id::text, true),
+  set_config('request.jwt.claim.role', 'authenticated', true)
+from shop_billing_fixture;
+set local role authenticated;
+do $$
+declare v_shop uuid := current_setting('ss_billing.shop')::uuid; v_notice uuid; v_read jsonb;
+begin
+  v_notice := public.submit_shop_billing_notice(
+    gen_random_uuid(), v_shop, 'multi', 1099, current_date, 'IPN-SS-UPGRADE'
+  );
+  v_read := public.shop_billing_read(v_shop);
+  if v_read #>> '{subscription,planSlug}' <> 'team'
+    or not exists (select 1 from jsonb_array_elements(v_read -> 'submissions') item
+      where (item ->> 'id')::uuid = v_notice
+        and item ->> 'requestedPlanSlug' = 'multi'
+        and item ->> 'billingInterval' = 'monthly'
+        and (item ->> 'listPriceAmount')::numeric = 1099
+        and (item ->> 'effectivePriceAmount')::numeric = 1099) then
+    raise exception 'plan-change notice mutated access or lost its quote';
+  end if;
+  perform set_config('ss_billing.upgrade_notice', v_notice::text, true);
+end;
+$$;
+reset role;
+
+select set_config('request.jwt.claim.sub', operator_id::text, true),
+  set_config('request.jwt.claim.role', 'authenticated', true)
+from shop_billing_fixture;
+set local role authenticated;
+do $$
+declare v_shop uuid := current_setting('ss_billing.shop')::uuid;
+begin
+  perform public.platform_admin_billing_command(
+    gen_random_uuid(), 'approve', current_setting('ss_billing.upgrade_notice')::uuid,
+    'Verified upgrade transfer',
+    jsonb_build_object('receivedAmount', 1099, 'receivedReference', 'BANK-SS-UPGRADE', 'receivedDate', current_date::text)
+  );
+  if public.platform_admin_billing_read('queue', 'approved') #>> '{items,0,requestedPlanSlug}' is null
+    or public.platform_admin_read('shop', v_shop) #>> '{subscription,planSlug}' <> 'multi' then
+    raise exception 'approved upgrade did not activate the exact requested plan';
+  end if;
+
+  perform public.platform_admin_billing_command(
+    gen_random_uuid(), 'set_price_override', null, 'Expired founder offer evidence',
+    jsonb_build_object('shopId', v_shop, 'amount', 399, 'currency', 'EGP',
+      'effectiveFrom', clock_timestamp() - interval '2 days',
+      'expiresAt', clock_timestamp() - interval '1 day')
+  );
+  perform public.platform_admin_billing_command(
+    gen_random_uuid(), 'set_price_override', null, 'Active founder renewal price',
+    jsonb_build_object('shopId', v_shop, 'amount', 499, 'currency', 'EGP',
+      'effectiveFrom', clock_timestamp() - interval '1 hour', 'expiresAt', null)
+  );
+  if false /* override storage checked after reset role */ then
+    raise exception 'price overrides were not append-only';
+  end if;
+end;
+$$;
+reset role;
+
+-- SS-PLAN-BILLING-001 privileged override-storage assertion
+-- Authenticated callers exercise billing through supported RPC boundaries.
+-- Internal commercial override persistence is asserted only by the test harness.
+do $$
+declare
+  v_shop uuid := current_setting('ss_billing.shop')::uuid;
+  v_override_count bigint;
+begin
+  if has_table_privilege(
+    'authenticated',
+    'public.subscription_price_overrides',
+    'select'
+  ) then
+    raise exception
+      'subscription_price_overrides unexpectedly exposed to authenticated';
+  end if;
+
+  select count(*)
+  into v_override_count
+  from public.subscription_price_overrides price
+  join public.shop_memberships membership
+    on membership.profile_id = (
+      select subscription.profile_id
+      from public.subscriptions subscription
+      where subscription.id = price.subscription_id
+    )
+  where membership.shop_id = v_shop;
+
+  if v_override_count <> 2 then
+    raise exception
+      'plan-aware billing override storage expected 2 rows, found %',
+      v_override_count;
+  end if;
+end;
+$$;
+
+
+select set_config('request.jwt.claim.sub', owner_id::text, true),
+  set_config('request.jwt.claim.role', 'authenticated', true)
+from shop_billing_fixture;
+set local role authenticated;
+do $$
+declare v_shop uuid := current_setting('ss_billing.shop')::uuid; v_notice uuid; v_item jsonb;
+begin
+  v_notice := public.submit_shop_billing_notice(
+    gen_random_uuid(), v_shop, 'multi', 499, current_date, 'IPN-SS-FOUNDER'
+  );
+  select item into v_item from jsonb_array_elements(public.shop_billing_read(v_shop) -> 'submissions') item
+  where (item ->> 'id')::uuid = v_notice;
+  if (v_item ->> 'listPriceAmount')::numeric <> 1099
+    or (v_item ->> 'effectivePriceAmount')::numeric <> 499
+    or v_item ->> 'priceSource' <> 'override' then
+    raise exception 'active founder price was not frozen into the renewal quote';
+  end if;
+  perform set_config('ss_billing.founder_notice', v_notice::text, true);
+end;
+$$;
+reset role;
+
+select set_config('request.jwt.claim.sub', operator_id::text, true),
+  set_config('request.jwt.claim.role', 'authenticated', true)
+from shop_billing_fixture;
+set local role authenticated;
+do $$
+declare v_notice uuid := current_setting('ss_billing.founder_notice')::uuid;
+begin
+  begin
+    perform public.platform_admin_billing_command(
+      gen_random_uuid(), 'approve', v_notice, 'Unexplained amount mismatch',
+      jsonb_build_object('receivedAmount', 500, 'receivedReference', 'BANK-SS-MISMATCH', 'receivedDate', current_date::text)
+    );
+    raise exception 'amount mismatch activated without override evidence';
+  exception when sqlstate '22023' then
+    if sqlerrm <> 'BILLING_AMOUNT_MISMATCH_OVERRIDE_REQUIRED' then raise; end if;
+  end;
+  perform public.platform_admin_billing_command(
+    gen_random_uuid(), 'approve', v_notice, 'Verified founder renewal transfer',
+    jsonb_build_object('receivedAmount', 499, 'receivedReference', 'BANK-SS-FOUNDER', 'receivedDate', current_date::text)
+  );
+  if false /* commercial-period storage checked after reset role */ then
+    raise exception 'negotiated renewal commercial evidence is incomplete';
+  end if;
+end;
+$$;
+reset role;
+
+-- SS-PLAN-BILLING-001 privileged commercial-period assertion
+-- Client-visible behavior is tested through supported RPCs. Commercial
+-- persistence evidence is inspected only by the privileged test harness.
+do $$
+declare
+  v_shop uuid := current_setting('ss_billing.shop')::uuid;
+  v_period_count bigint;
+begin
+  if has_table_privilege(
+    'authenticated',
+    'public.subscription_commercial_periods',
+    'select'
+  ) then
+    raise exception
+      'subscription_commercial_periods unexpectedly exposed to authenticated';
+  end if;
+
+  select count(*)
+  into v_period_count
+  from public.subscription_commercial_periods period
+  join public.subscriptions subscription
+    on subscription.id = period.subscription_id
+  join public.shop_memberships membership
+    on membership.profile_id = subscription.profile_id
+  where membership.shop_id = v_shop
+    and period.price_amount = 499
+    and period.list_price_amount = 1099
+    and period.price_override_id is not null;
+
+  if v_period_count <> 1 then
+    raise exception
+      'expected exactly one approved overridden commercial period, found %',
+      v_period_count;
+  end if;
+end;
+$$;
+
+
+-- Downgrade approval fails closed while live usage exceeds the requested plan.
+select set_config('request.jwt.claim.sub', owner_id::text, true),
+  set_config('request.jwt.claim.role', 'authenticated', true)
+from shop_billing_fixture;
+set local role authenticated;
+do $$
+declare v_shop uuid; v_notice uuid;
+begin
+  v_shop := public.create_owner_shop('Blocked downgrade shop', 'multi', 'mixed');
+  perform public.save_shop_location(v_shop, null, 'Second branch', 'BR-2', null, null);
+  v_notice := public.submit_shop_billing_notice(
+    gen_random_uuid(), v_shop, 'solo', 349, current_date, 'IPN-SS-DOWNGRADE'
+  );
+  perform set_config('ss_billing.downgrade_shop', v_shop::text, true);
+  perform set_config('ss_billing.downgrade_notice', v_notice::text, true);
+end;
+$$;
+reset role;
+
+select set_config('request.jwt.claim.sub', operator_id::text, true),
+  set_config('request.jwt.claim.role', 'authenticated', true)
+from shop_billing_fixture;
+set local role authenticated;
+do $$
+declare v_shop uuid := current_setting('ss_billing.downgrade_shop')::uuid;
+  v_notice uuid := current_setting('ss_billing.downgrade_notice')::uuid;
+begin
+  if jsonb_array_length((select item -> 'usageBlockers'
+      from jsonb_array_elements(public.platform_admin_billing_read('queue') -> 'items') item
+      where (item ->> 'id')::uuid = v_notice)) = 0 then
+    raise exception 'billing queue omitted current downgrade blockers';
+  end if;
+  begin
+    perform public.platform_admin_billing_command(
+      gen_random_uuid(), 'approve', v_notice, 'Attempt blocked downgrade',
+      jsonb_build_object('receivedAmount', (
+      select (item ->> 'expectedAmount')::numeric
+      from jsonb_array_elements(
+        public.platform_admin_billing_read(
+          'queue', null, 1, 100
+        ) -> 'items'
+      ) item
+      where (item ->> 'id')::uuid = v_notice
+      limit 1
+    ), 'receivedReference', 'BANK-SS-DOWNGRADE', 'receivedDate', current_date::text,
+        'amountOverrideReason',
+        'Explicit amount override while verifying downgrade quota blockers')
+    );
+    raise exception 'over-limit downgrade was approved';
+  exception when check_violation then
+    if sqlerrm <> 'PLAN_CHANGE_BLOCKED' then raise; end if;
+  end;
+  if public.platform_admin_read('shop', v_shop) #>> '{subscription,planSlug}' <> 'multi' then
+    raise exception 'blocked downgrade changed the subscription';
+  end if;
+end;
+$$;
+reset role;
+
 -- Exact expiry is read-only for supported writes, while authorized history and
 -- billing state remain readable and no records are deleted.
 do $$
 declare v_shop uuid := current_setting('ss_billing.shop')::uuid;
 begin
+  perform set_config(
+    'ss_billing.history_count_before_expiry',
+    (
+      select count(*)::text
+      from public.shop_billing_submissions submission
+      where submission.shop_id = v_shop
+    ),
+    true
+  );
+
   update public.subscriptions subscription set status = 'trialing',
     trial_end_at = now(), current_period_end = now(), locked_at = now()
   from public.shop_memberships membership
@@ -228,7 +517,7 @@ do $$
 declare v_shop uuid := current_setting('ss_billing.shop')::uuid;
 begin
   if public.shop_billing_read(v_shop) #>> '{subscription,accessState}' <> 'read_only'
-    or jsonb_array_length(public.shop_billing_read(v_shop) -> 'submissions') <> 2 then
+    or jsonb_array_length(public.shop_billing_read(v_shop) -> 'submissions') <> current_setting('ss_billing.history_count_before_expiry')::integer then
     raise exception 'expiry hid authorized billing history';
   end if;
   begin

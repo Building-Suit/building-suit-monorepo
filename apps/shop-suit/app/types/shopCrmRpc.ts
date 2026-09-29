@@ -54,6 +54,7 @@ export type ShopRpcDatabase = {
         Args: {
           p_request_id: string
           p_shop_id: string
+          p_requested_plan_slug: string
           p_paid_amount: number
           p_transfer_date: string
           p_transfer_reference: string
@@ -72,7 +73,7 @@ export type ShopRpcDatabase = {
       platform_admin_billing_command: {
         Args: {
           p_request_id: string
-          p_action: 'configure_instructions' | 'mark_under_review' | 'approve' | 'reject'
+          p_action: 'configure_instructions' | 'mark_under_review' | 'approve' | 'reject' | 'set_price_override'
           p_submission_id: string | null
           p_reason: string
           p_payload?: Record<string, unknown>

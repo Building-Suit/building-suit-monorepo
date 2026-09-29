@@ -11,7 +11,7 @@ const { current, currentId, isOwner } = useShop()
 const { push: pushToast } = useToasts()
 const isArabic = computed(() => locale.value === 'ar')
 const copy = computed(() => isArabic.value ? ar : en)
-const form = reactive({ paidAmount: 0, transferDate: '', transferReference: '' })
+const form = reactive({ planSlug: '', paidAmount: 0, transferDate: '', transferReference: '' })
 const submitPending = ref(false)
 const submitError = ref('')
 const submitRequestId = ref<string | null>(null)
@@ -29,14 +29,23 @@ const { data: billing, pending, error, refresh } = await useAsyncData(
   { watch: [currentId, isOwner] },
 )
 
-watch(() => billing.value?.subscription.priceAmount, value => {
-  if (typeof value === 'number' && !form.paidAmount) form.paidAmount = value
+const selectedPlan = computed(() => billing.value?.availablePlans.find(plan => plan.planSlug === form.planSlug) ?? null)
+
+watch(billing, value => {
+  if (!value) return
+  if (!form.planSlug || !value.availablePlans.some(plan => plan.planSlug === form.planSlug)) {
+    form.planSlug = value.subscription.planSlug
+  }
+}, { immediate: true })
+
+watch(selectedPlan, value => {
+  if (value) form.paidAmount = value.effectivePriceAmount
 }, { immediate: true })
 
 watch(currentId, () => {
   submitRequestId.value = null
   submitError.value = ''
-  Object.assign(form, { paidAmount: 0, transferDate: '', transferReference: '' })
+  Object.assign(form, { planSlug: '', paidAmount: 0, transferDate: '', transferReference: '' })
 }, { flush: 'sync' })
 
 function date(value?: string | null) {
@@ -55,7 +64,8 @@ function statusLabel(status: string) {
 async function submitNotice() {
   if (!currentId.value || !isOwner.value || submitPending.value) return
   submitError.value = ''
-  if (!(form.paidAmount > 0) || !form.transferDate || form.transferReference.trim().length < 2) {
+  const plan = selectedPlan.value
+  if (!plan || !(form.paidAmount > 0) || !form.transferDate || form.transferReference.trim().length < 2) {
     submitError.value = copy.value.invalid
     return
   }
@@ -66,13 +76,14 @@ async function submitNotice() {
     const { error: commandError } = await rpc.rpc('submit_shop_billing_notice', {
       p_request_id: requestId,
       p_shop_id: currentId.value,
+      p_requested_plan_slug: plan.planSlug,
       p_paid_amount: form.paidAmount,
       p_transfer_date: form.transferDate,
       p_transfer_reference: form.transferReference.trim(),
     })
     if (commandError) throw commandError
     submitRequestId.value = null
-    Object.assign(form, { paidAmount: billing.value?.subscription.priceAmount ?? 0, transferDate: '', transferReference: '' })
+    Object.assign(form, { paidAmount: plan.effectivePriceAmount, transferDate: '', transferReference: '' })
     await refresh()
     pushToast({ tone: 'success', title: copy.value.submitted })
   }
@@ -92,7 +103,7 @@ const en = {
   readOnly: 'Your business history remains available, but subscription-gated writes are disabled until an operator approves payment or adjusts access.',
   instructions: 'Pay with InstaPay / instant bank transfer', instructionsHelp: 'Transfer using the operator-configured details below, then submit the notice for manual review. This is not automatic bank verification.',
   recipient: 'Recipient alias', paymentLink: 'Payment link', qr: 'Payment QR', unavailable: 'Payment instructions have not been configured yet. Contact Building Suit support before transferring.',
-  notice: 'Submit payment notice', expected: 'Expected amount', paid: 'Paid amount', transferDate: 'Transfer date', reference: 'Transfer reference',
+  notice: 'Submit payment notice', requestedPlan: 'Requested plan', interval: 'Commercial term', listPrice: 'List price', expected: 'Effective quoted price', paid: 'Paid amount', transferDate: 'Transfer date', reference: 'Transfer reference', negotiated: 'Negotiated price', blockers: 'This plan is currently blocked by usage above its limits. Reduce usage before an operator can approve it.',
   submit: 'Submit for review', submitting: 'Submitting…', invalid: 'Enter a positive amount, transfer date, and reference.', submitted: 'Payment notice submitted for manual review.', failed: 'Could not submit the payment notice. You can retry safely.',
   history: 'Payment notice history', empty: 'No payment notices have been submitted.', reviewReason: 'Review note', manual: 'Manual verification',
   statuses: { trialing: 'Trialing', active: 'Active', read_only: 'Read-only', suspended: 'Suspended', submitted: 'Submitted', under_review: 'Under review', approved: 'Approved', rejected: 'Rejected' },
@@ -106,7 +117,7 @@ const ar = {
   readOnly: 'يظل سجل النشاط متاحًا، لكن عمليات الكتابة المرتبطة بالاشتراك تتوقف حتى يعتمد مسؤول المنصة الدفعة أو يعدّل الوصول.',
   instructions: 'الدفع عبر InstaPay / تحويل بنكي فوري', instructionsHelp: 'حوّل باستخدام البيانات التي ضبطها مسؤول المنصة ثم أرسل الإشعار للمراجعة اليدوية. لا توجد مطابقة بنكية تلقائية.',
   recipient: 'عنوان المستلم', paymentLink: 'رابط الدفع', qr: 'رمز QR للدفع', unavailable: 'لم يضبط مسؤول المنصة تعليمات الدفع بعد. تواصل مع دعم Building Suit قبل التحويل.',
-  notice: 'إرسال إشعار الدفع', expected: 'المبلغ المتوقع', paid: 'المبلغ المدفوع', transferDate: 'تاريخ التحويل', reference: 'مرجع التحويل',
+  notice: 'إرسال إشعار الدفع', requestedPlan: 'الخطة المطلوبة', interval: 'المدة التجارية', listPrice: 'السعر المعلن', expected: 'السعر الفعلي المثبت', paid: 'المبلغ المدفوع', transferDate: 'تاريخ التحويل', reference: 'مرجع التحويل', negotiated: 'سعر تفاوضي', blockers: 'يتجاوز الاستخدام الحالي حدود هذه الخطة. خفّض الاستخدام قبل أن يتمكن مسؤول المنصة من اعتمادها.',
   submit: 'إرسال للمراجعة', submitting: 'جارٍ الإرسال…', invalid: 'أدخل مبلغًا موجبًا وتاريخ التحويل والمرجع.', submitted: 'تم إرسال إشعار الدفع للمراجعة اليدوية.', failed: 'تعذّر إرسال إشعار الدفع. يمكنك إعادة المحاولة بأمان.',
   history: 'سجل إشعارات الدفع', empty: 'لم تُرسل إشعارات دفع بعد.', reviewReason: 'ملاحظة المراجعة', manual: 'تحقق يدوي',
   statuses: { trialing: 'فترة تجريبية', active: 'نشط', read_only: 'قراءة فقط', suspended: 'موقوف', submitted: 'مُرسل', under_review: 'قيد المراجعة', approved: 'معتمد', rejected: 'مرفوض' },
@@ -136,15 +147,17 @@ const ar = {
           <p class="whitespace-pre-line rounded-xl border border-border p-4 text-sm leading-6">{{ isArabic ? billing.instructions.instructionsAr : billing.instructions.instructionsEn }}</p>
         </div><p v-else class="mt-5 text-sm text-muted-foreground">{{ copy.unavailable }}</p>
       </section>
-      <section class="rounded-2xl border border-border bg-card p-5 sm:p-6"><h2 class="text-lg font-extrabold">{{ copy.notice }}</h2><p class="mt-2 text-sm text-muted-foreground">{{ copy.expected }}: <strong>{{ money(billing.subscription.priceAmount, billing.subscription.currency) }}</strong></p>
+      <section class="rounded-2xl border border-border bg-card p-5 sm:p-6"><h2 class="text-lg font-extrabold">{{ copy.notice }}</h2>
         <BsForm class="mt-5 grid gap-4 sm:grid-cols-2" :pending="submitPending" :error="submitError" @submit="submitNotice">
+          <label class="grid gap-2 text-sm font-bold sm:col-span-2">{{ copy.requestedPlan }}<select v-model="form.planSlug" class="ls-select min-h-11" required><option v-for="plan in billing.availablePlans" :key="plan.catalogTermsId" :value="plan.planSlug">{{ plan.planName }} · {{ plan.billingInterval }} · {{ money(plan.effectivePriceAmount, plan.currency) }}</option></select></label>
+          <div v-if="selectedPlan" class="rounded-xl border border-border p-4 text-sm sm:col-span-2"><p>{{ copy.listPrice }}: <strong>{{ money(selectedPlan.listPriceAmount, selectedPlan.currency) }}</strong> · {{ copy.expected }}: <strong>{{ money(selectedPlan.effectivePriceAmount, selectedPlan.currency) }}</strong> · {{ copy.interval }}: <strong>{{ selectedPlan.billingInterval }}</strong></p><p v-if="selectedPlan.priceSource === 'override'" class="mt-2 font-bold text-[var(--bs-link)]">{{ copy.negotiated }}</p><p v-if="selectedPlan.blockers.length" role="alert" class="mt-2 text-[var(--bs-status-warning)]">{{ copy.blockers }}</p></div>
           <label class="grid gap-2 text-sm font-bold">{{ copy.paid }}<input v-model.number="form.paidAmount" class="ls-input min-h-11 min-w-0" type="number" min="0.01" step="0.01" required></label>
           <label class="grid gap-2 text-sm font-bold">{{ copy.transferDate }}<input v-model="form.transferDate" class="ls-input min-h-11 min-w-0" type="date" :max="new Date().toISOString().slice(0, 10)" required></label>
           <label class="grid gap-2 text-sm font-bold sm:col-span-2">{{ copy.reference }}<input v-model="form.transferReference" class="ls-input min-h-11 min-w-0" dir="ltr" minlength="2" maxlength="200" required></label>
           <div class="sm:col-span-2"><BsButton type="submit" class="ls-btn ls-btn-primary" :pending="submitPending">{{ submitPending ? copy.submitting : copy.submit }}</BsButton></div>
         </BsForm>
       </section>
-      <section class="overflow-hidden rounded-2xl border border-border bg-card"><div class="p-5"><h2 class="text-lg font-extrabold">{{ copy.history }}</h2></div><div class="overflow-x-auto"><BsDataTable :value="billing.submissions" data-key="id" :label="copy.history"><Column field="status"><template #header>{{ copy.access }}</template><template #body="{ data: item }"><StatusBadge :status="item.status" /> <span class="ms-2 text-sm">{{ statusLabel(item.status) }}</span></template></Column><Column><template #header>{{ copy.paid }}</template><template #body="{ data: item }">{{ money(item.paidAmount, item.currency) }}</template></Column><Column field="transferReference"><template #header>{{ copy.reference }}</template></Column><Column><template #header>{{ copy.transferDate }}</template><template #body="{ data: item }">{{ date(item.transferDate) }}</template></Column><Column field="reviewReason"><template #header>{{ copy.reviewReason }}</template></Column><template #empty><p class="p-6 text-center text-sm text-muted-foreground">{{ copy.empty }}</p></template></BsDataTable></div></section>
+      <section class="overflow-hidden rounded-2xl border border-border bg-card"><div class="p-5"><h2 class="text-lg font-extrabold">{{ copy.history }}</h2></div><div class="overflow-x-auto"><BsDataTable :value="billing.submissions" data-key="id" :label="copy.history"><Column field="status"><template #header>{{ copy.access }}</template><template #body="{ data: item }"><StatusBadge :status="item.status" /> <span class="ms-2 text-sm">{{ statusLabel(item.status) }}</span></template></Column><Column field="requestedPlanName"><template #header>{{ copy.requestedPlan }}</template></Column><Column><template #header>{{ copy.expected }}</template><template #body="{ data: item }">{{ money(item.effectivePriceAmount, item.currency) }}</template></Column><Column><template #header>{{ copy.paid }}</template><template #body="{ data: item }">{{ money(item.paidAmount, item.currency) }}</template></Column><Column field="transferReference"><template #header>{{ copy.reference }}</template></Column><Column><template #header>{{ copy.transferDate }}</template><template #body="{ data: item }">{{ date(item.transferDate) }}</template></Column><Column field="reviewReason"><template #header>{{ copy.reviewReason }}</template></Column><template #empty><p class="p-6 text-center text-sm text-muted-foreground">{{ copy.empty }}</p></template></BsDataTable></div></section>
     </template>
     <p v-else role="status" class="rounded-xl border border-border p-5 text-sm">{{ copy.noBilling }}</p>
   </div>

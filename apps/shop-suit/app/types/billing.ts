@@ -7,6 +7,13 @@ export type BillingSubmission = {
   expectedAmount: number
   paidAmount: number
   currency: string
+  requestedPlanId: string
+  requestedPlanSlug: string
+  requestedPlanName: string
+  billingInterval: 'monthly' | 'quarterly' | 'annual'
+  listPriceAmount: number
+  effectivePriceAmount: number
+  priceSource: 'catalog' | 'override'
   transferDate: string
   transferReference: string
   reviewReason: string | null
@@ -19,6 +26,20 @@ export type BillingSubmission = {
   reviewedAt: string | null
 }
 
+export type BillingPlanOption = {
+  planId: string
+  planSlug: string
+  planName: string
+  catalogTermsId: string
+  billingInterval: 'monthly' | 'quarterly' | 'annual'
+  currency: string
+  listPriceAmount: number
+  effectivePriceAmount: number
+  priceSource: 'catalog' | 'override'
+  resourceLimits: Record<string, number | null>
+  blockers: Array<{ resource: string, used: number, limit: number, excess: number }>
+}
+
 export type ShopBilling = {
   subscription: {
     id: string
@@ -27,7 +48,15 @@ export type ShopBilling = {
     planSlug: string
     planName: string
     priceAmount: number
+    listPriceAmount: number
+    effectivePriceAmount: number
+    priceSource: 'catalog' | 'override'
+    priceOverrideId: string | null
+    priceOverrideReason: string | null
+    priceOverrideEffectiveFrom: string | null
+    priceOverrideExpiresAt: string | null
     currency: string
+    billingInterval: 'monthly' | 'quarterly' | 'annual'
     trialStartAt: string | null
     trialEndAt: string | null
     periodStart: string | null
@@ -35,6 +64,7 @@ export type ShopBilling = {
     accessState: 'trialing' | 'active' | 'read_only' | 'suspended'
     trialDaysRemaining: number
   }
+  availablePlans: BillingPlanOption[]
   instructions: {
     recipientAlias: string | null
     paymentLink: string | null
@@ -71,8 +101,9 @@ export type ShopBilling = {
 export type PlatformBillingQueueItem = BillingSubmission & {
   shopId: string
   shopName: string
-  planSlug: string
-  planName: string
+  currentPlanSlug: string
+  currentPlanName: string
+  usageBlockers: Array<{ resource: string, used: number, limit: number, excess: number }>
 }
 
 export type PlatformBillingConfiguration = {
