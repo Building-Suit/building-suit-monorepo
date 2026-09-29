@@ -2994,54 +2994,317 @@ Return a concise repair summary.
     const startedAt =
       Date.now()
 
-    const codexResult =
-      execute(
-        'codex',
-        [
-          'exec',
-          '--json',
-          '--ephemeral',
+    const maxRepairCycles =
+      3
 
-          '--sandbox',
-          'workspace-write',
+    let currentRepairPrompt =
+      prompt
 
-          '-C',
-          retry.worktree_path,
+    let repairCycles =
+      0
 
-          '--model',
-          route.model,
+    let totalPromptBytes =
+      0
 
-          '-c',
-          `model_reasoning_effort="${route.reasoning_effort}"`,
+    let totalOutputBytes =
+      0
 
-          prompt,
-        ],
+    let lastExitCode =
+      1
 
-        codexExecutionOptions({
-          cwd:
+    let lastStderr =
+      ''
+
+    let latestProbe =
+      null
+
+    let latestProbePath =
+      null
+
+    let probePassed =
+      false
+
+    let succeeded =
+      false
+
+    const codexOutputs =
+      []
+
+    for (
+      let cycle = 1;
+      cycle <= maxRepairCycles;
+      cycle++
+    ) {
+
+      repairCycles =
+        cycle
+
+      totalPromptBytes +=
+        Buffer.byteLength(
+          currentRepairPrompt,
+          'utf8',
+        )
+
+      const codexResult =
+        execute(
+          'codex',
+          [
+            'exec',
+            '--json',
+            '--ephemeral',
+
+            '--sandbox',
+            'workspace-write',
+
+            '-C',
             retry.worktree_path,
 
-          timeout:
-            45 * 60 * 1000,
-        }),
+            '--model',
+            route.model,
+
+            '-c',
+            `model_reasoning_effort="${route.reasoning_effort}"`,
+
+            currentRepairPrompt,
+          ],
+
+          codexExecutionOptions({
+            cwd:
+              retry.worktree_path,
+
+            timeout:
+              45 * 60 * 1000,
+          }),
+        )
+
+      lastExitCode =
+        codexResult.code
+
+      lastStderr =
+        codexResult.stderr ?? ''
+
+      const cycleOutput =
+        codexResult.stdout ?? ''
+
+      totalOutputBytes +=
+        Buffer.byteLength(
+          cycleOutput,
+          'utf8',
+        )
+
+      codexOutputs.push(
+        cycleOutput,
       )
 
-    writeFileSync(
-      logPath,
-      `${codexResult.stdout}\n`,
-      {
-        mode: 0o600,
-      },
-    )
+      writeFileSync(
+        logPath,
+        `${codexOutputs.join('\n')}\n`,
+        {
+          mode:
+            0o600,
+        },
+      )
+
+      if (
+        !successful(
+          codexResult,
+        )
+      ) {
+        break
+      }
+
+      const probeDirectory =
+        path.join(
+          runDirectory,
+          `repair-verification-${cycle}`,
+        )
+
+      const probeResult =
+        execute(
+          process.execPath,
+          [
+            path.join(
+              repoRoot,
+              'tooling',
+              'control-plane',
+              'runner',
+              'task-verifier.mjs',
+            ),
+
+            retry.worktree_path,
+            taskPacketPath,
+            probeDirectory,
+            'probe',
+          ],
+          {
+            cwd:
+              retry.worktree_path,
+
+            timeout:
+              60 * 60 * 1000,
+          },
+        )
+
+      try {
+
+        latestProbe =
+          JSON.parse(
+            probeResult.stdout,
+          )
+
+      }
+      catch {
+
+        latestProbe = {
+          ok:
+            false,
+
+          passed:
+            false,
+
+          checks: [
+            {
+              name:
+                'verifier-infrastructure',
+
+              status:
+                'fail',
+
+              exit_code:
+                probeResult.code,
+
+              summary:
+                probeResult.stderr ||
+                probeResult.error ||
+                probeResult.stdout ||
+                'Repair verifier probe returned invalid output.',
+            },
+          ],
+        }
+
+      }
+
+      latestProbePath =
+        path.join(
+          runDirectory,
+          `repair-verification-${cycle}.json`,
+        )
+
+      writeFileSync(
+        latestProbePath,
+        `${JSON.stringify(
+          latestProbe,
+          null,
+          2,
+        )}\n`,
+        {
+          mode:
+            0o600,
+        },
+      )
+
+      if (
+        latestProbe?.passed ===
+        true
+      ) {
+
+        probePassed =
+          true
+
+        succeeded =
+          true
+
+        break
+      }
+
+      if (
+        cycle ===
+        maxRepairCycles
+      ) {
+        break
+      }
+
+      const failedProbeChecks =
+        Array.isArray(
+          latestProbe?.checks,
+        )
+          ? latestProbe.checks
+              .filter(
+                check =>
+                  ![
+                    'pass',
+                    'skipped',
+                  ].includes(
+                    check.status,
+                  ),
+              )
+              .map(
+                check => ({
+                  name:
+                    check.name,
+
+                  status:
+                    check.status,
+
+                  exit_code:
+                    check.exit_code,
+
+                  summary:
+                    check.summary,
+
+                  log_path:
+                    check.log_path,
+                }),
+              )
+          : []
+
+      currentRepairPrompt =
+        `
+Continue repairing ${packet.project?.display_name ?? 'registered project'} task ${taskId}.
+
+This is still repair attempt ${retry.attempt}. Do not create a new task attempt.
+
+The control-plane verifier probe still fails after repair cycle ${cycle}.
+
+Read:
+1. ${taskPacketPath}
+2. ${latestProbePath}
+
+Current failing checks:
+${JSON.stringify(failedProbeChecks, null, 2)}
+
+Rules:
+- Fix only the currently recorded verifier failures.
+- Preserve already-correct work.
+- Do not expand scope.
+- Do not create another branch or worktree.
+- Do not commit.
+- Do not push.
+- Do not merge.
+- Do not deploy.
+- Do not modify hosted databases.
+- Inspect the full referenced verifier logs when the summary is insufficient.
+- If a suite exposes another failure after the first repair, continue repairing that same suite.
+- Do not report success merely because a code change looks correct.
+- The complete verifier probe must return passed=true before this repair can be accepted.
+
+Return a concise repair summary.
+        `.trim()
+
+    }
 
     const elapsedMs =
       Date.now() -
       startedAt
 
-    const succeeded =
-      successful(
-        codexResult,
-      )
+    const finalExitCode =
+      succeeded
+        ? 0
+        : (
+            lastExitCode === 0
+              ? 1
+              : lastExitCode
+          )
 
     finishExecution({
       executionId:
@@ -3053,22 +3316,17 @@ Return a concise repair summary.
           : 'failed',
 
       promptBytes:
-        Buffer.byteLength(
-          prompt,
-          'utf8',
-        ),
+        totalPromptBytes,
 
       outputBytes:
-        Buffer.byteLength(
-          codexResult.stdout,
-          'utf8',
-        ),
+        totalOutputBytes,
 
       runLogPath:
         logPath,
 
       metadata: {
-        retry: true,
+        retry:
+          true,
 
         previous_execution_id:
           previousExecution.execution_id,
@@ -3077,15 +3335,62 @@ Return a concise repair summary.
           elapsedMs,
 
         exit_code:
-          codexResult.code,
+          finalExitCode,
 
         stderr:
-          codexResult.stderr
-            ? codexResult.stderr.slice(
+          lastStderr
+            ? lastStderr.slice(
                 0,
                 4000,
               )
-            : '',
+            : (
+                succeeded
+                  ? ''
+                  : 'repair_verification_failed'
+              ),
+
+        repair_cycles:
+          repairCycles,
+
+        verification_probe_passed:
+          probePassed,
+
+        verification_probe_path:
+          latestProbePath,
+
+        verification_probe_failures:
+          Array.isArray(
+            latestProbe?.checks,
+          )
+            ? latestProbe.checks
+                .filter(
+                  check =>
+                    ![
+                      'pass',
+                      'skipped',
+                    ].includes(
+                      check.status,
+                    ),
+                )
+                .map(
+                  check => ({
+                    name:
+                      check.name,
+
+                    status:
+                      check.status,
+
+                    exit_code:
+                      check.exit_code,
+
+                    summary:
+                      check.summary,
+
+                    log_path:
+                      check.log_path,
+                  }),
+                )
+            : [],
       },
     })
 
@@ -3093,12 +3398,23 @@ Return a concise repair summary.
       true
 
     if (!succeeded) {
+
       recordControlFailure(
         taskId,
         'repair',
-        codexResult.stderr || 'codex_repair_failed',
-        { exit_code: codexResult.code, log_path: logPath },
+        'repair_verification_failed',
+        {
+          repair_cycles:
+            repairCycles,
+
+          verification_probe_path:
+            latestProbePath,
+
+          verification_probe:
+            latestProbe,
+        },
       )
+
     }
 
     output({
@@ -3133,15 +3449,25 @@ Return a concise repair summary.
 
       execution: {
         exit_code:
-          codexResult.code,
+          finalExitCode,
 
         elapsed_ms:
           elapsedMs,
 
         log_path:
           logPath,
+
+        repair_cycles:
+          repairCycles,
+
+        verification_probe_passed:
+          probePassed,
+
+        verification_probe_path:
+          latestProbePath,
       },
     }, succeeded ? 0 : 1)
+
   }
   catch (error) {
 
