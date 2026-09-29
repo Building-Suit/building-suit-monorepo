@@ -42,6 +42,14 @@ export type ShopRpcDatabase = {
         Args: { p_shop_id: string }
         Returns: unknown
       }
+      shop_plan_usage: {
+        Args: { p_shop_id: string }
+        Returns: unknown
+      }
+      shop_plan_change_validation: {
+        Args: { p_shop_id: string; p_target_plan_slug: string }
+        Returns: unknown
+      }
       submit_shop_billing_notice: {
         Args: {
           p_request_id: string

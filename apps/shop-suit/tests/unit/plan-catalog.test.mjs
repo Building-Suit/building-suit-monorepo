@@ -3,7 +3,9 @@ import { readFile } from 'node:fs/promises'
 import test from 'node:test'
 
 const migration = await readFile(new URL('../../supabase/migrations/20260929190000_canonical_plan_catalog.sql', import.meta.url), 'utf8')
+const limitsMigration = await readFile(new URL('../../supabase/migrations/20260929200000_atomic_plan_resource_limits.sql', import.meta.url), 'utf8')
 const databaseTest = await readFile(new URL('../../supabase/tests/shop_plan_catalog.sql', import.meta.url), 'utf8')
+const limitsDatabaseTest = await readFile(new URL('../../supabase/tests/shop_plan_limits.sql', import.meta.url), 'utf8')
 const plans = await readFile(new URL('../../app/composables/usePlans.ts', import.meta.url), 'utf8')
 
 test('SUB-D08 catalog is canonical and publicly selects only purchasable plans', () => {
@@ -41,4 +43,29 @@ test('database regression covers migration, trial, quota, downgrade, and idempot
   assert.match(databaseTest, /Solo accepted a third active member/)
   assert.match(databaseTest, /over-limit downgrade succeeded/)
   assert.match(databaseTest, /submitted notice or approved paid period was rewritten/)
+})
+
+test('atomic resource engine shares one resolver, usage predicate, and lock boundary', () => {
+  assert.match(limitsMigration, /create function shop_private\.resolve_plan_entitlement/)
+  assert.match(limitsMigration, /create function shop_private\.plan_resource_usage/)
+  assert.match(limitsMigration, /pg_catalog\.pg_advisory_xact_lock/)
+  assert.match(limitsMigration, /create trigger shop_team_invitations_plan_limit/)
+  assert.match(limitsMigration, /update public\.shop_team_invitations set status = 'accepted'[\s\S]+insert into public\.shop_memberships/)
+  assert.match(limitsMigration, /create function public\.shop_plan_change_validation/)
+  assert.match(limitsMigration, /'remaining'/)
+  assert.doesNotMatch(limitsMigration, /active_(customers|sales|payments|appointments)/)
+})
+
+test('resource-limit regression covers reservations, retries, reactivation, expiry, and isolation', () => {
+  assert.match(limitsDatabaseTest, /live invitation did not reserve member capacity/)
+  assert.match(limitsDatabaseTest, /idempotent invitation retry consumed capacity twice/)
+  assert.match(limitsDatabaseTest, /invitation reservation was not exchanged for one member seat/)
+  assert.match(limitsDatabaseTest, /member reactivated over reserved seat limit/)
+  assert.match(limitsDatabaseTest, /archived product reactivated over limit/)
+  assert.match(limitsDatabaseTest, /archived service reactivated over limit/)
+  assert.match(limitsDatabaseTest, /archived location reactivated over limit/)
+  assert.match(limitsDatabaseTest, /downgrade validation lacked blockers or mutated customer data/)
+  assert.match(limitsDatabaseTest, /expired subscription accepted a product mutation/)
+  assert.match(limitsDatabaseTest, /expired subscription accepted a quota-increasing location mutation/)
+  assert.match(limitsDatabaseTest, /cross-shop usage was disclosed/)
 })

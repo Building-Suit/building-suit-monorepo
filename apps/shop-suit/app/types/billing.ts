@@ -55,6 +55,15 @@ export type ShopBilling = {
       active_products: number | null
       active_services: number | null
     }
+    resources: Array<{
+      resource: 'active_locations' | 'active_members' | 'active_products' | 'active_services'
+      used: number
+      limit: number | null
+      remaining: number | null
+      unlimited: boolean
+      atLimit: boolean
+      overLimit: boolean
+    }>
   }
   submissions: BillingSubmission[]
 }
