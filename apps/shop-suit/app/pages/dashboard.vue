@@ -46,7 +46,7 @@ watchEffect(() => {
 
 const copy = computed(() => isArabic.value ? {
   title: 'لوحة التشغيل', subtitle: 'مبيعات وتحصيلات ومواعيد وأداء الفروع من سجلات المصدر.',
-  setupTitle: 'أنشئ متجرك الأول', setupBody: 'ابدأ تجربة الخطة التي تختارها. يُنشأ المتجر داخل Supabase بحسابك الحالي.',
+  setupTitle: 'أنشئ متجرك الأول', setupBody: 'ابدأ تجربة الخطة التي تختارها. ثم أعدّ الفروع والفريق والخدمات وساعات العمل.',
   shopName: 'اسم المتجر', plan: 'خطة التجربة', createShop: 'إنشاء المتجر', creating: 'جاري الإنشاء...',
   businessMode: 'طريقة تشغيل النشاط', businessModeHelp: 'تتحكم في ظهور مسارات المنتجات أو الخدمات ولا تغيّر خطة اشتراكك.',
   productMode: 'منتجات ومخزون', productModeBody: 'للبيع والمشتريات والموردين وإدارة المخزون.',
@@ -62,7 +62,7 @@ const copy = computed(() => isArabic.value ? {
   subscriptionReview: 'الاشتراك الحالي يحتاج مراجعة قبل إنشاء متجر.',
   modeDisabled: 'هذا المسار مخفي حسب طريقة تشغيل النشاط الحالية. يمكنك تغييره من إعدادات النشاط؛ وتظل البيانات السابقة محفوظة.',
   day: 'يوم', week: 'أسبوع', month: 'شهر', allLocations: 'كل الفروع', location: 'الفرع', reportDate: 'التاريخ',
-  loadingReport: 'جاري تحميل تقرير التشغيل…', reportDenied: 'ليست لديك صلاحية عرض تقارير التشغيل.',
+  loadingReport: 'جاري تحميل تقرير التشغيل…', reportDenied: 'اطلب من المالك صلاحية التقارير. استخدم التقويم أو نقطة البيع لعملك اليومي.',
   sales: 'المبيعات', salesCount: 'عدد البيعات', averageTicket: 'متوسط الفاتورة', collections: 'التحصيلات',
   expenses: 'مصروفات التشغيل', operatingBalance: 'المبيعات ناقص المصروفات', accountingNotice: 'ملخص تشغيلي فقط؛ ليس ربحًا محاسبيًا ولا قائمة مالية.',
   salesMix: 'مزيج المبيعات', product: 'منتجات', service: 'خدمات', quantity: 'الكمية', paymentMix: 'مزيج طرق الدفع', collected: 'محصل', refunded: 'مرتجع', net: 'صافي التحصيل',
@@ -72,7 +72,7 @@ const copy = computed(() => isArabic.value ? {
   branchComparison: 'مقارنة الفروع', openSource: 'فتح السجلات', noData: 'لا توجد بيانات في هذه الفترة.',
 } : {
   title: 'Operating dashboard', subtitle: 'Sales, collections, appointments, and branch performance reconciled from source records.',
-  setupTitle: 'Create your first shop', setupBody: 'Start a trial of your chosen plan. Your shop is created in Supabase under your signed-in account.',
+  setupTitle: 'Create your first shop', setupBody: 'Start a trial of your chosen plan. Then set up your locations, staff, services, and working hours.',
   shopName: 'Shop name', plan: 'Trial plan', createShop: 'Create shop', creating: 'Creating...',
   businessMode: 'Business operation mode', businessModeHelp: 'Controls product and service workflow visibility without changing your subscription plan.',
   productMode: 'Products and stock', productModeBody: 'For sales, purchasing, suppliers, and inventory operations.',
@@ -88,7 +88,7 @@ const copy = computed(() => isArabic.value ? {
   subscriptionReview: 'The current subscription needs review before creating a shop.',
   modeDisabled: 'This workflow is hidden by the current business mode. You can change it in Business settings; existing history remains preserved.',
   day: 'Day', week: 'Week', month: 'Month', allLocations: 'All locations', location: 'Location', reportDate: 'Date',
-  loadingReport: 'Loading the operating report…', reportDenied: 'You do not have permission to view operating reports.',
+  loadingReport: 'Loading the operating report…', reportDenied: 'Ask the owner for report access. Use Calendar or Point of sale for your daily work.',
   sales: 'Sales', salesCount: 'Sales count', averageTicket: 'Average ticket', collections: 'Collections',
   expenses: 'Operating expenses', operatingBalance: 'Sales less operating expenses', accountingNotice: 'Operational summary only; this is not accounting profit or a financial statement.',
   salesMix: 'Sales mix', product: 'Products', service: 'Services', quantity: 'Quantity', paymentMix: 'Payment-method mix', collected: 'Collected', refunded: 'Refunded', net: 'Net collections',
@@ -116,7 +116,7 @@ const { data: subscription, error: subscriptionError, refresh: refreshSubscripti
   }, { watch: [currentId], default: () => null },
 )
 
-const { data: reportAccess, error: reportAccessError } = useAsyncData(
+const { data: reportAccess, error: reportAccessError, pending: reportAccessPending, refresh: refreshReportAccess } = useAsyncData(
   'shop-data:dashboard-report-access', async () => {
     if (!currentId.value) return { 'reports.view': false }
     const { data, error } = await shopRpc.rpc('shop_permission_access', {
@@ -249,8 +249,7 @@ async function createShop() {
           <h1 class="text-2xl font-extrabold sm:text-3xl">{{ copy.setupTitle }}</h1>
           <p class="mt-2 max-w-xl text-sm leading-6 text-white/60">{{ copy.setupBody }}</p>
         </div>
-        <form class="space-y-6 p-6 sm:p-8" @submit.prevent="createShop">
-          <p v-if="setupError" role="alert" class="rounded-xl border border-[var(--bs-status-error)]/30 bg-[var(--bs-status-error-bg)] p-3 text-sm text-[var(--bs-status-error)]">{{ setupError }}</p>
+        <BsForm class="space-y-6 p-6 sm:p-8" :pending="setupPending" :error="setupError" @submit="createShop">
           <div class="space-y-2"><label for="shop-name" class="text-sm font-bold">{{ copy.shopName }}</label><input id="shop-name" v-model="setupName" type="text" minlength="2" maxlength="120" required class="ls-input"></div>
           <fieldset class="space-y-3">
             <legend class="text-sm font-bold">{{ copy.businessMode }}</legend>
@@ -270,13 +269,13 @@ async function createShop() {
             <p v-else-if="!selectablePlans.length" class="text-sm text-muted-foreground">{{ copy.noPlans }}</p>
             <div v-else class="grid gap-3 sm:grid-cols-2">
               <label v-for="plan in selectablePlans" :key="plan.id" class="cursor-pointer rounded-2xl border p-4 transition" :class="selectedPlan === plan.slug ? 'border-[var(--bs-accent)] bg-[var(--bs-accent)]/5 ring-2 ring-[var(--bs-accent)]/15' : 'border-border bg-background hover:border-muted-foreground/50'">
-                <input v-model="selectedPlan" type="radio" name="plan" :value="plan.slug" class="sr-only">
+                <input v-model="selectedPlan" type="radio" name="plan" :value="plan.slug" class="me-2">
                 <div class="flex items-start justify-between gap-3"><div><p class="font-extrabold">{{ plan.name }}</p><p class="mt-1 text-xs text-muted-foreground">{{ plan.trial_days }} {{ isArabic ? 'يوم تجربة' : 'day trial' }}</p></div><p class="text-sm font-extrabold text-[var(--bs-link)]">{{ money(plan.price_amount, plan.currency) }}</p></div>
               </label>
             </div>
           </fieldset>
-          <button type="submit" class="ls-btn ls-btn-primary w-full" :disabled="setupPending || !selectablePlans.length">{{ setupPending ? copy.creating : copy.createShop }}</button>
-        </form>
+          <BsButton type="submit" variant="primary" class="w-full" :pending="setupPending" :disabled="!selectablePlans.length">{{ setupPending ? copy.creating : copy.createShop }}</BsButton>
+        </BsForm>
       </div>
     </section>
 
@@ -286,6 +285,8 @@ async function createShop() {
         <span class="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-bold">{{ isOwner ? copy.owner : copy.employee }}</span>
       </header>
 
+      <BarberSetupGuide />
+
       <section v-if="isOwner" class="rounded-2xl border border-border bg-card p-4 sm:p-5">
         <div class="flex flex-wrap items-center gap-x-8 gap-y-2 text-sm">
           <h2 class="font-extrabold">{{ copy.planStatus }}</h2>
@@ -294,7 +295,7 @@ async function createShop() {
         </div>
       </section>
 
-      <section class="rounded-2xl border border-border bg-card p-4 sm:p-5" aria-label="Report filters">
+      <section class="rounded-2xl border border-border bg-card p-4 sm:p-5" :aria-label="isArabic ? 'مرشحات التقارير' : 'Report filters'">
         <div class="grid gap-4 sm:grid-cols-3">
           <label class="text-xs font-bold text-muted-foreground">{{ copy.location }}
             <select v-model="reportLocationId" class="ls-select mt-1 w-full"><option value="all">{{ copy.allLocations }}</option><option v-for="location in activeLocations" :key="location.id" :value="location.id">{{ location.name }}</option></select>
@@ -304,7 +305,8 @@ async function createShop() {
         </div>
       </section>
 
-      <p v-if="reportAccessError || reportError" role="alert" class="rounded-xl border border-[var(--bs-status-error)]/30 bg-[var(--bs-status-error-bg)] p-4 text-sm text-[var(--bs-status-error)]">{{ copy.loadFailed }} <button type="button" class="underline" @click="refreshReport()">{{ copy.retry }}</button></p>
+      <p v-if="reportAccessError || reportError" role="alert" class="rounded-xl border border-[var(--bs-status-error)]/30 bg-[var(--bs-status-error-bg)] p-4 text-sm text-[var(--bs-status-error)]">{{ copy.loadFailed }} <button type="button" class="min-h-11 min-w-11 underline" @click="refreshReportAccess(); refreshReport()">{{ copy.retry }}</button></p>
+      <p v-else-if="reportAccessPending" role="status">{{ copy.loadingReport }}</p>
       <p v-else-if="!canViewReports" role="status" class="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">{{ copy.reportDenied }}</p>
       <div v-else-if="reportPending" class="space-y-4" aria-live="polite"><p class="text-sm text-muted-foreground">{{ copy.loadingReport }}</p><div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><div v-for="index in 8" :key="index" class="h-28 animate-pulse rounded-2xl bg-muted" /></div></div>
 

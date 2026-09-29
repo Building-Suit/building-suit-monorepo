@@ -13,6 +13,7 @@ const rpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
 const user = useSupabaseUser()
 const userId = computed(() => user.value?.id ?? null)
 const { locale } = useI18n()
+const ui = useUiCopy()
 const confirmation = useConfirmation()
 const { push: pushToast } = useToasts()
 const showDevelopmentErrors = import.meta.dev
@@ -338,7 +339,7 @@ function handleDetailVisibility(value: boolean) { if (!value) selectedShopId.val
 const en = {
   title: 'Platform administration', subtitle: 'Cross-tenant support controls and immutable operational evidence.',
   overview: 'Overview', audit: 'Privileged audit', billingQueue: 'Billing queue', accessDenied: 'This account is not an authorized Shop Suit platform administrator.',
-  accessHint: 'Platform access is provisioned independently and cannot be granted from a Shop membership.', retry: 'Retry',
+  accessHint: 'Contact your platform operator for access. A Shop membership does not grant platform administration.', retry: 'Retry',
   shops: 'Shops', activeShops: 'Active shops', suspendedShops: 'Suspended shops', locations: 'Locations', members: 'Members',
   activeTrials: 'Active trials', trialsSoon: 'Trials expiring soon', activeSubscriptions: 'Active subscriptions', readOnly: 'Read-only subscriptions', pendingBilling: 'Pending billing submissions',
   recentEvents: 'Recent privileged events', search: 'Search by shop, ID, or owner email', allStates: 'All states', open: 'Open support view',
@@ -355,7 +356,7 @@ const en = {
 const ar = {
   title: 'إدارة المنصة', subtitle: 'ضوابط دعم عابرة للمتاجر وأدلة تشغيلية غير قابلة للتعديل.',
   overview: 'نظرة عامة', audit: 'سجل الصلاحيات', billingQueue: 'قائمة الفوترة', accessDenied: 'هذا الحساب غير مصرح له بإدارة منصة Shop Suit.',
-  accessHint: 'تُمنح صلاحية المنصة بشكل مستقل ولا يمكن منحها من عضوية متجر.', retry: 'إعادة المحاولة',
+  accessHint: 'تواصل مع مسؤول المنصة للحصول على الصلاحية. عضوية المتجر لا تمنح صلاحية إدارة المنصة.', retry: 'إعادة المحاولة',
   shops: 'المتاجر', activeShops: 'المتاجر النشطة', suspendedShops: 'المتاجر الموقوفة', locations: 'الفروع', members: 'الأعضاء',
   activeTrials: 'التجارب النشطة', trialsSoon: 'تجارب تنتهي قريبًا', activeSubscriptions: 'الاشتراكات النشطة', readOnly: 'اشتراكات للقراءة فقط', pendingBilling: 'طلبات فوترة معلقة',
   recentEvents: 'أحدث إجراءات الصلاحيات', search: 'ابحث بالمتجر أو المعرّف أو بريد المالك', allStates: 'كل الحالات', open: 'فتح عرض الدعم',
@@ -377,7 +378,7 @@ const ar = {
       <StatusBadge v-if="session" :status="session.role === 'operator' ? 'active' : 'read_only'" />
     </header>
 
-    <div v-if="sessionPending" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><div v-for="item in 8" :key="item" class="h-28 animate-pulse rounded-2xl bg-muted" /></div>
+    <div v-if="sessionPending" role="status" :aria-label="ui('loading')" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><div v-for="item in 8" :key="item" class="h-28 animate-pulse rounded-2xl bg-muted" /></div>
     <section v-else-if="!session" class="rounded-2xl border border-[var(--bs-status-error)]/30 bg-[var(--bs-status-error-bg)] p-6" role="alert">
       <h2 class="font-extrabold">{{ copy.accessDenied }}</h2><p class="mt-2 text-sm">{{ copy.accessHint }}</p>
       <BsButton class="ls-btn mt-4" @click="refreshSession()">{{ copy.retry }}</BsButton>
@@ -385,10 +386,10 @@ const ar = {
     </section>
 
     <template v-else>
-      <div class="flex gap-2" role="tablist">
-        <BsButton :aria-selected="view === 'overview'" role="tab" class="ls-btn" :class="view === 'overview' ? 'ls-btn-primary' : ''" @click="view = 'overview'">{{ copy.overview }}</BsButton>
-        <BsButton :aria-selected="view === 'billing'" role="tab" class="ls-btn" :class="view === 'billing' ? 'ls-btn-primary' : ''" @click="view = 'billing'">{{ copy.billingQueue }}</BsButton>
-        <BsButton :aria-selected="view === 'audit'" role="tab" class="ls-btn" :class="view === 'audit' ? 'ls-btn-primary' : ''" @click="view = 'audit'">{{ copy.audit }}</BsButton>
+      <div class="flex flex-wrap gap-2" role="group" :aria-label="copy.title">
+        <BsButton :aria-pressed="view === 'overview'" class="ls-btn" :class="view === 'overview' ? 'ls-btn-primary' : ''" @click="view = 'overview'">{{ copy.overview }}</BsButton>
+        <BsButton :aria-pressed="view === 'billing'" class="ls-btn" :class="view === 'billing' ? 'ls-btn-primary' : ''" @click="view = 'billing'">{{ copy.billingQueue }}</BsButton>
+        <BsButton :aria-pressed="view === 'audit'" class="ls-btn" :class="view === 'audit' ? 'ls-btn-primary' : ''" @click="view = 'audit'">{{ copy.audit }}</BsButton>
       </div>
 
       <template v-if="view === 'overview'">
@@ -456,7 +457,7 @@ const ar = {
       <p v-if="detailError" class="ls-error" role="alert">{{ copy.loadFailed }} <BsButton class="font-bold underline" @click="refreshDetail()">{{ copy.retry }}</BsButton></p>
       <div v-else-if="detail" class="space-y-6">
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"><BsKpiCard :title="copy.owner">{{ detail.owner?.name || detail.owner?.email || '—' }}</BsKpiCard><BsKpiCard :title="copy.access"><StatusBadge :status="detailAccessState(detail)" /></BsKpiCard><BsKpiCard :title="copy.plan">{{ detail.subscription?.planName || '—' }}</BsKpiCard><BsKpiCard :title="copy.members">{{ detail.usage.members }}</BsKpiCard></div>
-        <section><h3 class="font-extrabold">{{ copy.usage }}</h3><p class="mt-2 text-sm text-muted-foreground">{{ copy.trialStart }}: {{ date(detail.subscription?.trialStartAt) }} · {{ copy.trialEnd }}: {{ date(detail.subscription?.trialEndAt) }} · {{ copy.periodEnd }}: {{ date(detail.subscription?.periodEnd) }}</p><p class="mt-2 text-sm text-muted-foreground">{{ copy.locations }}: {{ detail.usage.locations }} · {{ copy.members }}: {{ detail.usage.members }} · Products: {{ detail.usage.products }} · Services: {{ detail.usage.services }}</p><pre class="mt-3 overflow-auto rounded-xl bg-muted p-3 text-xs">{{ JSON.stringify(detail.usage.limits || {}, null, 2) }}</pre></section>
+        <section><h3 class="font-extrabold">{{ copy.usage }}</h3><p class="mt-2 text-sm text-muted-foreground">{{ copy.trialStart }}: {{ date(detail.subscription?.trialStartAt) }} · {{ copy.trialEnd }}: {{ date(detail.subscription?.trialEndAt) }} · {{ copy.periodEnd }}: {{ date(detail.subscription?.periodEnd) }}</p><p class="mt-2 text-sm text-muted-foreground">{{ copy.locations }}: {{ detail.usage.locations }} · {{ copy.members }}: {{ detail.usage.members }} · {{ isArabic ? 'المنتجات' : 'Products' }}: {{ detail.usage.products }} · {{ isArabic ? 'الخدمات' : 'Services' }}: {{ detail.usage.services }}</p><pre class="mt-3 overflow-auto rounded-xl bg-muted p-3 text-xs">{{ JSON.stringify(detail.usage.limits || {}, null, 2) }}</pre></section>
         <section v-if="session?.canMutate"><h3 class="font-extrabold">{{ copy.controls }}</h3><div class="mt-3 flex flex-wrap gap-2"><BsButton v-for="key in (Object.keys(copy.actions) as ActionKey[])" :key="key" class="ls-btn" @click="openAction(key)">{{ actionLabel(key) }}</BsButton></div></section>
         <section><h3 class="font-extrabold">{{ copy.billing }}</h3><BsDataTable class="mt-3" :value="detail.billingHistory" data-key="id" :label="copy.billing"><Column field="kind"><template #header>{{ copy.action }}</template></Column><Column field="status"><template #header>{{ copy.status }}</template><template #body="{ data: item }"><StatusBadge :status="item.status" /></template></Column><Column field="reference"><template #header>{{ copy.billingReference }}</template></Column><Column><template #header>{{ copy.occurred }}</template><template #body="{ data: item }">{{ date(item.submittedAt) }}</template></Column><template #empty><p class="p-5 text-center text-sm text-muted-foreground">{{ copy.emptyBilling }}</p></template></BsDataTable></section>
         <section><h3 class="font-extrabold">{{ copy.sensitive }}</h3><BsDataTable class="mt-3" :value="detail.sensitiveEvents" data-key="id" :label="copy.sensitive"><Column field="type"><template #header>{{ copy.status }}</template></Column><Column field="action"><template #header>{{ copy.action }}</template></Column><Column field="reason"><template #header>{{ copy.reason }}</template></Column><Column><template #header>{{ copy.occurred }}</template><template #body="{ data: event }">{{ date(event.occurredAt) }}</template></Column><template #empty><p class="p-5 text-center text-sm text-muted-foreground">{{ copy.emptySensitive }}</p></template></BsDataTable></section>

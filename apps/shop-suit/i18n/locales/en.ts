@@ -160,19 +160,20 @@ export default defineI18nLocale(async () => ({
   },
 
   pos: {
+    reviewSale: 'Review sale ({count})', closeShift: 'Open / close shift', resetConfirm: 'Clear this sale and start again? Unsaved items will be removed.',
     title: 'Point of sale', subtitle: 'Scan first or search to build a fast counter checkout.',
     catalog: 'Catalog', search: 'Search products, services, SKU, or barcode', all: 'All', products: 'Products', services: 'Services',
-    loading: 'Loading…', loadError: 'Could not load the POS.', retry: 'Retry', noResults: 'No matching catalog items.', stock: '{count} in stock',
+    loading: 'Loading…', loadError: 'Could not load the POS.', retry: 'Retry', noResults: 'No matching items. Try another search, or ask the owner to set up this location’s catalog.', stock: '{count} in stock',
     cart: 'Current sale', emptyCart: 'Scan or choose an item to start.', quantity: 'Quantity', remove: 'Remove', total: 'Total',
     location: 'Location', staff: 'Barber / staff', selectStaff: 'Select staff', appointment: 'Appointment', walkIn: 'Walk-in / counter sale',
     customer: 'Customer', customerSearch: 'Search customer name or phone', noCustomer: 'No customer — fully paid counter sale', clearCustomer: 'Clear customer',
     paymentMethod: 'Payment method', reference: 'Payment reference (optional)', notes: 'Sale notes (optional)',
-    pay: 'Pay {amount}', paying: 'Completing checkout…', confirm: 'Issue this sale, deduct product stock, and record the full payment atomically?',
+    pay: 'Pay {amount}', paying: 'Completing checkout…', confirm: 'Issue this sale, deduct product stock, and record the full payment?',
     success: 'Checkout completed.', unknownBarcode: 'Barcode {code} was not found. Search the catalog or add it from Products.',
     ambiguousBarcode: 'More than one product uses this barcode. Search and choose the correct product.', scanAdded: '{name} added.',
     invalid: 'Add an item and select the responsible staff member.', locationChanged: 'The selected location changed during this sale. Reset before continuing so stock and staff context cannot change silently.',
     reset: 'Reset sale', serverTotal: 'The server recalculates totals and stock before confirming payment.', shortcuts: 'Shortcuts: F2 catalog, F4 customer, F8 pay, Esc clear message.',
-    permissionDenied: 'You do not have permission to run checkout for this shop.', insufficientStock: 'There is not enough stock at this location.', checkoutError: 'Checkout was not completed. No success was recorded; review the sale and retry.',
+    permissionDenied: 'Ask the owner for permission to run checkout for this shop.', insufficientStock: 'There is not enough stock at this location.', checkoutError: 'Checkout was not completed. No success was recorded; review the sale and retry.',
   },
 
   receipt: {

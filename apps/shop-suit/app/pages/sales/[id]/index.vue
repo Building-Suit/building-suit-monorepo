@@ -2,7 +2,10 @@
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import type { SaleReceiptSnapshot } from '~/types/receipt'
 
-definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
+definePageMeta({
+  layout: 'default',
+  middleware: ['auth', 'business-mode'],
+})
 
 type SaleLine = {
   id: string

@@ -6,6 +6,7 @@ definePageMeta({ layout: 'default', middleware: ['auth'] })
 
 const rpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
 const { locale } = useI18n()
+const ui = useUiCopy()
 const { current, currentId, isOwner } = useShop()
 const { push: pushToast } = useToasts()
 const isArabic = computed(() => locale.value === 'ar')
@@ -85,8 +86,8 @@ async function submitNotice() {
 
 const en = {
   title: 'Subscription and billing', subtitle: 'Review access, usage, and manual InstaPay transfer notices.',
-  ownerOnly: 'Only the Shop owner can view subscription payment details or submit a transfer notice.',
-  loadFailed: 'Could not load billing information.', retry: 'Retry', plan: 'Current plan', access: 'Access state',
+  ownerOnly: 'Ask the Shop owner to review billing or submit a transfer notice. Only the owner can access these details.',
+  noBilling: 'No subscription information is available. Contact Building Suit support to review this shop’s billing.', loadFailed: 'Could not load billing information.', retry: 'Retry', plan: 'Current plan', access: 'Access state',
   trialRemaining: 'Trial remaining', days: 'days', renewal: 'Trial or renewal date', trialPeriod: 'Trial period', usage: 'Current usage', products: 'Products', services: 'Services', members: 'Members',
   readOnly: 'Your business history remains available, but subscription-gated writes are disabled until an operator approves payment or adjusts access.',
   instructions: 'Pay with InstaPay / instant bank transfer', instructionsHelp: 'Transfer using the operator-configured details below, then submit the notice for manual review. This is not automatic bank verification.',
@@ -99,8 +100,8 @@ const en = {
 
 const ar = {
   title: 'الاشتراك والفوترة', subtitle: 'راجع حالة الوصول والاستخدام وإشعارات التحويل اليدوي عبر InstaPay.',
-  ownerOnly: 'يمكن لمالك المتجر فقط عرض تفاصيل دفع الاشتراك أو إرسال إشعار تحويل.',
-  loadFailed: 'تعذّر تحميل معلومات الفوترة.', retry: 'إعادة المحاولة', plan: 'الخطة الحالية', access: 'حالة الوصول',
+  ownerOnly: 'اطلب من مالك المتجر مراجعة الفوترة أو إرسال إشعار التحويل. هذه التفاصيل متاحة للمالك فقط.',
+  noBilling: 'لا توجد معلومات اشتراك متاحة. تواصل مع دعم Building Suit لمراجعة فوترة هذا المتجر.', loadFailed: 'تعذّر تحميل معلومات الفوترة.', retry: 'إعادة المحاولة', plan: 'الخطة الحالية', access: 'حالة الوصول',
   trialRemaining: 'المتبقي من التجربة', days: 'يوم', renewal: 'موعد انتهاء التجربة أو التجديد', trialPeriod: 'فترة التجربة', usage: 'الاستخدام الحالي', products: 'المنتجات', services: 'الخدمات', members: 'الأعضاء',
   readOnly: 'يظل سجل النشاط متاحًا، لكن عمليات الكتابة المرتبطة بالاشتراك تتوقف حتى يعتمد مسؤول المنصة الدفعة أو يعدّل الوصول.',
   instructions: 'الدفع عبر InstaPay / تحويل بنكي فوري', instructionsHelp: 'حوّل باستخدام البيانات التي ضبطها مسؤول المنصة ثم أرسل الإشعار للمراجعة اليدوية. لا توجد مطابقة بنكية تلقائية.',
@@ -116,7 +117,7 @@ const ar = {
   <div class="mx-auto max-w-5xl space-y-6">
     <header><p class="text-xs font-bold uppercase tracking-[0.16em] text-[var(--bs-link)]">{{ current?.name }}</p><h1 class="mt-1 text-3xl font-extrabold tracking-tight">{{ copy.title }}</h1><p class="mt-2 text-sm text-muted-foreground">{{ copy.subtitle }}</p></header>
     <p v-if="!isOwner" role="alert" class="rounded-2xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-5">{{ copy.ownerOnly }}</p>
-    <div v-else-if="pending" class="grid gap-4 sm:grid-cols-3"><div v-for="item in 3" :key="item" class="h-28 animate-pulse rounded-2xl bg-muted" /></div>
+    <div v-else-if="pending" role="status" :aria-label="ui('loading')" class="grid gap-4 sm:grid-cols-3"><div v-for="item in 3" :key="item" class="h-28 animate-pulse rounded-2xl bg-muted" /></div>
     <p v-else-if="error" role="alert" class="ls-error">{{ copy.loadFailed }} <BsButton @click="refresh()">{{ copy.retry }}</BsButton></p>
     <template v-else-if="billing">
       <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -129,7 +130,7 @@ const ar = {
       <section class="rounded-2xl border border-border bg-card p-5 sm:p-6"><h2 class="text-lg font-extrabold">{{ copy.usage }}</h2><p class="mt-3 text-sm text-muted-foreground">{{ copy.products }}: {{ billing.usage.products }} / {{ billing.usage.limits.max_products ?? '—' }} · {{ copy.services }}: {{ billing.usage.services }} / {{ billing.usage.limits.max_services ?? '—' }} · {{ copy.members }}: {{ billing.usage.members }}</p></section>
       <section class="rounded-2xl border border-border bg-card p-5 sm:p-6"><div class="flex flex-wrap items-start justify-between gap-3"><div><h2 class="text-lg font-extrabold">{{ copy.instructions }}</h2><p class="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{{ copy.instructionsHelp }}</p></div><span class="rounded-full bg-muted px-3 py-1 text-xs font-bold">{{ copy.manual }}</span></div>
         <div v-if="billing.instructions.recipientAlias || billing.instructions.paymentLink || billing.instructions.qrImageUrl || (isArabic ? billing.instructions.instructionsAr : billing.instructions.instructionsEn)" class="mt-5 grid gap-4 md:grid-cols-2">
-          <p v-if="billing.instructions.recipientAlias" class="rounded-xl border border-border p-4"><span class="block text-xs text-muted-foreground">{{ copy.recipient }}</span><strong dir="ltr">{{ billing.instructions.recipientAlias }}</strong></p>
+          <p v-if="billing.instructions.recipientAlias" class="rounded-xl border border-border p-4"><span class="block text-xs text-muted-foreground">{{ copy.recipient }}</span><strong dir="ltr" class="break-all">{{ billing.instructions.recipientAlias }}</strong></p>
           <p v-if="billing.instructions.paymentLink" class="rounded-xl border border-border p-4"><span class="block text-xs text-muted-foreground">{{ copy.paymentLink }}</span><a class="break-all font-bold text-[var(--bs-link)] underline" :href="billing.instructions.paymentLink" target="_blank" rel="noopener noreferrer">{{ billing.instructions.paymentLink }}</a></p>
           <div v-if="billing.instructions.qrImageUrl" class="rounded-xl border border-border p-4"><span class="mb-3 block text-xs text-muted-foreground">{{ copy.qr }}</span><img :src="billing.instructions.qrImageUrl" :alt="copy.qr" class="h-40 w-40 rounded-lg object-contain"></div>
           <p class="whitespace-pre-line rounded-xl border border-border p-4 text-sm leading-6">{{ isArabic ? billing.instructions.instructionsAr : billing.instructions.instructionsEn }}</p>
@@ -137,13 +138,14 @@ const ar = {
       </section>
       <section class="rounded-2xl border border-border bg-card p-5 sm:p-6"><h2 class="text-lg font-extrabold">{{ copy.notice }}</h2><p class="mt-2 text-sm text-muted-foreground">{{ copy.expected }}: <strong>{{ money(billing.subscription.priceAmount, billing.subscription.currency) }}</strong></p>
         <BsForm class="mt-5 grid gap-4 sm:grid-cols-2" :pending="submitPending" :error="submitError" @submit="submitNotice">
-          <label class="grid gap-2 text-sm font-bold">{{ copy.paid }}<input v-model.number="form.paidAmount" class="ls-input" type="number" min="0.01" step="0.01" required></label>
-          <label class="grid gap-2 text-sm font-bold">{{ copy.transferDate }}<input v-model="form.transferDate" class="ls-input" type="date" :max="new Date().toISOString().slice(0, 10)" required></label>
-          <label class="grid gap-2 text-sm font-bold sm:col-span-2">{{ copy.reference }}<input v-model="form.transferReference" class="ls-input" dir="ltr" minlength="2" maxlength="200" required></label>
+          <label class="grid gap-2 text-sm font-bold">{{ copy.paid }}<input v-model.number="form.paidAmount" class="ls-input min-h-11 min-w-0" type="number" min="0.01" step="0.01" required></label>
+          <label class="grid gap-2 text-sm font-bold">{{ copy.transferDate }}<input v-model="form.transferDate" class="ls-input min-h-11 min-w-0" type="date" :max="new Date().toISOString().slice(0, 10)" required></label>
+          <label class="grid gap-2 text-sm font-bold sm:col-span-2">{{ copy.reference }}<input v-model="form.transferReference" class="ls-input min-h-11 min-w-0" dir="ltr" minlength="2" maxlength="200" required></label>
           <div class="sm:col-span-2"><BsButton type="submit" class="ls-btn ls-btn-primary" :pending="submitPending">{{ submitPending ? copy.submitting : copy.submit }}</BsButton></div>
         </BsForm>
       </section>
-      <section class="overflow-hidden rounded-2xl border border-border bg-card"><div class="p-5"><h2 class="text-lg font-extrabold">{{ copy.history }}</h2></div><BsDataTable :value="billing.submissions" data-key="id" :label="copy.history"><Column field="status"><template #header>{{ copy.access }}</template><template #body="{ data: item }"><StatusBadge :status="item.status" /> <span class="ms-2 text-sm">{{ statusLabel(item.status) }}</span></template></Column><Column><template #header>{{ copy.paid }}</template><template #body="{ data: item }">{{ money(item.paidAmount, item.currency) }}</template></Column><Column field="transferReference"><template #header>{{ copy.reference }}</template></Column><Column><template #header>{{ copy.transferDate }}</template><template #body="{ data: item }">{{ date(item.transferDate) }}</template></Column><Column field="reviewReason"><template #header>{{ copy.reviewReason }}</template></Column><template #empty><p class="p-6 text-center text-sm text-muted-foreground">{{ copy.empty }}</p></template></BsDataTable></section>
+      <section class="overflow-hidden rounded-2xl border border-border bg-card"><div class="p-5"><h2 class="text-lg font-extrabold">{{ copy.history }}</h2></div><div class="overflow-x-auto"><BsDataTable :value="billing.submissions" data-key="id" :label="copy.history"><Column field="status"><template #header>{{ copy.access }}</template><template #body="{ data: item }"><StatusBadge :status="item.status" /> <span class="ms-2 text-sm">{{ statusLabel(item.status) }}</span></template></Column><Column><template #header>{{ copy.paid }}</template><template #body="{ data: item }">{{ money(item.paidAmount, item.currency) }}</template></Column><Column field="transferReference"><template #header>{{ copy.reference }}</template></Column><Column><template #header>{{ copy.transferDate }}</template><template #body="{ data: item }">{{ date(item.transferDate) }}</template></Column><Column field="reviewReason"><template #header>{{ copy.reviewReason }}</template></Column><template #empty><p class="p-6 text-center text-sm text-muted-foreground">{{ copy.empty }}</p></template></BsDataTable></div></section>
     </template>
+    <p v-else role="status" class="rounded-xl border border-border p-5 text-sm">{{ copy.noBilling }}</p>
   </div>
 </template>

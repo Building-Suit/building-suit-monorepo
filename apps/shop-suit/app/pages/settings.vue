@@ -234,12 +234,12 @@ async function saveReceiptSettings() {
       </BsForm>
     </section>
 
-    <section v-if="current" class="rounded-2xl border border-border bg-card p-5 sm:p-6">
+    <section v-if="current" id="locations" class="scroll-mt-28 rounded-2xl border border-border bg-card p-5 sm:p-6">
       <h2 class="text-lg font-extrabold">{{ copy.locationsTitle }}</h2>
       <p class="mt-2 text-sm leading-6 text-muted-foreground">{{ copy.locationsHelp }}</p>
       <p v-if="locationError" role="alert" class="mt-4 text-sm text-[var(--bs-status-error)]">{{ locationError }}</p>
       <ul class="mt-5 divide-y divide-border rounded-xl border border-border">
-        <li v-for="location in locations" :key="location.id" class="flex items-center justify-between gap-4 p-4">
+        <li v-for="location in locations" :key="location.id" class="flex flex-wrap items-center justify-between gap-4 p-4">
           <span>
             <strong class="block">{{ location.name }}</strong>
             <span class="text-xs text-muted-foreground">{{ location.code || location.address || '—' }}</span>
