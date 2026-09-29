@@ -2,6 +2,8 @@
 
 The bounded two-branch barber gate is maintained in the [SS-PILOT-001 runbook](../SS-PILOT-001-runbook.md) and [execution evidence](../SS-PILOT-001-verification.md). That gate remains blocked until its outstanding checks pass; the historical baseline below is not current pilot sign-off.
 
+The broader small-shop gate is maintained in the [SS-MARKET-VAL-001 runbook](../SS-MARKET-VAL-001-runbook.md) and [execution evidence](../SS-MARKET-VAL-001-verification.md). General product/service/mixed marketing remains blocked pending qualification; ETA compliance and offline operation are explicitly excluded.
+
 Updated: 2026-09-19. Status: **not ready for sale**.
 
 This is the current implementation guide. Earlier documents under `docs/rebuild/`
