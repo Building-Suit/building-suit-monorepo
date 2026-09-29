@@ -80,6 +80,42 @@ export type ShopRpcDatabase = {
         }
         Returns: unknown
       }
+      shop_public_plan_catalog: {
+        Args: Record<string, never>
+        Returns: Array<{
+          id: string
+          name: string
+          slug: string
+          price_amount: number
+          currency: string
+          billing_interval: string
+          trial_days: number
+          features: Record<string, unknown>
+          resource_limits: Record<string, number | null>
+          is_purchasable: boolean
+          is_coming_soon: boolean
+        }>
+      }
+      platform_plan_read: {
+        Args: {
+          p_resource?: 'catalog' | 'shop' | 'audit'
+          p_shop_id?: string | null
+          p_page?: number
+          p_page_size?: number
+        }
+        Returns: unknown
+      }
+      platform_plan_command: {
+        Args: {
+          p_request_id: string
+          p_action: 'publish_terms' | 'set_availability' | 'change_subscription' | 'renew_subscription' | 'suspend_subscription' | 'set_price_override' | 'remove_price_override'
+          p_reason: string
+          p_plan_id?: string | null
+          p_shop_id?: string | null
+          p_payload?: Record<string, unknown>
+        }
+        Returns: unknown
+      }
       set_shop_business_mode: {
         Args: { p_shop_id: string; p_business_mode: 'product' | 'service' | 'mixed' }
         Returns: 'product' | 'service' | 'mixed'

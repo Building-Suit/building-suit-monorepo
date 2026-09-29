@@ -77,3 +77,60 @@ export type PlatformShopDetail = {
   sensitiveEvents: Array<{ id: string; type: string; action: string; reason: string | null; actorId: string; occurredAt: string; details: Record<string, unknown> }>
   supportNotes: Array<{ id: string; note: string; reason: string; actorUserId: string; createdAt: string }>
 }
+
+export type PlatformPlan = {
+  id: string
+  slug: string
+  name: string
+  isActive: boolean
+  isPublic: boolean
+  isPurchasable: boolean
+  isComingSoon: boolean
+  catalogVersion: number
+  priceAmount: number
+  currency: string
+  billingInterval: 'monthly' | 'quarterly' | 'annual'
+  resourceLimits: Record<string, number | null>
+  effectiveFrom: string
+  nextTerms: null | {
+    version: number
+    priceAmount: number
+    currency: string
+    billingInterval: 'monthly' | 'quarterly' | 'annual'
+    resourceLimits: Record<string, number | null>
+    effectiveFrom: string
+  }
+  subscriptionCount: number
+  canDelete: false
+}
+
+export type PlatformPlanOption = {
+  planId: string
+  planSlug: string
+  planName: string
+  catalogTermsId: string
+  billingInterval: 'monthly' | 'quarterly' | 'annual'
+  currency: string
+  listPriceAmount: number
+  resourceLimits: Record<string, number | null>
+  blockers: Array<{ resource: string; used: number; limit: number; excess: number }>
+}
+
+export type PlatformPlanShop = {
+  subscription: (NonNullable<PlatformShopDetail['subscription']> & {
+    listPriceAmount: number
+    effectivePriceAmount: number
+    priceSource: 'catalog' | 'override'
+    priceOverrideId: string | null
+    currency: string
+    billingInterval: 'monthly' | 'quarterly' | 'annual'
+    accessState: 'trialing' | 'active' | 'read_only' | 'suspended'
+    resourceLimits: Record<string, number | null>
+    usage: {
+      resources: Array<{ resource: string; used: number; limit: number | null; remaining: number | null; unlimited: boolean; atLimit: boolean; overLimit: boolean }>
+    }
+    pendingBillingRequests: number
+    pendingPlanChange: null | { id: string; targetPlanId: string; targetPlanSlug: string; targetPlanName: string; effectiveAt: string; reason: string; createdAt: string }
+  }) | null
+  availablePlans: PlatformPlanOption[]
+}

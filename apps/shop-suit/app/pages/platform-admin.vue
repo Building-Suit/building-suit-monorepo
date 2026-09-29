@@ -6,7 +6,6 @@ import type { PlatformAdminEvent, PlatformAdminSession, PlatformDashboard, Platf
 definePageMeta({ layout: 'platform-admin', middleware: ['auth'] })
 
 type ActionKey = 'suspend_shop' | 'reactivate_shop' | 'extend_trial' | 'end_trial'
-  | 'activate_subscription' | 'extend_subscription' | 'suspend_subscription'
   | 'correct_billing_metadata' | 'add_support_note'
 
 const rpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
@@ -19,7 +18,7 @@ const { push: pushToast } = useToasts()
 const showDevelopmentErrors = import.meta.dev
 const isArabic = computed(() => locale.value === 'ar')
 const copy = computed(() => isArabic.value ? ar : en)
-const view = ref<'overview' | 'billing' | 'audit'>('overview')
+const view = ref<'overview' | 'plans' | 'billing' | 'audit'>('overview')
 const search = ref('')
 const debouncedSearch = ref('')
 const status = ref('')
@@ -336,8 +335,7 @@ function openAction(key: ActionKey) {
 }
 
 function payload() {
-  if (action.key === 'extend_trial' || action.key === 'extend_subscription') return { days: action.days }
-  if (action.key === 'activate_subscription') return { days: action.days, planSlug: action.planSlug }
+  if (action.key === 'extend_trial') return { days: action.days }
   if (action.key === 'correct_billing_metadata') return { billingReference: action.billingReference.trim(), billingNote: action.billingNote.trim() }
   if (action.key === 'add_support_note') return { note: action.note.trim() }
   return {}
@@ -350,7 +348,7 @@ async function runAction() {
     commandError.value = copy.value.reasonRequired
     return
   }
-  if ((action.key === 'extend_trial' || action.key === 'activate_subscription' || action.key === 'extend_subscription')
+  if (action.key === 'extend_trial'
     && (!Number.isInteger(action.days) || action.days < 1 || action.days > 3660)) {
     commandError.value = copy.value.daysInvalid
     return
@@ -359,8 +357,8 @@ async function runAction() {
     commandError.value = copy.value.noteRequired
     return
   }
-  if (['suspend_shop', 'end_trial', 'suspend_subscription'].includes(action.key)
-    && !await confirmation.ask(copy.value.destructiveConfirm[action.key as 'suspend_shop' | 'end_trial' | 'suspend_subscription'])) return
+  if (['suspend_shop', 'end_trial'].includes(action.key)
+    && !await confirmation.ask(copy.value.destructiveConfirm[action.key as 'suspend_shop' | 'end_trial'])) return
 
   actionPending.value = true
   try {
@@ -389,10 +387,13 @@ function handleAuditPage(event: { page: number }) { auditPage.value = event.page
 function handleBillingPage(event: { page: number }) { billingPage.value = event.page + 1 }
 function handleBillingAuditPage(event: { page: number }) { billingAuditPage.value = event.page + 1 }
 function handleDetailVisibility(value: boolean) { if (!value) selectedShopId.value = null }
+async function refreshPlanConsumers() {
+  await Promise.all([refreshDashboard(), refreshShops(), refreshDetail(), refreshAudit(), refreshBillingQueue(), refreshBillingSummary(), refreshBillingAudit()])
+}
 
 const en = {
   title: 'Platform administration', subtitle: 'Cross-tenant support controls and immutable operational evidence.',
-  overview: 'Overview', audit: 'Privileged audit', billingQueue: 'Billing queue', accessDenied: 'This account is not an authorized Shop Suit platform administrator.',
+  overview: 'Overview', plans: 'Plans & subscriptions', audit: 'Privileged audit', billingQueue: 'Billing queue', accessDenied: 'This account is not an authorized Shop Suit platform administrator.',
   accessHint: 'Contact your platform operator for access. A Shop membership does not grant platform administration.', retry: 'Retry',
   shops: 'Shops', activeShops: 'Active shops', suspendedShops: 'Suspended shops', locations: 'Locations', members: 'Members',
   activeTrials: 'Active trials', trialsSoon: 'Trials expiring soon', activeSubscriptions: 'Active subscriptions', readOnly: 'Read-only subscriptions', pendingBilling: 'Pending billing submissions',
@@ -403,13 +404,13 @@ const en = {
   status: 'Status', action: 'Action', actor: 'Actor', occurred: 'Occurred', emptyBilling: 'No billing submissions.', emptySensitive: 'No sensitive events are available.', emptyNotes: 'No support notes.',
   configuration: 'InstaPay instructions', configurationHelp: 'These details are shown to Shop owners. Transfers remain manually verified.', recipientAlias: 'Recipient alias', paymentLink: 'Payment link', qrImageUrl: 'QR image URL', instructionsEn: 'English instructions', instructionsAr: 'Arabic instructions', configurationSaved: 'Payment instructions were updated and audited.',
   currentPlan: 'Current plan', requestedPlan: 'Requested plan', interval: 'Term', listPrice: 'List price', effectivePrice: 'Quoted price', blockers: 'Usage blockers', noBlockers: 'None', negotiated: 'Negotiated', expectedAmount: 'Expected', paidAmount: 'Paid', transferDate: 'Transfer date', transferReference: 'Transfer reference', receivedAmount: 'Received amount', receivedReference: 'Received reference', receivedDate: 'Received date', review: 'Review', markUnderReview: 'Mark under review', approve: 'Approve and activate', reject: 'Reject', submitted: 'Submitted', underReview: 'Under review', approved: 'Approved', rejected: 'Rejected', approvalInvalid: 'Enter valid received payment details and an explicit mismatch reason when amounts differ.', amountOverrideReason: 'Amount mismatch override reason', approveConfirm: 'Approve this externally verified transfer and apply the requested plan for exactly one catalog term?', priceOverride: 'Set negotiated price', overrideAmount: 'Effective price', effectiveFrom: 'Effective date', expiresAt: 'Optional expiry', priceOverrideInvalid: 'Enter a valid positive price, effective date, and reason.', priceOverrideSaved: 'The negotiated price was appended and audited.',
-  actions: { suspend_shop: 'Suspend Shop access', reactivate_shop: 'Reactivate Shop access', extend_trial: 'Extend trial', end_trial: 'End trial', activate_subscription: 'Activate subscription', extend_subscription: 'Extend subscription', suspend_subscription: 'Suspend subscription', correct_billing_metadata: 'Correct billing metadata', add_support_note: 'Add support note' },
-  destructiveConfirm: { suspend_shop: 'Suspend this Shop? Tenant access will stop, but all history will be preserved.', end_trial: 'End this trial now? The Shop will become read-only.', suspend_subscription: 'Suspend this subscription? Historical reads remain available, but writes will stop.' },
+  actions: { suspend_shop: 'Suspend Shop access', reactivate_shop: 'Reactivate Shop access', extend_trial: 'Extend trial', end_trial: 'End trial', correct_billing_metadata: 'Correct billing metadata', add_support_note: 'Add support note' },
+  destructiveConfirm: { suspend_shop: 'Suspend this Shop? Tenant access will stop, but all history will be preserved.', end_trial: 'End this trial now? The Shop will become read-only.' },
 }
 
 const ar = {
   title: 'إدارة المنصة', subtitle: 'ضوابط دعم عابرة للمتاجر وأدلة تشغيلية غير قابلة للتعديل.',
-  overview: 'نظرة عامة', audit: 'سجل الصلاحيات', billingQueue: 'قائمة الفوترة', accessDenied: 'هذا الحساب غير مصرح له بإدارة منصة Shop Suit.',
+  overview: 'نظرة عامة', plans: 'الخطط والاشتراكات', audit: 'سجل الصلاحيات', billingQueue: 'قائمة الفوترة', accessDenied: 'هذا الحساب غير مصرح له بإدارة منصة Shop Suit.',
   accessHint: 'تواصل مع مسؤول المنصة للحصول على الصلاحية. عضوية المتجر لا تمنح صلاحية إدارة المنصة.', retry: 'إعادة المحاولة',
   shops: 'المتاجر', activeShops: 'المتاجر النشطة', suspendedShops: 'المتاجر الموقوفة', locations: 'الفروع', members: 'الأعضاء',
   activeTrials: 'التجارب النشطة', trialsSoon: 'تجارب تنتهي قريبًا', activeSubscriptions: 'الاشتراكات النشطة', readOnly: 'اشتراكات للقراءة فقط', pendingBilling: 'طلبات فوترة معلقة',
@@ -420,8 +421,8 @@ const ar = {
   status: 'الحالة', action: 'الإجراء', actor: 'المنفذ', occurred: 'الوقت', emptyBilling: 'لا توجد طلبات فوترة.', emptySensitive: 'لا توجد أحداث حساسة.', emptyNotes: 'لا توجد ملاحظات دعم.',
   configuration: 'تعليمات InstaPay', configurationHelp: 'تظهر هذه البيانات لمالكي المتاجر وتظل التحويلات خاضعة للتحقق اليدوي.', recipientAlias: 'عنوان المستلم', paymentLink: 'رابط الدفع', qrImageUrl: 'رابط صورة QR', instructionsEn: 'التعليمات الإنجليزية', instructionsAr: 'التعليمات العربية', configurationSaved: 'تم تحديث تعليمات الدفع وتسجيلها.',
   currentPlan: 'الخطة الحالية', requestedPlan: 'الخطة المطلوبة', interval: 'المدة', listPrice: 'السعر المعلن', effectivePrice: 'السعر المثبت', blockers: 'عوائق الاستخدام', noBlockers: 'لا يوجد', negotiated: 'تفاوضي', expectedAmount: 'المتوقع', paidAmount: 'المدفوع', transferDate: 'تاريخ التحويل', transferReference: 'مرجع التحويل', receivedAmount: 'المبلغ المستلم', receivedReference: 'المرجع المستلم', receivedDate: 'تاريخ الاستلام', review: 'المراجعة', markUnderReview: 'بدء المراجعة', approve: 'اعتماد وتفعيل', reject: 'رفض', submitted: 'مُرسل', underReview: 'قيد المراجعة', approved: 'معتمد', rejected: 'مرفوض', approvalInvalid: 'أدخل بيانات الاستلام الصحيحة وسببًا صريحًا عند اختلاف المبلغ.', amountOverrideReason: 'سبب تجاوز اختلاف المبلغ', approveConfirm: 'اعتماد هذا التحويل المتحقق منه وتطبيق الخطة المطلوبة لمدة تجارية واحدة؟', priceOverride: 'تعيين سعر تفاوضي', overrideAmount: 'السعر الفعلي', effectiveFrom: 'تاريخ السريان', expiresAt: 'انتهاء اختياري', priceOverrideInvalid: 'أدخل سعرًا موجبًا وتاريخ سريان وسببًا.', priceOverrideSaved: 'تمت إضافة السعر التفاوضي وتسجيله.',
-  actions: { suspend_shop: 'إيقاف وصول المتجر', reactivate_shop: 'إعادة تفعيل وصول المتجر', extend_trial: 'تمديد التجربة', end_trial: 'إنهاء التجربة', activate_subscription: 'تفعيل الاشتراك', extend_subscription: 'تمديد الاشتراك', suspend_subscription: 'إيقاف الاشتراك', correct_billing_metadata: 'تصحيح بيانات الفوترة', add_support_note: 'إضافة ملاحظة دعم' },
-  destructiveConfirm: { suspend_shop: 'إيقاف هذا المتجر؟ سيتوقف وصول المستأجر مع الحفاظ على كل السجل.', end_trial: 'إنهاء التجربة الآن؟ سيصبح المتجر للقراءة فقط.', suspend_subscription: 'إيقاف الاشتراك؟ ستبقى قراءة السجل متاحة وتتوقف الكتابة.' },
+  actions: { suspend_shop: 'إيقاف وصول المتجر', reactivate_shop: 'إعادة تفعيل وصول المتجر', extend_trial: 'تمديد التجربة', end_trial: 'إنهاء التجربة', correct_billing_metadata: 'تصحيح بيانات الفوترة', add_support_note: 'إضافة ملاحظة دعم' },
+  destructiveConfirm: { suspend_shop: 'إيقاف هذا المتجر؟ سيتوقف وصول المستأجر مع الحفاظ على كل السجل.', end_trial: 'إنهاء التجربة الآن؟ سيصبح المتجر للقراءة فقط.' },
 }
 </script>
 
@@ -442,6 +443,7 @@ const ar = {
     <template v-else>
       <div class="flex flex-wrap gap-2" role="group" :aria-label="copy.title">
         <BsButton :aria-pressed="view === 'overview'" class="ls-btn" :class="view === 'overview' ? 'ls-btn-primary' : ''" @click="view = 'overview'">{{ copy.overview }}</BsButton>
+        <BsButton :aria-pressed="view === 'plans'" class="ls-btn" :class="view === 'plans' ? 'ls-btn-primary' : ''" @click="view = 'plans'">{{ copy.plans }}</BsButton>
         <BsButton :aria-pressed="view === 'billing'" class="ls-btn" :class="view === 'billing' ? 'ls-btn-primary' : ''" @click="view = 'billing'">{{ copy.billingQueue }}</BsButton>
         <BsButton :aria-pressed="view === 'audit'" class="ls-btn" :class="view === 'audit' ? 'ls-btn-primary' : ''" @click="view = 'audit'">{{ copy.audit }}</BsButton>
       </div>
@@ -468,6 +470,8 @@ const ar = {
 
         <section class="rounded-2xl border border-border bg-card p-5"><h2 class="text-lg font-extrabold">{{ copy.recentEvents }}</h2><div class="mt-4 overflow-x-auto"><BsDataTable :value="dashboard?.recentEvents ?? []" :loading="dashboardPending" data-key="id" :label="copy.recentEvents"><Column field="shopName"><template #header>{{ copy.shop }}</template></Column><Column field="action"><template #header>{{ copy.action }}</template><template #body="{ data: event }">{{ actionLabel(event.action) || event.action }}</template></Column><Column field="reason"><template #header>{{ copy.reason }}</template></Column><Column><template #header>{{ copy.occurred }}</template><template #body="{ data: event }">{{ date(event.occurredAt) }}</template></Column><template #empty><p class="p-5 text-center text-sm text-muted-foreground">{{ copy.noEvents }}</p></template></BsDataTable></div></section>
       </template>
+
+      <PlatformPlanAdmin v-else-if="view === 'plans'" :can-mutate="session.canMutate" @changed="refreshPlanConsumers" />
 
       <section v-else-if="view === 'audit'" class="overflow-hidden rounded-2xl border border-border bg-card">
         <BsDataTable :value="audit?.items ?? []" :loading="auditPending" :error="auditError ? copy.loadFailed : null" :label="copy.audit" data-key="id" lazy paginator :rows="25" :first="(auditPage - 1) * 25" :total-records="audit?.total ?? 0" :always-show-paginator="false" @page="handleAuditPage" @retry="refreshAudit()">
@@ -512,6 +516,7 @@ const ar = {
       <div v-else-if="detail" class="space-y-6">
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"><BsKpiCard :title="copy.owner">{{ detail.owner?.name || detail.owner?.email || '—' }}</BsKpiCard><BsKpiCard :title="copy.access"><StatusBadge :status="detailAccessState(detail)" /></BsKpiCard><BsKpiCard :title="copy.plan">{{ detail.subscription?.planName || '—' }}</BsKpiCard><BsKpiCard :title="copy.members">{{ detail.usage.members }}</BsKpiCard></div>
         <section><h3 class="font-extrabold">{{ copy.usage }}</h3><p class="mt-2 text-sm text-muted-foreground">{{ copy.trialStart }}: {{ date(detail.subscription?.trialStartAt) }} · {{ copy.trialEnd }}: {{ date(detail.subscription?.trialEndAt) }} · {{ copy.periodEnd }}: {{ date(detail.subscription?.periodEnd) }}</p><p class="mt-2 text-sm text-muted-foreground">{{ copy.locations }}: {{ detail.usage.locations }} · {{ copy.members }}: {{ detail.usage.members }} · {{ isArabic ? 'المنتجات' : 'Products' }}: {{ detail.usage.products }} · {{ isArabic ? 'الخدمات' : 'Services' }}: {{ detail.usage.services }}</p><pre class="mt-3 overflow-auto rounded-xl bg-muted p-3 text-xs">{{ JSON.stringify(detail.usage.limits || {}, null, 2) }}</pre></section>
+        <PlatformPlanAdmin mode="shop" :shop-id="selectedShopId" :can-mutate="Boolean(session?.canMutate)" @changed="refreshPlanConsumers" />
         <section v-if="session?.canMutate"><h3 class="font-extrabold">{{ copy.controls }}</h3><div class="mt-3 flex flex-wrap gap-2"><BsButton v-for="key in (Object.keys(copy.actions) as ActionKey[])" :key="key" class="ls-btn" @click="openAction(key)">{{ actionLabel(key) }}</BsButton></div></section>
         <section><h3 class="font-extrabold">{{ copy.billing }}</h3><BsDataTable class="mt-3" :value="detail.billingHistory" data-key="id" :label="copy.billing"><Column field="kind"><template #header>{{ copy.action }}</template></Column><Column field="status"><template #header>{{ copy.status }}</template><template #body="{ data: item }"><StatusBadge :status="item.status" /></template></Column><Column field="reference"><template #header>{{ copy.billingReference }}</template></Column><Column><template #header>{{ copy.occurred }}</template><template #body="{ data: item }">{{ date(item.submittedAt) }}</template></Column><template #empty><p class="p-5 text-center text-sm text-muted-foreground">{{ copy.emptyBilling }}</p></template></BsDataTable></section>
         <section><h3 class="font-extrabold">{{ copy.sensitive }}</h3><BsDataTable class="mt-3" :value="detail.sensitiveEvents" data-key="id" :label="copy.sensitive"><Column field="type"><template #header>{{ copy.status }}</template></Column><Column field="action"><template #header>{{ copy.action }}</template></Column><Column field="reason"><template #header>{{ copy.reason }}</template></Column><Column><template #header>{{ copy.occurred }}</template><template #body="{ data: event }">{{ date(event.occurredAt) }}</template></Column><template #empty><p class="p-5 text-center text-sm text-muted-foreground">{{ copy.emptySensitive }}</p></template></BsDataTable></section>
@@ -522,8 +527,7 @@ const ar = {
     <BsDialog v-model:visible="actionOpen" :title="actionLabel(action.key)" :dirty="actionDirty" :pending="actionPending">
       <template #default="{ close }"><BsForm class="space-y-4" :pending="actionPending" :error="commandError" @submit="runAction">
         <label class="block space-y-2 text-sm font-bold">{{ copy.reason }}<textarea v-model="action.reason" class="ls-input" minlength="2" maxlength="1000" required rows="3" /></label>
-        <label v-if="['extend_trial','activate_subscription','extend_subscription'].includes(action.key)" class="block space-y-2 text-sm font-bold">{{ copy.days }}<input v-model.number="action.days" class="ls-input" type="number" min="1" :max="action.key === 'extend_trial' ? 365 : 3660" step="1" required></label>
-        <label v-if="action.key === 'activate_subscription'" class="block space-y-2 text-sm font-bold">{{ copy.planSlug }}<input v-model="action.planSlug" class="ls-input" maxlength="100" required></label>
+        <label v-if="action.key === 'extend_trial'" class="block space-y-2 text-sm font-bold">{{ copy.days }}<input v-model.number="action.days" class="ls-input" type="number" min="1" max="365" step="1" required></label>
         <template v-if="action.key === 'correct_billing_metadata'"><label class="block space-y-2 text-sm font-bold">{{ copy.billingReference }}<input v-model="action.billingReference" class="ls-input" maxlength="200"></label><label class="block space-y-2 text-sm font-bold">{{ copy.billingNote }}<textarea v-model="action.billingNote" class="ls-input" maxlength="1000" rows="3" /></label></template>
         <label v-if="action.key === 'add_support_note'" class="block space-y-2 text-sm font-bold">{{ copy.note }}<textarea v-model="action.note" class="ls-input" minlength="2" maxlength="2000" required rows="5" /></label>
         <div class="flex flex-wrap gap-2"><BsButton type="submit" class="ls-btn ls-btn-primary" :disabled="actionPending">{{ copy.save }}</BsButton><BsButton class="ls-btn" :disabled="actionPending" @click="close">{{ copy.cancel }}</BsButton></div>

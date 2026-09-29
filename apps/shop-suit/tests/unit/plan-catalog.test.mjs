@@ -4,6 +4,7 @@ import test from 'node:test'
 
 const migration = await readFile(new URL('../../supabase/migrations/20260929190000_canonical_plan_catalog.sql', import.meta.url), 'utf8')
 const limitsMigration = await readFile(new URL('../../supabase/migrations/20260929200000_atomic_plan_resource_limits.sql', import.meta.url), 'utf8')
+const adminMigration = await readFile(new URL('../../supabase/migrations/20260929220000_platform_plan_catalog_subscription_controls.sql', import.meta.url), 'utf8')
 const databaseTest = await readFile(new URL('../../supabase/tests/shop_plan_catalog.sql', import.meta.url), 'utf8')
 const limitsDatabaseTest = await readFile(new URL('../../supabase/tests/shop_plan_limits.sql', import.meta.url), 'utf8')
 const plans = await readFile(new URL('../../app/composables/usePlans.ts', import.meta.url), 'utf8')
@@ -16,7 +17,8 @@ test('SUB-D08 catalog is canonical and publicly selects only purchasable plans',
   ]) {
     assert.match(migration, new RegExp(`'${name}', '${slug}', ${price}, 'EGP', 'monthly', 14`))
   }
-  assert.match(plans, /\.eq\('is_purchasable', true\)/)
+  assert.match(plans, /rpc\('shop_public_plan_catalog'\)/)
+  assert.match(adminMigration, /plan\.is_active and plan\.is_public and plan\.is_purchasable/)
   assert.match(migration, /slug in \('basic', 'pro'\)/)
   assert.match(migration, /strategy text not null check \(strategy = 'grandfather'\)/)
 })

@@ -1,4 +1,5 @@
 import { useAsyncData, useSupabaseClient } from '#imports';
+import type { ShopRpcDatabase } from '~/types/shopCrmRpc';
 
 type PublicPlan = {
   id: string;
@@ -20,17 +21,13 @@ type PublicPlan = {
 };
 
 export const usePlans = () => {
-  const supabase = useSupabaseClient();
+  const supabase = useSupabaseClient<ShopRpcDatabase>();
   const { data, pending, error, refresh } = useAsyncData<PublicPlan[]>(
     'shop-crm-public-plans',
     async () => {
       const { data: plans, error: queryError } = await supabase
-        .from('plans')
-        .select('id,name,slug,price_amount,currency,billing_interval,trial_days,features,resource_limits,is_purchasable,is_coming_soon')
-        .eq('is_active', true)
-        .eq('is_public', true)
-        .eq('is_purchasable', true)
-        .order('sort_order', { ascending: true });
+        .schema('public')
+        .rpc('shop_public_plan_catalog');
 
       if (queryError) throw queryError;
       return (plans ?? []) as PublicPlan[];
