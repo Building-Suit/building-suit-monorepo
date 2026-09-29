@@ -33,6 +33,7 @@ const groups = computed(() => {
       { to: '/purchases', label: copy.value.purchases, icon: 'cash' },
     ] }] : []),
     { key: 'manage', label: copy.value.manage, links: [
+      { to: '/reports', label: copy.value.reports, icon: 'reports' },
       { to: '/catalog-import', label: copy.value.catalogSetup, icon: 'ledger' },
       ...(businessModeSupportsServices(mode) ? [{ to: '/services', label: copy.value.services, icon: 'invoice' }] : []),
       { to: '/expenses', label: copy.value.expenses, icon: 'cash' },

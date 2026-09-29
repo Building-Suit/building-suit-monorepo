@@ -19,6 +19,7 @@ type OperatingReport = {
   staff: Array<{ membershipId: string; name: string; sales: number; saleCount: number; serviceCount: number }>
   locations: Array<{ locationId: string; name: string; sales: number; saleCount: number; collections: number; expenses: number | null; cashVariance: number }>
 }
+type ReportHighlights = { payable: number; lowStockCount: number; inventoryValue: number; margin: number }
 
 const supabase = useSupabaseClient()
 const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
@@ -70,6 +71,8 @@ const copy = computed(() => isArabic.value ? {
   appointments: 'المواعيد', completed: 'مكتمل', cancelled: 'ملغي', noShow: 'لم يحضر', busiestTimes: 'أكثر الأوقات ازدحامًا', noAppointments: 'لا توجد بيانات مواعيد في الفترة.',
   cashVariance: 'فرق الخزنة', closedShifts: 'ورديات مغلقة', expected: 'متوقع', counted: 'فعلي', staffPerformance: 'أداء الفريق', staffMember: 'الموظف', serviceCount: 'عدد الخدمات',
   branchComparison: 'مقارنة الفروع', openSource: 'فتح السجلات', noData: 'لا توجد بيانات في هذه الفترة.',
+  fullReports: 'كل التقارير التشغيلية', fullReportsBody: 'المبيعات والتحصيلات ومستحقات الموردين والمصروفات والمخزون وهامش FIFO والنشاط مع تصدير CSV مطابق.',
+  supplierPayable: 'مستحقات الموردين', lowStock: 'منتجات منخفضة المخزون', inventoryValue: 'قيمة المخزون', fifoMargin: 'هامش FIFO المتصالح',
 } : {
   title: 'Operating dashboard', subtitle: 'Sales, collections, appointments, and branch performance reconciled from source records.',
   setupTitle: 'Create your first shop', setupBody: 'Start a trial of your chosen plan. Then set up your locations, staff, services, and working hours.',
@@ -96,6 +99,8 @@ const copy = computed(() => isArabic.value ? {
   appointments: 'Appointments', completed: 'Completed', cancelled: 'Cancelled', noShow: 'No-show', busiestTimes: 'Busiest times', noAppointments: 'No appointment data exists for this period.',
   cashVariance: 'Cash variance', closedShifts: 'Closed shifts', expected: 'Expected', counted: 'Counted', staffPerformance: 'Staff performance', staffMember: 'Staff member', serviceCount: 'Service count',
   branchComparison: 'Location comparison', openSource: 'Open source records', noData: 'No data exists for this period.',
+  fullReports: 'All operational reports', fullReportsBody: 'Sales, collections, supplier payables, expenses, stock, reconciled FIFO margin, activity, and matching CSV exports.',
+  supplierPayable: 'Supplier payable', lowStock: 'Low-stock products', inventoryValue: 'Inventory value', fifoMargin: 'Reconciled FIFO margin',
 })
 
 const modeOptions = computed(() => BUSINESS_MODES.map(value => ({
@@ -118,15 +123,16 @@ const { data: subscription, error: subscriptionError, refresh: refreshSubscripti
 
 const { data: reportAccess, error: reportAccessError, pending: reportAccessPending, refresh: refreshReportAccess } = useAsyncData(
   'shop-data:dashboard-report-access', async () => {
-    if (!currentId.value) return { 'reports.view': false }
+    if (!currentId.value) return { 'reports.view': false, 'reports.cost_profit.view': false }
     const { data, error } = await shopRpc.rpc('shop_permission_access', {
-      p_shop_id: currentId.value, p_permission_keys: ['reports.view'],
+      p_shop_id: currentId.value, p_permission_keys: ['reports.view', 'reports.cost_profit.view'],
     })
     if (error) throw error
     return data
-  }, { watch: [currentId], default: () => ({ 'reports.view': false }) },
+  }, { watch: [currentId], default: () => ({ 'reports.view': false, 'reports.cost_profit.view': false }) },
 )
 const canViewReports = computed(() => reportAccess.value?.['reports.view'] === true)
+const canViewReportCosts = computed(() => reportAccess.value?.['reports.cost_profit.view'] === true)
 
 watch([currentId, currentLocationId, activeLocations], () => {
   if (!currentId.value) { reportLocationId.value = 'all'; return }
@@ -148,6 +154,30 @@ const { data: report, pending: reportPending, error: reportError, refresh: refre
     return data as OperatingReport
   }, {
     watch: [currentId, canViewReports, reportLocationId, reportPeriod, reportAnchor],
+    default: () => null,
+  },
+)
+
+const { data: reportHighlights, pending: highlightsPending, error: highlightsError, refresh: refreshHighlights } = useAsyncData(
+  'shop-data:operational-report-highlights', async (): Promise<ReportHighlights | null> => {
+    if (!currentId.value || !canViewReports.value || !canViewReportCosts.value || !report.value) return null
+    const location = reportLocationId.value === 'all' ? null : reportLocationId.value
+    const range = reportQuery()
+    const [suppliers, inventory, margin] = await Promise.all([
+      shopRpc.rpc('shop_operational_report', { p_shop_id: currentId.value, p_report: 'suppliers', p_location_id: location, p_from: range.from, p_to: range.to, p_page: 1, p_page_size: 1 }),
+      shopRpc.rpc('shop_operational_report', { p_shop_id: currentId.value, p_report: 'inventory', p_location_id: location, p_from: null, p_to: null, p_page: 1, p_page_size: 1 }),
+      shopRpc.rpc('shop_operational_report', { p_shop_id: currentId.value, p_report: 'margin', p_location_id: location, p_from: range.from, p_to: range.to, p_page: 1, p_page_size: 1 }),
+    ])
+    const queryError = suppliers.error || inventory.error || margin.error
+    if (queryError) throw queryError
+    return {
+      payable: Number((suppliers.data as { summary: { payable: number } }).summary.payable),
+      lowStockCount: Number((inventory.data as { summary: { lowStockCount: number } }).summary.lowStockCount),
+      inventoryValue: Number((inventory.data as { summary: { inventoryValue: number } }).summary.inventoryValue),
+      margin: Number((margin.data as { summary: { margin: number } }).summary.margin),
+    }
+  }, {
+    watch: [currentId, canViewReports, canViewReportCosts, report, reportLocationId],
     default: () => null,
   },
 )
@@ -305,7 +335,11 @@ async function createShop() {
         </div>
       </section>
 
-      <p v-if="reportAccessError || reportError" role="alert" class="rounded-xl border border-[var(--bs-status-error)]/30 bg-[var(--bs-status-error-bg)] p-4 text-sm text-[var(--bs-status-error)]">{{ copy.loadFailed }} <button type="button" class="min-h-11 min-w-11 underline" @click="refreshReportAccess(); refreshReport()">{{ copy.retry }}</button></p>
+      <NuxtLink v-if="canViewReports" to="/reports" class="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[var(--bs-accent)]/40 bg-[var(--bs-accent)]/5 p-5 transition hover:border-[var(--bs-accent)]">
+        <span><strong class="block">{{ copy.fullReports }}</strong><span class="mt-1 block text-sm text-muted-foreground">{{ copy.fullReportsBody }}</span></span><span class="font-bold text-[var(--bs-link)]">{{ copy.openSource }}</span>
+      </NuxtLink>
+
+      <p v-if="reportAccessError || reportError || highlightsError" role="alert" class="rounded-xl border border-[var(--bs-status-error)]/30 bg-[var(--bs-status-error-bg)] p-4 text-sm text-[var(--bs-status-error)]">{{ copy.loadFailed }} <button type="button" class="min-h-11 min-w-11 underline" @click="refreshReportAccess(); refreshReport(); refreshHighlights()">{{ copy.retry }}</button></p>
       <p v-else-if="reportAccessPending" role="status">{{ copy.loadingReport }}</p>
       <p v-else-if="!canViewReports" role="status" class="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">{{ copy.reportDenied }}</p>
       <div v-else-if="reportPending" class="space-y-4" aria-live="polite"><p class="text-sm text-muted-foreground">{{ copy.loadingReport }}</p><div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><div v-for="index in 8" :key="index" class="h-28 animate-pulse rounded-2xl bg-muted" /></div></div>
@@ -317,6 +351,11 @@ async function createShop() {
           <article class="rounded-2xl border border-border bg-card p-5"><p class="text-sm text-muted-foreground">{{ copy.collections }}</p><p class="mt-2 text-2xl font-extrabold">{{ money(report.paymentsIn) }}</p><p class="mt-1 text-xs text-muted-foreground">{{ copy.averageTicket }}: {{ money(report.averageTicket) }}</p></article>
           <NuxtLink v-if="report.canViewCosts" to="/expenses" class="rounded-2xl border border-border bg-card p-5 transition hover:border-[var(--bs-accent)]"><p class="text-sm text-muted-foreground">{{ copy.expenses }}</p><p class="mt-2 text-2xl font-extrabold">{{ money(report.expenses.amount) }}</p><p class="mt-1 text-xs text-[var(--bs-link)]">{{ report.expenses.count }} {{ copy.openSource }}</p></NuxtLink>
           <article v-if="report.canViewCosts" class="rounded-2xl border border-border bg-card p-5"><p class="text-sm text-muted-foreground">{{ copy.operatingBalance }}</p><p class="mt-2 text-2xl font-extrabold">{{ money(report.expenses.operatingBalance) }}</p><p class="mt-1 text-xs leading-5 text-muted-foreground">{{ copy.accountingNotice }}</p></article>
+        </section>
+
+        <section v-if="reportHighlights || highlightsPending" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <template v-if="reportHighlights"><NuxtLink to="/reports?report=suppliers" class="rounded-2xl border border-border bg-card p-5"><p class="text-sm text-muted-foreground">{{ copy.supplierPayable }}</p><p class="mt-2 text-2xl font-extrabold">{{ money(reportHighlights.payable) }}</p></NuxtLink><NuxtLink to="/reports?report=inventory" class="rounded-2xl border border-border bg-card p-5"><p class="text-sm text-muted-foreground">{{ copy.lowStock }}</p><p class="mt-2 text-2xl font-extrabold">{{ reportHighlights.lowStockCount }}</p></NuxtLink><NuxtLink to="/reports?report=inventory" class="rounded-2xl border border-border bg-card p-5"><p class="text-sm text-muted-foreground">{{ copy.inventoryValue }}</p><p class="mt-2 text-2xl font-extrabold">{{ money(reportHighlights.inventoryValue) }}</p></NuxtLink><NuxtLink to="/reports?report=margin" class="rounded-2xl border border-border bg-card p-5"><p class="text-sm text-muted-foreground">{{ copy.fifoMargin }}</p><p class="mt-2 text-2xl font-extrabold">{{ money(reportHighlights.margin) }}</p></NuxtLink></template>
+          <template v-else><div v-for="index in 4" :key="index" class="h-28 animate-pulse rounded-2xl bg-muted" /></template>
         </section>
 
         <section class="grid gap-4 lg:grid-cols-2">

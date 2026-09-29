@@ -174,6 +174,18 @@ export type ShopRpcDatabase = {
         }
         Returns: unknown
       }
+      shop_operational_report: {
+        Args: {
+          p_shop_id: string
+          p_report: 'sales' | 'collections' | 'receivables' | 'suppliers' | 'expenses' | 'inventory' | 'margin' | 'activity'
+          p_location_id?: string | null
+          p_from?: string | null
+          p_to?: string | null
+          p_page?: number
+          p_page_size?: number
+        }
+        Returns: unknown
+      }
       save_location_sale_draft: {
         Args: {
           p_request_id: string

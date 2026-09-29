@@ -23,6 +23,15 @@ begin
     or has_function_privilege('anon', function_row.oid, 'execute') then
     raise exception 'unsafe operating report wrapper';
   end if;
+  select procedure.oid, procedure.prosecdef, procedure.proconfig into function_row
+  from pg_proc procedure join pg_namespace namespace on namespace.oid = procedure.pronamespace
+  where namespace.nspname = 'public' and procedure.proname = 'shop_operational_report';
+  if not function_row.prosecdef
+    or function_row.proconfig is distinct from array['search_path=""']::text[]
+    or not has_function_privilege('authenticated', function_row.oid, 'execute')
+    or has_function_privilege('anon', function_row.oid, 'execute') then
+    raise exception 'unsafe full operational report wrapper';
+  end if;
 end;
 $$;
 
@@ -33,7 +42,8 @@ do $$
 declare
   v_shop uuid; v_default uuid; v_branch uuid; v_staff uuid; v_customer uuid;
   v_product uuid; v_service uuid; v_bookable uuid; v_sale uuid; v_branch_sale uuid;
-  v_outstanding uuid; v_shift uuid; v_appointment uuid; v_report jsonb; v_branch_report jsonb;
+  v_outstanding uuid; v_shift uuid; v_appointment uuid; v_vendor uuid; v_purchase uuid;
+  v_report jsonb; v_branch_report jsonb; v_full jsonb; v_page_two jsonb; v_export jsonb;
   v_anchor date := (now() at time zone 'Africa/Cairo')::date;
   v_start timestamptz := ((now() at time zone 'Africa/Cairo')::date::timestamp
     + interval '10 hours') at time zone 'Africa/Cairo';
@@ -46,6 +56,10 @@ begin
   v_product := public.save_product(v_shop, null, 'Report product', 'RPT-1', null, 20);
   v_service := public.save_service(v_shop, null, 'Report service', null, 50, 'amount', 0);
   perform public.adjust_stock(gen_random_uuid(), v_shop, v_product, 5, 10, 'Report fixture stock');
+  v_vendor := public.save_vendor(v_shop, null, 'Report supplier', null, null, null, null, null, null);
+  v_purchase := public.create_supplier_purchase(gen_random_uuid(), v_shop, v_vendor,
+    'RPT-PUR-1', v_anchor, null, jsonb_build_array(
+      jsonb_build_object('product_id', v_product, 'quantity', 2, 'unit_cost', 8)));
 
   v_shift := public.open_cash_shift(gen_random_uuid(), v_shop, v_default, 'main', 100, null);
   v_sale := public.save_pos_sale_draft(gen_random_uuid(), v_shop, v_default, null,
@@ -124,11 +138,76 @@ begin
       where mix ->> 'method' = 'card' and (mix ->> 'net')::numeric = 50) then
     raise exception 'sales/payment mixes did not reconcile: %', v_report;
   end if;
+
+  v_full := public.shop_operational_report(v_shop, 'sales', null, v_anchor, v_anchor, 1, 2);
+  v_page_two := public.shop_operational_report(v_shop, 'sales', null, v_anchor, v_anchor, 2, 2);
+  v_export := public.shop_operational_report(v_shop, 'sales', null, v_anchor, v_anchor, 1, 500);
+  if (v_full ->> 'total')::integer <> 4
+    or jsonb_array_length(v_full -> 'items') <> 2
+    or (v_full #>> '{summary,sales}')::numeric <> 150
+    or (v_full #>> '{summary,productSales}')::numeric <> 20
+    or (v_full #>> '{summary,serviceSales}')::numeric <> 130
+    or (v_export ->> 'total')::integer <> 4
+    or jsonb_array_length(v_export -> 'items') <> 4
+    or jsonb_array_length(v_page_two -> 'items') <> 2
+    or exists (select 1 from jsonb_array_elements(v_full -> 'items') first_page
+      join jsonb_array_elements(v_page_two -> 'items') second_page
+        on first_page ->> 'id' = second_page ->> 'id')
+    or v_full -> 'summary' <> v_export -> 'summary' then
+    raise exception 'full sales report pagination/export did not reconcile: %, %', v_full, v_export;
+  end if;
+  v_full := public.shop_operational_report(v_shop, 'collections', null, v_anchor, v_anchor, 1, 20);
+  if (v_full #>> '{summary,collected}')::numeric <> 120
+    or (v_full #>> '{summary,outstanding}')::numeric <> 30 then
+    raise exception 'collections report did not reconcile: %', v_full;
+  end if;
+  v_full := public.shop_operational_report(v_shop, 'receivables', null, null, null, 1, 20);
+  if (v_full #>> '{summary,outstanding}')::numeric <> 30
+    or (v_full #>> '{summary,outstandingCustomerCount}')::integer <> 1
+    or jsonb_array_length(v_full -> 'items') <> 1 then
+    raise exception 'receivables report did not reconcile: %', v_full;
+  end if;
+  v_full := public.shop_operational_report(v_shop, 'suppliers', null, v_anchor, v_anchor, 1, 20);
+  if (v_full #>> '{summary,purchases}')::numeric <> 16
+    or (v_full #>> '{summary,payable}')::numeric <> 16 then
+    raise exception 'supplier report did not reconcile: %', v_full;
+  end if;
+  v_full := public.shop_operational_report(v_shop, 'expenses', null, v_anchor, v_anchor, 1, 20);
+  if (v_full #>> '{summary,expenses}')::numeric <> 15
+    or (v_full #>> '{summary,expenseCount}')::integer <> 2
+    or (v_full #>> '{summary,operatingResult}')::numeric <> 135 then
+    raise exception 'expense report did not reconcile: %', v_full;
+  end if;
+  v_full := public.shop_operational_report(v_shop, 'inventory', null, null, null, 1, 20);
+  if (v_full #>> '{summary,quantityOnHand}')::numeric <> 6
+    or (v_full #>> '{summary,inventoryValue}')::numeric <> 56 then
+    raise exception 'inventory report did not reconcile FIFO stock: %', v_full;
+  end if;
+  v_full := public.shop_operational_report(v_shop, 'margin', null, v_anchor, v_anchor, 1, 20);
+  if (v_full #>> '{summary,revenue}')::numeric <> 20
+    or (v_full #>> '{summary,fifoCost}')::numeric <> 10
+    or (v_full #>> '{summary,margin}')::numeric <> 10
+    or (v_full #>> '{summary,reconciledLineCount}')::integer <> 1
+    or (v_full #>> '{summary,excludedLineCount}')::integer <> 0 then
+    raise exception 'FIFO margin report did not reconcile: %', v_full;
+  end if;
+  v_full := public.shop_operational_report(v_shop, 'sales', v_branch, v_anchor, v_anchor, 1, 20);
+  if (v_full #>> '{summary,sales}')::numeric <> 80
+    or exists (select 1 from jsonb_array_elements(v_full -> 'items') item
+      where item ->> 'location_id' <> v_branch::text) then
+    raise exception 'full branch report leaked another location: %', v_full;
+  end if;
   begin
     perform public.shop_operating_report(v_shop, null, 'quarter', v_anchor);
     raise exception 'invalid report period accepted';
   exception when invalid_parameter_value then
     if sqlerrm <> 'INVALID_REPORT_PERIOD' then raise; end if;
+  end;
+  begin
+    perform public.shop_operational_report(v_shop, 'sales', null, null, null, 1, 501);
+    raise exception 'invalid full report page size accepted';
+  exception when invalid_parameter_value then
+    if sqlerrm <> 'INVALID_OPERATIONAL_REPORT_QUERY' then raise; end if;
   end;
   perform set_config('ss_report.shop', v_shop::text, true);
   perform set_config('ss_report.default', v_default::text, true);
@@ -156,6 +235,12 @@ begin
       current_setting('ss_report.default')::uuid, 'month',
       (now() at time zone 'Africa/Cairo')::date);
     raise exception 'ordinary barber viewed owner operating metrics';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.shop_operational_report(current_setting('ss_report.shop')::uuid,
+      'sales', current_setting('ss_report.default')::uuid, null, null, 1, 20);
+    raise exception 'ordinary barber viewed full operational reports';
   exception when insufficient_privilege then null;
   end;
 end;
