@@ -80,6 +80,7 @@ test('focused browser verification collects all failures before repair', async (
 
   assert.match(verifier, /'--workers=1'/)
   assert.match(verifier, /'--retries=0'/)
+  assert.match(verifier, /'--repeat-each=2'/)
   assert.doesNotMatch(verifier, /--max-failures=1/)
 })
 
@@ -104,4 +105,16 @@ test('repair execution is gated by verifier probes', async () => {
   assert.match(runner, /verification_probe_passed/)
   assert.match(runner, /latestProbe\?\.passed ===/)
   assert.match(runner, /repair_verification_failed/)
+})
+
+test('repair acceptance requires a confirmation verifier pass', async () => {
+  const { readFile } = await import('node:fs/promises')
+
+  const runner = await readFile(
+    new URL('../runner/bs-agent.mjs', import.meta.url),
+    'utf8',
+  )
+
+  assert.match(runner, /repair-verification-\$\{cycle\}-confirmation/)
+  assert.match(runner, /confirmationProbe\?\.passed ===/)
 })
