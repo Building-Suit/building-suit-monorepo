@@ -48,7 +48,7 @@ declare
   v_start timestamptz := ((now() at time zone 'Africa/Cairo')::date::timestamp
     + interval '10 hours') at time zone 'Africa/Cairo';
 begin
-  v_shop := public.create_owner_shop('Operating report fixture', 'pro', 'mixed');
+  v_shop := public.create_owner_shop('Operating report fixture', 'multi', 'mixed');
   select id into v_default from public.shop_locations where shop_id = v_shop and is_default;
   v_branch := public.save_shop_location(v_shop, null, 'Branch two', 'BR2', null, null);
   select id into v_staff from public.shop_memberships where shop_id = v_shop and role = 'owner';

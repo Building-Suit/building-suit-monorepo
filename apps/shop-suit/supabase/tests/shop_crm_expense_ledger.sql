@@ -10,9 +10,12 @@ select id, id::text || '@ss-exp-002.invalid', 'x', 'authenticated', 'authenticat
 from (select owner_id id from shop_expense_fixture union all
   select manager_id from shop_expense_fixture union all select outsider_id from shop_expense_fixture) users;
 
-insert into shop_crm.plans (portal_id, name, slug, price_amount, features)
-select id, 'Expense fixture', 'task-expense', 0, '{}'::jsonb
+insert into shop_crm.plans (
+  portal_id, name, slug, price_amount, features, is_purchasable
+)
+select id, 'Expense fixture', 'task-expense', 0, '{}'::jsonb, true
 from shop_crm.portals where key = 'shop-crm';
+select shop_private.reconcile_plan_catalog();
 
 do $$ begin
   if has_function_privilege('anon', 'shop_crm.save_expense(uuid,uuid,uuid,uuid,text,numeric,text,date,text,text)', 'EXECUTE')

@@ -47,7 +47,7 @@ declare v_shop uuid; v_location uuid; v_branch uuid; v_session uuid; v_retry uui
   v_dashboard jsonb; v_close uuid := gen_random_uuid();
   v_movement_request uuid := gen_random_uuid();
 begin
-  v_shop := public.create_owner_shop('Cash fixture', 'pro', 'service');
+  v_shop := public.create_owner_shop('Cash fixture', 'multi', 'service');
   select id into v_location from public.shop_locations where shop_id = v_shop and is_default;
   v_branch := public.save_shop_location(v_shop, null, 'Other branch', 'OTHER', null, null);
   v_session := public.open_cash_shift(v_open_request, v_shop, v_location, 'main', 100, 'Opening float');

@@ -126,7 +126,7 @@ declare
   v_items jsonb;
 begin
   v_shop := public.create_owner_shop(
-    'Safe fixture A', 'pro', 'mixed'::public.business_mode
+    'Safe fixture A', 'team', 'mixed'::public.business_mode
   );
   select id into v_location from public.shop_locations
   where shop_id = v_shop and is_default;
@@ -208,7 +208,7 @@ declare
   v_purchase uuid;
 begin
   v_shop := public.create_owner_shop(
-    'Safe fixture B', 'pro', 'mixed'::public.business_mode
+    'Safe fixture B', 'team', 'mixed'::public.business_mode
   );
   select id into v_location from public.shop_locations
   where shop_id = v_shop and is_default;

@@ -50,7 +50,7 @@ do $$
 declare
   v_shop uuid; v_branch uuid;
 begin
-  v_shop := public.create_owner_shop('Team fixture', 'pro', 'mixed');
+  v_shop := public.create_owner_shop('Team fixture', 'multi', 'mixed');
   v_branch := public.save_shop_location(v_shop, null, 'Branch two', 'BR2', null, null);
   perform set_config('ss_team.shop', v_shop::text, true);
   perform set_config('ss_team.branch', v_branch::text, true);
@@ -207,7 +207,7 @@ select set_config('request.jwt.claim.sub', outsider_id::text, true) from shop_te
 set local role authenticated;
 do $$
 begin
-  perform public.create_owner_shop('Outsider shop', 'pro', 'mixed');
+  perform public.create_owner_shop('Outsider shop', 'team', 'mixed');
   begin
     perform public.shop_team_read(current_setting('ss_team.shop')::uuid);
     raise exception 'outsider or cross-shop team isolation failed';

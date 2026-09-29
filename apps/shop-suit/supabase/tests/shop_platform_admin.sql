@@ -66,7 +66,7 @@ set local role authenticated;
 do $$
 declare v_shop uuid;
 begin
-  v_shop := public.create_owner_shop('Admin fixture shop', 'pro', 'mixed');
+  v_shop := public.create_owner_shop('Admin fixture shop', 'team', 'mixed');
   perform set_config('ss_admin.shop', v_shop::text, true);
 end;
 $$;
@@ -93,6 +93,29 @@ begin
   insert into public.shop_billing_submissions (
     shop_id, kind, status, amount, reference, metadata
   ) values (v_shop, 'activation', 'submitted', 1199, 'BILL-001', '{"channel":"instapay_manual"}');
+
+  -- Legacy operator notices omit plan_id. Resolve it from this shop's owner
+  -- subscription and still capture the complete canonical commercial snapshot.
+  if not exists (
+    select 1 from public.shop_billing_submissions submission
+    join public.shop_memberships membership
+      on membership.shop_id = submission.shop_id and membership.role = 'owner'
+    join public.subscriptions subscription
+      on subscription.profile_id = membership.profile_id
+    join public.plan_catalog_terms terms on terms.id = submission.catalog_terms_id
+    where submission.shop_id = v_shop and submission.reference = 'BILL-001'
+      and submission.plan_id = subscription.plan_id
+      and terms.plan_id = subscription.plan_id
+      and submission.plan_slug_snapshot = 'team'
+      and submission.plan_name_snapshot = terms.display_name
+      and submission.billing_interval_snapshot = terms.billing_interval
+      and submission.resource_limits_snapshot = terms.resource_limits
+      and submission.expected_amount = terms.price_amount
+      and submission.currency = terms.currency
+      and submission.amount = 1199
+  ) then
+    raise exception 'legacy operator notice did not resolve owner plan commercial terms';
+  end if;
 end;
 $$;
 
@@ -213,7 +236,7 @@ begin
   end if;
   perform public.platform_admin_command(
     gen_random_uuid(), v_shop, 'activate_subscription', 'Offline payment approved',
-    '{"days":30,"planSlug":"pro"}'::jsonb
+    '{"days":30,"planSlug":"team"}'::jsonb
   );
   perform public.platform_admin_command(
     gen_random_uuid(), v_shop, 'extend_subscription', 'Annual loyalty extension', '{"days":30}'::jsonb

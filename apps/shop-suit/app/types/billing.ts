@@ -45,10 +45,16 @@ export type ShopBilling = {
     manualVerification: true
   }
   usage: {
+    locations: number
     products: number
     services: number
     members: number
-    limits: Record<string, unknown>
+    limits: {
+      active_locations: number | null
+      active_members: number | null
+      active_products: number | null
+      active_services: number | null
+    }
   }
   submissions: BillingSubmission[]
 }

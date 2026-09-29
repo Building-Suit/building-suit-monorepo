@@ -25,7 +25,7 @@ do $$
 declare v_shop uuid; v_location uuid; v_owner_membership uuid;
   v_service uuid; v_customer uuid;
 begin
-  v_shop := public.create_owner_shop('Appointment fixture', 'pro', 'service');
+  v_shop := public.create_owner_shop('Appointment fixture', 'team', 'service');
   select id into v_location from public.shop_locations where shop_id = v_shop and is_default;
   select id into v_owner_membership from public.shop_memberships where shop_id = v_shop and role = 'owner';
   v_service := public.save_service(v_shop, null, 'Appointment haircut', null, 100,
@@ -160,7 +160,7 @@ set local role authenticated;
 do $$
 declare v_other_shop uuid; v_other_customer uuid;
 begin
-  v_other_shop := public.create_owner_shop('Appointment outsider', 'pro', 'service');
+  v_other_shop := public.create_owner_shop('Appointment outsider', 'team', 'service');
   v_other_customer := public.save_customer(v_other_shop, null, 'Other customer', null, null, null, null);
   perform set_config('ss_appt.other_customer', v_other_customer::text, true);
   begin

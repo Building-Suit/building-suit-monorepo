@@ -64,7 +64,7 @@ declare
   v_default_sale uuid; v_branch_sale uuid; v_owner_profile uuid;
   v_owner_membership uuid;
 begin
-  v_shop := public.create_owner_shop('Location fixture A', 'pro', 'service');
+  v_shop := public.create_owner_shop('Location fixture A', 'multi', 'service');
 
   select location.id into v_default
   from public.shop_locations location
@@ -428,7 +428,7 @@ set local role authenticated;
 do $$
 declare v_other_shop uuid;
 begin
-  v_other_shop := public.create_owner_shop('Location fixture B', 'pro', 'mixed');
+  v_other_shop := public.create_owner_shop('Location fixture B', 'multi', 'mixed');
   if exists (select 1 from public.shop_locations
       where shop_id = current_setting('ss_loc.shop')::uuid)
     or exists (select 1 from public.invoices

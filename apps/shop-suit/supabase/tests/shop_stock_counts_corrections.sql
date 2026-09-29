@@ -60,7 +60,7 @@ declare
   v_counted_at timestamptz := clock_timestamp();
 begin
   v_shop := public.create_owner_shop(
-    'Stock lifecycle owner', 'pro', 'product'::public.business_mode
+    'Stock lifecycle owner', 'team', 'product'::public.business_mode
   );
   v_product := public.save_product(
     v_shop, null, 'Counted product', 'COUNT-001', null, 25
@@ -327,7 +327,7 @@ do $$
 declare v_other_shop uuid; v_other_product uuid;
 begin
   v_other_shop := public.create_owner_shop(
-    'Other stock tenant', 'pro', 'product'::public.business_mode
+    'Other stock tenant', 'team', 'product'::public.business_mode
   );
   v_other_product := public.save_product(
     v_other_shop, null, 'Other product', null, null, 1

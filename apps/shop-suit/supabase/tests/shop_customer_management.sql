@@ -86,7 +86,7 @@ declare
   v_page jsonb;
 begin
   v_shop := public.create_owner_shop(
-    'Customer fixture A', 'pro', 'mixed'::public.business_mode
+    'Customer fixture A', 'team', 'mixed'::public.business_mode
   );
   v_customer_a := public.save_customer(
     v_shop, null, 'Alpha Customer', '+20 100 000 0001',
@@ -151,7 +151,7 @@ declare
   v_customer uuid;
 begin
   v_shop := public.create_owner_shop(
-    'Customer fixture B', 'pro', 'mixed'::public.business_mode
+    'Customer fixture B', 'team', 'mixed'::public.business_mode
   );
   v_customer := public.save_customer(
     v_shop, null, 'Other Shop Customer', null, null, null, null

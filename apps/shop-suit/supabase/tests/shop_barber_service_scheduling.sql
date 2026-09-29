@@ -48,7 +48,7 @@ set local role authenticated;
 do $$
 declare v_shop uuid; v_default uuid; v_branch uuid; v_owner_membership uuid;
 begin
-  v_shop := public.create_owner_shop('Barber fixture', 'pro', 'service');
+  v_shop := public.create_owner_shop('Barber fixture', 'multi', 'service');
   select id into v_default from public.shop_locations
     where shop_id = v_shop and is_default;
   v_branch := public.save_shop_location(v_shop, null, 'Barber branch', 'BARBER', null, null);
@@ -263,7 +263,7 @@ $$;
 select set_config('request.jwt.claim.sub', outsider_id::text, true) from shop_barber_fixture;
 set local role authenticated;
 do $$ begin
-  perform public.create_owner_shop('Barber outsider', 'pro', 'mixed');
+  perform public.create_owner_shop('Barber outsider', 'team', 'mixed');
   begin
     perform public.list_services(current_setting('ss_barber.shop')::uuid, null, 1, 20);
     raise exception 'outsider accessed scheduled service catalog';

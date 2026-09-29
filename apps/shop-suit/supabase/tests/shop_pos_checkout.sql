@@ -12,7 +12,7 @@ declare v_shop uuid; v_location uuid; v_staff uuid; v_customer uuid; v_product u
   v_appointment_service uuid; v_appointment uuid; v_appointment_invoice uuid;
   v_start timestamptz := date_trunc('day', now()) + interval '1 day 10 hours';
 begin
-  v_shop := public.create_owner_shop('POS fixture', 'pro', 'mixed');
+  v_shop := public.create_owner_shop('POS fixture', 'team', 'mixed');
   select id into v_location from public.shop_locations where shop_id = v_shop and is_default;
   select id into v_staff from public.shop_memberships where shop_id = v_shop and role = 'owner';
   v_customer := public.save_customer(v_shop, null, 'Counter customer', '01000000000', null, null, null);

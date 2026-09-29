@@ -9,6 +9,13 @@ type PublicPlan = {
   billing_interval: string;
   trial_days: number;
   features: { inventory?: boolean } | null;
+  resource_limits: {
+    active_locations: number | null;
+    active_members: number | null;
+    active_products: number | null;
+    active_services: number | null;
+  };
+  is_purchasable: boolean;
   is_coming_soon: boolean;
 };
 
@@ -19,9 +26,10 @@ export const usePlans = () => {
     async () => {
       const { data: plans, error: queryError } = await supabase
         .from('plans')
-        .select('id,name,slug,price_amount,currency,billing_interval,trial_days,features,is_coming_soon')
+        .select('id,name,slug,price_amount,currency,billing_interval,trial_days,features,resource_limits,is_purchasable,is_coming_soon')
         .eq('is_active', true)
         .eq('is_public', true)
+        .eq('is_purchasable', true)
         .order('sort_order', { ascending: true });
 
       if (queryError) throw queryError;

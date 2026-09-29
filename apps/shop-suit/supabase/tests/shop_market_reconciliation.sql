@@ -22,7 +22,7 @@ begin
   for fixture in select * from market_owners loop
     perform set_config('request.jwt.claim.sub', fixture.id::text, true);
     perform set_config('request.jwt.claim.role', 'authenticated', true);
-    shop := public.create_owner_shop('Market ' || fixture.mode, 'pro', fixture.mode);
+    shop := public.create_owner_shop('Market ' || fixture.mode, 'team', fixture.mode);
     select id into strict location from public.shop_locations where shop_id = shop and is_default;
     select id into strict staff from public.shop_memberships where shop_id = shop and role = 'owner';
     customer := public.save_customer(shop, null, 'Market customer', null, null, null, null);

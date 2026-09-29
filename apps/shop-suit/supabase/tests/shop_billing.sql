@@ -49,7 +49,7 @@ begin
     where portal.key = 'shop-crm' and plan.trial_days <> 14
   ) then raise exception 'canonical trial policy is not 14 days'; end if;
   begin
-    update public.plans set trial_days = 30 where slug = 'basic';
+    update public.plans set trial_days = 30 where slug = 'solo';
     raise exception '30-day Shop trial policy was accepted';
   exception when check_violation then
     if sqlerrm <> 'SHOP_TRIAL_DAYS_MUST_BE_14' then raise; end if;
@@ -69,7 +69,7 @@ declare
   v_notice uuid;
   v_replay uuid;
 begin
-  v_shop := public.create_owner_shop('Billing fixture shop', 'pro', 'mixed');
+  v_shop := public.create_owner_shop('Billing fixture shop', 'team', 'mixed');
   perform set_config('ss_billing.shop', v_shop::text, true);
   select subscription.trial_start_at, subscription.trial_end_at
   into v_trial_start, v_trial_end

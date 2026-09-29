@@ -39,7 +39,7 @@ do $$
 declare v_shop uuid; v_location uuid; v_staff uuid; v_service uuid; v_invoice uuid;
   v_credit_invoice uuid; v_customer uuid; v_snapshot jsonb;
 begin
-  v_shop := public.create_owner_shop('Receipt fixture', 'pro', 'service');
+  v_shop := public.create_owner_shop('Receipt fixture', 'team', 'service');
   select id into v_location from public.shop_locations where shop_id = v_shop and is_default;
   select id into v_staff from public.shop_memberships where shop_id = v_shop and role = 'owner';
   perform public.save_receipt_settings(v_shop, 'Snapshot Barber', '10 Original Street',

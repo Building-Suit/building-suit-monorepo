@@ -41,7 +41,7 @@ declare
   v_shop uuid; v_request uuid := gen_random_uuid(); v_invalid uuid := gen_random_uuid();
   v_result jsonb; v_product uuid; v_category uuid; v_vendor uuid;
 begin
-  v_shop := public.create_owner_shop('Catalog import owner', 'pro', 'mixed'::public.business_mode);
+  v_shop := public.create_owner_shop('Catalog import owner', 'team', 'mixed'::public.business_mode);
   v_vendor := public.save_vendor(v_shop, null, 'Local Supplier', null, '0100', 's@example.invalid', null, null, null);
 
   v_result := public.catalog_import(v_invalid, v_shop, 'products', jsonb_build_array(
@@ -141,7 +141,7 @@ set local role authenticated;
 do $$
 declare v_other uuid; v_result jsonb;
 begin
-  v_other := public.create_owner_shop('Other catalog owner', 'pro', 'product'::public.business_mode);
+  v_other := public.create_owner_shop('Other catalog owner', 'team', 'product'::public.business_mode);
   perform public.catalog_import(gen_random_uuid(), v_other, 'customers', jsonb_build_array(
     jsonb_build_object('name', 'Other tenant customer', 'phone', '0111', 'email', 'customer@example.invalid')
   ), false);

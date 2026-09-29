@@ -57,7 +57,7 @@ declare
   v_state jsonb; v_statement jsonb; v_other_shop uuid;
   v_original_updated_at timestamptz; v_original_issued_at timestamptz;
 begin
-  v_shop := public.create_owner_shop('Sale correction fixture', 'pro', 'mixed');
+  v_shop := public.create_owner_shop('Sale correction fixture', 'team', 'mixed');
   select id into v_location from public.shop_locations where shop_id = v_shop and is_default;
   select id into v_staff from public.shop_memberships where shop_id = v_shop and role = 'owner';
   v_customer := public.save_customer(v_shop, null, 'Correction customer', null, null, null, null);
@@ -207,7 +207,7 @@ begin
   -- to exercise invoice isolation after authorization for the other shop passes.
   perform set_config('request.jwt.claim.sub', other_owner_id::text, true)
   from shop_sale_correction_fixture;
-  v_other_shop := public.create_owner_shop('Other correction shop', 'pro', 'service');
+  v_other_shop := public.create_owner_shop('Other correction shop', 'team', 'service');
   if v_other_shop is null or v_other_shop = v_shop then
     raise exception 'cross-shop correction fixture requires a distinct shop';
   end if;

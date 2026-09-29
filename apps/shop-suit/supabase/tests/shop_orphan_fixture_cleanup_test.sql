@@ -24,7 +24,7 @@ begin
       'x', 'authenticated', 'authenticated', '{}', '{}', now(), now()
     );
     perform set_config('request.jwt.claim.sub', v_user_id::text, true);
-    v_shop_id := public.create_owner_shop('Orphan cleanup ' || v_scenario, 'pro', 'service');
+    v_shop_id := public.create_owner_shop('Orphan cleanup ' || v_scenario, 'team', 'service');
     select membership.profile_id into v_profile_id
     from public.shop_memberships membership
     where membership.shop_id = v_shop_id and membership.role = 'owner';
