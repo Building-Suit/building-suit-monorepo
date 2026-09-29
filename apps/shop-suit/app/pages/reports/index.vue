@@ -24,6 +24,9 @@ const page = ref(1)
 const pageSize = 20
 const exporting = ref(false)
 const exportError = ref('')
+const captureScope = useShopTaskScope()
+let exportVersion = 0
+watch([report, locationId, fromDate, toDate], () => { exportVersion++ }, { flush: 'sync' })
 
 const copy = computed(() => isArabic.value ? {
   title: 'التقارير التشغيلية', subtitle: 'تقارير كاملة من سجلات المصدر مع تصفية الفروع والتواريخ وتصدير مطابق للنتائج.',
@@ -186,13 +189,20 @@ function sourcePath(row: OperationalReportRow) { return typeof row.source_path =
 
 async function exportReport() {
   if (!currentId.value || exporting.value || !canView.value || costDenied.value) return
+  const inScope = captureScope()
+  const version = exportVersion
+  const stillCurrent = () => inScope() && version === exportVersion
+  const args = queryArgs(1, 500)
+  const headers = [...columns.value.map(column => column.key), 'source_path']
+  const filename = `shop-${report.value}-${fromDate.value || 'all'}-${toDate.value || 'all'}.csv`
   exporting.value = true; exportError.value = ''
   try {
     const rows: OperationalReportRow[] = []
     let exportPage = 1
     let total = 0
     do {
-      const { data, error } = await rpc.rpc('shop_operational_report', queryArgs(exportPage, 500))
+      const { data, error } = await rpc.rpc('shop_operational_report', { ...args, p_page: exportPage })
+      if (!stillCurrent()) return
       if (error) throw error
       const batch = data as OperationalReportPage
       total = Number(batch.total)
@@ -200,10 +210,9 @@ async function exportReport() {
       rows.push(...batch.items)
       exportPage++
     } while (rows.length < total)
-    const headers = [...columns.value.map(column => column.key), 'source_path']
-    downloadCsv(`shop-${report.value}-${fromDate.value || 'all'}-${toDate.value || 'all'}.csv`, encodeCsv(headers, rows))
+    downloadCsv(filename, encodeCsv(headers, rows))
   } catch {
-    exportError.value = copy.value.exportFailed
+    if (stillCurrent()) exportError.value = copy.value.exportFailed
   } finally { exporting.value = false }
 }
 </script>
@@ -227,7 +236,7 @@ async function exportReport() {
       </div><p class="mt-3 text-xs text-muted-foreground">{{ copy.fullHistory }}</p>
     </section>
 
-    <p v-if="accessError || error" role="alert" class="rounded-xl border border-[var(--bs-status-error)]/30 bg-[var(--bs-status-error-bg)] p-4 text-sm text-[var(--bs-status-error)]">{{ copy.failed }} <button type="button" class="underline" @click="refreshAccess(); refresh()">{{ copy.retry }}</button></p>
+    <p v-if="accessError || error" role="alert" class="rounded-xl border border-[var(--bs-status-error)]/30 bg-[var(--bs-status-error-bg)] p-4 text-sm text-[var(--bs-status-error)]">{{ copy.failed }} <BsButton @click="refreshAccess(); refresh()">{{ copy.retry }}</BsButton></p>
     <p v-else-if="exportError" role="alert" class="text-sm text-[var(--bs-status-error)]">{{ exportError }}</p>
     <p v-if="accessPending || pending" role="status" class="text-sm text-muted-foreground">{{ copy.loading }}</p>
     <p v-else-if="!canView" class="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">{{ copy.denied }}</p>
@@ -243,9 +252,9 @@ async function exportReport() {
           <BsDataTable :value="result.items" data-key="id" :row-class="() => 'border-b border-border last:border-0'">
             <Column v-for="column in columns" :key="column.key" header-class="px-4 py-3 text-start" body-class="px-4 py-3 text-start whitespace-nowrap">
               <template #header>{{ column.label }}</template>
-              <template #body="{ data: row }"><NuxtLink v-if="column.primary && sourcePath(row)" :to="sourcePath(row)" class="font-bold text-[var(--bs-link)] hover:underline">{{ display(row[column.key], column.format) }}</NuxtLink><span v-else>{{ display(row[column.key], column.format) }}</span></template>
+              <template #body="{ data: row }"><NuxtLink v-if="column.primary && sourcePath(row)" :to="sourcePath(row)" class="inline-flex min-h-11 min-w-11 items-center font-bold text-[var(--bs-link)] hover:underline">{{ display(row[column.key], column.format) }}</NuxtLink><span v-else>{{ display(row[column.key], column.format) }}</span></template>
             </Column>
-            <Column header-class="px-4 py-3 text-end" body-class="px-4 py-3 text-end"><template #header>{{ copy.open }}</template><template #body="{ data: row }"><NuxtLink v-if="sourcePath(row)" :to="sourcePath(row)" class="font-bold text-[var(--bs-link)] hover:underline">{{ copy.open }}</NuxtLink></template></Column>
+            <Column header-class="px-4 py-3 text-end" body-class="px-4 py-3 text-end"><template #header>{{ copy.open }}</template><template #body="{ data: row }"><NuxtLink v-if="sourcePath(row)" :to="sourcePath(row)" class="inline-flex min-h-11 min-w-11 items-center font-bold text-[var(--bs-link)] hover:underline">{{ copy.open }}</NuxtLink></template></Column>
             <template #empty><p class="p-8 text-center text-sm text-muted-foreground">{{ copy.empty }}</p></template>
           </BsDataTable>
         </div>

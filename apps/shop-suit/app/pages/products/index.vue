@@ -43,7 +43,7 @@ const canManage = computed(() => permissionAccess.value?.['products.manage'] ===
 
 const copy = computed(() => isArabic.value ? {
   title: 'المنتجات', subtitle: 'أنشئ منتجات متجرك وحدد سعر البيع.',
-  add: 'إضافة منتج', edit: 'تعديل', archive: 'أرشفة', cancel: 'إلغاء', save: 'حفظ المنتج', saving: 'جاري الحفظ...',
+  add: 'إضافة منتج', edit: 'تعديل', archive: 'أرشفة', cancel: 'إلغاء', save: 'حفظ المنتج', saving: 'جاري الحفظ...', loading: 'جاري تحميل المنتجات…',
   name: 'اسم المنتج', sku: 'رمز المنتج', barcode: 'الباركود', price: 'سعر البيع', category: 'التصنيف', allCategories: 'كل التصنيفات', previous: 'السابق', next: 'التالي', import: 'الاستيراد والإعداد',
   search: 'ابحث عن منتج أو رمز', empty: 'لا توجد منتجات بعد.', noResults: 'لا توجد نتائج مطابقة.',
   noShop: 'أنشئ متجرًا أولًا من لوحة التحكم.', dashboard: 'لوحة التحكم',
@@ -55,7 +55,7 @@ const copy = computed(() => isArabic.value ? {
   stockLater: 'يمكنك تسجيل الكميات يدويًا في المخزون أو تسجيلها من صفحة المشتريات.',
 } : {
   title: 'Products', subtitle: 'Create your shop catalog and sale prices.',
-  add: 'Add product', edit: 'Edit', archive: 'Archive', cancel: 'Cancel', save: 'Save product', saving: 'Saving...',
+  add: 'Add product', edit: 'Edit', archive: 'Archive', cancel: 'Cancel', save: 'Save product', saving: 'Saving...', loading: 'Loading products…',
   name: 'Product name', sku: 'SKU', barcode: 'Barcode', price: 'Sale price', category: 'Category', allCategories: 'All categories', previous: 'Previous', next: 'Next', import: 'Import & setup',
   search: 'Search name or code', empty: 'No products yet.', noResults: 'No matching products.',
   noShop: 'Create a shop from the dashboard first.', dashboard: 'Dashboard',
@@ -185,7 +185,7 @@ function money(value: number) {
   <div class="space-y-6">
     <header class="flex flex-wrap items-end justify-between gap-4">
       <div><h1 class="text-3xl font-extrabold tracking-tight">{{ copy.title }}</h1><p class="mt-2 text-sm text-muted-foreground">{{ copy.subtitle }}</p></div>
-      <div v-if="current" class="flex gap-2"><NuxtLink to="/catalog-import" class="ls-btn">{{ copy.import }}</NuxtLink><button v-if="canManage" type="button" class="ls-btn ls-btn-primary" @click="openCreate">{{ copy.add }}</button></div>
+      <div v-if="current" class="flex flex-wrap gap-2"><NuxtLink to="/catalog-import" class="ls-btn">{{ copy.import }}</NuxtLink><button v-if="canManage" type="button" class="ls-btn ls-btn-primary" @click="openCreate">{{ copy.add }}</button></div>
     </header>
 
     <div v-if="!current && !shopLoading" class="rounded-2xl border border-border bg-card p-8 text-center text-sm"><p>{{ copy.noShop }}</p><NuxtLink to="/dashboard" class="mt-3 inline-block font-bold text-[var(--bs-link)] underline">{{ copy.dashboard }}</NuxtLink></div>
@@ -193,20 +193,19 @@ function money(value: number) {
       <p class="rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm dark:bg-[var(--bs-status-info-bg)]">{{ copy.stockLater }}</p>
       <p v-if="actionError && !showForm" role="alert" class="rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm text-[var(--bs-status-error)]">{{ actionError }}</p>
 
-      <BsDialog v-model:visible="showForm" :title="editingId ? copy.edit : copy.add" :dirty="formDirty" :pending="saving"><template #default="{ close }"><form class="grid gap-4 sm:grid-cols-2" @submit.prevent="save">
-        <p v-if="actionError" role="alert" class="rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm text-[var(--bs-status-error)] sm:col-span-2">{{ actionError }}</p>
+      <BsDialog v-model:visible="showForm" :title="editingId ? copy.edit : copy.add" :dirty="formDirty" :pending="saving"><template #default="{ close }"><BsForm class="grid gap-4 sm:grid-cols-2" :pending="saving" :error="actionError" @submit="save">
         <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ copy.name }}<input v-model="form.name" type="text" minlength="2" maxlength="160" required class="ls-input"></label>
         <label class="space-y-2 text-sm font-bold">{{ copy.sku }}<input v-model="form.sku" type="text" maxlength="80" class="ls-input"></label>
         <label class="space-y-2 text-sm font-bold">{{ copy.barcode }}<input v-model="form.barcode" type="text" maxlength="80" class="ls-input"></label>
         <label class="space-y-2 text-sm font-bold">{{ copy.price }}<input v-model.number="form.salePrice" type="number" min="0" step="0.01" required class="ls-input"></label>
         <label class="space-y-2 text-sm font-bold">{{ copy.category }}<select v-model="form.categoryId" class="ls-select"><option value="">{{ copy.allCategories }}</option><option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option></select></label>
         <div class="flex items-end gap-2"><button type="submit" class="ls-btn ls-btn-primary" :disabled="saving">{{ saving ? copy.saving : copy.save }}</button><button type="button" class="ls-btn" @click="close">{{ copy.cancel }}</button></div>
-      </form></template></BsDialog>
+      </BsForm></template></BsDialog>
 
       <div class="overflow-hidden rounded-2xl border border-border bg-card">
-        <div class="grid gap-3 border-b border-border p-4 sm:grid-cols-2"><input v-model="search" type="search" :placeholder="copy.search" class="ls-input"><select v-model="categoryFilter" class="ls-select"><option value="">{{ copy.allCategories }}</option><option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option></select></div>
-        <div v-if="pending" class="space-y-3 p-5"><div v-for="index in 3" :key="index" class="h-11 animate-pulse rounded-lg bg-muted" /></div>
-        <p v-else-if="error" role="alert" class="p-5 text-sm text-[var(--bs-status-error)]">{{ copy.readError }} <button type="button" class="underline" @click="refresh()">{{ copy.retry }}</button></p>
+        <div class="grid gap-3 border-b border-border p-4 sm:grid-cols-2"><input v-model="search" :aria-label="copy.search" type="search" :placeholder="copy.search" class="ls-input"><select v-model="categoryFilter" :aria-label="copy.category" class="ls-select"><option value="">{{ copy.allCategories }}</option><option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option></select></div>
+        <div v-if="pending" role="status" :aria-label="copy.loading" class="space-y-3 p-5"><div v-for="index in 3" :key="index" class="h-11 animate-pulse rounded-lg bg-muted" /></div>
+        <p v-else-if="error" role="alert" class="p-5 text-sm text-[var(--bs-status-error)]">{{ copy.readError }} <BsButton @click="refresh()">{{ copy.retry }}</BsButton></p>
         <p v-else-if="!products.length" class="p-8 text-center text-sm text-muted-foreground">{{ search || categoryFilter ? copy.noResults : copy.empty }}</p>
         <div v-else class="overflow-x-auto"><BsDataTable :value="products" data-key="id" :row-class="() => 'border-t border-border'">
   <Column header-class="px-5 py-3 text-start" body-class="px-5 py-4 font-bold">
@@ -231,7 +230,7 @@ function money(value: number) {
   </Column>
   <Column header-class="px-5 py-3 text-end" body-class="whitespace-nowrap px-5 py-4 text-end">
     <template #header/>
-    <template #body="{ data: product }"><button v-if="canManage" type="button" class="me-3 font-semibold text-[var(--bs-link)]" @click="openEdit(product)">{{ copy.edit }}</button><button v-if="canManage" type="button" class="font-semibold text-[var(--bs-status-error)] disabled:opacity-50" :disabled="archivingId === product.id" @click="archive(product)">{{ copy.archive }}</button></template>
+    <template #body="{ data: product }"><BsButton v-if="canManage" type="button" class="me-3 font-semibold text-[var(--bs-link)]" @click="openEdit(product)">{{ copy.edit }}</BsButton><BsButton v-if="canManage" type="button" class="font-semibold text-[var(--bs-status-error)] disabled:opacity-50" :disabled="archivingId === product.id" @click="archive(product)">{{ copy.archive }}</BsButton></template>
   </Column>
 </BsDataTable></div>
         <div v-if="productPage.total > pageSize" class="flex items-center justify-center gap-3 border-t border-border p-4"><BsButton severity="secondary" :disabled="page <= 1" @click="page--">{{ copy.previous }}</BsButton><span>{{ page }} / {{ pageCount }}</span><BsButton severity="secondary" :disabled="page >= pageCount" @click="page++">{{ copy.next }}</BsButton></div>

@@ -50,7 +50,7 @@ test('full reports are server-paginated, location scoped, and reconcile every re
 
 test('report screen uses the authoritative RPC for screen and escaped CSV export', () => {
   for (const evidence of [
-    'shop_operational_report', 'queryArgs(page.value)', 'queryArgs(exportPage, 500)',
+    'shop_operational_report', 'queryArgs(page.value)', 'queryArgs(1, 500)', '{ ...args, p_page: exportPage }',
     'encodeCsv(headers, rows)', 'downloadCsv', 'source_path', 'BsDataTable',
     'All locations', 'كل الفروع', 'not a P&L', 'ليست قائمة دخل',
   ]) assert.ok(reports.includes(evidence), `missing report screen evidence: ${evidence}`)

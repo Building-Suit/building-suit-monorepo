@@ -77,6 +77,7 @@ export function useShop() {
   const loadError = useState<string | null>('shop:load-error', () => null)
   const loadedUserId = useState<string | null>('shop:loaded-user-id', () => null)
   const loadVersion = useState('shop:load-version', () => 0)
+  const locationVersion = useState('shop:location-version', () => 0)
 
   const current = computed(() => shops.value.find(shop => shop.id === currentId.value) ?? null)
   const currentMembership = computed(() => memberships.value.find(member => member.shop_id === currentId.value) ?? null)
@@ -89,6 +90,7 @@ export function useShop() {
   }
 
   function clearShopState() {
+    locationVersion.value += 1
     clearShopScopedData()
     shops.value = []
     memberships.value = []
@@ -99,6 +101,8 @@ export function useShop() {
   }
 
   async function loadLocations(shopId: string | null = currentId.value) {
+    const version = ++locationVersion.value
+    const userId = user.value?.id
     locations.value = []
     currentLocationId.value = null
     if (!shopId) {
@@ -106,8 +110,8 @@ export function useShop() {
       return
     }
     const { data, error } = await shopRpc.rpc('list_shop_locations', { p_shop_id: shopId })
+    if (version !== locationVersion.value || user.value?.id !== userId || currentId.value !== shopId) return
     if (error) throw error
-    if (currentId.value !== shopId) return
     locations.value = (data ?? []) as ShopLocation[]
     const selectable = locations.value.filter(location => location.status === 'active')
     const remembered = selectedLocationCookie.value
@@ -132,6 +136,8 @@ export function useShop() {
     if (!options.force && loadedUserId.value === userId) return
 
     const version = ++loadVersion.value
+    // Hide the previous account immediately, including while membership reads wait.
+    if (loadedUserId.value !== userId) clearShopState()
     loading.value = true
     loadError.value = null
     try {
@@ -206,6 +212,7 @@ export function useShop() {
       }
       selectedShopCookie.value = nextId
       await loadLocations(nextId)
+      if (version !== loadVersion.value || user.value?.id !== userId) return
       loadedUserId.value = userId
     }
     catch (error) {
@@ -222,11 +229,25 @@ export function useShop() {
 
   async function selectShop(shopId: string) {
     if (currentId.value === shopId || !shops.value.some(shop => shop.id === shopId)) return
+    const version = ++loadVersion.value
+    const userId = user.value?.id
+    loading.value = true
+    loadError.value = null
     clearShopScopedData()
     currentId.value = shopId
     selectedShopCookie.value = shopId
-    await loadLocations(shopId)
-    await nuxtApp.runWithContext(() => refreshNuxtData())
+    try {
+      await loadLocations(shopId)
+      if (version !== loadVersion.value || user.value?.id !== userId) return
+      await nuxtApp.runWithContext(() => refreshNuxtData())
+    }
+    catch {
+      if (version !== loadVersion.value || user.value?.id !== userId) return
+      loadError.value = 'Unable to load shop locations'
+    }
+    finally {
+      if (version === loadVersion.value) loading.value = false
+    }
   }
 
   async function selectLocation(locationId: string) {

@@ -1,7 +1,7 @@
 import { expect, type Page } from '@playwright/test'
 
 // Synthetic responses only: this suite never connects to a database.
-export async function pilotFixture(page: Page, locale: string, role = 'owner') {
+export async function pilotFixture(page: Page, locale: string, role = 'owner', override?: (name: string, args: Record<string, unknown>) => unknown | Promise<unknown>) {
   const calls: Array<{ name: string; args: Record<string, unknown> }> = []
   const state = { calendarError: false, calendarDenied: false, delayCalendar: false, emptyCalendar: false, failAccess: false }
   const user = { id: '00000000-0000-4000-8000-000000000001', email: 'pilot@example.test', aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {} }
@@ -29,6 +29,8 @@ export async function pilotFixture(page: Page, locale: string, role = 'owner') {
     if (name === 'shop_permission_access' && state.failAccess) {
       await route.fulfill({ status: 500, json: { message: 'temporarily unavailable' } }); return
     }
+    const overridden = await override?.(name, args)
+    if (overridden !== undefined) { await route.fulfill({ json: overridden }); return }
     let data: unknown = []
     switch (name) {
       case 'portals': data = { id: 'portal-1' }; break

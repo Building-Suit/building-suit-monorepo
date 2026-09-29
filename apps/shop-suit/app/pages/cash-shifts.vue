@@ -12,6 +12,7 @@ const { locale } = useI18n()
 const { current, currentId, currentLocation, currentLocationId, loading: shopLoading } = useShop()
 const { push: pushToast } = useToasts()
 const confirmation = useConfirmation()
+const captureScope = useShopTaskScope()
 const isArabic = computed(() => locale.value === 'ar')
 const page = ref(1)
 const pageSize = 20
@@ -20,7 +21,7 @@ const actionError = ref('')
 
 const copy = computed(() => isArabic.value ? {
   title: 'ورديات الخزنة', subtitle: 'افتح خزنة كل فرع، سجّل الحركات، وطابق النقدية عند الإغلاق.', branch: 'الفرع',
-  noShop: 'أنشئ متجرًا أولًا من لوحة التحكم.', noLocation: 'لا يوجد فرع متاح.', loadError: 'تعذّر تحميل ورديات الخزنة.', retry: 'إعادة المحاولة',
+  noShop: 'أنشئ متجرًا أولًا من لوحة التحكم.', loading: 'جاري تحميل الورديات…', noLocation: 'لا يوجد فرع متاح.', loadError: 'تعذّر تحميل ورديات الخزنة.', retry: 'إعادة المحاولة',
   active: 'الوردية المفتوحة', noActive: 'لا توجد وردية نقدية مفتوحة لهذا الفرع.', open: 'فتح وردية', openingCash: 'النقدية الافتتاحية', openingNotes: 'ملاحظة الافتتاح (اختيارية)', openAction: 'فتح الخزنة',
   cashier: 'الكاشير', opened: 'وقت الفتح', closed: 'وقت الإغلاق', register: 'الخزنة', cashSales: 'مبيعات نقدية', cashRefunds: 'مرتجعات نقدية', payIns: 'إيداع نقدي', payOuts: 'سحب نقدي', expected: 'النقدية المتوقعة', counted: 'النقدية المعدودة', variance: 'الفرق', nonCash: 'مدفوعات غير نقدية',
   movement: 'حركة نقدية', payIn: 'إيداع', payOut: 'سحب', amount: 'المبلغ', reason: 'السبب', reference: 'المرجع', record: 'تسجيل الحركة',
@@ -33,7 +34,7 @@ const copy = computed(() => isArabic.value ? {
   saved: 'تم تحديث وردية الخزنة.', invalid: 'راجع المبلغ والسبب والمرجع.', denied: 'ليست لديك صلاحية لهذا الفرع أو الإجراء.', conflict: 'توجد وردية مفتوحة بالفعل لهذه الخزنة.', writeError: 'تعذّر حفظ العملية. راجع البيانات وحاول مرة أخرى.', cancel: 'إلغاء',
 } : {
   title: 'Cashier shifts', subtitle: 'Open each location drawer, record movements, and reconcile counted cash at close.', branch: 'Location',
-  noShop: 'Create a shop from the dashboard first.', noLocation: 'No location is available.', loadError: 'Could not load cashier shifts.', retry: 'Retry',
+  noShop: 'Create a shop from the dashboard first.', loading: 'Loading shifts…', noLocation: 'No location is available.', loadError: 'Could not load cashier shifts.', retry: 'Retry',
   active: 'Open shift', noActive: 'No cash shift is open for this location.', open: 'Open shift', openingCash: 'Opening cash', openingNotes: 'Opening note (optional)', openAction: 'Open drawer',
   cashier: 'Cashier', opened: 'Opened', closed: 'Closed', register: 'Register', cashSales: 'Cash sales', cashRefunds: 'Cash refunds', payIns: 'Pay-ins', payOuts: 'Pay-outs', expected: 'Expected cash', counted: 'Counted cash', variance: 'Variance', nonCash: 'Non-cash payments',
   movement: 'Cash movement', payIn: 'Pay in', payOut: 'Pay out', amount: 'Amount', reason: 'Reason', reference: 'Reference', record: 'Record movement',
@@ -89,39 +90,45 @@ function startClose() { Object.assign(closeForm, { amount: Number(dashboard.valu
 
 async function openShift() {
   if (!currentId.value || !currentLocationId.value || !validMoney(openForm.amount, true) || opening.value) { actionError.value = copy.value.invalid; return }
-  if (!await confirmation.ask(copy.value.openConfirm)) return
+  const inScope = captureScope()
   opening.value = true; actionError.value = ''; openRequestId.value ??= crypto.randomUUID()
   try {
+    if (!await confirmation.ask(copy.value.openConfirm) || !inScope()) return
     const { error } = await rpc.rpc('open_cash_shift', { p_request_id: openRequestId.value, p_shop_id: currentId.value, p_location_id: currentLocationId.value, p_register_key: 'main', p_opening_amount: openForm.amount, p_notes: openForm.notes.trim() || null })
+    if (!inScope()) return
     if (error) throw error
-    showOpen.value = false; await refresh(); pushToast({ tone: 'success', title: copy.value.saved })
-  } catch (caught) { actionError.value = errorText(caught instanceof Error ? caught.message : String(caught)) }
+    showOpen.value = false; await refresh(); if (inScope()) pushToast({ tone: 'success', title: copy.value.saved })
+  } catch (caught) { if (inScope()) actionError.value = errorText(caught instanceof Error ? caught.message : String(caught)) }
   finally { opening.value = false }
 }
 
 async function recordMovement() {
   const active = dashboard.value.active
   if (!currentId.value || !active || !validMoney(movementForm.amount) || movementForm.reason.trim().length < 2 || !movementForm.reference.trim() || moving.value) { actionError.value = copy.value.invalid; return }
-  if (!await confirmation.ask(copy.value.movementConfirm)) return
+  const inScope = captureScope()
   moving.value = true; actionError.value = ''; movementRequestId.value ??= crypto.randomUUID()
   try {
+    if (!await confirmation.ask(copy.value.movementConfirm) || !inScope()) return
     const { error } = await rpc.rpc('record_cash_movement', { p_request_id: movementRequestId.value, p_shop_id: currentId.value, p_session_id: active.id, p_kind: movementForm.kind, p_amount: movementForm.amount, p_reason: movementForm.reason.trim(), p_reference: movementForm.reference.trim() })
+    if (!inScope()) return
     if (error) throw error
-    showMovement.value = false; await refresh(); pushToast({ tone: 'success', title: copy.value.saved })
-  } catch (caught) { actionError.value = errorText(caught instanceof Error ? caught.message : String(caught)) }
+    showMovement.value = false; await refresh(); if (inScope()) pushToast({ tone: 'success', title: copy.value.saved })
+  } catch (caught) { if (inScope()) actionError.value = errorText(caught instanceof Error ? caught.message : String(caught)) }
   finally { moving.value = false }
 }
 
 async function closeShift() {
   const active = dashboard.value.active
   if (!currentId.value || !active || !validMoney(closeForm.amount, true) || closing.value) { actionError.value = copy.value.invalid; return }
-  if (!await confirmation.ask(copy.value.closeConfirm)) return
+  const inScope = captureScope()
   closing.value = true; actionError.value = ''; closeRequestId.value ??= crypto.randomUUID()
   try {
+    if (!await confirmation.ask(copy.value.closeConfirm) || !inScope()) return
     const { error } = await rpc.rpc('close_cash_shift', { p_request_id: closeRequestId.value, p_shop_id: currentId.value, p_session_id: active.id, p_counted_amount: closeForm.amount, p_notes: closeForm.notes.trim() || null })
+    if (!inScope()) return
     if (error) throw error
-    showClose.value = false; await refresh(); pushToast({ tone: 'success', title: copy.value.saved })
-  } catch (caught) { actionError.value = errorText(caught instanceof Error ? caught.message : String(caught)) }
+    showClose.value = false; await refresh(); if (inScope()) pushToast({ tone: 'success', title: copy.value.saved })
+  } catch (caught) { if (inScope()) actionError.value = errorText(caught instanceof Error ? caught.message : String(caught)) }
   finally { closing.value = false }
 }
 </script>
@@ -133,7 +140,7 @@ async function closeShift() {
     <p v-else-if="!currentLocation && !shopLoading" class="rounded-2xl border border-border bg-card p-8 text-center text-sm">{{ copy.noLocation }}</p>
     <section v-else-if="current" class="space-y-5">
       <div v-if="error" role="alert" class="rounded-2xl border border-[var(--bs-status-error)] bg-[var(--bs-status-error-bg)] p-5 text-sm text-[var(--bs-status-error)]"><p>{{ copy.loadError }}</p><BsButton severity="secondary" class="mt-3" @click="refresh()">{{ copy.retry }}</BsButton></div>
-      <div v-else-if="pending" role="status" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><div v-for="index in 4" :key="index" class="h-28 animate-pulse rounded-2xl bg-muted" /></div>
+      <div v-else-if="pending" :aria-label="copy.loading" role="status" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><div v-for="index in 4" :key="index" class="h-28 animate-pulse rounded-2xl bg-muted" /></div>
       <template v-else>
         <section class="rounded-2xl border border-border bg-card p-5" aria-labelledby="active-shift-heading">
           <div class="flex flex-wrap items-start justify-between gap-3"><div><h2 id="active-shift-heading" class="text-xl font-extrabold">{{ copy.active }}</h2><p v-if="dashboard.active" class="mt-1 text-sm text-muted-foreground">{{ dashboard.active.cashierName }} · {{ date(dashboard.active.openedAt) }}</p></div><div class="flex flex-wrap gap-2"><BsButton v-if="!dashboard.active" @click="startOpen">{{ copy.open }}</BsButton><BsButton v-if="dashboard.active && dashboard.canAdjust" severity="secondary" @click="startMovement">{{ copy.movement }}</BsButton><BsButton v-if="dashboard.active && (dashboard.canManage || dashboard.active.cashierMembershipId === dashboard.currentMembershipId)" @click="startClose">{{ copy.close }}</BsButton></div></div>

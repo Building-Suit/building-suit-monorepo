@@ -26,6 +26,8 @@ type Expense = {
 type ExpensePage = { items: Expense[]; total: number; page: number; pageSize: number; canManage: boolean }
 type Category = { id: string; name: string }
 
+const confirmation = useConfirmation()
+const captureScope = useShopTaskScope()
 const rpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
 const supabase = useSupabaseClient()
 const { locale } = useI18n()
@@ -77,7 +79,7 @@ const copy = computed(() => isArabic.value ? {
   voidReason: 'سبب الإلغاء', voidTitle: 'إلغاء المصروف', voidHelp: 'سيبقى المصروف في السجل ويُستبعد من المجاميع.',
   categoryHint: 'مثل: إيجار، مرافق، مستلزمات', history: 'نوع السجل', actor: 'سجله',
   original: 'أصلي', correction: 'تصحيح بديل', corrected: 'الأصل المصحح', voidedHistory: 'ملغى',
-  readOnly: 'لديك صلاحية العرض فقط.', saved: 'تم حفظ المصروف وسجل التتبع.', branch: 'الفرع',
+  readOnly: 'لديك صلاحية العرض فقط.', confirmSave: 'تسجيل هذا المصروف المدفوع؟ سيزيد إجمالي المصروفات بالقيمة المعروضة.', confirmCorrection: 'استبدال هذا المصروف؟ يبقى الأصل ملغى في السجل وتستخدم الإجماليات القيمة الجديدة.', saved: 'تم حفظ المصروف وسجل التتبع.', branch: 'الفرع',
 } : {
   title: 'Expenses', subtitle: 'Complete paid operating-expense history, including corrections and voids.',
   incomeBoundary: 'Other operational income is excluded from V1. This page does not record sales revenue.',
@@ -94,7 +96,7 @@ const copy = computed(() => isArabic.value ? {
   voidReason: 'Void reason', voidTitle: 'Void expense', voidHelp: 'The expense remains in history and is excluded from totals.',
   categoryHint: 'For example: Rent, Utilities, Supplies', history: 'History', actor: 'Recorded by',
   original: 'Original', correction: 'Replacement correction', corrected: 'Corrected original', voidedHistory: 'Voided',
-  readOnly: 'You have view-only expense access.', saved: 'Expense and trace history saved.', branch: 'Location',
+  readOnly: 'You have view-only expense access.', confirmSave: 'Record this paid expense? It increases expense totals by the amount shown.', confirmCorrection: 'Replace this expense? The original is preserved as voided and totals use the new amount.', saved: 'Expense and trace history saved.', branch: 'Location',
 })
 
 watch(search, value => {
@@ -181,19 +183,22 @@ async function save() {
   if (!currentId.value || !currentLocationId.value || !canManage.value || saving.value) return
   actionError.value = ''
   if (!validForm()) { actionError.value = copy.value.invalid; return }
+  const inScope = captureScope()
   saveRequestId.value ||= crypto.randomUUID()
   saving.value = true
   try {
+    if (!await confirmation.ask(`${editingId.value ? copy.value.confirmCorrection : copy.value.confirmSave} ${money(Number(form.amount))}`) || !inScope()) return
     const { error: saveError } = await rpc.rpc('save_expense', {
       p_request_id: saveRequestId.value, p_shop_id: currentId.value, p_location_id: currentLocationId.value,
       p_expense_id: editingId.value, p_title: form.title.trim(), p_amount: Number(form.amount),
       p_category_name: form.category.trim(), p_expense_date: form.date, p_notes: form.notes.trim() || null,
       p_correction_reason: editingId.value ? form.correctionReason.trim() : null,
     })
+    if (!inScope()) return
     if (saveError) throw saveError
-    resetForm(); await refresh(); success(copy.value.saved)
+    resetForm(); await refresh(); if (inScope()) success(copy.value.saved)
   } catch (saveError) {
-    actionError.value = readableError(saveError instanceof Error ? saveError.message : undefined)
+    if (inScope()) actionError.value = readableError(saveError instanceof Error ? saveError.message : undefined)
   } finally { saving.value = false }
 }
 
@@ -204,16 +209,18 @@ async function submitVoid() {
   if (!currentId.value || !currentLocationId.value || !voidTarget.value || !canManage.value || voidPending.value) return
   const reason = voidReason.value.trim()
   if (reason.length < 2 || reason.length > 500) { actionError.value = copy.value.invalid; return }
+  const inScope = captureScope()
   voidRequestId.value ||= crypto.randomUUID(); voidPending.value = true; actionError.value = ''
   try {
     const { error: voidError } = await rpc.rpc('void_expense', {
       p_request_id: voidRequestId.value, p_shop_id: currentId.value, p_location_id: currentLocationId.value,
       p_expense_id: voidTarget.value.id, p_reason: reason,
     })
+    if (!inScope()) return
     if (voidError) throw voidError
-    await refresh(); closeVoid(true); success(copy.value.saved)
+    await refresh(); closeVoid(true); if (inScope()) success(copy.value.saved)
   } catch (voidError) {
-    actionError.value = readableError(voidError instanceof Error ? voidError.message : undefined)
+    if (inScope()) actionError.value = readableError(voidError instanceof Error ? voidError.message : undefined)
   } finally { voidPending.value = false }
 }
 function handlePage(event: { page: number }) { page.value = event.page + 1 }
@@ -233,8 +240,8 @@ function handlePage(event: { page: number }) { page.value = event.page + 1 }
       <p v-if="actionError && !showForm && !voidOpen" role="alert" class="ls-error">{{ actionError }}</p>
 
       <BsDialog v-model:visible="showForm" :title="editingId ? copy.correct : copy.add" :dirty="formDirty" :pending="saving">
-        <template #default="{ close }"><form class="grid gap-4 sm:grid-cols-2" @submit.prevent="save">
-          <p v-if="actionError" role="alert" class="ls-error sm:col-span-2">{{ actionError }}</p>
+        <template #default="{ close }"><BsForm class="grid gap-4 sm:grid-cols-2" :pending="saving" :error="actionError" @submit="save">
+
           <p v-if="editingId" class="rounded-xl bg-muted p-3 text-sm sm:col-span-2">{{ copy.correctionHelp }}</p>
           <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ copy.name }}<input v-model="form.title" type="text" minlength="2" maxlength="160" required class="ls-input"></label>
           <label class="space-y-2 text-sm font-bold">{{ copy.amount }}<input v-model.number="form.amount" type="number" min="0.01" max="999999999.99" step="0.01" required class="ls-input"></label>
@@ -243,16 +250,16 @@ function handlePage(event: { page: number }) { page.value = event.page + 1 }
           <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ copy.notes }}<textarea v-model="form.notes" rows="2" maxlength="1000" class="ls-input" /></label>
           <label v-if="editingId" class="space-y-2 text-sm font-bold sm:col-span-2">{{ copy.correctionReason }}<textarea v-model="form.correctionReason" rows="2" minlength="2" maxlength="500" required class="ls-input" /></label>
           <div class="flex items-center gap-2 sm:col-span-2"><BsButton type="submit" class="ls-btn ls-btn-primary" :disabled="saving">{{ saving ? copy.saving : editingId ? copy.saveCorrection : copy.save }}</BsButton><BsButton type="button" class="ls-btn" :disabled="saving" @click="close">{{ copy.cancel }}</BsButton></div>
-        </form></template>
+        </BsForm></template>
       </BsDialog>
 
       <BsDialog v-model:visible="voidOpen" :title="copy.voidTitle" :dirty="voidDirty" :pending="voidPending" size="sm">
         <p class="mb-4 text-sm text-muted-foreground">{{ copy.voidHelp }}</p>
-        <form class="space-y-4" @submit.prevent="submitVoid">
-          <p v-if="actionError" role="alert" class="ls-error">{{ actionError }}</p>
+        <BsForm class="space-y-4" :pending="voidPending" :error="actionError" @submit="submitVoid">
+
           <label class="space-y-2 text-sm font-bold">{{ copy.voidReason }}<textarea v-model="voidReason" rows="3" minlength="2" maxlength="500" required class="ls-input" /></label>
           <div class="flex items-center gap-2"><BsButton type="submit" class="ls-btn ls-btn-primary" :disabled="voidPending">{{ copy.void }}</BsButton><BsButton type="button" class="ls-btn" :disabled="voidPending" @click="closeVoid">{{ copy.cancel }}</BsButton></div>
-        </form>
+        </BsForm>
       </BsDialog>
 
       <section v-if="currentLocationId" class="overflow-hidden rounded-2xl border border-border bg-card">
