@@ -27,6 +27,7 @@ begin
     from pg_proc procedure join pg_namespace namespace on namespace.oid = procedure.pronamespace
     where namespace.nspname = 'public' and procedure.proname = any(array[
       'list_shop_locations', 'save_shop_location', 'archive_shop_location',
+      'restore_shop_location',
       'assign_membership_locations', 'location_operational_report',
       'save_location_sale_draft', 'list_location_sales', 'get_location_sale',
       'issue_location_sale', 'checkout_location_sale',
@@ -439,6 +440,27 @@ begin
     perform public.list_shop_locations(current_setting('ss_loc.shop')::uuid);
     if found then raise exception 'outsider listed another shop locations'; end if;
   end;
+  begin
+    perform public.save_shop_location(current_setting('ss_loc.shop')::uuid,
+      current_setting('ss_loc.default')::uuid, 'Cross-shop edit', null, null, null);
+    raise exception 'outsider edited another shop location';
+  exception when insufficient_privilege then
+    if sqlerrm <> 'SHOP_PERMISSION_DENIED' then raise; end if;
+  end;
+  begin
+    perform public.archive_shop_location(current_setting('ss_loc.shop')::uuid,
+      current_setting('ss_loc.branch')::uuid);
+    raise exception 'outsider archived another shop location';
+  exception when insufficient_privilege then
+    if sqlerrm <> 'SHOP_PERMISSION_DENIED' then raise; end if;
+  end;
+  begin
+    perform public.restore_shop_location(current_setting('ss_loc.shop')::uuid,
+      current_setting('ss_loc.branch')::uuid);
+    raise exception 'outsider restored another shop location';
+  exception when insufficient_privilege then
+    if sqlerrm <> 'SHOP_PERMISSION_DENIED' then raise; end if;
+  end;
 end;
 $$;
 reset role;
@@ -449,13 +471,49 @@ set local role authenticated;
 do $$
 declare v_shop uuid := current_setting('ss_loc.shop')::uuid;
   v_branch uuid := current_setting('ss_loc.branch')::uuid;
+  v_default uuid := current_setting('ss_loc.default')::uuid;
+  v_replacement uuid;
 begin
+  if public.save_shop_location(v_shop, v_default, 'Renamed main', 'HQ',
+      'Cairo', '+20100') <> v_default
+    or public.save_shop_location(v_shop, v_branch, 'Renamed branch', 'BR-X',
+      'Alexandria updated', '+20200') <> v_branch
+    or (select location_id from public.invoices
+      where id = current_setting('ss_loc.default_sale')::uuid) <> v_default
+    or (select location_id from public.invoices
+      where id = current_setting('ss_loc.branch_sale')::uuid) <> v_branch then
+    raise exception 'location edit changed historical identity';
+  end if;
+
   perform public.archive_shop_location(v_shop, v_branch);
   if (select status from public.shop_locations where id = v_branch) <> 'archived'
     or not exists (select 1 from public.invoices where location_id = v_branch)
     or not exists (select 1 from public.appointments where location_id = v_branch)
     or (public.location_operational_report(v_shop, v_branch) ->> 'sales')::numeric <> 200 then
     raise exception 'location archival hid or changed historical operations';
+  end if;
+  perform public.restore_shop_location(v_shop, v_branch);
+  if (select status from public.shop_locations where id = v_branch) <> 'active'
+    or (public.location_operational_report(v_shop, v_branch) ->> 'sales')::numeric <> 200 then
+    raise exception 'location restore changed historical operations';
+  end if;
+
+  perform public.save_shop_location(v_shop, null, 'Third active branch', null, null, null);
+  perform public.archive_shop_location(v_shop, v_branch);
+  v_replacement := public.save_shop_location(
+    v_shop, null, 'Capacity replacement', null, null, null
+  );
+  begin
+    perform public.restore_shop_location(v_shop, v_branch);
+    raise exception 'archived location restored over plan capacity';
+  exception when check_violation then
+    if sqlerrm not like 'PLAN_RESOURCE_LIMIT_REACHED:active_locations:%' then raise; end if;
+  end;
+  if (select status from public.shop_locations where id = v_branch) <> 'archived'
+    or (select count(*) from public.shop_locations
+      where shop_id = v_shop and status = 'active') <> 3
+    or v_replacement is null then
+    raise exception 'quota-rejected restore changed location state';
   end if;
   begin
     perform public.archive_shop_location(v_shop, current_setting('ss_loc.default')::uuid);

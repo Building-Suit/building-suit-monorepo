@@ -3,12 +3,15 @@ import market from './playwright.market.config'
 import usability from '../../packages/testing/playwright.shop-ux.config'
 import planUi from './playwright.plan-ui.config'
 import subscription from './playwright.subscription.config'
+import authOtp from './playwright.auth-otp.config'
 
 // The control plane selects a spec through the app-local entry point. Keep
 // qualification as the default, selecting market or usability for their specs.
 // Workers reload this file without the runner's spec arguments. Persist the
 // selection in their inherited environment so their baseURL matches the server.
 process.env.SHOP_PLAYWRIGHT_SUITE ??= process.argv.some(argument =>
+  /(?:^|[/\\])auth-otp\.spec(?:\.ts)?$/.test(argument),
+) ? 'auth-otp' : process.argv.some(argument =>
   /(?:^|[/\\])subscription-lifecycle\.spec(?:\.ts)?$/.test(argument),
 ) ? 'subscription' : process.argv.some(argument =>
   /(?:^|[/\\])plan-owner\.spec(?:\.ts)?$/.test(argument),
@@ -20,6 +23,7 @@ process.env.SHOP_PLAYWRIGHT_SUITE ??= process.argv.some(argument =>
 
 export default process.env.SHOP_PLAYWRIGHT_SUITE === 'market'
   ? market
+  : process.env.SHOP_PLAYWRIGHT_SUITE === 'auth-otp' ? authOtp
   : process.env.SHOP_PLAYWRIGHT_SUITE === 'subscription' ? subscription
   : process.env.SHOP_PLAYWRIGHT_SUITE === 'plan-ui' ? planUi
   : process.env.SHOP_PLAYWRIGHT_SUITE === 'usability' ? usability : qualification
