@@ -852,6 +852,7 @@ if (browserRequired) {
 
           '--workers=1',
           '--retries=0',
+          '--repeat-each=2',
         ],
 
         timeout:

@@ -3,6 +3,13 @@ const { locale } = useI18n()
 const ui = useUiCopy()
 const rows = ref([{ id: '1', name: 'Ledger Suit', category: 'Finance', amount: 120 }, { id: '2', name: 'Shop Suit', category: 'Commerce', amount: 240 }, { id: '3', name: 'Building Suit', category: 'Platform', amount: 360 }])
 const selected = ref([])
+const choice = ref<string | number | null>('1')
+const choices = Array.from({ length: 10000 }, (_, index) => ({ id: String(index + 1), name: `Item ${index + 1}` }))
+const formError = ref('')
+const formPending = ref(false)
+const formValue = ref('')
+const { success: toastSuccess } = useToasts()
+function verifyForm() { formError.value = locale.value === 'ar' ? 'راجع القيمة وحاول مرة أخرى.' : 'Review the value and try again.' }
 const filters = ref({ global: { value: null, matchMode: 'contains' } })
 const name = ref('')
 const action = useRecordAction(() => ({ name: name.value }))
@@ -28,8 +35,20 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
         <Column field="amount" :header="locale === 'ar' ? 'القيمة' : 'Value'" sortable body-class="ls-num" />
       </BsDataTable>
     </section>
+    <section class="ls-card p-6 space-y-4" data-testid="foundation-patterns">
+      <h2 class="text-xl font-bold">{{ locale === 'ar' ? 'أنماط التفاعل' : 'Interaction patterns' }}</h2>
+      <p id="catalogue-choice-label">{{ locale === 'ar' ? 'الصنف' : 'Item' }}</p>
+      <BsSelect v-model="choice" :label="locale === 'ar' ? 'الصنف' : 'Item'" :options="choices" option-label="name" option-value="id" filter virtual />
+      <BsForm :pending="formPending" :error="formError" class="space-y-4" @submit="verifyForm">
+        <FloatingField :label="locale === 'ar' ? 'القيمة' : 'Value'"><input v-model="formValue" required class="ls-input"></FloatingField>
+        <BsButton type="submit">{{ ui('save') }}</BsButton>
+      </BsForm>
+      <BsButton :aria-pressed="formPending" @click="formPending = !formPending">{{ ui('loading') }}</BsButton>
+      <BsButton @click="toastSuccess(locale === 'ar' ? 'تم الحفظ' : 'Saved')">{{ locale === 'ar' ? 'إظهار إشعار' : 'Show notification' }}</BsButton>
+    </section>
     <section class="ls-card p-6"><h2 class="mb-5 text-xl font-bold">{{ locale === 'ar' ? 'خطوات التسجيل' : 'Signup wizard' }}</h2><BsSignupWizard :step="step" :steps="[{ title: 'Account' }, { title: 'Workspace' }]" @back="back"><p>Step {{ step }}</p><button type="button" class="ls-btn" :disabled="step === 2" @click="advance()">{{ ui('next') }}</button></BsSignupWizard></section>
     <section class="ls-card p-6"><button type="button" class="ls-btn" @click="confirmExample">{{ ui('confirm') }}</button><p class="mt-3" role="status">{{ confirmationResult }}</p></section>
+    <ToastHost />
     <BsDialog v-model:visible="visible" :title="locale === 'ar' ? 'إضافة سجل' : 'Add record'" :dirty="dirty" :pending="pending"><form class="space-y-5" @submit.prevent="save"><FloatingField :label="locale === 'ar' ? 'الاسم' : 'Name'"><InputText id="catalogue-record-name" v-model="name" class="ls-input" required /></FloatingField><button class="ls-btn ls-btn-primary">{{ ui('save') }}</button></form></BsDialog>
   </div>
 </template>

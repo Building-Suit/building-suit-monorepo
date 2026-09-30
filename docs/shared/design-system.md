@@ -18,6 +18,8 @@ The application language uses 10px controls, 14px content containers and 20px ov
 
 Use semantic `--bs-*` roles for application UI. Raw neutral and gray aliases support intentionally dark previews; navy/gold primitives support brand areas. Future apps inherit the same palette through the shared Nuxt layer.
 
+Focus uses Building Navy in light mode and Highlight Gold in dark mode. These canonical roles exceed 3:1 against their control surfaces; light-mode Premium Gold did not. Always-dark brand panels retain the dark focus role in either theme. Feedback text uses the normal foreground when a semantic status color would have insufficient text contrast, while status borders/backgrounds and explicit wording preserve meaning.
+
 The shared Nuxt layer registers fonts, tokens, styles, components, composables, theme behavior and public brand assets. Product apps register Supabase and supply their own locale messages, content, routes and business logic.
 
 Atomic Design organizes `packages/ui/src`: atoms (icons, brand marks, status), molecules (fields, empty states, KPI presentation), organisms (tables, dialogs, wizard, settings and feedback), templates (marketing frame, complete landing page, auth frame, authenticated shell). Product pages compose these and own validation, currencies, roles, queries and commands. Atomic Design does not define database or business-service boundaries.

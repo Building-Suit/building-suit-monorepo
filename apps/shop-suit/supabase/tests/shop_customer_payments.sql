@@ -55,7 +55,7 @@ declare
   v_receipt_one uuid; v_receipt_two uuid; v_multi uuid; v_allocation uuid;
   v_request uuid := gen_random_uuid(); v_statement jsonb; v_outstanding jsonb;
 begin
-  v_shop := public.create_owner_shop('Payment fixture A', 'pro', 'service'::public.business_mode);
+  v_shop := public.create_owner_shop('Payment fixture A', 'team', 'service'::public.business_mode);
   v_customer := public.save_customer(v_shop, null, 'Payment Customer', null, null, null, null);
   v_service := public.save_service(v_shop, null, 'Payment Service', null, 100, 'amount', 0);
   v_invoice_one := public.save_sale_draft_with_due_date(gen_random_uuid(), v_shop, null,
@@ -326,7 +326,7 @@ set local role authenticated;
 do $$
 declare v_shop uuid; v_customer uuid;
 begin
-  v_shop := public.create_owner_shop('Payment fixture B', 'pro', 'service'::public.business_mode);
+  v_shop := public.create_owner_shop('Payment fixture B', 'team', 'service'::public.business_mode);
   v_customer := public.save_customer(v_shop, null, 'Foreign customer', null, null, null, null);
   perform set_config('ss_pay.shop_b', v_shop::text, true);
   perform set_config('ss_pay.customer_b', v_customer::text, true);

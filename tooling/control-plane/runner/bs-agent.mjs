@@ -3357,13 +3357,118 @@ Return a concise repair summary.
         true
       ) {
 
-        probePassed =
-          true
+        const confirmationDirectory =
+          path.join(
+            runDirectory,
+            `repair-verification-${cycle}-confirmation`,
+          )
 
-        succeeded =
-          true
+        const confirmationResult =
+          execute(
+            process.execPath,
+            [
+              path.join(
+                repoRoot,
+                'tooling',
+                'control-plane',
+                'runner',
+                'task-verifier.mjs',
+              ),
 
-        break
+              retry.worktree_path,
+              taskPacketPath,
+              confirmationDirectory,
+              'probe',
+            ],
+            {
+              cwd:
+                retry.worktree_path,
+
+              timeout:
+                60 * 60 * 1000,
+            },
+          )
+
+        let confirmationProbe
+
+        try {
+
+          confirmationProbe =
+            JSON.parse(
+              confirmationResult.stdout,
+            )
+
+        }
+        catch {
+
+          confirmationProbe = {
+            ok:
+              false,
+
+            passed:
+              false,
+
+            checks: [
+              {
+                name:
+                  'verifier-infrastructure',
+
+                status:
+                  'fail',
+
+                exit_code:
+                  confirmationResult.code,
+
+                summary:
+                  confirmationResult.stderr ||
+                  confirmationResult.error ||
+                  confirmationResult.stdout ||
+                  'Repair confirmation verifier returned invalid output.',
+              },
+            ],
+          }
+
+        }
+
+        const confirmationProbePath =
+          path.join(
+            runDirectory,
+            `repair-verification-${cycle}-confirmation.json`,
+          )
+
+        writeFileSync(
+          confirmationProbePath,
+          `${JSON.stringify(
+            confirmationProbe,
+            null,
+            2,
+          )}\n`,
+          {
+            mode:
+              0o600,
+          },
+        )
+
+        latestProbe =
+          confirmationProbe
+
+        latestProbePath =
+          confirmationProbePath
+
+        if (
+          confirmationProbe?.passed ===
+          true
+        ) {
+
+          probePassed =
+            true
+
+          succeeded =
+            true
+
+          break
+        }
+
       }
 
       if (

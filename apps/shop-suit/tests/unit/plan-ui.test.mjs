@@ -1,0 +1,48 @@
+import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
+import test from 'node:test'
+
+const billing = await readFile(new URL('../../app/pages/billing.vue', import.meta.url), 'utf8')
+const pricing = await readFile(new URL('../../app/components/ShopPricing.vue', import.meta.url), 'utf8')
+const usage = await readFile(new URL('../../app/components/PlanUsageMeter.vue', import.meta.url), 'utf8')
+const limits = await readFile(new URL('../../app/components/PlanResourceLimits.vue', import.meta.url), 'utf8')
+const quota = await readFile(new URL('../../app/utils/planQuotaError.ts', import.meta.url), 'utf8')
+
+test('owner billing uses the canonical purchasable catalog and effective server quote', () => {
+  assert.match(billing, /usePlans\(\)/)
+  assert.match(billing, /publicPlanSlugs/)
+  assert.match(billing, /effectivePriceAmount/)
+  assert.match(billing, /priceSource === 'override'/)
+  assert.doesNotMatch(billing, /349|699|1099/)
+  assert.match(pricing, /usePlans\(\)/)
+  assert.match(pricing, /plan\.is_purchasable && !plan\.is_coming_soon/)
+})
+
+test('all four quota resources have concise comparison and usage states', () => {
+  for (const resource of ['active_locations', 'active_members', 'active_products', 'active_services']) {
+    assert.match(limits, new RegExp(resource))
+    assert.match(billing, new RegExp(resource))
+  }
+  assert.match(usage, /ratio\.value >= 80/)
+  assert.match(usage, /data-usage-state/)
+  assert.match(usage, /role="progressbar"/)
+})
+
+test('downgrades and manual payment requests communicate their safety boundary', () => {
+  assert.match(billing, /plan\.blockers\.length/)
+  assert.match(billing, /nothing is automatically deleted/)
+  assert.match(billing, /Your access will not change until an operator approves it/)
+  assert.match(billing, /confirmation\.ask/)
+  assert.match(billing, /submitted: 'Submitted for manual review/)
+  assert.match(billing, /under_review: 'An operator is reviewing/)
+  assert.match(billing, /approved: 'This request was approved/)
+  assert.match(billing, /rejected: 'This request was rejected/)
+})
+
+test('quota errors identify the resource and safe owner actions', () => {
+  assert.match(quota, /PRODUCT_LIMIT_REACHED/)
+  assert.match(quota, /PLAN_RESOURCE_LIMIT_REACHED/)
+  assert.match(quota, /Archive or deactivate something unused/)
+  assert.match(quota, /Nothing will be deleted automatically/)
+  assert.match(quota, /الاشتراك والفوترة/)
+})
