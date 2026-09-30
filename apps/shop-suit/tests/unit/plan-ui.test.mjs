@@ -30,7 +30,14 @@ test('all four quota resources have concise comparison and usage states', () => 
 
 test('downgrades and manual payment requests communicate their safety boundary', () => {
   assert.match(billing, /plan\.blockers\.length/)
-  assert.match(billing, /nothing is automatically deleted/)
+  assert.match(billing, /You can select this plan and submit its payment notice now/)
+  assert.match(billing, /All resources and data stay saved/)
+  assert.match(billing, /Nothing is automatically deleted or archived/)
+  assert.match(billing, /unavailable for new or active use until you reduce usage or upgrade the plan/)
+  assert.match(billing, /تظل كل الموارد والبيانات محفوظة/)
+  assert.match(billing, /لن يُحذف أو يُؤرشف أي شيء تلقائيًا/)
+  assert.doesNotMatch(billing, /:disabled="plan\.blockers\.length > 0"/)
+  assert.doesNotMatch(billing, /!plan \|\| plan\.blockers\.length/)
   assert.match(billing, /Your access will not change until an operator approves it/)
   assert.match(billing, /confirmation\.ask/)
   assert.match(billing, /submitted: 'Submitted for manual review/)

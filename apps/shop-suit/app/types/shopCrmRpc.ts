@@ -127,6 +127,10 @@ export type ShopRpcDatabase = {
         Args: { p_shop_id: string; p_business_mode: 'product' | 'service' | 'mixed' }
         Returns: 'product' | 'service' | 'mixed'
       }
+      save_shop_profile: {
+        Args: { p_shop_id: string; p_display_name: string }
+        Returns: string
+      }
       list_shop_locations: {
         Args: { p_shop_id: string }
         Returns: Array<{

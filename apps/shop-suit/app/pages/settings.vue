@@ -14,6 +14,10 @@ const { locale } = useI18n()
 const { current, currentId, locations, loading, loadError: shopError, reload, loadLocations } = useShop()
 const { success } = useToasts()
 const ui = useUiCopy()
+const profileForm = reactive({ displayName: '' })
+const profilePending = ref(false)
+const profileError = ref('')
+const profileSuccess = ref('')
 const selectedMode = ref<BusinessMode>('mixed')
 const pending = ref(false)
 const errorMessage = ref('')
@@ -59,26 +63,34 @@ const { data: receiptSettings, pending: receiptLoading, error: receiptLoadError,
 )
 
 const copy = computed(() => isArabic.value ? {
-  title: 'إعدادات النشاط', subtitle: 'اضبط مسارات العمل المناسبة لنشاطك.',
+  title: 'إعدادات النشاط', subtitle: 'ظبط طريقة الشغل المناسبة لنشاطك.',
+  profileTitle: 'ملف المتجر', profileHelp: 'هذا اسم المتجر الذي يظهر في التنقل والقوائم والسجلات المستقبلية المناسبة. لا يغيّر اسم حسابك الشخصي أو بريدك الإلكتروني أو المستندات السابقة.',
+  shopDisplayName: 'اسم المتجر', profileLocationHelp: 'عنوان الفرع الرئيسي وهاتفه بيانات فرع. عدّلهما من قسم فروع النشاط أدناه حتى لا تتكرر بيانات متعارضة.',
+  manageLocations: 'إدارة بيانات الفروع', saveProfile: 'حفظ ملف المتجر', savingProfile: 'بنحفظ…', profileSaved: 'اتحدّث ملف المتجر.', profileFailed: 'مقدرناش نحدّث ملف المتجر. حاول تاني.',
+  profileOwnerOnly: 'محتاج صلاحية إدارة إعدادات النشاط عشان تعدّل ملف المتجر.',
   modeTitle: 'طريقة تشغيل النشاط', modeHelp: 'تتحكم هذه الإعدادات في ظهور مسارات المنتجات والمخزون والخدمات فقط. لا تغيّر خطة الاشتراك أو الحصص أو صلاحيات المستخدمين.',
   product: 'منتجات ومخزون', productBody: 'إظهار المنتجات والمخزون والمشتريات والموردين وإخفاء مسار الخدمات.',
   service: 'خدمات فقط', serviceBody: 'إظهار الخدمات دون فرض إنشاء منتجات أو سجلات مخزون.',
   mixed: 'منتجات وخدمات', mixedBody: 'إظهار مسارات المنتجات والمخزون والخدمات معًا.',
-  preserve: 'عند تغيير الطريقة، تظل المنتجات والخدمات والمخزون والمشتريات وكل السجلات السابقة محفوظة، وتظهر مجددًا عند إعادة تفعيل المسار.',
-  ownerOnly: 'تحتاج إلى صلاحية إدارة إعدادات النشاط. يمكنك رؤية الطريقة الحالية دون تعديلها.',
-  save: 'حفظ طريقة التشغيل', saving: 'جارٍ الحفظ…', success: 'تم تحديث طريقة تشغيل النشاط.',
-  failed: 'تعذّر تحديث طريقة تشغيل النشاط. حاول مرة أخرى.',
-  locationsTitle: 'فروع النشاط', locationsHelp: 'أضف الفرع الثاني وأدر الفروع النشطة دون حذف السجل التاريخي.',
+  preserve: 'لو غيّرت الطريقة، المنتجات والخدمات والمخزون والمشتريات وكل السجلات القديمة هتفضل محفوظة، وهتظهر تاني لما تشغّل المسار.',
+  ownerOnly: 'محتاج صلاحية إدارة إعدادات النشاط. تقدر تشوف الطريقة الحالية من غير ما تعدّلها.',
+  save: 'حفظ طريقة التشغيل', saving: 'بنحفظ…', success: 'اتحدّثت طريقة تشغيل النشاط.',
+  failed: 'مقدرناش نحدّث طريقة تشغيل النشاط. حاول تاني.',
+  locationsTitle: 'فروع النشاط', locationsHelp: 'ضيف فرع تاني وتحكّم في الفروع الشغالة من غير ما تحذف السجل القديم.',
   defaultLocation: 'افتراضي', archivedLocation: 'مؤرشف', locationName: 'اسم الفرع', locationCode: 'الرمز', locationAddress: 'العنوان', locationPhone: 'الهاتف',
-  addLocation: 'إضافة فرع', editLocation: 'تعديل', saveLocation: 'حفظ الفرع', cancelEdit: 'إلغاء', addingLocation: 'جارٍ الحفظ…', archiveLocation: 'أرشفة', restoreLocation: 'استعادة', locationSaved: 'تم حفظ الفرع.', locationFailed: 'تعذّر حفظ الفرع.',
+  addLocation: 'إضافة فرع', editLocation: 'تعديل', saveLocation: 'حفظ الفرع', cancelEdit: 'إلغاء', addingLocation: 'بنحفظ…', archiveLocation: 'أرشفة', restoreLocation: 'استعادة', locationSaved: 'اتحفظ الفرع.', locationFailed: 'مقدرناش نحفظ الفرع.',
   locationCapacity: 'تستخدم {used} من {limit} فروع نشطة.', locationUnlimited: '{used} فروع نشطة · بلا حد', locationLimit: 'وصلت إلى حد الفروع النشطة في خطتك. أرشف فرعًا غير مستخدم أو اطلب خطة أعلى من الاشتراك والفوترة لإضافة أو استعادة فرع.', upgradePlan: 'فتح الاشتراك والفوترة',
-  archiveLocationConfirm: 'أرشفة هذا الفرع؟ ستبقى المبيعات والمدفوعات والمواعيد السابقة ظاهرة في السجل والتقارير.',
+  archiveLocationConfirm: 'تأرشف الفرع ده؟ المبيعات والمدفوعات والمواعيد القديمة هتفضل ظاهرة في السجل والتقارير.',
   receiptTitle: 'إعدادات الإيصال', receiptHelp: 'تُحفظ هذه البيانات داخل كل إيصال عند سداد البيعة بالكامل. التعديلات التالية لا تغيّر الإيصالات السابقة.',
   receiptDisplayName: 'اسم النشاط على الإيصال', receiptAddress: 'عنوان النشاط', receiptPhone: 'هاتف النشاط', receiptFooter: 'رسالة أسفل الإيصال',
-  receiptPaper: 'المقاس الافتراضي', thermal80: 'حراري 80 مم', a4: 'A4 / PDF', saveReceipt: 'حفظ إعدادات الإيصال', savingReceipt: 'جارٍ الحفظ…',
-  receiptSaved: 'تم حفظ إعدادات الإيصال للمبيعات المستقبلية.', receiptFailed: 'تعذّر تحميل أو حفظ إعدادات الإيصال.', receiptOwnerOnly: 'تحتاج إلى صلاحية إدارة الإعدادات لتعديل شكل الإيصالات المستقبلية.',
+  receiptPaper: 'المقاس الافتراضي', thermal80: 'حراري 80 مم', a4: 'A4 / PDF', saveReceipt: 'حفظ إعدادات الإيصال', savingReceipt: 'بنحفظ…',
+  receiptSaved: 'اتحفظت إعدادات الإيصال للمبيعات الجديدة.', receiptFailed: 'مقدرناش نحمّل أو نحفظ إعدادات الإيصال.', receiptOwnerOnly: 'محتاج صلاحية إدارة الإعدادات عشان تعدّل شكل الإيصالات الجديدة.',
 } : {
   title: 'Business settings', subtitle: 'Choose the workflows that fit this business.',
+  profileTitle: 'Shop profile', profileHelp: 'This Shop name appears in navigation, selectors, and appropriate future records. It does not change your personal account name or email, or rewrite past documents.',
+  shopDisplayName: 'Shop display name', profileLocationHelp: 'The main-location address and phone are location data. Edit them in Business locations below so conflicting copies are not created.',
+  manageLocations: 'Manage location details', saveProfile: 'Save Shop profile', savingProfile: 'Saving…', profileSaved: 'Shop profile updated.', profileFailed: 'Could not update the Shop profile. Try again.',
+  profileOwnerOnly: 'Business-settings permission is required to edit the Shop profile.',
   modeTitle: 'Business operation mode', modeHelp: 'This setting controls product, stock, and service workflow visibility only. It does not change the subscription plan, quotas, or user permissions.',
   product: 'Products and stock', productBody: 'Show products, inventory, purchasing, and supplier workflows while hiding services.',
   service: 'Services only', serviceBody: 'Show services without requiring products or stock records.',
@@ -117,6 +129,12 @@ watch([currentId, () => current.value?.business_mode], ([, mode]) => {
   cancelLocationEdit()
 }, { immediate: true })
 
+watch([currentId, () => current.value?.name], ([, name]) => {
+  profileForm.displayName = name ?? ''
+  profileError.value = ''
+  profileSuccess.value = ''
+}, { immediate: true })
+
 watch(selectedMode, () => {
   errorMessage.value = ''
   successMessage.value = ''
@@ -153,6 +171,29 @@ async function saveMode() {
     errorMessage.value = copy.value.failed
   } finally {
     pending.value = false
+  }
+}
+
+async function saveProfile() {
+  const displayName = profileForm.displayName.trim()
+  if (!current.value || !canManage.value || profilePending.value
+    || displayName.length < 2 || displayName === current.value.name) return
+  profilePending.value = true
+  profileError.value = ''
+  profileSuccess.value = ''
+  try {
+    const { error } = await shopRpc.rpc('save_shop_profile', {
+      p_shop_id: current.value.id,
+      p_display_name: displayName,
+    })
+    if (error) throw error
+    await reload()
+    profileSuccess.value = copy.value.profileSaved
+    success(copy.value.profileSaved)
+  } catch {
+    profileError.value = copy.value.profileFailed
+  } finally {
+    profilePending.value = false
   }
 }
 
@@ -269,7 +310,24 @@ async function saveReceiptSettings() {
     <p v-if="loading" role="status">{{ ui('loading') }}</p>
     <div v-else-if="shopError" role="alert" class="ls-error">{{ copy.failed }} <BsButton @click="reload()">{{ ui('retry') }}</BsButton></div>
     <p v-else-if="!current" role="status">{{ ui('empty') }}</p>
-    <section v-else class="rounded-2xl border border-border bg-card p-5 sm:p-6">
+    <section v-else id="shop-profile" class="scroll-mt-28 rounded-2xl border border-border bg-card p-5 sm:p-6" aria-labelledby="shop-profile-title">
+      <h2 id="shop-profile-title" class="text-lg font-extrabold">{{ copy.profileTitle }}</h2>
+      <p class="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{{ copy.profileHelp }}</p>
+      <p v-if="!canManage" role="status" class="mt-5 rounded-xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-4 text-sm text-fg">{{ copy.profileOwnerOnly }}</p>
+      <p v-if="profileSuccess" role="status" class="mt-4 rounded-xl border border-[var(--bs-status-success)]/30 bg-[var(--bs-status-success-bg)] p-3 text-sm text-fg">{{ profileSuccess }}</p>
+      <BsForm class="mt-5 space-y-4" :pending="profilePending" :error="profileError" @submit="saveProfile">
+        <label class="grid max-w-xl gap-1 text-sm font-bold">
+          {{ copy.shopDisplayName }}
+          <input v-model="profileForm.displayName" class="ls-input min-h-11" autocomplete="organization" required minlength="2" maxlength="120" :disabled="!canManage">
+        </label>
+        <div class="rounded-xl border border-border bg-background p-4 text-sm leading-6 text-muted-foreground">
+          <p>{{ copy.profileLocationHelp }}</p>
+          <a href="#locations" class="mt-1 inline-block min-h-11 py-2 font-bold text-[var(--bs-link)] underline">{{ copy.manageLocations }}</a>
+        </div>
+        <BsButton type="submit" class="ls-btn ls-btn-primary" :pending="profilePending" :disabled="!canManage || profileForm.displayName.trim().length < 2 || profileForm.displayName.trim() === current.name">{{ profilePending ? copy.savingProfile : copy.saveProfile }}</BsButton>
+      </BsForm>
+    </section>
+    <section v-if="current" class="rounded-2xl border border-border bg-card p-5 sm:p-6">
       <h2 class="text-lg font-extrabold">{{ copy.modeTitle }}</h2>
       <p class="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{{ copy.modeHelp }}</p>
 
