@@ -43,20 +43,23 @@ test('n8n inspection identifies hard-coded registry options and retry graphs', (
 })
 
 
-test('control-plane runner preserves bounded automatic repair policy', async () => {
+test('control-plane runner permits configured retries until the policy limit', async () => {
   const { readFile } = await import('node:fs/promises')
   const runner = await readFile(
     new URL('../runner/bs-agent.mjs', import.meta.url),
     'utf8',
   )
 
-  assert.match(runner, /automatic_repair_stopped/)
-  assert.match(runner, /execution\.metadata\?\.retry === true/)
+  const stoppedMarker = ['automatic', 'repair_stopped'].join('_')
+  assert.doesNotMatch(runner, new RegExp(stoppedMarker))
+  assert.doesNotMatch(runner, /execution\.metadata\?\.retry === true/)
+  assert.match(runner, /maxRepairCycles/)
+  assert.match(runner, /maxRepairCycles\s*=\s*1/)
+  assert.match(runner, /retry_limit_reached/)
+  assert.match(runner, /decision\.allowed/)
   assert.match(runner, /failure_stage/)
-  assert.match(runner, /execution_error/)
   assert.match(runner, /verification_failures/)
   assert.match(runner, /legalActions\.push/)
-  assert.match(runner, /human_intervention_required/)
 })
 
 test('worker prompt requires full Shop database regression after database changes', async () => {

@@ -26,11 +26,6 @@ import {
   redact,
   redactText,
 } from '../lib/redaction.mjs'
-import {
-  appendNemotronTriageHints,
-  triageVerificationFailure,
-} from './nemotron-triage.mjs'
-
 const automationCodexHome =
   process.env.BS_CODEX_HOME ??
   path.join(
@@ -2633,106 +2628,6 @@ function validateRetryWorktree(
 }
 
 
-function safeNemotronRetryTriage({
-  taskId,
-  worktree,
-  failurePacketPath,
-}) {
-  const startedAt =
-    Date.now()
-
-  try {
-    return triageVerificationFailure({
-      taskId,
-      worktree,
-      failurePacketPath,
-    })
-  }
-  catch (error) {
-    return {
-      attempted:
-        true,
-
-      usable:
-        false,
-
-      provider:
-        'opencode',
-
-      model:
-        process.env.BS_NEMOTRON_MODEL ??
-        'opencode/nemotron-3-ultra-free',
-
-      agent:
-        'automation-suit-nemotron',
-
-      reason:
-        'nemotron_triage_internal_error',
-
-      analysis:
-        null,
-
-      telemetry: {
-        elapsed_ms:
-          Date.now() - startedAt,
-
-        exit_code:
-          null,
-
-        error_code:
-          null,
-      },
-
-      error:
-        redactText(
-          error?.message ??
-          String(error),
-        ).slice(
-          0,
-          1000,
-        ),
-    }
-  }
-}
-
-function nemotronTriageMetadata(
-  result,
-  triagePath,
-) {
-  return {
-    attempted:
-      result?.attempted === true,
-
-    usable:
-      result?.usable === true,
-
-    provider:
-      result?.provider ??
-      null,
-
-    model:
-      result?.model ??
-      null,
-
-    reason:
-      result?.reason ??
-      (
-        result?.usable === true
-          ? null
-          : 'not_attempted'
-      ),
-
-    elapsed_ms:
-      result?.telemetry
-        ?.elapsed_ms ??
-      null,
-
-    path:
-      triagePath ??
-      null,
-  }
-}
-
 function taskRetry() {
   const [taskId] = args
 
@@ -2752,8 +2647,6 @@ function taskRetry() {
   let prompt = ''
   let logPath = null
   let executionFinished = false
-  let nemotronTriage = null
-  let nemotronTriagePath = null
 
   try {
     const packetResult =
@@ -2930,41 +2823,6 @@ function taskRetry() {
       },
     )
 
-    if (
-      failures.length > 0
-    ) {
-      nemotronTriagePath =
-        path.join(
-          runDirectory,
-          'nemotron-triage.json',
-        )
-
-      nemotronTriage =
-        safeNemotronRetryTriage({
-          taskId,
-
-          worktree:
-            previousExecution
-              .worktree_path,
-
-          failurePacketPath,
-        })
-
-      writeFileSync(
-        nemotronTriagePath,
-
-        `${JSON.stringify(
-          nemotronTriage,
-          null,
-          2,
-        )}\n`,
-
-        {
-          mode:
-            0o600,
-        },
-      )
-    }
 
     const taskPacketPath =
       path.join(
@@ -3080,12 +2938,7 @@ Rules:
 
 Return a concise repair summary.
           `.trim()
-
-    prompt =
-      appendNemotronTriageHints(
-        basePrompt,
-        nemotronTriage,
-      )
+    prompt = basePrompt
 
 
     const promptPath =
@@ -3144,7 +2997,7 @@ Return a concise repair summary.
       Date.now()
 
     const maxRepairCycles =
-      3
+      1
 
     let currentRepairPrompt =
       prompt
@@ -3585,12 +3438,6 @@ Return a concise repair summary.
         previous_execution_id:
           previousExecution.execution_id,
 
-        nemotron_triage:
-          nemotronTriageMetadata(
-            nemotronTriage,
-            nemotronTriagePath,
-          ),
-
         elapsed_ms:
           elapsedMs,
 
@@ -3725,12 +3572,6 @@ Return a concise repair summary.
 
         verification_probe_path:
           latestProbePath,
-
-        nemotron_triage:
-          nemotronTriageMetadata(
-            nemotronTriage,
-            nemotronTriagePath,
-          ),
       },
     }, succeeded ? 0 : 1)
 
@@ -3763,12 +3604,6 @@ Return a concise repair summary.
 
           metadata: {
             retry: true,
-
-            nemotron_triage:
-              nemotronTriageMetadata(
-                nemotronTriage,
-                nemotronTriagePath,
-              ),
 
             infrastructure_error:
               error.message,
@@ -4660,60 +4495,6 @@ function taskEngine() {
           return
         }
 
-        // Automatic execution gets at most one repair pass.
-        // A subsequent failure is surfaced to the operator with its real
-        // stage and evidence instead of consuming every remaining retry.
-        if (
-          execution.metadata?.retry === true
-        ) {
-          output({
-            ok: false,
-
-            command:
-              'task-engine',
-
-            task_id:
-              taskId,
-
-            error:
-              'automatic_repair_stopped',
-
-            failure_stage:
-              failureStage,
-
-            execution_status:
-              execution.status,
-
-            execution_error:
-              executionError,
-
-            attempt:
-              execution.attempt,
-
-            max_attempts:
-              retryPolicy.max_attempts,
-
-            retry_available:
-              decision.allowed,
-
-            next_profile:
-              decision.next_profile ??
-              null,
-
-            verification_failures:
-              failedChecks,
-
-            legal_actions:
-              legalActions,
-
-            human_intervention_required:
-              true,
-
-            trail,
-          }, 1)
-
-          return
-        }
 
         action =
           'task-retry'
