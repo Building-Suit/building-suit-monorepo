@@ -49,8 +49,29 @@ test('expense UI uses the server contract and exposes bilingual traceable correc
   assert.match(page, /p_reason: reason/)
   assert.match(page, /سبب التصحيح/)
   assert.match(page, /Correction reason/)
-  assert.match(page, /Other operational income is excluded from V1/)
-  assert.match(page, /shop_permission_access/)
+  assert.match(page, /Record money the shop spends here, such as rent, supplies, and utilities/)
+  assert.match(page, /Sales income is recorded automatically from Sales or POS/)
+  assert.match(page, /سجّل هنا الأموال التي ينفقها المتجر/)
+  assert.match(page, /expensePage\.value\.canManage/)
+  assert.doesNotMatch(page, /shop-data:expense-permissions/)
   assert.doesNotMatch(page, /isOwner/)
   assert.doesNotMatch(page, /\.limit\(100\)/)
+})
+
+test('expense UI keeps operational failures distinct and extracts structured RPC errors', () => {
+  for (const code of [
+    'SHOP_PERMISSION_DENIED',
+    'SHOP_SUBSCRIPTION_INACTIVE',
+    'LOCATION_ACCESS_DENIED',
+    'ACCOUNTING_PERIOD_CLOSED',
+    'INVALID_EXPENSE',
+    'INVALID_EXPENSE_QUERY',
+    'EXPENSE_REQUEST_CONFLICT',
+    'EXPENSE_NOT_FOUND',
+  ]) assert.match(page, new RegExp(code))
+  assert.match(page, /typeof value === 'object' && value && 'message' in value/)
+  assert.match(page, /Ask the owner to add it to your role/)
+  assert.match(page, /review Subscription and billing/)
+  assert.match(page, /Choose a location assigned to you/)
+  assert.doesNotMatch(page, /permission, or the subscription/)
 })
