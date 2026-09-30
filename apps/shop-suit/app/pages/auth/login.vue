@@ -14,6 +14,11 @@ const email = ref('')
 const password = ref('')
 const pending = ref(false)
 const errorMessage = ref('')
+const clientReady = ref(false)
+
+onMounted(() => {
+  clientReady.value = true
+})
 
 function localizedFallback() {
   return locale.value === 'ar'
@@ -90,7 +95,7 @@ watchEffect(async () => {
 </script>
 
 <template>
-  <form class="ls-auth-card w-full space-y-5 p-6 text-start sm:p-8" @submit.prevent="onSubmit">
+  <form class="ls-auth-card w-full space-y-5 p-6 text-start sm:p-8" :data-client-ready="clientReady ? 'true' : 'false'" @submit.prevent="onSubmit">
     <div class="text-center"><p class="ls-auth-eyebrow">Shop Suit</p><h1 class="mt-2 text-xl font-extrabold tracking-[-.03em]">{{ t('auth.loginTitle') }}</h1><p class="mt-2 text-sm text-fg-muted">{{ t('auth.loginSubtitle') }}</p></div>
     <FloatingField :label="t('auth.email')"><InputText id="login-email" v-model="email" type="email" autocomplete="email" required dir="ltr" class="ls-input" /></FloatingField>
     <FloatingField :label="t('auth.password')"><InputText id="login-password" v-model="password" type="password" autocomplete="current-password" required dir="ltr" class="ls-input" /></FloatingField>

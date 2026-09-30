@@ -28,9 +28,10 @@ not yet seeded, approved, or sold as Shop Suit plans.
 
 Branches, advanced analytics and API access are disabled in all three launch
 plans. The annual reference prices implement a 32% reduction from monthly × 12.
-Ledger's launch documentation describes a cardless 14-day trial. Shop Suit's local
-Basic/Pro seeds instead use 30 days and 800/1,200 EGP monthly; the cloud `plans`
-column default is also 30 days. Existing customers must not silently be migrated.
+Ledger's launch documentation describes a cardless 14-day trial. Shop Suit now
+independently applies the approved 14-day policy to every new trial. The forward
+migration changes the catalog/default without shortening existing trial deadlines;
+exceptional live-customer records require an explicit audited operator command.
 
 ## Behavior to carry over
 
@@ -69,16 +70,12 @@ Task 08a provisionally sets active product caps at Basic 100 and Pro 1,000;
 Task 08b provisionally sets active service caps at Basic 50 and Pro 500. These
 are database-enforced operational values, not approved commercial promises.
 
-The hosted `shop-crm` portal currently has Basic at EGP 799/month and Pro at
-EGP 1,199/month, both with 30 trial days. They now have provisional
-product/service catalog limits but no complete launch quota matrix, and must
-not be conflated with the local historical 800/1,200 EGP seeds
-or Ledger's catalog. See [Task 02](02-database-contract.md).
+The Basic/Pro prices and product/service limits remain current implementation
+evidence, not newly approved commercial terms. See [Task 02](02-database-contract.md).
 
-Ledger uses Paymob infrastructure; it is outside this project's authorized
-architecture. With external payment APIs excluded, the proposed launch model is
-offline payment and operator-controlled subscription activation in Supabase,
-with an audit record, explicit duration, and no client self-activation. That flow
-must be implemented and documented before calling the product sellable. Exact
-Shop Suit prices, quotas, trial plan and existing-customer transition remain
-commercial decisions to settle during the plans task.
+Ledger uses Paymob infrastructure; it remains outside Shop Suit's authorized
+architecture. Shop Suit uses an operator-configured InstaPay/manual-transfer
+notice, external manual verification, and audited operator-only activation. It
+does not expose checkout/webhook behavior, automatic bank verification, or
+customer self-activation. Exact Shop Suit prices and final quotas remain separate
+commercial decisions.

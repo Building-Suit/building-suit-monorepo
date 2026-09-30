@@ -26,6 +26,16 @@ for (const app of applicationPackages) for (const file of await walk(`apps/${app
   if (/<table\b|<DataTable\b|role="dialog"/.test(text)) failures.push(`${file}: bypasses the shared table or dialog`)
   if (applicationImport.test(text)) failures.push(`${file}: imports another app`)
   if (/window\.confirm\(|\bconfirm\(/.test(text)) failures.push(`${file}: bypasses shared confirmation`)
+  if (app === 'shop-suit' && /<(?:Dialog|Drawer|Select|AutoComplete)\b|(?:from\s*|import\s*\()\s*['"](?:reka-ui|@nuxt\/ui)/.test(text)) {
+    failures.push(`${file}: UI-D01 requires shared wrappers for composite controls`)
+  }
+}
+for (const file of ['package.json', 'apps/shop-suit/package.json', 'packages/ui/package.json']) {
+  const manifest = JSON.parse(await readFile(path.join(root, file), 'utf8'))
+  const dependencies = { ...manifest.dependencies, ...manifest.devDependencies }
+  if (dependencies.primevue && !/^4\./.test(dependencies.primevue)) failures.push(`${file}: UI-D01 requires pinned PrimeVue 4.x`)
+  if (dependencies.tailwindcss && !/^4\./.test(dependencies.tailwindcss)) failures.push(`${file}: UI-D01 requires Tailwind 4.x`)
+  if (['reka-ui', '@nuxt/ui', 'radix-vue'].some(name => dependencies[name])) failures.push(`${file}: UI-D01 disallows a competing UI foundation`)
 }
 const manifest = JSON.parse(await readFile(path.join(root, 'docs/migration/copy-manifest.json'), 'utf8'))
 let migrations = 0

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const { toasts, dismiss } = useToasts()
-const { t } = useI18n()
+const ui = useUiCopy()
 
 const tones: Record<string, string> = {
   success: 'border-[var(--bs-status-success)]',
@@ -18,7 +18,7 @@ const tones: Record<string, string> = {
     <div
       v-for="toast in toasts"
       :key="toast.id"
-      class="pointer-events-auto w-full max-w-sm rounded-control border bg-[var(--bs-deep-structure-navy)] px-4 py-3 text-[var(--bs-pearl-white)] shadow-overlay"
+      class="pointer-events-auto w-full max-w-sm rounded-control border bg-[var(--bs-surface)] px-4 py-3 text-[var(--bs-text)] shadow-overlay"
       :class="tones[toast.tone]"
     >
       <div class="flex items-start gap-3">
@@ -30,8 +30,8 @@ const tones: Record<string, string> = {
         </div>
         <button
           type="button"
-          class="shrink-0 text-sm opacity-60 hover:opacity-100"
-          :aria-label="t('common.dismiss')"
+          class="ls-btn ls-btn-sm shrink-0"
+          :aria-label="ui('close')"
           @click="dismiss(toast.id)"
         >
           <AppIcon name="close" :size="18" />

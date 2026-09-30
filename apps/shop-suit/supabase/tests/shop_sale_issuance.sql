@@ -66,7 +66,7 @@ declare
   v_retry uuid := gen_random_uuid(); v_draft_retry uuid := gen_random_uuid();
   v_detail jsonb; v_page jsonb;
 begin
-  v_shop := public.create_owner_shop('Sale fixture A', 'pro', 'mixed'::public.business_mode);
+  v_shop := public.create_owner_shop('Sale fixture A', 'team', 'mixed'::public.business_mode);
   v_customer := public.save_customer(v_shop, null, 'Sale Customer', '+20100',
     'sale@example.invalid', 'Cairo', null);
   v_product := public.save_product(v_shop, null, 'Sale Product', 'SALE-SKU', 'SALE-BAR', 10);
@@ -212,7 +212,7 @@ set local role authenticated;
 do $$
 declare v_shop uuid; v_customer uuid; v_product uuid; v_sale uuid;
 begin
-  v_shop := public.create_owner_shop('Product mode sale fixture', 'pro', 'product'::public.business_mode);
+  v_shop := public.create_owner_shop('Product mode sale fixture', 'team', 'product'::public.business_mode);
   v_customer := public.save_customer(v_shop, null, 'Product Customer', null, null, null, null);
   v_product := public.save_product(v_shop, null, 'Mode Product', null, null, 8);
   perform public.adjust_stock(gen_random_uuid(), v_shop, v_product, 2, 3, 'Mode opening stock');
@@ -231,7 +231,7 @@ set local role authenticated;
 do $$
 declare v_shop uuid; v_customer uuid; v_service uuid; v_sale uuid;
 begin
-  v_shop := public.create_owner_shop('Service mode sale fixture', 'pro', 'service'::public.business_mode);
+  v_shop := public.create_owner_shop('Service mode sale fixture', 'team', 'service'::public.business_mode);
   v_customer := public.save_customer(v_shop, null, 'Service Customer', null, null, null, null);
   v_service := public.save_service(v_shop, null, 'Mode Service', null, 12, 'amount', 2);
   v_sale := public.save_sale_draft(gen_random_uuid(), v_shop, null, v_customer, null,
@@ -252,7 +252,7 @@ set local role authenticated;
 do $$
 declare v_shop uuid; v_customer uuid; v_product uuid; v_service uuid;
 begin
-  v_shop := public.create_owner_shop('Sale fixture B', 'pro', 'mixed'::public.business_mode);
+  v_shop := public.create_owner_shop('Sale fixture B', 'team', 'mixed'::public.business_mode);
   v_customer := public.save_customer(v_shop, null, 'Foreign Customer', null, null, null, null);
   v_product := public.save_product(v_shop, null, 'Foreign Product', null, null, 1);
   v_service := public.save_service(v_shop, null, 'Foreign Service', null, 1, 'amount', 0);

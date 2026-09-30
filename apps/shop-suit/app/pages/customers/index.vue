@@ -107,7 +107,7 @@ function openCreate() {
 function readableError(message?: string) {
   if (message === 'INVALID_CUSTOMER') return t('customers.invalid')
   if (message === 'SHOP_SUBSCRIPTION_INACTIVE' || message === 'SHOP_PERMISSION_DENIED') return t('customers.manageDenied')
-  return message || t('customers.writeError')
+  return t('customers.writeError')
 }
 
 async function save() {
@@ -164,9 +164,9 @@ function formatDate(value: string) {
         <h1 class="text-3xl font-extrabold tracking-tight">{{ t('customers.title') }}</h1>
         <p class="mt-2 text-sm text-muted-foreground">{{ t('customers.subtitle') }}</p>
       </div>
-      <button v-if="current && canManage" type="button" class="ls-btn ls-btn-primary" @click="openCreate">
+      <BsButton v-if="current && canManage" type="button" class="ls-btn ls-btn-primary" @click="openCreate">
         {{ t('customers.add') }}
-      </button>
+      </BsButton>
     </header>
 
     <div v-if="!current && !shopLoading" class="rounded-2xl border border-border bg-card p-8 text-center text-sm">
@@ -188,18 +188,17 @@ function formatDate(value: string) {
 
       <BsDialog v-model:visible="showForm" :title="t('customers.createTitle')" :dirty="formDirty" :pending="saving">
         <template #default="{ close }">
-          <form class="grid gap-4 sm:grid-cols-2" @submit.prevent="save">
-            <p v-if="actionError" role="alert" class="rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm text-[var(--bs-status-error)] sm:col-span-2">{{ actionError }}</p>
+          <BsForm class="grid gap-4 sm:grid-cols-2" :pending="saving" :error="actionError" @submit="save">
             <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ t('customers.name') }}<input v-model="form.name" type="text" minlength="2" maxlength="160" required class="ls-input"></label>
             <label class="space-y-2 text-sm font-bold">{{ t('customers.phone') }}<input v-model="form.phone" type="tel" maxlength="50" autocomplete="tel" class="ls-input"></label>
             <label class="space-y-2 text-sm font-bold">{{ t('customers.email') }}<input v-model="form.email" type="email" maxlength="254" autocomplete="email" class="ls-input"></label>
             <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ t('customers.address') }}<textarea v-model="form.address" maxlength="500" rows="2" class="ls-input" /></label>
             <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ t('customers.notes') }}<textarea v-model="form.notes" maxlength="2000" rows="3" class="ls-input" /></label>
             <div class="flex flex-wrap gap-2 sm:col-span-2">
-              <button type="submit" class="ls-btn ls-btn-primary" :disabled="saving">{{ saving ? t('customers.saving') : t('customers.save') }}</button>
-              <button type="button" class="ls-btn" :disabled="saving" @click="close">{{ t('customers.cancel') }}</button>
+              <BsButton type="submit" class="ls-btn ls-btn-primary" :disabled="saving">{{ saving ? t('customers.saving') : t('customers.save') }}</BsButton>
+              <BsButton type="button" class="ls-btn" :disabled="saving" @click="close">{{ t('customers.cancel') }}</BsButton>
             </div>
-          </form>
+          </BsForm>
         </template>
       </BsDialog>
 
@@ -244,7 +243,7 @@ function formatDate(value: string) {
           <Column header-class="px-5 py-3 text-start" body-class="px-5 py-4">
             <template #header>{{ t('customers.status') }}</template>
             <template #body="{ data: customer }">
-              <span class="ls-badge" :class="customer.is_active ? 'bg-[var(--bs-status-success-bg)] text-[var(--bs-status-success)]' : 'bg-muted text-muted-foreground'">
+              <span class="ls-badge" :class="customer.is_active ? 'bg-[var(--bs-status-success-bg)] text-fg' : 'bg-muted text-muted-foreground'">
                 {{ customer.is_active ? t('customers.active') : t('customers.archived') }}
               </span>
             </template>
