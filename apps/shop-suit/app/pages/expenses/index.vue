@@ -65,38 +65,38 @@ form.date = localToday()
 
 const copy = computed(() => isArabic.value ? {
   title: 'المصروفات', subtitle: 'سجل كامل لمصروفات التشغيل المدفوعة وتصحيحاتها وإلغائها.',
-  incomeBoundary: 'الدخل التشغيلي الآخر غير مشمول في الإصدار الأول. هذه الصفحة لا تسجل إيراد المبيعات.',
+  incomeBoundary: 'سجّل هنا الأموال التي ينفقها المتجر، مثل الإيجار والمستلزمات والمرافق. يُسجَّل دخل المبيعات تلقائيًا من شاشة المبيعات أو نقطة البيع؛ لا تسجله هنا.',
   add: 'تسجيل مصروف', correct: 'تصحيح', void: 'إلغاء', cancel: 'تراجع', save: 'حفظ المصروف',
   saveCorrection: 'حفظ التصحيح', saving: 'جاري الحفظ...', name: 'عنوان المصروف', amount: 'المبلغ',
   category: 'التصنيف', allCategories: 'كل التصنيفات', date: 'تاريخ المصروف', notes: 'ملاحظات', status: 'الحالة',
   paid: 'مدفوع', voided: 'ملغى', allStatuses: 'كل الحالات', search: 'ابحث بالعنوان أو التصنيف أو الملاحظات أو السبب',
   from: 'من', to: 'إلى', empty: 'لا توجد مصروفات مطابقة.', noShop: 'أنشئ متجرًا أولًا من لوحة التحكم.',
-  noLocation: 'اختر فرعًا متاحًا لعرض المصروفات.', dashboard: 'لوحة التحكم', readError: 'تعذّر تحميل المصروفات.', retry: 'إعادة المحاولة',
+  noLocation: 'اختر فرعًا نشطًا من أعلى الصفحة. إذا لم يظهر فرع، فاطلب من المالك إضافتك إليه.', dashboard: 'لوحة التحكم', readError: 'تعذّر تحميل المصروفات. حاول مجددًا.', retry: 'إعادة المحاولة',
   writeError: 'تعذّر حفظ المصروف.', invalid: 'راجع العنوان والتصنيف والمبلغ والتاريخ والسبب.',
-  access: 'ليست لديك صلاحية إدارة المصروفات أو انتهى الاشتراك.', closed: 'فترة هذا المصروف مغلقة.',
+  permission: 'لا تملك صلاحية إدارة المصروفات. اطلب من المالك منحك هذه الصلاحية.', viewPermission: 'لا تملك صلاحية عرض المصروفات. اطلب من المالك إضافتها إلى دورك.', subscription: 'الاشتراك غير نشط، لذلك لا يمكن حفظ المصروف. يمكن للمالك مراجعة صفحة الاشتراك والفوترة.', locationDenied: 'لا تملك صلاحية الوصول إلى الفرع المحدد. اختر فرعًا مخصصًا لك أو اطلب من المالك إضافتك.', closed: 'هذه الفترة المحاسبية مغلقة. اختر تاريخًا في فترة مفتوحة أو اطلب من المالك مراجعة الإغلاق.',
   requestConflict: 'استُخدم رقم المحاولة ببيانات مختلفة. عدّل البيانات وحاول مجددًا.',
   correctionReason: 'سبب التصحيح', correctionHelp: 'سيبقى السجل الأصلي ملغيًا ويرتبط بهذا السجل البديل.',
   voidReason: 'سبب الإلغاء', voidTitle: 'إلغاء المصروف', voidHelp: 'سيبقى المصروف في السجل ويُستبعد من المجاميع.',
   categoryHint: 'مثل: إيجار، مرافق، مستلزمات', history: 'نوع السجل', actor: 'سجله',
   original: 'أصلي', correction: 'تصحيح بديل', corrected: 'الأصل المصحح', voidedHistory: 'ملغى',
-  readOnly: 'لديك صلاحية العرض فقط.', confirmSave: 'تسجيل هذا المصروف المدفوع؟ سيزيد إجمالي المصروفات بالقيمة المعروضة.', confirmCorrection: 'استبدال هذا المصروف؟ يبقى الأصل ملغى في السجل وتستخدم الإجماليات القيمة الجديدة.', saved: 'تم حفظ المصروف وسجل التتبع.', branch: 'الفرع',
+  changed: 'تغيّر هذا المصروف منذ فتحه. حدّث القائمة وحاول مجددًا.', filterInvalid: 'راجع مرشحات البحث والتواريخ ثم حاول مجددًا.', readOnly: 'يمكنك عرض المصروفات فقط. اطلب من المالك صلاحية إدارة المصروفات للتسجيل أو التصحيح أو الإلغاء.', confirmSave: 'تسجيل هذا المصروف المدفوع؟ سيزيد إجمالي المصروفات بالقيمة المعروضة.', confirmCorrection: 'استبدال هذا المصروف؟ يبقى الأصل ملغى في السجل وتستخدم الإجماليات القيمة الجديدة.', saved: 'تم حفظ المصروف وسجل التتبع.', branch: 'الفرع',
 } : {
   title: 'Expenses', subtitle: 'Complete paid operating-expense history, including corrections and voids.',
-  incomeBoundary: 'Other operational income is excluded from V1. This page does not record sales revenue.',
+  incomeBoundary: 'Record money the shop spends here, such as rent, supplies, and utilities. Sales income is recorded automatically from Sales or POS; do not enter it here.',
   add: 'Record expense', correct: 'Correct', void: 'Void', cancel: 'Cancel', save: 'Save expense',
   saveCorrection: 'Save correction', saving: 'Saving...', name: 'Expense title', amount: 'Amount',
   category: 'Category', allCategories: 'All categories', date: 'Expense date', notes: 'Notes', status: 'Status',
   paid: 'Paid', voided: 'Voided', allStatuses: 'All statuses', search: 'Search title, category, notes, or reason',
   from: 'From', to: 'To', empty: 'No matching expenses.', noShop: 'Create a shop from the dashboard first.',
-  noLocation: 'Select an available location to view expenses.', dashboard: 'Dashboard', readError: 'Could not load expenses.', retry: 'Retry',
+  noLocation: 'Select an active location at the top of the page. If none is listed, ask the owner to assign you to one.', dashboard: 'Dashboard', readError: 'Could not load expenses. Try again.', retry: 'Retry',
   writeError: 'Could not save the expense.', invalid: 'Check the title, category, amount, date, and reason.',
-  access: 'You do not have expense-management permission, or the subscription is inactive.', closed: 'This expense period is closed.',
+  permission: 'You do not have expense-management permission. Ask the owner to add it to your role.', viewPermission: 'You do not have permission to view expenses. Ask the owner to add it to your role.', subscription: 'The subscription is inactive, so this expense cannot be saved. The owner can review Subscription and billing.', locationDenied: 'You cannot access the selected location. Choose a location assigned to you or ask the owner to add you.', closed: 'This accounting period is closed. Choose a date in an open period or ask the owner to review the closure.',
   requestConflict: 'This retry key was already used with different data. Change the form and retry.',
   correctionReason: 'Correction reason', correctionHelp: 'The original remains as a voided record linked to this replacement.',
   voidReason: 'Void reason', voidTitle: 'Void expense', voidHelp: 'The expense remains in history and is excluded from totals.',
   categoryHint: 'For example: Rent, Utilities, Supplies', history: 'History', actor: 'Recorded by',
   original: 'Original', correction: 'Replacement correction', corrected: 'Corrected original', voidedHistory: 'Voided',
-  readOnly: 'You have view-only expense access.', confirmSave: 'Record this paid expense? It increases expense totals by the amount shown.', confirmCorrection: 'Replace this expense? The original is preserved as voided and totals use the new amount.', saved: 'Expense and trace history saved.', branch: 'Location',
+  changed: 'This expense changed after you opened it. Refresh the list and try again.', filterInvalid: 'Review the search and date filters, then try again.', readOnly: 'You can view expenses only. Ask the owner for expense-management permission to record, correct, or void one.', confirmSave: 'Record this paid expense? It increases expense totals by the amount shown.', confirmCorrection: 'Replace this expense? The original is preserved as voided and totals use the new amount.', saved: 'Expense and trace history saved.', branch: 'Location',
 })
 
 watch(search, value => {
@@ -105,15 +105,6 @@ watch(search, value => {
 })
 onBeforeUnmount(() => { if (searchTimer) clearTimeout(searchTimer) })
 watch([statusFilter, categoryFilter, fromDate, toDate], () => { page.value = 1 })
-
-const { data: permissionAccess } = useAsyncData('shop-data:expense-permissions', async () => {
-  if (!currentId.value) return { 'expenses.manage': false }
-  const { data, error } = await rpc.rpc('shop_permission_access', {
-    p_shop_id: currentId.value, p_permission_keys: ['expenses.manage'],
-  })
-  if (error) throw error
-  return data
-}, { watch: [currentId], default: () => ({ 'expenses.manage': false }) })
 
 const { data: categories } = useAsyncData(() => `shop-data:expense-categories:${currentId.value ?? 'none'}`, async () => {
   if (!currentId.value) return []
@@ -138,7 +129,7 @@ const { data: expensePage, pending, error, refresh } = useAsyncData(
     return data as ExpensePage
   }, { watch: [currentId, currentLocationId, debouncedSearch, statusFilter, categoryFilter, fromDate, toDate, page], default: emptyPage },
 )
-const canManage = computed(() => permissionAccess.value?.['expenses.manage'] === true && expensePage.value.canManage)
+const canManage = computed(() => expensePage.value.canManage)
 
 function money(value: number) {
   return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { style: 'currency', currency: 'EGP', maximumFractionDigits: 2 }).format(Number(value))
@@ -149,13 +140,30 @@ function displayDate(value: string) {
 function historyLabel(kind: HistoryKind) {
   return kind === 'correction' ? copy.value.correction : kind === 'corrected' ? copy.value.corrected : kind === 'voided' ? copy.value.voidedHistory : copy.value.original
 }
-function readableError(message?: string) {
-  if (message === 'SHOP_SUBSCRIPTION_INACTIVE' || message === 'SHOP_PERMISSION_DENIED' || message === 'LOCATION_ACCESS_DENIED') return copy.value.access
-  if (message === 'ACCOUNTING_PERIOD_CLOSED') return copy.value.closed
-  if (message === 'EXPENSE_REQUEST_CONFLICT') return copy.value.requestConflict
-  if (message === 'INVALID_EXPENSE' || message === 'INVALID_EXPENSE_VOID') return copy.value.invalid
+function errorMessage(value: unknown) {
+  if (value instanceof Error) return value.message
+  if (typeof value === 'object' && value && 'message' in value) return String(value.message)
+  return String(value ?? '')
+}
+function readableError(value: unknown) {
+  const message = errorMessage(value)
+  if (message.includes('SHOP_SUBSCRIPTION_INACTIVE')) return copy.value.subscription
+  if (message.includes('SHOP_PERMISSION_DENIED')) return copy.value.permission
+  if (message.includes('LOCATION_ACCESS_DENIED')) return copy.value.locationDenied
+  if (message.includes('ACCOUNTING_PERIOD_CLOSED')) return copy.value.closed
+  if (message.includes('EXPENSE_REQUEST_CONFLICT')) return copy.value.requestConflict
+  if (message.includes('INVALID_EXPENSE') || message.includes('INVALID_EXPENSE_VOID')) return copy.value.invalid
+  if (message.includes('EXPENSE_NOT_FOUND') || message.includes('EXPENSE_NOT_PAID')) return copy.value.changed
   return copy.value.writeError
 }
+const readErrorMessage = computed(() => {
+  const message = errorMessage(error.value)
+  if (message.includes('SHOP_PERMISSION_DENIED')) return copy.value.viewPermission
+  if (message.includes('SHOP_SUBSCRIPTION_INACTIVE')) return copy.value.subscription
+  if (message.includes('LOCATION_ACCESS_DENIED')) return copy.value.locationDenied
+  if (message.includes('INVALID_EXPENSE_QUERY')) return copy.value.filterInvalid
+  return copy.value.readError
+})
 function resetForm() {
   editingId.value = null; saveRequestId.value = null; showForm.value = false; actionError.value = ''
   Object.assign(form, { title: '', amount: 0, category: '', date: localToday(), notes: '', correctionReason: '' })
@@ -198,7 +206,7 @@ async function save() {
     if (saveError) throw saveError
     resetForm(); await refresh(); if (inScope()) success(copy.value.saved)
   } catch (saveError) {
-    if (inScope()) actionError.value = readableError(saveError instanceof Error ? saveError.message : undefined)
+    if (inScope()) actionError.value = readableError(saveError)
   } finally { saving.value = false }
 }
 
@@ -220,7 +228,7 @@ async function submitVoid() {
     if (voidError) throw voidError
     await refresh(); closeVoid(true); if (inScope()) success(copy.value.saved)
   } catch (voidError) {
-    if (inScope()) actionError.value = readableError(voidError instanceof Error ? voidError.message : undefined)
+    if (inScope()) actionError.value = readableError(voidError)
   } finally { voidPending.value = false }
 }
 function handlePage(event: { page: number }) { page.value = event.page + 1 }
@@ -236,7 +244,7 @@ function handlePage(event: { page: number }) { page.value = event.page + 1 }
     <template v-else-if="current">
       <p class="rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm">{{ copy.incomeBoundary }}</p>
       <p v-if="!currentLocationId" role="alert" class="rounded-xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-4 text-sm">{{ copy.noLocation }}</p>
-      <p v-else-if="expensePage && !canManage" class="rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm">{{ copy.readOnly }}</p>
+      <p v-else-if="!pending && !error && !canManage" class="rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm">{{ copy.readOnly }}</p>
       <p v-if="actionError && !showForm && !voidOpen" role="alert" class="ls-error">{{ actionError }}</p>
 
       <BsDialog v-model:visible="showForm" :title="editingId ? copy.correct : copy.add" :dirty="formDirty" :pending="saving">
@@ -271,7 +279,7 @@ function handlePage(event: { page: number }) { page.value = event.page + 1 }
           <label class="text-xs font-bold text-muted-foreground">{{ copy.to }}<input v-model="toDate" type="date" class="ls-input mt-1"></label>
         </div>
         <div class="border-b border-border px-4 py-3 text-sm text-muted-foreground"><strong>{{ copy.branch }}:</strong> {{ currentLocation?.name }}</div>
-        <BsDataTable :value="expensePage?.items ?? []" :loading="pending" :error="error ? copy.readError : null" :label="copy.title" data-key="id" lazy paginator :rows="pageSize" :first="(page - 1) * pageSize" :total-records="expensePage?.total ?? 0" :always-show-paginator="false" :row-class="() => 'border-t border-border'" @page="handlePage" @retry="refresh()">
+        <BsDataTable :value="expensePage?.items ?? []" :loading="pending" :error="error ? readErrorMessage : null" :label="copy.title" data-key="id" lazy paginator :rows="pageSize" :first="(page - 1) * pageSize" :total-records="expensePage?.total ?? 0" :always-show-paginator="false" :row-class="() => 'border-t border-border'" @page="handlePage" @retry="refresh()">
           <Column header-class="px-4 py-3 text-start" body-class="px-4 py-3"><template #header>{{ copy.name }}</template><template #body="{ data: expense }"><p class="font-semibold">{{ expense.title }}</p><p v-if="expense.notes" class="text-xs text-muted-foreground">{{ expense.notes }}</p><p v-if="expense.change_reason" class="mt-1 text-xs text-muted-foreground">{{ expense.change_reason }}</p></template></Column>
           <Column header-class="px-4 py-3 text-start" body-class="px-4 py-3"><template #header>{{ copy.category }}</template><template #body="{ data: expense }">{{ expense.category_name || '—' }}</template></Column>
           <Column header-class="px-4 py-3 text-start" body-class="px-4 py-3"><template #header>{{ copy.date }}</template><template #body="{ data: expense }">{{ displayDate(expense.expense_date) }}</template></Column>
