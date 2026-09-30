@@ -5,7 +5,14 @@ export type ShopRpcDatabase = {
     Views: Record<string, never>
     Functions: {
       create_owner_shop: {
-        Args: { p_shop_name: string; p_business_mode: 'product' | 'service' | 'mixed' }
+        Args: {
+          p_shop_name: string
+          p_business_mode: 'product' | 'service' | 'mixed'
+          p_main_location_name?: string
+          p_main_location_code?: string | null
+          p_main_location_address?: string | null
+          p_main_location_phone?: string | null
+        }
         Returns: string
       }
       platform_admin_session: {
@@ -146,6 +153,10 @@ export type ShopRpcDatabase = {
         Returns: string
       }
       archive_shop_location: {
+        Args: { p_shop_id: string; p_location_id: string }
+        Returns: undefined
+      }
+      restore_shop_location: {
         Args: { p_shop_id: string; p_location_id: string }
         Returns: undefined
       }

@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
+import type { PlanUsageResource } from '~/types/plans'
 import type { ReceiptPaperSize } from '~/types/receipt'
 import type { BusinessMode } from '~/utils/businessMode'
+import type { ShopLocation } from '~/composables/useShop'
 import { BUSINESS_MODES } from '~/utils/businessMode'
 
 definePageMeta({ layout: 'default', middleware: ['auth'] })
@@ -18,6 +20,7 @@ const errorMessage = ref('')
 const successMessage = ref('')
 const locationPending = ref(false)
 const locationError = ref('')
+const editingLocationId = ref<string | null>(null)
 const locationForm = reactive({ name: '', code: '', address: '', phone: '' })
 const receiptForm = reactive({ displayName: '', address: '', phone: '', footer: '', paperSize: 'thermal_80' as ReceiptPaperSize })
 const receiptPending = ref(false)
@@ -33,6 +36,17 @@ const { data: permissionAccess } = useAsyncData('shop-data:settings-permissions'
   return data
 }, { watch: [currentId], default: () => ({ 'settings.manage': false }) })
 const canManage = computed(() => permissionAccess.value?.['settings.manage'] === true)
+const { data: locationUsage, refresh: refreshLocationUsage } = useAsyncData(
+  () => `shop-data:settings-location-usage:${currentId.value ?? 'none'}`,
+  async (): Promise<PlanUsageResource | null> => {
+    if (!currentId.value) return null
+    const { data, error } = await shopRpc.rpc('shop_plan_usage', { p_shop_id: currentId.value })
+    if (error) throw error
+    const resources = (data as { resources?: PlanUsageResource[] } | null)?.resources ?? []
+    return resources.find(resource => resource.resource === 'active_locations') ?? null
+  }, { watch: [currentId], default: () => null },
+)
+const locationCapacityFull = computed(() => locationUsage.value?.atLimit === true)
 type ReceiptSettings = { displayName: string; address: string | null; phone: string | null; footer: string | null; paperSize: ReceiptPaperSize; canManage: boolean }
 const { data: receiptSettings, pending: receiptLoading, error: receiptLoadError, refresh: refreshReceiptSettings } = useAsyncData(
   () => `shop-data:receipt-settings:${currentId.value ?? 'none'}`,
@@ -56,7 +70,8 @@ const copy = computed(() => isArabic.value ? {
   failed: 'تعذّر تحديث طريقة تشغيل النشاط. حاول مرة أخرى.',
   locationsTitle: 'فروع النشاط', locationsHelp: 'أضف الفرع الثاني وأدر الفروع النشطة دون حذف السجل التاريخي.',
   defaultLocation: 'افتراضي', archivedLocation: 'مؤرشف', locationName: 'اسم الفرع', locationCode: 'الرمز', locationAddress: 'العنوان', locationPhone: 'الهاتف',
-  addLocation: 'إضافة فرع', addingLocation: 'جارٍ الإضافة…', archiveLocation: 'أرشفة', locationSaved: 'تمت إضافة الفرع.', locationFailed: 'تعذّر حفظ الفرع.',
+  addLocation: 'إضافة فرع', editLocation: 'تعديل', saveLocation: 'حفظ الفرع', cancelEdit: 'إلغاء', addingLocation: 'جارٍ الحفظ…', archiveLocation: 'أرشفة', restoreLocation: 'استعادة', locationSaved: 'تم حفظ الفرع.', locationFailed: 'تعذّر حفظ الفرع.',
+  locationCapacity: 'تستخدم {used} من {limit} فروع نشطة.', locationUnlimited: '{used} فروع نشطة · بلا حد', locationLimit: 'وصلت إلى حد الفروع النشطة في خطتك. أرشف فرعًا غير مستخدم أو اطلب خطة أعلى من الاشتراك والفوترة لإضافة أو استعادة فرع.', upgradePlan: 'فتح الاشتراك والفوترة',
   archiveLocationConfirm: 'أرشفة هذا الفرع؟ ستبقى المبيعات والمدفوعات والمواعيد السابقة ظاهرة في السجل والتقارير.',
   receiptTitle: 'إعدادات الإيصال', receiptHelp: 'تُحفظ هذه البيانات داخل كل إيصال عند سداد البيعة بالكامل. التعديلات التالية لا تغيّر الإيصالات السابقة.',
   receiptDisplayName: 'اسم النشاط على الإيصال', receiptAddress: 'عنوان النشاط', receiptPhone: 'هاتف النشاط', receiptFooter: 'رسالة أسفل الإيصال',
@@ -74,12 +89,20 @@ const copy = computed(() => isArabic.value ? {
   failed: 'Could not update the business operation mode. Try again.',
   locationsTitle: 'Business locations', locationsHelp: 'Add the second branch and manage active locations without deleting history.',
   defaultLocation: 'Default', archivedLocation: 'Archived', locationName: 'Location name', locationCode: 'Code', locationAddress: 'Address', locationPhone: 'Phone',
-  addLocation: 'Add location', addingLocation: 'Adding…', archiveLocation: 'Archive', locationSaved: 'Location added.', locationFailed: 'Could not save the location.',
+  addLocation: 'Add location', editLocation: 'Edit', saveLocation: 'Save location', cancelEdit: 'Cancel', addingLocation: 'Saving…', archiveLocation: 'Archive', restoreLocation: 'Restore', locationSaved: 'Location saved.', locationFailed: 'Could not save the location.',
+  locationCapacity: 'Using {used} of {limit} active locations.', locationUnlimited: '{used} active locations · unlimited', locationLimit: 'Your plan’s active-location limit is full. Archive an unused location or request a higher plan from Subscription & billing to add or restore one.', upgradePlan: 'Open Subscription & billing',
   archiveLocationConfirm: 'Archive this location? Its historical sales, payments, and appointments will remain available in history and reports.',
   receiptTitle: 'Receipt settings', receiptHelp: 'These values are captured inside each receipt when a sale becomes fully paid. Later changes never rewrite previous receipts.',
   receiptDisplayName: 'Business name on receipt', receiptAddress: 'Business address', receiptPhone: 'Business phone', receiptFooter: 'Receipt footer message',
   receiptPaper: 'Default paper size', thermal80: '80 mm thermal', a4: 'A4 / PDF', saveReceipt: 'Save receipt settings', savingReceipt: 'Saving…',
   receiptSaved: 'Receipt settings saved for future sales.', receiptFailed: 'Could not load or save receipt settings.', receiptOwnerOnly: 'Settings permission is required to change future receipt presentation.',
+})
+
+const locationUsageLabel = computed(() => {
+  const usage = locationUsage.value
+  if (!usage) return ''
+  const template = usage.unlimited ? copy.value.locationUnlimited : copy.value.locationCapacity
+  return template.replace('{used}', String(usage.used)).replace('{limit}', String(usage.limit ?? ''))
 })
 
 const modeOptions = computed(() => BUSINESS_MODES.map(value => ({
@@ -91,6 +114,7 @@ const modeOptions = computed(() => BUSINESS_MODES.map(value => ({
 watch([currentId, () => current.value?.business_mode], ([, mode]) => {
   selectedMode.value = mode ?? 'mixed'
   errorMessage.value = ''; successMessage.value = ''
+  cancelLocationEdit()
 }, { immediate: true })
 
 watch(selectedMode, () => {
@@ -132,23 +156,38 @@ async function saveMode() {
   }
 }
 
-async function addLocation() {
+function editLocation(location: ShopLocation) {
+  editingLocationId.value = location.id
+  Object.assign(locationForm, {
+    name: location.name, code: location.code ?? '', address: location.address ?? '', phone: location.phone ?? '',
+  })
+  locationError.value = ''
+}
+
+function cancelLocationEdit() {
+  editingLocationId.value = null
+  Object.assign(locationForm, { name: '', code: '', address: '', phone: '' })
+  locationError.value = ''
+}
+
+async function saveLocation() {
   const name = locationForm.name.trim()
-  if (!currentId.value || !canManage.value || locationPending.value || name.length < 2) return
+  if (!currentId.value || !canManage.value || locationPending.value || name.length < 2
+    || (!editingLocationId.value && locationCapacityFull.value)) return
   locationPending.value = true
   locationError.value = ''
   try {
     const { error } = await shopRpc.rpc('save_shop_location', {
       p_shop_id: currentId.value,
-      p_location_id: null,
+      p_location_id: editingLocationId.value,
       p_name: name,
       p_code: locationForm.code.trim() || null,
       p_address: locationForm.address.trim() || null,
       p_phone: locationForm.phone.trim() || null,
     })
     if (error) throw error
-    Object.assign(locationForm, { name: '', code: '', address: '', phone: '' })
-    await loadLocations()
+    cancelLocationEdit()
+    await Promise.all([loadLocations(), refreshLocationUsage()])
     success(copy.value.locationSaved)
   } catch (error) {
     locationError.value = planQuotaMessage(error, locale.value) ?? copy.value.locationFailed
@@ -168,9 +207,28 @@ async function archiveLocation(locationId: string) {
       p_location_id: locationId,
     })
     if (error) throw error
-    await loadLocations()
+    await Promise.all([loadLocations(), refreshLocationUsage()])
   } catch {
     locationError.value = copy.value.locationFailed
+  } finally {
+    locationPending.value = false
+  }
+}
+
+async function restoreLocation(locationId: string) {
+  if (!currentId.value || !canManage.value || locationPending.value || locationCapacityFull.value) return
+  locationPending.value = true
+  locationError.value = ''
+  try {
+    const { error } = await shopRpc.rpc('restore_shop_location', {
+      p_shop_id: currentId.value,
+      p_location_id: locationId,
+    })
+    if (error) throw error
+    await Promise.all([loadLocations(), refreshLocationUsage()])
+  } catch (error) {
+    locationError.value = planQuotaMessage(error, locale.value) ?? copy.value.locationFailed
+    await refreshLocationUsage()
   } finally {
     locationPending.value = false
   }
@@ -237,6 +295,11 @@ async function saveReceiptSettings() {
     <section v-if="current" id="locations" class="scroll-mt-28 rounded-2xl border border-border bg-card p-5 sm:p-6">
       <h2 class="text-lg font-extrabold">{{ copy.locationsTitle }}</h2>
       <p class="mt-2 text-sm leading-6 text-muted-foreground">{{ copy.locationsHelp }}</p>
+      <p v-if="locationUsageLabel" class="mt-2 text-sm font-semibold text-muted-foreground">{{ locationUsageLabel }}</p>
+      <div v-if="locationCapacityFull && !editingLocationId" role="status" class="mt-4 rounded-xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-4 text-sm">
+        <p>{{ copy.locationLimit }}</p>
+        <NuxtLink to="/billing" class="mt-2 inline-block font-bold underline">{{ copy.upgradePlan }}</NuxtLink>
+      </div>
       <p v-if="locationError" role="alert" class="mt-4 text-sm text-[var(--bs-status-error)]">{{ locationError }}</p>
       <ul class="mt-5 divide-y divide-border rounded-xl border border-border">
         <li v-for="location in locations" :key="location.id" class="flex flex-wrap items-center justify-between gap-4 p-4">
@@ -247,16 +310,21 @@ async function saveReceiptSettings() {
           <span class="flex items-center gap-2">
             <span v-if="location.is_default" class="rounded-full bg-muted px-2 py-1 text-xs font-bold">{{ copy.defaultLocation }}</span>
             <span v-if="location.status === 'archived'" class="rounded-full bg-muted px-2 py-1 text-xs font-bold">{{ copy.archivedLocation }}</span>
+            <BsButton v-if="canManage" type="button" severity="secondary" :disabled="locationPending" @click="editLocation(location)">{{ copy.editLocation }}</BsButton>
             <BsButton v-if="canManage && !location.is_default && location.status === 'active'" type="button" severity="secondary" :disabled="locationPending" @click="archiveLocation(location.id)">{{ copy.archiveLocation }}</BsButton>
+            <BsButton v-if="canManage && location.status === 'archived'" type="button" severity="secondary" :disabled="locationPending || locationCapacityFull" @click="restoreLocation(location.id)">{{ copy.restoreLocation }}</BsButton>
           </span>
         </li>
       </ul>
-      <BsForm v-if="canManage" class="mt-5 grid gap-3 sm:grid-cols-2" :pending="locationPending" :error="locationError" @submit="addLocation">
+      <BsForm v-if="canManage && (editingLocationId || !locationCapacityFull)" class="mt-5 grid gap-3 sm:grid-cols-2" :pending="locationPending" :error="locationError" @submit="saveLocation">
         <label class="grid gap-1 text-sm"><span>{{ copy.locationName }}</span><input v-model="locationForm.name" class="ls-input" required minlength="2" maxlength="120"></label>
         <label class="grid gap-1 text-sm"><span>{{ copy.locationCode }}</span><input v-model="locationForm.code" class="ls-input" maxlength="32"></label>
         <label class="grid gap-1 text-sm"><span>{{ copy.locationAddress }}</span><input v-model="locationForm.address" class="ls-input"></label>
         <label class="grid gap-1 text-sm"><span>{{ copy.locationPhone }}</span><input v-model="locationForm.phone" class="ls-input"></label>
-        <div class="sm:col-span-2"><BsButton type="submit" :pending="locationPending" :disabled="locationForm.name.trim().length < 2">{{ locationPending ? copy.addingLocation : copy.addLocation }}</BsButton></div>
+        <div class="flex gap-2 sm:col-span-2">
+          <BsButton type="submit" :pending="locationPending" :disabled="locationForm.name.trim().length < 2">{{ locationPending ? copy.addingLocation : editingLocationId ? copy.saveLocation : copy.addLocation }}</BsButton>
+          <BsButton v-if="editingLocationId" type="button" severity="secondary" :disabled="locationPending" @click="cancelLocationEdit">{{ copy.cancelEdit }}</BsButton>
+        </div>
       </BsForm>
     </section>
 

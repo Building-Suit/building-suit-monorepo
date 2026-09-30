@@ -15,6 +15,10 @@ const safeForm = {
   email: 'owner@example.test',
   shopName: 'Recoverable shop',
   businessMode: 'mixed',
+  mainLocationName: 'Downtown',
+  mainLocationCode: 'DT',
+  mainLocationAddress: '1 Main Street',
+  mainLocationPhone: '+201000000000',
 }
 
 test('pending signup persists only resumable non-secret fields', () => {
@@ -67,6 +71,8 @@ test('signup is plan-neutral, defaults to mixed operations, and explains later s
   const signup = await readFile(new URL('../../app/pages/auth/signup.vue', import.meta.url), 'utf8')
   assert.doesNotMatch(signup, /id="signup-plan"|p_plan_slug|form\.plan/)
   assert.match(signup, /businessMode: 'mixed'/)
+  assert.match(signup, /p_main_location_name: form\.mainLocationName\.trim\(\)/)
+  assert.match(signup, /main_location_name: form\.mainLocationName\.trim\(\)/)
   for (const copy of [
     'Full product access for 14 days',
     'no paid-plan choice',
