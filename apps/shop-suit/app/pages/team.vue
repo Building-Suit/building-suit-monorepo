@@ -28,7 +28,7 @@ const transferReason = ref('')
 const copy = computed(() => isArabic.value ? {
   title: 'الفريق والصلاحيات', subtitle: 'ضيف الموظفين، وحدد دور كل واحد وفروعه، واقفل وصوله من غير ما تحذف سجله.',
   invite: 'إضافة أو دعوة موظف', inviteTitle: 'إضافة عضو للفريق', name: 'الاسم', email: 'البريد الإلكتروني', role: 'الدور', locations: 'الفروع', permissions: 'الصلاحيات', status: 'الحالة', actions: 'الإجراءات',
-  manager: 'مدير', cashier: 'كاشير', barber: 'حلاق / مقدم خدمة', staff: 'موظف', owner: 'المالك',
+  manager: 'مدير', cashier: 'كاشير', barber: 'مقدم خدمة', staff: 'موظف', owner: 'المالك',
   active: 'نشط', suspended: 'موقوف', removed: 'مزال', invited: 'مدعو', pending: 'بانتظار القبول', accepted: 'مقبولة', expired: 'منتهية', revoked: 'ملغاة',
   save: 'حفظ', saving: 'بنحفظ…', cancel: 'إلغاء', edit: 'تعديل الدور والفروع', suspend: 'إيقاف', reactivate: 'تشغيل تاني', remove: 'إزالة', transfer: 'نقل الملكية',
   acceptTitle: 'دعوة للانضمام للفريق', acceptHelp: 'اقبل الدعوة بالحساب اللي بريده هو نفس البريد المدعو.', accept: 'اقبل الدعوة', accepting: 'بنقبل الدعوة…',
@@ -42,7 +42,7 @@ const copy = computed(() => isArabic.value ? {
 } : {
   title: 'Team & permissions', subtitle: 'Invite staff, assign roles and locations, and stop access without deleting history.',
   invite: 'Add or invite staff', inviteTitle: 'Add a team member', name: 'Name', email: 'Email', role: 'Role', locations: 'Locations', permissions: 'Permissions', status: 'Status', actions: 'Actions',
-  manager: 'Manager', cashier: 'Cashier', barber: 'Barber / operator', staff: 'Staff', owner: 'Owner',
+  manager: 'Manager', cashier: 'Cashier', barber: 'Operator / service provider', staff: 'Staff', owner: 'Owner',
   active: 'Active', suspended: 'Suspended', removed: 'Removed', invited: 'Invited', pending: 'Pending', accepted: 'Accepted', expired: 'Expired', revoked: 'Revoked',
   save: 'Save', saving: 'Saving…', cancel: 'Cancel', edit: 'Edit role & locations', suspend: 'Suspend', reactivate: 'Reactivate', remove: 'Remove', transfer: 'Transfer ownership',
   acceptTitle: 'Team invitation', acceptHelp: 'Accept with the account whose email matches the invitation.', accept: 'Accept invitation', accepting: 'Accepting…',
