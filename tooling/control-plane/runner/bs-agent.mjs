@@ -26,6 +26,10 @@ import {
   redact,
   redactText,
 } from '../lib/redaction.mjs'
+import {
+  appendNemotronTriageHints,
+  triageVerificationFailure,
+} from './nemotron-triage.mjs'
 
 const automationCodexHome =
   process.env.BS_CODEX_HOME ??
@@ -2628,6 +2632,107 @@ function validateRetryWorktree(
   }
 }
 
+
+function safeNemotronRetryTriage({
+  taskId,
+  worktree,
+  failurePacketPath,
+}) {
+  const startedAt =
+    Date.now()
+
+  try {
+    return triageVerificationFailure({
+      taskId,
+      worktree,
+      failurePacketPath,
+    })
+  }
+  catch (error) {
+    return {
+      attempted:
+        true,
+
+      usable:
+        false,
+
+      provider:
+        'opencode',
+
+      model:
+        process.env.BS_NEMOTRON_MODEL ??
+        'opencode/nemotron-3-ultra-free',
+
+      agent:
+        'automation-suit-nemotron',
+
+      reason:
+        'nemotron_triage_internal_error',
+
+      analysis:
+        null,
+
+      telemetry: {
+        elapsed_ms:
+          Date.now() - startedAt,
+
+        exit_code:
+          null,
+
+        error_code:
+          null,
+      },
+
+      error:
+        redactText(
+          error?.message ??
+          String(error),
+        ).slice(
+          0,
+          1000,
+        ),
+    }
+  }
+}
+
+function nemotronTriageMetadata(
+  result,
+  triagePath,
+) {
+  return {
+    attempted:
+      result?.attempted === true,
+
+    usable:
+      result?.usable === true,
+
+    provider:
+      result?.provider ??
+      null,
+
+    model:
+      result?.model ??
+      null,
+
+    reason:
+      result?.reason ??
+      (
+        result?.usable === true
+          ? null
+          : 'not_attempted'
+      ),
+
+    elapsed_ms:
+      result?.telemetry
+        ?.elapsed_ms ??
+      null,
+
+    path:
+      triagePath ??
+      null,
+  }
+}
+
 function taskRetry() {
   const [taskId] = args
 
@@ -2647,6 +2752,8 @@ function taskRetry() {
   let prompt = ''
   let logPath = null
   let executionFinished = false
+  let nemotronTriage = null
+  let nemotronTriagePath = null
 
   try {
     const packetResult =
@@ -2823,6 +2930,42 @@ function taskRetry() {
       },
     )
 
+    if (
+      failures.length > 0
+    ) {
+      nemotronTriagePath =
+        path.join(
+          runDirectory,
+          'nemotron-triage.json',
+        )
+
+      nemotronTriage =
+        safeNemotronRetryTriage({
+          taskId,
+
+          worktree:
+            previousExecution
+              .worktree_path,
+
+          failurePacketPath,
+        })
+
+      writeFileSync(
+        nemotronTriagePath,
+
+        `${JSON.stringify(
+          nemotronTriage,
+          null,
+          2,
+        )}\n`,
+
+        {
+          mode:
+            0o600,
+        },
+      )
+    }
+
     const taskPacketPath =
       path.join(
         previousExecution.worktree_path,
@@ -2856,7 +2999,7 @@ function taskRetry() {
         'no_publishable_changes'
 
 
-    prompt =
+    const basePrompt =
       isNoPublishableChanges
         ? `
 Continue ${packet.project?.display_name ?? 'registered project'} task ${taskId}.
@@ -2937,6 +3080,12 @@ Rules:
 
 Return a concise repair summary.
           `.trim()
+
+    prompt =
+      appendNemotronTriageHints(
+        basePrompt,
+        nemotronTriage,
+      )
 
 
     const promptPath =
@@ -3436,6 +3585,12 @@ Return a concise repair summary.
         previous_execution_id:
           previousExecution.execution_id,
 
+        nemotron_triage:
+          nemotronTriageMetadata(
+            nemotronTriage,
+            nemotronTriagePath,
+          ),
+
         elapsed_ms:
           elapsedMs,
 
@@ -3570,6 +3725,12 @@ Return a concise repair summary.
 
         verification_probe_path:
           latestProbePath,
+
+        nemotron_triage:
+          nemotronTriageMetadata(
+            nemotronTriage,
+            nemotronTriagePath,
+          ),
       },
     }, succeeded ? 0 : 1)
 
@@ -3602,6 +3763,13 @@ Return a concise repair summary.
 
           metadata: {
             retry: true,
+
+            nemotron_triage:
+              nemotronTriageMetadata(
+                nemotronTriage,
+                nemotronTriagePath,
+              ),
+
             infrastructure_error:
               error.message,
           },
