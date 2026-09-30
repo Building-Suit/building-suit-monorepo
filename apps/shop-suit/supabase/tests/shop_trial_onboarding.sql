@@ -40,8 +40,12 @@ begin
       'public.create_owner_shop(text,public.business_mode)', 'EXECUTE')
     or not has_function_privilege('authenticated',
       'public.create_owner_shop(text,public.business_mode)', 'EXECUTE')
+    or not has_function_privilege('authenticated',
+      'public.create_owner_shop(text,public.business_mode,text,text,text,text)', 'EXECUTE')
     or has_function_privilege('authenticated',
-      'shop_private.create_owner_shop(text,public.business_mode)', 'EXECUTE') then
+      'shop_private.create_owner_shop(text,public.business_mode)', 'EXECUTE')
+    or has_function_privilege('authenticated',
+      'shop_private.create_owner_shop(text,public.business_mode,text,text,text,text)', 'EXECUTE') then
     raise exception 'plan-neutral onboarding grant boundary is invalid';
   end if;
 end;
@@ -69,7 +73,8 @@ select set_config('request.jwt.claim.sub', product_owner_id::text, true)
 from shop_trial_onboarding_fixture;
 set local role authenticated;
 select public.create_owner_shop(
-  'Product operation trial', 'product'::public.business_mode
+  'Product operation trial', 'product'::public.business_mode,
+  'Product main', 'PROD', 'Cairo', '+20101'
 );
 reset role;
 
@@ -77,7 +82,8 @@ select set_config('request.jwt.claim.sub', service_owner_id::text, true)
 from shop_trial_onboarding_fixture;
 set local role authenticated;
 select public.create_owner_shop(
-  'Service operation trial', 'service'::public.business_mode
+  'Service operation trial', 'service'::public.business_mode,
+  'Service main', null, null, null
 );
 reset role;
 
@@ -91,10 +97,12 @@ declare
   v_product uuid;
 begin
   v_shop := public.create_owner_shop(
-    'Mixed operation trial', 'mixed'::public.business_mode
+    'Mixed operation trial', 'mixed'::public.business_mode,
+    'Mixed main', 'MIX', 'Giza', '+20102'
   );
   v_retry := public.create_owner_shop(
-    'Retry must not rewrite mode', 'service'::public.business_mode
+    'Retry must not rewrite mode', 'service'::public.business_mode,
+    'Retry must not rewrite location', 'RETRY', null, null
   );
   if v_retry <> v_shop then raise exception 'trial retry created a second shop'; end if;
 
@@ -124,12 +132,12 @@ declare
   v_mixed_shop uuid := current_setting('ss_hot_onboard.mixed_shop')::uuid;
 begin
   for v_mode in
-    select fixture_user.user_id, fixture_user.expected_mode
+    select fixture_user.user_id, fixture_user.expected_mode, fixture_user.expected_location
     from (values
-      ((select product_owner_id from shop_trial_onboarding_fixture), 'product'::public.business_mode),
-      ((select service_owner_id from shop_trial_onboarding_fixture), 'service'::public.business_mode),
-      ((select mixed_owner_id from shop_trial_onboarding_fixture), 'mixed'::public.business_mode)
-    ) fixture_user(user_id, expected_mode)
+      ((select product_owner_id from shop_trial_onboarding_fixture), 'product'::public.business_mode, 'Product main'::text),
+      ((select service_owner_id from shop_trial_onboarding_fixture), 'service'::public.business_mode, 'Service main'::text),
+      ((select mixed_owner_id from shop_trial_onboarding_fixture), 'mixed'::public.business_mode, 'Mixed main'::text)
+    ) fixture_user(user_id, expected_mode, expected_location)
   loop
     select shop.business_mode, subscription.*, plan.slug
       into v_subscription
@@ -146,7 +154,15 @@ begin
       or v_subscription.trial_end_at
         <> v_subscription.trial_start_at + interval '14 days'
       or v_subscription.current_period_end <> v_subscription.trial_end_at
-      or not v_subscription.trial_consumed then
+      or not v_subscription.trial_consumed
+      or not exists (
+        select 1 from public.profiles profile
+        join public.shop_memberships membership on membership.profile_id = profile.id
+        join public.shop_locations location on location.shop_id = membership.shop_id
+          and location.is_default and location.status = 'active'
+        where profile.user_id = v_mode.user_id
+          and location.name = v_mode.expected_location
+      ) then
       raise exception 'onboarding did not atomically persist mode and exact trial: %',
         v_mode.expected_mode;
     end if;

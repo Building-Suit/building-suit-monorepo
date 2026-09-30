@@ -33,14 +33,14 @@ const reportFrom = ref(new Date(Date.now() - 29 * 86400000).toISOString().slice(
 const reportTo = ref(new Date().toISOString().slice(0, 10))
 
 const copy = computed(() => isArabic.value ? {
-  title: 'إعداد الكتالوج والاستيراد', subtitle: 'استورد بيانات Excel بصيغة CSV بعد فحصها، وأدر التصنيفات وبيانات ملصقات الباركود.',
+  title: 'إعداد قائمة المنتجات والخدمات', subtitle: 'استورد بيانات Excel بصيغة CSV بعد ما تفحصها، وظبط التصنيفات وبيانات ملصقات الباركود.',
   categories: 'تصنيفات المنتجات والخدمات', categoryName: 'اسم التصنيف', addCategory: 'إضافة تصنيف', allCategories: 'كل التصنيفات',
   importTitle: 'استيراد CSV', products: 'منتجات', customers: 'عملاء', suppliers: 'موردون', template: 'تنزيل نموذج CSV',
-  choose: 'اختر ملف CSV حتى 5 MB و1000 صف', validate: 'فحص بدون حفظ', apply: 'تنفيذ الاستيراد', validating: 'جاري الفحص…',
+  choose: 'اختار ملف CSV لحد 5 MB و1000 صف', validate: 'فحص من غير حفظ', apply: 'تنفيذ الاستيراد', validating: 'بنفحص…',
   valid: 'الملف صالح للتنفيذ.', applied: 'اكتمل الاستيراد.', row: 'الصف', field: 'الحقل', issue: 'المشكلة',
   labels: 'تصدير بيانات ملصقات الباركود', report: 'تقرير مبيعات الكتالوج', from: 'من', to: 'إلى', refresh: 'تحديث التقرير',
-  item: 'الصنف', category: 'التصنيف', quantity: 'الكمية', amount: 'المبيعات', noData: 'لا توجد بيانات.', noShop: 'أنشئ متجرًا أولًا.',
-  fileError: 'تعذّر قراءة الملف. تأكد من العناوين والصيغة والحد الأقصى.', serverError: 'تعذّر فحص أو تنفيذ الاستيراد.', categoryError: 'تعذّر حفظ التصنيف.', confirmImport: 'تنفيذ الاستيراد؟ سيتم إنشاء أو تحديث السجلات، وتزيد الأرصدة الافتتاحية كميات المخزون وقيمته.', exportError: 'تعذّر تصدير الملصقات.', reportError: 'تعذّر تحميل التقرير.', retry: 'إعادة المحاولة',
+  item: 'الصنف', category: 'التصنيف', quantity: 'الكمية', amount: 'المبيعات', noData: 'مفيش بيانات.', noShop: 'اعمل متجر الأول.',
+  fileError: 'مقدرناش نقرا الملف. راجع العناوين والصيغة والحجم.', serverError: 'مقدرناش نفحص الملف أو ننفّذ الاستيراد.', categoryError: 'مقدرناش نحفظ التصنيف.', confirmImport: 'تنفّذ الاستيراد؟ السجلات هتتعمل أو تتحدّث، والأرصدة الافتتاحية هتزود كمية المخزون وقيمته.', exportError: 'مقدرناش نصدّر الملصقات.', reportError: 'مقدرناش نحمّل التقرير.', retry: 'حاول تاني',
 } : {
   title: 'Catalog setup & import', subtitle: 'Validate and import Excel-compatible CSV data, manage categories, and export barcode-label data.',
   categories: 'Product & service categories', categoryName: 'Category name', addCategory: 'Add category', allCategories: 'All categories',

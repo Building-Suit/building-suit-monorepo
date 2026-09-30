@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
+import type { PlanUsageResource } from '~/types/plans'
 import type { ReceiptPaperSize } from '~/types/receipt'
 import type { BusinessMode } from '~/utils/businessMode'
+import type { ShopLocation } from '~/composables/useShop'
 import { BUSINESS_MODES } from '~/utils/businessMode'
 
 definePageMeta({ layout: 'default', middleware: ['auth'] })
@@ -12,12 +14,17 @@ const { locale } = useI18n()
 const { current, currentId, locations, loading, loadError: shopError, reload, loadLocations } = useShop()
 const { success } = useToasts()
 const ui = useUiCopy()
+const profileForm = reactive({ displayName: '' })
+const profilePending = ref(false)
+const profileError = ref('')
+const profileSuccess = ref('')
 const selectedMode = ref<BusinessMode>('mixed')
 const pending = ref(false)
 const errorMessage = ref('')
 const successMessage = ref('')
 const locationPending = ref(false)
 const locationError = ref('')
+const editingLocationId = ref<string | null>(null)
 const locationForm = reactive({ name: '', code: '', address: '', phone: '' })
 const receiptForm = reactive({ displayName: '', address: '', phone: '', footer: '', paperSize: 'thermal_80' as ReceiptPaperSize })
 const receiptPending = ref(false)
@@ -33,6 +40,17 @@ const { data: permissionAccess } = useAsyncData('shop-data:settings-permissions'
   return data
 }, { watch: [currentId], default: () => ({ 'settings.manage': false }) })
 const canManage = computed(() => permissionAccess.value?.['settings.manage'] === true)
+const { data: locationUsage, refresh: refreshLocationUsage } = useAsyncData(
+  () => `shop-data:settings-location-usage:${currentId.value ?? 'none'}`,
+  async (): Promise<PlanUsageResource | null> => {
+    if (!currentId.value) return null
+    const { data, error } = await shopRpc.rpc('shop_plan_usage', { p_shop_id: currentId.value })
+    if (error) throw error
+    const resources = (data as { resources?: PlanUsageResource[] } | null)?.resources ?? []
+    return resources.find(resource => resource.resource === 'active_locations') ?? null
+  }, { watch: [currentId], default: () => null },
+)
+const locationCapacityFull = computed(() => locationUsage.value?.atLimit === true)
 type ReceiptSettings = { displayName: string; address: string | null; phone: string | null; footer: string | null; paperSize: ReceiptPaperSize; canManage: boolean }
 const { data: receiptSettings, pending: receiptLoading, error: receiptLoadError, refresh: refreshReceiptSettings } = useAsyncData(
   () => `shop-data:receipt-settings:${currentId.value ?? 'none'}`,
@@ -45,25 +63,34 @@ const { data: receiptSettings, pending: receiptLoading, error: receiptLoadError,
 )
 
 const copy = computed(() => isArabic.value ? {
-  title: 'إعدادات النشاط', subtitle: 'اضبط مسارات العمل المناسبة لنشاطك.',
+  title: 'إعدادات النشاط', subtitle: 'ظبط طريقة الشغل المناسبة لنشاطك.',
+  profileTitle: 'ملف المتجر', profileHelp: 'هذا اسم المتجر الذي يظهر في التنقل والقوائم والسجلات المستقبلية المناسبة. لا يغيّر اسم حسابك الشخصي أو بريدك الإلكتروني أو المستندات السابقة.',
+  shopDisplayName: 'اسم المتجر', profileLocationHelp: 'عنوان الفرع الرئيسي وهاتفه بيانات فرع. عدّلهما من قسم فروع النشاط أدناه حتى لا تتكرر بيانات متعارضة.',
+  manageLocations: 'إدارة بيانات الفروع', saveProfile: 'حفظ ملف المتجر', savingProfile: 'بنحفظ…', profileSaved: 'اتحدّث ملف المتجر.', profileFailed: 'مقدرناش نحدّث ملف المتجر. حاول تاني.',
+  profileOwnerOnly: 'محتاج صلاحية إدارة إعدادات النشاط عشان تعدّل ملف المتجر.',
   modeTitle: 'طريقة تشغيل النشاط', modeHelp: 'تتحكم هذه الإعدادات في ظهور مسارات المنتجات والمخزون والخدمات فقط. لا تغيّر خطة الاشتراك أو الحصص أو صلاحيات المستخدمين.',
   product: 'منتجات ومخزون', productBody: 'إظهار المنتجات والمخزون والمشتريات والموردين وإخفاء مسار الخدمات.',
   service: 'خدمات فقط', serviceBody: 'إظهار الخدمات دون فرض إنشاء منتجات أو سجلات مخزون.',
   mixed: 'منتجات وخدمات', mixedBody: 'إظهار مسارات المنتجات والمخزون والخدمات معًا.',
-  preserve: 'عند تغيير الطريقة، تظل المنتجات والخدمات والمخزون والمشتريات وكل السجلات السابقة محفوظة، وتظهر مجددًا عند إعادة تفعيل المسار.',
-  ownerOnly: 'تحتاج إلى صلاحية إدارة إعدادات النشاط. يمكنك رؤية الطريقة الحالية دون تعديلها.',
-  save: 'حفظ طريقة التشغيل', saving: 'جارٍ الحفظ…', success: 'تم تحديث طريقة تشغيل النشاط.',
-  failed: 'تعذّر تحديث طريقة تشغيل النشاط. حاول مرة أخرى.',
-  locationsTitle: 'فروع النشاط', locationsHelp: 'أضف الفرع الثاني وأدر الفروع النشطة دون حذف السجل التاريخي.',
+  preserve: 'لو غيّرت الطريقة، المنتجات والخدمات والمخزون والمشتريات وكل السجلات القديمة هتفضل محفوظة، وهتظهر تاني لما تشغّل المسار.',
+  ownerOnly: 'محتاج صلاحية إدارة إعدادات النشاط. تقدر تشوف الطريقة الحالية من غير ما تعدّلها.',
+  save: 'حفظ طريقة التشغيل', saving: 'بنحفظ…', success: 'اتحدّثت طريقة تشغيل النشاط.',
+  failed: 'مقدرناش نحدّث طريقة تشغيل النشاط. حاول تاني.',
+  locationsTitle: 'فروع النشاط', locationsHelp: 'ضيف فرع تاني وتحكّم في الفروع الشغالة من غير ما تحذف السجل القديم.',
   defaultLocation: 'افتراضي', archivedLocation: 'مؤرشف', locationName: 'اسم الفرع', locationCode: 'الرمز', locationAddress: 'العنوان', locationPhone: 'الهاتف',
-  addLocation: 'إضافة فرع', addingLocation: 'جارٍ الإضافة…', archiveLocation: 'أرشفة', locationSaved: 'تمت إضافة الفرع.', locationFailed: 'تعذّر حفظ الفرع.',
-  archiveLocationConfirm: 'أرشفة هذا الفرع؟ ستبقى المبيعات والمدفوعات والمواعيد السابقة ظاهرة في السجل والتقارير.',
+  addLocation: 'إضافة فرع', editLocation: 'تعديل', saveLocation: 'حفظ الفرع', cancelEdit: 'إلغاء', addingLocation: 'بنحفظ…', archiveLocation: 'أرشفة', restoreLocation: 'استعادة', locationSaved: 'اتحفظ الفرع.', locationFailed: 'مقدرناش نحفظ الفرع.',
+  locationCapacity: 'تستخدم {used} من {limit} فروع نشطة.', locationUnlimited: '{used} فروع نشطة · بلا حد', locationLimit: 'وصلت إلى حد الفروع النشطة في خطتك. أرشف فرعًا غير مستخدم أو اطلب خطة أعلى من الاشتراك والفوترة لإضافة أو استعادة فرع.', upgradePlan: 'فتح الاشتراك والفوترة',
+  archiveLocationConfirm: 'تأرشف الفرع ده؟ المبيعات والمدفوعات والمواعيد القديمة هتفضل ظاهرة في السجل والتقارير.',
   receiptTitle: 'إعدادات الإيصال', receiptHelp: 'تُحفظ هذه البيانات داخل كل إيصال عند سداد البيعة بالكامل. التعديلات التالية لا تغيّر الإيصالات السابقة.',
   receiptDisplayName: 'اسم النشاط على الإيصال', receiptAddress: 'عنوان النشاط', receiptPhone: 'هاتف النشاط', receiptFooter: 'رسالة أسفل الإيصال',
-  receiptPaper: 'المقاس الافتراضي', thermal80: 'حراري 80 مم', a4: 'A4 / PDF', saveReceipt: 'حفظ إعدادات الإيصال', savingReceipt: 'جارٍ الحفظ…',
-  receiptSaved: 'تم حفظ إعدادات الإيصال للمبيعات المستقبلية.', receiptFailed: 'تعذّر تحميل أو حفظ إعدادات الإيصال.', receiptOwnerOnly: 'تحتاج إلى صلاحية إدارة الإعدادات لتعديل شكل الإيصالات المستقبلية.',
+  receiptPaper: 'المقاس الافتراضي', thermal80: 'حراري 80 مم', a4: 'A4 / PDF', saveReceipt: 'حفظ إعدادات الإيصال', savingReceipt: 'بنحفظ…',
+  receiptSaved: 'اتحفظت إعدادات الإيصال للمبيعات الجديدة.', receiptFailed: 'مقدرناش نحمّل أو نحفظ إعدادات الإيصال.', receiptOwnerOnly: 'محتاج صلاحية إدارة الإعدادات عشان تعدّل شكل الإيصالات الجديدة.',
 } : {
   title: 'Business settings', subtitle: 'Choose the workflows that fit this business.',
+  profileTitle: 'Shop profile', profileHelp: 'This Shop name appears in navigation, selectors, and appropriate future records. It does not change your personal account name or email, or rewrite past documents.',
+  shopDisplayName: 'Shop display name', profileLocationHelp: 'The main-location address and phone are location data. Edit them in Business locations below so conflicting copies are not created.',
+  manageLocations: 'Manage location details', saveProfile: 'Save Shop profile', savingProfile: 'Saving…', profileSaved: 'Shop profile updated.', profileFailed: 'Could not update the Shop profile. Try again.',
+  profileOwnerOnly: 'Business-settings permission is required to edit the Shop profile.',
   modeTitle: 'Business operation mode', modeHelp: 'This setting controls product, stock, and service workflow visibility only. It does not change the subscription plan, quotas, or user permissions.',
   product: 'Products and stock', productBody: 'Show products, inventory, purchasing, and supplier workflows while hiding services.',
   service: 'Services only', serviceBody: 'Show services without requiring products or stock records.',
@@ -74,12 +101,20 @@ const copy = computed(() => isArabic.value ? {
   failed: 'Could not update the business operation mode. Try again.',
   locationsTitle: 'Business locations', locationsHelp: 'Add the second branch and manage active locations without deleting history.',
   defaultLocation: 'Default', archivedLocation: 'Archived', locationName: 'Location name', locationCode: 'Code', locationAddress: 'Address', locationPhone: 'Phone',
-  addLocation: 'Add location', addingLocation: 'Adding…', archiveLocation: 'Archive', locationSaved: 'Location added.', locationFailed: 'Could not save the location.',
+  addLocation: 'Add location', editLocation: 'Edit', saveLocation: 'Save location', cancelEdit: 'Cancel', addingLocation: 'Saving…', archiveLocation: 'Archive', restoreLocation: 'Restore', locationSaved: 'Location saved.', locationFailed: 'Could not save the location.',
+  locationCapacity: 'Using {used} of {limit} active locations.', locationUnlimited: '{used} active locations · unlimited', locationLimit: 'Your plan’s active-location limit is full. Archive an unused location or request a higher plan from Subscription & billing to add or restore one.', upgradePlan: 'Open Subscription & billing',
   archiveLocationConfirm: 'Archive this location? Its historical sales, payments, and appointments will remain available in history and reports.',
   receiptTitle: 'Receipt settings', receiptHelp: 'These values are captured inside each receipt when a sale becomes fully paid. Later changes never rewrite previous receipts.',
   receiptDisplayName: 'Business name on receipt', receiptAddress: 'Business address', receiptPhone: 'Business phone', receiptFooter: 'Receipt footer message',
   receiptPaper: 'Default paper size', thermal80: '80 mm thermal', a4: 'A4 / PDF', saveReceipt: 'Save receipt settings', savingReceipt: 'Saving…',
   receiptSaved: 'Receipt settings saved for future sales.', receiptFailed: 'Could not load or save receipt settings.', receiptOwnerOnly: 'Settings permission is required to change future receipt presentation.',
+})
+
+const locationUsageLabel = computed(() => {
+  const usage = locationUsage.value
+  if (!usage) return ''
+  const template = usage.unlimited ? copy.value.locationUnlimited : copy.value.locationCapacity
+  return template.replace('{used}', String(usage.used)).replace('{limit}', String(usage.limit ?? ''))
 })
 
 const modeOptions = computed(() => BUSINESS_MODES.map(value => ({
@@ -91,6 +126,13 @@ const modeOptions = computed(() => BUSINESS_MODES.map(value => ({
 watch([currentId, () => current.value?.business_mode], ([, mode]) => {
   selectedMode.value = mode ?? 'mixed'
   errorMessage.value = ''; successMessage.value = ''
+  cancelLocationEdit()
+}, { immediate: true })
+
+watch([currentId, () => current.value?.name], ([, name]) => {
+  profileForm.displayName = name ?? ''
+  profileError.value = ''
+  profileSuccess.value = ''
 }, { immediate: true })
 
 watch(selectedMode, () => {
@@ -132,23 +174,61 @@ async function saveMode() {
   }
 }
 
-async function addLocation() {
+async function saveProfile() {
+  const displayName = profileForm.displayName.trim()
+  if (!current.value || !canManage.value || profilePending.value
+    || displayName.length < 2 || displayName === current.value.name) return
+  profilePending.value = true
+  profileError.value = ''
+  profileSuccess.value = ''
+  try {
+    const { error } = await shopRpc.rpc('save_shop_profile', {
+      p_shop_id: current.value.id,
+      p_display_name: displayName,
+    })
+    if (error) throw error
+    await reload()
+    profileSuccess.value = copy.value.profileSaved
+    success(copy.value.profileSaved)
+  } catch {
+    profileError.value = copy.value.profileFailed
+  } finally {
+    profilePending.value = false
+  }
+}
+
+function editLocation(location: ShopLocation) {
+  editingLocationId.value = location.id
+  Object.assign(locationForm, {
+    name: location.name, code: location.code ?? '', address: location.address ?? '', phone: location.phone ?? '',
+  })
+  locationError.value = ''
+}
+
+function cancelLocationEdit() {
+  editingLocationId.value = null
+  Object.assign(locationForm, { name: '', code: '', address: '', phone: '' })
+  locationError.value = ''
+}
+
+async function saveLocation() {
   const name = locationForm.name.trim()
-  if (!currentId.value || !canManage.value || locationPending.value || name.length < 2) return
+  if (!currentId.value || !canManage.value || locationPending.value || name.length < 2
+    || (!editingLocationId.value && locationCapacityFull.value)) return
   locationPending.value = true
   locationError.value = ''
   try {
     const { error } = await shopRpc.rpc('save_shop_location', {
       p_shop_id: currentId.value,
-      p_location_id: null,
+      p_location_id: editingLocationId.value,
       p_name: name,
       p_code: locationForm.code.trim() || null,
       p_address: locationForm.address.trim() || null,
       p_phone: locationForm.phone.trim() || null,
     })
     if (error) throw error
-    Object.assign(locationForm, { name: '', code: '', address: '', phone: '' })
-    await loadLocations()
+    cancelLocationEdit()
+    await Promise.all([loadLocations(), refreshLocationUsage()])
     success(copy.value.locationSaved)
   } catch (error) {
     locationError.value = planQuotaMessage(error, locale.value) ?? copy.value.locationFailed
@@ -168,9 +248,28 @@ async function archiveLocation(locationId: string) {
       p_location_id: locationId,
     })
     if (error) throw error
-    await loadLocations()
+    await Promise.all([loadLocations(), refreshLocationUsage()])
   } catch {
     locationError.value = copy.value.locationFailed
+  } finally {
+    locationPending.value = false
+  }
+}
+
+async function restoreLocation(locationId: string) {
+  if (!currentId.value || !canManage.value || locationPending.value || locationCapacityFull.value) return
+  locationPending.value = true
+  locationError.value = ''
+  try {
+    const { error } = await shopRpc.rpc('restore_shop_location', {
+      p_shop_id: currentId.value,
+      p_location_id: locationId,
+    })
+    if (error) throw error
+    await Promise.all([loadLocations(), refreshLocationUsage()])
+  } catch (error) {
+    locationError.value = planQuotaMessage(error, locale.value) ?? copy.value.locationFailed
+    await refreshLocationUsage()
   } finally {
     locationPending.value = false
   }
@@ -211,7 +310,24 @@ async function saveReceiptSettings() {
     <p v-if="loading" role="status">{{ ui('loading') }}</p>
     <div v-else-if="shopError" role="alert" class="ls-error">{{ copy.failed }} <BsButton @click="reload()">{{ ui('retry') }}</BsButton></div>
     <p v-else-if="!current" role="status">{{ ui('empty') }}</p>
-    <section v-else class="rounded-2xl border border-border bg-card p-5 sm:p-6">
+    <section v-else id="shop-profile" class="scroll-mt-28 rounded-2xl border border-border bg-card p-5 sm:p-6" aria-labelledby="shop-profile-title">
+      <h2 id="shop-profile-title" class="text-lg font-extrabold">{{ copy.profileTitle }}</h2>
+      <p class="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{{ copy.profileHelp }}</p>
+      <p v-if="!canManage" role="status" class="mt-5 rounded-xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-4 text-sm text-fg">{{ copy.profileOwnerOnly }}</p>
+      <p v-if="profileSuccess" role="status" class="mt-4 rounded-xl border border-[var(--bs-status-success)]/30 bg-[var(--bs-status-success-bg)] p-3 text-sm text-fg">{{ profileSuccess }}</p>
+      <BsForm class="mt-5 space-y-4" :pending="profilePending" :error="profileError" @submit="saveProfile">
+        <label class="grid max-w-xl gap-1 text-sm font-bold">
+          {{ copy.shopDisplayName }}
+          <input v-model="profileForm.displayName" class="ls-input min-h-11" autocomplete="organization" required minlength="2" maxlength="120" :disabled="!canManage">
+        </label>
+        <div class="rounded-xl border border-border bg-background p-4 text-sm leading-6 text-muted-foreground">
+          <p>{{ copy.profileLocationHelp }}</p>
+          <a href="#locations" class="mt-1 inline-block min-h-11 py-2 font-bold text-[var(--bs-link)] underline">{{ copy.manageLocations }}</a>
+        </div>
+        <BsButton type="submit" class="ls-btn ls-btn-primary" :pending="profilePending" :disabled="!canManage || profileForm.displayName.trim().length < 2 || profileForm.displayName.trim() === current.name">{{ profilePending ? copy.savingProfile : copy.saveProfile }}</BsButton>
+      </BsForm>
+    </section>
+    <section v-if="current" class="rounded-2xl border border-border bg-card p-5 sm:p-6">
       <h2 class="text-lg font-extrabold">{{ copy.modeTitle }}</h2>
       <p class="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{{ copy.modeHelp }}</p>
 
@@ -237,6 +353,11 @@ async function saveReceiptSettings() {
     <section v-if="current" id="locations" class="scroll-mt-28 rounded-2xl border border-border bg-card p-5 sm:p-6">
       <h2 class="text-lg font-extrabold">{{ copy.locationsTitle }}</h2>
       <p class="mt-2 text-sm leading-6 text-muted-foreground">{{ copy.locationsHelp }}</p>
+      <p v-if="locationUsageLabel" class="mt-2 text-sm font-semibold text-muted-foreground">{{ locationUsageLabel }}</p>
+      <div v-if="locationCapacityFull && !editingLocationId" role="status" class="mt-4 rounded-xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-4 text-sm">
+        <p>{{ copy.locationLimit }}</p>
+        <NuxtLink to="/billing" class="mt-2 inline-block font-bold underline">{{ copy.upgradePlan }}</NuxtLink>
+      </div>
       <p v-if="locationError" role="alert" class="mt-4 text-sm text-[var(--bs-status-error)]">{{ locationError }}</p>
       <ul class="mt-5 divide-y divide-border rounded-xl border border-border">
         <li v-for="location in locations" :key="location.id" class="flex flex-wrap items-center justify-between gap-4 p-4">
@@ -247,16 +368,21 @@ async function saveReceiptSettings() {
           <span class="flex items-center gap-2">
             <span v-if="location.is_default" class="rounded-full bg-muted px-2 py-1 text-xs font-bold">{{ copy.defaultLocation }}</span>
             <span v-if="location.status === 'archived'" class="rounded-full bg-muted px-2 py-1 text-xs font-bold">{{ copy.archivedLocation }}</span>
+            <BsButton v-if="canManage" type="button" severity="secondary" :disabled="locationPending" @click="editLocation(location)">{{ copy.editLocation }}</BsButton>
             <BsButton v-if="canManage && !location.is_default && location.status === 'active'" type="button" severity="secondary" :disabled="locationPending" @click="archiveLocation(location.id)">{{ copy.archiveLocation }}</BsButton>
+            <BsButton v-if="canManage && location.status === 'archived'" type="button" severity="secondary" :disabled="locationPending || locationCapacityFull" @click="restoreLocation(location.id)">{{ copy.restoreLocation }}</BsButton>
           </span>
         </li>
       </ul>
-      <BsForm v-if="canManage" class="mt-5 grid gap-3 sm:grid-cols-2" :pending="locationPending" :error="locationError" @submit="addLocation">
+      <BsForm v-if="canManage && (editingLocationId || !locationCapacityFull)" class="mt-5 grid gap-3 sm:grid-cols-2" :pending="locationPending" :error="locationError" @submit="saveLocation">
         <label class="grid gap-1 text-sm"><span>{{ copy.locationName }}</span><input v-model="locationForm.name" class="ls-input" required minlength="2" maxlength="120"></label>
         <label class="grid gap-1 text-sm"><span>{{ copy.locationCode }}</span><input v-model="locationForm.code" class="ls-input" maxlength="32"></label>
         <label class="grid gap-1 text-sm"><span>{{ copy.locationAddress }}</span><input v-model="locationForm.address" class="ls-input"></label>
         <label class="grid gap-1 text-sm"><span>{{ copy.locationPhone }}</span><input v-model="locationForm.phone" class="ls-input"></label>
-        <div class="sm:col-span-2"><BsButton type="submit" :pending="locationPending" :disabled="locationForm.name.trim().length < 2">{{ locationPending ? copy.addingLocation : copy.addLocation }}</BsButton></div>
+        <div class="flex gap-2 sm:col-span-2">
+          <BsButton type="submit" :pending="locationPending" :disabled="locationForm.name.trim().length < 2">{{ locationPending ? copy.addingLocation : editingLocationId ? copy.saveLocation : copy.addLocation }}</BsButton>
+          <BsButton v-if="editingLocationId" type="button" severity="secondary" :disabled="locationPending" @click="cancelLocationEdit">{{ copy.cancelEdit }}</BsButton>
+        </div>
       </BsForm>
     </section>
 

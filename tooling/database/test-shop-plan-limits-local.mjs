@@ -104,13 +104,26 @@ try {
   ])
   assertOneWinner(locationResults, 'PLAN_RESOURCE_LIMIT_REACHED:active_locations', 'location')
 
+  const archivedLocations = (await runSql(`update public.shop_locations
+    set status='archived', archived_at=now()
+    where id=(select id from public.shop_locations where shop_id='${multiShop}'
+      and not is_default and status='active' order by created_at limit 1);
+    insert into public.shop_locations (shop_id,name,status,archived_at) values
+      ('${multiShop}','Restore contender A','archived',now()),
+      ('${multiShop}','Restore contender B','archived',now()) returning id;`)).stdout
+    .split('\n').filter(line => /^[0-9a-f-]{36}$/.test(line))
+  if (archivedLocations.length !== 2) throw new Error(`restore fixtures were not created: ${archivedLocations}`)
+  const restoreResults = await Promise.all(archivedLocations.map(locationId => runSql(authenticated(multiOwner,
+    `select public.restore_shop_location('${multiShop}','${locationId}');`), { allowFailure: true })))
+  assertOneWinner(restoreResults, 'PLAN_RESOURCE_LIMIT_REACHED:active_locations', 'location restore')
+
   const counts = lastLine((await runSql(`select
     (select count(*) from public.products where shop_id='${soloShop}' and is_active),
     (select count(*) from public.services where shop_id='${soloShop}' and is_active),
     (select count(*) from public.shop_locations where shop_id='${multiShop}' and status='active'),
     (select count(*) from public.shop_locations where shop_id='${multiShop}' and id='${multiLocation}');`)).stdout)
   if (counts !== '250|50|3|1') throw new Error(`quota races exceeded a boundary: ${counts}`)
-  console.log('shop_plan_limit_concurrency: passed; seat, location, product, and service last-slot races serialized')
+  console.log('shop_plan_limit_concurrency: passed; seat, location add/restore, product, and service last-slot races serialized')
 }
 finally {
   const shops = [soloShop, multiShop].filter(Boolean)

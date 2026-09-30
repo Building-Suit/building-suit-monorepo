@@ -165,7 +165,7 @@ export default defineI18nLocale(async () => ({
     catalog: 'Catalog', search: 'Search products, services, SKU, or barcode', all: 'All', products: 'Products', services: 'Services',
     loading: 'Loading…', loadError: 'Could not load the POS.', retry: 'Retry', noResults: 'No matching items. Try another search, or ask the owner to set up this location’s catalog.', stock: '{count} in stock',
     cart: 'Current sale', emptyCart: 'Scan or choose an item to start.', quantity: 'Quantity', remove: 'Remove', total: 'Total',
-    location: 'Location', staff: 'Barber / staff', selectStaff: 'Select staff', appointment: 'Appointment', walkIn: 'Walk-in / counter sale',
+    location: 'Location', staff: 'Staff member', selectStaff: 'Select staff', appointment: 'Appointment', walkIn: 'Walk-in / counter sale',
     customer: 'Customer', customerSearch: 'Search customer name or phone', noCustomer: 'No customer — fully paid counter sale', clearCustomer: 'Clear customer',
     paymentMethod: 'Payment method', reference: 'Payment reference (optional)', notes: 'Sale notes (optional)',
     pay: 'Pay {amount}', paying: 'Completing checkout…', confirm: 'Issue this sale, deduct product stock, and record the full payment?',
