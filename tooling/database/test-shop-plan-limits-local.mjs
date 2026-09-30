@@ -97,7 +97,6 @@ try {
   ])
   assertOneWinner(serviceResults, 'PLAN_RESOURCE_LIMIT_REACHED:active_services', 'service')
 
-  await runSql(`insert into public.shop_locations (shop_id,name) values ('${multiShop}','Existing branch');`)
   const locationResults = await Promise.all([
     runSql(`insert into public.shop_locations (shop_id,name) values ('${multiShop}','Location contender A');`, { allowFailure: true }),
     runSql(`insert into public.shop_locations (shop_id,name) values ('${multiShop}','Location contender B');`, { allowFailure: true }),
@@ -122,7 +121,7 @@ try {
     (select count(*) from public.services where shop_id='${soloShop}' and is_active),
     (select count(*) from public.shop_locations where shop_id='${multiShop}' and status='active'),
     (select count(*) from public.shop_locations where shop_id='${multiShop}' and id='${multiLocation}');`)).stdout)
-  if (counts !== '250|50|3|1') throw new Error(`quota races exceeded a boundary: ${counts}`)
+  if (counts !== '250|50|2|1') throw new Error(`quota races exceeded a boundary: ${counts}`)
   console.log('shop_plan_limit_concurrency: passed; seat, location add/restore, product, and service last-slot races serialized')
 }
 finally {

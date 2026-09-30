@@ -275,10 +275,10 @@ begin
   if v_notice <> v_replay
     or public.shop_billing_read(v_shop) #>> '{subscription,planSlug}' <> 'solo'
     or v_item ->> 'requestedPlanSlug' <> 'multi'
-    or (v_item ->> 'listPriceAmount')::numeric <> 1099
+    or (v_item ->> 'listPriceAmount')::numeric <> 999
     or (v_item ->> 'effectivePriceAmount')::numeric <> 599
     or v_item ->> 'priceSource' <> 'override'
-    or (select price_amount from public.plans where slug = 'multi') <> 1099
+    or (select price_amount from public.plans where slug = 'multi') <> 999
     or public.shop_billing_read(v_shop) #>> '{instructions,manualVerification}' <> 'true' then
     raise exception 'manual upgrade quote, retry, or negotiated pricing regressed';
   end if;

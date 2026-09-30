@@ -10,8 +10,9 @@ commands.
 deadline, remaining trial days, current usage, operator-configured InstaPay
 instructions, and payment-notice history. An owner chooses an available plan and
 submits the paid amount, transfer date, and transfer reference through an
-idempotent RPC. The notice freezes the requested plan/catalog term, interval,
-currency, list price, effective negotiated price, and resource limits. Submission
+idempotent RPC. The notice freezes the requested plan family/catalog term,
+server-owned variant, interval, currency, list price, effective negotiated price,
+and resource limits. Submission
 never changes subscription access.
 
 `/platform-admin` has a billing queue. Explicitly provisioned operators can mark a

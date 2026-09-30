@@ -70,8 +70,13 @@ Task 08a provisionally sets active product caps at Basic 100 and Pro 1,000;
 Task 08b provisionally sets active service caps at Basic 50 and Pro 500. These
 are database-enforced operational values, not approved commercial promises.
 
-The Basic/Pro prices and product/service limits remain current implementation
-evidence, not newly approved commercial terms. See [Task 02](02-database-contract.md).
+Basic/Pro prices remain historical implementation evidence and are not sold to
+new customers. The approved Shop catalog is now Solo at EGP 349/month or
+EGP 2,847.84/year, Team at EGP 699/month or EGP 5,703.84/year, and one Multi
+family with two-branch (EGP 999/month or EGP 8,151.84/year) and three-branch
+(EGP 1,199/month or EGP 9,783.84/year) variants. Yearly prices apply the approved
+32% reduction to monthly × 12. The selected immutable catalog term is authoritative
+for variant, interval, exact price, trial policy, and enforced resource limits.
 
 Ledger uses Paymob infrastructure; it remains outside Shop Suit's authorized
 architecture. Shop Suit uses an operator-configured InstaPay/manual-transfer

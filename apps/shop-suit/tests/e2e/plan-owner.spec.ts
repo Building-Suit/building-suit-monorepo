@@ -6,23 +6,23 @@ type RequestStatus = 'submitted' | 'under_review' | 'approved' | 'rejected' | nu
 const limits = {
   solo: { active_locations: 1, active_members: 2, active_products: 250, active_services: 50 },
   team: { active_locations: 1, active_members: 8, active_products: 1000, active_services: 250 },
-  multi: { active_locations: 3, active_members: 25, active_products: 5000, active_services: 1000 },
+  multi: { active_locations: 2, active_members: 25, active_products: 5000, active_services: 1000 },
 }
 const catalog = [
   ['plan-solo', 'Solo', 'solo', 349, limits.solo],
   ['plan-team', 'Team', 'team', 699, limits.team],
-  ['plan-multi', 'Multi', 'multi', 1099, limits.multi],
-].map(([id, name, slug, price_amount, resource_limits]) => ({ id, name, slug, price_amount, resource_limits, currency: 'EGP', billing_interval: 'monthly', trial_days: 7, features: {}, is_purchasable: true, is_coming_soon: false }))
+  ['plan-multi', 'Multi', 'multi', 999, limits.multi],
+].map(([id, name, slug, price_amount, resource_limits]) => ({ id, name, slug, catalog_terms_id: `terms-${slug}`, plan_variant: slug === 'multi' ? 'multi_2' : 'standard', variant_name: name, price_amount, resource_limits, currency: 'EGP', billing_interval: 'monthly', trial_days: 7, features: {}, is_purchasable: true, is_coming_soon: false }))
 
 function plan(id: string, name: string, slug: string, price: number, resourceLimits: typeof limits.team, blockers: Array<Record<string, unknown>> = []) {
-  return { planId: id, planName: name, planSlug: slug, catalogTermsId: `terms-${slug}`, billingInterval: 'monthly', currency: 'EGP', listPriceAmount: price, effectivePriceAmount: slug === 'team' ? 649 : price, priceSource: slug === 'team' ? 'override' : 'catalog', resourceLimits, blockers }
+  return { planId: id, planName: name, planSlug: slug, catalogTermsId: `terms-${slug}`, planVariant: slug === 'multi' ? 'multi_2' : 'standard', variantName: name, billingInterval: 'monthly', currency: 'EGP', listPriceAmount: price, effectivePriceAmount: slug === 'team' ? 649 : price, priceSource: slug === 'team' ? 'override' : 'catalog', resourceLimits, blockers }
 }
 
 function billing(status: RequestStatus) {
   const submission = status ? [{
-    id: 'submission-1', kind: 'renewal', status, expectedAmount: 1099, paidAmount: 1099, currency: 'EGP',
-    requestedPlanId: 'plan-multi', requestedPlanSlug: 'multi', requestedPlanName: 'Multi', billingInterval: 'monthly',
-    listPriceAmount: 1099, effectivePriceAmount: 1099, priceSource: 'catalog', transferDate: '2026-09-29',
+    id: 'submission-1', kind: 'renewal', status, expectedAmount: 999, paidAmount: 999, currency: 'EGP',
+    requestedPlanId: 'plan-multi', requestedPlanSlug: 'multi', requestedPlanName: 'Multi', planVariant: 'multi_2', billingInterval: 'monthly',
+    listPriceAmount: 999, effectivePriceAmount: 999, priceSource: 'catalog', transferDate: '2026-09-29',
     transferReference: 'IPN-PLAN-001', reviewReason: status === 'rejected' ? 'Reference not found' : null,
     receivedAmount: null, receivedReference: null, receivedDate: null, activationDays: null,
     approvedSubscriptionEnd: status === 'approved' ? '2026-11-12T12:00:00Z' : null,
@@ -30,7 +30,7 @@ function billing(status: RequestStatus) {
   }] : []
   return {
     subscription: {
-      id: 'subscription-1', status: 'trialing', planId: 'plan-team', planSlug: 'team', planName: 'Team',
+      id: 'subscription-1', status: 'trialing', planId: 'plan-team', planSlug: 'team', planName: 'Team', planVariant: 'standard', variantName: 'Team',
       priceAmount: 699, listPriceAmount: 699, effectivePriceAmount: 649, priceSource: 'override',
       priceOverrideId: 'override-1', priceOverrideReason: 'Pilot agreement', priceOverrideEffectiveFrom: '2026-09-01T00:00:00Z', priceOverrideExpiresAt: null,
       currency: 'EGP', billingInterval: 'monthly', trialStartAt: '2026-09-28T12:00:00Z', trialEndAt: '2026-10-05T12:00:00Z',
@@ -45,7 +45,7 @@ function billing(status: RequestStatus) {
         { resource: 'active_services', used: 260, limit: 50, excess: 210 },
       ]),
       plan('plan-team', 'Team', 'team', 699, limits.team),
-      plan('plan-multi', 'Multi', 'multi', 1099, limits.multi),
+      plan('plan-multi', 'Multi', 'multi', 999, limits.multi),
     ],
     instructions: { recipientAlias: 'building-suit@instapay', paymentLink: null, qrImageUrl: null, instructionsEn: 'Transfer the exact amount and keep the reference.', instructionsAr: 'حوّل المبلغ المحدد واحتفظ بالمرجع.', updatedAt: '2026-09-01T00:00:00Z', manualVerification: true },
     usage: {
@@ -111,7 +111,7 @@ for (const locale of ['en', 'ar']) for (const width of [360, 768, 1440]) {
 }
 
 for (const locale of ['en', 'ar']) for (const [slug, name, price] of [
-  ['solo', 'Solo', 349], ['team', 'Team', 649], ['multi', 'Multi', 1099],
+  ['solo', 'Solo', 349], ['team', 'Team', 649], ['multi', 'Multi', 999],
 ] as const) {
   test(`trial owner can submit a plan-aware ${name} request: ${locale}`, async ({ page }) => {
     await page.setViewportSize({ width: 768, height: 900 })
@@ -119,7 +119,10 @@ for (const locale of ['en', 'ar']) for (const [slug, name, price] of [
     const { calls } = await setup(page, locale, request)
     await navigate(page, '/billing')
     const main = page.getByRole('main')
-    const planCard = main.locator('article').filter({ has: page.getByRole('heading', { name, exact: true }) })
+    const cardName = slug === 'multi'
+      ? (locale === 'ar' ? 'مالتي · فرعان' : 'Multi · 2 branches')
+      : name
+    const planCard = main.locator('article').filter({ has: page.getByRole('heading', { name: cardName, exact: true }) })
     await planCard.getByRole('button').click()
     await expect(main.getByText(new RegExp(`${locale === 'ar' ? 'الخطة المطلوبة' : 'Requested plan'}: ${name}`))).toBeVisible()
     await main.getByRole('spinbutton', { name: locale === 'ar' ? 'المبلغ المحوّل' : 'Amount transferred' }).fill(String(price))
@@ -131,6 +134,7 @@ for (const locale of ['en', 'ar']) for (const [slug, name, price] of [
     await expect.poll(() => calls.filter(call => call.name === 'submit_shop_billing_notice').length).toBe(1)
     const submission = calls.find(call => call.name === 'submit_shop_billing_notice')
     expect(submission?.args.p_requested_plan_slug).toBe(slug)
+    expect(submission?.args.p_requested_catalog_terms_id).toBe(`terms-${slug}`)
     expect(submission?.args.p_paid_amount).toBe(price)
   })
 }
@@ -145,7 +149,7 @@ for (const locale of ['en', 'ar']) {
     const choose = main.getByRole('button', { name: locale === 'ar' ? 'اختيار الخطة' : 'Choose plan' }).last()
     await choose.focus()
     await page.keyboard.press('Enter')
-    await main.getByRole('spinbutton', { name: locale === 'ar' ? 'المبلغ المحوّل' : 'Amount transferred' }).fill('1099')
+    await main.getByRole('spinbutton', { name: locale === 'ar' ? 'المبلغ المحوّل' : 'Amount transferred' }).fill('999')
     await main.getByLabel(locale === 'ar' ? 'تاريخ التحويل' : 'Transfer date').fill('2026-09-29')
     await main.getByRole('textbox', { name: locale === 'ar' ? 'مرجع التحويل' : 'Transfer reference' }).fill('IPN-PLAN-001')
     await main.getByRole('button', { name: locale === 'ar' ? 'إرسال للمراجعة' : 'Submit for review' }).click()

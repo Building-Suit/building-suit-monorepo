@@ -10,12 +10,14 @@ const quota = await readFile(new URL('../../app/utils/planQuotaError.ts', import
 
 test('owner billing uses the canonical purchasable catalog and effective server quote', () => {
   assert.match(billing, /usePlans\(\)/)
-  assert.match(billing, /publicPlanSlugs/)
+  assert.match(billing, /publicCatalogTerms/)
+  assert.match(billing, /p_requested_catalog_terms_id: plan\.catalogTermsId/)
   assert.match(billing, /effectivePriceAmount/)
   assert.match(billing, /priceSource === 'override'/)
   assert.doesNotMatch(billing, /349|699|1099/)
   assert.match(pricing, /usePlans\(\)/)
-  assert.match(pricing, /plan\.is_purchasable && !plan\.is_coming_soon/)
+  assert.match(pricing, /family\.some\(plan => plan\.is_purchasable && !plan\.is_coming_soon\)/)
+  assert.match(pricing, /v-for="family in families"/)
   assert.match(pricing, /pricing\.notes\.allPlansIncludeFreeTrial/)
   assert.doesNotMatch(pricing, /query: \{ plan: plan\.slug \}|pricing\.trial/)
 })

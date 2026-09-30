@@ -8,18 +8,18 @@ const state = { signupCalls: 0, resendCalls: 0, verifyCalls: 0, createCalls: 0, 
 const resourceLimits = { active_locations: 1, active_members: 8, active_products: 1000, active_services: 250 }
 const trialStartAt = '2026-09-30T10:00:00.000Z'
 const trialEndAt = '2026-10-07T10:00:00.000Z'
-const plan = { id: 'plan-team', name: 'Team', slug: 'team', price_amount: 699, currency: 'EGP', billing_interval: 'monthly', trial_days: 7, features: {}, resource_limits: resourceLimits, is_purchasable: true, is_coming_soon: false }
+const plan = { id: 'plan-team', name: 'Team', slug: 'team', catalog_terms_id: 'terms-team-2', plan_variant: 'standard', variant_name: 'Team', price_amount: 699, currency: 'EGP', billing_interval: 'monthly', trial_days: 7, features: {}, resource_limits: resourceLimits, is_purchasable: true, is_coming_soon: false }
 const billing = {
   subscription: {
     id: 'subscription-1', status: 'trialing', planId: 'plan-trial', planSlug: 'full-product-trial',
-    planName: 'Full-product trial', priceAmount: 0, listPriceAmount: 0,
+    planName: 'Full-product trial', planVariant: 'standard', variantName: 'Full-product trial', priceAmount: 0, listPriceAmount: 0,
     effectivePriceAmount: 0, priceSource: 'catalog', priceOverrideId: null,
     priceOverrideReason: null, priceOverrideEffectiveFrom: null, priceOverrideExpiresAt: null,
     currency: 'EGP', billingInterval: 'monthly', trialStartAt, trialEndAt,
     periodStart: trialStartAt, periodEnd: trialEndAt, accessState: 'trialing', trialDaysRemaining: 7,
   },
   availablePlans: [{
-    planId: plan.id, planSlug: plan.slug, planName: plan.name, catalogTermsId: 'terms-team-2',
+    planId: plan.id, planSlug: plan.slug, planName: plan.name, catalogTermsId: 'terms-team-2', planVariant: 'standard', variantName: 'Team',
     billingInterval: plan.billing_interval, currency: plan.currency, listPriceAmount: plan.price_amount,
     effectivePriceAmount: plan.price_amount, priceSource: 'catalog', resourceLimits, blockers: [],
   }],
