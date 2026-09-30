@@ -8,8 +8,11 @@ export interface PendingOnboardingForm {
   displayName: string
   email: string
   shopName: string
-  plan: string
   businessMode: BusinessMode
+  mainLocationName: string
+  mainLocationCode: string
+  mainLocationAddress: string
+  mainLocationPhone: string
 }
 
 export interface PendingOnboardingDraft {
@@ -31,14 +34,19 @@ function isFiniteTimestamp(value: unknown): value is number {
 function readForm(value: unknown): PendingOnboardingForm | null {
   if (!value || typeof value !== 'object') return null
   const form = value as Record<string, unknown>
-  if (!['displayName', 'email', 'shopName', 'plan'].every(key => typeof form[key] === 'string')) return null
+  if (!['displayName', 'email', 'shopName'].every(key => typeof form[key] === 'string')) return null
   if (!BUSINESS_MODES.includes(form.businessMode as BusinessMode)) return null
   return {
     displayName: String(form.displayName),
     email: String(form.email),
     shopName: String(form.shopName),
-    plan: String(form.plan),
     businessMode: form.businessMode as BusinessMode,
+    mainLocationName: typeof form.mainLocationName === 'string'
+      ? form.mainLocationName
+      : `${String(form.shopName).trim()} main location`,
+    mainLocationCode: typeof form.mainLocationCode === 'string' ? form.mainLocationCode : '',
+    mainLocationAddress: typeof form.mainLocationAddress === 'string' ? form.mainLocationAddress : '',
+    mainLocationPhone: typeof form.mainLocationPhone === 'string' ? form.mainLocationPhone : '',
   }
 }
 
@@ -57,8 +65,11 @@ export function createPendingOnboardingDraft(
       displayName: form.displayName,
       email: form.email,
       shopName: form.shopName,
-      plan: form.plan,
       businessMode: form.businessMode,
+      mainLocationName: form.mainLocationName,
+      mainLocationCode: form.mainLocationCode,
+      mainLocationAddress: form.mainLocationAddress,
+      mainLocationPhone: form.mainLocationPhone,
     },
   }
 }

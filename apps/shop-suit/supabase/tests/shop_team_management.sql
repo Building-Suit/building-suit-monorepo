@@ -189,6 +189,31 @@ begin
 end;
 $$;
 
+-- The former owner is now the delegated manager role. settings.manage grants
+-- the same location lifecycle without restoring ownership authority.
+select set_config('request.jwt.claim.sub', owner_id::text, true) from shop_team_fixture;
+set local role authenticated;
+do $$
+declare v_shop uuid := current_setting('ss_team.shop')::uuid;
+  v_branch uuid := current_setting('ss_team.branch')::uuid;
+  v_default uuid;
+begin
+  select id into v_default from public.shop_locations
+  where shop_id = v_shop and is_default;
+  perform public.save_shop_location(
+    v_shop, v_default, 'Manager-edited main', 'HQ', null, null
+  );
+  perform public.archive_shop_location(v_shop, v_branch);
+  perform public.restore_shop_location(v_shop, v_branch);
+  if (select name from public.shop_locations where id = v_default)
+      <> 'Manager-edited main'
+    or (select status from public.shop_locations where id = v_branch) <> 'active' then
+    raise exception 'settings manager location lifecycle failed';
+  end if;
+end;
+$$;
+reset role;
+
 -- Direct mutation cannot orphan the shop, even outside the public command API.
 do $$
 begin

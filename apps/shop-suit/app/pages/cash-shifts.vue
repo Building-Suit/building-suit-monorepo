@@ -21,7 +21,7 @@ const actionError = ref('')
 
 const copy = computed(() => isArabic.value ? {
   title: 'ورديات الخزنة', subtitle: 'افتح خزنة كل فرع، سجّل الحركات، وطابق النقدية عند الإغلاق.', branch: 'الفرع',
-  noShop: 'أنشئ متجرًا أولًا من لوحة التحكم.', loading: 'جاري تحميل الورديات…', noLocation: 'لا يوجد فرع متاح.', loadError: 'تعذّر تحميل ورديات الخزنة.', retry: 'إعادة المحاولة',
+  noShop: 'اعمل متجر الأول من لوحة التحكم.', loading: 'بنحمّل الورديات…', noLocation: 'مفيش فرع متاح.', loadError: 'مقدرناش نحمّل ورديات الخزنة.', retry: 'حاول تاني',
   active: 'الوردية المفتوحة', noActive: 'لا توجد وردية نقدية مفتوحة لهذا الفرع.', open: 'فتح وردية', openingCash: 'النقدية الافتتاحية', openingNotes: 'ملاحظة الافتتاح (اختيارية)', openAction: 'فتح الخزنة',
   cashier: 'الكاشير', opened: 'وقت الفتح', closed: 'وقت الإغلاق', register: 'الخزنة', cashSales: 'مبيعات نقدية', cashRefunds: 'مرتجعات نقدية', payIns: 'إيداع نقدي', payOuts: 'سحب نقدي', expected: 'النقدية المتوقعة', counted: 'النقدية المعدودة', variance: 'الفرق', nonCash: 'مدفوعات غير نقدية',
   movement: 'حركة نقدية', payIn: 'إيداع', payOut: 'سحب', amount: 'المبلغ', reason: 'السبب', reference: 'المرجع', record: 'تسجيل الحركة',
@@ -30,8 +30,8 @@ const copy = computed(() => isArabic.value ? {
   cash_sale: 'تحصيل بيع نقدي', cash_refund: 'رد نقدي للعميل', pay_in: 'إيداع نقدي', pay_out: 'سحب نقدي',
   openConfirm: 'فتح الخزنة بالمبلغ الافتتاحي المدخل؟ ستُربط الحركات النقدية التالية بهذه الوردية.',
   movementConfirm: 'تأكيد هذه الحركة؟ ستغيّر النقدية المتوقعة وتبقى محفوظة في سجل غير قابل للتعديل.',
-  closeConfirm: 'إغلاق الوردية بالمبلغ المعدود؟ سيُحفظ المتوقع والفرق دون تعديل أي عملية سابقة.',
-  saved: 'تم تحديث وردية الخزنة.', invalid: 'راجع المبلغ والسبب والمرجع.', denied: 'ليست لديك صلاحية لهذا الفرع أو الإجراء.', conflict: 'توجد وردية مفتوحة بالفعل لهذه الخزنة.', writeError: 'تعذّر حفظ العملية. راجع البيانات وحاول مرة أخرى.', cancel: 'إلغاء',
+  closeConfirm: 'تقفل الوردية على المبلغ اللي عدّيته؟ هنحفظ المبلغ المتوقع والفرق من غير ما نغيّر أي عملية قديمة.',
+  saved: 'اتحدّثت وردية الخزنة.', invalid: 'راجع المبلغ والسبب والمرجع.', denied: 'معندكش صلاحية للفرع أو الإجراء ده.', conflict: 'فيه وردية مفتوحة للخزنة دي بالفعل.', writeError: 'مقدرناش نحفظ العملية. راجع البيانات وحاول تاني.', cancel: 'إلغاء',
 } : {
   title: 'Cashier shifts', subtitle: 'Open each location drawer, record movements, and reconcile counted cash at close.', branch: 'Location',
   noShop: 'Create a shop from the dashboard first.', loading: 'Loading shifts…', noLocation: 'No location is available.', loadError: 'Could not load cashier shifts.', retry: 'Retry',

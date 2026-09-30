@@ -26,11 +26,9 @@ const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
 const route = useRoute()
 const { locale } = useI18n()
 const { current, currentId, activeLocations, currentLocationId, currentMembership, isOwner, selectLocation, reload } = useShop()
-const { data: plans, isLoading: plansPending, error: plansError, refresh: refreshPlans } = usePlans()
+const { data: plans } = usePlans()
 const isArabic = computed(() => locale.value === 'ar')
 const periodOptions: ReportPeriod[] = ['day', 'week', 'month']
-const selectablePlans = computed(() => plans.value?.filter(plan => !plan.is_coming_soon && plan.trial_days > 0) ?? [])
-const selectedPlan = ref('')
 const setupName = ref('')
 const setupMode = ref<BusinessMode>('mixed')
 const setupPending = ref(false)
@@ -39,55 +37,47 @@ const reportPeriod = ref<ReportPeriod>('day')
 const reportAnchor = ref(localToday())
 const reportLocationId = ref<string>('all')
 
-watchEffect(() => {
-  if (!selectablePlans.value.some(plan => plan.slug === selectedPlan.value)) {
-    selectedPlan.value = selectablePlans.value[0]?.slug ?? ''
-  }
-})
-
 const copy = computed(() => isArabic.value ? {
-  title: 'لوحة التشغيل', subtitle: 'مبيعات وتحصيلات ومواعيد وأداء الفروع من سجلات المصدر.',
-  setupTitle: 'أنشئ متجرك الأول', setupBody: 'ابدأ تجربة الخطة التي تختارها. ثم أعدّ الفروع والفريق والخدمات وساعات العمل.',
-  shopName: 'اسم المتجر', plan: 'خطة التجربة', createShop: 'إنشاء المتجر', creating: 'جاري الإنشاء...',
-  businessMode: 'طريقة تشغيل النشاط', businessModeHelp: 'تتحكم في ظهور مسارات المنتجات أو الخدمات ولا تغيّر خطة اشتراكك.',
+  title: 'لوحة التحكم', subtitle: 'شوف المبيعات والتحصيلات والمواعيد وأداء الفروع في مكان واحد.',
+  setupTitle: 'اعمل متجرك الأول', setupBody: 'ابدأ تجربة كاملة 14 يوم من غير ما تختار خطة مدفوعة. تقدر تختار خطتك بعدين من صفحة الاشتراك.',
+  shopName: 'اسم المتجر', plan: 'الخطة', fullTrial: 'تجربة كاملة 14 يوم', createShop: 'اعمل المتجر', creating: 'بنجهّز المتجر...',
+  businessMode: 'طريقة تشغيل النشاط', businessModeHelp: 'يمكنك تغيير طريقة التشغيل لاحقًا من إعدادات النشاط دون فقد أي بيانات.',
   productMode: 'منتجات ومخزون', productModeBody: 'للبيع والمشتريات والموردين وإدارة المخزون.',
   serviceMode: 'خدمات فقط', serviceModeBody: 'لتقديم الخدمات دون الحاجة إلى سجلات مخزون.',
-  mixedMode: 'منتجات وخدمات', mixedModeBody: 'لإظهار مسارات المنتجات والخدمات معًا.',
-  loadingPlans: 'جاري تحميل الخطط...', noPlans: 'لا توجد خطط متاحة للتجربة الآن.',
+  mixedMode: 'منتجات ومخزون وخدمات', mixedModeBody: 'لإظهار مسارات المنتجات والمخزون والخدمات معًا.',
   planStatus: 'حالة الخطة', trialEnds: 'تنتهي التجربة', periodEnds: 'نهاية الفترة', owner: 'مالك', employee: 'موظف',
   client: 'العميل', amount: 'الإجمالي', date: 'التاريخ',
-  loadFailed: 'تعذّر تحميل البيانات.', retry: 'إعادة المحاولة',
+  loadFailed: 'مقدرناش نحمّل البيانات.', retry: 'حاول تاني',
   noShopAfterCreate: 'تم إنشاء المتجر لكن تعذّر تحميله. حدّث الصفحة.',
   setupFailed: 'تعذّر إنشاء المتجر.', invalidName: 'اكتب اسمًا للمتجر من حرفين إلى 120 حرفًا.',
-  planUnavailable: 'هذه الخطة غير متاحة للتجربة الآن.', profileInactive: 'هذا الحساب غير نشط.',
+  profileInactive: 'هذا الحساب غير نشط.',
   subscriptionReview: 'الاشتراك الحالي يحتاج مراجعة قبل إنشاء متجر.',
   modeDisabled: 'هذا المسار مخفي حسب طريقة تشغيل النشاط الحالية. يمكنك تغييره من إعدادات النشاط؛ وتظل البيانات السابقة محفوظة.',
   day: 'يوم', week: 'أسبوع', month: 'شهر', allLocations: 'كل الفروع', location: 'الفرع', reportDate: 'التاريخ',
   loadingReport: 'جاري تحميل تقرير التشغيل…', reportDenied: 'اطلب من المالك صلاحية التقارير. استخدم التقويم أو نقطة البيع لعملك اليومي.',
   sales: 'المبيعات', salesCount: 'عدد البيعات', averageTicket: 'متوسط الفاتورة', collections: 'التحصيلات',
-  expenses: 'مصروفات التشغيل', operatingBalance: 'المبيعات ناقص المصروفات', accountingNotice: 'ملخص تشغيلي فقط؛ ليس ربحًا محاسبيًا ولا قائمة مالية.',
+  expenses: 'مصروفات التشغيل', operatingBalance: 'المبيعات ناقص المصروفات', accountingNotice: 'ده ملخص للشغل بس، مش حساب للربح المحاسبي ومش قائمة مالية.',
   salesMix: 'مزيج المبيعات', product: 'منتجات', service: 'خدمات', quantity: 'الكمية', paymentMix: 'مزيج طرق الدفع', collected: 'محصل', refunded: 'مرتجع', net: 'صافي التحصيل',
   outstanding: 'عملاء عليهم مستحقات', customer: 'العميل', noOutstanding: 'لا توجد مستحقات عملاء.',
   appointments: 'المواعيد', completed: 'مكتمل', cancelled: 'ملغي', noShow: 'لم يحضر', busiestTimes: 'أكثر الأوقات ازدحامًا', noAppointments: 'لا توجد بيانات مواعيد في الفترة.',
   cashVariance: 'فرق الخزنة', closedShifts: 'ورديات مغلقة', expected: 'متوقع', counted: 'فعلي', staffPerformance: 'أداء الفريق', staffMember: 'الموظف', serviceCount: 'عدد الخدمات',
   branchComparison: 'مقارنة الفروع', openSource: 'فتح السجلات', noData: 'لا توجد بيانات في هذه الفترة.',
-  fullReports: 'كل التقارير التشغيلية', fullReportsBody: 'المبيعات والتحصيلات ومستحقات الموردين والمصروفات والمخزون وهامش FIFO والنشاط مع تصدير CSV مطابق.',
+  fullReports: 'كل تقارير الشغل', fullReportsBody: 'المبيعات والتحصيلات ومستحقات الموردين والمصروفات والمخزون، وهامش FIFO (الأقدم أولًا)، مع تصدير CSV.',
   supplierPayable: 'مستحقات الموردين', lowStock: 'منتجات منخفضة المخزون', inventoryValue: 'قيمة المخزون', fifoMargin: 'هامش FIFO المتصالح',
 } : {
   title: 'Operating dashboard', subtitle: 'Sales, collections, appointments, and branch performance reconciled from source records.',
-  setupTitle: 'Create your first shop', setupBody: 'Start a trial of your chosen plan. Then set up your locations, staff, services, and working hours.',
-  shopName: 'Shop name', plan: 'Trial plan', createShop: 'Create shop', creating: 'Creating...',
-  businessMode: 'Business operation mode', businessModeHelp: 'Controls product and service workflow visibility without changing your subscription plan.',
+  setupTitle: 'Create your first shop', setupBody: 'Start with full product access for 14 days and no paid-plan choice. Choose a plan later from Billing.',
+  shopName: 'Shop name', plan: 'Plan', fullTrial: 'Full product trial · 14 days', createShop: 'Create shop', creating: 'Creating...',
+  businessMode: 'Business operation mode', businessModeHelp: 'You can change this later in Business settings without losing data.',
   productMode: 'Products and stock', productModeBody: 'For sales, purchasing, suppliers, and inventory operations.',
   serviceMode: 'Services only', serviceModeBody: 'For delivering services without requiring stock records.',
-  mixedMode: 'Products and services', mixedModeBody: 'Shows both product and service workflows.',
-  loadingPlans: 'Loading plans...', noPlans: 'No plans are currently available for a trial.',
+  mixedMode: 'Products, stock and services', mixedModeBody: 'Shows product, stock, and service workflows together.',
   planStatus: 'Plan status', trialEnds: 'Trial ends', periodEnds: 'Period ends', owner: 'Owner', employee: 'Employee',
   client: 'Client', amount: 'Total', date: 'Date',
   loadFailed: 'Could not load this data.', retry: 'Retry',
   noShopAfterCreate: 'The shop was created but could not be loaded. Refresh this page.',
   setupFailed: 'Could not create the shop.', invalidName: 'Enter a shop name between 2 and 120 characters.',
-  planUnavailable: 'This plan is not available for a trial right now.', profileInactive: 'This account is inactive.',
+  profileInactive: 'This account is inactive.',
   subscriptionReview: 'The current subscription needs review before creating a shop.',
   modeDisabled: 'This workflow is hidden by the current business mode. You can change it in Business settings; existing history remains preserved.',
   day: 'Day', week: 'Week', month: 'Month', allLocations: 'All locations', location: 'Location', reportDate: 'Date',
@@ -235,7 +225,7 @@ function money(value: number | null, currency = 'EGP') {
 
 function setupErrorText(message?: string) {
   if (message === 'INVALID_SHOP_NAME') return copy.value.invalidName
-  if (message === 'PLAN_UNAVAILABLE') return copy.value.planUnavailable
+  if (message === 'TRIAL_UNAVAILABLE') return copy.value.setupFailed
   if (message === 'PROFILE_INACTIVE') return copy.value.profileInactive
   if (message === 'SUBSCRIPTION_REQUIRES_REVIEW') return copy.value.subscriptionReview
   return message || copy.value.setupFailed
@@ -246,15 +236,10 @@ async function createShop() {
   setupError.value = ''
   const name = setupName.value.trim()
   if (name.length < 2 || name.length > 120) { setupError.value = copy.value.invalidName; return }
-  if (!selectablePlans.value.some(plan => plan.slug === selectedPlan.value)) {
-    setupError.value = copy.value.planUnavailable
-    return
-  }
   setupPending.value = true
   try {
     const { error } = await shopRpc.rpc('create_owner_shop', {
       p_shop_name: name,
-      p_plan_slug: selectedPlan.value,
       p_business_mode: setupMode.value,
     })
     if (error) throw error
@@ -292,19 +277,8 @@ async function createShop() {
               </label>
             </div>
           </fieldset>
-          <fieldset class="space-y-3">
-            <legend class="text-sm font-bold">{{ copy.plan }}</legend>
-            <p v-if="plansPending" class="text-sm text-muted-foreground">{{ copy.loadingPlans }}</p>
-            <p v-else-if="plansError" role="alert" class="text-sm text-[var(--bs-status-error)]">{{ copy.loadFailed }} <button type="button" class="underline" @click="refreshPlans()">{{ copy.retry }}</button></p>
-            <p v-else-if="!selectablePlans.length" class="text-sm text-muted-foreground">{{ copy.noPlans }}</p>
-            <div v-else class="grid gap-3 sm:grid-cols-2">
-              <label v-for="plan in selectablePlans" :key="plan.id" class="cursor-pointer rounded-2xl border p-4 transition" :class="selectedPlan === plan.slug ? 'border-[var(--bs-accent)] bg-[var(--bs-accent)]/5 ring-2 ring-[var(--bs-accent)]/15' : 'border-border bg-background hover:border-muted-foreground/50'">
-                <input v-model="selectedPlan" type="radio" name="plan" :value="plan.slug" class="me-2">
-                <div class="flex items-start justify-between gap-3"><div><p class="font-extrabold">{{ plan.name }}</p><p class="mt-1 text-xs text-muted-foreground">{{ plan.trial_days }} {{ isArabic ? 'يوم تجربة' : 'day trial' }}</p></div><p class="text-sm font-extrabold text-[var(--bs-link)]">{{ money(plan.price_amount, plan.currency) }}</p></div>
-              </label>
-            </div>
-          </fieldset>
-          <BsButton type="submit" variant="primary" class="w-full" :pending="setupPending" :disabled="!selectablePlans.length">{{ setupPending ? copy.creating : copy.createShop }}</BsButton>
+          <div class="rounded-2xl border border-border bg-muted/40 p-4"><p class="font-extrabold">{{ copy.fullTrial }}</p><p class="mt-1 text-sm text-muted-foreground">{{ copy.setupBody }}</p></div>
+          <BsButton type="submit" variant="primary" class="w-full" :pending="setupPending">{{ setupPending ? copy.creating : copy.createShop }}</BsButton>
         </BsForm>
       </div>
     </section>
@@ -321,7 +295,7 @@ async function createShop() {
         <div class="flex flex-wrap items-center gap-x-8 gap-y-2 text-sm">
           <h2 class="font-extrabold">{{ copy.planStatus }}</h2>
           <p v-if="subscriptionError" role="alert" class="text-[var(--bs-status-error)]">{{ copy.loadFailed }} <button type="button" class="underline" @click="refreshSubscription()">{{ copy.retry }}</button></p>
-          <template v-else-if="subscription"><p><span class="text-muted-foreground">{{ currentPlan?.name || copy.plan }}:</span> <strong>{{ subscription.status }}</strong></p><p v-if="subscription.trial_end_at"><span class="text-muted-foreground">{{ copy.trialEnds }}:</span> {{ formatDate(subscription.trial_end_at) }}</p><p v-else-if="subscription.current_period_end"><span class="text-muted-foreground">{{ copy.periodEnds }}:</span> {{ formatDate(subscription.current_period_end) }}</p></template>
+          <template v-else-if="subscription"><p><span class="text-muted-foreground">{{ currentPlan?.name || (subscription.status === 'trialing' ? copy.fullTrial : copy.plan) }}:</span> <strong>{{ subscription.status }}</strong></p><p v-if="subscription.trial_end_at"><span class="text-muted-foreground">{{ copy.trialEnds }}:</span> {{ formatDate(subscription.trial_end_at) }}</p><p v-else-if="subscription.current_period_end"><span class="text-muted-foreground">{{ copy.periodEnds }}:</span> {{ formatDate(subscription.current_period_end) }}</p></template>
         </div>
       </section>
 

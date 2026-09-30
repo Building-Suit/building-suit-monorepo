@@ -57,9 +57,9 @@ const usageResources = computed<PlanUsageResource[]>(() => {
 watch([billing, purchasablePlans], () => {
   const plans = purchasablePlans.value
   if (!plans.length) { form.planSlug = ''; return }
-  if (!plans.some(plan => plan.planSlug === form.planSlug && !plan.blockers.length)) {
-    form.planSlug = plans.find(plan => plan.planSlug === billing.value?.subscription.planSlug && !plan.blockers.length)?.planSlug
-      ?? plans.find(plan => !plan.blockers.length)?.planSlug ?? ''
+  if (!plans.some(plan => plan.planSlug === form.planSlug)) {
+    form.planSlug = plans.find(plan => plan.planSlug === billing.value?.subscription.planSlug)?.planSlug
+      ?? plans[0]?.planSlug ?? ''
   }
 }, { immediate: true })
 
@@ -99,14 +99,14 @@ function submissionMessage(submission: BillingSubmission) {
 }
 
 function choosePlan(plan: BillingPlanOption) {
-  if (!plan.blockers.length) form.planSlug = plan.planSlug
+  form.planSlug = plan.planSlug
 }
 
 async function submitNotice() {
   if (!currentId.value || !isOwner.value || submitPending.value) return
   submitError.value = ''
   const plan = selectedPlan.value
-  if (!plan || plan.blockers.length || !(form.paidAmount > 0) || !form.transferDate || form.transferReference.trim().length < 2) {
+  if (!plan || !(form.paidAmount > 0) || !form.transferDate || form.transferReference.trim().length < 2) {
     submitError.value = copy.value.invalid
     return
   }
@@ -145,7 +145,7 @@ const en = {
   days: 'days', periodEnd: 'Current access ends', trialEnd: 'Trial ends', currentPrice: 'Effective price', listPrice: 'List price', negotiated: 'Negotiated price applies', usage: 'Plan usage', usageHelp: 'Near-limit and full resources are highlighted before a write is rejected.',
   readOnly: 'Your business history remains available, but subscription-gated writes are disabled until an operator approves payment or adjusts access.',
   compare: 'Compare plans', compareHelp: 'Only plans currently approved for purchase are shown. Limits are enforced by resource, not by business type.', current: 'Current', choose: 'Choose plan', chosen: 'Selected',
-  blocked: 'Blocked by current usage', blockers: 'Reduce usage below every listed limit before requesting this downgrade. Existing data stays readable and nothing is automatically deleted.', used: 'used', limitLabel: 'limit',
+  blocked: 'Approval blocked by current usage', blockers: 'You can select this plan and submit its payment notice now, but it cannot be activated until every excess below is resolved.', preservation: 'All resources and data stay saved. Nothing is automatically deleted or archived. Resources above the chosen plan limits are unavailable for new or active use until you reduce usage or upgrade the plan.', used: 'used', limitLabel: 'limit', over: 'over',
   instructions: 'Pay with InstaPay / instant bank transfer', instructionsHelp: 'Transfer using the operator-configured details below, then submit the notice for manual review. This is not automatic bank verification.',
   recipient: 'Recipient alias', paymentLink: 'Payment link', qr: 'Payment QR', unavailable: 'Payment instructions have not been configured yet. Contact Building Suit support before transferring.',
   notice: 'Submit payment notice', noticeHelp: 'A notice starts manual review. It does not change your plan or access until a platform operator approves it.', requestedPlan: 'Requested plan', interval: 'Commercial term', expected: 'Quoted plan price', paid: 'Amount transferred', transferDate: 'Transfer date', reference: 'Transfer reference',
@@ -158,17 +158,17 @@ const en = {
 }
 
 const ar = {
-  title: 'الاشتراك والفوترة', subtitle: 'اعرف خطتك واستخدامك وحالة طلبات InstaPay التي تتم مراجعتها يدويًا.',
+  title: 'الاشتراك والدفع', subtitle: 'شوف خطتك واستخدامك، وتابع طلبات InstaPay اللي بنراجعها يدويًا.',
   ownerOnly: 'اطلب من مالك المتجر مراجعة الفوترة أو إرسال إشعار التحويل. هذه التفاصيل متاحة للمالك فقط.',
-  noBilling: 'لا توجد معلومات اشتراك متاحة. تواصل مع دعم Building Suit لمراجعة فوترة هذا المتجر.', loadFailed: 'تعذّر تحميل معلومات الفوترة.', retry: 'إعادة المحاولة', plan: 'الخطة الحالية', access: 'حالة الوصول',
+  noBilling: 'مفيش معلومات اشتراك متاحة. كلّم دعم Building Suit عشان يراجع اشتراك المتجر.', loadFailed: 'مقدرناش نحمّل معلومات الاشتراك.', retry: 'حاول تاني', plan: 'الخطة الحالية', access: 'حالة الاستخدام',
   days: 'يوم', periodEnd: 'ينتهي الوصول الحالي', trialEnd: 'تنتهي التجربة', currentPrice: 'السعر الفعلي', listPrice: 'السعر المعلن', negotiated: 'يُطبق سعر تفاوضي', usage: 'استخدام الخطة', usageHelp: 'نوضح الموارد القريبة من الحد أو المكتملة قبل رفض عملية جديدة.',
-  readOnly: 'يظل سجل النشاط متاحًا، لكن عمليات الكتابة المرتبطة بالاشتراك تتوقف حتى يعتمد مسؤول المنصة الدفعة أو يعدّل الوصول.',
+  readOnly: 'سجل شغلك هيفضل متاح للقراية، بس مش هتقدر تعمل عمليات جديدة لحد ما مسؤول المنصة يعتمد الدفعة أو يعدّل الاستخدام.',
   compare: 'مقارنة الخطط', compareHelp: 'تظهر فقط الخطط المعتمدة والمتاحة للشراء الآن. تُطبّق الحدود حسب المورد وليس نوع النشاط.', current: 'الحالية', choose: 'اختيار الخطة', chosen: 'تم الاختيار',
-  blocked: 'غير متاحة بسبب الاستخدام الحالي', blockers: 'خفّض الاستخدام عن كل حد موضح قبل طلب هذه الخطة الأقل. ستظل البيانات القديمة قابلة للقراءة ولن يحذف النظام أي شيء تلقائيًا.', used: 'مستخدم', limitLabel: 'الحد',
-  instructions: 'الدفع عبر InstaPay / تحويل بنكي فوري', instructionsHelp: 'حوّل باستخدام البيانات التي ضبطها مسؤول المنصة ثم أرسل الإشعار للمراجعة اليدوية. لا توجد مطابقة بنكية تلقائية.',
+  blocked: 'التفعيل متوقف بسبب الاستخدام الحالي', blockers: 'يمكنك اختيار هذه الخطة وإرسال إشعار الدفع الآن، لكن لا يمكن تفعيلها حتى تعالج كل تجاوز موضح أدناه.', preservation: 'تظل كل الموارد والبيانات محفوظة. لن يُحذف أو يُؤرشف أي شيء تلقائيًا. الموارد التي تتجاوز حدود الخطة المختارة لن تكون متاحة للاستخدام الجديد أو النشط حتى تخفّض الاستخدام أو ترقي الخطة.', used: 'مستخدم', limitLabel: 'الحد', over: 'فوق الحد',
+  instructions: 'الدفع بـ InstaPay أو تحويل بنكي فوري', instructionsHelp: 'حوّل على البيانات الظاهرة، وبعدها ابعت إشعار الدفع للمراجعة. التحويل بيتراجع يدويًا، مش بيتطابق تلقائيًا.',
   recipient: 'عنوان المستلم', paymentLink: 'رابط الدفع', qr: 'رمز QR للدفع', unavailable: 'لم يضبط مسؤول المنصة تعليمات الدفع بعد. تواصل مع دعم Building Suit قبل التحويل.',
-  notice: 'إرسال إشعار الدفع', noticeHelp: 'الإشعار يبدأ المراجعة اليدوية ولا يغيّر خطتك أو صلاحية الوصول قبل اعتماد مسؤول المنصة.', requestedPlan: 'الخطة المطلوبة', interval: 'المدة التجارية', expected: 'سعر الخطة المثبت', paid: 'المبلغ المحوّل', transferDate: 'تاريخ التحويل', reference: 'مرجع التحويل',
-  submit: 'إرسال للمراجعة', submitting: 'جارٍ الإرسال…', invalid: 'اختر خطة متاحة وأدخل مبلغًا موجبًا وتاريخ التحويل والمرجع.', submitted: 'تم إرسال إشعار الدفع للمراجعة اليدوية.', failed: 'تعذّر إرسال إشعار الدفع. يمكنك إعادة المحاولة بأمان.', confirmNotice: (plan: string, quote: string, paid: string) => `هل تريد إرسال إشعار دفع يدوي لخطة ${plan}؟ السعر المثبت ${quote} والمبلغ المدخل ${paid}. لن يتغير الوصول قبل اعتماد مسؤول المنصة.`,
+  notice: 'ابعت إشعار الدفع', noticeHelp: 'إشعار الدفع بيبدأ المراجعة اليدوية، بس خطتك واستخدامك مش هيتغيّروا غير بعد الاعتماد.', requestedPlan: 'الخطة المطلوبة', interval: 'مدة الاشتراك', expected: 'سعر الخطة المثبت', paid: 'المبلغ المحوّل', transferDate: 'تاريخ التحويل', reference: 'مرجع التحويل',
+  submit: 'ابعت للمراجعة', submitting: 'بنبعت…', invalid: 'اختار خطة متاحة، واكتب المبلغ وتاريخ ومرجع التحويل.', submitted: 'اتبعت إشعار الدفع للمراجعة اليدوية.', failed: 'مقدرناش نبعت إشعار الدفع. تقدر تحاول تاني من غير ما التحويل يتكرر.', confirmNotice: (plan: string, quote: string, paid: string) => `تبعت إشعار دفع لخطة ${plan}؟ سعر الخطة ${quote} والمبلغ اللي كتبته ${paid}. الاستخدام مش هيتغيّر غير بعد اعتماد مسؤول المنصة.`,
   latest: 'أحدث طلب', history: 'سجل إشعارات الدفع', empty: 'لم تُرسل إشعارات دفع بعد.', reviewReason: 'ملاحظة المراجعة', manual: 'تحقق يدوي', catalogFailed: 'تعذّر تحميل كتالوج الخطط المتاحة للشراء.', noPurchasable: 'لا توجد خطط متاحة للطلب حاليًا. سيظل اشتراكك الحالي دون تغيير.',
   statuses: { trialing: 'فترة تجريبية', active: 'نشط', read_only: 'قراءة فقط', suspended: 'موقوف', submitted: 'مُرسل', under_review: 'قيد المراجعة', approved: 'معتمد', rejected: 'مرفوض' },
   submissionMessages: { submitted: 'تم الإرسال للمراجعة اليدوية. لم تتغير خطتك الحالية أو صلاحية الوصول.', under_review: 'يراجع مسؤول المنصة التحويل الآن. لم تتغير خطتك الحالية أو صلاحية الوصول.', approved: 'تم اعتماد هذا الطلب. ملخص الخطة الحالية بالأعلى هو المرجع الفعلي لصلاحية الوصول.', rejected: 'تم رفض الطلب. راجع الملاحظة وصحح بيانات التحويل ثم أرسل إشعارًا جديدًا عند الحاجة.' },
@@ -210,8 +210,8 @@ const ar = {
             <div class="flex items-start justify-between gap-3"><div><h3 class="text-xl font-extrabold">{{ plan.planName }}</h3><p class="mt-1 text-sm text-muted-foreground">{{ intervalLabel(plan.billingInterval) }}</p></div><span v-if="plan.planSlug === billing.subscription.planSlug" class="rounded-full bg-muted px-2.5 py-1 text-xs font-bold">{{ copy.current }}</span></div>
             <p class="mt-4 text-2xl font-black">{{ money(plan.effectivePriceAmount, plan.currency) }}</p><p v-if="plan.priceSource === 'override'" class="mt-1 text-xs font-bold text-[var(--bs-link)]">{{ copy.negotiated }} · {{ copy.listPrice }} {{ money(plan.listPriceAmount, plan.currency) }}</p>
             <PlanResourceLimits class="mt-5" :limits="plan.resourceLimits" />
-            <div v-if="plan.blockers.length" role="alert" class="mt-5 rounded-xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-3 text-sm"><strong>{{ copy.blocked }}</strong><p class="mt-1 leading-5">{{ copy.blockers }}</p><ul class="mt-2 list-disc space-y-1 ps-5"><li v-for="blocker in plan.blockers" :key="blocker.resource">{{ resourceLabel(blocker.resource) }}: {{ blocker.used }} {{ copy.used }} / {{ blocker.limit }} {{ copy.limitLabel }}</li></ul></div>
-            <BsButton type="button" class="mt-5 w-full" :variant="form.planSlug === plan.planSlug ? 'default' : 'primary'" :disabled="plan.blockers.length > 0" :aria-pressed="form.planSlug === plan.planSlug" @click="choosePlan(plan)">{{ form.planSlug === plan.planSlug ? copy.chosen : copy.choose }}</BsButton>
+            <div v-if="plan.blockers.length" role="alert" class="mt-5 rounded-xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-3 text-sm"><strong>{{ copy.blocked }}</strong><p class="mt-1 leading-5">{{ copy.blockers }}</p><ul class="mt-2 list-disc space-y-1 ps-5"><li v-for="blocker in plan.blockers" :key="blocker.resource">{{ resourceLabel(blocker.resource) }}: {{ blocker.used }} {{ copy.used }} / {{ blocker.limit }} {{ copy.limitLabel }} · {{ blocker.excess }} {{ copy.over }}</li></ul><p class="mt-3 font-semibold leading-5">{{ copy.preservation }}</p></div>
+            <BsButton type="button" class="mt-5 w-full" :variant="form.planSlug === plan.planSlug ? 'default' : 'primary'" :aria-pressed="form.planSlug === plan.planSlug" @click="choosePlan(plan)">{{ form.planSlug === plan.planSlug ? copy.chosen : copy.choose }}</BsButton>
           </article>
         </div>
       </section>
@@ -221,7 +221,7 @@ const ar = {
       </section>
 
       <section class="rounded-2xl border border-border bg-card p-5 sm:p-6"><h2 class="text-lg font-extrabold">{{ copy.notice }}</h2><p class="mt-1 text-sm text-muted-foreground">{{ copy.noticeHelp }}</p>
-        <BsForm class="mt-5 grid gap-4 sm:grid-cols-2" :pending="submitPending" :error="submitError" @submit="submitNotice"><div v-if="selectedPlan" class="rounded-xl border border-border p-4 text-sm sm:col-span-2"><p>{{ copy.requestedPlan }}: <strong>{{ selectedPlan.planName }}</strong> · {{ copy.expected }}: <strong>{{ money(selectedPlan.effectivePriceAmount, selectedPlan.currency) }}</strong> · {{ copy.interval }}: <strong>{{ intervalLabel(selectedPlan.billingInterval) }}</strong></p><p v-if="selectedPlan.priceSource === 'override'" class="mt-2 font-bold text-[var(--bs-link)]">{{ copy.negotiated }}</p></div><p v-else role="status" class="rounded-xl border border-border p-4 text-sm sm:col-span-2">{{ copy.noPurchasable }}</p><label class="grid gap-2 text-sm font-bold">{{ copy.paid }}<input v-model.number="form.paidAmount" class="ls-input min-h-11 min-w-0" type="number" min="0.01" step="0.01" :disabled="!selectedPlan" required></label><label class="grid gap-2 text-sm font-bold">{{ copy.transferDate }}<input v-model="form.transferDate" class="ls-input min-h-11 min-w-0" type="date" :max="new Date().toISOString().slice(0, 10)" :disabled="!selectedPlan" required></label><label class="grid gap-2 text-sm font-bold sm:col-span-2">{{ copy.reference }}<input v-model="form.transferReference" class="ls-input min-h-11 min-w-0" dir="ltr" minlength="2" maxlength="200" :disabled="!selectedPlan" required></label><div class="sm:col-span-2"><BsButton type="submit" variant="primary" :pending="submitPending" :disabled="!selectedPlan || hasOpenRequest">{{ submitPending ? copy.submitting : copy.submit }}</BsButton></div></BsForm>
+        <BsForm class="mt-5 grid gap-4 sm:grid-cols-2" :pending="submitPending" :error="submitError" @submit="submitNotice"><div v-if="selectedPlan" class="rounded-xl border border-border p-4 text-sm sm:col-span-2"><p>{{ copy.requestedPlan }}: <strong>{{ selectedPlan.planName }}</strong> · {{ copy.expected }}: <strong>{{ money(selectedPlan.effectivePriceAmount, selectedPlan.currency) }}</strong> · {{ copy.interval }}: <strong>{{ intervalLabel(selectedPlan.billingInterval) }}</strong></p><p v-if="selectedPlan.priceSource === 'override'" class="mt-2 font-bold text-[var(--bs-link)]">{{ copy.negotiated }}</p><p v-if="selectedPlan.blockers.length" class="mt-3 rounded-lg bg-[var(--bs-status-warning-bg)] p-3 font-semibold leading-5">{{ copy.preservation }}</p></div><p v-else role="status" class="rounded-xl border border-border p-4 text-sm sm:col-span-2">{{ copy.noPurchasable }}</p><label class="grid gap-2 text-sm font-bold">{{ copy.paid }}<input v-model.number="form.paidAmount" class="ls-input min-h-11 min-w-0" type="number" min="0.01" step="0.01" :disabled="!selectedPlan" required></label><label class="grid gap-2 text-sm font-bold">{{ copy.transferDate }}<input v-model="form.transferDate" class="ls-input min-h-11 min-w-0" type="date" :max="new Date().toISOString().slice(0, 10)" :disabled="!selectedPlan" required></label><label class="grid gap-2 text-sm font-bold sm:col-span-2">{{ copy.reference }}<input v-model="form.transferReference" class="ls-input min-h-11 min-w-0" dir="ltr" minlength="2" maxlength="200" :disabled="!selectedPlan" required></label><div class="sm:col-span-2"><BsButton type="submit" variant="primary" :pending="submitPending" :disabled="!selectedPlan || hasOpenRequest">{{ submitPending ? copy.submitting : copy.submit }}</BsButton></div></BsForm>
       </section>
 
       <section class="overflow-hidden rounded-2xl border border-border bg-card"><div class="p-5"><h2 class="text-lg font-extrabold">{{ copy.history }}</h2></div><div class="overflow-x-auto"><BsDataTable :value="billing.submissions" data-key="id" :label="copy.history"><Column field="status"><template #header>{{ copy.access }}</template><template #body="{ data: item }"><StatusBadge :status="item.status" /> <span class="ms-2 text-sm">{{ statusLabel(item.status) }}</span></template></Column><Column field="requestedPlanName"><template #header>{{ copy.requestedPlan }}</template></Column><Column><template #header>{{ copy.expected }}</template><template #body="{ data: item }">{{ money(item.effectivePriceAmount, item.currency) }}</template></Column><Column><template #header>{{ copy.paid }}</template><template #body="{ data: item }">{{ money(item.paidAmount, item.currency) }}</template></Column><Column field="transferReference"><template #header>{{ copy.reference }}</template></Column><Column><template #header>{{ copy.transferDate }}</template><template #body="{ data: item }">{{ date(item.transferDate) }}</template></Column><Column field="reviewReason"><template #header>{{ copy.reviewReason }}</template></Column><template #empty><p class="p-6 text-center text-sm text-muted-foreground">{{ copy.empty }}</p></template></BsDataTable></div></section>

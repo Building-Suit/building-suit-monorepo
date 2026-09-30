@@ -44,8 +44,11 @@ test('team UI exposes bilingual responsive management and invite acceptance', ()
   assert.match(page, /accept_shop_invitation/)
   assert.match(page, /transfer_shop_ownership/)
   assert.match(page, /overflow-x-auto/)
-  for (const delegatedPage of [products, services, expenses, settings]) {
+  for (const delegatedPage of [products, services, settings]) {
     assert.match(delegatedPage, /shop_permission_access/)
     assert.doesNotMatch(delegatedPage, /isOwner/)
   }
+  assert.match(expenses, /expensePage\.value\.canManage/)
+  assert.match(expenses, /rpc\.rpc\('list_expenses'/)
+  assert.doesNotMatch(expenses, /isOwner/)
 })

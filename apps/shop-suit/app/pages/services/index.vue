@@ -48,19 +48,19 @@ const form = reactive({
 const { visible: showForm, pending: saving, dirty: formDirty } = useRecordAction(() => form)
 
 const copy = computed(() => isArabic.value ? {
-  title: 'الخدمات', subtitle: 'أدر الخدمات والأسعار، وفعّل الحجز فقط للخدمات التي تحتاج مواعيد.',
-  add: 'إضافة خدمة', edit: 'تعديل', archive: 'أرشفة', cancel: 'إلغاء', save: 'حفظ الخدمة', saving: 'جاري الحفظ…',
-  saved: 'تم حفظ الخدمة.', archived: 'تمت أرشفة الخدمة.', name: 'اسم الخدمة', description: 'وصف اختياري',
+  title: 'الخدمات', subtitle: 'ظبط الخدمات وأسعارها، وشغّل الحجز بس للخدمات اللي محتاجة مواعيد.',
+  add: 'إضافة خدمة', edit: 'تعديل', archive: 'أرشفة', cancel: 'إلغاء', save: 'حفظ الخدمة', saving: 'بنحفظ…',
+  saved: 'اتحفظت الخدمة.', archived: 'اتأرشفت الخدمة.', name: 'اسم الخدمة', description: 'وصف اختياري',
   price: 'سعر البيع', discountType: 'نوع الخصم', discountValue: 'قيمة الخصم', amount: 'مبلغ', percent: 'نسبة مئوية', net: 'السعر بعد الخصم', category: 'التصنيف', allCategories: 'كل التصنيفات', import: 'الاستيراد والإعداد',
-  scheduling: 'الحجز بالمواعيد', schedulingHelp: 'حدد مدة الخدمة والفروع والموظفين المؤهلين. الخدمات الأخرى تستمر دون أي تغيير.',
+  scheduling: 'الحجز بالمواعيد', schedulingHelp: 'حدد مدة الخدمة والفروع والموظفين اللي يقدّموا الخدمة. باقي الخدمات هتفضل زي ما هي.',
   duration: 'مدة الخدمة (دقيقة)', cleanup: 'وقت التجهيز/التنظيف (دقيقة)', locations: 'الفروع المتاحة', staff: 'الموظفون المؤهلون', scheduleSummary: 'مدة الحجز',
-  search: 'ابحث باسم الخدمة أو الوصف', empty: 'لا توجد خدمات بعد.', noResults: 'لا توجد نتائج مطابقة.',
-  noShop: 'أنشئ متجرًا أولًا من لوحة التحكم.', dashboard: 'لوحة التحكم', loading: 'جاري التحميل…',
-  readError: 'تعذّر تحميل الخدمات.', writeError: 'تعذّر حفظ الخدمة.', retry: 'إعادة المحاولة', previous: 'السابق', next: 'التالي',
+  search: 'دوّر باسم الخدمة أو الوصف', empty: 'مفيش خدمات لسه.', noResults: 'مفيش نتايج مطابقة.',
+  noShop: 'اعمل متجر الأول من لوحة التحكم.', dashboard: 'لوحة التحكم', loading: 'بنحمّل…',
+  readError: 'مقدرناش نحمّل الخدمات.', writeError: 'مقدرناش نحفظ الخدمة.', retry: 'حاول تاني', previous: 'السابق', next: 'التالي',
   invalid: 'تحقق من الاسم والسعر والخصم. عند تفعيل المواعيد اختر مدة صحيحة وفرعًا وموظفًا واحدًا على الأقل.',
-  limit: 'وصلت إلى حد الخدمات في خطتك.', access: 'انتهت التجربة أو ليست لديك صلاحية التعديل.',
+  limit: 'وصلت إلى حد الخدمات في خطتك.', access: 'الفترة التجريبية خلصت أو معندكش صلاحية التعديل.',
   mismatch: 'يجب أن يكون كل موظف مؤهلًا للعمل في فرع واحد على الأقل من الفروع المختارة.',
-  archiveConfirm: 'هل تريد أرشفة هذه الخدمة؟ ستبقى المبيعات السابقة محفوظة.',
+  archiveConfirm: 'تأرشف الخدمة دي؟ المبيعات القديمة هتفضل محفوظة.',
 } : {
   title: 'Services', subtitle: 'Manage services and prices, and opt only appointment-based services into scheduling.',
   add: 'Add service', edit: 'Edit', archive: 'Archive', cancel: 'Cancel', save: 'Save service', saving: 'Saving…',

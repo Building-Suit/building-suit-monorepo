@@ -14,8 +14,11 @@ const safeForm = {
   displayName: 'Owner',
   email: 'owner@example.test',
   shopName: 'Recoverable shop',
-  plan: 'team',
   businessMode: 'mixed',
+  mainLocationName: 'Downtown',
+  mainLocationCode: 'DT',
+  mainLocationAddress: '1 Main Street',
+  mainLocationPhone: '+201000000000',
 }
 
 test('pending signup persists only resumable non-secret fields', () => {
@@ -62,4 +65,20 @@ test('OTP screen exposes recovery in English and Arabic and provisioning remains
   assert.match(signup, /rpc\('create_owner_shop'/)
   assert.match(signup, /clearDraft\(\)/)
   assert.doesNotMatch(signup, /localStorage\.setItem|sessionStorage\.setItem\([^\n]*(password|otp|token)/i)
+})
+
+test('signup is plan-neutral, defaults to mixed operations, and explains later safe changes', async () => {
+  const signup = await readFile(new URL('../../app/pages/auth/signup.vue', import.meta.url), 'utf8')
+  assert.doesNotMatch(signup, /id="signup-plan"|p_plan_slug|form\.plan/)
+  assert.match(signup, /businessMode: 'mixed'/)
+  assert.match(signup, /p_main_location_name: form\.mainLocationName\.trim\(\)/)
+  assert.match(signup, /main_location_name: form\.mainLocationName\.trim\(\)/)
+  for (const copy of [
+    'Full product access for 14 days',
+    'no paid-plan choice',
+    'change this later in Business settings without losing data',
+    'تجربة كاملة لمدة 14 يومًا',
+    'دون اختيار خطة مدفوعة',
+    'تغيير طريقة التشغيل لاحقًا من إعدادات النشاط دون فقد أي بيانات',
+  ]) assert.match(signup, new RegExp(copy))
 })
