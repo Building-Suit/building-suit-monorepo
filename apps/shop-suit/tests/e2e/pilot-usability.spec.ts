@@ -29,7 +29,7 @@ for (const locale of ['en', 'ar']) for (const width of [360, 768, 1440]) for (co
     const { calls } = await pilotFixture(page, locale, role)
     const ar = locale === 'ar'
     await expect(page.locator('html')).toHaveAttribute('dir', ar ? 'rtl' : 'ltr')
-    const guide = page.getByRole('region', { name: ar ? 'جهّز نشاط الحلاقة لاستقبال أول عميل' : 'Prepare your barber business for its first customer' })
+    const guide = page.getByRole('region', { name: ar ? 'جهّز متجرك لاستقبال أول عميل' : 'Prepare your shop for its first customer' })
     if (role === 'owner') {
       await expect(guide.getByRole('link')).toHaveCount(6)
       expect(await guide.getByRole('link').evaluateAll(links => links.map(link => link.getAttribute('href')))).toEqual(['/settings', '/settings#locations', '/team', '/services', '/appointments', '/billing'])

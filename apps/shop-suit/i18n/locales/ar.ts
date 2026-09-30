@@ -165,7 +165,7 @@ export default defineI18nLocale(async () => ({
     catalog: 'الكتالوج', search: 'ابحث بالمنتج أو الخدمة أو SKU أو الباركود', all: 'الكل', products: 'المنتجات', services: 'الخدمات',
     loading: 'جارٍ التحميل…', loadError: 'تعذّر تحميل نقطة البيع.', retry: 'إعادة المحاولة', noResults: 'لا توجد عناصر مطابقة. جرّب بحثًا آخر أو اطلب من المالك إعداد كتالوج هذا الفرع.', stock: '{count} في المخزون',
     cart: 'البيعة الحالية', emptyCart: 'امسح باركود أو اختر عنصرًا للبدء.', quantity: 'الكمية', remove: 'حذف', total: 'الإجمالي',
-    location: 'الفرع', staff: 'الحلاق / الموظف', selectStaff: 'اختر الموظف', appointment: 'الموعد', walkIn: 'بيع مباشر / بدون موعد',
+    location: 'الفرع', staff: 'الموظف', selectStaff: 'اختر الموظف', appointment: 'الموعد', walkIn: 'بيع مباشر / بدون موعد',
     customer: 'العميل', customerSearch: 'ابحث باسم العميل أو الهاتف', noCustomer: 'بدون عميل — بيع كاونتر مسدد بالكامل', clearCustomer: 'إلغاء اختيار العميل',
     paymentMethod: 'طريقة الدفع', reference: 'مرجع الدفع (اختياري)', notes: 'ملاحظات البيعة (اختياري)',
     pay: 'تحصيل {amount}', paying: 'جارٍ إتمام البيع…', confirm: 'هل تريد إصدار البيعة وخصم مخزون المنتجات وتسجيل السداد الكامل في عملية واحدة؟',
