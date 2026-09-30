@@ -6,7 +6,7 @@ import { buildReceiptShareText } from '../../app/utils/receipt.ts'
 const migration = await readFile(new URL('../../supabase/migrations/20260928233000_immutable_sale_receipts.sql', import.meta.url), 'utf8')
 const databaseTest = await readFile(new URL('../../supabase/tests/shop_sale_receipts.sql', import.meta.url), 'utf8')
 const receiptPage = await readFile(new URL('../../app/pages/sales/[id]/receipt.vue', import.meta.url), 'utf8')
-const salePage = await readFile(new URL('../../app/pages/sales/[id].vue', import.meta.url), 'utf8')
+const salePage = await readFile(new URL('../../app/pages/sales/[id]/index.vue', import.meta.url), 'utf8')
 const posPage = await readFile(new URL('../../app/pages/pos.vue', import.meta.url), 'utf8')
 const settingsPage = await readFile(new URL('../../app/pages/settings.vue', import.meta.url), 'utf8')
 
