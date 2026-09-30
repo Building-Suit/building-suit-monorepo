@@ -22,6 +22,10 @@ async function startSignup(page: Page, email = 'owner@example.test') {
   await page.getByLabel('Password', { exact: true }).fill('safe-test-password')
   await continueButton.click()
   await page.getByLabel('Shop name', { exact: true }).fill('OTP shop')
+  await expect(page.getByText('Full product access for 14 days', { exact: true })).toBeVisible()
+  await expect(page.getByText(/change this later in Business settings without losing data/)).toBeVisible()
+  await expect(page.getByRole('radio', { name: 'Products, stock and services' })).toBeChecked()
+  await expect(page.locator('#signup-plan')).toHaveCount(0)
   await page.getByRole('button', { name: 'Create shop', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Verify your email' })).toBeVisible()
 }
@@ -58,6 +62,8 @@ test('invalid OTP, refresh, resend and verification retry provision one owner sh
   await expect(page).toHaveURL(/\/dashboard$/)
   const state = await fetch(`${fixtureUrl}/__state`).then(response => response.json())
   expect(state.createCalls).toBe(1)
+  expect(state.createPayload).toEqual({ p_shop_name: 'OTP shop', p_business_mode: 'mixed' })
+  expect(state.signupPayload.data.pending_shop).toEqual({ name: 'OTP shop', business_mode: 'mixed' })
 })
 
 test('start over clears the pending draft and permits a different email', async ({ page }) => {
@@ -96,4 +102,23 @@ test('expired drafts recover by resend and Arabic exposes every safe exit', asyn
   await expect(page.getByRole('link', { name: 'تسجيل الدخول بدلًا من ذلك' })).toBeVisible()
   await page.getByRole('button', { name: 'إرسال رمز جديد', exact: true }).click()
   await expect(page.getByRole('status')).toContainText('أرسلنا رمز تحقق جديدًا')
+})
+
+test('Arabic signup is plan-neutral and defaults to mixed operations', async ({ page }) => {
+  await resetFixture(page, 'ar')
+  await page.goto('/auth/signup')
+  await page.waitForFunction(() => {
+    const root = document.querySelector('#__nuxt') as HTMLElement & {
+      __vue_app__?: { config?: { globalProperties?: { $nuxt?: { isHydrating?: boolean } } } }
+    }
+    return root?.__vue_app__?.config?.globalProperties?.$nuxt?.isHydrating === false
+  })
+  await page.getByLabel('الاسم', { exact: true }).fill('مالك')
+  await page.getByLabel('البريد الإلكتروني', { exact: true }).fill('arabic-new@example.test')
+  await page.getByLabel('كلمة المرور', { exact: true }).fill('safe-test-password')
+  await page.getByRole('button', { name: 'متابعة', exact: true }).click()
+  await expect(page.getByText('تجربة كاملة لمدة 14 يومًا', { exact: true })).toBeVisible()
+  await expect(page.getByText(/تغيير طريقة التشغيل لاحقًا من إعدادات النشاط دون فقد أي بيانات/)).toBeVisible()
+  await expect(page.getByRole('radio', { name: 'منتجات ومخزون وخدمات' })).toBeChecked()
+  await expect(page.locator('#signup-plan')).toHaveCount(0)
 })

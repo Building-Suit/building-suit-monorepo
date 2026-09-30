@@ -8,7 +8,6 @@ export interface PendingOnboardingForm {
   displayName: string
   email: string
   shopName: string
-  plan: string
   businessMode: BusinessMode
 }
 
@@ -31,13 +30,12 @@ function isFiniteTimestamp(value: unknown): value is number {
 function readForm(value: unknown): PendingOnboardingForm | null {
   if (!value || typeof value !== 'object') return null
   const form = value as Record<string, unknown>
-  if (!['displayName', 'email', 'shopName', 'plan'].every(key => typeof form[key] === 'string')) return null
+  if (!['displayName', 'email', 'shopName'].every(key => typeof form[key] === 'string')) return null
   if (!BUSINESS_MODES.includes(form.businessMode as BusinessMode)) return null
   return {
     displayName: String(form.displayName),
     email: String(form.email),
     shopName: String(form.shopName),
-    plan: String(form.plan),
     businessMode: form.businessMode as BusinessMode,
   }
 }
@@ -57,7 +55,6 @@ export function createPendingOnboardingDraft(
       displayName: form.displayName,
       email: form.email,
       shopName: form.shopName,
-      plan: form.plan,
       businessMode: form.businessMode,
     },
   }

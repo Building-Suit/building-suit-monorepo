@@ -10,21 +10,17 @@ const { locale, t } = useI18n()
 const { step, advance, back, reset: resetWizard } = useSignupWizard(2)
 const verification = useShopVerificationTimer()
 const { currentId, loadShops } = useShop()
-const { data: plans, isLoading: plansPending, error: plansError, refresh: refreshPlans } = usePlans()
-const route = useRoute()
-const form = reactive({ displayName: '', email: '', password: '', shopName: '', plan: typeof route.query.plan === 'string' ? route.query.plan : '', businessMode: 'mixed' as BusinessMode })
+const form = reactive({ displayName: '', email: '', password: '', shopName: '', businessMode: 'mixed' as BusinessMode })
 const pending = ref(false)
 const errorMessage = ref('')
 const noticeMessage = ref('')
 const awaitingOtp = ref(false)
 const otp = ref('')
 const existingAccount = ref(false)
-const availablePlans = computed(() => plans.value?.filter(plan => !plan.is_coming_soon && plan.trial_days > 0) ?? [])
-watch(availablePlans, value => { if (!value.some(plan => plan.slug === form.plan)) form.plan = value[0]?.slug ?? '' }, { immediate: true })
 const copy = computed(() => locale.value === 'ar' ? {
-  account: 'بيانات الحساب', accountBody: 'الاسم والبريد الإلكتروني', shop: 'بيانات المتجر', shopBody: 'اسم المتجر وطريقة التشغيل والخطة', shopName: 'اسم المتجر', plan: 'خطة التجربة', businessMode: 'طريقة تشغيل النشاط', businessModeHelp: 'تتحكم في ظهور مسارات العمل ولا تغيّر خطة الاشتراك.', productMode: 'منتجات ومخزون', serviceMode: 'خدمات فقط', mixedMode: 'منتجات وخدمات', next: 'متابعة', back: 'السابق', create: 'إنشاء المتجر', pending: 'جارٍ المتابعة…', verify: 'تأكيد البريد الإلكتروني', verifyBody: 'أدخل رمز التحقق المرسل إلى بريدك الإلكتروني.', code: 'رمز التحقق', resend: 'إرسال رمز جديد', required: 'أكمل الحقول المطلوبة واختر طريقة تشغيل وخطة متاحة.', failed: 'تعذّر إكمال التسجيل. تحقق من البيانات وحاول مجددًا.', invalid: 'الرمز غير صحيح. تحقق منه أو اطلب رمزًا جديدًا.', expired: 'انتهت صلاحية الرمز. اطلب رمزًا جديدًا.', resendFailed: 'تعذّر إرسال رمز جديد الآن. انتظر قليلًا ثم حاول مرة أخرى.', resent: 'أرسلنا رمز تحقق جديدًا إلى بريدك الإلكتروني.', existingPending: 'يوجد تسجيل لهذا البريد بالفعل. استخدم الرمز المرسل أو اطلب رمزًا جديدًا أو سجل الدخول.', stale: 'انتهت جلسة التسجيل المحفوظة. ابدأ مرة أخرى بأمان.', startOver: 'بدء التسجيل من جديد', changeEmail: 'تغيير البريد الإلكتروني', unavailable: 'لا توجد خطط متاحة الآن.', retry: 'إعادة المحاولة', wait: 'يمكنك طلب رمز جديد بعد', expires: 'ينتهي الرمز خلال', login: 'لديك حساب بالفعل؟ سجل الدخول', signIn: 'تسجيل الدخول بدلًا من ذلك',
+  account: 'بيانات الحساب', accountBody: 'الاسم والبريد الإلكتروني', shop: 'بيانات المتجر', shopBody: 'اسم المتجر وطريقة التشغيل', shopName: 'اسم المتجر', trial: 'تجربة كاملة لمدة 14 يومًا', trialHelp: 'ابدأ بكل مزايا Shop Suit الحالية دون اختيار خطة مدفوعة. اختر خطتك لاحقًا من الفوترة.', businessMode: 'طريقة تشغيل النشاط', businessModeHelp: 'يمكنك تغيير طريقة التشغيل لاحقًا من إعدادات النشاط دون فقد أي بيانات.', productMode: 'منتجات ومخزون', serviceMode: 'خدمات فقط', mixedMode: 'منتجات ومخزون وخدمات', next: 'متابعة', back: 'السابق', create: 'إنشاء المتجر', pending: 'جارٍ المتابعة…', verify: 'تأكيد البريد الإلكتروني', verifyBody: 'أدخل رمز التحقق المرسل إلى بريدك الإلكتروني.', code: 'رمز التحقق', resend: 'إرسال رمز جديد', required: 'أكمل الحقول المطلوبة واختر طريقة تشغيل.', failed: 'تعذّر إكمال التسجيل. تحقق من البيانات وحاول مجددًا.', invalid: 'الرمز غير صحيح. تحقق منه أو اطلب رمزًا جديدًا.', expired: 'انتهت صلاحية الرمز. اطلب رمزًا جديدًا.', resendFailed: 'تعذّر إرسال رمز جديد الآن. انتظر قليلًا ثم حاول مرة أخرى.', resent: 'أرسلنا رمز تحقق جديدًا إلى بريدك الإلكتروني.', existingPending: 'يوجد تسجيل لهذا البريد بالفعل. استخدم الرمز المرسل أو اطلب رمزًا جديدًا أو سجل الدخول.', stale: 'انتهت جلسة التسجيل المحفوظة. ابدأ مرة أخرى بأمان.', startOver: 'بدء التسجيل من جديد', changeEmail: 'تغيير البريد الإلكتروني', retry: 'إعادة المحاولة', wait: 'يمكنك طلب رمز جديد بعد', expires: 'ينتهي الرمز خلال', login: 'لديك حساب بالفعل؟ سجل الدخول', signIn: 'تسجيل الدخول بدلًا من ذلك',
 } : {
-  account: 'Account details', accountBody: 'Your name and email', shop: 'Shop details', shopBody: 'Shop name, operation mode, and plan', shopName: 'Shop name', plan: 'Trial plan', businessMode: 'Business operation mode', businessModeHelp: 'Controls workflow visibility without changing your subscription plan.', productMode: 'Products and stock', serviceMode: 'Services only', mixedMode: 'Products and services', next: 'Continue', back: 'Back', create: 'Create shop', pending: 'Continuing…', verify: 'Verify your email', verifyBody: 'Enter the verification code sent to your email.', code: 'Verification code', resend: 'Send another code', required: 'Complete the required fields and choose an operation mode and available plan.', failed: 'Could not complete signup. Check your details and try again.', invalid: 'That code is not valid. Check it or request a new code.', expired: 'This code has expired. Request another code.', resendFailed: 'A new code could not be sent yet. Wait a moment and try again.', resent: 'We sent a new verification code to your email.', existingPending: 'A signup already exists for this email. Use its code, request a new one, or sign in.', stale: 'Your saved signup session expired. Start again safely.', startOver: 'Start signup over', changeEmail: 'Change email', unavailable: 'No plans are available right now.', retry: 'Retry', wait: 'Request another code in', expires: 'Code expires in', login: 'Already have an account? Sign in', signIn: 'Sign in instead',
+  account: 'Account details', accountBody: 'Your name and email', shop: 'Shop details', shopBody: 'Shop name and operation mode', shopName: 'Shop name', trial: 'Full product access for 14 days', trialHelp: 'Start with every current Shop Suit feature and no paid-plan choice. Choose a plan later from Billing.', businessMode: 'Business operation mode', businessModeHelp: 'You can change this later in Business settings without losing data.', productMode: 'Products and stock', serviceMode: 'Services only', mixedMode: 'Products, stock and services', next: 'Continue', back: 'Back', create: 'Create shop', pending: 'Continuing…', verify: 'Verify your email', verifyBody: 'Enter the verification code sent to your email.', code: 'Verification code', resend: 'Send another code', required: 'Complete the required fields and choose an operation mode.', failed: 'Could not complete signup. Check your details and try again.', invalid: 'That code is not valid. Check it or request a new code.', expired: 'This code has expired. Request another code.', resendFailed: 'A new code could not be sent yet. Wait a moment and try again.', resent: 'We sent a new verification code to your email.', existingPending: 'A signup already exists for this email. Use its code, request a new one, or sign in.', stale: 'Your saved signup session expired. Start again safely.', startOver: 'Start signup over', changeEmail: 'Change email', retry: 'Retry', wait: 'Request another code in', expires: 'Code expires in', login: 'Already have an account? Sign in', signIn: 'Sign in instead',
 })
 const modeOptions = computed(() => BUSINESS_MODES.map(value => ({
   value,
@@ -60,13 +56,12 @@ function startOver() {
   form.password = ''
   form.shopName = ''
   form.businessMode = 'mixed'
-  form.plan = typeof route.query.plan === 'string' ? route.query.plan : (availablePlans.value[0]?.slug ?? '')
   resetWizard()
 }
 async function provisionShop() {
   await loadShops({ force: true })
   if (!currentId.value) {
-    const { error } = await shopRpc.rpc('create_owner_shop', { p_shop_name: form.shopName.trim(), p_plan_slug: form.plan, p_business_mode: form.businessMode })
+    const { error } = await shopRpc.rpc('create_owner_shop', { p_shop_name: form.shopName.trim(), p_business_mode: form.businessMode })
     if (error) throw error
     await loadShops({ force: true })
     if (!currentId.value) throw new Error('Shop could not be loaded')
@@ -87,13 +82,13 @@ async function submit() {
   if (pending.value) return
   if (step.value === 1) { await nextStep(); return }
   errorMessage.value = ''
-  if (form.shopName.trim().length < 2 || form.shopName.trim().length > 120 || !BUSINESS_MODES.includes(form.businessMode) || !availablePlans.value.some(plan => plan.slug === form.plan)) { errorMessage.value = copy.value.required; return }
+  if (form.shopName.trim().length < 2 || form.shopName.trim().length > 120 || !BUSINESS_MODES.includes(form.businessMode)) { errorMessage.value = copy.value.required; return }
   pending.value = true
   try {
     if (existingAccount.value) { await provisionShop(); return }
     const { data, error } = await supabase.auth.signUp({
       email: form.email.trim().toLowerCase(), password: form.password,
-      options: { data: { display_name: form.displayName.trim(), portal_key: 'shop_suit', pending_shop: { name: form.shopName.trim(), plan: form.plan, business_mode: form.businessMode } } },
+      options: { data: { display_name: form.displayName.trim(), portal_key: 'shop_suit', pending_shop: { name: form.shopName.trim(), business_mode: form.businessMode } } },
     })
     if (error) {
       if (!isExistingIdentityError(error)) throw error
@@ -166,7 +161,6 @@ onMounted(async () => {
   form.displayName = String(data.user.user_metadata.display_name || data.user.user_metadata.full_name || form.displayName)
   const draft = data.user.user_metadata.pending_shop
   if (typeof draft?.name === 'string') form.shopName ||= draft.name
-  if (typeof draft?.plan === 'string') form.plan ||= draft.plan
   if (BUSINESS_MODES.includes(draft?.business_mode)) form.businessMode = draft.business_mode
   step.value = 2
   await loadShops({ force: true })
@@ -184,6 +178,7 @@ onMounted(async () => {
       </div>
       <div v-else class="space-y-4">
         <FloatingField :label="copy.shopName"><InputText id="signup-shop" v-model="form.shopName" class="ls-input" minlength="2" maxlength="120" required /></FloatingField>
+        <div class="rounded-xl border border-border bg-muted/40 p-3"><p class="text-sm font-bold">{{ copy.trial }}</p><p class="mt-1 text-xs text-fg-muted">{{ copy.trialHelp }}</p></div>
         <fieldset class="space-y-2">
           <legend class="text-sm font-bold">{{ copy.businessMode }}</legend>
           <p class="text-xs text-fg-muted">{{ copy.businessModeHelp }}</p>
@@ -192,14 +187,10 @@ onMounted(async () => {
             <span class="font-semibold">{{ mode.label }}</span>
           </label>
         </fieldset>
-        <SectionSkeleton v-if="plansPending" :rows="2" />
-        <div v-else-if="plansError" class="ls-error" role="alert"><p>{{ copy.failed }}</p><button type="button" class="ls-btn" @click="refreshPlans()">{{ copy.retry }}</button></div>
-        <p v-else-if="!availablePlans.length" class="text-fg-muted">{{ copy.unavailable }}</p>
-        <FloatingField v-else :label="copy.plan"><select id="signup-plan" v-model="form.plan" class="ls-input" required><option v-for="plan in availablePlans" :key="plan.id" :value="plan.slug">{{ plan.name }} · {{ t('pricing.trial', { trialDays: plan.trial_days }) }}</option></select></FloatingField>
       </div>
       <p v-if="noticeMessage" role="status" class="rounded-xl border border-border p-3 text-sm text-fg-muted">{{ noticeMessage }}</p>
       <p v-if="errorMessage" role="alert" class="ls-error">{{ errorMessage }}</p>
-      <button type="submit" class="ls-btn ls-btn-primary w-full" :disabled="pending || (step === 2 && (!availablePlans.length || plansPending))">{{ pending ? copy.pending : step === 1 ? copy.next : copy.create }}</button>
+      <button type="submit" class="ls-btn ls-btn-primary w-full" :disabled="pending">{{ pending ? copy.pending : step === 1 ? copy.next : copy.create }}</button>
     </BsSignupWizard>
     <p class="text-center text-sm text-fg-muted"><NuxtLink to="/auth/login" class="underline">{{ copy.login }}</NuxtLink></p>
   </form>

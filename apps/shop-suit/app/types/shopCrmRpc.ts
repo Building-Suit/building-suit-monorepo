@@ -5,7 +5,7 @@ export type ShopRpcDatabase = {
     Views: Record<string, never>
     Functions: {
       create_owner_shop: {
-        Args: { p_shop_name: string; p_plan_slug: string; p_business_mode: 'product' | 'service' | 'mixed' }
+        Args: { p_shop_name: string; p_business_mode: 'product' | 'service' | 'mixed' }
         Returns: string
       }
       platform_admin_session: {
