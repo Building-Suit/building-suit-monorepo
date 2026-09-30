@@ -4,9 +4,9 @@ import { pilotFixture } from './pilot-fixture'
 type RequestStatus = 'submitted' | 'under_review' | 'approved' | 'rejected' | null
 
 const limits = {
-  solo: { active_locations: 1, active_members: 2, active_products: 100, active_services: 25 },
-  team: { active_locations: 2, active_members: 10, active_products: 1000, active_services: 100 },
-  multi: { active_locations: 10, active_members: 50, active_products: null, active_services: null },
+  solo: { active_locations: 1, active_members: 2, active_products: 250, active_services: 50 },
+  team: { active_locations: 1, active_members: 8, active_products: 1000, active_services: 250 },
+  multi: { active_locations: 3, active_members: 25, active_products: 5000, active_services: 1000 },
 }
 const catalog = [
   ['plan-solo', 'Solo', 'solo', 349, limits.solo],
@@ -38,18 +38,23 @@ function billing(status: RequestStatus) {
     },
     availablePlans: [
       plan('legacy-plan', 'Legacy founder', 'legacy-founder', 199, limits.team),
-      plan('plan-solo', 'Solo', 'solo', 349, limits.solo, [{ resource: 'active_locations', used: 2, limit: 1, excess: 1 }]),
+      plan('plan-solo', 'Solo', 'solo', 349, limits.solo, [
+        { resource: 'active_locations', used: 4, limit: 1, excess: 3 },
+        { resource: 'active_members', used: 10, limit: 2, excess: 8 },
+        { resource: 'active_products', used: 300, limit: 250, excess: 50 },
+        { resource: 'active_services', used: 260, limit: 50, excess: 210 },
+      ]),
       plan('plan-team', 'Team', 'team', 699, limits.team),
       plan('plan-multi', 'Multi', 'multi', 1099, limits.multi),
     ],
     instructions: { recipientAlias: 'building-suit@instapay', paymentLink: null, qrImageUrl: null, instructionsEn: 'Transfer the exact amount and keep the reference.', instructionsAr: 'حوّل المبلغ المحدد واحتفظ بالمرجع.', updatedAt: '2026-09-01T00:00:00Z', manualVerification: true },
     usage: {
-      locations: 2, members: 8, products: 20, services: 51, limits: limits.team,
+      locations: 4, members: 10, products: 300, services: 260, limits: limits.team,
       resources: [
-        { resource: 'active_locations', used: 2, limit: 2, remaining: 0, unlimited: false, atLimit: true, overLimit: false },
-        { resource: 'active_members', used: 8, limit: 10, remaining: 2, unlimited: false, atLimit: false, overLimit: false },
-        { resource: 'active_products', used: 20, limit: null, remaining: null, unlimited: true, atLimit: false, overLimit: false },
-        { resource: 'active_services', used: 51, limit: 50, remaining: 0, unlimited: false, atLimit: true, overLimit: true },
+        { resource: 'active_locations', used: 4, limit: 1, remaining: 0, unlimited: false, atLimit: true, overLimit: true },
+        { resource: 'active_members', used: 10, limit: 8, remaining: 0, unlimited: false, atLimit: true, overLimit: true },
+        { resource: 'active_products', used: 300, limit: 1000, remaining: 700, unlimited: false, atLimit: false, overLimit: false },
+        { resource: 'active_services', used: 260, limit: 250, remaining: 0, unlimited: false, atLimit: true, overLimit: true },
       ],
     },
     submissions: submission,
@@ -83,12 +88,50 @@ for (const locale of ['en', 'ar']) for (const width of [360, 768, 1440]) {
     await expect(main.getByRole('heading', { name: locale === 'ar' ? 'الاشتراك والفوترة' : 'Subscription and billing' })).toBeVisible()
     const currentSubscription = main.locator('section[aria-label="Current subscription"]')
     await expect(currentSubscription.getByText(locale === 'ar' ? 'يُطبق سعر تفاوضي' : 'Negotiated price applies', { exact: true })).toBeVisible()
-    await expect(main.locator('[data-usage-state="full"]')).toHaveCount(1)
-    await expect(main.locator('[data-usage-state="near"]')).toHaveCount(1)
-    await expect(main.locator('[data-usage-state="over"]')).toHaveCount(1)
+    await expect(main.locator('[data-usage-state="over"]')).toHaveCount(3)
+    await expect(main.locator('[data-usage-state="available"]')).toHaveCount(1)
     await expect(main.getByRole('heading', { name: 'Legacy founder' })).toHaveCount(0)
-    await expect(main.getByRole('button', { name: locale === 'ar' ? 'اختيار الخطة' : 'Choose plan' }).first()).toBeDisabled()
+    const soloCard = main.locator('article').filter({ has: page.getByRole('heading', { name: 'Solo', exact: true }) })
+    const soloChoice = soloCard.getByRole('button', { name: locale === 'ar' ? 'اختيار الخطة' : 'Choose plan' })
+    await expect(soloChoice).toBeEnabled()
+    await expect(soloCard.getByRole('alert').getByRole('listitem')).toHaveCount(4)
+    for (const label of locale === 'ar'
+      ? ['الفروع النشطة', 'أعضاء الفريق', 'المنتجات النشطة', 'الخدمات النشطة']
+      : ['Active locations', 'Team members', 'Active products', 'Active services']) {
+      await expect(soloCard.getByRole('alert')).toContainText(label)
+    }
+    await expect(soloCard.getByRole('alert')).toContainText(locale === 'ar'
+      ? 'لن يُحذف أو يُؤرشف أي شيء تلقائيًا'
+      : 'Nothing is automatically deleted or archived')
+    await expect(soloCard.getByRole('alert')).toContainText(locale === 'ar'
+      ? 'حتى تخفّض الاستخدام أو ترقي الخطة'
+      : 'until you reduce usage or upgrade the plan')
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  })
+}
+
+for (const locale of ['en', 'ar']) for (const [slug, name, price] of [
+  ['solo', 'Solo', 349], ['team', 'Team', 649], ['multi', 'Multi', 1099],
+] as const) {
+  test(`trial owner can submit a plan-aware ${name} request: ${locale}`, async ({ page }) => {
+    await page.setViewportSize({ width: 768, height: 900 })
+    const request = { status: null as RequestStatus }
+    const { calls } = await setup(page, locale, request)
+    await navigate(page, '/billing')
+    const main = page.getByRole('main')
+    const planCard = main.locator('article').filter({ has: page.getByRole('heading', { name, exact: true }) })
+    await planCard.getByRole('button').click()
+    await expect(main.getByText(new RegExp(`${locale === 'ar' ? 'الخطة المطلوبة' : 'Requested plan'}: ${name}`))).toBeVisible()
+    await main.getByRole('spinbutton', { name: locale === 'ar' ? 'المبلغ المحوّل' : 'Amount transferred' }).fill(String(price))
+    await main.getByLabel(locale === 'ar' ? 'تاريخ التحويل' : 'Transfer date').fill('2026-09-29')
+    await main.getByRole('textbox', { name: locale === 'ar' ? 'مرجع التحويل' : 'Transfer reference' }).fill(`IPN-${slug.toUpperCase()}-001`)
+    await main.getByRole('button', { name: locale === 'ar' ? 'إرسال للمراجعة' : 'Submit for review' }).click()
+    await page.getByRole('dialog').getByRole('button', { name: locale === 'ar' ? 'تأكيد' : 'Confirm', exact: true }).click()
+
+    await expect.poll(() => calls.filter(call => call.name === 'submit_shop_billing_notice').length).toBe(1)
+    const submission = calls.find(call => call.name === 'submit_shop_billing_notice')
+    expect(submission?.args.p_requested_plan_slug).toBe(slug)
+    expect(submission?.args.p_paid_amount).toBe(price)
   })
 }
 
