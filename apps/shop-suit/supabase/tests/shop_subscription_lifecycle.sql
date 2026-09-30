@@ -169,10 +169,10 @@ begin
       join public.subscriptions subscription
         on subscription.profile_id = membership.profile_id
       where membership.shop_id = v_shop and membership.role = 'owner') <> 1
-    or v_subscription.trial_end_at <> v_subscription.trial_start_at + interval '14 days'
+    or v_subscription.trial_end_at <> v_subscription.trial_start_at + interval '7 days'
     or (select plan.slug from public.plans plan where plan.id = v_subscription.plan_id) <> 'solo'
     or (select shop.business_mode from public.shops shop where shop.id = v_shop) <> 'service' then
-    raise exception 'signup did not preserve exactly one selected 14-day trial';
+    raise exception 'signup did not preserve exactly one selected 7-day trial';
   end if;
 end;
 $$;

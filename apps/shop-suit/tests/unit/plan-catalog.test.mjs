@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises'
 import test from 'node:test'
 
 const migration = await readFile(new URL('../../supabase/migrations/20260929190000_canonical_plan_catalog.sql', import.meta.url), 'utf8')
+const trialMigration = await readFile(new URL('../../supabase/migrations/20260930180000_seven_day_shop_trials.sql', import.meta.url), 'utf8')
 const limitsMigration = await readFile(new URL('../../supabase/migrations/20260929200000_atomic_plan_resource_limits.sql', import.meta.url), 'utf8')
 const adminMigration = await readFile(new URL('../../supabase/migrations/20260929220000_platform_plan_catalog_subscription_controls.sql', import.meta.url), 'utf8')
 const databaseTest = await readFile(new URL('../../supabase/tests/shop_plan_catalog.sql', import.meta.url), 'utf8')
@@ -17,6 +18,7 @@ test('SUB-D08 catalog is canonical and publicly selects only purchasable plans',
   ]) {
     assert.match(migration, new RegExp(`'${name}', '${slug}', ${price}, 'EGP', 'monthly', 14`))
   }
+  assert.match(trialMigration, /trial_days = 7/)
   assert.match(plans, /rpc\('shop_public_plan_catalog'\)/)
   assert.match(adminMigration, /plan\.is_active and plan\.is_public and plan\.is_purchasable/)
   assert.match(migration, /slug in \('basic', 'pro'\)/)
@@ -40,7 +42,7 @@ test('resource limits and commercial history are server-owned snapshots', () => 
 test('database regression covers migration, trial, quota, downgrade, and idempotency', () => {
   assert.match(databaseTest, /legacy active\/trial subscriptions were rewritten/)
   assert.match(databaseTest, /catalog reconciliation was not idempotent/)
-  assert.match(databaseTest, /interval '14 days'/)
+  assert.match(databaseTest, /interval '7 days'/)
   assert.match(databaseTest, /Solo accepted a second active location/)
   assert.match(databaseTest, /Solo accepted a third active member/)
   assert.match(databaseTest, /over-limit downgrade succeeded/)

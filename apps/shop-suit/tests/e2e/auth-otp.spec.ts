@@ -30,7 +30,7 @@ async function startSignup(page: Page, email = 'owner@example.test', mode: 'mixe
   await page.getByLabel('Location code (optional)', { exact: true }).fill('DT')
   await page.getByLabel('Location address (optional)', { exact: true }).fill('1 Main Street')
   await page.getByLabel('Location phone (optional)', { exact: true }).fill('+201000000000')
-  await expect(page.getByText('Full product access for 14 days', { exact: true })).toBeVisible()
+  await expect(page.getByText('Full product access for 7 days', { exact: true })).toBeVisible()
   await expect(page.getByText(/change this later in Business settings without losing data/)).toBeVisible()
   await expect(page.getByRole('radio', { name: 'Products, stock and services' })).toBeChecked()
   if (mode === 'service') await page.getByRole('radio', { name: 'Services only' }).check()
@@ -79,6 +79,13 @@ test('invalid OTP, refresh, resend and verification retry provision one owner sh
     name: 'OTP shop', business_mode: 'mixed', main_location_name: 'Downtown',
     main_location_code: 'DT', main_location_address: '1 Main Street', main_location_phone: '+201000000000',
   })
+
+  await expect(page.getByRole('heading', { name: 'Operating dashboard' })).toBeVisible()
+  await page.goto('/billing')
+  await waitForHydration(page)
+  await expect(page.getByRole('heading', { name: 'Subscription and billing' })).toBeVisible()
+  await expect(page.getByText('Trialing', { exact: true })).toBeVisible()
+  await expect(page.getByText('7 days', { exact: true })).toBeVisible()
 })
 
 test('start over clears the pending draft and permits a different email', async ({ page }) => {
@@ -111,12 +118,12 @@ test('expired drafts recover by resend and Arabic exposes every safe exit', asyn
     form: { displayName: 'مالك', email: 'arabic@example.test', shopName: 'متجر', plan: 'team', businessMode: 'mixed' },
   })))
   await page.reload()
-  await expect(page.getByText('انتهت صلاحية الرمز. اطلب رمزًا جديدًا.')).toBeVisible()
-  await expect(page.getByRole('button', { name: 'إرسال رمز جديد', exact: true })).toBeEnabled()
-  await expect(page.getByRole('button', { name: /تغيير البريد الإلكتروني/ })).toBeEnabled()
-  await expect(page.getByRole('link', { name: 'تسجيل الدخول بدلًا من ذلك' })).toBeVisible()
-  await page.getByRole('button', { name: 'إرسال رمز جديد', exact: true }).click()
-  await expect(page.getByRole('status')).toContainText('أرسلنا رمز تحقق جديدًا')
+  await expect(page.getByText('صلاحية الكود خلصت. اطلب كود جديد.')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'ابعت كود جديد', exact: true })).toBeEnabled()
+  await expect(page.getByRole('button', { name: /غيّر الإيميل/ })).toBeEnabled()
+  await expect(page.getByRole('link', { name: 'سجّل دخول بدل كده' })).toBeVisible()
+  await page.getByRole('button', { name: 'ابعت كود جديد', exact: true }).click()
+  await expect(page.getByRole('status')).toContainText('بعتنا كود تأكيد جديد')
 })
 
 test('Arabic signup is plan-neutral and defaults to mixed operations', async ({ page }) => {
@@ -126,10 +133,10 @@ test('Arabic signup is plan-neutral and defaults to mixed operations', async ({ 
   await page.getByLabel('الاسم', { exact: true }).fill('مالك')
   await page.getByLabel('البريد الإلكتروني', { exact: true }).fill('arabic-new@example.test')
   await page.getByLabel('كلمة المرور', { exact: true }).fill('safe-test-password')
-  await page.getByRole('button', { name: 'متابعة', exact: true }).click()
+  await page.getByRole('button', { name: 'كمّل', exact: true }).click()
   await page.getByLabel('اسم الفرع الرئيسي', { exact: true }).fill('الفرع الرئيسي')
-  await expect(page.getByText('تجربة كاملة لمدة 14 يومًا', { exact: true })).toBeVisible()
-  await expect(page.getByText(/تغيير طريقة التشغيل لاحقًا من إعدادات النشاط دون فقد أي بيانات/)).toBeVisible()
+  await expect(page.getByText('تجربة كاملة 7 أيام', { exact: true })).toBeVisible()
+  await expect(page.getByText(/تقدر تغيّرها بعدين من إعدادات النشاط، وبياناتك هتفضل محفوظة/)).toBeVisible()
   await expect(page.getByRole('radio', { name: 'منتجات ومخزون وخدمات' })).toBeChecked()
   await expect(page.locator('#signup-plan')).toHaveCount(0)
 })
@@ -162,8 +169,8 @@ test('signup main location, selected mode, editing, restore, and capacity persis
   await expect(page.getByRole('heading', { name: 'Shop profile' })).toBeVisible()
   await page.getByLabel('Shop display name', { exact: true }).fill('OTP flagship Shop')
   await page.getByRole('button', { name: 'Save Shop profile', exact: true }).click()
-  await expect(page.getByRole('status')).toContainText('Shop profile updated.')
-  await expect(page.getByLabel('Shop', { exact: true })).toContainText('OTP flagship Shop')
+  await expect(page.getByRole('status').filter({ hasText: 'Shop profile updated.' }).first()).toBeVisible()
+  await expect(page.getByRole('banner').getByRole('combobox', { name: 'Shop', exact: true })).toContainText('OTP flagship Shop')
   await page.reload()
   await waitForHydration(page)
   await expect(page.getByLabel('Shop display name', { exact: true })).toHaveValue('OTP flagship Shop')

@@ -29,8 +29,8 @@ not yet seeded, approved, or sold as Shop Suit plans.
 Branches, advanced analytics and API access are disabled in all three launch
 plans. The annual reference prices implement a 32% reduction from monthly × 12.
 Ledger's launch documentation describes a cardless 14-day trial. Shop Suit now
-independently applies the approved 14-day policy to every new trial. The forward
-migration changes the catalog/default without shortening existing trial deadlines;
+independently applies the approved 7-day policy to every new trial. The forward
+migration appends new catalog terms and changes the default without shortening existing trial deadlines;
 exceptional live-customer records require an explicit audited operator command.
 
 ## Behavior to carry over

@@ -278,7 +278,7 @@ export default defineI18nLocale(async () => ({
     noAccount: 'مش عندك حساب؟',
     signupAction: 'إنشاء حساب',
     signupTitle: 'ابدأ مجانًا',
-    signupSubtitle: 'جرّب Shop CRM مجانًا 14 يوم من غير كارت فيزا.',
+    signupSubtitle: 'جرّب كل مميزات Shop CRM مجانًا 7 أيام من غير كارت فيزا.',
     displayName: 'الاسم',
     displayNamePlaceholder: 'اكتب اسمك',
     haveAccount: 'عندك حساب بالفعل؟',
@@ -320,7 +320,7 @@ export default defineI18nLocale(async () => ({
     subtitle: 'توقف عن التخمين.',
     description:
       'نظام إدارة المحلات الشامل للمحلات الصغيرة والمتوسطة في مصر. فواتير، موظفين، مصروفات، ومخزون - كل شيء في مكان واحد.',
-    cta: 'ابدأ تجربة 14 يوم مجانا',
+    cta: 'ابدأ تجربة 7 أيام مجانًا',
     noCreditCard: 'لا بطاقة ائتمانية مطلوبة. الغاء في أي وقت.',
     seeHowItWorks: 'شاهد كيف يعمل',
     trustSignal1: 'مصمم للشركات المصرية',
@@ -398,7 +398,7 @@ export default defineI18nLocale(async () => ({
       'ابدأ مجانًا وطور خطتك وقت ما تحب. من غير رسوم مخفية وتقدر تلغي في أي وقت.',
     notes: {
       allPlansIncludeFreeTrial:
-        'كل الخطط فيها تجربة مجانية لمدة 14 يوم، ومن غير كارت فيزا.',
+        'ابدأ بكل مميزات المنتج لمدة 7 أيام من غير ما تختار خطة أو تدخل كارت فيزا.',
       switchPlansAnytime: 'تقدر تغيّر خطتك في أي وقت خلال فترة التجربة.',
       upgradeMidTrial:
         'لو حابب تطوّر خطتك أثناء التجربة، الدفع بيبدأ فورًا وبياناتك بتفضل محفوظة.',

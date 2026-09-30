@@ -16,6 +16,8 @@ test('owner billing uses the canonical purchasable catalog and effective server 
   assert.doesNotMatch(billing, /349|699|1099/)
   assert.match(pricing, /usePlans\(\)/)
   assert.match(pricing, /plan\.is_purchasable && !plan\.is_coming_soon/)
+  assert.match(pricing, /pricing\.notes\.allPlansIncludeFreeTrial/)
+  assert.doesNotMatch(pricing, /query: \{ plan: plan\.slug \}|pricing\.trial/)
 })
 
 test('all four quota resources have concise comparison and usage states', () => {

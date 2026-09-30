@@ -278,7 +278,7 @@ export default defineI18nLocale(async () => ({
     noAccount: "Don't have an account?",
     signupAction: 'Create account',
     signupTitle: 'Start for free',
-    signupSubtitle: 'Try Shop CRM free for 14 days. No credit card required.',
+    signupSubtitle: 'Try every Shop CRM feature free for 7 days. No credit card required.',
     displayName: 'Name',
     displayNamePlaceholder: 'Enter your name',
     haveAccount: 'Already have an account?',
@@ -320,7 +320,7 @@ export default defineI18nLocale(async () => ({
     subtitle: 'Stop guessing.',
     description:
       'A complete CRM for small business owners in Egypt. Handle invoices, employees, services, expenses, and inventory — all in one place.',
-    cta: 'Start Your 30-Day Free Trial',
+    cta: 'Start Your 7-Day Free Trial',
     noCreditCard: 'No credit card required. Cancel anytime.',
     seeHowItWorks: 'See How It Works',
     trustSignal1: 'Built for Egyptian businesses',
@@ -398,7 +398,7 @@ export default defineI18nLocale(async () => ({
       "Start free, upgrade when you're ready. No hidden fees, cancel anytime.",
     notes: {
       allPlansIncludeFreeTrial:
-        'All plans include a 14-day free trial. No credit card required.',
+        'Start with full product access for 7 days. No plan or credit card required.',
       switchPlansAnytime: 'Switch plans anytime during your trial.',
       upgradeMidTrial:
         "Need to upgrade mid-trial? You'll start paying immediately, but keep your data.",

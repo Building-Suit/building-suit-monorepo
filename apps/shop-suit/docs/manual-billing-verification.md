@@ -1,7 +1,8 @@
 # SS-BILLING-001 — Manual subscription verification
 
-New Shop Suit subscriptions receive one 14-day trial. The catalog/default changes
-forward; existing `trial_start_at` and `trial_end_at` values are not shortened.
+New Shop Suit subscriptions receive one 7-day trial. The catalog/default changes
+forward through a new immutable commercial-terms version; existing `trial_start_at`
+and `trial_end_at` values and prior 14-day terms are not changed.
 Platform operators can explicitly extend/end exceptional trials through audited
 commands.
 

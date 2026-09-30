@@ -28,7 +28,7 @@ begin
     is_purchasable, is_coming_soon, catalog_version
   ) values (
     v_plan, v_portal, 'Limit test', 'ss-plan-limits-test', 0, 'EGP', 'monthly',
-    14, '{"inventory":true,"max_locations":2,"max_members":2,"max_products":1,"max_services":1}'::jsonb,
+    7, '{"inventory":true,"max_locations":2,"max_members":2,"max_products":1,"max_services":1}'::jsonb,
     '{"active_locations":2,"active_members":2,"active_products":1,"active_services":1}'::jsonb,
     999, true, true, true, false, 1
   );

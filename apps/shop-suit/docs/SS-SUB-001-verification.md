@@ -10,7 +10,7 @@ The control-plane task record marks every hard prerequisite complete:
 SS-PILOT-001, SS-PLAN-CATALOG-001, SS-PLAN-LIMITS-001,
 SS-PLAN-BILLING-001, SS-PLAN-ADMIN-001, and SS-PLAN-UI-001.
 
-The integrated rollback-only database fixture covers: idempotent 14-day signup,
+The integrated rollback-only database fixture covers: idempotent 7-day signup,
 owner/employee/observer/operator authorization, negotiated quote isolation,
 manual upgrade approval and retry, renewal, explicit downgrade blockers and
 data preservation, subscription suspension/reactivation, and the absence of an

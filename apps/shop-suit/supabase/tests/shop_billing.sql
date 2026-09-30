@@ -1,4 +1,4 @@
--- SS-BILLING-001: 14-day boundary, owner isolation, manual notice review,
+-- HOT-09: seven-day boundary, owner isolation, manual notice review,
 -- approval idempotency, read-only expiry, and immutable evidence.
 
 create temporary table shop_billing_fixture as
@@ -46,13 +46,13 @@ begin
   end if;
   if exists (
     select 1 from public.plans plan join public.portals portal on portal.id = plan.portal_id
-    where portal.key = 'shop-crm' and plan.trial_days <> 14
-  ) then raise exception 'canonical trial policy is not 14 days'; end if;
+    where portal.key = 'shop-crm' and plan.trial_days <> 7
+  ) then raise exception 'canonical trial policy is not 7 days'; end if;
   begin
     update public.plans set trial_days = 30 where slug = 'solo';
     raise exception '30-day Shop trial policy was accepted';
   exception when check_violation then
-    if sqlerrm <> 'SHOP_TRIAL_DAYS_MUST_BE_14' then raise; end if;
+    if sqlerrm <> 'SHOP_TRIAL_DAYS_MUST_BE_7' then raise; end if;
   end;
 end;
 $$;
@@ -76,9 +76,9 @@ begin
   from public.subscriptions subscription
   join public.shop_memberships membership on membership.profile_id = subscription.profile_id
   where membership.shop_id = v_shop and membership.role = 'owner';
-  if v_trial_end <> v_trial_start + interval '14 days'
-    or public.shop_billing_read(v_shop) #>> '{subscription,trialDaysRemaining}' not in ('13', '14') then
-    raise exception 'new trial is not exactly 14 days';
+  if v_trial_end <> v_trial_start + interval '7 days'
+    or public.shop_billing_read(v_shop) #>> '{subscription,trialDaysRemaining}' not in ('6', '7') then
+    raise exception 'new trial is not exactly 7 days';
   end if;
 
   v_notice := public.submit_shop_billing_notice(

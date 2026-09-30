@@ -12,7 +12,7 @@ const catalog = [
   ['plan-solo', 'Solo', 'solo', 349, limits.solo],
   ['plan-team', 'Team', 'team', 699, limits.team],
   ['plan-multi', 'Multi', 'multi', 1099, limits.multi],
-].map(([id, name, slug, price_amount, resource_limits]) => ({ id, name, slug, price_amount, resource_limits, currency: 'EGP', billing_interval: 'monthly', trial_days: 14, features: {}, is_purchasable: true, is_coming_soon: false }))
+].map(([id, name, slug, price_amount, resource_limits]) => ({ id, name, slug, price_amount, resource_limits, currency: 'EGP', billing_interval: 'monthly', trial_days: 7, features: {}, is_purchasable: true, is_coming_soon: false }))
 
 function plan(id: string, name: string, slug: string, price: number, resourceLimits: typeof limits.team, blockers: Array<Record<string, unknown>> = []) {
   return { planId: id, planName: name, planSlug: slug, catalogTermsId: `terms-${slug}`, billingInterval: 'monthly', currency: 'EGP', listPriceAmount: price, effectivePriceAmount: slug === 'team' ? 649 : price, priceSource: slug === 'team' ? 'override' : 'catalog', resourceLimits, blockers }
@@ -33,7 +33,7 @@ function billing(status: RequestStatus) {
       id: 'subscription-1', status: 'trialing', planId: 'plan-team', planSlug: 'team', planName: 'Team',
       priceAmount: 699, listPriceAmount: 699, effectivePriceAmount: 649, priceSource: 'override',
       priceOverrideId: 'override-1', priceOverrideReason: 'Pilot agreement', priceOverrideEffectiveFrom: '2026-09-01T00:00:00Z', priceOverrideExpiresAt: null,
-      currency: 'EGP', billingInterval: 'monthly', trialStartAt: '2026-09-20T12:00:00Z', trialEndAt: '2026-10-04T12:00:00Z',
+      currency: 'EGP', billingInterval: 'monthly', trialStartAt: '2026-09-28T12:00:00Z', trialEndAt: '2026-10-05T12:00:00Z',
       periodStart: null, periodEnd: null, accessState: 'trialing', trialDaysRemaining: 5,
     },
     availablePlans: [
