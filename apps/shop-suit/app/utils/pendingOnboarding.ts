@@ -9,6 +9,10 @@ export interface PendingOnboardingForm {
   email: string
   shopName: string
   businessMode: BusinessMode
+  mainLocationName: string
+  mainLocationCode: string
+  mainLocationAddress: string
+  mainLocationPhone: string
 }
 
 export interface PendingOnboardingDraft {
@@ -37,6 +41,12 @@ function readForm(value: unknown): PendingOnboardingForm | null {
     email: String(form.email),
     shopName: String(form.shopName),
     businessMode: form.businessMode as BusinessMode,
+    mainLocationName: typeof form.mainLocationName === 'string'
+      ? form.mainLocationName
+      : `${String(form.shopName).trim()} main location`,
+    mainLocationCode: typeof form.mainLocationCode === 'string' ? form.mainLocationCode : '',
+    mainLocationAddress: typeof form.mainLocationAddress === 'string' ? form.mainLocationAddress : '',
+    mainLocationPhone: typeof form.mainLocationPhone === 'string' ? form.mainLocationPhone : '',
   }
 }
 
@@ -56,6 +66,10 @@ export function createPendingOnboardingDraft(
       email: form.email,
       shopName: form.shopName,
       businessMode: form.businessMode,
+      mainLocationName: form.mainLocationName,
+      mainLocationCode: form.mainLocationCode,
+      mainLocationAddress: form.mainLocationAddress,
+      mainLocationPhone: form.mainLocationPhone,
     },
   }
 }

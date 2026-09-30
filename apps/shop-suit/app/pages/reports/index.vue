@@ -29,16 +29,16 @@ let exportVersion = 0
 watch([report, locationId, fromDate, toDate], () => { exportVersion++ }, { flush: 'sync' })
 
 const copy = computed(() => isArabic.value ? {
-  title: 'التقارير التشغيلية', subtitle: 'تقارير كاملة من سجلات المصدر مع تصفية الفروع والتواريخ وتصدير مطابق للنتائج.',
-  operational: 'هذه تقارير تشغيلية وليست قائمة دخل أو ميزانية أو دفتر أستاذ أو محاسبة بالقيد المزدوج.',
-  sales: 'المبيعات', collections: 'التحصيلات والمدفوعات', receivables: 'مستحقات العملاء', suppliers: 'المشتريات ومستحقات الموردين',
-  expenses: 'المصروفات', inventory: 'المخزون والتقييم', margin: 'هامش FIFO المتصالح', activity: 'النشاط الأخير',
+  title: 'التقارير التشغيلية', subtitle: 'شوف أرقام الشغل من السجلات الأصلية، وحدد الفروع والتواريخ، وصدّر نفس النتايج.',
+  operational: 'دي تقارير للشغل بس، مش قائمة دخل ولا ميزانية ولا دفتر أستاذ ولا محاسبة بالقيد المزدوج.',
+  sales: 'المبيعات', collections: 'التحصيلات والمدفوعات', receivables: 'مبالغ مستحقة من العملاء', suppliers: 'المشتريات ومستحقات الموردين',
+  expenses: 'المصروفات', inventory: 'المخزون والتقييم', margin: 'هامش FIFO (الأقدم أولًا)', activity: 'آخر نشاط',
   location: 'الفرع', allLocations: 'كل الفروع', from: 'من', to: 'إلى', fullHistory: 'اترك التاريخ فارغًا لعرض كل السجل.',
-  export: 'تصدير CSV', exporting: 'جاري التصدير…', exportFailed: 'تعذّر تصدير التقرير.',
-  loading: 'جاري تحميل التقرير…', failed: 'تعذّر تحميل التقرير.', retry: 'إعادة المحاولة', denied: 'ليست لديك صلاحية عرض التقارير.',
-  costDenied: 'تحتاج إلى صلاحية عرض التكلفة والربح لهذا التقرير.', empty: 'لا توجد نتائج لهذه المرشحات.',
+  export: 'تصدير CSV', exporting: 'بنصدّر…', exportFailed: 'مقدرناش نصدّر التقرير.',
+  loading: 'بنحمّل التقرير…', failed: 'مقدرناش نحمّل التقرير.', retry: 'حاول تاني', denied: 'معندكش صلاحية تشوف التقارير.',
+  costDenied: 'محتاج صلاحية عرض التكلفة والربح عشان تشوف التقرير ده.', empty: 'مفيش نتايج للاختيارات دي.',
   previous: 'السابق', next: 'التالي', page: 'صفحة', of: 'من', records: 'سجل', open: 'فتح المصدر',
-  true: 'نعم', false: 'لا', fifoNotice: 'يظهر الهامش فقط لبنود المنتجات التي تتطابق كمياتها تمامًا مع حركات تكلفة FIFO. تُستبعد الخدمات والبنود غير المتصالحة.',
+  true: 'نعم', false: 'لا', fifoNotice: 'الهامش بيظهر بس للمنتجات اللي كمياتها مطابقة تمامًا لحركات تكلفة FIFO (الأقدم يتباع الأول). الخدمات والبنود غير المتطابقة مش بتتحسب.',
 } : {
   title: 'Operational reports', subtitle: 'Full-history source-record reports with location/date filters and result-parity exports.',
   operational: 'These are operational reports—not a P&L, balance sheet, general ledger, journal, or double-entry accounting system.',
