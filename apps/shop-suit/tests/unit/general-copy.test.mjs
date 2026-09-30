@@ -7,12 +7,8 @@ const browserRoots = [
   new URL('../../i18n/', import.meta.url),
 ]
 const allowedBarberLiterals = new Set([
-  // The role and industry labels are genuinely optional barber-specific copy.
+  // The persisted role key remains internal for compatibility.
   'barber',
-  'Barber / operator',
-  'حلاق / مقدم خدمة',
-  'Barbers',
-  'الحلاقين',
   // This existing DOM id is internal and is not browser-facing copy.
   'barber-setup-title',
   'copy.barber',
@@ -49,6 +45,7 @@ test('general browser copy does not assume the shop is a barber business', async
 
 test('dashboard setup and POS staff copy stay neutral in English and Arabic', async () => {
   const guide = await readFile(new URL('../../app/components/BarberSetupGuide.vue', import.meta.url), 'utf8')
+  const team = await readFile(new URL('../../app/pages/team.vue', import.meta.url), 'utf8')
   const english = await readFile(new URL('../../i18n/locales/en.ts', import.meta.url), 'utf8')
   const arabic = await readFile(new URL('../../i18n/locales/ar.ts', import.meta.url), 'utf8')
 
@@ -58,6 +55,16 @@ test('dashboard setup and POS staff copy stay neutral in English and Arabic', as
     'جهّز متجرك لاستقبال أول عميل',
     'الخدمات ومددها',
   ]) assert.match(guide, new RegExp(expected))
+  assert.match(team, /barber: 'Operator \/ service provider'/)
+  assert.match(team, /barber: 'مقدم خدمة'/)
   assert.match(english, /staff: 'Staff member'/)
   assert.match(arabic, /staff: 'الموظف'/)
+})
+
+test('customer archive history notice exists in English and Arabic', async () => {
+  const english = await readFile(new URL('../../i18n/locales/en.ts', import.meta.url), 'utf8')
+  const arabic = await readFile(new URL('../../i18n/locales/ar.ts', import.meta.url), 'utf8')
+
+  assert.match(english, /historyNotice: 'Customer history is preserved when a customer is archived\. Previous sales, payments, and activity remain available\.'/)
+  assert.match(arabic, /historyNotice: 'لو أرشفت عميل، سجلّه القديم هيفضل محفوظ\. المبيعات والمدفوعات والتعاملات السابقة هتفضل موجودة\.'/)
 })
