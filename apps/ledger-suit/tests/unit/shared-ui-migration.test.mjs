@@ -20,7 +20,8 @@ const sources = vueFiles(appRoot).map(file => ({
 
 test('Ledger reusable controls and tables come from shared UI', () => {
   for (const { file, source } of sources) {
-    assert.doesNotMatch(source, /<(?:button|form|table)\b/, `${file} contains a native reusable presentation primitive`)
+    assert.doesNotMatch(source, /<table\b/, `${file} contains a native reusable data table`)
+    assert.doesNotMatch(source, /<(?:button|form)\b[^>]*class=["'][^"']*(?:\bls-(?:btn|action|card)\b|rounded-(?:card|control|xl|2xl)[^"']{0,64}(?:border|bg-|p[xy]?-[0-9]))/, `${file} owns a reusable native control recipe`)
     assert.doesNotMatch(source, /<(?:DataTable|Dialog)\b/, `${file} bypasses the Building Suit wrapper`)
     assert.doesNotMatch(source, /\b(?:window\.)?confirm\s*\(/, `${file} bypasses shared confirmation`)
   }

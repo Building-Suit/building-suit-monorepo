@@ -105,8 +105,8 @@ onBeforeUnmount(() => clearInterval(timer))
           <div class="mt-4 flex items-center justify-between gap-4 text-xs text-fg-muted" aria-live="polite"><span v-if="!expired">{{ t('onboarding.otpExpiresIn', { time: formatCountdown(Math.max(0, Math.ceil((expiresAt - now) / 1000))) }) }}</span><span v-else class="font-semibold text-danger">{{ t('onboarding.otpExpired') }}</span><span>{{ t('onboarding.otpAttemptsHint') }}</span></div>
           <p v-if="errorMessage" class="ls-error mt-6" role="alert">{{ errorMessage }}</p>
           <BsButton type="submit" class="ls-btn ls-btn-primary mt-6 w-full" :disabled="pending || (!verified && (otp.length !== 6 || expired))">{{ pending ? t('onboarding.otpVerifying') : (verified ? t('billing.startTrial') : t('onboarding.otpVerify')) }}</BsButton>
-          <p class="mt-6 text-center text-sm text-fg-muted"><span>{{ t('onboarding.otpMissing') }}</span><BsButton type="button" class="ms-1 font-bold text-link disabled:text-fg-muted" :disabled="pending || resendIn > 0" @click="resend">{{ resendIn > 0 ? t('onboarding.otpResendIn', { time: formatCountdown(resendIn) }) : t('onboarding.otpResend') }}</BsButton></p>
-          <div class="mt-8 rounded-card border border-[var(--bs-border)] bg-surface-muted p-4 text-sm text-fg-muted"><p class="font-bold text-fg">{{ t('onboarding.otpSecurityTitle') }}</p><p class="mt-1">{{ t('onboarding.otpSecurityBody') }}</p></div>
+          <p class="mt-6 text-center text-sm text-fg-muted"><span>{{ t('onboarding.otpMissing') }}</span><BsButton variant="link" type="button" class="ms-1 font-bold text-link disabled:text-fg-muted" :disabled="pending || resendIn > 0" @click="resend">{{ resendIn > 0 ? t('onboarding.otpResendIn', { time: formatCountdown(resendIn) }) : t('onboarding.otpResend') }}</BsButton></p>
+          <div class="mt-8 ls-card-muted p-4 text-sm text-fg-muted"><p class="font-bold text-fg">{{ t('onboarding.otpSecurityTitle') }}</p><p class="mt-1">{{ t('onboarding.otpSecurityBody') }}</p></div>
         </div>
       </BsForm>
     </div>

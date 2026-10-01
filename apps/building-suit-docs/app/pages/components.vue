@@ -71,6 +71,13 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
       <div class="ls-card-flat mt-5 flex flex-wrap items-center gap-3 p-5">
         <BsButton variant="primary">{{ ui('save') }}</BsButton><BsButton variant="secondary">{{ isArabic ? 'مراجعة' : 'Review' }}</BsButton><BsButton>{{ ui('cancel') }}</BsButton><BsButton variant="danger">{{ isArabic ? 'حذف' : 'Delete' }}</BsButton>
       </div>
+      <div class="mt-5 flex flex-wrap items-center gap-3" role="group" :aria-label="isArabic ? 'إجراءات دلالية' : 'Semantic actions'">
+        <BsButton variant="link">{{ isArabic ? 'إجراء رابط' : 'Link action' }}</BsButton>
+        <BsButton variant="icon" :aria-label="ui('close')"><AppIcon name="close" /></BsButton>
+        <BsButton variant="tab" role="tab" aria-selected="true">{{ isArabic ? 'تبويب' : 'Tab' }}</BsButton>
+        <BsButton variant="chip" aria-pressed="true">{{ isArabic ? 'خيار' : 'Chip' }}</BsButton>
+        <BsButton variant="tile" class="max-w-48">{{ isArabic ? 'بطاقة تفاعلية' : 'Interactive tile' }}</BsButton>
+      </div>
     </BsCard>
 
     <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-label="Status and KPI examples">
@@ -113,7 +120,7 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
           <FloatingField :label="isArabic ? 'القيمة' : 'Value'"><input v-model="formValue" required class="ls-input"></FloatingField>
           <BsButton type="submit" variant="primary">{{ ui('save') }}</BsButton>
         </BsForm>
-        <div class="flex flex-wrap gap-2"><BsButton :aria-pressed="formPending" @click="formPending = !formPending">{{ ui('loading') }}</BsButton><BsButton @click="toastSuccess(isArabic ? 'تم الحفظ' : 'Saved')">{{ isArabic ? 'إظهار إشعار' : 'Show notification' }}</BsButton></div>
+        <div class="flex flex-wrap gap-2"><BsButton variant="chip" :aria-pressed="formPending" @click="formPending = !formPending">{{ ui('loading') }}</BsButton><BsButton @click="toastSuccess(isArabic ? 'تم الحفظ' : 'Saved')">{{ isArabic ? 'إظهار إشعار' : 'Show notification' }}</BsButton></div>
       </div>
     </BsCard>
 

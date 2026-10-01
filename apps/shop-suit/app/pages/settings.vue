@@ -310,7 +310,7 @@ async function saveReceiptSettings() {
     <p v-if="loading" role="status">{{ ui('loading') }}</p>
     <div v-else-if="shopError" role="alert" class="ls-error">{{ copy.failed }} <BsButton @click="reload()">{{ ui('retry') }}</BsButton></div>
     <p v-else-if="!current" role="status">{{ ui('empty') }}</p>
-    <section v-else id="shop-profile" class="scroll-mt-28 rounded-2xl border border-border bg-card p-5 sm:p-6" aria-labelledby="shop-profile-title">
+    <section v-else id="shop-profile" class="scroll-mt-28 ls-card p-5 sm:p-6" aria-labelledby="shop-profile-title">
       <h2 id="shop-profile-title" class="text-lg font-extrabold">{{ copy.profileTitle }}</h2>
       <p class="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{{ copy.profileHelp }}</p>
       <p v-if="!canManage" role="status" class="mt-5 rounded-xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-4 text-sm text-fg">{{ copy.profileOwnerOnly }}</p>
@@ -327,7 +327,7 @@ async function saveReceiptSettings() {
         <BsButton type="submit" class="ls-btn ls-btn-primary" :pending="profilePending" :disabled="!canManage || profileForm.displayName.trim().length < 2 || profileForm.displayName.trim() === current.name">{{ profilePending ? copy.savingProfile : copy.saveProfile }}</BsButton>
       </BsForm>
     </section>
-    <section v-if="current" class="rounded-2xl border border-border bg-card p-5 sm:p-6">
+    <section v-if="current" class="ls-card p-5 sm:p-6">
       <h2 class="text-lg font-extrabold">{{ copy.modeTitle }}</h2>
       <p class="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{{ copy.modeHelp }}</p>
 
@@ -350,7 +350,7 @@ async function saveReceiptSettings() {
       </BsForm>
     </section>
 
-    <section v-if="current" id="locations" class="scroll-mt-28 rounded-2xl border border-border bg-card p-5 sm:p-6">
+    <section v-if="current" id="locations" class="scroll-mt-28 ls-card p-5 sm:p-6">
       <h2 class="text-lg font-extrabold">{{ copy.locationsTitle }}</h2>
       <p class="mt-2 text-sm leading-6 text-muted-foreground">{{ copy.locationsHelp }}</p>
       <p v-if="locationUsageLabel" class="mt-2 text-sm font-semibold text-muted-foreground">{{ locationUsageLabel }}</p>
@@ -386,11 +386,11 @@ async function saveReceiptSettings() {
       </BsForm>
     </section>
 
-    <section v-if="current" class="rounded-2xl border border-border bg-card p-5 sm:p-6" aria-labelledby="receipt-settings-title">
+    <section v-if="current" class="ls-card p-5 sm:p-6" aria-labelledby="receipt-settings-title">
       <h2 id="receipt-settings-title" class="text-lg font-extrabold">{{ copy.receiptTitle }}</h2>
       <p class="mt-2 text-sm leading-6 text-muted-foreground">{{ copy.receiptHelp }}</p>
       <p v-if="receiptLoading" role="status" class="mt-4">{{ ui('loading') }}</p>
-      <p v-else-if="receiptLoadError" role="alert" class="mt-4 text-sm text-[var(--bs-status-error)]">{{ copy.receiptFailed }} <BsButton type="button" class="min-h-11 font-bold underline" @click="refreshReceiptSettings()">{{ ui('retry') }}</BsButton></p>
+      <p v-else-if="receiptLoadError" role="alert" class="mt-4 text-sm text-[var(--bs-status-error)]">{{ copy.receiptFailed }} <BsButton variant="link" type="button" class="min-h-11 font-bold underline" @click="refreshReceiptSettings()">{{ ui('retry') }}</BsButton></p>
       <template v-else-if="receiptSettings">
         <p v-if="!canManage" role="status" class="mt-5 rounded-xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-4 text-sm">{{ copy.receiptOwnerOnly }}</p>
         <p v-if="receiptSuccess" role="status" class="mt-4 rounded-xl bg-[var(--bs-status-success-bg)] p-3 text-sm">{{ receiptSuccess }}</p>

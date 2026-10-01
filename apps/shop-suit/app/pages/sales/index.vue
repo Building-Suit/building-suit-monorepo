@@ -331,13 +331,13 @@ function handlePage(event: { page: number }) { page.value = event.page + 1 }
       <BsButton v-if="current && salePage?.canManage" type="button" class="ls-btn ls-btn-primary" :disabled="catalogPending" @click="openCreate">{{ t('sales.newSale') }}</BsButton>
     </header>
 
-    <div v-if="!current && !shopLoading" class="rounded-2xl border border-border bg-card p-8 text-center text-sm">{{ t('sales.noShop') }}</div>
+    <div v-if="!current && !shopLoading" class="ls-card p-8 text-center text-sm">{{ t('sales.noShop') }}</div>
     <template v-else-if="current">
       <p v-if="salePage?.permissionDenied" role="alert" class="rounded-xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-4 text-sm">{{ t('sales.permissionDenied') }}</p>
       <p v-else-if="salePage && !salePage.canManage" class="rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm">{{ t('sales.manageDenied') }}</p>
       <p class="rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm">{{ t('sales.paymentBoundary') }}</p>
 
-      <div v-if="!salePage?.permissionDenied" class="overflow-hidden rounded-2xl border border-border bg-card">
+      <div v-if="!salePage?.permissionDenied" class="overflow-hidden ls-card">
         <div class="grid gap-3 border-b border-border p-4 sm:grid-cols-2 xl:grid-cols-5">
           <input v-model="search" type="search" :placeholder="t('sales.search')" :aria-label="t('sales.search')" class="ls-input xl:col-span-2">
           <select v-model="statusFilter" :aria-label="t('sales.status')" class="ls-select"><option value="all">{{ t('sales.allStatuses') }}</option><option value="draft">{{ t('sales.draft') }}</option><option value="issued">{{ t('sales.issued') }}</option></select>
@@ -349,7 +349,7 @@ function handlePage(event: { page: number }) { page.value = event.page + 1 }
           <Column header-class="px-5 py-3 text-start" body-class="px-5 py-4"><template #header>{{ t('sales.customer') }}</template><template #body="{ data: sale }">{{ sale.client_name_snapshot || '—' }}</template></Column>
           <Column header-class="px-5 py-3 text-start" body-class="px-5 py-4"><template #header>{{ t('sales.status') }}</template><template #body="{ data: sale }"><span class="ls-badge" :class="sale.status === 'issued' ? 'bg-[var(--bs-status-success-bg)] text-fg' : 'bg-muted text-muted-foreground'">{{ t(`sales.${sale.status}`) }}</span></template></Column>
           <Column header-class="px-5 py-3 text-end" body-class="px-5 py-4 text-end"><template #header>{{ t('sales.total') }}</template><template #body="{ data: sale }">{{ money(Number(sale.total_amount)) }}</template></Column>
-          <Column header-class="px-5 py-3 text-end" body-class="px-5 py-4 text-end"><template #header>{{ t('sales.date') }}</template><template #body="{ data: sale }"><p>{{ formatDate(sale.issued_at || sale.created_at) }}</p><BsButton v-if="sale.status === 'draft' && salePage?.canManage" type="button" class="mt-1 text-sm font-bold text-[var(--bs-link)]" @click="openEdit(sale.id)">{{ t('sales.edit') }}</BsButton></template></Column>
+          <Column header-class="px-5 py-3 text-end" body-class="px-5 py-4 text-end"><template #header>{{ t('sales.date') }}</template><template #body="{ data: sale }"><p>{{ formatDate(sale.issued_at || sale.created_at) }}</p><BsButton variant="link" v-if="sale.status === 'draft' && salePage?.canManage" type="button" class="mt-1 text-sm font-bold text-[var(--bs-link)]" @click="openEdit(sale.id)">{{ t('sales.edit') }}</BsButton></template></Column>
           <template #empty><p class="p-8 text-center text-sm text-muted-foreground">{{ t('sales.empty') }}</p></template>
         </BsDataTable>
       </div>

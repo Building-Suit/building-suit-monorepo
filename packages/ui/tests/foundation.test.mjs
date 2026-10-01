@@ -38,6 +38,15 @@ test('PrimeVue button defaults safely and preserves explicit submit/label/disabl
   assert.match(await render('atoms/BsButton.vue', { variant: 'danger', size: 'sm' }, 'Remove'), /ls-btn-sm/)
 })
 
+test('semantic action variants do not inherit default button chrome', async () => {
+  for (const variant of ['text', 'link', 'icon', 'tab', 'chip', 'tile']) {
+    const html = await render('atoms/BsButton.vue', { variant, 'aria-label': variant }, variant)
+    assert.match(html, new RegExp(`ls-action-${variant === 'link' ? 'text' : variant}`))
+    assert.doesNotMatch(html, /class="[^"]*\bls-btn\b/)
+  }
+  assert.match(await render('atoms/BsButton.vue', { severity: 'secondary' }, 'Secondary'), /ls-btn-secondary/)
+})
+
 test('status badges expose written labels and semantic tone instead of color alone', async () => {
   const html = await render('atoms/StatusBadge.vue', { status: 'custom', label: 'Needs review', tone: 'warning', icon: false })
   assert.match(html, />Needs review</)
@@ -132,7 +141,7 @@ test('every dynamically discovered Suit local component has one approved ownersh
   assert.deepEqual(manifest.bypasses, [])
 })
 
-test('every dynamically discovered Suit uses shared reusable presentation primitives', () => {
+test('every dynamically discovered Suit uses shared reusable presentation without banning plain native semantics', () => {
   const appsDirectory = path.join(workspaceRoot, 'apps')
   const suits = readdirSync(appsDirectory, { withFileTypes: true })
     .filter(entry => entry.isDirectory() && entry.name.endsWith('-suit'))
@@ -140,10 +149,18 @@ test('every dynamically discovered Suit uses shared reusable presentation primit
   for (const suit of suits) for (const file of vueFiles(path.join(appsDirectory, suit, 'app'))) {
     const source = readFileSync(file, 'utf8')
     const relative = path.relative(workspaceRoot, file)
-    assert.doesNotMatch(source, /<(?:button|form|table)\b/, `${relative} contains a native reusable presentation primitive`)
+    assert.doesNotMatch(source, /<table\b/, `${relative} contains a native reusable data table`)
+    assert.doesNotMatch(source, /<(?:button|form)\b[^>]*class=["'][^"']*(?:\bls-(?:btn|action|card)\b|rounded-(?:card|control|xl|2xl)[^"']{0,64}(?:border|bg-|p[xy]?-[0-9]))/, `${relative} owns a reusable native control recipe`)
     assert.doesNotMatch(source, /<(?:Button|Card|Tag|DataTable|Dialog|ConfirmDialog)\b/, `${relative} bypasses a Building Suit wrapper`)
     assert.doesNotMatch(source, /\b(?:window\.)?confirm\s*\(/, `${relative} bypasses shared confirmation`)
   }
+})
+
+test('workspace enforcement corroborates ownership and semantic action variants from source', () => {
+  const source = readFileSync(path.join(workspaceRoot, 'tooling/checks/workspace.mjs'), 'utf8')
+  assert.match(source, /product-orchestration classification lacks mechanically corroborated domain\/adaptor behavior/)
+  assert.match(source, /semantic BsButton variants must not reintroduce default ls-btn chrome/)
+  assert.doesNotMatch(source, /if \(\/<button\\b\/\.test\(text\)\)/)
 })
 
 test('Automation and Inventory consume the final shared presentation contracts', () => {

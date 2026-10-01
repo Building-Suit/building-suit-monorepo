@@ -234,8 +234,8 @@ onMounted(async () => {
     <p v-if="noticeMessage" role="status" class="rounded-xl border border-border p-3 text-sm text-fg-muted">{{ noticeMessage }}</p>
     <p v-if="errorMessage" role="alert" class="ls-error">{{ errorMessage }}</p>
     <BsButton class="ls-btn ls-btn-primary w-full" :disabled="pending || (!existingAccount && (otp.length !== 6 || verification.expired.value))">{{ pending ? copy.pending : existingAccount ? copy.retry : copy.verify }}</BsButton>
-    <BsButton v-if="!existingAccount" type="button" class="text-sm font-bold underline disabled:opacity-50" :disabled="pending || verification.resendIn.value > 0" @click="resend">{{ verification.resendIn.value > 0 ? `${copy.wait} ${verification.format(verification.resendIn.value)}` : copy.resend }}</BsButton>
-    <BsButton v-if="!existingAccount" type="button" class="text-sm font-bold underline" :disabled="pending" @click="startOver">{{ copy.changeEmail }} · {{ copy.startOver }}</BsButton>
+    <BsButton variant="link" v-if="!existingAccount" type="button" class="text-sm font-bold underline disabled:opacity-50" :disabled="pending || verification.resendIn.value > 0" @click="resend">{{ verification.resendIn.value > 0 ? `${copy.wait} ${verification.format(verification.resendIn.value)}` : copy.resend }}</BsButton>
+    <BsButton variant="link" v-if="!existingAccount" type="button" class="text-sm font-bold underline" :disabled="pending" @click="startOver">{{ copy.changeEmail }} · {{ copy.startOver }}</BsButton>
     <NuxtLink to="/auth/login" class="block text-sm font-bold underline" @click="clearDraft">{{ copy.signIn }}</NuxtLink>
   </BsForm>
 </template>

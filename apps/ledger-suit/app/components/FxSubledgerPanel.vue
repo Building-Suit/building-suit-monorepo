@@ -80,7 +80,7 @@ function expectedSettlement(row: { document: string, rate: string }, currency: s
   <section class="ls-card overflow-hidden" data-testid="fx-panel">
     <div class="border-b border-border p-4"><h2 class="text-h2 font-bold">{{ t('fx.title') }}</h2><p class="text-sm text-fg-muted">{{ t('fx.policy') }}</p></div>
     <div class="flex flex-wrap gap-2 p-4" role="tablist">
-      <BsButton type="submit" v-for="name in (['item','settlement','revaluation','reversal','mapping'] as const)" :key="name" class="ls-btn" :aria-selected="tab===name" @click="tab=name">{{ t(`fx.tabs.${name}`) }}</BsButton>
+      <BsButton variant="chip" type="submit" v-for="name in (['item','settlement','revaluation','reversal','mapping'] as const)" :key="name"  :aria-selected="tab===name" @click="tab=name">{{ t(`fx.tabs.${name}`) }}</BsButton>
     </div>
     <p v-if="error" class="ls-error m-4" role="alert">{{ t('fx.errors.load') }} <BsButton type="submit" @click="load">{{ t('common.retry') }}</BsButton></p>
     <SectionSkeleton v-else-if="pending" class="m-4" variant="table" :rows="3" />

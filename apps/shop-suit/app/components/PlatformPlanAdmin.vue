@@ -183,7 +183,7 @@ const ar = {
 </script>
 
 <template>
-  <section v-if="mode === 'catalog'" class="overflow-hidden rounded-2xl border border-border bg-card">
+  <section v-if="mode === 'catalog'" class="overflow-hidden ls-card">
     <div class="border-b border-border p-5"><h2 class="text-lg font-extrabold">{{ copy.catalog }}</h2><p class="mt-2 text-sm text-muted-foreground">{{ copy.catalogHelp }}</p><p v-if="!canMutate" class="mt-2 text-sm font-bold">{{ copy.observer }}</p></div>
     <BsDataTable :value="catalog?.items ?? []" :loading="catalogPending" :error="catalogError ? copy.loadFailed : null" :label="copy.catalog" data-key="id" @retry="refreshCatalog()">
       <Column><template #header>{{ copy.plan }}</template><template #body="{ data: plan }"><p class="font-bold">{{ plan.name }}</p><p class="text-xs text-muted-foreground">{{ plan.slug }}</p></template></Column>

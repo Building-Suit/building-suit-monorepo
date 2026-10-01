@@ -104,7 +104,8 @@
       "path": "apps/ledger-suit/app/components/FinancialSystemMap.vue",
       "classification": "product-orchestration",
       "rationale": "Explains Ledger-specific accounting flows and links using the product domain model. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-LEDGER-MIG-001"
+      "approval": "BS-UI-LEDGER-MIG-001",
+      "domainEvidence": ["manualFlows", "postingChecks", "financialMap."]
     },
     {
       "path": "apps/ledger-suit/app/components/FxSubledgerPanel.vue",

@@ -215,7 +215,7 @@ function close() {
                 </div>
               </section>
 
-              <aside class="mt-6 rounded-card border border-[var(--bs-border)] bg-surface-muted p-4 text-sm">
+              <aside class="mt-6 ls-card-muted p-4 text-sm">
                 <strong>{{ t('financialMap.boundary.title') }}</strong>
                 <span class="ms-1 text-fg-muted">{{ t('financialMap.boundary.body') }}</span>
               </aside>

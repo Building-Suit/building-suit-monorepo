@@ -341,12 +341,12 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
     <ChartTemplateReview />
 
     <div class="flex flex-wrap gap-2" :aria-label="t('accountTree.view')" role="group">
-      <BsButton type="button" class="ls-btn ls-btn-sm" :class="{ 'ls-btn-primary': view === 'tree' }" :aria-pressed="view === 'tree'" :disabled="!hydrated" @click="selectView('tree')">{{ t('accountTree.treeView') }}</BsButton>
-      <BsButton type="button" class="ls-btn ls-btn-sm" :class="{ 'ls-btn-primary': view === 'table' }" :aria-pressed="view === 'table'" :disabled="!hydrated" @click="selectView('table')">{{ t('accountTree.tableView') }}</BsButton>
+      <BsButton variant="chip" type="button" :aria-pressed="view === 'tree'" :disabled="!hydrated" @click="selectView('tree')">{{ t('accountTree.treeView') }}</BsButton>
+      <BsButton variant="chip" type="button" :aria-pressed="view === 'table'" :disabled="!hydrated" @click="selectView('table')">{{ t('accountTree.tableView') }}</BsButton>
     </div>
 
     <div v-if="view === 'table'" class="flex gap-1 overflow-x-auto border-b border-[var(--bs-border)]" role="tablist" :aria-label="t('accounts.tabsLabel')">
-      <BsButton
+      <BsButton variant="tab"
         v-for="type in GROUP_TYPES"
         :id="`account-tab-${type}`"
         :key="type"
@@ -354,8 +354,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
         role="tab"
         :aria-controls="`account-panel-${type}`"
         :aria-selected="tab === type"
-        class="ls-tab -mb-px whitespace-nowrap"
-        :class="{ 'ls-tab-active': tab === type }"
+        class="-mb-px whitespace-nowrap"
         @click="selectTab(type)"
       >
         {{ t(`accounts.groups.${type}`) }}
@@ -433,7 +432,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
           </Column>
           <Column field="name" :header="t('accounts.account')" sortable :pt="sortColumnPt">
             <template #body="{ data: account }">
-              <BsButton v-if="account.account_role !== 'group' && canReadActivity" type="button" :disabled="!hydrated" class="text-start font-medium text-link hover:underline" :class="{ 'ps-4': account.parent_account_id }" @click="activityAccountId = account.account_id">{{ account.name }}</BsButton>
+              <BsButton variant="link" v-if="account.account_role !== 'group' && canReadActivity" type="button" :disabled="!hydrated" class="text-start font-medium text-link hover:underline" :class="{ 'ps-4': account.parent_account_id }" @click="activityAccountId = account.account_id">{{ account.name }}</BsButton>
               <span v-else :class="{ 'ps-4': account.parent_account_id, 'font-semibold': activeGroup.parentIds.has(account.account_id) }">{{ account.name }}</span>
               <StatusBadge v-if="account.is_archived" class="ms-2" status="archived" :label="t('accounts.archived')" tone="neutral" />
               <StatusBadge v-else-if="account.is_liquid" class="ms-2" status="liquid" :label="t('accounts.liquid')" tone="info" />
@@ -563,3 +562,5 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
       </BsRecordActionDialog>
   </div>
 </template>
+
+undefined

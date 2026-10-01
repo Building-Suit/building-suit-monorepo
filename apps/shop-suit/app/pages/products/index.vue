@@ -189,7 +189,7 @@ function money(value: number) {
       <div v-if="current" class="flex flex-wrap gap-2"><NuxtLink to="/catalog-import" class="ls-btn">{{ copy.import }}</NuxtLink><BsButton v-if="canManage" type="button" class="ls-btn ls-btn-primary" @click="openCreate">{{ copy.add }}</BsButton></div>
     </header>
 
-    <div v-if="!current && !shopLoading" class="rounded-2xl border border-border bg-card p-8 text-center text-sm"><p>{{ copy.noShop }}</p><NuxtLink to="/dashboard" class="mt-3 inline-block font-bold text-[var(--bs-link)] underline">{{ copy.dashboard }}</NuxtLink></div>
+    <div v-if="!current && !shopLoading" class="ls-card p-8 text-center text-sm"><p>{{ copy.noShop }}</p><NuxtLink to="/dashboard" class="mt-3 inline-block font-bold text-[var(--bs-link)] underline">{{ copy.dashboard }}</NuxtLink></div>
     <template v-else-if="current">
       <p class="rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm dark:bg-[var(--bs-status-info-bg)]">{{ copy.stockLater }}</p>
       <p v-if="actionError && !showForm" role="alert" class="rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm text-[var(--bs-status-error)]">{{ actionError }}</p>
@@ -202,7 +202,7 @@ function money(value: number) {
         <label class="space-y-2 text-sm font-bold">{{ copy.category }}<select v-model="form.categoryId" class="ls-select"><option value="">{{ copy.allCategories }}</option><option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option></select></label>
       </BsRecordActionDialog>
 
-      <div class="overflow-hidden rounded-2xl border border-border bg-card">
+      <div class="overflow-hidden ls-card">
         <div class="grid gap-3 border-b border-border p-4 sm:grid-cols-2"><input v-model="search" :aria-label="copy.search" type="search" :placeholder="copy.search" class="ls-input"><select v-model="categoryFilter" :aria-label="copy.category" class="ls-select"><option value="">{{ copy.allCategories }}</option><option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option></select></div>
         <div v-if="pending" role="status" :aria-label="copy.loading" class="space-y-3 p-5"><div v-for="index in 3" :key="index" class="h-11 animate-pulse rounded-lg bg-muted" /></div>
         <p v-else-if="error" role="alert" class="p-5 text-sm text-[var(--bs-status-error)]">{{ copy.readError }} <BsButton @click="refresh()">{{ copy.retry }}</BsButton></p>
@@ -230,7 +230,7 @@ function money(value: number) {
   </Column>
   <Column header-class="px-5 py-3 text-end" body-class="whitespace-nowrap px-5 py-4 text-end">
     <template #header/>
-    <template #body="{ data: product }"><BsButton v-if="canManage" type="button" class="me-3 font-semibold text-[var(--bs-link)]" @click="openEdit(product)">{{ copy.edit }}</BsButton><BsButton v-if="canManage" type="button" class="font-semibold text-[var(--bs-status-error)] disabled:opacity-50" :disabled="archivingId === product.id" @click="archive(product)">{{ copy.archive }}</BsButton></template>
+    <template #body="{ data: product }"><BsButton variant="link" v-if="canManage" type="button" class="me-3 font-semibold text-[var(--bs-link)]" @click="openEdit(product)">{{ copy.edit }}</BsButton><BsButton variant="text" v-if="canManage" type="button" class="font-semibold text-[var(--bs-status-error)] disabled:opacity-50" :disabled="archivingId === product.id" @click="archive(product)">{{ copy.archive }}</BsButton></template>
   </Column>
 </BsDataTable></div>
         <div v-if="productPage.total > pageSize" class="flex items-center justify-center gap-3 border-t border-border p-4"><BsButton severity="secondary" :disabled="page <= 1" @click="page--">{{ copy.previous }}</BsButton><span>{{ page }} / {{ pageCount }}</span><BsButton severity="secondary" :disabled="page >= pageCount" @click="page++">{{ copy.next }}</BsButton></div>

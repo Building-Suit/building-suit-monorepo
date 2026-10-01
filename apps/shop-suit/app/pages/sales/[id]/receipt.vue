@@ -70,9 +70,9 @@ async function printReceipt() {
     </div>
 
     <p v-if="shareError" role="alert" class="receipt-controls rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm text-[var(--bs-status-error)]">{{ shareError }}</p>
-    <div v-if="pending" role="status" class="rounded-2xl border border-border bg-card p-12 text-center">{{ t('receipt.loading') }}</div>
-    <div v-else-if="error" role="alert" class="rounded-2xl border border-border bg-card p-8 text-center"><p>{{ t('receipt.loadError') }}</p><BsButton severity="secondary" class="mt-3" @click="refresh()">{{ t('common.retry') }}</BsButton></div>
-    <div v-else-if="!receipt" role="status" class="rounded-2xl border border-border bg-card p-8 text-center"><p>{{ t('receipt.unavailable') }}</p><NuxtLink :to="`/sales/${saleId}`" class="mt-3 inline-block font-bold text-[var(--bs-link)]">{{ t('receipt.back') }}</NuxtLink></div>
+    <div v-if="pending" role="status" class="ls-card p-12 text-center">{{ t('receipt.loading') }}</div>
+    <div v-else-if="error" role="alert" class="ls-card p-8 text-center"><p>{{ t('receipt.loadError') }}</p><BsButton severity="secondary" class="mt-3" @click="refresh()">{{ t('common.retry') }}</BsButton></div>
+    <div v-else-if="!receipt" role="status" class="ls-card p-8 text-center"><p>{{ t('receipt.unavailable') }}</p><NuxtLink :to="`/sales/${saleId}`" class="mt-3 inline-block font-bold text-[var(--bs-link)]">{{ t('receipt.back') }}</NuxtLink></div>
 
     <article v-else class="receipt-print-surface mx-auto bg-white text-black" :class="paperSize === 'thermal_80' ? 'receipt-thermal' : 'receipt-a4'" :dir="receiptLanguage === 'ar' ? 'rtl' : 'ltr'" :lang="receiptLanguage">
       <header class="text-center">

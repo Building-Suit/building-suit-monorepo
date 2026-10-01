@@ -451,7 +451,7 @@ async function restoreAuthenticatedOnboarding() {
 
             <div class="mt-6 text-center text-sm text-fg-muted">
               <span>{{ t('onboarding.otpMissing') }}</span>
-              <BsButton type="button" class="ms-1 font-bold text-fg underline underline-offset-4 disabled:no-underline disabled:opacity-50" :disabled="pending || resendIn > 0" @click="resendOtp">
+              <BsButton variant="link" type="button" class="ms-1 font-bold text-fg underline underline-offset-4 disabled:no-underline disabled:opacity-50" :disabled="pending || resendIn > 0" @click="resendOtp">
                 {{ resendIn > 0 ? t('onboarding.otpResendIn', { time: formatCountdown(resendIn) }) : t('onboarding.otpResend') }}
               </BsButton>
             </div>

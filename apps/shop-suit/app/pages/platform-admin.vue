@@ -444,20 +444,20 @@ const ar = {
 
     <template v-else>
       <div class="flex flex-wrap gap-2" role="group" :aria-label="copy.title">
-        <BsButton :aria-pressed="view === 'overview'" class="ls-btn" :class="view === 'overview' ? 'ls-btn-primary' : ''" @click="view = 'overview'">{{ copy.overview }}</BsButton>
-        <BsButton :aria-pressed="view === 'plans'" class="ls-btn" :class="view === 'plans' ? 'ls-btn-primary' : ''" @click="view = 'plans'">{{ copy.plans }}</BsButton>
-        <BsButton :aria-pressed="view === 'billing'" class="ls-btn" :class="view === 'billing' ? 'ls-btn-primary' : ''" @click="view = 'billing'">{{ copy.billingQueue }}</BsButton>
-        <BsButton :aria-pressed="view === 'audit'" class="ls-btn" :class="view === 'audit' ? 'ls-btn-primary' : ''" @click="view = 'audit'">{{ copy.audit }}</BsButton>
+        <BsButton variant="chip" :aria-pressed="view === 'overview'" @click="view = 'overview'">{{ copy.overview }}</BsButton>
+        <BsButton variant="chip" :aria-pressed="view === 'plans'" @click="view = 'plans'">{{ copy.plans }}</BsButton>
+        <BsButton variant="chip" :aria-pressed="view === 'billing'" @click="view = 'billing'">{{ copy.billingQueue }}</BsButton>
+        <BsButton variant="chip" :aria-pressed="view === 'audit'" @click="view = 'audit'">{{ copy.audit }}</BsButton>
       </div>
 
       <template v-if="view === 'overview'">
-        <p v-if="dashboardError || shopsError" class="ls-error" role="alert">{{ copy.loadFailed }} <BsButton class="font-bold underline" @click="refreshDashboard(); refreshShops()">{{ copy.retry }}</BsButton></p>
+        <p v-if="dashboardError || shopsError" class="ls-error" role="alert">{{ copy.loadFailed }} <BsButton variant="link" class="font-bold underline" @click="refreshDashboard(); refreshShops()">{{ copy.retry }}</BsButton></p>
         <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-5" :aria-busy="dashboardPending">
           <BsKpiCard :title="copy.shops">{{ dashboard?.shops ?? '—' }}</BsKpiCard><BsKpiCard :title="copy.activeShops">{{ dashboard?.activeShops ?? '—' }}</BsKpiCard><BsKpiCard :title="copy.suspendedShops">{{ dashboard?.suspendedShops ?? '—' }}</BsKpiCard><BsKpiCard :title="copy.locations">{{ dashboard?.locations ?? '—' }}</BsKpiCard><BsKpiCard :title="copy.members">{{ dashboard?.members ?? '—' }}</BsKpiCard>
           <BsKpiCard :title="copy.activeTrials">{{ dashboard?.activeTrials ?? '—' }}</BsKpiCard><BsKpiCard :title="copy.trialsSoon">{{ dashboard?.trialsExpiringSoon ?? '—' }}</BsKpiCard><BsKpiCard :title="copy.activeSubscriptions">{{ dashboard?.activeSubscriptions ?? '—' }}</BsKpiCard><BsKpiCard :title="copy.readOnly">{{ dashboard?.readOnlySubscriptions ?? '—' }}</BsKpiCard><BsKpiCard :title="copy.pendingBilling">{{ billingSummary?.open ?? '—' }}</BsKpiCard>
         </div>
 
-        <section class="overflow-hidden rounded-2xl border border-border bg-card">
+        <section class="overflow-hidden ls-card">
           <div class="flex flex-col gap-3 border-b border-border p-4 sm:flex-row"><input v-model="search" type="search" :placeholder="copy.search" :aria-label="copy.search" class="ls-input sm:max-w-md"><select v-model="status" :aria-label="copy.status" class="ls-select sm:ms-auto sm:w-auto"><option value="">{{ copy.allStates }}</option><option value="active">{{ copy.activeShops }}</option><option value="suspended">{{ copy.suspendedShops }}</option><option value="read_only">{{ copy.readOnly }}</option></select></div>
           <BsDataTable :value="shops?.items ?? []" :loading="shopsPending" :error="shopsError ? copy.loadFailed : null" :label="copy.shops" data-key="id" lazy paginator :rows="20" :first="(page - 1) * 20" :total-records="shops?.total ?? 0" :always-show-paginator="false" @page="handleShopPage" @retry="refreshShops()">
             <Column><template #header>{{ copy.shop }}</template><template #body="{ data: row }"><p class="font-bold">{{ row.name }}</p><p class="text-xs text-muted-foreground">{{ row.id }}</p></template></Column>
@@ -465,23 +465,23 @@ const ar = {
             <Column><template #header>{{ copy.access }}</template><template #body="{ data: row }"><StatusBadge :status="row.accessState" /></template></Column>
             <Column><template #header>{{ copy.plan }}</template><template #body="{ data: row }">{{ row.planSlug || '—' }}</template></Column>
             <Column><template #header>{{ copy.members }}</template><template #body="{ data: row }">{{ row.memberCount }}</template></Column>
-            <Column><template #body="{ data: row }"><BsButton class="font-bold text-[var(--bs-link)]" @click="selectedShopId = row.id">{{ copy.open }}</BsButton></template></Column>
+            <Column><template #body="{ data: row }"><BsButton variant="link" class="font-bold text-[var(--bs-link)]" @click="selectedShopId = row.id">{{ copy.open }}</BsButton></template></Column>
             <template #empty><p class="p-6 text-center text-sm text-muted-foreground">{{ copy.noRows }}</p></template>
           </BsDataTable>
         </section>
 
-        <section class="rounded-2xl border border-border bg-card p-5"><h2 class="text-lg font-extrabold">{{ copy.recentEvents }}</h2><div class="mt-4 overflow-x-auto"><BsDataTable :value="dashboard?.recentEvents ?? []" :loading="dashboardPending" data-key="id" :label="copy.recentEvents"><Column field="shopName"><template #header>{{ copy.shop }}</template></Column><Column field="action"><template #header>{{ copy.action }}</template><template #body="{ data: event }">{{ actionLabel(event.action) || event.action }}</template></Column><Column field="reason"><template #header>{{ copy.reason }}</template></Column><Column><template #header>{{ copy.occurred }}</template><template #body="{ data: event }">{{ date(event.occurredAt) }}</template></Column><template #empty><p class="p-5 text-center text-sm text-muted-foreground">{{ copy.noEvents }}</p></template></BsDataTable></div></section>
+        <section class="ls-card p-5"><h2 class="text-lg font-extrabold">{{ copy.recentEvents }}</h2><div class="mt-4 overflow-x-auto"><BsDataTable :value="dashboard?.recentEvents ?? []" :loading="dashboardPending" data-key="id" :label="copy.recentEvents"><Column field="shopName"><template #header>{{ copy.shop }}</template></Column><Column field="action"><template #header>{{ copy.action }}</template><template #body="{ data: event }">{{ actionLabel(event.action) || event.action }}</template></Column><Column field="reason"><template #header>{{ copy.reason }}</template></Column><Column><template #header>{{ copy.occurred }}</template><template #body="{ data: event }">{{ date(event.occurredAt) }}</template></Column><template #empty><p class="p-5 text-center text-sm text-muted-foreground">{{ copy.noEvents }}</p></template></BsDataTable></div></section>
       </template>
 
       <PlatformPlanAdmin v-else-if="view === 'plans'" :can-mutate="session.canMutate" @changed="refreshPlanConsumers" />
 
-      <section v-else-if="view === 'audit'" class="overflow-hidden rounded-2xl border border-border bg-card">
+      <section v-else-if="view === 'audit'" class="overflow-hidden ls-card">
         <BsDataTable :value="audit?.items ?? []" :loading="auditPending" :error="auditError ? copy.loadFailed : null" :label="copy.audit" data-key="id" lazy paginator :rows="25" :first="(auditPage - 1) * 25" :total-records="audit?.total ?? 0" :always-show-paginator="false" @page="handleAuditPage" @retry="refreshAudit()">
           <Column field="shopName"><template #header>{{ copy.shop }}</template></Column><Column field="action"><template #header>{{ copy.action }}</template><template #body="{ data: event }">{{ actionLabel(event.action) || event.action }}</template></Column><Column field="reason"><template #header>{{ copy.reason }}</template></Column><Column field="actorUserId"><template #header>{{ copy.actor }}</template></Column><Column><template #header>{{ copy.occurred }}</template><template #body="{ data: event }">{{ date(event.occurredAt) }}</template></Column><template #empty><p class="p-6 text-center text-sm text-muted-foreground">{{ copy.noEvents }}</p></template>
         </BsDataTable>
       </section>
       <div v-else class="space-y-6">
-        <section class="rounded-2xl border border-border bg-card p-5 sm:p-6">
+        <section class="ls-card p-5 sm:p-6">
           <h2 class="text-lg font-extrabold">{{ copy.configuration }}</h2><p class="mt-2 text-sm text-muted-foreground">{{ copy.configurationHelp }}</p>
           <p v-if="billingConfigurationLoadError" role="alert" class="ls-error mt-4">{{ copy.loadFailed }} <BsButton @click="refreshBillingConfiguration()">{{ copy.retry }}</BsButton></p>
           <BsForm v-else class="mt-5 grid gap-4 sm:grid-cols-2" :pending="configurationPending" :error="configurationError" @submit="saveBillingConfiguration">
@@ -496,7 +496,7 @@ const ar = {
             </fieldset>
           </BsForm>
         </section>
-        <section class="overflow-hidden rounded-2xl border border-border bg-card">
+        <section class="overflow-hidden ls-card">
           <div class="flex flex-wrap gap-3 border-b border-border p-4"><h2 class="text-lg font-extrabold">{{ copy.billingQueue }}</h2><select v-model="billingStatus" class="ls-select ms-auto" :aria-label="copy.status"><option value="">{{ copy.allStates }}</option><option value="submitted">{{ copy.submitted }}</option><option value="under_review">{{ copy.underReview }}</option><option value="approved">{{ copy.approved }}</option><option value="rejected">{{ copy.rejected }}</option></select></div>
           <BsDataTable :value="billingQueue?.items ?? []" :loading="billingQueuePending" :error="billingQueueError ? copy.loadFailed : null" :label="copy.billingQueue" data-key="id" lazy paginator :rows="25" :first="(billingPage - 1) * 25" :total-records="billingQueue?.total ?? 0" :always-show-paginator="false" @page="handleBillingPage" @retry="refreshBillingQueue()">
             <Column field="shopName"><template #header>{{ copy.shop }}</template></Column><Column field="status"><template #header>{{ copy.status }}</template><template #body="{ data: item }"><StatusBadge :status="item.status" /></template></Column><Column><template #header>{{ copy.currentPlan }}</template><template #body="{ data: item }">{{ item.currentPlanName }}</template></Column><Column><template #header>{{ copy.requestedPlan }}</template><template #body="{ data: item }">{{ item.requestedPlanName }} · {{ item.billingInterval }}</template></Column><Column><template #header>{{ copy.listPrice }}</template><template #body="{ data: item }">{{ item.listPriceAmount }} {{ item.currency }}</template></Column><Column><template #header>{{ copy.effectivePrice }}</template><template #body="{ data: item }">{{ item.effectivePriceAmount }} {{ item.currency }}<span v-if="item.priceSource === 'override'" class="ms-1 text-xs font-bold text-[var(--bs-link)]">{{ copy.negotiated }}</span></template></Column><Column><template #header>{{ copy.paidAmount }}</template><template #body="{ data: item }">{{ item.paidAmount }} {{ item.currency }}</template></Column><Column><template #header>{{ copy.blockers }}</template><template #body="{ data: item }"><span v-if="item.usageBlockers.length" class="text-[var(--bs-status-warning)]">{{ usageBlockersLabel(item.usageBlockers) }}</span><span v-else>{{ copy.noBlockers }}</span></template></Column><Column field="transferReference"><template #header>{{ copy.transferReference }}</template></Column><Column><template #header>{{ copy.transferDate }}</template><template #body="{ data: item }">{{ date(item.transferDate) }}</template></Column>
@@ -504,7 +504,7 @@ const ar = {
             <template #empty><p class="p-6 text-center text-sm text-muted-foreground">{{ copy.emptyBilling }}</p></template>
           </BsDataTable>
         </section>
-        <section class="overflow-hidden rounded-2xl border border-border bg-card">
+        <section class="overflow-hidden ls-card">
           <div class="border-b border-border p-4"><h2 class="text-lg font-extrabold">{{ copy.billingQueue }} · {{ copy.audit }}</h2></div>
           <BsDataTable :value="billingAudit?.items ?? []" :loading="billingAuditPending" :error="billingAuditError ? copy.loadFailed : null" :label="`${copy.billingQueue} ${copy.audit}`" data-key="id" lazy paginator :rows="25" :first="(billingAuditPage - 1) * 25" :total-records="billingAudit?.total ?? 0" :always-show-paginator="false" @page="handleBillingAuditPage" @retry="refreshBillingAudit()">
             <Column field="shopName"><template #header>{{ copy.shop }}</template></Column><Column field="action"><template #header>{{ copy.action }}</template></Column><Column field="reason"><template #header>{{ copy.reason }}</template></Column><Column field="actorUserId"><template #header>{{ copy.actor }}</template></Column><Column><template #header>{{ copy.occurred }}</template><template #body="{ data: event }">{{ date(event.occurredAt) }}</template></Column><template #empty><p class="p-6 text-center text-sm text-muted-foreground">{{ copy.noEvents }}</p></template>
@@ -514,7 +514,7 @@ const ar = {
     </template>
 
     <BsDialog :visible="Boolean(selectedShopId)" :title="detail?.shop.name || copy.shop" size="lg" :pending="detailPending" @update:visible="handleDetailVisibility">
-      <p v-if="detailError" class="ls-error" role="alert">{{ copy.loadFailed }} <BsButton class="font-bold underline" @click="refreshDetail()">{{ copy.retry }}</BsButton></p>
+      <p v-if="detailError" class="ls-error" role="alert">{{ copy.loadFailed }} <BsButton variant="link" class="font-bold underline" @click="refreshDetail()">{{ copy.retry }}</BsButton></p>
       <div v-else-if="detail" class="space-y-6">
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"><BsKpiCard :title="copy.owner">{{ detail.owner?.name || detail.owner?.email || '—' }}</BsKpiCard><BsKpiCard :title="copy.access"><StatusBadge :status="detailAccessState(detail)" /></BsKpiCard><BsKpiCard :title="copy.plan">{{ detail.subscription?.planName || '—' }}</BsKpiCard><BsKpiCard :title="copy.members">{{ detail.usage.members }}</BsKpiCard></div>
         <section><h3 class="font-extrabold">{{ copy.usage }}</h3><p class="mt-2 text-sm text-muted-foreground">{{ copy.trialStart }}: {{ date(detail.subscription?.trialStartAt) }} · {{ copy.trialEnd }}: {{ date(detail.subscription?.trialEndAt) }} · {{ copy.periodEnd }}: {{ date(detail.subscription?.periodEnd) }}</p><p class="mt-2 text-sm text-muted-foreground">{{ copy.locations }}: {{ detail.usage.locations }} · {{ copy.members }}: {{ detail.usage.members }} · {{ isArabic ? 'المنتجات' : 'Products' }}: {{ detail.usage.products }} · {{ isArabic ? 'الخدمات' : 'Services' }}: {{ detail.usage.services }}</p><pre class="mt-3 overflow-auto rounded-xl bg-muted p-3 text-xs">{{ JSON.stringify(detail.usage.limits || {}, null, 2) }}</pre></section>

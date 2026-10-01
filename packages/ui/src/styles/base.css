@@ -327,6 +327,128 @@ body {
     line-height: var(--bs-type-caption-lh);
   }
 
+  /* Semantic action variants deliberately do not inherit .ls-btn. Their
+     geometry is owned here so product code never has to undo button chrome. */
+  .ls-action-text,
+  .ls-action-icon,
+  .ls-action-tab,
+  .ls-action-chip,
+  .ls-action-tile {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    transition:
+      background var(--bs-motion-quick),
+      color var(--bs-motion-quick),
+      border-color var(--bs-motion-quick),
+      opacity var(--bs-motion-quick),
+      box-shadow var(--bs-motion-quick),
+      transform var(--bs-motion-quick);
+  }
+
+  .ls-action-text {
+    display: inline;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    text-align: inherit;
+    white-space: normal;
+  }
+
+  .ls-action-link {
+    color: var(--bs-link);
+    font-weight: var(--bs-weight-semibold);
+    text-decoration: none;
+  }
+
+  .ls-action-link:hover:not(:disabled) { text-decoration: underline; }
+
+  .ls-action-icon {
+    display: inline-grid;
+    width: var(--bs-tap-target-min);
+    min-width: var(--bs-tap-target-min);
+    height: var(--bs-tap-target-min);
+    place-items: center;
+    padding: 0;
+    border-radius: var(--bs-radius-button);
+  }
+
+  .ls-action-icon:hover:not(:disabled),
+  .ls-action-chip:hover:not(:disabled) {
+    background: var(--bs-surface-muted);
+  }
+
+  .ls-action-tab {
+    display: inline-flex;
+    min-width: 0;
+    min-height: var(--bs-tap-target-min);
+    align-items: center;
+    justify-content: center;
+    border-bottom: 2px solid transparent;
+    padding: var(--bs-space-2) var(--bs-space-3);
+    color: var(--bs-text-muted);
+    font-size: var(--bs-type-body-m-size);
+    line-height: var(--bs-type-body-m-lh);
+    font-weight: var(--bs-weight-semibold);
+    white-space: nowrap;
+  }
+
+  .ls-action-tab:hover:not(:disabled) { color: var(--bs-text); }
+  .ls-action-tab[aria-selected="true"],
+  .ls-action-tab[aria-pressed="true"] {
+    border-color: var(--bs-accent);
+    color: var(--bs-text);
+  }
+
+  .ls-action-chip {
+    display: inline-flex;
+    min-width: 0;
+    min-height: var(--bs-tap-target-min);
+    align-items: center;
+    justify-content: center;
+    gap: var(--bs-space-2);
+    padding: var(--bs-space-2) var(--bs-space-3);
+    border-radius: var(--bs-radius-button);
+    color: var(--bs-text-muted);
+    font-size: var(--bs-type-body-m-size);
+    line-height: var(--bs-type-body-m-lh);
+    font-weight: var(--bs-weight-semibold);
+  }
+
+  .ls-action-chip[aria-selected="true"],
+  .ls-action-chip[aria-pressed="true"] {
+    background: var(--bs-primary);
+    color: var(--bs-text-on-primary);
+  }
+
+  .ls-action-tile {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    padding: var(--bs-space-4);
+    border: 1px solid var(--bs-border);
+    border-radius: var(--bs-radius-button);
+    background: var(--bs-surface);
+    color: var(--bs-text);
+    text-align: start;
+    white-space: normal;
+  }
+
+  .ls-action-tile:hover:not(:disabled) { border-color: var(--bs-accent); }
+
+  .ls-action-text:disabled,
+  .ls-action-icon:disabled,
+  .ls-action-tab:disabled,
+  .ls-action-chip:disabled,
+  .ls-action-tile:disabled {
+    cursor: not-allowed;
+    color: var(--bs-text-disabled);
+    opacity: 0.6;
+  }
+
   .ls-select,
   .ls-input {
     width: 100%;

@@ -111,7 +111,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => ({ name: name.value, lega
       role="listbox"
     >
       <li v-for="org in organizations" :key="org.id">
-        <BsButton
+        <BsButton variant="chip"
           type="button"
           role="option"
           :aria-selected="org.id === current?.id"
@@ -131,7 +131,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => ({ name: name.value, lega
         </BsButton>
       </li>
       <li v-if="!ownsOrganization" class="mt-1 border-t border-[var(--bs-border)] pt-1">
-        <BsButton
+        <BsButton variant="text"
           type="button"
           class="flex w-full items-center gap-2 rounded-chip px-2 py-2 text-start text-sm font-semibold text-accent hover:bg-surface-muted"
           @click="showCreate"

@@ -278,12 +278,12 @@ function formatDate(value: string) {
       <BsButton v-if="current && team.canManage" @click="openInvite">{{ copy.invite }}</BsButton>
     </header>
 
-    <p v-if="shopLoading || pending" role="status" class="rounded-xl border border-border bg-card p-5">…</p>
+    <p v-if="shopLoading || pending" role="status" class="ls-card-flat p-5">…</p>
     <div v-else-if="error" role="alert" class="ls-error">{{ copy.permissionDenied }} <BsButton @click="refresh()">{{ copy.retry }}</BsButton></div>
-    <p v-else-if="!current" class="rounded-xl border border-border bg-card p-6 text-center text-sm">{{ copy.noTeam }}</p>
+    <p v-else-if="!current" class="ls-card-flat p-6 text-center text-sm">{{ copy.noTeam }}</p>
     <template v-else>
       <p v-if="actionError" role="alert" class="rounded-xl border border-[var(--bs-status-error)]/30 bg-[var(--bs-status-error-bg)] p-4 text-sm">{{ actionError }}</p>
-      <section class="overflow-x-auto rounded-2xl border border-border bg-card">
+      <section class="overflow-x-auto ls-card">
         <BsDataTable :value="team.members" data-key="id" :label="copy.title" :row-class="() => 'border-t border-border'">
           <Column header-class="px-4 py-3 text-start" body-class="px-4 py-4"><template #header>{{ copy.member }}</template><template #body="{ data: member }"><p class="font-bold">{{ memberName(member) }}</p><p class="text-xs text-muted-foreground">{{ member.email || '—' }}</p></template></Column>
           <Column header-class="px-4 py-3 text-start" body-class="px-4 py-4"><template #header>{{ copy.role }}</template><template #body="{ data: member }">{{ roleLabel(member.roleKey) }}</template></Column>
@@ -294,7 +294,7 @@ function formatDate(value: string) {
         </BsDataTable>
       </section>
 
-      <section class="rounded-2xl border border-border bg-card p-5">
+      <section class="ls-card p-5">
         <h2 class="text-lg font-extrabold">{{ copy.permissions }}</h2>
         <div class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <article v-for="role in team.roles" :key="role.key" class="rounded-xl border border-border p-4">
@@ -306,9 +306,9 @@ function formatDate(value: string) {
         </div>
       </section>
 
-      <section v-if="team.canManage" class="overflow-hidden rounded-2xl border border-border bg-card"><h2 class="p-5 text-lg font-extrabold">{{ copy.invitations }}</h2><BsDataTable :value="team.invitations" data-key="id" :label="copy.invitations"><Column field="email"><template #header>{{ copy.email }}</template></Column><Column><template #header>{{ copy.role }}</template><template #body="{ data: invitation }">{{ roleLabel(invitation.roleKey) }}</template></Column><Column><template #header>{{ copy.status }}</template><template #body="{ data: invitation }">{{ statusLabel(invitation.status) }}</template></Column><Column><template #header>{{ copy.date }}</template><template #body="{ data: invitation }">{{ formatDate(invitation.createdAt) }}</template></Column><Column><template #header>{{ copy.actions }}</template><template #body="{ data: invitation }"><BsButton v-if="invitation.status === 'pending'" size="small" severity="secondary" :disabled="actionPending" @click="revokeInvitation(invitation.id)">{{ copy.revoke }}</BsButton></template></Column><template #empty><p class="p-6 text-center text-sm text-muted-foreground">{{ copy.noInvitations }}</p></template></BsDataTable></section>
+      <section v-if="team.canManage" class="overflow-hidden ls-card"><h2 class="p-5 text-lg font-extrabold">{{ copy.invitations }}</h2><BsDataTable :value="team.invitations" data-key="id" :label="copy.invitations"><Column field="email"><template #header>{{ copy.email }}</template></Column><Column><template #header>{{ copy.role }}</template><template #body="{ data: invitation }">{{ roleLabel(invitation.roleKey) }}</template></Column><Column><template #header>{{ copy.status }}</template><template #body="{ data: invitation }">{{ statusLabel(invitation.status) }}</template></Column><Column><template #header>{{ copy.date }}</template><template #body="{ data: invitation }">{{ formatDate(invitation.createdAt) }}</template></Column><Column><template #header>{{ copy.actions }}</template><template #body="{ data: invitation }"><BsButton v-if="invitation.status === 'pending'" size="small" severity="secondary" :disabled="actionPending" @click="revokeInvitation(invitation.id)">{{ copy.revoke }}</BsButton></template></Column><template #empty><p class="p-6 text-center text-sm text-muted-foreground">{{ copy.noInvitations }}</p></template></BsDataTable></section>
 
-      <section v-if="team.canViewAudit" class="overflow-hidden rounded-2xl border border-border bg-card"><h2 class="p-5 text-lg font-extrabold">{{ copy.audit }}</h2><BsDataTable :value="team.events" data-key="id" :label="copy.audit"><Column field="action"><template #header>{{ copy.action }}</template></Column><Column field="actorEmail"><template #header>{{ copy.actor }}</template></Column><Column field="reason"><template #header>{{ copy.reason }}</template></Column><Column><template #header>{{ copy.date }}</template><template #body="{ data: event }">{{ formatDate(event.occurredAt) }}</template></Column><template #empty><p class="p-6 text-center text-sm text-muted-foreground">{{ copy.noAudit }}</p></template></BsDataTable></section>
+      <section v-if="team.canViewAudit" class="overflow-hidden ls-card"><h2 class="p-5 text-lg font-extrabold">{{ copy.audit }}</h2><BsDataTable :value="team.events" data-key="id" :label="copy.audit"><Column field="action"><template #header>{{ copy.action }}</template></Column><Column field="actorEmail"><template #header>{{ copy.actor }}</template></Column><Column field="reason"><template #header>{{ copy.reason }}</template></Column><Column><template #header>{{ copy.date }}</template><template #body="{ data: event }">{{ formatDate(event.occurredAt) }}</template></Column><template #empty><p class="p-6 text-center text-sm text-muted-foreground">{{ copy.noAudit }}</p></template></BsDataTable></section>
     </template>
 
     <BsRecordActionDialog v-model:visible="showInvite" :title="copy.inviteTitle" :dirty="inviteDirty" :pending="actionPending" :error="actionError" :submit-label="copy.save" :cancel-label="invitationLink ? copy.close : copy.cancel" @submit="sendInvite">

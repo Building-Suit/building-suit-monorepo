@@ -26,7 +26,7 @@ function checkAgain() {
       </ul>
       <div v-if="processing" class="rounded-control bg-surface-muted p-3 text-sm" role="status">
         <p class="font-semibold">{{ t('billing.confirming') }}</p>
-        <BsButton type="button" class="mt-2 text-link" :disabled="loading" @click="checkAgain">
+        <BsButton variant="link" type="button" class="mt-2 text-link" :disabled="loading" @click="checkAgain">
           {{ t('billing.checkAgain') }}
         </BsButton>
       </div>

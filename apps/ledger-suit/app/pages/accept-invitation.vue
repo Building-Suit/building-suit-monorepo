@@ -194,7 +194,7 @@ onBeforeUnmount(() => clearInterval(timer))
           <template v-else-if="step === 'otp'">
             <OtpInput v-model="otp" :label="t('onboarding.otpLabel')" :disabled="pending" />
             <BsButton type="submit" class="ls-btn ls-btn-primary w-full" :disabled="pending || otp.length !== 6">{{ pending ? t('access.inviteFlow.verifyingOtp') : t('access.inviteFlow.verifyOtp') }}</BsButton>
-            <BsButton type="button" class="w-full text-center text-sm font-bold text-link disabled:text-fg-muted" :disabled="pending || resendIn > 0" @click="sendOtp">{{ resendIn ? t('onboarding.otpResendIn', { time: `00:${String(resendIn).padStart(2, '0')}` }) : t('access.inviteFlow.resend') }}</BsButton>
+            <BsButton variant="link" type="button" class="w-full text-center text-sm font-bold text-link disabled:text-fg-muted" :disabled="pending || resendIn > 0" @click="sendOtp">{{ resendIn ? t('onboarding.otpResendIn', { time: `00:${String(resendIn).padStart(2, '0')}` }) : t('access.inviteFlow.resend') }}</BsButton>
           </template>
           <template v-else>
           <FloatingField :label="t('onboarding.fullName')">
@@ -220,7 +220,7 @@ onBeforeUnmount(() => clearInterval(timer))
           </BsButton>
           </template>
           
-          <div class="mt-7 flex items-start gap-3 rounded-card border border-[var(--bs-border)] bg-surface-muted p-4 text-xs leading-5 text-fg-muted">
+          <div class="mt-7 flex items-start gap-3 ls-card-muted p-4 text-xs leading-5 text-fg-muted">
             <AppIcon name="checkBadge" :size="19" class="mt-0.5 shrink-0 text-success" />
             <p>{{ t('access.inviteFlow.security') }}</p>
           </div>

@@ -169,7 +169,7 @@ function formatDate(value: string) {
       </BsButton>
     </header>
 
-    <div v-if="!current && !shopLoading" class="rounded-2xl border border-border bg-card p-8 text-center text-sm">
+    <div v-if="!current && !shopLoading" class="ls-card p-8 text-center text-sm">
       <p>{{ t('customers.noShop') }}</p>
       <NuxtLink to="/dashboard" class="mt-3 inline-block font-bold text-[var(--bs-link)] underline">{{ t('customers.dashboard') }}</NuxtLink>
     </div>
@@ -194,7 +194,7 @@ function formatDate(value: string) {
             <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ t('customers.notes') }}<textarea v-model="form.notes" maxlength="2000" rows="3" class="ls-input" /></label>
       </BsRecordActionDialog>
 
-      <div v-if="!customerPage?.permissionDenied" class="overflow-hidden rounded-2xl border border-border bg-card">
+      <div v-if="!customerPage?.permissionDenied" class="overflow-hidden ls-card">
         <div class="flex flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-center">
           <input v-model="search" type="search" :placeholder="t('customers.search')" :aria-label="t('customers.search')" class="ls-input sm:max-w-md">
           <select v-model="statusFilter" :aria-label="t('customers.status')" class="ls-select sm:ms-auto sm:w-auto">

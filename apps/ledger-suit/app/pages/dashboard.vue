@@ -183,12 +183,10 @@ const payableHint = computed(() =>
           <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
             <h2 id="chart-heading" class="text-base font-bold">{{ t('dashboard.revenueVsExpenses') }}</h2>
             <div class="flex gap-1" role="group" :aria-label="t('dashboard.chartRange')">
-              <BsButton
+              <BsButton variant="chip"
                 v-for="option in [3, 6, 12]"
                 :key="option"
                 type="button"
-                class="ls-btn ls-btn-sm"
-                :class="{ 'ls-btn-primary': months === option }"
                 :aria-pressed="months === option"
                 @click="months = option; customRange = false"
               >
@@ -286,3 +284,6 @@ const payableHint = computed(() =>
     </template>
   </div>
 </template>
+
+undefined
+undefined

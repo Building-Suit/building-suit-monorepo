@@ -46,7 +46,7 @@ function rowClass(row: AccountTreeRow) { return `chart-row chart-row-${row.kind}
             <div class="min-w-0 flex-1">
               <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
                 <span v-if="node.account?.code" class="rounded-control border border-line bg-surface px-2 py-0.5 font-mono text-sm text-fg-muted" dir="ltr">{{ node.account.code }}</span>
-                <BsButton v-if="node.account?.account_role !== 'group' && canReadActivity" type="button" :disabled="!hydrated" class="chart-label text-start font-semibold text-link hover:underline" @click="emit('activity', node.account)">{{ node.label }}</BsButton>
+                <BsButton variant="link" v-if="node.account?.account_role !== 'group' && canReadActivity" type="button" :disabled="!hydrated" class="chart-label text-start font-semibold text-link hover:underline" @click="emit('activity', node.account)">{{ node.label }}</BsButton>
                 <span v-else class="chart-label">{{ node.label }}</span>
                 <span v-if="node.kind !== 'account' || node.children.length" class="chart-count">{{ t('accountTree.accountCount', { count: node.count }) }}</span>
                 <span v-if="node.account?.is_archived" class="ls-badge bg-surface-muted text-fg-muted">{{ t('accounts.archived') }}</span>

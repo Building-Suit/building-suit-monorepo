@@ -291,7 +291,7 @@ async function reviewChange(planKey: LaunchPlanKey) {
     <div v-if="catalogPending" class="py-8 text-center text-sm text-fg-muted" role="status">{{ t('billing.plans.loading') }}</div>
     <div v-else-if="catalogError" class="ls-error text-center" role="alert">
       <p>{{ t('billing.plans.loadFailed') }}</p>
-      <BsButton type="button" class="mt-2 text-link" @click="refresh()">{{ t('common.retry') }}</BsButton>
+      <BsButton variant="link" type="button" class="mt-2 text-link" @click="refresh()">{{ t('common.retry') }}</BsButton>
     </div>
     <div v-else class="grid items-stretch gap-4 md:grid-cols-2 xl:grid-cols-4">
       <article
@@ -347,7 +347,7 @@ async function reviewChange(planKey: LaunchPlanKey) {
 
     <section
       v-if="surface === 'checkout'"
-      class="rounded-card border border-[var(--bs-border)] bg-surface-muted p-4 text-center text-sm leading-6 text-fg-muted"
+      class="ls-card-muted p-4 text-center text-sm leading-6 text-fg-muted"
       data-testid="checkout-policy-review"
       role="note"
     >
@@ -386,7 +386,7 @@ async function reviewChange(planKey: LaunchPlanKey) {
                 target: planNameForKey(planImpact.target_plan_key),
               }) }}</p>
             </div>
-            <BsButton type="button" class="ls-btn-icon" :aria-label="t('common.close')" @click="dismiss"><AppIcon name="close" :size="20" /></BsButton>
+            <BsButton variant="icon" type="button"  :aria-label="t('common.close')" @click="dismiss"><AppIcon name="close" :size="20" /></BsButton>
           </div>
 
           <div class="mt-5 rounded-card bg-surface-muted p-4 text-sm">

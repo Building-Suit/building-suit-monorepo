@@ -405,14 +405,13 @@ const { dirty: overlayDirty2 } = useRecordAction(() => roleForm.value, computed(
     </header>
 
     <div class="ls-card flex flex-wrap gap-1 p-1.5" role="tablist" :aria-label="t('access.title')">
-      <BsButton
+      <BsButton variant="tab"
         v-for="tab in tabs"
         :key="tab.key"
         type="button"
         role="tab"
         :aria-selected="activeTab === tab.key"
         class="min-h-11 rounded-control px-4 text-sm font-bold transition-colors"
-        :class="activeTab === tab.key ? 'bg-fg text-background shadow-card' : 'text-fg-muted hover:bg-surface-muted hover:text-fg'"
         @click="activeTab = tab.key"
       >
         {{ tab.label }} <span v-if="tab.count !== undefined" class="ms-1 opacity-70">{{ tab.count }}</span>
@@ -567,3 +566,5 @@ const { dirty: overlayDirty2 } = useRecordAction(() => roleForm.value, computed(
         </BsRecordActionDialog>
   </div>
 </template>
+
+undefined

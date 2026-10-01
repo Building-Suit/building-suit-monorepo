@@ -210,7 +210,7 @@ async function archive(service: Service) {
       <div v-if="current" class="flex gap-2"><NuxtLink to="/catalog-import" class="ls-btn">{{ copy.import }}</NuxtLink><BsButton v-if="canManage" type="button" @click="openCreate">{{ copy.add }}</BsButton></div>
     </header>
 
-    <div v-if="!current && !shopLoading" class="rounded-2xl border border-border bg-card p-8 text-center text-sm"><p>{{ copy.noShop }}</p><NuxtLink to="/dashboard" class="mt-3 inline-block font-bold text-[var(--bs-link)] underline">{{ copy.dashboard }}</NuxtLink></div>
+    <div v-if="!current && !shopLoading" class="ls-card p-8 text-center text-sm"><p>{{ copy.noShop }}</p><NuxtLink to="/dashboard" class="mt-3 inline-block font-bold text-[var(--bs-link)] underline">{{ copy.dashboard }}</NuxtLink></div>
     <template v-else-if="current">
       <p v-if="actionError && !showForm" role="alert" class="rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm text-[var(--bs-status-error)]">{{ actionError }}</p>
 
@@ -235,7 +235,7 @@ async function archive(service: Service) {
             </fieldset>
       </BsRecordActionDialog>
 
-      <section class="rounded-2xl border border-border bg-card p-5">
+      <section class="ls-card p-5">
         <div class="grid gap-3 sm:grid-cols-2"><input v-model="search" type="search" :placeholder="copy.search" class="ls-input" :aria-label="copy.search"><select v-model="categoryFilter" :aria-label="copy.category" class="ls-select"><option value="">{{ copy.allCategories }}</option><option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option></select></div>
         <p v-if="pending" role="status" class="py-5 text-sm text-muted-foreground">{{ copy.loading }}</p>
         <div v-else-if="error" role="alert" class="py-5 text-sm"><p>{{ readErrorMessage }}</p><BsButton type="button" severity="secondary" class="mt-2" @click="refresh()">{{ copy.retry }}</BsButton></div>
@@ -245,7 +245,7 @@ async function archive(service: Service) {
           <Column header-class="py-3 text-start" body-class="py-3"><template #header>{{ copy.category }}</template><template #body="{ data: service }">{{ service.categoryName || '—' }}</template></Column>
           <Column header-class="py-3 text-end" body-class="py-3 text-end"><template #header>{{ copy.net }}</template><template #body="{ data: service }">{{ money(netPrice(service)) }}</template></Column>
           <Column header-class="py-3 text-start" body-class="py-3 text-start"><template #header>{{ copy.scheduleSummary }}</template><template #body="{ data: service }"><span v-if="service.schedulingEnabled">{{ service.durationMinutes }} + {{ service.cleanupMinutes }} {{ isArabic ? 'دقيقة' : 'min' }}</span><span v-else>—</span></template></Column>
-          <Column header-class="py-3 text-end" body-class="space-x-2 py-3 text-end"><template #header>{{ copy.edit }}</template><template #body="{ data: service }"><BsButton v-if="canManage" type="button" class="font-bold text-[var(--bs-link)]" @click="openEdit(service)">{{ copy.edit }}</BsButton><BsButton v-if="canManage" type="button" class="font-bold text-[var(--bs-status-error)]" :disabled="archivingId === service.id" @click="archive(service)">{{ copy.archive }}</BsButton></template></Column>
+          <Column header-class="py-3 text-end" body-class="space-x-2 py-3 text-end"><template #header>{{ copy.edit }}</template><template #body="{ data: service }"><BsButton variant="link" v-if="canManage" type="button" class="font-bold text-[var(--bs-link)]" @click="openEdit(service)">{{ copy.edit }}</BsButton><BsButton variant="text" v-if="canManage" type="button" class="font-bold text-[var(--bs-status-error)]" :disabled="archivingId === service.id" @click="archive(service)">{{ copy.archive }}</BsButton></template></Column>
         </BsDataTable></div>
         <nav v-if="servicesPage.total > pageSize" class="mt-4 flex items-center justify-between gap-3" :aria-label="copy.title"><BsButton type="button" severity="secondary" :disabled="page <= 1 || pending" @click="page--">{{ copy.previous }}</BsButton><span class="text-sm text-muted-foreground">{{ page }} / {{ pageCount }}</span><BsButton type="button" severity="secondary" :disabled="page >= pageCount || pending" @click="page++">{{ copy.next }}</BsButton></nav>
       </section>

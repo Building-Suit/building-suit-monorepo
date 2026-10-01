@@ -69,11 +69,11 @@ function date(value: string) { return new Intl.DateTimeFormat(locale.value, { da
             <li v-for="event in history" :key="event.id">{{ date(event.occurred_at) }} · {{ t(`billing.manual.states.${event.after_state}`) }} · {{ event.reason }}</li>
           </ol>
           <ul class="space-y-2">
-            <li v-for="receipt in evidence" :key="receipt.id"><BsButton type="button" class="text-link" :disabled="pending" @click="download(receipt)">{{ receipt.filename }} · {{ date(receipt.submitted_at) }}</BsButton></li>
+            <li v-for="receipt in evidence" :key="receipt.id"><BsButton variant="link" type="button" class="text-link" :disabled="pending" @click="download(receipt)">{{ receipt.filename }} · {{ date(receipt.submitted_at) }}</BsButton></li>
           </ul>
         </template>
         <ul v-if="requests.length > 1" class="space-y-2">
-          <li v-for="payment in requests" :key="payment.id"><BsButton type="button" class="text-link" :disabled="pending || dirty" @click="select(payment)">{{ date(payment.created_at) }} · {{ t(`billing.plans.${payment.plan_key}.name`) }}</BsButton></li>
+          <li v-for="payment in requests" :key="payment.id"><BsButton variant="link" type="button" class="text-link" :disabled="pending || dirty" @click="select(payment)">{{ date(payment.created_at) }} · {{ t(`billing.plans.${payment.plan_key}.name`) }}</BsButton></li>
         </ul>
       </template>
     </div>

@@ -31,7 +31,7 @@ function close() {
     </div>
 
     <div class="flex flex-wrap gap-2" role="group" :aria-label="t('chartTemplates.choose')">
-      <BsButton v-for="item in reviewedChartTemplates" :key="item.key" type="button" class="ls-btn ls-btn-sm" :class="{ 'ls-btn-primary': selected === item.key }" :aria-pressed="selected === item.key" @click="selected = item.key">
+      <BsButton variant="chip" v-for="item in reviewedChartTemplates" :key="item.key" type="button" :aria-pressed="selected === item.key" @click="selected = item.key">
         {{ t(`chartTemplates.templates.${item.key}.title`) }}
       </BsButton>
     </div>
