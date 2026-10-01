@@ -17,3 +17,21 @@ export type PlanUsageResource = {
   atLimit: boolean
   overLimit: boolean
 }
+
+export type ShopPlanInterval = 'monthly' | 'annual'
+export type ShopPlanVariant = 'standard' | 'multi_2' | 'multi_3'
+
+export type ShopPlanOffer = {
+  catalogTermsId: string
+  planSlug: string
+  planName: string
+  planVariant: ShopPlanVariant
+  variantName: string
+  billingInterval: ShopPlanInterval
+  currency: string
+  listPriceAmount: number
+  effectivePriceAmount: number
+  priceSource: 'catalog' | 'override'
+  resourceLimits: PlanResourceLimits
+  blockers: Array<{ resource: PlanResourceKey, used: number, limit: number, excess: number }>
+}

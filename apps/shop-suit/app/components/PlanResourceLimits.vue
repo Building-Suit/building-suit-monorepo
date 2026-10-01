@@ -6,18 +6,25 @@ const { locale } = useI18n()
 const isArabic = computed(() => locale.value === 'ar')
 const resources: PlanResourceKey[] = ['active_locations', 'active_members', 'active_products', 'active_services', 'active_customers', 'active_suppliers']
 const labels = computed<Record<PlanResourceKey, string>>(() => isArabic.value ? {
-  active_locations: 'الفروع النشطة', active_members: 'أعضاء الفريق',
-  active_products: 'المنتجات النشطة', active_services: 'الخدمات النشطة',
-  active_customers: 'العملاء النشطون', active_suppliers: 'الموردون النشطون',
+  active_locations: 'فروع المتجر التي يمكنك تشغيلها', active_members: 'الأشخاص في فريقك',
+  active_products: 'المنتجات التي يمكنك إبقاؤها نشطة', active_services: 'الخدمات التي يمكنك إبقاؤها نشطة',
+  active_customers: 'العملاء الذين يمكنك إبقاؤهم نشطين', active_suppliers: 'الموردون الذين يمكنك إبقاؤهم نشطين',
 } : {
-  active_locations: 'Active locations', active_members: 'Team members',
-  active_products: 'Active products', active_services: 'Active services',
-  active_customers: 'Active customers', active_suppliers: 'Active suppliers',
+  active_locations: 'Shop locations you can run', active_members: 'People on your team',
+  active_products: 'Products you can keep active', active_services: 'Services you can keep active',
+  active_customers: 'Customers you can keep active', active_suppliers: 'Suppliers you can keep active',
 })
 
 function value(resource: PlanResourceKey) {
   const limit = props.limits[resource]
-  return limit == null ? (isArabic.value ? 'غير محدود' : 'Unlimited') : new Intl.NumberFormat(locale.value).format(limit)
+
+  if (limit == null) {
+    return isArabic.value ? 'غير محدود' : 'Unlimited'
+  }
+
+  return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', {
+    numberingSystem: isArabic.value ? 'arab' : 'latn',
+  }).format(limit)
 }
 </script>
 
