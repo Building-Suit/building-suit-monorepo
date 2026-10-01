@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Database, Json } from '~~/types/database.types'
+import type { MarketingPricingPlan } from '@building-suit/contracts'
 import type { LaunchPlanKey } from '~/composables/useBilling'
 
 const { compact = false, surface = 'checkout' } = defineProps<{
@@ -211,6 +212,56 @@ function featureRows(plan: CatalogPlan) {
   ]
 }
 
+const pricingPlans = computed<MarketingPricingPlan[]>(() => plans.value.map((plan) => {
+  const currentAmount = amount(plan)
+  const action = !plan.is_purchasable
+    ? { label: t('billing.plans.comingSoon'), disabled: true }
+    : surface === 'public'
+      ? { label: t('landing.startTrial'), to: '/signup', variant: 'primary' as const }
+      : surface === 'checkout'
+        ? { label: pendingPlan.value === plan.plan_key ? t('billing.openingCheckout') : t('billing.plans.choose', { plan: planName(plan) }), pending: pendingPlan.value === plan.plan_key, disabled: Boolean(pendingPlan.value), variant: 'primary' as const }
+        : surface === 'manage' && launchPlanCurrent.value
+          ? { label: reviewingPlan.value === plan.plan_key ? t('billing.planChange.reviewing') : t('billing.planChange.review', { plan: planName(plan) }), pending: reviewingPlan.value === plan.plan_key, disabled: Boolean(reviewingPlan.value) }
+          : undefined
+  return {
+    id: plan.plan_key,
+    name: planName(plan),
+    description: planDescription(plan),
+    badge: plan.plan_key === 'starter' ? t('billing.plans.mostPopular') : !plan.is_purchasable ? t('billing.plans.comingSoon') : undefined,
+    badgeTone: plan.plan_key === 'starter' ? 'featured' : 'muted',
+    promoted: plan.plan_key === 'starter',
+    unavailable: !plan.is_purchasable,
+    originalPrice: interval.value === 'yearly' && currentAmount !== null ? t('billing.plans.price', { amount: formatAmount(yearlyOriginalAmount(plan) ?? 0) }) : undefined,
+    discount: interval.value === 'yearly' && currentAmount !== null ? t('billing.plans.discount', { percent: yearlyDiscount(plan) }) : undefined,
+    price: currentAmount === null ? undefined : t('billing.plans.price', { amount: formatAmount(currentAmount) }),
+    priceNote: currentAmount === null ? undefined : interval.value === 'yearly'
+      ? t('billing.plans.yearlyEquivalent', {
+          monthlyPrice: t('billing.plans.price', { amount: formatAmount(yearlyMonthlyAmount(plan) ?? 0) }),
+          yearlyPrice: t('billing.plans.price', { amount: formatAmount(currentAmount) }),
+        })
+      : t('billing.plans.perMonth'),
+    pricingUnavailable: currentAmount === null ? t('billing.plans.pricingComingSoon') : undefined,
+    features: featureRows(plan),
+    featureFallback: featureRows(plan).length ? undefined : t('billing.plans.scale.preview'),
+    action,
+    secondaryAction: surface === 'checkout' && plan.is_purchasable && can('billing.manage')
+      ? { label: t('billing.manual.choose') }
+      : undefined,
+  }
+}))
+
+function choosePlan(planKey: string) {
+  const plan = plans.value.find(candidate => candidate.plan_key === planKey)
+  if (!plan?.is_purchasable) return
+  if (surface === 'checkout') void checkout(plan.plan_key as LaunchPlanKey)
+  else if (surface === 'manage') void reviewChange(plan.plan_key as LaunchPlanKey)
+}
+
+function chooseManualPlan(planKey: string) {
+  manualPlan.value = planKey as LaunchPlanKey
+  manualOpen.value = true
+}
+
 async function checkout(planKey: LaunchPlanKey) {
   if (!currentId.value || pendingPlan.value) return
   pendingPlan.value = planKey
@@ -273,77 +324,20 @@ async function reviewChange(planKey: LaunchPlanKey) {
     <BsButton v-if="['checkout', 'manage', 'display'].includes(surface) && can('billing.manage')" type="button" class="ls-btn" @click="manualPlan = undefined; manualOpen = true">{{ t('billing.manual.requests') }}</BsButton>
     <ManualPaymentCheckout v-if="manualOpen" :key="`${currentId}:${user?.id}`" :plan="manualPlan" :interval="interval" @close="manualOpen = false" />
 
-    <fieldset class="mx-auto max-w-sm">
-      <legend class="ls-label text-center">{{ t('billing.billingCycle') }}</legend>
-      <div class="mx-auto grid max-w-xs grid-cols-2 rounded-full border border-[var(--bs-border)] bg-surface-muted p-1 shadow-inner" dir="ltr">
-        <label class="relative cursor-pointer">
-          <input v-model="interval" class="absolute inset-0 z-10 h-full w-full cursor-pointer appearance-none rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" type="radio" name="billing-cycle" value="monthly">
-          <span class="block rounded-full px-6 py-2 text-center text-sm font-semibold transition" :class="interval === 'monthly' ? 'bg-surface text-fg shadow-sm' : 'text-fg-muted'">{{ t('billing.monthly') }}</span>
-        </label>
-        <label class="relative cursor-pointer">
-          <input v-model="interval" class="absolute inset-0 z-10 h-full w-full cursor-pointer appearance-none rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" type="radio" name="billing-cycle" value="yearly">
-          <span class="block rounded-full px-6 py-2 text-center text-sm font-semibold transition" :class="interval === 'yearly' ? 'bg-surface text-fg shadow-sm' : 'text-fg-muted'">{{ t('billing.yearly') }}</span>
-        </label>
-      </div>
-      <p v-if="annualDiscount !== null" class="mt-2 text-center text-xs text-fg-muted">{{ t('billing.plans.annualDiscount', { percent: annualDiscount }) }}</p>
-    </fieldset>
-
-    <div v-if="catalogPending" class="py-8 text-center text-sm text-fg-muted" role="status">{{ t('billing.plans.loading') }}</div>
-    <div v-else-if="catalogError" class="ls-error text-center" role="alert">
-      <p>{{ t('billing.plans.loadFailed') }}</p>
-      <BsButton variant="link" type="button" class="mt-2 text-link" @click="refresh()">{{ t('common.retry') }}</BsButton>
-    </div>
-    <div v-else class="grid items-stretch gap-4 md:grid-cols-2 xl:grid-cols-4">
-      <article
-        v-for="plan in plans"
-        :key="plan.plan_key"
-        class="ls-card relative flex min-w-0 flex-col p-5 text-start"
-        :class="{ 'border-primary shadow-card': plan.plan_key === 'starter', 'opacity-75': !plan.is_purchasable }"
-        :data-plan="plan.plan_key"
-      >
-        <span v-if="plan.plan_key === 'starter'" class="absolute end-4 top-4 rounded-full bg-brand-gold px-2.5 py-1 text-xs font-bold text-brand-navy-deep">{{ t('billing.plans.mostPopular') }}</span>
-        <span v-else-if="!plan.is_purchasable" class="absolute end-4 top-4 rounded-full bg-surface-muted px-2.5 py-1 text-xs font-bold">{{ t('billing.plans.comingSoon') }}</span>
-        <h3 class="pe-24 text-xl font-black">{{ planName(plan) }}</h3>
-        <p class="mt-2 min-h-12 text-sm text-fg-muted">{{ planDescription(plan) }}</p>
-
-        <div v-if="amount(plan) !== null" class="mt-5">
-          <template v-if="interval === 'yearly'">
-            <div class="flex flex-wrap items-center gap-2 text-sm text-fg-muted" dir="ltr">
-              <s>{{ t('billing.plans.price', { amount: formatAmount(yearlyOriginalAmount(plan) ?? 0) }) }}</s>
-              <span class="rounded-full bg-[var(--bs-status-success-bg)] px-2 py-0.5 text-xs font-bold text-[var(--bs-status-success)]">{{ t('billing.plans.discount', { percent: yearlyDiscount(plan) }) }}</span>
-            </div>
-            <p class="mt-1 text-3xl font-black" dir="ltr">{{ t('billing.plans.price', { amount: formatAmount(amount(plan) ?? 0) }) }}</p>
-            <p class="text-xs text-fg-muted">{{ t('billing.plans.yearlyEquivalent', {
-              monthlyPrice: t('billing.plans.price', { amount: formatAmount(yearlyMonthlyAmount(plan) ?? 0) }),
-              yearlyPrice: t('billing.plans.price', { amount: formatAmount(amount(plan) ?? 0) }),
-            }) }}</p>
-          </template>
-          <template v-else>
-            <p class="text-3xl font-black" dir="ltr">{{ t('billing.plans.price', { amount: formatAmount(amount(plan) ?? 0) }) }}</p>
-            <p class="text-xs text-fg-muted">{{ t('billing.plans.perMonth') }}</p>
-          </template>
-        </div>
-        <p v-else class="mt-5 text-lg font-bold">{{ t('billing.plans.pricingComingSoon') }}</p>
-
-        <ul v-if="featureRows(plan).length" class="mt-5 flex-1 space-y-2 text-sm">
-          <li v-for="feature in featureRows(plan)" :key="feature.key" class="flex items-start gap-2">
-            <AppIcon :name="feature.included ? 'check' : 'close'" :size="17" :class="feature.included ? 'text-[var(--bs-status-success)]' : 'text-fg-muted'" />
-            <span :class="{ 'text-fg-muted': !feature.included }">{{ feature.text }} <span class="sr-only">({{ feature.included ? t('billing.plans.included') : t('billing.plans.notIncluded') }})</span></span>
-          </li>
-        </ul>
-        <p v-else class="mt-5 flex-1 text-sm text-fg-muted">{{ t('billing.plans.scale.preview') }}</p>
-
-        <BsButton v-if="surface === 'checkout' && plan.is_purchasable" type="button" class="ls-btn ls-btn-primary mt-6 w-full" :disabled="Boolean(pendingPlan)" @click="checkout(plan.plan_key as LaunchPlanKey)">
-          {{ pendingPlan === plan.plan_key ? t('billing.openingCheckout') : t('billing.plans.choose', { plan: planName(plan) }) }}
-        </BsButton>
-        <BsButton v-else-if="surface === 'manage' && plan.is_purchasable && launchPlanCurrent" type="button" class="ls-btn mt-6 w-full" :disabled="Boolean(reviewingPlan)" @click="reviewChange(plan.plan_key as LaunchPlanKey)">
-          {{ reviewingPlan === plan.plan_key ? t('billing.planChange.reviewing') : t('billing.planChange.review', { plan: planName(plan) }) }}
-        </BsButton>
-        <NuxtLink v-else-if="surface === 'public' && plan.is_purchasable" to="/signup" class="ls-btn ls-btn-primary mt-6 w-full">{{ t('landing.startTrial') }}</NuxtLink>
-        <BsButton v-else-if="!plan.is_purchasable" type="button" class="ls-btn mt-6 w-full" disabled>{{ t('billing.plans.comingSoon') }}</BsButton>
-        <BsButton v-if="surface === 'checkout' && plan.is_purchasable && can('billing.manage')" type="button" class="ls-btn mt-2 w-full" @click="manualPlan = plan.plan_key as LaunchPlanKey; manualOpen = true">{{ t('billing.manual.choose') }}</BsButton>
-      </article>
-    </div>
+    <BsMarketingPricing
+      :interval="interval"
+      :plans="pricingPlans"
+      test-id="plan-pricing-grid"
+      :interval-options="[{ value: 'monthly', label: t('billing.monthly') }, { value: 'yearly', label: t('billing.yearly') }]"
+      :copy="{ cycleLabel: t('billing.billingCycle'), loading: t('billing.plans.loading'), empty: t('billing.plans.loadFailed'), retry: t('common.retry'), included: t('billing.plans.included'), notIncluded: t('billing.plans.notIncluded') }"
+      :annual-saving="annualDiscount === null ? null : t('billing.plans.annualDiscount', { percent: annualDiscount })"
+      :loading="catalogPending"
+      :error="catalogError ? t('billing.plans.loadFailed') : null"
+      @update:interval="value => { if (value === 'monthly' || value === 'yearly') interval = value }"
+      @retry="refresh"
+      @action="choosePlan"
+      @secondary-action="chooseManualPlan"
+    />
 
     <section
       v-if="surface === 'checkout'"

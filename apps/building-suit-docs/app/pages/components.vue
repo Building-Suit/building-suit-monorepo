@@ -20,6 +20,7 @@ const notificationChoices = ref<string[]>(['email'])
 const planChoice = ref<string | string[]>('standard')
 const tableState = ref<'data' | 'loading' | 'empty' | 'error'>('data')
 const density = ref<'compact' | 'comfortable'>('comfortable')
+const pricingInterval = ref('monthly')
 const { success: toastSuccess } = useToasts()
 function verifyForm() { formError.value = isArabic.value ? 'راجع القيمة وحاول مرة أخرى.' : 'Review the value and try again.' }
 const filters = ref({ global: { value: null, matchMode: 'contains' } })
@@ -143,6 +144,21 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
     <BsContentSection :title="isArabic ? 'حالات المحتوى' : 'Content states'" variant="flat">
       <div class="grid gap-3 md:grid-cols-2"><BsStateSurface state="loading" :title="ui('loading')" /><BsStateSurface state="error" :title="isArabic ? 'تعذر التحميل' : 'Could not load'" :description="isArabic ? 'حاول مرة أخرى.' : 'Try again.'" :action-label="isArabic ? 'إعادة المحاولة' : 'Retry'" /></div>
       <BsPagination v-model:page="page" class="mt-4" :page-size="10" :total="42" :label="isArabic ? 'الصفحات' : 'Pages'" :previous-label="isArabic ? 'السابق' : 'Previous'" :next-label="isArabic ? 'التالي' : 'Next'" />
+    </BsContentSection>
+
+    <BsContentSection :title="isArabic ? 'خطط التسويق' : 'Marketing plans'" :description="isArabic ? 'البطاقات ودورة الفوترة والإجراءات تأتي من مكوّن مشترك.' : 'Cards, billing-cycle controls, states, and actions come from one shared organism.'">
+      <BsMarketingPricing
+        :interval="pricingInterval"
+        :interval-options="[{ value: 'monthly', label: isArabic ? 'شهري' : 'Monthly' }, { value: 'yearly', label: isArabic ? 'سنوي' : 'Yearly' }]"
+        :copy="{ cycleLabel: isArabic ? 'دورة الفوترة' : 'Billing cycle', loading: ui('loading'), empty: ui('empty'), retry: isArabic ? 'إعادة المحاولة' : 'Retry', included: isArabic ? 'مشمول' : 'Included', notIncluded: isArabic ? 'غير مشمول' : 'Not included' }"
+        :annual-saving="pricingInterval === 'yearly' ? (isArabic ? 'وفّر ٢٠٪ مع الدفع السنوي' : 'Save 20% with yearly billing') : null"
+        :plans="[
+          { id: 'starter', name: isArabic ? 'البداية' : 'Starter', description: isArabic ? 'للعمل الجديد.' : 'For a new operation.', badge: isArabic ? 'الأكثر شيوعًا' : 'Most popular', badgeTone: 'featured', promoted: true, price: pricingInterval === 'yearly' ? 'EGP 4,800' : 'EGP 500', priceNote: pricingInterval === 'yearly' ? (isArabic ? 'تُدفع سنويًا' : 'billed yearly') : (isArabic ? 'شهريًا' : 'per month'), features: [{ key: 'records', included: true, text: isArabic ? 'تقارير أساسية' : 'Core reports' }], action: { label: isArabic ? 'ابدأ التجربة' : 'Start trial', to: '#', variant: 'primary' } },
+          { id: 'scale', name: isArabic ? 'التوسع' : 'Scale', description: isArabic ? 'للفرق الأكبر.' : 'For larger teams.', pricingUnavailable: isArabic ? 'السعر قريبًا' : 'Pricing coming soon', unavailable: true, action: { label: isArabic ? 'قريبًا' : 'Coming soon', disabled: true } },
+        ]"
+        :columns="3"
+        @update:interval="pricingInterval = $event"
+      />
     </BsContentSection>
 
     <BsCard :title="isArabic ? 'التأكيد والخطوات' : 'Confirmation and steps'">

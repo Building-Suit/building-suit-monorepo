@@ -31,6 +31,7 @@
     "./organisms/BsDialog": "./src/organisms/BsDialog.vue",
     "./organisms/BsForm": "./src/organisms/BsForm.vue",
     "./organisms/BsMenu": "./src/organisms/BsMenu.vue",
+    "./organisms/BsMarketingPricing": "./src/organisms/BsMarketingPricing.vue",
     "./organisms/BsPageHeader": "./src/organisms/BsPageHeader.vue",
     "./organisms/BsRecordActionDialog": "./src/organisms/BsRecordActionDialog.vue",
     "./organisms/BsSignupWizard": "./src/organisms/BsSignupWizard.vue",

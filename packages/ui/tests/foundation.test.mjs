@@ -61,6 +61,21 @@ test('primitive inventory centrally owns fields, choices, states, navigation, an
   assert.doesNotMatch(empty, /<button\b/)
 })
 
+test('shared marketing owns the landing frame and Ledger-derived pricing presentation', () => {
+  const landing = readFileSync(new URL('../src/templates/BsLandingPage.vue', import.meta.url), 'utf8')
+  const frame = readFileSync(new URL('../src/templates/BsMarketingLayout.vue', import.meta.url), 'utf8')
+  const pricing = readFileSync(new URL('../src/organisms/BsMarketingPricing.vue', import.meta.url), 'utf8')
+  assert.match(frame, /<header class="bs-marketing-header/)
+  assert.match(frame, /id="marketing-mobile-navigation"/)
+  assert.match(frame, /<footer class="bs-marketing-footer/)
+  for (const section of ['ls-landing-hero', 'id="features"', 'id="workflow"', 'id="pricing"']) assert.match(landing, new RegExp(section))
+  assert.match(pricing, /v-for="option in intervalOptions"/)
+  assert.match(pricing, /v-for="plan in plans"/)
+  assert.match(pricing, /<NuxtLink v-if="plan\.action\?\.to/)
+  assert.match(pricing, /<BsButton v-else-if="plan\.action"/)
+  assert.match(pricing, /<BsStateSurface v-if="loading/)
+})
+
 test('status badges expose written labels and semantic tone instead of color alone', async () => {
   const html = await render('atoms/StatusBadge.vue', { status: 'custom', label: 'Needs review', tone: 'warning', icon: false })
   assert.match(html, />Needs review</)
