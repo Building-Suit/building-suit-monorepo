@@ -1,7 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
+import path from 'node:path'
 import { parse, compileScript } from 'vue/compiler-sfc'
 import { renderToString } from 'vue/server-renderer'
 import * as vue from 'vue'
@@ -82,4 +83,38 @@ test('critical pattern text and focus colors meet contrast targets in both theme
   }
   assert.ok(contrast('color.role.dark.focusRing', 'color.brand.buildingNavy') >= 3)
   assert.ok(contrast('color.role.dark.focusRing', 'color.brand.deepStructureNavy') >= 3)
+})
+
+const workspaceRoot = new URL('../../../', import.meta.url).pathname
+
+function vueFiles(directory) {
+  if (!existsSync(directory)) return []
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const target = path.join(directory, entry.name)
+    return entry.isDirectory() ? vueFiles(target) : entry.name.endsWith('.vue') ? [target] : []
+  })
+}
+
+test('every dynamically discovered Suit local component has one approved ownership classification', () => {
+  const appsDirectory = path.join(workspaceRoot, 'apps')
+  const suits = readdirSync(appsDirectory, { withFileTypes: true })
+    .filter(entry => entry.isDirectory() && entry.name.endsWith('-suit'))
+    .map(entry => entry.name)
+    .sort()
+  assert.ok(suits.includes('automation-suit'))
+  const actual = suits.flatMap(suit => vueFiles(path.join(appsDirectory, suit, 'app/components')))
+    .map(file => path.relative(workspaceRoot, file).replaceAll(path.sep, '/')).sort()
+  const manifest = JSON.parse(readFileSync(path.join(workspaceRoot, 'docs/shared/ui-ownership-manifest.json'), 'utf8'))
+  const classified = manifest.components.map(component => component.path).sort()
+  assert.deepEqual(classified, actual)
+  assert.ok(manifest.components.every(component => component.approval && component.rationale))
+})
+
+test('shared UI exports are explicit and cover every governed source', () => {
+  const manifest = JSON.parse(readFileSync(path.join(workspaceRoot, 'packages/ui/package.json'), 'utf8'))
+  assert.ok(Object.keys(manifest.exports).every(key => !key.includes('*')))
+  assert.ok(Object.values(manifest.exports).every(target => typeof target === 'string' && !target.includes('*')))
+  const components = vueFiles(path.join(workspaceRoot, 'packages/ui/src'))
+    .map(file => `./${path.relative(path.join(workspaceRoot, 'packages/ui'), file).replaceAll(path.sep, '/')}`)
+  assert.deepEqual(Object.values(manifest.exports).sort(), [...components, './src/styles/base.css'].sort())
 })

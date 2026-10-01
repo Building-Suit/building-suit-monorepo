@@ -24,6 +24,8 @@ The shared Nuxt layer registers fonts, tokens, styles, components, composables, 
 
 Atomic Design organizes `packages/ui/src`: atoms (icons, brand marks, status), molecules (fields, empty states, KPI presentation), organisms (tables, dialogs, wizard, settings and feedback), templates (marketing frame, complete landing page, auth frame, authenticated shell). Product pages compose these and own validation, currencies, roles, queries and commands. Atomic Design does not define database or business-service boundaries.
 
+Composition is downward-only: a shared layer may use its own layer or a lower layer, never a higher one. Every shared UI source is exported explicitly by `packages/ui`; wildcard exports are not permitted. The [shared UI ownership contract](ui-ownership.md) and its canonical manifest govern app-local components and migration debt.
+
 The shared system supplies the layout composition for product applications: landing hero/features/workflow/pricing, login/signup split frame, sidebar/header/content shell. App adapters provide navigation, content, assets and the pricing preview slots. Change shared layout code to change all consumers.
 
 Landing motion is progressive enhancement owned by `packages/ux/src/composables/useLandingMotion.ts`. It dynamically loads GSAP and ScrollTrigger on the client, scopes selectors to the mounted landing root, reverts the context on unmount and does nothing when reduced motion is requested. No essential content is hidden in CSS, so SSR output and no-JavaScript rendering remain complete.

@@ -1,0 +1,311 @@
+{
+  "schemaVersion": 1,
+  "scope": "apps/*-suit/app/components/**/*.vue",
+  "owner": "packages/ui",
+  "interactionOwner": "packages/ux",
+  "classifications": {
+    "shared-presentation-debt": "Reusable presentation that remains local only as recorded migration debt.",
+    "product-orchestration": "Valid product/domain orchestration that composes shared UI and may remain app-owned.",
+    "obsolete-duplicate": "A local duplicate already superseded by a shared UI primitive and awaiting removal."
+  },
+  "bypasses": [
+    {
+      "path": "apps/automation-suit/app/pages/index.vue",
+      "requiredSharedOwner": "BsDataTable",
+      "rationale": "Existing Automation dashboard tables predate dynamic Suit enforcement and must migrate without changing product logic in this foundation task.",
+      "approval": "BS-UI-FOUNDATION-001 baseline debt"
+    },
+    {
+      "path": "apps/automation-suit/app/pages/tasks/index.vue",
+      "requiredSharedOwner": "BsDataTable",
+      "rationale": "Existing Automation task tables predate dynamic Suit enforcement and must migrate without changing product logic in this foundation task.",
+      "approval": "BS-UI-FOUNDATION-001 baseline debt"
+    }
+  ],
+  "components": [
+    {
+      "path": "apps/automation-suit/app/components/DashboardIncidentCard.vue",
+      "classification": "product-orchestration",
+      "rationale": "Renders Automation incident evidence and recovery fields from its product contract.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/automation-suit/app/components/DashboardMetricCard.vue",
+      "classification": "shared-presentation-debt",
+      "rationale": "Generic metric-card presentation has no Automation domain orchestration.",
+      "migrationTarget": "packages/ui/src/molecules/BsKpiCard.vue",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/automation-suit/app/components/DashboardStatusPill.vue",
+      "classification": "obsolete-duplicate",
+      "rationale": "Generic status-pill presentation duplicates the shared status badge role.",
+      "migrationTarget": "packages/ui/src/atoms/StatusBadge.vue",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/ledger-suit/app/components/AccountActivityDialog.vue",
+      "classification": "product-orchestration",
+      "rationale": "Coordinates Ledger account and journal RPC navigation inside BsDialog and BsDataTable.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/ledger-suit/app/components/AccountMenu.vue",
+      "classification": "product-orchestration",
+      "rationale": "Coordinates Ledger profile, billing capability, settings, team actions, and sign-out.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/ledger-suit/app/components/AccountStatementClassificationDialog.vue",
+      "classification": "product-orchestration",
+      "rationale": "Owns Ledger statement classification queries, validation, and commands while composing shared overlays and tables.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/ledger-suit/app/components/AccountTree.vue",
+      "classification": "product-orchestration",
+      "rationale": "Presents Ledger chart-of-accounts hierarchy and accounting amounts through shared table primitives.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/ledger-suit/app/components/AccountingTableDensity.vue",
+      "classification": "shared-presentation-debt",
+      "rationale": "The compact versus comfortable table-density selector is reusable presentation and interaction.",
+      "migrationTarget": "packages/ui/src/molecules/BsTableDensity.vue",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/ledger-suit/app/components/AddTransactionDialog.vue",
+      "classification": "product-orchestration",
+      "rationale": "Owns Ledger transaction validation, account selection, plan checks, and authorized creation workflow.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/ledger-suit/app/components/AppLogo.vue",
+      "classification": "obsolete-duplicate",
+      "rationale": "A thin fixed-product wrapper duplicates configuration already accepted by BsProductLogo.",
+      "migrationTarget": "packages/ui/src/atoms/BsProductLogo.vue",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/ledger-suit/app/components/BillingCheckout.vue",
+      "classification": "product-orchestration",
+      "rationale": "Coordinates Ledger plan selection, billing impact, payment methods, and checkout commands.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/ledger-suit/app/components/CashFlowAllocationDialog.vue",
+      "classification": "product-orchestration",
+      "rationale": "Owns Ledger cash-flow allocation data, amount rules, and mutation flow inside BsDialog.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/ledger-suit/app/components/ChartTemplateReview.vue",
+      "classification": "product-orchestration",
+      "rationale": "Presents and selects Ledger chart templates using product-owned account semantics.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/ledger-suit/app/components/ControlReconciliationPanel.vue",
+      "classification": "product-orchestration",
+      "rationale": "Coordinates Ledger reconciliation queries, balances, account choices, and commands.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/ledger-suit/app/components/CsvImportDialog.vue",
+      "classification": "product-orchestration",
+      "rationale": "Owns Ledger import parsing, review phases, quota checks, and transaction creation.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/ledger-suit/app/components/DocumentExtractionReview.vue",
+      "classification": "product-orchestration",
+      "rationale": "Reviews Ledger-specific extracted transaction candidates and account mappings.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/ledger-suit/app/components/FinancialSystemMap.vue",
+      "classification": "product-orchestration",
+      "rationale": "Explains Ledger-specific accounting flows and links using the product domain model.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/ledger-suit/app/components/FxSubledgerPanel.vue",
+      "classification": "product-orchestration",
+      "rationale": "Coordinates Ledger foreign-currency subledger queries, periods, and monetary rendering.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/ledger-suit/app/components/KpiCard.vue",
+      "classification": "product-orchestration",
+      "rationale": "Adapts Ledger minor-unit amounts and accounting improvement direction into BsKpiCard.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/ledger-suit/app/components/LedgerPageHeader.vue",
+      "classification": "shared-presentation-debt",
+      "rationale": "Page title, context metadata, reporting period, and action-slot layout are reusable presentation.",
+      "migrationTarget": "packages/ui/src/organisms/BsPageHeader.vue",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/ledger-suit/app/components/ManualPaymentCheckout.vue",
+      "classification": "product-orchestration",
+      "rationale": "Owns Ledger manual-payment evidence, billing validation, and submission workflow.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/ledger-suit/app/components/MoneyText.vue",
+      "classification": "product-orchestration",
+      "rationale": "Applies Ledger tenant currency and exact minor-unit accounting display rules.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/ledger-suit/app/components/NotificationMenu.vue",
+      "classification": "product-orchestration",
+      "rationale": "Loads and presents tenant-scoped Ledger notifications with product navigation.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/ledger-suit/app/components/OperationsCenter.vue",
+      "classification": "product-orchestration",
+      "rationale": "Coordinates Ledger operational queues, quota state, domain choices, and commands.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/ledger-suit/app/components/OrganizationSetup.vue",
+      "classification": "product-orchestration",
+      "rationale": "Owns Ledger organization provisioning inputs, validation, and setup commands.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/ledger-suit/app/components/OrganizationSwitcher.vue",
+      "classification": "product-orchestration",
+      "rationale": "Coordinates Ledger tenant selection, billing state, creation, and route changes.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/ledger-suit/app/components/PublicLegalPage.vue",
+      "classification": "shared-presentation-debt",
+      "rationale": "The legal-document layout is duplicated across products and only receives content data.",
+      "migrationTarget": "packages/ui/src/templates/BsPublicLegalPage.vue",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/ledger-suit/app/components/QuotaUsageMeter.vue",
+      "classification": "product-orchestration",
+      "rationale": "Combines Ledger quota lookup, plan upgrade rules, localized units, and billing links.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/ledger-suit/app/components/RevenueExpenseChart.vue",
+      "classification": "product-orchestration",
+      "rationale": "Transforms Ledger revenue and expense amounts into accounting-specific chart and table views.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/ledger-suit/app/components/SetupChecklist.vue",
+      "classification": "product-orchestration",
+      "rationale": "Loads tenant-specific Ledger setup state and maps it to product routes.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/ledger-suit/app/components/SubscriptionGate.vue",
+      "classification": "product-orchestration",
+      "rationale": "Applies Ledger subscription and route policy around product-owned content.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/ledger-suit/app/components/SyntheticDemo.vue",
+      "classification": "product-orchestration",
+      "rationale": "Presents Ledger-specific synthetic transaction examples through BsDataTable.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/ledger-suit/app/components/TeamMenu.vue",
+      "classification": "product-orchestration",
+      "rationale": "Coordinates Ledger invitations, member quotas, permissions, and tenant commands.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/ledger-suit/app/components/TransactionDetailDialog.vue",
+      "classification": "product-orchestration",
+      "rationale": "Loads Ledger transaction detail and coordinates reversal, tagging, and audit actions.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/ledger-suit/app/components/TransactionTags.vue",
+      "classification": "product-orchestration",
+      "rationale": "Owns Ledger tag queries, billing capability checks, and transaction-tag mutations.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/ledger-suit/app/components/TrialCountdown.vue",
+      "classification": "product-orchestration",
+      "rationale": "Derives Ledger trial state from billing policy and routes users to product billing.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/ledger-suit/app/components/UsageMeters.vue",
+      "classification": "product-orchestration",
+      "rationale": "Maps Ledger plan quotas into the product-owned quota meter adapter.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/shop-suit/app/components/AppLogo.vue",
+      "classification": "obsolete-duplicate",
+      "rationale": "A thin fixed-product wrapper duplicates configuration already accepted by BsProductLogo.",
+      "migrationTarget": "packages/ui/src/atoms/BsProductLogo.vue",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/shop-suit/app/components/BarberSetupGuide.vue",
+      "classification": "product-orchestration",
+      "rationale": "Maps Shop setup state and barber-specific onboarding steps to product routes.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/shop-suit/app/components/PlanResourceLimits.vue",
+      "classification": "product-orchestration",
+      "rationale": "Presents Shop plan resource keys and product-specific allowance semantics.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/shop-suit/app/components/PlanUsageMeter.vue",
+      "classification": "product-orchestration",
+      "rationale": "Adapts Shop resource usage, plan-limit states, and localized domain labels.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/shop-suit/app/components/PlatformPlanAdmin.vue",
+      "classification": "product-orchestration",
+      "rationale": "Coordinates Shop plan administration queries, commands, confirmations, dialogs, and tables.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/shop-suit/app/components/PublicLegalPage.vue",
+      "classification": "shared-presentation-debt",
+      "rationale": "The legal-document layout is duplicated across products and only receives content data.",
+      "migrationTarget": "packages/ui/src/templates/BsPublicLegalPage.vue",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/shop-suit/app/components/PurchaseEntityPicker.vue",
+      "classification": "product-orchestration",
+      "rationale": "Owns Shop product and supplier queries, paging, selection contracts, and cache scope.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/shop-suit/app/components/ShopPlanCards.vue",
+      "classification": "product-orchestration",
+      "rationale": "Applies Shop plan families, billing intervals, blockers, pricing, and resource rules.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    },
+    {
+      "path": "apps/shop-suit/app/components/ShopPricing.vue",
+      "classification": "product-orchestration",
+      "rationale": "Adapts Shop plan catalogue queries into the product-owned plan-card contract.",
+      "approval": "BS-UI-FOUNDATION-001 baseline"
+    }
+  ]
+}
