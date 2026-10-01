@@ -24,6 +24,8 @@ The shared Nuxt layer registers fonts, tokens, styles, components, composables, 
 
 Atomic Design organizes `packages/ui/src`: atoms (icons, brand marks, status), molecules (fields, empty states, KPI presentation), organisms (tables, dialogs, wizard, settings and feedback), templates (marketing frame, complete landing page, auth frame, authenticated shell). Product pages compose these and own validation, currencies, roles, queries and commands. Atomic Design does not define database or business-service boundaries.
 
+Canonical working surfaces are explicit contracts: `StatusBadge` accepts a written status plus an optional semantic tone; `BsCard` and `BsKpiCard` own ordinary card/KPI presentation; `BsPageHeader` receives product-built context items; and `BsTableDensity` receives translated labels and a compact/comfortable value. `BsPublicLegalPage` owns the shared legal-document layout while product adapters retain metadata, translated update labels and legal content. These components consume existing semantic tokens and do not create another editable visual system.
+
 Composition is downward-only: a shared layer may use its own layer or a lower layer, never a higher one. Every shared UI source is exported explicitly by `packages/ui`; wildcard exports are not permitted. The [shared UI ownership contract](ui-ownership.md) and its canonical manifest govern app-local components and migration debt.
 
 The shared system supplies the layout composition for product applications: landing hero/features/workflow/pricing, login/signup split frame, sidebar/header/content shell. App adapters provide navigation, content, assets and the pricing preview slots. Change shared layout code to change all consumers.

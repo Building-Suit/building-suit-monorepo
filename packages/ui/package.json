@@ -9,8 +9,10 @@
     "./atoms/BsButton": "./src/atoms/BsButton.vue",
     "./atoms/BsProductLogo": "./src/atoms/BsProductLogo.vue",
     "./atoms/StatusBadge": "./src/atoms/StatusBadge.vue",
+    "./molecules/BsCard": "./src/molecules/BsCard.vue",
     "./molecules/BsKpiCard": "./src/molecules/BsKpiCard.vue",
     "./molecules/BsSelect": "./src/molecules/BsSelect.vue",
+    "./molecules/BsTableDensity": "./src/molecules/BsTableDensity.vue",
     "./molecules/EmptyState": "./src/molecules/EmptyState.vue",
     "./molecules/FloatingField": "./src/molecules/FloatingField.vue",
     "./molecules/OtpInput": "./src/molecules/OtpInput.vue",
@@ -19,6 +21,8 @@
     "./organisms/BsDataTable": "./src/organisms/BsDataTable.vue",
     "./organisms/BsDialog": "./src/organisms/BsDialog.vue",
     "./organisms/BsForm": "./src/organisms/BsForm.vue",
+    "./organisms/BsPageHeader": "./src/organisms/BsPageHeader.vue",
+    "./organisms/BsRecordActionDialog": "./src/organisms/BsRecordActionDialog.vue",
     "./organisms/BsSignupWizard": "./src/organisms/BsSignupWizard.vue",
     "./organisms/SettingsMenu": "./src/organisms/SettingsMenu.vue",
     "./organisms/ToastHost": "./src/organisms/ToastHost.vue",
@@ -26,6 +30,7 @@
     "./templates/BsAuthLayout": "./src/templates/BsAuthLayout.vue",
     "./templates/BsLandingPage": "./src/templates/BsLandingPage.vue",
     "./templates/BsMarketingLayout": "./src/templates/BsMarketingLayout.vue",
+    "./templates/BsPublicLegalPage": "./src/templates/BsPublicLegalPage.vue",
     "./styles/base.css": "./src/styles/base.css"
   },
   "dependencies": {

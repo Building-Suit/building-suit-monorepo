@@ -1,54 +1,134 @@
 <script setup lang="ts">
 const { locale } = useI18n()
 const ui = useUiCopy()
-const rows = ref([{ id: '1', name: 'Ledger Suit', category: 'Finance', amount: 120 }, { id: '2', name: 'Shop Suit', category: 'Commerce', amount: 240 }, { id: '3', name: 'Building Suit', category: 'Platform', amount: 360 }])
+const isArabic = computed(() => locale.value === 'ar')
+const rows = ref([
+  { id: '1', name: 'Ledger Suit', category: 'Finance', amount: 120, status: 'active' },
+  { id: '2', name: 'Shop Suit', category: 'Commerce', amount: 240, status: 'pending' },
+  { id: '3', name: 'Building Suit', category: 'Platform', amount: 360, status: 'completed' },
+])
 const selected = ref([])
 const choice = ref<string | number | null>('1')
 const choices = Array.from({ length: 10000 }, (_, index) => ({ id: String(index + 1), name: `Item ${index + 1}` }))
 const formError = ref('')
 const formPending = ref(false)
 const formValue = ref('')
+const tableState = ref<'data' | 'loading' | 'empty' | 'error'>('data')
+const density = ref<'compact' | 'comfortable'>('comfortable')
 const { success: toastSuccess } = useToasts()
-function verifyForm() { formError.value = locale.value === 'ar' ? 'راجع القيمة وحاول مرة أخرى.' : 'Review the value and try again.' }
+function verifyForm() { formError.value = isArabic.value ? 'راجع القيمة وحاول مرة أخرى.' : 'Review the value and try again.' }
 const filters = ref({ global: { value: null, matchMode: 'contains' } })
 const name = ref('')
+const editingId = ref<string | null>(null)
 const action = useRecordAction(() => ({ name: name.value }))
-const { visible, dirty, pending } = action
+const { visible, dirty, pending, error: actionError, mode } = action
 const { step, advance, back } = useSignupWizard(2)
 const confirmation = useConfirmation()
 const confirmationResult = ref('')
-async function confirmExample() { confirmationResult.value = await confirmation.ask(locale.value === 'ar' ? 'تأكيد هذا الإجراء التجريبي؟' : 'Confirm this example action?') ? 'Confirmed' : 'Cancelled' }
-function add() { name.value = ''; action.open() }
-function save() { rows.value.push({ id: String(rows.value.length + 1), name: name.value, category: 'Example', amount: 0 }); action.complete() }
+async function confirmExample() {
+  const confirmed = await confirmation.ask({
+    title: isArabic.value ? 'إزالة السجل' : 'Remove record',
+    message: isArabic.value ? 'هل تريد إزالة هذا السجل التجريبي؟' : 'Remove this example record?',
+    confirmLabel: isArabic.value ? 'إزالة' : 'Remove',
+    tone: 'danger',
+  })
+  confirmationResult.value = confirmed ? (isArabic.value ? 'تم التأكيد' : 'Confirmed') : (isArabic.value ? 'تم الإلغاء' : 'Cancelled')
+}
+function add() {
+  editingId.value = null
+  name.value = ''
+  action.create()
+}
+function edit(row: { id: string; name: string }) {
+  editingId.value = row.id
+  name.value = row.name
+  action.edit()
+}
+async function save() {
+  await action.run(async () => {
+    if (!name.value.trim()) throw new Error('invalid example')
+    if (editingId.value) {
+      const row = rows.value.find(item => item.id === editingId.value)
+      if (row) row.name = name.value.trim()
+    }
+    else rows.value.push({ id: String(rows.value.length + 1), name: name.value.trim(), category: 'Example', amount: 0, status: 'draft' })
+  }, () => isArabic.value ? 'أدخل اسماً قبل الحفظ.' : 'Enter a name before saving.')
+}
 useHead({ title: 'Shared component catalogue · Building Suit' })
 </script>
+
 <template>
   <div class="space-y-8">
-    <header><h1 class="text-3xl font-black">{{ locale === 'ar' ? 'مكتبة المكونات المشتركة' : 'Shared component catalogue' }}</h1><p class="mt-3 text-fg-muted">{{ locale === 'ar' ? 'أمثلة حية من نفس المكونات المستخدمة في جميع تطبيقات سوت الحالية والمستقبلية.' : 'Live examples from the one shared UI source used by every current and future Suit.' }}</p></header>
-    <section class="ls-card p-6"><h2 class="text-xl font-bold">{{ locale === 'ar' ? 'الهوية والأيقونات' : 'Brand and icons' }}</h2><div class="mt-5 flex flex-wrap items-center gap-6"><BsBuildingLogo /><AppIcon v-for="icon in ['dashboard', 'ledger', 'invoice', 'team', 'wallet', 'reports']" :key="icon" :name="icon" :size="28" /></div></section>
-    <section class="ls-card p-6"><h2 class="text-xl font-bold">{{ locale === 'ar' ? 'الأسطح والإجراءات' : 'Surfaces and actions' }}</h2><p class="mt-2 max-w-2xl text-fg-muted">{{ locale === 'ar' ? 'سطح هادئ للعمل اليومي، مع تسلسل واضح للإجراءات وتركيز مرئي ثابت.' : 'A quiet working surface with clear action hierarchy and consistent visible focus.' }}</p><div class="ls-card-flat mt-5 flex flex-wrap items-center gap-3 p-5"><button type="button" class="ls-btn ls-btn-primary">{{ ui('save') }}</button><button type="button" class="ls-btn ls-btn-secondary">{{ locale === 'ar' ? 'مراجعة' : 'Review' }}</button><button type="button" class="ls-btn">{{ ui('cancel') }}</button><button type="button" class="ls-btn ls-btn-danger">{{ locale === 'ar' ? 'حذف' : 'Delete' }}</button></div></section>
-    <section class="ls-card overflow-hidden"><div class="flex flex-wrap items-center justify-between gap-3 p-5"><h2 class="text-xl font-bold">{{ locale === 'ar' ? 'جدول البيانات' : 'Data table' }}</h2><button type="button" class="ls-btn ls-btn-primary" data-testid="catalogue-add" @click="add">{{ locale === 'ar' ? 'إضافة سجل' : 'Add record' }}</button></div>
-      <BsDataTable v-model:selection="selected" v-model:filters="filters" :value="rows" data-key="id" :search-fields="['name', 'category']" searchable exportable paginator :rows="2" :rows-per-page-options="[2, 5, 10]" sort-mode="multiple" removable-sort resizable-columns reorderable-columns striped-rows selection-mode="multiple" :meta-key-selection="false" label="Component examples">
+    <BsPageHeader
+      :title="isArabic ? 'مكتبة المكونات المشتركة' : 'Shared component catalogue'"
+      :subtitle="isArabic ? 'أمثلة حية للعقود الأساسية المستخدمة في جميع تطبيقات سوت.' : 'Live examples of the canonical contracts used by every Suit.'"
+      :context-label="isArabic ? 'سياق المعاينة' : 'Preview context'"
+      :context="[{ label: isArabic ? 'الاتجاه' : 'Direction', value: isArabic ? 'RTL' : 'LTR' }, { label: isArabic ? 'المصدر' : 'Owner', value: 'packages/ui' }]"
+    />
+
+    <BsCard :title="isArabic ? 'الهوية والإجراءات' : 'Brand and actions'" :subtitle="isArabic ? 'تستخدم الإجراءات الحالات والأحجام المشتركة.' : 'Actions use shared variants, sizes and pending guards.'">
+      <div class="flex flex-wrap items-center gap-3"><BsBuildingLogo /><AppIcon v-for="icon in ['dashboard', 'ledger', 'invoice', 'team', 'wallet', 'reports']" :key="icon" :name="icon" :size="28" /></div>
+      <div class="ls-card-flat mt-5 flex flex-wrap items-center gap-3 p-5">
+        <BsButton variant="primary">{{ ui('save') }}</BsButton><BsButton variant="secondary">{{ isArabic ? 'مراجعة' : 'Review' }}</BsButton><BsButton>{{ ui('cancel') }}</BsButton><BsButton variant="danger">{{ isArabic ? 'حذف' : 'Delete' }}</BsButton>
+      </div>
+    </BsCard>
+
+    <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-label="Status and KPI examples">
+      <BsKpiCard :title="isArabic ? 'السجلات' : 'Records'" change-label="+12%" tone="success">{{ rows.length }}</BsKpiCard>
+      <BsKpiCard :title="isArabic ? 'قيد المراجعة' : 'In review'" :hint="isArabic ? 'بيانات تجريبية' : 'Example data'">1</BsKpiCard>
+      <BsCard :title="isArabic ? 'الحالات' : 'Statuses'" padding="lg"><div class="flex flex-wrap gap-2"><StatusBadge status="active" /><StatusBadge status="pending" /><StatusBadge status="failed" /></div></BsCard>
+      <BsCard :title="isArabic ? 'سطح متداخل' : 'Nested surface'" variant="flat" padding="lg"><p class="text-sm text-fg-muted">{{ isArabic ? 'بدون ظل إضافي.' : 'No competing elevation.' }}</p></BsCard>
+    </section>
+
+    <section class="ls-card overflow-hidden">
+      <div class="flex flex-wrap items-center justify-between gap-3 p-5">
+        <h2 class="text-xl font-bold">{{ isArabic ? 'جدول البيانات' : 'Data table' }}</h2>
+        <div class="flex flex-wrap gap-2">
+          <BsButton v-for="state in (['data', 'loading', 'empty', 'error'] as const)" :key="state" size="sm" :variant="tableState === state ? 'primary' : 'default'" @click="tableState = state">{{ state }}</BsButton>
+          <BsButton variant="primary" data-testid="catalogue-add" @click="add">{{ isArabic ? 'إضافة سجل' : 'Add record' }}</BsButton>
+        </div>
+      </div>
+      <div class="px-5 pb-3"><BsTableDensity v-model="density" :label="isArabic ? 'كثافة الجدول' : 'Table density'" :compact-label="isArabic ? 'مضغوط' : 'Compact'" :comfortable-label="isArabic ? 'مريح' : 'Comfortable'" /></div>
+      <BsDataTable
+        v-model:selection="selected" v-model:filters="filters" :value="tableState === 'empty' ? [] : rows" data-key="id"
+        :search-fields="['name', 'category']" searchable exportable paginator :rows="2" :rows-per-page-options="[2, 5, 10]"
+        sort-mode="multiple" removable-sort resizable-columns reorderable-columns striped-rows selection-mode="multiple"
+        :meta-key-selection="false" :density="density" :loading="tableState === 'loading'"
+        :error="tableState === 'error' ? (isArabic ? 'تعذر تحميل المثال.' : 'The example could not be loaded.') : null"
+        :label="isArabic ? 'أمثلة المكونات' : 'Component examples'" @retry="tableState = 'data'"
+      >
         <Column selection-mode="multiple" header-style="width: 3rem" />
-        <Column field="name" :header="locale === 'ar' ? 'الاسم' : 'Name'" sortable />
-        <Column field="category" :header="locale === 'ar' ? 'التصنيف' : 'Category'" sortable />
-        <Column field="amount" :header="locale === 'ar' ? 'القيمة' : 'Value'" sortable body-class="ls-num" />
+        <Column field="name" :header="isArabic ? 'الاسم' : 'Name'" sortable />
+        <Column field="category" :header="isArabic ? 'التصنيف' : 'Category'" sortable />
+        <Column field="status" :header="isArabic ? 'الحالة' : 'Status'"><template #body="{ data: row }"><StatusBadge :status="row.status" /></template></Column>
+        <Column field="amount" :header="isArabic ? 'القيمة' : 'Value'" sortable body-class="ls-num" />
+        <Column :header="isArabic ? 'الإجراءات' : 'Actions'"><template #body="{ data: row }"><BsButton size="sm" @click="edit(row)">{{ isArabic ? 'تعديل' : 'Edit' }}</BsButton></template></Column>
       </BsDataTable>
     </section>
-    <section class="ls-card p-6 space-y-4" data-testid="foundation-patterns">
-      <h2 class="text-xl font-bold">{{ locale === 'ar' ? 'أنماط التفاعل' : 'Interaction patterns' }}</h2>
-      <p id="catalogue-choice-label">{{ locale === 'ar' ? 'الصنف' : 'Item' }}</p>
-      <BsSelect v-model="choice" :label="locale === 'ar' ? 'الصنف' : 'Item'" :options="choices" option-label="name" option-value="id" filter virtual />
-      <BsForm :pending="formPending" :error="formError" class="space-y-4" @submit="verifyForm">
-        <FloatingField :label="locale === 'ar' ? 'القيمة' : 'Value'"><input v-model="formValue" required class="ls-input"></FloatingField>
-        <BsButton type="submit">{{ ui('save') }}</BsButton>
-      </BsForm>
-      <BsButton :aria-pressed="formPending" @click="formPending = !formPending">{{ ui('loading') }}</BsButton>
-      <BsButton @click="toastSuccess(locale === 'ar' ? 'تم الحفظ' : 'Saved')">{{ locale === 'ar' ? 'إظهار إشعار' : 'Show notification' }}</BsButton>
-    </section>
-    <section class="ls-card p-6"><h2 class="mb-5 text-xl font-bold">{{ locale === 'ar' ? 'خطوات التسجيل' : 'Signup wizard' }}</h2><BsSignupWizard :step="step" :steps="[{ title: 'Account' }, { title: 'Workspace' }]" @back="back"><p>Step {{ step }}</p><button type="button" class="ls-btn" :disabled="step === 2" @click="advance()">{{ ui('next') }}</button></BsSignupWizard></section>
-    <section class="ls-card p-6"><button type="button" class="ls-btn" @click="confirmExample">{{ ui('confirm') }}</button><p class="mt-3" role="status">{{ confirmationResult }}</p></section>
+
+    <BsCard :title="isArabic ? 'النماذج والاختيار' : 'Forms and selection'" data-testid="foundation-patterns">
+      <div class="space-y-4">
+        <BsSelect v-model="choice" :label="isArabic ? 'الصنف' : 'Item'" :options="choices" option-label="name" option-value="id" filter virtual />
+        <BsForm :pending="formPending" :error="formError" class="space-y-4" @submit="verifyForm">
+          <FloatingField :label="isArabic ? 'القيمة' : 'Value'"><input v-model="formValue" required class="ls-input"></FloatingField>
+          <BsButton type="submit" variant="primary">{{ ui('save') }}</BsButton>
+        </BsForm>
+        <div class="flex flex-wrap gap-2"><BsButton :aria-pressed="formPending" @click="formPending = !formPending">{{ ui('loading') }}</BsButton><BsButton @click="toastSuccess(isArabic ? 'تم الحفظ' : 'Saved')">{{ isArabic ? 'إظهار إشعار' : 'Show notification' }}</BsButton></div>
+      </div>
+    </BsCard>
+
+    <BsCard :title="isArabic ? 'التأكيد والخطوات' : 'Confirmation and steps'">
+      <BsSignupWizard :step="step" :steps="[{ title: 'Account' }, { title: 'Workspace' }]" @back="back"><p>Step {{ step }}</p><BsButton :disabled="step === 2" @click="advance()">{{ ui('next') }}</BsButton></BsSignupWizard>
+      <div class="mt-5"><BsButton variant="danger" @click="confirmExample">{{ isArabic ? 'إزالة سجل' : 'Remove record' }}</BsButton><p class="mt-3" role="status">{{ confirmationResult }}</p></div>
+    </BsCard>
+
     <ToastHost />
-    <BsDialog v-model:visible="visible" :title="locale === 'ar' ? 'إضافة سجل' : 'Add record'" :dirty="dirty" :pending="pending"><form class="space-y-5" @submit.prevent="save"><FloatingField :label="locale === 'ar' ? 'الاسم' : 'Name'"><InputText id="catalogue-record-name" v-model="name" class="ls-input" required /></FloatingField><button class="ls-btn ls-btn-primary">{{ ui('save') }}</button></form></BsDialog>
+    <BsRecordActionDialog
+      v-model:visible="visible"
+      :title="mode === 'edit' ? (isArabic ? 'تعديل السجل' : 'Edit record') : (isArabic ? 'إضافة سجل' : 'Add record')"
+      :dirty="dirty" :pending="pending" :error="actionError" @submit="save"
+    >
+      <FloatingField :label="isArabic ? 'الاسم' : 'Name'"><InputText id="catalogue-record-name" v-model="name" class="ls-input" required /></FloatingField>
+    </BsRecordActionDialog>
   </div>
 </template>

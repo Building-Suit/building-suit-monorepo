@@ -37,7 +37,8 @@ test('module headers expose organization and applicable reporting context', () =
     assert.match(read(`app/pages/${path}.vue`), /<LedgerPageHeader/)
   }
   const header = read('app/components/LedgerPageHeader.vue')
-  assert.match(header, /current\?\.name/)
+  assert.match(header, /<BsPageHeader/)
+  assert.match(header, /current\.value\?\.name/)
   assert.match(header, /pageContext\.reportingPeriod/)
 })
 

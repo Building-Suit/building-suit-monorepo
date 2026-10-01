@@ -33,6 +33,8 @@ Shared component composition follows `atoms → molecules → organisms → temp
 
 Every public UI source has an explicit package export. Adding, moving, or removing a shared component requires updating `packages/ui/package.json`, the `/components` catalogue when its capability changes, affected consumers, and the canonical manifest when local migration debt changes.
 
+Thin product adapters may remain when they add domain context before composing the shared owner. Current examples map Automation execution states to `StatusBadge`, Ledger tenant/reporting context to `BsPageHeader`, and product legal metadata/content to `BsPublicLegalPage`; the adapters contain no duplicate standalone presentation.
+
 ## Design-system lock and verification
 
 The token source and brand values remain owner-controlled. Ownership enforcement and debt migration may consume canonical semantic tokens or remove duplicate local styling, but they do not authorize token-value changes or a visual redesign.

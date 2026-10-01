@@ -15,7 +15,7 @@ function component(file, language = 'en') {
   const code = ts.transpileModule(script.content, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText
   const module = { exports: {} }
   const copy = language === 'ar' ? { close: 'إغلاق', saving: 'جارٍ الحفظ…', search: 'بحث', empty: 'لا توجد سجلات' } : { close: 'Close', saving: 'Saving…', search: 'Search', empty: 'No records found' }
-  const globals = { ref: vue.ref, watch: vue.watch, nextTick: vue.nextTick, useId: vue.useId, useAttrs: vue.useAttrs, useToasts: () => ({ toasts: vue.ref([{ id: 1, title: 'Saved', tone: 'success' }]), dismiss: () => {} }), useUiCopy: () => key => copy[key] }
+  const globals = { ref: vue.ref, computed: vue.computed, watch: vue.watch, nextTick: vue.nextTick, useId: vue.useId, useAttrs: vue.useAttrs, useSlots: vue.useSlots, useI18n: () => ({ t: key => key, te: () => false }), useToasts: () => ({ toasts: vue.ref([{ id: 1, title: 'Saved', tone: 'success' }]), dismiss: () => {} }), useUiCopy: () => key => copy[key] }
   new Function('require', 'module', 'exports', ...Object.keys(globals), code)(require, module, module.exports, ...Object.values(globals))
   return module.exports.default
 }
@@ -34,6 +34,26 @@ test('PrimeVue button defaults safely and preserves explicit submit/label/disabl
   assert.match(button, / disabled/)
   assert.match(button, /ls-btn/)
   assert.match(await render('atoms/BsButton.vue', { type: 'submit' }, 'Save'), /type="submit"/)
+  assert.match(await render('atoms/BsButton.vue', { variant: 'danger', size: 'sm' }, 'Remove'), /ls-btn-danger/)
+  assert.match(await render('atoms/BsButton.vue', { variant: 'danger', size: 'sm' }, 'Remove'), /ls-btn-sm/)
+})
+
+test('status badges expose written labels and semantic tone instead of color alone', async () => {
+  const html = await render('atoms/StatusBadge.vue', { status: 'custom', label: 'Needs review', tone: 'warning', icon: false })
+  assert.match(html, />Needs review</)
+  assert.match(html, /--bs-status-warning-bg/)
+  assert.doesNotMatch(html, /<svg/)
+})
+
+test('canonical record actions compose dialog, form, guarded buttons, and shared close semantics', () => {
+  const source = readFileSync(new URL('../src/organisms/BsRecordActionDialog.vue', import.meta.url), 'utf8')
+  assert.match(source, /<BsDialog[^>]+:dirty="dirty"[^>]+:pending="pending"/s)
+  assert.match(source, /<BsForm[^>]+:pending="pending"[^>]+:error="error"/s)
+  assert.match(source, /<slot :close="close"/)
+  assert.match(source, /<BsButton type="submit"[^>]+:pending="pending"/s)
+  const confirmHost = readFileSync(new URL('../src/organisms/BsConfirmHost.vue', import.meta.url), 'utf8')
+  assert.match(confirmHost, /autofocus/)
+  assert.match(confirmHost, /current\.tone === 'danger'/)
 })
 
 for (const language of ['en', 'ar']) test(`form and select provide localized accessible markup (${language})`, async () => {

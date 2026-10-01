@@ -31,17 +31,15 @@
     },
     {
       "path": "apps/automation-suit/app/components/DashboardMetricCard.vue",
-      "classification": "shared-presentation-debt",
-      "rationale": "Generic metric-card presentation has no Automation domain orchestration.",
-      "migrationTarget": "packages/ui/src/molecules/BsKpiCard.vue",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "classification": "product-orchestration",
+      "rationale": "Adapts Automation metric values and danger state into the canonical BsKpiCard presentation.",
+      "approval": "BS-UI-CANONICAL-001"
     },
     {
       "path": "apps/automation-suit/app/components/DashboardStatusPill.vue",
-      "classification": "obsolete-duplicate",
-      "rationale": "Generic status-pill presentation duplicates the shared status badge role.",
-      "migrationTarget": "packages/ui/src/atoms/StatusBadge.vue",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "classification": "product-orchestration",
+      "rationale": "Maps Automation execution vocabulary to canonical StatusBadge tones without duplicating badge presentation.",
+      "approval": "BS-UI-CANONICAL-001"
     },
     {
       "path": "apps/ledger-suit/app/components/AccountActivityDialog.vue",
@@ -69,10 +67,9 @@
     },
     {
       "path": "apps/ledger-suit/app/components/AccountingTableDensity.vue",
-      "classification": "shared-presentation-debt",
-      "rationale": "The compact versus comfortable table-density selector is reusable presentation and interaction.",
-      "migrationTarget": "packages/ui/src/molecules/BsTableDensity.vue",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "classification": "product-orchestration",
+      "rationale": "Adapts Ledger's translated density labels and preference type into canonical BsTableDensity presentation.",
+      "approval": "BS-UI-CANONICAL-001"
     },
     {
       "path": "apps/ledger-suit/app/components/AddTransactionDialog.vue",
@@ -143,10 +140,9 @@
     },
     {
       "path": "apps/ledger-suit/app/components/LedgerPageHeader.vue",
-      "classification": "shared-presentation-debt",
-      "rationale": "Page title, context metadata, reporting period, and action-slot layout are reusable presentation.",
-      "migrationTarget": "packages/ui/src/organisms/BsPageHeader.vue",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "classification": "product-orchestration",
+      "rationale": "Builds Ledger tenant and reporting-period context, then delegates presentation to canonical BsPageHeader.",
+      "approval": "BS-UI-CANONICAL-001"
     },
     {
       "path": "apps/ledger-suit/app/components/ManualPaymentCheckout.vue",
@@ -186,10 +182,9 @@
     },
     {
       "path": "apps/ledger-suit/app/components/PublicLegalPage.vue",
-      "classification": "shared-presentation-debt",
-      "rationale": "The legal-document layout is duplicated across products and only receives content data.",
-      "migrationTarget": "packages/ui/src/templates/BsPublicLegalPage.vue",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "classification": "product-orchestration",
+      "rationale": "Supplies Ledger metadata, branding copy and its product-owned legal document to canonical BsPublicLegalPage.",
+      "approval": "BS-UI-CANONICAL-001"
     },
     {
       "path": "apps/ledger-suit/app/components/QuotaUsageMeter.vue",
@@ -284,10 +279,9 @@
     },
     {
       "path": "apps/shop-suit/app/components/PublicLegalPage.vue",
-      "classification": "shared-presentation-debt",
-      "rationale": "The legal-document layout is duplicated across products and only receives content data.",
-      "migrationTarget": "packages/ui/src/templates/BsPublicLegalPage.vue",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "classification": "product-orchestration",
+      "rationale": "Supplies Shop metadata, branding copy and its product-owned legal document to canonical BsPublicLegalPage.",
+      "approval": "BS-UI-CANONICAL-001"
     },
     {
       "path": "apps/shop-suit/app/components/PurchaseEntityPicker.vue",
