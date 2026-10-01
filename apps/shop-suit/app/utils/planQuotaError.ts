@@ -14,7 +14,7 @@ export function planQuotaResource(error: unknown): PlanResourceKey | null {
   for (const [code, resource] of Object.entries(legacyResources)) {
     if (message.includes(code)) return resource
   }
-  const match = message.match(/PLAN_RESOURCE_LIMIT_REACHED:(active_locations|active_members|active_products|active_services)(?::|\b)/)
+  const match = message.match(/PLAN_RESOURCE_LIMIT_REACHED:(active_locations|active_members|active_products|active_services|active_customers|active_suppliers)(?::|\b)/)
   return (match?.[1] as PlanResourceKey | undefined) ?? null
 }
 
@@ -27,6 +27,8 @@ export function planQuotaMessage(error: unknown, locale: string) {
     active_members: ['team member', 'أعضاء الفريق'],
     active_products: ['active product', 'المنتجات النشطة'],
     active_services: ['active service', 'الخدمات النشطة'],
+    active_customers: ['active customer', 'العملاء النشطون'],
+    active_suppliers: ['active supplier', 'الموردون النشطون'],
   }
   return arabic
     ? `وصلت إلى حد ${labels[resource][1]} في خطتك. أرشف أو أوقف عنصرًا غير مستخدم، أو اطلب خطة أعلى من صفحة الاشتراك والفوترة. لن يحذف النظام بياناتك تلقائيًا.`

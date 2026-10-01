@@ -119,7 +119,7 @@ begin
     jsonb_build_object(
       'displayName', 'Team', 'billingInterval', 'monthly', 'currency', 'EGP',
       'priceAmount', 749,
-      'resourceLimits', '{"active_locations":1,"active_members":8,"active_products":1000,"active_services":250}'::jsonb,
+      'resourceLimits', '{"active_locations":1,"active_members":8,"active_products":500,"active_services":100,"active_customers":2000,"active_suppliers":150}'::jsonb,
       'effectiveFrom', v_effective_from
     ));
   perform public.platform_plan_command(v_request, 'publish_terms',
@@ -127,7 +127,7 @@ begin
     jsonb_build_object(
       'displayName', 'Team', 'billingInterval', 'monthly', 'currency', 'EGP',
       'priceAmount', 749,
-      'resourceLimits', '{"active_locations":1,"active_members":8,"active_products":1000,"active_services":250}'::jsonb,
+      'resourceLimits', '{"active_locations":1,"active_members":8,"active_products":500,"active_services":100,"active_customers":2000,"active_suppliers":150}'::jsonb,
       'effectiveFrom', v_effective_from
     ));
   if (public.platform_plan_read('audit') ->> 'total')::integer <> v_before_events + 1 then

@@ -498,20 +498,36 @@ begin
     raise exception 'location restore changed historical operations';
   end if;
 
-  perform public.save_shop_location(v_shop, null, 'Third active branch', null, null, null);
+  begin
+    perform public.save_shop_location(
+      v_shop, null, 'Third active branch', null, null, null
+    );
+    raise exception 'location created over plan capacity';
+  exception when check_violation then
+    if sqlerrm not like 'PLAN_RESOURCE_LIMIT_REACHED:active_locations:%' then raise; end if;
+  end;
+
+  if (select count(*) from public.shop_locations
+      where shop_id = v_shop and status = 'active') <> 2 then
+    raise exception 'quota-rejected create changed location state';
+  end if;
+
   perform public.archive_shop_location(v_shop, v_branch);
+
   v_replacement := public.save_shop_location(
     v_shop, null, 'Capacity replacement', null, null, null
   );
+
   begin
     perform public.restore_shop_location(v_shop, v_branch);
     raise exception 'archived location restored over plan capacity';
   exception when check_violation then
     if sqlerrm not like 'PLAN_RESOURCE_LIMIT_REACHED:active_locations:%' then raise; end if;
   end;
+
   if (select status from public.shop_locations where id = v_branch) <> 'archived'
     or (select count(*) from public.shop_locations
-      where shop_id = v_shop and status = 'active') <> 3
+      where shop_id = v_shop and status = 'active') <> 2
     or v_replacement is null then
     raise exception 'quota-rejected restore changed location state';
   end if;

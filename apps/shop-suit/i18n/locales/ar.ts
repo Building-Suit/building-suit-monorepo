@@ -4,6 +4,22 @@ export default defineI18nLocale(async () => ({
     retry: 'حاول تاني',
   },
 
+  marketing: {
+    home: 'الصفحة الرئيسية لـ Shop Suit', about: 'من نحن', contact: 'تواصل معنا', terms: 'الشروط والأحكام', privacy: 'سياسة الخصوصية',
+    deliveryShipping: 'سياسة التسليم والشحن', refundCancellation: 'سياسة الاسترداد والإلغاء', footerNavigation: 'معلومات الشركة والسياسات', lastUpdated: 'آخر تحديث:',
+    contactMetaDescription: 'تواصل مع Shop Suit من Building Suit للاستفسار عن المنتج أو الاشتراك أو الفوترة أو الدعم.',
+    contactIntro: 'للاستفسار عن المنتج أو الاشتراك أو الفوترة أو الدعم الفني، تواصل معنا باستخدام البيانات الموثقة أدناه.',
+    contactFormTitle: 'إرسال طلب دعم', contactFormIntro: 'يُسجّل طلبك بأمان لفريق الدعم، وتُربط الطلبات المرسلة بعد تسجيل الدخول بمساحة متجر حالية عند توفرها.',
+    contactCategory: 'التصنيف', contactReplyEmail: 'بريد الرد', contactSubject: 'الموضوع', contactMessage: 'الرسالة',
+    contactConsent: 'أوافق على استخدام Building Suit لهذه البيانات للرد على طلبي.', contactSubmit: 'إرسال الطلب', contactPending: 'جارٍ الإرسال…',
+    contactSuccess: 'تم تسجيل طلبك، وسيتابع معك فريق الدعم عبر البريد الإلكتروني.',
+    contactValidation: 'اكتب بريد رد صالحًا وأكمل الموضوع والرسالة ووافق على إشعار الموافقة.',
+    contactError: 'تعذر تسجيل طلبك. حاول مرة أخرى.', contactRateLimited: 'انتظر بضع دقائق قبل إرسال طلب آخر.',
+    contactCategories: { general: 'عام', product: 'المنتج', billing: 'الفوترة', technical: 'دعم فني', account: 'الحساب' },
+    email: 'البريد الإلكتروني', phone: 'الهاتف', businessAddress: 'عنوان النشاط', businessIdentity: 'هوية النشاط',
+    businessIdentityBody: '{product} هو أحد منتجات العلامة التجارية الأم {parent}، التي تُستخدم هويتها أيضًا بصفتها هوية التاجر لمدفوعات المنتج.',
+  },
+
   customers: {
     title: 'العملاء',
     subtitle: 'احفظ بيانات عملائك عشان تلاقيها بسهولة في أي بيعة جديدة.',

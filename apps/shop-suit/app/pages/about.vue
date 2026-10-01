@@ -1,0 +1,7 @@
+<script setup lang="ts">
+import { legalDocuments } from '~/utils/legal'
+definePageMeta({ layout: 'landing' })
+const { locale } = useI18n()
+const document = computed(() => legalDocuments.about[locale.value === 'ar' ? 'ar' : 'en'])
+</script>
+<template><PublicLegalPage :document="document" /></template>

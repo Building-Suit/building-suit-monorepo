@@ -57,7 +57,7 @@ Evidence includes `20260911093000_plan_quota_engine.sql`,
 `20260912094117_monthly_posted_transaction_quota.sql`, and
 `20260913171823_launch_plan_concurrency_hardening.sql` in Ledger Suit.
 
-## Shop Suit adaptation still to decide
+## Shop Suit adaptation
 
 Map organization ownership to shop ownership and counterparties to customers plus
 vendors. Define whether monthly activity counts sales, purchases, or both, and
@@ -66,16 +66,38 @@ Ledger's chart-of-account quota is not automatically a product limit. Do not
 advertise storage, payroll, multi-currency, recurring billing, or imports before
 those capabilities exist and their limits are enforced.
 
-Task 08a provisionally sets active product caps at Basic 100 and Pro 1,000;
-Task 08b provisionally sets active service caps at Basic 50 and Pro 500. These
-are database-enforced operational values, not approved commercial promises.
+Task 08a provisionally set active product caps at Basic 100 and Pro 1,000;
+Task 08b provisionally set active service caps at Basic 50 and Pro 500. Those
+historical Basic/Pro values are not current commercial promises.
 
-The Basic/Pro prices and product/service limits remain current implementation
-evidence, not newly approved commercial terms. See [Task 02](02-database-contract.md).
+Basic/Pro prices remain historical implementation evidence and are not sold to
+new customers. The approved Shop catalog is now Solo at EGP 349/month or
+EGP 2,847.84/year, Team at EGP 699/month or EGP 5,703.84/year, and one Multi
+family with two-branch (EGP 999/month or EGP 8,151.84/year) and three-branch
+(EGP 1,199/month or EGP 9,783.84/year) variants. Yearly prices apply the approved
+32% reduction to monthly × 12. The selected immutable catalog term is authoritative
+for variant, interval, exact price, trial policy, and enforced resource limits.
 
 Ledger uses Paymob infrastructure; it remains outside Shop Suit's authorized
 architecture. Shop Suit uses an operator-configured InstaPay/manual-transfer
 notice, external manual verification, and audited operator-only activation. It
 does not expose checkout/webhook behavior, automatic bank verification, or
-customer self-activation. Exact Shop Suit prices and final quotas remain separate
-commercial decisions.
+customer self-activation.
+
+## Approved six-resource limits
+
+| Resource | Solo | Team | Multi 2 | Multi 3 |
+|---|---:|---:|---:|---:|
+| Active locations | 1 | 1 | 2 | 3 |
+| Members including owner | 2 | 8 | 16 | 25 |
+| Active products | 250 | 500 | 1,000 | 2,000 |
+| Active services | 50 | 100 | 200 | 300 |
+| Active customers | 500 | 2,000 | 5,000 | 10,000 |
+| Active suppliers | 50 | 150 | 300 | 500 |
+
+The database is authoritative for all six resources. Active-customer and
+active-supplier writes use the same per-shop advisory-lock boundary as the
+other resources. Archiving preserves history and frees capacity; plan changes
+report blockers and never delete, archive, reassign, or otherwise mutate
+business records automatically. UI counters are advisory views of that server
+state.

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" width="1200" height="320">
+  <defs><linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#EBB45A"/><stop offset="1" stop-color="#D89B42"/></linearGradient></defs>
+  <g transform="translate(28 24) scale(.53)">
+    <rect x="48" y="48" width="416" height="416" rx="112" fill="#141416" stroke="#D89B42" stroke-width="14"/>
+    <path d="M150 205h212l-18 190H168l-18-190Z" fill="#F7F8FA"/>
+    <path d="M196 217v-34c0-38 24-66 60-66s60 28 60 66v34" fill="none" stroke="url(#gold)" stroke-width="24" stroke-linecap="round"/>
+    <path d="M310 265c-15-12-34-18-54-18-27 0-45 11-45 27 0 17 17 22 48 28 37 7 61 19 61 48 0 31-28 51-66 51-27 0-54-9-73-27" fill="none" stroke="#16293B" stroke-width="22" stroke-linecap="round"/>
+  </g>
+  <text x="340" y="158" fill="#F7F8FA" font-family="Manrope,Arial,sans-serif" font-size="112" font-weight="800" letter-spacing="-4">Shop</text>
+  <text x="615" y="158" fill="#EBB45A" font-family="Manrope,Arial,sans-serif" font-size="112" font-weight="800" letter-spacing="-4">Suit</text>
+  <rect x="346" y="188" width="94" height="7" rx="3.5" fill="#F7F8FA"/><rect x="448" y="188" width="54" height="7" rx="3.5" fill="#D89B42"/>
+  <text x="344" y="246" fill="#A1A1AA" font-family="Manrope,Arial,sans-serif" font-size="31" font-weight="600" letter-spacing="7">BY BUILDING SUIT</text>
+</svg>

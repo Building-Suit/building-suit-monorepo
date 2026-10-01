@@ -29,7 +29,7 @@ test('full Shop regression owns the lifecycle suite and all required races', asy
   }
   assert.match(runner, /test-shop-plan-limits-local\.mjs/)
   assert.match(runner, /test-shop-plan-billing-local\.mjs/)
-  for (const resource of ['active_locations', 'active_members', 'active_products', 'active_services']) assert.match(limitRace, new RegExp(resource))
+  for (const resource of ['active_locations', 'active_members', 'active_products', 'active_services', 'active_customers', 'active_suppliers']) assert.match(limitRace, new RegExp(resource))
   assert.match(lifecycle, /trial_end_at <> v_subscription\.trial_start_at \+ interval '7 days'/)
   assert.match(lifecycle, /First barber legacy fixture/)
   assert.match(lifecycle, /perform shop_private\.reconcile_plan_catalog\(\)/)
