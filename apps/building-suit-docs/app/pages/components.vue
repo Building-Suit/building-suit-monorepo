@@ -108,7 +108,6 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
         <h2 class="text-xl font-bold">{{ isArabic ? 'جدول البيانات' : 'Data table' }}</h2>
         <div class="flex flex-wrap gap-2">
           <BsButton v-for="state in (['data', 'loading', 'empty', 'error'] as const)" :key="state" size="sm" :variant="tableState === state ? 'primary' : 'default'" @click="tableState = state">{{ state }}</BsButton>
-          <BsButton variant="primary" data-testid="catalogue-add" @click="add">{{ isArabic ? 'إضافة سجل' : 'Add record' }}</BsButton>
         </div>
       </div>
       <div class="px-5 pb-3"><BsTableDensity v-model="density" :label="isArabic ? 'كثافة الجدول' : 'Table density'" :compact-label="isArabic ? 'مضغوط' : 'Compact'" :comfortable-label="isArabic ? 'مريح' : 'Comfortable'" /></div>
@@ -118,14 +117,17 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
         sort-mode="multiple" removable-sort resizable-columns reorderable-columns striped-rows selection-mode="multiple"
         :meta-key-selection="false" :density="density" :loading="tableState === 'loading'"
         :error="tableState === 'error' ? (isArabic ? 'تعذر تحميل المثال.' : 'The example could not be loaded.') : null"
-        :label="isArabic ? 'أمثلة المكونات' : 'Component examples'" @retry="tableState = 'data'"
+        :label="isArabic ? 'أمثلة المكونات' : 'Component examples'"
+        :capabilities="{ insert: true, edit: true }"
+        @create="add"
+        @edit="edit"
+        @retry="tableState = 'data'"
       >
         <Column selection-mode="multiple" header-style="width: 3rem" />
         <Column field="name" :header="isArabic ? 'الاسم' : 'Name'" sortable />
         <Column field="category" :header="isArabic ? 'التصنيف' : 'Category'" sortable />
         <Column field="status" :header="isArabic ? 'الحالة' : 'Status'"><template #body="{ data: row }"><StatusBadge :status="row.status" /></template></Column>
         <Column field="amount" :header="isArabic ? 'القيمة' : 'Value'" sortable body-class="ls-num" />
-        <Column :header="isArabic ? 'الإجراءات' : 'Actions'"><template #body="{ data: row }"><BsButton size="sm" @click="edit(row)">{{ isArabic ? 'تعديل' : 'Edit' }}</BsButton></template></Column>
       </BsDataTable>
     </section>
 

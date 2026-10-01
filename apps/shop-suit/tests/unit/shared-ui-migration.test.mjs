@@ -51,6 +51,7 @@ test('Shop auth routes use the canonical shared auth and signup contracts', () =
 test('standard Shop record actions use the canonical dialog and controller', () => {
   const expected = [
     'components/PlatformPlanAdmin.vue',
+    'pages/catalog-import.vue',
     'pages/appointments/index.vue',
     'pages/cash-shifts.vue',
     'pages/customers/[id].vue',
@@ -72,6 +73,32 @@ test('standard Shop record actions use the canonical dialog and controller', () 
     assert.match(source, /useRecordAction\(/, `${file} does not use the shared controller`)
     assert.match(source, /<BsRecordActionDialog\b/, `${file} does not use the shared record-action dialog`)
   }
+})
+
+test('Shop catalog category CRUD uses the canonical record dialog', () => {
+  const catalog = sources.find(item => item.file === 'pages/catalog-import.vue')?.source || ''
+  assert.match(catalog, /useRecordAction\(/)
+  assert.match(catalog, /<BsRecordActionDialog v-model:visible="categoryOpen"/)
+  assert.doesNotMatch(catalog, /<BsForm class="mt-4 flex flex-col gap-3 md:flex-row"/)
+})
+
+test('Shop CRUD tables use shared capabilities, toolbar controls, pagination, and row actions', () => {
+  for (const file of ['pages/products/index.vue', 'pages/services/index.vue']) {
+    const source = sources.find(item => item.file === file)?.source || ''
+    assert.match(source, /<BsDataTable[\s\S]+:capabilities="\{ insert:/, `${file} lacks shared capabilities`)
+    assert.match(source, /searchable/, `${file} lacks shared search`)
+    assert.match(source, /paginator/, `${file} lacks shared pagination`)
+    assert.match(source, /@create=/, `${file} lacks shared create action`)
+    assert.match(source, /@edit=/, `${file} lacks shared edit action`)
+    assert.doesNotMatch(source, /<nav v-if="[^"]*total > pageSize"/, `${file} retains local pagination`)
+  }
+  const customers = sources.find(item => item.file === 'pages/customers/index.vue')?.source || ''
+  assert.match(customers, /:capabilities="\{ insert: canManage \}"/)
+  assert.match(customers, /@create="openCreate"/)
+  const settings = sources.find(item => item.file === 'pages/settings.vue')?.source || ''
+  assert.match(settings, /<BsDataTable[\s\S]+copy\.locationsTitle/)
+  assert.match(settings, /<BsRecordActionDialog v-model:visible="locationDialogOpen"/)
+  assert.doesNotMatch(settings, /<BsForm v-if="canManage && \(editingLocationId/)
 })
 
 test('remaining direct dialogs are materially different shared-overlay workflows', () => {

@@ -164,9 +164,6 @@ function formatDate(value: string) {
         <h1 class="text-3xl font-extrabold tracking-tight">{{ t('customers.title') }}</h1>
         <p class="mt-2 text-sm text-muted-foreground">{{ t('customers.subtitle') }}</p>
       </div>
-      <BsButton v-if="current && canManage" type="button" class="ls-btn ls-btn-primary" @click="openCreate">
-        {{ t('customers.add') }}
-      </BsButton>
     </header>
 
     <div v-if="!current && !shopLoading" class="ls-card p-8 text-center text-sm">
@@ -195,20 +192,15 @@ function formatDate(value: string) {
       </BsRecordActionDialog>
 
       <div v-if="!customerPage?.permissionDenied" class="overflow-hidden ls-card">
-        <div class="flex flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-center">
-          <input v-model="search" type="search" :placeholder="t('customers.search')" :aria-label="t('customers.search')" class="ls-input sm:max-w-md">
-          <select v-model="statusFilter" :aria-label="t('customers.status')" class="ls-select sm:ms-auto sm:w-auto">
-            <option value="active">{{ t('customers.active') }}</option>
-            <option value="archived">{{ t('customers.archived') }}</option>
-            <option value="all">{{ t('customers.all') }}</option>
-          </select>
-        </div>
-
         <BsDataTable
           :value="customerPage?.items ?? []"
           :loading="pending"
           :error="error ? t('customers.loadError') : null"
           :label="t('customers.title')"
+          :capabilities="{ insert: canManage }"
+          :action-labels="{ insert: t('customers.add') }"
+          searchable
+          :search-label="t('customers.search')"
           data-key="id"
           lazy
           paginator
@@ -217,9 +209,24 @@ function formatDate(value: string) {
           :total-records="customerPage?.total ?? 0"
           :always-show-paginator="false"
           :row-class="() => 'border-t border-border'"
+          @search="value => search = value"
           @page="handlePage"
           @retry="refresh()"
+          @create="openCreate"
         >
+          <template #filters>
+            <BsSelect
+              v-model="statusFilter"
+              :label="t('customers.status')"
+              :options="[
+              { value: 'active', label: t('customers.active') },
+              { value: 'archived', label: t('customers.archived') },
+              { value: 'all', label: t('customers.all') },
+              ]"
+              option-label="label"
+              option-value="value"
+            />
+          </template>
           <Column header-class="px-5 py-3 text-start" body-class="px-5 py-4">
             <template #header>{{ t('customers.name') }}</template>
             <template #body="{ data: customer }">

@@ -28,6 +28,8 @@ const parsingError = ref('')
 const pending = ref(false)
 const categoryName = ref('')
 const categoryPending = ref(false)
+const categoryError = ref('')
+const { visible: categoryOpen, dirty: categoryDirty, complete: completeCategory } = useRecordAction(() => ({ name: categoryName.value }))
 const categoryFilter = ref('')
 const reportFrom = ref(new Date(Date.now() - 29 * 86400000).toISOString().slice(0, 10))
 const reportTo = ref(new Date().toISOString().slice(0, 10))
@@ -126,12 +128,13 @@ async function addCategory() {
   if (!currentId.value || categoryPending.value || categoryName.value.trim().length < 2) return
   const inScope = captureScope()
   categoryPending.value = true
+  categoryError.value = ''
   try {
     const { error } = await rpc.rpc('save_catalog_category', { p_shop_id: currentId.value, p_category_id: null, p_name: categoryName.value.trim() })
     if (!inScope()) return
     if (error) throw error
-    categoryName.value = ''; await refreshCategories()
-  } catch { if (inScope()) pushToast({ tone: 'error', title: copy.value.categoryError }) }
+    categoryName.value = ''; await refreshCategories(); completeCategory()
+  } catch { if (inScope()) categoryError.value = copy.value.categoryError }
   finally { categoryPending.value = false }
 }
 
@@ -169,10 +172,13 @@ function money(value: number) { return new Intl.NumberFormat(isArabic.value ? 'a
     <p v-if="!current && !shopLoading" class="ls-card p-8 text-center text-sm">{{ copy.noShop }}</p>
     <template v-else-if="current">
       <section class="ls-card p-5">
-        <h2 class="text-lg font-extrabold">{{ copy.categories }}</h2>
-        <BsForm class="mt-4 flex flex-wrap gap-2" :pending="categoryPending" @submit="addCategory"><input v-model="categoryName" :aria-label="copy.categoryName" class="ls-input max-w-sm" minlength="2" maxlength="80" required :placeholder="copy.categoryName"><BsButton type="submit" :pending="categoryPending">{{ copy.addCategory }}</BsButton></BsForm>
+        <div class="flex flex-wrap items-center justify-between gap-3"><h2 class="text-lg font-extrabold">{{ copy.categories }}</h2><BsButton variant="primary" @click="categoryName = ''; categoryError = ''; categoryOpen = true">{{ copy.addCategory }}</BsButton></div>
         <div class="mt-3 flex flex-wrap gap-2"><span v-for="category in categories" :key="category.id" class="ls-badge bg-muted">{{ category.name }}</span></div>
       </section>
+
+      <BsRecordActionDialog v-model:visible="categoryOpen" :title="copy.addCategory" :dirty="categoryDirty" :pending="categoryPending" :error="categoryError" :submit-label="copy.addCategory" @submit="addCategory">
+        <BsField :label="copy.categoryName"><BsInput v-model="categoryName" minlength="2" maxlength="80" required /></BsField>
+      </BsRecordActionDialog>
 
       <section class="ls-card p-5">
         <div class="flex flex-wrap items-center justify-between gap-3"><h2 class="text-lg font-extrabold">{{ copy.importTitle }}</h2><BsButton severity="secondary" @click="template">{{ copy.template }}</BsButton></div>

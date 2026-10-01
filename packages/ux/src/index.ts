@@ -4,6 +4,56 @@ export function csvCell(value: unknown): string {
   return typeof value === 'string' && /^[\s]*[=+@-]/.test(text) ? `'${text}` : text
 }
 
+export type BsDataTableRowAction = 'edit' | 'delete' | 'archive' | 'void'
+
+/**
+ * Presentation capabilities are deliberately separate from server authority.
+ * Products derive these flags from trusted access state and still authorize
+ * every command on the server.
+ */
+export interface BsDataTableCapabilities {
+  insert?: boolean
+  edit?: boolean
+  delete?: boolean
+  archive?: boolean
+  void?: boolean
+  export?: boolean
+  select?: boolean
+}
+
+export interface BsDataTableActionLabels {
+  insert?: string
+  edit?: string
+  delete?: string
+  archive?: string
+  void?: string
+  actions?: string
+}
+
+export interface BsDataTablePageQuery {
+  first: number
+  rows: number
+  page: number
+  pageCount: number
+}
+
+export interface BsDataTableSortQuery {
+  sortField?: string | ((item: unknown) => string) | null
+  sortOrder?: 0 | 1 | -1 | null
+}
+
+export interface BsDataTableFilterQuery extends BsDataTableSortQuery {
+  filters: Record<string, unknown>
+}
+
+/** Optional typed bridge for a product-owned lazy query adapter. */
+export interface BsDataTableQueryAdapter {
+  search?: (value: string) => void
+  page?: (event: BsDataTablePageQuery) => void
+  sort?: (event: BsDataTableSortQuery) => void
+  filter?: (event: BsDataTableFilterQuery) => void
+}
+
 export type ConfirmationTone = 'default' | 'danger'
 
 export interface ConfirmationRequest {

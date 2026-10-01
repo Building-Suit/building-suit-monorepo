@@ -115,3 +115,48 @@ test('Shop authenticated shell shares mobile drawer, user menu, settings, and RT
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
   await expect(userMenu.getByRole('menuitem', { name: 'تسجيل الخروج' })).toBeVisible()
 })
+
+test('Shop capability-driven table create and edit actions share one record modal', async ({ page }) => {
+  const service = {
+    id: 'service-foundation', name: 'Foundation service', description: null,
+    baseSalePrice: 75, defaultDiscountType: 'amount', defaultDiscountValue: 0,
+    schedulingEnabled: false, durationMinutes: null, cleanupMinutes: 0,
+    locationIds: [], staffMembershipIds: [], categoryId: null, categoryName: null,
+  }
+  await pilotFixture(page, 'en', 'owner', (name) => {
+    if (name === 'shop_permission_access') return { 'services.manage': true }
+    if (name === 'list_catalog_categories') return []
+    if (name === 'list_services_by_category') return { items: [service], total: 1, page: 1, pageSize: 20 }
+    if (name === 'service_scheduling_options') return { locations: [], staff: [] }
+  })
+  await page.locator('#__nuxt').evaluate((root) => {
+    const app = (root as HTMLElement & {
+      __vue_app__?: {
+        config: {
+          globalProperties: {
+            $router?: { push: (to: string) => Promise<unknown> }
+          }
+        }
+      }
+    }).__vue_app__
+
+    void app?.config.globalProperties.$router?.push('/services')
+  })
+  await expect(page).toHaveURL(/\/services(?:[?#]|$)/)
+  const table = page.locator('.bs-data-table')
+  await expect(table).toContainText('Foundation service')
+  const navigation = page.locator('#bs-primary-navigation')
+  const navigationBox = await navigation.boundingBox()
+  const logoBox = await navigation.locator('.ls-logo-image:visible').boundingBox()
+  expect(navigationBox).not.toBeNull()
+  expect(logoBox).not.toBeNull()
+  expect(logoBox!.x).toBeGreaterThanOrEqual(navigationBox!.x)
+  expect(logoBox!.x + logoBox!.width).toBeLessThanOrEqual(navigationBox!.x + navigationBox!.width)
+  await table.getByRole('button', { name: 'Add service' }).click()
+  const createDialog = page.getByRole('dialog', { name: 'Add service' })
+  await expect(createDialog).toBeVisible()
+  await createDialog.getByRole('button', { name: 'Cancel' }).click()
+  await expect(createDialog).toBeHidden()
+  await table.getByRole('button', { name: 'Edit' }).click()
+  await expect(page.getByRole('dialog', { name: 'Edit' })).toBeVisible()
+})

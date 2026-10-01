@@ -332,7 +332,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
           <input v-model="showArchived" type="checkbox" class="rounded-sm border-[var(--bs-border)]">
           {{ t('accounts.showArchived') }}
         </label>
-        <BsButton v-if="can('accounts.create')" type="button" class="ls-btn ls-btn-primary" :disabled="!hydrated" @click="openCreate()">
+        <BsButton v-if="view === 'tree' && can('accounts.create')" type="button" class="ls-btn ls-btn-primary" :disabled="!hydrated" @click="openCreate()">
           {{ t('accounts.add') }}
         </BsButton>
       </template>
@@ -421,9 +421,15 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
           :always-show-paginator="false"
           :value="filteredRows"
           data-key="account_id"
+          :capabilities="{ insert: can('accounts.create'), edit: can('accounts.update'), archive: can('accounts.archive') }"
+          :action-labels="{ insert: t('accounts.add'), edit: t('accounts.edit'), archive: t('accounts.archive'), actions: t('accounts.actions') }"
+          :can-row-action="(action, account) => action !== 'archive' || !account.is_archived"
           table-class="ls-table"
           :table-props="{ 'aria-label': t('accounts.caption', { group: activeGroup.label }) }"
           :pt="{ tableContainer: { class: 'overflow-x-auto', tabindex: 0, role: 'region', 'aria-label': t('accounts.tableScroll') } }"
+          @create="openCreate()"
+          @edit="openEdit"
+          @archive="archiveAccount"
         >
           <Column field="code" :header="t('accounts.code')" sortable :pt="sortColumnPt">
             <template #body="{ data: account }">
@@ -470,13 +476,9 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
               </template>
             </template>
           </Column>
-          <Column v-if="can('accounts.read')" :header="t('accounts.actions')" body-class="whitespace-nowrap text-end">
-            <template #body="{ data: account }">
+          <template #row-actions="{ row: account }">
               <BsButton v-if="['posting', 'control'].includes(account.account_role)" type="button" class="ls-btn ls-btn-sm me-1" @click="statementAccount = account">{{ t('statementClassification.title') }}</BsButton>
-              <BsButton v-if="can('accounts.update')" type="button" class="ls-btn ls-btn-sm" @click="openEdit(account)">{{ t('accounts.edit') }}</BsButton>
-              <BsButton v-if="can('accounts.archive') && !account.is_archived" type="button" class="ls-btn ls-btn-sm ms-1" @click="archiveAccount(account)">{{ t('accounts.archive') }}</BsButton>
-            </template>
-          </Column>
+          </template>
           <template #paginatorcontainer="{ page, pageCount, prevPageCallback, nextPageCallback }">
             <nav class="flex flex-wrap items-center justify-center gap-3 border-t border-[var(--bs-border)] p-3" :aria-label="t('accounts.pages')">
               <BsButton type="button" class="ls-btn ls-btn-sm" :disabled="page === 0" @click="prevPageCallback">{{ t('accounts.previousPage') }}</BsButton>

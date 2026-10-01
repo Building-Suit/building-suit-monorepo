@@ -17,6 +17,8 @@ const valueForm = reactive({ id: '', kind: 'cost_center' as DimensionKind, code:
 const { visible, pending: saving, dirty, open, complete } = useRecordAction(() => valueForm)
 const formError = ref('')
 const policy = reactive({ accountId: '', kind: 'cost_center' as DimensionKind, requirement: 'optional' as 'optional' | 'required' })
+const policyError = ref('')
+const { visible: policyOpen, pending: policySaving, dirty: policyDirty, complete: completePolicy } = useRecordAction(() => policy)
 const reportFilter = reactive({ kind: 'cost_center' as DimensionKind, report: 'trial_balance' as 'general_ledger' | 'trial_balance' | 'profit_loss' | 'balance_sheet' | 'cash_flow', from: `${new Date().getUTCFullYear()}-01-01`, to: new Date().toISOString().slice(0, 10), valueId: '' })
 const reconciled = computed(() => dimensionReportReconciles(report.value))
 watch(() => reportFilter.kind, () => { reportFilter.valueId = ''; report.value = null })
@@ -40,8 +42,14 @@ async function archive(value: DimensionValueRow) {
   catch { toasts.error(t('dimensions.errors.title'), t('dimensions.errors.archive')) }
 }
 async function savePolicy() {
-  try { await command('set_account_dimension_policy', { p_account_id: policy.accountId, p_kind: policy.kind, p_requirement: policy.requirement }); toasts.success(t('dimensions.policySaved')) }
-  catch { toasts.error(t('dimensions.errors.title'), t('dimensions.errors.policy')) }
+  policyError.value = ''; policySaving.value = true
+  try { await command('set_account_dimension_policy', { p_account_id: policy.accountId, p_kind: policy.kind, p_requirement: policy.requirement }); completePolicy(); toasts.success(t('dimensions.policySaved')) }
+  catch { policyError.value = t('dimensions.errors.policy') }
+  finally { policySaving.value = false }
+}
+function editPolicy(row?: { account_id: string; kind: DimensionKind; requirement: 'optional' | 'required' }) {
+  Object.assign(policy, row ? { accountId: row.account_id, kind: row.kind, requirement: row.requirement } : { accountId: '', kind: 'cost_center', requirement: 'optional' })
+  policyError.value = ''; policyOpen.value = true
 }
 async function runReport() {
   try { await loadReport({ p_report_kind: reportFilter.report, p_dimension_kind: reportFilter.kind, p_from_date: reportFilter.from, p_to_date: reportFilter.to, p_dimension_value_id: reportFilter.valueId || null }) }
@@ -64,19 +72,17 @@ watch([currentId, () => user.value?.id], () => { visible.value = false; tab.valu
         </aside>
 
         <section v-if="tab==='values'" class="ls-card overflow-hidden">
-          <div class="flex items-center justify-between p-4"><h2 class="text-h2 font-bold">{{ t('dimensions.values') }}</h2><BsButton type="submit" v-if="can('dimensions.manage')" class="ls-btn ls-btn-primary" :disabled="readOnly" @click="editValue()">{{ t('dimensions.add') }}</BsButton></div>
-          <BsDataTable :value="workspace.values" data-key="id" :table-props="{ 'aria-label': t('dimensions.values') }"><template #empty>{{ t('dimensions.empty') }}</template>
+          <h2 class="p-4 text-h2 font-bold">{{ t('dimensions.values') }}</h2>
+          <BsDataTable :value="workspace.values" data-key="id" :label="t('dimensions.values')" :capabilities="{ insert: can('dimensions.manage') && !readOnly, edit: can('dimensions.manage') && !readOnly, archive: can('dimensions.manage') && !readOnly }" :action-labels="{ insert: t('dimensions.add'), edit: t('dimensions.edit'), archive: t('dimensions.archive') }" :can-row-action="(_action, row) => row.status === 'active'" @create="editValue()" @edit="editValue" @archive="archive"><template #empty>{{ t('dimensions.empty') }}</template>
             <Column field="kind" :header="t('dimensions.kind')"><template #body="{ data: row }">{{ t(`dimensions.kinds.${row.kind}`) }}</template></Column>
             <Column field="code" :header="t('dimensions.code')" /><Column field="name" :header="t('dimensions.name')" />
             <Column field="status" :header="t('dimensions.statusLabel')"><template #body="{ data: row }">{{ t(`dimensions.status.${row.status}`) }}</template></Column>
-            <Column :header="t('dimensions.actions')"><template #body="{ data: row }"><div v-if="row.status==='active' && can('dimensions.manage')" class="flex gap-2"><BsButton type="submit" class="ls-btn" :disabled="readOnly" @click="editValue(row)">{{ t('dimensions.edit') }}</BsButton><BsButton type="submit" class="ls-btn" :disabled="readOnly" @click="archive(row)">{{ t('dimensions.archive') }}</BsButton></div></template></Column>
           </BsDataTable>
         </section>
 
         <section v-else-if="tab==='policies'" class="ls-card p-5 space-y-4">
           <h2 class="text-h2 font-bold">{{ t('dimensions.policies') }}</h2><p class="text-fg-muted">{{ t('dimensions.policiesHint') }}</p>
-          <BsForm class="grid gap-4 md:grid-cols-4" @submit.prevent="savePolicy"><FloatingField :label="t('dimensions.account')"><select v-model="policy.accountId" class="ls-input" required><option value="" /><option v-for="account in workspace.accounts.filter(item=>!item.archived)" :key="account.id" :value="account.id">{{ account.code }} · {{ account.name }}</option></select></FloatingField><FloatingField :label="t('dimensions.kind')"><select v-model="policy.kind" class="ls-input"><option value="cost_center">{{ t('dimensions.kinds.cost_center') }}</option><option value="project">{{ t('dimensions.kinds.project') }}</option></select></FloatingField><FloatingField :label="t('dimensions.requirement')"><select v-model="policy.requirement" class="ls-input"><option value="optional">{{ t('dimensions.requirements.optional') }}</option><option value="required">{{ t('dimensions.requirements.required') }}</option></select></FloatingField><BsButton type="submit" v-if="can('dimensions.configure')" class="ls-btn ls-btn-primary self-end" :disabled="readOnly">{{ t('common.save') }}</BsButton></BsForm>
-          <BsDataTable :value="workspace.policies" data-key="account_id" :table-props="{ 'aria-label': t('dimensions.policies') }"><Column :header="t('dimensions.account')"><template #body="{ data: row }">{{ workspace.accounts.find(account=>account.id===row.account_id)?.name }}</template></Column><Column :header="t('dimensions.kind')"><template #body="{ data: row }">{{ t(`dimensions.kinds.${row.kind}`) }}</template></Column><Column :header="t('dimensions.requirement')"><template #body="{ data: row }">{{ t(`dimensions.requirements.${row.requirement}`) }}</template></Column></BsDataTable>
+          <BsDataTable :value="workspace.policies" data-key="account_id" :label="t('dimensions.policies')" :capabilities="{ insert: can('dimensions.configure') && !readOnly, edit: can('dimensions.configure') && !readOnly }" :action-labels="{ insert: t('dimensions.add'), edit: t('dimensions.edit') }" @create="editPolicy()" @edit="editPolicy"><Column :header="t('dimensions.account')"><template #body="{ data: row }">{{ workspace.accounts.find(account=>account.id===row.account_id)?.name }}</template></Column><Column :header="t('dimensions.kind')"><template #body="{ data: row }">{{ t(`dimensions.kinds.${row.kind}`) }}</template></Column><Column :header="t('dimensions.requirement')"><template #body="{ data: row }">{{ t(`dimensions.requirements.${row.requirement}`) }}</template></Column></BsDataTable>
         </section>
 
         <section v-else class="space-y-4">
@@ -90,6 +96,11 @@ watch([currentId, () => user.value?.id], () => { visible.value = false; tab.valu
 
     <BsRecordActionDialog v-model:visible="visible" :title="valueForm.id ? t('dimensions.edit') : t('dimensions.add')" :pending="saving" :dirty="dirty" :error="formError" :submit-label="t('common.save')" :cancel-label="t('common.cancel')" :submit-disabled="readOnly" @submit="saveValue">
       <FloatingField :label="t('dimensions.kind')"><select v-model="valueForm.kind" class="ls-input" :disabled="Boolean(valueForm.id)"><option value="cost_center">{{ t('dimensions.kinds.cost_center') }}</option><option value="project">{{ t('dimensions.kinds.project') }}</option></select></FloatingField><FloatingField :label="t('dimensions.code')"><input v-model="valueForm.code" class="ls-input" required maxlength="50"></FloatingField><FloatingField :label="t('dimensions.name')"><input v-model="valueForm.name" class="ls-input" required maxlength="160"></FloatingField><FloatingField :label="t('dimensions.description')"><textarea v-model="valueForm.description" class="ls-input" maxlength="500" /></FloatingField>
+    </BsRecordActionDialog>
+    <BsRecordActionDialog v-model:visible="policyOpen" :title="t('dimensions.policies')" :pending="policySaving" :dirty="policyDirty" :error="policyError" :submit-label="t('common.save')" :cancel-label="t('common.cancel')" :submit-disabled="readOnly" @submit="savePolicy">
+      <FloatingField :label="t('dimensions.account')"><select v-model="policy.accountId" class="ls-input" required><option value="" /><option v-for="account in workspace?.accounts.filter(item=>!item.archived)" :key="account.id" :value="account.id">{{ account.code }} · {{ account.name }}</option></select></FloatingField>
+      <FloatingField :label="t('dimensions.kind')"><select v-model="policy.kind" class="ls-input"><option value="cost_center">{{ t('dimensions.kinds.cost_center') }}</option><option value="project">{{ t('dimensions.kinds.project') }}</option></select></FloatingField>
+      <FloatingField :label="t('dimensions.requirement')"><select v-model="policy.requirement" class="ls-input"><option value="optional">{{ t('dimensions.requirements.optional') }}</option><option value="required">{{ t('dimensions.requirements.required') }}</option></select></FloatingField>
     </BsRecordActionDialog>
   </div>
 </template>

@@ -144,6 +144,23 @@ test('canonical record actions compose dialog, form, guarded buttons, and shared
   assert.match(confirmHost, /current\.tone === 'danger'/)
 })
 
+test('canonical data table owns typed CRUD capabilities, query adapters, and action placement', () => {
+  const source = readFileSync(new URL('../src/organisms/BsDataTable.vue', import.meta.url), 'utf8')
+  const contract = readFileSync(new URL('../../ux/src/index.ts', import.meta.url), 'utf8')
+  for (const capability of ['insert', 'edit', 'delete', 'archive', 'void', 'export', 'select']) {
+    assert.match(contract, new RegExp(`${capability}\\?: boolean`))
+  }
+  for (const event of ['create', 'edit', 'delete', 'archive', 'void']) {
+    assert.match(source, new RegExp(`${event}: \\[`))
+  }
+  assert.match(contract, /interface BsDataTableQueryAdapter/)
+  assert.match(source, /<BsToolbar\b/)
+  assert.match(source, /<BsStateSurface v-if="error"/)
+  assert.match(source, /<Column v-if="rowActions\.length"/)
+  assert.match(source, /<BsButton v-if="capabilities\.insert"/)
+  assert.doesNotMatch(source, /<(?:button|InputText)\b/)
+})
+
 for (const language of ['en', 'ar']) test(`form and select provide localized accessible markup (${language})`, async () => {
   const html = await render('organisms/BsForm.vue', { pending: true, error: 'Check value', class: 'grid gap-4' }, vue.h('input', { required: true, 'aria-label': 'Value' }), language)
   assert.match(html, /aria-busy="true"/)

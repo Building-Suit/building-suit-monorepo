@@ -48,9 +48,11 @@ async function openAuthenticatedShell(page: Page) {
     if (url.endsWith('/rpc/subscription_plan_catalog')) await route.fulfill({ json: catalog })
     else if (url.endsWith('/rpc/platform_admin_read')) {
       const data = args.p_resource === 'identity'
-        ? [{ id, role: 'observer' }]
+        ? [{ id, role: 'platform_admin' }]
         : args.p_resource === 'status'
           ? [{ id: 'ledger', pending_payments: 0, unprocessed_billing_events: 0, failed_billing_events: 0, open_support_requests: 0, suspended_organizations: 0, support_reminder_delivery: 'not_configured' }]
+          : args.p_resource === 'organizations'
+            ? [{ id: 'organization-1', name: 'Foundation ledger', status: 'active', access_state: 'active', operator_suspended: false, plan_key: 'solo', subscription_status: 'active', member_count: 2, pending_payment_count: 0, open_support_count: 0 }]
           : []
       await route.fulfill({ json: { ok: true, data } })
     }
@@ -142,4 +144,18 @@ test('Ledger authenticated shell shares mobile drawer, user menu, settings, and 
   await page.keyboard.press('Escape')
   await expect(userMenu).toBeHidden()
   await expect(page.getByRole('button', { name: 'Account menu' })).toBeFocused()
+})
+
+test('Ledger shared table action opens the canonical record modal', async ({ page }) => {
+  await openAuthenticatedShell(page)
+  await page.getByLabel('View').selectOption('organizations')
+  const table = page.locator('.bs-data-table')
+  await expect(table).toBeVisible()
+  await expect(table).toContainText('Foundation ledger')
+  await table.getByRole('button', { name: 'Suspend' }).click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog).toBeVisible()
+  await expect(dialog.getByRole('button', { name: 'Cancel' })).toBeVisible()
+  await dialog.getByRole('button', { name: 'Cancel' }).click()
+  await expect(dialog).toBeHidden()
 })

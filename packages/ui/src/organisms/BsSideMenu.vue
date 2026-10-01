@@ -65,7 +65,7 @@ watch(() => props.open, async (open) => {
   >
     <div class="flex h-full min-h-0 flex-col gap-4 p-4">
       <div class="flex items-center justify-between">
-        <NuxtLink :to="homePath" class="inline-flex" :aria-label="productName">
+        <NuxtLink :to="homePath" class="bs-side-menu__logo inline-flex min-w-0" :aria-label="productName">
           <slot name="logo" />
         </NuxtLink>
         <BsButton
@@ -119,3 +119,10 @@ watch(() => props.open, async (open) => {
     @click="emit('close', true)"
   />
 </template>
+
+<style scoped>
+/* Product wordmarks must fit the navigation, regardless of intrinsic asset size. */
+.bs-side-menu__logo :deep(.ls-logo) {
+  max-inline-size: 100%;
+}
+</style>

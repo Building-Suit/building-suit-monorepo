@@ -87,6 +87,24 @@ test('standard Ledger record actions use the canonical dialog and controller', (
   }
 })
 
+test('Ledger account CRUD actions are capability-driven by the shared table', () => {
+  const accounts = sources.find(item => item.file === 'pages/accounts.vue')?.source || ''
+  assert.match(accounts, /<BsDataTable[\s\S]+:capabilities="\{ insert:/)
+  assert.match(accounts, /@create="openCreate\(\)"/)
+  assert.match(accounts, /@edit="openEdit"/)
+  assert.match(accounts, /@archive="archiveAccount"/)
+  assert.match(accounts, /<template #row-actions=/)
+})
+
+test('Ledger dimension CRUD actions use shared table capabilities and record dialogs', () => {
+  const dimensions = sources.find(item => item.file === 'pages/accounting-dimensions.vue')?.source || ''
+  assert.match(dimensions, /<BsDataTable[\s\S]+:capabilities="\{ insert:/)
+  assert.match(dimensions, /@create="editPolicy\(\)"/)
+  assert.match(dimensions, /@edit="editPolicy"/)
+  assert.match(dimensions, /<BsRecordActionDialog v-model:visible="policyOpen"/)
+  assert.doesNotMatch(dimensions, /<BsForm class="grid gap-4 md:grid-cols-4"/)
+})
+
 test('remaining direct dialogs are materially different shared-overlay workflows', () => {
   const allowed = new Set([
     'components/AccountActivityDialog.vue',
