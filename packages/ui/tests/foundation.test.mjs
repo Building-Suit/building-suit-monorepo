@@ -121,13 +121,39 @@ test('every dynamically discovered Suit local component has one approved ownersh
     .filter(entry => entry.isDirectory() && entry.name.endsWith('-suit'))
     .map(entry => entry.name)
     .sort()
-  assert.ok(suits.includes('automation-suit'))
+  for (const suit of ['automation-suit', 'inventory-suit', 'ledger-suit', 'shop-suit']) assert.ok(suits.includes(suit))
   const actual = suits.flatMap(suit => vueFiles(path.join(appsDirectory, suit, 'app/components')))
     .map(file => path.relative(workspaceRoot, file).replaceAll(path.sep, '/')).sort()
   const manifest = JSON.parse(readFileSync(path.join(workspaceRoot, 'docs/shared/ui-ownership-manifest.json'), 'utf8'))
   const classified = manifest.components.map(component => component.path).sort()
   assert.deepEqual(classified, actual)
   assert.ok(manifest.components.every(component => component.approval && component.rationale))
+  assert.ok(manifest.components.every(component => component.classification === 'product-orchestration'))
+  assert.deepEqual(manifest.bypasses, [])
+})
+
+test('every dynamically discovered Suit uses shared reusable presentation primitives', () => {
+  const appsDirectory = path.join(workspaceRoot, 'apps')
+  const suits = readdirSync(appsDirectory, { withFileTypes: true })
+    .filter(entry => entry.isDirectory() && entry.name.endsWith('-suit'))
+    .map(entry => entry.name)
+  for (const suit of suits) for (const file of vueFiles(path.join(appsDirectory, suit, 'app'))) {
+    const source = readFileSync(file, 'utf8')
+    const relative = path.relative(workspaceRoot, file)
+    assert.doesNotMatch(source, /<(?:button|form|table)\b/, `${relative} contains a native reusable presentation primitive`)
+    assert.doesNotMatch(source, /<(?:Button|Card|Tag|DataTable|Dialog|ConfirmDialog)\b/, `${relative} bypasses a Building Suit wrapper`)
+    assert.doesNotMatch(source, /\b(?:window\.)?confirm\s*\(/, `${relative} bypasses shared confirmation`)
+  }
+})
+
+test('Automation and Inventory consume the final shared presentation contracts', () => {
+  const automation = vueFiles(path.join(workspaceRoot, 'apps/automation-suit/app'))
+    .map(file => readFileSync(file, 'utf8')).join('\n')
+  for (const component of ['BsDataTable', 'BsRecordActionDialog', 'BsButton', 'BsSelect', 'BsCard', 'BsKpiCard', 'StatusBadge', 'BsAppShell']) {
+    assert.match(automation, new RegExp(`<${component}\\b`), `Automation does not consume ${component}`)
+  }
+  assert.match(readFileSync(path.join(workspaceRoot, 'apps/inventory-suit/app/pages/index.vue'), 'utf8'), /<BsCard\b/)
+  assert.match(readFileSync(path.join(workspaceRoot, 'apps/inventory-suit/app/layouts/default.vue'), 'utf8'), /<BsAppShell\b/)
 })
 
 test('shared UI exports are explicit and cover every governed source', () => {

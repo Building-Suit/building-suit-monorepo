@@ -57,7 +57,9 @@ for (const app of appDirectories) for (const file of await walk(`apps/${app}/app
   if (bypassPattern.test(text)) detectedBypasses.push(file)
   if (applicationImport.test(text)) failures.push(`${file}: imports another app`)
   if (/window\.confirm\(|\bconfirm\(/.test(text)) failures.push(`${file}: bypasses shared confirmation`)
-  if (/<(?:Drawer|Select|AutoComplete)\b|(?:from\s*|import\s*\()\s*["'](?:reka-ui|@nuxt\/ui|radix-vue)["']/.test(text)) {
+  if (/<button\b/.test(text)) failures.push(`${file}: BsButton is required for reusable actions`)
+  if (/<form\b/.test(text)) failures.push(`${file}: BsForm is required for reusable forms`)
+  if (/<(?:Button|Card|Tag|Drawer|Select|AutoComplete)\b|(?:from\s*|import\s*\()\s*["'](?:reka-ui|@nuxt\/ui|radix-vue)["']/.test(text)) {
     failures.push(`${file}: shared wrappers are required for composite controls`)
   }
 }
