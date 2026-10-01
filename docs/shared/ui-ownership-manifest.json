@@ -44,207 +44,200 @@
     {
       "path": "apps/ledger-suit/app/components/AccountActivityDialog.vue",
       "classification": "product-orchestration",
-      "rationale": "Coordinates Ledger account and journal RPC navigation inside BsDialog and BsDataTable.",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "rationale": "Coordinates Ledger account and journal RPC navigation inside BsDialog and BsDataTable. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
       "path": "apps/ledger-suit/app/components/AccountMenu.vue",
       "classification": "product-orchestration",
-      "rationale": "Coordinates Ledger profile, billing capability, settings, team actions, and sign-out.",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "rationale": "Coordinates Ledger profile, billing capability, settings, team actions, and sign-out. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
       "path": "apps/ledger-suit/app/components/AccountStatementClassificationDialog.vue",
       "classification": "product-orchestration",
-      "rationale": "Owns Ledger statement classification queries, validation, and commands while composing shared overlays and tables.",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "rationale": "Owns Ledger statement classification queries, validation, and commands while composing shared overlays and tables. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
       "path": "apps/ledger-suit/app/components/AccountTree.vue",
       "classification": "product-orchestration",
-      "rationale": "Presents Ledger chart-of-accounts hierarchy and accounting amounts through shared table primitives.",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "rationale": "Presents Ledger chart-of-accounts hierarchy and accounting amounts through shared table primitives. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
       "path": "apps/ledger-suit/app/components/AccountingTableDensity.vue",
       "classification": "product-orchestration",
-      "rationale": "Adapts Ledger's translated density labels and preference type into canonical BsTableDensity presentation.",
-      "approval": "BS-UI-CANONICAL-001"
+      "rationale": "Adapts Ledger's translated density labels and preference type into canonical BsTableDensity presentation. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
       "path": "apps/ledger-suit/app/components/AddTransactionDialog.vue",
       "classification": "product-orchestration",
-      "rationale": "Owns Ledger transaction validation, account selection, plan checks, and authorized creation workflow.",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
-    },
-    {
-      "path": "apps/ledger-suit/app/components/AppLogo.vue",
-      "classification": "obsolete-duplicate",
-      "rationale": "A thin fixed-product wrapper duplicates configuration already accepted by BsProductLogo.",
-      "migrationTarget": "packages/ui/src/atoms/BsProductLogo.vue",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "rationale": "Owns Ledger transaction validation, account selection, plan checks, and authorized creation workflow. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
       "path": "apps/ledger-suit/app/components/BillingCheckout.vue",
       "classification": "product-orchestration",
-      "rationale": "Coordinates Ledger plan selection, billing impact, payment methods, and checkout commands.",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "rationale": "Coordinates Ledger plan selection, billing impact, payment methods, and checkout commands. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
       "path": "apps/ledger-suit/app/components/CashFlowAllocationDialog.vue",
       "classification": "product-orchestration",
-      "rationale": "Owns Ledger cash-flow allocation data, amount rules, and mutation flow inside BsDialog.",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "rationale": "Owns Ledger cash-flow allocation data, amount rules, and mutation flow inside BsDialog. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
       "path": "apps/ledger-suit/app/components/ChartTemplateReview.vue",
       "classification": "product-orchestration",
-      "rationale": "Presents and selects Ledger chart templates using product-owned account semantics.",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "rationale": "Presents and selects Ledger chart templates using product-owned account semantics. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
       "path": "apps/ledger-suit/app/components/ControlReconciliationPanel.vue",
       "classification": "product-orchestration",
-      "rationale": "Coordinates Ledger reconciliation queries, balances, account choices, and commands.",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "rationale": "Coordinates Ledger reconciliation queries, balances, account choices, and commands. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
       "path": "apps/ledger-suit/app/components/CsvImportDialog.vue",
       "classification": "product-orchestration",
-      "rationale": "Owns Ledger import parsing, review phases, quota checks, and transaction creation.",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "rationale": "Owns Ledger's multi-phase import, mapping, review, and result workflow, which is not a standard single-record create/edit action. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
       "path": "apps/ledger-suit/app/components/DocumentExtractionReview.vue",
       "classification": "product-orchestration",
-      "rationale": "Reviews Ledger-specific extracted transaction candidates and account mappings.",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "rationale": "Reviews Ledger-specific extracted transaction candidates and account mappings. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
       "path": "apps/ledger-suit/app/components/FinancialSystemMap.vue",
       "classification": "product-orchestration",
-      "rationale": "Explains Ledger-specific accounting flows and links using the product domain model.",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "rationale": "Explains Ledger-specific accounting flows and links using the product domain model. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
       "path": "apps/ledger-suit/app/components/FxSubledgerPanel.vue",
       "classification": "product-orchestration",
-      "rationale": "Coordinates Ledger foreign-currency subledger queries, periods, and monetary rendering.",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "rationale": "Coordinates Ledger foreign-currency subledger queries, periods, and monetary rendering. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
       "path": "apps/ledger-suit/app/components/KpiCard.vue",
       "classification": "product-orchestration",
-      "rationale": "Adapts Ledger minor-unit amounts and accounting improvement direction into BsKpiCard.",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "rationale": "Adapts Ledger minor-unit amounts and accounting improvement direction into BsKpiCard. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
       "path": "apps/ledger-suit/app/components/LedgerPageHeader.vue",
       "classification": "product-orchestration",
-      "rationale": "Builds Ledger tenant and reporting-period context, then delegates presentation to canonical BsPageHeader.",
-      "approval": "BS-UI-CANONICAL-001"
+      "rationale": "Builds Ledger tenant and reporting-period context, then delegates presentation to canonical BsPageHeader. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
       "path": "apps/ledger-suit/app/components/ManualPaymentCheckout.vue",
       "classification": "product-orchestration",
-      "rationale": "Owns Ledger manual-payment evidence, billing validation, and submission workflow.",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "rationale": "Owns Ledger's payment-evidence lifecycle across draft, review, rejection, cancellation, and receipt history, which is not a standard single-record create/edit action. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
       "path": "apps/ledger-suit/app/components/MoneyText.vue",
       "classification": "product-orchestration",
-      "rationale": "Applies Ledger tenant currency and exact minor-unit accounting display rules.",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "rationale": "Applies Ledger tenant currency and exact minor-unit accounting display rules. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
       "path": "apps/ledger-suit/app/components/NotificationMenu.vue",
       "classification": "product-orchestration",
-      "rationale": "Loads and presents tenant-scoped Ledger notifications with product navigation.",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "rationale": "Loads and presents tenant-scoped Ledger notifications with product navigation. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
       "path": "apps/ledger-suit/app/components/OperationsCenter.vue",
       "classification": "product-orchestration",
-      "rationale": "Coordinates Ledger operational queues, quota state, domain choices, and commands.",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "rationale": "Coordinates Ledger operational queues, quota state, domain choices, and commands. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
       "path": "apps/ledger-suit/app/components/OrganizationSetup.vue",
       "classification": "product-orchestration",
-      "rationale": "Owns Ledger organization provisioning inputs, validation, and setup commands.",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "rationale": "Owns Ledger organization provisioning inputs, validation, and setup commands. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
       "path": "apps/ledger-suit/app/components/OrganizationSwitcher.vue",
       "classification": "product-orchestration",
-      "rationale": "Coordinates Ledger tenant selection, billing state, creation, and route changes.",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "rationale": "Coordinates Ledger tenant selection, billing state, creation, and route changes. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
       "path": "apps/ledger-suit/app/components/PublicLegalPage.vue",
       "classification": "product-orchestration",
-      "rationale": "Supplies Ledger metadata, branding copy and its product-owned legal document to canonical BsPublicLegalPage.",
-      "approval": "BS-UI-CANONICAL-001"
+      "rationale": "Supplies Ledger metadata, branding copy and its product-owned legal document to canonical BsPublicLegalPage. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
       "path": "apps/ledger-suit/app/components/QuotaUsageMeter.vue",
       "classification": "product-orchestration",
-      "rationale": "Combines Ledger quota lookup, plan upgrade rules, localized units, and billing links.",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "rationale": "Combines Ledger quota lookup, plan upgrade rules, localized units, and billing links. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
       "path": "apps/ledger-suit/app/components/RevenueExpenseChart.vue",
       "classification": "product-orchestration",
-      "rationale": "Transforms Ledger revenue and expense amounts into accounting-specific chart and table views.",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "rationale": "Transforms Ledger revenue and expense amounts into accounting-specific chart and table views. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
       "path": "apps/ledger-suit/app/components/SetupChecklist.vue",
       "classification": "product-orchestration",
-      "rationale": "Loads tenant-specific Ledger setup state and maps it to product routes.",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "rationale": "Loads tenant-specific Ledger setup state and maps it to product routes. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
       "path": "apps/ledger-suit/app/components/SubscriptionGate.vue",
       "classification": "product-orchestration",
-      "rationale": "Applies Ledger subscription and route policy around product-owned content.",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "rationale": "Applies Ledger subscription and route policy around product-owned content. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
       "path": "apps/ledger-suit/app/components/SyntheticDemo.vue",
       "classification": "product-orchestration",
-      "rationale": "Presents Ledger-specific synthetic transaction examples through BsDataTable.",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "rationale": "Presents Ledger-specific synthetic transaction examples through BsDataTable. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
       "path": "apps/ledger-suit/app/components/TeamMenu.vue",
       "classification": "product-orchestration",
-      "rationale": "Coordinates Ledger invitations, member quotas, permissions, and tenant commands.",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "rationale": "Coordinates Ledger invitations, member quotas, permissions, and tenant commands. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
       "path": "apps/ledger-suit/app/components/TransactionDetailDialog.vue",
       "classification": "product-orchestration",
-      "rationale": "Loads Ledger transaction detail and coordinates reversal, tagging, and audit actions.",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "rationale": "Owns Ledger's read-oriented transaction detail, reversal, attachment, tagging, and audit workflow rather than a standard create/edit form. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
       "path": "apps/ledger-suit/app/components/TransactionTags.vue",
       "classification": "product-orchestration",
-      "rationale": "Owns Ledger tag queries, billing capability checks, and transaction-tag mutations.",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "rationale": "Owns Ledger tag queries, billing capability checks, and transaction-tag mutations. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
       "path": "apps/ledger-suit/app/components/TrialCountdown.vue",
       "classification": "product-orchestration",
-      "rationale": "Derives Ledger trial state from billing policy and routes users to product billing.",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "rationale": "Derives Ledger trial state from billing policy and routes users to product billing. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
       "path": "apps/ledger-suit/app/components/UsageMeters.vue",
       "classification": "product-orchestration",
-      "rationale": "Maps Ledger plan quotas into the product-owned quota meter adapter.",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "rationale": "Maps Ledger plan quotas into the product-owned quota meter adapter. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
       "path": "apps/shop-suit/app/components/AppLogo.vue",

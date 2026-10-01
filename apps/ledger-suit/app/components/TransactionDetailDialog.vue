@@ -216,7 +216,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => ({ reason: reason.value, 
               <span v-if="transaction?.journal_reference" class="font-semibold">{{ transaction.journal_reference }}</span>
             </p>
           </div>
-          <button type="button" class="ls-btn ls-btn-sm" :aria-label="t('common.close')" @click="dismiss"><AppIcon name="close" /></button>
+          <BsButton type="button" class="ls-btn ls-btn-sm" :aria-label="t('common.close')" @click="dismiss"><AppIcon name="close" /></BsButton>
         </header>
 
         <div class="min-h-0 flex-1 space-y-6 overflow-y-auto px-6 py-4">
@@ -290,14 +290,14 @@ const { dirty: overlayDirty0 } = useRecordAction(() => ({ reason: reason.value, 
           <section aria-labelledby="attachments-heading">
             <div class="mb-2 flex items-center justify-between"><h3 id="attachments-heading" class="text-sm font-bold">{{ t('operations.attachments') }}</h3><label v-if="can('attachments.create')" class="ls-btn ls-btn-sm cursor-pointer">{{ uploading ? t('common.saving') : t('operations.upload') }}<input type="file" class="sr-only" accept="application/pdf,image/png,image/jpeg,image/webp" :disabled="uploading" @change="uploadAttachment"></label></div>
             <QuotaUsageMeter v-if="can('attachments.create')" quota-key="max_storage_bytes" compact class="mb-3" />
-            <div v-if="attachments.length" class="space-y-2"><div v-for="item in attachments" :key="item.id" class="flex items-center justify-between rounded-control bg-surface-muted px-3 py-2 text-sm"><button class="truncate text-link" @click="downloadAttachment(item)">{{ item.file_name }}</button><button v-if="can('attachments.delete')" class="ls-btn ls-btn-sm" :aria-label="t('common.delete')" @click="deleteAttachment(item)"><AppIcon name="delete" :size="18" /></button></div></div><p v-else class="text-sm text-fg-muted">{{ t('operations.noAttachments') }}</p>
+            <div v-if="attachments.length" class="space-y-2"><div v-for="item in attachments" :key="item.id" class="flex items-center justify-between rounded-control bg-surface-muted px-3 py-2 text-sm"><BsButton type="submit" class="truncate text-link" @click="downloadAttachment(item)">{{ item.file_name }}</BsButton><BsButton type="submit" v-if="can('attachments.delete')" class="ls-btn ls-btn-sm" :aria-label="t('common.delete')" @click="deleteAttachment(item)"><AppIcon name="delete" :size="18" /></BsButton></div></div><p v-else class="text-sm text-fg-muted">{{ t('operations.noAttachments') }}</p>
           </section>
 
           <section v-if="transaction?.reverses_transaction_id || transaction?.reversed_by_transaction_id || transaction?.correction_of_transaction_id" class="rounded-control bg-[var(--bs-status-info-bg)] px-3 py-3 text-sm text-[var(--bs-status-info)]" aria-labelledby="relationships-heading">
             <h3 id="relationships-heading" class="font-bold">{{ t('journalCenter.relationships') }}</h3>
-            <p v-if="transaction?.reversed_by_transaction_id" class="mt-2">{{ t('detail.reversedNotice') }} <button type="button" class="font-semibold underline" @click="emit('navigate', transaction.reversed_by_transaction_id)">{{ t('journalCenter.reversalJournal') }} {{ relationship(transaction.reversed_by_transaction_id)?.journal_reference }}</button></p>
-            <p v-if="transaction?.reverses_transaction_id" class="mt-2">{{ t('journalCenter.reverses') }} <button type="button" class="font-semibold underline" @click="emit('navigate', transaction.reverses_transaction_id)">{{ t('journalCenter.originalJournal') }} {{ relationship(transaction.reverses_transaction_id)?.journal_reference }}</button></p>
-            <p v-if="transaction?.correction_of_transaction_id" class="mt-2">{{ t('journalCenter.adjusts') }} <button type="button" class="font-semibold underline" @click="emit('navigate', transaction.correction_of_transaction_id)">{{ relationship(transaction.correction_of_transaction_id)?.journal_reference }}</button></p>
+            <p v-if="transaction?.reversed_by_transaction_id" class="mt-2">{{ t('detail.reversedNotice') }} <BsButton type="button" class="font-semibold underline" @click="emit('navigate', transaction.reversed_by_transaction_id)">{{ t('journalCenter.reversalJournal') }} {{ relationship(transaction.reversed_by_transaction_id)?.journal_reference }}</BsButton></p>
+            <p v-if="transaction?.reverses_transaction_id" class="mt-2">{{ t('journalCenter.reverses') }} <BsButton type="button" class="font-semibold underline" @click="emit('navigate', transaction.reverses_transaction_id)">{{ t('journalCenter.originalJournal') }} {{ relationship(transaction.reverses_transaction_id)?.journal_reference }}</BsButton></p>
+            <p v-if="transaction?.correction_of_transaction_id" class="mt-2">{{ t('journalCenter.adjusts') }} <BsButton type="button" class="font-semibold underline" @click="emit('navigate', transaction.correction_of_transaction_id)">{{ relationship(transaction.correction_of_transaction_id)?.journal_reference }}</BsButton></p>
           </section>
 
           <p v-if="periodRestriction" class="rounded-control bg-surface-muted px-3 py-2 text-sm text-fg-muted">{{ periodRestriction }}</p>
@@ -314,10 +314,10 @@ const { dirty: overlayDirty0 } = useRecordAction(() => ({ reason: reason.value, 
               >
             </div>
             <div class="flex justify-end gap-2">
-              <button type="button" class="ls-btn" @click="confirming = false">{{ t('common.cancel') }}</button>
-              <button type="button" class="ls-btn ls-btn-danger" :disabled="reversing" @click="reverse">
+              <BsButton type="button" class="ls-btn" @click="confirming = false">{{ t('common.cancel') }}</BsButton>
+              <BsButton type="button" class="ls-btn ls-btn-danger" :disabled="reversing" @click="reverse">
                 {{ reversing ? t('detail.reversing') : t('detail.reverseConfirm') }}
-              </button>
+              </BsButton>
             </div>
           </div>
 
@@ -327,7 +327,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => ({ reason: reason.value, 
         </div>
 
         <footer v-if="canReverse && !confirming" class="border-t border-[var(--bs-border)] px-6 py-4">
-          <button type="button" class="ls-btn" @click="confirming = true">{{ t('detail.reverseAction') }}</button>
+          <BsButton type="button" class="ls-btn" @click="confirming = true">{{ t('detail.reverseAction') }}</BsButton>
         </footer>
       </div>
 </template></BsDialog>

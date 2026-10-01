@@ -158,7 +158,7 @@ onBeforeUnmount(() => clearInterval(timer))
     <section class="ls-auth-panel flex items-center justify-center px-5 py-10 sm:px-8 lg:px-12">
       <div class="ls-auth-form-shell flex w-full max-w-[27rem] flex-col items-center">
         <NuxtLink to="/" class="mb-12 inline-flex lg:hidden" aria-label="Ledger Suit home">
-          <AppLogo class="h-14 w-auto max-w-56" />
+          <BsProductLogo name="Ledger Suit" asset-prefix="/brand/ledger-suit" class="h-14 w-auto max-w-56" />
         </NuxtLink>
         
         <div v-if="step === 'loading'" aria-busy="true" class="w-full">
@@ -173,7 +173,7 @@ onBeforeUnmount(() => clearInterval(timer))
           <NuxtLink to="/login" class="ls-btn ls-btn-primary mt-7 w-full">{{ t('access.inviteFlow.backToLogin') }}</NuxtLink>
         </section>
 
-        <form v-else-if="preview" class="ls-auth-card w-full space-y-5 p-6 text-start sm:p-8" :data-hydrated="hydrated" @submit.prevent="step === 'ready' ? sendOtp() : step === 'otp' ? verifyOtp() : finish()">
+        <BsForm v-else-if="preview" class="ls-auth-card w-full space-y-5 p-6 text-start sm:p-8" :data-hydrated="hydrated" @submit.prevent="step === 'ready' ? sendOtp() : step === 'otp' ? verifyOtp() : finish()">
           <div class="text-center">
             <p class="ls-auth-eyebrow">{{ t('access.inviteFlow.eyebrow') }}</p>
             <h1 v-if="step === 'ready'" class="mt-2 text-xl font-extrabold tracking-[-.03em]" dir="ltr">{{ t('access.inviteFlow.title', { organization: preview.organization_name }) }}</h1>
@@ -189,12 +189,12 @@ onBeforeUnmount(() => clearInterval(timer))
           </FloatingField>
           
           <template v-if="step === 'ready'">
-            <button class="ls-btn ls-btn-primary w-full" :disabled="pending">{{ pending ? t('access.inviteFlow.sendingOtp') : t('access.inviteFlow.sendOtp') }}</button>
+            <BsButton type="submit" class="ls-btn ls-btn-primary w-full" :disabled="pending">{{ pending ? t('access.inviteFlow.sendingOtp') : t('access.inviteFlow.sendOtp') }}</BsButton>
           </template>
           <template v-else-if="step === 'otp'">
             <OtpInput v-model="otp" :label="t('onboarding.otpLabel')" :disabled="pending" />
-            <button class="ls-btn ls-btn-primary w-full" :disabled="pending || otp.length !== 6">{{ pending ? t('access.inviteFlow.verifyingOtp') : t('access.inviteFlow.verifyOtp') }}</button>
-            <button type="button" class="w-full text-center text-sm font-bold text-link disabled:text-fg-muted" :disabled="pending || resendIn > 0" @click="sendOtp">{{ resendIn ? t('onboarding.otpResendIn', { time: `00:${String(resendIn).padStart(2, '0')}` }) : t('access.inviteFlow.resend') }}</button>
+            <BsButton type="submit" class="ls-btn ls-btn-primary w-full" :disabled="pending || otp.length !== 6">{{ pending ? t('access.inviteFlow.verifyingOtp') : t('access.inviteFlow.verifyOtp') }}</BsButton>
+            <BsButton type="button" class="w-full text-center text-sm font-bold text-link disabled:text-fg-muted" :disabled="pending || resendIn > 0" @click="sendOtp">{{ resendIn ? t('onboarding.otpResendIn', { time: `00:${String(resendIn).padStart(2, '0')}` }) : t('access.inviteFlow.resend') }}</BsButton>
           </template>
           <template v-else>
           <FloatingField :label="t('onboarding.fullName')">
@@ -215,16 +215,16 @@ onBeforeUnmount(() => clearInterval(timer))
           </FloatingField>
           <p v-if="errorMessage" role="alert" class="ls-error">{{ errorMessage }}</p>
           
-          <button type="submit" :disabled="pending || password.length < 8 || confirmPassword.length < 8" class="ls-btn ls-btn-primary w-full">
+          <BsButton type="submit" :disabled="pending || password.length < 8 || confirmPassword.length < 8" class="ls-btn ls-btn-primary w-full">
             {{ pending ? t('access.inviteFlow.finishing') : t('access.inviteFlow.finish') }}
-          </button>
+          </BsButton>
           </template>
           
           <div class="mt-7 flex items-start gap-3 rounded-card border border-[var(--bs-border)] bg-surface-muted p-4 text-xs leading-5 text-fg-muted">
             <AppIcon name="checkBadge" :size="19" class="mt-0.5 shrink-0 text-success" />
             <p>{{ t('access.inviteFlow.security') }}</p>
           </div>
-        </form>
+        </BsForm>
         <div class="mt-5 flex justify-center"><SettingsMenu /></div>
       </div>
     </section>
@@ -234,7 +234,7 @@ onBeforeUnmount(() => clearInterval(timer))
       <div class="ls-auth-orbit ls-auth-orbit-two" aria-hidden="true" />
       <div class="ls-auth-showcase-content relative z-10 flex max-w-xl flex-col items-center px-12 text-center">
         <NuxtLink to="/" class="ls-auth-brand z-10 inline-flex" aria-label="Ledger Suit home">
-          <AppLogo tone="light" class="h-20 w-auto max-w-80" />
+          <BsProductLogo name="Ledger Suit" asset-prefix="/brand/ledger-suit" tone="light" class="h-20 w-auto max-w-80" />
         </NuxtLink>
         <h2 class="mt-5 text-5xl font-black leading-[1.25] tracking-[-.045em]">{{ preview?.organization_name || t('app.name') }}</h2>
         <p class="ls-brand-hero-muted mt-6 max-w-lg text-base leading-8">{{ t('auth.welcomeBody') }}</p>

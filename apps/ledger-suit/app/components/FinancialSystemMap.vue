@@ -27,7 +27,7 @@ function close() {
 </script>
 
 <template>
-  <button
+  <BsButton
     type="button"
     class="ls-btn financial-help"
     data-testid="financial-help"
@@ -37,7 +37,7 @@ function close() {
   >
     <span class="inline-flex" aria-hidden="true"><AppIcon name="chart" :size="22" /></span>
     <span class="inline">{{ t('financialMap.button') }}</span>
-  </button>
+  </BsButton>
       <BsDialog :visible="open" :title="t('financialMap.title')" :aria-label="t('financialMap.title')" :show-header="false" size="lg" @update:visible="value => { if (!value) close() }"><template #default="{ close: dismiss }">
 <section class="flex h-dvh flex-col overflow-hidden bg-background sm:h-[94dvh] sm:max-w-[1500px] sm:rounded-modal sm:border sm:border-[var(--bs-border)]">
           <header class="flex shrink-0 items-start gap-4 border-b border-[var(--bs-border)] bg-surface px-4 py-4 sm:px-6">
@@ -46,9 +46,9 @@ function close() {
               <h2 id="financial-map-title" class="mt-1 text-xl font-bold sm:text-2xl">{{ t('financialMap.title') }}</h2>
               <p class="mt-1 max-w-4xl text-sm text-fg-muted">{{ t('financialMap.subtitle') }}</p>
             </div>
-            <button type="button" class="ls-btn ls-btn-sm shrink-0" :aria-label="t('common.close')" @click="dismiss">
+            <BsButton type="button" class="ls-btn ls-btn-sm shrink-0" :aria-label="t('common.close')" @click="dismiss">
               <AppIcon name="close" />
-            </button>
+            </BsButton>
           </header>
 
           <div class="min-h-0 flex-1 overflow-auto px-4 py-6 sm:px-6 lg:px-10">

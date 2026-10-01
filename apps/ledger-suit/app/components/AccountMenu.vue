@@ -47,7 +47,7 @@ async function signOut() {
 
 <template>
   <div ref="root" class="relative">
-    <button
+    <BsButton
       type="button"
       class="ls-btn ls-btn-sm"
       :aria-label="t('common.accountMenu')"
@@ -56,7 +56,7 @@ async function signOut() {
       @click="open = !open"
     >
       <AppIcon name="user" />
-    </button>
+    </BsButton>
 
     <div
       v-show="open"
@@ -89,9 +89,9 @@ async function signOut() {
 
       <hr class="border-[var(--bs-border)]">
 
-      <button type="button" class="ls-btn ls-btn-danger ls-btn-sm w-full" role="menuitem" @click="signOut">
+      <BsButton type="button" class="ls-btn ls-btn-danger ls-btn-sm w-full" role="menuitem" @click="signOut">
         {{ t('common.signOut') }}
-      </button>
+      </BsButton>
     </div>
 
     <TeamMenu :show-trigger="false" />

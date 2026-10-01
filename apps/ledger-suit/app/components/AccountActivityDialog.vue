@@ -114,7 +114,7 @@ async function page(offset: number) {
 <template>
   <BsDialog :visible="true" :title="title" size="lg" @update:visible="value => { if (!value) emit('close') }">
     <div ref="content" class="min-w-0 space-y-5">
-      <button v-if="views.length > 1" type="button" class="ls-btn ls-btn-sm" @click="back"><span class="rotate-180"><AppIcon name="arrowRight" directional :size="16" /></span>{{ t('accountActivity.back') }}</button>
+      <BsButton v-if="views.length > 1" type="button" class="ls-btn ls-btn-sm" @click="back"><span class="rotate-180"><AppIcon name="arrowRight" directional :size="16" /></span>{{ t('accountActivity.back') }}</BsButton>
       <h2 ref="heading" tabindex="-1" class="break-words text-xl font-bold outline-none">{{ activity?.account.name || journal?.description || title }}</h2>
       <template v-if="current.kind === 'account'">
         <div v-if="activity" class="flex flex-wrap items-center gap-2 text-sm text-fg-muted">
@@ -123,13 +123,13 @@ async function page(offset: number) {
           <span v-if="activity.account.is_archived" class="ls-badge bg-surface-muted">{{ t('accounts.archived') }}</span>
           <span>{{ t('accountActivity.baseCurrency', { currency: activity.currency }) }}</span>
         </div>
-        <form class="grid grid-cols-2 items-end gap-3 sm:flex sm:flex-wrap" @submit.prevent="applyPeriod">
+        <BsForm class="grid grid-cols-2 items-end gap-3 sm:flex sm:flex-wrap" @submit.prevent="applyPeriod">
           <FloatingField class="min-w-0" :label="t('reports.from')"><input id="activity-from" v-model="current.from" type="date" class="ls-input" required :disabled="loading"></FloatingField>
           <FloatingField class="min-w-0" :label="t('reports.to')"><input id="activity-to" v-model="current.to" type="date" class="ls-input" required :min="current.from" :disabled="loading"></FloatingField>
-          <button class="ls-btn ls-btn-primary col-span-2" type="submit" :disabled="loading || periodInvalid">{{ t('accountActivity.apply') }}</button>
-        </form>
+          <BsButton class="ls-btn ls-btn-primary col-span-2" type="submit" :disabled="loading || periodInvalid">{{ t('accountActivity.apply') }}</BsButton>
+        </BsForm>
       </template>
-      <p v-if="error" role="alert" class="ls-error">{{ error }} <button type="button" class="ls-btn ls-btn-sm" @click="load(true)">{{ t('accounts.retry') }}</button></p>
+      <p v-if="error" role="alert" class="ls-error">{{ error }} <BsButton type="button" class="ls-btn ls-btn-sm" @click="load(true)">{{ t('accounts.retry') }}</BsButton></p>
       <SectionSkeleton v-if="loading" variant="table" :rows="5" />
       <template v-else-if="!error && activity">
         <p class="text-sm text-fg-muted">{{ t('accountActivity.period', { from: formatDate(activity.from_date, locale), to: formatDate(activity.to_date, locale) }) }}</p>
@@ -144,15 +144,15 @@ async function page(offset: number) {
         <div v-else class="overflow-x-auto">
           <BsDataTable :label="t('accountActivity.title')" :value="activity.rows" data-key="entry_id">
             <Column :header="t('transactions.date')"><template #body="{ data: row }"><span class="whitespace-nowrap">{{ formatDate(row.entry_date, locale) }}</span></template></Column>
-            <Column :header="t('transactions.description')"><template #body="{ data: row }"><button type="button" class="text-start font-medium text-link hover:underline" :data-nav-id="`entry-${row.entry_id}`" @click="openJournal(row.transaction_id, row.entry_id)">{{ row.description || t('accountActivity.journal') }}</button><p v-if="row.reference || row.memo" class="mt-1 text-xs text-fg-muted">{{ row.reference || row.memo }}</p></template></Column>
+            <Column :header="t('transactions.description')"><template #body="{ data: row }"><BsButton type="button" class="text-start font-medium text-link hover:underline" :data-nav-id="`entry-${row.entry_id}`" @click="openJournal(row.transaction_id, row.entry_id)">{{ row.description || t('accountActivity.journal') }}</BsButton><p v-if="row.reference || row.memo" class="mt-1 text-xs text-fg-muted">{{ row.reference || row.memo }}</p></template></Column>
             <Column :header="t('detail.debit')" body-class="ls-num whitespace-nowrap"><template #body="{ data: row }"><MoneyText :amount-minor="row.debit_minor" :currency="activity.currency" /></template></Column>
             <Column :header="t('detail.credit')" body-class="ls-num whitespace-nowrap"><template #body="{ data: row }"><MoneyText :amount-minor="row.credit_minor" :currency="activity.currency" /></template></Column>
             <Column :header="t('accountActivity.running')" body-class="ls-num whitespace-nowrap"><template #body="{ data: row }"><MoneyText :amount-minor="accountBalanceDisplay(row.balance_minor).amount" :currency="activity.currency" /><span class="ms-1 text-xs text-fg-muted">{{ t(`accounts.sides.${accountBalanceDisplay(row.balance_minor).side}`) }}</span></template></Column>
           </BsDataTable>
           <nav v-if="current.kind === 'account'" :aria-label="t('accountActivity.pages')" class="flex flex-wrap items-center justify-between gap-3 py-3 text-sm">
-            <button type="button" class="ls-btn ls-btn-sm" :disabled="current.offset === 0" @click="page(Math.max(0, current.offset - pageSize))">{{ t('accounts.previousPage') }}</button>
+            <BsButton type="button" class="ls-btn ls-btn-sm" :disabled="current.offset === 0" @click="page(Math.max(0, current.offset - pageSize))">{{ t('accounts.previousPage') }}</BsButton>
             <span>{{ t('accountActivity.showing', { from: current.offset + 1, to: Math.min(current.offset + pageSize, activity.total), total: activity.total }) }}</span>
-            <button type="button" class="ls-btn ls-btn-sm" :disabled="current.offset + pageSize >= activity.total" @click="page(current.offset + pageSize)">{{ t('accounts.nextPage') }}</button>
+            <BsButton type="button" class="ls-btn ls-btn-sm" :disabled="current.offset + pageSize >= activity.total" @click="page(current.offset + pageSize)">{{ t('accounts.nextPage') }}</BsButton>
           </nav>
         </div>
       </template>
@@ -161,7 +161,7 @@ async function page(offset: number) {
         <p v-if="journal.reverses_transaction_id || journal.reversed_by_transaction_id" class="rounded-control bg-surface-muted p-3 text-sm">{{ t('accountActivity.reversal') }}</p>
         <p class="text-sm text-fg-muted">{{ t('accountActivity.journalHint', { currency: journal.currency }) }}</p>
         <div class="overflow-x-auto"><BsDataTable :label="t('accountActivity.journal')" :value="journal.rows" data-key="entry_id">
-          <Column :header="t('detail.account')"><template #body="{ data: row }"><button type="button" class="text-start font-medium text-link hover:underline" :data-nav-id="`account-${row.entry_id}`" @click="openAccount(row.account_id, row.entry_id)">{{ row.account_name }}</button><p class="mt-1 text-xs text-fg-muted">{{ row.account_code }}<span v-if="row.memo"> · {{ row.memo }}</span></p><p v-if="row.original_currency !== journal.currency" class="text-xs text-fg-muted"><MoneyText :amount-minor="row.original_amount_minor" :currency="row.original_currency" /></p></template></Column>
+          <Column :header="t('detail.account')"><template #body="{ data: row }"><BsButton type="button" class="text-start font-medium text-link hover:underline" :data-nav-id="`account-${row.entry_id}`" @click="openAccount(row.account_id, row.entry_id)">{{ row.account_name }}</BsButton><p class="mt-1 text-xs text-fg-muted">{{ row.account_code }}<span v-if="row.memo"> · {{ row.memo }}</span></p><p v-if="row.original_currency !== journal.currency" class="text-xs text-fg-muted"><MoneyText :amount-minor="row.original_amount_minor" :currency="row.original_currency" /></p></template></Column>
           <Column :header="t('detail.debit')" body-class="ls-num whitespace-nowrap"><template #body="{ data: row }"><MoneyText :amount-minor="row.debit_minor" :currency="journal.currency" /></template></Column>
           <Column :header="t('detail.credit')" body-class="ls-num whitespace-nowrap"><template #body="{ data: row }"><MoneyText :amount-minor="row.credit_minor" :currency="journal.currency" /></template></Column>
         </BsDataTable></div>

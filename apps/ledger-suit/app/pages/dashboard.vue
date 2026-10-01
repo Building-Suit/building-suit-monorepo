@@ -118,7 +118,7 @@ const payableHint = computed(() =>
     <div v-else-if="recentError" class="ls-card space-y-3 p-6" role="alert">
       <h2 class="font-bold">{{ t('dashboard.recentLoadError') }}</h2>
       <p class="text-sm text-fg-muted">{{ t('dashboard.loadErrorHint') }}</p>
-      <button type="button" class="ls-btn" @click="refreshRecent()">{{ t('common.retry') }}</button>
+      <BsButton type="button" class="ls-btn" @click="refreshRecent()">{{ t('common.retry') }}</BsButton>
     </div>
 
     <EmptyState
@@ -134,7 +134,7 @@ const payableHint = computed(() =>
       <div v-else-if="summaryError" class="ls-card space-y-3 p-6" role="alert">
         <h2 class="font-bold">{{ t('dashboard.summaryLoadError') }}</h2>
         <p class="text-sm text-fg-muted">{{ t('dashboard.loadErrorHint') }}</p>
-        <button type="button" class="ls-btn" @click="refreshSummary()">{{ t('common.retry') }}</button>
+        <BsButton type="button" class="ls-btn" @click="refreshSummary()">{{ t('common.retry') }}</BsButton>
       </div>
       <section v-else aria-labelledby="kpis" class="space-y-3">
         <h2 id="kpis" class="sr-only">{{ t('dashboard.kpis') }}</h2>
@@ -177,13 +177,13 @@ const payableHint = computed(() =>
         <section v-else-if="seriesError" class="ls-card space-y-3 p-6 xl:col-span-2" role="alert" aria-labelledby="series-error-heading">
           <h2 id="series-error-heading" class="font-bold">{{ t('dashboard.seriesLoadError') }}</h2>
           <p class="text-sm text-fg-muted">{{ t('dashboard.loadErrorHint') }}</p>
-          <button type="button" class="ls-btn" @click="refreshSeries()">{{ t('common.retry') }}</button>
+          <BsButton type="button" class="ls-btn" @click="refreshSeries()">{{ t('common.retry') }}</BsButton>
         </section>
         <section v-else class="ls-card min-w-0 p-6 xl:col-span-2" aria-labelledby="chart-heading">
           <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
             <h2 id="chart-heading" class="text-base font-bold">{{ t('dashboard.revenueVsExpenses') }}</h2>
             <div class="flex gap-1" role="group" :aria-label="t('dashboard.chartRange')">
-              <button
+              <BsButton
                 v-for="option in [3, 6, 12]"
                 :key="option"
                 type="button"
@@ -193,8 +193,8 @@ const payableHint = computed(() =>
                 @click="months = option; customRange = false"
               >
                 {{ t('dashboard.months', { count: option }) }}
-              </button>
-              <button type="button" class="ls-btn ls-btn-sm" :class="{ 'ls-btn-primary': customRange }" @click="customRange = !customRange">{{ t('dashboard.custom') }}</button>
+              </BsButton>
+              <BsButton type="button" class="ls-btn ls-btn-sm" :class="{ 'ls-btn-primary': customRange }" @click="customRange = !customRange">{{ t('dashboard.custom') }}</BsButton>
             </div>
           </div>
           <div v-if="customRange" class="mb-4 flex flex-wrap gap-2"><FloatingField class="w-auto" :label="t('reports.from')"><input v-model="customFrom" type="date" class="ls-input w-auto"></FloatingField><FloatingField class="w-auto" :label="t('reports.to')"><input v-model="customTo" type="date" class="ls-input w-auto"></FloatingField></div>
@@ -205,7 +205,7 @@ const payableHint = computed(() =>
         <section v-else-if="liquidError" class="ls-card space-y-3 p-6" role="alert" aria-labelledby="liquid-error-heading">
           <h2 id="liquid-error-heading" class="font-bold">{{ t('dashboard.liquidLoadError') }}</h2>
           <p class="text-sm text-fg-muted">{{ t('dashboard.loadErrorHint') }}</p>
-          <button type="button" class="ls-btn" @click="refreshLiquid()">{{ t('common.retry') }}</button>
+          <BsButton type="button" class="ls-btn" @click="refreshLiquid()">{{ t('common.retry') }}</BsButton>
         </section>
         <section v-else class="ls-card min-w-0 p-6" aria-labelledby="cash-heading">
           <h2 id="cash-heading" class="mb-4 text-base font-bold">{{ t('dashboard.cashPosition') }}</h2>
@@ -225,10 +225,10 @@ const payableHint = computed(() =>
       <section v-else-if="can('commitments.read') && commitmentsError" class="ls-card space-y-3 p-6" role="alert" aria-labelledby="commitments-error-heading">
         <h2 id="commitments-error-heading" class="font-bold">{{ t('dashboard.commitmentsLoadError') }}</h2>
         <p class="text-sm text-fg-muted">{{ t('dashboard.loadErrorHint') }}</p>
-        <button type="button" class="ls-btn" @click="refreshCommitments()">{{ t('common.retry') }}</button>
+        <BsButton type="button" class="ls-btn" @click="refreshCommitments()">{{ t('common.retry') }}</BsButton>
       </section>
       <section v-else-if="can('commitments.read')" class="ls-card overflow-hidden" aria-labelledby="commitments-heading">
-        <div class="flex items-center justify-between px-6 py-4"><h2 id="commitments-heading" class="text-base font-bold">{{ t('dashboard.commitments') }}</h2><button class="ls-btn ls-btn-sm" @click="showOperations('commitments')">{{ t('dashboard.manage') }}</button></div>
+        <div class="flex items-center justify-between px-6 py-4"><h2 id="commitments-heading" class="text-base font-bold">{{ t('dashboard.commitments') }}</h2><BsButton type="submit" class="ls-btn ls-btn-sm" @click="showOperations('commitments')">{{ t('dashboard.manage') }}</BsButton></div>
         <div v-if="commitments.length" class="overflow-x-auto"><BsDataTable :value="commitments">
   <Column >
     <template #body="{ data: item }">{{ item.title }}</template>

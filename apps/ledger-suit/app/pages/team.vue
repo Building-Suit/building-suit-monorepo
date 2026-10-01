@@ -396,16 +396,16 @@ const { dirty: overlayDirty2 } = useRecordAction(() => roleForm.value, computed(
         <p class="mt-2 text-sm leading-6 text-fg-muted">{{ t('access.subtitle') }}</p>
       </div>
       <div class="flex flex-wrap gap-2">
-        <button v-if="can('members.read')" type="button" class="ls-btn" @click="openMatrix">{{ t('access.permissionsMatrix') }}</button>
-        <button v-if="can('members.update')" type="button" class="ls-btn ls-btn-primary" @click="openCreateRole"><AppIcon name="add" :size="18" /> {{ t('access.newRole') }}</button>
-        <button v-if="can('members.invite')" type="button" class="ls-btn ls-btn-primary" @click="showInvitation">
+        <BsButton v-if="can('members.read')" type="button" class="ls-btn" @click="openMatrix">{{ t('access.permissionsMatrix') }}</BsButton>
+        <BsButton v-if="can('members.update')" type="button" class="ls-btn ls-btn-primary" @click="openCreateRole"><AppIcon name="add" :size="18" /> {{ t('access.newRole') }}</BsButton>
+        <BsButton v-if="can('members.invite')" type="button" class="ls-btn ls-btn-primary" @click="showInvitation">
           <AppIcon name="add" :size="18" /> {{ t('org.invite') }}
-        </button>
+        </BsButton>
       </div>
     </header>
 
     <div class="ls-card flex flex-wrap gap-1 p-1.5" role="tablist" :aria-label="t('access.title')">
-      <button
+      <BsButton
         v-for="tab in tabs"
         :key="tab.key"
         type="button"
@@ -416,7 +416,7 @@ const { dirty: overlayDirty2 } = useRecordAction(() => roleForm.value, computed(
         @click="activeTab = tab.key"
       >
         {{ tab.label }} <span v-if="tab.count !== undefined" class="ms-1 opacity-70">{{ tab.count }}</span>
-      </button>
+      </BsButton>
     </div>
 
     <SectionSkeleton v-if="loading" variant="table" :rows="6" />
@@ -450,7 +450,7 @@ const { dirty: overlayDirty2 } = useRecordAction(() => roleForm.value, computed(
   </Column>
   <Column header-class="text-end" body-class="whitespace-nowrap text-end">
     <template #header>{{ t('access.actions') }}</template>
-    <template #body="{ data: member }"><button v-if="can('members.update') && member.role !== 'owner'" type="button" class="ls-btn ls-btn-sm" @click="openEditor(member)">{{ t('access.editAccess') }}</button><button v-if="can('members.update') && member.role !== 'owner' && member.user_id !== user?.id" type="button" class="ls-btn ls-btn-sm ms-1" @click="quickStatus(member)">{{ t(member.status === 'active' ? 'access.suspend' : 'access.reactivate') }}</button><button v-if="can('members.remove') && member.role !== 'owner' && member.user_id !== user?.id" type="button" class="ls-btn ls-btn-sm ms-1 text-danger" @click="removeMember(member)">{{ t('access.remove') }}</button></template>
+    <template #body="{ data: member }"><BsButton v-if="can('members.update') && member.role !== 'owner'" type="button" class="ls-btn ls-btn-sm" @click="openEditor(member)">{{ t('access.editAccess') }}</BsButton><BsButton v-if="can('members.update') && member.role !== 'owner' && member.user_id !== user?.id" type="button" class="ls-btn ls-btn-sm ms-1" @click="quickStatus(member)">{{ t(member.status === 'active' ? 'access.suspend' : 'access.reactivate') }}</BsButton><BsButton v-if="can('members.remove') && member.role !== 'owner' && member.user_id !== user?.id" type="button" class="ls-btn ls-btn-sm ms-1 text-danger" @click="removeMember(member)">{{ t('access.remove') }}</BsButton></template>
   </Column>
 </BsDataTable>
       </div>
@@ -467,7 +467,7 @@ const { dirty: overlayDirty2 } = useRecordAction(() => roleForm.value, computed(
         <article v-for="role in roles" :key="role" class="ls-card p-5">
           <div class="flex items-start justify-between gap-2">
             <span class="grid size-10 place-items-center rounded-control bg-brand-navy text-brand-gold"><AppIcon :name="role === 'viewer' ? 'user' : 'team'" /></span>
-            <button v-if="can('members.update') && role !== 'owner'" type="button" class="ls-btn ls-btn-sm" @click="openEditSystemRole(role)">{{ t('access.editRole') }}</button>
+            <BsButton v-if="can('members.update') && role !== 'owner'" type="button" class="ls-btn ls-btn-sm" @click="openEditSystemRole(role)">{{ t('access.editRole') }}</BsButton>
           </div>
           <h3 class="mt-4 font-bold">{{ t(`org.roles.${role}`) }}</h3>
           <p class="mt-2 min-h-16 text-sm leading-5 text-fg-muted">{{ t(`access.roles.${role}`) }}</p>
@@ -477,8 +477,8 @@ const { dirty: overlayDirty2 } = useRecordAction(() => roleForm.value, computed(
           <div class="flex items-start justify-between gap-2">
             <span class="grid size-10 place-items-center rounded-control bg-brand-navy text-brand-gold"><AppIcon name="team" /></span>
             <div v-if="can('members.update')" class="flex gap-1">
-              <button type="button" class="ls-btn ls-btn-sm" @click="openEditRole(role)">{{ t('access.editRole') }}</button>
-              <button type="button" class="ls-btn ls-btn-sm text-danger" @click="deleteRole(role)">{{ t('access.remove') }}</button>
+              <BsButton type="button" class="ls-btn ls-btn-sm" @click="openEditRole(role)">{{ t('access.editRole') }}</BsButton>
+              <BsButton type="button" class="ls-btn ls-btn-sm text-danger" @click="deleteRole(role)">{{ t('access.remove') }}</BsButton>
             </div>
           </div>
           <h3 class="mt-4 font-bold">{{ roleLabel(null, role.id) }}</h3>
@@ -518,7 +518,7 @@ const { dirty: overlayDirty2 } = useRecordAction(() => roleForm.value, computed(
   </Column>
   <Column header-class="text-end" body-class="whitespace-nowrap text-end">
     <template #header>{{ t('access.actions') }}</template>
-    <template #body="{ data: invitation }"><template v-if="invitation.status === 'pending'"><button v-if="can('members.invite')" type="button" class="ls-btn ls-btn-sm" :disabled="saving" @click="resendInvitation(invitation)">{{ t('access.resend') }}</button><button v-if="can('members.update')" type="button" class="ls-btn ls-btn-sm ms-1 text-danger" :disabled="saving" @click="revokeInvitation(invitation)">{{ t('access.revoke') }}</button></template></template>
+    <template #body="{ data: invitation }"><template v-if="invitation.status === 'pending'"><BsButton v-if="can('members.invite')" type="button" class="ls-btn ls-btn-sm" :disabled="saving" @click="resendInvitation(invitation)">{{ t('access.resend') }}</BsButton><BsButton v-if="can('members.update')" type="button" class="ls-btn ls-btn-sm ms-1 text-danger" :disabled="saving" @click="revokeInvitation(invitation)">{{ t('access.revoke') }}</BsButton></template></template>
   </Column>
 </BsDataTable>
       </div>
@@ -527,9 +527,8 @@ const { dirty: overlayDirty2 } = useRecordAction(() => roleForm.value, computed(
 
     <TeamMenu :show-trigger="false" />
       <!-- Edit access: role menu only -->
-        <BsDialog v-if="editingMember" :visible="true" :title="t('access.editAccessFor', { name: editingMember.profile?.full_name || editingMember.profile?.email })" :aria-label="t('access.editAccessFor', { name: editingMember.profile?.full_name || editingMember.profile?.email })" :show-header="false" size="lg" :dirty="overlayDirty0" :pending="saving" @update:visible="value => { if (!value) editingMember = null }"><template #default="{ close: dismiss }">
-<form class="overflow-y-auto p-6" @submit.prevent="saveMember">
-            <div class="flex items-start justify-between gap-4"><div><h2 class="text-lg font-bold">{{ t('access.editAccessFor', { name: editingMember.profile?.full_name || editingMember.profile?.email }) }}</h2><p class="mt-1 text-sm text-fg-muted" dir="ltr">{{ editingMember.profile?.email }}</p></div><button type="button" class="ls-btn ls-btn-sm" :aria-label="t('common.close')" @click="dismiss"><AppIcon name="close" /></button></div>
+        <BsRecordActionDialog v-if="editingMember" :visible="true" :title="t('access.editAccessFor', { name: editingMember.profile?.full_name || editingMember.profile?.email })" size="lg" :dirty="overlayDirty0" :pending="saving" :error="errorMessage" :submit-label="t('access.saveAccess')" :cancel-label="t('common.cancel')" @update:visible="value => { if (!value) editingMember = null }" @submit="saveMember">
+            <p class="text-sm text-fg-muted" dir="ltr">{{ editingMember.profile?.email }}</p>
             <fieldset class="mt-6">
               <legend class="text-sm font-bold">{{ t('access.role') }}</legend>
               <div class="mt-3 grid gap-2">
@@ -537,15 +536,12 @@ const { dirty: overlayDirty2 } = useRecordAction(() => roleForm.value, computed(
                 <label v-for="role in customRoles" :key="role.id" class="flex cursor-pointer items-center justify-between gap-3 rounded-card border p-3 text-sm transition-colors" :class="editRoleChoice === `custom:${role.id}` ? 'border-fg bg-surface-muted' : 'border-[var(--bs-border)] hover:bg-surface-muted'"><span class="flex items-center gap-3"><input v-model="editRoleChoice" type="radio" name="edit-member-role" :value="`custom:${role.id}`" class="size-4 accent-[var(--bs-accent)]"><span class="font-bold">{{ roleLabel(null, role.id) }}</span></span><span class="text-xs text-fg-muted">{{ customPermissionCount(role.id) }} / {{ capabilities.length }} {{ t('access.permissionsMatrix').toLocaleLowerCase() }}</span></label>
               </div>
             </fieldset>
-            <p v-if="errorMessage" class="ls-error mt-6" role="alert">{{ errorMessage }}</p>
-            <div class="mt-6 flex justify-end gap-2"><button type="button" class="ls-btn" @click="dismiss">{{ t('common.cancel') }}</button><button class="ls-btn ls-btn-primary" :disabled="saving">{{ saving ? t('common.saving') : t('access.saveAccess') }}</button></div>
-          </form>
-</template></BsDialog>
+        </BsRecordActionDialog>
 
       <!-- Permission matrix -->
         <BsDialog v-if="matrixOpen" :visible="true" :title="t('access.permissionsMatrix')" :aria-label="t('access.permissionsMatrix')" :show-header="false" size="lg" :pending="saving" @update:visible="value => { if (!value) matrixOpen = false }"><template #default="{ close: dismiss }">
 <div class="overflow-y-auto p-6">
-            <div class="flex items-start justify-between gap-4"><div><h2 class="text-lg font-bold">{{ t('access.permissionsMatrix') }}</h2><p class="mt-1 text-sm text-fg-muted">{{ t('access.matrixHint') }}</p></div><button type="button" class="ls-btn ls-btn-sm" :aria-label="t('common.close')" @click="dismiss"><AppIcon name="close" /></button></div>
+            <div class="flex items-start justify-between gap-4"><div><h2 class="text-lg font-bold">{{ t('access.permissionsMatrix') }}</h2><p class="mt-1 text-sm text-fg-muted">{{ t('access.matrixHint') }}</p></div><BsButton type="button" class="ls-btn ls-btn-sm" :aria-label="t('common.close')" @click="dismiss"><AppIcon name="close" /></BsButton></div>
             <div class="mt-6 overflow-x-auto">
               <BsDataTable :value="permissionRows" row-group-mode="subheader" group-rows-by="section">
   <Column :header="t('access.permission')"><template #body="{ data: row }"><p class="font-semibold">{{ capabilityTitle(row.capability) }}</p></template></Column>
@@ -557,9 +553,7 @@ const { dirty: overlayDirty2 } = useRecordAction(() => roleForm.value, computed(
 </template></BsDialog>
 
       <!-- Create / edit custom role -->
-        <BsDialog v-if="roleModalOpen" :visible="true" :title="roleForm.systemRole ? t('access.editRoleFor', { role: t(`org.roles.${roleForm.systemRole}`) }) : roleForm.id ? t('access.editRole') : t('access.newRole')" :aria-label="roleForm.systemRole ? t('access.editRoleFor', { role: t(`org.roles.${roleForm.systemRole}`) }) : roleForm.id ? t('access.editRole') : t('access.newRole')" :show-header="false" size="lg" :dirty="overlayDirty2" :pending="roleSaving" @update:visible="value => { if (!value) roleModalOpen = false }"><template #default="{ close: dismiss }">
-<form class="overflow-y-auto p-6" @submit.prevent="saveRole">
-            <div class="flex items-start justify-between gap-4"><div><h2 class="text-lg font-bold">{{ roleForm.systemRole ? t('access.editRoleFor', { role: t(`org.roles.${roleForm.systemRole}`) }) : roleForm.id ? t('access.editRole') : t('access.newRole') }}</h2></div><button type="button" class="ls-btn ls-btn-sm" :aria-label="t('common.close')" @click="dismiss"><AppIcon name="close" /></button></div>
+        <BsRecordActionDialog v-if="roleModalOpen" :visible="true" :title="roleForm.systemRole ? t('access.editRoleFor', { role: t(`org.roles.${roleForm.systemRole}`) }) : roleForm.id ? t('access.editRole') : t('access.newRole')" size="lg" :dirty="overlayDirty2" :pending="roleSaving" :error="errorMessage" :submit-label="t('access.createRole')" :cancel-label="t('common.cancel')" @update:visible="value => { if (!value) roleModalOpen = false }" @submit="saveRole">
             <QuotaUsageMeter v-if="!roleForm.id && !roleForm.systemRole" quota-key="max_custom_roles" compact class="mt-4" />
             <div v-if="!roleForm.systemRole" class="mt-6 grid gap-4 sm:grid-cols-2">
               <FloatingField :label="t('access.roleNameEn')"><input v-model="roleForm.name_en" type="text" class="ls-input" dir="ltr" required maxlength="80"></FloatingField>
@@ -570,9 +564,6 @@ const { dirty: overlayDirty2 } = useRecordAction(() => roleForm.value, computed(
   <Column :header="t('access.permission')"><template #body="{ data: row }"><label class="flex cursor-pointer items-center gap-3"><input type="checkbox" class="size-4 shrink-0 accent-[var(--bs-accent)]" :checked="roleForm.caps.has(row.capability.key)" @change="toggleRoleCap(row.capability.key, ($event.target as HTMLInputElement).checked)"><span class="font-semibold">{{ capabilityTitle(row.capability) }}</span></label></template></Column>
 <template #groupheader="{ data: row }"><div class="bg-surface-muted font-bold">{{ t(`nav.groups.${row.groupKey}`) }} / {{ t(`access.permissionAreas.${row.domainKey}`) }}</div></template></BsDataTable>
             </div>
-            <p v-if="errorMessage" class="ls-error mt-6" role="alert">{{ errorMessage }}</p>
-            <div class="mt-6 flex justify-end gap-2"><button type="button" class="ls-btn" @click="dismiss">{{ t('common.cancel') }}</button><button class="ls-btn ls-btn-primary" :disabled="roleSaving">{{ roleSaving ? t('common.saving') : t('access.createRole') }}</button></div>
-          </form>
-</template></BsDialog>
+        </BsRecordActionDialog>
   </div>
 </template>

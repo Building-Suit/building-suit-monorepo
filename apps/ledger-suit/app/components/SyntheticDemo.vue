@@ -17,7 +17,7 @@ function reset() { state.value = resetSyntheticDemo(state.value) }
         <h2 id="synthetic-demo-title" class="text-lg font-bold">{{ t('demo.title') }}</h2>
         <p class="mt-1 text-sm text-fg-muted">{{ t('demo.isolation') }}</p>
       </div>
-      <button type="button" class="ls-btn ls-btn-sm" @click="emit('close')">{{ t('common.close') }}</button>
+      <BsButton type="button" class="ls-btn ls-btn-sm" @click="emit('close')">{{ t('common.close') }}</BsButton>
     </div>
 
     <div class="rounded-control bg-surface-muted p-4 text-sm" role="status">
@@ -33,8 +33,8 @@ function reset() { state.value = resetSyntheticDemo(state.value) }
     </BsDataTable>
 
     <div class="flex flex-wrap gap-2">
-      <button type="button" class="ls-btn ls-btn-primary" @click="addReceipt">{{ t('demo.addReceipt') }}</button>
-      <button type="button" class="ls-btn" @click="reset">{{ t('demo.reset') }}</button>
+      <BsButton type="button" class="ls-btn ls-btn-primary" @click="addReceipt">{{ t('demo.addReceipt') }}</BsButton>
+      <BsButton type="button" class="ls-btn" @click="reset">{{ t('demo.reset') }}</BsButton>
     </div>
     <p class="text-xs text-fg-muted">{{ t('demo.revision', { revision: state.revision }) }}</p>
   </section>

@@ -377,8 +377,8 @@ async function restoreAuthenticatedOnboarding() {
 
 <template>
   <BsAuthLayout :product-name="t('app.name')" :home-label="t('marketing.home')" :title="t('onboarding.title')" :description="t('onboarding.subtitle')" wide>
-    <template #logo="{ tone }"><AppLogo :tone="tone" class="h-auto w-56" /></template>
-        <form v-if="!awaitingOtp" class="ls-auth-card w-full p-6 sm:p-8" :data-hydrated="hydrated" @submit.prevent="step === 1 ? next() : finishOnboarding()">
+    <template #logo="{ tone }"><BsProductLogo name="Ledger Suit" asset-prefix="/brand/ledger-suit" :tone="tone" class="h-auto w-56" /></template>
+        <BsForm v-if="!awaitingOtp" class="ls-auth-card w-full p-6 sm:p-8" :data-hydrated="hydrated" @submit.prevent="step === 1 ? next() : finishOnboarding()">
           <header class="mb-6 space-y-2"><h1 class="text-xl font-bold">{{ t('onboarding.title') }}</h1><p class="text-sm text-fg-muted">{{ t('onboarding.noCardTrial') }}</p></header>
           <BsSignupWizard :step="step" :steps="[1, 2].map(index => ({ title: t(`onboarding.steps.${index}.title`), body: t(`onboarding.steps.${index}.body`) }))" :pending="pending" @back="back">
 
@@ -420,12 +420,12 @@ async function restoreAuthenticatedOnboarding() {
           </div>
 
           <p v-if="errorMessage" class="ls-error mt-6" role="alert">{{ errorMessage }}</p>
-          <button type="submit" class="ls-btn ls-btn-primary mt-8 w-full" :disabled="pending || (step === 2 && !consentAccepted)">{{ submitButtonText }}</button>
+          <BsButton type="submit" class="ls-btn ls-btn-primary mt-8 w-full" :disabled="pending || (step === 2 && !consentAccepted)">{{ submitButtonText }}</BsButton>
           <p v-if="step === 2" class="mt-3 text-center text-xs text-fg-muted">{{ t('onboarding.noCardRequired') }}</p>
           </BsSignupWizard>
-        </form>
+        </BsForm>
 
-        <form v-else class="ls-auth-card w-full p-6 sm:p-8" :data-hydrated="hydrated" @submit.prevent="verifyOtpAndContinue">
+        <BsForm v-else class="ls-auth-card w-full p-6 sm:p-8" :data-hydrated="hydrated" @submit.prevent="verifyOtpAndContinue">
           <div class="mx-auto max-w-lg text-center">
             <div class="mx-auto grid size-14 place-items-center rounded-full bg-surface-muted text-primary"><AppIcon name="mail" :size="28" /></div>
             <p class="mt-6 text-xs font-bold uppercase tracking-[.18em] text-fg-muted">{{ t('onboarding.otpEyebrow') }}</p>
@@ -445,15 +445,15 @@ async function restoreAuthenticatedOnboarding() {
 
             <p v-if="errorMessage" class="ls-error mt-6" role="alert">{{ errorMessage }}</p>
 
-            <button class="ls-btn ls-btn-primary mt-6 w-full" :disabled="pending || otp.length !== 6 || otpExpired">
+            <BsButton type="submit" class="ls-btn ls-btn-primary mt-6 w-full" :disabled="pending || otp.length !== 6 || otpExpired">
               {{ pending ? t('onboarding.otpVerifying') : t('onboarding.otpVerify') }}
-            </button>
+            </BsButton>
 
             <div class="mt-6 text-center text-sm text-fg-muted">
               <span>{{ t('onboarding.otpMissing') }}</span>
-              <button type="button" class="ms-1 font-bold text-fg underline underline-offset-4 disabled:no-underline disabled:opacity-50" :disabled="pending || resendIn > 0" @click="resendOtp">
+              <BsButton type="button" class="ms-1 font-bold text-fg underline underline-offset-4 disabled:no-underline disabled:opacity-50" :disabled="pending || resendIn > 0" @click="resendOtp">
                 {{ resendIn > 0 ? t('onboarding.otpResendIn', { time: formatCountdown(resendIn) }) : t('onboarding.otpResend') }}
-              </button>
+              </BsButton>
             </div>
 
             <div class="mt-8 rounded-control border border-[var(--bs-border)] bg-surface-muted p-4 text-xs leading-5 text-fg-muted">
@@ -461,7 +461,7 @@ async function restoreAuthenticatedOnboarding() {
               <p class="mt-1">{{ t('onboarding.otpSecurityBody') }}</p>
             </div>
           </div>
-        </form>
+        </BsForm>
 
     <template #legal><p class="mt-4 text-sm text-fg-muted"><NuxtLink to="/login" class="underline">{{ t('auth.signIn') }}</NuxtLink> · <NuxtLink to="/contact" class="underline">{{ t('marketing.contact') }}</NuxtLink></p></template>
   </BsAuthLayout>

@@ -11,6 +11,7 @@ const query = ref('')
 const filter = ref<PortfolioFilter>('all')
 const openingId = ref<string | null>(null)
 const FILTER_OPTIONS = ['all', 'healthy', 'needs_attention', 'unavailable'] as const
+const filterOptions = computed(() => FILTER_OPTIONS.map(value => ({ value, label: t(`clientPortfolio.filters.${value}`) })))
 
 useHead({ title: () => `${t('clientPortfolio.title')} · ${t('app.name')}` })
 
@@ -28,10 +29,10 @@ function signalText<T>(signal: { state: 'available', value: T } | { state: 'unav
   return signal.state === 'available' ? t(`${key}.${String(signal.value)}`) : t('clientPortfolio.unavailable')
 }
 
-function healthClass(health: ClientHealthRow['health']) {
-  if (health === 'healthy') return 'bg-[var(--bs-status-success-bg)] text-[var(--bs-status-success)]'
-  if (health === 'needs_attention') return 'bg-[var(--bs-status-warning-bg)] text-[var(--bs-status-warning)]'
-  return 'bg-surface-muted text-fg-muted'
+function healthTone(health: ClientHealthRow['health']) {
+  if (health === 'healthy') return 'success' as const
+  if (health === 'needs_attention') return 'warning' as const
+  return 'neutral' as const
 }
 
 async function openClient(row: ClientHealthRow) {
@@ -51,10 +52,7 @@ async function openClient(row: ClientHealthRow) {
     <LedgerPageHeader :title="t('clientPortfolio.title')" :subtitle="t('clientPortfolio.subtitle')" />
 
     <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" :aria-label="t('clientPortfolio.summary')">
-      <div v-for="status in FILTER_OPTIONS" :key="status" class="ls-card p-4">
-        <p class="text-sm text-fg-muted">{{ t(`clientPortfolio.filters.${status}`) }}</p>
-        <p class="mt-1 text-2xl font-bold tabular-nums">{{ counts[status] }}</p>
-      </div>
+      <BsKpiCard v-for="status in FILTER_OPTIONS" :key="status" :title="t(`clientPortfolio.filters.${status}`)"><span class="tabular-nums">{{ counts[status] }}</span></BsKpiCard>
     </section>
 
     <section class="ls-card space-y-4 p-4" :aria-label="t('clientPortfolio.filters.label')">
@@ -63,15 +61,11 @@ async function openClient(row: ClientHealthRow) {
           <input v-model="query" type="search" class="ls-input" :placeholder="t('clientPortfolio.searchPlaceholder')">
         </FloatingField>
         <FloatingField :label="t('clientPortfolio.healthFilter')">
-          <select v-model="filter" class="ls-input">
-            <option v-for="status in FILTER_OPTIONS" :key="status" :value="status">
-              {{ t(`clientPortfolio.filters.${status}`) }}
-            </option>
-          </select>
+          <BsSelect v-model="filter" :label="t('clientPortfolio.healthFilter')" :options="filterOptions" option-label="label" option-value="value" />
         </FloatingField>
-        <button type="button" class="ls-btn" :disabled="pending" @click="load">
+        <BsButton type="button" class="ls-btn" :disabled="pending" @click="load">
           {{ t('clientPortfolio.refresh') }}
-        </button>
+        </BsButton>
       </div>
       <p class="text-sm text-fg-muted">{{ t('clientPortfolio.signalNote') }}</p>
     </section>
@@ -81,7 +75,7 @@ async function openClient(row: ClientHealthRow) {
     <section v-else-if="error" class="ls-card space-y-3 p-6" role="alert">
       <h2 class="font-bold">{{ t('clientPortfolio.loadFailed') }}</h2>
       <p class="text-sm text-fg-muted">{{ t('clientPortfolio.loadFailedHint') }}</p>
-      <button type="button" class="ls-btn" @click="load">{{ t('common.retry') }}</button>
+      <BsButton type="button" class="ls-btn" @click="load">{{ t('common.retry') }}</BsButton>
     </section>
 
     <EmptyState
@@ -105,7 +99,7 @@ async function openClient(row: ClientHealthRow) {
           <Column>
             <template #header>{{ t('clientPortfolio.health') }}</template>
             <template #body="{ data: row }">
-              <span class="ls-badge whitespace-nowrap" :class="healthClass(row.health)">{{ t(`clientPortfolio.healthStates.${row.health}`) }}</span>
+              <StatusBadge class="whitespace-nowrap" :status="row.health" :label="t(`clientPortfolio.healthStates.${row.health}`)" :tone="healthTone(row.health)" />
             </template>
           </Column>
           <Column body-class="whitespace-nowrap">
@@ -129,9 +123,9 @@ async function openClient(row: ClientHealthRow) {
           <Column header-class="text-end" body-class="text-end whitespace-nowrap">
             <template #header><span class="sr-only">{{ t('clientPortfolio.actions') }}</span></template>
             <template #body="{ data: row }">
-              <button type="button" class="ls-btn ls-btn-sm" :disabled="Boolean(openingId)" @click="openClient(row)">
+              <BsButton type="button" class="ls-btn ls-btn-sm" :disabled="Boolean(openingId)" @click="openClient(row)">
                 {{ openingId === row.id ? t('clientPortfolio.opening') : t('clientPortfolio.openClient') }}
-              </button>
+              </BsButton>
             </template>
           </Column>
         </BsDataTable>

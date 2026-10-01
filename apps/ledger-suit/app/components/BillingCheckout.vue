@@ -270,7 +270,7 @@ async function reviewChange(planKey: LaunchPlanKey) {
       </template>
     </section>
 
-    <button v-if="['checkout', 'manage', 'display'].includes(surface) && can('billing.manage')" type="button" class="ls-btn" @click="manualPlan = undefined; manualOpen = true">{{ t('billing.manual.requests') }}</button>
+    <BsButton v-if="['checkout', 'manage', 'display'].includes(surface) && can('billing.manage')" type="button" class="ls-btn" @click="manualPlan = undefined; manualOpen = true">{{ t('billing.manual.requests') }}</BsButton>
     <ManualPaymentCheckout v-if="manualOpen" :key="`${currentId}:${user?.id}`" :plan="manualPlan" :interval="interval" @close="manualOpen = false" />
 
     <fieldset class="mx-auto max-w-sm">
@@ -291,7 +291,7 @@ async function reviewChange(planKey: LaunchPlanKey) {
     <div v-if="catalogPending" class="py-8 text-center text-sm text-fg-muted" role="status">{{ t('billing.plans.loading') }}</div>
     <div v-else-if="catalogError" class="ls-error text-center" role="alert">
       <p>{{ t('billing.plans.loadFailed') }}</p>
-      <button type="button" class="mt-2 text-link" @click="refresh()">{{ t('common.retry') }}</button>
+      <BsButton type="button" class="mt-2 text-link" @click="refresh()">{{ t('common.retry') }}</BsButton>
     </div>
     <div v-else class="grid items-stretch gap-4 md:grid-cols-2 xl:grid-cols-4">
       <article
@@ -333,15 +333,15 @@ async function reviewChange(planKey: LaunchPlanKey) {
         </ul>
         <p v-else class="mt-5 flex-1 text-sm text-fg-muted">{{ t('billing.plans.scale.preview') }}</p>
 
-        <button v-if="surface === 'checkout' && plan.is_purchasable" type="button" class="ls-btn ls-btn-primary mt-6 w-full" :disabled="Boolean(pendingPlan)" @click="checkout(plan.plan_key as LaunchPlanKey)">
+        <BsButton v-if="surface === 'checkout' && plan.is_purchasable" type="button" class="ls-btn ls-btn-primary mt-6 w-full" :disabled="Boolean(pendingPlan)" @click="checkout(plan.plan_key as LaunchPlanKey)">
           {{ pendingPlan === plan.plan_key ? t('billing.openingCheckout') : t('billing.plans.choose', { plan: planName(plan) }) }}
-        </button>
-        <button v-else-if="surface === 'manage' && plan.is_purchasable && launchPlanCurrent" type="button" class="ls-btn mt-6 w-full" :disabled="Boolean(reviewingPlan)" @click="reviewChange(plan.plan_key as LaunchPlanKey)">
+        </BsButton>
+        <BsButton v-else-if="surface === 'manage' && plan.is_purchasable && launchPlanCurrent" type="button" class="ls-btn mt-6 w-full" :disabled="Boolean(reviewingPlan)" @click="reviewChange(plan.plan_key as LaunchPlanKey)">
           {{ reviewingPlan === plan.plan_key ? t('billing.planChange.reviewing') : t('billing.planChange.review', { plan: planName(plan) }) }}
-        </button>
+        </BsButton>
         <NuxtLink v-else-if="surface === 'public' && plan.is_purchasable" to="/signup" class="ls-btn ls-btn-primary mt-6 w-full">{{ t('landing.startTrial') }}</NuxtLink>
-        <button v-else-if="!plan.is_purchasable" type="button" class="ls-btn mt-6 w-full" disabled>{{ t('billing.plans.comingSoon') }}</button>
-        <button v-if="surface === 'checkout' && plan.is_purchasable && can('billing.manage')" type="button" class="ls-btn mt-2 w-full" @click="manualPlan = plan.plan_key as LaunchPlanKey; manualOpen = true">{{ t('billing.manual.choose') }}</button>
+        <BsButton v-else-if="!plan.is_purchasable" type="button" class="ls-btn mt-6 w-full" disabled>{{ t('billing.plans.comingSoon') }}</BsButton>
+        <BsButton v-if="surface === 'checkout' && plan.is_purchasable && can('billing.manage')" type="button" class="ls-btn mt-2 w-full" @click="manualPlan = plan.plan_key as LaunchPlanKey; manualOpen = true">{{ t('billing.manual.choose') }}</BsButton>
       </article>
     </div>
 
@@ -386,7 +386,7 @@ async function reviewChange(planKey: LaunchPlanKey) {
                 target: planNameForKey(planImpact.target_plan_key),
               }) }}</p>
             </div>
-            <button type="button" class="ls-btn-icon" :aria-label="t('common.close')" @click="dismiss"><AppIcon name="close" :size="20" /></button>
+            <BsButton type="button" class="ls-btn-icon" :aria-label="t('common.close')" @click="dismiss"><AppIcon name="close" :size="20" /></BsButton>
           </div>
 
           <div class="mt-5 rounded-card bg-surface-muted p-4 text-sm">
@@ -435,7 +435,7 @@ async function reviewChange(planKey: LaunchPlanKey) {
           <p v-else class="mt-6 text-sm text-fg-muted">{{ t('billing.planChange.noChange') }}</p>
 
           <div class="mt-6 flex justify-end">
-            <button type="button" class="ls-btn ls-btn-primary" @click="dismiss">{{ t('common.close') }}</button>
+            <BsButton type="button" class="ls-btn ls-btn-primary" @click="dismiss">{{ t('common.close') }}</BsButton>
           </div>
         </section>
 </template></BsDialog>

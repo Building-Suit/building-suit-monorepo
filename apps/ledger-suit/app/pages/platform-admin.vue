@@ -115,8 +115,8 @@ function planName(key: unknown) {
 
 <template>
   <BsAppShell home-path="/platform-admin" :product-name="t('admin.title')" :groups="[]" :labels="{ close: t('nav.close'), open: t('nav.open'), navigation: t('nav.primary'), dashboard: t('admin.title') }">
-    <template #logo><AppLogo class="h-14 w-auto max-w-52" /></template>
-    <template #header><SettingsMenu /><button type="button" class="ls-btn" @click="signOut">{{ t('common.signOut') }}</button></template>
+    <template #logo><BsProductLogo name="Ledger Suit" asset-prefix="/brand/ledger-suit" class="h-14 w-auto max-w-52" /></template>
+    <template #header><SettingsMenu /><BsButton type="button" class="ls-btn" @click="signOut">{{ t('common.signOut') }}</BsButton></template>
     <div class="space-y-4">
       <h1 class="text-h1 font-bold">{{ t('admin.title') }}</h1>
       <p class="text-fg-muted">{{ t('admin.subtitle') }}</p>
@@ -127,9 +127,9 @@ function planName(key: unknown) {
         <FloatingField :label="t('admin.view')"><select v-model="resource" class="ls-input" :disabled="pending || denied" @change="changeResource"><option v-for="view in resources" :key="view" :value="view">{{ t(`admin.views.${view}`) }}</option></select></FloatingField>
         <FloatingField v-if="resource !== 'status'" :label="t('admin.search')"><input v-model="search" class="ls-input" maxlength="100" :disabled="pending || denied" @keyup.enter="applyFilters"></FloatingField>
         <FloatingField v-if="filterOptions[resource]?.length" :label="t('admin.filter')"><select v-model="status" class="ls-input" :disabled="pending || denied"><option value="">{{ t('admin.allStates') }}</option><option v-for="item in filterOptions[resource]" :key="item" :value="item">{{ t(`admin.states.${item}`, item) }}</option></select></FloatingField>
-        <button v-if="resource !== 'status'" type="button" class="ls-btn" :disabled="pending" @click="applyFilters">{{ t('admin.apply') }}</button>
-        <button v-if="resource !== 'status' && (search || status || targetId)" type="button" class="ls-btn" :disabled="pending" @click="clearFilters">{{ t('admin.clear') }}</button>
-        <button type="button" class="ls-btn" :disabled="pending" @click="refresh">{{ t('common.refresh') }}</button>
+        <BsButton v-if="resource !== 'status'" type="button" class="ls-btn" :disabled="pending" @click="applyFilters">{{ t('admin.apply') }}</BsButton>
+        <BsButton v-if="resource !== 'status' && (search || status || targetId)" type="button" class="ls-btn" :disabled="pending" @click="clearFilters">{{ t('admin.clear') }}</BsButton>
+        <BsButton type="button" class="ls-btn" :disabled="pending" @click="refresh">{{ t('common.refresh') }}</BsButton>
       </div>
       <p v-if="targetId" class="text-sm text-fg-muted">{{ t('admin.scopedResults') }}</p>
       <p v-if="pending" role="status">{{ t('app.loading') }}</p>
@@ -138,25 +138,23 @@ function planName(key: unknown) {
         <Column v-for="column in columns" :key="column.field" :field="column.field" :header="column.header">
           <template #body="{ data }"><pre v-if="column.field.endsWith('_state')" class="max-w-80 overflow-auto text-xs" dir="ltr">{{ display(data[column.field]) }}</pre><span v-else class="break-words">{{ column.field === 'plan_key' ? planName(data[column.field]) : display(data[column.field]) }}</span></template>
         </Column>
-        <Column v-if="resource === 'users' || resource === 'organizations'" :header="t('admin.memberships')"><template #body="{ data }"><button type="button" class="ls-btn" :disabled="pending" @click="inspectMemberships(data)">{{ t('admin.memberships') }}</button></template></Column>
-        <Column v-if="resource === 'organizations' && isPlatformAdmin" :header="t('admin.access')"><template #body="{ data }"><button type="button" class="ls-btn" :disabled="pending" @click="open(data, 'access')">{{ data.operator_suspended ? t('admin.reactivate') : t('admin.suspend') }}</button></template></Column>
-        <Column v-if="resource === 'subscriptions' && isPlatformAdmin" :header="t('admin.correction')"><template #body="{ data }"><button type="button" class="ls-btn" :disabled="pending || data.provider !== 'manual'" @click="open(data, 'subscription')">{{ t('admin.correction') }}</button></template></Column>
-        <Column v-if="resource === 'payments'" :header="t('admin.review')"><template #body="{ data }"><button v-if="data.evidence_id" type="button" class="ls-btn" :disabled="pending" @click="open(data, 'payment')">{{ t('admin.review') }}</button></template></Column>
-        <Column v-if="resource === 'support' && isPlatformAdmin" :header="t('admin.manage')"><template #body="{ data }"><button type="button" class="ls-btn" :disabled="pending" @click="open(data, 'support')">{{ t('admin.manage') }}</button></template></Column>
+        <Column v-if="resource === 'users' || resource === 'organizations'" :header="t('admin.memberships')"><template #body="{ data }"><BsButton type="button" class="ls-btn" :disabled="pending" @click="inspectMemberships(data)">{{ t('admin.memberships') }}</BsButton></template></Column>
+        <Column v-if="resource === 'organizations' && isPlatformAdmin" :header="t('admin.access')"><template #body="{ data }"><BsButton type="button" class="ls-btn" :disabled="pending" @click="open(data, 'access')">{{ data.operator_suspended ? t('admin.reactivate') : t('admin.suspend') }}</BsButton></template></Column>
+        <Column v-if="resource === 'subscriptions' && isPlatformAdmin" :header="t('admin.correction')"><template #body="{ data }"><BsButton type="button" class="ls-btn" :disabled="pending || data.provider !== 'manual'" @click="open(data, 'subscription')">{{ t('admin.correction') }}</BsButton></template></Column>
+        <Column v-if="resource === 'payments'" :header="t('admin.review')"><template #body="{ data }"><BsButton v-if="data.evidence_id" type="button" class="ls-btn" :disabled="pending" @click="open(data, 'payment')">{{ t('admin.review') }}</BsButton></template></Column>
+        <Column v-if="resource === 'support' && isPlatformAdmin" :header="t('admin.manage')"><template #body="{ data }"><BsButton type="button" class="ls-btn" :disabled="pending" @click="open(data, 'support')">{{ t('admin.manage') }}</BsButton></template></Column>
       </BsDataTable>
       <div v-if="role && resource !== 'status'" class="flex gap-3">
-        <button type="button" class="ls-btn" :disabled="pending || offset === 0" @click="page(-50)">{{ t('admin.previous') }}</button>
-        <button type="button" class="ls-btn" :disabled="pending || rows.length < 50 || offset >= 100000" @click="page(50)">{{ t('admin.next') }}</button>
+        <BsButton type="button" class="ls-btn" :disabled="pending || offset === 0" @click="page(-50)">{{ t('admin.previous') }}</BsButton>
+        <BsButton type="button" class="ls-btn" :disabled="pending || rows.length < 50 || offset >= 100000" @click="page(50)">{{ t('admin.next') }}</BsButton>
       </div>
     </div>
-    <BsDialog :visible="!!selected" :title="dialogTitle" :dirty="dirty" :pending="pending" @update:visible="value => { if (!value) close() }">
-      <form class="space-y-4 p-4" @submit.prevent="submit">
+    <BsRecordActionDialog :visible="!!selected" :title="dialogTitle" :dirty="dirty" :pending="pending" :error="error" :cancel-label="t('common.cancel')" @update:visible="value => { if (!value) close() }" @submit="submit">
         <p class="break-all">{{ selected?.id }}</p>
         <p v-if="dialogMode === 'support'" class="whitespace-pre-wrap rounded bg-surface-muted p-3">{{ selected?.customer_message }}</p>
         <p v-if="dialogMode === 'subscription'">{{ t('admin.currentPlan') }}: <strong>{{ planName(selected?.plan_key) }}</strong></p>
-        <p v-if="error" role="alert" class="ls-error">{{ error }}</p>
         <template v-if="dialogMode === 'payment'">
-          <button type="button" class="ls-btn" :disabled="pending" @click="inspectReceipt">{{ t('admin.inspect') }}</button>
+          <BsButton type="button" class="ls-btn" :disabled="pending" @click="inspectReceipt">{{ t('admin.inspect') }}</BsButton>
           <a v-if="receiptUrl" :href="receiptUrl" target="_blank" rel="noopener noreferrer" class="block text-link">{{ t('admin.openReceipt') }}</a>
           <FloatingField v-if="role === 'billing_operator' || isPlatformAdmin" :label="t('admin.action')"><select v-model="action" class="ls-input" :disabled="pending"><option v-for="state in ['under_review', 'approved', 'rejected']" :key="state" :value="state">{{ t(`billing.manual.states.${state}`) }}</option></select></FloatingField>
         </template>
@@ -169,9 +167,11 @@ function planName(key: unknown) {
         <template v-if="dialogMode !== 'payment' || role === 'billing_operator' || isPlatformAdmin">
           <FloatingField :label="t(dialogMode === 'payment' ? 'admin.paymentReason' : 'admin.reason')"><textarea v-model="reason" class="ls-input" required maxlength="1000" :disabled="pending" /></FloatingField>
           <FloatingField :label="t('admin.context')"><textarea v-model="context" class="ls-input" required maxlength="1000" :disabled="pending" /></FloatingField>
-          <button type="submit" class="ls-btn ls-btn-primary" :disabled="pending || !reason.trim() || !context.trim()">{{ t('admin.submit') }}</button>
         </template>
-      </form>
-    </BsDialog>
+        <template #actions="{ close: dismiss }">
+          <BsButton type="button" :disabled="pending" @click="dismiss">{{ t('common.cancel') }}</BsButton>
+          <BsButton v-if="dialogMode !== 'payment' || role === 'billing_operator' || isPlatformAdmin" type="submit" variant="primary" :pending="pending" :disabled="!reason.trim() || !context.trim()">{{ t('admin.submit') }}</BsButton>
+        </template>
+    </BsRecordActionDialog>
   </BsAppShell>
 </template>

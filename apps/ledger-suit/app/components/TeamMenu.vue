@@ -55,13 +55,8 @@ const { dirty: overlayDirty0 } = useRecordAction(() => ({ email: email.value, ro
 </script>
 <template>
   <div v-if="can('members.invite')">
-    <button v-if="showTrigger" type="button" class="ls-btn ls-btn-sm w-full" @click="show">{{ t('org.invite') }}</button>
-      <BsDialog v-if="open" :visible="true" :title="t('org.invite')" :aria-label="t('org.invite')" :show-header="false" size="md" :dirty="overlayDirty0" :pending="pending" @update:visible="value => { if (!value) close() }"><template #default="{ close: dismiss }">
-<form class="space-y-4 p-6" @submit.prevent="invite">
-          <div class="flex justify-between">
-            <h2 class="text-lg font-bold">{{ t('org.invite') }}</h2>
-            <button type="button" class="ls-btn ls-btn-sm" :aria-label="t('common.close')" @click="dismiss"><AppIcon name="close" /></button>
-          </div>
+    <BsButton v-if="showTrigger" type="button" class="ls-btn ls-btn-sm w-full" @click="show">{{ t('org.invite') }}</BsButton>
+      <BsRecordActionDialog v-if="open" :visible="true" :title="t('org.invite')" size="md" :dirty="overlayDirty0" :pending="pending" :error="errorMessage" :submit-label="t('org.createInvite')" :cancel-label="t('common.cancel')" @update:visible="value => { if (!value) close() }" @submit="invite">
           <p class="text-sm leading-6 text-fg-muted">{{ t('access.inviteDescription') }}</p>
           <QuotaUsageMeter quota-key="max_members" compact />
           <FloatingField :label="t('auth.email')"><input v-model="email" type="email" class="ls-input" :placeholder="t('auth.email')" autocomplete="email" dir="ltr" required></FloatingField>
@@ -70,9 +65,6 @@ const { dirty: overlayDirty0 } = useRecordAction(() => ({ email: email.value, ro
             <option v-for="custom in customRoles" :key="custom.id" :value="`custom:${custom.id}`">{{ roleLabel(null, custom.id) }}</option>
           </select></FloatingField>
           <div class="flex items-start gap-3 rounded-control bg-surface-muted p-4"><AppIcon name="mail" class="mt-0.5 shrink-0 text-accent" /><div><p class="text-sm font-bold">{{ t('access.emailDelivery') }}</p><p class="mt-1 text-xs leading-5 text-fg-muted">{{ t('access.emailDeliveryHint') }}</p></div></div>
-          <button class="ls-btn ls-btn-primary w-full" :disabled="pending">{{ pending ? t('onboarding.sendingOtp') : t('org.createInvite') }}</button>
-          <p v-if="errorMessage" class="ls-error">{{ errorMessage }}</p>
-        </form>
-</template></BsDialog>
+      </BsRecordActionDialog>
   </div>
 </template>

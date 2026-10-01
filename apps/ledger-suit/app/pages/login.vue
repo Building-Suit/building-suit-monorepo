@@ -48,8 +48,8 @@ async function signIn() {
 
 <template>
   <BsAuthLayout :product-name="t('app.name')" :home-label="t('marketing.home')" :title="t('auth.welcomeTitle')" :description="t('auth.welcomeBody')">
-    <template #logo="{ tone }"><AppLogo :tone="tone" class="h-auto w-56" /></template>
-        <form class="ls-auth-card w-full space-y-5 p-6 text-start sm:p-8" :data-hydrated="hydrated" @submit.prevent="signIn">
+    <template #logo="{ tone }"><BsProductLogo name="Ledger Suit" asset-prefix="/brand/ledger-suit" :tone="tone" class="h-auto w-56" /></template>
+        <BsForm class="ls-auth-card w-full space-y-5 p-6 text-start sm:p-8" :data-hydrated="hydrated" @submit.prevent="signIn">
           <div class="text-center">
             <p class="ls-auth-eyebrow">{{ t('auth.welcomeEyebrow') }}</p>
             <h1 class="mt-2 text-xl font-extrabold tracking-[-.03em]" dir="ltr">{{ t('auth.signIn') }}</h1>
@@ -62,9 +62,9 @@ async function signIn() {
             <input id="password" v-model="password" type="password" autocomplete="current-password" required dir="ltr" class="ls-input">
           </FloatingField>
           <p v-if="error" role="alert" class="ls-error">{{ error }}</p>
-          <button type="submit" :disabled="pending" class="ls-btn ls-btn-primary w-full">{{ pending ? t('auth.signingIn') : t('auth.signIn') }}</button>
+          <BsButton type="submit" :disabled="pending" class="ls-btn ls-btn-primary w-full">{{ pending ? t('auth.signingIn') : t('auth.signIn') }}</BsButton>
           <p class="text-center text-sm text-fg-muted">{{ t('auth.needAccount') }} <NuxtLink to="/signup" class="font-bold text-fg underline underline-offset-4">{{ t('landing.startTrial') }}</NuxtLink></p>
-        </form>
+        </BsForm>
         <nav class="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs text-fg-muted" :aria-label="t('auth.legalNavigation')">
           <NuxtLink to="/privacy" class="hover:text-fg">{{ t('marketing.privacy') }}</NuxtLink>
           <NuxtLink to="/contact" class="hover:text-fg">{{ t('marketing.contact') }}</NuxtLink>

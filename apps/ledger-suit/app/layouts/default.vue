@@ -95,7 +95,7 @@ watch(currentId, async (value, previous) => {
 <template>
   <div v-if="!showShell" class="min-h-dvh bg-background" aria-busy="true" />
   <BsAppShell v-else :product-name="t('app.name')" :groups="NAV_GROUPS.map(group => ({ ...group, label: t(`nav.groups.${group.key}`), links: group.links.map(item => ({ ...item, label: t(item.label) })) }))" :mobile-links="PRIMARY_NAV.map(item => ({ ...item, label: t(`nav.${item.key}`) }))" :labels="{ close: t('nav.close'), open: t('nav.open'), navigation: t('nav.primary'), dashboard: t('nav.dashboard') }">
-    <template #logo><AppLogo class="h-14 w-auto max-w-52" /></template>
+    <template #logo><BsProductLogo name="Ledger Suit" asset-prefix="/brand/ledger-suit" class="h-14 w-auto max-w-52" /></template>
     <template #context><OrganizationSwitcher /></template>
     <template #header><TrialCountdown /><NotificationMenu /><AccountMenu /></template>
         <div v-if="loading" class="text-sm text-fg-muted">{{ t('app.loading') }}</div>

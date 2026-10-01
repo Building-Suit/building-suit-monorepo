@@ -80,7 +80,7 @@ useHead(() => ({
           </div>
         </div>
 
-        <form class="grid gap-4 px-6 py-8 sm:px-10" @submit.prevent="submit" novalidate>
+        <BsForm class="grid gap-4 px-6 py-8 sm:px-10" @submit.prevent="submit" novalidate>
           <h2 class="text-xl font-black">{{ t('marketing.contactFormTitle') }}</h2>
           <p class="text-sm text-fg-muted">{{ t('marketing.contactFormIntro') }}</p>
           <div class="grid gap-4 md:grid-cols-2">
@@ -92,8 +92,8 @@ useHead(() => ({
           <label class="hidden" aria-hidden="true"><span>Website</span><input v-model="form.honeypot" tabindex="-1" autocomplete="off"></label>
           <label class="flex items-start gap-2"><input v-model="form.consent" type="checkbox" required><span class="text-sm">{{ t('marketing.contactConsent') }}</span></label>
           <p v-if="error" role="alert" class="ls-error">{{ error }}</p><p v-if="sent" role="status" class="text-sm text-success">{{ t('marketing.contactSuccess') }}</p>
-          <button class="ls-btn w-fit" type="submit" :disabled="pending">{{ pending ? t('app.loading') : t('marketing.contactSubmit') }}</button>
-        </form>
+          <BsButton class="ls-btn w-fit" type="submit" :disabled="pending">{{ pending ? t('app.loading') : t('marketing.contactSubmit') }}</BsButton>
+        </BsForm>
         <div class="px-6 pb-8 sm:px-10">
           <h2 class="text-xl font-black">{{ t('marketing.businessIdentity') }}</h2>
           <p class="mt-3 text-sm leading-7 text-fg-muted sm:text-base">
