@@ -18,6 +18,7 @@ const tab = ref('overview')
 const page = ref(1)
 const notificationChoices = ref<string[]>(['email'])
 const planChoice = ref<string | string[]>('standard')
+const catalogueOtp = ref('123456')
 const tableState = ref<'data' | 'loading' | 'empty' | 'error'>('data')
 const density = ref<'compact' | 'comfortable'>('comfortable')
 const pricingInterval = ref('monthly')
@@ -161,8 +162,35 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
       />
     </BsContentSection>
 
+    <BsContentSection
+      :title="isArabic ? 'المصادقة والتحقق' : 'Authentication and verification'"
+      :description="isArabic ? 'هندسة مشتركة للنموذج وحالة التحقق مع محتوى يقدمه المنتج.' : 'Shared form geometry and verification states with product-supplied content.'"
+    >
+      <div class="grid items-start gap-5 xl:grid-cols-2">
+        <BsAuthForm
+          :eyebrow="isArabic ? 'منتج تجريبي' : 'Example product'" :title="isArabic ? 'تسجيل الدخول' : 'Sign in'"
+          :description="isArabic ? 'مثال على غلاف المصادقة المشترك.' : 'An example of the shared authentication shell.'"
+          :submit-label="isArabic ? 'متابعة' : 'Continue'" submit-disabled @submit="() => {}"
+        >
+          <FloatingField :label="isArabic ? 'البريد الإلكتروني' : 'Email'"><BsInput type="email" value="demo@example.com" readonly dir="ltr" /></FloatingField>
+        </BsAuthForm>
+        <BsVerificationForm
+          v-model="catalogueOtp" :title="isArabic ? 'تحقق من بريدك' : 'Verify your email'"
+          :description="isArabic ? 'أدخل الرمز المكوّن من ستة أرقام.' : 'Enter the six-digit code.'" email="demo@example.com"
+          :code-label="isArabic ? 'رمز التحقق' : 'Verification code'" :expired-label="isArabic ? 'انتهت صلاحية الرمز' : 'Code expired'"
+          :submit-label="isArabic ? 'تحقق' : 'Verify'" :resend-label="isArabic ? 'إعادة الإرسال' : 'Resend'" resend-disabled
+          @submit="() => {}"
+        />
+      </div>
+    </BsContentSection>
+
     <BsCard :title="isArabic ? 'التأكيد والخطوات' : 'Confirmation and steps'">
-      <BsSignupWizard :step="step" :steps="[{ title: 'Account' }, { title: 'Workspace' }]" @back="back"><p>Step {{ step }}</p><BsButton :disabled="step === 2" @click="advance()">{{ ui('next') }}</BsButton></BsSignupWizard>
+      <BsForm @submit="advance()">
+        <BsSignupWizard
+          :step="step" :steps="[{ id: 'account', title: isArabic ? 'الحساب' : 'Account' }, { id: 'workspace', title: isArabic ? 'مساحة العمل' : 'Workspace' }]"
+          :submit-label="step === 2 ? (isArabic ? 'إنشاء' : 'Create') : ui('next')" :submit-disabled="step === 2" @back="back"
+        ><p>Step {{ step }}</p></BsSignupWizard>
+      </BsForm>
       <div class="mt-5"><BsButton variant="danger" @click="confirmExample">{{ isArabic ? 'إزالة سجل' : 'Remove record' }}</BsButton><p class="mt-3" role="status">{{ confirmationResult }}</p></div>
     </BsCard>
 

@@ -30,6 +30,24 @@ test('Shop reusable controls and tables come from shared UI', () => {
   }
 })
 
+test('Shop auth routes use the canonical shared auth and signup contracts', () => {
+  const layout = sources.find(item => item.file === 'layouts/auth.vue')?.source || ''
+  const login = sources.find(item => item.file === 'pages/auth/login.vue')?.source || ''
+  const signup = sources.find(item => item.file === 'pages/auth/signup.vue')?.source || ''
+  const recovery = sources.filter(item => ['pages/auth/forgot-password.vue', 'pages/auth/reset-password.vue'].includes(item.file))
+  assert.match(layout, /<BsAuthLayout\b/)
+  assert.match(login, /<BsAuthForm\b/)
+  assert.match(signup, /<BsAuthForm\b/)
+  assert.match(signup, /<BsSignupWizard\b/)
+  assert.match(signup, /<BsVerificationForm\b/)
+  assert.match(signup, /useVerificationTimer\(\)/)
+  assert.equal(existsSync(path.join(appRoot, 'composables/useShopVerificationTimer.ts')), false)
+  for (const { source } of recovery) assert.match(source, /<BsAuthForm\b/)
+  for (const source of [login, signup, ...recovery.map(item => item.source)]) {
+    assert.doesNotMatch(source, /\bls-auth-(?:card|eyebrow)\b/)
+  }
+})
+
 test('standard Shop record actions use the canonical dialog and controller', () => {
   const expected = [
     'components/PlatformPlanAdmin.vue',

@@ -8,7 +8,7 @@ const supabase = useSupabaseClient()
 const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
 const { locale, t } = useI18n()
 const { step, advance, back, reset: resetWizard } = useSignupWizard(2)
-const verification = useShopVerificationTimer()
+const verification = useVerificationTimer()
 const { currentId, loadShops } = useShop()
 const form = reactive({
   displayName: '', email: '', password: '', shopName: '', businessMode: 'mixed' as BusinessMode,
@@ -194,9 +194,12 @@ onMounted(async () => {
 })
 </script>
 <template>
-  <BsForm v-if="!awaitingOtp" class="ls-auth-card space-y-6 p-6 sm:p-8" @submit.prevent="submit">
-    <div class="text-center"><p class="ls-auth-eyebrow">Shop Suit</p><h1 class="mt-2 text-xl font-extrabold">{{ t('auth.signupTitle') }}</h1><p class="mt-2 text-sm text-fg-muted">{{ t('auth.signupSubtitle') }}</p></div>
-    <BsSignupWizard :step="step" :steps="[{ title: copy.account, body: copy.accountBody }, { title: copy.shop, body: copy.shopBody }]" :pending="pending" @back="back">
+  <BsAuthForm v-if="!awaitingOtp" eyebrow="Shop Suit" :title="t('auth.signupTitle')" :description="t('auth.signupSubtitle')" :pending="pending" @submit="submit">
+    <BsSignupWizard
+      :step="step" :steps="[{ id: 'account', title: copy.account, body: copy.accountBody }, { id: 'shop', title: copy.shop, body: copy.shopBody }]"
+      :pending="pending" :error="errorMessage" :notice="noticeMessage" :back-label="copy.back"
+      :submit-label="step === 1 ? copy.next : copy.create" :pending-label="copy.pending" @back="back"
+    >
       <div v-if="step === 1" class="space-y-4">
         <FloatingField :label="t('auth.displayName')"><InputText id="signup-name" v-model="form.displayName" class="ls-input" autocomplete="name" required /></FloatingField>
         <FloatingField :label="t('auth.email')"><InputText id="signup-email" v-model="form.email" class="ls-input" type="email" autocomplete="email" dir="ltr" :readonly="existingAccount" required /></FloatingField>
@@ -221,21 +224,18 @@ onMounted(async () => {
           </label>
         </fieldset>
       </div>
-      <p v-if="noticeMessage" role="status" class="rounded-xl border border-border p-3 text-sm text-fg-muted">{{ noticeMessage }}</p>
-      <p v-if="errorMessage" role="alert" class="ls-error">{{ errorMessage }}</p>
-      <BsButton type="submit" class="ls-btn ls-btn-primary w-full" :disabled="pending">{{ pending ? copy.pending : step === 1 ? copy.next : copy.create }}</BsButton>
     </BsSignupWizard>
-    <p class="text-center text-sm text-fg-muted"><NuxtLink to="/auth/login" class="underline">{{ copy.login }}</NuxtLink></p>
-  </BsForm>
-  <BsForm v-else class="ls-auth-card space-y-6 p-6 text-center sm:p-8" @submit.prevent="verify">
-    <AppIcon name="mail" :size="32" class="mx-auto" /><h1 class="text-xl font-black">{{ copy.verify }}</h1><p class="text-sm text-fg-muted">{{ copy.verifyBody }}</p><p class="break-all font-bold" dir="ltr">{{ form.email }}</p>
-    <OtpInput v-if="!existingAccount" v-model="otp" :label="copy.code" :disabled="pending || verification.expired.value" />
-    <template v-if="!existingAccount"><p v-if="verification.expired.value" class="text-sm text-danger">{{ copy.expired }}</p><p v-else class="text-sm text-fg-muted">{{ copy.expires }} {{ verification.format(verification.expiresIn.value) }}</p></template>
-    <p v-if="noticeMessage" role="status" class="rounded-xl border border-border p-3 text-sm text-fg-muted">{{ noticeMessage }}</p>
-    <p v-if="errorMessage" role="alert" class="ls-error">{{ errorMessage }}</p>
-    <BsButton class="ls-btn ls-btn-primary w-full" :disabled="pending || (!existingAccount && (otp.length !== 6 || verification.expired.value))">{{ pending ? copy.pending : existingAccount ? copy.retry : copy.verify }}</BsButton>
-    <BsButton variant="link" v-if="!existingAccount" type="button" class="text-sm font-bold underline disabled:opacity-50" :disabled="pending || verification.resendIn.value > 0" @click="resend">{{ verification.resendIn.value > 0 ? `${copy.wait} ${verification.format(verification.resendIn.value)}` : copy.resend }}</BsButton>
-    <BsButton variant="link" v-if="!existingAccount" type="button" class="text-sm font-bold underline" :disabled="pending" @click="startOver">{{ copy.changeEmail }} · {{ copy.startOver }}</BsButton>
-    <NuxtLink to="/auth/login" class="block text-sm font-bold underline" @click="clearDraft">{{ copy.signIn }}</NuxtLink>
-  </BsForm>
+    <template #footer><NuxtLink to="/auth/login" class="underline">{{ copy.login }}</NuxtLink></template>
+  </BsAuthForm>
+  <BsVerificationForm
+    v-else v-model="otp" :title="copy.verify" :description="copy.verifyBody" :email="form.email" :code-label="copy.code"
+    :pending="pending" :error="errorMessage" :notice="noticeMessage" :expired="verification.expired.value" :verified="existingAccount"
+    :expiry-label="`${copy.expires} ${verification.format(verification.expiresIn.value)}`" :expired-label="copy.expired"
+    :submit-label="existingAccount ? copy.retry : copy.verify" :pending-label="copy.pending"
+    :resend-label="verification.resendIn.value > 0 ? `${copy.wait} ${verification.format(verification.resendIn.value)}` : copy.resend"
+    :resend-disabled="verification.resendIn.value > 0" @submit="verify" @resend="resend"
+  >
+    <template #secondary><BsButton v-if="!existingAccount" variant="link" type="button" :disabled="pending" @click="startOver">{{ copy.changeEmail }} · {{ copy.startOver }}</BsButton></template>
+    <template #footer><NuxtLink to="/auth/login" class="font-bold underline" @click="clearDraft">{{ copy.signIn }}</NuxtLink></template>
+  </BsVerificationForm>
 </template>

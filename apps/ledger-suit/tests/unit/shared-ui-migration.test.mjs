@@ -35,6 +35,27 @@ test('Ledger reusable controls and tables come from shared UI', () => {
   assert.ok(sources.some(({ source }) => source.includes('<StatusBadge')))
 })
 
+test('Ledger auth routes use the canonical shared auth and signup contracts', () => {
+  const login = sources.find(item => item.file === 'pages/login.vue')?.source || ''
+  const signup = sources.find(item => item.file === 'pages/signup.vue')?.source || ''
+  const verification = sources.find(item => item.file === 'pages/verify-email.vue')?.source || ''
+  const invitation = sources.find(item => item.file === 'pages/accept-invitation.vue')?.source || ''
+  assert.match(login, /<BsAuthLayout\b/)
+  assert.match(login, /<BsAuthForm\b/)
+  assert.match(signup, /<BsAuthLayout\b/)
+  assert.match(signup, /<BsAuthForm\b/)
+  assert.match(signup, /<BsSignupWizard\b/)
+  assert.match(signup, /<BsVerificationForm\b/)
+  assert.match(verification, /<BsAuthLayout\b/)
+  assert.match(verification, /<BsVerificationForm\b/)
+  assert.match(invitation, /<BsAuthLayout\b/)
+  assert.match(invitation, /<BsAuthForm\b/)
+  assert.match(invitation, /<BsVerificationForm\b/)
+  for (const source of [login, signup, verification, invitation]) {
+    assert.doesNotMatch(source, /\bls-auth-(?:page|panel|form-shell|card|eyebrow)\b/)
+  }
+})
+
 test('standard Ledger record actions use the canonical dialog and controller', () => {
   const expected = [
     'components/AccountStatementClassificationDialog.vue',

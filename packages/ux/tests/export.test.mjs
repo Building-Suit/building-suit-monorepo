@@ -42,6 +42,17 @@ function recordAction(getValue) {
   return module.exports.useRecordAction(getValue)
 }
 
+function signupWizard(totalSteps) {
+  const source = readFileSync(new URL('../src/composables/useSignupWizard.ts', import.meta.url), 'utf8')
+  const code = ts.transpileModule(source, {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+  }).outputText
+  const module = { exports: {} }
+  const globals = { ref: vue.ref, computed: vue.computed }
+  new Function('module', 'exports', ...Object.keys(globals), code)(module, module.exports, ...Object.values(globals))
+  return module.exports.useSignupWizard(totalSteps)
+}
+
 test('record actions standardize create/edit, dirty, pending, failure, and completion state', async () => {
   const form = vue.reactive({ name: '', permissions: new Set(['read']) })
   const action = recordAction(() => form)
@@ -77,4 +88,27 @@ test('record actions standardize create/edit, dirty, pending, failure, and compl
   assert.equal(action.pending.value, false)
   assert.equal(action.error.value, 'Could not save this record.')
   assert.doesNotMatch(action.error.value, /infrastructure/)
+})
+
+test('signup wizard supports variable steps, validation, bounds, and advance concurrency', async () => {
+  assert.throws(() => signupWizard(0), /at least one step/)
+  const wizard = signupWizard(3)
+  assert.equal(wizard.step.value, 1)
+  assert.equal(await wizard.advance(() => false), false)
+  assert.equal(wizard.step.value, 1)
+
+  let release
+  const advancing = wizard.advance(() => new Promise(resolve => { release = resolve }))
+  assert.equal(wizard.advancing.value, true)
+  assert.equal(await wizard.advance(), false)
+  release(true)
+  assert.equal(await advancing, true)
+  assert.equal(wizard.step.value, 2)
+  assert.equal(await wizard.advance(), true)
+  assert.equal(wizard.isLastStep.value, true)
+  assert.equal(await wizard.advance(), false)
+  wizard.back()
+  assert.equal(wizard.step.value, 2)
+  wizard.reset()
+  assert.equal(wizard.step.value, 1)
 })

@@ -378,9 +378,13 @@ async function restoreAuthenticatedOnboarding() {
 <template>
   <BsAuthLayout :product-name="t('app.name')" :home-label="t('marketing.home')" :title="t('onboarding.title')" :description="t('onboarding.subtitle')" wide>
     <template #logo="{ tone }"><BsProductLogo name="Ledger Suit" asset-prefix="/brand/ledger-suit" :tone="tone" class="h-auto w-56" /></template>
-        <BsForm v-if="!awaitingOtp" class="ls-auth-card w-full p-6 sm:p-8" :data-hydrated="hydrated" @submit.prevent="step === 1 ? next() : finishOnboarding()">
-          <header class="mb-6 space-y-2"><h1 class="text-xl font-bold">{{ t('onboarding.title') }}</h1><p class="text-sm text-fg-muted">{{ t('onboarding.noCardTrial') }}</p></header>
-          <BsSignupWizard :step="step" :steps="[1, 2].map(index => ({ title: t(`onboarding.steps.${index}.title`), body: t(`onboarding.steps.${index}.body`) }))" :pending="pending" @back="back">
+        <BsAuthForm v-if="!awaitingOtp" :title="t('onboarding.title')" :description="t('onboarding.noCardTrial')" :pending="pending" :data-hydrated="hydrated" @submit="step === 1 ? next() : finishOnboarding()">
+          <BsSignupWizard
+            :step="step"
+            :steps="[1, 2].map(index => ({ id: index, title: t(`onboarding.steps.${index}.title`), body: t(`onboarding.steps.${index}.body`) }))"
+            :pending="pending" :error="errorMessage" :submit-label="submitButtonText" :pending-label="submitButtonText"
+            :submit-disabled="step === 2 && !consentAccepted" @back="back"
+          >
 
 
           <div v-if="step === 1" class="grid gap-4 sm:grid-cols-2">
@@ -419,49 +423,20 @@ async function restoreAuthenticatedOnboarding() {
             </label>
           </div>
 
-          <p v-if="errorMessage" class="ls-error mt-6" role="alert">{{ errorMessage }}</p>
-          <BsButton type="submit" class="ls-btn ls-btn-primary mt-8 w-full" :disabled="pending || (step === 2 && !consentAccepted)">{{ submitButtonText }}</BsButton>
-          <p v-if="step === 2" class="mt-3 text-center text-xs text-fg-muted">{{ t('onboarding.noCardRequired') }}</p>
+          <template v-if="step === 2" #footer>{{ t('onboarding.noCardRequired') }}</template>
           </BsSignupWizard>
-        </BsForm>
+        </BsAuthForm>
 
-        <BsForm v-else class="ls-auth-card w-full p-6 sm:p-8" :data-hydrated="hydrated" @submit.prevent="verifyOtpAndContinue">
-          <div class="mx-auto max-w-lg text-center">
-            <div class="mx-auto grid size-14 place-items-center rounded-full bg-surface-muted text-primary"><AppIcon name="mail" :size="28" /></div>
-            <p class="mt-6 text-xs font-bold uppercase tracking-[.18em] text-fg-muted">{{ t('onboarding.otpEyebrow') }}</p>
-            <h2 class="mt-2 text-2xl font-black">{{ t('onboarding.otpTitle') }}</h2>
-            <p class="mt-3 text-sm leading-6 text-fg-muted">{{ t('onboarding.otpDescription') }}</p>
-            <p class="mt-1 break-all font-bold" dir="ltr">{{ form.email }}</p>
-          </div>
-
-          <div class="mx-auto mt-8 max-w-md">
-            <OtpInput v-model="otp" :label="t('onboarding.otpLabel')" :disabled="pending || otpExpired" />
-
-            <div class="mt-4 flex items-center justify-between gap-4 text-xs text-fg-muted" aria-live="polite">
-              <span v-if="!otpExpired">{{ t('onboarding.otpExpiresIn', { time: formatCountdown(otpExpiresIn) }) }}</span>
-              <span v-else class="font-semibold text-danger">{{ t('onboarding.otpExpired') }}</span>
-              <span>{{ t('onboarding.otpAttemptsHint') }}</span>
-            </div>
-
-            <p v-if="errorMessage" class="ls-error mt-6" role="alert">{{ errorMessage }}</p>
-
-            <BsButton type="submit" class="ls-btn ls-btn-primary mt-6 w-full" :disabled="pending || otp.length !== 6 || otpExpired">
-              {{ pending ? t('onboarding.otpVerifying') : t('onboarding.otpVerify') }}
-            </BsButton>
-
-            <div class="mt-6 text-center text-sm text-fg-muted">
-              <span>{{ t('onboarding.otpMissing') }}</span>
-              <BsButton variant="link" type="button" class="ms-1 font-bold text-fg underline underline-offset-4 disabled:no-underline disabled:opacity-50" :disabled="pending || resendIn > 0" @click="resendOtp">
-                {{ resendIn > 0 ? t('onboarding.otpResendIn', { time: formatCountdown(resendIn) }) : t('onboarding.otpResend') }}
-              </BsButton>
-            </div>
-
-            <div class="mt-8 rounded-control border border-[var(--bs-border)] bg-surface-muted p-4 text-xs leading-5 text-fg-muted">
-              <p class="font-bold text-fg">{{ t('onboarding.otpSecurityTitle') }}</p>
-              <p class="mt-1">{{ t('onboarding.otpSecurityBody') }}</p>
-            </div>
-          </div>
-        </BsForm>
+        <BsVerificationForm
+          v-else v-model="otp" :data-hydrated="hydrated" :eyebrow="t('onboarding.otpEyebrow')"
+          :title="t('onboarding.otpTitle')" :description="t('onboarding.otpDescription')" :email="form.email"
+          :code-label="t('onboarding.otpLabel')" :pending="pending" :error="errorMessage" :expired="otpExpired"
+          :expiry-label="t('onboarding.otpExpiresIn', { time: formatCountdown(otpExpiresIn) })" :expired-label="t('onboarding.otpExpired')"
+          :attempts-label="t('onboarding.otpAttemptsHint')" :submit-label="t('onboarding.otpVerify')" :pending-label="t('onboarding.otpVerifying')"
+          :resend-prompt="t('onboarding.otpMissing')" :resend-label="resendIn > 0 ? t('onboarding.otpResendIn', { time: formatCountdown(resendIn) }) : t('onboarding.otpResend')"
+          :resend-disabled="resendIn > 0" :security-title="t('onboarding.otpSecurityTitle')" :security-body="t('onboarding.otpSecurityBody')"
+          @submit="verifyOtpAndContinue" @resend="resendOtp"
+        />
 
     <template #legal><p class="mt-4 text-sm text-fg-muted"><NuxtLink to="/login" class="underline">{{ t('auth.signIn') }}</NuxtLink> · <NuxtLink to="/contact" class="underline">{{ t('marketing.contact') }}</NuxtLink></p></template>
   </BsAuthLayout>

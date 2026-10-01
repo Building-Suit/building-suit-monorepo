@@ -8,7 +8,7 @@
 
 `useConfirmation().ask(message, title?)` queues accessible confirmations through `BsConfirmHost`. The object form accepts translated `message`, `title`, `confirmLabel`, `cancelLabel` and a `default` or `danger` tone for consequential actions. Apps include one host at their root. Use it for archive, void, removal and similar actions; domain authorization and reversals remain server responsibilities. Cancel receives initial focus and queued requests resolve in order. Do not use native browser confirm dialogs.
 
-`BsSignupWizard` and `useSignupWizard` own step presentation, back/next bounds and advance concurrency. Apps supply the steps, validation and provisioning calls. `useVerificationTimer` owns OTP expiry and resend countdown presentation; the server remains authoritative for validity and rate limits. Never persist passwords or OTPs in draft storage.
+`BsSignupWizard` and `useSignupWizard` own variable-length step presentation, shared back/submit controls, error/notice placement, navigation bounds and advance concurrency. Apps supply stable step descriptors, translated action labels, field slots, validation and provisioning calls. `BsVerificationForm` owns the accessible OTP, countdown, resend, feedback and pending presentation, while `useVerificationTimer` owns its expiry/resend clock and safe restore/reset mechanics. The server remains authoritative for validity and rate limits. Never persist passwords or OTPs in draft storage.
 
 Messages sent to `useToasts` are already translated. Display safe product/domain error messages; do not expose raw SQL, credentials or infrastructure errors. Loading, empty, denied, error and successful states are part of each page's contract.
 

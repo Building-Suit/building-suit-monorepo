@@ -76,6 +76,33 @@ test('shared marketing owns the landing frame and Ledger-derived pricing present
   assert.match(pricing, /<BsStateSurface v-if="loading/)
 })
 
+test('shared auth owns split geometry, form shells, wizard controls, and verification presentation', () => {
+  const manifest = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
+  for (const name of ['BsAuthForm', 'BsSignupWizard', 'BsVerificationForm', 'BsAuthLayout']) {
+    assert.ok(Object.keys(manifest.exports).some(key => key.endsWith(`/${name}`)), `${name} is not exported`)
+  }
+
+  const layout = readFileSync(new URL('../src/templates/BsAuthLayout.vue', import.meta.url), 'utf8')
+  assert.match(layout, /class="bs-auth-layout ls-auth-page"/)
+  assert.match(layout, /grid-template-columns: minmax\(0, \.92fr\) minmax\(0, 1\.08fr\)/)
+  assert.match(layout, /bs-auth-layout__form-shell--wide/)
+
+  const authForm = readFileSync(new URL('../src/organisms/BsAuthForm.vue', import.meta.url), 'utf8')
+  assert.match(authForm, /<BsForm[^>]+:pending="pending"[^>]+:error="error"/s)
+  assert.match(authForm, /<BsButton type="submit" variant="primary"/)
+
+  const wizard = readFileSync(new URL('../src/organisms/BsSignupWizard.vue', import.meta.url), 'utf8')
+  assert.match(wizard, /v-for="\(item, index\) in steps"/)
+  assert.match(wizard, /:aria-current="index \+ 1 === step \? 'step'/)
+  assert.match(wizard, /<BsButton v-if="step > 1"[^>]+@click="emit\('back'\)"/s)
+  assert.match(wizard, /<BsButton type="submit" variant="primary"/)
+
+  const verification = readFileSync(new URL('../src/organisms/BsVerificationForm.vue', import.meta.url), 'utf8')
+  assert.match(verification, /<OtpInput v-if="!verified" v-model="code"/)
+  assert.match(verification, /aria-live="polite"/)
+  assert.match(verification, /@click="emit\('resend'\)"/)
+})
+
 test('status badges expose written labels and semantic tone instead of color alone', async () => {
   const html = await render('atoms/StatusBadge.vue', { status: 'custom', label: 'Needs review', tone: 'warning', icon: false })
   assert.match(html, />Needs review</)

@@ -4,15 +4,15 @@ defineSlots<{ default(): unknown; logo(props: { tone: 'auto' | 'light' | 'dark' 
 useTheme()
 </script>
 <template>
-  <main class="ls-auth-page min-h-dvh lg:grid lg:grid-cols-[minmax(0,.92fr)_minmax(0,1.08fr)]">
-    <section class="ls-auth-panel flex items-center justify-center px-5 py-10 sm:px-8 lg:px-12">
-      <div class="ls-auth-form-shell flex w-full flex-col items-center" :class="wide ? 'max-w-[36rem]' : 'max-w-[27rem]'">
-        <NuxtLink to="/" class="mb-12 inline-flex lg:hidden" :aria-label="homeLabel">
+  <main class="bs-auth-layout ls-auth-page" :data-wide="wide || undefined">
+    <section class="bs-auth-layout__panel ls-auth-panel">
+      <div class="bs-auth-layout__form-shell ls-auth-form-shell" :class="wide ? 'bs-auth-layout__form-shell--wide' : ''">
+        <NuxtLink to="/" class="bs-auth-layout__mobile-logo" :aria-label="homeLabel">
           <slot name="logo" :tone="'auto'" />
         </NuxtLink>
         <slot />
         <slot name="legal" />
-        <div class="mt-5 flex justify-center"><SettingsMenu /></div>
+        <div class="bs-auth-layout__settings"><SettingsMenu /></div>
       </div>
     </section>
     <section class="ls-auth-showcase relative hidden overflow-hidden lg:flex lg:items-center lg:justify-center" :aria-label="productName">
@@ -37,10 +37,12 @@ useTheme()
 </template>
 
 <style>
-.ls-auth-page { background: var(--bs-bg); }
-.ls-auth-panel { background: radial-gradient(circle at 50% 18%, color-mix(in oklab, var(--bs-accent) 9%, transparent), transparent 25rem), var(--bs-bg); }
-.ls-auth-eyebrow, .ls-auth-showcase-eyebrow { color: var(--bs-accent); font-size: 11px; font-weight: var(--bs-weight-bold); letter-spacing: .12em; }
-.ls-auth-card { border: 1px solid color-mix(in oklab, var(--bs-border) 88%, transparent); border-radius: 20px; background: color-mix(in oklab, var(--bs-surface) 94%, transparent); box-shadow: 0 24px 64px rgb(0 0 0 / .18), 0 1px 0 rgb(255 255 255 / .04) inset; }
+.bs-auth-layout { min-height: 100dvh; background: var(--bs-bg); }
+.bs-auth-layout__panel { display: flex; align-items: center; justify-content: center; padding: var(--bs-space-9) var(--bs-space-5); background: radial-gradient(circle at 50% 18%, color-mix(in oklab, var(--bs-accent) 9%, transparent), transparent 25rem), var(--bs-bg); }
+.bs-auth-layout__form-shell { display: flex; width: 100%; max-width: 27rem; flex-direction: column; align-items: center; }
+.bs-auth-layout__form-shell--wide { max-width: 36rem; }
+.bs-auth-layout__mobile-logo { display: inline-flex; margin-bottom: var(--bs-space-9); }
+.bs-auth-layout__settings { display: flex; justify-content: center; margin-top: var(--bs-space-5); }
 .ls-auth-showcase { isolation: isolate; color: var(--bs-pearl-white); background: linear-gradient(135deg, rgb(22 41 59 / .88), rgb(13 27 40 / .98)), var(--bs-gradient-navy); }
 /* .ls-auth-brand { top: 48px; left: 50%; transform: translateX(-50%); } */
 .ls-auth-showcase::before { position: absolute; z-index: -1; inset: 0; content: ''; opacity: .75; background-image: linear-gradient(to right, rgb(235 180 90 / .08) 1px, transparent 1px), linear-gradient(to bottom, rgb(235 180 90 / .08) 1px, transparent 1px); background-size: 64px 64px; mask-image: linear-gradient(to bottom, black, transparent 82%); }
@@ -54,5 +56,10 @@ useTheme()
 .ls-auth-ledger-row { justify-content: space-between; padding-top: 14px; }
 .ls-auth-ledger-row span, .ls-auth-ledger-row i { display: block; height: 7px; border-radius: 999px; background: rgb(220 230 241 / .22); }
 .ls-auth-ledger-row span { width: 46%; }.ls-auth-ledger-row i { width: 23%; background: rgb(235 180 90 / .72); }
-@media (max-width: 1023px) { .ls-auth-card { box-shadow: var(--bs-elevation-2); } }
+@media (min-width: 640px) { .bs-auth-layout__panel { padding-inline: var(--bs-space-8); } }
+@media (min-width: 1024px) {
+  .bs-auth-layout { display: grid; grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr); }
+  .bs-auth-layout__panel { padding-inline: var(--bs-space-9); }
+  .bs-auth-layout__mobile-logo { display: none; }
+}
 </style>
