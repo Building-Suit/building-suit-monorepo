@@ -4,13 +4,15 @@ import type { PlanResourceKey, PlanResourceLimits } from '~/types/plans'
 const props = defineProps<{ limits: PlanResourceLimits | Record<string, number | null> }>()
 const { locale } = useI18n()
 const isArabic = computed(() => locale.value === 'ar')
-const resources: PlanResourceKey[] = ['active_locations', 'active_members', 'active_products', 'active_services']
+const resources: PlanResourceKey[] = ['active_locations', 'active_members', 'active_products', 'active_services', 'active_customers', 'active_suppliers']
 const labels = computed<Record<PlanResourceKey, string>>(() => isArabic.value ? {
   active_locations: 'الفروع النشطة', active_members: 'أعضاء الفريق',
   active_products: 'المنتجات النشطة', active_services: 'الخدمات النشطة',
+  active_customers: 'العملاء النشطون', active_suppliers: 'الموردون النشطون',
 } : {
   active_locations: 'Active locations', active_members: 'Team members',
   active_products: 'Active products', active_services: 'Active services',
+  active_customers: 'Active customers', active_suppliers: 'Active suppliers',
 })
 
 function value(resource: PlanResourceKey) {

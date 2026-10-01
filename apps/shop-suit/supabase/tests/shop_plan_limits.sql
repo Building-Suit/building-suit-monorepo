@@ -3,7 +3,8 @@
 
 create temporary table shop_plan_limits_fixture as
 select gen_random_uuid() owner_id, gen_random_uuid() invited_id,
-  gen_random_uuid() outsider_id, gen_random_uuid() tight_plan_id;
+  gen_random_uuid() outsider_id, gen_random_uuid() tight_plan_id,
+  gen_random_uuid() downgrade_plan_id;
 grant select on shop_plan_limits_fixture to authenticated;
 
 insert into auth.users (
@@ -21,6 +22,7 @@ from (
 do $$
 declare v_portal uuid := (select id from public.portals where key = 'shop-crm');
   v_plan uuid := (select tight_plan_id from shop_plan_limits_fixture);
+  v_downgrade uuid := (select downgrade_plan_id from shop_plan_limits_fixture);
 begin
   insert into public.plans (
     id, portal_id, name, slug, price_amount, currency, billing_interval,
@@ -28,8 +30,8 @@ begin
     is_purchasable, is_coming_soon, catalog_version
   ) values (
     v_plan, v_portal, 'Limit test', 'ss-plan-limits-test', 0, 'EGP', 'monthly',
-    7, '{"inventory":true,"max_locations":2,"max_members":2,"max_products":1,"max_services":1}'::jsonb,
-    '{"active_locations":2,"active_members":2,"active_products":1,"active_services":1}'::jsonb,
+    7, '{"inventory":true,"max_locations":2,"max_members":2,"max_products":1,"max_services":1,"max_customers":1,"max_suppliers":1}'::jsonb,
+    '{"active_locations":2,"active_members":2,"active_products":1,"active_services":1,"active_customers":1,"active_suppliers":1}'::jsonb,
     999, true, true, true, false, 1
   );
   insert into public.plan_catalog_terms (
@@ -37,6 +39,22 @@ begin
     trial_days, resource_limits, is_public, is_purchasable
   ) select id, 1, name, billing_interval, currency, price_amount, trial_days,
     resource_limits, true, true from public.plans where id = v_plan;
+
+  insert into public.plans (
+    id, portal_id, name, slug, price_amount, currency, billing_interval,
+    trial_days, features, resource_limits, sort_order, is_active, is_public,
+    is_purchasable, is_coming_soon, catalog_version
+  ) values (
+    v_downgrade, v_portal, 'Multi-blocker target', 'ss-plan-limits-downgrade',
+    0, 'EGP', 'monthly', 7, '{"inventory":true}'::jsonb,
+    '{"active_locations":1,"active_members":1,"active_products":1,"active_services":1,"active_customers":1,"active_suppliers":1}'::jsonb,
+    1000, true, true, true, false, 1
+  );
+  insert into public.plan_catalog_terms (
+    plan_id, version, display_name, billing_interval, currency, price_amount,
+    trial_days, resource_limits, is_public, is_purchasable
+  ) select id, 1, name, billing_interval, currency, price_amount, trial_days,
+    resource_limits, true, true from public.plans where id = v_downgrade;
 end;
 $$;
 
@@ -117,7 +135,8 @@ reset role;
 -- Direct privileged writes use the same trigger boundary as supported RPCs.
 do $$
 declare v_shop uuid := current_setting('ss_plan_limits.shop')::uuid;
-  v_profile uuid; v_product uuid; v_service uuid; v_archived_location uuid;
+  v_profile uuid; v_product uuid; v_service uuid; v_customer uuid; v_supplier uuid;
+  v_archived_location uuid; v_usage jsonb;
 begin
   select membership.profile_id into v_profile from public.shop_memberships membership
   where membership.shop_id = v_shop and membership.role = 'owner';
@@ -156,6 +175,44 @@ begin
     if sqlerrm not like 'PLAN_RESOURCE_LIMIT_REACHED:active_services:%' then raise; end if;
   end;
 
+  insert into public.clients (shop_id, name, created_by_profile_id)
+  values (v_shop, 'First customer', v_profile) returning id into v_customer;
+  begin
+    insert into public.clients (shop_id, name, created_by_profile_id)
+    values (v_shop, 'Over customer', v_profile);
+    raise exception 'customer limit was exceeded';
+  exception when check_violation then
+    if sqlerrm not like 'PLAN_RESOURCE_LIMIT_REACHED:active_customers:%' then raise; end if;
+  end;
+  update public.clients set is_active = false, archived_at = now() where id = v_customer;
+  insert into public.clients (shop_id, name, created_by_profile_id)
+  values (v_shop, 'Replacement customer', v_profile);
+  begin
+    update public.clients set is_active = true, archived_at = null where id = v_customer;
+    raise exception 'archived customer reactivated over limit';
+  exception when check_violation then
+    if sqlerrm not like 'PLAN_RESOURCE_LIMIT_REACHED:active_customers:%' then raise; end if;
+  end;
+
+  insert into public.vendors (shop_id, name, created_by_profile_id)
+  values (v_shop, 'First supplier', v_profile) returning id into v_supplier;
+  begin
+    insert into public.vendors (shop_id, name, created_by_profile_id)
+    values (v_shop, 'Over supplier', v_profile);
+    raise exception 'supplier limit was exceeded';
+  exception when check_violation then
+    if sqlerrm not like 'PLAN_RESOURCE_LIMIT_REACHED:active_suppliers:%' then raise; end if;
+  end;
+  update public.vendors set is_active = false, archived_at = now() where id = v_supplier;
+  insert into public.vendors (shop_id, name, created_by_profile_id)
+  values (v_shop, 'Replacement supplier', v_profile);
+  begin
+    update public.vendors set is_active = true, archived_at = null where id = v_supplier;
+    raise exception 'archived supplier reactivated over limit';
+  exception when check_violation then
+    if sqlerrm not like 'PLAN_RESOURCE_LIMIT_REACHED:active_suppliers:%' then raise; end if;
+  end;
+
   insert into public.shop_locations (shop_id, name)
   values (v_shop, 'Second branch');
   insert into public.shop_locations (shop_id, name, status, archived_at)
@@ -167,6 +224,15 @@ begin
   exception when check_violation then
     if sqlerrm not like 'PLAN_RESOURCE_LIMIT_REACHED:active_locations:%' then raise; end if;
   end;
+
+  v_usage := shop_private.plan_usage_snapshot(v_shop);
+  if jsonb_array_length(v_usage -> 'resources') <> 6
+    or (v_usage ->> 'customers')::integer <> 1
+    or (v_usage ->> 'suppliers')::integer <> 1
+    or (select count(*) from public.clients where shop_id = v_shop) <> 2
+    or (select count(*) from public.vendors where shop_id = v_shop) <> 2 then
+    raise exception 'six-resource usage or archived-record preservation failed';
+  end if;
 end;
 $$;
 
@@ -175,7 +241,7 @@ from shop_plan_limits_fixture;
 set local role authenticated;
 do $$
 declare v_shop uuid := current_setting('ss_plan_limits.shop')::uuid;
-  v_before jsonb; v_validation jsonb; v_invitation jsonb;
+  v_before jsonb; v_validation jsonb; v_multi_validation jsonb; v_invitation jsonb;
   v_invited_membership uuid; v_location uuid;
 begin
   select (member ->> 'id')::uuid into v_invited_membership
@@ -210,15 +276,24 @@ begin
   v_before := jsonb_build_object(
     'products', (select count(*) from public.products where shop_id = v_shop),
     'services', (select count(*) from public.services where shop_id = v_shop),
-    'locations', (select count(*) from public.shop_locations where shop_id = v_shop)
+    'locations', (select count(*) from public.shop_locations where shop_id = v_shop),
+    'customers', (select count(*) from public.clients where shop_id = v_shop),
+    'suppliers', (select count(*) from public.vendors where shop_id = v_shop)
   );
   v_validation := public.shop_plan_change_validation(v_shop, 'solo');
+  v_multi_validation := public.shop_plan_change_validation(v_shop, 'ss-plan-limits-downgrade');
   if (v_validation ->> 'mutated')::boolean
-    or jsonb_array_length(v_validation -> 'blockers') < 1
+    or jsonb_array_length(v_validation -> 'blockers') <> 1
+    or v_validation #>> '{blockers,0,resource}' <> 'active_locations'
+    or jsonb_array_length(v_multi_validation -> 'blockers') <> 2
+    or v_multi_validation #>> '{blockers,0,resource}' <> 'active_locations'
+    or v_multi_validation #>> '{blockers,1,resource}' <> 'active_members'
     or v_before is distinct from jsonb_build_object(
       'products', (select count(*) from public.products where shop_id = v_shop),
       'services', (select count(*) from public.services where shop_id = v_shop),
-      'locations', (select count(*) from public.shop_locations where shop_id = v_shop)
+      'locations', (select count(*) from public.shop_locations where shop_id = v_shop),
+      'customers', (select count(*) from public.clients where shop_id = v_shop),
+      'suppliers', (select count(*) from public.vendors where shop_id = v_shop)
     ) then raise exception 'downgrade validation lacked blockers or mutated customer data'; end if;
 end;
 $$;
@@ -299,6 +374,18 @@ begin
     raise exception 'cross-shop usage was disclosed';
   exception when insufficient_privilege then null;
   end;
+  begin
+    perform public.save_customer(current_setting('ss_plan_limits.shop')::uuid,
+      null, 'Cross-shop customer', null, null, null, null);
+    raise exception 'outsider created a cross-shop customer';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.save_vendor(current_setting('ss_plan_limits.shop')::uuid,
+      null, 'Cross-shop supplier', null, null, null, null, null, null);
+    raise exception 'outsider created a cross-shop supplier';
+  exception when insufficient_privilege then null;
+  end;
 end;
 $$;
 reset role;
@@ -320,8 +407,8 @@ begin
     end if;
   end loop;
   if exists (select 1 from public.plans plan where plan.slug in ('solo','team','multi')
-    and plan.resource_limits ?| array['customers','sales','payments','appointments']) then
-    raise exception 'an unapproved initial resource limit was introduced';
+    and not plan.resource_limits ?& array['active_customers','active_suppliers']) then
+    raise exception 'a current plan lacks customer or supplier capacity';
   end if;
 end;
 $$;

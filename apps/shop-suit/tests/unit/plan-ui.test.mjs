@@ -22,8 +22,8 @@ test('owner billing uses the canonical purchasable catalog and effective server 
   assert.doesNotMatch(pricing, /query: \{ plan: plan\.slug \}|pricing\.trial/)
 })
 
-test('all four quota resources have concise comparison and usage states', () => {
-  for (const resource of ['active_locations', 'active_members', 'active_products', 'active_services']) {
+test('all six quota resources have concise comparison and usage states', () => {
+  for (const resource of ['active_locations', 'active_members', 'active_products', 'active_services', 'active_customers', 'active_suppliers']) {
     assert.match(limits, new RegExp(resource))
     assert.match(billing, new RegExp(resource))
   }

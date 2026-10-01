@@ -37,6 +37,24 @@ begin
       where catalog_generation = 1 and trial_days = 14 and created_at > now()) then
     raise exception 'family count, public offers, or historical 14-day terms regressed';
   end if;
+
+  if exists (
+    with expected(slug, variant, limits) as (values
+      ('solo', 'standard', '{"active_locations":1,"active_members":2,"active_products":250,"active_services":50,"active_customers":500,"active_suppliers":50}'::jsonb),
+      ('team', 'standard', '{"active_locations":1,"active_members":8,"active_products":500,"active_services":100,"active_customers":2000,"active_suppliers":150}'::jsonb),
+      ('multi', 'multi_2', '{"active_locations":2,"active_members":16,"active_products":1000,"active_services":200,"active_customers":5000,"active_suppliers":300}'::jsonb),
+      ('multi', 'multi_3', '{"active_locations":3,"active_members":25,"active_products":2000,"active_services":300,"active_customers":10000,"active_suppliers":500}'::jsonb)
+    )
+    select 1 from expected
+    where exists (
+      select 1 from public.shop_public_plan_catalog() catalog
+      where catalog.slug = expected.slug and catalog.plan_variant = expected.variant
+        and catalog.resource_limits is distinct from expected.limits
+    ) or (select count(*) from public.shop_public_plan_catalog() catalog
+      where catalog.slug = expected.slug and catalog.plan_variant = expected.variant) <> 2
+  ) then
+    raise exception 'HOT-12 exact six-resource catalog mismatch';
+  end if;
 end;
 $$;
 
@@ -47,7 +65,7 @@ select gen_random_uuid() owner_id, gen_random_uuid() operator_id,
   gen_random_uuid() multi2_request, gen_random_uuid() multi2_approval,
   gen_random_uuid() renewal_request, gen_random_uuid() renewal_approval,
   gen_random_uuid() multi3_request, gen_random_uuid() multi3_approval,
-  gen_random_uuid() override_request;
+  gen_random_uuid() downgrade_request, gen_random_uuid() override_request;
 grant select on shop_plan_catalog_v2_fixture to authenticated;
 
 insert into auth.users (
@@ -271,6 +289,67 @@ select public.platform_admin_billing_command(
 );
 reset role;
 
+-- A same-family Multi-3 -> Multi-2 variant downgrade is blocked atomically
+-- when the third active location does not fit. Neither the exact subscribed
+-- term nor any business record is changed by the failed attempt.
+do $$
+declare v_shop uuid := current_setting('hot11.shop')::uuid;
+begin
+  insert into public.shop_locations (shop_id, name) values
+    (v_shop, 'Second branch'), (v_shop, 'Third branch');
+end;
+$$;
+
+select set_config('request.jwt.claim.sub', owner_id::text, true),
+  set_config('request.jwt.claim.role', 'authenticated', true)
+from shop_plan_catalog_v2_fixture;
+set local role authenticated;
+select public.submit_shop_billing_notice(
+  (select downgrade_request from shop_plan_catalog_v2_fixture),
+  current_setting('hot11.shop')::uuid, 'multi',
+  (select catalog.catalog_terms_id
+    from public.shop_public_plan_catalog() catalog
+    where catalog.slug = 'multi' and catalog.plan_variant = 'multi_2'
+      and catalog.billing_interval = 'monthly'),
+  999, current_date, 'HOT11-MULTI2-DOWNGRADE'
+);
+reset role;
+
+select set_config('request.jwt.claim.sub', operator_id::text, true),
+  set_config('request.jwt.claim.role', 'authenticated', true),
+  set_config('shop.billing_approval', 'approved', true)
+from shop_plan_catalog_v2_fixture;
+do $$
+declare
+  v_shop uuid := current_setting('hot11.shop')::uuid;
+  v_subscription uuid;
+  v_before_terms uuid;
+  v_multi2_terms uuid := (select catalog.catalog_terms_id
+    from public.shop_public_plan_catalog() catalog
+    where catalog.slug = 'multi' and catalog.plan_variant = 'multi_2'
+      and catalog.billing_interval = 'monthly');
+begin
+  select subscription.id, subscription.catalog_terms_id
+    into v_subscription, v_before_terms
+  from public.shop_memberships membership
+  join public.subscriptions subscription on subscription.profile_id = membership.profile_id
+  where membership.shop_id = v_shop and membership.role = 'owner';
+  begin
+    update public.subscriptions set catalog_terms_id = v_multi2_terms
+    where id = v_subscription;
+    raise exception 'over-limit Multi-2 variant downgrade became effective';
+  exception when check_violation then
+    if sqlerrm not like 'PLAN_RESOURCE_LIMIT_EXCEEDED:active_locations:%' then raise; end if;
+  end;
+  if (select catalog_terms_id from public.subscriptions where id = v_subscription)
+      is distinct from v_before_terms
+    or (select count(*) from public.shop_locations
+      where shop_id = v_shop and status = 'active') <> 3 then
+    raise exception 'blocked variant downgrade changed terms or business records';
+  end if;
+end;
+$$;
+
 do $$
 declare
   v_before_terms jsonb;
@@ -313,7 +392,7 @@ begin
       where to_jsonb(subscription) is distinct from snapshot.snapshot
     )
     or (select count(*) from shop_plan_catalog_v2_subscription_snapshot) <> 3
-    or (select count(*) from public.plan_catalog_terms where catalog_generation = 2) <> 8 then
+    or (select count(*) from public.plan_catalog_terms where catalog_generation = 2) <> 16 then
     raise exception 'catalog reapplication rewrote history or duplicated V2 offers';
   end if;
 end;

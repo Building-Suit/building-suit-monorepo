@@ -47,6 +47,7 @@ const usageResources = computed<PlanUsageResource[]>(() => {
   const pairs: Array<[PlanResourceKey, number]> = [
     ['active_locations', usage.locations], ['active_members', usage.members],
     ['active_products', usage.products], ['active_services', usage.services],
+    ['active_customers', usage.customers], ['active_suppliers', usage.suppliers],
   ]
   return pairs.map(([resource, used]) => {
     const limit = usage.limits?.[resource] ?? null
@@ -163,7 +164,7 @@ const en = {
   latest: 'Latest request', history: 'Payment notice history', empty: 'No payment notices have been submitted.', reviewReason: 'Review note', manual: 'Manual verification', catalogFailed: 'Could not load the purchasable plan catalog.', noPurchasable: 'No plans are currently available to request. Your current subscription remains unchanged.',
   statuses: { trialing: 'Trialing', active: 'Active', read_only: 'Read-only', suspended: 'Suspended', submitted: 'Submitted', under_review: 'Under review', approved: 'Approved', rejected: 'Rejected' },
   submissionMessages: { submitted: 'Submitted for manual review. Your current plan and access have not changed.', under_review: 'An operator is reviewing this transfer. Your current plan and access have not changed.', approved: 'This request was approved. The current-plan summary above is the authoritative active access.', rejected: 'This request was rejected. Review the note, correct the transfer details, and submit a new notice if needed.' },
-  resources: { active_locations: 'Active locations', active_members: 'Team members', active_products: 'Active products', active_services: 'Active services' },
+  resources: { active_locations: 'Active locations', active_members: 'Team members', active_products: 'Active products', active_services: 'Active services', active_customers: 'Active customers', active_suppliers: 'Active suppliers' },
   intervals: { monthly: 'Monthly', quarterly: 'Quarterly', annual: 'Annual' },
 }
 
@@ -183,7 +184,7 @@ const ar = {
   latest: 'أحدث طلب', history: 'سجل إشعارات الدفع', empty: 'لم تُرسل إشعارات دفع بعد.', reviewReason: 'ملاحظة المراجعة', manual: 'تحقق يدوي', catalogFailed: 'تعذّر تحميل كتالوج الخطط المتاحة للشراء.', noPurchasable: 'لا توجد خطط متاحة للطلب حاليًا. سيظل اشتراكك الحالي دون تغيير.',
   statuses: { trialing: 'فترة تجريبية', active: 'نشط', read_only: 'قراءة فقط', suspended: 'موقوف', submitted: 'مُرسل', under_review: 'قيد المراجعة', approved: 'معتمد', rejected: 'مرفوض' },
   submissionMessages: { submitted: 'تم الإرسال للمراجعة اليدوية. لم تتغير خطتك الحالية أو صلاحية الوصول.', under_review: 'يراجع مسؤول المنصة التحويل الآن. لم تتغير خطتك الحالية أو صلاحية الوصول.', approved: 'تم اعتماد هذا الطلب. ملخص الخطة الحالية بالأعلى هو المرجع الفعلي لصلاحية الوصول.', rejected: 'تم رفض الطلب. راجع الملاحظة وصحح بيانات التحويل ثم أرسل إشعارًا جديدًا عند الحاجة.' },
-  resources: { active_locations: 'الفروع النشطة', active_members: 'أعضاء الفريق', active_products: 'المنتجات النشطة', active_services: 'الخدمات النشطة' },
+  resources: { active_locations: 'الفروع النشطة', active_members: 'أعضاء الفريق', active_products: 'المنتجات النشطة', active_services: 'الخدمات النشطة', active_customers: 'العملاء النشطون', active_suppliers: 'الموردون النشطون' },
   intervals: { monthly: 'شهريًا', quarterly: 'كل ثلاثة أشهر', annual: 'سنويًا' },
 }
 </script>
@@ -209,7 +210,7 @@ const ar = {
         <p class="mt-2 text-sm leading-6">{{ submissionMessage(latestSubmission) }}</p><p v-if="latestSubmission.reviewReason" class="mt-2 text-sm text-muted-foreground">{{ copy.reviewReason }}: {{ latestSubmission.reviewReason }}</p>
       </section>
 
-      <section class="rounded-2xl border border-border bg-card p-5 sm:p-6"><h2 class="text-lg font-extrabold">{{ copy.usage }}</h2><p class="mt-1 text-sm text-muted-foreground">{{ copy.usageHelp }}</p><div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><PlanUsageMeter v-for="resource in usageResources" :key="resource.resource" :usage="resource" /></div></section>
+      <section class="rounded-2xl border border-border bg-card p-5 sm:p-6"><h2 class="text-lg font-extrabold">{{ copy.usage }}</h2><p class="mt-1 text-sm text-muted-foreground">{{ copy.usageHelp }}</p><div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3"><PlanUsageMeter v-for="resource in usageResources" :key="resource.resource" :usage="resource" /></div></section>
 
       <section class="rounded-2xl border border-border bg-card p-5 sm:p-6">
         <h2 class="text-lg font-extrabold">{{ copy.compare }}</h2><p class="mt-1 text-sm text-muted-foreground">{{ copy.compareHelp }}</p>

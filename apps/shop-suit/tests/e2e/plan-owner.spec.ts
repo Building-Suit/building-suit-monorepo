@@ -4,9 +4,9 @@ import { pilotFixture } from './pilot-fixture'
 type RequestStatus = 'submitted' | 'under_review' | 'approved' | 'rejected' | null
 
 const limits = {
-  solo: { active_locations: 1, active_members: 2, active_products: 250, active_services: 50 },
-  team: { active_locations: 1, active_members: 8, active_products: 1000, active_services: 250 },
-  multi: { active_locations: 2, active_members: 25, active_products: 5000, active_services: 1000 },
+  solo: { active_locations: 1, active_members: 2, active_products: 250, active_services: 50, active_customers: 500, active_suppliers: 50 },
+  team: { active_locations: 1, active_members: 8, active_products: 500, active_services: 100, active_customers: 2000, active_suppliers: 150 },
+  multi: { active_locations: 2, active_members: 16, active_products: 1000, active_services: 200, active_customers: 5000, active_suppliers: 300 },
 }
 const catalog = [
   ['plan-solo', 'Solo', 'solo', 349, limits.solo],
@@ -43,18 +43,22 @@ function billing(status: RequestStatus) {
         { resource: 'active_members', used: 10, limit: 2, excess: 8 },
         { resource: 'active_products', used: 300, limit: 250, excess: 50 },
         { resource: 'active_services', used: 260, limit: 50, excess: 210 },
+        { resource: 'active_customers', used: 1800, limit: 500, excess: 1300 },
+        { resource: 'active_suppliers', used: 160, limit: 50, excess: 110 },
       ]),
       plan('plan-team', 'Team', 'team', 699, limits.team),
       plan('plan-multi', 'Multi', 'multi', 999, limits.multi),
     ],
     instructions: { recipientAlias: 'building-suit@instapay', paymentLink: null, qrImageUrl: null, instructionsEn: 'Transfer the exact amount and keep the reference.', instructionsAr: 'حوّل المبلغ المحدد واحتفظ بالمرجع.', updatedAt: '2026-09-01T00:00:00Z', manualVerification: true },
     usage: {
-      locations: 4, members: 10, products: 300, services: 260, limits: limits.team,
+      locations: 4, members: 10, products: 300, services: 260, customers: 1800, suppliers: 160, limits: limits.team,
       resources: [
         { resource: 'active_locations', used: 4, limit: 1, remaining: 0, unlimited: false, atLimit: true, overLimit: true },
         { resource: 'active_members', used: 10, limit: 8, remaining: 0, unlimited: false, atLimit: true, overLimit: true },
-        { resource: 'active_products', used: 300, limit: 1000, remaining: 700, unlimited: false, atLimit: false, overLimit: false },
-        { resource: 'active_services', used: 260, limit: 250, remaining: 0, unlimited: false, atLimit: true, overLimit: true },
+        { resource: 'active_products', used: 300, limit: 500, remaining: 200, unlimited: false, atLimit: false, overLimit: false },
+        { resource: 'active_services', used: 260, limit: 100, remaining: 0, unlimited: false, atLimit: true, overLimit: true },
+        { resource: 'active_customers', used: 1800, limit: 2000, remaining: 200, unlimited: false, atLimit: false, overLimit: false },
+        { resource: 'active_suppliers', used: 160, limit: 150, remaining: 0, unlimited: false, atLimit: true, overLimit: true },
       ],
     },
     submissions: submission,
@@ -88,16 +92,16 @@ for (const locale of ['en', 'ar']) for (const width of [360, 768, 1440]) {
     await expect(main.getByRole('heading', { name: locale === 'ar' ? 'الاشتراك والفوترة' : 'Subscription and billing' })).toBeVisible()
     const currentSubscription = main.locator('section[aria-label="Current subscription"]')
     await expect(currentSubscription.getByText(locale === 'ar' ? 'يُطبق سعر تفاوضي' : 'Negotiated price applies', { exact: true })).toBeVisible()
-    await expect(main.locator('[data-usage-state="over"]')).toHaveCount(3)
-    await expect(main.locator('[data-usage-state="available"]')).toHaveCount(1)
+    await expect(main.locator('[data-usage-state="over"]')).toHaveCount(4)
+    await expect(main.locator('[data-usage-state="available"]')).toHaveCount(2)
     await expect(main.getByRole('heading', { name: 'Legacy founder' })).toHaveCount(0)
     const soloCard = main.locator('article').filter({ has: page.getByRole('heading', { name: 'Solo', exact: true }) })
     const soloChoice = soloCard.getByRole('button', { name: locale === 'ar' ? 'اختيار الخطة' : 'Choose plan' })
     await expect(soloChoice).toBeEnabled()
-    await expect(soloCard.getByRole('alert').getByRole('listitem')).toHaveCount(4)
+    await expect(soloCard.getByRole('alert').getByRole('listitem')).toHaveCount(6)
     for (const label of locale === 'ar'
-      ? ['الفروع النشطة', 'أعضاء الفريق', 'المنتجات النشطة', 'الخدمات النشطة']
-      : ['Active locations', 'Team members', 'Active products', 'Active services']) {
+      ? ['الفروع النشطة', 'أعضاء الفريق', 'المنتجات النشطة', 'الخدمات النشطة', 'العملاء النشطون', 'الموردون النشطون']
+      : ['Active locations', 'Team members', 'Active products', 'Active services', 'Active customers', 'Active suppliers']) {
       await expect(soloCard.getByRole('alert')).toContainText(label)
     }
     await expect(soloCard.getByRole('alert')).toContainText(locale === 'ar'
