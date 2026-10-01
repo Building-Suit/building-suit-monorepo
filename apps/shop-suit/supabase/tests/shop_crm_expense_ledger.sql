@@ -11,9 +11,11 @@ from (select owner_id id from shop_expense_fixture union all
   select manager_id from shop_expense_fixture union all select outsider_id from shop_expense_fixture) users;
 
 insert into shop_crm.plans (
-  portal_id, name, slug, price_amount, features, is_purchasable
+  portal_id, name, slug, price_amount, features, resource_limits, is_purchasable
 )
-select id, 'Expense fixture', 'task-expense', 0, '{}'::jsonb, true
+select id, 'Expense fixture', 'task-expense', 0, '{}'::jsonb,
+  '{"active_locations":null,"active_members":null,"active_products":null,"active_services":null,"active_customers":null,"active_suppliers":null}'::jsonb,
+  true
 from shop_crm.portals where key = 'shop-crm';
 select shop_private.reconcile_plan_catalog();
 

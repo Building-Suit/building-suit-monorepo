@@ -6,9 +6,12 @@ export type PublicPlan = {
   id: string;
   name: string;
   slug: string;
+  catalog_terms_id: string;
+  plan_variant: 'standard' | 'multi_2' | 'multi_3';
+  variant_name: string;
   price_amount: number;
   currency: string;
-  billing_interval: string;
+  billing_interval: 'monthly' | 'annual';
   trial_days: number;
   features: { inventory?: boolean } | null;
   resource_limits: PlanResourceLimits;

@@ -224,8 +224,9 @@ declare
   v_shop uuid := current_setting('ss_hot_onboard.mixed_shop')::uuid;
   v_billing jsonb := public.shop_billing_read(v_shop);
 begin
+  -- Four purchasable variants each expose monthly and annual terms.
   if v_billing #>> '{subscription,planSlug}' <> 'full-product-trial'
-    or jsonb_array_length(v_billing -> 'availablePlans') <> 4
+    or jsonb_array_length(v_billing -> 'availablePlans') <> 8
     or not (v_billing -> 'availablePlans' @> '[
       {"planSlug":"solo"},{"planSlug":"team"},{"planSlug":"multi"}
     ]'::jsonb)
