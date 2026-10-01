@@ -99,7 +99,7 @@ export type ShopRpcDatabase = {
           variant_name: string
           price_amount: number
           currency: string
-          billing_interval: string
+          billing_interval: 'monthly' | 'annual'
           trial_days: number
           features: Record<string, unknown>
           resource_limits: Record<string, number | null>

@@ -86,6 +86,8 @@ export type ShopBilling = {
     products: number
     services: number
     members: number
+    customers: number
+    suppliers: number
     limits: PlanResourceLimits
     resources: PlanUsageResource[]
   }

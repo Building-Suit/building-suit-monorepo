@@ -97,6 +97,49 @@ try {
   ])
   assertOneWinner(serviceResults, 'PLAN_RESOURCE_LIMIT_REACHED:active_services', 'service')
 
+  await runSql(`insert into public.clients (shop_id,name,created_by_profile_id)
+    select '${soloShop}', 'Race customer ' || value, '${soloProfile}'
+    from generate_series(1,499) value;`)
+  const customerResults = await Promise.all([
+    runSql(authenticated(soloOwner,
+      `select public.save_customer('${soloShop}',null,'Customer contender A',null,null,null,null);`), { allowFailure: true }),
+    runSql(authenticated(soloOwner,
+      `select public.save_customer('${soloShop}',null,'Customer contender B',null,null,null,null);`), { allowFailure: true }),
+  ])
+  assertOneWinner(customerResults, 'PLAN_RESOURCE_LIMIT_REACHED:active_customers', 'customer')
+
+  await runSql(`insert into public.vendors (shop_id,name,created_by_profile_id)
+    select '${soloShop}', 'Race supplier ' || value, '${soloProfile}'
+    from generate_series(1,49) value;`)
+  const supplierResults = await Promise.all([
+    runSql(authenticated(soloOwner,
+      `select public.save_vendor('${soloShop}',null,'Supplier contender A',null,null,null,null,null,null);`), { allowFailure: true }),
+    runSql(authenticated(soloOwner,
+      `select public.save_vendor('${soloShop}',null,'Supplier contender B',null,null,null,null,null,null);`), { allowFailure: true }),
+  ])
+  assertOneWinner(supplierResults, 'PLAN_RESOURCE_LIMIT_REACHED:active_suppliers', 'supplier')
+
+  await runSql(`update public.clients set is_active=false, archived_at=now()
+    where id=(select id from public.clients where shop_id='${soloShop}' and is_active order by created_at limit 1);
+    insert into public.clients (shop_id,name,is_active,archived_at,created_by_profile_id) values
+      ('${soloShop}','Customer restore contender A',false,now(),'${soloProfile}'),
+      ('${soloShop}','Customer restore contender B',false,now(),'${soloProfile}');
+    update public.vendors set is_active=false, archived_at=now()
+    where id=(select id from public.vendors where shop_id='${soloShop}' and is_active order by created_at limit 1);
+    insert into public.vendors (shop_id,name,is_active,archived_at,created_by_profile_id) values
+      ('${soloShop}','Supplier restore contender A',false,now(),'${soloProfile}'),
+      ('${soloShop}','Supplier restore contender B',false,now(),'${soloProfile}');`)
+  const customerRestoreIds = (await runSql(`select id from public.clients
+    where shop_id='${soloShop}' and name like 'Customer restore contender %' order by name;`)).stdout.split('\n').filter(Boolean)
+  const customerRestoreResults = await Promise.all(customerRestoreIds.map(customerId => runSql(
+    `update public.clients set is_active=true, archived_at=null where id='${customerId}';`, { allowFailure: true })))
+  assertOneWinner(customerRestoreResults, 'PLAN_RESOURCE_LIMIT_REACHED:active_customers', 'customer restore')
+  const supplierRestoreIds = (await runSql(`select id from public.vendors
+    where shop_id='${soloShop}' and name like 'Supplier restore contender %' order by name;`)).stdout.split('\n').filter(Boolean)
+  const supplierRestoreResults = await Promise.all(supplierRestoreIds.map(supplierId => runSql(
+    `update public.vendors set is_active=true, archived_at=null where id='${supplierId}';`, { allowFailure: true })))
+  assertOneWinner(supplierRestoreResults, 'PLAN_RESOURCE_LIMIT_REACHED:active_suppliers', 'supplier restore')
+
   const locationResults = await Promise.all([
     runSql(`insert into public.shop_locations (shop_id,name) values ('${multiShop}','Location contender A');`, { allowFailure: true }),
     runSql(`insert into public.shop_locations (shop_id,name) values ('${multiShop}','Location contender B');`, { allowFailure: true }),
@@ -119,10 +162,12 @@ try {
   const counts = lastLine((await runSql(`select
     (select count(*) from public.products where shop_id='${soloShop}' and is_active),
     (select count(*) from public.services where shop_id='${soloShop}' and is_active),
+    (select count(*) from public.clients where shop_id='${soloShop}' and is_active),
+    (select count(*) from public.vendors where shop_id='${soloShop}' and is_active),
     (select count(*) from public.shop_locations where shop_id='${multiShop}' and status='active'),
     (select count(*) from public.shop_locations where shop_id='${multiShop}' and id='${multiLocation}');`)).stdout)
-  if (counts !== '250|50|2|1') throw new Error(`quota races exceeded a boundary: ${counts}`)
-  console.log('shop_plan_limit_concurrency: passed; seat, location add/restore, product, and service last-slot races serialized')
+  if (counts !== '250|50|500|50|2|1') throw new Error(`quota races exceeded a boundary: ${counts}`)
+  console.log('shop_plan_limit_concurrency: passed; all six resources and customer/supplier reactivation races serialized')
 }
 finally {
   const shops = [soloShop, multiShop].filter(Boolean)
