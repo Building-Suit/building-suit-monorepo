@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { Database } from '~~/types/database.types'
+
 const PRIMARY_NAV = [
   { to: '/dashboard', key: 'dashboard', icon: 'dashboard' },
   { to: '/transactions', key: 'transactions', icon: 'transactions' },
@@ -61,6 +63,8 @@ const NAV_GROUPS = computed(() => [
 
 
 const { t } = useI18n()
+const supabase = useSupabaseClient<Database>()
+const user = useSupabaseUser()
 const { current, currentId, organizations, loadOrganizations, loading } = useTenant()
 const { can } = useTenant()
 const {
@@ -84,6 +88,40 @@ const initialShellReady = useState('ledger:initial-shell-ready', () => accessRea
 const hydrating = ref(useNuxtApp().isHydrating)
 onMounted(() => { hydrating.value = false })
 const showShell = computed(() => hydrating.value ? initialShellReady.value : accessReady.value)
+const signingOut = ref(false)
+const signOutError = ref('')
+const userId = computed(() => user.value?.id)
+const { data: profile } = useLazyAsyncData('account:profile', async () => {
+  if (!userId.value) return null
+  const { data, error } = await supabase.from('profiles').select('full_name').eq('id', userId.value).maybeSingle()
+  if (error) throw error
+  return data
+}, { watch: [userId] })
+const fullName = computed(() => {
+  if (profile.value?.full_name) return profile.value.full_name
+  const metadataName = user.value?.user_metadata.full_name ?? user.value?.user_metadata.name
+  return typeof metadataName === 'string' ? metadataName : ''
+})
+const userMenuActions = computed(() => can('billing.read')
+  ? [{ to: '/billing', label: t('billing.title'), icon: 'wallet' }]
+  : [])
+
+async function signOut() {
+  if (signingOut.value) return
+  signingOut.value = true
+  signOutError.value = ''
+  try {
+    const { error } = await supabase.auth.signOut()
+    if (error) throw error
+    await navigateTo('/login')
+  }
+  catch {
+    signOutError.value = t('errors.generic')
+  }
+  finally {
+    signingOut.value = false
+  }
+}
 
 
 watch(currentId, async (value, previous) => {
@@ -97,7 +135,20 @@ watch(currentId, async (value, previous) => {
   <BsAppShell v-else :product-name="t('app.name')" :groups="NAV_GROUPS.map(group => ({ ...group, label: t(`nav.groups.${group.key}`), links: group.links.map(item => ({ ...item, label: t(item.label) })) }))" :mobile-links="PRIMARY_NAV.map(item => ({ ...item, label: t(`nav.${item.key}`) }))" :labels="{ close: t('nav.close'), open: t('nav.open'), navigation: t('nav.primary'), dashboard: t('nav.dashboard') }">
     <template #logo><BsProductLogo name="Ledger Suit" asset-prefix="/brand/ledger-suit" class="h-14 w-auto max-w-52" /></template>
     <template #context><OrganizationSwitcher /></template>
-    <template #header><TrialCountdown /><NotificationMenu /><AccountMenu /></template>
+    <template #header>
+      <TrialCountdown />
+      <NotificationMenu />
+      <BsUserMenu
+        :name="fullName"
+        :email="user?.email"
+        :actions="userMenuActions"
+        :account-label="t('common.accountMenu')"
+        :sign-out-label="t('common.signOut')"
+        :sign-out-pending="signingOut"
+        :error="signOutError"
+        @sign-out="signOut"
+      />
+    </template>
         <div v-if="loading" class="text-sm text-fg-muted">{{ t('app.loading') }}</div>
 
         <OrganizationSetup v-else-if="!current" />
@@ -110,6 +161,6 @@ watch(currentId, async (value, previous) => {
           </div>
           <div class="pb-16"><slot /></div>
         </template>
-    <template #overlays><FinancialSystemMap v-if="current" /><AddTransactionDialog /><OperationsCenter /><ToastHost /></template>
+    <template #overlays><FinancialSystemMap v-if="current" /><AddTransactionDialog /><OperationsCenter /><TeamMenu :show-trigger="false" /><ToastHost /></template>
   </BsAppShell>
 </template>

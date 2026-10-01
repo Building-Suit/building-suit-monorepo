@@ -116,7 +116,7 @@ function planName(key: unknown) {
 <template>
   <BsAppShell home-path="/platform-admin" :product-name="t('admin.title')" :groups="[]" :labels="{ close: t('nav.close'), open: t('nav.open'), navigation: t('nav.primary'), dashboard: t('admin.title') }">
     <template #logo><BsProductLogo name="Ledger Suit" asset-prefix="/brand/ledger-suit" class="h-14 w-auto max-w-52" /></template>
-    <template #header><SettingsMenu /><BsButton type="button" class="ls-btn" @click="signOut">{{ t('common.signOut') }}</BsButton></template>
+    <template #header><BsUserMenu :email="user?.email" :account-label="t('common.accountMenu')" :sign-out-label="t('common.signOut')" @sign-out="signOut" /></template>
     <div class="space-y-4">
       <h1 class="text-h1 font-bold">{{ t('admin.title') }}</h1>
       <p class="text-fg-muted">{{ t('admin.subtitle') }}</p>

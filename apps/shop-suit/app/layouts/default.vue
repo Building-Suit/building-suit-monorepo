@@ -8,11 +8,14 @@ const user = useSupabaseUser()
 const { locale, t } = useI18n()
 const { shops, current, currentId, activeLocations, currentLocationId, loading, loadError, loadShops, selectShop, selectLocation } = useShop()
 
-const accountOpen = ref(false)
 const signingOut = ref(false)
 const signOutError = ref('')
 const showErrorDetails = import.meta.dev
 const isArabic = computed(() => locale.value === 'ar')
+const fullName = computed(() => {
+  const value = user.value?.user_metadata.full_name ?? user.value?.user_metadata.name
+  return typeof value === 'string' ? value : ''
+})
 
 const copy = computed(() => isArabic.value
   ? { dashboard: 'التقارير ونظرة عامة', daily: 'العمل اليومي', manage: 'إدارة النشاط', pos: 'نقطة البيع', cashShifts: 'ورديات الخزنة', invoices: 'الفواتير', products: 'المنتجات', catalogSetup: 'إعداد الكتالوج والاستيراد', services: 'الخدمات', appointments: 'التقويم والمواعيد', inventory: 'المخزون', purchases: 'المشتريات', expenses: 'المصروفات', settings: 'إعدادات النشاط', billing: 'الاشتراك والفوترة', team: 'الفريق', reports: 'التقارير', soon: 'قريبًا', shop: 'المتجر', location: 'الفرع', account: 'الحساب', logout: 'تسجيل الخروج', openMenu: 'فتح القائمة', closeMenu: 'إغلاق القائمة', loadFailed: 'تعذّر تحميل بيانات المتجر. حاول مرة أخرى.', retry: 'إعادة المحاولة', loading: 'جاري تحميل المتجر…', signOutFailed: 'تعذّر تسجيل الخروج. حاول مرة أخرى.' }
@@ -46,10 +49,6 @@ const groups = computed(() => {
 })
 await loadShops()
 
-watch(() => route.fullPath, () => {
-  accountOpen.value = false
-})
-
 watch(
   [() => current.value?.business_mode, () => route.path],
   ([mode, path]) => {
@@ -78,10 +77,17 @@ async function logout() {
       <label v-if="shops.length" class="grid gap-1 text-xs font-bold sm:hidden">{{ copy.shop }}<select :value="currentId ?? ''" class="ls-select min-h-11 w-full" @change="selectShop(($event.target as HTMLSelectElement).value)"><option v-for="shop in shops" :key="shop.id" :value="shop.id">{{ shop.name }}</option></select></label>
     </template>
     <template #header>
-      <SettingsMenu />
       <select v-if="shops.length" :value="currentId ?? ''" class="ls-select hidden min-h-11 w-36 truncate sm:block lg:w-48" :aria-label="copy.shop" @change="selectShop(($event.target as HTMLSelectElement).value)"><option v-for="shop in shops" :key="shop.id" :value="shop.id">{{ shop.name }}</option></select>
       <select v-if="activeLocations.length" :value="currentLocationId ?? ''" class="ls-select min-h-11 w-28 truncate sm:w-36 lg:w-48" :aria-label="copy.location" @change="selectLocation(($event.target as HTMLSelectElement).value)"><option v-for="location in activeLocations" :key="location.id" :value="location.id">{{ location.name }}</option></select>
-      <BsButton :aria-label="copy.account" aria-haspopup="dialog" :aria-expanded="accountOpen" @click="signOutError = ''; accountOpen = true"><AppIcon name="user" /></BsButton>
+      <BsUserMenu
+        :name="fullName"
+        :email="user?.email"
+        :account-label="copy.account"
+        :sign-out-label="copy.logout"
+        :sign-out-pending="signingOut"
+        :error="signOutError"
+        @sign-out="logout"
+      />
     </template>
         <div v-if="loadError" class="rounded-2xl border border-[var(--bs-status-error)]/30 bg-[var(--bs-status-error-bg)] p-5 text-[var(--bs-status-error)] dark:bg-[var(--bs-status-error-bg)] dark:text-[var(--bs-status-error)]" role="alert">
           <p class="text-sm font-bold">{{ copy.loadFailed }}</p>
@@ -98,12 +104,6 @@ async function logout() {
         <slot v-else />
     <template #overlays>
       <ToastHost />
-      <BsDialog v-model:visible="accountOpen" :title="copy.account" :pending="signingOut">
-        <BsForm class="grid gap-4" :pending="signingOut" :error="signOutError" @submit="logout">
-          <p class="break-all text-sm">{{ user?.email }}</p>
-          <BsButton type="submit" :pending="signingOut">{{ copy.logout }}</BsButton>
-        </BsForm>
-      </BsDialog>
     </template>
   </BsAppShell>
 </template>

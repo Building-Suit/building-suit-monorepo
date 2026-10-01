@@ -101,6 +101,16 @@ test('remaining direct dialogs are materially different shared-overlay workflows
   assert.deepEqual(actual.sort(), [...allowed].sort())
 })
 
+test('Ledger authenticated chrome is adapter-only shared UI', () => {
+  for (const file of ['layouts/default.vue', 'pages/platform-admin.vue', 'pages/subscribe.vue']) {
+    const source = sources.find(item => item.file === file)?.source || ''
+    assert.match(source, /<BsAppShell\b/)
+    assert.match(source, /<BsUserMenu\b/)
+    assert.doesNotMatch(source, /<SettingsMenu\b|<AccountMenu\b|role="menu"/)
+  }
+  assert.equal(existsSync(path.join(appRoot, 'components/AccountMenu.vue')), false)
+})
+
 test('every remaining Ledger component is approved product orchestration over shared UI', () => {
   const manifest = JSON.parse(readFileSync(path.join(workspaceRoot, 'docs/shared/ui-ownership-manifest.json'), 'utf8'))
   const ledger = manifest.components.filter(component => component.path.startsWith('apps/ledger-suit/'))

@@ -75,6 +75,7 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
 
     <BsContentSection :title="isArabic ? 'الهوية والإجراءات' : 'Brand and actions'" :description="isArabic ? 'تستخدم الإجراءات الحالات والأحجام المشتركة.' : 'Actions use shared variants, sizes and pending guards.'">
       <div class="flex flex-wrap items-center gap-3"><BsBuildingLogo /><AppIcon v-for="icon in ['dashboard', 'ledger', 'invoice', 'team', 'wallet', 'reports']" :key="icon" :name="icon" :size="28" /></div>
+      <div class="mt-5 flex flex-wrap items-start gap-4"><BsUserIdentity name="Building Suit User" email="user@example.com" /><BsUserMenu name="Building Suit User" email="user@example.com" :account-label="isArabic ? 'قائمة الحساب' : 'Account menu'" :sign-out-label="isArabic ? 'تسجيل الخروج' : 'Sign out'" /></div>
       <div class="ls-card-flat mt-5 flex flex-wrap items-center gap-3 p-5">
         <BsButton variant="primary">{{ ui('save') }}</BsButton><BsButton variant="secondary">{{ isArabic ? 'مراجعة' : 'Review' }}</BsButton><BsButton>{{ ui('cancel') }}</BsButton><BsButton variant="danger">{{ isArabic ? 'حذف' : 'Delete' }}</BsButton>
       </div>

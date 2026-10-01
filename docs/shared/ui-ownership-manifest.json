@@ -35,12 +35,6 @@
       "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
-      "path": "apps/ledger-suit/app/components/AccountMenu.vue",
-      "classification": "product-orchestration",
-      "rationale": "Coordinates Ledger profile, billing capability, settings, team actions, and sign-out. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-LEDGER-MIG-001"
-    },
-    {
       "path": "apps/ledger-suit/app/components/AccountStatementClassificationDialog.vue",
       "classification": "product-orchestration",
       "rationale": "Owns Ledger statement classification queries, validation, and commands while composing shared overlays and tables. It composes canonical shared UI primitives.",

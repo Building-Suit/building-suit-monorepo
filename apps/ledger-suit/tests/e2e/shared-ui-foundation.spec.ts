@@ -37,6 +37,34 @@ async function openLanding(page: Page) {
   await expect(pricing).toBeVisible()
 }
 
+async function openAuthenticatedShell(page: Page) {
+  const id = 'd0000000-0000-4000-8000-000000000004'
+  const user = { id, aud: 'authenticated', role: 'authenticated', email: 'operator@example.test', app_metadata: {}, user_metadata: { full_name: 'Ledger Operator' } }
+  const token = `${Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url')}.${Buffer.from(JSON.stringify({ sub: id, role: 'authenticated', exp: Math.floor(Date.now() / 1000) + 3600 })).toString('base64url')}.mock`
+  await page.route('**/auth/v1/**', route => route.fulfill({ json: route.request().url().includes('/token') ? { access_token: token, token_type: 'bearer', expires_in: 3600, refresh_token: 'mock-refresh', user } : user }))
+  await page.route('**/rest/v1/**', async (route) => {
+    const url = route.request().url()
+    const args = route.request().postDataJSON() ?? {}
+    if (url.endsWith('/rpc/subscription_plan_catalog')) await route.fulfill({ json: catalog })
+    else if (url.endsWith('/rpc/platform_admin_read')) {
+      const data = args.p_resource === 'identity'
+        ? [{ id, role: 'observer' }]
+        : args.p_resource === 'status'
+          ? [{ id: 'ledger', pending_payments: 0, unprocessed_billing_events: 0, failed_billing_events: 0, open_support_requests: 0, suspended_organizations: 0, support_reminder_delivery: 'not_configured' }]
+          : []
+      await route.fulfill({ json: { ok: true, data } })
+    }
+    else await route.fulfill({ json: [] })
+  })
+  await page.goto('/platform-admin')
+  await expect(page).toHaveURL(/\/login\?operator=1/)
+  await expect(page.locator('form')).toHaveAttribute('data-hydrated', 'true')
+  await page.locator('#email').fill(user.email)
+  await page.locator('#password').fill('synthetic-password')
+  await page.locator('button[type=submit]').click()
+  await expect(page).toHaveURL('/platform-admin')
+}
+
 test('Ledger consumes the shared responsive marketing frame and plan presentation', async ({ page }) => {
   await mockPublicBackend(page)
   await page.addInitScript(() => localStorage.setItem('building-suit.theme', 'dark'))
@@ -90,4 +118,28 @@ test('Ledger auth uses the shared split frame, login shell, and responsive RTL s
   await expect(page.locator('.bs-signup-wizard__step')).toHaveCount(2)
   await expect(page.locator('.bs-signup-wizard__step').first()).toHaveAttribute('aria-current', 'step')
   expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1)
+})
+
+test('Ledger authenticated shell shares mobile drawer, user menu, settings, and focus behavior', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await openAuthenticatedShell(page)
+
+  const navigationTrigger = page.getByRole('button', { name: 'Open navigation' })
+  await navigationTrigger.click()
+  const navigation = page.locator('#bs-primary-navigation')
+  await expect(navigation).toBeVisible()
+  await expect(page.locator('.ls-scrim')).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(navigation).toBeHidden()
+  await expect(navigationTrigger).toBeFocused()
+
+  await page.getByRole('button', { name: 'Account menu' }).click()
+  const userMenu = page.getByRole('menu', { name: 'Account menu' })
+  await expect(userMenu).toBeVisible()
+  await expect(userMenu.getByText('operator@example.test')).toBeVisible()
+  await userMenu.getByRole('menuitemradio', { name: 'Dark' }).click()
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
+  await page.keyboard.press('Escape')
+  await expect(userMenu).toBeHidden()
+  await expect(page.getByRole('button', { name: 'Account menu' })).toBeFocused()
 })

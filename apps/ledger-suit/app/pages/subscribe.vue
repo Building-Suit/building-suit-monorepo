@@ -2,6 +2,7 @@
 definePageMeta({ layout: false })
 
 const supabase = useSupabaseClient()
+const user = useSupabaseUser()
 const { t } = useI18n()
 const { current, loadOrganizations } = useTenant()
 const { paymentRequired, loading, load } = useBilling()
@@ -54,10 +55,11 @@ async function signOut() {
 </script>
 
 <template>
-  <main class="min-h-dvh bg-background px-4 py-6">
-    <div class="mx-auto max-w-7xl"><header class="flex flex-wrap items-center justify-between gap-4"><NuxtLink to="/" class="inline-flex" aria-label="Ledger Suit home"><BsProductLogo name="Ledger Suit" asset-prefix="/brand/ledger-suit" class="h-14 w-auto max-w-52" /></NuxtLink><div class="flex items-center gap-2"><SettingsMenu /><BsButton type="button" class="ls-btn ls-btn-sm" @click="signOut">{{ t('common.signOut') }}</BsButton></div><div v-if="current" class="w-full"><OrganizationSwitcher /></div></header>
-      <div v-if="loading" class="py-16 text-center text-sm text-fg-muted">{{ t('app.loading') }}</div>
-      <SubscriptionGate v-else-if="current && paymentRequired" />
-    </div>
-  </main>
+  <BsAppShell :product-name="t('app.name')" :groups="[]" :labels="{ close: t('nav.close'), open: t('nav.open'), navigation: t('nav.primary'), dashboard: t('nav.dashboard') }">
+    <template #logo><BsProductLogo name="Ledger Suit" asset-prefix="/brand/ledger-suit" class="h-14 w-auto max-w-52" /></template>
+    <template #context><OrganizationSwitcher v-if="current" /></template>
+    <template #header><BsUserMenu :email="user?.email" :account-label="t('common.accountMenu')" :sign-out-label="t('common.signOut')" @sign-out="signOut" /></template>
+    <div v-if="loading" class="py-16 text-center text-sm text-fg-muted">{{ t('app.loading') }}</div>
+    <SubscriptionGate v-else-if="current && paymentRequired" />
+  </BsAppShell>
 </template>

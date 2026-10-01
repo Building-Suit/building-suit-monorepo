@@ -39,7 +39,7 @@ test('operator surface uses only authenticated RPCs and clears on identity chang
   assert.match(page, /watch\(userId,[\s\S]*session\.value = null/)
   assert.match(page, /await confirmation\.ask/)
   assert.match(page, /const ar = \{/)
-  assert.match(layout, /SettingsMenu/)
+  assert.match(layout, /BsUserMenu/)
   assert.doesNotMatch(`${page}\n${layout}`, /service[_-]?role/i)
   assert.doesNotMatch(`${migration}\n${page}`, /impersonat/i)
 })

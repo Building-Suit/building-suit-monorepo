@@ -76,12 +76,21 @@ test('standard Shop record actions use the canonical dialog and controller', () 
 
 test('remaining direct dialogs are materially different shared-overlay workflows', () => {
   const allowed = new Set([
-    'layouts/default.vue',
     'pages/appointments/index.vue',
     'pages/platform-admin.vue',
   ])
   const actual = sources.filter(({ source }) => /<BsDialog\b/.test(source)).map(({ file }) => file)
   assert.deepEqual(actual.sort(), [...allowed].sort())
+})
+
+test('Shop authenticated chrome is adapter-only shared UI', () => {
+  const layouts = sources.filter(({ file }) => file.startsWith('layouts/'))
+  for (const file of ['layouts/default.vue', 'layouts/platform-admin.vue']) {
+    const source = layouts.find(item => item.file === file)?.source || ''
+    assert.match(source, /<BsAppShell\b/)
+    assert.match(source, /<BsUserMenu\b/)
+    assert.doesNotMatch(source, /<SettingsMenu\b|accountOpen|role="menu"/)
+  }
 })
 
 test('every remaining Shop component is approved product orchestration over shared UI', () => {

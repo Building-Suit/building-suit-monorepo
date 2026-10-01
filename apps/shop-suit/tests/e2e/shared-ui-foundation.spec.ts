@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { pilotFixture } from './pilot-fixture'
 
 const limits = { active_locations: 1, active_members: 2, active_products: 250, active_services: 50, active_customers: 500, active_suppliers: 50 }
 const catalog = [
@@ -90,4 +91,27 @@ test('Shop auth uses the shared split frame, login shell, and responsive RTL sig
   await expect(page.locator('.bs-signup-wizard__step')).toHaveCount(2)
   await expect(page.locator('.bs-signup-wizard__step').first()).toHaveAttribute('aria-current', 'step')
   expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1)
+})
+
+test('Shop authenticated shell shares mobile drawer, user menu, settings, and RTL behavior', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await pilotFixture(page, 'ar')
+
+  const navigationTrigger = page.getByRole('button', { name: 'فتح القائمة' })
+  await navigationTrigger.click()
+  const navigation = page.locator('#bs-primary-navigation')
+  await expect(navigation).toBeVisible()
+  await expect(page.locator('.ls-scrim')).toBeVisible()
+  const drawerBox = await navigation.boundingBox()
+  expect(drawerBox?.x).toBeGreaterThan(120)
+  await page.keyboard.press('Escape')
+  await expect(navigation).toBeHidden()
+  await expect(navigationTrigger).toBeFocused()
+
+  await page.getByRole('button', { name: 'الحساب' }).click()
+  const userMenu = page.getByRole('menu', { name: 'الحساب' })
+  await expect(userMenu).toBeVisible()
+  await userMenu.getByRole('menuitemradio', { name: 'داكن' }).click()
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
+  await expect(userMenu.getByRole('menuitem', { name: 'تسجيل الخروج' })).toBeVisible()
 })

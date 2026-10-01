@@ -44,9 +44,12 @@ test('module headers expose organization and applicable reporting context', () =
 
 test('mobile navigation declares state and restores keyboard focus', () => {
   const shell = read('../../packages/ui/src/templates/BsAppShell.vue')
-  assert.match(shell, /aria-controls="bs-primary-navigation"/)
-  assert.match(shell, /:aria-expanded="mobileNavOpen"/)
-  assert.match(shell, /event\.key === 'Escape'/)
-  assert.match(shell, /closeButton\.value\?\.focus\(\)/)
-  assert.match(shell, /menuButton\.value\?\.focus\(\)/)
+  const sideMenu = read('../../packages/ui/src/organisms/BsSideMenu.vue')
+  const topHeader = read('../../packages/ui/src/organisms/BsTopHeader.vue')
+  assert.match(topHeader, /aria-controls="bs-primary-navigation"/)
+  assert.match(topHeader, /:aria-expanded="navigationOpen"/)
+  assert.match(sideMenu, /event\.key === 'Escape'/)
+  assert.match(sideMenu, /event\.key !== 'Tab'/)
+  assert.match(sideMenu, /data-side-menu-close/)
+  assert.match(shell, /focusNavigationTrigger/)
 })

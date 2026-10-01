@@ -103,6 +103,29 @@ test('shared auth owns split geometry, form shells, wizard controls, and verific
   assert.match(verification, /@click="emit\('resend'\)"/)
 })
 
+test('authenticated chrome is composed from canonical shared organisms', () => {
+  const manifest = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
+  for (const name of ['BsSideMenu', 'BsTopHeader', 'BsUserMenu', 'SettingsMenu', 'BsAppShell']) {
+    assert.ok(Object.keys(manifest.exports).some(key => key.endsWith(`/${name}`)), `${name} is not exported`)
+  }
+  const shell = readFileSync(new URL('../src/templates/BsAppShell.vue', import.meta.url), 'utf8')
+  const sideMenu = readFileSync(new URL('../src/organisms/BsSideMenu.vue', import.meta.url), 'utf8')
+  const topHeader = readFileSync(new URL('../src/organisms/BsTopHeader.vue', import.meta.url), 'utf8')
+  const userMenu = readFileSync(new URL('../src/organisms/BsUserMenu.vue', import.meta.url), 'utf8')
+  assert.match(shell, /<BsSideMenu\b/)
+  assert.match(shell, /<BsTopHeader\b/)
+  assert.doesNotMatch(shell, /<aside\b|<header\b/)
+  assert.match(sideMenu, /id="bs-primary-navigation"/)
+  assert.match(sideMenu, /event\.key === 'Escape'/)
+  assert.match(sideMenu, /event\.key !== 'Tab'/)
+  assert.match(sideMenu, /class="fixed inset-0 z-30 ls-scrim lg:hidden"/)
+  assert.match(topHeader, /aria-controls="bs-primary-navigation"/)
+  assert.match(userMenu, /<BsUserIdentity\b/)
+  assert.match(userMenu, /<SettingsMenu embedded/)
+  assert.match(userMenu, /v-for="action in actions"/)
+  assert.match(userMenu, /@click="emit\('signOut'\)"/)
+})
+
 test('status badges expose written labels and semantic tone instead of color alone', async () => {
   const html = await render('atoms/StatusBadge.vue', { status: 'custom', label: 'Needs review', tone: 'warning', icon: false })
   assert.match(html, />Needs review</)
