@@ -101,7 +101,7 @@ export async function pilotFixture(page: Page, locale: string, role = 'owner', o
   await submitButton.click()
   await expect(page).toHaveURL(/dashboard/, { timeout: 20_000 })
   await expect(page.getByRole('main').getByRole('heading', {
-    name: locale === 'ar' ? 'لوحة التشغيل' : 'Operating dashboard',
+    name: locale === 'ar' ? 'لوحة التحكم' : 'Operating dashboard',
     exact: true,
   })).toBeVisible({ timeout: 20_000 })
   return { calls, state }

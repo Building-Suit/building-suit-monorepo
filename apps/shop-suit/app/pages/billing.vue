@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { BillingPlanOption, BillingSubmission, ShopBilling } from '~/types/billing'
-import type { PlanResourceKey, PlanUsageResource } from '~/types/plans'
+import type { PlanResourceKey, PlanUsageResource, ShopPlanInterval, ShopPlanOffer } from '~/types/plans'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 
 definePageMeta({ layout: 'default', middleware: ['auth'] })
@@ -36,8 +36,12 @@ const publicCatalogTerms = computed(() => new Set((publicPlans.value ?? [])
   .filter(plan => plan.is_purchasable && !plan.is_coming_soon)
   .map(plan => plan.catalog_terms_id)))
 const purchasablePlans = computed(() => (billing.value?.availablePlans ?? [])
-  .filter(plan => publicCatalogTerms.value.has(plan.catalogTermsId)))
+  .filter((plan): plan is BillingPlanOption & { billingInterval: ShopPlanInterval } => publicCatalogTerms.value.has(plan.catalogTermsId)
+    && (plan.billingInterval === 'monthly' || plan.billingInterval === 'annual')))
 const selectedPlan = computed(() => purchasablePlans.value.find(plan => plan.catalogTermsId === form.catalogTermsId) ?? null)
+const currentCatalogTermsId = computed(() => purchasablePlans.value.find(plan => plan.planSlug === billing.value?.subscription.planSlug
+  && plan.planVariant === billing.value?.subscription.planVariant
+  && plan.billingInterval === billing.value?.subscription.billingInterval)?.catalogTermsId ?? '')
 const latestSubmission = computed(() => billing.value?.submissions?.[0] ?? null)
 const hasOpenRequest = computed(() => billing.value?.submissions?.some(item => ['submitted', 'under_review'].includes(item.status)) ?? false)
 const usageResources = computed<PlanUsageResource[]>(() => {
@@ -93,21 +97,11 @@ function intervalLabel(interval: string) {
   return copy.value.intervals[interval as keyof typeof copy.value.intervals] ?? interval
 }
 
-function variantLabel(plan: BillingPlanOption) {
-  if (plan.planVariant === 'multi_2') return isArabic.value ? 'مالتي · فرعان' : 'Multi · 2 branches'
-  if (plan.planVariant === 'multi_3') return isArabic.value ? 'مالتي · 3 فروع' : 'Multi · 3 branches'
-  return plan.planName
-}
-
-function resourceLabel(resource: PlanResourceKey) {
-  return copy.value.resources[resource]
-}
-
 function submissionMessage(submission: BillingSubmission) {
   return copy.value.submissionMessages[submission.status]
 }
 
-function choosePlan(plan: BillingPlanOption) {
+function choosePlan(plan: ShopPlanOffer) {
   form.catalogTermsId = plan.catalogTermsId
 }
 
@@ -179,7 +173,7 @@ const ar = {
   instructions: 'الدفع بـ InstaPay أو تحويل بنكي فوري', instructionsHelp: 'حوّل على البيانات الظاهرة، وبعدها ابعت إشعار الدفع للمراجعة. التحويل بيتراجع يدويًا، مش بيتطابق تلقائيًا.',
   recipient: 'عنوان المستلم', paymentLink: 'رابط الدفع', qr: 'رمز QR للدفع', unavailable: 'لم يضبط مسؤول المنصة تعليمات الدفع بعد. تواصل مع دعم Building Suit قبل التحويل.',
   notice: 'ابعت إشعار الدفع', noticeHelp: 'إشعار الدفع بيبدأ المراجعة اليدوية، بس خطتك واستخدامك مش هيتغيّروا غير بعد الاعتماد.', requestedPlan: 'الخطة المطلوبة', interval: 'مدة الاشتراك', expected: 'سعر الخطة المثبت', paid: 'المبلغ المحوّل', transferDate: 'تاريخ التحويل', reference: 'مرجع التحويل',
-  submit: 'ابعت للمراجعة', submitting: 'بنبعت…', invalid: 'اختار خطة متاحة، واكتب المبلغ وتاريخ ومرجع التحويل.', submitted: 'اتبعت إشعار الدفع للمراجعة اليدوية.', failed: 'مقدرناش نبعت إشعار الدفع. تقدر تحاول تاني من غير ما التحويل يتكرر.', confirmNotice: (plan: string, quote: string, paid: string) => `تبعت إشعار دفع لخطة ${plan}؟ سعر الخطة ${quote} والمبلغ اللي كتبته ${paid}. الاستخدام مش هيتغيّر غير بعد اعتماد مسؤول المنصة.`,
+  submit: 'ابعت للمراجعة', submitting: 'بنبعت…', invalid: 'اختار خطة متاحة، واكتب المبلغ وتاريخ ومرجع التحويل.', submitted: 'اتبعت إشعار الدفع للمراجعة اليدوية.', failed: 'مقدرناش نبعت إشعار الدفع. تقدر تحاول تاني من غير ما التحويل يتكرر.', confirmNotice: (plan: string, quote: string, paid: string) => `تبعت إشعار دفع لخطة ${plan}؟ سعر الخطة ${quote} والمبلغ اللي كتبته ${paid}. لن يتغير الوصول إلا بعد اعتماد مسؤول المنصة.`,
   policyPrefix: 'بإرسال الطلب، أنت تقر بالاطلاع على', terms: 'الشروط والأحكام', privacy: 'سياسة الخصوصية', refund: 'سياسة الاسترداد والإلغاء',
   latest: 'أحدث طلب', history: 'سجل إشعارات الدفع', empty: 'لم تُرسل إشعارات دفع بعد.', reviewReason: 'ملاحظة المراجعة', manual: 'تحقق يدوي', catalogFailed: 'تعذّر تحميل كتالوج الخطط المتاحة للشراء.', noPurchasable: 'لا توجد خطط متاحة للطلب حاليًا. سيظل اشتراكك الحالي دون تغيير.',
   statuses: { trialing: 'فترة تجريبية', active: 'نشط', read_only: 'قراءة فقط', suspended: 'موقوف', submitted: 'مُرسل', under_review: 'قيد المراجعة', approved: 'معتمد', rejected: 'مرفوض' },
@@ -217,15 +211,7 @@ const ar = {
         <div v-if="catalogPending" role="status" class="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3"><div v-for="item in 3" :key="item" class="h-72 animate-pulse rounded-2xl bg-muted" /></div>
         <div v-else-if="catalogError" role="alert" class="ls-error mt-5"><p>{{ copy.catalogFailed }}</p><BsButton class="mt-3" severity="secondary" @click="refreshCatalog()">{{ copy.retry }}</BsButton></div>
         <p v-else-if="!purchasablePlans.length" role="status" class="mt-5 rounded-xl border border-border p-4 text-sm">{{ copy.noPurchasable }}</p>
-        <div v-else class="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <article v-for="plan in purchasablePlans" :key="plan.catalogTermsId" class="flex flex-col rounded-2xl border p-5" :class="form.catalogTermsId === plan.catalogTermsId ? 'border-[var(--bs-link)] ring-2 ring-[var(--bs-link)]/20' : 'border-border'">
-            <div class="flex items-start justify-between gap-3"><div><h3 class="text-xl font-extrabold">{{ variantLabel(plan) }}</h3><p class="mt-1 text-sm text-muted-foreground">{{ intervalLabel(plan.billingInterval) }}</p></div><span v-if="plan.planSlug === billing.subscription.planSlug && plan.planVariant === billing.subscription.planVariant && plan.billingInterval === billing.subscription.billingInterval" class="rounded-full bg-muted px-2.5 py-1 text-xs font-bold">{{ copy.current }}</span></div>
-            <p class="mt-4 text-2xl font-black">{{ money(plan.effectivePriceAmount, plan.currency) }}</p><p v-if="plan.priceSource === 'override'" class="mt-1 text-xs font-bold text-[var(--bs-link)]">{{ copy.negotiated }} · {{ copy.listPrice }} {{ money(plan.listPriceAmount, plan.currency) }}</p>
-            <PlanResourceLimits class="mt-5" :limits="plan.resourceLimits" />
-            <div v-if="plan.blockers.length" role="alert" class="mt-5 rounded-xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-3 text-sm"><strong>{{ copy.blocked }}</strong><p class="mt-1 leading-5">{{ copy.blockers }}</p><ul class="mt-2 list-disc space-y-1 ps-5"><li v-for="blocker in plan.blockers" :key="blocker.resource">{{ resourceLabel(blocker.resource) }}: {{ blocker.used }} {{ copy.used }} / {{ blocker.limit }} {{ copy.limitLabel }} · {{ blocker.excess }} {{ copy.over }}</li></ul><p class="mt-3 font-semibold leading-5">{{ copy.preservation }}</p></div>
-            <BsButton type="button" class="mt-5 w-full" :variant="form.catalogTermsId === plan.catalogTermsId ? 'default' : 'primary'" :aria-pressed="form.catalogTermsId === plan.catalogTermsId" @click="choosePlan(plan)">{{ form.catalogTermsId === plan.catalogTermsId ? copy.chosen : copy.choose }}</BsButton>
-          </article>
-        </div>
+        <ShopPlanCards v-else class="mt-5" :offers="purchasablePlans" :selected-catalog-terms-id="form.catalogTermsId" :current-catalog-terms-id="currentCatalogTermsId" action="select" @select="choosePlan" />
       </section>
 
       <section class="rounded-2xl border border-border bg-card p-5 sm:p-6"><div class="flex flex-wrap items-start justify-between gap-3"><div><h2 class="text-lg font-extrabold">{{ copy.instructions }}</h2><p class="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{{ copy.instructionsHelp }}</p></div><span class="rounded-full bg-muted px-3 py-1 text-xs font-bold">{{ copy.manual }}</span></div>

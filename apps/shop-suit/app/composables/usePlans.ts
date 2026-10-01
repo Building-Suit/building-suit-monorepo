@@ -11,7 +11,7 @@ export type PublicPlan = {
   variant_name: string;
   price_amount: number;
   currency: string;
-  billing_interval: string;
+  billing_interval: 'monthly' | 'annual';
   trial_days: number;
   features: { inventory?: boolean } | null;
   resource_limits: PlanResourceLimits;
