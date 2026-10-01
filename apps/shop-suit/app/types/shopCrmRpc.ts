@@ -62,6 +62,7 @@ export type ShopRpcDatabase = {
           p_request_id: string
           p_shop_id: string
           p_requested_plan_slug: string
+          p_requested_catalog_terms_id: string
           p_paid_amount: number
           p_transfer_date: string
           p_transfer_reference: string
@@ -93,9 +94,12 @@ export type ShopRpcDatabase = {
           id: string
           name: string
           slug: string
+          catalog_terms_id: string
+          plan_variant: 'standard' | 'multi_2' | 'multi_3'
+          variant_name: string
           price_amount: number
           currency: string
-          billing_interval: string
+          billing_interval: 'monthly' | 'annual'
           trial_days: number
           features: Record<string, unknown>
           resource_limits: Record<string, number | null>

@@ -1,4 +1,4 @@
--- SS-BILLING-001: 14-day boundary, owner isolation, manual notice review,
+-- HOT-09: seven-day boundary, owner isolation, manual notice review,
 -- approval idempotency, read-only expiry, and immutable evidence.
 
 create temporary table shop_billing_fixture as
@@ -46,13 +46,13 @@ begin
   end if;
   if exists (
     select 1 from public.plans plan join public.portals portal on portal.id = plan.portal_id
-    where portal.key = 'shop-crm' and plan.trial_days <> 14
-  ) then raise exception 'canonical trial policy is not 14 days'; end if;
+    where portal.key = 'shop-crm' and plan.trial_days <> 7
+  ) then raise exception 'canonical trial policy is not 7 days'; end if;
   begin
     update public.plans set trial_days = 30 where slug = 'solo';
     raise exception '30-day Shop trial policy was accepted';
   exception when check_violation then
-    if sqlerrm <> 'SHOP_TRIAL_DAYS_MUST_BE_14' then raise; end if;
+    if sqlerrm <> 'SHOP_TRIAL_DAYS_MUST_BE_7' then raise; end if;
   end;
 end;
 $$;
@@ -76,9 +76,9 @@ begin
   from public.subscriptions subscription
   join public.shop_memberships membership on membership.profile_id = subscription.profile_id
   where membership.shop_id = v_shop and membership.role = 'owner';
-  if v_trial_end <> v_trial_start + interval '14 days'
-    or public.shop_billing_read(v_shop) #>> '{subscription,trialDaysRemaining}' not in ('13', '14') then
-    raise exception 'new trial is not exactly 14 days';
+  if v_trial_end <> v_trial_start + interval '7 days'
+    or public.shop_billing_read(v_shop) #>> '{subscription,trialDaysRemaining}' not in ('6', '7') then
+    raise exception 'new trial is not exactly 7 days';
   end if;
 
   v_notice := public.submit_shop_billing_notice(
@@ -253,7 +253,7 @@ do $$
 declare v_shop uuid := current_setting('ss_billing.shop')::uuid; v_notice uuid; v_read jsonb;
 begin
   v_notice := public.submit_shop_billing_notice(
-    gen_random_uuid(), v_shop, 'multi', 1099, current_date, 'IPN-SS-UPGRADE'
+    gen_random_uuid(), v_shop, 'multi', 999, current_date, 'IPN-SS-UPGRADE'
   );
   v_read := public.shop_billing_read(v_shop);
   if v_read #>> '{subscription,planSlug}' <> 'team'
@@ -261,8 +261,8 @@ begin
       where (item ->> 'id')::uuid = v_notice
         and item ->> 'requestedPlanSlug' = 'multi'
         and item ->> 'billingInterval' = 'monthly'
-        and (item ->> 'listPriceAmount')::numeric = 1099
-        and (item ->> 'effectivePriceAmount')::numeric = 1099) then
+        and (item ->> 'listPriceAmount')::numeric = 999
+        and (item ->> 'effectivePriceAmount')::numeric = 999) then
     raise exception 'plan-change notice mutated access or lost its quote';
   end if;
   perform set_config('ss_billing.upgrade_notice', v_notice::text, true);
@@ -280,7 +280,7 @@ begin
   perform public.platform_admin_billing_command(
     gen_random_uuid(), 'approve', current_setting('ss_billing.upgrade_notice')::uuid,
     'Verified upgrade transfer',
-    jsonb_build_object('receivedAmount', 1099, 'receivedReference', 'BANK-SS-UPGRADE', 'receivedDate', current_date::text)
+    jsonb_build_object('receivedAmount', 999, 'receivedReference', 'BANK-SS-UPGRADE', 'receivedDate', current_date::text)
   );
   if public.platform_admin_billing_read('queue', 'approved') #>> '{items,0,requestedPlanSlug}' is null
     or public.platform_admin_read('shop', v_shop) #>> '{subscription,planSlug}' <> 'multi' then
@@ -354,7 +354,7 @@ begin
   );
   select item into v_item from jsonb_array_elements(public.shop_billing_read(v_shop) -> 'submissions') item
   where (item ->> 'id')::uuid = v_notice;
-  if (v_item ->> 'listPriceAmount')::numeric <> 1099
+  if (v_item ->> 'listPriceAmount')::numeric <> 999
     or (v_item ->> 'effectivePriceAmount')::numeric <> 499
     or v_item ->> 'priceSource' <> 'override' then
     raise exception 'active founder price was not frozen into the renewal quote';
@@ -417,7 +417,7 @@ begin
     on membership.profile_id = subscription.profile_id
   where membership.shop_id = v_shop
     and period.price_amount = 499
-    and period.list_price_amount = 1099
+    and period.list_price_amount = 999
     and period.price_override_id is not null;
 
   if v_period_count <> 1 then

@@ -4,6 +4,22 @@ export default defineI18nLocale(async () => ({
     retry: 'حاول تاني',
   },
 
+  marketing: {
+    home: 'الصفحة الرئيسية لـ Shop Suit', about: 'من نحن', contact: 'تواصل معنا', terms: 'الشروط والأحكام', privacy: 'سياسة الخصوصية',
+    deliveryShipping: 'سياسة التسليم والشحن', refundCancellation: 'سياسة الاسترداد والإلغاء', footerNavigation: 'معلومات الشركة والسياسات', lastUpdated: 'آخر تحديث:',
+    contactMetaDescription: 'تواصل مع Shop Suit من Building Suit للاستفسار عن المنتج أو الاشتراك أو الفوترة أو الدعم.',
+    contactIntro: 'للاستفسار عن المنتج أو الاشتراك أو الفوترة أو الدعم الفني، تواصل معنا باستخدام البيانات الموثقة أدناه.',
+    contactFormTitle: 'إرسال طلب دعم', contactFormIntro: 'يُسجّل طلبك بأمان لفريق الدعم، وتُربط الطلبات المرسلة بعد تسجيل الدخول بمساحة متجر حالية عند توفرها.',
+    contactCategory: 'التصنيف', contactReplyEmail: 'بريد الرد', contactSubject: 'الموضوع', contactMessage: 'الرسالة',
+    contactConsent: 'أوافق على استخدام Building Suit لهذه البيانات للرد على طلبي.', contactSubmit: 'إرسال الطلب', contactPending: 'جارٍ الإرسال…',
+    contactSuccess: 'تم تسجيل طلبك، وسيتابع معك فريق الدعم عبر البريد الإلكتروني.',
+    contactValidation: 'اكتب بريد رد صالحًا وأكمل الموضوع والرسالة ووافق على إشعار الموافقة.',
+    contactError: 'تعذر تسجيل طلبك. حاول مرة أخرى.', contactRateLimited: 'انتظر بضع دقائق قبل إرسال طلب آخر.',
+    contactCategories: { general: 'عام', product: 'المنتج', billing: 'الفوترة', technical: 'دعم فني', account: 'الحساب' },
+    email: 'البريد الإلكتروني', phone: 'الهاتف', businessAddress: 'عنوان النشاط', businessIdentity: 'هوية النشاط',
+    businessIdentityBody: '{product} هو أحد منتجات العلامة التجارية الأم {parent}، التي تُستخدم هويتها أيضًا بصفتها هوية التاجر لمدفوعات المنتج.',
+  },
+
   customers: {
     title: 'العملاء',
     subtitle: 'احفظ بيانات عملائك عشان تلاقيها بسهولة في أي بيعة جديدة.',
@@ -278,7 +294,7 @@ export default defineI18nLocale(async () => ({
     noAccount: 'مش عندك حساب؟',
     signupAction: 'إنشاء حساب',
     signupTitle: 'ابدأ مجانًا',
-    signupSubtitle: 'جرّب Shop CRM مجانًا 14 يوم من غير كارت فيزا.',
+    signupSubtitle: 'جرّب كل مميزات Shop CRM مجانًا 7 أيام من غير كارت فيزا.',
     displayName: 'الاسم',
     displayNamePlaceholder: 'اكتب اسمك',
     haveAccount: 'عندك حساب بالفعل؟',
@@ -320,7 +336,7 @@ export default defineI18nLocale(async () => ({
     subtitle: 'توقف عن التخمين.',
     description:
       'نظام إدارة المحلات الشامل للمحلات الصغيرة والمتوسطة في مصر. فواتير، موظفين، مصروفات، ومخزون - كل شيء في مكان واحد.',
-    cta: 'ابدأ تجربة 14 يوم مجانا',
+    cta: 'ابدأ تجربة 7 أيام مجانًا',
     noCreditCard: 'لا بطاقة ائتمانية مطلوبة. الغاء في أي وقت.',
     seeHowItWorks: 'شاهد كيف يعمل',
     trustSignal1: 'مصمم للشركات المصرية',
@@ -398,7 +414,7 @@ export default defineI18nLocale(async () => ({
       'ابدأ مجانًا وطور خطتك وقت ما تحب. من غير رسوم مخفية وتقدر تلغي في أي وقت.',
     notes: {
       allPlansIncludeFreeTrial:
-        'كل الخطط فيها تجربة مجانية لمدة 14 يوم، ومن غير كارت فيزا.',
+        'ابدأ بكل مميزات المنتج لمدة 7 أيام من غير ما تختار خطة أو تدخل كارت فيزا.',
       switchPlansAnytime: 'تقدر تغيّر خطتك في أي وقت خلال فترة التجربة.',
       upgradeMidTrial:
         'لو حابب تطوّر خطتك أثناء التجربة، الدفع بيبدأ فورًا وبياناتك بتفضل محفوظة.',

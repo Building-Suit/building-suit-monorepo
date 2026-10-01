@@ -59,7 +59,7 @@ test('OTP screen exposes recovery in English and Arabic and provisioning remains
   const signup = await readFile(new URL('../../app/pages/auth/signup.vue', import.meta.url), 'utf8')
   for (const copy of [
     'Send another code', 'Change email', 'Start signup over', 'Sign in instead',
-    'إرسال رمز جديد', 'تغيير البريد الإلكتروني', 'بدء التسجيل من جديد', 'تسجيل الدخول بدلًا من ذلك',
+    'ابعت كود جديد', 'غيّر الإيميل', 'ابدأ التسجيل من جديد', 'سجّل دخول بدل كده',
   ]) assert.match(signup, new RegExp(copy))
   assert.match(signup, /if \(!currentId\.value\)/)
   assert.match(signup, /rpc\('create_owner_shop'/)
@@ -74,11 +74,11 @@ test('signup is plan-neutral, defaults to mixed operations, and explains later s
   assert.match(signup, /p_main_location_name: form\.mainLocationName\.trim\(\)/)
   assert.match(signup, /main_location_name: form\.mainLocationName\.trim\(\)/)
   for (const copy of [
-    'Full product access for 14 days',
+    'Full product access for 7 days',
     'no paid-plan choice',
     'change this later in Business settings without losing data',
-    'تجربة كاملة لمدة 14 يومًا',
-    'دون اختيار خطة مدفوعة',
-    'تغيير طريقة التشغيل لاحقًا من إعدادات النشاط دون فقد أي بيانات',
+    'تجربة كاملة 7 أيام',
+    'من غير ما تختار خطة مدفوعة',
+    'تقدر تغيّرها بعدين من إعدادات النشاط، وبياناتك هتفضل محفوظة',
   ]) assert.match(signup, new RegExp(copy))
 })

@@ -23,9 +23,9 @@ begin
   where portal.key = 'shop-crm' and plan.slug in ('solo', 'team', 'multi');
 
   if v_catalog is distinct from '[
-    {"slug":"solo","name":"Solo","price":349,"currency":"EGP","interval":"monthly","trialDays":14,"limits":{"active_locations":1,"active_members":2,"active_products":250,"active_services":50},"active":true,"public":true,"purchasable":true,"inventory":true},
-    {"slug":"team","name":"Team","price":699,"currency":"EGP","interval":"monthly","trialDays":14,"limits":{"active_locations":1,"active_members":8,"active_products":1000,"active_services":250},"active":true,"public":true,"purchasable":true,"inventory":true},
-    {"slug":"multi","name":"Multi","price":1099,"currency":"EGP","interval":"monthly","trialDays":14,"limits":{"active_locations":3,"active_members":25,"active_products":5000,"active_services":1000},"active":true,"public":true,"purchasable":true,"inventory":true}
+    {"slug":"solo","name":"Solo","price":349,"currency":"EGP","interval":"monthly","trialDays":7,"limits":{"active_locations":1,"active_members":2,"active_products":250,"active_services":50,"active_customers":500,"active_suppliers":50},"active":true,"public":true,"purchasable":true,"inventory":true},
+    {"slug":"team","name":"Team","price":699,"currency":"EGP","interval":"monthly","trialDays":7,"limits":{"active_locations":1,"active_members":8,"active_products":500,"active_services":100,"active_customers":2000,"active_suppliers":150},"active":true,"public":true,"purchasable":true,"inventory":true},
+    {"slug":"multi","name":"Multi","price":999,"currency":"EGP","interval":"monthly","trialDays":7,"limits":{"active_locations":2,"active_members":16,"active_products":1000,"active_services":200,"active_customers":5000,"active_suppliers":300},"active":true,"public":true,"purchasable":true,"inventory":true}
   ]'::jsonb then
     raise exception 'canonical plan catalog differs from SUB-D08: %', v_catalog;
   end if;
@@ -40,8 +40,8 @@ begin
   if exists (
     select 1 from public.plans plan
     where plan.slug in ('solo', 'team', 'multi')
-      and plan.resource_limits ?| array['customers', 'sales', 'appointments']
-  ) then raise exception 'an uncapped resource was added to the initial catalog'; end if;
+      and not plan.resource_limits ?& array['active_customers', 'active_suppliers']
+  ) then raise exception 'a current plan lacks customer or supplier capacity'; end if;
 end;
 $$;
 
@@ -50,7 +50,13 @@ do $$
 begin
   if (select count(*) from public.plans) <> 3
     or exists (select 1 from public.plans where not is_purchasable)
-    or (select count(*) from public.plan_catalog_terms where is_purchasable) <> 3 then
+    or (select count(*) from public.plan_catalog_terms terms
+      where terms.is_purchasable and not exists (
+        select 1 from public.plan_catalog_terms newer
+        where newer.plan_id = terms.plan_id
+          and (newer.effective_from, newer.version, newer.id)
+            > (terms.effective_from, terms.version, terms.id)
+      )) <> 3 then
     raise exception 'anonymous catalog exposed a legacy or non-purchasable plan';
   end if;
 end;
@@ -164,7 +170,7 @@ begin
   v_subscription := public.shop_billing_read(v_shop) -> 'subscription';
 
   if (v_subscription ->> 'trialEndAt')::timestamptz
-       <> (v_subscription ->> 'trialStartAt')::timestamptz + interval '14 days'
+       <> (v_subscription ->> 'trialStartAt')::timestamptz + interval '7 days'
     or (select business_mode from public.shops where id = v_shop) <> 'mixed' then
     raise exception 'canonical trial or business-mode independence regressed';
   end if;

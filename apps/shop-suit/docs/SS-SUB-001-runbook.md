@@ -7,13 +7,16 @@ not authorize deployment or a hosted-database change.
 
 ## Commercial policy
 
-- New owners choose one currently public, purchasable Shop plan during signup.
-  The idempotent owner-bootstrap command creates exactly one subscription and
-  one 14-day trial. A retry returns the first Shop and cannot replace its plan,
-  operating mode, or trial.
-- The public launch catalog is Solo (EGP 349/month), Team (EGP 699/month), and
-  Multi (EGP 1,099/month). The authoritative limits are the current immutable
-  `plan_catalog_terms` version, not copy in a page or this document.
+- New owners start a plan-neutral, full-product trial and choose a paid plan later
+  from Billing. The idempotent owner-bootstrap command creates exactly one
+  subscription and one 7-day trial. A retry returns the first Shop and cannot
+  replace its operating mode or trial.
+- The public launch catalog is Solo (EGP 349/month or EGP 2,847.84/year), Team
+  (EGP 699/month or EGP 5,703.84/year), and one Multi family with two-branch
+  (EGP 999/month or EGP 8,151.84/year) and three-branch (EGP 1,199/month or
+  EGP 9,783.84/year) variants. Yearly prices are exactly 32% below monthly × 12.
+  The authoritative variant, interval, price, and limits are the selected
+  immutable `plan_catalog_terms` offer, not copy in a page or this document.
 - Basic and Pro are grandfathered historical plans. They stay attached to
   existing subscriptions and remain hidden from new purchase.
 - InstaPay is a transfer channel. An owner submits a transfer notice; an
@@ -135,4 +138,3 @@ Record the candidate SHA and actual result of every command in
 - **Deployed**: the verified SHA and migration versions reached a named environment.
 - **Commercially approved**: the product owner approved sale; technical evidence
   alone never implies this state.
-

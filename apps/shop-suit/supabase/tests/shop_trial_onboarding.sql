@@ -1,4 +1,5 @@
--- SS-HOT-ONBOARD-001: plan-neutral 14-day signup and operation-mode defaults.
+-- HOT-09: plan-neutral seven-day signup, preserved live deadlines, and
+-- operation-mode defaults.
 -- The database runner wraps every synthetic owner and shop in a rollback.
 
 create temporary table shop_trial_onboarding_fixture as
@@ -27,7 +28,7 @@ begin
   select plan.* into v_trial from public.plans plan
   join public.portals portal on portal.id = plan.portal_id
   where portal.key = 'shop-crm' and plan.slug = 'full-product-trial';
-  if v_trial.id is null or v_trial.trial_days <> 14 or v_trial.price_amount <> 0
+  if v_trial.id is null or v_trial.trial_days <> 7 or v_trial.price_amount <> 0
     or not v_trial.is_active or v_trial.is_public or v_trial.is_purchasable
     or v_trial.is_coming_soon or v_trial.features <> '{"inventory":true}'::jsonb
     or v_trial.resource_limits <> '{
@@ -35,6 +36,17 @@ begin
       "active_products":null,"active_services":null
     }'::jsonb then
     raise exception 'internal full-product trial contract is invalid';
+  end if;
+  if not exists (
+      select 1 from public.plan_catalog_terms terms
+      where terms.plan_id = v_trial.id and terms.version = 1
+        and terms.trial_days = 14
+    ) or not exists (
+      select 1 from public.plan_catalog_terms terms
+      where terms.plan_id = v_trial.id and terms.version = v_trial.catalog_version
+        and terms.trial_days = 7
+    ) then
+    raise exception 'historical and current trial terms were not both preserved';
   end if;
   if has_function_privilege('anon',
       'public.create_owner_shop(text,public.business_mode)', 'EXECUTE')
@@ -61,6 +73,16 @@ select public.create_owner_shop(
   'Existing paid-plan trial', 'team', 'mixed'::public.business_mode
 );
 reset role;
+
+-- Model a live deadline granted under the previous policy. Applying and using
+-- the new policy must never rewrite this customer-specific date.
+update public.subscriptions subscription
+set trial_end_at = subscription.trial_start_at + interval '14 days',
+  current_period_end = subscription.trial_start_at + interval '14 days'
+from public.profiles profile
+join shop_trial_onboarding_fixture fixture
+  on fixture.legacy_owner_id = profile.user_id
+where subscription.profile_id = profile.id;
 
 create temporary table existing_subscription_snapshot as
 select subscription.id, to_jsonb(subscription) snapshot
@@ -152,7 +174,7 @@ begin
       or v_subscription.slug <> 'full-product-trial'
       or v_subscription.status <> 'trialing'
       or v_subscription.trial_end_at
-        <> v_subscription.trial_start_at + interval '14 days'
+        <> v_subscription.trial_start_at + interval '7 days'
       or v_subscription.current_period_end <> v_subscription.trial_end_at
       or not v_subscription.trial_consumed
       or not exists (
@@ -186,6 +208,11 @@ begin
       on current_subscription.id = before.id
     where to_jsonb(current_subscription) is distinct from before.snapshot
   ) then raise exception 'existing subscription was rewritten'; end if;
+  if not exists (
+    select 1 from existing_subscription_snapshot before
+    where (before.snapshot ->> 'trial_end_at')::timestamptz
+      = (before.snapshot ->> 'trial_start_at')::timestamptz + interval '14 days'
+  ) then raise exception 'pre-existing 14-day deadline fixture was not preserved'; end if;
 end;
 $$;
 
@@ -197,8 +224,9 @@ declare
   v_shop uuid := current_setting('ss_hot_onboard.mixed_shop')::uuid;
   v_billing jsonb := public.shop_billing_read(v_shop);
 begin
+  -- Four purchasable variants each expose monthly and annual terms.
   if v_billing #>> '{subscription,planSlug}' <> 'full-product-trial'
-    or jsonb_array_length(v_billing -> 'availablePlans') <> 4
+    or jsonb_array_length(v_billing -> 'availablePlans') <> 8
     or not (v_billing -> 'availablePlans' @> '[
       {"planSlug":"solo"},{"planSlug":"team"},{"planSlug":"multi"}
     ]'::jsonb)

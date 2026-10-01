@@ -5,7 +5,28 @@ const user = { id: '00000000-0000-4000-8000-000000000101', email: 'owner@example
 const jwt = `${Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url')}.${Buffer.from(JSON.stringify({ sub: user.id, exp: Math.floor(Date.now() / 1000) + 3600, role: 'authenticated', email: user.email })).toString('base64url')}.test`
 const state = { signupCalls: 0, resendCalls: 0, verifyCalls: 0, createCalls: 0, created: false, failFirstCreate: true, signupPayload: null, createPayload: null, shopName: null, locations: [] }
 
-const plan = { id: 'plan-team', name: 'Team', slug: 'team', price_amount: 699, currency: 'EGP', billing_interval: 'monthly', trial_days: 14, features: {}, resource_limits: {}, is_purchasable: true, is_coming_soon: false }
+const resourceLimits = { active_locations: 1, active_members: 8, active_products: 500, active_services: 100, active_customers: 2000, active_suppliers: 150 }
+const trialStartAt = '2026-09-30T10:00:00.000Z'
+const trialEndAt = '2026-10-07T10:00:00.000Z'
+const plan = { id: 'plan-team', name: 'Team', slug: 'team', catalog_terms_id: 'terms-team-2', plan_variant: 'standard', variant_name: 'Team', price_amount: 699, currency: 'EGP', billing_interval: 'monthly', trial_days: 7, features: {}, resource_limits: resourceLimits, is_purchasable: true, is_coming_soon: false }
+const billing = {
+  subscription: {
+    id: 'subscription-1', status: 'trialing', planId: 'plan-trial', planSlug: 'full-product-trial',
+    planName: 'Full-product trial', planVariant: 'standard', variantName: 'Full-product trial', priceAmount: 0, listPriceAmount: 0,
+    effectivePriceAmount: 0, priceSource: 'catalog', priceOverrideId: null,
+    priceOverrideReason: null, priceOverrideEffectiveFrom: null, priceOverrideExpiresAt: null,
+    currency: 'EGP', billingInterval: 'monthly', trialStartAt, trialEndAt,
+    periodStart: trialStartAt, periodEnd: trialEndAt, accessState: 'trialing', trialDaysRemaining: 7,
+  },
+  availablePlans: [{
+    planId: plan.id, planSlug: plan.slug, planName: plan.name, catalogTermsId: 'terms-team-2', planVariant: 'standard', variantName: 'Team',
+    billingInterval: plan.billing_interval, currency: plan.currency, listPriceAmount: plan.price_amount,
+    effectivePriceAmount: plan.price_amount, priceSource: 'catalog', resourceLimits, blockers: [],
+  }],
+  instructions: { recipientAlias: null, paymentLink: null, qrImageUrl: null, instructionsEn: '', instructionsAr: '', updatedAt: trialStartAt, manualVerification: true },
+  usage: { locations: 1, products: 0, services: 0, members: 1, customers: 0, suppliers: 0, limits: { active_locations: null, active_members: null, active_products: null, active_services: null, active_customers: null, active_suppliers: null }, resources: [] },
+  submissions: [],
+}
 
 function send(response, status, value, headers = {}) {
   response.writeHead(status, { 'content-type': 'application/json', 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': 'GET,POST,OPTIONS', ...headers })
@@ -48,6 +69,7 @@ createServer(async (request, response) => {
   if (url.pathname === '/auth/v1/token') { send(response, 200, { access_token: jwt, refresh_token: 'synthetic-refresh', expires_in: 3600, token_type: 'bearer', user }); return }
 
   if (url.pathname.endsWith('/rpc/shop_public_plan_catalog')) { send(response, 200, [plan]); return }
+  if (url.pathname.endsWith('/rpc/shop_billing_read')) { send(response, 200, billing); return }
   if (url.pathname.endsWith('/rpc/create_owner_shop')) {
     state.createPayload = await body(request)
     if (!state.created) {
@@ -96,5 +118,6 @@ createServer(async (request, response) => {
   if (url.pathname.endsWith('/profiles')) { send(response, 200, { id: 'profile-1', display_name: 'OTP owner', email_snapshot: user.email, status: 'active' }); return }
   if (url.pathname.endsWith('/shop_memberships')) { send(response, 200, state.created ? [{ id: 'membership-1', shop_id: 'shop-1', profile_id: 'profile-1', role: 'owner', status: 'active' }] : []); return }
   if (url.pathname.endsWith('/shops')) { send(response, 200, state.created ? [{ id: 'shop-1', name: state.shopName, business_mode: state.createPayload?.p_business_mode || 'mixed', status: 'active', created_at: '2026-09-30T10:00:00Z' }] : []); return }
+  if (url.pathname.endsWith('/subscriptions')) { send(response, 200, { status: 'trialing', trial_end_at: trialEndAt, current_period_end: trialEndAt, plan_id: 'plan-trial' }); return }
   send(response, 200, [])
 }).listen(port, '127.0.0.1', () => process.stdout.write(`auth otp fixture listening on ${port}\n`))

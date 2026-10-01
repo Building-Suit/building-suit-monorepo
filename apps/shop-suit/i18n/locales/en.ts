@@ -4,6 +4,22 @@ export default defineI18nLocale(async () => ({
     retry: 'Retry',
   },
 
+  marketing: {
+    home: 'Shop Suit home', about: 'About Us', contact: 'Contact Us', terms: 'Terms & Conditions', privacy: 'Privacy Policy',
+    deliveryShipping: 'Delivery & Shipping Policy', refundCancellation: 'Refund & Cancellation Policy', footerNavigation: 'Legal and company information', lastUpdated: 'Last updated:',
+    contactMetaDescription: 'Contact Shop Suit by Building Suit for product, subscription, billing, or support questions.',
+    contactIntro: 'For product, subscription, billing, or technical support questions, contact us using the verified details below.',
+    contactFormTitle: 'Send a support request', contactFormIntro: 'Your request is securely recorded for the support team. Signed-in requests are linked to a current Shop workspace when available.',
+    contactCategory: 'Category', contactReplyEmail: 'Reply email', contactSubject: 'Subject', contactMessage: 'Message',
+    contactConsent: 'I agree that Building Suit may use these details to respond to my request.', contactSubmit: 'Submit request', contactPending: 'Submitting…',
+    contactSuccess: 'Your request was recorded. The support team will follow up by email.',
+    contactValidation: 'Enter a valid reply email, complete the subject and message, and accept the consent notice.',
+    contactError: 'We could not record your request. Please try again.', contactRateLimited: 'Please wait a few minutes before sending another request.',
+    contactCategories: { general: 'General', product: 'Product', billing: 'Billing', technical: 'Technical support', account: 'Account' },
+    email: 'Email', phone: 'Phone', businessAddress: 'Business address', businessIdentity: 'Business identity',
+    businessIdentityBody: '{product} is a product of its parent brand, {parent}, whose merchant identity is used for product payments.',
+  },
+
   customers: {
     title: 'Customers',
     subtitle: 'Keep customer contact details accurate and ready for future sales.',
@@ -278,7 +294,7 @@ export default defineI18nLocale(async () => ({
     noAccount: "Don't have an account?",
     signupAction: 'Create account',
     signupTitle: 'Start for free',
-    signupSubtitle: 'Try Shop CRM free for 14 days. No credit card required.',
+    signupSubtitle: 'Try every Shop CRM feature free for 7 days. No credit card required.',
     displayName: 'Name',
     displayNamePlaceholder: 'Enter your name',
     haveAccount: 'Already have an account?',
@@ -320,7 +336,7 @@ export default defineI18nLocale(async () => ({
     subtitle: 'Stop guessing.',
     description:
       'A complete CRM for small business owners in Egypt. Handle invoices, employees, services, expenses, and inventory — all in one place.',
-    cta: 'Start Your 30-Day Free Trial',
+    cta: 'Start Your 7-Day Free Trial',
     noCreditCard: 'No credit card required. Cancel anytime.',
     seeHowItWorks: 'See How It Works',
     trustSignal1: 'Built for Egyptian businesses',
@@ -398,7 +414,7 @@ export default defineI18nLocale(async () => ({
       "Start free, upgrade when you're ready. No hidden fees, cancel anytime.",
     notes: {
       allPlansIncludeFreeTrial:
-        'All plans include a 14-day free trial. No credit card required.',
+        'Start with full product access for 7 days. No plan or credit card required.',
       switchPlansAnytime: 'Switch plans anytime during your trial.',
       upgradeMidTrial:
         "Need to upgrade mid-trial? You'll start paying immediately, but keep your data.",

@@ -3,18 +3,20 @@ import { readFile } from 'node:fs/promises'
 import test from 'node:test'
 
 const migration = await readFile(new URL('../../supabase/migrations/20260928200000_manual_instapay_billing.sql', import.meta.url), 'utf8')
+const trialMigration = await readFile(new URL('../../supabase/migrations/20260930180000_seven_day_shop_trials.sql', import.meta.url), 'utf8')
 const planBillingMigration = await readFile(new URL('../../supabase/migrations/20260929210001_plan_aware_billing_renewals.sql', import.meta.url), 'utf8')
 const databaseTest = await readFile(new URL('../../supabase/tests/shop_billing.sql', import.meta.url), 'utf8')
 const customerPage = await readFile(new URL('../../app/pages/billing.vue', import.meta.url), 'utf8')
 const adminPage = await readFile(new URL('../../app/pages/platform-admin.vue', import.meta.url), 'utf8')
 
-test('new trials are 14 days without rewriting existing trial deadlines', () => {
-  assert.match(migration, /alter table public\.plans alter column trial_days set default 14/)
-  assert.match(migration, /set trial_days = 14/)
-  assert.match(migration, /plans_shop_trial_policy/)
-  assert.match(migration, /SHOP_TRIAL_DAYS_MUST_BE_14/)
-  assert.doesNotMatch(migration, /update public\.subscriptions[^;]*trial_end_at/i)
-  assert.match(databaseTest, /v_trial_end <> v_trial_start \+ interval '14 days'/)
+test('new trials are 7 days without rewriting existing trial deadlines', () => {
+  assert.match(trialMigration, /alter table public\.plans alter column trial_days set default 7/)
+  assert.match(trialMigration, /trial_days = 7/)
+  assert.match(trialMigration, /SHOP_TRIAL_DAYS_MUST_BE_7/)
+  assert.match(trialMigration, /check \(trial_days in \(7, 14\)\)/)
+  assert.match(trialMigration, /insert into public\.plan_catalog_terms/)
+  assert.doesNotMatch(trialMigration, /update public\.subscriptions[^;]*trial_end_at/i)
+  assert.match(databaseTest, /v_trial_end <> v_trial_start \+ interval '7 days'/)
   assert.match(databaseTest, /exact expiry still allowed writes/)
 })
 
@@ -70,7 +72,7 @@ test('negotiated pricing and amount mismatches require append-only audit evidenc
 
 test('billing surfaces are bilingual and make manual verification explicit', () => {
   assert.match(customerPage, /This is not automatic bank verification/)
-  assert.match(customerPage, /لا توجد مطابقة بنكية تلقائية/)
+  assert.match(customerPage, /التحويل بيتراجع يدويًا، مش بيتطابق تلقائيًا/)
   assert.match(customerPage, /const ar = \{/)
   assert.match(adminPage, /platform_admin_billing_read/)
   assert.match(adminPage, /platform_admin_billing_command/)

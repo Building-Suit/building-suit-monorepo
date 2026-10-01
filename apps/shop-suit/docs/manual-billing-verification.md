@@ -1,7 +1,8 @@
 # SS-BILLING-001 — Manual subscription verification
 
-New Shop Suit subscriptions receive one 14-day trial. The catalog/default changes
-forward; existing `trial_start_at` and `trial_end_at` values are not shortened.
+New Shop Suit subscriptions receive one 7-day trial. The catalog/default changes
+forward through a new immutable commercial-terms version; existing `trial_start_at`
+and `trial_end_at` values and prior 14-day terms are not changed.
 Platform operators can explicitly extend/end exceptional trials through audited
 commands.
 
@@ -9,8 +10,9 @@ commands.
 deadline, remaining trial days, current usage, operator-configured InstaPay
 instructions, and payment-notice history. An owner chooses an available plan and
 submits the paid amount, transfer date, and transfer reference through an
-idempotent RPC. The notice freezes the requested plan/catalog term, interval,
-currency, list price, effective negotiated price, and resource limits. Submission
+idempotent RPC. The notice freezes the requested plan family/catalog term,
+server-owned variant, interval, currency, list price, effective negotiated price,
+and resource limits. Submission
 never changes subscription access.
 
 `/platform-admin` has a billing queue. Explicitly provisioned operators can mark a

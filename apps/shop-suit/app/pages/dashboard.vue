@@ -39,8 +39,8 @@ const reportLocationId = ref<string>('all')
 
 const copy = computed(() => isArabic.value ? {
   title: 'لوحة التحكم', subtitle: 'شوف المبيعات والتحصيلات والمواعيد وأداء الفروع في مكان واحد.',
-  setupTitle: 'اعمل متجرك الأول', setupBody: 'ابدأ تجربة كاملة 14 يوم من غير ما تختار خطة مدفوعة. تقدر تختار خطتك بعدين من صفحة الاشتراك.',
-  shopName: 'اسم المتجر', plan: 'الخطة', fullTrial: 'تجربة كاملة 14 يوم', createShop: 'اعمل المتجر', creating: 'بنجهّز المتجر...',
+  setupTitle: 'اعمل متجرك الأول', setupBody: 'ابدأ تجربة كاملة 7 أيام من غير ما تختار خطة مدفوعة. تقدر تختار خطتك بعدين من صفحة الاشتراك.',
+  shopName: 'اسم المتجر', plan: 'الخطة', fullTrial: 'تجربة كاملة 7 أيام', createShop: 'اعمل المتجر', creating: 'بنجهّز المتجر...',
   businessMode: 'طريقة تشغيل النشاط', businessModeHelp: 'يمكنك تغيير طريقة التشغيل لاحقًا من إعدادات النشاط دون فقد أي بيانات.',
   productMode: 'منتجات ومخزون', productModeBody: 'للبيع والمشتريات والموردين وإدارة المخزون.',
   serviceMode: 'خدمات فقط', serviceModeBody: 'لتقديم الخدمات دون الحاجة إلى سجلات مخزون.',
@@ -66,8 +66,8 @@ const copy = computed(() => isArabic.value ? {
   supplierPayable: 'مستحقات الموردين', lowStock: 'منتجات منخفضة المخزون', inventoryValue: 'قيمة المخزون', fifoMargin: 'هامش FIFO المتصالح',
 } : {
   title: 'Operating dashboard', subtitle: 'Sales, collections, appointments, and branch performance reconciled from source records.',
-  setupTitle: 'Create your first shop', setupBody: 'Start with full product access for 14 days and no paid-plan choice. Choose a plan later from Billing.',
-  shopName: 'Shop name', plan: 'Plan', fullTrial: 'Full product trial · 14 days', createShop: 'Create shop', creating: 'Creating...',
+  setupTitle: 'Create your first shop', setupBody: 'Start with full product access for 7 days and no paid-plan choice. Choose a plan later from Billing.',
+  shopName: 'Shop name', plan: 'Plan', fullTrial: 'Full product trial · 7 days', createShop: 'Create shop', creating: 'Creating...',
   businessMode: 'Business operation mode', businessModeHelp: 'You can change this later in Business settings without losing data.',
   productMode: 'Products and stock', productModeBody: 'For sales, purchasing, suppliers, and inventory operations.',
   serviceMode: 'Services only', serviceModeBody: 'For delivering services without requiring stock records.',

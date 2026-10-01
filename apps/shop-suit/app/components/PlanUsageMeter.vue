@@ -7,9 +7,11 @@ const isArabic = computed(() => locale.value === 'ar')
 const labels = computed<Record<PlanResourceKey, string>>(() => isArabic.value ? {
   active_locations: 'الفروع النشطة', active_members: 'أعضاء الفريق',
   active_products: 'المنتجات النشطة', active_services: 'الخدمات النشطة',
+  active_customers: 'العملاء النشطون', active_suppliers: 'الموردون النشطون',
 } : {
   active_locations: 'Active locations', active_members: 'Team members',
   active_products: 'Active products', active_services: 'Active services',
+  active_customers: 'Active customers', active_suppliers: 'Active suppliers',
 })
 const ratio = computed(() => props.usage.limit == null || props.usage.limit <= 0
   ? 0 : Math.min(100, Math.round((props.usage.used / props.usage.limit) * 100)))
