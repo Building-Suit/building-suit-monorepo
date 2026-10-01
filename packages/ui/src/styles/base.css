@@ -464,6 +464,139 @@ body {
     transition: border-color var(--bs-motion-quick), box-shadow var(--bs-motion-quick), background var(--bs-motion-quick);
   }
 
+  .ls-textarea {
+    min-height: calc(var(--bs-input-height) * 2);
+    padding-block: var(--bs-space-3);
+    resize: vertical;
+  }
+
+  .ls-field {
+    display: grid;
+    min-width: 0;
+    gap: var(--bs-space-2);
+  }
+
+  .ls-field__label {
+    color: var(--bs-text);
+    font-size: var(--bs-type-body-m-size);
+    line-height: var(--bs-type-body-m-lh);
+    font-weight: var(--bs-weight-semibold);
+  }
+
+  .ls-field__hint,
+  .ls-field__error {
+    margin: 0;
+    font-size: var(--bs-type-caption-size);
+    line-height: var(--bs-type-caption-lh);
+  }
+
+  .ls-field__hint { color: var(--bs-text-muted); }
+  .ls-field__error { color: var(--bs-status-error); }
+
+  .ls-choice-group {
+    display: grid;
+    min-width: 0;
+    gap: var(--bs-space-2);
+    padding: 0;
+    border: 0;
+  }
+
+  .ls-choice {
+    display: flex;
+    min-height: var(--bs-tap-target-min);
+    align-items: flex-start;
+    gap: var(--bs-space-3);
+    padding: var(--bs-space-2) var(--bs-space-3);
+    border-radius: var(--bs-radius-button);
+    cursor: pointer;
+  }
+
+  .ls-choice:hover { background: var(--bs-surface-muted); }
+  .ls-choice input { width: 1rem; height: 1rem; margin-top: 0.2rem; accent-color: var(--bs-primary); }
+  .ls-choice small { display: block; color: var(--bs-text-muted); }
+
+  .ls-tabs {
+    display: flex;
+    max-width: 100%;
+    gap: var(--bs-space-1);
+    overflow-x: auto;
+    border-bottom: 1px solid var(--bs-border);
+  }
+
+  .ls-state-surface {
+    display: flex;
+    min-height: 8rem;
+    align-items: center;
+    justify-content: center;
+    gap: var(--bs-space-4);
+    padding: var(--bs-space-6);
+    border: 1px dashed var(--bs-border);
+    border-radius: var(--bs-radius-card);
+    background: var(--bs-surface-muted);
+    text-align: start;
+  }
+
+  .ls-state-surface[data-state='error'] { border-color: color-mix(in oklab, var(--bs-status-error) 45%, var(--bs-border)); }
+  .ls-state-surface[data-state='success'] { border-color: color-mix(in oklab, var(--bs-status-success) 45%, var(--bs-border)); }
+
+  .ls-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--bs-space-3);
+    color: var(--bs-text-muted);
+    font-size: var(--bs-type-caption-size);
+  }
+
+  .ls-section-header {
+    display: flex;
+    min-width: 0;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--bs-space-4);
+  }
+
+  .ls-content-section { min-width: 0; }
+
+  .ls-toolbar {
+    display: flex;
+    min-width: 0;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--bs-space-3);
+  }
+
+  .ls-toolbar--surface {
+    padding: var(--bs-space-3);
+    border: 1px solid var(--bs-border);
+    border-radius: var(--bs-radius-button);
+    background: var(--bs-surface-muted);
+  }
+
+  .ls-toolbar--sticky { position: sticky; top: var(--bs-space-2); z-index: 10; }
+  .ls-toolbar__main { min-width: min(100%, 14rem); flex: 1 1 14rem; }
+  .ls-toolbar__filters,
+  .ls-toolbar__actions { display: flex; min-width: 0; flex-wrap: wrap; align-items: center; gap: var(--bs-space-2); }
+
+  .ls-menu { position: relative; }
+  .ls-menu > summary { list-style: none; }
+  .ls-menu > summary::-webkit-details-marker { display: none; }
+  .ls-menu__panel {
+    position: absolute;
+    z-index: 30;
+    top: calc(100% + var(--bs-space-1));
+    width: max-content;
+    min-width: 12rem;
+    max-width: min(20rem, calc(100vw - var(--bs-space-4)));
+    padding: var(--bs-space-2);
+    border: 1px solid var(--bs-border);
+    border-radius: var(--bs-radius-card);
+    background: var(--bs-surface-raised);
+    box-shadow: var(--bs-elevation-3);
+  }
+
   /* Shared floating-label shell. Controls retain their native semantics; the
      label is associated by nesting, including for selects and date inputs. */
   .ls-floating-field {

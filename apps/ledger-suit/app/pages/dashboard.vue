@@ -115,11 +115,7 @@ const payableHint = computed(() =>
       </div>
     </div>
 
-    <div v-else-if="recentError" class="ls-card space-y-3 p-6" role="alert">
-      <h2 class="font-bold">{{ t('dashboard.recentLoadError') }}</h2>
-      <p class="text-sm text-fg-muted">{{ t('dashboard.loadErrorHint') }}</p>
-      <BsButton type="button" class="ls-btn" @click="refreshRecent()">{{ t('common.retry') }}</BsButton>
-    </div>
+    <BsStateSurface v-else-if="recentError" state="error" :title="t('dashboard.recentLoadError')" :description="t('dashboard.loadErrorHint')" :action-label="t('common.retry')" @action="refreshRecent()" />
 
     <EmptyState
       v-else-if="!hasActivity"
@@ -131,11 +127,7 @@ const payableHint = computed(() =>
 
     <template v-else>
       <SectionSkeleton v-if="summaryPending || commitmentsPending" variant="cards" />
-      <div v-else-if="summaryError" class="ls-card space-y-3 p-6" role="alert">
-        <h2 class="font-bold">{{ t('dashboard.summaryLoadError') }}</h2>
-        <p class="text-sm text-fg-muted">{{ t('dashboard.loadErrorHint') }}</p>
-        <BsButton type="button" class="ls-btn" @click="refreshSummary()">{{ t('common.retry') }}</BsButton>
-      </div>
+      <BsStateSurface v-else-if="summaryError" state="error" :title="t('dashboard.summaryLoadError')" :description="t('dashboard.loadErrorHint')" :action-label="t('common.retry')" @action="refreshSummary()" />
       <section v-else aria-labelledby="kpis" class="space-y-3">
         <h2 id="kpis" class="sr-only">{{ t('dashboard.kpis') }}</h2>
         <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -174,11 +166,7 @@ const payableHint = computed(() =>
 
       <div class="grid gap-6 xl:grid-cols-3">
         <SectionSkeleton v-if="seriesPending" class="xl:col-span-2" variant="chart" />
-        <section v-else-if="seriesError" class="ls-card space-y-3 p-6 xl:col-span-2" role="alert" aria-labelledby="series-error-heading">
-          <h2 id="series-error-heading" class="font-bold">{{ t('dashboard.seriesLoadError') }}</h2>
-          <p class="text-sm text-fg-muted">{{ t('dashboard.loadErrorHint') }}</p>
-          <BsButton type="button" class="ls-btn" @click="refreshSeries()">{{ t('common.retry') }}</BsButton>
-        </section>
+        <BsStateSurface v-else-if="seriesError" class="xl:col-span-2" state="error" :title="t('dashboard.seriesLoadError')" :description="t('dashboard.loadErrorHint')" :action-label="t('common.retry')" @action="refreshSeries()" />
         <section v-else class="ls-card min-w-0 p-6 xl:col-span-2" aria-labelledby="chart-heading">
           <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
             <h2 id="chart-heading" class="text-base font-bold">{{ t('dashboard.revenueVsExpenses') }}</h2>

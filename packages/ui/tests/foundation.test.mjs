@@ -47,6 +47,20 @@ test('semantic action variants do not inherit default button chrome', async () =
   assert.match(await render('atoms/BsButton.vue', { severity: 'secondary' }, 'Secondary'), /ls-btn-secondary/)
 })
 
+test('primitive inventory centrally owns fields, choices, states, navigation, and composition', () => {
+  const manifest = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
+  for (const component of ['BsInput', 'BsTextarea', 'BsField', 'BsChoiceGroup', 'BsTabs', 'BsPagination', 'BsStateSurface', 'BsSectionHeader', 'BsContentSection', 'BsToolbar', 'BsMenu']) {
+    assert.ok(Object.keys(manifest.exports).some(key => key.endsWith(`/${component}`)), `${component} is not exported`)
+  }
+  const styles = readFileSync(new URL('../src/styles/base.css', import.meta.url), 'utf8')
+  for (const className of ['ls-field', 'ls-choice-group', 'ls-tabs', 'ls-state-surface', 'ls-pagination', 'ls-section-header', 'ls-toolbar', 'ls-menu__panel']) {
+    assert.match(styles, new RegExp(`\\.${className.replaceAll('-', '\\-')}`))
+  }
+  const empty = readFileSync(new URL('../src/molecules/EmptyState.vue', import.meta.url), 'utf8')
+  assert.match(empty, /<BsStateSurface state="empty"/)
+  assert.doesNotMatch(empty, /<button\b/)
+})
+
 test('status badges expose written labels and semantic tone instead of color alone', async () => {
   const html = await render('atoms/StatusBadge.vue', { status: 'custom', label: 'Needs review', tone: 'warning', icon: false })
   assert.match(html, />Needs review</)

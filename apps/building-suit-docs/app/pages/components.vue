@@ -13,6 +13,11 @@ const choices = Array.from({ length: 10000 }, (_, index) => ({ id: String(index 
 const formError = ref('')
 const formPending = ref(false)
 const formValue = ref('')
+const notes = ref('')
+const tab = ref('overview')
+const page = ref(1)
+const notificationChoices = ref<string[]>(['email'])
+const planChoice = ref<string | string[]>('standard')
 const tableState = ref<'data' | 'loading' | 'empty' | 'error'>('data')
 const density = ref<'compact' | 'comfortable'>('comfortable')
 const { success: toastSuccess } = useToasts()
@@ -66,7 +71,7 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
       :context="[{ label: isArabic ? 'الاتجاه' : 'Direction', value: isArabic ? 'RTL' : 'LTR' }, { label: isArabic ? 'المصدر' : 'Owner', value: 'packages/ui' }]"
     />
 
-    <BsCard :title="isArabic ? 'الهوية والإجراءات' : 'Brand and actions'" :subtitle="isArabic ? 'تستخدم الإجراءات الحالات والأحجام المشتركة.' : 'Actions use shared variants, sizes and pending guards.'">
+    <BsContentSection :title="isArabic ? 'الهوية والإجراءات' : 'Brand and actions'" :description="isArabic ? 'تستخدم الإجراءات الحالات والأحجام المشتركة.' : 'Actions use shared variants, sizes and pending guards.'">
       <div class="flex flex-wrap items-center gap-3"><BsBuildingLogo /><AppIcon v-for="icon in ['dashboard', 'ledger', 'invoice', 'team', 'wallet', 'reports']" :key="icon" :name="icon" :size="28" /></div>
       <div class="ls-card-flat mt-5 flex flex-wrap items-center gap-3 p-5">
         <BsButton variant="primary">{{ ui('save') }}</BsButton><BsButton variant="secondary">{{ isArabic ? 'مراجعة' : 'Review' }}</BsButton><BsButton>{{ ui('cancel') }}</BsButton><BsButton variant="danger">{{ isArabic ? 'حذف' : 'Delete' }}</BsButton>
@@ -78,7 +83,15 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
         <BsButton variant="chip" aria-pressed="true">{{ isArabic ? 'خيار' : 'Chip' }}</BsButton>
         <BsButton variant="tile" class="max-w-48">{{ isArabic ? 'بطاقة تفاعلية' : 'Interactive tile' }}</BsButton>
       </div>
-    </BsCard>
+    </BsContentSection>
+
+    <BsContentSection :title="isArabic ? 'التنقل والأدوات' : 'Navigation and tools'" :description="isArabic ? 'تبويبات وشريط أدوات وقائمة مشتركة.' : 'Shared tabs, toolbar and menu geometry.'">
+      <BsTabs v-model="tab" :label="isArabic ? 'أقسام المثال' : 'Example sections'" :tabs="[{ value: 'overview', label: isArabic ? 'نظرة عامة' : 'Overview' }, { value: 'activity', label: isArabic ? 'النشاط' : 'Activity' }]" />
+      <BsToolbar class="mt-4" :label="isArabic ? 'أدوات الصفحة' : 'Page tools'">
+        <BsInput :model-value="''" type="search" :placeholder="isArabic ? 'بحث' : 'Search'" :aria-label="isArabic ? 'بحث' : 'Search'" />
+        <template #actions><BsButton variant="primary">{{ isArabic ? 'إضافة' : 'Add' }}</BsButton><BsMenu :label="isArabic ? 'المزيد' : 'More'"><BsButton variant="text" role="menuitem">{{ isArabic ? 'تصدير' : 'Export' }}</BsButton></BsMenu></template>
+      </BsToolbar>
+    </BsContentSection>
 
     <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-label="Status and KPI examples">
       <BsKpiCard :title="isArabic ? 'السجلات' : 'Records'" change-label="+12%" tone="success">{{ rows.length }}</BsKpiCard>
@@ -117,12 +130,20 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
       <div class="space-y-4">
         <BsSelect v-model="choice" :label="isArabic ? 'الصنف' : 'Item'" :options="choices" option-label="name" option-value="id" filter virtual />
         <BsForm :pending="formPending" :error="formError" class="space-y-4" @submit="verifyForm">
-          <FloatingField :label="isArabic ? 'القيمة' : 'Value'"><input v-model="formValue" required class="ls-input"></FloatingField>
+          <BsField v-slot="field" :label="isArabic ? 'القيمة' : 'Value'" for="catalogue-value" :hint="isArabic ? 'حقل نصي مشترك' : 'Shared text field'" required><BsInput id="catalogue-value" v-model="formValue" required :aria-describedby="field.describedby" :invalid="field.invalid" /></BsField>
+          <BsField v-slot="field" :label="isArabic ? 'ملاحظات' : 'Notes'" for="catalogue-notes"><BsTextarea id="catalogue-notes" v-model="notes" :aria-describedby="field.describedby" /></BsField>
+          <BsChoiceGroup v-model="notificationChoices" :legend="isArabic ? 'الإشعارات' : 'Notifications'" :options="[{ value: 'email', label: isArabic ? 'البريد' : 'Email' }, { value: 'app', label: isArabic ? 'داخل التطبيق' : 'In app' }]" inline />
+          <BsChoiceGroup v-model="planChoice" type="radio" :legend="isArabic ? 'الخطة' : 'Plan'" :options="[{ value: 'standard', label: isArabic ? 'قياسية' : 'Standard' }, { value: 'advanced', label: isArabic ? 'متقدمة' : 'Advanced' }]" inline />
           <BsButton type="submit" variant="primary">{{ ui('save') }}</BsButton>
         </BsForm>
         <div class="flex flex-wrap gap-2"><BsButton variant="chip" :aria-pressed="formPending" @click="formPending = !formPending">{{ ui('loading') }}</BsButton><BsButton @click="toastSuccess(isArabic ? 'تم الحفظ' : 'Saved')">{{ isArabic ? 'إظهار إشعار' : 'Show notification' }}</BsButton></div>
       </div>
     </BsCard>
+
+    <BsContentSection :title="isArabic ? 'حالات المحتوى' : 'Content states'" variant="flat">
+      <div class="grid gap-3 md:grid-cols-2"><BsStateSurface state="loading" :title="ui('loading')" /><BsStateSurface state="error" :title="isArabic ? 'تعذر التحميل' : 'Could not load'" :description="isArabic ? 'حاول مرة أخرى.' : 'Try again.'" :action-label="isArabic ? 'إعادة المحاولة' : 'Retry'" /></div>
+      <BsPagination v-model:page="page" class="mt-4" :page-size="10" :total="42" :label="isArabic ? 'الصفحات' : 'Pages'" :previous-label="isArabic ? 'السابق' : 'Previous'" :next-label="isArabic ? 'التالي' : 'Next'" />
+    </BsContentSection>
 
     <BsCard :title="isArabic ? 'التأكيد والخطوات' : 'Confirmation and steps'">
       <BsSignupWizard :step="step" :steps="[{ title: 'Account' }, { title: 'Workspace' }]" @back="back"><p>Step {{ step }}</p><BsButton :disabled="step === 2" @click="advance()">{{ ui('next') }}</BsButton></BsSignupWizard>

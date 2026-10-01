@@ -36,10 +36,10 @@ const steps = computed(() => [
     <p class="mt-2 text-sm text-muted-foreground">{{ copy.help }}</p>
     <ol class="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
       <li v-for="(step, index) in steps" :key="step.to">
-        <NuxtLink :to="step.to" class="flex h-full min-h-11 gap-3 rounded-xl border border-border p-3 hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+        <BsButton as="NuxtLink" :to="step.to" variant="tile" class="flex h-full gap-3">
           <span class="font-extrabold" aria-hidden="true">{{ index + 1 }}.</span>
           <span><strong class="block text-sm text-[var(--bs-link)]">{{ step.title }}</strong><span class="mt-1 block text-sm text-muted-foreground">{{ step.help }}</span></span>
-        </NuxtLink>
+        </BsButton>
       </li>
     </ol>
   </BsCard>
