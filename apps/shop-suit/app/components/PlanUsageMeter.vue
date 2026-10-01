@@ -26,13 +26,13 @@ const valueLabel = computed(() => props.usage.unlimited
 </script>
 
 <template>
-  <article class="rounded-xl border p-4" :class="state === 'available' ? 'border-border' : 'border-[var(--bs-status-warning)]/40 bg-[var(--bs-status-warning-bg)]'" :data-usage-state="state">
+  <BsCard as="article" variant="flat" padding="sm" :class="state === 'available' ? '' : 'border-[var(--bs-status-warning)]/40 bg-[var(--bs-status-warning-bg)]'" :data-usage-state="state">
     <div class="flex items-start justify-between gap-3">
       <div><h3 class="text-sm font-bold">{{ labels[usage.resource] }}</h3><p class="mt-1 font-extrabold tabular-nums">{{ valueLabel }}</p></div>
-      <span v-if="!usage.unlimited" class="rounded-full px-2.5 py-1 text-xs font-bold" :class="state === 'available' ? 'bg-muted text-muted-foreground' : 'bg-[var(--bs-status-warning)]/15 text-[var(--bs-status-warning)]'">{{ stateLabel }}</span>
+      <StatusBadge v-if="!usage.unlimited" :status="state" :label="stateLabel" :tone="state === 'available' ? 'neutral' : 'warning'" />
     </div>
     <div v-if="!usage.unlimited" class="mt-3 h-2 overflow-hidden rounded-full bg-muted" role="progressbar" :aria-label="labels[usage.resource]" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="ratio">
       <span class="block h-full rounded-full transition-[width]" :class="state === 'available' ? 'bg-[var(--bs-link)]' : 'bg-[var(--bs-status-warning)]'" :style="{ width: `${ratio}%` }" />
     </div>
-  </article>
+  </BsCard>
 </template>

@@ -194,7 +194,7 @@ onMounted(async () => {
 })
 </script>
 <template>
-  <form v-if="!awaitingOtp" class="ls-auth-card space-y-6 p-6 sm:p-8" @submit.prevent="submit">
+  <BsForm v-if="!awaitingOtp" class="ls-auth-card space-y-6 p-6 sm:p-8" @submit.prevent="submit">
     <div class="text-center"><p class="ls-auth-eyebrow">Shop Suit</p><h1 class="mt-2 text-xl font-extrabold">{{ t('auth.signupTitle') }}</h1><p class="mt-2 text-sm text-fg-muted">{{ t('auth.signupSubtitle') }}</p></div>
     <BsSignupWizard :step="step" :steps="[{ title: copy.account, body: copy.accountBody }, { title: copy.shop, body: copy.shopBody }]" :pending="pending" @back="back">
       <div v-if="step === 1" class="space-y-4">
@@ -223,19 +223,19 @@ onMounted(async () => {
       </div>
       <p v-if="noticeMessage" role="status" class="rounded-xl border border-border p-3 text-sm text-fg-muted">{{ noticeMessage }}</p>
       <p v-if="errorMessage" role="alert" class="ls-error">{{ errorMessage }}</p>
-      <button type="submit" class="ls-btn ls-btn-primary w-full" :disabled="pending">{{ pending ? copy.pending : step === 1 ? copy.next : copy.create }}</button>
+      <BsButton type="submit" class="ls-btn ls-btn-primary w-full" :disabled="pending">{{ pending ? copy.pending : step === 1 ? copy.next : copy.create }}</BsButton>
     </BsSignupWizard>
     <p class="text-center text-sm text-fg-muted"><NuxtLink to="/auth/login" class="underline">{{ copy.login }}</NuxtLink></p>
-  </form>
-  <form v-else class="ls-auth-card space-y-6 p-6 text-center sm:p-8" @submit.prevent="verify">
+  </BsForm>
+  <BsForm v-else class="ls-auth-card space-y-6 p-6 text-center sm:p-8" @submit.prevent="verify">
     <AppIcon name="mail" :size="32" class="mx-auto" /><h1 class="text-xl font-black">{{ copy.verify }}</h1><p class="text-sm text-fg-muted">{{ copy.verifyBody }}</p><p class="break-all font-bold" dir="ltr">{{ form.email }}</p>
     <OtpInput v-if="!existingAccount" v-model="otp" :label="copy.code" :disabled="pending || verification.expired.value" />
     <template v-if="!existingAccount"><p v-if="verification.expired.value" class="text-sm text-danger">{{ copy.expired }}</p><p v-else class="text-sm text-fg-muted">{{ copy.expires }} {{ verification.format(verification.expiresIn.value) }}</p></template>
     <p v-if="noticeMessage" role="status" class="rounded-xl border border-border p-3 text-sm text-fg-muted">{{ noticeMessage }}</p>
     <p v-if="errorMessage" role="alert" class="ls-error">{{ errorMessage }}</p>
-    <button class="ls-btn ls-btn-primary w-full" :disabled="pending || (!existingAccount && (otp.length !== 6 || verification.expired.value))">{{ pending ? copy.pending : existingAccount ? copy.retry : copy.verify }}</button>
-    <button v-if="!existingAccount" type="button" class="text-sm font-bold underline disabled:opacity-50" :disabled="pending || verification.resendIn.value > 0" @click="resend">{{ verification.resendIn.value > 0 ? `${copy.wait} ${verification.format(verification.resendIn.value)}` : copy.resend }}</button>
-    <button v-if="!existingAccount" type="button" class="text-sm font-bold underline" :disabled="pending" @click="startOver">{{ copy.changeEmail }} · {{ copy.startOver }}</button>
+    <BsButton class="ls-btn ls-btn-primary w-full" :disabled="pending || (!existingAccount && (otp.length !== 6 || verification.expired.value))">{{ pending ? copy.pending : existingAccount ? copy.retry : copy.verify }}</BsButton>
+    <BsButton v-if="!existingAccount" type="button" class="text-sm font-bold underline disabled:opacity-50" :disabled="pending || verification.resendIn.value > 0" @click="resend">{{ verification.resendIn.value > 0 ? `${copy.wait} ${verification.format(verification.resendIn.value)}` : copy.resend }}</BsButton>
+    <BsButton v-if="!existingAccount" type="button" class="text-sm font-bold underline" :disabled="pending" @click="startOver">{{ copy.changeEmail }} · {{ copy.startOver }}</BsButton>
     <NuxtLink to="/auth/login" class="block text-sm font-bold underline" @click="clearDraft">{{ copy.signIn }}</NuxtLink>
-  </form>
+  </BsForm>
 </template>

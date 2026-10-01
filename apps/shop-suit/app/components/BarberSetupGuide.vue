@@ -31,7 +31,7 @@ const steps = computed(() => [
 </script>
 
 <template>
-  <section v-if="isOwner && current?.business_mode !== 'product'" class="rounded-2xl border border-border bg-card p-4 sm:p-5" aria-labelledby="barber-setup-title">
+  <BsCard v-if="isOwner && current?.business_mode !== 'product'" as="section" padding="md" aria-labelledby="barber-setup-title">
     <h2 id="barber-setup-title" class="text-lg font-extrabold">{{ copy.title }}</h2>
     <p class="mt-2 text-sm text-muted-foreground">{{ copy.help }}</p>
     <ol class="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -42,5 +42,5 @@ const steps = computed(() => [
         </NuxtLink>
       </li>
     </ol>
-  </section>
+  </BsCard>
 </template>

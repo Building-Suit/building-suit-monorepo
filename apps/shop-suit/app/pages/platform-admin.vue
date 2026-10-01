@@ -46,6 +46,8 @@ const priceOverrideError = ref('')
 const priceOverrideRequestId = ref<string | null>(null)
 const priceOverride = reactive({ shopId: '', shopName: '', amount: 0, currency: 'EGP', effectiveFrom: '', expiresAt: '', reason: '' })
 const { visible: actionOpen, pending: actionPending, dirty: actionDirty, open: showAction, complete: completeAction } = useRecordAction(() => action)
+const { dirty: billingReviewDirty } = useRecordAction(() => billingReview, billingReviewOpen)
+const { dirty: priceOverrideDirty } = useRecordAction(() => priceOverride, priceOverrideOpen)
 let searchTimer: ReturnType<typeof setTimeout> | undefined
 
 watch(search, value => {
@@ -524,17 +526,13 @@ const ar = {
       </div>
     </BsDialog>
 
-    <BsDialog v-model:visible="actionOpen" :title="actionLabel(action.key)" :dirty="actionDirty" :pending="actionPending">
-      <template #default="{ close }"><BsForm class="space-y-4" :pending="actionPending" :error="commandError" @submit="runAction">
+    <BsRecordActionDialog v-model:visible="actionOpen" :title="actionLabel(action.key)" :dirty="actionDirty" :pending="actionPending" :error="commandError" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="runAction">
         <label class="block space-y-2 text-sm font-bold">{{ copy.reason }}<textarea v-model="action.reason" class="ls-input" minlength="2" maxlength="1000" required rows="3" /></label>
         <label v-if="action.key === 'extend_trial'" class="block space-y-2 text-sm font-bold">{{ copy.days }}<input v-model.number="action.days" class="ls-input" type="number" min="1" max="365" step="1" required></label>
         <template v-if="action.key === 'correct_billing_metadata'"><label class="block space-y-2 text-sm font-bold">{{ copy.billingReference }}<input v-model="action.billingReference" class="ls-input" maxlength="200"></label><label class="block space-y-2 text-sm font-bold">{{ copy.billingNote }}<textarea v-model="action.billingNote" class="ls-input" maxlength="1000" rows="3" /></label></template>
         <label v-if="action.key === 'add_support_note'" class="block space-y-2 text-sm font-bold">{{ copy.note }}<textarea v-model="action.note" class="ls-input" minlength="2" maxlength="2000" required rows="5" /></label>
-        <div class="flex flex-wrap gap-2"><BsButton type="submit" class="ls-btn ls-btn-primary" :disabled="actionPending">{{ copy.save }}</BsButton><BsButton class="ls-btn" :disabled="actionPending" @click="close">{{ copy.cancel }}</BsButton></div>
-      </BsForm></template>
-    </BsDialog>
-    <BsDialog v-model:visible="billingReviewOpen" :title="billingReview.action === 'approve' ? copy.approve : billingReview.action === 'reject' ? copy.reject : copy.markUnderReview" :pending="billingReviewPending">
-      <BsForm class="space-y-4" :pending="billingReviewPending" :error="billingReviewError" @submit="runBillingReview">
+    </BsRecordActionDialog>
+    <BsRecordActionDialog v-model:visible="billingReviewOpen" :title="billingReview.action === 'approve' ? copy.approve : billingReview.action === 'reject' ? copy.reject : copy.markUnderReview" :dirty="billingReviewDirty" :pending="billingReviewPending" :error="billingReviewError" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="runBillingReview">
         <label class="grid gap-2 text-sm font-bold">{{ copy.reason }}<textarea v-model="billingReview.reason" class="ls-input" minlength="2" maxlength="1000" required rows="3" /></label>
         <template v-if="billingReview.action === 'approve'">
           <label class="grid gap-2 text-sm font-bold">{{ copy.receivedAmount }}<input v-model.number="billingReview.receivedAmount" class="ls-input" type="number" min="0.01" step="0.01" required></label>
@@ -542,17 +540,12 @@ const ar = {
           <label class="grid gap-2 text-sm font-bold">{{ copy.receivedDate }}<input v-model="billingReview.receivedDate" class="ls-input" type="date" :max="new Date().toISOString().slice(0, 10)" required></label>
           <label v-if="billingReview.submission && (billingReview.receivedAmount !== billingReview.submission.effectivePriceAmount || billingReview.submission.paidAmount !== billingReview.submission.effectivePriceAmount)" class="grid gap-2 text-sm font-bold">{{ copy.amountOverrideReason }}<textarea v-model="billingReview.amountOverrideReason" class="ls-input" minlength="2" maxlength="1000" required rows="3" /></label>
         </template>
-        <div class="flex flex-wrap gap-2"><BsButton type="submit" class="ls-btn ls-btn-primary" :pending="billingReviewPending">{{ copy.save }}</BsButton><BsButton type="button" class="ls-btn" :disabled="billingReviewPending" @click="billingReviewOpen = false">{{ copy.cancel }}</BsButton></div>
-      </BsForm>
-    </BsDialog>
-    <BsDialog v-model:visible="priceOverrideOpen" :title="`${copy.priceOverride} · ${priceOverride.shopName}`" :pending="priceOverridePending">
-      <BsForm class="space-y-4" :pending="priceOverridePending" :error="priceOverrideError" @submit="savePriceOverride">
+    </BsRecordActionDialog>
+    <BsRecordActionDialog v-model:visible="priceOverrideOpen" :title="`${copy.priceOverride} · ${priceOverride.shopName}`" :dirty="priceOverrideDirty" :pending="priceOverridePending" :error="priceOverrideError" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="savePriceOverride">
         <label class="grid gap-2 text-sm font-bold">{{ copy.overrideAmount }}<input v-model.number="priceOverride.amount" class="ls-input" type="number" min="0.01" step="0.01" required></label>
         <label class="grid gap-2 text-sm font-bold">{{ copy.effectiveFrom }}<input v-model="priceOverride.effectiveFrom" class="ls-input" type="date" required></label>
         <label class="grid gap-2 text-sm font-bold">{{ copy.expiresAt }}<input v-model="priceOverride.expiresAt" class="ls-input" type="date" :min="priceOverride.effectiveFrom"></label>
         <label class="grid gap-2 text-sm font-bold">{{ copy.reason }}<textarea v-model="priceOverride.reason" class="ls-input" minlength="2" maxlength="1000" required rows="3" /></label>
-        <div class="flex flex-wrap gap-2"><BsButton type="submit" class="ls-btn ls-btn-primary" :pending="priceOverridePending">{{ copy.save }}</BsButton><BsButton type="button" class="ls-btn" :disabled="priceOverridePending" @click="priceOverrideOpen = false">{{ copy.cancel }}</BsButton></div>
-      </BsForm>
-    </BsDialog>
+    </BsRecordActionDialog>
   </div>
 </template>

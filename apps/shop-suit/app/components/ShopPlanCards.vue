@@ -126,8 +126,9 @@ const ar = {
     </fieldset>
 
     <div class="mt-6 grid items-stretch gap-4 md:grid-cols-2 xl:grid-cols-3">
-      <article v-for="offer in cards" :key="offer.planSlug" class="relative flex min-w-0 flex-col rounded-2xl border bg-card p-5 text-start" :class="isSelected(offer) ? 'border-[var(--bs-link)] ring-2 ring-[var(--bs-link)]/20' : 'border-border'" :data-plan="offer.planSlug" :data-variant="offer.planVariant">
-        <span v-if="isCurrent(offer)" class="absolute end-4 top-4 rounded-full bg-muted px-2.5 py-1 text-xs font-bold">{{ copy.current }}</span>
+      <BsCard v-for="offer in cards" :key="offer.planSlug" as="article" class="relative flex min-w-0 flex-col text-start" :class="isSelected(offer) ? 'border-[var(--bs-link)] ring-2 ring-[var(--bs-link)]/20' : ''" :data-plan="offer.planSlug" :data-variant="offer.planVariant">
+        <div class="flex h-full flex-col">
+        <StatusBadge v-if="isCurrent(offer)" class="absolute end-4 top-4" status="current" :label="copy.current" tone="info" />
         <h3 class="pe-20 text-xl font-extrabold">{{ familyName(offer) }}</h3>
 
         <fieldset v-if="offer.planSlug === 'multi'" class="mt-4">
@@ -166,7 +167,8 @@ const ar = {
 
         <NuxtLink v-if="action === 'signup'" to="/auth/signup" class="ls-btn ls-btn-primary mt-6 w-full text-center">{{ copy.startTrial }}</NuxtLink>
         <BsButton v-else type="button" class="mt-6 w-full" :variant="isSelected(offer) ? 'default' : 'primary'" :aria-pressed="isSelected(offer)" @click="emit('select', offer)">{{ isSelected(offer) ? copy.selected : copy.choose }}</BsButton>
-      </article>
+        </div>
+      </BsCard>
     </div>
   </div>
 </template>

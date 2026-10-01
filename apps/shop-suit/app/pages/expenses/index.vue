@@ -247,8 +247,7 @@ function handlePage(event: { page: number }) { page.value = event.page + 1 }
       <p v-else-if="!pending && !error && !canManage" class="rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm">{{ copy.readOnly }}</p>
       <p v-if="actionError && !showForm && !voidOpen" role="alert" class="ls-error">{{ actionError }}</p>
 
-      <BsDialog v-model:visible="showForm" :title="editingId ? copy.correct : copy.add" :dirty="formDirty" :pending="saving">
-        <template #default="{ close }"><BsForm class="grid gap-4 sm:grid-cols-2" :pending="saving" :error="actionError" @submit="save">
+      <BsRecordActionDialog v-model:visible="showForm" :title="editingId ? copy.correct : copy.add" :dirty="formDirty" :pending="saving" :error="actionError" :submit-label="editingId ? copy.saveCorrection : copy.save" :cancel-label="copy.cancel" @submit="save">
 
           <p v-if="editingId" class="rounded-xl bg-muted p-3 text-sm sm:col-span-2">{{ copy.correctionHelp }}</p>
           <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ copy.name }}<input v-model="form.title" type="text" minlength="2" maxlength="160" required class="ls-input"></label>
@@ -257,18 +256,12 @@ function handlePage(event: { page: number }) { page.value = event.page + 1 }
           <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ copy.category }}<input v-model="form.category" type="text" list="shop-expense-categories" minlength="2" maxlength="80" required :placeholder="copy.categoryHint" class="ls-input"><datalist id="shop-expense-categories"><option v-for="category in categories" :key="category.id" :value="category.name" /></datalist></label>
           <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ copy.notes }}<textarea v-model="form.notes" rows="2" maxlength="1000" class="ls-input" /></label>
           <label v-if="editingId" class="space-y-2 text-sm font-bold sm:col-span-2">{{ copy.correctionReason }}<textarea v-model="form.correctionReason" rows="2" minlength="2" maxlength="500" required class="ls-input" /></label>
-          <div class="flex items-center gap-2 sm:col-span-2"><BsButton type="submit" class="ls-btn ls-btn-primary" :disabled="saving">{{ saving ? copy.saving : editingId ? copy.saveCorrection : copy.save }}</BsButton><BsButton type="button" class="ls-btn" :disabled="saving" @click="close">{{ copy.cancel }}</BsButton></div>
-        </BsForm></template>
-      </BsDialog>
+      </BsRecordActionDialog>
 
-      <BsDialog v-model:visible="voidOpen" :title="copy.voidTitle" :dirty="voidDirty" :pending="voidPending" size="sm">
+      <BsRecordActionDialog v-model:visible="voidOpen" :title="copy.voidTitle" :dirty="voidDirty" :pending="voidPending" :error="actionError" :submit-label="copy.void" :cancel-label="copy.cancel" submit-tone="danger" size="sm" @submit="submitVoid">
         <p class="mb-4 text-sm text-muted-foreground">{{ copy.voidHelp }}</p>
-        <BsForm class="space-y-4" :pending="voidPending" :error="actionError" @submit="submitVoid">
-
-          <label class="space-y-2 text-sm font-bold">{{ copy.voidReason }}<textarea v-model="voidReason" rows="3" minlength="2" maxlength="500" required class="ls-input" /></label>
-          <div class="flex items-center gap-2"><BsButton type="submit" class="ls-btn ls-btn-primary" :disabled="voidPending">{{ copy.void }}</BsButton><BsButton type="button" class="ls-btn" :disabled="voidPending" @click="closeVoid">{{ copy.cancel }}</BsButton></div>
-        </BsForm>
-      </BsDialog>
+        <label class="space-y-2 text-sm font-bold">{{ copy.voidReason }}<textarea v-model="voidReason" rows="3" minlength="2" maxlength="500" required class="ls-input" /></label>
+      </BsRecordActionDialog>
 
       <section v-if="currentLocationId" class="overflow-hidden rounded-2xl border border-border bg-card">
         <div class="grid gap-3 border-b border-border p-4 sm:grid-cols-2 xl:grid-cols-6">

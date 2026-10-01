@@ -24,6 +24,9 @@ const selectedMember = ref<TeamMember | null>(null)
 const inviteForm = reactive({ name: '', email: '', roleKey: 'staff', locationIds: [] as string[] })
 const editForm = reactive({ roleKey: 'staff', locationIds: [] as string[] })
 const transferReason = ref('')
+const { dirty: inviteDirty } = useRecordAction(() => inviteForm, showInvite)
+const { dirty: editDirty } = useRecordAction(() => editForm, showEdit)
+const { dirty: transferDirty } = useRecordAction(() => transferReason.value, showTransfer)
 
 const copy = computed(() => isArabic.value ? {
   title: 'الفريق والصلاحيات', subtitle: 'ضيف الموظفين، وحدد دور كل واحد وفروعه، واقفل وصوله من غير ما تحذف سجله.',
@@ -308,27 +311,19 @@ function formatDate(value: string) {
       <section v-if="team.canViewAudit" class="overflow-hidden rounded-2xl border border-border bg-card"><h2 class="p-5 text-lg font-extrabold">{{ copy.audit }}</h2><BsDataTable :value="team.events" data-key="id" :label="copy.audit"><Column field="action"><template #header>{{ copy.action }}</template></Column><Column field="actorEmail"><template #header>{{ copy.actor }}</template></Column><Column field="reason"><template #header>{{ copy.reason }}</template></Column><Column><template #header>{{ copy.date }}</template><template #body="{ data: event }">{{ formatDate(event.occurredAt) }}</template></Column><template #empty><p class="p-6 text-center text-sm text-muted-foreground">{{ copy.noAudit }}</p></template></BsDataTable></section>
     </template>
 
-    <BsDialog v-model:visible="showInvite" :title="copy.inviteTitle" :pending="actionPending">
-      <BsForm class="grid gap-4" :pending="actionPending" :error="actionError" @submit="sendInvite">
+    <BsRecordActionDialog v-model:visible="showInvite" :title="copy.inviteTitle" :dirty="inviteDirty" :pending="actionPending" :error="actionError" :submit-label="copy.save" :cancel-label="invitationLink ? copy.close : copy.cancel" @submit="sendInvite">
         <label class="grid gap-1 text-sm font-bold">{{ copy.name }}<input v-model="inviteForm.name" class="ls-input" maxlength="160"></label>
         <label class="grid gap-1 text-sm font-bold">{{ copy.email }}<input v-model="inviteForm.email" type="email" class="ls-input" required maxlength="254"></label>
         <label class="grid gap-1 text-sm font-bold">{{ copy.role }}<select v-model="inviteForm.roleKey" class="ls-select"><option v-for="role in team.roles" :key="role.key" :value="role.key" :disabled="role.key === 'manager' && !team.canManagePermissions">{{ roleLabel(role.key) }}</option></select></label>
         <fieldset><legend class="text-sm font-bold">{{ copy.locations }}</legend><label v-for="location in activeLocations" :key="location.id" class="mt-2 flex items-center gap-2 text-sm"><input v-model="inviteForm.locationIds" type="checkbox" :value="location.id">{{ location.name }}</label></fieldset>
         <p v-if="invitationLink" role="status" class="rounded-xl bg-muted p-3 text-sm"><strong>{{ copy.invitationReady }}</strong><input :value="invitationLink" readonly class="ls-input mt-2" @focus="($event.target as HTMLInputElement).select()"></p>
-        <div class="flex gap-2"><BsButton type="submit" :pending="actionPending">{{ actionPending ? copy.saving : copy.save }}</BsButton><BsButton type="button" severity="secondary" @click="showInvite = false">{{ invitationLink ? copy.close : copy.cancel }}</BsButton></div>
-      </BsForm>
-    </BsDialog>
+    </BsRecordActionDialog>
 
-    <BsDialog v-model:visible="showEdit" :title="copy.edit" :pending="actionPending">
-      <BsForm class="grid gap-4" :pending="actionPending" :error="actionError" @submit="saveMember">
+    <BsRecordActionDialog v-model:visible="showEdit" :title="copy.edit" :dirty="editDirty" :pending="actionPending" :error="actionError" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="saveMember">
         <label class="grid gap-1 text-sm font-bold">{{ copy.role }}<select v-model="editForm.roleKey" class="ls-select" :disabled="!team.canManagePermissions"><option v-for="role in team.roles" :key="role.key" :value="role.key">{{ roleLabel(role.key) }}</option></select></label>
         <fieldset><legend class="text-sm font-bold">{{ copy.locations }}</legend><label v-for="location in activeLocations" :key="location.id" class="mt-2 flex items-center gap-2 text-sm"><input v-model="editForm.locationIds" type="checkbox" :value="location.id">{{ location.name }}</label></fieldset>
-        <div class="flex gap-2"><BsButton type="submit" :pending="actionPending">{{ actionPending ? copy.saving : copy.save }}</BsButton><BsButton type="button" severity="secondary" @click="showEdit = false">{{ copy.cancel }}</BsButton></div>
-      </BsForm>
-    </BsDialog>
+    </BsRecordActionDialog>
 
-    <BsDialog v-model:visible="showTransfer" :title="copy.transfer" :pending="actionPending">
-      <BsForm class="grid gap-4" :pending="actionPending" :error="actionError" @submit="transferOwnership"><p class="text-sm">{{ copy.transferHelp }}</p><label class="grid gap-1 text-sm font-bold">{{ copy.reason }}<textarea v-model="transferReason" class="ls-input" required minlength="2" maxlength="1000" rows="3" /></label><div class="flex gap-2"><BsButton type="submit" :pending="actionPending">{{ copy.transfer }}</BsButton><BsButton type="button" severity="secondary" @click="showTransfer = false">{{ copy.cancel }}</BsButton></div></BsForm>
-    </BsDialog>
+    <BsRecordActionDialog v-model:visible="showTransfer" :title="copy.transfer" :dirty="transferDirty" :pending="actionPending" :error="actionError" :submit-label="copy.transfer" :cancel-label="copy.cancel" @submit="transferOwnership"><p class="text-sm">{{ copy.transferHelp }}</p><label class="grid gap-1 text-sm font-bold">{{ copy.reason }}<textarea v-model="transferReason" class="ls-input" required minlength="2" maxlength="1000" rows="3" /></label></BsRecordActionDialog>
   </div>
 </template>

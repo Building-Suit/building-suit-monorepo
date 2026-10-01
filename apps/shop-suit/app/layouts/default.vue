@@ -73,7 +73,7 @@ async function logout() {
 
 <template>
   <BsAppShell product-name="Shop Suit" :groups="groups" :mobile-links="[...(groups[0]?.links.slice(0, 3) ?? []), { to: '/dashboard', label: copy.reports, icon: 'dashboard' }]" :labels="{ close: copy.closeMenu, open: copy.openMenu, navigation: copy.shop, dashboard: copy.dashboard }">
-    <template #logo><AppLogo /></template>
+    <template #logo><BsProductLogo name="Shop Suit" asset-prefix="/brand/shop-suit" /></template>
     <template #context>
       <label v-if="shops.length" class="grid gap-1 text-xs font-bold sm:hidden">{{ copy.shop }}<select :value="currentId ?? ''" class="ls-select min-h-11 w-full" @change="selectShop(($event.target as HTMLSelectElement).value)"><option v-for="shop in shops" :key="shop.id" :value="shop.id">{{ shop.name }}</option></select></label>
     </template>

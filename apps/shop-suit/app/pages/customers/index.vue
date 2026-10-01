@@ -186,21 +186,13 @@ function formatDate(value: string) {
         {{ t('customers.manageDenied') }}
       </p>
 
-      <BsDialog v-model:visible="showForm" :title="t('customers.createTitle')" :dirty="formDirty" :pending="saving">
-        <template #default="{ close }">
-          <BsForm class="grid gap-4 sm:grid-cols-2" :pending="saving" :error="actionError" @submit="save">
+      <BsRecordActionDialog v-model:visible="showForm" :title="t('customers.createTitle')" :dirty="formDirty" :pending="saving" :error="actionError" :submit-label="t('customers.save')" :cancel-label="t('customers.cancel')" @submit="save">
             <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ t('customers.name') }}<input v-model="form.name" type="text" minlength="2" maxlength="160" required class="ls-input"></label>
             <label class="space-y-2 text-sm font-bold">{{ t('customers.phone') }}<input v-model="form.phone" type="tel" maxlength="50" autocomplete="tel" class="ls-input"></label>
             <label class="space-y-2 text-sm font-bold">{{ t('customers.email') }}<input v-model="form.email" type="email" maxlength="254" autocomplete="email" class="ls-input"></label>
             <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ t('customers.address') }}<textarea v-model="form.address" maxlength="500" rows="2" class="ls-input" /></label>
             <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ t('customers.notes') }}<textarea v-model="form.notes" maxlength="2000" rows="3" class="ls-input" /></label>
-            <div class="flex flex-wrap gap-2 sm:col-span-2">
-              <BsButton type="submit" class="ls-btn ls-btn-primary" :disabled="saving">{{ saving ? t('customers.saving') : t('customers.save') }}</BsButton>
-              <BsButton type="button" class="ls-btn" :disabled="saving" @click="close">{{ t('customers.cancel') }}</BsButton>
-            </div>
-          </BsForm>
-        </template>
-      </BsDialog>
+      </BsRecordActionDialog>
 
       <div v-if="!customerPage?.permissionDenied" class="overflow-hidden rounded-2xl border border-border bg-card">
         <div class="flex flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-center">

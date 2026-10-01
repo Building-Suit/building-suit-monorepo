@@ -214,9 +214,7 @@ async function archive(service: Service) {
     <template v-else-if="current">
       <p v-if="actionError && !showForm" role="alert" class="rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm text-[var(--bs-status-error)]">{{ actionError }}</p>
 
-      <BsDialog v-model:visible="showForm" :title="editingId ? copy.edit : copy.add" :dirty="formDirty" :pending="saving">
-        <template #default="{ close }">
-          <BsForm class="grid gap-4 sm:grid-cols-2" :pending="saving" :error="actionError" @submit="save">
+      <BsRecordActionDialog v-model:visible="showForm" :title="editingId ? copy.edit : copy.add" :dirty="formDirty" :pending="saving" :error="actionError" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="save">
             <label class="grid gap-2 text-sm font-bold sm:col-span-2">{{ copy.name }}<input v-model="form.name" type="text" minlength="2" maxlength="160" required class="ls-input"></label>
             <label class="grid gap-2 text-sm font-bold sm:col-span-2">{{ copy.description }}<textarea v-model="form.description" maxlength="1000" rows="2" class="ls-input" /></label>
             <label class="grid gap-2 text-sm font-bold">{{ copy.price }}<input v-model.number="form.price" type="number" min="0" max="999999999.99" step="0.01" required class="ls-input"></label>
@@ -235,10 +233,7 @@ async function archive(service: Service) {
                 <fieldset><legend class="text-sm font-bold">{{ copy.staff }}</legend><label v-for="member in schedulingOptions.staff" :key="member.membershipId" class="mt-2 flex min-h-11 items-center gap-2 text-sm"><input v-model="form.staffMembershipIds" type="checkbox" :value="member.membershipId">{{ member.name }}</label></fieldset>
               </div>
             </fieldset>
-            <div class="flex items-end gap-2 sm:col-span-2"><BsButton type="submit" :pending="saving">{{ saving ? copy.saving : copy.save }}</BsButton><BsButton type="button" severity="secondary" :disabled="saving" @click="close">{{ copy.cancel }}</BsButton></div>
-          </BsForm>
-        </template>
-      </BsDialog>
+      </BsRecordActionDialog>
 
       <section class="rounded-2xl border border-border bg-card p-5">
         <div class="grid gap-3 sm:grid-cols-2"><input v-model="search" type="search" :placeholder="copy.search" class="ls-input" :aria-label="copy.search"><select v-model="categoryFilter" :aria-label="copy.category" class="ls-select"><option value="">{{ copy.allCategories }}</option><option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option></select></div>

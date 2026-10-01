@@ -240,59 +240,52 @@
       "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
-      "path": "apps/shop-suit/app/components/AppLogo.vue",
-      "classification": "obsolete-duplicate",
-      "rationale": "A thin fixed-product wrapper duplicates configuration already accepted by BsProductLogo.",
-      "migrationTarget": "packages/ui/src/atoms/BsProductLogo.vue",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
-    },
-    {
       "path": "apps/shop-suit/app/components/BarberSetupGuide.vue",
       "classification": "product-orchestration",
-      "rationale": "Maps Shop setup state and barber-specific onboarding steps to product routes.",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "rationale": "Maps Shop setup state and barber-specific onboarding steps to product routes. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-SHOP-MIG-001"
     },
     {
       "path": "apps/shop-suit/app/components/PlanResourceLimits.vue",
       "classification": "product-orchestration",
-      "rationale": "Presents Shop plan resource keys and product-specific allowance semantics.",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "rationale": "Presents Shop plan resource keys and product-specific allowance semantics. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-SHOP-MIG-001"
     },
     {
       "path": "apps/shop-suit/app/components/PlanUsageMeter.vue",
       "classification": "product-orchestration",
-      "rationale": "Adapts Shop resource usage, plan-limit states, and localized domain labels.",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "rationale": "Adapts Shop resource usage, plan-limit states, and localized domain labels. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-SHOP-MIG-001"
     },
     {
       "path": "apps/shop-suit/app/components/PlatformPlanAdmin.vue",
       "classification": "product-orchestration",
-      "rationale": "Coordinates Shop plan administration queries, commands, confirmations, dialogs, and tables.",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "rationale": "Coordinates Shop plan administration queries, commands, confirmations, dialogs, and tables. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-SHOP-MIG-001"
     },
     {
       "path": "apps/shop-suit/app/components/PublicLegalPage.vue",
       "classification": "product-orchestration",
-      "rationale": "Supplies Shop metadata, branding copy and its product-owned legal document to canonical BsPublicLegalPage.",
-      "approval": "BS-UI-CANONICAL-001"
+      "rationale": "Supplies Shop metadata, branding copy and its product-owned legal document to canonical BsPublicLegalPage. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-SHOP-MIG-001"
     },
     {
       "path": "apps/shop-suit/app/components/PurchaseEntityPicker.vue",
       "classification": "product-orchestration",
-      "rationale": "Owns Shop product and supplier queries, paging, selection contracts, and cache scope.",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "rationale": "Owns Shop product and supplier queries, paging, selection contracts, and cache scope. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-SHOP-MIG-001"
     },
     {
       "path": "apps/shop-suit/app/components/ShopPlanCards.vue",
       "classification": "product-orchestration",
-      "rationale": "Applies Shop plan families, billing intervals, blockers, pricing, and resource rules.",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "rationale": "Applies Shop plan families, billing intervals, blockers, pricing, and resource rules. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-SHOP-MIG-001"
     },
     {
       "path": "apps/shop-suit/app/components/ShopPricing.vue",
       "classification": "product-orchestration",
-      "rationale": "Adapts Shop plan catalogue queries into the product-owned plan-card contract.",
-      "approval": "BS-UI-FOUNDATION-001 baseline"
+      "rationale": "Adapts Shop plan catalogue queries into the product-owned plan-card contract. It composes canonical shared UI primitives.",
+      "approval": "BS-UI-SHOP-MIG-001"
     }
   ]
 }

@@ -58,7 +58,7 @@ async function printReceipt() {
       <NuxtLink :to="`/sales/${saleId}`" class="inline-flex min-h-11 items-center font-semibold text-[var(--bs-link)] underline-offset-4 hover:underline">{{ t('receipt.back') }}</NuxtLink>
       <div class="flex flex-wrap gap-2">
         <div class="flex rounded-xl border border-border p-1" role="group" :aria-label="t('receipt.language')">
-          <button v-for="language in ['en', 'ar'] as const" :key="language" type="button" class="min-h-11 rounded-lg px-3 text-sm font-bold" :class="receiptLanguage === language ? 'bg-primary text-primary-foreground' : ''" @click="receiptLanguage = language">{{ language === 'ar' ? 'العربية' : 'English' }}</button>
+          <BsButton v-for="language in ['en', 'ar'] as const" :key="language" type="button" class="min-h-11 rounded-lg px-3 text-sm font-bold" :class="receiptLanguage === language ? 'bg-primary text-primary-foreground' : ''" @click="receiptLanguage = language">{{ language === 'ar' ? 'العربية' : 'English' }}</BsButton>
         </div>
         <select v-model="paperSize" class="ls-select min-h-11" :aria-label="t('receipt.paperSize')">
           <option value="thermal_80">{{ t('receipt.thermal80') }}</option>

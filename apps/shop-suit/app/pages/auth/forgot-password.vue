@@ -49,7 +49,7 @@ async function onSubmit() {
       <p class="mt-2 text-sm leading-6 text-muted-foreground">{{ isArabic ? 'لو البريد مسجّل عندنا، هتوصلك رسالة فيها رابط آمن لتغيير كلمة المرور.' : 'If the address is registered, you will receive a secure link to choose a new password.' }}</p>
     </div>
 
-    <form v-else class="space-y-5" novalidate @submit.prevent="onSubmit">
+    <BsForm v-else class="space-y-5" novalidate @submit.prevent="onSubmit">
       <div v-if="errorMessage" class="rounded-xl border border-[var(--bs-status-error)]/30 bg-[var(--bs-status-error-bg)] px-4 py-3 text-sm text-[var(--bs-status-error)] dark:bg-[var(--bs-status-error-bg)] dark:text-[var(--bs-status-error)]" role="alert">{{ errorMessage }}</div>
 
       <div class="space-y-2">
@@ -60,11 +60,11 @@ async function onSubmit() {
         </div>
       </div>
 
-      <button type="submit" class="ls-btn ls-btn-primary w-full" :disabled="pending">
+      <BsButton type="submit" class="ls-btn ls-btn-primary w-full" :disabled="pending">
         <AppIcon v-if="pending" name="automation" class="size-4" />
         {{ t('auth.resetAction') }}
-      </button>
-    </form>
+      </BsButton>
+    </BsForm>
 
     <p class="text-center text-sm"><NuxtLink to="/auth/login" class="font-bold text-foreground underline decoration-[var(--bs-accent)] decoration-2 underline-offset-4">{{ t('auth.backToLogin') }}</NuxtLink></p>
   </section>

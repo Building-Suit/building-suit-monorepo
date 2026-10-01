@@ -60,21 +60,21 @@ async function onSubmit() {
       <NuxtLink to="/auth/forgot-password" class="mt-4 inline-block text-sm font-bold underline">{{ isArabic ? 'اطلب رابط جديد' : 'Request a new link' }}</NuxtLink>
     </div>
 
-    <form v-else class="space-y-5" @submit.prevent="onSubmit">
+    <BsForm v-else class="space-y-5" @submit.prevent="onSubmit">
       <div v-if="errorMessage" class="rounded-xl border border-[var(--bs-status-error)]/30 bg-[var(--bs-status-error-bg)] px-4 py-3 text-sm text-[var(--bs-status-error)] dark:bg-[var(--bs-status-error-bg)] dark:text-[var(--bs-status-error)]">{{ errorMessage }}</div>
       <div class="space-y-2">
         <label for="new-password" class="text-sm font-semibold">{{ isArabic ? 'كلمة المرور الجديدة' : 'New password' }}</label>
         <div class="relative">
           <AppIcon name="lock" class="pointer-events-none absolute start-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <input id="new-password" v-model="password" :type="showPassword ? 'text' : 'password'" autocomplete="new-password" class="ls-input">
-          <button type="button" class="ls-btn" @click="showPassword = !showPassword"><AppIcon :name="showPassword ? 'eyeOff' : 'eye'" class="size-4" /></button>
+          <BsButton type="button" class="ls-btn" @click="showPassword = !showPassword"><AppIcon :name="showPassword ? 'eyeOff' : 'eye'" class="size-4" /></BsButton>
         </div>
       </div>
       <div class="space-y-2">
         <label for="confirm-password" class="text-sm font-semibold">{{ isArabic ? 'تأكيد كلمة المرور' : 'Confirm password' }}</label>
         <input id="confirm-password" v-model="confirmPassword" :type="showPassword ? 'text' : 'password'" autocomplete="new-password" class="ls-input">
       </div>
-      <button type="submit" class="ls-btn ls-btn-primary w-full" :disabled="pending"><AppIcon v-if="pending" name="automation" class="size-4" />{{ isArabic ? 'حفظ كلمة المرور' : 'Save password' }}</button>
-    </form>
+      <BsButton type="submit" class="ls-btn ls-btn-primary w-full" :disabled="pending"><AppIcon v-if="pending" name="automation" class="size-4" />{{ isArabic ? 'حفظ كلمة المرور' : 'Save password' }}</BsButton>
+    </BsForm>
   </section>
 </template>

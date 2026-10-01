@@ -356,9 +356,7 @@ function handlePage(event: { page: number }) { page.value = event.page + 1 }
     </template>
 
     <p v-if="editorError && !editorOpen" role="alert" class="ls-error">{{ editorError }}</p>
-    <BsDialog v-model:visible="editorOpen" :title="editingId ? t('sales.editDraft') : t('sales.newSale')" :dirty="editorDirty" :pending="saving || issuing">
-      <template #default="{ close }">
-        <BsForm class="space-y-5" :pending="saving || issuing" :error="editorError" @submit="saveDraft">
+    <BsRecordActionDialog v-model:visible="editorOpen" :title="editingId ? t('sales.editDraft') : t('sales.newSale')" :dirty="editorDirty" :pending="saving || issuing" :error="editorError" size="lg" @submit="saveDraft">
           <p v-if="catalogError" role="alert">{{ t('sales.catalogError') }} <BsButton @click="refreshCatalog()">{{ t('common.retry') }}</BsButton></p>
           <div class="grid gap-4 sm:grid-cols-2">
             <label class="space-y-2 text-sm font-bold">{{ t('sales.customer') }}<BsSelect v-model="customerId" :label="t('sales.customer')" :options="[{ id: '', name: t('sales.selectCustomer') }, ...(catalog?.customers ?? [])]" option-label="name" option-value="id" filter virtual :disabled="catalogPending || saving || issuing" /></label>
@@ -381,9 +379,7 @@ function handlePage(event: { page: number }) { page.value = event.page + 1 }
             </div>
           </div>
           <div class="rounded-xl bg-muted p-4"><p class="text-sm">{{ t('sales.previewNotice') }}</p><p class="mt-1 text-sm">{{ t('sales.stockNotice') }}</p><p class="mt-3 text-xl font-extrabold">{{ t('sales.total') }}: {{ money(previewTotal) }}</p></div>
-          <div class="flex flex-wrap gap-2"><BsButton type="submit" class="ls-btn" :disabled="saving || issuing">{{ saving ? t('sales.saving') : t('sales.saveDraft') }}</BsButton><BsButton v-if="salePage?.canIssue" type="button" class="ls-btn ls-btn-primary" :disabled="saving || issuing" @click="issue">{{ issuing ? t('sales.issuing') : t(customerId ? 'sales.issue' : 'sales.checkout') }}</BsButton><BsButton type="button" class="ls-btn" :disabled="saving || issuing" @click="close">{{ t('sales.cancel') }}</BsButton></div>
-        </BsForm>
-      </template>
-    </BsDialog>
+      <template #actions="{ close }"><BsButton type="submit" :disabled="saving || issuing">{{ saving ? t('sales.saving') : t('sales.saveDraft') }}</BsButton><BsButton v-if="salePage?.canIssue" type="button" variant="primary" :disabled="saving || issuing" @click="issue">{{ issuing ? t('sales.issuing') : t(customerId ? 'sales.issue' : 'sales.checkout') }}</BsButton><BsButton type="button" :disabled="saving || issuing" @click="close">{{ t('sales.cancel') }}</BsButton></template>
+    </BsRecordActionDialog>
   </div>
 </template>

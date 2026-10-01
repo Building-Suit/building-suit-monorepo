@@ -95,13 +95,13 @@ watchEffect(async () => {
 </script>
 
 <template>
-  <form class="ls-auth-card w-full space-y-5 p-6 text-start sm:p-8" :data-client-ready="clientReady ? 'true' : 'false'" @submit.prevent="onSubmit">
+  <BsForm class="ls-auth-card w-full space-y-5 p-6 text-start sm:p-8" :data-client-ready="clientReady ? 'true' : 'false'" @submit.prevent="onSubmit">
     <div class="text-center"><p class="ls-auth-eyebrow">Shop Suit</p><h1 class="mt-2 text-xl font-extrabold tracking-[-.03em]">{{ t('auth.loginTitle') }}</h1><p class="mt-2 text-sm text-fg-muted">{{ t('auth.loginSubtitle') }}</p></div>
     <FloatingField :label="t('auth.email')"><InputText id="login-email" v-model="email" type="email" autocomplete="email" required dir="ltr" class="ls-input" /></FloatingField>
     <FloatingField :label="t('auth.password')"><InputText id="login-password" v-model="password" type="password" autocomplete="current-password" required dir="ltr" class="ls-input" /></FloatingField>
     <NuxtLink to="/auth/forgot-password" class="text-xs text-fg-muted underline">{{ t('auth.forgotPassword') }}</NuxtLink>
     <p v-if="errorMessage" role="alert" class="ls-error">{{ errorMessage }}</p>
-    <button type="submit" :disabled="pending" class="ls-btn ls-btn-primary w-full">{{ t('auth.loginAction') }}</button>
+    <BsButton type="submit" :disabled="pending" class="ls-btn ls-btn-primary w-full">{{ t('auth.loginAction') }}</BsButton>
     <p class="text-center text-sm text-fg-muted">{{ t('auth.noAccount') }} <NuxtLink to="/auth/signup" class="font-bold text-fg underline underline-offset-4">{{ t('auth.signupAction') }}</NuxtLink></p>
-  </form>
+  </BsForm>
 </template>

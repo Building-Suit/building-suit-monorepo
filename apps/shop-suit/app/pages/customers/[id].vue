@@ -307,9 +307,7 @@ const overdueCount = computed(() => overdue.value.total)
 
       <section class="rounded-2xl border border-border bg-card p-5"><h2 class="text-lg font-bold">{{ t('customers.statement') }}</h2><p v-if="statementError" role="alert" class="mt-4 text-sm text-fg">{{ t('payments.loadError') }} <BsButton type="button" class="font-bold underline" @click="refreshStatement()">{{ t('common.retry') }}</BsButton></p><div v-else class="mt-4 overflow-x-auto"><BsDataTable :value="statement.items" :label="t('customers.statement')" lazy paginator :rows="statementPageSize" :first="(statementPageNumber - 1) * statementPageSize" :total-records="statement.total" :loading="statementPending" data-key="event_id" :row-class="() => 'border-t border-border'" @page="statementPageNumber = $event.page + 1"><Column header-class="px-4 py-3 text-start" body-class="px-4 py-3"><template #header>{{ t('sales.date') }}</template><template #body="{ data: event }">{{ formatDate(event.event_at) }}</template></Column><Column header-class="px-4 py-3 text-start" body-class="px-4 py-3"><template #header>{{ t('payments.event') }}</template><template #body="{ data: event }"><p class="font-bold">{{ t(`payments.events.${event.event_type}`) }}</p><NuxtLink :to="`/sales/${event.invoice_id}`" class="text-[var(--bs-link)]">{{ event.document_number }}</NuxtLink></template></Column><Column header-class="px-4 py-3 text-end" body-class="px-4 py-3 text-end"><template #header>{{ t('payments.debit') }}</template><template #body="{ data: event }">{{ Number(event.debit) ? money(Number(event.debit)) : '—' }}</template></Column><Column header-class="px-4 py-3 text-end" body-class="px-4 py-3 text-end"><template #header>{{ t('payments.credit') }}</template><template #body="{ data: event }">{{ Number(event.credit) ? money(Number(event.credit)) : '—' }}</template></Column><Column header-class="px-4 py-3 text-end" body-class="px-4 py-3 text-end font-bold"><template #header>{{ t('payments.runningBalance') }}</template><template #body="{ data: event }">{{ money(Number(event.running_balance)) }}</template></Column><template #empty><p class="p-6 text-center text-sm text-muted-foreground">{{ t('customers.noStatement') }}</p></template></BsDataTable></div></section>
 
-      <BsDialog v-model:visible="receiptOpen" :title="t('payments.recordReceipt')" :dirty="receiptDirty" :pending="receiptPending">
-        <template #default="{ close }">
-          <BsForm class="space-y-4" :pending="receiptPending" :error="receiptError" @submit="saveReceipt">
+      <BsRecordActionDialog v-model:visible="receiptOpen" :title="t('payments.recordReceipt')" :dirty="receiptDirty" :pending="receiptPending" :error="receiptError" :submit-label="t('payments.save')" :cancel-label="t('customers.cancel')" :submit-disabled="receiptAmount <= 0" size="lg" @submit="saveReceipt">
             <p class="text-sm text-muted-foreground">{{ t('payments.allocateInvoices') }}</p>
             <BsDataTable :value="outstanding.items" :label="t('customers.receivables')" :loading="outstandingPending" :error="outstandingError ? t('payments.loadError') : null" lazy paginator :rows="outstandingPageSize" :first="(outstandingPage - 1) * outstandingPageSize" :total-records="outstanding.total" @page="outstandingPage = $event.page + 1" @retry="refreshOutstanding()">
               <Column :header="t('sales.invoiceNumber')"><template #body="{ data: invoice }">{{ invoice.invoice_number }}<p>{{ t('payments.outstanding') }}: {{ money(Number(invoice.outstanding)) }}</p></template></Column>
@@ -322,26 +320,15 @@ const overdueCount = computed(() => overdue.value.total)
               <label class="space-y-2 text-sm font-bold">{{ t('payments.reference') }}<input v-model="receiptReference" maxlength="200" class="ls-input"></label>
               <label class="space-y-2 text-sm font-bold">{{ t('payments.notes') }}<input v-model="receiptNotes" maxlength="2000" class="ls-input"></label>
             </div>
-            <div class="flex gap-2"><BsButton type="submit" class="ls-btn ls-btn-primary" :disabled="receiptPending || receiptAmount <= 0">{{ t('payments.save') }}</BsButton><BsButton type="button" class="ls-btn" :disabled="receiptPending" @click="close">{{ t('customers.cancel') }}</BsButton></div>
-          </BsForm>
-        </template>
-      </BsDialog>
+      </BsRecordActionDialog>
 
-      <BsDialog v-model:visible="showForm" :title="t('customers.editTitle')" :dirty="formDirty" :pending="saving">
-        <template #default="{ close }">
-          <BsForm class="grid gap-4 sm:grid-cols-2" :pending="saving" :error="actionError" @submit="save">
+      <BsRecordActionDialog v-model:visible="showForm" :title="t('customers.editTitle')" :dirty="formDirty" :pending="saving" :error="actionError" :submit-label="t('customers.save')" :cancel-label="t('customers.cancel')" @submit="save">
             <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ t('customers.name') }}<input v-model="form.name" type="text" minlength="2" maxlength="160" required class="ls-input"></label>
             <label class="space-y-2 text-sm font-bold">{{ t('customers.phone') }}<input v-model="form.phone" type="tel" maxlength="50" autocomplete="tel" class="ls-input"></label>
             <label class="space-y-2 text-sm font-bold">{{ t('customers.email') }}<input v-model="form.email" type="email" maxlength="254" autocomplete="email" class="ls-input"></label>
             <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ t('customers.address') }}<textarea v-model="form.address" maxlength="500" rows="2" class="ls-input" /></label>
             <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ t('customers.notes') }}<textarea v-model="form.notes" maxlength="2000" rows="3" class="ls-input" /></label>
-            <div class="flex flex-wrap gap-2 sm:col-span-2">
-              <BsButton type="submit" class="ls-btn ls-btn-primary" :disabled="saving">{{ saving ? t('customers.saving') : t('customers.save') }}</BsButton>
-              <BsButton type="button" class="ls-btn" :disabled="saving" @click="close">{{ t('customers.cancel') }}</BsButton>
-            </div>
-          </BsForm>
-        </template>
-      </BsDialog>
+      </BsRecordActionDialog>
     </template>
   </div>
 </template>

@@ -22,7 +22,7 @@ async function logout() {
     :groups="[]"
     :labels="{ close: copy.close, open: copy.open, navigation: copy.navigation, dashboard: copy.dashboard }"
   >
-    <template #logo><AppLogo /></template>
+    <template #logo><BsProductLogo name="Shop Suit" asset-prefix="/brand/shop-suit" /></template>
     <template #context><p class="px-3 text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">{{ copy.console }}</p></template>
     <template #header>
       <SettingsMenu />
