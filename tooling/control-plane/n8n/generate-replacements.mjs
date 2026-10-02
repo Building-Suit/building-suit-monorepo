@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { validateControllerReplacements } from '../lib/n8n-workflows.mjs'
@@ -166,12 +167,34 @@ const validation = validateControllerReplacements(workflows)
 if (!validation.valid) throw new Error(`generated_workflow_validation_failed:${validation.errors.join(',')}`)
 
 const files = new Map(workflows.map(workflow => [`${workflow.id}.json`, `${JSON.stringify(workflow, null, 2)}\n`]))
+const sha256 = value => createHash('sha256').update(value).digest('hex')
 const manifest = {
-  version: 1,
+  version: 2,
   task_id: 'CP-RES-007',
-  source_snapshot: { exported_at: '2026-10-02T14:24:40.777Z', source: 'container-cli', fixture: '../fixtures/live-2026-10-02.json' },
+  source_snapshot: {
+    exported_at: '2026-10-02T14:24:40.777Z',
+    source: 'container-cli',
+    fixture: '../fixtures/live-2026-10-02.json',
+    sha256: '068636531fa71de2fb37944bc6b896dca827ab9f7268ee3dad6b1ecf87f460d7',
+  },
   runner_workflow_id: runnerWorkflowId,
-  replacements: workflows.map(workflow => ({ name: workflow.name, live_id: workflow.id, artifact: `${workflow.id}.json`, preserves_identity: true, generated_active: false })),
+  replacements: workflows.map(workflow => {
+    const artifact = `${workflow.id}.json`
+    return {
+      name: workflow.name,
+      live_id: workflow.id,
+      artifact,
+      sha256: sha256(files.get(artifact)),
+      preserves_identity: true,
+      generated_active: false,
+    }
+  }),
+  acceptance_gate: {
+    task_id: 'CP-RES-009',
+    command: 'node tooling/control-plane/resilience/run-acceptance.mjs --check',
+    machine_report: '../../resilience/reports/cutover-readiness.json',
+    human_report: '../../resilience/reports/cutover-readiness.md',
+  },
   runtime_mutation_performed: false,
 }
 files.set('manifest.json', `${JSON.stringify(manifest, null, 2)}\n`)

@@ -37,7 +37,8 @@
     "agent:preflight": "node tooling/git/preflight.mjs",
     "agent:pr-check": "node tooling/git/check-pr.mjs",
     "automation": "node tooling/control-plane/automation.mjs",
-    "automation:n8n:export": "node tooling/control-plane/n8n/export.mjs"
+    "automation:n8n:export": "node tooling/control-plane/n8n/export.mjs",
+    "automation:resilience": "node tooling/control-plane/resilience/run-acceptance.mjs --check"
   },
   "devDependencies": {
     "nuxt": "4.5.2",

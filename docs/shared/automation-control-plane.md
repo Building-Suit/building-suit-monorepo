@@ -145,9 +145,12 @@ Migration `021_external_state_watcher.sql` adds the non-AI external watcher used
 ```sh
 pnpm automation:n8n:export
 pnpm automation n8n inspect
+pnpm automation:resilience
 ```
 
 The exporter uses the n8n public API when `N8N_API_URL` and `N8N_API_KEY` are configured. Otherwise it uses the supported `n8n export:workflow` CLI inside `N8N_CONTAINER_NAME` (default `n8n`). It writes normalized JSON and a human-readable graph under ignored `.local/automation/n8n/`. It never reads or mutates n8n's internal database and never imports a workflow.
+
+`automation:resilience` is the deterministic CP-RES-009 acceptance gate. It exercises interruption boundaries across implementation, verification and publication; external waits and lease recovery; focused versus milestone verification; parent satisfaction and no-change handling; publication scope; continuous-run stops; and repeated supervisor, watcher and publisher reconciliation. It also validates the generated BS-10, BS-20 and BS-21 replacements, their manifest digests and the immutable sanitized pre-cutover export digest. The command runs in check mode, reads only repository fixtures, makes no AI calls, and never contacts or mutates live n8n. Machine-readable and human-readable evidence live in `tooling/control-plane/resilience/reports/`; `cutover_ready` is true only when every mandatory scenario passes. Live activation remains a separate explicitly authorized operation.
 
 ## Dashboard
 

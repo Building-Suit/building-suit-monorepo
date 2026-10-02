@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { readFile } from 'node:fs/promises'
+import { runResilienceAcceptance } from '../resilience/acceptance.mjs'
 import { inspectWorkflowSnapshot, normalizeWorkflow, validateControllerReplacements, workflowGraphSummary } from '../lib/n8n-workflows.mjs'
 import { continuousRunTransition, normalizeSupervisorResult, resumeSchedule } from '../lib/n8n-controller.mjs'
 import { validateProjectConfig } from '../lib/project-config.mjs'
@@ -196,6 +197,55 @@ test('sanitized n8n fixture records the verified live baseline', async () => {
   assert.deepEqual(inspectWorkflowSnapshot(fixture.workflows).findings.map(finding => finding.code), [
     'n8n_owned_retry_graph', 'hardcoded_registry_options', 'hardcoded_registry_options',
   ])
+})
+
+test('resilience acceptance covers mandatory crash recovery and emits a strict cutover gate', async () => {
+  const { readdir } = await import('node:fs/promises')
+  const artifactRoot = new URL('../n8n/artifacts/', import.meta.url)
+  const files = (await readdir(artifactRoot)).filter(file => file.endsWith('.json') && file !== 'manifest.json')
+  const workflows = await Promise.all(files.map(async file => JSON.parse(await readFile(new URL(file, artifactRoot), 'utf8'))))
+  const manifest = JSON.parse(await readFile(new URL('manifest.json', artifactRoot), 'utf8'))
+  const baselineFixture = await readFile(new URL('../n8n/fixtures/live-2026-10-02.json', import.meta.url))
+  const report = runResilienceAcceptance({ workflows, manifest, baselineFixture })
+
+  assert.equal(report.cutover_ready, true)
+  assert.equal(report.summary.failed, 0)
+  assert.equal(report.live_n8n_contacted, false)
+  assert.equal(report.destructive_faults_used, false)
+  assert.ok(report.summary.mandatory >= 25)
+  for (const scenario of report.scenarios) {
+    assert.equal(scenario.result, 'pass', scenario.id)
+    assert.equal(typeof scenario.injected_fault, 'string')
+    assert.ok(scenario.expected_recovery_path.length > 0, scenario.id)
+    assert.ok(scenario.observed_recovery_path.length > 0, scenario.id)
+    assert.deepEqual(Object.keys(scenario.counts), [
+      'implementation_attempts',
+      'verification_runs',
+      'publication_attempts',
+      'ai_calls',
+      'implementation_retry_budget_consumed',
+    ])
+  }
+
+  const requiredScenarios = [
+    'interrupt-before-implementation-execution',
+    'interrupt-during-implementation',
+    'interrupt-after-passed-verification',
+    'interrupt-after-pr-creation',
+    'active-controller-lease-collision',
+    'expired-controller-lease-reclamation',
+    'focused-repair-exhaustion',
+    'milestone-required-check-contract',
+    'evidence-backed-parent-satisfaction',
+    'ambiguous-publication-scope',
+    'stop-request-safe-boundary',
+    'generated-n8n-replacement-compatibility',
+    'pre-cutover-live-export-integrity',
+  ]
+  assert.deepEqual(
+    requiredScenarios.filter(id => !report.scenarios.some(scenario => scenario.id === id)),
+    [],
+  )
 })
 
 test('thin controller schedules only persisted automatic recovery states', () => {

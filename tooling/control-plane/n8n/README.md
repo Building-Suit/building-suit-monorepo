@@ -10,11 +10,20 @@ Generate and validate locally:
 node tooling/control-plane/n8n/generate-replacements.mjs
 node tooling/control-plane/n8n/generate-replacements.mjs --check
 node tooling/control-plane/n8n/validate-replacements.mjs
+pnpm automation:resilience
 ```
 
 These commands only read and write repository files. They do not import,
 activate, disable, or update a running n8n instance. Runtime review and cutover
 are intentionally outside CP-RES-007.
+
+The resilience command is the CP-RES-009 cutover-readiness gate. It deterministically
+injects controller failures into repository-side fixtures, validates crash/resume,
+leases, verification, publication, stop/run and watcher behavior, and checks the
+generated replacement and baseline-export digests. Its committed machine-readable
+and human-readable results are under `../resilience/reports/`. Check mode is read-only
+and fails if either report is stale. The gate does not contact or mutate live n8n;
+activation still requires explicit operator authorization.
 
 The controller contract is:
 

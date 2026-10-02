@@ -1,10 +1,11 @@
 {
-  "version": 1,
+  "version": 2,
   "task_id": "CP-RES-007",
   "source_snapshot": {
     "exported_at": "2026-10-02T14:24:40.777Z",
     "source": "container-cli",
-    "fixture": "../fixtures/live-2026-10-02.json"
+    "fixture": "../fixtures/live-2026-10-02.json",
+    "sha256": "068636531fa71de2fb37944bc6b896dca827ab9f7268ee3dad6b1ecf87f460d7"
   },
   "runner_workflow_id": "rzoRWvnSBG7sU1Oh",
   "replacements": [
@@ -12,6 +13,7 @@
       "name": "BS-10 — Task Engine",
       "live_id": "9aWPOijyhfmnEtRy",
       "artifact": "9aWPOijyhfmnEtRy.json",
+      "sha256": "28020c28af319a88f9ed49a46826a9704fa1eabec6fb870b81d953040936701b",
       "preserves_identity": true,
       "generated_active": false
     },
@@ -19,6 +21,7 @@
       "name": "BS-20 — Continue Suit",
       "live_id": "pg0BEkbP9E4H4RqB",
       "artifact": "pg0BEkbP9E4H4RqB.json",
+      "sha256": "b9fc0cc468a2b406764e02d4e3a40270ac1c450a2db465e3ab2b45041b1c772f",
       "preserves_identity": true,
       "generated_active": false
     },
@@ -26,9 +29,16 @@
       "name": "BS-21 — Stop Suit Run",
       "live_id": "qHGzP3b0PS82IYSw",
       "artifact": "qHGzP3b0PS82IYSw.json",
+      "sha256": "e45240dcf33c5e3b6413b185c76941ea61948f8d2ae2c703aa2a1a3c1743e8ae",
       "preserves_identity": true,
       "generated_active": false
     }
   ],
+  "acceptance_gate": {
+    "task_id": "CP-RES-009",
+    "command": "node tooling/control-plane/resilience/run-acceptance.mjs --check",
+    "machine_report": "../../resilience/reports/cutover-readiness.json",
+    "human_report": "../../resilience/reports/cutover-readiness.md"
+  },
   "runtime_mutation_performed": false
 }
