@@ -37,6 +37,16 @@ import {
   fingerprint as preflightFingerprint,
 } from './task-preflight.mjs'
 import { evaluateParentSatisfaction } from './parent-satisfaction.mjs'
+import {
+  WATCHER_LEASE_MS,
+  WATCHER_MAX_BATCH,
+  classifyControlProbe,
+  githubProbeCommand,
+  githubProbeObservation,
+  normalizeWatchDescriptor,
+  watchDescriptorForRecovery,
+  watchTransition,
+} from './external-state-watcher.mjs'
 const automationCodexHome =
   process.env.BS_CODEX_HOME ??
   path.join(
@@ -4858,6 +4868,8 @@ function recordSupervisorRecovery(snapshot, plan, options = {}) {
     command: plan.command ?? null,
     ...(options.condition ?? {}),
   }
+  const watch = watchDescriptorForRecovery(snapshot, plan, options)
+  if (watch && !condition.watch) condition.watch = watch
   const metadata = {
     supervisor: 'task-supervisor-v1',
     ...(options.metadata ?? {}),
@@ -4900,6 +4912,172 @@ function recordSupervisorRecovery(snapshot, plan, options = {}) {
   )
 
   return parseControlJson(result)
+}
+
+
+function claimDueExternalRecovery(owner, token) {
+  const result = controlQuery(
+    `
+      SELECT control.claim_due_external_recovery(
+        :'owner', :'token', :'lease_seconds'::integer
+      );
+    `,
+    {
+      owner,
+      token,
+      lease_seconds: String(WATCHER_LEASE_MS / 1000),
+    },
+  )
+  return parseControlJson(result)
+}
+
+
+function probeControlDependency(descriptor) {
+  if (descriptor.kind === 'control-execution') {
+    return classifyControlProbe(descriptor, parseControlJson(controlQuery(
+      `SELECT to_jsonb(e) FROM control.executions e WHERE e.execution_id = :'execution_id'::bigint;`,
+      { execution_id: String(descriptor.execution_id) },
+    )))
+  }
+
+  if (descriptor.kind === 'control-task-dependencies') {
+    return classifyControlProbe(descriptor, parseControlJson(controlQuery(
+      `
+        SELECT COALESCE(jsonb_agg(jsonb_build_object(
+          'task_id', t.task_id, 'status', t.status
+        ) ORDER BY t.task_id), '[]'::jsonb)
+        FROM control.tasks t
+        WHERE t.task_id IN (
+          SELECT jsonb_array_elements_text(:'task_ids'::jsonb)
+        );
+      `,
+      { task_ids: JSON.stringify(descriptor.task_ids) },
+    )))
+  }
+
+  return classifyControlProbe(descriptor, parseControlJson(controlQuery(
+    `
+      SELECT COALESCE(jsonb_agg(jsonb_build_object(
+        'task_id', t.task_id, 'status', t.status, 'engine_stage', t.engine_stage
+      ) ORDER BY t.task_id), '[]'::jsonb)
+      FROM control.tasks t
+      WHERE t.project_id = :'project_id'::uuid
+        AND t.workstream_slug = :'workstream_slug'
+        AND t.task_id <> :'task_id'
+        AND t.status IN ('in_progress', 'verification', 'passed', 'failed');
+    `,
+    {
+      project_id: descriptor.project_id,
+      workstream_slug: descriptor.workstream_slug,
+      task_id: descriptor.task_id,
+    },
+  )))
+}
+
+
+function probeExternalDependency(descriptor) {
+  if (descriptor.kind.startsWith('control-')) return probeControlDependency(descriptor)
+  const result = execute('gh', githubProbeCommand(descriptor), {
+    timeout: 30 * 1000,
+  })
+  return githubProbeObservation(descriptor, result)
+}
+
+
+function recordExternalWatchResult(recovery, token, transition) {
+  const result = controlQuery(
+    `
+      SELECT control.record_external_watch_result(
+        :'resume_identity', :'lease_token', :'observation'::jsonb,
+        :'actionable'::boolean, :'poll_count'::integer,
+        :'next_wake_at'::timestamptz, 'external-watcher'
+      );
+    `,
+    {
+      resume_identity: recovery.resume_identity,
+      lease_token: token,
+      observation: JSON.stringify(transition.observation),
+      actionable: transition.actionable ? 'true' : 'false',
+      poll_count: String(transition.poll_count),
+      next_wake_at: transition.next_wake_at,
+    },
+  )
+  return parseControlJson(result)
+}
+
+
+function externalWatcher() {
+  const requestedLimit = args[0] == null ? 10 : Number(args[0])
+  if (!Number.isSafeInteger(requestedLimit) || requestedLimit < 1 || requestedLimit > WATCHER_MAX_BATCH) {
+    output({ ok: false, command: 'external-watch', error: 'watch_limit_must_be_between_1_and_25' }, 64)
+    return
+  }
+
+  const owner = `${process.pid}@${process.env.HOSTNAME ?? 'local'}`
+  const results = []
+  try {
+    for (let index = 0; index < requestedLimit; index++) {
+      const token = randomUUID()
+      const recovery = claimDueExternalRecovery(owner, token)
+      if (!recovery) break
+
+      const descriptor = normalizeWatchDescriptor(recovery)
+      if (!descriptor) {
+        throw new Error(`claimed_recovery_has_invalid_watch_descriptor:${recovery.resume_identity}`)
+      }
+
+      const observedAt = new Date()
+      const observation = probeExternalDependency(descriptor)
+      const transition = watchTransition(recovery, observation, observedAt)
+      const recorded = recordExternalWatchResult(recovery, token, transition)
+      let resume = null
+
+      if (recorded?.applied && transition.actionable && validTaskId(recovery.current_task_id)) {
+        const child = invokeTaskAction('task-supervise', recovery.current_task_id)
+        resume = {
+          invoked: true,
+          ok: child.payload?.ok === true,
+          status: child.payload?.status ?? null,
+          reason: child.payload?.reason ?? child.payload?.error ?? null,
+        }
+      }
+
+      results.push({
+        resume_identity: recovery.resume_identity,
+        task_id: recovery.current_task_id,
+        dependency: descriptor,
+        observation,
+        changed: transition.changed,
+        actionable: transition.actionable,
+        next_wake_at: transition.next_wake_at,
+        poll_count: transition.poll_count,
+        persisted: recorded,
+        resume,
+      })
+
+      // An actionable row stays due until the supervisor durably advances it.
+      // End this bounded invocation so a failed/crashed resume cannot cause an
+      // immediate reclaim loop in the same process.
+      if (transition.actionable) break
+    }
+
+    output({
+      ok: true,
+      command: 'external-watch',
+      checked: results.length,
+      limit: requestedLimit,
+      results,
+    })
+  }
+  catch (error) {
+    output({
+      ok: false,
+      command: 'external-watch',
+      error: error.message,
+      checked: results.length,
+      results,
+    }, 1)
+  }
 }
 
 
@@ -6156,6 +6334,10 @@ switch (command) {
     taskSupervisor()
     break
 
+  case 'external-watch':
+    externalWatcher()
+    break
+
   case 'task-engine':
     taskEngine()
     break
@@ -6205,6 +6387,7 @@ switch (command) {
         'task-publish <task-id>',
         'task-execution-preflight <task-id>',
         'task-supervise <task-id>',
+        'external-watch [limit]',
         'task-engine <task-id>',
         'run-start <suit> <max-tasks>',
         'run-check <run-id>',

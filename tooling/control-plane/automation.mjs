@@ -224,6 +224,10 @@ async function main() {
   if (resource === 'task' && ['prepare','run','verify','retry','publish','engine'].includes(action)) return delegate(`task-${action}`, positional())
   if (resource === 'task' && action === 'supervise') return delegate('task-supervise', positional())
   if (resource === 'task' && action === 'resume') return delegate('task-engine', positional())
+  if (resource === 'watcher' && action === 'run') {
+    const limit = flag('limit', '10')
+    return delegate('external-watch', [String(limit)])
+  }
   if (resource === 'task' && ['reverify','reopen-verification'].includes(action)) {
     const id = positional(); query(`SELECT control.reopen_verification(:'task','human',:'reason');`, { task:id,reason:String(flag('reason','operator requested reverification')) })
     return action === 'reverify' ? delegate('task-verify', id) : output({ ok:true,task_id:id,status:'verification' })

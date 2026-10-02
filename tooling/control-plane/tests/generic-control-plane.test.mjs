@@ -12,6 +12,19 @@ import {
   supervisorResumeIdentity,
 } from '../runner/task-supervisor.mjs'
 import {
+  WATCHER_MAX_BACKOFF_MS,
+  WATCHER_MIN_BACKOFF_MS,
+  boundedWatcherBackoff,
+  classifyControlProbe,
+  classifyGithubProbe,
+  githubProbeCommand,
+  githubProbeObservation,
+  isDueExternalRecovery,
+  normalizeWatchDescriptor,
+  watchDescriptorForRecovery,
+  watchTransition,
+} from '../runner/external-state-watcher.mjs'
+import {
   evaluateExecutionPreflight,
   fingerprint,
 } from '../runner/task-preflight.mjs'
@@ -198,6 +211,168 @@ test('thin controller schedules only persisted automatic recovery states', () =>
   const lease = normalizeSupervisorResult({ payload: { ok: true, status: 'wait', reason: 'supervisor_lease_active', lease_expires_at: '2026-10-02T12:10:00.000Z' } }, now)
   assert.equal(lease.automatic_resume, true)
   assert.equal(lease.lease_active, true)
+})
+
+test('external watcher enumerates only due automatic waits and reclaims expired leases', () => {
+  const now = new Date('2026-10-02T12:00:00.000Z')
+  const recovery = {
+    status: 'active', recoverable: true, next_action: 'wait-external',
+    next_wake_at: '2026-10-02T11:59:00.000Z',
+    condition: { watch: { kind: 'github-reachability', repository: 'Building-Suit/building-suit-monorepo' } },
+  }
+  assert.equal(isDueExternalRecovery(recovery, now), true)
+  assert.equal(isDueExternalRecovery({ ...recovery, lease_expires_at: '2026-10-02T11:59:59.000Z' }, now), true)
+  assert.equal(isDueExternalRecovery({ ...recovery, lease_expires_at: '2026-10-02T12:00:01.000Z' }, now), false)
+  assert.equal(isDueExternalRecovery({ ...recovery, next_action: 'reconcile-publication' }, now), true)
+  assert.equal(isDueExternalRecovery({ ...recovery, next_action: 'reconcile-repository' }, now), true)
+
+  for (const nextAction of ['wait-decision', 'wait-operator', 'safety-stop']) {
+    assert.equal(isDueExternalRecovery({ ...recovery, next_action: nextAction }, now), false)
+  }
+  assert.equal(isDueExternalRecovery({ ...recovery, status: 'resolved' }, now), false)
+  assert.equal(isDueExternalRecovery({ ...recovery, condition: {} }, now), false)
+})
+
+test('external watcher validates narrow GitHub dependency descriptors and commands', () => {
+  const branchRecovery = {
+    condition: { watch: {
+      kind: 'github-branch', repository: 'Building-Suit/building-suit-monorepo',
+      branch: 'codex/control-plane/cp-res-008', expected: 'present',
+    } },
+  }
+  const descriptor = normalizeWatchDescriptor(branchRecovery)
+  assert.equal(descriptor.kind, 'github-branch')
+  assert.deepEqual(githubProbeCommand(descriptor), [
+    'api',
+    'repos/Building-Suit/building-suit-monorepo/git/ref/heads/codex%2Fcontrol-plane%2Fcp-res-008',
+  ])
+  assert.equal(normalizeWatchDescriptor({ condition: { watch: { kind: 'unknown', repository: 'a/b' } } }), null)
+})
+
+test('GitHub watcher distinguishes unavailable, missing, pending, and actionable state', () => {
+  const reachability = { kind: 'github-reachability', repository: 'Building-Suit/building-suit-monorepo' }
+  const unavailable = classifyGithubProbe(reachability, { unavailable: true, error: 'timeout' })
+  assert.equal(unavailable.state, 'unavailable')
+  assert.equal(
+    unavailable.fingerprint,
+    classifyGithubProbe(reachability, { unavailable: true, error: 'connection reset' }).fingerprint,
+  )
+  assert.equal(classifyGithubProbe(reachability, { data: { id: 1 } }).actionable, true)
+
+  const branch = { kind: 'github-branch', repository: reachability.repository, branch: 'codex/example', expected: 'present' }
+  assert.equal(classifyGithubProbe(branch, { missing: true }).state, 'missing')
+  assert.equal(classifyGithubProbe(branch, { data: { object: { sha: '1'.repeat(40) } } }).actionable, true)
+
+  const pullRequest = { kind: 'github-pull-request', repository: reachability.repository, pull_request: 17 }
+  assert.equal(classifyGithubProbe(pullRequest, { missing: true }).actionable, false)
+  assert.equal(classifyGithubProbe(pullRequest, { data: { state: 'OPEN', headRefOid: '2'.repeat(40) } }).actionable, true)
+  const mergedPullRequest = { ...pullRequest, expected_states: ['MERGED'] }
+  assert.equal(classifyGithubProbe(mergedPullRequest, { data: { state: 'OPEN' } }).actionable, false)
+  assert.equal(classifyGithubProbe(mergedPullRequest, { data: { state: 'MERGED' } }).actionable, true)
+
+  const checks = { kind: 'github-checks', repository: reachability.repository, pull_request: 17 }
+  assert.equal(classifyGithubProbe(checks, { data: [{ name: 'verify', bucket: 'pending' }] }).state, 'pending')
+  assert.equal(classifyGithubProbe(checks, { data: [{ name: 'verify', bucket: 'pass' }] }).actionable, true)
+
+  assert.equal(githubProbeObservation(branch, {
+    code: 1, stderr: 'Could not resolve host: api.github.com', stdout: '',
+  }).state, 'unavailable')
+  assert.equal(githubProbeObservation(branch, {
+    code: 1, stderr: 'gh: Not Found (HTTP 404)', stdout: '',
+  }).state, 'missing')
+})
+
+test('external watcher observes only the persisted control-plane dependency', () => {
+  const execution = normalizeWatchDescriptor({
+    condition: { watch: { kind: 'control-execution', execution_id: 41 } },
+  })
+  assert.deepEqual(execution, { kind: 'control-execution', execution_id: 41 })
+  assert.equal(classifyControlProbe(execution, { status: 'running' }).actionable, false)
+  assert.equal(classifyControlProbe(execution, { status: 'succeeded' }).actionable, true)
+
+  const dependencies = normalizeWatchDescriptor({ condition: { watch: {
+    kind: 'control-task-dependencies', task_ids: ['CP-TEST-002', 'CP-TEST-001', 'CP-TEST-001'],
+  } } })
+  assert.deepEqual(dependencies.task_ids, ['CP-TEST-001', 'CP-TEST-002'])
+  assert.equal(classifyControlProbe(dependencies, [
+    { task_id: 'CP-TEST-001', status: 'complete' },
+    { task_id: 'CP-TEST-002', status: 'in_progress' },
+  ]).actionable, false)
+  assert.equal(classifyControlProbe(dependencies, [
+    { task_id: 'CP-TEST-001', status: 'complete' },
+    { task_id: 'CP-TEST-002', status: 'complete' },
+  ]).actionable, true)
+})
+
+test('supervisor persists precise watch descriptors for in-flight and prerequisite waits', () => {
+  const executionDescriptor = watchDescriptorForRecovery({}, {
+    next_action: 'wait-external', reason: 'execution_in_flight', execution: { execution_id: 41 },
+  })
+  assert.deepEqual(executionDescriptor, { kind: 'control-execution', execution_id: 41 })
+
+  const dependencyDescriptor = watchDescriptorForRecovery({ packet: { dependencies: [
+    { task_id: 'CP-TEST-001', dependency_type: 'hard', status: 'in_progress' },
+    { task_id: 'CP-TEST-002', dependency_type: 'soft', status: 'in_progress' },
+  ] } }, { next_action: 'wait-external', reason: 'hard_dependency_unsatisfied' })
+  assert.deepEqual(dependencyDescriptor, {
+    kind: 'control-task-dependencies', task_ids: ['CP-TEST-001'],
+  })
+})
+
+test('unchanged watcher polls advance only durable wake state with bounded backoff', () => {
+  const now = new Date('2026-10-02T12:00:00.000Z')
+  const observation = classifyGithubProbe(
+    { kind: 'github-checks', repository: 'Building-Suit/building-suit-monorepo', pull_request: 17 },
+    { data: [{ name: 'verify', bucket: 'pending' }] },
+  )
+  const recovery = { metadata: { watcher: { poll_count: 3, observation } } }
+  const transition = watchTransition(recovery, structuredClone(observation), now)
+  assert.equal(transition.changed, false)
+  assert.equal(transition.actionable, false)
+  assert.equal(transition.poll_count, 4)
+  assert.equal(transition.next_wake_at, '2026-10-02T12:08:00.000Z')
+  assert.equal(boundedWatcherBackoff(0), WATCHER_MIN_BACKOFF_MS)
+  assert.equal(boundedWatcherBackoff(100), WATCHER_MAX_BACKOFF_MS)
+})
+
+test('actionable watcher transition schedules the existing supervisor without an implementation attempt', () => {
+  const snapshot = {
+    packet: { project: { github_repository: 'Building-Suit/building-suit-monorepo' } },
+    publications: [{ pull_request_id: 1, pr_number: 17, state: 'open' }],
+  }
+  const descriptor = watchDescriptorForRecovery(snapshot, {
+    next_action: 'wait-external', reason: 'external_dependency_unavailable',
+  }, { metadata: { child_command: 'task-publish' } })
+  assert.equal(descriptor.kind, 'github-pull-request')
+
+  const prior = classifyGithubProbe(descriptor, { unavailable: true, error: 'timeout' })
+  const available = classifyGithubProbe(descriptor, { data: { state: 'OPEN', headRefOid: '3'.repeat(40) } })
+  const transition = watchTransition({ metadata: { watcher: { poll_count: 5, observation: prior } } }, available, new Date('2026-10-02T12:00:00.000Z'))
+  assert.equal(transition.changed, true)
+  assert.equal(transition.actionable, true)
+  assert.equal(transition.poll_count, 0)
+  assert.equal(transition.next_wake_at, '2026-10-02T12:00:00.000Z')
+})
+
+test('external watcher persistence is leased, crash-safe, idempotent, and retry-budget neutral', async () => {
+  const migration = await readFile(new URL('../sql/021_external_state_watcher.sql', import.meta.url), 'utf8')
+  const runner = await readFile(new URL('../runner/bs-agent.mjs', import.meta.url), 'utf8')
+  const watcher = runner.slice(runner.indexOf('function externalWatcher()'), runner.indexOf('function acquireSupervisorLease'))
+
+  assert.match(migration, /FOR UPDATE SKIP LOCKED/)
+  assert.match(migration, /lease_expires_at <= now\(\)/)
+  assert.match(migration, /next_action IN \(/)
+  assert.match(migration, /'reconcile-repository'/)
+  assert.match(migration, /'reconcile-publication'/)
+  assert.match(migration, /jsonb_typeof\(condition->'watch'\) = 'object'/)
+  assert.match(migration, /IF state_changed THEN/)
+  assert.match(migration, /interval '30 seconds'/)
+  assert.match(migration, /interval '15 minutes'/)
+  assert.match(migration, /'external_recovery_actionable'/)
+  assert.doesNotMatch(migration, /UPDATE control\.executions/)
+  assert.doesNotMatch(migration, /INSERT INTO control\.executions/)
+  assert.match(watcher, /invokeTaskAction\('task-supervise'/)
+  assert.doesNotMatch(watcher, /task-run|task-retry|codex/)
 })
 
 test('continuous controller preserves bounded run outcomes', () => {

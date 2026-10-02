@@ -52,6 +52,7 @@ pnpm automation task publish V2-IMP-013
 pnpm automation task reparent V2-IMP-013 --to-current-parent --dry-run
 pnpm automation task reparent V2-IMP-013 --to-current-parent
 pnpm automation task cancel V2-IMP-013 --reason "superseded"
+pnpm automation watcher run --limit 10
 
 pnpm automation execution list V2-IMP-013
 pnpm automation verification failures 123
@@ -136,6 +137,8 @@ Every state-changing database operation emits task and/or generic audit evidence
 Verified implementation attempts that later produce no publishable diff still use the bounded historical no-change repair/review path. Existing `allow_no_change_completion` metadata remains readable for compatibility, but it is not parent-satisfaction evidence; automatic pre-implementation completion requires the evidence contract above.
 
 Migration `018_failure_recovery_state.sql` provides the durable recovery contract consumed by `task supervise`. `control.failure_classes` and `control.recovery_actions` are the canonical vocabulary. `control.record_recovery_condition` stores the current task/execution/failure pointers, next action, recoverability, wake time, heartbeat and lease metadata under the stable `task:<task-id>` resume identity. Each distinct idempotency key advances the state version and appends an immutable recovery event plus a generic audit event; replaying the same key returns the recorded state without another write. `control.read_recovery_condition` resumes by identity, and `control.current_task_recovery_condition` reads the latest active condition for a task.
+
+Migration `021_external_state_watcher.sql` adds the non-AI external watcher used by `watcher run`. Only active, recoverable, due external/reconciliation conditions with an explicit `condition.watch` descriptor are eligible. A claim uses `FOR UPDATE SKIP LOCKED` and a two-minute durable lease; expired leases are reclaimable after a crash. Each claim probes exactly one named dependency: an execution, hard-task prerequisite, workstream serialization condition, or one GitHub reachability/branch/pull-request/check condition. Unchanged observations advance `next_wake_at` with a 30-second-to-15-minute bounded backoff without adding recovery or audit events. Changed observations record the probe evidence, and actionable observations invoke `task-supervise`; the watcher never creates an execution, consumes retry budget, or calls Codex itself. Decision, operator, resolved, non-recoverable and safety-stop conditions are never eligible. The command processes at most 25 claims per invocation and stops after an actionable claim, so a failed supervisor wake cannot form an in-process tight loop. It is safe for a periodic system timer or the thin n8n controller to invoke; wake scheduling remains authoritative in PostgreSQL rather than in the caller.
 
 ## n8n inspection
 

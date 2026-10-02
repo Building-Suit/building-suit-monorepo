@@ -28,3 +28,10 @@ The controller contract is:
   logical run.
 - BS-20 and BS-21 accept a workstream reference and validate it against active
   control-plane projects/workstreams before using its internal Suit routing key.
+
+The restricted runner also permits `bs-agent external-watch [1-25]`. A timer may
+invoke it as a thin trigger, but PostgreSQL owns due-time, lease, backoff and
+change-detection state. The watcher probes only the persisted dependency
+and calls `task-supervise` when it becomes actionable; it does not invoke Codex
+or own task lifecycle/retry behavior. No generated or running n8n workflow is
+changed or activated by this interface.
