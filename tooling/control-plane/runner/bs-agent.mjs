@@ -1824,18 +1824,34 @@ function recordControlFailure(
 function beginVerification(
   taskId,
   executionId,
+  verificationMode,
 ) {
   const result =
     controlQuery(
       `
-        SELECT jsonb_build_object(
-          'verification_run_id',
-          control.start_verification_run(
+        WITH existing AS (
+          SELECT verification_run_id
+          FROM control.verification_runs
+          WHERE execution_id = :'execution_id'::bigint
+            AND status = 'running'
+          ORDER BY verification_run_id DESC
+          LIMIT 1
+        ), started AS (
+          SELECT control.start_verification_run(
             :'task_id',
             :'execution_id'::bigint,
-            'runner'
-          )
-        );
+            'runner',
+            jsonb_build_object('verification_mode', :'verification_mode')
+          ) AS verification_run_id
+        )
+        SELECT jsonb_build_object(
+          'verification_run_id', vr.verification_run_id,
+          'verification_mode', vr.verification_mode,
+          'resumed', EXISTS (SELECT 1 FROM existing)
+        )
+        FROM started
+        JOIN control.verification_runs vr
+          ON vr.verification_run_id = started.verification_run_id;
       `,
       {
         task_id:
@@ -1843,6 +1859,9 @@ function beginVerification(
 
         execution_id:
           String(executionId),
+
+        verification_mode:
+          verificationMode,
       },
     )
 
@@ -1898,6 +1917,14 @@ function skipUnselectedVerificationChecks(
         UPDATE control.verification_results
         SET status = 'skipped',
             summary = 'Not selected by the task-focused verification plan.',
+            metadata = COALESCE(metadata, '{}'::jsonb) || jsonb_build_object(
+              'selection_reason', 'not_selected_by_verifier',
+              'verification_mode', (
+                SELECT verification_mode
+                FROM control.verification_runs
+                WHERE verification_run_id = :'verification_run_id'::bigint
+              )
+            ),
             started_at = COALESCE(started_at, now()),
             finished_at = now(),
             elapsed_ms = 0
@@ -1942,7 +1969,8 @@ function recordVerification(
             :'log_path',
             :'elapsed_ms'::bigint,
             :'command',
-            :'required'::boolean
+            :'required'::boolean,
+            :'metadata'::jsonb
           )
         );
       `,
@@ -1977,6 +2005,14 @@ function recordVerification(
 
         required:
           check.required === false ? 'false' : 'true',
+
+        metadata:
+          JSON.stringify({
+            selection_reason:
+              check.selection_reason ?? 'unspecified',
+            verification_mode:
+              check.verification_mode ?? null,
+          }),
       },
     )
 
@@ -2104,14 +2140,20 @@ function taskVerify() {
       beginVerification(
       taskId,
       execution.execution_id,
+      packet.task.verification_mode ?? 'focused',
     )
 
     const verificationRunId =
       verificationRun.verification_run_id
 
-    queueVerificationChecks(
-      verificationRunId,
-    )
+    const verificationMode =
+      verificationRun.verification_mode
+
+    if (!verificationRun.resumed) {
+      queueVerificationChecks(
+        verificationRunId,
+      )
+    }
 
     const verifier =
       execute(
@@ -2129,6 +2171,7 @@ function taskVerify() {
           packetPath,
           verificationDirectory,
           String(verificationRunId),
+          verificationMode,
         ],
         {
           cwd:
@@ -2269,6 +2312,9 @@ function taskVerify() {
 
       verification_run_id:
         verificationRunId,
+
+      verification_mode:
+        verificationMode,
 
       result:
         finalResult,
@@ -2430,8 +2476,13 @@ function verificationFailures(
           '[]'::jsonb
         )
         FROM control.verification_results
-        WHERE execution_id =
-          :'execution_id'::bigint
+        WHERE verification_run_id = (
+          SELECT verification_run_id
+          FROM control.verification_runs
+          WHERE execution_id = :'execution_id'::bigint
+          ORDER BY verification_run_id DESC
+          LIMIT 1
+        )
           AND status IN (
             'fail',
             'not_run'

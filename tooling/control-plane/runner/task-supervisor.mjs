@@ -42,6 +42,7 @@ export function supervisorStateFingerprint(snapshot) {
     task: task && [
       task.task_id, task.status, task.engine_stage, task.model_profile,
       task.title, task.description, task.acceptance_criteria, task.verification_plan,
+      task.verification_mode,
     ],
     dependencies: snapshot.packet?.dependencies?.map(item =>
       [item.task_id, item.dependency_type, item.status],
@@ -64,7 +65,11 @@ export function supervisorStateFingerprint(snapshot) {
       [item.task_id, item.status, item.engine_stage],
     ),
     execution: execution && [execution.execution_id, execution.attempt, execution.status, execution.engine_stage],
-    verification: verification && [verification.verification_run_id, verification.status],
+    verification: verification && [
+      verification.verification_run_id,
+      verification.status,
+      verification.verification_mode ?? 'focused',
+    ],
     failure: failure && [failure.failure_id, failure.failure_class, failure.recovery_action, failure.resolved_at],
     publication: publication && [publication.pull_request_id, publication.pr_number, publication.state, publication.head_sha],
   })).digest('hex')

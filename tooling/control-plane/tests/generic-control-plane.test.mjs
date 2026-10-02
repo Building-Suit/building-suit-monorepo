@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { readFile } from 'node:fs/promises'
 import { inspectWorkflowSnapshot, normalizeWorkflow, workflowGraphSummary } from '../lib/n8n-workflows.mjs'
 import { validateProjectConfig } from '../lib/project-config.mjs'
 import { redact } from '../lib/redaction.mjs'
@@ -13,6 +14,12 @@ import {
   evaluateExecutionPreflight,
   fingerprint,
 } from '../runner/task-preflight.mjs'
+import {
+  applicationScopeSelected,
+  commandResultStatus,
+  customCheckSelection,
+  resolveVerificationMode,
+} from '../runner/verification-mode.mjs'
 
 test('retry policy requires one explicit profile per attempt', () => {
   assert.throws(() => validateRetryPolicy({ policy_id:'broken',max_attempts:5,attempt_profiles:['standard','standard','deep'] }), /count/)
@@ -94,6 +101,122 @@ test('focused browser verification collects all failures before repair', async (
   assert.match(verifier, /'--retries=0'/)
   assert.match(verifier, /'--repeat-each=2'/)
   assert.doesNotMatch(verifier, /--max-failures=1/)
+})
+
+test('focused control-plane verification ignores unrelated workspace typecheck failures', async () => {
+  const verifier = await readFile(
+    new URL('../runner/task-verifier.mjs', import.meta.url),
+    'utf8',
+  )
+  const selection = applicationScopeSelected({
+    appPath: 'tooling/control-plane',
+    changedFiles: ['tooling/control-plane/change.mjs'],
+    mode: 'focused',
+    verificationPlanText: '',
+  })
+
+  assert.equal(selection.selected, true)
+  assert.doesNotMatch(verifier, /name:\s*'root-typecheck'/)
+  assert.match(verifier, /appPackage\?\.name &&\s*applicationSelection\.selected/)
+})
+
+test('focused application verification selects relevant package checks', async () => {
+  const verifier = await readFile(
+    new URL('../runner/task-verifier.mjs', import.meta.url),
+    'utf8',
+  )
+  const selection = applicationScopeSelected({
+    appPath: 'apps/example',
+    changedFiles: ['apps/example/src/change.mjs'],
+    mode: 'focused',
+    verificationPlanText: '',
+  })
+
+  assert.deepEqual(selection, {
+    selected: true,
+    reason: 'changed_file_in_application_scope',
+  })
+  for (const name of ['app-typecheck', 'app-lint', 'app-unit', 'app-build']) {
+    assert.match(verifier, new RegExp(`'${name}'`))
+  }
+})
+
+test('verification modes select changed-path checks deterministically', () => {
+  const optional = {
+    name: 'docs-check',
+    program: 'node',
+    required: false,
+    changed_paths: ['docs/'],
+  }
+  assert.deepEqual(customCheckSelection({
+    check: optional,
+    changedFiles: ['tooling/control-plane/runner/task-verifier.mjs'],
+    mode: 'focused',
+  }), {
+    selected: false,
+    reason: 'optional_check_no_changed_path_match',
+  })
+
+  assert.deepEqual(customCheckSelection({
+    check: optional,
+    changedFiles: [],
+    mode: 'focused',
+    verificationPlanText: 'run docs-check',
+  }), {
+    selected: true,
+    reason: 'required_by_task_verification_plan',
+  })
+
+  const required = { ...optional, required: true }
+  assert.deepEqual(customCheckSelection({
+    check: required,
+    changedFiles: ['tooling/control-plane/runner/task-verifier.mjs'],
+    mode: 'milestone',
+  }), {
+    selected: true,
+    reason: 'required_by_milestone_contract',
+  })
+  assert.equal(resolveVerificationMode({ task: { task_type: 'release' } }), 'release')
+  assert.equal(applicationScopeSelected({
+    appPath: 'apps/example',
+    changedFiles: [],
+    mode: 'milestone',
+    verificationPlanText: '',
+  }).selected, true)
+})
+
+test('unavailable required milestone check is not_run instead of skipped', () => {
+  assert.equal(commandResultStatus({
+    required: true,
+    exitCode: 1,
+    errorCode: 'ENOENT',
+  }), 'not_run')
+  assert.equal(commandResultStatus({
+    required: false,
+    exitCode: 1,
+    errorCode: 'ENOENT',
+  }), 'skipped')
+})
+
+test('verification schema persists modes and reuses the running authoritative run', async () => {
+  const migration = await readFile(
+    new URL('../sql/019_verification_modes.sql', import.meta.url),
+    'utf8',
+  )
+  const runner = await readFile(
+    new URL('../runner/bs-agent.mjs', import.meta.url),
+    'utf8',
+  )
+
+  assert.match(migration, /verification_mode text NOT NULL DEFAULT 'focused'/)
+  assert.match(migration, /IF existing_id IS NOT NULL THEN\s+RETURN existing_id;/)
+  assert.match(migration, /metadata->>'verification_mode'/)
+  assert.match(runner, /if \(!verificationRun\.resumed\)/)
+  assert.match(runner, /verification_mode:\s+verificationMode/)
+  assert.match(
+    runner,
+    /WHERE verification_run_id = \(\s*SELECT verification_run_id\s*FROM control\.verification_runs\s*WHERE execution_id = :'execution_id'::bigint\s*ORDER BY verification_run_id DESC/,
+  )
 })
 
 test('repair execution is gated by verifier probes', async () => {
