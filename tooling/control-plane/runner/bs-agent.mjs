@@ -30,6 +30,7 @@ import {
 import {
   classifySupervisorFailure,
   planSupervisorStep,
+  preflightReconciliationAction,
   supervisorResumeIdentity,
 } from './task-supervisor.mjs'
 import {
@@ -5122,6 +5123,108 @@ function activeSupervisorLease(recovery) {
 }
 
 
+function localSupervisorLeasePid(recovery) {
+  const match = String(recovery?.lease_owner ?? '').match(/^([1-9][0-9]*)@(.+)$/)
+  if (!match) return null
+
+  const localHosts = new Set(
+    ['local', process.env.HOSTNAME]
+      .filter(Boolean),
+  )
+
+  if (!localHosts.has(match[2])) return null
+  return Number(match[1])
+}
+
+
+function localProcessAlive(pid) {
+  try {
+    process.kill(pid, 0)
+    return true
+  }
+  catch (error) {
+    return error?.code === 'EPERM'
+  }
+}
+
+
+function reclaimDeadLocalSupervisorLease(recovery) {
+  if (!activeSupervisorLease(recovery)) return false
+
+  const pid = localSupervisorLeasePid(recovery)
+  if (!pid || localProcessAlive(pid)) return false
+
+  const result = controlQuery(
+    `
+      WITH reclaimed AS (
+        UPDATE control.recovery_states
+        SET lease_owner = NULL,
+            lease_token = NULL,
+            lease_expires_at = NULL,
+            updated_at = now(),
+            metadata = COALESCE(metadata, '{}'::jsonb) ||
+              jsonb_build_object(
+                'dead_local_lease_reclaimed_at', now(),
+                'dead_local_lease_owner', :'lease_owner'
+              )
+        WHERE resume_identity = :'resume_identity'
+          AND status = 'active'
+          AND lease_owner = :'lease_owner'
+          AND lease_token = :'lease_token'
+          AND lease_expires_at > now()
+        RETURNING recovery_state_id
+      )
+      SELECT jsonb_build_object(
+        'reclaimed',
+        EXISTS(SELECT 1 FROM reclaimed)
+      );
+    `,
+    {
+      resume_identity: recovery.resume_identity,
+      lease_owner: recovery.lease_owner,
+      lease_token: recovery.lease_token,
+    },
+  )
+
+  return parseControlJson(result)?.reclaimed === true
+}
+
+
+function prepareTaskDependencies(worktreePath) {
+  if (!worktreePath || !existsSync(worktreePath)) {
+    return {
+      ok: false,
+      command: 'prepare-dependencies',
+      error: 'dependency_worktree_not_found',
+      exit_code: 1,
+    }
+  }
+
+  const result = execute(
+    'pnpm',
+    [
+      'install',
+      '--frozen-lockfile',
+      '--prefer-offline',
+    ],
+    {
+      cwd: worktreePath,
+      timeout: 20 * 60 * 1000,
+    },
+  )
+
+  return {
+    ok: successful(result),
+    command: 'prepare-dependencies',
+    exit_code: result.code,
+    error:
+      successful(result)
+        ? null
+        : result.stderr || result.error || result.stdout || 'dependency_prepare_failed',
+  }
+}
+
+
 function taskSupervisor() {
   const [taskId] = args
   if (!validTaskId(taskId)) {
@@ -5138,6 +5241,20 @@ function taskSupervisor() {
   try {
     let snapshot = supervisorSnapshot(taskId)
     if (!snapshot?.packet?.task) throw new Error(`Unknown task: ${taskId}`)
+
+    if (reclaimDeadLocalSupervisorLease(snapshot.recovery)) {
+      trail.push({
+        step: 0,
+        command: 'reclaim-dead-local-supervisor-lease',
+        exit_code: 0,
+        ok: true,
+        response: {
+          reclaimed: true,
+          lease_owner: snapshot.recovery?.lease_owner ?? null,
+        },
+      })
+      snapshot = supervisorSnapshot(taskId)
+    }
 
     if (activeSupervisorLease(snapshot.recovery)) {
       output({
@@ -5218,15 +5335,105 @@ function taskSupervisor() {
           ok: preflight.ready,
           response: preflight,
         })
+        const reconciliationAction = preflightReconciliationAction(preflight)
+        const keepLeaseForReconciliation = Boolean(reconciliationAction)
+
         const persistedRecovery = recordSupervisorRecovery(snapshot, recoveryPlan, {
           idempotencyKey: `preflight:${preflight.fingerprint}`,
           status: preflight.ready ? 'active' : preflight.kind === 'stop' ? 'resolved' : 'active',
-          leaseOwner: preflight.ready ? owner : '',
-          leaseToken: preflight.ready ? token : '',
-          leaseExpiresAt: preflight.ready ? leaseExpiresAt : '',
+          leaseOwner: preflight.ready || keepLeaseForReconciliation ? owner : '',
+          leaseToken: preflight.ready || keepLeaseForReconciliation ? token : '',
+          leaseExpiresAt: preflight.ready || keepLeaseForReconciliation ? leaseExpiresAt : '',
           condition: { preflight: true, step, preflight_fingerprint: preflight.fingerprint, checks: preflight.checks },
           metadata: { preflight: true, context: preflight.context },
         })
+
+        if (!preflight.ready && reconciliationAction) {
+          let reconciliation
+
+          if (reconciliationAction === 'task-prepare') {
+            const child = invokeTaskAction('task-prepare', taskId)
+            reconciliation = {
+              ok: child.payload?.ok === true,
+              command: reconciliationAction,
+              exit_code: child.result.code,
+              response: child.payload,
+              error:
+                child.payload?.error ??
+                child.result.stderr ??
+                child.result.error ??
+                null,
+            }
+          }
+          else {
+            const prepared = prepareTaskDependencies(
+              preflight.context?.worktree_path,
+            )
+            reconciliation = {
+              ...prepared,
+              response: prepared,
+            }
+          }
+
+          trail.push({
+            step,
+            command: reconciliation.command,
+            exit_code: reconciliation.exit_code,
+            ok: reconciliation.ok,
+            response: reconciliation.response,
+          })
+
+          if (reconciliation.ok) {
+            continue
+          }
+
+          const failedSnapshot = supervisorSnapshot(taskId)
+          const classified = classifySupervisorFailure({
+            command: reconciliation.command,
+            payload: {
+              error:
+                reconciliation.error ??
+                `${reconciliation.command}_failed`,
+            },
+            attempt: plan.execution?.attempt,
+            maxAttempts: snapshot.packet.retry_policy?.max_attempts,
+          })
+
+          classified.fingerprint =
+            planSupervisorStep(failedSnapshot).fingerprint
+          classified.execution =
+            planSupervisorStep(failedSnapshot).execution
+
+          const persistedFailure = recordSupervisorRecovery(
+            failedSnapshot,
+            classified,
+            {
+              idempotencyKey: `${token}:reconciliation:${step}`,
+              status:
+                classified.kind === 'terminal'
+                  ? 'resolved'
+                  : 'active',
+              metadata: {
+                reconciliation_command: reconciliation.command,
+                reconciliation_exit_code: reconciliation.exit_code,
+              },
+            },
+          )
+
+          output({
+            ok: classified.kind === 'wait',
+            command: 'task-supervise',
+            task_id: taskId,
+            status: classified.kind,
+            recovery: {
+              ...classified,
+              ...persistedFailure,
+            },
+            preflight,
+            trail,
+          }, classified.kind === 'wait' ? 0 : 1)
+          return
+        }
 
         if (!preflight.ready) {
           output({

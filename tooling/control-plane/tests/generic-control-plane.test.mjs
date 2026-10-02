@@ -10,6 +10,7 @@ import { profileForAttempt, retryDecision, validateRetryPolicy } from '../lib/re
 import {
   classifySupervisorFailure,
   planSupervisorStep,
+  preflightReconciliationAction,
   supervisorResumeIdentity,
 } from '../runner/task-supervisor.mjs'
 import {
@@ -234,6 +235,7 @@ test('resilience acceptance covers mandatory crash recovery and emits a strict c
     'interrupt-after-pr-creation',
     'active-controller-lease-collision',
     'expired-controller-lease-reclamation',
+    'fresh-task-auto-reconciliation',
     'focused-repair-exhaustion',
     'milestone-required-check-contract',
     'evidence-backed-parent-satisfaction',
@@ -257,6 +259,20 @@ test('thin controller schedules only persisted automatic recovery states', () =>
 
   const operator = resumeSchedule({ status: 'wait', recovery: { next_action: 'wait-operator', next_wake_at: '2026-10-02T12:05:00.000Z' } }, now)
   assert.equal(operator.automatic_resume, false)
+
+  const reconcile = normalizeSupervisorResult({
+    payload: {
+      ok: true,
+      status: 'reconcile',
+      recovery: {
+        recoverable: true,
+        next_action: 'reconcile-repository',
+        reason: 'worktree_not_prepared',
+      },
+    },
+  }, now)
+  assert.equal(reconcile.outcome, 'wait')
+  assert.equal(reconcile.automatic_resume, false)
 
   const lease = normalizeSupervisorResult({ payload: { ok: true, status: 'wait', reason: 'supervisor_lease_active', lease_expires_at: '2026-10-02T12:10:00.000Z' } }, now)
   assert.equal(lease.automatic_resume, true)
@@ -1082,6 +1098,32 @@ test('execution preflight routes repository drift to deterministic reconciliatio
   assert.equal(evaluateExecutionPreflight(missingWorktree).reason, 'worktree_not_prepared')
 })
 
+test('fresh task reconciliation prepares worktrees and deterministic dependencies', () => {
+  assert.equal(
+    preflightReconciliationAction({
+      kind: 'reconcile',
+      reason: 'worktree_not_prepared',
+    }),
+    'task-prepare',
+  )
+
+  assert.equal(
+    preflightReconciliationAction({
+      kind: 'reconcile',
+      reason: 'repository_dependencies_missing',
+    }),
+    'prepare-dependencies',
+  )
+
+  assert.equal(
+    preflightReconciliationAction({
+      kind: 'wait',
+      reason: 'parent_branch_sha_pr_inconsistent',
+    }),
+    null,
+  )
+})
+
 test('execution preflight waits for hard dependencies, decisions, and serialized workstreams', () => {
   const dependency = executionPreflightFixture()
   dependency.packet.dependencies[0].status = 'in_progress'
@@ -1155,6 +1197,23 @@ test('supervisor lease SQL returns the UPDATE target alias safely', async () => 
     leaseSql,
     /to_jsonb\(control\.recovery_states\)/,
   )
+})
+
+test('supervisor self-heals fresh worktrees, dependencies, and dead local leases', async () => {
+  const runner = await readFile(new URL('../runner/bs-agent.mjs', import.meta.url), 'utf8')
+  const supervisor = runner.slice(
+    runner.indexOf('function taskSupervisor()'),
+    runner.indexOf('function taskEngine()'),
+  )
+
+  assert.match(runner, /function reclaimDeadLocalSupervisorLease/)
+  assert.match(runner, /process\.kill\(pid, 0\)/)
+  assert.match(runner, /dead_local_lease_reclaimed_at/)
+  assert.match(supervisor, /preflightReconciliationAction\(preflight\)/)
+  assert.match(supervisor, /invokeTaskAction\('task-prepare', taskId\)/)
+  assert.match(supervisor, /prepareTaskDependencies/)
+  assert.match(runner, /--frozen-lockfile/)
+  assert.match(runner, /--prefer-offline/)
 })
 
 test('supervisor gates token-bearing implementation actions with audited preflight', async () => {
