@@ -161,7 +161,7 @@ onBeforeUnmount(() => clearInterval(timer))
     <template #logo="{ tone }"><BsProductLogo name="Ledger Suit" asset-prefix="/brand/ledger-suit" :tone="tone" class="h-auto w-56" /></template>
 
     <div v-if="step === 'loading'" aria-busy="true" class="w-full">
-      <SectionSkeleton variant="table" :rows="4" />
+      <BsSectionSkeleton variant="table" :rows="4" />
     </div>
 
     <BsAuthForm
@@ -194,30 +194,30 @@ onBeforeUnmount(() => clearInterval(timer))
       :submit-disabled="step === 'password' && (password.length < 8 || confirmPassword.length < 8)"
       :data-hydrated="hydrated" @submit="step === 'ready' ? sendOtp() : finish()"
     >
-      <FloatingField :label="t('access.inviteFlow.emailLabel')">
+      <BsFloatingField :label="t('access.inviteFlow.emailLabel')">
         <input :value="preview.email" type="email" class="ls-input" readonly dir="ltr" aria-readonly="true">
-      </FloatingField>
+      </BsFloatingField>
 
       <template v-if="step === 'password'">
-        <FloatingField :label="t('onboarding.fullName')">
+        <BsFloatingField :label="t('onboarding.fullName')">
           <input v-model="fullName" type="text" autocomplete="name" class="ls-input" required>
-        </FloatingField>
-        <FloatingField :label="t('onboarding.phone')">
+        </BsFloatingField>
+        <BsFloatingField :label="t('onboarding.phone')">
           <input v-model="phone" type="tel" autocomplete="tel" class="ls-input" required dir="ltr">
-        </FloatingField>
-        <FloatingField :label="t('onboarding.jobTitle')">
+        </BsFloatingField>
+        <BsFloatingField :label="t('onboarding.jobTitle')">
           <input v-model="jobTitle" type="text" autocomplete="organization-title" class="ls-input" required>
-        </FloatingField>
-        <FloatingField :label="t('access.inviteFlow.password')">
+        </BsFloatingField>
+        <BsFloatingField :label="t('access.inviteFlow.password')">
           <input v-model="password" type="password" minlength="8" autocomplete="new-password" class="ls-input" required dir="ltr">
-        </FloatingField>
-        <FloatingField :label="t('access.inviteFlow.confirmPassword')">
+        </BsFloatingField>
+        <BsFloatingField :label="t('access.inviteFlow.confirmPassword')">
           <input v-model="confirmPassword" type="password" minlength="8" autocomplete="new-password" class="ls-input" required dir="ltr">
-        </FloatingField>
+        </BsFloatingField>
       </template>
 
       <div class="flex items-start gap-3 ls-card-muted p-4 text-xs leading-5 text-fg-muted">
-        <AppIcon name="checkBadge" :size="19" class="mt-0.5 shrink-0 text-success" />
+        <BsIcon name="checkBadge" :size="19" class="mt-0.5 shrink-0 text-success" />
         <p>{{ t('access.inviteFlow.security') }}</p>
       </div>
     </BsAuthForm>

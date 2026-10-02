@@ -40,7 +40,7 @@ function rowClass(row: AccountTreeRow) { return `chart-row chart-row-${row.kind}
         <template #body="{ data: node }">
           <div class="chart-branch" :class="{ 'chart-branch-nested': node.depth > 0 }" :style="{ '--tree-depth': node.depth }">
             <BsButton v-if="node.children.length" type="button" class="ls-btn chart-toggle" :aria-expanded="node.expanded" :aria-label="t(node.expanded ? 'accountTree.collapse' : 'accountTree.expand', { name: node.label })" :disabled="!hydrated || !!search" @click="toggle(node.id)">
-              <AppIcon :name="node.expanded ? 'arrowDown' : 'arrowRight'" directional :size="16" />
+              <BsIcon :name="node.expanded ? 'arrowDown' : 'arrowRight'" directional :size="16" />
             </BsButton>
             <span v-else class="chart-leaf" aria-hidden="true"><span /></span>
             <div class="min-w-0 flex-1">

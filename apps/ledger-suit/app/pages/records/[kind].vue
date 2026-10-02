@@ -203,12 +203,12 @@ const { dirty: overlayDirty0 } = useRecordAction(() => commitmentAction, compute
         <div v-for="step in ['create', 'assign', 'find']" :key="step" class="rounded-control bg-surface-muted p-4"><h3 class="font-semibold">{{ t(`tagsGuide.steps.${step}.title`) }}</h3><p class="mt-2 text-sm leading-relaxed text-fg-muted">{{ t(`tagsGuide.steps.${step}.body`) }}</p></div>
       </div>
       <p class="text-sm text-fg-muted">{{ t('tagsGuide.example') }}</p>
-      <NuxtLink v-if="can('transactions.read')" to="/transactions" class="ls-btn">{{ t('tagsGuide.openTransactions') }}<AppIcon name="arrowRight" directional :size="18" /></NuxtLink>
+      <NuxtLink v-if="can('transactions.read')" to="/transactions" class="ls-btn">{{ t('tagsGuide.openTransactions') }}<BsIcon name="arrowRight" directional :size="18" /></NuxtLink>
     </section>
 
     <div v-if="loadError" role="alert" class="ls-card p-5"><p>{{ t('transactionWorkspace.loadError') }}</p><BsButton type="button" class="ls-btn mt-3" @click="refresh()">{{ t('accounts.retry') }}</BsButton></div>
-    <SectionSkeleton v-else-if="pending" variant="table" :rows="8" />
-    <EmptyState v-else-if="rows.length === 0" :title="kind === 'tags' ? t('tagsGuide.emptyTitle') : t('recordPages.empty', { item: title })" :description="t(kind === 'tags' ? 'tagsGuide.emptyHint' : 'recordPages.emptyHint')" :action-label="canCreate ? (kind === 'tags' ? t('recordPages.addTag') : t('recordPages.add', { item: title })) : undefined" @action="addRecord" />
+    <BsSectionSkeleton v-else-if="pending" variant="table" :rows="8" />
+    <BsEmptyState v-else-if="rows.length === 0" :title="kind === 'tags' ? t('tagsGuide.emptyTitle') : t('recordPages.empty', { item: title })" :description="t(kind === 'tags' ? 'tagsGuide.emptyHint' : 'recordPages.emptyHint')" :action-label="canCreate ? (kind === 'tags' ? t('recordPages.addTag') : t('recordPages.add', { item: title })) : undefined" @action="addRecord" />
 
     <div v-else class="ls-card overflow-x-auto">
       <BsDataTable v-if="isTransaction" :value="rows" :label="title" :row-class="() => 'cursor-pointer hover:bg-surface-muted'" @row-click="event => selectedId = text(event.data, 'id')">
@@ -226,11 +226,11 @@ const { dirty: overlayDirty0 } = useRecordAction(() => commitmentAction, compute
   </Column>
   <Column body-class="whitespace-nowrap text-fg-muted">
     <template #header>{{ t('transactions.fromTo') }}</template>
-    <template #body="{ data: row }">{{ text(row, 'from_account_name') }} <AppIcon name="arrowRight" :size="14" directional class="inline-block" /> {{ text(row, 'to_account_name') }}</template>
+    <template #body="{ data: row }">{{ text(row, 'from_account_name') }} <BsIcon name="arrowRight" :size="14" directional class="inline-block" /> {{ text(row, 'to_account_name') }}</template>
   </Column>
   <Column >
     <template #header>{{ t('transactions.status') }}</template>
-    <template #body="{ data: row }"><StatusBadge :status="text(row, 'status')" /></template>
+    <template #body="{ data: row }"><BsStatusBadge :status="text(row, 'status')" /></template>
   </Column>
   <Column header-class="text-end" body-class="ls-num font-semibold">
     <template #header>{{ t('transactions.amount') }}</template>
@@ -253,7 +253,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => commitmentAction, compute
   </Column>
   <Column >
     <template #header>{{ t('transactions.status') }}</template>
-    <template #body="{ data: row }"><StatusBadge :status="text(row, 'status')" /></template>
+    <template #body="{ data: row }"><BsStatusBadge :status="text(row, 'status')" /></template>
   </Column>
   <Column header-class="text-end" body-class="ls-num">
     <template #header>{{ t('transactions.amount') }}</template>
@@ -284,7 +284,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => commitmentAction, compute
   </Column>
   <Column >
     <template #header>{{ t('transactions.status') }}</template>
-    <template #body="{ data: row }"><StatusBadge :status="text(row, 'status')" /></template>
+    <template #body="{ data: row }"><BsStatusBadge :status="text(row, 'status')" /></template>
   </Column>
   <Column header-class="text-end" body-class="text-end">
     <template #header>{{ t('accounts.actions') }}</template>
@@ -311,7 +311,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => commitmentAction, compute
   </Column>
   <Column >
     <template #header>{{ t('transactions.status') }}</template>
-    <template #body="{ data: row }"><StatusBadge :status="value(row, 'is_archived') ? 'archived' : 'active'" /></template>
+    <template #body="{ data: row }"><BsStatusBadge :status="value(row, 'is_archived') ? 'archived' : 'active'" /></template>
   </Column>
 </BsDataTable>
 
@@ -340,7 +340,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => commitmentAction, compute
   </Column>
   <Column >
     <template #header>{{ t('transactions.status') }}</template>
-    <template #body="{ data: row }"><StatusBadge :status="text(row, 'status')" /></template>
+    <template #body="{ data: row }"><BsStatusBadge :status="text(row, 'status')" /></template>
   </Column>
   <Column >
     <template #header>{{ t('recordPages.created') }}</template>
@@ -355,8 +355,8 @@ const { dirty: overlayDirty0 } = useRecordAction(() => commitmentAction, compute
 
     <p v-if="actionError && !commitmentAction.id" class="ls-error" role="alert">{{ actionError }}</p>
         <BsRecordActionDialog v-if="commitmentAction.id" :visible="true" :title="t(commitmentAction.mode === 'settle' ? 'operations.settle' : 'operations.postpone')" size="md" :dirty="overlayDirty0" :pending="actionBusy" :error="actionError" :submit-label="t(commitmentAction.mode === 'settle' ? 'operations.convert' : 'operations.postpone')" :cancel-label="t('common.cancel')" @update:visible="value => { if (!value) commitmentAction.id = '' }" @submit="submitCommitmentAction">
-            <template v-if="commitmentAction.mode === 'settle'"><FloatingField :label="t('add.chooseAccount')"><select v-model="commitmentAction.paymentAccountId" class="ls-input" required><option value="">{{ t('add.chooseAccount') }}</option><option v-for="account in paymentAccounts" :key="account.id" :value="account.id">{{ account.name }}</option></select></FloatingField><FloatingField :label="t('operations.fullOrPartialAmount')"><input v-model="commitmentAction.amount" class="ls-input" inputmode="decimal" :placeholder="t('operations.fullOrPartialAmount')"></FloatingField></template>
-            <FloatingField :label="t('add.date')"><input v-model="commitmentAction.date" type="date" class="ls-input" required></FloatingField>
+            <template v-if="commitmentAction.mode === 'settle'"><BsFloatingField :label="t('add.chooseAccount')"><select v-model="commitmentAction.paymentAccountId" class="ls-input" required><option value="">{{ t('add.chooseAccount') }}</option><option v-for="account in paymentAccounts" :key="account.id" :value="account.id">{{ account.name }}</option></select></BsFloatingField><BsFloatingField :label="t('operations.fullOrPartialAmount')"><input v-model="commitmentAction.amount" class="ls-input" inputmode="decimal" :placeholder="t('operations.fullOrPartialAmount')"></BsFloatingField></template>
+            <BsFloatingField :label="t('add.date')"><input v-model="commitmentAction.date" type="date" class="ls-input" required></BsFloatingField>
         </BsRecordActionDialog>
 
     <TransactionDetailDialog v-if="selectedId" :transaction-id="selectedId" @changed="refresh" @close="selectedId = null" />

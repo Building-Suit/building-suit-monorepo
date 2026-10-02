@@ -354,7 +354,7 @@ onMounted(markSaved)
     <template #default="{ close }">
   <div class="space-y-5">
     <p class="text-sm text-fg-muted">{{ t('imports.subtitle') }}</p>
-    <SectionSkeleton v-if="featurePending" variant="cards" />
+    <BsSectionSkeleton v-if="featurePending" variant="cards" />
 
     <div v-else-if="!can('imports.create') || !writesAllowed" class="ls-card p-6">
       <h2 class="font-semibold">{{ t('imports.noPermissionTitle') }}</h2>
@@ -432,12 +432,12 @@ onMounted(markSaved)
             <BsButton type="button" class="ls-btn ls-btn-sm" :disabled="!!busy" @click="reset">{{ t('imports.changeFile') }}</BsButton>
           </div>
           <div class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <FloatingField v-for="field in ALL_FIELDS" :key="field" :label="t(`imports.fields.${field}`)">
+            <BsFloatingField v-for="field in ALL_FIELDS" :key="field" :label="t(`imports.fields.${field}`)">
               <select v-model="mapping[field]" class="ls-input" :aria-required="isRequiredField(field)" :disabled="!!busy">
                 <option value="">{{ isRequiredField(field) ? t('imports.selectColumn') : t('common.none') }}</option>
                 <option v-for="header in headers" :key="header" :value="header" :disabled="Object.values(mapping).includes(header) && mapping[field] !== header">{{ header }}</option>
               </select>
-            </FloatingField>
+            </BsFloatingField>
           </div>
         </section>
 
@@ -460,7 +460,7 @@ onMounted(markSaved)
                 <h2 class="text-h2 font-bold">{{ phase === 'results' ? t('imports.resultsTitle') : t('imports.validationTitle') }}</h2>
                 <p class="mt-1 text-sm text-fg-muted">{{ filename }}</p>
               </div>
-              <StatusBadge :status="batch.status" />
+              <BsStatusBadge :status="batch.status" />
             </div>
             <dl class="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
               <div v-for="metric in METRICS" :key="metric" class="rounded-control bg-surface-muted p-3">
@@ -480,14 +480,14 @@ onMounted(markSaved)
 
           <div class="ls-card overflow-hidden">
             <div class="flex flex-wrap items-end justify-between gap-3 border-b border-[var(--bs-border)] p-4">
-              <FloatingField :label="t('imports.reviewFilter')" class="min-w-48">
+              <BsFloatingField :label="t('imports.reviewFilter')" class="min-w-48">
                 <select v-model="reviewFilter" class="ls-input">
                   <option value="all">{{ t('imports.reviewFilters.all', { count: reviewCounts.all }) }}</option>
                   <option value="ready">{{ t('imports.reviewFilters.ready', { count: reviewCounts.ready }) }}</option>
                   <option value="issues">{{ t('imports.reviewFilters.issues', { count: reviewCounts.issues }) }}</option>
                   <option value="duplicates">{{ t('imports.reviewFilters.duplicates', { count: reviewCounts.duplicates }) }}</option>
                 </select>
-              </FloatingField>
+              </BsFloatingField>
               <p role="status" class="text-sm text-fg-muted">{{ t('imports.reviewRange', { from: reviewRangeStart, to: reviewRangeEnd, total: filteredResultRows.length }) }}</p>
             </div>
             <div class="overflow-x-auto">
@@ -498,7 +498,7 @@ onMounted(markSaved)
   </Column>
   <Column >
     <template #header>{{ t('transactions.status') }}</template>
-    <template #body="{ data: row }"><StatusBadge :status="row.status" /></template>
+    <template #body="{ data: row }"><BsStatusBadge :status="row.status" /></template>
   </Column>
   <Column >
     <template #header>{{ t('transactions.type') }}</template>

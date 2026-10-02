@@ -54,12 +54,12 @@ async function signIn() {
           :pending="pending" :error="error" :submit-label="t('auth.signIn')" :pending-label="t('auth.signingIn')"
           :data-hydrated="hydrated" @submit="signIn"
         >
-          <FloatingField :label="t('auth.email')">
+          <BsFloatingField :label="t('auth.email')">
             <input id="email" v-model="email" type="email" autocomplete="email" required dir="ltr" class="ls-input">
-          </FloatingField>
-          <FloatingField :label="t('auth.password')">
+          </BsFloatingField>
+          <BsFloatingField :label="t('auth.password')">
             <input id="password" v-model="password" type="password" autocomplete="current-password" required dir="ltr" class="ls-input">
-          </FloatingField>
+          </BsFloatingField>
           <template #footer>{{ t('auth.needAccount') }} <NuxtLink to="/signup" class="font-bold text-fg underline underline-offset-4">{{ t('landing.startTrial') }}</NuxtLink></template>
         </BsAuthForm>
         <nav class="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs text-fg-muted" :aria-label="t('auth.legalNavigation')">

@@ -201,18 +201,18 @@ onMounted(async () => {
       :submit-label="step === 1 ? copy.next : copy.create" :pending-label="copy.pending" @back="back"
     >
       <div v-if="step === 1" class="space-y-4">
-        <FloatingField :label="t('auth.displayName')"><InputText id="signup-name" v-model="form.displayName" class="ls-input" autocomplete="name" required /></FloatingField>
-        <FloatingField :label="t('auth.email')"><InputText id="signup-email" v-model="form.email" class="ls-input" type="email" autocomplete="email" dir="ltr" :readonly="existingAccount" required /></FloatingField>
-        <FloatingField v-if="!existingAccount" :label="t('auth.password')"><InputText id="signup-password" v-model="form.password" class="ls-input" type="password" autocomplete="new-password" dir="ltr" minlength="6" required /></FloatingField>
+        <BsFloatingField :label="t('auth.displayName')"><InputText id="signup-name" v-model="form.displayName" class="ls-input" autocomplete="name" required /></BsFloatingField>
+        <BsFloatingField :label="t('auth.email')"><InputText id="signup-email" v-model="form.email" class="ls-input" type="email" autocomplete="email" dir="ltr" :readonly="existingAccount" required /></BsFloatingField>
+        <BsFloatingField v-if="!existingAccount" :label="t('auth.password')"><InputText id="signup-password" v-model="form.password" class="ls-input" type="password" autocomplete="new-password" dir="ltr" minlength="6" required /></BsFloatingField>
       </div>
       <div v-else class="space-y-4">
-        <FloatingField :label="copy.shopName"><InputText id="signup-shop" v-model="form.shopName" class="ls-input" minlength="2" maxlength="120" required /></FloatingField>
+        <BsFloatingField :label="copy.shopName"><InputText id="signup-shop" v-model="form.shopName" class="ls-input" minlength="2" maxlength="120" required /></BsFloatingField>
         <fieldset class="grid gap-3 rounded-xl border border-border p-4 sm:grid-cols-2">
           <legend class="px-1 text-sm font-bold">{{ copy.mainLocation }}</legend>
-          <FloatingField :label="copy.mainLocationName"><InputText id="signup-main-location" v-model="form.mainLocationName" class="ls-input" minlength="2" maxlength="120" required /></FloatingField>
-          <FloatingField :label="copy.mainLocationCode"><InputText id="signup-main-location-code" v-model="form.mainLocationCode" class="ls-input" maxlength="32" /></FloatingField>
-          <FloatingField :label="copy.mainLocationAddress"><InputText id="signup-main-location-address" v-model="form.mainLocationAddress" class="ls-input" maxlength="500" /></FloatingField>
-          <FloatingField :label="copy.mainLocationPhone"><InputText id="signup-main-location-phone" v-model="form.mainLocationPhone" class="ls-input" maxlength="80" dir="auto" /></FloatingField>
+          <BsFloatingField :label="copy.mainLocationName"><InputText id="signup-main-location" v-model="form.mainLocationName" class="ls-input" minlength="2" maxlength="120" required /></BsFloatingField>
+          <BsFloatingField :label="copy.mainLocationCode"><InputText id="signup-main-location-code" v-model="form.mainLocationCode" class="ls-input" maxlength="32" /></BsFloatingField>
+          <BsFloatingField :label="copy.mainLocationAddress"><InputText id="signup-main-location-address" v-model="form.mainLocationAddress" class="ls-input" maxlength="500" /></BsFloatingField>
+          <BsFloatingField :label="copy.mainLocationPhone"><InputText id="signup-main-location-phone" v-model="form.mainLocationPhone" class="ls-input" maxlength="80" dir="auto" /></BsFloatingField>
         </fieldset>
         <div class="rounded-xl border border-border bg-muted/40 p-3"><p class="text-sm font-bold">{{ copy.trial }}</p><p class="mt-1 text-xs text-fg-muted">{{ copy.trialHelp }}</p></div>
         <fieldset class="space-y-2">

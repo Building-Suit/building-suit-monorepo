@@ -59,12 +59,12 @@ const { dirty: overlayDirty0 } = useRecordAction(() => ({ email: email.value, ro
       <BsRecordActionDialog v-if="open" :visible="true" :title="t('org.invite')" size="md" :dirty="overlayDirty0" :pending="pending" :error="errorMessage" :submit-label="t('org.createInvite')" :cancel-label="t('common.cancel')" @update:visible="value => { if (!value) close() }" @submit="invite">
           <p class="text-sm leading-6 text-fg-muted">{{ t('access.inviteDescription') }}</p>
           <QuotaUsageMeter quota-key="max_members" compact />
-          <FloatingField :label="t('auth.email')"><input v-model="email" type="email" class="ls-input" :placeholder="t('auth.email')" autocomplete="email" dir="ltr" required></FloatingField>
-          <FloatingField :label="t('team.role')"><select v-model="role" class="ls-input">
+          <BsFloatingField :label="t('auth.email')"><input v-model="email" type="email" class="ls-input" :placeholder="t('auth.email')" autocomplete="email" dir="ltr" required></BsFloatingField>
+          <BsFloatingField :label="t('team.role')"><select v-model="role" class="ls-input">
             <option v-for="key in ['admin','accountant','data_entry','viewer']" :key="key" :value="`system:${key}`">{{ t(`org.roles.${key}`) }}</option>
             <option v-for="custom in customRoles" :key="custom.id" :value="`custom:${custom.id}`">{{ roleLabel(null, custom.id) }}</option>
-          </select></FloatingField>
-          <div class="flex items-start gap-3 rounded-control bg-surface-muted p-4"><AppIcon name="mail" class="mt-0.5 shrink-0 text-accent" /><div><p class="text-sm font-bold">{{ t('access.emailDelivery') }}</p><p class="mt-1 text-xs leading-5 text-fg-muted">{{ t('access.emailDeliveryHint') }}</p></div></div>
+          </select></BsFloatingField>
+          <div class="flex items-start gap-3 rounded-control bg-surface-muted p-4"><BsIcon name="mail" class="mt-0.5 shrink-0 text-accent" /><div><p class="text-sm font-bold">{{ t('access.emailDelivery') }}</p><p class="mt-1 text-xs leading-5 text-fg-muted">{{ t('access.emailDeliveryHint') }}</p></div></div>
       </BsRecordActionDialog>
   </div>
 </template>

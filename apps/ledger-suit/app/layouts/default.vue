@@ -161,6 +161,6 @@ watch(currentId, async (value, previous) => {
           </div>
           <div class="pb-16"><slot /></div>
         </template>
-    <template #overlays><FinancialSystemMap v-if="current" /><AddTransactionDialog /><OperationsCenter /><TeamMenu :show-trigger="false" /><ToastHost /></template>
+    <template #overlays><FinancialSystemMap v-if="current" /><AddTransactionDialog /><OperationsCenter /><TeamMenu :show-trigger="false" /><BsToastHost /></template>
   </BsAppShell>
 </template>

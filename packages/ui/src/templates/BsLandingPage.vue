@@ -28,7 +28,7 @@ useLandingMotion(landingRoot)
           <div data-landing-intro class="mt-9 flex flex-wrap items-center gap-3">
             <NuxtLink :to="signupPath" class="ls-btn ls-btn-accent">
               {{ content.createWorkspace }}
-              <AppIcon name="arrowRight" directional />
+              <BsIcon name="arrowRight" directional />
             </NuxtLink>
             <a href="#features" class="ls-btn ls-btn-on-brand">{{ content.explore }}</a>
           </div>
@@ -58,7 +58,7 @@ useLandingMotion(landingRoot)
         <div class="ls-feature-grid mt-12" data-landing-reveal>
           <article v-for="(feature, index) in content.features" :key="feature.title" class="ls-feature-item">
             <div class="flex items-start justify-between gap-6">
-              <span class="ls-feature-icon"><AppIcon :name="feature.icon" :size="24" /></span>
+              <span class="ls-feature-icon"><BsIcon :name="feature.icon" :size="24" /></span>
               <span class="ls-feature-number" aria-hidden="true">{{ String(index + 1).padStart(2, '0') }}</span>
             </div>
             <h3 class="mt-8 text-xl font-bold tracking-[-.02em]">{{ feature.title }}</h3>

@@ -151,7 +151,7 @@ async function reverse(batch: Batch) {
     <LedgerPageHeader :title="t('opening.title')" :subtitle="t('opening.subtitle')" :as-of="cutoff" />
     <p v-if="!can('opening_balances.read')" class="ls-card p-6 text-fg-muted">{{ t('opening.noAccess') }}</p>
     <p v-else-if="error" class="ls-error" role="alert">{{ t('opening.loadFailed') }}</p>
-    <SectionSkeleton v-else-if="pending" variant="table" :rows="5" />
+    <BsSectionSkeleton v-else-if="pending" variant="table" :rows="5" />
     <template v-else>
       <section class="ls-card space-y-3 p-5" aria-labelledby="opening-readiness-guide" data-opening-readiness-guide>
         <h2 id="opening-readiness-guide" class="text-h2 font-bold">{{ t('opening.guideTitle') }}</h2>
@@ -169,8 +169,8 @@ async function reverse(batch: Batch) {
       <section v-if="can('opening_balances.manage')" class="ls-card space-y-5 p-5" aria-labelledby="opening-setup">
         <div><h2 id="opening-setup" class="text-h2 font-bold">1. {{ t('opening.setup') }}</h2><p class="text-sm text-fg-muted">{{ t('opening.cutoffHint') }}</p></div>
         <div class="grid gap-4 sm:grid-cols-2">
-          <FloatingField :label="t('opening.mode')"><select id="opening-mode" v-model="mode" class="ls-input" :disabled="!!postedTransactionId"><option value="year_start">{{ t('opening.modes.year_start') }}</option><option value="midyear">{{ t('opening.modes.midyear') }}</option></select></FloatingField>
-          <FloatingField :label="t('opening.cutoff')"><input id="opening-cutoff" v-model="cutoff" class="ls-input" type="date" required :disabled="!!postedTransactionId"></FloatingField>
+          <BsFloatingField :label="t('opening.mode')"><select id="opening-mode" v-model="mode" class="ls-input" :disabled="!!postedTransactionId"><option value="year_start">{{ t('opening.modes.year_start') }}</option><option value="midyear">{{ t('opening.modes.midyear') }}</option></select></BsFloatingField>
+          <BsFloatingField :label="t('opening.cutoff')"><input id="opening-cutoff" v-model="cutoff" class="ls-input" type="date" required :disabled="!!postedTransactionId"></BsFloatingField>
         </div>
         <div class="border-t border-line pt-4">
           <h2 class="text-h2 font-bold">2. {{ t('opening.upload') }}</h2>
@@ -212,12 +212,12 @@ async function reverse(batch: Batch) {
         <div v-if="postedTransactionId" class="rounded-control bg-surface-muted p-4" data-opening-posted><strong>{{ t('opening.postedLocked') }}</strong><br><NuxtLink class="text-link underline" :to="{ path: '/transactions', query: { q: postedTransactionId } }">{{ t('opening.openJournal') }}</NuxtLink></div>
       </section>
 
-      <section class="ls-card space-y-4 p-5" aria-labelledby="opening-history"><h2 id="opening-history" class="text-h2 font-bold">{{ t('opening.history') }}</h2><EmptyState v-if="!batches.length" :title="t('opening.empty')" :description="t('opening.emptyHint')" />
+      <section class="ls-card space-y-4 p-5" aria-labelledby="opening-history"><h2 id="opening-history" class="text-h2 font-bold">{{ t('opening.history') }}</h2><BsEmptyState v-if="!batches.length" :title="t('opening.empty')" :description="t('opening.emptyHint')" />
         <article v-for="batch in batches" :key="batch.id" class="rounded-control border border-line p-4" :data-batch-status="batch.status"><div class="flex flex-wrap justify-between gap-3"><div><strong>{{ t(`opening.modes.${batch.migration_mode}`) }} · {{ date(batch.cutoff_date) }}</strong><p class="text-sm text-fg-muted">{{ t('opening.revision', { revision: batch.revision }) }} · {{ t(`opening.status.${batch.status}`) }}</p></div><NuxtLink v-if="batch.posted_transaction_id" class="text-link underline" :to="{ path: '/transactions', query: { q: batch.posted_transaction_id } }">{{ t('opening.openJournal') }}</NuxtLink></div>
           <div v-if="batch.validation_result" class="mt-3 grid gap-2 text-sm sm:grid-cols-3"><span>{{ t('opening.rowCount', { count: (batch.validation_result as any).valid_row_count + (batch.validation_result as any).zero_row_count }) }}</span><span>{{ t('opening.debit') }}: {{ amount((batch.validation_result as any).debit_total_minor) }}</span><span>{{ t('opening.credit') }}: {{ amount((batch.validation_result as any).credit_total_minor) }}</span></div>
           <p class="mt-2 break-all text-xs text-fg-muted">{{ t('opening.creator') }}: {{ batch.created_by }}<template v-if="batch.approved_by"> · {{ t('opening.approver') }}: {{ batch.approved_by }}</template></p>
           <p v-if="batch.reversal_transaction_id" class="mt-2 text-sm">{{ t('opening.reversal') }}: <NuxtLink class="text-link underline" :to="{ path: '/transactions', query: { q: batch.reversal_transaction_id } }">{{ batch.reversal_transaction_id }}</NuxtLink> · {{ batch.correction_reason }}</p>
-          <BsForm v-if="batch.status==='posted' && can('opening_balances.correct')" class="mt-4 grid gap-2 border-t border-line pt-4 sm:grid-cols-[2fr_1fr_auto]" :aria-busy="busy===`reverse:${batch.id}`" @submit.prevent="reverse(batch)"><FloatingField :label="t('opening.correctionReason')"><input v-model="correctionReason" class="ls-input" required></FloatingField><FloatingField :label="t('opening.reversalDate')"><input v-model="correctionDate" class="ls-input" type="date"></FloatingField><BsButton type="submit" class="ls-btn self-end" :disabled="!correctionReason.trim() || Boolean(busy)">{{ busy===`reverse:${batch.id}` ? t('common.saving') : t('opening.reverse') }}</BsButton></BsForm>
+          <BsForm v-if="batch.status==='posted' && can('opening_balances.correct')" class="mt-4 grid gap-2 border-t border-line pt-4 sm:grid-cols-[2fr_1fr_auto]" :aria-busy="busy===`reverse:${batch.id}`" @submit.prevent="reverse(batch)"><BsFloatingField :label="t('opening.correctionReason')"><input v-model="correctionReason" class="ls-input" required></BsFloatingField><BsFloatingField :label="t('opening.reversalDate')"><input v-model="correctionDate" class="ls-input" type="date"></BsFloatingField><BsButton type="submit" class="ls-btn self-end" :disabled="!correctionReason.trim() || Boolean(busy)">{{ busy===`reverse:${batch.id}` ? t('common.saving') : t('opening.reverse') }}</BsButton></BsForm>
         </article>
       </section>
     </template>

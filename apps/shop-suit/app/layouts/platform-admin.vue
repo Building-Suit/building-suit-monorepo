@@ -25,6 +25,6 @@ async function logout() {
     <template #context><p class="px-3 text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">{{ copy.console }}</p></template>
     <template #header><BsUserMenu :email="user?.email" :account-label="copy.account" :sign-out-label="copy.logout" @sign-out="logout" /></template>
     <slot />
-    <template #overlays><ToastHost /><BsConfirmHost /></template>
+    <template #overlays><BsToastHost /><BsConfirmHost /></template>
   </BsAppShell>
 </template>
