@@ -12,6 +12,7 @@ An app-local component is valid only when its API and implementation are tied to
 - raw or directly imported PrimeVue data tables and dialogs instead of `BsDataTable` and `BsDialog`;
 - native confirmation dialogs instead of the shared confirmation controller and host;
 - direct composite controls or dependencies from competing UI foundations;
+- product-local button/card recipes that should use a semantic action variant or shared surface;
 - imports between applications or from shared packages into applications;
 - upward Atomic Design dependencies in `packages/ui`;
 - wildcard, missing, or ungoverned `packages/ui` exports; and
@@ -23,7 +24,7 @@ The canonical inventory is [`ui-ownership-manifest.json`](ui-ownership-manifest.
 - `shared-presentation-debt`: reusable presentation that must move to its recorded `packages/ui` target.
 - `obsolete-duplicate`: a local wrapper or duplicate already superseded by the recorded shared target.
 
-The manifest is an approval boundary, not a way to waive ownership. A new app-local component must be reviewed and recorded with explicit approval evidence and a useful rationale. Reusable presentation must be added to `packages/ui` instead. Removing or migrating a component updates the inventory in the same change so the file set and manifest remain exact.
+The manifest is an approval boundary, not a way to waive ownership. A new app-local component must be reviewed and recorded with explicit approval evidence and a useful rationale. The workspace check independently inspects each `product-orchestration` source for a product import/composable/data or emit flow, or for a thin typed adapter that composes shared presentation without local visual recipes. A stateless product-domain view may record at least two `domainEvidence` source symbols, which the check verifies against the file. A rationale string alone cannot certify ownership. Reusable presentation must be added to `packages/ui` instead. Removing or migrating a component updates the inventory in the same change so the file set and manifest remain exact.
 
 The manifest also records the exact pre-enforcement files that still bypass a required shared primitive. These are migration debt, not precedent: the check rejects any new bypass and rejects stale debt entries after migration.
 
@@ -32,6 +33,8 @@ The manifest also records the exact pre-enforcement files that still bypass a re
 Shared component composition follows `atoms → molecules → organisms → templates`: a layer may use its own layer or a lower layer, but never a higher layer. Product contracts never move into an atomic layer merely to satisfy this structure. Shared interaction controllers remain independent in `packages/ux`; `packages/ui` may consume them, while `packages/ux` must not depend on `packages/ui`.
 
 Every public UI source has an explicit package export. Adding, moving, or removing a shared component requires updating `packages/ui/package.json`, the `/components` catalogue when its capability changes, affected consumers, and the canonical manifest when local migration debt changes.
+
+Thin product adapters may remain when they add domain context before composing the shared owner. Current examples map Automation execution states to `StatusBadge`, Ledger tenant/reporting context to `BsPageHeader`, and product legal metadata/content to `BsPublicLegalPage`; the adapters contain no duplicate standalone presentation.
 
 ## Design-system lock and verification
 

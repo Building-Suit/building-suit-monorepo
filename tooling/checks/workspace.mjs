@@ -51,13 +51,21 @@ for (const file of await walk('packages')) {
 }
 
 const bypassPattern = /<table\b|<(?:DataTable|Dialog|ConfirmDialog)\b|role=["']dialog["']|(?:from\s*|import\s*\()\s*["']primevue\/(?:datatable|dialog|confirmdialog)["']/
+const localSurfaceRecipe = /class=["'][^"']*rounded-(?:card|xl|2xl)[^"']{0,96}(?:border[^"']{0,48}bg-(?:card|surface)|bg-(?:card|surface)[^"']{0,48}border)/
+const nativeActionRecipe = /<(?:button|form)\b[^>]*class=["'][^"']*(?:\bls-(?:btn|action|card)\b|rounded-(?:card|control|xl|2xl)[^"']{0,64}(?:border|bg-|p[xy]?-[0-9]))/
+const localActionRecipe = /<BsButton\b(?![^>]*\bvariant=["'](?:text|link|icon|tab|chip|tile)["'])[^>]*class=["'][^"']*(?:\btext-link\b|text-\[var\(--bs-link\)|\bls-tab\b|\bls-btn-icon\b|rounded-(?:card|xl|2xl)[^"']*(?:border|bg-))/
+const conflictingActionRecipe = /<BsButton\b[^>]*\bvariant=["'](?:text|link|icon|tab|chip|tile)["'][^>]*class=["'][^"']*\bls-btn\b/
 const detectedBypasses = []
 for (const app of appDirectories) for (const file of await walk(`apps/${app}/app`)) {
   const text = await readFile(path.join(root, file), 'utf8')
   if (bypassPattern.test(text)) detectedBypasses.push(file)
   if (applicationImport.test(text)) failures.push(`${file}: imports another app`)
   if (/window\.confirm\(|\bconfirm\(/.test(text)) failures.push(`${file}: bypasses shared confirmation`)
-  if (/<(?:Drawer|Select|AutoComplete)\b|(?:from\s*|import\s*\()\s*["'](?:reka-ui|@nuxt\/ui|radix-vue)["']/.test(text)) {
+  if (nativeActionRecipe.test(text)) failures.push(`${file}: native semantic controls must not own a reusable action/form recipe`)
+  if (localActionRecipe.test(text)) failures.push(`${file}: BsButton needs the shared semantic variant for its clickable presentation`)
+  if (conflictingActionRecipe.test(text)) failures.push(`${file}: semantic BsButton variants must not reintroduce default ls-btn chrome`)
+  if (localSurfaceRecipe.test(text)) failures.push(`${file}: repeated card/surface recipes must use a shared UI component or shared surface class`)
+  if (/<(?:Button|Card|Tag|Drawer|Select|AutoComplete)\b|(?:from\s*|import\s*\()\s*["'](?:reka-ui|@nuxt\/ui|radix-vue)["']/.test(text)) {
     failures.push(`${file}: shared wrappers are required for composite controls`)
   }
 }
@@ -90,6 +98,21 @@ for (const item of ownershipManifest.components || []) {
     failures.push(`${ownershipManifestPath}: ${item.path} needs a packages/ui migrationTarget`)
   }
   if (!await exists(item.path)) failures.push(`${ownershipManifestPath}: missing classified component ${item.path}`)
+  else if (item.classification === 'product-orchestration') {
+    const source = await readFile(path.join(root, item.path), 'utf8')
+    const sharedPresentation = /<(?:Bs[A-Z][A-Za-z0-9]*|StatusBadge|AppIcon)\b|\b(?:ls-card|ls-card-flat|ls-action-(?:text|link|icon|tab|chip|tile))\b/.test(source)
+    const productImports = /(?:from\s*|import\s*\()\s*["']~\//.test(source)
+    const productComposables = [...source.matchAll(/\b(use[A-Z][A-Za-z0-9]*)\s*\(/g)]
+      .some(([, name]) => !['useAttrs', 'useId', 'useI18n', 'useSlots', 'useUiCopy'].includes(name))
+    const domainFlow = productImports || productComposables || /defineEmits\s*</.test(source) || /(?:\$fetch|\.rpc\(|\.from\()/.test(source)
+    const thinAdapter = /defineProps\s*</.test(source) && sharedPresentation && !/<style\b/.test(source) && !localSurfaceRecipe.test(source)
+    const declaredEvidence = Array.isArray(item.domainEvidence) && item.domainEvidence.length >= 2
+      && item.domainEvidence.every(signal => typeof signal === 'string' && signal.length >= 4 && source.includes(signal))
+    if (!domainFlow && !thinAdapter && !declaredEvidence) failures.push(`${item.path}: product-orchestration classification lacks mechanically corroborated domain/adaptor behavior`)
+    if (!sharedPresentation && (localSurfaceRecipe.test(source) || localActionRecipe.test(source) || nativeActionRecipe.test(source))) {
+      failures.push(`${item.path}: product-orchestration owns reusable presentation instead of composing shared UI`)
+    }
+  }
 }
 const localComponents = (await Promise.all(appDirectories.map(app => walk(`apps/${app}/app/components`))))
   .flat().filter(file => file.endsWith('.vue')).sort()
@@ -135,6 +158,22 @@ for (const target of expectedUiTargets) if (!actualUiTargets.includes(target)) f
 for (const target of actualUiTargets) if (!expectedUiTargets.includes(target)) failures.push(`packages/ui/package.json: export target is not a governed UI source ${target}`)
 const uxPackage = JSON.parse(await readFile(path.join(root, 'packages/ux/package.json'), 'utf8'))
 if ({ ...uxPackage.dependencies, ...uxPackage.devDependencies }['@building-suit/ui']) failures.push('packages/ux/package.json: packages/ux must not depend on packages/ui')
+
+const scaffoldSources = {
+  app: await readFile(path.join(root, 'tooling/new-platform/templates/app/app.vue.template'), 'utf8'),
+  layout: await readFile(path.join(root, 'tooling/new-platform/templates/app/layouts/default.vue.template'), 'utf8'),
+  page: await readFile(path.join(root, 'tooling/new-platform/templates/app/pages/index.vue.template'), 'utf8'),
+}
+for (const component of ['BsAppShell', 'BsProductLogo', 'SettingsMenu']) {
+  if (!new RegExp(`<${component}\\b`).test(scaffoldSources.layout)) failures.push(`tooling/new-platform: default layout must compose ${component}`)
+}
+for (const component of ['ToastHost', 'BsConfirmHost']) {
+  if (!new RegExp(`<${component}\\b`).test(scaffoldSources.app)) failures.push(`tooling/new-platform: app root must compose ${component}`)
+}
+if (!/<BsContentSection\b/.test(scaffoldSources.page)) failures.push('tooling/new-platform: starter page must use shared page composition')
+if (/\bls-(?:card|btn|input|select)\b|<(?:button|form|section)\b[^>]*class=/.test(scaffoldSources.page)) {
+  failures.push('tooling/new-platform: starter page recreates shared presentation')
+}
 
 const migrationManifest = JSON.parse(await readFile(path.join(root, 'docs/migration/copy-manifest.json'), 'utf8'))
 let migrations = 0

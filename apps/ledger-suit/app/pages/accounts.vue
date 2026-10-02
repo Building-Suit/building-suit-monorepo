@@ -332,21 +332,21 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
           <input v-model="showArchived" type="checkbox" class="rounded-sm border-[var(--bs-border)]">
           {{ t('accounts.showArchived') }}
         </label>
-        <button v-if="can('accounts.create')" type="button" class="ls-btn ls-btn-primary" :disabled="!hydrated" @click="openCreate()">
+        <BsButton v-if="view === 'tree' && can('accounts.create')" type="button" class="ls-btn ls-btn-primary" :disabled="!hydrated" @click="openCreate()">
           {{ t('accounts.add') }}
-        </button>
+        </BsButton>
       </template>
     </LedgerPageHeader>
 
     <ChartTemplateReview />
 
     <div class="flex flex-wrap gap-2" :aria-label="t('accountTree.view')" role="group">
-      <button type="button" class="ls-btn ls-btn-sm" :class="{ 'ls-btn-primary': view === 'tree' }" :aria-pressed="view === 'tree'" :disabled="!hydrated" @click="selectView('tree')">{{ t('accountTree.treeView') }}</button>
-      <button type="button" class="ls-btn ls-btn-sm" :class="{ 'ls-btn-primary': view === 'table' }" :aria-pressed="view === 'table'" :disabled="!hydrated" @click="selectView('table')">{{ t('accountTree.tableView') }}</button>
+      <BsButton variant="chip" type="button" :aria-pressed="view === 'tree'" :disabled="!hydrated" @click="selectView('tree')">{{ t('accountTree.treeView') }}</BsButton>
+      <BsButton variant="chip" type="button" :aria-pressed="view === 'table'" :disabled="!hydrated" @click="selectView('table')">{{ t('accountTree.tableView') }}</BsButton>
     </div>
 
     <div v-if="view === 'table'" class="flex gap-1 overflow-x-auto border-b border-[var(--bs-border)]" role="tablist" :aria-label="t('accounts.tabsLabel')">
-      <button
+      <BsButton variant="tab"
         v-for="type in GROUP_TYPES"
         :id="`account-tab-${type}`"
         :key="type"
@@ -354,12 +354,11 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
         role="tab"
         :aria-controls="`account-panel-${type}`"
         :aria-selected="tab === type"
-        class="ls-tab -mb-px whitespace-nowrap"
-        :class="{ 'ls-tab-active': tab === type }"
+        class="-mb-px whitespace-nowrap"
         @click="selectTab(type)"
       >
         {{ t(`accounts.groups.${type}`) }}
-      </button>
+      </BsButton>
     </div>
 
     <div class="flex flex-wrap items-end gap-3">
@@ -367,7 +366,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
         <label for="account-search" class="mb-2 block text-sm font-semibold">{{ t('accounts.searchLabel') }}</label>
         <input id="account-search" ref="searchInput" v-model="search" type="search" class="ls-input" :placeholder="t('accounts.searchPlaceholder')" :aria-controls="view === 'tree' ? 'accounts-tree' : 'accounts-table'" :disabled="!hydrated || balancesPending || !!balancesError">
       </div>
-      <button v-if="search" type="button" class="ls-btn" @click="clearSearch">{{ t('accounts.clearSearch') }}</button>
+      <BsButton v-if="search" type="button" class="ls-btn" @click="clearSearch">{{ t('accounts.clearSearch') }}</BsButton>
       <p v-if="!balancesPending && !balancesError" class="py-2 text-sm text-fg-muted" role="status" data-testid="account-result-count">
         {{ view === 'table' ? t('accounts.resultCount', { count: filteredRows.length, total: activeGroup.rows.length, group: activeGroup.label }) : t('accountTree.accountCount', { count: visible.length }) }}
       </p>
@@ -375,7 +374,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
 
     <div v-if="hiddenSavedAccount && !balancesPending && !balancesError" class="ls-card flex flex-wrap items-center justify-between gap-3 p-4" role="status">
       <p class="text-sm">{{ t('accounts.savedHidden', { name: hiddenSavedAccount.name }) }}</p>
-      <button type="button" class="ls-btn" @click="revealSavedAccount">{{ t('accounts.revealSaved') }}</button>
+      <BsButton type="button" class="ls-btn" @click="revealSavedAccount">{{ t('accounts.revealSaved') }}</BsButton>
     </div>
 
     <div v-if="balancesPending" role="status" :aria-label="t('accounts.loading')">
@@ -386,7 +385,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
     <div v-else-if="balancesError" class="ls-card space-y-3 p-6" role="alert">
       <h2 class="font-bold">{{ t('accounts.loadError') }}</h2>
       <p class="text-sm text-fg-muted">{{ t('accounts.loadErrorHint') }}</p>
-      <button type="button" class="ls-btn" @click="refreshBalances()">{{ t('accounts.retry') }}</button>
+      <BsButton type="button" class="ls-btn" @click="refreshBalances()">{{ t('accounts.retry') }}</BsButton>
     </div>
 
     <EmptyState
@@ -422,9 +421,15 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
           :always-show-paginator="false"
           :value="filteredRows"
           data-key="account_id"
+          :capabilities="{ insert: can('accounts.create'), edit: can('accounts.update'), archive: can('accounts.archive') }"
+          :action-labels="{ insert: t('accounts.add'), edit: t('accounts.edit'), archive: t('accounts.archive'), actions: t('accounts.actions') }"
+          :can-row-action="(action, account) => action !== 'archive' || !account.is_archived"
           table-class="ls-table"
           :table-props="{ 'aria-label': t('accounts.caption', { group: activeGroup.label }) }"
           :pt="{ tableContainer: { class: 'overflow-x-auto', tabindex: 0, role: 'region', 'aria-label': t('accounts.tableScroll') } }"
+          @create="openCreate()"
+          @edit="openEdit"
+          @archive="archiveAccount"
         >
           <Column field="code" :header="t('accounts.code')" sortable :pt="sortColumnPt">
             <template #body="{ data: account }">
@@ -433,10 +438,10 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
           </Column>
           <Column field="name" :header="t('accounts.account')" sortable :pt="sortColumnPt">
             <template #body="{ data: account }">
-              <button v-if="account.account_role !== 'group' && canReadActivity" type="button" :disabled="!hydrated" class="text-start font-medium text-link hover:underline" :class="{ 'ps-4': account.parent_account_id }" @click="activityAccountId = account.account_id">{{ account.name }}</button>
+              <BsButton variant="link" v-if="account.account_role !== 'group' && canReadActivity" type="button" :disabled="!hydrated" class="text-start font-medium text-link hover:underline" :class="{ 'ps-4': account.parent_account_id }" @click="activityAccountId = account.account_id">{{ account.name }}</BsButton>
               <span v-else :class="{ 'ps-4': account.parent_account_id, 'font-semibold': activeGroup.parentIds.has(account.account_id) }">{{ account.name }}</span>
-              <span v-if="account.is_archived" class="ls-badge ms-2 bg-[var(--bs-surface-muted)] text-fg-muted">{{ t('accounts.archived') }}</span>
-              <span v-else-if="account.is_liquid" class="ls-badge ms-2 bg-[var(--bs-status-info-bg)] text-[var(--bs-status-info)]">{{ t('accounts.liquid') }}</span>
+              <StatusBadge v-if="account.is_archived" class="ms-2" status="archived" :label="t('accounts.archived')" tone="neutral" />
+              <StatusBadge v-else-if="account.is_liquid" class="ms-2" status="liquid" :label="t('accounts.liquid')" tone="info" />
             </template>
           </Column>
           <Column field="account_role" :header="t('accounts.role')">
@@ -446,7 +451,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
             <template #body="{ data: account }">
               <span v-if="account.control_subledger_type">{{ t(`controls.subledgers.${account.control_subledger_type}`) }}</span>
               <span v-else>{{ t('common.dash') }}</span>
-              <span v-if="account.control_binding_locked" class="ls-badge ms-2 bg-surface-muted text-fg-muted">{{ t('controls.bindingLocked') }}</span>
+              <StatusBadge v-if="account.control_binding_locked" class="ms-2" status="locked" :label="t('controls.bindingLocked')" tone="neutral" />
             </template>
           </Column>
           <Column field="subtype" :header="t('accounts.subtype')">
@@ -471,18 +476,14 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
               </template>
             </template>
           </Column>
-          <Column v-if="can('accounts.read')" :header="t('accounts.actions')" body-class="whitespace-nowrap text-end">
-            <template #body="{ data: account }">
-              <button v-if="['posting', 'control'].includes(account.account_role)" type="button" class="ls-btn ls-btn-sm me-1" @click="statementAccount = account">{{ t('statementClassification.title') }}</button>
-              <button v-if="can('accounts.update')" type="button" class="ls-btn ls-btn-sm" @click="openEdit(account)">{{ t('accounts.edit') }}</button>
-              <button v-if="can('accounts.archive') && !account.is_archived" type="button" class="ls-btn ls-btn-sm ms-1" @click="archiveAccount(account)">{{ t('accounts.archive') }}</button>
-            </template>
-          </Column>
+          <template #row-actions="{ row: account }">
+              <BsButton v-if="['posting', 'control'].includes(account.account_role)" type="button" class="ls-btn ls-btn-sm me-1" @click="statementAccount = account">{{ t('statementClassification.title') }}</BsButton>
+          </template>
           <template #paginatorcontainer="{ page, pageCount, prevPageCallback, nextPageCallback }">
             <nav class="flex flex-wrap items-center justify-center gap-3 border-t border-[var(--bs-border)] p-3" :aria-label="t('accounts.pages')">
-              <button type="button" class="ls-btn ls-btn-sm" :disabled="page === 0" @click="prevPageCallback">{{ t('accounts.previousPage') }}</button>
+              <BsButton type="button" class="ls-btn ls-btn-sm" :disabled="page === 0" @click="prevPageCallback">{{ t('accounts.previousPage') }}</BsButton>
               <span class="text-sm text-fg-muted">{{ t('accounts.pageCount', { page: page + 1, total: pageCount }) }}</span>
-              <button type="button" class="ls-btn ls-btn-sm" :disabled="page + 1 >= (pageCount ?? 1)" @click="nextPageCallback">{{ t('accounts.nextPage') }}</button>
+              <BsButton type="button" class="ls-btn ls-btn-sm" :disabled="page + 1 >= (pageCount ?? 1)" @click="nextPageCallback">{{ t('accounts.nextPage') }}</BsButton>
             </nav>
           </template>
           <template #empty>
@@ -503,12 +504,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
       />
       <AccountActivityDialog v-if="activityAccountId" :key="`${balanceKey}:${activityAccountId}`" :account-id="activityAccountId" :scope="balanceKey" @close="activityAccountId = null" />
       <AccountStatementClassificationDialog v-if="statementAccount" :key="`${balanceKey}:${statementAccount.account_id}`" :account="statementAccount" :scope="balanceKey" @close="statementAccount = null" />
-      <BsDialog v-if="editorOpen" :visible="true" :title="editing ? t('accounts.edit') : t('accounts.add')" :aria-label="editing ? t('accounts.edit') : t('accounts.add')" :show-header="false" size="md" :dirty="overlayDirty0" :pending="submitting" @update:visible="value => { if (!value) editorOpen = false }"><template #default="{ close: dismiss }">
-<form class="space-y-4 p-6" @submit.prevent="saveAccount">
-          <div class="flex items-center justify-between">
-            <h2 class="text-lg font-bold">{{ editing ? t('accounts.edit') : t('accounts.add') }}</h2>
-            <button type="button" class="ls-btn ls-btn-sm" :aria-label="t('common.close')" @click="dismiss"><AppIcon name="close" /></button>
-          </div>
+      <BsRecordActionDialog v-if="editorOpen" v-model:visible="editorOpen" :title="editing ? t('accounts.edit') : t('accounts.add')" size="md" :dirty="overlayDirty0" :pending="submitting" :error="editorError" :submit-label="t('common.save')" :cancel-label="t('common.cancel')" @submit="saveAccount">
           <QuotaUsageMeter v-if="!editing" quota-key="max_accounts" compact />
           <FloatingField :label="t('accounts.name')"><input id="account-name" v-model="form.name" class="ls-input" required></FloatingField>
           <FloatingField :label="t('accounts.code')"><input id="account-code" v-model="form.code" class="ls-input" dir="ltr"></FloatingField>
@@ -565,9 +561,8 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
           <p v-if="form.accountRole === 'posting'" id="account-contra-help" class="text-sm text-fg-muted">{{ t('accounts.contraHint') }}</p>
           <p v-if="natureLocked" class="text-sm text-fg-muted">{{ t('accounts.natureLocked') }}</p>
           </template>
-          <p v-if="editorError" class="ls-error" role="alert">{{ editorError }}</p>
-          <div class="flex justify-end gap-2"><button type="button" class="ls-btn" @click="dismiss">{{ t('common.cancel') }}</button><button class="ls-btn ls-btn-primary" :disabled="submitting">{{ submitting ? t('common.saving') : t('common.save') }}</button></div>
-        </form>
-</template></BsDialog>
+      </BsRecordActionDialog>
   </div>
 </template>
+
+undefined

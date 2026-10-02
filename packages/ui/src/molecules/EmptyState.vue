@@ -12,18 +12,5 @@ defineEmits<{ action: [] }>()
 </script>
 
 <template>
-  <div class="flex flex-col items-center justify-center rounded-card border border-dashed border-[var(--bs-border)] px-6 py-12 text-center">
-    <p class="text-base font-semibold">{{ title }}</p>
-    <p v-if="description" class="mt-2 max-w-sm text-sm text-fg-muted">
-      {{ description }}
-    </p>
-    <button
-      v-if="actionLabel"
-      type="button"
-      class="ls-btn ls-btn-accent mt-6"
-      @click="$emit('action')"
-    >
-      {{ actionLabel }}
-    </button>
-  </div>
+  <BsStateSurface state="empty" :title="title" :description="description" :action-label="actionLabel" @action="$emit('action')" />
 </template>

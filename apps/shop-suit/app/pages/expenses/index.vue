@@ -240,15 +240,14 @@ function handlePage(event: { page: number }) { page.value = event.page + 1 }
       <div><h1 class="text-3xl font-extrabold tracking-tight">{{ copy.title }}</h1><p class="mt-2 text-sm text-muted-foreground">{{ copy.subtitle }}</p></div>
       <BsButton v-if="current && currentLocationId && canManage" type="button" class="ls-btn ls-btn-primary" @click="openCreate">{{ copy.add }}</BsButton>
     </header>
-    <div v-if="!current && !shopLoading" class="rounded-2xl border border-border bg-card p-8 text-center text-sm"><p>{{ copy.noShop }}</p><NuxtLink to="/dashboard" class="mt-3 inline-block font-bold text-[var(--bs-link)] underline">{{ copy.dashboard }}</NuxtLink></div>
+    <div v-if="!current && !shopLoading" class="ls-card p-8 text-center text-sm"><p>{{ copy.noShop }}</p><NuxtLink to="/dashboard" class="mt-3 inline-block font-bold text-[var(--bs-link)] underline">{{ copy.dashboard }}</NuxtLink></div>
     <template v-else-if="current">
       <p class="rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm">{{ copy.incomeBoundary }}</p>
       <p v-if="!currentLocationId" role="alert" class="rounded-xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-4 text-sm">{{ copy.noLocation }}</p>
       <p v-else-if="!pending && !error && !canManage" class="rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm">{{ copy.readOnly }}</p>
       <p v-if="actionError && !showForm && !voidOpen" role="alert" class="ls-error">{{ actionError }}</p>
 
-      <BsDialog v-model:visible="showForm" :title="editingId ? copy.correct : copy.add" :dirty="formDirty" :pending="saving">
-        <template #default="{ close }"><BsForm class="grid gap-4 sm:grid-cols-2" :pending="saving" :error="actionError" @submit="save">
+      <BsRecordActionDialog v-model:visible="showForm" :title="editingId ? copy.correct : copy.add" :dirty="formDirty" :pending="saving" :error="actionError" :submit-label="editingId ? copy.saveCorrection : copy.save" :cancel-label="copy.cancel" @submit="save">
 
           <p v-if="editingId" class="rounded-xl bg-muted p-3 text-sm sm:col-span-2">{{ copy.correctionHelp }}</p>
           <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ copy.name }}<input v-model="form.title" type="text" minlength="2" maxlength="160" required class="ls-input"></label>
@@ -257,20 +256,14 @@ function handlePage(event: { page: number }) { page.value = event.page + 1 }
           <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ copy.category }}<input v-model="form.category" type="text" list="shop-expense-categories" minlength="2" maxlength="80" required :placeholder="copy.categoryHint" class="ls-input"><datalist id="shop-expense-categories"><option v-for="category in categories" :key="category.id" :value="category.name" /></datalist></label>
           <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ copy.notes }}<textarea v-model="form.notes" rows="2" maxlength="1000" class="ls-input" /></label>
           <label v-if="editingId" class="space-y-2 text-sm font-bold sm:col-span-2">{{ copy.correctionReason }}<textarea v-model="form.correctionReason" rows="2" minlength="2" maxlength="500" required class="ls-input" /></label>
-          <div class="flex items-center gap-2 sm:col-span-2"><BsButton type="submit" class="ls-btn ls-btn-primary" :disabled="saving">{{ saving ? copy.saving : editingId ? copy.saveCorrection : copy.save }}</BsButton><BsButton type="button" class="ls-btn" :disabled="saving" @click="close">{{ copy.cancel }}</BsButton></div>
-        </BsForm></template>
-      </BsDialog>
+      </BsRecordActionDialog>
 
-      <BsDialog v-model:visible="voidOpen" :title="copy.voidTitle" :dirty="voidDirty" :pending="voidPending" size="sm">
+      <BsRecordActionDialog v-model:visible="voidOpen" :title="copy.voidTitle" :dirty="voidDirty" :pending="voidPending" :error="actionError" :submit-label="copy.void" :cancel-label="copy.cancel" submit-tone="danger" size="sm" @submit="submitVoid">
         <p class="mb-4 text-sm text-muted-foreground">{{ copy.voidHelp }}</p>
-        <BsForm class="space-y-4" :pending="voidPending" :error="actionError" @submit="submitVoid">
+        <label class="space-y-2 text-sm font-bold">{{ copy.voidReason }}<textarea v-model="voidReason" rows="3" minlength="2" maxlength="500" required class="ls-input" /></label>
+      </BsRecordActionDialog>
 
-          <label class="space-y-2 text-sm font-bold">{{ copy.voidReason }}<textarea v-model="voidReason" rows="3" minlength="2" maxlength="500" required class="ls-input" /></label>
-          <div class="flex items-center gap-2"><BsButton type="submit" class="ls-btn ls-btn-primary" :disabled="voidPending">{{ copy.void }}</BsButton><BsButton type="button" class="ls-btn" :disabled="voidPending" @click="closeVoid">{{ copy.cancel }}</BsButton></div>
-        </BsForm>
-      </BsDialog>
-
-      <section v-if="currentLocationId" class="overflow-hidden rounded-2xl border border-border bg-card">
+      <section v-if="currentLocationId" class="overflow-hidden ls-card">
         <div class="grid gap-3 border-b border-border p-4 sm:grid-cols-2 xl:grid-cols-6">
           <input v-model="search" type="search" :placeholder="copy.search" :aria-label="copy.search" class="ls-input xl:col-span-2">
           <select v-model="statusFilter" :aria-label="copy.status" class="ls-select"><option value="all">{{ copy.allStatuses }}</option><option value="paid">{{ copy.paid }}</option><option value="void">{{ copy.voided }}</option></select>
@@ -285,7 +278,7 @@ function handlePage(event: { page: number }) { page.value = event.page + 1 }
           <Column header-class="px-4 py-3 text-start" body-class="px-4 py-3"><template #header>{{ copy.date }}</template><template #body="{ data: expense }">{{ displayDate(expense.expense_date) }}</template></Column>
           <Column header-class="px-4 py-3 text-start" body-class="px-4 py-3"><template #header>{{ copy.history }}</template><template #body="{ data: expense }"><span class="ls-badge bg-muted text-fg">{{ historyLabel(expense.history_kind) }}</span><p class="mt-1 text-xs text-muted-foreground">{{ expense.created_by_name || '—' }}</p></template></Column>
           <Column header-class="px-4 py-3 text-end" body-class="px-4 py-3 text-end"><template #header>{{ copy.amount }}</template><template #body="{ data: expense }">{{ money(expense.amount) }}</template></Column>
-          <Column header-class="px-4 py-3 text-end" body-class="px-4 py-3 text-end"><template #header>{{ copy.status }}</template><template #body="{ data: expense }"><span class="ls-badge" :class="expense.status === 'paid' ? 'bg-[var(--bs-status-success-bg)] text-fg' : 'bg-muted text-muted-foreground'">{{ expense.status === 'paid' ? copy.paid : copy.voided }}</span><div v-if="canManage && expense.status === 'paid'" class="mt-2 flex justify-end gap-2"><BsButton type="button" class="text-sm font-bold text-[var(--bs-link)]" @click="openCorrection(expense)">{{ copy.correct }}</BsButton><BsButton type="button" class="text-sm font-bold text-[var(--bs-status-error)]" @click="openVoid(expense)">{{ copy.void }}</BsButton></div></template></Column>
+          <Column header-class="px-4 py-3 text-end" body-class="px-4 py-3 text-end"><template #header>{{ copy.status }}</template><template #body="{ data: expense }"><span class="ls-badge" :class="expense.status === 'paid' ? 'bg-[var(--bs-status-success-bg)] text-fg' : 'bg-muted text-muted-foreground'">{{ expense.status === 'paid' ? copy.paid : copy.voided }}</span><div v-if="canManage && expense.status === 'paid'" class="mt-2 flex justify-end gap-2"><BsButton variant="link" type="button" class="text-sm font-bold text-[var(--bs-link)]" @click="openCorrection(expense)">{{ copy.correct }}</BsButton><BsButton variant="text" type="button" class="text-sm font-bold text-[var(--bs-status-error)]" @click="openVoid(expense)">{{ copy.void }}</BsButton></div></template></Column>
           <template #empty><p class="p-8 text-center text-sm text-muted-foreground">{{ copy.empty }}</p></template>
         </BsDataTable>
       </section>

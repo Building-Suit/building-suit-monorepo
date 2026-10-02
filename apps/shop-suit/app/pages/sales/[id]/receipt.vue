@@ -58,7 +58,7 @@ async function printReceipt() {
       <NuxtLink :to="`/sales/${saleId}`" class="inline-flex min-h-11 items-center font-semibold text-[var(--bs-link)] underline-offset-4 hover:underline">{{ t('receipt.back') }}</NuxtLink>
       <div class="flex flex-wrap gap-2">
         <div class="flex rounded-xl border border-border p-1" role="group" :aria-label="t('receipt.language')">
-          <button v-for="language in ['en', 'ar'] as const" :key="language" type="button" class="min-h-11 rounded-lg px-3 text-sm font-bold" :class="receiptLanguage === language ? 'bg-primary text-primary-foreground' : ''" @click="receiptLanguage = language">{{ language === 'ar' ? 'العربية' : 'English' }}</button>
+          <BsButton v-for="language in ['en', 'ar'] as const" :key="language" type="button" class="min-h-11 rounded-lg px-3 text-sm font-bold" :class="receiptLanguage === language ? 'bg-primary text-primary-foreground' : ''" @click="receiptLanguage = language">{{ language === 'ar' ? 'العربية' : 'English' }}</BsButton>
         </div>
         <select v-model="paperSize" class="ls-select min-h-11" :aria-label="t('receipt.paperSize')">
           <option value="thermal_80">{{ t('receipt.thermal80') }}</option>
@@ -70,9 +70,9 @@ async function printReceipt() {
     </div>
 
     <p v-if="shareError" role="alert" class="receipt-controls rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm text-[var(--bs-status-error)]">{{ shareError }}</p>
-    <div v-if="pending" role="status" class="rounded-2xl border border-border bg-card p-12 text-center">{{ t('receipt.loading') }}</div>
-    <div v-else-if="error" role="alert" class="rounded-2xl border border-border bg-card p-8 text-center"><p>{{ t('receipt.loadError') }}</p><BsButton severity="secondary" class="mt-3" @click="refresh()">{{ t('common.retry') }}</BsButton></div>
-    <div v-else-if="!receipt" role="status" class="rounded-2xl border border-border bg-card p-8 text-center"><p>{{ t('receipt.unavailable') }}</p><NuxtLink :to="`/sales/${saleId}`" class="mt-3 inline-block font-bold text-[var(--bs-link)]">{{ t('receipt.back') }}</NuxtLink></div>
+    <div v-if="pending" role="status" class="ls-card p-12 text-center">{{ t('receipt.loading') }}</div>
+    <div v-else-if="error" role="alert" class="ls-card p-8 text-center"><p>{{ t('receipt.loadError') }}</p><BsButton severity="secondary" class="mt-3" @click="refresh()">{{ t('common.retry') }}</BsButton></div>
+    <div v-else-if="!receipt" role="status" class="ls-card p-8 text-center"><p>{{ t('receipt.unavailable') }}</p><NuxtLink :to="`/sales/${saleId}`" class="mt-3 inline-block font-bold text-[var(--bs-link)]">{{ t('receipt.back') }}</NuxtLink></div>
 
     <article v-else class="receipt-print-surface mx-auto bg-white text-black" :class="paperSize === 'thermal_80' ? 'receipt-thermal' : 'receipt-a4'" :dir="receiptLanguage === 'ar' ? 'rtl' : 'ltr'" :lang="receiptLanguage">
       <header class="text-center">

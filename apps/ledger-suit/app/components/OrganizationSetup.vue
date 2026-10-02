@@ -62,13 +62,13 @@ async function acceptInvitation() {
 
 <template>
   <div class="mx-auto grid max-w-3xl gap-6 md:grid-cols-2">
-    <form class="ls-card space-y-4 p-6" @submit.prevent="createOrganization"><h2 class="text-lg font-bold">{{ t('org.create') }}</h2><p class="text-sm text-fg-muted">{{ t('org.createHint') }}</p><FloatingField :label="t('org.name')"><input id="org-name" v-model="name" class="ls-input" required></FloatingField><FloatingField :label="t('onboarding.legalName')"><input id="org-legal-name" v-model="legalName" class="ls-input" required></FloatingField><FloatingField :label="t('accounts.currency')"><select id="org-currency" v-model="currency" class="ls-input"><option v-for="code in ['EGP','USD','EUR','GBP','SAR','AED']" :key="code">{{ code }}</option></select></FloatingField><button class="ls-btn ls-btn-primary w-full" :disabled="pending">{{ t('org.create') }}</button></form>
-    <form class="ls-card space-y-4 p-6" @submit.prevent="acceptInvitation"><h2 class="text-lg font-bold">{{ t('org.acceptInvite') }}</h2><p class="text-sm text-fg-muted">{{ t('org.acceptInviteHint') }}</p><FloatingField :label="t('org.inviteToken')"><input id="invite-token" v-model="invitationToken" class="ls-input" dir="ltr" required></FloatingField><button class="ls-btn w-full" :disabled="pending">{{ t('org.acceptInvite') }}</button></form>
+    <BsForm class="ls-card space-y-4 p-6" @submit.prevent="createOrganization"><h2 class="text-lg font-bold">{{ t('org.create') }}</h2><p class="text-sm text-fg-muted">{{ t('org.createHint') }}</p><FloatingField :label="t('org.name')"><input id="org-name" v-model="name" class="ls-input" required></FloatingField><FloatingField :label="t('onboarding.legalName')"><input id="org-legal-name" v-model="legalName" class="ls-input" required></FloatingField><FloatingField :label="t('accounts.currency')"><select id="org-currency" v-model="currency" class="ls-input"><option v-for="code in ['EGP','USD','EUR','GBP','SAR','AED']" :key="code">{{ code }}</option></select></FloatingField><BsButton type="submit" class="ls-btn ls-btn-primary w-full" :disabled="pending">{{ t('org.create') }}</BsButton></BsForm>
+    <BsForm class="ls-card space-y-4 p-6" @submit.prevent="acceptInvitation"><h2 class="text-lg font-bold">{{ t('org.acceptInvite') }}</h2><p class="text-sm text-fg-muted">{{ t('org.acceptInviteHint') }}</p><FloatingField :label="t('org.inviteToken')"><input id="invite-token" v-model="invitationToken" class="ls-input" dir="ltr" required></FloatingField><BsButton type="submit" class="ls-btn w-full" :disabled="pending">{{ t('org.acceptInvite') }}</BsButton></BsForm>
     <p v-if="errorMessage" class="ls-error md:col-span-2" role="alert">{{ errorMessage }}</p>
     <section v-if="!showDemo" class="ls-card space-y-3 p-6 md:col-span-2" aria-labelledby="demo-invitation-title">
       <h2 id="demo-invitation-title" class="text-lg font-bold">{{ t('demo.invitationTitle') }}</h2>
       <p class="text-sm text-fg-muted">{{ t('demo.invitationHint') }}</p>
-      <button type="button" class="ls-btn" @click="showDemo = true">{{ t('demo.open') }}</button>
+      <BsButton type="button" class="ls-btn" @click="showDemo = true">{{ t('demo.open') }}</BsButton>
     </section>
     <SyntheticDemo v-else @close="showDemo = false" />
   </div>

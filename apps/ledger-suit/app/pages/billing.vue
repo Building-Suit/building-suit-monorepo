@@ -38,7 +38,8 @@ const currentPlanName = computed(() => {
       <p class="mt-1 text-sm text-fg-muted">{{ t('billing.subtitle') }}</p>
     </header>
 
-    <div class="ls-card space-y-6 p-6">
+    <BsCard as="div" padding="lg">
+      <div class="space-y-6">
       <div class="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p class="text-xs text-fg-muted">{{ t('billing.currentPlan') }}</p>
@@ -58,7 +59,8 @@ const currentPlanName = computed(() => {
       </p>
       <p v-if="subscription?.provider === 'manual'" class="text-sm text-fg-muted">{{ t('billing.manual.managed') }}</p>
       <div id="plans"><BillingCheckout :surface="pricingSurface" compact /></div>
-    </div>
+      </div>
+    </BsCard>
     <UsageMeters />
   </div>
 </template>

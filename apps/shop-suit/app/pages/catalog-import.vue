@@ -28,6 +28,8 @@ const parsingError = ref('')
 const pending = ref(false)
 const categoryName = ref('')
 const categoryPending = ref(false)
+const categoryError = ref('')
+const { visible: categoryOpen, dirty: categoryDirty, complete: completeCategory } = useRecordAction(() => ({ name: categoryName.value }))
 const categoryFilter = ref('')
 const reportFrom = ref(new Date(Date.now() - 29 * 86400000).toISOString().slice(0, 10))
 const reportTo = ref(new Date().toISOString().slice(0, 10))
@@ -126,12 +128,13 @@ async function addCategory() {
   if (!currentId.value || categoryPending.value || categoryName.value.trim().length < 2) return
   const inScope = captureScope()
   categoryPending.value = true
+  categoryError.value = ''
   try {
     const { error } = await rpc.rpc('save_catalog_category', { p_shop_id: currentId.value, p_category_id: null, p_name: categoryName.value.trim() })
     if (!inScope()) return
     if (error) throw error
-    categoryName.value = ''; await refreshCategories()
-  } catch { if (inScope()) pushToast({ tone: 'error', title: copy.value.categoryError }) }
+    categoryName.value = ''; await refreshCategories(); completeCategory()
+  } catch { if (inScope()) categoryError.value = copy.value.categoryError }
   finally { categoryPending.value = false }
 }
 
@@ -166,15 +169,18 @@ function money(value: number) { return new Intl.NumberFormat(isArabic.value ? 'a
 <template>
   <div class="space-y-6">
     <header><h1 class="text-3xl font-extrabold tracking-tight">{{ copy.title }}</h1><p class="mt-2 text-sm text-muted-foreground">{{ copy.subtitle }}</p></header>
-    <p v-if="!current && !shopLoading" class="rounded-2xl border border-border bg-card p-8 text-center text-sm">{{ copy.noShop }}</p>
+    <p v-if="!current && !shopLoading" class="ls-card p-8 text-center text-sm">{{ copy.noShop }}</p>
     <template v-else-if="current">
-      <section class="rounded-2xl border border-border bg-card p-5">
-        <h2 class="text-lg font-extrabold">{{ copy.categories }}</h2>
-        <BsForm class="mt-4 flex flex-wrap gap-2" :pending="categoryPending" @submit="addCategory"><input v-model="categoryName" :aria-label="copy.categoryName" class="ls-input max-w-sm" minlength="2" maxlength="80" required :placeholder="copy.categoryName"><BsButton type="submit" :pending="categoryPending">{{ copy.addCategory }}</BsButton></BsForm>
+      <section class="ls-card p-5">
+        <div class="flex flex-wrap items-center justify-between gap-3"><h2 class="text-lg font-extrabold">{{ copy.categories }}</h2><BsButton variant="primary" @click="categoryName = ''; categoryError = ''; categoryOpen = true">{{ copy.addCategory }}</BsButton></div>
         <div class="mt-3 flex flex-wrap gap-2"><span v-for="category in categories" :key="category.id" class="ls-badge bg-muted">{{ category.name }}</span></div>
       </section>
 
-      <section class="rounded-2xl border border-border bg-card p-5">
+      <BsRecordActionDialog v-model:visible="categoryOpen" :title="copy.addCategory" :dirty="categoryDirty" :pending="categoryPending" :error="categoryError" :submit-label="copy.addCategory" @submit="addCategory">
+        <BsField :label="copy.categoryName"><BsInput v-model="categoryName" minlength="2" maxlength="80" required /></BsField>
+      </BsRecordActionDialog>
+
+      <section class="ls-card p-5">
         <div class="flex flex-wrap items-center justify-between gap-3"><h2 class="text-lg font-extrabold">{{ copy.importTitle }}</h2><BsButton severity="secondary" @click="template">{{ copy.template }}</BsButton></div>
         <div class="mt-4 grid gap-4 md:grid-cols-2">
           <label class="space-y-2 text-sm font-bold">{{ copy.importTitle }}<select v-model="kind" :disabled="pending" class="ls-select"><option value="products">{{ copy.products }}</option><option value="customers">{{ copy.customers }}</option><option value="suppliers">{{ copy.suppliers }}</option></select></label>
@@ -187,7 +193,7 @@ function money(value: number) { return new Intl.NumberFormat(isArabic.value ? 'a
         <div v-if="result?.errors.length" class="mt-4 overflow-x-auto"><BsDataTable :value="result.errors"><Column field="row" :header="copy.row"/><Column field="field" :header="copy.field"/><Column field="code" :header="copy.issue"/></BsDataTable></div>
       </section>
 
-      <section class="rounded-2xl border border-border bg-card p-5">
+      <section class="ls-card p-5">
         <div class="flex flex-wrap items-center justify-between gap-3"><h2 class="text-lg font-extrabold">{{ copy.report }}</h2><BsButton severity="secondary" :pending="exporting" @click="exportLabels">{{ copy.labels }}</BsButton></div>
         <div class="mt-4 grid gap-3 sm:grid-cols-3"><label class="space-y-2 text-sm font-bold">{{ copy.category }}<select v-model="categoryFilter" class="ls-select"><option value="">{{ copy.allCategories }}</option><option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option></select></label><label class="space-y-2 text-sm font-bold">{{ copy.from }}<input v-model="reportFrom" type="date" class="ls-input"></label><label class="space-y-2 text-sm font-bold">{{ copy.to }}<input v-model="reportTo" type="date" class="ls-input"></label></div>
         <p v-if="reportPending" role="status" class="p-5 text-sm text-muted-foreground">{{ copy.validating }}</p>

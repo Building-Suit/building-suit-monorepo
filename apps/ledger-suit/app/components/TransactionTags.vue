@@ -74,14 +74,14 @@ async function changeTag(tagId: string, remove = false) {
     <p v-if="pending || tagsPending" role="status" class="text-sm text-fg-muted">{{ t('app.loading') }}</p>
     <div v-else-if="error || tagsError" role="alert" class="ls-error">
       {{ t('tagsGuide.loadError') }}
-      <button type="button" class="ls-btn ls-btn-sm ms-2" @click="refresh(); refreshOptions()">{{ t('accounts.retry') }}</button>
+      <BsButton type="button" class="ls-btn ls-btn-sm ms-2" @click="refresh(); refreshOptions()">{{ t('accounts.retry') }}</BsButton>
     </div>
     <template v-else>
       <ul v-if="assigned.length" class="flex flex-wrap gap-2" :aria-label="t('tagsGuide.assigned')">
         <li v-for="row in assigned" :key="row.tag_id" class="inline-flex max-w-full items-center gap-2 rounded-control border border-line bg-surface-muted px-3 py-1 text-sm">
           <span aria-hidden="true" class="size-2 shrink-0 rounded-full" :style="{ backgroundColor: row.tags?.color ?? 'var(--bs-primary)' }" />
           <span class="break-words">{{ row.tags?.name }}</span>
-          <button v-if="canManage" type="button" class="ls-btn ls-btn-sm" :disabled="busy" :aria-label="t('tagsGuide.remove', { name: row.tags?.name })" @click="changeTag(row.tag_id, true)"><AppIcon name="close" :size="14" /></button>
+          <BsButton v-if="canManage" type="button" class="ls-btn ls-btn-sm" :disabled="busy" :aria-label="t('tagsGuide.remove', { name: row.tags?.name })" @click="changeTag(row.tag_id, true)"><AppIcon name="close" :size="14" /></BsButton>
         </li>
       </ul>
       <p v-else class="text-sm text-fg-muted">{{ t('tagsGuide.noneAssigned') }}</p>
@@ -92,7 +92,7 @@ async function changeTag(tagId: string, remove = false) {
             <option v-for="tag in available" :key="tag.id" :value="tag.id">{{ tag.name }}</option>
           </select>
         </FloatingField>
-        <button type="button" class="ls-btn" :disabled="!selected || busy" @click="changeTag(selected)">{{ t('operations.assign') }}</button>
+        <BsButton type="button" class="ls-btn" :disabled="!selected || busy" @click="changeTag(selected)">{{ t('operations.assign') }}</BsButton>
       </div>
       <p v-if="!tags.length" class="text-sm text-fg-muted">{{ t('tagsGuide.noOptions') }}</p>
       <p v-if="failure" role="alert" class="ls-error">{{ failure }}</p>

@@ -6,50 +6,47 @@
  * Gold is deliberately absent: per the brand guidelines gold is not a status
  * colour, it marks the single focal point of a screen.
  */
-const props = defineProps<{ status: string | null | undefined }>()
+type StatusTone = 'neutral' | 'success' | 'info' | 'warning' | 'danger'
+
+const props = withDefaults(defineProps<{
+  status: string | null | undefined
+  label?: string
+  tone?: StatusTone
+  icon?: string | false
+}>(), { label: undefined, tone: undefined, icon: undefined })
 
 const { t, te } = useI18n()
 
-const TONES: Record<string, string> = {
-  posted: 'bg-[var(--bs-status-success-bg)] text-[var(--bs-status-success)]',
-  completed: 'bg-[var(--bs-status-success-bg)] text-[var(--bs-status-success)]',
-  valid: 'bg-[var(--bs-status-success-bg)] text-[var(--bs-status-success)]',
-  paid: 'bg-[var(--bs-status-success-bg)] text-[var(--bs-status-success)]',
-  active: 'bg-[var(--bs-status-success-bg)] text-[var(--bs-status-success)]',
-  trialing: 'bg-[var(--bs-status-info-bg)] text-[var(--bs-status-info)]',
-  grace_period: 'bg-[var(--bs-status-warning-bg)] text-[var(--bs-status-warning)]',
-  checkout_required: 'bg-[var(--bs-status-warning-bg)] text-[var(--bs-status-warning)]',
-  read_only: 'bg-[var(--bs-status-error-bg)] text-[var(--bs-status-error)]',
-  scheduled: 'bg-[var(--bs-status-info-bg)] text-[var(--bs-status-info)]',
-  pending: 'bg-[var(--bs-status-warning-bg)] text-[var(--bs-status-warning)]',
-  processing: 'bg-[var(--bs-status-warning-bg)] text-[var(--bs-status-warning)]',
-  partial: 'bg-[var(--bs-status-warning-bg)] text-[var(--bs-status-warning)]',
-  pending_approval: 'bg-[var(--bs-status-warning-bg)] text-[var(--bs-status-warning)]',
-  due: 'bg-[var(--bs-status-warning-bg)] text-[var(--bs-status-warning)]',
-  due_soon: 'bg-[var(--bs-status-warning-bg)] text-[var(--bs-status-warning)]',
-  partially_paid: 'bg-[var(--bs-status-warning-bg)] text-[var(--bs-status-warning)]',
-  reversed: 'bg-[var(--bs-status-info-bg)] text-[var(--bs-status-info)]',
-  failed: 'bg-[var(--bs-status-error-bg)] text-[var(--bs-status-error)]',
-  invalid: 'bg-[var(--bs-status-error-bg)] text-[var(--bs-status-error)]',
-  overdue: 'bg-[var(--bs-status-error-bg)] text-[var(--bs-status-error)]',
-  draft: 'bg-[var(--bs-surface-muted)] text-[var(--bs-text-muted)]',
-  staged: 'bg-[var(--bs-surface-muted)] text-[var(--bs-text-muted)]',
-  validated: 'bg-[var(--bs-surface-muted)] text-[var(--bs-text-muted)]',
-  duplicate: 'bg-[var(--bs-surface-muted)] text-[var(--bs-text-muted)]',
-  voided: 'bg-[var(--bs-surface-muted)] text-[var(--bs-text-muted)]',
-  cancelled: 'bg-[var(--bs-surface-muted)] text-[var(--bs-text-muted)]',
-  paused: 'bg-[var(--bs-surface-muted)] text-[var(--bs-text-muted)]',
-  skipped: 'bg-[var(--bs-surface-muted)] text-[var(--bs-text-muted)]',
+const STATUS_TONES: Record<string, StatusTone> = {
+  posted: 'success', completed: 'success', valid: 'success', paid: 'success', active: 'success', passed: 'success', approved: 'success', succeeded: 'success', merged: 'success', finished: 'success',
+  trialing: 'info', scheduled: 'info', reversed: 'info', running: 'info', in_progress: 'info', verification: 'info', open: 'info', planned: 'info', queued: 'info',
+  grace_period: 'warning', checkout_required: 'warning', pending: 'warning', processing: 'warning', partial: 'warning', pending_approval: 'warning', due: 'warning', due_soon: 'warning', partially_paid: 'warning', blocked: 'warning', not_run: 'warning', stopped: 'warning',
+  read_only: 'danger', failed: 'danger', fail: 'danger', invalid: 'danger', overdue: 'danger', critical: 'danger',
+}
+
+const TONE_CLASSES: Record<StatusTone, string> = {
+  neutral: 'bg-[var(--bs-surface-muted)] text-[var(--bs-text-muted)]',
+  success: 'bg-[var(--bs-status-success-bg)] text-[var(--bs-status-success)]',
+  info: 'bg-[var(--bs-status-info-bg)] text-[var(--bs-status-info)]',
+  warning: 'bg-[var(--bs-status-warning-bg)] text-[var(--bs-status-warning)]',
+  danger: 'bg-[var(--bs-status-error-bg)] text-[var(--bs-status-error)]',
 }
 
 const key = computed(() => props.status ?? 'unknown')
-const label = computed(() =>
-  te(`status.${key.value}`) ? t(`status.${key.value}`) : key.value.replace(/_/g, ' '),
-)
-const klass = computed(() => TONES[key.value] ?? TONES.draft)
-const icon = computed(() => ['posted', 'paid', 'active'].includes(key.value) ? 'checkBadge' : key.value === 'failed' || key.value === 'overdue' || key.value === 'read_only' ? 'close' : 'notification')
+const label = computed(() => props.label ?? (
+  te(`status.${key.value}`) ? t(`status.${key.value}`) : key.value.replace(/_/g, ' ')
+))
+const tone = computed<StatusTone>(() => props.tone ?? STATUS_TONES[key.value] ?? 'neutral')
+const klass = computed(() => TONE_CLASSES[tone.value])
+const icon = computed(() => {
+  if (props.icon === false) return null
+  if (props.icon) return props.icon
+  if (tone.value === 'success') return 'checkBadge'
+  if (tone.value === 'danger') return 'close'
+  return 'notification'
+})
 </script>
 
 <template>
-  <span class="ls-badge" :class="klass"><AppIcon :name="icon" :size="14" />{{ label }}</span>
+  <span class="ls-badge" :class="klass"><AppIcon v-if="icon" :name="icon" :size="14" />{{ label }}</span>
 </template>

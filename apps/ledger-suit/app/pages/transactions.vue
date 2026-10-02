@@ -77,14 +77,14 @@ useHead({ title: () => `${t('transactions.title')} · ${t('app.name')}` })
   <div class="space-y-4">
     <LedgerPageHeader :title="t('transactions.title')" :subtitle="t('transactionWorkspace.subtitle')" :from="filters.from" :to="filters.to">
       <template #actions>
-        <button v-if="can('imports.create') && writesAllowed" type="button" class="ls-btn" :disabled="!hydrated" @click="importOpen = true">{{ t('imports.entryPoint') }}</button>
-        <button v-if="canCreate" type="button" class="ls-btn ls-btn-primary" :disabled="!hydrated" @click="addTransaction"><AppIcon name="add" :size="18" />{{ t('transactionWorkspace.new') }}</button>
+        <BsButton v-if="can('imports.create') && writesAllowed" type="button" class="ls-btn" :disabled="!hydrated" @click="importOpen = true">{{ t('imports.entryPoint') }}</BsButton>
+        <BsButton v-if="canCreate" type="button" class="ls-btn ls-btn-primary" :disabled="!hydrated" @click="addTransaction"><AppIcon name="add" :size="18" />{{ t('transactionWorkspace.new') }}</BsButton>
       </template>
     </LedgerPageHeader>
 
     <div v-if="can('transactions.read')" class="ls-card space-y-4 p-4 sm:p-5">
       <div class="flex flex-wrap gap-2" role="group" :aria-label="t('transactions.type')">
-        <button v-for="type in QUICK_TYPES" :key="type" type="button" class="ls-btn ls-btn-sm" :class="{ 'ls-btn-primary': filters.type === type }" :aria-pressed="filters.type === type" :disabled="!hydrated" @click="filters.type = type">{{ type ? t(`types.${type}`) : t('transactionWorkspace.all') }}</button>
+        <BsButton variant="chip" v-for="type in QUICK_TYPES" :key="type" type="button" :aria-pressed="filters.type === type" :disabled="!hydrated" @click="filters.type = type">{{ type ? t(`types.${type}`) : t('transactionWorkspace.all') }}</BsButton>
       </div>
       <div class="grid items-end gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <FloatingField class="min-w-0 sm:col-span-2" :label="t('transactions.searchLabel')"><input id="search" v-model="filters.search" type="search" class="ls-input" :placeholder="t('transactions.searchPlaceholder')" :disabled="!hydrated"></FloatingField>
@@ -96,12 +96,12 @@ useHead({ title: () => `${t('transactions.title')} · ${t('app.name')}` })
         <FloatingField :label="t('transactions.account')"><select id="account" v-model="filters.accountId" class="ls-input" :disabled="!hydrated"><option value="">{{ t('transactionWorkspace.allAccounts') }}</option><option v-for="account in accounts" :key="account.id" :value="account.id">{{ account.name }}</option></select></FloatingField>
         <div v-if="can('tags.read')">
           <FloatingField :label="t('tagsGuide.filter')"><select id="tag" v-model="filters.tagId" class="ls-input" :disabled="!hydrated || !!tagsError"><option value="">{{ t('tagsGuide.all') }}</option><option v-if="filters.tagId && !tags.some(tag => tag.id === filters.tagId)" :value="filters.tagId">{{ t('tagsGuide.selectedUnavailable') }}</option><option v-for="tag in tags" :key="tag.id" :value="tag.id">{{ tag.name }}</option></select></FloatingField>
-          <p v-if="tagsError" role="alert" class="mt-2 text-sm text-fg-muted">{{ t('tagsGuide.loadError') }} <button type="button" class="text-link underline" @click="refreshTags()">{{ t('accounts.retry') }}</button></p>
+          <p v-if="tagsError" role="alert" class="mt-2 text-sm text-fg-muted">{{ t('tagsGuide.loadError') }} <BsButton variant="link" type="button" class="text-link underline" @click="refreshTags()">{{ t('accounts.retry') }}</BsButton></p>
         </div>
       </div>
       <div class="flex flex-wrap items-center gap-3">
-        <button type="button" class="ls-btn ls-btn-sm" :aria-expanded="filtersOpen" aria-controls="transaction-more-filters" :disabled="!hydrated" @click="filtersOpen = !filtersOpen">{{ t('transactionWorkspace.moreFilters') }}<AppIcon name="arrowDown" :size="16" /></button>
-        <button v-if="activeFilterCount" type="button" class="ls-btn ls-btn-sm" :disabled="!hydrated" @click="clearFilters">{{ t('transactionWorkspace.clearFilters', { count: activeFilterCount }) }}</button>
+        <BsButton type="button" class="ls-btn ls-btn-sm" :aria-expanded="filtersOpen" aria-controls="transaction-more-filters" :disabled="!hydrated" @click="filtersOpen = !filtersOpen">{{ t('transactionWorkspace.moreFilters') }}<AppIcon name="arrowDown" :size="16" /></BsButton>
+        <BsButton v-if="activeFilterCount" type="button" class="ls-btn ls-btn-sm" :disabled="!hydrated" @click="clearFilters">{{ t('transactionWorkspace.clearFilters', { count: activeFilterCount }) }}</BsButton>
         <p v-if="!pending && !error && !validation" role="status" class="ms-auto text-sm text-fg-muted">{{ t('transactions.count', total) }}</p>
       </div>
       <div v-if="filtersOpen" id="transaction-more-filters" class="grid gap-3 border-t border-line pt-4 sm:grid-cols-3">
@@ -112,15 +112,15 @@ useHead({ title: () => `${t('transactions.title')} · ${t('app.name')}` })
       <div class="grid items-end gap-3 border-t border-line pt-4 sm:grid-cols-[minmax(12rem,1fr)_minmax(12rem,1fr)_auto_auto]">
         <FloatingField :label="t('journalCenter.savedViews')"><select id="saved-view" v-model="savedViewId" class="ls-input" :disabled="savedViewsPending || savingView"><option value="">{{ t('journalCenter.chooseView') }}</option><option v-for="view in savedViews" :key="view.id" :value="view.id">{{ view.name }}</option></select></FloatingField>
         <FloatingField :label="t('journalCenter.viewName')"><input id="saved-view-name" v-model="savedViewName" class="ls-input" maxlength="120" :disabled="savingView" @keyup.enter="createSavedView"></FloatingField>
-        <button type="button" class="ls-btn ls-btn-sm" :disabled="savingView || !savedViewName.trim()" @click="createSavedView">{{ t('journalCenter.saveView') }}</button>
-        <button type="button" class="ls-btn ls-btn-sm" :disabled="savingView || !savedViewId" @click="deleteSavedView">{{ t('journalCenter.removeView') }}</button>
+        <BsButton type="button" class="ls-btn ls-btn-sm" :disabled="savingView || !savedViewName.trim()" @click="createSavedView">{{ t('journalCenter.saveView') }}</BsButton>
+        <BsButton type="button" class="ls-btn ls-btn-sm" :disabled="savingView || !savedViewId" @click="deleteSavedView">{{ t('journalCenter.removeView') }}</BsButton>
         <p v-if="savedViewsError" role="alert" class="text-sm text-danger sm:col-span-4">{{ t('journalCenter.savedViewsError') }}</p>
       </div>
     </div>
 
     <p v-if="!can('transactions.read')" role="status" class="ls-card p-6 text-fg-muted">{{ t('transactionWorkspace.noRead') }}</p>
     <p v-else-if="validation" role="alert" class="ls-error">{{ t(`transactionWorkspace.validation.${validation}`) }}</p>
-    <div v-else-if="error" role="alert" class="ls-card space-y-3 p-6"><h2 class="font-bold">{{ t('transactionWorkspace.loadError') }}</h2><p class="text-sm text-fg-muted">{{ t('transactionWorkspace.retryHint') }}</p><button type="button" class="ls-btn" @click="refresh()">{{ t('accounts.retry') }}</button></div>
+    <div v-else-if="error" role="alert" class="ls-card space-y-3 p-6"><h2 class="font-bold">{{ t('transactionWorkspace.loadError') }}</h2><p class="text-sm text-fg-muted">{{ t('transactionWorkspace.retryHint') }}</p><BsButton type="button" class="ls-btn" @click="refresh()">{{ t('accounts.retry') }}</BsButton></div>
     <SectionSkeleton v-else-if="pending" variant="table" :rows="8" />
 
     <EmptyState
@@ -148,37 +148,37 @@ useHead({ title: () => `${t('transactions.title')} · ${t('app.name')}` })
       <div class="hidden md:block">
         <BsDataTable :value="rows" data-key="id" :label="t('transactions.caption')" :density="tableDensity" sticky-header max-height="38rem" :scroll-label="t('accountingTable.journalScroll')" :row-class="() => 'cursor-pointer hover:bg-surface-muted'" @row-click="event => selectedId = event.data.id">
   <Column header-class="ls-sticky-start" body-class="ls-sticky-start whitespace-nowrap" :pt="{ headerCell: { 'aria-sort': ariaSort('journal_reference') } }">
-    <template #header><button type="button" class="hover:underline" @click="toggleSort('journal_reference')">{{ t('journalCenter.journalReference') }}</button></template>
+    <template #header><BsButton variant="link" type="button" class="hover:underline" @click="toggleSort('journal_reference')">{{ t('journalCenter.journalReference') }}</BsButton></template>
     <template #body="{ data: row }">
-      <button type="button" class="font-semibold text-link hover:underline" @click.stop="selectedId = row.id">{{ row.journal_reference }}</button>
+      <BsButton variant="link" type="button" class="font-semibold text-link hover:underline" @click.stop="selectedId = row.id">{{ row.journal_reference }}</BsButton>
       <p class="mt-1 max-w-48 truncate text-xs text-fg-muted" :title="row.from_account_name || undefined">{{ row.from_account_name || t('common.dash') }}</p>
       <p class="max-w-48 truncate text-xs text-fg-muted" :title="row.to_account_name || undefined"><AppIcon name="arrowRight" :size="14" directional class="inline-block" /> {{ row.to_account_name || t('common.dash') }}</p>
     </template>
   </Column>
   <Column body-class="whitespace-nowrap" :pt="{ headerCell: { 'aria-sort': ariaSort('transaction_date') } }">
-    <template #header><button type="button" class="hover:underline" @click="toggleSort('transaction_date')">{{ t('transactions.date') }}</button></template>
+    <template #header><BsButton variant="link" type="button" class="hover:underline" @click="toggleSort('transaction_date')">{{ t('transactions.date') }}</BsButton></template>
     <template #body="{ data: row }">{{ formatDate(row.transaction_date, locale) }}</template>
   </Column>
   <Column body-class="max-w-64">
     <template #header>{{ t('transactions.description') }}</template>
-    <template #body="{ data: row }"><button type="button" class="block max-w-56 truncate text-start font-semibold text-link hover:underline" @click.stop="selectedId = row.id">{{ row.description || t('common.dash') }}</button>
+    <template #body="{ data: row }"><BsButton variant="link" type="button" class="block max-w-56 truncate text-start font-semibold text-link hover:underline" @click.stop="selectedId = row.id">{{ row.description || t('common.dash') }}</BsButton>
                 <span v-if="row.reference || row.category_name || row.counterparty_name" class="block max-w-56 truncate text-xs text-fg-muted">{{ [row.reference, row.category_name, row.counterparty_name].filter(Boolean).join(' · ') }}</span>
                 <ul v-if="row.tags?.length" class="mt-2 flex flex-wrap gap-1" :aria-label="t('operations.tabs.tags')"><li v-for="tag in row.tags" :key="tag" class="rounded-control border border-line bg-surface-muted px-2 py-1 text-xs break-words">{{ tag }}</li></ul></template>
   </Column>
   <Column body-class="whitespace-nowrap" :pt="{ headerCell: { 'aria-sort': ariaSort('source') } }">
-    <template #header><button type="button" class="hover:underline" @click="toggleSort('source')">{{ t('journalCenter.source') }}</button></template>
+    <template #header><BsButton variant="link" type="button" class="hover:underline" @click="toggleSort('source')">{{ t('journalCenter.source') }}</BsButton></template>
     <template #body="{ data: row }"><span>{{ t(`journalSources.${row.source}`) }}</span><span class="block text-xs text-fg-muted">{{ t(`types.${row.type}`) }}</span></template>
   </Column>
   <Column  :pt="{ headerCell: { 'aria-sort': ariaSort('status') } }">
-    <template #header><button type="button" class="hover:underline" @click="toggleSort('status')">{{ t('transactions.status') }}</button></template>
+    <template #header><BsButton variant="link" type="button" class="hover:underline" @click="toggleSort('status')">{{ t('transactions.status') }}</BsButton></template>
     <template #body="{ data: row }"><StatusBadge :status="row.status" /></template>
   </Column>
   <Column header-class="ls-sticky-end-offset text-end" body-class="ls-sticky-end-offset ls-num font-semibold" :pt="{ headerCell: { 'aria-sort': ariaSort('debit') } }">
-    <template #header><button type="button" class="hover:underline" @click="toggleSort('debit')">{{ t('detail.debit') }}</button></template>
+    <template #header><BsButton variant="link" type="button" class="hover:underline" @click="toggleSort('debit')">{{ t('detail.debit') }}</BsButton></template>
     <template #body="{ data: row }"><MoneyText :amount-minor="row.debit_minor" :currency="row.currency_code" /></template>
   </Column>
   <Column header-class="ls-sticky-end text-end" body-class="ls-sticky-end ls-num font-semibold" :pt="{ headerCell: { 'aria-sort': ariaSort('credit') } }">
-    <template #header><button type="button" class="hover:underline" @click="toggleSort('credit')">{{ t('detail.credit') }}</button></template>
+    <template #header><BsButton variant="link" type="button" class="hover:underline" @click="toggleSort('credit')">{{ t('detail.credit') }}</BsButton></template>
     <template #body="{ data: row }"><MoneyText :amount-minor="row.credit_minor" :currency="row.currency_code" /></template>
   </Column>
 </BsDataTable>
@@ -187,7 +187,7 @@ useHead({ title: () => `${t('transactions.title')} · ${t('app.name')}` })
       <!-- Compact rows on small screens: a wide table is unusable on a phone -->
       <ul class="divide-y divide-[var(--bs-border)] md:hidden">
         <li v-for="row in rows" :key="row.id">
-          <button type="button" class="w-full px-4 py-3 text-start" @click="selectedId = row.id">
+          <BsButton type="button" class="w-full px-4 py-3 text-start" @click="selectedId = row.id">
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0">
                 <p class="truncate text-xs font-semibold text-link">{{ row.journal_reference }}</p>
@@ -203,7 +203,7 @@ useHead({ title: () => `${t('transactions.title')} · ${t('app.name')}` })
               </div>
             </div>
             <span v-if="row.tags?.length" class="mt-2 flex flex-wrap gap-1"><span v-for="tag in row.tags" :key="tag" class="rounded-control border border-line bg-surface-muted px-2 py-1 text-xs break-words">{{ tag }}</span></span>
-          </button>
+          </BsButton>
         </li>
       </ul>
 
@@ -212,9 +212,9 @@ useHead({ title: () => `${t('transactions.title')} · ${t('app.name')}` })
           {{ t('transactions.showing', { from: rangeStart, to: rangeEnd, total }) }}
         </p>
         <div class="flex items-center gap-2">
-          <button type="button" class="ls-btn ls-btn-sm" :disabled="page <= 1" @click="page--">{{ t('common.previous') }}</button>
+          <BsButton type="button" class="ls-btn ls-btn-sm" :disabled="page <= 1" @click="page--">{{ t('common.previous') }}</BsButton>
           <span class="text-sm text-fg-muted">{{ t('transactions.page', { page, pages: pageCount }) }}</span>
-          <button type="button" class="ls-btn ls-btn-sm" :disabled="page >= pageCount" @click="page++">{{ t('common.next') }}</button>
+          <BsButton type="button" class="ls-btn ls-btn-sm" :disabled="page >= pageCount" @click="page++">{{ t('common.next') }}</BsButton>
         </div>
       </div>
     </div>
