@@ -229,6 +229,38 @@ case "$REQUESTED_COMMAND" in
       "$TASK_ID"
     ;;
 
+  "bs-agent task-supervise "*)
+    TASK_ID="${REQUESTED_COMMAND#bs-agent task-supervise }"
+
+    if [[ ! "$TASK_ID" =~ ^[A-Z][A-Z0-9-]{2,63}$ ]]; then
+      printf '%s\n' \
+        '{"ok":false,"error":"invalid_task_id"}'
+
+      exit 64
+    fi
+
+    exec "$NODE_BIN" \
+      "$AGENT" \
+      task-supervise \
+      "$TASK_ID"
+    ;;
+
+  "bs-agent workstream-resolve "*)
+    WORKSTREAM_REF="${REQUESTED_COMMAND#bs-agent workstream-resolve }"
+
+    if [[ ! "$WORKSTREAM_REF" =~ ^([a-z][a-z0-9-]{1,63}/)?[a-z][a-z0-9-]{1,63}$ ]]; then
+      printf '%s\n' \
+        '{"ok":false,"error":"invalid_workstream_reference"}'
+
+      exit 64
+    fi
+
+    exec "$NODE_BIN" \
+      "$AGENT" \
+      workstream-resolve \
+      "$WORKSTREAM_REF"
+    ;;
+
   "bs-agent task-publish "*)
     TASK_ID="${REQUESTED_COMMAND#bs-agent task-publish }"
 

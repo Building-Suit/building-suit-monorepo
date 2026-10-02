@@ -768,6 +768,13 @@ function validSuitSlug(value) {
   )
 }
 
+function validWorkstreamReference(value) {
+  return (
+    typeof value === 'string' &&
+    /^(?:[a-z][a-z0-9-]{1,63}\/)?[a-z][a-z0-9-]{1,63}$/.test(value)
+  )
+}
+
 function controlQuery(
   sql,
   variables = {},
@@ -831,6 +838,56 @@ function parseControlJson(result) {
   }
 
   return JSON.parse(result.stdout)
+}
+
+function workstreamResolve() {
+  const [reference] = args
+  if (!validWorkstreamReference(reference)) {
+    output({ ok: false, command: 'workstream-resolve', error: 'valid_workstream_reference_required' }, 64)
+    return
+  }
+
+  const [projectSlug, workstreamSlug] = reference.includes('/')
+    ? reference.split('/', 2)
+    : ['', reference]
+
+  try {
+    const result = controlQuery(
+      `
+        WITH matches AS (
+          SELECT p.slug AS project_slug, w.slug AS workstream_slug, w.suit_slug
+          FROM control.workstreams w
+          JOIN control.projects p USING (project_id)
+          WHERE p.active = true
+            AND w.active = true
+            AND (:'project_slug' = '' OR p.slug = :'project_slug')
+            AND w.slug = :'workstream_slug'
+        )
+        SELECT jsonb_build_object(
+          'match_count', count(*),
+          'workstream', CASE WHEN count(*) = 1 THEN (jsonb_agg(to_jsonb(matches)))->0 ELSE NULL END
+        )
+        FROM matches;
+      `,
+      { project_slug: projectSlug, workstream_slug: workstreamSlug },
+    )
+    const resolved = parseControlJson(result)
+    if (Number(resolved?.match_count) !== 1) {
+      output({
+        ok: false,
+        command: 'workstream-resolve',
+        reference,
+        error: Number(resolved?.match_count) > 1
+          ? 'ambiguous_workstream_use_project_slash_workstream'
+          : 'unknown_or_inactive_workstream',
+      }, 1)
+      return
+    }
+    output({ ok: true, command: 'workstream-resolve', reference, ...resolved.workstream })
+  }
+  catch (error) {
+    output({ ok: false, command: 'workstream-resolve', reference, error: error.message }, 1)
+  }
 }
 
 function taskNext() {
@@ -4857,7 +4914,8 @@ function acquireSupervisorLease(resumeIdentity, owner, token, expiresAt) {
         WHERE resume_identity = :'resume_identity'
           AND status = 'active'
           AND (
-            lease_expires_at IS NULL OR lease_expires_at <= now()
+            heartbeat_at IS NULL
+            OR lease_expires_at IS NULL OR lease_expires_at <= now()
             OR lease_token = :'token'
           )
         RETURNING to_jsonb(control.recovery_states) AS recovery
@@ -4876,8 +4934,11 @@ function acquireSupervisorLease(resumeIdentity, owner, token, expiresAt) {
 function activeSupervisorLease(recovery) {
   return Boolean(
     recovery?.status === 'active' &&
+    recovery.heartbeat_at &&
     recovery.lease_token &&
     recovery.lease_expires_at &&
+    Date.parse(recovery.heartbeat_at) <= Date.now() &&
+    Date.parse(recovery.heartbeat_at) < Date.parse(recovery.lease_expires_at) &&
     Date.parse(recovery.lease_expires_at) > Date.now(),
   )
 }
@@ -4921,14 +4982,14 @@ function taskSupervisor() {
 
     if (plan.kind !== 'act') {
       const successfulTerminal = ['task_complete', 'task_cancelled'].includes(plan.reason)
-      recordSupervisorRecovery(snapshot, plan, {
+      const persistedRecovery = recordSupervisorRecovery(snapshot, plan, {
         idempotencyKey: `${token}:settled`,
         status: plan.kind === 'terminal' ? 'resolved' : 'active',
       })
       output({
         ok: plan.kind !== 'terminal' || successfulTerminal,
         command: 'task-supervise', task_id: taskId,
-        status: plan.kind, recovery: plan, trail,
+        status: plan.kind, recovery: { ...plan, ...persistedRecovery }, trail,
       }, plan.kind === 'terminal' && !successfulTerminal ? 1 : 0)
       return
     }
@@ -4956,7 +5017,7 @@ function taskSupervisor() {
 
       if (plan.kind !== 'act') {
         const successfulTerminal = ['task_complete', 'task_cancelled'].includes(plan.reason)
-        recordSupervisorRecovery(snapshot, plan, {
+        const persistedRecovery = recordSupervisorRecovery(snapshot, plan, {
           idempotencyKey: `${token}:release:${step}`,
           status: plan.kind === 'terminal' ? 'resolved' : 'active',
           condition: { step },
@@ -4964,7 +5025,7 @@ function taskSupervisor() {
         output({
           ok: plan.kind !== 'terminal' || successfulTerminal,
           command: 'task-supervise', task_id: taskId,
-          status: plan.kind, recovery: plan, trail,
+          status: plan.kind, recovery: { ...plan, ...persistedRecovery }, trail,
         }, plan.kind === 'terminal' && !successfulTerminal ? 1 : 0)
         return
       }
@@ -4979,7 +5040,7 @@ function taskSupervisor() {
           ok: preflight.ready,
           response: preflight,
         })
-        recordSupervisorRecovery(snapshot, recoveryPlan, {
+        const persistedRecovery = recordSupervisorRecovery(snapshot, recoveryPlan, {
           idempotencyKey: `preflight:${preflight.fingerprint}`,
           status: preflight.ready ? 'active' : preflight.kind === 'stop' ? 'resolved' : 'active',
           leaseOwner: preflight.ready ? owner : '',
@@ -4995,7 +5056,7 @@ function taskSupervisor() {
             command: 'task-supervise',
             task_id: taskId,
             status: preflight.kind,
-            recovery: recoveryPlan,
+            recovery: { ...recoveryPlan, ...persistedRecovery },
             preflight,
             trail,
           }, preflight.kind === 'stop' ? 1 : 0)
@@ -5053,7 +5114,7 @@ function taskSupervisor() {
         }
 
         const failure = [...(failedSnapshot.failures ?? [])].at(-1)
-        recordSupervisorRecovery(failedSnapshot, classified, {
+        const persistedRecovery = recordSupervisorRecovery(failedSnapshot, classified, {
           idempotencyKey: `${token}:failure:${step}`,
           failureId: failure?.failure_id,
           status: classified.kind === 'terminal' ? 'resolved' : 'active',
@@ -5067,7 +5128,7 @@ function taskSupervisor() {
 
         output({
           ok: classified.kind === 'wait', command: 'task-supervise', task_id: taskId,
-          status: classified.kind, recovery: classified, trail,
+          status: classified.kind, recovery: { ...classified, ...persistedRecovery }, trail,
         }, classified.kind === 'wait' ? 0 : 1)
         return
       }
@@ -6043,6 +6104,10 @@ switch (command) {
     codexSmoke()
     break
 
+  case 'workstream-resolve':
+    workstreamResolve()
+    break
+
   case 'task-next':
     taskNext()
     break
@@ -6127,6 +6192,7 @@ switch (command) {
         'codex-status',
         'route <profile>',
         'codex-smoke <profile>',
+        'workstream-resolve <project/workstream>',
         'task-next <suit>',
         'task-packet <task-id>',
         'task-claim <suit>',

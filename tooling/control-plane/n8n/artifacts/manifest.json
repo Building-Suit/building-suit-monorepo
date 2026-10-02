@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "task_id": "CP-RES-007",
+  "source_snapshot": {
+    "exported_at": "2026-10-02T14:24:40.777Z",
+    "source": "container-cli",
+    "fixture": "../fixtures/live-2026-10-02.json"
+  },
+  "runner_workflow_id": "rzoRWvnSBG7sU1Oh",
+  "replacements": [
+    {
+      "name": "BS-10 — Task Engine",
+      "live_id": "9aWPOijyhfmnEtRy",
+      "artifact": "9aWPOijyhfmnEtRy.json",
+      "preserves_identity": true,
+      "generated_active": false
+    },
+    {
+      "name": "BS-20 — Continue Suit",
+      "live_id": "pg0BEkbP9E4H4RqB",
+      "artifact": "pg0BEkbP9E4H4RqB.json",
+      "preserves_identity": true,
+      "generated_active": false
+    },
+    {
+      "name": "BS-21 — Stop Suit Run",
+      "live_id": "qHGzP3b0PS82IYSw",
+      "artifact": "qHGzP3b0PS82IYSw.json",
+      "preserves_identity": true,
+      "generated_active": false
+    }
+  ],
+  "runtime_mutation_performed": false
+}

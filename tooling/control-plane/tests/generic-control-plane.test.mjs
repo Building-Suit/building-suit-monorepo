@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { readFile } from 'node:fs/promises'
-import { inspectWorkflowSnapshot, normalizeWorkflow, workflowGraphSummary } from '../lib/n8n-workflows.mjs'
+import { inspectWorkflowSnapshot, normalizeWorkflow, validateControllerReplacements, workflowGraphSummary } from '../lib/n8n-workflows.mjs'
+import { continuousRunTransition, normalizeSupervisorResult, resumeSchedule } from '../lib/n8n-controller.mjs'
 import { validateProjectConfig } from '../lib/project-config.mjs'
 import { redact } from '../lib/redaction.mjs'
 import { profileForAttempt, retryDecision, validateRetryPolicy } from '../lib/retry-policy.mjs'
@@ -160,6 +161,64 @@ test('n8n inspection identifies hard-coded registry options and retry graphs', (
   const inspection=inspectWorkflowSnapshot([{name:'Legacy engine',nodes:[{name:'Retry Attempt 02',parameters:{}},{name:'Form',parameters:{fieldName:'suit_slug',fieldOptions:{values:[{option:'ledger-suit'}]}}}]}])
   assert.equal(inspection.compatible,false)
   assert.deepEqual(inspection.findings.map(item=>item.code).sort(),['hardcoded_registry_options','n8n_owned_retry_graph'])
+})
+
+test('generated n8n replacements preserve identities and remove legacy ownership', async () => {
+  const { readFile, readdir } = await import('node:fs/promises')
+  const artifactRoot = new URL('../n8n/artifacts/', import.meta.url)
+  const files = (await readdir(artifactRoot)).filter(file => file.endsWith('.json') && file !== 'manifest.json')
+  const workflows = await Promise.all(files.map(async file => JSON.parse(await readFile(new URL(file, artifactRoot), 'utf8'))))
+  const validation = validateControllerReplacements(workflows)
+  assert.deepEqual(validation.errors, [])
+  assert.equal(inspectWorkflowSnapshot(workflows).compatible, true)
+})
+
+test('sanitized n8n fixture records the verified live baseline', async () => {
+  const { readFile } = await import('node:fs/promises')
+  const fixture = JSON.parse(await readFile(new URL('../n8n/fixtures/live-2026-10-02.json', import.meta.url), 'utf8'))
+  assert.equal(fixture.exported_at, '2026-10-02T14:24:40.777Z')
+  assert.deepEqual(fixture.workflows.map(workflow => workflow.id), [
+    '9aWPOijyhfmnEtRy', 'pg0BEkbP9E4H4RqB', 'qHGzP3b0PS82IYSw',
+  ])
+  assert.deepEqual(inspectWorkflowSnapshot(fixture.workflows).findings.map(finding => finding.code), [
+    'n8n_owned_retry_graph', 'hardcoded_registry_options', 'hardcoded_registry_options',
+  ])
+})
+
+test('thin controller schedules only persisted automatic recovery states', () => {
+  const now = new Date('2026-10-02T12:00:00.000Z')
+  const external = normalizeSupervisorResult({ payload: { ok: true, task_id: 'CP-X-001', status: 'wait', recovery: { next_action: 'wait-external', reason: 'execution_in_flight', next_wake_at: '2026-10-02T12:05:00.000Z' } } }, now)
+  assert.equal(external.outcome, 'wait')
+  assert.equal(external.automatic_resume, true)
+  assert.equal(external.wake_at, '2026-10-02T12:05:00.000Z')
+
+  const operator = resumeSchedule({ status: 'wait', recovery: { next_action: 'wait-operator', next_wake_at: '2026-10-02T12:05:00.000Z' } }, now)
+  assert.equal(operator.automatic_resume, false)
+
+  const lease = normalizeSupervisorResult({ payload: { ok: true, status: 'wait', reason: 'supervisor_lease_active', lease_expires_at: '2026-10-02T12:10:00.000Z' } }, now)
+  assert.equal(lease.automatic_resume, true)
+  assert.equal(lease.lease_active, true)
+})
+
+test('continuous controller preserves bounded run outcomes', () => {
+  assert.equal(continuousRunTransition({ gate: { should_continue: true }, task: { task_id: 'CP-X-001' }, supervisor: { outcome: 'success' } }), 'success')
+  assert.equal(continuousRunTransition({ gate: { should_continue: true }, task: { task_id: 'CP-X-001' }, supervisor: { outcome: 'wait' } }), 'wait')
+  assert.equal(continuousRunTransition({ gate: { should_continue: true }, task: null }), 'no-ready-task')
+  assert.equal(continuousRunTransition({ gate: { reason: 'stop_requested' } }), 'stop-requested')
+  assert.equal(continuousRunTransition({ gate: { reason: 'limit_reached' } }), 'task-limit')
+  assert.equal(continuousRunTransition({ gate: { should_continue: true }, task: { task_id: 'CP-X-001' }, supervisor: { outcome: 'safety-stop' } }), 'safety-stop')
+})
+
+test('restricted n8n runner exposes only validated supervisor and registry commands', async () => {
+  const { readFile } = await import('node:fs/promises')
+  const runner = await readFile(new URL('../runner/bs-agent-ssh.sh', import.meta.url), 'utf8')
+  assert.match(runner, /"bs-agent task-supervise "\*/)
+  assert.match(runner, /"bs-agent workstream-resolve "\*/)
+  assert.match(runner, /invalid_workstream_reference/)
+  const supervisor = await readFile(new URL('../runner/bs-agent.mjs', import.meta.url), 'utf8')
+  assert.match(supervisor, /recovery\.heartbeat_at/)
+  assert.match(supervisor, /lease_expires_at <= now\(\)/)
+  assert.match(supervisor, /recovery: \{ \.\.\.plan, \.\.\.persistedRecovery \}/)
 })
 
 

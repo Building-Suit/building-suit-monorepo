@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "exported_at": "2026-10-02T14:24:40.777Z",
+  "source": "container-cli",
+  "sanitized": true,
+  "workflow_count_in_live_export": 11,
+  "workflows": [
+    {
+      "id": "9aWPOijyhfmnEtRy",
+      "name": "BS-10 — Task Engine",
+      "active": true,
+      "updatedAt": "2026-09-25T17:39:34.873Z",
+      "node_count": 28,
+      "connection_count": 33,
+      "lifecycle_commands": ["task-engine", "task-run", "task-verify", "task-retry", "task-publish", "task-release"],
+      "attempt_nodes": ["Retry Attempt 02", "Retry Attempt 03"],
+      "nodes": [
+        { "name": "Run Task", "parameters": { "command": "bs-agent task-run TASK-ID" } },
+        { "name": "Verify 01", "parameters": { "command": "bs-agent task-verify TASK-ID" } },
+        { "name": "Retry Attempt 02", "parameters": { "command": "bs-agent task-retry TASK-ID" } },
+        { "name": "Publish Task", "parameters": { "command": "bs-agent task-publish TASK-ID" } }
+      ]
+    },
+    {
+      "id": "pg0BEkbP9E4H4RqB",
+      "name": "BS-20 — Continue Suit",
+      "active": true,
+      "updatedAt": "2026-10-01T14:11:39.515Z",
+      "node_count": 27,
+      "connection_count": 28,
+      "registry_field": "suit_slug",
+      "hardcoded_registry_options": ["shared", "shop-suit", "ledger-suit", "inventory-suit"],
+      "subworkflow_references": ["9aWPOijyhfmnEtRy", "rzoRWvnSBG7sU1Oh"],
+      "nodes": [
+        { "name": "Continue Suit", "parameters": { "formFields": { "values": [{ "fieldName": "suit_slug", "fieldOptions": { "values": [{ "option": "shared" }, { "option": "shop-suit" }, { "option": "ledger-suit" }, { "option": "inventory-suit" }] } }] } } }
+      ]
+    },
+    {
+      "id": "qHGzP3b0PS82IYSw",
+      "name": "BS-21 — Stop Suit Run",
+      "active": true,
+      "updatedAt": "2026-09-24T18:03:06.194Z",
+      "node_count": 5,
+      "connection_count": 4,
+      "registry_field": "suit_slug",
+      "hardcoded_registry_options": ["shop-suit", "ledger-suit", "inventory-suit"],
+      "subworkflow_references": ["rzoRWvnSBG7sU1Oh"],
+      "nodes": [
+        { "name": "Stop Suit", "parameters": { "formFields": { "values": [{ "fieldName": "suit_slug", "fieldOptions": { "values": [{ "option": "shop-suit" }, { "option": "ledger-suit" }, { "option": "inventory-suit" }] } }] } } }
+      ]
+    }
+  ]
+}
