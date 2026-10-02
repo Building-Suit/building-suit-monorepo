@@ -5085,7 +5085,7 @@ function acquireSupervisorLease(resumeIdentity, owner, token, expiresAt) {
   const result = controlQuery(
     `
       WITH acquired AS (
-        UPDATE control.recovery_states
+        UPDATE control.recovery_states AS recovery_state
         SET lease_owner = :'owner', lease_token = :'token',
             lease_expires_at = :'expires_at'::timestamptz,
             heartbeat_at = now(), updated_at = now()
@@ -5096,7 +5096,7 @@ function acquireSupervisorLease(resumeIdentity, owner, token, expiresAt) {
             OR lease_expires_at IS NULL OR lease_expires_at <= now()
             OR lease_token = :'token'
           )
-        RETURNING to_jsonb(control.recovery_states) AS recovery
+        RETURNING to_jsonb(recovery_state) AS recovery
       )
       SELECT jsonb_build_object(
         'acquired', EXISTS(SELECT 1 FROM acquired),
