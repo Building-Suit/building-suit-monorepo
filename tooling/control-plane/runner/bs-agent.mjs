@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { spawnSync } from 'node:child_process'
+import { randomUUID } from 'node:crypto'
 import {
   mkdirSync,
   mkdtempSync,
@@ -26,6 +27,11 @@ import {
   redact,
   redactText,
 } from '../lib/redaction.mjs'
+import {
+  classifySupervisorFailure,
+  planSupervisorStep,
+  supervisorResumeIdentity,
+} from './task-supervisor.mjs'
 const automationCodexHome =
   process.env.BS_CODEX_HOME ??
   path.join(
@@ -4236,6 +4242,327 @@ function handleNoPublishableChanges(
 }
 
 
+function supervisorSnapshot(taskId) {
+  const result = controlQuery(
+    `
+      SELECT jsonb_build_object(
+        'packet', control.generic_task_packet(:'task_id'),
+        'executions', COALESCE((
+          SELECT jsonb_agg(to_jsonb(e) ORDER BY e.attempt)
+          FROM control.executions e
+          WHERE e.task_id = :'task_id'
+        ), '[]'::jsonb),
+        'verification_runs', COALESCE((
+          SELECT jsonb_agg(to_jsonb(vr) ORDER BY vr.verification_run_id)
+          FROM control.verification_runs vr
+          JOIN control.executions e USING (execution_id)
+          WHERE e.task_id = :'task_id'
+        ), '[]'::jsonb),
+        'verification_results', COALESCE((
+          SELECT jsonb_agg(to_jsonb(v) ORDER BY v.verification_id)
+          FROM control.verification_results v
+          JOIN control.executions e USING (execution_id)
+          WHERE e.task_id = :'task_id'
+        ), '[]'::jsonb),
+        'failures', COALESCE((
+          SELECT jsonb_agg(to_jsonb(f) ORDER BY f.failure_id)
+          FROM control.failures f
+          WHERE f.task_id = :'task_id'
+        ), '[]'::jsonb),
+        'publications', COALESCE((
+          SELECT jsonb_agg(to_jsonb(pr) ORDER BY pr.pull_request_id)
+          FROM control.pull_requests pr
+          WHERE pr.task_id = :'task_id'
+        ), '[]'::jsonb),
+        'recovery', control.current_task_recovery_condition(:'task_id')
+      );
+    `,
+    { task_id: taskId },
+  )
+
+  return parseControlJson(result)
+}
+
+
+function recordSupervisorRecovery(snapshot, plan, options = {}) {
+  const task = snapshot.packet.task
+  const openFailure = [...(snapshot.failures ?? [])]
+    .filter(failure => failure.resolved_at == null)
+    .at(-1)
+  const resumeIdentity = supervisorResumeIdentity(task.task_id)
+  const heartbeat = options.heartbeat ?? new Date().toISOString()
+  const nextWake = plan.next_action === 'wait-external'
+    ? new Date(Date.now() + 5 * 60 * 1000).toISOString()
+    : ''
+  const condition = {
+    fingerprint: plan.fingerprint,
+    reason: plan.reason,
+    route: plan.kind,
+    command: plan.command ?? null,
+    ...(options.condition ?? {}),
+  }
+  const metadata = {
+    supervisor: 'task-supervisor-v1',
+    ...(options.metadata ?? {}),
+  }
+  const result = controlQuery(
+    `
+      SELECT control.record_recovery_condition(
+        :'resume_identity', :'idempotency_key', :'failure_class',
+        NULLIF(:'error_code', ''), :'next_action', :'recoverable'::boolean,
+        'supervisor', NULLIF(:'project_id', '')::uuid,
+        NULLIF(:'workstream_slug', ''), NULL, :'task_id',
+        NULLIF(:'execution_id', '')::bigint, NULLIF(:'failure_id', '')::bigint,
+        NULLIF(:'next_wake_at', '')::timestamptz, :'heartbeat_at'::timestamptz,
+        NULLIF(:'lease_owner', ''), NULLIF(:'lease_token', ''),
+        NULLIF(:'lease_expires_at', '')::timestamptz,
+        :'condition'::jsonb, :'metadata'::jsonb, :'status'
+      );
+    `,
+    {
+      resume_identity: resumeIdentity,
+      idempotency_key: options.idempotencyKey ?? `decision:${plan.fingerprint}:${plan.next_action}`,
+      failure_class: plan.failure_class,
+      error_code: plan.reason ?? '',
+      next_action: plan.next_action,
+      recoverable: plan.recoverable === false ? 'false' : 'true',
+      project_id: snapshot.packet.project?.project_id ?? '',
+      workstream_slug: snapshot.packet.workstream?.slug ?? '',
+      task_id: task.task_id,
+      execution_id: String(plan.execution?.execution_id ?? ''),
+      failure_id: String(options.failureId ?? openFailure?.failure_id ?? ''),
+      next_wake_at: nextWake,
+      heartbeat_at: heartbeat,
+      lease_owner: options.leaseOwner ?? '',
+      lease_token: options.leaseToken ?? '',
+      lease_expires_at: options.leaseExpiresAt ?? '',
+      condition: JSON.stringify(condition),
+      metadata: JSON.stringify(metadata),
+      status: options.status ?? 'active',
+    },
+  )
+
+  return parseControlJson(result)
+}
+
+
+function acquireSupervisorLease(resumeIdentity, owner, token, expiresAt) {
+  const result = controlQuery(
+    `
+      WITH acquired AS (
+        UPDATE control.recovery_states
+        SET lease_owner = :'owner', lease_token = :'token',
+            lease_expires_at = :'expires_at'::timestamptz,
+            heartbeat_at = now(), updated_at = now()
+        WHERE resume_identity = :'resume_identity'
+          AND status = 'active'
+          AND (
+            lease_expires_at IS NULL OR lease_expires_at <= now()
+            OR lease_token = :'token'
+          )
+        RETURNING to_jsonb(control.recovery_states) AS recovery
+      )
+      SELECT jsonb_build_object(
+        'acquired', EXISTS(SELECT 1 FROM acquired),
+        'recovery', COALESCE((SELECT recovery FROM acquired), 'null'::jsonb)
+      );
+    `,
+    { resume_identity: resumeIdentity, owner, token, expires_at: expiresAt },
+  )
+  return parseControlJson(result)
+}
+
+
+function activeSupervisorLease(recovery) {
+  return Boolean(
+    recovery?.status === 'active' &&
+    recovery.lease_token &&
+    recovery.lease_expires_at &&
+    Date.parse(recovery.lease_expires_at) > Date.now(),
+  )
+}
+
+
+function taskSupervisor() {
+  const [taskId] = args
+  if (!validTaskId(taskId)) {
+    output({ ok: false, command: 'task-supervise', error: 'valid_task_id_required' }, 64)
+    return
+  }
+
+  const owner = `${process.pid}@${process.env.HOSTNAME ?? 'local'}`
+  const token = randomUUID()
+  const leaseExpiresAt = new Date(Date.now() + 80 * 60 * 1000).toISOString()
+  const trail = []
+  let leaseAcquired = false
+
+  try {
+    let snapshot = supervisorSnapshot(taskId)
+    if (!snapshot?.packet?.task) throw new Error(`Unknown task: ${taskId}`)
+
+    if (activeSupervisorLease(snapshot.recovery)) {
+      output({
+        ok: true,
+        command: 'task-supervise',
+        task_id: taskId,
+        status: 'wait',
+        reason: 'supervisor_lease_active',
+        resume_identity: snapshot.recovery.resume_identity,
+        lease_owner: snapshot.recovery.lease_owner,
+        lease_expires_at: snapshot.recovery.lease_expires_at,
+        trail,
+      })
+      return
+    }
+
+    let plan = planSupervisorStep(snapshot)
+    recordSupervisorRecovery(snapshot, plan)
+
+    if (plan.kind !== 'act') {
+      const successfulTerminal = ['task_complete', 'task_cancelled'].includes(plan.reason)
+      recordSupervisorRecovery(snapshot, plan, {
+        idempotencyKey: `${token}:settled`,
+        status: plan.kind === 'terminal' ? 'resolved' : 'active',
+      })
+      output({
+        ok: plan.kind !== 'terminal' || successfulTerminal,
+        command: 'task-supervise', task_id: taskId,
+        status: plan.kind, recovery: plan, trail,
+      }, plan.kind === 'terminal' && !successfulTerminal ? 1 : 0)
+      return
+    }
+
+    const lease = acquireSupervisorLease(
+      supervisorResumeIdentity(taskId), owner, token, leaseExpiresAt,
+    )
+    if (!lease?.acquired) {
+      output({ ok: true, command: 'task-supervise', task_id: taskId, status: 'wait', reason: 'supervisor_lease_contended', trail })
+      return
+    }
+    leaseAcquired = true
+
+    for (let step = 1; step <= 16; step++) {
+      snapshot = supervisorSnapshot(taskId)
+      plan = planSupervisorStep(snapshot)
+
+      recordSupervisorRecovery(snapshot, plan, {
+        idempotencyKey: `${token}:step:${step}`,
+        leaseOwner: owner,
+        leaseToken: token,
+        leaseExpiresAt,
+        condition: { step },
+      })
+
+      if (plan.kind !== 'act') {
+        const successfulTerminal = ['task_complete', 'task_cancelled'].includes(plan.reason)
+        recordSupervisorRecovery(snapshot, plan, {
+          idempotencyKey: `${token}:release:${step}`,
+          status: plan.kind === 'terminal' ? 'resolved' : 'active',
+          condition: { step },
+        })
+        output({
+          ok: plan.kind !== 'terminal' || successfulTerminal,
+          command: 'task-supervise', task_id: taskId,
+          status: plan.kind, recovery: plan, trail,
+        }, plan.kind === 'terminal' && !successfulTerminal ? 1 : 0)
+        return
+      }
+
+      let child
+      if (plan.command === 'handle-no-publishable-changes') {
+        const response = handleNoPublishableChanges(taskId)
+        child = { result: { code: 0, stderr: '' }, payload: { ok: response?.action !== 'blocked', resolution: response } }
+      }
+      else {
+        child = invokeTaskAction(plan.command, taskId)
+      }
+
+      trail.push({
+        step,
+        command: plan.command,
+        exit_code: child.result.code,
+        ok: child.payload?.ok === true,
+        response: child.payload,
+      })
+
+      if (child.payload?.ok !== true) {
+        const failedSnapshot = supervisorSnapshot(taskId)
+        const classified = classifySupervisorFailure({
+          command: plan.command,
+          payload: child.payload,
+          attempt: plan.execution?.attempt,
+          maxAttempts: snapshot.packet.retry_policy?.max_attempts,
+        })
+        classified.fingerprint = planSupervisorStep(failedSnapshot).fingerprint
+        classified.execution = planSupervisorStep(failedSnapshot).execution
+
+        if (classified.command === 'handle-no-publishable-changes') {
+          const resolution = handleNoPublishableChanges(taskId)
+          trail.push({ step, command: classified.command, exit_code: 0, ok: resolution?.action !== 'blocked', response: resolution })
+          if (resolution?.action === 'complete_no_changes') continue
+        }
+
+        const failure = [...(failedSnapshot.failures ?? [])].at(-1)
+        recordSupervisorRecovery(failedSnapshot, classified, {
+          idempotencyKey: `${token}:failure:${step}`,
+          failureId: failure?.failure_id,
+          status: classified.kind === 'terminal' ? 'resolved' : 'active',
+          leaseOwner: classified.kind === 'act' ? owner : '',
+          leaseToken: classified.kind === 'act' ? token : '',
+          leaseExpiresAt: classified.kind === 'act' ? leaseExpiresAt : '',
+          metadata: { child_command: plan.command, child_exit_code: child.result.code },
+        })
+
+        if (classified.kind === 'act') continue
+
+        output({
+          ok: classified.kind === 'wait', command: 'task-supervise', task_id: taskId,
+          status: classified.kind, recovery: classified, trail,
+        }, classified.kind === 'wait' ? 0 : 1)
+        return
+      }
+    }
+
+    const exhaustedSnapshot = supervisorSnapshot(taskId)
+    const exhaustedPlan = {
+      ...planSupervisorStep(exhaustedSnapshot),
+      kind: 'terminal', next_action: 'safety-stop', failure_class: 'safety-stop',
+      reason: 'supervisor_step_limit_reached', recoverable: false,
+    }
+    recordSupervisorRecovery(exhaustedSnapshot, exhaustedPlan, {
+      idempotencyKey: `${token}:step-limit`, status: 'resolved',
+    })
+    output({ ok: false, command: 'task-supervise', task_id: taskId, error: 'supervisor_step_limit_reached', trail }, 1)
+  }
+  catch (error) {
+    if (leaseAcquired) {
+      try {
+        const failedSnapshot = supervisorSnapshot(taskId)
+        const currentPlan = planSupervisorStep(failedSnapshot)
+        const classified = classifySupervisorFailure({
+          command: 'task-supervise',
+          payload: { error: error.message },
+          attempt: currentPlan.execution?.attempt,
+          maxAttempts: failedSnapshot.packet.retry_policy?.max_attempts,
+        })
+        classified.fingerprint = currentPlan.fingerprint
+        classified.execution = currentPlan.execution
+        recordSupervisorRecovery(failedSnapshot, classified, {
+          idempotencyKey: `${token}:exception`,
+          status: classified.kind === 'terminal' ? 'resolved' : 'active',
+          metadata: { supervisor_error: true },
+        })
+      }
+      catch {
+        // The original supervisor error remains authoritative. An unreachable
+        // control database leaves the lease to expire rather than guessing.
+      }
+    }
+    output({ ok: false, command: 'task-supervise', task_id: taskId, error: error.message, trail }, 1)
+  }
+}
+
+
 function taskEngine() {
   const [taskId] = args
 
@@ -5167,6 +5494,10 @@ switch (command) {
     taskPublish()
     break
 
+  case 'task-supervise':
+    taskSupervisor()
+    break
+
   case 'task-engine':
     taskEngine()
     break
@@ -5213,6 +5544,8 @@ switch (command) {
         'retry-route <profile> <previous-attempt>',
         'task-retry <task-id>',
         'task-publish <task-id>',
+        'task-supervise <task-id>',
+        'task-engine <task-id>',
         'run-start <suit> <max-tasks>',
         'run-check <run-id>',
         'run-complete-task <run-id>',

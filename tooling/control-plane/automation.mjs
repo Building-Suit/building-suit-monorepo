@@ -221,6 +221,7 @@ async function main() {
   }
   if (resource === 'task' && action === 'release') return delegate('task-release', positional())
   if (resource === 'task' && ['prepare','run','verify','retry','publish','engine'].includes(action)) return delegate(`task-${action}`, positional())
+  if (resource === 'task' && action === 'supervise') return delegate('task-supervise', positional())
   if (resource === 'task' && action === 'resume') return delegate('task-engine', positional())
   if (resource === 'task' && ['reverify','reopen-verification'].includes(action)) {
     const id = positional(); query(`SELECT control.reopen_verification(:'task','human',:'reason');`, { task:id,reason:String(flag('reason','operator requested reverification')) })

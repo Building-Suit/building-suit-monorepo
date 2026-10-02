@@ -41,6 +41,7 @@ pnpm automation task show V2-IMP-013
 pnpm automation task next building-suit/ledger-suit
 pnpm automation task claim building-suit/ledger-suit
 pnpm automation task prepare V2-IMP-013
+pnpm automation task supervise V2-IMP-013
 pnpm automation task run V2-IMP-013
 pnpm automation task verify V2-IMP-013
 pnpm automation task reverify V2-IMP-013 --reason "local database recovered"
@@ -66,7 +67,9 @@ pnpm automation run inspect RUN-UUID
 pnpm automation run stop building-suit/ledger-suit
 ```
 
-`resume` inspects database state. It never creates an attempt when a succeeded execution only needs verification, and it publishes a passed task without re-running Codex. `reverify` creates a new verification run on the same succeeded execution. `reparent` refuses published branches, snapshots all task changes, moves the local task branch to the live parent, restores the snapshot with three-way conflict detection, and records metadata only after success. A conflict is left for human review with the snapshot path reported.
+`task supervise` is the single lifecycle entry point for one already-claimed task. It reads the task, every execution and verification run, open failures, publication records, and the durable recovery condition before choosing an action. A stable task resume identity and an atomic database lease prevent concurrent supervisors from duplicating implementation, verification, commits, or draft pull requests. The supervisor resumes at the first incomplete stage, records its heartbeat, classification, recovery action, and next wake condition, and stops explicitly for external, decision, operator, or safety conditions. Retry and repair decisions use the resolved retry-policy budget.
+
+The existing `run`, `verify`, `retry`, `publish`, `resume`, and diagnostic commands remain lower-level compatibility primitives. `resume` retains its prior engine behavior; new automation should invoke `supervise`. `reverify` creates a new verification run on the same succeeded execution. `reparent` refuses published branches, snapshots all task changes, moves the local task branch to the live parent, restores the snapshot with three-way conflict detection, and records metadata only after success. A conflict is left for human review with the snapshot path reported.
 
 ## Retry policy
 
@@ -123,7 +126,7 @@ Normal recovery does not require SQL edits:
 
 Every state-changing database operation emits task and/or generic audit evidence. Draft PR creation is the automatic publication boundary. Merge, deploy, hosted database mutation, shared-history rewriting and destructive worktree cleanup remain prohibited.
 
-Migration `018_failure_recovery_state.sql` provides the durable recovery contract used by later supervisors. `control.failure_classes` and `control.recovery_actions` are the canonical vocabulary. `control.record_recovery_condition` stores the current task/execution/failure pointers, next action, recoverability, wake time, heartbeat and lease metadata under a stable resume identity. Each distinct idempotency key advances the state version and appends an immutable recovery event plus a generic audit event; replaying the same key returns the current state without another write. `control.read_recovery_condition` resumes by identity, and `control.current_task_recovery_condition` reads the latest active condition for a task. Existing runners do not consume or act on this state automatically.
+Migration `018_failure_recovery_state.sql` provides the durable recovery contract consumed by `task supervise`. `control.failure_classes` and `control.recovery_actions` are the canonical vocabulary. `control.record_recovery_condition` stores the current task/execution/failure pointers, next action, recoverability, wake time, heartbeat and lease metadata under the stable `task:<task-id>` resume identity. Each distinct idempotency key advances the state version and appends an immutable recovery event plus a generic audit event; replaying the same key returns the recorded state without another write. `control.read_recovery_condition` resumes by identity, and `control.current_task_recovery_condition` reads the latest active condition for a task.
 
 ## n8n inspection
 
