@@ -221,7 +221,16 @@ export function evaluateExecutionPreflight({ packet, runtime, executions = [], s
   checks.push({ name: 'repository_parent_and_worktree', status: 'pass' })
 
   if (runtime?.repository?.dependencies_ready !== true) {
-    return failure('reconcile', 'reconcile-runtime', 'transient-infrastructure', 'repository_dependencies_missing', checks)
+    return failure(
+      'reconcile',
+      'reconcile-runtime',
+      'transient-infrastructure',
+      'repository_dependencies_missing',
+      checks,
+      {
+        worktree_path: repository.worktree_target?.path ?? null,
+      },
+    )
   }
   checks.push({ name: 'repository_dependencies', status: 'pass' })
 

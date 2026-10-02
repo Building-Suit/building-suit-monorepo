@@ -5367,7 +5367,8 @@ function taskSupervisor() {
           }
           else {
             const prepared = prepareTaskDependencies(
-              preflight.context?.worktree_path,
+              preflight.context?.worktree_path ??
+                snapshot.packet?.preparation?.worktree?.worktree_path,
             )
             reconciliation = {
               ...prepared,
