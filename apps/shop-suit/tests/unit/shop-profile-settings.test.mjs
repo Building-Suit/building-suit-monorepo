@@ -22,7 +22,8 @@ test('Shop profile coverage protects account, location, and historical identitie
     'settings manager Shop profile update failed',
     'ordinary employee Shop profile update accepted',
     'cross-shop profile update accepted',
-    'Shop profile update changed personal account identity',
+    'Shop profile update changed personal profile identity',
+    'Shop profile update changed personal Auth identity',
     'Shop profile update rewrote historical receipt snapshots',
     'Shop profile update duplicated or changed main-location contact data',
   ]) assert.match(databaseTest, new RegExp(evidence))

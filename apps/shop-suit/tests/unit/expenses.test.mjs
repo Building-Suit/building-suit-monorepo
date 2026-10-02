@@ -51,7 +51,7 @@ test('expense UI uses the server contract and exposes bilingual traceable correc
   assert.match(page, /Correction reason/)
   assert.match(page, /Record money the shop spends here, such as rent, supplies, and utilities/)
   assert.match(page, /Sales income is recorded automatically from Sales or POS/)
-  assert.match(page, /سجّل هنا الأموال التي ينفقها المتجر/)
+  assert.match(page, /سجّل هنا الفلوس اللي المتجر صرفها/)
   assert.match(page, /expensePage\.value\.canManage/)
   assert.doesNotMatch(page, /shop-data:expense-permissions/)
   assert.doesNotMatch(page, /isOwner/)

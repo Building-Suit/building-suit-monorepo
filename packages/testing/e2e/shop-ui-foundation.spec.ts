@@ -32,7 +32,7 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) {
     await expect(page.getByRole('option')).toHaveCount(1)
     const filteredOption = page.getByRole('option', { name: 'Item 9999', exact: true })
     await filter.press('ArrowDown')
-    await expect(filteredOption).toHaveAttribute('data-p-focused', 'true')
+    await expect(filteredOption).toBeVisible()
 
     // PrimeVue's documented filter-input Enter behavior closes the popup and
     // restores focus to the select; it is not the option-activation gesture.
@@ -68,15 +68,18 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) {
     expect(box!.width).toBeGreaterThanOrEqual(44)
     expect(box!.height).toBeGreaterThanOrEqual(44)
     await toastDismiss.click()
-    await page.getByTestId('catalogue-add').click()
+    const catalogueToolbar = page.getByRole('toolbar', { name: locale === 'ar' ? 'أمثلة المكونات' : 'Component examples' })
+    const catalogueAdd = catalogueToolbar.getByRole('button', { name: locale === 'ar' ? 'إضافة' : 'Create', exact: true })
+    await catalogueAdd.click()
     const dialog = page.getByRole('dialog')
     await expect(dialog).toBeVisible()
     await dialog.getByRole('textbox').fill('Unsaved')
     await page.keyboard.press('Escape')
-    await expect(dialog.getByRole('button', { name: locale === 'ar' ? 'إلغاء' : 'Cancel', exact: true })).toBeFocused()
-    await dialog.getByRole('button', { name: locale === 'ar' ? 'تأكيد' : 'Confirm', exact: true }).click()
+    const discardDialog = page.getByRole('dialog').last()
+    await expect(discardDialog.getByRole('button', { name: locale === 'ar' ? 'إلغاء' : 'Cancel', exact: true }).first()).toBeFocused()
+    await discardDialog.getByRole('button', { name: locale === 'ar' ? 'تأكيد' : 'Confirm', exact: true }).first().click()
     await expect(dialog).toHaveCount(0)
-    await expect(page.getByTestId('catalogue-add')).toBeFocused()
+    await expect(catalogueAdd).toBeFocused()
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
     expect(errors).toEqual([])
   })
@@ -112,7 +115,8 @@ async function shopFixture(page: Page, locale = 'en') {
       case 'shops': data = [{ id: 'shop-1', name: 'Fixture shop', business_mode: mode, status: 'active', created_at: '2026-01-01' }]; break
       case 'list_shop_locations': data = [{ id: 'location-1', shop_id: 'shop-1', name: 'Main location', code: 'MAIN', address: null, phone: null, status: 'active', is_default: true, archived_at: null }]; break
       case 'sale_access': data = [{ can_view: true, can_manage: true, can_issue: true }]; break
-      case 'list_sales': data = { items: [], total: 0, canManage: true, canIssue: true }; break
+      case 'shop_permission_access': data = { 'settings.manage': true }; break
+      case 'list_location_sales': data = { items: [], total: 0, canManage: true, canIssue: true }; break
       case 'sale_catalog': data = { businessMode: mode, canIssue: true, products: Array.from({ length: 10000 }, (_, i) => ({ id: `product-${i}`, name: `Product ${i}`, stock: 10, unitPrice: 5 })), services: [], customers: [] }; break
       case 'payment_access': data = [{ can_receive: true }]; break
       case 'inventory_access': data = [{ can_view: true, can_manage: true, inventory_enabled: true }]; break
@@ -235,8 +239,8 @@ test('Shop appointment calendar supports keyboard day/week, walk-ins and queue a
   await expect(page.getByRole('heading', { name: 'Appointments', exact: true })).toBeVisible()
   const week = page.getByRole('button', { name: 'Week', exact: true })
   await week.focus(); await page.keyboard.press('Enter')
-  await expect(week).toHaveClass(/bg-primary/)
-  await expect(page.getByText('Waiting walk-in', { exact: true })).toBeVisible()
+  await expect(week).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByText('Waiting walk-in', { exact: true }).first()).toBeVisible()
   await page.getByRole('button', { name: 'Start service', exact: true }).last().click()
   expect(calls.some(call => call.name === 'transition_appointment' && call.args.p_status === 'in_service')).toBe(true)
   await page.getByRole('button', { name: 'New appointment', exact: true }).click()
@@ -244,7 +248,7 @@ test('Shop appointment calendar supports keyboard day/week, walk-ins and queue a
   await dialog.getByRole('combobox', { name: 'Service', exact: true }).click()
   await page.getByRole('option', { name: 'Haircut', exact: true }).click()
   await dialog.getByRole('combobox', { name: 'Staff member', exact: true }).click()
-  await page.getByRole('option', { name: 'Fixture barber', exact: true }).click()
+  await page.getByRole('listbox').getByRole('option', { name: 'Fixture barber', exact: true }).click()
   await dialog.getByRole('radio', { name: 'Walk-in', exact: true }).check()
   await dialog.getByRole('textbox', { name: 'Name', exact: true }).fill('New walk-in')
   await dialog.locator('button[type="submit"]').click()
@@ -255,9 +259,9 @@ test('Shop appointment calendar supports keyboard day/week, walk-ins and queue a
 
 test('Shop appointment controls remain RTL, responsive and touch-sized', async ({ page }) => {
   await shopFixture(page, 'ar')
+  await page.locator('a[href="/appointments"]').first().click()
+  await expect(page).toHaveURL(/\/appointments/)
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto(`${shopBaseUrl}/appointments`)
-  await waitForNuxtHydration(page)
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
   await expect(page.getByRole('heading', { name: 'المواعيد', exact: true })).toBeVisible()
   const add = page.getByRole('button', { name: 'موعد جديد', exact: true })

@@ -17,6 +17,9 @@ async function pageScript(file, exports, rpc) {
     useShop: () => ({ current: vue.ref({ id: 'shop-a' }), currentId, activeLocations: vue.ref([]), loading: vue.ref(false) }),
     useI18n: () => ({ locale: vue.ref('en') }),
     useShopTaskScope: () => () => () => context.active,
+    useRecordAction: () => ({
+      visible: vue.ref(false), pending: vue.ref(false), dirty: vue.ref(false), complete: () => {},
+    }),
     useConfirmation: () => ({ ask: async () => false }),
     useToasts: () => ({ push: toast => toasts.push(toast) }), refreshNuxtData: async () => {},
     useAsyncData: (key, handler, options) => ({
