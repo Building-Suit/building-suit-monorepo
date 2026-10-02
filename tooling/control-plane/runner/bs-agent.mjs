@@ -32,6 +32,10 @@ import {
   planSupervisorStep,
   supervisorResumeIdentity,
 } from './task-supervisor.mjs'
+import {
+  evaluateExecutionPreflight,
+  fingerprint as preflightFingerprint,
+} from './task-preflight.mjs'
 const automationCodexHome =
   process.env.BS_CODEX_HOME ??
   path.join(
@@ -4274,6 +4278,20 @@ function supervisorSnapshot(taskId) {
           FROM control.pull_requests pr
           WHERE pr.task_id = :'task_id'
         ), '[]'::jsonb),
+        'serialization_conflicts', COALESCE((
+          SELECT jsonb_agg(jsonb_build_object(
+            'task_id', other.task_id,
+            'status', other.status,
+            'engine_stage', other.engine_stage
+          ) ORDER BY other.task_id)
+          FROM control.tasks target
+          JOIN control.tasks other
+            ON other.project_id = target.project_id
+           AND other.workstream_slug = target.workstream_slug
+           AND other.task_id <> target.task_id
+          WHERE target.task_id = :'task_id'
+            AND other.status IN ('in_progress', 'verification', 'passed', 'failed')
+        ), '[]'::jsonb),
         'recovery', control.current_task_recovery_condition(:'task_id')
       );
     `,
@@ -4281,6 +4299,219 @@ function supervisorSnapshot(taskId) {
   )
 
   return parseControlJson(result)
+}
+
+
+function gitCheck(cwd, gitArgs) {
+  const result = execute('git', gitArgs, { cwd })
+  return {
+    ok: successful(result),
+    value: successful(result) ? result.stdout : null,
+  }
+}
+
+
+function executableAvailable(program) {
+  return successful(execute('sh', ['-c', 'command -v "$1" >/dev/null 2>&1', 'sh', program]))
+}
+
+
+function executionPreflightRuntime(snapshot) {
+  const packet = snapshot.packet
+  const project = projectRuntime(packet)
+  const repositoryRoot = path.resolve(repoRoot, project.repository_root)
+  const identityResult = controlQuery(`
+    SELECT jsonb_build_object(
+      'database', current_database(),
+      'user', current_user,
+      'server_address', COALESCE(inet_server_addr()::text, 'local-socket'),
+      'server_port', inet_server_port(),
+      'server_version_num', current_setting('server_version_num'),
+      'control_schema', to_regnamespace('control')::text,
+      'task_packet_contract', to_regprocedure('control.generic_task_packet(text)')::text
+    );
+  `)
+  const identity = parseControlJson(identityResult)
+  const actualDatabaseFingerprint = preflightFingerprint(identity)
+  const expectedDatabaseFingerprint =
+    process.env.AUTOMATION_CONTROL_DB_FINGERPRINT ??
+    packet.project?.environment_routing?.control_database_fingerprint ??
+    null
+
+  let parent = null
+  let parentError = null
+  try {
+    parent = resolveStackParent(packet.suit.stack_key, project)
+  }
+  catch (error) {
+    parentError = error.message
+  }
+
+  const root = gitCheck(repositoryRoot, ['rev-parse', '--show-toplevel'])
+  const integration = gitCheck(repositoryRoot, ['rev-parse', `origin/${project.integration_branch}`])
+  const integrationPresent = integration.ok
+    ? gitCheck(repositoryRoot, ['cat-file', '-e', `${integration.value}^{commit}`]).ok
+    : false
+  const parentPresent = parent?.parent_sha
+    ? gitCheck(repositoryRoot, ['cat-file', '-e', `${parent.parent_sha}^{commit}`]).ok
+    : false
+  const parentRemoteSha = parent?.parent_remote_ref
+    ? gitCheck(repositoryRoot, ['rev-parse', parent.parent_remote_ref])
+    : { ok: false, value: null }
+  const parentPrConsistent = !parent?.parent_pr || (
+    parent.parent_type === 'stack_leaf' &&
+    parent.parent_pr.number > 0 &&
+    (
+      parent.parent_pr.base_branch === project.integration_branch ||
+      parent.parent_pr.base_branch.startsWith(`codex/${packet.suit.stack_key}/`)
+    )
+  )
+  const parentConsistent = Boolean(
+    parent && parentPresent && parentRemoteSha.ok &&
+    parentRemoteSha.value === parent.parent_sha && parentPrConsistent,
+  )
+
+  const expectedBranch = `codex/${packet.suit.stack_key}/${packet.task.task_id.toLowerCase()}`
+  const preparedWorktree = packet.preparation?.worktree
+  let worktreeTarget
+  if (preparedWorktree) {
+    const targetPath = preparedWorktree.worktree_path
+    const branch = existsSync(targetPath)
+      ? gitCheck(targetPath, ['branch', '--show-current'])
+      : { ok: false, value: null }
+    const containsParent = existsSync(targetPath) && parent?.parent_sha
+      ? gitCheck(targetPath, ['merge-base', '--is-ancestor', parent.parent_sha, 'HEAD']).ok
+      : false
+    const trackedChanges = existsSync(targetPath)
+      ? gitCheck(targetPath, ['diff', '--name-only', 'HEAD']).value?.split('\n').filter(Boolean) ?? []
+      : []
+    const untrackedChanges = existsSync(targetPath)
+      ? gitCheck(targetPath, ['ls-files', '--others', '--exclude-standard']).value?.split('\n').filter(Boolean) ?? []
+      : []
+    const changedFiles = [...new Set([...trackedChanges, ...untrackedChanges])].sort()
+    worktreeTarget = {
+      path: targetPath,
+      branch: branch.value,
+      changed_files: changedFiles,
+      status: !existsSync(targetPath) || !branch.ok
+        ? 'invalid'
+        : branch.value !== expectedBranch || preparedWorktree.branch_name !== expectedBranch || !containsParent
+          ? 'stale'
+          : 'ready',
+    }
+  }
+  else {
+    const targetPath = path.join(
+      path.resolve(repositoryRoot, project.worktree_root),
+      `${packet.suit.stack_key}-${packet.task.task_id.toLowerCase()}`,
+    )
+    const branchExists = gitCheck(repositoryRoot, ['show-ref', '--verify', '--quiet', `refs/heads/${expectedBranch}`]).ok
+    worktreeTarget = {
+      path: targetPath,
+      branch: expectedBranch,
+      changed_files: [],
+      status: existsSync(targetPath) || branchExists ? 'invalid' : 'missing',
+    }
+  }
+
+  const requiredPrograms = new Set(['node', 'git', 'gh', 'psql', 'pnpm', 'codex'])
+  for (const config of [packet.project?.verification_config, packet.workstream?.verification_config]) {
+    for (const check of config?.commands ?? []) {
+      if (check?.required !== false && check?.program) requiredPrograms.add(check.program)
+    }
+  }
+  const executables = Object.fromEntries(
+    [...requiredPrograms].sort().map(program => [program, executableAvailable(program)]),
+  )
+  const missingEnvironment = []
+  if (!expectedDatabaseFingerprint) missingEnvironment.push('AUTOMATION_CONTROL_DB_FINGERPRINT')
+  if (Number(process.versions.node.split('.')[0]) < 22) missingEnvironment.push('node>=22')
+  if (!packet.project?.github_repository) missingEnvironment.push('project.github_repository')
+  if (!packet.project?.integration_branch) missingEnvironment.push('project.integration_branch')
+  if (!packet.project?.local_repository_root) missingEnvironment.push('project.local_repository_root')
+  if (!packet.project?.worktree_root) missingEnvironment.push('project.worktree_root')
+
+  return {
+    control_database: {
+      identity,
+      actual_fingerprint: actualDatabaseFingerprint,
+      expected_fingerprint: expectedDatabaseFingerprint,
+    },
+    repository: {
+      root: root.value,
+      root_valid: root.ok && path.resolve(root.value) === path.resolve(repositoryRoot),
+      integration_sha: integration.value,
+      integration_commit_present: integrationPresent,
+      parent,
+      parent_error: parentError,
+      parent_commit_present: parentPresent,
+      parent_consistent: parentConsistent,
+      worktree_target: worktreeTarget,
+      dependencies_ready: worktreeTarget.status === 'ready' && existsSync(path.join(worktreeTarget.path, 'node_modules')),
+    },
+    executables,
+    environment: {
+      valid: missingEnvironment.length === 0,
+      missing: missingEnvironment,
+    },
+  }
+}
+
+
+function runExecutionPreflight(snapshot) {
+  const runtime = executionPreflightRuntime(snapshot)
+  return evaluateExecutionPreflight({
+    packet: snapshot.packet,
+    runtime,
+    executions: snapshot.executions,
+    serializationConflicts: snapshot.serialization_conflicts,
+  })
+}
+
+
+function preflightRecoveryPlan(snapshot, preflight) {
+  const supervisorPlan = planSupervisorStep(snapshot)
+  return {
+    kind: preflight.kind === 'ready' ? 'act' : preflight.kind,
+    next_action: preflight.next_action,
+    failure_class: preflight.failure_class,
+    reason: preflight.reason,
+    recoverable: preflight.recoverable,
+    fingerprint: supervisorPlan.fingerprint,
+    execution: supervisorPlan.execution,
+    preflight_fingerprint: preflight.fingerprint,
+  }
+}
+
+
+function taskExecutionPreflight() {
+  const [taskId] = args
+  if (!validTaskId(taskId)) {
+    output({ ok: false, command: 'task-execution-preflight', error: 'valid_task_id_required' }, 64)
+    return
+  }
+
+  try {
+    const snapshot = supervisorSnapshot(taskId)
+    if (!snapshot?.packet?.task) throw new Error(`Unknown task: ${taskId}`)
+    const preflight = runExecutionPreflight(snapshot)
+    const recoveryPlan = preflightRecoveryPlan(snapshot, preflight)
+    recordSupervisorRecovery(snapshot, recoveryPlan, {
+      idempotencyKey: `preflight:${preflight.fingerprint}`,
+      status: preflight.ready ? 'resolved' : preflight.kind === 'stop' ? 'resolved' : 'active',
+      condition: { preflight: true, preflight_fingerprint: preflight.fingerprint, checks: preflight.checks },
+      metadata: { preflight: true, context: preflight.context },
+    })
+    output({
+      ok: preflight.ready,
+      command: 'task-execution-preflight',
+      task_id: taskId,
+      preflight,
+    }, preflight.ready ? 0 : 1)
+  }
+  catch (error) {
+    output({ ok: false, command: 'task-execution-preflight', task_id: taskId, error: error.message }, 1)
+  }
 }
 
 
@@ -4466,6 +4697,40 @@ function taskSupervisor() {
           status: plan.kind, recovery: plan, trail,
         }, plan.kind === 'terminal' && !successfulTerminal ? 1 : 0)
         return
+      }
+
+      if (['task-run', 'task-retry'].includes(plan.command)) {
+        const preflight = runExecutionPreflight(snapshot)
+        const recoveryPlan = preflightRecoveryPlan(snapshot, preflight)
+        trail.push({
+          step,
+          command: 'task-execution-preflight',
+          exit_code: preflight.ready ? 0 : 1,
+          ok: preflight.ready,
+          response: preflight,
+        })
+        recordSupervisorRecovery(snapshot, recoveryPlan, {
+          idempotencyKey: `preflight:${preflight.fingerprint}`,
+          status: preflight.ready ? 'active' : preflight.kind === 'stop' ? 'resolved' : 'active',
+          leaseOwner: preflight.ready ? owner : '',
+          leaseToken: preflight.ready ? token : '',
+          leaseExpiresAt: preflight.ready ? leaseExpiresAt : '',
+          condition: { preflight: true, step, preflight_fingerprint: preflight.fingerprint, checks: preflight.checks },
+          metadata: { preflight: true, context: preflight.context },
+        })
+
+        if (!preflight.ready) {
+          output({
+            ok: preflight.kind !== 'stop',
+            command: 'task-supervise',
+            task_id: taskId,
+            status: preflight.kind,
+            recovery: recoveryPlan,
+            preflight,
+            trail,
+          }, preflight.kind === 'stop' ? 1 : 0)
+          return
+        }
       }
 
       let child
@@ -5494,6 +5759,10 @@ switch (command) {
     taskPublish()
     break
 
+  case 'task-execution-preflight':
+    taskExecutionPreflight()
+    break
+
   case 'task-supervise':
     taskSupervisor()
     break
@@ -5544,6 +5813,7 @@ switch (command) {
         'retry-route <profile> <previous-attempt>',
         'task-retry <task-id>',
         'task-publish <task-id>',
+        'task-execution-preflight <task-id>',
         'task-supervise <task-id>',
         'task-engine <task-id>',
         'run-start <suit> <max-tasks>',

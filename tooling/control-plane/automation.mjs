@@ -220,6 +220,7 @@ async function main() {
     `,{project:projectSlug,workstream:workstreamSlug,task_id:task.task_id,sequence:String(task.sequence??1000),priority:String(task.priority??100),title:String(task.title??''),description:String(task.description??''),task_type:task.task_type??'feature',risk_level:task.risk_level??'normal',model_profile:task.model_profile??'standard',acceptance:JSON.stringify(task.acceptance_criteria??[]),verification:JSON.stringify(task.verification_plan??[]),retry_policy:task.retry_policy_id??'',metadata:JSON.stringify(task.metadata??{})}) })
   }
   if (resource === 'task' && action === 'release') return delegate('task-release', positional())
+  if (resource === 'task' && action === 'preflight') return delegate('task-execution-preflight', positional())
   if (resource === 'task' && ['prepare','run','verify','retry','publish','engine'].includes(action)) return delegate(`task-${action}`, positional())
   if (resource === 'task' && action === 'supervise') return delegate('task-supervise', positional())
   if (resource === 'task' && action === 'resume') return delegate('task-engine', positional())

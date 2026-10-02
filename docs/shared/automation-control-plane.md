@@ -41,6 +41,7 @@ pnpm automation task show V2-IMP-013
 pnpm automation task next building-suit/ledger-suit
 pnpm automation task claim building-suit/ledger-suit
 pnpm automation task prepare V2-IMP-013
+pnpm automation task preflight V2-IMP-013
 pnpm automation task supervise V2-IMP-013
 pnpm automation task run V2-IMP-013
 pnpm automation task verify V2-IMP-013
@@ -67,7 +68,9 @@ pnpm automation run inspect RUN-UUID
 pnpm automation run stop building-suit/ledger-suit
 ```
 
-`task supervise` is the single lifecycle entry point for one already-claimed task. It reads the task, every execution and verification run, open failures, publication records, and the durable recovery condition before choosing an action. A stable task resume identity and an atomic database lease prevent concurrent supervisors from duplicating implementation, verification, commits, or draft pull requests. The supervisor resumes at the first incomplete stage, records its heartbeat, classification, recovery action, and next wake condition, and stops explicitly for external, decision, operator, or safety conditions. Retry and repair decisions use the resolved retry-policy budget.
+`task supervise` is the single lifecycle entry point for one already-claimed task. It reads the task, every execution and verification run, open failures, publication records, and the durable recovery condition before choosing an action. Before every initial or retry implementation attempt, it runs the same deterministic readiness gate exposed by `task preflight`; no execution row is created and Codex is not invoked until that gate passes. A stable task resume identity and an atomic database lease prevent concurrent supervisors from duplicating implementation, verification, commits, or draft pull requests. The supervisor resumes at the first incomplete stage, records its heartbeat, classification, recovery action, and next wake condition, and stops explicitly for external, decision, operator, or safety conditions. Retry and repair decisions use the resolved retry-policy budget.
+
+The execution preflight checks the expected control-database fingerprint, executable task state, hard dependencies, blocking decisions, workstream serialization, retry budget/profile, task contract and publication scope, required executables/dependencies/environment, and the fetched integration/parent/PR/worktree lineage. Configure the non-secret expected fingerprint as `AUTOMATION_CONTROL_DB_FINGERPRINT` (or as `environment_routing.control_database_fingerprint` in the project registry). The reported fingerprint is the SHA-256 digest of the live database identity fields returned by `task preflight`; configure an expected value only after independently verifying that identity. A mismatch safety-stops. Recoverable repository/runtime conditions use reconcile actions, unresolved decisions and external prerequisites use explicit waits, and unchanged results reuse one durable recovery event through the preflight fingerprint.
 
 The existing `run`, `verify`, `retry`, `publish`, `resume`, and diagnostic commands remain lower-level compatibility primitives. `resume` retains its prior engine behavior; new automation should invoke `supervise`. `reverify` creates a new verification run on the same succeeded execution. `reparent` refuses published branches, snapshots all task changes, moves the local task branch to the live parent, restores the snapshot with three-way conflict detection, and records metadata only after success. A conflict is left for human review with the snapshot path reported.
 

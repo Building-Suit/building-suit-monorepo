@@ -39,7 +39,30 @@ export function supervisorStateFingerprint(snapshot) {
   const publication = latest(snapshot.publications, 'pull_request_id')
 
   return createHash('sha256').update(JSON.stringify({
-    task: task && [task.task_id, task.status, task.engine_stage],
+    task: task && [
+      task.task_id, task.status, task.engine_stage, task.model_profile,
+      task.title, task.description, task.acceptance_criteria, task.verification_plan,
+    ],
+    dependencies: snapshot.packet?.dependencies?.map(item =>
+      [item.task_id, item.dependency_type, item.status],
+    ),
+    decisions: snapshot.packet?.decisions?.map(item =>
+      [item.id, item.blocking, item.status],
+    ),
+    project: snapshot.packet?.project && [
+      snapshot.packet.project.active,
+      snapshot.packet.project.allowed_publication_paths,
+      snapshot.packet.project.environment_routing,
+    ],
+    workstream: snapshot.packet?.workstream && [
+      snapshot.packet.workstream.active,
+      snapshot.packet.workstream.application_path,
+      snapshot.packet.workstream.concurrency_policy,
+      snapshot.packet.workstream.publication_config,
+    ],
+    serialization_conflicts: snapshot.serialization_conflicts?.map(item =>
+      [item.task_id, item.status, item.engine_stage],
+    ),
     execution: execution && [execution.execution_id, execution.attempt, execution.status, execution.engine_stage],
     verification: verification && [verification.verification_run_id, verification.status],
     failure: failure && [failure.failure_id, failure.failure_class, failure.recovery_action, failure.resolved_at],
@@ -73,6 +96,7 @@ export function planSupervisorStep(snapshot) {
 
   if (
     recovery?.status === 'active' &&
+    recovery.condition?.preflight !== true &&
     recovery.condition?.fingerprint === fingerprint &&
     ['wait-external', 'wait-decision', 'wait-operator', 'safety-stop'].includes(recovery.next_action) &&
     (
