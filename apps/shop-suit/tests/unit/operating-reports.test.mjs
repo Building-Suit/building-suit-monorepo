@@ -22,7 +22,7 @@ test('dashboard supports three periods, all locations, source drill-through, and
     'shop_operating_report', 'allLocations', "'day', 'week', 'month'", 'salesMix',
     'paymentMix', 'outstanding', 'busiestTimes', 'cashVariance', 'staffPerformance',
     'branchComparison', 'BsDataTable', 'sm:grid-cols-2', 'xl:grid-cols-4',
-    'not accounting profit or a financial statement', 'ليس ربحًا محاسبيًا',
+    'not accounting profit or a financial statement', 'مش حساب للربح المحاسبي',
   ]) assert.match(dashboard, new RegExp(evidence))
   assert.match(sales, /route\.query\.from/)
 })
@@ -52,7 +52,7 @@ test('report screen uses the authoritative RPC for screen and escaped CSV export
   for (const evidence of [
     'shop_operational_report', 'queryArgs(page.value)', 'queryArgs(1, 500)', '{ ...args, p_page: exportPage }',
     'encodeCsv(headers, rows)', 'downloadCsv', 'source_path', 'BsDataTable',
-    'All locations', 'كل الفروع', 'not a P&L', 'ليست قائمة دخل',
+    'All locations', 'كل الفروع', 'not a P&L', 'مش قائمة دخل',
   ]) assert.ok(reports.includes(evidence), `missing report screen evidence: ${evidence}`)
 })
 

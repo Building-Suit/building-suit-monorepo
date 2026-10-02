@@ -52,7 +52,7 @@ test('plain explanations retain operational and compliance precision', async () 
   assert.match(source.locale, /فترة محاسبية مقفولة/)
   assert.match(source.locale, /مش معناه إن فلوس هتخرج/)
   assert.match(source.locale, /ليس فاتورة ضريبية مصرية أو إيصالًا إلكترونيًا معتمدًا من مصلحة الضرائب/)
-  assert.match(source.billing, /مش هيتغيّر غير بعد اعتماد مسؤول المنصة/)
+  assert.match(source.billing, /لن يتغير الوصول إلا بعد اعتماد مسؤول المنصة/)
   assert.match(source.convention, /المعنى المرجعي|meaning reference/)
 })
 
