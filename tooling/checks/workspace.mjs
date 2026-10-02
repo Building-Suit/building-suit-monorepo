@@ -159,6 +159,22 @@ for (const target of actualUiTargets) if (!expectedUiTargets.includes(target)) f
 const uxPackage = JSON.parse(await readFile(path.join(root, 'packages/ux/package.json'), 'utf8'))
 if ({ ...uxPackage.dependencies, ...uxPackage.devDependencies }['@building-suit/ui']) failures.push('packages/ux/package.json: packages/ux must not depend on packages/ui')
 
+const scaffoldSources = {
+  app: await readFile(path.join(root, 'tooling/new-platform/templates/app/app.vue.template'), 'utf8'),
+  layout: await readFile(path.join(root, 'tooling/new-platform/templates/app/layouts/default.vue.template'), 'utf8'),
+  page: await readFile(path.join(root, 'tooling/new-platform/templates/app/pages/index.vue.template'), 'utf8'),
+}
+for (const component of ['BsAppShell', 'BsProductLogo', 'SettingsMenu']) {
+  if (!new RegExp(`<${component}\\b`).test(scaffoldSources.layout)) failures.push(`tooling/new-platform: default layout must compose ${component}`)
+}
+for (const component of ['ToastHost', 'BsConfirmHost']) {
+  if (!new RegExp(`<${component}\\b`).test(scaffoldSources.app)) failures.push(`tooling/new-platform: app root must compose ${component}`)
+}
+if (!/<BsContentSection\b/.test(scaffoldSources.page)) failures.push('tooling/new-platform: starter page must use shared page composition')
+if (/\bls-(?:card|btn|input|select)\b|<(?:button|form|section)\b[^>]*class=/.test(scaffoldSources.page)) {
+  failures.push('tooling/new-platform: starter page recreates shared presentation')
+}
+
 const migrationManifest = JSON.parse(await readFile(path.join(root, 'docs/migration/copy-manifest.json'), 'utf8'))
 let migrations = 0
 for (const item of migrationManifest.filter(item => /(?:migrations|shop_crm_migrations)\/.*\.sql$/.test(item.source))) {

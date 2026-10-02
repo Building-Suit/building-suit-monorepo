@@ -160,3 +160,29 @@ test('Shop capability-driven table create and edit actions share one record moda
   await table.getByRole('button', { name: 'Edit' }).click()
   await expect(page.getByRole('dialog', { name: 'Edit' })).toBeVisible()
 })
+
+test('Shop POS uses the shared tile action without default button chrome', async ({ page }) => {
+  await page.setViewportSize({ width: 1024, height: 768 })
+  await pilotFixture(page, 'en')
+  await page.locator('#__nuxt').evaluate((root) => {
+    const app = (root as HTMLElement & {
+      __vue_app__?: {
+        config: {
+          globalProperties: {
+            $router?: { push: (to: string) => Promise<unknown> }
+          }
+        }
+      }
+    }).__vue_app__
+
+    void app?.config.globalProperties.$router?.push('/pos')
+  })
+  await expect(page).toHaveURL(/\/pos(?:[?#]|$)/)
+
+  const tile = page.getByRole('button', { name: /Haircut/ })
+  await expect(tile).toBeVisible()
+  await expect(tile).toHaveClass(/\bls-action-tile\b/)
+  await expect(tile).not.toHaveClass(/\bls-btn\b/)
+  await tile.click()
+  await expect(page.locator('#pos-cart-title').locator('..')).toContainText('Haircut')
+})

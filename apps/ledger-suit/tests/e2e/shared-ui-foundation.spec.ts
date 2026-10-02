@@ -52,7 +52,10 @@ async function openAuthenticatedShell(page: Page) {
         : args.p_resource === 'status'
           ? [{ id: 'ledger', pending_payments: 0, unprocessed_billing_events: 0, failed_billing_events: 0, open_support_requests: 0, suspended_organizations: 0, support_reminder_delivery: 'not_configured' }]
           : args.p_resource === 'organizations'
-            ? [{ id: 'organization-1', name: 'Foundation ledger', status: 'active', access_state: 'active', operator_suspended: false, plan_key: 'solo', subscription_status: 'active', member_count: 2, pending_payment_count: 0, open_support_count: 0 }]
+            ? [
+                { id: 'organization-2', name: 'Zeta ledger', status: 'trial', access_state: 'active', operator_suspended: false, plan_key: 'starter', subscription_status: 'trialing', member_count: 1, pending_payment_count: 0, open_support_count: 0 },
+                { id: 'organization-1', name: 'Foundation ledger', status: 'active', access_state: 'active', operator_suspended: false, plan_key: 'solo', subscription_status: 'active', member_count: 2, pending_payment_count: 0, open_support_count: 0 },
+              ].filter(organization => (!args.p_search || organization.name.toLowerCase().includes(String(args.p_search).toLowerCase())) && (!args.p_status || organization.status === args.p_status))
           : []
       await route.fulfill({ json: { ok: true, data } })
     }
@@ -146,13 +149,27 @@ test('Ledger authenticated shell shares mobile drawer, user menu, settings, and 
   await expect(page.getByRole('button', { name: 'Account menu' })).toBeFocused()
 })
 
-test('Ledger shared table action opens the canonical record modal', async ({ page }) => {
+test('Ledger shared table sorts, searches, filters, and opens the canonical record modal', async ({ page }) => {
   await openAuthenticatedShell(page)
   await page.getByLabel('View').selectOption('organizations')
   const table = page.locator('.bs-data-table')
   await expect(table).toBeVisible()
   await expect(table).toContainText('Foundation ledger')
-  await table.getByRole('button', { name: 'Suspend' }).click()
+  await expect(table).toContainText('Zeta ledger')
+
+  await table.getByRole('columnheader', { name: 'Name' }).click()
+  await expect(table.locator('tbody tr').first()).toContainText('Foundation ledger')
+
+  await page.getByLabel('Search').fill('Foundation')
+  await page.getByLabel('Search').press('Enter')
+  await expect(table).not.toContainText('Zeta ledger')
+  await expect(table).toContainText('Foundation ledger')
+
+  await page.getByLabel('Status or role').selectOption('active')
+  await page.getByRole('button', { name: 'Apply' }).click()
+  await expect(table).toContainText('Foundation ledger')
+
+  await table.locator('tbody tr', { hasText: 'Foundation ledger' }).getByRole('button', { name: 'Suspend' }).click()
   const dialog = page.getByRole('dialog')
   await expect(dialog).toBeVisible()
   await expect(dialog.getByRole('button', { name: 'Cancel' })).toBeVisible()

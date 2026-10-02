@@ -135,7 +135,7 @@ function planName(key: unknown) {
       <p v-if="pending" role="status">{{ t('app.loading') }}</p>
       <p v-else-if="!error && !rows.length">{{ t('admin.empty') }}</p>
       <BsDataTable v-if="rows.length && !denied" :value="rows" data-key="id" :loading="pending">
-        <Column v-for="column in columns" :key="column.field" :field="column.field" :header="column.header">
+        <Column v-for="column in columns" :key="column.field" :field="column.field" :header="column.header" sortable>
           <template #body="{ data }"><pre v-if="column.field.endsWith('_state')" class="max-w-80 overflow-auto text-xs" dir="ltr">{{ display(data[column.field]) }}</pre><span v-else class="break-words">{{ column.field === 'plan_key' ? planName(data[column.field]) : display(data[column.field]) }}</span></template>
         </Column>
         <Column v-if="resource === 'users' || resource === 'organizations'" :header="t('admin.memberships')"><template #body="{ data }"><BsButton type="button" class="ls-btn" :disabled="pending" @click="inspectMemberships(data)">{{ t('admin.memberships') }}</BsButton></template></Column>
