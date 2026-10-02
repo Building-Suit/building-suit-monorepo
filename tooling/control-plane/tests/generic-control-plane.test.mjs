@@ -1096,6 +1096,15 @@ test('execution preflight routes repository drift to deterministic reconciliatio
   const missingWorktree = executionPreflightFixture()
   missingWorktree.runtime.repository.worktree_target.status = 'missing'
   assert.equal(evaluateExecutionPreflight(missingWorktree).reason, 'worktree_not_prepared')
+
+  const missingDependencies = executionPreflightFixture()
+  missingDependencies.runtime.repository.dependencies_ready = false
+  const dependencyResult = evaluateExecutionPreflight(missingDependencies)
+  assert.equal(dependencyResult.reason, 'repository_dependencies_missing')
+  assert.equal(
+    dependencyResult.context.worktree_path,
+    '/tmp/control-plane-cp-test-001',
+  )
 })
 
 test('fresh task reconciliation prepares worktrees and deterministic dependencies', () => {
@@ -1212,6 +1221,10 @@ test('supervisor self-heals fresh worktrees, dependencies, and dead local leases
   assert.match(supervisor, /preflightReconciliationAction\(preflight\)/)
   assert.match(supervisor, /invokeTaskAction\('task-prepare', taskId\)/)
   assert.match(supervisor, /prepareTaskDependencies/)
+  assert.match(
+    supervisor,
+    /snapshot\.packet\?\.preparation\?\.worktree\?\.worktree_path/,
+  )
   assert.match(runner, /--frozen-lockfile/)
   assert.match(runner, /--prefer-offline/)
 })
