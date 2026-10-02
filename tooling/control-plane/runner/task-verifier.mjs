@@ -13,11 +13,21 @@ import {
 
 import path from 'node:path'
 
+import {
+  applicationScopeSelected,
+  commandResultStatus,
+  customCheckSelection,
+  isMilestoneVerification,
+  resolveVerificationMode,
+} from './verification-mode.mjs'
+import { publicationStateFingerprint } from './publication-preflight.mjs'
+
 const [
   worktreePath,
   packetPath,
   runDirectory,
   verificationRunId,
+  persistedVerificationMode,
 ] = process.argv.slice(2)
 
 const verificationProbe =
@@ -72,9 +82,33 @@ const suit =
 
 const project = packet.project ?? {}
 const workstream = packet.workstream ?? {}
+const configuredCommands = new Map()
+for (
+  const config
+  of [
+    project.verification_config,
+    workstream.verification_config,
+  ]
+) {
+  for (const command of config?.commands ?? []) {
+    configuredCommands.set(command.name, command)
+  }
+}
 const verificationConfig = {
   ...(project.verification_config ?? {}),
   ...(workstream.verification_config ?? {}),
+  commands: [...configuredCommands.values()],
+}
+
+const verificationMode =
+  persistedVerificationMode ??
+  resolveVerificationMode(packet)
+
+if (
+  verificationMode !==
+  resolveVerificationMode(packet)
+) {
+  fail('persisted_verification_mode_mismatch')
 }
 
 const controlDatabase = {
@@ -100,13 +134,17 @@ function liveCheck(check) {
     elapsed_ms: String(check.elapsed_ms ?? 0),
     command: check.command ?? '',
     required: check.required === false ? 'false' : 'true',
+    metadata: JSON.stringify({
+      verification_mode: verificationMode,
+      selection_reason: check.selection_reason ?? 'unspecified',
+    }),
   }
   const args = ['-X','-q','-A','-t','-v','ON_ERROR_STOP=1','-h',controlDatabase.host,'-p',controlDatabase.port,'-U',controlDatabase.user,'-d',controlDatabase.database]
   for (const [key,value] of Object.entries(values)) args.push('--set',`${key}=${value}`)
   const result = spawnSync('psql',args,{
     encoding:'utf8',
     env:{...process.env,PGSSLMODE:controlDatabase.sslmode},
-    input:`SELECT control.update_verification_check(:'run_id'::bigint,:'name',:'status',NULLIF(:'exit_code','')::integer,:'summary',:'log_path',:'elapsed_ms'::bigint,:'command',:'required'::boolean);\n`,
+    input:`SELECT control.update_verification_check(:'run_id'::bigint,:'name',:'status',NULLIF(:'exit_code','')::integer,:'summary',:'log_path',:'elapsed_ms'::bigint,:'command',:'required'::boolean,:'metadata'::jsonb);\n`,
   })
   if (result.status !== 0) {
     throw new Error(`live_verification_update_failed:${(result.stderr ?? '').trim()}`)
@@ -134,6 +172,7 @@ function runCheck({
   cwd = worktreePath,
   timeout = 15 * 60 * 1000,
   required = true,
+  selectionReason = 'required_by_verification_policy',
 }) {
   const started =
     Date.now()
@@ -142,6 +181,7 @@ function runCheck({
     name,
     command: `${program} ${args.join(' ')}`,
     required,
+    selection_reason: selectionReason,
     status: 'running',
     exit_code: null,
     summary: 'Running',
@@ -207,6 +247,9 @@ function runCheck({
     },
   )
 
+  const unavailable =
+    result.error?.code === 'ENOENT'
+
   const passed =
     exitCode === 0 &&
     !result.error
@@ -221,7 +264,9 @@ function runCheck({
       .filter(Boolean)
 
   const summary =
-    passed
+    unavailable
+      ? `Required program is unavailable: ${program}`
+      : passed
       ? `PASS in ${Date.now() - started}ms`
       : (
           lines
@@ -237,14 +282,13 @@ function runCheck({
     command:
       `${program} ${args.join(' ')}`,
     required,
+    selection_reason: selectionReason,
     status:
-      passed
-        ? 'pass'
-        : (
-            required
-              ? 'fail'
-              : 'skipped'
-          ),
+      commandResultStatus({
+        required,
+        exitCode,
+        errorCode: result.error?.code,
+      }),
     exit_code:
       exitCode,
     summary,
@@ -286,6 +330,9 @@ function gitOutput(args) {
 const changedFiles =
   new Set()
 
+const verificationBaseSha =
+  gitOutput(['rev-parse', 'HEAD'])
+
 for (
   const output
   of [
@@ -326,6 +373,30 @@ const verificationPlanText =
 
 const results = []
 
+function omittedCheck({
+  name,
+  command,
+  required = false,
+  reason,
+  summary,
+  unavailable = false,
+}) {
+  return {
+    name,
+    command,
+    required,
+    selection_reason: reason,
+    status:
+      unavailable && required
+        ? 'not_run'
+        : 'skipped',
+    exit_code: null,
+    summary,
+    log_path: null,
+    elapsed_ms: 0,
+  }
+}
+
 results.push(
   runCheck({
     name:
@@ -342,6 +413,9 @@ results.push(
 
     timeout:
       20 * 60 * 1000,
+
+    selectionReason:
+      'verification_environment_prerequisite',
   }),
 )
 
@@ -357,22 +431,35 @@ results.push(
       'diff',
       '--check',
     ],
+
+    selectionReason:
+      'required_for_changed_files',
   }),
 )
 
-results.push(
-  runCheck({
-    name:
-      'workspace-check',
+if (
+  isMilestoneVerification(verificationMode) ||
+  /pnpm check|workspace check/.test(verificationPlanText)
+) {
+  results.push(
+    runCheck({
+      name:
+        'workspace-check',
 
-    program:
-      'pnpm',
+      program:
+        'pnpm',
 
-    args: [
-      'check',
-    ],
-  }),
-)
+      args: [
+        'check',
+      ],
+
+      selectionReason:
+        isMilestoneVerification(verificationMode)
+          ? 'required_by_milestone_contract'
+          : 'required_by_task_verification_plan',
+    }),
+  )
+}
 
 const appPath =
   workstream.application_path ??
@@ -402,7 +489,18 @@ if (
     )
 }
 
-if (appPackage?.name) {
+const applicationSelection =
+  applicationScopeSelected({
+    appPath,
+    changedFiles: [...changedFiles],
+    mode: verificationMode,
+    verificationPlanText,
+  })
+
+if (
+  appPackage?.name &&
+  applicationSelection.selected
+) {
   if (
     appPackage.scripts?.typecheck
   ) {
@@ -419,6 +517,9 @@ if (appPackage?.name) {
           appPackage.name,
           'typecheck',
         ],
+
+        selectionReason:
+          applicationSelection.reason,
       }),
     )
   }
@@ -439,6 +540,9 @@ if (appPackage?.name) {
           appPackage.name,
           'lint',
         ],
+
+        selectionReason:
+          applicationSelection.reason,
       }),
     )
   }
@@ -459,6 +563,9 @@ if (appPackage?.name) {
           appPackage.name,
           'test:unit',
         ],
+
+        selectionReason:
+          applicationSelection.reason,
       }),
     )
   }
@@ -501,39 +608,29 @@ if (appPackage?.name) {
 
         timeout:
           20 * 60 * 1000,
+
+        selectionReason:
+          applicationSelection.reason,
       }),
     )
   }
 }
-else {
-  results.push(
-    runCheck({
-      name:
-        'root-typecheck',
-
-      program:
-        'pnpm',
-
-      args: [
-        'typecheck',
-      ],
-    }),
-  )
-}
 
 for (const custom of verificationConfig.commands ?? []) {
-  const prefixes = Array.isArray(custom.changed_paths) ? custom.changed_paths : []
-  if (prefixes.length > 0 && ![...changedFiles].some(file => prefixes.some(prefix => file.startsWith(prefix)))) {
-    results.push({
+  const selection = customCheckSelection({
+    check: custom,
+    changedFiles: [...changedFiles],
+    mode: verificationMode,
+    verificationPlanText,
+  })
+  if (!selection.selected) {
+    results.push(omittedCheck({
       name: custom.name,
       command: [custom.program, ...(custom.args ?? [])].join(' '),
       required: custom.required !== false,
-      status: 'skipped',
-      exit_code: null,
-      summary: 'No changed file matched this custom check.',
-      log_path: null,
-      elapsed_ms: 0,
-    })
+      reason: selection.reason,
+      summary: 'No changed file matched this focused custom check.',
+    }))
     continue
   }
   results.push(runCheck({
@@ -543,6 +640,7 @@ for (const custom of verificationConfig.commands ?? []) {
     cwd: custom.cwd ? path.join(worktreePath, custom.cwd) : worktreePath,
     timeout: custom.timeout_ms ?? 15 * 60 * 1000,
     required: custom.required !== false,
+    selectionReason: selection.reason,
   }))
 }
 
@@ -618,6 +716,9 @@ if (databaseChanged) {
 
         timeout:
           20 * 60 * 1000,
+
+        selectionReason:
+          'database_scope_changed',
       })
 
 
@@ -658,6 +759,9 @@ if (databaseChanged) {
 
             timeout:
               15 * 60 * 1000,
+
+            selectionReason:
+              'database_scope_changed',
           }),
         )
 
@@ -673,6 +777,9 @@ if (databaseChanged) {
 
           required:
             true,
+
+          selection_reason:
+            'required_database_test_unavailable',
 
           status:
             'not_run',
@@ -713,6 +820,9 @@ if (databaseChanged) {
 
         timeout:
           30 * 60 * 1000,
+
+        selectionReason:
+          'database_scope_changed',
       }),
     )
 
@@ -728,6 +838,9 @@ if (databaseChanged) {
 
       required:
         true,
+
+      selection_reason:
+        'required_database_runner_unavailable',
 
       status:
         'not_run',
@@ -809,8 +922,11 @@ if (
         '--local',
       ],
 
-      timeout:
-        15 * 60 * 1000,
+    timeout:
+      15 * 60 * 1000,
+
+    selectionReason:
+      'required_browser_environment',
     })
 
 
@@ -829,7 +945,10 @@ if (browserRequired) {
   if (
    browserEnvironmentReady &&
    appPackage?.name &&
-   changedBrowserTests.length > 0
+   (
+     changedBrowserTests.length > 0 ||
+     isMilestoneVerification(verificationMode)
+   )
   ) {
 
     results.push(
@@ -857,37 +976,29 @@ if (browserRequired) {
 
         timeout:
           12 * 60 * 1000,
+
+        selectionReason:
+          changedBrowserTests.length > 0
+            ? 'changed_browser_spec'
+            : 'required_by_milestone_contract',
       }),
     )
 
   }
   else {
 
-    results.push({
-      name:
-        'browser-tests',
-
-      command:
-        null,
-
-      required:
-        false,
-
-      status:
-        'skipped',
-
-      exit_code:
-        null,
-
-      summary:
-        'No task-specific Playwright spec was changed; broad application E2E suite intentionally skipped.',
-
-      log_path:
-        null,
-
-      elapsed_ms:
-        0,
-    })
+    results.push(omittedCheck({
+      name: 'browser-tests',
+      command: null,
+      required: true,
+      reason: appPackage?.name
+        ? 'required_browser_check_has_no_changed_spec'
+        : 'required_browser_runner_unavailable',
+      summary: appPackage?.name
+        ? 'Browser verification is required, but no task-specific Playwright spec changed in focused mode.'
+        : `Browser verification is required, but ${appPath ?? suit.slug} has no runnable application package.`,
+      unavailable: true,
+    }))
 
   }
 
@@ -900,6 +1011,21 @@ const passed =
       result.status === 'skipped',
   )
 
+const verifiedFiles = [...changedFiles].sort().map(file => ({
+  file,
+  object: existsSync(path.join(worktreePath, file))
+    ? gitOutput(['hash-object', '--', file])
+    : 'deleted',
+}))
+
+const verifiedState = {
+  base_sha: verificationBaseSha,
+  files: verifiedFiles,
+}
+
+verifiedState.fingerprint =
+  publicationStateFingerprint(verifiedState)
+
 process.stdout.write(
   `${JSON.stringify({
     ok: true,
@@ -909,8 +1035,14 @@ process.stdout.write(
     task_id:
       task.task_id,
 
+    verification_mode:
+      verificationMode,
+
     changed_files:
       changed,
+
+    verified_state:
+      verifiedState,
 
     checks:
       results,

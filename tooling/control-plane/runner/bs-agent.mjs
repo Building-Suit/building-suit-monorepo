@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { spawnSync } from 'node:child_process'
+import { randomUUID } from 'node:crypto'
 import {
   mkdirSync,
   mkdtempSync,
@@ -26,6 +27,26 @@ import {
   redact,
   redactText,
 } from '../lib/redaction.mjs'
+import {
+  classifySupervisorFailure,
+  planSupervisorStep,
+  supervisorResumeIdentity,
+} from './task-supervisor.mjs'
+import {
+  evaluateExecutionPreflight,
+  fingerprint as preflightFingerprint,
+} from './task-preflight.mjs'
+import { evaluateParentSatisfaction } from './parent-satisfaction.mjs'
+import {
+  WATCHER_LEASE_MS,
+  WATCHER_MAX_BATCH,
+  classifyControlProbe,
+  githubProbeCommand,
+  githubProbeObservation,
+  normalizeWatchDescriptor,
+  watchDescriptorForRecovery,
+  watchTransition,
+} from './external-state-watcher.mjs'
 const automationCodexHome =
   process.env.BS_CODEX_HOME ??
   path.join(
@@ -757,6 +778,13 @@ function validSuitSlug(value) {
   )
 }
 
+function validWorkstreamReference(value) {
+  return (
+    typeof value === 'string' &&
+    /^(?:[a-z][a-z0-9-]{1,63}\/)?[a-z][a-z0-9-]{1,63}$/.test(value)
+  )
+}
+
 function controlQuery(
   sql,
   variables = {},
@@ -820,6 +848,56 @@ function parseControlJson(result) {
   }
 
   return JSON.parse(result.stdout)
+}
+
+function workstreamResolve() {
+  const [reference] = args
+  if (!validWorkstreamReference(reference)) {
+    output({ ok: false, command: 'workstream-resolve', error: 'valid_workstream_reference_required' }, 64)
+    return
+  }
+
+  const [projectSlug, workstreamSlug] = reference.includes('/')
+    ? reference.split('/', 2)
+    : ['', reference]
+
+  try {
+    const result = controlQuery(
+      `
+        WITH matches AS (
+          SELECT p.slug AS project_slug, w.slug AS workstream_slug, w.suit_slug
+          FROM control.workstreams w
+          JOIN control.projects p USING (project_id)
+          WHERE p.active = true
+            AND w.active = true
+            AND (:'project_slug' = '' OR p.slug = :'project_slug')
+            AND w.slug = :'workstream_slug'
+        )
+        SELECT jsonb_build_object(
+          'match_count', count(*),
+          'workstream', CASE WHEN count(*) = 1 THEN (jsonb_agg(to_jsonb(matches)))->0 ELSE NULL END
+        )
+        FROM matches;
+      `,
+      { project_slug: projectSlug, workstream_slug: workstreamSlug },
+    )
+    const resolved = parseControlJson(result)
+    if (Number(resolved?.match_count) !== 1) {
+      output({
+        ok: false,
+        command: 'workstream-resolve',
+        reference,
+        error: Number(resolved?.match_count) > 1
+          ? 'ambiguous_workstream_use_project_slash_workstream'
+          : 'unknown_or_inactive_workstream',
+      }, 1)
+      return
+    }
+    output({ ok: true, command: 'workstream-resolve', reference, ...resolved.workstream })
+  }
+  catch (error) {
+    output({ ok: false, command: 'workstream-resolve', reference, error: error.message }, 1)
+  }
 }
 
 function taskNext() {
@@ -1814,18 +1892,34 @@ function recordControlFailure(
 function beginVerification(
   taskId,
   executionId,
+  verificationMode,
 ) {
   const result =
     controlQuery(
       `
-        SELECT jsonb_build_object(
-          'verification_run_id',
-          control.start_verification_run(
+        WITH existing AS (
+          SELECT verification_run_id
+          FROM control.verification_runs
+          WHERE execution_id = :'execution_id'::bigint
+            AND status = 'running'
+          ORDER BY verification_run_id DESC
+          LIMIT 1
+        ), started AS (
+          SELECT control.start_verification_run(
             :'task_id',
             :'execution_id'::bigint,
-            'runner'
-          )
-        );
+            'runner',
+            jsonb_build_object('verification_mode', :'verification_mode')
+          ) AS verification_run_id
+        )
+        SELECT jsonb_build_object(
+          'verification_run_id', vr.verification_run_id,
+          'verification_mode', vr.verification_mode,
+          'resumed', EXISTS (SELECT 1 FROM existing)
+        )
+        FROM started
+        JOIN control.verification_runs vr
+          ON vr.verification_run_id = started.verification_run_id;
       `,
       {
         task_id:
@@ -1833,6 +1927,9 @@ function beginVerification(
 
         execution_id:
           String(executionId),
+
+        verification_mode:
+          verificationMode,
       },
     )
 
@@ -1888,6 +1985,14 @@ function skipUnselectedVerificationChecks(
         UPDATE control.verification_results
         SET status = 'skipped',
             summary = 'Not selected by the task-focused verification plan.',
+            metadata = COALESCE(metadata, '{}'::jsonb) || jsonb_build_object(
+              'selection_reason', 'not_selected_by_verifier',
+              'verification_mode', (
+                SELECT verification_mode
+                FROM control.verification_runs
+                WHERE verification_run_id = :'verification_run_id'::bigint
+              )
+            ),
             started_at = COALESCE(started_at, now()),
             finished_at = now(),
             elapsed_ms = 0
@@ -1911,6 +2016,40 @@ function skipUnselectedVerificationChecks(
   return parseControlJson(result)
 }
 
+function recordVerificationState(
+  verificationRunId,
+  verifiedState,
+) {
+  if (!verifiedState?.fingerprint) {
+    throw new Error(
+      'Verifier did not return an authoritative repository state fingerprint.',
+    )
+  }
+
+  const result = controlQuery(
+    `
+      UPDATE control.verification_runs
+      SET metadata = COALESCE(metadata, '{}'::jsonb) ||
+        jsonb_build_object('verified_state', :'verified_state'::jsonb)
+      WHERE verification_run_id = :'verification_run_id'::bigint
+        AND status = 'running'
+      RETURNING jsonb_build_object(
+        'verification_run_id', verification_run_id,
+        'state_fingerprint', metadata->'verified_state'->>'fingerprint'
+      );
+    `,
+    {
+      verification_run_id: String(verificationRunId),
+      verified_state: JSON.stringify(verifiedState),
+    },
+  )
+
+  const recorded = parseControlJson(result)
+  if (recorded?.state_fingerprint !== verifiedState.fingerprint) {
+    throw new Error('Unable to persist verified repository state.')
+  }
+}
+
 function recordVerification(
   verificationRunId,
   check,
@@ -1932,7 +2071,8 @@ function recordVerification(
             :'log_path',
             :'elapsed_ms'::bigint,
             :'command',
-            :'required'::boolean
+            :'required'::boolean,
+            :'metadata'::jsonb
           )
         );
       `,
@@ -1967,6 +2107,14 @@ function recordVerification(
 
         required:
           check.required === false ? 'false' : 'true',
+
+        metadata:
+          JSON.stringify({
+            selection_reason:
+              check.selection_reason ?? 'unspecified',
+            verification_mode:
+              check.verification_mode ?? null,
+          }),
       },
     )
 
@@ -2094,14 +2242,20 @@ function taskVerify() {
       beginVerification(
       taskId,
       execution.execution_id,
+      packet.task.verification_mode ?? 'focused',
     )
 
     const verificationRunId =
       verificationRun.verification_run_id
 
-    queueVerificationChecks(
-      verificationRunId,
-    )
+    const verificationMode =
+      verificationRun.verification_mode
+
+    if (!verificationRun.resumed) {
+      queueVerificationChecks(
+        verificationRunId,
+      )
+    }
 
     const verifier =
       execute(
@@ -2119,6 +2273,7 @@ function taskVerify() {
           packetPath,
           verificationDirectory,
           String(verificationRunId),
+          verificationMode,
         ],
         {
           cwd:
@@ -2210,6 +2365,11 @@ function taskVerify() {
       ]
     }
 
+    recordVerificationState(
+      verificationRunId,
+      verification.verified_state,
+    )
+
     for (
       const check
       of verification.checks
@@ -2259,6 +2419,9 @@ function taskVerify() {
 
       verification_run_id:
         verificationRunId,
+
+      verification_mode:
+        verificationMode,
 
       result:
         finalResult,
@@ -2420,8 +2583,13 @@ function verificationFailures(
           '[]'::jsonb
         )
         FROM control.verification_results
-        WHERE execution_id =
-          :'execution_id'::bigint
+        WHERE verification_run_id = (
+          SELECT verification_run_id
+          FROM control.verification_runs
+          WHERE execution_id = :'execution_id'::bigint
+          ORDER BY verification_run_id DESC
+          LIMIT 1
+        )
           AND status IN (
             'fail',
             'not_run'
@@ -3672,9 +3840,22 @@ function publicationVerification(
   const result =
     controlQuery(
       `
-        SELECT COALESCE(
-          jsonb_agg(
-            jsonb_build_object(
+        WITH latest_run AS (
+          SELECT *
+          FROM control.verification_runs
+          WHERE execution_id = :'execution_id'::bigint
+          ORDER BY verification_run_id DESC
+          LIMIT 1
+        )
+        SELECT COALESCE((
+          SELECT jsonb_build_object(
+            'verification_run_id', run.verification_run_id,
+            'execution_id', run.execution_id,
+            'status', run.status,
+            'state_fingerprint', run.metadata->'verified_state'->>'fingerprint',
+            'verified_state', run.metadata->'verified_state',
+            'checks', COALESCE((
+              SELECT jsonb_agg(jsonb_build_object(
               'check_name',
                 check_name,
 
@@ -3686,20 +3867,13 @@ function publicationVerification(
 
               'summary',
                 summary
-            )
-            ORDER BY verification_id
-          ),
-          '[]'::jsonb
-        )
-        FROM control.verification_results
-        WHERE verification_run_id = (
-          SELECT verification_run_id
-          FROM control.verification_runs
-          WHERE execution_id =
-            :'execution_id'::bigint
-          ORDER BY verification_run_id DESC
-          LIMIT 1
-        );
+              ) ORDER BY verification_id)
+              FROM control.verification_results
+              WHERE verification_run_id = run.verification_run_id
+            ), '[]'::jsonb)
+          )
+          FROM latest_run run
+        ), 'null'::jsonb);
       `,
       {
         execution_id:
@@ -3712,7 +3886,7 @@ function publicationVerification(
   return (
     parseControlJson(
       result,
-    ) ?? []
+      ) ?? null
   )
 }
 
@@ -3773,6 +3947,15 @@ function completePublication({
 
             changed_files:
               publication.changed_files,
+
+            verification_run_id:
+              publication.verification_run_id,
+
+            reconciliation:
+              publication.reconciliation,
+
+            publication_preflight:
+              publication.preflight,
           }),
       },
     )
@@ -3869,19 +4052,27 @@ function taskPublish() {
 
 
     if (
-      verification.length === 0
+      !verification
     ) {
       throw new Error(
         'Task has no verification evidence.',
       )
     }
 
+    if (verification.status !== 'passed') {
+      throw new Error(
+        'Latest authoritative verification run is not passed.',
+      )
+    }
+
 
     const blockingVerification =
-      verification.filter(
+      verification.checks.filter(
         check =>
           check.status === 'fail' ||
-          check.status === 'not_run',
+          check.status === 'not_run' ||
+          check.status === 'queued' ||
+          check.status === 'running',
       )
 
 
@@ -4021,6 +4212,13 @@ function taskPublish() {
             packet.requirements,
 
           verification,
+
+          publication_boundaries: {
+            task_paths: configuredAllowedPaths,
+            source_paths: sourceAllowedPaths,
+            workstream_paths: workstreamAllowedPaths,
+            project_paths: projectAllowedPaths,
+          },
         },
         null,
         2,
@@ -4233,6 +4431,924 @@ function handleNoPublishableChanges(
   return parseControlJson(
     result,
   )
+}
+
+
+function supervisorSnapshot(taskId) {
+  const result = controlQuery(
+    `
+      SELECT jsonb_build_object(
+        'packet', control.generic_task_packet(:'task_id'),
+        'executions', COALESCE((
+          SELECT jsonb_agg(to_jsonb(e) ORDER BY e.attempt)
+          FROM control.executions e
+          WHERE e.task_id = :'task_id'
+        ), '[]'::jsonb),
+        'verification_runs', COALESCE((
+          SELECT jsonb_agg(to_jsonb(vr) ORDER BY vr.verification_run_id)
+          FROM control.verification_runs vr
+          JOIN control.executions e USING (execution_id)
+          WHERE e.task_id = :'task_id'
+        ), '[]'::jsonb),
+        'verification_results', COALESCE((
+          SELECT jsonb_agg(to_jsonb(v) ORDER BY v.verification_id)
+          FROM control.verification_results v
+          JOIN control.executions e USING (execution_id)
+          WHERE e.task_id = :'task_id'
+        ), '[]'::jsonb),
+        'failures', COALESCE((
+          SELECT jsonb_agg(to_jsonb(f) ORDER BY f.failure_id)
+          FROM control.failures f
+          WHERE f.task_id = :'task_id'
+        ), '[]'::jsonb),
+        'publications', COALESCE((
+          SELECT jsonb_agg(to_jsonb(pr) ORDER BY pr.pull_request_id)
+          FROM control.pull_requests pr
+          WHERE pr.task_id = :'task_id'
+        ), '[]'::jsonb),
+        'serialization_conflicts', COALESCE((
+          SELECT jsonb_agg(jsonb_build_object(
+            'task_id', other.task_id,
+            'status', other.status,
+            'engine_stage', other.engine_stage
+          ) ORDER BY other.task_id)
+          FROM control.tasks target
+          JOIN control.tasks other
+            ON other.project_id = target.project_id
+           AND other.workstream_slug = target.workstream_slug
+           AND other.task_id <> target.task_id
+          WHERE target.task_id = :'task_id'
+            AND other.status IN ('in_progress', 'verification', 'passed', 'failed')
+        ), '[]'::jsonb),
+        'recovery', control.current_task_recovery_condition(:'task_id')
+      );
+    `,
+    { task_id: taskId },
+  )
+
+  return parseControlJson(result)
+}
+
+
+function parentSatisfactionSourceEvidence(contract) {
+  if (!validTaskId(contract?.source_task_id)) return null
+  const result = controlQuery(
+    `
+      WITH selected_run AS (
+        SELECT vr.*
+        FROM control.verification_runs vr
+        JOIN control.executions e USING (execution_id)
+        WHERE e.task_id = :'source_task_id'
+          AND vr.status = 'passed'
+          AND (
+            NULLIF(:'verification_run_id', '')::bigint IS NULL
+            OR vr.verification_run_id = NULLIF(:'verification_run_id', '')::bigint
+          )
+        ORDER BY vr.verification_run_id DESC
+        LIMIT 1
+      )
+      SELECT COALESCE((
+        SELECT jsonb_build_object(
+          'task_id', t.task_id,
+          'task_status', t.status,
+          'execution_id', e.execution_id,
+          'execution_status', e.status,
+          'commit_sha', e.commit_sha,
+          'lineage_sha', CASE
+            WHEN pr.state = 'merged'
+              AND pr.head_sha = e.commit_sha
+              AND pr.merge_sha IS NOT NULL
+            THEN pr.merge_sha
+            ELSE e.commit_sha
+          END,
+          'publication_state', pr.state,
+          'publication_head_sha', pr.head_sha,
+          'publication_merge_sha', pr.merge_sha,
+          'verification_run_id', vr.verification_run_id,
+          'verification_status', vr.status,
+          'checks', COALESCE((
+            SELECT jsonb_agg(jsonb_build_object(
+              'check_name', v.check_name,
+              'command', v.command,
+              'status', v.status,
+              'exit_code', v.exit_code,
+              'summary', v.summary,
+              'required', COALESCE((v.metadata->>'required')::boolean, true)
+            ) ORDER BY v.verification_id)
+            FROM control.verification_results v
+            WHERE v.verification_run_id = vr.verification_run_id
+          ), '[]'::jsonb)
+        )
+        FROM selected_run vr
+        JOIN control.executions e USING (execution_id)
+        JOIN control.tasks t ON t.task_id = e.task_id
+        LEFT JOIN LATERAL (
+          SELECT state, head_sha, merge_sha
+          FROM control.pull_requests
+          WHERE task_id = t.task_id
+          ORDER BY pull_request_id DESC
+          LIMIT 1
+        ) pr ON true
+      ), 'null'::jsonb);
+    `,
+    {
+      source_task_id: contract.source_task_id,
+      verification_run_id: String(contract.verification_run_id ?? ''),
+    },
+  )
+  return parseControlJson(result)
+}
+
+
+function recordParentSatisfactionEvaluation(taskId, evaluation) {
+  const result = controlQuery(
+    `
+      SELECT control.record_parent_satisfaction_evaluation(
+        :'task_id', :'fingerprint', :'evidence'::jsonb, 'runner'
+      );
+    `,
+    {
+      task_id: taskId,
+      fingerprint: evaluation.fingerprint,
+      evidence: JSON.stringify(evaluation),
+    },
+  )
+  return parseControlJson(result)
+}
+
+
+function evaluateSupervisorParentSatisfaction(snapshot) {
+  const task = snapshot.packet?.task
+  if (task?.status !== 'in_progress' || (snapshot.executions ?? []).length > 0) return snapshot
+
+  const project = projectRuntime(snapshot.packet)
+  let parent = null
+  try {
+    parent = resolveStackParent(snapshot.packet.suit.stack_key, project)
+  }
+  catch {
+    // The evaluator records an unavailable parent and lets execution preflight
+    // provide the authoritative repository recovery route.
+  }
+
+  const expectedBranch = `codex/${snapshot.packet.suit.stack_key}/${task.task_id.toLowerCase()}`
+  const repositoryRoot = path.resolve(repoRoot, project.repository_root)
+  const localBranch = gitCheck(repositoryRoot, [
+    'show-ref', '--verify', '--quiet', `refs/heads/${expectedBranch}`,
+  ]).ok
+  const remoteBranch = gitCheck(repositoryRoot, [
+    'show-ref', '--verify', '--quiet', `refs/remotes/origin/${expectedBranch}`,
+  ]).ok
+  const sourceEvidence = parentSatisfactionSourceEvidence(task.parent_satisfaction)
+  const sourceCommitInParent = Boolean(
+    sourceEvidence?.lineage_sha && parent?.parent_sha &&
+    gitCheck(repositoryRoot, [
+      'merge-base', '--is-ancestor', sourceEvidence.lineage_sha, parent.parent_sha,
+    ]).ok,
+  )
+  const evaluation = evaluateParentSatisfaction({
+    packet: snapshot.packet,
+    parent,
+    taskLineage: {
+      local_branch: localBranch,
+      remote_branch: remoteBranch,
+      pull_request: parent?.parent_branch === expectedBranch ? parent.parent_pr : null,
+    },
+    sourceEvidence,
+    sourceCommitInParent,
+    executions: snapshot.executions,
+    publications: snapshot.publications,
+  })
+
+  recordParentSatisfactionEvaluation(task.task_id, evaluation)
+  return { ...snapshot, parent_satisfaction: evaluation }
+}
+
+
+function completeParentSatisfied(taskId, evaluation) {
+  const result = controlQuery(
+    `
+      SELECT control.complete_parent_satisfied(
+        :'task_id', :'fingerprint', 'runner'
+      );
+    `,
+    { task_id: taskId, fingerprint: evaluation.fingerprint },
+  )
+  return parseControlJson(result)
+}
+
+
+function gitCheck(cwd, gitArgs) {
+  const result = execute('git', gitArgs, { cwd })
+  return {
+    ok: successful(result),
+    value: successful(result) ? result.stdout : null,
+  }
+}
+
+
+function executableAvailable(program) {
+  return successful(execute('sh', ['-c', 'command -v "$1" >/dev/null 2>&1', 'sh', program]))
+}
+
+
+function executionPreflightRuntime(snapshot) {
+  const packet = snapshot.packet
+  const project = projectRuntime(packet)
+  const repositoryRoot = path.resolve(repoRoot, project.repository_root)
+  const identityResult = controlQuery(`
+    SELECT jsonb_build_object(
+      'database', current_database(),
+      'user', current_user,
+      'server_address', COALESCE(inet_server_addr()::text, 'local-socket'),
+      'server_port', inet_server_port(),
+      'server_version_num', current_setting('server_version_num'),
+      'control_schema', to_regnamespace('control')::text,
+      'task_packet_contract', to_regprocedure('control.generic_task_packet(text)')::text
+    );
+  `)
+  const identity = parseControlJson(identityResult)
+  const actualDatabaseFingerprint = preflightFingerprint(identity)
+  const expectedDatabaseFingerprint =
+    process.env.AUTOMATION_CONTROL_DB_FINGERPRINT ??
+    packet.project?.environment_routing?.control_database_fingerprint ??
+    null
+
+  let parent = null
+  let parentError = null
+  try {
+    parent = resolveStackParent(packet.suit.stack_key, project)
+  }
+  catch (error) {
+    parentError = error.message
+  }
+
+  const root = gitCheck(repositoryRoot, ['rev-parse', '--show-toplevel'])
+  const integration = gitCheck(repositoryRoot, ['rev-parse', `origin/${project.integration_branch}`])
+  const integrationPresent = integration.ok
+    ? gitCheck(repositoryRoot, ['cat-file', '-e', `${integration.value}^{commit}`]).ok
+    : false
+  const parentPresent = parent?.parent_sha
+    ? gitCheck(repositoryRoot, ['cat-file', '-e', `${parent.parent_sha}^{commit}`]).ok
+    : false
+  const parentRemoteSha = parent?.parent_remote_ref
+    ? gitCheck(repositoryRoot, ['rev-parse', parent.parent_remote_ref])
+    : { ok: false, value: null }
+  const parentPrConsistent = !parent?.parent_pr || (
+    parent.parent_type === 'stack_leaf' &&
+    parent.parent_pr.number > 0 &&
+    (
+      parent.parent_pr.base_branch === project.integration_branch ||
+      parent.parent_pr.base_branch.startsWith(`codex/${packet.suit.stack_key}/`)
+    )
+  )
+  const parentConsistent = Boolean(
+    parent && parentPresent && parentRemoteSha.ok &&
+    parentRemoteSha.value === parent.parent_sha && parentPrConsistent,
+  )
+
+  const expectedBranch = `codex/${packet.suit.stack_key}/${packet.task.task_id.toLowerCase()}`
+  const preparedWorktree = packet.preparation?.worktree
+  let worktreeTarget
+  if (preparedWorktree) {
+    const targetPath = preparedWorktree.worktree_path
+    const branch = existsSync(targetPath)
+      ? gitCheck(targetPath, ['branch', '--show-current'])
+      : { ok: false, value: null }
+    const containsParent = existsSync(targetPath) && parent?.parent_sha
+      ? gitCheck(targetPath, ['merge-base', '--is-ancestor', parent.parent_sha, 'HEAD']).ok
+      : false
+    const trackedChanges = existsSync(targetPath)
+      ? gitCheck(targetPath, ['diff', '--name-only', 'HEAD']).value?.split('\n').filter(Boolean) ?? []
+      : []
+    const untrackedChanges = existsSync(targetPath)
+      ? gitCheck(targetPath, ['ls-files', '--others', '--exclude-standard']).value?.split('\n').filter(Boolean) ?? []
+      : []
+    const changedFiles = [...new Set([...trackedChanges, ...untrackedChanges])].sort()
+    worktreeTarget = {
+      path: targetPath,
+      branch: branch.value,
+      changed_files: changedFiles,
+      status: !existsSync(targetPath) || !branch.ok
+        ? 'invalid'
+        : branch.value !== expectedBranch || preparedWorktree.branch_name !== expectedBranch || !containsParent
+          ? 'stale'
+          : 'ready',
+    }
+  }
+  else {
+    const targetPath = path.join(
+      path.resolve(repositoryRoot, project.worktree_root),
+      `${packet.suit.stack_key}-${packet.task.task_id.toLowerCase()}`,
+    )
+    const branchExists = gitCheck(repositoryRoot, ['show-ref', '--verify', '--quiet', `refs/heads/${expectedBranch}`]).ok
+    worktreeTarget = {
+      path: targetPath,
+      branch: expectedBranch,
+      changed_files: [],
+      status: existsSync(targetPath) || branchExists ? 'invalid' : 'missing',
+    }
+  }
+
+  const requiredPrograms = new Set(['node', 'git', 'gh', 'psql', 'pnpm', 'codex'])
+  for (const config of [packet.project?.verification_config, packet.workstream?.verification_config]) {
+    for (const check of config?.commands ?? []) {
+      if (check?.required !== false && check?.program) requiredPrograms.add(check.program)
+    }
+  }
+  const executables = Object.fromEntries(
+    [...requiredPrograms].sort().map(program => [program, executableAvailable(program)]),
+  )
+  const missingEnvironment = []
+  if (!expectedDatabaseFingerprint) missingEnvironment.push('AUTOMATION_CONTROL_DB_FINGERPRINT')
+  if (Number(process.versions.node.split('.')[0]) < 22) missingEnvironment.push('node>=22')
+  if (!packet.project?.github_repository) missingEnvironment.push('project.github_repository')
+  if (!packet.project?.integration_branch) missingEnvironment.push('project.integration_branch')
+  if (!packet.project?.local_repository_root) missingEnvironment.push('project.local_repository_root')
+  if (!packet.project?.worktree_root) missingEnvironment.push('project.worktree_root')
+
+  return {
+    control_database: {
+      identity,
+      actual_fingerprint: actualDatabaseFingerprint,
+      expected_fingerprint: expectedDatabaseFingerprint,
+    },
+    repository: {
+      root: root.value,
+      root_valid: root.ok && path.resolve(root.value) === path.resolve(repositoryRoot),
+      integration_sha: integration.value,
+      integration_commit_present: integrationPresent,
+      parent,
+      parent_error: parentError,
+      parent_commit_present: parentPresent,
+      parent_consistent: parentConsistent,
+      worktree_target: worktreeTarget,
+      dependencies_ready: worktreeTarget.status === 'ready' && existsSync(path.join(worktreeTarget.path, 'node_modules')),
+    },
+    executables,
+    environment: {
+      valid: missingEnvironment.length === 0,
+      missing: missingEnvironment,
+    },
+  }
+}
+
+
+function runExecutionPreflight(snapshot) {
+  const runtime = executionPreflightRuntime(snapshot)
+  return evaluateExecutionPreflight({
+    packet: snapshot.packet,
+    runtime,
+    executions: snapshot.executions,
+    serializationConflicts: snapshot.serialization_conflicts,
+  })
+}
+
+
+function preflightRecoveryPlan(snapshot, preflight) {
+  const supervisorPlan = planSupervisorStep(snapshot)
+  return {
+    kind: preflight.kind === 'ready' ? 'act' : preflight.kind,
+    next_action: preflight.next_action,
+    failure_class: preflight.failure_class,
+    reason: preflight.reason,
+    recoverable: preflight.recoverable,
+    fingerprint: supervisorPlan.fingerprint,
+    execution: supervisorPlan.execution,
+    preflight_fingerprint: preflight.fingerprint,
+  }
+}
+
+
+function taskExecutionPreflight() {
+  const [taskId] = args
+  if (!validTaskId(taskId)) {
+    output({ ok: false, command: 'task-execution-preflight', error: 'valid_task_id_required' }, 64)
+    return
+  }
+
+  try {
+    const snapshot = supervisorSnapshot(taskId)
+    if (!snapshot?.packet?.task) throw new Error(`Unknown task: ${taskId}`)
+    const preflight = runExecutionPreflight(snapshot)
+    const recoveryPlan = preflightRecoveryPlan(snapshot, preflight)
+    recordSupervisorRecovery(snapshot, recoveryPlan, {
+      idempotencyKey: `preflight:${preflight.fingerprint}`,
+      status: preflight.ready ? 'resolved' : preflight.kind === 'stop' ? 'resolved' : 'active',
+      condition: { preflight: true, preflight_fingerprint: preflight.fingerprint, checks: preflight.checks },
+      metadata: { preflight: true, context: preflight.context },
+    })
+    output({
+      ok: preflight.ready,
+      command: 'task-execution-preflight',
+      task_id: taskId,
+      preflight,
+    }, preflight.ready ? 0 : 1)
+  }
+  catch (error) {
+    output({ ok: false, command: 'task-execution-preflight', task_id: taskId, error: error.message }, 1)
+  }
+}
+
+
+function recordSupervisorRecovery(snapshot, plan, options = {}) {
+  const task = snapshot.packet.task
+  const openFailure = [...(snapshot.failures ?? [])]
+    .filter(failure => failure.resolved_at == null)
+    .at(-1)
+  const resumeIdentity = supervisorResumeIdentity(task.task_id)
+  const heartbeat = options.heartbeat ?? new Date().toISOString()
+  const nextWake = plan.next_action === 'wait-external'
+    ? new Date(Date.now() + 5 * 60 * 1000).toISOString()
+    : ''
+  const condition = {
+    fingerprint: plan.fingerprint,
+    reason: plan.reason,
+    route: plan.kind,
+    command: plan.command ?? null,
+    ...(options.condition ?? {}),
+  }
+  const watch = watchDescriptorForRecovery(snapshot, plan, options)
+  if (watch && !condition.watch) condition.watch = watch
+  const metadata = {
+    supervisor: 'task-supervisor-v1',
+    ...(options.metadata ?? {}),
+  }
+  const result = controlQuery(
+    `
+      SELECT control.record_recovery_condition(
+        :'resume_identity', :'idempotency_key', :'failure_class',
+        NULLIF(:'error_code', ''), :'next_action', :'recoverable'::boolean,
+        'supervisor', NULLIF(:'project_id', '')::uuid,
+        NULLIF(:'workstream_slug', ''), NULL, :'task_id',
+        NULLIF(:'execution_id', '')::bigint, NULLIF(:'failure_id', '')::bigint,
+        NULLIF(:'next_wake_at', '')::timestamptz, :'heartbeat_at'::timestamptz,
+        NULLIF(:'lease_owner', ''), NULLIF(:'lease_token', ''),
+        NULLIF(:'lease_expires_at', '')::timestamptz,
+        :'condition'::jsonb, :'metadata'::jsonb, :'status'
+      );
+    `,
+    {
+      resume_identity: resumeIdentity,
+      idempotency_key: options.idempotencyKey ?? `decision:${plan.fingerprint}:${plan.next_action}`,
+      failure_class: plan.failure_class,
+      error_code: plan.reason ?? '',
+      next_action: plan.next_action,
+      recoverable: plan.recoverable === false ? 'false' : 'true',
+      project_id: snapshot.packet.project?.project_id ?? '',
+      workstream_slug: snapshot.packet.workstream?.slug ?? '',
+      task_id: task.task_id,
+      execution_id: String(plan.execution?.execution_id ?? ''),
+      failure_id: String(options.failureId ?? openFailure?.failure_id ?? ''),
+      next_wake_at: nextWake,
+      heartbeat_at: heartbeat,
+      lease_owner: options.leaseOwner ?? '',
+      lease_token: options.leaseToken ?? '',
+      lease_expires_at: options.leaseExpiresAt ?? '',
+      condition: JSON.stringify(condition),
+      metadata: JSON.stringify(metadata),
+      status: options.status ?? 'active',
+    },
+  )
+
+  return parseControlJson(result)
+}
+
+
+function claimDueExternalRecovery(owner, token) {
+  const result = controlQuery(
+    `
+      SELECT control.claim_due_external_recovery(
+        :'owner', :'token', :'lease_seconds'::integer
+      );
+    `,
+    {
+      owner,
+      token,
+      lease_seconds: String(WATCHER_LEASE_MS / 1000),
+    },
+  )
+  return parseControlJson(result)
+}
+
+
+function probeControlDependency(descriptor) {
+  if (descriptor.kind === 'control-execution') {
+    return classifyControlProbe(descriptor, parseControlJson(controlQuery(
+      `SELECT to_jsonb(e) FROM control.executions e WHERE e.execution_id = :'execution_id'::bigint;`,
+      { execution_id: String(descriptor.execution_id) },
+    )))
+  }
+
+  if (descriptor.kind === 'control-task-dependencies') {
+    return classifyControlProbe(descriptor, parseControlJson(controlQuery(
+      `
+        SELECT COALESCE(jsonb_agg(jsonb_build_object(
+          'task_id', t.task_id, 'status', t.status
+        ) ORDER BY t.task_id), '[]'::jsonb)
+        FROM control.tasks t
+        WHERE t.task_id IN (
+          SELECT jsonb_array_elements_text(:'task_ids'::jsonb)
+        );
+      `,
+      { task_ids: JSON.stringify(descriptor.task_ids) },
+    )))
+  }
+
+  return classifyControlProbe(descriptor, parseControlJson(controlQuery(
+    `
+      SELECT COALESCE(jsonb_agg(jsonb_build_object(
+        'task_id', t.task_id, 'status', t.status, 'engine_stage', t.engine_stage
+      ) ORDER BY t.task_id), '[]'::jsonb)
+      FROM control.tasks t
+      WHERE t.project_id = :'project_id'::uuid
+        AND t.workstream_slug = :'workstream_slug'
+        AND t.task_id <> :'task_id'
+        AND t.status IN ('in_progress', 'verification', 'passed', 'failed');
+    `,
+    {
+      project_id: descriptor.project_id,
+      workstream_slug: descriptor.workstream_slug,
+      task_id: descriptor.task_id,
+    },
+  )))
+}
+
+
+function probeExternalDependency(descriptor) {
+  if (descriptor.kind.startsWith('control-')) return probeControlDependency(descriptor)
+  const result = execute('gh', githubProbeCommand(descriptor), {
+    timeout: 30 * 1000,
+  })
+  return githubProbeObservation(descriptor, result)
+}
+
+
+function recordExternalWatchResult(recovery, token, transition) {
+  const result = controlQuery(
+    `
+      SELECT control.record_external_watch_result(
+        :'resume_identity', :'lease_token', :'observation'::jsonb,
+        :'actionable'::boolean, :'poll_count'::integer,
+        :'next_wake_at'::timestamptz, 'external-watcher'
+      );
+    `,
+    {
+      resume_identity: recovery.resume_identity,
+      lease_token: token,
+      observation: JSON.stringify(transition.observation),
+      actionable: transition.actionable ? 'true' : 'false',
+      poll_count: String(transition.poll_count),
+      next_wake_at: transition.next_wake_at,
+    },
+  )
+  return parseControlJson(result)
+}
+
+
+function externalWatcher() {
+  const requestedLimit = args[0] == null ? 10 : Number(args[0])
+  if (!Number.isSafeInteger(requestedLimit) || requestedLimit < 1 || requestedLimit > WATCHER_MAX_BATCH) {
+    output({ ok: false, command: 'external-watch', error: 'watch_limit_must_be_between_1_and_25' }, 64)
+    return
+  }
+
+  const owner = `${process.pid}@${process.env.HOSTNAME ?? 'local'}`
+  const results = []
+  try {
+    for (let index = 0; index < requestedLimit; index++) {
+      const token = randomUUID()
+      const recovery = claimDueExternalRecovery(owner, token)
+      if (!recovery) break
+
+      const descriptor = normalizeWatchDescriptor(recovery)
+      if (!descriptor) {
+        throw new Error(`claimed_recovery_has_invalid_watch_descriptor:${recovery.resume_identity}`)
+      }
+
+      const observedAt = new Date()
+      const observation = probeExternalDependency(descriptor)
+      const transition = watchTransition(recovery, observation, observedAt)
+      const recorded = recordExternalWatchResult(recovery, token, transition)
+      let resume = null
+
+      if (recorded?.applied && transition.actionable && validTaskId(recovery.current_task_id)) {
+        const child = invokeTaskAction('task-supervise', recovery.current_task_id)
+        resume = {
+          invoked: true,
+          ok: child.payload?.ok === true,
+          status: child.payload?.status ?? null,
+          reason: child.payload?.reason ?? child.payload?.error ?? null,
+        }
+      }
+
+      results.push({
+        resume_identity: recovery.resume_identity,
+        task_id: recovery.current_task_id,
+        dependency: descriptor,
+        observation,
+        changed: transition.changed,
+        actionable: transition.actionable,
+        next_wake_at: transition.next_wake_at,
+        poll_count: transition.poll_count,
+        persisted: recorded,
+        resume,
+      })
+
+      // An actionable row stays due until the supervisor durably advances it.
+      // End this bounded invocation so a failed/crashed resume cannot cause an
+      // immediate reclaim loop in the same process.
+      if (transition.actionable) break
+    }
+
+    output({
+      ok: true,
+      command: 'external-watch',
+      checked: results.length,
+      limit: requestedLimit,
+      results,
+    })
+  }
+  catch (error) {
+    output({
+      ok: false,
+      command: 'external-watch',
+      error: error.message,
+      checked: results.length,
+      results,
+    }, 1)
+  }
+}
+
+
+function acquireSupervisorLease(resumeIdentity, owner, token, expiresAt) {
+  const result = controlQuery(
+    `
+      WITH acquired AS (
+        UPDATE control.recovery_states
+        SET lease_owner = :'owner', lease_token = :'token',
+            lease_expires_at = :'expires_at'::timestamptz,
+            heartbeat_at = now(), updated_at = now()
+        WHERE resume_identity = :'resume_identity'
+          AND status = 'active'
+          AND (
+            heartbeat_at IS NULL
+            OR lease_expires_at IS NULL OR lease_expires_at <= now()
+            OR lease_token = :'token'
+          )
+        RETURNING to_jsonb(control.recovery_states) AS recovery
+      )
+      SELECT jsonb_build_object(
+        'acquired', EXISTS(SELECT 1 FROM acquired),
+        'recovery', COALESCE((SELECT recovery FROM acquired), 'null'::jsonb)
+      );
+    `,
+    { resume_identity: resumeIdentity, owner, token, expires_at: expiresAt },
+  )
+  return parseControlJson(result)
+}
+
+
+function activeSupervisorLease(recovery) {
+  return Boolean(
+    recovery?.status === 'active' &&
+    recovery.heartbeat_at &&
+    recovery.lease_token &&
+    recovery.lease_expires_at &&
+    Date.parse(recovery.heartbeat_at) <= Date.now() &&
+    Date.parse(recovery.heartbeat_at) < Date.parse(recovery.lease_expires_at) &&
+    Date.parse(recovery.lease_expires_at) > Date.now(),
+  )
+}
+
+
+function taskSupervisor() {
+  const [taskId] = args
+  if (!validTaskId(taskId)) {
+    output({ ok: false, command: 'task-supervise', error: 'valid_task_id_required' }, 64)
+    return
+  }
+
+  const owner = `${process.pid}@${process.env.HOSTNAME ?? 'local'}`
+  const token = randomUUID()
+  const leaseExpiresAt = new Date(Date.now() + 80 * 60 * 1000).toISOString()
+  const trail = []
+  let leaseAcquired = false
+
+  try {
+    let snapshot = supervisorSnapshot(taskId)
+    if (!snapshot?.packet?.task) throw new Error(`Unknown task: ${taskId}`)
+
+    if (activeSupervisorLease(snapshot.recovery)) {
+      output({
+        ok: true,
+        command: 'task-supervise',
+        task_id: taskId,
+        status: 'wait',
+        reason: 'supervisor_lease_active',
+        resume_identity: snapshot.recovery.resume_identity,
+        lease_owner: snapshot.recovery.lease_owner,
+        lease_expires_at: snapshot.recovery.lease_expires_at,
+        trail,
+      })
+      return
+    }
+
+    snapshot = evaluateSupervisorParentSatisfaction(snapshot)
+    let plan = planSupervisorStep(snapshot)
+    recordSupervisorRecovery(snapshot, plan)
+
+    if (plan.kind !== 'act') {
+      const successfulTerminal = ['task_complete', 'task_cancelled'].includes(plan.reason)
+      const persistedRecovery = recordSupervisorRecovery(snapshot, plan, {
+        idempotencyKey: `${token}:settled`,
+        status: plan.kind === 'terminal' ? 'resolved' : 'active',
+      })
+      output({
+        ok: plan.kind !== 'terminal' || successfulTerminal,
+        command: 'task-supervise', task_id: taskId,
+        status: plan.kind, recovery: { ...plan, ...persistedRecovery }, trail,
+      }, plan.kind === 'terminal' && !successfulTerminal ? 1 : 0)
+      return
+    }
+
+    const lease = acquireSupervisorLease(
+      supervisorResumeIdentity(taskId), owner, token, leaseExpiresAt,
+    )
+    if (!lease?.acquired) {
+      output({ ok: true, command: 'task-supervise', task_id: taskId, status: 'wait', reason: 'supervisor_lease_contended', trail })
+      return
+    }
+    leaseAcquired = true
+
+    for (let step = 1; step <= 16; step++) {
+      snapshot = evaluateSupervisorParentSatisfaction(supervisorSnapshot(taskId))
+      plan = planSupervisorStep(snapshot)
+
+      recordSupervisorRecovery(snapshot, plan, {
+        idempotencyKey: `${token}:step:${step}`,
+        leaseOwner: owner,
+        leaseToken: token,
+        leaseExpiresAt,
+        condition: { step },
+      })
+
+      if (plan.kind !== 'act') {
+        const successfulTerminal = ['task_complete', 'task_cancelled'].includes(plan.reason)
+        const persistedRecovery = recordSupervisorRecovery(snapshot, plan, {
+          idempotencyKey: `${token}:release:${step}`,
+          status: plan.kind === 'terminal' ? 'resolved' : 'active',
+          condition: { step },
+        })
+        output({
+          ok: plan.kind !== 'terminal' || successfulTerminal,
+          command: 'task-supervise', task_id: taskId,
+          status: plan.kind, recovery: { ...plan, ...persistedRecovery }, trail,
+        }, plan.kind === 'terminal' && !successfulTerminal ? 1 : 0)
+        return
+      }
+
+      if (['task-run', 'task-retry'].includes(plan.command)) {
+        const preflight = runExecutionPreflight(snapshot)
+        const recoveryPlan = preflightRecoveryPlan(snapshot, preflight)
+        trail.push({
+          step,
+          command: 'task-execution-preflight',
+          exit_code: preflight.ready ? 0 : 1,
+          ok: preflight.ready,
+          response: preflight,
+        })
+        const persistedRecovery = recordSupervisorRecovery(snapshot, recoveryPlan, {
+          idempotencyKey: `preflight:${preflight.fingerprint}`,
+          status: preflight.ready ? 'active' : preflight.kind === 'stop' ? 'resolved' : 'active',
+          leaseOwner: preflight.ready ? owner : '',
+          leaseToken: preflight.ready ? token : '',
+          leaseExpiresAt: preflight.ready ? leaseExpiresAt : '',
+          condition: { preflight: true, step, preflight_fingerprint: preflight.fingerprint, checks: preflight.checks },
+          metadata: { preflight: true, context: preflight.context },
+        })
+
+        if (!preflight.ready) {
+          output({
+            ok: preflight.kind !== 'stop',
+            command: 'task-supervise',
+            task_id: taskId,
+            status: preflight.kind,
+            recovery: { ...recoveryPlan, ...persistedRecovery },
+            preflight,
+            trail,
+          }, preflight.kind === 'stop' ? 1 : 0)
+          return
+        }
+      }
+
+      let child
+      if (plan.command === 'complete-parent-satisfied') {
+        recordSupervisorRecovery(snapshot, plan, {
+          idempotencyKey: `parent-satisfaction:${plan.parent_satisfaction.fingerprint}`,
+          leaseOwner: owner,
+          leaseToken: token,
+          leaseExpiresAt,
+          condition: {
+            parent_satisfaction: plan.parent_satisfaction,
+            step,
+          },
+          metadata: { parent_satisfaction: true },
+        })
+        const response = completeParentSatisfied(taskId, plan.parent_satisfaction)
+        child = { result: { code: 0, stderr: '' }, payload: { ok: true, completion: response } }
+      }
+      else if (plan.command === 'handle-no-publishable-changes') {
+        const response = handleNoPublishableChanges(taskId)
+        child = { result: { code: 0, stderr: '' }, payload: { ok: response?.action !== 'blocked', resolution: response } }
+      }
+      else {
+        child = invokeTaskAction(plan.command, taskId)
+      }
+
+      trail.push({
+        step,
+        command: plan.command,
+        exit_code: child.result.code,
+        ok: child.payload?.ok === true,
+        response: child.payload,
+      })
+
+      if (child.payload?.ok !== true) {
+        const failedSnapshot = supervisorSnapshot(taskId)
+        const classified = classifySupervisorFailure({
+          command: plan.command,
+          payload: child.payload,
+          attempt: plan.execution?.attempt,
+          maxAttempts: snapshot.packet.retry_policy?.max_attempts,
+        })
+        classified.fingerprint = planSupervisorStep(failedSnapshot).fingerprint
+        classified.execution = planSupervisorStep(failedSnapshot).execution
+
+        if (classified.command === 'handle-no-publishable-changes') {
+          const resolution = handleNoPublishableChanges(taskId)
+          trail.push({ step, command: classified.command, exit_code: 0, ok: resolution?.action !== 'blocked', response: resolution })
+          if (resolution?.action === 'complete_no_changes') continue
+        }
+
+        const failure = [...(failedSnapshot.failures ?? [])].at(-1)
+        const persistedRecovery = recordSupervisorRecovery(failedSnapshot, classified, {
+          idempotencyKey: `${token}:failure:${step}`,
+          failureId: failure?.failure_id,
+          status: classified.kind === 'terminal' ? 'resolved' : 'active',
+          leaseOwner: classified.kind === 'act' ? owner : '',
+          leaseToken: classified.kind === 'act' ? token : '',
+          leaseExpiresAt: classified.kind === 'act' ? leaseExpiresAt : '',
+          metadata: { child_command: plan.command, child_exit_code: child.result.code },
+        })
+
+        if (classified.kind === 'act') continue
+
+        output({
+          ok: classified.kind === 'wait', command: 'task-supervise', task_id: taskId,
+          status: classified.kind, recovery: { ...classified, ...persistedRecovery }, trail,
+        }, classified.kind === 'wait' ? 0 : 1)
+        return
+      }
+    }
+
+    const exhaustedSnapshot = supervisorSnapshot(taskId)
+    const exhaustedPlan = {
+      ...planSupervisorStep(exhaustedSnapshot),
+      kind: 'terminal', next_action: 'safety-stop', failure_class: 'safety-stop',
+      reason: 'supervisor_step_limit_reached', recoverable: false,
+    }
+    recordSupervisorRecovery(exhaustedSnapshot, exhaustedPlan, {
+      idempotencyKey: `${token}:step-limit`, status: 'resolved',
+    })
+    output({ ok: false, command: 'task-supervise', task_id: taskId, error: 'supervisor_step_limit_reached', trail }, 1)
+  }
+  catch (error) {
+    if (leaseAcquired) {
+      try {
+        const failedSnapshot = supervisorSnapshot(taskId)
+        const currentPlan = planSupervisorStep(failedSnapshot)
+        const classified = classifySupervisorFailure({
+          command: 'task-supervise',
+          payload: { error: error.message },
+          attempt: currentPlan.execution?.attempt,
+          maxAttempts: failedSnapshot.packet.retry_policy?.max_attempts,
+        })
+        classified.fingerprint = currentPlan.fingerprint
+        classified.execution = currentPlan.execution
+        recordSupervisorRecovery(failedSnapshot, classified, {
+          idempotencyKey: `${token}:exception`,
+          status: classified.kind === 'terminal' ? 'resolved' : 'active',
+          metadata: { supervisor_error: true },
+        })
+      }
+      catch {
+        // The original supervisor error remains authoritative. An unreachable
+        // control database leaves the lease to expire rather than guessing.
+      }
+    }
+    output({ ok: false, command: 'task-supervise', task_id: taskId, error: error.message, trail }, 1)
+  }
 }
 
 
@@ -4743,6 +5859,45 @@ function taskEngine() {
         }
 
 
+        const recoverySnapshot =
+          supervisorSnapshot(taskId)
+
+        const recovery =
+          classifySupervisorFailure({
+            command: 'task-publish',
+            payload: child.payload,
+            attempt: execution?.attempt,
+            maxAttempts: packet.retry_policy?.max_attempts,
+          })
+
+        recovery.fingerprint =
+          planSupervisorStep(recoverySnapshot).fingerprint
+
+        recovery.execution =
+          execution
+
+        if (recovery.kind === 'wait') {
+          const failure = [...(recoverySnapshot.failures ?? [])].at(-1)
+          recordSupervisorRecovery(recoverySnapshot, recovery, {
+            idempotencyKey: `task-engine:publication:${recovery.fingerprint}:${recovery.reason}`,
+            failureId: failure?.failure_id,
+            status: 'active',
+            metadata: { legacy_task_engine: true },
+          })
+
+          output({
+            ok: true,
+            command: 'task-engine',
+            task_id: taskId,
+            status: 'wait',
+            recovery,
+            trail,
+          })
+
+          return
+        }
+
+
         const retryablePublicationError =
           publicationError ===
           'pr_create_failed'
@@ -5127,6 +6282,10 @@ switch (command) {
     codexSmoke()
     break
 
+  case 'workstream-resolve':
+    workstreamResolve()
+    break
+
   case 'task-next':
     taskNext()
     break
@@ -5167,6 +6326,18 @@ switch (command) {
     taskPublish()
     break
 
+  case 'task-execution-preflight':
+    taskExecutionPreflight()
+    break
+
+  case 'task-supervise':
+    taskSupervisor()
+    break
+
+  case 'external-watch':
+    externalWatcher()
+    break
+
   case 'task-engine':
     taskEngine()
     break
@@ -5203,6 +6374,7 @@ switch (command) {
         'codex-status',
         'route <profile>',
         'codex-smoke <profile>',
+        'workstream-resolve <project/workstream>',
         'task-next <suit>',
         'task-packet <task-id>',
         'task-claim <suit>',
@@ -5213,6 +6385,10 @@ switch (command) {
         'retry-route <profile> <previous-attempt>',
         'task-retry <task-id>',
         'task-publish <task-id>',
+        'task-execution-preflight <task-id>',
+        'task-supervise <task-id>',
+        'external-watch [limit]',
+        'task-engine <task-id>',
         'run-start <suit> <max-tasks>',
         'run-check <run-id>',
         'run-complete-task <run-id>',
