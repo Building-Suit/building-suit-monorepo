@@ -4,7 +4,7 @@ Task: CP-RES-009
 
 Cutover ready: **YES**
 
-Mandatory scenarios: 30/30 passed. The deterministic harness used no destructive faults and did not contact or mutate live n8n.
+Mandatory scenarios: 31/31 passed. The deterministic harness used no destructive faults and did not contact or mutate live n8n.
 
 | Scenario | Fault | Expected recovery | Observed recovery | Impl | Verify | Publish | Result |
 |---|---|---|---|---:|---:|---:|---|
@@ -22,6 +22,7 @@ Mandatory scenarios: 30/30 passed. The deterministic harness used no destructive
 | repeat-publication-reconciliation | publisher is invoked repeatedly against identical persisted remote state | reuse-existing-pr → reuse-existing-pr | reuse_existing_pr → reuse_existing_pr | 1 | 1 | 2 | PASS |
 | transient-github-failure | GitHub API is temporarily unavailable during publication | wait-external → watch → resume supervisor | wait-external → watch → resume supervisor | 1 | 1 | 1 | PASS |
 | transient-repository-failure | repository fetch is temporarily unavailable | wait-external → watch → resume supervisor | wait-external → watch → resume supervisor | 1 | 0 | 0 | PASS |
+| fresh-task-auto-reconciliation | a freshly claimed task has no worktree and then no installed dependencies | task-prepare → prepare-dependencies | task-prepare → prepare-dependencies | 0 | 0 | 0 | PASS |
 | active-controller-lease-collision | a second controller attempts ownership before the current lease expires | leave lease owner unchanged → wait | wait | 0 | 0 | 0 | PASS |
 | expired-controller-lease-reclamation | the controller crashes and its durable lease expires | reclaim lease → probe dependency | reclaim lease → probe dependency | 0 | 0 | 0 | PASS |
 | external-poll-retry-neutrality | the same unavailable dependency is polled twice | watch → watch | watch → watch | 0 | 0 | 0 | PASS |

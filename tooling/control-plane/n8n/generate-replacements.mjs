@@ -57,7 +57,8 @@ const automaticResume = payload.status === 'wait' && (
   reason === 'supervisor_lease_contended'
 ) && !!wakeAt;
 const terminalSuccess = payload.status === 'terminal' && payload.ok === true && ['task_complete', 'task_cancelled'].includes(reason);
-const outcome = automaticResume ? 'automatic-resume' : payload.status === 'wait' ? 'wait' : terminalSuccess ? 'success' : 'safety-stop';
+const recoverableReconcile = payload.status === 'reconcile' && recovery?.recoverable !== false;
+const outcome = automaticResume ? 'automatic-resume' : payload.status === 'wait' || recoverableReconcile ? 'wait' : terminalSuccess ? 'success' : 'safety-stop';
 return [{ json: { outcome, task_id: payload.task_id ?? $('Task Engine Input').first().json.task_id, reason, next_action: recovery?.next_action ?? null, next_wake_at: wakeAt, heartbeat_at: recovery?.heartbeat_at ?? null, lease_owner: payload.lease_owner ?? recovery?.lease_owner ?? null, lease_expires_at: payload.lease_expires_at ?? recovery?.lease_expires_at ?? null, recovery, supervisor: payload } }];`
 
 const bs10 = {

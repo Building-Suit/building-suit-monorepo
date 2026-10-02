@@ -23,6 +23,20 @@ export function supervisorResumeIdentity(taskId) {
   return `task:${taskId}`
 }
 
+export function preflightReconciliationAction(preflight) {
+  if (preflight?.kind !== 'reconcile') return null
+
+  if (preflight.reason === 'worktree_not_prepared') {
+    return 'task-prepare'
+  }
+
+  if (preflight.reason === 'repository_dependencies_missing') {
+    return 'prepare-dependencies'
+  }
+
+  return null
+}
+
 export function supervisorStateFingerprint(snapshot) {
   const task = snapshot.packet?.task ?? null
   const execution = latestExecution(snapshot)

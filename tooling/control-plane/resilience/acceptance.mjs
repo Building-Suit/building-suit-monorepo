@@ -3,7 +3,7 @@ import { inspectWorkflowSnapshot, validateControllerReplacements } from '../lib/
 import { continuousRunTransition } from '../lib/n8n-controller.mjs'
 import { acceptanceCriteriaDigest, evaluateParentSatisfaction } from '../runner/parent-satisfaction.mjs'
 import { classifyPublicationFiles, planPublicationReconciliation } from '../runner/publication-preflight.mjs'
-import { classifySupervisorFailure, planSupervisorStep } from '../runner/task-supervisor.mjs'
+import { classifySupervisorFailure, planSupervisorStep, preflightReconciliationAction } from '../runner/task-supervisor.mjs'
 import { customCheckSelection } from '../runner/verification-mode.mjs'
 import { isDueExternalRecovery, watchTransition } from '../runner/external-state-watcher.mjs'
 
@@ -139,6 +139,13 @@ function recoveryScenarios(now) {
       classified_external: repositoryFailure.failure_class === 'external-wait',
       dependency_becomes_actionable: readyPoll.actionable,
     }, { implementation_attempts: 1, ai_calls: 1, implementation_retry_budget_consumed: 1 }),
+    scenario('fresh-task-auto-reconciliation', 'a freshly claimed task has no worktree and then no installed dependencies', ['task-prepare', 'prepare-dependencies'], [
+      preflightReconciliationAction({ kind: 'reconcile', reason: 'worktree_not_prepared' }),
+      preflightReconciliationAction({ kind: 'reconcile', reason: 'repository_dependencies_missing' }),
+    ], {
+      missing_worktree_is_prepared: preflightReconciliationAction({ kind: 'reconcile', reason: 'worktree_not_prepared' }) === 'task-prepare',
+      missing_dependencies_are_prepared: preflightReconciliationAction({ kind: 'reconcile', reason: 'repository_dependencies_missing' }) === 'prepare-dependencies',
+    }),
     scenario('active-controller-lease-collision', 'a second controller attempts ownership before the current lease expires', ['leave lease owner unchanged', 'wait'], [isDueExternalRecovery(activeLease, now) ? 'claim' : 'wait'], {
       active_lease_prevents_claim: !isDueExternalRecovery(activeLease, now),
     }),
