@@ -24,6 +24,106 @@ import {
   customCheckSelection,
   resolveVerificationMode,
 } from '../runner/verification-mode.mjs'
+import {
+  classifyPublicationFiles,
+  evaluatePublicationParent,
+  evaluateVerificationAuthority,
+  planPublicationReconciliation,
+  publicationStateFingerprint,
+} from '../runner/publication-preflight.mjs'
+
+test('publication preflight classifies task, workstream, bounded repair, and unrelated scope', () => {
+  const classification = classifyPublicationFiles({
+    files: [
+      'tooling/control-plane/runner/task-publisher.mjs',
+      'tooling/control-plane/runner/publication-preflight.mjs',
+      'docs/shared/publication.md',
+      'tooling/control-plane/import/unrelated.md',
+      'apps/shop-suit/app.vue',
+      'README.md',
+    ],
+    task: { description: 'Update publication behavior and its documentation.' },
+    taskPaths: ['tooling/control-plane/runner/task-publisher.mjs'],
+    workstreamPaths: ['tooling/control-plane/'],
+    projectPaths: ['apps/', 'packages/', 'tooling/', 'docs/'],
+  })
+
+  assert.equal(classification.decisions.find(item => item.file.endsWith('task-publisher.mjs')).boundary, 'task')
+  assert.deepEqual(classification.repaired, [
+    'docs/shared/publication.md',
+    'tooling/control-plane/runner/publication-preflight.mjs',
+  ])
+  assert.deepEqual(classification.waiting, ['apps/shop-suit/app.vue', 'tooling/control-plane/import/unrelated.md'])
+  assert.deepEqual(classification.blocked, ['README.md'])
+})
+
+test('publication scope repair never authorizes protected or product behavior paths', () => {
+  const classification = classifyPublicationFiles({
+    files: ['apps/shop-suit/supabase/migrations/999.sql', '.env.production', '.github/workflows/deploy.yml'],
+    task: { description: 'Document the control-plane publication flow.' },
+    workstreamPaths: ['tooling/control-plane/'],
+    projectPaths: ['apps/', 'tooling/', 'docs/'],
+  })
+  assert.deepEqual(classification.repaired, [])
+  assert.equal(classification.blocked.length, 3)
+})
+
+test('publication reconciliation is idempotent after commit and PR creation', () => {
+  const base = '1'.repeat(40)
+  const head = '2'.repeat(40)
+  assert.equal(planPublicationReconciliation({
+    parentSha: base, localSha: head, remoteSha: head,
+    localTaskCommits: true, remoteTaskCommits: true,
+    existingPrs: [], expectedBase: 'stg',
+  }).action, 'create_pr')
+
+  const existing = [{ number: 17, baseRefName: 'stg', isDraft: true }]
+  assert.equal(planPublicationReconciliation({
+    parentSha: base, localSha: head, remoteSha: head,
+    localTaskCommits: true, remoteTaskCommits: true,
+    existingPrs: existing, expectedBase: 'stg',
+  }).action, 'reuse_existing_pr')
+})
+
+test('publication reconciliation fast-forwards unambiguous stale local task state', () => {
+  const plan = planPublicationReconciliation({
+    parentSha: '1'.repeat(40), localSha: '1'.repeat(40), remoteSha: '2'.repeat(40),
+    localTaskCommits: false, remoteTaskCommits: true,
+    existingPrs: [{ number: 18, baseRefName: 'stg', isDraft: true }], expectedBase: 'stg',
+  })
+  assert.equal(plan.action, 'fast_forward_remote_task_branch')
+})
+
+test("a task's own draft PR is not mistaken for changed parent state", () => {
+  const parentSha = '1'.repeat(40)
+  const result = evaluatePublicationParent({
+    execution: {
+      branch_name: 'codex/control-plane/cp-test-001',
+      parent_branch: 'stg',
+      parent_sha: parentSha,
+    },
+    liveParent: {
+      parent_branch: 'codex/control-plane/cp-test-001',
+      parent_sha: '2'.repeat(40),
+      parent_pr: { number: 22, base_branch: 'stg' },
+    },
+    recordedParentSha: parentSha,
+  })
+  assert.deepEqual(result, { current: true, reason: 'task_own_pr_is_current_stack_leaf' })
+})
+
+test('publication requires the latest passed verification for the exact repository state', () => {
+  const state = { base_sha: '1'.repeat(40), files: [{ file: 'tooling/change.mjs', object: 'abc' }] }
+  const fingerprint = publicationStateFingerprint(state)
+  assert.equal(evaluateVerificationAuthority({
+    verification: { execution_id: 41, status: 'passed', state_fingerprint: fingerprint },
+    executionId: 41, stateFingerprint: fingerprint,
+  }).authoritative, true)
+  assert.equal(evaluateVerificationAuthority({
+    verification: { execution_id: 41, status: 'passed', state_fingerprint: fingerprint },
+    executionId: 41, stateFingerprint: publicationStateFingerprint({ ...state, files: [] }),
+  }).reason, 'verified_repository_state_changed')
+})
 
 test('retry policy requires one explicit profile per attempt', () => {
   assert.throws(() => validateRetryPolicy({ policy_id:'broken',max_attempts:5,attempt_profiles:['standard','standard','deep'] }), /count/)
@@ -403,6 +503,15 @@ test('supervisor respects retry exhaustion and explicit wait or safety routing',
     command: 'task-publish', payload: { error: 'network unavailable' }, attempt: 1, maxAttempts: 5,
   })
   assert.equal(external.next_action, 'wait-external')
+
+  const github = classifySupervisorFailure({
+    command: 'task-publish',
+    payload: { publication: { error: 'unable_to_find_existing_pr', stderr: 'temporary GitHub API failure' } },
+    attempt: 5,
+    maxAttempts: 5,
+  })
+  assert.equal(github.failure_class, 'external-wait')
+  assert.equal(github.next_action, 'wait-external')
 
   const operator = classifySupervisorFailure({
     command: 'task-publish', payload: { error: 'publication scope unauthorized' }, attempt: 1, maxAttempts: 5,

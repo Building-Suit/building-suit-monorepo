@@ -20,6 +20,7 @@ import {
   isMilestoneVerification,
   resolveVerificationMode,
 } from './verification-mode.mjs'
+import { publicationStateFingerprint } from './publication-preflight.mjs'
 
 const [
   worktreePath,
@@ -328,6 +329,9 @@ function gitOutput(args) {
 
 const changedFiles =
   new Set()
+
+const verificationBaseSha =
+  gitOutput(['rev-parse', 'HEAD'])
 
 for (
   const output
@@ -1007,6 +1011,21 @@ const passed =
       result.status === 'skipped',
   )
 
+const verifiedFiles = [...changedFiles].sort().map(file => ({
+  file,
+  object: existsSync(path.join(worktreePath, file))
+    ? gitOutput(['hash-object', '--', file])
+    : 'deleted',
+}))
+
+const verifiedState = {
+  base_sha: verificationBaseSha,
+  files: verifiedFiles,
+}
+
+verifiedState.fingerprint =
+  publicationStateFingerprint(verifiedState)
+
 process.stdout.write(
   `${JSON.stringify({
     ok: true,
@@ -1021,6 +1040,9 @@ process.stdout.write(
 
     changed_files:
       changed,
+
+    verified_state:
+      verifiedState,
 
     checks:
       results,

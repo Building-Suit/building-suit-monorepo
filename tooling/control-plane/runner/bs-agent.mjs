@@ -1949,6 +1949,40 @@ function skipUnselectedVerificationChecks(
   return parseControlJson(result)
 }
 
+function recordVerificationState(
+  verificationRunId,
+  verifiedState,
+) {
+  if (!verifiedState?.fingerprint) {
+    throw new Error(
+      'Verifier did not return an authoritative repository state fingerprint.',
+    )
+  }
+
+  const result = controlQuery(
+    `
+      UPDATE control.verification_runs
+      SET metadata = COALESCE(metadata, '{}'::jsonb) ||
+        jsonb_build_object('verified_state', :'verified_state'::jsonb)
+      WHERE verification_run_id = :'verification_run_id'::bigint
+        AND status = 'running'
+      RETURNING jsonb_build_object(
+        'verification_run_id', verification_run_id,
+        'state_fingerprint', metadata->'verified_state'->>'fingerprint'
+      );
+    `,
+    {
+      verification_run_id: String(verificationRunId),
+      verified_state: JSON.stringify(verifiedState),
+    },
+  )
+
+  const recorded = parseControlJson(result)
+  if (recorded?.state_fingerprint !== verifiedState.fingerprint) {
+    throw new Error('Unable to persist verified repository state.')
+  }
+}
+
 function recordVerification(
   verificationRunId,
   check,
@@ -2263,6 +2297,11 @@ function taskVerify() {
         },
       ]
     }
+
+    recordVerificationState(
+      verificationRunId,
+      verification.verified_state,
+    )
 
     for (
       const check
@@ -3734,9 +3773,22 @@ function publicationVerification(
   const result =
     controlQuery(
       `
-        SELECT COALESCE(
-          jsonb_agg(
-            jsonb_build_object(
+        WITH latest_run AS (
+          SELECT *
+          FROM control.verification_runs
+          WHERE execution_id = :'execution_id'::bigint
+          ORDER BY verification_run_id DESC
+          LIMIT 1
+        )
+        SELECT COALESCE((
+          SELECT jsonb_build_object(
+            'verification_run_id', run.verification_run_id,
+            'execution_id', run.execution_id,
+            'status', run.status,
+            'state_fingerprint', run.metadata->'verified_state'->>'fingerprint',
+            'verified_state', run.metadata->'verified_state',
+            'checks', COALESCE((
+              SELECT jsonb_agg(jsonb_build_object(
               'check_name',
                 check_name,
 
@@ -3748,20 +3800,13 @@ function publicationVerification(
 
               'summary',
                 summary
-            )
-            ORDER BY verification_id
-          ),
-          '[]'::jsonb
-        )
-        FROM control.verification_results
-        WHERE verification_run_id = (
-          SELECT verification_run_id
-          FROM control.verification_runs
-          WHERE execution_id =
-            :'execution_id'::bigint
-          ORDER BY verification_run_id DESC
-          LIMIT 1
-        );
+              ) ORDER BY verification_id)
+              FROM control.verification_results
+              WHERE verification_run_id = run.verification_run_id
+            ), '[]'::jsonb)
+          )
+          FROM latest_run run
+        ), 'null'::jsonb);
       `,
       {
         execution_id:
@@ -3774,7 +3819,7 @@ function publicationVerification(
   return (
     parseControlJson(
       result,
-    ) ?? []
+      ) ?? null
   )
 }
 
@@ -3835,6 +3880,15 @@ function completePublication({
 
             changed_files:
               publication.changed_files,
+
+            verification_run_id:
+              publication.verification_run_id,
+
+            reconciliation:
+              publication.reconciliation,
+
+            publication_preflight:
+              publication.preflight,
           }),
       },
     )
@@ -3931,19 +3985,27 @@ function taskPublish() {
 
 
     if (
-      verification.length === 0
+      !verification
     ) {
       throw new Error(
         'Task has no verification evidence.',
       )
     }
 
+    if (verification.status !== 'passed') {
+      throw new Error(
+        'Latest authoritative verification run is not passed.',
+      )
+    }
+
 
     const blockingVerification =
-      verification.filter(
+      verification.checks.filter(
         check =>
           check.status === 'fail' ||
-          check.status === 'not_run',
+          check.status === 'not_run' ||
+          check.status === 'queued' ||
+          check.status === 'running',
       )
 
 
@@ -4083,6 +4145,13 @@ function taskPublish() {
             packet.requirements,
 
           verification,
+
+          publication_boundaries: {
+            task_paths: configuredAllowedPaths,
+            source_paths: sourceAllowedPaths,
+            workstream_paths: workstreamAllowedPaths,
+            project_paths: projectAllowedPaths,
+          },
         },
         null,
         2,
@@ -5548,6 +5617,45 @@ function taskEngine() {
 
           return
 
+        }
+
+
+        const recoverySnapshot =
+          supervisorSnapshot(taskId)
+
+        const recovery =
+          classifySupervisorFailure({
+            command: 'task-publish',
+            payload: child.payload,
+            attempt: execution?.attempt,
+            maxAttempts: packet.retry_policy?.max_attempts,
+          })
+
+        recovery.fingerprint =
+          planSupervisorStep(recoverySnapshot).fingerprint
+
+        recovery.execution =
+          execution
+
+        if (recovery.kind === 'wait') {
+          const failure = [...(recoverySnapshot.failures ?? [])].at(-1)
+          recordSupervisorRecovery(recoverySnapshot, recovery, {
+            idempotencyKey: `task-engine:publication:${recovery.fingerprint}:${recovery.reason}`,
+            failureId: failure?.failure_id,
+            status: 'active',
+            metadata: { legacy_task_engine: true },
+          })
+
+          output({
+            ok: true,
+            command: 'task-engine',
+            task_id: taskId,
+            status: 'wait',
+            recovery,
+            trail,
+          })
+
+          return
         }
 
 

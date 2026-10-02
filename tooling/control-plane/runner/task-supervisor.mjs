@@ -236,18 +236,18 @@ export function planSupervisorStep(snapshot) {
 
 export function classifySupervisorFailure({ command, payload, attempt, maxAttempts }) {
   const error = String(payload?.publication?.error ?? payload?.error ?? 'task_action_failed')
-  const lower = error.toLowerCase()
+  const lower = `${error} ${JSON.stringify(payload ?? {})}`.toLowerCase()
 
   if (lower.includes('no_publishable_changes')) {
     return decision('act', 'complete-no-changes', 'no-change', 'no_publishable_changes', {
       command: 'handle-no-publishable-changes', recoverable: false,
     })
   }
-  if (/timeout|network|fetch|connect|temporar|unavailable|pr_create_failed/.test(lower)) {
-    return decision('wait', 'wait-external', 'external-wait', 'external_dependency_unavailable')
-  }
   if (/permission|authorization|credential|authentication/.test(lower)) {
     return decision('wait', 'wait-operator', 'operator-wait', 'operator_authorization_required')
+  }
+  if (/timeout|network|fetch|connect|temporar|unavailable|pr_create_failed|unable_to_find_existing_pr|unable_to_inspect_remote_branch|unable_to_read_created_pr|stack_parent_resolution_failed/.test(lower)) {
+    return decision('wait', 'wait-external', 'external-wait', 'external_dependency_unavailable')
   }
   if (command === 'task-verify' || lower.includes('verification_failed')) {
     if (Number(attempt ?? 0) >= Number(maxAttempts ?? 0)) {
