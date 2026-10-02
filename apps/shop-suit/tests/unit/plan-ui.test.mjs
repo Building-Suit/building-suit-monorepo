@@ -6,7 +6,6 @@ const billing = await readFile(new URL('../../app/pages/billing.vue', import.met
 const pricing = await readFile(new URL('../../app/components/ShopPricing.vue', import.meta.url), 'utf8')
 const cards = await readFile(new URL('../../app/components/ShopPlanCards.vue', import.meta.url), 'utf8')
 const usage = await readFile(new URL('../../app/components/PlanUsageMeter.vue', import.meta.url), 'utf8')
-const limits = await readFile(new URL('../../app/components/PlanResourceLimits.vue', import.meta.url), 'utf8')
 const quota = await readFile(new URL('../../app/utils/planQuotaError.ts', import.meta.url), 'utf8')
 
 test('owner billing uses the canonical purchasable catalog and effective server quote', () => {
@@ -18,7 +17,7 @@ test('owner billing uses the canonical purchasable catalog and effective server 
   assert.doesNotMatch(billing, /349|699|1099/)
   assert.match(pricing, /usePlans\(\)/)
   assert.match(pricing, /plan\.is_purchasable && !plan\.is_coming_soon/)
-  assert.match(pricing, /<ShopPlanCards :offers="offers"/)
+  assert.match(pricing, /<ShopPlanCards/)
   assert.match(pricing, /pricing\.notes\.allPlansIncludeFreeTrial/)
   assert.doesNotMatch(pricing, /2847\.84|5703\.84|8151\.84|9783\.84/)
   assert.match(cards, /familyOrder = \['solo', 'team', 'multi'\]/)
@@ -29,10 +28,13 @@ test('owner billing uses the canonical purchasable catalog and effective server 
 })
 
 test('plan cards expose Ledger-style term and Multi variant controls accessibly', () => {
-  assert.match(cards, /type="radio" name="shop-billing-cycle"/)
-  assert.match(cards, /type="radio" name="shop-multi-variant"/)
-  assert.match(cards, /\['monthly', 'annual'\]/)
-  assert.match(cards, /\['multi_2', 'multi_3'\]/)
+  assert.match(cards, /<BsMarketingPricing/)
+  assert.doesNotMatch(cards, /<article\b/)
+  assert.doesNotMatch(cards, /<fieldset\b/)
+  assert.match(cards, /value: 'monthly'/)
+  assert.match(cards, /value: 'annual'/)
+  assert.match(cards, /multi_2/)
+  assert.match(cards, /multi_3/)
   assert.match(cards, /yearlyOriginal/)
   assert.match(cards, /yearlyDiscount/)
   assert.match(cards, /Founder \/ negotiated price/)
@@ -41,7 +43,7 @@ test('plan cards expose Ledger-style term and Multi variant controls accessibly'
 
 test('all six quota resources have concise comparison and usage states', () => {
   for (const resource of ['active_locations', 'active_members', 'active_products', 'active_services', 'active_customers', 'active_suppliers']) {
-    assert.match(limits, new RegExp(resource))
+    assert.match(cards, new RegExp(resource))
     assert.match(billing, new RegExp(resource))
   }
   assert.match(usage, /ratio\.value >= 80/)

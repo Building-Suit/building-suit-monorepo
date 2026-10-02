@@ -21,11 +21,13 @@ const offers = computed<ShopPlanOffer[]>(() => (plans.value ?? [])
   })))
 </script>
 <template>
-  <SectionSkeleton v-if="isLoading && !offers.length" />
-  <div v-else-if="error" role="alert" class="ls-error"><p>{{ t('pricing.loadError') }}</p><BsButton type="button" severity="secondary" class="mt-3" @click="refresh()">{{ t('common.retry') }}</BsButton></div>
-  <p v-else-if="!offers.length" class="text-fg-muted">{{ t('pricing.empty') }}</p>
-  <div v-else>
-    <p class="mb-6 text-center text-sm text-muted-foreground">{{ t('pricing.notes.allPlansIncludeFreeTrial') }}</p>
-    <ShopPlanCards :offers="offers" action="signup" />
-  </div>
+  <ShopPlanCards
+    :offers="offers"
+    action="signup"
+    :loading="isLoading"
+    :error="error ? t('pricing.loadError') : null"
+    :intro="t('pricing.notes.allPlansIncludeFreeTrial')"
+    :empty-label="t('pricing.empty')"
+    @retry="refresh"
+  />
 </template>

@@ -26,6 +26,7 @@ const locationPending = ref(false)
 const locationError = ref('')
 const editingLocationId = ref<string | null>(null)
 const locationForm = reactive({ name: '', code: '', address: '', phone: '' })
+const { visible: locationDialogOpen, dirty: locationDirty } = useRecordAction(() => locationForm)
 const receiptForm = reactive({ displayName: '', address: '', phone: '', footer: '', paperSize: 'thermal_80' as ReceiptPaperSize })
 const receiptPending = ref(false)
 const receiptError = ref('')
@@ -203,9 +204,16 @@ function editLocation(location: ShopLocation) {
     name: location.name, code: location.code ?? '', address: location.address ?? '', phone: location.phone ?? '',
   })
   locationError.value = ''
+  locationDialogOpen.value = true
+}
+
+function createLocation() {
+  cancelLocationEdit()
+  locationDialogOpen.value = true
 }
 
 function cancelLocationEdit() {
+  locationDialogOpen.value = false
   editingLocationId.value = null
   Object.assign(locationForm, { name: '', code: '', address: '', phone: '' })
   locationError.value = ''
@@ -310,7 +318,7 @@ async function saveReceiptSettings() {
     <p v-if="loading" role="status">{{ ui('loading') }}</p>
     <div v-else-if="shopError" role="alert" class="ls-error">{{ copy.failed }} <BsButton @click="reload()">{{ ui('retry') }}</BsButton></div>
     <p v-else-if="!current" role="status">{{ ui('empty') }}</p>
-    <section v-else id="shop-profile" class="scroll-mt-28 rounded-2xl border border-border bg-card p-5 sm:p-6" aria-labelledby="shop-profile-title">
+    <section v-else id="shop-profile" class="scroll-mt-28 ls-card p-5 sm:p-6" aria-labelledby="shop-profile-title">
       <h2 id="shop-profile-title" class="text-lg font-extrabold">{{ copy.profileTitle }}</h2>
       <p class="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{{ copy.profileHelp }}</p>
       <p v-if="!canManage" role="status" class="mt-5 rounded-xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-4 text-sm text-fg">{{ copy.profileOwnerOnly }}</p>
@@ -327,7 +335,7 @@ async function saveReceiptSettings() {
         <BsButton type="submit" class="ls-btn ls-btn-primary" :pending="profilePending" :disabled="!canManage || profileForm.displayName.trim().length < 2 || profileForm.displayName.trim() === current.name">{{ profilePending ? copy.savingProfile : copy.saveProfile }}</BsButton>
       </BsForm>
     </section>
-    <section v-if="current" class="rounded-2xl border border-border bg-card p-5 sm:p-6">
+    <section v-if="current" class="ls-card p-5 sm:p-6">
       <h2 class="text-lg font-extrabold">{{ copy.modeTitle }}</h2>
       <p class="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{{ copy.modeHelp }}</p>
 
@@ -350,7 +358,7 @@ async function saveReceiptSettings() {
       </BsForm>
     </section>
 
-    <section v-if="current" id="locations" class="scroll-mt-28 rounded-2xl border border-border bg-card p-5 sm:p-6">
+    <section v-if="current" id="locations" class="scroll-mt-28 ls-card p-5 sm:p-6">
       <h2 class="text-lg font-extrabold">{{ copy.locationsTitle }}</h2>
       <p class="mt-2 text-sm leading-6 text-muted-foreground">{{ copy.locationsHelp }}</p>
       <p v-if="locationUsageLabel" class="mt-2 text-sm font-semibold text-muted-foreground">{{ locationUsageLabel }}</p>
@@ -358,39 +366,37 @@ async function saveReceiptSettings() {
         <p>{{ copy.locationLimit }}</p>
         <NuxtLink to="/billing" class="mt-2 inline-block font-bold underline">{{ copy.upgradePlan }}</NuxtLink>
       </div>
-      <p v-if="locationError" role="alert" class="mt-4 text-sm text-[var(--bs-status-error)]">{{ locationError }}</p>
-      <ul class="mt-5 divide-y divide-border rounded-xl border border-border">
-        <li v-for="location in locations" :key="location.id" class="flex flex-wrap items-center justify-between gap-4 p-4">
-          <span>
-            <strong class="block">{{ location.name }}</strong>
-            <span class="text-xs text-muted-foreground">{{ location.code || location.address || '—' }}</span>
-          </span>
-          <span class="flex items-center gap-2">
-            <span v-if="location.is_default" class="rounded-full bg-muted px-2 py-1 text-xs font-bold">{{ copy.defaultLocation }}</span>
-            <span v-if="location.status === 'archived'" class="rounded-full bg-muted px-2 py-1 text-xs font-bold">{{ copy.archivedLocation }}</span>
-            <BsButton v-if="canManage" type="button" severity="secondary" :disabled="locationPending" @click="editLocation(location)">{{ copy.editLocation }}</BsButton>
-            <BsButton v-if="canManage && !location.is_default && location.status === 'active'" type="button" severity="secondary" :disabled="locationPending" @click="archiveLocation(location.id)">{{ copy.archiveLocation }}</BsButton>
-            <BsButton v-if="canManage && location.status === 'archived'" type="button" severity="secondary" :disabled="locationPending || locationCapacityFull" @click="restoreLocation(location.id)">{{ copy.restoreLocation }}</BsButton>
-          </span>
-        </li>
-      </ul>
-      <BsForm v-if="canManage && (editingLocationId || !locationCapacityFull)" class="mt-5 grid gap-3 sm:grid-cols-2" :pending="locationPending" :error="locationError" @submit="saveLocation">
+      <BsDataTable
+        class="mt-5"
+        :value="locations"
+        data-key="id"
+        :label="copy.locationsTitle"
+        :capabilities="{ insert: canManage && !locationCapacityFull, edit: canManage, archive: canManage }"
+        :action-labels="{ insert: copy.addLocation, edit: copy.editLocation, archive: copy.archiveLocation }"
+        :can-row-action="(action, location) => action !== 'archive' || (!location.is_default && location.status === 'active')"
+        :row-action-pending="locationPending"
+        @create="createLocation"
+        @edit="editLocation"
+        @archive="location => archiveLocation(location.id)"
+      >
+        <Column field="name" :header="copy.locationName" />
+        <Column :header="copy.locationCode"><template #body="{ data: location }">{{ location.code || location.address || '—' }}</template></Column>
+        <Column :header="copy.defaultLocation"><template #body="{ data: location }"><StatusBadge v-if="location.is_default" status="default" :label="copy.defaultLocation" tone="neutral" /><StatusBadge v-else-if="location.status === 'archived'" status="archived" :label="copy.archivedLocation" tone="neutral" /></template></Column>
+        <template #row-actions="{ row: location }"><BsButton v-if="canManage && location.status === 'archived'" variant="link" :disabled="locationPending || locationCapacityFull" @click="restoreLocation(location.id)">{{ copy.restoreLocation }}</BsButton></template>
+      </BsDataTable>
+      <BsRecordActionDialog v-model:visible="locationDialogOpen" :title="editingLocationId ? copy.editLocation : copy.addLocation" :dirty="locationDirty" :pending="locationPending" :error="locationError" :submit-label="editingLocationId ? copy.saveLocation : copy.addLocation" :cancel-label="copy.cancelEdit" @submit="saveLocation">
         <label class="grid gap-1 text-sm"><span>{{ copy.locationName }}</span><input v-model="locationForm.name" class="ls-input" required minlength="2" maxlength="120"></label>
         <label class="grid gap-1 text-sm"><span>{{ copy.locationCode }}</span><input v-model="locationForm.code" class="ls-input" maxlength="32"></label>
         <label class="grid gap-1 text-sm"><span>{{ copy.locationAddress }}</span><input v-model="locationForm.address" class="ls-input"></label>
         <label class="grid gap-1 text-sm"><span>{{ copy.locationPhone }}</span><input v-model="locationForm.phone" class="ls-input"></label>
-        <div class="flex gap-2 sm:col-span-2">
-          <BsButton type="submit" :pending="locationPending" :disabled="locationForm.name.trim().length < 2">{{ locationPending ? copy.addingLocation : editingLocationId ? copy.saveLocation : copy.addLocation }}</BsButton>
-          <BsButton v-if="editingLocationId" type="button" severity="secondary" :disabled="locationPending" @click="cancelLocationEdit">{{ copy.cancelEdit }}</BsButton>
-        </div>
-      </BsForm>
+      </BsRecordActionDialog>
     </section>
 
-    <section v-if="current" class="rounded-2xl border border-border bg-card p-5 sm:p-6" aria-labelledby="receipt-settings-title">
+    <section v-if="current" class="ls-card p-5 sm:p-6" aria-labelledby="receipt-settings-title">
       <h2 id="receipt-settings-title" class="text-lg font-extrabold">{{ copy.receiptTitle }}</h2>
       <p class="mt-2 text-sm leading-6 text-muted-foreground">{{ copy.receiptHelp }}</p>
       <p v-if="receiptLoading" role="status" class="mt-4">{{ ui('loading') }}</p>
-      <p v-else-if="receiptLoadError" role="alert" class="mt-4 text-sm text-[var(--bs-status-error)]">{{ copy.receiptFailed }} <button type="button" class="min-h-11 font-bold underline" @click="refreshReceiptSettings()">{{ ui('retry') }}</button></p>
+      <p v-else-if="receiptLoadError" role="alert" class="mt-4 text-sm text-[var(--bs-status-error)]">{{ copy.receiptFailed }} <BsButton variant="link" type="button" class="min-h-11 font-bold underline" @click="refreshReceiptSettings()">{{ ui('retry') }}</BsButton></p>
       <template v-else-if="receiptSettings">
         <p v-if="!canManage" role="status" class="mt-5 rounded-xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-4 text-sm">{{ copy.receiptOwnerOnly }}</p>
         <p v-if="receiptSuccess" role="status" class="mt-4 rounded-xl bg-[var(--bs-status-success-bg)] p-3 text-sm">{{ receiptSuccess }}</p>

@@ -1,54 +1,209 @@
 <script setup lang="ts">
 const { locale } = useI18n()
 const ui = useUiCopy()
-const rows = ref([{ id: '1', name: 'Ledger Suit', category: 'Finance', amount: 120 }, { id: '2', name: 'Shop Suit', category: 'Commerce', amount: 240 }, { id: '3', name: 'Building Suit', category: 'Platform', amount: 360 }])
+const isArabic = computed(() => locale.value === 'ar')
+const rows = ref([
+  { id: '1', name: 'Ledger Suit', category: 'Finance', amount: 120, status: 'active' },
+  { id: '2', name: 'Shop Suit', category: 'Commerce', amount: 240, status: 'pending' },
+  { id: '3', name: 'Building Suit', category: 'Platform', amount: 360, status: 'completed' },
+])
 const selected = ref([])
 const choice = ref<string | number | null>('1')
 const choices = Array.from({ length: 10000 }, (_, index) => ({ id: String(index + 1), name: `Item ${index + 1}` }))
 const formError = ref('')
 const formPending = ref(false)
 const formValue = ref('')
+const notes = ref('')
+const tab = ref('overview')
+const page = ref(1)
+const notificationChoices = ref<string[]>(['email'])
+const planChoice = ref<string | string[]>('standard')
+const catalogueOtp = ref('123456')
+const tableState = ref<'data' | 'loading' | 'empty' | 'error'>('data')
+const density = ref<'compact' | 'comfortable'>('comfortable')
+const pricingInterval = ref('monthly')
 const { success: toastSuccess } = useToasts()
-function verifyForm() { formError.value = locale.value === 'ar' ? 'راجع القيمة وحاول مرة أخرى.' : 'Review the value and try again.' }
+function verifyForm() { formError.value = isArabic.value ? 'راجع القيمة وحاول مرة أخرى.' : 'Review the value and try again.' }
 const filters = ref({ global: { value: null, matchMode: 'contains' } })
 const name = ref('')
+const editingId = ref<string | null>(null)
 const action = useRecordAction(() => ({ name: name.value }))
-const { visible, dirty, pending } = action
+const { visible, dirty, pending, error: actionError, mode } = action
 const { step, advance, back } = useSignupWizard(2)
 const confirmation = useConfirmation()
 const confirmationResult = ref('')
-async function confirmExample() { confirmationResult.value = await confirmation.ask(locale.value === 'ar' ? 'تأكيد هذا الإجراء التجريبي؟' : 'Confirm this example action?') ? 'Confirmed' : 'Cancelled' }
-function add() { name.value = ''; action.open() }
-function save() { rows.value.push({ id: String(rows.value.length + 1), name: name.value, category: 'Example', amount: 0 }); action.complete() }
+async function confirmExample() {
+  const confirmed = await confirmation.ask({
+    title: isArabic.value ? 'إزالة السجل' : 'Remove record',
+    message: isArabic.value ? 'هل تريد إزالة هذا السجل التجريبي؟' : 'Remove this example record?',
+    confirmLabel: isArabic.value ? 'إزالة' : 'Remove',
+    tone: 'danger',
+  })
+  confirmationResult.value = confirmed ? (isArabic.value ? 'تم التأكيد' : 'Confirmed') : (isArabic.value ? 'تم الإلغاء' : 'Cancelled')
+}
+function add() {
+  editingId.value = null
+  name.value = ''
+  action.create()
+}
+function edit(row: { id: string; name: string }) {
+  editingId.value = row.id
+  name.value = row.name
+  action.edit()
+}
+async function save() {
+  await action.run(async () => {
+    if (!name.value.trim()) throw new Error('invalid example')
+    if (editingId.value) {
+      const row = rows.value.find(item => item.id === editingId.value)
+      if (row) row.name = name.value.trim()
+    }
+    else rows.value.push({ id: String(rows.value.length + 1), name: name.value.trim(), category: 'Example', amount: 0, status: 'draft' })
+  }, () => isArabic.value ? 'أدخل اسماً قبل الحفظ.' : 'Enter a name before saving.')
+}
 useHead({ title: 'Shared component catalogue · Building Suit' })
 </script>
+
 <template>
   <div class="space-y-8">
-    <header><h1 class="text-3xl font-black">{{ locale === 'ar' ? 'مكتبة المكونات المشتركة' : 'Shared component catalogue' }}</h1><p class="mt-3 text-fg-muted">{{ locale === 'ar' ? 'أمثلة حية من نفس المكونات المستخدمة في التطبيقات.' : 'Live examples of the components used by both applications.' }}</p></header>
-    <section class="ls-card p-6"><h2 class="text-xl font-bold">{{ locale === 'ar' ? 'الهوية والأيقونات' : 'Brand and icons' }}</h2><div class="mt-5 flex flex-wrap items-center gap-6"><BsBuildingLogo /><AppIcon v-for="icon in ['dashboard', 'ledger', 'invoice', 'team', 'wallet', 'reports']" :key="icon" :name="icon" :size="28" /></div></section>
-    <section class="ls-card p-6"><h2 class="text-xl font-bold">{{ locale === 'ar' ? 'الأسطح والإجراءات' : 'Surfaces and actions' }}</h2><p class="mt-2 max-w-2xl text-fg-muted">{{ locale === 'ar' ? 'سطح هادئ للعمل اليومي، مع تسلسل واضح للإجراءات وتركيز مرئي ثابت.' : 'A quiet working surface with clear action hierarchy and consistent visible focus.' }}</p><div class="ls-card-flat mt-5 flex flex-wrap items-center gap-3 p-5"><button type="button" class="ls-btn ls-btn-primary">{{ ui('save') }}</button><button type="button" class="ls-btn ls-btn-secondary">{{ locale === 'ar' ? 'مراجعة' : 'Review' }}</button><button type="button" class="ls-btn">{{ ui('cancel') }}</button><button type="button" class="ls-btn ls-btn-danger">{{ locale === 'ar' ? 'حذف' : 'Delete' }}</button></div></section>
-    <section class="ls-card overflow-hidden"><div class="flex flex-wrap items-center justify-between gap-3 p-5"><h2 class="text-xl font-bold">{{ locale === 'ar' ? 'جدول البيانات' : 'Data table' }}</h2><button type="button" class="ls-btn ls-btn-primary" data-testid="catalogue-add" @click="add">{{ locale === 'ar' ? 'إضافة سجل' : 'Add record' }}</button></div>
-      <BsDataTable v-model:selection="selected" v-model:filters="filters" :value="rows" data-key="id" :search-fields="['name', 'category']" searchable exportable paginator :rows="2" :rows-per-page-options="[2, 5, 10]" sort-mode="multiple" removable-sort resizable-columns reorderable-columns striped-rows selection-mode="multiple" :meta-key-selection="false" label="Component examples">
+    <BsPageHeader
+      :title="isArabic ? 'مكتبة المكونات المشتركة' : 'Shared component catalogue'"
+      :subtitle="isArabic ? 'أمثلة حية للعقود الأساسية المستخدمة في جميع تطبيقات سوت.' : 'Live examples of the canonical contracts used by every Suit.'"
+      :context-label="isArabic ? 'سياق المعاينة' : 'Preview context'"
+      :context="[{ label: isArabic ? 'الاتجاه' : 'Direction', value: isArabic ? 'RTL' : 'LTR' }, { label: isArabic ? 'المصدر' : 'Owner', value: 'packages/ui' }]"
+    />
+
+    <BsContentSection :title="isArabic ? 'الهوية والإجراءات' : 'Brand and actions'" :description="isArabic ? 'تستخدم الإجراءات الحالات والأحجام المشتركة.' : 'Actions use shared variants, sizes and pending guards.'">
+      <div class="flex flex-wrap items-center gap-3"><BsBuildingLogo /><AppIcon v-for="icon in ['dashboard', 'ledger', 'invoice', 'team', 'wallet', 'reports']" :key="icon" :name="icon" :size="28" /></div>
+      <div class="mt-5 flex flex-wrap items-start gap-4"><BsUserIdentity name="Building Suit User" email="user@example.com" /><BsUserMenu name="Building Suit User" email="user@example.com" :account-label="isArabic ? 'قائمة الحساب' : 'Account menu'" :sign-out-label="isArabic ? 'تسجيل الخروج' : 'Sign out'" /></div>
+      <div class="ls-card-flat mt-5 flex flex-wrap items-center gap-3 p-5">
+        <BsButton variant="primary">{{ ui('save') }}</BsButton><BsButton variant="secondary">{{ isArabic ? 'مراجعة' : 'Review' }}</BsButton><BsButton>{{ ui('cancel') }}</BsButton><BsButton variant="danger">{{ isArabic ? 'حذف' : 'Delete' }}</BsButton>
+      </div>
+      <div class="mt-5 flex flex-wrap items-center gap-3" role="group" :aria-label="isArabic ? 'إجراءات دلالية' : 'Semantic actions'">
+        <BsButton variant="link">{{ isArabic ? 'إجراء رابط' : 'Link action' }}</BsButton>
+        <BsButton variant="icon" :aria-label="ui('close')"><AppIcon name="close" /></BsButton>
+        <BsButton variant="tab" role="tab" aria-selected="true">{{ isArabic ? 'تبويب' : 'Tab' }}</BsButton>
+        <BsButton variant="chip" aria-pressed="true">{{ isArabic ? 'خيار' : 'Chip' }}</BsButton>
+        <BsButton variant="tile" class="max-w-48">{{ isArabic ? 'بطاقة تفاعلية' : 'Interactive tile' }}</BsButton>
+      </div>
+    </BsContentSection>
+
+    <BsContentSection :title="isArabic ? 'التنقل والأدوات' : 'Navigation and tools'" :description="isArabic ? 'تبويبات وشريط أدوات وقائمة مشتركة.' : 'Shared tabs, toolbar and menu geometry.'">
+      <BsTabs v-model="tab" :label="isArabic ? 'أقسام المثال' : 'Example sections'" :tabs="[{ value: 'overview', label: isArabic ? 'نظرة عامة' : 'Overview' }, { value: 'activity', label: isArabic ? 'النشاط' : 'Activity' }]" />
+      <BsToolbar class="mt-4" :label="isArabic ? 'أدوات الصفحة' : 'Page tools'">
+        <BsInput :model-value="''" type="search" :placeholder="isArabic ? 'بحث' : 'Search'" :aria-label="isArabic ? 'بحث' : 'Search'" />
+        <template #actions><BsButton variant="primary">{{ isArabic ? 'إضافة' : 'Add' }}</BsButton><BsMenu :label="isArabic ? 'المزيد' : 'More'"><BsButton variant="text" role="menuitem">{{ isArabic ? 'تصدير' : 'Export' }}</BsButton></BsMenu></template>
+      </BsToolbar>
+    </BsContentSection>
+
+    <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-label="Status and KPI examples">
+      <BsKpiCard :title="isArabic ? 'السجلات' : 'Records'" change-label="+12%" tone="success">{{ rows.length }}</BsKpiCard>
+      <BsKpiCard :title="isArabic ? 'قيد المراجعة' : 'In review'" :hint="isArabic ? 'بيانات تجريبية' : 'Example data'">1</BsKpiCard>
+      <BsCard :title="isArabic ? 'الحالات' : 'Statuses'" padding="lg"><div class="flex flex-wrap gap-2"><StatusBadge status="active" /><StatusBadge status="pending" /><StatusBadge status="failed" /></div></BsCard>
+      <BsCard :title="isArabic ? 'سطح متداخل' : 'Nested surface'" variant="flat" padding="lg"><p class="text-sm text-fg-muted">{{ isArabic ? 'بدون ظل إضافي.' : 'No competing elevation.' }}</p></BsCard>
+    </section>
+
+    <section class="ls-card overflow-hidden">
+      <div class="flex flex-wrap items-center justify-between gap-3 p-5">
+        <h2 class="text-xl font-bold">{{ isArabic ? 'جدول البيانات' : 'Data table' }}</h2>
+        <div class="flex flex-wrap gap-2">
+          <BsButton v-for="state in (['data', 'loading', 'empty', 'error'] as const)" :key="state" size="sm" :variant="tableState === state ? 'primary' : 'default'" @click="tableState = state">{{ state }}</BsButton>
+        </div>
+      </div>
+      <div class="px-5 pb-3"><BsTableDensity v-model="density" :label="isArabic ? 'كثافة الجدول' : 'Table density'" :compact-label="isArabic ? 'مضغوط' : 'Compact'" :comfortable-label="isArabic ? 'مريح' : 'Comfortable'" /></div>
+      <BsDataTable
+        v-model:selection="selected" v-model:filters="filters" :value="tableState === 'empty' ? [] : rows" data-key="id"
+        :search-fields="['name', 'category']" searchable exportable paginator :rows="2" :rows-per-page-options="[2, 5, 10]"
+        sort-mode="multiple" removable-sort resizable-columns reorderable-columns striped-rows selection-mode="multiple"
+        :meta-key-selection="false" :density="density" :loading="tableState === 'loading'"
+        :error="tableState === 'error' ? (isArabic ? 'تعذر تحميل المثال.' : 'The example could not be loaded.') : null"
+        :label="isArabic ? 'أمثلة المكونات' : 'Component examples'"
+        :capabilities="{ insert: true, edit: true }"
+        @create="add"
+        @edit="edit"
+        @retry="tableState = 'data'"
+      >
         <Column selection-mode="multiple" header-style="width: 3rem" />
-        <Column field="name" :header="locale === 'ar' ? 'الاسم' : 'Name'" sortable />
-        <Column field="category" :header="locale === 'ar' ? 'التصنيف' : 'Category'" sortable />
-        <Column field="amount" :header="locale === 'ar' ? 'القيمة' : 'Value'" sortable body-class="ls-num" />
+        <Column field="name" :header="isArabic ? 'الاسم' : 'Name'" sortable />
+        <Column field="category" :header="isArabic ? 'التصنيف' : 'Category'" sortable />
+        <Column field="status" :header="isArabic ? 'الحالة' : 'Status'"><template #body="{ data: row }"><StatusBadge :status="row.status" /></template></Column>
+        <Column field="amount" :header="isArabic ? 'القيمة' : 'Value'" sortable body-class="ls-num" />
       </BsDataTable>
     </section>
-    <section class="ls-card p-6 space-y-4" data-testid="foundation-patterns">
-      <h2 class="text-xl font-bold">{{ locale === 'ar' ? 'أنماط التفاعل' : 'Interaction patterns' }}</h2>
-      <p id="catalogue-choice-label">{{ locale === 'ar' ? 'الصنف' : 'Item' }}</p>
-      <BsSelect v-model="choice" :label="locale === 'ar' ? 'الصنف' : 'Item'" :options="choices" option-label="name" option-value="id" filter virtual />
-      <BsForm :pending="formPending" :error="formError" class="space-y-4" @submit="verifyForm">
-        <FloatingField :label="locale === 'ar' ? 'القيمة' : 'Value'"><input v-model="formValue" required class="ls-input"></FloatingField>
-        <BsButton type="submit">{{ ui('save') }}</BsButton>
+
+    <BsCard :title="isArabic ? 'النماذج والاختيار' : 'Forms and selection'" data-testid="foundation-patterns">
+      <div class="space-y-4">
+        <BsSelect v-model="choice" :label="isArabic ? 'الصنف' : 'Item'" :options="choices" option-label="name" option-value="id" filter virtual />
+        <BsForm :pending="formPending" :error="formError" class="space-y-4" @submit="verifyForm">
+          <BsField v-slot="field" :label="isArabic ? 'القيمة' : 'Value'" for="catalogue-value" :hint="isArabic ? 'حقل نصي مشترك' : 'Shared text field'" required><BsInput id="catalogue-value" v-model="formValue" required :aria-describedby="field.describedby" :invalid="field.invalid" /></BsField>
+          <BsField v-slot="field" :label="isArabic ? 'ملاحظات' : 'Notes'" for="catalogue-notes"><BsTextarea id="catalogue-notes" v-model="notes" :aria-describedby="field.describedby" /></BsField>
+          <BsChoiceGroup v-model="notificationChoices" :legend="isArabic ? 'الإشعارات' : 'Notifications'" :options="[{ value: 'email', label: isArabic ? 'البريد' : 'Email' }, { value: 'app', label: isArabic ? 'داخل التطبيق' : 'In app' }]" inline />
+          <BsChoiceGroup v-model="planChoice" type="radio" :legend="isArabic ? 'الخطة' : 'Plan'" :options="[{ value: 'standard', label: isArabic ? 'قياسية' : 'Standard' }, { value: 'advanced', label: isArabic ? 'متقدمة' : 'Advanced' }]" inline />
+          <BsButton type="submit" variant="primary">{{ ui('save') }}</BsButton>
+        </BsForm>
+        <div class="flex flex-wrap gap-2"><BsButton variant="chip" :aria-pressed="formPending" @click="formPending = !formPending">{{ ui('loading') }}</BsButton><BsButton @click="toastSuccess(isArabic ? 'تم الحفظ' : 'Saved')">{{ isArabic ? 'إظهار إشعار' : 'Show notification' }}</BsButton></div>
+      </div>
+    </BsCard>
+
+    <BsContentSection :title="isArabic ? 'حالات المحتوى' : 'Content states'" variant="flat">
+      <div class="grid gap-3 md:grid-cols-2"><BsStateSurface state="loading" :title="ui('loading')" /><BsStateSurface state="error" :title="isArabic ? 'تعذر التحميل' : 'Could not load'" :description="isArabic ? 'حاول مرة أخرى.' : 'Try again.'" :action-label="isArabic ? 'إعادة المحاولة' : 'Retry'" /></div>
+      <BsPagination v-model:page="page" class="mt-4" :page-size="10" :total="42" :label="isArabic ? 'الصفحات' : 'Pages'" :previous-label="isArabic ? 'السابق' : 'Previous'" :next-label="isArabic ? 'التالي' : 'Next'" />
+    </BsContentSection>
+
+    <BsContentSection :title="isArabic ? 'خطط التسويق' : 'Marketing plans'" :description="isArabic ? 'البطاقات ودورة الفوترة والإجراءات تأتي من مكوّن مشترك.' : 'Cards, billing-cycle controls, states, and actions come from one shared organism.'">
+      <BsMarketingPricing
+        :interval="pricingInterval"
+        :interval-options="[{ value: 'monthly', label: isArabic ? 'شهري' : 'Monthly' }, { value: 'yearly', label: isArabic ? 'سنوي' : 'Yearly' }]"
+        :copy="{ cycleLabel: isArabic ? 'دورة الفوترة' : 'Billing cycle', loading: ui('loading'), empty: ui('empty'), retry: isArabic ? 'إعادة المحاولة' : 'Retry', included: isArabic ? 'مشمول' : 'Included', notIncluded: isArabic ? 'غير مشمول' : 'Not included' }"
+        :annual-saving="pricingInterval === 'yearly' ? (isArabic ? 'وفّر ٢٠٪ مع الدفع السنوي' : 'Save 20% with yearly billing') : null"
+        :plans="[
+          { id: 'starter', name: isArabic ? 'البداية' : 'Starter', description: isArabic ? 'للعمل الجديد.' : 'For a new operation.', badge: isArabic ? 'الأكثر شيوعًا' : 'Most popular', badgeTone: 'featured', promoted: true, price: pricingInterval === 'yearly' ? 'EGP 4,800' : 'EGP 500', priceNote: pricingInterval === 'yearly' ? (isArabic ? 'تُدفع سنويًا' : 'billed yearly') : (isArabic ? 'شهريًا' : 'per month'), features: [{ key: 'records', included: true, text: isArabic ? 'تقارير أساسية' : 'Core reports' }], action: { label: isArabic ? 'ابدأ التجربة' : 'Start trial', to: '#', variant: 'primary' } },
+          { id: 'scale', name: isArabic ? 'التوسع' : 'Scale', description: isArabic ? 'للفرق الأكبر.' : 'For larger teams.', pricingUnavailable: isArabic ? 'السعر قريبًا' : 'Pricing coming soon', unavailable: true, action: { label: isArabic ? 'قريبًا' : 'Coming soon', disabled: true } },
+        ]"
+        :columns="3"
+        @update:interval="pricingInterval = $event"
+      />
+    </BsContentSection>
+
+    <BsContentSection
+      :title="isArabic ? 'المصادقة والتحقق' : 'Authentication and verification'"
+      :description="isArabic ? 'هندسة مشتركة للنموذج وحالة التحقق مع محتوى يقدمه المنتج.' : 'Shared form geometry and verification states with product-supplied content.'"
+    >
+      <div class="grid items-start gap-5 xl:grid-cols-2">
+        <BsAuthForm
+          :eyebrow="isArabic ? 'منتج تجريبي' : 'Example product'" :title="isArabic ? 'تسجيل الدخول' : 'Sign in'"
+          :description="isArabic ? 'مثال على غلاف المصادقة المشترك.' : 'An example of the shared authentication shell.'"
+          :submit-label="isArabic ? 'متابعة' : 'Continue'" submit-disabled @submit="() => {}"
+        >
+          <FloatingField :label="isArabic ? 'البريد الإلكتروني' : 'Email'"><BsInput type="email" value="demo@example.com" readonly dir="ltr" /></FloatingField>
+        </BsAuthForm>
+        <BsVerificationForm
+          v-model="catalogueOtp" :title="isArabic ? 'تحقق من بريدك' : 'Verify your email'"
+          :description="isArabic ? 'أدخل الرمز المكوّن من ستة أرقام.' : 'Enter the six-digit code.'" email="demo@example.com"
+          :code-label="isArabic ? 'رمز التحقق' : 'Verification code'" :expired-label="isArabic ? 'انتهت صلاحية الرمز' : 'Code expired'"
+          :submit-label="isArabic ? 'تحقق' : 'Verify'" :resend-label="isArabic ? 'إعادة الإرسال' : 'Resend'" resend-disabled
+          @submit="() => {}"
+        />
+      </div>
+    </BsContentSection>
+
+    <BsCard :title="isArabic ? 'التأكيد والخطوات' : 'Confirmation and steps'">
+      <BsForm @submit="advance()">
+        <BsSignupWizard
+          :step="step" :steps="[{ id: 'account', title: isArabic ? 'الحساب' : 'Account' }, { id: 'workspace', title: isArabic ? 'مساحة العمل' : 'Workspace' }]"
+          :submit-label="step === 2 ? (isArabic ? 'إنشاء' : 'Create') : ui('next')" :submit-disabled="step === 2" @back="back"
+        ><p>Step {{ step }}</p></BsSignupWizard>
       </BsForm>
-      <BsButton :aria-pressed="formPending" @click="formPending = !formPending">{{ ui('loading') }}</BsButton>
-      <BsButton @click="toastSuccess(locale === 'ar' ? 'تم الحفظ' : 'Saved')">{{ locale === 'ar' ? 'إظهار إشعار' : 'Show notification' }}</BsButton>
-    </section>
-    <section class="ls-card p-6"><h2 class="mb-5 text-xl font-bold">{{ locale === 'ar' ? 'خطوات التسجيل' : 'Signup wizard' }}</h2><BsSignupWizard :step="step" :steps="[{ title: 'Account' }, { title: 'Workspace' }]" @back="back"><p>Step {{ step }}</p><button type="button" class="ls-btn" :disabled="step === 2" @click="advance()">{{ ui('next') }}</button></BsSignupWizard></section>
-    <section class="ls-card p-6"><button type="button" class="ls-btn" @click="confirmExample">{{ ui('confirm') }}</button><p class="mt-3" role="status">{{ confirmationResult }}</p></section>
+      <div class="mt-5"><BsButton variant="danger" @click="confirmExample">{{ isArabic ? 'إزالة سجل' : 'Remove record' }}</BsButton><p class="mt-3" role="status">{{ confirmationResult }}</p></div>
+    </BsCard>
+
     <ToastHost />
-    <BsDialog v-model:visible="visible" :title="locale === 'ar' ? 'إضافة سجل' : 'Add record'" :dirty="dirty" :pending="pending"><form class="space-y-5" @submit.prevent="save"><FloatingField :label="locale === 'ar' ? 'الاسم' : 'Name'"><InputText id="catalogue-record-name" v-model="name" class="ls-input" required /></FloatingField><button class="ls-btn ls-btn-primary">{{ ui('save') }}</button></form></BsDialog>
+    <BsRecordActionDialog
+      v-model:visible="visible"
+      :title="mode === 'edit' ? (isArabic ? 'تعديل السجل' : 'Edit record') : (isArabic ? 'إضافة سجل' : 'Add record')"
+      :dirty="dirty" :pending="pending" :error="actionError" @submit="save"
+    >
+      <FloatingField :label="isArabic ? 'الاسم' : 'Name'"><InputText id="catalogue-record-name" v-model="name" class="ls-input" required /></FloatingField>
+    </BsRecordActionDialog>
   </div>
 </template>

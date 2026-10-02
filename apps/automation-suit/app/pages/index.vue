@@ -6,6 +6,16 @@ const config = useRuntimeConfig()
 const selectedSuit = ref('')
 const severity = ref<'all' | IncidentSeverity>('all')
 const showCompleted = ref(false)
+const suitOptions = computed(() => [
+  { value: '', label: t('dashboard.allSuits') },
+  ...(data.value?.suits ?? []).map(suit => ({ value: suit.slug, label: suit.display_name })),
+])
+const severityOptions = computed(() => [
+  { value: 'all', label: t('incidents.all') },
+  { value: 'critical', label: t('incidents.critical') },
+  { value: 'warning', label: t('incidents.warning') },
+  { value: 'info', label: t('incidents.info') },
+])
 
 const requestQuery = computed(() => selectedSuit.value ? { suit: selectedSuit.value } : {})
 const { data, error, status, refresh } = await useFetch<DashboardResponse>('/api/dashboard', {
@@ -63,27 +73,24 @@ function progress(run: { completed_tasks: number; max_tasks: number }) {
       </div>
 
       <div class="flex flex-wrap items-center gap-2">
-        <select v-model="selectedSuit" class="min-w-48 rounded-control border border-[var(--bs-border)] bg-surface px-3 py-2 text-sm text-fg">
-          <option value="">{{ t('dashboard.allSuits') }}</option>
-          <option v-for="suit in data?.suits || []" :key="suit.slug" :value="suit.slug">{{ suit.display_name }}</option>
-        </select>
-        <button class="rounded-control border border-[var(--bs-border)] bg-surface px-3 py-2 text-sm font-bold text-fg hover:bg-surface-muted" @click="refresh()">
+        <BsSelect v-model="selectedSuit" :label="t('dashboard.allSuits')" :options="suitOptions" option-label="label" option-value="value" class="min-w-48" />
+        <BsButton @click="refresh()">
           {{ t('dashboard.refresh') }}
-        </button>
+        </BsButton>
       </div>
     </section>
 
-    <section v-if="error" class="rounded-card border border-danger/40 bg-[var(--bs-status-danger-bg)] p-5">
+    <BsCard v-if="error" as="section" class="border-danger/40 bg-[var(--bs-status-danger-bg)]">
       <h2 class="font-black text-danger">{{ t('dashboard.loadFailed') }}</h2>
       <p class="mt-1 text-sm text-fg">{{ error.message }}</p>
-    </section>
+    </BsCard>
 
-    <section v-if="status === 'pending' && !data" class="rounded-card border border-[var(--bs-border)] bg-surface p-8 text-center text-sm text-fg-muted" aria-busy="true">
+    <BsCard v-if="status === 'pending' && !data" as="section" padding="lg" class="text-center text-sm text-fg-muted" aria-busy="true">
       {{ t('dashboard.loading') }}
-    </section>
+    </BsCard>
 
     <template v-if="data && summary">
-      <section class="rounded-card border border-[var(--bs-border)] bg-surface p-4">
+      <BsCard as="section" padding="sm">
         <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <div class="flex flex-wrap items-center gap-2">
@@ -100,7 +107,7 @@ function progress(run: { completed_tasks: number; max_tasks: number }) {
             <div><strong class="text-fg">Server:</strong> {{ data.database.server_addr || 'managed' }}<template v-if="data.database.server_port">:{{ data.database.server_port }}</template></div>
           </div>
         </div>
-      </section>
+      </BsCard>
 
       <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-6">
         <DashboardMetricCard :label="t('metrics.total')" :value="summary.total_tasks" />
@@ -123,21 +130,16 @@ function progress(run: { completed_tasks: number; max_tasks: number }) {
             <h2 class="text-xl font-black text-fg">{{ t('incidents.title') }}</h2>
             <p class="text-sm text-fg-muted">{{ t('incidents.subtitle') }}</p>
           </div>
-          <select v-model="severity" class="rounded-control border border-[var(--bs-border)] bg-surface px-3 py-2 text-sm text-fg">
-            <option value="all">{{ t('incidents.all') }}</option>
-            <option value="critical">{{ t('incidents.critical') }}</option>
-            <option value="warning">{{ t('incidents.warning') }}</option>
-            <option value="info">{{ t('incidents.info') }}</option>
-          </select>
+          <BsSelect v-model="severity" :label="t('incidents.title')" :options="severityOptions" option-label="label" option-value="value" class="min-w-40" />
         </div>
         <div v-if="incidents.length" class="grid gap-3 xl:grid-cols-2">
           <DashboardIncidentCard v-for="incident in incidents" :key="incident.id" :incident="incident" />
         </div>
-        <div v-else class="rounded-card border border-[var(--bs-border)] bg-surface p-6 text-sm text-fg-muted">{{ t('incidents.empty') }}</div>
+        <BsCard v-else padding="lg" class="text-sm text-fg-muted">{{ t('incidents.empty') }}</BsCard>
       </section>
 
       <section class="grid gap-4 xl:grid-cols-2">
-        <div class="rounded-card border border-[var(--bs-border)] bg-surface p-4">
+        <BsCard padding="sm">
           <div class="flex items-center justify-between gap-3">
             <div>
               <h2 class="font-black text-fg">{{ t('runtime.title') }}</h2>
@@ -164,9 +166,9 @@ function progress(run: { completed_tasks: number; max_tasks: number }) {
           </div>
           <p v-else-if="!data.runtimeTelemetryAvailable" class="mt-4 rounded-control border border-warning/40 bg-[var(--bs-status-warning-bg)] p-3 text-sm text-fg">{{ t('runtime.installHint') }}</p>
           <p v-else class="mt-4 text-sm text-fg-muted">{{ t('runtime.idle') }}</p>
-        </div>
+        </BsCard>
 
-        <div class="rounded-card border border-[var(--bs-border)] bg-surface p-4">
+        <BsCard padding="sm">
           <h2 class="font-black text-fg">{{ t('runs.title') }}</h2>
           <p class="text-xs text-fg-muted">{{ t('runs.subtitle') }}</p>
           <div v-if="activeRuns.length" class="mt-4 space-y-3">
@@ -180,26 +182,26 @@ function progress(run: { completed_tasks: number; max_tasks: number }) {
             </div>
           </div>
           <p v-else class="mt-4 text-sm text-fg-muted">{{ t('runs.idle') }}</p>
-        </div>
+        </BsCard>
       </section>
 
-      <section class="rounded-card border border-[var(--bs-border)] bg-surface">
+      <BsCard as="section" padding="none">
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--bs-border)] p-4">
           <div><h2 class="font-black text-fg">{{ t('tasks.title') }}</h2><p class="text-xs text-fg-muted">{{ t('tasks.subtitle') }}</p></div>
           <label class="flex items-center gap-2 text-xs font-semibold text-fg-muted"><input v-model="showCompleted" type="checkbox"> {{ t('tasks.showCompleted') }}</label>
         </div>
-        <div class="overflow-x-auto">
-          <table class="min-w-full text-sm">
-            <thead class="bg-surface-muted text-start text-xs uppercase tracking-wide text-fg-muted"><tr><th class="px-4 py-3">Task</th><th class="px-4 py-3">Suit</th><th class="px-4 py-3">Title</th><th class="px-4 py-3">Status</th><th class="px-4 py-3">Risk / model</th><th class="px-4 py-3">Updated</th></tr></thead>
-            <tbody class="divide-y divide-[var(--bs-border)]">
-              <tr v-for="task in visibleTasks" :key="task.task_id" class="align-top"><td class="px-4 py-3 font-mono text-xs text-fg">{{ task.task_id }}</td><td class="px-4 py-3 text-fg">{{ task.suit_slug }}</td><td class="max-w-xl px-4 py-3 font-semibold text-fg">{{ task.title }}</td><td class="px-4 py-3"><DashboardStatusPill :value="task.status" /></td><td class="px-4 py-3 text-xs text-fg-muted">{{ task.risk_level }} · {{ task.model_profile }}</td><td class="whitespace-nowrap px-4 py-3 text-xs text-fg-muted">{{ formatDate(task.updated_at) }}</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
+        <BsDataTable :value="visibleTasks" data-key="task_id" :label="t('tasks.title')" scroll-label="Tasks" class="overflow-x-auto">
+          <Column field="task_id" header="Task" body-class="font-mono text-xs" />
+          <Column field="suit_slug" header="Suit" />
+          <Column field="title" header="Title" body-class="max-w-xl font-semibold" />
+          <Column field="status" header="Status"><template #body="{ data: task }"><DashboardStatusPill :value="task.status" /></template></Column>
+          <Column header="Risk / model" body-class="text-xs text-fg-muted"><template #body="{ data: task }">{{ task.risk_level }} · {{ task.model_profile }}</template></Column>
+          <Column field="updated_at" header="Updated" body-class="whitespace-nowrap text-xs text-fg-muted"><template #body="{ data: task }">{{ formatDate(task.updated_at) }}</template></Column>
+        </BsDataTable>
+      </BsCard>
 
       <section class="grid gap-4 xl:grid-cols-2">
-        <div class="rounded-card border border-[var(--bs-border)] bg-surface p-4">
+        <BsCard padding="sm">
           <h2 class="font-black text-fg">{{ t('verification.title') }}</h2>
           <p class="text-xs text-fg-muted">{{ t('verification.subtitle') }}</p>
           <div v-if="failingVerification.length" class="mt-4 space-y-3">
@@ -209,9 +211,9 @@ function progress(run: { completed_tasks: number; max_tasks: number }) {
             </div>
           </div>
           <p v-else class="mt-4 text-sm text-fg-muted">{{ t('verification.empty') }}</p>
-        </div>
+        </BsCard>
 
-        <div class="rounded-card border border-[var(--bs-border)] bg-surface p-4">
+        <BsCard padding="sm">
           <h2 class="font-black text-fg">{{ t('decisions.title') }}</h2>
           <p class="text-xs text-fg-muted">{{ t('decisions.subtitle') }}</p>
           <div v-if="openDecisions.length" class="mt-4 space-y-3">
@@ -221,18 +223,23 @@ function progress(run: { completed_tasks: number; max_tasks: number }) {
             </div>
           </div>
           <p v-else class="mt-4 text-sm text-fg-muted">{{ t('decisions.empty') }}</p>
-        </div>
+        </BsCard>
       </section>
 
       <section class="grid gap-4 2xl:grid-cols-2">
-        <div class="rounded-card border border-[var(--bs-border)] bg-surface">
+        <BsCard padding="none">
           <div class="border-b border-[var(--bs-border)] p-4"><h2 class="font-black text-fg">{{ t('executions.title') }}</h2><p class="text-xs text-fg-muted">{{ t('executions.subtitle') }}</p></div>
-          <div class="max-h-[34rem] overflow-auto">
-            <table class="min-w-full text-xs"><thead class="sticky top-0 bg-surface-muted text-fg-muted"><tr><th class="px-3 py-2">ID</th><th class="px-3 py-2">Task</th><th class="px-3 py-2">Status</th><th class="px-3 py-2">Attempt</th><th class="px-3 py-2">Branch</th><th class="px-3 py-2">Started</th></tr></thead><tbody class="divide-y divide-[var(--bs-border)]"><tr v-for="row in data.executions" :key="row.execution_id"><td class="px-3 py-2 font-mono">{{ row.execution_id }}</td><td class="px-3 py-2 font-mono">{{ row.task_id }}</td><td class="px-3 py-2"><DashboardStatusPill :value="row.status" /></td><td class="px-3 py-2">{{ row.attempt }}</td><td class="max-w-56 truncate px-3 py-2 font-mono text-fg-muted">{{ row.branch_name || '—' }}</td><td class="whitespace-nowrap px-3 py-2 text-fg-muted">{{ formatDate(row.started_at || row.created_at) }}</td></tr></tbody></table>
-          </div>
-        </div>
+          <BsDataTable :value="data.executions" data-key="execution_id" label="Executions" density="compact" sticky-header max-height="34rem" scroll-label="Executions">
+            <Column field="execution_id" header="ID" body-class="font-mono text-xs" />
+            <Column field="task_id" header="Task" body-class="font-mono text-xs" />
+            <Column field="status" header="Status"><template #body="{ data: row }"><DashboardStatusPill :value="row.status" /></template></Column>
+            <Column field="attempt" header="Attempt" />
+            <Column field="branch_name" header="Branch" body-class="max-w-56 truncate font-mono text-fg-muted"><template #body="{ data: row }">{{ row.branch_name || '—' }}</template></Column>
+            <Column header="Started" body-class="whitespace-nowrap text-fg-muted"><template #body="{ data: row }">{{ formatDate(row.started_at || row.created_at) }}</template></Column>
+          </BsDataTable>
+        </BsCard>
 
-        <div class="rounded-card border border-[var(--bs-border)] bg-surface">
+        <BsCard padding="none">
           <div class="border-b border-[var(--bs-border)] p-4"><h2 class="font-black text-fg">{{ t('events.title') }}</h2><p class="text-xs text-fg-muted">{{ t('events.subtitle') }}</p></div>
           <div class="max-h-[34rem] overflow-auto divide-y divide-[var(--bs-border)]">
             <details v-for="row in data.events" :key="row.event_id" class="p-3">
@@ -243,12 +250,12 @@ function progress(run: { completed_tasks: number; max_tasks: number }) {
               <pre class="mt-3 overflow-auto rounded-control bg-background p-3 font-mono text-[11px] leading-5 text-fg">{{ JSON.stringify(row.payload, null, 2) }}</pre>
             </details>
           </div>
-        </div>
+        </BsCard>
       </section>
 
-      <section class="rounded-card border border-[var(--bs-border)] bg-surface p-4 text-xs text-fg-muted">
+      <BsCard as="section" padding="sm" class="text-xs text-fg-muted">
         {{ t('dashboard.readOnlyFooter') }}
-      </section>
+      </BsCard>
     </template>
   </main>
 </template>

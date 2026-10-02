@@ -31,13 +31,13 @@ Apply workflow 1 first. Every new feature stacks on the latest verified active w
 
 ## 3. Add or change shared UI or interaction behavior
 
-1. Locate the atomic component/template, token source and interaction-policy owner. Search all consumers.
+1. Search `packages/ui`, `packages/ux`, the explicit package exports and `docs/shared/ui-ownership-manifest.json` before adding UI. Locate the atomic component/template, token source and interaction-policy owner, then search all consumers.
 2. Extend the existing typed interface/configuration/slots where appropriate; avoid per-product forks.
 3. Change tokens at their source and regenerate outputs when visual foundations change.
 4. Implement common presentation in `packages/ui`, interaction logic in `packages/ux` and framework integration in the shared Nuxt layer.
-5. Update the component catalogue, contracts and affected consumers together.
+5. Keep Atomic Design dependencies at the same layer or downward. Update explicit package exports, the component catalogue, contracts, affected consumers and the canonical ownership/migration manifest together.
 6. Verify relevant language/direction/theme, mobile/desktop, keyboard/focus and loading/error/empty/success/permission states in every affected product.
-7. Run affected component/browser checks and boundary/token checks. Stop when the requested change's acceptance criteria pass.
+7. Run affected component/browser checks and `pnpm check`; the workspace check dynamically discovers every `apps/*-suit` application and rejects unclassified local components and shared UI bypasses. Stop when the requested change's acceptance criteria pass.
 
 ## 4. Fix a bug
 

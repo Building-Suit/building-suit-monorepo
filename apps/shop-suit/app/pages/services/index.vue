@@ -116,7 +116,6 @@ const { data: schedulingOptions, pending: schedulingOptionsPending, error: sched
   }, { watch: [currentId, canManage], default: emptyOptions },
 )
 const services = computed(() => servicesPage.value.items)
-const pageCount = computed(() => Math.max(1, Math.ceil(servicesPage.value.total / pageSize)))
 const readErrorMessage = computed(() => error.value instanceof Error && error.value.message.includes('SHOP_PERMISSION_DENIED')
   ? copy.value.access : copy.value.readError)
 
@@ -207,16 +206,14 @@ async function archive(service: Service) {
   <div class="space-y-6">
     <header class="flex flex-wrap items-end justify-between gap-4">
       <div><h1 class="text-3xl font-extrabold tracking-tight">{{ copy.title }}</h1><p class="mt-2 text-sm text-muted-foreground">{{ copy.subtitle }}</p></div>
-      <div v-if="current" class="flex gap-2"><NuxtLink to="/catalog-import" class="ls-btn">{{ copy.import }}</NuxtLink><BsButton v-if="canManage" type="button" @click="openCreate">{{ copy.add }}</BsButton></div>
+      <div v-if="current" class="flex gap-2"><NuxtLink to="/catalog-import" class="ls-btn">{{ copy.import }}</NuxtLink></div>
     </header>
 
-    <div v-if="!current && !shopLoading" class="rounded-2xl border border-border bg-card p-8 text-center text-sm"><p>{{ copy.noShop }}</p><NuxtLink to="/dashboard" class="mt-3 inline-block font-bold text-[var(--bs-link)] underline">{{ copy.dashboard }}</NuxtLink></div>
+    <div v-if="!current && !shopLoading" class="ls-card p-8 text-center text-sm"><p>{{ copy.noShop }}</p><NuxtLink to="/dashboard" class="mt-3 inline-block font-bold text-[var(--bs-link)] underline">{{ copy.dashboard }}</NuxtLink></div>
     <template v-else-if="current">
       <p v-if="actionError && !showForm" role="alert" class="rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm text-[var(--bs-status-error)]">{{ actionError }}</p>
 
-      <BsDialog v-model:visible="showForm" :title="editingId ? copy.edit : copy.add" :dirty="formDirty" :pending="saving">
-        <template #default="{ close }">
-          <BsForm class="grid gap-4 sm:grid-cols-2" :pending="saving" :error="actionError" @submit="save">
+      <BsRecordActionDialog v-model:visible="showForm" :title="editingId ? copy.edit : copy.add" :dirty="formDirty" :pending="saving" :error="actionError" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="save">
             <label class="grid gap-2 text-sm font-bold sm:col-span-2">{{ copy.name }}<input v-model="form.name" type="text" minlength="2" maxlength="160" required class="ls-input"></label>
             <label class="grid gap-2 text-sm font-bold sm:col-span-2">{{ copy.description }}<textarea v-model="form.description" maxlength="1000" rows="2" class="ls-input" /></label>
             <label class="grid gap-2 text-sm font-bold">{{ copy.price }}<input v-model.number="form.price" type="number" min="0" max="999999999.99" step="0.01" required class="ls-input"></label>
@@ -235,24 +232,41 @@ async function archive(service: Service) {
                 <fieldset><legend class="text-sm font-bold">{{ copy.staff }}</legend><label v-for="member in schedulingOptions.staff" :key="member.membershipId" class="mt-2 flex min-h-11 items-center gap-2 text-sm"><input v-model="form.staffMembershipIds" type="checkbox" :value="member.membershipId">{{ member.name }}</label></fieldset>
               </div>
             </fieldset>
-            <div class="flex items-end gap-2 sm:col-span-2"><BsButton type="submit" :pending="saving">{{ saving ? copy.saving : copy.save }}</BsButton><BsButton type="button" severity="secondary" :disabled="saving" @click="close">{{ copy.cancel }}</BsButton></div>
-          </BsForm>
-        </template>
-      </BsDialog>
+      </BsRecordActionDialog>
 
-      <section class="rounded-2xl border border-border bg-card p-5">
-        <div class="grid gap-3 sm:grid-cols-2"><input v-model="search" type="search" :placeholder="copy.search" class="ls-input" :aria-label="copy.search"><select v-model="categoryFilter" :aria-label="copy.category" class="ls-select"><option value="">{{ copy.allCategories }}</option><option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option></select></div>
-        <p v-if="pending" role="status" class="py-5 text-sm text-muted-foreground">{{ copy.loading }}</p>
-        <div v-else-if="error" role="alert" class="py-5 text-sm"><p>{{ readErrorMessage }}</p><BsButton type="button" severity="secondary" class="mt-2" @click="refresh()">{{ copy.retry }}</BsButton></div>
-        <p v-else-if="!services.length" class="py-8 text-center text-sm text-muted-foreground">{{ servicesPage.total ? copy.noResults : copy.empty }}</p>
-        <div v-else class="overflow-x-auto"><BsDataTable :value="services" data-key="id" :row-class="() => 'border-b border-border last:border-0'">
+      <section class="overflow-hidden ls-card">
+        <BsDataTable
+          :value="services"
+          :label="copy.title"
+          :loading="pending"
+          :error="error ? readErrorMessage : null"
+          :capabilities="{ insert: canManage, edit: canManage, archive: canManage }"
+          :action-labels="{ insert: copy.add, edit: copy.edit, archive: copy.archive }"
+          :row-action-pending="(action, service) => action === 'archive' && archivingId === service.id"
+          searchable
+          :search-label="copy.search"
+          lazy
+          paginator
+          :rows="pageSize"
+          :first="(page - 1) * pageSize"
+          :total-records="servicesPage.total"
+          :always-show-paginator="false"
+          data-key="id"
+          :row-class="() => 'border-b border-border last:border-0'"
+          @search="value => search = value"
+          @page="page = $event.page + 1"
+          @retry="refresh()"
+          @create="openCreate"
+          @edit="openEdit"
+          @archive="archive"
+        >
+          <template #filters><BsSelect v-model="categoryFilter" :label="copy.category" :options="[{ id: '', name: copy.allCategories }, ...categories]" option-label="name" option-value="id" /></template>
           <Column header-class="py-3 text-start" body-class="py-3 font-semibold"><template #header>{{ copy.name }}</template><template #body="{ data: service }">{{ service.name }}<p v-if="service.description" class="text-xs font-normal text-muted-foreground">{{ service.description }}</p></template></Column>
           <Column header-class="py-3 text-start" body-class="py-3"><template #header>{{ copy.category }}</template><template #body="{ data: service }">{{ service.categoryName || '—' }}</template></Column>
           <Column header-class="py-3 text-end" body-class="py-3 text-end"><template #header>{{ copy.net }}</template><template #body="{ data: service }">{{ money(netPrice(service)) }}</template></Column>
           <Column header-class="py-3 text-start" body-class="py-3 text-start"><template #header>{{ copy.scheduleSummary }}</template><template #body="{ data: service }"><span v-if="service.schedulingEnabled">{{ service.durationMinutes }} + {{ service.cleanupMinutes }} {{ isArabic ? 'دقيقة' : 'min' }}</span><span v-else>—</span></template></Column>
-          <Column header-class="py-3 text-end" body-class="space-x-2 py-3 text-end"><template #header>{{ copy.edit }}</template><template #body="{ data: service }"><BsButton v-if="canManage" type="button" class="font-bold text-[var(--bs-link)]" @click="openEdit(service)">{{ copy.edit }}</BsButton><BsButton v-if="canManage" type="button" class="font-bold text-[var(--bs-status-error)]" :disabled="archivingId === service.id" @click="archive(service)">{{ copy.archive }}</BsButton></template></Column>
-        </BsDataTable></div>
-        <nav v-if="servicesPage.total > pageSize" class="mt-4 flex items-center justify-between gap-3" :aria-label="copy.title"><BsButton type="button" severity="secondary" :disabled="page <= 1 || pending" @click="page--">{{ copy.previous }}</BsButton><span class="text-sm text-muted-foreground">{{ page }} / {{ pageCount }}</span><BsButton type="button" severity="secondary" :disabled="page >= pageCount || pending" @click="page++">{{ copy.next }}</BsButton></nav>
+          <template #empty><BsStateSurface state="empty" :title="servicesPage.total ? copy.noResults : copy.empty" /></template>
+        </BsDataTable>
       </section>
     </template>
   </div>

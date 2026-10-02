@@ -3,8 +3,8 @@ const { t } = useI18n()
 useHead({ title: () => t('product.name') })
 </script>
 <template>
-  <section class="ls-card mx-auto max-w-3xl space-y-4 p-6">
+  <BsCard as="section" padding="lg" class="mx-auto max-w-3xl">
     <h1 class="text-3xl font-bold">{{ t('welcome') }}</h1>
-    <p class="text-fg-muted">{{ t('description') }}</p>
-  </section>
+    <p class="mt-4 text-fg-muted">{{ t('description') }}</p>
+  </BsCard>
 </template>

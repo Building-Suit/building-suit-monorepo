@@ -225,9 +225,9 @@ async function exportReport() {
     </header>
 
     <p class="rounded-xl border border-[var(--bs-status-warning)]/25 bg-[var(--bs-status-warning-bg)] p-4 text-sm">{{ copy.operational }}</p>
-    <p v-if="report === 'margin'" class="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">{{ copy.fifoNotice }}</p>
+    <p v-if="report === 'margin'" class="ls-card-flat p-4 text-sm text-muted-foreground">{{ copy.fifoNotice }}</p>
 
-    <section class="rounded-2xl border border-border bg-card p-4 sm:p-5" :aria-label="copy.title">
+    <section class="ls-card p-4 sm:p-5" :aria-label="copy.title">
       <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <label class="text-xs font-bold text-muted-foreground">{{ copy.title }}<select v-model="report" class="ls-select mt-1 w-full"><option v-for="option in reportOptions" :key="option.value" :value="option.value">{{ option.label }}</option></select></label>
         <label class="text-xs font-bold text-muted-foreground">{{ copy.location }}<select v-model="locationId" class="ls-select mt-1 w-full"><option value="all">{{ copy.allLocations }}</option><option v-for="location in activeLocations" :key="location.id" :value="location.id">{{ location.name }}</option></select></label>
@@ -239,15 +239,15 @@ async function exportReport() {
     <p v-if="accessError || error" role="alert" class="rounded-xl border border-[var(--bs-status-error)]/30 bg-[var(--bs-status-error-bg)] p-4 text-sm text-[var(--bs-status-error)]">{{ copy.failed }} <BsButton @click="refreshAccess(); refresh()">{{ copy.retry }}</BsButton></p>
     <p v-else-if="exportError" role="alert" class="text-sm text-[var(--bs-status-error)]">{{ exportError }}</p>
     <p v-if="accessPending || pending" role="status" class="text-sm text-muted-foreground">{{ copy.loading }}</p>
-    <p v-else-if="!canView" class="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">{{ copy.denied }}</p>
-    <p v-else-if="costDenied" class="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">{{ copy.costDenied }}</p>
+    <p v-else-if="!canView" class="ls-card-flat p-6 text-sm text-muted-foreground">{{ copy.denied }}</p>
+    <p v-else-if="costDenied" class="ls-card-flat p-6 text-sm text-muted-foreground">{{ copy.costDenied }}</p>
 
     <template v-else>
       <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <NuxtLink v-for="(value, key) in result.summary" v-show="key !== 'costBasis' && key !== 'snapshot'" :key="key" :to="summaryPath(String(key))" class="rounded-2xl border border-border bg-card p-4 transition hover:border-[var(--bs-accent)]"><p class="text-xs font-bold text-muted-foreground">{{ labels[key] || key }}</p><p class="mt-2 text-xl font-extrabold">{{ display(value, summaryFormat(String(key))) }}</p><span class="mt-2 block text-xs font-bold text-[var(--bs-link)]">{{ copy.open }}</span></NuxtLink>
+        <NuxtLink v-for="(value, key) in result.summary" v-show="key !== 'costBasis' && key !== 'snapshot'" :key="key" :to="summaryPath(String(key))" class="ls-card p-4 transition hover:border-[var(--bs-accent)]"><p class="text-xs font-bold text-muted-foreground">{{ labels[key] || key }}</p><p class="mt-2 text-xl font-extrabold">{{ display(value, summaryFormat(String(key))) }}</p><span class="mt-2 block text-xs font-bold text-[var(--bs-link)]">{{ copy.open }}</span></NuxtLink>
       </section>
 
-      <section id="report-results" class="scroll-mt-24 overflow-hidden rounded-2xl border border-border bg-card">
+      <section id="report-results" class="scroll-mt-24 overflow-hidden ls-card">
         <div class="overflow-x-auto">
           <BsDataTable :value="result.items" data-key="id" :row-class="() => 'border-b border-border last:border-0'">
             <Column v-for="column in columns" :key="column.key" header-class="px-4 py-3 text-start" body-class="px-4 py-3 text-start whitespace-nowrap">

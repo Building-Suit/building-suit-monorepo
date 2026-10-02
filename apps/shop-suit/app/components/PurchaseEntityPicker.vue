@@ -38,14 +38,12 @@ function choose(value: string | number | null) {
 
 <template>
   <div class="min-w-0 space-y-2" role="group" :aria-label="label">
-    <label class="grid gap-1 text-sm font-bold">{{ copy.search }} · {{ label }}<input v-model="search" type="search" maxlength="160" class="ls-input"></label>
+    <BsField v-slot="field" :label="`${copy.search} · ${label}`" :for="`purchase-${kind}-search`">
+      <BsInput :id="`purchase-${kind}-search`" v-model="search" type="search" maxlength="160" :aria-describedby="field.describedby" />
+    </BsField>
     <BsSelect :model-value="model" :label="label" :options="options" option-label="name" option-value="id" :show-clear="clearable" :disabled="pending || !!error" @update:model-value="choose" />
-    <p v-if="pending" role="status" class="text-sm">{{ copy.loading }}</p>
-    <div v-else-if="error" role="alert" class="text-sm">{{ copy.failed }} <BsButton @click="refresh()">{{ copy.retry }}</BsButton></div>
-    <div v-if="data.total > pageSize" class="flex flex-wrap items-center gap-2">
-      <BsButton :disabled="pending || page <= 1" :aria-label="`${copy.previous} · ${label}`" @click="page--">{{ copy.previous }}</BsButton>
-      <span class="text-sm" aria-live="polite">{{ page }} / {{ Math.ceil(data.total / pageSize) }}</span>
-      <BsButton :disabled="pending || page * pageSize >= data.total" :aria-label="`${copy.next} · ${label}`" @click="page++">{{ copy.next }}</BsButton>
-    </div>
+    <BsStateSurface v-if="pending" state="loading" :title="copy.loading" />
+    <BsStateSurface v-else-if="error" state="error" :title="copy.failed" :action-label="copy.retry" @action="refresh()" />
+    <BsPagination v-if="!pending && data.total > pageSize" v-model:page="page" :page-size="pageSize" :total="data.total" :label="label" :previous-label="copy.previous" :next-label="copy.next" />
   </div>
 </template>

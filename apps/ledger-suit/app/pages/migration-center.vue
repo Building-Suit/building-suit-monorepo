@@ -18,6 +18,8 @@ const center = useMigrationCenter()
 const selectedProjectId = ref('')
 const createOpen = ref(false)
 const createForm = reactive({ name: '', sourceType: 'excel_csv' as MigrationSourceType, cutoverDate: '', depth: 'fast_cutover' as MigrationDepth })
+const createError = ref('')
+const { dirty: createDirty } = useRecordAction(() => createForm, computed(() => createOpen.value))
 const mappingDecisions = ref<MigrationMappingDecision[]>([])
 const reviewNote = ref('')
 const selectedOpeningId = ref('')
@@ -39,6 +41,7 @@ const { data: references } = useLazyAsyncData(referenceKey, async () => {
 
 const activeAccounts = computed(() => references.value.accounts.filter(account => !account.is_archived && account.account_role === 'posting'))
 const activeCounterparties = computed(() => references.value.counterparties.filter(item => !item.is_archived))
+const projectOptions = computed(() => center.projects.value.map(project => ({ id: project.id, label: `${project.name} · ${project.cutover_date}` })))
 const progress = computed(() => center.context.value ? migrationProgress(center.context.value, center.review.value) : [])
 const openingReview = computed(() => center.review.value?.modules.opening_trial_balance)
 const canApprove = computed(() => can('migrations.review') && can('opening_balances.approve') && center.review.value?.valid && !center.review.value.approved && approvalAcknowledged.value)
@@ -80,12 +83,18 @@ async function act(action: () => Promise<unknown>, success?: string) {
 }
 
 async function createProject() {
-  await act(async () => {
+  createError.value = ''
+  try {
     const id = await center.createProject(createForm)
     selectedProjectId.value = id
     createOpen.value = false
     createForm.name = ''
-  }, 'migration.created')
+    toasts.success(t('migration.successTitle'), t('migration.created'))
+  }
+  catch (failure) {
+    createError.value = describeError(failure)
+    toasts.error(t('migration.errorTitle'), createError.value)
+  }
 }
 
 async function selectSource(event: Event) {
@@ -135,22 +144,20 @@ function isApplicable(key: string) {
       <section class="ls-card space-y-4 p-5" aria-labelledby="migration-projects">
         <div class="flex flex-wrap items-end justify-between gap-3">
           <FloatingField class="min-w-64 flex-1" :label="t('migration.project')">
-            <select id="migration-project" v-model="selectedProjectId" class="ls-input">
-              <option value="">{{ t('migration.chooseProject') }}</option>
-              <option v-for="project in center.projects.value" :key="project.id" :value="project.id">{{ project.name }} · {{ project.cutover_date }}</option>
-            </select>
+            <BsSelect id="migration-project" v-model="selectedProjectId" :label="t('migration.project')" :placeholder="t('migration.chooseProject')" :options="projectOptions" option-label="label" option-value="id" />
           </FloatingField>
-          <button v-if="can('migrations.manage')" type="button" class="ls-btn ls-btn-primary" @click="createOpen = !createOpen">{{ t('migration.newProject') }}</button>
+          <BsButton v-if="can('migrations.manage')" type="button" variant="primary" @click="createError = ''; createOpen = true">{{ t('migration.newProject') }}</BsButton>
         </div>
-        <form v-if="createOpen" class="grid gap-4 border-t border-line pt-4 md:grid-cols-2" @submit.prevent="createProject">
+      </section>
+      <BsRecordActionDialog v-if="createOpen" v-model:visible="createOpen" :title="t('migration.newProject')" :dirty="createDirty" :pending="center.pending.value === 'create'" :error="createError" size="lg" :submit-label="t('migration.createProject')" :cancel-label="t('common.cancel')" @submit="createProject">
+        <div class="grid gap-4 md:grid-cols-2">
           <FloatingField :label="t('migration.projectName')"><input v-model="createForm.name" class="ls-input" required maxlength="160"></FloatingField>
           <FloatingField :label="t('migration.sourceType')"><select v-model="createForm.sourceType" class="ls-input"><option value="excel_csv">{{ t('migration.sourceTypes.excel_csv') }}</option><option value="other_system_export">{{ t('migration.sourceTypes.other_system_export') }}</option><option value="accountant_paper_workbook">{{ t('migration.sourceTypes.accountant_paper_workbook') }}</option></select></FloatingField>
           <FloatingField :label="t('migration.cutoverDate')"><input v-model="createForm.cutoverDate" class="ls-input" type="date" required></FloatingField>
           <FloatingField :label="t('migration.depth')"><select v-model="createForm.depth" class="ls-input"><option value="fast_cutover">{{ t('migration.depths.fast_cutover') }}</option><option value="current_fiscal_year">{{ t('migration.depths.current_fiscal_year') }}</option><option value="full_history">{{ t('migration.depths.full_history') }}</option></select></FloatingField>
           <p class="text-sm text-fg-muted md:col-span-2">{{ t('migration.fastCutoverPolicy') }}</p>
-          <button class="ls-btn ls-btn-primary justify-self-start" :disabled="Boolean(center.pending.value)">{{ center.pending.value === 'create' ? t('common.saving') : t('migration.createProject') }}</button>
-        </form>
-      </section>
+        </div>
+      </BsRecordActionDialog>
 
       <p v-if="center.error.value" class="ls-error" role="alert">{{ t('migration.loadFailed') }}</p>
       <SectionSkeleton v-else-if="center.pending.value === 'context'" variant="table" :rows="6" />
@@ -170,9 +177,9 @@ function isApplicable(key: string) {
         <section class="ls-card space-y-4 p-5" aria-labelledby="migration-source">
           <div><h2 id="migration-source" class="text-h2 font-bold">{{ t('migration.sections.source') }}</h2><p class="text-sm text-fg-muted">{{ t('migration.sourceHint') }}</p></div>
           <div class="flex flex-wrap gap-2">
-            <button type="button" class="ls-btn ls-btn-sm" @click="downloadCsv(`migration-source-${locale}.csv`, migrationSourceTemplate(locale))">{{ t('migration.sourceTemplate') }}</button>
-            <button type="button" class="ls-btn ls-btn-sm" @click="downloadCsv('migration-open-items.csv', migrationOpenItemsTemplate())">{{ t('migration.openItemsTemplate') }}</button>
-            <button type="button" class="ls-btn ls-btn-sm" @click="downloadCsv('migration-operational-registers.csv', migrationOperationalTemplate())">{{ t('migration.operationalTemplate') }}</button>
+            <BsButton type="button" class="ls-btn ls-btn-sm" @click="downloadCsv(`migration-source-${locale}.csv`, migrationSourceTemplate(locale))">{{ t('migration.sourceTemplate') }}</BsButton>
+            <BsButton type="button" class="ls-btn ls-btn-sm" @click="downloadCsv('migration-open-items.csv', migrationOpenItemsTemplate())">{{ t('migration.openItemsTemplate') }}</BsButton>
+            <BsButton type="button" class="ls-btn ls-btn-sm" @click="downloadCsv('migration-operational-registers.csv', migrationOperationalTemplate())">{{ t('migration.operationalTemplate') }}</BsButton>
             <NuxtLink to="/opening-balances" class="ls-btn ls-btn-sm">{{ t('migration.openingTemplate') }}</NuxtLink>
           </div>
           <label v-if="can('migrations.manage') && !center.context.value.approval" class="ls-btn ls-btn-primary w-fit cursor-pointer" for="migration-source-file">{{ t('migration.uploadSource') }}</label>
@@ -200,7 +207,7 @@ function isApplicable(key: string) {
             <Column :header="t('migration.ledgerTarget')"><template #body="{ data }"><select class="ls-input min-w-64" :value="mappingTarget(data)" @change="onMappingTarget(data, $event)"><option value="">{{ t('migration.chooseTarget') }}</option><option v-for="option in mappingOptions(data)" :key="option.id" :value="option.id">{{ option.label }}</option><option v-if="data.source_kind !== 'account'" value="__create__">{{ t('migration.reviewedCreation') }}</option></select></template></Column>
           </BsDataTable>
           <FloatingField :label="t('migration.reviewNote')"><textarea v-model="reviewNote" class="ls-input min-h-24" minlength="8" maxlength="1000" /></FloatingField>
-          <button type="button" class="ls-btn ls-btn-primary" :disabled="!mappingReady || Boolean(center.pending.value)" @click="act(() => center.reviewMappings(mappingDecisions, reviewNote), 'migration.mappingSaved')">{{ center.pending.value === 'mapping' ? t('common.saving') : t('migration.validateMapping') }}</button>
+          <BsButton type="button" class="ls-btn ls-btn-primary" :disabled="!mappingReady || Boolean(center.pending.value)" @click="act(() => center.reviewMappings(mappingDecisions, reviewNote), 'migration.mappingSaved')">{{ center.pending.value === 'mapping' ? t('common.saving') : t('migration.validateMapping') }}</BsButton>
         </section>
 
         <section v-else-if="center.context.value.mapping_entries.length" class="ls-card space-y-4 p-5" aria-labelledby="migration-mapping-reviewed">
@@ -217,7 +224,7 @@ function isApplicable(key: string) {
           <div><h2 id="migration-opening" class="text-h2 font-bold">{{ t('migration.sections.opening') }}</h2><p class="text-sm text-fg-muted">{{ t('migration.openingHint') }}</p></div>
           <div v-if="!center.context.value.project.opening_balance_batch_id" class="flex flex-wrap items-end gap-3">
             <FloatingField class="min-w-72 flex-1" :label="t('migration.openingBatch')"><select v-model="selectedOpeningId" class="ls-input"><option value="">{{ t('migration.chooseOpening') }}</option><option v-for="batch in center.context.value.opening_candidates" :key="batch.id" :value="batch.id">{{ batch.source_filename }} · {{ t(`opening.status.${batch.status}`) }}</option></select></FloatingField>
-            <button type="button" class="ls-btn ls-btn-primary" :disabled="!selectedOpeningId || Boolean(center.pending.value)" @click="act(() => center.linkOpeningBalance(selectedOpeningId), 'migration.openingLinked')">{{ t('migration.linkOpening') }}</button>
+            <BsButton type="button" class="ls-btn ls-btn-primary" :disabled="!selectedOpeningId || Boolean(center.pending.value)" @click="act(() => center.linkOpeningBalance(selectedOpeningId), 'migration.openingLinked')">{{ t('migration.linkOpening') }}</BsButton>
             <NuxtLink to="/opening-balances" class="ls-btn">{{ t('migration.prepareOpening') }}</NuxtLink>
           </div>
           <p v-else class="rounded-control bg-surface-muted p-3 text-sm">{{ t('migration.openingLinkedStatus', { status: t(`opening.status.${center.context.value.opening_batch?.status}`) }) }}</p>
@@ -228,7 +235,7 @@ function isApplicable(key: string) {
           <div v-if="center.context.value.operational_batches[0]" class="grid gap-2 sm:grid-cols-5">
             <p v-for="key in ['open_items','assets','bank','inventory','tax']" :key="key" class="rounded-control border border-line p-3 text-sm"><span class="font-semibold">{{ t(`migration.moduleNames.${key}`) }}</span><br>{{ isApplicable(key) ? t('migration.applicable') : t('migration.notApplicable') }}</p>
           </div>
-          <button v-else-if="center.context.value.project.status === 'validated' && can('migrations.manage')" type="button" class="ls-btn" :disabled="Boolean(center.pending.value)" @click="act(() => center.markModulesNotApplicable(), 'migration.modulesSaved')">{{ t('migration.allModulesNotApplicable') }}</button>
+          <BsButton v-else-if="center.context.value.project.status === 'validated' && can('migrations.manage')" type="button" class="ls-btn" :disabled="Boolean(center.pending.value)" @click="act(() => center.markModulesNotApplicable(), 'migration.modulesSaved')">{{ t('migration.allModulesNotApplicable') }}</BsButton>
           <p class="rounded-control border border-warning bg-[var(--bs-status-warning-bg)] p-3 text-sm">{{ t('migration.historyPolicy') }}</p>
         </section>
 
@@ -263,7 +270,7 @@ function isApplicable(key: string) {
           <template v-else>
             <label class="flex items-start gap-2 text-sm"><input v-model="approvalAcknowledged" type="checkbox" class="mt-1"><span>{{ t('migration.approvalAcknowledgement', { revision: center.review.value.source_revision, date: center.review.value.cutover_date }) }}</span></label>
             <p class="text-sm text-fg-muted">{{ t('migration.correctionPolicy') }}</p>
-            <button type="button" class="ls-btn ls-btn-primary" :disabled="!canApprove || Boolean(center.pending.value)" @click="act(() => center.approve(), 'migration.approvalSuccess')">{{ center.pending.value === 'approve' ? t('common.saving') : t('migration.finalApprove') }}</button>
+            <BsButton type="button" class="ls-btn ls-btn-primary" :disabled="!canApprove || Boolean(center.pending.value)" @click="act(() => center.approve(), 'migration.approvalSuccess')">{{ center.pending.value === 'approve' ? t('common.saving') : t('migration.finalApprove') }}</BsButton>
           </template>
         </section>
       </template>

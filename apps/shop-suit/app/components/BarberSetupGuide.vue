@@ -31,16 +31,16 @@ const steps = computed(() => [
 </script>
 
 <template>
-  <section v-if="isOwner && current?.business_mode !== 'product'" class="rounded-2xl border border-border bg-card p-4 sm:p-5" aria-labelledby="barber-setup-title">
+  <BsCard v-if="isOwner && current?.business_mode !== 'product'" as="section" padding="md" aria-labelledby="barber-setup-title">
     <h2 id="barber-setup-title" class="text-lg font-extrabold">{{ copy.title }}</h2>
     <p class="mt-2 text-sm text-muted-foreground">{{ copy.help }}</p>
     <ol class="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
       <li v-for="(step, index) in steps" :key="step.to">
-        <NuxtLink :to="step.to" class="flex h-full min-h-11 gap-3 rounded-xl border border-border p-3 hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+        <BsButton as="NuxtLink" :to="step.to" variant="tile" class="flex h-full gap-3">
           <span class="font-extrabold" aria-hidden="true">{{ index + 1 }}.</span>
           <span><strong class="block text-sm text-[var(--bs-link)]">{{ step.title }}</strong><span class="mt-1 block text-sm text-muted-foreground">{{ step.help }}</span></span>
-        </NuxtLink>
+        </BsButton>
       </li>
     </ol>
-  </section>
+  </BsCard>
 </template>

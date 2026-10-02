@@ -42,9 +42,12 @@ test('contact intake and paid-plan boundary include all required protections and
 })
 
 test('Shop logo resolves canonical light and dark marks and wordmarks', async () => {
-  const appLogo = await read('app/components/AppLogo.vue')
-  assert.match(appLogo, /asset-prefix="\/brand\/shop-suit"/)
-  assert.doesNotMatch(appLogo, /monogram=/)
+  for (const layout of ['auth', 'default', 'landing', 'platform-admin']) {
+    const source = await read(`app/layouts/${layout}.vue`)
+    assert.match(source, /<BsProductLogo/)
+    assert.match(source, /asset-prefix="\/brand\/shop-suit"/)
+    assert.doesNotMatch(source, /<AppLogo/)
+  }
   for (const asset of ['mark-light', 'mark-dark', 'wordmark-light', 'wordmark-dark']) {
     const svg = await read(`../../packages/brand/assets/shop-suit-${asset}.svg`)
     assert.match(svg, /<svg/)

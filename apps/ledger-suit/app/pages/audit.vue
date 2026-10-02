@@ -175,9 +175,9 @@ watch(currentId, () => fetchRows(), { immediate: true })
       </div>
 
       <div v-if="hasMore" class="flex justify-center">
-        <button type="button" class="ls-btn" :disabled="loadingMore" @click="fetchRows(true)">
+        <BsButton type="button" class="ls-btn" :disabled="loadingMore" @click="fetchRows(true)">
           {{ t('audit.loadMore') }}
-        </button>
+        </BsButton>
       </div>
     </template>
   </div>
