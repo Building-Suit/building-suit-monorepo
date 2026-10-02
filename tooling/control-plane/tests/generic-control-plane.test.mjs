@@ -15,6 +15,10 @@ import {
   fingerprint,
 } from '../runner/task-preflight.mjs'
 import {
+  acceptanceCriteriaDigest,
+  evaluateParentSatisfaction,
+} from '../runner/parent-satisfaction.mjs'
+import {
   applicationScopeSelected,
   commandResultStatus,
   customCheckSelection,
@@ -439,6 +443,136 @@ test('supervisor reevaluates preflight waits when runtime configuration changes'
     condition: { fingerprint: planned.fingerprint, preflight: true },
   }
   assert.equal(planSupervisorStep(fixture).command, 'task-run')
+})
+
+function parentSatisfactionFixture() {
+  const criteria = ['The requested behavior is verified.']
+  const packet = {
+    task: {
+      task_id: 'CP-TEST-001',
+      status: 'in_progress',
+      acceptance_criteria: criteria,
+      parent_satisfaction: {
+        source_task_id: 'CP-SOURCE-001',
+        verification_run_id: 71,
+        acceptance_criteria_digest: acceptanceCriteriaDigest(criteria),
+        reason: 'The verified source implementation is contained in the resolved parent.',
+      },
+    },
+  }
+  const sourceEvidence = {
+    task_id: 'CP-SOURCE-001',
+    task_status: 'complete',
+    execution_id: 41,
+    execution_status: 'succeeded',
+    commit_sha: '2'.repeat(40),
+    verification_run_id: 71,
+    verification_status: 'passed',
+    checks: [{
+      check_name: 'focused-tests', command: 'node --test', status: 'pass',
+      exit_code: 0, summary: 'passed', required: true,
+    }],
+  }
+  return {
+    packet,
+    parent: { parent_branch: 'codex/control-plane/source', parent_sha: '3'.repeat(40) },
+    sourceEvidence,
+    sourceCommitInParent: true,
+    executions: [],
+    publications: [],
+  }
+}
+
+test('parent satisfaction requires deterministic acceptance and passed verification evidence', () => {
+  const fixture = parentSatisfactionFixture()
+  const evaluation = evaluateParentSatisfaction(fixture)
+  assert.equal(evaluation.satisfied, true)
+  assert.equal(evaluation.parent_sha, '3'.repeat(40))
+  assert.equal(evaluation.source_verification_run_id, 71)
+  assert.equal(evaluation.verification_evidence[0].status, 'pass')
+
+  const planFixture = supervisorFixture()
+  planFixture.parent_satisfaction = evaluation
+  const plan = planSupervisorStep(planFixture)
+  assert.equal(plan.command, 'complete-parent-satisfied')
+  assert.equal(plan.reason, 'parent_satisfaction_proven')
+})
+
+test('empty diff or incomplete evidence never proves parent satisfaction', () => {
+  const missingContract = parentSatisfactionFixture()
+  delete missingContract.packet.task.parent_satisfaction
+  assert.equal(
+    evaluateParentSatisfaction(missingContract).reason,
+    'parent_satisfaction_contract_missing',
+  )
+
+  const failedCheck = parentSatisfactionFixture()
+  failedCheck.sourceEvidence.checks[0].status = 'fail'
+  assert.equal(
+    evaluateParentSatisfaction(failedCheck).reason,
+    'required_verification_evidence_not_passed',
+  )
+
+  const noChange = classifySupervisorFailure({
+    command: 'task-publish', payload: { error: 'no_publishable_changes' }, attempt: 1, maxAttempts: 5,
+  })
+  assert.equal(noChange.command, 'handle-no-publishable-changes')
+})
+
+test('parent advancement reconciles verified source lineage deterministically', () => {
+  const absent = parentSatisfactionFixture()
+  absent.sourceCommitInParent = false
+  assert.equal(
+    evaluateParentSatisfaction(absent).reason,
+    'source_commit_not_in_resolved_parent',
+  )
+
+  const advanced = parentSatisfactionFixture()
+  advanced.parent.parent_sha = '4'.repeat(40)
+  const first = evaluateParentSatisfaction(advanced)
+  const repeated = evaluateParentSatisfaction(structuredClone(advanced))
+  assert.equal(first.satisfied, true)
+  assert.equal(first.fingerprint, repeated.fingerprint)
+})
+
+test('existing task branches, publications, or executions are not parent satisfaction', () => {
+  for (const fixture of [
+    { taskLineage: { local_branch: true }, reason: 'task_lineage_already_exists' },
+    { publications: [{ pull_request_id: 9 }], reason: 'task_lineage_already_exists' },
+    { executions: [{ execution_id: 8 }], reason: 'implementation_execution_already_exists' },
+  ]) {
+    const input = parentSatisfactionFixture()
+    Object.assign(input, fixture)
+    assert.equal(evaluateParentSatisfaction(input).reason, fixture.reason)
+  }
+})
+
+test('parent-satisfaction persistence is idempotent and preserves no-change compatibility', async () => {
+  const migration = await readFile(
+    new URL('../sql/020_parent_satisfaction.sql', import.meta.url),
+    'utf8',
+  )
+  const noChangeMigration = await readFile(
+    new URL('../sql/017_no_change_observability.sql', import.meta.url),
+    'utf8',
+  )
+  assert.match(migration, /UNIQUE \(task_id, fingerprint\)/)
+  assert.match(migration, /ON CONFLICT \(task_id, fingerprint\) DO NOTHING/)
+  assert.match(migration, /parent_satisfaction_evaluated/)
+  assert.match(migration, /parent_satisfaction_completed/)
+  assert.match(migration, /source evidence is not authoritative/)
+  assert.match(migration, /already has implementation or publication lineage/)
+  assert.match(migration, /status = 'complete'/)
+  assert.match(noChangeMigration, /allow_no_change_completion/)
+  assert.match(noChangeMigration, /implementation_no_changes/)
+})
+
+test('supervisor records satisfaction before completion and can resume without implementation', async () => {
+  const runner = await readFile(new URL('../runner/bs-agent.mjs', import.meta.url), 'utf8')
+  const supervisor = runner.slice(runner.indexOf('function taskSupervisor()'), runner.indexOf('function taskEngine()'))
+  assert.ok(supervisor.indexOf('evaluateSupervisorParentSatisfaction') < supervisor.indexOf('runExecutionPreflight(snapshot)'))
+  assert.match(supervisor, /parent-satisfaction:\$\{plan\.parent_satisfaction\.fingerprint\}/)
+  assert.ok(supervisor.indexOf('recordSupervisorRecovery(snapshot, plan') < supervisor.indexOf('completeParentSatisfied(taskId'))
 })
 
 function executionPreflightFixture() {

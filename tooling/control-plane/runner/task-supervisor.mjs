@@ -72,6 +72,13 @@ export function supervisorStateFingerprint(snapshot) {
     ],
     failure: failure && [failure.failure_id, failure.failure_class, failure.recovery_action, failure.resolved_at],
     publication: publication && [publication.pull_request_id, publication.pr_number, publication.state, publication.head_sha],
+    parent_satisfaction: snapshot.parent_satisfaction && [
+      snapshot.parent_satisfaction.fingerprint,
+      snapshot.parent_satisfaction.satisfied,
+      snapshot.parent_satisfaction.parent_branch,
+      snapshot.parent_satisfaction.parent_sha,
+      snapshot.parent_satisfaction.reason,
+    ],
   })).digest('hex')
 }
 
@@ -151,6 +158,16 @@ export function planSupervisorStep(snapshot) {
 
   if (task.status === 'in_progress') {
     if (!execution) {
+      if (snapshot.parent_satisfaction?.satisfied === true) {
+        return decision('act', 'complete-no-changes', 'no-change', 'parent_satisfaction_proven', {
+          command: 'complete-parent-satisfied',
+          execution,
+          verification,
+          publication,
+          parent_satisfaction: snapshot.parent_satisfaction,
+          fingerprint,
+        })
+      }
       return decision('act', 'retry', 'transient-infrastructure', 'implementation_required', {
         command: 'task-run', execution, verification, publication, fingerprint,
       })

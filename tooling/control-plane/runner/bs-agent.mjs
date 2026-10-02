@@ -36,6 +36,7 @@ import {
   evaluateExecutionPreflight,
   fingerprint as preflightFingerprint,
 } from './task-preflight.mjs'
+import { evaluateParentSatisfaction } from './parent-satisfaction.mjs'
 const automationCodexHome =
   process.env.BS_CODEX_HOME ??
   path.join(
@@ -4353,6 +4354,154 @@ function supervisorSnapshot(taskId) {
 }
 
 
+function parentSatisfactionSourceEvidence(contract) {
+  if (!validTaskId(contract?.source_task_id)) return null
+  const result = controlQuery(
+    `
+      WITH selected_run AS (
+        SELECT vr.*
+        FROM control.verification_runs vr
+        JOIN control.executions e USING (execution_id)
+        WHERE e.task_id = :'source_task_id'
+          AND vr.status = 'passed'
+          AND (
+            NULLIF(:'verification_run_id', '')::bigint IS NULL
+            OR vr.verification_run_id = NULLIF(:'verification_run_id', '')::bigint
+          )
+        ORDER BY vr.verification_run_id DESC
+        LIMIT 1
+      )
+      SELECT COALESCE((
+        SELECT jsonb_build_object(
+          'task_id', t.task_id,
+          'task_status', t.status,
+          'execution_id', e.execution_id,
+          'execution_status', e.status,
+          'commit_sha', e.commit_sha,
+          'lineage_sha', CASE
+            WHEN pr.state = 'merged'
+              AND pr.head_sha = e.commit_sha
+              AND pr.merge_sha IS NOT NULL
+            THEN pr.merge_sha
+            ELSE e.commit_sha
+          END,
+          'publication_state', pr.state,
+          'publication_head_sha', pr.head_sha,
+          'publication_merge_sha', pr.merge_sha,
+          'verification_run_id', vr.verification_run_id,
+          'verification_status', vr.status,
+          'checks', COALESCE((
+            SELECT jsonb_agg(jsonb_build_object(
+              'check_name', v.check_name,
+              'command', v.command,
+              'status', v.status,
+              'exit_code', v.exit_code,
+              'summary', v.summary,
+              'required', COALESCE((v.metadata->>'required')::boolean, true)
+            ) ORDER BY v.verification_id)
+            FROM control.verification_results v
+            WHERE v.verification_run_id = vr.verification_run_id
+          ), '[]'::jsonb)
+        )
+        FROM selected_run vr
+        JOIN control.executions e USING (execution_id)
+        JOIN control.tasks t ON t.task_id = e.task_id
+        LEFT JOIN LATERAL (
+          SELECT state, head_sha, merge_sha
+          FROM control.pull_requests
+          WHERE task_id = t.task_id
+          ORDER BY pull_request_id DESC
+          LIMIT 1
+        ) pr ON true
+      ), 'null'::jsonb);
+    `,
+    {
+      source_task_id: contract.source_task_id,
+      verification_run_id: String(contract.verification_run_id ?? ''),
+    },
+  )
+  return parseControlJson(result)
+}
+
+
+function recordParentSatisfactionEvaluation(taskId, evaluation) {
+  const result = controlQuery(
+    `
+      SELECT control.record_parent_satisfaction_evaluation(
+        :'task_id', :'fingerprint', :'evidence'::jsonb, 'runner'
+      );
+    `,
+    {
+      task_id: taskId,
+      fingerprint: evaluation.fingerprint,
+      evidence: JSON.stringify(evaluation),
+    },
+  )
+  return parseControlJson(result)
+}
+
+
+function evaluateSupervisorParentSatisfaction(snapshot) {
+  const task = snapshot.packet?.task
+  if (task?.status !== 'in_progress' || (snapshot.executions ?? []).length > 0) return snapshot
+
+  const project = projectRuntime(snapshot.packet)
+  let parent = null
+  try {
+    parent = resolveStackParent(snapshot.packet.suit.stack_key, project)
+  }
+  catch {
+    // The evaluator records an unavailable parent and lets execution preflight
+    // provide the authoritative repository recovery route.
+  }
+
+  const expectedBranch = `codex/${snapshot.packet.suit.stack_key}/${task.task_id.toLowerCase()}`
+  const repositoryRoot = path.resolve(repoRoot, project.repository_root)
+  const localBranch = gitCheck(repositoryRoot, [
+    'show-ref', '--verify', '--quiet', `refs/heads/${expectedBranch}`,
+  ]).ok
+  const remoteBranch = gitCheck(repositoryRoot, [
+    'show-ref', '--verify', '--quiet', `refs/remotes/origin/${expectedBranch}`,
+  ]).ok
+  const sourceEvidence = parentSatisfactionSourceEvidence(task.parent_satisfaction)
+  const sourceCommitInParent = Boolean(
+    sourceEvidence?.lineage_sha && parent?.parent_sha &&
+    gitCheck(repositoryRoot, [
+      'merge-base', '--is-ancestor', sourceEvidence.lineage_sha, parent.parent_sha,
+    ]).ok,
+  )
+  const evaluation = evaluateParentSatisfaction({
+    packet: snapshot.packet,
+    parent,
+    taskLineage: {
+      local_branch: localBranch,
+      remote_branch: remoteBranch,
+      pull_request: parent?.parent_branch === expectedBranch ? parent.parent_pr : null,
+    },
+    sourceEvidence,
+    sourceCommitInParent,
+    executions: snapshot.executions,
+    publications: snapshot.publications,
+  })
+
+  recordParentSatisfactionEvaluation(task.task_id, evaluation)
+  return { ...snapshot, parent_satisfaction: evaluation }
+}
+
+
+function completeParentSatisfied(taskId, evaluation) {
+  const result = controlQuery(
+    `
+      SELECT control.complete_parent_satisfied(
+        :'task_id', :'fingerprint', 'runner'
+      );
+    `,
+    { task_id: taskId, fingerprint: evaluation.fingerprint },
+  )
+  return parseControlJson(result)
+}
+
+
 function gitCheck(cwd, gitArgs) {
   const result = execute('git', gitArgs, { cwd })
   return {
@@ -4697,6 +4846,7 @@ function taskSupervisor() {
       return
     }
 
+    snapshot = evaluateSupervisorParentSatisfaction(snapshot)
     let plan = planSupervisorStep(snapshot)
     recordSupervisorRecovery(snapshot, plan)
 
@@ -4724,7 +4874,7 @@ function taskSupervisor() {
     leaseAcquired = true
 
     for (let step = 1; step <= 16; step++) {
-      snapshot = supervisorSnapshot(taskId)
+      snapshot = evaluateSupervisorParentSatisfaction(supervisorSnapshot(taskId))
       plan = planSupervisorStep(snapshot)
 
       recordSupervisorRecovery(snapshot, plan, {
@@ -4785,7 +4935,22 @@ function taskSupervisor() {
       }
 
       let child
-      if (plan.command === 'handle-no-publishable-changes') {
+      if (plan.command === 'complete-parent-satisfied') {
+        recordSupervisorRecovery(snapshot, plan, {
+          idempotencyKey: `parent-satisfaction:${plan.parent_satisfaction.fingerprint}`,
+          leaseOwner: owner,
+          leaseToken: token,
+          leaseExpiresAt,
+          condition: {
+            parent_satisfaction: plan.parent_satisfaction,
+            step,
+          },
+          metadata: { parent_satisfaction: true },
+        })
+        const response = completeParentSatisfied(taskId, plan.parent_satisfaction)
+        child = { result: { code: 0, stderr: '' }, payload: { ok: true, completion: response } }
+      }
+      else if (plan.command === 'handle-no-publishable-changes') {
         const response = handleNoPublishableChanges(taskId)
         child = { result: { code: 0, stderr: '' }, payload: { ok: response?.action !== 'blocked', resolution: response } }
       }
