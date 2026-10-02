@@ -381,7 +381,7 @@ async function saveReceiptSettings() {
       >
         <Column field="name" :header="copy.locationName" />
         <Column :header="copy.locationCode"><template #body="{ data: location }">{{ location.code || location.address || '—' }}</template></Column>
-        <Column :header="copy.defaultLocation"><template #body="{ data: location }"><StatusBadge v-if="location.is_default" status="default" :label="copy.defaultLocation" tone="neutral" /><StatusBadge v-else-if="location.status === 'archived'" status="archived" :label="copy.archivedLocation" tone="neutral" /></template></Column>
+        <Column :header="copy.defaultLocation"><template #body="{ data: location }"><BsStatusBadge v-if="location.is_default" status="default" :label="copy.defaultLocation" tone="neutral" /><BsStatusBadge v-else-if="location.status === 'archived'" status="archived" :label="copy.archivedLocation" tone="neutral" /></template></Column>
         <template #row-actions="{ row: location }"><BsButton v-if="canManage && location.status === 'archived'" variant="link" :disabled="locationPending || locationCapacityFull" @click="restoreLocation(location.id)">{{ copy.restoreLocation }}</BsButton></template>
       </BsDataTable>
       <BsRecordActionDialog v-model:visible="locationDialogOpen" :title="editingLocationId ? copy.editLocation : copy.addLocation" :dirty="locationDirty" :pending="locationPending" :error="locationError" :submit-label="editingLocationId ? copy.saveLocation : copy.addLocation" :cancel-label="copy.cancelEdit" @submit="saveLocation">

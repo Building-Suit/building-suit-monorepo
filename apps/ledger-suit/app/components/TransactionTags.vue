@@ -81,17 +81,17 @@ async function changeTag(tagId: string, remove = false) {
         <li v-for="row in assigned" :key="row.tag_id" class="inline-flex max-w-full items-center gap-2 rounded-control border border-line bg-surface-muted px-3 py-1 text-sm">
           <span aria-hidden="true" class="size-2 shrink-0 rounded-full" :style="{ backgroundColor: row.tags?.color ?? 'var(--bs-primary)' }" />
           <span class="break-words">{{ row.tags?.name }}</span>
-          <BsButton v-if="canManage" type="button" class="ls-btn ls-btn-sm" :disabled="busy" :aria-label="t('tagsGuide.remove', { name: row.tags?.name })" @click="changeTag(row.tag_id, true)"><AppIcon name="close" :size="14" /></BsButton>
+          <BsButton v-if="canManage" type="button" class="ls-btn ls-btn-sm" :disabled="busy" :aria-label="t('tagsGuide.remove', { name: row.tags?.name })" @click="changeTag(row.tag_id, true)"><BsIcon name="close" :size="14" /></BsButton>
         </li>
       </ul>
       <p v-else class="text-sm text-fg-muted">{{ t('tagsGuide.noneAssigned') }}</p>
       <div v-if="canManage && available.length" class="flex flex-wrap items-end gap-2">
-        <FloatingField class="min-w-0 flex-1" :label="t('tagsGuide.choose')">
+        <BsFloatingField class="min-w-0 flex-1" :label="t('tagsGuide.choose')">
           <select id="transaction-tag" v-model="selected" class="ls-input" :disabled="busy">
             <option value="">{{ t('tagsGuide.choose') }}</option>
             <option v-for="tag in available" :key="tag.id" :value="tag.id">{{ tag.name }}</option>
           </select>
-        </FloatingField>
+        </BsFloatingField>
         <BsButton type="button" class="ls-btn" :disabled="!selected || busy" @click="changeTag(selected)">{{ t('operations.assign') }}</BsButton>
       </div>
       <p v-if="!tags.length" class="text-sm text-fg-muted">{{ t('tagsGuide.noOptions') }}</p>

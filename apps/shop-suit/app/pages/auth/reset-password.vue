@@ -54,9 +54,9 @@ async function onSubmit() {
       <div class="space-y-2">
         <label for="new-password" class="text-sm font-semibold">{{ isArabic ? 'كلمة المرور الجديدة' : 'New password' }}</label>
         <div class="relative">
-          <AppIcon name="lock" class="pointer-events-none absolute start-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <BsIcon name="lock" class="pointer-events-none absolute start-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <input id="new-password" v-model="password" :type="showPassword ? 'text' : 'password'" autocomplete="new-password" class="ls-input">
-          <BsButton type="button" variant="icon" :aria-label="isArabic ? 'إظهار أو إخفاء كلمة المرور' : 'Show or hide password'" @click="showPassword = !showPassword"><AppIcon :name="showPassword ? 'eyeOff' : 'eye'" class="size-4" /></BsButton>
+          <BsButton type="button" variant="icon" :aria-label="isArabic ? 'إظهار أو إخفاء كلمة المرور' : 'Show or hide password'" @click="showPassword = !showPassword"><BsIcon :name="showPassword ? 'eyeOff' : 'eye'" class="size-4" /></BsButton>
         </div>
       </div>
       <div class="space-y-2">

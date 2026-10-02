@@ -102,7 +102,7 @@ defineEmits<{
 
           <ul v-if="plan.features?.length" class="mt-5 flex-1 space-y-2 text-sm">
             <li v-for="feature in plan.features" :key="feature.key" class="flex items-start gap-2">
-              <AppIcon :name="feature.included ? 'check' : 'close'" :size="17" :class="feature.included ? 'text-[var(--bs-status-success)]' : 'text-fg-muted'" />
+              <BsIcon :name="feature.included ? 'check' : 'close'" :size="17" :class="feature.included ? 'text-[var(--bs-status-success)]' : 'text-fg-muted'" />
               <span :class="{ 'text-fg-muted': !feature.included }">{{ feature.text }} <span class="sr-only">({{ feature.included ? copy.included : copy.notIncluded }})</span></span>
             </li>
           </ul>

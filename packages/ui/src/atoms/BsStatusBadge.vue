@@ -48,5 +48,5 @@ const icon = computed(() => {
 </script>
 
 <template>
-  <span class="ls-badge" :class="klass"><AppIcon v-if="icon" :name="icon" :size="14" />{{ label }}</span>
+  <span class="ls-badge" :class="klass"><BsIcon v-if="icon" :name="icon" :size="14" />{{ label }}</span>
 </template>

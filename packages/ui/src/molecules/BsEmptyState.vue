@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Calm and instructive, never apologetic. Anatomy per the brand guidelines:
+// Calm and instructive, never apologetic. Canonical Bs-prefixed anatomy:
 // short headline, one line of guidance, one primary action — and gold only on
 // that single action.
 defineProps<{

@@ -102,7 +102,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => ({ name: name.value, lega
         <span class="truncate">{{ current?.name ?? t('org.none') }}</span>
         <span v-if="current?.legal_name" class="truncate text-[10px] text-fg-muted">{{ current.legal_name }}</span>
       </span>
-      <AppIcon name="arrowDown" class="text-fg-muted -me-3" />
+      <BsIcon name="arrowDown" class="text-fg-muted -me-3" />
     </BsButton>
 
     <ul
@@ -125,9 +125,9 @@ const { dirty: overlayDirty0 } = useRecordAction(() => ({ name: name.value, lega
               {{ roleLabel(org.role, org.role_id) }} · {{ org.base_currency }}
             </span>
 
-            <StatusBadge :status="org.status === 'trial' ? 'trialing' : 'active'" />
+            <BsStatusBadge :status="org.status === 'trial' ? 'trialing' : 'active'" />
           </span>
-          <AppIcon v-if="org.id === current?.id" name="check" class="text-[var(--bs-status-success)]" />
+          <BsIcon v-if="org.id === current?.id" name="check" class="text-[var(--bs-status-success)]" />
         </BsButton>
       </li>
       <li v-if="!ownsOrganization" class="mt-1 border-t border-[var(--bs-border)] pt-1">
@@ -136,7 +136,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => ({ name: name.value, lega
           class="flex w-full items-center gap-2 rounded-chip px-2 py-2 text-start text-sm font-semibold text-accent hover:bg-surface-muted"
           @click="showCreate"
         >
-          <AppIcon name="add" :size="18" />
+          <BsIcon name="add" :size="18" />
           <span>{{ t('org.createAnother') }}</span>
         </BsButton>
       </li>
@@ -145,19 +145,19 @@ const { dirty: overlayDirty0 } = useRecordAction(() => ({ name: name.value, lega
             <p class="text-sm font-semibold text-accent">{{ t('org.additionalEyebrow') }}</p>
             <p class="text-sm text-fg-muted">{{ t('org.additionalBillingHint') }}</p>
 
-            <FloatingField :label="t('org.name')">
+            <BsFloatingField :label="t('org.name')">
               <input id="additional-org-name" v-model="name" class="ls-input" required>
-            </FloatingField>
+            </BsFloatingField>
 
-            <FloatingField :label="t('onboarding.legalName')">
+            <BsFloatingField :label="t('onboarding.legalName')">
               <input id="additional-org-legal-name" v-model="legalName" class="ls-input" required>
-            </FloatingField>
+            </BsFloatingField>
 
-            <FloatingField :label="t('accounts.currency')">
+            <BsFloatingField :label="t('accounts.currency')">
               <select id="additional-org-currency" v-model="currency" class="ls-input">
                 <option v-for="code in ['EGP', 'USD', 'EUR', 'GBP', 'SAR', 'AED']" :key="code">{{ code }}</option>
               </select>
-            </FloatingField>
+            </BsFloatingField>
 
             <div class="rounded-control border border-[var(--bs-border)] bg-surface-muted p-3 text-sm">
               <p class="font-semibold">{{ t('org.separateSubscriptionTitle') }}</p>

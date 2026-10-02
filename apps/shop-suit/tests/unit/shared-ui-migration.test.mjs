@@ -25,7 +25,7 @@ test('Shop reusable controls and tables come from shared UI', () => {
     assert.doesNotMatch(source, /<(?:DataTable|Dialog)\b/, `${file} bypasses the Building Suit wrapper`)
     assert.doesNotMatch(source, /\b(?:window\.)?confirm\s*\(/, `${file} bypasses shared confirmation`)
   }
-  for (const component of ['BsDataTable', 'BsRecordActionDialog', 'BsButton', 'BsForm', 'BsSelect', 'BsCard', 'BsKpiCard', 'StatusBadge']) {
+  for (const component of ['BsDataTable', 'BsRecordActionDialog', 'BsButton', 'BsForm', 'BsSelect', 'BsCard', 'BsKpiCard', 'BsStatusBadge']) {
     assert.ok(sources.some(({ source }) => source.includes(`<${component}`)), `Shop does not consume ${component}`)
   }
 })

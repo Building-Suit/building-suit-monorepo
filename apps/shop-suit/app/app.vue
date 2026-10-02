@@ -31,9 +31,4 @@ useHead(() => ({
 }));
 </script>
 
-<template>
-  <NuxtLayout :key="user?.id ?? 'anonymous'">
-    <NuxtPage :key="contextKey" />
-  </NuxtLayout>
-  <BsConfirmHost />
-</template>
+<template><BsAppRoot :layout-key="user?.id ?? 'anonymous'" :page-key="contextKey" /></template>
