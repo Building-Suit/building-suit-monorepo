@@ -1136,6 +1136,27 @@ test('execution preflight enforces attempt budget without consuming an attempt',
   assert.deepEqual(fixture.executions, before)
 })
 
+test('supervisor lease SQL returns the UPDATE target alias safely', async () => {
+  const runner = await readFile(new URL('../runner/bs-agent.mjs', import.meta.url), 'utf8')
+  const leaseSql = runner.slice(
+    runner.indexOf('function acquireSupervisorLease'),
+    runner.indexOf('function activeSupervisorLease'),
+  )
+
+  assert.match(
+    leaseSql,
+    /UPDATE control\.recovery_states AS recovery_state/,
+  )
+  assert.match(
+    leaseSql,
+    /RETURNING to_jsonb\(recovery_state\) AS recovery/,
+  )
+  assert.doesNotMatch(
+    leaseSql,
+    /to_jsonb\(control\.recovery_states\)/,
+  )
+})
+
 test('supervisor gates token-bearing implementation actions with audited preflight', async () => {
   const { readFile } = await import('node:fs/promises')
   const runner = await readFile(new URL('../runner/bs-agent.mjs', import.meta.url), 'utf8')

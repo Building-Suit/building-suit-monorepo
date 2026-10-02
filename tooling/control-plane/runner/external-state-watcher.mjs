@@ -255,7 +255,7 @@ export function githubProbeCommand(descriptor) {
 }
 
 export function githubProbeObservation(descriptor, result) {
-  let data = null
+  let data
   try {
     data = result?.stdout ? JSON.parse(result.stdout) : null
   }
