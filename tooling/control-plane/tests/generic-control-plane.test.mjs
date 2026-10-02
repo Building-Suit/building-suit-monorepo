@@ -121,3 +121,52 @@ test('repair acceptance requires a confirmation verifier pass', async () => {
   assert.match(runner, /repair-verification-\$\{cycle\}-confirmation/)
   assert.match(runner, /confirmationProbe\?\.passed ===/)
 })
+
+test('recovery schema exposes the canonical durable contract without activating the runner', async () => {
+  const { readFile } = await import('node:fs/promises')
+  const migration = await readFile(
+    new URL('../sql/018_failure_recovery_state.sql', import.meta.url),
+    'utf8',
+  )
+  const runner = await readFile(
+    new URL('../runner/bs-agent.mjs', import.meta.url),
+    'utf8',
+  )
+
+  for (const failureClass of [
+    'transient-infrastructure',
+    'repository-state',
+    'verification-product-defect',
+    'flaky-verification',
+    'publication-scope',
+    'publication-reconciliation',
+    'no-change',
+    'external-wait',
+    'decision-wait',
+    'operator-wait',
+    'safety-stop',
+  ]) {
+    assert.match(migration, new RegExp(`'${failureClass}'`))
+  }
+
+  for (const recoveryAction of [
+    'retry',
+    'repair',
+    'reconcile-runtime',
+    'reconcile-repository',
+    'reconcile-publication',
+    'wait-external',
+    'wait-decision',
+    'wait-operator',
+    'complete-no-changes',
+    'safety-stop',
+  ]) {
+    assert.match(migration, new RegExp(`'${recoveryAction}'`))
+  }
+
+  assert.match(migration, /CREATE TABLE IF NOT EXISTS control\.recovery_states/)
+  assert.match(migration, /CREATE TABLE IF NOT EXISTS control\.recovery_state_events/)
+  assert.match(migration, /FUNCTION control\.record_recovery_condition/)
+  assert.match(migration, /FUNCTION control\.read_recovery_condition/)
+  assert.doesNotMatch(runner, /record_recovery_condition/)
+})

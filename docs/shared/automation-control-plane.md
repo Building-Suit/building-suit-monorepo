@@ -21,7 +21,7 @@ Secrets are not registry fields. Database passwords, n8n API keys and Codex auth
 
 ## Install or upgrade
 
-Apply the existing migrations in numeric order to Staging, then `tooling/control-plane/sql/014_generic_automation_platform.sql`. Validate there before Production. The migration only adds/backfills objects and does not delete history. Do not apply it to a product database; it belongs to the dedicated control database.
+Apply every migration under `tooling/control-plane/sql` in numeric order. Validate the complete chain in a disposable database before applying it to Staging, and validate there before Production. Control-plane migrations are additive and preserve operational history. Do not apply them to a product database; they belong to the dedicated control database.
 
 Configure the runner with `AUTOMATION_CONTROL_DB_*` variables. Legacy `BS_CONTROL_DB_*` variables remain supported. `local_repository_root` and `worktree_root` may be relative to the control-plane checkout; absolute paths require explicit validation in project configuration. The dashboard keeps `NUXT_CONTROL_DATABASE_URL` read-only; set the separate server-only `NUXT_CONTROL_OPERATOR_DATABASE_URL` only when authenticated project/policy editing is required.
 
@@ -123,6 +123,8 @@ Normal recovery does not require SQL edits:
 
 Every state-changing database operation emits task and/or generic audit evidence. Draft PR creation is the automatic publication boundary. Merge, deploy, hosted database mutation, shared-history rewriting and destructive worktree cleanup remain prohibited.
 
+Migration `018_failure_recovery_state.sql` provides the durable recovery contract used by later supervisors. `control.failure_classes` and `control.recovery_actions` are the canonical vocabulary. `control.record_recovery_condition` stores the current task/execution/failure pointers, next action, recoverability, wake time, heartbeat and lease metadata under a stable resume identity. Each distinct idempotency key advances the state version and appends an immutable recovery event plus a generic audit event; replaying the same key returns the current state without another write. `control.read_recovery_condition` resumes by identity, and `control.current_task_recovery_condition` reads the latest active condition for a task. Existing runners do not consume or act on this state automatically.
+
 ## n8n inspection
 
 ```sh
@@ -142,6 +144,7 @@ Apply migrations to a disposable database and run:
 
 ```sh
 psql "$DISPOSABLE_CONTROL_DATABASE_URL" -f tooling/control-plane/tests/generic-platform-smoke.sql
+psql "$DISPOSABLE_CONTROL_DATABASE_URL" -f tooling/control-plane/tests/recovery-state-smoke.sql
 ```
 
-The transaction rolls back after proving registration, claim, simulated implementation, failed verification, retry profile sequence, same-execution reverification, resume-ready state and bounded control records. Never point this fixture at a hosted product database.
+The transactions roll back after proving the existing lifecycle plus recovery taxonomy, create/update/resume behavior, idempotency, audit history and compatibility with existing evidence. Never point these fixtures at a hosted product database.
