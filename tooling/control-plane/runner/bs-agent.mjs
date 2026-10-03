@@ -4122,9 +4122,7 @@ function taskPublish() {
 
 
     const explicitTaskAllowedPaths =
-      configuredAllowedPaths.length > 0
-        ? configuredAllowedPaths
-        : sourceAllowedPaths
+      configuredAllowedPaths
 
 
     const projectAllowedPaths =
@@ -4142,13 +4140,6 @@ function taskPublish() {
         ...new Set([
           ...workstreamAllowedPaths,
           ...explicitTaskAllowedPaths,
-
-          ...(
-            workstreamAllowedPaths.length === 0 &&
-            explicitTaskAllowedPaths.length === 0
-              ? projectAllowedPaths
-              : []
-          ),
         ]),
       ]
 

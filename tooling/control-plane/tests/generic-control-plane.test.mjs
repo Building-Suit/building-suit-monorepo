@@ -37,6 +37,7 @@ import {
 import {
   applicationScopeSelected,
   commandResultStatus,
+  controlPlaneRootLintSelection,
   customCheckSelection,
   resolveVerificationMode,
 } from '../runner/verification-mode.mjs'
@@ -45,10 +46,14 @@ import {
   evaluatePublicationParent,
   evaluateVerificationAuthority,
   planPublicationReconciliation,
+  publicationScopeAuthorizationFingerprint,
   publicationStateFingerprint,
+  taskPublicationMetadata,
+  validateCurrentPublicationAuthorization,
+  validatePublicationAuthorization,
 } from '../runner/publication-preflight.mjs'
 
-test('publication preflight classifies task, workstream, bounded repair, and unrelated scope', () => {
+test('publication preflight uses only explicit task and workstream authority', () => {
   const classification = classifyPublicationFiles({
     files: [
       'tooling/control-plane/runner/task-publisher.mjs',
@@ -65,12 +70,53 @@ test('publication preflight classifies task, workstream, bounded repair, and unr
   })
 
   assert.equal(classification.decisions.find(item => item.file.endsWith('task-publisher.mjs')).boundary, 'task')
-  assert.deepEqual(classification.repaired, [
-    'docs/shared/publication.md',
-    'tooling/control-plane/runner/publication-preflight.mjs',
-  ])
-  assert.deepEqual(classification.waiting, ['apps/shop-suit/app.vue', 'tooling/control-plane/import/unrelated.md'])
+  assert.deepEqual(classification.repaired, [])
+  assert.deepEqual(classification.waiting, ['apps/shop-suit/app.vue', 'docs/shared/publication.md'])
+  assert.ok(classification.allowed.includes('tooling/control-plane/import/unrelated.md'))
+  assert.ok(classification.allowed.includes('tooling/control-plane/runner/publication-preflight.mjs'))
   assert.deepEqual(classification.blocked, ['README.md'])
+})
+
+test('task-create publication metadata persists validated top-level allowed_paths', () => {
+  const metadata = taskPublicationMetadata({
+    metadata: { source: 'unit-fixture' },
+    allowedPaths: ['packages/ui/', 'docs/shared/exact.md', 'packages/ui/'],
+    workstreamPaths: ['apps/shop-suit/'],
+    projectPaths: ['apps/', 'packages/', 'docs/'],
+  })
+  assert.deepEqual(metadata.allowed_paths, ['docs/shared/exact.md', 'packages/ui/'])
+  assert.equal(metadata.source, 'unit-fixture')
+  assert.throws(() => taskPublicationMetadata({
+    allowedPaths: ['README.md'], workstreamPaths: ['apps/shop-suit/'], projectPaths: ['apps/'],
+  }), /outside_project/)
+  assert.throws(() => taskPublicationMetadata({
+    allowedPaths: ['apps/shop-suit/supabase/migrations/999.sql'],
+    workstreamPaths: ['apps/shop-suit/'], projectPaths: ['apps/'],
+  }), /protected/)
+})
+
+test('publication authorization accepts only exact safe paths inside the project boundary', () => {
+  assert.deepEqual(validatePublicationAuthorization({
+    requestedPaths: ['packages/ui/src/BsShell.vue'], projectPaths: ['apps/', 'packages/'],
+  }), ['packages/ui/src/BsShell.vue'])
+  assert.throws(() => validatePublicationAuthorization({
+    requestedPaths: ['README.md'], projectPaths: ['apps/', 'packages/'],
+  }), /outside_project/)
+  assert.throws(() => validatePublicationAuthorization({
+    requestedPaths: ['apps/shop-suit/supabase/migrations/999.sql'], projectPaths: ['apps/'],
+  }), /protected/)
+  assert.throws(() => validatePublicationAuthorization({
+    requestedPaths: ['packages/ui/**'], projectPaths: ['packages/'],
+  }), /exact_relative_paths/)
+  assert.equal(
+    publicationScopeAuthorizationFingerprint({ task_id: 'CP-T-001', paths: ['packages/ui/a.vue'] }),
+    publicationScopeAuthorizationFingerprint({ task_id: 'CP-T-001', paths: ['packages/ui/a.vue'] }),
+  )
+  assert.throws(() => validateCurrentPublicationAuthorization({
+    requestedPaths: ['packages/ui/a.vue'],
+    waitingPaths: ['packages/ui/a.vue', 'packages/ui/b.vue'],
+    projectPaths: ['packages/'],
+  }), /match_current/)
 })
 
 test('publication scope repair never authorizes protected or product behavior paths', () => {
@@ -524,6 +570,28 @@ test('focused control-plane verification ignores unrelated workspace typecheck f
   assert.match(verifier, /appPackage\?\.name &&\s*applicationSelection\.selected/)
 })
 
+test('control-plane JavaScript changes select the CI-equivalent root lint gate', async () => {
+  const verifier = await readFile(
+    new URL('../runner/task-verifier.mjs', import.meta.url),
+    'utf8',
+  )
+
+  assert.deepEqual(controlPlaneRootLintSelection({
+    changedFiles: ['tooling/control-plane/runner/publication-preflight.mjs'],
+  }), {
+    selected: true,
+    reason: 'changed_control_plane_javascript',
+  })
+  assert.deepEqual(controlPlaneRootLintSelection({
+    changedFiles: ['tooling/control-plane/README.md', 'apps/shop-suit/app.vue'],
+  }), {
+    selected: false,
+    reason: 'no_changed_control_plane_javascript',
+  })
+  assert.match(verifier, /name:\s*'root-lint'/)
+  assert.match(verifier, /controlPlaneRootLintSelection\(\{\s*changedFiles/)
+})
+
 test('focused application verification selects relevant package checks', async () => {
   const verifier = await readFile(
     new URL('../runner/task-verifier.mjs', import.meta.url),
@@ -817,6 +885,7 @@ test('supervisor respects retry exhaustion and explicit wait or safety routing',
     command: 'task-publish', payload: { error: 'publication scope unauthorized' }, attempt: 1, maxAttempts: 5,
   })
   assert.equal(operator.next_action, 'wait-operator')
+  assert.equal(operator.failure_class, 'publication-scope')
 
   const verifierInfrastructure = classifySupervisorFailure({
     command: 'task-verify', payload: { error: 'network unavailable' }, attempt: 1, maxAttempts: 5,
@@ -1171,6 +1240,42 @@ test('execution preflight rejects incomplete contract, publication, retry, and r
   const environment = executionPreflightFixture()
   environment.runtime.environment = { valid: false, missing: ['AUTOMATION_CONTROL_DB_FINGERPRINT'] }
   assert.equal(evaluateExecutionPreflight(environment).reason, 'required_environment_configuration_missing')
+})
+
+test('execution preflight exposes boundaries and waits for missing cross-workstream authority before attempt one', () => {
+  const fixture = executionPreflightFixture()
+  fixture.packet.publication_boundaries = {
+    task_paths: [],
+    source_paths: ['packages/ui/'],
+    workstream_paths: ['tooling/control-plane/'],
+    project_paths: ['tooling/', 'packages/'],
+  }
+  const waiting = evaluateExecutionPreflight(fixture)
+  assert.equal(waiting.kind, 'wait')
+  assert.equal(waiting.reason, 'cross_workstream_publication_authority_required')
+  assert.deepEqual(waiting.context.requested_paths, ['packages/ui/'])
+  assert.equal(waiting.context.publication_boundaries.effective_paths[0], 'tooling/control-plane/')
+  assert.equal(waiting.context.attempt, undefined)
+
+  fixture.packet.publication_boundaries.task_paths = ['packages/ui/']
+  const approved = evaluateExecutionPreflight(fixture)
+  assert.equal(approved.ready, true)
+  assert.deepEqual(approved.context.publication_boundaries.effective_paths, [
+    'packages/ui/', 'tooling/control-plane/',
+  ])
+})
+
+test('publication authorization migration binds exact waits and preserves execution verification lineage', async () => {
+  const migration = await readFile(new URL('../sql/022_publication_scope_authorization.sql', import.meta.url), 'utf8')
+  assert.match(migration, /Authorization must match the exact current publication waiting paths/)
+  assert.match(migration, /current_task\.status <> 'passed'/)
+  assert.match(migration, /current_execution\.status <> 'succeeded'/)
+  assert.match(migration, /latest_verification_status <> 'passed'/)
+  assert.match(migration, /old_allowed_paths.*new_allowed_paths/s)
+  assert.match(migration, /publication_scope_authorized/)
+  assert.match(migration, /idempotency_key text NOT NULL UNIQUE/)
+  assert.doesNotMatch(migration, /INSERT INTO control\.executions/)
+  assert.doesNotMatch(migration, /INSERT INTO control\.verification_runs/)
 })
 
 test('execution preflight enforces attempt budget without consuming an attempt', () => {

@@ -4,7 +4,7 @@ Task: CP-RES-009
 
 Cutover ready: **YES**
 
-Mandatory scenarios: 31/31 passed. The deterministic harness used no destructive faults and did not contact or mutate live n8n.
+Mandatory scenarios: 32/32 passed. The deterministic harness used no destructive faults and did not contact or mutate live n8n.
 
 | Scenario | Fault | Expected recovery | Observed recovery | Impl | Verify | Publish | Result |
 |---|---|---|---|---:|---:|---:|---|
@@ -32,7 +32,8 @@ Mandatory scenarios: 31/31 passed. The deterministic harness used no destructive
 | milestone-required-check-contract | changed paths do not match a required milestone check | select required check | required_by_milestone_contract | 0 | 0 | 0 | PASS |
 | evidence-backed-parent-satisfaction | task is already satisfied by verified parent lineage | complete without implementation | complete without implementation | 0 | 0 | 0 | PASS |
 | unexplained-empty-diff | publication discovers an empty diff without parent-satisfaction evidence | bounded no-change review | handle-no-publishable-changes | 1 | 1 | 1 | PASS |
-| mechanical-publication-scope-repair | a directly implied companion documentation file is outside the explicit task path | allow task file → repair documentation scope | tooling/control-plane/resilience/acceptance.mjs → docs/shared/automation-control-plane.md | 0 | 0 | 0 | PASS |
+| publication-scope-before-implementation | a Shop task requests the shared UI path used by the BS-UI-ZN-PUBLIC-CHROME-001 class without explicit authority | wait before implementation → authorize exact shared path | wait before implementation → packages/ui/ | 0 | 0 | 0 | PASS |
+| publication-scope-authorization-resume | a passed and verified task waits on the exact shared UI publication path | merge exact task scope → resume publication | packages/ui/ → task-publish | 1 | 1 | 1 | PASS |
 | ambiguous-publication-scope | an unrelated product behavior file appears in the publication diff | wait-operator | apps/shop-suit/app.vue | 0 | 0 | 0 | PASS |
 | stop-request-safe-boundary | a stop request arrives after the current task reaches its persistence boundary | stop-requested → no new claim | stop-requested → no new claim | 0 | 0 | 0 | PASS |
 | bounded-continuous-run | the configured task limit is reached after one completed task | success → task-limit | success → task-limit | 1 | 1 | 1 | PASS |

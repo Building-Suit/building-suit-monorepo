@@ -7,6 +7,11 @@ import { fileURLToPath } from 'node:url'
 import { redact } from './lib/redaction.mjs'
 import { validateProjectConfig } from './lib/project-config.mjs'
 import { validateRetryPolicy } from './lib/retry-policy.mjs'
+import {
+  publicationScopeAuthorizationFingerprint,
+  taskPublicationMetadata,
+  validateCurrentPublicationAuthorization,
+} from './runner/publication-preflight.mjs'
 
 const repoRoot = fileURLToPath(new URL('../../', import.meta.url))
 const [resource, action, ...positionals] = process.argv.slice(2)
@@ -47,6 +52,12 @@ function query(sql, variables = {}) {
 function flag(name, fallback = null) {
   const index = positionals.indexOf(`--${name}`)
   return index >= 0 ? (positionals[index + 1] ?? true) : fallback
+}
+
+function flags(name) {
+  return positionals.flatMap((value, index) =>
+    value === `--${name}` && positionals[index + 1] ? [positionals[index + 1]] : [],
+  )
 }
 
 function positional(index = 0) {
@@ -209,6 +220,15 @@ async function main() {
     if (!/^[A-Z][A-Z0-9-]{2,63}$/.test(String(task.task_id ?? ''))) throw new Error('invalid_task_id')
     const [projectSlug, workstreamSlug] = String(task.workstream ?? '').split('/',2)
     if (!projectSlug || !workstreamSlug) throw new Error('workstream_must_be_project_slash_workstream')
+    const target = query(`SELECT jsonb_build_object('project_paths',p.allowed_publication_paths,'workstream_path',w.application_path) FROM control.projects p JOIN control.workstreams w USING(project_id) WHERE p.slug=:'project' AND w.slug=:'workstream' AND p.active=true AND w.active=true;`, { project:projectSlug,workstream:workstreamSlug })
+    if (!target) throw new Error('active_project_workstream_not_found')
+    const suppliedAllowedPaths = task.allowed_paths ?? task.metadata?.allowed_paths ?? []
+    const metadata = taskPublicationMetadata({
+      metadata: task.metadata,
+      allowedPaths: suppliedAllowedPaths,
+      workstreamPaths: [`${String(target.workstream_path).replace(/\/$/, '')}/`],
+      projectPaths: target.project_paths,
+    })
     return output({ ok:true,task:query(`
       WITH target AS (SELECT p.project_id,w.slug workstream_slug,w.suit_slug FROM control.projects p JOIN control.workstreams w USING(project_id) WHERE p.slug=:'project' AND w.slug=:'workstream' AND p.active=true AND w.active=true),
       inserted AS (
@@ -217,7 +237,44 @@ async function main() {
         RETURNING *
       )
       SELECT to_jsonb(inserted) FROM inserted;
-    `,{project:projectSlug,workstream:workstreamSlug,task_id:task.task_id,sequence:String(task.sequence??1000),priority:String(task.priority??100),title:String(task.title??''),description:String(task.description??''),task_type:task.task_type??'feature',risk_level:task.risk_level??'normal',model_profile:task.model_profile??'standard',acceptance:JSON.stringify(task.acceptance_criteria??[]),verification:JSON.stringify(task.verification_plan??[]),retry_policy:task.retry_policy_id??'',metadata:JSON.stringify(task.metadata??{})}) })
+    `,{project:projectSlug,workstream:workstreamSlug,task_id:task.task_id,sequence:String(task.sequence??1000),priority:String(task.priority??100),title:String(task.title??''),description:String(task.description??''),task_type:task.task_type??'feature',risk_level:task.risk_level??'normal',model_profile:task.model_profile??'standard',acceptance:JSON.stringify(task.acceptance_criteria??[]),verification:JSON.stringify(task.verification_plan??[]),retry_policy:task.retry_policy_id??'',metadata:JSON.stringify(metadata)}) })
+  }
+  if (resource === 'task' && action === 'authorize-publication') {
+    const taskId = positional()
+    const requested = flags('path')
+    const state = query(`
+      SELECT jsonb_build_object(
+        'project_paths', p.allowed_publication_paths,
+        'failure', COALESCE((
+          SELECT to_jsonb(f) FROM control.failures f
+          WHERE f.task_id=t.task_id AND f.stage='publication'
+            AND f.error_code='publication_scope_operator_wait' AND f.resolved_at IS NULL
+          ORDER BY f.failure_id DESC LIMIT 1
+        ), 'null'::jsonb),
+        'recovery', control.current_task_recovery_condition(t.task_id)
+      )
+      FROM control.tasks t JOIN control.projects p USING(project_id)
+      WHERE t.task_id=:'task_id';
+    `, { task_id:taskId })
+    if (!state) throw new Error('task_not_found')
+    const waiting = [...new Set(state.failure?.metadata?.classification?.waiting ?? [])].sort()
+    const paths = state.failure
+      ? validateCurrentPublicationAuthorization({ requestedPaths:requested, waitingPaths:waiting, projectPaths:state.project_paths })
+      : validateCurrentPublicationAuthorization({ requestedPaths:requested, waitingPaths:requested, projectPaths:state.project_paths })
+    const recovery = state.recovery?.failure_class === 'publication-scope' && Number(state.recovery?.failure_id) === Number(state.failure?.failure_id)
+      ? state.recovery
+      : null
+    const idempotencyKey = publicationScopeAuthorizationFingerprint({ task_id:taskId, paths })
+    const authorization = query(`SELECT control.authorize_publication_scope(:'task_id', NULLIF(:'failure_id','')::bigint, NULLIF(:'recovery_state_id','')::uuid, :'paths'::jsonb, :'idempotency_key', 'human');`, {
+      task_id:taskId,
+      failure_id:String(state.failure?.failure_id ?? ''),
+      recovery_state_id:recovery?.recovery_state_id ?? '',
+      paths:JSON.stringify(paths),
+      idempotency_key:idempotencyKey,
+    })
+    const resumed = run(process.execPath, ['tooling/control-plane/runner/bs-agent.mjs','task-supervise',taskId], { timeout:75*60*1000 })
+    const resumePayload = resumed.stdout ? JSON.parse(resumed.stdout) : { ok:false,error:resumed.stderr||resumed.error }
+    return output({ ok:resumePayload.ok===true,authorization,resumed:true,resume:resumePayload }, resumed.code)
   }
   if (resource === 'task' && action === 'release') return delegate('task-release', positional())
   if (resource === 'task' && action === 'preflight') return delegate('task-execution-preflight', positional())

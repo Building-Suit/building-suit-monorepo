@@ -120,6 +120,27 @@ export function applicationScopeSelected({
   }
 }
 
+export function controlPlaneRootLintSelection({
+  changedFiles,
+}) {
+  if (
+    changedFiles.some(file =>
+      file.startsWith('tooling/control-plane/') &&
+      /\.(?:c|m)?js$/.test(file),
+    )
+  ) {
+    return {
+      selected: true,
+      reason: 'changed_control_plane_javascript',
+    }
+  }
+
+  return {
+    selected: false,
+    reason: 'no_changed_control_plane_javascript',
+  }
+}
+
 export function commandResultStatus({
   required,
   exitCode,
