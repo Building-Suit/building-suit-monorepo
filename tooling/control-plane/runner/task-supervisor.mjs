@@ -57,6 +57,7 @@ export function supervisorStateFingerprint(snapshot) {
       task.task_id, task.status, task.engine_stage, task.model_profile,
       task.title, task.description, task.acceptance_criteria, task.verification_plan,
       task.verification_mode,
+      task.allowed_paths,
     ],
     dependencies: snapshot.packet?.dependencies?.map(item =>
       [item.task_id, item.dependency_type, item.status],
@@ -75,6 +76,7 @@ export function supervisorStateFingerprint(snapshot) {
       snapshot.packet.workstream.concurrency_policy,
       snapshot.packet.workstream.publication_config,
     ],
+    publication_boundaries: snapshot.packet?.publication_boundaries ?? null,
     serialization_conflicts: snapshot.serialization_conflicts?.map(item =>
       [item.task_id, item.status, item.engine_stage],
     ),
@@ -257,6 +259,9 @@ export function classifySupervisorFailure({ command, payload, attempt, maxAttemp
       command: 'handle-no-publishable-changes', recoverable: false,
     })
   }
+  if (/publication_scope|publication scope|allowed path|unauthorized/.test(lower)) {
+    return decision('wait', 'wait-operator', 'publication-scope', 'publication_scope_requires_operator')
+  }
   if (/permission|authorization|credential|authentication/.test(lower)) {
     return decision('wait', 'wait-operator', 'operator-wait', 'operator_authorization_required')
   }
@@ -268,9 +273,6 @@ export function classifySupervisorFailure({ command, payload, attempt, maxAttemp
       return decision('terminal', 'safety-stop', 'safety-stop', 'retry_budget_exhausted', { recoverable: false })
     }
     return decision('act', 'repair', 'verification-product-defect', 'verification_failed', { command: 'task-retry' })
-  }
-  if (/scope|allowed path|unauthorized/.test(lower)) {
-    return decision('wait', 'wait-operator', 'publication-scope', 'publication_scope_requires_operator')
   }
   if (/parent|worktree|branch mismatch|dirty|upstream/.test(lower)) {
     return decision('wait', 'wait-operator', 'repository-state', 'repository_reconciliation_requires_operator')

@@ -5,6 +5,10 @@ function normalize(value) {
   return String(value ?? '').replaceAll('\\', '/').replace(/^\.\//, '')
 }
 
+function uniquePaths(values = []) {
+  return [...new Set(values.map(normalize).filter(Boolean))].sort()
+}
+
 export function validPublicationPath(value) {
   const candidate = normalize(value)
   return Boolean(candidate) && !path.isAbsolute(candidate) && !candidate.split('/').includes('..')
@@ -21,7 +25,7 @@ export function pathInScope(file, scopes = []) {
   })
 }
 
-const neverRepair = [
+const protectedPublicationPaths = [
   /^\.env(?:\.|$)/,
   /(^|\/)\.env(?:\.|$)/,
   /(^|\/)(?:secrets?|credentials?)(?:\/|\.|$)/i,
@@ -31,28 +35,102 @@ const neverRepair = [
   /(^|\/)(?:vercel|deploy)(?:\/|\.|-)/i,
 ]
 
-function contractExplicitlyRequiresDocumentation(task) {
-  return /\b(documentation|document|docs|readme|agent guidance)\b/i.test(JSON.stringify({
-    title: task?.title,
-    description: task?.description,
-    acceptance_criteria: task?.acceptance_criteria,
-    verification_plan: task?.verification_plan,
-  }))
+export function protectedPublicationPath(value) {
+  const candidate = normalize(value)
+  return protectedPublicationPaths.some(pattern => pattern.test(candidate))
 }
 
-function boundedControlPlaneRepair(file, task) {
-  if (!file.startsWith('tooling/control-plane/')) return false
-  const contract = JSON.stringify({
-    title: task?.title,
-    description: task?.description,
-    acceptance_criteria: task?.acceptance_criteria,
-    verification_plan: task?.verification_plan,
-  }).toLowerCase()
-  if (file.startsWith('tooling/control-plane/tests/') && /\b(test|verification|verify)\b/.test(contract)) {
-    return true
+export function evaluatePublicationBoundaries({
+  taskPaths = [],
+  sourcePaths = [],
+  workstreamPaths = [],
+  projectPaths = [],
+}) {
+  const boundaries = {
+    task_paths: uniquePaths(taskPaths),
+    source_paths: uniquePaths(sourcePaths),
+    workstream_paths: uniquePaths(workstreamPaths),
+    project_paths: uniquePaths(projectPaths),
   }
-  return ['publication', 'preflight', 'reconciliation', 'reconcile', 'recovery']
-    .some(keyword => contract.includes(keyword) && file.toLowerCase().includes(keyword))
+  const invalid = Object.entries(boundaries).flatMap(([boundary, paths]) =>
+    paths.filter(item => !validPublicationPath(item)).map(path => ({ boundary, path })),
+  )
+  const protectedTaskPaths = boundaries.task_paths.filter(protectedPublicationPath)
+  const taskOutsideProject = boundaries.task_paths.filter(item =>
+    !pathInScope(item.replace(/[?*[{].*$/, ''), boundaries.project_paths),
+  )
+  const effectivePaths = uniquePaths([
+    ...boundaries.workstream_paths,
+    ...boundaries.task_paths,
+  ])
+  const requestedCrossWorkstream = boundaries.source_paths.filter(item =>
+    !pathInScope(item.replace(/[?*[{].*$/, ''), boundaries.workstream_paths),
+  )
+  const missingAuthority = requestedCrossWorkstream.filter(item =>
+    !pathInScope(item.replace(/[?*[{].*$/, ''), boundaries.task_paths),
+  )
+
+  return {
+    ...boundaries,
+    effective_paths: effectivePaths,
+    invalid,
+    protected_task_paths: protectedTaskPaths,
+    task_paths_outside_project: taskOutsideProject,
+    requested_cross_workstream_paths: requestedCrossWorkstream,
+    missing_authority: missingAuthority,
+  }
+}
+
+export function validatePublicationAuthorization({ requestedPaths, projectPaths }) {
+  if (!Array.isArray(requestedPaths) || !Array.isArray(projectPaths)) {
+    throw new Error('publication_paths_must_be_arrays')
+  }
+  const paths = uniquePaths(requestedPaths)
+  if (paths.length === 0) throw new Error('publication_paths_required')
+  if (paths.some(item => !validPublicationPath(item) || /[*?[{]/.test(item))) {
+    throw new Error('publication_authorization_requires_exact_relative_paths')
+  }
+  if (paths.some(protectedPublicationPath)) throw new Error('protected_publication_path')
+  if (paths.some(item => !pathInScope(item, projectPaths))) {
+    throw new Error('publication_path_outside_project_boundary')
+  }
+  return paths
+}
+
+export function validateCurrentPublicationAuthorization({
+  requestedPaths,
+  waitingPaths,
+  projectPaths,
+}) {
+  const paths = validatePublicationAuthorization({ requestedPaths, projectPaths })
+  const waiting = uniquePaths(waitingPaths)
+  if (JSON.stringify(paths) !== JSON.stringify(waiting)) {
+    throw new Error('authorization_must_match_current_publication_waiting_paths')
+  }
+  return paths
+}
+
+export function taskPublicationMetadata({
+  metadata = {},
+  allowedPaths = [],
+  workstreamPaths = [],
+  projectPaths = [],
+}) {
+  if (!Array.isArray(allowedPaths)) throw new Error('task_allowed_paths_must_be_an_array')
+  const boundaries = evaluatePublicationBoundaries({
+    taskPaths: allowedPaths,
+    workstreamPaths,
+    projectPaths,
+  })
+  if (boundaries.invalid.length > 0) throw new Error('invalid_task_allowed_paths')
+  if (boundaries.protected_task_paths.length > 0) throw new Error('protected_task_allowed_path')
+  if (boundaries.task_paths_outside_project.length > 0) {
+    throw new Error('task_allowed_path_outside_project_boundary')
+  }
+  return {
+    ...metadata,
+    allowed_paths: boundaries.task_paths,
+  }
 }
 
 export function classifyPublicationFiles({
@@ -63,41 +141,26 @@ export function classifyPublicationFiles({
   workstreamPaths = [],
   projectPaths = [],
 }) {
-  const hasTaskBoundary = taskPaths.length > 0 || sourcePaths.length > 0
   const decisions = [...new Set(files)].sort().map(file => {
     const normalized = normalize(file)
+    if (protectedPublicationPath(normalized)) {
+      return { file: normalized, decision: 'safety-stop', reason: 'protected_publication_area' }
+    }
     if (pathInScope(normalized, taskPaths)) {
       return { file: normalized, decision: 'allow', boundary: 'task', reason: 'task_specific_path' }
     }
-    if (pathInScope(normalized, sourcePaths)) {
-      return { file: normalized, decision: 'allow', boundary: 'task-source', reason: 'source_task_path' }
-    }
     if (pathInScope(normalized, workstreamPaths)) {
-      if (!hasTaskBoundary) {
-        return { file: normalized, decision: 'allow', boundary: 'workstream', reason: 'workstream_is_effective_task_boundary' }
-      }
-      if (boundedControlPlaneRepair(normalized, task)) {
-        return { file: normalized, decision: 'repair', boundary: 'workstream', reason: 'control_plane_companion_directly_implied_by_task_contract' }
-      }
-      return { file: normalized, decision: 'wait', boundary: 'workstream', reason: 'workstream_path_not_in_task_boundary' }
-    }
-    if (neverRepair.some(pattern => pattern.test(normalized))) {
-      return { file: normalized, decision: 'safety-stop', reason: 'protected_publication_area' }
-    }
-    if (
-      normalized.startsWith('docs/') &&
-      pathInScope(normalized, projectPaths) &&
-      contractExplicitlyRequiresDocumentation(task)
-    ) {
-      return {
-        file: normalized,
-        decision: 'repair',
-        boundary: 'project',
-        reason: 'documentation_directly_required_by_task_contract',
-      }
+      return { file: normalized, decision: 'allow', boundary: 'workstream', reason: 'workstream_publication_path' }
     }
     if (pathInScope(normalized, projectPaths)) {
-      return { file: normalized, decision: 'wait', boundary: 'project', reason: 'project_scope_requires_explicit_task_authorization' }
+      return {
+        file: normalized,
+        decision: 'wait',
+        boundary: pathInScope(normalized, sourcePaths) ? 'task-source' : 'project',
+        reason: pathInScope(normalized, sourcePaths)
+          ? 'source_path_requires_explicit_task_authorization'
+          : 'project_scope_requires_explicit_task_authorization',
+      }
     }
     return { file: normalized, decision: 'safety-stop', reason: 'outside_project_publication_boundary' }
   })
@@ -117,6 +180,13 @@ export function publicationStateFingerprint({ base_sha, files = [] }) {
     object: item.object ?? 'deleted',
   })).sort((left, right) => left.file.localeCompare(right.file))
   return createHash('sha256').update(JSON.stringify({ base_sha, files: normalized })).digest('hex')
+}
+
+export function publicationScopeAuthorizationFingerprint({ task_id, paths = [] }) {
+  return createHash('sha256').update(JSON.stringify({
+    task_id,
+    paths: uniquePaths(paths),
+  })).digest('hex')
 }
 
 export function evaluateVerificationAuthority({ verification, executionId, stateFingerprint }) {

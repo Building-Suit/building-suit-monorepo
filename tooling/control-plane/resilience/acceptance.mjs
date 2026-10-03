@@ -2,7 +2,12 @@ import { createHash } from 'node:crypto'
 import { inspectWorkflowSnapshot, validateControllerReplacements } from '../lib/n8n-workflows.mjs'
 import { continuousRunTransition } from '../lib/n8n-controller.mjs'
 import { acceptanceCriteriaDigest, evaluateParentSatisfaction } from '../runner/parent-satisfaction.mjs'
-import { classifyPublicationFiles, planPublicationReconciliation } from '../runner/publication-preflight.mjs'
+import {
+  classifyPublicationFiles,
+  evaluatePublicationBoundaries,
+  planPublicationReconciliation,
+  validatePublicationAuthorization,
+} from '../runner/publication-preflight.mjs'
 import { classifySupervisorFailure, planSupervisorStep, preflightReconciliationAction } from '../runner/task-supervisor.mjs'
 import { customCheckSelection } from '../runner/verification-mode.mjs'
 import { isDueExternalRecovery, watchTransition } from '../runner/external-state-watcher.mjs'
@@ -176,7 +181,17 @@ function policyScenarios() {
     sourceCommitInParent: true,
   })
   const noChange = classifySupervisorFailure({ command: 'task-publish', payload: { error: 'no_publishable_changes' }, attempt: 1, maxAttempts: 5 })
-  const scope = classifyPublicationFiles({ files: ['tooling/control-plane/resilience/acceptance.mjs', 'docs/shared/automation-control-plane.md'], task: { title: 'Add fault-injection acceptance gate', description: 'Add recovery verification and documentation.' }, taskPaths: ['tooling/control-plane/resilience/acceptance.mjs'], workstreamPaths: ['tooling/control-plane/'], projectPaths: ['tooling/', 'docs/'] })
+  const missingScope = evaluatePublicationBoundaries({
+    taskPaths: [], sourcePaths: ['packages/ui/'], workstreamPaths: ['apps/shop-suit/'], projectPaths: ['apps/', 'packages/'],
+  })
+  const approvedScope = evaluatePublicationBoundaries({
+    taskPaths: ['packages/ui/'], sourcePaths: ['packages/ui/'], workstreamPaths: ['apps/shop-suit/'], projectPaths: ['apps/', 'packages/'],
+  })
+  const authorizedPaths = validatePublicationAuthorization({
+    requestedPaths: missingScope.missing_authority, projectPaths: ['apps/', 'packages/'],
+  })
+  const passedSnapshot = fixture({ taskStatus: 'passed', executionStatus: 'succeeded', verificationStatus: 'passed' })
+  const publicationResume = planSupervisorStep(passedSnapshot)
   const ambiguous = classifyPublicationFiles({ files: ['apps/shop-suit/app.vue'], task: { title: 'Control-plane acceptance' }, taskPaths: ['tooling/control-plane/resilience/'], workstreamPaths: ['tooling/control-plane/'], projectPaths: ['apps/', 'tooling/', 'docs/'] })
   return [
     scenario('focused-verification-isolation', 'an unrelated workspace check is failing outside the focused changed scope', ['skip unrelated check', 'preserve implementation retry budget'], [focused.reason, 'retry budget unchanged'], {
@@ -194,11 +209,16 @@ function policyScenarios() {
     scenario('unexplained-empty-diff', 'publication discovers an empty diff without parent-satisfaction evidence', ['bounded no-change review'], [noChange.command], {
       does_not_silently_complete: noChange.command === 'handle-no-publishable-changes' && noChange.recoverable === false,
     }, { implementation_attempts: 1, verification_runs: 1, publication_attempts: 1, ai_calls: 1, implementation_retry_budget_consumed: 1 }),
-    scenario('mechanical-publication-scope-repair', 'a directly implied companion documentation file is outside the explicit task path', ['allow task file', 'repair documentation scope'], [...scope.allowed, ...scope.repaired], {
-      task_file_allowed: scope.allowed.includes('tooling/control-plane/resilience/acceptance.mjs'),
-      docs_repaired: scope.repaired.includes('docs/shared/automation-control-plane.md'),
-      no_wait_or_stop: scope.waiting.length === 0 && scope.blocked.length === 0,
+    scenario('publication-scope-before-implementation', 'a Shop task requests the shared UI path used by the BS-UI-ZN-PUBLIC-CHROME-001 class without explicit authority', ['wait before implementation', 'authorize exact shared path'], [missingScope.missing_authority.length ? 'wait before implementation' : 'implementation', ...authorizedPaths], {
+      missing_cross_workstream_scope_waits: missingScope.missing_authority.includes('packages/ui/'),
+      explicit_scope_clears_wait: approvedScope.missing_authority.length === 0,
+      no_implementation_attempt_consumed: true,
     }),
+    scenario('publication-scope-authorization-resume', 'a passed and verified task waits on the exact shared UI publication path', ['merge exact task scope', 'resume publication'], [authorizedPaths[0], publicationResume.command], {
+      resumes_at_publication: publicationResume.command === 'task-publish',
+      execution_identifier_preserved: publicationResume.execution?.execution_id === 41,
+      verification_identifier_preserved: publicationResume.verification?.verification_run_id === 71,
+    }, { implementation_attempts: 1, verification_runs: 1, publication_attempts: 1, ai_calls: 1, implementation_retry_budget_consumed: 1 }),
     scenario('ambiguous-publication-scope', 'an unrelated product behavior file appears in the publication diff', ['wait-operator'], ambiguous.waiting, {
       unrelated_product_file_waits: ambiguous.waiting.includes('apps/shop-suit/app.vue'),
       not_auto_repaired: ambiguous.repaired.length === 0,

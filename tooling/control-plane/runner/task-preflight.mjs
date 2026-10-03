@@ -5,6 +5,10 @@ import {
   profileForAttempt,
   validateRetryPolicy,
 } from '../lib/retry-policy.mjs'
+import {
+  evaluatePublicationBoundaries,
+  pathInScope,
+} from './publication-preflight.mjs'
 
 function stable(value) {
   if (Array.isArray(value)) return value.map(stable)
@@ -162,8 +166,35 @@ export function evaluateExecutionPreflight({ packet, runtime, executions = [], s
   if (!Array.isArray(allowedPaths) || allowedPaths.length === 0 || !allowedPaths.every(validPublicationPath)) {
     return failure('wait', 'wait-operator', 'publication-scope', 'publication_scope_invalid', checks)
   }
+  const publicationBoundaries = evaluatePublicationBoundaries({
+    taskPaths: packet.publication_boundaries?.task_paths ?? task.allowed_paths ?? [],
+    sourcePaths: packet.publication_boundaries?.source_paths ?? [],
+    workstreamPaths: packet.publication_boundaries?.workstream_paths ?? [
+      `${String(workstream.application_path ?? suit.app_path ?? '').replace(/\/$/, '')}/`,
+    ],
+    projectPaths: packet.publication_boundaries?.project_paths ?? allowedPaths,
+  })
+  if (publicationBoundaries.invalid.length > 0) {
+    return failure('stop', 'safety-stop', 'safety-stop', 'publication_scope_invalid', checks, {
+      publication_boundaries: publicationBoundaries,
+    })
+  }
   if (!allowedPaths.some(prefix => String(workstream.application_path ?? suit.app_path ?? '').startsWith(prefix))) {
     return failure('wait', 'wait-operator', 'publication-scope', 'workstream_outside_publication_scope', checks)
+  }
+  if (
+    publicationBoundaries.protected_task_paths.length > 0 ||
+    publicationBoundaries.task_paths_outside_project.length > 0
+  ) {
+    return failure('stop', 'safety-stop', 'safety-stop', 'task_publication_scope_violates_project_boundary', checks, {
+      publication_boundaries: publicationBoundaries,
+    })
+  }
+  if (publicationBoundaries.missing_authority.length > 0) {
+    return failure('wait', 'wait-operator', 'publication-scope', 'cross_workstream_publication_authority_required', checks, {
+      publication_boundaries: publicationBoundaries,
+      requested_paths: publicationBoundaries.missing_authority,
+    })
   }
   if (
     typeof workstream.publication_config?.merge_authorized !== 'boolean' ||
@@ -173,7 +204,11 @@ export function evaluateExecutionPreflight({ packet, runtime, executions = [], s
   ) {
     return failure('wait', 'wait-operator', 'publication-scope', 'publication_policy_incomplete', checks)
   }
-  checks.push({ name: 'task_contract_and_publication_scope', status: 'pass' })
+  checks.push({
+    name: 'task_contract_and_publication_scope',
+    status: 'pass',
+    publication_boundaries: publicationBoundaries,
+  })
 
   const missingExecutable = Object.entries(runtime?.executables ?? {})
     .find(([, available]) => available !== true)
@@ -211,7 +246,7 @@ export function evaluateExecutionPreflight({ packet, runtime, executions = [], s
     return failure('stop', 'safety-stop', 'safety-stop', 'worktree_target_invalid', checks)
   }
   const outOfScopeChange = (repository.worktree_target?.changed_files ?? []).find(file =>
-    !allowedPaths.some(prefix => file.startsWith(prefix)),
+    !pathInScope(file, publicationBoundaries.effective_paths),
   )
   if (outOfScopeChange) {
     return failure('wait', 'wait-operator', 'publication-scope', 'worktree_change_outside_publication_scope', checks, {
@@ -239,5 +274,6 @@ export function evaluateExecutionPreflight({ packet, runtime, executions = [], s
     profile,
     parent_sha: repository.parent.parent_sha,
     worktree_path: repository.worktree_target?.path ?? null,
+    publication_boundaries: publicationBoundaries,
   })
 }
