@@ -1274,6 +1274,8 @@ test('publication authorization migration binds exact waits and preserves execut
   assert.match(migration, /old_allowed_paths.*new_allowed_paths/s)
   assert.match(migration, /publication_scope_authorized/)
   assert.match(migration, /idempotency_key text NOT NULL UNIQUE/)
+  assert.doesNotMatch(migration, /\bauthorization\s+control\.publication_scope_authorizations%ROWTYPE\s*;/i)
+  assert.doesNotMatch(migration, /\bauthorization\s*\.\s*authorization_id\b/i)
   assert.doesNotMatch(migration, /INSERT INTO control\.executions/)
   assert.doesNotMatch(migration, /INSERT INTO control\.verification_runs/)
 })

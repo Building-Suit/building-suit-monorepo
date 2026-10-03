@@ -42,7 +42,7 @@ DECLARE
   requested_paths jsonb;
   old_paths jsonb;
   new_paths jsonb;
-  authorization control.publication_scope_authorizations%ROWTYPE;
+  created_authorization control.publication_scope_authorizations%ROWTYPE;
 BEGIN
   SELECT * INTO replay
   FROM control.publication_scope_authorizations
@@ -172,23 +172,23 @@ BEGIN
     p_task_id, current_execution.execution_id, latest_verification_run_id,
     p_failure_id, matching_recovery_id, requested_paths, old_paths, new_paths,
     p_idempotency_key, p_source
-  ) RETURNING * INTO authorization;
+  ) RETURNING * INTO created_authorization;
 
   INSERT INTO control.task_events(task_id,event_type,from_status,to_status,source,payload)
   VALUES (p_task_id,'publication_scope_authorized','passed','passed',p_source,
-    jsonb_build_object('authorization_id',authorization.authorization_id,'failure_id',p_failure_id,
+    jsonb_build_object('authorization_id',created_authorization.authorization_id,'failure_id',p_failure_id,
       'execution_id',current_execution.execution_id,'verification_run_id',latest_verification_run_id,
       'old_allowed_paths',old_paths,'new_allowed_paths',new_paths));
   INSERT INTO control.audit_events(project_id,workstream_slug,task_id,execution_id,action,source,old_value,new_value,metadata)
   VALUES (current_task.project_id,current_task.workstream_slug,p_task_id,current_execution.execution_id,
     'publication_scope_authorized',p_source,
     jsonb_build_object('allowed_paths',old_paths),jsonb_build_object('allowed_paths',new_paths),
-    jsonb_build_object('authorization_id',authorization.authorization_id,'failure_id',p_failure_id,
+    jsonb_build_object('authorization_id',created_authorization.authorization_id,'failure_id',p_failure_id,
       'verification_run_id',latest_verification_run_id,'requested_paths',requested_paths));
 
   RETURN jsonb_build_object(
     'authorized', true, 'idempotent', false,
-    'authorization_id', authorization.authorization_id,
+    'authorization_id', created_authorization.authorization_id,
     'task_id', p_task_id, 'execution_id', current_execution.execution_id,
     'verification_run_id', latest_verification_run_id, 'failure_id', p_failure_id,
     'old_allowed_paths', old_paths, 'new_allowed_paths', new_paths
