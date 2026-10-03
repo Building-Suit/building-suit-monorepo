@@ -3,11 +3,22 @@ const props = defineProps<{
   modelValue: string
   label: string
   disabled?: boolean
+  invalid?: boolean
+  describedby?: string
+  length?: number
+  required?: boolean
 }>()
 
-const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
+const emit = defineEmits<{ 'update:modelValue': [value: string]; complete: [value: string] }>()
 const inputs = ref<HTMLInputElement[]>([])
-const digits = computed(() => Array.from({ length: 6 }, (_, index) => props.modelValue[index] ?? ''))
+const inputLength = computed(() => props.length || 6)
+const digits = computed(() => Array.from({ length: inputLength.value }, (_, index) => props.modelValue[index] ?? ''))
+
+function commit(value: string) {
+  const normalized = value.replace(/\D/g, '').slice(0, inputLength.value)
+  emit('update:modelValue', normalized)
+  if (normalized.length === inputLength.value) emit('complete', normalized)
+}
 
 function updateDigit(index: number, event: Event) {
   const input = event.target as HTMLInputElement
@@ -15,8 +26,8 @@ function updateDigit(index: number, event: Event) {
   const next = [...digits.value]
   next[index] = value.replace(/\D/g, '').slice(-1)
   input.value = next[index]
-  emit('update:modelValue', next.join(''))
-  if (next[index] && index < 5) inputs.value[index + 1]?.focus()
+  commit(next.join(''))
+  if (next[index] && index < inputLength.value - 1) inputs.value[index + 1]?.focus()
 }
 
 function onKeydown(index: number, event: KeyboardEvent) {
@@ -26,27 +37,27 @@ function onKeydown(index: number, event: KeyboardEvent) {
   else if (event.key === 'ArrowLeft' && index > 0) {
     inputs.value[index - 1]?.focus()
   }
-  else if (event.key === 'ArrowRight' && index < 5) {
+  else if (event.key === 'ArrowRight' && index < inputLength.value - 1) {
     inputs.value[index + 1]?.focus()
   }
 }
 
 function onPaste(event: ClipboardEvent) {
-  const value = event.clipboardData?.getData('text').replace(/\D/g, '').slice(0, 6) ?? ''
+  const value = event.clipboardData?.getData('text').replace(/\D/g, '').slice(0, inputLength.value) ?? ''
   if (!value) return
   event.preventDefault()
-  emit('update:modelValue', value)
-  inputs.value[Math.min(value.length, 6) - 1]?.focus()
+  commit(value)
+  inputs.value[Math.min(value.length, inputLength.value) - 1]?.focus()
 }
 
 onMounted(() => nextTick(() => inputs.value[0]?.focus()))
 </script>
 
 <template>
-  <fieldset :aria-label="label" class="grid grid-cols-6 gap-2" dir="ltr">
+  <fieldset class="bs-otp-input" dir="ltr" :aria-describedby="describedby" :aria-invalid="invalid || undefined" :disabled="disabled">
     <legend class="sr-only">{{ label }}</legend>
     <input
-      v-for="(_, index) in 6"
+      v-for="(_, index) in inputLength"
       :key="index"
       :ref="element => { if (element) inputs[index] = element as HTMLInputElement }"
       :value="digits[index]"
@@ -57,7 +68,10 @@ onMounted(() => nextTick(() => inputs.value[0]?.focus()))
       :autocomplete="index === 0 ? 'one-time-code' : 'off'"
       :aria-label="`${label} ${index + 1}`"
       :disabled="disabled"
-      class="h-14 min-w-0 rounded-control border border-[var(--bs-border)] bg-surface text-center text-xl font-black tabular-nums outline-none transition-colors focus:border-[var(--bs-border-strong)] focus:ring-2 focus:ring-[var(--bs-focus-ring)] sm:h-16 sm:text-2xl"
+      :required="required"
+      :aria-invalid="invalid || undefined"
+      :aria-describedby="describedby"
+      class="bs-otp-input__digit"
       @input="updateDigit(index, $event)"
       @keydown="onKeydown(index, $event)"
       @paste="onPaste"

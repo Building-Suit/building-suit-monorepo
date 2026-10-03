@@ -5,9 +5,16 @@ const props = withDefaults(defineProps<{
   modelValue?: string | null
   invalid?: boolean
   rows?: number
-}>(), { modelValue: '', invalid: false, rows: 4 })
+  modelModifiers?: { trim?: boolean; lazy?: boolean }
+}>(), { modelValue: '', invalid: false, rows: 4, modelModifiers: () => ({}) })
 
 const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
+
+function update(event: Event) {
+  let value = (event.target as HTMLTextAreaElement).value
+  if (props.modelModifiers.trim) value = value.trim()
+  emit('update:modelValue', value)
+}
 </script>
 
 <template>
@@ -17,6 +24,7 @@ const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
     :value="props.modelValue ?? ''"
     :rows="rows"
     :aria-invalid="invalid || undefined"
-    @input="emit('update:modelValue', ($event.target as HTMLTextAreaElement).value)"
+    @input="!props.modelModifiers.lazy && update($event)"
+    @change="props.modelModifiers.lazy && update($event)"
   />
 </template>

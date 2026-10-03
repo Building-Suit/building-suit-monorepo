@@ -19,6 +19,12 @@ const segment = ref('summary')
 const page = ref(1)
 const notificationChoices = ref<string[]>(['email'])
 const planChoice = ref<string | string[]>('standard')
+const consent = ref(false)
+const notificationsEnabled = ref(true)
+const searchValue = ref('')
+const rangeFrom = ref('2026-10-01')
+const rangeTo = ref('2026-10-31')
+const selectedFile = ref<File | null>(null)
 const catalogueOtp = ref('123456')
 const tableState = ref<'data' | 'loading' | 'empty' | 'error'>('data')
 const density = ref<'compact' | 'comfortable'>('comfortable')
@@ -170,14 +176,24 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
     </section>
 
     <BsCard :title="isArabic ? 'النماذج والاختيار' : 'Forms and selection'" data-testid="foundation-patterns">
-      <div class="space-y-4">
+      <div class="space-y-5">
+        <BsFilterBar :label="isArabic ? 'مرشحات السجلات' : 'Record filters'">
+          <template #search><BsSearchField v-model="searchValue" :label="isArabic ? 'البحث' : 'Search'" :placeholder="isArabic ? 'ابحث بالاسم' : 'Search by name'" :clear-label="ui('close')" /></template>
+          <template #filters><BsDateRangeFilter v-model:from="rangeFrom" v-model:to="rangeTo" :legend="isArabic ? 'نطاق التاريخ' : 'Date range'" :from-label="isArabic ? 'من' : 'From'" :to-label="isArabic ? 'إلى' : 'To'" /></template>
+          <template #actions><BsButton>{{ isArabic ? 'تطبيق' : 'Apply' }}</BsButton></template>
+        </BsFilterBar>
         <BsSelect v-model="choice" :label="isArabic ? 'الصنف' : 'Item'" :options="choices" option-label="name" option-value="id" filter virtual />
-        <BsForm :pending="formPending" :error="formError" class="space-y-4" @submit="verifyForm">
-          <BsField v-slot="field" :label="isArabic ? 'القيمة' : 'Value'" for="catalogue-value" :hint="isArabic ? 'حقل نصي مشترك' : 'Shared text field'" required><BsInput id="catalogue-value" v-model="formValue" required :aria-describedby="field.describedby" :invalid="field.invalid" /></BsField>
+        <BsForm :pending="formPending" :error="formError" layout="grid" :columns="2" @submit="verifyForm">
+          <BsField v-slot="field" :label="isArabic ? 'القيمة' : 'Value'" for="catalogue-value" :description="isArabic ? 'وصف الحقل' : 'Field description'" :hint="isArabic ? 'حقل نصي مشترك' : 'Shared text field'" required><BsInput id="catalogue-value" v-model="formValue" required :aria-describedby="field.describedby" :invalid="field.invalid" /></BsField>
           <BsField v-slot="field" :label="isArabic ? 'ملاحظات' : 'Notes'" for="catalogue-notes"><BsTextarea id="catalogue-notes" v-model="notes" :aria-describedby="field.describedby" /></BsField>
+          <BsFormSection :title="isArabic ? 'خيارات السجل' : 'Record options'" :description="isArabic ? 'عناصر تحكم دلالية مشتركة.' : 'Shared semantic controls.'" :columns="2">
+            <BsCheckbox v-model="consent" :label="isArabic ? 'أوافق على الشروط' : 'I agree to the terms'" required />
+            <BsSwitch v-model="notificationsEnabled" :label="isArabic ? 'تفعيل الإشعارات' : 'Enable notifications'" />
+            <BsFileInput v-model="selectedFile" :label="isArabic ? 'اختر ملف CSV' : 'Choose CSV file'" accept=".csv,text/csv" :empty-label="isArabic ? 'لم يتم اختيار ملف' : 'No file selected'" />
+          </BsFormSection>
           <BsChoiceGroup v-model="notificationChoices" :legend="isArabic ? 'الإشعارات' : 'Notifications'" :options="[{ value: 'email', label: isArabic ? 'البريد' : 'Email' }, { value: 'app', label: isArabic ? 'داخل التطبيق' : 'In app' }]" inline />
           <BsChoiceGroup v-model="planChoice" type="radio" :legend="isArabic ? 'الخطة' : 'Plan'" :options="[{ value: 'standard', label: isArabic ? 'قياسية' : 'Standard' }, { value: 'advanced', label: isArabic ? 'متقدمة' : 'Advanced' }]" inline />
-          <BsButton type="submit" variant="primary">{{ ui('save') }}</BsButton>
+          <BsFormActions><BsButton type="button">{{ ui('cancel') }}</BsButton><BsButton type="submit" variant="primary">{{ ui('save') }}</BsButton></BsFormActions>
         </BsForm>
         <div class="flex flex-wrap gap-2"><BsButton variant="chip" :aria-pressed="formPending" @click="formPending = !formPending">{{ ui('loading') }}</BsButton><BsButton @click="toastSuccess(isArabic ? 'تم الحفظ' : 'Saved')">{{ isArabic ? 'إظهار إشعار' : 'Show notification' }}</BsButton></div>
       </div>
@@ -241,7 +257,7 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
       :title="mode === 'edit' ? (isArabic ? 'تعديل السجل' : 'Edit record') : (isArabic ? 'إضافة سجل' : 'Add record')"
       :dirty="dirty" :pending="pending" :error="actionError" @submit="save"
     >
-      <BsFloatingField :label="isArabic ? 'الاسم' : 'Name'"><InputText id="catalogue-record-name" v-model="name" class="ls-input" required /></BsFloatingField>
+      <BsField v-slot="field" :label="isArabic ? 'الاسم' : 'Name'" for="catalogue-record-name" required><BsInput id="catalogue-record-name" v-model="name" required :aria-describedby="field.describedby" /></BsField>
     </BsRecordActionDialog>
   </div>
 </template>
