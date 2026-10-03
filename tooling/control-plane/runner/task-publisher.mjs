@@ -89,9 +89,20 @@ const {
   requirements,
   verification,
   publication_boundaries: publicationBoundaries = {},
+  publication_contract: publicationContract = {},
+  publication_authorizations: publicationAuthorizations = {},
   project = {},
   workstream = {},
 } = context
+
+const contractRequiredPaths = (publicationContract.required_paths ?? [])
+  .map(item => typeof item === 'string' ? item : item?.path)
+  .filter(Boolean)
+const authorizationPaths = authorizations => (authorizations ?? []).flatMap(item =>
+  item.revoked_at ? [] : (item.authorized_paths ?? item.requested_paths ?? []),
+)
+const ordinaryAuthorizedPaths = authorizationPaths(publicationAuthorizations.ordinary)
+const protectedAuthorizedPaths = authorizationPaths(publicationAuthorizations.protected)
 
 const repository =
   project.github_repository ??
@@ -530,6 +541,9 @@ const scopeClassification = classifyPublicationFiles({
   sourcePaths: publicationBoundaries.source_paths ?? [],
   workstreamPaths: publicationBoundaries.workstream_paths ?? allowedPaths,
   projectPaths: publicationBoundaries.project_paths ?? [],
+  requiredPaths: contractRequiredPaths,
+  ordinaryAuthorizedPaths,
+  protectedAuthorizedPaths,
 })
 
 if (scopeClassification.blocked.length > 0) {
@@ -650,6 +664,9 @@ else {
     sourcePaths: publicationBoundaries.source_paths ?? [],
     workstreamPaths: publicationBoundaries.workstream_paths ?? allowedPaths,
     projectPaths: publicationBoundaries.project_paths ?? [],
+    requiredPaths: contractRequiredPaths,
+    ordinaryAuthorizedPaths,
+    protectedAuthorizedPaths,
   })
 
   if (stagedClassification.waiting.length > 0 || stagedClassification.blocked.length > 0) {

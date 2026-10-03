@@ -79,6 +79,19 @@ export function supervisorStateFingerprint(snapshot) {
       snapshot.packet.workstream.verification_config,
     ],
     publication_boundaries: snapshot.packet?.publication_boundaries ?? null,
+    publication_contract: snapshot.packet?.publication_contract && [
+      snapshot.packet.publication_contract.contract_id,
+      snapshot.packet.publication_contract.contract_fingerprint,
+      snapshot.packet.publication_contract.updated_at,
+    ],
+    publication_authorizations: snapshot.packet?.publication_authorizations && [
+      snapshot.packet.publication_authorizations.ordinary?.map(item =>
+        [item.authorization_id, item.authorized_paths ?? item.requested_paths, item.revoked_at],
+      ),
+      snapshot.packet.publication_authorizations.protected?.map(item =>
+        [item.authorization_id, item.authorized_paths, item.revoked_at],
+      ),
+    ],
     serialization_conflicts: snapshot.serialization_conflicts?.map(item =>
       [item.task_id, item.status, item.engine_stage],
     ),

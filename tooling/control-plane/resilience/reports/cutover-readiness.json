@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "task_id": "CP-RES-009",
+  "task_id": "CP-RES-014",
   "deterministic": true,
   "destructive_faults_used": false,
   "live_n8n_contacted": false,
   "cutover_ready": true,
   "summary": {
-    "mandatory": 35,
-    "passed": 35,
+    "mandatory": 37,
+    "passed": 37,
     "failed": 0
   },
   "scenarios": [
@@ -607,6 +607,52 @@
       ],
       "observed_recovery_path": [
         "apps/shop-suit/app.vue"
+      ],
+      "counts": {
+        "implementation_attempts": 0,
+        "verification_runs": 0,
+        "publication_attempts": 0,
+        "ai_calls": 0,
+        "implementation_retry_budget_consumed": 0
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "authoritative-publication-readiness",
+      "mandatory": true,
+      "injected_fault": "an approved root structural path lacks exact task authorization before implementation",
+      "expected_recovery_path": [
+        "exact authorization required",
+        "ready without execution"
+      ],
+      "observed_recovery_path": [
+        "exact_authorization_required",
+        "ready"
+      ],
+      "counts": {
+        "implementation_attempts": 0,
+        "verification_runs": 0,
+        "publication_attempts": 0,
+        "ai_calls": 0,
+        "implementation_retry_budget_consumed": 0
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "protected-publication-readiness",
+      "mandatory": true,
+      "injected_fault": "a protected migration is approved but lacks distinct human authorization",
+      "expected_recovery_path": [
+        "protected authorization required",
+        "unexpected runtime file safety-stop"
+      ],
+      "observed_recovery_path": [
+        "protected_authorization_required",
+        "unexpected_runtime_change"
       ],
       "counts": {
         "implementation_attempts": 0,

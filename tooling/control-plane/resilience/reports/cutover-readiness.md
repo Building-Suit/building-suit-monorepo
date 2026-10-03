@@ -1,10 +1,10 @@
 # Control-plane resilience acceptance
 
-Task: CP-RES-009
+Task: CP-RES-014
 
 Cutover ready: **YES**
 
-Mandatory scenarios: 35/35 passed. The deterministic harness used no destructive faults and did not contact or mutate live n8n.
+Mandatory scenarios: 37/37 passed. The deterministic harness used no destructive faults and did not contact or mutate live n8n.
 
 | Scenario | Fault | Expected recovery | Observed recovery | Impl | Verify | Publish | Result |
 |---|---|---|---|---:|---:|---:|---|
@@ -35,6 +35,8 @@ Mandatory scenarios: 35/35 passed. The deterministic harness used no destructive
 | publication-scope-before-implementation | a Shop task requests the shared UI path used by the BS-UI-ZN-PUBLIC-CHROME-001 class without explicit authority | wait before implementation → authorize exact shared path | wait before implementation → packages/ui/ | 0 | 0 | 0 | PASS |
 | publication-scope-authorization-resume | a passed and verified task waits on the exact shared UI publication path | merge exact task scope → resume publication | packages/ui/ → task-publish | 1 | 1 | 1 | PASS |
 | ambiguous-publication-scope | an unrelated product behavior file appears in the publication diff | wait-operator | apps/shop-suit/app.vue | 0 | 0 | 0 | PASS |
+| authoritative-publication-readiness | an approved root structural path lacks exact task authorization before implementation | exact authorization required → ready without execution | exact_authorization_required → ready | 0 | 0 | 0 | PASS |
+| protected-publication-readiness | a protected migration is approved but lacks distinct human authorization | protected authorization required → unexpected runtime file safety-stop | protected_authorization_required → unexpected_runtime_change | 0 | 0 | 0 | PASS |
 | stop-request-safe-boundary | a stop request arrives after the current task reaches its persistence boundary | stop-requested → no new claim | stop-requested → no new claim | 0 | 0 | 0 | PASS |
 | bounded-continuous-run | the configured task limit is reached after one completed task | success → task-limit | success → task-limit | 1 | 1 | 1 | PASS |
 | repeat-supervisor-invocation | the supervisor is invoked twice against identical persisted state | task-verify → task-verify | task-verify → task-verify | 1 | 0 | 0 | PASS |

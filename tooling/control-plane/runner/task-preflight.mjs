@@ -7,8 +7,11 @@ import {
 } from '../lib/retry-policy.mjs'
 import {
   evaluatePublicationBoundaries,
-  pathInScope,
 } from './publication-preflight.mjs'
+import {
+  evaluatePublicationReadiness,
+  publicationReadinessOutcome,
+} from './publication-readiness.mjs'
 import { completePublicationPolicy } from '../lib/workstream-readiness.mjs'
 import { evaluateVerificationReadiness } from './verification-mode.mjs'
 
@@ -102,8 +105,12 @@ export function evaluateExecutionPreflight({
     purpose === 'verification-product-repair' &&
     task.status === 'failed' &&
     latestExecution?.status === 'succeeded'
+  const retryEligible =
+    purpose === 'retry' &&
+    task.status === 'failed' &&
+    latestExecution?.status !== 'succeeded'
   if (
-    (task.status !== 'in_progress' && !repairEligible) ||
+    (task.status !== 'in_progress' && !repairEligible && !retryEligible) ||
     project.active !== true || workstream.active !== true || suit.status !== 'active'
   ) {
     return failure('stop', 'safety-stop', 'safety-stop', 'task_not_execution_eligible', checks)
@@ -113,6 +120,7 @@ export function evaluateExecutionPreflight({
     status: 'pass',
     purpose,
     failed_verification_product_repair: repairEligible,
+    failed_execution_retry: retryEligible,
   })
 
   const hardDependency = (packet.dependencies ?? []).find(dependency =>
@@ -197,27 +205,35 @@ export function evaluateExecutionPreflight({
     ],
     projectPaths: packet.publication_boundaries?.project_paths ?? allowedPaths,
   })
-  if (publicationBoundaries.invalid.length > 0) {
-    return failure('stop', 'safety-stop', 'safety-stop', 'publication_scope_invalid', checks, {
-      publication_boundaries: publicationBoundaries,
-    })
-  }
   if (!allowedPaths.some(prefix => String(workstream.application_path ?? suit.app_path ?? '').startsWith(prefix))) {
     return failure('wait', 'wait-operator', 'publication-scope', 'workstream_outside_publication_scope', checks)
   }
-  if (
-    publicationBoundaries.protected_task_paths.length > 0 ||
-    publicationBoundaries.task_paths_outside_project.length > 0
-  ) {
-    return failure('stop', 'safety-stop', 'safety-stop', 'task_publication_scope_violates_project_boundary', checks, {
-      publication_boundaries: publicationBoundaries,
-    })
-  }
-  if (publicationBoundaries.missing_authority.length > 0) {
-    return failure('wait', 'wait-operator', 'publication-scope', 'cross_workstream_publication_authority_required', checks, {
-      publication_boundaries: publicationBoundaries,
-      requested_paths: publicationBoundaries.missing_authority,
-    })
+  const publicationReadiness = evaluatePublicationReadiness({
+    contract: packet.publication_contract,
+    taskPaths: publicationBoundaries.task_paths,
+    sourcePaths: publicationBoundaries.source_paths,
+    workstreamPaths: publicationBoundaries.workstream_paths,
+    projectPaths: publicationBoundaries.project_paths,
+    ordinaryAuthorizations: packet.publication_authorizations?.ordinary ?? [],
+    protectedAuthorizations: packet.publication_authorizations?.protected ?? [],
+    runtimeFiles: runtime?.repository?.worktree_target?.changed_files ?? [],
+  })
+  const publicationOutcome = publicationReadinessOutcome(publicationReadiness)
+  if (!publicationReadiness.ready) {
+    return failure(
+      publicationOutcome.kind,
+      publicationOutcome.kind === 'stop' ? 'safety-stop' : 'wait-operator',
+      publicationOutcome.kind === 'stop' ? 'safety-stop' : 'publication-scope',
+      publicationOutcome.reason,
+      checks,
+      {
+        publication_boundaries: publicationBoundaries,
+        publication_readiness: publicationReadiness,
+        requested_paths: publicationReadiness.protected_authorization_required.length > 0
+          ? publicationReadiness.protected_authorization_required
+          : publicationReadiness.exact_authorization_required,
+      },
+    )
   }
   if (!completePublicationPolicy(workstream.publication_config)) {
     return failure('wait', 'wait-operator', 'publication-scope', 'publication_policy_incomplete', checks)
@@ -238,6 +254,7 @@ export function evaluateExecutionPreflight({
     name: 'task_contract_publication_and_verification_readiness',
     status: 'pass',
     publication_boundaries: publicationBoundaries,
+    publication_readiness: publicationReadiness,
   })
 
   const missingExecutable = Object.entries(runtime?.executables ?? {})
@@ -275,14 +292,6 @@ export function evaluateExecutionPreflight({
   if (repository.worktree_target?.status === 'invalid') {
     return failure('stop', 'safety-stop', 'safety-stop', 'worktree_target_invalid', checks)
   }
-  const outOfScopeChange = (repository.worktree_target?.changed_files ?? []).find(file =>
-    !pathInScope(file, publicationBoundaries.effective_paths),
-  )
-  if (outOfScopeChange) {
-    return failure('wait', 'wait-operator', 'publication-scope', 'worktree_change_outside_publication_scope', checks, {
-      path: outOfScopeChange,
-    })
-  }
   checks.push({ name: 'repository_parent_and_worktree', status: 'pass' })
 
   if (runtime?.repository?.dependencies_ready !== true) {
@@ -305,5 +314,6 @@ export function evaluateExecutionPreflight({
     parent_sha: repository.parent.parent_sha,
     worktree_path: repository.worktree_target?.path ?? null,
     publication_boundaries: publicationBoundaries,
+    publication_readiness: publicationReadiness,
   })
 }

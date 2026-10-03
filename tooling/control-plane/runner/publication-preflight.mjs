@@ -30,6 +30,7 @@ const protectedPublicationPaths = [
   /(^|\/)\.env(?:\.|$)/,
   /(^|\/)(?:secrets?|credentials?)(?:\/|\.|$)/i,
   /(^|\/)supabase\/migrations\//,
+  /(^|\/)supabase\/(?:config\.toml|seed\.sql)$/,
   /(^|\/)n8n(?:\/|\.|-)/i,
   /(^|\/)\.github\/workflows\//,
   /(^|\/)(?:vercel|deploy)(?:\/|\.|-)/i,
@@ -113,43 +114,64 @@ export function validateCurrentPublicationAuthorization({
 export function taskPublicationMetadata({
   metadata = {},
   allowedPaths = [],
+  sourcePaths = [],
+  exactRequirementPaths = [],
   workstreamPaths = [],
   projectPaths = [],
 }) {
-  if (!Array.isArray(allowedPaths)) throw new Error('task_allowed_paths_must_be_an_array')
+  if (![allowedPaths, sourcePaths, exactRequirementPaths].every(Array.isArray)) {
+    throw new Error('task_publication_paths_must_be_arrays')
+  }
   const boundaries = evaluatePublicationBoundaries({
-    taskPaths: allowedPaths,
+    taskPaths: [...allowedPaths, ...exactRequirementPaths],
+    sourcePaths,
     workstreamPaths,
     projectPaths,
   })
   if (boundaries.invalid.length > 0) throw new Error('invalid_task_allowed_paths')
-  if (boundaries.protected_task_paths.length > 0) throw new Error('protected_task_allowed_path')
+  if (exactRequirementPaths.some(item => /[*?[{]/.test(item))) {
+    throw new Error('publication_requirements_must_be_exact_paths')
+  }
   if (boundaries.task_paths_outside_project.length > 0) {
     throw new Error('task_allowed_path_outside_project_boundary')
   }
+  if (boundaries.source_paths.some(item =>
+    !pathInScope(item.replace(/[?*[{].*$/, ''), boundaries.project_paths),
+  )) {
+    throw new Error('task_source_path_outside_project_boundary')
+  }
   return {
     ...metadata,
-    allowed_paths: boundaries.task_paths,
+    allowed_paths: uniquePaths(allowedPaths),
+    source_allowed_paths: uniquePaths(sourcePaths),
   }
 }
 
 export function classifyPublicationFiles({
   files = [],
-  taskPaths = [],
   sourcePaths = [],
   workstreamPaths = [],
   projectPaths = [],
+  requiredPaths = [],
+  ordinaryAuthorizedPaths = [],
+  protectedAuthorizedPaths = [],
 }) {
   const decisions = [...new Set(files)].sort().map(file => {
     const normalized = normalize(file)
     if (protectedPublicationPath(normalized)) {
+      if (
+        requiredPaths.map(normalize).includes(normalized) &&
+        protectedAuthorizedPaths.map(normalize).includes(normalized)
+      ) {
+        return { file: normalized, decision: 'allow', boundary: 'protected-exact', reason: 'protected_exact_human_authorization' }
+      }
       return { file: normalized, decision: 'safety-stop', reason: 'protected_publication_area' }
-    }
-    if (pathInScope(normalized, taskPaths)) {
-      return { file: normalized, decision: 'allow', boundary: 'task', reason: 'task_specific_path' }
     }
     if (pathInScope(normalized, workstreamPaths)) {
       return { file: normalized, decision: 'allow', boundary: 'workstream', reason: 'workstream_publication_path' }
+    }
+    if (pathInScope(normalized, ordinaryAuthorizedPaths)) {
+      return { file: normalized, decision: 'allow', boundary: 'task-exact', reason: 'exact_human_authorization' }
     }
     if (pathInScope(normalized, projectPaths)) {
       return {

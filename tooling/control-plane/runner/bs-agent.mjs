@@ -1534,6 +1534,18 @@ function taskRun() {
       )
     }
 
+    const executionPreflight = runExecutionPreflight(supervisorSnapshot(taskId), 'implementation')
+    if (!executionPreflight.ready) {
+      output({
+        ok: false,
+        command: 'task-run',
+        task_id: taskId,
+        error: executionPreflight.reason,
+        preflight: executionPreflight,
+      }, 1)
+      return
+    }
+
     const verificationReadiness = evaluateWorkstreamReadiness(packet)
     if (!verificationReadiness.ready) {
       output({
@@ -3065,6 +3077,21 @@ function taskRetry() {
       )
     }
 
+    const executionPreflight = runExecutionPreflight(
+      supervisorSnapshot(taskId),
+      previousExecution.status === 'succeeded' ? 'verification-product-repair' : 'retry',
+    )
+    if (!executionPreflight.ready) {
+      output({
+        ok: false,
+        command: 'task-retry',
+        task_id: taskId,
+        error: executionPreflight.reason,
+        preflight: executionPreflight,
+      }, 1)
+      return
+    }
+
     const retryPolicy =
       validateRetryPolicy(
         packet.retry_policy,
@@ -4427,6 +4454,12 @@ function taskPublish() {
             workstream_paths: workstreamAllowedPaths,
             project_paths: projectAllowedPaths,
           },
+
+          publication_contract:
+            packet.publication_contract,
+
+          publication_authorizations:
+            packet.publication_authorizations,
         },
         null,
         2,
@@ -5542,7 +5575,9 @@ function taskSupervisor() {
         const preflight = runExecutionPreflight(
           snapshot,
           plan.command === 'task-retry'
-            ? 'verification-product-repair'
+            ? snapshot.executions.at(-1)?.status === 'succeeded'
+              ? 'verification-product-repair'
+              : 'retry'
             : 'implementation',
         )
         const recoveryPlan = preflightRecoveryPlan(snapshot, preflight)
