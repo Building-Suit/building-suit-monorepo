@@ -42,6 +42,7 @@ import {
   evaluateExecutionPreflight,
   fingerprint as preflightFingerprint,
 } from './task-preflight.mjs'
+import { evaluateWorkstreamReadiness } from './verification-mode.mjs'
 import { evaluateParentSatisfaction } from './parent-satisfaction.mjs'
 import {
   WATCHER_LEASE_MS,
@@ -1218,6 +1219,22 @@ function taskPrepare() {
       )
     }
 
+    const verificationReadiness = evaluateWorkstreamReadiness(packet)
+    if (!verificationReadiness.ready) {
+      output({
+        ok: false,
+        command: 'task-prepare',
+        task_id: taskId,
+        error: verificationReadiness.reason,
+        classification: {
+          failure_class: verificationReadiness.failure_class,
+          recovery_action: 'wait-operator',
+        },
+        unenforced: verificationReadiness.unenforced ?? [],
+      }, 1)
+      return
+    }
+
     const stackKey =
       packet.suit.stack_key
 
@@ -1515,6 +1532,22 @@ function taskRun() {
       throw new Error(
         `Task ${taskId} is not claimed.`,
       )
+    }
+
+    const verificationReadiness = evaluateWorkstreamReadiness(packet)
+    if (!verificationReadiness.ready) {
+      output({
+        ok: false,
+        command: 'task-run',
+        task_id: taskId,
+        error: verificationReadiness.reason,
+        classification: {
+          failure_class: verificationReadiness.failure_class,
+          recovery_action: 'wait-operator',
+        },
+        unenforced: verificationReadiness.unenforced ?? [],
+      }, 1)
+      return
     }
 
     const project =
@@ -2234,6 +2267,22 @@ function taskVerify() {
       throw new Error(
         `Unknown task: ${taskId}`,
       )
+    }
+
+    const verificationReadiness = evaluateWorkstreamReadiness(packet)
+    if (!verificationReadiness.ready) {
+      output({
+        ok: false,
+        command: 'task-verify',
+        task_id: taskId,
+        error: verificationReadiness.reason,
+        classification: {
+          failure_class: verificationReadiness.failure_class,
+          recovery_action: 'wait-operator',
+        },
+        unenforced: verificationReadiness.unenforced ?? [],
+      }, 1)
+      return
     }
 
     if (packet.task.status === 'failed') {
@@ -4913,6 +4962,11 @@ function executionPreflightRuntime(snapshot) {
   for (const config of [packet.project?.verification_config, packet.workstream?.verification_config]) {
     for (const check of config?.commands ?? []) {
       if (check?.required !== false && check?.program) requiredPrograms.add(check.program)
+    }
+    for (const phase of ['start_commands', 'reset_commands', 'test_commands']) {
+      for (const check of config?.database?.[phase] ?? []) {
+        if (check?.required !== false && check?.program) requiredPrograms.add(check.program)
+      }
     }
   }
   const executables = Object.fromEntries(

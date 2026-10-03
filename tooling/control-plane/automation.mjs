@@ -127,10 +127,13 @@ function saveProject(config, dryRun) {
     ), compatibility_suits AS (
       INSERT INTO control.suits(slug,display_name,stack_key,app_path,status,metadata)
       SELECT CASE WHEN p.slug='building-suit' THEN w->>'slug' ELSE p.slug||'-'||(w->>'slug') END,
-        COALESCE(w->>'display_name',w->>'slug'),w->>'stack_key',w->>'application_path','active',
+        COALESCE(w->>'display_name',w->>'slug'),w->>'stack_key',w->>'application_path',
+        CASE WHEN COALESCE((w->>'active')::boolean,true) THEN 'active' ELSE 'paused' END,
         jsonb_build_object('compatibility_project',p.slug,'compatibility_workstream',w->>'slug')
       FROM upsert_project p, input, jsonb_array_elements(input.c->'workstreams') w
-      ON CONFLICT (slug) DO UPDATE SET display_name=EXCLUDED.display_name,stack_key=EXCLUDED.stack_key,app_path=EXCLUDED.app_path
+      ON CONFLICT (slug) DO UPDATE SET display_name=EXCLUDED.display_name,stack_key=EXCLUDED.stack_key,
+        app_path=EXCLUDED.app_path,status=EXCLUDED.status,
+        metadata=control.suits.metadata||EXCLUDED.metadata
       RETURNING slug
     ), upsert_workstreams AS (
       INSERT INTO control.workstreams(project_id,slug,display_name,stack_key,application_path,suit_slug,retry_policy_id,model_profile,concurrency_policy,verification_config,publication_config,active,metadata)

@@ -25,6 +25,7 @@ import {
   resolveVerificationMode,
   safeRegisteredVerificationCommand,
 } from './verification-mode.mjs'
+import { mergeVerificationConfig } from '../lib/workstream-readiness.mjs'
 import { publicationStateFingerprint } from './publication-preflight.mjs'
 import { executeWithControlDatabaseRetry } from '../lib/control-database.mjs'
 
@@ -88,23 +89,10 @@ const suit =
 
 const project = packet.project ?? {}
 const workstream = packet.workstream ?? {}
-const configuredCommands = new Map()
-for (
-  const config
-  of [
-    project.verification_config,
-    workstream.verification_config,
-  ]
-) {
-  for (const command of config?.commands ?? []) {
-    configuredCommands.set(command.name, command)
-  }
-}
-const verificationConfig = {
-  ...(project.verification_config ?? {}),
-  ...(workstream.verification_config ?? {}),
-  commands: [...configuredCommands.values()],
-}
+const verificationConfig = mergeVerificationConfig(
+  project.verification_config,
+  workstream.verification_config,
+)
 
 const verificationMode =
   persistedVerificationMode ??
@@ -759,9 +747,9 @@ if (databaseChanged) {
       // A failed prerequisite makes later database evidence unavailable rather
       // than executing against an unprepared local database.
       const prerequisiteFailed = results.some(result =>
-        result.name === 'database-reset' && result.status !== 'pass',
+        result.database_phase && result.status !== 'pass',
       )
-      if (prerequisiteFailed && command.name !== 'database-reset') {
+      if (prerequisiteFailed) {
         results.push(omittedCheck({
           name: command.name,
           command: [command.program, ...(command.args ?? [])].join(' '),
@@ -773,17 +761,19 @@ if (databaseChanged) {
         }))
         continue
       }
-      results.push(runCheck({
+      const databaseResult = runCheck({
         name: command.name,
         program: command.program,
         args: command.args ?? [],
         cwd: command.cwd ? path.join(worktreePath, command.cwd) : worktreePath,
         timeout: command.timeout_ms ?? 15 * 60 * 1000,
         required: command.required !== false,
-        selectionReason: databaseVerification.source === 'registered_verification_config'
+        selectionReason: databaseVerification.source.startsWith('registered_')
           ? 'registered_database_verification_contract'
           : 'database_scope_changed',
-      }))
+      })
+      databaseResult.database_phase = command.phase ?? 'test'
+      results.push(databaseResult)
     }
 
     if (
@@ -948,6 +938,7 @@ if (browserRequired) {
 const resolvedPlan = resolveVerificationPlan({
   entries: task.verification_plan ?? [],
   configuredCommands: verificationConfig.commands ?? [],
+  legacyMappings: verificationConfig.legacy_plan_mappings ?? {},
 })
 
 for (const planned of resolvedPlan.checks) {

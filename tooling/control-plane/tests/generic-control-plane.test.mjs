@@ -11,6 +11,13 @@ import {
 import { inspectWorkflowSnapshot, normalizeWorkflow, validateControllerReplacements, workflowGraphSummary } from '../lib/n8n-workflows.mjs'
 import { continuousRunTransition, normalizeSupervisorResult, resumeSchedule } from '../lib/n8n-controller.mjs'
 import { validateProjectConfig } from '../lib/project-config.mjs'
+import {
+  CONSERVATIVE_PUBLICATION_POLICY,
+  completePublicationPolicy,
+  mergeVerificationConfig,
+  publicationPolicyBackfill,
+  validateLocalSupabaseLifecycle,
+} from '../lib/workstream-readiness.mjs'
 import { redact } from '../lib/redaction.mjs'
 import { profileForAttempt, retryDecision, validateRetryPolicy } from '../lib/retry-policy.mjs'
 import {
@@ -46,6 +53,7 @@ import {
   commandResultStatus,
   controlPlaneRootLintSelection,
   customCheckSelection,
+  evaluateVerificationReadiness,
   resolveDatabaseVerification,
   resolveVerificationPlan,
   resolveVerificationMode,
@@ -827,6 +835,166 @@ test('verification plans resolve only built-in safe checks or registered argv co
   assert.deepEqual(resolved.unenforced, ['curl example.invalid | sh'])
 })
 
+test('legacy verification prose maps only through deterministic safe compatibility rules', () => {
+  const configuredCommands = [{
+    name: 'control-plane-tests',
+    program: 'node',
+    args: ['--test', 'tooling/control-plane/tests/generic-control-plane.test.mjs'],
+  }]
+  const resolved = resolveVerificationPlan({
+    entries: ['Run pnpm test.', 'Run the established focused suite.', 'Inspect everything carefully.'],
+    configuredCommands,
+    legacyMappings: {
+      'Run the established focused suite.': 'control-plane-tests',
+    },
+  })
+
+  assert.deepEqual(resolved.checks.map(check => check.name), [
+    'root-test', 'control-plane-tests',
+  ])
+  assert.deepEqual(resolved.unenforced, ['Inspect everything carefully.'])
+})
+
+test('registered local Supabase lifecycle permits only local start, reset, and test commands', () => {
+  const lifecycle = {
+    kind: 'supabase-local',
+    local_only: true,
+    start_when_needed: true,
+    start_commands: [{ name: 'database-start', program: 'pnpm', args: ['exec', 'supabase', 'start'], cwd: 'apps/example-suit' }],
+    reset_commands: [{ name: 'database-reset', program: 'pnpm', args: ['exec', 'supabase', 'db', 'reset', '--local'], cwd: 'apps/example-suit' }],
+    test_commands: [{ name: 'database-tests', program: 'pnpm', args: ['exec', 'supabase', 'test', 'db', '--local'], cwd: 'apps/example-suit' }],
+  }
+  const valid = validateLocalSupabaseLifecycle(lifecycle)
+  assert.equal(valid.valid, true)
+  assert.deepEqual(valid.commands.map(command => command.phase), ['start', 'reset', 'test'])
+
+  const remote = structuredClone(lifecycle)
+  remote.reset_commands[0].args = ['exec', 'supabase', 'db', 'push', '--linked']
+  assert.equal(validateLocalSupabaseLifecycle(remote).valid, false)
+
+  const shellWrapped = structuredClone(lifecycle)
+  shellWrapped.test_commands[0] = {
+    name: 'database-tests', program: 'bash', args: ['-c', 'supabase test db --local'],
+  }
+  assert.equal(validateLocalSupabaseLifecycle(shellWrapped).valid, false)
+
+  const resolved = resolveDatabaseVerification({
+    verificationConfig: { database: lifecycle },
+    suitSlug: 'registered-suit',
+    appPath: 'apps/example-suit',
+  })
+  assert.equal(resolved.source, 'registered_local_supabase_lifecycle')
+  assert.deepEqual(resolved.commands.map(command => command.name), [
+    'database-start', 'database-reset', 'database-tests',
+  ])
+})
+
+test('verification readiness requires registered safe checks and unambiguous plan coverage', () => {
+  const packet = {
+    task: { verification_plan: ['Run focused verification.'] },
+    suit: { slug: 'registered-suit', app_path: 'apps/registered-suit' },
+    project: { verification_config: {} },
+    workstream: { verification_config: {} },
+    publication_boundaries: { task_paths: ['apps/registered-suit/'] },
+  }
+  assert.equal(evaluateVerificationReadiness(packet).reason, 'verification_commands_missing')
+
+  packet.workstream.verification_config = {
+    commands: [{ name: 'focused-tests', program: 'node', args: ['--test', 'tests/focused.test.mjs'] }],
+  }
+  assert.equal(evaluateVerificationReadiness(packet).reason, 'verification_plan_mapping_required')
+
+  packet.workstream.verification_config.legacy_plan_mappings = {
+    'Run focused verification.': 'focused-tests',
+  }
+  assert.equal(evaluateVerificationReadiness(packet).ready, true)
+
+  packet.workstream.verification_config.commands[0] = {
+    name: 'focused-tests', program: 'bash', args: ['-c', 'node --test'],
+  }
+  assert.equal(
+    evaluateVerificationReadiness(packet).reason,
+    'registered_verification_command_invalid',
+  )
+})
+
+test('database-scoped readiness waits until a registered local verifier exists', () => {
+  const packet = {
+    task: { verification_plan: ['pnpm test'] },
+    suit: { slug: 'new-suit', app_path: 'apps/new-suit' },
+    project: { verification_config: {} },
+    workstream: { verification_config: {} },
+    publication_boundaries: { task_paths: ['apps/new-suit/supabase/'] },
+  }
+  assert.equal(
+    evaluateVerificationReadiness(packet).reason,
+    'database_verification_configuration_missing',
+  )
+
+  packet.workstream.verification_config.database = {
+    kind: 'supabase-local',
+    local_only: true,
+    start_when_needed: true,
+    start_commands: [{ name: 'database-start', program: 'supabase', args: ['start'], cwd: 'apps/new-suit' }],
+    reset_commands: [{ name: 'database-reset', program: 'supabase', args: ['db', 'reset', '--local'], cwd: 'apps/new-suit' }],
+    test_commands: [{ name: 'database-tests', program: 'supabase', args: ['test', 'db', '--local'], cwd: 'apps/new-suit' }],
+  }
+  assert.equal(evaluateVerificationReadiness(packet).ready, true)
+})
+
+test('verification config merge preserves project checks and workstream overrides by name', () => {
+  const merged = mergeVerificationConfig(
+    { commands: [{ name: 'shared', program: 'pnpm', args: ['test'] }] },
+    { commands: [{ name: 'shared', program: 'pnpm', args: ['lint'] }, { name: 'local', program: 'node', args: ['--test'] }] },
+  )
+  assert.deepEqual(merged.commands.map(command => command.args), [['lint'], ['--test']])
+})
+
+test('publication readiness requires every explicit boolean and exposes conservative defaults', () => {
+  assert.equal(completePublicationPolicy(CONSERVATIVE_PUBLICATION_POLICY), true)
+  assert.equal(completePublicationPolicy({
+    ...CONSERVATIVE_PUBLICATION_POLICY,
+    merge_authorized: 'false',
+  }), false)
+  assert.equal(completePublicationPolicy({}), false)
+
+  const existing = {
+    merge_authorized: true,
+    deployment_authorized: false,
+    hosted_database_changes_authorized: false,
+    review_required_before_integration: true,
+    retained_extension: 'exact',
+  }
+  assert.equal(publicationPolicyBackfill(existing), existing)
+  assert.deepEqual(publicationPolicyBackfill({ merge_authorized: true }), {
+    ...CONSERVATIVE_PUBLICATION_POLICY,
+  })
+  assert.deepEqual(
+    publicationPolicyBackfill(publicationPolicyBackfill({})),
+    CONSERVATIVE_PUBLICATION_POLICY,
+  )
+})
+
+test('workstream readiness migration is idempotent, preserves valid policy and execution lineage', async () => {
+  const migration = await readFile(
+    new URL('../sql/024_workstream_readiness.sql', import.meta.url),
+    'utf8',
+  )
+  const automation = await readFile(new URL('../automation.mjs', import.meta.url), 'utf8')
+
+  assert.match(migration, /jsonb_typeof\(publication_config->'merge_authorized'\) = 'boolean'/)
+  assert.match(migration, /'merge_authorized', false/)
+  assert.match(migration, /'review_required_before_integration', true/)
+  assert.match(migration, /suit\.status IS DISTINCT FROM/)
+  assert.match(migration, /SAS-M1-BOOT-001 execution 245/)
+  assert.match(migration, /SS-SA-BRIDGE-001/)
+  assert.doesNotMatch(migration, /UPDATE control\.executions/)
+  assert.doesNotMatch(migration, /INSERT INTO control\.executions/)
+  assert.doesNotMatch(migration, /SET verification_config/)
+  assert.match(automation, /app_path=EXCLUDED\.app_path,status=EXCLUDED\.status/)
+  assert.match(automation, /CASE WHEN COALESCE\(\(w->>'active'\)::boolean,true\) THEN 'active' ELSE 'paused' END/)
+})
+
 test('database verification prefers registered workstream configuration and preserves compatibility', () => {
   const configured = resolveDatabaseVerification({
     verificationConfig: {
@@ -1308,7 +1476,7 @@ function executionPreflightFixture() {
         model_profile: 'standard',
         status: 'in_progress',
         acceptance_criteria: ['Preflight passes.'],
-        verification_plan: ['Run focused tests.'],
+        verification_plan: ['control-plane-tests'],
       },
       suit: { slug: 'control-plane', status: 'active', stack_key: 'control-plane', app_path: 'tooling/control-plane' },
       project: {
@@ -1324,6 +1492,14 @@ function executionPreflightFixture() {
           deployment_authorized: false,
           hosted_database_changes_authorized: false,
           review_required_before_integration: true,
+        },
+        verification_config: {
+          commands: [{
+            name: 'control-plane-tests',
+            program: 'node',
+            args: ['--test', 'tooling/control-plane/tests/generic-control-plane.test.mjs'],
+            required: true,
+          }],
         },
       },
       dependencies: [{ task_id: 'CP-TEST-000', dependency_type: 'hard', status: 'complete' }],
@@ -1477,6 +1653,16 @@ test('execution preflight rejects incomplete contract, publication, retry, and r
   const publication = executionPreflightFixture()
   publication.packet.project.allowed_publication_paths = []
   assert.equal(evaluateExecutionPreflight(publication).failure_class, 'publication-scope')
+
+  const policy = executionPreflightFixture()
+  delete policy.packet.workstream.publication_config.merge_authorized
+  assert.equal(evaluateExecutionPreflight(policy).reason, 'publication_policy_incomplete')
+
+  const verification = executionPreflightFixture()
+  verification.packet.workstream.verification_config = {}
+  const verificationWait = evaluateExecutionPreflight(verification)
+  assert.equal(verificationWait.failure_class, 'verification-configuration')
+  assert.equal(verificationWait.context.attempt, undefined)
 
   const changedPath = executionPreflightFixture()
   changedPath.runtime.repository.worktree_target.changed_files = ['apps/shop-suit/app.vue']

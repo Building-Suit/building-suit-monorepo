@@ -1,3 +1,10 @@
+import {
+  completePublicationPolicy,
+  mergeVerificationConfig,
+  safeRegisteredCommand,
+  validateLocalSupabaseLifecycle,
+} from '../lib/workstream-readiness.mjs'
+
 const supportedModes = new Set([
   'focused',
   'milestone',
@@ -19,37 +26,45 @@ function normalizedCommand(program, args = []) {
 }
 
 export function safeRegisteredVerificationCommand(command) {
-  const cwd = command?.cwd
-  return Boolean(
-    command?.name &&
-    typeof command.program === 'string' &&
-    /^[a-zA-Z0-9._+-]+$/.test(command.program) &&
-    Array.isArray(command.args ?? []) &&
-    (command.args ?? []).every(argument => typeof argument === 'string') &&
-    (
-      cwd == null ||
-      (
-        typeof cwd === 'string' &&
-        !cwd.startsWith('/') &&
-        !cwd.split(/[\\/]/).includes('..')
-      )
-    )
-  )
+  return safeRegisteredCommand(command)
 }
 
-export function resolveVerificationPlan({ entries = [], configuredCommands = [] }) {
+function normalizedPlanEntry(value) {
+  return String(value ?? '').trim().replace(/\s+/g, ' ')
+}
+
+function compatibilityPlanEntry(value) {
+  const normalized = normalizedPlanEntry(value).replace(/[.;:]$/, '')
+  const command = normalized.replace(/^run\s+/i, '')
+  return safePlanCommands.has(command) ? command : normalized
+}
+
+export function resolveVerificationPlan({
+  entries = [],
+  configuredCommands = [],
+  legacyMappings = {},
+}) {
   const registered = new Map()
   for (const command of configuredCommands) {
     if (!safeRegisteredVerificationCommand(command)) continue
     registered.set(normalizedCommand(command.program, command.args), command)
-    registered.set(String(command.name).trim(), command)
+    registered.set(String(command.name).trim().toLowerCase(), command)
   }
 
   const checks = []
   const unenforced = []
   for (const rawEntry of entries) {
-    const entry = typeof rawEntry === 'string' ? rawEntry.trim().replace(/\s+/g, ' ') : ''
-    const command = safePlanCommands.get(entry) ?? registered.get(entry)
+    const entry = typeof rawEntry === 'string' ? normalizedPlanEntry(rawEntry) : ''
+    const compatible = compatibilityPlanEntry(entry)
+    const mapped = legacyMappings?.[entry] ?? legacyMappings?.[compatible]
+    const command =
+      safePlanCommands.get(entry) ??
+      safePlanCommands.get(compatible) ??
+      registered.get(entry.toLowerCase()) ??
+      registered.get(compatible.toLowerCase()) ??
+      (typeof mapped === 'string'
+        ? safePlanCommands.get(mapped) ?? registered.get(mapped.toLowerCase())
+        : null)
     if (!entry || !command) {
       unenforced.push(typeof rawEntry === 'string' ? rawEntry : JSON.stringify(rawEntry))
       continue
@@ -67,6 +82,12 @@ export function resolveVerificationPlan({ entries = [], configuredCommands = [] 
 
 export function resolveDatabaseVerification({ verificationConfig = {}, suitSlug, appPath, changedDatabaseTests = [] }) {
   const configured = verificationConfig.database
+  if (configured?.kind === 'supabase-local' || configured?.local_only != null) {
+    const lifecycle = validateLocalSupabaseLifecycle(configured)
+    return lifecycle.valid
+      ? { source: 'registered_local_supabase_lifecycle', commands: lifecycle.commands }
+      : { source: 'invalid_configuration', commands: [], reason: lifecycle.reason }
+  }
   if (configured?.commands?.length > 0) {
     if (!configured.commands.every(safeRegisteredVerificationCommand)) {
       return { source: 'invalid_configuration', commands: [] }
@@ -104,6 +125,73 @@ export function resolveDatabaseVerification({ verificationConfig = {}, suitSlug,
     }
   }
   return { source: 'missing', commands: [] }
+}
+
+function databaseScopeRequired(packet) {
+  const paths = [
+    ...(packet.publication_boundaries?.task_paths ?? []),
+    ...(packet.publication_boundaries?.source_paths ?? []),
+  ]
+  const plan = JSON.stringify(packet.task?.verification_plan ?? []).toLowerCase()
+  return paths.some(value => /(^|\/)supabase\//.test(String(value))) ||
+    /\b(?:database|supabase|pgtap|db:test)\b/.test(plan)
+}
+
+export function evaluateVerificationReadiness(packet) {
+  const config = mergeVerificationConfig(
+    packet.project?.verification_config,
+    packet.workstream?.verification_config,
+  )
+  const invalidCommand = (config.commands ?? []).find(command =>
+    !safeRegisteredVerificationCommand(command),
+  )
+  if (invalidCommand) {
+    return { ready: false, reason: 'registered_verification_command_invalid' }
+  }
+  const plan = resolveVerificationPlan({
+    entries: packet.task?.verification_plan ?? [],
+    configuredCommands: config.commands,
+    legacyMappings: config.legacy_plan_mappings,
+  })
+  if (plan.unenforced.length > 0) {
+    return {
+      ready: false,
+      reason: (config.commands ?? []).length === 0
+        ? 'verification_commands_missing'
+        : 'verification_plan_mapping_required',
+      unenforced: plan.unenforced,
+    }
+  }
+
+  if (databaseScopeRequired(packet)) {
+    const database = resolveDatabaseVerification({
+      verificationConfig: config,
+      suitSlug: packet.suit?.slug,
+      appPath: packet.workstream?.application_path ?? packet.suit?.app_path,
+    })
+    if (database.commands.length === 0) {
+      return {
+        ready: false,
+        reason: database.reason ?? 'database_verification_configuration_missing',
+      }
+    }
+  }
+
+  return { ready: true, reason: 'verification_configuration_ready', config, plan }
+}
+
+export function evaluateWorkstreamReadiness(packet) {
+  if (!completePublicationPolicy(packet.workstream?.publication_config)) {
+    return {
+      ready: false,
+      reason: 'publication_policy_incomplete',
+      failure_class: 'publication-scope',
+    }
+  }
+  const verification = evaluateVerificationReadiness(packet)
+  return verification.ready
+    ? verification
+    : { ...verification, failure_class: 'verification-configuration' }
 }
 
 export function classifyVerificationResults(checks = []) {
