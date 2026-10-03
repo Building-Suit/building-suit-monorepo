@@ -69,12 +69,14 @@ export function supervisorStateFingerprint(snapshot) {
       snapshot.packet.project.active,
       snapshot.packet.project.allowed_publication_paths,
       snapshot.packet.project.environment_routing,
+      snapshot.packet.project.verification_config,
     ],
     workstream: snapshot.packet?.workstream && [
       snapshot.packet.workstream.active,
       snapshot.packet.workstream.application_path,
       snapshot.packet.workstream.concurrency_policy,
       snapshot.packet.workstream.publication_config,
+      snapshot.packet.workstream.verification_config,
     ],
     publication_boundaries: snapshot.packet?.publication_boundaries ?? null,
     serialization_conflicts: snapshot.serialization_conflicts?.map(item =>
@@ -221,6 +223,50 @@ export function planSupervisorStep(snapshot) {
       })
     }
 
+    const verificationFailureClass =
+      (String(explicitFailure?.failure_class ?? '').startsWith('verification-')
+        ? explicitFailure.failure_class
+        : null) ??
+      verification?.metadata?.failure_class ??
+      latest(
+        (snapshot.verification_results ?? []).filter(result =>
+          verification && Number(result.verification_run_id) === Number(verification.verification_run_id),
+        ),
+        'verification_id',
+      )?.metadata?.failure_class ??
+      (execution?.status === 'succeeded' ? 'verification-product-defect' : null)
+
+    if (execution?.status === 'succeeded' && verificationFailureClass !== 'verification-product-defect') {
+      if (verificationFailureClass === 'verification-lifecycle') {
+        return decision('act', 'reverify', verificationFailureClass, 'verification_lifecycle_reverify', {
+          command: 'task-verify', execution, verification, publication, fingerprint,
+        })
+      }
+
+      const retryAfterWait =
+        recovery?.failure_class === verificationFailureClass &&
+        recovery?.next_wake_at &&
+        Date.parse(recovery.next_wake_at) <= Date.now()
+      const configurationChanged =
+        recovery?.failure_class === verificationFailureClass &&
+        recovery?.condition?.fingerprint &&
+        recovery.condition.fingerprint !== fingerprint
+      if (retryAfterWait || configurationChanged) {
+        return decision('act', 'reverify', verificationFailureClass, 'verification_condition_changed', {
+          command: 'task-verify', execution, verification, publication, fingerprint,
+        })
+      }
+
+      if (verificationFailureClass === 'verification-infrastructure') {
+        return decision('wait', 'wait-external', verificationFailureClass, 'verification_infrastructure_unavailable', {
+          execution, verification, publication, fingerprint,
+        })
+      }
+      return decision('wait', 'wait-operator', verificationFailureClass, 'verification_configuration_required', {
+        execution, verification, publication, fingerprint,
+      })
+    }
+
     const policy = snapshot.packet.retry_policy ?? {}
     const attemptsRemain = execution && Number(execution.attempt) < Number(policy.max_attempts ?? 0)
     if (!attemptsRemain) {
@@ -253,6 +299,20 @@ export function planSupervisorStep(snapshot) {
 export function classifySupervisorFailure({ command, payload, attempt, maxAttempts }) {
   const error = String(payload?.publication?.error ?? payload?.error ?? 'task_action_failed')
   const lower = `${error} ${JSON.stringify(payload ?? {})}`.toLowerCase()
+  const verificationClass = payload?.classification?.failure_class
+
+  if (verificationClass === 'verification-lifecycle') {
+    return decision('act', 'reverify', verificationClass, 'verification_lifecycle_reverify', { command: 'task-verify' })
+  }
+  if (verificationClass === 'verification-configuration') {
+    return decision('wait', 'wait-operator', verificationClass, 'verification_configuration_required')
+  }
+  if (verificationClass === 'verification-infrastructure') {
+    return decision('wait', 'wait-external', verificationClass, 'verification_infrastructure_unavailable')
+  }
+  if (verificationClass === 'verification-required-check-unavailable') {
+    return decision('wait', 'wait-operator', verificationClass, 'required_verification_check_unavailable')
+  }
 
   if (lower.includes('no_publishable_changes')) {
     return decision('act', 'complete-no-changes', 'no-change', 'no_publishable_changes', {

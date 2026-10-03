@@ -1866,21 +1866,28 @@ function recordControlFailure(
     const decision = execution
       ? retryDecision(policy, execution.attempt)
       : { allowed: false }
+    const failureClass = safeMetadata.classification?.failure_class ?? null
+    const recoveryAction = safeMetadata.classification?.recovery_action ?? null
+    const implementationRetryAllowed =
+      decision.allowed &&
+      (!failureClass || failureClass === 'verification-product-defect')
     const legalActions = ['inspect', 'error-bundle', 'resume']
     if (stage === 'verification') legalActions.push('reverify')
-    if (decision.allowed) legalActions.push('retry')
+    if (implementationRetryAllowed) legalActions.push('retry')
     if (stage === 'publication') legalActions.push('publish', 'reparent')
     controlQuery(
       `
         INSERT INTO control.failures(
           project_id,workstream_slug,task_id,execution_id,attempt,stage,error_code,
           summary,raw_error,retry_available,next_profile,human_intervention_required,
-          legal_actions,metadata
+          legal_actions,metadata,failure_class,recovery_action,recoverable
         )
         SELECT t.project_id,t.workstream_slug,t.task_id,
           NULLIF(:'execution_id','')::bigint,NULLIF(:'attempt','')::integer,:'stage',:'error_code',
           :'summary',:'raw_error',:'retry_available'::boolean,NULLIF(:'next_profile',''),
-          :'human_required'::boolean,:'legal_actions'::jsonb,:'metadata'::jsonb
+          :'human_required'::boolean,:'legal_actions'::jsonb,:'metadata'::jsonb,
+          COALESCE(NULLIF(:'failure_class',''), 'operator-wait'),
+          COALESCE(NULLIF(:'recovery_action',''), 'wait-operator'), true
         FROM control.tasks t WHERE t.task_id=:'task_id';
         SELECT jsonb_build_object('recorded',true);
       `,
@@ -1892,11 +1899,13 @@ function recordControlFailure(
         error_code: safeError.split(/\s/)[0].slice(0,120) || 'failure',
         summary: safeError.slice(0,1000),
         raw_error: JSON.stringify(safeMetadata).slice(0,12000),
-        retry_available: decision.allowed ? 'true' : 'false',
-        next_profile: decision.next_profile ?? '',
+        retry_available: implementationRetryAllowed ? 'true' : 'false',
+        next_profile: implementationRetryAllowed ? decision.next_profile ?? '' : '',
         human_required: ['publication','reparent'].includes(stage) ? 'true' : 'false',
         legal_actions: JSON.stringify(legalActions),
         metadata: JSON.stringify(safeMetadata),
+        failure_class: failureClass ?? '',
+        recovery_action: recoveryAction ?? '',
       },
     )
   }
@@ -1910,48 +1919,55 @@ function beginVerification(
   executionId,
   verificationMode,
 ) {
-  const result =
-    controlQuery(
-      `
-        WITH existing AS (
-          SELECT verification_run_id
-          FROM control.verification_runs
-          WHERE execution_id = :'execution_id'::bigint
-            AND status = 'running'
-          ORDER BY verification_run_id DESC
-          LIMIT 1
-        ), started AS (
-          SELECT control.start_verification_run(
-            :'task_id',
-            :'execution_id'::bigint,
-            'runner',
-            jsonb_build_object('verification_mode', :'verification_mode')
-          ) AS verification_run_id
+  const requestId = randomUUID()
+
+  const startedResult = controlQuery(
+    `
+      SELECT jsonb_build_object(
+        'verification_run_id', control.start_verification_run(
+          :'task_id', :'execution_id'::bigint, 'runner',
+          jsonb_build_object(
+            'verification_mode', :'verification_mode',
+            'start_request_id', :'start_request_id'
+          )
         )
+      );
+    `,
+    {
+      task_id: taskId,
+      execution_id: String(executionId),
+      verification_mode: verificationMode,
+      start_request_id: requestId,
+    },
+  )
+  const started = parseControlJson(startedResult)
+  if (!started?.verification_run_id) {
+    throw new Error('verification_lifecycle_start_returned_no_run')
+  }
+
+  // Read in a new statement so PostgreSQL cannot hide a row inserted by the
+  // state-changing function behind the caller statement's original snapshot.
+  const result = controlQuery(
+    `
         SELECT jsonb_build_object(
           'verification_run_id', vr.verification_run_id,
           'verification_mode', vr.verification_mode,
-          'resumed', EXISTS (SELECT 1 FROM existing)
+          'resumed', COALESCE(vr.metadata->>'start_request_id', '') <> :'start_request_id'
         )
-        FROM started
-        JOIN control.verification_runs vr
-          ON vr.verification_run_id = started.verification_run_id;
-      `,
-      {
-        task_id:
-          taskId,
-
-        execution_id:
-          String(executionId),
-
-        verification_mode:
-          verificationMode,
-      },
-    )
-
-  return parseControlJson(
-    result,
+        FROM control.verification_runs vr
+        WHERE vr.verification_run_id = :'verification_run_id'::bigint;
+    `,
+    {
+      verification_run_id: String(started.verification_run_id),
+      start_request_id: requestId,
+    },
   )
+
+  const verificationRun = parseControlJson(result)
+  if (!verificationRun?.verification_run_id) {
+    throw new Error('verification_lifecycle_authoritative_run_unavailable')
+  }
+  return verificationRun
 }
 
 function queueVerificationChecks(
@@ -2035,8 +2051,10 @@ function skipUnselectedVerificationChecks(
 function recordVerificationState(
   verificationRunId,
   verifiedState,
+  classification,
 ) {
   if (!verifiedState?.fingerprint) {
+    if (classification?.failure_class) return null
     throw new Error(
       'Verifier did not return an authoritative repository state fingerprint.',
     )
@@ -2046,7 +2064,11 @@ function recordVerificationState(
     `
       UPDATE control.verification_runs
       SET metadata = COALESCE(metadata, '{}'::jsonb) ||
-        jsonb_build_object('verified_state', :'verified_state'::jsonb)
+        jsonb_build_object(
+          'verified_state', :'verified_state'::jsonb,
+          'failure_class', NULLIF(:'failure_class', ''),
+          'recovery_action', NULLIF(:'recovery_action', '')
+        )
       WHERE verification_run_id = :'verification_run_id'::bigint
         AND status = 'running'
       RETURNING jsonb_build_object(
@@ -2057,6 +2079,8 @@ function recordVerificationState(
     {
       verification_run_id: String(verificationRunId),
       verified_state: JSON.stringify(verifiedState),
+      failure_class: classification?.failure_class ?? '',
+      recovery_action: classification?.recovery_action ?? '',
     },
   )
 
@@ -2130,6 +2154,8 @@ function recordVerification(
               check.selection_reason ?? 'unspecified',
             verification_mode:
               check.verification_mode ?? null,
+            failure_class:
+              check.failure_class ?? null,
           }),
       },
     )
@@ -2168,6 +2194,7 @@ function finalizeVerification(
 
 function taskVerify() {
   const [taskId] = args
+  let verificationLifecycleStage = 'load'
 
   if (!validTaskId(taskId)) {
     output({
@@ -2209,6 +2236,26 @@ function taskVerify() {
       )
     }
 
+    if (packet.task.status === 'failed') {
+      const failure = latestOpenControlFailure(taskId)
+      const reverifyClasses = new Set([
+        'verification-lifecycle',
+        'verification-configuration',
+        'verification-infrastructure',
+        'verification-required-check-unavailable',
+      ])
+      if (!reverifyClasses.has(failure?.failure_class)) {
+        throw new Error('failed_task_requires_implementation_repair')
+      }
+      controlQuery(
+        `SELECT control.reopen_verification(:'task_id', 'supervisor', :'reason');`,
+        {
+          task_id: taskId,
+          reason: `same-execution reverify after ${failure.failure_class}`,
+        },
+      )
+    }
+
     const execution =
       latestExecution(
         taskId,
@@ -2245,6 +2292,13 @@ function taskVerify() {
         `${taskId}.json`,
       )
 
+    mkdirSync(path.dirname(packetPath), { recursive: true })
+    writeFileSync(
+      packetPath,
+      `${JSON.stringify(packet, null, 2)}\n`,
+      { mode: 0o600 },
+    )
+
     const verificationDirectory =
       path.join(
         execution.worktree_path,
@@ -2254,12 +2308,15 @@ function taskVerify() {
         'verification',
       )
 
+    verificationLifecycleStage = 'start'
     const verificationRun =
       beginVerification(
       taskId,
       execution.execution_id,
       packet.task.verification_mode ?? 'focused',
     )
+
+    verificationLifecycleStage = 'execute'
 
     const verificationRunId =
       verificationRun.verification_run_id
@@ -2321,6 +2378,10 @@ function taskVerify() {
       verification = {
         ok: false,
         passed: false,
+        classification: {
+          failure_class: 'verification-infrastructure',
+          recovery_action: 'wait-external',
+        },
         checks: [
           {
             name:
@@ -2334,6 +2395,9 @@ function taskVerify() {
 
             status:
               'fail',
+
+            failure_class:
+              'verification-infrastructure',
 
             exit_code:
               verifier.code,
@@ -2374,6 +2438,9 @@ function taskVerify() {
           status:
             'fail',
 
+          failure_class:
+            'verification-infrastructure',
+
           exit_code:
             verifier.code,
 
@@ -2388,11 +2455,17 @@ function taskVerify() {
             0,
         },
       ]
+      verification.classification = {
+        failure_class: 'verification-infrastructure',
+        recovery_action: 'wait-external',
+      }
     }
 
+    verificationLifecycleStage = 'record'
     recordVerificationState(
       verificationRunId,
       verification.verified_state,
+      verification.classification,
     )
 
     for (
@@ -2414,6 +2487,7 @@ function taskVerify() {
       ),
     )
 
+    verificationLifecycleStage = 'finalize'
     const finalResult =
       finalizeVerification(
         taskId,
@@ -2425,7 +2499,11 @@ function taskVerify() {
         taskId,
         'verification',
         'verification_failed',
-        { verification_run_id: verificationRunId, checks: verification.checks },
+        {
+          verification_run_id: verificationRunId,
+          checks: verification.checks,
+          classification: verification.classification,
+        },
       )
     }
 
@@ -2451,6 +2529,9 @@ function taskVerify() {
       result:
         finalResult,
 
+      classification:
+        verification.classification,
+
       checks:
         verification.checks.map(
           check => ({
@@ -2470,10 +2551,23 @@ function taskVerify() {
     }, finalResult.passed ? 0 : 1)
   }
   catch (error) {
+    const infrastructure = /control_database_connectivity|connect|network|timeout|temporar/i.test(
+      String(error.message),
+    )
+    const lifecycle =
+      !infrastructure &&
+      (
+        ['start', 'record', 'finalize'].includes(verificationLifecycleStage) ||
+        String(error.message).startsWith('verification_lifecycle_')
+      )
+    const classification = lifecycle
+      ? { failure_class: 'verification-lifecycle', recovery_action: 'reverify' }
+      : { failure_class: 'verification-infrastructure', recovery_action: 'wait-external' }
     recordControlFailure(
       taskId,
       'verification',
       error.message,
+      { classification },
     )
     output({
       ok: false,
@@ -2483,6 +2577,7 @@ function taskVerify() {
         taskId,
       error:
         error.message,
+      classification,
     }, 1)
   }
 }
@@ -2979,6 +3074,22 @@ function taskRetry() {
       latestOpenControlFailure(
         taskId,
       )
+
+    if (
+      previousExecution.status === 'succeeded' &&
+      String(controlFailure?.failure_class ?? '').startsWith('verification-') &&
+      controlFailure.failure_class !== 'verification-product-defect'
+    ) {
+      output({
+        ok: false,
+        command: 'task-retry',
+        task_id: taskId,
+        error: 'verification_failure_requires_same_execution_reverify',
+        failure_class: controlFailure.failure_class,
+        execution_id: previousExecution.execution_id,
+      }, 1)
+      return
+    }
 
     const previousFailure =
       {
@@ -4842,13 +4953,14 @@ function executionPreflightRuntime(snapshot) {
 }
 
 
-function runExecutionPreflight(snapshot) {
+function runExecutionPreflight(snapshot, purpose = 'implementation') {
   const runtime = executionPreflightRuntime(snapshot)
   return evaluateExecutionPreflight({
     packet: snapshot.packet,
     runtime,
     executions: snapshot.executions,
     serializationConflicts: snapshot.serialization_conflicts,
+    purpose,
   })
 }
 
@@ -5373,7 +5485,12 @@ function taskSupervisor() {
       }
 
       if (['task-run', 'task-retry'].includes(plan.command)) {
-        const preflight = runExecutionPreflight(snapshot)
+        const preflight = runExecutionPreflight(
+          snapshot,
+          plan.command === 'task-retry'
+            ? 'verification-product-repair'
+            : 'implementation',
+        )
         const recoveryPlan = preflightRecoveryPlan(snapshot, preflight)
         trail.push({
           step,

