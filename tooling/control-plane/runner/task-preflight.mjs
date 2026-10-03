@@ -9,6 +9,8 @@ import {
   evaluatePublicationBoundaries,
   pathInScope,
 } from './publication-preflight.mjs'
+import { completePublicationPolicy } from '../lib/workstream-readiness.mjs'
+import { evaluateVerificationReadiness } from './verification-mode.mjs'
 
 function stable(value) {
   if (Array.isArray(value)) return value.map(stable)
@@ -217,16 +219,23 @@ export function evaluateExecutionPreflight({
       requested_paths: publicationBoundaries.missing_authority,
     })
   }
-  if (
-    typeof workstream.publication_config?.merge_authorized !== 'boolean' ||
-    typeof workstream.publication_config?.deployment_authorized !== 'boolean' ||
-    typeof workstream.publication_config?.hosted_database_changes_authorized !== 'boolean' ||
-    typeof workstream.publication_config?.review_required_before_integration !== 'boolean'
-  ) {
+  if (!completePublicationPolicy(workstream.publication_config)) {
     return failure('wait', 'wait-operator', 'publication-scope', 'publication_policy_incomplete', checks)
   }
+
+  const verificationReadiness = evaluateVerificationReadiness(packet)
+  if (!verificationReadiness.ready) {
+    return failure(
+      'wait',
+      'wait-operator',
+      'verification-configuration',
+      verificationReadiness.reason,
+      checks,
+      { unenforced: verificationReadiness.unenforced ?? [] },
+    )
+  }
   checks.push({
-    name: 'task_contract_and_publication_scope',
+    name: 'task_contract_publication_and_verification_readiness',
     status: 'pass',
     publication_boundaries: publicationBoundaries,
   })
