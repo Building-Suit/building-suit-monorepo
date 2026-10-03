@@ -219,6 +219,15 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
       />
     </BsContentSection>
 
+    <BsContentSection :title="isArabic ? 'سياق التطبيق والحالة' : 'Application context and status'" :description="isArabic ? 'مبدّل السياق والإشعارات وحالات التجربة والقراءة فقط مملوكة للنظام المشترك.' : 'Context switching, notifications, trial state, and read-only presentation are shared.'">
+      <div class="grid gap-4 md:grid-cols-2">
+        <BsScopeSwitcher model-value="main" :label="isArabic ? 'مساحة العمل' : 'Workspace'" :options="[{ id: 'main', label: isArabic ? 'المساحة الرئيسية' : 'Main workspace' }, { id: 'second', label: isArabic ? 'المساحة الثانية' : 'Second workspace' }]" />
+        <BsNotificationMenu :items="[{ id: 'notice', title: isArabic ? 'اكتمل التقرير' : 'Report complete', body: isArabic ? 'التقرير جاهز للمراجعة.' : 'The report is ready for review.', read: false }]" :label="isArabic ? 'الإشعارات' : 'Notifications'" :empty-label="ui('empty')" :mark-all-label="isArabic ? 'تحديد الكل كمقروء' : 'Mark all read'" />
+        <BsTrialCountdown to="#" :label="isArabic ? 'متبقي ٤ أيام' : '4 days remaining'" :compact-label="isArabic ? '٤ أيام' : '4 days'" />
+        <BsReadOnlyBanner :title="isArabic ? 'وضع القراءة فقط' : 'Read-only mode'" :description="isArabic ? 'يمكنك عرض البيانات دون تعديلها.' : 'You can view data without changing it.'" />
+      </div>
+    </BsContentSection>
+
     <BsContentSection
       :title="isArabic ? 'المصادقة والتحقق' : 'Authentication and verification'"
       :description="isArabic ? 'هندسة مشتركة للنموذج وحالة التحقق مع محتوى يقدمه المنتج.' : 'Shared form geometry and verification states with product-supplied content.'"

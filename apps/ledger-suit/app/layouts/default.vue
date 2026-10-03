@@ -69,6 +69,7 @@ const { current, currentId, organizations, loadOrganizations, loading } = useTen
 const { can } = useTenant()
 const {
   accessState,
+  subscription,
   paymentRequired,
   readOnly,
   load: loadBilling,
@@ -105,6 +106,29 @@ const fullName = computed(() => {
 const userMenuActions = computed(() => can('billing.read')
   ? [{ to: '/billing', label: t('billing.title'), icon: 'wallet' }]
   : [])
+const { data: notifications, refresh: refreshNotifications } = useLazyAsyncData('org:notifications', async () => {
+  if (!currentId.value) return []
+  const { data, error } = await supabase.from('notifications').select('*').eq('organization_id', currentId.value).order('created_at', { ascending: false }).limit(20)
+  if (error) throw error
+  return data ?? []
+}, { watch: [currentId], default: () => [] })
+const notificationItems = computed(() => notifications.value.map(item => ({ id: item.id, title: item.title, body: item.body ?? undefined, read: Boolean(item.read_at) })))
+async function markNotificationRead(id: string) { await supabase.rpc('mark_notification_read' as never, { p_notification_id: id } as never); await refreshNotifications() }
+async function markAllNotificationsRead() { if (!currentId.value) return; await supabase.rpc('mark_all_notifications_read' as never, { p_organization_id: currentId.value } as never); await refreshNotifications() }
+
+const now = ref(Date.now())
+const checkingTrialExpiration = ref(false)
+const remainingTrialMilliseconds = computed(() => accessState.value === 'trialing' && subscription.value?.trial_ends_at ? Math.max(0, new Date(subscription.value.trial_ends_at).getTime() - now.value) : null)
+const trialParts = computed(() => { const totalMinutes = Math.ceil((remainingTrialMilliseconds.value ?? 0) / 60_000); return { days: Math.floor(totalMinutes / 1440), hours: Math.floor((totalMinutes % 1440) / 60), minutes: totalMinutes % 60 } })
+let trialTimer: ReturnType<typeof setInterval> | undefined
+onMounted(() => { now.value = Date.now(); trialTimer = setInterval(() => { now.value = Date.now() }, 30_000) })
+onBeforeUnmount(() => clearInterval(trialTimer))
+watch(remainingTrialMilliseconds, async (remaining) => {
+  if (remaining !== 0 || checkingTrialExpiration.value) return
+  checkingTrialExpiration.value = true
+  try { await loadBilling({ force: true }); if (paymentRequired.value) await navigateTo('/subscribe', { replace: true }) }
+  finally { checkingTrialExpiration.value = false }
+})
 
 async function signOut() {
   if (signingOut.value) return
@@ -131,13 +155,13 @@ watch(currentId, async (value, previous) => {
 </script>
 
 <template>
-  <div v-if="!showShell" class="min-h-dvh bg-background" aria-busy="true" />
+  <BsStateSurface v-if="!showShell" state="loading" :title="t('app.loading')" />
   <BsAppShell v-else :product-name="t('app.name')" :groups="NAV_GROUPS.map(group => ({ ...group, label: t(`nav.groups.${group.key}`), links: group.links.map(item => ({ ...item, label: t(item.label) })) }))" :mobile-links="PRIMARY_NAV.map(item => ({ ...item, label: t(`nav.${item.key}`) }))" :labels="{ close: t('nav.close'), open: t('nav.open'), navigation: t('nav.primary'), dashboard: t('nav.dashboard') }">
-    <template #logo><BsProductLogo name="Ledger Suit" asset-prefix="/brand/ledger-suit" class="h-14 w-auto max-w-52" /></template>
+    <template #logo><BsProductLogo name="Ledger Suit" asset-prefix="/brand/ledger-suit" size="navigation" /></template>
     <template #context><OrganizationSwitcher /></template>
     <template #header>
-      <TrialCountdown />
-      <NotificationMenu />
+      <BsTrialCountdown v-if="remainingTrialMilliseconds !== null" to="/billing" :label="t('billing.trialCountdown', trialParts)" :compact-label="t('billing.trialCountdownCompact', trialParts)" />
+      <BsNotificationMenu :items="notificationItems" :label="t('notifications.title')" :empty-label="t('notifications.empty')" :mark-all-label="t('notifications.markAll')" @select="markNotificationRead" @mark-all="markAllNotificationsRead" />
       <BsUserMenu
         :name="fullName"
         :email="user?.email"
@@ -149,17 +173,13 @@ watch(currentId, async (value, previous) => {
         @sign-out="signOut"
       />
     </template>
-        <div v-if="loading" class="text-sm text-fg-muted">{{ t('app.loading') }}</div>
+        <BsStateSurface v-if="loading" state="loading" :title="t('app.loading')" />
 
         <OrganizationSetup v-else-if="!current" />
 
         <template v-else>
-          <div v-if="readOnly" class="mb-6 rounded-control border border-warning bg-[var(--bs-status-warning-bg)] p-4 text-sm" role="status">
-            <p class="font-semibold">{{ t('billing.readOnlyTitle') }}</p>
-            <p>{{ t('billing.readOnlyBody') }}</p>
-            <NuxtLink v-if="can('billing.manage')" to="/billing" class="mt-2 inline-block text-link">{{ t('billing.fixBilling') }}</NuxtLink>
-          </div>
-          <div class="pb-16"><slot /></div>
+          <BsReadOnlyBanner v-if="readOnly" :title="t('billing.readOnlyTitle')" :description="t('billing.readOnlyBody')" :action-label="can('billing.manage') ? t('billing.fixBilling') : undefined" action-to="/billing" />
+          <BsPageBody><BsSlot :render="$slots.default" /></BsPageBody>
         </template>
     <template #overlays><FinancialSystemMap v-if="current" /><AddTransactionDialog /><OperationsCenter /><TeamMenu :show-trigger="false" /><BsToastHost /></template>
   </BsAppShell>

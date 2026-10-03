@@ -132,12 +132,6 @@
       "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
-      "path": "apps/ledger-suit/app/components/NotificationMenu.vue",
-      "classification": "product-orchestration",
-      "rationale": "Loads and presents tenant-scoped Ledger notifications with product navigation. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-LEDGER-MIG-001"
-    },
-    {
       "path": "apps/ledger-suit/app/components/OperationsCenter.vue",
       "classification": "product-orchestration",
       "rationale": "Coordinates Ledger operational queues, quota state, domain choices, and commands. It composes canonical shared UI primitives.",
@@ -153,12 +147,6 @@
       "path": "apps/ledger-suit/app/components/OrganizationSwitcher.vue",
       "classification": "product-orchestration",
       "rationale": "Coordinates Ledger tenant selection, billing state, creation, and route changes. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-LEDGER-MIG-001"
-    },
-    {
-      "path": "apps/ledger-suit/app/components/PublicLegalPage.vue",
-      "classification": "product-orchestration",
-      "rationale": "Supplies Ledger metadata, branding copy and its product-owned legal document to canonical BsPublicLegalPage. It composes canonical shared UI primitives.",
       "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
@@ -210,12 +198,6 @@
       "approval": "BS-UI-LEDGER-MIG-001"
     },
     {
-      "path": "apps/ledger-suit/app/components/TrialCountdown.vue",
-      "classification": "product-orchestration",
-      "rationale": "Derives Ledger trial state from billing policy and routes users to product billing. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-LEDGER-MIG-001"
-    },
-    {
       "path": "apps/ledger-suit/app/components/UsageMeters.vue",
       "classification": "product-orchestration",
       "rationale": "Maps Ledger plan quotas into the product-owned quota meter adapter. It composes canonical shared UI primitives.",
@@ -237,12 +219,6 @@
       "path": "apps/shop-suit/app/components/PlatformPlanAdmin.vue",
       "classification": "product-orchestration",
       "rationale": "Coordinates Shop plan administration queries, commands, confirmations, dialogs, and tables. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-SHOP-MIG-001"
-    },
-    {
-      "path": "apps/shop-suit/app/components/PublicLegalPage.vue",
-      "classification": "product-orchestration",
-      "rationale": "Supplies Shop metadata, branding copy and its product-owned legal document to canonical BsPublicLegalPage. It composes canonical shared UI primitives.",
       "approval": "BS-UI-SHOP-MIG-001"
     },
     {
