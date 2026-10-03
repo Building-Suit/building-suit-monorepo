@@ -56,6 +56,8 @@ Use manifests, package exports and the dependency graph to find interfaces and a
 
 ## UI, design and interaction
 
+- Suit presentation has a zero-native boundary: in every dynamically discovered `apps/*-suit/app/**/*.vue`, Vue's non-rendering `<template>` control tag is the only non-`Bs` template tag allowed. Every rendered tag must be `Bs`-prefixed. Native HTML, Nuxt/Vue rendering primitives, direct vendor components, non-`Bs` aliases and product-local component tags are migration debt and are forbidden once strict mode is reached.
+- Suit templates must not use `class`/`:class`/`v-bind:class`, `style`/`:style`/`v-bind:style`, `v-html`, vendor passthrough styling props or equivalent table/header/body class/style props. Suit Vue files must not contain `<style>` blocks or direct UI-vendor imports. During migration, only exact entries in `docs/shared/suit-ui-boundary-debt.json` are allowed; new and stale entries fail `pnpm check`. Final strict mode also requires zero Vue files under `apps/*-suit/app/components`.
 - Use canonical Building Suit tokens and brand rules: Manrope, IBM Plex Sans Arabic, Hugeicons Stroke Rounded, the approved palette and theme behavior.
 - Change reusable visual values at their token source. Do not introduce per-page palettes, competing editable token sets or manual changes to generated outputs.
 - Use PrimeVue through the shared UI package. Reuse shared landing/auth/signup templates and the authenticated shell; product configuration supplies navigation, assets and content.

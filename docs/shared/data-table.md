@@ -1,6 +1,6 @@
 # Shared data table
 
-Every product table uses `BsDataTable` backed by PrimeVue 4.5.5 DataTable and Column. The wrapper supplies shared appearance, loading/empty/error behavior, optional search/export, CRUD action placement and translations. Product components supply values and Column definitions or body/header/footer/editor slots.
+Every product table uses `BsDataTable` backed by PrimeVue 4.5.5 DataTable and Column. The wrapper supplies shared appearance, loading/empty/error behavior, optional search/export, CRUD action placement and translations. Product adapters supply values, typed column configuration and body/header/footer/editor content through Bs-prefixed contracts. Current direct `Column`, `ColumnGroup` and `Row` tags in Suit templates are recorded migration debt and are forbidden at the final zero-native gate.
 
 `BsDataTableCapabilities` is the common presentation contract. `insert`, `edit`, `delete`, `archive`, `void`, `export` and `select` default to false, so a view-only table never gains a mutation affordance accidentally. `insert` emits `create`; configured row actions emit their typed row through `edit`, `delete`, `archive` or `void`. Products provide translated action labels, optional per-row guards and pending state, then open `BsRecordActionDialog` or invoke the shared confirmation controller. These flags reflect product access state but never replace server authorization.
 
