@@ -5,6 +5,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { redact } from './lib/redaction.mjs'
+import { executeWithControlDatabaseRetry } from './lib/control-database.mjs'
 import { validateProjectConfig } from './lib/project-config.mjs'
 import { validateRetryPolicy } from './lib/retry-policy.mjs'
 import {
@@ -42,9 +43,9 @@ function run(program, args, options = {}) {
 
 function query(sql, variables = {}) {
   const variableArgs = Object.entries(variables).flatMap(([name, value]) => ['--set', `${name}=${value}`])
-  const result = run('psql', ['-X', '-q', '-A', '-t', '-v', 'ON_ERROR_STOP=1', '-h', db.host, '-p', db.port, '-U', db.user, '-d', db.name, ...variableArgs], {
+  const result = executeWithControlDatabaseRetry(() => run('psql', ['-X', '-q', '-A', '-t', '-v', 'ON_ERROR_STOP=1', '-h', db.host, '-p', db.port, '-U', db.user, '-d', db.name, ...variableArgs], {
     input: `${sql.trim()}\n`, env: { PGSSLMODE: db.sslmode },
-  })
+  }))
   if (result.code !== 0 || result.error) throw new Error(result.stderr || result.error || 'control_database_query_failed')
   return result.stdout ? JSON.parse(result.stdout) : null
 }

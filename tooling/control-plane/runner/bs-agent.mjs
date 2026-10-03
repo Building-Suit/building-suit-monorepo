@@ -28,6 +28,11 @@ import {
   redactText,
 } from '../lib/redaction.mjs'
 import {
+  controlDatabaseWaitOutcome,
+  executeWithControlDatabaseRetry,
+  isControlDatabaseConnectivityError,
+} from '../lib/control-database.mjs'
+import {
   classifySupervisorFailure,
   planSupervisorStep,
   preflightReconciliationAction,
@@ -799,7 +804,7 @@ function controlQuery(
     )
   }
 
-  return execute(
+  return executeWithControlDatabaseRetry(() => execute(
     'psql',
     [
       '-X',
@@ -832,7 +837,7 @@ function controlQuery(
           controlDatabase.sslmode,
       },
     },
-  )
+  ))
 }
 
 function parseControlJson(result) {
@@ -1288,7 +1293,16 @@ function startExecution({
       `
         SELECT jsonb_build_object(
           'execution_id',
-          control.start_execution(
+          COALESCE(
+            (
+              SELECT execution_id
+              FROM control.executions
+              WHERE task_id = :'task_id'
+                AND status = 'running'
+              ORDER BY attempt DESC
+              LIMIT 1
+            ),
+            control.start_execution(
             :'task_id',
             :'model_profile',
             :'model_name',
@@ -1297,6 +1311,7 @@ function startExecution({
             :'branch_name',
             :'parent_branch',
             :'parent_sha'
+            )
           )
         );
       `,
@@ -2285,6 +2300,15 @@ function taskVerify() {
         },
       )
 
+    if (
+      !successful(verifier) &&
+      [verifier.stdout, verifier.stderr, verifier.error]
+        .filter(Boolean)
+        .some(value => String(value).includes('control_database_connectivity_exhausted'))
+    ) {
+      throw new Error('control_database_connectivity_exhausted')
+    }
+
     let verification
 
     try {
@@ -2653,12 +2677,44 @@ function startRetryExecution(
   const startedResult =
     controlQuery(
       `
-        SELECT control.start_retry_execution(
-          :'task_id',
-          :'max_attempts'::integer,
-          :'model_profile',
-          :'model_name',
-          :'reasoning_effort'
+        WITH current_execution AS (
+          SELECT *
+          FROM control.executions
+          WHERE task_id = :'task_id'
+            AND status = 'running'
+          ORDER BY attempt DESC
+          LIMIT 1
+        )
+        SELECT COALESCE(
+          (
+            SELECT jsonb_build_object(
+              'allowed', true,
+              'execution_id', execution_id,
+              'attempt', attempt,
+              'previous_execution_id', (
+                SELECT previous.execution_id
+                FROM control.executions previous
+                WHERE previous.task_id = current_execution.task_id
+                  AND previous.attempt < current_execution.attempt
+                ORDER BY previous.attempt DESC
+                LIMIT 1
+              ),
+              'previous_attempt', attempt - 1,
+              'worktree_path', worktree_path,
+              'branch_name', branch_name,
+              'parent_branch', parent_branch,
+              'parent_sha', parent_sha,
+              'resumed', true
+            )
+            FROM current_execution
+          ),
+          control.start_retry_execution(
+            :'task_id',
+            :'max_attempts'::integer,
+            :'model_profile',
+            :'model_name',
+            :'reasoning_effort'
+          )
         );
       `,
       {
@@ -5523,6 +5579,18 @@ function taskSupervisor() {
     output({ ok: false, command: 'task-supervise', task_id: taskId, error: 'supervisor_step_limit_reached', trail }, 1)
   }
   catch (error) {
+    if (isControlDatabaseConnectivityError(error)) {
+      output({
+        ...controlDatabaseWaitOutcome({
+          taskId,
+          command: 'task-supervise',
+          error,
+        }),
+        trail,
+      })
+      return
+    }
+
     if (leaseAcquired) {
       try {
         const failedSnapshot = supervisorSnapshot(taskId)

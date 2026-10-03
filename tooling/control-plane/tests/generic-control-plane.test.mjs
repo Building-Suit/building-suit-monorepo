@@ -2,6 +2,12 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { readFile } from 'node:fs/promises'
 import { runResilienceAcceptance } from '../resilience/acceptance.mjs'
+import {
+  CONTROL_DATABASE_RETRY_POLICY,
+  classifyControlDatabaseFailure,
+  controlDatabaseWaitOutcome,
+  executeWithControlDatabaseRetry,
+} from '../lib/control-database.mjs'
 import { inspectWorkflowSnapshot, normalizeWorkflow, validateControllerReplacements, workflowGraphSummary } from '../lib/n8n-workflows.mjs'
 import { continuousRunTransition, normalizeSupervisorResult, resumeSchedule } from '../lib/n8n-controller.mjs'
 import { validateProjectConfig } from '../lib/project-config.mjs'
@@ -52,6 +58,98 @@ import {
   validateCurrentPublicationAuthorization,
   validatePublicationAuthorization,
 } from '../runner/publication-preflight.mjs'
+
+test('control database retry recovers the original operation after a transient failure', () => {
+  const results = [
+    { code: 2, stderr: 'psql: could not translate host name "db.invalid": Temporary failure in name resolution' },
+    { code: 0, stdout: '{"task_id":"CP-TEST-001"}' },
+  ]
+  const attempts = []
+  const delays = []
+
+  const result = executeWithControlDatabaseRetry(attempt => {
+    attempts.push(attempt)
+    return results.shift()
+  }, { sleep: delay => delays.push(delay) })
+
+  assert.equal(result.code, 0)
+  assert.deepEqual(attempts, [1, 2])
+  assert.deepEqual(delays, [CONTROL_DATABASE_RETRY_POLICY.backoff_ms[0]])
+})
+
+test('exhausted transient control database failures become a credential-safe recoverable wait', () => {
+  let attempts = 0
+  let caught
+  try {
+    executeWithControlDatabaseRetry(() => {
+      attempts++
+      return {
+        code: 2,
+        stderr: 'psql: connection to server at "db.example" failed: Connection timed out postgresql://runtime:secret@db.example/control',
+      }
+    }, { sleep: () => {} })
+  }
+  catch (error) {
+    caught = error
+  }
+
+  assert.equal(attempts, CONTROL_DATABASE_RETRY_POLICY.max_attempts)
+  assert.equal(caught?.code, 'CONTROL_DATABASE_CONNECTIVITY_EXHAUSTED')
+  const outcome = controlDatabaseWaitOutcome({
+    taskId: 'CP-TEST-001',
+    command: 'task-supervise',
+    error: caught,
+    now: new Date('2026-10-03T00:00:00.000Z'),
+  })
+  assert.equal(outcome.ok, true)
+  assert.equal(outcome.status, 'wait')
+  assert.equal(outcome.recovery.next_action, 'wait-external')
+  assert.equal(outcome.recovery.resume_identity, 'task:CP-TEST-001')
+  assert.equal(outcome.recovery.controller_retry.implementation_retry_budget_consumed, 0)
+  assert.equal(normalizeSupervisorResult({ runner_ok: true, payload: outcome }).outcome, 'wait')
+  assert.equal(normalizeSupervisorResult({ runner_ok: true, payload: outcome }).automatic_resume, true)
+  assert.doesNotMatch(JSON.stringify(outcome), /secret|postgresql:\/\//)
+})
+
+test('non-transient control database failures are rejected without retry', () => {
+  const failures = [
+    'FATAL: password authentication failed for user "runtime"',
+    'ERROR: permission denied for schema control',
+    'ERROR: relation "control.tasks" does not exist',
+    'control_database_fingerprint_mismatch',
+    'lifecycle_policy_failure',
+  ]
+
+  for (const stderr of failures) {
+    let attempts = 0
+    let sleeps = 0
+    const result = executeWithControlDatabaseRetry(() => {
+      attempts++
+      return { code: 2, stderr }
+    }, { sleep: () => sleeps++ })
+    assert.equal(result.stderr, stderr)
+    assert.equal(attempts, 1)
+    assert.equal(sleeps, 0)
+    assert.equal(classifyControlDatabaseFailure(result).transient, false)
+  }
+})
+
+test('execution creation reuses a committed running row after an ambiguous connection loss', async () => {
+  const runner = await readFile(new URL('../runner/bs-agent.mjs', import.meta.url), 'utf8')
+  const initial = runner.slice(
+    runner.indexOf('function startExecution('),
+    runner.indexOf('function finishExecution('),
+  )
+  const retry = runner.slice(
+    runner.indexOf('function startRetryExecution('),
+    runner.indexOf('function validateRetryWorktree('),
+  )
+
+  assert.match(initial, /status = 'running'[\s\S]+control\.start_execution/)
+  assert.match(retry, /status = 'running'[\s\S]+control\.start_retry_execution/)
+  assert.ok(initial.indexOf("status = 'running'") < initial.indexOf('control.start_execution'))
+  assert.ok(retry.indexOf("status = 'running'") < retry.indexOf('control.start_retry_execution'))
+})
 
 test('publication preflight uses only explicit task and workstream authority', () => {
   const classification = classifyPublicationFiles({

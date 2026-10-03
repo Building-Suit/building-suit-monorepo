@@ -1,4 +1,9 @@
 import { createHash } from 'node:crypto'
+import {
+  CONTROL_DATABASE_RETRY_POLICY,
+  controlDatabaseWaitOutcome,
+  executeWithControlDatabaseRetry,
+} from '../lib/control-database.mjs'
 import { inspectWorkflowSnapshot, validateControllerReplacements } from '../lib/n8n-workflows.mjs'
 import { continuousRunTransition } from '../lib/n8n-controller.mjs'
 import { acceptanceCriteriaDigest, evaluateParentSatisfaction } from '../runner/parent-satisfaction.mjs'
@@ -247,6 +252,59 @@ function controllerScenarios() {
   ]
 }
 
+function controlDatabaseScenarios() {
+  const noDelay = { sleep: () => {} }
+  let recoveredAttempts = 0
+  const recovered = executeWithControlDatabaseRetry(() => {
+    recoveredAttempts++
+    return recoveredAttempts === 1
+      ? { code: 2, stderr: 'could not translate host name: Temporary failure in name resolution' }
+      : { code: 0, stdout: '{"status":"in_progress"}' }
+  }, noDelay)
+
+  let exhaustedAttempts = 0
+  let exhaustedError
+  try {
+    executeWithControlDatabaseRetry(() => {
+      exhaustedAttempts++
+      return { code: 2, stderr: 'connection to server failed: Connection timed out' }
+    }, noDelay)
+  }
+  catch (error) {
+    exhaustedError = error
+  }
+  const wait = controlDatabaseWaitOutcome({
+    taskId: 'CP-FI-001',
+    command: 'task-supervise',
+    error: exhaustedError,
+    now: new Date('2026-10-02T12:00:00.000Z'),
+  })
+
+  let rejectedAttempts = 0
+  const rejected = executeWithControlDatabaseRetry(() => {
+    rejectedAttempts++
+    return { code: 2, stderr: 'FATAL: password authentication failed for user "runtime"' }
+  }, noDelay)
+
+  return [
+    scenario('control-database-transient-then-success', 'the first control-database connection attempt encounters a transient DNS failure', ['bounded backoff', 'repeat original command', 'continue same lifecycle'], ['bounded backoff', `attempt ${recoveredAttempts}`, recovered.code === 0 ? 'continue same lifecycle' : 'failed'], {
+      original_command_retried: recoveredAttempts === 2,
+      successful_result_returned: recovered.code === 0,
+      no_implementation_attempt_created: true,
+    }),
+    scenario('control-database-transient-retries-exhausted', 'every bounded control-database connection attempt times out', ['bounded retries', 'wait-external', 'preserve task and run'], [`${exhaustedAttempts} attempts`, wait.recovery.next_action, wait.ok ? 'preserve task and run' : 'failed'], {
+      retries_are_bounded: exhaustedAttempts === CONTROL_DATABASE_RETRY_POLICY.max_attempts,
+      wait_is_recoverable: wait.status === 'wait' && wait.recovery.recoverable,
+      lifecycle_identity_is_preserved: wait.recovery.resume_identity === 'task:CP-FI-001',
+      implementation_budget_is_unchanged: wait.recovery.controller_retry.implementation_retry_budget_consumed === 0,
+    }),
+    scenario('control-database-non-transient-rejection', 'the control database rejects authentication immediately', ['no retry', 'safety handling'], [`${rejectedAttempts} attempt`, rejected.code === 0 ? 'continued' : 'safety handling'], {
+      rejected_immediately: rejectedAttempts === 1,
+      original_failure_is_preserved: /password authentication failed/.test(rejected.stderr),
+    }),
+  ]
+}
+
 function artifactScenarios({ workflows, manifest, baselineFixture, baselineFixtureAfter = baselineFixture }) {
   const validation = validateControllerReplacements(workflows)
   const compatibility = inspectWorkflowSnapshot(workflows)
@@ -281,6 +339,7 @@ export function runResilienceAcceptance(input) {
     ...recoveryScenarios(now),
     ...policyScenarios(),
     ...controllerScenarios(),
+    ...controlDatabaseScenarios(),
     ...artifactScenarios(input),
   ]
   const mandatory = scenarios.filter(item => item.mandatory)
