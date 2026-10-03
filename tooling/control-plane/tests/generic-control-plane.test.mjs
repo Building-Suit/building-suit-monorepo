@@ -975,22 +975,46 @@ test('publication readiness requires every explicit boolean and exposes conserva
   )
 })
 
-test('workstream readiness migration is idempotent, preserves valid policy and execution lineage', async () => {
-  const migration = await readFile(
+test('workstream readiness migrations preserve valid policy and repair nullable policy gaps', async () => {
+  const readinessMigration = await readFile(
     new URL('../sql/024_workstream_readiness.sql', import.meta.url),
+    'utf8',
+  )
+  const repairMigration = await readFile(
+    new URL('../sql/025_workstream_publication_policy_repair.sql', import.meta.url),
+    'utf8',
+  )
+  const repairSmoke = await readFile(
+    new URL('./workstream-publication-policy-repair-smoke.sql', import.meta.url),
     'utf8',
   )
   const automation = await readFile(new URL('../automation.mjs', import.meta.url), 'utf8')
 
-  assert.match(migration, /jsonb_typeof\(publication_config->'merge_authorized'\) = 'boolean'/)
-  assert.match(migration, /'merge_authorized', false/)
-  assert.match(migration, /'review_required_before_integration', true/)
-  assert.match(migration, /suit\.status IS DISTINCT FROM/)
-  assert.match(migration, /SAS-M1-BOOT-001 execution 245/)
-  assert.match(migration, /SS-SA-BRIDGE-001/)
-  assert.doesNotMatch(migration, /UPDATE control\.executions/)
-  assert.doesNotMatch(migration, /INSERT INTO control\.executions/)
-  assert.doesNotMatch(migration, /SET verification_config/)
+  assert.match(readinessMigration, /suit\.status IS DISTINCT FROM/)
+  assert.match(readinessMigration, /SAS-M1-BOOT-001 execution 245/)
+  assert.match(repairMigration, /jsonb_typeof\(publication_config->'merge_authorized'\) = 'boolean'/)
+  assert.match(repairMigration, /\) IS NOT TRUE/)
+  assert.match(repairMigration, /'merge_authorized', false/)
+  assert.match(repairMigration, /'deployment_authorized', false/)
+  assert.match(repairMigration, /'hosted_database_changes_authorized', false/)
+  assert.match(repairMigration, /'review_required_before_integration', true/)
+  assert.match(repairMigration, /old_config, publication_config/)
+  assert.match(repairMigration, /025_workstream_publication_policy_repair/)
+  assert.match(repairMigration, /SS-SA-BRIDGE-001/)
+  assert.doesNotMatch(repairMigration, /UPDATE control\.executions/)
+  assert.doesNotMatch(repairMigration, /INSERT INTO control\.executions/)
+  assert.doesNotMatch(repairMigration, /SET verification_config/)
+  for (const fixture of [
+    "'empty'",
+    "'partial'",
+    "'explicit-null'",
+    "'wrong-type'",
+    "'array'",
+    "'scalar-null'",
+    "'complete'",
+  ]) assert.match(repairSmoke, new RegExp(fixture))
+  assert.equal((repairSmoke.match(/025_workstream_publication_policy_repair\.sql/g) ?? []).length, 2)
+  assert.match(repairSmoke, /old_value IS NULL OR new_value IS DISTINCT FROM conservative_policy/)
   assert.match(automation, /app_path=EXCLUDED\.app_path,status=EXCLUDED\.status/)
   assert.match(automation, /CASE WHEN COALESCE\(\(w->>'active'\)::boolean,true\) THEN 'active' ELSE 'paused' END/)
 })
