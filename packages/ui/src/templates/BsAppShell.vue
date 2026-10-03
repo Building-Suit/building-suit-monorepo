@@ -3,116 +3,31 @@ import type { NavigationGroup, NavigationLink } from '@building-suit/contracts'
 withDefaults(defineProps<{ homePath?: string; productName: string; groups: NavigationGroup[]; mobileLinks?: NavigationLink[]; labels: { close: string; open: string; navigation: string; dashboard: string } }>(), { homePath: '/dashboard', mobileLinks: () => [] })
 const route = useRoute()
 const mobileNavOpen = ref(false)
-const menuButton = ref<HTMLButtonElement | null>(null)
-const closeButton = ref<HTMLButtonElement | null>(null)
+const topHeader = ref<{ focusNavigationTrigger: () => void } | null>(null)
 useTheme()
 watch(() => route.fullPath, () => {
-  if (mobileNavOpen.value) void closeMobileNav()
+  if (mobileNavOpen.value) void closeMobileNav(false)
 })
 function isActive(to: string) { return route.path === to || route.path.startsWith(`${to}/`) }
-async function openMobileNav() {
-  mobileNavOpen.value = true
-  await nextTick()
-  closeButton.value?.focus()
-}
 async function closeMobileNav(restoreFocus = true) {
   mobileNavOpen.value = false
   if (restoreFocus) {
     await nextTick()
-    menuButton.value?.focus()
+    topHeader.value?.focusNavigationTrigger()
   }
 }
-function onKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape' && mobileNavOpen.value) void closeMobileNav()
-}
 </script>
-<template>  <div class="min-h-dvh bg-background lg:grid lg:grid-cols-[17rem_1fr] lg:gap-4 lg:p-4" @keydown="onKeydown">
-    <!-- Shown/hidden rather than slid off-screen with a transform: a translate
-         utility that silently fails to apply leaves the drawer sitting on top
-         of the page on every phone, which is exactly what happened here. -->
-    <aside
-      id="bs-primary-navigation"
-      class="fixed inset-y-0 start-0 z-40 w-64 border-e border-[var(--bs-border)] bg-surface lg:sticky lg:top-4 lg:block lg:h-[calc(100dvh-2rem)] lg:w-auto lg:rounded-modal lg:border lg:shadow-card"
-      :class="mobileNavOpen ? 'block' : 'hidden'"
-    >
-      <div class="flex h-full min-h-0 flex-col gap-4 p-4">
-        <div class="flex items-center justify-between">
-          <NuxtLink :to="homePath" class="inline-flex" :aria-label="productName">
-            <slot name="logo" />
-          </NuxtLink>
-          <button
-            ref="closeButton"
-            type="button"
-            class="ls-btn ls-btn-sm lg:hidden"
-            :aria-label="labels.close"
-            @click="closeMobileNav()"
-          >
-            <AppIcon name="close" />
-          </button>
-        </div>
-
-        <slot name="context" />
-        <hr class="my-2 border-[var(--bs-border)]">
-
-        <nav :aria-label="labels.navigation" class="min-h-0 flex-1 space-y-5 overflow-y-auto pe-1">
-          <NuxtLink
-            :to="homePath"
-            class="ls-nav-link"
-            :class="{ 'ls-nav-link-active': isActive(homePath) }"
-            :aria-current="isActive(homePath) ? 'page' : undefined"
-          >
-            <AppIcon name="dashboard" />
-            <span>{{ labels.dashboard }}</span>
-          </NuxtLink>
-          <section v-for="group in groups" :key="group.key">
-            <h2 class="mb-1.5 px-3 text-md font-bold uppercase tracking-[0.16em]">
-              {{ group.label }}
-            </h2>
-            <div class="flex flex-col gap-0.5 ms-6">
-              <NuxtLink
-                v-for="item in group.links"
-                :key="item.to"
-                :to="item.to"
-                class="ls-nav-link py-2"
-                :class="{ 'ls-nav-link-active': isActive(item.to) }"
-                :aria-current="isActive(item.to) ? 'page' : undefined"
-              >
-                <span>{{ item.label }}</span>
-              </NuxtLink>
-            </div>
-          </section>
-        </nav>
-
-      </div>
-    </aside>
-
-    <div
-      v-if="mobileNavOpen"
-      class="fixed inset-0 z-30 ls-scrim lg:hidden"
-      aria-hidden="true"
-      @click="closeMobileNav()"
-    />
+<template>
+  <div class="min-h-dvh bg-background lg:grid lg:grid-cols-[17rem_1fr] lg:gap-4 lg:p-4">
+    <BsSideMenu :open="mobileNavOpen" :home-path="homePath" :product-name="productName" :groups="groups" :labels="labels" @close="closeMobileNav">
+      <template #logo><slot name="logo" /></template>
+      <template #context><slot name="context" /></template>
+    </BsSideMenu>
 
     <div class="flex min-w-0 flex-col">
-      <header class="sticky top-0 z-20 flex min-w-0 items-center gap-2 border-b border-[var(--bs-border)] bg-surface/90 px-3 py-3 backdrop-blur sm:gap-3 sm:px-4 lg:top-4 lg:rounded-card lg:border lg:px-6 lg:shadow-card">
-        <button
-          ref="menuButton"
-          type="button"
-          class="ls-btn ls-btn-sm lg:hidden"
-          :aria-label="labels.open"
-          aria-controls="bs-primary-navigation"
-          :aria-expanded="mobileNavOpen"
-          @click="openMobileNav"
-        >
-          <AppIcon name="menu" />
-        </button>
-
-        <div class="min-w-0 flex-1" />
-
-        <div class="flex min-w-0 shrink-0 items-center gap-1 sm:gap-2">
-          <slot name="header" />
-        </div>
-      </header>
+      <BsTopHeader ref="topHeader" :navigation-open="mobileNavOpen" :open-navigation-label="labels.open" @open-navigation="mobileNavOpen = true">
+        <slot name="header" />
+      </BsTopHeader>
 
       <main class="mx-auto w-full max-w-[1440px] min-w-0 flex-1 px-4 py-6 pb-24 lg:px-8 lg:pb-6">
         <slot />

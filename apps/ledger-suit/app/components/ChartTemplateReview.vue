@@ -22,7 +22,7 @@ function close() {
         <h2 id="chart-template-heading" class="text-h2 font-bold">{{ t('chartTemplates.title') }}</h2>
         <p class="mt-1 text-sm text-fg-muted">{{ t('chartTemplates.hint') }}</p>
       </div>
-      <button type="button" class="ls-btn ls-btn-sm" @click="close">{{ t('common.close') }}</button>
+      <BsButton type="button" class="ls-btn ls-btn-sm" @click="close">{{ t('common.close') }}</BsButton>
     </div>
 
     <div class="rounded-control border border-warning bg-[var(--bs-status-warning-bg)] p-4 text-sm" role="note">
@@ -31,9 +31,9 @@ function close() {
     </div>
 
     <div class="flex flex-wrap gap-2" role="group" :aria-label="t('chartTemplates.choose')">
-      <button v-for="item in reviewedChartTemplates" :key="item.key" type="button" class="ls-btn ls-btn-sm" :class="{ 'ls-btn-primary': selected === item.key }" :aria-pressed="selected === item.key" @click="selected = item.key">
+      <BsButton variant="chip" v-for="item in reviewedChartTemplates" :key="item.key" type="button" :aria-pressed="selected === item.key" @click="selected = item.key">
         {{ t(`chartTemplates.templates.${item.key}.title`) }}
-      </button>
+      </BsButton>
     </div>
     <p class="text-sm text-fg-muted">{{ t(`chartTemplates.templates.${selected}.description`) }}</p>
 

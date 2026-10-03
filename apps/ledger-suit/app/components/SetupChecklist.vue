@@ -81,7 +81,7 @@ const completed = computed(() => data.value?.filter(item => item.state === 'comp
       <SectionSkeleton v-if="pending" class="mt-4" variant="table" :rows="3" />
       <div v-else-if="error" class="ls-error mt-4" role="alert">
         <p>{{ t('setupChecklist.loadFailed') }}</p>
-        <button type="button" class="ls-btn ls-btn-sm mt-2" @click="refresh()">{{ t('common.retry') }}</button>
+        <BsButton type="button" class="ls-btn ls-btn-sm mt-2" @click="refresh()">{{ t('common.retry') }}</BsButton>
       </div>
       <ol v-else class="mt-4 grid gap-3 md:grid-cols-2">
         <li v-for="item in data" :key="item.key" class="rounded-control border border-line p-4">
@@ -90,9 +90,7 @@ const completed = computed(() => data.value?.filter(item => item.state === 'comp
               <p class="font-semibold">{{ t(`setupChecklist.items.${item.key}.title`) }}</p>
               <p class="mt-1 text-sm text-fg-muted">{{ t(`setupChecklist.items.${item.key}.${item.state}`, { count: item.count ?? 0, mapped: item.mappedCount ?? 0 }) }}</p>
             </div>
-            <span class="ls-badge" :class="item.state === 'complete' ? 'bg-[var(--bs-status-success-bg)] text-success' : 'bg-[var(--bs-surface-muted)] text-fg-muted'">
-              {{ t(`setupChecklist.states.${item.state}`) }}
-            </span>
+            <StatusBadge :status="item.state" :label="t(`setupChecklist.states.${item.state}`)" :tone="item.state === 'complete' ? 'success' : 'neutral'" />
           </div>
           <NuxtLink v-if="item.key !== 'organization'" :to="item.route" class="mt-3 inline-block text-sm font-semibold text-link hover:underline">
             {{ t(`setupChecklist.items.${item.key}.action`) }}

@@ -1,6 +1,12 @@
 # Shop Suit readiness work
 
-Updated: 2026-09-19. Status: **not ready for sale**.
+The bounded two-branch barber gate is maintained in the [SS-PILOT-001 runbook](../SS-PILOT-001-runbook.md) and [execution evidence](../SS-PILOT-001-verification.md). That gate remains blocked until its outstanding checks pass; the historical baseline below is not current pilot sign-off.
+
+The broader small-shop gate is maintained in the [SS-MARKET-VAL-001 runbook](../SS-MARKET-VAL-001-runbook.md) and [execution evidence](../SS-MARKET-VAL-001-verification.md). General product/service/mixed marketing remains blocked pending qualification; ETA compliance and offline operation are explicitly excluded.
+
+The current plans lifecycle gate is maintained in the [SS-SUB-001 commercial runbook](../SS-SUB-001-runbook.md) and [candidate evidence](../SS-SUB-001-verification.md). Code-complete acceptance fixtures do not imply automated, manual, deployed, or commercially approved status; use that record for the current candidate state.
+
+Updated: 2026-09-30. Status: **not ready for sale**.
 
 This is the current implementation guide. Earlier documents under `docs/rebuild/`
 and the batch notes in the root README describe historical work; their claims of
@@ -40,6 +46,7 @@ historical pre-transfer checkpoints only; they are not active deployment targets
 - [Task 09b supplier purchases](09b-supplier-purchases.md)
 - [Dedicated-project unlinked migration procedure](deploy-without-link.md)
 - [Plans and limitations reference](plans.md)
+- [Team management and authorization](team-management.md)
 - [Ordered task list and acceptance criteria](tasks.md)
 - [Cloud tables, columns, and policies](cloud-schema-audit.json)
 - [Cloud constraints, triggers, and grants](cloud-schema-constraints.json)
@@ -178,6 +185,14 @@ uses a request UUID so a repeated submission cannot charge twice. The hosted
 rollback fixture covered idempotency, closed periods, outsider denial and
 expired trials. Nuxt build and typecheck pass. Other income and reports remain
 pending. See [Task 11a](11a-expense-ledger.md).
+
+## SS-TEAM-001 record
+
+Added a complete tenant team workflow with email-bound invitations, practical
+granular-permission role presets, multi-location assignment, suspended/removed
+states, immediate backend denial, last-owner continuity, atomic ownership
+transfer, immutable audit events, and a bilingual responsive `/team` page.
+Platform-admin authority remains separate. See [SS-TEAM-001](team-management.md).
 
 ## Task 09b record
 

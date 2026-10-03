@@ -5,12 +5,347 @@ export type ShopRpcDatabase = {
     Views: Record<string, never>
     Functions: {
       create_owner_shop: {
-        Args: { p_shop_name: string; p_plan_slug: string; p_business_mode: 'product' | 'service' | 'mixed' }
+        Args: {
+          p_shop_name: string
+          p_business_mode: 'product' | 'service' | 'mixed'
+          p_main_location_name?: string
+          p_main_location_code?: string | null
+          p_main_location_address?: string | null
+          p_main_location_phone?: string | null
+        }
         Returns: string
+      }
+      platform_admin_session: {
+        Args: Record<string, never>
+        Returns: {
+          userId: string
+          role: 'observer' | 'operator'
+          canMutate: boolean
+          displayName: string | null
+        }
+      }
+      platform_admin_read: {
+        Args: {
+          p_resource: 'dashboard' | 'shops' | 'shop' | 'audit'
+          p_shop_id?: string | null
+          p_search?: string | null
+          p_status?: string | null
+          p_page?: number
+          p_page_size?: number
+        }
+        Returns: unknown
+      }
+      platform_admin_command: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_action: string
+          p_reason: string
+          p_payload?: Record<string, unknown>
+        }
+        Returns: unknown
+      }
+      shop_billing_read: {
+        Args: { p_shop_id: string }
+        Returns: unknown
+      }
+      shop_plan_usage: {
+        Args: { p_shop_id: string }
+        Returns: unknown
+      }
+      shop_plan_change_validation: {
+        Args: { p_shop_id: string; p_target_plan_slug: string }
+        Returns: unknown
+      }
+      submit_shop_billing_notice: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_requested_plan_slug: string
+          p_requested_catalog_terms_id: string
+          p_paid_amount: number
+          p_transfer_date: string
+          p_transfer_reference: string
+        }
+        Returns: string
+      }
+      platform_admin_billing_read: {
+        Args: {
+          p_resource?: 'queue' | 'configuration' | 'summary' | 'audit'
+          p_status?: 'submitted' | 'under_review' | 'approved' | 'rejected' | null
+          p_page?: number
+          p_page_size?: number
+        }
+        Returns: unknown
+      }
+      platform_admin_billing_command: {
+        Args: {
+          p_request_id: string
+          p_action: 'configure_instructions' | 'mark_under_review' | 'approve' | 'reject' | 'set_price_override'
+          p_submission_id: string | null
+          p_reason: string
+          p_payload?: Record<string, unknown>
+        }
+        Returns: unknown
+      }
+      shop_public_plan_catalog: {
+        Args: Record<string, never>
+        Returns: Array<{
+          id: string
+          name: string
+          slug: string
+          catalog_terms_id: string
+          plan_variant: 'standard' | 'multi_2' | 'multi_3'
+          variant_name: string
+          price_amount: number
+          currency: string
+          billing_interval: 'monthly' | 'annual'
+          trial_days: number
+          features: Record<string, unknown>
+          resource_limits: Record<string, number | null>
+          is_purchasable: boolean
+          is_coming_soon: boolean
+        }>
+      }
+      platform_plan_read: {
+        Args: {
+          p_resource?: 'catalog' | 'shop' | 'audit'
+          p_shop_id?: string | null
+          p_page?: number
+          p_page_size?: number
+        }
+        Returns: unknown
+      }
+      platform_plan_command: {
+        Args: {
+          p_request_id: string
+          p_action: 'publish_terms' | 'set_availability' | 'change_subscription' | 'renew_subscription' | 'suspend_subscription' | 'set_price_override' | 'remove_price_override'
+          p_reason: string
+          p_plan_id?: string | null
+          p_shop_id?: string | null
+          p_payload?: Record<string, unknown>
+        }
+        Returns: unknown
       }
       set_shop_business_mode: {
         Args: { p_shop_id: string; p_business_mode: 'product' | 'service' | 'mixed' }
         Returns: 'product' | 'service' | 'mixed'
+      }
+      save_shop_profile: {
+        Args: { p_shop_id: string; p_display_name: string }
+        Returns: string
+      }
+      list_shop_locations: {
+        Args: { p_shop_id: string }
+        Returns: Array<{
+          id: string
+          shop_id: string
+          name: string
+          code: string | null
+          address: string | null
+          phone: string | null
+          status: 'active' | 'archived'
+          is_default: boolean
+          archived_at: string | null
+        }>
+      }
+      save_shop_location: {
+        Args: {
+          p_shop_id: string
+          p_location_id: string | null
+          p_name: string
+          p_code?: string | null
+          p_address?: string | null
+          p_phone?: string | null
+        }
+        Returns: string
+      }
+      archive_shop_location: {
+        Args: { p_shop_id: string; p_location_id: string }
+        Returns: undefined
+      }
+      restore_shop_location: {
+        Args: { p_shop_id: string; p_location_id: string }
+        Returns: undefined
+      }
+      assign_membership_locations: {
+        Args: { p_shop_id: string; p_membership_id: string; p_location_ids: string[] }
+        Returns: undefined
+      }
+      shop_team_read: {
+        Args: { p_shop_id: string }
+        Returns: unknown
+      }
+      shop_permission_access: {
+        Args: { p_shop_id: string; p_permission_keys: string[] }
+        Returns: Record<string, boolean>
+      }
+      invite_shop_member: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_email: string
+          p_display_name: string | null
+          p_role_key: string
+          p_location_ids: string[]
+        }
+        Returns: unknown
+      }
+      accept_shop_invitation: {
+        Args: { p_request_id: string; p_invitation_code: string }
+        Returns: string
+      }
+      revoke_shop_invitation: {
+        Args: { p_request_id: string; p_shop_id: string; p_invitation_id: string; p_reason?: string | null }
+        Returns: undefined
+      }
+      manage_shop_member: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_membership_id: string
+          p_action: 'suspend' | 'reactivate' | 'remove' | 'change_role' | 'assign_locations'
+          p_role_key?: string | null
+          p_location_ids?: string[] | null
+          p_reason?: string | null
+        }
+        Returns: undefined
+      }
+      transfer_shop_ownership: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_target_membership_id: string
+          p_reason: string
+        }
+        Returns: undefined
+      }
+      location_operational_report: {
+        Args: {
+          p_shop_id: string
+          p_location_id?: string | null
+          p_from?: string | null
+          p_to?: string | null
+        }
+        Returns: unknown
+      }
+      shop_operating_report: {
+        Args: {
+          p_shop_id: string
+          p_location_id?: string | null
+          p_period?: 'day' | 'week' | 'month'
+          p_anchor_date?: string
+        }
+        Returns: unknown
+      }
+      shop_operational_report: {
+        Args: {
+          p_shop_id: string
+          p_report: 'sales' | 'collections' | 'receivables' | 'suppliers' | 'expenses' | 'inventory' | 'margin' | 'activity'
+          p_location_id?: string | null
+          p_from?: string | null
+          p_to?: string | null
+          p_page?: number
+          p_page_size?: number
+        }
+        Returns: unknown
+      }
+      save_location_sale_draft: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_location_id: string
+          p_invoice_id: string | null
+          p_customer_id: string | null
+          p_due_date: string | null
+          p_notes: string | null
+          p_lines: Array<{ item_type: 'product' | 'service'; source_id: string; quantity: number }>
+        }
+        Returns: string
+      }
+      list_location_sales: {
+        Args: {
+          p_shop_id: string
+          p_location_id: string
+          p_search?: string | null
+          p_status?: 'draft' | 'issued' | null
+          p_from?: string | null
+          p_to?: string | null
+          p_page?: number
+          p_page_size?: number
+        }
+        Returns: unknown
+      }
+      get_location_sale: {
+        Args: { p_shop_id: string; p_location_id: string; p_invoice_id: string }
+        Returns: unknown
+      }
+      sale_correction_state: {
+        Args: { p_shop_id: string; p_location_id: string; p_invoice_id: string }
+        Returns: unknown
+      }
+      correct_location_sale: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_location_id: string
+          p_invoice_id: string
+          p_effective_at: string
+          p_reason: string
+          p_reference?: string | null
+        }
+        Returns: string
+      }
+      issue_location_sale: {
+        Args: { p_request_id: string; p_shop_id: string; p_location_id: string; p_invoice_id: string }
+        Returns: string
+      }
+      checkout_location_sale: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_location_id: string
+          p_invoice_id: string
+          p_amount: number
+          p_paid_at: string
+          p_method: 'cash' | 'bank_transfer' | 'card' | 'wallet' | 'cheque' | 'other'
+          p_reference: string | null
+        }
+        Returns: string
+      }
+      record_location_customer_receipt: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_location_id: string
+          p_customer_id: string
+          p_amount: number
+          p_paid_at: string
+          p_method: 'cash' | 'bank_transfer' | 'card' | 'wallet' | 'cheque' | 'other'
+          p_reference: string | null
+          p_notes: string | null
+          p_allocations: Array<{ invoice_id: string; amount: number }>
+        }
+        Returns: string
+      }
+      receipt_settings: {
+        Args: { p_shop_id: string }
+        Returns: unknown
+      }
+      save_receipt_settings: {
+        Args: {
+          p_shop_id: string
+          p_display_name: string
+          p_address: string | null
+          p_phone: string | null
+          p_footer: string | null
+          p_paper_size: 'thermal_80' | 'a4'
+        }
+        Returns: unknown
+      }
+      get_location_sale_receipt: {
+        Args: { p_shop_id: string; p_location_id: string; p_invoice_id: string }
+        Returns: unknown
       }
       save_product: {
         Args: {
@@ -23,9 +358,56 @@ export type ShopRpcDatabase = {
         }
         Returns: string
       }
+      save_product_with_category: {
+        Args: {
+          p_shop_id: string; p_product_id: string | null; p_name: string; p_sku: string | null
+          p_barcode: string | null; p_sale_price: number; p_category_id: string | null
+        }
+        Returns: string
+      }
+      list_products: {
+        Args: { p_shop_id: string; p_search?: string | null; p_category_id?: string | null; p_page?: number; p_page_size?: number }
+        Returns: unknown
+      }
+      list_catalog_categories: {
+        Args: { p_shop_id: string }
+        Returns: Array<{ id: string; name: string }>
+      }
+      save_catalog_category: {
+        Args: { p_shop_id: string; p_category_id: string | null; p_name: string }
+        Returns: string
+      }
+      set_catalog_item_category: {
+        Args: { p_shop_id: string; p_item_type: 'product' | 'service'; p_item_id: string; p_category_id: string | null }
+        Returns: undefined
+      }
+      catalog_import: {
+        Args: { p_request_id: string; p_shop_id: string; p_kind: 'products' | 'customers' | 'suppliers'; p_rows: Array<Record<string, unknown>>; p_dry_run?: boolean }
+        Returns: unknown
+      }
+      barcode_label_data: {
+        Args: { p_shop_id: string; p_search?: string | null; p_category_id?: string | null; p_page?: number; p_page_size?: number }
+        Returns: unknown
+      }
+      catalog_sales_report: {
+        Args: { p_shop_id: string; p_category_id?: string | null; p_from?: string; p_to?: string }
+        Returns: unknown
+      }
       archive_product: {
         Args: { p_shop_id: string; p_product_id: string }
         Returns: undefined
+      }
+      list_services: {
+        Args: { p_shop_id: string; p_search?: string | null; p_page?: number; p_page_size?: number }
+        Returns: unknown
+      }
+      list_services_by_category: {
+        Args: { p_shop_id: string; p_search?: string | null; p_category_id?: string | null; p_page?: number; p_page_size?: number }
+        Returns: unknown
+      }
+      service_scheduling_options: {
+        Args: { p_shop_id: string }
+        Returns: unknown
       }
       save_service: {
         Args: {
@@ -36,6 +418,20 @@ export type ShopRpcDatabase = {
           p_base_sale_price: number
           p_discount_type: 'amount' | 'percent'
           p_discount_value: number
+          p_scheduling_enabled: boolean
+          p_duration_minutes: number | null
+          p_cleanup_minutes: number
+          p_location_ids: string[]
+          p_staff_membership_ids: string[]
+        }
+        Returns: string
+      }
+      save_service_with_category: {
+        Args: {
+          p_shop_id: string; p_service_id: string | null; p_name: string; p_description: string | null
+          p_base_sale_price: number; p_discount_type: 'amount' | 'percent'; p_discount_value: number
+          p_scheduling_enabled: boolean; p_duration_minutes: number | null; p_cleanup_minutes: number
+          p_location_ids: string[]; p_staff_membership_ids: string[]; p_category_id: string | null
         }
         Returns: string
       }
@@ -43,22 +439,207 @@ export type ShopRpcDatabase = {
         Args: { p_shop_id: string; p_service_id: string }
         Returns: undefined
       }
-      save_expense: {
+      appointment_options: {
+        Args: { p_shop_id: string }
+        Returns: unknown
+      }
+      appointment_calendar: {
         Args: {
           p_shop_id: string
+          p_location_id: string
+          p_from: string
+          p_to: string
+          p_membership_id?: string | null
+        }
+        Returns: unknown
+      }
+      save_appointment: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_appointment_id: string | null
+          p_location_id: string
+          p_membership_id: string
+          p_service_id: string
+          p_starts_at: string
+          p_identity_kind: 'customer' | 'walk_in'
+          p_customer_id: string | null
+          p_walk_in_name: string | null
+          p_walk_in_phone: string | null
+          p_notes: string | null
+        }
+        Returns: string
+      }
+      transition_appointment: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_appointment_id: string
+          p_status: 'arrived' | 'waiting' | 'in_service' | 'completed' | 'cancelled' | 'no_show'
+          p_reason?: string | null
+        }
+        Returns: string
+      }
+      link_appointment_sale: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_appointment_id: string
+          p_sale_id: string
+        }
+        Returns: string
+      }
+      pos_catalog_search: {
+        Args: {
+          p_shop_id: string
+          p_location_id: string
+          p_search?: string | null
+          p_item_type?: 'product' | 'service' | null
+          p_barcode?: string | null
+          p_page?: number
+          p_page_size?: number
+        }
+        Returns: unknown
+      }
+      pos_catalog_search_by_category: {
+        Args: {
+          p_shop_id: string
+          p_location_id: string
+          p_search?: string | null
+          p_item_type?: 'product' | 'service' | null
+          p_barcode?: string | null
+          p_category_id?: string | null
+          p_page?: number
+          p_page_size?: number
+        }
+        Returns: unknown
+      }
+      pos_checkout_context: {
+        Args: { p_shop_id: string; p_location_id: string; p_customer_search?: string | null }
+        Returns: unknown
+      }
+      save_pos_sale_draft: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_location_id: string
+          p_invoice_id: string | null
+          p_staff_membership_id: string
+          p_appointment_id: string | null
+          p_customer_id: string | null
+          p_notes: string | null
+          p_lines: Array<{ item_type: 'product' | 'service'; source_id: string; quantity: number }>
+        }
+        Returns: string
+      }
+      checkout_pos_sale: {
+        Args: {
+          p_request_id: string
+          p_issue_request_id: string
+          p_payment_request_id: string
+          p_appointment_request_id: string | null
+          p_shop_id: string
+          p_location_id: string
+          p_invoice_id: string
+          p_amount: number
+          p_paid_at: string
+          p_method: 'cash' | 'bank_transfer' | 'card' | 'wallet' | 'cheque' | 'other'
+          p_reference: string | null
+        }
+        Returns: string
+      }
+      cash_shift_dashboard: {
+        Args: {
+          p_shop_id: string
+          p_location_id: string
+          p_cashier_membership_id?: string | null
+          p_page?: number
+          p_page_size?: number
+        }
+        Returns: unknown
+      }
+      open_cash_shift: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_location_id: string
+          p_register_key: string
+          p_opening_amount: number
+          p_notes?: string | null
+        }
+        Returns: string
+      }
+      record_cash_movement: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_session_id: string
+          p_kind: 'pay_in' | 'pay_out'
+          p_amount: number
+          p_reason: string
+          p_reference: string
+        }
+        Returns: string
+      }
+      close_cash_shift: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_session_id: string
+          p_counted_amount: number
+          p_notes?: string | null
+        }
+        Returns: string
+      }
+      save_staff_schedule: {
+        Args: {
+          p_shop_id: string
+          p_location_id: string
+          p_membership_id: string
+          p_timezone: string
+          p_working_hours: Array<{ weekday: number; startsLocal: string; endsLocal: string }>
+          p_blocks: Array<{ kind: 'break' | 'time_off'; startsAt: string; endsAt: string; note: string | null }>
+        }
+        Returns: undefined
+      }
+      save_expense: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_location_id: string
           p_expense_id: string | null
-          p_request_id: string | null
           p_title: string
           p_amount: number
           p_category_name: string
           p_expense_date: string
           p_notes: string | null
+          p_correction_reason?: string | null
         }
         Returns: string
       }
       void_expense: {
-        Args: { p_shop_id: string; p_expense_id: string }
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_location_id: string
+          p_expense_id: string
+          p_reason: string
+        }
         Returns: undefined
+      }
+      list_expenses: {
+        Args: {
+          p_shop_id: string
+          p_location_id: string
+          p_search?: string | null
+          p_status?: 'paid' | 'void' | null
+          p_category_id?: string | null
+          p_from?: string | null
+          p_to?: string | null
+          p_page?: number
+          p_page_size?: number
+        }
+        Returns: unknown
       }
       adjust_stock: {
         Args: {

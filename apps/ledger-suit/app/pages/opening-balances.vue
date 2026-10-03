@@ -174,10 +174,10 @@ async function reverse(batch: Batch) {
         </div>
         <div class="border-t border-line pt-4">
           <h2 class="text-h2 font-bold">2. {{ t('opening.upload') }}</h2>
-          <div class="mt-3 flex flex-wrap gap-2"><label class="ls-btn ls-btn-primary cursor-pointer" for="opening-file">{{ t('opening.chooseCsv') }}</label><button type="button" class="ls-btn" @click="downloadTemplate">{{ t('opening.downloadTemplate') }}</button></div>
+          <div class="mt-3 flex flex-wrap gap-2"><label class="ls-btn ls-btn-primary cursor-pointer" for="opening-file">{{ t('opening.chooseCsv') }}</label><BsButton type="button" class="ls-btn" @click="downloadTemplate">{{ t('opening.downloadTemplate') }}</BsButton></div>
           <input id="opening-file" class="sr-only" type="file" accept=".csv,text/csv" :disabled="!cutoff || busy==='upload'" @change="selectFile">
           <p v-if="filename" class="mt-2 text-sm text-fg-muted">{{ filename }} · {{ t('opening.rowCount', { count: rows.length }) }}</p>
-          <button v-if="uploadFailed" type="button" class="ls-btn mt-2" :disabled="Boolean(busy)" @click="uploadRows">{{ busy === 'upload' ? t('common.saving') : t('common.retry') }}</button>
+          <BsButton v-if="uploadFailed" type="button" class="ls-btn mt-2" :disabled="Boolean(busy)" @click="uploadRows">{{ busy === 'upload' ? t('common.saving') : t('common.retry') }}</BsButton>
         </div>
       </section>
 
@@ -191,7 +191,7 @@ async function reverse(batch: Batch) {
           <Column :header="t('opening.ledgerAccount')"><template #body="{ data: row }"><select v-model="row.account_id" class="ls-input min-w-64" :aria-label="`${t('opening.ledgerAccount')} ${row.source_row}`"><option :value="null">{{ t('opening.chooseAccount') }}</option><option v-for="account in accounts" :key="account.id" :value="account.id">{{ account.code }} · {{ account.name }} · {{ t(`opening.roles.${account.account_role}`) }}<template v-if="account.is_archived"> · {{ t('opening.archived') }}</template></option></select></template></Column>
           <Column :header="t('opening.validationErrors')"><template #body="{ data: row }"><ul v-if="rowErrors(row.source_row).length" class="text-danger"><li v-for="code in rowErrors(row.source_row)" :key="code">{{ validationLabel(code) }}</li></ul><span v-else-if="validation" class="text-success">{{ t('opening.valid') }}</span></template></Column>
         </BsDataTable>
-        <button type="button" class="ls-btn ls-btn-primary" :disabled="Boolean(busy)" @click="validateBatch">{{ busy === 'validate' ? t('common.saving') : t('opening.validate') }}</button>
+        <BsButton type="button" class="ls-btn ls-btn-primary" :disabled="Boolean(busy)" @click="validateBatch">{{ busy === 'validate' ? t('common.saving') : t('opening.validate') }}</BsButton>
       </section>
 
       <section v-if="validation" class="ls-card space-y-4 p-5" aria-labelledby="opening-validation" :data-validation="validation.valid ? 'valid' : 'invalid'">
@@ -208,7 +208,7 @@ async function reverse(batch: Batch) {
           <Column :header="t('opening.debit')" header-class="text-end" body-class="text-end"><template #body="{ data: line }">{{ amount(line.debit_minor) }}</template></Column>
           <Column :header="t('opening.credit')" header-class="text-end" body-class="text-end"><template #body="{ data: line }">{{ amount(line.credit_minor) }}</template></Column>
         </BsDataTable>
-        <button v-if="can('opening_balances.approve') && !postedTransactionId" type="button" class="ls-btn ls-btn-primary" :disabled="!validation.valid || Boolean(busy)" @click="approve">{{ busy === 'approve' ? t('common.saving') : t('opening.approve') }}</button>
+        <BsButton v-if="can('opening_balances.approve') && !postedTransactionId" type="button" class="ls-btn ls-btn-primary" :disabled="!validation.valid || Boolean(busy)" @click="approve">{{ busy === 'approve' ? t('common.saving') : t('opening.approve') }}</BsButton>
         <div v-if="postedTransactionId" class="rounded-control bg-surface-muted p-4" data-opening-posted><strong>{{ t('opening.postedLocked') }}</strong><br><NuxtLink class="text-link underline" :to="{ path: '/transactions', query: { q: postedTransactionId } }">{{ t('opening.openJournal') }}</NuxtLink></div>
       </section>
 
@@ -217,7 +217,7 @@ async function reverse(batch: Batch) {
           <div v-if="batch.validation_result" class="mt-3 grid gap-2 text-sm sm:grid-cols-3"><span>{{ t('opening.rowCount', { count: (batch.validation_result as any).valid_row_count + (batch.validation_result as any).zero_row_count }) }}</span><span>{{ t('opening.debit') }}: {{ amount((batch.validation_result as any).debit_total_minor) }}</span><span>{{ t('opening.credit') }}: {{ amount((batch.validation_result as any).credit_total_minor) }}</span></div>
           <p class="mt-2 break-all text-xs text-fg-muted">{{ t('opening.creator') }}: {{ batch.created_by }}<template v-if="batch.approved_by"> · {{ t('opening.approver') }}: {{ batch.approved_by }}</template></p>
           <p v-if="batch.reversal_transaction_id" class="mt-2 text-sm">{{ t('opening.reversal') }}: <NuxtLink class="text-link underline" :to="{ path: '/transactions', query: { q: batch.reversal_transaction_id } }">{{ batch.reversal_transaction_id }}</NuxtLink> · {{ batch.correction_reason }}</p>
-          <form v-if="batch.status==='posted' && can('opening_balances.correct')" class="mt-4 grid gap-2 border-t border-line pt-4 sm:grid-cols-[2fr_1fr_auto]" :aria-busy="busy===`reverse:${batch.id}`" @submit.prevent="reverse(batch)"><FloatingField :label="t('opening.correctionReason')"><input v-model="correctionReason" class="ls-input" required></FloatingField><FloatingField :label="t('opening.reversalDate')"><input v-model="correctionDate" class="ls-input" type="date"></FloatingField><button class="ls-btn self-end" :disabled="!correctionReason.trim() || Boolean(busy)">{{ busy===`reverse:${batch.id}` ? t('common.saving') : t('opening.reverse') }}</button></form>
+          <BsForm v-if="batch.status==='posted' && can('opening_balances.correct')" class="mt-4 grid gap-2 border-t border-line pt-4 sm:grid-cols-[2fr_1fr_auto]" :aria-busy="busy===`reverse:${batch.id}`" @submit.prevent="reverse(batch)"><FloatingField :label="t('opening.correctionReason')"><input v-model="correctionReason" class="ls-input" required></FloatingField><FloatingField :label="t('opening.reversalDate')"><input v-model="correctionDate" class="ls-input" type="date"></FloatingField><BsButton type="submit" class="ls-btn self-end" :disabled="!correctionReason.trim() || Boolean(busy)">{{ busy===`reverse:${batch.id}` ? t('common.saving') : t('opening.reverse') }}</BsButton></BsForm>
         </article>
       </section>
     </template>

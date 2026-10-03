@@ -64,6 +64,7 @@ const form = reactive({
   reference: '',
   idempotencyKey: '',
 })
+const { dirty } = useRecordAction(() => form, computed(() => dialogOpen.value))
 const postingAccounts = computed(() => props.accounts.filter(account =>
   account.account_role === 'posting' && !account.is_archived,
 ))
@@ -143,15 +144,12 @@ async function submitAdjustment() {
       <Column :header="t('controls.glBalance')" body-class="ls-num"><template #body="{ data }"><MoneyText :amount-minor="data.gl_balance_minor" /></template></Column>
       <Column :header="t('controls.subledgerBalance')" body-class="ls-num"><template #body="{ data }"><MoneyText v-if="data.subledger_balance_minor !== null" :amount-minor="data.subledger_balance_minor" /><span v-else>{{ t('controls.subledgerUnavailable') }}</span></template></Column>
       <Column :header="t('controls.variance')" body-class="ls-num"><template #body="{ data }"><MoneyText v-if="data.variance_minor !== null" :amount-minor="data.variance_minor" /><span v-else>{{ t('common.dash') }}</span></template></Column>
-      <Column :header="t('controls.status')"><template #body="{ data }"><span class="ls-badge bg-surface-muted">{{ t(`controls.statuses.${data.status}`) }}</span><p v-if="data.explanation_reason" class="mt-1 text-xs text-fg-muted">{{ data.explanation_reason }} · {{ data.explanation_reference }}</p></template></Column>
-      <Column v-if="can('controls.adjust')" :header="t('accounts.actions')"><template #body="{ data }"><NuxtLink v-if="data.subledger_type === 'inventory' && can('inventory.read')" to="/inventory-accounting" class="text-link underline">{{ t('inventory.sourceLink') }}</NuxtLink><button v-else-if="data.subledger_type !== 'inventory'" type="button" class="ls-btn ls-btn-sm" @click="openAdjustment(data.control_account_id)">{{ t('controls.adjust') }}</button></template></Column>
+      <Column :header="t('controls.status')"><template #body="{ data }"><StatusBadge :status="data.status" :label="t(`controls.statuses.${data.status}`)" :tone="data.status === 'reconciled' ? 'success' : data.status === 'unreconciled' ? 'danger' : 'warning'" /><p v-if="data.explanation_reason" class="mt-1 text-xs text-fg-muted">{{ data.explanation_reason }} · {{ data.explanation_reference }}</p></template></Column>
+      <Column v-if="can('controls.adjust')" :header="t('accounts.actions')"><template #body="{ data }"><NuxtLink v-if="data.subledger_type === 'inventory' && can('inventory.read')" to="/inventory-accounting" class="text-link underline">{{ t('inventory.sourceLink') }}</NuxtLink><BsButton v-else-if="data.subledger_type !== 'inventory'" type="button" class="ls-btn ls-btn-sm" @click="openAdjustment(data.control_account_id)">{{ t('controls.adjust') }}</BsButton></template></Column>
     </BsDataTable>
   </section>
 
-  <BsDialog v-if="dialogOpen" :visible="true" :title="t('controls.adjust')" :show-header="false" size="md" :pending="submitting" @update:visible="value => { if (!value) dialogOpen = false }">
-    <template #default="{ close }">
-      <form class="space-y-4 p-6" @submit.prevent="submitAdjustment">
-        <div class="flex items-center justify-between"><h2 class="text-lg font-bold">{{ t('controls.adjust') }}</h2><button type="button" class="ls-btn ls-btn-sm" :aria-label="t('common.close')" @click="close"><AppIcon name="close" /></button></div>
+  <BsRecordActionDialog v-if="dialogOpen" :visible="true" :title="t('controls.adjust')" size="md" :dirty="dirty" :pending="submitting" :error="formError" :submit-label="t('common.save')" :cancel-label="t('common.cancel')" @update:visible="value => { if (!value) dialogOpen = false }" @submit="submitAdjustment">
         <p class="text-sm text-fg-muted">{{ selected?.name }} · {{ selected?.control_subledger_type ? t(`controls.subledgers.${selected.control_subledger_type}`) : '' }}</p>
         <FloatingField :label="t('controls.asOfDate')"><input v-model="form.date" type="date" class="ls-input" required></FloatingField>
         <FloatingField :label="t('controls.counterpartAccount')"><select v-model="form.counterpartAccountId" class="ls-input" required><option value="">{{ t('controls.choosePostingAccount') }}</option><option v-for="account in postingAccounts" :key="account.account_id" :value="account.account_id">{{ account.name }}</option></select></FloatingField>
@@ -161,9 +159,5 @@ async function submitAdjustment() {
         <FloatingField :label="t('controls.adjustmentReason')"><input v-model="form.reason" class="ls-input" required></FloatingField>
         <FloatingField :label="t('controls.reconciliationReference')"><input v-model="form.reference" class="ls-input" required></FloatingField>
         <p class="text-sm text-fg-muted">{{ t('controls.adjustmentWarning') }}</p>
-        <p v-if="formError" class="ls-error" role="alert">{{ formError }}</p>
-        <div class="flex justify-end gap-2"><button type="button" class="ls-btn" @click="close">{{ t('common.cancel') }}</button><button class="ls-btn ls-btn-primary" :disabled="submitting">{{ submitting ? t('common.saving') : t('common.save') }}</button></div>
-      </form>
-    </template>
-  </BsDialog>
+  </BsRecordActionDialog>
 </template>

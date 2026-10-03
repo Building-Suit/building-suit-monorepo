@@ -44,7 +44,7 @@ onMounted(() => void refresh())
 </script>
 
 <template>
-  <article v-if="row" class="rounded-card border border-[var(--bs-border)] bg-surface" :class="compact ? 'p-3' : 'p-4'" :data-quota="quotaKey">
+  <article v-if="row" class="ls-card" :class="compact ? 'p-3' : 'p-4'" :data-quota="quotaKey">
     <div class="flex items-start justify-between gap-3">
       <div>
         <h3 class="text-sm font-bold">{{ t(`usage.quotas.${quotaKey}`) }}</h3>

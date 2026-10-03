@@ -90,7 +90,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => ({ name: name.value, lega
 
 <template>
   <div ref="root" class="relative">
-    <button
+    <BsButton
       type="button"
       class="ls-btn w-full justify-between"
       :aria-expanded="open"
@@ -103,7 +103,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => ({ name: name.value, lega
         <span v-if="current?.legal_name" class="truncate text-[10px] text-fg-muted">{{ current.legal_name }}</span>
       </span>
       <AppIcon name="arrowDown" class="text-fg-muted -me-3" />
-    </button>
+    </BsButton>
 
     <ul
       v-if="open"
@@ -111,7 +111,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => ({ name: name.value, lega
       role="listbox"
     >
       <li v-for="org in organizations" :key="org.id">
-        <button
+        <BsButton variant="chip"
           type="button"
           role="option"
           :aria-selected="org.id === current?.id"
@@ -128,31 +128,22 @@ const { dirty: overlayDirty0 } = useRecordAction(() => ({ name: name.value, lega
             <StatusBadge :status="org.status === 'trial' ? 'trialing' : 'active'" />
           </span>
           <AppIcon v-if="org.id === current?.id" name="check" class="text-[var(--bs-status-success)]" />
-        </button>
+        </BsButton>
       </li>
       <li v-if="!ownsOrganization" class="mt-1 border-t border-[var(--bs-border)] pt-1">
-        <button
+        <BsButton variant="text"
           type="button"
           class="flex w-full items-center gap-2 rounded-chip px-2 py-2 text-start text-sm font-semibold text-accent hover:bg-surface-muted"
           @click="showCreate"
         >
           <AppIcon name="add" :size="18" />
           <span>{{ t('org.createAnother') }}</span>
-        </button>
+        </BsButton>
       </li>
     </ul>
-        <BsDialog v-if="createOpen" :visible="true" :title="t('org.createAnother')" :aria-label="t('org.createAnother')" :show-header="false" size="md" :dirty="overlayDirty0" :pending="pending" @update:visible="value => { if (!value) closeCreate() }"><template #default="{ close: dismiss }">
-<form class="space-y-5 p-6" @submit.prevent="createAndStartTrial">
-            <div class="flex items-start justify-between gap-4">
-              <div>
-                <p class="text-sm font-semibold text-accent">{{ t('org.additionalEyebrow') }}</p>
-                <h2 id="create-organization-title" class="mt-1 text-xl font-bold">{{ t('org.createAnother') }}</h2>
-                <p class="mt-2 text-sm text-fg-muted">{{ t('org.additionalBillingHint') }}</p>
-              </div>
-              <button type="button" class="ls-btn ls-btn-sm shrink-0" :aria-label="t('common.close')" :disabled="pending" @click="dismiss">
-                <AppIcon name="close" />
-              </button>
-            </div>
+        <BsRecordActionDialog v-if="createOpen" :visible="true" :title="t('org.createAnother')" size="md" :dirty="overlayDirty0" :pending="pending" :error="errorMessage" @update:visible="value => { if (!value) closeCreate() }" @submit="createAndStartTrial">
+            <p class="text-sm font-semibold text-accent">{{ t('org.additionalEyebrow') }}</p>
+            <p class="text-sm text-fg-muted">{{ t('org.additionalBillingHint') }}</p>
 
             <FloatingField :label="t('org.name')">
               <input id="additional-org-name" v-model="name" class="ls-input" required>
@@ -173,11 +164,10 @@ const { dirty: overlayDirty0 } = useRecordAction(() => ({ name: name.value, lega
               <p class="mt-1 text-fg-muted">{{ t('org.separateSubscriptionBody') }}</p>
             </div>
 
-            <p v-if="errorMessage" class="ls-error" role="alert">{{ errorMessage }}</p>
-            <button type="submit" class="ls-btn ls-btn-accent w-full" :disabled="pending">
-              {{ pending ? t('onboarding.creating') : t('org.createAndStartTrial') }}
-            </button>
-          </form>
-</template></BsDialog>
+            <template #actions="{ close }">
+              <BsButton type="button" :disabled="pending" @click="close">{{ t('common.cancel') }}</BsButton>
+              <BsButton type="submit" variant="accent" :pending="pending">{{ t('org.createAndStartTrial') }}</BsButton>
+            </template>
+        </BsRecordActionDialog>
   </div>
 </template>

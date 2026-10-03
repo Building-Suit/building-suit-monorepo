@@ -192,9 +192,9 @@ const { dirty: overlayDirty0 } = useRecordAction(() => commitmentAction, compute
         <h1 class="mt-1 text-h1 font-bold">{{ title }}</h1>
         <p class="mt-1 text-sm text-fg-muted">{{ t('recordPages.count', rows.length) }}</p>
       </div>
-      <button v-if="canCreate" type="button" class="ls-btn ls-btn-primary" @click="addRecord">
+      <BsButton v-if="canCreate" type="button" class="ls-btn ls-btn-primary" @click="addRecord">
         {{ kind === 'tags' ? t('recordPages.addTag') : t('recordPages.add', { item: title }) }}
-      </button>
+      </BsButton>
     </header>
 
     <section v-if="kind === 'tags'" class="ls-card space-y-5 p-5 sm:p-6" aria-labelledby="tags-guide-title">
@@ -206,7 +206,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => commitmentAction, compute
       <NuxtLink v-if="can('transactions.read')" to="/transactions" class="ls-btn">{{ t('tagsGuide.openTransactions') }}<AppIcon name="arrowRight" directional :size="18" /></NuxtLink>
     </section>
 
-    <div v-if="loadError" role="alert" class="ls-card p-5"><p>{{ t('transactionWorkspace.loadError') }}</p><button type="button" class="ls-btn mt-3" @click="refresh()">{{ t('accounts.retry') }}</button></div>
+    <div v-if="loadError" role="alert" class="ls-card p-5"><p>{{ t('transactionWorkspace.loadError') }}</p><BsButton type="button" class="ls-btn mt-3" @click="refresh()">{{ t('accounts.retry') }}</BsButton></div>
     <SectionSkeleton v-else-if="pending" variant="table" :rows="8" />
     <EmptyState v-else-if="rows.length === 0" :title="kind === 'tags' ? t('tagsGuide.emptyTitle') : t('recordPages.empty', { item: title })" :description="t(kind === 'tags' ? 'tagsGuide.emptyHint' : 'recordPages.emptyHint')" :action-label="canCreate ? (kind === 'tags' ? t('recordPages.addTag') : t('recordPages.add', { item: title })) : undefined" @action="addRecord" />
 
@@ -261,7 +261,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => commitmentAction, compute
   </Column>
   <Column header-class="text-end" body-class="whitespace-nowrap text-end">
     <template #header>{{ t('accounts.actions') }}</template>
-    <template #body="{ data: row }"><template v-if="!['paid','cancelled'].includes(text(row, 'status'))"><button v-if="can('commitments.settle')" class="ls-btn ls-btn-sm" @click="openCommitmentAction(text(row, 'id'), 'settle')">{{ t('operations.settle') }}</button><button v-if="can('commitments.update')" class="ls-btn ls-btn-sm ms-1" @click="openCommitmentAction(text(row, 'id'), 'postpone')">{{ t('operations.postpone') }}</button><button v-if="can('commitments.update')" class="ls-btn ls-btn-sm ms-1" :disabled="actionBusy" @click="cancelCommitment(text(row, 'id'))">{{ t('common.cancel') }}</button></template></template>
+    <template #body="{ data: row }"><template v-if="!['paid','cancelled'].includes(text(row, 'status'))"><BsButton type="submit" v-if="can('commitments.settle')" class="ls-btn ls-btn-sm" @click="openCommitmentAction(text(row, 'id'), 'settle')">{{ t('operations.settle') }}</BsButton><BsButton type="submit" v-if="can('commitments.update')" class="ls-btn ls-btn-sm ms-1" @click="openCommitmentAction(text(row, 'id'), 'postpone')">{{ t('operations.postpone') }}</BsButton><BsButton type="submit" v-if="can('commitments.update')" class="ls-btn ls-btn-sm ms-1" :disabled="actionBusy" @click="cancelCommitment(text(row, 'id'))">{{ t('common.cancel') }}</BsButton></template></template>
   </Column>
 </BsDataTable>
 
@@ -288,7 +288,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => commitmentAction, compute
   </Column>
   <Column header-class="text-end" body-class="text-end">
     <template #header>{{ t('accounts.actions') }}</template>
-    <template #body="{ data: row }"><button v-if="can('recurring.manage') && text(row, 'status') === 'active'" class="ls-btn ls-btn-sm" :disabled="actionBusy" @click="setRuleStatus(text(row, 'id'), 'paused')">{{ t('operations.pause') }}</button><button v-else-if="can('recurring.manage') && ['paused','failed'].includes(text(row, 'status'))" class="ls-btn ls-btn-sm" :disabled="actionBusy" @click="setRuleStatus(text(row, 'id'), 'active')">{{ t('operations.resume') }}</button></template>
+    <template #body="{ data: row }"><BsButton type="submit" v-if="can('recurring.manage') && text(row, 'status') === 'active'" class="ls-btn ls-btn-sm" :disabled="actionBusy" @click="setRuleStatus(text(row, 'id'), 'paused')">{{ t('operations.pause') }}</BsButton><BsButton type="submit" v-else-if="can('recurring.manage') && ['paused','failed'].includes(text(row, 'status'))" class="ls-btn ls-btn-sm" :disabled="actionBusy" @click="setRuleStatus(text(row, 'id'), 'active')">{{ t('operations.resume') }}</BsButton></template>
   </Column>
 </BsDataTable>
 
@@ -354,15 +354,10 @@ const { dirty: overlayDirty0 } = useRecordAction(() => commitmentAction, compute
     </div>
 
     <p v-if="actionError && !commitmentAction.id" class="ls-error" role="alert">{{ actionError }}</p>
-        <BsDialog v-if="commitmentAction.id" :visible="true" :title="t(commitmentAction.mode === 'settle' ? 'operations.settle' : 'operations.postpone')" :aria-label="t(commitmentAction.mode === 'settle' ? 'operations.settle' : 'operations.postpone')" :show-header="false" size="md" :dirty="overlayDirty0" @update:visible="value => { if (!value) commitmentAction.id = '' }"><template #default="{ close: dismiss }">
-<form class="space-y-4 p-6" @submit.prevent="submitCommitmentAction">
-            <div class="flex items-center justify-between"><h2 class="text-lg font-bold">{{ t(commitmentAction.mode === 'settle' ? 'operations.settle' : 'operations.postpone') }}</h2><button type="button" class="ls-btn ls-btn-sm" :aria-label="t('common.close')" @click="dismiss"><AppIcon name="close" /></button></div>
+        <BsRecordActionDialog v-if="commitmentAction.id" :visible="true" :title="t(commitmentAction.mode === 'settle' ? 'operations.settle' : 'operations.postpone')" size="md" :dirty="overlayDirty0" :pending="actionBusy" :error="actionError" :submit-label="t(commitmentAction.mode === 'settle' ? 'operations.convert' : 'operations.postpone')" :cancel-label="t('common.cancel')" @update:visible="value => { if (!value) commitmentAction.id = '' }" @submit="submitCommitmentAction">
             <template v-if="commitmentAction.mode === 'settle'"><FloatingField :label="t('add.chooseAccount')"><select v-model="commitmentAction.paymentAccountId" class="ls-input" required><option value="">{{ t('add.chooseAccount') }}</option><option v-for="account in paymentAccounts" :key="account.id" :value="account.id">{{ account.name }}</option></select></FloatingField><FloatingField :label="t('operations.fullOrPartialAmount')"><input v-model="commitmentAction.amount" class="ls-input" inputmode="decimal" :placeholder="t('operations.fullOrPartialAmount')"></FloatingField></template>
             <FloatingField :label="t('add.date')"><input v-model="commitmentAction.date" type="date" class="ls-input" required></FloatingField>
-            <p v-if="actionError" class="ls-error" role="alert">{{ actionError }}</p>
-            <div class="flex justify-end gap-2"><button type="button" class="ls-btn" @click="dismiss">{{ t('common.cancel') }}</button><button class="ls-btn ls-btn-primary" :disabled="actionBusy">{{ t(commitmentAction.mode === 'settle' ? 'operations.convert' : 'operations.postpone') }}</button></div>
-          </form>
-</template></BsDialog>
+        </BsRecordActionDialog>
 
     <TransactionDetailDialog v-if="selectedId" :transaction-id="selectedId" @changed="refresh" @close="selectedId = null" />
   </div>

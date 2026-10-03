@@ -52,7 +52,7 @@ begin
     raise exception 'business mode browser grants are too broad';
   end if;
   begin
-    perform public.create_owner_shop('Invalid enum fixture', 'pro', 'retail');
+    perform public.create_owner_shop('Invalid enum fixture', 'team', 'retail');
     raise exception 'unsupported business mode accepted';
   exception when invalid_text_representation then
     null;
@@ -76,7 +76,7 @@ declare
 begin
   begin
     perform public.create_owner_shop(
-      'Invalid mode fixture', 'pro', null::public.business_mode
+      'Invalid mode fixture', 'team', null::public.business_mode
     );
     raise exception 'null business mode accepted';
   exception when sqlstate '22023' then
@@ -84,10 +84,10 @@ begin
   end;
 
   v_shop_id := public.create_owner_shop(
-    'Product mode fixture', 'pro', 'product'::public.business_mode
+    'Product mode fixture', 'team', 'product'::public.business_mode
   );
   v_retry_id := public.create_owner_shop(
-    'Changed retry name', 'basic', 'mixed'::public.business_mode
+    'Changed retry name', 'solo', 'mixed'::public.business_mode
   );
   if v_retry_id <> v_shop_id
     or (select business_mode from public.shops where id = v_shop_id) <> 'product'
@@ -201,7 +201,7 @@ declare
   v_shop_id uuid;
 begin
   v_shop_id := public.create_owner_shop(
-    'Service mode fixture', 'basic', 'service'::public.business_mode
+    'Service mode fixture', 'solo', 'service'::public.business_mode
   );
   perform public.save_service(
     v_shop_id, null, 'Stock-free service', null, 15, 'amount', 0
@@ -225,7 +225,7 @@ declare
   v_shop_id uuid;
 begin
   v_shop_id := public.create_owner_shop(
-    'Mixed mode fixture', 'basic', 'mixed'::public.business_mode
+    'Mixed mode fixture', 'solo', 'mixed'::public.business_mode
   );
   if (select business_mode from public.shops where id = v_shop_id) <> 'mixed' then
     raise exception 'mixed-mode shop was not created';

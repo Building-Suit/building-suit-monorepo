@@ -42,17 +42,17 @@ function date(value: string) { return new Intl.DateTimeFormat(locale.value, { da
       <template v-else>
         <p v-if="pending" role="status">{{ t('app.loading') }}</p>
         <p v-if="error || validation" class="ls-error" role="alert">{{ error || validation }}</p>
-        <button type="button" class="ls-btn" :disabled="pending || dirty" @click="load(plan, interval, quoteId)">{{ t('common.refresh') }}</button>
+        <BsButton type="button" class="ls-btn" :disabled="pending || dirty" @click="load(plan, interval, quoteId)">{{ t('common.refresh') }}</BsButton>
         <p v-if="!pending && !selected && !error">{{ t('billing.manual.empty') }}</p>
         <template v-if="selected">
           <p class="text-sm text-fg-muted">{{ t('billing.manual.pendingHint') }}</p>
           <p class="font-bold">{{ t(`billing.plans.${selected.plan_key}.name`) }} · {{ t(`billing.${selected.billing_interval}`) }} · {{ new Intl.NumberFormat(locale, { style: 'currency', currency: selected.currency_code.trim() }).format(selected.amount_minor / 100) }}</p>
           <p role="status">{{ t(`billing.manual.states.${selected.status}`) }}</p>
-          <button v-if="selected.status === 'approved'" type="button" class="ls-btn ls-btn-primary" @click="reloadNuxtApp({ path: '/billing' })">{{ t('billing.manual.openSubscription') }}</button>
+          <BsButton v-if="selected.status === 'approved'" type="button" class="ls-btn ls-btn-primary" @click="reloadNuxtApp({ path: '/billing' })">{{ t('billing.manual.openSubscription') }}</BsButton>
           <p class="whitespace-pre-wrap rounded-card bg-surface-muted p-4">{{ selected.instructions }}</p>
           <p class="break-all text-sm">{{ t('billing.manual.reference') }}: {{ selected.id }}</p>
           <p v-if="selected.period_start && selected.period_end">{{ date(selected.period_start) }} — {{ date(selected.period_end) }}</p>
-          <form v-if="cancelAllowed" class="space-y-4" @submit.prevent="send">
+          <BsForm v-if="cancelAllowed" class="space-y-4" @submit.prevent="send">
             <label v-if="uploadAllowed" class="block space-y-2">
               <span>{{ t('billing.manual.receipt') }}</span>
               <input :key="selected.evidence_id ?? selected.id" type="file" accept="image/jpeg,image/png,application/pdf" class="ls-input" :disabled="pending" @change="chooseFile">
@@ -60,20 +60,20 @@ function date(value: string) { return new Intl.DateTimeFormat(locale.value, { da
             </label>
             <FloatingField :label="t('billing.manual.reason')"><textarea v-model="reason" class="ls-input" maxlength="1000" required :disabled="pending" /></FloatingField>
             <div class="flex flex-wrap gap-2">
-              <button v-if="uploadAllowed" type="submit" class="ls-btn ls-btn-primary" :disabled="pending || !file || !reason.trim()">{{ t('billing.manual.submit') }}</button>
-              <button type="button" class="ls-btn" :disabled="pending || !reason.trim()" @click="cancelRequest">{{ t('billing.manual.cancel') }}</button>
+              <BsButton v-if="uploadAllowed" type="submit" class="ls-btn ls-btn-primary" :disabled="pending || !file || !reason.trim()">{{ t('billing.manual.submit') }}</BsButton>
+              <BsButton type="button" class="ls-btn" :disabled="pending || !reason.trim()" @click="cancelRequest">{{ t('billing.manual.cancel') }}</BsButton>
             </div>
-          </form>
+          </BsForm>
           <h3 class="font-bold">{{ t('billing.manual.history') }}</h3>
           <ol class="space-y-2 text-sm">
             <li v-for="event in history" :key="event.id">{{ date(event.occurred_at) }} · {{ t(`billing.manual.states.${event.after_state}`) }} · {{ event.reason }}</li>
           </ol>
           <ul class="space-y-2">
-            <li v-for="receipt in evidence" :key="receipt.id"><button type="button" class="text-link" :disabled="pending" @click="download(receipt)">{{ receipt.filename }} · {{ date(receipt.submitted_at) }}</button></li>
+            <li v-for="receipt in evidence" :key="receipt.id"><BsButton variant="link" type="button" class="text-link" :disabled="pending" @click="download(receipt)">{{ receipt.filename }} · {{ date(receipt.submitted_at) }}</BsButton></li>
           </ul>
         </template>
         <ul v-if="requests.length > 1" class="space-y-2">
-          <li v-for="payment in requests" :key="payment.id"><button type="button" class="text-link" :disabled="pending || dirty" @click="select(payment)">{{ date(payment.created_at) }} · {{ t(`billing.plans.${payment.plan_key}.name`) }}</button></li>
+          <li v-for="payment in requests" :key="payment.id"><BsButton variant="link" type="button" class="text-link" :disabled="pending || dirty" @click="select(payment)">{{ date(payment.created_at) }} · {{ t(`billing.plans.${payment.plan_key}.name`) }}</BsButton></li>
         </ul>
       </template>
     </div>

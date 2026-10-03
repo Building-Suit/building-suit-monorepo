@@ -12,16 +12,5 @@ const tone = computed(() => {
 </script>
 
 <template>
-  <span
-    class="inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-bold"
-    :class="{
-      'border-danger/40 bg-[var(--bs-status-danger-bg)] text-danger': tone === 'danger',
-      'border-warning/40 bg-[var(--bs-status-warning-bg)] text-warning': tone === 'warning',
-      'border-[var(--bs-border-strong)] bg-surface-muted text-fg': tone === 'active',
-      'border-success/40 bg-[var(--bs-status-success-bg)] text-success': tone === 'success',
-      'border-[var(--bs-border)] bg-surface-muted text-fg-muted': tone === 'neutral',
-    }"
-  >
-    {{ value || 'unknown' }}
-  </span>
+  <StatusBadge :status="normalized" :label="value || 'unknown'" :tone="tone === 'active' ? 'info' : tone" />
 </template>

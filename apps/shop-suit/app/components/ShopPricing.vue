@@ -1,12 +1,33 @@
 <script setup lang="ts">
+import type { ShopPlanOffer } from '~/types/plans'
+
 const { data: plans, isLoading, error, refresh } = usePlans()
-const { t, locale } = useI18n()
+const { t } = useI18n()
+const offers = computed<ShopPlanOffer[]>(() => (plans.value ?? [])
+  .filter(plan => plan.is_purchasable && !plan.is_coming_soon)
+  .map(plan => ({
+    catalogTermsId: plan.catalog_terms_id,
+    planSlug: plan.slug,
+    planName: plan.name,
+    planVariant: plan.plan_variant,
+    variantName: plan.variant_name,
+    billingInterval: plan.billing_interval,
+    currency: plan.currency,
+    listPriceAmount: plan.price_amount,
+    effectivePriceAmount: plan.price_amount,
+    priceSource: 'catalog',
+    resourceLimits: plan.resource_limits,
+    blockers: [],
+  })))
 </script>
 <template>
-  <SectionSkeleton v-if="isLoading" />
-  <div v-else-if="error" role="alert" class="ls-error"><p>{{ t('pricing.loadError') }}</p><button type="button" class="ls-btn mt-3" @click="refresh()">{{ t('common.retry') }}</button></div>
-  <p v-else-if="!plans?.length" class="text-fg-muted">{{ t('pricing.empty') }}</p>
-  <div v-else class="grid gap-6 md:grid-cols-2">
-    <article v-for="plan in plans" :key="plan.id" class="ls-card flex flex-col gap-6 p-8 text-start"><h3 class="text-xl font-bold">{{ plan.name }}</h3><p class="text-3xl font-black">{{ new Intl.NumberFormat(locale, { style: 'currency', currency: plan.currency }).format(plan.price_amount) }} <span class="text-sm font-normal">/ {{ t(`pricing.${plan.billing_interval}`) }}</span></p><p>{{ t('pricing.trial', { trialDays: plan.trial_days }) }}</p><NuxtLink v-if="!plan.is_coming_soon" :to="{ path: '/auth/signup', query: { plan: plan.slug } }" class="ls-btn ls-btn-primary">{{ t('auth.signupAction') }}</NuxtLink><p v-else class="text-fg-muted">{{ locale === 'ar' ? 'قريبًا' : 'Coming soon' }}</p></article>
-  </div>
+  <ShopPlanCards
+    :offers="offers"
+    action="signup"
+    :loading="isLoading"
+    :error="error ? t('pricing.loadError') : null"
+    :intro="t('pricing.notes.allPlansIncludeFreeTrial')"
+    :empty-label="t('pricing.empty')"
+    @retry="refresh"
+  />
 </template>

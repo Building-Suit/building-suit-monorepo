@@ -53,7 +53,7 @@ declare
   v_request_id uuid := gen_random_uuid();
   v_items jsonb;
 begin
-  v_shop_id := shop_crm.create_owner_shop('Purchase fixture Pro', 'pro');
+  v_shop_id := shop_crm.create_owner_shop('Purchase fixture Team', 'team');
   v_product_one := shop_crm.save_product(
     v_shop_id, null, 'Purchase item one', 'PURCHASE-1', null, 12
   );
@@ -182,7 +182,7 @@ declare
   v_other_vendor uuid;
   v_other_product uuid;
 begin
-  v_other_shop := shop_crm.create_owner_shop('Purchase fixture other', 'pro');
+  v_other_shop := shop_crm.create_owner_shop('Purchase fixture other', 'team');
   v_other_product := shop_crm.save_product(
     v_other_shop, null, 'Other product', 'PURCHASE-OTHER', null, 3
   );
@@ -303,57 +303,33 @@ do $$
 declare
   v_basic_shop uuid;
   v_basic_product uuid;
+  v_basic_vendor uuid;
 begin
-  v_basic_shop := shop_crm.create_owner_shop('Purchase fixture Basic', 'basic');
+  v_basic_shop := shop_crm.create_owner_shop('Purchase fixture Solo', 'solo');
   v_basic_product := shop_crm.save_product(
-    v_basic_shop, null, 'Basic purchase item', 'PURCHASE-BASIC', null, 2
+    v_basic_shop, null, 'Solo purchase item', 'PURCHASE-SOLO', null, 2
   );
   perform set_config('task09b.basic_shop', v_basic_shop::text, true);
   perform set_config('task09b.basic_product', v_basic_product::text, true);
-  begin
-    perform shop_crm.create_vendor(
-      v_basic_shop, 'Basic supplier', null, null, null, null, null, null
-    );
-    raise exception 'plan without inventory created a supplier';
-  exception when insufficient_privilege then
-    if sqlerrm <> 'PURCHASES_NOT_IN_PLAN' then raise; end if;
-  end;
+  v_basic_vendor := shop_crm.create_vendor(
+    v_basic_shop, 'Solo supplier', null, null, null, null, null, null
+  );
+  perform set_config('task09b.basic_vendor', v_basic_vendor::text, true);
 end $$;
 reset role;
-
-create temporary table basic_vendor_id (id uuid primary key);
-with inserted as (
-  insert into shop_crm.vendors (
-    shop_id, name, created_by_profile_id
-  ) select
-    current_setting('task09b.basic_shop')::uuid, 'Basic fixture supplier',
-    membership.profile_id
-  from shop_crm.shop_memberships membership
-  where membership.shop_id = current_setting('task09b.basic_shop')::uuid
-    and membership.role = 'owner'
-  returning id
-)
-insert into basic_vendor_id select id from inserted;
-select set_config('task09b.basic_vendor', id::text, true)
-from basic_vendor_id;
 
 select set_config('request.jwt.claim.sub', basic_owner_id::text, true)
 from shop_purchase_fixture;
 set local role authenticated;
 do $$ begin
-  begin
-    perform shop_crm.create_supplier_purchase(
-      gen_random_uuid(), current_setting('task09b.basic_shop')::uuid,
-      current_setting('task09b.basic_vendor')::uuid, 'BASIC-DENIED', current_date,
-      null, jsonb_build_array(jsonb_build_object(
-        'product_id', current_setting('task09b.basic_product')::uuid,
-        'quantity', 1, 'unit_cost', 1
-      ))
-    );
-    raise exception 'plan without inventory posted a purchase';
-  exception when insufficient_privilege then
-    if sqlerrm <> 'PURCHASES_NOT_IN_PLAN' then raise; end if;
-  end;
+  perform shop_crm.create_supplier_purchase(
+    gen_random_uuid(), current_setting('task09b.basic_shop')::uuid,
+    current_setting('task09b.basic_vendor')::uuid, 'SOLO-PURCHASE', current_date,
+    null, jsonb_build_array(jsonb_build_object(
+      'product_id', current_setting('task09b.basic_product')::uuid,
+      'quantity', 1, 'unit_cost', 1
+    ))
+  );
 end $$;
 reset role;
 

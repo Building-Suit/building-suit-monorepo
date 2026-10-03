@@ -1,7 +1,7 @@
 # Shop Suit Requirements V1 — canonical implementation tracker
 
-Status: SS-BASE-001 complete; next implementation task proposed, not started.  
-Last updated: 2026-09-23.
+Status: SS-SUB-001 commercial lifecycle acceptance implemented; candidate verification is recorded separately.
+Last updated: 2026-09-30.
 
 This file is the sole canonical implementation tracker for the Shop Suit Requirements Pack V1 stream. It replaces the former coarse backlog in this path. Other files in `apps/shop-suit/docs/readiness/` and `docs/rebuild/` remain dated evidence, not parallel status authorities.
 
@@ -103,10 +103,10 @@ Evidence codes keep the 197-row matrix readable. Each code resolves to concrete 
 
 | Status | Count |
 |---|---:|
-| `implemented` | 57 |
-| `partially implemented` | 86 |
-| `missing` | 46 |
-| `unverified` | 8 |
+| `implemented` | 67 |
+| `partially implemented` | 80 |
+| `missing` | 43 |
+| `unverified` | 7 |
 | **Total** | **197** |
 
 “Implemented” is used only for a bounded criterion supported by current source/database/tests or an explicit architecture boundary. Connected P0 capabilities remain partial when authenticated browser proof or required adjacent workflow is absent.
@@ -307,18 +307,18 @@ Evidence codes keep the 197-row matrix readable. Each code resolves to concrete 
 
 | ID | Short requirement | Priority/type | Status | Repository evidence | Database evidence | UI/workflow evidence | Test evidence | Known gap | Dependencies | Preservation/security note |
 |---|---|---|---|---|---|---|---|---|---|---|
-| SUB-01 | Represent trial and subscription lifecycle | P0 / subscriptions and quotas | `partially implemented` | E3,E7,E10 | D3,D6 | U1,U3 | T1,T4 | Only part/foundation of “Represent trial and subscription lifecycle” is connected or tested; remaining workflow/browser scope is open. | SS-BIZ-001; SS-SUB-001; commercial decisions | Basic/Pro values and product/service caps are provisional evidence, not approved policy. |
-| SUB-02 | Use approved plan names, prices and terms | P0 / subscriptions and quotas | `unverified` | E3,E7,E10 | D3,D6 | U1,U3 | T1,T4 | Exact Pack wording or safe evidence for “Use approved plan names, prices and terms” is unavailable; no policy inferred. | SS-BIZ-001; SS-SUB-001; commercial decisions | Basic/Pro values and product/service caps are provisional evidence, not approved policy. |
-| SUB-03 | Separate business mode from entitlements | P0 / subscriptions and quotas | `missing` | E3,E7,E10 | D3,D6 | U1,U3 | T1,T4 | No supported connected “Separate business mode from entitlements” workflow exists. | SS-BIZ-001; SS-SUB-001; commercial decisions | Basic/Pro values and product/service caps are provisional evidence, not approved policy. |
-| SUB-04 | Model resource quotas | P0 / subscriptions and quotas | `partially implemented` | E3,E7,E10 | D3,D6 | U1,U3 | T1,T4 | Only part/foundation of “Model resource quotas” is connected or tested; remaining workflow/browser scope is open. | SS-BIZ-001; SS-SUB-001; commercial decisions | Basic/Pro values and product/service caps are provisional evidence, not approved policy. |
-| SUB-05 | Enforce write access and quotas in Postgres | P0 / subscriptions and quotas | `partially implemented` | E3,E7,E10 | D3,D6 | U1,U3 | T1,T4 | Only part/foundation of “Enforce write access and quotas in Postgres” is connected or tested; remaining workflow/browser scope is open. | SS-BIZ-001; SS-SUB-001; commercial decisions | Basic/Pro values and product/service caps are provisional evidence, not approved policy. |
-| SUB-06 | Serialize concurrent quota consumption | P0 / subscriptions and quotas | `partially implemented` | E3,E7,E10 | D3,D6 | U1,U3 | T1,T4 | Only part/foundation of “Serialize concurrent quota consumption” is connected or tested; remaining workflow/browser scope is open. | SS-BIZ-001; SS-SUB-001; commercial decisions | Basic/Pro values and product/service caps are provisional evidence, not approved policy. |
-| SUB-07 | Keep retries from double-consuming usage | P0 / subscriptions and quotas | `partially implemented` | E3,E7,E10 | D3,D6 | U1,U3 | T1,T4 | Only part/foundation of “Keep retries from double-consuming usage” is connected or tested; remaining workflow/browser scope is open. | SS-BIZ-001; SS-SUB-001; commercial decisions | Basic/Pro values and product/service caps are provisional evidence, not approved policy. |
-| SUB-08 | Preserve data across expiry and downgrade | P0 / subscriptions and quotas | `partially implemented` | E3,E7,E10 | D3,D6 | U1,U3 | T1,T4 | Only part/foundation of “Preserve data across expiry and downgrade” is connected or tested; remaining workflow/browser scope is open. | SS-BIZ-001; SS-SUB-001; commercial decisions | Basic/Pro values and product/service caps are provisional evidence, not approved policy. |
-| SUB-09 | Display current usage | P0 / subscriptions and quotas | `missing` | E3,E7,E10 | D3,D6 | U1,U3 | T1,T4 | No supported connected “Display current usage” workflow exists. | SS-BIZ-001; SS-SUB-001; commercial decisions | Basic/Pro values and product/service caps are provisional evidence, not approved policy. |
-| SUB-10 | Provide subscription management UI | P0 / subscriptions and quotas | `missing` | E3,E7,E10 | D3,D6 | U1,U3 | T1,T4 | No supported connected “Provide subscription management UI” workflow exists. | SS-BIZ-001; SS-SUB-001; commercial decisions | Basic/Pro values and product/service caps are provisional evidence, not approved policy. |
-| SUB-11 | Prevent customer self-upgrade | P0 / subscriptions and quotas | `implemented` | E3,E7,E10 | D3,D6 | U1,U3 | T1,T4 | Bounded criterion evidenced for “Prevent customer self-upgrade”; preserve it while completing adjacent workflow. | SS-BIZ-001; SS-SUB-001; commercial decisions | Basic/Pro values and product/service caps are provisional evidence, not approved policy. |
-| SUB-12 | Keep authorized history readable after expiry | P0 / subscriptions and quotas | `implemented` | E3,E7,E10 | D3,D6 | U1,U3 | T1,T4 | Bounded criterion evidenced for “Keep authorized history readable after expiry”; preserve it while completing adjacent workflow. | SS-BIZ-001; SS-SUB-001; commercial decisions | Basic/Pro values and product/service caps are provisional evidence, not approved policy. |
+| SUB-01 | Independent Shop subscription lifecycle | P0 / subscriptions and quotas | `implemented` | SS-SUB-001 verification | Integrated lifecycle fixture | Owner and operator surfaces | Full local gate | Candidate execution state is separate. | SS-SUB-001 | Shop remains independently subscribable. |
+| SUB-02 | Resource-based plan limits | P0 / subscriptions and quotas | `implemented` | SS-SUB-001 verification | Data-driven four-resource engine | Usage/plan comparison | SQL + race runner | Candidate execution state is separate. | SS-SUB-001 | Business mode does not grant entitlements. |
+| SUB-03 | Approved catalog terms | P0 / subscriptions and quotas | `implemented` | SS-SUB-001 verification | Immutable catalog versions | Public/owner/admin catalog | Catalog + lifecycle SQL | Candidate execution state is separate. | SS-SUB-001 | Current approved terms replace provisional evidence. |
+| SUB-04 | Grandfather legacy implementation values | P0 / subscriptions and quotas | `implemented` | SS-SUB-001 verification | Basic/Pro mapping and reimport | Legacy current plan only | Catalog reimport fixture | Candidate execution state is separate. | SS-SUB-001 | Legacy subscriptions are preserved, not newly sold. |
+| SUB-05 | Concurrency-safe backend quotas | P0 / subscriptions and quotas | `implemented` | SS-SUB-001 verification | Atomic resource locks | Explicit quota errors | Four-resource race runner | Candidate execution state is separate. | SS-SUB-001 | Client state is advisory only. |
+| SUB-06 | Understandable pre-write usage | P0 / subscriptions and quotas | `implemented` | SS-SUB-001 verification | Usage snapshot/blockers | Bilingual meters and blockers | Owner/admin browser matrix | Candidate execution state is separate. | SS-SUB-001 | Rejections name the exhausted resource. |
+| SUB-07 | Preserve data through lifecycle changes | P0 / subscriptions and quotas | `implemented` | SS-SUB-001 verification | Archive/read-only invariants | Downgrade/expiry guidance | Integrated lifecycle SQL | Candidate execution state is separate. | SS-SUB-001 | No automatic deletion or archival. |
+| SUB-08 | Read-only expiry policy | P0 / subscriptions and quotas | `implemented` | SS-SUB-001 verification | Access-state write guards | History and reactivation UI | Expiry/reactivation SQL | Candidate execution state is separate. | SS-SUB-001 | Authorized history remains readable. |
+| SUB-09 | Explicit over-limit downgrade policy | P0 / subscriptions and quotas | `implemented` | SS-SUB-001 verification | Exact blocker resolver | Owner/operator blockers | SQL + browser matrix | Candidate execution state is separate. | SS-SUB-001 | Reduce usage or upgrade; never delete data. |
+| SUB-10 | Retry-safe quota and approval operations | P0 / subscriptions and quotas | `implemented` | SS-SUB-001 verification | Request ledgers/advisory locks | Stable retry states | Quota + approval concurrency | Candidate execution state is separate. | SS-SUB-001 | Retry cannot consume or extend twice. |
+| SUB-11 | Subscription/settings experience | P0 / subscriptions and quotas | `implemented` | SS-SUB-001 verification | Owner billing read contract | Plan, state, usage, requests | Bilingual responsive matrix | Candidate execution state is separate. | SS-SUB-001 | Customer cannot self-grant access. |
+| SUB-12 | Manual transfer provider boundary | P0 / subscriptions and quotas | `implemented` | SS-SUB-001 verification | Manual notice metadata | InstaPay instructions/review | Provider-boundary assertions | Candidate execution state is separate. | SS-SUB-001 | No Paymob/webhook/automatic verification. |
 
 ### SET
 
@@ -611,4 +611,3 @@ Measurable acceptance criteria:
 - Migrations applied locally: existing `20260919091222_supplier_purchases.sql` to the disposable local Shop database only.
 - Remote migrations/data/provider settings/secrets/deployments: none.
 - Commit/push/PR/merge: none.
-

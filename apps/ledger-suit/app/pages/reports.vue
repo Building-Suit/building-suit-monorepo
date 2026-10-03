@@ -450,18 +450,17 @@ async function exportReport(report: ExportReport, format: ExportFormat = 'csv') 
     <p v-if="exportError" class="ls-error" role="alert">{{ exportError }}</p>
 
     <div class="flex max-w-full gap-1 overflow-x-auto border-b border-[var(--bs-border)]" role="tablist">
-      <button
+      <BsButton variant="tab"
         v-for="item in TABS"
         :key="item.key"
         type="button"
         role="tab"
         :aria-selected="tab === item.key"
-        class="ls-tab -mb-px"
-        :class="{ 'ls-tab-active': tab === item.key }"
+        class="-mb-px"
         @click="selectTab(item.key)"
       >
         {{ t(item.labelKey) }}
-      </button>
+      </BsButton>
     </div>
 
     <div class="flex flex-wrap items-end gap-3">
@@ -485,7 +484,7 @@ async function exportReport(report: ExportReport, format: ExportFormat = 'csv') 
     <section v-if="tab === 'overview'" class="space-y-4" role="tabpanel" :aria-label="t('reports.tabs.overview')">
       <div v-if="overviewError" role="alert" class="ls-card space-y-3 p-6">
         <p>{{ t('reports.loadError') }}</p>
-        <button type="button" class="ls-btn" @click="refreshOverview()">{{ t('accounts.retry') }}</button>
+        <BsButton type="button" class="ls-btn" @click="refreshOverview()">{{ t('accounts.retry') }}</BsButton>
       </div>
       <template v-else>
       <div
@@ -506,7 +505,7 @@ async function exportReport(report: ExportReport, format: ExportFormat = 'csv') 
         <summary class="cursor-pointer font-semibold">{{ t('financialMapping.reconciliationDetails') }}</summary>
         <BsDataTable :value="statementReconciliation.accounts" :label="t('financialMapping.reconciliationDetails')" :density="tableDensity" class="mt-3">
           <Column :header="t('financialMapping.dimension')"><template #body="{ data: row }">{{ t(`financialMapping.dimensions.${row.statement}`) }}</template></Column>
-          <Column :header="t('reports.account')"><template #body="{ data: row }"><button type="button" class="text-link underline" @click="openStatementDrilldown(row.account_id, row.statement === 'balance_sheet' ? 'asof' : 'range')">{{ accountName(row.account_id) }}</button></template></Column>
+          <Column :header="t('reports.account')"><template #body="{ data: row }"><BsButton variant="link" type="button" class="text-link underline" @click="openStatementDrilldown(row.account_id, row.statement === 'balance_sheet' ? 'asof' : 'range')">{{ accountName(row.account_id) }}</BsButton></template></Column>
           <Column :header="t('financialMapping.statementAmount')"><template #body="{ data: row }"><MoneyText :amount-minor="row.statement_minor" signed /></template></Column>
           <Column :header="t('financialMapping.ledgerAmount')"><template #body="{ data: row }"><MoneyText :amount-minor="row.ledger_minor" signed /></template></Column>
           <Column :header="t('financialMapping.difference')"><template #body="{ data: row }"><MoneyText :amount-minor="row.difference_minor" signed /></template></Column>
@@ -521,7 +520,7 @@ async function exportReport(report: ExportReport, format: ExportFormat = 'csv') 
       </div>
 
       <p v-if="periodInvalid" role="alert" class="ls-error">{{ t('reports.invalidPeriod') }}</p>
-      <div v-else-if="trialBalanceError" role="alert" class="ls-card space-y-3 p-6"><p>{{ t('reports.trialBalanceError') }}</p><button type="button" class="ls-btn" @click="refreshTrialBalance()">{{ t('accounts.retry') }}</button></div>
+      <div v-else-if="trialBalanceError" role="alert" class="ls-card space-y-3 p-6"><p>{{ t('reports.trialBalanceError') }}</p><BsButton type="button" class="ls-btn" @click="refreshTrialBalance()">{{ t('accounts.retry') }}</BsButton></div>
       <SectionSkeleton v-else-if="trialBalancePending" variant="table" :rows="7" />
       <EmptyState v-else-if="!trialBalance.length" :title="t('reports.emptyTitle')" :description="t('reports.emptyRange')" />
       <section v-else class="ls-card overflow-hidden" aria-labelledby="tb-heading">
@@ -532,9 +531,9 @@ async function exportReport(report: ExportReport, format: ExportFormat = 'csv') 
               {{ trialBalanced ? t('reports.inBalance') : t('reports.outOfBalance') }}
             </p>
             <template v-if="can('reports.export')">
-              <button type="button" class="ls-btn ls-btn-sm" :disabled="exportPending" @click="exportReport('trial_balance')">{{ t('common.exportCsv') }}</button>
-              <button type="button" class="ls-btn ls-btn-sm" :disabled="exportPending" @click="exportReport('trial_balance', 'excel')">{{ t('reports.exportExcel') }}</button>
-              <button type="button" class="ls-btn ls-btn-sm" :disabled="exportPending" @click="exportReport('trial_balance', 'print')">{{ t('reports.printPdf') }}</button>
+              <BsButton type="button" class="ls-btn ls-btn-sm" :disabled="exportPending" @click="exportReport('trial_balance')">{{ t('common.exportCsv') }}</BsButton>
+              <BsButton type="button" class="ls-btn ls-btn-sm" :disabled="exportPending" @click="exportReport('trial_balance', 'excel')">{{ t('reports.exportExcel') }}</BsButton>
+              <BsButton type="button" class="ls-btn ls-btn-sm" :disabled="exportPending" @click="exportReport('trial_balance', 'print')">{{ t('reports.printPdf') }}</BsButton>
             </template>
           </div>
         </div>
@@ -545,7 +544,7 @@ async function exportReport(report: ExportReport, format: ExportFormat = 'csv') 
     <template #body="{ data: row }"><span class="block font-semibold">{{ row.name }}</span><span class="block font-mono text-xs text-fg-muted" dir="ltr">{{ row.code || t('common.dash') }}</span></template>
   </Column>
   <Column v-for="column in trialColumns" :key="column.field" :header="t(`reports.${column.label}`)" header-class="min-w-36 whitespace-nowrap text-end" body-class="ls-num whitespace-nowrap">
-    <template #body="{ data: row }"><button type="button" class="rounded-control px-1 text-link hover:underline focus-visible:outline focus-visible:outline-2" :aria-label="t('reports.drilldownAmount', { column: t(`reports.${column.label}`), account: row.name })" @click="openTrialDrilldown(row, column.scope)"><MoneyText :amount-minor="row[column.field]" /></button></template>
+    <template #body="{ data: row }"><BsButton variant="link" type="button" class="rounded-control px-1 text-link hover:underline focus-visible:outline focus-visible:outline-2" :aria-label="t('reports.drilldownAmount', { column: t(`reports.${column.label}`), account: row.name })" @click="openTrialDrilldown(row, column.scope)"><MoneyText :amount-minor="row[column.field]" /></BsButton></template>
   </Column>
   <ColumnGroup type="footer"><Row><Column :footer="t('reports.total')" footer-class="ls-sticky-start font-bold" /><Column v-for="total in trialTotalCells" :key="total.key" footer-class="ls-num whitespace-nowrap"><template #footer><MoneyText :amount-minor="total.amount" /></template></Column></Row></ColumnGroup>
 </BsDataTable>
@@ -557,12 +556,12 @@ async function exportReport(report: ExportReport, format: ExportFormat = 'csv') 
     <!-- Profit & Loss -->
     <section v-else-if="tab === 'profit-loss'" class="space-y-4" role="tabpanel" :aria-label="t('reports.tabs.profitLoss')">
       <div v-if="can('reports.export')" class="flex flex-wrap justify-end gap-2">
-        <button type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('profit_loss')">{{ t('common.exportCsv') }}</button>
-        <button type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('profit_loss', 'excel')">{{ t('reports.exportExcel') }}</button>
-        <button type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('profit_loss', 'print')">{{ t('reports.printPdf') }}</button>
+        <BsButton type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('profit_loss')">{{ t('common.exportCsv') }}</BsButton>
+        <BsButton type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('profit_loss', 'excel')">{{ t('reports.exportExcel') }}</BsButton>
+        <BsButton type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('profit_loss', 'print')">{{ t('reports.printPdf') }}</BsButton>
       </div>
 
-      <div v-if="profitLossError" role="alert" class="ls-card space-y-3 p-6"><p>{{ t('reports.loadError') }}</p><button type="button" class="ls-btn" @click="refreshProfitLoss()">{{ t('accounts.retry') }}</button></div>
+      <div v-if="profitLossError" role="alert" class="ls-card space-y-3 p-6"><p>{{ t('reports.loadError') }}</p><BsButton type="button" class="ls-btn" @click="refreshProfitLoss()">{{ t('accounts.retry') }}</BsButton></div>
       <SectionSkeleton v-else-if="profitLossPending" variant="table" :rows="7" />
 
       <EmptyState
@@ -574,7 +573,7 @@ async function exportReport(report: ExportReport, format: ExportFormat = 'csv') 
       <p v-if="!profitLossError && plMappingIncomplete" role="alert" class="ls-error">{{ t('financialMapping.incomplete') }}</p>
       <div v-if="!profitLossError && profitLoss?.length" class="ls-card overflow-hidden">
         <BsDataTable :label="t('reports.tabs.profitLoss')" :value="plSections.flatMap(section => rowsIn(profitLoss, section.key).map(row => ({ ...row, groupKey: section.key, groupLabel: section.labelKey })))" :density="tableDensity" row-group-mode="subheader" group-rows-by="groupKey">
-  <Column :header="t('reports.account')" body-class="ps-8"><template #body="{ data: row }"><button type="button" class="text-link underline" @click="openStatementDrilldown(row.account_id)">{{ row.name }}</button></template></Column>
+  <Column :header="t('reports.account')" body-class="ps-8"><template #body="{ data: row }"><BsButton variant="link" type="button" class="text-link underline" @click="openStatementDrilldown(row.account_id)">{{ row.name }}</BsButton></template></Column>
   <Column :header="t('transactions.amount')" body-class="ls-num"><template #body="{ data: row }"><MoneyText :amount-minor="row.amount_minor" /></template></Column>
   <template #groupheader="{ data: row }"><div class="flex justify-between gap-4 bg-surface-muted font-bold"><span>{{ t(row.groupLabel) }}</span><MoneyText :amount-minor="sectionTotal(profitLoss, row.groupKey)" /></div></template>
   <template #footer><div class="flex justify-between gap-4 text-base font-bold"><span>{{ t('reports.netProfit') }}</span><MoneyText :amount-minor="netProfit" signed /></div></template>
@@ -589,13 +588,13 @@ async function exportReport(report: ExportReport, format: ExportFormat = 'csv') 
     <!-- Balance sheet -->
     <section v-else-if="tab === 'balance-sheet'" class="space-y-4" role="tabpanel" :aria-label="t('reports.tabs.balanceSheet')">
       <div v-if="can('reports.export')" class="flex flex-wrap justify-end gap-2">
-        <button type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('balance_sheet')">{{ t('common.exportCsv') }}</button>
-        <button type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('balance_sheet', 'excel')">{{ t('reports.exportExcel') }}</button>
-        <button type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('balance_sheet', 'print')">{{ t('reports.printPdf') }}</button>
+        <BsButton type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('balance_sheet')">{{ t('common.exportCsv') }}</BsButton>
+        <BsButton type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('balance_sheet', 'excel')">{{ t('reports.exportExcel') }}</BsButton>
+        <BsButton type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('balance_sheet', 'print')">{{ t('reports.printPdf') }}</BsButton>
       </div>
 
       <p class="text-sm text-fg-muted">{{ t('statementClassification.reportHint', { date: formatDate(asOf, locale) }) }}</p>
-      <div v-if="balanceSheetError" class="ls-card space-y-3 p-6" role="alert"><p class="ls-error">{{ t('statementClassification.reportError') }}</p><button type="button" class="ls-btn" @click="refreshBalanceSheet()">{{ t('statementClassification.reload') }}</button></div>
+      <div v-if="balanceSheetError" class="ls-card space-y-3 p-6" role="alert"><p class="ls-error">{{ t('statementClassification.reportError') }}</p><BsButton type="button" class="ls-btn" @click="refreshBalanceSheet()">{{ t('statementClassification.reload') }}</BsButton></div>
       <SectionSkeleton v-else-if="balanceSheetPending" variant="table" :rows="7" />
 
       <EmptyState
@@ -608,7 +607,7 @@ async function exportReport(report: ExportReport, format: ExportFormat = 'csv') 
         <p v-if="bsMappingIncomplete" role="alert" class="ls-error">{{ t('financialMapping.incomplete') }}</p>
         <div class="ls-card overflow-hidden">
           <BsDataTable :label="t('reports.tabs.balanceSheet')" :value="bsRows" :density="tableDensity" row-group-mode="subheader" group-rows-by="statement_line">
-  <Column :header="t('reports.account')" body-class="ps-8"><template #body="{ data: row }"><button v-if="row.account_id" type="button" class="text-link underline" @click="openStatementDrilldown(row.account_id, 'asof')">{{ row.displayName }}</button><span v-else>{{ row.displayName }}</span></template></Column>
+  <Column :header="t('reports.account')" body-class="ps-8"><template #body="{ data: row }"><BsButton variant="link" v-if="row.account_id" type="button" class="text-link underline" @click="openStatementDrilldown(row.account_id, 'asof')">{{ row.displayName }}</BsButton><span v-else>{{ row.displayName }}</span></template></Column>
   <Column :header="t('statementClassification.effectiveFrom')"><template #body="{ data: row }">{{ row.effective_from ? formatDate(row.effective_from, locale) : t('common.dash') }}</template></Column>
   <Column :header="t('transactions.amount')" body-class="ls-num"><template #body="{ data: row }"><MoneyText :amount-minor="row.amount_minor" /></template></Column>
   <template #groupheader="{ data: row }"><div class="flex justify-between gap-4 bg-surface-muted font-bold"><span>{{ t(`statementClassification.lines.${row.statement_line}`) }}</span><MoneyText :amount-minor="sumStatementAmounts(balanceSheet, row.statement_line, 'statement_line')" /></div></template>
@@ -628,11 +627,11 @@ async function exportReport(report: ExportReport, format: ExportFormat = 'csv') 
     <!-- Cash flow -->
     <section v-else-if="tab === 'cash-flow'" class="space-y-4" role="tabpanel" :aria-label="t('reports.tabs.cashFlow')">
       <div v-if="can('reports.export')" class="flex flex-wrap justify-end gap-2">
-        <button type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('cash_flow')">{{ t('common.exportCsv') }}</button>
-        <button type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('cash_flow', 'excel')">{{ t('reports.exportExcel') }}</button>
-        <button type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('cash_flow', 'print')">{{ t('reports.printPdf') }}</button>
+        <BsButton type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('cash_flow')">{{ t('common.exportCsv') }}</BsButton>
+        <BsButton type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('cash_flow', 'excel')">{{ t('reports.exportExcel') }}</BsButton>
+        <BsButton type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('cash_flow', 'print')">{{ t('reports.printPdf') }}</BsButton>
       </div>
-      <div v-if="cashFlowError || cashDetailError" role="alert" class="ls-card space-y-3 p-6"><p>{{ t('reports.loadError') }}</p><button type="button" class="ls-btn" @click="refreshCashFlowSurface">{{ t('accounts.retry') }}</button></div>
+      <div v-if="cashFlowError || cashDetailError" role="alert" class="ls-card space-y-3 p-6"><p>{{ t('reports.loadError') }}</p><BsButton type="button" class="ls-btn" @click="refreshCashFlowSurface">{{ t('accounts.retry') }}</BsButton></div>
       <SectionSkeleton v-else-if="cashFlowPending" variant="table" :rows="5" />
 
       <EmptyState v-else-if="!cashFlow" :title="t('reports.emptyCashTitle')" :description="t('reports.emptyCashHint')" />
@@ -657,15 +656,15 @@ async function exportReport(report: ExportReport, format: ExportFormat = 'csv') 
         <p class="text-sm text-fg-muted">{{ t('financialMapping.cashDiagnostic', { difference: formatMoney(cashFlow.operating_adjustment_difference_minor, baseCurrency, locale) }) }}</p>
         <h3 class="font-semibold">{{ t('financialMapping.adjustmentSources') }}</h3>
         <BsDataTable :value="cashFlow.operating_adjustments" data-key="account_id" :label="t('financialMapping.adjustmentSources')" :density="tableDensity">
-          <Column :header="t('reports.account')"><template #body="{ data: row }"><button type="button" class="text-link underline" @click="openStatementDrilldown(row.account_id)">{{ row.code }} · {{ row.name }}</button></template></Column>
+          <Column :header="t('reports.account')"><template #body="{ data: row }"><BsButton variant="link" type="button" class="text-link underline" @click="openStatementDrilldown(row.account_id)">{{ row.code }} · {{ row.name }}</BsButton></template></Column>
           <Column :header="t('transactions.amount')"><template #body="{ data: row }"><MoneyText :amount-minor="row.amount_minor" signed /></template></Column>
         </BsDataTable>
         <h3 class="font-semibold">{{ t('financialMapping.cashSources') }}</h3>
         <BsDataTable :value="cashDetail ?? []" :label="t('financialMapping.cashSources')" :density="tableDensity">
-          <Column :header="t('reports.account')"><template #body="{ data: row }"><button type="button" class="text-link underline" @click="openStatementDrilldown(row.account_id)">{{ accountName(row.account_id) }}</button></template></Column>
+          <Column :header="t('reports.account')"><template #body="{ data: row }"><BsButton variant="link" type="button" class="text-link underline" @click="openStatementDrilldown(row.account_id)">{{ accountName(row.account_id) }}</BsButton></template></Column>
           <Column :header="t('reports.activity')"><template #body="{ data: row }">{{ t(`financialMapping.lines.${row.section}`) }}</template></Column>
           <Column :header="t('transactions.amount')"><template #body="{ data: row }"><MoneyText :amount-minor="row.amount_minor" signed /></template></Column>
-          <Column v-if="can('accounts.update')" :header="t('financialMapping.allocate')"><template #body="{ data: row }"><button type="button" class="ls-btn ls-btn-sm" @click="allocationEntry = row">{{ t('financialMapping.allocate') }}</button></template></Column>
+          <Column v-if="can('accounts.update')" :header="t('financialMapping.allocate')"><template #body="{ data: row }"><BsButton type="button" class="ls-btn ls-btn-sm" @click="allocationEntry = row">{{ t('financialMapping.allocate') }}</BsButton></template></Column>
         </BsDataTable>
       </div>
     </section>
@@ -673,11 +672,11 @@ async function exportReport(report: ExportReport, format: ExportFormat = 'csv') 
     <!-- General ledger -->
     <section v-else class="space-y-4" role="tabpanel" :aria-label="t('reports.tabs.ledger')">
       <div v-if="can('reports.export')" class="flex flex-wrap justify-end gap-2">
-        <button type="button" class="ls-btn" :disabled="exportPending || !ledgerAccountId" @click="exportReport('general_ledger')">{{ t('common.exportCsv') }}</button>
-        <button type="button" class="ls-btn" :disabled="exportPending || !ledgerAccountId" @click="exportReport('general_ledger', 'excel')">{{ t('reports.exportExcel') }}</button>
-        <button type="button" class="ls-btn" :disabled="exportPending || !ledgerAccountId" @click="exportReport('general_ledger', 'print')">{{ t('reports.printPdf') }}</button>
+        <BsButton type="button" class="ls-btn" :disabled="exportPending || !ledgerAccountId" @click="exportReport('general_ledger')">{{ t('common.exportCsv') }}</BsButton>
+        <BsButton type="button" class="ls-btn" :disabled="exportPending || !ledgerAccountId" @click="exportReport('general_ledger', 'excel')">{{ t('reports.exportExcel') }}</BsButton>
+        <BsButton type="button" class="ls-btn" :disabled="exportPending || !ledgerAccountId" @click="exportReport('general_ledger', 'print')">{{ t('reports.printPdf') }}</BsButton>
       </div>
-      <div v-if="ledgerError" role="alert" class="ls-card space-y-3 p-6"><p>{{ t('reports.loadError') }}</p><button type="button" class="ls-btn" @click="refreshLedger()">{{ t('accounts.retry') }}</button></div>
+      <div v-if="ledgerError" role="alert" class="ls-card space-y-3 p-6"><p>{{ t('reports.loadError') }}</p><BsButton type="button" class="ls-btn" @click="refreshLedger()">{{ t('accounts.retry') }}</BsButton></div>
       <SectionSkeleton v-else-if="ledgerPending" variant="table" :rows="8" />
 
       <EmptyState
@@ -721,3 +720,5 @@ async function exportReport(report: ExportReport, format: ExportFormat = 'csv') 
     <AccountActivityDialog v-if="trialDrilldown" :account-id="trialDrilldown.accountId" :scope="trialScope" :initial-from="trialDrilldown.from" :initial-to="trialDrilldown.to" @close="trialDrilldown = null" />
   </div>
 </template>
+
+undefined

@@ -116,10 +116,10 @@ async function save() {
         <FloatingField :label="t('ar.customer')"><select id="ar-customer-filter" v-model="customer" class="ls-input"><option value="">{{ t('ar.allCustomers') }}</option><option v-for="c in data?.customers ?? []" :key="c.id" :value="c.id">{{ c.name }}</option></select></FloatingField>
         <AccountingTableDensity v-model="tableDensity" :disabled="!tablePreferenceHydrated" />
       </div>
-      <p v-if="error" class="ls-error" role="alert">{{ t('ar.errors.load') }} <button class="ls-btn" @click="load">{{ t('ar.retry') }}</button></p>
+      <p v-if="error" class="ls-error" role="alert">{{ t('ar.errors.load') }} <BsButton type="submit" class="ls-btn" @click="load">{{ t('ar.retry') }}</BsButton></p>
       <SectionSkeleton v-else-if="pending" variant="table" :rows="5" />
       <template v-else-if="data">
-        <div class="flex flex-wrap gap-2"><template v-for="kind in kinds" :key="kind"><button v-if="can(capability[kind])" class="ls-btn" :disabled="readOnly || !controls.length || saving" @click="begin(kind)">{{ t(`ar.actions.${kind}`) }}</button></template></div>
+        <div class="flex flex-wrap gap-2"><template v-for="kind in kinds" :key="kind"><BsButton type="submit" v-if="can(capability[kind])" class="ls-btn" :disabled="readOnly || !controls.length || saving" @click="begin(kind)">{{ t(`ar.actions.${kind}`) }}</BsButton></template></div>
         <p v-if="!controls.length" role="status" class="ls-card p-5">{{ t('ar.setup') }} <NuxtLink to="/accounts" class="text-link underline">{{ t('nav.accounts') }}</NuxtLink></p>
         <section class="ls-card overflow-hidden">
           <h2 class="p-4 text-h2 font-bold">{{ t('ar.openItems') }}</h2>
@@ -145,7 +145,7 @@ async function save() {
               <Column :header="t('ar.movement')"><template #body="{ data: row }"><MoneyText :amount-minor="row.effect_minor" /></template></Column>
               <Column :header="t('ar.balance')"><template #body="{ data: row }"><MoneyText :amount-minor="row.balance_minor" /></template></Column>
               <Column field="reason" :header="t('ar.reason')" />
-              <Column :header="t('ar.history')"><template #body="{ data: row }"><NuxtLink :to="{ path: '/transactions', query: { q: row.transaction_id } }" class="text-link underline">{{ t('ar.journal') }}</NuxtLink><p v-if="row.reverses_document_id" class="text-xs">{{ t('ar.reverses') }}: {{ row.reverses_document_id }}</p><button v-if="can('ar.reverse') && !row.reversed && row.kind !== 'reversal'" class="ls-btn ms-2" :disabled="readOnly || saving" @click="begin('reversal', row)">{{ t('ar.actions.reversal') }}</button></template></Column>
+              <Column :header="t('ar.history')"><template #body="{ data: row }"><NuxtLink :to="{ path: '/transactions', query: { q: row.transaction_id } }" class="text-link underline">{{ t('ar.journal') }}</NuxtLink><p v-if="row.reverses_document_id" class="text-xs">{{ t('ar.reverses') }}: {{ row.reverses_document_id }}</p><BsButton type="submit" v-if="can('ar.reverse') && !row.reversed && row.kind !== 'reversal'" class="ls-btn ms-2" :disabled="readOnly || saving" @click="begin('reversal', row)">{{ t('ar.actions.reversal') }}</BsButton></template></Column>
             </BsDataTable>
           </template>
         </section>
@@ -163,10 +163,7 @@ async function save() {
         </details>
       </template>
     </template>
-    <BsDialog v-model:visible="visible" :title="t(`ar.actions.${form.kind}`)" :pending="saving" :dirty="dirty" size="lg">
-      <template #default="{ close }">
-        <form class="space-y-4 p-5" :aria-busy="saving" @submit.prevent="save">
-          <p v-if="formError" class="ls-error" role="alert">{{ formError }}</p>
+    <BsRecordActionDialog v-model:visible="visible" :title="t(`ar.actions.${form.kind}`)" :pending="saving" :dirty="dirty" :error="formError" size="lg" :submit-label="t('common.save')" :cancel-label="t('common.cancel')" :submit-disabled="readOnly" @submit="save">
           <p v-if="form.kind === 'reversal'" class="text-fg-muted">{{ t('ar.reversalPolicy') }}</p>
           <template v-else>
             <FloatingField :label="t('ar.customer')"><select id="ar-form-customer" v-model="form.customer" class="ls-input" required><option value="" /><option v-for="c in data?.customers.filter(c => !c.archived) ?? []" :key="c.id" :value="c.id">{{ c.name }}</option></select></FloatingField>
@@ -180,9 +177,6 @@ async function save() {
           <FloatingField v-if="form.kind === 'invoice'" :label="t('ar.dueDate')"><input id="ar-due" v-model="form.due" class="ls-input" type="date" :min="form.date" required></FloatingField>
           <FloatingField v-if="['credit', 'adjustment', 'reversal'].includes(form.kind)" :label="t('ar.reason')"><input id="ar-reason" v-model="form.reason" class="ls-input" required></FloatingField>
           <fieldset v-if="isAllocation" class="space-y-3"><legend class="font-bold">{{ t('ar.allocations') }}</legend><p class="text-sm text-fg-muted">{{ t('ar.allocationPolicy') }}</p><p v-if="!allocationItems.length">{{ t('ar.noAllocationItems') }}</p><div v-for="item in allocationItems" :key="item.invoice_id"><FloatingField :label="item.reference"><input :id="`ar-allocation-${item.invoice_id}`" v-model="form.allocations[item.invoice_id]" class="ls-input" inputmode="decimal"></FloatingField><p class="text-sm">{{ t('ar.outstanding') }}: <MoneyText :amount-minor="item.outstanding_minor" /></p></div></fieldset>
-          <div class="flex justify-end gap-2"><button type="button" class="ls-btn" @click="close">{{ t('common.cancel') }}</button><button type="submit" class="ls-btn ls-btn-primary" :disabled="saving || readOnly">{{ saving ? t('common.saving') : t('common.save') }}</button></div>
-        </form>
-      </template>
-    </BsDialog>
+    </BsRecordActionDialog>
   </div>
 </template>
