@@ -15,7 +15,7 @@ function component(file, language = 'en') {
   const code = ts.transpileModule(script.content, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText
   const module = { exports: {} }
   const copy = language === 'ar' ? { close: 'إغلاق', saving: 'جارٍ الحفظ…', search: 'بحث', empty: 'لا توجد سجلات' } : { close: 'Close', saving: 'Saving…', search: 'Search', empty: 'No records found' }
-  const globals = { ref: vue.ref, computed: vue.computed, watch: vue.watch, nextTick: vue.nextTick, useId: vue.useId, useAttrs: vue.useAttrs, useSlots: vue.useSlots, useI18n: () => ({ t: key => key, te: () => false }), useToasts: () => ({ toasts: vue.ref([{ id: 1, title: 'Saved', tone: 'success' }]), dismiss: () => {} }), useUiCopy: () => key => copy[key] }
+  const globals = { ref: vue.ref, computed: vue.computed, watch: vue.watch, watchEffect: vue.watchEffect, nextTick: vue.nextTick, onMounted: vue.onMounted, onBeforeUnmount: vue.onBeforeUnmount, useId: vue.useId, useAttrs: vue.useAttrs, useSlots: vue.useSlots, useI18n: () => ({ t: key => key, te: () => false }), useToasts: () => ({ toasts: vue.ref([{ id: 1, title: 'Saved', tone: 'success' }]), dismiss: () => {} }), useUiCopy: () => key => copy[key] }
   new Function('require', 'module', 'exports', ...Object.keys(globals), code)(require, module, module.exports, ...Object.values(globals))
   return module.exports.default
 }
@@ -49,11 +49,11 @@ test('semantic action variants do not inherit default button chrome', async () =
 
 test('primitive inventory centrally owns fields, choices, states, navigation, and composition', () => {
   const manifest = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
-  for (const component of ['BsAppRoot', 'BsBox', 'BsPage', 'BsPageBody', 'BsContainer', 'BsStack', 'BsInline', 'BsGrid', 'BsText', 'BsHeading', 'BsLink', 'BsIcon', 'BsImage', 'BsDivider', 'BsList', 'BsListItem', 'BsDescriptionList', 'BsDescriptionItem', 'BsDisclosure', 'BsCodeBlock', 'BsVisuallyHidden', 'BsSurface', 'BsPanel', 'BsActionTile', 'BsInteractiveCard', 'BsAlert', 'BsSkeleton', 'BsStatusBadge', 'BsInput', 'BsTextarea', 'BsField', 'BsChoiceGroup', 'BsTabs', 'BsSegmentedControl', 'BsPagination', 'BsStateSurface', 'BsSectionHeader', 'BsContentSection', 'BsToolbar', 'BsMenu']) {
+  for (const component of ['BsAppRoot', 'BsBox', 'BsPage', 'BsPageBody', 'BsContainer', 'BsStack', 'BsInline', 'BsGrid', 'BsText', 'BsHeading', 'BsLink', 'BsIcon', 'BsImage', 'BsDivider', 'BsList', 'BsListItem', 'BsDescriptionList', 'BsDescriptionItem', 'BsDisclosure', 'BsCodeBlock', 'BsVisuallyHidden', 'BsSurface', 'BsPanel', 'BsActionTile', 'BsInteractiveCard', 'BsAlert', 'BsSkeleton', 'BsStatusBadge', 'BsInput', 'BsTextarea', 'BsSelect', 'BsCheckbox', 'BsRadio', 'BsSwitch', 'BsFileInput', 'BsOtpInput', 'BsField', 'BsFieldGroup', 'BsChoiceGroup', 'BsSearchField', 'BsDateRangeFilter', 'BsForm', 'BsFormSection', 'BsFormActions', 'BsFilterBar', 'BsTabs', 'BsSegmentedControl', 'BsPagination', 'BsStateSurface', 'BsSectionHeader', 'BsContentSection', 'BsToolbar', 'BsMenu']) {
     assert.ok(Object.keys(manifest.exports).some(key => key.endsWith(`/${component}`)), `${component} is not exported`)
   }
   const styles = readFileSync(new URL('../src/styles/base.css', import.meta.url), 'utf8')
-  for (const className of ['ls-field', 'ls-choice-group', 'ls-tabs', 'ls-state-surface', 'ls-pagination', 'ls-section-header', 'ls-toolbar', 'ls-menu__panel']) {
+  for (const className of ['ls-field', 'ls-choice-group', 'bs-check-control', 'bs-switch', 'bs-file-input', 'bs-otp-input', 'bs-field-group', 'bs-form-actions', 'bs-search-field', 'ls-tabs', 'ls-state-surface', 'ls-pagination', 'ls-section-header', 'ls-toolbar', 'ls-menu__panel']) {
     assert.match(styles, new RegExp(`\\.${className.replaceAll('-', '\\-')}`))
   }
   const empty = readFileSync(new URL('../src/molecules/BsEmptyState.vue', import.meta.url), 'utf8')
@@ -138,10 +138,42 @@ test('canonical record actions compose dialog, form, guarded buttons, and shared
   assert.match(source, /<BsDialog[^>]+:dirty="dirty"[^>]+:pending="pending"/s)
   assert.match(source, /<BsForm[^>]+:pending="pending"[^>]+:error="error"/s)
   assert.match(source, /<slot :close="close"/)
+  assert.match(source, /<BsFormActions/)
   assert.match(source, /<BsButton type="submit"[^>]+:pending="pending"/s)
   const confirmHost = readFileSync(new URL('../src/organisms/BsConfirmHost.vue', import.meta.url), 'utf8')
   assert.match(confirmHost, /autofocus/)
   assert.match(confirmHost, /current\.tone === 'danger'/)
+})
+
+test('shared controls cover native field semantics and own accessible presentation', async () => {
+  const input = await render('atoms/BsInput.vue', { type: 'datetime-local', modelValue: '2026-10-03T12:30', invalid: true, 'aria-describedby': 'when-help' })
+  assert.match(input, /type="datetime-local"/)
+  assert.match(input, /aria-invalid="true"/)
+  assert.match(input, /aria-describedby="when-help"/)
+
+  const checkbox = await render('atoms/BsCheckbox.vue', { label: 'Consent', modelValue: true, required: true, description: 'Required to continue' })
+  assert.match(checkbox, /type="checkbox"/)
+  assert.match(checkbox, / checked/)
+  assert.match(checkbox, />Consent/)
+  assert.match(checkbox, /Required to continue/)
+
+  const radio = await render('atoms/BsRadio.vue', { label: 'Monthly', modelValue: 'monthly', value: 'monthly', name: 'cycle' })
+  assert.match(radio, /type="radio"/)
+  assert.match(radio, /name="cycle"/)
+  assert.match(radio, / checked/)
+
+  const toggle = await render('atoms/BsSwitch.vue', { label: 'Notifications', modelValue: true })
+  assert.match(toggle, /role="switch"/)
+  assert.match(toggle, / checked/)
+
+  const field = readFileSync(new URL('../src/molecules/BsField.vue', import.meta.url), 'utf8')
+  for (const relationship of ['descriptionId', 'helpId', 'errorId', 'describedby']) assert.match(field, new RegExp(relationship))
+  const file = readFileSync(new URL('../src/atoms/BsFileInput.vue', import.meta.url), 'utf8')
+  assert.match(file, /type="file"/)
+  assert.match(file, /update:modelValue/)
+  const filters = readFileSync(new URL('../src/organisms/BsFilterBar.vue', import.meta.url), 'utf8')
+  assert.match(filters, /data-form-role="filter"/)
+  assert.match(filters, /<BsToolbar/)
 })
 
 test('canonical data table owns typed CRUD capabilities, query adapters, and action placement', () => {
