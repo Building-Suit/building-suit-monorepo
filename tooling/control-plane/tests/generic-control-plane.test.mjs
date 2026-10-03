@@ -24,6 +24,7 @@ import {
   classifySupervisorFailure,
   planSupervisorStep,
   preflightReconciliationAction,
+  supervisorStateFingerprint,
   supervisorResumeIdentity,
 } from '../runner/task-supervisor.mjs'
 import {
@@ -69,6 +70,11 @@ import {
   validateCurrentPublicationAuthorization,
   validatePublicationAuthorization,
 } from '../runner/publication-preflight.mjs'
+import {
+  evaluatePublicationReadiness,
+  publicationAuthorizationValidationKind,
+  validateProtectedPublicationAuthorization,
+} from '../runner/publication-readiness.mjs'
 
 test('control database retry recovers the original operation after a transient failure', () => {
   const results = [
@@ -178,7 +184,7 @@ test('publication preflight uses only explicit task and workstream authority', (
     projectPaths: ['apps/', 'packages/', 'tooling/', 'docs/'],
   })
 
-  assert.equal(classification.decisions.find(item => item.file.endsWith('task-publisher.mjs')).boundary, 'task')
+  assert.equal(classification.decisions.find(item => item.file.endsWith('task-publisher.mjs')).boundary, 'workstream')
   assert.deepEqual(classification.repaired, [])
   assert.deepEqual(classification.waiting, ['apps/shop-suit/app.vue', 'docs/shared/publication.md'])
   assert.ok(classification.allowed.includes('tooling/control-plane/import/unrelated.md'))
@@ -190,18 +196,21 @@ test('task-create publication metadata persists validated top-level allowed_path
   const metadata = taskPublicationMetadata({
     metadata: { source: 'unit-fixture' },
     allowedPaths: ['packages/ui/', 'docs/shared/exact.md', 'packages/ui/'],
+    sourcePaths: ['packages/ui/**', 'packages/ui/**'],
+    exactRequirementPaths: ['docs/shared/contract.md'],
     workstreamPaths: ['apps/shop-suit/'],
     projectPaths: ['apps/', 'packages/', 'docs/'],
   })
   assert.deepEqual(metadata.allowed_paths, ['docs/shared/exact.md', 'packages/ui/'])
+  assert.deepEqual(metadata.source_allowed_paths, ['packages/ui/**'])
   assert.equal(metadata.source, 'unit-fixture')
   assert.throws(() => taskPublicationMetadata({
     allowedPaths: ['README.md'], workstreamPaths: ['apps/shop-suit/'], projectPaths: ['apps/'],
   }), /outside_project/)
-  assert.throws(() => taskPublicationMetadata({
+  assert.deepEqual(taskPublicationMetadata({
     allowedPaths: ['apps/shop-suit/supabase/migrations/999.sql'],
     workstreamPaths: ['apps/shop-suit/'], projectPaths: ['apps/'],
-  }), /protected/)
+  }).allowed_paths, ['apps/shop-suit/supabase/migrations/999.sql'])
 })
 
 test('publication authorization accepts only exact safe paths inside the project boundary', () => {
@@ -226,6 +235,13 @@ test('publication authorization accepts only exact safe paths inside the project
     waitingPaths: ['packages/ui/a.vue', 'packages/ui/b.vue'],
     projectPaths: ['packages/'],
   }), /match_current/)
+  const legacyDirectoryAuthorization = classifyPublicationFiles({
+    files: ['packages/ui/src/BsShell.vue'],
+    workstreamPaths: ['apps/shop-suit/'],
+    projectPaths: ['apps/', 'packages/'],
+    ordinaryAuthorizedPaths: ['packages/ui/'],
+  })
+  assert.deepEqual(legacyDirectoryAuthorization.allowed, ['packages/ui/src/BsShell.vue'])
 })
 
 test('publication scope repair never authorizes protected or product behavior paths', () => {
@@ -237,6 +253,94 @@ test('publication scope repair never authorizes protected or product behavior pa
   })
   assert.deepEqual(classification.repaired, [])
   assert.equal(classification.blocked.length, 3)
+})
+
+test('protected publication authorization is exact, evidenced, validated, and project-bound', () => {
+  const path = 'apps/shop-suit/supabase/migrations/999.sql'
+  const validations = {
+    [path]: { status: 'passed', checks: ['database-change-review'] },
+  }
+  assert.equal(publicationAuthorizationValidationKind(path), 'database-change-review')
+  assert.deepEqual(validateProtectedPublicationAuthorization({
+    requestedPaths: [path], requiredPaths: [path], projectPaths: ['apps/'],
+    evidence: 'approved change ticket CP-42', validations,
+  }), [path])
+  assert.throws(() => validateProtectedPublicationAuthorization({
+    requestedPaths: [path], requiredPaths: [path], projectPaths: ['apps/'],
+    evidence: 'short', validations,
+  }), /audit_evidence/)
+  assert.throws(() => validateProtectedPublicationAuthorization({
+    requestedPaths: ['apps/shop-suit/supabase/migrations/**'], requiredPaths: [path], projectPaths: ['apps/'],
+    evidence: 'approved change ticket CP-42', validations,
+  }), /exact_relative_paths/)
+  assert.throws(() => validateProtectedPublicationAuthorization({
+    requestedPaths: ['apps/shop-suit/supabase/migrations/'], requiredPaths: ['apps/shop-suit/supabase/migrations/'], projectPaths: ['apps/'],
+    evidence: 'approved change ticket CP-42', validations: {},
+  }), /exact_relative_paths/)
+})
+
+test('publication readiness never turns runtime files into authority', () => {
+  const base = {
+    contract: {
+      contract_version: 1, contract_id: 7, required_paths: ['package.json'], unresolved_scopes: [],
+      task_paths: ['apps/shop-suit/'], source_paths: [], workstream_paths: ['apps/shop-suit/'], project_paths: ['apps/', 'package.json'],
+    },
+    taskPaths: ['apps/shop-suit/'], sourcePaths: [], workstreamPaths: ['apps/shop-suit/'],
+    projectPaths: ['apps/', 'package.json'], ordinaryAuthorizations: [], protectedAuthorizations: [],
+  }
+  const waiting = evaluatePublicationReadiness(base)
+  assert.equal(waiting.classification, 'exact_authorization_required')
+  assert.deepEqual(waiting.exact_authorization_required, ['package.json'])
+  const invented = evaluatePublicationReadiness({
+    ...base,
+    contract: { ...base.contract, project_paths: ['apps/', 'package.json', 'packages/'] },
+    projectPaths: ['apps/', 'package.json', 'packages/'],
+    runtimeFiles: ['packages/invented.mjs'],
+  })
+  assert.equal(invented.classification, 'unexpected_runtime_change')
+  assert.equal(invented.evidence.uses_runtime_files_as_authority, false)
+  const outside = evaluatePublicationReadiness({ ...base, runtimeFiles: ['README.md'] })
+  assert.equal(outside.classification, 'outside_project_boundary')
+  const protectedResult = evaluatePublicationReadiness({
+    ...base,
+    contract: {
+      contract_version: 1, required_paths: ['apps/shop-suit/.env.example'], unresolved_scopes: [],
+      task_paths: ['apps/shop-suit/'], source_paths: [], workstream_paths: ['apps/shop-suit/'], project_paths: ['apps/', 'package.json'],
+    },
+    runtimeFiles: ['apps/shop-suit/.env.example'],
+  })
+  assert.equal(protectedResult.classification, 'unexpected_runtime_change')
+  assert.deepEqual(protectedResult.unexpected_runtime_change, ['apps/shop-suit/.env.example'])
+  const protectedReady = evaluatePublicationReadiness({
+    ...base,
+    contract: {
+      contract_version: 1, required_paths: ['apps/shop-suit/.env.example'], unresolved_scopes: [],
+      task_paths: ['apps/shop-suit/'], source_paths: [], workstream_paths: ['apps/shop-suit/'], project_paths: ['apps/', 'package.json'],
+    },
+    protectedAuthorizations: [{ authorization_kind: 'protected', authorized_paths: ['apps/shop-suit/.env.example'] }],
+  })
+  assert.equal(protectedReady.classification, 'ready')
+  const unresolved = evaluatePublicationReadiness({
+    ...base,
+    contract: { ...base.contract, unresolved_scopes: ['packages/**'] },
+  })
+  assert.equal(unresolved.classification, 'invalid')
+})
+
+test('publication authorization changes the supervisor recovery fingerprint', () => {
+  const snapshot = {
+    packet: {
+      task: { task_id: 'CP-T-001', status: 'in_progress' },
+      publication_contract: { contract_id: 7, contract_fingerprint: 'contract-1', updated_at: '2026-10-03T00:00:00Z' },
+      publication_authorizations: { ordinary: [], protected: [] },
+    },
+    executions: [], verification_runs: [], failures: [], publications: [], serialization_conflicts: [],
+  }
+  const before = supervisorStateFingerprint(snapshot)
+  snapshot.packet.publication_authorizations.ordinary.push({
+    authorization_id: 9, authorized_paths: ['package.json'], revoked_at: null,
+  })
+  assert.notEqual(supervisorStateFingerprint(snapshot), before)
 })
 
 test('publication reconciliation is idempotent after commit and PR creation', () => {
@@ -1571,6 +1675,19 @@ function executionPreflightFixture() {
         max_attempts: 5,
         attempt_profiles: ['standard', 'standard', 'deep', 'deep', 'deep'],
       },
+      publication_contract: {
+        contract_id: 1,
+        contract_version: 1,
+        source: 'unit-fixture',
+        required_paths: [],
+        unresolved_scopes: [],
+        contract_fingerprint: 'fixture',
+        task_paths: [],
+        source_paths: [],
+        workstream_paths: ['tooling/control-plane/'],
+        project_paths: ['tooling/'],
+      },
+      publication_authorizations: { ordinary: [], protected: [] },
     },
     runtime: {
       control_database: {
@@ -1623,6 +1740,26 @@ test('verification product repair has an explicit failed-task preflight without 
     repair.checks.find(check => check.name === 'task_lifecycle')?.failed_verification_product_repair,
     true,
   )
+})
+
+test('failed implementation retry also requires authoritative execution preflight', () => {
+  const fixture = executionPreflightFixture()
+  fixture.packet.task.status = 'failed'
+  fixture.executions = [{ execution_id: 246, attempt: 1, status: 'failed' }]
+  const retry = evaluateExecutionPreflight({ ...fixture, purpose: 'retry' })
+  assert.equal(retry.ready, true)
+  assert.equal(retry.context.attempt, 2)
+  assert.equal(retry.checks.find(check => check.name === 'task_lifecycle')?.failed_execution_retry, true)
+})
+
+test('direct task-run and task-retry cannot bypass execution preflight', async () => {
+  const runner = await readFile(new URL('../runner/bs-agent.mjs', import.meta.url), 'utf8')
+  const runBody = runner.slice(runner.indexOf('function taskRun()'), runner.indexOf('function taskRetry()'))
+  const retryBody = runner.slice(runner.indexOf('function taskRetry()'), runner.indexOf('function taskPublish()'))
+  assert.match(runBody, /runExecutionPreflight\(supervisorSnapshot\(taskId\), 'implementation'\)/)
+  assert.match(retryBody, /runExecutionPreflight\(/)
+  assert.ok(runBody.indexOf('runExecutionPreflight') < runBody.indexOf('startExecution('))
+  assert.ok(retryBody.indexOf('runExecutionPreflight') < retryBody.indexOf('startRetryExecution('))
 })
 
 test('execution preflight safety-stops a wrong control database fingerprint', () => {
@@ -1728,7 +1865,7 @@ test('execution preflight rejects incomplete contract, publication, retry, and r
 
   const changedPath = executionPreflightFixture()
   changedPath.runtime.repository.worktree_target.changed_files = ['apps/shop-suit/app.vue']
-  assert.equal(evaluateExecutionPreflight(changedPath).reason, 'worktree_change_outside_publication_scope')
+  assert.equal(evaluateExecutionPreflight(changedPath).reason, 'publication_path_outside_project_boundary')
 
   const retry = executionPreflightFixture()
   retry.packet.retry_policy.attempt_profiles = ['standard']
@@ -1751,19 +1888,44 @@ test('execution preflight exposes boundaries and waits for missing cross-workstr
     workstream_paths: ['tooling/control-plane/'],
     project_paths: ['tooling/', 'packages/'],
   }
+  fixture.packet.publication_contract.required_paths = ['packages/ui/']
+  fixture.packet.publication_contract.task_paths = []
+  fixture.packet.publication_contract.source_paths = ['packages/ui/']
+  fixture.packet.publication_contract.workstream_paths = ['tooling/control-plane/']
+  fixture.packet.publication_contract.project_paths = ['packages/', 'tooling/']
   const waiting = evaluateExecutionPreflight(fixture)
   assert.equal(waiting.kind, 'wait')
-  assert.equal(waiting.reason, 'cross_workstream_publication_authority_required')
+  assert.equal(waiting.reason, 'publication_exact_authorization_required')
   assert.deepEqual(waiting.context.requested_paths, ['packages/ui/'])
   assert.equal(waiting.context.publication_boundaries.effective_paths[0], 'tooling/control-plane/')
   assert.equal(waiting.context.attempt, undefined)
 
-  fixture.packet.publication_boundaries.task_paths = ['packages/ui/']
+  fixture.packet.publication_authorizations.ordinary = [{
+    authorization_kind: 'ordinary', authorized_paths: ['packages/ui/'],
+  }]
   const approved = evaluateExecutionPreflight(fixture)
   assert.equal(approved.ready, true)
-  assert.deepEqual(approved.context.publication_boundaries.effective_paths, [
-    'packages/ui/', 'tooling/control-plane/',
-  ])
+  assert.deepEqual(approved.context.publication_readiness.effective_paths, ['packages/ui/', 'tooling/control-plane/'])
+})
+
+test('authoritative publication migration backfills historical tasks without execution churn', async () => {
+  const migration = await readFile(new URL('../sql/027_authoritative_publication_readiness.sql', import.meta.url), 'utf8')
+  const smoke = await readFile(new URL('./publication-readiness-smoke.sql', import.meta.url), 'utf8')
+  assert.match(migration, /publication_readiness_contracts/)
+  assert.match(migration, /publication_preexecution_authorizations/)
+  assert.match(migration, /SAS-M1-BOOT-001/)
+  assert.match(migration, /preserve_execution_id', 245/)
+  assert.match(migration, /preserve_verification_run_id', 264/)
+  assert.match(migration, /SS-SA-BRIDGE-001|task\.status IN \('planned','ready','in_progress'/)
+  assert.match(migration, /worker_output_used', false/)
+  assert.match(migration, /project_publication_boundary_amended/)
+  assert.match(migration, /protected_publication_paths_authorized/)
+  assert.doesNotMatch(migration, /INSERT INTO control\.executions/)
+  assert.doesNotMatch(migration, /INSERT INTO control\.verification_runs/)
+  assert.match(smoke, /authorize_preexecution_publication_paths/)
+  assert.match(smoke, /authorize_protected_publication_paths/)
+  assert.match(smoke, /no-secrets-review/)
+  assert.match(smoke, /Publication readiness consumed an implementation execution/)
 })
 
 test('publication authorization migration binds exact waits and preserves execution verification lineage', async () => {

@@ -13,6 +13,10 @@ import {
   taskPublicationMetadata,
   validateCurrentPublicationAuthorization,
 } from './runner/publication-preflight.mjs'
+import {
+  evaluatePublicationReadiness,
+  validateProtectedPublicationAuthorization,
+} from './runner/publication-readiness.mjs'
 
 const repoRoot = fileURLToPath(new URL('../../', import.meta.url))
 const [resource, action, ...positionals] = process.argv.slice(2)
@@ -97,7 +101,7 @@ function projectShow(slug) {
 function saveProject(config, dryRun) {
   const validated = validateProjectConfig(config)
   if (dryRun) return { ok: true, dry_run: true, project: validated }
-  return query(`
+  const saved = query(`
     WITH input AS (SELECT :'config'::jsonb AS c),
     upsert_project AS (
       INSERT INTO control.projects (
@@ -155,6 +159,8 @@ function saveProject(config, dryRun) {
     SELECT jsonb_build_object('ok',true,'project',(SELECT to_jsonb(p) FROM upsert_project p),
       'workstreams',(SELECT jsonb_agg(to_jsonb(w) ORDER BY w.slug) FROM upsert_workstreams w));
   `, { config: JSON.stringify(validated) })
+  query(`SELECT COALESCE(jsonb_agg(control.refresh_publication_readiness_contract(t.task_id,'project-config-updated') ORDER BY t.task_id),'[]') FROM control.tasks t JOIN control.projects p USING(project_id) WHERE p.slug=:'slug';`, { slug:validated.slug })
+  return saved
 }
 
 function taskBundle(taskId) {
@@ -165,6 +171,20 @@ function taskBundle(taskId) {
     'failures',COALESCE((SELECT jsonb_agg(to_jsonb(f) ORDER BY f.created_at) FROM control.failures f WHERE f.task_id=:'task_id'),'[]'),
     'events',COALESCE((SELECT jsonb_agg(to_jsonb(ev) ORDER BY ev.event_id) FROM control.task_events ev WHERE ev.task_id=:'task_id'),'[]'));
   `, { task_id: taskId })
+}
+
+function publicationReadiness(packet, runtimeFiles = []) {
+  const boundaries = packet.publication_boundaries ?? {}
+  return evaluatePublicationReadiness({
+    contract: packet.publication_contract,
+    taskPaths: boundaries.task_paths ?? [],
+    sourcePaths: boundaries.source_paths ?? [],
+    workstreamPaths: boundaries.workstream_paths ?? [],
+    projectPaths: boundaries.project_paths ?? [],
+    ordinaryAuthorizations: packet.publication_authorizations?.ordinary ?? [],
+    protectedAuthorizations: packet.publication_authorizations?.protected ?? [],
+    runtimeFiles,
+  })
 }
 
 function diagnosticPrompt(bundle, mode = 'chatgpt') {
@@ -216,6 +236,31 @@ async function main() {
   }
 
   if (resource === 'task' && action === 'list') return output({ ok: true, tasks: query(`SELECT COALESCE(jsonb_agg(to_jsonb(x) ORDER BY x.priority,x.sequence,x.task_id),'[]') FROM (SELECT t.*,p.slug project_slug FROM control.tasks t LEFT JOIN control.projects p USING(project_id) WHERE (:'project'='' OR p.slug=:'project') AND (:'workstream'='' OR t.workstream_slug=:'workstream') AND (:'status'='' OR t.status=:'status')) x;`, { project:flag('project',''),workstream:flag('workstream',''),status:flag('status','') }) })
+  if (resource === 'task' && action === 'publication-readiness') {
+    const taskId = positional() ?? ''
+    const statuses = flags('status')
+    const packets = query(`
+      SELECT COALESCE(jsonb_agg(control.generic_task_packet(t.task_id) ORDER BY t.priority,t.sequence,t.task_id),'[]')
+      FROM control.tasks t LEFT JOIN control.projects p USING(project_id)
+      WHERE (:'task_id'='' OR t.task_id=:'task_id')
+        AND (:'project'='' OR p.slug=:'project')
+        AND (:'workstream'='' OR t.workstream_slug=:'workstream')
+        AND (:'statuses'::jsonb='[]'::jsonb OR t.status IN (SELECT jsonb_array_elements_text(:'statuses'::jsonb)));
+    `, { task_id:taskId,project:flag('project',''),workstream:flag('workstream',''),statuses:JSON.stringify(statuses) })
+    const reports = packets.map(packet => ({
+      task_id: packet.task.task_id,
+      task_status: packet.task.status,
+      recovery: packet.publication_recovery ?? null,
+      ...publicationReadiness(packet),
+    }))
+    return output({
+      ok: true,
+      mutated: false,
+      classifications: ['ready','exact_authorization_required','protected_authorization_required','outside_project_boundary','invalid','unexpected_runtime_change'],
+      summary: Object.fromEntries([...new Set(reports.map(report => report.classification))].sort().map(classification => [classification,reports.filter(report => report.classification===classification).length])),
+      reports,
+    })
+  }
   if (resource === 'task' && ['show','inspect'].includes(action)) return output({ ok: true, bundle: redact(taskBundle(positional())) })
   if (resource === 'task' && action === 'next') return delegate('task-next', resolveWorkstreamRef(positional()))
   if (resource === 'task' && action === 'claim') return delegate('task-claim', resolveWorkstreamRef(positional()))
@@ -227,21 +272,43 @@ async function main() {
     const target = query(`SELECT jsonb_build_object('project_paths',p.allowed_publication_paths,'workstream_path',w.application_path) FROM control.projects p JOIN control.workstreams w USING(project_id) WHERE p.slug=:'project' AND w.slug=:'workstream' AND p.active=true AND w.active=true;`, { project:projectSlug,workstream:workstreamSlug })
     if (!target) throw new Error('active_project_workstream_not_found')
     const suppliedAllowedPaths = task.allowed_paths ?? task.metadata?.allowed_paths ?? []
+    const suppliedMetadata = { ...(task.metadata ?? {}) }
+    for (const key of [
+      'source_allowed_paths',
+      'publication_exact_paths',
+      'publication_acceptance_paths',
+      'publication_scaffold_paths',
+      'publication_resolved_scopes',
+      'publication_requirement_evidence',
+    ]) {
+      if (task[key] != null) suppliedMetadata[key] = task[key]
+    }
+    for (const key of [
+      'source_allowed_paths','publication_exact_paths','publication_acceptance_paths',
+      'publication_scaffold_paths','publication_resolved_scopes',
+    ]) {
+      if (suppliedMetadata[key] != null && !Array.isArray(suppliedMetadata[key])) {
+        throw new Error(`${key}_must_be_an_array`)
+      }
+    }
     const metadata = taskPublicationMetadata({
-      metadata: task.metadata,
+      metadata: suppliedMetadata,
       allowedPaths: suppliedAllowedPaths,
+      sourcePaths: suppliedMetadata.source_allowed_paths ?? [],
+      exactRequirementPaths: [
+        ...(suppliedMetadata.publication_exact_paths ?? []),
+        ...(suppliedMetadata.publication_acceptance_paths ?? []),
+        ...(suppliedMetadata.publication_scaffold_paths ?? []),
+      ],
       workstreamPaths: [`${String(target.workstream_path).replace(/\/$/, '')}/`],
       projectPaths: target.project_paths,
     })
-    return output({ ok:true,task:query(`
-      WITH target AS (SELECT p.project_id,w.slug workstream_slug,w.suit_slug FROM control.projects p JOIN control.workstreams w USING(project_id) WHERE p.slug=:'project' AND w.slug=:'workstream' AND p.active=true AND w.active=true),
-      inserted AS (
-        INSERT INTO control.tasks(task_id,suit_slug,project_id,workstream_slug,sequence,priority,title,description,task_type,risk_level,model_profile,status,acceptance_criteria,verification_plan,retry_policy_id,metadata)
-        SELECT :'task_id',suit_slug,project_id,workstream_slug,:'sequence'::int,:'priority'::int,:'title',:'description',:'task_type',:'risk_level',:'model_profile','planned',:'acceptance'::jsonb,:'verification'::jsonb,NULLIF(:'retry_policy',''),:'metadata'::jsonb FROM target
-        RETURNING *
-      )
-      SELECT to_jsonb(inserted) FROM inserted;
-    `,{project:projectSlug,workstream:workstreamSlug,task_id:task.task_id,sequence:String(task.sequence??1000),priority:String(task.priority??100),title:String(task.title??''),description:String(task.description??''),task_type:task.task_type??'feature',risk_level:task.risk_level??'normal',model_profile:task.model_profile??'standard',acceptance:JSON.stringify(task.acceptance_criteria??[]),verification:JSON.stringify(task.verification_plan??[]),retry_policy:task.retry_policy_id??'',metadata:JSON.stringify(metadata)}) })
+    const created = query(`SELECT control.create_task_with_publication_contract(
+      :'project',:'workstream',:'task_id',:'sequence'::int,:'priority'::int,:'title',:'description',
+      :'task_type',:'risk_level',:'model_profile',:'acceptance'::jsonb,:'verification'::jsonb,
+      NULLIF(:'retry_policy',''),:'metadata'::jsonb
+    );`,{project:projectSlug,workstream:workstreamSlug,task_id:task.task_id,sequence:String(task.sequence??1000),priority:String(task.priority??100),title:String(task.title??''),description:String(task.description??''),task_type:task.task_type??'feature',risk_level:task.risk_level??'normal',model_profile:task.model_profile??'standard',acceptance:JSON.stringify(task.acceptance_criteria??[]),verification:JSON.stringify(task.verification_plan??[]),retry_policy:task.retry_policy_id??'',metadata:JSON.stringify(metadata)})
+    return output({ ok:true,task:created })
   }
   if (resource === 'task' && action === 'authorize-publication') {
     const taskId = positional()
@@ -276,9 +343,50 @@ async function main() {
       paths:JSON.stringify(paths),
       idempotency_key:idempotencyKey,
     })
+    query(`SELECT control.refresh_publication_readiness_contract(:'task_id','cp-res-010-authorization');`, { task_id:taskId })
     const resumed = run(process.execPath, ['tooling/control-plane/runner/bs-agent.mjs','task-supervise',taskId], { timeout:75*60*1000 })
     const resumePayload = resumed.stdout ? JSON.parse(resumed.stdout) : { ok:false,error:resumed.stderr||resumed.error }
     return output({ ok:resumePayload.ok===true,authorization,resumed:true,resume:resumePayload }, resumed.code)
+  }
+  if (resource === 'task' && action === 'authorize-preexecution-publication') {
+    const taskId = positional()
+    const paths = [...new Set(flags('path'))].sort()
+    const evidence = String(flag('evidence',''))
+    const packet = query(`SELECT control.generic_task_packet(:'task_id');`, { task_id:taskId })
+    if (!packet?.task) throw new Error('task_not_found')
+    const readiness = publicationReadiness(packet)
+    if (JSON.stringify(paths) !== JSON.stringify(readiness.exact_authorization_required)) {
+      throw new Error('authorization_must_match_current_exact_publication_requirements')
+    }
+    const idempotencyKey = publicationScopeAuthorizationFingerprint({ task_id:`${taskId}:preexecution`, paths })
+    const authorization = query(`SELECT control.authorize_preexecution_publication_paths(:'task_id',:'paths'::jsonb,:'key',:'evidence','human');`, {
+      task_id:taskId,paths:JSON.stringify(paths),key:idempotencyKey,evidence,
+    })
+    return output({ ok:true,authorization,readiness_before:readiness,resumed:false })
+  }
+  if (resource === 'task' && action === 'authorize-protected-publication') {
+    const taskId = positional()
+    const paths = [...new Set(flags('path'))].sort()
+    const evidence = String(flag('evidence',''))
+    const validations = loadJson(flag('validation-file'))
+    const packet = query(`SELECT control.generic_task_packet(:'task_id');`, { task_id:taskId })
+    if (!packet?.task) throw new Error('task_not_found')
+    const readiness = publicationReadiness(packet)
+    validateProtectedPublicationAuthorization({
+      requestedPaths:paths,
+      requiredPaths:readiness.boundaries.required_paths,
+      projectPaths:readiness.boundaries.project_paths,
+      evidence,
+      validations,
+    })
+    if (JSON.stringify(paths) !== JSON.stringify(readiness.protected_authorization_required)) {
+      throw new Error('authorization_must_match_current_protected_publication_requirements')
+    }
+    const idempotencyKey = publicationScopeAuthorizationFingerprint({ task_id:`${taskId}:protected`, paths })
+    const authorization = query(`SELECT control.authorize_protected_publication_paths(:'task_id',:'paths'::jsonb,:'key',:'evidence',:'validations'::jsonb,'human');`, {
+      task_id:taskId,paths:JSON.stringify(paths),key:idempotencyKey,evidence,validations:JSON.stringify(validations),
+    })
+    return output({ ok:true,authorization,readiness_before:readiness,resumed:false })
   }
   if (resource === 'task' && action === 'release') return delegate('task-release', positional())
   if (resource === 'task' && action === 'preflight') return delegate('task-execution-preflight', positional())

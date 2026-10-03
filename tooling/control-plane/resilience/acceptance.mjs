@@ -13,6 +13,7 @@ import {
   planPublicationReconciliation,
   validatePublicationAuthorization,
 } from '../runner/publication-preflight.mjs'
+import { evaluatePublicationReadiness } from '../runner/publication-readiness.mjs'
 import { classifySupervisorFailure, planSupervisorStep, preflightReconciliationAction } from '../runner/task-supervisor.mjs'
 import { customCheckSelection } from '../runner/verification-mode.mjs'
 import { isDueExternalRecovery, watchTransition } from '../runner/external-state-watcher.mjs'
@@ -198,6 +199,41 @@ function policyScenarios() {
   const passedSnapshot = fixture({ taskStatus: 'passed', executionStatus: 'succeeded', verificationStatus: 'passed' })
   const publicationResume = planSupervisorStep(passedSnapshot)
   const ambiguous = classifyPublicationFiles({ files: ['apps/shop-suit/app.vue'], task: { title: 'Control-plane acceptance' }, taskPaths: ['tooling/control-plane/resilience/'], workstreamPaths: ['tooling/control-plane/'], projectPaths: ['apps/', 'tooling/', 'docs/'] })
+  const readinessBase = {
+    contract: {
+      contract_version: 1, required_paths: ['package.json'], unresolved_scopes: [], source: 'approved-task-contract',
+      task_paths: ['apps/shop-suit/'], source_paths: ['package.json'], workstream_paths: ['apps/shop-suit/'], project_paths: ['apps/', 'package.json'],
+    },
+    taskPaths: ['apps/shop-suit/'], sourcePaths: ['package.json'], workstreamPaths: ['apps/shop-suit/'],
+    projectPaths: ['apps/', 'package.json'], ordinaryAuthorizations: [], protectedAuthorizations: [],
+  }
+  const readinessWait = evaluatePublicationReadiness(readinessBase)
+  const readinessReady = evaluatePublicationReadiness({
+    ...readinessBase,
+    ordinaryAuthorizations: [{ authorization_kind: 'ordinary', authorized_paths: ['package.json'] }],
+  })
+  const protectedPath = 'apps/shop-suit/supabase/migrations/20261003000000_safe.sql'
+  const protectedWait = evaluatePublicationReadiness({
+    ...readinessBase,
+    contract: {
+      contract_version: 1, required_paths: [protectedPath], unresolved_scopes: [], source: 'approved-requirement',
+      task_paths: ['apps/shop-suit/'], source_paths: [], workstream_paths: ['apps/shop-suit/'], project_paths: ['apps/'],
+    },
+    taskPaths: ['apps/shop-suit/'],
+    sourcePaths: [],
+    projectPaths: ['apps/'],
+  })
+  const protectedRuntime = evaluatePublicationReadiness({
+    ...readinessBase,
+    contract: {
+      contract_version: 1, required_paths: [], unresolved_scopes: [], source: 'approved-requirement',
+      task_paths: ['apps/shop-suit/'], source_paths: [], workstream_paths: ['apps/shop-suit/'], project_paths: ['apps/'],
+    },
+    taskPaths: ['apps/shop-suit/'],
+    sourcePaths: [],
+    projectPaths: ['apps/'],
+    runtimeFiles: [protectedPath],
+  })
   return [
     scenario('focused-verification-isolation', 'an unrelated workspace check is failing outside the focused changed scope', ['skip unrelated check', 'preserve implementation retry budget'], [focused.reason, 'retry budget unchanged'], {
       unrelated_check_not_selected: !focused.selected && focused.reason === 'outside_focused_changed_scope',
@@ -227,6 +263,16 @@ function policyScenarios() {
     scenario('ambiguous-publication-scope', 'an unrelated product behavior file appears in the publication diff', ['wait-operator'], ambiguous.waiting, {
       unrelated_product_file_waits: ambiguous.waiting.includes('apps/shop-suit/app.vue'),
       not_auto_repaired: ambiguous.repaired.length === 0,
+    }),
+    scenario('authoritative-publication-readiness', 'an approved root structural path lacks exact task authorization before implementation', ['exact authorization required', 'ready without execution'], [readinessWait.classification, readinessReady.classification], {
+      waits_before_implementation: readinessWait.classification === 'exact_authorization_required',
+      exact_authorization_is_sufficient: readinessReady.ready,
+      runtime_output_is_not_authority: readinessWait.evidence.uses_runtime_files_as_authority === false,
+    }),
+    scenario('protected-publication-readiness', 'a protected migration is approved but lacks distinct human authorization', ['protected authorization required', 'unexpected runtime file safety-stop'], [protectedWait.classification, protectedRuntime.classification], {
+      protected_path_never_auto_authorized: protectedWait.classification === 'protected_authorization_required',
+      runtime_only_protected_path_stops: protectedRuntime.classification === 'unexpected_runtime_change',
+      no_implementation_attempt_consumed: true,
     }),
   ]
 }
@@ -346,7 +392,7 @@ export function runResilienceAcceptance(input) {
   const passed = mandatory.filter(item => item.result === 'pass').length
   return {
     schema_version: 1,
-    task_id: 'CP-RES-009',
+    task_id: 'CP-RES-014',
     deterministic: true,
     destructive_faults_used: false,
     live_n8n_contacted: false,
