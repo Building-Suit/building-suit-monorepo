@@ -64,5 +64,47 @@ export interface MarketingPricingCopy {
   included: string
   notIncluded: string
 }
+export interface ContactInfoItem {
+  key: string
+  label: string
+  value: string
+  href?: string
+  direction?: 'ltr' | 'rtl' | 'auto'
+}
+export interface SupportRequestValue {
+  category: string
+  subject: string
+  message: string
+  email: string
+  consent: boolean
+  honeypot: string
+}
+export interface SupportRequestCopy {
+  title: string
+  intro: string
+  category: string
+  replyEmail: string
+  subject: string
+  message: string
+  consent: string
+  success: string
+  submit: string
+  pending: string
+  website: string
+}
+export interface ScopeOption {
+  id: string
+  label: string
+  description?: string
+  status?: string
+  meta?: string
+}
+export interface NotificationMenuItem {
+  id: string
+  title: string
+  body?: string
+  read?: boolean
+  timestamp?: string
+}
 export interface DataScope { environment: string; portal: string; userId: string; tenantId: string }
 export interface CapabilityAdapter { can(capability: string): boolean }

@@ -51,18 +51,9 @@ async function onSubmit() {
     <BsStateSurface v-if="done" state="success" :title="isArabic ? 'تم تغيير كلمة المرور' : 'Password updated'" :action-label="isArabic ? 'فتح Shop Suit' : 'Open Shop Suit'" @action="navigateTo('/dashboard')" />
     <BsStateSurface v-else-if="!user" state="error" :title="isArabic ? 'رابط الاستعادة غير صالح أو انتهت صلاحيته.' : 'The recovery link is invalid or expired.'" :action-label="isArabic ? 'اطلب رابط جديد' : 'Request a new link'" @action="navigateTo('/auth/forgot-password')" />
     <template v-else>
-      <div class="space-y-2">
-        <label for="new-password" class="text-sm font-semibold">{{ isArabic ? 'كلمة المرور الجديدة' : 'New password' }}</label>
-        <div class="relative">
-          <BsIcon name="lock" class="pointer-events-none absolute start-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <input id="new-password" v-model="password" :type="showPassword ? 'text' : 'password'" autocomplete="new-password" class="ls-input">
-          <BsButton type="button" variant="icon" :aria-label="isArabic ? 'إظهار أو إخفاء كلمة المرور' : 'Show or hide password'" @click="showPassword = !showPassword"><BsIcon :name="showPassword ? 'eyeOff' : 'eye'" class="size-4" /></BsButton>
-        </div>
-      </div>
-      <div class="space-y-2">
-        <label for="confirm-password" class="text-sm font-semibold">{{ isArabic ? 'تأكيد كلمة المرور' : 'Confirm password' }}</label>
-        <input id="confirm-password" v-model="confirmPassword" :type="showPassword ? 'text' : 'password'" autocomplete="new-password" class="ls-input">
-      </div>
+      <BsField :label="isArabic ? 'كلمة المرور الجديدة' : 'New password'"><template #default="field"><BsInput v-model="password" :id="field.id" :type="showPassword ? 'text' : 'password'" autocomplete="new-password" /></template></BsField>
+      <BsButton type="button" variant="link" :aria-label="isArabic ? 'إظهار أو إخفاء كلمة المرور' : 'Show or hide password'" @click="showPassword = !showPassword"><BsIcon :name="showPassword ? 'eyeOff' : 'eye'" />{{ isArabic ? 'إظهار أو إخفاء كلمة المرور' : 'Show or hide password' }}</BsButton>
+      <BsField :label="isArabic ? 'تأكيد كلمة المرور' : 'Confirm password'"><template #default="field"><BsInput v-model="confirmPassword" :id="field.id" :type="showPassword ? 'text' : 'password'" autocomplete="new-password" /></template></BsField>
     </template>
   </BsAuthForm>
 </template>
