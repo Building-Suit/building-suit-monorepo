@@ -59,7 +59,13 @@ function validPublicationPath(value) {
     value.endsWith('/')
 }
 
-export function evaluateExecutionPreflight({ packet, runtime, executions = [], serializationConflicts = [] }) {
+export function evaluateExecutionPreflight({
+  packet,
+  runtime,
+  executions = [],
+  serializationConflicts = [],
+  purpose = 'implementation',
+}) {
   const checks = []
   const task = packet?.task
   const project = packet?.project
@@ -87,10 +93,25 @@ export function evaluateExecutionPreflight({ packet, runtime, executions = [], s
   }
   checks.push({ name: 'control_database_identity', status: 'pass', fingerprint: actualFingerprint })
 
-  if (task.status !== 'in_progress' || project.active !== true || workstream.active !== true || suit.status !== 'active') {
+  const latestExecution = [...executions]
+    .sort((left, right) => Number(left.attempt ?? 0) - Number(right.attempt ?? 0))
+    .at(-1)
+  const repairEligible =
+    purpose === 'verification-product-repair' &&
+    task.status === 'failed' &&
+    latestExecution?.status === 'succeeded'
+  if (
+    (task.status !== 'in_progress' && !repairEligible) ||
+    project.active !== true || workstream.active !== true || suit.status !== 'active'
+  ) {
     return failure('stop', 'safety-stop', 'safety-stop', 'task_not_execution_eligible', checks)
   }
-  checks.push({ name: 'task_lifecycle', status: 'pass' })
+  checks.push({
+    name: 'task_lifecycle',
+    status: 'pass',
+    purpose,
+    failed_verification_product_repair: repairEligible,
+  })
 
   const hardDependency = (packet.dependencies ?? []).find(dependency =>
     dependency.dependency_type === 'hard' && dependency.status !== 'complete',

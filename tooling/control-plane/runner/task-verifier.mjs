@@ -15,11 +15,15 @@ import path from 'node:path'
 
 import {
   applicationScopeSelected,
+  classifyVerificationResults,
   commandResultStatus,
   controlPlaneRootLintSelection,
   customCheckSelection,
   isMilestoneVerification,
+  resolveDatabaseVerification,
+  resolveVerificationPlan,
   resolveVerificationMode,
+  safeRegisteredVerificationCommand,
 } from './verification-mode.mjs'
 import { publicationStateFingerprint } from './publication-preflight.mjs'
 import { executeWithControlDatabaseRetry } from '../lib/control-database.mjs'
@@ -139,6 +143,7 @@ function liveCheck(check) {
     metadata: JSON.stringify({
       verification_mode: verificationMode,
       selection_reason: check.selection_reason ?? 'unspecified',
+      failure_class: check.failure_class ?? null,
     }),
   }
   const args = ['-X','-q','-A','-t','-v','ON_ERROR_STOP=1','-h',controlDatabase.host,'-p',controlDatabase.port,'-U',controlDatabase.user,'-d',controlDatabase.database]
@@ -291,6 +296,12 @@ function runCheck({
         exitCode,
         errorCode: result.error?.code,
       }),
+    failure_class:
+      unavailable && required
+        ? 'verification-required-check-unavailable'
+        : passed || !required
+        ? null
+        : 'verification-product-defect',
     exit_code:
       exitCode,
     summary,
@@ -382,6 +393,7 @@ function omittedCheck({
   reason,
   summary,
   unavailable = false,
+  failureClass = null,
 }) {
   return {
     name,
@@ -392,6 +404,7 @@ function omittedCheck({
       unavailable && required
         ? 'not_run'
         : 'skipped',
+    failure_class: failureClass,
     exit_code: null,
     summary,
     log_path: null,
@@ -643,6 +656,18 @@ if (
 }
 
 for (const custom of verificationConfig.commands ?? []) {
+  if (!safeRegisteredVerificationCommand(custom)) {
+    results.push(omittedCheck({
+      name: custom?.name ?? `invalid-registered-command-${results.length + 1}`,
+      command: null,
+      required: custom?.required !== false,
+      reason: 'registered_verification_command_invalid',
+      summary: 'Registered verification command must use a safe program/argv definition and repository-relative cwd.',
+      unavailable: true,
+      failureClass: 'verification-configuration',
+    }))
+    continue
+  }
   const selection = customCheckSelection({
     check: custom,
     changedFiles: [...changedFiles],
@@ -709,183 +734,73 @@ const changedDatabaseTests =
     : []
 
 if (databaseChanged) {
+  const databaseVerification = resolveDatabaseVerification({
+    verificationConfig,
+    suitSlug: suit.slug,
+    appPath,
+    changedDatabaseTests,
+  })
 
-  if (
-    suit.slug === 'ledger-suit'
-  ) {
-
-    const ledgerAppPath =
-      path.join(
-        worktreePath,
-        appPath,
-      )
-
-
-    const databaseReset =
-      runCheck({
-        name:
-          'database-reset',
-
-        program:
-          'pnpm',
-
-        args: [
-          'exec',
-          'supabase',
-          'db',
-          'reset',
-          '--local',
-        ],
-
-        cwd:
-          ledgerAppPath,
-
-        timeout:
-          20 * 60 * 1000,
-
-        selectionReason:
-          'database_scope_changed',
-      })
-
-
-    results.push(
-      databaseReset,
-    )
-
-
-    if (
-      databaseReset.status === 'pass'
-    ) {
-
-      if (
-        changedDatabaseTests.length > 0
-      ) {
-
-        results.push(
-          runCheck({
-            name:
-              'database-tests',
-
-            program:
-              'pnpm',
-
-            args: [
-              'exec',
-              'supabase',
-              'test',
-              'db',
-
-              ...changedDatabaseTests,
-
-              '--local',
-            ],
-
-            cwd:
-              ledgerAppPath,
-
-            timeout:
-              15 * 60 * 1000,
-
-            selectionReason:
-              'database_scope_changed',
-          }),
-        )
-
-      }
-      else {
-
-        results.push({
-          name:
-            'database-tests',
-
-          command:
-            null,
-
-          required:
-            true,
-
-          selection_reason:
-            'required_database_test_unavailable',
-
-          status:
-            'not_run',
-
-          exit_code:
-            null,
-
-          summary:
-            'Ledger database changed but this task changed no task-specific pgTAP test.',
-
-          log_path:
-            null,
-
-          elapsed_ms:
-            0,
-        })
-
-      }
-
-    }
-
-  }
-  else if (
-    suit.slug === 'shop-suit'
-  ) {
-
-    results.push(
-      runCheck({
-        name:
-          'database-tests',
-
-        program:
-          'pnpm',
-
-        args: [
-          'db:test:shop',
-        ],
-
-        timeout:
-          30 * 60 * 1000,
-
-        selectionReason:
-          'database_scope_changed',
-      }),
-    )
-
+  if (databaseVerification.commands.length === 0) {
+    results.push(omittedCheck({
+      name: 'database-tests',
+      command: null,
+      required: true,
+      reason: 'required_database_runner_unavailable',
+      summary: databaseVerification.source === 'invalid_configuration'
+        ? `The registered database verification command for ${suit.slug} is invalid.`
+        : `No registered database verification command is configured for ${suit.slug}.`,
+      unavailable: true,
+      failureClass: 'verification-configuration',
+    }))
   }
   else {
+    for (const command of databaseVerification.commands) {
+      // A failed prerequisite makes later database evidence unavailable rather
+      // than executing against an unprepared local database.
+      const prerequisiteFailed = results.some(result =>
+        result.name === 'database-reset' && result.status !== 'pass',
+      )
+      if (prerequisiteFailed && command.name !== 'database-reset') {
+        results.push(omittedCheck({
+          name: command.name,
+          command: [command.program, ...(command.args ?? [])].join(' '),
+          required: command.required !== false,
+          reason: 'database_prerequisite_failed',
+          summary: 'Database verification prerequisite failed.',
+          unavailable: true,
+          failureClass: 'verification-infrastructure',
+        }))
+        continue
+      }
+      results.push(runCheck({
+        name: command.name,
+        program: command.program,
+        args: command.args ?? [],
+        cwd: command.cwd ? path.join(worktreePath, command.cwd) : worktreePath,
+        timeout: command.timeout_ms ?? 15 * 60 * 1000,
+        required: command.required !== false,
+        selectionReason: databaseVerification.source === 'registered_verification_config'
+          ? 'registered_database_verification_contract'
+          : 'database_scope_changed',
+      }))
+    }
 
-    results.push({
-      name:
-        'database-tests',
-
-      command:
-        null,
-
-      required:
-        true,
-
-      selection_reason:
-        'required_database_runner_unavailable',
-
-      status:
-        'not_run',
-
-      exit_code:
-        null,
-
-      summary:
-        `No database verification command configured for ${suit.slug}.`,
-
-      log_path:
-        null,
-
-      elapsed_ms:
-        0,
-    })
-
+    if (
+      databaseVerification.source === 'legacy_ledger_compatibility' &&
+      changedDatabaseTests.length === 0
+    ) {
+      results.push(omittedCheck({
+        name: 'database-tests',
+        command: null,
+        required: true,
+        reason: 'required_database_test_unavailable',
+        summary: 'Ledger database changed but this task changed no task-specific pgTAP test.',
+        unavailable: true,
+        failureClass: 'verification-configuration',
+      }))
+    }
   }
-
 }
 
 const browserRequired =
@@ -1030,6 +945,40 @@ if (browserRequired) {
 
 }
 
+const resolvedPlan = resolveVerificationPlan({
+  entries: task.verification_plan ?? [],
+  configuredCommands: verificationConfig.commands ?? [],
+})
+
+for (const planned of resolvedPlan.checks) {
+  const existing = results.find(result =>
+    result.name === planned.name && result.status !== 'skipped',
+  )
+  if (existing) continue
+
+  results.push(runCheck({
+    name: planned.name,
+    program: planned.program,
+    args: planned.args,
+    cwd: planned.cwd ? path.join(worktreePath, planned.cwd) : worktreePath,
+    timeout: planned.timeout_ms ?? 15 * 60 * 1000,
+    required: true,
+    selectionReason: 'required_by_task_verification_plan',
+  }))
+}
+
+for (const entry of resolvedPlan.unenforced) {
+  results.push(omittedCheck({
+    name: `verification-plan-unenforced-${results.length + 1}`,
+    command: null,
+    required: true,
+    reason: 'verification_plan_entry_unenforced',
+    summary: `Required verification-plan entry is not a known safe check or registered command: ${entry}`,
+    unavailable: true,
+    failureClass: 'verification-configuration',
+  }))
+}
+
 const passed =
   results.every(
     result =>
@@ -1052,11 +1001,16 @@ const verifiedState = {
 verifiedState.fingerprint =
   publicationStateFingerprint(verifiedState)
 
+const classification =
+  classifyVerificationResults(results)
+
 process.stdout.write(
   `${JSON.stringify({
     ok: true,
 
     passed,
+
+    classification,
 
     task_id:
       task.task_id,
