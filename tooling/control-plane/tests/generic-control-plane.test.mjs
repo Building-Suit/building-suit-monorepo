@@ -37,6 +37,7 @@ import {
 import {
   applicationScopeSelected,
   commandResultStatus,
+  controlPlaneRootLintSelection,
   customCheckSelection,
   resolveVerificationMode,
 } from '../runner/verification-mode.mjs'
@@ -567,6 +568,28 @@ test('focused control-plane verification ignores unrelated workspace typecheck f
   assert.equal(selection.selected, true)
   assert.doesNotMatch(verifier, /name:\s*'root-typecheck'/)
   assert.match(verifier, /appPackage\?\.name &&\s*applicationSelection\.selected/)
+})
+
+test('control-plane JavaScript changes select the CI-equivalent root lint gate', async () => {
+  const verifier = await readFile(
+    new URL('../runner/task-verifier.mjs', import.meta.url),
+    'utf8',
+  )
+
+  assert.deepEqual(controlPlaneRootLintSelection({
+    changedFiles: ['tooling/control-plane/runner/publication-preflight.mjs'],
+  }), {
+    selected: true,
+    reason: 'changed_control_plane_javascript',
+  })
+  assert.deepEqual(controlPlaneRootLintSelection({
+    changedFiles: ['tooling/control-plane/README.md', 'apps/shop-suit/app.vue'],
+  }), {
+    selected: false,
+    reason: 'no_changed_control_plane_javascript',
+  })
+  assert.match(verifier, /name:\s*'root-lint'/)
+  assert.match(verifier, /controlPlaneRootLintSelection\(\{\s*changedFiles/)
 })
 
 test('focused application verification selects relevant package checks', async () => {

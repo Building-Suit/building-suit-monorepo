@@ -16,6 +16,7 @@ import path from 'node:path'
 import {
   applicationScopeSelected,
   commandResultStatus,
+  controlPlaneRootLintSelection,
   customCheckSelection,
   isMilestoneVerification,
   resolveVerificationMode,
@@ -436,6 +437,30 @@ results.push(
       'required_for_changed_files',
   }),
 )
+
+const rootLintSelection =
+  controlPlaneRootLintSelection({
+    changedFiles: [...changedFiles],
+  })
+
+if (rootLintSelection.selected) {
+  results.push(
+    runCheck({
+      name:
+        'root-lint',
+
+      program:
+        'pnpm',
+
+      args: [
+        'lint',
+      ],
+
+      selectionReason:
+        rootLintSelection.reason,
+    }),
+  )
+}
 
 if (
   isMilestoneVerification(verificationMode) ||
