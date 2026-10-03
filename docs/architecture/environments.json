@@ -82,6 +82,31 @@
         "appUrl": "",
         "status": "unprovisioned; provider identifiers intentionally blank"
       }
+    },
+    "super-admin-suit": {
+      "organizationId": "",
+      "ownerEmail": "",
+      "managementRole": "Owner",
+      "plan": "unrecorded",
+      "schema": "public",
+      "cliWorkdir": "apps/super-admin-suit",
+      "appUrlVariable": "APP_URL",
+      "local": {
+        "projectId": "building-suit-super-admin",
+        "apiUrl": "http://127.0.0.1:64321",
+        "databasePort": 64322,
+        "emailInboxUrl": "http://127.0.0.1:64324"
+      },
+      "production": {
+        "projectRef": "",
+        "appUrl": "",
+        "status": "dedicated project exists; provider identifiers intentionally absent pending verification"
+      },
+      "staging": {
+        "projectRef": "",
+        "appUrl": "",
+        "status": "dedicated project exists; provider identifiers intentionally absent pending verification"
+      }
     }
   },
   "sources": {
