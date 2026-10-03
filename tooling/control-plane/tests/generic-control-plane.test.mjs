@@ -1019,6 +1019,44 @@ test('workstream readiness migrations preserve valid policy and repair nullable 
   assert.match(automation, /CASE WHEN COALESCE\(\(w->>'active'\)::boolean,true\) THEN 'active' ELSE 'paused' END/)
 })
 
+test('forward verification reopen migration restores same-execution lifecycle safely', async () => {
+  const historicalMigration = await readFile(
+    new URL('../sql/014_generic_automation_platform.sql', import.meta.url),
+    'utf8',
+  )
+  const migration = await readFile(
+    new URL('../sql/026_verification_reopen_lifecycle.sql', import.meta.url),
+    'utf8',
+  )
+  const upgradeSmoke = await readFile(
+    new URL('./verification-reopen-upgrade-smoke.sql', import.meta.url),
+    'utf8',
+  )
+
+  assert.match(historicalMigration, /FUNCTION control\.reopen_verification/)
+  assert.match(migration, /CREATE OR REPLACE FUNCTION control\.reopen_verification/)
+  assert.match(migration, /task_row\.status NOT IN \('failed', 'passed'\)/)
+  assert.match(migration, /execution_row\.status <> 'succeeded'/)
+  assert.match(migration, /ORDER BY execution\.attempt DESC, execution\.execution_id DESC/)
+  assert.match(migration, /SET status = 'verification', engine_stage = 'verification'/)
+  assert.match(migration, /'verification_reopened'/)
+  assert.match(migration, /'verification_recovery_resolved'/)
+  assert.match(migration, /resolved_failure_ids/)
+  assert.match(migration, /resolved_recovery_state_ids/)
+  assert.match(migration, /GRANT EXECUTE ON FUNCTION control\.reopen_verification\(text, text, text\)/)
+  assert.doesNotMatch(migration, /INSERT INTO control\.executions/)
+  assert.doesNotMatch(migration, /UPDATE control\.executions/)
+  assert.doesNotMatch(migration, /verification-product-defect/)
+
+  assert.match(upgradeSmoke, /DROP FUNCTION IF EXISTS control\.reopen_verification/)
+  assert.match(upgradeSmoke, /representative pre-026 state still has reopen_verification/)
+  assert.equal((upgradeSmoke.match(/026_verification_reopen_lifecycle\.sql/g) ?? []).length, 2)
+  assert.match(upgradeSmoke, /has_function_privilege/)
+  assert.match(upgradeSmoke, /source = 'supervisor'/)
+  assert.match(upgradeSmoke, /same-execution verification did not complete cleanly/)
+  assert.match(upgradeSmoke, /unsucceeded latest execution was incorrectly eligible/)
+})
+
 test('database verification prefers registered workstream configuration and preserves compatibility', () => {
   const configured = resolveDatabaseVerification({
     verificationConfig: {
