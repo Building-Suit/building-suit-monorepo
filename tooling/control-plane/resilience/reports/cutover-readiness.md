@@ -4,7 +4,7 @@ Task: CP-RES-009
 
 Cutover ready: **YES**
 
-Mandatory scenarios: 32/32 passed. The deterministic harness used no destructive faults and did not contact or mutate live n8n.
+Mandatory scenarios: 35/35 passed. The deterministic harness used no destructive faults and did not contact or mutate live n8n.
 
 | Scenario | Fault | Expected recovery | Observed recovery | Impl | Verify | Publish | Result |
 |---|---|---|---|---:|---:|---:|---|
@@ -38,6 +38,9 @@ Mandatory scenarios: 32/32 passed. The deterministic harness used no destructive
 | stop-request-safe-boundary | a stop request arrives after the current task reaches its persistence boundary | stop-requested → no new claim | stop-requested → no new claim | 0 | 0 | 0 | PASS |
 | bounded-continuous-run | the configured task limit is reached after one completed task | success → task-limit | success → task-limit | 1 | 1 | 1 | PASS |
 | repeat-supervisor-invocation | the supervisor is invoked twice against identical persisted state | task-verify → task-verify | task-verify → task-verify | 1 | 0 | 0 | PASS |
+| control-database-transient-then-success | the first control-database connection attempt encounters a transient DNS failure | bounded backoff → repeat original command → continue same lifecycle | bounded backoff → attempt 2 → continue same lifecycle | 0 | 0 | 0 | PASS |
+| control-database-transient-retries-exhausted | every bounded control-database connection attempt times out | bounded retries → wait-external → preserve task and run | 3 attempts → wait-external → preserve task and run | 0 | 0 | 0 | PASS |
+| control-database-non-transient-rejection | the control database rejects authentication immediately | no retry → safety handling | 1 attempt → safety handling | 0 | 0 | 0 | PASS |
 | generated-n8n-replacement-compatibility | generated BS-10, BS-20, and BS-21 fixtures are evaluated as cutover candidates | validate identities → reject retry graph → reject hardcoded registry | identities valid → no retry graph → no hardcoded registry | 0 | 0 | 0 | PASS |
 | pre-cutover-live-export-integrity | the full acceptance suite runs beside the sanitized live-export baseline | same fixture digest before and after → no runtime mutation | 068636531fa71de2fb37944bc6b896dca827ab9f7268ee3dad6b1ecf87f460d7 → no runtime mutation | 0 | 0 | 0 | PASS |
 

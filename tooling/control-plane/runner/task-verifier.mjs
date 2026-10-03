@@ -22,6 +22,7 @@ import {
   resolveVerificationMode,
 } from './verification-mode.mjs'
 import { publicationStateFingerprint } from './publication-preflight.mjs'
+import { executeWithControlDatabaseRetry } from '../lib/control-database.mjs'
 
 const [
   worktreePath,
@@ -142,11 +143,11 @@ function liveCheck(check) {
   }
   const args = ['-X','-q','-A','-t','-v','ON_ERROR_STOP=1','-h',controlDatabase.host,'-p',controlDatabase.port,'-U',controlDatabase.user,'-d',controlDatabase.database]
   for (const [key,value] of Object.entries(values)) args.push('--set',`${key}=${value}`)
-  const result = spawnSync('psql',args,{
+  const result = executeWithControlDatabaseRetry(() => spawnSync('psql',args,{
     encoding:'utf8',
     env:{...process.env,PGSSLMODE:controlDatabase.sslmode},
     input:`SELECT control.update_verification_check(:'run_id'::bigint,:'name',:'status',NULLIF(:'exit_code','')::integer,:'summary',:'log_path',:'elapsed_ms'::bigint,:'command',:'required'::boolean,:'metadata'::jsonb);\n`,
-  })
+  }), { successful: value => value.status === 0 && !value.error })
   if (result.status !== 0) {
     throw new Error(`live_verification_update_failed:${(result.stderr ?? '').trim()}`)
   }
