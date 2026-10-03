@@ -135,7 +135,6 @@ export function taskPublicationMetadata({
 
 export function classifyPublicationFiles({
   files = [],
-  task = {},
   taskPaths = [],
   sourcePaths = [],
   workstreamPaths = [],
