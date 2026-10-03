@@ -69,6 +69,7 @@ import {
   taskPublicationMetadata,
   validateCurrentPublicationAuthorization,
   validatePublicationAuthorization,
+  validPublicationPath,
 } from '../runner/publication-preflight.mjs'
 import {
   evaluatePublicationReadiness,
@@ -190,6 +191,15 @@ test('publication preflight uses only explicit task and workstream authority', (
   assert.ok(classification.allowed.includes('tooling/control-plane/import/unrelated.md'))
   assert.ok(classification.allowed.includes('tooling/control-plane/runner/publication-preflight.mjs'))
   assert.deepEqual(classification.blocked, ['README.md'])
+})
+
+test('canonical publication path validity accepts exact files and directories without weakening traversal safety', () => {
+  for (const path of ['README.md', 'package.json', 'pnpm-lock.yaml', 'apps/', 'tooling/']) {
+    assert.equal(validPublicationPath(path), true, path)
+  }
+  for (const path of ['/absolute/path', '../outside', 'foo/../outside']) {
+    assert.equal(validPublicationPath(path), false, path)
+  }
 })
 
 test('task-create publication metadata persists validated top-level allowed_paths', () => {
@@ -1722,6 +1732,28 @@ test('execution preflight accepts a coherent ready task deterministically', () =
   assert.equal(first.context.attempt, 1)
   assert.equal(first.fingerprint, second.fingerprint)
   assert.deepEqual(first.checks, second.checks)
+})
+
+test('execution preflight accepts a mixed Building Suit project publication boundary', () => {
+  const fixture = executionPreflightFixture()
+  const projectPaths = [
+    'AGENTS.md',
+    'README.md',
+    'package.json',
+    'pnpm-lock.yaml',
+    'pnpm-workspace.yaml',
+    'turbo.json',
+    'apps/',
+    'docs/',
+    'tooling/',
+  ]
+  fixture.packet.project.allowed_publication_paths = projectPaths
+  fixture.packet.publication_contract.project_paths = projectPaths
+
+  const result = evaluateExecutionPreflight(fixture)
+  assert.equal(result.ready, true)
+  assert.equal(result.reason, 'preflight_ready')
+  assert.notEqual(result.reason, 'publication_scope_invalid')
 })
 
 test('verification product repair has an explicit failed-task preflight without weakening task-run eligibility', () => {

@@ -7,6 +7,7 @@ import {
 } from '../lib/retry-policy.mjs'
 import {
   evaluatePublicationBoundaries,
+  validPublicationPath,
 } from './publication-preflight.mjs'
 import {
   evaluatePublicationReadiness,
@@ -54,14 +55,6 @@ function nonEmptyStrings(value) {
   return Array.isArray(value) && value.length > 0 && value.every(item =>
     typeof item === 'string' && item.trim().length > 0,
   )
-}
-
-function validPublicationPath(value) {
-  return typeof value === 'string' &&
-    value.length > 0 &&
-    !value.startsWith('/') &&
-    !value.includes('..') &&
-    value.endsWith('/')
 }
 
 export function evaluateExecutionPreflight({
