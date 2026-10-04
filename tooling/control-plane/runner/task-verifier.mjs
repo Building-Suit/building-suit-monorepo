@@ -93,6 +93,11 @@ const verificationConfig = mergeVerificationConfig(
   project.verification_config,
   workstream.verification_config,
 )
+const resolvedPlan = resolveVerificationPlan({
+  entries: task.verification_plan ?? [],
+  configuredCommands: verificationConfig.commands ?? [],
+  legacyMappings: verificationConfig.legacy_plan_mappings ?? {},
+})
 
 const verificationMode =
   persistedVerificationMode ??
@@ -793,7 +798,12 @@ if (databaseChanged) {
   }
 }
 
+const explicitBrowserChecks = resolvedPlan.checks.filter(check =>
+  Array.isArray(check.capabilities) && check.capabilities.includes('browser'),
+)
+
 const browserRequired =
+  explicitBrowserChecks.length === 0 &&
   /e2e|browser|playwright/.test(
     verificationPlanText,
   )
@@ -935,12 +945,6 @@ if (browserRequired) {
 
 }
 
-const resolvedPlan = resolveVerificationPlan({
-  entries: task.verification_plan ?? [],
-  configuredCommands: verificationConfig.commands ?? [],
-  legacyMappings: verificationConfig.legacy_plan_mappings ?? {},
-})
-
 for (const planned of resolvedPlan.checks) {
   const existing = results.find(result =>
     result.name === planned.name && result.status !== 'skipped',
@@ -955,6 +959,18 @@ for (const planned of resolvedPlan.checks) {
     timeout: planned.timeout_ms ?? 15 * 60 * 1000,
     required: true,
     selectionReason: 'required_by_task_verification_plan',
+  }))
+}
+
+for (const blocker of resolvedPlan.blockers) {
+  results.push(omittedCheck({
+    name: `verification-obligation-blocked-${results.length + 1}`,
+    command: null,
+    required: blocker.required !== false,
+    reason: blocker.blocker,
+    summary: `Required verification obligation is blocked (${blocker.kind}): ${blocker.plan_entry}`,
+    unavailable: true,
+    failureClass: 'verification-configuration',
   }))
 }
 

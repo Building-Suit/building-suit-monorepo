@@ -469,7 +469,7 @@ test('sanitized n8n fixture records the verified live baseline', async () => {
   ])
 })
 
-test('resilience acceptance covers mandatory crash recovery and emits a strict cutover gate', async () => {
+test('resilience acceptance covers the repository harness without claiming deployed cutover', async () => {
   const { readdir } = await import('node:fs/promises')
   const artifactRoot = new URL('../n8n/artifacts/', import.meta.url)
   const files = (await readdir(artifactRoot)).filter(file => file.endsWith('.json') && file !== 'manifest.json')
@@ -478,7 +478,9 @@ test('resilience acceptance covers mandatory crash recovery and emits a strict c
   const baselineFixture = await readFile(new URL('../n8n/fixtures/live-2026-10-02.json', import.meta.url))
   const report = runResilienceAcceptance({ workflows, manifest, baselineFixture })
 
-  assert.equal(report.cutover_ready, true)
+  assert.equal(report.harness_ready, true)
+  assert.equal(report.cutover_ready, false)
+  assert.ok(report.release_blockers.includes('live_controller_export_and_fingerprint_not_verified'))
   assert.equal(report.summary.failed, 0)
   assert.equal(report.live_n8n_contacted, false)
   assert.equal(report.destructive_faults_used, false)
@@ -1698,6 +1700,15 @@ function executionPreflightFixture() {
         project_paths: ['tooling/'],
       },
       publication_authorizations: { ordinary: [], protected: [] },
+      execution_admission: {
+        ready: true,
+        reason: 'admitted',
+        publication_current: true,
+        publication_authority_current: true,
+        maintenance_requested: false,
+        run_id: null,
+        run_owned: false,
+      },
     },
     runtime: {
       control_database: {
@@ -1805,6 +1816,17 @@ test('execution preflight safety-stops a wrong control database fingerprint', ()
   assert.equal(result.reason, 'control_database_fingerprint_mismatch')
   assert.equal(result.fingerprint, repeated.fingerprint)
   assert.equal(fixture.executions.length, 0)
+})
+
+test('execution preflight cannot bypass stale admission, maintenance, or revoked authority', () => {
+  for (const reason of ['publication_contract_stale', 'maintenance_requested', 'publication_authority_incomplete']) {
+    const fixture = executionPreflightFixture()
+    fixture.packet.execution_admission = { ...fixture.packet.execution_admission,ready:false,reason }
+    const result = evaluateExecutionPreflight(fixture)
+    assert.equal(result.ready, false)
+    assert.equal(result.reason, reason)
+    assert.equal(result.next_action, 'wait-operator')
+  }
 })
 
 test('execution preflight routes repository drift to deterministic reconciliation or wait', () => {
