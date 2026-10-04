@@ -327,15 +327,51 @@ case "$REQUESTED_COMMAND" in
     ;;
 
 
-  "bs-agent run-complete-task "*)
-    RUN_ID="${REQUESTED_COMMAND#bs-agent run-complete-task }"
+  "bs-agent run-acquire-task "*)
+    REST="${REQUESTED_COMMAND#bs-agent run-acquire-task }"
+    read -r RUN_ID CONTROLLER_PROTOCOL CONTROLLER_FINGERPRINT LEASE_TOKEN EXTRA <<< "$REST"
 
-    exec "$NODE_BIN" \
-      "$AGENT" \
-      run-complete-task \
-      "$RUN_ID"
+    if [[ "$REST" == *$'\n'* || "$REST" == *$'\r'* ]] \
+      || [[ -n "${EXTRA:-}" ]] \
+      || [[ ! "$RUN_ID" =~ ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ ]] \
+      || [[ "$CONTROLLER_PROTOCOL" != "cp-batch-v2" ]] \
+      || [[ ! "$CONTROLLER_FINGERPRINT" =~ ^[0-9a-f]{64}$ ]] \
+      || [[ ! "$LEASE_TOKEN" =~ ^[1-9][0-9]{0,19}$ ]]; then
+      printf '%s\n' '{"ok":false,"error":"invalid_run_acquire_task"}'
+      exit 64
+    fi
+
+    exec "$NODE_BIN" "$AGENT" run-acquire-task \
+      "$RUN_ID" "$CONTROLLER_PROTOCOL" "$CONTROLLER_FINGERPRINT" "$LEASE_TOKEN"
     ;;
 
+
+  "bs-agent run-complete-task "*)
+    REST="${REQUESTED_COMMAND#bs-agent run-complete-task }"
+    read -r RUN_ID TASK_ID IDEMPOTENCY_KEY EXTRA <<< "$REST"
+
+    if [[ "$REST" == *$'\n'* || "$REST" == *$'\r'* ]] \
+      || [[ -n "${EXTRA:-}" ]] \
+      || [[ ! "$RUN_ID" =~ ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ ]]; then
+      printf '%s\n' '{"ok":false,"error":"invalid_run_complete_task"}'
+      exit 64
+    fi
+
+    # Retain the one-argument ordinary-run interface. The database continues
+    # to reject it for attributed/batch claims; the SSH adapter grants no credit.
+    if [[ -z "$TASK_ID" && -z "$IDEMPOTENCY_KEY" ]]; then
+      exec "$NODE_BIN" "$AGENT" run-complete-task "$RUN_ID"
+    fi
+
+    # BS-20 emits an exact run:task key. Never evaluate a command string.
+    if [[ ! "$TASK_ID" =~ ^[A-Z][A-Z0-9-]{2,63}$ ]] \
+      || [[ "$IDEMPOTENCY_KEY" != "$RUN_ID:$TASK_ID" ]]; then
+      printf '%s\n' '{"ok":false,"error":"invalid_run_complete_task"}'
+      exit 64
+    fi
+
+    exec "$NODE_BIN" "$AGENT" run-complete-task "$RUN_ID" "$TASK_ID" "$IDEMPOTENCY_KEY"
+    ;;
 
   "bs-agent run-stop "*)
     SUIT_SLUG="${REQUESTED_COMMAND#bs-agent run-stop }"
