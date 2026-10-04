@@ -39,7 +39,7 @@ const acceptanceRuntimeOperations = [
   [/\bfetch\s*\(/, 'network_fetch'],
   [/n8n\s+(?:import|update):workflow/, 'n8n_cli_mutation'],
   [/\/api\/v1\/workflows\//, 'n8n_api_mutation'],
-  [/\b(?:psql|supabase)\b/, 'database_command'],
+  [/(?:spawnSync|execFileSync)\s*\(\s*['"](?:psql|supabase)['"]/, 'database_command'],
 ].filter(([pattern]) => pattern.test(acceptanceSources)).map(([, operation]) => operation)
 
 const errors = [

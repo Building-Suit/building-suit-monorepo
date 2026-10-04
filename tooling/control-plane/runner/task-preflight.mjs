@@ -116,6 +116,20 @@ export function evaluateExecutionPreflight({
     failed_execution_retry: retryEligible,
   })
 
+  const executionAdmission = packet.execution_admission
+  if (!executionAdmission || executionAdmission.ready !== true) {
+    return failure('wait', 'wait-operator', 'verification-configuration',
+      executionAdmission?.reason ?? 'authoritative_execution_admission_missing', checks, {
+        execution_admission: executionAdmission ?? null,
+      })
+  }
+  checks.push({
+    name: 'authoritative_execution_admission',
+    status: 'pass',
+    run_id: executionAdmission.run_id ?? null,
+    run_owned: executionAdmission.run_owned === true,
+  })
+
   const hardDependency = (packet.dependencies ?? []).find(dependency =>
     dependency.dependency_type === 'hard' && dependency.status !== 'complete',
   )

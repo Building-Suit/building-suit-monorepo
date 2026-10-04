@@ -17,6 +17,7 @@ import { evaluatePublicationReadiness } from '../runner/publication-readiness.mj
 import { classifySupervisorFailure, planSupervisorStep, preflightReconciliationAction } from '../runner/task-supervisor.mjs'
 import { customCheckSelection } from '../runner/verification-mode.mjs'
 import { isDueExternalRecovery, watchTransition } from '../runner/external-state-watcher.mjs'
+import { applyCompletionCredit, evaluateSafeResume, planActiveRunStart } from '../lib/batch-readiness.mjs'
 
 const ZERO_COUNTS = Object.freeze({
   implementation_attempts: 0,
@@ -199,6 +200,11 @@ function policyScenarios() {
   const passedSnapshot = fixture({ taskStatus: 'passed', executionStatus: 'succeeded', verificationStatus: 'passed' })
   const publicationResume = planSupervisorStep(passedSnapshot)
   const ambiguous = classifyPublicationFiles({ files: ['apps/shop-suit/app.vue'], task: { title: 'Control-plane acceptance' }, taskPaths: ['tooling/control-plane/resilience/'], workstreamPaths: ['tooling/control-plane/'], projectPaths: ['apps/', 'tooling/', 'docs/'] })
+  const activeRun = { run_id:'run-1',status:'running',max_tasks:3,completed_tasks:0,current_task_id:'SS-SA-EVIDENCE-001',maintenance_requested:true,controller_fingerprint:'controller-v2' }
+  const budgetPlan = planActiveRunStart(activeRun,2)
+  const firstCredit = applyCompletionCredit({ run:activeRun,taskId:'SS-SA-EVIDENCE-001',idempotencyKey:'run-1:SS-SA-EVIDENCE-001' })
+  const replayCredit = applyCompletionCredit({ run:{ ...activeRun,completed_tasks:1,current_task_id:null },taskId:'SS-SA-EVIDENCE-001',idempotencyKey:'run-1:SS-SA-EVIDENCE-001',credits:[firstCredit.credit] })
+  const resumeWithoutProof = evaluateSafeResume({ run:activeRun,controllerProof:{ available:false },admissions:[{ current:true,blockers:[] }] })
   const readinessBase = {
     contract: {
       contract_version: 1, required_paths: ['package.json'], unresolved_scopes: [], source: 'approved-task-contract',
@@ -235,6 +241,20 @@ function policyScenarios() {
     runtimeFiles: [protectedPath],
   })
   return [
+    scenario('active-run-budget-reconciliation', 'an already active run is started with a different requested task limit', ['preserve run id', 'require explicit reconciliation'], [budgetPlan.action], {
+      explicit_reconciliation_required: budgetPlan.action === 'explicit_reconciliation_required',
+      run_identity_preserved: budgetPlan.run_id === activeRun.run_id,
+      historical_credit_not_guessed: budgetPlan.completed_tasks === 0,
+    }),
+    scenario('idempotent-run-completion-credit', 'the controller reconnects after task completion credit was persisted', ['credit once', 'replay without increment'], [firstCredit.applied ? 'credit once' : 'failed', replayCredit.idempotent ? 'replay without increment' : 'double count'], {
+      first_credit_applied: firstCredit.applied,
+      replay_is_idempotent: replayCredit.idempotent,
+      replay_count_unchanged: replayCredit.completed_tasks === 1,
+    }),
+    scenario('resume-without-deployed-controller-proof', 'a repaired batch is considered for resume without a live controller export', ['safety stop'], [resumeWithoutProof.resumable ? 'resume' : 'safety stop'], {
+      resume_refused: !resumeWithoutProof.resumable,
+      explicit_reason: resumeWithoutProof.reasons.includes('deployed_controller_proof_missing'),
+    }),
     scenario('focused-verification-isolation', 'an unrelated workspace check is failing outside the focused changed scope', ['skip unrelated check', 'preserve implementation retry budget'], [focused.reason, 'retry budget unchanged'], {
       unrelated_check_not_selected: !focused.selected && focused.reason === 'outside_focused_changed_scope',
     }),
@@ -396,7 +416,13 @@ export function runResilienceAcceptance(input) {
     deterministic: true,
     destructive_faults_used: false,
     live_n8n_contacted: false,
-    cutover_ready: passed === mandatory.length,
+    harness_ready: passed === mandatory.length,
+    cutover_ready: false,
+    release_blockers: [
+      'live_controller_export_and_fingerprint_not_verified',
+      'disposable_postgresql_migration_and_concurrency_gate_required',
+      'independent_batch_admission_review_required',
+    ],
     summary: { mandatory: mandatory.length, passed, failed: mandatory.length - passed },
     scenarios,
   }
@@ -408,7 +434,9 @@ export function renderResilienceReport(report) {
     '',
     `Task: ${report.task_id}`,
     '',
-    `Cutover ready: **${report.cutover_ready ? 'YES' : 'NO'}**`,
+    `Deterministic repository harness: **${report.harness_ready ? 'PASS' : 'FAIL'}**`,
+    '',
+    'Deployed cutover ready: **NO**. Live controller proof, disposable PostgreSQL migration/concurrency results, and independent admission review remain separate gates.',
     '',
     `Mandatory scenarios: ${report.summary.passed}/${report.summary.mandatory} passed. The deterministic harness used no destructive faults and did not contact or mutate live n8n.`,
     '',

@@ -6586,9 +6586,10 @@ function workflowRunCheck() {
 }
 
 function workflowRunCompleteTask() {
-  const [runId] = args
+  const [runId, taskId, idempotencyKey] = args
 
-  if (!validRunId(runId)) {
+  const attributed = taskId != null || idempotencyKey != null
+  if (!validRunId(runId) || (attributed && (!validTaskId(taskId) || !idempotencyKey))) {
     output({
       ok: false,
       command: 'run-complete-task',
@@ -6603,12 +6604,18 @@ function workflowRunCompleteTask() {
       controlQuery(
         `
           SELECT
-            control.record_workflow_task_success(
-              :'run_id'::uuid
-            );
+            ${attributed
+              ? `control.record_workflow_task_success(
+                  :'run_id'::uuid,
+                  :'task_id',
+                  :'idempotency_key'
+                )`
+              : `control.record_workflow_task_success(:'run_id'::uuid)`};
         `,
         {
           run_id: runId,
+          task_id: taskId,
+          idempotency_key: idempotencyKey,
         },
       )
 
@@ -6624,6 +6631,33 @@ function workflowRunCompleteTask() {
       command: 'run-complete-task',
       error: error.message,
     }, 1)
+  }
+}
+
+function workflowRunAcquireTask() {
+  const [runId, controllerProtocol, controllerFingerprint, controllerLeaseToken] = args
+  if (!validRunId(runId) || !controllerProtocol || !controllerFingerprint || !controllerLeaseToken) {
+    output({ ok:false,command:'run-acquire-task',error:'run_id_controller_protocol_fingerprint_and_lease_required' },64)
+    return
+  }
+  try {
+    const result = controlQuery(`SELECT control.acquire_workflow_run_task(:'run_id'::uuid,:'protocol',:'fingerprint',:'lease_token','runner');`, {
+      run_id:runId,
+      protocol:controllerProtocol,
+      fingerprint:controllerFingerprint,
+      lease_token:controllerLeaseToken,
+    })
+    const acquisition = parseControlJson(result)
+    output({
+      ok: acquisition?.acquired === true || acquisition?.action === 'wait_for_owner' || acquisition?.reason === 'no_admitted_task',
+      command: 'run-acquire-task',
+      run_id: runId,
+      reason: acquisition?.reason ?? null,
+      acquisition,
+    }, acquisition?.acquired === true || acquisition?.action === 'wait_for_owner' || acquisition?.reason === 'no_admitted_task' ? 0 : 1)
+  }
+  catch (error) {
+    output({ ok:false,command:'run-acquire-task',run_id:runId,error:error.message },1)
   }
 }
 
@@ -6823,6 +6857,11 @@ switch (command) {
     workflowRunCheck()
     break
 
+  case 'run-acquire-task':
+  case 'run-claim-task':
+    workflowRunAcquireTask()
+    break
+
   case 'run-complete-task':
     workflowRunCompleteTask()
     break
@@ -6864,7 +6903,8 @@ switch (command) {
         'task-engine <task-id>',
         'run-start <suit> <max-tasks>',
         'run-check <run-id>',
-        'run-complete-task <run-id>',
+        'run-acquire-task <run-id> <controller-protocol> <controller-fingerprint> <controller-lease-token>',
+        'run-complete-task <run-id> [<task-id> <idempotency-key>]',
         'run-stop <suit>',
         'run-finish <run-id> <status>',
       ],

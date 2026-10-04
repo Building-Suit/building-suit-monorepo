@@ -2,9 +2,11 @@
 
 Task: CP-RES-014
 
-Cutover ready: **YES**
+Deterministic repository harness: **PASS**
 
-Mandatory scenarios: 37/37 passed. The deterministic harness used no destructive faults and did not contact or mutate live n8n.
+Deployed cutover ready: **NO**. Live controller proof, disposable PostgreSQL migration/concurrency results, and independent admission review remain separate gates.
+
+Mandatory scenarios: 40/40 passed. The deterministic harness used no destructive faults and did not contact or mutate live n8n.
 
 | Scenario | Fault | Expected recovery | Observed recovery | Impl | Verify | Publish | Result |
 |---|---|---|---|---:|---:|---:|---|
@@ -27,6 +29,9 @@ Mandatory scenarios: 37/37 passed. The deterministic harness used no destructive
 | expired-controller-lease-reclamation | the controller crashes and its durable lease expires | reclaim lease → probe dependency | reclaim lease → probe dependency | 0 | 0 | 0 | PASS |
 | external-poll-retry-neutrality | the same unavailable dependency is polled twice | watch → watch | watch → watch | 0 | 0 | 0 | PASS |
 | repeat-watcher-invocation | the watcher observes identical external state repeatedly | unchanged observation → bounded next wake | unchanged observation → 2026-10-02T12:01:00.000Z | 0 | 0 | 0 | PASS |
+| active-run-budget-reconciliation | an already active run is started with a different requested task limit | preserve run id → require explicit reconciliation | explicit_reconciliation_required | 0 | 0 | 0 | PASS |
+| idempotent-run-completion-credit | the controller reconnects after task completion credit was persisted | credit once → replay without increment | credit once → replay without increment | 0 | 0 | 0 | PASS |
+| resume-without-deployed-controller-proof | a repaired batch is considered for resume without a live controller export | safety stop | safety stop | 0 | 0 | 0 | PASS |
 | focused-verification-isolation | an unrelated workspace check is failing outside the focused changed scope | skip unrelated check → preserve implementation retry budget | outside_focused_changed_scope → retry budget unchanged | 0 | 0 | 0 | PASS |
 | focused-repair-exhaustion | focused verification keeps failing through the final allowed attempt | bounded repair → safety-stop | repair attempts 1-4 → safety-stop | 5 | 5 | 0 | PASS |
 | milestone-required-check-contract | changed paths do not match a required milestone check | select required check | required_by_milestone_contract | 0 | 0 | 0 | PASS |
