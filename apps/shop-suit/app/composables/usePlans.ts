@@ -1,28 +1,32 @@
 import { useAsyncData, useSupabaseClient } from '#imports';
+import type { ShopRpcDatabase } from '~/types/shopCrmRpc';
+import type { PlanResourceLimits } from '~/types/plans';
 
-type PublicPlan = {
+export type PublicPlan = {
   id: string;
   name: string;
   slug: string;
+  catalog_terms_id: string;
+  plan_variant: 'standard' | 'multi_2' | 'multi_3';
+  variant_name: string;
   price_amount: number;
   currency: string;
-  billing_interval: string;
+  billing_interval: 'monthly' | 'annual';
   trial_days: number;
   features: { inventory?: boolean } | null;
+  resource_limits: PlanResourceLimits;
+  is_purchasable: boolean;
   is_coming_soon: boolean;
 };
 
 export const usePlans = () => {
-  const supabase = useSupabaseClient();
+  const supabase = useSupabaseClient<ShopRpcDatabase>();
   const { data, pending, error, refresh } = useAsyncData<PublicPlan[]>(
     'shop-crm-public-plans',
     async () => {
       const { data: plans, error: queryError } = await supabase
-        .from('plans')
-        .select('id,name,slug,price_amount,currency,billing_interval,trial_days,features,is_coming_soon')
-        .eq('is_active', true)
-        .eq('is_public', true)
-        .order('sort_order', { ascending: true });
+        .schema('public')
+        .rpc('shop_public_plan_catalog');
 
       if (queryError) throw queryError;
       return (plans ?? []) as PublicPlan[];

@@ -107,7 +107,7 @@ function openCreate() {
 function readableError(message?: string) {
   if (message === 'INVALID_CUSTOMER') return t('customers.invalid')
   if (message === 'SHOP_SUBSCRIPTION_INACTIVE' || message === 'SHOP_PERMISSION_DENIED') return t('customers.manageDenied')
-  return message || t('customers.writeError')
+  return t('customers.writeError')
 }
 
 async function save() {
@@ -164,12 +164,9 @@ function formatDate(value: string) {
         <h1 class="text-3xl font-extrabold tracking-tight">{{ t('customers.title') }}</h1>
         <p class="mt-2 text-sm text-muted-foreground">{{ t('customers.subtitle') }}</p>
       </div>
-      <button v-if="current && canManage" type="button" class="ls-btn ls-btn-primary" @click="openCreate">
-        {{ t('customers.add') }}
-      </button>
     </header>
 
-    <div v-if="!current && !shopLoading" class="rounded-2xl border border-border bg-card p-8 text-center text-sm">
+    <div v-if="!current && !shopLoading" class="ls-card p-8 text-center text-sm">
       <p>{{ t('customers.noShop') }}</p>
       <NuxtLink to="/dashboard" class="mt-3 inline-block font-bold text-[var(--bs-link)] underline">{{ t('customers.dashboard') }}</NuxtLink>
     </div>
@@ -186,38 +183,24 @@ function formatDate(value: string) {
         {{ t('customers.manageDenied') }}
       </p>
 
-      <BsDialog v-model:visible="showForm" :title="t('customers.createTitle')" :dirty="formDirty" :pending="saving">
-        <template #default="{ close }">
-          <form class="grid gap-4 sm:grid-cols-2" @submit.prevent="save">
-            <p v-if="actionError" role="alert" class="rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm text-[var(--bs-status-error)] sm:col-span-2">{{ actionError }}</p>
+      <BsRecordActionDialog v-model:visible="showForm" :title="t('customers.createTitle')" :dirty="formDirty" :pending="saving" :error="actionError" :submit-label="t('customers.save')" :cancel-label="t('customers.cancel')" @submit="save">
             <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ t('customers.name') }}<input v-model="form.name" type="text" minlength="2" maxlength="160" required class="ls-input"></label>
             <label class="space-y-2 text-sm font-bold">{{ t('customers.phone') }}<input v-model="form.phone" type="tel" maxlength="50" autocomplete="tel" class="ls-input"></label>
             <label class="space-y-2 text-sm font-bold">{{ t('customers.email') }}<input v-model="form.email" type="email" maxlength="254" autocomplete="email" class="ls-input"></label>
             <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ t('customers.address') }}<textarea v-model="form.address" maxlength="500" rows="2" class="ls-input" /></label>
             <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ t('customers.notes') }}<textarea v-model="form.notes" maxlength="2000" rows="3" class="ls-input" /></label>
-            <div class="flex flex-wrap gap-2 sm:col-span-2">
-              <button type="submit" class="ls-btn ls-btn-primary" :disabled="saving">{{ saving ? t('customers.saving') : t('customers.save') }}</button>
-              <button type="button" class="ls-btn" :disabled="saving" @click="close">{{ t('customers.cancel') }}</button>
-            </div>
-          </form>
-        </template>
-      </BsDialog>
+      </BsRecordActionDialog>
 
-      <div v-if="!customerPage?.permissionDenied" class="overflow-hidden rounded-2xl border border-border bg-card">
-        <div class="flex flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-center">
-          <input v-model="search" type="search" :placeholder="t('customers.search')" :aria-label="t('customers.search')" class="ls-input sm:max-w-md">
-          <select v-model="statusFilter" :aria-label="t('customers.status')" class="ls-select sm:ms-auto sm:w-auto">
-            <option value="active">{{ t('customers.active') }}</option>
-            <option value="archived">{{ t('customers.archived') }}</option>
-            <option value="all">{{ t('customers.all') }}</option>
-          </select>
-        </div>
-
+      <div v-if="!customerPage?.permissionDenied" class="overflow-hidden ls-card">
         <BsDataTable
           :value="customerPage?.items ?? []"
           :loading="pending"
           :error="error ? t('customers.loadError') : null"
           :label="t('customers.title')"
+          :capabilities="{ insert: canManage }"
+          :action-labels="{ insert: t('customers.add') }"
+          searchable
+          :search-label="t('customers.search')"
           data-key="id"
           lazy
           paginator
@@ -226,9 +209,24 @@ function formatDate(value: string) {
           :total-records="customerPage?.total ?? 0"
           :always-show-paginator="false"
           :row-class="() => 'border-t border-border'"
+          @search="value => search = value"
           @page="handlePage"
           @retry="refresh()"
+          @create="openCreate"
         >
+          <template #filters>
+            <BsSelect
+              v-model="statusFilter"
+              :label="t('customers.status')"
+              :options="[
+              { value: 'active', label: t('customers.active') },
+              { value: 'archived', label: t('customers.archived') },
+              { value: 'all', label: t('customers.all') },
+              ]"
+              option-label="label"
+              option-value="value"
+            />
+          </template>
           <Column header-class="px-5 py-3 text-start" body-class="px-5 py-4">
             <template #header>{{ t('customers.name') }}</template>
             <template #body="{ data: customer }">
@@ -244,7 +242,7 @@ function formatDate(value: string) {
           <Column header-class="px-5 py-3 text-start" body-class="px-5 py-4">
             <template #header>{{ t('customers.status') }}</template>
             <template #body="{ data: customer }">
-              <span class="ls-badge" :class="customer.is_active ? 'bg-[var(--bs-status-success-bg)] text-[var(--bs-status-success)]' : 'bg-muted text-muted-foreground'">
+              <span class="ls-badge" :class="customer.is_active ? 'bg-[var(--bs-status-success-bg)] text-fg' : 'bg-muted text-muted-foreground'">
                 {{ customer.is_active ? t('customers.active') : t('customers.archived') }}
               </span>
             </template>

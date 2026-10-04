@@ -130,21 +130,24 @@ async function createTag() {
     tagForm.name = ''
   })
 }
+function submitCurrent() {
+  if (tab.value === 'commitments') return createCommitment()
+  if (tab.value === 'recurring') return createRecurring()
+  if (tab.value === 'counterparties') return createCounterparty()
+  return createTag()
+}
+const submitLabel = computed(() => tab.value === 'commitments'
+  ? t('operations.addCommitment')
+  : tab.value === 'recurring' ? t('operations.addRule') : t('common.save'))
 const { dirty: overlayDirty0 } = useRecordAction(() => ({ commitmentForm, recurringForm, counterpartyForm, tagForm }), computed(() => Boolean(open.value)))
 </script>
 
 <template>
-      <BsDialog v-if="open" :visible="true" :title="title" :aria-label="title" :show-header="false" size="lg" :dirty="overlayDirty0" :pending="busy" @update:visible="value => { if (!value) close() }"><template #default="{ close: dismiss }">
-<div class="flex flex-col overflow-hidden">
-          <header class="flex items-center justify-between border-b border-[var(--bs-border)] px-6 py-4">
-            <h2 class="text-lg font-bold">{{ title }}</h2>
-            <button type="button" class="ls-btn ls-btn-sm" :aria-label="t('common.close')" @click="dismiss"><AppIcon name="close" /></button>
-          </header>
-          <main class="min-h-0 flex-1 overflow-y-auto p-6">
-            <p v-if="errorMessage" class="ls-error mb-4" role="alert">{{ errorMessage }}</p>
+      <BsRecordActionDialog v-if="open" :visible="true" :title="title" size="lg" :dirty="overlayDirty0" :pending="busy" :error="errorMessage" :submit-label="submitLabel" :cancel-label="t('common.cancel')" @update:visible="value => { if (!value) close() }" @submit="submitCurrent">
+          <main class="min-h-0 flex-1 overflow-y-auto">
             <QuotaUsageMeter v-if="quotaKey" :quota-key="quotaKey" compact class="mb-4" />
 
-            <form v-if="tab === 'commitments' && can('commitments.create')" class="grid gap-3 md:grid-cols-2" @submit.prevent="createCommitment">
+            <div v-if="tab === 'commitments' && can('commitments.create')" class="grid gap-3 md:grid-cols-2">
               <FloatingField :label="t('operations.name')"><input v-model="commitmentForm.title" class="ls-input" :placeholder="t('operations.name')" required></FloatingField>
               <FloatingField :label="t('transactions.description')"><input v-model="commitmentForm.description" class="ls-input" :placeholder="t('transactions.description')"></FloatingField>
               <FloatingField :label="t('transactions.amount')"><input v-model="commitmentForm.amount" class="ls-input" inputmode="decimal" :placeholder="t('transactions.amount')" required></FloatingField>
@@ -155,10 +158,9 @@ const { dirty: overlayDirty0 } = useRecordAction(() => ({ commitmentForm, recurr
               <FloatingField :label="t('add.chooseAccount')"><select v-model="commitmentForm.paymentAccountId" class="ls-input" :required="commitmentForm.autoConvert"><option value="">{{ t('add.chooseAccount') }}</option><option v-for="a in paymentAccounts" :key="a.id" :value="a.id">{{ a.name }}</option></select></FloatingField>
               <label class="flex items-center gap-2 text-sm"><input v-model="commitmentForm.autoConvert" type="checkbox">{{ t('operations.autoConvert') }}</label>
               <label class="flex items-center gap-2 text-sm">{{ t('operations.reminderDays') }} <input v-model.number="commitmentForm.reminderDays" type="number" min="0" max="90" class="ls-input w-24"></label>
-              <div class="flex justify-end gap-2 md:col-span-2"><button type="button" class="ls-btn" @click="dismiss">{{ t('common.cancel') }}</button><button class="ls-btn ls-btn-primary" :disabled="busy">{{ t('operations.addCommitment') }}</button></div>
-            </form>
+            </div>
 
-            <form v-else-if="tab === 'recurring' && can('recurring.manage')" class="grid gap-3 md:grid-cols-3" @submit.prevent="createRecurring">
+            <div v-else-if="tab === 'recurring' && can('recurring.manage')" class="grid gap-3 md:grid-cols-3">
               <FloatingField :label="t('operations.name')"><input v-model="recurringForm.name" class="ls-input" :placeholder="t('operations.name')" required></FloatingField><FloatingField v-if="recurringForm.transactionType !== 'liability_payment'" :label="t('transactions.amount')"><input v-model="recurringForm.amount" class="ls-input" inputmode="decimal" :placeholder="t('transactions.amount')" required></FloatingField>
               <FloatingField :label="t('transactions.type')"><select v-model="recurringForm.transactionType" class="ls-input"><option value="expense">{{ t('types.expense') }}</option><option value="income">{{ t('types.income') }}</option><option value="liability_payment">{{ t('types.liability_payment') }}</option></select></FloatingField>
               <FloatingField v-if="recurringForm.transactionType !== 'liability_payment'" :label="t('add.category')"><select v-model="recurringForm.categoryId" class="ls-input"><option value="">{{ t('add.chooseCategory') }}</option><option v-for="c in (recurringForm.transactionType === 'income' ? incomeCategories : expenseCategories)" :key="c.id" :value="c.id">{{ c.name }}</option></select></FloatingField>
@@ -166,13 +168,11 @@ const { dirty: overlayDirty0 } = useRecordAction(() => ({ commitmentForm, recurr
               <select v-model="recurringForm.paymentAccountId" class="ls-input" required><option value="">{{ t('add.chooseAccount') }}</option><option v-for="a in paymentAccounts" :key="a.id" :value="a.id">{{ a.name }}</option></select>
               <label class="flex items-center gap-2 text-sm">{{ t('operations.every') }} <input v-model.number="recurringForm.intervalCount" type="number" min="1" class="ls-input w-24" required></label>
               <input v-model="recurringForm.endDate" type="date" class="ls-input" :aria-label="t('operations.endDate')"><input v-model="recurringForm.maxOccurrences" type="number" min="1" class="ls-input" :placeholder="t('operations.maxOccurrences')"><select v-model="recurringForm.frequency" class="ls-input"><option v-for="f in ['daily','weekly','monthly','quarterly','yearly']" :key="f" :value="f">{{ f }}</option></select><input v-model="recurringForm.startDate" type="date" class="ls-input"><select v-model="recurringForm.mode" class="ls-input"><option value="requires_confirmation">{{ t('operations.confirmMode') }}</option><option value="auto_post">{{ t('operations.autoPost') }}</option></select>
-              <div class="flex justify-end gap-2 md:col-span-3"><button type="button" class="ls-btn" @click="dismiss">{{ t('common.cancel') }}</button><button class="ls-btn ls-btn-primary" :disabled="busy">{{ t('operations.addRule') }}</button></div>
-            </form>
+            </div>
 
-            <form v-else-if="tab === 'counterparties' && can('counterparties.manage')" class="grid gap-3 md:grid-cols-2" @submit.prevent="createCounterparty"><input v-model="counterpartyForm.name" class="ls-input" :placeholder="t('operations.name')" required><select v-model="counterpartyForm.type" class="ls-input"><option v-for="type in ['customer','vendor','lender','employee','government','other']" :key="type" :value="type">{{ type }}</option></select><input v-model="counterpartyForm.email" type="email" class="ls-input" :placeholder="t('auth.email')"><input v-model="counterpartyForm.phone" class="ls-input" :placeholder="t('operations.phone')"><input v-model="counterpartyForm.taxIdentifier" class="ls-input" :placeholder="t('operations.taxIdentifier')"><input v-model="counterpartyForm.notes" class="ls-input" :placeholder="t('operations.notes')"><div class="flex justify-end gap-2 md:col-span-2"><button type="button" class="ls-btn" @click="dismiss">{{ t('common.cancel') }}</button><button class="ls-btn ls-btn-primary" :disabled="busy">{{ t('common.save') }}</button></div></form>
+            <div v-else-if="tab === 'counterparties' && can('counterparties.manage')" class="grid gap-3 md:grid-cols-2"><input v-model="counterpartyForm.name" class="ls-input" :placeholder="t('operations.name')" required><select v-model="counterpartyForm.type" class="ls-input"><option v-for="type in ['customer','vendor','lender','employee','government','other']" :key="type" :value="type">{{ type }}</option></select><input v-model="counterpartyForm.email" type="email" class="ls-input" :placeholder="t('auth.email')"><input v-model="counterpartyForm.phone" class="ls-input" :placeholder="t('operations.phone')"><input v-model="counterpartyForm.taxIdentifier" class="ls-input" :placeholder="t('operations.taxIdentifier')"><input v-model="counterpartyForm.notes" class="ls-input" :placeholder="t('operations.notes')"></div>
 
-            <form v-else-if="can('tags.manage')" class="space-y-4" @submit.prevent="createTag"><p class="text-sm leading-relaxed text-fg-muted">{{ t('tagsGuide.createHint') }}</p><FloatingField :label="t('operations.name')"><input id="tag-name" v-model="tagForm.name" class="ls-input" :placeholder="t('tagsGuide.namePlaceholder')" required maxlength="80"></FloatingField><FloatingField :label="t('recordPages.color')"><input id="tag-color" v-model="tagForm.color" type="color" class="h-12 w-full rounded-control border border-[var(--bs-border)] bg-surface p-1"></FloatingField><div class="flex justify-end gap-2"><button type="button" class="ls-btn" @click="dismiss">{{ t('common.cancel') }}</button><button class="ls-btn ls-btn-primary" :disabled="busy">{{ t('common.save') }}</button></div></form>
+            <div v-else-if="can('tags.manage')" class="space-y-4"><p class="text-sm leading-relaxed text-fg-muted">{{ t('tagsGuide.createHint') }}</p><FloatingField :label="t('operations.name')"><input id="tag-name" v-model="tagForm.name" class="ls-input" :placeholder="t('tagsGuide.namePlaceholder')" required maxlength="80"></FloatingField><FloatingField :label="t('recordPages.color')"><input id="tag-color" v-model="tagForm.color" type="color" class="h-12 w-full rounded-control border border-[var(--bs-border)] bg-surface p-1"></FloatingField></div>
           </main>
-        </div>
-</template></BsDialog>
+      </BsRecordActionDialog>
 </template>

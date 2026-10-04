@@ -1,0 +1,863 @@
+{
+  "schema_version": 1,
+  "task_id": "CP-RES-014",
+  "deterministic": true,
+  "destructive_faults_used": false,
+  "live_n8n_contacted": false,
+  "cutover_ready": true,
+  "summary": {
+    "mandatory": 37,
+    "passed": 37,
+    "failed": 0
+  },
+  "scenarios": [
+    {
+      "id": "interrupt-before-implementation-execution",
+      "mandatory": true,
+      "injected_fault": "controller exits after planning implementation but before execution creation",
+      "expected_recovery_path": [
+        "task-run",
+        "persist one execution",
+        "task-verify"
+      ],
+      "observed_recovery_path": [
+        "task-run",
+        "task-run",
+        "task-verify"
+      ],
+      "counts": {
+        "implementation_attempts": 1,
+        "verification_runs": 0,
+        "publication_attempts": 0,
+        "ai_calls": 1,
+        "implementation_retry_budget_consumed": 1
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "interrupt-during-implementation",
+      "mandatory": true,
+      "injected_fault": "controller exits while the persisted implementation execution is running",
+      "expected_recovery_path": [
+        "wait-external",
+        "task-verify"
+      ],
+      "observed_recovery_path": [
+        "wait-external",
+        "task-verify"
+      ],
+      "counts": {
+        "implementation_attempts": 1,
+        "verification_runs": 0,
+        "publication_attempts": 0,
+        "ai_calls": 1,
+        "implementation_retry_budget_consumed": 1
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "interrupt-after-implementation-success",
+      "mandatory": true,
+      "injected_fault": "controller exits after implementation success is persisted",
+      "expected_recovery_path": [
+        "task-verify"
+      ],
+      "observed_recovery_path": [
+        "task-verify"
+      ],
+      "counts": {
+        "implementation_attempts": 1,
+        "verification_runs": 0,
+        "publication_attempts": 0,
+        "ai_calls": 1,
+        "implementation_retry_budget_consumed": 1
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "interrupt-before-verification",
+      "mandatory": true,
+      "injected_fault": "controller exits immediately before verification invocation",
+      "expected_recovery_path": [
+        "task-verify"
+      ],
+      "observed_recovery_path": [
+        "task-verify"
+      ],
+      "counts": {
+        "implementation_attempts": 1,
+        "verification_runs": 0,
+        "publication_attempts": 0,
+        "ai_calls": 1,
+        "implementation_retry_budget_consumed": 1
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "interrupt-after-failed-verification",
+      "mandatory": true,
+      "injected_fault": "controller exits after a failed focused verification is persisted",
+      "expected_recovery_path": [
+        "task-retry",
+        "task-verify"
+      ],
+      "observed_recovery_path": [
+        "task-retry",
+        "task-verify"
+      ],
+      "counts": {
+        "implementation_attempts": 2,
+        "verification_runs": 1,
+        "publication_attempts": 0,
+        "ai_calls": 2,
+        "implementation_retry_budget_consumed": 2
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "interrupt-after-repaired-verification",
+      "mandatory": true,
+      "injected_fault": "controller exits after repair succeeds and before its confirmation verification",
+      "expected_recovery_path": [
+        "task-verify"
+      ],
+      "observed_recovery_path": [
+        "task-verify"
+      ],
+      "counts": {
+        "implementation_attempts": 2,
+        "verification_runs": 1,
+        "publication_attempts": 0,
+        "ai_calls": 2,
+        "implementation_retry_budget_consumed": 2
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "interrupt-after-passed-verification",
+      "mandatory": true,
+      "injected_fault": "controller exits after the authoritative verification pass is persisted",
+      "expected_recovery_path": [
+        "task-publish"
+      ],
+      "observed_recovery_path": [
+        "task-publish"
+      ],
+      "counts": {
+        "implementation_attempts": 1,
+        "verification_runs": 1,
+        "publication_attempts": 1,
+        "ai_calls": 1,
+        "implementation_retry_budget_consumed": 1
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "interrupt-before-commit",
+      "mandatory": true,
+      "injected_fault": "publisher exits before creating the task commit",
+      "expected_recovery_path": [
+        "create one commit",
+        "push-and-create-pr"
+      ],
+      "observed_recovery_path": [
+        "resume publication",
+        "push_and_create_pr"
+      ],
+      "counts": {
+        "implementation_attempts": 1,
+        "verification_runs": 1,
+        "publication_attempts": 1,
+        "ai_calls": 1,
+        "implementation_retry_budget_consumed": 1
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "interrupt-after-commit",
+      "mandatory": true,
+      "injected_fault": "publisher exits after the local task commit is created",
+      "expected_recovery_path": [
+        "reuse commit",
+        "push-and-create-pr"
+      ],
+      "observed_recovery_path": [
+        "existing local commit",
+        "push_and_create_pr"
+      ],
+      "counts": {
+        "implementation_attempts": 1,
+        "verification_runs": 1,
+        "publication_attempts": 1,
+        "ai_calls": 1,
+        "implementation_retry_budget_consumed": 1
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "interrupt-before-pr-creation",
+      "mandatory": true,
+      "injected_fault": "publisher exits after the remote branch is created but before draft PR creation",
+      "expected_recovery_path": [
+        "reuse remote branch",
+        "create-pr"
+      ],
+      "observed_recovery_path": [
+        "matching remote branch",
+        "create_pr"
+      ],
+      "counts": {
+        "implementation_attempts": 1,
+        "verification_runs": 1,
+        "publication_attempts": 1,
+        "ai_calls": 1,
+        "implementation_retry_budget_consumed": 1
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "interrupt-after-pr-creation",
+      "mandatory": true,
+      "injected_fault": "publisher exits after draft PR creation but before local publication completion",
+      "expected_recovery_path": [
+        "reuse-existing-pr"
+      ],
+      "observed_recovery_path": [
+        "reuse_existing_pr"
+      ],
+      "counts": {
+        "implementation_attempts": 1,
+        "verification_runs": 1,
+        "publication_attempts": 1,
+        "ai_calls": 1,
+        "implementation_retry_budget_consumed": 1
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "repeat-publication-reconciliation",
+      "mandatory": true,
+      "injected_fault": "publisher is invoked repeatedly against identical persisted remote state",
+      "expected_recovery_path": [
+        "reuse-existing-pr",
+        "reuse-existing-pr"
+      ],
+      "observed_recovery_path": [
+        "reuse_existing_pr",
+        "reuse_existing_pr"
+      ],
+      "counts": {
+        "implementation_attempts": 1,
+        "verification_runs": 1,
+        "publication_attempts": 2,
+        "ai_calls": 1,
+        "implementation_retry_budget_consumed": 1
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "transient-github-failure",
+      "mandatory": true,
+      "injected_fault": "GitHub API is temporarily unavailable during publication",
+      "expected_recovery_path": [
+        "wait-external",
+        "watch",
+        "resume supervisor"
+      ],
+      "observed_recovery_path": [
+        "wait-external",
+        "watch",
+        "resume supervisor"
+      ],
+      "counts": {
+        "implementation_attempts": 1,
+        "verification_runs": 1,
+        "publication_attempts": 1,
+        "ai_calls": 1,
+        "implementation_retry_budget_consumed": 1
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "transient-repository-failure",
+      "mandatory": true,
+      "injected_fault": "repository fetch is temporarily unavailable",
+      "expected_recovery_path": [
+        "wait-external",
+        "watch",
+        "resume supervisor"
+      ],
+      "observed_recovery_path": [
+        "wait-external",
+        "watch",
+        "resume supervisor"
+      ],
+      "counts": {
+        "implementation_attempts": 1,
+        "verification_runs": 0,
+        "publication_attempts": 0,
+        "ai_calls": 1,
+        "implementation_retry_budget_consumed": 1
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "fresh-task-auto-reconciliation",
+      "mandatory": true,
+      "injected_fault": "a freshly claimed task has no worktree and then no installed dependencies",
+      "expected_recovery_path": [
+        "task-prepare",
+        "prepare-dependencies"
+      ],
+      "observed_recovery_path": [
+        "task-prepare",
+        "prepare-dependencies"
+      ],
+      "counts": {
+        "implementation_attempts": 0,
+        "verification_runs": 0,
+        "publication_attempts": 0,
+        "ai_calls": 0,
+        "implementation_retry_budget_consumed": 0
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "active-controller-lease-collision",
+      "mandatory": true,
+      "injected_fault": "a second controller attempts ownership before the current lease expires",
+      "expected_recovery_path": [
+        "leave lease owner unchanged",
+        "wait"
+      ],
+      "observed_recovery_path": [
+        "wait"
+      ],
+      "counts": {
+        "implementation_attempts": 0,
+        "verification_runs": 0,
+        "publication_attempts": 0,
+        "ai_calls": 0,
+        "implementation_retry_budget_consumed": 0
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "expired-controller-lease-reclamation",
+      "mandatory": true,
+      "injected_fault": "the controller crashes and its durable lease expires",
+      "expected_recovery_path": [
+        "reclaim lease",
+        "probe dependency"
+      ],
+      "observed_recovery_path": [
+        "reclaim lease",
+        "probe dependency"
+      ],
+      "counts": {
+        "implementation_attempts": 0,
+        "verification_runs": 0,
+        "publication_attempts": 0,
+        "ai_calls": 0,
+        "implementation_retry_budget_consumed": 0
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "external-poll-retry-neutrality",
+      "mandatory": true,
+      "injected_fault": "the same unavailable dependency is polled twice",
+      "expected_recovery_path": [
+        "watch",
+        "watch"
+      ],
+      "observed_recovery_path": [
+        "watch",
+        "watch"
+      ],
+      "counts": {
+        "implementation_attempts": 0,
+        "verification_runs": 0,
+        "publication_attempts": 0,
+        "ai_calls": 0,
+        "implementation_retry_budget_consumed": 0
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "repeat-watcher-invocation",
+      "mandatory": true,
+      "injected_fault": "the watcher observes identical external state repeatedly",
+      "expected_recovery_path": [
+        "unchanged observation",
+        "bounded next wake"
+      ],
+      "observed_recovery_path": [
+        "unchanged observation",
+        "2026-10-02T12:01:00.000Z"
+      ],
+      "counts": {
+        "implementation_attempts": 0,
+        "verification_runs": 0,
+        "publication_attempts": 0,
+        "ai_calls": 0,
+        "implementation_retry_budget_consumed": 0
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "focused-verification-isolation",
+      "mandatory": true,
+      "injected_fault": "an unrelated workspace check is failing outside the focused changed scope",
+      "expected_recovery_path": [
+        "skip unrelated check",
+        "preserve implementation retry budget"
+      ],
+      "observed_recovery_path": [
+        "outside_focused_changed_scope",
+        "retry budget unchanged"
+      ],
+      "counts": {
+        "implementation_attempts": 0,
+        "verification_runs": 0,
+        "publication_attempts": 0,
+        "ai_calls": 0,
+        "implementation_retry_budget_consumed": 0
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "focused-repair-exhaustion",
+      "mandatory": true,
+      "injected_fault": "focused verification keeps failing through the final allowed attempt",
+      "expected_recovery_path": [
+        "bounded repair",
+        "safety-stop"
+      ],
+      "observed_recovery_path": [
+        "repair attempts 1-4",
+        "safety-stop"
+      ],
+      "counts": {
+        "implementation_attempts": 5,
+        "verification_runs": 5,
+        "publication_attempts": 0,
+        "ai_calls": 5,
+        "implementation_retry_budget_consumed": 5
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "milestone-required-check-contract",
+      "mandatory": true,
+      "injected_fault": "changed paths do not match a required milestone check",
+      "expected_recovery_path": [
+        "select required check"
+      ],
+      "observed_recovery_path": [
+        "required_by_milestone_contract"
+      ],
+      "counts": {
+        "implementation_attempts": 0,
+        "verification_runs": 0,
+        "publication_attempts": 0,
+        "ai_calls": 0,
+        "implementation_retry_budget_consumed": 0
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "evidence-backed-parent-satisfaction",
+      "mandatory": true,
+      "injected_fault": "task is already satisfied by verified parent lineage",
+      "expected_recovery_path": [
+        "complete without implementation"
+      ],
+      "observed_recovery_path": [
+        "complete without implementation"
+      ],
+      "counts": {
+        "implementation_attempts": 0,
+        "verification_runs": 0,
+        "publication_attempts": 0,
+        "ai_calls": 0,
+        "implementation_retry_budget_consumed": 0
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "unexplained-empty-diff",
+      "mandatory": true,
+      "injected_fault": "publication discovers an empty diff without parent-satisfaction evidence",
+      "expected_recovery_path": [
+        "bounded no-change review"
+      ],
+      "observed_recovery_path": [
+        "handle-no-publishable-changes"
+      ],
+      "counts": {
+        "implementation_attempts": 1,
+        "verification_runs": 1,
+        "publication_attempts": 1,
+        "ai_calls": 1,
+        "implementation_retry_budget_consumed": 1
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "publication-scope-before-implementation",
+      "mandatory": true,
+      "injected_fault": "a Shop task requests the shared UI path used by the BS-UI-ZN-PUBLIC-CHROME-001 class without explicit authority",
+      "expected_recovery_path": [
+        "wait before implementation",
+        "authorize exact shared path"
+      ],
+      "observed_recovery_path": [
+        "wait before implementation",
+        "packages/ui/"
+      ],
+      "counts": {
+        "implementation_attempts": 0,
+        "verification_runs": 0,
+        "publication_attempts": 0,
+        "ai_calls": 0,
+        "implementation_retry_budget_consumed": 0
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "publication-scope-authorization-resume",
+      "mandatory": true,
+      "injected_fault": "a passed and verified task waits on the exact shared UI publication path",
+      "expected_recovery_path": [
+        "merge exact task scope",
+        "resume publication"
+      ],
+      "observed_recovery_path": [
+        "packages/ui/",
+        "task-publish"
+      ],
+      "counts": {
+        "implementation_attempts": 1,
+        "verification_runs": 1,
+        "publication_attempts": 1,
+        "ai_calls": 1,
+        "implementation_retry_budget_consumed": 1
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "ambiguous-publication-scope",
+      "mandatory": true,
+      "injected_fault": "an unrelated product behavior file appears in the publication diff",
+      "expected_recovery_path": [
+        "wait-operator"
+      ],
+      "observed_recovery_path": [
+        "apps/shop-suit/app.vue"
+      ],
+      "counts": {
+        "implementation_attempts": 0,
+        "verification_runs": 0,
+        "publication_attempts": 0,
+        "ai_calls": 0,
+        "implementation_retry_budget_consumed": 0
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "authoritative-publication-readiness",
+      "mandatory": true,
+      "injected_fault": "an approved root structural path lacks exact task authorization before implementation",
+      "expected_recovery_path": [
+        "exact authorization required",
+        "ready without execution"
+      ],
+      "observed_recovery_path": [
+        "exact_authorization_required",
+        "ready"
+      ],
+      "counts": {
+        "implementation_attempts": 0,
+        "verification_runs": 0,
+        "publication_attempts": 0,
+        "ai_calls": 0,
+        "implementation_retry_budget_consumed": 0
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "protected-publication-readiness",
+      "mandatory": true,
+      "injected_fault": "a protected migration is approved but lacks distinct human authorization",
+      "expected_recovery_path": [
+        "protected authorization required",
+        "unexpected runtime file safety-stop"
+      ],
+      "observed_recovery_path": [
+        "protected_authorization_required",
+        "unexpected_runtime_change"
+      ],
+      "counts": {
+        "implementation_attempts": 0,
+        "verification_runs": 0,
+        "publication_attempts": 0,
+        "ai_calls": 0,
+        "implementation_retry_budget_consumed": 0
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "stop-request-safe-boundary",
+      "mandatory": true,
+      "injected_fault": "a stop request arrives after the current task reaches its persistence boundary",
+      "expected_recovery_path": [
+        "stop-requested",
+        "no new claim"
+      ],
+      "observed_recovery_path": [
+        "stop-requested",
+        "no new claim"
+      ],
+      "counts": {
+        "implementation_attempts": 0,
+        "verification_runs": 0,
+        "publication_attempts": 0,
+        "ai_calls": 0,
+        "implementation_retry_budget_consumed": 0
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "bounded-continuous-run",
+      "mandatory": true,
+      "injected_fault": "the configured task limit is reached after one completed task",
+      "expected_recovery_path": [
+        "success",
+        "task-limit"
+      ],
+      "observed_recovery_path": [
+        "success",
+        "task-limit"
+      ],
+      "counts": {
+        "implementation_attempts": 1,
+        "verification_runs": 1,
+        "publication_attempts": 1,
+        "ai_calls": 1,
+        "implementation_retry_budget_consumed": 1
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "repeat-supervisor-invocation",
+      "mandatory": true,
+      "injected_fault": "the supervisor is invoked twice against identical persisted state",
+      "expected_recovery_path": [
+        "task-verify",
+        "task-verify"
+      ],
+      "observed_recovery_path": [
+        "task-verify",
+        "task-verify"
+      ],
+      "counts": {
+        "implementation_attempts": 1,
+        "verification_runs": 0,
+        "publication_attempts": 0,
+        "ai_calls": 1,
+        "implementation_retry_budget_consumed": 1
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "control-database-transient-then-success",
+      "mandatory": true,
+      "injected_fault": "the first control-database connection attempt encounters a transient DNS failure",
+      "expected_recovery_path": [
+        "bounded backoff",
+        "repeat original command",
+        "continue same lifecycle"
+      ],
+      "observed_recovery_path": [
+        "bounded backoff",
+        "attempt 2",
+        "continue same lifecycle"
+      ],
+      "counts": {
+        "implementation_attempts": 0,
+        "verification_runs": 0,
+        "publication_attempts": 0,
+        "ai_calls": 0,
+        "implementation_retry_budget_consumed": 0
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "control-database-transient-retries-exhausted",
+      "mandatory": true,
+      "injected_fault": "every bounded control-database connection attempt times out",
+      "expected_recovery_path": [
+        "bounded retries",
+        "wait-external",
+        "preserve task and run"
+      ],
+      "observed_recovery_path": [
+        "3 attempts",
+        "wait-external",
+        "preserve task and run"
+      ],
+      "counts": {
+        "implementation_attempts": 0,
+        "verification_runs": 0,
+        "publication_attempts": 0,
+        "ai_calls": 0,
+        "implementation_retry_budget_consumed": 0
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "control-database-non-transient-rejection",
+      "mandatory": true,
+      "injected_fault": "the control database rejects authentication immediately",
+      "expected_recovery_path": [
+        "no retry",
+        "safety handling"
+      ],
+      "observed_recovery_path": [
+        "1 attempt",
+        "safety handling"
+      ],
+      "counts": {
+        "implementation_attempts": 0,
+        "verification_runs": 0,
+        "publication_attempts": 0,
+        "ai_calls": 0,
+        "implementation_retry_budget_consumed": 0
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "generated-n8n-replacement-compatibility",
+      "mandatory": true,
+      "injected_fault": "generated BS-10, BS-20, and BS-21 fixtures are evaluated as cutover candidates",
+      "expected_recovery_path": [
+        "validate identities",
+        "reject retry graph",
+        "reject hardcoded registry"
+      ],
+      "observed_recovery_path": [
+        "identities valid",
+        "no retry graph",
+        "no hardcoded registry"
+      ],
+      "counts": {
+        "implementation_attempts": 0,
+        "verification_runs": 0,
+        "publication_attempts": 0,
+        "ai_calls": 0,
+        "implementation_retry_budget_consumed": 0
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "pre-cutover-live-export-integrity",
+      "mandatory": true,
+      "injected_fault": "the full acceptance suite runs beside the sanitized live-export baseline",
+      "expected_recovery_path": [
+        "same fixture digest before and after",
+        "no runtime mutation"
+      ],
+      "observed_recovery_path": [
+        "068636531fa71de2fb37944bc6b896dca827ab9f7268ee3dad6b1ecf87f460d7",
+        "no runtime mutation"
+      ],
+      "counts": {
+        "implementation_attempts": 0,
+        "verification_runs": 0,
+        "publication_attempts": 0,
+        "ai_calls": 0,
+        "implementation_retry_budget_consumed": 0
+      },
+      "result": "pass",
+      "failed_checks": [],
+      "evidence": {
+        "baseline_sha256_before": "068636531fa71de2fb37944bc6b896dca827ab9f7268ee3dad6b1ecf87f460d7",
+        "baseline_sha256_after": "068636531fa71de2fb37944bc6b896dca827ab9f7268ee3dad6b1ecf87f460d7",
+        "live_runtime_contacted": false
+      }
+    }
+  ]
+}

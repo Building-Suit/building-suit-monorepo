@@ -389,7 +389,7 @@ onMounted(markSaved)
         <label class="ls-btn ls-btn-accent mt-5 cursor-pointer" for="csv-file">
           {{ t('imports.chooseFile') }}
         </label>
-        <button type="button" class="ls-btn mt-5 ms-2" @click="downloadTemplate">{{ t('csv.downloadTemplate') }}</button>
+        <BsButton type="button" class="ls-btn mt-5 ms-2" @click="downloadTemplate">{{ t('csv.downloadTemplate') }}</BsButton>
         <p class="mt-3 text-sm text-fg-muted">{{ t('csv.templateHint') }}</p>
         <p class="mt-2 text-sm text-fg-muted">{{ t('csv.languageHint') }}</p>
         <input id="csv-file" class="sr-only" type="file" accept=".csv,text/csv" @change="onFileSelected">
@@ -410,7 +410,7 @@ onMounted(markSaved)
           @keydown="onPasteKeydown"
         />
         <div class="mt-3 flex justify-end">
-          <button type="button" class="ls-btn ls-btn-accent" :disabled="!pasteText.trim()" @click="usePastedRows">{{ t('imports.reviewPaste') }}</button>
+          <BsButton type="button" class="ls-btn ls-btn-accent" :disabled="!pasteText.trim()" @click="usePastedRows">{{ t('imports.reviewPaste') }}</BsButton>
         </div>
       </section>
 
@@ -429,7 +429,7 @@ onMounted(markSaved)
               <h2 class="text-h2 font-bold">{{ t('imports.mappingTitle') }}</h2>
               <p class="mt-1 text-sm text-fg-muted">{{ t('imports.fileSummary', { filename, count: sourceRows.length }) }}</p>
             </div>
-            <button type="button" class="ls-btn ls-btn-sm" :disabled="!!busy" @click="reset">{{ t('imports.changeFile') }}</button>
+            <BsButton type="button" class="ls-btn ls-btn-sm" :disabled="!!busy" @click="reset">{{ t('imports.changeFile') }}</BsButton>
           </div>
           <div class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <FloatingField v-for="field in ALL_FIELDS" :key="field" :label="t(`imports.fields.${field}`)">
@@ -447,9 +447,9 @@ onMounted(markSaved)
             <BsDataTable :value="previewRows"><Column v-for="header in headers" :key="header" :field="header" :header="header"><template #body="{ data: row }">{{ row[header] || t('common.dash') }}</template></Column></BsDataTable>
           </div>
           <div class="flex justify-end border-t border-[var(--bs-border)] p-4">
-            <button type="button" class="ls-btn ls-btn-accent" :disabled="!requiredMappingComplete || !!busy" @click="validateImport">
+            <BsButton type="button" class="ls-btn ls-btn-accent" :disabled="!requiredMappingComplete || !!busy" @click="validateImport">
               {{ busy === 'validating' ? t('imports.validating') : t('imports.validate') }}
-            </button>
+            </BsButton>
           </div>
         </section>
 
@@ -470,11 +470,11 @@ onMounted(markSaved)
             </dl>
             <QuotaUsageMeter v-if="phase === 'validated'" quota-key="max_monthly_transactions" compact class="mt-5" />
             <div class="mt-5 flex flex-wrap justify-end gap-2">
-              <button v-if="phase === 'results'" type="button" class="ls-btn" @click="reset">{{ t('imports.importAnother') }}</button>
-              <button v-else type="button" class="ls-btn" :disabled="!!busy" @click="reset">{{ t('imports.startOver') }}</button>
-              <button v-if="phase === 'validated' && canConfirm" type="button" class="ls-btn ls-btn-accent" :disabled="!!busy" @click="confirmImport">
+              <BsButton v-if="phase === 'results'" type="button" class="ls-btn" @click="reset">{{ t('imports.importAnother') }}</BsButton>
+              <BsButton v-else type="button" class="ls-btn" :disabled="!!busy" @click="reset">{{ t('imports.startOver') }}</BsButton>
+              <BsButton v-if="phase === 'validated' && canConfirm" type="button" class="ls-btn ls-btn-accent" :disabled="!!busy" @click="confirmImport">
                 {{ busy === 'confirming' ? t('imports.confirming') : t('imports.confirm') }}
-              </button>
+              </BsButton>
             </div>
           </div>
 
@@ -519,15 +519,15 @@ onMounted(markSaved)
 </BsDataTable>
             </div>
             <div v-if="reviewPageCount > 1" class="flex items-center justify-end gap-2 border-t border-[var(--bs-border)] p-3">
-              <button type="button" class="ls-btn ls-btn-sm" :disabled="reviewPage <= 1" @click="reviewPage--">{{ t('common.previous') }}</button>
+              <BsButton type="button" class="ls-btn ls-btn-sm" :disabled="reviewPage <= 1" @click="reviewPage--">{{ t('common.previous') }}</BsButton>
               <span class="text-sm text-fg-muted">{{ t('transactions.page', { page: reviewPage, pages: reviewPageCount }) }}</span>
-              <button type="button" class="ls-btn ls-btn-sm" :disabled="reviewPage >= reviewPageCount" @click="reviewPage++">{{ t('common.next') }}</button>
+              <BsButton type="button" class="ls-btn ls-btn-sm" :disabled="reviewPage >= reviewPageCount" @click="reviewPage++">{{ t('common.next') }}</BsButton>
             </div>
           </div>
         </section>
       </template>
     </template>
-    <div class="flex justify-end border-t border-line pt-4"><button type="button" class="ls-btn" :disabled="!!busy" @click="close">{{ t('csv.close') }}</button></div>
+    <div class="flex justify-end border-t border-line pt-4"><BsButton type="button" class="ls-btn" :disabled="!!busy" @click="close">{{ t('csv.close') }}</BsButton></div>
   </div>
     </template>
   </BsDialog>

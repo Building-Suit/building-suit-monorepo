@@ -1,0 +1,222 @@
+{
+  "id": "qHGzP3b0PS82IYSw",
+  "name": "BS-21 — Stop Suit Run",
+  "active": false,
+  "nodes": [
+    {
+      "id": "bs21-form",
+      "name": "Stop Workstream",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "authentication": "n8nUserAuth",
+        "formTitle": "Stop Building Suit Run",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Workstream",
+              "fieldType": "text",
+              "fieldName": "workstream_ref",
+              "placeholder": "project/workstream",
+              "requiredField": true
+            }
+          ]
+        },
+        "responseMode": "lastNode",
+        "options": {
+          "path": "building-suit-stop"
+        }
+      }
+    },
+    {
+      "id": "bs21-resolve",
+      "name": "Validate Stop Target",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "rzoRWvnSBG7sU1Oh",
+          "mode": "list",
+          "cachedResultName": "BS-00 — Runner Command"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "command": "={{ 'bs-agent workstream-resolve ' + $('Stop Workstream').first().json.workstream_ref }}"
+          },
+          "matchingColumns": [
+            "command"
+          ],
+          "schema": [
+            {
+              "id": "command",
+              "displayName": "command",
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "bs21-valid",
+      "name": "Stop Target Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.runner_ok }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "bs21-stop",
+      "name": "Request Graceful Stop",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        720,
+        -80
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "rzoRWvnSBG7sU1Oh",
+          "mode": "list",
+          "cachedResultName": "BS-00 — Runner Command"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "command": "={{ 'bs-agent run-stop ' + $('Validate Stop Target').first().json.payload.suit_slug }}"
+          },
+          "matchingColumns": [
+            "command"
+          ],
+          "schema": [
+            {
+              "id": "command",
+              "displayName": "command",
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "bs21-result",
+      "name": "Stop Requested",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        -80
+      ],
+      "parameters": {
+        "jsCode": "return [{json:{ok:$json.runner_ok,status:$json.payload?.stop?.requested?'stop-requested':'no-active-run',details:$json.payload}}];"
+      }
+    },
+    {
+      "id": "bs21-rejected",
+      "name": "Rejected Stop Target",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        80
+      ],
+      "parameters": {
+        "jsCode": "return [{json:{ok:false,status:'rejected',reason:$json.payload?.error??'unknown_or_inactive_workstream'}}];"
+      }
+    }
+  ],
+  "connections": {
+    "Stop Workstream": {
+      "main": [
+        [
+          {
+            "node": "Validate Stop Target",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Stop Target": {
+      "main": [
+        [
+          {
+            "node": "Stop Target Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stop Target Valid?": {
+      "main": [
+        [
+          {
+            "node": "Request Graceful Stop",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Rejected Stop Target",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Request Graceful Stop": {
+      "main": [
+        [
+          {
+            "node": "Stop Requested",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

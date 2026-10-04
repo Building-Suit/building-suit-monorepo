@@ -3,6 +3,26 @@ import type { DashboardResponse } from '../../../types/dashboard'
 const workstream = ref(''); const statusFilter = ref('')
 const { data, error } = await useFetch<DashboardResponse>('/api/dashboard')
 const rows = computed(() => (data.value?.tasks ?? []).filter(row => (!workstream.value || row.suit_slug === workstream.value) && (!statusFilter.value || row.status === statusFilter.value)))
+const workstreamOptions = computed(() => [{ value: '', label: 'All workstreams' }, ...(data.value?.suits ?? []).map(suit => ({ value: suit.slug, label: suit.display_name }))])
+const statusOptions = [{ value: '', label: 'All states' }, ...['planned', 'ready', 'blocked', 'in_progress', 'verification', 'failed', 'passed', 'complete', 'cancelled'].map(value => ({ value, label: value }))]
 </script>
 
-<template><main class="space-y-5"><div><p class="text-xs font-bold uppercase tracking-widest text-fg-muted">Control plane</p><h1 class="mt-2 text-3xl font-black">Tasks</h1></div><div class="flex flex-wrap gap-2"><select v-model="workstream" class="rounded-control border border-[var(--bs-border)] bg-surface px-3 py-2"><option value="">All workstreams</option><option v-for="suit in data?.suits || []" :key="suit.slug" :value="suit.slug">{{ suit.display_name }}</option></select><select v-model="statusFilter" class="rounded-control border border-[var(--bs-border)] bg-surface px-3 py-2"><option value="">All states</option><option v-for="value in ['planned','ready','blocked','in_progress','verification','failed','passed','complete','cancelled']" :key="value">{{ value }}</option></select></div><p v-if="error" class="text-danger">{{ error.message }}</p><div class="overflow-x-auto rounded-card border border-[var(--bs-border)] bg-surface"><table class="min-w-full text-sm"><thead class="bg-surface-muted text-xs uppercase text-fg-muted"><tr><th class="px-4 py-3">Task</th><th class="px-4 py-3">Workstream</th><th class="px-4 py-3">Title</th><th class="px-4 py-3">Status</th><th class="px-4 py-3">Profile</th></tr></thead><tbody class="divide-y divide-[var(--bs-border)]"><tr v-for="task in rows" :key="task.task_id"><td class="px-4 py-3"><NuxtLink class="font-mono font-bold text-link" :to="`/tasks/${task.task_id}`">{{ task.task_id }}</NuxtLink></td><td class="px-4 py-3">{{ task.suit_slug }}</td><td class="px-4 py-3">{{ task.title }}</td><td class="px-4 py-3"><DashboardStatusPill :value="task.status" /></td><td class="px-4 py-3 text-xs text-fg-muted">{{ task.model_profile }}</td></tr></tbody></table></div></main></template>
+<template>
+  <main class="space-y-5">
+    <div><p class="text-xs font-bold uppercase tracking-widest text-fg-muted">Control plane</p><h1 class="mt-2 text-3xl font-black">Tasks</h1></div>
+    <div class="flex flex-wrap gap-2">
+      <BsSelect v-model="workstream" label="Workstream" :options="workstreamOptions" option-label="label" option-value="value" class="min-w-48" />
+      <BsSelect v-model="statusFilter" label="Status" :options="statusOptions" option-label="label" option-value="value" class="min-w-40" />
+    </div>
+    <p v-if="error" class="text-danger">{{ error.message }}</p>
+    <BsCard padding="none">
+      <BsDataTable :value="rows" data-key="task_id" label="Tasks" scroll-label="Tasks" class="overflow-x-auto">
+        <Column field="task_id" header="Task"><template #body="{ data: task }"><NuxtLink class="font-mono font-bold text-link" :to="`/tasks/${task.task_id}`">{{ task.task_id }}</NuxtLink></template></Column>
+        <Column field="suit_slug" header="Workstream" />
+        <Column field="title" header="Title" />
+        <Column field="status" header="Status"><template #body="{ data: task }"><DashboardStatusPill :value="task.status" /></template></Column>
+        <Column field="model_profile" header="Profile" body-class="text-xs text-fg-muted" />
+      </BsDataTable>
+    </BsCard>
+  </main>
+</template>

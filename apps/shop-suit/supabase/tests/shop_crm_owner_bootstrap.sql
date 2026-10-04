@@ -39,18 +39,18 @@ declare
   original_end timestamptz;
 begin
   begin
-    perform shop_crm.create_owner_shop('x', 'basic');
+    perform shop_crm.create_owner_shop('x', 'solo');
     raise exception 'short shop name accepted';
   exception when sqlstate '22023' then
     if sqlerrm <> 'INVALID_SHOP_NAME' then raise; end if;
   end;
 
-  first_shop := shop_crm.create_owner_shop('Fixture shop', 'basic');
+  first_shop := shop_crm.create_owner_shop('Fixture shop', 'solo');
   select s.trial_end_at into original_end
   from shop_crm.subscriptions s
   join shop_crm.shop_memberships m on m.profile_id = s.profile_id
   where m.shop_id = first_shop and m.role = 'owner';
-  repeated_shop := shop_crm.create_owner_shop('Changed name', 'pro');
+  repeated_shop := shop_crm.create_owner_shop('Changed name', 'team');
 
   if repeated_shop <> first_shop
     or (select count(*) from shop_crm.shops) <> 1
@@ -82,7 +82,7 @@ begin
     if sqlerrm <> 'PLAN_UNAVAILABLE' then raise; end if;
   end;
 
-  second_shop := shop_crm.create_owner_shop('Second shop', 'pro');
+  second_shop := shop_crm.create_owner_shop('Second shop', 'team');
   if (select count(*) from shop_crm.shops) <> 1
     or (select count(*) from shop_crm.shop_memberships) <> 1
     or (select count(*) from shop_crm.subscriptions) <> 1 then

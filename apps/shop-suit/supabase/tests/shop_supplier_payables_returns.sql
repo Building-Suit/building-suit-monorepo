@@ -59,7 +59,7 @@ declare
   v_return uuid; v_credit uuid; v_request uuid := gen_random_uuid();
   v_detail jsonb; v_list jsonb; v_stock numeric;
 begin
-  v_shop := public.create_owner_shop('Supplier payable fixture A', 'pro', 'product');
+  v_shop := public.create_owner_shop('Supplier payable fixture A', 'team', 'product');
   v_product := public.save_product(v_shop, null, 'Returnable item', 'PUR-RET-1', null, 20);
   v_vendor := public.save_vendor(v_shop, null, 'Original supplier', 'Contact',
     '01000000000', 'supplier@ss-pur.invalid', 'Address', 'TAX-PUR', 'Note');
@@ -204,7 +204,7 @@ set local role authenticated;
 do $$
 declare v_shop uuid; v_vendor uuid; v_product uuid; v_purchase uuid;
 begin
-  v_shop := public.create_owner_shop('Supplier payable fixture B', 'pro', 'product');
+  v_shop := public.create_owner_shop('Supplier payable fixture B', 'team', 'product');
   v_product := public.save_product(v_shop, null, 'Foreign item', 'PUR-FOREIGN', null, 10);
   v_vendor := public.save_vendor(v_shop, null, 'Foreign supplier', null, null, null, null, null, null);
   v_purchase := public.create_supplier_purchase(gen_random_uuid(), v_shop, v_vendor,

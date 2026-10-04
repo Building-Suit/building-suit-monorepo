@@ -13,6 +13,14 @@ import {
 
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import {
+  classifyPublicationFiles,
+  evaluatePublicationParent,
+  evaluateVerificationAuthority,
+  planPublicationReconciliation,
+  publicationStateFingerprint,
+  validPublicationPath,
+} from './publication-preflight.mjs'
 
 
 const controlRoot =
@@ -80,9 +88,21 @@ const {
   allowed_paths: allowedPaths,
   requirements,
   verification,
+  publication_boundaries: publicationBoundaries = {},
+  publication_contract: publicationContract = {},
+  publication_authorizations: publicationAuthorizations = {},
   project = {},
   workstream = {},
 } = context
+
+const contractRequiredPaths = (publicationContract.required_paths ?? [])
+  .map(item => typeof item === 'string' ? item : item?.path)
+  .filter(Boolean)
+const authorizationPaths = authorizations => (authorizations ?? []).flatMap(item =>
+  item.revoked_at ? [] : (item.authorized_paths ?? item.requested_paths ?? []),
+)
+const ordinaryAuthorizedPaths = authorizationPaths(publicationAuthorizations.ordinary)
+const protectedAuthorizedPaths = authorizationPaths(publicationAuthorizations.protected)
 
 const repository =
   project.github_repository ??
@@ -191,14 +211,7 @@ function git(args) {
 function validateAllowedPath(
   value,
 ) {
-  return (
-    typeof value === 'string' &&
-    value.length > 0 &&
-    !path.isAbsolute(value) &&
-    !value
-      .split('/')
-      .includes('..')
-  )
+  return validPublicationPath(value)
 }
 
 
@@ -214,7 +227,13 @@ if (
 
 for (
   const allowedPath
-  of allowedPaths
+  of [
+    ...allowedPaths,
+    ...(publicationBoundaries.task_paths ?? []),
+    ...(publicationBoundaries.source_paths ?? []),
+    ...(publicationBoundaries.workstream_paths ?? []),
+    ...(publicationBoundaries.project_paths ?? []),
+  ]
 ) {
   if (
     !validateAllowedPath(
@@ -229,61 +248,6 @@ for (
       },
     )
   }
-}
-
-
-function pathAllowed(file) {
-  const candidate =
-    file.replaceAll('\\\\', '/')
-
-
-  return allowedPaths.some(
-    configured => {
-
-      const scope =
-        configured.replaceAll(
-          '\\\\',
-          '/',
-        )
-
-
-      const hasGlob =
-        scope.includes('*') ||
-        scope.includes('?') ||
-        scope.includes('[') ||
-        scope.includes('{')
-
-
-      if (hasGlob) {
-
-        return path.matchesGlob(
-          candidate,
-          scope,
-        )
-
-      }
-
-
-      const prefix =
-        scope.endsWith('/')
-          ? scope
-          : `${scope}/`
-
-
-      const exact =
-        scope.endsWith('/')
-          ? scope.slice(0, -1)
-          : scope
-
-
-      return (
-        candidate === exact ||
-        candidate.startsWith(
-          prefix,
-        )
-      )
-    },
-  )
 }
 
 
@@ -369,11 +333,7 @@ catch {
 }
 
 
-let parentStillCurrent =
-  liveParent.parent_branch ===
-    execution.parent_branch &&
-  liveParent.parent_sha ===
-    execution.parent_sha
+let recordedParentSha = null
 
 
 // Publication may already have pushed the task branch and created its
@@ -384,14 +344,13 @@ let parentStillCurrent =
 // that the recorded parent branch still points at the execution's
 // original parent SHA.
 if (
-  !parentStillCurrent &&
   liveParent.parent_branch ===
     execution.branch_name &&
   liveParent.parent_pr?.base_branch ===
     execution.parent_branch
 ) {
 
-  const recordedParentSha =
+  recordedParentSha =
     requireSuccess(
       git([
         'rev-parse',
@@ -400,14 +359,15 @@ if (
       'unable_to_read_recorded_parent',
     )
 
-
-  parentStillCurrent =
-    recordedParentSha ===
-    execution.parent_sha
 }
 
+const parentEvaluation = evaluatePublicationParent({
+  liveParent,
+  execution,
+  recordedParentSha,
+})
 
-if (!parentStillCurrent) {
+if (!parentEvaluation.current) {
   fail(
     'parent_changed_since_execution',
     {
@@ -465,6 +425,55 @@ function lines(value) {
     .filter(Boolean)
 }
 
+function taskCommitsOnly(
+  baseSha,
+  tip,
+) {
+  const ancestry = git(['merge-base', '--is-ancestor', baseSha, tip])
+  if (ancestry.code !== 0) return false
+  const bodies = requireSuccess(
+    git(['log', '--format=%B%x1e', `${baseSha}..${tip}`]),
+    'unable_to_read_existing_commits',
+  ).split('\x1e').map(body => body.trim()).filter(Boolean)
+  return bodies.length > 0 && bodies.every(body => body.includes(`Task: ${task.task_id}`))
+}
+
+let currentHead = requireSuccess(
+  git(['rev-parse', 'HEAD']),
+  'unable_to_read_head',
+)
+
+const remoteBranch = run('git', [
+  'ls-remote', '--heads', 'origin', `refs/heads/${execution.branch_name}`,
+])
+requireSuccess(remoteBranch, 'unable_to_inspect_remote_branch')
+let remoteSha = remoteBranch.stdout.trim()
+  ? remoteBranch.stdout.trim().split(/\s+/)[0]
+  : null
+
+let reconciliation = {
+  remote_branch_found: Boolean(remoteSha),
+  local_head_before: currentHead,
+  actions: [],
+}
+
+if (
+  remoteSha &&
+  currentHead === execution.parent_sha &&
+  remoteSha !== currentHead
+) {
+  const remoteRef = `origin/${execution.branch_name}`
+  if (!taskCommitsOnly(execution.parent_sha, remoteRef)) {
+    fail('remote_branch_not_unambiguous_task_lineage', { remote_sha: remoteSha })
+  }
+  requireSuccess(
+    git(['merge', '--ff-only', remoteRef]),
+    'unable_to_fast_forward_task_branch',
+  )
+  currentHead = requireSuccess(git(['rev-parse', 'HEAD']), 'unable_to_read_head')
+  reconciliation.actions.push('fast_forwarded_unambiguous_remote_task_branch')
+}
+
 
 const changedFiles =
   new Set()
@@ -477,7 +486,7 @@ for (
       git([
         'diff',
         '--name-only',
-        'HEAD',
+        execution.parent_sha,
       ]),
       'git_diff_failed',
     ),
@@ -525,36 +534,54 @@ const changed =
   [...changedFiles]
     .sort()
 
+const scopeClassification = classifyPublicationFiles({
+  files: changed,
+  task,
+  taskPaths: publicationBoundaries.task_paths ?? [],
+  sourcePaths: publicationBoundaries.source_paths ?? [],
+  workstreamPaths: publicationBoundaries.workstream_paths ?? allowedPaths,
+  projectPaths: publicationBoundaries.project_paths ?? [],
+  requiredPaths: contractRequiredPaths,
+  ordinaryAuthorizedPaths,
+  protectedAuthorizedPaths,
+})
 
-const outOfScope =
-  changed.filter(
-    file =>
-      !pathAllowed(file),
-  )
-
-
-if (outOfScope.length > 0) {
-  fail(
-    'out_of_scope_changes',
-    {
-      allowed_paths:
-        allowedPaths,
-
-      out_of_scope:
-        outOfScope,
-    },
-  )
+if (scopeClassification.blocked.length > 0) {
+  fail('publication_scope_safety_stop', { classification: scopeClassification })
+}
+if (scopeClassification.waiting.length > 0) {
+  fail('publication_scope_operator_wait', { classification: scopeClassification })
 }
 
+const stateFiles = changed.map(file => ({
+  file,
+  object: existsSync(path.join(worktreePath, file))
+    ? requireSuccess(git(['hash-object', '--', file]), 'unable_to_hash_publication_file')
+    : 'deleted',
+}))
+const stateFingerprint = publicationStateFingerprint({
+  base_sha: verification?.verified_state?.base_sha ?? execution.parent_sha,
+  files: stateFiles,
+})
+const verificationAuthority = evaluateVerificationAuthority({
+  verification,
+  executionId: execution.execution_id,
+  stateFingerprint,
+})
+if (!verificationAuthority.authoritative) {
+  fail('publication_verification_not_authoritative', {
+    verification_run_id: verification?.verification_run_id ?? null,
+    reason: verificationAuthority.reason,
+  })
+}
 
-const currentHead =
-  requireSuccess(
-    git([
-      'rev-parse',
-      'HEAD',
-    ]),
-    'unable_to_read_head',
-  )
+reconciliation = {
+  ...reconciliation,
+  local_head_after: currentHead,
+  scope_repairs: scopeClassification.repaired,
+  verification_run_id: verification.verification_run_id,
+  state_fingerprint: stateFingerprint,
+}
 
 
 let commitSha =
@@ -579,22 +606,9 @@ if (
     )
 
 
-  const lastCommitBody =
-    requireSuccess(
-      git([
-        'log',
-        '-1',
-        '--format=%B',
-      ]),
-      'unable_to_read_commit',
-    )
-
-
   if (
-    aheadCount !== 1 ||
-    !lastCommitBody.includes(
-      `Task: ${task.task_id}`,
-    )
+    aheadCount < 1 ||
+    !taskCommitsOnly(execution.parent_sha, 'HEAD')
   ) {
     fail(
       'unexpected_existing_commits',
@@ -643,21 +657,23 @@ else {
     )
 
 
-  const stagedOutOfScope =
-    stagedFiles.filter(
-      file =>
-        !pathAllowed(file),
-    )
+  const stagedClassification = classifyPublicationFiles({
+    files: stagedFiles,
+    task,
+    taskPaths: publicationBoundaries.task_paths ?? [],
+    sourcePaths: publicationBoundaries.source_paths ?? [],
+    workstreamPaths: publicationBoundaries.workstream_paths ?? allowedPaths,
+    projectPaths: publicationBoundaries.project_paths ?? [],
+    requiredPaths: contractRequiredPaths,
+    ordinaryAuthorizedPaths,
+    protectedAuthorizedPaths,
+  })
 
-
-  if (
-    stagedOutOfScope.length > 0
-  ) {
+  if (stagedClassification.waiting.length > 0 || stagedClassification.blocked.length > 0) {
     fail(
       'staged_out_of_scope_changes',
       {
-        out_of_scope:
-          stagedOutOfScope,
+        classification: stagedClassification,
       },
     )
   }
@@ -731,29 +747,7 @@ else {
 }
 
 
-const remoteBranch =
-  run(
-    'git',
-    [
-      'ls-remote',
-      '--heads',
-      'origin',
-      `refs/heads/${execution.branch_name}`,
-    ],
-  )
-
-
-requireSuccess(
-  remoteBranch,
-  'unable_to_inspect_remote_branch',
-)
-
-
-const remoteLine =
-  remoteBranch.stdout.trim()
-
-
-if (!remoteLine) {
+if (!remoteSha) {
 
   requireSuccess(
     git([
@@ -765,13 +759,11 @@ if (!remoteLine) {
     'git_push_failed',
   )
 
+  remoteSha = commitSha
+  reconciliation.actions.push('pushed_task_branch')
+
 }
 else {
-
-  const remoteSha =
-    remoteLine
-      .split(/\s+/)[0]
-
 
   if (
     remoteSha !==
@@ -812,7 +804,7 @@ const requirementIds =
 
 
 const verificationLines =
-  (verification ?? [])
+  (verification?.checks ?? [])
     .map(
       item =>
         `- ${item.check_name}: ${item.status.toUpperCase()}`,
@@ -960,6 +952,24 @@ if (existingPrs.length > 1) {
     'multiple_open_prs_for_branch',
   )
 }
+
+const reconciliationPlan = planPublicationReconciliation({
+  parentSha: execution.parent_sha,
+  localSha: commitSha,
+  remoteSha: remoteSha ?? commitSha,
+  localTaskCommits: taskCommitsOnly(execution.parent_sha, 'HEAD'),
+  remoteTaskCommits: remoteSha
+    ? taskCommitsOnly(execution.parent_sha, `origin/${execution.branch_name}`)
+    : false,
+  existingPrs,
+  expectedBase: execution.parent_branch,
+})
+
+if (['wait', 'safety-stop'].includes(reconciliationPlan.action)) {
+  fail(reconciliationPlan.reason, { reconciliation_plan: reconciliationPlan })
+}
+
+reconciliation.actions.push(reconciliationPlan.action)
 
 
 let pr
@@ -1138,6 +1148,20 @@ output({
 
   changed_files:
     changed,
+
+  verification_run_id:
+    verification.verification_run_id,
+
+  reconciliation,
+
+  preflight: {
+    parent: {
+      branch: execution.parent_branch,
+      sha: execution.parent_sha,
+    },
+    classification: scopeClassification.decisions,
+    verification: verificationAuthority,
+  },
 
   allowed_paths:
     allowedPaths,

@@ -11,6 +11,7 @@ const pending = ref(false)
 const error = ref('')
 const reason = ref('')
 const amounts = reactive({ operating: '', investing: '', financing: '' })
+const { dirty } = useRecordAction(() => ({ reason: reason.value, ...amounts }), computed(() => !loading.value))
 const context = ref<{ amount_minor: number, decision_id: string | null, allocations: Record<string, number> }>()
 let requestId: string | undefined
 const total = computed(() => {
@@ -55,23 +56,19 @@ async function save() {
 </script>
 
 <template>
-  <BsDialog :visible="true" :title="t('financialMapping.allocate')" size="md" :pending="pending" @update:visible="value => { if (!value) emit('close') }">
-    <div class="space-y-4 p-4">
+  <BsRecordActionDialog :visible="true" :title="t('financialMapping.allocate')" size="md" :dirty="dirty" :pending="pending" :error="error" :submit-label="t('common.save')" :cancel-label="t('common.cancel')" :submit-disabled="!valid || loading" @update:visible="value => { if (!value) emit('close') }" @submit="save">
       <p>{{ accountName }}</p>
       <SectionSkeleton v-if="loading" variant="table" :rows="3" />
       <template v-else-if="context">
         <p>{{ t('financialMapping.sourceAmount') }}: <MoneyText :amount-minor="context.amount_minor" /></p>
         <div v-if="context.decision_id" class="text-sm text-fg-muted"><p>{{ t('financialMapping.previousAllocation') }}</p><p v-for="(value, section) in context.allocations" :key="section">{{ t(`financialMapping.lines.${section}`) }}: <MoneyText :amount-minor="value" /></p></div>
-        <form class="space-y-3" @submit.prevent="save">
+        <div class="space-y-3">
           <FloatingField v-for="key in (['operating', 'investing', 'financing'] as const)" :key="key" :label="t(`financialMapping.lines.${key}`)">
             <input v-model="amounts[key]" type="text" inputmode="decimal" class="ls-input" :disabled="pending">
           </FloatingField>
           <FloatingField :label="t('statementClassification.reason')"><textarea v-model="reason" class="ls-input" required maxlength="1000" :disabled="pending" /></FloatingField>
           <p v-if="total !== BigInt(context.amount_minor)" role="alert" class="ls-error">{{ t('financialMapping.allocationMismatch') }}</p>
-          <button type="submit" class="ls-btn ls-btn-primary" :disabled="!valid || pending">{{ t('common.saving') }}</button>
-        </form>
+        </div>
       </template>
-      <p v-if="error" role="alert" class="ls-error">{{ error }}</p>
-    </div>
-  </BsDialog>
+  </BsRecordActionDialog>
 </template>

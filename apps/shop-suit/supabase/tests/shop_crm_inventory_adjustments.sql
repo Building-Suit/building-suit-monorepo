@@ -42,7 +42,7 @@ declare
   receipt_two uuid := gen_random_uuid();
   writeoff uuid := gen_random_uuid();
 begin
-  shop_id := shop_crm.create_owner_shop('Stock fixture Pro', 'pro');
+  shop_id := shop_crm.create_owner_shop('Stock fixture Team', 'team');
   v_product_id := shop_crm.save_product(
     shop_id, null, 'Stock item', 'STOCK-1', null, 20
   );
@@ -89,20 +89,19 @@ set local role authenticated;
 do $$
 declare
   shop_id uuid;
-  product_id uuid;
+  v_product_id uuid;
 begin
-  shop_id := shop_crm.create_owner_shop('Stock fixture Basic', 'basic');
-  product_id := shop_crm.save_product(
-    shop_id, null, 'Basic item', null, null, 5
+  shop_id := shop_crm.create_owner_shop('Stock fixture Solo', 'solo');
+  v_product_id := shop_crm.save_product(
+    shop_id, null, 'Solo item', null, null, 5
   );
-  begin
-    perform shop_crm.adjust_stock(
-      gen_random_uuid(), shop_id, product_id, 1, 1, null
-    );
-    raise exception 'Basic received stock';
-  exception when sqlstate '42501' then
-    if sqlerrm <> 'INVENTORY_NOT_IN_PLAN' then raise; end if;
-  end;
+  perform shop_crm.adjust_stock(
+    gen_random_uuid(), shop_id, v_product_id, 1, 1, null
+  );
+  if (select stock.quantity_on_hand from shop_crm.product_stock stock
+      where stock.product_id = v_product_id) <> 1 then
+    raise exception 'Solo core inventory access failed';
+  end if;
 end;
 $$;
 reset role;

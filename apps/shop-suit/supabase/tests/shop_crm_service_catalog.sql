@@ -13,10 +13,15 @@ from (
   union all select outsider_id from shop_service_fixture
 ) users;
 
-insert into shop_crm.plans (portal_id, name, slug, price_amount, features)
+insert into shop_crm.plans (
+  portal_id, name, slug, price_amount, features, resource_limits, is_purchasable
+)
 select id, 'Service fixture', 'task-service', 0,
-  '{"max_services":1}'::jsonb
+  '{"max_services":1}'::jsonb,
+  '{"active_locations":null,"active_members":null,"active_products":null,"active_services":1,"active_customers":null,"active_suppliers":null}'::jsonb,
+  true
 from shop_crm.portals where key = 'shop-crm';
+select shop_private.reconcile_plan_catalog();
 
 do $$ begin
   if has_function_privilege('anon',

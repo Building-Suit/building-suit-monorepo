@@ -54,6 +54,7 @@ Verified production/staging refs are recorded in `docs/architecture/environments
 | `pnpm agent:pr-check <number>` | Verify the app-specific staging root and same-stack parent chain |
 | `pnpm automation <resource> <action>` | Operate the project-independent Automation Suit control plane |
 | `pnpm automation:n8n:export` | Export and normalize local n8n workflows through supported interfaces |
+| `pnpm automation:resilience` | Run the deterministic control-plane fault-injection and crash-resume acceptance gate |
 | `pnpm build` | Build all four apps |
 | `pnpm typecheck` | Check apps and imported shared TypeScript |
 | `pnpm lint` | Lint apps, shared components and tooling |

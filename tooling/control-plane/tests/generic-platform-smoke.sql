@@ -11,8 +11,8 @@ VALUES('sandbox-project-backend','Sandbox backend','sandbox-backend','active','{
 INSERT INTO control.workstreams(project_id,slug,display_name,stack_key,suit_slug)
 SELECT project_id,'backend','Backend','sandbox-backend','sandbox-project-backend' FROM control.projects WHERE slug='sandbox-project';
 
-INSERT INTO control.tasks(task_id,suit_slug,project_id,workstream_slug,title,status,verification_plan)
-SELECT 'SANDBOX-001','sandbox-project-backend',project_id,'backend','Disposable sandbox task','planned','["focused"]'
+INSERT INTO control.tasks(task_id,suit_slug,project_id,workstream_slug,title,status,verification_plan,metadata)
+SELECT 'SANDBOX-001','sandbox-project-backend',project_id,'backend','Disposable sandbox task','planned','["focused"]','{"verification_mode":"milestone"}'
 FROM control.projects WHERE slug='sandbox-project';
 
 INSERT INTO control.tasks(task_id,suit_slug,project_id,workstream_slug,title,status,verification_plan,sequence)
@@ -20,10 +20,11 @@ SELECT 'SANDBOX-002','sandbox-project-backend',project_id,'backend','Serialized 
 FROM control.projects WHERE slug='sandbox-project';
 
 DO $do$
-DECLARE packet jsonb; claimed jsonb; execution_id bigint; run_id bigint; retry jsonb; workflow jsonb;
+DECLARE packet jsonb; claimed jsonb; execution_id bigint; run_id bigint; resumed_run_id bigint; retry jsonb; workflow jsonb;
 BEGIN
   packet:=control.generic_task_packet('SANDBOX-001');
   IF packet->'retry_policy'->>'policy_id'<>'cheap-three' THEN RAISE EXCEPTION 'project retry policy did not resolve'; END IF;
+  IF packet->'task'->>'verification_mode'<>'milestone' THEN RAISE EXCEPTION 'verification mode did not resolve'; END IF;
   claimed:=control.claim_next_task('sandbox-project-backend','runner');
   IF claimed->'task'->>'status'<>'in_progress' THEN RAISE EXCEPTION 'claim failed'; END IF;
   IF EXISTS(SELECT 1 FROM control.next_ready_task('sandbox-project-backend')) THEN RAISE EXCEPTION 'serialized workstream exposed a second task'; END IF;
@@ -38,6 +39,9 @@ BEGIN
   execution_id:=control.start_execution('SANDBOX-001','fast','sandbox-model','low','/tmp/sandbox','codex/sandbox-backend/sandbox-001','stg',repeat('a',40));
   PERFORM control.finish_execution(execution_id,'succeeded',NULL,1,1,'/tmp/sandbox.log','{"simulated":true}');
   run_id:=control.start_verification_run('SANDBOX-001',execution_id,'runner','{"simulated":true}');
+  resumed_run_id:=control.start_verification_run('SANDBOX-001',execution_id,'runner','{"simulated":true}');
+  IF resumed_run_id<>run_id THEN RAISE EXCEPTION 'verification resume duplicated the authoritative run'; END IF;
+  IF (SELECT verification_mode FROM control.verification_runs WHERE verification_run_id=run_id)<>'milestone' THEN RAISE EXCEPTION 'verification mode was not persisted'; END IF;
   PERFORM control.queue_verification_check(run_id,'focused','true',true);
   PERFORM control.update_verification_check(run_id,'focused','running');
   PERFORM control.update_verification_check(run_id,'focused','fail',1,'expected sandbox failure','/tmp/focused.log',1,'false',true);

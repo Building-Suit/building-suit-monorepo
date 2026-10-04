@@ -170,8 +170,8 @@ function acceptProposal() {
       </label>
       <p v-if="!requiredComplete" class="text-sm text-[var(--bs-status-danger)]">{{ t('imports.extraction.requiredIncomplete') }}</p>
       <div class="flex flex-wrap justify-end gap-2">
-        <button type="button" class="ls-btn" @click="rejectProposal">{{ t('imports.extraction.reject') }}</button>
-        <button type="button" class="ls-btn ls-btn-accent" :disabled="!canAccept" @click="acceptProposal">{{ t('imports.extraction.accept') }}</button>
+        <BsButton type="button" class="ls-btn" @click="rejectProposal">{{ t('imports.extraction.reject') }}</BsButton>
+        <BsButton type="button" class="ls-btn ls-btn-accent" :disabled="!canAccept" @click="acceptProposal">{{ t('imports.extraction.accept') }}</BsButton>
       </div>
     </div>
   </section>

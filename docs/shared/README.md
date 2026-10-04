@@ -2,6 +2,8 @@
 
 - [Git and staging workflow](git-workflow.md): preflight, short-lived features, stacked/parallel PRs, manual-merge recovery and deployment controls.
 - [Design system](design-system.md): tokens, branding, Atomic Design and shared templates.
+- [Shared UI ownership](ui-ownership.md): library-first ownership, migration inventory and mechanical enforcement for every Suit.
+- [Shared UI convergence report](ui-convergence-report.md): final component inventory, valid product wrappers, exception status and cross-Suit evidence.
 - [Interaction policy](interactions.md): record actions, dialogs, signup and feedback.
 - [Database development](database.md): product-specific local commands, environment verification and hosted release procedure.
 - [Manual Supabase setup](supabase-manual-setup.md): organizations, project refs, frontend keys, deployment secrets and Auth configuration.

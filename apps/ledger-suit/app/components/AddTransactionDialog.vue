@@ -419,18 +419,8 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
 </script>
 
 <template>
-    <BsDialog v-if="open" :visible="true" :title="t(`add.flows.${flow}`)" :aria-label="t(`add.flows.${flow}`)" :show-header="false" size="md" :dirty="overlayDirty0" :pending="submitting" @update:visible="value => { if (!value) close() }"><template #default="{ close: dismiss }">
-<div class="flex flex-col overflow-hidden rounded-b-none sm:rounded-modal">
-        <header class="flex items-center justify-between border-b border-[var(--bs-border)] px-6 py-4">
-          <h2 id="add-transaction-title" class="text-base font-bold">
-            {{ t(`add.flows.${flow}`) }}
-          </h2>
-          <button type="button" class="ls-btn ls-btn-sm" :aria-label="t('common.close')" @click="dismiss">
-            <AppIcon name="close" />
-          </button>
-        </header>
-
-        <div class="border-b border-[var(--bs-border)] px-6 py-3">
+    <BsRecordActionDialog v-if="open" :visible="true" :title="t(`add.flows.${flow}`)" size="lg" :dirty="overlayDirty0" :pending="submitting" :error="fieldError" :cancel-label="t('common.cancel')" @update:visible="value => { if (!value) close() }" @submit="submit">
+        <div class="border-b border-[var(--bs-border)] pb-4">
           <label class="ls-label" for="flow">{{ t('add.whatAreYouRecording') }}</label>
           <select id="flow" v-model="flow" class="ls-input">
             <option v-for="f in availableFlows" :key="f" :value="f">
@@ -439,7 +429,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
           </select>
         </div>
 
-        <form class="min-h-0 flex-1 overflow-y-auto px-6 py-4" :aria-busy="submitting" @submit.prevent="submit">
+        <div class="min-h-0 flex-1 overflow-y-auto">
           <QuotaUsageMeter quota-key="max_monthly_transactions" compact class="mb-4" />
           <div class="grid gap-4 sm:grid-cols-2">
             <!-- Amount: every flow except the split ones -->
@@ -678,7 +668,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
           <div v-if="flow === 'adjustment'" class="mt-6">
             <div class="mb-2 flex items-center justify-between">
               <h3 class="text-sm font-bold">{{ t('add.journalLines') }}</h3>
-              <button type="button" class="ls-btn ls-btn-sm" @click="addLine">{{ t('add.addLine') }}</button>
+              <BsButton type="button" class="ls-btn ls-btn-sm" @click="addLine">{{ t('add.addLine') }}</BsButton>
             </div>
 
             <div class="space-y-2">
@@ -708,7 +698,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
                   <label class="sr-only" :for="`line-amount-${index}`">{{ t('transactions.amount') }}</label>
                   <input :id="`line-amount-${index}`" v-model="line.amount" class="ls-input" inputmode="decimal" placeholder="0.00">
                 </div>
-                <button
+                <BsButton
                   type="button"
                   class="ls-btn ls-btn-sm h-9"
                   :disabled="form.lines.length <= 2"
@@ -716,14 +706,14 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
                   @click="removeLine(index)"
                 >
                   <AppIcon name="delete" :size="18" />
-                </button>
+                </BsButton>
                 </div>
                 <div v-if="can('dimensions.allocate') && dimensionWorkspace?.values.some(value => value.status==='active')" class="mt-3 space-y-2 border-t border-[var(--bs-border)] pt-3">
-                  <div class="flex flex-wrap gap-2"><button type="button" class="ls-btn ls-btn-sm" @click="addAllocation(line,'cost_center')">{{ t('dimensions.allocateKind', { kind: t('dimensions.kinds.cost_center') }) }}</button><button type="button" class="ls-btn ls-btn-sm" @click="addAllocation(line,'project')">{{ t('dimensions.allocateKind', { kind: t('dimensions.kinds.project') }) }}</button></div>
+                  <div class="flex flex-wrap gap-2"><BsButton type="button" class="ls-btn ls-btn-sm" @click="addAllocation(line,'cost_center')">{{ t('dimensions.allocateKind', { kind: t('dimensions.kinds.cost_center') }) }}</BsButton><BsButton type="button" class="ls-btn ls-btn-sm" @click="addAllocation(line,'project')">{{ t('dimensions.allocateKind', { kind: t('dimensions.kinds.project') }) }}</BsButton></div>
                   <div v-for="(allocation, allocationIndex) in line.allocations" :key="allocationIndex" class="grid grid-cols-[1fr_8rem_2rem] gap-2">
                     <select v-model="allocation.valueId" class="ls-input"><option value="">{{ t(`dimensions.kinds.${allocation.kind}`) }}</option><option v-for="value in dimensionWorkspace.values.filter(item=>item.kind===allocation.kind && item.status==='active')" :key="value.id" :value="value.id">{{ value.code }} · {{ value.name }}</option></select>
                     <input v-model="allocation.amount" class="ls-input" inputmode="decimal" :aria-label="t('dimensions.allocationAmount')">
-                    <button type="button" class="ls-btn ls-btn-sm" :aria-label="t('dimensions.removeAllocation')" @click="line.allocations.splice(allocationIndex,1)"><AppIcon name="delete" :size="18" /></button>
+                    <BsButton type="button" class="ls-btn ls-btn-sm" :aria-label="t('dimensions.removeAllocation')" @click="line.allocations.splice(allocationIndex,1)"><AppIcon name="delete" :size="18" /></BsButton>
                   </div>
                 </div>
               </div>
@@ -743,22 +733,10 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
             </div>
           </div>
 
-          <p v-if="fieldError" role="alert" class="ls-error mt-4">
-            {{ fieldError }}
-          </p>
-        </form>
-
-        <footer class="flex items-center justify-end gap-2 border-t border-[var(--bs-border)] px-6 py-4">
-          <button type="button" class="ls-btn" @click="dismiss">{{ t('common.cancel') }}</button>
-          <button
-            type="button"
-            class="ls-btn ls-btn-accent"
-            :disabled="submitting"
-            @click="submit"
-          >
-            {{ submitting ? t('common.saving') : t('common.save') }}
-          </button>
-        </footer>
-      </div>
-</template></BsDialog>
+        </div>
+        <template #actions="{ close: dismiss }">
+          <BsButton type="button" :disabled="submitting" @click="dismiss">{{ t('common.cancel') }}</BsButton>
+          <BsButton type="submit" variant="accent" :pending="submitting">{{ t('common.save') }}</BsButton>
+        </template>
+    </BsRecordActionDialog>
 </template>

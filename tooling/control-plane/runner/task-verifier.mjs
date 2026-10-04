@@ -13,12 +13,32 @@ import {
 
 import path from 'node:path'
 
+import {
+  applicationScopeSelected,
+  classifyVerificationResults,
+  commandResultStatus,
+  controlPlaneRootLintSelection,
+  customCheckSelection,
+  isMilestoneVerification,
+  resolveDatabaseVerification,
+  resolveVerificationPlan,
+  resolveVerificationMode,
+  safeRegisteredVerificationCommand,
+} from './verification-mode.mjs'
+import { mergeVerificationConfig } from '../lib/workstream-readiness.mjs'
+import { publicationStateFingerprint } from './publication-preflight.mjs'
+import { executeWithControlDatabaseRetry } from '../lib/control-database.mjs'
+
 const [
   worktreePath,
   packetPath,
   runDirectory,
   verificationRunId,
+  persistedVerificationMode,
 ] = process.argv.slice(2)
+
+const verificationProbe =
+  verificationRunId === 'probe'
 
 function fail(message) {
   process.stdout.write(
@@ -35,7 +55,10 @@ if (
   !worktreePath ||
   !packetPath ||
   !runDirectory ||
-  !/^\d+$/.test(verificationRunId ?? '')
+  (
+    !verificationProbe &&
+    !/^\d+$/.test(verificationRunId ?? '')
+  )
 ) {
   fail(
     'worktree, packet, run directory and verification run ID are required',
@@ -66,9 +89,20 @@ const suit =
 
 const project = packet.project ?? {}
 const workstream = packet.workstream ?? {}
-const verificationConfig = {
-  ...(project.verification_config ?? {}),
-  ...(workstream.verification_config ?? {}),
+const verificationConfig = mergeVerificationConfig(
+  project.verification_config,
+  workstream.verification_config,
+)
+
+const verificationMode =
+  persistedVerificationMode ??
+  resolveVerificationMode(packet)
+
+if (
+  verificationMode !==
+  resolveVerificationMode(packet)
+) {
+  fail('persisted_verification_mode_mismatch')
 }
 
 const controlDatabase = {
@@ -80,6 +114,10 @@ const controlDatabase = {
 }
 
 function liveCheck(check) {
+  if (verificationProbe) {
+    return
+  }
+
   const values = {
     run_id: verificationRunId,
     name: check.name,
@@ -90,14 +128,19 @@ function liveCheck(check) {
     elapsed_ms: String(check.elapsed_ms ?? 0),
     command: check.command ?? '',
     required: check.required === false ? 'false' : 'true',
+    metadata: JSON.stringify({
+      verification_mode: verificationMode,
+      selection_reason: check.selection_reason ?? 'unspecified',
+      failure_class: check.failure_class ?? null,
+    }),
   }
   const args = ['-X','-q','-A','-t','-v','ON_ERROR_STOP=1','-h',controlDatabase.host,'-p',controlDatabase.port,'-U',controlDatabase.user,'-d',controlDatabase.database]
   for (const [key,value] of Object.entries(values)) args.push('--set',`${key}=${value}`)
-  const result = spawnSync('psql',args,{
+  const result = executeWithControlDatabaseRetry(() => spawnSync('psql',args,{
     encoding:'utf8',
     env:{...process.env,PGSSLMODE:controlDatabase.sslmode},
-    input:`SELECT control.update_verification_check(:'run_id'::bigint,:'name',:'status',NULLIF(:'exit_code','')::integer,:'summary',:'log_path',:'elapsed_ms'::bigint,:'command',:'required'::boolean);\n`,
-  })
+    input:`SELECT control.update_verification_check(:'run_id'::bigint,:'name',:'status',NULLIF(:'exit_code','')::integer,:'summary',:'log_path',:'elapsed_ms'::bigint,:'command',:'required'::boolean,:'metadata'::jsonb);\n`,
+  }), { successful: value => value.status === 0 && !value.error })
   if (result.status !== 0) {
     throw new Error(`live_verification_update_failed:${(result.stderr ?? '').trim()}`)
   }
@@ -124,6 +167,7 @@ function runCheck({
   cwd = worktreePath,
   timeout = 15 * 60 * 1000,
   required = true,
+  selectionReason = 'required_by_verification_policy',
 }) {
   const started =
     Date.now()
@@ -132,6 +176,7 @@ function runCheck({
     name,
     command: `${program} ${args.join(' ')}`,
     required,
+    selection_reason: selectionReason,
     status: 'running',
     exit_code: null,
     summary: 'Running',
@@ -197,6 +242,9 @@ function runCheck({
     },
   )
 
+  const unavailable =
+    result.error?.code === 'ENOENT'
+
   const passed =
     exitCode === 0 &&
     !result.error
@@ -211,7 +259,9 @@ function runCheck({
       .filter(Boolean)
 
   const summary =
-    passed
+    unavailable
+      ? `Required program is unavailable: ${program}`
+      : passed
       ? `PASS in ${Date.now() - started}ms`
       : (
           lines
@@ -227,14 +277,19 @@ function runCheck({
     command:
       `${program} ${args.join(' ')}`,
     required,
+    selection_reason: selectionReason,
     status:
-      passed
-        ? 'pass'
-        : (
-            required
-              ? 'fail'
-              : 'skipped'
-          ),
+      commandResultStatus({
+        required,
+        exitCode,
+        errorCode: result.error?.code,
+      }),
+    failure_class:
+      unavailable && required
+        ? 'verification-required-check-unavailable'
+        : passed || !required
+        ? null
+        : 'verification-product-defect',
     exit_code:
       exitCode,
     summary,
@@ -276,6 +331,9 @@ function gitOutput(args) {
 const changedFiles =
   new Set()
 
+const verificationBaseSha =
+  gitOutput(['rev-parse', 'HEAD'])
+
 for (
   const output
   of [
@@ -316,6 +374,32 @@ const verificationPlanText =
 
 const results = []
 
+function omittedCheck({
+  name,
+  command,
+  required = false,
+  reason,
+  summary,
+  unavailable = false,
+  failureClass = null,
+}) {
+  return {
+    name,
+    command,
+    required,
+    selection_reason: reason,
+    status:
+      unavailable && required
+        ? 'not_run'
+        : 'skipped',
+    failure_class: failureClass,
+    exit_code: null,
+    summary,
+    log_path: null,
+    elapsed_ms: 0,
+  }
+}
+
 results.push(
   runCheck({
     name:
@@ -332,6 +416,9 @@ results.push(
 
     timeout:
       20 * 60 * 1000,
+
+    selectionReason:
+      'verification_environment_prerequisite',
   }),
 )
 
@@ -347,22 +434,59 @@ results.push(
       'diff',
       '--check',
     ],
+
+    selectionReason:
+      'required_for_changed_files',
   }),
 )
 
-results.push(
-  runCheck({
-    name:
-      'workspace-check',
+const rootLintSelection =
+  controlPlaneRootLintSelection({
+    changedFiles: [...changedFiles],
+  })
 
-    program:
-      'pnpm',
+if (rootLintSelection.selected) {
+  results.push(
+    runCheck({
+      name:
+        'root-lint',
 
-    args: [
-      'check',
-    ],
-  }),
-)
+      program:
+        'pnpm',
+
+      args: [
+        'lint',
+      ],
+
+      selectionReason:
+        rootLintSelection.reason,
+    }),
+  )
+}
+
+if (
+  isMilestoneVerification(verificationMode) ||
+  /pnpm check|workspace check/.test(verificationPlanText)
+) {
+  results.push(
+    runCheck({
+      name:
+        'workspace-check',
+
+      program:
+        'pnpm',
+
+      args: [
+        'check',
+      ],
+
+      selectionReason:
+        isMilestoneVerification(verificationMode)
+          ? 'required_by_milestone_contract'
+          : 'required_by_task_verification_plan',
+    }),
+  )
+}
 
 const appPath =
   workstream.application_path ??
@@ -392,7 +516,18 @@ if (
     )
 }
 
-if (appPackage?.name) {
+const applicationSelection =
+  applicationScopeSelected({
+    appPath,
+    changedFiles: [...changedFiles],
+    mode: verificationMode,
+    verificationPlanText,
+  })
+
+if (
+  appPackage?.name &&
+  applicationSelection.selected
+) {
   if (
     appPackage.scripts?.typecheck
   ) {
@@ -409,6 +544,9 @@ if (appPackage?.name) {
           appPackage.name,
           'typecheck',
         ],
+
+        selectionReason:
+          applicationSelection.reason,
       }),
     )
   }
@@ -429,6 +567,9 @@ if (appPackage?.name) {
           appPackage.name,
           'lint',
         ],
+
+        selectionReason:
+          applicationSelection.reason,
       }),
     )
   }
@@ -449,6 +590,9 @@ if (appPackage?.name) {
           appPackage.name,
           'test:unit',
         ],
+
+        selectionReason:
+          applicationSelection.reason,
       }),
     )
   }
@@ -491,39 +635,41 @@ if (appPackage?.name) {
 
         timeout:
           20 * 60 * 1000,
+
+        selectionReason:
+          applicationSelection.reason,
       }),
     )
   }
 }
-else {
-  results.push(
-    runCheck({
-      name:
-        'root-typecheck',
-
-      program:
-        'pnpm',
-
-      args: [
-        'typecheck',
-      ],
-    }),
-  )
-}
 
 for (const custom of verificationConfig.commands ?? []) {
-  const prefixes = Array.isArray(custom.changed_paths) ? custom.changed_paths : []
-  if (prefixes.length > 0 && ![...changedFiles].some(file => prefixes.some(prefix => file.startsWith(prefix)))) {
-    results.push({
+  if (!safeRegisteredVerificationCommand(custom)) {
+    results.push(omittedCheck({
+      name: custom?.name ?? `invalid-registered-command-${results.length + 1}`,
+      command: null,
+      required: custom?.required !== false,
+      reason: 'registered_verification_command_invalid',
+      summary: 'Registered verification command must use a safe program/argv definition and repository-relative cwd.',
+      unavailable: true,
+      failureClass: 'verification-configuration',
+    }))
+    continue
+  }
+  const selection = customCheckSelection({
+    check: custom,
+    changedFiles: [...changedFiles],
+    mode: verificationMode,
+    verificationPlanText,
+  })
+  if (!selection.selected) {
+    results.push(omittedCheck({
       name: custom.name,
       command: [custom.program, ...(custom.args ?? [])].join(' '),
       required: custom.required !== false,
-      status: 'skipped',
-      exit_code: null,
-      summary: 'No changed file matched this custom check.',
-      log_path: null,
-      elapsed_ms: 0,
-    })
+      reason: selection.reason,
+      summary: 'No changed file matched this focused custom check.',
+    }))
     continue
   }
   results.push(runCheck({
@@ -533,6 +679,7 @@ for (const custom of verificationConfig.commands ?? []) {
     cwd: custom.cwd ? path.join(worktreePath, custom.cwd) : worktreePath,
     timeout: custom.timeout_ms ?? 15 * 60 * 1000,
     required: custom.required !== false,
+    selectionReason: selection.reason,
   }))
 }
 
@@ -575,168 +722,75 @@ const changedDatabaseTests =
     : []
 
 if (databaseChanged) {
+  const databaseVerification = resolveDatabaseVerification({
+    verificationConfig,
+    suitSlug: suit.slug,
+    appPath,
+    changedDatabaseTests,
+  })
 
-  if (
-    suit.slug === 'ledger-suit'
-  ) {
-
-    const ledgerAppPath =
-      path.join(
-        worktreePath,
-        appPath,
-      )
-
-
-    const databaseReset =
-      runCheck({
-        name:
-          'database-reset',
-
-        program:
-          'pnpm',
-
-        args: [
-          'exec',
-          'supabase',
-          'db',
-          'reset',
-          '--local',
-        ],
-
-        cwd:
-          ledgerAppPath,
-
-        timeout:
-          20 * 60 * 1000,
-      })
-
-
-    results.push(
-      databaseReset,
-    )
-
-
-    if (
-      databaseReset.status === 'pass'
-    ) {
-
-      if (
-        changedDatabaseTests.length > 0
-      ) {
-
-        results.push(
-          runCheck({
-            name:
-              'database-tests',
-
-            program:
-              'pnpm',
-
-            args: [
-              'exec',
-              'supabase',
-              'test',
-              'db',
-
-              ...changedDatabaseTests,
-
-              '--local',
-            ],
-
-            cwd:
-              ledgerAppPath,
-
-            timeout:
-              15 * 60 * 1000,
-          }),
-        )
-
-      }
-      else {
-
-        results.push({
-          name:
-            'database-tests',
-
-          command:
-            null,
-
-          required:
-            true,
-
-          status:
-            'not_run',
-
-          exit_code:
-            null,
-
-          summary:
-            'Ledger database changed but this task changed no task-specific pgTAP test.',
-
-          log_path:
-            null,
-
-          elapsed_ms:
-            0,
-        })
-
-      }
-
-    }
-
-  }
-  else if (
-    suit.slug === 'shop-suit'
-  ) {
-
-    results.push(
-      runCheck({
-        name:
-          'database-tests',
-
-        program:
-          'pnpm',
-
-        args: [
-          'db:test:shop',
-        ],
-
-        timeout:
-          30 * 60 * 1000,
-      }),
-    )
-
+  if (databaseVerification.commands.length === 0) {
+    results.push(omittedCheck({
+      name: 'database-tests',
+      command: null,
+      required: true,
+      reason: 'required_database_runner_unavailable',
+      summary: databaseVerification.source === 'invalid_configuration'
+        ? `The registered database verification command for ${suit.slug} is invalid.`
+        : `No registered database verification command is configured for ${suit.slug}.`,
+      unavailable: true,
+      failureClass: 'verification-configuration',
+    }))
   }
   else {
+    for (const command of databaseVerification.commands) {
+      // A failed prerequisite makes later database evidence unavailable rather
+      // than executing against an unprepared local database.
+      const prerequisiteFailed = results.some(result =>
+        result.database_phase && result.status !== 'pass',
+      )
+      if (prerequisiteFailed) {
+        results.push(omittedCheck({
+          name: command.name,
+          command: [command.program, ...(command.args ?? [])].join(' '),
+          required: command.required !== false,
+          reason: 'database_prerequisite_failed',
+          summary: 'Database verification prerequisite failed.',
+          unavailable: true,
+          failureClass: 'verification-infrastructure',
+        }))
+        continue
+      }
+      const databaseResult = runCheck({
+        name: command.name,
+        program: command.program,
+        args: command.args ?? [],
+        cwd: command.cwd ? path.join(worktreePath, command.cwd) : worktreePath,
+        timeout: command.timeout_ms ?? 15 * 60 * 1000,
+        required: command.required !== false,
+        selectionReason: databaseVerification.source.startsWith('registered_')
+          ? 'registered_database_verification_contract'
+          : 'database_scope_changed',
+      })
+      databaseResult.database_phase = command.phase ?? 'test'
+      results.push(databaseResult)
+    }
 
-    results.push({
-      name:
-        'database-tests',
-
-      command:
-        null,
-
-      required:
-        true,
-
-      status:
-        'not_run',
-
-      exit_code:
-        null,
-
-      summary:
-        `No database verification command configured for ${suit.slug}.`,
-
-      log_path:
-        null,
-
-      elapsed_ms:
-        0,
-    })
-
+    if (
+      databaseVerification.source === 'legacy_ledger_compatibility' &&
+      changedDatabaseTests.length === 0
+    ) {
+      results.push(omittedCheck({
+        name: 'database-tests',
+        command: null,
+        required: true,
+        reason: 'required_database_test_unavailable',
+        summary: 'Ledger database changed but this task changed no task-specific pgTAP test.',
+        unavailable: true,
+        failureClass: 'verification-configuration',
+      }))
+    }
   }
-
 }
 
 const browserRequired =
@@ -799,8 +853,11 @@ if (
         '--local',
       ],
 
-      timeout:
-        15 * 60 * 1000,
+    timeout:
+      15 * 60 * 1000,
+
+    selectionReason:
+      'required_browser_environment',
     })
 
 
@@ -819,7 +876,10 @@ if (browserRequired) {
   if (
    browserEnvironmentReady &&
    appPackage?.name &&
-   changedBrowserTests.length > 0
+   (
+     changedBrowserTests.length > 0 ||
+     isMilestoneVerification(verificationMode)
+   )
   ) {
 
     results.push(
@@ -842,45 +902,72 @@ if (browserRequired) {
 
           '--workers=1',
           '--retries=0',
-          '--max-failures=1',
+          '--repeat-each=2',
         ],
 
         timeout:
           12 * 60 * 1000,
+
+        selectionReason:
+          changedBrowserTests.length > 0
+            ? 'changed_browser_spec'
+            : 'required_by_milestone_contract',
       }),
     )
 
   }
   else {
 
-    results.push({
-      name:
-        'browser-tests',
-
-      command:
-        null,
-
-      required:
-        false,
-
-      status:
-        'skipped',
-
-      exit_code:
-        null,
-
-      summary:
-        'No task-specific Playwright spec was changed; broad application E2E suite intentionally skipped.',
-
-      log_path:
-        null,
-
-      elapsed_ms:
-        0,
-    })
+    results.push(omittedCheck({
+      name: 'browser-tests',
+      command: null,
+      required: true,
+      reason: appPackage?.name
+        ? 'required_browser_check_has_no_changed_spec'
+        : 'required_browser_runner_unavailable',
+      summary: appPackage?.name
+        ? 'Browser verification is required, but no task-specific Playwright spec changed in focused mode.'
+        : `Browser verification is required, but ${appPath ?? suit.slug} has no runnable application package.`,
+      unavailable: true,
+    }))
 
   }
 
+}
+
+const resolvedPlan = resolveVerificationPlan({
+  entries: task.verification_plan ?? [],
+  configuredCommands: verificationConfig.commands ?? [],
+  legacyMappings: verificationConfig.legacy_plan_mappings ?? {},
+})
+
+for (const planned of resolvedPlan.checks) {
+  const existing = results.find(result =>
+    result.name === planned.name && result.status !== 'skipped',
+  )
+  if (existing) continue
+
+  results.push(runCheck({
+    name: planned.name,
+    program: planned.program,
+    args: planned.args,
+    cwd: planned.cwd ? path.join(worktreePath, planned.cwd) : worktreePath,
+    timeout: planned.timeout_ms ?? 15 * 60 * 1000,
+    required: true,
+    selectionReason: 'required_by_task_verification_plan',
+  }))
+}
+
+for (const entry of resolvedPlan.unenforced) {
+  results.push(omittedCheck({
+    name: `verification-plan-unenforced-${results.length + 1}`,
+    command: null,
+    required: true,
+    reason: 'verification_plan_entry_unenforced',
+    summary: `Required verification-plan entry is not a known safe check or registered command: ${entry}`,
+    unavailable: true,
+    failureClass: 'verification-configuration',
+  }))
 }
 
 const passed =
@@ -890,17 +977,43 @@ const passed =
       result.status === 'skipped',
   )
 
+const verifiedFiles = [...changedFiles].sort().map(file => ({
+  file,
+  object: existsSync(path.join(worktreePath, file))
+    ? gitOutput(['hash-object', '--', file])
+    : 'deleted',
+}))
+
+const verifiedState = {
+  base_sha: verificationBaseSha,
+  files: verifiedFiles,
+}
+
+verifiedState.fingerprint =
+  publicationStateFingerprint(verifiedState)
+
+const classification =
+  classifyVerificationResults(results)
+
 process.stdout.write(
   `${JSON.stringify({
     ok: true,
 
     passed,
 
+    classification,
+
     task_id:
       task.task_id,
 
+    verification_mode:
+      verificationMode,
+
     changed_files:
       changed,
+
+    verified_state:
+      verifiedState,
 
     checks:
       results,

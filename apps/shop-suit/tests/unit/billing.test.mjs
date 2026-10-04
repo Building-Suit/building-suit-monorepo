@@ -1,0 +1,80 @@
+import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
+import test from 'node:test'
+
+const migration = await readFile(new URL('../../supabase/migrations/20260928200000_manual_instapay_billing.sql', import.meta.url), 'utf8')
+const trialMigration = await readFile(new URL('../../supabase/migrations/20260930180000_seven_day_shop_trials.sql', import.meta.url), 'utf8')
+const planBillingMigration = await readFile(new URL('../../supabase/migrations/20260929210001_plan_aware_billing_renewals.sql', import.meta.url), 'utf8')
+const databaseTest = await readFile(new URL('../../supabase/tests/shop_billing.sql', import.meta.url), 'utf8')
+const customerPage = await readFile(new URL('../../app/pages/billing.vue', import.meta.url), 'utf8')
+const adminPage = await readFile(new URL('../../app/pages/platform-admin.vue', import.meta.url), 'utf8')
+
+test('new trials are 7 days without rewriting existing trial deadlines', () => {
+  assert.match(trialMigration, /alter table public\.plans alter column trial_days set default 7/)
+  assert.match(trialMigration, /trial_days = 7/)
+  assert.match(trialMigration, /SHOP_TRIAL_DAYS_MUST_BE_7/)
+  assert.match(trialMigration, /check \(trial_days in \(7, 14\)\)/)
+  assert.match(trialMigration, /insert into public\.plan_catalog_terms/)
+  assert.doesNotMatch(trialMigration, /update public\.subscriptions[^;]*trial_end_at/i)
+  assert.match(databaseTest, /v_trial_end <> v_trial_start \+ interval '7 days'/)
+  assert.match(databaseTest, /exact expiry still allowed writes/)
+})
+
+test('customer notices are owner-only, idempotent, and cannot activate access', () => {
+  assert.match(migration, /not shop_private\.is_owner\(p_shop_id\)/)
+  assert.match(migration, /shop_billing_submissions_request_idx/)
+  assert.match(migration, /BILLING_NOTICE_KEY_REUSED/)
+  assert.match(databaseTest, /no-self-activation invariant failed/)
+  assert.match(databaseTest, /employee submitted billing/)
+  assert.match(databaseTest, /cross-shop billing submission/)
+  assert.doesNotMatch(customerPage, /platform_admin_billing_command/)
+})
+
+test('manual operator approval is terminal, atomic, and audited', () => {
+  assert.match(migration, /where submission\.id = p_submission_id for update/)
+  assert.match(migration, /v_submission\.status not in \('submitted', 'under_review'\)/)
+  assert.match(migration, /update public\.subscriptions set plan_id = v_submission\.plan_id, status = 'active'/)
+  assert.match(migration, /create table public\.platform_billing_events/)
+  assert.match(migration, /platform_billing_events_immutable/)
+  assert.match(planBillingMigration, /lock_all_plan_resources/)
+  assert.match(planBillingMigration, /effective_price_amount/)
+  assert.match(databaseTest, /approval did not activate exactly once/)
+  assert.match(databaseTest, /second approval extended subscription/)
+})
+
+test('notices freeze the requested plan, interval, and effective commercial quote', () => {
+  assert.match(planBillingMigration, /p_requested_plan_slug text/)
+  assert.match(planBillingMigration, /plan_slug_snapshot/)
+  assert.match(planBillingMigration, /billing_interval_snapshot/)
+  assert.match(planBillingMigration, /list_price_amount/)
+  assert.match(planBillingMigration, /BILLING_NOTICE_COMMERCIAL_TERMS_IMMUTABLE/)
+  assert.match(databaseTest, /plan-change notice mutated access or lost its quote/)
+  assert.match(customerPage, /p_requested_plan_slug/)
+})
+
+test('renewals use catalog terms and downgrades fail while usage blockers remain', () => {
+  assert.match(planBillingMigration, /when 'monthly' then interval '1 month'/)
+  assert.doesNotMatch(planBillingMigration, /p_payload ->> 'days'/)
+  assert.match(planBillingMigration, /PLAN_CHANGE_BLOCKED/)
+  assert.match(databaseTest, /over-limit downgrade was approved/)
+  assert.match(adminPage, /usageBlockers/)
+})
+
+test('negotiated pricing and amount mismatches require append-only audit evidence', () => {
+  assert.match(planBillingMigration, /create table public\.subscription_price_overrides/)
+  assert.match(planBillingMigration, /subscription_price_overrides_immutable/)
+  assert.match(planBillingMigration, /set_price_override/)
+  assert.match(planBillingMigration, /BILLING_AMOUNT_MISMATCH_OVERRIDE_REQUIRED/)
+  assert.match(databaseTest, /active founder price was not frozen/)
+  assert.match(databaseTest, /amount mismatch activated without override evidence/)
+  assert.match(adminPage, /amountOverrideReason/)
+})
+
+test('billing surfaces are bilingual and make manual verification explicit', () => {
+  assert.match(customerPage, /This is not automatic bank verification/)
+  assert.match(customerPage, /التحويل بيتراجع يدويًا، مش بيتطابق تلقائيًا/)
+  assert.match(customerPage, /const ar = \{/)
+  assert.match(adminPage, /platform_admin_billing_read/)
+  assert.match(adminPage, /platform_admin_billing_command/)
+  assert.doesNotMatch(`${migration}\n${planBillingMigration}\n${customerPage}\n${adminPage}`, /paymob|webhook|automaticVerification[^\n]*true/i)
+})

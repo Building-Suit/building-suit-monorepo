@@ -5,8 +5,9 @@ defineProps<{ incident: Incident }>()
 </script>
 
 <template>
-  <article
-    class="rounded-card border p-4"
+  <BsCard
+    padding="sm"
+    class="border"
     :class="incident.severity === 'critical'
       ? 'border-danger/40 bg-[var(--bs-status-danger-bg)]'
       : incident.severity === 'warning'
@@ -37,5 +38,5 @@ defineProps<{ incident: Incident }>()
       <summary class="cursor-pointer font-bold text-link">Evidence</summary>
       <pre class="mt-2 max-h-64 overflow-auto rounded-control border border-[var(--bs-border)] bg-background p-3 font-mono text-[11px] leading-5 text-fg">{{ JSON.stringify(incident.evidence, null, 2) }}</pre>
     </details>
-  </article>
+  </BsCard>
 </template>
