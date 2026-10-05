@@ -96,6 +96,13 @@ test('required HTTP test cannot pass by exiting zero with skipped coverage',()=>
   const executed=execFileSync(process.execPath,['--test','--test-reporter=tap',f],{encoding:'utf8',env})
   assert.equal(requiredVerificationEvidenceMissing({name:'shop-payment-evidence-http',output:executed}),false)
   assert.equal(requiredVerificationEvidenceMissing({name:'shop-payment-evidence-http',output:'pretend green'}),true)
+  writeFileSync(f,"import test from 'node:test';test('required HTTP',()=>{throw new Error('RLS assertion failed')});\n")
+  let failed=''
+  try {execFileSync(process.execPath,['--test','--test-reporter=tap',f],{encoding:'utf8',env})} catch(error){failed=error.stdout}
+  assert.ok(failed)
+  assert.equal(requiredVerificationEvidenceMissing({name:'shop-payment-evidence-http',output:failed}),false)
+  assert.equal(verificationCommandFailureClass({name:'shop-payment-evidence-http',passed:false,output:failed}),'verification-product-defect')
+
  } finally {rmSync(root,{recursive:true,force:true})}
 })
 

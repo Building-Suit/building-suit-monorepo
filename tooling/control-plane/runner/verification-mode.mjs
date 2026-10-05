@@ -543,6 +543,8 @@ export function commandResultStatus({
 
 export function requiredVerificationEvidenceMissing({ name, output = '' }) {
   if (name !== 'shop-payment-evidence-http') return false
+  const failed = output.match(/^# fail (\d+)$/m)
+  if (Number(failed?.[1] ?? 0) > 0) return false // executed assertions must remain product defects.
   const skipped = output.match(/^# skipped (\d+)$/m)
   const passed = output.match(/^# pass (\d+)$/m)
   return !passed || Number(passed[1]) === 0 || Number(skipped?.[1] ?? 0) > 0
