@@ -6619,7 +6619,7 @@ function recoverWorkflowRun() {
 function observableTaskStatus() {
   const [taskId] = args
   if(!validTaskId(taskId)) {output({ok:false,error:'valid_task_id_required'},64);return}
-  try {output({ok:true,command:'task-status',...taskStatusEvidence(supervisorSnapshot(taskId))})}
+  try { const snapshot=supervisorSnapshot(taskId); const profile=snapshot.packet.task.model_profile ?? snapshot.packet.project.default_model_profile ?? 'standard'; output({ok:true,command:'task-status',...taskStatusEvidence(snapshot,resolveCodexRoute(profile))}) }
   catch(error) {output({ok:false,error:error.message},1)}
 }
 
