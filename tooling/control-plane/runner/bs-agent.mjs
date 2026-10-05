@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
-import { spawnSync } from 'node:child_process'
+import { spawnSync, spawn } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 import {
+  readFileSync,
   mkdirSync,
   mkdtempSync,
   existsSync,
@@ -46,6 +47,8 @@ import { evaluateWorkstreamReadiness, resolveVerificationPlan } from './verifica
 import { mergeVerificationConfig } from '../lib/workstream-readiness.mjs'
 import { evaluateParentSatisfaction } from './parent-satisfaction.mjs'
 import { retryPurpose, verifiedRepairBaselineFiles, repairFailureChecks, preserveAttributedRun, currentExecution, publicationHoldOutcome } from './recovery-evidence.mjs'
+import { durableExecute, receiptPaths, startReceipt, readJson, receiptLocked } from './durable-process.mjs'
+import { recoveryBackoff, retryWithoutProductAttempt, runWakeEligibility, taskStatusEvidence } from './selfhealing.mjs'
 import { initialSupervisorLeaseSql } from './supervisor-lease.mjs'
 import {
   WATCHER_LEASE_MS,
@@ -116,6 +119,12 @@ function execute(program, programArgs = [], options = {}) {
     delete childEnv[variable]
   }
 
+  if (process.env.BS_OPERATION_ID && (program === 'codex' && programArgs[0] === 'exec' || programArgs.some(arg => String(arg).endsWith('/task-verifier.mjs')))) {
+    const role = program === 'codex' ? 'codex' : `verifier:${programArgs[3] ?? 'probe'}:${process.env.BS_OPERATION_INFRA_GENERATION ?? 0}`
+    return durableExecute(path.join(repoRoot, '.local', 'runtime-receipts'), `${process.env.BS_OPERATION_ID}:${role}`, program, programArgs, {
+      ...options, cwd: options.cwd ?? repoRoot, env: childEnv, retryProcessFailure: true,
+    })
+  }
   const result = spawnSync(
     program,
     programArgs,
@@ -457,7 +466,7 @@ function discoverCodexModels() {
   const result = execute(
     process.execPath,
     [
-      'tooling/control-plane/runner/codex-models.mjs',
+      path.join(controlSourceRoot, 'tooling/control-plane/runner/codex-models.mjs'),
     ],
     codexExecutionOptions({
       timeout: 20_000,
@@ -1438,6 +1447,7 @@ function startExecution({
   }
 
 
+  attachRuntimeExecution(executionId)
   return executionId
 }
 
@@ -1491,6 +1501,7 @@ function finishExecution({
 }
 
 function taskRun() {
+  if (!process.env.BS_OPERATION_ID) { taskSupervisor(); return }
   const [taskId] = args
 
   if (!validTaskId(taskId)) {
@@ -1542,7 +1553,9 @@ function taskRun() {
       )
     }
 
-    const executionPreflight = runExecutionPreflight(supervisorSnapshot(taskId), 'implementation')
+    const existingExecution = latestExecution(taskId)
+    const resumeExecution = existingExecution?.status === 'running' ? existingExecution : null
+    const executionPreflight = resumeExecution ? { ready: true } : runExecutionPreflight(supervisorSnapshot(taskId), 'implementation')
     if (!executionPreflight.ready) {
       output({
         ok: false,
@@ -1608,7 +1621,7 @@ function taskRun() {
         1,
       )
 
-    const route =
+    const route = resumeExecution ? { uses_codex: true, profile: resumeExecution.model_profile, model: resumeExecution.model_name, reasoning_effort: resumeExecution.reasoning_effort } :
       firstProfile === 'no_ai'
         ? resolveProfile(
             'no_ai',
@@ -1696,8 +1709,7 @@ function taskRun() {
       )
     }
 
-    const prompt =
-      promptResult.stdout
+    const prompt = resumeExecution?.prompt_path && existsSync(resumeExecution.prompt_path) ? readFileSync(resumeExecution.prompt_path, 'utf8').trim() : promptResult.stdout
 
     const promptPath =
       path.join(
@@ -1777,6 +1789,12 @@ function taskRun() {
     const succeeded =
       successful(codexResult)
 
+    if (!succeeded) {
+      output({ ok: false, command: 'task-run', task_id: taskId, execution_id: executionId,
+        error: 'worker_process_interrupted', classification: { failure_class: 'transient-infrastructure', recovery_action: 'wait-external' },
+        execution: { log_path: logPath, exit_code: codexResult.code } }, 1)
+      return
+    }
     finishExecution({
       executionId,
 
@@ -1866,12 +1884,8 @@ function taskRun() {
     }, succeeded ? 0 : 1)
   }
   catch (error) {
-    recordControlFailure(
-      taskId,
-      'implementation',
-      error.message,
-    )
     output({
+      classification: { failure_class: executionId || isControlDatabaseConnectivityError(error) ? 'transient-infrastructure' : 'safety-stop', recovery_action: executionId || isControlDatabaseConnectivityError(error) ? 'wait-external' : 'safety-stop' },
       ok: false,
       command: 'task-run',
       task_id: taskId,
@@ -2246,6 +2260,7 @@ function finalizeVerification(
 }
 
 function taskVerify() {
+  if (!process.env.BS_OPERATION_ID) { taskSupervisor(); return }
   const [taskId] = args
   let verificationLifecycleStage = 'load'
 
@@ -2969,6 +2984,7 @@ function startRetryExecution(
   }
 
 
+  attachRuntimeExecution(started.execution_id)
   return started
 }
 
@@ -3021,6 +3037,7 @@ function validateRetryWorktree(
 
 
 function taskRetry() {
+  if (!process.env.BS_OPERATION_ID) { taskSupervisor(); return }
   const [taskId] = args
 
   if (!validTaskId(taskId)) {
@@ -3036,9 +3053,8 @@ function taskRetry() {
   }
 
   let newExecutionId = null
-  let prompt = ''
-  let logPath = null
-  let executionFinished = false
+  let prompt
+  let logPath
 
   try {
     const packetResult =
@@ -3068,19 +3084,15 @@ function taskRetry() {
       )
     }
 
-    if (
-      packet.task.status !==
-      'failed'
-    ) {
+    const runningExecution = latestExecution(taskId)
+    const resumeExecution = runningExecution?.status === 'running' ? runningExecution : null
+    if (packet.task.status !== 'failed' && !resumeExecution) {
       throw new Error(
         `Task ${taskId} is ${packet.task.status}, not failed.`,
       )
     }
 
-    const previousExecution =
-      latestExecution(
-        taskId,
-      )
+    const previousExecution = resumeExecution ? currentExecution({ executions: supervisorSnapshot(taskId).executions.filter(e => e.attempt < resumeExecution.attempt) }) : latestExecution(taskId)
 
     if (!previousExecution) {
       throw new Error(
@@ -3088,7 +3100,7 @@ function taskRetry() {
       )
     }
 
-    const executionPreflight = runExecutionPreflight(
+    const executionPreflight = resumeExecution ? { ready: true } : runExecutionPreflight(
       supervisorSnapshot(taskId),
       retryPurpose(supervisorSnapshot(taskId)),
     )
@@ -3147,10 +3159,7 @@ function taskRetry() {
     const nextProfile =
       decision.next_profile
 
-    const route =
-      resolveCodexRoute(
-        nextProfile,
-      )
+    const route = resumeExecution ? { uses_codex: true, profile: resumeExecution.model_profile, model: resumeExecution.model_name, reasoning_effort: resumeExecution.reasoning_effort } : resolveCodexRoute(nextProfile)
 
     const persistedVerificationFailures =
       verificationFailures(
@@ -3391,6 +3400,7 @@ Return a concise repair summary.
         'codex.jsonl',
       )
 
+    if (resumeExecution && existsSync(promptPath)) prompt = readFileSync(promptPath, 'utf8').trim()
     writeFileSync(
       promptPath,
       `${prompt}\n`,
@@ -3596,6 +3606,7 @@ Return a concise repair summary.
       catch {
 
         latestProbe = {
+          classification: { failure_class: 'verification-infrastructure', recovery_action: 'wait-external' },
           ok:
             false,
 
@@ -3851,6 +3862,13 @@ Return a concise repair summary.
               : lastExitCode
           )
 
+    if (!succeeded && (lastExitCode !== 0 || latestProbe?.classification?.failure_class && latestProbe.classification.failure_class !== 'verification-product-defect')) {
+      const classification = latestProbe?.classification ?? { failure_class: 'transient-infrastructure', recovery_action: 'wait-external' }
+      output({ ok: false, command: 'task-retry', task_id: taskId, execution_id: newExecutionId,
+        error: latestProbe ? 'repair_verifier_recovery_required' : 'worker_process_interrupted', classification,
+        probe: latestProbe, execution: { log_path: logPath } }, 1)
+      return
+    }
     finishExecution({
       executionId:
         newExecutionId,
@@ -3942,8 +3960,6 @@ Return a concise repair summary.
       },
     })
 
-    executionFinished =
-      true
 
     const repairFailureClassification =
       !succeeded
@@ -4049,63 +4065,13 @@ Return a concise repair summary.
   }
   catch (error) {
 
-    if (
-      newExecutionId &&
-      !executionFinished
-    ) {
-      try {
-        finishExecution({
-          executionId:
-            newExecutionId,
-
-          status:
-            'failed',
-
-          promptBytes:
-            Buffer.byteLength(
-              prompt,
-              'utf8',
-            ),
-
-          outputBytes:
-            0,
-
-          runLogPath:
-            logPath ?? '',
-
-          metadata: {
-            retry: true,
-
-            infrastructure_error:
-              error.message,
-          },
-        })
-      }
-      catch {
-        // Preserve the original error.
-      }
-    }
-
-    recordControlFailure(
-      taskId,
-      'repair',
-      error.message,
-    )
+    const failureClass = isControlDatabaseConnectivityError(error) || newExecutionId ? 'transient-infrastructure' : 'safety-stop'
 
     output({
       ok: false,
 
-      command:
-        'task-retry',
-
-      task_id:
-        taskId,
-
-      execution_id:
-        newExecutionId,
-
-      error:
-        error.message,
+      command: 'task-retry', task_id: taskId, execution_id: newExecutionId, error: error.message,
+      classification: { failure_class: failureClass, recovery_action: failureClass === 'safety-stop' ? 'safety-stop' : 'wait-external' },
     }, 1)
   }
 }
@@ -4269,6 +4235,7 @@ function completePublication({
 }
 
 function taskPublish() {
+  if (!process.env.BS_OPERATION_ID) { taskSupervisor(); return }
   const [taskId] = args
 
   if (!validTaskId(taskId)) {
@@ -4732,36 +4699,49 @@ function engineTaskPacket(taskId) {
 }
 
 
-function invokeTaskAction(
-  action,
-  taskId,
-) {
-  const result =
-    execute(
-      process.execPath,
-      [
-        agentScriptPath,
-        action,
-        taskId,
-      ],
-      {
-        cwd:
-          repoRoot,
-
-        timeout:
-          70 * 60 * 1000,
-      },
-    )
-
-  return {
-    result,
-
-    payload:
-      parseJson(
-        result.stdout,
-        null,
-      ),
+function invokeTaskAction(action, taskId) {
+  if (!['task-run','task-retry','task-verify','task-publish','task-prepare'].includes(action)) {
+    const result = execute(process.execPath, [agentScriptPath, action, taskId], { cwd: repoRoot, timeout: 70 * 60_000 })
+    return { result, payload: parseJson(result.stdout, null) }
   }
+  const snapshot = supervisorSnapshot(taskId)
+  const existing = snapshot.runtime_operations?.find(op => op.status !== 'consumed')
+  const claimed = existing ? { acquired: true, operation: existing } : parseControlJson(controlQuery(
+    `SELECT control.claim_runtime_operation(:'task_id', :'action', NULLIF(:'execution_id','')::bigint, :'descriptor'::jsonb, :'owner', :'token');`,
+    { task_id: taskId, action, execution_id: String(currentExecution(snapshot)?.execution_id ?? ''),
+      descriptor: JSON.stringify({ source: agentScriptPath, previous_execution_id: currentExecution(snapshot)?.execution_id ?? null }), owner: `${process.pid}@local`, token: randomUUID() },
+  ))
+  if (!claimed.acquired) return { result: { code: 0 }, payload: { ok: false, error: claimed.reason, classification: { failure_class: 'operator-wait', recovery_action: 'wait-operator' } } }
+  const op = claimed.operation
+  if (Date.parse(op.next_wake_at) > Date.now()) return { result: { code: 0 }, payload: { ok: false, error: 'runtime_backoff_pending', classification: { failure_class: 'transient-infrastructure', recovery_action: 'wait-external' } } }
+  const reserved = snapshot.executions?.find(e => e.execution_id === op.execution_id)
+  const completedVerification = snapshot.verification_runs?.filter(v => v.execution_id === op.execution_id && v.status !== 'running').at(-1)
+  const phaseSettled = ['task-run','task-retry'].includes(op.action) && reserved && !['running','queued'].includes(reserved.status) && reserved.execution_id !== op.descriptor?.previous_execution_id
+    || op.action === 'task-verify' && completedVerification && ['passed','failed'].includes(snapshot.packet.task.status)
+  if (phaseSettled) {
+    const failure = snapshot.failures?.filter(f => f.execution_id === op.execution_id && !f.resolved_at).at(-1)
+    const passed = op.action === 'task-verify' ? completedVerification.status === 'passed' : reserved.status === 'succeeded'
+    const classification = failure?.metadata?.classification ?? reserved?.metadata?.verification_probe_classification ?? { failure_class: 'safety-stop', recovery_action: 'safety-stop' }
+    const payload = { ok: passed, execution_id: op.execution_id, command: op.action, replayed_authoritative_state: true, classification: passed ? null : classification, error: passed ? null : 'authoritative_phase_failed' }
+    // Infrastructure formal failures need reverify, rather than replay forever.
+    if (!retryWithoutProductAttempt(classification) || passed) {
+      controlQuery(`UPDATE control.runtime_operations SET status='consumed',result=:'result'::jsonb,updated_at=now() WHERE operation_id=:'id'::uuid;`, { id: op.operation_id, result: JSON.stringify(payload) })
+      return { result: { code: passed ? 0 : 1 }, payload }
+    }
+  }
+  const paths = receiptPaths(path.join(repoRoot, '.local', 'runtime-operations'), op.operation_id, op.infra_retries)
+  startReceipt(paths, { program: process.execPath, args: [agentScriptPath, op.action, taskId], cwd: repoRoot, timeout: 70 * 60_000 }, { ...process.env, BS_OPERATION_ID: op.operation_id, BS_OPERATION_INFRA_GENERATION: String(op.infra_retries) })
+  // A short polling boundary lets n8n return while detached worker survives SSH.
+  let result = readJson(paths.result)
+  if (!result) return { result: { code: 0 }, payload: { ok: false, error: 'runtime_operation_in_flight', classification: { failure_class: 'transient-infrastructure', recovery_action: 'wait-external' }, operation_id: op.operation_id } }
+  const payload = parseJson(result.stdout, null) ?? { ok: false, error: 'malformed_child_response', classification: { failure_class: 'transient-infrastructure', recovery_action: 'wait-external' } }
+  const automatic = payload.ok !== true && retryWithoutProductAttempt(payload.classification)
+  controlQuery(`UPDATE control.runtime_operations SET status=:'status', result=:'result'::jsonb,
+    infra_retries=infra_retries+:'increment'::integer, next_wake_at=now()+(:'backoff'::integer*interval '1 millisecond'),
+    execution_id=(SELECT execution_id FROM control.executions WHERE task_id=:'task_id' ORDER BY attempt DESC LIMIT 1),
+    lease_owner=NULL,lease_token=NULL,lease_expires_at=NULL,updated_at=now() WHERE operation_id=:'id'::uuid;`,
+    { status: automatic ? 'pending' : 'consumed', result: JSON.stringify({ result, payload }), increment: automatic ? '1' : '0', backoff: String(automatic ? recoveryBackoff(op.infra_retries) : 0), task_id: taskId, id: op.operation_id })
+  return { result, payload }
 }
 
 
@@ -4836,6 +4816,8 @@ export function supervisorSnapshot(taskId) {
           WHERE target.task_id = :'task_id'
             AND other.status IN ('in_progress', 'verification', 'passed', 'failed')
         ), '[]'::jsonb),
+        'workflow_run', (SELECT to_jsonb(r) FROM control.workflow_runs r WHERE current_task_id=:'task_id' ORDER BY started_at DESC LIMIT 1),
+        'runtime_operations', COALESCE((SELECT jsonb_agg(to_jsonb(o) ORDER BY created_at) FROM control.runtime_operations o WHERE task_id=:'task_id' AND status<>'consumed'),'[]'::jsonb),
         'recovery', control.current_task_recovery_condition(:'task_id')
       );
     `,
@@ -5199,7 +5181,7 @@ function taskExecutionPreflight() {
     const preflight = runExecutionPreflight(snapshot)
     const recoveryPlan = preflightRecoveryPlan(snapshot, preflight)
     recordSupervisorRecovery(snapshot, recoveryPlan, {
-      idempotencyKey: `preflight:${preflight.fingerprint}`,
+      idempotencyKey: `${randomUUID()}:preflight:${preflight.fingerprint}`,
       status: preflight.ready ? 'resolved' : preflight.kind === 'stop' ? 'resolved' : 'active',
       condition: { preflight: true, preflight_fingerprint: preflight.fingerprint, checks: preflight.checks },
       metadata: { preflight: true, context: preflight.context },
@@ -5224,8 +5206,8 @@ function recordSupervisorRecovery(snapshot, plan, options = {}) {
     .at(-1)
   const resumeIdentity = supervisorResumeIdentity(task.task_id)
   const heartbeat = options.heartbeat ?? new Date().toISOString()
-  const nextWake = plan.next_action === 'wait-external'
-    ? new Date(Date.now() + 5 * 60 * 1000).toISOString()
+  const nextWake = plan.kind === 'wait' && !['wait-operator','wait-decision','safety-stop'].includes(plan.next_action) || plan.kind === 'reconcile'
+    ? new Date(Date.now() + recoveryBackoff(snapshot.runtime_operations?.at(-1)?.infra_retries ?? 0)).toISOString()
     : ''
   const condition = {
     fingerprint: plan.fingerprint,
@@ -5585,7 +5567,6 @@ function taskSupervisor() {
   const token = randomUUID()
   const leaseExpiresAt = new Date(Date.now() + 80 * 60 * 1000).toISOString()
   const trail = []
-  let leaseAcquired = false
 
   try {
     let snapshot = supervisorSnapshot(taskId)
@@ -5644,7 +5625,6 @@ function taskSupervisor() {
       output({ ok: true, command: 'task-supervise', task_id: taskId, status: 'wait', reason: 'supervisor_lease_contended', lease_expires_at: lease?.recovery?.lease_expires_at ?? null, trail })
       return
     }
-    leaseAcquired = true
 
     for (let step = 1; step <= 16; step++) {
       snapshot = evaluateSupervisorParentSatisfaction(supervisorSnapshot(taskId))
@@ -5673,7 +5653,7 @@ function taskSupervisor() {
         return
       }
 
-      if (['task-run', 'task-retry'].includes(plan.command)) {
+      if (['task-run', 'task-retry'].includes(plan.command) && !plan.operation) {
         const preflight = runExecutionPreflight(
           snapshot,
           plan.command === 'task-retry'
@@ -5692,7 +5672,7 @@ function taskSupervisor() {
         const keepLeaseForReconciliation = Boolean(reconciliationAction)
 
         const persistedRecovery = recordSupervisorRecovery(snapshot, recoveryPlan, {
-          idempotencyKey: `preflight:${preflight.fingerprint}`,
+          idempotencyKey: `${token}:preflight:${step}:${preflight.fingerprint}`,
           status: preflight.ready ? 'active' : preflight.kind === 'stop' ? 'resolved' : 'active',
           leaseOwner: preflight.ready || keepLeaseForReconciliation ? owner : '',
           leaseToken: preflight.ready || keepLeaseForReconciliation ? token : '',
@@ -5876,13 +5856,13 @@ function taskSupervisor() {
     const exhaustedSnapshot = supervisorSnapshot(taskId)
     const exhaustedPlan = {
       ...planSupervisorStep(exhaustedSnapshot),
-      kind: 'terminal', next_action: 'safety-stop', failure_class: 'safety-stop',
-      reason: 'supervisor_step_limit_reached', recoverable: false,
+      kind: 'wait', next_action: 'wait-external', failure_class: 'transient-infrastructure',
+      reason: 'supervisor_time_slice_yield', recoverable: true,
     }
     recordSupervisorRecovery(exhaustedSnapshot, exhaustedPlan, {
-      idempotencyKey: `${token}:step-limit`, status: 'resolved',
+      idempotencyKey: `${token}:step-limit`, status: 'active',
     })
-    output({ ok: false, command: 'task-supervise', task_id: taskId, error: 'supervisor_step_limit_reached', trail }, 1)
+    output({ ok: true, command: 'task-supervise', task_id: taskId, status: 'wait', recovery: exhaustedPlan, trail })
   }
   catch (error) {
     if (isControlDatabaseConnectivityError(error)) {
@@ -5897,7 +5877,7 @@ function taskSupervisor() {
       return
     }
 
-    if (leaseAcquired) {
+    {
       try {
         const failedSnapshot = supervisorSnapshot(taskId)
         const currentPlan = planSupervisorStep(failedSnapshot)
@@ -6578,6 +6558,71 @@ function taskEngine() {
 }
 
 
+function attachRuntimeExecution(executionId) {
+  if (!process.env.BS_OPERATION_ID) return
+  controlQuery(`UPDATE control.runtime_operations SET execution_id=:'execution_id'::bigint, status='running',updated_at=now() WHERE operation_id=:'id'::uuid;`, { id: process.env.BS_OPERATION_ID, execution_id: String(executionId) })
+}
+
+function recoveryWatch() {
+  try {
+    const candidates = parseControlJson(controlQuery(`SELECT control.runtime_recovery_candidates(10);`))
+    const outcomes = []
+    for (const candidate of candidates) {
+      const row = parseControlJson(controlQuery(`SELECT to_jsonb(r) FROM control.workflow_runs r WHERE run_id=:'id'::uuid;`, { id: candidate.run_id }))
+      const snapshot = row.current_task_id ? supervisorSnapshot(row.current_task_id) : null
+      const eligible = runWakeEligibility(row, snapshot?.recovery, snapshot?.runtime_operations?.at(-1))
+      if (!eligible.eligible) { outcomes.push({ run_id: row.run_id, ...eligible }); continue }
+      const lockDir = path.join(repoRoot,'.local','runtime-run-locks')
+      mkdirSync(lockDir,{ recursive:true,mode:0o700 })
+      const lock = path.join(lockDir,`${row.run_id}.lock`)
+      if (receiptLocked({lock})) { outcomes.push({ run_id: row.run_id, eligible:false,reason:'controller_process_active' }); continue }
+      const child = spawn('flock',['-n',lock,process.execPath,agentScriptPath,'run-recover',row.run_id],{ cwd:repoRoot,env:process.env,detached:true,stdio:'ignore' })
+      child.unref()
+      outcomes.push({ run_id:row.run_id,task_id:row.current_task_id,action:'existing_run_wake',pid:child.pid })
+    }
+    output({ok:true,command:'recovery-watch',outcomes})
+  } catch(error) {
+    output({ok:false,command:'recovery-watch',reason:'control_database_unavailable',retry_after_ms:30_000,error:error.message},1)
+  }
+}
+function recoverWorkflowRun() {
+  const [runId] = args
+  if (!validRunId(runId)) { output({ok:false,error:'valid_run_id_required'},64); return }
+  try {
+    // Same SQL authority as BS20. Stable watchdog owner token is not an n8n
+    // owner token and cannot bypass a currently held controller lease.
+    for(let step=0;step<25;step++) {
+      const gate = parseControlJson(controlQuery(`SELECT control.workflow_run_gate(:'id'::uuid);`,{id:runId}))
+      if (!gate.should_continue) { output({ok:true,status:gate.reason,run:gate}); return }
+      const acquisition = parseControlJson(controlQuery(`SELECT control.acquire_workflow_run_task(:'id'::uuid,'cp-batch-v2',:'fingerprint',:'token','runner');`,{id:runId,fingerprint:process.env.BS_BATCH_CONTROLLER_FINGERPRINT ?? 'c51e2846c1fe3966ac5705a2ba6e21c11804e4f1e0ea3be37a14ef2c47cca075',token:`selfheal:${runId}`}))
+      if (!acquisition.acquired && acquisition.action !== 'credit_completion') { output({ok:true,status:'wait',run_id:runId,acquisition}); return }
+      const taskId = acquisition.packet?.task?.task_id ?? acquisition.task_id
+      if (!taskId) throw new Error('acquisition_task_identity_missing')
+      let response = { status:'terminal',ok:true,recovery:{reason:'task_complete'} }
+      if (acquisition.action !== 'credit_completion') {
+        const result = execute(process.execPath,[agentScriptPath,'task-supervise',taskId],{cwd:repoRoot,timeout:75*60_000})
+        response = parseJson(result.stdout,null)
+        if (!response) throw new Error('malformed_supervisor_response')
+      }
+      if (response.ok && response.status === 'terminal' && response.recovery?.reason === 'task_complete') {
+        controlQuery(`SELECT control.record_workflow_task_success(:'id'::uuid,:'task_id',:'key');`,{id:runId,task_id:taskId,key:`${runId}:${taskId}`})
+        continue
+      }
+      if (response.status === 'terminal' && response.recovery?.reason === 'retry_budget_exhausted') {
+        controlQuery(`SELECT control.finish_workflow_run(:'id'::uuid,'failed');`,{id:runId})
+      }
+      output({ok:true,command:'run-recover',run_id:runId,task_id:taskId,status:response.status,response});return
+    }
+    output({ok:true,command:'run-recover',run_id:runId,status:'time-slice-yield'})
+  } catch(error) { output({ok:false,command:'run-recover',run_id:runId,error:error.message,classification:{failure_class:'transient-infrastructure',recovery_action:'wait-external'}},1) }
+}
+function observableTaskStatus() {
+  const [taskId] = args
+  if(!validTaskId(taskId)) {output({ok:false,error:'valid_task_id_required'},64);return}
+  try {output({ok:true,command:'task-status',...taskStatusEvidence(supervisorSnapshot(taskId))})}
+  catch(error) {output({ok:false,error:error.message},1)}
+}
+
 function validRunId(value) {
   return (
     typeof value === 'string' &&
@@ -6614,7 +6659,7 @@ function workflowRunStart() {
       controlQuery(
         `
           SELECT
-            control.start_workflow_run(
+            control.ensure_workflow_run(
               :'suit_slug',
               :'max_tasks'::integer
             );
@@ -6990,6 +7035,18 @@ switch (command) {
 
   case 'task-supervise':
     taskSupervisor()
+    break
+
+  case 'recovery-watch':
+    recoveryWatch()
+    break
+
+  case 'run-recover':
+    recoverWorkflowRun()
+    break
+
+  case 'task-status':
+    observableTaskStatus()
     break
 
   case 'external-watch':

@@ -382,7 +382,7 @@ function artifactScenarios({ workflows, manifest, baselineFixture, baselineFixtu
   const baselineDigestAfter = sha256(baselineFixtureAfter)
   return [
     scenario('generated-n8n-replacement-compatibility', 'generated BS-10, BS-20, and BS-21 fixtures are evaluated as cutover candidates', ['validate identities', 'reject retry graph', 'reject hardcoded registry'], validation.valid ? ['identities valid', 'no retry graph', 'no hardcoded registry'] : validation.errors, {
-      three_workflows_present: workflows.length === 3,
+      three_controllers_and_optional_watchdog_present: workflows.length === 3 || workflows.length === 4 && workflows.some(w => w.id === 'BS31SelfHealingRecovery'),
       controller_contract_valid: validation.valid,
       compatibility_clean: compatibility.compatible,
       generated_inactive: workflows.every(workflow => workflow.active === false),

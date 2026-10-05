@@ -21,7 +21,7 @@
       "name": "BS-20 — Continue Suit",
       "live_id": "pg0BEkbP9E4H4RqB",
       "artifact": "pg0BEkbP9E4H4RqB.json",
-      "sha256": "48d24bfc072442872bcda191837763c157ab6e7609a98baff4c210d16460cdd7",
+      "sha256": "de4f0b875b2b75dd5b01d05caed971f94a0f443a88b858170b8ce081acee83cc",
       "preserves_identity": true,
       "generated_active": false
     },
@@ -30,6 +30,14 @@
       "live_id": "qHGzP3b0PS82IYSw",
       "artifact": "qHGzP3b0PS82IYSw.json",
       "sha256": "e45240dcf33c5e3b6413b185c76941ea61948f8d2ae2c703aa2a1a3c1743e8ae",
+      "preserves_identity": true,
+      "generated_active": false
+    },
+    {
+      "name": "BS-31 — Persisted Recovery Watchdog",
+      "live_id": "BS31SelfHealingRecovery",
+      "artifact": "BS31SelfHealingRecovery.json",
+      "sha256": "9bd67dc5c23971eb88fc976a0998e0c8656cca66a8ef7b6e7ac01ba3fa8de6cc",
       "preserves_identity": true,
       "generated_active": false
     }

@@ -1939,5 +1939,5 @@ test('supervisor gates token-bearing implementation actions with audited preflig
   const supervisor = runner.slice(runner.indexOf('function taskSupervisor()'), runner.indexOf('function taskEngine()'))
   assert.match(supervisor, /\['task-run', 'task-retry'\]\.includes\(plan\.command\)/)
   assert.ok(supervisor.indexOf('runExecutionPreflight(') < supervisor.indexOf('invokeTaskAction(plan.command, taskId)'))
-  assert.match(supervisor, /idempotencyKey: `preflight:\$\{preflight\.fingerprint\}`/)
+  assert.match(supervisor, /idempotencyKey: `\$\{token\}:preflight:\$\{step\}:\$\{preflight\.fingerprint\}`/)
 })

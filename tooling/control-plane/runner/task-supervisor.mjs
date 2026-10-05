@@ -1,4 +1,5 @@
 import { executionFailure, failedVerificationEvidence } from './recovery-evidence.mjs'
+import { AUTO_CLASSES } from './selfhealing.mjs'
 import { createHash } from 'node:crypto'
 
 const explicitWaitClasses = new Map([
@@ -138,6 +139,15 @@ export function planSupervisorStep(snapshot) {
   const publication = latest(snapshot.publications, 'pull_request_id')
   const recovery = snapshot.recovery
 
+  const run = snapshot.workflow_run
+  if (run && (run.stop_requested || run.maintenance_requested || run.status !== 'running' || run.completed_tasks >= run.max_tasks)) {
+    return decision('wait', 'wait-operator', 'operator-wait', run.stop_requested ? 'stop_requested' : run.maintenance_requested ? 'maintenance_requested' : run.completed_tasks >= run.max_tasks ? 'limit_reached' : 'run_not_running', { execution, fingerprint })
+  }
+  const operation = snapshot.runtime_operations?.find(op => op.status !== 'consumed')
+  if (operation && !(recovery?.status === 'active' && ['wait-operator','wait-decision','safety-stop'].includes(recovery.next_action))) {
+    if (Date.parse(operation.next_wake_at) > Date.now()) return decision('wait','wait-external','transient-infrastructure','runtime_backoff_pending',{ operation, execution, fingerprint })
+    return decision('act','reconcile-runtime','transient-infrastructure','runtime_operation_resume',{ command: operation.action, operation, execution, fingerprint })
+  }
   if (
     recovery?.status === 'active' &&
     recovery.condition?.preflight !== true &&
@@ -235,6 +245,9 @@ export function planSupervisorStep(snapshot) {
       })
     }
 
+    if (AUTO_CLASSES.has(explicitFailure?.failure_class) && !String(explicitFailure.failure_class).startsWith('verification-')) {
+      return decision('wait','wait-external',explicitFailure.failure_class,'same_execution_infrastructure_recovery',{ execution, verification, publication, fingerprint })
+    }
     const verificationFailureClass =
       (String(explicitFailure?.failure_class ?? '').startsWith('verification-')
         ? explicitFailure.failure_class
@@ -312,10 +325,14 @@ export function planSupervisorStep(snapshot) {
 export function classifySupervisorFailure({ command, payload, attempt, maxAttempts }) {
   const error = String(payload?.publication?.error ?? payload?.error ?? 'task_action_failed')
   const lower = error.toLowerCase()
-  const verificationClass = payload?.classification?.failure_class
+  const verificationClass = payload?.classification?.failure_class ?? payload?.recovery?.failure_class ?? payload?.failure_class ?? payload?.probe?.classification?.failure_class
   const explicitWait = explicitWaitClasses.get(verificationClass)
   if (explicitWait) {
     return decision(explicitWait === 'safety-stop' ? 'terminal' : 'wait', explicitWait, verificationClass, error.slice(0, 160), { recoverable: explicitWait !== 'safety-stop' })
+  }
+
+  if (['transient-infrastructure', 'repository-state', 'publication-reconciliation', 'flaky-verification'].includes(verificationClass)) {
+    return decision('wait','wait-external',verificationClass,error.slice(0,160))
   }
 
   if (verificationClass === 'verification-lifecycle') {
@@ -346,6 +363,8 @@ export function classifySupervisorFailure({ command, payload, attempt, maxAttemp
     )
   }
 
+  if (verificationClass) return decision('terminal','safety-stop','safety-stop','unknown_explicit_failure_class',{ recoverable: false })
+
   if (lower.includes('no_publishable_changes')) {
     return decision('act', 'complete-no-changes', 'no-change', 'no_publishable_changes', {
       command: 'handle-no-publishable-changes', recoverable: false,
@@ -360,12 +379,13 @@ export function classifySupervisorFailure({ command, payload, attempt, maxAttemp
   if (/timeout|network|fetch|connect|temporar|unavailable|pr_create_failed|unable_to_find_existing_pr|unable_to_inspect_remote_branch|unable_to_read_created_pr|stack_parent_resolution_failed/.test(lower)) {
     return decision('wait', 'wait-external', 'external-wait', 'external_dependency_unavailable')
   }
-  if (command === 'task-verify' || lower.includes('verification_failed')) {
+  if (lower === 'verification_failed' || lower === 'repair_verification_failed') {
     if (Number(attempt ?? 0) >= Number(maxAttempts ?? 0)) {
       return decision('terminal', 'safety-stop', 'safety-stop', 'retry_budget_exhausted', { recoverable: false })
     }
     return decision('act', 'repair', 'verification-product-defect', 'verification_failed', { command: 'task-retry' })
   }
+  if (command === 'task-verify' || /malformed_child_response|durable_operation_pending|worker_process_interrupted|runtime_operation_in_flight/.test(lower)) return decision('wait','wait-external','transient-infrastructure','process_recovery_required')
   if (/parent|worktree|branch mismatch|dirty|upstream/.test(lower)) {
     return decision('wait', 'wait-operator', 'repository-state', 'repository_reconciliation_requires_operator')
   }

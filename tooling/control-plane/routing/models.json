@@ -24,7 +24,7 @@
       "uses_codex": true,
       "reasoning_effort": "medium",
       "model_preferences": [
-        "gpt-5.6-sol",
+        "gpt-6.1-sol",
         "gpt-5.6-terra"
       ],
       "description": "Normal implementation, debugging and multi-file feature work."
@@ -35,7 +35,7 @@
       "reasoning_effort": "high",
       "model_preferences": [
         "gpt-6-astra",
-        "gpt-5.6-sol",
+        "gpt-6.1-sol",
         "gpt-5.6-terra"
       ],
       "description": "Financial, authorization, concurrency, architecture and other high-risk work."
@@ -46,7 +46,7 @@
       "reasoning_effort": "high",
       "model_preferences": [
         "gpt-6-astra",
-        "gpt-5.6-sol",
+        "gpt-6.1-sol",
         "gpt-5.6-terra"
       ],
       "description": "Focused independent review of high-risk changes."

@@ -1,0 +1,107 @@
+{
+  "id": "BS31SelfHealingRecovery",
+  "name": "BS-31 — Persisted Recovery Watchdog",
+  "active": false,
+  "nodes": [
+    {
+      "id": "bs30-cadence",
+      "name": "Recovery Cadence",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "bs30-watch",
+      "name": "Wake Eligible Existing Runs",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "rzoRWvnSBG7sU1Oh",
+          "mode": "list",
+          "cachedResultName": "BS-00 — Runner Command"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "command": "bs-agent recovery-watch"
+          },
+          "matchingColumns": [
+            "command"
+          ],
+          "schema": [
+            {
+              "id": "command",
+              "displayName": "command",
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "bs30-status",
+      "name": "Recovery Status",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {
+        "jsCode": "return [{json:{...$json,component:'persisted-recovery-watchdog',no_new_runs:true}}];"
+      }
+    }
+  ],
+  "connections": {
+    "Recovery Cadence": {
+      "main": [
+        [
+          {
+            "node": "Wake Eligible Existing Runs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wake Eligible Existing Runs": {
+      "main": [
+        [
+          {
+            "node": "Recovery Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

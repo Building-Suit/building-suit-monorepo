@@ -58,7 +58,7 @@ test('migration 001..028 and upgrade 027->028 preserve authoritative full lifecy
   psql(adminUrl, ['-c', `CREATE DATABASE ${database}`])
   try {
     const migrations = readdirSync(path.join(root, 'tooling/control-plane/sql'))
-      .filter(file => /^\d{3}_.+\.sql$/.test(file))
+      .filter(file => /^\d{3}_.+\.sql$/.test(file) && !file.startsWith('029_'))
       .sort()
     assert.ok(['17', '18'].includes(psql(databaseUrl.href, ['-Atqc', "SELECT current_setting('server_version_num')::integer / 10000"])))
     assert.equal(psql(databaseUrl.href, ['-Atqc', "SELECT current_setting('check_function_bodies')"]), 'on')
@@ -125,6 +125,9 @@ test('migration 001..028 and upgrade 027->028 preserve authoritative full lifecy
 
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/batch-readiness-authority-smoke.sql')])
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/batch-readiness-real-graph-lifecycle-smoke.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/029_selfhealing_runtime_operations.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/selfhealing-postgres-smoke.sql')])
+
   }
   finally {
     parsed.pathname = '/postgres'

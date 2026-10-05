@@ -56,7 +56,7 @@ export function resolveProfile(
   }
 
   const visibleModels = availableModels.filter(
-    model => model.hidden !== true,
+    model => model.hidden !== true && !['gpt-5.6-sol'].includes(model.model ?? model.id),
   )
 
   if (visibleModels.length === 0) {
