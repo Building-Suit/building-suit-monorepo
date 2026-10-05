@@ -5,6 +5,34 @@ export function csvCell(value: unknown): string {
 }
 
 export type BsDataTableRowAction = 'edit' | 'delete' | 'archive' | 'void'
+export type BsDataTableAlign = 'start' | 'center' | 'end'
+export type BsDataTableWidth = 'selection' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'content'
+export type BsDataTableSticky = 'start' | 'end'
+
+/**
+ * Bs-owned column description. Presentation is intentionally semantic: Suit
+ * consumers cannot pass vendor classes, styles, or passthrough configuration.
+ * A `cell-${key}` slot may provide domain presentation while keeping the
+ * rendered content behind the Bs-only template boundary.
+ */
+export interface BsDataTableColumn<Row extends object = Record<string, unknown>> {
+  key: string
+  field?: string
+  header: string
+  value?: (row: Row) => unknown
+  format?: (value: unknown, row: Row) => string | number | null | undefined
+  align?: BsDataTableAlign
+  headerAlign?: BsDataTableAlign
+  width?: BsDataTableWidth
+  sticky?: BsDataTableSticky
+  sortable?: boolean
+  sortField?: string
+  filterField?: string
+  filterMatchMode?: string
+  hidden?: boolean
+  exportable?: boolean
+  selectionMode?: 'single' | 'multiple'
+}
 
 /**
  * Presentation capabilities are deliberately separate from server authority.

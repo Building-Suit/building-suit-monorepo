@@ -64,8 +64,9 @@ async function openAuthenticatedShell(page: Page) {
   await page.goto('/platform-admin')
   await expect(page).toHaveURL(/\/login\?operator=1/)
   await expect(page.locator('form')).toHaveAttribute('data-hydrated', 'true')
-  await page.locator('#email').fill(user.email)
-  await page.locator('#password').fill('synthetic-password')
+  // Label text includes BsField's aria-hidden required marker.
+  await page.getByLabel(/^Email\s*\*?$/).fill(user.email)
+  await page.getByLabel(/^Password\s*\*?$/).fill('synthetic-password')
   await page.locator('button[type=submit]').click()
   await expect(page).toHaveURL('/platform-admin')
 }
