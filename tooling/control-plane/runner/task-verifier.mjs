@@ -400,7 +400,7 @@ function omittedCheck({
         : 'skipped',
     failure_class: failureClass,
     exit_code: null,
-    summary: missingEvidence ? 'Required HTTP coverage did not execute all checks; disposable fixture evidence is still required.\n' + summary : summary,
+    summary,
     log_path: null,
     elapsed_ms: 0,
   }
