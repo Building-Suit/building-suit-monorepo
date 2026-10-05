@@ -50,6 +50,7 @@ CREATE OR REPLACE FUNCTION control.runtime_recovery_candidates(p_limit integer D
   LEFT JOIN control.recovery_states s ON s.resume_identity='task:'||r.current_task_id
   LEFT JOIN control.runtime_operations o ON o.task_id=r.current_task_id AND o.status IN ('pending','running','settled')
   WHERE r.status='running' AND r.current_task_id IS NOT NULL AND NOT r.stop_requested AND NOT r.maintenance_requested AND r.completed_tasks<r.max_tasks
+  AND s.next_action IS DISTINCT FROM 'safety-stop'
   AND (s.status IS DISTINCT FROM 'active' OR s.next_action NOT IN ('wait-operator','wait-decision','safety-stop'))
   AND (o.operation_id IS NOT NULL OR s.next_wake_at IS NULL OR s.next_wake_at<=now())
   ORDER BY r.started_at LIMIT greatest(1,least(p_limit,25))

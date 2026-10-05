@@ -9,6 +9,7 @@ export function runWakeEligibility(run, recovery, operation, now = Date.now()) {
   if (run.stop_requested) return { eligible: false, reason: 'stop_requested' }
   if (run.maintenance_requested) return { eligible: false, reason: 'maintenance_requested' }
   if (run.completed_tasks >= run.max_tasks) return { eligible: false, reason: 'limit_reached' }
+  if (recovery?.next_action === 'safety-stop') return { eligible: false, reason: recovery.error_code ?? 'safety-stop' }
   if (recovery?.status === 'active' && HUMAN_ACTIONS.has(recovery.next_action)) return { eligible: false, reason: recovery.error_code ?? recovery.next_action }
   if (operation && Date.parse(operation.next_wake_at) > now) return { eligible: false, reason: 'backoff_pending' }
   if (!operation && recovery?.status === 'active' && Date.parse(recovery.next_wake_at ?? '') > now) return { eligible: false, reason: 'backoff_pending' }

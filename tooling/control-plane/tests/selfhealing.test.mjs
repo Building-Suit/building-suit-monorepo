@@ -107,3 +107,7 @@ test('selfheal BS00 persisted transport loop retries SSH/DB but never explicit p
  assert.equal(invoke({ssh_error:'permission denied authentication failed'}).transport_retry,false)
  assert.equal(w.nodes.find(n=>n.name==='Persist RPC Backoff').type,'n8n-nodes-base.wait')
 })
+
+test('selfheal resolved terminal safety evidence still prevents watchdog wake',()=>{
+  assert.equal(runWakeEligibility({status:'running',completed_tasks:0,max_tasks:1},{status:'resolved',next_action:'safety-stop',error_code:'unsafe_unknown_response'}).eligible,false)
+})
