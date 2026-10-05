@@ -142,3 +142,6 @@ export const interactionPolicy = Object.freeze({
   protectDirtyForms: true,
   confirmationPresentation: 'modal',
 } as const)
+
+export { formatPresentationMoney, usagePercentage } from './presentation.ts'
+export type { BsMoneyFormatOptions } from './presentation.ts'

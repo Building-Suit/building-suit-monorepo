@@ -41,3 +41,5 @@ The shared system supplies the layout composition for product applications: land
 Landing motion is progressive enhancement owned by `packages/ux/src/composables/useLandingMotion.ts`. It dynamically loads GSAP and ScrollTrigger on the client, scopes selectors to the mounted landing root, reverts the context on unmount and does nothing when reduced motion is requested. No essential content is hidden in CSS, so SSR output and no-JavaScript rendering remain complete.
 
 The `/components` route in the documentation app is the live catalogue. Check English/Arabic, LTR/RTL, light/dark, narrow screens, keyboard navigation and focus whenever changing shared components.
+
+The remaining workflow families are documented in [workflow presentation](workflow-presentation.md): exact money, usage meters, setup, imports, teams, reviews, metric charts, hierarchy/flow, repeating rows and printable documents. Their typed inputs preserve product ownership of policy, calculations and commands.
