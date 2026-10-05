@@ -559,7 +559,8 @@ export function verificationCommandFailureClass({ name, required = true, passed,
   // identities and bridge fixtures. Preserve that missing prerequisite as a
   // required gate; an HTTP/RLS assertion failure remains a product defect.
   if (name === 'shop-payment-evidence-http' &&
-      /^(?:#\s*)?Error: SHOP_EVIDENCE_[A-Z_]+ is required for the disposable local evidence test$/m.test(output)) {
+      (/^(?:#\s*)?Error: SHOP_EVIDENCE_[A-Z_]+ is required for the disposable local evidence test$/m.test(output) ||
+       /^(?:#\s*)?AssertionError \[ERR_ASSERTION\]: Disposable local payment-evidence fixture is required; missing: SHOP_EVIDENCE_[A-Z_]+(?:, SHOP_EVIDENCE_[A-Z_]+)*$/m.test(output))) {
     return 'verification-required-check-unavailable'
   }
   return 'verification-product-defect'

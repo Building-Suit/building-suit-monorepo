@@ -192,3 +192,11 @@ test('persisted explicit external/operator classes retain their route without a 
   assert.notEqual(result.reason,'retry_budget_exhausted')
  }
 })
+
+
+test('missing Shop HTTP identity fixture is unavailable even when node reports a failed test file', () => {
+ const output = '# AssertionError [ERR_ASSERTION]: Disposable local payment-evidence fixture is required; missing: SHOP_EVIDENCE_ANON_KEY, SHOP_EVIDENCE_OWNER_TOKEN\n# fail 1\n';
+ assert.equal(verificationCommandFailureClass({ name: 'shop-payment-evidence-http', passed: false, output }), 'verification-required-check-unavailable');
+ assert.equal(verificationCommandFailureClass({ name: 'shop-payment-evidence-http', passed: false, output: '# AssertionError [ERR_ASSERTION]: outsider read returned 200\n# fail 1\n' }), 'verification-product-defect');
+ assert.equal(verificationCommandFailureClass({ name: 'another-check', passed: false, output }), 'verification-product-defect');
+});
