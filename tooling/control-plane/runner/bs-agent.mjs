@@ -45,7 +45,7 @@ import {
 import { evaluateWorkstreamReadiness, resolveVerificationPlan } from './verification-mode.mjs'
 import { mergeVerificationConfig } from '../lib/workstream-readiness.mjs'
 import { evaluateParentSatisfaction } from './parent-satisfaction.mjs'
-import { retryPurpose, verifiedRepairBaselineFiles, repairFailureChecks, preserveAttributedRun, currentExecution } from './recovery-evidence.mjs'
+import { retryPurpose, verifiedRepairBaselineFiles, repairFailureChecks, preserveAttributedRun, currentExecution, publicationHoldOutcome } from './recovery-evidence.mjs'
 import { initialSupervisorLeaseSql } from './supervisor-lease.mjs'
 import {
   WATCHER_LEASE_MS,
@@ -4431,6 +4431,13 @@ function taskPublish() {
         gates: prePublicationGates,
       }, 1)
 
+      return
+    }
+
+    const publicationHold = publicationHoldOutcome()
+    if (publicationHold) {
+      recordControlFailure(taskId, 'publication', publicationHold.error, publicationHold)
+      output({ ...publicationHold, command: 'task-publish', task_id: taskId }, 1)
       return
     }
 

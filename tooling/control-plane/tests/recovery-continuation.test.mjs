@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { execFileSync } from 'node:child_process'
 import { planSupervisorStep, classifySupervisorFailure } from '../runner/task-supervisor.mjs'
-import { retryPurpose, verifiedRepairBaselineFiles, repairFailureChecks, preserveAttributedRun } from '../runner/recovery-evidence.mjs'
+import { retryPurpose, verifiedRepairBaselineFiles, repairFailureChecks, preserveAttributedRun, publicationHoldOutcome } from '../runner/recovery-evidence.mjs'
 import { evaluateExecutionPreflight, repairPreflightPublicationRuntimeFiles } from '../runner/task-preflight.mjs'
 import { publicationStateFingerprint } from '../runner/publication-preflight.mjs'
 import { classifyVerificationResults, resolveVerificationPlan } from '../runner/verification-mode.mjs'
@@ -62,4 +62,12 @@ test('explicit external and terminal classes survive incidental verifier/path wo
   const result=classifySupervisorFailure({command:'task-retry',payload:{error:'repair_verification_failed',classification:{failure_class},path:'/worktree/parent'},attempt:2,maxAttempts:3});
   assert.equal(result.failure_class,failure_class);assert.equal(result.kind,failure_class==='safety-stop'?'terminal':'wait');
  }
+})
+
+test('operator publication hold is a real wait and never consumes retry budget',()=>{
+ assert.equal(publicationHoldOutcome({}),null)
+ const hold=publicationHoldOutcome({BS_CONTROL_PUBLICATION_HOLD:'1'})
+ const result=classifySupervisorFailure({command:'task-publish',payload:hold,attempt:2,maxAttempts:3})
+ assert.equal(result.kind,'wait');assert.equal(result.failure_class,'operator-wait')
+ assert.ok(!result.command)
 })

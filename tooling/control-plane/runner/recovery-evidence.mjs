@@ -70,3 +70,13 @@ export function preserveAttributedRun(run, plan) {
   return !(plan?.kind === 'terminal' && plan.recoverable === false &&
     ['retry_budget_exhausted', 'task_cancelled'].includes(plan.reason))
 }
+
+// An operator may authorize repair/verification while withholding Git publication.
+export function publicationHoldOutcome(env = process.env) {
+  if (env.BS_CONTROL_PUBLICATION_HOLD !== '1') return null
+  return {
+    ok: false, error: 'publication_operator_hold',
+    classification: { failure_class: 'operator-wait', recovery_action: 'wait-operator' },
+    reason: 'Operator has authorized local recovery and verification only; publication requires separate authorization.',
+  }
+}
