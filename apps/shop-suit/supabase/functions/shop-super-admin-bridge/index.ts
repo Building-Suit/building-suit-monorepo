@@ -3,7 +3,12 @@ import {
   parseEnvelope, parseKeySet, parseProtocolHeaders, readKey, requestSigningInput,
   responseSigningInput, sha256Hex, signHmac, verifyHmac,
 } from '../_shared/super-admin-bridge.mjs'
+import {
+  isPaymentEvidenceAccess, signPaymentEvidenceAccess,
+} from '../_shared/payment-evidence.mjs'
 
+// Kong strips /functions/v1; the HMAC input still uses the public INVOCATION_PATH.
+const RUNTIME_INVOCATION_PATH = '/shop-super-admin-bridge/v1/invoke'
 const JSON_HEADERS = { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' }
 const responseHeaders = (keyId: string, bodyDigest: string, signature: string) => ({
   ...JSON_HEADERS,
@@ -82,7 +87,10 @@ Deno.serve(async request => {
   } = null
   try {
     const url = new URL(request.url)
-    if (request.method !== 'POST' || url.pathname !== INVOCATION_PATH) throw new BridgeError('route_not_found', 404)
+    if (request.method !== 'POST'
+      || (url.pathname !== INVOCATION_PATH && url.pathname !== RUNTIME_INVOCATION_PATH)) {
+      throw new BridgeError('route_not_found', 404)
+    }
     if (request.headers.get('content-type')?.split(';', 1)[0].trim().toLowerCase() !== 'application/json') throw new BridgeError('content_type_invalid', 415)
     const bytes = new Uint8Array(await request.arrayBuffer())
     if (bytes.byteLength === 0 || bytes.byteLength > 65536) throw new BridgeError('request_body_invalid', 413)
@@ -112,10 +120,20 @@ Deno.serve(async request => {
       p_nonce: headers.nonce, p_request_id: headers.requestId,
       p_request_timestamp: headers.timestamp, p_body_digest: requestDigest,
     })
-    const result = await rpc('shop_super_admin_bridge_invoke', {
+    const result = await rpc(isPaymentEvidenceAccess(envelope)
+      ? 'shop_super_admin_bridge_evidence_access'
+      : 'shop_super_admin_bridge_invoke', {
       p_principal_id: principal.principalId, p_nonce: headers.nonce,
       p_body_digest: requestDigest, p_envelope: envelope,
     })
+    if (isPaymentEvidenceAccess(envelope)) {
+      result.data = await signPaymentEvidenceAccess({
+        data: result.data,
+        supabaseUrl: env('SUPABASE_URL'),
+        publicSupabaseUrl: Deno.env.get('SHOP_SUPER_ADMIN_PUBLIC_SUPABASE_URL'),
+        serviceRoleKey: env('SUPABASE_SERVICE_ROLE_KEY'),
+      })
+    }
     const responseEnvelope = {
       protocolVersion: PROTOCOL_VERSION, requestId: envelope.requestId,
       correlationId: envelope.correlationId, targetBindingId: envelope.targetBindingId,
