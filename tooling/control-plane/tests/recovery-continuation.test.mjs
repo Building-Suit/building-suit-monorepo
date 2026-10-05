@@ -102,6 +102,11 @@ test('required HTTP test cannot pass by exiting zero with skipped coverage',()=>
   assert.ok(failed)
   assert.equal(requiredVerificationEvidenceMissing({name:'shop-payment-evidence-http',output:failed}),false)
   assert.equal(verificationCommandFailureClass({name:'shop-payment-evidence-http',passed:false,output:failed}),'verification-product-defect')
+  writeFileSync(f,"throw new Error('SHOP_EVIDENCE_ANON_KEY is required for the disposable local evidence test');\n")
+  let unavailable=''
+  try {execFileSync(process.execPath,['--test','--test-reporter=tap',f],{encoding:'utf8',env})} catch(error){unavailable=error.stdout}
+  assert.equal(verificationCommandFailureClass({name:'shop-payment-evidence-http',passed:false,output:unavailable}),'verification-required-check-unavailable')
+
 
  } finally {rmSync(root,{recursive:true,force:true})}
 })
