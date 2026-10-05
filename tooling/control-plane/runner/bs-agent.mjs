@@ -1126,7 +1126,7 @@ function runJsonHelper(
   const result = execute(
     process.execPath,
     [
-      relativePath,
+      path.resolve(controlSourceRoot, relativePath),
       ...helperArgs,
     ],
     options,
