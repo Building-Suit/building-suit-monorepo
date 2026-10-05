@@ -16,6 +16,7 @@ import path from 'node:path'
 import {
   applicationScopeSelected,
   classifyVerificationResults,
+  verificationCommandFailureClass,
   commandResultStatus,
   controlPlaneRootLintSelection,
   customCheckSelection,
@@ -290,11 +291,9 @@ function runCheck({
         errorCode: result.error?.code,
       }),
     failure_class:
-      unavailable && required
-        ? 'verification-required-check-unavailable'
-        : passed || !required
-        ? null
-        : 'verification-product-defect',
+      verificationCommandFailureClass({
+        name, required, passed, errorCode: result.error?.code, output: combined,
+      }),
     exit_code:
       exitCode,
     summary,

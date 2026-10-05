@@ -9,7 +9,7 @@ import { planSupervisorStep, classifySupervisorFailure } from '../runner/task-su
 import { retryPurpose, verifiedRepairBaselineFiles, repairFailureChecks, preserveAttributedRun, publicationHoldOutcome } from '../runner/recovery-evidence.mjs'
 import { evaluateExecutionPreflight, repairPreflightPublicationRuntimeFiles } from '../runner/task-preflight.mjs'
 import { publicationStateFingerprint } from '../runner/publication-preflight.mjs'
-import { classifyVerificationResults, resolveVerificationPlan } from '../runner/verification-mode.mjs'
+import { classifyVerificationResults, resolveVerificationPlan, verificationCommandFailureClass } from '../runner/verification-mode.mjs'
 import { profileForAttempt } from '../lib/retry-policy.mjs'
 const policy = { policy_id: 'foundation-three', max_attempts: 3, attempt_profiles: ['standard','standard','deep'] }
 function snapshot(attempt=1,status='succeeded') {
@@ -70,4 +70,14 @@ test('operator publication hold is a real wait and never consumes retry budget',
  const result=classifySupervisorFailure({command:'task-publish',payload:hold,attempt:2,maxAttempts:3})
  assert.equal(result.kind,'wait');assert.equal(result.failure_class,'operator-wait')
  assert.ok(!result.command)
+})
+
+test('missing local HTTP fixture waits without masking a genuine database defect',()=>{
+ const missing=verificationCommandFailureClass({name:'shop-payment-evidence-http',passed:false,output:'Error: SHOP_EVIDENCE_ANON_KEY is required for the disposable local evidence test\n'})
+ assert.equal(missing,'verification-required-check-unavailable')
+ const gate={status:'fail',failure_class:missing}
+ assert.equal(classifyVerificationResults([gate]).recovery_action,'wait-operator')
+ assert.equal(classifyVerificationResults([gate,{status:'fail',failure_class:'verification-product-defect'}]).recovery_action,'repair')
+ assert.equal(verificationCommandFailureClass({name:'shop-payment-evidence-http',passed:false,output:'AssertionError: outsider read private evidence'}),'verification-product-defect')
+ assert.equal(verificationCommandFailureClass({name:'other-test',passed:false,output:'Error: SHOP_EVIDENCE_ANON_KEY is required for the disposable local evidence test'}),'verification-product-defect')
 })

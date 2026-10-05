@@ -540,3 +540,17 @@ export function commandResultStatus({
     ? 'fail'
     : 'skipped'
 }
+
+export function verificationCommandFailureClass({ name, required = true, passed, errorCode, output = '' }) {
+  if (passed || !required) return null
+  if (errorCode === 'ENOENT') return 'verification-required-check-unavailable'
+  if (errorCode === 'ETIMEDOUT') return 'verification-infrastructure'
+  // A materialized HTTP check may still require separately provisioned local
+  // identities and bridge fixtures. Preserve that missing prerequisite as a
+  // required gate; an HTTP/RLS assertion failure remains a product defect.
+  if (name === 'shop-payment-evidence-http' &&
+      /^Error: SHOP_EVIDENCE_[A-Z_]+ is required for the disposable local evidence test$/m.test(output)) {
+    return 'verification-required-check-unavailable'
+  }
+  return 'verification-product-defect'
+}
