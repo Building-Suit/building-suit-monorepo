@@ -1,6 +1,5 @@
 {
-  "version": 2,
-
+  "version": 3,
   "profiles": {
     "no_ai": {
       "uses_codex": false,
@@ -8,48 +7,41 @@
       "model_preferences": [],
       "description": "Deterministic operation. No model invocation."
     },
-
     "fast": {
       "uses_codex": true,
       "reasoning_effort": "low",
       "model_preferences": [
-        "gpt-6-luna",
-        "gpt-5.6-luna",
-        "gpt-5.6-terra"
+        "gpt-6.1-sol"
       ],
-      "description": "Low-risk, bounded and mechanical implementation work."
+      "description": "Low-risk, bounded and mechanical implementation work.",
+      "require_preferred_model": true
     },
-
     "standard": {
       "uses_codex": true,
       "reasoning_effort": "medium",
       "model_preferences": [
-        "gpt-6.1-sol",
-        "gpt-5.6-terra"
+        "gpt-6.1-sol"
       ],
-      "description": "Normal implementation, debugging and multi-file feature work."
+      "description": "Normal implementation, debugging and multi-file feature work.",
+      "require_preferred_model": true
     },
-
     "deep": {
       "uses_codex": true,
       "reasoning_effort": "high",
       "model_preferences": [
-        "gpt-6-astra",
-        "gpt-6.1-sol",
-        "gpt-5.6-terra"
+        "gpt-6.1-sol"
       ],
-      "description": "Financial, authorization, concurrency, architecture and other high-risk work."
+      "description": "Financial, authorization, concurrency, architecture and other high-risk work.",
+      "require_preferred_model": true
     },
-
     "review": {
       "uses_codex": true,
       "reasoning_effort": "high",
       "model_preferences": [
-        "gpt-6-astra",
-        "gpt-6.1-sol",
-        "gpt-5.6-terra"
+        "gpt-6.1-sol"
       ],
-      "description": "Focused independent review of high-risk changes."
+      "description": "Focused independent review of high-risk changes.",
+      "require_preferred_model": true
     }
   }
 }

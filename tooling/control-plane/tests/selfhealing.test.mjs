@@ -38,10 +38,16 @@ test('selfheal human gates never wake even when runtime operation exists or atte
 test('selfheal backoff persists bounded schedule and cannot spend product attempts',()=>{
  assert.deepEqual([0,1,2,5,100].map(recoveryBackoff),[30000,60000,120000,900000,900000]);assert.equal(runWakeEligibility(run,null,{next_wake_at:new Date(Date.now()+60000).toISOString()}).reason,'backoff_pending')
 })
-test('selfheal 22 model preferences migrate only Sol, preserve profile reasoning/tier semantics',()=>{
- const models=['gpt-6.1-sol','gpt-6-astra','gpt-6-luna','gpt-5.6-sol','gpt-5.6-terra'].map(model=>({model,supportedReasoningEfforts:['low','medium','high'].map(reasoningEffort=>({reasoningEffort}))}))
- for(const name of ['standard','deep','review']){assert.ok(getProfile(name).model_preferences.includes('gpt-6.1-sol'));assert.ok(!getProfile(name).model_preferences.includes('gpt-5.6-sol'));assert.equal(resolveProfile(name,models.filter(m=>m.model==='gpt-6.1-sol')).model,'gpt-6.1-sol')}
- assert.equal(resolveProfile('standard',models).reasoning_effort,'medium');assert.equal(resolveProfile('deep',models).reasoning_effort,'high');assert.equal(resolveProfile('fast',models).model,'gpt-6-luna');assert.equal(resolveProfile('deep',models).model,'gpt-6-astra');assert.equal(listProfiles().length,5)
+test('selfheal 22 future AI routes require 6.1 Sol and preserve each profile effort',()=>{
+ const models=['gpt-6.1-sol','gpt-6-astra','gpt-6-luna'].map(model=>({model,isDefault:model==='gpt-6-astra',supportedReasoningEfforts:['low','medium','high'].map(reasoningEffort=>({reasoningEffort}))}))
+ for(const [name,effort] of Object.entries({standard:'medium',deep:'high',review:'high',fast:'low'})){
+  assert.deepEqual(getProfile(name).model_preferences,['gpt-6.1-sol'])
+  assert.equal(resolveProfile(name,models).model,'gpt-6.1-sol')
+  assert.equal(resolveProfile(name,models).reasoning_effort,effort)
+  assert.throws(()=>resolveProfile(name,models.filter(m=>m.model!=='gpt-6.1-sol')),/No suitable Codex model/)
+ }
+ assert.throws(()=>resolveProfile('deep',[{model:'gpt-6.1-sol',supportedReasoningEfforts:[{reasoningEffort:'low'}]}]),/Configured reasoning effort/)
+ assert.equal(resolveProfile('no_ai',[]).model,null);assert.equal(listProfiles().length,5)
  assert.throws(()=>resolveProfile('standard',[{model:'gpt-5.6-sol',isDefault:true}]),/No ChatGPT/)
 })
 test('selfheal 23 task status keeps historical actual model separately from future route',()=>{
