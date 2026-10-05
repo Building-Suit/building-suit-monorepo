@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "profiles": {
     "no_ai": {
       "uses_codex": false,
@@ -38,7 +38,7 @@
       "uses_codex": true,
       "reasoning_effort": "high",
       "model_preferences": [
-        "gpt-6.1-sol"
+        "gpt-6-astra"
       ],
       "description": "Focused independent review of high-risk changes.",
       "require_preferred_model": true
