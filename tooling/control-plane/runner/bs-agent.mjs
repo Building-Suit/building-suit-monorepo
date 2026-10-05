@@ -5171,12 +5171,12 @@ export function runExecutionPreflight(snapshot, purpose = 'implementation') {
 }
 
 
-function preflightRecoveryPlan(snapshot, preflight) {
+export function preflightRecoveryPlan(snapshot, preflight) {
   const supervisorPlan = planSupervisorStep(snapshot)
   return {
     kind: preflight.kind === 'ready' ? 'act' : preflight.kind,
-    next_action: preflight.next_action,
-    failure_class: preflight.failure_class,
+    next_action: preflight.ready ? supervisorPlan.next_action : preflight.next_action,
+    failure_class: preflight.ready ? supervisorPlan.failure_class : preflight.failure_class,
     reason: preflight.reason,
     recoverable: preflight.recoverable,
     fingerprint: supervisorPlan.fingerprint,

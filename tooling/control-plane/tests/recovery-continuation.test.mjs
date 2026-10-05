@@ -1,3 +1,4 @@
+import { preflightRecoveryPlan } from '../runner/bs-agent.mjs'
 import { canonicalMigrationSql, localShopMigrationReadiness } from '../runner/local-migration-readiness.mjs'
 import { executionPreflightFixture } from './fixtures/execution-preflight.mjs'
 import test from 'node:test'
@@ -173,4 +174,12 @@ test('generated type mismatch exposes actual schema artifact without changing ch
   writeFileSync(artifact,readFileSync(expected))
   assert.match(execFileSync(process.execPath,[helper,artifact,expected],{env,encoding:'utf8'}),/match the task artifact/)
  }finally{rmSync(root,{recursive:true,force:true})}
+})
+
+test('ready preflight preserves the pending product repair class in recovery state',()=>{
+ const s=snapshot(2,'failed')
+ const ready=preflightRecoveryPlan(s,{ready:true,kind:'ready',next_action:'reconcile-runtime',failure_class:'transient-infrastructure',reason:'preflight_ready',recoverable:true})
+ assert.equal(ready.failure_class,'verification-product-defect');assert.equal(ready.next_action,'repair')
+ const blocked=preflightRecoveryPlan(s,{ready:false,kind:'stop',next_action:'safety-stop',failure_class:'safety-stop',reason:'protected_drift',recoverable:false})
+ assert.equal(blocked.failure_class,'safety-stop');assert.equal(blocked.next_action,'safety-stop')
 })
