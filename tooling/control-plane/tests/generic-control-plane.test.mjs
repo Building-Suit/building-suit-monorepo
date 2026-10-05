@@ -43,7 +43,6 @@ import {
 } from '../runner/external-state-watcher.mjs'
 import {
   evaluateExecutionPreflight,
-  fingerprint,
 } from '../runner/task-preflight.mjs'
 import {
   acceptanceCriteriaDigest,
