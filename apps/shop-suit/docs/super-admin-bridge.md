@@ -55,3 +55,8 @@ HMAC key set nor the Shop service-role credential.
 Run the focused protocol unit test through `pnpm test`, execute
 `supabase/tests/shop_super_admin_bridge.sql` against the disposable local Shop
 database, and run the full `pnpm db:test:shop` regression before publication.
+
+Recipient-bound private registration and authenticated redemption are documented
+in [private offers](private-offers.md). Registration is the bounded
+`register_private_offer` member of `shop.billing.command`; approval continues
+through the existing billing command.

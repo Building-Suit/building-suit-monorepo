@@ -11,6 +11,7 @@ select
   gen_random_uuid() request_id,
   gen_random_uuid() correlation_id,
   gen_random_uuid() actor_id;
+grant select on shop_super_admin_bridge_fixture to authenticated, service_role;
 
 insert into auth.users (id, email, encrypted_password, aud, role,
   raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
