@@ -97,3 +97,30 @@ test('required HTTP test cannot pass by exiting zero with skipped coverage',()=>
   assert.equal(requiredVerificationEvidenceMissing({name:'shop-payment-evidence-http',output:'pretend green'}),true)
  } finally {rmSync(root,{recursive:true,force:true})}
 })
+
+test('actual verifier process keeps required skipped HTTP unavailable and optional omissions intact',()=>{
+ const root=mkdtempSync(path.join(tmpdir(),'cp-verifier-process-'))
+ try {
+  execFileSync('git',['init','-q',root])
+  execFileSync('git',['-C',root,'-c','user.name=Fixture','-c','user.email=fixture@example.invalid','commit','-q','--allow-empty','-m','fixture'])
+  const relative='apps/shop-suit/tests/integration/payment-evidence-http.mjs'
+  mkdirSync(path.dirname(path.join(root,relative)),{recursive:true})
+  writeFileSync(path.join(root,relative),"import test from 'node:test';test('HTTP coverage',{skip:'local fixture absent'},()=>{});\n")
+  const bin=path.join(root,'bin');mkdirSync(bin)
+  writeFileSync(path.join(bin,'pnpm'),'#!/bin/sh\nexit 0\n',{mode:0o755})
+  const packet=path.join(root,'packet.json')
+  writeFileSync(packet,JSON.stringify({
+   task:{task_id:'CP-VERIFIER-FIXTURE',task_type:'implementation',verification_plan:[{version:2,kind:'planned_test',description:'required HTTP coverage',blocker:'shop_storage_http_signed_url_coverage_not_implemented',expected_outputs:[relative]}]},
+   suit:{slug:'shop-suit',app_path:'apps/shop-suit'},project:{verification_config:{commands:[{name:'optional-unrelated',program:'pnpm',args:['test'],changed_paths:['unrelated/'],required:false}]}},workstream:{verification_config:{}},
+  }))
+  const env={...process.env,PATH:bin+path.delimiter+process.env.PATH};delete env.NODE_TEST_CONTEXT
+  const verifier=new URL('../runner/task-verifier.mjs',import.meta.url).pathname
+  const output=execFileSync(process.execPath,[verifier,root,packet,path.join(root,'logs'),'probe','focused'],{env,encoding:'utf8'})
+  const result=JSON.parse(output.trim())
+  assert.equal(result.ok,true);assert.equal(result.passed,false)
+  const http=result.checks.find(c=>c.name==='shop-payment-evidence-http')
+  assert.equal(http.status,'not_run');assert.equal(http.required,true)
+  assert.equal(http.failure_class,'verification-required-check-unavailable')
+  assert.ok(result.checks.some(c=>c.status==='skipped'))
+ }finally{rmSync(root,{recursive:true,force:true})}
+})
