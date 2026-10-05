@@ -1,3 +1,4 @@
+import { canonicalMigrationSql, localShopMigrationReadiness } from '../runner/local-migration-readiness.mjs'
 import { executionPreflightFixture } from './fixtures/execution-preflight.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
@@ -122,5 +123,23 @@ test('actual verifier process keeps required skipped HTTP unavailable and option
   assert.equal(http.status,'not_run');assert.equal(http.required,true)
   assert.equal(http.failure_class,'verification-required-check-unavailable')
   assert.ok(result.checks.some(c=>c.status==='skipped'))
+ }finally{rmSync(root,{recursive:true,force:true})}
+})
+
+test('edited applied local migration is infrastructure drift, never a product assertion',()=>{
+ const root=mkdtempSync(path.join(tmpdir(),'cp-local-migration-'))
+ try {
+  const file='apps/shop-suit/supabase/migrations/20261005120000_test.sql'
+  mkdirSync(path.dirname(path.join(root,file)),{recursive:true})
+  writeFileSync(path.join(root,file),"-- header\nselect 'a b';\n")
+  const query=()=>[{version:'20261005120000',statements:["select 'a b'"]}]
+  assert.equal(localShopMigrationReadiness({worktreePath:root,changedFiles:[file],query}).ready,true)
+  writeFileSync(path.join(root,file),"select 'ab';\n")
+  const stale=localShopMigrationReadiness({worktreePath:root,changedFiles:[file],query})
+  assert.equal(stale.ready,false);assert.equal(stale.failure_class,'verification-infrastructure')
+  assert.equal(localShopMigrationReadiness({worktreePath:root,changedFiles:[file],query:()=>[]}).ready,true)
+  assert.equal(localShopMigrationReadiness({worktreePath:root,changedFiles:[file],query:()=>{throw new Error('unavailable')}}).ready,false)
+  assert.notEqual(canonicalMigrationSql('do $$begin perform 1; end$$;'),canonicalMigrationSql('do $$begin perform 2; end$$;'))
+  assert.equal(canonicalMigrationSql('/* nested /* comment */ */ select 1;'),canonicalMigrationSql('select 1'))
  }finally{rmSync(root,{recursive:true,force:true})}
 })

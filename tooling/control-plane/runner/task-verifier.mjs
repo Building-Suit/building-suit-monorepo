@@ -27,6 +27,7 @@ import {
   resolveVerificationMode,
   safeRegisteredVerificationCommand,
 } from './verification-mode.mjs'
+import { localShopMigrationReadiness } from './local-migration-readiness.mjs'
 import { mergeVerificationConfig } from '../lib/workstream-readiness.mjs'
 import { publicationStateFingerprint } from './publication-preflight.mjs'
 import { executeWithControlDatabaseRetry } from '../lib/control-database.mjs'
@@ -176,6 +177,20 @@ function runCheck({
   required = true,
   selectionReason = 'required_by_verification_policy',
 }) {
+  if (suit.slug === 'shop-suit' && ['shop-database-regression', 'database-tests'].includes(name)) {
+    const freshness = localShopMigrationReadiness({ worktreePath, changedFiles: [...changedFiles] })
+    if (!freshness.ready) {
+      const check = omittedCheck({
+        name, command: `${program} ${args.join(' ')}`, required,
+        reason: freshness.reason, unavailable: true,
+        failureClass: freshness.failure_class,
+        summary: `Local disposable database is not evidence for the current migration source: ${freshness.reason}; files: ${(freshness.files ?? []).join(', ')}`,
+      })
+      liveCheck(check)
+      return check
+    }
+  }
+
   const started =
     Date.now()
 
