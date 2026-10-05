@@ -183,3 +183,12 @@ test('ready preflight preserves the pending product repair class in recovery sta
  const blocked=preflightRecoveryPlan(s,{ready:false,kind:'stop',next_action:'safety-stop',failure_class:'safety-stop',reason:'protected_drift',recoverable:false})
  assert.equal(blocked.failure_class,'safety-stop');assert.equal(blocked.next_action,'safety-stop')
 })
+
+test('persisted explicit external/operator classes retain their route without a legacy marker',()=>{
+ for (const failure_class of ['operator-wait','external-wait']) {
+  const s=snapshot(3,'failed');s.failures[0]={failure_id:3,execution_id:3,failure_class,metadata:{classification:{failure_class}},resolved_at:null}
+  const result=planSupervisorStep(s)
+  assert.equal(result.kind,'wait');assert.equal(result.failure_class,failure_class)
+  assert.notEqual(result.reason,'retry_budget_exhausted')
+ }
+})

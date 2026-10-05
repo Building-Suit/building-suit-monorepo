@@ -228,7 +228,8 @@ export function planSupervisorStep(snapshot) {
   if (task.status === 'failed') {
     const explicitFailure = executionFailure(snapshot, execution)
     const explicitWait = explicitWaitClasses.get(explicitFailure?.failure_class)
-    if (explicitWait && explicitFailure?.metadata?.supervisor_classified === true) {
+    const typedFailure = explicitFailure?.metadata?.classification?.failure_class === explicitFailure?.failure_class
+    if (explicitWait && (explicitFailure?.metadata?.supervisor_classified === true || typedFailure)) {
       return decision(explicitWait === 'safety-stop' ? 'terminal' : 'wait', explicitWait, explicitFailure.failure_class, explicitFailure.error_code ?? 'classified_failure', {
         execution, verification, publication, fingerprint, recoverable: explicitWait !== 'safety-stop',
       })
