@@ -1,3 +1,4 @@
+import { initialSupervisorLeaseSql } from '../runner/supervisor-lease.mjs'
 import assert from 'node:assert/strict'
 import { spawn, spawnSync } from 'node:child_process'
 import { readdirSync } from 'node:fs'
@@ -71,6 +72,36 @@ test('migration 001..028 and upgrade 027->028 preserve authoritative full lifecy
     assert.equal(psql(databaseUrl.href, ['-Atqc', "SELECT NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='control' AND table_name='workflow_runs' AND column_name='admitted_repair_id')"]), 't')
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql', upgrade)])
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/batch-readiness-postgres-smoke.sql')])
+    // Reproduce a resolved recovery whose old initial key exists in the journal.
+    // Each supervisor invocation must atomically create its own active lease.
+    const resumeIdentity = 'test:supervisor-lease-replay'
+    const record = (key, token, status = 'active') => `control.record_recovery_condition(
+      p_resume_identity => '${resumeIdentity}', p_idempotency_key => '${key}',
+      p_failure_class => 'transient-infrastructure', p_error_code => 'implementation_failed',
+      p_next_action => 'retry', p_recoverable => true, p_source => 'unit-test',
+      p_heartbeat_at => now(), p_lease_owner => 'test-owner', p_lease_token => '${token}',
+      p_lease_expires_at => now() + interval '5 minutes', p_status => '${status}')`
+    psql(databaseUrl.href, ['-c', `SELECT ${record('old-decision', 'old-token')}`])
+    psql(databaseUrl.href, ['-c', `SELECT ${record('resolved-stop', 'old-token', 'resolved')}`])
+    const leaseSql = (key, token) => initialSupervisorLeaseSql(record(key, token))
+      .replaceAll(":'resume_identity'", `'${resumeIdentity}'`)
+      .replaceAll(":'lease_token'", `'${token}'`)
+    const jsonLine = output => JSON.parse(output.split('\n').find(line => line.startsWith('{')))
+    const fresh = jsonLine(psql(databaseUrl.href, ['-At'], { input: leaseSql('new-invocation:initial', 'new-token') }))
+    assert.equal(fresh.acquired, true)
+    assert.equal(fresh.recorded.recovery.status, 'active')
+    assert.equal(fresh.recorded.recovery.lease_token, 'new-token')
+    const contended = jsonLine(psql(databaseUrl.href, ['-At'], { input: leaseSql('contender:initial', 'contender-token') }))
+    assert.equal(contended.acquired, false)
+    assert.equal(contended.recovery.lease_token, 'new-token')
+    psql(databaseUrl.href, ['-c', `SELECT ${record('resolved-before-race', 'new-token', 'resolved')}`])
+    const raced = await Promise.all([
+      concurrentPsql(databaseUrl.href, leaseSql('race-a:initial', 'race-a')),
+      concurrentPsql(databaseUrl.href, leaseSql('race-b:initial', 'race-b')),
+    ])
+    assert.ok(raced.every(result => result.code === 0), JSON.stringify(raced))
+    assert.deepEqual(raced.map(result => jsonLine(result.stdout).acquired).sort(), [false, true])
+
 
     const taskId = 'BS-UI-ZN-PATTERNS-001'
     const update = concurrentPsql(databaseUrl.href,

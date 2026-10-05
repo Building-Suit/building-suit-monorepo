@@ -46,6 +46,7 @@ import { evaluateWorkstreamReadiness, resolveVerificationPlan } from './verifica
 import { mergeVerificationConfig } from '../lib/workstream-readiness.mjs'
 import { evaluateParentSatisfaction } from './parent-satisfaction.mjs'
 import { retryPurpose, verifiedRepairBaselineFiles, repairFailureChecks, preserveAttributedRun, currentExecution } from './recovery-evidence.mjs'
+import { initialSupervisorLeaseSql } from './supervisor-lease.mjs'
 import {
   WATCHER_LEASE_MS,
   WATCHER_MAX_BATCH,
@@ -94,9 +95,10 @@ const controlDatabase = {
 
 // Installed source may live in a pinned repair checkout while product worktrees
 // and relative project roots remain anchored to the operator's repository.
+const controlSourceRoot = fileURLToPath(new URL('../../../', import.meta.url))
 const repoRoot = process.env.BS_CONTROL_REPOSITORY_ROOT
   ? path.resolve(process.env.BS_CONTROL_REPOSITORY_ROOT)
-  : fileURLToPath(new URL('../../../', import.meta.url))
+  : controlSourceRoot
 
 const githubRepository = 'Building-Suit/building-suit-monorepo'
 
@@ -1674,7 +1676,7 @@ function taskRun() {
         process.execPath,
         [
           path.join(
-            repoRoot,
+            controlSourceRoot,
             'tooling',
             'control-plane',
             'runner',
@@ -2402,7 +2404,7 @@ function taskVerify() {
         process.execPath,
         [
           path.join(
-            repoRoot,
+            controlSourceRoot,
             'tooling',
             'control-plane',
             'runner',
@@ -3560,7 +3562,7 @@ Return a concise repair summary.
           process.execPath,
           [
             path.join(
-              repoRoot,
+              controlSourceRoot,
               'tooling',
               'control-plane',
               'runner',
@@ -3655,7 +3657,7 @@ Return a concise repair summary.
             process.execPath,
             [
               path.join(
-                repoRoot,
+                controlSourceRoot,
                 'tooling',
                 'control-plane',
                 'runner',
@@ -4580,7 +4582,7 @@ function taskPublish() {
         process.execPath,
         [
           path.join(
-            repoRoot,
+            controlSourceRoot,
             'tooling',
             'control-plane',
             'runner',
@@ -5229,8 +5231,7 @@ function recordSupervisorRecovery(snapshot, plan, options = {}) {
     supervisor: 'task-supervisor-v1',
     ...(options.metadata ?? {}),
   }
-  const result = controlQuery(
-    `
+  const recordSql = `
       SELECT control.record_recovery_condition(
         :'resume_identity', :'idempotency_key', :'failure_class',
         NULLIF(:'error_code', ''), :'next_action', :'recoverable'::boolean,
@@ -5242,7 +5243,11 @@ function recordSupervisorRecovery(snapshot, plan, options = {}) {
         NULLIF(:'lease_expires_at', '')::timestamptz,
         :'condition'::jsonb, :'metadata'::jsonb, :'status'
       );
-    `,
+    `
+  const result = controlQuery(
+    options.acquireLease
+      ? initialSupervisorLeaseSql(recordSql.trim().replace(/^SELECT\s+/, '').replace(/;$/, ''))
+      : recordSql,
     {
       resume_identity: resumeIdentity,
       idempotency_key: options.idempotencyKey ?? `decision:${plan.fingerprint}:${plan.next_action}`,
@@ -5436,31 +5441,12 @@ function externalWatcher() {
 }
 
 
-function acquireSupervisorLease(resumeIdentity, owner, token, expiresAt) {
-  const result = controlQuery(
-    `
-      WITH acquired AS (
-        UPDATE control.recovery_states AS recovery_state
-        SET lease_owner = :'owner', lease_token = :'token',
-            lease_expires_at = :'expires_at'::timestamptz,
-            heartbeat_at = now(), updated_at = now()
-        WHERE resume_identity = :'resume_identity'
-          AND status = 'active'
-          AND (
-            heartbeat_at IS NULL
-            OR lease_expires_at IS NULL OR lease_expires_at <= now()
-            OR lease_token = :'token'
-          )
-        RETURNING to_jsonb(recovery_state) AS recovery
-      )
-      SELECT jsonb_build_object(
-        'acquired', EXISTS(SELECT 1 FROM acquired),
-        'recovery', COALESCE((SELECT recovery FROM acquired), 'null'::jsonb)
-      );
-    `,
-    { resume_identity: resumeIdentity, owner, token, expires_at: expiresAt },
-  )
-  return parseControlJson(result)
+function acquireSupervisorLease(snapshot, plan, owner, token, expiresAt) {
+  return recordSupervisorRecovery(snapshot, plan, {
+    idempotencyKey: `${token}:initial`,
+    leaseOwner: owner, leaseToken: token, leaseExpiresAt: expiresAt,
+    acquireLease: true,
+  })
 }
 
 
@@ -5627,7 +5613,6 @@ function taskSupervisor() {
 
     snapshot = evaluateSupervisorParentSatisfaction(snapshot)
     let plan = planSupervisorStep(snapshot)
-    recordSupervisorRecovery(snapshot, plan)
 
     if (plan.kind !== 'act') {
       const successfulTerminal = ['task_complete', 'task_cancelled'].includes(plan.reason)
@@ -5644,10 +5629,10 @@ function taskSupervisor() {
     }
 
     const lease = acquireSupervisorLease(
-      supervisorResumeIdentity(taskId), owner, token, leaseExpiresAt,
+      snapshot, plan, owner, token, leaseExpiresAt,
     )
     if (!lease?.acquired) {
-      output({ ok: true, command: 'task-supervise', task_id: taskId, status: 'wait', reason: 'supervisor_lease_contended', trail })
+      output({ ok: true, command: 'task-supervise', task_id: taskId, status: 'wait', reason: 'supervisor_lease_contended', lease_expires_at: lease?.recovery?.lease_expires_at ?? null, trail })
       return
     }
     leaseAcquired = true

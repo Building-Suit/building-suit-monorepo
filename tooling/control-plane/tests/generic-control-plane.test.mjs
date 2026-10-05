@@ -730,7 +730,8 @@ test('restricted n8n runner exposes only validated supervisor and registry comma
   assert.match(runner, /invalid_workstream_reference/)
   const supervisor = await readFile(new URL('../runner/bs-agent.mjs', import.meta.url), 'utf8')
   assert.match(supervisor, /recovery\.heartbeat_at/)
-  assert.match(supervisor, /lease_expires_at <= now\(\)/)
+  const leaseSql = await readFile(new URL('../runner/supervisor-lease.mjs', import.meta.url), 'utf8')
+  assert.match(leaseSql, /r\.lease_expires_at > now\(\)/)
   assert.match(supervisor, /recovery: \{ \.\.\.plan, \.\.\.persistedRecovery \}/)
 })
 
@@ -1910,27 +1911,6 @@ test('execution preflight enforces attempt budget without consuming an attempt',
   const result = evaluateExecutionPreflight(fixture)
   assert.equal(result.reason, 'retry_budget_exhausted')
   assert.deepEqual(fixture.executions, before)
-})
-
-test('supervisor lease SQL returns the UPDATE target alias safely', async () => {
-  const runner = await readFile(new URL('../runner/bs-agent.mjs', import.meta.url), 'utf8')
-  const leaseSql = runner.slice(
-    runner.indexOf('function acquireSupervisorLease'),
-    runner.indexOf('function activeSupervisorLease'),
-  )
-
-  assert.match(
-    leaseSql,
-    /UPDATE control\.recovery_states AS recovery_state/,
-  )
-  assert.match(
-    leaseSql,
-    /RETURNING to_jsonb\(recovery_state\) AS recovery/,
-  )
-  assert.doesNotMatch(
-    leaseSql,
-    /to_jsonb\(control\.recovery_states\)/,
-  )
 })
 
 test('supervisor self-heals fresh worktrees, dependencies, and dead local leases', async () => {
