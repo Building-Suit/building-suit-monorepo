@@ -17,6 +17,7 @@ import {
   applicationScopeSelected,
   classifyVerificationResults,
   verificationCommandFailureClass,
+  requiredVerificationEvidenceMissing,
   commandResultStatus,
   controlPlaneRootLintSelection,
   customCheckSelection,
@@ -278,6 +279,7 @@ function runCheck({
           'Command failed'
         )
 
+  const missingEvidence = required && requiredVerificationEvidenceMissing({ name, output: combined })
   const check = {
     name,
     command:
@@ -285,18 +287,18 @@ function runCheck({
     required,
     selection_reason: selectionReason,
     status:
-      commandResultStatus({
+      missingEvidence ? 'not_run' : commandResultStatus({
         required,
         exitCode,
         errorCode: result.error?.code,
       }),
     failure_class:
       verificationCommandFailureClass({
-        name, required, passed, errorCode: result.error?.code, output: combined,
+        name, required, passed, errorCode: result.error?.code, output: combined, missingEvidence,
       }),
     exit_code:
       exitCode,
-    summary,
+    summary: missingEvidence ? 'Required HTTP coverage did not execute all checks; disposable fixture evidence is still required.\n' + summary : summary,
     log_path:
       logPath,
     elapsed_ms:
@@ -398,7 +400,7 @@ function omittedCheck({
         : 'skipped',
     failure_class: failureClass,
     exit_code: null,
-    summary,
+    summary: missingEvidence ? 'Required HTTP coverage did not execute all checks; disposable fixture evidence is still required.\n' + summary : summary,
     log_path: null,
     elapsed_ms: 0,
   }
@@ -1001,7 +1003,7 @@ function plannedCompatibilityCovered(blocker) {
     results.push(runCheck({
       name: 'shop-payment-evidence-http',
       program: 'node',
-      args: ['--test', relativePath],
+      args: ['--test', '--test-reporter=tap', relativePath],
       required: blocker.required !== false,
       selectionReason: 'planned_test_materialized_as_executable',
     }))

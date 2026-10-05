@@ -9,7 +9,7 @@ import { planSupervisorStep, classifySupervisorFailure } from '../runner/task-su
 import { retryPurpose, verifiedRepairBaselineFiles, repairFailureChecks, preserveAttributedRun, publicationHoldOutcome } from '../runner/recovery-evidence.mjs'
 import { evaluateExecutionPreflight, repairPreflightPublicationRuntimeFiles } from '../runner/task-preflight.mjs'
 import { publicationStateFingerprint } from '../runner/publication-preflight.mjs'
-import { classifyVerificationResults, resolveVerificationPlan, verificationCommandFailureClass } from '../runner/verification-mode.mjs'
+import { classifyVerificationResults, resolveVerificationPlan, verificationCommandFailureClass, requiredVerificationEvidenceMissing } from '../runner/verification-mode.mjs'
 import { profileForAttempt } from '../lib/retry-policy.mjs'
 const policy = { policy_id: 'foundation-three', max_attempts: 3, attempt_profiles: ['standard','standard','deep'] }
 function snapshot(attempt=1,status='succeeded') {
@@ -80,4 +80,20 @@ test('missing local HTTP fixture waits without masking a genuine database defect
  assert.equal(classifyVerificationResults([gate,{status:'fail',failure_class:'verification-product-defect'}]).recovery_action,'repair')
  assert.equal(verificationCommandFailureClass({name:'shop-payment-evidence-http',passed:false,output:'AssertionError: outsider read private evidence'}),'verification-product-defect')
  assert.equal(verificationCommandFailureClass({name:'other-test',passed:false,output:'Error: SHOP_EVIDENCE_ANON_KEY is required for the disposable local evidence test'}),'verification-product-defect')
+})
+
+test('required HTTP test cannot pass by exiting zero with skipped coverage',()=>{
+ const root=mkdtempSync(path.join(tmpdir(),'cp-http-receipt-'))
+ try {
+  const f=path.join(root,'test.mjs')
+  const env={...process.env};delete env.NODE_TEST_CONTEXT
+  writeFileSync(f,"import test from 'node:test';test('required HTTP',{skip:'fixture missing'},()=>{});\n")
+  const skipped=execFileSync(process.execPath,['--test','--test-reporter=tap',f],{encoding:'utf8',env})
+  assert.equal(requiredVerificationEvidenceMissing({name:'shop-payment-evidence-http',output:skipped}),true)
+  assert.equal(verificationCommandFailureClass({name:'shop-payment-evidence-http',passed:true,missingEvidence:true}),'verification-required-check-unavailable')
+  writeFileSync(f,"import test from 'node:test';test('required HTTP',()=>{});\n")
+  const executed=execFileSync(process.execPath,['--test','--test-reporter=tap',f],{encoding:'utf8',env})
+  assert.equal(requiredVerificationEvidenceMissing({name:'shop-payment-evidence-http',output:executed}),false)
+  assert.equal(requiredVerificationEvidenceMissing({name:'shop-payment-evidence-http',output:'pretend green'}),true)
+ } finally {rmSync(root,{recursive:true,force:true})}
 })

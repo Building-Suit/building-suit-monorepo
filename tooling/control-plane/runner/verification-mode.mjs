@@ -541,7 +541,15 @@ export function commandResultStatus({
     : 'skipped'
 }
 
-export function verificationCommandFailureClass({ name, required = true, passed, errorCode, output = '' }) {
+export function requiredVerificationEvidenceMissing({ name, output = '' }) {
+  if (name !== 'shop-payment-evidence-http') return false
+  const skipped = output.match(/^# skipped (\d+)$/m)
+  const passed = output.match(/^# pass (\d+)$/m)
+  return !passed || Number(passed[1]) === 0 || Number(skipped?.[1] ?? 0) > 0
+}
+
+export function verificationCommandFailureClass({ name, required = true, passed, errorCode, output = '', missingEvidence = false }) {
+  if (required && missingEvidence) return 'verification-required-check-unavailable'
   if (passed || !required) return null
   if (errorCode === 'ENOENT') return 'verification-required-check-unavailable'
   if (errorCode === 'ETIMEDOUT') return 'verification-infrastructure'
