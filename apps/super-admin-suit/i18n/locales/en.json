@@ -3,5 +3,22 @@
     "name": "Super Admin Suit"
   },
   "welcome": "Super Admin Suit foundation",
-  "description": "The independent control-plane workspace is ready for authorized, database-configured capabilities. No operational modules are configured in application source."
+  "description": "The independent control-plane workspace is ready for authorized, database-configured capabilities. No operational modules are configured in application source.",
+  "auth": {
+    "signIn": "Sign in",
+    "description": "Use your provisioned Super Admin account. Access requires an enabled platform identity.",
+    "email": "Email",
+    "password": "Password",
+    "pending": "Signing in…",
+    "signOut": "Sign out",
+    "loading": "Checking access…",
+    "denied": "Access denied",
+    "deniedDescription": "This account does not have enabled Super Admin access. Contact the platform owner.",
+    "error": "Access check unavailable",
+    "retry": "Check access again",
+    "authorized": "Super Admin access verified",
+    "empty": "No operational modules are available yet.",
+    "signInError": "Unable to sign in. Check your credentials and try again.",
+    "actionError": "Unable to complete the session action. Try again."
+  }
 }
