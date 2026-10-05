@@ -119,6 +119,7 @@ export function resolveVerificationPlan({
         blocker: structured?.blocker ?? mapped?.blocker ?? 'verification_obligation_requires_explicit_evidence',
         required: structured?.required !== false && mapped?.required !== false,
       }
+
       if (kind === 'planned_test') {
         const expectedOutputs = structured?.expected_outputs ?? mapped?.expected_outputs
         if (!Array.isArray(expectedOutputs) || expectedOutputs.length === 0
@@ -130,13 +131,32 @@ export function resolveVerificationPlan({
           })
           continue
         }
+
         item.expected_outputs = [...expectedOutputs]
         item.required_post_implementation = true
-        if (phase === 'pre_implementation') {
+
+        const advisorGate =
+          /advisor_evidence_unavailable/i.test(String(item.blocker)) ||
+          /supabase.*advisor/i.test(String(item.plan_entry))
+
+        item.phase = advisorGate
+          ? 'pre_publication'
+          : 'post_implementation'
+
+        if (phase !== item.phase) {
           deferred.push(item)
           continue
         }
       }
+
+      if (kind === 'external_gate') {
+        item.phase = structured?.phase ?? mapped?.phase ?? 'pre_publication'
+        if (phase !== item.phase) {
+          deferred.push(item)
+          continue
+        }
+      }
+
       blockers.push(item)
       continue
     }
@@ -351,10 +371,10 @@ export function classifyVerificationResults(checks = []) {
   const classes = new Set(blocking.map(check => check.failure_class).filter(Boolean))
   const priority = [
     ['verification-lifecycle', 'reverify'],
-    ['verification-configuration', 'wait-operator'],
+    ['verification-product-defect', 'repair'],
     ['verification-infrastructure', 'wait-external'],
     ['verification-required-check-unavailable', 'wait-operator'],
-    ['verification-product-defect', 'repair'],
+    ['verification-configuration', 'wait-operator'],
   ]
   for (const [failureClass, recoveryAction] of priority) {
     if (classes.has(failureClass)) {

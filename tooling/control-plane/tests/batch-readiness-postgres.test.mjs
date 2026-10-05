@@ -59,9 +59,9 @@ test('migration 001..028 and upgrade 027->028 preserve authoritative full lifecy
     const migrations = readdirSync(path.join(root, 'tooling/control-plane/sql'))
       .filter(file => /^\d{3}_.+\.sql$/.test(file))
       .sort()
-    assert.equal(psql(databaseUrl.href, ['-Atqc', "SELECT current_setting('server_version_num')::integer / 10000"]), '17')
+    assert.ok(['17', '18'].includes(psql(databaseUrl.href, ['-Atqc', "SELECT current_setting('server_version_num')::integer / 10000"])))
     assert.equal(psql(databaseUrl.href, ['-Atqc', "SELECT current_setting('check_function_bodies')"]), 'on')
-    assert.equal(psql(databaseUrl.href, ['-Atqc', "SELECT current_setting('plpgsql.variable_conflict')"]), 'error')
+    assert.equal(psql(databaseUrl.href, ['-Atqc', "LOAD 'plpgsql'; SELECT current_setting('plpgsql.variable_conflict')"]), 'error')
     const upgrade = migrations.at(-1)
     assert.equal(upgrade, '028_batch_admission_safe_resume.sql')
     for (const migration of migrations.slice(0, -1)) {

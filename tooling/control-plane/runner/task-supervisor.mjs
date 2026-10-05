@@ -1,3 +1,4 @@
+import { executionFailure, failedVerificationEvidence } from './recovery-evidence.mjs'
 import { createHash } from 'node:crypto'
 
 const explicitWaitClasses = new Map([
@@ -225,10 +226,7 @@ export function planSupervisorStep(snapshot) {
   }
 
   if (task.status === 'failed') {
-    const explicitFailure = latest(
-      (snapshot.failures ?? []).filter(item => item.resolved_at == null),
-      'failure_id',
-    )
+    const explicitFailure = executionFailure(snapshot, execution)
     const explicitWait = explicitWaitClasses.get(explicitFailure?.failure_class)
     if (explicitWait && explicitFailure?.metadata?.supervisor_classified === true) {
       return decision(explicitWait === 'safety-stop' ? 'terminal' : 'wait', explicitWait, explicitFailure.failure_class, explicitFailure.error_code ?? 'classified_failure', {
@@ -240,6 +238,7 @@ export function planSupervisorStep(snapshot) {
       (String(explicitFailure?.failure_class ?? '').startsWith('verification-')
         ? explicitFailure.failure_class
         : null) ??
+      failedVerificationEvidence(snapshot)?.classification?.failure_class ??
       verification?.metadata?.failure_class ??
       latest(
         (snapshot.verification_results ?? []).filter(result =>
@@ -249,7 +248,7 @@ export function planSupervisorStep(snapshot) {
       )?.metadata?.failure_class ??
       (execution?.status === 'succeeded' ? 'verification-product-defect' : null)
 
-    if (execution?.status === 'succeeded' && verificationFailureClass !== 'verification-product-defect') {
+    if (verificationFailureClass && verificationFailureClass !== 'verification-product-defect') {
       if (verificationFailureClass === 'verification-lifecycle') {
         return decision('act', 'reverify', verificationFailureClass, 'verification_lifecycle_reverify', {
           command: 'task-verify', execution, verification, publication, fingerprint,
@@ -287,7 +286,7 @@ export function planSupervisorStep(snapshot) {
         execution, verification, publication, fingerprint, recoverable: false,
       })
     }
-    const verificationFailure = execution.status === 'succeeded'
+    const verificationFailure = verificationFailureClass === 'verification-product-defect'
     return decision('act', verificationFailure ? 'repair' : 'retry', verificationFailure ? 'verification-product-defect' : 'transient-infrastructure', verificationFailure ? 'verification_failed' : 'implementation_failed', {
       command: 'task-retry', execution, verification, publication, fingerprint,
     })
@@ -311,11 +310,17 @@ export function planSupervisorStep(snapshot) {
 
 export function classifySupervisorFailure({ command, payload, attempt, maxAttempts }) {
   const error = String(payload?.publication?.error ?? payload?.error ?? 'task_action_failed')
-  const lower = `${error} ${JSON.stringify(payload ?? {})}`.toLowerCase()
+  const lower = error.toLowerCase()
   const verificationClass = payload?.classification?.failure_class
 
   if (verificationClass === 'verification-lifecycle') {
     return decision('act', 'reverify', verificationClass, 'verification_lifecycle_reverify', { command: 'task-verify' })
+  }
+  if (verificationClass === 'verification-product-defect') {
+    if (Number(attempt ?? 0) >= Number(maxAttempts ?? 0)) {
+      return decision('terminal', 'safety-stop', 'safety-stop', 'retry_budget_exhausted', { recoverable: false })
+    }
+    return decision('act', 'repair', verificationClass, 'repair_verification_failed', { command: 'task-retry' })
   }
   if (verificationClass === 'verification-configuration') {
     return decision('wait', 'wait-operator', verificationClass, 'verification_configuration_required')
@@ -325,6 +330,15 @@ export function classifySupervisorFailure({ command, payload, attempt, maxAttemp
   }
   if (verificationClass === 'verification-required-check-unavailable') {
     return decision('wait', 'wait-operator', verificationClass, 'required_verification_check_unavailable')
+  }
+
+  if (payload?.classification?.recovery_action === 'wait-operator') {
+    return decision(
+      'wait',
+      'wait-operator',
+      verificationClass ?? 'operator-wait',
+      error.slice(0, 160),
+    )
   }
 
   if (lower.includes('no_publishable_changes')) {

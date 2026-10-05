@@ -37,7 +37,8 @@
         "options": {
           "path": "building-suit-continue"
         }
-      }
+      },
+      "webhookId": "64a5715c-5c8f-5729-a2b2-5f11cc1afae7"
     },
     {
       "id": "bs20-resolve",

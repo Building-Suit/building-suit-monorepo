@@ -11,7 +11,7 @@ import {
 } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 
 import {
   getProfile,
@@ -42,8 +42,10 @@ import {
   evaluateExecutionPreflight,
   fingerprint as preflightFingerprint,
 } from './task-preflight.mjs'
-import { evaluateWorkstreamReadiness } from './verification-mode.mjs'
+import { evaluateWorkstreamReadiness, resolveVerificationPlan } from './verification-mode.mjs'
+import { mergeVerificationConfig } from '../lib/workstream-readiness.mjs'
 import { evaluateParentSatisfaction } from './parent-satisfaction.mjs'
+import { retryPurpose, verifiedRepairBaselineFiles, repairFailureChecks, preserveAttributedRun, currentExecution } from './recovery-evidence.mjs'
 import {
   WATCHER_LEASE_MS,
   WATCHER_MAX_BATCH,
@@ -90,7 +92,11 @@ const controlDatabase = {
     'prefer',
 }
 
-const repoRoot = fileURLToPath(new URL('../../../', import.meta.url))
+// Installed source may live in a pinned repair checkout while product worktrees
+// and relative project roots remain anchored to the operator's repository.
+const repoRoot = process.env.BS_CONTROL_REPOSITORY_ROOT
+  ? path.resolve(process.env.BS_CONTROL_REPOSITORY_ROOT)
+  : fileURLToPath(new URL('../../../', import.meta.url))
 
 const githubRepository = 'Building-Suit/building-suit-monorepo'
 
@@ -2757,7 +2763,10 @@ function verificationFailures(
                 summary,
 
               'log_path',
-                log_path
+                log_path,
+
+              'failure_class',
+                metadata->>'failure_class'
             )
             ORDER BY verification_id
           ),
@@ -3079,7 +3088,7 @@ function taskRetry() {
 
     const executionPreflight = runExecutionPreflight(
       supervisorSnapshot(taskId),
-      previousExecution.status === 'succeeded' ? 'verification-product-repair' : 'retry',
+      retryPurpose(supervisorSnapshot(taskId)),
     )
     if (!executionPreflight.ready) {
       output({
@@ -3141,7 +3150,7 @@ function taskRetry() {
         nextProfile,
       )
 
-    const failures =
+    const persistedVerificationFailures =
       verificationFailures(
         previousExecution.execution_id,
       )
@@ -3150,6 +3159,19 @@ function taskRetry() {
       latestOpenControlFailure(
         taskId,
       )
+
+    const failures = repairFailureChecks({
+      execution: previousExecution,
+      failure: controlFailure,
+      formalChecks: persistedVerificationFailures,
+    })
+
+    const repairFailures =
+      controlFailure?.failure_class === 'verification-product-defect'
+        ? failures.filter(
+            failure => failure.failure_class === 'verification-product-defect',
+          )
+        : failures
 
     if (
       previousExecution.status === 'succeeded' &&
@@ -3192,7 +3214,7 @@ function taskRetry() {
           null,
 
         verification_failures:
-          failures,
+          repairFailures,
 
         control_failure:
           controlFailure,
@@ -3871,6 +3893,8 @@ Return a concise repair summary.
         repair_cycles:
           repairCycles,
 
+        verification_probe_classification: latestProbe?.classification ?? null,
+        verification_probe_verified_state: latestProbe?.verified_state ?? null,
         verification_probe_passed:
           probePassed,
 
@@ -3907,6 +3931,7 @@ Return a concise repair summary.
 
                     log_path:
                       check.log_path,
+                    failure_class: check.failure_class ?? latestProbe?.classification?.failure_class ?? null,
                   }),
                 )
             : [],
@@ -3916,6 +3941,18 @@ Return a concise repair summary.
     executionFinished =
       true
 
+    const repairFailureClassification =
+      !succeeded
+        ? (
+            latestProbe?.classification?.failure_class
+              ? latestProbe.classification
+              : {
+                  failure_class: 'verification-product-defect',
+                  recovery_action: 'repair',
+                }
+          )
+        : null
+
     if (!succeeded) {
 
       recordControlFailure(
@@ -3923,6 +3960,9 @@ Return a concise repair summary.
         'repair',
         'repair_verification_failed',
         {
+          classification:
+            repairFailureClassification,
+
           repair_cycles:
             repairCycles,
 
@@ -3939,6 +3979,14 @@ Return a concise repair summary.
     output({
       ok:
         succeeded,
+
+      error:
+        succeeded
+          ? null
+          : 'repair_verification_failed',
+
+      classification:
+        repairFailureClassification,
 
       command:
         'task-retry',
@@ -3979,6 +4027,8 @@ Return a concise repair summary.
         repair_cycles:
           repairCycles,
 
+        verification_probe_classification: latestProbe?.classification ?? null,
+        verification_probe_verified_state: latestProbe?.verified_state ?? null,
         verification_probe_passed:
           probePassed,
 
@@ -4328,6 +4378,55 @@ function taskPublish() {
       )
     }
 
+    const prePublicationVerificationConfig =
+      mergeVerificationConfig(
+        packet.project?.verification_config,
+        packet.workstream?.verification_config,
+      )
+
+    const prePublicationPlan =
+      resolveVerificationPlan({
+        entries: packet.task?.verification_plan ?? [],
+        configuredCommands: prePublicationVerificationConfig.commands ?? [],
+        legacyMappings: prePublicationVerificationConfig.legacy_plan_mappings ?? {},
+        phase: 'pre_publication',
+      })
+
+    const prePublicationGates =
+      prePublicationPlan.blockers.filter(
+        blocker =>
+          blocker.phase === 'pre_publication' &&
+          blocker.required !== false,
+      )
+
+    if (prePublicationGates.length > 0) {
+      const classification = {
+        failure_class: 'operator-wait',
+        recovery_action: 'wait-operator',
+      }
+
+      recordControlFailure(
+        taskId,
+        'publication',
+        'prepublication_external_verification_required',
+        {
+          classification,
+          gates: prePublicationGates,
+        },
+      )
+
+      output({
+        ok: false,
+        command: 'task-publish',
+        task_id: taskId,
+        error: 'prepublication_external_verification_required',
+        classification,
+        gates: prePublicationGates,
+      }, 1)
+
+      return
+    }
+
 
     const metadata =
       taskMetadata(
@@ -4675,7 +4774,7 @@ function handleNoPublishableChanges(
 }
 
 
-function supervisorSnapshot(taskId) {
+export function supervisorSnapshot(taskId) {
   const result = controlQuery(
     `
       SELECT jsonb_build_object(
@@ -4893,7 +4992,7 @@ function executableAvailable(program) {
 }
 
 
-function executionPreflightRuntime(snapshot) {
+export function executionPreflightRuntime(snapshot) {
   const packet = snapshot.packet
   const project = projectRuntime(packet)
   const repositoryRoot = path.resolve(repoRoot, project.repository_root)
@@ -5040,14 +5139,18 @@ function executionPreflightRuntime(snapshot) {
 }
 
 
-function runExecutionPreflight(snapshot, purpose = 'implementation') {
+export function runExecutionPreflight(snapshot, purpose = 'implementation') {
   const runtime = executionPreflightRuntime(snapshot)
+  const repairBaselineFiles =
+    verifiedRepairBaselineFiles(snapshot, runtime, purpose)
+
   return evaluateExecutionPreflight({
     packet: snapshot.packet,
     runtime,
     executions: snapshot.executions,
     serializationConflicts: snapshot.serialization_conflicts,
     purpose,
+    repairBaselineFiles,
   })
 }
 
@@ -5575,9 +5678,7 @@ function taskSupervisor() {
         const preflight = runExecutionPreflight(
           snapshot,
           plan.command === 'task-retry'
-            ? snapshot.executions.at(-1)?.status === 'succeeded'
-              ? 'verification-product-repair'
-              : 'retry'
+            ? retryPurpose(snapshot)
             : 'implementation',
         )
         const recoveryPlan = preflightRecoveryPlan(snapshot, preflight)
@@ -5740,8 +5841,8 @@ function taskSupervisor() {
         const classified = classifySupervisorFailure({
           command: plan.command,
           payload: child.payload,
-          attempt: plan.execution?.attempt,
-          maxAttempts: snapshot.packet.retry_policy?.max_attempts,
+          attempt: currentExecution(failedSnapshot)?.attempt,
+          maxAttempts: failedSnapshot.packet.retry_policy?.max_attempts,
         })
         classified.fingerprint = planSupervisorStep(failedSnapshot).fingerprint
         classified.execution = planSupervisorStep(failedSnapshot).execution
@@ -6730,6 +6831,56 @@ function workflowRunFinish() {
   }
 
   try {
+    if (status === 'failed') {
+      const currentResult =
+        controlQuery(
+          `
+            SELECT COALESCE(
+              (
+                SELECT jsonb_build_object(
+                  'run_id', run.run_id,
+                  'status', run.status,
+                  'max_tasks', run.max_tasks,
+                  'completed_tasks', run.completed_tasks,
+                  'current_task_id', run.current_task_id,
+                  'admitted_repair_id', run.admitted_repair_id,
+                  'run_revision', run.run_revision,
+                  'task_status', task.status
+                )
+                FROM control.workflow_runs run
+                LEFT JOIN control.tasks task
+                  ON task.task_id = run.current_task_id
+                WHERE run.run_id = :'run_id'::uuid
+              ),
+              'null'::jsonb
+            );
+          `,
+          {
+            run_id: runId,
+          },
+        )
+
+      const current =
+        parseControlJson(
+          currentResult,
+        )
+
+      if (
+        preserveAttributedRun(current,
+          current?.current_task_id ? planSupervisorStep(supervisorSnapshot(current.current_task_id)) : null,
+        )
+      ) {
+        output({
+          ok: true,
+          command: 'run-finish',
+          run: current,
+          preserved: true,
+          reason: 'attributed_incomplete_run_preserved',
+        })
+        return
+      }
+    }
+
     const result =
       controlQuery(
         `
@@ -6760,6 +6911,7 @@ function workflowRunFinish() {
   }
 }
 
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
 switch (command) {
   case 'ping':
     ping()
@@ -6909,4 +7061,6 @@ switch (command) {
         'run-finish <run-id> <status>',
       ],
     }, 64)
+}
+
 }

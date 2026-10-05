@@ -962,7 +962,92 @@ for (const planned of resolvedPlan.checks) {
   }))
 }
 
+function existingResult(...names) {
+  return results.find(result => names.includes(result.name))
+}
+
+function plannedCompatibilityCovered(blocker) {
+  if (blocker.kind !== 'planned_test') return false
+
+  if (blocker.blocker === 'missing_suit_template_boundary_runner') {
+    const match = String(blocker.plan_entry).match(
+      /^node\s+([A-Za-z0-9._/-]+\.(?:mjs|js))$/,
+    )
+    if (!match || match[1].split('/').includes('..')) return false
+
+    const relativePath = match[1]
+    if (!existsSync(path.join(worktreePath, relativePath))) return false
+
+    results.push(runCheck({
+      name: 'suit-template-boundaries',
+      program: 'node',
+      args: [relativePath],
+      required: blocker.required !== false,
+      selectionReason: 'planned_test_materialized_as_executable',
+    }))
+    return true
+  }
+
+  if (blocker.blocker === 'shop_storage_policy_coverage_not_implemented') {
+    if (changedDatabaseTests.length === 0) return false
+    return Boolean(existingResult('shop-database-regression', 'database-tests'))
+  }
+
+  if (blocker.blocker === 'shop_storage_http_signed_url_coverage_not_implemented') {
+    if (!appPath) return false
+    const relativePath =
+      `${appPath}/tests/integration/payment-evidence-http.mjs`
+    if (!existsSync(path.join(worktreePath, relativePath))) return false
+
+    results.push(runCheck({
+      name: 'shop-payment-evidence-http',
+      program: 'node',
+      args: ['--test', relativePath],
+      required: blocker.required !== false,
+      selectionReason: 'planned_test_materialized_as_executable',
+    }))
+    return true
+  }
+
+  if (blocker.blocker === 'super_admin_app_and_local_database_not_present') {
+    return Boolean(existingResult('super-admin-database-reset'))
+  }
+
+  if (blocker.blocker === 'super_admin_security_database_tests_not_present') {
+    return Boolean(existingResult('super-admin-database-tests'))
+  }
+
+  if (blocker.blocker === 'super_admin_generated_type_check_not_present') {
+    if (!appPath) return false
+    const typeFile =
+      path.join(worktreePath, appPath, 'app', 'types', 'database.types.ts')
+    if (!existsSync(typeFile)) return false
+
+    results.push(runCheck({
+      name: 'super-admin-generated-types',
+      program: 'node',
+      args: [new URL('./check-generated-types.mjs', import.meta.url).pathname, typeFile],
+      cwd: path.join(worktreePath, appPath),
+      timeout: 5 * 60 * 1000,
+      required: blocker.required !== false,
+      selectionReason: 'planned_test_materialized_as_executable',
+    }))
+    return true
+  }
+
+  return false
+}
+
 for (const blocker of resolvedPlan.blockers) {
+  if (plannedCompatibilityCovered(blocker)) continue
+
+  const failureClass =
+    blocker.kind === 'planned_test'
+      ? 'verification-product-defect'
+      : blocker.kind === 'external_gate'
+        ? 'verification-required-check-unavailable'
+        : 'verification-configuration'
+
   results.push(omittedCheck({
     name: `verification-obligation-blocked-${results.length + 1}`,
     command: null,
@@ -970,7 +1055,7 @@ for (const blocker of resolvedPlan.blockers) {
     reason: blocker.blocker,
     summary: `Required verification obligation is blocked (${blocker.kind}): ${blocker.plan_entry}`,
     unavailable: true,
-    failureClass: 'verification-configuration',
+    failureClass,
   }))
 }
 

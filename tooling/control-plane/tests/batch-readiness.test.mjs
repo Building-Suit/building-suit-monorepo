@@ -218,7 +218,15 @@ test('planned and external obligations remain explicit blockers', () => {
     configuredCommands:config.commands,
     legacyMappings:config.legacy_plan_mappings,
   })
-  assert.deepEqual(resolved.blockers.map(item => item.kind), ['planned_test','external_gate'])
+  assert.deepEqual(resolved.blockers.map(item => item.kind), ['planned_test'])
+  assert.deepEqual(resolved.deferred.map(item => item.kind), ['external_gate'])
+  const publication = resolveVerificationPlan({
+    entries:['Supabase advisors/security review where available.'],
+    configuredCommands:config.commands,
+    legacyMappings:config.legacy_plan_mappings,
+    phase:'pre_publication',
+  })
+  assert.deepEqual(publication.blockers.map(item => item.kind), ['external_gate'])
   assert.deepEqual(resolved.unenforced, [])
 })
 
