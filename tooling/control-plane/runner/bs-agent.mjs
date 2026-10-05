@@ -3370,6 +3370,8 @@ Rules:
 - Do not report the repair complete while any recorded failed verifier command still fails.
 - If that verifier command exposes another failure in the same regression suite, continue repairing that suite until the command exits successfully.
 - Additional focused checks may be used for diagnosis, but they do not replace the failed verifier command.
+- Never convert a required failed check into a skip or unconditional success.
+- If a required local fixture is unavailable, report that prerequisite and preserve the required check.
 - Independent final verification still belongs to the control plane.
 
 Return a concise repair summary.
