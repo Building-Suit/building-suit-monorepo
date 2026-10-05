@@ -150,3 +150,22 @@ test('edited applied local migration is infrastructure drift, never a product as
   assert.equal(canonicalMigrationSql('/* nested /* comment */ */ select 1;'),canonicalMigrationSql('select 1'))
  }finally{rmSync(root,{recursive:true,force:true})}
 })
+
+test('generated type mismatch exposes actual schema artifact without changing checked task file',()=>{
+ const root=mkdtempSync(path.join(tmpdir(),'cp-generated-types-'))
+ try {
+  const bin=path.join(root,'bin');mkdirSync(bin)
+  writeFileSync(path.join(bin,'pnpm'),"#!/bin/sh\nprintf 'export type Schema = { id: string };\\n'\n",{mode:0o755})
+  const artifact=path.join(root,'checked.ts'),expected=path.join(root,'expected.ts')
+  writeFileSync(artifact,'export type Schema = {};\n')
+  const env={...process.env,PATH:bin+path.delimiter+process.env.PATH};delete env.NODE_TEST_CONTEXT
+  const helper=new URL('../runner/check-generated-types.mjs',import.meta.url).pathname
+  let mismatch
+  try {execFileSync(process.execPath,[helper,artifact,expected],{env,encoding:'utf8',stdio:'pipe'})}catch(e){mismatch=e}
+  assert.ok(mismatch);assert.match(mismatch.stderr,/Generated schema artifact for repair:/)
+  assert.equal(readFileSync(artifact,'utf8'),'export type Schema = {};\n')
+  assert.match(readFileSync(expected,'utf8'),/id: string/)
+  writeFileSync(artifact,readFileSync(expected))
+  assert.match(execFileSync(process.execPath,[helper,artifact,expected],{env,encoding:'utf8'}),/match the task artifact/)
+ }finally{rmSync(root,{recursive:true,force:true})}
+})

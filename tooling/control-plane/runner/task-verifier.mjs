@@ -1042,7 +1042,7 @@ function plannedCompatibilityCovered(blocker) {
     results.push(runCheck({
       name: 'super-admin-generated-types',
       program: 'node',
-      args: [new URL('./check-generated-types.mjs', import.meta.url).pathname, typeFile],
+      args: [new URL('./check-generated-types.mjs', import.meta.url).pathname, typeFile, path.join(runDirectory, 'super-admin-generated-types.expected.ts')],
       cwd: path.join(worktreePath, appPath),
       timeout: 5 * 60 * 1000,
       required: blocker.required !== false,
