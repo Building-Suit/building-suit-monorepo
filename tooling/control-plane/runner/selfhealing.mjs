@@ -26,16 +26,19 @@ export function taskStatusEvidence(snapshot, route = null) {
   const task = snapshot.packet?.task
   const execution = [...(snapshot.executions ?? [])].sort((a,b) => a.attempt-b.attempt).at(-1)
   const recovery = snapshot.recovery
+  const exhausted = task?.status === 'failed' && execution?.attempt >= snapshot.packet?.retry_policy?.max_attempts
+  const probeClass = execution?.metadata?.verification_probe_classification
   const failures = [...(snapshot.failures ?? [])].filter(f => !f.resolved_at && f.execution_id === execution?.execution_id)
   return { task_id: task?.task_id, task_status: task?.status, stage: task?.engine_stage,
     execution_id: execution?.execution_id, product_attempt: execution?.attempt,
     product_retry_budget: snapshot.packet?.retry_policy?.max_attempts,
     profile: execution?.model_profile ?? task?.model_profile, actual_model: execution?.model_name,
     future_route: route, run_id: snapshot.workflow_run?.run_id,
-    failure_class: recovery?.failure_class, next_action: recovery?.next_action,
-    reason: recovery?.error_code, next_wake_at: recovery?.next_wake_at,
-    lease_owner: recovery?.lease_owner, lease_expires_at: recovery?.lease_expires_at,
-    operator_action_required: recovery?.status === 'active' && HUMAN_ACTIONS.has(recovery?.next_action),
+    failure_class: recovery?.failure_class ?? probeClass?.failure_class, next_action: recovery?.next_action ?? (exhausted ? 'safety-stop' : probeClass?.recovery_action),
+    reason: recovery?.error_code ?? (exhausted ? 'retry_budget_exhausted' : undefined), next_wake_at: recovery?.next_wake_at,
+    lease_owner: recovery?.lease_owner ?? snapshot.workflow_run?.controller_lease_token, lease_expires_at: recovery?.lease_expires_at ?? snapshot.workflow_run?.controller_lease_expires_at,
+    run_status: snapshot.workflow_run?.status, maintenance_requested: snapshot.workflow_run?.maintenance_requested, stop_requested: snapshot.workflow_run?.stop_requested,
+    operator_action_required: exhausted || recovery?.status === 'active' && HUMAN_ACTIONS.has(recovery?.next_action),
     last_verifier_failures: [...(execution?.metadata?.verification_probe_failures ?? []), ...failures.flatMap(f => (f.metadata?.verification_probe?.checks ?? f.metadata?.checks ?? []).filter(c=>c.status==='fail'||c.status==='not_run'))],
     publication_gate: task?.status === 'passed' ? recovery?.error_code : null,
     required_operator_evidence: recovery?.condition?.required_evidence ?? recovery?.condition?.reason ?? recovery?.error_code ?? null,

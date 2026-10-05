@@ -116,3 +116,8 @@ test('selfheal resolved terminal safety evidence still prevents watchdog wake',(
   const s=snapshot();s.recovery={status:'resolved',next_action:'safety-stop',failure_class:'safety-stop',error_code:'unsafe_response',condition:{fingerprint:supervisorStateFingerprint(s)}}
   const result=planSupervisorStep(s);assert.equal(result.kind,'terminal');assert.equal(result.reason,'unsafe_response');assert.equal(result.command,undefined)
  })
+
+test('selfheal status exposes exhausted product probe without an active recovery row',()=>{
+ const s=snapshot(3);s.executions[0].metadata={verification_probe_classification:{failure_class:'verification-product-defect',recovery_action:'repair'},verification_probe_failures:[{status:'fail',name:'immutable-object'}]}
+ const result=taskStatusEvidence(s);assert.equal(result.failure_class,'verification-product-defect');assert.equal(result.reason,'retry_budget_exhausted');assert.equal(result.operator_action_required,true);assert.equal(result.last_verifier_failures.length,1)
+})
