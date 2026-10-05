@@ -57,3 +57,9 @@ test('full attempt-3 preflight accepts checked migration and stops newly changed
  const ready=evaluateExecutionPreflight(f);assert.equal(ready.ready,true,ready.reason);assert.equal(ready.checks.find(c=>c.name==='retry_policy_and_model_profile').profile,'deep');
  f.repairBaselineFiles=[];const drift=evaluateExecutionPreflight(f);assert.equal(drift.ready,false);assert.equal(drift.reason,'publication_unexpected_runtime_change');
 })
+test('explicit external and terminal classes survive incidental verifier/path wording',()=>{
+ for (const failure_class of ['external-wait','safety-stop']) {
+  const result=classifySupervisorFailure({command:'task-retry',payload:{error:'repair_verification_failed',classification:{failure_class},path:'/worktree/parent'},attempt:2,maxAttempts:3});
+  assert.equal(result.failure_class,failure_class);assert.equal(result.kind,failure_class==='safety-stop'?'terminal':'wait');
+ }
+})

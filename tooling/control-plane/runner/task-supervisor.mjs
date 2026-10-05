@@ -312,6 +312,10 @@ export function classifySupervisorFailure({ command, payload, attempt, maxAttemp
   const error = String(payload?.publication?.error ?? payload?.error ?? 'task_action_failed')
   const lower = error.toLowerCase()
   const verificationClass = payload?.classification?.failure_class
+  const explicitWait = explicitWaitClasses.get(verificationClass)
+  if (explicitWait) {
+    return decision(explicitWait === 'safety-stop' ? 'terminal' : 'wait', explicitWait, verificationClass, error.slice(0, 160), { recoverable: explicitWait !== 'safety-stop' })
+  }
 
   if (verificationClass === 'verification-lifecycle') {
     return decision('act', 'reverify', verificationClass, 'verification_lifecycle_reverify', { command: 'task-verify' })

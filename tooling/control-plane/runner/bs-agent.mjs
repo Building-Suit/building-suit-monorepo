@@ -3946,10 +3946,15 @@ Return a concise repair summary.
         ? (
             latestProbe?.classification?.failure_class
               ? latestProbe.classification
-              : {
-                  failure_class: 'verification-product-defect',
-                  recovery_action: 'repair',
-                }
+              : (() => {
+                  const workerFailure = classifySupervisorFailure({
+                    command: 'task-retry',
+                    payload: { error: lastStderr || latestProbe?.error || 'repair_worker_failed' },
+                    attempt: previousExecution.attempt + 1,
+                    maxAttempts: retryPolicy.max_attempts,
+                  })
+                  return { failure_class: workerFailure.failure_class, recovery_action: workerFailure.next_action }
+                })()
           )
         : null
 
