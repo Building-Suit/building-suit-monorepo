@@ -4119,6 +4119,7 @@ function publicationVerification(
         SELECT COALESCE((
           SELECT jsonb_build_object(
             'verification_run_id', run.verification_run_id,
+            'publication_execution_eligible', control.publication_execution_is_eligible((SELECT task_id FROM control.executions WHERE execution_id=run.execution_id),run.execution_id),
             'execution_id', run.execution_id,
             'status', run.status,
             'state_fingerprint', run.metadata->'verified_state'->>'fingerprint',
@@ -4305,16 +4306,6 @@ function taskPublish() {
     }
 
 
-    if (
-      execution.status !==
-      'succeeded'
-    ) {
-      throw new Error(
-        `Latest execution is ${execution.status}, not succeeded.`,
-      )
-    }
-
-
     const verification =
       publicationVerification(
         execution.execution_id,
@@ -4327,6 +4318,10 @@ function taskPublish() {
       throw new Error(
         'Task has no verification evidence.',
       )
+    }
+
+    if (execution.status !== 'succeeded' && verification.publication_execution_eligible !== true) {
+      throw new Error('Latest execution lacks successful implementation or exact guarded reacceptance.')
     }
 
     if (verification.status !== 'passed') {
