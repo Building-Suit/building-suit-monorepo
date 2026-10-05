@@ -4,7 +4,7 @@ import { mkdtempSync, writeFileSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { spawn } from 'node:child_process'
-import { planSupervisorStep, classifySupervisorFailure } from '../runner/task-supervisor.mjs'
+import { planSupervisorStep, classifySupervisorFailure, supervisorStateFingerprint } from '../runner/task-supervisor.mjs'
 import { runWakeEligibility, recoveryBackoff, acquisitionStatus, retryWithoutProductAttempt, taskStatusEvidence } from '../runner/selfhealing.mjs'
 import { receiptPaths, startReceipt, readJson, receiptLocked, receiptProcessAlive } from '../runner/durable-process.mjs'
 import { resolveProfile, getProfile, listProfiles } from '../routing/router.mjs'
@@ -111,3 +111,8 @@ test('selfheal BS00 persisted transport loop retries SSH/DB but never explicit p
 test('selfheal resolved terminal safety evidence still prevents watchdog wake',()=>{
   assert.equal(runWakeEligibility({status:'running',completed_tasks:0,max_tasks:1},{status:'resolved',next_action:'safety-stop',error_code:'unsafe_unknown_response'}).eligible,false)
 })
+
+ test('selfheal direct supervisor re-entry preserves a resolved safety gate at the same fingerprint',()=>{
+  const s=snapshot();s.recovery={status:'resolved',next_action:'safety-stop',failure_class:'safety-stop',error_code:'unsafe_response',condition:{fingerprint:supervisorStateFingerprint(s)}}
+  const result=planSupervisorStep(s);assert.equal(result.kind,'terminal');assert.equal(result.reason,'unsafe_response');assert.equal(result.command,undefined)
+ })
