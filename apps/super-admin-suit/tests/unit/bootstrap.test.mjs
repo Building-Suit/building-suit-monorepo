@@ -62,3 +62,46 @@ test('Super Admin templates contain placeholders only and no runtime business co
   assert.doesNotMatch(runtimeSources, /https:\/\/[a-z]{20}\.supabase\.co|sb_secret_|service[_-]?role/i)
   assert.doesNotMatch(runtimeSources, /(?:price|quota|instapay|provider|ownerId)\s*[:=]/i)
 })
+
+test('configuration authority is migration-owned, deny-by-default, and contains no deployed values', () => {
+  const migration = read('supabase/migrations/20261005120000_configuration_authority.sql')
+  const databaseTest = read('supabase/tests/configuration_authority.sql')
+  const databaseTypes = read('app/types/database.types.ts')
+
+  for (const relation of [
+    'admin_environments',
+    'platform_admins',
+    'suit_registry',
+    'suit_environment_bindings',
+    'adapter_registrations',
+    'adapter_capability_policy',
+    'navigation_items',
+    'integration_providers',
+    'integration_settings',
+    'integration_secret_references',
+    'adapter_manifest_observations',
+    'configuration_revisions',
+    'control_plane_events',
+  ]) {
+    assert.match(migration, new RegExp(`create table public\\.${relation}\\b`))
+    assert.match(migration, new RegExp(`'${relation}'`))
+  }
+
+  assert.match(migration, /create schema super_admin_private/)
+  assert.match(migration, /security definer set search_path = ''/)
+  assert.match(migration, /PLATFORM_OWNER_REQUIRED/)
+  assert.match(migration, /CONFIG_VERSION_CONFLICT/)
+  assert.match(migration, /CONFIG_REQUEST_ID_REUSED/)
+  assert.match(migration, /configuration_revisions_immutable/)
+  assert.match(migration, /control_plane_events_immutable/)
+  assert.match(migration, /p_resource_type='secret_reference' then p_payload-'vaultSecretId'/)
+  assert.match(databaseTest, /metadata-bearing outsider entered Super Admin/)
+  assert.match(databaseTest, /disabled platform owner retained authority/)
+  assert.match(databaseTest, /Vault reference leaked through public audit projection/)
+  assert.match(databaseTypes, /super_admin_configuration_command/)
+  assert.match(databaseTypes, /integration_secret_references/)
+
+  assert.doesNotMatch(migration, /https:\/\/[a-z]{20}\.supabase\.co/)
+  assert.doesNotMatch(migration, /sb_(?:secret|publishable)_[A-Za-z0-9]{20,}/)
+  assert.doesNotMatch(migration, /service[_-]?role\s*[:=]\s*['"][^'"]+/i)
+})
