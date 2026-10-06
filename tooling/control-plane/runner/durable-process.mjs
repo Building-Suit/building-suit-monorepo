@@ -18,7 +18,9 @@ export function readJson(file) {
 export function processStamp(pid) {
   try {
     const stat = readFileSync(`/proc/${pid}/stat`, 'utf8')
-    return stat.slice(stat.lastIndexOf(')') + 2).split(' ')[19]
+    const fields = stat.slice(stat.lastIndexOf(')') + 2).split(' ')
+    // An unreaped exit retains its PID/start stamp but cannot finish a receipt.
+    return ['Z', 'X'].includes(fields[0]) ? null : fields[19]
   }
   catch { return null }
 }
