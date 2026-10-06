@@ -101,6 +101,7 @@ export function supervisorStateFingerprint(snapshot) {
       [item.task_id, item.status, item.engine_stage],
     ),
     retry_accounting: snapshot.retry_accounting,
+    binding_recovery: snapshot.binding_recovery,
     execution: execution && [execution.execution_id, execution.attempt, execution.status, execution.engine_stage],
     verification: verification && [
       verification.verification_run_id,
@@ -251,6 +252,11 @@ export function planSupervisorStep(snapshot) {
     if (['verification-configuration','verification-infrastructure'].includes(explicitFailure?.failure_class) && execution?.status==='failed' && snapshot.run_publication_authority?.authorized) {
       return decision('act','reverify',explicitFailure.failure_class,'same_attempt_verifier_reacceptance',{command:'task-reaccept',execution,verification,publication,fingerprint})
     }
+    if (explicitFailure?.failure_class==='verification-configuration' && execution?.status==='succeeded' && snapshot.binding_recovery) {
+      return decision('act','reverify','verification-configuration','existing_executable_binding_recovery',{command:'task-verify',execution,verification,publication,fingerprint})
+    }
+    // An audited unknown is a safety gate, never fall through to legacy PRODUCT.
+    if (explicitFailure?.failure_class==='safety-stop') return decision('wait','wait-operator','operator-wait','retry_classification_review_required',{execution,verification,publication,fingerprint})
     const explicitWait = explicitWaitClasses.get(explicitFailure?.failure_class)
     const typedFailure = explicitFailure?.metadata?.classification?.failure_class === explicitFailure?.failure_class
     if (explicitWait && (explicitFailure?.metadata?.supervisor_classified === true || typedFailure)) {

@@ -992,6 +992,13 @@ function plannedCompatibilityCovered(blocker) {
     return true
   }
 
+  if (blocker.blocker==='missing_strict_boundary_runner' && blocker.plan_entry==='node tooling/checks/suit-template-boundaries.mjs --require-strict') {
+    const runner='tooling/checks/suit-template-boundaries.mjs'
+    if(!existsSync(path.join(worktreePath,runner))) return false
+    results.push(runCheck({name:`verification-obligation-blocked-${results.length+1}`,program:'node',args:[runner,'--require-strict'],required:true,selectionReason:'existing_strict_boundary_binding_reconciled'}))
+    return true
+  }
+
   if (blocker.blocker === 'missing_suit_template_boundary_runner') {
     const match = String(blocker.plan_entry).match(
       /^node\s+([A-Za-z0-9._/-]+\.(?:mjs|js))$/,

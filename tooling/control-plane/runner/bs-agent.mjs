@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { cleanupIntegratedWorktrees } from './dot-cleanup.mjs'
+import { strictBindingRecoveryEvidence } from './binding-recovery.mjs'
 import { incidentIdentity, repairEvidenceHeader, parentContinuation, effectiveFailureClass, workerProcessClassification } from './dot.mjs'
 import { operationHasAuthoritativeSuccess } from './bounded-publication.mjs'
 
@@ -2334,14 +2335,15 @@ function taskVerify() {
         'verification-infrastructure',
         'verification-required-check-unavailable',
       ])
-      if (!reverifyClasses.has(failure?.failure_class)) {
+      const effectiveClass=effectiveFailureClass(supervisorSnapshot(taskId),failure?.failure_class)
+      if (!reverifyClasses.has(effectiveClass)) {
         throw new Error('failed_task_requires_implementation_repair')
       }
       controlQuery(
         `SELECT control.reopen_verification(:'task_id', 'supervisor', :'reason');`,
         {
           task_id: taskId,
-          reason: `same-execution reverify after ${failure.failure_class}`,
+          reason: `same-execution reverify after ${effectiveClass}`,
         },
       )
     }
@@ -4836,7 +4838,9 @@ export function supervisorSnapshot(taskId) {
     { task_id: taskId },
   )
 
-  return parseControlJson(result)
+  const snapshot=parseControlJson(result)
+  if(snapshot) snapshot.binding_recovery=strictBindingRecoveryEvidence(snapshot)
+  return snapshot
 }
 
 
@@ -5581,6 +5585,13 @@ function taskSupervisor() {
   const trail = []
 
   try {
+    const currentRun=parseControlJson(controlQuery(`SELECT to_jsonb(r) FROM control.workflow_runs r WHERE current_task_id=:'task' AND status='running' ORDER BY started_at DESC LIMIT 1;`,{task:taskId}))
+    if(currentRun?.run_id && !currentRun.admitted_repair_id) controlQuery(`SELECT control.reconcile_ordinary_run_publication(:'run'::uuid);`,{run:currentRun.run_id})
+    const bindingSnapshot=supervisorSnapshot(taskId)
+    if(bindingSnapshot?.binding_recovery) {
+      controlQuery(`SELECT control.reconcile_strict_verification_binding(:'task',:'proof'::jsonb);`,{task:taskId,proof:JSON.stringify(bindingSnapshot.binding_recovery)})
+      if(bindingSnapshot.workflow_run?.run_id && bindingSnapshot.run_publication_authority?.authorized) controlQuery(`SELECT control.refresh_dot_admission(:'run'::uuid);`,{run:bindingSnapshot.workflow_run.run_id})
+    }
     controlQuery(`SELECT control.audit_product_attempts(:'task');`,{task:taskId})
     let snapshot = supervisorSnapshot(taskId)
     if (!snapshot?.packet?.task) throw new Error(`Unknown task: ${taskId}`)
@@ -6593,6 +6604,9 @@ function recoveryWatch() {
       if(row.admitted_repair_id && !row.stop_requested && !row.maintenance_requested) {
         const refresh=execute(process.execPath,[agentScriptPath,'run-refresh-admission',row.run_id],{cwd:repoRoot,timeout:30000})
         if(refresh.code!==0){outcomes.push({run_id:row.run_id,eligible:false,reason:'admission_scope_gate',details:parseJson(refresh.stdout,null)});continue}
+      }
+      if(!row.admitted_repair_id && !row.stop_requested && !row.maintenance_requested) {
+        try { controlQuery(`SELECT control.reconcile_ordinary_run_publication(:'run'::uuid);`,{run:row.run_id}) } catch(error) {outcomes.push({run_id:row.run_id,eligible:false,reason:'ordinary_publication_scope_gate',error:error.message});continue}
       }
       const snapshot = row.current_task_id ? supervisorSnapshot(row.current_task_id) : null
       const plan = snapshot ? planSupervisorStep(snapshot) : null

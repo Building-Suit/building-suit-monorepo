@@ -27,6 +27,7 @@ export function knownBindingFailure(check) {
  return check.status === 'not_run' && new Set(['generator_disposable_fixture_runner_not_registered','missing_generated_fixture_boundary_runner','browser_configuration_discovery_failed','verification_plan_entry_unenforced']).has(check.selection_reason)
 }
 export function effectiveFailureClass(snapshot, fallback) {
+ if (snapshot.binding_recovery?.classification==='CONFIGURATION') return 'verification-configuration'
  const e=snapshot.executions?.at(-1)
  const reviewed=snapshot.retry_accounting?.classifications?.find(c=>Number(c.execution_id)===Number(e?.execution_id))
  if (reviewed) return reviewed.classification === 'OTHER' ? 'safety-stop' : legacyClassification(reviewed.classification)
