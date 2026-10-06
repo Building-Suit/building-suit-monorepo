@@ -66,6 +66,7 @@ import {
   classifyControlProbe,
   githubProbeCommand,
   githubProbeObservation,
+  localReceiptWatchObservation,
   normalizeWatchDescriptor,
   watchDescriptorForRecovery,
   watchTransition,
@@ -5418,7 +5419,7 @@ function externalWatcher() {
       }
 
       const observedAt = new Date()
-      const observation = probeExternalDependency(descriptor)
+      const observation = localReceiptWatchObservation(recovery) ?? probeExternalDependency(descriptor)
       const transition = watchTransition(recovery, observation, observedAt)
       const recorded = recordExternalWatchResult(recovery, token, transition)
       let resume = null
@@ -6631,8 +6632,17 @@ async function recoveryWatch() {
       if(nativeGate.reconciled){outcomes.push({action:'native_reacceptance_guard_reconciled',...nativeGate});continue}
       const observed=parseControlJson(controlQuery(`SELECT snapshot FROM control.dot_health_current WHERE run_id=:'run'::uuid;`,{run:candidate.run_id}))
       if(observed?.worker_alive){outcomes.push({run_id:candidate.run_id,eligible:false,reason:'worker_active'});continue}
-      if(needsRecovery(observed)) {
-        const dispatch=await dispatchRecovery({health:observed,snapshot:candidate.current_task_id?supervisorSnapshot(candidate.current_task_id):null,claim:(run,fingerprint,family,evidence)=>parseControlJson(controlQuery(`SELECT control.claim_dot_recovery(:'run'::uuid,:'fingerprint',:'family',:'evidence'::jsonb);`,{run,fingerprint,family,evidence:JSON.stringify(evidence)})),start:job=>{const child=spawn(process.execPath,[path.join(controlSourceRoot,'tooling/control-plane/runner/dot-recovery-worker.mjs'),job.incident_id],{cwd:repoRoot,env:process.env,detached:true,stdio:'ignore'});child.on('error',()=>{});child.unref()}})
+      const recoveryNeeded=needsRecovery(observed)
+      const receiptSnapshot=recoveryNeeded&&candidate.current_task_id?supervisorSnapshot(candidate.current_task_id):null
+      // Due local publication receipts need ordinary supervisor polling. Sending
+      // each poll through incident investigation starves that path and escalates
+      // a known wait. Admission, timers, run locks and human gates remain below.
+      const localPublicationReceipt=candidate.status==='running'
+        && receiptSnapshot?.recovery?.status==='active' && receiptSnapshot.recovery.recoverable===true
+        && localReceiptWatchObservation(receiptSnapshot.recovery)
+        && receiptSnapshot.runtime_operations?.find(op=>op.status!=='consumed')?.action==='task-publish'
+      if(recoveryNeeded && !localPublicationReceipt) {
+        const dispatch=await dispatchRecovery({health:observed,snapshot:receiptSnapshot,claim:(run,fingerprint,family,evidence)=>parseControlJson(controlQuery(`SELECT control.claim_dot_recovery(:'run'::uuid,:'fingerprint',:'family',:'evidence'::jsonb);`,{run,fingerprint,family,evidence:JSON.stringify(evidence)})),start:job=>{const child=spawn(process.execPath,[path.join(controlSourceRoot,'tooling/control-plane/runner/dot-recovery-worker.mjs'),job.incident_id],{cwd:repoRoot,env:process.env,detached:true,stdio:'ignore'});child.on('error',()=>{});child.unref()}})
         outcomes.push({run_id:candidate.run_id,action:'general_recovery_dispatch',...dispatch})
         continue
       } else if(candidate.status==='failed' && candidate.workstream_slug!=='shared') {continue}
