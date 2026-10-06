@@ -7,6 +7,7 @@ import { parse, compileScript } from 'vue/compiler-sfc'
 import { renderToString } from 'vue/server-renderer'
 import * as vue from 'vue'
 import ts from 'typescript'
+import { useNavigationDisclosure } from '../../ux/src/composables/useNavigationDisclosure.ts'
 
 const require = createRequire(import.meta.url)
 function component(file, language = 'en', imports = {}) {
@@ -15,7 +16,7 @@ function component(file, language = 'en', imports = {}) {
   const code = ts.transpileModule(script.content, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText
   const module = { exports: {} }
   const copy = language === 'ar' ? { close: 'إغلاق', saving: 'جارٍ الحفظ…', search: 'بحث', empty: 'لا توجد سجلات' } : { close: 'Close', saving: 'Saving…', search: 'Search', empty: 'No records found' }
-  const globals = { ref: vue.ref, computed: vue.computed, watch: vue.watch, watchEffect: vue.watchEffect, nextTick: vue.nextTick, onMounted: vue.onMounted, onBeforeUnmount: vue.onBeforeUnmount, useId: vue.useId, useAttrs: vue.useAttrs, useSlots: vue.useSlots, useI18n: () => ({ t: key => key, te: () => false }), useToasts: () => ({ toasts: vue.ref([{ id: 1, title: 'Saved', tone: 'success' }]), dismiss: () => {} }), useUiCopy: () => key => copy[key] }
+  const globals = { useNavigationDisclosure, ref: vue.ref, computed: vue.computed, watch: vue.watch, watchEffect: vue.watchEffect, nextTick: vue.nextTick, onMounted: vue.onMounted, onBeforeUnmount: vue.onBeforeUnmount, useId: vue.useId, useAttrs: vue.useAttrs, useSlots: vue.useSlots, useI18n: () => ({ t: key => key, te: () => false }), useToasts: () => ({ toasts: vue.ref([{ id: 1, title: 'Saved', tone: 'success' }]), dismiss: () => {} }), useUiCopy: () => key => copy[key] }
   new Function('require', 'module', 'exports', ...Object.keys(globals), code)(name => imports[name] ?? require(name), module, module.exports, ...Object.values(globals))
   return module.exports.default
 }
@@ -535,4 +536,23 @@ test('shared UI exports are explicit and cover every governed source', () => {
     .map(file => `./${path.relative(path.join(workspaceRoot, 'packages/ui'), file).replaceAll(path.sep, '/')}`)
   assert.ok(components.every(file => path.basename(file, '.vue').startsWith('Bs')), 'every renderable shared component must have a canonical Bs-prefixed name')
   assert.deepEqual(Object.values(manifest.exports).sort(), [...components, './src/styles/base.css'].sort())
+})
+
+
+test('administration shell renders caller-owned selection, disabled items and state copy', async () => {
+  const labels = { suits: 'Registry', navigation: 'Context', open: 'Expand', close: 'Collapse', loading: 'Pending registry', emptySuits: 'Empty registry', emptyNavigation: 'Empty context' }
+  const props = { labels, contextTitle: 'Caller context', suits: [{ id: 'a', label: 'Caller A' }, { id: 'b', label: 'Caller B', disabled: true }], groups: [{ id: 'g', label: 'Caller group', items: [{ id: 'x', label: 'Caller action' }] }], selectedSuit: 'a', selectedContext: 'x' }
+  const html = await render('templates/BsAdministrationShell.vue', props)
+  assert.match(html, /aria-label="Caller A"[^>]*aria-pressed="true"/)
+  assert.match(html, /aria-label="Caller B"[^>]*disabled/)
+  assert.match(html, /aria-pressed="true"[^>]*>[^]*Caller action/)
+  assert.match(html, /Caller context/)
+  assert.doesNotMatch(html, /Super Admin|Shop Suit|Ledger Suit|supabase/i)
+  const empty = await render('templates/BsAdministrationShell.vue', { ...props, suits: [], groups: [] })
+  assert.match(empty, /Empty registry/)
+  assert.match(empty, /Empty context/)
+  const loading = await render('templates/BsAdministrationShell.vue', { ...props, loading: true })
+  assert.match(loading, /aria-busy="true"/)
+  assert.match(loading, /Pending registry/)
+  assert.doesNotMatch(loading, /Caller A|Caller action/)
 })

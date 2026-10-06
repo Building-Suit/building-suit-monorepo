@@ -164,7 +164,8 @@
     "./molecules/BsWorkflowScope": "./src/molecules/BsWorkflowScope.vue",
     "./atoms/BsColorSwatch": "./src/atoms/BsColorSwatch.vue",
     "./molecules/BsFlowBlock": "./src/molecules/BsFlowBlock.vue",
-    "./organisms/BsDashboardPreview": "./src/organisms/BsDashboardPreview.vue"
+    "./organisms/BsDashboardPreview": "./src/organisms/BsDashboardPreview.vue",
+    "./templates/BsAdministrationShell": "./src/templates/BsAdministrationShell.vue"
   },
   "dependencies": {
     "primevue": "4.5.5",

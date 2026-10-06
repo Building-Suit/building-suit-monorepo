@@ -1,4 +1,7 @@
 <script setup lang="ts">
+const shellSuit = ref('alpha')
+const shellContext = ref('overview')
+const shellState = ref<'normal' | 'loading' | 'empty' | 'overflow'>('normal')
 const { locale } = useI18n()
 const ui = useUiCopy()
 const isArabic = computed(() => locale.value === 'ar')
@@ -81,6 +84,26 @@ async function save() {
     else rows.value.push({ id: String(rows.value.length + 1), name: name.value.trim(), category: 'Example', amount: 0, status: 'draft' })
   }, () => isArabic.value ? 'أدخل اسماً قبل الحفظ.' : 'Enter a name before saving.')
 }
+const shellSuits = computed(() => shellState.value === 'empty' ? [] : Array.from({ length: shellState.value === 'overflow' ? 24 : 3 }, (_, index) => ({
+  id: index === 0 ? 'alpha' : `suit-${index}`,
+  label: isArabic.value ? `مساحة العمل ${index + 1}` : `Workspace ${index + 1}`,
+  icon: 'dashboard', disabled: index === 2,
+})))
+const shellGroups = computed(() => shellState.value === 'empty' ? [] : [{
+  id: 'workspace', label: isArabic.value ? 'الإدارة' : 'Administration',
+  items: Array.from({ length: shellState.value === 'overflow' ? 32 : 3 }, (_, index) => ({
+    id: index === 0 ? 'overview' : `context-${index}`,
+    label: index === 0 ? (isArabic.value ? 'نظرة عامة' : 'Overview') : (isArabic.value ? `إعدادات مساحة العمل وعناصر التنقل الطويلة ${index}` : `Workspace settings and long navigation item ${index}`),
+    to: index === 1 ? '#administration-shell' : undefined,
+    disabled: index === 2,
+  })),
+}])
+const shellLabels = computed(() => ({
+  suits: isArabic.value ? 'مساحات العمل' : 'Workspaces', navigation: isArabic.value ? 'تنقل السياق' : 'Context navigation',
+  open: isArabic.value ? 'فتح التنقل' : 'Open navigation', close: isArabic.value ? 'إغلاق التنقل' : 'Close navigation',
+  loading: isArabic.value ? 'جارٍ التحميل' : 'Loading navigation', emptySuits: isArabic.value ? 'لا توجد مساحات عمل' : 'No workspaces',
+  emptyNavigation: isArabic.value ? 'لا توجد عناصر تنقل' : 'No navigation items',
+}))
 useHead({ title: 'Shared component catalogue · Building Suit' })
 </script>
 
@@ -92,6 +115,18 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
       :context-label="isArabic ? 'سياق المعاينة' : 'Preview context'"
       :context="[{ label: isArabic ? 'الاتجاه' : 'Direction', value: isArabic ? 'RTL' : 'LTR' }, { label: isArabic ? 'المصدر' : 'Owner', value: 'packages/ui' }]"
     />
+
+    <BsContentSection id="administration-shell" :title="isArabic ? 'هيكل الإدارة' : 'Administration shell'" :description="isArabic ? 'أمثلة التنقل والحالات من بيانات التطبيق.' : 'App-owned descriptors, controlled selection and normal/loading/empty/overflow examples.'">
+      <BsInline>
+        <BsButton v-for="state in (['normal', 'loading', 'empty', 'overflow'] as const)" :key="state" :aria-pressed="shellState === state" @click="shellState = state">{{ state }}</BsButton>
+      </BsInline>
+      <BsAdministrationShell v-model:selected-suit="shellSuit" v-model:selected-context="shellContext" :suits="shellSuits" :groups="shellGroups" :labels="shellLabels" :loading="shellState === 'loading'" :context-title="isArabic ? 'مساحة العمل النشطة' : 'Active workspace'">
+        <template #header><BsText>{{ isArabic ? 'أدوات مساحة العمل' : 'Workspace tools' }}</BsText></template>
+        <BsHeading :level="2">{{ isArabic ? 'مساحة العمل' : 'Working area' }}</BsHeading>
+        <BsText>{{ isArabic ? 'يملك التطبيق البيانات والإجراءات والتفويض.' : 'The app owns data, actions and authorization.' }}</BsText>
+        <BsButton>{{ isArabic ? 'إجراء تجريبي' : 'Example action' }}</BsButton>
+      </BsAdministrationShell>
+    </BsContentSection>
 
     <BsContentSection
       :title="isArabic ? 'الدلالات والتخطيط' : 'Semantic content and layout'"
