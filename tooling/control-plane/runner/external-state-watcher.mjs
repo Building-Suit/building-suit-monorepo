@@ -24,6 +24,9 @@ const watchableActions = new Set([
   'reconcile-publication',
 ])
 
+// Receipt polling is local; publisher transport does not imply a GitHub wait.
+const receiptWaitReasons = new Set(['runtime_operation_in_flight', 'runtime_backoff_pending'])
+
 function digest(value) {
   return createHash('sha256')
     .update(JSON.stringify(value))
@@ -155,6 +158,17 @@ function observation(state, actionable, evidence, identity = evidence) {
   }
 }
 
+// Legacy rows can already have a GitHub descriptor and a claimed watcher lease.
+// Release it through the ordinary observation path and re-enter the supervisor;
+// this proves only local routing, never receipt success or publication authority.
+export function localReceiptWatchObservation(recovery) {
+  if (recovery?.next_action !== 'wait-external') return null
+  const reason = recovery.error_code ?? recovery.condition?.reason
+  return receiptWaitReasons.has(reason)
+    ? observation('local-runtime', true, { kind: 'runtime-receipt', reason })
+    : null
+}
+
 export function classifyGithubProbe(descriptor, result) {
   if (result?.unavailable) {
     return observation(
@@ -277,6 +291,7 @@ export function githubProbeObservation(descriptor, result) {
 
 export function watchDescriptorForRecovery(snapshot, plan, options = {}) {
   if (plan?.next_action !== 'wait-external') return null
+  if (receiptWaitReasons.has(plan.reason)) return null
   if (plan.reason === 'execution_in_flight' && plan.execution?.execution_id) {
     return { kind: 'control-execution', execution_id: Number(plan.execution.execution_id) }
   }

@@ -66,6 +66,7 @@ import {
   classifyControlProbe,
   githubProbeCommand,
   githubProbeObservation,
+  localReceiptWatchObservation,
   normalizeWatchDescriptor,
   watchDescriptorForRecovery,
   watchTransition,
@@ -5403,7 +5404,7 @@ function externalWatcher() {
       }
 
       const observedAt = new Date()
-      const observation = probeExternalDependency(descriptor)
+      const observation = localReceiptWatchObservation(recovery) ?? probeExternalDependency(descriptor)
       const transition = watchTransition(recovery, observation, observedAt)
       const recorded = recordExternalWatchResult(recovery, token, transition)
       let resume = null
