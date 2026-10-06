@@ -6676,13 +6676,13 @@ async function recoveryWatch() {
       if(observed?.worker_alive){outcomes.push({run_id:candidate.run_id,eligible:false,reason:'worker_active'});continue}
       const recoveryNeeded=needsRecovery(observed)
       const receiptSnapshot=recoveryNeeded&&candidate.current_task_id?supervisorSnapshot(candidate.current_task_id):null
-      // Due local verification/publication receipts need supervisor polling. Sending
-      // each poll through incident investigation starves that path and escalates
+      // Due local implementation, verification and publication receipts need
+      // supervisor polling. Incident investigation starves that path and escalates
       // a known wait. Admission, timers, run locks and human gates remain below.
       const localRuntimeReceipt=candidate.status==='running'
         && receiptSnapshot?.recovery?.status==='active' && receiptSnapshot.recovery.recoverable===true
         && localReceiptWatchObservation(receiptSnapshot.recovery)
-        && ['task-verify','task-publish'].includes(receiptSnapshot.runtime_operations?.find(op=>op.status!=='consumed')?.action)
+        && ['task-run','task-verify','task-publish'].includes(receiptSnapshot.runtime_operations?.find(op=>op.status!=='consumed')?.action)
       if(recoveryNeeded && !localRuntimeReceipt) {
         const dispatch=await dispatchRecovery({health:observed,snapshot:receiptSnapshot,claim:(run,fingerprint,family,evidence)=>parseControlJson(controlQuery(`SELECT control.claim_dot_recovery(:'run'::uuid,:'fingerprint',:'family',:'evidence'::jsonb);`,{run,fingerprint,family,evidence:JSON.stringify(evidence)})),start:job=>{const child=spawn(process.execPath,[path.join(controlSourceRoot,'tooling/control-plane/runner/dot-recovery-worker.mjs'),job.incident_id],{cwd:repoRoot,env:process.env,detached:true,stdio:'ignore'});child.on('error',()=>{});child.unref()}})
         outcomes.push({run_id:candidate.run_id,action:'general_recovery_dispatch',...dispatch})
