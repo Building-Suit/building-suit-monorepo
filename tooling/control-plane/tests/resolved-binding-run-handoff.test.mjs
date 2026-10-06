@@ -27,6 +27,7 @@ function recover({ runGate = 'continue', authority = 'current', acquisitionGate 
   let contractCurrent = false
   const context = {
     args: [runId],
+    reconcileNativeAdmission: () => null,
     validRunId: value => value === runId,
     parseControlJson: value => value,
     parseJson: value => JSON.parse(value),

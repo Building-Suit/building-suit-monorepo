@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {reviewedAdmissionBindings} from './native-admission.mjs'
 import {auditAttempts} from './retry-exhaustion-audit.mjs'
 import { dispatchRecovery,needsRecovery } from './dot-general-recovery.mjs'
 import { cleanupIntegratedWorktrees } from './dot-cleanup.mjs'
@@ -6620,6 +6621,24 @@ function attachRuntimeExecution(executionId) {
   controlQuery(`UPDATE control.runtime_operations SET execution_id=:'execution_id'::bigint, status='running',updated_at=now() WHERE operation_id=:'id'::uuid;`, { id: process.env.BS_OPERATION_ID, execution_id: String(executionId) })
 }
 
+function reconcileNativeAdmission(runId){
+ const diagnosis=parseControlJson(controlQuery(`SELECT control.diagnose_native_run_admission(:'run'::uuid);`,{run:runId}))
+ if(!diagnosis)return null
+ if(diagnosis.dependencies?.length||diagnosis.decisions?.length)return diagnosis
+ const bindings=reviewedAdmissionBindings(diagnosis)
+ if(bindings){
+  controlQuery(`UPDATE control.workstreams w SET verification_config=jsonb_set(jsonb_set(coalesce(w.verification_config,'{}'),'{commands}',
+   (SELECT coalesce(jsonb_agg(c),'[]') FROM jsonb_array_elements(coalesce(w.verification_config->'commands','[]')) c WHERE NOT (:'names'::jsonb ? (c->>'name'))) || :'commands'::jsonb),
+   '{legacy_plan_mappings}',coalesce(w.verification_config->'legacy_plan_mappings','{}')||:'mappings'::jsonb)
+   WHERE w.project_id=:'project'::uuid AND w.slug=:'workstream' AND NOT(w.verification_config->'commands' @> :'commands'::jsonb AND w.verification_config->'legacy_plan_mappings' @> :'mappings'::jsonb);`,
+   {names:JSON.stringify(bindings.commands.map(c=>c.name)),commands:JSON.stringify(bindings.commands),mappings:JSON.stringify(bindings.legacy_plan_mappings),project:diagnosis.packet.project.project_id,workstream:diagnosis.packet.workstream.slug})
+  controlQuery(`INSERT INTO control.task_events(task_id,event_type,source,payload) SELECT :'task','native_verification_bindings_reconciled','dot',:'proof'::jsonb
+   WHERE NOT EXISTS(SELECT 1 FROM control.task_events WHERE task_id=:'task' AND event_type='native_verification_bindings_reconciled' AND payload->>'run_id'=:'run');`,
+   {task:diagnosis.task_id,run:runId,proof:JSON.stringify({run_id:runId,bindings,approved_plan:diagnosis.packet.task.verification_plan,tests_required_post_implementation:true,product_attempt_consumed:false})})
+ }
+ return parseControlJson(controlQuery(`SELECT control.reconcile_native_run_admission(:'run'::uuid);`,{run:runId}))
+}
+
 async function recoveryWatch() {
   try {
     controlQuery(`SELECT control.reconcile_dot_recovery_completion();`)
@@ -6627,6 +6646,7 @@ async function recoveryWatch() {
     const candidates = parseControlJson(controlQuery(`SELECT coalesce(jsonb_agg(to_jsonb(r)),'[]'::jsonb) FROM control.workflow_runs r WHERE status='running' OR (status='failed' AND current_task_id IS NOT NULL);`))
     const outcomes = [{action:'health_collection',ok:health.code===0,llm_used:false}]
     for (const candidate of candidates) {
+      if(!candidate.current_task_id && candidate.status==='running' && !candidate.stop_requested && !candidate.maintenance_requested){const admission=reconcileNativeAdmission(candidate.run_id);if(admission)outcomes.push({run_id:candidate.run_id,action:'native_admission_diagnostics',task_id:admission.task_id,reason:admission.reason})}
       if(candidate.current_task_id){const audit=supervisorSnapshot(candidate.current_task_id).exhaustion_audit;controlQuery(`SELECT control.record_retry_exhaustion_audit(:'task',:'proof'::jsonb);`,{task:candidate.current_task_id,proof:JSON.stringify(audit)})}
       const nativeGate=parseControlJson(controlQuery(`SELECT control.reconcile_native_reacceptance_gate(:'run'::uuid);`,{run:candidate.run_id}))
       if(nativeGate.reconciled){outcomes.push({action:'native_reacceptance_guard_reconciled',...nativeGate});continue}
@@ -6704,6 +6724,7 @@ function recoverWorkflowRun() {
       // Binding reconciliation can invalidate the claim's contract. Refresh it
       // through the existing frozen-run authority before acquisition, as the
       // ordinary watchdog does; acquisition still owns every admission gate.
+      reconcileNativeAdmission(runId)
       controlQuery(`SELECT control.reconcile_ordinary_run_publication(:'run'::uuid);`,{run:runId})
       const acquisition = parseControlJson(controlQuery(`SELECT control.acquire_workflow_run_task(:'id'::uuid,'cp-batch-v2',:'fingerprint',:'token','runner');`,{id:runId,fingerprint:process.env.BS_BATCH_CONTROLLER_FINGERPRINT ?? 'c51e2846c1fe3966ac5705a2ba6e21c11804e4f1e0ea3be37a14ef2c47cca075',token:`selfheal:${runId}`}))
       if (!acquisition.acquired && acquisition.action !== 'credit_completion') { output({ok:true,status:'wait',run_id:runId,acquisition}); return }

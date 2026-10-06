@@ -1,5 +1,6 @@
+import {admissionDiagnostic} from './native-admission.mjs'
 import {exhaustionHealth} from './retry-exhaustion-audit.mjs'
-export const HEALTH_STATES = Object.freeze(['RUNNING','VERIFYING','REPAIRING','PUBLISHING','WAITING_TIMER','WAITING_OPERATOR','WAITING_DEPENDENCY','STUCK','FAILED','COMPLETE'])
+export const HEALTH_STATES = Object.freeze(['RUNNING','VERIFYING','REPAIRING','PUBLISHING','WAITING_TIMER','WAITING_OPERATOR','WAITING_DEPENDENCY','WAITING_ADMISSION','RECONCILING','STUCK','FAILED','COMPLETE'])
 const time = value => Number.isFinite(Date.parse(value)) ? Date.parse(value) : 0
 export function classifyHealth(input, process = {}, now = Date.now(), graceMs = 60_000) {
  const {run,task,execution:e,verification:v,recovery:r,operation:o,publication:p,policy} = input
@@ -60,7 +61,10 @@ export function classifyHealth(input, process = {}, now = Date.now(), graceMs = 
   if(input.unowned_prerequisite)return state('WAITING_OPERATOR',`Unowned prerequisite outside authorized runs: ${input.unowned_prerequisite}`,'Authorize the prerequisite within a correctly scoped run; never bypass the dependency',true)
   if(input.bounded_scope_exhausted)return state('WAITING_OPERATOR','All authorized batch tasks completed before the configured run limit','Operator must reconcile the existing batch scope/count; no scope expansion or replacement run',true)
   if(run?.status==='failed')return state('FAILED','Run failed without a current task','Inspect the recorded run failure',true)
-  return state('WAITING_DEPENDENCY','No eligible admitted task','Wait for authoritative dependency/decision readiness')
+  const diagnostic=admissionDiagnostic(input.admission)
+  base.admission={task_id:input.admission?.task_id??null,dependencies:input.admission?.dependencies??[],decisions:input.admission?.decisions??[],publication_current:input.admission?.publication_current??false}
+  base.recovery_owner=diagnostic.needs?null:'Dot';base.recovery_action=diagnostic.needs?null:'admission-diagnostics'
+  return state(incident?.status==='running'&&diagnostic.state==='WAITING_ADMISSION'?'RECONCILING':diagnostic.state,diagnostic.why,diagnostic.next,diagnostic.needs)
  }
  if(task.status==='complete' && run?.current_task_id===task.task_id){
   if(age<=graceMs)return state('RUNNING','Publication complete; completion credit handoff pending','Credit once, then acquire the next eligible task')
@@ -70,7 +74,7 @@ export function classifyHealth(input, process = {}, now = Date.now(), graceMs = 
   if(age<=graceMs)return state('RUNNING','Verification passed; publication handoff pending','Supervisor must invoke publication preflight')
   return state('STUCK','Verification passed but publication transition never started','Supervisor must reconcile publication from passing evidence')
  }
- if(['planned','ready'].includes(task.status)&&!run)return state('WAITING_DEPENDENCY',input.blocking_decision?'Unapproved blocking decision':input.blocking_dependency?'Hard dependency incomplete':'Awaiting admission/current-task completion',input.blocking_decision?'Wait for the approved decision':'Acquire only when authoritative readiness permits',!!input.blocking_decision)
+ if(['planned','ready'].includes(task.status)&&!run)return state(input.blocking_decision?'WAITING_OPERATOR':input.blocking_dependency?'WAITING_DEPENDENCY':'WAITING_ADMISSION',input.blocking_decision?'Unapproved blocking decision':input.blocking_dependency?'Hard dependency incomplete':'Awaiting admission/current-task completion',input.blocking_decision?'Wait for the approved decision':'Acquire only when authoritative readiness permits',!!input.blocking_decision)
  if(!e && process.supervisor_alive && base.supervisor_lease.valid)return state('RUNNING','Supervisor preparing implementation preflight','Prepare dependencies and dispatch attempt 1')
  if(task.status==='failed')return state('STUCK','Task failed; no active repair, timer or human gate','Dot must classify the failure and route supported recovery')
  if(run?.status==='failed')return state('FAILED','Run failed','Inspect the run failure',true)
