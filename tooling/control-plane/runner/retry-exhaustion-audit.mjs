@@ -1,3 +1,4 @@
+import {reconcileFailureEvidence} from './failure-evidence.mjs'
 import {redactText} from '../lib/redaction.mjs'
 import {existsSync,readFileSync,mkdirSync,realpathSync,readdirSync} from 'node:fs'
 import path from 'node:path'
@@ -29,18 +30,24 @@ export function auditAttempts(snapshot){
   const fs=failures.filter(f=>Number(f.execution_id)===Number(e.execution_id));const latest=fs.at(-1)
   let checks=latest?.metadata?.verification_probe?.checks??latest?.metadata?.checks??e.metadata?.verification_probe_failures
   if(!checks?.length)checks=results.filter(r=>Number(r.execution_id)===Number(e.execution_id)).map(r=>({...r,...r.metadata}))
+  const verification=(snapshot.verification_runs??[]).filter(v=>Number(v.execution_id)===Number(e.execution_id)).at(-1)
+  const structured=results.filter(r=>Number(r.execution_id)===Number(e.execution_id)&&r.verification_run_id===verification?.verification_run_id&&r.metadata?.failure_evidence)
+  if(structured.length)checks=structured.map(r=>({...r,...r.metadata,name:r.check_name}))
   checks=(checks??[]).filter(c=>c.required!==false&&['fail','not_run','unavailable'].includes(c.status))
   if(!latest&&!checks.length&&e.status==='succeeded')return []
   let classification='UNKNOWN',proof=null
   const text=checks.map(c=>c.summary??'').join('\n')+'\n'+(latest?.error_code??'')
-  if(checks.length&&checks.every(c=>emptyComponentFixture(e.worktree_path,c)||correctedLocaleSelector(e.worktree_path,c))){classification='VERIFIER_INFRA';proof=checks.map(c=>emptyComponentFixture(e.worktree_path,c)||correctedLocaleSelector(e.worktree_path,c))}
+  const bound=checks.map(c=>reconcileFailureEvidence(c,e,verification??{verification_run_id:c.verification_run_id}))
+  if(bound.length&&bound.every(b=>b.evidence&&b.classification!=='UNKNOWN')){classification=bound.some(b=>b.classification==='PRODUCT_DEFECT')?'PRODUCT_DEFECT':bound[0].classification;proof=bound.map(b=>b.evidence)}
+  else if(bound.some(b=>b.evidence&&b.classification==='UNKNOWN'))classification='UNKNOWN'
+  else if(checks.length&&checks.every(c=>emptyComponentFixture(e.worktree_path,c)||correctedLocaleSelector(e.worktree_path,c))){classification='VERIFIER_INFRA';proof=checks.map(c=>emptyComponentFixture(e.worktree_path,c)||correctedLocaleSelector(e.worktree_path,c))}
   else if(/E2BIG|worker_spawn|ECONNREFUSED|EADDRINUSE/.test(text))classification='TRANSIENT_INFRASTRUCTURE'
   else if(checks.length&&checks.every(c=>['verification-configuration','CONFIGURATION'].includes(c.failure_class)||c.status==='not_run'&&/binding|unenforced|configuration/.test(c.selection_reason??'')))classification='CONFIGURATION'
   else if(checks.length&&checks.every(c=>['verification-infrastructure','verification-lifecycle','VERIFIER_INFRA'].includes(c.failure_class)))classification='VERIFIER_INFRA'
   else if(latest?.failure_class==='repository-state')classification='REPOSITORY_WORKTREE'
   else if(latest?.failure_class==='publication-reconciliation')classification='PUBLICATION_INFRA'
   else if(checks.some(c=>c.status==='fail'&&/AssertionError|assertion failed|Error: expect\(|ERR_ASSERTION|✖.*assert/i.test(c.summary??''))&&!/ENOENT|EACCES|spawn|ECONN|EADDR/.test(text))classification='PRODUCT_DEFECT'
-  const blocking_checks=checks.map(c=>({name:c.name,status:c.status,summary:redactText(c.summary??'').slice(0,2500),failure_class:c.failure_class}))
+  const blocking_checks=checks.map(c=>({name:c.name,status:c.status,summary:redactText(c.summary??'').slice(0,2500),failure_class:c.failure_class,failure_evidence:c.metadata?.failure_evidence??c.failure_evidence??null}))
   return [{execution_id:e.execution_id,attempt:e.attempt,classification,charged:classification==='PRODUCT_DEFECT',blocking_checks,proof,root_cause:proof?'Legacy migration test scans a removed optional components directory without provisioning its empty fixture.':blocking_checks[0]?.summary??latest?.error_code??'Failure evidence requires investigation'}]
  })
  const max=snapshot.packet?.retry_policy?.max_attempts??snapshot.policy?.max_attempts??5,consumed=entries.filter(e=>e.charged).length

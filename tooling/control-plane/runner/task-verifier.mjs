@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {failureEvidence} from './failure-evidence.mjs'
 import {emptyComponentFixture} from './retry-exhaustion-audit.mjs'
 
 import {
@@ -141,6 +142,7 @@ function liveCheck(check) {
       verification_mode: verificationMode,
       selection_reason: check.selection_reason ?? 'unspecified',
       failure_class: check.failure_class ?? null,
+      failure_evidence: check.failure_evidence ?? null,
     }),
   }
   const args = ['-X','-q','-A','-t','-v','ON_ERROR_STOP=1','-h',controlDatabase.host,'-p',controlDatabase.port,'-U',controlDatabase.user,'-d',controlDatabase.database]
@@ -322,6 +324,7 @@ function runCheck({
       Date.now() - started,
   }
 
+  check.failure_evidence=failureEvidence({execution_id:null,verification_run_id:verificationRunId,check,artifact:readFileSync(logPath,'utf8'),classification:result.error||result.signal?'TRANSIENT_INFRASTRUCTURE':missingEvidence?'CONFIGURATION':'UNKNOWN',phase:result.error?'spawn':'test',origin:result.error?'process':'unknown',result:{signal:result.signal??null,error_code:result.error?.code??null}})
   liveCheck(check)
 
   return check

@@ -22,6 +22,7 @@ export function classifyHealth(input, process = {}, now = Date.now(), graceMs = 
  const state=(value,why,next,needs=false)=>({...base,state:value,why,next_automatic_action:next,operator_action_required:needs})
  if(run && !runIsActionable(run))return state('COMPLETE',`Historical lifecycle ended: ${run.status}`,'None — historical run')
  if(!run&&['complete','cancelled'].includes(task?.status))return state('COMPLETE','Task completed','None')
+ if(incident?.action==='incident-investigate' && incident?.status==='running')return state('RECONCILING','Execution-bound failure evidence investigation is active','Codex must review complete artifacts and persist the bound classification')
  if(incident?.status==='human-gate')return state('WAITING_OPERATOR',incident.evidence?.reason??'Incident investigation established a human gate','Resolve the recorded incident gate',true)
  if(run?.stop_requested||run?.maintenance_requested)return state('WAITING_OPERATOR',run.stop_requested?'Run stop requested':'Run maintenance hold','Operator must release the existing run hold',true)
  const audit=r?.condition?.exhaustion_audit

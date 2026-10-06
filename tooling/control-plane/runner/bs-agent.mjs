@@ -2342,7 +2342,16 @@ function taskVerify() {
         'verification-infrastructure',
         'verification-required-check-unavailable',
       ])
-      const effectiveClass=effectiveFailureClass(supervisorSnapshot(taskId),failure?.failure_class)
+      const reviewedSnapshot=supervisorSnapshot(taskId)
+      const effectiveClass=effectiveFailureClass(reviewedSnapshot,failure?.failure_class)
+      const reviewed=reviewedSnapshot.exhaustion_audit?.entries?.at(-1)
+      if(reviewed?.proof?.length&&reviewed.proof.every(p=>p.version===2)){
+       const old=reviewedSnapshot.verification_runs?.at(-1)?.metadata?.verified_state
+       const e=reviewedSnapshot.executions?.at(-1)
+       if(!old?.files?.length)throw Error('original_verified_source_required')
+       const allowed=new Set(reviewed.proof.flatMap(p=>p.review?.source??[]).map(s=>s.path).filter(f=>f.includes('/tests/')))
+       for(const f of old.files)if(!allowed.has(f.file)&&gitCheck(e.worktree_path,['hash-object','--',f.file]).value!==f.object)throw Error('reviewed_verifier_recovery_product_changed:'+f.file)
+      }
       if (!reverifyClasses.has(effectiveClass)) {
         throw new Error('failed_task_requires_implementation_repair')
       }
@@ -4824,7 +4833,7 @@ export function supervisorSnapshot(taskId) {
           WHERE e.task_id = :'task_id'
         ), '[]'::jsonb),
         'verification_results', COALESCE((
-          SELECT jsonb_agg(to_jsonb(v) ORDER BY v.verification_id)
+          SELECT jsonb_agg(to_jsonb(v)||jsonb_build_object('metadata',v.metadata||jsonb_build_object('failure_evidence',coalesce((SELECT review.evidence FROM control.verification_failure_reviews review WHERE review.verification_id=v.verification_id),v.metadata->'failure_evidence'))) ORDER BY v.verification_id)
           FROM control.verification_results v
           JOIN control.executions e USING (execution_id)
           WHERE e.task_id = :'task_id'
@@ -6641,7 +6650,7 @@ function reconcileNativeAdmission(runId){
 
 async function recoveryWatch() {
   try {
-    controlQuery(`SELECT control.reconcile_dot_recovery_completion();`)
+    controlQuery(`SELECT control.reconcile_dot_recovery_completion(); SELECT control.reconcile_reviewed_evidence_incidents();`)
     const health=execute(process.execPath,[path.join(controlSourceRoot,'tooling/control-plane/runner/dot-health-collector.mjs')],{cwd:repoRoot,timeout:25000})
     const candidates = parseControlJson(controlQuery(`SELECT coalesce(jsonb_agg(to_jsonb(r)),'[]'::jsonb) FROM control.workflow_runs r WHERE control.run_is_actionable(r.status,r.current_task_id,r.finished_at);`))
     const outcomes = [{action:'health_collection',ok:health.code===0,llm_used:false}]
@@ -6772,8 +6781,8 @@ function taskReaccept() {
   const original=execution.metadata?.verification_probe_verified_state
   const currentState={base_sha:original?.base_sha,files:probe.verified_state?.files?.map(f=>({...f,object:existsSync(path.join(execution.worktree_path,f.file))?gitCheck(execution.worktree_path,['hash-object','--',f.file]).value:'deleted'}))}
   currentState.fingerprint=publicationStateFingerprint(currentState)
-  const review=snapshot.retry_accounting?.classifications?.find(c=>Number(c.execution_id)===Number(execution.execution_id) && c.source==='human' && ['VERIFIER_INFRA','CONFIGURATION'].includes(c.classification))
-  const verifierPaths=review?.evidence?.verifier_paths ?? (original?.files??[]).map(f=>f.file).filter(f=>f.includes('/tests/') && !f.includes('/migrations/'))
+  const review=snapshot.retry_accounting?.classifications?.find(c=>Number(c.execution_id)===Number(execution.execution_id) && (c.source==='human'||c.evidence?.proof?.every(e=>e.version===2&&e.review?.source?.length)) && ['VERIFIER_INFRA','CONFIGURATION'].includes(c.classification))
+  const verifierPaths=review?.evidence?.verifier_paths ?? review?.evidence?.proof?.flatMap(e=>e.review.source.map(s=>s.path)).filter(f=>f.includes('/tests/')) ?? (original?.files??[]).map(f=>f.file).filter(f=>f.includes('/tests/') && !f.includes('/migrations/'))
   const requiredChecks=probe.checks.filter(c=>c.required!==false && c.status!=='skipped').map(c=>c.name)
   if(!review && publicationStateFingerprint(currentState)!==publicationStateFingerprint(original)) throw new Error('automatic_reacceptance_source_changed')
   validateVerifierOnlyReacceptance({execution,probe,currentState,verifierPaths,requiredChecks})

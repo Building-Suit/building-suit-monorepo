@@ -254,6 +254,7 @@ export function planSupervisorStep(snapshot) {
     if (['verification-configuration','verification-infrastructure'].includes(explicitFailure?.failure_class) && execution?.status==='failed' && snapshot.run_publication_authority?.authorized) {
       return decision('act','reverify',explicitFailure.failure_class,'same_attempt_verifier_reacceptance',{command:'task-reaccept',execution,verification,publication,fingerprint})
     }
+    if (['verification-configuration','verification-infrastructure'].includes(explicitFailure?.failure_class) && execution?.status==='succeeded' && snapshot.exhaustion_audit?.entries?.some(e=>e.execution_id===execution.execution_id&&e.proof?.length&&e.proof.every(p=>p.version===2)))return decision('act','reverify',explicitFailure.failure_class,'reviewed_existing_verifier_recovery',{command:'task-verify',execution,verification,publication,fingerprint})
     if (explicitFailure?.failure_class==='verification-configuration' && execution?.status==='succeeded' && snapshot.binding_recovery) {
       return decision('act','reverify','verification-configuration','existing_executable_binding_recovery',{command:'task-verify',execution,verification,publication,fingerprint})
     }
