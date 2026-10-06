@@ -30,7 +30,7 @@ export function auditAttempts(snapshot){
   const fs=failures.filter(f=>Number(f.execution_id)===Number(e.execution_id));const latest=fs.at(-1)
   let checks=latest?.metadata?.verification_probe?.checks??latest?.metadata?.checks??e.metadata?.verification_probe_failures
   if(!checks?.length)checks=results.filter(r=>Number(r.execution_id)===Number(e.execution_id)).map(r=>({...r,...r.metadata}))
-  const verification=(snapshot.verification_runs??[]).filter(v=>Number(v.execution_id)===Number(e.execution_id)).at(-1)
+  const verification=(snapshot.verification_runs??[]).filter(v=>Number(v.execution_id)===Number(e.execution_id)&&!['running','passed'].includes(v.status)).at(-1)
   const structured=results.filter(r=>Number(r.execution_id)===Number(e.execution_id)&&r.verification_run_id===verification?.verification_run_id&&r.metadata?.failure_evidence)
   if(structured.length)checks=structured.map(r=>({...r,...r.metadata,name:r.check_name}))
   checks=(checks??[]).filter(c=>c.required!==false&&['fail','not_run','unavailable'].includes(c.status))

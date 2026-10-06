@@ -59,3 +59,9 @@ test('reviewed non-product receipt must reverify, never replay its old failed ph
 })
 
 test('ambiguous timeout or child crash stays UNKNOWN; typed transport/configuration errors recover without product charge',()=>{assert.equal(processFailureCategory({error:{code:'ETIMEDOUT'}}),'UNKNOWN');assert.equal(processFailureCategory({signal:'SIGSEGV'}),'UNKNOWN');assert.equal(processFailureCategory({error:{code:'E2BIG'}}),'TRANSIENT_INFRASTRUCTURE');assert.equal(processFailureCategory({error:{code:'ENOENT'}}),'CONFIGURATION')})
+
+test('in-flight same-attempt reverification retains the reviewed historical failure classification',()=>{
+ const evidence=failureEvidence({execution_id:30,verification_run_id:20,check,artifact:'full log',classification:'VERIFIER_INFRA',origin:'verifier-fixture',review:{root_cause:'test fixture failure',source:[{path:'app/tests/fixture.ts'}]}})
+ const s={executions:[{execution_id:30,attempt:1,status:'succeeded'}],verification_runs:[{execution_id:30,verification_run_id:20,status:'failed'},{execution_id:30,verification_run_id:21,status:'running'}],verification_results:[{...check,metadata:{failure_evidence:evidence}}]}
+ assert.equal(auditAttempts(s).entries[0].classification,'VERIFIER_INFRA');assert.equal(auditAttempts(s).consumed,0)
+})
