@@ -1,3 +1,4 @@
+import {runIsActionable} from './run-lifecycle.mjs'
 import { spawn,spawnSync,execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { mkdirSync,readFileSync,writeFileSync,readdirSync,existsSync } from 'node:fs'
@@ -91,7 +92,7 @@ async function run() {
  const heartbeat=setInterval(()=>{try{finish('running',{heartbeat_at:new Date().toISOString()})}catch{/* DB reconnect is owned by the next heartbeat/watchdog. */}},45000)
  try {
   const current=query(`SELECT to_jsonb(r) FROM control.workflow_runs r WHERE run_id=${quote(job.run_id)}::uuid;`)
-  if(current.current_task_id!==job.task_id||current.stop_requested||current.maintenance_requested){finish('resolved',{reason:'subject_progressed_or_held'});return}
+  if(!runIsActionable(current)||current.current_task_id!==job.task_id||current.stop_requested||current.maintenance_requested){finish('resolved',{reason:'subject_progressed_or_held'});return}
   let runtime=source
   const catalog=query(`SELECT to_jsonb(c) FROM control.dot_recovery_catalog c WHERE root_family=${quote(job.root_family)};`)
   if(job.owner==='Dot'&&catalog?.compatible_runtime!=='dot-general-v1') {
