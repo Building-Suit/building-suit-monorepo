@@ -6643,9 +6643,11 @@ async function recoveryWatch() {
   try {
     controlQuery(`SELECT control.reconcile_dot_recovery_completion();`)
     const health=execute(process.execPath,[path.join(controlSourceRoot,'tooling/control-plane/runner/dot-health-collector.mjs')],{cwd:repoRoot,timeout:25000})
-    const candidates = parseControlJson(controlQuery(`SELECT coalesce(jsonb_agg(to_jsonb(r)),'[]'::jsonb) FROM control.workflow_runs r WHERE status='running' OR (status='failed' AND current_task_id IS NOT NULL);`))
+    const candidates = parseControlJson(controlQuery(`SELECT coalesce(jsonb_agg(to_jsonb(r)),'[]'::jsonb) FROM control.workflow_runs r WHERE control.run_is_actionable(r.status,r.current_task_id,r.finished_at);`))
     const outcomes = [{action:'health_collection',ok:health.code===0,llm_used:false}]
     for (const candidate of candidates) {
+      const lifecycle=parseControlJson(controlQuery(`SELECT control.reconcile_empty_run(:'run'::uuid);`,{run:candidate.run_id}))
+      if(lifecycle?.closed){outcomes.push({action:'obsolete_run_closed',...lifecycle});continue}
       if(!candidate.current_task_id && candidate.status==='running' && !candidate.stop_requested && !candidate.maintenance_requested){const admission=reconcileNativeAdmission(candidate.run_id);if(admission)outcomes.push({run_id:candidate.run_id,action:'native_admission_diagnostics',task_id:admission.task_id,reason:admission.reason})}
       if(candidate.current_task_id){const audit=supervisorSnapshot(candidate.current_task_id).exhaustion_audit;controlQuery(`SELECT control.record_retry_exhaustion_audit(:'task',:'proof'::jsonb);`,{task:candidate.current_task_id,proof:JSON.stringify(audit)})}
       const nativeGate=parseControlJson(controlQuery(`SELECT control.reconcile_native_reacceptance_gate(:'run'::uuid);`,{run:candidate.run_id}))

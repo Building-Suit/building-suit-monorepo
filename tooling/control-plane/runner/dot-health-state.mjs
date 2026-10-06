@@ -1,3 +1,4 @@
+import {runIsActionable} from './run-lifecycle.mjs'
 import {admissionDiagnostic} from './native-admission.mjs'
 import {exhaustionHealth} from './retry-exhaustion-audit.mjs'
 export const HEALTH_STATES = Object.freeze(['RUNNING','VERIFYING','REPAIRING','PUBLISHING','WAITING_TIMER','WAITING_OPERATOR','WAITING_DEPENDENCY','WAITING_ADMISSION','RECONCILING','STUCK','FAILED','COMPLETE'])
@@ -8,7 +9,7 @@ export function classifyHealth(input, process = {}, now = Date.now(), graceMs = 
  const last=Math.max(...timestamps,run&&!task?time(run.updated_at):0)
  const age=last?now-last:Infinity
  const base={key:input.key,run_id:run?.run_id??null,workstream:run?.workstream_slug??task?.workstream_slug??task?.suit_slug,
- task_id:task?.task_id??run?.current_task_id??null,completed_tasks:run?.completed_tasks??null,max_tasks:run?.max_tasks??null,
+ run_status:run?.status??null,history_only:!!run&&!runIsActionable(run),task_id:task?.task_id??run?.current_task_id??null,completed_tasks:run?.completed_tasks??null,max_tasks:run?.max_tasks??null,
  attempt:e?.attempt??0,max_attempts:policy?.max_attempts??null,model:e?.model_name??null,profile:e?.model_profile??task?.model_profile??null,reasoning_effort:e?.reasoning_effort??null,execution_id:e?.execution_id??null,
  worker_alive:process.worker_alive===true,process:process.worker??null,process_observed_at:process.observed_at??null,
  controller_lease:{token:run?.controller_lease_token??null,expires_at:run?.controller_lease_expires_at??null,valid:process.supervisor_alive===true&&time(run?.controller_lease_expires_at)>now},
@@ -19,7 +20,7 @@ export function classifyHealth(input, process = {}, now = Date.now(), graceMs = 
  const incident=input.incident_recovery
  if(incident){base.recovery_owner=incident.owner;base.recovery_action=incident.action;base.incident_id=incident.incident_id;base.recovery_started=incident.started_at;base.next_recovery_check=incident.next_check_at}
  const state=(value,why,next,needs=false)=>({...base,state:value,why,next_automatic_action:next,operator_action_required:needs})
- if(run && (['finished','complete'].includes(run.status)||run.completed_tasks>=run.max_tasks))return state('COMPLETE','Bounded run completed','None')
+ if(run && !runIsActionable(run))return state('COMPLETE',`Historical lifecycle ended: ${run.status}`,'None — historical run')
  if(!run&&['complete','cancelled'].includes(task?.status))return state('COMPLETE','Task completed','None')
  if(incident?.status==='human-gate')return state('WAITING_OPERATOR',incident.evidence?.reason??'Incident investigation established a human gate','Resolve the recorded incident gate',true)
  if(run?.stop_requested||run?.maintenance_requested)return state('WAITING_OPERATOR',run.stop_requested?'Run stop requested':'Run maintenance hold','Operator must release the existing run hold',true)

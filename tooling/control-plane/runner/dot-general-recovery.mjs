@@ -22,7 +22,7 @@ export function recoveryIdentity(h) {
  return createHash('sha256').update(JSON.stringify({run:h.run_id,task:h.task_id,execution:h.execution_id,state:'STUCK',dispatcher:'general-v1'})).digest('hex')
 }
 export function needsRecovery(h,now=Date.now()) {
- return ['STUCK','WAITING_ADMISSION','RECONCILING'].includes(h?.state)&&h.operator_action_required===false&&!h.worker_alive&&now-Date.parse(h.observed_at)<90_000
+ return !h?.history_only && (!h?.run_status||['running','failed'].includes(h.run_status)) && ['STUCK','WAITING_ADMISSION','RECONCILING'].includes(h?.state)&&h.operator_action_required===false&&!h.worker_alive&&now-Date.parse(h.observed_at)<90_000
 }
 export async function dispatchRecovery({health,snapshot,claim,start,now=Date.now()}) {
  if(!needsRecovery(health,now))return {claimed:false,reason:'progress_or_human_gate'}

@@ -166,6 +166,8 @@ test('Dot binding recovery and native bounded ordinary publication preserve iden
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/051_dot_native_admission.sql')])
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/052_dot_admission_health_states.sql')])
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/native-admission-smoke.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/053_dot_run_lifecycle.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/run-lifecycle-smoke.sql')])
     assert.ok(JSON.parse(psql(databaseUrl.href, ['-f', path.join(root,'tooling/control-plane/runner/dot-health-inputs.sql'),'-At'])).length > 0)
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/dot-stuck-recovery-smoke.sql')])
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/dot-general-recovery-smoke.sql')])

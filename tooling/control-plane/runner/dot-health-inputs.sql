@@ -1,9 +1,9 @@
 WITH active_runs AS (
- SELECT * FROM control.workflow_runs r WHERE status='running' OR (status='failed' AND current_task_id IS NOT NULL) OR (status='finished' AND finished_at>now()-interval '24 hours') OR EXISTS(SELECT 1 FROM control.dot_health_observations h WHERE h.run_id=r.run_id)
+ SELECT * FROM control.workflow_runs r WHERE control.run_is_actionable(r.status,r.current_task_id,r.finished_at)
 ), subjects AS (
  SELECT 'run:'||r.run_id key,to_jsonb(r) run,t.task_id FROM active_runs r LEFT JOIN control.tasks t ON t.task_id=r.current_task_id
  UNION ALL
- SELECT 'task:'||t.task_id,NULL::jsonb,t.task_id FROM control.tasks t WHERE (status IN('planned','ready','in_progress','verification','passed','failed') OR EXISTS(SELECT 1 FROM control.dot_health_observations h WHERE h.key='task:'||t.task_id))
+ SELECT 'task:'||t.task_id,NULL::jsonb,t.task_id FROM control.tasks t WHERE status IN('planned','ready','in_progress','verification','passed','failed')
  AND NOT EXISTS(SELECT 1 FROM active_runs r WHERE r.current_task_id=t.task_id)
 )
 SELECT coalesce(jsonb_agg(jsonb_build_object('key',s.key,'run',s.run,'task',to_jsonb(t),'execution',e.data,'verification',v.data,'recovery',rec.data,'operation',op.data,'publication',pub.data,'publication_started',(SELECT jsonb_build_object('at',ev.created_at,'operation_id',ev.payload->>'operation_id') FROM control.task_events ev WHERE ev.task_id=t.task_id AND ev.event_type='publication_started' ORDER BY event_id DESC LIMIT 1),
