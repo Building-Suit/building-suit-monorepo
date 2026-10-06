@@ -1639,3 +1639,37 @@ body {
 
 @media (max-width: 80rem) { .bs-grid--columns-7 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 40rem) { .bs-grid--columns-7 { grid-template-columns: minmax(0, 1fr); } }
+
+/* Semantic layout options shared by the stack, grid and inline primitives. */
+[data-bs-padding='xs'] { padding: var(--bs-space-1); }
+[data-bs-padding='sm'] { padding: var(--bs-space-2); }
+[data-bs-padding='md'] { padding: var(--bs-space-3); }
+[data-bs-padding='lg'] { padding: var(--bs-space-4); }
+[data-bs-padding='xl'] { padding: var(--bs-space-6); }
+[data-bs-surface='default'] { background: var(--bs-surface); }
+[data-bs-surface='muted'] { background: var(--bs-surface-muted); }
+[data-bs-surface='raised'] { background: var(--bs-surface-raised); }
+[data-bs-border='true'] { border: 1px solid var(--bs-border); }
+[data-bs-radius='control'] { border-radius: var(--bs-radius-button); }
+[data-bs-radius='card'] { border-radius: var(--bs-radius-card); }
+[data-bs-radius='round'] { border-radius: 9999px; }
+[data-bs-grow='true'] { flex: 1; min-width: 0; }
+[data-bs-overflow='hidden'] { overflow: hidden; }
+[data-bs-span='2'] { grid-column: span 2; }
+[data-bs-span='3'] { grid-column: span 3; }
+[data-bs-span='4'] { grid-column: span 4; }
+[data-bs-span='5'] { grid-column: span 5; }
+.bs-bare-control { display: contents; }
+.bs-button--block { width: 100%; }
+.bs-button--start { justify-content: flex-start; text-align: start; }
+@media (max-width: 767px) { [data-bs-visibility='desktop'] { display: none; } [data-bs-span] { grid-column: auto; } }
+@media (min-width: 768px) { [data-bs-visibility='mobile'] { display: none; } }
+
+.bs-link--flow { display: inline-flex; align-items: center; gap: var(--bs-space-1); margin-top: var(--bs-space-3); color: var(--bs-primary); font-size: var(--bs-type-body-s-size); font-weight: 700; }
+
+.bs-grid--columns-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.bs-grid--columns-6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+@media (max-width: 80rem) { .bs-grid--columns-5, .bs-grid--columns-6 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 40rem) { .bs-grid--columns-5, .bs-grid--columns-6 { grid-template-columns: minmax(0, 1fr); } }
+.bs-button--floating { position: fixed; inset-inline-end: max(1rem, env(safe-area-inset-right)); inset-block-end: calc(5rem + env(safe-area-inset-bottom)); z-index: 25; min-height: var(--bs-tap-target-min); border-color: var(--bs-border-strong); border-radius: 999px; background: var(--bs-surface-raised); box-shadow: var(--bs-elevation-2); }
+@media (min-width: 1024px) { .bs-button--floating { inset-block-end: 1.25rem; inset-inline-end: 1.5rem; } }

@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict'
-import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises'
+import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
-import { auditSuitTemplates, validateSuitTemplateBoundaries } from './suit-template-boundaries.mjs'
+import { auditSuitTemplates, validateSuitTemplateBoundaries, writeSuitTemplateDebt } from './suit-template-boundaries.mjs'
 
 async function fixture(source, manifestViolations) {
   const root = await mkdtemp(path.join(os.tmpdir(), 'bs-suit-boundary-'))
@@ -80,4 +80,51 @@ test('strict mode accepts Bs-only templates without a debt manifest', async t =>
   await rm(path.join(root, 'debt.json'))
   const result = await validateSuitTemplateBoundaries({ root, strict: true })
   assert.deepEqual(result.failures, [])
+})
+
+test('the final gate requires a strict manifest even when actual debt is zero', async t => {
+  const { root } = await fixture('<template><BsText /></template>')
+  t.after(() => rm(root, { recursive: true, force: true }))
+  const result = await validateSuitTemplateBoundaries({ root, manifestPath: 'debt.json', requireStrict: true })
+  assert.ok(result.failures.some(message => message.includes('strict mode is required')))
+})
+
+test('normal workspace validation honors strict manifests and rejects recorded debt', async t => {
+  const { root, audit } = await fixture('<template><BsText /></template>')
+  t.after(() => rm(root, { recursive: true, force: true }))
+  const manifest = JSON.parse(await readFile(path.join(root, 'debt.json'), 'utf8'))
+  manifest.mode = 'strict'
+  await writeFile(path.join(root, 'debt.json'), JSON.stringify(manifest))
+  assert.deepEqual((await validateSuitTemplateBoundaries({ root, manifestPath: 'debt.json', requireStrict: true })).failures, [])
+  await assert.rejects(writeSuitTemplateDebt({ root, manifestPath: 'debt.json', branch: 'test', commit: '0000000' }), /Refusing to downgrade/)
+  manifest.violations = [{ file: 'obsolete.vue' }]
+  await writeFile(path.join(root, 'debt.json'), JSON.stringify(manifest))
+  assert.ok((await validateSuitTemplateBoundaries({ root, manifestPath: 'debt.json' })).failures.some(message => message.includes('empty violations array')))
+  assert.equal(audit.debt.length, 0)
+  manifest.violations = []
+  await writeFile(path.join(root, 'debt.json'), JSON.stringify(manifest))
+  await writeFile(path.join(root, 'apps/example-suit/app/pages.vue'), '<template><div /></template>')
+  assert.ok((await validateSuitTemplateBoundaries({ root, manifestPath: 'debt.json' })).failures.some(message => message.includes('forbidden in strict mode')))
+})
+
+test('Bs names require an uppercase component suffix and dynamic render tags remain forbidden', async t => {
+  const { root, audit } = await fixture('<template><Bs /><Bslegacy /><component :is="view" /></template>')
+  t.after(() => rm(root, { recursive: true, force: true }))
+  assert.equal(audit.debt.filter(item => item.kind.endsWith('tag')).length, 3)
+})
+
+test('strict mode checks CSS, vendor imports in adapters, compatibility imports, and public export names', async t => {
+  const { root } = await fixture('<template><BsText /></template>')
+  t.after(() => rm(root, { recursive: true, force: true }))
+  const app = path.join(root, 'apps/example-suit/app')
+  await writeFile(path.join(app, 'presentation.css'), '/* product CSS */ .panel { color: red }')
+  await writeFile(path.join(app, 'adapter.ts'), 'import("primevue/button"); export { default as BsIcon } from "@building-suit/ui/atoms/AppIcon"')
+  await mkdir(path.join(root, 'packages/ui'), { recursive: true })
+  await writeFile(path.join(root, 'packages/ui/package.json'), JSON.stringify({ exports: { './atoms/AppIcon': './src/atoms/BsIcon.vue' } }))
+  const result = await validateSuitTemplateBoundaries({ root, strict: true })
+  for (const signal of ['presentation CSS', 'direct UI-vendor import', 'stale unprefixed', 'renderable export']) {
+    assert.ok(result.failures.some(message => message.includes(signal)), signal)
+  }
+  await writeFile(path.join(app, 'presentation.css'), '/* shared CSS is registered by the layer */')
+  assert.ok(!(await validateSuitTemplateBoundaries({ root, strict: true })).failures.some(message => message.includes('presentation CSS')))
 })

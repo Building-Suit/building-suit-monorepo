@@ -129,63 +129,97 @@ const ledgerPresentation = useLedgerPresentation()
 </script>
 
 <template>
-  <div class="space-y-6">
-    <BsPageHeader :title="t('periods.title')" :subtitle="t('periods.subtitle')"  :context="ledgerPresentation.context(currentPeriod?.start_date, currentPeriod?.end_date, undefined)" :context-label="ledgerPresentation.t('pageContext.label')" />
-
-    <p v-if="!can('periods.read')" class="ls-card p-6 text-fg-muted" role="status">{{ t('periods.noAccess') }}</p>
-    <p v-else-if="error" class="ls-error" role="alert">{{ t('periods.loadFailed') }}</p>
+  <BsStack gap="lg">
+    <BsPageHeader
+      :title="t('periods.title')"
+      :subtitle="t('periods.subtitle')"
+      :context="ledgerPresentation.context(currentPeriod?.start_date, currentPeriod?.end_date, undefined)"
+      :context-label="ledgerPresentation.t('pageContext.label')"
+    />
+    <BsText v-if="!can('periods.read')" role="status" tone="muted">{{ t('periods.noAccess') }}</BsText>
+    <BsText v-else-if="error" role="alert" tone="danger">{{ t('periods.loadFailed') }}</BsText>
     <BsSectionSkeleton v-else-if="pending" variant="table" :rows="5" />
     <template v-else>
-      <section class="ls-card space-y-3 p-5" aria-labelledby="fiscal-year-heading">
-        <h2 id="fiscal-year-heading" class="text-h2 font-bold">{{ t('periods.fiscalYear') }}</h2>
-        <p>{{ t('periods.fiscalMonth', { month: fiscalMonth }) }}</p>
-        <p class="text-sm text-fg-muted">{{ t('periods.fiscalHint') }}</p>
-      </section>
-
+      <BsCard aria-labelledby="fiscal-year-heading" as="section" padding="md">
+        <BsStack gap="md">
+          <BsHeading id="fiscal-year-heading" :level="2" size="h2">{{ t('periods.fiscalYear') }}</BsHeading>
+          <BsText>{{ t('periods.fiscalMonth', { month: fiscalMonth }) }}</BsText>
+          <BsText size="sm" tone="muted">{{ t('periods.fiscalHint') }}</BsText>
+        </BsStack>
+      </BsCard>
       <BsButton v-if="can('periods.manage')" type="button" variant="primary" @click="createOpen = true">{{ t('periods.create') }}</BsButton>
-      <BsRecordActionDialog v-if="createOpen" v-model:visible="createOpen" :title="t('periods.create')" :dirty="createDirty" :pending="pendingAction === 'create'" :error="createError" :submit-label="t('periods.create')" :cancel-label="t('common.cancel')" @submit="createPeriod">
-        <BsFloatingField :label="t('periods.startDate')"><input id="period-start" v-model="createForm.start" type="date" class="ls-input" required></BsFloatingField>
-        <BsFloatingField :label="t('periods.endDate')"><input id="period-end" v-model="createForm.end" type="date" class="ls-input" :min="createForm.start" required></BsFloatingField>
+      <BsRecordActionDialog
+        v-if="createOpen"
+        v-model:visible="createOpen"
+        :title="t('periods.create')"
+        :dirty="createDirty"
+        :pending="pendingAction === 'create'"
+        :error="createError"
+        :submit-label="t('periods.create')"
+        :cancel-label="t('common.cancel')"
+        @submit="createPeriod"
+      >
+        <BsFloatingField :label="t('periods.startDate')">
+          <BsInput id="period-start" v-model="createForm.start" type="date" required />
+        </BsFloatingField>
+        <BsFloatingField :label="t('periods.endDate')">
+          <BsInput id="period-end" v-model="createForm.end" type="date" :min="createForm.start" required />
+        </BsFloatingField>
       </BsRecordActionDialog>
-
       <BsEmptyState v-if="!periods.length" :title="t('periods.empty')" :description="t('periods.emptyHint')" />
-      <section v-for="period in periods" :key="period.id" class="ls-card space-y-4 p-5" :data-period-status="period.status" :data-period-start="period.start_date">
-        <div class="flex flex-wrap items-start justify-between gap-3">
-          <div><h2 class="font-bold">{{ date(period.start_date) }} — {{ date(period.end_date) }}</h2><p class="text-sm text-fg-muted">{{ t('periods.fiscalRange', { start: date(period.fiscal_year_start), end: date(period.fiscal_year_end) }) }}</p></div>
-          <BsStatusBadge :status="period.status" :label="statusLabel(period.status)" :tone="period.status === 'open' ? 'success' : period.status === 'soft_closed' ? 'warning' : 'neutral'" />
-        </div>
-
-        <div v-if="can('periods.manage')" class="space-y-3 border-t border-line pt-4">
-          <BsFloatingField :label="t('periods.reason')"><input :id="`reason-${period.id}`" v-model="actionReason[period.id]" class="ls-input" :placeholder="t('periods.reasonHint')"></BsFloatingField>
-          <div class="flex flex-wrap gap-2">
-            <BsButton v-for="target in transitionOptions(period)" :key="target" type="button" class="ls-btn" :class="{ 'ls-btn-primary': target !== 'open' }" :disabled="Boolean(pendingAction) || (reopening(period, target) && !actionReason[period.id]?.trim())" @click="transition(period, target)">
-              {{ pendingAction === `${period.id}:${target}` ? t('common.saving') : target === 'soft_closed' && period.status === 'hard_closed' ? t('periods.reopen') : target === 'soft_closed' ? t('periods.softClose') : target === 'hard_closed' ? t('periods.hardClose') : t('periods.reopen') }}
-            </BsButton>
-          </div>
-        </div>
-
-        <div v-if="closeFor(period)" class="rounded-control bg-surface-muted p-3 text-sm">
-          <p class="font-semibold">{{ t('periods.yearEndComplete') }}</p>
-          <p>{{ t('periods.netResult') }}: <BsMoneyText :amount="closeFor(period)!.net_income_minor" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" /></p>
-          <NuxtLink class="text-link underline" :to="{ path: '/transactions', query: { q: closeFor(period)!.closing_transaction_id } }">{{ t('periods.closingJournal') }}</NuxtLink>
-        </div>
-
-        <details v-if="transitionsFor(period.id).length">
-          <summary class="cursor-pointer font-semibold">{{ t('periods.history') }}</summary>
-          <ol class="mt-3 space-y-2 text-sm">
-            <li v-for="item in transitionsFor(period.id)" :key="item.id" class="rounded-control bg-surface-muted p-3">
-              <p>{{ statusLabel(item.previous_status) }} → {{ statusLabel(item.new_status) }}</p>
-              <p class="text-fg-muted">{{ timestamp(item.transitioned_at) }}<template v-if="item.reason"> · {{ item.reason }}</template></p>
-            </li>
-          </ol>
-        </details>
-      </section>
-
-      <BsForm v-if="can('periods.year_end_close')" class="ls-card grid gap-3 p-5 sm:grid-cols-[1fr_2fr_auto] sm:items-end" :aria-busy="pendingAction === 'year-end'" @submit.prevent="closeYear">
-        <BsFloatingField :label="t('periods.fiscalYearStart')"><input id="year-start" v-model="closeForm.fiscalYearStart" type="date" class="ls-input" required></BsFloatingField>
-        <BsFloatingField :label="t('periods.yearEndReason')"><input id="year-end-reason" v-model="closeForm.reason" class="ls-input" required></BsFloatingField>
-        <BsButton type="submit" class="ls-btn ls-btn-primary" :disabled="Boolean(pendingAction) || !closeForm.reason.trim()">{{ pendingAction === 'year-end' ? t('common.saving') : t('periods.yearEnd') }}</BsButton>
+      <BsCard v-for="period in periods" :key="period.id" :data-period-status="period.status" :data-period-start="period.start_date" as="section" padding="md">
+        <BsStack gap="md">
+          <BsInline gap="md" :wrap="true" align="start" justify="between">
+            <BsBox>
+              <BsHeading :level="2" size="body">{{ date(period.start_date) }} — {{ date(period.end_date) }}</BsHeading>
+              <BsText size="sm" tone="muted">{{ t('periods.fiscalRange', { start: date(period.fiscal_year_start), end: date(period.fiscal_year_end) }) }}</BsText>
+            </BsBox>
+            <BsStatusBadge
+              :status="period.status"
+              :label="statusLabel(period.status)"
+              :tone="period.status === 'open' ? 'success' : period.status === 'soft_closed' ? 'warning' : 'neutral'"
+            />
+          </BsInline>
+          <BsStack v-if="can('periods.manage')" gap="md">
+            <BsFloatingField :label="t('periods.reason')">
+              <BsInput :id="`reason-${period.id}`" v-model="actionReason[period.id]" :placeholder="t('periods.reasonHint')" />
+            </BsFloatingField>
+            <BsInline gap="sm" :wrap="true">
+              <BsButton
+                v-for="target in transitionOptions(period)"
+                :key="target"
+                type="button"
+                :disabled="Boolean(pendingAction) || (reopening(period, target) && !actionReason[period.id]?.trim())"
+                :variant="(target !== 'open' ) ? 'primary' : 'default'"
+                @click="transition(period, target)"
+              >{{ pendingAction === `${period.id}:${target}` ? t('common.saving') : target === 'soft_closed' && period.status === 'hard_closed' ? t('periods.reopen') : target === 'soft_closed' ? t('periods.softClose') : target === 'hard_closed' ? t('periods.hardClose') : t('periods.reopen') }}</BsButton>
+            </BsInline>
+          </BsStack>
+          <BsBox v-if="closeFor(period)" padding="md" surface="muted" radius="control">
+            <BsText emphasis="semibold">{{ t('periods.yearEndComplete') }}</BsText>
+            <BsText>{{ t('periods.netResult') }}: <BsMoneyText :amount="closeFor(period)!.net_income_minor" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" /></BsText>
+            <BsLink :to="{ path: '/transactions', query: { q: closeFor(period)!.closing_transaction_id } }">{{ t('periods.closingJournal') }}</BsLink>
+          </BsBox>
+          <BsDisclosure v-if="transitionsFor(period.id).length">
+            <template #summary>{{ t('periods.history') }}</template>
+            <BsList :ordered="true" marker="none">
+              <BsListItem v-for="item in transitionsFor(period.id)" :key="item.id">
+                <BsText>{{ statusLabel(item.previous_status) }} → {{ statusLabel(item.new_status) }}</BsText>
+                <BsText tone="muted">{{ timestamp(item.transitioned_at) }}<template v-if="item.reason"> · {{ item.reason }}</template></BsText>
+              </BsListItem>
+            </BsList>
+          </BsDisclosure>
+        </BsStack>
+      </BsCard>
+      <BsForm v-if="can('periods.year_end_close')" :aria-busy="pendingAction === 'year-end'" layout="grid" @submit.prevent="closeYear">
+        <BsFloatingField :label="t('periods.fiscalYearStart')">
+          <BsInput id="year-start" v-model="closeForm.fiscalYearStart" type="date" required />
+        </BsFloatingField>
+        <BsFloatingField :label="t('periods.yearEndReason')">
+          <BsInput id="year-end-reason" v-model="closeForm.reason" required />
+        </BsFloatingField>
+        <BsButton type="submit" :disabled="Boolean(pendingAction) || !closeForm.reason.trim()" variant="primary">{{ pendingAction === 'year-end' ? t('common.saving') : t('periods.yearEnd') }}</BsButton>
       </BsForm>
     </template>
-  </div>
+  </BsStack>
 </template>

@@ -1,5 +1,7 @@
 <script setup lang="ts" generic="Row extends object = Record<string, unknown>">
+import { createTextVNode, h, renderSlot, toDisplayString, type VNodeChild } from 'vue'
 import Column from 'primevue/column'
+import BsButton from '../atoms/BsButton.vue'
 import DataTable, {
   type DataTableFilterEvent,
   type DataTableFilterMeta,
@@ -138,6 +140,70 @@ function columnClass(column: BsDataTableColumn<Row>, header = false) {
     column.sticky ? `bs-data-table__cell--sticky-${column.sticky}` : undefined,
   ].filter(Boolean).join(' ')
 }
+// PrimeVue mounts column slots as functional components. Keep their identities
+// stable across table updates so an open dialog retains its connected opener.
+const columnTemplates = new Map<string, {
+  body: (scope: { data: Row; index: number }) => VNodeChild[]
+  header: () => VNodeChild[]
+  footer: () => VNodeChild[]
+  filter: (scope: Record<string, unknown>) => VNodeChild[]
+}>()
+function templatesFor(initialColumn: BsDataTableColumn<Row>) {
+  const key = initialColumn.key
+  let templates = columnTemplates.get(key)
+  if (!templates) {
+    const currentColumn = () => props.columns.find(column => column.key === key) ?? initialColumn
+    templates = {
+      body: ({ data, index }) => {
+        const column = currentColumn()
+        const value = cellValue(column, data)
+        return [renderSlot(slots, `cell-${key}`, { row: data, value, column, index }, () => [createTextVNode(toDisplayString(value))])]
+      },
+      header: () => [renderSlot(slots, `header-${key}`, { column: currentColumn() })],
+      footer: () => {
+        const column = currentColumn()
+        return [renderSlot(slots, `footer-${key}`, { column }, () => [createTextVNode(toDisplayString(column.footer))])]
+      },
+      filter: scope => [renderSlot(slots, `filter-${key}`, { ...scope, column: currentColumn() })],
+    }
+    columnTemplates.set(key, templates)
+  }
+  return templates
+}
+function columnVNode(column: BsDataTableColumn<Row>) {
+  const templates = templatesFor(column)
+  return h(Column, {
+    key: column.key, columnKey: column.key, field: column.field,
+    header: slots[`header-${column.key}`] ? undefined : column.header,
+    exportHeader: column.header,
+    footer: column.footer === undefined ? undefined : String(column.footer),
+    sortable: column.sortable,
+    pt: column.ariaSort ? { headerCell: { 'aria-sort': column.ariaSort } } : undefined,
+    sortField: column.sortField, filterField: column.filterField,
+    filterMatchMode: column.filterMatchMode, exportable: column.exportable,
+    selectionMode: column.selectionMode, frozen: Boolean(column.sticky), alignFrozen: column.sticky,
+    headerClass: columnClass(column, true), bodyClass: columnClass(column), footerClass: columnClass(column),
+  }, {
+    body: templates.body,
+    ...(slots[`header-${column.key}`] ? { header: templates.header } : {}),
+    ...(column.footer !== undefined || slots[`footer-${column.key}`] ? { footer: templates.footer } : {}),
+    ...(slots[`filter-${column.key}`] ? { filter: templates.filter } : {}),
+  })
+}
+const renderRowActions = ({ data }: { data: Row }) => [
+  ...rowActions.value.filter(action => rowActionVisible(action, data)).map(action => h(BsButton, {
+    key: action, variant: action === 'edit' ? 'link' : 'text', size: 'sm',
+    class: { 'bs-data-table__danger-action': action !== 'edit' },
+    pending: isRowActionPending(action, data),
+    onClick: (event: Event) => { event.stopPropagation(); emitRowAction(action, data) },
+  }, () => actionLabel(action))),
+  renderSlot(slots, 'row-actions', { row: data }),
+]
+const renderActionHeader = () => [props.actionLabels.actions || ui('actions')]
+const actionColumnVNode = () => h(Column, {
+  columnKey: 'bs-row-actions',
+  headerClass: 'text-end', bodyClass: 'whitespace-nowrap text-end',
+}, { header: renderActionHeader, body: renderRowActions })
 function emitRowAction(action: BsDataTableRowAction, row: Row) {
   if (action === 'edit') emit('edit', row)
   else if (action === 'delete') emit('delete', row)
@@ -206,52 +272,11 @@ defineExpose({ exportCSV: exportCsv })
       @row-click="emit('row-click', $event)"
     >
       <Column v-if="capabilities.select && selectionMode" :selection-mode="selectionMode" header-class="bs-data-table__cell--selection" body-class="bs-data-table__cell--selection" />
-      <Column
-        v-for="column in visibleColumns"
-        :key="column.key"
-        :field="column.field"
-        :header="slots[`header-${column.key}`] ? undefined : column.header"
-        :export-header="column.header"
-        :footer="column.footer === undefined ? undefined : String(column.footer)"
-        :sortable="column.sortable"
-        :pt="column.ariaSort ? { headerCell: { 'aria-sort': column.ariaSort } } : undefined"
-        :sort-field="column.sortField"
-        :filter-field="column.filterField"
-        :filter-match-mode="column.filterMatchMode"
-        :exportable="column.exportable"
-        :selection-mode="column.selectionMode"
-        :frozen="Boolean(column.sticky)"
-        :align-frozen="column.sticky"
-        :header-class="columnClass(column, true)"
-        :body-class="columnClass(column)"
-        :footer-class="columnClass(column)"
-      >
-        <template v-if="slots[`header-${column.key}`]" #header><slot :name="`header-${column.key}`" :column="column" /></template>
-        <template #body="{ data, index }"><slot :name="`cell-${column.key}`" :row="data" :value="cellValue(column, data)" :column="column" :index="index">{{ cellValue(column, data) }}</slot></template>
-        <template v-if="column.footer !== undefined || slots[`footer-${column.key}`]" #footer><slot :name="`footer-${column.key}`" :column="column">{{ column.footer }}</slot></template>
-        <template v-if="slots[`filter-${column.key}`]" #filter="scope"><slot :name="`filter-${column.key}`" v-bind="scope || {}" :column="column" /></template>
-      </Column>
+      <component :is="columnVNode(column)" v-for="column in visibleColumns" :key="column.key" />
       <!-- Migration-only compatibility. New Suit consumers use `columns` and `cell-*` slots. -->
       <slot name="legacy-columns" />
       <slot v-if="!columns.length" />
-      <Column v-if="rowActions.length" header-class="text-end" body-class="whitespace-nowrap text-end">
-        <template #header>{{ actionLabels.actions || ui('actions') }}</template>
-        <template #body="{ data }">
-          <template v-for="action in rowActions" :key="action">
-            <BsButton
-              v-if="rowActionVisible(action, data)"
-              :variant="action === 'edit' ? 'link' : 'text'"
-              size="sm"
-              :class="{ 'bs-data-table__danger-action': action !== 'edit' }"
-              :pending="isRowActionPending(action, data)"
-              @click.stop="emitRowAction(action, data)"
-            >
-              {{ actionLabel(action) }}
-            </BsButton>
-          </template>
-          <slot name="row-actions" :row="data" />
-        </template>
-      </Column>
+      <component :is="actionColumnVNode()" v-if="rowActions.length" key="bs-action-column" />
       <template v-for="name in forwardedSlots()" :key="name" #[name]="scope"><slot :name="name" v-bind="scope || {}" /></template>
       <template #empty><slot name="empty"><BsStateSurface state="empty" :title="ui('empty')" /></slot></template>
       <template #loading><slot name="loading"><BsStateSurface state="loading" :title="ui('loading')" /></slot></template>

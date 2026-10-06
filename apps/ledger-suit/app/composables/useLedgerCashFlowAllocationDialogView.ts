@@ -1,7 +1,12 @@
-<script setup lang="ts">
 import type { Database } from '~~/types/database.types'
-const props = defineProps<{ entryId: string, accountName: string }>()
-const emit = defineEmits<{ close: [], saved: [] }>()
+
+/** Ledger-owned orchestration; mounted by a shared workflow scope in its route/layout. */
+export function useLedgerCashFlowAllocationDialogView(_values: { entryId: string, accountName: string }, _emit: (event: string, ...args: unknown[]) => void) {
+const _props = new Proxy(_values, { get: (target, key) => Reflect.get(target, key) ?? Reflect.get({}, key) })
+const entryId = computed(() => _props.entryId)
+const accountName = computed(() => _props.accountName)
+const props = _props
+const emit = _emit as <K extends keyof ({ close: [], saved: [] })>(event: K, ...args: ({ close: [], saved: [] })[K]) => void
 const supabase = useSupabaseClient<Database>()
 const { currentId, baseCurrency, can } = useTenant()
 const { t } = useI18n()
@@ -54,22 +59,5 @@ async function save() {
   finally { pending.value = false }
 }
 const ledgerPresentation = useLedgerPresentation()
-</script>
-
-<template>
-  <BsRecordActionDialog :visible="true" :title="t('financialMapping.allocate')" size="md" :dirty="dirty" :pending="pending" :error="error" :submit-label="t('common.save')" :cancel-label="t('common.cancel')" :submit-disabled="!valid || loading" @update:visible="value => { if (!value) emit('close') }" @submit="save">
-      <p>{{ accountName }}</p>
-      <BsSectionSkeleton v-if="loading" variant="table" :rows="3" />
-      <template v-else-if="context">
-        <p>{{ t('financialMapping.sourceAmount') }}: <BsMoneyText :amount="context.amount_minor" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" /></p>
-        <div v-if="context.decision_id" class="text-sm text-fg-muted"><p>{{ t('financialMapping.previousAllocation') }}</p><p v-for="(value, section) in context.allocations" :key="section">{{ t(`financialMapping.lines.${section}`) }}: <BsMoneyText :amount="value" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" /></p></div>
-        <div class="space-y-3">
-          <BsFloatingField v-for="key in (['operating', 'investing', 'financing'] as const)" :key="key" :label="t(`financialMapping.lines.${key}`)">
-            <input v-model="amounts[key]" type="text" inputmode="decimal" class="ls-input" :disabled="pending">
-          </BsFloatingField>
-          <BsFloatingField :label="t('statementClassification.reason')"><textarea v-model="reason" class="ls-input" required maxlength="1000" :disabled="pending" /></BsFloatingField>
-          <p v-if="total !== BigInt(context.amount_minor)" role="alert" class="ls-error">{{ t('financialMapping.allocationMismatch') }}</p>
-        </div>
-      </template>
-  </BsRecordActionDialog>
-</template>
+return { props, emit, supabase, currentId, baseCurrency, can, t, describeError, loading, pending, error, reason, amounts, dirty, context, requestId, total, valid, save, ledgerPresentation, entryId, accountName }
+}

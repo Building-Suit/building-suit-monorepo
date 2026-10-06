@@ -1,7 +1,8 @@
-<script setup lang="ts">
 import type { Database } from '~~/types/database.types'
 import type { QuotaKey } from '~/composables/usePlanUsage'
 
+/** Ledger-owned orchestration; mounted by a shared workflow scope in its route/layout. */
+export function useLedgerOperationsCenterView(_values: Record<string, unknown>, _emit: (event: string, ...args: unknown[]) => void) {
 const supabase = useSupabaseClient<Database>()
 const { currentId, baseCurrency, can } = useTenant()
 const { open, tab, close, markChanged } = useOperationsCenter()
@@ -141,39 +142,5 @@ const submitLabel = computed(() => tab.value === 'commitments'
   : tab.value === 'recurring' ? t('operations.addRule') : t('common.save'))
 const { dirty: overlayDirty0 } = useRecordAction(() => ({ commitmentForm, recurringForm, counterpartyForm, tagForm }), computed(() => Boolean(open.value)))
 const ledgerUsage = useLedgerUsagePresentation()
-</script>
-
-<template>
-      <BsRecordActionDialog v-if="open" :visible="true" :title="title" size="lg" :dirty="overlayDirty0" :pending="busy" :error="errorMessage" :submit-label="submitLabel" :cancel-label="t('common.cancel')" @update:visible="value => { if (!value) close() }" @submit="submitCurrent">
-          <main class="min-h-0 flex-1 overflow-y-auto">
-            <BsUsageMeter v-if="(quotaKey) && ledgerUsage.item(quotaKey)"  compact class="mb-4" :item="ledgerUsage.item(quotaKey)!" />
-
-            <div v-if="tab === 'commitments' && can('commitments.create')" class="grid gap-3 md:grid-cols-2">
-              <BsFloatingField :label="t('operations.name')"><input v-model="commitmentForm.title" class="ls-input" :placeholder="t('operations.name')" required></BsFloatingField>
-              <BsFloatingField :label="t('transactions.description')"><input v-model="commitmentForm.description" class="ls-input" :placeholder="t('transactions.description')"></BsFloatingField>
-              <BsFloatingField :label="t('transactions.amount')"><input v-model="commitmentForm.amount" class="ls-input" inputmode="decimal" :placeholder="t('transactions.amount')" required></BsFloatingField>
-              <BsFloatingField :label="t('add.dueDate')"><input v-model="commitmentForm.dueDate" type="date" class="ls-input" required></BsFloatingField>
-              <BsFloatingField :label="t('transactions.type')"><select v-model="commitmentForm.type" class="ls-input"><option value="payable">{{ t('operations.payable') }}</option><option value="receivable">{{ t('operations.receivable') }}</option><option value="scheduled_expense">{{ t('operations.scheduledExpense') }}</option><option value="scheduled_income">{{ t('operations.scheduledIncome') }}</option></select></BsFloatingField>
-              <BsFloatingField :label="t('add.category')"><select v-model="commitmentForm.categoryId" class="ls-input"><option value="">{{ t('add.chooseCategory') }}</option><option v-for="c in (['receivable','scheduled_income'].includes(commitmentForm.type) ? incomeCategories : expenseCategories)" :key="c.id" :value="c.id">{{ c.name }}</option></select></BsFloatingField>
-              <BsFloatingField :label="t('add.counterparty')"><select v-model="commitmentForm.counterpartyId" class="ls-input"><option value="">{{ t('add.counterparty') }}</option><option v-for="party in counterparties" :key="party.id" :value="party.id">{{ party.name }}</option></select></BsFloatingField>
-              <BsFloatingField :label="t('add.chooseAccount')"><select v-model="commitmentForm.paymentAccountId" class="ls-input" :required="commitmentForm.autoConvert"><option value="">{{ t('add.chooseAccount') }}</option><option v-for="a in paymentAccounts" :key="a.id" :value="a.id">{{ a.name }}</option></select></BsFloatingField>
-              <label class="flex items-center gap-2 text-sm"><input v-model="commitmentForm.autoConvert" type="checkbox">{{ t('operations.autoConvert') }}</label>
-              <label class="flex items-center gap-2 text-sm">{{ t('operations.reminderDays') }} <input v-model.number="commitmentForm.reminderDays" type="number" min="0" max="90" class="ls-input w-24"></label>
-            </div>
-
-            <div v-else-if="tab === 'recurring' && can('recurring.manage')" class="grid gap-3 md:grid-cols-3">
-              <BsFloatingField :label="t('operations.name')"><input v-model="recurringForm.name" class="ls-input" :placeholder="t('operations.name')" required></BsFloatingField><BsFloatingField v-if="recurringForm.transactionType !== 'liability_payment'" :label="t('transactions.amount')"><input v-model="recurringForm.amount" class="ls-input" inputmode="decimal" :placeholder="t('transactions.amount')" required></BsFloatingField>
-              <BsFloatingField :label="t('transactions.type')"><select v-model="recurringForm.transactionType" class="ls-input"><option value="expense">{{ t('types.expense') }}</option><option value="income">{{ t('types.income') }}</option><option value="liability_payment">{{ t('types.liability_payment') }}</option></select></BsFloatingField>
-              <BsFloatingField v-if="recurringForm.transactionType !== 'liability_payment'" :label="t('add.category')"><select v-model="recurringForm.categoryId" class="ls-input"><option value="">{{ t('add.chooseCategory') }}</option><option v-for="c in (recurringForm.transactionType === 'income' ? incomeCategories : expenseCategories)" :key="c.id" :value="c.id">{{ c.name }}</option></select></BsFloatingField>
-              <template v-else><select v-model="recurringForm.liabilityAccountId" class="ls-input" required><option value="">{{ t('add.liabilityAccount') }}</option><option v-for="account in liabilityAccounts" :key="account.id" :value="account.id">{{ account.name }}</option></select><input v-model="recurringForm.principal" class="ls-input" inputmode="decimal" :placeholder="t('add.principal')" required><input v-model="recurringForm.interest" class="ls-input" inputmode="decimal" :placeholder="t('add.interest')"><input v-model="recurringForm.fees" class="ls-input" inputmode="decimal" :placeholder="t('add.fees')"></template>
-              <select v-model="recurringForm.paymentAccountId" class="ls-input" required><option value="">{{ t('add.chooseAccount') }}</option><option v-for="a in paymentAccounts" :key="a.id" :value="a.id">{{ a.name }}</option></select>
-              <label class="flex items-center gap-2 text-sm">{{ t('operations.every') }} <input v-model.number="recurringForm.intervalCount" type="number" min="1" class="ls-input w-24" required></label>
-              <input v-model="recurringForm.endDate" type="date" class="ls-input" :aria-label="t('operations.endDate')"><input v-model="recurringForm.maxOccurrences" type="number" min="1" class="ls-input" :placeholder="t('operations.maxOccurrences')"><select v-model="recurringForm.frequency" class="ls-input"><option v-for="f in ['daily','weekly','monthly','quarterly','yearly']" :key="f" :value="f">{{ f }}</option></select><input v-model="recurringForm.startDate" type="date" class="ls-input"><select v-model="recurringForm.mode" class="ls-input"><option value="requires_confirmation">{{ t('operations.confirmMode') }}</option><option value="auto_post">{{ t('operations.autoPost') }}</option></select>
-            </div>
-
-            <div v-else-if="tab === 'counterparties' && can('counterparties.manage')" class="grid gap-3 md:grid-cols-2"><input v-model="counterpartyForm.name" class="ls-input" :placeholder="t('operations.name')" required><select v-model="counterpartyForm.type" class="ls-input"><option v-for="type in ['customer','vendor','lender','employee','government','other']" :key="type" :value="type">{{ type }}</option></select><input v-model="counterpartyForm.email" type="email" class="ls-input" :placeholder="t('auth.email')"><input v-model="counterpartyForm.phone" class="ls-input" :placeholder="t('operations.phone')"><input v-model="counterpartyForm.taxIdentifier" class="ls-input" :placeholder="t('operations.taxIdentifier')"><input v-model="counterpartyForm.notes" class="ls-input" :placeholder="t('operations.notes')"></div>
-
-            <div v-else-if="can('tags.manage')" class="space-y-4"><p class="text-sm leading-relaxed text-fg-muted">{{ t('tagsGuide.createHint') }}</p><BsFloatingField :label="t('operations.name')"><input id="tag-name" v-model="tagForm.name" class="ls-input" :placeholder="t('tagsGuide.namePlaceholder')" required maxlength="80"></BsFloatingField><BsFloatingField :label="t('recordPages.color')"><input id="tag-color" v-model="tagForm.color" type="color" class="h-12 w-full rounded-control border border-[var(--bs-border)] bg-surface p-1"></BsFloatingField></div>
-          </main>
-      </BsRecordActionDialog>
-</template>
+return { supabase, currentId, baseCurrency, can, open, tab, close, markChanged, accounts, categories, counterparties, toasts, describeError, t, refreshPlanUsage, paymentAccounts, liabilityAccounts, incomeCategories, expenseCategories, busy, errorMessage, today, commitmentForm, recurringForm, counterpartyForm, tagForm, title, quotaKey, run, createCommitment, createRecurring, createCounterparty, createTag, submitCurrent, submitLabel, overlayDirty0, ledgerUsage }
+}

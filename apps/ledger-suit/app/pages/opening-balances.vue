@@ -148,80 +148,186 @@ const ledgerPresentation = useLedgerPresentation()
 </script>
 
 <template>
-  <div class="space-y-6" data-opening-workflow>
-    <BsPageHeader :title="t('opening.title')" :subtitle="t('opening.subtitle')" :context="ledgerPresentation.context(undefined, undefined, cutoff)" :context-label="ledgerPresentation.t('pageContext.label')" />
-    <p v-if="!can('opening_balances.read')" class="ls-card p-6 text-fg-muted">{{ t('opening.noAccess') }}</p>
-    <p v-else-if="error" class="ls-error" role="alert">{{ t('opening.loadFailed') }}</p>
+  <BsStack data-opening-workflow gap="lg">
+    <BsPageHeader
+      :title="t('opening.title')"
+      :subtitle="t('opening.subtitle')"
+      :context="ledgerPresentation.context(undefined, undefined, cutoff)"
+      :context-label="ledgerPresentation.t('pageContext.label')"
+    />
+    <BsText v-if="!can('opening_balances.read')" tone="muted">{{ t('opening.noAccess') }}</BsText>
+    <BsText v-else-if="error" role="alert" tone="danger">{{ t('opening.loadFailed') }}</BsText>
     <BsSectionSkeleton v-else-if="pending" variant="table" :rows="5" />
     <template v-else>
-      <section class="ls-card space-y-3 p-5" aria-labelledby="opening-readiness-guide" data-opening-readiness-guide>
-        <h2 id="opening-readiness-guide" class="text-h2 font-bold">{{ t('opening.guideTitle') }}</h2>
-        <p class="text-sm text-fg-muted">{{ t('opening.guideHint') }}</p>
-        <ul class="list-disc space-y-1 ps-5 text-sm">
-          <li>{{ t('opening.guideChart') }}</li>
-          <li>{{ t('opening.guidePeriod') }}</li>
-          <li>{{ t('opening.guideMapping') }}</li>
-        </ul>
-        <div class="flex flex-wrap gap-2">
-          <NuxtLink to="/accounts?setup=templates" class="ls-btn ls-btn-sm">{{ t('opening.reviewChart') }}</NuxtLink>
-          <NuxtLink to="/periods" class="ls-btn ls-btn-sm">{{ t('opening.reviewPeriods') }}</NuxtLink>
-        </div>
-      </section>
-      <section v-if="can('opening_balances.manage')" class="ls-card space-y-5 p-5" aria-labelledby="opening-setup">
-        <div><h2 id="opening-setup" class="text-h2 font-bold">1. {{ t('opening.setup') }}</h2><p class="text-sm text-fg-muted">{{ t('opening.cutoffHint') }}</p></div>
-        <div class="grid gap-4 sm:grid-cols-2">
-          <BsFloatingField :label="t('opening.mode')"><select id="opening-mode" v-model="mode" class="ls-input" :disabled="!!postedTransactionId"><option value="year_start">{{ t('opening.modes.year_start') }}</option><option value="midyear">{{ t('opening.modes.midyear') }}</option></select></BsFloatingField>
-          <BsFloatingField :label="t('opening.cutoff')"><input id="opening-cutoff" v-model="cutoff" class="ls-input" type="date" required :disabled="!!postedTransactionId"></BsFloatingField>
-        </div>
-        <div class="border-t border-line pt-4">
-          <h2 class="text-h2 font-bold">2. {{ t('opening.upload') }}</h2>
-          <div class="mt-3 flex flex-wrap gap-2"><label class="ls-btn ls-btn-primary cursor-pointer" for="opening-file">{{ t('opening.chooseCsv') }}</label><BsButton type="button" class="ls-btn" @click="downloadTemplate">{{ t('opening.downloadTemplate') }}</BsButton></div>
-          <input id="opening-file" class="sr-only" type="file" accept=".csv,text/csv" :disabled="!cutoff || busy==='upload'" @change="selectFile">
-          <p v-if="filename" class="mt-2 text-sm text-fg-muted">{{ filename }} · {{ t('opening.rowCount', { count: rows.length }) }}</p>
-          <BsButton v-if="uploadFailed" type="button" class="ls-btn mt-2" :disabled="Boolean(busy)" @click="uploadRows">{{ busy === 'upload' ? t('common.saving') : t('common.retry') }}</BsButton>
-        </div>
-      </section>
-
-      <section v-if="rows.length" class="ls-card space-y-4 overflow-x-auto p-5" aria-labelledby="opening-mapping">
-        <h2 id="opening-mapping" class="text-h2 font-bold">3. {{ t('opening.mapping') }}</h2>
-        <BsDataTable :value="rows" row-key="source_row" :label="t('opening.mapping')" :table-style="{ minWidth: '760px' }" :columns="[{ key: 'source_row', field: 'source_row', header: '#' }, { key: 'column2', header: t('opening.sourceAccount') }, { key: 'column3', header: t('opening.debit') }, { key: 'column4', header: t('opening.credit') }, { key: 'column5', header: t('opening.ledgerAccount') }, { key: 'column6', header: t('opening.validationErrors') }]">
-          <template #cell-column2="{ row }"><strong>{{ row.source_code }}</strong><br><span class="text-fg-muted">{{ row.source_name }}</span></template>
-          <template #cell-column3="{ row }">{{ row.debit || '—' }}</template>
-          <template #cell-column4="{ row }">{{ row.credit || '—' }}</template>
-          <template #cell-column5="{ row }"><select v-model="row.account_id" class="ls-input min-w-64" :aria-label="`${t('opening.ledgerAccount')} ${row.source_row}`"><option :value="null">{{ t('opening.chooseAccount') }}</option><option v-for="account in accounts" :key="account.id" :value="account.id">{{ account.code }} · {{ account.name }} · {{ t(`opening.roles.${account.account_role}`) }}<template v-if="account.is_archived"> · {{ t('opening.archived') }}</template></option></select></template>
-          <template #cell-column6="{ row }"><ul v-if="rowErrors(row.source_row).length" class="text-danger"><li v-for="code in rowErrors(row.source_row)" :key="code">{{ validationLabel(code) }}</li></ul><span v-else-if="validation" class="text-success">{{ t('opening.valid') }}</span></template>
-
-        </BsDataTable>
-        <BsButton type="button" class="ls-btn ls-btn-primary" :disabled="Boolean(busy)" @click="validateBatch">{{ busy === 'validate' ? t('common.saving') : t('opening.validate') }}</BsButton>
-      </section>
-
-      <section v-if="validation" class="ls-card space-y-4 p-5" aria-labelledby="opening-validation" :data-validation="validation.valid ? 'valid' : 'invalid'">
-        <h2 id="opening-validation" class="text-h2 font-bold">4. {{ t('opening.validation') }}</h2>
-        <div class="grid gap-3 sm:grid-cols-3"><p><span class="text-fg-muted">{{ t('opening.debitTotal') }}</span><br><strong>{{ amount(validation.debit_total_minor) }}</strong></p><p><span class="text-fg-muted">{{ t('opening.creditTotal') }}</span><br><strong>{{ amount(validation.credit_total_minor) }}</strong></p><p><span class="text-fg-muted">{{ t('opening.difference') }}</span><br><strong>{{ amount(validation.difference_minor) }}</strong></p></div>
-        <div v-if="validation.errors.length" class="ls-error" role="alert"><p class="font-semibold">{{ t('opening.blocked') }}</p><ul class="mt-2 list-disc ps-5"><li v-for="code in validation.errors" :key="code">{{ validationLabel(code) }}</li></ul></div>
-        <div v-else class="rounded-control bg-surface-muted p-3 text-success" role="status">{{ t('opening.validationPassed') }}</div>
-      </section>
-
-      <section v-if="validation?.preview.length" class="ls-card space-y-4 overflow-x-auto p-5" aria-labelledby="opening-preview">
-        <h2 id="opening-preview" class="text-h2 font-bold">5. {{ t('opening.preview') }}</h2><p class="text-sm text-fg-muted">{{ t('opening.previewHint', { date: cutoff }) }}</p>
-        <BsDataTable :value="validation.preview" row-key="row_id" :label="t('opening.preview')" :table-style="{ minWidth: '620px' }" :columns="[{ key: 'column1', header: t('opening.ledgerAccount') }, { key: 'column2', header: t('opening.debit'), align: 'end' as const }, { key: 'column3', header: t('opening.credit'), align: 'end' as const }]">
-          <template #cell-column1="{ row: line }">{{ line.account_code }} · {{ line.account_name }}</template>
-          <template #cell-column2="{ row: line }">{{ amount(line.debit_minor) }}</template>
-          <template #cell-column3="{ row: line }">{{ amount(line.credit_minor) }}</template>
-
-        </BsDataTable>
-        <BsButton v-if="can('opening_balances.approve') && !postedTransactionId" type="button" class="ls-btn ls-btn-primary" :disabled="!validation.valid || Boolean(busy)" @click="approve">{{ busy === 'approve' ? t('common.saving') : t('opening.approve') }}</BsButton>
-        <div v-if="postedTransactionId" class="rounded-control bg-surface-muted p-4" data-opening-posted><strong>{{ t('opening.postedLocked') }}</strong><br><NuxtLink class="text-link underline" :to="{ path: '/transactions', query: { q: postedTransactionId } }">{{ t('opening.openJournal') }}</NuxtLink></div>
-      </section>
-
-      <section class="ls-card space-y-4 p-5" aria-labelledby="opening-history"><h2 id="opening-history" class="text-h2 font-bold">{{ t('opening.history') }}</h2><BsEmptyState v-if="!batches.length" :title="t('opening.empty')" :description="t('opening.emptyHint')" />
-        <article v-for="batch in batches" :key="batch.id" class="rounded-control border border-line p-4" :data-batch-status="batch.status"><div class="flex flex-wrap justify-between gap-3"><div><strong>{{ t(`opening.modes.${batch.migration_mode}`) }} · {{ date(batch.cutoff_date) }}</strong><p class="text-sm text-fg-muted">{{ t('opening.revision', { revision: batch.revision }) }} · {{ t(`opening.status.${batch.status}`) }}</p></div><NuxtLink v-if="batch.posted_transaction_id" class="text-link underline" :to="{ path: '/transactions', query: { q: batch.posted_transaction_id } }">{{ t('opening.openJournal') }}</NuxtLink></div>
-          <div v-if="batch.validation_result" class="mt-3 grid gap-2 text-sm sm:grid-cols-3"><span>{{ t('opening.rowCount', { count: (batch.validation_result as any).valid_row_count + (batch.validation_result as any).zero_row_count }) }}</span><span>{{ t('opening.debit') }}: {{ amount((batch.validation_result as any).debit_total_minor) }}</span><span>{{ t('opening.credit') }}: {{ amount((batch.validation_result as any).credit_total_minor) }}</span></div>
-          <p class="mt-2 break-all text-xs text-fg-muted">{{ t('opening.creator') }}: {{ batch.created_by }}<template v-if="batch.approved_by"> · {{ t('opening.approver') }}: {{ batch.approved_by }}</template></p>
-          <p v-if="batch.reversal_transaction_id" class="mt-2 text-sm">{{ t('opening.reversal') }}: <NuxtLink class="text-link underline" :to="{ path: '/transactions', query: { q: batch.reversal_transaction_id } }">{{ batch.reversal_transaction_id }}</NuxtLink> · {{ batch.correction_reason }}</p>
-          <BsForm v-if="batch.status==='posted' && can('opening_balances.correct')" class="mt-4 grid gap-2 border-t border-line pt-4 sm:grid-cols-[2fr_1fr_auto]" :aria-busy="busy===`reverse:${batch.id}`" @submit.prevent="reverse(batch)"><BsFloatingField :label="t('opening.correctionReason')"><input v-model="correctionReason" class="ls-input" required></BsFloatingField><BsFloatingField :label="t('opening.reversalDate')"><input v-model="correctionDate" class="ls-input" type="date"></BsFloatingField><BsButton type="submit" class="ls-btn self-end" :disabled="!correctionReason.trim() || Boolean(busy)">{{ busy===`reverse:${batch.id}` ? t('common.saving') : t('opening.reverse') }}</BsButton></BsForm>
-        </article>
-      </section>
+      <BsCard aria-labelledby="opening-readiness-guide" data-opening-readiness-guide as="section" padding="md">
+        <BsStack gap="md">
+          <BsHeading id="opening-readiness-guide" :level="2" size="h2">{{ t('opening.guideTitle') }}</BsHeading>
+          <BsText size="sm" tone="muted">{{ t('opening.guideHint') }}</BsText>
+          <BsList :ordered="false" marker="disc">
+            <BsListItem>{{ t('opening.guideChart') }}</BsListItem>
+            <BsListItem>{{ t('opening.guidePeriod') }}</BsListItem>
+            <BsListItem>{{ t('opening.guideMapping') }}</BsListItem>
+          </BsList>
+          <BsInline gap="sm" :wrap="true">
+            <BsLink to="/accounts?setup=templates">{{ t('opening.reviewChart') }}</BsLink>
+            <BsLink to="/periods">{{ t('opening.reviewPeriods') }}</BsLink>
+          </BsInline>
+        </BsStack>
+      </BsCard>
+      <BsCard v-if="can('opening_balances.manage')" aria-labelledby="opening-setup" as="section" padding="md">
+        <BsStack gap="md">
+          <BsBox>
+            <BsHeading id="opening-setup" :level="2" size="h2">1. {{ t('opening.setup') }}</BsHeading>
+            <BsText size="sm" tone="muted">{{ t('opening.cutoffHint') }}</BsText>
+          </BsBox>
+          <BsGrid :columns="2" gap="md">
+            <BsFloatingField :label="t('opening.mode')">
+              <BsSelect id="opening-mode" v-model="mode" :disabled="!!postedTransactionId" native>
+                <BsSelectOption value="year_start">{{ t('opening.modes.year_start') }}</BsSelectOption>
+                <BsSelectOption value="midyear">{{ t('opening.modes.midyear') }}</BsSelectOption>
+              </BsSelect>
+            </BsFloatingField>
+            <BsFloatingField :label="t('opening.cutoff')">
+              <BsInput id="opening-cutoff" v-model="cutoff" type="date" required :disabled="!!postedTransactionId" />
+            </BsFloatingField>
+          </BsGrid>
+          <BsBox>
+            <BsHeading :level="2" size="h2">2. {{ t('opening.upload') }}</BsHeading>
+            <BsInline gap="sm" :wrap="true">
+              <BsFieldLabel for="opening-file">{{ t('opening.chooseCsv') }}</BsFieldLabel>
+              <BsButton type="button" @click="downloadTemplate">{{ t('opening.downloadTemplate') }}</BsButton>
+            </BsInline>
+            <BsFileInput id="opening-file" accept=".csv,text/csv" :disabled="!cutoff || busy==='upload'" bare @change="selectFile"  hide-control />
+            <BsText v-if="filename" size="sm" tone="muted">{{ filename }} · {{ t('opening.rowCount', { count: rows.length }) }}</BsText>
+            <BsButton v-if="uploadFailed" type="button" :disabled="Boolean(busy)" @click="uploadRows">{{ busy === 'upload' ? t('common.saving') : t('common.retry') }}</BsButton>
+          </BsBox>
+        </BsStack>
+      </BsCard>
+      <BsCard v-if="rows.length" aria-labelledby="opening-mapping" as="section" padding="md">
+        <BsStack gap="md">
+          <BsHeading id="opening-mapping" :level="2" size="h2">3. {{ t('opening.mapping') }}</BsHeading>
+          <BsDataTable
+            :value="rows"
+            row-key="source_row"
+            :label="t('opening.mapping')"
+            :columns="[{ key: 'source_row', field: 'source_row', header: '#' }, { key: 'column2', header: t('opening.sourceAccount') }, { key: 'column3', header: t('opening.debit') }, { key: 'column4', header: t('opening.credit') }, { key: 'column5', header: t('opening.ledgerAccount') }, { key: 'column6', header: t('opening.validationErrors') }]"
+          >
+            <template #cell-column2="{ row }">
+              <BsText as="strong">{{ row.source_code }}</BsText>
+              <BsLineBreak />
+              <BsText as="span" tone="muted">{{ row.source_name }}</BsText>
+            </template>
+            <template #cell-column3="{ row }">{{ row.debit || '—' }}</template>
+            <template #cell-column4="{ row }">{{ row.credit || '—' }}</template>
+            <template #cell-column5="{ row }">
+              <BsSelect v-model="row.account_id" :aria-label="`${t('opening.ledgerAccount')} ${row.source_row}`" native>
+                <BsSelectOption :value="null">{{ t('opening.chooseAccount') }}</BsSelectOption>
+                <BsSelectOption v-for="account in accounts" :key="account.id" :value="account.id">{{ account.code }} · {{ account.name }} · {{ t(`opening.roles.${account.account_role}`) }}<template v-if="account.is_archived"> · {{ t('opening.archived') }}</template></BsSelectOption>
+              </BsSelect>
+            </template>
+            <template #cell-column6="{ row }">
+              <BsList v-if="rowErrors(row.source_row).length" :ordered="false" marker="none">
+                <BsListItem v-for="code in rowErrors(row.source_row)" :key="code">{{ validationLabel(code) }}</BsListItem>
+              </BsList>
+              <BsText v-else-if="validation" as="span" tone="success">{{ t('opening.valid') }}</BsText>
+            </template>
+          </BsDataTable>
+          <BsButton type="button" :disabled="Boolean(busy)" variant="primary" @click="validateBatch">{{ busy === 'validate' ? t('common.saving') : t('opening.validate') }}</BsButton>
+        </BsStack>
+      </BsCard>
+      <BsCard v-if="validation" aria-labelledby="opening-validation" :data-validation="validation.valid ? 'valid' : 'invalid'" as="section" padding="md">
+        <BsStack gap="md">
+          <BsHeading id="opening-validation" :level="2" size="h2">4. {{ t('opening.validation') }}</BsHeading>
+          <BsGrid :columns="3" gap="md">
+            <BsText>
+              <BsText as="span" tone="muted">{{ t('opening.debitTotal') }}</BsText>
+              <BsLineBreak />
+              <BsText as="strong">{{ amount(validation.debit_total_minor) }}</BsText>
+            </BsText>
+            <BsText>
+              <BsText as="span" tone="muted">{{ t('opening.creditTotal') }}</BsText>
+              <BsLineBreak />
+              <BsText as="strong">{{ amount(validation.credit_total_minor) }}</BsText>
+            </BsText>
+            <BsText>
+              <BsText as="span" tone="muted">{{ t('opening.difference') }}</BsText>
+              <BsLineBreak />
+              <BsText as="strong">{{ amount(validation.difference_minor) }}</BsText>
+            </BsText>
+          </BsGrid>
+          <BsBox v-if="validation.errors.length" role="alert">
+            <BsText emphasis="semibold">{{ t('opening.blocked') }}</BsText>
+            <BsList :ordered="false" marker="disc">
+              <BsListItem v-for="code in validation.errors" :key="code">{{ validationLabel(code) }}</BsListItem>
+            </BsList>
+          </BsBox>
+          <BsBox v-else role="status" padding="md" surface="muted" radius="control">{{ t('opening.validationPassed') }}</BsBox>
+        </BsStack>
+      </BsCard>
+      <BsCard v-if="validation?.preview.length" aria-labelledby="opening-preview" as="section" padding="md">
+        <BsStack gap="md">
+          <BsHeading id="opening-preview" :level="2" size="h2">5. {{ t('opening.preview') }}</BsHeading>
+          <BsText size="sm" tone="muted">{{ t('opening.previewHint', { date: cutoff }) }}</BsText>
+          <BsDataTable
+            :value="validation.preview"
+            row-key="row_id"
+            :label="t('opening.preview')"
+            :columns="[{ key: 'column1', header: t('opening.ledgerAccount') }, { key: 'column2', header: t('opening.debit'), align: 'end' as const }, { key: 'column3', header: t('opening.credit'), align: 'end' as const }]"
+          >
+            <template #cell-column1="{ row: line }">{{ line.account_code }} · {{ line.account_name }}</template>
+            <template #cell-column2="{ row: line }">{{ amount(line.debit_minor) }}</template>
+            <template #cell-column3="{ row: line }">{{ amount(line.credit_minor) }}</template>
+          </BsDataTable>
+          <BsButton
+            v-if="can('opening_balances.approve') && !postedTransactionId"
+            type="button"
+            :disabled="!validation.valid || Boolean(busy)"
+            variant="primary"
+            @click="approve"
+          >{{ busy === 'approve' ? t('common.saving') : t('opening.approve') }}</BsButton>
+          <BsBox v-if="postedTransactionId" data-opening-posted padding="lg" surface="muted" radius="control">
+            <BsText as="strong">{{ t('opening.postedLocked') }}</BsText>
+            <BsLineBreak />
+            <BsLink :to="{ path: '/transactions', query: { q: postedTransactionId } }">{{ t('opening.openJournal') }}</BsLink>
+          </BsBox>
+        </BsStack>
+      </BsCard>
+      <BsCard aria-labelledby="opening-history" as="section" padding="md">
+        <BsStack gap="md">
+          <BsHeading id="opening-history" :level="2" size="h2">{{ t('opening.history') }}</BsHeading>
+          <BsEmptyState v-if="!batches.length" :title="t('opening.empty')" :description="t('opening.emptyHint')" />
+          <BsBox v-for="batch in batches" :key="batch.id" :data-batch-status="batch.status" as="article" padding="lg" border radius="control">
+            <BsInline gap="md" :wrap="true" justify="between">
+              <BsBox>
+                <BsText as="strong">{{ t(`opening.modes.${batch.migration_mode}`) }} · {{ date(batch.cutoff_date) }}</BsText>
+                <BsText size="sm" tone="muted">{{ t('opening.revision', { revision: batch.revision }) }} · {{ t(`opening.status.${batch.status}`) }}</BsText>
+              </BsBox>
+              <BsLink v-if="batch.posted_transaction_id" :to="{ path: '/transactions', query: { q: batch.posted_transaction_id } }">{{ t('opening.openJournal') }}</BsLink>
+            </BsInline>
+            <BsGrid v-if="batch.validation_result" :columns="3" gap="sm">
+              <BsText as="span">{{ t('opening.rowCount', { count: (batch.validation_result as any).valid_row_count + (batch.validation_result as any).zero_row_count }) }}</BsText>
+              <BsText as="span">{{ t('opening.debit') }}: {{ amount((batch.validation_result as any).debit_total_minor) }}</BsText>
+              <BsText as="span">{{ t('opening.credit') }}: {{ amount((batch.validation_result as any).credit_total_minor) }}</BsText>
+            </BsGrid>
+            <BsText size="xs" tone="muted">{{ t('opening.creator') }}: {{ batch.created_by }}<template v-if="batch.approved_by"> · {{ t('opening.approver') }}: {{ batch.approved_by }}</template></BsText>
+            <BsText v-if="batch.reversal_transaction_id" size="sm">{{ t('opening.reversal') }}: <BsLink :to="{ path: '/transactions', query: { q: batch.reversal_transaction_id } }">{{ batch.reversal_transaction_id }}</BsLink> · {{ batch.correction_reason }}</BsText>
+            <BsForm
+              v-if="batch.status==='posted' && can('opening_balances.correct')"
+              :aria-busy="busy===`reverse:${batch.id}`"
+              layout="grid"
+              @submit.prevent="reverse(batch)"
+            >
+              <BsFloatingField :label="t('opening.correctionReason')">
+                <BsInput v-model="correctionReason" required />
+              </BsFloatingField>
+              <BsFloatingField :label="t('opening.reversalDate')">
+                <BsInput v-model="correctionDate" type="date" />
+              </BsFloatingField>
+              <BsButton type="submit" :disabled="!correctionReason.trim() || Boolean(busy)">{{ busy===`reverse:${batch.id}` ? t('common.saving') : t('opening.reverse') }}</BsButton>
+            </BsForm>
+          </BsBox>
+        </BsStack>
+      </BsCard>
     </template>
-  </div>
+  </BsStack>
 </template>

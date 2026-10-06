@@ -1,12 +1,15 @@
-<script setup lang="ts">
 import type { Database, Json } from '~~/types/database.types'
 import type { MarketingPricingPlan } from '@building-suit/contracts'
 import type { LaunchPlanKey } from '~/composables/useBilling'
 
-const { compact = false, surface = 'checkout' } = defineProps<{
+/** Ledger-owned orchestration; mounted by a shared workflow scope in its route/layout. */
+export function useLedgerBillingCheckoutView(_values: {
   compact?: boolean
   surface?: 'checkout' | 'public' | 'display' | 'manage'
-}>()
+}, _emit: (event: string, ...args: unknown[]) => void) {
+const _props = new Proxy(_values, { get: (target, key) => Reflect.get(target, key) ?? Reflect.get({compact: false,surface: 'checkout'}, key) })
+const compact = computed(() => _props.compact)
+const surface = computed(() => _props.surface ?? 'checkout')
 const supabase = useSupabaseClient<Database>()
 const { currentId, can } = useTenant()
 const user = useSupabaseUser()
@@ -56,7 +59,7 @@ interface FeatureImpact {
   will_lose: boolean
 }
 
-const { data: catalog, pending: catalogPending, error: catalogError, refresh } = await useAsyncData(
+const { data: catalog, pending: catalogPending, error: catalogError, refresh } = useAsyncData(
   'launch-plan-catalog',
   async () => {
     const { data, error } = await supabase.rpc('subscription_plan_catalog')
@@ -216,11 +219,11 @@ const pricingPlans = computed<MarketingPricingPlan[]>(() => plans.value.map((pla
   const currentAmount = amount(plan)
   const action = !plan.is_purchasable
     ? { label: t('billing.plans.comingSoon'), disabled: true }
-    : surface === 'public'
+    : surface.value === 'public'
       ? { label: t('landing.startTrial'), to: '/signup', variant: 'primary' as const }
-      : surface === 'checkout'
+      : surface.value === 'checkout'
         ? { label: pendingPlan.value === plan.plan_key ? t('billing.openingCheckout') : t('billing.plans.choose', { plan: planName(plan) }), pending: pendingPlan.value === plan.plan_key, disabled: Boolean(pendingPlan.value), variant: 'primary' as const }
-        : surface === 'manage' && launchPlanCurrent.value
+        : surface.value === 'manage' && launchPlanCurrent.value
           ? { label: reviewingPlan.value === plan.plan_key ? t('billing.planChange.reviewing') : t('billing.planChange.review', { plan: planName(plan) }), pending: reviewingPlan.value === plan.plan_key, disabled: Boolean(reviewingPlan.value) }
           : undefined
   return {
@@ -244,7 +247,7 @@ const pricingPlans = computed<MarketingPricingPlan[]>(() => plans.value.map((pla
     features: featureRows(plan),
     featureFallback: featureRows(plan).length ? undefined : t('billing.plans.scale.preview'),
     action,
-    secondaryAction: surface === 'checkout' && plan.is_purchasable && can('billing.manage')
+    secondaryAction: surface.value === 'checkout' && plan.is_purchasable && can('billing.manage')
       ? { label: t('billing.manual.choose') }
       : undefined,
   }
@@ -253,8 +256,8 @@ const pricingPlans = computed<MarketingPricingPlan[]>(() => plans.value.map((pla
 function choosePlan(planKey: string) {
   const plan = plans.value.find(candidate => candidate.plan_key === planKey)
   if (!plan?.is_purchasable) return
-  if (surface === 'checkout') void checkout(plan.plan_key as LaunchPlanKey)
-  else if (surface === 'manage') void reviewChange(plan.plan_key as LaunchPlanKey)
+  if (surface.value === 'checkout') void checkout(plan.plan_key as LaunchPlanKey)
+  else if (surface.value === 'manage') void reviewChange(plan.plan_key as LaunchPlanKey)
 }
 
 function chooseManualPlan(planKey: string) {
@@ -298,140 +301,5 @@ async function reviewChange(planKey: LaunchPlanKey) {
     reviewingPlan.value = null
   }
 }
-
-</script>
-
-<template>
-  <div :class="compact ? 'space-y-5' : 'space-y-8'" data-testid="plan-pricing">
-    <section
-      v-if="trialPlanCurrent && surface === 'checkout'"
-      class="rounded-card border border-primary/40 bg-primary/5 p-5 text-start"
-      data-testid="trial-summary"
-    >
-      <template v-if="accessState === 'trialing'">
-        <h2 class="text-lg font-black">{{ t('billing.trial.activeTitle') }}</h2>
-        <p class="mt-2 text-sm">{{ t('billing.trial.activeBenefits') }}</p>
-        <p class="mt-2 text-sm text-fg-muted">{{ t('billing.trial.endsOn', { date: formatDate(subscription?.trial_ends_at) }) }}</p>
-        <p class="mt-2 text-sm text-fg-muted">{{ t('billing.trial.optionalConversion') }}</p>
-      </template>
-      <template v-else-if="accessState === 'read_only'">
-        <h2 class="text-lg font-black">{{ t('billing.trial.expiredTitle') }}</h2>
-        <p class="mt-2 text-sm">{{ t('billing.trial.expiredBody', { date: formatDate(subscription?.trial_ends_at) }) }}</p>
-        <p class="mt-2 text-sm font-semibold">{{ t('billing.trial.resumeWrites') }}</p>
-      </template>
-    </section>
-
-    <BsButton v-if="['checkout', 'manage', 'display'].includes(surface) && can('billing.manage')" type="button" class="ls-btn" @click="manualPlan = undefined; manualOpen = true">{{ t('billing.manual.requests') }}</BsButton>
-    <ManualPaymentCheckout v-if="manualOpen" :key="`${currentId}:${user?.id}`" :plan="manualPlan" :interval="interval" @close="manualOpen = false" />
-
-    <BsMarketingPricing
-      :interval="interval"
-      :plans="pricingPlans"
-      test-id="plan-pricing-grid"
-      :interval-options="[{ value: 'monthly', label: t('billing.monthly') }, { value: 'yearly', label: t('billing.yearly') }]"
-      :copy="{ cycleLabel: t('billing.billingCycle'), loading: t('billing.plans.loading'), empty: t('billing.plans.loadFailed'), retry: t('common.retry'), included: t('billing.plans.included'), notIncluded: t('billing.plans.notIncluded') }"
-      :annual-saving="annualDiscount === null ? null : t('billing.plans.annualDiscount', { percent: annualDiscount })"
-      :loading="catalogPending"
-      :error="catalogError ? t('billing.plans.loadFailed') : null"
-      @update:interval="value => { if (value === 'monthly' || value === 'yearly') interval = value }"
-      @retry="refresh"
-      @action="choosePlan"
-      @secondary-action="chooseManualPlan"
-    />
-
-    <section
-      v-if="surface === 'checkout'"
-      class="ls-card-muted p-4 text-center text-sm leading-6 text-fg-muted"
-      data-testid="checkout-policy-review"
-      role="note"
-    >
-      <i18n-t keypath="billing.policyReview" tag="p" scope="global">
-        <template #terms>
-          <NuxtLink to="/terms" target="_blank" rel="noopener" class="font-semibold text-link underline underline-offset-4">{{ t('marketing.terms') }}</NuxtLink>
-        </template>
-        <template #refund>
-          <NuxtLink to="/refund-cancellation" target="_blank" rel="noopener" class="font-semibold text-link underline underline-offset-4">{{ t('marketing.refundCancellation') }}</NuxtLink>
-        </template>
-        <template #privacy>
-          <NuxtLink to="/privacy" target="_blank" rel="noopener" class="font-semibold text-link underline underline-offset-4">{{ t('marketing.privacy') }}</NuxtLink>
-        </template>
-      </i18n-t>
-    </section>
-
-    <section
-      v-if="surface === 'checkout' || surface === 'public'"
-      class="text-center text-xs font-semibold text-fg-muted"
-      data-testid="payment-method-branding"
-      role="note"
-    >
-      {{ t('billing.securePayments') }}
-    </section>
-
-    <p v-if="surface === 'checkout'" class="text-center text-xs text-fg-muted">{{ t('billing.paymentRequired') }}</p>
-    <p v-if="surface === 'manage' && compatibilityPlanCurrent" class="rounded-card border border-[var(--bs-border-strong)] p-4 text-sm text-fg-muted" role="note">{{ t('billing.planChange.legacyGrandfathered') }}</p>
-    <p v-if="errorMessage" class="ls-error" role="alert">{{ errorMessage }}</p>
-      <BsDialog v-if="planImpact" :visible="true" :title="t('billing.planChange.title')" :aria-label="t('billing.planChange.title')" :show-header="false" size="md" @update:visible="value => { if (!value) planImpact = null }"><template #default="{ close: dismiss }">
-<section class="ls-card max-h-[90vh] w-full max-w-3xl overflow-y-auto p-6" data-testid="plan-change-impact">
-          <div class="flex items-start justify-between gap-4">
-            <div>
-              <h2 id="plan-change-title" class="text-xl font-black">{{ t('billing.planChange.title') }}</h2>
-              <p class="mt-1 text-sm text-fg-muted">{{ t('billing.planChange.summary', {
-                current: planNameForKey(planImpact.current_plan_key),
-                target: planNameForKey(planImpact.target_plan_key),
-              }) }}</p>
-            </div>
-            <BsButton variant="icon" type="button"  :aria-label="t('common.close')" @click="dismiss"><BsIcon name="close" :size="20" /></BsButton>
-          </div>
-
-          <div class="mt-5 rounded-card bg-surface-muted p-4 text-sm">
-            <p class="font-bold">{{ t('billing.planChange.noDeletion') }}</p>
-            <p class="mt-1 text-fg-muted">{{ t('billing.planChange.targetPrice', {
-              price: t('billing.plans.price', { amount: formatAmount(planImpact.target_amount_minor) }),
-              interval: t(`billing.${planImpact.target_interval}`),
-            }) }}</p>
-          </div>
-
-          <h3 class="mt-6 font-bold">{{ t('billing.planChange.capacityTitle') }}</h3>
-          <ul class="mt-3 grid gap-2 sm:grid-cols-2">
-            <li v-for="quota in quotaImpacts" :key="quota.quota_key" class="rounded-card border border-[var(--bs-border)] p-3 text-sm" :data-impact-quota="quota.quota_key">
-              <div class="flex items-start justify-between gap-3">
-                <span class="font-semibold">{{ t(`usage.quotas.${quota.quota_key}`) }}</span>
-                <span v-if="quota.will_block_new_activity" class="text-xs font-bold text-[var(--bs-status-danger)]">{{ t('billing.planChange.blocked') }}</span>
-                <span v-else class="text-xs font-bold text-[var(--bs-status-success)]">{{ t('billing.planChange.available') }}</span>
-              </div>
-              <p class="mt-1 text-fg-muted">{{ t('billing.planChange.usageLimit', {
-                used: formatQuota(quota.quota_key, quota.used_value),
-                limit: formatQuota(quota.quota_key, quota.target_limit_value),
-              }) }}</p>
-            </li>
-          </ul>
-
-          <div v-if="gainedFeatures.length || auditHistoryIncreased" class="mt-6">
-            <h3 class="font-bold">{{ t('billing.planChange.gainedTitle') }}</h3>
-            <ul class="mt-2 list-disc space-y-1 ps-5 text-sm text-[var(--bs-status-success)]">
-              <li v-for="feature in gainedFeatures" :key="feature.feature_key">{{ featureName(feature.feature_key) }}</li>
-              <li v-if="auditHistoryIncreased">{{ t('billing.planChange.auditHistoryIncreased', { days: formatNumber(planImpact.audit_history_target_days) }) }}</li>
-            </ul>
-          </div>
-
-          <div v-if="lostFeatures.length || planImpact.audit_history_reduced" class="mt-6">
-            <h3 class="font-bold">{{ t('billing.planChange.lostTitle') }}</h3>
-            <ul class="mt-2 list-disc space-y-1 ps-5 text-sm text-fg-muted">
-              <li v-for="feature in lostFeatures" :key="feature.feature_key">{{ featureName(feature.feature_key) }}</li>
-              <li v-if="planImpact.audit_history_reduced">{{ t('billing.planChange.auditHistoryReduced', { days: formatNumber(planImpact.audit_history_target_days) }) }}</li>
-            </ul>
-          </div>
-
-          <div v-if="planImpact.requires_manual_handoff" class="mt-6 rounded-card border border-[var(--bs-border-strong)] p-4 text-sm" role="note">
-            <p class="font-bold">{{ t('billing.planChange.handoffTitle') }}</p>
-            <p class="mt-1 text-fg-muted">{{ t('billing.planChange.handoffBody') }}</p>
-          </div>
-          <p v-else class="mt-6 text-sm text-fg-muted">{{ t('billing.planChange.noChange') }}</p>
-
-          <div class="mt-6 flex justify-end">
-            <BsButton type="button" class="ls-btn ls-btn-primary" @click="dismiss">{{ t('common.close') }}</BsButton>
-          </div>
-        </section>
-</template></BsDialog>
-  </div>
-</template>
+return { supabase, currentId, can, user, manualOpen, manualPlan, usageRows, createCheckoutSession, accessState, subscription, t, te, locale, interval, pendingPlan, reviewingPlan, errorMessage, describeError, catalog, catalogPending, catalogError, refresh, plans, planImpact, currentPlanKey, currentPlanKind, trialPlanCurrent, launchPlanCurrent, compatibilityPlanCurrent, object, priceAmount, amount, yearlyOriginalAmount, yearlyMonthlyAmount, yearlyDiscount, annualDiscount, planName, planDescription, planNameForKey, formatAmount, formatDate, formatNumber, formatBytes, formatQuota, quotaImpacts, lostFeatures, gainedFeatures, auditHistoryIncreased, featureName, limit, included, featureRows, pricingPlans, choosePlan, chooseManualPlan, checkout, reviewChange, compact, surface }
+}

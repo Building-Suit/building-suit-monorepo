@@ -80,11 +80,26 @@ test('standard Ledger record actions use the canonical dialog and controller', (
     'pages/tax-vat.vue',
     'pages/team.vue',
   ]
+  const routeForAdapter = {
+    AccountStatementClassificationDialog: 'pages/accounts.vue',
+    AddTransactionDialog: 'layouts/default.vue',
+    CashFlowAllocationDialog: 'pages/reports.vue',
+    ControlReconciliationPanel: 'pages/accounts.vue',
+    OperationsCenter: 'layouts/default.vue',
+    OrganizationSwitcher: 'layouts/default.vue',
+    TeamMenu: 'layouts/default.vue',
+  }
   for (const file of expected) {
-    const source = sources.find(item => item.file === file)?.source
-    assert.ok(source, `${file} is missing`)
+    const name = path.basename(file, '.vue')
+    const route = routeForAdapter[name]
+    const source = route
+      ? readFileSync(path.join(appRoot, `composables/useLedger${name}View.ts`), 'utf8')
+      : sources.find(item => item.file === file)?.source
+    assert.ok(source, `${file} orchestration is missing`)
     assert.match(source, /useRecordAction\(/, `${file} does not use the shared controller`)
-    assert.match(source, /<BsRecordActionDialog\b/, `${file} does not use the shared record-action dialog`)
+    const presentation = route ? sources.find(item => item.file === route).source : source
+    assert.match(presentation, /<BsRecordActionDialog\b/, `${file} does not use the shared record-action dialog`)
+    if (route) assert.ok(presentation.includes(`:factory="useLedger${name}View"`), `${file} adapter is not connected`)
   }
 })
 
@@ -102,19 +117,15 @@ test('Ledger dimension CRUD actions use shared table capabilities and record dia
   assert.match(dimensions, /<BsDataTable[\s\S]+:capabilities="\{ insert:/)
   assert.match(dimensions, /@create="editPolicy\(\)"/)
   assert.match(dimensions, /@edit="editPolicy"/)
-  assert.match(dimensions, /<BsRecordActionDialog v-model:visible="policyOpen"/)
+  assert.match(dimensions, /<BsRecordActionDialog\s+v-model:visible="policyOpen"/)
   assert.doesNotMatch(dimensions, /<BsForm class="grid gap-4 md:grid-cols-4"/)
 })
 
 test('remaining direct dialogs are materially different shared-overlay workflows', () => {
   const allowed = new Set([
-    'components/AccountActivityDialog.vue',
-    'components/BillingCheckout.vue',
-    'components/CsvImportDialog.vue',
-    'components/FinancialSystemMap.vue',
-    'components/ManualPaymentCheckout.vue',
-    'components/TransactionDetailDialog.vue',
-    'pages/team.vue',
+    'layouts/default.vue', 'pages/accounts.vue', 'pages/billing.vue',
+    'pages/index.vue', 'pages/records/[kind].vue', 'pages/reports.vue',
+    'pages/subscribe.vue', 'pages/team.vue', 'pages/transactions.vue',
   ])
   const actual = sources.filter(({ source }) => /<BsDialog\b/.test(source)).map(({ file }) => file)
   assert.deepEqual(actual.sort(), [...allowed].sort())
@@ -130,27 +141,28 @@ test('Ledger authenticated chrome is adapter-only shared UI', () => {
   assert.equal(existsSync(path.join(appRoot, 'components/AccountMenu.vue')), false)
 })
 
-test('every remaining Ledger component is approved product orchestration over shared UI', () => {
+test('Ledger has no local Vue component layer or ownership debt', () => {
   const manifest = JSON.parse(readFileSync(path.join(workspaceRoot, 'docs/shared/ui-ownership-manifest.json'), 'utf8'))
   const ledger = manifest.components.filter(component => component.path.startsWith('apps/ledger-suit/'))
   const actual = vueFiles(path.join(appRoot, 'components'))
     .map(file => `apps/ledger-suit/app/components/${path.basename(file)}`)
     .sort()
-  assert.deepEqual(ledger.map(component => component.path).sort(), actual)
-  assert.ok(ledger.every(component => component.classification === 'product-orchestration'))
-  assert.ok(ledger.every(component => component.approval === 'BS-UI-LEDGER-MIG-001'))
-  assert.ok(ledger.every(component => component.rationale.includes('composes canonical shared UI primitives')))
+  assert.deepEqual(actual, [], 'Ledger presentation must live in shared Bs components')
+  assert.deepEqual(ledger, [], 'Removed local components must not retain ownership debt')
   assert.equal(existsSync(path.join(appRoot, 'components/AppLogo.vue')), false)
 })
 
-// The column boundary is exhaustive even while other presentation debt remains.
+// The final template and column boundaries are exhaustive.
 test('all Ledger tables use Bs-owned column schemas and domain cell slots', () => {
   let tables = 0
   for (const { file, source } of sources) {
     const { descriptor, errors } = parse(source)
     assert.deepEqual(errors, [], file)
+    assert.equal(descriptor.styles.length, 0, `${file}: local CSS`)
     function visit(node) {
       if (node.type === 1) {
+        assert.ok(node.tag === 'template' || node.tag.startsWith('Bs'), `${file}: non-Bs tag ${node.tag}`)
+        assert.ok(!node.props.some(prop => prop.type === 6 && ['class', 'style'].includes(prop.name) || prop.type === 7 && prop.name === 'bind' && ['class', 'style', 'pt'].includes(prop.arg?.content)), `${file}: local presentation styling`)
         assert.ok(!['Column', 'ColumnGroup', 'Row', 'DataTable'].includes(node.tag), `${file}: vendor table tag ${node.tag}`)
         if (node.tag === 'BsDataTable') {
           tables++

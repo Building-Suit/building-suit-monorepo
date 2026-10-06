@@ -5,7 +5,6 @@ import planUi from './playwright.plan-ui.config'
 import subscription from './playwright.subscription.config'
 import authOtp from './playwright.auth-otp.config'
 import publicLegal from './playwright.public-legal.config'
-import sharedUi from './playwright.shared-ui.config'
 
 // The control plane selects a spec through the app-local entry point. Keep
 // qualification as the default, selecting market or usability for their specs.
@@ -29,7 +28,8 @@ process.env.SHOP_PLAYWRIGHT_SUITE ??= process.argv.some(argument =>
 
 export default process.env.SHOP_PLAYWRIGHT_SUITE === 'market'
   ? market
-  : process.env.SHOP_PLAYWRIGHT_SUITE === 'shared-ui' ? sharedUi
+  : process.env.SHOP_PLAYWRIGHT_SUITE === 'shared-ui'
+    ? import('./playwright.shared-ui.config').then(module => module.default)
   : process.env.SHOP_PLAYWRIGHT_SUITE === 'public-legal' ? publicLegal
   : process.env.SHOP_PLAYWRIGHT_SUITE === 'auth-otp' ? authOtp
   : process.env.SHOP_PLAYWRIGHT_SUITE === 'subscription' ? subscription

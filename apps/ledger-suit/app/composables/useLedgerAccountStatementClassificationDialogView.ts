@@ -1,11 +1,15 @@
-<script setup lang="ts">
 import type { Database } from '~~/types/database.types'
 
-const props = defineProps<{
+/** Ledger-owned orchestration; mounted by a shared workflow scope in its route/layout. */
+export function useLedgerAccountStatementClassificationDialogView(_values: {
   account: { account_id: string, name: string, type: string, is_archived: boolean }
   scope: string
-}>()
-const emit = defineEmits<{ close: [], saved: [] }>()
+}, _emit: (event: string, ...args: unknown[]) => void) {
+const _props = new Proxy(_values, { get: (target, key) => Reflect.get(target, key) ?? Reflect.get({}, key) })
+const account = computed(() => _props.account)
+const scope = computed(() => _props.scope)
+const props = _props
+const emit = _emit as <K extends keyof ({ close: [], saved: [] })>(event: K, ...args: ({ close: [], saved: [] })[K]) => void
 const supabase = useSupabaseClient<Database>()
 const { currentId, can } = useTenant()
 const { t, locale } = useI18n()
@@ -88,37 +92,5 @@ async function save() {
   catch (failure) { if (isCurrent()) error.value = describeError(failure) }
   finally { if (isCurrent()) pending.value = false }
 }
-</script>
-
-<template>
-  <BsRecordActionDialog :visible="true" :title="t('statementClassification.title')" size="lg" :dirty="dirty" :pending="pending" :error="error" :submit-label="t('statementClassification.schedule')" :cancel-label="t('common.cancel')" :submit-disabled="!context || !canSchedule || loading || !form.reason.trim()" @update:visible="value => { if (!value) emit('close') }" @submit="save">
-      <p class="font-semibold">{{ account.name }}</p>
-      <BsFloatingField :label="t('financialMapping.dimension')"><select v-model="dimension" class="ls-input" :disabled="pending">
-        <option v-for="item in dimensions" :key="item" :value="item">{{ t(`financialMapping.dimensions.${item}`) }}</option>
-      </select></BsFloatingField>
-      <p class="text-sm text-fg-muted">{{ t('financialMapping.hint') }}</p>
-      <BsSectionSkeleton v-if="loading" variant="table" :rows="3" />
-      <template v-else>
-        <BsButton v-if="error" type="button" class="ls-btn" :disabled="pending" @click="load">{{ t('statementClassification.reload') }}</BsButton>
-        <template v-if="context">
-          <p v-if="!canSchedule" class="text-sm text-fg-muted">{{ t('statementClassification.readOnly') }}</p>
-          <div v-else class="space-y-4">
-            <BsFloatingField :label="t('statementClassification.line')"><select id="statement-line" v-model="form.statementLine" class="ls-input" required :disabled="pending">
-              <option value="" disabled>{{ t('statementClassification.choose') }}</option>
-              <option v-for="line in options" :key="line" :value="line">{{ dimension === 'balance_sheet' ? t(`statementClassification.lines.${line}`) : t(`financialMapping.lines.${line}`) }}</option>
-            </select></BsFloatingField>
-            <BsFloatingField :label="t('statementClassification.effectiveFrom')"><input id="statement-effective" v-model="form.effectiveFrom" type="date" class="ls-input" required :min="minDate" :disabled="pending"></BsFloatingField>
-            <p class="text-sm text-fg-muted">{{ t('statementClassification.minimum', { date: formatDate(minDate, locale) }) }}</p>
-            <BsFloatingField :label="t('statementClassification.reason')"><textarea id="statement-reason" v-model="form.reason" class="ls-input" rows="3" required maxlength="1000" :disabled="pending" /></BsFloatingField>
-          </div>
-          <h3 class="font-semibold">{{ t('statementClassification.history') }}</h3>
-          <p v-if="!history.length" class="text-sm text-fg-muted">{{ t('statementClassification.noHistory') }}</p>
-          <BsDataTable v-else :label="t('statementClassification.history')" :value="history" row-key="id" :paginator="history.length > 10" :rows="10" class="overflow-x-auto" :columns="[{ key: 'effective_from', field: 'effective_from', header: t('statementClassification.effectiveFrom') }, { key: 'statement_line', field: 'statement_line', header: t('statementClassification.line') }, { key: 'reason', field: 'reason', header: t('statementClassification.reason') }]">
-            <template #cell-effective_from="{ row }">{{ formatDate(row.effective_from, locale) }}</template>
-            <template #cell-statement_line="{ row }">{{ dimension === 'balance_sheet' ? t(`statementClassification.lines.${row.statement_line}`) : t(`financialMapping.lines.${row.statement_line}`) }}</template>
-
-          </BsDataTable>
-        </template>
-      </template>
-  </BsRecordActionDialog>
-</template>
+return { props, emit, supabase, currentId, can, t, locale, describeError, toasts, dimension, dimensions, context, loading, pending, error, form, requestId, history, options, canSchedule, minDate, dirty, disposed, loadController, initialScope, initialOrganization, isCurrent, load, save, account, scope }
+}

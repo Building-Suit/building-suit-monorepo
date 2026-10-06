@@ -193,6 +193,11 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
           <template #actions><BsButton>{{ isArabic ? 'تطبيق' : 'Apply' }}</BsButton></template>
         </BsFilterBar>
         <BsSelect v-model="choice" :label="isArabic ? 'الصنف' : 'Item'" :options="choices" option-label="name" option-value="id" filter virtual />
+        <BsFieldLabel for="catalogue-native-plan">{{ isArabic ? 'الخطة' : 'Plan' }}</BsFieldLabel>
+        <BsSelect id="catalogue-native-plan" v-model="searchValue" native>
+          <BsSelectOption value="standard">{{ isArabic ? 'قياسية' : 'Standard' }}</BsSelectOption>
+          <BsSelectOption value="advanced">{{ isArabic ? 'متقدمة' : 'Advanced' }}</BsSelectOption>
+        </BsSelect>
         <BsForm :pending="formPending" :error="formError" layout="grid" :columns="2" @submit="verifyForm">
           <BsField v-slot="field" :label="isArabic ? 'القيمة' : 'Value'" for="catalogue-value" :description="isArabic ? 'وصف الحقل' : 'Field description'" :hint="isArabic ? 'حقل نصي مشترك' : 'Shared text field'" required><BsInput id="catalogue-value" v-model="formValue" required :aria-describedby="field.describedby" :invalid="field.invalid" /></BsField>
           <BsField v-slot="field" :label="isArabic ? 'ملاحظات' : 'Notes'" for="catalogue-notes"><BsTextarea id="catalogue-notes" v-model="notes" :aria-describedby="field.describedby" /></BsField>
@@ -216,6 +221,11 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
 
     <BsContentSection :title="isArabic ? 'عرض البيانات' : 'Data presentation'" :description="isArabic ? 'تفاصيل وسجل ووسوم واختيار كيانات بعقود مشتركة.' : 'Shared contracts for details, history, tags, and entity selection.'">
       <BsStack gap="lg">
+        <BsHierarchyBranch :depth="1"><BsHierarchyLeaf /><BsText>{{ isArabic ? 'فرع متداخل' : 'Nested branch' }}</BsText></BsHierarchyBranch>
+        <BsFlowBlock part="branches" :columns="2">
+          <BsFlowBlock part="node" state="start"><BsHeading size="body">{{ isArabic ? 'المدخلات' : 'Input' }}</BsHeading></BsFlowBlock>
+          <BsFlowBlock part="node"><BsHeading size="body">{{ isArabic ? 'المراجعة' : 'Review' }}</BsHeading><BsColorSwatch color="#16293B" /></BsFlowBlock>
+        </BsFlowBlock>
         <BsDetailSection :title="isArabic ? 'تفاصيل السجل' : 'Record details'" :columns="2" divided>
           <BsDescriptionItem :term="isArabic ? 'المالك' : 'Owner'">packages/ui</BsDescriptionItem>
           <BsDescriptionItem :term="isArabic ? 'الحالة' : 'Status'"><BsStatusBadge status="active" /></BsDescriptionItem>
