@@ -41,7 +41,7 @@ Shared component composition follows `atoms → molecules → organisms → temp
 
 Every public UI source has an explicit package export. Adding, moving, or removing a shared component requires updating `packages/ui/package.json`, the `/components` catalogue when its capability changes, affected consumers, and the canonical manifest when local migration debt changes.
 
-Thin product adapters may remain when they add domain context before composing the shared owner. Current examples map Automation execution states to `StatusBadge`, Ledger tenant/reporting context to `BsPageHeader`, and product legal metadata/content to `BsPublicLegalPage`; the adapters contain no duplicate standalone presentation.
+Thin product adapters may remain when they add domain context before composing the shared owner. Automation execution-state mapping lives in a product-owned TypeScript helper and routes supply its tones to `BsStatusBadge`. Automation and Inventory render only Bs components and contain no local Vue components. Other adapters supply Ledger tenant/reporting context to `BsPageHeader` and product legal metadata/content to `BsPublicLegalPage`; they contain no duplicate standalone presentation.
 
 ## Design-system lock and verification
 

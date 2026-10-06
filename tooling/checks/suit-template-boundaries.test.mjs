@@ -56,3 +56,13 @@ test('recorded migration debt is exact and temporarily allowed', async (t) => {
   const result = await validateSuitTemplateBoundaries({ root, manifestPath: 'debt.json' })
   assert.deepEqual(result.failures, [])
 })
+
+test('Automation and Inventory have no remaining template or local-component debt', async () => {
+  const audit = await auditSuitTemplates()
+  const migrated = ['apps/automation-suit/', 'apps/inventory-suit/']
+  for (const prefix of migrated) {
+    assert.ok(audit.files.some(file => file.startsWith(prefix)), `${prefix} must be discovered`)
+    assert.deepEqual(audit.debt.filter(item => item.file.startsWith(prefix)), [], prefix)
+    assert.deepEqual(audit.parseFailures.filter(message => message.startsWith(prefix)), [], prefix)
+  }
+})

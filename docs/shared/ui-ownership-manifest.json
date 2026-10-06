@@ -11,24 +11,6 @@
   "bypasses": [],
   "components": [
     {
-      "path": "apps/automation-suit/app/components/DashboardIncidentCard.vue",
-      "classification": "product-orchestration",
-      "rationale": "Maps Automation incident evidence and recovery fields from its product contract into canonical BsCard and status presentation.",
-      "approval": "BS-UI-CONVERGENCE-001"
-    },
-    {
-      "path": "apps/automation-suit/app/components/DashboardMetricCard.vue",
-      "classification": "product-orchestration",
-      "rationale": "Adapts Automation metric values and danger state into the canonical BsKpiCard presentation.",
-      "approval": "BS-UI-CONVERGENCE-001"
-    },
-    {
-      "path": "apps/automation-suit/app/components/DashboardStatusPill.vue",
-      "classification": "product-orchestration",
-      "rationale": "Maps Automation execution vocabulary to canonical StatusBadge tones without duplicating badge presentation.",
-      "approval": "BS-UI-CONVERGENCE-001"
-    },
-    {
       "path": "apps/ledger-suit/app/components/AccountActivityDialog.vue",
       "classification": "product-orchestration",
       "rationale": "Coordinates Ledger account and journal RPC navigation inside BsDialog and BsDataTable. It composes canonical shared UI primitives.",
