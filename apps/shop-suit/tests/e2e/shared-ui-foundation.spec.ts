@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { pilotFixture } from './pilot-fixture'
+import { captureFoundation, expectChromeFree, expectNoPageOverflow, navigateFixture } from '../../../../packages/testing/browser-foundation'
 
 const limits = { active_locations: 1, active_members: 2, active_products: 250, active_services: 50, active_customers: 500, active_suppliers: 50 }
 const catalog = [
@@ -114,6 +115,12 @@ test('Shop authenticated shell shares mobile drawer, user menu, settings, and RT
   await userMenu.getByRole('menuitemradio', { name: 'داكن' }).click()
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
   await expect(userMenu.getByRole('menuitem', { name: 'تسجيل الخروج' })).toBeVisible()
+  await page.keyboard.press('End')
+  await expect(userMenu.getByRole('menuitem', { name: 'تسجيل الخروج' })).toBeFocused()
+  await page.keyboard.press('Escape')
+  await expect(userMenu).toBeHidden()
+  await expect(page.getByRole('button', { name: 'الحساب' })).toBeFocused()
+  await expectNoPageOverflow(page)
 })
 
 test('Shop capability-driven table create and edit actions share one record modal', async ({ page }) => {
@@ -161,9 +168,11 @@ test('Shop capability-driven table create and edit actions share one record moda
   await expect(page.getByRole('dialog', { name: 'Edit' })).toBeVisible()
 })
 
-test('Shop POS uses the shared tile action without default button chrome', async ({ page }) => {
+test('Shop POS uses the shared tile action without default button chrome', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 1024, height: 768 })
-  await pilotFixture(page, 'en')
+  const { calls } = await pilotFixture(page, 'en', 'owner', name => {
+    if (name === 'pos_checkout_context') return { staff: [], appointments: [], customers: [{ id: 'customer-1', name: 'Foundation customer', phone: null }] }
+  })
   await page.locator('#__nuxt').evaluate((root) => {
     const app = (root as HTMLElement & {
       __vue_app__?: {
@@ -183,6 +192,7 @@ test('Shop POS uses the shared tile action without default button chrome', async
   await expect(tile).toBeVisible()
   await expect(tile).toHaveClass(/\bbs-action-tile\b/)
   await expect(tile).not.toHaveClass(/\bls-btn\b/)
+  await expectChromeFree(tile)
   await tile.click()
   await expect(page.locator('#pos-cart-title').locator('..')).toContainText('Haircut')
   await page.keyboard.press('F2')
@@ -190,6 +200,17 @@ test('Shop POS uses the shared tile action without default button chrome', async
   const quantity = page.getByRole('spinbutton', { name: 'Quantity', exact: true })
   await quantity.fill('2')
   await expect(quantity).toHaveValue('2')
+  const customer = page.getByRole('combobox', { name: 'Customer', exact: true })
+  await customer.click()
+  await page.getByRole('option', { name: 'Foundation customer', exact: true }).click()
+  await expect(customer).toContainText('Foundation customer')
+  await page.keyboard.press('F2')
+  await page.locator('#pos-catalog-search').fill('Hair')
+  await expect.poll(() => calls.some(call => call.name === 'pos_catalog_search_by_category' && call.args.p_search === 'Hair')).toBe(true)
+  await expectNoPageOverflow(page)
+  await captureFoundation(page, testInfo, 'shop-pos-desktop-light-en')
+  await page.getByRole('button', { name: 'Remove: Haircut', exact: true }).click()
+  await expect(quantity).toHaveCount(0)
 })
 
 
@@ -219,4 +240,120 @@ test('Shop settings keeps profile edits in a shared modal with validation and fo
   await dialog.getByRole('button', { name: 'Cancel', exact: true }).click()
   await expect(dialog).toBeHidden()
   await expect(trigger).toBeFocused()
+})
+
+
+for (const [locale, width, theme] of [['en', 1440, 'light'], ['ar', 390, 'dark']] as const) {
+  test(`Shop dashboard and billing plan/usage: ${locale}, ${width}px, ${theme}`, async ({ page }, testInfo) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.addInitScript(value => localStorage.setItem('building-suit.theme', value), theme)
+    await pilotFixture(page, locale, 'owner', name => {
+      if (name === 'shop_public_plan_catalog') return catalog
+      if (name === 'shop_billing_read') return {
+        subscription: { planName: 'Pilot plan', accessState: 'trialing', priceAmount: 349, effectivePriceAmount: 349, listPriceAmount: 349, currency: 'EGP', trialDaysRemaining: 7, trialEndAt: '2099-01-01', billingInterval: 'monthly' },
+        instructions: { recipientAlias: 'synthetic-billing@example.test', instructionsEn: 'Synthetic fixture only.', instructionsAr: 'بيانات اختبار فقط.' },
+        usage: { locations: 1, members: 2, products: 0, services: 1, customers: 0, suppliers: 0, limits, resources: [] },
+        submissions: [],
+        availablePlans: catalog.map(plan => ({ planId: plan.id, planName: plan.name, planSlug: plan.slug,
+          catalogTermsId: plan.catalog_terms_id, planVariant: plan.plan_variant, variantName: plan.variant_name,
+          billingInterval: plan.billing_interval, currency: plan.currency, listPriceAmount: plan.price_amount,
+          effectivePriceAmount: plan.price_amount, priceSource: 'catalog', resourceLimits: plan.resource_limits, blockers: [] })),
+      }
+    })
+    await expect(page.locator('html')).toHaveAttribute('dir', locale === 'ar' ? 'rtl' : 'ltr')
+    await expect(page.locator('html')).toHaveAttribute('data-theme', theme)
+    await expectNoPageOverflow(page)
+    await captureFoundation(page, testInfo, `shop-dashboard-${locale}-${theme}-${width}`)
+    await navigateFixture(page, '/billing')
+    await expect(page.getByRole('heading', { name: locale === 'ar' ? 'الاشتراك والدفع' : 'Subscription and billing', exact: true })).toBeVisible()
+    await expect(page.getByText('Pilot plan', { exact: true })).toBeVisible()
+    await expect(page.locator('.bs-usage-meter')).toHaveCount(6)
+    const plans = page.getByTestId('shop-plan-cards')
+    await expect(plans.locator('article')).toHaveCount(3)
+    await plans.getByRole('radio', { name: locale === 'ar' ? 'سنوي' : 'Yearly' }).check()
+    await expect(plans.locator('[data-plan="solo"]')).toContainText(locale === 'ar' ? '٢٬٨٤٧٫٨٤' : '2,847.84')
+    await expectNoPageOverflow(page)
+    await captureFoundation(page, testInfo, `shop-billing-${locale}-${theme}-${width}`)
+  })
+}
+
+test('Shop signup advances and returns through shared wizard and invalid OTP states', async ({ page }) => {
+  await mockPublicBackend(page)
+  await page.route('http://127.0.0.1:61321/auth/v1/signup', route => route.fulfill({ json: { id: 'synthetic-signup', email: 'signup@example.test', identities: [{ id: 'synthetic-identity' }] } }))
+  await page.route('http://127.0.0.1:61321/auth/v1/verify', route => route.fulfill({ status: 400, json: { message: 'Invalid synthetic code', error_code: 'otp_expired' } }))
+  await page.goto('/auth/signup')
+  // The Vue app exists before Nuxt finishes hydrating the async signup page.
+  // Filling the SSR inputs at that point can leave the form model empty.
+  await expect.poll(() => page.locator('#__nuxt').evaluate((root) => {
+    const app = (root as HTMLElement & { __vue_app__?: { $nuxt?: { isHydrating: boolean } } }).__vue_app__
+    return app?.$nuxt?.isHydrating === false
+  })).toBe(true)
+  await page.getByLabel(/^Name\s*\*?$/).fill('Foundation owner')
+  await page.getByLabel(/^Email\s*\*?$/).fill('signup@example.test')
+  await page.getByLabel(/^Password\s*\*?$/).fill('synthetic-password')
+  await page.getByRole('button', { name: 'Continue', exact: true }).click()
+  await expect(page.locator('.bs-signup-wizard__step').nth(1)).toHaveAttribute('aria-current', 'step')
+  await page.getByLabel(/^Shop name\s*\*?$/).fill('Foundation shop')
+  await page.getByRole('button', { name: 'Back', exact: true }).click()
+  await expect(page.getByLabel(/^Email\s*\*?$/)).toHaveValue('signup@example.test')
+  await page.getByRole('button', { name: 'Continue', exact: true }).click()
+  await page.getByLabel(/^Main location name\s*\*?$/).fill('Main branch')
+  await page.getByRole('radio', { name: 'Services only', exact: true }).check()
+  await page.getByRole('button', { name: 'Create shop', exact: true }).click()
+  const verification = page.locator('.bs-verification-form')
+  await expect(verification).toContainText('signup@example.test')
+  await expect(verification.getByRole('textbox')).toHaveCount(6)
+  for (let index = 0; index < 6; index++) await verification.getByRole('textbox').nth(index).fill(String(index + 1))
+  await verification.getByRole('button', { name: 'Verify your email', exact: true }).click()
+  await expect(verification.getByRole('alert')).toBeVisible()
+  await expect(verification.getByRole('textbox').first()).toHaveValue('')
+  await expectNoPageOverflow(page)
+})
+
+
+test('Shop customers table paginates, searches and opens a focused create modal', async ({ page }) => {
+  const { calls } = await pilotFixture(page, 'en', 'owner', (name, args) => {
+    if (name === 'customer_access') return [{ can_view: true, can_manage: true }]
+    if (name === 'list_customers') {
+      const rows = Array.from({ length: 21 }, (_, index) => ({ id: `customer-${index}`, name: `Foundation customer ${String(index).padStart(2, '0')}`, phone: null, email: null, address: null, notes: null, is_active: true, created_at: '2026-10-01', updated_at: '2026-10-01', archived_at: null }))
+      const filtered = rows.filter(row => !args.p_search || row.name.includes(String(args.p_search)))
+      const offset = (Number(args.p_page) - 1) * 20
+      return { items: filtered.slice(offset, offset + 20), total: filtered.length, page: args.p_page, pageSize: 20, canManage: true }
+    }
+  })
+  await navigateFixture(page, '/customers')
+  const table = page.locator('.bs-data-table')
+  await expect(table.locator('tbody tr')).toHaveCount(20)
+  await table.getByRole('button', { name: 'Next Page', exact: true }).click()
+  await expect(table.locator('tbody tr')).toHaveCount(1)
+  await expect(table).toContainText('Foundation customer 20')
+  await table.getByRole('searchbox').fill('customer 01')
+  await expect(table.locator('tbody tr')).toHaveCount(1)
+  await expect(table).toContainText('Foundation customer 01')
+  expect(calls.filter(call => call.name === 'list_customers').at(-1)?.args.p_page).toBe(1)
+  const create = table.getByRole('button', { name: 'Add customer', exact: true })
+  await create.click()
+  await expect(page.getByRole('dialog').getByLabel('Customer name', { exact: true })).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('dialog')).toBeHidden()
+  await expect(create).toBeFocused()
+})
+
+
+test('Shop public desktop light frame keeps shared plan cards aligned', async ({ page }, testInfo) => {
+  await mockPublicBackend(page)
+  await page.addInitScript(() => localStorage.setItem('building-suit.theme', 'light'))
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await openLanding(page)
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
+  await expect(page.locator('.bs-marketing-header').getByRole('link', { name: 'Pricing', exact: true })).toHaveAttribute('href', /#pricing/)
+  const grid = page.getByTestId('shop-plan-cards')
+  const first = await grid.locator('article').first().boundingBox()
+  const second = await grid.locator('article').nth(1).boundingBox()
+  expect(first).not.toBeNull()
+  expect(second).not.toBeNull()
+  expect(Math.abs(first!.y - second!.y)).toBeLessThanOrEqual(1)
+  expect(second!.x).toBeGreaterThan(first!.x + first!.width)
+  await expectNoPageOverflow(page)
+  await captureFoundation(page, testInfo, 'shop-public-desktop-light-en')
 })
