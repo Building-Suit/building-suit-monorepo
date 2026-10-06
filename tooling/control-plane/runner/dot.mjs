@@ -29,6 +29,8 @@ export function knownBindingFailure(check) {
 export function effectiveFailureClass(snapshot, fallback) {
  if (snapshot.binding_recovery?.classification==='CONFIGURATION') return 'verification-configuration'
  const e=snapshot.executions?.at(-1)
+ const audited=snapshot.exhaustion_audit?.entries.find(c=>Number(c.execution_id)===Number(e?.execution_id))
+ if(audited&&audited.classification!=='UNKNOWN')return legacyClassification(audited.classification)
  const reviewed=snapshot.retry_accounting?.classifications?.find(c=>Number(c.execution_id)===Number(e?.execution_id))
  if (reviewed) return reviewed.classification === 'OTHER' ? 'safety-stop' : legacyClassification(reviewed.classification)
  const failure=snapshot.failures?.filter(f=>!f.resolved_at && f.execution_id===e?.execution_id).at(-1)

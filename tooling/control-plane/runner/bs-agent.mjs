@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {auditAttempts} from './retry-exhaustion-audit.mjs'
 import { dispatchRecovery,needsRecovery } from './dot-general-recovery.mjs'
 import { cleanupIntegratedWorktrees } from './dot-cleanup.mjs'
 import { preexecutionBindingEvidence } from './preexecution-binding-recovery.mjs'
@@ -4846,7 +4847,7 @@ export function supervisorSnapshot(taskId) {
   )
 
   const snapshot=parseControlJson(result)
-  if(snapshot) { snapshot.binding_recovery=strictBindingRecoveryEvidence(snapshot); snapshot.preexecution_binding_recovery=preexecutionBindingEvidence(snapshot,repoRoot) }
+  if(snapshot) { snapshot.exhaustion_audit=auditAttempts(snapshot); snapshot.binding_recovery=strictBindingRecoveryEvidence(snapshot); snapshot.preexecution_binding_recovery=preexecutionBindingEvidence(snapshot,repoRoot) }
   return snapshot
 }
 
@@ -5233,6 +5234,7 @@ function recordSupervisorRecovery(snapshot, plan, options = {}) {
     ? new Date(Date.now() + recoveryBackoff(snapshot.runtime_operations?.at(-1)?.infra_retries ?? 0)).toISOString()
     : ''
   const condition = {
+    ...(plan.reason==='retry_budget_exhausted'?{exhaustion_audit:snapshot.exhaustion_audit}:{}),
     fingerprint: plan.fingerprint,
     reason: plan.reason,
     route: plan.kind,
@@ -5603,6 +5605,7 @@ function taskSupervisor() {
       controlQuery(`SELECT control.reconcile_strict_verification_binding(:'task',:'proof'::jsonb);`,{task:taskId,proof:JSON.stringify(bindingSnapshot.binding_recovery)})
       if(bindingSnapshot.workflow_run?.run_id && bindingSnapshot.run_publication_authority?.authorized) controlQuery(`SELECT control.refresh_dot_admission(:'run'::uuid);`,{run:bindingSnapshot.workflow_run.run_id})
     }
+    controlQuery(`SELECT control.record_retry_exhaustion_audit(:'task',:'proof'::jsonb);`,{task:taskId,proof:JSON.stringify(supervisorSnapshot(taskId).exhaustion_audit)})
     controlQuery(`SELECT control.audit_product_attempts(:'task');`,{task:taskId})
     let snapshot = supervisorSnapshot(taskId)
     if (!snapshot?.packet?.task) throw new Error(`Unknown task: ${taskId}`)
@@ -6608,6 +6611,7 @@ async function recoveryWatch() {
     const candidates = parseControlJson(controlQuery(`SELECT coalesce(jsonb_agg(to_jsonb(r)),'[]'::jsonb) FROM control.workflow_runs r WHERE status='running' OR (status='failed' AND current_task_id IS NOT NULL);`))
     const outcomes = [{action:'health_collection',ok:health.code===0,llm_used:false}]
     for (const candidate of candidates) {
+      if(candidate.current_task_id){const audit=supervisorSnapshot(candidate.current_task_id).exhaustion_audit;controlQuery(`SELECT control.record_retry_exhaustion_audit(:'task',:'proof'::jsonb);`,{task:candidate.current_task_id,proof:JSON.stringify(audit)})}
       const nativeGate=parseControlJson(controlQuery(`SELECT control.reconcile_native_reacceptance_gate(:'run'::uuid);`,{run:candidate.run_id}))
       if(nativeGate.reconciled){outcomes.push({action:'native_reacceptance_guard_reconciled',...nativeGate});continue}
       const observed=parseControlJson(controlQuery(`SELECT snapshot FROM control.dot_health_current WHERE run_id=:'run'::uuid;`,{run:candidate.run_id}))

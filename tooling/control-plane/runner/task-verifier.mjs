@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {emptyComponentFixture} from './retry-exhaustion-audit.mjs'
 
 import {
   existsSync,
@@ -177,6 +178,7 @@ function runCheck({
   required = true,
   selectionReason = 'required_by_verification_policy',
 }) {
+  if(name==='ledger-shared-ui-tests')emptyComponentFixture(worktreePath,{name,summary:'ENOENT app/components'},true)
   if (suit.slug === 'shop-suit' && ['shop-database-regression', 'database-tests'].includes(name)) {
     const freshness = localShopMigrationReadiness({ worktreePath, changedFiles: [...changedFiles] })
     if (!freshness.ready) {

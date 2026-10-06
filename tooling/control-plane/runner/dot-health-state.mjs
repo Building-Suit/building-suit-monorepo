@@ -1,7 +1,8 @@
+import {exhaustionHealth} from './retry-exhaustion-audit.mjs'
 export const HEALTH_STATES = Object.freeze(['RUNNING','VERIFYING','REPAIRING','PUBLISHING','WAITING_TIMER','WAITING_OPERATOR','WAITING_DEPENDENCY','STUCK','FAILED','COMPLETE'])
 const time = value => Number.isFinite(Date.parse(value)) ? Date.parse(value) : 0
 export function classifyHealth(input, process = {}, now = Date.now(), graceMs = 60_000) {
- const {run,task,execution:e,verification:v,recovery:r,operation:o,publication:p,accounting:a,policy} = input
+ const {run,task,execution:e,verification:v,recovery:r,operation:o,publication:p,policy} = input
  const timestamps=[input.last_progress_at,e?.started_at,e?.finished_at,v?.started_at,v?.finished_at,process.last_output_at].map(time)
  const last=Math.max(...timestamps,run&&!task?time(run.updated_at):0)
  const age=last?now-last:Infinity
@@ -21,8 +22,10 @@ export function classifyHealth(input, process = {}, now = Date.now(), graceMs = 
  if(!run&&['complete','cancelled'].includes(task?.status))return state('COMPLETE','Task completed','None')
  if(incident?.status==='human-gate')return state('WAITING_OPERATOR',incident.evidence?.reason??'Incident investigation established a human gate','Resolve the recorded incident gate',true)
  if(run?.stop_requested||run?.maintenance_requested)return state('WAITING_OPERATOR',run.stop_requested?'Run stop requested':'Run maintenance hold','Operator must release the existing run hold',true)
+ const audit=r?.condition?.exhaustion_audit
+ if(r?.error_code==='retry_budget_exhausted'){const gate=exhaustionHealth(audit);return {...state(gate.needs?'WAITING_OPERATOR':'STUCK',gate.why,gate.next,gate.needs),exhaustion_audit:audit??null}}
  if(['wait-operator','wait-decision','safety-stop'].includes(r?.next_action)&&r.status==='active')return state('WAITING_OPERATOR',r.error_code??r.next_action,'Resolve the recorded operator/decision gate',true)
- if(a?.all_product===true && a.consumed>=policy?.max_attempts && ['failed'].includes(task?.status))return state('FAILED','Legitimate product retry budget exhausted','Operator authorization required; budget remains unchanged',true)
+
  if(process.worker_alive){
   if(time(process.worker?.deadline_at)&&time(process.worker.deadline_at)<now)return state('STUCK','Worker still alive beyond its enforced deadline','Dot must reconcile the overdue worker receipt')
   if(process.phase==='verification')return state('VERIFYING','Independent verifier process alive','Finish mandatory verification')

@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 // Families describe lifecycle semantics. Error strings and clocks never identify incidents.
 export function recoveryFamily(health, snapshot={}) {
+ if(snapshot.exhaustion_audit?.action==='investigate')return 'unknown-lifecycle'
  const task=snapshot.packet?.task??{},e=snapshot.executions?.at(-1),v=snapshot.verification_runs?.at(-1)
  if(task.status==='complete')return 'completion-credit'
  if(!health.task_id)return 'controller-acquisition'

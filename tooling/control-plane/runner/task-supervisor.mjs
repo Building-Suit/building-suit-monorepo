@@ -149,6 +149,7 @@ export function planSupervisorStep(snapshot) {
   if (run && (run.stop_requested || run.maintenance_requested || run.status !== 'running' || run.completed_tasks >= run.max_tasks)) {
     return decision('wait', 'wait-operator', 'operator-wait', run.stop_requested ? 'stop_requested' : run.maintenance_requested ? 'maintenance_requested' : run.completed_tasks >= run.max_tasks ? 'limit_reached' : 'run_not_running', { execution, fingerprint })
   }
+  if(task.status==='failed'&&snapshot.exhaustion_audit?.action==='investigate'&&!['operator-wait','decision-wait'].includes(executionFailure(snapshot,execution)?.failure_class))return decision('wait','wait-external','transient-infrastructure','retry_audit_investigation_required',{execution,fingerprint,exhaustion_audit:snapshot.exhaustion_audit})
   const reclassifyPublicationStop = publicationStopNeedsReclassification(snapshot)
   if (recovery?.next_action === 'safety-stop' && !reclassifyPublicationStop && recovery.condition?.fingerprint === fingerprint) {
     return decision('terminal','safety-stop',recovery.failure_class ?? 'safety-stop',recovery.error_code ?? 'persisted_safety_stop',{execution,verification,publication,fingerprint,persisted:true,recoverable:false})
@@ -319,6 +320,7 @@ export function planSupervisorStep(snapshot) {
     }
     const policy = snapshot.packet.retry_policy ?? {}
     const attemptsRemain = execution && Number(snapshot.retry_accounting?.consumed ?? execution.attempt) < Number(policy.max_attempts ?? 0)
+    if (!attemptsRemain&&!snapshot.exhaustion_audit)return decision('wait','wait-external','transient-infrastructure','retry_audit_required',{execution,fingerprint})
     if (!attemptsRemain && snapshot.retry_accounting && snapshot.retry_accounting.all_product !== true) {
       return decision('wait', 'wait-operator', 'operator-wait', 'retry_classification_review_required', { execution, verification, publication, fingerprint })
     }

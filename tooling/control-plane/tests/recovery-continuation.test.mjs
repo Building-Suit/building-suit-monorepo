@@ -15,7 +15,7 @@ import { classifyVerificationResults, resolveVerificationPlan, verificationComma
 import { profileForAttempt } from '../lib/retry-policy.mjs'
 const policy = { policy_id: 'foundation-three', max_attempts: 3, attempt_profiles: ['standard','standard','deep'] }
 function snapshot(attempt=1,status='succeeded') {
- return {packet:{task:{task_id:'CP-RECOVERY-001',status:'failed'},retry_policy:policy},executions:[{execution_id:attempt,attempt,status}],failures:[{failure_id:attempt,execution_id:attempt,failure_class:'verification-product-defect',resolved_at:null}]}
+ return {exhaustion_audit:{all_attempts_audited:true,action:'operator-gate',entries:[]},packet:{task:{task_id:'CP-RECOVERY-001',status:'failed'},retry_policy:policy},executions:[{execution_id:attempt,attempt,status}],failures:[{failure_id:attempt,execution_id:attempt,failure_class:'verification-product-defect',resolved_at:null}]}
 }
 test('1 initial failed verification repairs',()=>{const p=planSupervisorStep(snapshot());assert.equal(p.kind,'act');assert.equal(p.command,'task-retry');assert.equal(p.next_action,'repair')})
 test('2 failed repair keeps product class and selects attempt 3 deep',()=>{const s=snapshot(2,'failed');assert.equal(planSupervisorStep(s).next_action,'repair');assert.equal(retryPurpose(s),'verification-product-repair');assert.equal(profileForAttempt(policy,3),'deep')})
