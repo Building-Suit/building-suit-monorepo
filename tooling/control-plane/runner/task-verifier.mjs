@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import {failureEvidence,processFailureCategory} from './failure-evidence.mjs'
+import {failureEvidence,processFailureCategory,evidenceDigest} from './failure-evidence.mjs'
 import {emptyComponentFixture} from './retry-exhaustion-audit.mjs'
 
 import {
@@ -37,10 +37,11 @@ import { executeWithControlDatabaseRetry } from '../lib/control-database.mjs'
 const [
   worktreePath,
   packetPath,
-  runDirectory,
+  suppliedRunDirectory,
   verificationRunId,
   persistedVerificationMode,
 ] = process.argv.slice(2)
+const runDirectory=suppliedRunDirectory?path.join(suppliedRunDirectory,String(verificationRunId)):null
 
 const verificationProbe =
   verificationRunId === 'probe'
@@ -243,30 +244,9 @@ function runCheck({
       ? result.status
       : 1
 
-  const logPath =
-    path.join(
-      runDirectory,
-      `${sanitizeName(name)}.log`,
-    )
-
-  writeFileSync(
-    logPath,
-
-    [
-      `$ ${program} ${args.join(' ')}`,
-      '',
-      '--- STDOUT ---',
-      stdout,
-      '',
-      '--- STDERR ---',
-      stderr,
-      '',
-    ].join('\n'),
-
-    {
-      mode: 0o600,
-    },
-  )
+  const logContent=[`$ ${program} ${args.join(' ')}`,'','--- STDOUT ---',stdout,'','--- STDERR ---',stderr,''].join('\n')
+  const logPath=path.join(runDirectory,`${sanitizeName(name)}-${evidenceDigest(logContent)}.log`)
+  if(!existsSync(logPath))writeFileSync(logPath,logContent,{mode:0o600,flag:'wx'})
 
   const unavailable =
     result.error?.code === 'ENOENT'

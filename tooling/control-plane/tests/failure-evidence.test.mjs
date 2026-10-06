@@ -65,3 +65,5 @@ test('in-flight same-attempt reverification retains the reviewed historical fail
  const s={executions:[{execution_id:30,attempt:1,status:'succeeded'}],verification_runs:[{execution_id:30,verification_run_id:20,status:'failed'},{execution_id:30,verification_run_id:21,status:'running'}],verification_results:[{...check,metadata:{failure_evidence:evidence}}]}
  assert.equal(auditAttempts(s).entries[0].classification,'VERIFIER_INFRA');assert.equal(auditAttempts(s).consumed,0)
 })
+
+test('verification logs retain unique run and content-addressed artifacts across reverification',()=>{const source=readFileSync(new URL('../runner/task-verifier.mjs',import.meta.url),'utf8');assert.match(source,/path.join\(suppliedRunDirectory,String\(verificationRunId\)\)/);assert.match(source,/evidenceDigest\(logContent\)/);assert.match(source,/flag:'wx'/);})
