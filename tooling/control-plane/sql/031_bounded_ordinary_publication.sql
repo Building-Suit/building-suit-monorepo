@@ -88,6 +88,8 @@ CREATE OR REPLACE FUNCTION control.runtime_recovery_candidates(p_limit integer D
 $$;
 DO $$ BEGIN
  IF EXISTS(SELECT 1 FROM pg_roles WHERE rolname='bs_control_app') THEN
+  -- Existing hosted default privileges may grant ALL to the application role.
+  REVOKE ALL ON control.run_ordinary_publication_authorizations,control.run_task_publication_authorities FROM bs_control_app;
   GRANT SELECT ON control.run_ordinary_publication_authorizations,control.run_task_publication_authorities TO bs_control_app;
   GRANT EXECUTE ON FUNCTION control.current_run_publication_authority(text) TO bs_control_app;
  END IF;
