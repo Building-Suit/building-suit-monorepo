@@ -17,3 +17,12 @@ export function strictBindingRecoveryEvidence(snapshot) {
  if (!source.includes("args.includes('--require-strict')") || !source.includes('validateSuitTemplateBoundaries')) return null
  return {execution_id:execution.execution_id,verification_run_id:verification.verification_run_id,command:strictBoundaryCommand,runner_path:'tooling/checks/suit-template-boundaries.mjs',runner_sha256:createHash('sha256').update(source).digest('hex'),classification:'CONFIGURATION',checks:checks.map(c=>c.check_name)}
 }
+
+// A failed receipt from BEFORE binding reconciliation cannot settle the new
+// same-execution verification operation. Completed product failures still replay.
+export function requiresSameAttemptVerification(snapshot, operation) {
+ const proof=snapshot.binding_recovery
+ const reviewed=snapshot.retry_accounting?.classifications?.find(c=>Number(c.execution_id)===Number(proof?.execution_id))
+ return operation.action==='task-verify' && Number(operation.execution_id)===Number(proof?.execution_id)
+  && reviewed?.classification==='CONFIGURATION' && reviewed.evidence?.binding_reconciled===true
+}

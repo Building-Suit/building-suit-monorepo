@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { cleanupIntegratedWorktrees } from './dot-cleanup.mjs'
-import { strictBindingRecoveryEvidence } from './binding-recovery.mjs'
+import { strictBindingRecoveryEvidence, requiresSameAttemptVerification } from './binding-recovery.mjs'
 import { incidentIdentity, repairEvidenceHeader, parentContinuation, effectiveFailureClass, workerProcessClassification } from './dot.mjs'
 import { operationHasAuthoritativeSuccess } from './bounded-publication.mjs'
 
@@ -4729,7 +4729,7 @@ function invokeTaskAction(action, taskId) {
   const reserved = snapshot.executions?.find(e => e.execution_id === op.execution_id)
   const completedVerification = snapshot.verification_runs?.filter(v => v.execution_id === op.execution_id && v.status !== 'running').at(-1)
   const phaseSettled = ['task-run','task-retry'].includes(op.action) && reserved && !['running','queued'].includes(reserved.status) && reserved.execution_id !== op.descriptor?.previous_execution_id
-    || op.action === 'task-verify' && completedVerification && ['passed','failed'].includes(snapshot.packet.task.status)
+    || op.action === 'task-verify' && completedVerification && ['passed','failed'].includes(snapshot.packet.task.status) && !requiresSameAttemptVerification(snapshot,op)
   if (phaseSettled) {
     const failure = snapshot.failures?.filter(f => f.execution_id === op.execution_id && !f.resolved_at).at(-1)
     const passed = op.action === 'task-verify' ? completedVerification.status === 'passed' : reserved.status === 'succeeded'

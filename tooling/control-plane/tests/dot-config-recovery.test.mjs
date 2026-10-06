@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { strictBindingRecoveryEvidence, strictBoundaryCommand } from '../runner/binding-recovery.mjs'
+import { strictBindingRecoveryEvidence, strictBoundaryCommand, requiresSameAttemptVerification } from '../runner/binding-recovery.mjs'
 import { effectiveFailureClass } from '../runner/dot.mjs'
 import { planSupervisorStep } from '../runner/task-supervisor.mjs'
 import { resolveVerificationPlan } from '../runner/verification-mode.mjs'
@@ -19,7 +19,11 @@ test('Exact deadlock: legacy PRODUCT + Dot OTHER + rejected guard becomes automa
  assert.equal(effectiveFailureClass(s,'verification-product-defect'),'verification-configuration')
  let plan=planSupervisorStep(s);assert.equal(plan.command,'task-verify');assert.equal(plan.execution.execution_id,295)
  // Persisted configuration classification continues to override legacy PRODUCT.
- s.retry_accounting.classifications[0].classification='CONFIGURATION';assert.equal(planSupervisorStep(s).command,'task-verify')
+ s.retry_accounting.classifications[0]={execution_id:295,classification:'CONFIGURATION',source:'dot',evidence:{binding_reconciled:true}};
+ assert.equal(requiresSameAttemptVerification(s,{action:'task-verify',execution_id:295}),true)
+ assert.equal(requiresSameAttemptVerification(s,{action:'task-retry',execution_id:295}),false)
+ assert.equal(requiresSameAttemptVerification(s,{action:'task-verify',execution_id:296}),false)
+ assert.equal(planSupervisorStep(s).command,'task-verify')
  assert.equal(JSON.stringify(s.executions),history)
  // The actual assertion failing removes binding proof and routes product repair.
  s.verification_results[0].status='fail';assert.equal(strictBindingRecoveryEvidence(s),null)
