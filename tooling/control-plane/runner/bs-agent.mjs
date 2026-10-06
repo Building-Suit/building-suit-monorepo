@@ -6603,6 +6603,7 @@ function attachRuntimeExecution(executionId) {
 
 async function recoveryWatch() {
   try {
+    controlQuery(`SELECT control.reconcile_dot_recovery_completion();`)
     const health=execute(process.execPath,[path.join(controlSourceRoot,'tooling/control-plane/runner/dot-health-collector.mjs')],{cwd:repoRoot,timeout:25000})
     const candidates = parseControlJson(controlQuery(`SELECT coalesce(jsonb_agg(to_jsonb(r)),'[]'::jsonb) FROM control.workflow_runs r WHERE status='running' OR (status='failed' AND current_task_id IS NOT NULL);`))
     const outcomes = [{action:'health_collection',ok:health.code===0,llm_used:false}]

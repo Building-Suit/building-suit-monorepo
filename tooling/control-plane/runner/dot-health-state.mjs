@@ -42,6 +42,8 @@ export function classifyHealth(input, process = {}, now = Date.now(), graceMs = 
  if(v?.status==='running')return state('STUCK','Verification marked running but no live verifier','Dot must recover/reconcile this verification')
  if(!task){
   if(input.next_eligible_task)return state('STUCK',`No current task despite eligible admitted work: ${input.next_eligible_task}`,'Controller must acquire the next task on this same run')
+  if(input.unowned_prerequisite)return state('WAITING_OPERATOR',`Unowned prerequisite outside authorized runs: ${input.unowned_prerequisite}`,'Authorize the prerequisite within a correctly scoped run; never bypass the dependency',true)
+  if(input.bounded_scope_exhausted)return state('WAITING_OPERATOR','All authorized batch tasks completed before the configured run limit','Operator must reconcile the existing batch scope/count; no scope expansion or replacement run',true)
   if(run?.status==='failed')return state('FAILED','Run failed without a current task','Inspect the recorded run failure',true)
   return state('WAITING_DEPENDENCY','No eligible admitted task','Wait for authoritative dependency/decision readiness')
  }

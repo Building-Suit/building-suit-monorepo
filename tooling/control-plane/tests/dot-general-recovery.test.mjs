@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {dispatchRecovery,recoveryFamily,recoveryIdentity,validateIncidentRepair} from '../runner/dot-general-recovery.mjs'
+import {classifyHealth} from '../runner/dot-health-state.mjs'
 import {supervisorStateFingerprint,planSupervisorStep} from '../runner/task-supervisor.mjs'
 const now=Date.now(), h=()=>({run_id:'same-run',task_id:'same-task',execution_id:302,state:'STUCK',operator_action_required:false,worker_alive:false,observed_at:new Date(now).toISOString()})
 function store(){const jobs=new Map();let launches=0;return {jobs,get launches(){return launches},claim:async(run,id,family)=>{if(jobs.has(id))return {claimed:false,job:jobs.get(id)};const job={incident_id:id,run_id:run,root_family:family,owner:family.startsWith('unknown')?'Codex':'Dot'};jobs.set(id,job);return {claimed:true,job}},start:async()=>{launches++}}}
@@ -16,3 +17,6 @@ test('incident patches cannot touch product paths, providers, SQL, merge or depl
 test('publication completion transitions to credit, unowned next task to acquisition',()=>{assert.equal(recoveryFamily(h(),{packet:{task:{status:'complete'}}}),'completion-credit');assert.equal(recoveryFamily({...h(),task_id:null},{}),'controller-acquisition')})
 
 test('exact native reacceptance proof supersedes the old publisher eligibility stop',()=>{const s=snapshot('reaccepted');s.run_publication_authority={authorized:true,mode:'ordinary-draft',task_id:'same-task',run_id:'same-run',contract_fingerprint:'current'};s.publication_execution_eligible=true;s.recovery={status:'resolved',next_action:'safety-stop',failure_class:'safety-stop',error_code:'Latest execution lacks successful implementation or exact guarded reacceptance.',metadata:{child_command:'task-publish'}};s.recovery.condition={fingerprint:supervisorStateFingerprint(s)};assert.equal(planSupervisorStep(s).command,'task-publish');s.publication_execution_eligible=false;s.recovery.condition.fingerprint=supervisorStateFingerprint(s);assert.equal(planSupervisorStep(s).kind,'terminal');s.publication_execution_eligible=true;s.recovery.error_code='publication_protected_path_operator_wait';s.recovery.condition.fingerprint=supervisorStateFingerprint(s);assert.equal(planSupervisorStep(s).kind,'terminal')})
+
+// A pending prerequisite outside every authorized run cannot be started by recovery.
+test('unowned prerequisite and completed frozen scope are real operator gates, not silent automatic waits',()=>{const base={key:'run:x',run:{run_id:'x',status:'running',max_tasks:14,completed_tasks:2}};for(const patch of [{unowned_prerequisite:'SHARED-PREREQUISITE'},{bounded_scope_exhausted:true}]){const health=classifyHealth({...base,...patch},{},now);assert.equal(health.state,'WAITING_OPERATOR');assert.equal(health.operator_action_required,true)}})

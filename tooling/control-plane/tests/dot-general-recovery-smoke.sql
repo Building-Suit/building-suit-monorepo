@@ -46,6 +46,8 @@ BEGIN
  IF (SELECT completed_tasks FROM control.workflow_runs WHERE run_id=run)<>1 THEN RAISE EXCEPTION 'Credit duplicated';END IF;
  acquisition:=control.acquire_workflow_run_task(run,'cp-batch-v2','fixture-controller','general-owner','runner');
  IF acquisition->>'task_id' IS DISTINCT FROM 'CP-GENERAL-002' THEN RAISE EXCEPTION 'Completion did not advance existing run: %',acquisition;END IF;
+ PERFORM control.reconcile_dot_recovery_completion();
+ IF EXISTS(SELECT 1 FROM control.dot_recovery_jobs WHERE run_id=run AND status<>'resolved') THEN RAISE EXCEPTION 'Publication incidents remained orphaned after credit';END IF;
  IF (SELECT count(*) FROM control.task_events WHERE task_id=task AND event_type='publication_completed')<>1 THEN RAISE EXCEPTION 'Publication repeated';END IF;
 END $$;
 ROLLBACK;
