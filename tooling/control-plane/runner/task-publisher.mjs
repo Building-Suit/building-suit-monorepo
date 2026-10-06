@@ -380,6 +380,7 @@ const parentEvaluation = evaluatePublicationParent({
   liveParent,
   execution,
   recordedParentSha,
+  parentDescendant: (liveParent.parent_branch===execution.parent_branch || recordedParentSha!==null) && git(['merge-base','--is-ancestor',execution.parent_sha,recordedParentSha ?? liveParent.parent_sha]).code===0,
 })
 
 if (!parentEvaluation.current) {

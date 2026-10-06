@@ -1,9 +1,10 @@
+import { evaluatePublicationParent } from '../runner/publication-preflight.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { dotClassification, incidentIdentity, effectiveFailureClass, parentContinuation, cleanupEligibility, repairEvidenceHeader } from '../runner/dot.mjs'
+import { dotClassification, incidentIdentity, effectiveFailureClass, parentContinuation, cleanupEligibility, repairEvidenceHeader, workerProcessClassification } from '../runner/dot.mjs'
 import { planSupervisorStep, classifySupervisorFailure, supervisorStateFingerprint } from '../runner/task-supervisor.mjs'
-import { verificationCommandFailureClass } from '../runner/verification-mode.mjs'
+import { verificationCommandFailureClass, classifyVerificationResults } from '../runner/verification-mode.mjs'
 import { runWakeEligibility } from '../runner/selfhealing.mjs'
 const run={run_id:'11111111-2222-4333-8444-555555555555',status:'running',completed_tasks:0,max_tasks:3,current_task_id:'DOT-FIXTURE-001'}
 const make=()=>({workflow_run:{...run},packet:{task:{task_id:'DOT-FIXTURE-001',status:'failed',allowed_paths:['tooling/'],acceptance_criteria:['must pass'],verification_plan:['pnpm test']},retry_policy:{max_attempts:3},requirements:[]},executions:[{execution_id:1,attempt:1,status:'failed',worktree_path:'/fixture'}],failures:[{execution_id:1,failure_id:1,failure_class:'verification-product-defect',metadata:{classification:{failure_class:'verification-product-defect'}}}]})
@@ -32,3 +33,11 @@ test('Dot prompt includes failures, passing checks and boundaries',()=>{const s=
 test('Dot bounded verifier failure reaccepts the same failed execution without a product attempt',()=>{const s=make();s.failures[0].metadata.checks=[{status:'not_run',selection_reason:'generator_disposable_fixture_runner_not_registered'}];s.run_publication_authority={authorized:true};s.executions[0].attempt=3;const p=planSupervisorStep(s);assert.equal(p.command,'task-reaccept');assert.equal(p.execution.execution_id,1);assert.equal(p.execution.attempt,3)})
 test('Dot authoritative reacceptance supersedes stale exhausted timer and recovery',()=>{const s=make();s.packet.task.status='passed';s.verification_runs=[{execution_id:1,status:'passed',metadata:{verifier_only_reacceptance:true}}];assert.equal(runWakeEligibility(run,{next_action:'safety-stop',error_code:'retry_budget_exhausted'},null,Date.now(),s).eligible,true)})
 test('Dot unrelated safety gate survives verifier reacceptance',()=>{const s=make();s.packet.task.status='passed';s.verification_runs=[{execution_id:1,status:'passed',metadata:{verifier_only_reacceptance:true}}];assert.equal(runWakeEligibility(run,{next_action:'safety-stop',error_code:'ambiguous_source'},null,Date.now(),s).eligible,false)})
+
+test('Dot verified actual-parent advancement permits draft publication without resetting work',()=>{const execution={parent_branch:'codex/shared/parent',parent_sha:'old'};assert.equal(evaluatePublicationParent({execution,liveParent:{parent_branch:'codex/shared/parent',parent_sha:'new'},parentDescendant:true}).current,true);assert.equal(evaluatePublicationParent({execution,liveParent:{parent_branch:'stg',parent_sha:'new'},parentDescendant:true}).current,false)})
+test('Dot unproven parent advancement keeps publication held',()=>assert.equal(evaluatePublicationParent({execution:{parent_branch:'stg',parent_sha:'old'},liveParent:{parent_branch:'stg',parent_sha:'new'}}).current,false))
+test('Dot revoked CLI authentication stops infrastructure process replay',()=>{assert.equal(workerProcessClassification({code:1,stderr:'401 Unauthorized: refresh token expired'}).failure_class,'operator-wait');assert.equal(workerProcessClassification({code:1,stderr:'ECONNRESET'}).failure_class,'transient-infrastructure')})
+
+test('Dot killed verifier is infrastructure and spends no product attempt',()=>assert.equal(verificationCommandFailureClass({name:'required-check',passed:false,signal:'SIGKILL'}),'verification-infrastructure'))
+test('Dot structured hydration synchronization verifier classification survives formal aggregation',()=>assert.equal(classifyVerificationResults([{status:'fail',failure_class:'VERIFIER_INFRA',name:'hydration-synchronization'}]).failure_class,'verification-infrastructure'))
+test('Dot unknown structured verifier classification cannot become a product retry',()=>assert.equal(classifyVerificationResults([{status:'fail',failure_class:'unrecognized-class'}]).recovery_action,'safety-stop'))

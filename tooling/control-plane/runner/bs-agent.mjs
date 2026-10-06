@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { cleanupIntegratedWorktrees } from './dot-cleanup.mjs'
-import { incidentIdentity, repairEvidenceHeader, parentContinuation, effectiveFailureClass } from './dot.mjs'
+import { incidentIdentity, repairEvidenceHeader, parentContinuation, effectiveFailureClass, workerProcessClassification } from './dot.mjs'
 import { operationHasAuthoritativeSuccess } from './bounded-publication.mjs'
 
 import { spawnSync, spawn } from 'node:child_process'
@@ -1796,7 +1796,7 @@ function taskRun() {
 
     if (!succeeded) {
       output({ ok: false, command: 'task-run', task_id: taskId, execution_id: executionId,
-        error: 'worker_process_interrupted', classification: { failure_class: 'transient-infrastructure', recovery_action: 'wait-external' },
+        error: workerProcessClassification(codexResult).failure_class==='operator-wait'?'chatgpt_authentication_required':'worker_process_interrupted', classification: workerProcessClassification(codexResult),
         execution: { log_path: logPath, exit_code: codexResult.code } }, 1)
       return
     }
@@ -3868,7 +3868,7 @@ Return a concise repair summary.
           )
 
     if (!succeeded && (lastExitCode !== 0 || latestProbe?.classification?.failure_class && latestProbe.classification.failure_class !== 'verification-product-defect')) {
-      const classification = latestProbe?.classification ?? { failure_class: 'transient-infrastructure', recovery_action: 'wait-external' }
+      const classification = latestProbe?.classification ?? workerProcessClassification({code:lastExitCode,stderr:lastStderr,stdout:codexOutputs.join('\n')})
       output({ ok: false, command: 'task-retry', task_id: taskId, execution_id: newExecutionId,
         error: latestProbe ? 'repair_verifier_recovery_required' : 'worker_process_interrupted', classification,
         probe: latestProbe, execution: { log_path: logPath } }, 1)

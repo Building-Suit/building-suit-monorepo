@@ -230,7 +230,7 @@ export function evaluateVerificationAuthority({ verification, executionId, state
   return { authoritative: true, reason: 'latest_passed_verification_matches_repository_state' }
 }
 
-export function evaluatePublicationParent({ liveParent, execution, recordedParentSha = null }) {
+export function evaluatePublicationParent({ liveParent, execution, recordedParentSha = null, parentDescendant = false }) {
   if (
     liveParent?.parent_branch === execution?.parent_branch &&
     liveParent?.parent_sha === execution?.parent_sha
@@ -244,6 +244,7 @@ export function evaluatePublicationParent({ liveParent, execution, recordedParen
   ) {
     return { current: true, reason: 'task_own_pr_is_current_stack_leaf' }
   }
+  if(parentDescendant && (liveParent?.parent_branch===execution?.parent_branch || liveParent?.parent_branch===execution?.branch_name && liveParent?.parent_pr?.base_branch===execution?.parent_branch)) return {current:true,reason:'actual_parent_advanced_preserved_base'}
   return { current: false, reason: 'parent_changed_since_execution' }
 }
 

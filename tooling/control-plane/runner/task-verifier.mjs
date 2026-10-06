@@ -309,7 +309,7 @@ function runCheck({
       }),
     failure_class:
       verificationCommandFailureClass({
-        name, required, passed, errorCode: result.error?.code, output: combined, missingEvidence,
+        name, required, passed, errorCode: result.error?.code, signal: result.signal, output: combined, missingEvidence,
       }),
     exit_code:
       exitCode,

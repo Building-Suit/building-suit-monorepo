@@ -1,3 +1,4 @@
+import { workerProcessClassification } from './dot.mjs'
 import { spawn, spawnSync } from 'node:child_process'
 import { mkdirSync, readFileSync, writeFileSync, renameSync, existsSync } from 'node:fs'
 import { createHash } from 'node:crypto'
@@ -65,7 +66,7 @@ export function durableExecute(root, key, program, args, options = {}) {
     const settled = readJson(paths.result)
     // Failed process invocations are immutable receipts. Retry as a new INFRA
     // generation, never a new product execution. Successful output is replayed.
-    if (settled && settled.code !== 0 && options.retryProcessFailure) { generation++; continue }
+    if (settled && settled.code !== 0 && options.retryProcessFailure && workerProcessClassification(settled).failure_class!=='operator-wait') { generation++; continue }
     startReceipt(paths, { program, args, cwd: options.cwd, timeout: options.timeout, input: options.input }, options.env)
     return waitReceipt(paths, options.timeout ? options.timeout + 60_000 : undefined)
   }

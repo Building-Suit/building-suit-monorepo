@@ -1,3 +1,4 @@
+import { legacyClassification } from './dot.mjs'
 import {
   completePublicationPolicy,
   mergeVerificationConfig,
@@ -368,7 +369,7 @@ export function classifyVerificationResults(checks = []) {
   const blocking = checks.filter(check => ['fail', 'not_run'].includes(check.status))
   if (blocking.length === 0) return { failure_class: null, recovery_action: null }
 
-  const classes = new Set(blocking.map(check => check.failure_class).filter(Boolean))
+  const classes = new Set(blocking.map(check => legacyClassification(check.failure_class)).filter(Boolean))
   const priority = [
     ['verification-lifecycle', 'reverify'],
     ['verification-product-defect', 'repair'],
@@ -381,7 +382,7 @@ export function classifyVerificationResults(checks = []) {
       return { failure_class: failureClass, recovery_action: recoveryAction }
     }
   }
-  return { failure_class: 'verification-product-defect', recovery_action: 'repair' }
+  return classes.size ? {failure_class:'safety-stop',recovery_action:'safety-stop'} : { failure_class: 'verification-product-defect', recovery_action: 'repair' }
 }
 
 export function resolveVerificationMode(packet) {
@@ -550,7 +551,8 @@ export function requiredVerificationEvidenceMissing({ name, output = '' }) {
   return !passed || Number(passed[1]) === 0 || Number(skipped?.[1] ?? 0) > 0
 }
 
-export function verificationCommandFailureClass({ name, required = true, passed, errorCode, output = '', missingEvidence = false }) {
+export function verificationCommandFailureClass({ name, required = true, passed, errorCode, signal, output = '', missingEvidence = false }) {
+  if (signal) return 'verification-infrastructure'
   if (required && missingEvidence) return 'verification-required-check-unavailable'
   if (passed || !required) return null
   if (errorCode === 'ENOENT') return 'verification-required-check-unavailable'

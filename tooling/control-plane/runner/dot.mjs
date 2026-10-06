@@ -52,3 +52,10 @@ export function repairEvidenceHeader(snapshot, attempt) {
  required_regression:snapshot.packet.task.verification_plan,preservation:'Same run/task/worktree; preserve successful work and evidence.',
  prohibited_actions:['merge','deploy','main promotion','hosted product migration','secret/provider change','scope expansion','waive security or advisor evidence','fabricate verification']},null,2)
 }
+
+export function workerProcessClassification(result) {
+ if(result?.classification?.failure_class) return { ...result.classification, failure_class:legacyClassification(result.classification.failure_class) }
+ const text=[result?.stderr,result?.stdout,result?.error].filter(Boolean).join('\n')
+ if(/chatgpt_authentication_required|not logged in|please (?:log|sign) in|authentication (?:expired|revoked)|refresh token.*(?:expired|invalid|reused)|401 Unauthorized/i.test(text)) return {failure_class:'operator-wait',recovery_action:'wait-operator'}
+ return {failure_class:'transient-infrastructure',recovery_action:'wait-external'}
+}
