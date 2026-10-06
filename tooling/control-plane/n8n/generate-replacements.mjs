@@ -167,11 +167,12 @@ const bs21 = {
 const bs30 = {
   id: 'BS31SelfHealingRecovery', name: 'BS-31 — Persisted Recovery Watchdog', active: false,
   nodes: [
-    node('bs30-cadence','Recovery Cadence','n8n-nodes-base.scheduleTrigger',{rule:{interval:[{field:'minutes',minutesInterval:1}]}},[0,0]),
+    node('bs30-cadence','Recovery Cadence','n8n-nodes-base.scheduleTrigger',{rule:{interval:[{field:'minutes',minutesInterval:2}]}},[0,0]),
+    node('dot-event','Control State Changed','n8n-nodes-base.webhook',{httpMethod:'POST',path:'building-suit-dot-wake',responseMode:'onReceived',options:{}},[0,160]),
     runner('bs30-watch','Wake Eligible Existing Runs','bs-agent recovery-watch',[240,0]),
     node('bs30-status','Recovery Status','n8n-nodes-base.code',{jsCode:"return [{json:{...$json,component:'persisted-recovery-watchdog',no_new_runs:true}}];"},[480,0]),
   ],
-  connections: {'Recovery Cadence':connection('Wake Eligible Existing Runs'),'Wake Eligible Existing Runs':connection('Recovery Status')},
+  connections: {'Control State Changed':connection('Wake Eligible Existing Runs'),'Recovery Cadence':connection('Wake Eligible Existing Runs'),'Wake Eligible Existing Runs':connection('Recovery Status')},
   settings:{executionOrder:'v1'},
 }
 const workflows = [bs10, bs20, bs21, bs30]

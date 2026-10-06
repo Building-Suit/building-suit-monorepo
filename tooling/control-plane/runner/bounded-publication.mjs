@@ -32,6 +32,7 @@ export function operationHasAuthoritativeSuccess(snapshot, op) {
   const task = snapshot.packet?.task
   if (task?.status === 'complete') return true
   const execution = snapshot.executions?.find(e => Number(e.execution_id) === Number(op.execution_id))
+  if(op.action==='task-reaccept') return task?.status==='passed' && snapshot.verification_runs?.filter(v=>Number(v.execution_id)===Number(op.execution_id) && v.status==='passed' && v.metadata?.verifier_only_reacceptance===true).length>0
   if (!execution || execution.status !== 'succeeded') return false
   if (['task-run','task-retry'].includes(op.action)) {
     return ['passed','verification'].includes(task?.status) ||

@@ -129,13 +129,13 @@ const branchCheck =
   )
 
 if (branchCheck.status === 0) {
-  fail(
-    'local_branch_already_exists',
-    {
-      branch_name:
-        branchName,
-    },
-  )
+  const attached = spawnSync('git',['worktree','list','--porcelain'],{cwd:repositoryRoot,encoding:'utf8'})
+  if (attached.status !== 0 || attached.stdout.includes(`branch refs/heads/${branchName}`)) fail('existing_branch_worktree_requires_reconciliation')
+  mkdirSync(path.dirname(worktreePath),{recursive:true})
+  const restored=spawnSync('git',['worktree','add',worktreePath,branchName],{cwd:repositoryRoot,encoding:'utf8'})
+  if(restored.status!==0) fail('missing_worktree_restore_failed',{stderr:restored.stderr})
+  process.stdout.write(`${JSON.stringify({ok:true,task_id:taskId,stack_key:stackKey,branch_name:branchName,parent_sha:parentSha,worktree_path:worktreePath,restored_existing_branch:true})}\n`)
+  process.exit(0)
 }
 
 mkdirSync(

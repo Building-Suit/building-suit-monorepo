@@ -985,6 +985,13 @@ function existingResult(...names) {
 function plannedCompatibilityCovered(blocker) {
   if (blocker.kind !== 'planned_test') return false
 
+  if (['generator_disposable_fixture_runner_not_registered','missing_generated_fixture_boundary_runner','future_generator_fixture_not_implemented'].includes(blocker.blocker)) {
+    const fixture = 'tooling/new-platform/verify-fixture.mjs'
+    if (!existsSync(path.join(worktreePath, fixture))) return false
+    results.push(runCheck({name: `verification-obligation-blocked-${results.length + 1}`, program:'node', args:[fixture], required:true, selectionReason:'planned_test_materialized_as_executable'}))
+    return true
+  }
+
   if (blocker.blocker === 'missing_suit_template_boundary_runner') {
     const match = String(blocker.plan_entry).match(
       /^node\s+([A-Za-z0-9._/-]+\.(?:mjs|js))$/,

@@ -555,6 +555,8 @@ export function verificationCommandFailureClass({ name, required = true, passed,
   if (passed || !required) return null
   if (errorCode === 'ENOENT') return 'verification-required-check-unavailable'
   if (errorCode === 'ETIMEDOUT') return 'verification-infrastructure'
+  if (/No tests found|Cannot find module.*playwright|Playwright Test did not expect test|Failed to load.*config|Executable doesn't exist/.test(output)) return 'verification-configuration'
+  if (errorCode && ['ECONNRESET','ECONNREFUSED','EPIPE'].includes(errorCode)) return 'verification-infrastructure'
   // A materialized HTTP check may still require separately provisioned local
   // identities and bridge fixtures. Preserve that missing prerequisite as a
   // required gate; an HTTP/RLS assertion failure remains a product defect.

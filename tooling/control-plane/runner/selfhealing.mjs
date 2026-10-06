@@ -12,6 +12,7 @@ export function runWakeEligibility(run, recovery, operation, now = Date.now(), s
   if (run.completed_tasks >= run.max_tasks) return { eligible: false, reason: 'limit_reached' }
   const reclassifyPublicationStop = publicationStopNeedsReclassification(snapshot ?? {})
   if (recovery?.next_action === 'safety-stop' && !reclassifyPublicationStop) return { eligible: false, reason: recovery.error_code ?? 'safety-stop' }
+  if (snapshot?.watchdog_plan?.kind === 'act' && snapshot.watchdog_plan.fingerprint !== recovery?.condition?.fingerprint) recovery = null
   if (recovery?.status === 'active' && HUMAN_ACTIONS.has(recovery.next_action) && !reclassifyPublicationStop && !supersededPublicationHold(snapshot ?? {})) return { eligible: false, reason: recovery.error_code ?? recovery.next_action }
   const settled = snapshot && (snapshot.packet?.task?.status === 'complete' || snapshot.packet?.task?.status === 'passed' && (!operation || operationHasAuthoritativeSuccess(snapshot, operation)))
   if (!settled && operation && Date.parse(operation.next_wake_at) > now) return { eligible: false, reason: 'backoff_pending' }

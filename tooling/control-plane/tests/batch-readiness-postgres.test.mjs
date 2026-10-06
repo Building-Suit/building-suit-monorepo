@@ -131,6 +131,12 @@ test('migration 001..028 and upgrade 027->028 preserve authoritative full lifecy
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/031_bounded_ordinary_publication.sql')])
     assert.equal(psql(databaseUrl.href, ['-Atqc', "SELECT has_table_privilege('bs_control_app','control.run_task_publication_authorities','SELECT') AND NOT has_table_privilege('bs_control_app','control.run_task_publication_authorities','INSERT,UPDATE,DELETE,TRUNCATE')"]), 't')
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/bounded-publication-smoke.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/032_dot_watchdog.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/dot-postgres-smoke.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/032_dot_watchdog.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/030_verifier_only_reacceptance.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/033_dot_same_attempt_reacceptance.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/dot-postgres-smoke.sql')])
 
   }
   finally {

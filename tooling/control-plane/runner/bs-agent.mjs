@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import { cleanupIntegratedWorktrees } from './dot-cleanup.mjs'
+import { incidentIdentity, repairEvidenceHeader, parentContinuation, effectiveFailureClass } from './dot.mjs'
 import { operationHasAuthoritativeSuccess } from './bounded-publication.mjs'
 
 import { spawnSync, spawn } from 'node:child_process'
@@ -50,6 +52,8 @@ import { evaluateParentSatisfaction } from './parent-satisfaction.mjs'
 import { retryPurpose, verifiedRepairBaselineFiles, repairFailureChecks, preserveAttributedRun, currentExecution, publicationHoldOutcome } from './recovery-evidence.mjs'
 import { durableExecute, receiptPaths, startReceipt, readJson, receiptLocked } from './durable-process.mjs'
 import { recoveryBackoff, retryWithoutProductAttempt, runWakeEligibility, taskStatusEvidence } from './selfhealing.mjs'
+import { validateVerifierOnlyReacceptance } from './verifier-only-reacceptance.mjs'
+import { publicationStateFingerprint } from './publication-preflight.mjs'
 import { initialSupervisorLeaseSql } from './supervisor-lease.mjs'
 import {
   WATCHER_LEASE_MS,
@@ -3386,7 +3390,7 @@ Rules:
 
 Return a concise repair summary.
           `.trim()
-    prompt = basePrompt
+    prompt = `${basePrompt}\n\nPersisted repair evidence:\n${repairEvidenceHeader(supervisorSnapshot(taskId), nextAttempt)}`
 
 
     const promptPath =
@@ -4698,7 +4702,7 @@ function engineTaskPacket(taskId) {
 
 
 function invokeTaskAction(action, taskId) {
-  if (!['task-run','task-retry','task-verify','task-publish','task-prepare'].includes(action)) {
+  if (!['task-run','task-retry','task-verify','task-publish','task-prepare','task-reaccept'].includes(action)) {
     const result = execute(process.execPath, [agentScriptPath, action, taskId], { cwd: repoRoot, timeout: 70 * 60_000 })
     return { result, payload: parseJson(result.stdout, null) }
   }
@@ -5019,7 +5023,7 @@ export function executionPreflightRuntime(snapshot) {
   let parent = null
   let parentError = null
   try {
-    parent = resolveStackParent(packet.suit.stack_key, project)
+    parent = packet.preparation?.parent ?? resolveStackParent(packet.suit.stack_key, project)
   }
   catch (error) {
     parentError = error.message
@@ -5046,7 +5050,7 @@ export function executionPreflightRuntime(snapshot) {
   )
   const parentConsistent = Boolean(
     parent && parentPresent && parentRemoteSha.ok &&
-    parentRemoteSha.value === parent.parent_sha && parentPrConsistent,
+    (parentRemoteSha.value === parent.parent_sha || parentContinuation({sameBranch:true,oldPresent:parentPresent,newPresent:gitCheck(repositoryRoot,['cat-file','-e',`${parentRemoteSha.value}^{commit}`]).ok,ancestor:gitCheck(repositoryRoot,['merge-base','--is-ancestor',parent.parent_sha,parentRemoteSha.value]).ok,containsOld:true}).safe) && parentPrConsistent,
   )
 
   const expectedBranch = `codex/${packet.suit.stack_key}/${packet.task.task_id.toLowerCase()}`
@@ -5071,7 +5075,7 @@ export function executionPreflightRuntime(snapshot) {
       path: targetPath,
       branch: branch.value,
       changed_files: changedFiles,
-      status: !existsSync(targetPath) || !branch.ok
+      status: !existsSync(targetPath) ? 'missing' : !branch.ok
         ? 'invalid'
         : branch.value !== expectedBranch || preparedWorktree.branch_name !== expectedBranch || !containsParent
           ? 'stale'
@@ -6569,11 +6573,17 @@ function attachRuntimeExecution(executionId) {
 
 function recoveryWatch() {
   try {
-    const candidates = parseControlJson(controlQuery(`SELECT control.runtime_recovery_candidates(10);`))
+    const candidates = parseControlJson(controlQuery(`SELECT coalesce(jsonb_agg(to_jsonb(r)),'[]'::jsonb) FROM control.workflow_runs r WHERE status='running';`))
     const outcomes = []
     for (const candidate of candidates) {
       const row = parseControlJson(controlQuery(`SELECT to_jsonb(r) FROM control.workflow_runs r WHERE run_id=:'id'::uuid;`, { id: candidate.run_id }))
       const snapshot = row.current_task_id ? supervisorSnapshot(row.current_task_id) : null
+      const plan = snapshot ? planSupervisorStep(snapshot) : null
+      if (plan && !['execution_in_flight','runtime_operation_resume','verification_required','implementation_required','publication_pending'].includes(plan.reason)) {
+        const incident=incidentIdentity(snapshot,plan)
+        controlQuery(`SELECT control.record_dot_incident(:'run'::uuid,:'task',NULLIF(:'execution','')::bigint,:'fingerprint',:'classification',:'evidence'::jsonb);`,{run:row.run_id,task:incident.task_id,execution:String(incident.execution_id??''),fingerprint:incident.root_fingerprint,classification:incident.classification,evidence:JSON.stringify({plan,recovery:snapshot.recovery,operations:snapshot.runtime_operations})})
+      }
+      if(snapshot) snapshot.watchdog_plan=plan
       const eligible = runWakeEligibility(row, snapshot?.recovery, snapshot?.runtime_operations?.at(-1), Date.now(), snapshot)
       if (!eligible.eligible) { outcomes.push({ run_id: row.run_id, ...eligible }); continue }
       const lockDir = path.join(repoRoot,'.local','runtime-run-locks')
@@ -6584,7 +6594,14 @@ function recoveryWatch() {
       child.unref()
       outcomes.push({ run_id:row.run_id,task_id:row.current_task_id,action:'existing_run_wake',pid:child.pid })
     }
-    output({ok:true,command:'recovery-watch',outcomes})
+    const lastCleanup=parseControlJson(controlQuery(`SELECT jsonb_build_object('due',NOT EXISTS(SELECT 1 FROM control.dot_cycles WHERE started_at>now()-interval '15 minutes' AND outcomes @> '[{"action":"safe_cleanup_scan"}]'::jsonb));`))
+    if(lastCleanup.due){
+      const state=parseControlJson(controlQuery(`SELECT jsonb_build_object('tasks',(SELECT coalesce(jsonb_agg(to_jsonb(t)),'[]') FROM control.tasks t),'runs',(SELECT coalesce(jsonb_agg(to_jsonb(r)),'[]') FROM control.workflow_runs r),'publications',(SELECT coalesce(jsonb_agg(to_jsonb(p)),'[]') FROM control.pull_requests p));`))
+      const cleanup=cleanupIntegratedWorktrees({repository:{root:repoRoot,github_repository:githubRepository,integration_branch:'stg'},...state})
+      outcomes.push({action:'safe_cleanup_scan',...cleanup})
+    }
+    controlQuery(`INSERT INTO control.dot_cycles(outcomes) VALUES(:'outcomes'::jsonb); UPDATE control.dot_wake_events SET consumed_at=now() WHERE consumed_at IS NULL;`,{outcomes:JSON.stringify(outcomes)})
+    output({ok:true,command:'recovery-watch',outcomes,codex_invoked_by_scan:false})
   } catch(error) {
     output({ok:false,command:'recovery-watch',reason:'control_database_unavailable',retry_after_ms:30_000,error:error.message},1)
   }
@@ -6620,6 +6637,35 @@ function recoverWorkflowRun() {
     output({ok:true,command:'run-recover',run_id:runId,status:'time-slice-yield'})
   } catch(error) { output({ok:false,command:'run-recover',run_id:runId,error:error.message,classification:{failure_class:'transient-infrastructure',recovery_action:'wait-external'}},1) }
 }
+function taskReaccept() {
+ const [taskId]=args
+ if(!validTaskId(taskId)){output({ok:false,error:'valid_task_id_required'},64);return}
+ try {
+  const snapshot=supervisorSnapshot(taskId),execution=currentExecution(snapshot)
+  const classification=effectiveFailureClass(snapshot,executionFailureClass(snapshot))
+  if(execution?.status!=='failed' || !['verification-configuration','verification-infrastructure'].includes(classification) || snapshot.run_publication_authority?.authorized!==true) throw new Error('bounded_same_attempt_reacceptance_not_authorized')
+  const directory=path.join(repoRoot,'.local','dot-reacceptance',taskId,String(execution.execution_id),process.env.BS_OPERATION_INFRA_GENERATION ?? '0')
+  mkdirSync(directory,{recursive:true,mode:0o700})
+  const packetPath=path.join(directory,'packet.json')
+  writeFileSync(packetPath,JSON.stringify(snapshot.packet),{mode:0o600})
+  const result=execute(process.execPath,[path.join(controlSourceRoot,'tooling/control-plane/runner/task-verifier.mjs'),execution.worktree_path,packetPath,directory,'probe'],{cwd:repoRoot,timeout:70*60_000})
+  const probe=parseJson(result.stdout,null)
+  if(!probe?.passed){output({ok:false,error:'same_attempt_verification_failed',classification:probe?.classification ?? {failure_class:'verification-infrastructure',recovery_action:'wait-external'},probe},1);return}
+  const original=execution.metadata?.verification_probe_verified_state
+  const currentState={base_sha:original?.base_sha,files:probe.verified_state?.files?.map(f=>({...f,object:existsSync(path.join(execution.worktree_path,f.file))?gitCheck(execution.worktree_path,['hash-object','--',f.file]).value:'deleted'}))}
+  currentState.fingerprint=publicationStateFingerprint(currentState)
+  const verifierPaths=(original?.files??[]).map(f=>f.file).filter(f=>f.includes('/tests/') && !f.includes('/migrations/'))
+  const requiredChecks=probe.checks.filter(c=>c.required!==false && c.status!=='skipped').map(c=>c.name)
+  if(publicationStateFingerprint(currentState)!==publicationStateFingerprint(original)) throw new Error('automatic_reacceptance_source_changed')
+  validateVerifierOnlyReacceptance({execution,probe,currentState,verifierPaths,requiredChecks})
+  // This is a derived bounded authority, not a fabricated human approval.
+  const approval=parseControlJson(controlQuery(`INSERT INTO control.task_events(task_id,event_type,source,payload) VALUES(:'task','verifier_reacceptance_authorized','dot',:'payload'::jsonb) RETURNING jsonb_build_object('event_id',event_id);`,{task:taskId,payload:JSON.stringify({run_id:snapshot.workflow_run.run_id,execution_id:execution.execution_id,attempt:execution.attempt,verifier_paths:verifierPaths,required_checks:requiredChecks,classification,source_unchanged:true})}))
+  const accepted=parseControlJson(controlQuery(`SELECT control.reaccept_dot_verifier_only(:'task',:'execution'::bigint,:'approval'::bigint,:'probe'::jsonb);`,{task:taskId,execution:String(execution.execution_id),approval:String(approval.event_id),probe:JSON.stringify(probe)}))
+  output({ok:true,command:'task-reaccept',task_id:taskId,...accepted})
+ }catch(error){output({ok:false,error:error.message,classification:{failure_class:'operator-wait',recovery_action:'wait-operator'}},1)}
+}
+function executionFailureClass(snapshot){return snapshot.failures?.filter(f=>!f.resolved_at && f.execution_id===currentExecution(snapshot)?.execution_id).at(-1)?.failure_class}
+
 function observableTaskStatus() {
   const [taskId] = args
   if(!validTaskId(taskId)) {output({ok:false,error:'valid_task_id_required'},64);return}
@@ -7039,6 +7085,10 @@ switch (command) {
 
   case 'task-supervise':
     taskSupervisor()
+    break
+
+  case 'task-reaccept':
+    taskReaccept()
     break
 
   case 'recovery-watch':

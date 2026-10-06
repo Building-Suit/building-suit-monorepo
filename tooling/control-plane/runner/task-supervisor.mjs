@@ -1,3 +1,4 @@
+import { effectiveFailureClass, legacyClassification } from './dot.mjs'
 import { supersededPublicationHold, operationHasAuthoritativeSuccess, publicationStopNeedsReclassification } from './bounded-publication.mjs'
 import { executionFailure, failedVerificationEvidence } from './recovery-evidence.mjs'
 import { AUTO_CLASSES } from './selfhealing.mjs'
@@ -244,7 +245,11 @@ export function planSupervisorStep(snapshot) {
   }
 
   if (task.status === 'failed') {
-    const explicitFailure = executionFailure(snapshot, execution)
+    const originalFailure = executionFailure(snapshot, execution)
+    const explicitFailure = originalFailure && { ...originalFailure, failure_class: effectiveFailureClass(snapshot, originalFailure.failure_class) }
+    if (['verification-configuration','verification-infrastructure'].includes(explicitFailure?.failure_class) && execution?.status==='failed' && snapshot.run_publication_authority?.authorized) {
+      return decision('act','reverify',explicitFailure.failure_class,'same_attempt_verifier_reacceptance',{command:'task-reaccept',execution,verification,publication,fingerprint})
+    }
     const explicitWait = explicitWaitClasses.get(explicitFailure?.failure_class)
     const typedFailure = explicitFailure?.metadata?.classification?.failure_class === explicitFailure?.failure_class
     if (explicitWait && (explicitFailure?.metadata?.supervisor_classified === true || typedFailure)) {
@@ -268,7 +273,7 @@ export function planSupervisorStep(snapshot) {
         ),
         'verification_id',
       )?.metadata?.failure_class ??
-      (execution?.status === 'succeeded' ? 'verification-product-defect' : null)
+      (execution?.status === 'succeeded' && verification?.status === 'failed' ? 'verification-product-defect' : null)
 
     if (verificationFailureClass && verificationFailureClass !== 'verification-product-defect') {
       if (verificationFailureClass === 'verification-lifecycle') {
@@ -301,6 +306,9 @@ export function planSupervisorStep(snapshot) {
       })
     }
 
+    if (verificationFailureClass !== 'verification-product-defect' && explicitFailure?.failure_class !== 'verification-product-defect') {
+      return decision('terminal','safety-stop','safety-stop','unknown_failure_outcome',{execution,verification,publication,fingerprint,recoverable:false})
+    }
     const policy = snapshot.packet.retry_policy ?? {}
     const attemptsRemain = execution && Number(execution.attempt) < Number(policy.max_attempts ?? 0)
     if (!attemptsRemain) {
@@ -333,7 +341,7 @@ export function planSupervisorStep(snapshot) {
 export function classifySupervisorFailure({ command, payload, attempt, maxAttempts }) {
   const error = String(payload?.publication?.error ?? payload?.error ?? 'task_action_failed')
   const lower = error.toLowerCase()
-  const verificationClass = payload?.classification?.failure_class ?? payload?.recovery?.failure_class ?? payload?.failure_class ?? payload?.publication?.classification?.failure_class ?? payload?.probe?.classification?.failure_class
+  const verificationClass = legacyClassification(payload?.classification?.failure_class ?? payload?.recovery?.failure_class ?? payload?.failure_class ?? payload?.publication?.classification?.failure_class ?? payload?.probe?.classification?.failure_class)
   const explicitWait = explicitWaitClasses.get(verificationClass)
   if (explicitWait) {
     return decision(explicitWait === 'safety-stop' ? 'terminal' : 'wait', explicitWait, verificationClass, error.slice(0, 160), { recoverable: explicitWait !== 'safety-stop' })
