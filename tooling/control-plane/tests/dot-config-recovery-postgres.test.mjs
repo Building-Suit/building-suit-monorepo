@@ -150,6 +150,8 @@ test('Dot binding recovery and native bounded ordinary publication preserve iden
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/041_dot_configuration_recovery.sql')])
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/042_dot_owned_ordinary_scope.sql')])
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/dot-config-recovery-smoke.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/043_dot_preexecution_auth_bindings.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/preexecution-bindings-smoke.sql')])
 
   }
   finally {

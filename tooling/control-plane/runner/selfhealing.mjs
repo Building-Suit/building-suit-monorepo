@@ -1,3 +1,4 @@
+import { preexecutionBindingWake } from './preexecution-binding-recovery.mjs'
 import { supersededPublicationHold, operationHasAuthoritativeSuccess, publicationStopNeedsReclassification } from './bounded-publication.mjs'
 export const AUTO_CLASSES = new Set(['transient-infrastructure', 'verification-infrastructure', 'repository-state', 'publication-reconciliation', 'flaky-verification', 'verification-lifecycle'])
 export const HUMAN_ACTIONS = new Set(['wait-operator', 'wait-decision', 'safety-stop'])
@@ -15,7 +16,7 @@ export function runWakeEligibility(run, recovery, operation, now = Date.now(), s
   const reclassifyPublicationStop = publicationStopNeedsReclassification(snapshot ?? {})
   if (recovery?.next_action === 'safety-stop' && !reclassifyPublicationStop) return { eligible: false, reason: recovery.error_code ?? 'safety-stop' }
   if (snapshot?.watchdog_plan?.kind === 'act' && snapshot.watchdog_plan.fingerprint !== recovery?.condition?.fingerprint) recovery = null
-  if (recovery?.status === 'active' && HUMAN_ACTIONS.has(recovery.next_action) && !reclassifyPublicationStop && !supersededPublicationHold(snapshot ?? {})) return { eligible: false, reason: recovery.error_code ?? recovery.next_action }
+  if (recovery?.status === 'active' && !preexecutionBindingWake(snapshot,recovery) && HUMAN_ACTIONS.has(recovery.next_action) && !reclassifyPublicationStop && !supersededPublicationHold(snapshot ?? {})) return { eligible: false, reason: recovery.error_code ?? recovery.next_action }
   const settled = snapshot && (snapshot.packet?.task?.status === 'complete' || snapshot.packet?.task?.status === 'passed' && (!operation || operationHasAuthoritativeSuccess(snapshot, operation)))
   if (!settled && operation && Date.parse(operation.next_wake_at) > now) return { eligible: false, reason: 'backoff_pending' }
   if (!settled && !operation && recovery?.status === 'active' && Date.parse(recovery.next_wake_at ?? '') > now) return { eligible: false, reason: 'backoff_pending' }

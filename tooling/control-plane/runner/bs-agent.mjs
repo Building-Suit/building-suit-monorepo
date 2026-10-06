@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { cleanupIntegratedWorktrees } from './dot-cleanup.mjs'
+import { preexecutionBindingEvidence } from './preexecution-binding-recovery.mjs'
 import { strictBindingRecoveryEvidence, requiresSameAttemptVerification } from './binding-recovery.mjs'
 import { incidentIdentity, repairEvidenceHeader, parentContinuation, effectiveFailureClass, workerProcessClassification } from './dot.mjs'
 import { operationHasAuthoritativeSuccess } from './bounded-publication.mjs'
@@ -4843,7 +4844,7 @@ export function supervisorSnapshot(taskId) {
   )
 
   const snapshot=parseControlJson(result)
-  if(snapshot) snapshot.binding_recovery=strictBindingRecoveryEvidence(snapshot)
+  if(snapshot) { snapshot.binding_recovery=strictBindingRecoveryEvidence(snapshot); snapshot.preexecution_binding_recovery=preexecutionBindingEvidence(snapshot,repoRoot) }
   return snapshot
 }
 
@@ -5592,6 +5593,10 @@ function taskSupervisor() {
     const currentRun=parseControlJson(controlQuery(`SELECT to_jsonb(r) FROM control.workflow_runs r WHERE current_task_id=:'task' AND status='running' ORDER BY started_at DESC LIMIT 1;`,{task:taskId}))
     if(currentRun?.run_id && !currentRun.admitted_repair_id) controlQuery(`SELECT control.reconcile_ordinary_run_publication(:'run'::uuid);`,{run:currentRun.run_id})
     const bindingSnapshot=supervisorSnapshot(taskId)
+    if(bindingSnapshot?.preexecution_binding_recovery) {
+      controlQuery(`SELECT control.reconcile_preexecution_auth_bindings(:'task',:'proof'::jsonb);`,{task:taskId,proof:JSON.stringify(bindingSnapshot.preexecution_binding_recovery)})
+      controlQuery(`SELECT control.reconcile_ordinary_run_publication(:'run'::uuid);`,{run:currentRun.run_id})
+    }
     if(bindingSnapshot?.binding_recovery) {
       controlQuery(`SELECT control.reconcile_strict_verification_binding(:'task',:'proof'::jsonb);`,{task:taskId,proof:JSON.stringify(bindingSnapshot.binding_recovery)})
       if(bindingSnapshot.workflow_run?.run_id && bindingSnapshot.run_publication_authority?.authorized) controlQuery(`SELECT control.refresh_dot_admission(:'run'::uuid);`,{run:bindingSnapshot.workflow_run.run_id})
