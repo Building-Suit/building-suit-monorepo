@@ -44,3 +44,5 @@ test('unknown investigation supports evidence-only review without runtime/produc
 })
 
 test('reviewed evidence creates a new owned recovery instead of reviving stale unknown investigation',()=>{const h={run_id:'same',task_id:'task',execution_id:30,evidence_revision:1};assert.notEqual(recoveryIdentity(h),recoveryIdentity({...h,evidence_revision:2}));assert.equal(recoveryIdentity(h),recoveryIdentity(JSON.parse(JSON.stringify(h))))})
+
+test('duplicate watchdog scans serialize before consuming database sessions',()=>{const source=readFileSync(new URL('../runner/bs-agent.mjs',import.meta.url),'utf8');const watch=source.slice(source.indexOf('async function recoveryWatch()'),source.indexOf('function recoverWorkflowRun()'));assert.ok(watch.indexOf('dot-watch.lock')<watch.indexOf('controlQuery'));assert.match(watch,/watchdog_scan_already_owned/);assert.match(watch,/BS_DOT_WATCH_LOCKED/);})

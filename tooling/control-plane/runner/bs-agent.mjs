@@ -6649,6 +6649,13 @@ function reconcileNativeAdmission(runId){
 }
 
 async function recoveryWatch() {
+  const scanLocks=path.join(repoRoot,'.local','runtime-run-locks')
+  mkdirSync(scanLocks,{recursive:true,mode:0o700})
+  if(process.env.BS_DOT_WATCH_LOCKED!=='1'){
+    const scan=execute('flock',['-n',path.join(scanLocks,'dot-watch.lock'),process.execPath,agentScriptPath,'recovery-watch'],{cwd:repoRoot,timeout:240000,env:{...process.env,BS_DOT_WATCH_LOCKED:'1'}})
+    if(scan.code===1&&!scan.stdout?.trim()){output({ok:true,command:'recovery-watch',outcomes:[{action:'watchdog_scan_already_owned'}]});return}
+    output(parseJson(scan.stdout,{ok:false,error:'watchdog_scan_unavailable'}),scan.code??1);return
+  }
   try {
     controlQuery(`SELECT control.reconcile_dot_recovery_completion(); SELECT control.reconcile_reviewed_evidence_incidents();`)
     const health=execute(process.execPath,[path.join(controlSourceRoot,'tooling/control-plane/runner/dot-health-collector.mjs')],{cwd:repoRoot,timeout:25000})
