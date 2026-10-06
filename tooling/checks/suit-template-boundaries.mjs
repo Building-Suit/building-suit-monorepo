@@ -211,9 +211,14 @@ export async function auditSuitTemplates({ root = defaultRoot } = {}) {
   return { suits, files: relativeFiles, debt: debt.sort(compareDebt), parseFailures }
 }
 
-export async function validateSuitTemplateBoundaries({ root = defaultRoot, manifestPath = defaultDebtManifest } = {}) {
+export async function validateSuitTemplateBoundaries({ root = defaultRoot, manifestPath = defaultDebtManifest, strict = false } = {}) {
   const audit = await auditSuitTemplates({ root })
   const failures = [...audit.parseFailures]
+  if (strict) {
+    if (!audit.suits.length || !audit.files.length) failures.push('Strict Suit UI boundary requires a discovered Suit with Vue files')
+    for (const item of audit.debt) failures.push(`${debtKey(item)}: forbidden in strict mode`)
+    return { ...audit, failures }
+  }
   let manifest
   try { manifest = JSON.parse(await readFile(path.join(root, manifestPath), 'utf8')) }
   catch (error) { return { ...audit, failures: [...failures, `${manifestPath}: ${error.message}`] } }
@@ -278,12 +283,14 @@ async function main() {
     console.log(`Recorded ${result.debt.length} exact Suit UI boundary violations across ${result.files.length} Vue files in ${result.suits.length} dynamically discovered Suits.`)
     return
   }
-  const result = await validateSuitTemplateBoundaries({ root, manifestPath })
+  const result = await validateSuitTemplateBoundaries({ root, manifestPath, strict: args.includes('--strict') })
   if (result.failures.length) {
     console.error(result.failures.join('\n'))
     process.exitCode = 1
   } else {
-    console.log(`Suit UI boundary passes in migration mode: ${result.debt.length} recorded violations across ${result.files.length} Vue files in ${result.suits.length} dynamically discovered Suits; no new or stale debt.`)
+    console.log(args.includes('--strict')
+      ? `Suit UI boundary passes in strict mode: ${result.files.length} Vue files in ${result.suits.length} dynamically discovered Suits; zero violations.`
+      : `Suit UI boundary passes in migration mode: ${result.debt.length} recorded violations across ${result.files.length} Vue files in ${result.suits.length} dynamically discovered Suits; no new or stale debt.`)
   }
 }
 

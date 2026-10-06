@@ -35,6 +35,16 @@ The manifest also records the exact pre-enforcement files that still bypass a re
 
 `ui-ownership-manifest.json` records the ownership classification of the remaining local component files. `suit-ui-boundary-debt.json` is the separate occurrence-level inventory for the zero-native migration across roots, pages, layouts and components. Each entry records its file, violation kind, exact source evidence and location, target shared family/component, owner task and migration status. Migration mode allows only that closed set: adding an unrecorded violation or removing code without deleting its entry fails immediately. Final strict mode requires an empty violation list and zero local Vue component files.
 
+## Future Suit generation
+
+`pnpm new:platform <slug> "Product name" --dry-run` previews the maintained starter without creating an app. The generator emits `BsAppRoot`, a Bs-only shell/layout and a route adapter demonstrating translated props and event handlers. It creates no local Vue component layer or presentation CSS. Generated apps declare Nuxt/Vue runtime dependencies and the shared Nuxt layer; presentation vendors, modules, styles and fonts remain owned by that layer.
+
+Run `node --test tooling/new-platform/tests/generate.test.mjs` for the disposable scaffold regression gate. It compares dry-run output with generated files and runs `suit-template-boundaries.mjs` in strict mode on the generated Suit. The same check is available as `node tooling/checks/suit-template-boundaries.mjs --root <disposable-workspace> --strict`. Strict mode requires discovered Suit Vue files and rejects every violation without reading or allowing migration debt. Regression fixtures verify that native/Nuxt/vendor tags, aliases, local components, styling escape hatches and vendor imports fail. Existing products continue to use the exact migration inventory through `pnpm check`.
+
+The standalone command `node tooling/new-platform/verify-fixture.mjs` creates a disposable workspace, verifies the side-effect-free dry run against emitted files, runs the strict boundary checker CLI against that fixture, and removes the workspace on success or failure. Its assertions and the checker exit status are required for success. It never registers a real app.
+
+[`tooling/new-platform/verification-registry.json`](../../tooling/new-platform/verification-registry.json) supplies the command and exact mappings for the two generator verification obligations. The control-plane owner must append this command and merge these mappings into the shared workstream registry, preserving its other commands and mappings. This file is a registration handoff; adding it does not activate the registry or satisfy independent verification. Both obligations remain required until that registration is applied and the control plane reruns them.
+
 ## Atomic direction and exports
 
 Shared component composition follows `atoms → molecules → organisms → templates`: a layer may use its own layer or a lower layer, but never a higher layer. Product contracts never move into an atomic layer merely to satisfy this structure. Shared interaction controllers remain independent in `packages/ux`; `packages/ui` may consume them, while `packages/ux` must not depend on `packages/ui`.

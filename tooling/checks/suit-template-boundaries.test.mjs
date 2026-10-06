@@ -66,3 +66,18 @@ test('Automation and Inventory have no remaining template or local-component deb
     assert.deepEqual(audit.parseFailures.filter(message => message.startsWith(prefix)), [], prefix)
   }
 })
+
+test('strict mode rejects even exactly recorded migration debt', async t => {
+  const { root } = await fixture('<template><div /></template>')
+  t.after(() => rm(root, { recursive: true, force: true }))
+  const result = await validateSuitTemplateBoundaries({ root, manifestPath: 'debt.json', strict: true })
+  assert.ok(result.failures.some(failure => failure.includes('forbidden in strict mode')))
+})
+
+test('strict mode accepts Bs-only templates without a debt manifest', async t => {
+  const { root } = await fixture('<template><BsCard><template #default><BsText /></template></BsCard></template>')
+  t.after(() => rm(root, { recursive: true, force: true }))
+  await rm(path.join(root, 'debt.json'))
+  const result = await validateSuitTemplateBoundaries({ root, strict: true })
+  assert.deepEqual(result.failures, [])
+})
