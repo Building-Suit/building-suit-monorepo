@@ -37,7 +37,7 @@ export function classifyHealth(input, process = {}, now = Date.now(), graceMs = 
   const publisher={operation_id:o.operation_id,receipt_id:process.publisher?.receipt_id??null,
    heartbeat_at:process.publisher?.heartbeat_at??null,publication_started_at:started?.at??null,
    next_recovery_check:incident?.next_check_at??r?.next_wake_at??null,deadline_at:process.publisher?.deadline_at??null}
-  base.publisher=publisher;base.recovery_owner=incident?.owner??'Dot';base.recovery_action='publication-handoff'
+  base.publisher=publisher;base.recovery_owner='Dot';base.recovery_action='publication-handoff'
   const fresh=process.publisher?.alive && !process.publisher?.settled && time(publisher.heartbeat_at)>now-30_000
    && (!time(publisher.deadline_at)||time(publisher.deadline_at)>now)
   const due=time(publisher.next_recovery_check)

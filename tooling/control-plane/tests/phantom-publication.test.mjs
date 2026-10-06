@@ -20,7 +20,8 @@ test('reaccepted verification PASS enters publication without another product ex
  assert.ok(source.includes("payload->>'operation_id'=:'op'"))
 })
 test('live wrapper with stale publisher receipt cannot display PUBLISHING',()=>{
- const row=classifyHealth(input(),{operation_alive:true,publisher:{alive:true,heartbeat_at:past,deadline_at:future}},now)
+ const s=input();s.incident_recovery={owner:'Codex',action:'incident-investigate',next_check_at:past}
+ const row=classifyHealth(s,{operation_alive:true,publisher:{alive:true,heartbeat_at:past,deadline_at:future}},now)
  assert.equal(row.state,'STUCK');assert.equal(row.operator_action_required,false)
  assert.equal(row.recovery_owner,'Dot');assert.equal(row.recovery_action,'publication-handoff')
 })
