@@ -6,7 +6,7 @@ WITH active_runs AS (
  SELECT 'task:'||t.task_id,NULL::jsonb,t.task_id FROM control.tasks t WHERE (status IN('planned','ready','in_progress','verification','passed','failed') OR EXISTS(SELECT 1 FROM control.dot_health_observations h WHERE h.key='task:'||t.task_id))
  AND NOT EXISTS(SELECT 1 FROM active_runs r WHERE r.current_task_id=t.task_id)
 )
-SELECT coalesce(jsonb_agg(jsonb_build_object('key',s.key,'run',s.run,'task',to_jsonb(t),'execution',e.data,'verification',v.data,'recovery',rec.data,'operation',op.data,'publication',pub.data,
+SELECT coalesce(jsonb_agg(jsonb_build_object('key',s.key,'run',s.run,'task',to_jsonb(t),'execution',e.data,'verification',v.data,'recovery',rec.data,'operation',op.data,'publication',pub.data,'publication_started',(SELECT jsonb_build_object('at',ev.created_at,'operation_id',ev.payload->>'operation_id') FROM control.task_events ev WHERE ev.task_id=t.task_id AND ev.event_type='publication_started' ORDER BY event_id DESC LIMIT 1),
  'policy',CASE WHEN t.task_id IS NOT NULL THEN control.resolved_retry_policy(t.task_id) END,
  'accounting',CASE WHEN t.task_id IS NOT NULL THEN control.product_retry_accounting(t.task_id) END,
  'last_progress_at',progress.created_at,'incident_recovery',(SELECT to_jsonb(j) FROM control.dot_recovery_jobs j WHERE j.run_id=(s.run->>'run_id')::uuid AND j.task_id IS NOT DISTINCT FROM t.task_id AND j.status IN('queued','running','human-gate') ORDER BY started_at DESC LIMIT 1),

@@ -49,10 +49,18 @@ export function observeProcesses(input, root, inventory, now=Date.now()) {
  const worker=workers.find(w=>w.phase==='verification')??workers.at(-1)
  let operation_alive=false
  if(o){const dir=path.join(root,'.local/runtime-operations',createHash('sha256').update(o.operation_id).digest('hex'),String(o.infra_retries));const s=json(path.join(dir,'state.json'));operation_alive=processAlive(s?.child)}
+ let publisher=null
+ if(o?.action==='task-publish'){
+  const base=path.join(root,'.local/runtime-receipts',createHash('sha256').update(`${o.operation_id}:publisher`).digest('hex'))
+  const dir=latestDirectory(base),receipt=dir?json(path.join(dir,'state.json')):null
+  publisher={operation_id:o.operation_id,receipt_id:dir?path.basename(path.dirname(dir))+':'+path.basename(dir):null,
+   child:receipt?.child??null,heartbeat_at:receipt?.heartbeat_at??null,deadline_at:receipt?.deadline_at??null,
+   alive:processAlive(receipt?.child),settled:!!(dir&&json(path.join(dir,'result.json')))}
+ }
  let supervisor_alive=false
  const owner=input.recovery?.lease_owner?.match(/^(\d+)@/)
  if(owner){try{const args=readFileSync(`/proc/${owner[1]}/cmdline`,'utf8').split('\0');const i=args.indexOf('task-supervise');supervisor_alive=i>=0&&args[i+1]===input.task?.task_id}catch{/* not a local supervisor */}}
- return {observed_at,worker_alive:!!worker,worker:worker?.worker??null,phase:worker?.phase??null,last_output_at:worker?.worker.last_output_at??null,operation_alive,supervisor_alive}
+ return {observed_at,publisher,worker_alive:!!worker,worker:worker?.worker??null,phase:worker?.phase??null,last_output_at:worker?.worker.last_output_at??null,operation_alive,supervisor_alive}
 }
 export function collectHealth({root=process.env.BS_CONTROL_REPOSITORY_ROOT,query=healthQuery,now=Date.now(),inventory}={}) {
  if(!root)throw Error('health_repository_root_required')

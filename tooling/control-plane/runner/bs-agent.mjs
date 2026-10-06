@@ -130,10 +130,11 @@ function execute(program, programArgs = [], options = {}) {
     delete childEnv[variable]
   }
 
-  if (process.env.BS_OPERATION_ID && (program === 'codex' && programArgs[0] === 'exec' || programArgs.some(arg => String(arg).endsWith('/task-verifier.mjs')))) {
-    const role = program === 'codex' ? 'codex' : `verifier:${programArgs[3] ?? 'probe'}:${process.env.BS_OPERATION_INFRA_GENERATION ?? 0}`
+  if (process.env.BS_OPERATION_ID && (program === 'codex' && programArgs[0] === 'exec' || programArgs.some(arg => String(arg).endsWith('/task-verifier.mjs') || String(arg).endsWith('/task-publisher.mjs')))) {
+    const publisherInvocation=programArgs.some(arg=>String(arg).endsWith('/task-publisher.mjs'))
+    const role = program === 'codex' ? 'codex' : publisherInvocation ? 'publisher' : `verifier:${programArgs[3] ?? 'probe'}:${process.env.BS_OPERATION_INFRA_GENERATION ?? 0}`
     return durableExecute(path.join(repoRoot, '.local', 'runtime-receipts'), `${process.env.BS_OPERATION_ID}:${role}`, program, programArgs, {
-      ...options, cwd: options.cwd ?? repoRoot, env: childEnv, retryProcessFailure: true,
+      ...options, cwd: options.cwd ?? repoRoot, env: childEnv, retryProcessFailure: !publisherInvocation,
     })
   }
   const result = spawnSync(
@@ -4564,6 +4565,13 @@ function taskPublish() {
     )
 
 
+    // Persist the lifecycle handoff before launching the publisher. Replays of
+    // this operation retain one transition; completion remains DB-idempotent.
+    controlQuery(`INSERT INTO control.task_events(task_id,event_type,source,payload)
+      SELECT :'task_id','publication_started','runner',jsonb_build_object('operation_id',:'op','execution_id',:'execution'::bigint,'verification_run_id',:'verification'::bigint)
+      WHERE NOT EXISTS(SELECT 1 FROM control.task_events WHERE task_id=:'task_id' AND event_type='publication_started' AND payload->>'operation_id'=:'op');`,
+      {task_id:taskId,op:process.env.BS_OPERATION_ID,execution:String(execution.execution_id),verification:String(verification.verification_run_id)})
+
     const publisher =
       execute(
         process.execPath,
@@ -4587,6 +4595,13 @@ function taskPublish() {
         },
       )
 
+
+    if(publisher.code!==0 && !publisher.stdout){
+      const classification={failure_class:'transient-infrastructure',recovery_action:'wait-external',component:'publisher-transport'}
+      recordControlFailure(taskId,'publication','publisher_receipt_interrupted',{classification})
+      output({ok:false,command:'task-publish',task_id:taskId,error:'publisher_receipt_interrupted',classification},1)
+      return
+    }
 
     let publication
 

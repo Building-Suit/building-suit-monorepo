@@ -32,11 +32,23 @@ export function classifyHealth(input, process = {}, now = Date.now(), graceMs = 
   if(o?.action==='task-retry'||e?.attempt>1)return state('REPAIRING','Repair worker process alive','Finish this reserved repair attempt, then verify')
   return state('RUNNING','Implementation worker process alive','Finish implementation, then verify')
  }
+ if(o?.action==='task-publish'){
+  const started=input.publication_started?.operation_id===o.operation_id?input.publication_started:null
+  const publisher={operation_id:o.operation_id,receipt_id:process.publisher?.receipt_id??null,
+   heartbeat_at:process.publisher?.heartbeat_at??null,publication_started_at:started?.at??null,
+   next_recovery_check:incident?.next_check_at??r?.next_wake_at??null,deadline_at:process.publisher?.deadline_at??null}
+  base.publisher=publisher;base.recovery_owner=incident?.owner??'Dot';base.recovery_action='publication-handoff'
+  const fresh=process.publisher?.alive && !process.publisher?.settled && time(publisher.heartbeat_at)>now-30_000
+   && (!time(publisher.deadline_at)||time(publisher.deadline_at)>now)
+  const due=time(publisher.next_recovery_check)
+  if(fresh && (started || !due || due>now))return state('PUBLISHING','Publisher receipt has a live child and fresh heartbeat','Finish publication, credit once, then acquire the next task')
+  if(started && process.operation_alive && !process.publisher?.settled && time(started.at)>now-graceMs)return state('PUBLISHING','Authoritative publication_started handoff','Start/reconcile the persisted publisher receipt')
+  return state('STUCK',!started&&due&&due<=now?'Publication recovery check expired before publication_started':'Publisher receipt missing, stale or exited before completion','Dot must reconcile the same publication operation; never spend a product attempt')
+ }
  const timer=Math.max(time(r?.next_wake_at),time(o?.next_wake_at))
  const settledBackoff=!!o?.result || ['worker_transport_interrupted','process_recovery_required','malformed_child_response'].includes(r?.error_code)
  if(timer>now && (!(e?.status==='running')||settledBackoff))return state('WAITING_TIMER',r?.error_code??'Persisted recovery backoff','Wake the same operation at next_wake_at')
  if(o && process.operation_alive){
-  if(o.action==='task-publish')return state('PUBLISHING','Publisher invocation alive','Publish verified scope and credit completion')
   if(o.action==='task-verify')return state('VERIFYING','Verification invocation alive','Run/reconcile mandatory verification')
   if(o.action==='task-prepare')return state('RUNNING','Task preparation invocation alive','Prepare the authorized parent/worktree, then dispatch')
   if(e?.status==='running' && now-time(o.updated_at??o.created_at)<=graceMs)return state('RUNNING','Worker dispatch in progress','Start the reserved worker')

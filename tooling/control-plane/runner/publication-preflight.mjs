@@ -153,6 +153,8 @@ export function taskPublicationMetadata({
 
 export function classifyPublicationFiles({
   files = [],
+  taskPaths = [],
+  ordinaryRunAuthorized = false,
   sourcePaths = [],
   workstreamPaths = [],
   projectPaths = [],
@@ -173,6 +175,9 @@ export function classifyPublicationFiles({
     }
     if (pathInScope(normalized, workstreamPaths)) {
       return { file: normalized, decision: 'allow', boundary: 'workstream', reason: 'workstream_publication_path' }
+    }
+    if (ordinaryRunAuthorized && validPublicationPath(normalized) && pathInScope(normalized, taskPaths) && pathInScope(normalized, projectPaths)) {
+      return { file: normalized, decision: 'allow', boundary: 'run-task', reason: 'current_run_registered_ordinary_scope' }
     }
     if (pathInScope(normalized, ordinaryAuthorizedPaths)) {
       return { file: normalized, decision: 'allow', boundary: 'task-exact', reason: 'exact_human_authorization' }

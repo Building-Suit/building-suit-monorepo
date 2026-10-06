@@ -15,7 +15,7 @@ for(const [name,alter,process,expected] of [
  ['human gate',s=>{s.recovery={status:'active',next_action:'wait-operator',error_code:'missing_credentials'}},{},'WAITING_OPERATOR'],
  ['active verifier',()=>{},{worker_alive:true,phase:'verification'},'VERIFYING'],
  ['active repair',s=>{s.operation={action:'task-retry'}},{worker_alive:true},'REPAIRING'],
- ['publisher',s=>{s.execution.status='succeeded';s.operation={action:'task-publish'}},{operation_alive:true},'PUBLISHING'],
+ ['publisher',s=>{s.execution.status='succeeded';s.operation={action:'task-publish',operation_id:'pub'};s.publication_started={operation_id:'pub',at:new Date(now).toISOString()}},{operation_alive:true},'PUBLISHING'],
  ['legitimate exhaustion',s=>{s.execution.status='failed';s.task.status='failed';s.accounting={all_product:true,consumed:5};s.recovery={status:'active',error_code:'retry_budget_exhausted',next_action:'wait-operator',condition:{exhaustion_audit:{all_attempts_audited:true,action:'operator-gate',root_cause:'AssertionError: shell accessibility',required_authorization:'Authorize bounded repair'}}}},{},'WAITING_OPERATOR'],
  ['completed run',s=>{s.run.completed_tasks=2},{},'COMPLETE'],
  ['null current with eligible task',s=>{s.task=null;s.execution=null;s.run.current_task_id=null;s.next_eligible_task='NEXT'},{},'STUCK'],
