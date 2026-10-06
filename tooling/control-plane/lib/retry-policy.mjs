@@ -47,3 +47,15 @@ export function retryDecision(policy, completedAttempt) {
     max_attempts: validated.max_attempts,
   }
 }
+
+// Resume an already-reserved execution using its recorded profile. It does not
+// ask for a new slot, even when that reservation occupies the final slot.
+export function repairRetryDecision(policy, previousExecution, accounting = null, runningExecution = null) {
+  const validated = validateRetryPolicy(policy)
+  if (runningExecution) {
+    if (runningExecution.status !== 'running' || runningExecution.attempt <= previousExecution.attempt
+      || previousExecution.task_id && runningExecution.task_id !== previousExecution.task_id) throw new Error('same_task_running_reservation_required')
+    return { allowed: true, resumed: true, next_attempt: runningExecution.attempt, next_profile: runningExecution.model_profile, max_attempts: validated.max_attempts }
+  }
+  return retryDecision(validated, validated.policy_id === 'shared-foundation-five' ? accounting?.consumed ?? previousExecution.attempt : previousExecution.attempt)
+}

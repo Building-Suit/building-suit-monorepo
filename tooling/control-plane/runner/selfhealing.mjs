@@ -32,11 +32,11 @@ export function taskStatusEvidence(snapshot, route = null) {
   const task = snapshot.packet?.task
   const execution = [...(snapshot.executions ?? [])].sort((a,b) => a.attempt-b.attempt).at(-1)
   const recovery = snapshot.recovery
-  const exhausted = task?.status === 'failed' && execution?.attempt >= snapshot.packet?.retry_policy?.max_attempts
+  const exhausted = task?.status === 'failed' && (snapshot.retry_accounting?.consumed ?? execution?.attempt) >= snapshot.packet?.retry_policy?.max_attempts
   const probeClass = execution?.metadata?.verification_probe_classification
   const failures = [...(snapshot.failures ?? [])].filter(f => !f.resolved_at && f.execution_id === execution?.execution_id)
   return { task_id: task?.task_id, task_status: task?.status, stage: task?.engine_stage,
-    execution_id: execution?.execution_id, product_attempt: execution?.attempt,
+    execution_id: execution?.execution_id, product_attempt: snapshot.retry_accounting?.consumed ?? execution?.attempt, physical_attempt: execution?.attempt,
     product_retry_budget: snapshot.packet?.retry_policy?.max_attempts,
     profile: execution?.model_profile ?? task?.model_profile, actual_model: execution?.model_name,
     future_route: route, run_id: snapshot.workflow_run?.run_id,

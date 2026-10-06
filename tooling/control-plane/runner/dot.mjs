@@ -28,6 +28,8 @@ export function knownBindingFailure(check) {
 }
 export function effectiveFailureClass(snapshot, fallback) {
  const e=snapshot.executions?.at(-1)
+ const reviewed=snapshot.retry_accounting?.classifications?.find(c=>Number(c.execution_id)===Number(e?.execution_id))
+ if (reviewed) return reviewed.classification === 'OTHER' ? 'safety-stop' : legacyClassification(reviewed.classification)
  const failure=snapshot.failures?.filter(f=>!f.resolved_at && f.execution_id===e?.execution_id).at(-1)
  const checks=failure?.metadata?.verification_probe?.checks ?? failure?.metadata?.checks ?? e?.metadata?.verification_probe_failures ?? []
  const blocking=checks.filter(c=>c.required!==false && ['fail','not_run','unavailable'].includes(c.status))

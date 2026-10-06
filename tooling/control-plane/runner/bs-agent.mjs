@@ -24,6 +24,7 @@ import {
 } from '../routing/router.mjs'
 import {
   profileForAttempt,
+  repairRetryDecision,
   retryDecision,
   validateRetryPolicy,
 } from '../lib/retry-policy.mjs'
@@ -1936,7 +1937,7 @@ function recordControlFailure(
     const execution = latestExecution(taskId)
     const policy = resolvedRetryPolicy(taskId)
     const decision = execution
-      ? retryDecision(policy, execution.attempt)
+      ? retryDecision(policy, Math.max(1, supervisorSnapshot(taskId).retry_accounting?.consumed ?? execution.attempt))
       : { allowed: false }
     const failureClass = safeMetadata.classification?.failure_class ?? null
     const recoveryAction = safeMetadata.classification?.recovery_action ?? null
@@ -3126,9 +3127,11 @@ function taskRetry() {
       )
 
     const decision =
-      retryDecision(
+      repairRetryDecision(
         retryPolicy,
-        previousExecution.attempt,
+        previousExecution,
+        supervisorSnapshot(taskId).retry_accounting,
+        resumeExecution,
       )
 
     if (!decision.allowed) {
@@ -4782,6 +4785,7 @@ export function supervisorSnapshot(taskId) {
     `
       SELECT jsonb_build_object(
         'packet', control.generic_task_packet(:'task_id'),
+        'retry_accounting', CASE WHEN control.resolved_retry_policy(:'task_id')->>'policy_id'='shared-foundation-five' THEN control.product_retry_accounting(:'task_id') ELSE NULL END,
         'executions', COALESCE((
           SELECT jsonb_agg(to_jsonb(e) ORDER BY e.attempt)
           FROM control.executions e
@@ -5577,6 +5581,7 @@ function taskSupervisor() {
   const trail = []
 
   try {
+    controlQuery(`SELECT control.audit_product_attempts(:'task');`,{task:taskId})
     let snapshot = supervisorSnapshot(taskId)
     if (!snapshot?.packet?.task) throw new Error(`Unknown task: ${taskId}`)
 
@@ -5729,6 +5734,7 @@ function taskSupervisor() {
             continue
           }
 
+          controlQuery(`SELECT control.audit_product_attempts(:'task');`,{task:taskId})
           const failedSnapshot = supervisorSnapshot(taskId)
           const classified = classifySupervisorFailure({
             command: reconciliation.command,
@@ -5737,7 +5743,7 @@ function taskSupervisor() {
                 reconciliation.error ??
                 `${reconciliation.command}_failed`,
             },
-            attempt: plan.execution?.attempt,
+            attempt: failedSnapshot.retry_accounting?.consumed ?? plan.execution?.attempt,
             maxAttempts: snapshot.packet.retry_policy?.max_attempts,
           })
 
@@ -5824,11 +5830,12 @@ function taskSupervisor() {
       })
 
       if (child.payload?.ok !== true) {
+        controlQuery(`SELECT control.audit_product_attempts(:'task');`,{task:taskId})
         const failedSnapshot = supervisorSnapshot(taskId)
         const classified = classifySupervisorFailure({
           command: plan.command,
           payload: child.payload,
-          attempt: currentExecution(failedSnapshot)?.attempt,
+          attempt: failedSnapshot.retry_accounting?.consumed ?? currentExecution(failedSnapshot)?.attempt,
           maxAttempts: failedSnapshot.packet.retry_policy?.max_attempts,
         })
         classified.fingerprint = planSupervisorStep(failedSnapshot).fingerprint
@@ -5887,12 +5894,13 @@ function taskSupervisor() {
 
     {
       try {
+        controlQuery(`SELECT control.audit_product_attempts(:'task');`,{task:taskId})
         const failedSnapshot = supervisorSnapshot(taskId)
         const currentPlan = planSupervisorStep(failedSnapshot)
         const classified = classifySupervisorFailure({
           command: 'task-supervise',
           payload: { error: error.message },
-          attempt: currentPlan.execution?.attempt,
+          attempt: failedSnapshot.retry_accounting?.consumed ?? currentPlan.execution?.attempt,
           maxAttempts: failedSnapshot.packet.retry_policy?.max_attempts,
         })
         classified.fingerprint = currentPlan.fingerprint
@@ -6085,7 +6093,7 @@ function taskEngine() {
         const decision =
           retryDecision(
             retryPolicy,
-            execution.attempt,
+            supervisorSnapshot(taskId).retry_accounting?.consumed ?? execution.attempt,
           )
 
         const verificationFailure =
@@ -6573,9 +6581,14 @@ function attachRuntimeExecution(executionId) {
 
 function recoveryWatch() {
   try {
-    const candidates = parseControlJson(controlQuery(`SELECT coalesce(jsonb_agg(to_jsonb(r)),'[]'::jsonb) FROM control.workflow_runs r WHERE status='running';`))
+    const candidates = parseControlJson(controlQuery(`SELECT coalesce(jsonb_agg(to_jsonb(r)),'[]'::jsonb) FROM control.workflow_runs r WHERE status='running' OR (status='failed' AND workstream_slug='shared' AND current_task_id IS NOT NULL AND control.resolved_retry_policy(current_task_id)->>'policy_id'='shared-foundation-five');`))
     const outcomes = []
     for (const candidate of candidates) {
+      if (candidate.current_task_id && candidate.workstream_slug === 'shared') {
+        controlQuery(`SELECT control.audit_product_attempts(:'task');`, { task:candidate.current_task_id })
+        const audit=parseControlJson(controlQuery(`SELECT control.reconcile_shared_retry_exhaustion(:'id'::uuid);`, { id:candidate.run_id }))
+        if(audit.accounting) outcomes.push({run_id:candidate.run_id,task_id:candidate.current_task_id,action:'shared_retry_exhaustion_audit',...audit})
+      }
       const row = parseControlJson(controlQuery(`SELECT to_jsonb(r) FROM control.workflow_runs r WHERE run_id=:'id'::uuid;`, { id: candidate.run_id }))
       if(row.admitted_repair_id && !row.stop_requested && !row.maintenance_requested) {
         const refresh=execute(process.execPath,[agentScriptPath,'run-refresh-admission',row.run_id],{cwd:repoRoot,timeout:30000})
@@ -6651,16 +6664,22 @@ function taskReaccept() {
   const directory=path.join(repoRoot,'.local','dot-reacceptance',taskId,String(execution.execution_id),process.env.BS_OPERATION_INFRA_GENERATION ?? '0')
   mkdirSync(directory,{recursive:true,mode:0o700})
   const packetPath=path.join(directory,'packet.json')
-  writeFileSync(packetPath,JSON.stringify(snapshot.packet),{mode:0o600})
+  // Guarded reacceptance runs a strict superset of the original mandatory plan.
+  const commands=mergeVerificationConfig(snapshot.packet.project?.verification_config,snapshot.packet.workstream?.verification_config).commands
+  const probePacket={...snapshot.packet,task:{...snapshot.packet.task,verification_plan:[...(snapshot.packet.task.verification_plan??[]),...commands.filter(c=>c.required!==false).map(c=>c.name)]}}
+  writeFileSync(packetPath,JSON.stringify(probePacket),{mode:0o600})
   const result=execute(process.execPath,[path.join(controlSourceRoot,'tooling/control-plane/runner/task-verifier.mjs'),execution.worktree_path,packetPath,directory,'probe'],{cwd:repoRoot,timeout:70*60_000})
   const probe=parseJson(result.stdout,null)
-  if(!probe?.passed){output({ok:false,error:'same_attempt_verification_failed',classification:probe?.classification ?? {failure_class:'verification-infrastructure',recovery_action:'wait-external'},probe},1);return}
+  if(!probe?.passed){
+    if(probe?.ok && probe.checks?.length) recordControlFailure(taskId,'verification','same_attempt_verification_failed',{classification:probe.classification,verification_probe:probe})
+    output({ok:false,error:'same_attempt_verification_failed',classification:probe?.classification ?? {failure_class:'verification-infrastructure',recovery_action:'wait-external'},probe},1);return}
   const original=execution.metadata?.verification_probe_verified_state
   const currentState={base_sha:original?.base_sha,files:probe.verified_state?.files?.map(f=>({...f,object:existsSync(path.join(execution.worktree_path,f.file))?gitCheck(execution.worktree_path,['hash-object','--',f.file]).value:'deleted'}))}
   currentState.fingerprint=publicationStateFingerprint(currentState)
-  const verifierPaths=(original?.files??[]).map(f=>f.file).filter(f=>f.includes('/tests/') && !f.includes('/migrations/'))
+  const review=snapshot.retry_accounting?.classifications?.find(c=>Number(c.execution_id)===Number(execution.execution_id) && c.source==='human' && ['VERIFIER_INFRA','CONFIGURATION'].includes(c.classification))
+  const verifierPaths=review?.evidence?.verifier_paths ?? (original?.files??[]).map(f=>f.file).filter(f=>f.includes('/tests/') && !f.includes('/migrations/'))
   const requiredChecks=probe.checks.filter(c=>c.required!==false && c.status!=='skipped').map(c=>c.name)
-  if(publicationStateFingerprint(currentState)!==publicationStateFingerprint(original)) throw new Error('automatic_reacceptance_source_changed')
+  if(!review && publicationStateFingerprint(currentState)!==publicationStateFingerprint(original)) throw new Error('automatic_reacceptance_source_changed')
   validateVerifierOnlyReacceptance({execution,probe,currentState,verifierPaths,requiredChecks})
   // This is a derived bounded authority, not a fabricated human approval.
   const approval=parseControlJson(controlQuery(`INSERT INTO control.task_events(task_id,event_type,source,payload) VALUES(:'task','verifier_reacceptance_authorized','dot',:'payload'::jsonb) RETURNING jsonb_build_object('event_id',event_id);`,{task:taskId,payload:JSON.stringify({run_id:snapshot.workflow_run.run_id,execution_id:execution.execution_id,attempt:execution.attempt,verifier_paths:verifierPaths,required_checks:requiredChecks,classification,source_unchanged:true})}))

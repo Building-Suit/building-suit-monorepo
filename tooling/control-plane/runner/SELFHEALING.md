@@ -48,3 +48,28 @@ Branches use Git's non-force deletion; prune follows successful checked removal.
 Run all control-plane tests with required disposable PostgreSQL and published
 n8n fixtures, lint, workspace check, generated workflow validation and the
 resilience harness before committing and repinning the local forced adapter.
+
+## Shared foundation product budget
+
+`shared-foundation-five` resolves slots 1/2 to standard Sol medium, 3/4 to
+deep Sol high, and 5 to review Astra high. Shared imports still carrying
+`foundation-three` resolve to this policy. Other workstreams retain their policy.
+Historical execution ordinals, routes, snapshots and failures are never rewritten.
+
+`product_attempt_classifications` is an append-only ledger outside execution
+history. Dot audits structured blocking receipts and known missing bindings.
+Exact operator-reviewed test/fixture classifications override the original
+misclassification for that receipt. New failed reverification receipts receive
+a new audit; an old infrastructure correction cannot mask a later product defect.
+Unknown evidence stays guarded. Non-product failures require same-execution
+recovery; they cannot reserve a new product execution. Product routing uses the
+chargeable slot, and physical execution ordinals remain unique.
+
+Each normal Dot cycle includes failed Shared runs stopped solely by retry
+exhaustion. Reconciliation locks the original run, requires the frozen bounded
+authority and current scope, respects maintenance/stop/leases and other active
+runs, and preserves task counts and execution history. Five genuine product
+failures require human intervention; the runner rejects any budget above five.
+Guarded reacceptance runs all registered mandatory checks. Only exact reviewed
+test paths may differ; product hashes, parent lineage and original failed checks
+remain enforced. No merge, deployment or protected publication gate is waived.

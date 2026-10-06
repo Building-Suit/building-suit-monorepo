@@ -141,6 +141,10 @@ test('migration 001..028 and upgrade 027->028 preserve authoritative full lifecy
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/dot-future-scope-smoke.sql')])
     assert.equal(psql(databaseUrl.href, ['-Atqc', "SELECT attempt_profiles->>1 FROM control.retry_policies WHERE policy_id='standard-five'"]), 'deep')
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/dot-postgres-smoke.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/shared-retry-five-seed.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/038_shared_product_retry_accounting.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/039_dot_reviewed_verifier_reacceptance.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/shared-retry-five-smoke.sql')])
 
   }
   finally {

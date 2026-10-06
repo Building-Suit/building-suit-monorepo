@@ -100,6 +100,7 @@ export function supervisorStateFingerprint(snapshot) {
     serialization_conflicts: snapshot.serialization_conflicts?.map(item =>
       [item.task_id, item.status, item.engine_stage],
     ),
+    retry_accounting: snapshot.retry_accounting,
     execution: execution && [execution.execution_id, execution.attempt, execution.status, execution.engine_stage],
     verification: verification && [
       verification.verification_run_id,
@@ -310,7 +311,10 @@ export function planSupervisorStep(snapshot) {
       return decision('terminal','safety-stop','safety-stop','unknown_failure_outcome',{execution,verification,publication,fingerprint,recoverable:false})
     }
     const policy = snapshot.packet.retry_policy ?? {}
-    const attemptsRemain = execution && Number(execution.attempt) < Number(policy.max_attempts ?? 0)
+    const attemptsRemain = execution && Number(snapshot.retry_accounting?.consumed ?? execution.attempt) < Number(policy.max_attempts ?? 0)
+    if (!attemptsRemain && snapshot.retry_accounting && snapshot.retry_accounting.all_product !== true) {
+      return decision('wait', 'wait-operator', 'operator-wait', 'retry_classification_review_required', { execution, verification, publication, fingerprint })
+    }
     if (!attemptsRemain) {
       return decision('terminal', 'safety-stop', 'safety-stop', 'retry_budget_exhausted', {
         execution, verification, publication, fingerprint, recoverable: false,
