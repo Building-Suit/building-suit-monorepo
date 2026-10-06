@@ -35,6 +35,10 @@ The controller contract is:
 - BS-20 checks the run gate before every claim and after every successful task,
   so stop requests prevent the next claim. A recoverable task wait preserves the
   logical run.
+- BS-20 treats maintenance as a distinct resumable wait. It passes the protocol,
+  the operator-reviewed `BS_BATCH_CONTROLLER_FINGERPRINT`, and the n8n execution
+  ID separately to the acquire/resume API; the protocol label is never accepted
+  as content proof, and a concurrent controller receives a lease wait.
 - BS-20 and BS-21 accept a workstream reference and validate it against active
   control-plane projects/workstreams before using its internal Suit routing key.
 

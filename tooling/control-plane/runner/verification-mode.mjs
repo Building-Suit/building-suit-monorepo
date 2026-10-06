@@ -33,6 +33,30 @@ function normalizedPlanEntry(value) {
   return String(value ?? '').trim().replace(/\s+/g, ' ')
 }
 
+const semanticPatterns = [
+  ['storage-policy', /\bstorage\b.*\b(?:rls|policy|tenant|anonymous|owner)\b|\b(?:rls|policy)\b.*\bstorage\b/i],
+  ['signed-url-expiry', /signed(?:-| )?(?:access|url).*expir|expir.*signed(?:-| )?(?:access|url)/i],
+  ['security-review', /security review|advisors?\/security|credential\/redaction/i],
+  ['browser-security', /browser.*(?:leak|credential|secret|network)|(?:leak|credential|secret).*browser/i],
+  ['generated-types', /generate typescript types|type generation|generated types/i],
+  ['rls-authorization', /\brls\b|authorization.*(?:outsider|admin|tenant)|cross-tenant/i],
+  ['browser', /\bbrowser\b|\bplaywright\b|\be2e\b/i],
+  ['database', /\bdatabase\b|\bsql\b|\brpc\b|\bpgtap\b|\bdb:test\b/i],
+]
+
+export function verificationObligationCapabilities(entry) {
+  const text = typeof entry === 'string'
+    ? entry
+    : String(entry?.description ?? entry?.title ?? entry?.obligation_id ?? '')
+  return semanticPatterns
+    .filter(([, pattern]) => pattern.test(text))
+    .map(([capability]) => capability)
+}
+
+function commandCapabilities(command) {
+  return new Set(Array.isArray(command?.capabilities) ? command.capabilities : [])
+}
+
 function compatibilityPlanEntry(value) {
   const normalized = normalizedPlanEntry(value).replace(/[.;:]$/, '')
   const command = normalized.replace(/^run\s+/i, '')
@@ -43,6 +67,7 @@ export function resolveVerificationPlan({
   entries = [],
   configuredCommands = [],
   legacyMappings = {},
+  phase = 'post_implementation',
 }) {
   const registered = new Map()
   for (const command of configuredCommands) {
@@ -52,32 +77,149 @@ export function resolveVerificationPlan({
   }
 
   const checks = []
+  const blockers = []
   const unenforced = []
+  const deferred = []
   for (const rawEntry of entries) {
-    const entry = typeof rawEntry === 'string' ? normalizedPlanEntry(rawEntry) : ''
+    const rawObject = rawEntry && typeof rawEntry === 'object' && !Array.isArray(rawEntry)
+    const structured = rawObject && rawEntry.version === 2
+      ? rawEntry
+      : null
+    const entry = typeof rawEntry === 'string'
+      ? normalizedPlanEntry(rawEntry)
+      : normalizedPlanEntry(structured?.description ?? structured?.title ?? structured?.obligation_id)
     const compatible = compatibilityPlanEntry(entry)
-    const mapped = legacyMappings?.[entry] ?? legacyMappings?.[compatible]
-    const command =
-      safePlanCommands.get(entry) ??
-      safePlanCommands.get(compatible) ??
-      registered.get(entry.toLowerCase()) ??
-      registered.get(compatible.toLowerCase()) ??
-      (typeof mapped === 'string'
-        ? safePlanCommands.get(mapped) ?? registered.get(mapped.toLowerCase())
-        : null)
-    if (!entry || !command) {
+    const mapped = structured ?? legacyMappings?.[entry] ?? legacyMappings?.[compatible]
+    const kind = structured?.kind ?? (mapped && typeof mapped === 'object' ? mapped.kind : null)
+
+    if (rawObject && !structured) {
+      blockers.push({
+        plan_entry: JSON.stringify(rawEntry),
+        kind: 'invalid_obligation',
+        blocker: 'unsupported_verification_obligation_shape_or_version',
+        required: true,
+      })
+      continue
+    }
+
+    if (mapped && typeof mapped === 'object' && mapped.version !== 2) {
+      blockers.push({
+        plan_entry: entry,
+        kind: 'invalid_obligation',
+        blocker: 'unsupported_verification_mapping_version',
+        required: true,
+      })
+      continue
+    }
+
+    if (['human_gate', 'external_gate', 'planned_test', 'blocker'].includes(kind)) {
+      const item = {
+        plan_entry: entry || JSON.stringify(rawEntry),
+        kind,
+        blocker: structured?.blocker ?? mapped?.blocker ?? 'verification_obligation_requires_explicit_evidence',
+        required: structured?.required !== false && mapped?.required !== false,
+      }
+      if (kind === 'planned_test') {
+        const expectedOutputs = structured?.expected_outputs ?? mapped?.expected_outputs
+        if (!Array.isArray(expectedOutputs) || expectedOutputs.length === 0
+          || expectedOutputs.some(value => typeof value !== 'string' || !value.trim())) {
+          blockers.push({
+            ...item,
+            kind: 'invalid_obligation',
+            blocker: 'planned_test_expected_outputs_required',
+          })
+          continue
+        }
+        item.expected_outputs = [...expectedOutputs]
+        item.required_post_implementation = true
+        if (phase === 'pre_implementation') {
+          deferred.push(item)
+          continue
+        }
+      }
+      blockers.push(item)
+      continue
+    }
+
+    if (!mapped) {
+      const implicit = safePlanCommands.get(compatible) ?? registered.get(String(compatible).toLowerCase())
+      if (!entry || !implicit) {
+        unenforced.push(typeof rawEntry === 'string' ? rawEntry : JSON.stringify(rawEntry))
+        continue
+      }
+    }
+    const refs = structured?.commands ?? mapped?.commands ?? (
+      structured?.command || (mapped && typeof mapped === 'object' && mapped.command)
+        ? [structured?.command ?? mapped.command]
+        : typeof mapped === 'string'
+          ? [mapped]
+          : [compatible]
+    )
+    const expectedShape = kind === 'group'
+      ? Array.isArray(refs) && refs.length > 0
+      : Array.isArray(refs) && refs.length > 0
+    if (!expectedShape || refs.some(ref => typeof ref !== 'string' || !ref.trim())) {
+      blockers.push({
+        plan_entry: entry || JSON.stringify(rawEntry),
+        kind: 'invalid_obligation',
+        blocker: 'verification_command_references_malformed',
+        required: true,
+      })
+      continue
+    }
+    const uniqueRefs = [...new Set(refs)]
+    const resolvedRefs = uniqueRefs.map(ref => ({
+      ref,
+      command: safePlanCommands.get(ref) ?? registered.get(String(ref).toLowerCase()),
+    }))
+    const unknownReferences = resolvedRefs.filter(item => !item.command).map(item => item.ref)
+    if (unknownReferences.length > 0) {
+      blockers.push({
+        plan_entry: entry || JSON.stringify(rawEntry),
+        kind: kind ?? 'command',
+        blocker: kind === 'group'
+          ? 'verification_group_member_unregistered'
+          : 'verification_command_unregistered',
+        unknown_references: unknownReferences,
+        required: true,
+      })
+      continue
+    }
+    const commands = resolvedRefs.map(item => item.command)
+    if (!entry || commands.length === 0) {
       unenforced.push(typeof rawEntry === 'string' ? rawEntry : JSON.stringify(rawEntry))
       continue
     }
-    checks.push({
-      ...command,
-      args: [...(command.args ?? [])],
-      required: true,
-      plan_entry: entry,
-    })
+
+    const requiredCapabilities = new Set([
+      ...verificationObligationCapabilities(rawEntry),
+      ...(structured?.requires ?? mapped?.requires ?? []),
+    ])
+    const providedCapabilities = new Set(commands.flatMap(command => [...commandCapabilities(command)]))
+    const missingCapabilities = [...requiredCapabilities].filter(capability => !providedCapabilities.has(capability))
+    if (missingCapabilities.length > 0) {
+      blockers.push({
+        plan_entry: entry,
+        kind: 'semantic_mismatch',
+        blocker: 'verification_mapping_lacks_required_capability',
+        missing_capabilities: missingCapabilities,
+        mapped_commands: commands.map(command => command.name),
+        required: true,
+      })
+      continue
+    }
+
+    for (const command of commands) {
+      checks.push({
+        ...command,
+        args: [...(command.args ?? [])],
+        required: true,
+        plan_entry: entry,
+      })
+    }
   }
 
-  return { checks, unenforced }
+  return { checks, blockers, unenforced, deferred }
 }
 
 export function resolveDatabaseVerification({ verificationConfig = {}, suitSlug, appPath, changedDatabaseTests = [] }) {
@@ -152,6 +294,7 @@ export function evaluateVerificationReadiness(packet) {
     entries: packet.task?.verification_plan ?? [],
     configuredCommands: config.commands,
     legacyMappings: config.legacy_plan_mappings,
+    phase: 'pre_implementation',
   })
   if (plan.unenforced.length > 0) {
     return {
@@ -160,6 +303,13 @@ export function evaluateVerificationReadiness(packet) {
         ? 'verification_commands_missing'
         : 'verification_plan_mapping_required',
       unenforced: plan.unenforced,
+    }
+  }
+  if (plan.blockers.length > 0) {
+    return {
+      ready: false,
+      reason: 'verification_obligation_blocked',
+      blockers: plan.blockers,
     }
   }
 
