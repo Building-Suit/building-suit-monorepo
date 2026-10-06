@@ -2237,6 +2237,7 @@ function recordVerification(
               check.verification_mode ?? null,
             failure_class:
               check.failure_class ?? null,
+            failure_evidence: check.failure_evidence ?? null,
           }),
       },
     )
@@ -3980,6 +3981,7 @@ Return a concise repair summary.
                     log_path:
                       check.log_path,
                     failure_class: check.failure_class ?? latestProbe?.classification?.failure_class ?? null,
+                    failure_evidence: check.failure_evidence ?? null,
                   }),
                 )
             : [],

@@ -67,3 +67,5 @@ test('in-flight same-attempt reverification retains the reviewed historical fail
 })
 
 test('verification logs retain unique run and content-addressed artifacts across reverification',()=>{const source=readFileSync(new URL('../runner/task-verifier.mjs',import.meta.url),'utf8');assert.match(source,/path.join\(suppliedRunDirectory,String\(verificationRunId\)\)/);assert.match(source,/evidenceDigest\(logContent\)/);assert.match(source,/flag:'wx'/);})
+
+ test('final receipt and recovery probe preserve structured evidence',()=>{const source=readFileSync(new URL('../runner/bs-agent.mjs',import.meta.url),'utf8');const final=source.slice(source.indexOf('function recordVerification('),source.indexOf('function finalizeVerification('));assert.match(final,/failure_evidence: check.failure_evidence/);const probe=source.slice(source.indexOf('failure_class: check.failure_class ?? latestProbe'),source.indexOf('failure_class: check.failure_class ?? latestProbe')+250);assert.match(probe,/failure_evidence: check.failure_evidence/);})
