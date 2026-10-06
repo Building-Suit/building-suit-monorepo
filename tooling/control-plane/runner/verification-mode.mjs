@@ -557,6 +557,7 @@ export function verificationCommandFailureClass({ name, required = true, passed,
   if (passed || !required) return null
   if (errorCode === 'ENOENT') return 'verification-required-check-unavailable'
   if (errorCode === 'ETIMEDOUT') return 'verification-infrastructure'
+  if (/EADDRINUSE|listen EPERM|spawn E2BIG/.test(output)) return 'verification-infrastructure'
   if (/No tests found|Cannot find module.*playwright|Playwright Test did not expect test|Failed to load.*config|Executable doesn't exist/.test(output)) return 'verification-configuration'
   if (errorCode && ['ECONNRESET','ECONNREFUSED','EPIPE'].includes(errorCode)) return 'verification-infrastructure'
   // A materialized HTTP check may still require separately provisioned local

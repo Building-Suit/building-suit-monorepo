@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { stuckRecoveryCandidate,stuckIncidentFingerprint } from './dot-stuck-recovery.mjs'
 import { cleanupIntegratedWorktrees } from './dot-cleanup.mjs'
 import { preexecutionBindingEvidence } from './preexecution-binding-recovery.mjs'
 import { strictBindingRecoveryEvidence, requiresSameAttemptVerification } from './binding-recovery.mjs'
@@ -4792,7 +4793,7 @@ export function supervisorSnapshot(taskId) {
     `
       SELECT jsonb_build_object(
         'packet', control.generic_task_packet(:'task_id'),
-        'retry_accounting', CASE WHEN control.resolved_retry_policy(:'task_id')->>'policy_id'='shared-foundation-five' THEN control.product_retry_accounting(:'task_id') ELSE NULL END,
+        'retry_accounting', control.product_retry_accounting(:'task_id'),
         'executions', COALESCE((
           SELECT jsonb_agg(to_jsonb(e) ORDER BY e.attempt)
           FROM control.executions e
@@ -6601,9 +6602,18 @@ function attachRuntimeExecution(executionId) {
 
 function recoveryWatch() {
   try {
-    const candidates = parseControlJson(controlQuery(`SELECT coalesce(jsonb_agg(to_jsonb(r)),'[]'::jsonb) FROM control.workflow_runs r WHERE status='running' OR (status='failed' AND workstream_slug='shared' AND current_task_id IS NOT NULL AND control.resolved_retry_policy(current_task_id)->>'policy_id'='shared-foundation-five');`))
-    const outcomes = []
+    const health=execute(process.execPath,[path.join(controlSourceRoot,'tooling/control-plane/runner/dot-health-collector.mjs')],{cwd:repoRoot,timeout:25000})
+    const candidates = parseControlJson(controlQuery(`SELECT coalesce(jsonb_agg(to_jsonb(r)),'[]'::jsonb) FROM control.workflow_runs r WHERE status='running' OR (status='failed' AND current_task_id IS NOT NULL);`))
+    const outcomes = [{action:'health_collection',ok:health.code===0,llm_used:false}]
     for (const candidate of candidates) {
+      const observed=parseControlJson(controlQuery(`SELECT snapshot FROM control.dot_health_current WHERE run_id=:'run'::uuid;`,{run:candidate.run_id}))
+      if(observed?.worker_alive){outcomes.push({run_id:candidate.run_id,eligible:false,reason:'worker_active'});continue}
+      if(stuckRecoveryCandidate(observed)) {
+        const recovered=parseControlJson(controlQuery(`SELECT control.claim_dot_stuck_recovery(:'run'::uuid,:'fingerprint');`,{run:candidate.run_id,fingerprint:stuckIncidentFingerprint(observed)}))
+        outcomes.push({run_id:candidate.run_id,action:'stuck_recovery',...recovered})
+        if(!recovered.claimed)continue
+      } else if(candidate.status==='failed' && candidate.workstream_slug!=='shared') {continue}
+      if(candidate.current_task_id) controlQuery(`SELECT control.audit_product_attempts(:'task');`,{task:candidate.current_task_id})
       if (candidate.current_task_id && candidate.workstream_slug === 'shared') {
         controlQuery(`SELECT control.audit_product_attempts(:'task');`, { task:candidate.current_task_id })
         const audit=parseControlJson(controlQuery(`SELECT control.reconcile_shared_retry_exhaustion(:'id'::uuid);`, { id:candidate.run_id }))
@@ -6641,8 +6651,8 @@ function recoveryWatch() {
       outcomes.push({action:'safe_cleanup_scan',...cleanup})
     }
     // Observability is deterministic and isolated from task/recovery ownership.
-    const health=execute(process.execPath,[path.join(controlSourceRoot,'tooling/control-plane/runner/dot-health-collector.mjs')],{cwd:repoRoot,timeout:25000})
-    outcomes.push({action:'health_collection',ok:health.code===0,llm_used:false})
+    const refreshed=execute(process.execPath,[path.join(controlSourceRoot,'tooling/control-plane/runner/dot-health-collector.mjs')],{cwd:repoRoot,timeout:25000})
+    outcomes.push({action:'health_refresh',ok:refreshed.code===0,llm_used:false})
     controlQuery(`INSERT INTO control.dot_cycles(outcomes) VALUES(:'outcomes'::jsonb); UPDATE control.dot_wake_events SET consumed_at=now() WHERE consumed_at IS NULL;`,{outcomes:JSON.stringify(outcomes)})
     output({ok:true,command:'recovery-watch',outcomes,codex_invoked_by_scan:false})
   } catch(error) {
