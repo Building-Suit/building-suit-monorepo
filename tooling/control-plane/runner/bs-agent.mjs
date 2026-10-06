@@ -6667,7 +6667,7 @@ async function recoveryWatch() {
       const lifecycle=parseControlJson(controlQuery(`SELECT control.reconcile_empty_run(:'run'::uuid);`,{run:candidate.run_id}))
       if(lifecycle?.closed){outcomes.push({action:'obsolete_run_closed',...lifecycle});continue}
       if(!candidate.current_task_id && candidate.status==='running' && !candidate.stop_requested && !candidate.maintenance_requested){const admission=reconcileNativeAdmission(candidate.run_id);if(admission)outcomes.push({run_id:candidate.run_id,action:'native_admission_diagnostics',task_id:admission.task_id,reason:admission.reason})}
-      if(candidate.current_task_id){const audit=supervisorSnapshot(candidate.current_task_id).exhaustion_audit;controlQuery(`SELECT control.record_retry_exhaustion_audit(:'task',:'proof'::jsonb);`,{task:candidate.current_task_id,proof:JSON.stringify(audit)})}
+      if(candidate.current_task_id){const auditSnapshot=supervisorSnapshot(candidate.current_task_id);if(!auditSnapshot){outcomes.push({run_id:candidate.run_id,task_id:candidate.current_task_id,action:'snapshot_recheck',owner:'Dot',retry_after_ms:30000});continue}const audit=auditSnapshot.exhaustion_audit;controlQuery(`SELECT control.record_retry_exhaustion_audit(:'task',:'proof'::jsonb);`,{task:candidate.current_task_id,proof:JSON.stringify(audit)})}
       const nativeGate=parseControlJson(controlQuery(`SELECT control.reconcile_native_reacceptance_gate(:'run'::uuid);`,{run:candidate.run_id}))
       if(nativeGate.reconciled){outcomes.push({action:'native_reacceptance_guard_reconciled',...nativeGate});continue}
       const observed=parseControlJson(controlQuery(`SELECT snapshot FROM control.dot_health_current WHERE run_id=:'run'::uuid;`,{run:candidate.run_id}))

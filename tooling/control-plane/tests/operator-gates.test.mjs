@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import vm from 'node:vm'
+import {readFileSync} from 'node:fs'
 import {operatorGateWorkflow as w} from '../n8n/operator-gates.mjs'
 const code=n=>w.nodes.find(x=>x.name===n).parameters.jsCode
 function run(name,json,refs={}){return vm.runInNewContext("(()=>{"+code(name)+"})()",{$input:{first:()=>({json})},$:(n)=>({first:()=>({json:refs[n]})})})}
@@ -9,3 +10,5 @@ test('run input cannot inject shell commands',()=>{assert.throws(()=>run('Valida
 test('review shows exact run task reason and requested authorization with escaped content',()=>{const out=run('Build Gate Review',{ok:true,run_id:'run',gates:[{run_id:'run',task_id:'task',action:'ordinary-publication',reason:'<script>',requested_authorization:'exact approval',gate_fingerprint:'a'.repeat(32)}]})[0].json;assert.match(out.fields[0].html,/run/);assert.match(out.fields[0].html,/task/);assert.match(out.fields[0].html,/&lt;script&gt;/);assert.match(out.fields[0].html,/exact approval/);assert.deepEqual(JSON.parse(JSON.stringify(out.fields[2].fieldOptions.values)),[{option:'Approve'},{option:'Reject'}]);})
 test('response is bound to server reviewed offer, not user supplied run or task',()=>{const reviewed={run_id:'run',gates:[{gate_fingerprint:'a'.repeat(32),choice:'task — publication_operator_hold'}]};assert.throws(()=>run('Validate Operator Response',{gate_choice:'forged',response:'Approve'},{'Build Gate Review':reviewed}));assert.match(run('Validate Operator Response',{gate_choice:'task — publication_operator_hold',response:'Reject',run_id:'other'},{'Build Gate Review':reviewed})[0].json.command,/run a+ reject$/)})
 test('failed authoritative resolution never appears successful',()=>{assert.throws(()=>run('Verify Resolution',{payload:{ok:false,error:'stale'}}));assert.equal(run('Verify Resolution',{payload:{ok:true,resolution_id:1}})[0].json.resolution_id,1)})
+
+test('one temporarily unavailable snapshot cannot abort other run gate recovery',()=>{const source=readFileSync(new URL('../runner/bs-agent.mjs',import.meta.url),'utf8');const body=source.slice(source.indexOf('if(candidate.current_task_id){const auditSnapshot='),source.indexOf('      const nativeGate=',source.indexOf('if(candidate.current_task_id){const auditSnapshot=')));const outcomes=[],audits=[];vm.runInNewContext('for(const candidate of candidates){'+body+'}',{candidates:[{run_id:'first',current_task_id:'missing'},{run_id:'second',current_task_id:'valid'}],outcomes,supervisorSnapshot:id=>id==='missing'?null:{exhaustion_audit:{consumed:0}},controlQuery:(sql,v)=>audits.push(v.task)});assert.deepEqual(audits,['valid']);assert.equal(outcomes[0].owner,'Dot');assert.equal(outcomes[0].retry_after_ms,30000)})
