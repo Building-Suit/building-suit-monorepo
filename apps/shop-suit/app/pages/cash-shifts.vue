@@ -134,32 +134,119 @@ async function closeShift() {
 </script>
 
 <template>
-  <div class="space-y-5">
-    <header class="flex flex-wrap items-end justify-between gap-3"><div><h1 class="text-3xl font-extrabold tracking-tight">{{ copy.title }}</h1><p class="mt-1 text-sm text-muted-foreground">{{ copy.subtitle }}</p></div><p v-if="currentLocation" class="rounded-xl bg-muted px-4 py-2 text-sm"><strong>{{ copy.branch }}:</strong> {{ currentLocation.name }}</p></header>
-    <p v-if="!current && !shopLoading" class="ls-card p-8 text-center text-sm">{{ copy.noShop }}</p>
-    <p v-else-if="!currentLocation && !shopLoading" class="ls-card p-8 text-center text-sm">{{ copy.noLocation }}</p>
-    <section v-else-if="current" class="space-y-5">
-      <div v-if="error" role="alert" class="rounded-2xl border border-[var(--bs-status-error)] bg-[var(--bs-status-error-bg)] p-5 text-sm text-[var(--bs-status-error)]"><p>{{ copy.loadError }}</p><BsButton severity="secondary" class="mt-3" @click="refresh()">{{ copy.retry }}</BsButton></div>
-      <div v-else-if="pending" :aria-label="copy.loading" role="status" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><div v-for="index in 4" :key="index" class="h-28 animate-pulse rounded-2xl bg-muted" /></div>
-      <template v-else>
-        <section class="ls-card p-5" aria-labelledby="active-shift-heading">
-          <div class="flex flex-wrap items-start justify-between gap-3"><div><h2 id="active-shift-heading" class="text-xl font-extrabold">{{ copy.active }}</h2><p v-if="dashboard.active" class="mt-1 text-sm text-muted-foreground">{{ dashboard.active.cashierName }} · {{ date(dashboard.active.openedAt) }}</p></div><div class="flex flex-wrap gap-2"><BsButton v-if="!dashboard.active" @click="startOpen">{{ copy.open }}</BsButton><BsButton v-if="dashboard.active && dashboard.canAdjust" severity="secondary" @click="startMovement">{{ copy.movement }}</BsButton><BsButton v-if="dashboard.active && (dashboard.canManage || dashboard.active.cashierMembershipId === dashboard.currentMembershipId)" @click="startClose">{{ copy.close }}</BsButton></div></div>
-          <p v-if="!dashboard.active" class="mt-6 rounded-xl bg-muted p-6 text-center text-sm text-muted-foreground">{{ copy.noActive }}</p>
-          <template v-else>
-            <dl class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><div
-              v-for="item in [
-              [copy.openingCash, dashboard.active.openingAmount], [copy.cashSales, dashboard.active.cashSales], [copy.cashRefunds, -dashboard.active.cashRefunds], [copy.payIns, dashboard.active.payIns], [copy.payOuts, -dashboard.active.payOuts], [copy.nonCash, dashboard.active.nonCashTotal], [copy.expected, dashboard.active.expectedCash]
-            ]" :key="String(item[0])" class="rounded-xl bg-muted p-4"><dt class="text-xs font-bold text-muted-foreground">{{ item[0] }}</dt><dd class="mt-1 text-lg font-extrabold">{{ money(item[1] as number) }}</dd></div></dl>
-            <div class="mt-5 overflow-x-auto"><h3 class="mb-3 font-bold">{{ copy.eventHistory }}</h3><BsDataTable :value="dashboard.active.events ?? []" data-key="id" :label="copy.eventHistory"><Column><template #header>{{ copy.date }}</template><template #body="{ data: event }">{{ date(event.occurredAt) }}</template></Column><Column><template #header>{{ copy.event }}</template><template #body="{ data: event }"><p class="font-bold">{{ eventLabel(event.kind) }}</p><p class="text-xs text-muted-foreground">{{ event.reason || event.reference || '—' }}</p></template></Column><Column><template #header>{{ copy.actor }}</template><template #body="{ data: event }">{{ event.actorName }}</template></Column><Column body-class="text-end"><template #header>{{ copy.amount }}</template><template #body="{ data: event }"><strong>{{ money(event.amount) }}</strong></template></Column><template #empty><p class="p-5 text-center text-sm text-muted-foreground">{{ copy.empty }}</p></template></BsDataTable></div>
-          </template>
-        </section>
-
-        <section class="ls-card p-5"><div class="flex flex-wrap items-end justify-between gap-3"><h2 class="text-xl font-extrabold">{{ copy.history }}</h2><BsSelect v-if="dashboard.canManage" v-model="cashierId" class="w-full sm:w-64" :label="copy.cashier" :options="[{ id: null, name: copy.allCashiers }, ...dashboard.cashiers]" option-label="name" option-value="id" /></div><div class="mt-4 overflow-x-auto"><BsDataTable :value="dashboard.items" data-key="id" :label="copy.history" lazy paginator :rows="pageSize" :first="(page - 1) * pageSize" :total-records="dashboard.total" :always-show-paginator="false" @page="page = $event.page + 1"><Column field="cashierName"><template #header>{{ copy.cashier }}</template></Column><Column><template #header>{{ copy.opened }}</template><template #body="{ data: shift }">{{ date(shift.openedAt) }}</template></Column><Column body-class="text-end"><template #header>{{ copy.expected }}</template><template #body="{ data: shift }">{{ money(shift.expectedCash) }}</template></Column><Column body-class="text-end"><template #header>{{ copy.counted }}</template><template #body="{ data: shift }">{{ money(shift.countedCash) }}</template></Column><Column body-class="text-end"><template #header>{{ copy.variance }}</template><template #body="{ data: shift }"><strong :class="Number(shift.variance) === 0 ? 'text-[var(--bs-status-success)]' : 'text-[var(--bs-status-error)]'">{{ money(shift.variance) }}</strong></template></Column><Column body-class="text-end"><template #header>{{ copy.nonCash }}</template><template #body="{ data: shift }">{{ money(shift.nonCashTotal) }}</template></Column><template #empty><p class="p-6 text-center text-sm text-muted-foreground">{{ copy.empty }}</p></template></BsDataTable></div></section>
+  <BsStack>
+    <BsPageHeader  :title="copy.title" :subtitle="copy.subtitle">
+      <template #actions>
+        <BsText v-if="currentLocation" as="p" size="sm">
+          <BsText as="strong">{{ copy.branch }}:</BsText> {{ currentLocation.name }}</BsText>
       </template>
-    </section>
-
-    <BsRecordActionDialog v-model:visible="showOpen" :title="copy.open" :dirty="openDirty" :pending="opening" :error="actionError" :submit-label="copy.openAction" :cancel-label="copy.cancel" @submit="openShift"><label class="grid gap-1 text-sm font-bold">{{ copy.openingCash }}<input v-model.number="openForm.amount" type="number" min="0" step="0.01" required class="ls-input min-h-11"></label><label class="grid gap-1 text-sm font-bold">{{ copy.openingNotes }}<textarea v-model="openForm.notes" maxlength="1000" rows="3" class="ls-input" /></label></BsRecordActionDialog>
-    <BsRecordActionDialog v-model:visible="showMovement" :title="copy.movement" :dirty="movementDirty" :pending="moving" :error="actionError" :submit-label="copy.record" :cancel-label="copy.cancel" @submit="recordMovement"><fieldset class="flex gap-4"><legend class="mb-2 text-sm font-bold">{{ copy.event }}</legend><label class="flex min-h-11 items-center gap-2"><input v-model="movementForm.kind" type="radio" value="pay_in">{{ copy.payIn }}</label><label class="flex min-h-11 items-center gap-2"><input v-model="movementForm.kind" type="radio" value="pay_out">{{ copy.payOut }}</label></fieldset><label class="grid gap-1 text-sm font-bold">{{ copy.amount }}<input v-model.number="movementForm.amount" type="number" min="0.01" step="0.01" required class="ls-input min-h-11"></label><label class="grid gap-1 text-sm font-bold">{{ copy.reason }}<textarea v-model="movementForm.reason" minlength="2" maxlength="1000" required rows="3" class="ls-input" /></label><label class="grid gap-1 text-sm font-bold">{{ copy.reference }}<input v-model="movementForm.reference" maxlength="200" required class="ls-input min-h-11"></label></BsRecordActionDialog>
-    <BsRecordActionDialog v-model:visible="showClose" :title="copy.close" :dirty="closeDirty" :pending="closing" :error="actionError" :submit-label="copy.closeAction" :cancel-label="copy.cancel" @submit="closeShift"><p class="rounded-xl bg-muted p-4 text-sm">{{ copy.expected }}: <strong>{{ money(dashboard.active?.expectedCash) }}</strong></p><label class="grid gap-1 text-sm font-bold">{{ copy.counted }}<input v-model.number="closeForm.amount" type="number" min="0" step="0.01" required class="ls-input min-h-11"></label><label class="grid gap-1 text-sm font-bold">{{ copy.closeNotes }}<textarea v-model="closeForm.notes" minlength="2" maxlength="1000" rows="3" class="ls-input" /></label></BsRecordActionDialog>
-  </div>
+    </BsPageHeader>
+    <BsText v-if="!current && !shopLoading" as="p" size="sm">{{ copy.noShop }}</BsText>
+    <BsText v-else-if="!currentLocation && !shopLoading" as="p" size="sm">{{ copy.noLocation }}</BsText>
+    <BsStack v-else-if="current">
+      <BsBox v-if="error" role="alert" padding="md">
+        <BsText as="p">{{ copy.loadError }}</BsText>
+        <BsButton severity="secondary" @click="refresh()">{{ copy.retry }}</BsButton>
+      </BsBox>
+      <BsGrid v-else-if="pending" :aria-label="copy.loading" role="status" :columns="4">
+        <BsSkeleton v-for="index in 4" :key="index"/>
+      </BsGrid>
+      <template v-else>
+        <BsPanel aria-labelledby="active-shift-heading" padding="md">
+          <BsInline justify="between">
+            <BsBox>
+              <BsHeading id="active-shift-heading" :level="2">{{ copy.active }}</BsHeading>
+              <BsText v-if="dashboard.active" as="p" size="sm" tone="muted">{{ dashboard.active.cashierName }} · {{ date(dashboard.active.openedAt) }}</BsText>
+            </BsBox>
+            <BsInline>
+              <BsButton v-if="!dashboard.active" @click="startOpen">{{ copy.open }}</BsButton>
+              <BsButton v-if="dashboard.active && dashboard.canAdjust" severity="secondary" @click="startMovement">{{ copy.movement }}</BsButton>
+              <BsButton v-if="dashboard.active && (dashboard.canManage || dashboard.active.cashierMembershipId === dashboard.currentMembershipId)" @click="startClose">{{ copy.close }}</BsButton>
+            </BsInline>
+          </BsInline>
+          <BsText v-if="!dashboard.active" as="p" size="sm" tone="muted">{{ copy.noActive }}</BsText>
+          <template v-else>
+            <BsDescriptionList>
+              <BsDescriptionItem
+                v-for="item in [
+                  [copy.openingCash, dashboard.active.openingAmount], [copy.cashSales, dashboard.active.cashSales], [copy.cashRefunds, -dashboard.active.cashRefunds], [copy.payIns, dashboard.active.payIns], [copy.payOuts, -dashboard.active.payOuts], [copy.nonCash, dashboard.active.nonCashTotal], [copy.expected, dashboard.active.expectedCash]
+                ]" :key="String(item[0])" :term="(item[0])">
+                <BsText as="span" size="lg" emphasis="semibold">{{ money(item[1] as number) }}</BsText>
+              </BsDescriptionItem>
+            </BsDescriptionList>
+            <BsBox scroll="x">
+              <BsHeading :level="3">{{ copy.eventHistory }}</BsHeading>
+              <BsDataTable :value="dashboard.active.events ?? []" data-key="id" :label="copy.eventHistory" :columns="[{ key: 'column0', header: (copy.date) }, { key: 'column1', header: (copy.event) }, { key: 'column2', header: (copy.actor) }, { key: 'column3', header: (copy.amount), align: 'end' }]">
+                <template #cell-column0="{ row: event }">{{ date(event.occurredAt) }}</template>
+                <template #cell-column1="{ row: event }">
+                  <BsText as="p" emphasis="semibold">{{ eventLabel(event.kind) }}</BsText>
+                  <BsText as="p" size="xs" tone="muted">{{ event.reason || event.reference || '—' }}</BsText>
+                </template>
+                <template #cell-column2="{ row: event }">{{ event.actorName }}</template>
+                <template #cell-column3="{ row: event }">
+                  <BsText as="strong">{{ money(event.amount) }}</BsText>
+                </template>
+                <template #empty>
+                  <BsText as="p" size="sm" tone="muted">{{ copy.empty }}</BsText>
+                </template>
+              </BsDataTable>
+            </BsBox>
+          </template>
+        </BsPanel>
+        <BsPanel padding="md">
+          <BsInline justify="between">
+            <BsHeading :level="2">{{ copy.history }}</BsHeading>
+            <BsSelect v-if="dashboard.canManage" v-model="cashierId" :label="copy.cashier" :options="[{ id: null, name: copy.allCashiers }, ...dashboard.cashiers]" option-label="name" option-value="id"/>
+          </BsInline>
+          <BsBox scroll="x">
+            <BsDataTable :value="dashboard.items" data-key="id" :label="copy.history" lazy paginator :rows="pageSize" :first="(page - 1) * pageSize" :total-records="dashboard.total" :always-show-paginator="false" :columns="[{ key: 'cashierName', header: (copy.cashier), field: 'cashierName' }, { key: 'column1', header: (copy.opened) }, { key: 'column2', header: (copy.expected), align: 'end' }, { key: 'column3', header: (copy.counted), align: 'end' }, { key: 'column4', header: (copy.variance), align: 'end' }, { key: 'column5', header: (copy.nonCash), align: 'end' }]" @page="page = $event.page + 1">
+              <template #cell-column1="{ row: shift }">{{ date(shift.openedAt) }}</template>
+              <template #cell-column2="{ row: shift }">{{ money(shift.expectedCash) }}</template>
+              <template #cell-column3="{ row: shift }">{{ money(shift.countedCash) }}</template>
+              <template #cell-column4="{ row: shift }">
+                <BsText as="strong">{{ money(shift.variance) }}</BsText>
+              </template>
+              <template #cell-column5="{ row: shift }">{{ money(shift.nonCashTotal) }}</template>
+              <template #empty>
+                <BsText as="p" size="sm" tone="muted">{{ copy.empty }}</BsText>
+              </template>
+            </BsDataTable>
+          </BsBox>
+        </BsPanel>
+      </template>
+    </BsStack>
+    <BsRecordActionDialog v-model:visible="showOpen" :title="copy.open" :dirty="openDirty" :pending="opening" :error="actionError" :submit-label="copy.openAction" :cancel-label="copy.cancel" @submit="openShift">
+      <BsField v-slot="field" :label="copy.openingCash">
+        <BsInput :id="field.id" v-model.number="openForm.amount" :aria-describedby="field.describedby" type="number" :min="0" :step="0.01" required/>
+      </BsField>
+      <BsField v-slot="field" :label="copy.openingNotes">
+        <BsTextarea :id="field.id" v-model="openForm.notes" :aria-describedby="field.describedby" :maxlength="1000" :rows="3"/>
+      </BsField>
+    </BsRecordActionDialog>
+    <BsRecordActionDialog v-model:visible="showMovement" :title="copy.movement" :dirty="movementDirty" :pending="moving" :error="actionError" :submit-label="copy.record" :cancel-label="copy.cancel" @submit="recordMovement">
+      <BsFieldGroup :legend="(copy.event)">
+        <BsRadio  v-model="movementForm.kind" value="pay_in" :label="copy.payIn" />
+        <BsRadio  v-model="movementForm.kind" value="pay_out" :label="copy.payOut" />
+      </BsFieldGroup>
+      <BsField v-slot="field" :label="copy.amount">
+        <BsInput :id="field.id" v-model.number="movementForm.amount" :aria-describedby="field.describedby" type="number" :min="0.01" :step="0.01" required/>
+      </BsField>
+      <BsField v-slot="field" :label="copy.reason">
+        <BsTextarea :id="field.id" v-model="movementForm.reason" :aria-describedby="field.describedby" :minlength="2" :maxlength="1000" required :rows="3"/>
+      </BsField>
+      <BsField v-slot="field" :label="copy.reference">
+        <BsInput :id="field.id" v-model="movementForm.reference" :aria-describedby="field.describedby" :maxlength="200" required/>
+      </BsField>
+    </BsRecordActionDialog>
+    <BsRecordActionDialog v-model:visible="showClose" :title="copy.close" :dirty="closeDirty" :pending="closing" :error="actionError" :submit-label="copy.closeAction" :cancel-label="copy.cancel" @submit="closeShift">
+      <BsText as="p" size="sm">{{ copy.expected }}: <BsText as="strong">{{ money(dashboard.active?.expectedCash) }}</BsText>
+      </BsText>
+      <BsField v-slot="field" :label="copy.counted">
+        <BsInput :id="field.id" v-model.number="closeForm.amount" :aria-describedby="field.describedby" type="number" :min="0" :step="0.01" required/>
+      </BsField>
+      <BsField v-slot="field" :label="copy.closeNotes">
+        <BsTextarea :id="field.id" v-model="closeForm.notes" :aria-describedby="field.describedby" :minlength="2" :maxlength="1000" :rows="3"/>
+      </BsField>
+    </BsRecordActionDialog>
+  </BsStack>
 </template>

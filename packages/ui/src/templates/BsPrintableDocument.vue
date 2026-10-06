@@ -1,5 +1,5 @@
 <script setup lang="ts">
-defineProps<{ label: string; format?: 'receipt' | 'statement' }>()
+defineProps<{ label: string; format?: 'receipt' | 'statement' | 'a4' }>()
 </script>
 
 <template>

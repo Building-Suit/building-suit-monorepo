@@ -36,18 +36,17 @@ async function onSubmit() {
 </script>
 
 <template>
-  <BsAuthForm
-    eyebrow="Shop Suit" :title="t('auth.forgotTitle')" :description="t('auth.forgotSubtitle')"
-    :pending="pending" :error="errorMessage" :submit-label="sent ? undefined : t('auth.resetAction')"
-    :pending-label="t('auth.resetAction')" novalidate @submit="onSubmit"
-  >
-    <BsStateSurface
-      v-if="sent" state="success" :title="t('auth.resetSent')"
-      :description="isArabic ? 'لو البريد مسجّل عندنا، هتوصلك رسالة فيها رابط آمن لتغيير كلمة المرور.' : 'If the address is registered, you will receive a secure link to choose a new password.'"
-    />
+  <BsAuthForm eyebrow="Shop Suit" :title="t('auth.forgotTitle')" :description="t('auth.forgotSubtitle')" :pending="pending" :error="errorMessage" :submit-label="sent ? undefined : t('auth.resetAction')" :pending-label="t('auth.resetAction')" novalidate @submit="onSubmit">
+    <BsStateSurface v-if="sent" state="success" :title="t('auth.resetSent')" :description="isArabic ? 'لو البريد مسجّل عندنا، هتوصلك رسالة فيها رابط آمن لتغيير كلمة المرور.' : 'If the address is registered, you will receive a secure link to choose a new password.'"/>
     <template v-else>
-      <BsField :label="t('auth.email')" required><template #default="field"><BsInput v-model="email" :id="field.id" type="email" autocomplete="email" required :placeholder="t('auth.emailPlaceholder')" /></template></BsField>
+      <BsField :label="t('auth.email')" required>
+        <template #default="field">
+          <BsInput :id="field.id" v-model="email" type="email" autocomplete="email" required :placeholder="t('auth.emailPlaceholder')"/>
+        </template>
+      </BsField>
     </template>
-    <template #footer><BsLink to="/auth/login" variant="standalone">{{ t('auth.backToLogin') }}</BsLink></template>
+    <template #footer>
+      <BsLink to="/auth/login" variant="standalone">{{ t('auth.backToLogin') }}</BsLink>
+    </template>
   </BsAuthForm>
 </template>

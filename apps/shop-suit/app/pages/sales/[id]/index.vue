@@ -346,54 +346,206 @@ function lineMovements(lineId: string) { return sale.value?.movements.filter(mov
 </script>
 
 <template>
-  <div class="space-y-6">
-    <NuxtLink to="/sales" class="inline-flex font-semibold text-[var(--bs-link)] underline-offset-4 hover:underline">{{ t('sales.back') }}</NuxtLink>
-    <div v-if="pending" class="space-y-4"><div class="h-10 w-64 animate-pulse rounded-lg bg-muted"/><div class="h-64 animate-pulse rounded-2xl bg-muted"/></div>
-    <div v-else-if="error" role="alert" class="rounded-2xl border border-[var(--bs-status-error)]/30 bg-[var(--bs-status-error-bg)] p-5 text-sm text-fg"><p>{{ t('sales.loadError') }}</p><BsButton variant="link" type="button" class="mt-3 font-bold underline" @click="refresh()">{{ t('sales.retry') }}</BsButton></div>
-    <div v-else-if="!sale" class="ls-card p-8 text-center text-sm text-muted-foreground">{{ t('sales.notFound') }}</div>
+  <BsStack>
+    <BsLink to="/sales">{{ t('sales.back') }}</BsLink>
+    <BsStack v-if="pending">
+      <BsSkeleton/>
+      <BsSkeleton/>
+    </BsStack>
+    <BsBox v-else-if="error" role="alert" padding="md">
+      <BsText as="p">{{ t('sales.loadError') }}</BsText>
+      <BsButton variant="link" type="button" @click="refresh()">{{ t('sales.retry') }}</BsButton>
+    </BsBox>
+    <BsPanel v-else-if="!sale" padding="md">{{ t('sales.notFound') }}</BsPanel>
     <template v-else>
-      <header class="flex flex-wrap items-end justify-between gap-4">
-        <div><div class="flex flex-wrap items-center gap-3"><h1 class="text-3xl font-extrabold tracking-tight">{{ sale.invoice_number || t('sales.draftNumber') }}</h1><span class="ls-badge" :class="sale.status === 'issued' ? 'bg-[var(--bs-status-success-bg)] text-fg' : 'bg-muted text-muted-foreground'">{{ t(`sales.${sale.status}`) }}</span></div><p class="mt-2 text-sm text-muted-foreground">{{ t('sales.details') }}</p></div>
-        <div class="flex flex-wrap gap-2"><template v-if="sale.status === 'draft'"><NuxtLink v-if="sale.canManage" :to="{ path: '/sales', query: { edit: sale.id } }" class="ls-btn">{{ t('sales.editDraft') }}</NuxtLink><BsButton v-if="sale.canIssue" type="button" class="ls-btn ls-btn-primary" :disabled="issuing" @click="issue">{{ issuing ? t('sales.issuing') : t('sales.issue') }}</BsButton></template><template v-else><BsButton v-if="correctionState?.canCorrect" type="button" severity="danger" :disabled="correctionPending" @click="openCorrection">{{ t('saleCorrections.action') }}</BsButton><template v-if="receiptSnapshot"><NuxtLink :to="`/sales/${sale.id}/receipt`" class="ls-btn ls-btn-primary">{{ t('receipt.reprint') }}</NuxtLink><BsButton type="button" severity="secondary" :pending="sharingReceipt" @click="shareReceipt(receiptSnapshot)">{{ t('receipt.share') }}</BsButton></template></template></div>
-      </header>
-      <p v-if="actionError" role="alert" class="rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm text-fg">{{ actionError }}</p>
-      <p v-if="shareError" role="alert" class="rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm text-fg">{{ shareError }}</p>
-      <p v-if="sale.status === 'issued'" class="rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm">{{ t('sales.immutable') }}</p>
-      <p v-if="sale.status === 'draft'" class="rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm">{{ t('sales.paymentBoundary') }}</p>
-
-      <section v-if="sale.status === 'issued'" class="ls-card p-5">
-        <h2 class="text-lg font-bold">{{ t('saleCorrections.title') }}</h2>
-        <p v-if="correctionLoading" class="mt-3 text-sm text-muted-foreground">{{ t('saleCorrections.loading') }}</p>
-        <div v-else-if="correctionLoadError" role="alert" class="mt-3 rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm"><p>{{ t('saleCorrections.loadError') }}</p><BsButton type="button" severity="secondary" class="mt-2" @click="refreshCorrection()">{{ t('common.retry') }}</BsButton></div>
-        <div v-else-if="correctionState?.correction" class="mt-4 rounded-xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-4 text-sm">
-          <p class="font-bold">{{ t(`saleCorrections.kinds.${correctionState.correction.kind}`) }}</p>
-          <p class="mt-1 text-muted-foreground">{{ formatDate(correctionState.correction.effectiveAt) }}<template v-if="correctionState.correction.reference"> · {{ correctionState.correction.reference }}</template></p>
-          <p class="mt-2 whitespace-pre-wrap">{{ correctionState.correction.reason }}</p>
-          <dl class="mt-3 grid gap-3 sm:grid-cols-2"><div><dt class="text-xs font-bold text-muted-foreground">{{ t('saleCorrections.refunded') }}</dt><dd>{{ money(Number(correctionState.correction.refundAmount)) }}</dd></div><div><dt class="text-xs font-bold text-muted-foreground">{{ t('saleCorrections.restored') }}</dt><dd>{{ Number(correctionState.correction.restoredQuantity) }}</dd></div></dl>
-        </div>
-        <p v-else-if="correctionState" class="mt-3 text-sm text-muted-foreground">{{ t(correctionState.canCorrect ? 'saleCorrections.available' : 'saleCorrections.readOnly') }}</p>
-        <p class="mt-3 text-sm text-muted-foreground">{{ t('saleCorrections.fullOnly') }}</p>
-      </section>
-
-      <div class="grid gap-5 lg:grid-cols-2">
-        <section class="ls-card p-5"><h2 class="text-lg font-bold">{{ t('sales.customerSnapshot') }}</h2><div v-if="sale.client_name_snapshot" class="mt-4 space-y-2 text-sm"><p class="font-bold"><NuxtLink v-if="sale.client_id" :to="`/customers/${sale.client_id}`" class="text-[var(--bs-link)]">{{ sale.client_name_snapshot }}</NuxtLink><template v-else>{{ sale.client_name_snapshot }}</template></p><p>{{ sale.client_phone_snapshot || '—' }}</p><p>{{ sale.client_email_snapshot || '—' }}</p><p>{{ sale.client_address_snapshot || '—' }}</p></div><p v-else class="mt-4 text-sm text-muted-foreground">{{ t('sales.noCustomer') }}</p></section>
-        <section class="ls-card p-5"><h2 class="text-lg font-bold">{{ t('sales.details') }}</h2><dl class="mt-4 grid gap-4 sm:grid-cols-2"><div><dt class="text-xs font-bold text-muted-foreground">{{ t('sales.createdAt') }}</dt><dd>{{ formatDate(sale.created_at) }}</dd></div><div><dt class="text-xs font-bold text-muted-foreground">{{ t('sales.issuedAt') }}</dt><dd>{{ formatDate(sale.issued_at) }}</dd></div><div class="sm:col-span-2"><dt class="text-xs font-bold text-muted-foreground">{{ t('sales.notes') }}</dt><dd class="whitespace-pre-wrap">{{ sale.notes || '—' }}</dd></div><div><dt class="text-xs font-bold text-muted-foreground">{{ t('sales.discount') }}</dt><dd>{{ money(Number(sale.discount_amount)) }}</dd></div><div><dt class="text-xs font-bold text-muted-foreground">{{ t('sales.total') }}</dt><dd class="text-xl font-extrabold">{{ money(Number(sale.total_amount)) }}</dd></div></dl></section>
-      </div>
-
-      <section v-if="sale.status === 'issued'" class="ls-card p-5">
-        <div class="flex flex-wrap items-start justify-between gap-4"><div><h2 class="text-lg font-bold">{{ t('payments.title') }}</h2><p class="mt-1 text-sm text-muted-foreground">{{ correctionState?.correction ? t('payments.settlement.corrected') : t(`payments.settlement.${sale.settlementState}`) }}<template v-if="sale.overdue && !correctionState?.correction"> · {{ t('payments.overdue') }}</template></p></div><BsButton v-if="sale.client_id && sale.outstanding > 0 && sale.canReceivePayment" type="button" class="ls-btn ls-btn-primary" @click="openReceipt">{{ t('payments.recordReceipt') }}</BsButton></div>
-        <dl class="mt-4 grid gap-4 sm:grid-cols-4"><div><dt class="text-xs font-bold text-muted-foreground">{{ t('sales.total') }}</dt><dd class="font-bold">{{ money(Number(sale.total_amount)) }}</dd></div><div><dt class="text-xs font-bold text-muted-foreground">{{ t('payments.paid') }}</dt><dd class="font-bold">{{ money(Number(correctionState?.correction ? correctionState.correction.refundAmount : sale.amountPaid)) }}</dd></div><div><dt class="text-xs font-bold text-muted-foreground">{{ t('payments.outstanding') }}</dt><dd class="font-bold">{{ money(Number(sale.outstanding)) }}</dd></div><div><dt class="text-xs font-bold text-muted-foreground">{{ t('sales.dueDate') }}</dt><dd>{{ sale.due_date || '—' }}</dd></div></dl>
-        <p v-if="!sale.client_id" class="mt-4 rounded-xl bg-[var(--bs-status-success-bg)] p-3 text-sm text-fg">{{ t('payments.customerlessPaid') }}</p>
-        <div class="mt-5 space-y-3"><h3 class="font-bold">{{ t('payments.history') }}</h3><p v-if="!sale.payments.length" class="text-sm text-muted-foreground">{{ t('payments.empty') }}</p><article v-for="event in sale.payments" :key="event.id" class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-4 text-sm"><div><p class="font-bold">{{ t(`payments.events.${event.eventType}`) }} · {{ money(Number(event.amount)) }}</p><p class="text-muted-foreground">{{ formatDate(event.eventAt) }}<template v-if="event.method"> · {{ t(`payments.methods.${event.method}`) }}</template><template v-if="event.reference"> · {{ event.reference }}</template></p><p v-if="event.reason" class="mt-1">{{ event.reason }}</p></div><div v-if="event.eventType === 'receipt' && sale.client_id && !correctionState?.correction && event.remainingEffective > 0" class="flex gap-2"><BsButton v-if="sale.canReversePayment" type="button" class="ls-btn ls-btn-sm" @click="openAdjustment('reversal', event)">{{ t('payments.reverse') }}</BsButton><BsButton v-if="sale.canRefundPayment" type="button" class="ls-btn ls-btn-sm" @click="openAdjustment('refund', event)">{{ t('payments.refund') }}</BsButton></div></article></div>
-      </section>
-
-      <section class="overflow-hidden ls-card"><h2 class="border-b border-border p-5 text-lg font-bold">{{ t('sales.lines') }}</h2><div class="overflow-x-auto"><BsDataTable :value="sale.lines" data-key="id" :row-class="() => 'border-t border-border'"><Column header-class="px-5 py-3 text-start" body-class="px-5 py-4"><template #header>{{ t('sales.item') }}</template><template #body="{ data: line }"><p class="font-bold">{{ line.item_name }}</p><p class="text-xs text-muted-foreground">{{ t(`sales.${line.item_type}`) }}<template v-if="line.product_sku_snapshot"> · {{ line.product_sku_snapshot }}</template></p></template></Column><Column header-class="px-5 py-3 text-end" body-class="px-5 py-4 text-end"><template #header>{{ t('sales.quantity') }}</template><template #body="{ data: line }">{{ Number(line.quantity) }}</template></Column><Column header-class="px-5 py-3 text-end" body-class="px-5 py-4 text-end"><template #header>{{ t('sales.unitPrice') }}</template><template #body="{ data: line }">{{ money(Number(line.unit_price)) }}</template></Column><Column header-class="px-5 py-3 text-end" body-class="px-5 py-4 text-end"><template #header>{{ t('sales.discount') }}</template><template #body="{ data: line }">{{ money(Number(line.discount_amount)) }}</template></Column><Column header-class="px-5 py-3 text-end" body-class="px-5 py-4 text-end font-bold"><template #header>{{ t('sales.lineTotal') }}</template><template #body="{ data: line }">{{ money(Number(line.total_amount)) }}</template></Column></BsDataTable></div></section>
-
-      <section class="ls-card p-5"><h2 class="text-lg font-bold">{{ t('sales.inventoryTrace') }}</h2><p v-if="!sale.movements.length" class="mt-4 text-sm text-muted-foreground">{{ t('sales.noInventoryEffect') }}</p><div v-else class="mt-4 space-y-4"><template v-for="line in sale.lines.filter(item => item.item_type === 'product')" :key="line.id"><div v-for="movement in lineMovements(line.id)" :key="movement.id" class="grid gap-2 rounded-xl border border-border p-4 text-sm sm:grid-cols-4"><p class="font-bold">{{ line.item_name }}</p><p><span class="text-muted-foreground">{{ t('sales.movement') }}:</span> {{ Math.abs(Number(movement.quantityChange)) }}</p><p class="break-all"><span class="text-muted-foreground">{{ t('sales.batch') }}:</span> {{ movement.batchId }}</p><NuxtLink :to="`/inventory?product=${movement.productId}`" class="font-bold text-[var(--bs-link)]">{{ t('sales.open') }}</NuxtLink></div></template></div></section>
+      <BsInline justify="between">
+        <BsBox>
+          <BsInline>
+            <BsHeading :level="1">{{ sale.invoice_number || t('sales.draftNumber') }}</BsHeading>
+            <BsText as="span">{{ t(`sales.${sale.status}`) }}</BsText>
+          </BsInline>
+          <BsText as="p" size="sm" tone="muted">{{ t('sales.details') }}</BsText>
+        </BsBox>
+        <BsInline>
+          <template v-if="sale.status === 'draft'">
+            <BsLink v-if="sale.canManage" :to="{ path: '/sales', query: { edit: sale.id } }">{{ t('sales.editDraft') }}</BsLink>
+            <BsButton v-if="sale.canIssue" type="button" :disabled="issuing" @click="issue">{{ issuing ? t('sales.issuing') : t('sales.issue') }}</BsButton>
+          </template>
+          <template v-else>
+            <BsButton v-if="correctionState?.canCorrect" type="button" severity="danger" :disabled="correctionPending" @click="openCorrection">{{ t('saleCorrections.action') }}</BsButton>
+            <template v-if="receiptSnapshot">
+              <BsLink :to="`/sales/${sale.id}/receipt`">{{ t('receipt.reprint') }}</BsLink>
+              <BsButton type="button" severity="secondary" :pending="sharingReceipt" @click="shareReceipt(receiptSnapshot)">{{ t('receipt.share') }}</BsButton>
+            </template>
+          </template>
+        </BsInline>
+      </BsInline>
+      <BsText v-if="actionError" role="alert" as="p" size="sm" tone="danger">{{ actionError }}</BsText>
+      <BsText v-if="shareError" role="alert" as="p" size="sm" tone="danger">{{ shareError }}</BsText>
+      <BsText v-if="sale.status === 'issued'" as="p" size="sm">{{ t('sales.immutable') }}</BsText>
+      <BsText v-if="sale.status === 'draft'" as="p" size="sm">{{ t('sales.paymentBoundary') }}</BsText>
+      <BsPanel v-if="sale.status === 'issued'" padding="md">
+        <BsHeading :level="2">{{ t('saleCorrections.title') }}</BsHeading>
+        <BsText v-if="correctionLoading" as="p" size="sm" tone="muted">{{ t('saleCorrections.loading') }}</BsText>
+        <BsBox v-else-if="correctionLoadError" role="alert">
+          <BsText as="p">{{ t('saleCorrections.loadError') }}</BsText>
+          <BsButton type="button" severity="secondary" @click="refreshCorrection()">{{ t('common.retry') }}</BsButton>
+        </BsBox>
+        <BsBox v-else-if="correctionState?.correction" padding="md">
+          <BsText as="p" emphasis="semibold">{{ t(`saleCorrections.kinds.${correctionState.correction.kind}`) }}</BsText>
+          <BsText as="p" tone="muted">{{ formatDate(correctionState.correction.effectiveAt) }}<template v-if="correctionState.correction.reference"> · {{ correctionState.correction.reference }}</template>
+          </BsText>
+          <BsText as="p">{{ correctionState.correction.reason }}</BsText>
+          <BsDescriptionList>
+            <BsDescriptionItem :term="(t('saleCorrections.refunded'))">
+              <BsText as="span">{{ money(Number(correctionState.correction.refundAmount)) }}</BsText>
+            </BsDescriptionItem>
+            <BsDescriptionItem :term="(t('saleCorrections.restored'))">
+              <BsText as="span">{{ Number(correctionState.correction.restoredQuantity) }}</BsText>
+            </BsDescriptionItem>
+          </BsDescriptionList>
+        </BsBox>
+        <BsText v-else-if="correctionState" as="p" size="sm" tone="muted">{{ t(correctionState.canCorrect ? 'saleCorrections.available' : 'saleCorrections.readOnly') }}</BsText>
+        <BsText as="p" size="sm" tone="muted">{{ t('saleCorrections.fullOnly') }}</BsText>
+      </BsPanel>
+      <BsGrid :columns="2">
+        <BsPanel padding="md">
+          <BsHeading :level="2">{{ t('sales.customerSnapshot') }}</BsHeading>
+          <BsStack v-if="sale.client_name_snapshot">
+            <BsText as="p" emphasis="semibold">
+              <BsLink v-if="sale.client_id" :to="`/customers/${sale.client_id}`">{{ sale.client_name_snapshot }}</BsLink>
+              <template v-else>{{ sale.client_name_snapshot }}</template>
+            </BsText>
+            <BsText as="p">{{ sale.client_phone_snapshot || '—' }}</BsText>
+            <BsText as="p">{{ sale.client_email_snapshot || '—' }}</BsText>
+            <BsText as="p">{{ sale.client_address_snapshot || '—' }}</BsText>
+          </BsStack>
+          <BsText v-else as="p" size="sm" tone="muted">{{ t('sales.noCustomer') }}</BsText>
+        </BsPanel>
+        <BsPanel padding="md">
+          <BsHeading :level="2">{{ t('sales.details') }}</BsHeading>
+          <BsDescriptionList>
+            <BsDescriptionItem :term="(t('sales.createdAt'))">
+              <BsText as="span">{{ formatDate(sale.created_at) }}</BsText>
+            </BsDescriptionItem>
+            <BsDescriptionItem :term="(t('sales.issuedAt'))">
+              <BsText as="span">{{ formatDate(sale.issued_at) }}</BsText>
+            </BsDescriptionItem>
+            <BsDescriptionItem :term="(t('sales.notes'))">
+              <BsText as="span">{{ sale.notes || '—' }}</BsText>
+            </BsDescriptionItem>
+            <BsDescriptionItem :term="(t('sales.discount'))">
+              <BsText as="span">{{ money(Number(sale.discount_amount)) }}</BsText>
+            </BsDescriptionItem>
+            <BsDescriptionItem :term="(t('sales.total'))">
+              <BsText as="span" size="lg" emphasis="semibold">{{ money(Number(sale.total_amount)) }}</BsText>
+            </BsDescriptionItem>
+          </BsDescriptionList>
+        </BsPanel>
+      </BsGrid>
+      <BsPanel v-if="sale.status === 'issued'" padding="md">
+        <BsInline justify="between">
+          <BsBox>
+            <BsHeading :level="2">{{ t('payments.title') }}</BsHeading>
+            <BsText as="p" size="sm" tone="muted">{{ correctionState?.correction ? t('payments.settlement.corrected') : t(`payments.settlement.${sale.settlementState}`) }}<template v-if="sale.overdue && !correctionState?.correction"> · {{ t('payments.overdue') }}</template>
+            </BsText>
+          </BsBox>
+          <BsButton v-if="sale.client_id && sale.outstanding > 0 && sale.canReceivePayment" type="button" @click="openReceipt">{{ t('payments.recordReceipt') }}</BsButton>
+        </BsInline>
+        <BsDescriptionList>
+          <BsDescriptionItem :term="(t('sales.total'))">
+            <BsText as="span" emphasis="semibold">{{ money(Number(sale.total_amount)) }}</BsText>
+          </BsDescriptionItem>
+          <BsDescriptionItem :term="(t('payments.paid'))">
+            <BsText as="span" emphasis="semibold">{{ money(Number(correctionState?.correction ? correctionState.correction.refundAmount : sale.amountPaid)) }}</BsText>
+          </BsDescriptionItem>
+          <BsDescriptionItem :term="(t('payments.outstanding'))">
+            <BsText as="span" emphasis="semibold">{{ money(Number(sale.outstanding)) }}</BsText>
+          </BsDescriptionItem>
+          <BsDescriptionItem :term="(t('sales.dueDate'))">
+            <BsText as="span">{{ sale.due_date || '—' }}</BsText>
+          </BsDescriptionItem>
+        </BsDescriptionList>
+        <BsText v-if="!sale.client_id" as="p" size="sm">{{ t('payments.customerlessPaid') }}</BsText>
+        <BsStack>
+          <BsHeading :level="3">{{ t('payments.history') }}</BsHeading>
+          <BsText v-if="!sale.payments.length" as="p" size="sm" tone="muted">{{ t('payments.empty') }}</BsText>
+          <BsInline v-for="event in sale.payments" :key="event.id" justify="between">
+            <BsBox>
+              <BsText as="p" emphasis="semibold">{{ t(`payments.events.${event.eventType}`) }} · {{ money(Number(event.amount)) }}</BsText>
+              <BsText as="p" tone="muted">{{ formatDate(event.eventAt) }}<template v-if="event.method"> · {{ t(`payments.methods.${event.method}`) }}</template>
+                <template v-if="event.reference"> · {{ event.reference }}</template>
+              </BsText>
+              <BsText v-if="event.reason" as="p">{{ event.reason }}</BsText>
+            </BsBox>
+            <BsInline v-if="event.eventType === 'receipt' && sale.client_id && !correctionState?.correction && event.remainingEffective > 0">
+              <BsButton v-if="sale.canReversePayment" type="button" @click="openAdjustment('reversal', event)">{{ t('payments.reverse') }}</BsButton>
+              <BsButton v-if="sale.canRefundPayment" type="button" @click="openAdjustment('refund', event)">{{ t('payments.refund') }}</BsButton>
+            </BsInline>
+          </BsInline>
+        </BsStack>
+      </BsPanel>
+      <BsPanel padding="md">
+        <BsHeading :level="2">{{ t('sales.lines') }}</BsHeading>
+        <BsBox scroll="x">
+          <BsDataTable :value="sale.lines" data-key="id" :columns="[{ key: 'column0', header: (t('sales.item')) }, { key: 'column1', header: (t('sales.quantity')), align: 'end' }, { key: 'column2', header: (t('sales.unitPrice')), align: 'end' }, { key: 'column3', header: (t('sales.discount')), align: 'end' }, { key: 'column4', header: (t('sales.lineTotal')), align: 'end' }]">
+            <template #cell-column0="{ row: line }">
+              <BsText as="p" emphasis="semibold">{{ line.item_name }}</BsText>
+              <BsText as="p" size="xs" tone="muted">{{ t(`sales.${line.item_type}`) }}<template v-if="line.product_sku_snapshot"> · {{ line.product_sku_snapshot }}</template>
+              </BsText>
+            </template>
+            <template #cell-column1="{ row: line }">{{ Number(line.quantity) }}</template>
+            <template #cell-column2="{ row: line }">{{ money(Number(line.unit_price)) }}</template>
+            <template #cell-column3="{ row: line }">{{ money(Number(line.discount_amount)) }}</template>
+            <template #cell-column4="{ row: line }">{{ money(Number(line.total_amount)) }}</template>
+          </BsDataTable>
+        </BsBox>
+      </BsPanel>
+      <BsPanel padding="md">
+        <BsHeading :level="2">{{ t('sales.inventoryTrace') }}</BsHeading>
+        <BsText v-if="!sale.movements.length" as="p" size="sm" tone="muted">{{ t('sales.noInventoryEffect') }}</BsText>
+        <BsStack v-else>
+          <template v-for="line in sale.lines.filter(item => item.item_type === 'product')" :key="line.id">
+            <BsGrid v-for="movement in lineMovements(line.id)" :key="movement.id" :columns="4">
+              <BsText as="p" emphasis="semibold">{{ line.item_name }}</BsText>
+              <BsText as="p">
+                <BsText as="span" tone="muted">{{ t('sales.movement') }}:</BsText> {{ Math.abs(Number(movement.quantityChange)) }}</BsText>
+              <BsText as="p">
+                <BsText as="span" tone="muted">{{ t('sales.batch') }}:</BsText> {{ movement.batchId }}</BsText>
+              <BsLink :to="`/inventory?product=${movement.productId}`">{{ t('sales.open') }}</BsLink>
+            </BsGrid>
+          </template>
+        </BsStack>
+      </BsPanel>
     </template>
-
-    <BsRecordActionDialog v-model:visible="paymentDialogOpen" :title="paymentDialog ? t(`payments.${paymentDialog}Title`) : ''" :dirty="paymentDirty" :pending="paymentPending" :error="actionError" :submit-label="t('payments.save')" :cancel-label="t('sales.cancel')" @submit="submitPayment"><label class="space-y-2 text-sm font-bold">{{ t('payments.amount') }}<input v-model.number="paymentAmount" type="number" min="0.01" step="0.01" required class="ls-input"></label><label class="space-y-2 text-sm font-bold">{{ t('payments.date') }}<input v-model="paymentDate" type="date" required class="ls-input"></label><label v-if="paymentDialog !== 'reversal'" class="space-y-2 text-sm font-bold">{{ t('payments.method') }}<select v-model="paymentMethod" class="ls-select"><option v-for="method in ['cash','bank_transfer','card','wallet','cheque','other']" :key="method" :value="method">{{ t(`payments.methods.${method}`) }}</option></select></label><label v-if="paymentDialog !== 'reversal'" class="space-y-2 text-sm font-bold">{{ t('payments.reference') }}<input v-model="paymentReference" maxlength="200" class="ls-input"></label><label v-if="paymentDialog !== 'receipt'" class="space-y-2 text-sm font-bold sm:col-span-2">{{ t('payments.reason') }}<textarea v-model="paymentReason" minlength="2" maxlength="1000" required rows="3" class="ls-input" /></label></BsRecordActionDialog>
-
-    <BsRecordActionDialog v-model:visible="correctionOpen" :title="t('saleCorrections.dialogTitle')" :dirty="correctionDirty" :pending="correctionPending" :error="actionError" :submit-label="t('saleCorrections.submit')" :cancel-label="t('sales.cancel')" submit-tone="danger" @submit="submitCorrection"><p class="rounded-xl bg-[var(--bs-status-warning-bg)] p-3 text-sm sm:col-span-2">{{ t('saleCorrections.warning') }}</p><label class="space-y-2 text-sm font-bold">{{ t('saleCorrections.date') }}<input v-model="correctionDate" type="date" required class="ls-input"></label><label class="space-y-2 text-sm font-bold">{{ t('saleCorrections.reference') }}<input v-model="correctionReference" maxlength="200" class="ls-input"></label><label class="space-y-2 text-sm font-bold sm:col-span-2">{{ t('saleCorrections.reason') }}<textarea v-model="correctionReason" minlength="2" maxlength="1000" required rows="4" class="ls-input" /></label></BsRecordActionDialog>
-  </div>
+    <BsRecordActionDialog v-model:visible="paymentDialogOpen" :title="paymentDialog ? t(`payments.${paymentDialog}Title`) : ''" :dirty="paymentDirty" :pending="paymentPending" :error="actionError" :submit-label="t('payments.save')" :cancel-label="t('sales.cancel')" @submit="submitPayment">
+      <BsField v-slot="field" :label="(t('payments.amount'))">
+        <BsInput :id="field.id" v-model.number="paymentAmount" :aria-describedby="field.describedby" type="number" :min="0.01" :step="0.01" required/>
+      </BsField>
+      <BsField v-slot="field" :label="(t('payments.date'))">
+        <BsInput :id="field.id" v-model="paymentDate" :aria-describedby="field.describedby" type="date" required/>
+      </BsField>
+      <BsField v-if="paymentDialog !== 'reversal'" v-slot="field" :label="(t('payments.method'))">
+        <BsSelect v-model="paymentMethod" :input-id="field.id" :aria-describedby="field.describedby" :label="t('payments.method')" :options="[...(['cash','bank_transfer','card','wallet','cheque','other']).map(method => ({ value: method, label: (t(`payments.methods.${method}`)), disabled: false }))]" option-label="label" option-value="value" option-disabled="disabled"/>
+      </BsField>
+      <BsField v-if="paymentDialog !== 'reversal'" v-slot="field" :label="(t('payments.reference'))">
+        <BsInput :id="field.id" v-model="paymentReference" :aria-describedby="field.describedby" :maxlength="200"/>
+      </BsField>
+      <BsField v-if="paymentDialog !== 'receipt'" v-slot="field" :label="(t('payments.reason'))">
+        <BsTextarea :id="field.id" v-model="paymentReason" :aria-describedby="field.describedby" :minlength="2" :maxlength="1000" required :rows="3"/>
+      </BsField>
+    </BsRecordActionDialog>
+    <BsRecordActionDialog v-model:visible="correctionOpen" :title="t('saleCorrections.dialogTitle')" :dirty="correctionDirty" :pending="correctionPending" :error="actionError" :submit-label="t('saleCorrections.submit')" :cancel-label="t('sales.cancel')" submit-tone="danger" @submit="submitCorrection">
+      <BsText as="p" size="sm" tone="warning">{{ t('saleCorrections.warning') }}</BsText>
+      <BsField v-slot="field" :label="(t('saleCorrections.date'))">
+        <BsInput :id="field.id" v-model="correctionDate" :aria-describedby="field.describedby" type="date" required/>
+      </BsField>
+      <BsField v-slot="field" :label="(t('saleCorrections.reference'))">
+        <BsInput :id="field.id" v-model="correctionReference" :aria-describedby="field.describedby" :maxlength="200"/>
+      </BsField>
+      <BsField v-slot="field" :label="(t('saleCorrections.reason'))">
+        <BsTextarea :id="field.id" v-model="correctionReason" :aria-describedby="field.describedby" :minlength="2" :maxlength="1000" required :rows="4"/>
+      </BsField>
+    </BsRecordActionDialog>
+  </BsStack>
 </template>

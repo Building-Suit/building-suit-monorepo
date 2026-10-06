@@ -31,4 +31,6 @@ useHead(() => ({
 }));
 </script>
 
-<template><BsAppRoot :layout-key="user?.id ?? 'anonymous'" :page-key="contextKey" /></template>
+<template>
+  <BsAppRoot :layout-key="user?.id ?? 'anonymous'" :page-key="contextKey"/>
+</template>

@@ -1,6 +1,7 @@
-<script setup lang="ts">
+export function useShopSetupGuide() {
+
 const { locale } = useI18n()
-const { current, isOwner, activeLocations } = useShop()
+const { activeLocations } = useShop()
 const copy = computed(() => locale.value === 'ar' ? {
   title: 'جهّز متجرك لاستقبال أول عميل',
   help: 'راجع هذه الخطوات بالترتيب. تأكد من إعداد الفريق والخدمات وساعات العمل في كلا الفرعين قبل الحجز.',
@@ -21,26 +22,13 @@ const copy = computed(() => locale.value === 'ar' ? {
   billing: 'Trial and billing', billingHelp: 'Check the trial end date, access status, and subscription renewal instructions.',
 })
 const steps = computed(() => [
-  { to: '/settings', title: copy.value.business, help: copy.value.businessHelp },
-  { to: '/settings#locations', title: copy.value.locations, help: copy.value.locationsHelp },
-  { to: '/team', title: copy.value.team, help: copy.value.teamHelp },
-  { to: '/services', title: copy.value.services, help: copy.value.servicesHelp },
-  { to: '/appointments', title: copy.value.hours, help: copy.value.hoursHelp },
-  { to: '/billing', title: copy.value.billing, help: copy.value.billingHelp },
+  { id: '/settings', title: copy.value.business, description: copy.value.businessHelp, action: { label: copy.value.business, to: '/settings' } },
+  { id: '/settings#locations', title: copy.value.locations, description: copy.value.locationsHelp, action: { label: copy.value.locations, to: '/settings#locations' } },
+  { id: '/team', title: copy.value.team, description: copy.value.teamHelp, action: { label: copy.value.team, to: '/team' } },
+  { id: '/services', title: copy.value.services, description: copy.value.servicesHelp, action: { label: copy.value.services, to: '/services' } },
+  { id: '/appointments', title: copy.value.hours, description: copy.value.hoursHelp, action: { label: copy.value.hours, to: '/appointments' } },
+  { id: '/billing', title: copy.value.billing, description: copy.value.billingHelp, action: { label: copy.value.billing, to: '/billing' } },
 ])
-</script>
 
-<template>
-  <BsCard v-if="isOwner && current?.business_mode !== 'product'" as="section" padding="md" aria-labelledby="barber-setup-title">
-    <h2 id="barber-setup-title" class="text-lg font-extrabold">{{ copy.title }}</h2>
-    <p class="mt-2 text-sm text-muted-foreground">{{ copy.help }}</p>
-    <ol class="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-      <li v-for="(step, index) in steps" :key="step.to">
-        <BsButton as="NuxtLink" :to="step.to" variant="tile" class="flex h-full gap-3">
-          <span class="font-extrabold" aria-hidden="true">{{ index + 1 }}.</span>
-          <span><strong class="block text-sm text-[var(--bs-link)]">{{ step.title }}</strong><span class="mt-1 block text-sm text-muted-foreground">{{ step.help }}</span></span>
-        </BsButton>
-      </li>
-    </ol>
-  </BsCard>
-</template>
+return { copy, steps }
+}

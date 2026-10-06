@@ -11,11 +11,18 @@ withDefaults(defineProps<{
   virtual?: boolean
   virtualScrollerOptions?: SelectProps['virtualScrollerOptions']
 }>(), { virtual: false, optionLabel: undefined, optionValue: undefined, virtualScrollerOptions: undefined })
+const select = ref<InstanceType<typeof Select> | null>(null)
+defineExpose({ focus: () => {
+  const root = (select.value as unknown as { $el?: HTMLElement } | null)?.$el
+  const control = root?.querySelector<HTMLElement>('[role="combobox"]') ?? root
+  control?.focus()
+} })
 const ui = useUiCopy()
 </script>
 
 <template>
   <Select
+    ref="select"
     v-bind="$attrs" v-model="model" :options="options" :option-label="optionLabel" :option-value="optionValue"
     :aria-label="label"
     :empty-message="ui('empty')" :empty-filter-message="ui('empty')"

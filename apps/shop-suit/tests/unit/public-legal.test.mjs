@@ -11,9 +11,9 @@ test('all Shop public and legal routes use the Shop-owned landing structure', as
     assert.match(source, /layout: 'landing'/)
     assert.doesNotMatch(source, /ledger-suit|Ledger Suit/)
   }
-  const page = await read('app/components/PublicLegalPage.vue')
+  const page = await read('app/pages/terms.vue')
   assert.match(page, /Shop Suit by Building Suit/)
-  assert.match(page, /title: `\$\{props\.document\.title\} · Shop Suit`/)
+  assert.match(page, /title: `\$\{document\.value\.title\} · Shop Suit`/)
 })
 
 test('legal copy is bilingual and describes Shop manual digital delivery accurately', async () => {

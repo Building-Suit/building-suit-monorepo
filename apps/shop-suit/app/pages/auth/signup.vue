@@ -195,39 +195,66 @@ onMounted(async () => {
 </script>
 <template>
   <BsAuthForm v-if="!awaitingOtp" eyebrow="Shop Suit" :title="t('auth.signupTitle')" :description="t('auth.signupSubtitle')" :pending="pending" @submit="submit">
-    <BsSignupWizard
-      :step="step" :steps="[{ id: 'account', title: copy.account, body: copy.accountBody }, { id: 'shop', title: copy.shop, body: copy.shopBody }]"
-      :pending="pending" :error="errorMessage" :notice="noticeMessage" :back-label="copy.back"
-      :submit-label="step === 1 ? copy.next : copy.create" :pending-label="copy.pending" @back="back"
-    >
+    <BsSignupWizard :step="step" :steps="[{ id: 'account', title: copy.account, body: copy.accountBody }, { id: 'shop', title: copy.shop, body: copy.shopBody }]" :pending="pending" :error="errorMessage" :notice="noticeMessage" :back-label="copy.back" :submit-label="step === 1 ? copy.next : copy.create" :pending-label="copy.pending" @back="back">
       <BsStack v-if="step === 1">
-        <BsField :label="t('auth.displayName')" required><template #default="field"><BsInput v-model="form.displayName" :id="field.id" autocomplete="name" required /></template></BsField>
-        <BsField :label="t('auth.email')" required><template #default="field"><BsInput v-model="form.email" :id="field.id" type="email" autocomplete="email" dir="ltr" :readonly="existingAccount" required /></template></BsField>
-        <BsField v-if="!existingAccount" :label="t('auth.password')" required><template #default="field"><BsInput v-model="form.password" :id="field.id" type="password" autocomplete="new-password" dir="ltr" :minlength="6" required /></template></BsField>
+        <BsField :label="t('auth.displayName')" required>
+          <template #default="field">
+            <BsInput :id="field.id" v-model="form.displayName" autocomplete="name" required/>
+          </template>
+        </BsField>
+        <BsField :label="t('auth.email')" required>
+          <template #default="field">
+            <BsInput :id="field.id" v-model="form.email" type="email" autocomplete="email" dir="ltr" :readonly="existingAccount" required/>
+          </template>
+        </BsField>
+        <BsField v-if="!existingAccount" :label="t('auth.password')" required>
+          <template #default="field">
+            <BsInput :id="field.id" v-model="form.password" type="password" autocomplete="new-password" dir="ltr" :minlength="6" required/>
+          </template>
+        </BsField>
       </BsStack>
       <BsStack v-else>
-        <BsField :label="copy.shopName" required><template #default="field"><BsInput v-model="form.shopName" :id="field.id" :minlength="2" :maxlength="120" required /></template></BsField>
+        <BsField :label="copy.shopName" required>
+          <template #default="field">
+            <BsInput :id="field.id" v-model="form.shopName" :minlength="2" :maxlength="120" required/>
+          </template>
+        </BsField>
         <BsFieldGroup :legend="copy.mainLocation" layout="grid" :columns="2">
-          <BsField :label="copy.mainLocationName" required><template #default="field"><BsInput v-model="form.mainLocationName" :id="field.id" :minlength="2" :maxlength="120" required /></template></BsField>
-          <BsField :label="copy.mainLocationCode"><template #default="field"><BsInput v-model="form.mainLocationCode" :id="field.id" :maxlength="32" /></template></BsField>
-          <BsField :label="copy.mainLocationAddress"><template #default="field"><BsInput v-model="form.mainLocationAddress" :id="field.id" :maxlength="500" /></template></BsField>
-          <BsField :label="copy.mainLocationPhone"><template #default="field"><BsInput v-model="form.mainLocationPhone" :id="field.id" :maxlength="80" dir="auto" /></template></BsField>
+          <BsField :label="copy.mainLocationName" required>
+            <template #default="field">
+              <BsInput :id="field.id" v-model="form.mainLocationName" :minlength="2" :maxlength="120" required/>
+            </template>
+          </BsField>
+          <BsField :label="copy.mainLocationCode">
+            <template #default="field">
+              <BsInput :id="field.id" v-model="form.mainLocationCode" :maxlength="32"/>
+            </template>
+          </BsField>
+          <BsField :label="copy.mainLocationAddress">
+            <template #default="field">
+              <BsInput :id="field.id" v-model="form.mainLocationAddress" :maxlength="500"/>
+            </template>
+          </BsField>
+          <BsField :label="copy.mainLocationPhone">
+            <template #default="field">
+              <BsInput :id="field.id" v-model="form.mainLocationPhone" :maxlength="80" dir="auto"/>
+            </template>
+          </BsField>
         </BsFieldGroup>
-        <BsAlert tone="info" :title="copy.trial" :description="copy.trialHelp" />
-        <BsChoiceGroup v-model="form.businessMode" type="radio" name="signup-business-mode" :legend="copy.businessMode" :description="copy.businessModeHelp" :options="modeOptions" />
+        <BsAlert tone="info" :title="copy.trial" :description="copy.trialHelp"/>
+        <BsChoiceGroup v-model="form.businessMode" type="radio" name="signup-business-mode" :legend="copy.businessMode" :description="copy.businessModeHelp" :options="modeOptions"/>
       </BsStack>
     </BsSignupWizard>
-    <template #footer><BsLink to="/auth/login">{{ copy.login }}</BsLink></template>
+    <template #footer>
+      <BsLink to="/auth/login">{{ copy.login }}</BsLink>
+    </template>
   </BsAuthForm>
-  <BsVerificationForm
-    v-else v-model="otp" :title="copy.verify" :description="copy.verifyBody" :email="form.email" :code-label="copy.code"
-    :pending="pending" :error="errorMessage" :notice="noticeMessage" :expired="verification.expired.value" :verified="existingAccount"
-    :expiry-label="`${copy.expires} ${verification.format(verification.expiresIn.value)}`" :expired-label="copy.expired"
-    :submit-label="existingAccount ? copy.retry : copy.verify" :pending-label="copy.pending"
-    :resend-label="verification.resendIn.value > 0 ? `${copy.wait} ${verification.format(verification.resendIn.value)}` : copy.resend"
-    :resend-disabled="verification.resendIn.value > 0" @submit="verify" @resend="resend"
-  >
-    <template #secondary><BsButton v-if="!existingAccount" variant="link" type="button" :disabled="pending" @click="startOver">{{ copy.changeEmail }} · {{ copy.startOver }}</BsButton></template>
-    <template #footer><BsLink to="/auth/login" variant="standalone" @click="clearDraft">{{ copy.signIn }}</BsLink></template>
+  <BsVerificationForm v-else v-model="otp" :title="copy.verify" :description="copy.verifyBody" :email="form.email" :code-label="copy.code" :pending="pending" :error="errorMessage" :notice="noticeMessage" :expired="verification.expired.value" :verified="existingAccount" :expiry-label="`${copy.expires} ${verification.format(verification.expiresIn.value)}`" :expired-label="copy.expired" :submit-label="existingAccount ? copy.retry : copy.verify" :pending-label="copy.pending" :resend-label="verification.resendIn.value > 0 ? `${copy.wait} ${verification.format(verification.resendIn.value)}` : copy.resend" :resend-disabled="verification.resendIn.value > 0" @submit="verify" @resend="resend">
+    <template #secondary>
+      <BsButton v-if="!existingAccount" variant="link" type="button" :disabled="pending" @click="startOver">{{ copy.changeEmail }} · {{ copy.startOver }}</BsButton>
+    </template>
+    <template #footer>
+      <BsLink to="/auth/login" variant="standalone" @click="clearDraft">{{ copy.signIn }}</BsLink>
+    </template>
   </BsVerificationForm>
 </template>

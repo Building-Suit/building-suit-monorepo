@@ -224,7 +224,7 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
           <template #default="{ entry }"><BsStack gap="none"><BsText emphasis="semibold">{{ entry.title }}</BsText><BsText size="sm" tone="muted">{{ entry.detail }}</BsText></BsStack></template>
         </BsHistoryList>
         <BsTagEditor v-model="catalogueTags" :label="isArabic ? 'الوسوم' : 'Tags'" :add-label="isArabic ? 'إضافة' : 'Add tag'" :remove-label="isArabic ? 'إزالة' : 'Remove'" />
-        <BsEntityPicker v-model="selectedEntity" :label="isArabic ? 'اختر المنتج' : 'Choose product'" :options="entityOptions" option-label="name" option-value="id" :load-more-label="isArabic ? 'تحميل المزيد' : 'Load more'" />
+        <BsEntityPicker v-model="selectedEntity" :label="isArabic ? 'اختر المنتج' : 'Choose product'" :options="entityOptions" option-label="name" option-value="id" :load-more-label="isArabic ? 'تحميل المزيد' : 'Load more'" show-clear :retry-label="isArabic ? 'إعادة المحاولة' : 'Retry'" />
       </BsStack>
     </BsContentSection>
 

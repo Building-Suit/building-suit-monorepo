@@ -1454,6 +1454,7 @@ body {
 .bs-grid--columns-1 { grid-template-columns: minmax(0, 1fr); }
 .bs-grid--columns-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .bs-grid--columns-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.bs-grid--columns-7 { grid-template-columns: repeat(7, minmax(0, 1fr)); }
 .bs-grid--columns-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .bs-grid--columns-auto.bs-grid--minimum-sm { grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); }
 .bs-grid--columns-auto.bs-grid--minimum-md { grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); }
@@ -1625,3 +1626,16 @@ body {
   .bs-printable-document { visibility: visible; position: absolute; inset-block-start: 0; inset-inline-start: 0; width: 100%; --bs-text: var(--bs-ink); --bs-text-muted: var(--bs-ink); --bs-surface: var(--bs-white); --bs-border: var(--bs-border-strong); color: var(--bs-ink); }
 }
 .bs-flow-map__connector { display: flex; align-items: center; gap: var(--bs-space-2); margin-block-end: var(--bs-space-4); color: var(--bs-text-muted); }
+
+.bs-printable-document[data-format='a4'] { max-width: 210mm; }
+@page bs-receipt { size: 80mm auto; margin: 0; }
+@page bs-a4 { size: A4; margin: 0; }
+@media print {
+  .bs-printable-document[data-format='receipt'] { page: bs-receipt; width: 80mm; }
+  .bs-printable-document[data-format='a4'] { page: bs-a4; width: 210mm; min-height: 297mm; }
+  .bs-printable-document[data-format='receipt'] .bs-printable-document__paper { padding: 5mm 4mm; }
+  .bs-printable-document[data-format='a4'] .bs-printable-document__paper { padding: 16mm; }
+}
+
+@media (max-width: 80rem) { .bs-grid--columns-7 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 40rem) { .bs-grid--columns-7 { grid-template-columns: minmax(0, 1fr); } }
