@@ -104,7 +104,11 @@ const authorizationPaths = authorizations => (authorizations ?? []).flatMap(item
   item.revoked_at ? [] : (item.authorized_paths ?? item.requested_paths ?? []),
 )
 const ordinaryAuthorizedPaths = authorizationPaths(publicationAuthorizations.ordinary)
-const protectedAuthorizedPaths = authorizationPaths(publicationAuthorizations.protected)
+const protectedGrant = context.protected_publication_authority
+const protectedAuthorizedPaths = authorizationPaths(publicationAuthorizations.protected).concat(
+  protectedGrant?.authorized === true && Number(protectedGrant.verification_run_id) === Number(verification.verification_run_id)
+    ? protectedGrant.protected_files.map(item => item.path) : [],
+)
 
 const repository =
   project.github_repository ??
@@ -563,8 +567,8 @@ const scopeClassification = classifyPublicationFiles({
   protectedAuthorizedPaths,
 })
 
-if (ordinaryRunAuthority(context.run_publication_authority, task.task_id) && changed.some(file => protectedPublicationPath(file))) {
-  fail('publication_protected_path_operator_wait', { protected_paths: changed.filter(protectedPublicationPath), classification: { failure_class: 'operator-wait', recovery_action: 'wait-operator' } })
+if (ordinaryRunAuthority(context.run_publication_authority, task.task_id) && changed.some(file => protectedPublicationPath(file) && !protectedAuthorizedPaths.includes(file))) {
+  fail('publication_protected_path_operator_wait', { protected_paths: changed.filter(file => protectedPublicationPath(file) && !protectedAuthorizedPaths.includes(file)), classification: { failure_class: 'operator-wait', recovery_action: 'wait-operator' } })
 }
 
 if (scopeClassification.blocked.length > 0) {

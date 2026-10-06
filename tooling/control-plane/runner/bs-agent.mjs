@@ -4567,6 +4567,7 @@ function taskPublish() {
           run_publication_authority: runPublicationAuthority,
           publication_authorizations:
             packet.publication_authorizations,
+          protected_publication_authority: parseControlJson(controlQuery(`SELECT control.current_protected_publication_authority(:'task');`, {task: taskId})),
         },
         null,
         2,
@@ -5626,7 +5627,7 @@ function taskSupervisor() {
     if(currentRun?.run_id && !currentRun.admitted_repair_id) controlQuery(`SELECT control.reconcile_ordinary_run_publication(:'run'::uuid);`,{run:currentRun.run_id})
     const bindingSnapshot=supervisorSnapshot(taskId)
     if(bindingSnapshot?.preexecution_binding_recovery) {
-      controlQuery(`SELECT control.reconcile_preexecution_auth_bindings(:'task',:'proof'::jsonb);`,{task:taskId,proof:JSON.stringify(bindingSnapshot.preexecution_binding_recovery)})
+      controlQuery(`SELECT control.${taskId === 'SS-LAUNCH-TEAM-001' ? 'reconcile_preexecution_team_bindings' : 'reconcile_preexecution_auth_bindings'}(:'task',:'proof'::jsonb);`,{task:taskId,proof:JSON.stringify(bindingSnapshot.preexecution_binding_recovery)})
       controlQuery(`SELECT control.reconcile_ordinary_run_publication(:'run'::uuid);`,{run:currentRun.run_id})
     }
     if(bindingSnapshot?.binding_recovery) {

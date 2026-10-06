@@ -4,8 +4,11 @@ import { createHash } from 'node:crypto'
 import { mergeVerificationConfig } from '../lib/workstream-readiness.mjs'
 import { resolveVerificationPlan } from './verification-mode.mjs'
 export const reviewedAuthBindings = JSON.parse(readFileSync(new URL('./shop-auth-bindings.json', import.meta.url), 'utf8'))
+export const reviewedTeamBindings = JSON.parse(readFileSync(new URL('./shop-team-bindings.json', import.meta.url), 'utf8'))
 export function preexecutionBindingEvidence(snapshot, repositoryRoot = process.cwd()) {
- const c=reviewedAuthBindings,t=snapshot.packet?.task,r=snapshot.workflow_run
+ const t=snapshot.packet?.task,r=snapshot.workflow_run
+ const c=[reviewedAuthBindings,reviewedTeamBindings].find(c=>c.task_id===t?.task_id)
+ if(!c) return null
  if(t?.task_id!==c.task_id || snapshot.packet?.workstream?.slug!==c.workstream_slug || !['ready','in_progress'].includes(t.status) || snapshot.executions?.length
  || r?.status!=='running' || r.current_task_id!==t.task_id || r.stop_requested || r.maintenance_requested || r.completed_tasks>=r.max_tasks
  || snapshot.run_publication_authority?.authorized!==true || JSON.stringify(t.verification_plan)!==JSON.stringify(c.entries)) return null
