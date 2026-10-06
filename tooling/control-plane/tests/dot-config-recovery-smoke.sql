@@ -21,7 +21,7 @@ END $$;
 UPDATE control.workflow_runs SET status='finished' WHERE suit_slug='cp-selfheal-fixture' AND status='running';
 UPDATE control.tasks SET status='cancelled' WHERE workstream_slug='cp-selfheal-fixture' AND status IN('in_progress','verification','passed','failed');
 INSERT INTO control.tasks(task_id,suit_slug,sequence,title,status,acceptance_criteria,verification_plan,metadata,project_id,workstream_slug,retry_policy_id)
-SELECT id,'cp-selfheal-fixture',ordinal,id,'planned','["fixture"]','["git diff --check"]','{}',project_id,'cp-selfheal-fixture','standard-five'
+SELECT id,'cp-selfheal-fixture',ordinal,id,'planned','["fixture"]','["git diff --check"]','{"allowed_paths":["tooling/control-plane/**"]}',project_id,'cp-selfheal-fixture','standard-five'
 FROM (VALUES('CP-NATIVE-DRAFT-001',-10002),('CP-NATIVE-DRAFT-002',-10001)) v(id,ordinal) CROSS JOIN control.projects WHERE slug='building-suit';
 SELECT control.refresh_publication_readiness_contract(task_id,'native-fixture') FROM control.tasks WHERE task_id LIKE 'CP-NATIVE-DRAFT-%';
 INSERT INTO control.workflow_runs(run_id,suit_slug,project_id,workstream_slug,max_tasks,status,current_task_id,controller_protocol,controller_fingerprint)
@@ -47,7 +47,9 @@ BEGIN
  IF acquisition->>'task_id' IS DISTINCT FROM 'CP-NATIVE-DRAFT-002' THEN RAISE EXCEPTION 'Native next-task acquisition failed: %',acquisition;END IF;
  PERFORM control.reconcile_ordinary_run_publication(run);
  IF NOT(control.current_run_publication_authority('CP-NATIVE-DRAFT-002')->>'authorized')::boolean THEN RAISE EXCEPTION 'Native next-task grant not automatic: run %, contract %, authority %, scope %, reconciled %',(SELECT to_jsonb(r) FROM control.workflow_runs r WHERE run_id=run),(SELECT to_jsonb(c) FROM control.publication_readiness_contracts c WHERE task_id='CP-NATIVE-DRAFT-002'),(SELECT to_jsonb(a) FROM control.run_task_publication_authorities a WHERE run_id=run AND task_id='CP-NATIVE-DRAFT-002'),(SELECT to_jsonb(f) FROM control.dot_task_scope_authorities f WHERE run_id=run AND task_id='CP-NATIVE-DRAFT-002'),control.reconcile_ordinary_run_publication(run);END IF;
- UPDATE control.tasks SET metadata=metadata||'{"scope_drift":true}' WHERE task_id='CP-NATIVE-DRAFT-002';
+ UPDATE control.tasks SET metadata=metadata||'{"publication_exact_paths":["tooling/control-plane/.env"]}' WHERE task_id='CP-NATIVE-DRAFT-002';
+ BEGIN PERFORM control.reconcile_ordinary_run_publication(run); RAISE EXCEPTION 'Protected file accepted'; EXCEPTION WHEN OTHERS THEN IF SQLERRM='Protected file accepted' THEN RAISE;END IF;END;
+ UPDATE control.tasks SET metadata=metadata||'{"allowed_paths":["apps/unrelated/**"]}' WHERE task_id='CP-NATIVE-DRAFT-002';
  IF (control.current_run_publication_authority('CP-NATIVE-DRAFT-002')->>'authorized')::boolean THEN RAISE EXCEPTION 'Scope drift allowed';END IF;
  UPDATE control.run_ordinary_publication_authorizations SET revoked_at=now() WHERE run_id=run;
  IF (control.current_run_publication_authority('CP-NATIVE-DRAFT-002')->>'authorized')::boolean THEN RAISE EXCEPTION 'Revoked grant allowed';END IF;
