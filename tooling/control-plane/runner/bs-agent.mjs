@@ -6640,10 +6640,10 @@ function recoveryWatch() {
       const cleanup=cleanupIntegratedWorktrees({repository:{root:repoRoot,github_repository:githubRepository,integration_branch:'stg'},...state})
       outcomes.push({action:'safe_cleanup_scan',...cleanup})
     }
-    controlQuery(`INSERT INTO control.dot_cycles(outcomes) VALUES(:'outcomes'::jsonb); UPDATE control.dot_wake_events SET consumed_at=now() WHERE consumed_at IS NULL;`,{outcomes:JSON.stringify(outcomes)})
     // Observability is deterministic and isolated from task/recovery ownership.
     const health=execute(process.execPath,[path.join(controlSourceRoot,'tooling/control-plane/runner/dot-health-collector.mjs')],{cwd:repoRoot,timeout:25000})
     outcomes.push({action:'health_collection',ok:health.code===0,llm_used:false})
+    controlQuery(`INSERT INTO control.dot_cycles(outcomes) VALUES(:'outcomes'::jsonb); UPDATE control.dot_wake_events SET consumed_at=now() WHERE consumed_at IS NULL;`,{outcomes:JSON.stringify(outcomes)})
     output({ok:true,command:'recovery-watch',outcomes,codex_invoked_by_scan:false})
   } catch(error) {
     output({ok:false,command:'recovery-watch',reason:'control_database_unavailable',retry_after_ms:30_000,error:error.message},1)
