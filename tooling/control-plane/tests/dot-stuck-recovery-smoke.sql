@@ -1,7 +1,7 @@
 \set ON_ERROR_STOP on
 BEGIN;
 UPDATE control.workflow_runs SET status='finished' WHERE suit_slug='cp-selfheal-fixture' AND status='running';
-DO $$ DECLARE run uuid:=gen_random_uuid(); task text:='CP-STUCK-INFRA-001'; prj uuid; ex bigint; i integer; history jsonb; result jsonb; repeat_result jsonb; budget jsonb; incident uuid; rejected boolean;
+DO $$ DECLARE run uuid:=gen_random_uuid(); task text:='CP-STUCK-INFRA-001'; prj uuid; ex bigint; i integer; history jsonb; result jsonb; repeat_result jsonb; budget jsonb; incident uuid; rejected boolean; wakes integer;
 BEGIN
  SELECT project_id INTO prj FROM control.projects WHERE slug='building-suit';
  INSERT INTO control.tasks(task_id,suit_slug,sequence,title,status,acceptance_criteria,verification_plan,metadata,project_id,workstream_slug,retry_policy_id)
@@ -18,6 +18,10 @@ BEGIN
  PERFORM control.record_recovery_condition(p_resume_identity=>'task:'||task,p_idempotency_key=>'stuck-fixture-terminal',p_failure_class=>'safety-stop',p_error_code=>'retry_budget_exhausted',p_next_action=>'safety-stop',p_recoverable=>false,p_source=>'unit-test',p_project_id=>prj,p_workstream_slug=>'cp-selfheal-fixture',p_current_task_id=>task,p_execution_id=>ex,p_status=>'resolved');
  SELECT jsonb_agg(to_jsonb(e) ORDER BY attempt) INTO history FROM control.executions e WHERE task_id=task;
  PERFORM control.record_dot_health(jsonb_build_array(jsonb_build_object('key','run:'||run,'run_id',run,'task_id',task,'execution_id',ex,'state','STUCK','why','Failed without owner','worker_alive',false,'operator_action_required',false,'observed_at',now())));
+ SELECT count(*) INTO wakes FROM control.dot_wake_events WHERE origin='dot-health-stuck' AND payload->>'run_id'=run::text;
+ IF wakes<>1 THEN RAISE EXCEPTION 'STUCK transition did not wake BS-31';END IF;
+ UPDATE control.dot_health_observations SET observed_at=now() WHERE run_id=run;
+ IF (SELECT count(*) FROM control.dot_wake_events WHERE origin='dot-health-stuck' AND payload->>'run_id'=run::text)<>wakes THEN RAISE EXCEPTION 'Stable poll emitted duplicate wake';END IF;
  result:=control.claim_dot_stuck_recovery(run,repeat('a',64));
  IF result->>'claimed'<>'true' OR result#>>'{accounting,consumed}'<>'1' THEN RAISE EXCEPTION 'Next cycle did not recover reclaimed task: %',result;END IF;
  incident:=(result->>'incident_id')::uuid;
