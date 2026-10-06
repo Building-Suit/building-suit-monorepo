@@ -23,7 +23,7 @@ export function classifyHealth(input, process = {}, now = Date.now(), graceMs = 
  if(incident?.status==='human-gate')return state('WAITING_OPERATOR',incident.evidence?.reason??'Incident investigation established a human gate','Resolve the recorded incident gate',true)
  if(run?.stop_requested||run?.maintenance_requested)return state('WAITING_OPERATOR',run.stop_requested?'Run stop requested':'Run maintenance hold','Operator must release the existing run hold',true)
  const audit=r?.condition?.exhaustion_audit
- if(r?.error_code==='retry_budget_exhausted'){const gate=exhaustionHealth(audit);return {...state(gate.needs?'WAITING_OPERATOR':'STUCK',gate.why,gate.next,gate.needs),exhaustion_audit:audit??null}}
+ if(['retry_budget_exhausted','retry_classification_review_required'].includes(r?.error_code)){const gate=exhaustionHealth(audit);return {...state(gate.needs?'WAITING_OPERATOR':'STUCK',gate.why,gate.next,gate.needs),exhaustion_audit:audit??null}}
  if(['wait-operator','wait-decision','safety-stop'].includes(r?.next_action)&&r.status==='active')return state('WAITING_OPERATOR',r.error_code??r.next_action,'Resolve the recorded operator/decision gate',true)
 
  if(process.worker_alive){
