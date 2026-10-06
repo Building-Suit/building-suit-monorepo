@@ -25,7 +25,13 @@ const watchableActions = new Set([
 ])
 
 // Receipt polling is local; publisher transport does not imply a GitHub wait.
-const receiptWaitReasons = new Set(['runtime_operation_in_flight', 'runtime_backoff_pending'])
+const receiptWaitReasons = new Set([
+  'runtime_operation_in_flight',
+  'runtime_backoff_pending',
+  // A settled transport receipt without a child JSON response still needs local
+  // infrastructure replay; checking GitHub cannot repair or consume it.
+  'malformed_child_response',
+])
 
 function digest(value) {
   return createHash('sha256')
