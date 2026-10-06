@@ -175,6 +175,8 @@ test('Dot binding recovery and native bounded ordinary publication preserve iden
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/055_failure_evidence_required_fields.sql')])
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/056_preserve_final_failure_evidence.sql')])
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/failure-evidence-smoke.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/057_operator_task_gates.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/operator-gates-smoke.sql')])
 
   }
   finally {

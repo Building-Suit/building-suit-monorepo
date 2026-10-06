@@ -7224,6 +7224,16 @@ switch (command) {
     taskSupervisor()
     break
 
+  case 'operator-gates':
+    if(!validRunId(args[0])) output({ok:false,error:'valid_run_id_required'},64)
+    else {try {output({ok:true,run_id:args[0],...parseControlJson(controlQuery(`SELECT jsonb_build_object('gates',control.operator_gate_offers(:'run'::uuid),'blocked_state',(SELECT jsonb_build_object('task_id',r.current_task_id,'reason',s.error_code,'condition',s.condition) FROM control.workflow_runs r LEFT JOIN control.recovery_states s ON s.current_task_id=r.current_task_id AND s.status='active' WHERE r.run_id=:'run'::uuid ORDER BY s.updated_at DESC LIMIT 1));`,{run:args[0]}))})}catch(error){output({ok:false,error:error.message},1)}}
+    break
+
+  case 'operator-gate-resolve':
+    if(!validRunId(args[0]) || !/^[a-f0-9]{32}$/.test(args[1]??'') || !['approve','reject'].includes(args[2])) output({ok:false,error:'valid_operator_gate_response_required'},64)
+    else {try {output(parseControlJson(controlQuery(`SELECT control.resolve_operator_task_gate(:'run'::uuid,:'gate',:'response',:'evidence');`,{run:args[0],gate:args[1],response:args[2],evidence:`Authenticated human operator gate ${args[2]} for existing run ${args[0]} and gate ${args[1]}; task-only ordinary publication or registered decision, no merge/deploy/budget changes.`})))}catch(error){output({ok:false,error:error.message},1)}}
+    break
+
   case 'run-refresh-admission':
     if(!validRunId(args[0])) output({ok:false,error:'valid_run_id_required'},64)
     else {try { output({ok:true,...parseControlJson(controlQuery(`SELECT control.refresh_dot_admission(:'run'::uuid);`,{run:args[0]}))}) } catch(error) {output({ok:false,error:error.message,classification:{failure_class:'operator-wait',recovery_action:'wait-operator'}},1)}}

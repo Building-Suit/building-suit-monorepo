@@ -44,6 +44,15 @@ if [[ "$REQUESTED_COMMAND" == "$N8N_CWD_PREFIX"* ]]; then
 fi
 
 case "$REQUESTED_COMMAND" in
+ "bs-agent operator-gates "*)
+  RUN_ID="${REQUESTED_COMMAND#bs-agent operator-gates }"
+  [[ "$RUN_ID" =~ ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ ]] || exit 64
+  exec "$NODE_BIN" "$AGENT" operator-gates "$RUN_ID" ;;
+ "bs-agent operator-gate-resolve "*)
+  INPUT="${REQUESTED_COMMAND#bs-agent operator-gate-resolve }"
+  [[ "$INPUT" =~ ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})\ ([a-f0-9]{32})\ (approve|reject)$ ]] || exit 64
+  exec "$NODE_BIN" "$AGENT" operator-gate-resolve "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}" "${BASH_REMATCH[3]}" ;;
+
 
   "bs-agent ping")
     exec "$NODE_BIN" "$AGENT" ping
