@@ -11,7 +11,7 @@ export function classifyHealth(input, process = {}, now = Date.now(), graceMs = 
  worker_alive:process.worker_alive===true,process:process.worker??null,process_observed_at:process.observed_at??null,
  controller_lease:{token:run?.controller_lease_token??null,expires_at:run?.controller_lease_expires_at??null,valid:time(run?.controller_lease_expires_at)>now},
  supervisor_lease:{owner:r?.lease_owner??null,expires_at:r?.lease_expires_at??null,valid:time(r?.lease_expires_at)>now},
- last_progress_at:last?new Date(last).toISOString():null,elapsed_seconds:e?.started_at?Math.max(0,Math.floor((now-time(e.started_at))/1000)):null,
+ last_progress_at:last?new Date(last).toISOString():null,elapsed_seconds:last?Math.max(0,Math.floor(age/1000)):null,execution_elapsed_seconds:e?.started_at?Math.max(0,Math.floor((now-time(e.started_at))/1000)):null,
  next_wake_at:r?.next_wake_at??o?.next_wake_at??null,recovery_classification:r?.failure_class??null,recovery_action:r?.next_action??null,
  publication_state:p?.state??(task?.status==='passed'?'pending':'not_started'),observed_at:new Date(now).toISOString(),llm_used:false}
  const state=(value,why,next,needs=false)=>({...base,state:value,why,next_automatic_action:next,operator_action_required:needs})
