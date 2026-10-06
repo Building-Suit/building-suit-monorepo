@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import {failureEvidence} from './failure-evidence.mjs'
+import {failureEvidence,processFailureCategory} from './failure-evidence.mjs'
 import {emptyComponentFixture} from './retry-exhaustion-audit.mjs'
 
 import {
@@ -324,7 +324,7 @@ function runCheck({
       Date.now() - started,
   }
 
-  check.failure_evidence=failureEvidence({execution_id:null,verification_run_id:verificationRunId,check,artifact:readFileSync(logPath,'utf8'),classification:result.error||result.signal?'TRANSIENT_INFRASTRUCTURE':missingEvidence?'CONFIGURATION':'UNKNOWN',phase:result.error?'spawn':'test',origin:result.error?'process':'unknown',result:{signal:result.signal??null,error_code:result.error?.code??null}})
+  check.failure_evidence=failureEvidence({execution_id:null,verification_run_id:verificationRunId,check,artifact:readFileSync(logPath,'utf8'),classification:processFailureCategory(result,missingEvidence),phase:result.error?'spawn':'test',origin:result.error?'process':'unknown',result:{signal:result.signal??null,error_code:result.error?.code??null}})
   liveCheck(check)
 
   return check

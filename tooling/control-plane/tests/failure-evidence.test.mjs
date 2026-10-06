@@ -2,7 +2,7 @@ import {requiresSameAttemptVerification} from '../runner/binding-recovery.mjs'
 import test from 'node:test'
 import {readFileSync} from 'node:fs'
 import assert from 'node:assert/strict'
-import {failureEvidence,validateFailureEvidence,reconcileFailureEvidence} from '../runner/failure-evidence.mjs'
+import {failureEvidence,processFailureCategory,validateFailureEvidence,reconcileFailureEvidence} from '../runner/failure-evidence.mjs'
 import {auditAttempts} from '../runner/retry-exhaustion-audit.mjs'
 import {dispatchRecovery,recoveryIdentity} from '../runner/dot-general-recovery.mjs'
 const check={verification_id:10,verification_run_id:20,execution_id:30,check_name:'test',name:'test',command:'registered runner',status:'fail',exit_code:1,log_path:'/private/bound.log',metadata:{required:true}}
@@ -57,3 +57,5 @@ test('reviewed non-product receipt must reverify, never replay its old failed ph
  assert.equal(requiresSameAttemptVerification({...s,exhaustion_audit:{entries:[{execution_id:30,classification:'PRODUCT_DEFECT'}]}},op),false)
  assert.equal(requiresSameAttemptVerification(s,{...op,execution_id:31}),false)
 })
+
+test('ambiguous timeout or child crash stays UNKNOWN; typed transport/configuration errors recover without product charge',()=>{assert.equal(processFailureCategory({error:{code:'ETIMEDOUT'}}),'UNKNOWN');assert.equal(processFailureCategory({signal:'SIGSEGV'}),'UNKNOWN');assert.equal(processFailureCategory({error:{code:'E2BIG'}}),'TRANSIENT_INFRASTRUCTURE');assert.equal(processFailureCategory({error:{code:'ENOENT'}}),'CONFIGURATION')})

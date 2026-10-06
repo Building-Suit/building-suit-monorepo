@@ -17,3 +17,10 @@ export function reconcileFailureEvidence(check,execution,verification) {
  try{validateFailureEvidence(e,{execution_id:execution.execution_id,verification_run_id:verification.verification_run_id,check});return {classification:e.classification,action:e.classification==='UNKNOWN'?'incident-investigate':'classified',evidence:e}}
  catch{return {classification:'UNKNOWN',action:'incident-investigate'}}
 }
+
+export function processFailureCategory(result,missingEvidence=false){
+ if(missingEvidence)return 'CONFIGURATION'
+ if(result.error?.code==='E2BIG')return 'TRANSIENT_INFRASTRUCTURE'
+ if(['ENOENT','EACCES'].includes(result.error?.code))return 'CONFIGURATION'
+ return 'UNKNOWN' // Timeouts/signals may originate in product or harness code.
+}
