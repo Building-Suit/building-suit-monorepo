@@ -538,3 +538,237 @@ begin
   exception when sqlstate '55000' then null; end;
 end;
 $$;
+
+-- SS-SA-EVIDENCE-001: private Storage policy, immutable metadata, requester
+-- isolation and the trusted review boundary. Evidence never changes approval.
+select set_config('request.jwt.claim.sub', owner_id::text, true),
+  set_config('request.jwt.claim.role', 'authenticated', true)
+from shop_billing_fixture;
+set local role authenticated;
+do $$
+declare
+  v_submission uuid := current_setting('ss_billing.downgrade_notice')::uuid;
+  v_reserved jsonb;
+  v_index integer;
+  v_affected integer;
+  v_immutable_object jsonb;
+begin
+  v_reserved := public.reserve_shop_billing_payment_evidence(
+    v_submission, 'transfer receipt.png', 'image/png', 1024, repeat('a', 64)
+  );
+  perform set_config('ss_billing.evidence_id', v_reserved ->> 'evidenceId', true);
+  perform set_config('ss_billing.evidence_object', v_reserved ->> 'objectName', true);
+  if v_reserved ->> 'bucket' <> 'shop-payment-evidence'
+    or v_reserved ->> 'objectName' !~ ('^' || current_setting('ss_billing.downgrade_shop')
+      || '/' || v_submission::text || '/[0-9a-f-]+\.png$') then
+    raise exception 'evidence reservation did not return a safe server path';
+  end if;
+  if not shop_private.billing_payment_evidence_upload_allowed(
+      v_reserved ->> 'objectName', '{"mimetype":"image/png","contentLength":1024}')
+    or not shop_private.billing_payment_evidence_upload_allowed(
+      v_reserved ->> 'objectName', '{"mimetype":"image/png","size":1024,"contentLength":1024}') then
+    raise exception 'Storage preflight contentLength was not authorized';
+  end if;
+  if shop_private.billing_payment_evidence_upload_allowed(
+      v_reserved ->> 'objectName', '{"mimetype":"image/png","size":1024,"contentLength":2048}')
+    or shop_private.billing_payment_evidence_upload_allowed(
+      v_reserved ->> 'objectName', '{"mimetype":"image/png","size":2048,"contentLength":1024}')
+    or shop_private.billing_payment_evidence_upload_allowed(
+      v_reserved ->> 'objectName', '{"mimetype":"image/png"}')
+    or shop_private.billing_payment_evidence_upload_allowed(
+      v_reserved ->> 'objectName', '{"mimetype":"image/png","contentLength":"invalid"}')
+    or shop_private.billing_payment_evidence_upload_allowed(
+      v_reserved ->> 'objectName', '{"mimetype":"image/png","contentLength":null}')
+    or shop_private.billing_payment_evidence_upload_allowed(
+      v_reserved ->> 'objectName', '{"mimetype":"application/pdf","contentLength":1024}') then
+    raise exception 'invalid Storage metadata bypassed immutable reservation';
+  end if;
+  insert into storage.objects (bucket_id, name, metadata)
+  values ('shop-payment-evidence', v_reserved ->> 'objectName',
+    jsonb_build_object('mimetype', 'image/png', 'size', 1024));
+  if jsonb_array_length(public.shop_billing_payment_evidence_read(v_submission)) <> 1 then
+    raise exception 'uploaded owner evidence is not readable';
+  end if;
+  begin
+    perform public.reserve_shop_billing_payment_evidence(
+      v_submission, '../unsafe.exe', 'application/octet-stream', 1024, repeat('b', 64));
+    raise exception 'unsafe payment evidence was reserved';
+  exception when sqlstate '22023' then
+    if sqlerrm <> 'BILLING_PAYMENT_EVIDENCE_INVALID' then raise; end if;
+  end;
+  for v_index in 2..5 loop
+    perform public.reserve_shop_billing_payment_evidence(
+      v_submission, 'receipt-' || v_index || '.pdf', 'application/pdf', 2048,
+      repeat(v_index::text, 64));
+  end loop;
+  begin
+    perform public.reserve_shop_billing_payment_evidence(
+      v_submission, 'receipt-6.pdf', 'application/pdf', 2048, repeat('6', 64));
+    raise exception 'payment evidence count limit was bypassed';
+  exception when sqlstate '22023' then
+    if sqlerrm <> 'BILLING_PAYMENT_EVIDENCE_LIMIT_REACHED' then raise; end if;
+  end;
+  select to_jsonb(object) into strict v_immutable_object
+  from storage.objects object
+  where object.bucket_id = 'shop-payment-evidence'
+    and object.name = current_setting('ss_billing.evidence_object');
+  v_affected := 0;
+  begin
+    update storage.objects set name = name || '.changed'
+    where bucket_id = 'shop-payment-evidence' and name = current_setting('ss_billing.evidence_object');
+    get diagnostics v_affected = row_count;
+  exception when insufficient_privilege then null; end;
+  if v_affected <> 0 or v_immutable_object is distinct from (
+    select to_jsonb(object) from storage.objects object
+    where object.bucket_id = 'shop-payment-evidence'
+      and object.name = current_setting('ss_billing.evidence_object')
+  ) then raise exception 'owner updated immutable evidence object'; end if;
+  v_affected := 0;
+  begin
+    delete from storage.objects
+    where bucket_id = 'shop-payment-evidence' and name = current_setting('ss_billing.evidence_object');
+    get diagnostics v_affected = row_count;
+  exception when insufficient_privilege then null; end;
+  if v_affected <> 0 or v_immutable_object is distinct from (
+    select to_jsonb(object) from storage.objects object
+    where object.bucket_id = 'shop-payment-evidence'
+      and object.name = current_setting('ss_billing.evidence_object')
+  ) then raise exception 'owner deleted retained evidence object'; end if;
+end;
+$$;
+reset role;
+
+select set_config('request.jwt.claim.sub', outsider_id::text, true),
+  set_config('request.jwt.claim.role', 'authenticated', true)
+from shop_billing_fixture;
+set local role authenticated;
+do $$
+begin
+  if exists (select 1 from storage.objects object
+      where object.bucket_id = 'shop-payment-evidence') then
+    raise exception 'other user listed payment evidence';
+  end if;
+  begin
+    perform public.reserve_shop_billing_payment_evidence(
+      current_setting('ss_billing.downgrade_notice')::uuid,
+      'cross-shop.pdf', 'application/pdf', 1024, repeat('7', 64));
+    raise exception 'non-requester reserved payment evidence';
+  exception when insufficient_privilege then null; end;
+  begin
+    insert into storage.objects (bucket_id, name, metadata)
+    values ('shop-payment-evidence', current_setting('ss_billing.downgrade_shop') || '/'
+      || current_setting('ss_billing.downgrade_notice') || '/' || gen_random_uuid()::text || '.png',
+      jsonb_build_object('mimetype', 'image/png', 'size', 1024));
+    raise exception 'non-requester uploaded payment evidence';
+  exception when insufficient_privilege then null; end;
+end;
+$$;
+reset role;
+
+select set_config('request.jwt.claim.sub', '', true),
+  set_config('request.jwt.claim.role', 'anon', true);
+set local role anon;
+do $$
+begin
+  if exists (select 1 from storage.objects object
+      where object.bucket_id = 'shop-payment-evidence') then
+    raise exception 'anonymous user listed payment evidence';
+  end if;
+  begin
+    insert into storage.objects (bucket_id, name, metadata)
+    values ('shop-payment-evidence', gen_random_uuid()::text || '.pdf',
+      jsonb_build_object('mimetype', 'application/pdf', 'size', 1));
+    raise exception 'anonymous user uploaded payment evidence';
+  exception when insufficient_privilege then null; end;
+end;
+$$;
+reset role;
+
+do $$
+begin
+  if (select public from storage.buckets where id = 'shop-payment-evidence')
+    or (select file_size_limit from storage.buckets where id = 'shop-payment-evidence') <> 5242880
+    or has_table_privilege('authenticated', 'public.shop_billing_payment_evidence', 'select')
+    or has_function_privilege('authenticated',
+      'shop_private.billing_payment_evidence_review_access(uuid,uuid,integer)', 'execute')
+    or has_function_privilege('authenticated',
+      'public.shop_super_admin_bridge_evidence_access(uuid,uuid,text,jsonb)', 'execute') then
+    raise exception 'private evidence boundary is exposed';
+  end if;
+  begin
+    update public.shop_billing_payment_evidence set original_file_name = 'rewritten.pdf'
+    where id = current_setting('ss_billing.evidence_id')::uuid;
+    raise exception 'evidence metadata was mutable';
+  exception when sqlstate '55000' then null; end;
+  if (select retained_until < created_at + interval '7 years'
+      from public.shop_billing_payment_evidence
+      where id = current_setting('ss_billing.evidence_id')::uuid) then
+    raise exception 'evidence retention metadata is too short';
+  end if;
+  if (select status from public.shop_billing_submissions
+      where id = current_setting('ss_billing.downgrade_notice')::uuid) <> 'submitted' then
+    raise exception 'evidence presence changed billing approval state';
+  end if;
+end;
+$$;
+
+select set_config('request.jwt.claim.sub', operator_id::text, true),
+  set_config('request.jwt.claim.role', 'authenticated', true)
+from shop_billing_fixture;
+set local role authenticated;
+do $$
+begin
+  begin
+    perform shop_private.billing_payment_evidence_review_access(
+      current_setting('ss_billing.downgrade_notice')::uuid,
+      current_setting('ss_billing.evidence_id')::uuid, 60);
+    raise exception 'platform operator bypassed the trusted bridge';
+  exception when insufficient_privilege then null; end;
+end;
+$$;
+reset role;
+
+select set_config('request.jwt.claim.sub', '', true),
+  set_config('request.jwt.claim.role', 'service_role', true);
+set local role service_role;
+do $$
+declare v_access jsonb;
+begin
+  begin
+    perform shop_private.billing_payment_evidence_review_access(
+      current_setting('ss_billing.downgrade_notice')::uuid,
+      current_setting('ss_billing.evidence_id')::uuid, 60);
+    raise exception 'service role bypassed the trusted bridge context';
+  exception when insufficient_privilege then null; end;
+  perform set_config('shop.super_admin_bridge_principal_id', gen_random_uuid()::text, true);
+  begin
+    perform shop_private.billing_payment_evidence_review_access(
+      current_setting('ss_billing.downgrade_notice')::uuid,
+      current_setting('ss_billing.evidence_id')::uuid, 60);
+    raise exception 'service role directly executed private helper with forged bridge context';
+  exception when insufficient_privilege then null; end;
+end;
+$$;
+reset role;
+
+-- Unit-test helper behavior as its database owner. Browser/service-role direct
+-- execution remains denied above; the HTTP harness tests the trusted gateway.
+do $$
+declare v_access jsonb;
+begin
+  v_access := shop_private.billing_payment_evidence_review_access(
+    current_setting('ss_billing.downgrade_notice')::uuid,
+    current_setting('ss_billing.evidence_id')::uuid, 60);
+  if v_access ->> 'objectName' <> current_setting('ss_billing.evidence_object')
+    or (v_access ->> 'expiresIn')::integer <> 60 then
+    raise exception 'trusted review access contract is incomplete';
+  end if;
+  begin
+    perform shop_private.billing_payment_evidence_review_access(
+      current_setting('ss_billing.downgrade_notice')::uuid,
+      current_setting('ss_billing.evidence_id')::uuid, 301);
+    raise exception 'overlong signed access was accepted';
+  exception when sqlstate '22023' then null; end;
+end;
+$$;
+reset role;
