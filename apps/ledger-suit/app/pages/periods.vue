@@ -125,11 +125,12 @@ async function closeYear() {
   catch (failure) { toasts.error(t('periods.errorTitle'), describeError(failure)) }
   finally { pendingAction.value = '' }
 }
+const ledgerPresentation = useLedgerPresentation()
 </script>
 
 <template>
   <div class="space-y-6">
-    <LedgerPageHeader :title="t('periods.title')" :subtitle="t('periods.subtitle')" :from="currentPeriod?.start_date" :to="currentPeriod?.end_date" />
+    <BsPageHeader :title="t('periods.title')" :subtitle="t('periods.subtitle')"  :context="ledgerPresentation.context(currentPeriod?.start_date, currentPeriod?.end_date, undefined)" :context-label="ledgerPresentation.t('pageContext.label')" />
 
     <p v-if="!can('periods.read')" class="ls-card p-6 text-fg-muted" role="status">{{ t('periods.noAccess') }}</p>
     <p v-else-if="error" class="ls-error" role="alert">{{ t('periods.loadFailed') }}</p>
@@ -165,7 +166,7 @@ async function closeYear() {
 
         <div v-if="closeFor(period)" class="rounded-control bg-surface-muted p-3 text-sm">
           <p class="font-semibold">{{ t('periods.yearEndComplete') }}</p>
-          <p>{{ t('periods.netResult') }}: <MoneyText :amount-minor="closeFor(period)!.net_income_minor" /></p>
+          <p>{{ t('periods.netResult') }}: <BsMoneyText :amount="closeFor(period)!.net_income_minor" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" /></p>
           <NuxtLink class="text-link underline" :to="{ path: '/transactions', query: { q: closeFor(period)!.closing_transaction_id } }">{{ t('periods.closingJournal') }}</NuxtLink>
         </div>
 

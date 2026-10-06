@@ -36,3 +36,5 @@ Do not combine a wrapper search box with a second independent global-search cont
 `BsTableToolbar`, `BsTableSearch`, `BsTableFilters`, `BsTableActions` and `BsPagination` own table-adjacent presentation. `BsSummaryGrid`, `BsDescriptionList`, `BsHistoryList`/`BsTimeline`, `BsDetailSection`/`BsDetailDialog`, `BsTagEditor` and `BsEntityPicker` cover recurring data presentation without creating small product-local display systems. Entity picker search/page events are handled by the product adapter; the shared component never queries a product schema.
 
 API inventory is generated from the pinned installed declaration files by `pnpm table:inventory`. Vendor behavior and unsupported native combinations follow the pinned upstream implementation, not a separately reimplemented grid.
+
+Column totals use the Bs-owned `footer` value and `footer-{key}` slots. Footer cells follow the column's alignment and width; products retain total calculations over the full report population. `ariaSort` preserves accessible sort state when a product's header actions own server sorting. Vendor column groups and passthrough styling are unnecessary for these cases.

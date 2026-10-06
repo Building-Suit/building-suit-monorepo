@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { BsChartSeries, BsChartPoint } from '@building-suit/contracts'
-const props = defineProps<{ label: string; series: BsChartSeries[]; points: BsChartPoint[]; tableLabel: string; emptyLabel: string; loading?: boolean; error?: string | null }>()
+const props = defineProps<{ label: string; pointLabel?: string; series: BsChartSeries[]; tableSeries?: BsChartSeries[]; points: BsChartPoint[]; tableLabel: string; emptyLabel: string; loading?: boolean; error?: string | null }>()
 const extent = computed(() => Math.max(1, ...props.points.flatMap(point => props.series.map(series => Math.abs(point.values[series.id] || 0))).filter(Number.isFinite)))
 function height(value: number) { return Number.isFinite(value) ? Math.abs(value) / extent.value * 100 : 0 }
-const columns = computed(() => [{ key: 'label', field: 'label', header: props.label }, ...props.series.map(series => ({ key: series.id, header: series.label, value: (point: BsChartPoint) => point.formattedValues?.[series.id] ?? point.values[series.id] ?? 0 }))])
+const columns = computed(() => [{ key: 'label', field: 'label', header: props.pointLabel || props.label }, ...(props.tableSeries || props.series).map(series => ({ key: series.id, header: series.label, value: (point: BsChartPoint) => point.formattedValues?.[series.id] ?? point.values[series.id] ?? 0 }))])
 </script>
 
 <template>

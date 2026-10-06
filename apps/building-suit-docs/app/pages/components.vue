@@ -36,7 +36,7 @@ const historyEntries = [
   { id: 'reviewed', title: 'Reviewed', detail: 'Bs-only domain cells' },
 ]
 const tableColumns = computed(() => [
-  { key: 'name', field: 'name', header: isArabic.value ? 'الاسم' : 'Name', sortable: true },
+  { key: 'name', field: 'name', header: isArabic.value ? 'الاسم' : 'Name', sortable: true, footer: isArabic.value ? 'الإجمالي' : 'Total' },
   { key: 'category', field: 'category', header: isArabic.value ? 'التصنيف' : 'Category', sortable: true },
   { key: 'status', field: 'status', header: isArabic.value ? 'الحالة' : 'Status' },
   { key: 'amount', field: 'amount', header: isArabic.value ? 'القيمة' : 'Value', sortable: true, align: 'end' as const, width: 'sm' as const },
@@ -181,6 +181,7 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
         @retry="tableState = 'data'"
       >
         <template #cell-status="{ row }"><BsStatusBadge :status="row.status" /></template>
+        <template #footer-amount><BsText numeric>{{ rows.reduce((sum, row) => sum + row.amount, 0) }}</BsText></template>
       </BsDataTable>
     </section>
 

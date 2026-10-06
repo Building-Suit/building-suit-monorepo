@@ -52,13 +52,14 @@ async function invite() {
   finally { pending.value = false }
 }
 const { dirty: overlayDirty0 } = useRecordAction(() => ({ email: email.value, role: role.value }), computed(() => Boolean(open.value)))
+const ledgerUsage = useLedgerUsagePresentation()
 </script>
 <template>
   <div v-if="can('members.invite')">
     <BsButton v-if="showTrigger" type="button" class="ls-btn ls-btn-sm w-full" @click="show">{{ t('org.invite') }}</BsButton>
       <BsRecordActionDialog v-if="open" :visible="true" :title="t('org.invite')" size="md" :dirty="overlayDirty0" :pending="pending" :error="errorMessage" :submit-label="t('org.createInvite')" :cancel-label="t('common.cancel')" @update:visible="value => { if (!value) close() }" @submit="invite">
           <p class="text-sm leading-6 text-fg-muted">{{ t('access.inviteDescription') }}</p>
-          <QuotaUsageMeter quota-key="max_members" compact />
+          <BsUsageMeter  v-if="ledgerUsage.item('max_members')" compact :item="ledgerUsage.item('max_members')!" />
           <BsFloatingField :label="t('auth.email')"><input v-model="email" type="email" class="ls-input" :placeholder="t('auth.email')" autocomplete="email" dir="ltr" required></BsFloatingField>
           <BsFloatingField :label="t('team.role')"><select v-model="role" class="ls-input">
             <option v-for="key in ['admin','accountant','data_entry','viewer']" :key="key" :value="`system:${key}`">{{ t(`org.roles.${key}`) }}</option>

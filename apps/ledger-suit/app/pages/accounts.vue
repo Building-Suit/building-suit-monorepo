@@ -139,12 +139,6 @@ async function revealSavedAccount() {
   searchInput.value?.focus()
 }
 
-const sortColumnPt = {
-  columnHeaderContent: { class: 'flex items-center gap-2' },
-  sortIcon: { class: 'h-3 w-3 shrink-0', 'aria-hidden': true },
-  headerCell: { class: 'cursor-pointer select-none' },
-}
-
 const hasAccounts = computed(() => scopedBalances.value.length > 0)
 
 const activityAccountId = ref<string | null>(null)
@@ -322,11 +316,13 @@ async function archiveAccount(row: BalanceRow) {
   await refreshNuxtData(['org:accounts', 'org:categories'])
 }
 const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Boolean(editorOpen.value)))
+const ledgerPresentation = useLedgerPresentation()
+const ledgerUsage = useLedgerUsagePresentation()
 </script>
 
 <template>
   <div class="space-y-6" :data-hydrated="hydrated">
-    <LedgerPageHeader :title="t('accounts.title')" :subtitle="t('accountTree.subtitle')">
+    <BsPageHeader :title="t('accounts.title')" :subtitle="t('accountTree.subtitle')" :context="ledgerPresentation.context(undefined, undefined, undefined)" :context-label="ledgerPresentation.t('pageContext.label')">
       <template #actions>
         <label class="flex items-center gap-2 text-sm text-fg-muted">
           <input v-model="showArchived" type="checkbox" class="rounded-sm border-[var(--bs-border)]">
@@ -336,7 +332,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
           {{ t('accounts.add') }}
         </BsButton>
       </template>
-    </LedgerPageHeader>
+    </BsPageHeader>
 
     <ChartTemplateReview />
 
@@ -346,10 +342,11 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
     </div>
 
     <div v-if="view === 'table'" class="flex gap-1 overflow-x-auto border-b border-[var(--bs-border)]" role="tablist" :aria-label="t('accounts.tabsLabel')">
-      <BsButton variant="tab"
-        v-for="type in GROUP_TYPES"
+      <BsButton
+v-for="type in GROUP_TYPES"
         :id="`account-tab-${type}`"
         :key="type"
+        variant="tab"
         type="button"
         role="tab"
         :aria-controls="`account-panel-${type}`"
@@ -407,7 +404,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
     >
         <div class="flex items-center justify-between border-b border-[var(--bs-border)] px-6 py-3">
           <h2 class="text-sm font-bold">{{ activeGroup.label }}</h2>
-          <MoneyText class="text-sm font-bold" :amount-minor="activeGroup.total" />
+          <BsMoneyText class="text-sm font-bold" :amount="activeGroup.total" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
         </div>
 
         <p class="px-6 py-2 text-xs text-fg-muted">{{ t('accounts.totalHint', { currency: baseCurrency }) }}</p>
@@ -420,64 +417,46 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
           :rows="25"
           :always-show-paginator="false"
           :value="filteredRows"
-          data-key="account_id"
+          row-key="account_id"
           :capabilities="{ insert: can('accounts.create'), edit: can('accounts.update'), archive: can('accounts.archive') }"
           :action-labels="{ insert: t('accounts.add'), edit: t('accounts.edit'), archive: t('accounts.archive'), actions: t('accounts.actions') }"
           :can-row-action="(action, account) => action !== 'archive' || !account.is_archived"
           table-class="ls-table"
           :table-props="{ 'aria-label': t('accounts.caption', { group: activeGroup.label }) }"
           :pt="{ tableContainer: { class: 'overflow-x-auto', tabindex: 0, role: 'region', 'aria-label': t('accounts.tableScroll') } }"
+          :columns="[{ key: 'code', field: 'code', header: t('accounts.code'), sortable: true }, { key: 'name', field: 'name', header: t('accounts.account'), sortable: true }, { key: 'account_role', field: 'account_role', header: t('accounts.role') }, { key: 'control_subledger_type', field: 'control_subledger_type', header: t('controls.subledgerType') }, { key: 'subtype', field: 'subtype', header: t('accounts.subtype') }, { key: 'normal_balance', field: 'normal_balance', header: t('accounts.normalBalance') }, { key: 'contra_account_id', field: 'contra_account_id', header: t('accounts.contraAccount') }, { key: 'currency', field: 'currency', header: t('accounts.currency') }, { key: 'entry_count', field: 'entry_count', header: t('accounts.entries'), align: 'end' as const }, { key: 'net_debit_minor', field: 'net_debit_minor', header: t('accounts.balance'), align: 'end' as const }]"
           @create="openCreate()"
           @edit="openEdit"
-          @archive="archiveAccount"
-        >
-          <Column field="code" :header="t('accounts.code')" sortable :pt="sortColumnPt">
-            <template #body="{ data: account }">
-              <span class="font-mono text-xs text-fg-muted" dir="ltr">{{ account.code || t('common.dash') }}</span>
+         @archive="archiveAccount">
+          <template #cell-code="{ row: account }">
+            <span class="font-mono text-xs text-fg-muted" dir="ltr">{{ account.code || t('common.dash') }}</span>
+          </template>
+          <template #cell-name="{ row: account }">
+            <BsButton v-if="account.account_role !== 'group' && canReadActivity" variant="link" type="button" :disabled="!hydrated" class="text-start font-medium text-link hover:underline" :class="{ 'ps-4': account.parent_account_id }" @click="activityAccountId = account.account_id">{{ account.name }}</BsButton>
+            <span v-else :class="{ 'ps-4': account.parent_account_id, 'font-semibold': activeGroup.parentIds.has(account.account_id) }">{{ account.name }}</span>
+            <BsStatusBadge v-if="account.is_archived" class="ms-2" status="archived" :label="t('accounts.archived')" tone="neutral" />
+            <BsStatusBadge v-else-if="account.is_liquid" class="ms-2" status="liquid" :label="t('accounts.liquid')" tone="info" />
+          </template>
+          <template #cell-account_role="{ row: account }">{{ t(`accounts.roles.${account.account_role}`) }}</template>
+          <template #cell-control_subledger_type="{ row: account }">
+            <span v-if="account.control_subledger_type">{{ t(`controls.subledgers.${account.control_subledger_type}`) }}</span>
+            <span v-else>{{ t('common.dash') }}</span>
+            <BsStatusBadge v-if="account.control_binding_locked" class="ms-2" status="locked" :label="t('controls.bindingLocked')" tone="neutral" />
+          </template>
+          <template #cell-subtype="{ row: account }">{{ t(`accounts.subtypes.${account.subtype}`) }}</template>
+          <template #cell-normal_balance="{ row: account }">{{ t(`accounts.sides.${account.normal_balance}`) }}</template>
+          <template #cell-contra_account_id="{ row: account }">{{ account.contra_account_id ? accountName(account.contra_account_id) : t('common.dash') }}</template>
+          <template #cell-currency="{ row: account }"><span class="text-fg-muted" dir="ltr">{{ account.currency }}</span></template>
+          <template #cell-net_debit_minor="{ row: account }">
+            <span v-if="account.account_role === 'group'" class="text-fg-muted">{{ t('accounts.groupBalance') }}</span>
+          <template v-else>
+              <BsMoneyText :amount="accountBalanceDisplay(account.net_debit_minor).amount" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
+              <span class="ms-2">{{ t(`accounts.sides.${accountBalanceDisplay(account.net_debit_minor).side}`) }}</span>
             </template>
-          </Column>
-          <Column field="name" :header="t('accounts.account')" sortable :pt="sortColumnPt">
-            <template #body="{ data: account }">
-              <BsButton variant="link" v-if="account.account_role !== 'group' && canReadActivity" type="button" :disabled="!hydrated" class="text-start font-medium text-link hover:underline" :class="{ 'ps-4': account.parent_account_id }" @click="activityAccountId = account.account_id">{{ account.name }}</BsButton>
-              <span v-else :class="{ 'ps-4': account.parent_account_id, 'font-semibold': activeGroup.parentIds.has(account.account_id) }">{{ account.name }}</span>
-              <BsStatusBadge v-if="account.is_archived" class="ms-2" status="archived" :label="t('accounts.archived')" tone="neutral" />
-              <BsStatusBadge v-else-if="account.is_liquid" class="ms-2" status="liquid" :label="t('accounts.liquid')" tone="info" />
-            </template>
-          </Column>
-          <Column field="account_role" :header="t('accounts.role')">
-            <template #body="{ data: account }">{{ t(`accounts.roles.${account.account_role}`) }}</template>
-          </Column>
-          <Column field="control_subledger_type" :header="t('controls.subledgerType')">
-            <template #body="{ data: account }">
-              <span v-if="account.control_subledger_type">{{ t(`controls.subledgers.${account.control_subledger_type}`) }}</span>
-              <span v-else>{{ t('common.dash') }}</span>
-              <BsStatusBadge v-if="account.control_binding_locked" class="ms-2" status="locked" :label="t('controls.bindingLocked')" tone="neutral" />
-            </template>
-          </Column>
-          <Column field="subtype" :header="t('accounts.subtype')">
-            <template #body="{ data: account }">{{ t(`accounts.subtypes.${account.subtype}`) }}</template>
-          </Column>
-          <Column field="normal_balance" :header="t('accounts.normalBalance')">
-            <template #body="{ data: account }">{{ t(`accounts.sides.${account.normal_balance}`) }}</template>
-          </Column>
-          <Column field="contra_account_id" :header="t('accounts.contraAccount')">
-            <template #body="{ data: account }">{{ account.contra_account_id ? accountName(account.contra_account_id) : t('common.dash') }}</template>
-          </Column>
-          <Column field="currency" :header="t('accounts.currency')">
-            <template #body="{ data: account }"><span class="text-fg-muted" dir="ltr">{{ account.currency }}</span></template>
-          </Column>
-          <Column field="entry_count" :header="t('accounts.entries')" body-class="ls-num text-fg-muted" />
-          <Column field="net_debit_minor" :header="t('accounts.balance')" body-class="ls-num whitespace-nowrap">
-            <template #body="{ data: account }">
-              <span v-if="account.account_role === 'group'" class="text-fg-muted">{{ t('accounts.groupBalance') }}</span>
-              <template v-else>
-                <MoneyText :amount-minor="accountBalanceDisplay(account.net_debit_minor).amount" />
-                <span class="ms-2">{{ t(`accounts.sides.${accountBalanceDisplay(account.net_debit_minor).side}`) }}</span>
-              </template>
-            </template>
-          </Column>
+          </template>
+
           <template #row-actions="{ row: account }">
-              <BsButton v-if="['posting', 'control'].includes(account.account_role)" type="button" class="ls-btn ls-btn-sm me-1" @click="statementAccount = account">{{ t('statementClassification.title') }}</BsButton>
+            <BsButton v-if="['posting', 'control'].includes(account.account_role)" type="button" class="ls-btn ls-btn-sm me-1" @click="statementAccount = account">{{ t('statementClassification.title') }}</BsButton>
           </template>
           <template #paginatorcontainer="{ page, pageCount, prevPageCallback, nextPageCallback }">
             <nav class="flex flex-wrap items-center justify-center gap-3 border-t border-[var(--bs-border)] p-3" :aria-label="t('accounts.pages')">
@@ -505,7 +484,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
       <AccountActivityDialog v-if="activityAccountId" :key="`${balanceKey}:${activityAccountId}`" :account-id="activityAccountId" :scope="balanceKey" @close="activityAccountId = null" />
       <AccountStatementClassificationDialog v-if="statementAccount" :key="`${balanceKey}:${statementAccount.account_id}`" :account="statementAccount" :scope="balanceKey" @close="statementAccount = null" />
       <BsRecordActionDialog v-if="editorOpen" v-model:visible="editorOpen" :title="editing ? t('accounts.edit') : t('accounts.add')" size="md" :dirty="overlayDirty0" :pending="submitting" :error="editorError" :submit-label="t('common.save')" :cancel-label="t('common.cancel')" @submit="saveAccount">
-          <QuotaUsageMeter v-if="!editing" quota-key="max_accounts" compact />
+          <BsUsageMeter v-if="(!editing) && ledgerUsage.item('max_accounts')"  compact :item="ledgerUsage.item('max_accounts')!" />
           <BsFloatingField :label="t('accounts.name')"><input id="account-name" v-model="form.name" class="ls-input" required></BsFloatingField>
           <BsFloatingField :label="t('accounts.code')"><input id="account-code" v-model="form.code" class="ls-input" dir="ltr"></BsFloatingField>
           <BsFloatingField :label="t('accounts.role')">

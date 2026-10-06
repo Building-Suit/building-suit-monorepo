@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import test from 'node:test'
+import { parse } from '@vue/compiler-sfc'
 
 const appRoot = new URL('../../app/', import.meta.url).pathname
 const workspaceRoot = new URL('../../../../', import.meta.url).pathname
@@ -140,4 +141,39 @@ test('every remaining Ledger component is approved product orchestration over sh
   assert.ok(ledger.every(component => component.approval === 'BS-UI-LEDGER-MIG-001'))
   assert.ok(ledger.every(component => component.rationale.includes('composes canonical shared UI primitives')))
   assert.equal(existsSync(path.join(appRoot, 'components/AppLogo.vue')), false)
+})
+
+// The column boundary is exhaustive even while other presentation debt remains.
+test('all Ledger tables use Bs-owned column schemas and domain cell slots', () => {
+  let tables = 0
+  for (const { file, source } of sources) {
+    const { descriptor, errors } = parse(source)
+    assert.deepEqual(errors, [], file)
+    function visit(node) {
+      if (node.type === 1) {
+        assert.ok(!['Column', 'ColumnGroup', 'Row', 'DataTable'].includes(node.tag), `${file}: vendor table tag ${node.tag}`)
+        if (node.tag === 'BsDataTable') {
+          tables++
+          assert.ok(node.props.some(prop => prop.type === 7 && prop.name === 'bind' && prop.arg?.content === 'columns'), `${file}: missing Bs columns`)
+        }
+      }
+      for (const child of node.children || []) visit(child)
+    }
+    if (descriptor.template?.ast) visit(descriptor.template.ast)
+    assert.doesNotMatch(source, /#(?:cell|header)-[^=]+="\{\s*data\b/, `${file}: vendor slot scope`)
+  }
+  assert.ok(tables > 0)
+})
+
+test('migrated presentation wrappers are removed and report values are preserved', () => {
+  for (const name of ['MoneyText', 'KpiCard', 'LedgerPageHeader', 'AccountingTableDensity', 'RevenueExpenseChart', 'SetupChecklist', 'QuotaUsageMeter', 'UsageMeters']) {
+    assert.equal(existsSync(path.join(appRoot, `components/${name}.vue`)), false)
+    for (const { file, source } of sources) assert.doesNotMatch(source, new RegExp(`<${name}\\b`), file)
+  }
+  const reports = sources.find(item => item.file === 'pages/reports.vue').source
+  assert.match(reports, /#\[`footer-\$\{column.field\}`\]/)
+  assert.match(reports, /:amount="sumTrial\(column.field\)"/)
+  const dashboard = sources.find(item => item.file === 'pages/dashboard.vue').source
+  assert.match(dashboard, /<BsMetricBarChart/)
+  assert.match(dashboard, /:table-series="ledgerPresentation.chartTableSeries"/)
 })

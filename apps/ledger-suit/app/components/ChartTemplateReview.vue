@@ -31,18 +31,19 @@ function close() {
     </div>
 
     <div class="flex flex-wrap gap-2" role="group" :aria-label="t('chartTemplates.choose')">
-      <BsButton variant="chip" v-for="item in reviewedChartTemplates" :key="item.key" type="button" :aria-pressed="selected === item.key" @click="selected = item.key">
+      <BsButton v-for="item in reviewedChartTemplates" :key="item.key" variant="chip" type="button" :aria-pressed="selected === item.key" @click="selected = item.key">
         {{ t(`chartTemplates.templates.${item.key}.title`) }}
       </BsButton>
     </div>
     <p class="text-sm text-fg-muted">{{ t(`chartTemplates.templates.${selected}.description`) }}</p>
 
-    <BsDataTable :value="template.accounts" data-key="code" :label="t('chartTemplates.preview')" :table-style="{ minWidth: '720px' }">
-      <Column field="code" :header="t('accounts.code')"><template #body="{ data: account }"><span class="font-mono text-xs" dir="ltr">{{ account.code }}</span></template></Column>
-      <Column :header="t('accounts.account')"><template #body="{ data: account }">{{ t(`chartTemplates.accounts.${account.nameKey}`) }}</template></Column>
-      <Column :header="t('chartTemplates.parent')"><template #body="{ data: account }"><span class="font-mono text-xs" dir="ltr">{{ account.parentCode ?? t('common.dash') }}</span></template></Column>
-      <Column :header="t('accounts.role')"><template #body="{ data: account }">{{ t(`accounts.roles.${account.role}`) }}</template></Column>
-      <Column :header="t('chartTemplates.presentation')"><template #body="{ data: account }">{{ account.statementLine ? t(`chartTemplates.lines.${account.statementLine}`) : t('common.dash') }}</template></Column>
+    <BsDataTable :value="template.accounts" row-key="code" :label="t('chartTemplates.preview')" :table-style="{ minWidth: '720px' }" :columns="[{ key: 'code', field: 'code', header: t('accounts.code') }, { key: 'column2', header: t('accounts.account') }, { key: 'column3', header: t('chartTemplates.parent') }, { key: 'column4', header: t('accounts.role') }, { key: 'column5', header: t('chartTemplates.presentation') }]">
+      <template #cell-code="{ row: account }"><span class="font-mono text-xs" dir="ltr">{{ account.code }}</span></template>
+      <template #cell-column2="{ row: account }">{{ t(`chartTemplates.accounts.${account.nameKey}`) }}</template>
+      <template #cell-column3="{ row: account }"><span class="font-mono text-xs" dir="ltr">{{ account.parentCode ?? t('common.dash') }}</span></template>
+      <template #cell-column4="{ row: account }">{{ t(`accounts.roles.${account.role}`) }}</template>
+      <template #cell-column5="{ row: account }">{{ account.statementLine ? t(`chartTemplates.lines.${account.statementLine}`) : t('common.dash') }}</template>
+
     </BsDataTable>
   </section>
 </template>

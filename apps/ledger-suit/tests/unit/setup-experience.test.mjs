@@ -73,7 +73,7 @@ test('synthetic demo uses exact minor units and reset rejects any real-tenant-sh
 test('demo component has no backend client and template review exposes no apply action', () => {
   const demo = readFileSync(new URL('../../app/components/SyntheticDemo.vue', import.meta.url), 'utf8')
   const templates = readFileSync(new URL('../../app/components/ChartTemplateReview.vue', import.meta.url), 'utf8')
-  const checklist = readFileSync(new URL('../../app/components/SetupChecklist.vue', import.meta.url), 'utf8')
+  const checklist = readFileSync(new URL('../../app/composables/useLedgerSetupChecklist.ts', import.meta.url), 'utf8')
   assert.doesNotMatch(demo, /useSupabaseClient|\.from\(|\.rpc\(/)
   assert.doesNotMatch(templates, /useSupabaseClient|applyTemplate|create_account/)
   assert.doesNotMatch(checklist, /\.insert\(|\.update\(|\.delete\(|\.rpc\(/)

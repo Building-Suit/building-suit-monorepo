@@ -45,11 +45,12 @@ async function openClient(row: ClientHealthRow) {
     if (openingId.value === row.id) openingId.value = null
   }
 }
+const ledgerPresentation = useLedgerPresentation()
 </script>
 
 <template>
   <div class="space-y-6" data-client-portfolio>
-    <LedgerPageHeader :title="t('clientPortfolio.title')" :subtitle="t('clientPortfolio.subtitle')" />
+    <BsPageHeader :title="t('clientPortfolio.title')" :subtitle="t('clientPortfolio.subtitle')" :context="ledgerPresentation.context(undefined, undefined, undefined)" :context-label="ledgerPresentation.t('pageContext.label')" />
 
     <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" :aria-label="t('clientPortfolio.summary')">
       <BsKpiCard v-for="status in FILTER_OPTIONS" :key="status" :title="t(`clientPortfolio.filters.${status}`)"><span class="tabular-nums">{{ counts[status] }}</span></BsKpiCard>
@@ -87,47 +88,36 @@ async function openClient(row: ClientHealthRow) {
     <section v-else class="ls-card overflow-hidden" aria-labelledby="client-portfolio-table-heading">
       <h2 id="client-portfolio-table-heading" class="sr-only">{{ t('clientPortfolio.tableLabel') }}</h2>
       <div class="overflow-x-auto">
-        <BsDataTable :value="filteredRows" data-key="id" :table-props="{ 'aria-label': t('clientPortfolio.tableLabel') }">
-          <Column body-class="min-w-60">
-            <template #header>{{ t('clientPortfolio.client') }}</template>
-            <template #body="{ data: row }">
-              <p class="font-semibold">{{ row.name }}</p>
-              <p v-if="row.legalName" class="text-xs text-fg-muted">{{ row.legalName }}</p>
-              <p class="text-xs text-fg-muted">{{ roleLabel(row.role, row.roleId) }} · {{ row.baseCurrency }}</p>
-            </template>
-          </Column>
-          <Column>
-            <template #header>{{ t('clientPortfolio.health') }}</template>
-            <template #body="{ data: row }">
-              <BsStatusBadge class="whitespace-nowrap" :status="row.health" :label="t(`clientPortfolio.healthStates.${row.health}`)" :tone="healthTone(row.health)" />
-            </template>
-          </Column>
-          <Column body-class="whitespace-nowrap">
-            <template #header>{{ t('clientPortfolio.period') }}</template>
-            <template #body="{ data: row }">{{ signalText(row.period, 'clientPortfolio.periodStates') }}</template>
-          </Column>
-          <Column body-class="whitespace-nowrap">
-            <template #header>{{ t('clientPortfolio.reconciliation') }}</template>
-            <template #body="{ data: row }">{{ signalText(row.reconciliation, 'clientPortfolio.reconciliationStates') }}</template>
-          </Column>
-          <Column body-class="whitespace-nowrap">
-            <template #header>{{ t('clientPortfolio.lastActivity') }}</template>
-            <template #body="{ data: row }">
-              {{ row.lastActivity.state === 'unavailable'
-                ? t('clientPortfolio.unavailable')
-                : row.lastActivity.value
-                  ? formatDate(row.lastActivity.value, locale)
-                  : t('clientPortfolio.noActivity') }}
-            </template>
-          </Column>
-          <Column header-class="text-end" body-class="text-end whitespace-nowrap">
-            <template #header><span class="sr-only">{{ t('clientPortfolio.actions') }}</span></template>
-            <template #body="{ data: row }">
-              <BsButton type="button" class="ls-btn ls-btn-sm" :disabled="Boolean(openingId)" @click="openClient(row)">
-                {{ openingId === row.id ? t('clientPortfolio.opening') : t('clientPortfolio.openClient') }}
-              </BsButton>
-            </template>
-          </Column>
+        <BsDataTable :value="filteredRows" row-key="id" :label="t('clientPortfolio.tableLabel')" :columns="[{ key: 'column1', header: (t('clientPortfolio.client')) }, { key: 'column2', header: (t('clientPortfolio.health')) }, { key: 'column3', header: (t('clientPortfolio.period')) }, { key: 'column4', header: (t('clientPortfolio.reconciliation')) }, { key: 'column5', header: (t('clientPortfolio.lastActivity')) }, { key: 'column6', header: '', align: 'end' as const }]">
+          <template #header-column1>{{ t('clientPortfolio.client') }}</template>
+          <template #cell-column1="{ row }">
+            <p class="font-semibold">{{ row.name }}</p>
+            <p v-if="row.legalName" class="text-xs text-fg-muted">{{ row.legalName }}</p>
+            <p class="text-xs text-fg-muted">{{ roleLabel(row.role, row.roleId) }} · {{ row.baseCurrency }}</p>
+          </template>
+          <template #header-column2>{{ t('clientPortfolio.health') }}</template>
+          <template #cell-column2="{ row }">
+            <BsStatusBadge class="whitespace-nowrap" :status="row.health" :label="t(`clientPortfolio.healthStates.${row.health}`)" :tone="healthTone(row.health)" />
+          </template>
+          <template #header-column3>{{ t('clientPortfolio.period') }}</template>
+          <template #cell-column3="{ row }">{{ signalText(row.period, 'clientPortfolio.periodStates') }}</template>
+          <template #header-column4>{{ t('clientPortfolio.reconciliation') }}</template>
+          <template #cell-column4="{ row }">{{ signalText(row.reconciliation, 'clientPortfolio.reconciliationStates') }}</template>
+          <template #header-column5>{{ t('clientPortfolio.lastActivity') }}</template>
+          <template #cell-column5="{ row }">
+            {{ row.lastActivity.state === 'unavailable'
+              ? t('clientPortfolio.unavailable')
+              : row.lastActivity.value
+                ? formatDate(row.lastActivity.value, locale)
+                : t('clientPortfolio.noActivity') }}
+          </template>
+          <template #header-column6><span class="sr-only">{{ t('clientPortfolio.actions') }}</span></template>
+          <template #cell-column6="{ row }">
+            <BsButton type="button" class="ls-btn ls-btn-sm" :disabled="Boolean(openingId)" @click="openClient(row)">
+              {{ openingId === row.id ? t('clientPortfolio.opening') : t('clientPortfolio.openClient') }}
+            </BsButton>
+          </template>
+
         </BsDataTable>
       </div>
     </section>

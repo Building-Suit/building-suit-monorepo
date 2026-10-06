@@ -113,10 +113,10 @@ async function save() {
           </div>
           <h3 class="font-semibold">{{ t('statementClassification.history') }}</h3>
           <p v-if="!history.length" class="text-sm text-fg-muted">{{ t('statementClassification.noHistory') }}</p>
-          <BsDataTable v-else :label="t('statementClassification.history')" :value="history" data-key="id" :paginator="history.length > 10" :rows="10" class="overflow-x-auto">
-            <Column field="effective_from" :header="t('statementClassification.effectiveFrom')"><template #body="{ data: row }">{{ formatDate(row.effective_from, locale) }}</template></Column>
-            <Column field="statement_line" :header="t('statementClassification.line')"><template #body="{ data: row }">{{ dimension === 'balance_sheet' ? t(`statementClassification.lines.${row.statement_line}`) : t(`financialMapping.lines.${row.statement_line}`) }}</template></Column>
-            <Column field="reason" :header="t('statementClassification.reason')" body-class="min-w-48 whitespace-normal break-words" />
+          <BsDataTable v-else :label="t('statementClassification.history')" :value="history" row-key="id" :paginator="history.length > 10" :rows="10" class="overflow-x-auto" :columns="[{ key: 'effective_from', field: 'effective_from', header: t('statementClassification.effectiveFrom') }, { key: 'statement_line', field: 'statement_line', header: t('statementClassification.line') }, { key: 'reason', field: 'reason', header: t('statementClassification.reason') }]">
+            <template #cell-effective_from="{ row }">{{ formatDate(row.effective_from, locale) }}</template>
+            <template #cell-statement_line="{ row }">{{ dimension === 'balance_sheet' ? t(`statementClassification.lines.${row.statement_line}`) : t(`financialMapping.lines.${row.statement_line}`) }}</template>
+
           </BsDataTable>
         </template>
       </template>

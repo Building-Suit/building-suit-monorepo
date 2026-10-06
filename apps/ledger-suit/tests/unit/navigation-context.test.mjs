@@ -17,27 +17,26 @@ test('accounting routes remain capability-gated and grouped in one app shell', (
 
 test('module headers expose organization and applicable reporting context', () => {
   const expected = new Map([
-    ['pages/transactions.vue', [':from="filters.from"', ':to="filters.to"']],
-    ['pages/reports.vue', [':as-of=', ':from=']],
-    ['pages/receivables.vue', [':from="from"', ':to="asOf"']],
-    ['pages/payables.vue', [':from="from"', ':to="asOf"']],
-    ['pages/bank-reconciliation.vue', [':from="current?.statement_start"', ':to="current?.statement_end"']],
-    ['pages/accounting-dimensions.vue', [':from=', ':to=']],
-    ['pages/tax-vat.vue', [':from="from"', ':to="to"']],
-    ['pages/inventory-accounting.vue', [':as-of="asOf"']],
-    ['pages/fixed-assets.vue', [':as-of="asOfDate"']],
-    ['pages/periods.vue', [':from="currentPeriod?.start_date"', ':to="currentPeriod?.end_date"']],
+    ['pages/transactions.vue', ['context(filters.from, filters.to, undefined)']],
+    ['pages/reports.vue', ['ledgerPresentation.context(']],
+    ['pages/receivables.vue', ['context(from, asOf, undefined)']],
+    ['pages/payables.vue', ['context(from, asOf, undefined)']],
+    ['pages/bank-reconciliation.vue', ['context(current?.statement_start, current?.statement_end, undefined)']],
+    ['pages/accounting-dimensions.vue', ["context(tab === 'reports' ? reportFilter.from"]],
+    ['pages/tax-vat.vue', ['context(from, to, undefined)']],
+    ['pages/inventory-accounting.vue', ['context(undefined, undefined, asOf)']],
+    ['pages/fixed-assets.vue', ['context(undefined, undefined, asOfDate)']],
+    ['pages/periods.vue', ['context(currentPeriod?.start_date, currentPeriod?.end_date, undefined)']],
   ])
   for (const [path, bindings] of expected) {
     const page = read(`app/${path}`)
-    assert.match(page, /<LedgerPageHeader/)
+    assert.match(page, /<BsPageHeader/)
     for (const binding of bindings) assert.ok(page.includes(binding), `${path} is missing ${binding}`)
   }
   for (const path of ['accounts', 'opening-balances']) {
-    assert.match(read(`app/pages/${path}.vue`), /<LedgerPageHeader/)
+    assert.match(read(`app/pages/${path}.vue`), /<BsPageHeader/)
   }
-  const header = read('app/components/LedgerPageHeader.vue')
-  assert.match(header, /<BsPageHeader/)
+  const header = read('app/composables/useLedgerPresentation.ts')
   assert.match(header, /current\.value\?\.name/)
   assert.match(header, /pageContext\.reportingPeriod/)
 })

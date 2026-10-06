@@ -140,12 +140,13 @@ const submitLabel = computed(() => tab.value === 'commitments'
   ? t('operations.addCommitment')
   : tab.value === 'recurring' ? t('operations.addRule') : t('common.save'))
 const { dirty: overlayDirty0 } = useRecordAction(() => ({ commitmentForm, recurringForm, counterpartyForm, tagForm }), computed(() => Boolean(open.value)))
+const ledgerUsage = useLedgerUsagePresentation()
 </script>
 
 <template>
       <BsRecordActionDialog v-if="open" :visible="true" :title="title" size="lg" :dirty="overlayDirty0" :pending="busy" :error="errorMessage" :submit-label="submitLabel" :cancel-label="t('common.cancel')" @update:visible="value => { if (!value) close() }" @submit="submitCurrent">
           <main class="min-h-0 flex-1 overflow-y-auto">
-            <QuotaUsageMeter v-if="quotaKey" :quota-key="quotaKey" compact class="mb-4" />
+            <BsUsageMeter v-if="(quotaKey) && ledgerUsage.item(quotaKey)"  compact class="mb-4" :item="ledgerUsage.item(quotaKey)!" />
 
             <div v-if="tab === 'commitments' && can('commitments.create')" class="grid gap-3 md:grid-cols-2">
               <BsFloatingField :label="t('operations.name')"><input v-model="commitmentForm.title" class="ls-input" :placeholder="t('operations.name')" required></BsFloatingField>

@@ -29,6 +29,7 @@ const currentPlanName = computed(() => {
 
 // The global entitlement middleware owns the initial load. Loading again from
 // onMounted made the layout remove and remount this page on every request.
+const ledgerUsage = useLedgerUsagePresentation()
 </script>
 
 <template>
@@ -61,6 +62,13 @@ const currentPlanName = computed(() => {
       <div id="plans"><BillingCheckout :surface="pricingSurface" compact /></div>
       </div>
     </BsCard>
-    <UsageMeters />
+    <BsContentSection id="usage" :title="t('usage.title')" :description="t('usage.subtitle')">
+      <BsStateSurface v-if="ledgerUsage.loading && !ledgerUsage.items.length" state="loading" :title="t('usage.loading')" />
+      <BsStateSurface v-else-if="ledgerUsage.loadError && !ledgerUsage.items.length" state="error" :title="t('usage.loadFailed')" :action-label="t('common.retry')" @action="ledgerUsage.refresh()" />
+      <template v-else>
+        <BsButton v-if="ledgerUsage.loadError" variant="link" @click="ledgerUsage.refresh()">{{ t('common.retry') }}</BsButton>
+        <BsUsageMeterGrid :items="ledgerUsage.items" />
+      </template>
+    </BsContentSection>
   </div>
 </template>

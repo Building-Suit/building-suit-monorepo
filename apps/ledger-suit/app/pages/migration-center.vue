@@ -133,11 +133,12 @@ function isApplicable(key: string) {
   if (key === 'inventory') return operational.inventory_applicable
   return operational.tax_applicable
 }
+const ledgerPresentation = useLedgerPresentation()
 </script>
 
 <template>
   <div class="space-y-6" data-migration-center>
-    <LedgerPageHeader :title="t('migration.title')" :subtitle="t('migration.subtitle')" :as-of="center.context.value?.project.cutover_date" />
+    <BsPageHeader :title="t('migration.title')" :subtitle="t('migration.subtitle')" :context="ledgerPresentation.context(undefined, undefined, center.context.value?.project.cutover_date)" :context-label="ledgerPresentation.t('pageContext.label')" />
 
     <p v-if="!can('migrations.read')" class="ls-card p-6 text-fg-muted">{{ t('migration.noAccess') }}</p>
     <template v-else>
@@ -189,22 +190,21 @@ function isApplicable(key: string) {
             <p class="break-all text-fg-muted">SHA-256: {{ center.context.value.sources[0].content_sha256 }}</p>
             <p>{{ t('migration.originalRows', { count: sourceRows.length }) }}</p>
           </div>
-          <BsDataTable v-if="sourceRows.length" :value="sourceRows" data-key="source_row" :label="t('migration.sourcePreview')" :table-style="{ minWidth: '680px' }">
-            <Column field="source_row" header="#" />
-            <Column :header="t('migration.sourceKind')"><template #body="{ data }">{{ t(`migration.kinds.${data.raw_payload.source_kind}`) }}</template></Column>
-            <Column :header="t('migration.sourceKey')"><template #body="{ data }">{{ data.raw_payload.source_key }}</template></Column>
-            <Column :header="t('migration.sourceName')"><template #body="{ data }">{{ data.raw_payload.source_name }}</template></Column>
-            <Column :header="t('migration.rowIssues')"><template #body="{ data }"><span v-if="rowIssues(data.source_row).length" class="text-danger">{{ rowIssues(data.source_row).join(', ') }}</span><span v-else-if="center.context.value?.project.current_staging_batch_id" class="text-success">{{ t('migration.rowValid') }}</span><span v-else>—</span></template></Column>
+          <BsDataTable v-if="sourceRows.length" :value="sourceRows" row-key="source_row" :label="t('migration.sourcePreview')" :table-style="{ minWidth: '680px' }" :columns="[{ key: 'source_row', field: 'source_row', header: '#' }, { key: 'column2', header: t('migration.sourceKind') }, { key: 'column3', header: t('migration.sourceKey') }, { key: 'column4', header: t('migration.sourceName') }, { key: 'column5', header: t('migration.rowIssues') }]">
+            <template #cell-column2="{ row: data }">{{ t(`migration.kinds.${data.raw_payload.source_kind}`) }}</template>
+            <template #cell-column3="{ row: data }">{{ data.raw_payload.source_key }}</template>
+            <template #cell-column4="{ row: data }">{{ data.raw_payload.source_name }}</template>
+            <template #cell-column5="{ row: data }"><span v-if="rowIssues(data.source_row).length" class="text-danger">{{ rowIssues(data.source_row).join(', ') }}</span><span v-else-if="center.context.value?.project.current_staging_batch_id" class="text-success">{{ t('migration.rowValid') }}</span><span v-else>—</span></template>
+
           </BsDataTable>
         </section>
 
         <section v-if="mappingDecisions.length" class="ls-card space-y-4 p-5" aria-labelledby="migration-mapping">
           <div><h2 id="migration-mapping" class="text-h2 font-bold">{{ t('migration.sections.accounts') }}</h2><p class="text-sm text-fg-muted">{{ t('migration.mappingHint') }}</p></div>
-          <BsDataTable :value="mappingDecisions" data-key="source_key" :label="t('migration.mappingReview')" :table-style="{ minWidth: '760px' }">
-            <Column :header="t('migration.sourceKind')"><template #body="{ data }">{{ t(`migration.kinds.${data.source_kind}`) }}</template></Column>
-            <Column field="source_key" :header="t('migration.sourceKey')" />
-            <Column field="source_name" :header="t('migration.sourceName')" />
-            <Column :header="t('migration.ledgerTarget')"><template #body="{ data }"><select class="ls-input min-w-64" :value="mappingTarget(data)" @change="onMappingTarget(data, $event)"><option value="">{{ t('migration.chooseTarget') }}</option><option v-for="option in mappingOptions(data)" :key="option.id" :value="option.id">{{ option.label }}</option><option v-if="data.source_kind !== 'account'" value="__create__">{{ t('migration.reviewedCreation') }}</option></select></template></Column>
+          <BsDataTable :value="mappingDecisions" row-key="source_key" :label="t('migration.mappingReview')" :table-style="{ minWidth: '760px' }" :columns="[{ key: 'column1', header: t('migration.sourceKind') }, { key: 'source_key', field: 'source_key', header: t('migration.sourceKey') }, { key: 'source_name', field: 'source_name', header: t('migration.sourceName') }, { key: 'column4', header: t('migration.ledgerTarget') }]">
+            <template #cell-column1="{ row: data }">{{ t(`migration.kinds.${data.source_kind}`) }}</template>
+            <template #cell-column4="{ row: data }"><select class="ls-input min-w-64" :value="mappingTarget(data)" @change="onMappingTarget(data, $event)"><option value="">{{ t('migration.chooseTarget') }}</option><option v-for="option in mappingOptions(data)" :key="option.id" :value="option.id">{{ option.label }}</option><option v-if="data.source_kind !== 'account'" value="__create__">{{ t('migration.reviewedCreation') }}</option></select></template>
+
           </BsDataTable>
           <BsFloatingField :label="t('migration.reviewNote')"><textarea v-model="reviewNote" class="ls-input min-h-24" minlength="8" maxlength="1000" /></BsFloatingField>
           <BsButton type="button" class="ls-btn ls-btn-primary" :disabled="!mappingReady || Boolean(center.pending.value)" @click="act(() => center.reviewMappings(mappingDecisions, reviewNote), 'migration.mappingSaved')">{{ center.pending.value === 'mapping' ? t('common.saving') : t('migration.validateMapping') }}</BsButton>
@@ -212,11 +212,9 @@ function isApplicable(key: string) {
 
         <section v-else-if="center.context.value.mapping_entries.length" class="ls-card space-y-4 p-5" aria-labelledby="migration-mapping-reviewed">
           <div><h2 id="migration-mapping-reviewed" class="text-h2 font-bold">{{ t('migration.mappingReview') }}</h2><p class="text-sm text-fg-muted">{{ center.context.value.mapping_revisions[0]?.review_note }}</p></div>
-          <BsDataTable :value="center.context.value.mapping_entries" data-key="id" :label="t('migration.mappingReview')" :table-style="{ minWidth: '680px' }">
-            <Column field="source_kind" :header="t('migration.sourceKind')" />
-            <Column field="source_key" :header="t('migration.sourceKey')" />
-            <Column field="resolution" :header="t('migration.resolution')" />
-            <Column :header="t('migration.ledgerTarget')"><template #body="{ data }">{{ data.target_account_id || data.target_counterparty_id || data.proposed_record?.name }}</template></Column>
+          <BsDataTable :value="center.context.value.mapping_entries" row-key="id" :label="t('migration.mappingReview')" :table-style="{ minWidth: '680px' }" :columns="[{ key: 'source_kind', field: 'source_kind', header: t('migration.sourceKind') }, { key: 'source_key', field: 'source_key', header: t('migration.sourceKey') }, { key: 'resolution', field: 'resolution', header: t('migration.resolution') }, { key: 'column4', header: t('migration.ledgerTarget') }]">
+            <template #cell-column4="{ row: data }">{{ data.target_account_id || data.target_counterparty_id || data.proposed_record?.name }}</template>
+
           </BsDataTable>
         </section>
 
@@ -246,11 +244,11 @@ function isApplicable(key: string) {
             <p><span class="text-fg-muted">{{ t('opening.creditTotal') }}</span><br><strong>{{ amount(openingReview?.credit_total_minor) }}</strong></p>
             <p><span class="text-fg-muted">{{ t('opening.difference') }}</span><br><strong>{{ amount(openingReview?.difference_minor) }}</strong></p>
           </div>
-          <BsDataTable v-if="center.review.value.variances.length" :value="center.review.value.variances" :label="t('migration.reconciliations')" :table-style="{ minWidth: '680px' }">
-            <Column field="module" :header="t('migration.module')" />
-            <Column :header="t('migration.moduleDetail')"><template #body="{ data }">{{ amount(data.detail_minor) }}</template></Column>
-            <Column :header="t('migration.glBalance')"><template #body="{ data }">{{ amount(data.gl_minor) }}</template></Column>
-            <Column :header="t('opening.difference')"><template #body="{ data }"><span :class="data.variance_minor === '0' ? 'text-success' : 'text-danger'">{{ amount(data.variance_minor) }}</span></template></Column>
+          <BsDataTable v-if="center.review.value.variances.length" :value="center.review.value.variances" :label="t('migration.reconciliations')" :table-style="{ minWidth: '680px' }" :columns="[{ key: 'module', field: 'module', header: t('migration.module') }, { key: 'column2', header: t('migration.moduleDetail') }, { key: 'column3', header: t('migration.glBalance') }, { key: 'column4', header: t('opening.difference') }]">
+            <template #cell-column2="{ row: data }">{{ amount(data.detail_minor) }}</template>
+            <template #cell-column3="{ row: data }">{{ amount(data.gl_minor) }}</template>
+            <template #cell-column4="{ row: data }"><span :class="data.variance_minor === '0' ? 'text-success' : 'text-danger'">{{ amount(data.variance_minor) }}</span></template>
+
           </BsDataTable>
           <div v-if="center.review.value.errors.length" class="ls-error" role="alert"><p class="font-semibold">{{ t('migration.approvalBlocked') }}</p><ul class="mt-2 list-disc ps-5"><li v-for="code in center.review.value.errors" :key="code">{{ t(`migration.errors.${code}`) }}</li></ul></div>
           <div v-else class="rounded-control bg-[var(--bs-status-success-bg)] p-3 text-success" role="status">{{ t('migration.reconciled') }}</div>

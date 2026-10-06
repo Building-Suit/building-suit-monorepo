@@ -385,6 +385,7 @@ async function resendInvitation(invitation: InvitationRow) {
 const permissionRows = computed(() => permissionMenuGroups.value.flatMap(group => group.domains.flatMap(domain => domain.items.map(capability => ({ capability, groupKey: group.key, domainKey: domain.key, section: `${group.key}.${domain.key}` })))))
 const { dirty: overlayDirty0 } = useRecordAction(() => ({ role: editRoleChoice.value, status: editStatus.value }), computed(() => Boolean(editingMember.value)))
 const { dirty: overlayDirty2 } = useRecordAction(() => roleForm.value, computed(() => Boolean(roleModalOpen.value)))
+const ledgerUsage = useLedgerUsagePresentation()
 </script>
 
 <template>
@@ -405,9 +406,10 @@ const { dirty: overlayDirty2 } = useRecordAction(() => roleForm.value, computed(
     </header>
 
     <div class="ls-card flex flex-wrap gap-1 p-1.5" role="tablist" :aria-label="t('access.title')">
-      <BsButton variant="tab"
-        v-for="tab in tabs"
+      <BsButton
+v-for="tab in tabs"
         :key="tab.key"
+        variant="tab"
         type="button"
         role="tab"
         :aria-selected="activeTab === tab.key"
@@ -430,27 +432,18 @@ const { dirty: overlayDirty2 } = useRecordAction(() => roleForm.value, computed(
         </label>
       </div>
       <div v-if="visibleMembers.length" class="ls-card overflow-x-auto">
-        <BsDataTable :value="visibleMembers" data-key="id">
-  <Column >
-    <template #header>{{ t('access.name') }}</template>
-    <template #body="{ data: member }"><div class="flex items-center gap-3"><span class="grid size-9 shrink-0 place-items-center rounded-full bg-surface-muted font-black">{{ (member.profile?.full_name || member.profile?.email || '?').slice(0, 1).toUpperCase() }}</span><div><p class="font-bold">{{ member.profile?.full_name || member.profile?.email }}</p><p class="text-xs text-fg-muted" dir="ltr">{{ member.profile?.email }}</p><p v-if="member.profile?.job_title" class="text-xs text-fg-muted">{{ member.profile.job_title }}</p></div></div></template>
-  </Column>
-  <Column >
-    <template #header>{{ t('access.role') }}</template>
-    <template #body="{ data: member }"><span class="ls-badge bg-surface-muted">{{ roleLabel(member.role, member.role_id) }}</span><span v-if="member.granted_capabilities.length || member.revoked_capabilities.length" class="ms-1 text-xs text-fg-muted">{{ t('access.customized') }}</span></template>
-  </Column>
-  <Column >
-    <template #header>{{ t('access.status') }}</template>
-    <template #body="{ data: member }"><BsStatusBadge :status="member.status" /></template>
-  </Column>
-  <Column body-class="whitespace-nowrap">
-    <template #header>{{ t('access.joined') }}</template>
-    <template #body="{ data: member }">{{ formatDate(member.joined_at) }}</template>
-  </Column>
-  <Column header-class="text-end" body-class="whitespace-nowrap text-end">
-    <template #header>{{ t('access.actions') }}</template>
-    <template #body="{ data: member }"><BsButton v-if="can('members.update') && member.role !== 'owner'" type="button" class="ls-btn ls-btn-sm" @click="openEditor(member)">{{ t('access.editAccess') }}</BsButton><BsButton v-if="can('members.update') && member.role !== 'owner' && member.user_id !== user?.id" type="button" class="ls-btn ls-btn-sm ms-1" @click="quickStatus(member)">{{ t(member.status === 'active' ? 'access.suspend' : 'access.reactivate') }}</BsButton><BsButton v-if="can('members.remove') && member.role !== 'owner' && member.user_id !== user?.id" type="button" class="ls-btn ls-btn-sm ms-1 text-danger" @click="removeMember(member)">{{ t('access.remove') }}</BsButton></template>
-  </Column>
+        <BsDataTable :value="visibleMembers" row-key="id" :columns="[{ key: 'column1', header: (t('access.name')) }, { key: 'column2', header: (t('access.role')) }, { key: 'column3', header: (t('access.status')) }, { key: 'column4', header: (t('access.joined')) }, { key: 'column5', header: (t('access.actions')), align: 'end' as const }]">
+          <template #header-column1>{{ t('access.name') }}</template>
+          <template #cell-column1="{ row: member }"><div class="flex items-center gap-3"><span class="grid size-9 shrink-0 place-items-center rounded-full bg-surface-muted font-black">{{ (member.profile?.full_name || member.profile?.email || '?').slice(0, 1).toUpperCase() }}</span><div><p class="font-bold">{{ member.profile?.full_name || member.profile?.email }}</p><p class="text-xs text-fg-muted" dir="ltr">{{ member.profile?.email }}</p><p v-if="member.profile?.job_title" class="text-xs text-fg-muted">{{ member.profile.job_title }}</p></div></div></template>
+          <template #header-column2>{{ t('access.role') }}</template>
+          <template #cell-column2="{ row: member }"><span class="ls-badge bg-surface-muted">{{ roleLabel(member.role, member.role_id) }}</span><span v-if="member.granted_capabilities.length || member.revoked_capabilities.length" class="ms-1 text-xs text-fg-muted">{{ t('access.customized') }}</span></template>
+          <template #header-column3>{{ t('access.status') }}</template>
+          <template #cell-column3="{ row: member }"><BsStatusBadge :status="member.status" /></template>
+          <template #header-column4>{{ t('access.joined') }}</template>
+          <template #cell-column4="{ row: member }">{{ formatDate(member.joined_at) }}</template>
+          <template #header-column5>{{ t('access.actions') }}</template>
+          <template #cell-column5="{ row: member }"><BsButton v-if="can('members.update') && member.role !== 'owner'" type="button" class="ls-btn ls-btn-sm" @click="openEditor(member)">{{ t('access.editAccess') }}</BsButton><BsButton v-if="can('members.update') && member.role !== 'owner' && member.user_id !== user?.id" type="button" class="ls-btn ls-btn-sm ms-1" @click="quickStatus(member)">{{ t(member.status === 'active' ? 'access.suspend' : 'access.reactivate') }}</BsButton><BsButton v-if="can('members.remove') && member.role !== 'owner' && member.user_id !== user?.id" type="button" class="ls-btn ls-btn-sm ms-1 text-danger" @click="removeMember(member)">{{ t('access.remove') }}</BsButton></template>
+
 </BsDataTable>
       </div>
       <BsEmptyState v-else :title="t('access.noMembers')" />
@@ -490,35 +483,22 @@ const { dirty: overlayDirty2 } = useRecordAction(() => roleForm.value, computed(
     <template v-else>
       <p class="text-sm font-semibold text-fg-muted">{{ t('access.invitationCount', invitations.length) }}</p>
       <div v-if="invitations.length" class="ls-card overflow-x-auto">
-        <BsDataTable :value="invitations" data-key="id">
-  <Column >
-    <template #header>{{ t('auth.email') }}</template>
-    <template #body="{ data: invitation }"><div dir="ltr">{{ invitation.email }}</div></template>
-  </Column>
-  <Column >
-    <template #header>{{ t('access.role') }}</template>
-    <template #body="{ data: invitation }">{{ roleLabel(invitation.role, invitation.role_id) }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('access.status') }}</template>
-    <template #body="{ data: invitation }"><BsStatusBadge :status="invitation.status" /></template>
-  </Column>
-  <Column >
-    <template #header>{{ t('access.invitedBy') }}</template>
-    <template #body="{ data: invitation }"><p>{{ invitation.inviter?.full_name || '—' }}</p><p v-if="invitation.inviter?.job_title" class="text-xs text-fg-muted">{{ invitation.inviter.job_title }}</p></template>
-  </Column>
-  <Column body-class="whitespace-nowrap">
-    <template #header>{{ t('access.sent') }}</template>
-    <template #body="{ data: invitation }">{{ formatDate(invitation.created_at) }}</template>
-  </Column>
-  <Column body-class="whitespace-nowrap">
-    <template #header>{{ t('access.expires') }}</template>
-    <template #body="{ data: invitation }">{{ formatDate(invitation.expires_at) }}</template>
-  </Column>
-  <Column header-class="text-end" body-class="whitespace-nowrap text-end">
-    <template #header>{{ t('access.actions') }}</template>
-    <template #body="{ data: invitation }"><template v-if="invitation.status === 'pending'"><BsButton v-if="can('members.invite')" type="button" class="ls-btn ls-btn-sm" :disabled="saving" @click="resendInvitation(invitation)">{{ t('access.resend') }}</BsButton><BsButton v-if="can('members.update')" type="button" class="ls-btn ls-btn-sm ms-1 text-danger" :disabled="saving" @click="revokeInvitation(invitation)">{{ t('access.revoke') }}</BsButton></template></template>
-  </Column>
+        <BsDataTable :value="invitations" row-key="id" :columns="[{ key: 'column1', header: (t('auth.email')) }, { key: 'column2', header: (t('access.role')) }, { key: 'column3', header: (t('access.status')) }, { key: 'column4', header: (t('access.invitedBy')) }, { key: 'column5', header: (t('access.sent')) }, { key: 'column6', header: (t('access.expires')) }, { key: 'column7', header: (t('access.actions')), align: 'end' as const }]">
+          <template #header-column1>{{ t('auth.email') }}</template>
+          <template #cell-column1="{ row: invitation }"><div dir="ltr">{{ invitation.email }}</div></template>
+          <template #header-column2>{{ t('access.role') }}</template>
+          <template #cell-column2="{ row: invitation }">{{ roleLabel(invitation.role, invitation.role_id) }}</template>
+          <template #header-column3>{{ t('access.status') }}</template>
+          <template #cell-column3="{ row: invitation }"><BsStatusBadge :status="invitation.status" /></template>
+          <template #header-column4>{{ t('access.invitedBy') }}</template>
+          <template #cell-column4="{ row: invitation }"><p>{{ invitation.inviter?.full_name || '—' }}</p><p v-if="invitation.inviter?.job_title" class="text-xs text-fg-muted">{{ invitation.inviter.job_title }}</p></template>
+          <template #header-column5>{{ t('access.sent') }}</template>
+          <template #cell-column5="{ row: invitation }">{{ formatDate(invitation.created_at) }}</template>
+          <template #header-column6>{{ t('access.expires') }}</template>
+          <template #cell-column6="{ row: invitation }">{{ formatDate(invitation.expires_at) }}</template>
+          <template #header-column7>{{ t('access.actions') }}</template>
+          <template #cell-column7="{ row: invitation }"><template v-if="invitation.status === 'pending'"><BsButton v-if="can('members.invite')" type="button" class="ls-btn ls-btn-sm" :disabled="saving" @click="resendInvitation(invitation)">{{ t('access.resend') }}</BsButton><BsButton v-if="can('members.update')" type="button" class="ls-btn ls-btn-sm ms-1 text-danger" :disabled="saving" @click="revokeInvitation(invitation)">{{ t('access.revoke') }}</BsButton></template></template>
+
 </BsDataTable>
       </div>
       <BsEmptyState v-else :title="t('access.noInvitations')" />
@@ -542,26 +522,27 @@ const { dirty: overlayDirty2 } = useRecordAction(() => roleForm.value, computed(
 <div class="overflow-y-auto p-6">
             <div class="flex items-start justify-between gap-4"><div><h2 class="text-lg font-bold">{{ t('access.permissionsMatrix') }}</h2><p class="mt-1 text-sm text-fg-muted">{{ t('access.matrixHint') }}</p></div><BsButton type="button" class="ls-btn ls-btn-sm" :aria-label="t('common.close')" @click="dismiss"><BsIcon name="close" /></BsButton></div>
             <div class="mt-6 overflow-x-auto">
-              <BsDataTable :value="permissionRows" row-group-mode="subheader" group-rows-by="section">
-  <Column :header="t('access.permission')"><template #body="{ data: row }"><p class="font-semibold">{{ capabilityTitle(row.capability) }}</p></template></Column>
-  <Column v-for="role in roles" :key="role" :header="t(`org.roles.${role}`)" header-class="text-center" body-class="text-center"><template #body="{ data: row }"><BsIcon v-if="hasRolePermission(role, row.capability.key)" name="check" :size="18" class="mx-auto text-success" /><span v-else class="text-fg-muted">—</span></template></Column>
-  <Column v-for="role in customRoles" :key="role.id" :header="roleLabel(null, role.id)" header-class="text-center" body-class="text-center"><template #body="{ data: row }"><BsIcon v-if="customCapabilitiesFor(role.id).has(row.capability.key)" name="check" :size="18" class="mx-auto text-success" /><span v-else class="text-fg-muted">—</span></template></Column>
-<template #groupheader="{ data: row }"><div class="bg-surface-muted font-bold">{{ t(`nav.groups.${row.groupKey}`) }} / {{ t(`access.permissionAreas.${row.domainKey}`) }}</div></template></BsDataTable>
+              <BsDataTable :value="permissionRows" row-group-mode="subheader" group-rows-by="section" :columns="[{ key: 'column1', header: t('access.permission') }, ...(roles ?? []).map((role) => ({ key: role, header: t(`org.roles.${role}`), align: 'center' as const })), ...(customRoles ?? []).map((role) => ({ key: role.id, header: roleLabel(null, role.id), align: 'center' as const }))]">
+                <template #cell-column1="{ row }"><p class="font-semibold">{{ capabilityTitle(row.capability) }}</p></template>
+                <template v-for="role in roles" :key="role" #[`cell-${role}`]="{ row }"><BsIcon v-if="hasRolePermission(role, row.capability.key)" name="check" :size="18" class="mx-auto text-success" /><span v-else class="text-fg-muted">—</span></template>
+                <template v-for="role in customRoles" :key="role.id" #[`cell-${role.id}`]="{ row }"><BsIcon v-if="customCapabilitiesFor(role.id).has(row.capability.key)" name="check" :size="18" class="mx-auto text-success" /><span v-else class="text-fg-muted">—</span></template>
+
+                <template #groupheader="{ data: row }"><div class="bg-surface-muted font-bold">{{ t(`nav.groups.${row.groupKey}`) }} / {{ t(`access.permissionAreas.${row.domainKey}`) }}</div></template></BsDataTable>
             </div>
           </div>
 </template></BsDialog>
 
       <!-- Create / edit custom role -->
         <BsRecordActionDialog v-if="roleModalOpen" :visible="true" :title="roleForm.systemRole ? t('access.editRoleFor', { role: t(`org.roles.${roleForm.systemRole}`) }) : roleForm.id ? t('access.editRole') : t('access.newRole')" size="lg" :dirty="overlayDirty2" :pending="roleSaving" :error="errorMessage" :submit-label="t('access.createRole')" :cancel-label="t('common.cancel')" @update:visible="value => { if (!value) roleModalOpen = false }" @submit="saveRole">
-            <QuotaUsageMeter v-if="!roleForm.id && !roleForm.systemRole" quota-key="max_custom_roles" compact class="mt-4" />
+            <BsUsageMeter v-if="(!roleForm.id && !roleForm.systemRole) && ledgerUsage.item('max_custom_roles')"  compact class="mt-4" :item="ledgerUsage.item('max_custom_roles')!" />
             <div v-if="!roleForm.systemRole" class="mt-6 grid gap-4 sm:grid-cols-2">
               <BsFloatingField :label="t('access.roleNameEn')"><input v-model="roleForm.name_en" type="text" class="ls-input" dir="ltr" required maxlength="80"></BsFloatingField>
               <BsFloatingField :label="t('access.roleNameAr')"><input v-model="roleForm.name_ar" type="text" class="ls-input" dir="rtl" required maxlength="80"></BsFloatingField>
             </div>
             <div class="mt-7 overflow-x-auto">
-              <BsDataTable :value="permissionRows" row-group-mode="subheader" group-rows-by="section">
-  <Column :header="t('access.permission')"><template #body="{ data: row }"><label class="flex cursor-pointer items-center gap-3"><input type="checkbox" class="size-4 shrink-0 accent-[var(--bs-accent)]" :checked="roleForm.caps.has(row.capability.key)" @change="toggleRoleCap(row.capability.key, ($event.target as HTMLInputElement).checked)"><span class="font-semibold">{{ capabilityTitle(row.capability) }}</span></label></template></Column>
-<template #groupheader="{ data: row }"><div class="bg-surface-muted font-bold">{{ t(`nav.groups.${row.groupKey}`) }} / {{ t(`access.permissionAreas.${row.domainKey}`) }}</div></template></BsDataTable>
+              <BsDataTable :value="permissionRows" row-group-mode="subheader" group-rows-by="section" :columns="[{ key: 'column1', header: t('access.permission') }]">
+                <template #cell-column1="{ row }"><label class="flex cursor-pointer items-center gap-3"><input type="checkbox" class="size-4 shrink-0 accent-[var(--bs-accent)]" :checked="roleForm.caps.has(row.capability.key)" @change="toggleRoleCap(row.capability.key, ($event.target as HTMLInputElement).checked)"><span class="font-semibold">{{ capabilityTitle(row.capability) }}</span></label></template>
+                <template #groupheader="{ data: row }"><div class="bg-surface-muted font-bold">{{ t(`nav.groups.${row.groupKey}`) }} / {{ t(`access.permissionAreas.${row.domainKey}`) }}</div></template></BsDataTable>
             </div>
         </BsRecordActionDialog>
   </div>
