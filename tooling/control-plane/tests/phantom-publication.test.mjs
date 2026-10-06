@@ -86,3 +86,14 @@ test('legacy scope gate resumes only when every waiting path has current registe
  snapshot.failures[0].metadata.classification.waiting=['apps/shop-suit/app.vue'];assert.equal(supersededPublicationHold(snapshot),false)
  snapshot.failures[0].metadata.classification.waiting=['packages/ux/src/index.ts'];snapshot.run_publication_authority.authorized=false;assert.equal(supersededPublicationHold(snapshot),false)
 })
+test('duplicate publisher wakes and restarted polling run one child and replay its receipt',async()=>{
+ const root=mkdtempSync(path.join(os.tmpdir(),'publication-once-'))
+ try{const paths=receiptPaths(root,'publication'),counter=path.join(root,'counter')
+ const request={program:process.execPath,args:['-e',`const fs=require('node:fs');const p=process.argv[1];fs.writeFileSync(p,String(Number(fs.existsSync(p)?fs.readFileSync(p,'utf8'):0)+1));setTimeout(()=>console.log(JSON.stringify({ok:true})),300)`,counter],cwd:root,timeout:5000}
+ startReceipt(paths,request);startReceipt(paths,request)
+ for(let i=0;i<100&&!readJson(paths.result);i++)await new Promise(resolve=>setTimeout(resolve,30))
+ assert.equal(readJson(paths.result)?.code,0);assert.equal(readFileSync(counter,'utf8'),'1')
+ assert.equal(startReceipt(receiptPaths(root,'publication'),request).settled,true)
+ assert.equal(readFileSync(counter,'utf8'),'1')
+ }finally{rmSync(root,{recursive:true,force:true})}
+})
