@@ -6672,6 +6672,10 @@ function recoverWorkflowRun() {
     for(let step=0;step<25;step++) {
       const gate = parseControlJson(controlQuery(`SELECT control.workflow_run_gate(:'id'::uuid);`,{id:runId}))
       if (!gate.should_continue) { output({ok:true,status:gate.reason,run:gate}); return }
+      // Binding reconciliation can invalidate the claim's contract. Refresh it
+      // through the existing frozen-run authority before acquisition, as the
+      // ordinary watchdog does; acquisition still owns every admission gate.
+      controlQuery(`SELECT control.reconcile_ordinary_run_publication(:'run'::uuid);`,{run:runId})
       const acquisition = parseControlJson(controlQuery(`SELECT control.acquire_workflow_run_task(:'id'::uuid,'cp-batch-v2',:'fingerprint',:'token','runner');`,{id:runId,fingerprint:process.env.BS_BATCH_CONTROLLER_FINGERPRINT ?? 'c51e2846c1fe3966ac5705a2ba6e21c11804e4f1e0ea3be37a14ef2c47cca075',token:`selfheal:${runId}`}))
       if (!acquisition.acquired && acquisition.action !== 'credit_completion') { output({ok:true,status:'wait',run_id:runId,acquisition}); return }
       const taskId = acquisition.packet?.task?.task_id ?? acquisition.task_id
