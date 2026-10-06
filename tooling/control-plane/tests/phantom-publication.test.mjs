@@ -8,6 +8,7 @@ import {planSupervisorStep} from '../runner/task-supervisor.mjs'
 import {dispatchRecovery} from '../runner/dot-general-recovery.mjs'
 import {receiptPaths,atomicJson,startReceipt,readJson,processStamp} from '../runner/durable-process.mjs'
 import {classifyPublicationFiles} from '../runner/publication-preflight.mjs'
+import {supersededPublicationHold} from '../runner/bounded-publication.mjs'
 import {observeProcesses} from '../runner/dot-health-collector.mjs'
 const now=Date.now(),past=new Date(now-120_000).toISOString(),future=new Date(now+120_000).toISOString()
 const input=()=>({key:'run:original',run:{run_id:'original',status:'running',max_tasks:2,completed_tasks:0},task:{task_id:'SHELL',status:'passed'},execution:{execution_id:309,attempt:5,status:'failed',finished_at:past},verification:{status:'passed',finished_at:past},operation:{operation_id:'publication',action:'task-publish'},recovery:{status:'active',next_action:'wait-external',next_wake_at:past},policy:{max_attempts:5}})
@@ -75,4 +76,13 @@ test('health page renders publisher evidence and changes stale evidence to STUCK
  await page.reload();await page.waitForFunction(()=>document.querySelector('.badge')?.textContent==='STUCK')
  assert.equal(await page.locator('.badge').first().innerText(),'STUCK')
  }finally{await browser.close()}
+})
+
+test('legacy scope gate resumes only when every waiting path has current registered ordinary run authority',()=>{
+ const snapshot={packet:{task:{task_id:'SHELL',status:'passed'},publication_boundaries:{task_paths:['packages/ux/**'],project_paths:['packages/']}},recovery:{next_action:'wait-operator',error_code:'publication_scope_requires_operator',failure_id:1},failures:[{failure_id:1,error_code:'publication_scope_operator_wait',metadata:{classification:{waiting:['packages/ux/src/index.ts'],blocked:[]}}}],run_publication_authority:{authorized:true,mode:'ordinary-draft',run_id:'original',task_id:'SHELL',contract_fingerprint:'current'}}
+ assert.equal(supersededPublicationHold(snapshot),true)
+ assert.equal(planSupervisorStep(snapshot).command,'task-publish')
+ snapshot.failures[0].metadata.classification.waiting=['packages/ux/.env'];assert.equal(supersededPublicationHold(snapshot),false)
+ snapshot.failures[0].metadata.classification.waiting=['apps/shop-suit/app.vue'];assert.equal(supersededPublicationHold(snapshot),false)
+ snapshot.failures[0].metadata.classification.waiting=['packages/ux/src/index.ts'];snapshot.run_publication_authority.authorized=false;assert.equal(supersededPublicationHold(snapshot),false)
 })

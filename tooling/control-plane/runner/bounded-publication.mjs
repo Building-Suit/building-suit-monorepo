@@ -1,3 +1,4 @@
+import {pathInScope,validPublicationPath,protectedPublicationPath} from './publication-preflight.mjs'
 // These receipts are supplied by PostgreSQL, not worker-generated task metadata.
 export function ordinaryRunAuthority(authority, taskId) {
   return authority?.authorized === true && authority.mode === 'ordinary-draft' &&
@@ -6,8 +7,18 @@ export function ordinaryRunAuthority(authority, taskId) {
 export function supersededPublicationHold(snapshot) {
   return snapshot.packet?.task?.status === 'passed' &&
     snapshot.recovery?.next_action === 'wait-operator' &&
-    snapshot.recovery?.error_code === 'publication_operator_hold' &&
+    (snapshot.recovery?.error_code === 'publication_operator_hold' || supersededRegisteredScopeGate(snapshot)) &&
     ordinaryRunAuthority(snapshot.run_publication_authority, snapshot.packet.task.task_id)
+}
+// Reconcile a legacy exact-file gate only when every recorded waiting file is
+// already inside this task's registered, ordinary scope under a current DB grant.
+export function supersededRegisteredScopeGate(snapshot){
+ if(snapshot.recovery?.error_code!=='publication_scope_requires_operator')return false
+ const failure=snapshot.failures?.find(f=>Number(f.failure_id)===Number(snapshot.recovery.failure_id))
+ const proof=failure?.metadata?.classification,boundaries=snapshot.packet?.publication_boundaries
+ return failure?.error_code==='publication_scope_operator_wait' && proof?.waiting?.length>0 && proof.blocked?.length===0
+  && proof.waiting.every(file=>validPublicationPath(file)&&!protectedPublicationPath(file)
+   && pathInScope(file,boundaries?.task_paths??[])&&pathInScope(file,boundaries?.project_paths??[]))
 }
 // Repair only the historical nested-publisher classification bug. Re-enter
 // publication, which must enforce the current scope, verification and gates;
