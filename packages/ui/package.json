@@ -165,7 +165,12 @@
     "./atoms/BsColorSwatch": "./src/atoms/BsColorSwatch.vue",
     "./molecules/BsFlowBlock": "./src/molecules/BsFlowBlock.vue",
     "./organisms/BsDashboardPreview": "./src/organisms/BsDashboardPreview.vue",
-    "./templates/BsAdministrationShell": "./src/templates/BsAdministrationShell.vue"
+    "./templates/BsAdministrationShell": "./src/templates/BsAdministrationShell.vue",
+    "./molecules/BsAccessTabs": "./src/molecules/BsAccessTabs.vue",
+    "./organisms/BsPermissionMatrix": "./src/organisms/BsPermissionMatrix.vue",
+    "./organisms/BsRoleEditorDialog": "./src/organisms/BsRoleEditorDialog.vue",
+    "./organisms/BsMemberEditorDialog": "./src/organisms/BsMemberEditorDialog.vue",
+    "./organisms/BsInvitationTable": "./src/organisms/BsInvitationTable.vue"
   },
   "dependencies": {
     "primevue": "4.5.5",
