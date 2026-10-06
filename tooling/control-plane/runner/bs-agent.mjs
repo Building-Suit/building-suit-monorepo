@@ -7226,7 +7226,7 @@ switch (command) {
 
   case 'operator-gates':
     if(!validRunId(args[0])) output({ok:false,error:'valid_run_id_required'},64)
-    else {try {output({ok:true,run_id:args[0],...parseControlJson(controlQuery(`SELECT jsonb_build_object('gates',control.operator_gate_offers(:'run'::uuid),'blocked_state',(SELECT jsonb_build_object('task_id',r.current_task_id,'reason',s.error_code,'condition',s.condition) FROM control.workflow_runs r LEFT JOIN control.recovery_states s ON s.current_task_id=r.current_task_id AND s.status='active' WHERE r.run_id=:'run'::uuid ORDER BY s.updated_at DESC LIMIT 1));`,{run:args[0]}))})}catch(error){output({ok:false,error:error.message},1)}}
+    else {try {output({ok:true,run_id:args[0],...parseControlJson(controlQuery(`SELECT jsonb_build_object('gates',control.operator_gate_offers(:'run'::uuid),'blocked_state',(SELECT jsonb_build_object('task_id',r.current_task_id,'reason',s.error_code,'condition',s.condition,'protected_paths',f.metadata->'protected_paths','requested_authorization',CASE WHEN s.error_code='publication_protected_path_operator_wait' THEN 'Separate protected-path review and authorization required for the listed files; unavailable through ordinary publication approval.' ELSE NULL END) FROM control.workflow_runs r LEFT JOIN control.recovery_states s ON s.current_task_id=r.current_task_id AND s.status='active' LEFT JOIN control.failures f ON f.failure_id=s.failure_id WHERE r.run_id=:'run'::uuid ORDER BY s.updated_at DESC LIMIT 1));`,{run:args[0]}))})}catch(error){output({ok:false,error:error.message},1)}}
     break
 
   case 'operator-gate-resolve':
