@@ -6606,6 +6606,8 @@ function recoveryWatch() {
     const candidates = parseControlJson(controlQuery(`SELECT coalesce(jsonb_agg(to_jsonb(r)),'[]'::jsonb) FROM control.workflow_runs r WHERE status='running' OR (status='failed' AND current_task_id IS NOT NULL);`))
     const outcomes = [{action:'health_collection',ok:health.code===0,llm_used:false}]
     for (const candidate of candidates) {
+      const nativeGate=parseControlJson(controlQuery(`SELECT control.reconcile_native_reacceptance_gate(:'run'::uuid);`,{run:candidate.run_id}))
+      if(nativeGate.reconciled){outcomes.push({action:'native_reacceptance_guard_reconciled',...nativeGate});continue}
       const observed=parseControlJson(controlQuery(`SELECT snapshot FROM control.dot_health_current WHERE run_id=:'run'::uuid;`,{run:candidate.run_id}))
       if(observed?.worker_alive){outcomes.push({run_id:candidate.run_id,eligible:false,reason:'worker_active'});continue}
       if(stuckRecoveryCandidate(observed)) {

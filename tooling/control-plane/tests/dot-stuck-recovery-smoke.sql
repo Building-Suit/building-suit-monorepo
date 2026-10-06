@@ -38,5 +38,22 @@ BEGIN
  IF result->>'reason'<>'operator_gate' OR result#>>'{accounting,all_product}'<>'true' THEN RAISE EXCEPTION 'Legitimate exhaustion did not gate: %',result;END IF;
  IF NOT EXISTS(SELECT 1 FROM control.recovery_states WHERE resume_identity='task:'||task AND status='active' AND next_action='wait-operator' AND error_code='retry_budget_exhausted') THEN RAISE EXCEPTION 'Human gate not persisted';END IF;
 END $$;
+DO $$ DECLARE r control.workflow_runs%ROWTYPE; ex bigint; approval bigint; result jsonb; original jsonb; before_history jsonb;
+BEGIN
+ SELECT * INTO r FROM control.workflow_runs WHERE current_task_id='CP-STUCK-INFRA-001';
+ SELECT execution_id INTO ex FROM control.executions WHERE task_id=r.current_task_id ORDER BY attempt DESC LIMIT 1;
+ original:=jsonb_build_object('base_sha',repeat('b',40),'fingerprint',repeat('c',64),'files',jsonb_build_array(jsonb_build_object('file','tooling/control-plane/tests/fixture.mjs','object',repeat('d',40))));
+ UPDATE control.executions SET metadata=metadata||jsonb_build_object('verification_probe_verified_state',original,'verification_probe_failures',jsonb_build_array(jsonb_build_object('name','required-e2e','status','fail','failure_class','verification-infrastructure'))) WHERE execution_id=ex;
+ PERFORM control.reconcile_ordinary_run_publication(r.run_id);
+ PERFORM control.record_recovery_condition(p_resume_identity=>'task:'||r.current_task_id,p_idempotency_key=>'native-null-guard-fixture',p_failure_class=>'operator-wait',p_error_code=>'ERROR:  Original authorized bounded run required',p_next_action=>'wait-operator',p_recoverable=>false,p_source=>'unit-test',p_project_id=>r.project_id,p_workstream_slug=>r.workstream_slug,p_current_task_id=>r.current_task_id,p_execution_id=>ex,p_status=>'active');
+ result:=control.reconcile_native_reacceptance_gate(r.run_id);
+ IF result->>'reconciled'<>'true' THEN RAISE EXCEPTION 'Native configuration guard did not reconcile: %',result;END IF;
+ INSERT INTO control.task_events(task_id,event_type,source,payload) VALUES(r.current_task_id,'verifier_reacceptance_authorized','dot',jsonb_build_object('run_id',r.run_id,'execution_id',ex,'attempt',3,'verifier_paths',jsonb_build_array('tooling/control-plane/tests/fixture.mjs'),'required_checks',jsonb_build_array('required-e2e'))) RETURNING event_id INTO approval;
+ SELECT to_jsonb(e) INTO before_history FROM control.executions e WHERE execution_id=ex;
+ result:=control.reaccept_dot_verifier_only(r.current_task_id,ex,approval,jsonb_build_object('task_id',r.current_task_id,'ok',true,'passed',true,'verified_state',original,'checks',jsonb_build_array(jsonb_build_object('name','required-e2e','status','pass','required',true,'exit_code',0))));
+ IF result->>'passed'<>'true' OR (SELECT status FROM control.tasks WHERE task_id=r.current_task_id)<>'passed' THEN RAISE EXCEPTION 'Native same-attempt reacceptance failed: %',result;END IF;
+ IF before_history IS DISTINCT FROM (SELECT to_jsonb(e) FROM control.executions e WHERE execution_id=ex) THEN RAISE EXCEPTION 'Native reacceptance rewrote execution';END IF;
+ IF control.reconcile_native_reacceptance_gate(r.run_id)->>'reconciled'<>'false' THEN RAISE EXCEPTION 'Configuration recovery not idempotent';END IF;
+END $$;
 ROLLBACK;
 SELECT 'DOT_STUCK_RECOVERY_DEDUP_ACCOUNTING_GATE_PASS';
