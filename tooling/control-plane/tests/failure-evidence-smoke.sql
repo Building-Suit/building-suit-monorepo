@@ -18,5 +18,7 @@ BEGIN
  IF NOT EXISTS(SELECT 1 FROM control.verification_failure_reviews WHERE verification_id=c.verification_id AND evidence->>'classification'='PRODUCT_DEFECT') THEN RAISE EXCEPTION 'Structured SQL receipt not accepted';END IF;
  UPDATE control.verification_results SET metadata=metadata||jsonb_build_object('failure_evidence',e||jsonb_build_object('execution_id',-1)) WHERE verification_id=c.verification_id;
  IF (SELECT metadata->'failure_evidence'->>'execution_id' FROM control.verification_results WHERE verification_id=c.verification_id)<>c.execution_id::text THEN RAISE EXCEPTION 'Verifier identity not bound server-side';END IF;
+ UPDATE control.verification_results SET metadata=metadata-'failure_evidence' WHERE verification_id=c.verification_id;
+ IF (SELECT metadata->'failure_evidence'->>'classification' FROM control.verification_results WHERE verification_id=c.verification_id) IS DISTINCT FROM 'PRODUCT_DEFECT' THEN RAISE EXCEPTION 'Final serialization dropped evidence';END IF;
 END $$;
 ROLLBACK;
