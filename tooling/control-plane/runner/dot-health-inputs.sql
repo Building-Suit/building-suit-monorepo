@@ -9,7 +9,7 @@ WITH active_runs AS (
 SELECT coalesce(jsonb_agg(jsonb_build_object('key',s.key,'run',s.run,'task',to_jsonb(t),'execution',e.data,'verification',v.data,'recovery',rec.data,'operation',op.data,'publication',pub.data,
  'policy',CASE WHEN t.task_id IS NOT NULL THEN control.resolved_retry_policy(t.task_id) END,
  'accounting',CASE WHEN t.task_id IS NOT NULL THEN control.product_retry_accounting(t.task_id) END,
- 'last_progress_at',progress.created_at,
+ 'last_progress_at',progress.created_at,'incident_recovery',(SELECT to_jsonb(j) FROM control.dot_recovery_jobs j WHERE j.run_id=(s.run->>'run_id')::uuid AND j.task_id IS NOT DISTINCT FROM t.task_id AND j.status IN('queued','running','human-gate') ORDER BY started_at DESC LIMIT 1),
  'blocking_dependency',EXISTS(SELECT 1 FROM control.task_dependencies d JOIN control.tasks parent ON parent.task_id=d.depends_on_task_id WHERE d.task_id=t.task_id AND d.dependency_type='hard' AND parent.status<>'complete'),
  'blocking_decision',EXISTS(SELECT 1 FROM control.task_decisions td JOIN control.decisions d ON d.suit_slug=td.suit_slug AND d.decision_id=td.decision_id WHERE td.task_id=t.task_id AND td.blocking AND d.status<>'approved'),
  'next_eligible_task',(SELECT ready.task_id FROM control.ready_tasks ready WHERE ready.project_id=(s.run->>'project_id')::uuid AND ready.workstream_slug=s.run->>'workstream_slug'

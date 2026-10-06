@@ -1,0 +1,52 @@
+\set ON_ERROR_STOP on
+BEGIN;
+UPDATE control.workflow_runs SET status='finished' WHERE suit_slug='cp-selfheal-fixture' AND status='running';
+UPDATE control.tasks SET status='cancelled' WHERE workstream_slug='cp-selfheal-fixture' AND status IN('in_progress','verification','passed','failed');
+DO $$ DECLARE run uuid:=gen_random_uuid(); task text:='CP-GENERAL-001'; prj uuid; ex bigint; approval bigint; result jsonb; first jsonb; second jsonb; original jsonb; v bigint; jid uuid; token uuid; acquisition jsonb;
+BEGIN
+ SELECT project_id INTO prj FROM control.projects WHERE slug='building-suit';
+ INSERT INTO control.tasks(task_id,suit_slug,sequence,title,status,acceptance_criteria,verification_plan,metadata,project_id,workstream_slug,retry_policy_id)
+ SELECT id,'cp-selfheal-fixture',n,id,'planned','["fixture"]','["git diff --check"]','{"allowed_paths":["tooling/control-plane/**"]}',prj,'cp-selfheal-fixture','foundation-three' FROM (VALUES(task,-60002),('CP-GENERAL-002',-60001)) ids(id,n);
+ PERFORM control.refresh_publication_readiness_contract(task,'general-recovery-test');
+ PERFORM control.refresh_publication_readiness_contract('CP-GENERAL-002','general-recovery-test');
+ INSERT INTO control.workflow_runs(run_id,suit_slug,project_id,workstream_slug,max_tasks,status,current_task_id,controller_protocol,controller_fingerprint)
+ VALUES(run,'cp-selfheal-fixture',prj,'cp-selfheal-fixture',2,'running',task,'cp-batch-v2','fixture-controller');
+ UPDATE control.tasks SET status='in_progress' WHERE task_id=task;
+ PERFORM control.authorize_ordinary_bounded_run(run,jsonb_build_array(task,'CP-GENERAL-002'),'Explicit general recovery fixture');
+ original:=jsonb_build_object('base_sha',repeat('b',40),'fingerprint',repeat('c',64),'files',jsonb_build_array(jsonb_build_object('file','tooling/control-plane/tests/fixture.mjs','object',repeat('d',40))));
+ INSERT INTO control.executions(task_id,attempt,status,model_profile,branch_name,parent_branch,commit_sha,metadata) VALUES(task,1,'failed','standard','codex/cp-selfheal-fixture/general','stg',repeat('b',40),jsonb_build_object('verification_probe_verified_state',original,'verification_probe_failures',jsonb_build_array(jsonb_build_object('name','required-e2e','status','fail','failure_class','verification-infrastructure')))) RETURNING execution_id INTO ex;
+ UPDATE control.tasks SET status='failed' WHERE task_id=task;
+ PERFORM control.reconcile_ordinary_run_publication(run);
+ INSERT INTO control.task_events(task_id,event_type,source,payload) VALUES(task,'verifier_reacceptance_authorized','dot',jsonb_build_object('run_id',run,'execution_id',ex,'attempt',1,'verifier_paths',jsonb_build_array('tooling/control-plane/tests/fixture.mjs'),'required_checks',jsonb_build_array('required-e2e'))) RETURNING event_id INTO approval;
+ result:=control.reaccept_dot_verifier_only(task,ex,approval,jsonb_build_object('task_id',task,'ok',true,'passed',true,'verified_state',original,'checks',jsonb_build_array(jsonb_build_object('name','required-e2e','status','pass','required',true,'exit_code',0))));v:=(result->>'verification_run_id')::bigint;
+ IF NOT control.publication_execution_is_eligible(task,ex) THEN RAISE EXCEPTION 'Native NULL admission PASS cannot publish';END IF;
+ UPDATE control.run_ordinary_publication_authorizations SET revoked_at=now() WHERE run_id=run;
+ IF control.publication_execution_is_eligible(task,ex) THEN RAISE EXCEPTION 'Revoked authority bypassed';END IF;
+ UPDATE control.run_ordinary_publication_authorizations SET revoked_at=NULL WHERE run_id=run;
+ PERFORM control.record_dot_health(jsonb_build_array(jsonb_build_object('key','run:'||run,'run_id',run,'task_id',task,'execution_id',ex,'state','STUCK','why','fixture publication handoff','worker_alive',false,'operator_action_required',false,'observed_at',now())));
+ first:=control.claim_dot_recovery(run,repeat('e',64),'publication-handoff','{}');
+ IF first->>'claimed'<>'true' OR first#>>'{job,owner}'<>'Dot' THEN RAISE EXCEPTION 'Same-cycle ownership missing: %',first;END IF;
+ jid:=(first#>>'{job,incident_id}')::uuid;token:=(first#>>'{job,claim_token}')::uuid;
+ second:=control.claim_dot_recovery(run,repeat('e',64),'publication-handoff','{}');
+ IF second->>'claimed'<>'false' OR second#>>'{job,incident_id}' IS DISTINCT FROM jid::text THEN RAISE EXCEPTION 'Duplicate repair started';END IF;
+ UPDATE control.dot_recovery_jobs SET claim_until=now()-interval '1 second' WHERE incident_id=jid;
+ second:=control.claim_dot_recovery(run,repeat('e',64),'publication-handoff','{}');
+ IF second->>'claimed'<>'true' OR second#>>'{job,incident_id}' IS DISTINCT FROM jid::text THEN RAISE EXCEPTION 'Restart lost incident';END IF;
+ IF control.finish_dot_recovery(jid,token,'resolved','{}') THEN RAISE EXCEPTION 'Stale owner changed recovery';END IF;
+ first:=control.claim_dot_recovery(run,repeat('f',64),'unknown-fixture-family','{}');
+ IF first#>>'{job,owner}'<>'Codex' OR first#>>'{job,action}'<>'incident-investigate' THEN RAISE EXCEPTION 'Unknown incident not automatically queued';END IF;
+ jid:=(first#>>'{job,incident_id}')::uuid;token:=(first#>>'{job,claim_token}')::uuid;
+ PERFORM control.finish_dot_recovery(jid,token,'resolved','{"regression_passed":true}',repeat('a',40),'tooling/control-plane/tests/dot-general-recovery.test.mjs');
+ first:=control.claim_dot_recovery(run,repeat('a',64),'unknown-fixture-family','{}');
+ IF first#>>'{job,owner}'<>'Dot' THEN RAISE EXCEPTION 'Learned semantic recovery not deterministic';END IF;
+ IF (control.audit_product_attempts(task)->>'consumed')::integer<>0 OR (SELECT count(*) FROM control.executions WHERE task_id=task)<>1 THEN RAISE EXCEPTION 'Infrastructure consumed product budget/history';END IF;
+ PERFORM control.complete_publication(task,'fixture/native',950001,'codex/cp-selfheal-fixture/general','stg','https://example.invalid/950001',repeat('b',40),true,jsonb_build_object('verification_run_id',v));
+ PERFORM control.record_workflow_task_success(run,task,'general-credit');
+ PERFORM control.record_workflow_task_success(run,task,'general-credit-replay');
+ IF (SELECT completed_tasks FROM control.workflow_runs WHERE run_id=run)<>1 THEN RAISE EXCEPTION 'Credit duplicated';END IF;
+ acquisition:=control.acquire_workflow_run_task(run,'cp-batch-v2','fixture-controller','general-owner','runner');
+ IF acquisition->>'task_id' IS DISTINCT FROM 'CP-GENERAL-002' THEN RAISE EXCEPTION 'Completion did not advance existing run: %',acquisition;END IF;
+ IF (SELECT count(*) FROM control.task_events WHERE task_id=task AND event_type='publication_completed')<>1 THEN RAISE EXCEPTION 'Publication repeated';END IF;
+END $$;
+ROLLBACK;
+SELECT 'DOT_GENERAL_NATIVE_PASS_OWNERSHIP_RESTART_LEARNING_CREDIT_NEXT_PASS';

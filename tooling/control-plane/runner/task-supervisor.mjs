@@ -82,6 +82,7 @@ export function supervisorStateFingerprint(snapshot) {
       snapshot.packet.workstream.publication_config,
       snapshot.packet.workstream.verification_config,
     ],
+    publication_execution_eligible:snapshot.publication_execution_eligible??null,
     run_publication_authority: snapshot.run_publication_authority ?? null,
     publication_boundaries: snapshot.packet?.publication_boundaries ?? null,
     publication_contract: snapshot.packet?.publication_contract && [

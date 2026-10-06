@@ -18,6 +18,13 @@ export function publicationStopNeedsReclassification(snapshot) {
   const verification = [...(snapshot.verification_runs ?? [])]
     .filter(v => Number(v.execution_id) === Number(execution?.execution_id))
     .sort((a, b) => a.verification_run_id - b.verification_run_id).at(-1)
+  // A previously rejected eligibility guard is superseded only by current DB
+  // proof of the exact latest execution and a current ordinary run grant. The
+  // publisher still performs every protected-path/scope/verification preflight.
+  if(snapshot.packet?.task?.status==='passed' && verification?.status==='passed' && snapshot.publication_execution_eligible===true
+    && ordinaryRunAuthority(snapshot.run_publication_authority,snapshot.packet.task.task_id)
+    && recovery?.next_action==='safety-stop' && recovery.metadata?.child_command==='task-publish'
+    && /^Latest execution lacks successful implementation or exact guarded reacceptance\.?$/.test(recovery.error_code??''))return true
   const failure = snapshot.failures?.find(f => Number(f.failure_id) === Number(recovery?.failure_id))
   return snapshot.packet?.task?.status === 'passed' && execution?.status === 'succeeded' && verification?.status === 'passed' &&
     recovery?.next_action === 'safety-stop' && recovery.failure_class === 'safety-stop' &&

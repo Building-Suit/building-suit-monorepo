@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { stuckRecoveryCandidate,stuckIncidentFingerprint } from './dot-stuck-recovery.mjs'
+import { dispatchRecovery,needsRecovery } from './dot-general-recovery.mjs'
 import { cleanupIntegratedWorktrees } from './dot-cleanup.mjs'
 import { preexecutionBindingEvidence } from './preexecution-binding-recovery.mjs'
 import { strictBindingRecoveryEvidence, requiresSameAttemptVerification } from './binding-recovery.mjs'
@@ -4835,6 +4835,7 @@ export function supervisorSnapshot(taskId) {
           WHERE target.task_id = :'task_id'
             AND other.status IN ('in_progress', 'verification', 'passed', 'failed')
         ), '[]'::jsonb),
+        'publication_execution_eligible',(SELECT control.publication_execution_is_eligible(:'task_id',e.execution_id) FROM control.executions e WHERE task_id=:'task_id' ORDER BY attempt DESC,execution_id DESC LIMIT 1),
         'run_publication_authority', control.current_run_publication_authority(:'task_id'),
         'workflow_run', (SELECT to_jsonb(r) FROM control.workflow_runs r WHERE current_task_id=:'task_id' ORDER BY started_at DESC LIMIT 1),
         'runtime_operations', COALESCE((SELECT jsonb_agg(to_jsonb(o) ORDER BY created_at) FROM control.runtime_operations o WHERE task_id=:'task_id' AND status<>'consumed'),'[]'::jsonb),
@@ -6600,7 +6601,7 @@ function attachRuntimeExecution(executionId) {
   controlQuery(`UPDATE control.runtime_operations SET execution_id=:'execution_id'::bigint, status='running',updated_at=now() WHERE operation_id=:'id'::uuid;`, { id: process.env.BS_OPERATION_ID, execution_id: String(executionId) })
 }
 
-function recoveryWatch() {
+async function recoveryWatch() {
   try {
     const health=execute(process.execPath,[path.join(controlSourceRoot,'tooling/control-plane/runner/dot-health-collector.mjs')],{cwd:repoRoot,timeout:25000})
     const candidates = parseControlJson(controlQuery(`SELECT coalesce(jsonb_agg(to_jsonb(r)),'[]'::jsonb) FROM control.workflow_runs r WHERE status='running' OR (status='failed' AND current_task_id IS NOT NULL);`))
@@ -6610,10 +6611,10 @@ function recoveryWatch() {
       if(nativeGate.reconciled){outcomes.push({action:'native_reacceptance_guard_reconciled',...nativeGate});continue}
       const observed=parseControlJson(controlQuery(`SELECT snapshot FROM control.dot_health_current WHERE run_id=:'run'::uuid;`,{run:candidate.run_id}))
       if(observed?.worker_alive){outcomes.push({run_id:candidate.run_id,eligible:false,reason:'worker_active'});continue}
-      if(stuckRecoveryCandidate(observed)) {
-        const recovered=parseControlJson(controlQuery(`SELECT control.claim_dot_stuck_recovery(:'run'::uuid,:'fingerprint');`,{run:candidate.run_id,fingerprint:stuckIncidentFingerprint(observed)}))
-        outcomes.push({run_id:candidate.run_id,action:'stuck_recovery',...recovered})
-        if(!recovered.claimed)continue
+      if(needsRecovery(observed)) {
+        const dispatch=await dispatchRecovery({health:observed,snapshot:candidate.current_task_id?supervisorSnapshot(candidate.current_task_id):null,claim:(run,fingerprint,family,evidence)=>parseControlJson(controlQuery(`SELECT control.claim_dot_recovery(:'run'::uuid,:'fingerprint',:'family',:'evidence'::jsonb);`,{run,fingerprint,family,evidence:JSON.stringify(evidence)})),start:job=>{const child=spawn(process.execPath,[path.join(controlSourceRoot,'tooling/control-plane/runner/dot-recovery-worker.mjs'),job.incident_id],{cwd:repoRoot,env:process.env,detached:true,stdio:'ignore'});child.on('error',()=>{});child.unref()}})
+        outcomes.push({run_id:candidate.run_id,action:'general_recovery_dispatch',...dispatch})
+        continue
       } else if(candidate.status==='failed' && candidate.workstream_slug!=='shared') {continue}
       if(candidate.current_task_id) controlQuery(`SELECT control.audit_product_attempts(:'task');`,{task:candidate.current_task_id})
       if (candidate.current_task_id && candidate.workstream_slug === 'shared') {
