@@ -6577,6 +6577,10 @@ function recoveryWatch() {
     const outcomes = []
     for (const candidate of candidates) {
       const row = parseControlJson(controlQuery(`SELECT to_jsonb(r) FROM control.workflow_runs r WHERE run_id=:'id'::uuid;`, { id: candidate.run_id }))
+      if(row.admitted_repair_id && !row.stop_requested && !row.maintenance_requested) {
+        const refresh=execute(process.execPath,[agentScriptPath,'run-refresh-admission',row.run_id],{cwd:repoRoot,timeout:30000})
+        if(refresh.code!==0){outcomes.push({run_id:row.run_id,eligible:false,reason:'admission_scope_gate',details:parseJson(refresh.stdout,null)});continue}
+      }
       const snapshot = row.current_task_id ? supervisorSnapshot(row.current_task_id) : null
       const plan = snapshot ? planSupervisorStep(snapshot) : null
       if (plan && !['execution_in_flight','runtime_operation_resume','verification_required','implementation_required','publication_pending'].includes(plan.reason)) {
@@ -7085,6 +7089,11 @@ switch (command) {
 
   case 'task-supervise':
     taskSupervisor()
+    break
+
+  case 'run-refresh-admission':
+    if(!validRunId(args[0])) output({ok:false,error:'valid_run_id_required'},64)
+    else {try { output({ok:true,...parseControlJson(controlQuery(`SELECT control.refresh_dot_admission(:'run'::uuid);`,{run:args[0]}))}) } catch(error) {output({ok:false,error:error.message,classification:{failure_class:'operator-wait',recovery_action:'wait-operator'}},1)}}
     break
 
   case 'task-reaccept':

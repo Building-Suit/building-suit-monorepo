@@ -134,8 +134,15 @@ test('migration 001..028 and upgrade 027->028 preserve authoritative full lifecy
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/032_dot_watchdog.sql')])
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/dot-postgres-smoke.sql')])
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/032_dot_watchdog.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/dot-postgres-smoke.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/032_dot_watchdog.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/dot-postgres-smoke.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/032_dot_watchdog.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/dot-postgres-smoke.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/032_dot_watchdog.sql')])
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/030_verifier_only_reacceptance.sql')])
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/033_dot_same_attempt_reacceptance.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/034_dot_admission_refresh.sql')])
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/dot-postgres-smoke.sql')])
 
   }

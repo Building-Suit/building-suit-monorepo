@@ -10,6 +10,8 @@ export function runWakeEligibility(run, recovery, operation, now = Date.now(), s
   if (run.stop_requested) return { eligible: false, reason: 'stop_requested' }
   if (run.maintenance_requested) return { eligible: false, reason: 'maintenance_requested' }
   if (run.completed_tasks >= run.max_tasks) return { eligible: false, reason: 'limit_reached' }
+  const reaccepted=snapshot?.packet?.task?.status==='passed' && snapshot.verification_runs?.some(v=>v.status==='passed' && v.metadata?.verifier_only_reacceptance===true && Number(v.execution_id)===Number(snapshot.executions?.at(-1)?.execution_id))
+  if(reaccepted && recovery?.error_code==='retry_budget_exhausted') recovery=null
   const reclassifyPublicationStop = publicationStopNeedsReclassification(snapshot ?? {})
   if (recovery?.next_action === 'safety-stop' && !reclassifyPublicationStop) return { eligible: false, reason: recovery.error_code ?? 'safety-stop' }
   if (snapshot?.watchdog_plan?.kind === 'act' && snapshot.watchdog_plan.fingerprint !== recovery?.condition?.fingerprint) recovery = null

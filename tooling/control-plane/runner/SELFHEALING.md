@@ -13,3 +13,38 @@ The installed runtime keeps BS_CONTROL_PUBLICATION_HOLD=1. Merge, deployment, ho
 Do not remove active receipt directories. Reboot recovery relies on persistent receipts and process identity disappearance; the user's computer is not rebooted for fault injection. Source must be committed and match the forced SSH adapter pin. Keep historical executions and product budgets unchanged.
 
 BS-31 also wakes a running admitted run with no current task after completion credit. Authoritative phase success consumes an unfinished operation before consulting its old backoff timer. Restart recovery reuses existing task commits/PRs and the unique run/task credit. Migration 031 creates read-only runtime authority; only an operator may write its grants. This authority never creates runs or changes task scope.
+
+## Dot installation
+
+BS-31 is the sole recovery owner. Its two-minute fallback and loopback webhook
+both delegate to `recovery-watch`. The enabled local `dot-event-relay.mjs` service
+LISTENs on `bs_dot_wake` using the existing database environment and authentication;
+it never supervises tasks or calls a model. Forward migration 032 persists the
+wake outbox, scan history and restart-stable incident identities. Heartbeats do
+not create event loops. The fallback scans every active run.
+
+Only typed product failures may reserve a product repair. Known unexecuted
+binding failures are configuration even when historical metadata charged them
+as product defects. Migration 033 can reaccept the latest failed execution
+inside existing explicit bounded authority after a full passing probe and exact
+source preservation; it retains executions, failures and attempt history.
+
+Migration 034 allows configuration-only admission renewal against operator-frozen
+paths and requirement/acceptance scope. Task workers cannot write these frozen
+grants. Changed scope, protected paths, stopped runs, revoked run grants and
+revoked current derived authorizations stop recovery. The `human` authorization
+source denotes its inherited frozen human authority; the refresh is attributed
+to Dot and does not invent a new human decision. Existing ordinary draft policy,
+manual protected publication, merge and deployment gates remain authoritative.
+
+Preparation uses the actual stored stack parent. A descendant parent advance
+can continue against its preserved preparation base without touching a dirty
+worktree. Diverged lineage remains an ambiguity gate. Missing worktrees can be
+restored from an existing unattached task branch without deleting unique work.
+Cleanup scans at most every fifteen minutes and removes only clean, integrated,
+published worktrees with no active references, workers, open PR or dependent PR.
+Branches use Git's non-force deletion; prune follows successful checked removal.
+
+Run all control-plane tests with required disposable PostgreSQL and published
+n8n fixtures, lint, workspace check, generated workflow validation and the
+resilience harness before committing and repinning the local forced adapter.
