@@ -3,6 +3,19 @@ definePageMeta({ layout: false })
 const { t } = useI18n()
 const { ready, state, pending, actionError, recheck, signIn, signOut } = useAdminSession()
 await ready
+const { registry, selection, state: registryState, label } = useAdminRegistry()
+if (state.value === 'success') await registry.refresh()
+watch(state, (value) => {
+  registry.clear()
+  if (value === 'success') void registry.refresh()
+})
+onMounted(() => {
+  // Periodically re-resolve configuration and manifest expiry without a rebuild.
+  const timer = setInterval(() => {
+    if (state.value === 'success' && document.visibilityState === 'visible') void registry.refresh()
+  }, 30_000)
+  onScopeDispose(() => { clearInterval(timer); registry.clear() })
+})
 const email = ref('')
 const password = ref('')
 useHead({ title: () => t('product.name') })
@@ -17,7 +30,10 @@ async function submit() {
   <NuxtLayout v-if="state === 'success'" name="default">
     <BsContentSection :title="t('welcome')" :description="t('description')" padding="lg">
       <BsStateSurface state="success" :title="t('auth.authorized')" />
-      <BsStateSurface state="empty" :title="t('auth.empty')" />
+      <BsStateSurface v-if="registryState !== 'success'" :state="registryState" :title="t(`registry.${registryState}`)" :action-label="registryState === 'loading' ? undefined : t('registry.retry')" @action="registry.refresh()" />
+      <BsContentSection v-else :title="selection.item ? label(selection.item.label) : label(selection.suit!.label)" :description="label(selection.item?.description || selection.suit!.description)">
+        <BsStateSurface v-if="selection.item?.module === 'capabilities'" state="empty" data-registry-pending :title="t('registry.pending')" />
+      </BsContentSection>
       <BsButton :pending="pending" @click="signOut">{{ t('auth.signOut') }}</BsButton>
       <BsStateSurface v-if="actionError" state="error" :title="t('auth.actionError')" />
     </BsContentSection>

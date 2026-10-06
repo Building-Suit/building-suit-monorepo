@@ -20,5 +20,15 @@
     "empty": "No operational modules are available yet.",
     "signInError": "Unable to sign in. Check your credentials and try again.",
     "actionError": "Unable to complete the session action. Try again."
+  },
+  "registry": {
+    "suits": "Managed Suits",
+    "context": "Suit navigation",
+    "loading": "Loading Suit configuration…",
+    "empty": "No available navigation is configured.",
+    "denied": "This navigation is unavailable.",
+    "error": "Unable to load Suit configuration.",
+    "retry": "Reload configuration",
+    "pending": "Adapter operations are not available in this workspace."
   }
 }
