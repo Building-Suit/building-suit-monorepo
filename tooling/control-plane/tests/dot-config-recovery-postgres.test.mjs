@@ -152,6 +152,10 @@ test('Dot binding recovery and native bounded ordinary publication preserve iden
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/dot-config-recovery-smoke.sql')])
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/043_dot_preexecution_auth_bindings.sql')])
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/preexecution-bindings-smoke.sql')])
+    psql(databaseUrl.href, ['-c', "DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname='anon') THEN CREATE ROLE anon; END IF; IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname='authenticated') THEN CREATE ROLE authenticated; END IF; END $$;"])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/044_dot_operator_health.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/dot-health-smoke.sql')])
+    assert.ok(JSON.parse(psql(databaseUrl.href, ['-f', path.join(root,'tooling/control-plane/runner/dot-health-inputs.sql'),'-At'])).length > 0)
 
   }
   finally {

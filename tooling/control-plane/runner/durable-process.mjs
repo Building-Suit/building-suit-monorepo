@@ -124,11 +124,15 @@ if (process.argv[2] === '--worker') {
   if (!existsSync(resultPath)) {
     const request = readJson(path.join(dir, 'request.json'))
     atomicJson(path.join(dir, 'state.json'), { pid: process.pid, start_stamp: processStamp(process.pid), started_at: new Date().toISOString() })
-    let child, timer, error = null, stdout = '', stderr = '', settled = false
+    let child, timer, heartbeatTimer, error = null, stdout = '', stderr = '', settled = false
+    const identity={pid:process.pid,start_stamp:processStamp(process.pid),started_at:new Date().toISOString(),worker_state:'spawning',heartbeat_at:new Date().toISOString(),deadline_at:request.timeout?new Date(Date.now()+request.timeout).toISOString():null}
+    const heartbeat=()=>{identity.heartbeat_at=new Date().toISOString();try{atomicJson(path.join(dir,'state.json'),identity)}catch{/* result receipt remains the lifecycle authority */}}
     const finish = (code, failure = error) => {
       if (settled) return
       settled = true
       clearTimeout(timer)
+      clearInterval(heartbeatTimer)
+      identity.worker_state='exited';identity.exit_code=typeof code==='number'?code:1;heartbeat()
       atomicJson(resultPath, { code: typeof code === 'number' ? code : 1, stdout: stdout.trim(), stderr: stderr.trim(), error: failure,
         ...(failure ? { classification: { failure_class: 'transient-infrastructure', recovery_action: 'wait-external', component: 'worker-transport' } } : {}),
         finished_at: new Date().toISOString() })
@@ -137,10 +141,11 @@ if (process.argv[2] === '--worker') {
       // Also normalizes immutable legacy requests when re-entered after restart.
       const normalized = stdinPromptRequest(request.program, request.args, { input: request.input })
       child = spawn(request.program, normalized.args, { cwd: request.cwd, env: process.env, detached: true, stdio: ['pipe', 'pipe', 'pipe'] })
-      if (child.pid) atomicJson(path.join(dir, 'state.json'), { pid: process.pid, start_stamp: processStamp(process.pid), child: { pid: child.pid, start_stamp: processStamp(child.pid) }, started_at: new Date().toISOString() })
+      if(child.pid)identity.child={pid:child.pid,start_stamp:processStamp(child.pid)}
+      identity.worker_state=child.pid?'running':'spawning';heartbeat();heartbeatTimer=setInterval(heartbeat,5000)
       const maxBytes = 50 * 1024 * 1024
-      child.stdout.on('data', chunk => { stdout = (stdout + chunk).slice(-maxBytes) })
-      child.stderr.on('data', chunk => { stderr = (stderr + chunk).slice(-maxBytes) })
+      child.stdout.on('data', chunk => { stdout = (stdout + chunk).slice(-maxBytes); identity.last_output_at=new Date().toISOString() })
+      child.stderr.on('data', chunk => { stderr = (stderr + chunk).slice(-maxBytes); identity.last_output_at=new Date().toISOString() })
       child.on('error', value => { finish(1, value.code ?? 'worker_spawn_failed') })
       child.stdin.on('error', value => { error = value.code ?? 'worker_stdin_failed' })
       child.on('close', code => { finish(code) })
