@@ -42,7 +42,7 @@ async function cycle(state, { observed = health(state), locked = false, scopeHel
   const queries = [], launches = [], outputs = []
   let investigations = 0
   const watch = runInNewContext(`(${watchSource.trim()})`, {
-    process: { execPath: process.execPath, env: {} }, path,
+    process: { execPath: process.execPath, env: {BS_DOT_WATCH_LOCKED: '1'} }, path,
     repoRoot: '/fixture', controlSourceRoot: '/runtime', agentScriptPath: '/runtime/bs-agent.mjs',
     supervisorSnapshot: () => structuredClone(state), parseControlJson: value => value,
     controlQuery: (sql, values) => {
