@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { ordinaryRunAuthority } from './bounded-publication.mjs'
 
 import {
   existsSync,
@@ -15,6 +16,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
   classifyPublicationFiles,
+  protectedPublicationPath,
   evaluatePublicationParent,
   evaluateVerificationAuthority,
   planPublicationReconciliation,
@@ -277,6 +279,19 @@ if (
   )
 }
 
+
+if (ordinaryRunAuthority(context.run_publication_authority, task.task_id)) {
+  if (!execution.branch_name.startsWith(`codex/${suit.stack_key}/`) || ['main','stg',project.integration_branch].includes(execution.branch_name)) {
+    fail('publication_branch_operator_wait', { classification: { failure_class: 'operator-wait', recovery_action: 'wait-operator' } })
+  }
+  const existing = run('gh', ['pr','list','--repo',repository,'--head',execution.branch_name,'--state','open','--json','number,isDraft,baseRefName'])
+  requireSuccess(existing, 'unable_to_inspect_draft_publication')
+  let prs
+  try { prs = JSON.parse(existing.stdout) } catch { fail('invalid_draft_publication_response') }
+  if (prs.some(pr => pr.isDraft !== true)) {
+    fail('publication_nondraft_operator_wait', { classification: { failure_class: 'operator-wait', recovery_action: 'wait-operator' } })
+  }
+}
 
 requireSuccess(
   git([
@@ -545,6 +560,10 @@ const scopeClassification = classifyPublicationFiles({
   ordinaryAuthorizedPaths,
   protectedAuthorizedPaths,
 })
+
+if (ordinaryRunAuthority(context.run_publication_authority, task.task_id) && changed.some(file => protectedPublicationPath(file))) {
+  fail('publication_protected_path_operator_wait', { classification: { failure_class: 'operator-wait', recovery_action: 'wait-operator' } })
+}
 
 if (scopeClassification.blocked.length > 0) {
   fail('publication_scope_safety_stop', { classification: scopeClassification })

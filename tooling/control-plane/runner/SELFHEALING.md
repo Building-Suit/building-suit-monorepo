@@ -11,3 +11,5 @@ Structured classification outranks typed child/verifier outcomes and narrow erro
 The installed runtime keeps BS_CONTROL_PUBLICATION_HOLD=1. Merge, deployment, hosted migrations, providers/secrets and required advisor/security evidence retain authorization boundaries. task-status exposes actual historical model/attempt separately from future routing, run, stage, reason, wake, ownership and required evidence.
 
 Do not remove active receipt directories. Reboot recovery relies on persistent receipts and process identity disappearance; the user's computer is not rebooted for fault injection. Source must be committed and match the forced SSH adapter pin. Keep historical executions and product budgets unchanged.
+
+BS-31 also wakes a running admitted run with no current task after completion credit. Authoritative phase success consumes an unfinished operation before consulting its old backoff timer. Restart recovery reuses existing task commits/PRs and the unique run/task credit. Migration 031 creates read-only runtime authority; only an operator may write its grants. This authority never creates runs or changes task scope.

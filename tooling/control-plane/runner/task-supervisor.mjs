@@ -1,3 +1,4 @@
+import { supersededPublicationHold, operationHasAuthoritativeSuccess } from './bounded-publication.mjs'
 import { executionFailure, failedVerificationEvidence } from './recovery-evidence.mjs'
 import { AUTO_CLASSES } from './selfhealing.mjs'
 import { createHash } from 'node:crypto'
@@ -80,6 +81,7 @@ export function supervisorStateFingerprint(snapshot) {
       snapshot.packet.workstream.publication_config,
       snapshot.packet.workstream.verification_config,
     ],
+    run_publication_authority: snapshot.run_publication_authority ?? null,
     publication_boundaries: snapshot.packet?.publication_boundaries ?? null,
     publication_contract: snapshot.packet?.publication_contract && [
       snapshot.packet.publication_contract.contract_id,
@@ -148,11 +150,12 @@ export function planSupervisorStep(snapshot) {
   }
   const operation = snapshot.runtime_operations?.find(op => op.status !== 'consumed')
   if (operation && !(recovery?.status === 'active' && ['wait-operator','wait-decision','safety-stop'].includes(recovery.next_action))) {
-    if (Date.parse(operation.next_wake_at) > Date.now()) return decision('wait','wait-external','transient-infrastructure','runtime_backoff_pending',{ operation, execution, fingerprint })
+    if (!operationHasAuthoritativeSuccess(snapshot, operation) && Date.parse(operation.next_wake_at) > Date.now()) return decision('wait','wait-external','transient-infrastructure','runtime_backoff_pending',{ operation, execution, fingerprint })
     return decision('act','reconcile-runtime','transient-infrastructure','runtime_operation_resume',{ command: operation.action, operation, execution, fingerprint })
   }
   if (
     recovery?.status === 'active' &&
+    !supersededPublicationHold(snapshot) &&
     recovery.condition?.preflight !== true &&
     recovery.condition?.fingerprint === fingerprint &&
     ['wait-external', 'wait-decision', 'wait-operator', 'safety-stop'].includes(recovery.next_action) &&

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { operationHasAuthoritativeSuccess } from './bounded-publication.mjs'
 
 import { spawnSync, spawn } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
@@ -4398,7 +4399,8 @@ function taskPublish() {
       return
     }
 
-    const publicationHold = publicationHoldOutcome()
+    const runPublicationAuthority = parseControlJson(controlQuery(`SELECT control.current_run_publication_authority(:'task_id');`, { task_id: taskId }))
+    const publicationHold = publicationHoldOutcome(process.env, runPublicationAuthority, taskId)
     if (publicationHold) {
       recordControlFailure(taskId, 'publication', publicationHold.error, publicationHold)
       output({ ...publicationHold, command: 'task-publish', task_id: taskId }, 1)
@@ -4535,6 +4537,7 @@ function taskPublish() {
           publication_contract:
             packet.publication_contract,
 
+          run_publication_authority: runPublicationAuthority,
           publication_authorizations:
             packet.publication_authorizations,
         },
@@ -4708,6 +4711,11 @@ function invokeTaskAction(action, taskId) {
   ))
   if (!claimed.acquired) return { result: { code: 0 }, payload: { ok: false, error: claimed.reason, classification: { failure_class: 'operator-wait', recovery_action: 'wait-operator' } } }
   const op = claimed.operation
+  if (operationHasAuthoritativeSuccess(snapshot, op)) {
+    const payload = { ok: true, command: op.action, replayed_authoritative_state: true }
+    controlQuery(`UPDATE control.runtime_operations SET status='consumed',result=:'result'::jsonb,updated_at=now() WHERE operation_id=:'id'::uuid;`, { id: op.operation_id, result: JSON.stringify(payload) })
+    return { result: { code: 0 }, payload }
+  }
   if (Date.parse(op.next_wake_at) > Date.now()) return { result: { code: 0 }, payload: { ok: false, error: 'runtime_backoff_pending', classification: { failure_class: 'transient-infrastructure', recovery_action: 'wait-external' } } }
   const reserved = snapshot.executions?.find(e => e.execution_id === op.execution_id)
   const completedVerification = snapshot.verification_runs?.filter(v => v.execution_id === op.execution_id && v.status !== 'running').at(-1)
@@ -4811,6 +4819,7 @@ export function supervisorSnapshot(taskId) {
           WHERE target.task_id = :'task_id'
             AND other.status IN ('in_progress', 'verification', 'passed', 'failed')
         ), '[]'::jsonb),
+        'run_publication_authority', control.current_run_publication_authority(:'task_id'),
         'workflow_run', (SELECT to_jsonb(r) FROM control.workflow_runs r WHERE current_task_id=:'task_id' ORDER BY started_at DESC LIMIT 1),
         'runtime_operations', COALESCE((SELECT jsonb_agg(to_jsonb(o) ORDER BY created_at) FROM control.runtime_operations o WHERE task_id=:'task_id' AND status<>'consumed'),'[]'::jsonb),
         'recovery', control.current_task_recovery_condition(:'task_id')
@@ -6565,7 +6574,7 @@ function recoveryWatch() {
     for (const candidate of candidates) {
       const row = parseControlJson(controlQuery(`SELECT to_jsonb(r) FROM control.workflow_runs r WHERE run_id=:'id'::uuid;`, { id: candidate.run_id }))
       const snapshot = row.current_task_id ? supervisorSnapshot(row.current_task_id) : null
-      const eligible = runWakeEligibility(row, snapshot?.recovery, snapshot?.runtime_operations?.at(-1))
+      const eligible = runWakeEligibility(row, snapshot?.recovery, snapshot?.runtime_operations?.at(-1), Date.now(), snapshot)
       if (!eligible.eligible) { outcomes.push({ run_id: row.run_id, ...eligible }); continue }
       const lockDir = path.join(repoRoot,'.local','runtime-run-locks')
       mkdirSync(lockDir,{ recursive:true,mode:0o700 })

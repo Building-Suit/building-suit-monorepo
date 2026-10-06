@@ -1,3 +1,4 @@
+import { ordinaryRunAuthority } from './bounded-publication.mjs'
 import { existsSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import path from 'node:path'
@@ -72,8 +73,9 @@ export function preserveAttributedRun(run, plan) {
 }
 
 // An operator may authorize repair/verification while withholding Git publication.
-export function publicationHoldOutcome(env = process.env) {
+export function publicationHoldOutcome(env = process.env, authority = null, taskId = null) {
   if (env.BS_CONTROL_PUBLICATION_HOLD !== '1') return null
+  if (ordinaryRunAuthority(authority, taskId)) return null
   return {
     ok: false, error: 'publication_operator_hold',
     classification: { failure_class: 'operator-wait', recovery_action: 'wait-operator' },
