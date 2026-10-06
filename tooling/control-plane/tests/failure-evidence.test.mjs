@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs'
 import assert from 'node:assert/strict'
 import {failureEvidence,validateFailureEvidence,reconcileFailureEvidence} from '../runner/failure-evidence.mjs'
 import {auditAttempts} from '../runner/retry-exhaustion-audit.mjs'
-import {dispatchRecovery} from '../runner/dot-general-recovery.mjs'
+import {dispatchRecovery,recoveryIdentity} from '../runner/dot-general-recovery.mjs'
 const check={verification_id:10,verification_run_id:20,execution_id:30,check_name:'test',name:'test',command:'registered runner',status:'fail',exit_code:1,log_path:'/private/bound.log',metadata:{required:true}}
 for(const [kind,origin,category] of [['assertion','product-test','PRODUCT_DEFECT'],['browser click without marker','application-behavior','PRODUCT_DEFECT'],['SQL missing-column product','application-sql','PRODUCT_DEFECT'],['SQL missing-column fixture','verifier-fixture','VERIFIER_INFRA'],['SQL type product','application-sql','PRODUCT_DEFECT'],['Playwright fixture','verifier-fixture','CONFIGURATION'],['HTTP product','application-http','PRODUCT_DEFECT']])test(kind,()=>{
  const e=failureEvidence({execution_id:30,verification_run_id:20,check,artifact:'complete receipt without magic markers',classification:category,origin,review:{root_cause:kind,source:[{path:category==='PRODUCT_DEFECT'?'app/source.ts':'app/tests/fixture.ts',sha256:'a'.repeat(64)}]}})
@@ -42,3 +42,5 @@ test('unknown investigation supports evidence-only review without runtime/produc
  const source=readFileSync(new URL('../runner/dot-recovery-worker.mjs',import.meta.url),'utf8')
  assert.match(source,/evidence-review-plan.json/);assert.match(source,/incident_source_review_stale/);assert.match(source,/review_verification_failure/)
 })
+
+test('reviewed evidence creates a new owned recovery instead of reviving stale unknown investigation',()=>{const h={run_id:'same',task_id:'task',execution_id:30,evidence_revision:1};assert.notEqual(recoveryIdentity(h),recoveryIdentity({...h,evidence_revision:2}));assert.equal(recoveryIdentity(h),recoveryIdentity(JSON.parse(JSON.stringify(h))))})
