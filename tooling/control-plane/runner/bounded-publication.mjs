@@ -1,4 +1,4 @@
-import {pathInScope,validPublicationPath,protectedPublicationPath} from './publication-preflight.mjs'
+import {pathInScope,validPublicationPath,protectedPublicationPath,verifiedProtectedPublicationPaths} from './publication-preflight.mjs'
 // These receipts are supplied by PostgreSQL, not worker-generated task metadata.
 export function ordinaryRunAuthority(authority, taskId) {
   return authority?.authorized === true && authority.mode === 'ordinary-draft' &&
@@ -16,6 +16,9 @@ export function supersededRegisteredScopeGate(snapshot){
  if(snapshot.recovery?.error_code!=='publication_scope_requires_operator')return false
  const failure=snapshot.failures?.find(f=>Number(f.failure_id)===Number(snapshot.recovery.failure_id))
  const proof=failure?.metadata?.classification,boundaries=snapshot.packet?.publication_boundaries
+ const execution=snapshot.executions?.at(-1),v=snapshot.verification_runs?.filter(v=>Number(v.execution_id)===Number(execution?.execution_id)).at(-1)
+ const verified=verifiedProtectedPublicationPaths({grant:snapshot.protected_publication_authority,task:snapshot.packet?.task,execution,verification:v?{...v,state_fingerprint:v.metadata?.verified_state?.fingerprint,verified_state:v.metadata?.verified_state}:null})
+ if(failure?.error_code==='publication_scope_safety_stop' && proof?.blocked?.length>0 && (proof.waiting??[]).length===0 && proof.blocked.every(file=>verified.includes(file)&&pathInScope(file,boundaries?.task_paths??[])&&pathInScope(file,boundaries?.project_paths??[]))) return true
  return failure?.error_code==='publication_scope_operator_wait' && proof?.waiting?.length>0 && proof.blocked?.length===0
   && proof.waiting.every(file=>validPublicationPath(file)&&!protectedPublicationPath(file)
    && pathInScope(file,boundaries?.task_paths??[])&&pathInScope(file,boundaries?.project_paths??[]))

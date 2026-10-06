@@ -4867,6 +4867,7 @@ export function supervisorSnapshot(taskId) {
         ), '[]'::jsonb),
         'publication_execution_eligible',(SELECT control.publication_execution_is_eligible(:'task_id',e.execution_id) FROM control.executions e WHERE task_id=:'task_id' ORDER BY attempt DESC,execution_id DESC LIMIT 1),
         'run_publication_authority', control.current_run_publication_authority(:'task_id'),
+        'protected_publication_authority',control.current_protected_publication_authority(:'task_id'),
         'workflow_run', (SELECT to_jsonb(r) FROM control.workflow_runs r WHERE current_task_id=:'task_id' ORDER BY started_at DESC LIMIT 1),
         'runtime_operations', COALESCE((SELECT jsonb_agg(to_jsonb(o) ORDER BY created_at) FROM control.runtime_operations o WHERE task_id=:'task_id' AND status<>'consumed'),'[]'::jsonb),
         'recovery', control.current_task_recovery_condition(:'task_id')

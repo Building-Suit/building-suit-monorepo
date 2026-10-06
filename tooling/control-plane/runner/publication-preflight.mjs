@@ -161,13 +161,15 @@ export function classifyPublicationFiles({
   requiredPaths = [],
   ordinaryAuthorizedPaths = [],
   protectedAuthorizedPaths = [],
+  verifiedProtectedPaths = [],
 }) {
   const decisions = [...new Set(files)].sort().map(file => {
     const normalized = normalize(file)
     if (protectedPublicationPath(normalized)) {
       if (
-        requiredPaths.map(normalize).includes(normalized) &&
-        protectedAuthorizedPaths.map(normalize).includes(normalized)
+        (requiredPaths.map(normalize).includes(normalized) &&
+        protectedAuthorizedPaths.map(normalize).includes(normalized)) ||
+        (validPublicationPath(normalized) && verifiedProtectedPaths.includes(normalized) && pathInScope(normalized, taskPaths) && pathInScope(normalized, projectPaths))
       ) {
         return { file: normalized, decision: 'allow', boundary: 'protected-exact', reason: 'protected_exact_human_authorization' }
       }
@@ -270,4 +272,9 @@ export function planPublicationReconciliation({
   if (localSha !== parentSha && !localTaskCommits) return { action: 'safety-stop', reason: 'unexpected_existing_commits', pr }
   if (pr) return { action: 'reuse_existing_pr', pr }
   return { action: remoteSha ? 'create_pr' : 'push_and_create_pr', pr: null }
+}
+
+export function verifiedProtectedPublicationPaths({grant,task,execution,verification}) {
+ if(grant?.authorized !== true || grant.task_id !== task?.task_id || Number(grant.execution_id) !== Number(execution?.execution_id) || Number(grant.verification_run_id) !== Number(verification?.verification_run_id) || grant.verified_state_fingerprint !== verification?.state_fingerprint) return []
+ return (grant.protected_files ?? []).filter(item=>validPublicationPath(item.path) && protectedPublicationPath(item.path) && verification.verified_state?.files?.some(file=>file.file===item.path && file.object===item.object)).map(item=>item.path)
 }
