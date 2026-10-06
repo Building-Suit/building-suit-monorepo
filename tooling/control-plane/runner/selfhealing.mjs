@@ -1,4 +1,4 @@
-import { supersededPublicationHold, operationHasAuthoritativeSuccess } from './bounded-publication.mjs'
+import { supersededPublicationHold, operationHasAuthoritativeSuccess, publicationStopNeedsReclassification } from './bounded-publication.mjs'
 export const AUTO_CLASSES = new Set(['transient-infrastructure', 'verification-infrastructure', 'repository-state', 'publication-reconciliation', 'flaky-verification', 'verification-lifecycle'])
 export const HUMAN_ACTIONS = new Set(['wait-operator', 'wait-decision', 'safety-stop'])
 export function recoveryBackoff(retries = 0) { return Math.min(15 * 60_000, 30_000 * 2 ** Math.min(Math.max(retries, 0), 5)) }
@@ -10,8 +10,9 @@ export function runWakeEligibility(run, recovery, operation, now = Date.now(), s
   if (run.stop_requested) return { eligible: false, reason: 'stop_requested' }
   if (run.maintenance_requested) return { eligible: false, reason: 'maintenance_requested' }
   if (run.completed_tasks >= run.max_tasks) return { eligible: false, reason: 'limit_reached' }
-  if (recovery?.next_action === 'safety-stop') return { eligible: false, reason: recovery.error_code ?? 'safety-stop' }
-  if (recovery?.status === 'active' && HUMAN_ACTIONS.has(recovery.next_action) && !supersededPublicationHold(snapshot ?? {})) return { eligible: false, reason: recovery.error_code ?? recovery.next_action }
+  const reclassifyPublicationStop = publicationStopNeedsReclassification(snapshot ?? {})
+  if (recovery?.next_action === 'safety-stop' && !reclassifyPublicationStop) return { eligible: false, reason: recovery.error_code ?? 'safety-stop' }
+  if (recovery?.status === 'active' && HUMAN_ACTIONS.has(recovery.next_action) && !reclassifyPublicationStop && !supersededPublicationHold(snapshot ?? {})) return { eligible: false, reason: recovery.error_code ?? recovery.next_action }
   const settled = snapshot && (snapshot.packet?.task?.status === 'complete' || snapshot.packet?.task?.status === 'passed' && (!operation || operationHasAuthoritativeSuccess(snapshot, operation)))
   if (!settled && operation && Date.parse(operation.next_wake_at) > now) return { eligible: false, reason: 'backoff_pending' }
   if (!settled && !operation && recovery?.status === 'active' && Date.parse(recovery.next_wake_at ?? '') > now) return { eligible: false, reason: 'backoff_pending' }

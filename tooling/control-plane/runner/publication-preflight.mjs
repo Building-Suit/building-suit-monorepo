@@ -31,14 +31,18 @@ const protectedPublicationPaths = [
   /(^|\/)(?:secrets?|credentials?)(?:\/|\.|$)/i,
   /(^|\/)supabase\/migrations\//,
   /(^|\/)supabase\/(?:config\.toml|seed\.sql)$/,
-  /(^|\/)n8n(?:\/|\.|-)/i,
   /(^|\/)\.github\/workflows\//,
   /(^|\/)(?:vercel|deploy)(?:\/|\.|-)/i,
 ]
 
 export function protectedPublicationPath(value) {
   const candidate = normalize(value)
-  return protectedPublicationPaths.some(pattern => pattern.test(candidate))
+  // An n8n-named Nuxt UI component is not an executable workflow. Keep all
+  // other protected categories, and n8n directories/configuration, gated.
+  const n8nUi = /^apps\/[^/]+\/app\/(?:pages|components)\/(?:[^/]+\/)*n8n(?:-[^/]+)?\.vue$/i.test(candidate) &&
+    !/(^|\/)n8n(?:\/|\.|-)/i.test(path.posix.dirname(candidate))
+  return protectedPublicationPaths.some(pattern => pattern.test(candidate)) ||
+    /(^|\/)n8n(?:\/|\.|-)/i.test(candidate) && !n8nUi
 }
 
 export function evaluatePublicationBoundaries({

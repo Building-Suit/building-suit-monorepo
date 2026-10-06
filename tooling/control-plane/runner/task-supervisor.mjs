@@ -1,4 +1,4 @@
-import { supersededPublicationHold, operationHasAuthoritativeSuccess } from './bounded-publication.mjs'
+import { supersededPublicationHold, operationHasAuthoritativeSuccess, publicationStopNeedsReclassification } from './bounded-publication.mjs'
 import { executionFailure, failedVerificationEvidence } from './recovery-evidence.mjs'
 import { AUTO_CLASSES } from './selfhealing.mjs'
 import { createHash } from 'node:crypto'
@@ -145,7 +145,8 @@ export function planSupervisorStep(snapshot) {
   if (run && (run.stop_requested || run.maintenance_requested || run.status !== 'running' || run.completed_tasks >= run.max_tasks)) {
     return decision('wait', 'wait-operator', 'operator-wait', run.stop_requested ? 'stop_requested' : run.maintenance_requested ? 'maintenance_requested' : run.completed_tasks >= run.max_tasks ? 'limit_reached' : 'run_not_running', { execution, fingerprint })
   }
-  if (recovery?.next_action === 'safety-stop' && recovery.condition?.fingerprint === fingerprint) {
+  const reclassifyPublicationStop = publicationStopNeedsReclassification(snapshot)
+  if (recovery?.next_action === 'safety-stop' && !reclassifyPublicationStop && recovery.condition?.fingerprint === fingerprint) {
     return decision('terminal','safety-stop',recovery.failure_class ?? 'safety-stop',recovery.error_code ?? 'persisted_safety_stop',{execution,verification,publication,fingerprint,persisted:true,recoverable:false})
   }
   const operation = snapshot.runtime_operations?.find(op => op.status !== 'consumed')
@@ -155,6 +156,7 @@ export function planSupervisorStep(snapshot) {
   }
   if (
     recovery?.status === 'active' &&
+    !reclassifyPublicationStop &&
     !supersededPublicationHold(snapshot) &&
     recovery.condition?.preflight !== true &&
     recovery.condition?.fingerprint === fingerprint &&
@@ -331,7 +333,7 @@ export function planSupervisorStep(snapshot) {
 export function classifySupervisorFailure({ command, payload, attempt, maxAttempts }) {
   const error = String(payload?.publication?.error ?? payload?.error ?? 'task_action_failed')
   const lower = error.toLowerCase()
-  const verificationClass = payload?.classification?.failure_class ?? payload?.recovery?.failure_class ?? payload?.failure_class ?? payload?.probe?.classification?.failure_class
+  const verificationClass = payload?.classification?.failure_class ?? payload?.recovery?.failure_class ?? payload?.failure_class ?? payload?.publication?.classification?.failure_class ?? payload?.probe?.classification?.failure_class
   const explicitWait = explicitWaitClasses.get(verificationClass)
   if (explicitWait) {
     return decision(explicitWait === 'safety-stop' ? 'terminal' : 'wait', explicitWait, verificationClass, error.slice(0, 160), { recoverable: explicitWait !== 'safety-stop' })
@@ -360,7 +362,7 @@ export function classifySupervisorFailure({ command, payload, attempt, maxAttemp
     return decision('wait', 'wait-operator', verificationClass, 'required_verification_check_unavailable')
   }
 
-  if (payload?.classification?.recovery_action === 'wait-operator') {
+  if ((payload?.classification?.recovery_action ?? payload?.publication?.classification?.recovery_action) === 'wait-operator') {
     return decision(
       'wait',
       'wait-operator',

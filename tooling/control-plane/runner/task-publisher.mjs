@@ -562,7 +562,7 @@ const scopeClassification = classifyPublicationFiles({
 })
 
 if (ordinaryRunAuthority(context.run_publication_authority, task.task_id) && changed.some(file => protectedPublicationPath(file))) {
-  fail('publication_protected_path_operator_wait', { classification: { failure_class: 'operator-wait', recovery_action: 'wait-operator' } })
+  fail('publication_protected_path_operator_wait', { protected_paths: changed.filter(protectedPublicationPath), classification: { failure_class: 'operator-wait', recovery_action: 'wait-operator' } })
 }
 
 if (scopeClassification.blocked.length > 0) {
