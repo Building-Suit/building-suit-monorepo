@@ -1,3 +1,4 @@
+import {requiresSameAttemptVerification} from '../runner/binding-recovery.mjs'
 import test from 'node:test'
 import {readFileSync} from 'node:fs'
 import assert from 'node:assert/strict'
@@ -46,3 +47,13 @@ test('unknown investigation supports evidence-only review without runtime/produc
 test('reviewed evidence creates a new owned recovery instead of reviving stale unknown investigation',()=>{const h={run_id:'same',task_id:'task',execution_id:30,evidence_revision:1};assert.notEqual(recoveryIdentity(h),recoveryIdentity({...h,evidence_revision:2}));assert.equal(recoveryIdentity(h),recoveryIdentity(JSON.parse(JSON.stringify(h))))})
 
 test('duplicate watchdog scans serialize before consuming database sessions',()=>{const source=readFileSync(new URL('../runner/bs-agent.mjs',import.meta.url),'utf8');const watch=source.slice(source.indexOf('async function recoveryWatch()'),source.indexOf('function recoverWorkflowRun()'));assert.ok(watch.indexOf('dot-watch.lock')<watch.indexOf('controlQuery'));assert.match(watch,/watchdog_scan_already_owned/);assert.match(watch,/BS_DOT_WATCH_LOCKED/);})
+
+test('reviewed non-product receipt must reverify, never replay its old failed phase',()=>{
+ const s={executions:[{execution_id:30,status:'succeeded',attempt:1}],verification_runs:[{execution_id:30,verification_run_id:20,status:'failed'}],exhaustion_audit:{entries:[{execution_id:30,classification:'VERIFIER_INFRA',proof:[{version:2,verification_run_id:20}]}]}}
+ const op={action:'task-verify',execution_id:30}
+ assert.equal(requiresSameAttemptVerification(s,op),true)
+ assert.equal(requiresSameAttemptVerification(JSON.parse(JSON.stringify(s)),op),true)
+ assert.equal(requiresSameAttemptVerification({...s,verification_runs:[...s.verification_runs,{execution_id:30,verification_run_id:21,status:'passed'}]},op),false)
+ assert.equal(requiresSameAttemptVerification({...s,exhaustion_audit:{entries:[{execution_id:30,classification:'PRODUCT_DEFECT'}]}},op),false)
+ assert.equal(requiresSameAttemptVerification(s,{...op,execution_id:31}),false)
+})
