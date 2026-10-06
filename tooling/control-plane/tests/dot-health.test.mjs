@@ -4,7 +4,7 @@ import { mkdtempSync,readFileSync,rmSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { classifyHealth } from '../runner/dot-health-state.mjs'
-import { collectHealth,healthQuery,workerInventory } from '../runner/dot-health-collector.mjs'
+import { collectHealth,healthQuery,workerInventory,readHealth } from '../runner/dot-health-collector.mjs'
 import { receiptPaths,startReceipt,readJson } from '../runner/durable-process.mjs'
 const now=Date.parse('2026-10-06T16:00:00Z'),past=new Date(now-300000).toISOString(),future=new Date(now+300000).toISOString()
 const fixture=()=>({key:'run:original',run:{run_id:'original',status:'running',current_task_id:'TASK',completed_tasks:0,max_tasks:2,workstream_slug:'shared'},task:{task_id:'TASK',status:'in_progress'},execution:{execution_id:299,attempt:1,status:'running',started_at:past,model_name:'gpt-6.1-sol',model_profile:'standard'},policy:{max_attempts:5},last_progress_at:past})
@@ -32,3 +32,12 @@ test('healthy status collection performs only SQL reads/health persistence and n
  const programs=[];healthQuery('SELECT 1;', {BS_CONTROL_DB_HOST:'fixture',BS_CONTROL_DB_PORT:'123',BS_CONTROL_DB_USER:'fixture',BS_CONTROL_DB_NAME:'fixture'},(program)=>{programs.push(program);return {status:0,stdout:'1'}});assert.deepEqual(programs,['psql'])
  }finally{rmSync(root,{recursive:true,force:true})}})
 test('persisted worker heartbeat/deadline/output/exit receipt and secret-free health inventory',async()=>{const root=mkdtempSync(path.join(os.tmpdir(),'health-heartbeat-'));try{const paths=receiptPaths(path.join(root,'.local/runtime-receipts'),'heartbeat');startReceipt(paths,{program:process.execPath,args:['-e',"console.log('private-fixture-output');setTimeout(()=>{},5500)"],cwd:root,timeout:10000});const until=async fn=>{for(let i=0;i<400;i++){const value=fn();if(value)return value;await new Promise(r=>setTimeout(r,20))}throw Error('fixture_timeout')};const first=await until(()=>readJson(paths.state)?.heartbeat_at?readJson(paths.state):null);const next=await until(()=>{const s=readJson(paths.state);return Date.parse(s?.heartbeat_at)>Date.parse(first.heartbeat_at)+1000?s:null});assert.ok(next.child.pid);assert.ok(next.last_output_at);assert.ok(next.deadline_at);const result=await until(()=>readJson(paths.result));assert.equal(result.code,0);assert.equal(readJson(paths.state).worker_state,'exited');assert.equal(workerInventory(root).length,0);assert.ok(!JSON.stringify(workerInventory(root)).includes('private-fixture-output'));assert.ok(readFileSync(paths.state,'utf8').includes('heartbeat_at'))}finally{rmSync(root,{recursive:true,force:true})}})
+
+test('current run observation supersedes historical task-only human gate without deleting history',()=>{
+ const historical={key:'task:TASK',task_id:'TASK',run_id:null,state:'STUCK',operator_action_required:true}
+ const current={key:'run:original',task_id:'TASK',run_id:'original',state:'WAITING_TIMER',operator_action_required:false}
+ const unrelated={key:'task:OTHER',task_id:'OTHER',run_id:null,state:'WAITING_OPERATOR',operator_action_required:true}
+ const persisted=[historical,current,unrelated]
+ const result=readHealth(()=>({rows:[...persisted]}))
+ assert.deepEqual(result.rows,[current,unrelated]);assert.equal(persisted.length,3)
+})
