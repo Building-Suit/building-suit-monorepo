@@ -8,7 +8,8 @@ export function classifyHealth(input, process = {}, now = Date.now(), graceMs = 
  const timestamps=[input.last_progress_at,e?.started_at,e?.finished_at,v?.started_at,v?.finished_at,process.last_output_at].map(time)
  const last=Math.max(...timestamps,run&&!task?time(run.updated_at):0)
  const age=last?now-last:Infinity
- const base={key:input.key,run_id:run?.run_id??null,workstream:run?.workstream_slug??task?.workstream_slug??task?.suit_slug,
+ const failureEvidence=input.accounting?.classifications?.filter(c=>Number(c.execution_id)===Number(e?.execution_id)).at(-1)
+ const base={failure_classification:failureEvidence?.classification??null,failed_checks:failureEvidence?.evidence?.blocking_checks?.map(c=>c.name)??[],root_cause:failureEvidence?.evidence?.root_cause??null,key:input.key,run_id:run?.run_id??null,workstream:run?.workstream_slug??task?.workstream_slug??task?.suit_slug,
  evidence_revision:input.accounting?.classifications?.filter(c=>Number(c.execution_id)===Number(e?.execution_id)).at(-1)?.classification_id??null,run_status:run?.status??null,history_only:!!run&&!runIsActionable(run),task_id:task?.task_id??run?.current_task_id??null,completed_tasks:run?.completed_tasks??null,max_tasks:run?.max_tasks??null,
  attempt:e?.attempt??0,max_attempts:policy?.max_attempts??null,model:e?.model_name??null,profile:e?.model_profile??task?.model_profile??null,reasoning_effort:e?.reasoning_effort??null,execution_id:e?.execution_id??null,
  worker_alive:process.worker_alive===true,process:process.worker??null,process_observed_at:process.observed_at??null,

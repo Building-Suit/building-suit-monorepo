@@ -48,7 +48,7 @@ export function auditAttempts(snapshot){
   else if(latest?.failure_class==='publication-reconciliation')classification='PUBLICATION_INFRA'
   else if(checks.some(c=>c.status==='fail'&&/AssertionError|assertion failed|Error: expect\(|ERR_ASSERTION|✖.*assert/i.test(c.summary??''))&&!/ENOENT|EACCES|spawn|ECONN|EADDR/.test(text))classification='PRODUCT_DEFECT'
   const blocking_checks=checks.map(c=>({name:c.name,status:c.status,summary:redactText(c.summary??'').slice(0,2500),failure_class:c.failure_class,failure_evidence:c.metadata?.failure_evidence??c.failure_evidence??null}))
-  return [{execution_id:e.execution_id,attempt:e.attempt,classification,charged:classification==='PRODUCT_DEFECT',blocking_checks,proof,root_cause:proof?'Legacy migration test scans a removed optional components directory without provisioning its empty fixture.':blocking_checks[0]?.summary??latest?.error_code??'Failure evidence requires investigation'}]
+  return [{execution_id:e.execution_id,attempt:e.attempt,classification,charged:classification==='PRODUCT_DEFECT',blocking_checks,proof,root_cause:proof?.some(p=>p.version===2)?proof.map(p=>p.review?.root_cause).filter(Boolean).join('; '):proof?'Legacy migration test scans a removed optional components directory without provisioning its empty fixture.':blocking_checks[0]?.summary??latest?.error_code??'Failure evidence requires investigation'}]
  })
  const max=snapshot.packet?.retry_policy?.max_attempts??snapshot.policy?.max_attempts??5,consumed=entries.filter(e=>e.charged).length
  const unknown=entries.some(e=>e.classification==='UNKNOWN'),nonproduct=entries.some(e=>!e.charged&&e.classification!=='UNKNOWN')
