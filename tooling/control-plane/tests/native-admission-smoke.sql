@@ -14,6 +14,9 @@ BEGIN
  result:=control.reconcile_native_run_admission(r.run_id);
  IF (SELECT max_tasks FROM control.workflow_runs WHERE run_id=r.run_id)<>7 OR (SELECT current_task_id FROM control.workflow_runs WHERE run_id=r.run_id) IS NOT NULL
  OR (SELECT count(*) FROM control.executions WHERE task_id=t.task_id)<>old_executions THEN RAISE EXCEPTION 'Diagnostics mutated run identity/limit or product attempts';END IF;
+ PERFORM control.record_dot_health(jsonb_build_array(jsonb_build_object('key','run:'||r.run_id,'run_id',r.run_id,'state','WAITING_ADMISSION','observed_at',now(),'operator_action_required',false,'recovery_owner','Dot')));
+ PERFORM control.record_dot_health(jsonb_build_array(jsonb_build_object('key','run:'||r.run_id,'run_id',r.run_id,'state','RECONCILING','observed_at',now(),'operator_action_required',false,'recovery_owner','Dot')));
+ IF (SELECT state FROM control.dot_health_current WHERE run_id=r.run_id) <> 'RECONCILING' THEN RAISE EXCEPTION 'Admission recovery health cannot persist';END IF;
  UPDATE control.workflow_runs SET maintenance_requested=true WHERE run_id=r.run_id;
  result:=control.reconcile_native_run_admission(r.run_id);
  IF result->>'reason'<>'run_not_idle_native' THEN RAISE EXCEPTION 'Maintenance gate bypassed';END IF;
