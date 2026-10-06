@@ -59,6 +59,7 @@ export function repairEvidenceHeader(snapshot, attempt) {
 export function workerProcessClassification(result) {
  if(result?.classification?.failure_class) return { ...result.classification, failure_class:legacyClassification(result.classification.failure_class) }
  const text=[result?.stderr,result?.stdout,result?.error].filter(Boolean).join('\n')
+ if(/E2BIG|worker_(?:spawn|stdin|transport|launcher)_|receipt_writer_interrupted/.test(text)) return {failure_class:'transient-infrastructure',recovery_action:'wait-external',component:'worker-transport'}
  if(/chatgpt_authentication_required|not logged in|please (?:log|sign) in|authentication (?:expired|revoked)|refresh token.*(?:expired|invalid|reused)|401 Unauthorized/i.test(text)) return {failure_class:'operator-wait',recovery_action:'wait-operator'}
  return {failure_class:'transient-infrastructure',recovery_action:'wait-external'}
 }

@@ -11,3 +11,5 @@ exact frozen task set. Dot prepares each current contract without acquiring task
 out of order; native readiness and dependency selection still choose the next
 task. Only authoritative passing ordinary scope may publish. Revocations, scope
 changes, protected paths, approvals, merges and deployment gates remain enforced.
+
+Codex prompts use exact stdin transport (`codex exec ... -`), including recovery of private legacy argv receipts. Prompt audit files remain mode 0600; no temporary prompt file or environment secrets are added. Model, reasoning and execution reservations are preserved. Spawn failures (including synchronous E2BIG before a child PID) settle as worker-transport infrastructure. A dead receipt writer is recovered only after PID/start-stamp and kernel-lock checks; a live child is never duplicated. Dot stops an old outer waiter only when its inner handoff demonstrably died before spawn, then resumes the original execution through an infrastructure generation. This does not reserve a product attempt.

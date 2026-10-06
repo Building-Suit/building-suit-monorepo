@@ -52,7 +52,7 @@ import { evaluateWorkstreamReadiness, resolveVerificationPlan } from './verifica
 import { mergeVerificationConfig } from '../lib/workstream-readiness.mjs'
 import { evaluateParentSatisfaction } from './parent-satisfaction.mjs'
 import { retryPurpose, verifiedRepairBaselineFiles, repairFailureChecks, preserveAttributedRun, currentExecution, publicationHoldOutcome } from './recovery-evidence.mjs'
-import { durableExecute, receiptPaths, startReceipt, readJson, receiptLocked } from './durable-process.mjs'
+import { durableExecute, receiptPaths, startReceipt, readJson, receiptLocked, stdinPromptRequest, storedPrompt, recoverInterruptedHandoff } from './durable-process.mjs'
 import { recoveryBackoff, retryWithoutProductAttempt, runWakeEligibility, taskStatusEvidence } from './selfhealing.mjs'
 import { validateVerifierOnlyReacceptance } from './verifier-only-reacceptance.mjs'
 import { publicationStateFingerprint } from './publication-preflight.mjs'
@@ -115,6 +115,7 @@ const githubRepository = 'Building-Suit/building-suit-monorepo'
 const [command, ...args] = process.argv.slice(2)
 
 function execute(program, programArgs = [], options = {}) {
+  ;({ args: programArgs, options } = stdinPromptRequest(program, programArgs, options))
   const childEnv = {
     ...process.env,
     NO_COLOR: '1',
@@ -1716,7 +1717,7 @@ function taskRun() {
       )
     }
 
-    const prompt = resumeExecution?.prompt_path && existsSync(resumeExecution.prompt_path) ? readFileSync(resumeExecution.prompt_path, 'utf8').trim() : promptResult.stdout
+    const prompt = resumeExecution?.prompt_path && existsSync(resumeExecution.prompt_path) ? storedPrompt(readFileSync(resumeExecution.prompt_path, 'utf8')) : promptResult.stdout
 
     const promptPath =
       path.join(
@@ -3410,7 +3411,7 @@ Return a concise repair summary.
         'codex.jsonl',
       )
 
-    if (resumeExecution && existsSync(promptPath)) prompt = readFileSync(promptPath, 'utf8').trim()
+    if (resumeExecution && existsSync(promptPath)) prompt = storedPrompt(readFileSync(promptPath, 'utf8'))
     writeFileSync(
       promptPath,
       `${prompt}\n`,
@@ -4742,6 +4743,9 @@ function invokeTaskAction(action, taskId) {
     }
   }
   const paths = receiptPaths(path.join(repoRoot, '.local', 'runtime-operations'), op.operation_id, op.infra_retries)
+  if (['task-run','task-retry'].includes(op.action) && recoverInterruptedHandoff(path.join(repoRoot, '.local', 'runtime-receipts'), op.operation_id, paths)) {
+    return { result: { code: 0 }, payload: { ok: false, error: 'worker_transport_interrupted', classification: { failure_class: 'transient-infrastructure', recovery_action: 'wait-external', component: 'worker-transport' }, operation_id: op.operation_id } }
+  }
   startReceipt(paths, { program: process.execPath, args: [agentScriptPath, op.action, taskId], cwd: repoRoot, timeout: 70 * 60_000 }, { ...process.env, BS_OPERATION_ID: op.operation_id, BS_OPERATION_INFRA_GENERATION: String(op.infra_retries) })
   // A short polling boundary lets n8n return while detached worker survives SSH.
   let result = readJson(paths.result)
