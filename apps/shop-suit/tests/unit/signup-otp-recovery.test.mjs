@@ -5,6 +5,8 @@ import {
   classifyOtpFailure,
   createPendingOnboardingDraft,
   isExistingIdentityError,
+  normalizeSignupEmail,
+  signupNeedsRecovery,
   PENDING_ONBOARDING_MAX_AGE_MS,
   restorePendingOnboarding,
 } from '../../app/utils/pendingOnboarding.ts'
@@ -81,4 +83,21 @@ test('signup is plan-neutral, defaults to mixed operations, and explains later s
     'من غير ما تختار خطة مدفوعة',
     'تقدر تغيّرها بعدين من إعدادات النشاط، وبياناتك هتفضل محفوظة',
   ]) assert.match(signup, new RegExp(copy))
+})
+
+test('signup distinguishes masked/explicit duplicates from unconfirmed signup without identity lookup', () => {
+  assert.equal(signupNeedsRecovery({ identities: [] }, null), true)
+  assert.equal(signupNeedsRecovery(null, { code: 'user_already_exists' }), true)
+  assert.equal(signupNeedsRecovery({ identities: [{ id: 'real-identity' }] }, null), false)
+  assert.equal(signupNeedsRecovery(null, { code: 'over_email_send_rate_limit' }), false)
+})
+
+test('normalization is stable across signup, storage and refresh; recovery state survives refresh', () => {
+  assert.equal(normalizeSignupEmail('  OWNER@Example.test  '), safeForm.email)
+  const draft = createPendingOnboardingDraft({ ...safeForm, email: '  OWNER@Example.test  ' }, { expiresAt: now + 1000, resendAt: now }, now)
+  assert.equal(draft.form.email, safeForm.email)
+  const restored = restorePendingOnboarding(JSON.stringify({ ...draft, recovery: true }), now)
+  assert.equal(restored.status, 'active')
+  assert.equal(restored.draft.recovery, true)
+  assert.equal(restored.draft.form.email, safeForm.email)
 })
