@@ -3,6 +3,7 @@ import {spawnSync} from 'node:child_process'
 import {mkdirSync,writeFileSync,readFileSync,symlinkSync,readlinkSync,existsSync} from 'node:fs'
 import path from 'node:path'
 import {prepareRuntimeRelease,verifyRuntimeRelease} from '../../runner/runtime-release.mjs'
+import {evidenceDigest} from '../../runner/failure-evidence.mjs'
 
 export function incidentInstallProof({source,output,bin,env,sql,agent,runId,task}){
  const root=path.join(output,'incident-repository'),home=path.join(output,'incident-runtime')
@@ -31,7 +32,7 @@ export function incidentInstallProof({source,output,bin,env,sql,agent,runId,task
  const health={key:'run:'+runId,run_id:runId,task_id:task,state:'STUCK',why:'Disposable runtime helper is missing',observed_at:new Date().toISOString(),operator_action_required:false,worker_alive:false}
  const quote=v=>"'"+String(v).replaceAll("'","''")+"'"
  sql(`SELECT control.record_dot_health(${quote(JSON.stringify([health]))}::jsonb);`)
- const claimed=JSON.parse(sql(`SELECT control.claim_dot_recovery('${runId}','synthetic-repair-install','unknown-synthetic-repair','{"cause_fingerprint":"synthetic-missing-helper","semantic":{"fixture":"missing-helper"}}');`))
+ const claimed=JSON.parse(sql(`SELECT control.claim_dot_recovery('${runId}','synthetic-repair-install','unknown-synthetic-repair','{"cause_fingerprint":"${evidenceDigest('synthetic-missing-helper')}","semantic":{"fixture":"missing-helper"}}');`))
  assert.equal(claimed.claimed,true);const incident=claimed.job.incident_id
  try{
   run(process.execPath,[path.join(source,'tooling/control-plane/runner/dot-recovery-worker.mjs'),incident,'--locked'],{cwd:root,env:testEnv})
