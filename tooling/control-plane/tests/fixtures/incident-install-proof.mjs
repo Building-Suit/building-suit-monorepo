@@ -4,6 +4,7 @@ import {mkdirSync,writeFileSync,readFileSync,symlinkSync,readlinkSync,existsSync
 import path from 'node:path'
 import {prepareRuntimeRelease,verifyRuntimeRelease} from '../../runner/runtime-release.mjs'
 import {evidenceDigest} from '../../runner/failure-evidence.mjs'
+import {runtimeIdentity} from '../../runner/runtime-identity.mjs'
 
 export function incidentInstallProof({source,output,bin,env,sql,agent,runId,task}){
  const root=path.join(output,'incident-repository'),home=path.join(output,'incident-runtime')
@@ -17,7 +18,7 @@ export function incidentInstallProof({source,output,bin,env,sql,agent,runId,task
  const commit=run('git',['rev-parse','HEAD'],{cwd:source})
  assert.equal(run('git',['status','--porcelain','--','tooling/control-plane'],{cwd:source}),'','Incident proof requires committed source')
  const files=run('git',['ls-files','tooling/control-plane','tooling/git'],{cwd:source}).split('\n')
- const previous=prepareRuntimeRelease({sourceRoot:source,releaseHome:home,commit,files,schemaVersion:97,acceptance:{disposable_source:true},metadata:{protocol:'cp-batch-v2'}})
+ const previous=prepareRuntimeRelease({sourceRoot:source,releaseHome:home,commit,files,schemaVersion:runtimeIdentity(source).schema_version,acceptance:{disposable_source:true},metadata:{protocol:'cp-batch-v2'}})
  symlinkSync(previous.directory,path.join(home,'current'))
  sql("DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname='cp_fixture_installer') THEN CREATE ROLE cp_fixture_installer LOGIN;END IF;END $$;GRANT bs_control_release_installer TO cp_fixture_installer;")
  const normal=readFileSync(path.join(bin,'codex'));writeFileSync(path.join(bin,'codex-normal'),normal,{mode:0o700})

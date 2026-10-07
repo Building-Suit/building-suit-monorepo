@@ -13,11 +13,19 @@ UPDATE control.workflow_runs SET current_task_id=NULL WHERE run_id='a0000000-000
 UPDATE control.supervisor_wakes SET pending=false WHERE run_id='a0000000-0000-4000-8000-000000000098';
 DO $$ DECLARE result jsonb; ex bigint; claim jsonb; version bigint; event bigint;BEGIN
  SELECT execution_id INTO ex FROM control.executions WHERE task_id='CP-LIFECYCLE-A';
- PERFORM control.record_lifecycle_failure('CP-LIFECYCLE-A',ex,repeat('b',64),'VERIFIER_INFRA','{"source_fingerprint":"old"}');
+ PERFORM control.record_lifecycle_failure('CP-LIFECYCLE-A',ex,repeat('b',64),'UNKNOWN','{"source_fingerprint":"old"}');
  result:=control.claim_recovery_action('CP-LIFECYCLE-A',ex,'task-verify',repeat('b',64),'VERIFIER_INFRA','{"source_fingerprint":"old"}');
  IF result->>'claimed'<>'false' THEN RAISE EXCEPTION 'Unrepaired verification reopened';END IF;
+ -- Reclassification of the SAME failed verification retains its original
+ -- executable-input baseline, even when the review occurs after fixture repair.
+ PERFORM control.record_lifecycle_failure('CP-LIFECYCLE-A',ex,repeat('c',64),'VERIFIER_INFRA','{"source_fingerprint":"fixed"}');
+ result:=control.recovery_action_readiness(ex,'task-verify',repeat('c',64),'fixed');
+ IF result->>'allowed'<>'true' THEN RAISE EXCEPTION 'Reclassified repaired inputs blocked';END IF;
+ result:=control.claim_recovery_action('CP-LIFECYCLE-A',ex,'task-verify',repeat('c',64),'VERIFIER_INFRA','{"source_fingerprint":"fixed"}');
+ IF result->>'claimed'<>'true' THEN RAISE EXCEPTION 'One repaired-input verification not claimed';END IF;
+ FOR n IN 1..100 LOOP result:=control.claim_recovery_action('CP-LIFECYCLE-A',ex,'task-verify',repeat('c',64),'VERIFIER_INFRA','{"source_fingerprint":"fixed"}');IF result->>'claimed'<>'false' THEN RAISE EXCEPTION 'Repaired generation repeated';END IF;END LOOP;
  FOR n IN 1..100 LOOP result:=control.claim_recovery_action('CP-LIFECYCLE-A',ex,'task-verify',repeat('a',64),'VERIFIER_INFRA','{"source":"unchanged"}');IF n>1 AND result->>'claimed'<>'false' THEN RAISE EXCEPTION 'Repeated unchanged recovery';END IF;END LOOP;
- IF (SELECT count(*) FROM control.recovery_action_claims WHERE task_id='CP-LIFECYCLE-A')<>1 THEN RAISE EXCEPTION 'Recovery duplicate';END IF;
+ IF (SELECT count(*) FROM control.recovery_action_claims WHERE task_id='CP-LIFECYCLE-A')<>2 THEN RAISE EXCEPTION 'Recovery duplicate';END IF;
  IF (SELECT count(*) FROM control.executions WHERE task_id='CP-LIFECYCLE-A')<>1 THEN RAISE EXCEPTION 'Nonproduct budget consumed';END IF;
  INSERT INTO control.dot_incidents(incident_id,run_id,task_id,root_fingerprint,classification,status,evidence) VALUES('b0000000-0000-4000-8000-000000000097','a0000000-0000-4000-8000-000000000097','CP-LIFECYCLE-A','synthetic-stale','UNKNOWN','operator-gate','{}');
  INSERT INTO control.dot_recovery_jobs(incident_id,run_id,task_id,root_family,owner,action,status,evidence) VALUES('b0000000-0000-4000-8000-000000000097','a0000000-0000-4000-8000-000000000097','CP-LIFECYCLE-A','unknown-lifecycle','Codex','incident-investigate','human-gate','{}');
