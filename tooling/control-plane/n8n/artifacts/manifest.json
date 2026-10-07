@@ -37,7 +37,7 @@
       "name": "BS-31 — Persisted Recovery Watchdog",
       "live_id": "BS31SelfHealingRecovery",
       "artifact": "BS31SelfHealingRecovery.json",
-      "sha256": "e12e5167ec94dd97cf62af313ac5ed026184b5d5972b2a9600a5400f913644d0",
+      "sha256": "f864ad65c40e3c185a582f470a0f5fde0ca5c1f245ab806678b8695f6d755ffb",
       "preserves_identity": true,
       "generated_active": false
     }

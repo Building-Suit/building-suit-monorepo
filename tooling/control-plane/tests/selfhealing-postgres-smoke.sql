@@ -32,14 +32,15 @@ END $$;
 
 -- PostgreSQL RLS UPDATE denial can return zero rows without throwing 42501.
 -- Reproduce the Shop test semantic mismatch without touching its real DB.
-CREATE ROLE cp_selfheal_rls_fixture;
+SELECT 'cp_selfheal_rls_' || substr(md5(current_database()),1,24) AS fixture_role \gset
+CREATE ROLE :"fixture_role";
 CREATE TABLE public.cp_selfheal_rls_fixture(id integer PRIMARY KEY, owner_name text, object_name text);
 INSERT INTO public.cp_selfheal_rls_fixture VALUES(1,'owner','immutable.png');
 ALTER TABLE public.cp_selfheal_rls_fixture ENABLE ROW LEVEL SECURITY;
-GRANT USAGE ON SCHEMA public TO cp_selfheal_rls_fixture;
-GRANT SELECT,UPDATE ON public.cp_selfheal_rls_fixture TO cp_selfheal_rls_fixture;
-CREATE POLICY owner_select ON public.cp_selfheal_rls_fixture FOR SELECT TO cp_selfheal_rls_fixture USING(owner_name='owner');
-SET ROLE cp_selfheal_rls_fixture;
+GRANT USAGE ON SCHEMA public TO :"fixture_role";
+GRANT SELECT,UPDATE ON public.cp_selfheal_rls_fixture TO :"fixture_role";
+CREATE POLICY owner_select ON public.cp_selfheal_rls_fixture FOR SELECT TO :"fixture_role" USING(owner_name='owner');
+SET ROLE :"fixture_role";
 DO $$ DECLARE touched integer; BEGIN
  UPDATE public.cp_selfheal_rls_fixture SET object_name='changed.png' WHERE id=1;
  GET DIAGNOSTICS touched=ROW_COUNT;
@@ -48,5 +49,5 @@ DO $$ DECLARE touched integer; BEGIN
 END $$;
 RESET ROLE;
 DROP TABLE public.cp_selfheal_rls_fixture;
-DROP OWNED BY cp_selfheal_rls_fixture;
-DROP ROLE cp_selfheal_rls_fixture;
+DROP OWNED BY :"fixture_role";
+DROP ROLE :"fixture_role";

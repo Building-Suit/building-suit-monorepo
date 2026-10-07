@@ -46,6 +46,12 @@ export function auditAttempts(snapshot){
   else if(checks.length&&checks.every(c=>['verification-infrastructure','verification-lifecycle','VERIFIER_INFRA'].includes(c.failure_class)))classification='VERIFIER_INFRA'
   else if(latest?.failure_class==='repository-state')classification='REPOSITORY_WORKTREE'
   else if(latest?.failure_class==='publication-reconciliation')classification='PUBLICATION_INFRA'
+  const persisted=(snapshot.retry_accounting?.classifications??[]).find(row=>Number(row.execution_id)===Number(e.execution_id))
+  const latestId=Math.max(...executions.map(row=>Number(row.execution_id)))
+  // Later implementation changes naturally stale an earlier source fingerprint.
+  // Historical charges come from the database's admitted trusted review, while
+  // new retry authority still requires independent validation of the latest source.
+  if(Number(e.execution_id)!==latestId&&persisted?.charged===true){classification='PRODUCT_DEFECT';proof=checks.map(c=>c.metadata?.failure_evidence??c.failure_evidence).filter(p=>p?.version===2&&p.classification==='PRODUCT_DEFECT')}
   const blocking_checks=checks.map(c=>({name:c.name,status:c.status,summary:redactText(c.summary??'').slice(0,2500),failure_class:c.failure_class,failure_evidence:c.metadata?.failure_evidence??c.failure_evidence??null}))
   return [{execution_id:e.execution_id,attempt:e.attempt,classification,charged:classification==='PRODUCT_DEFECT',blocking_checks,proof,root_cause:proof?.some(p=>p.version===2)?proof.map(p=>p.review?.root_cause).filter(Boolean).join('; '):proof?'Legacy migration test scans a removed optional components directory without provisioning its empty fixture.':blocking_checks[0]?.summary??latest?.error_code??'Failure evidence requires investigation'}]
  })

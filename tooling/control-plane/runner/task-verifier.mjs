@@ -1,5 +1,7 @@
 #!/usr/bin/env node
-import {verifierReceipt} from './trusted-verifier-receipt.mjs'
+import {controlQueryError} from './recovery-error.mjs'
+import {fileURLToPath} from 'node:url'
+import {verifierReceipt,trustedCommandRegistration} from './trusted-verifier-receipt.mjs'
 import {failureEvidence,processFailureCategory,evidenceDigest} from './failure-evidence.mjs'
 import {emptyComponentFixture} from './retry-exhaustion-audit.mjs'
 
@@ -8,6 +10,7 @@ import {
   mkdirSync,
   readFileSync,
   writeFileSync,
+  realpathSync,
 } from 'node:fs'
 
 import {
@@ -147,7 +150,7 @@ function liveCheck(check) {
       failure_evidence: check.failure_evidence ?? null,
     }),
   }
-  const args = ['-X','-q','-A','-t','-v','ON_ERROR_STOP=1','-h',controlDatabase.host,'-p',controlDatabase.port,'-U',controlDatabase.user,'-d',controlDatabase.database]
+  const args = ['-X','-q','-A','-t','-v','ON_ERROR_STOP=1','-v','VERBOSITY=verbose','-h',controlDatabase.host,'-p',controlDatabase.port,'-U',controlDatabase.user,'-d',controlDatabase.database]
   for (const [key,value] of Object.entries(values)) args.push('--set',`${key}=${value}`)
   const result = executeWithControlDatabaseRetry(() => spawnSync('psql',args,{
     encoding:'utf8',
@@ -155,8 +158,8 @@ function liveCheck(check) {
     input:`SELECT control.update_verification_check(:'run_id'::bigint,:'name',:'status',NULLIF(:'exit_code','')::integer,:'summary',:'log_path',:'elapsed_ms'::bigint,:'command',:'required'::boolean,:'metadata'::jsonb);\n`,
   }), { successful: value => value.status === 0 && !value.error })
   if (result.status !== 0) {
-    const error = new Error('live_verification_update_failed')
-    error.component = 'verifier'; error.code = 'VERIFIER_DATABASE_UPDATE_FAILED'
+    const error = controlQueryError(result)
+    error.component = 'verifier'
     throw error
   }
   const id = Number(result.stdout.trim().split('\n').at(-1))
@@ -166,8 +169,14 @@ function liveCheck(check) {
       encoding: 'utf8', env: { ...process.env, PGSSLMODE: controlDatabase.sslmode },
       input: `SELECT jsonb_build_object('execution_id',v.execution_id,'run_id',(SELECT r.run_id FROM control.workflow_runs r WHERE r.current_task_id=e.task_id ORDER BY r.started_at DESC LIMIT 1)) FROM control.verification_runs v JOIN control.executions e USING(execution_id) WHERE v.verification_run_id=${Number(verificationRunId)};\n`,
     })
-    if (identity.status !== 0) throw new Error('trusted_receipt_execution_identity_unavailable')
+    if (identity.status !== 0) throw controlQueryError(identity)
     const boundIdentity = JSON.parse(identity.stdout.trim())
+    const obligations=resolvedPlan.checks.filter(p=>p.name===check.name).map(p=>p.plan_entry)
+    check.trusted_registration=trustedCommandRegistration({check,executionId:Number(boundIdentity.execution_id),verificationRunId,taskId:task.task_id,runId:boundIdentity.run_id,
+      registry:{configuration:verificationConfig,plan:task.verification_plan},obligationIds:obligations.length?obligations.map(e=>evidenceDigest(e)):[`runtime:${check.name}`],verifierBytes:readFileSync(fileURLToPath(import.meta.url))})
+    const registered=spawnSync('psql',args.slice(0,args.indexOf('--set')).concat(['--set',`registration=${JSON.stringify(check.trusted_registration)}`]),{
+      encoding:'utf8',env:{...process.env,PGSSLMODE:controlDatabase.sslmode},input:`SELECT control.register_trusted_verification_command(${check.verification_id}, :'registration'::jsonb);\n`})
+    if(registered.status!==0)throw controlQueryError(registered)
     check.trusted_receipt = verifierReceipt({ check, artifactRoot: worktreePath, sourceRoot: worktreePath,
       executionId: Number(boundIdentity.execution_id), runId: boundIdentity.run_id, verificationRunId, taskId: task.task_id,
       startedAt: check.started_at, finishedAt: check.finished_at })
@@ -176,7 +185,7 @@ function liveCheck(check) {
       encoding: 'utf8', env: { ...process.env, PGSSLMODE: controlDatabase.sslmode },
       input: `SELECT control.capture_verifier_receipt(${check.verification_id}, :'receipt'::jsonb);\n`,
     })
-    if (persisted.status !== 0) throw new Error('trusted_receipt_persistence_refused')
+    if (persisted.status !== 0) throw controlQueryError(persisted)
   }
 }
 
@@ -993,6 +1002,12 @@ function existingResult(...names) {
 
 function plannedCompatibilityCovered(blocker) {
   if (blocker.kind !== 'planned_test') return false
+
+  if(blocker.registered_checks?.length){
+    const root=realpathSync(worktreePath)
+    if(blocker.expected_outputs.some(output=>!existsSync(path.join(root,output))||!realpathSync(path.join(root,output)).startsWith(root+path.sep)))return false
+    return blocker.registered_checks.every(check=>existingResult(check.name))
+  }
 
   if (['generator_disposable_fixture_runner_not_registered','missing_generated_fixture_boundary_runner','future_generator_fixture_not_implemented'].includes(blocker.blocker)) {
     const fixture = 'tooling/new-platform/verify-fixture.mjs'

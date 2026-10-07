@@ -15,7 +15,15 @@ export function catalogApplies(entry,context) {
  if(!entry||entry.root_family!==context.root_family||entry.cause_fingerprint!==context.cause_fingerprint)return false
  if(entry.handler_id!=='run-recover'||entry.handler_version!==1||entry.safety_boundary!=='existing-bounded-run')return false
  if(context.protocol!==entry.protocol||context.schema_version<entry.schema_min||context.schema_version>entry.schema_max)return false
- if(entry.regression_version!==context.regression_version||!entry.runtime_release)return false
+ if(entry.regression_version!==context.regression_version||!entry.runtime_release||entry.runtime_release!==context.runtime_release)return false
  if(!entry.required_preconditions?.length||!entry.required_evidence?.length)return false
  return entry.required_preconditions.every(p=>context.preconditions?.[p]===true)&&entry.required_evidence.every(p=>context.evidence?.[p]===true)
+}
+export function recoveryOwner(persistedOwner,entry,context) {
+ // Native handlers keep their guarded deterministic path. An exact learned
+ // handler converts an unknown incident to Dot; mismatches never do so.
+ const nativeFamilies=['publication-handoff','completion-credit','controller-acquisition','worker-transport','verifier-configuration','verifier-infrastructure','repository-reconciliation','transient-infrastructure','product-repair','timer-reconciliation','lease-reconciliation']
+ // Legacy settlement can persist a coarse learned family as owner=Dot. That
+ // row cannot turn an unknown semantic cause into a native handler.
+ return catalogApplies(entry,context)||(persistedOwner==='Dot'&&nativeFamilies.includes(context.root_family))?'Dot':'Codex'
 }

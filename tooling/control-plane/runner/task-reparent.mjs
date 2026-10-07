@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 
+import {controlQueryError,recoveryErrorEnvelope} from './recovery-error.mjs'
 import { spawnSync } from 'node:child_process'
 import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const controlRoot = fileURLToPath(new URL('../../../', import.meta.url))
+const repositoryRoot=process.env.BS_CONTROL_REPOSITORY_ROOT??controlRoot
 const [taskId, mode, dryRunFlag] = process.argv.slice(2)
 const dryRun = mode === '--dry-run' || dryRunFlag === '--dry-run'
 if (!/^[A-Z][A-Z0-9-]{2,63}$/.test(taskId ?? '') || ![undefined,'--to-current-parent','--dry-run'].includes(mode)) fail('usage: task-reparent TASK-ID --to-current-parent [--dry-run]')
@@ -25,10 +27,11 @@ function result(program,args,cwd=controlRoot,input) {
 function requireResult(value,label) { if(value.code!==0||value.error) fail(label,{stderr:value.stderr,error_detail:value.error}); return value.stdout }
 function fail(error,extra={}) { process.stdout.write(`${JSON.stringify({ok:false,error,...extra},null,2)}\n`); process.exit(1) }
 function query(sql,variables={}) {
-  const args=['-X','-q','-A','-t','-v','ON_ERROR_STOP=1','-h',db.host,'-p',db.port,'-U',db.user,'-d',db.name]
+  const args=['-X','-q','-A','-t','-v','ON_ERROR_STOP=1','-v','VERBOSITY=verbose','-h',db.host,'-p',db.port,'-U',db.user,'-d',db.name]
   for(const [key,value] of Object.entries(variables)) args.push('--set',`${key}=${value}`)
   const value=result('psql',args,controlRoot,`${sql.trim()}\n`)
-  return JSON.parse(requireResult(value,'control_database_query_failed'))
+  if(value.code!==0)fail('control_database_query_failed',recoveryErrorEnvelope(controlQueryError(value),'task-reparent'))
+  return JSON.parse(value.stdout)
 }
 
 const state=query(`SELECT jsonb_build_object('packet',control.generic_task_packet(:'task'),'execution',(SELECT to_jsonb(e) FROM control.executions e WHERE e.task_id=:'task' ORDER BY attempt DESC LIMIT 1));`,{task:taskId})
@@ -52,7 +55,7 @@ const changed=requireResult(result('git',['status','--short'],worktree),'git_sta
 const preview={ok:true,dry_run:dryRun,task_id:taskId,worktree,branch,original_parent:original,current_parent:{branch:liveParent.parent_branch,sha:liveParent.parent_sha},changed_files:changed}
 if(dryRun){process.stdout.write(`${JSON.stringify(preview,null,2)}\n`);process.exit(0)}
 
-const snapshotRoot=path.join(controlRoot,'.local','automation','reparent',`${taskId}-${Date.now()}`)
+const snapshotRoot=path.join(repositoryRoot,'.local','automation','reparent',`${taskId}-${Date.now()}`)
 mkdirSync(path.join(snapshotRoot,'untracked'),{recursive:true})
 const patchText=requireResult(result('git',['diff','--binary','--full-index',original.sha],worktree),'unable_to_snapshot_changes')
 writeFileSync(path.join(snapshotRoot,'changes.patch'),`${patchText}\n`,{mode:0o600})
@@ -65,12 +68,9 @@ if(patchText.trim()){
 }
 for(const file of untracked){const destination=path.join(worktree,file);if(!existsSync(destination)){mkdirSync(path.dirname(destination),{recursive:true});cpSync(path.join(snapshotRoot,'untracked',file),destination,{recursive:true})}}
 const head=requireResult(result('git',['rev-parse','HEAD'],worktree),'unable_to_read_new_head')
+if(!process.env.BS_CONTROL_VERIFIER_USER)fail('trusted_reparent_credentials_required')
+db.user=process.env.BS_CONTROL_VERIFIER_USER
 const recorded=query(`
-  WITH current_task AS (SELECT * FROM control.tasks WHERE task_id=:'task' FOR UPDATE),
-  updated_execution AS (UPDATE control.executions SET parent_branch=:'parent_branch',parent_sha=:'parent_sha',engine_stage='reverification_required' WHERE execution_id=:'execution'::bigint RETURNING execution_id),
-  updated_task AS (UPDATE control.tasks SET status='verification',engine_stage='reverification_required' WHERE task_id=:'task' RETURNING *)
-  INSERT INTO control.task_events(task_id,event_type,from_status,to_status,source,payload)
-  SELECT :'task','task_reparented',current_task.status,'verification','human',jsonb_build_object('execution_id',:'execution'::bigint,'old_parent',jsonb_build_object('branch',:'old_branch','sha',:'old_sha'),'new_parent',jsonb_build_object('branch',:'parent_branch','sha',:'parent_sha'),'snapshot',:'snapshot') FROM current_task
-  RETURNING jsonb_build_object('recorded',true,'event_id',event_id);
+  SELECT control.record_trusted_task_reparent(:'task',:'execution'::bigint,:'old_branch',:'old_sha',:'parent_branch',:'parent_sha',:'snapshot');
 `,{task:taskId,execution:String(state.execution.execution_id),old_branch:original.branch,old_sha:original.sha,parent_branch:liveParent.parent_branch,parent_sha:liveParent.parent_sha,snapshot:snapshotRoot})
 process.stdout.write(`${JSON.stringify({...preview,dry_run:false,new_head:head,snapshot: snapshotRoot,control:recorded,reverification_required:true},null,2)}\n`)

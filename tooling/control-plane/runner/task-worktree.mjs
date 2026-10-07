@@ -27,7 +27,7 @@ const [
 
 const requestedRepositoryRoot =
   path.resolve(
-    controlRoot,
+    process.env.BS_CONTROL_REPOSITORY_ROOT ?? controlRoot,
     configuredRepositoryRoot ?? '.',
   )
 

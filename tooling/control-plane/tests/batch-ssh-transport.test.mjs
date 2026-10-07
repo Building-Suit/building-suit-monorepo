@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
@@ -21,10 +21,13 @@ function invoke(command, exitCode = 0) {
   const home = mkdtempSync(path.join(tmpdir(), 'bs-batch-ssh-'))
   try {
     const bin = path.join(home, 'bin')
-    const agent = path.join(home, 'Dev/building-suit-monorepo/tooling/control-plane/runner/bs-agent.mjs')
+    const release=path.join(home,'.local/lib/building-suit-control-plane/releases/synthetic')
+    const agent = path.join(release, 'tooling/control-plane/runner/runtime-bootstrap.mjs')
     mkdirSync(bin, { recursive:true })
     mkdirSync(path.dirname(agent), { recursive:true })
     writeFileSync(agent, '// Test placeholder: never executed.\n')
+    writeFileSync(path.join(release,'release.json'),'{}')
+    symlinkSync(release,path.join(home,'.local/lib/building-suit-control-plane/current'))
     const fakeNode = path.join(bin, 'node')
     writeFileSync(fakeNode, '#!/bin/sh\nprintf \'%s\\0\' "$@"\nexit "${BS_SSH_TEST_EXIT_CODE:-0}"\n')
     chmodSync(fakeNode, 0o700)
@@ -43,7 +46,7 @@ function invoke(command, exitCode = 0) {
 function accepted(command, expected, exitCode = 0) {
   const result = invoke(command, exitCode)
   assert.equal(result.status, exitCode, result.stderr || result.stdout)
-  assert.deepEqual(result.args, [result.agent, ...expected])
+  assert.deepEqual(result.args, [result.agent, 'runner', ...expected])
 }
 
 function rejected(command, error, code = 64) {
@@ -87,6 +90,15 @@ test('acquire preserves child exit status', () => accepted(acquire, acquireArgs,
 test('completion preserves child exit status', () => accepted(complete, completeArgs, 23))
 test('unrelated supervisor command is unchanged', () => accepted(`bs-agent task-supervise ${taskId}`, ['task-supervise', taskId]))
 test('unknown commands remain forbidden', () => rejected('bs-agent arbitrary-command', 'command_not_allowed', 126))
+test('actual BS-31 watchdog command reaches the immutable runner without extra authority', () => {
+  const watchdog = JSON.parse(readFileSync(path.join(root, 'tooling/control-plane/n8n/artifacts/BS31SelfHealingRecovery.json'), 'utf8'))
+  const command = watchdog.nodes.find(node => node.name === 'Wake Eligible Existing Runs').parameters.workflowInputs.value.command
+  assert.equal(command, 'bs-agent recovery-watch')
+  accepted(command, ['recovery-watch'])
+  accepted(`cd / ; ${command}`, ['recovery-watch'])
+  rejected(`${command}; echo unsafe`, 'command_not_allowed', 126)
+  rejected(`${command} arbitrary`, 'command_not_allowed', 126)
+})
 test('an unapproved working-directory prefix remains forbidden', () => rejected(`cd /tmp ; ${acquire}`, 'command_not_allowed', 126))
 
 const invalidAcquisitions = [

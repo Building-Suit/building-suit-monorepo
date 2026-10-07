@@ -324,7 +324,7 @@ const liveParentResult =
     ],
     {
       cwd:
-        controlRoot,
+        worktreePath,
     },
   )
 
@@ -947,7 +947,7 @@ const existingPrResult =
     ],
     {
       cwd:
-        controlRoot,
+        worktreePath,
     },
   )
 
@@ -1057,7 +1057,7 @@ else {
       ],
       {
         cwd:
-          controlRoot,
+          worktreePath,
       },
     )
 
@@ -1091,7 +1091,7 @@ else {
       ],
       {
         cwd:
-          controlRoot,
+          worktreePath,
       },
     )
 
@@ -1131,10 +1131,12 @@ const prCheck =
       String(
         pr.number,
       ),
+      '--repository',
+      repository,
     ],
     {
       cwd:
-        controlRoot,
+        worktreePath,
 
       timeout:
         10 * 60 * 1000,

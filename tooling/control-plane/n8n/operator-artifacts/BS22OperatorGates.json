@@ -32,7 +32,9 @@
         },
         "responseMode": "lastNode",
         "options": {
-          "path": "building-suit-operator-gates"
+          "path": "building-suit-operator-gates",
+          "requireExecuteAccess": true,
+          "includeUserInOutput": true
         }
       }
     },
@@ -93,7 +95,7 @@
         0
       ],
       "parameters": {
-        "jsCode": "const raw=$input.first().json,p=raw.payload??raw;if(p.ok!==true||!Array.isArray(p.gates))throw Error(p.error??'Gate lookup failed');const esc=x=>String(x??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[c]));const gates=p.gates.map(g=>({...g,choice:g.task_id+' — '+g.reason}));const html=gates.length?gates.map(g=>'<section><p>Run: '+esc(g.run_id)+'</p><p>Task: '+esc(g.task_id)+'</p><p>Gate: '+esc(g.action)+' — '+esc(g.reason)+'</p><p>Verification: '+esc(g.verification_run_id)+'</p>'+((g.protected_files??[]).map(f=>'<p>Protected file: '+esc(f.path)+' — '+esc(f.reason)+'</p>').join(''))+'<p>Requested authorization: '+esc(g.requested_authorization)+'</p></section>').join(''):'<p>No supported operator gate exists for this run. Merge, deployment and new scope are not supported.</p>';const details=p.blocked_state?'<p>Current task/gate: '+esc(JSON.stringify(p.blocked_state))+'</p>':'';const fields=[{fieldType:'html',html:html+details}];if(gates.length)fields.push({fieldLabel:'Gate',fieldName:'gate_choice',fieldType:'dropdown',fieldOptions:{values:gates.map(g=>({option:g.choice}))},requiredField:true},{fieldLabel:'Decision',fieldName:'response',fieldType:'dropdown',fieldOptions:{values:[{option:'Approve'},{option:'Reject'}]},requiredField:true});return [{json:{run_id:p.run_id,gates,fields}}];"
+        "jsCode": "const raw=$input.first().json,p=raw.payload??raw;if(p.ok!==true||!Array.isArray(p.gates))throw Error(p.error??'Gate lookup failed');const esc=x=>String(x??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[c]));const gates=p.gates.map(g=>({...g,choice:(g.task_id??'Bounded run')+' — '+g.reason+(g.choice_suffix?' — '+g.choice_suffix:'')}));const html=gates.length?gates.map(g=>'<section><p>Run: '+esc(g.run_id)+'</p><p>Task: '+esc(g.task_id)+'</p><p>Gate: '+esc(g.action)+' — '+esc(g.reason)+'</p><p>Verification: '+esc(g.verification_run_id)+'</p>'+((g.protected_files??[]).map(f=>'<p>Protected file: '+esc(f.path)+' — '+esc(f.reason)+'</p>').join(''))+'<p>Requested authorization: '+esc(g.requested_authorization)+'</p></section>').join(''):'<p>No supported operator gate exists for this run. Merge, deployment and new scope are not supported.</p>';const details=p.blocked_state?'<p>Current task/gate: '+esc(JSON.stringify(p.blocked_state))+'</p>':'';const fields=[{fieldType:'html',html:html+details}];if(gates.length)fields.push({fieldLabel:'Gate',fieldName:'gate_choice',fieldType:'dropdown',fieldOptions:{values:gates.map(g=>({option:g.choice}))},requiredField:true},{fieldLabel:'Decision',fieldName:'response',fieldType:'dropdown',fieldOptions:{values:[{option:'Approve'},{option:'Reject'},{option:'Revoke'}]},requiredField:true});return [{json:{run_id:p.run_id,gates,fields}}];"
       }
     },
     {
@@ -124,7 +126,7 @@
         0
       ],
       "parameters": {
-        "jsCode": "const reviewed=$('Build Gate Review').first().json,input=$input.first().json;const response=String(input.response??'').toLowerCase();const selected=reviewed.gates.find(g=>g.choice===input.gate_choice);if(!['approve','reject'].includes(response)||!selected)throw Error('No valid reviewed gate selected');return [{json:{command:'bs-agent operator-gate-resolve '+reviewed.run_id+' '+selected.gate_fingerprint+' '+response}}];"
+        "jsCode": "const reviewed=$('Build Gate Review').first().json,input=$input.first().json;const response=String(input.response??'').toLowerCase();const selected=reviewed.gates.find(g=>g.choice===input.gate_choice);const actor=$('Select Existing Run').first().json.user?.id;if(!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(actor??''))throw Error('Authenticated n8n actor required');if(!['approve','reject','revoke'].includes(response)||!selected||!(selected.available_responses??['approve','reject']).includes(response))throw Error('No valid reviewed gate selected');return [{json:{command:'bs-agent operator-gate-resolve '+reviewed.run_id+' '+selected.gate_fingerprint+' '+response+' '+actor}}];"
       }
     },
     {
@@ -139,7 +141,7 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "rzoRWvnSBG7sU1Oh",
+          "value": "BS23OperatorCapability",
           "mode": "list"
         },
         "workflowInputs": {

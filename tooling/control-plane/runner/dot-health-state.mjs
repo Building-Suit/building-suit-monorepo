@@ -1,4 +1,4 @@
-import {runIsActionable} from './run-lifecycle.mjs'
+import {runIsActionable,lifecycleOutcome,activityState} from './run-lifecycle.mjs'
 import {admissionDiagnostic} from './native-admission.mjs'
 import {exhaustionHealth} from './retry-exhaustion-audit.mjs'
 export const HEALTH_STATES = Object.freeze(['RUNNING','VERIFYING','REPAIRING','PUBLISHING','WAITING_TIMER','WAITING_OPERATOR','WAITING_DEPENDENCY','WAITING_ADMISSION','RECONCILING','STUCK','FAILED','COMPLETE','INVESTIGATING','IDLE','LIMIT_REACHED','CLOSED','CANCELLED','STOPPED','SUPERSEDED','FINISHED'])
@@ -18,13 +18,16 @@ export function classifyHealth(input, process = {}, now = Date.now(), graceMs = 
  last_progress_at:last?new Date(last).toISOString():null,elapsed_seconds:last?Math.max(0,Math.floor(age/1000)):null,execution_elapsed_seconds:e?.started_at?Math.max(0,Math.floor((now-time(e.started_at))/1000)):null,
  next_wake_at:r?.next_wake_at??o?.next_wake_at??null,recovery_classification:r?.failure_class??null,recovery_action:r?.next_action??null,
  publication_state:p?.state??(task?.status==='passed'?'pending':'not_started'),observed_at:new Date(now).toISOString(),llm_used:false}
+ base.gate_offers=input.gate_status?.gate_offers??[];base.gate_id=input.gate_status?.gate_id??null;
+ base.hard_policy_reason=input.gate_status?.hard_policy_reason??null;base.bs22_path=input.gate_status?.bs22_path??'/form/building-suit-operator-gates'
  const incident=input.incident_recovery
- if(incident){base.recovery_owner=incident.owner;base.recovery_action=incident.action;base.incident_id=incident.incident_id;base.recovery_started=incident.started_at;base.next_recovery_check=incident.next_check_at}
- const state=(value,why,next,needs=false)=>({...base,state:value,activity_state:base.history_only?'IDLE':value,lifecycle_outcome:run?.status?.toUpperCase()??task?.status?.toUpperCase()??null,why,next_automatic_action:next,operator_action_required:needs})
+ if(incident){base.recovery_owner=incident.owner;base.recovery_action=incident.action;base.incident_id=incident.incident_id;base.incident_generation=incident.generation??incident.attempts;base.recovery_started=incident.started_at;base.next_recovery_check=incident.next_check_at}
+ const state=(value,why,next,needs=false)=>({...base,state:value,activity_state:activityState(value,base.history_only),lifecycle_outcome:lifecycleOutcome(run,task),why,next_automatic_action:next,operator_action_required:needs})
  if(run && !runIsActionable(run))return state(run.status.toUpperCase(),`Historical lifecycle ended: ${run.status}`,'None — historical run')
  if(!run&&['complete','cancelled'].includes(task?.status))return state(task.status.toUpperCase(),'Task '+task.status,'None')
  if(incident?.action==='incident-investigate' && incident?.status==='running')return state('INVESTIGATING','Execution-bound failure evidence investigation is active','Codex must review complete artifacts and persist the bound classification')
  if(incident?.status==='human-gate')return state('WAITING_OPERATOR',incident.evidence?.reason??'Incident investigation established a human gate','Resolve the recorded incident gate',true)
+ if(base.gate_offers.some(g=>g.action==='bounded-run-release')&&!process.worker_alive)return state('WAITING_OPERATOR','Prevalidated bounded run requires its exact scope release','Review the existing frozen task set in BS-22',true)
  if(run?.stop_requested||run?.maintenance_requested)return state('WAITING_OPERATOR',run.stop_requested?'Run stop requested':'Run maintenance hold','Operator must release the existing run hold',true)
  const audit=r?.condition?.exhaustion_audit
  if(['retry_budget_exhausted','retry_classification_review_required'].includes(r?.error_code)){const gate=exhaustionHealth(audit);return {...state(gate.needs?'WAITING_OPERATOR':'STUCK',gate.why,gate.next,gate.needs),exhaustion_audit:audit??null}}

@@ -39,6 +39,8 @@ export function validateIncidentRepair({files,regression,rootFamily,base,head}) 
  if(!files.length||!files.includes(regression)||!/^tooling\/control-plane\/tests\/[^/]+\.test\.mjs$/.test(regression))throw Error('incident_regression_required')
  for(const file of files) {
   if(!/^(tooling\/control-plane\/runner\/[^/]+\.mjs|tooling\/control-plane\/tests\/[^/]+\.test\.mjs|tooling\/control-plane\/SELFHEALING\.md)$/.test(file))throw Error('incident_repair_outside_runtime_scope')
+  if(protectedIncidentModules.some(name=>file.endsWith('/'+name)))throw Error('incident_protected_runtime_guard')
  }
  return true
 }
+export const protectedIncidentModules=Object.freeze(['dot-recovery-worker.mjs','dot-general-recovery.mjs','publication-preflight.mjs','verifier-only-reacceptance.mjs','trusted-verifier-receipt.mjs','failure-evidence.mjs','task-verifier.mjs','reaccept-verifier-probe.mjs','runtime-release.mjs','runtime-bootstrap.mjs','runtime-identity.mjs','incident-release-installer.mjs','operator-gate.mjs','schema-provenance.mjs','control-adoption.mjs','recovery-catalog.mjs','codex-child-environment.mjs'])

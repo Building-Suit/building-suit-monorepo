@@ -26,11 +26,20 @@ export function failedVerificationEvidence(snapshot) {
     .at(-1)?.metadata ?? null
 }
 
+export function reviewedFailureClass(snapshot, execution = currentExecution(snapshot)) {
+ const entry=snapshot.exhaustion_audit?.entries?.find(item=>Number(item.execution_id)===Number(execution?.execution_id))
+ if(!Array.isArray(entry?.proof)||!entry.proof.length||!entry.proof.every(proof=>proof.version===2&&proof.classification!=='UNKNOWN'))return null
+ return {PRODUCT_DEFECT:'verification-product-defect',VERIFIER_INFRA:'verification-infrastructure',CONFIGURATION:'verification-configuration'}[entry.classification]??null
+}
+export function reviewedProductFailure(snapshot, execution = currentExecution(snapshot)) {
+ return reviewedFailureClass(snapshot,execution)==='verification-product-defect'
+}
+
 export function retryPurpose(snapshot) {
   const execution = currentExecution(snapshot)
   const failure = executionFailure(snapshot, execution)
   const failureClass = failure?.failure_class ?? execution?.metadata?.verification_probe_classification?.failure_class
-  return execution?.status === 'succeeded' || failureClass === 'verification-product-defect'
+  return execution?.status === 'succeeded' || reviewedProductFailure(snapshot,execution) || failureClass === 'verification-product-defect'
     ? 'verification-product-repair' : 'retry'
 }
 

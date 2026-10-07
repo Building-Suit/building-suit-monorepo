@@ -37,7 +37,8 @@
         "path": "building-suit-dot-wake",
         "responseMode": "onReceived",
         "options": {}
-      }
+      },
+      "webhookId": "f0317b2d-2770-4b2f-93f7-c275d7946384"
     },
     {
       "id": "bs30-watch",

@@ -4,8 +4,10 @@ import { spawn } from 'node:child_process'
 const env=process.env
 const args=['-X','-q','-A','-t','-w','-v','ON_ERROR_STOP=1','-h',env.BS_CONTROL_DB_HOST,'-p',env.BS_CONTROL_DB_PORT,'-U',env.BS_CONTROL_DB_USER,'-d',env.BS_CONTROL_DB_NAME]
 if(args.some(x=>x===undefined)) throw new Error('existing_control_database_environment_required')
-const child=spawn('psql',args,{env:{...env,PGSSLMODE:env.BS_CONTROL_DB_SSLMODE ?? 'require'},stdio:['pipe','pipe','pipe']})
-let pending=false, running=false, buffer=''
+// psql stdout is otherwise block-buffered behind a pipe, delaying the wake
+// watermark until several kilobytes accumulate on an idle installation.
+const child=spawn('stdbuf',['-oL','-eL','psql',...args],{env:{...env,PGSSLMODE:env.BS_CONTROL_DB_SSLMODE ?? 'require'},stdio:['pipe','pipe','pipe']})
+let pending=false, running=false, buffer='', observedEvent=0
 async function wake(){
  if(!pending || running)return
  running=true;pending=false
@@ -13,12 +15,25 @@ async function wake(){
  catch {pending=true}
  finally {running=false}
 }
-child.stdout.on('data',chunk=>{buffer+=chunk.toString();if(buffer.includes('bs_dot_wake')){pending=true;buffer='';void wake()}if(buffer.length>8192)buffer=buffer.slice(-8192)})
+child.stdout.on('data',chunk=>{
+ buffer+=chunk.toString()
+ const lines=buffer.split('\n');buffer=lines.pop()
+ for(const line of lines){
+  const event=/^bs_dot_event:([0-9]+)$/.exec(line.trim())
+  if(event){const id=Number(event[1]);if(id>0&&id!==observedEvent)pending=true;observedEvent=id}
+  if(line.includes('bs_dot_wake'))pending=true
+ }
+ if(buffer.length>8192)buffer=buffer.slice(-8192)
+ void wake()
+})
 child.stderr.on('data',chunk=>{if(chunk.toString().includes('bs_dot_wake')){pending=true;void wake()}})
 child.on('close',code=>process.exit(code || 1))
 child.stdin.on('error',()=>process.exit(1))
 child.stdin.write('LISTEN bs_dot_wake;\n')
 // psql delivers asynchronous notifications after each command. This connection
-// performs no recovery or model call and survives ordinary healthy idle state.
-const tick=setInterval(()=>{child.stdin.write('SELECT 1;\n');void wake()},5000)
+// Persisted events also cover missed notifications and reconnects through a
+// provider pooler. The observer reads the outbox; only BS-31 consumes it.
+const poll="SELECT 'bs_dot_event:' || coalesce(max(event_id),0)::text FROM control.dot_wake_events WHERE consumed_at IS NULL;\n"
+child.stdin.write(poll)
+const tick=setInterval(()=>{child.stdin.write(poll);void wake()},5000)
 process.on('SIGTERM',()=>{clearInterval(tick);child.kill('SIGTERM');process.exit(0)})

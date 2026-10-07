@@ -55,6 +55,6 @@ test('actual native reconciliation runs before same-run acquisition and dispatch
   throw Error('unexpected SQL')
  },execute:(_program,args)=>{calls.push('dispatch');assert.equal(args[1],'task-supervise');assert.equal(args[2],registryBindings.task_id);return {stdout:JSON.stringify({ok:true,status:'running'})}}}
  runInNewContext(helper+recover+'\nrecoverWorkflowRun()',context)
- assert.deepEqual(calls,['diagnose','bindings','contract','acquire','dispatch']);assert.equal(outputs[0].run_id,'existing')
+ assert.deepEqual(calls,['contract','acquire','dispatch']);assert.equal(outputs[0].run_id,'existing')
  assert.equal(run.max_tasks,7);assert.equal(run.completed_tasks,0)
 })

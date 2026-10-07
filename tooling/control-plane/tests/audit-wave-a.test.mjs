@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { failureEvidence, validateFailureEvidence, evidenceDigest } from '../runner/failure-evidence.mjs'
-import { verifierReceipt, validateTrustedReceipt } from '../runner/trusted-verifier-receipt.mjs'
+import { verifierReceipt, validateTrustedReceipt, trustedCommandRegistration } from '../runner/trusted-verifier-receipt.mjs'
 import { verificationCommandFailureClass } from '../runner/verification-mode.mjs'
 import { auditAttempts } from '../runner/retry-exhaustion-audit.mjs'
 import { recoveryErrorEnvelope } from '../runner/recovery-error.mjs'
@@ -22,6 +22,7 @@ function fixture(t) {
   const check = { verification_id: 10, name: 'registered-test', check_name: 'registered-test', command: 'node --test source.mjs',
     exit_code: 1, status: 'fail', log_path: path.join(root, 'check.log') }
   writeFileSync(check.log_path, 'AssertionError from fixture configuration\n')
+  check.trusted_registration=trustedCommandRegistration({check,executionId:30,verificationRunId:20,taskId:'CP-SYNTHETIC-001',registry:{fixture:true},obligationIds:['synthetic-product-invariant'],verifierBytes:Buffer.from('synthetic verifier')})
   check.trusted_receipt = verifierReceipt({ check, artifactRoot: root, sourceRoot: root,
     executionId: 30, verificationRunId: 20, taskId: 'CP-SYNTHETIC-001',
     startedAt: '2026-10-07T00:00:00Z', finishedAt: '2026-10-07T00:00:01Z' })
@@ -110,4 +111,18 @@ test('P001 trusted reviewed product evidence charges one execution exactly once 
     assert.equal(result.entries.length,1)
     assert.equal(result.entries[0].classification,'PRODUCT_DEFECT')
   }
+})
+
+test('trusted PASS rechecks bytes and allows only unchanged bytes after attributed publication commit', async t => {
+ const {validatePassedVerifierCheck}=await import('../runner/trusted-verifier-receipt.mjs')
+ const {root,check}=fixture(t)
+ check.status='pass';check.exit_code=0
+ check.trusted_receipt=verifierReceipt({check,artifactRoot:root,sourceRoot:root,executionId:30,verificationRunId:20,taskId:'CP-SYNTHETIC-001',startedAt:'2026-10-07T00:00:00Z',finishedAt:'2026-10-07T00:00:01Z'})
+ const context={executionId:30,verificationRunId:20,artifactRoot:root,sourceRoot:root,allowTaskPublicationCommit:true}
+ assert.equal(validatePassedVerifierCheck(check,context).status,'pass')
+ assert.equal(spawnSync('git',['-c','user.name=Fixture','-c','user.email=fixture@example.invalid','commit','--allow-empty','-qm','Synthetic publication','-m','Task: CP-SYNTHETIC-001'],{cwd:root}).status,0)
+ assert.equal(validatePassedVerifierCheck(check,context).status,'pass')
+ assert.throws(()=>validatePassedVerifierCheck(check,{...context,allowTaskPublicationCommit:false}),/source_fingerprint_stale/)
+ writeFileSync(path.join(root,'source.mjs'),'export const example=2\n')
+ assert.throws(()=>validatePassedVerifierCheck(check,context),/source_fingerprint_stale/)
 })

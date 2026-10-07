@@ -169,3 +169,95 @@ psql "$DISPOSABLE_CONTROL_DATABASE_URL" -f tooling/control-plane/tests/recovery-
 ```
 
 The transactions roll back after proving the existing lifecycle plus recovery taxonomy, create/update/resume behavior, idempotency, audit history and compatibility with existing evidence. Never point these fixtures at a hosted product database.
+
+### Audited runtime authority and immutable installation
+
+The remediation separates observer, executor, verifier, operator, migration-owner
+and release-installer capabilities. Runtime logins cannot directly rewrite
+control history, grant authority, change policies or mint trusted verification.
+The verifier records receipt version 2 against the exact task, run, execution,
+verification generation, registered command/version, source fingerprint and
+artifact bytes. Unknown results require bounded investigation; they do not
+consume a product retry. A later infrastructure observation does not erase an
+already reviewed historical product charge.
+
+BS-22 uses n8n's authenticated form trigger (2.6). Its signed-in actor is obtained
+from the trigger's trusted user output, then sent through BS-23's dedicated
+operator SSH capability. Ordinary SSH can read gates but cannot resolve them.
+Offers bind their subject generation and expose typed approval, rejection and
+revocation. Replays retain the original event. Consumed authority cannot be
+revoked. Genuine exhausted product budgets remain on the same existing run at
+an operator wait; a grant permits one review-profile execution without changing
+the configured maximum. Incident grants similarly permit one actual model turn.
+Process setup and authentication failures before a model turn consume no turn.
+
+An external acknowledgement requires a passing version-2 result from the latest
+verification and a registered external command in that run's frozen plan.
+Acknowledgement never collects, invents or waives evidence. Publication still
+validates the artifact bytes and source before consuming the acknowledgement.
+
+Whole-bound admission resolves every remaining task before attempt one. The
+categories are existing executable, task-owned output, external evidence and
+unresolved configuration. Task-owned tests have explicit file paths and executable
+registrations, and must actually exist and pass after implementation. Freezing a
+registered cross-workstream prerequisite preserves its identity; it does not
+complete or waive the dependency. Claiming still waits for actual completion.
+`remaining-plan-review.mjs` prepares a proposal only and performs no database or
+provider changes.
+
+Every runtime component pins the same content-addressed release through one
+`current` pointer. The business repository is resolved through
+`BS_CONTROL_REPOSITORY_ROOT`, independently of immutable executable source.
+Publisher PR validation passes the configured repository explicitly to
+`check-pr.mjs <number> --repository <owner/name>`. Activation uses a serialized
+compare-and-swap and complete readiness checks. Failure restores the pointer and
+services; a failed first activation removes its new pointer and calls the
+previous-service restoration callback.
+
+The Linux event relay requires `stdbuf` alongside `psql` so piped query output
+arrives immediately. Its observer connection listens for notifications and also
+reads the persisted unconsumed wake-event watermark every five seconds. An
+unchanged watermark makes no webhook or model call; missed notifications and
+restarts can wake BS-31 from persisted state. Only the lifecycle executor consumes
+events. The forced runner permits the exact `bs-agent recovery-watch` command;
+extra arguments and shell operators remain forbidden.
+The canonical BS-31 definition pins a stable webhook identity, registering
+`/webhook/building-suit-dot-wake` across regeneration and import.
+
+Schema adoption compares canonical and live object definitions, ownership,
+privileges, policies, constraints, triggers and role capabilities. The append-only
+baseline explicitly does not assert pre-ledger application order. Future control
+migrations are exact-checksum, environment-bound, serialized transactions. A
+published product migration file is never evidence of hosted application.
+
+Disposable behavioral acceptance is available through
+`node tooling/control-plane/tests/synthetic-runtime-e2e.mjs <absolute-evidence-directory>`.
+The harness uses its explicitly disposable control PostgreSQL container, local
+Git repositories and deterministic publication/model providers. It must not be
+pointed at a business database. Its fault flags exercise actual runtime operations,
+receipt loss, worker/publisher death, exact credit replay, trusted re-verification,
+operator authority and bounded investigation. `--n8n-restart` additionally checks
+persisted same-execution resumption on the isolated n8n fixture. The authenticated
+form proof under `tests/fixtures/` runs only inside that disposable n8n instance and
+keeps cookies and tokens out of its output. These fixtures do not authorize live
+activation, product deployment, merge or provider mutation.
+
+Initial CONTROL adoption uses `runner/control-adoption.mjs` inside one privileged,
+environment-bound transaction. It validates every migration byte against the
+immutable release, applies only the post-ledger-boundary migrations, compares
+complete canonical/live schema snapshots, and checks preserved business-history
+row counts and digests before recording provenance. A mismatch rolls back the
+entire adoption. Versions 001–059 are historical schema snapshots; versions
+060–091 are recorded as executed in this adoption transaction. Migration 090
+also removes pre-ledger default grants to ordinary roles so they cannot leak
+onto newly created functions, tables, or sequences. Default privileges are part
+of the schema fingerprint. ACL comparison preserves each permission's grant
+option and normalizes ordering and redundant owner privileges across PostgreSQL
+17 and 18.
+
+Migration 091 makes learned recovery evidence subject-specific: exact semantic
+health and an independently executed regression are always required. A cause
+that binds verification checks additionally requires registered v2 verifier
+evidence before catalog reuse. Pre-verification infrastructure failures do not
+require unrelated verifier evidence. Incident patches cannot replace the trusted
+verifier, release installer, operator or credential boundary modules.

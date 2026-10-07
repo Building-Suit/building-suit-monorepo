@@ -730,7 +730,7 @@ test('restricted n8n runner exposes only validated supervisor and registry comma
   const supervisor = await readFile(new URL('../runner/bs-agent.mjs', import.meta.url), 'utf8')
   assert.match(supervisor, /recovery\.heartbeat_at/)
   const leaseSql = await readFile(new URL('../runner/supervisor-lease.mjs', import.meta.url), 'utf8')
-  assert.match(leaseSql, /r\.lease_expires_at > now\(\)/)
+  assert.match(leaseSql, /r\.lease_expires_at > clock_timestamp\(\)/)
   assert.match(supervisor, /recovery: \{ \.\.\.plan, \.\.\.persistedRecovery \}/)
 })
 
@@ -1326,7 +1326,7 @@ function supervisorFixture({
           metadata: verificationFailureClass ? { failure_class: verificationFailureClass } : {},
         }]
       : [],
-    verification_results: [],
+    verification_results: verificationStatus === 'passed' ? [{verification_run_id:71,status:'pass',metadata:{required:true},trusted_receipt:{version:2},trusted_registration:{version:1}}] : [],
     failures,
     publications: publication ? [{ pull_request_id: 91, state: 'open', ...publication }] : [],
     recovery,
@@ -1358,7 +1358,7 @@ test('supervisor resumes completed stages instead of restarting them', () => {
     'task-verify',
   )
   assert.equal(
-    planSupervisorStep(supervisorFixture({ taskStatus: 'failed', executionStatus: 'succeeded', verificationStatus: 'failed' })).command,
+    planSupervisorStep(supervisorFixture({ taskStatus: 'failed', executionStatus: 'succeeded', verificationStatus: 'failed', verificationFailureClass: 'verification-product-defect' })).command,
     'task-retry',
   )
   assert.equal(
@@ -1440,11 +1440,15 @@ test('supervisor decisions are idempotent for identical persisted state', () => 
 })
 
 test('supervisor respects retry exhaustion and explicit wait or safety routing', () => {
-  const exhausted = planSupervisorStep(supervisorFixture({
-    taskStatus: 'failed', executionStatus: 'failed', attempt: 5, maxAttempts: 5,
-  }))
-  assert.equal(exhausted.next_action, 'safety-stop')
-  assert.equal(exhausted.kind, 'terminal')
+  const exhaustedSnapshot=supervisorFixture({
+    taskStatus:'failed',executionStatus:'failed',attempt:5,maxAttempts:5,
+    failures:[{execution_id:41,failure_id:1,failure_class:'verification-product-defect'}],
+  })
+  exhaustedSnapshot.exhaustion_audit={action:'product-exhausted',entries:[{execution_id:41,classification:'PRODUCT_DEFECT'}]}
+  exhaustedSnapshot.retry_accounting={consumed:5,all_product:true}
+  const exhausted=planSupervisorStep(exhaustedSnapshot)
+  assert.equal(exhausted.next_action, 'wait-operator')
+  assert.equal(exhausted.kind, 'wait')
 
   const inFlight = planSupervisorStep(supervisorFixture({ executionStatus: 'running' }))
   assert.equal(inFlight.next_action, 'wait-external')
@@ -1921,7 +1925,7 @@ test('supervisor self-heals fresh worktrees, dependencies, and dead local leases
 
   assert.match(runner, /function reclaimDeadLocalSupervisorLease/)
   assert.match(runner, /process\.kill\(pid, 0\)/)
-  assert.match(runner, /dead_local_lease_reclaimed_at/)
+  assert.match(runner, /control\.reclaim_local_supervisor_lease/)
   assert.match(supervisor, /preflightReconciliationAction\(preflight\)/)
   assert.match(supervisor, /invokeTaskAction\('task-prepare', taskId\)/)
   assert.match(supervisor, /prepareTaskDependencies/)

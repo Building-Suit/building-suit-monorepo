@@ -178,6 +178,7 @@ const bs30 = {
 const workflows = [bs10, bs20, bs21, bs30]
 // Preserve the published production form identity across regeneration/import.
 bs20.nodes.find(node => node.id === 'bs20-form').webhookId = '64a5715c-5c8f-5729-a2b2-5f11cc1afae7'
+bs30.nodes.find(node => node.id === 'dot-event').webhookId = 'f0317b2d-2770-4b2f-93f7-c275d7946384'
 
 const validation = validateControllerReplacements(workflows)
 if (!validation.valid) throw new Error(`generated_workflow_validation_failed:${validation.errors.join(',')}`)

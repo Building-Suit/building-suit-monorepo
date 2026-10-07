@@ -8,7 +8,7 @@ export function initialSupervisorLeaseSql(recordExpression) {
       SELECT to_jsonb(r) AS recovery FROM control.recovery_states r
       WHERE r.resume_identity = :'resume_identity' AND r.status = 'active'
         AND r.heartbeat_at IS NOT NULL AND r.lease_token IS NOT NULL
-        AND r.lease_expires_at > now() AND r.heartbeat_at <= now()
+        AND r.lease_expires_at > clock_timestamp() AND r.heartbeat_at <= clock_timestamp()
         AND r.heartbeat_at < r.lease_expires_at
         AND r.lease_token IS DISTINCT FROM :'lease_token'
     )

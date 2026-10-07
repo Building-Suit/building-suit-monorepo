@@ -114,7 +114,7 @@ export function durableExecute(root, key, program, args, options = {}) {
     const settled = readJson(paths.result)
     // Failed process invocations are immutable receipts. Retry as a new INFRA
     // generation, never a new product execution. Successful output is replayed.
-    if (settled && settled.code !== 0 && options.retryProcessFailure && workerProcessClassification(settled).failure_class!=='operator-wait') { generation++; continue }
+    if (settled && settled.code !== 0 && (options.retryProcessFailure || options.retryTransportFailure && !settled.stdout?.trim()) && workerProcessClassification(settled).failure_class!=='operator-wait') { generation++; continue }
     startReceipt(paths, { program, args, cwd: options.cwd, timeout: options.timeout, input: options.input }, options.env)
     return waitReceipt(paths, options.timeout ? options.timeout + 60_000 : undefined)
   }
@@ -126,7 +126,7 @@ if (process.argv[2] === '--worker') {
   if (!existsSync(resultPath)) {
     const request = readJson(path.join(dir, 'request.json'))
     atomicJson(path.join(dir, 'state.json'), { pid: process.pid, start_stamp: processStamp(process.pid), started_at: new Date().toISOString() })
-    let child, timer, heartbeatTimer, error = null, stdout = '', stderr = '', settled = false
+    let child, timer, heartbeatTimer, error = null, stdout = '', stderr = '', eventBuffer = '', settled = false
     const identity={pid:process.pid,start_stamp:processStamp(process.pid),started_at:new Date().toISOString(),worker_state:'spawning',heartbeat_at:new Date().toISOString(),deadline_at:request.timeout?new Date(Date.now()+request.timeout).toISOString():null}
     const heartbeat=()=>{identity.heartbeat_at=new Date().toISOString();try{atomicJson(path.join(dir,'state.json'),identity)}catch{/* result receipt remains the lifecycle authority */}}
     const finish = (code, failure = error) => {
@@ -146,7 +146,16 @@ if (process.argv[2] === '--worker') {
       if(child.pid)identity.child={pid:child.pid,start_stamp:processStamp(child.pid)}
       identity.worker_state=child.pid?'running':'spawning';heartbeat();heartbeatTimer=setInterval(heartbeat,5000)
       const maxBytes = 50 * 1024 * 1024
-      child.stdout.on('data', chunk => { stdout = (stdout + chunk).slice(-maxBytes); identity.last_output_at=new Date().toISOString() })
+      child.stdout.on('data', chunk => {
+        stdout = (stdout + chunk).slice(-maxBytes); identity.last_output_at=new Date().toISOString()
+        if(path.basename(request.program)==='codex'){
+          eventBuffer+=chunk
+          const lines=eventBuffer.split('\n');eventBuffer=lines.pop().slice(-1024*1024)
+          for(const line of lines){let event;try{event=JSON.parse(line)}catch{continue}
+            if(['turn.started','turn.completed'].includes(event.type)&&!identity.child.model_started_at){identity.child.model_started_at=new Date().toISOString();heartbeat()}
+          }
+        }
+      })
       child.stderr.on('data', chunk => { stderr = (stderr + chunk).slice(-maxBytes); identity.last_output_at=new Date().toISOString() })
       child.on('spawn', () => {identity.child.launched_at=new Date().toISOString();heartbeat()})
       child.on('error', value => { finish(1, value.code ?? 'worker_spawn_failed') })

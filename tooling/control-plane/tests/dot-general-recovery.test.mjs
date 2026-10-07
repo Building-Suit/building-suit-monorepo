@@ -20,3 +20,7 @@ test('exact native reacceptance proof supersedes the old publisher eligibility s
 
 // A pending prerequisite outside every authorized run cannot be started by recovery.
 test('unowned prerequisite and completed frozen scope are real operator gates, not silent automatic waits',()=>{const base={key:'run:x',run:{run_id:'x',status:'running',max_tasks:14,completed_tasks:2}};for(const patch of [{unowned_prerequisite:'SHARED-PREREQUISITE'},{bounded_scope_exhausted:true}]){const health=classifyHealth({...base,...patch},{},now);assert.equal(health.state,'WAITING_OPERATOR');assert.equal(health.operator_action_required,true)}})
+
+test('learned runtime repair cannot replace its verifier, installer, operator or secret boundary',()=>{
+ for(const name of ['task-verifier.mjs','trusted-verifier-receipt.mjs','runtime-release.mjs','incident-release-installer.mjs','operator-gate.mjs','control-adoption.mjs','codex-child-environment.mjs'])assert.throws(()=>validateIncidentRepair({files:['tooling/control-plane/runner/'+name,'tooling/control-plane/tests/new.test.mjs'],regression:'tooling/control-plane/tests/new.test.mjs',rootFamily:'unknown-lifecycle',base:'base',head:'base'}),/incident_protected_runtime_guard/)
+})

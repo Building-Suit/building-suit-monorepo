@@ -92,3 +92,16 @@ test('Vue exception does not authorize workflows, configuration, secrets, or dep
   assert.equal(protectedPublicationPath('apps/automation-suit/app/pages/n8n.vue'), false)
   assert.equal(protectedPublicationPath('apps/automation-suit/app/components/n8n-status.vue'), false)
 })
+
+test('publication response loss preserves verification and waits for idempotent publication replay',()=>{
+ for(const error of ['git_commit_failed','git_push_failed','gh_pr_create_failed']){
+  const next=classifySupervisorFailure({command:'task-publish',payload:{publication:{error}},attempt:5,maxAttempts:5})
+  assert.equal(next.kind,'wait');assert.equal(next.failure_class,'publication-reconciliation');assert.equal(next.next_action,'wait-external');assert.equal(next.command,undefined)
+ }
+})
+test('generic verification failure requests evidence investigation without a product repair',()=>{
+ for(const error of ['verification_failed','repair_verification_failed']){
+  const next=classifySupervisorFailure({command:'task-verify',payload:{error},attempt:5,maxAttempts:5})
+  assert.equal(next.kind,'wait');assert.equal(next.failure_class,'unknown-outcome');assert.equal(next.command,undefined)
+ }
+})

@@ -13,7 +13,7 @@ const server=createServer((req,res)=>{
  res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; frame-ancestors 'none'")
  if(req.method!=='GET'){res.writeHead(405);res.end();return}
  if(req.url==='/'){res.setHeader('Content-Type','text/html; charset=utf-8');res.end(readFileSync(new URL('./dot-health.html',import.meta.url)));return}
- if(req.url==='/api/status'){try{res.setHeader('Content-Type','application/json');res.end(JSON.stringify({...readHealth(),collector_error:lastError,llm_used:false}))}catch{res.writeHead(503);res.end(JSON.stringify({error:'Health status unavailable',llm_used:false}))}return}
+ if(req.url==='/api/status'){try{res.setHeader('Content-Type','application/json');res.end(JSON.stringify({...readHealth(),runtime_release_id:process.env.BS_CONTROL_RUNTIME_RELEASE_ID??null,collector_error:lastError,llm_used:false}))}catch{res.writeHead(503);res.end(JSON.stringify({error:'Health status unavailable',llm_used:false}))}return}
  res.writeHead(404);res.end()
 })
 server.listen(port,'127.0.0.1')

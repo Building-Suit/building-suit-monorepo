@@ -10,7 +10,7 @@ import { localReceiptWatchObservation } from '../runner/external-state-watcher.m
 import { planSupervisorStep, supervisorStateFingerprint } from '../runner/task-supervisor.mjs'
 import { runWakeEligibility, retryWithoutProductAttempt } from '../runner/selfhealing.mjs'
 import { incidentIdentity } from '../runner/dot.mjs'
-import { currentExecution } from '../runner/recovery-evidence.mjs'
+import { currentExecution, reviewedProductFailure } from '../runner/recovery-evidence.mjs'
 import { operationHasAuthoritativeSuccess } from '../runner/bounded-publication.mjs'
 import { requiresSameAttemptVerification } from '../runner/binding-recovery.mjs'
 
@@ -156,7 +156,7 @@ test('ordinary receipt reconciliation consumes settled verification without rewr
     const before = JSON.stringify(state)
     const writes = []
     const invoke = runInNewContext(`(${actionSource.trim()})`, {
-      supervisorSnapshot: () => structuredClone(state), operationHasAuthoritativeSuccess, requiresSameAttemptVerification,
+      supervisorSnapshot: () => structuredClone(state), operationHasAuthoritativeSuccess, requiresSameAttemptVerification, reviewedProductFailure,
       currentExecution, retryWithoutProductAttempt,
       controlQuery: (sql, values) => { writes.push({ sql, values }) },
     })
@@ -166,7 +166,7 @@ test('ordinary receipt reconciliation consumes settled verification without rewr
     assert.equal(outcome.result.code, passed ? 0 : 1)
     if (!passed) assert.deepEqual(outcome.payload.classification, classification)
     assert.equal(writes.length, 1)
-    assert.match(writes[0].sql, /UPDATE control\.runtime_operations SET status='consumed'/)
+    assert.match(writes[0].sql, /control\.set_runtime_operation_outcome\([^;]+,'consumed'/)
     assert.equal(writes[0].values.id, state.runtime_operations[0].operation_id)
     assert.equal(JSON.stringify(state), before)
   }

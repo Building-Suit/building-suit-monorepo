@@ -21,7 +21,7 @@ BEGIN
  INSERT INTO control.executions(task_id,attempt,model_profile,model_name,reasoning_effort,status,worktree_path,branch_name,parent_branch,parent_sha,started_at,resolved_retry_policy)
  VALUES(p_task_id,previous.attempt+1,p_model_profile,p_model_name,p_reasoning_effort,'running',previous.worktree_path,previous.branch_name,previous.parent_branch,previous.parent_sha,now(),policy) RETURNING execution_id INTO new_id;
  INSERT INTO control.task_events(task_id,event_type,from_status,to_status,source,payload) VALUES(p_task_id,'retry_started','failed','in_progress','runner',jsonb_build_object('execution_id',new_id,'previous_execution_id',previous.execution_id,'attempt',previous.attempt+1,'product_slot',slot,'max_attempts',p_max_attempts,'accounting',budget,'model_profile',p_model_profile,'model_name',p_model_name,'reasoning_effort',p_reasoning_effort));
- RETURN jsonb_build_object('allowed',true,'execution_id',new_id,'attempt',previous.attempt+1,'previous_execution_id',previous.execution_id,'previous_attempt',previous.attempt,'worktree_path',previous.worktree_path,'branch_name',previous.branch_name,'parent_branch',previous.parent_sha,'product_slot',slot,'max_attempts',p_max_attempts);
+ RETURN jsonb_build_object('allowed',true,'execution_id',new_id,'attempt',previous.attempt+1,'previous_execution_id',previous.execution_id,'previous_attempt',previous.attempt,'worktree_path',previous.worktree_path,'branch_name',previous.branch_name,'parent_branch',previous.parent_branch,'product_slot',slot,'max_attempts',p_max_attempts);
 END $$;
 REVOKE ALL ON FUNCTION control.start_retry_execution(text,integer,text,text,text) FROM PUBLIC,anon,authenticated;
 GRANT EXECUTE ON FUNCTION control.start_retry_execution(text,integer,text,text,text) TO bs_control_app;

@@ -117,3 +117,27 @@ test('infrastructure generation recovers execution 299 attempt 3 with unchanged 
   assert.equal(readJson(old.result).error,'receipt_writer_interrupted');assert.equal(readFileSync(path.join(f.root,'calls'),'utf8'),'one\n')
  }finally{f.cleanup()}
 })
+
+test('Codex process setup failure is distinct from an actual model turn',async()=>{
+ const f=fixture();try{
+  writeFileSync(f.codex,'#!/usr/bin/env node\nconsole.error("synthetic authentication setup failure");process.exitCode=1\n',{mode:0o700})
+  const paths=receiptPaths(f.root,'setup');startReceipt(paths,{program:f.codex,args:['exec','--json','-'],cwd:f.root,timeout:2000})
+  assert.equal((await until(()=>readJson(paths.result))).code,1)
+  const state=readJson(paths.state);assert.ok(state.child.launched_at);assert.equal(state.child.model_started_at,undefined)
+ }finally{f.cleanup()}
+})
+test('Codex streamed turn event durably identifies the actual investigation start',async()=>{
+ const f=fixture();try{
+  writeFileSync(f.codex,'#!/usr/bin/env node\nconsole.log(JSON.stringify({type:"turn.started"}));setTimeout(()=>console.log(JSON.stringify({type:"turn.completed"})),100)\n',{mode:0o700})
+  const paths=receiptPaths(f.root,'model');startReceipt(paths,{program:f.codex,args:['exec','--json','-'],cwd:f.root,timeout:2000})
+  assert.equal((await until(()=>readJson(paths.result))).code,0)
+  assert.ok(readJson(paths.state).child.model_started_at)
+ }finally{f.cleanup()}
+})
+test('publisher transport death advances only an infrastructure receipt and preserves failure evidence',()=>{
+ const f=fixture();try{
+  const paths=receiptPaths(f.root,'publisher');atomicJson(paths.result,{code:1,stdout:'',stderr:'',error:'receipt_writer_interrupted'})
+  const result=durableExecute(f.root,'publisher',process.execPath,['-e','console.log("reconciled")'],{cwd:f.root,timeout:2000,retryTransportFailure:true})
+  assert.equal(result.code,0);assert.equal(result.stdout,'reconciled');assert.equal(readJson(paths.result).error,'receipt_writer_interrupted')
+ }finally{f.cleanup()}
+})

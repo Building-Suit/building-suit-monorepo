@@ -15,7 +15,7 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms))
 async function until(predicate,timeout=5000){const t=Date.now();while(Date.now()-t<timeout){const x=predicate();if(x)return x;await delay(20)}throw new Error('fixture_timeout')}
 test('selfheal 1-3 repeated product failures automatically repair and exhaust exact profiles',()=>{
  const phases=[];for(let attempt=1;attempt<=3;attempt++){const s=snapshot(attempt);s.exhaustion_audit={all_attempts_audited:true,action:'operator-gate',entries:[]};const p=planSupervisorStep(s);phases.push(p);if(attempt<3){assert.equal(p.command,'task-retry');assert.equal(p.next_action,'repair');assert.equal(policy.attempt_profiles[attempt],attempt===2?'deep':'standard')}}
- assert.equal(phases[2].reason,'retry_budget_exhausted');assert.equal(phases[2].kind,'terminal')
+ assert.equal(phases[2].reason,'retry_budget_exhausted');assert.equal(phases[2].kind,'wait');assert.equal(phases[2].next_action,'wait-operator')
 })
 test('selfheal 4 explicit product class dominates branch/worktree/parent and permission error text',()=>{
  const p=classifySupervisorFailure({command:'task-retry',payload:{error:'permission parent worktree network timeout',classification:{failure_class:'verification-product-defect'}},attempt:1,maxAttempts:3});assert.equal(p.next_action,'repair')

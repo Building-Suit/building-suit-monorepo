@@ -17,8 +17,8 @@ test('reaccepted verification PASS enters publication without another product ex
  const plan=planSupervisorStep(snapshot)
  assert.equal(plan.command,'task-publish')
  const source=readFileSync(new URL('../runner/bs-agent.mjs',import.meta.url),'utf8')
- assert.ok(source.indexOf("SELECT :'task_id','publication_started'")<source.indexOf('    const publisher ='))
- assert.ok(source.includes("payload->>'operation_id'=:'op'"))
+ assert.ok(source.indexOf("SELECT control.record_publication_started(")<source.indexOf('    const publisher ='))
+ assert.ok(source.includes("NULLIF(:'op','undefined')::uuid,:'execution'::bigint,:'verification'::bigint"))
 })
 test('live wrapper with stale publisher receipt cannot display PUBLISHING',()=>{
  const s=input();s.incident_recovery={owner:'Codex',action:'incident-investigate',next_check_at:past}

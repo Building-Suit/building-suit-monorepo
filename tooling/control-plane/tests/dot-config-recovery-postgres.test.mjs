@@ -168,7 +168,6 @@ test('Dot binding recovery and native bounded ordinary publication preserve iden
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/native-admission-smoke.sql')])
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/053_dot_run_lifecycle.sql')])
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/run-lifecycle-smoke.sql')])
-    assert.ok(JSON.parse(psql(databaseUrl.href, ['-f', path.join(root,'tooling/control-plane/runner/dot-health-inputs.sql'),'-At'])).length > 0)
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/dot-stuck-recovery-smoke.sql')])
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/dot-general-recovery-smoke.sql')])
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/054_structured_failure_evidence.sql')])
@@ -181,6 +180,11 @@ test('Dot binding recovery and native bounded ordinary publication preserve iden
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/059_dot_preexecution_team_bindings.sql')])
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/team-bindings-smoke.sql')])
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/protected-gates-smoke.sql')])
+    // Current health consumes the current canonical schema, after upgrade proofs.
+    for (const migration of readdirSync(path.join(root, 'tooling/control-plane/sql')).filter(file => /^\d{3}_.+\.sql$/.test(file) && Number(file.slice(0, 3)) >= 60).sort()) {
+      psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql', migration)])
+    }
+    assert.ok(JSON.parse(psql(databaseUrl.href, ['-f', path.join(root,'tooling/control-plane/runner/dot-health-inputs.sql'),'-At'])).length > 0)
 
   }
   finally {
