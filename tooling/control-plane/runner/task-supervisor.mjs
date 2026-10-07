@@ -372,15 +372,21 @@ export function planSupervisorStep(snapshot) {
   })
 }
 
-export function classifySupervisorFailure({ command, payload, attempt, maxAttempts }) {
+export function classifySupervisorFailure({ command, payload, attempt, maxAttempts, snapshot }) {
   const error = String(payload?.publication?.error ?? payload?.error ?? 'task_action_failed')
   const lower = error.toLowerCase()
+  const verificationClass = legacyClassification(payload?.classification?.failure_class ?? payload?.recovery?.failure_class ?? payload?.failure_class ?? payload?.publication?.classification?.failure_class ?? payload?.probe?.classification?.failure_class)
+  const current = snapshot?.authoritative_failure
+  const execution = snapshot && latestExecution(snapshot)
+  const verification = snapshot?.verification_runs?.filter(v => Number(v.execution_id) === Number(execution?.execution_id)).at(-1)
+  if (command === 'task-verify' && ['VERIFIER_INFRA','CONFIGURATION'].includes(current?.classification) && Number(current.execution_id) === Number(execution?.execution_id) && Number(current.evidence?.verification_run_id) === Number(verification?.verification_run_id) && [undefined,'unknown-outcome','transient-infrastructure'].includes(verificationClass)) {
+    return decision('wait','reverify',current.classification === 'VERIFIER_INFRA' ? 'verification-infrastructure' : 'verification-configuration','verifier_repair_required',{recoverable:true})
+  }
   if(/unchanged_recovery_action_forbidden|classified_verifier_repair_required/.test(error)){
     const failureClass = legacyClassification(payload?.classification?.failure_class)
     if (['verification-infrastructure', 'verification-configuration'].includes(failureClass)) return decision('wait', 'reverify', failureClass, 'verifier_repair_required', {recoverable:true})
     return decision('wait','wait-external','unknown-outcome','verifier_repair_without_progress',{recoverable:true})
   }
-  const verificationClass = legacyClassification(payload?.classification?.failure_class ?? payload?.recovery?.failure_class ?? payload?.failure_class ?? payload?.publication?.classification?.failure_class ?? payload?.probe?.classification?.failure_class)
   const explicitWait = explicitWaitClasses.get(verificationClass)
   if (explicitWait) {
     return decision(explicitWait === 'safety-stop' ? 'terminal' : 'wait', explicitWait, verificationClass, error.slice(0, 160), { recoverable: explicitWait !== 'safety-stop' })

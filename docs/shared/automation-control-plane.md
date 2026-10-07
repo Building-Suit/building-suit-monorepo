@@ -299,11 +299,13 @@ grant another action. The original failed generation's input fingerprint survive
 later reviews. A same-execution verification requires repaired inputs and can
 run only once for that fingerprint; an unchanged result waits for actual repair.
 
-Migration 102 converges recovery state when the current execution's newest trusted
+Migrations 102–103 converge recovery state when the current execution's newest trusted
 failed-check reviews replace its failure classification. An incompatible prior
 recovery generation is resolved in the audit history and preserved in the new
 state; incompatible incidents and jobs are superseded. The transition emits one
-durable Supervisor wake per evidence generation. Verifier infrastructure uses
+durable Supervisor wake per evidence generation. A late legacy operation cannot
+restore an incompatible wait: the same trusted generation reasserts its recovery
+state without repeating the wake. Verifier infrastructure uses
 `reverify`, with unchanged inputs blocked until the prerequisite is repaired.
 For registered disposable local Supabase databases, a bounded, stable
 `.local/verification-inputs/database-preparation.json` receipt binds the prepared

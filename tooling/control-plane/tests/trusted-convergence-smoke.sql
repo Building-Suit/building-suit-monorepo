@@ -28,13 +28,17 @@ DO $$ DECLARE ex bigint; ver bigint; version bigint; before_version bigint; resu
  RESET ROLE;
  SELECT supervisor_wakes.version INTO before_version FROM control.supervisor_wakes WHERE run_id='a0000000-0000-4000-8000-000000000097';
  PERFORM control.record_lifecycle_failure('CP-LIFECYCLE-A',ex,repeat('b',64),'VERIFIER_INFRA',jsonb_build_object('protocol',2,'release_id',repeat('e',64),'source_fingerprint','old'));
- IF NOT EXISTS(SELECT 1 FROM control.recovery_state_events WHERE recorded_state->>'status'='resolved' AND idempotency_key LIKE 'trusted-convergence:%:superseded') THEN RAISE EXCEPTION 'Old recovery history missing';END IF;
+ IF NOT EXISTS(SELECT 1 FROM control.recovery_state_events WHERE recorded_state->>'status'='resolved' AND idempotency_key LIKE 'trusted-convergence:%:superseded:%') THEN RAISE EXCEPTION 'Old recovery history missing';END IF;
  IF NOT EXISTS(SELECT 1 FROM control.recovery_states WHERE current_task_id='CP-LIFECYCLE-A' AND failure_class='verification-infrastructure' AND next_action='reverify' AND status='active') THEN RAISE EXCEPTION 'Recovery classification did not converge';END IF;
  IF (SELECT status FROM control.dot_incidents WHERE incident_id='b0000000-0000-4000-8000-000000000099')<>'superseded' THEN RAISE EXCEPTION 'Old incident retained';END IF;
  SELECT supervisor_wakes.version INTO version FROM control.supervisor_wakes WHERE run_id='a0000000-0000-4000-8000-000000000097';
  IF version<>before_version+1 THEN RAISE EXCEPTION 'Exactly one convergence wake required';END IF;
  FOR n IN 1..100 LOOP PERFORM control.record_lifecycle_failure('CP-LIFECYCLE-A',ex,repeat('b',64),'VERIFIER_INFRA',jsonb_build_object('protocol',2,'release_id',repeat('e',64),'source_fingerprint','old'));END LOOP;
  IF (SELECT supervisor_wakes.version FROM control.supervisor_wakes WHERE run_id='a0000000-0000-4000-8000-000000000097')<>version THEN RAISE EXCEPTION 'Convergence wake repeated';END IF;
+ PERFORM control.record_recovery_condition('task:CP-LIFECYCLE-A','late-legacy-operation','unknown-outcome','task_action_failed','wait-external',true,'test',p_workflow_run_id=>'a0000000-0000-4000-8000-000000000097',p_current_task_id=>'CP-LIFECYCLE-A',p_execution_id=>ex);
+ PERFORM control.record_lifecycle_failure('CP-LIFECYCLE-A',ex,repeat('b',64),'VERIFIER_INFRA',jsonb_build_object('protocol',2,'release_id',repeat('e',64),'source_fingerprint','old'));
+ IF NOT EXISTS(SELECT 1 FROM control.recovery_states WHERE current_task_id='CP-LIFECYCLE-A' AND failure_class='verification-infrastructure' AND next_action='reverify' AND status='active') THEN RAISE EXCEPTION 'Late legacy operation poisoned recovery';END IF;
+ IF (SELECT supervisor_wakes.version FROM control.supervisor_wakes WHERE run_id='a0000000-0000-4000-8000-000000000097')<>version THEN RAISE EXCEPTION 'Reassertion repeated convergence wake';END IF;
  before_version:=version;
  result:=control.adopt_lifecycle_recovery('a0000000-0000-4000-8000-000000000097',2,repeat('d',64));
  IF result->>'adopted'<>'true' THEN RAISE EXCEPTION 'Release adoption missing';END IF;

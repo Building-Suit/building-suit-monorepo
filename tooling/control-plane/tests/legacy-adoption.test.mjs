@@ -4,7 +4,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {spawnSync} from 'node:child_process'
 import {readFileSync} from 'node:fs'
-import {planSupervisorStep} from '../runner/task-supervisor.mjs'
+import {planSupervisorStep,classifySupervisorFailure} from '../runner/task-supervisor.mjs'
 const snapshot={packet:{task:{task_id:'LEGACY-FAILED',status:'failed'},retry_policy:{max_attempts:3}},executions:[{execution_id:7,attempt:1,status:'succeeded'}],verification_runs:[{execution_id:7,verification_run_id:9,status:'failed'}],failures:[],exhaustion_audit:{action:'investigate',entries:[{execution_id:7,classification:'UNKNOWN'}]},authoritative_failure:{execution_id:7,classification:'VERIFIER_INFRA',evidence:{protocol:2,verification_run_id:9,adoption_materialization:true}},recovery_readiness:{allowed:true}}
 test('legacy untrusted verification materializes once through Supervisor despite stale unknown audit',()=>{const p=planSupervisorStep(snapshot);assert.equal(p.command,'task-verify');assert.equal(p.execution.execution_id,7);assert.equal(p.failure_class,'verification-infrastructure')})
 test('consumed adoption permission cannot reopen unchanged execution',()=>{const p=planSupervisorStep({...snapshot,recovery_readiness:{allowed:false}});assert.equal(p.kind,'wait');assert.equal(p.command,undefined)})
@@ -39,4 +39,15 @@ test('local database preparation changes verifier inputs without changing produc
   mkdirSync(path.join(root,'.local/verification-inputs'),{recursive:true});writeFileSync(path.join(root,'.local/verification-inputs/database-preparation.json'),'{}')
   assert.equal(recoveryActionInput(hosted,'task-verify',source).fingerprint,original.fingerprint)
  } finally {rmSync(root,{recursive:true,force:true})}
+})
+
+test('late obsolete verification outcome cannot overwrite current trusted classification',()=>{
+ const s={...snapshot,authoritative_failure:{execution_id:7,classification:'VERIFIER_INFRA',evidence:{verification_run_id:9}}}
+ const payload={error:'task_action_failed',classification:{failure_class:'unknown-outcome'}}
+ const decision=classifySupervisorFailure({command:'task-verify',payload,snapshot:s})
+ assert.equal(decision.failure_class,'verification-infrastructure');assert.equal(decision.next_action,'reverify');assert.equal(decision.command,undefined)
+ assert.equal(classifySupervisorFailure({command:'task-verify',payload:{error:'task_action_failed'},snapshot:s}).next_action,'reverify')
+ const newer={...s,verification_runs:[{execution_id:7,verification_run_id:10,status:'failed'}]}
+ assert.equal(classifySupervisorFailure({command:'task-verify',payload,snapshot:newer}).failure_class,'unknown-outcome')
+ assert.equal(classifySupervisorFailure({command:'task-verify',payload:{error:'denied',classification:{failure_class:'operator-wait'}},snapshot:s}).next_action,'wait-operator')
 })

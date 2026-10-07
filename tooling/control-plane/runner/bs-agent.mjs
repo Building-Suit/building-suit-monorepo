@@ -5788,6 +5788,7 @@ function taskSupervisor() {
           controlQuery(`SELECT control.audit_product_attempts(:'task');`,{task:taskId})
           const failedSnapshot = supervisorSnapshot(taskId)
           const classified = classifySupervisorFailure({
+            snapshot: failedSnapshot,
             command: reconciliation.command,
             payload: {
               error:
@@ -5884,6 +5885,7 @@ function taskSupervisor() {
         controlQuery(`SELECT control.audit_product_attempts(:'task');`,{task:taskId})
         const failedSnapshot = supervisorSnapshot(taskId)
         const classified = classifySupervisorFailure({
+          snapshot: failedSnapshot,
           command: plan.command,
           payload: child.payload,
           attempt: failedSnapshot.retry_accounting?.consumed ?? currentExecution(failedSnapshot)?.attempt,
@@ -5957,6 +5959,7 @@ function taskSupervisor() {
         const failedSnapshot = supervisorSnapshot(taskId)
         const currentPlan = planSupervisorStep(failedSnapshot)
         const classified = classifySupervisorFailure({
+          snapshot: failedSnapshot,
           command: 'task-supervise',
           payload: { error: error.message },
           attempt: failedSnapshot.retry_accounting?.consumed ?? currentPlan.execution?.attempt,
