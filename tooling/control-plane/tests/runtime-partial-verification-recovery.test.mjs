@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
+import {spawnSync} from 'node:child_process'
 import path from 'node:path'
 import { runInNewContext } from 'node:vm'
 import { controlQueryError, recoveryErrorEnvelope } from '../runner/recovery-error.mjs'
@@ -93,4 +94,14 @@ test('restart after the infrastructure marker preserves trusted history and reus
   assert.equal(checks.size, 2)
   assert.equal(checks.get('dependencies'), receipt)
   assert.equal(JSON.stringify(checks.get('verifier-resume-infrastructure')), marker)
+})
+
+
+test('partial verification guard returns a JSON boolean through actual PostgreSQL',{skip:!process.env.CP_EGRESS_TEST_DATABASE},()=>{
+ const database=process.env.CP_EGRESS_TEST_DATABASE;assert.match(database,/^cp_egress_/)
+ const a=action.indexOf('SELECT to_jsonb(EXISTS ('),b=action.indexOf('`, { verification_run_id:',a)
+ assert.ok(a>=0&&b>a)
+ const sql=action.slice(a,b).replaceAll(":'verification_run_id'",'0')
+ const r=spawnSync('docker',['exec','-i',process.env.CP_EGRESS_TEST_CONTAINER??'cp-remediation-disposable-20261007','psql','-U','postgres','-d',database,'-XqAt','-v','ON_ERROR_STOP=1'],{input:'BEGIN READ ONLY;'+sql+'COMMIT;',encoding:'utf8'})
+ assert.equal(r.status,0,r.stderr);assert.equal(JSON.parse(r.stdout.trim()),false)
 })

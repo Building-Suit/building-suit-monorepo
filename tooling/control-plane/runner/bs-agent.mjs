@@ -2605,7 +2605,7 @@ function taskVerify() {
     if (verificationLifecycleStage === 'execute' && resumedVerification
       && error.sqlstate === 'P0001' && /\bimmutable_verifier_receipt_conflict\b/.test(error.message)
       && parseControlJson(controlQuery(`
-        SELECT EXISTS (
+        SELECT to_jsonb(EXISTS (
           SELECT 1 FROM control.verification_results
           WHERE verification_run_id = :'verification_run_id'::bigint AND trusted_receipt IS NOT NULL
         ) AND NOT EXISTS (
@@ -2618,7 +2618,7 @@ function taskVerify() {
             AND (status IN ('fail','not_run','unavailable')
               OR (status = 'pass' AND COALESCE(metadata->>'required','true') <> 'false'
                 AND (trusted_receipt IS NULL OR trusted_registration IS NULL)))
-        );
+        ));
       `, { verification_run_id: String(resumedVerification.verification_run_id) })) === true) {
       const classification = { failure_class: 'verification-infrastructure', recovery_action: 'wait-external' }
       const check = {
