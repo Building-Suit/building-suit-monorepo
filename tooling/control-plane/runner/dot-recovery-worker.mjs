@@ -95,7 +95,9 @@ async function investigate(job) {
  await command(path.join(root,'node_modules/.bin/eslint'),['--config',path.join(root,'eslint.config.mjs'),...lintFiles],root,120000)
  const isolatedTests=incidentTestEnvironment(folder)
  let checked
- try{checked=await command(process.execPath,['--test','--test-reporter=tap',...tests],folder,240000,isolatedTests.env)}finally{isolatedTests.close()}
+ try{checked=await command(process.execPath,['--test','--test-reporter=tap',...tests],folder,240000,isolatedTests.env)}
+ catch(error){writeFileSync(path.join(dir,'regression.log'),String(error.stdout??'')+'\n'+String(error.stderr??''),{mode:0o600});throw Error('incident_full_regression_failed',{cause:error})}
+ finally{isolatedTests.close()}
  writeFileSync(path.join(dir,'regression.log'),checked.stdout,{mode:0o600})
  await command('git',['add','--',...files],folder)
  await command('git',['commit','-m',`fix(control-plane): recover ${job.root_family}`],folder)
