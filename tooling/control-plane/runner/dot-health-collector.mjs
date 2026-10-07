@@ -1,3 +1,4 @@
+import {recordEgress} from './dot-egress-telemetry.mjs'
 import {controlQueryError} from './recovery-error.mjs'
 import {historicalHealth} from './run-lifecycle.mjs'
 import { readFileSync,readdirSync,existsSync } from 'node:fs'
@@ -10,7 +11,7 @@ import { executeWithControlDatabaseRetry } from '../lib/control-database.mjs'
 export function healthQuery(sql, env=process.env, execute=spawnSync) {
  const args=['-X','-q','-A','-t','-w','-v','ON_ERROR_STOP=1','-v','VERBOSITY=verbose','-h',env.BS_CONTROL_DB_HOST,'-p',env.BS_CONTROL_DB_PORT,'-U',env.BS_CONTROL_DB_USER,'-d',env.BS_CONTROL_DB_NAME]
  if(args.some(x=>x===undefined))throw Error('health_control_environment_missing')
- const r=executeWithControlDatabaseRetry(()=>{const v=execute('psql',args,{input:sql,encoding:'utf8',timeout:20_000,maxBuffer:20*1024*1024,env:{...env,PGSSLMODE:env.BS_CONTROL_DB_SSLMODE??'require'}});return {code:v.status??1,stdout:v.stdout,stderr:v.stderr,error:v.error?.code}})
+ const r=executeWithControlDatabaseRetry(()=>{const v=execute('psql',args,{input:sql,encoding:'utf8',timeout:20_000,maxBuffer:20*1024*1024,env:{...env,PGSSLMODE:env.BS_CONTROL_DB_SSLMODE??'require'}});recordEgress('health',{queries:1,connections:1,bytes:Buffer.byteLength(v.stdout??'')},env.BS_CONTROL_REPOSITORY_ROOT);return {code:v.status??1,stdout:v.stdout,stderr:v.stderr,error:v.error?.code}})
  if(r.code!==0)throw controlQueryError(r)
  return r.stdout.trim()?JSON.parse(r.stdout.trim()):null
 }
@@ -76,7 +77,7 @@ export function collectHealth({root=process.env.BS_CONTROL_REPOSITORY_ROOT,query
 }
 export function readHealth(query=healthQuery) {
  const result=query(`SELECT jsonb_build_object('collected_at',(SELECT max(observed_at) FROM control.dot_health_current),'watchdog_last_cycle',(SELECT max(started_at) FROM control.dot_cycles),'collection_interval_seconds',30,'rows',(SELECT coalesce(jsonb_agg(h.snapshot || jsonb_build_object('recovery_owner',coalesce(h.snapshot->>'recovery_owner',j.owner),'recovery_action',coalesce(h.snapshot->>'recovery_action',j.action),'incident_id',j.incident_id,'recovery_started',j.started_at,'next_recovery_check',j.next_check_at) ORDER BY h.snapshot->>'workstream',h.key),'[]') FROM control.dot_health_current h LEFT JOIN LATERAL(SELECT * FROM control.dot_recovery_jobs j WHERE j.run_id=h.run_id AND j.task_id IS NOT DISTINCT FROM h.task_id AND j.status IN('queued','running','human-gate') ORDER BY j.started_at DESC LIMIT 1) j ON true WHERE (h.run_id IS NULL AND EXISTS(SELECT 1 FROM control.tasks t WHERE t.task_id=h.task_id AND t.status NOT IN('complete','cancelled'))) OR EXISTS(SELECT 1 FROM control.workflow_runs r WHERE r.run_id=h.run_id AND control.run_is_actionable(r.status,r.current_task_id,r.finished_at))),'alerts',(SELECT coalesce(jsonb_agg(to_jsonb(a)),'[]') FROM (SELECT key,state,why,created_at FROM control.dot_health_alerts ORDER BY alert_id DESC LIMIT 30)a));`)
- if(result)result.history=(query(`SELECT coalesce(jsonb_agg(jsonb_build_object('run',to_jsonb(r),'audit',to_jsonb(a)) ORDER BY r.started_at DESC),'[]') FROM control.workflow_runs r LEFT JOIN control.run_lifecycle_audits a USING(run_id) WHERE NOT control.run_is_actionable(r.status,r.current_task_id,r.finished_at);`)??[]).map(x=>historicalHealth(x.run,x.audit))
+
  // A task-only observation predating admission is historical. Its current run
  // observation owns status; retaining both creates a phantom stale human gate.
  const owned=new Set((result?.rows??[]).filter(r=>r.run_id&&r.task_id).map(r=>r.task_id))

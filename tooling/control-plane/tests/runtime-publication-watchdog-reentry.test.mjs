@@ -1,3 +1,4 @@
+import {requiresWatchdogAction,cycleEvidenceCache} from '../runner/dot-current-state.mjs'
 import {isolateRecoveryCandidates,recoveryErrorEnvelope} from '../runner/recovery-error.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
@@ -47,7 +48,8 @@ async function cycle(state, { observed = health(state), locked = false, scopeHel
   const launches = [], queries = [], outputs = []
   let investigations = 0
   const watch = runInNewContext(`(${entryPoint.trim()})`, {
-    isolateRecoveryCandidates,recoveryErrorEnvelope,
+    isolateRecoveryCandidates,recoveryErrorEnvelope,requiresWatchdogAction,cycleEvidenceCache,recordEgress:()=>{},fetch:async()=>({ok:true}),AbortSignal,
+    currentStateSql:()=> 'SELECT compact_state',classifyCurrent:()=>[observed],
     process: { execPath: process.execPath, env: {BS_DOT_WATCH_LOCKED: '1'} }, path,
     repoRoot: '/disposable-watchdog-fixture', controlSourceRoot: '/disposable-runtime',
     agentScriptPath: '/disposable-runtime/bs-agent.mjs',
@@ -55,7 +57,7 @@ async function cycle(state, { observed = health(state), locked = false, scopeHel
     parseControlJson: value => value,
     controlQuery: (sql, values) => {
       queries.push({ sql, values })
-      if (sql.includes('jsonb_agg(to_jsonb(r))')) return [structuredClone(state.workflow_run)]
+      if (sql.includes('WITH compact')) return {inputs:[{run:structuredClone(state.workflow_run),task:state.packet.task,verification:state.verification_runs?.at(-1)}],event_watermark:0,cleanup_due:false}
       if (sql.includes('reconcile_native_reacceptance_gate')) return { reconciled: false }
       if (sql.includes('SELECT snapshot FROM control.dot_health_current')) return observed
       if (sql.includes('reconcile_shared_retry_exhaustion')) return {}

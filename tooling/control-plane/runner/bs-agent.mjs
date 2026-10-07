@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import {recordEgress} from './dot-egress-telemetry.mjs'
+import {currentStateSql,classifyCurrent,requiresWatchdogAction,cycleEvidenceCache} from './dot-current-state.mjs'
 import {validatePassedVerifierCheck} from './trusted-verifier-receipt.mjs'
 import {runtimeIdentity} from './runtime-identity.mjs'
 import {codexChildEnvironment} from './codex-child-environment.mjs'
@@ -880,6 +882,7 @@ function controlQuery(
       },
     },
   ))
+  if(command==='recovery-watch')recordEgress('bs31',{queries:1,connections:1,bytes:Buffer.byteLength(result.stdout??'')})
   if (!successful(result)) throw controlQueryError(result)
   return result
 }
@@ -6569,21 +6572,32 @@ async function recoveryWatch() {
     output(parseJson(scan.stdout,{ok:false,error:'watchdog_scan_unavailable'}),scan.code??1);return
   }
   try {
-    controlQuery(`SELECT control.reconcile_dot_recovery_completion(); SELECT control.reconcile_reviewed_evidence_incidents();`)
-    const health=execute(process.execPath,[path.join(controlSourceRoot,'tooling/control-plane/runner/dot-health-collector.mjs')],{cwd:repoRoot,timeout:25000})
-    const candidates = parseControlJson(controlQuery(`SELECT coalesce(jsonb_agg(to_jsonb(r)),'[]'::jsonb) FROM control.workflow_runs r WHERE control.run_is_actionable(r.status,r.current_task_id,r.finished_at);`))
-    const outcomes = [{action:'health_collection',ok:health.code===0,llm_used:false}]
+    // One Level 0 scan precedes all evidence and mutation. Browser reads use the
+    // independent local cache, never this path. Watermark bounds event consumption.
+    const scanSql=currentStateSql().trim().replace(/;$/,'')
+    const compact=parseControlJson(controlQuery(`WITH compact(state) AS (${scanSql}) SELECT jsonb_build_object('inputs',(SELECT state FROM compact),'event_watermark',(SELECT coalesce(max(event_id),0) FROM control.dot_wake_events WHERE consumed_at IS NULL),'cleanup_due',NOT EXISTS(SELECT 1 FROM control.dot_cycles WHERE started_at>now()-interval '15 minutes' AND outcomes @> '[{"action":"safe_cleanup_scan"}]'::jsonb));`))
+    const inputs=compact.inputs,rows=classifyCurrent(inputs,repoRoot)
+    recordEgress('bs31',{cycles:1,[compact.event_watermark>0?'event_triggered':'scheduled']:1})
+    const subjects=new Map(inputs.map((i,index)=>i.run?[i.run.run_id,{input:i,health:rows[index]}]:null).filter(Boolean))
+    const candidates=inputs.filter(i=>i.run).map(i=>i.run)
+    const evidence=cycleEvidenceCache(task=>{recordEgress('bs31',{heavy_evidence_loads:1});return supervisorSnapshot(task)})
+    const outcomes=[{action:'compact_health_collection',ok:true,llm_used:false,event_watermark:compact.event_watermark}]
     await isolateRecoveryCandidates(candidates, async candidate => {
+      const subject=subjects.get(candidate.run_id)
+      if(!requiresWatchdogAction(subject.input,subject.health)){
+        outcomes.push({run_id:candidate.run_id,eligible:false,reason:subject.health.state,event_id:subject.health.latest_event_id,generation:subject.health.incident_generation,llm_used:false});return
+      }
+      controlQuery(`SELECT control.reconcile_dot_recovery_completion(); SELECT control.reconcile_reviewed_evidence_incidents();`)
       const lifecycle=parseControlJson(controlQuery(`SELECT control.reconcile_empty_run(:'run'::uuid);`,{run:candidate.run_id}))
       if(lifecycle?.closed){outcomes.push({action:'obsolete_run_closed',...lifecycle});return}
       if(!candidate.current_task_id && candidate.status==='running' && !candidate.stop_requested && !candidate.maintenance_requested){const admission=reconcileNativeAdmission(candidate.run_id);if(admission)outcomes.push({run_id:candidate.run_id,action:'native_admission_diagnostics',task_id:admission.task_id,reason:admission.reason})}
-      if(candidate.current_task_id){const auditSnapshot=supervisorSnapshot(candidate.current_task_id);if(!auditSnapshot){outcomes.push({run_id:candidate.run_id,task_id:candidate.current_task_id,action:'snapshot_recheck',owner:'Dot',retry_after_ms:30000});return}const audit=auditSnapshot.exhaustion_audit;controlQuery(`SELECT control.record_retry_exhaustion_audit(:'task',:'proof'::jsonb);`,{task:candidate.current_task_id,proof:JSON.stringify(audit)})}
+      if(candidate.current_task_id){const auditSnapshot=evidence.get(candidate.current_task_id);if(!auditSnapshot){outcomes.push({run_id:candidate.run_id,task_id:candidate.current_task_id,action:'snapshot_recheck',owner:'Dot',retry_after_ms:30000});return}const audit=auditSnapshot.exhaustion_audit;controlQuery(`SELECT control.record_retry_exhaustion_audit(:'task',:'proof'::jsonb);`,{task:candidate.current_task_id,proof:JSON.stringify(audit)})}
       const nativeGate=parseControlJson(controlQuery(`SELECT control.reconcile_native_reacceptance_gate(:'run'::uuid);`,{run:candidate.run_id}))
       if(nativeGate.reconciled){outcomes.push({action:'native_reacceptance_guard_reconciled',...nativeGate});return}
-      const observed=parseControlJson(controlQuery(`SELECT snapshot FROM control.dot_health_current WHERE run_id=:'run'::uuid;`,{run:candidate.run_id}))
+      const observed=subject.health
       if(observed?.worker_alive){outcomes.push({run_id:candidate.run_id,eligible:false,reason:'worker_active'});return}
       const recoveryNeeded=needsRecovery(observed)
-      const receiptSnapshot=recoveryNeeded&&candidate.current_task_id?supervisorSnapshot(candidate.current_task_id):null
+      const receiptSnapshot=recoveryNeeded&&candidate.current_task_id?evidence.get(candidate.current_task_id):null
       // Due local implementation, verification and publication receipts need
       // supervisor polling. Incident investigation starves that path and escalates
       // a known wait. Admission, timers, run locks and human gates remain below.
@@ -6598,7 +6612,6 @@ async function recoveryWatch() {
       } else if(candidate.status==='failed' && candidate.workstream_slug!=='shared') {return}
       if(candidate.current_task_id) controlQuery(`SELECT control.audit_product_attempts(:'task');`,{task:candidate.current_task_id})
       if (candidate.current_task_id && candidate.workstream_slug === 'shared') {
-        controlQuery(`SELECT control.audit_product_attempts(:'task');`, { task:candidate.current_task_id })
         const audit=parseControlJson(controlQuery(`SELECT control.reconcile_shared_retry_exhaustion(:'id'::uuid);`, { id:candidate.run_id }))
         if(audit.accounting) outcomes.push({run_id:candidate.run_id,task_id:candidate.current_task_id,action:'shared_retry_exhaustion_audit',...audit})
       }
@@ -6610,7 +6623,14 @@ async function recoveryWatch() {
       if(!row.admitted_repair_id && !row.stop_requested && !row.maintenance_requested) {
         try { controlQuery(`SELECT control.reconcile_ordinary_run_publication(:'run'::uuid);`,{run:row.run_id}) } catch(error) {outcomes.push({run_id:row.run_id,eligible:false,reason:'ordinary_publication_scope_gate',error:error.message});return}
       }
-      const snapshot = row.current_task_id ? supervisorSnapshot(row.current_task_id) : null
+      // Authority/accounting writes may have changed this subject. Re-read only
+      // Level 0 for it; reload evidence solely on an observed state transition.
+      if(row.current_task_id){
+        const targeted=scanSql+`\nWHERE s.key='run:${row.run_id}'`
+        const latest=parseControlJson(controlQuery(targeted))?.[0]
+        if(latest&&JSON.stringify(latest)!==JSON.stringify(subject.input))evidence.invalidate(row.current_task_id)
+      }
+      const snapshot = row.current_task_id ? evidence.get(row.current_task_id) : null
       const plan = snapshot ? planSupervisorStep(snapshot) : null
       if (plan && !['execution_in_flight','runtime_operation_resume','verification_required','implementation_required','publication_pending'].includes(plan.reason)) {
         const incident=incidentIdentity(snapshot,plan)
@@ -6627,16 +6647,16 @@ async function recoveryWatch() {
       child.unref()
       outcomes.push({ run_id:row.run_id,task_id:row.current_task_id,action:'existing_run_wake',pid:child.pid })
     }, (candidate, error) => outcomes.push({run_id:candidate.run_id,action:'candidate_recovery_failure',...error}))
-    const lastCleanup=parseControlJson(controlQuery(`SELECT jsonb_build_object('due',NOT EXISTS(SELECT 1 FROM control.dot_cycles WHERE started_at>now()-interval '15 minutes' AND outcomes @> '[{"action":"safe_cleanup_scan"}]'::jsonb));`))
-    if(lastCleanup.due){
-      const state=parseControlJson(controlQuery(`SELECT jsonb_build_object('tasks',(SELECT coalesce(jsonb_agg(to_jsonb(t)),'[]') FROM control.tasks t),'runs',(SELECT coalesce(jsonb_agg(to_jsonb(r)),'[]') FROM control.workflow_runs r),'publications',(SELECT coalesce(jsonb_agg(to_jsonb(p)),'[]') FROM control.pull_requests p));`))
+    if(compact.cleanup_due){
+      const state=parseControlJson(controlQuery(`WITH prepared AS (SELECT task_id,metadata#>'{preparation,worktree}' AS worktree FROM control.tasks WHERE status='complete'), roots AS (SELECT worktree->>'worktree_path' AS root,worktree->>'branch_name' AS branch FROM prepared WHERE worktree->>'worktree_path' IS NOT NULL)
+      SELECT jsonb_build_object('tasks',(SELECT coalesce(jsonb_agg(jsonb_build_object('task_id',t.task_id,'status',t.status,'metadata',jsonb_build_object('preparation',jsonb_build_object('worktree',CASE WHEN t.status='complete' THEN t.metadata#>'{preparation,worktree}' END)),'active_references',(SELECT coalesce(jsonb_agg(root),'[]') FROM roots WHERE strpos(to_jsonb(t)::text,root)>0))),'[]') FROM control.tasks t),'runs',(SELECT coalesce(jsonb_agg(jsonb_build_object('status',r.status,'current_task_id',r.current_task_id,'active_references',(SELECT coalesce(jsonb_agg(branch),'[]') FROM roots WHERE strpos(to_jsonb(r)::text,branch)>0))),'[]') FROM control.workflow_runs r),'publications',(SELECT coalesce(jsonb_agg(jsonb_build_object('task_id',p.task_id,'state',p.state)),'[]') FROM control.pull_requests p));`))
       const cleanup=cleanupIntegratedWorktrees({repository:{root:repoRoot,github_repository:githubRepository,integration_branch:'stg'},...state})
       outcomes.push({action:'safe_cleanup_scan',...cleanup})
     }
-    // Observability is deterministic and isolated from task/recovery ownership.
-    const refreshed=execute(process.execPath,[path.join(controlSourceRoot,'tooling/control-plane/runner/dot-health-collector.mjs')],{cwd:repoRoot,timeout:25000})
-    outcomes.push({action:'health_refresh',ok:refreshed.code===0,llm_used:false})
-    controlQuery(`SELECT control.record_dot_cycle(:'outcomes'::jsonb);`,{outcomes:JSON.stringify(outcomes)})
+    // Reuse this cycle's observation. A later state transition emits another
+    // identifier event; no duplicate collection/snapshot download is needed.
+    controlQuery(`SELECT jsonb_build_object('written',control.record_dot_health(:'rows'::jsonb),'cycle',control.record_dot_compact_cycle(:'outcomes'::jsonb,:'watermark'::bigint));`,{rows:JSON.stringify(rows),outcomes:JSON.stringify(outcomes),watermark:String(compact.event_watermark)})
+    try{await fetch('http://127.0.0.1:8787/api/observation',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rows,collected_at:new Date().toISOString(),watchdog_last_cycle:new Date().toISOString()}),signal:AbortSignal.timeout(1000)})}catch{/* Independent 2 minute cache fallback remains. */}
     output({ok:true,command:'recovery-watch',outcomes,codex_invoked_by_scan:false})
   } catch(error) {
     output({command:'recovery-watch',...recoveryErrorEnvelope(error,'watchdog')},1)

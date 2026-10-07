@@ -10,7 +10,7 @@ export const adoptionHistorySql=`SELECT jsonb_object_agg(name,value) FROM (${his
 // escapes the transaction until both schema and preserved history are checked.
 export async function adoptControlSchema({transaction,sourceRoot,sourceCommit,projectRef,releaseManifest,canonicalSnapshot,preLedgerLastVersion=59}) {
  if(typeof transaction!=='function'||!/^[a-f0-9]{40}$/.test(sourceCommit)||!/^[a-z]{20}$/.test(projectRef)||releaseManifest.commit!==sourceCommit||!/^[a-f0-9]{64}$/.test(releaseManifest.release_id)||releaseManifest.schema_version!==91)throw Error('exact_control_adoption_identity_required')
- const migrations=migrationChecksums(sourceRoot),canonicalFingerprint=fingerprintSchema(canonicalSnapshot)
+ const migrations=migrationChecksums(sourceRoot).filter(item=>item.version<=91),canonicalFingerprint=fingerprintSchema(canonicalSnapshot)
  if(migrations.length!==91||migrations.some((item,index)=>item.version!==index+1))throw Error('complete_canonical_migration_set_required')
  const {release_id,...manifestBody}=releaseManifest
  if(createHash('sha256').update(JSON.stringify(manifestBody)).digest('hex')!==release_id||migrations.some(item=>releaseManifest.files?.['tooling/control-plane/sql/'+item.file]!==item.sha256))throw Error('release_bound_canonical_migration_bytes_required')
