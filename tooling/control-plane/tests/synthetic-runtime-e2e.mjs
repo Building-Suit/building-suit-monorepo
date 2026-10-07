@@ -1,7 +1,8 @@
 #!/usr/bin/env node
+import {incidentInstallProof} from './fixtures/incident-install-proof.mjs'
 import {failureEvidence,validateFailureEvidence,evidenceDigest} from '../runner/failure-evidence.mjs'
 import assert from 'node:assert/strict'
-import {spawnSync} from 'node:child_process'
+import {spawnSync,spawn} from 'node:child_process'
 import {mkdirSync,writeFileSync,readdirSync,readFileSync,existsSync,rmSync,symlinkSync} from 'node:fs'
 import path from 'node:path'
 import {fileURLToPath} from 'node:url'
@@ -15,21 +16,21 @@ const restartEnabled=process.argv.includes('--n8n-restart')
 const publicationFailure=process.argv.find(arg=>arg.startsWith('--fault-publication='))?.split('=')[1]??null
 if(publicationFailure&&!['commit','push','pr'].includes(publicationFailure))throw Error('invalid_publication_fault')
 const injectedFault=process.argv.find(arg=>arg.startsWith('--fault='))?.slice(8)??null
-if(injectedFault&&!['large-prompt','controller-lease','supervisor-lease','stale-timer','transient-db','nontransient-db','transport','duplicate-wake','lost-completion','null-current','missing-binding','product-defect','publisher-death','lost-publication-receipt','unknown-safe','no-child','incident-extra','stale-parent','verifier-fixture','external-evidence','product-extra','operator-paths','ordinary-task','protected-task'].includes(injectedFault))throw Error('invalid_synthetic_fault')
+if(injectedFault&&!['large-prompt','controller-lease','supervisor-lease','stale-timer','transient-db','nontransient-db','transport','duplicate-wake','lost-completion','null-current','missing-binding','product-defect','publisher-death','lost-publication-receipt','unknown-repair','unknown-safe','no-child','incident-extra','stale-parent','verifier-fixture','external-evidence','product-extra','operator-paths','ordinary-task','protected-task'].includes(injectedFault))throw Error('invalid_synthetic_fault')
 const bound=injectedFault==='ordinary-task'?1:2
 const boundedTasks=['CP-E2E-001','CP-E2E-002'].slice(0,bound)
 const ownedOutput=process.argv.includes('--task-owned-output')||['product-defect','product-extra'].includes(injectedFault)
 const crashFault=process.argv.includes('--fault-worker-crash')
 if(!output||!path.isAbsolute(output))throw Error('explicit_synthetic_evidence_directory_required')
 mkdirSync(output,{recursive:true})
-const database='cp_runtime_e2e_'+Date.now(),repository=path.join(output,'repository'),remote=path.join(output,'remote.git'),bin=path.join(output,'bin'),worktrees=path.join(output,'worktrees'),home=path.join(output,'codex-home')
+const database='cp_runtime_e2e_'+Date.now()+'_'+process.pid,repository=path.join(output,'repository'),remote=path.join(output,'remote.git'),bin=path.join(output,'bin'),worktrees=path.join(output,'worktrees'),home=path.join(output,'codex-home')
 for(const directory of [repository,worktrees,home])mkdirSync(directory,{recursive:true})
 const run=(program,args,options={})=>{const r=spawnSync(program,args,{encoding:'utf8',timeout:120_000,maxBuffer:32*1024*1024,...options});if(r.status!==0)throw Error(program+' failed: '+r.stdout+'\n'+r.stderr);return r.stdout.trim()}
 const sql=value=>run('docker',['exec','-i','cp-remediation-disposable-20261007','psql','-U','postgres','-d',database,'-XqAt','-v','ON_ERROR_STOP=1'],{input:value})
 const quote=value=>"'"+String(value).replaceAll("'","''")+"'"
 run('docker',['exec','cp-remediation-disposable-20261007','createdb','-U','postgres',database])
 for(const migration of readdirSync(path.join(source,'tooling/control-plane/sql')).filter(f=>/^\d{3}_.+\.sql$/.test(f)).sort())sql(readFileSync(path.join(source,'tooling/control-plane/sql',migration),'utf8'))
-sql("DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname='cp_fixture_verifier') THEN CREATE ROLE cp_fixture_verifier LOGIN;END IF;END $$; GRANT bs_control_verifier TO cp_fixture_verifier;")
+sql("DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname='cp_fixture_verifier') THEN CREATE ROLE cp_fixture_verifier LOGIN;END IF;END $$; GRANT bs_control_verifier TO cp_fixture_verifier;DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname='cp_fixture_executor') THEN CREATE ROLE cp_fixture_executor LOGIN;END IF;END $$;GRANT bs_runtime_executor TO cp_fixture_executor;")
 const git=args=>run('/usr/bin/git',args,{cwd:repository})
 git(['init','--bare','-q',remote]);git(['init','-q','-b','stg']);git(['config','user.name','Synthetic']);git(['config','user.email','synthetic@example.invalid'])
 mkdirSync(path.join(repository,'tooling/git'),{recursive:true});mkdirSync(path.join(repository,'src'))
@@ -38,7 +39,7 @@ writeFileSync(path.join(repository,'package.json'),JSON.stringify({name:'synthet
 writeFileSync(path.join(repository,'pnpm-lock.yaml'),"lockfileVersion: '9.0'\nsettings:\n  autoInstallPeers: true\n  excludeLinksFromLockfile: false\nimporters:\n  .: {}\n")
 writeFileSync(path.join(repository,'tooling/git/preflight.mjs'),'console.log(JSON.stringify({errors:[]}))\n')
 writeFileSync(path.join(repository,'src/result.mjs'),'export const result=0\n')
-if(injectedFault==='verifier-fixture')writeFileSync(path.join(repository,'src/fixture-check.test.mjs'),"import {readFileSync} from 'node:fs';import assert from 'node:assert/strict';assert.equal(JSON.parse(readFileSync('.local/required-fixture.json')).ready,true)\n")
+if(injectedFault==='verifier-fixture')writeFileSync(path.join(repository,'src/fixture-check.test.mjs'),"import {readFileSync} from 'node:fs';import assert from 'node:assert/strict';assert.equal(JSON.parse(readFileSync('.local/verification-inputs/required-fixture.json')).ready,true)\n")
 run('pnpm',['install','--lockfile-only','--ignore-scripts'],{cwd:repository});
 git(['add','.']);git(['commit','-qm','Synthetic fixture parent']);git(['remote','add','origin',remote]);git(['push','-qu','origin','stg'])
 installSyntheticProviders(bin,{publicationFailure})
@@ -57,7 +58,7 @@ if(ownedOutput){
 if(injectedFault==='verifier-fixture'){
  const command={name:'synthetic-fixture-check',program:'node',args:['--test','src/fixture-check.test.mjs'],required:true,capabilities:['unit-test'],changed_paths:['__verification-plan-only__/synthetic-fixture-check']}
  const plan=[{version:2,kind:'command',description:'Verify the existing disposable fixture prerequisite',command:command.name,requires:['unit-test']},'git diff --check']
- sql(`UPDATE control.projects SET verification_config=${quote(JSON.stringify({commands:[command]}))}::jsonb WHERE slug='synthetic-e2e';UPDATE control.tasks SET verification_plan=${quote(JSON.stringify(plan))}::jsonb WHERE suit_slug='synthetic-e2e';SELECT control.refresh_publication_readiness_contract(task_id,'synthetic-fixture-binding') FROM control.tasks WHERE suit_slug='synthetic-e2e';`)
+ sql(`UPDATE control.projects SET verification_config=${quote(JSON.stringify({commands:[command],evidence_inputs:['.local/verification-inputs/required-fixture.json']}))}::jsonb WHERE slug='synthetic-e2e';UPDATE control.tasks SET verification_plan=${quote(JSON.stringify(plan))}::jsonb WHERE suit_slug='synthetic-e2e';SELECT control.refresh_publication_readiness_contract(task_id,'synthetic-fixture-binding') FROM control.tasks WHERE suit_slug='synthetic-e2e';`)
 }
 if(injectedFault==='external-evidence'){
  const command={name:'synthetic-external-evidence',program:'node',args:['-e',"const fs=require('fs'),a=require('assert/strict');const e=JSON.parse(fs.readFileSync('.local/trusted-external.json'));a.equal(e.provider,'synthetic-disposable');a.equal(e.status,'verified');console.log(JSON.stringify(e))"],required:true,capabilities:['external-evidence']}
@@ -68,8 +69,8 @@ if(injectedFault==='product-extra')sql(`INSERT INTO control.retry_policies(polic
 if(['operator-paths','ordinary-task','protected-task'].includes(injectedFault))sql(`INSERT INTO control.operator_actors(actor_id,identity_provider) VALUES('a0000000-0000-4000-8000-000000000090','local-n8n');`)
 if(injectedFault==='operator-paths')sql(`INSERT INTO control.decisions(suit_slug,decision_id,title,decision_text,metadata) VALUES('synthetic-e2e','synthetic-owner-start','Synthetic explicit owner decision','Release only the two disposable fixture tasks','{"gate_kind":"owner_start"}');INSERT INTO control.task_decisions(task_id,suit_slug,decision_id,blocking) VALUES('CP-E2E-001','synthetic-e2e','synthetic-owner-start',true);`)
 
-const identity=JSON.parse(run('docker',['exec','cp-remediation-disposable-20261007','psql','-h','localhost','-U','bs_control_app','-d',database,'-XqAt','-c',"SELECT jsonb_build_object('database',current_database(),'user',current_user,'server_address',COALESCE(inet_server_addr()::text,'local-socket'),'server_port',inet_server_port(),'server_version_num',current_setting('server_version_num'),'control_schema',to_regnamespace('control')::text,'task_packet_contract',to_regprocedure('control.generic_task_packet(text)')::text);"]))
-const env={...process.env,PATH:bin+':/tmp/cp-remediation-test-bin:'+process.env.PATH,BS_CONTROL_DB_HOST:'localhost',BS_CONTROL_DB_PORT:'5432',BS_CONTROL_DB_NAME:database,BS_CONTROL_DB_USER:'bs_control_app',BS_CONTROL_DB_SSLMODE:'disable',BS_CONTROL_VERIFIER_USER:'cp_fixture_verifier',BS_CONTROL_REPOSITORY_ROOT:repository,BS_CODEX_HOME:home,BS_BATCH_CONTROLLER_FINGERPRINT:'synthetic-controller',AUTOMATION_CONTROL_DB_FINGERPRINT:fingerprint(identity),CP_SYNTHETIC_PROVIDER_STATE:path.join(output,'prs.json'),FUTURE_SECRET:'synthetic-sentinel'}
+const identity=JSON.parse(run('docker',['exec','cp-remediation-disposable-20261007','psql','-h','localhost','-U','cp_fixture_executor','-d',database,'-XqAt','-c',"SELECT jsonb_build_object('database',current_database(),'user',current_user,'server_address',COALESCE(inet_server_addr()::text,'local-socket'),'server_port',inet_server_port(),'server_version_num',current_setting('server_version_num'),'control_schema',to_regnamespace('control')::text,'task_packet_contract',to_regprocedure('control.generic_task_packet(text)')::text);"]))
+const env={...process.env,PATH:bin+':/tmp/cp-remediation-test-bin:'+process.env.PATH,BS_CONTROL_DB_HOST:'localhost',BS_CONTROL_DB_PORT:'5432',BS_CONTROL_DB_NAME:database,BS_CONTROL_DB_USER:'cp_fixture_executor',BS_CONTROL_DB_SSLMODE:'disable',BS_CONTROL_VERIFIER_USER:'cp_fixture_verifier',BS_CONTROL_REPOSITORY_ROOT:repository,BS_CODEX_HOME:home,BS_BATCH_CONTROLLER_FINGERPRINT:'synthetic-controller',AUTOMATION_CONTROL_DB_FINGERPRINT:fingerprint(identity),CP_SYNTHETIC_PROVIDER_STATE:path.join(output,'prs.json'),FUTURE_SECRET:'synthetic-sentinel'}
 if(['ordinary-task','protected-task'].includes(injectedFault))env.BS_CONTROL_PUBLICATION_HOLD='1'
 // Remove alternate host routing; this fixture can connect only to its disposable DB.
 for(const key of Object.keys(env))if(key.startsWith('AUTOMATION_CONTROL_DB_')&&key!=='AUTOMATION_CONTROL_DB_FINGERPRINT')delete env[key]
@@ -102,7 +103,30 @@ sql(`SELECT control.reconcile_ordinary_run_publication('${runId}');`)
 
 const controlSnapshot=()=>JSON.parse(sql(`SELECT jsonb_build_object('run_id',run_id,'status',status,'current_task_id',current_task_id,'max_tasks',max_tasks,'completed_tasks',completed_tasks,'controller_fingerprint',controller_fingerprint,'executions',(SELECT coalesce(jsonb_agg(jsonb_build_object('execution_id',e.execution_id,'task_id',e.task_id,'attempt',e.attempt,'status',e.status) ORDER BY e.execution_id),'[]') FROM control.executions e JOIN control.tasks t USING(task_id) WHERE t.suit_slug='synthetic-e2e'),'credits',(SELECT count(*) FROM control.workflow_run_task_credits WHERE run_id=r.run_id),'publications',(SELECT count(*) FROM control.pull_requests p JOIN control.tasks t USING(task_id) WHERE t.suit_slug='synthetic-e2e'),'incidents',(SELECT coalesce(jsonb_agg(jsonb_build_object('incident_id',incident_id,'claim_token',claim_token,'status',status) ORDER BY incident_id),'[]') FROM control.dot_recovery_jobs WHERE run_id=r.run_id)) FROM control.workflow_runs r WHERE run_id='${runId}';`))
 const restart=(phase,taskId,workerPid)=>n8nRestartProof({phase,runId,taskId,controlSnapshot,output,workerPid})
-for(const task of boundedTasks) {
+if(process.argv.includes('--supervisor-service')){
+ // No webhook, BS-31 or manual task/credit command participates. A persistent
+ // SQL inbox consumer is restarted once while the original run is active.
+ writeFileSync(path.join(bin,'psql'),'#!/bin/sh\nexec docker exec -i cp-remediation-disposable-20261007 stdbuf -oL psql "$@"\n',{mode:0o700})
+ const launch=()=>spawn(process.execPath,[path.join(source,'tooling/control-plane/runner/supervisor-service.mjs')],{cwd:repository,env,stdio:'ignore'})
+ let service=launch(),restarted=false
+ try {
+  for(let n=0;n<360;n++){
+   const state=controlSnapshot()
+   if(!restarted&&state.executions?.some(e=>e.status==='running')){
+    service.kill('SIGTERM');await new Promise(resolve=>service.once('exit',resolve));service=launch();restarted=true
+   }
+   if(state.status==='limit_reached')break
+   await new Promise(resolve=>setTimeout(resolve,500))
+  }
+  assert.equal(restarted,true);writeFileSync(path.join(output,'supervisor-service-proof.json'),JSON.stringify({no_webhook:true,dot_calls:0,restarted:true,run_id:runId}))
+ }finally{service.kill('SIGTERM')}
+}else if(process.argv.includes('--supervisor-only')){
+ for(let n=0;n<300;n++){
+  const result=agent(['run-supervise',runId]);if(result.status==='limit_reached')break
+  if(result.response?.recovery?.next_action==='wait-operator')throw Error('synthetic_supervisor_unexpected_authority_wait:'+JSON.stringify(result))
+  await new Promise(resolve=>setTimeout(resolve,500))
+ }
+}else for(const task of boundedTasks) {
  agent(['run-acquire-task',runId,'cp-batch-v2','synthetic-controller','synthetic-lease-'+task])
  if(injectedFault==='operator-paths'&&task==='CP-E2E-001'){
   const id=sql(`INSERT INTO control.dot_incidents(run_id,task_id,root_fingerprint,classification,status,evidence) VALUES('${runId}','${task}','synthetic-human-ack','UNKNOWN','operator-gate','{}') RETURNING incident_id;`)
@@ -150,28 +174,29 @@ for(const task of boundedTasks) {
    if(status==='human-gate')break
    sql(`UPDATE control.dot_recovery_jobs SET next_check_at=now() WHERE incident_id='${id}';SELECT control.claim_dot_recovery('${runId}','synthetic-unknown-safe','unknown-safe','{"cause_fingerprint":"synthetic-safe-cause"}');`)
   }
-  const calls=Number(sql(`SELECT count(*) FROM control.dot_model_invocations WHERE incident_id='${id}' AND launched_at IS NOT NULL;`));assert.equal(calls,2)
-  // A further scheduler wake reaches the two-investigation no-progress fuse.
+  const calls=Number(sql(`SELECT count(*) FROM control.dot_model_invocations WHERE incident_id='${id}' AND launched_at IS NOT NULL;`));assert.equal(calls,1)
+  // A further scheduler wake reaches the stronger unchanged-input fuse.
   sql(`UPDATE control.dot_recovery_jobs SET status='running',owner='Codex',claim_until=now()+interval '5 minutes' WHERE incident_id='${id}';`)
   run(process.execPath,[path.join(source,'tooling/control-plane/runner/dot-recovery-worker.mjs'),id,'--locked'],{cwd:incidentRoot,env:incidentEnv})
-  assert.equal(Number(sql(`SELECT count(*) FROM control.dot_model_invocations WHERE incident_id='${id}' AND launched_at IS NOT NULL;`)),2)
+  assert.equal(Number(sql(`SELECT count(*) FROM control.dot_model_invocations WHERE incident_id='${id}' AND launched_at IS NOT NULL;`)),1)
   const offers=JSON.parse(sql(`SELECT control.operator_gate_offers('${runId}');`)).filter(o=>o.incident_id===id);assert.equal(offers.length,1);assert.equal(offers[0].action,'incident-investigation-extension')
   if(injectedFault==='incident-extra'){
    const actor='a0000000-0000-4000-8000-000000000090',gate=offers[0].gate_fingerprint
    sql(`INSERT INTO control.operator_actors(actor_id,identity_provider) VALUES('${actor}','local-n8n');SET ROLE bs_control_operator;SELECT control.resolve_authenticated_operator_gate('${actor}','${runId}','${gate}','approve');SELECT control.resolve_authenticated_operator_gate('${actor}','${runId}','${gate}','approve');RESET ROLE;`)
    job=JSON.parse(sql(`SELECT control.claim_dot_recovery('${runId}','synthetic-unknown-safe','unknown-safe','{"cause_fingerprint":"synthetic-safe-cause"}');`));assert.equal(job.claimed,true);assert.equal(job.job.incident_id,id)
    run(process.execPath,[path.join(source,'tooling/control-plane/runner/dot-recovery-worker.mjs'),id,'--locked'],{cwd:incidentRoot,env:incidentEnv})
-   assert.equal(Number(sql(`SELECT count(*) FROM control.dot_model_invocations WHERE incident_id='${id}' AND launched_at IS NOT NULL;`)),3)
+   assert.equal(Number(sql(`SELECT count(*) FROM control.dot_model_invocations WHERE incident_id='${id}' AND launched_at IS NOT NULL;`)),2)
    assert.equal(Number(sql(`SELECT count(*) FROM control.operator_invocation_extensions WHERE incident_id='${id}' AND consumed_at IS NOT NULL;`)),1)
    sql(`UPDATE control.dot_recovery_jobs SET status='running',owner='Codex',claim_until=now()+interval '5 minutes' WHERE incident_id='${id}';`)
    run(process.execPath,[path.join(source,'tooling/control-plane/runner/dot-recovery-worker.mjs'),id,'--locked'],{cwd:incidentRoot,env:incidentEnv})
-   assert.equal(Number(sql(`SELECT count(*) FROM control.dot_model_invocations WHERE incident_id='${id}' AND launched_at IS NOT NULL;`)),3)
-   writeFileSync(path.join(output,'one-extra-investigation-proof.json'),JSON.stringify({incident_id:id,actual_model_starts:3,consumed_grants:1,replay_did_not_extend:true}))
+   assert.equal(Number(sql(`SELECT count(*) FROM control.dot_model_invocations WHERE incident_id='${id}' AND launched_at IS NOT NULL;`)),2)
+   writeFileSync(path.join(output,'one-extra-investigation-proof.json'),JSON.stringify({incident_id:id,actual_model_starts:2,consumed_grants:1,replay_did_not_extend:true}))
   }
-  writeFileSync(path.join(output,'unknown-bounded-incident-proof.json'),JSON.stringify({run_id:runId,incident_id:id,actual_model_starts:2,offers},null,2))
+  writeFileSync(path.join(output,'unknown-bounded-incident-proof.json'),JSON.stringify({run_id:runId,incident_id:id,actual_model_starts:calls,offers},null,2))
   sql(`SELECT control.finish_dot_recovery('${id}',(SELECT claim_token FROM control.dot_recovery_jobs WHERE incident_id='${id}'),'resolved','{"fixture_resolved_after_budget_proof":true}',NULL,NULL);`)
   writeFileSync(model,saved,{mode:0o700})
  }
+ if(injectedFault==='unknown-repair'&&task==='CP-E2E-001')incidentInstallProof({source,output,bin,env,sql,agent,runId,task})
  const prepared=agent(['task-prepare',task]);mkdirSync(path.join(prepared.worktree.worktree_path,'node_modules'),{recursive:true})
  const worktree=prepared.worktree.worktree_path
  if(injectedFault==='protected-task'){mkdirSync(path.join(worktree,'.local'),{recursive:true});writeFileSync(path.join(worktree,'.local/protected-task'),'true')}
@@ -196,7 +221,7 @@ for(const task of boundedTasks) {
   assert.equal(run('/usr/bin/git',['rev-parse','HEAD'],{cwd:worktree}),parent);assert.equal(Number(sql(`SELECT count(*) FROM control.executions WHERE task_id='${task}';`)),1)
   writeFileSync(path.join(output,'stale-parent-proof.json'),JSON.stringify({run_id:runId,task_id:task,parent,same_execution:true}))
  }
- if(injectedFault==='verifier-fixture'){mkdirSync(path.join(worktree,'.local'),{recursive:true});if(task==='CP-E2E-002')writeFileSync(path.join(worktree,'.local/required-fixture.json'),'{"ready":true}')}
+ if(injectedFault==='verifier-fixture'){mkdirSync(path.join(worktree,'.local/verification-inputs'),{recursive:true});if(task==='CP-E2E-002')writeFileSync(path.join(worktree,'.local/verification-inputs/required-fixture.json'),'{"ready":true}')}
  if(ownedOutput){mkdirSync(path.join(worktree,'.local'),{recursive:true});writeFileSync(path.join(worktree,'.local/task-owned-output'),'true')}
  if((restartEnabled||crashFault||injectedFault==='publisher-death')&&task==='CP-E2E-001'){mkdirSync(path.join(worktree,'.local'),{recursive:true});writeFileSync(path.join(worktree,'.local/synthetic-hooks'),'true')}
  if(restartEnabled&&task==='CP-E2E-002') {
@@ -239,14 +264,14 @@ for(const task of boundedTasks) {
   }
 
   if(injectedFault==='verifier-fixture'&&task==='CP-E2E-001'&&!productReviewed){
-   const checks=JSON.parse(sql(`SELECT coalesce(jsonb_agg(to_jsonb(v)),'[]') FROM control.verification_results v WHERE status='fail' AND trusted_receipt IS NOT NULL AND verification_run_id IN(SELECT verification_run_id FROM control.verification_runs WHERE status='failed') AND execution_id=(SELECT max(execution_id) FROM control.executions WHERE task_id='${task}');`))
+   const checks=JSON.parse(sql(`SELECT coalesce(jsonb_agg(to_jsonb(v)),'[]') FROM control.verification_results v WHERE status='fail' AND trusted_receipt IS NOT NULL AND EXISTS(SELECT 1 FROM control.lifecycle_failure_current current_failure WHERE current_failure.execution_id=v.execution_id) AND verification_run_id IN(SELECT verification_run_id FROM control.verification_runs WHERE status='failed') AND execution_id=(SELECT max(execution_id) FROM control.executions WHERE task_id='${task}');`))
    for(const check of checks){
     assert.equal(check.check_name,'synthetic-fixture-check');assert.match(readFileSync(check.log_path,'utf8'),/ENOENT/)
     const review={root_cause:'The registered existing test fixture is missing; application source is not defective',source:[{path:'src/fixture-check.test.mjs',sha256:evidenceDigest(readFileSync(path.join(worktree,'src/fixture-check.test.mjs')))}]}
     const evidence=failureEvidence({execution_id:check.execution_id,verification_run_id:check.verification_run_id,check,artifact:readFileSync(check.log_path),classification:'VERIFIER_INFRA',origin:'verifier',review})
     validateFailureEvidence(evidence,{execution_id:check.execution_id,verification_run_id:check.verification_run_id,check,artifactRoot:worktree,sourceRoot:worktree})
     sql(`SET ROLE bs_control_verifier;SELECT control.review_verification_failure(${check.verification_id},${quote(JSON.stringify(evidence))}::jsonb);RESET ROLE;`)
-    writeFileSync(path.join(worktree,'.local/required-fixture.json'),'{"ready":true}')
+    writeFileSync(path.join(worktree,'.local/verification-inputs/required-fixture.json'),'{"ready":true}')
     agent(['task-verify',task]);productReviewed=true
     assert.equal(Number(sql(`SELECT count(*) FROM control.executions WHERE task_id='${task}';`)),1)
     writeFileSync(path.join(output,'same-execution-fixture-recovery.json'),JSON.stringify({run_id:runId,task_id:task,execution_id:check.execution_id,review:evidence}))
@@ -318,7 +343,7 @@ if(injectedFault==='product-extra'){
 }
 
 if(injectedFault==='large-prompt')assert.ok(outcome.executions.some(e=>e.task_id==='CP-E2E-001'&&e.prompt_bytes>128000),'Large prompt was not transported')
-const modelCallsBefore=Number(sql('SELECT count(*) FROM control.dot_model_invocations;'));const healthy=agent(['recovery-watch']);assert.equal(healthy.ok,true);assert.equal(Number(sql('SELECT count(*) FROM control.dot_model_invocations;')),modelCallsBefore);outcome.healthy_poll_llm_calls=0
+const modelCallsBefore=Number(sql('SELECT count(*) FROM control.dot_model_invocations;'));if(!process.argv.includes('--supervisor-only')&&!process.argv.includes('--supervisor-service')){const healthy=agent(['recovery-watch']);assert.equal(healthy.ok,true);}assert.equal(Number(sql('SELECT count(*) FROM control.dot_model_invocations;')),modelCallsBefore);outcome.healthy_poll_llm_calls=0
 if(publicationFailure)assert.ok(existsSync(path.join(output,'prs.json.crash-'+publicationFailure)),'Publication fault was not injected')
 if(crashFault)assert.ok(existsSync(path.join(output,'worker-crash-injection.json')),'Worker crash was not injected')
 writeFileSync(path.join(output,'outcome.json'),JSON.stringify({passed:true,database,run_id:runId,...outcome},null,2));console.log(JSON.stringify({passed:true,database,run_id:runId,credits:bound,publications:bound}))

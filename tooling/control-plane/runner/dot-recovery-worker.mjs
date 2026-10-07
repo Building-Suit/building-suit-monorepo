@@ -1,3 +1,5 @@
+import {incidentTestEnvironment} from './incident-test-environment.mjs'
+import {recoveryFingerprint} from './lifecycle-policy.mjs'
 import {schemaFingerprintSql,fingerprintSchema} from './schema-provenance.mjs'
 import {runtimeIdentity} from './runtime-identity.mjs'
 import {installIncidentRelease} from './incident-release-installer.mjs'
@@ -27,8 +29,8 @@ const trustedQuery=sql=>{if(!process.env.BS_CONTROL_VERIFIER_USER)throw Error('t
 const installerQuery=sql=>{if(!process.env.BS_CONTROL_RELEASE_INSTALLER_USER)throw Error('trusted_release_installer_credentials_required');return healthQuery(sql,{...process.env,BS_CONTROL_DB_USER:process.env.BS_CONTROL_RELEASE_INSTALLER_USER})}
 const jobId=process.argv[2]
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms))
-async function command(program,args,cwd=source,timeout=120000) {
- return execute(program,args,{cwd:program==='git'&&cwd===source?root:cwd,timeout,maxBuffer:24*1024*1024,env:process.env})
+async function command(program,args,cwd=source,timeout=120000,env=process.env) {
+ return execute(program,args,{cwd:program==='git'&&cwd===source?root:cwd,timeout,maxBuffer:24*1024*1024,env})
 }
 async function investigate(job) {
  // Codex owns only an isolated runtime checkout. It gets sanitized evidence, no
@@ -47,13 +49,13 @@ async function investigate(job) {
  const env=codexChildEnvironment(process.env,{codexHome:process.env.BS_CODEX_HOME??path.join(os.homedir(),'Services/building-suit-monorepo-plane/codex-home')})
  const receipt=receiptPaths(dir,'codex-incident',Math.max(0,job.attempts-1))
  const receiptKey=receipt.dir
- const before=incidentProgressFingerprint({evidence_revision:packet?.health?.evidence_revision,source_hash:base})
+ const before=recoveryFingerprint({task_id:job.task_id,run_id:job.run_id,execution_id:job.execution_id,source:base,classification:packet?.health?.failure_classification,checks:evidenceRows.map(c=>({name:c.check_name,status:c.status,command:c.command,exit_code:c.exit_code,classification:c.trusted_receipt?.classification,root_cause:c.trusted_receipt?.review?.root_cause}))})
  const reserved=query(`SELECT control.reserve_dot_model_invocation(${quote(job.incident_id)}::uuid,${quote(job.claim_token)}::uuid,${quote(receiptKey)},${quote(before)});`)
- if(!reserved?.allowed)return {human_gate:true,reason:'incident_investigation_budget_exhausted'}
+ if(!reserved?.allowed)return {human_gate:true,reason:reserved.reason??'incident_investigation_budget_exhausted'}
  let launched=false
  const observeLaunch=()=>{const state=readJson(receipt.state);if(!launched&&state?.child?.model_started_at){query(`SELECT control.record_dot_model_launch(${quote(job.incident_id)}::uuid,${quote(job.claim_token)}::uuid,${quote(receiptKey)},${quote(state.child.model_started_at)}::timestamptz);`);launched=true}}
  try {
- startReceipt(receipt,{program:'codex',args:['exec','--json','--sandbox','workspace-write','-c','approval_policy="never"','-m',model,'-c',`model_reasoning_effort="${profile.reasoning_effort}"`,'-'],cwd:folder,input:prompt,timeout:Math.min(45*60_000,Number(reserved.remaining_ms??45*60_000)),maxBuffer:20*1024*1024},env)
+ startReceipt(receipt,{program:'codex',args:['exec','--json','--sandbox','workspace-write','-c','approval_policy="never"','-m',model,'-c',`model_reasoning_effort="${profile.reasoning_effort}"`,'-'],cwd:folder,input:prompt,timeout:Math.min(45*60_000,Number(reserved.remaining_ms??45*60_000)),maxBuffer:20*1024*1024,context:{model,reasoning_effort:profile.reasoning_effort,task_id:job.task_id,run_id:job.run_id,execution_id:job.execution_id,attempt:job.attempts,incident_id:job.incident_id}},env)
  const deadline=Date.now()+Math.min(45*60_000,Number(reserved.remaining_ms??45*60_000))+60_000
  while(!readJson(receipt.result)&&Date.now()<deadline){observeLaunch();await delay(2000)}
  observeLaunch()
@@ -91,7 +93,11 @@ async function investigate(job) {
  if(!/# pass [1-9][0-9]*/.test(focused.stdout)||!/# fail 0/.test(focused.stdout)||!/# skipped 0/.test(focused.stdout))throw Error('incident_regression_not_executed')
  const lintFiles=files.filter(f=>f.endsWith('.mjs')).map(f=>path.join(folder,f))
  await command(path.join(root,'node_modules/.bin/eslint'),['--config',path.join(root,'eslint.config.mjs'),...lintFiles],root,120000)
- const checked=await command(process.execPath,['--test','--test-reporter=tap',...tests],folder,240000)
+ const isolatedTests=incidentTestEnvironment(folder)
+ let checked
+ try{checked=await command(process.execPath,['--test','--test-reporter=tap',...tests],folder,240000,isolatedTests.env)}
+ catch(error){writeFileSync(path.join(dir,'regression.log'),String(error.stdout??'')+'\n'+String(error.stderr??''),{mode:0o600});throw Error('incident_full_regression_failed',{cause:error})}
+ finally{isolatedTests.close()}
  writeFileSync(path.join(dir,'regression.log'),checked.stdout,{mode:0o600})
  await command('git',['add','--',...files],folder)
  await command('git',['commit','-m',`fix(control-plane): recover ${job.root_family}`],folder)
@@ -100,6 +106,8 @@ async function investigate(job) {
  // pointer. No incident may independently rewrite an adapter or service file.
  const releaseHome=process.env.BS_CONTROL_RELEASE_HOME??path.join(os.homedir(),'.local/lib/building-suit-control-plane')
  const candidateReadiness=async(manifest,directory)=>{
+  const subject=query(`SELECT jsonb_build_object('task',t.status,'run',r.status,'current_task',r.current_task_id) FROM control.workflow_runs r LEFT JOIN control.tasks t ON t.task_id=r.current_task_id WHERE r.run_id=${quote(job.run_id)}::uuid;`)
+  if(subject?.run!=='running'||subject.current_task!==job.task_id||['passed','complete'].includes(subject.task))return false
   const result=await command(process.execPath,[path.join(directory,'tooling/control-plane/runner/bs-agent.mjs'),'ping'],root)
   return JSON.parse(result.stdout).ok===true&&manifest.schema_version===runtimeIdentity(source).schema_version
  }
@@ -114,7 +122,7 @@ async function investigate(job) {
   },
   recordActivation:async(activated,directory)=>{installerQuery(`SELECT control.record_runtime_activation(${quote(activated.release_id)},${quote(activated.previous)},'activated',${quote(directory)},'{"readiness_passed":true}'::jsonb);`)},
   testResult:{code:0,stdout:checked.stdout},focusedResult:{code:0,stdout:focused.stdout},preReadiness:candidateReadiness,
-  restart:async()=>{await command('systemctl',['--user','restart','building-suit-dot-health.service','building-suit-dot-events.service'],root)},
+  restart:async()=>{await command('systemctl',['--user','restart','building-suit-dot-health.service','building-suit-dot-events.service','building-suit-supervisor.service'],root)},
   readiness:async manifest=>{
    const response=await fetch('http://127.0.0.1:'+Number(process.env.BS_DOT_HEALTH_PORT??8787)+'/api/status')
    const health=await response.json();return response.ok&&health.runtime_release_id===manifest.release_id&&!health.collector_error
@@ -126,7 +134,7 @@ async function investigate(job) {
   const changed=(await command('git',['status','--porcelain','--untracked-files=all'],folder)).stdout.split('\n').filter(Boolean).map(x=>x.slice(3)).filter(f=>/^tooling\/control-plane\//.test(f))
   const sourceHash=changed.length?evidenceDigest(changed.sort().map(f=>f+':'+(existsSync(path.join(folder,f))?evidenceDigest(readBoundArtifact(path.join(folder,f),folder)):'deleted')).join('\n')):(await command('git',['rev-parse','HEAD'],folder)).stdout.trim()
   const latest=query(`SELECT snapshot FROM control.dot_health_current WHERE run_id=${quote(job.run_id)}::uuid;`)
-  const after=incidentProgressFingerprint({evidence_revision:latest?.evidence_revision,source_hash:sourceHash,changed_paths:changed})
+  const after=sourceHash===base&&latest?.failure_classification===packet?.health?.failure_classification?before:incidentProgressFingerprint({classification:latest?.failure_classification,source_hash:sourceHash,changed_paths:changed})
   query(`SELECT control.finish_dot_model_invocation(${quote(job.incident_id)}::uuid,${quote(job.claim_token)}::uuid,${quote(receiptKey)},${quote(after)});`)
  }
 }
@@ -137,7 +145,7 @@ async function run() {
  if(process.argv[3]!=='--locked') {
   const child=spawn('flock',['-n',lock,process.execPath,fileURLToPath(import.meta.url),jobId,'--locked'],{cwd:root,env:process.env,detached:true,stdio:'ignore'});child.unref();return
  }
- const job=query(`SELECT to_jsonb(j) FROM control.dot_recovery_jobs j WHERE incident_id=${quote(jobId)}::uuid;`)
+ const job=query(`SELECT to_jsonb(j)||jsonb_build_object('execution_id',i.execution_id) FROM control.dot_recovery_jobs j JOIN control.dot_incidents i USING(incident_id) WHERE j.incident_id=${quote(jobId)}::uuid;`)
  if(!job||job.status!=='running')return
  const finish=(status,evidence={},runtime=null,regression=null)=>query(`SELECT to_jsonb(control.finish_dot_recovery(${quote(jobId)}::uuid,${quote(job.claim_token)}::uuid,${quote(status)},${quote(JSON.stringify(evidence))}::jsonb,${runtime?quote(runtime):'NULL'},${regression?quote(regression):'NULL'}));`)
  const heartbeat=setInterval(()=>{try{finish('running',{heartbeat_at:new Date().toISOString()})}catch{/* DB reconnect is owned by the next heartbeat/watchdog. */}},45000)

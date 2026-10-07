@@ -1,6 +1,7 @@
 import {createHash} from 'node:crypto'
 export function semanticRecoveryCause(rootFamily,snapshot={}) {
  snapshot??={}
+ if(snapshot.authoritative_failure)return {semantic:{version:2,root_family:rootFamily,failure_generation:snapshot.authoritative_failure.fingerprint,classification:snapshot.authoritative_failure.classification},cause_fingerprint:snapshot.authoritative_failure.fingerprint}
  const last=snapshot.executions?.at(-1),verification=snapshot.verification_runs?.at(-1)
  const failures=(snapshot.failed_checks??snapshot.checks??[]).filter(c=>['fail','not_run','unavailable'].includes(c.status))
  const semantic={version:1,root_family:rootFamily,component:snapshot.recovery?.component??null,

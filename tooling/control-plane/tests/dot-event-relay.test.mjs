@@ -14,7 +14,8 @@ test('actual observer relay wakes persisted events once per burst, persists its 
  writeFileSync(hook,`import {appendFileSync} from 'node:fs';const realTimeout=globalThis.setTimeout;globalThis.setTimeout=(fn,delay,...args)=>realTimeout(fn,delay===15000?50:delay,...args);globalThis.fetch=async(url,options)=>{appendFileSync(${JSON.stringify(record)},JSON.stringify({url,body:options.body})+'\\n');return {ok:true}};`)
  const child=spawn(process.execPath,['--import',hook,fileURLToPath(new URL('../runner/dot-event-relay.mjs',import.meta.url))],{env:{...process.env,PATH:home+':'+process.env.PATH,BS_CONTROL_REPOSITORY_ROOT:home,BS_CONTROL_DB_HOST:'fixture',BS_CONTROL_DB_PORT:'5432',BS_CONTROL_DB_USER:'observer',BS_CONTROL_DB_NAME:'fixture'},stdio:'ignore'})
  try{
-  await new Promise(resolve=>setTimeout(resolve,500))
+  await waitUntil(()=>readFileSyncSafe(path.join(home,'.local/control-egress/relay-watermark.json')).includes('41'))
+  await new Promise(resolve=>setTimeout(resolve,200))
   const wakes=readFileSync(record,'utf8').trim().split('\n').map(JSON.parse)
   assert.equal(wakes.length,1);assert.equal(JSON.parse(wakes[0].body).event_id,41);assert.equal(JSON.parse(readFileSync(path.join(home,'.local/control-egress/relay-watermark.json'),'utf8')).event_id,41)
   assert.ok(wakes.every(w=>w.url==='http://127.0.0.1:5678/webhook/building-suit-dot-wake'))

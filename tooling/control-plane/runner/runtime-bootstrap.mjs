@@ -4,7 +4,7 @@ import {spawn} from 'node:child_process'
 import path from 'node:path'
 import os from 'node:os'
 import {verifyRuntimeRelease} from './runtime-release.mjs'
-const components={runner:'bs-agent.mjs',health:'dot-health-server.mjs',events:'dot-event-relay.mjs',operator:'operator-gate.mjs'}
+const components={supervisor:'supervisor-service.mjs',runner:'bs-agent.mjs',health:'dot-health-server.mjs',events:'dot-event-relay.mjs',operator:'operator-gate.mjs'}
 const [component,...args]=process.argv.slice(2)
 if(!components[component])throw Error('registered_runtime_component_required')
 // Each process pins one complete immutable release before loading any component.

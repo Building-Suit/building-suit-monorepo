@@ -75,13 +75,11 @@ const complete = `bs-agent run-complete-task ${runId} ${taskId} ${key}`
 const acquireArgs = ['run-acquire-task', runId, 'cp-batch-v2', fingerprint, executionId]
 const completeArgs = ['run-complete-task', runId, taskId, key]
 
-test('actual BS-20 acquire expression reaches the adapter as five distinct arguments', () => {
-  assert.equal(emittedCommand('Acquire or Resume Admitted Task'), acquire)
-  accepted(emittedCommand('Acquire or Resume Admitted Task'), acquireArgs)
-})
-test('actual BS-20 completion expression preserves task identity and replay key', () => {
-  assert.equal(emittedCommand('Record Task Success'), complete)
-  accepted(emittedCommand('Record Task Success'), completeArgs)
+test('BS20 hands the exact existing run to the immutable Supervisor adapter',()=>{
+ const command=emittedCommand('Delegate Run to Supervisor')
+ assert.equal(command,`bs-agent run-supervise ${runId}`)
+ accepted(command,['run-supervise',runId])
+ rejected(`${command}; echo unsafe`,'invalid_run_supervise',64)
 })
 test('known n8n cd prefix preserves acquire arguments', () => accepted(`cd / ; ${acquire}`, acquireArgs))
 test('known n8n cd prefix preserves attributed completion arguments', () => accepted(`cd / ; ${complete}`, completeArgs))

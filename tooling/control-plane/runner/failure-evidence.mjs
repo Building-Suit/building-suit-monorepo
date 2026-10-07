@@ -26,3 +26,18 @@ export function processFailureCategory(result,missingEvidence=false){
  if(['ENOENT','EACCES'].includes(result.error?.code))return 'CONFIGURATION'
  return 'UNKNOWN' // Timeouts/signals may originate in product or harness code.
 }
+
+// Planned omissions can precede a later executable with the same check name.
+// Persist the executable result; never overwrite its immutable receipt with
+// that earlier omission or accept two contradictory executable outcomes.
+export function persistedVerificationChecks(checks) {
+ const current=new Map()
+ for(const check of checks) {
+  const previous=current.get(check.name)
+  if(!previous){current.set(check.name,check);continue}
+  if(check.status==='skipped')continue
+  if(previous.status!=='skipped'&&JSON.stringify([previous.command,previous.status,previous.exit_code,previous.log_path])!==JSON.stringify([check.command,check.status,check.exit_code,check.log_path]))throw Error('conflicting_verification_check_results')
+  current.set(check.name,check)
+ }
+ return [...current.values()]
+}

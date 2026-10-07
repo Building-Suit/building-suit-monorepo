@@ -27,10 +27,11 @@ export function knownBindingFailure(check) {
  return check.status === 'not_run' && new Set(['generator_disposable_fixture_runner_not_registered','missing_generated_fixture_boundary_runner','browser_configuration_discovery_failed','verification_plan_entry_unenforced']).has(check.selection_reason)
 }
 export function effectiveFailureClass(snapshot, fallback) {
+ if(snapshot.authoritative_failure)return snapshot.authoritative_failure.classification==='UNKNOWN'?'unknown-outcome':legacyClassification(snapshot.authoritative_failure.classification)
  if (snapshot.binding_recovery?.classification==='CONFIGURATION') return 'verification-configuration'
  const e=snapshot.executions?.at(-1)
  const audited=snapshot.exhaustion_audit?.entries.find(c=>Number(c.execution_id)===Number(e?.execution_id))
- if(audited&&audited.classification!=='UNKNOWN')return legacyClassification(audited.classification)
+ if(audited)return audited.classification==='UNKNOWN'?'unknown-outcome':legacyClassification(audited.classification)
  const reviewed=snapshot.retry_accounting?.classifications?.find(c=>Number(c.execution_id)===Number(e?.execution_id))
  if (reviewed) return reviewed.classification === 'OTHER' ? 'unknown-outcome' : legacyClassification(reviewed.classification)
  const failure=snapshot.failures?.filter(f=>!f.resolved_at && f.execution_id===e?.execution_id).at(-1)

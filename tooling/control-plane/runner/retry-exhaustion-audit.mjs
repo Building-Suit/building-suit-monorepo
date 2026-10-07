@@ -1,3 +1,4 @@
+import {canonicalFailure} from './lifecycle-policy.mjs'
 import {reconcileFailureEvidence} from './failure-evidence.mjs'
 import {redactText} from '../lib/redaction.mjs'
 import {existsSync,readFileSync,mkdirSync,realpathSync,readdirSync} from 'node:fs'
@@ -38,7 +39,7 @@ export function auditAttempts(snapshot){
   let classification='UNKNOWN',proof=null
   const text=checks.map(c=>c.summary??'').join('\n')+'\n'+(latest?.error_code??'')
   const bound=checks.map(c=>reconcileFailureEvidence(c,e,verification??{verification_run_id:c.verification_run_id}))
-  if(bound.length&&bound.every(b=>b.evidence&&b.classification!=='UNKNOWN')){classification=bound.some(b=>b.classification==='PRODUCT_DEFECT')?'PRODUCT_DEFECT':bound[0].classification;proof=bound.map(b=>b.evidence)}
+  if(bound.length&&bound.every(b=>b.evidence&&b.classification!=='UNKNOWN')){classification=canonicalFailure({trusted:bound.map(b=>b.evidence)});proof=bound.map(b=>b.evidence)}
   else if(bound.some(b=>b.evidence&&b.classification==='UNKNOWN'))classification='UNKNOWN'
   else if(checks.length&&checks.every(c=>emptyComponentFixture(e.worktree_path,c)||correctedLocaleSelector(e.worktree_path,c))){classification='VERIFIER_INFRA';proof=checks.map(c=>emptyComponentFixture(e.worktree_path,c)||correctedLocaleSelector(e.worktree_path,c))}
   else if(/E2BIG|worker_spawn|ECONNREFUSED|EADDRINUSE/.test(text))classification='TRANSIENT_INFRASTRUCTURE'
