@@ -10,7 +10,7 @@ import { executeWithControlDatabaseRetry } from '../lib/control-database.mjs'
 export function healthQuery(sql, env=process.env, execute=spawnSync) {
  const args=['-X','-q','-A','-t','-w','-v','ON_ERROR_STOP=1','-v','VERBOSITY=verbose','-h',env.BS_CONTROL_DB_HOST,'-p',env.BS_CONTROL_DB_PORT,'-U',env.BS_CONTROL_DB_USER,'-d',env.BS_CONTROL_DB_NAME]
  if(args.some(x=>x===undefined))throw Error('health_control_environment_missing')
- const r=executeWithControlDatabaseRetry(()=>{const v=execute('psql',args,{input:sql,encoding:'utf8',timeout:20_000,maxBuffer:20*1024*1024,env:{...env,PGSSLMODE:env.BS_CONTROL_DB_SSLMODE??'require'}});recordEgress('health',{queries:1,connections:1,bytes:Buffer.byteLength(v.stdout??'')},env.BS_CONTROL_REPOSITORY_ROOT);return {code:v.status??1,stdout:v.stdout,stderr:v.stderr,error:v.error?.code}})
+ const r=executeWithControlDatabaseRetry(()=>{const v=execute('psql',args,{input:sql,encoding:'utf8',timeout:20_000,maxBuffer:20*1024*1024,env:{...env,PGSSLMODE:env.BS_CONTROL_DB_SSLMODE??'require'}});recordEgress(path.basename(process.argv[1]??'')==='dot-health-collector.mjs'?'health':path.basename(process.argv[1]??'')==='dot-recovery-worker.mjs'?'dot_recovery':'control_admin',{queries:1,connections:1,bytes:Buffer.byteLength(v.stdout??'')},env.BS_CONTROL_REPOSITORY_ROOT);return {code:v.status??1,stdout:v.stdout,stderr:v.stderr,error:v.error?.code}})
  if(r.code!==0)throw controlQueryError(r)
  return r.stdout.trim()?JSON.parse(r.stdout.trim()):null
 }
