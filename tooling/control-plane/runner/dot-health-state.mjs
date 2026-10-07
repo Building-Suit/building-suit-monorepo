@@ -26,8 +26,9 @@ export function classifyHealth(input, process = {}, now = Date.now(), graceMs = 
  if(run && !runIsActionable(run))return state(run.status.toUpperCase(),`Historical lifecycle ended: ${run.status}`,'None — historical run')
  if(!run&&['complete','cancelled'].includes(task?.status))return state(task.status.toUpperCase(),'Task '+task.status,'None')
  if(incident?.action==='incident-investigate' && incident?.status==='running')return state('INVESTIGATING','Execution-bound failure evidence investigation is active','Codex must review complete artifacts and persist the bound classification')
- if(incident?.status==='human-gate')return state('WAITING_OPERATOR',incident.evidence?.reason??'Incident investigation established a human gate','Resolve the recorded incident gate',true)
- if(base.gate_offers.some(g=>g.action==='bounded-run-release')&&!process.worker_alive)return state('WAITING_OPERATOR','Prevalidated bounded run requires its exact scope release','Review the existing frozen task set in BS-22',true)
+ if(input.approved_incident&&incident?.status!=='running')return state('RECONCILING','Approved incident investigation awaits its existing claim','Claim the already authorized incident')
+ if(incident?.status==='human-gate'&&base.gate_offers.length)return state('WAITING_OPERATOR',incident.evidence?.reason??'Incident investigation established a human gate','Resolve the recorded incident gate',true)
+ if(base.gate_offers.some(g=>g.action==='bounded-run-release'&&!g.available_responses?.includes('revoke'))&&!process.worker_alive)return state('WAITING_OPERATOR','Prevalidated bounded run requires its exact scope release','Review the existing frozen task set in BS-22',true)
  if(run?.stop_requested||run?.maintenance_requested)return state('WAITING_OPERATOR',run.stop_requested?'Run stop requested':'Run maintenance hold','Operator must release the existing run hold',true)
  const audit=r?.condition?.exhaustion_audit
  if(['retry_budget_exhausted','retry_classification_review_required'].includes(r?.error_code)){const gate=exhaustionHealth(audit);return {...state(gate.needs?'WAITING_OPERATOR':'STUCK',gate.why,gate.next,gate.needs),exhaustion_audit:audit??null}}

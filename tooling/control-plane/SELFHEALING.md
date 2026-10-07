@@ -31,3 +31,21 @@ Known semantic families use the normal same-run supervisor: authoritative PASS (
 Unknown or repeatedly unsuccessful deterministic handlers invoke Codex in an isolated control-runtime checkout using stdin and durable receipts. The host validates scope, a new regression and the full control suite, then commits and atomically pins only a compatible clean runtime. Product files, SQL, providers and safety guard edits cannot pass the incident installer. Such extensions become explicit human gates. Learned semantic families retain their tested runtime commit and regression in the private catalog. Historical executions and product budgets are immutable.
 
 Health exposes persisted owner/action/incident/start/next check; Codex-established human gates are shown as NEEDS_ME=YES. No merge, deployment, protected publication or business decision is authorized by recovery ownership.
+
+Authoritative lifecycle wakes remain durable identifiers in `dot_wake_events`.
+Operator approvals now enter that outbox in the same transaction as the authority
+record, including an exact incident identity. Compact scans prefer a current,
+unconsumed incident approval over unrelated historical incident gates. The
+runtime claims that incident through `claim_approved_dot_incident`; its run lock,
+claim lease and invocation ledger prevent duplicate investigation starts. Claiming
+does not consume an extension: the existing model-launch receipt consumes it.
+The two-minute periodic scan can recover a missed webhook without a browser.
+
+A passing check's receipt is not failed evidence. Retry auditing selects required
+failed checks from the completed verification generation and preserves internal
+verifier failures as non-product. Existing local verification operations resume
+through their original execution before any new incident investigation. A stale
+incident report with no current actionable operator gate does not require a human.
+Relay debounce retains an observed authoritative identifier even if a later outbox
+poll is empty; only successful delivery advances the relay watermark. Audit-only
+events and recovery heartbeats continue to be suppressed.

@@ -28,7 +28,7 @@ child.stdout.on('data',chunk=>{
  const lines=buffer.split('\n');buffer=lines.pop()
  for(const line of lines){
   const event=/^bs_dot_event:([0-9]+)$/.exec(line.trim())
-  if(event){const id=Number(event[1]);if(id>observedEvent){pending=true;latestEvent=Math.max(latestEvent,id)}else if(id===0&&pending&&!running){observedEvent=latestEvent;pending=false;clearTimeout(debounce);debounce=null;recordEgress('bs31',{coalesced:1})}}
+  if(event){const id=Number(event[1]);if(id>observedEvent){pending=true;latestEvent=Math.max(latestEvent,id)}}
 
  }
  if(buffer.length>8192)buffer=buffer.slice(-8192)

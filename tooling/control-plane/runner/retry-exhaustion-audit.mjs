@@ -31,8 +31,8 @@ export function auditAttempts(snapshot){
   let checks=latest?.metadata?.verification_probe?.checks??latest?.metadata?.checks??e.metadata?.verification_probe_failures
   if(!checks?.length)checks=results.filter(r=>Number(r.execution_id)===Number(e.execution_id)).map(r=>({...r,...r.metadata}))
   const verification=(snapshot.verification_runs??[]).filter(v=>Number(v.execution_id)===Number(e.execution_id)&&!['running','passed'].includes(v.status)).at(-1)
-  const structured=results.filter(r=>Number(r.execution_id)===Number(e.execution_id)&&r.verification_run_id===verification?.verification_run_id&&r.metadata?.failure_evidence)
-  if(structured.length)checks=structured.map(r=>({...r,...r.metadata,name:r.check_name}))
+  const currentChecks=results.filter(r=>Number(r.execution_id)===Number(e.execution_id)&&r.verification_run_id===verification?.verification_run_id&&r.metadata?.required!==false&&['fail','not_run','unavailable'].includes(r.status))
+  if(currentChecks.length)checks=currentChecks.map(r=>({...r,...r.metadata,name:r.check_name}))
   checks=(checks??[]).filter(c=>c.required!==false&&['fail','not_run','unavailable'].includes(c.status))
   if(!latest&&!checks.length&&e.status==='succeeded')return []
   let classification='UNKNOWN',proof=null

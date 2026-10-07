@@ -6627,6 +6627,14 @@ async function recoveryWatch() {
     const outcomes=[{action:'compact_health_collection',ok:true,llm_used:false,event_watermark:compact.event_watermark}]
     await isolateRecoveryCandidates(candidates, async candidate => {
       const subject=subjects.get(candidate.run_id)
+      // Exact persisted operator approval has its own incident identity. Never
+      // derive a new incident fingerprint or pick a newer unrelated human gate.
+      if(subject.input.approved_incident){
+        const approved=subject.input.approved_incident
+        const dispatch=parseControlJson(controlQuery(`SELECT control.claim_approved_dot_incident(:'run'::uuid,:'incident'::uuid,:'grant'::bigint);`,{run:candidate.run_id,incident:approved.incident_id,grant:String(approved.grant_id)}))
+        if(dispatch.claimed){const child=spawn(process.execPath,[path.join(controlSourceRoot,'tooling/control-plane/runner/dot-recovery-worker.mjs'),dispatch.job.incident_id],{cwd:repoRoot,env:process.env,detached:true,stdio:'ignore'});child.on('error',()=>{});child.unref()}
+        outcomes.push({run_id:candidate.run_id,action:'approved_incident_dispatch',...dispatch});return
+      }
       if(!requiresWatchdogAction(subject.input,subject.health)){
         outcomes.push({run_id:candidate.run_id,eligible:false,reason:subject.health.state,event_id:subject.health.latest_event_id,generation:subject.health.incident_generation,llm_used:false});return
       }
@@ -6646,7 +6654,7 @@ async function recoveryWatch() {
       // a known wait. Admission, timers, run locks and human gates remain below.
       const localRuntimeReceipt=candidate.status==='running'
         && receiptSnapshot?.recovery?.status==='active' && receiptSnapshot.recovery.recoverable===true
-        && localReceiptWatchObservation(receiptSnapshot.recovery)
+        && (localReceiptWatchObservation(receiptSnapshot.recovery) || receiptSnapshot.exhaustion_audit?.action==='same-attempt-recovery' && receiptSnapshot.exhaustion_audit.entries?.at(-1)?.classification==='VERIFIER_INFRA' && receiptSnapshot.executions?.at(-1)?.status==='succeeded')
         && ['task-run','task-verify','task-publish'].includes(receiptSnapshot.runtime_operations?.find(op=>op.status!=='consumed')?.action)
       if(recoveryNeeded && !localRuntimeReceipt) {
         const dispatch=await dispatchRecovery({health:observed,snapshot:receiptSnapshot,claim:(run,fingerprint,family,evidence)=>parseControlJson(controlQuery(`SELECT control.claim_dot_recovery(:'run'::uuid,:'fingerprint',:'family',:'evidence'::jsonb);`,{run,fingerprint,family,evidence:JSON.stringify(evidence)})),start:job=>{const child=spawn(process.execPath,[path.join(controlSourceRoot,'tooling/control-plane/runner/dot-recovery-worker.mjs'),job.incident_id],{cwd:repoRoot,env:process.env,detached:true,stdio:'ignore'});child.on('error',()=>{});child.unref()}})
