@@ -11,7 +11,7 @@ export function incidentInstallProof({source,output,bin,env,sql,agent,runId,task
  run('git',['config','user.name','Disposable incident'],{cwd:root});run('git',['config','user.email','incident@example.invalid'],{cwd:root})
  const repositoryRoot=run('git',['rev-parse','--git-common-dir'],{cwd:source})
  const mainRoot=path.dirname(path.resolve(source,repositoryRoot))
- for(const name of ['node_modules','.nuxt'])symlinkSync(path.join(mainRoot,name),path.join(root,name))
+ for(const name of ['node_modules','apps/building-suit-docs/.nuxt'])symlinkSync(path.join(mainRoot,name),path.join(root,name))
  mkdirSync(home,{recursive:true})
  const commit=run('git',['rev-parse','HEAD'],{cwd:source})
  assert.equal(run('git',['status','--porcelain','--','tooling/control-plane'],{cwd:source}),'','Incident proof requires committed source')
