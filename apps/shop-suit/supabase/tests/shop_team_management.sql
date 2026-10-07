@@ -72,8 +72,16 @@ declare v_shop uuid := current_setting('ss_team.shop')::uuid;
 begin
   v_add := public.invite_shop_member(gen_random_uuid(), v_shop,
     'staff@ss-team-001.invalid', 'Staff member', 'cashier', array[v_branch]);
-  v_staff_membership := (v_add ->> 'membershipId')::uuid;
-  if v_add ->> 'kind' <> 'added' or v_staff_membership is null
+  if v_add ->> 'kind' <> 'invited' then raise exception 'existing identity must consent'; end if;
+  perform set_config('request.jwt.claim.sub', (select staff_id::text from shop_team_fixture), true);
+  perform public.accept_shop_invitation(gen_random_uuid(), (v_add ->> 'invitationCode')::uuid);
+  perform set_config('request.jwt.claim.sub', (select owner_id::text from shop_team_fixture), true);
+  -- The owner reads other members through the authorized team projection;
+  -- profile_self_read correctly prevents a direct join to their profiles.
+  select (member ->> 'id')::uuid into v_staff_membership
+    from jsonb_array_elements(public.shop_team_read(v_shop) -> 'members') member
+    where member ->> 'email' = 'staff@ss-team-001.invalid';
+  if v_staff_membership is null
     or (select count(*) from public.membership_location_assignments
       where membership_id = v_staff_membership and location_id = v_branch) <> 1
     or not exists (select 1 from public.membership_roles membership_role
@@ -155,6 +163,90 @@ begin
   if exists (select 1 from public.list_shop_locations(current_setting('ss_team.shop')::uuid)) then
     raise exception 'suspended membership retained location access';
   end if;
+end;
+$$;
+reset role;
+
+-- Launch parity: explicit Shop capabilities, bilingual custom roles and escalation denial.
+select set_config('request.jwt.claim.sub', owner_id::text, true) from shop_team_fixture;
+set local role authenticated;
+do $$
+declare v_shop uuid := current_setting('ss_team.shop')::uuid;
+  v_key text; v_request uuid := gen_random_uuid(); v_first jsonb; v_retry jsonb;
+  v_permissions text[];
+begin
+  v_key := public.save_shop_team_role(gen_random_uuid(),v_shop,null,'Reception','الاستقبال',array['team.view','products.view']);
+  perform public.save_shop_team_role(gen_random_uuid(),v_shop,v_key,'Reception updated','الاستقبال الجديد',array['team.view']);
+  if not exists(select 1 from jsonb_array_elements(public.shop_team_read(v_shop)->'roles') role
+    where role->>'key'=v_key and role->>'nameAr'='الاستقبال الجديد' and role->'permissionKeys'='["team.view"]'::jsonb) then
+    raise exception 'custom role bilingual CRUD failed'; end if;
+  perform public.manage_shop_member(gen_random_uuid(),v_shop,current_setting('ss_team.staff_membership')::uuid,'reactivate',null,null,null);
+  perform public.save_shop_team_member(gen_random_uuid(),v_shop,current_setting('ss_team.staff_membership')::uuid,
+    'Reception member','Receptionist',v_key,array[current_setting('ss_team.branch')::uuid]);
+  if not exists(select 1 from jsonb_array_elements(public.shop_team_read(v_shop)->'members') member
+    where member->>'id'=current_setting('ss_team.staff_membership') and member->>'roleKey'=v_key
+      and member->>'jobTitle'='Receptionist') then raise exception 'custom role and member details not assigned'; end if;
+  begin
+    perform public.save_shop_team_role(gen_random_uuid(),v_shop,v_key,'Reception updated','الاستقبال الجديد',array['team.view'],true);
+    raise exception 'assigned custom role was archived';
+  exception when check_violation then null; end;
+  perform public.manage_shop_member(gen_random_uuid(),v_shop,current_setting('ss_team.staff_membership')::uuid,'change_role','cashier',null,null);
+  begin
+    perform public.save_shop_team_member(gen_random_uuid(),v_shop,current_setting('ss_team.staff_membership')::uuid,
+      'Invalid edit','Changed title','staff',array[gen_random_uuid()]);
+    raise exception 'invalid location edit succeeded';
+  exception when check_violation then null; end;
+  if not exists(select 1 from jsonb_array_elements(public.shop_team_read(v_shop)->'members') member
+    where member->>'id'=current_setting('ss_team.staff_membership') and member->>'roleKey'='cashier'
+      and member->>'jobTitle'='Receptionist') then raise exception 'member edit was not atomic'; end if;
+  perform public.save_shop_team_role(gen_random_uuid(),v_shop,v_key,'Reception updated','الاستقبال الجديد',array['team.view'],true);
+  if exists(select 1 from jsonb_array_elements(public.shop_team_read(v_shop)->'roles') role where role->>'key'=v_key) then
+    raise exception 'archived role remains assignable'; end if;
+  begin
+    perform public.save_shop_team_role(gen_random_uuid(),v_shop,'owner','Owner','المالك',array[]::text[]);
+    raise exception 'owner invariant changed';
+  exception when check_violation then null; end;
+  begin
+    perform public.save_shop_team_role(gen_random_uuid(),v_shop,null,'Foreign','خارجي',array['ledger.accounts.manage']);
+    raise exception 'foreign capability accepted';
+  exception when insufficient_privilege then null; end;
+  v_first := public.invite_shop_staff(v_request,v_shop,'retry@ss-team-001.invalid','Retry member','Receptionist','staff',array[current_setting('ss_team.branch')::uuid]);
+  v_retry := public.invite_shop_staff(v_request,v_shop,'retry@ss-team-001.invalid','Retry member','Receptionist','staff',array[current_setting('ss_team.branch')::uuid]);
+  if v_first->>'invitationCode' <> v_retry->>'invitationCode' then raise exception 'invitation retry created duplicate'; end if;
+  begin
+    perform public.invite_shop_staff(gen_random_uuid(),v_shop,'retry@ss-team-001.invalid','Retry member','Receptionist','staff',array[current_setting('ss_team.branch')::uuid]);
+    raise exception 'duplicate invitation admitted';
+  exception when unique_violation then null; end;
+  perform public.revoke_shop_invitation(gen_random_uuid(),v_shop,(v_first->>'invitationId')::uuid,null);
+  begin
+    perform public.accept_shop_invitation(gen_random_uuid(),(v_first->>'invitationCode')::uuid);
+    raise exception 'revoked invitation accepted';
+  exception when sqlstate '55000' then null; end;
+  v_key := public.save_shop_team_role(gen_random_uuid(),v_shop,null,'Access delegate','مفوض الوصول',array['team.view','team.manage','team.permissions.manage']);
+  perform public.manage_shop_member(gen_random_uuid(),v_shop,current_setting('ss_team.staff_membership')::uuid,'change_role',v_key,null,null);
+  perform set_config('request.jwt.claim.sub',(select staff_id::text from shop_team_fixture),true);
+  begin
+    perform public.save_shop_team_role(gen_random_uuid(),v_shop,null,'Escalated','تصعيد',array['products.manage']);
+    raise exception 'delegate granted a capability they lack';
+  exception when insufficient_privilege then null; end;
+  perform set_config('request.jwt.claim.sub',(select owner_id::text from shop_team_fixture),true);
+  perform public.manage_shop_member(gen_random_uuid(),v_shop,current_setting('ss_team.staff_membership')::uuid,'change_role','cashier',null,null);
+  -- Keep the original manager preset after proving that system sets are editable.
+  select array_agg(value) into v_permissions from jsonb_array_elements_text(
+    (select role->'permissionKeys' from jsonb_array_elements(public.shop_team_read(v_shop)->'roles') role where role->>'key'='manager')) value;
+  perform public.save_shop_team_role(gen_random_uuid(),v_shop,'manager','Manager','مدير',array['team.view']);
+  perform public.save_shop_team_role(gen_random_uuid(),v_shop,'manager','Manager','مدير',v_permissions);
+end;
+$$;
+reset role;
+select set_config('request.jwt.claim.sub', staff_id::text, true) from shop_team_fixture;
+set local role authenticated;
+do $$
+begin
+  begin
+    perform public.save_shop_team_role(gen_random_uuid(),current_setting('ss_team.shop')::uuid,null,'Escalation','تصعيد',array['team.permissions.manage']);
+    raise exception 'permission escalation accepted';
+  exception when insufficient_privilege then null; end;
 end;
 $$;
 reset role;

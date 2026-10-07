@@ -4,6 +4,9 @@ definePageMeta({ layout: 'auth' })
 const supabase = useSupabaseClient()
 const nuxtApp = useNuxtApp()
 const user = useSupabaseUser()
+const route = useRoute()
+const destination = computed(() => typeof route.query.invite === 'string' && /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(route.query.invite)
+  ? `/auth/team-invitation?invite=${route.query.invite}` : '/dashboard')
 const { t, locale } = useI18n()
 
 useHead({
@@ -74,7 +77,7 @@ async function onSubmit() {
 
     if (error) throw error
 
-    await nuxtApp.runWithContext(() => navigateTo('/dashboard'))
+    await nuxtApp.runWithContext(() => navigateTo(destination.value))
   }
   catch (error: unknown) {
     errorMessage.value = normalizeAuthError(error instanceof Error ? error.message : undefined)
@@ -88,7 +91,7 @@ watchEffect(async () => {
   if (user.value) {
     // Do not force-navigation while a submit is executing.
     if (!pending.value && import.meta.client && window.location.pathname === '/auth/login') {
-      await nuxtApp.runWithContext(() => navigateTo('/dashboard'))
+      await nuxtApp.runWithContext(() => navigateTo(destination.value))
     }
   }
 })

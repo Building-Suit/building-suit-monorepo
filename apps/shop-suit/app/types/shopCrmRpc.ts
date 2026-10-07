@@ -191,6 +191,22 @@ export type ShopRpcDatabase = {
         }
         Returns: unknown
       }
+      invite_shop_staff: {
+        Args: { p_request_id: string; p_shop_id: string; p_email: string; p_display_name: string; p_job_title: string | null; p_role_key: string; p_location_ids: string[] }
+        Returns: unknown
+      }
+      save_shop_team_role: {
+        Args: { p_request_id: string; p_shop_id: string; p_role_key: string | null; p_name: string; p_name_ar: string; p_permission_keys: string[]; p_archive?: boolean }
+        Returns: string
+      }
+      save_shop_team_member: {
+        Args: { p_request_id: string; p_shop_id: string; p_membership_id: string; p_full_name: string; p_job_title: string | null; p_role_key: string; p_location_ids: string[] }
+        Returns: undefined
+      }
+      save_shop_member_details: {
+        Args: { p_request_id: string; p_shop_id: string; p_membership_id: string; p_full_name: string; p_job_title: string | null }
+        Returns: undefined
+      }
       accept_shop_invitation: {
         Args: { p_request_id: string; p_invitation_code: string }
         Returns: string
