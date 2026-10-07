@@ -38,6 +38,8 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
+      # Control-plane node tests render the health UI with Playwright.
+      - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test
   verify:
     needs: [review, branch-policy]
