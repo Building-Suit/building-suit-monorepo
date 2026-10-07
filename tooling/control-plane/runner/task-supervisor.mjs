@@ -149,7 +149,6 @@ export function planSupervisorStep(snapshot) {
   if (run && (run.stop_requested || run.maintenance_requested || run.status !== 'running' || run.completed_tasks >= run.max_tasks)) {
     return decision('wait', 'wait-operator', 'operator-wait', run.stop_requested ? 'stop_requested' : run.maintenance_requested ? 'maintenance_requested' : run.completed_tasks >= run.max_tasks ? 'limit_reached' : 'run_not_running', { execution, fingerprint })
   }
-  if(task.status==='failed'&&snapshot.recovery_readiness?.allowed===false)return decision('wait','wait-external','unknown-outcome','verifier_repair_without_progress',{execution,fingerprint})
   if(task.status==='failed'&&snapshot.exhaustion_audit?.action==='investigate'&&(!snapshot.authoritative_failure||snapshot.authoritative_failure.classification==='UNKNOWN')&&!['operator-wait','decision-wait'].includes(executionFailure(snapshot,execution)?.failure_class))return decision('wait','wait-external','transient-infrastructure','retry_audit_investigation_required',{execution,fingerprint,exhaustion_audit:snapshot.exhaustion_audit})
   const reclassifyPublicationStop = publicationStopNeedsReclassification(snapshot)
   if (recovery?.next_action === 'safety-stop' && !reclassifyPublicationStop && recovery.condition?.fingerprint === fingerprint) {
@@ -162,6 +161,7 @@ export function planSupervisorStep(snapshot) {
   }
   if (
     recovery?.status === 'active' &&
+    !(recovery.next_action === 'wait-external' && ['VERIFIER_INFRA','CONFIGURATION'].includes(snapshot.authoritative_failure?.classification)) &&
     !reclassifyPublicationStop &&
     !supersededPublicationHold(snapshot) &&
     recovery.condition?.preflight !== true &&
@@ -211,6 +211,11 @@ export function planSupervisorStep(snapshot) {
       execution, verification, publication, fingerprint,
     })
   }
+
+  if(task.status==='failed'&&snapshot.recovery_readiness?.allowed===false&&['VERIFIER_INFRA','CONFIGURATION'].includes(snapshot.authoritative_failure?.classification))return decision('wait','reverify',snapshot.authoritative_failure.classification==='VERIFIER_INFRA'?'verification-infrastructure':'verification-configuration','verifier_repair_required',{execution,fingerprint})
+  if(task.status==='failed'&&snapshot.recovery_readiness?.allowed===false)return decision('wait','wait-external','unknown-outcome','verifier_repair_without_progress',{execution,fingerprint})
+
+  if(task.status==='failed'&&snapshot.recovery_readiness?.allowed===true&&['VERIFIER_INFRA','CONFIGURATION'].includes(snapshot.authoritative_failure?.classification)&&!snapshot.authoritative_failure?.evidence?.adoption_materialization)return decision('act','reverify',snapshot.authoritative_failure.classification==='VERIFIER_INFRA'?'verification-infrastructure':'verification-configuration','current_trusted_verifier_recovery',{command:'task-verify',execution,verification,fingerprint})
 
   if (task.status==='failed' && snapshot.authoritative_failure?.evidence?.adoption_materialization===true && Number(snapshot.authoritative_failure.evidence.verification_run_id)===Number(verification?.verification_run_id) && snapshot.recovery_readiness?.allowed===true) {
     return decision('act','reverify','verification-infrastructure','legacy_trusted_evidence_materialization',{command:'task-verify',execution,verification,fingerprint})
@@ -370,7 +375,11 @@ export function planSupervisorStep(snapshot) {
 export function classifySupervisorFailure({ command, payload, attempt, maxAttempts }) {
   const error = String(payload?.publication?.error ?? payload?.error ?? 'task_action_failed')
   const lower = error.toLowerCase()
-  if(/unchanged_recovery_action_forbidden|classified_verifier_repair_required/.test(error))return decision('wait','wait-external','unknown-outcome','verifier_repair_without_progress',{recoverable:true})
+  if(/unchanged_recovery_action_forbidden|classified_verifier_repair_required/.test(error)){
+    const failureClass = legacyClassification(payload?.classification?.failure_class)
+    if (['verification-infrastructure', 'verification-configuration'].includes(failureClass)) return decision('wait', 'reverify', failureClass, 'verifier_repair_required', {recoverable:true})
+    return decision('wait','wait-external','unknown-outcome','verifier_repair_without_progress',{recoverable:true})
+  }
   const verificationClass = legacyClassification(payload?.classification?.failure_class ?? payload?.recovery?.failure_class ?? payload?.failure_class ?? payload?.publication?.classification?.failure_class ?? payload?.probe?.classification?.failure_class)
   const explicitWait = explicitWaitClasses.get(verificationClass)
   if (explicitWait) {

@@ -299,6 +299,18 @@ grant another action. The original failed generation's input fingerprint survive
 later reviews. A same-execution verification requires repaired inputs and can
 run only once for that fingerprint; an unchanged result waits for actual repair.
 
+Migration 102 converges recovery state when the current execution's newest trusted
+failed-check reviews replace its failure classification. An incompatible prior
+recovery generation is resolved in the audit history and preserved in the new
+state; incompatible incidents and jobs are superseded. The transition emits one
+durable Supervisor wake per evidence generation. Verifier infrastructure uses
+`reverify`, with unchanged inputs blocked until the prerequisite is repaired.
+For registered disposable local Supabase databases, a bounded, stable
+`.local/verification-inputs/database-preparation.json` receipt binds the prepared
+migration chain into verifier input identity. It does not change product source
+or product-attempt accounting. Active owners and genuine authority gates retain
+precedence.
+
 Migrations 099–101 add bounded adoption of legacy recovery generations. On runtime
 startup and before existing-run supervision, current failed tasks are revalidated
 against their execution, latest verification, trusted evidence digest, lifecycle
