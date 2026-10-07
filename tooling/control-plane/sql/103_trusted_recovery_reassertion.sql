@@ -2,7 +2,7 @@ BEGIN;
 -- A late legacy operation can change the current pointer, never trusted authority.
 CREATE OR REPLACE FUNCTION control.converge_lifecycle_recovery(p_task text) RETURNS jsonb
 LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,control AS $$
-DECLARE r control.workflow_runs%ROWTYPE; s control.recovery_states%ROWTYPE; g jsonb; class text; action text; identity text; result jsonb; reviewed text; notified boolean;
+DECLARE r control.workflow_runs%ROWTYPE; s control.recovery_states%ROWTYPE; g jsonb; class text; action text; identity text; result jsonb; reviewed text; notified boolean; evidence_fingerprint text;
 BEGIN
  SELECT * INTO r FROM control.workflow_runs WHERE current_task_id=p_task AND status='running' AND NOT stop_requested AND NOT maintenance_requested FOR UPDATE;
  IF NOT FOUND OR NOT EXISTS(SELECT 1 FROM control.tasks WHERE task_id=p_task AND status='failed') THEN RETURN jsonb_build_object('converged',false);END IF;
@@ -28,7 +28,14 @@ BEGIN
  class:=CASE g->>'classification' WHEN 'VERIFIER_INFRA' THEN 'verification-infrastructure' WHEN 'CONFIGURATION' THEN 'verification-configuration' ELSE 'verification-product-defect' END;
  action:=CASE WHEN g->>'classification'='PRODUCT_DEFECT' THEN 'repair' ELSE 'reverify' END;
  identity:='trusted-convergence:'||(g->>'execution_id')||':'||(g->>'fingerprint');
- SELECT EXISTS(SELECT 1 FROM control.task_events WHERE task_id=p_task AND event_type='lifecycle_failure_converged' AND payload->>'identity'=identity) INTO notified;
+ evidence_fingerprint:=control.lifecycle_evidence_fingerprint((g->>'execution_id')::bigint,(g->'evidence'->>'verification_run_id')::bigint);
+ SELECT EXISTS(SELECT 1 FROM control.task_events event WHERE task_id=p_task AND event_type='lifecycle_failure_converged'
+ AND event.payload->'current_failure'->>'execution_id'=g->>'execution_id'
+ AND event.payload->'current_failure'->>'classification'=g->>'classification'
+ AND event.payload->'current_failure'->'evidence'->>'verification_run_id'=g->'evidence'->>'verification_run_id'
+ AND (event.payload->>'evidence_fingerprint'=evidence_fingerprint OR (NOT(event.payload ? 'evidence_fingerprint') AND event.created_at >=
+ (SELECT max(review.reviewed_at) FROM control.verification_results v JOIN control.verification_failure_reviews review USING(verification_id) WHERE v.execution_id=(g->>'execution_id')::bigint AND v.verification_run_id=(g->'evidence'->>'verification_run_id')::bigint)))) INTO notified;
+
  IF s.status='active' AND s.failure_class=class AND s.next_action=action AND NOT EXISTS(SELECT 1 FROM control.dot_incidents WHERE run_id=r.run_id AND task_id=p_task AND execution_id=(g->>'execution_id')::bigint AND classification IS DISTINCT FROM g->>'classification' AND status NOT IN('resolved','superseded','closed','cancelled','failed')) THEN RETURN jsonb_build_object('converged',false,'reason','already_compatible');END IF;
  IF s.recovery_state_id IS NOT NULL THEN
  PERFORM control.record_recovery_condition(s.resume_identity,identity||':superseded:'||coalesce(s.version,0),s.failure_class,'trusted_failure_generation_superseded',s.next_action,false,'runner',r.project_id,r.workstream_slug,r.run_id,p_task,(g->>'execution_id')::bigint,s.failure_id,NULL,NULL,NULL,NULL,NULL,s.condition,s.metadata||jsonb_build_object('superseded_by',g->>'fingerprint'),'resolved');
@@ -37,9 +44,13 @@ BEGIN
  UPDATE control.dot_recovery_jobs SET status='superseded',claim_token=NULL,claim_until=NULL,updated_at=now(),evidence=evidence||jsonb_build_object('resolution','trusted_failure_recovery_converged','history_preserved',true) WHERE incident_id IN(SELECT incident_id FROM control.dot_incidents WHERE run_id=r.run_id AND task_id=p_task AND execution_id=(g->>'execution_id')::bigint AND classification IS DISTINCT FROM g->>'classification') AND status NOT IN('resolved','superseded','closed','cancelled','failed');
  UPDATE control.dot_incidents SET status='superseded',claim_until=NULL,evidence=evidence||jsonb_build_object('resolution','trusted_failure_recovery_converged','history_preserved',true) WHERE run_id=r.run_id AND task_id=p_task AND execution_id=(g->>'execution_id')::bigint AND classification IS DISTINCT FROM g->>'classification' AND status NOT IN('resolved','superseded','closed','cancelled','failed');
  IF NOT notified THEN
- INSERT INTO control.task_events(task_id,event_type,source,payload) VALUES(p_task,'lifecycle_failure_converged','runner',jsonb_build_object('identity',identity,'prior_recovery',to_jsonb(s),'current_failure',g,'history_preserved',true));
+ INSERT INTO control.task_events(task_id,event_type,source,payload) VALUES(p_task,'lifecycle_failure_converged','runner',jsonb_build_object('identity',identity,'evidence_fingerprint',evidence_fingerprint,'prior_recovery',to_jsonb(s),'current_failure',g,'history_preserved',true));
  PERFORM control.enqueue_supervisor_wake(r.run_id);
  END IF;
- RETURN jsonb_build_object('converged',true,'classification',g->>'classification','recovery',result);
+ RETURN jsonb_build_object('converged',true,'wake_enqueued',NOT notified,'classification',g->>'classification','recovery',result);
+END $$;
+DO $$BEGIN
+ EXECUTE replace(pg_get_functiondef('control.adopt_lifecycle_recovery(uuid,integer,text)'::regprocedure),
+ '->>''converged'')::boolean', '->>''wake_enqueued'')::boolean');
 END $$;
 COMMIT;
