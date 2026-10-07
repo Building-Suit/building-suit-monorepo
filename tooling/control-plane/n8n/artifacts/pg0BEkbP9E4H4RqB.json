@@ -37,7 +37,8 @@
         "options": {
           "path": "building-suit-continue"
         }
-      }
+      },
+      "webhookId": "64a5715c-5c8f-5729-a2b2-5f11cc1afae7"
     },
     {
       "id": "bs20-resolve",
@@ -553,7 +554,7 @@
         -120
       ],
       "parameters": {
-        "jsCode": "return [{json:{...$json,status:'wait',reason:$json.payload?.reason??'no-admitted-task',run_preserved:true}}];"
+        "jsCode": "return [{json:{...$json,status:'wait',reason:$json.acquisition?.reason??$json.payload?.acquisition?.reason??'acquisition_wait',run_preserved:true}}];"
       }
     },
     {
@@ -632,7 +633,7 @@
         -120
       ],
       "parameters": {
-        "jsCode": "return [{json:{...$json,status:'no-ready-task'}}];"
+        "jsCode": "return [{json:{...$json,status:$json.acquisition?.action==='wait_for_owner'?'owner-wait':$json.acquisition?.reason==='no_admitted_task'||$json.acquisition?.reason==='no_ready_task'?'no-ready-task':'wait',reason:$json.acquisition?.reason??$json.reason??'acquisition_wait'}}];"
       }
     },
     {

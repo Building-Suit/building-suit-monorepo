@@ -1,0 +1,16 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import {readFileSync} from 'node:fs'
+import {runInNewContext} from 'node:vm'
+import path from 'node:path'
+import {existingCommandIdentity} from '../runner/verification-command-identity.mjs'
+const source=readFileSync(new URL('../runner/task-verifier.mjs',import.meta.url),'utf8')
+const loop=source.slice(source.indexOf('for (const custom of verificationConfig.commands'),source.indexOf('\nconst changed =',source.indexOf('for (const custom of verificationConfig.commands')))
+const command={name:'git-diff-check',program:'git',args:['diff','--check'],required:true}
+const prior={name:command.name,command:'git diff --check',status:'pass',required:true,trusted_receipt:{version:2},working_directory:'/worktree'}
+function run(custom){const results=[structuredClone(prior)],before=JSON.stringify(results[0]),launched=[],persisted=[];runInNewContext(loop,{verificationConfig:{commands:[custom]},results,existingCommandIdentity,worktreePath:'/worktree',path,safeRegisteredVerificationCommand:()=>true,customCheckSelection:()=>({selected:true,reason:'required'}),changedFiles:[],verificationMode:'focused',verificationPlanText:'',runCheck:x=>{launched.push(x);return x},omittedCheck:x=>({...x,status:'not_run'}),liveCheck:x=>persisted.push(x)});assert.equal(JSON.stringify(results[0]),before);return {results,launched,persisted}}
+test('duplicate built-in and registered git diff command retains exactly one immutable check',()=>{for(let n=0;n<100;n++){const r=run(command);assert.equal(r.results.length,1);assert.equal(r.launched.length,0);assert.equal(r.persisted.length,0)}})
+for(const [name,change]of [['argv',{args:['status']}],['cwd',{cwd:'apps/shop-suit'}],['required',{required:false}]])test(`conflicting registered ${name} does not overwrite or weaken captured evidence`,()=>{const r=run({...command,...change});assert.equal(r.launched.length,0);assert.equal(r.results[1].required,true);assert.equal(r.results[1].failureClass,'verification-configuration');assert.equal(r.persisted.length,1)})
+test('distinct registered obligations still execute mandatory commands',()=>{const r=run({...command,name:'mandatory-unit'});assert.equal(r.launched.length,1);assert.equal(r.results.length,2)})
+const agent=readFileSync(new URL('../runner/bs-agent.mjs',import.meta.url),'utf8'),start=agent.indexOf('function execute('),end=agent.indexOf('\nfunction ',start+10),action=agent.slice(start,end)
+test('100 infrastructure polls retain a single verifier identity for the actual verification run',()=>{const invocations=[];for(let n=0;n<100;n++){const execute=runInNewContext(`(${action.trim()})`,{process:{env:{BS_OPERATION_ID:'existing',BS_OPERATION_INFRA_GENERATION:String(n)}},repoRoot:'/repository',automationCodexHome:'/home',path,stdinPromptRequest:(program,args,options)=>({args,options}),durableExecute:(root,key,program,args,options)=>{invocations.push({key,options});return {code:1,stdout:'{"checks":[{"status":"fail"}]}'}}});execute('/node',['/runtime/task-verifier.mjs','/worktree','/packet','/directory','335','focused']);}assert.equal(new Set(invocations.map(v=>v.key)).size,1);assert.equal(invocations[0].key,'existing:verifier:335');assert.ok(invocations.every(v=>v.options.retryProcessFailure===false&&v.options.retryTransportFailure===false))})

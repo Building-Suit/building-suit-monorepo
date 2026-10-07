@@ -1,8 +1,23 @@
 #!/usr/bin/env node
+import {recordEgress} from './dot-egress-telemetry.mjs'
+import {currentStateSql,classifyCurrent,requiresWatchdogAction,cycleEvidenceCache} from './dot-current-state.mjs'
+import {validatePassedVerifierCheck} from './trusted-verifier-receipt.mjs'
+import {runtimeIdentity} from './runtime-identity.mjs'
+import {codexChildEnvironment} from './codex-child-environment.mjs'
+import {recoveryErrorEnvelope,isolateRecoveryCandidates,controlQueryError} from './recovery-error.mjs'
+import {boundedVerificationReadiness} from './bounded-verification-readiness.mjs'
+import {auditAttempts} from './retry-exhaustion-audit.mjs'
+import { dispatchRecovery,needsRecovery } from './dot-general-recovery.mjs'
+import { cleanupIntegratedWorktrees } from './dot-cleanup.mjs'
+import { preexecutionBindingEvidence } from './preexecution-binding-recovery.mjs'
+import { strictBindingRecoveryEvidence, requiresSameAttemptVerification } from './binding-recovery.mjs'
+import { incidentIdentity, repairEvidenceHeader, parentContinuation, effectiveFailureClass, workerProcessClassification } from './dot.mjs'
+import { operationHasAuthoritativeSuccess } from './bounded-publication.mjs'
 
-import { spawnSync } from 'node:child_process'
+import { spawnSync, spawn } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 import {
+  readFileSync,
   mkdirSync,
   mkdtempSync,
   existsSync,
@@ -11,7 +26,7 @@ import {
 } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 
 import {
   getProfile,
@@ -20,6 +35,7 @@ import {
 } from '../routing/router.mjs'
 import {
   profileForAttempt,
+  repairRetryDecision,
   retryDecision,
   validateRetryPolicy,
 } from '../lib/retry-policy.mjs'
@@ -42,14 +58,22 @@ import {
   evaluateExecutionPreflight,
   fingerprint as preflightFingerprint,
 } from './task-preflight.mjs'
-import { evaluateWorkstreamReadiness } from './verification-mode.mjs'
+import { evaluateWorkstreamReadiness, resolveVerificationPlan } from './verification-mode.mjs'
+import { mergeVerificationConfig } from '../lib/workstream-readiness.mjs'
 import { evaluateParentSatisfaction } from './parent-satisfaction.mjs'
+import { reviewedProductFailure, retryPurpose, verifiedRepairBaselineFiles, repairFailureChecks, preserveAttributedRun, currentExecution, publicationHoldOutcome } from './recovery-evidence.mjs'
+import { durableExecute, receiptPaths, startReceipt, readJson, receiptLocked, stdinPromptRequest, storedPrompt, recoverInterruptedHandoff } from './durable-process.mjs'
+import { recoveryBackoff, retryWithoutProductAttempt, runWakeEligibility, taskStatusEvidence } from './selfhealing.mjs'
+import { validateVerifierOnlyReacceptance } from './verifier-only-reacceptance.mjs'
+import { publicationStateFingerprint } from './publication-preflight.mjs'
+import { initialSupervisorLeaseSql } from './supervisor-lease.mjs'
 import {
   WATCHER_LEASE_MS,
   WATCHER_MAX_BATCH,
   classifyControlProbe,
   githubProbeCommand,
   githubProbeObservation,
+  localReceiptWatchObservation,
   normalizeWatchDescriptor,
   watchDescriptorForRecovery,
   watchTransition,
@@ -90,14 +114,20 @@ const controlDatabase = {
     'prefer',
 }
 
-const repoRoot = fileURLToPath(new URL('../../../', import.meta.url))
+// Installed source may live in a pinned repair checkout while product worktrees
+// and relative project roots remain anchored to the operator's repository.
+const controlSourceRoot = fileURLToPath(new URL('../../../', import.meta.url))
+const repoRoot = process.env.BS_CONTROL_REPOSITORY_ROOT
+  ? path.resolve(process.env.BS_CONTROL_REPOSITORY_ROOT)
+  : controlSourceRoot
 
 const githubRepository = 'Building-Suit/building-suit-monorepo'
 
 const [command, ...args] = process.argv.slice(2)
 
 function execute(program, programArgs = [], options = {}) {
-  const childEnv = {
+  ;({ args: programArgs, options } = stdinPromptRequest(program, programArgs, options))
+  let childEnv = {
     ...process.env,
     NO_COLOR: '1',
     FORCE_COLOR: '0',
@@ -108,6 +138,15 @@ function execute(program, programArgs = [], options = {}) {
     delete childEnv[variable]
   }
 
+  if(program==='codex')childEnv=codexChildEnvironment(childEnv,{codexHome:childEnv.CODEX_HOME??automationCodexHome})
+
+  if (process.env.BS_OPERATION_ID && (program === 'codex' && programArgs[0] === 'exec' || programArgs.some(arg => String(arg).endsWith('/task-verifier.mjs') || String(arg).endsWith('/task-publisher.mjs')))) {
+    const publisherInvocation=programArgs.some(arg=>String(arg).endsWith('/task-publisher.mjs'))
+    const role = program === 'codex' ? 'codex' : publisherInvocation ? 'publisher' : `verifier:${programArgs[4] ?? 'probe'}`
+    return durableExecute(path.join(repoRoot, '.local', 'runtime-receipts'), `${process.env.BS_OPERATION_ID}:${role}`, program, programArgs, {
+      ...options, cwd: options.cwd ?? repoRoot, env: childEnv, retryProcessFailure: program === 'codex', retryTransportFailure:publisherInvocation,
+    })
+  }
   const result = spawnSync(
     program,
     programArgs,
@@ -375,7 +414,7 @@ function preflight() {
   const result = execute(
     process.execPath,
     [
-      'tooling/git/preflight.mjs',
+      path.join(controlSourceRoot, 'tooling/git/preflight.mjs'),
     ],
   )
 
@@ -404,7 +443,7 @@ function prCheck() {
   const result = execute(
     process.execPath,
     [
-      'tooling/git/check-pr.mjs',
+      path.join(controlSourceRoot, 'tooling/git/check-pr.mjs'),
       prNumber,
     ],
   )
@@ -449,7 +488,7 @@ function discoverCodexModels() {
   const result = execute(
     process.execPath,
     [
-      'tooling/control-plane/runner/codex-models.mjs',
+      path.join(controlSourceRoot, 'tooling/control-plane/runner/codex-models.mjs'),
     ],
     codexExecutionOptions({
       timeout: 20_000,
@@ -612,6 +651,7 @@ function routeProfile() {
       ok: false,
       command: 'route',
       error: error.message,
+      ...(error.sqlstate ? recoveryErrorEnvelope(error, command) : {}),
       allowed_profiles: listProfiles(),
     }, 1)
   }
@@ -630,6 +670,7 @@ function codexSmoke() {
       ok: false,
       command: 'codex-smoke',
       error: error.message,
+      ...(error.sqlstate ? recoveryErrorEnvelope(error, command) : {}),
     }, 64)
 
     return
@@ -795,6 +836,7 @@ function validWorkstreamReference(value) {
 function controlQuery(
   sql,
   variables = {},
+  databaseUser = controlDatabase.user,
 ) {
   const variableArgs = []
 
@@ -805,7 +847,7 @@ function controlQuery(
     )
   }
 
-  return executeWithControlDatabaseRetry(() => execute(
+  const result = executeWithControlDatabaseRetry(() => execute(
     'psql',
     [
       '-X',
@@ -815,6 +857,7 @@ function controlQuery(
 
       '-v',
       'ON_ERROR_STOP=1',
+      '-v', 'VERBOSITY=verbose',
 
       '-h',
       controlDatabase.host,
@@ -823,7 +866,7 @@ function controlQuery(
       controlDatabase.port,
 
       '-U',
-      controlDatabase.user,
+      databaseUser,
 
       '-d',
       controlDatabase.database,
@@ -839,6 +882,14 @@ function controlQuery(
       },
     },
   ))
+  if(command==='recovery-watch')recordEgress('bs31',{queries:1,connections:1,bytes:Buffer.byteLength(result.stdout??'')})
+  if (!successful(result)) throw controlQueryError(result)
+  return result
+}
+
+function trustedControlQuery(sql,variables={}) {
+ if(!process.env.BS_CONTROL_VERIFIER_USER)throw Error('trusted_verifier_credentials_required')
+ return controlQuery(sql,variables,process.env.BS_CONTROL_VERIFIER_USER)
 }
 
 function parseControlJson(result) {
@@ -960,6 +1011,7 @@ function taskNext() {
       ok: false,
       command: 'task-next',
       error: error.message,
+      ...(error.sqlstate ? recoveryErrorEnvelope(error, command) : {}),
     }, 1)
   }
 }
@@ -1005,6 +1057,7 @@ function taskPacket() {
       ok: false,
       command: 'task-packet',
       error: error.message,
+      ...(error.sqlstate ? recoveryErrorEnvelope(error, command) : {}),
     }, 1)
   }
 }
@@ -1051,6 +1104,7 @@ function taskClaim() {
       ok: false,
       command: 'task-claim',
       error: error.message,
+      ...(error.sqlstate ? recoveryErrorEnvelope(error, command) : {}),
     }, 1)
   }
 }
@@ -1097,6 +1151,7 @@ function taskRelease() {
       ok: false,
       command: 'task-release',
       error: error.message,
+      ...(error.sqlstate ? recoveryErrorEnvelope(error, command) : {}),
     }, 1)
   }
 }
@@ -1109,7 +1164,7 @@ function runJsonHelper(
   const result = execute(
     process.execPath,
     [
-      relativePath,
+      path.resolve(controlSourceRoot, relativePath),
       ...helperArgs,
     ],
     options,
@@ -1256,23 +1311,7 @@ function taskPrepare() {
       )
 
     controlQuery(
-      `
-        UPDATE control.tasks
-        SET metadata = jsonb_set(
-              metadata,
-              '{preparation}',
-              :'preparation'::jsonb,
-              true
-            ),
-            engine_stage = 'prepared'
-        WHERE task_id = :'task_id';
-        INSERT INTO control.audit_events(
-          project_id, workstream_slug, task_id, action, source, new_value
-        )
-        SELECT project_id, workstream_slug, task_id, 'task_prepared', 'runner', :'preparation'::jsonb
-        FROM control.tasks WHERE task_id = :'task_id';
-        SELECT jsonb_build_object('recorded', true);
-      `,
+      `SELECT control.record_task_preparation(:'task_id',:'preparation'::jsonb);`,
       {
         task_id: taskId,
         preparation: JSON.stringify({ parent, worktree: prepared }),
@@ -1379,26 +1418,7 @@ function startExecution({
 
   const recordedResult =
     controlQuery(
-      `
-        UPDATE control.executions
-        SET
-          resolved_retry_policy =
-            :'retry_policy'::jsonb,
-
-          prompt_path =
-            :'prompt_path',
-
-          engine_stage =
-            'implementation'
-
-        WHERE execution_id =
-          :'execution_id'::bigint
-
-        RETURNING jsonb_build_object(
-          'execution_id',
-          execution_id
-        );
-      `,
+      `SELECT control.record_execution_setup(:'execution_id'::bigint,:'retry_policy'::jsonb,:'prompt_path');`,
       {
         execution_id:
           String(executionId),
@@ -1430,6 +1450,7 @@ function startExecution({
   }
 
 
+  attachRuntimeExecution(executionId)
   return executionId
 }
 
@@ -1483,6 +1504,7 @@ function finishExecution({
 }
 
 function taskRun() {
+  if (!process.env.BS_OPERATION_ID) { taskSupervisor(); return }
   const [taskId] = args
 
   if (!validTaskId(taskId)) {
@@ -1534,7 +1556,9 @@ function taskRun() {
       )
     }
 
-    const executionPreflight = runExecutionPreflight(supervisorSnapshot(taskId), 'implementation')
+    const existingExecution = latestExecution(taskId)
+    const resumeExecution = existingExecution?.status === 'running' ? existingExecution : null
+    const executionPreflight = resumeExecution ? { ready: true } : runExecutionPreflight(supervisorSnapshot(taskId), 'implementation')
     if (!executionPreflight.ready) {
       output({
         ok: false,
@@ -1600,7 +1624,7 @@ function taskRun() {
         1,
       )
 
-    const route =
+    const route = resumeExecution ? { uses_codex: true, profile: resumeExecution.model_profile, model: resumeExecution.model_name, reasoning_effort: resumeExecution.reasoning_effort } :
       firstProfile === 'no_ai'
         ? resolveProfile(
             'no_ai',
@@ -1668,7 +1692,7 @@ function taskRun() {
         process.execPath,
         [
           path.join(
-            repoRoot,
+            controlSourceRoot,
             'tooling',
             'control-plane',
             'runner',
@@ -1688,8 +1712,7 @@ function taskRun() {
       )
     }
 
-    const prompt =
-      promptResult.stdout
+    const prompt = resumeExecution?.prompt_path && existsSync(resumeExecution.prompt_path) ? storedPrompt(readFileSync(resumeExecution.prompt_path, 'utf8')) : promptResult.stdout
 
     const promptPath =
       path.join(
@@ -1769,6 +1792,12 @@ function taskRun() {
     const succeeded =
       successful(codexResult)
 
+    if (!succeeded) {
+      output({ ok: false, command: 'task-run', task_id: taskId, execution_id: executionId,
+        error: workerProcessClassification(codexResult).failure_class==='operator-wait'?'chatgpt_authentication_required':'worker_process_interrupted', classification: workerProcessClassification(codexResult),
+        execution: { log_path: logPath, exit_code: codexResult.code } }, 1)
+      return
+    }
     finishExecution({
       executionId,
 
@@ -1858,12 +1887,8 @@ function taskRun() {
     }, succeeded ? 0 : 1)
   }
   catch (error) {
-    recordControlFailure(
-      taskId,
-      'implementation',
-      error.message,
-    )
     output({
+      classification: { failure_class: executionId || isControlDatabaseConnectivityError(error) ? 'transient-infrastructure' : 'safety-stop', recovery_action: executionId || isControlDatabaseConnectivityError(error) ? 'wait-external' : 'safety-stop' },
       ok: false,
       command: 'task-run',
       task_id: taskId,
@@ -1909,7 +1934,7 @@ function recordControlFailure(
     const execution = latestExecution(taskId)
     const policy = resolvedRetryPolicy(taskId)
     const decision = execution
-      ? retryDecision(policy, execution.attempt)
+      ? retryDecision(policy, Math.max(1, supervisorSnapshot(taskId).retry_accounting?.consumed ?? execution.attempt))
       : { allowed: false }
     const failureClass = safeMetadata.classification?.failure_class ?? null
     const recoveryAction = safeMetadata.classification?.recovery_action ?? null
@@ -1921,21 +1946,7 @@ function recordControlFailure(
     if (implementationRetryAllowed) legalActions.push('retry')
     if (stage === 'publication') legalActions.push('publish', 'reparent')
     controlQuery(
-      `
-        INSERT INTO control.failures(
-          project_id,workstream_slug,task_id,execution_id,attempt,stage,error_code,
-          summary,raw_error,retry_available,next_profile,human_intervention_required,
-          legal_actions,metadata,failure_class,recovery_action,recoverable
-        )
-        SELECT t.project_id,t.workstream_slug,t.task_id,
-          NULLIF(:'execution_id','')::bigint,NULLIF(:'attempt','')::integer,:'stage',:'error_code',
-          :'summary',:'raw_error',:'retry_available'::boolean,NULLIF(:'next_profile',''),
-          :'human_required'::boolean,:'legal_actions'::jsonb,:'metadata'::jsonb,
-          COALESCE(NULLIF(:'failure_class',''), 'operator-wait'),
-          COALESCE(NULLIF(:'recovery_action',''), 'wait-operator'), true
-        FROM control.tasks t WHERE t.task_id=:'task_id';
-        SELECT jsonb_build_object('recorded',true);
-      `,
+      `SELECT control.record_runtime_failure(:'task_id',NULLIF(:'execution_id','')::bigint,:'stage',:'error_code',:'summary',:'raw_error',:'retry_available'::boolean,NULLIF(:'next_profile',''),:'human_required'::boolean,:'legal_actions'::jsonb,:'metadata'::jsonb,:'failure_class',:'recovery_action');`,
       {
         task_id: taskId,
         execution_id: execution ? String(execution.execution_id) : '',
@@ -2031,7 +2042,7 @@ function queueVerificationChecks(
   ]
 
   for (const [name, checkCommand] of checks) {
-    controlQuery(
+    trustedControlQuery(
       `
         SELECT jsonb_build_object(
           'verification_id',
@@ -2057,33 +2068,7 @@ function skipUnselectedVerificationChecks(
   selectedNames,
 ) {
   const result = controlQuery(
-    `
-      WITH updated AS (
-        UPDATE control.verification_results
-        SET status = 'skipped',
-            summary = 'Not selected by the task-focused verification plan.',
-            metadata = COALESCE(metadata, '{}'::jsonb) || jsonb_build_object(
-              'selection_reason', 'not_selected_by_verifier',
-              'verification_mode', (
-                SELECT verification_mode
-                FROM control.verification_runs
-                WHERE verification_run_id = :'verification_run_id'::bigint
-              )
-            ),
-            started_at = COALESCE(started_at, now()),
-            finished_at = now(),
-            elapsed_ms = 0
-        WHERE verification_run_id = :'verification_run_id'::bigint
-          AND status IN ('queued','running')
-          AND NOT EXISTS (
-            SELECT 1
-            FROM jsonb_array_elements_text(:'selected_names'::jsonb) AS selected(check_name)
-            WHERE selected.check_name = verification_results.check_name
-          )
-        RETURNING verification_id
-      )
-      SELECT jsonb_build_object('skipped', count(*)) FROM updated;
-    `,
+    `SELECT control.skip_unselected_verification_checks(:'verification_run_id'::bigint,:'selected_names'::jsonb);`,
     {
       verification_run_id: String(verificationRunId),
       selected_names: JSON.stringify([...selectedNames]),
@@ -2105,28 +2090,16 @@ function recordVerificationState(
     )
   }
 
-  const result = controlQuery(
-    `
-      UPDATE control.verification_runs
-      SET metadata = COALESCE(metadata, '{}'::jsonb) ||
-        jsonb_build_object(
-          'verified_state', :'verified_state'::jsonb,
-          'failure_class', NULLIF(:'failure_class', ''),
-          'recovery_action', NULLIF(:'recovery_action', '')
-        )
-      WHERE verification_run_id = :'verification_run_id'::bigint
-        AND status = 'running'
-      RETURNING jsonb_build_object(
-        'verification_run_id', verification_run_id,
-        'state_fingerprint', metadata->'verified_state'->>'fingerprint'
-      );
-    `,
+  if(!process.env.BS_CONTROL_VERIFIER_USER)throw Error('trusted_verifier_credentials_required')
+  const result = trustedControlQuery(
+    `SELECT control.record_trusted_verification_state(:'verification_run_id'::bigint,:'verified_state'::jsonb,:'failure_class',:'recovery_action');`,
     {
       verification_run_id: String(verificationRunId),
       verified_state: JSON.stringify(verifiedState),
       failure_class: classification?.failure_class ?? '',
       recovery_action: classification?.recovery_action ?? '',
     },
+    process.env.BS_CONTROL_VERIFIER_USER,
   )
 
   const recorded = parseControlJson(result)
@@ -2140,7 +2113,7 @@ function recordVerification(
   check,
 ) {
   const result =
-    controlQuery(
+    trustedControlQuery(
       `
         SELECT jsonb_build_object(
           'verification_id',
@@ -2201,6 +2174,7 @@ function recordVerification(
               check.verification_mode ?? null,
             failure_class:
               check.failure_class ?? null,
+            failure_evidence: check.failure_evidence ?? null,
           }),
       },
     )
@@ -2215,7 +2189,7 @@ function finalizeVerification(
   verificationRunId,
 ) {
   const result =
-    controlQuery(
+    trustedControlQuery(
       `
         SELECT
           control.finish_verification_run(
@@ -2238,8 +2212,10 @@ function finalizeVerification(
 }
 
 function taskVerify() {
+  if (!process.env.BS_OPERATION_ID) { taskSupervisor(); return }
   const [taskId] = args
   let verificationLifecycleStage = 'load'
+  let resumedVerification = null
 
   if (!validTaskId(taskId)) {
     output({
@@ -2305,14 +2281,24 @@ function taskVerify() {
         'verification-infrastructure',
         'verification-required-check-unavailable',
       ])
-      if (!reverifyClasses.has(failure?.failure_class)) {
+      const reviewedSnapshot=supervisorSnapshot(taskId)
+      const effectiveClass=effectiveFailureClass(reviewedSnapshot,failure?.failure_class)
+      const reviewed=reviewedSnapshot.exhaustion_audit?.entries?.at(-1)
+      if(reviewed?.proof?.length&&reviewed.proof.every(p=>p.version===2)){
+       const old=reviewedSnapshot.verification_runs?.at(-1)?.metadata?.verified_state
+       const e=reviewedSnapshot.executions?.at(-1)
+       if(!old?.files?.length)throw Error('original_verified_source_required')
+       const allowed=new Set(reviewed.proof.flatMap(p=>p.review?.source??[]).map(s=>s.path).filter(f=>f.includes('/tests/')))
+       for(const f of old.files)if(!allowed.has(f.file)&&gitCheck(e.worktree_path,['hash-object','--',f.file]).value!==f.object)throw Error('reviewed_verifier_recovery_product_changed:'+f.file)
+      }
+      if (!reverifyClasses.has(effectiveClass)) {
         throw new Error('failed_task_requires_implementation_repair')
       }
       controlQuery(
         `SELECT control.reopen_verification(:'task_id', 'supervisor', :'reason');`,
         {
           task_id: taskId,
-          reason: `same-execution reverify after ${failure.failure_class}`,
+          reason: `same-execution reverify after ${effectiveClass}`,
         },
       )
     }
@@ -2328,10 +2314,8 @@ function taskVerify() {
       )
     }
 
-    if (
-      execution.status !==
-      'succeeded'
-    ) {
+    const reacceptedEligible = execution.status === 'failed' && parseControlJson(controlQuery(`SELECT control.publication_execution_is_eligible(:'task',:'execution'::bigint);`,{task:taskId,execution:String(execution.execution_id)})) === true
+    if (execution.status !== 'succeeded' && !reacceptedEligible) {
       throw new Error(
         `Latest execution is ${execution.status}, not succeeded.`,
       )
@@ -2376,6 +2360,7 @@ function taskVerify() {
       execution.execution_id,
       packet.task.verification_mode ?? 'focused',
     )
+    if (verificationRun.resumed) resumedVerification = { ...verificationRun, execution_id: execution.execution_id }
 
     verificationLifecycleStage = 'execute'
 
@@ -2396,7 +2381,7 @@ function taskVerify() {
         process.execPath,
         [
           path.join(
-            repoRoot,
+            controlSourceRoot,
             'tooling',
             'control-plane',
             'runner',
@@ -2426,6 +2411,8 @@ function taskVerify() {
     ) {
       throw new Error('control_database_connectivity_exhausted')
     }
+
+    if (!successful(verifier) && /(?:ERROR|FATAL):\s+[0-9A-Z]{5}:/.test(verifier.stderr ?? '')) throw controlQueryError(verifier)
 
     let verification
 
@@ -2612,6 +2599,52 @@ function taskVerify() {
     }, finalResult.passed ? 0 : 1)
   }
   catch (error) {
+    // A restarted verifier cannot reset an already captured immutable check.
+    // Fail the interrupted generation through ordinary APIs, retaining all
+    // terminal evidence, so the same execution can receive a fresh verification.
+    if (verificationLifecycleStage === 'execute' && resumedVerification
+      && error.sqlstate === 'P0001' && /\bimmutable_verifier_receipt_conflict\b/.test(error.message)
+      && parseControlJson(controlQuery(`
+        SELECT to_jsonb(EXISTS (
+          SELECT 1 FROM control.verification_results
+          WHERE verification_run_id = :'verification_run_id'::bigint AND trusted_receipt IS NOT NULL
+        ) AND NOT EXISTS (
+          SELECT 1 FROM control.verification_results
+          WHERE verification_run_id = :'verification_run_id'::bigint
+            AND NOT (check_name = 'verifier-resume-infrastructure' AND status = 'fail'
+              AND COALESCE(command,'') = '' AND trusted_receipt IS NULL
+              AND metadata->>'selection_reason' IS NOT DISTINCT FROM 'interrupted_verification_has_immutable_receipts'
+              AND metadata->>'failure_class' IS NOT DISTINCT FROM 'verification-infrastructure')
+            AND (status IN ('fail','not_run','unavailable')
+              OR (status = 'pass' AND COALESCE(metadata->>'required','true') <> 'false'
+                AND (trusted_receipt IS NULL OR trusted_registration IS NULL)))
+        ));
+      `, { verification_run_id: String(resumedVerification.verification_run_id) })) === true) {
+      const classification = { failure_class: 'verification-infrastructure', recovery_action: 'wait-external' }
+      const check = {
+        name: 'verifier-resume-infrastructure', command: null, required: true, status: 'fail',
+        failure_class: classification.failure_class, exit_code: 1, log_path: null, elapsed_ms: 0,
+        selection_reason: 'interrupted_verification_has_immutable_receipts',
+        summary: 'Resumed verification attempted to reset an immutable trusted receipt; fresh same-execution verification required.',
+      }
+      const id = resumedVerification.verification_run_id
+      recordVerification(id, check)
+      skipUnselectedVerificationChecks(id, new Set([check.name]))
+      const result = finalizeVerification(taskId, id)
+      recordControlFailure(taskId, 'verification', check.selection_reason, {
+        verification_run_id: id, checks: [check], classification, interrupted_error: error.message,
+      })
+      output({ ok: false, command: 'task-verify', task_id: taskId,
+        execution_id: resumedVerification.execution_id, verification_run_id: id,
+        error: check.selection_reason, classification, result }, 1)
+      return
+    }
+    if (error.sqlstate) {
+      const envelope=recoveryErrorEnvelope(error,'verification')
+      recordControlFailure(taskId,'verification',error.sqlstate,{...envelope,classification:envelope.classification})
+      output({command:'task-verify',task_id:taskId,...envelope},1)
+      return
+    }
     const infrastructure = /control_database_connectivity|connect|network|timeout|temporar/i.test(
       String(error.message),
     )
@@ -2757,7 +2790,10 @@ function verificationFailures(
                 summary,
 
               'log_path',
-                log_path
+                log_path,
+
+              'failure_class',
+                metadata->>'failure_class'
             )
             ORDER BY verification_id
           ),
@@ -2911,23 +2947,7 @@ function startRetryExecution(
 
   const recordedResult =
     controlQuery(
-      `
-        UPDATE control.executions
-        SET
-          resolved_retry_policy =
-            :'retry_policy'::jsonb,
-
-          engine_stage =
-            'implementation'
-
-        WHERE execution_id =
-          :'execution_id'::bigint
-
-        RETURNING jsonb_build_object(
-          'execution_id',
-          execution_id
-        );
-      `,
+      `SELECT control.record_execution_setup(:'execution_id'::bigint,:'retry_policy'::jsonb);`,
       {
         execution_id:
           String(
@@ -2958,6 +2978,7 @@ function startRetryExecution(
   }
 
 
+  attachRuntimeExecution(started.execution_id)
   return started
 }
 
@@ -3010,6 +3031,7 @@ function validateRetryWorktree(
 
 
 function taskRetry() {
+  if (!process.env.BS_OPERATION_ID) { taskSupervisor(); return }
   const [taskId] = args
 
   if (!validTaskId(taskId)) {
@@ -3025,9 +3047,8 @@ function taskRetry() {
   }
 
   let newExecutionId = null
-  let prompt = ''
-  let logPath = null
-  let executionFinished = false
+  let prompt
+  let logPath
 
   try {
     const packetResult =
@@ -3057,19 +3078,15 @@ function taskRetry() {
       )
     }
 
-    if (
-      packet.task.status !==
-      'failed'
-    ) {
+    const runningExecution = latestExecution(taskId)
+    const resumeExecution = runningExecution?.status === 'running' ? runningExecution : null
+    if (packet.task.status !== 'failed' && !resumeExecution) {
       throw new Error(
         `Task ${taskId} is ${packet.task.status}, not failed.`,
       )
     }
 
-    const previousExecution =
-      latestExecution(
-        taskId,
-      )
+    const previousExecution = resumeExecution ? currentExecution({ executions: supervisorSnapshot(taskId).executions.filter(e => e.attempt < resumeExecution.attempt) }) : latestExecution(taskId)
 
     if (!previousExecution) {
       throw new Error(
@@ -3077,9 +3094,9 @@ function taskRetry() {
       )
     }
 
-    const executionPreflight = runExecutionPreflight(
+    const executionPreflight = resumeExecution ? { ready: true } : runExecutionPreflight(
       supervisorSnapshot(taskId),
-      previousExecution.status === 'succeeded' ? 'verification-product-repair' : 'retry',
+      retryPurpose(supervisorSnapshot(taskId)),
     )
     if (!executionPreflight.ready) {
       output({
@@ -3098,9 +3115,11 @@ function taskRetry() {
       )
 
     const decision =
-      retryDecision(
+      repairRetryDecision(
         retryPolicy,
-        previousExecution.attempt,
+        previousExecution,
+        supervisorSnapshot(taskId).retry_accounting,
+        resumeExecution,
       )
 
     if (!decision.allowed) {
@@ -3136,12 +3155,9 @@ function taskRetry() {
     const nextProfile =
       decision.next_profile
 
-    const route =
-      resolveCodexRoute(
-        nextProfile,
-      )
+    const route = resumeExecution ? { uses_codex: true, profile: resumeExecution.model_profile, model: resumeExecution.model_name, reasoning_effort: resumeExecution.reasoning_effort } : resolveCodexRoute(nextProfile)
 
-    const failures =
+    const persistedVerificationFailures =
       verificationFailures(
         previousExecution.execution_id,
       )
@@ -3151,10 +3167,24 @@ function taskRetry() {
         taskId,
       )
 
+    const failures = repairFailureChecks({
+      execution: previousExecution,
+      failure: controlFailure,
+      formalChecks: persistedVerificationFailures,
+    })
+
+    const repairFailures =
+      controlFailure?.failure_class === 'verification-product-defect'
+        ? failures.filter(
+            failure => failure.failure_class === 'verification-product-defect',
+          )
+        : failures
+
     if (
       previousExecution.status === 'succeeded' &&
       String(controlFailure?.failure_class ?? '').startsWith('verification-') &&
-      controlFailure.failure_class !== 'verification-product-defect'
+      controlFailure.failure_class !== 'verification-product-defect' &&
+      !reviewedProductFailure(supervisorSnapshot(taskId),previousExecution)
     ) {
       output({
         ok: false,
@@ -3192,7 +3222,7 @@ function taskRetry() {
           null,
 
         verification_failures:
-          failures,
+          repairFailures,
 
         control_failure:
           controlFailure,
@@ -3346,11 +3376,13 @@ Rules:
 - Do not report the repair complete while any recorded failed verifier command still fails.
 - If that verifier command exposes another failure in the same regression suite, continue repairing that suite until the command exits successfully.
 - Additional focused checks may be used for diagnosis, but they do not replace the failed verifier command.
+- Never convert a required failed check into a skip or unconditional success.
+- If a required local fixture is unavailable, report that prerequisite and preserve the required check.
 - Independent final verification still belongs to the control plane.
 
 Return a concise repair summary.
           `.trim()
-    prompt = basePrompt
+    prompt = `${basePrompt}\n\nPersisted repair evidence:\n${repairEvidenceHeader(supervisorSnapshot(taskId), nextAttempt)}`
 
 
     const promptPath =
@@ -3365,6 +3397,7 @@ Return a concise repair summary.
         'codex.jsonl',
       )
 
+    if (resumeExecution && existsSync(promptPath)) prompt = storedPrompt(readFileSync(promptPath, 'utf8'))
     writeFileSync(
       promptPath,
       `${prompt}\n`,
@@ -3538,7 +3571,7 @@ Return a concise repair summary.
           process.execPath,
           [
             path.join(
-              repoRoot,
+              controlSourceRoot,
               'tooling',
               'control-plane',
               'runner',
@@ -3570,6 +3603,7 @@ Return a concise repair summary.
       catch {
 
         latestProbe = {
+          classification: { failure_class: 'verification-infrastructure', recovery_action: 'wait-external' },
           ok:
             false,
 
@@ -3633,7 +3667,7 @@ Return a concise repair summary.
             process.execPath,
             [
               path.join(
-                repoRoot,
+                controlSourceRoot,
                 'tooling',
                 'control-plane',
                 'runner',
@@ -3825,6 +3859,13 @@ Return a concise repair summary.
               : lastExitCode
           )
 
+    if (!succeeded && (lastExitCode !== 0 || latestProbe?.classification?.failure_class && latestProbe.classification.failure_class !== 'verification-product-defect')) {
+      const classification = latestProbe?.classification ?? workerProcessClassification({code:lastExitCode,stderr:lastStderr,stdout:codexOutputs.join('\n')})
+      output({ ok: false, command: 'task-retry', task_id: taskId, execution_id: newExecutionId,
+        error: latestProbe ? 'repair_verifier_recovery_required' : 'worker_process_interrupted', classification,
+        probe: latestProbe, execution: { log_path: logPath } }, 1)
+      return
+    }
     finishExecution({
       executionId:
         newExecutionId,
@@ -3871,6 +3912,8 @@ Return a concise repair summary.
         repair_cycles:
           repairCycles,
 
+        verification_probe_classification: latestProbe?.classification ?? null,
+        verification_probe_verified_state: latestProbe?.verified_state ?? null,
         verification_probe_passed:
           probePassed,
 
@@ -3907,14 +3950,31 @@ Return a concise repair summary.
 
                     log_path:
                       check.log_path,
+                    failure_class: check.failure_class ?? latestProbe?.classification?.failure_class ?? null,
+                    failure_evidence: check.failure_evidence ?? null,
                   }),
                 )
             : [],
       },
     })
 
-    executionFinished =
-      true
+
+    const repairFailureClassification =
+      !succeeded
+        ? (
+            latestProbe?.classification?.failure_class
+              ? latestProbe.classification
+              : (() => {
+                  const workerFailure = classifySupervisorFailure({
+                    command: 'task-retry',
+                    payload: { error: lastStderr || latestProbe?.error || 'repair_worker_failed' },
+                    attempt: previousExecution.attempt + 1,
+                    maxAttempts: retryPolicy.max_attempts,
+                  })
+                  return { failure_class: workerFailure.failure_class, recovery_action: workerFailure.next_action }
+                })()
+          )
+        : null
 
     if (!succeeded) {
 
@@ -3923,6 +3983,9 @@ Return a concise repair summary.
         'repair',
         'repair_verification_failed',
         {
+          classification:
+            repairFailureClassification,
+
           repair_cycles:
             repairCycles,
 
@@ -3939,6 +4002,14 @@ Return a concise repair summary.
     output({
       ok:
         succeeded,
+
+      error:
+        succeeded
+          ? null
+          : 'repair_verification_failed',
+
+      classification:
+        repairFailureClassification,
 
       command:
         'task-retry',
@@ -3979,6 +4050,8 @@ Return a concise repair summary.
         repair_cycles:
           repairCycles,
 
+        verification_probe_classification: latestProbe?.classification ?? null,
+        verification_probe_verified_state: latestProbe?.verified_state ?? null,
         verification_probe_passed:
           probePassed,
 
@@ -3990,63 +4063,15 @@ Return a concise repair summary.
   }
   catch (error) {
 
-    if (
-      newExecutionId &&
-      !executionFinished
-    ) {
-      try {
-        finishExecution({
-          executionId:
-            newExecutionId,
-
-          status:
-            'failed',
-
-          promptBytes:
-            Buffer.byteLength(
-              prompt,
-              'utf8',
-            ),
-
-          outputBytes:
-            0,
-
-          runLogPath:
-            logPath ?? '',
-
-          metadata: {
-            retry: true,
-
-            infrastructure_error:
-              error.message,
-          },
-        })
-      }
-      catch {
-        // Preserve the original error.
-      }
-    }
-
-    recordControlFailure(
-      taskId,
-      'repair',
-      error.message,
-    )
+    const failureClass = isControlDatabaseConnectivityError(error) || newExecutionId ? 'transient-infrastructure' : 'safety-stop'
 
     output({
       ok: false,
 
-      command:
-        'task-retry',
-
-      task_id:
-        taskId,
-
-      execution_id:
-        newExecutionId,
-
-      error:
-        error.message,
+      command: 'task-retry', task_id: taskId, execution_id: newExecutionId, error: error.message,
+      ...(error.sqlstate ? recoveryErrorEnvelope(error, command) : {
+        classification: { failure_class: failureClass, recovery_action: failureClass === 'safety-stop' ? 'safety-stop' : 'wait-external' },
+      }),
     }, 1)
   }
 }
@@ -4094,25 +4119,14 @@ function publicationVerification(
         SELECT COALESCE((
           SELECT jsonb_build_object(
             'verification_run_id', run.verification_run_id,
+            'publication_execution_eligible', control.publication_execution_is_eligible((SELECT task_id FROM control.executions WHERE execution_id=run.execution_id),run.execution_id),
             'execution_id', run.execution_id,
             'status', run.status,
             'state_fingerprint', run.metadata->'verified_state'->>'fingerprint',
             'verified_state', run.metadata->'verified_state',
             'checks', COALESCE((
-              SELECT jsonb_agg(jsonb_build_object(
-              'check_name',
-                check_name,
-
-              'status',
-                status,
-
-              'exit_code',
-                exit_code,
-
-              'summary',
-                summary
-              ) ORDER BY verification_id)
-              FROM control.verification_results
+              SELECT jsonb_agg(to_jsonb(result_row) ORDER BY result_row.verification_id)
+              FROM control.verification_results result_row
               WHERE verification_run_id = run.verification_run_id
             ), '[]'::jsonb)
           )
@@ -4210,6 +4224,7 @@ function completePublication({
 }
 
 function taskPublish() {
+  if (!process.env.BS_OPERATION_ID) { taskSupervisor(); return }
   const [taskId] = args
 
   if (!validTaskId(taskId)) {
@@ -4279,16 +4294,6 @@ function taskPublish() {
     }
 
 
-    if (
-      execution.status !==
-      'succeeded'
-    ) {
-      throw new Error(
-        `Latest execution is ${execution.status}, not succeeded.`,
-      )
-    }
-
-
     const verification =
       publicationVerification(
         execution.execution_id,
@@ -4301,6 +4306,10 @@ function taskPublish() {
       throw new Error(
         'Task has no verification evidence.',
       )
+    }
+
+    if (execution.status !== 'succeeded' && verification.publication_execution_eligible !== true) {
+      throw new Error('Latest execution lacks successful implementation or exact guarded reacceptance.')
     }
 
     if (verification.status !== 'passed') {
@@ -4326,6 +4335,85 @@ function taskPublish() {
       throw new Error(
         'Task has blocking verification results.',
       )
+    }
+
+    for (const check of verification.checks.filter(check=>check.status==='pass' && check.metadata?.required!==false)) {
+      validatePassedVerifierCheck({...check,task_id:taskId}, {executionId:execution.execution_id,verificationRunId:verification.verification_run_id,
+        artifactRoot:execution.worktree_path,sourceRoot:execution.worktree_path,allowTaskPublicationCommit:true})
+    }
+
+    const prePublicationVerificationConfig =
+      mergeVerificationConfig(
+        packet.project?.verification_config,
+        packet.workstream?.verification_config,
+      )
+
+    const prePublicationPlan =
+      resolveVerificationPlan({
+        entries: packet.task?.verification_plan ?? [],
+        configuredCommands: prePublicationVerificationConfig.commands ?? [],
+        legacyMappings: prePublicationVerificationConfig.legacy_plan_mappings ?? {},
+        phase: 'pre_publication',
+      })
+
+    let prePublicationGates =
+      prePublicationPlan.blockers.filter(
+        blocker =>
+          blocker.phase === 'pre_publication' &&
+          blocker.required !== false,
+      )
+
+    let externalEvidenceCondition = null
+    prePublicationGates = prePublicationGates.filter(gate => {
+      if (gate.kind !== 'external_gate' || !gate.registered_checks?.length) return true
+      let acknowledged = true
+      for (const registered of gate.registered_checks) {
+        const check = verification.checks.find(item => item.check_name === registered.name && item.status === 'pass')
+        if (!check) { acknowledged = false; continue }
+        const status = parseControlJson(controlQuery(`SELECT control.external_evidence_status(:'task',:'check'::bigint);`, {task:taskId,check:String(check.verification_id)}))
+        if (status.acknowledged !== true) {
+          acknowledged = false
+          if (status.eligible === true && !externalEvidenceCondition) externalEvidenceCondition = {gate_kind:'external-evidence',verification_id:String(check.verification_id)}
+        }
+      }
+      return !acknowledged
+    })
+
+    if (prePublicationGates.length > 0) {
+      const classification = {
+        failure_class: 'operator-wait',
+        recovery_action: 'wait-operator',
+      }
+
+      recordControlFailure(
+        taskId,
+        'publication',
+        'prepublication_external_verification_required',
+        {
+          classification,
+          gates: prePublicationGates,
+        },
+      )
+
+      output({
+        ok: false,
+        command: 'task-publish',
+        task_id: taskId,
+        error: 'prepublication_external_verification_required',
+        condition: externalEvidenceCondition,
+        classification,
+        gates: prePublicationGates,
+      }, 1)
+
+      return
+    }
+
+    const runPublicationAuthority = parseControlJson(controlQuery(`SELECT control.current_run_publication_authority(:'task_id');`, { task_id: taskId }))
+    const publicationHold = publicationHoldOutcome(process.env, runPublicationAuthority, taskId)
+    if (publicationHold) {
+      recordControlFailure(taskId, 'publication', publicationHold.error, publicationHold)
+      output({ ...publicationHold, command: 'task-publish', task_id: taskId }, 1)
+      return
     }
 
 
@@ -4458,8 +4546,10 @@ function taskPublish() {
           publication_contract:
             packet.publication_contract,
 
+          run_publication_authority: runPublicationAuthority,
           publication_authorizations:
             packet.publication_authorizations,
+          protected_publication_authority: parseControlJson(controlQuery(`SELECT control.current_protected_publication_authority(:'task');`, {task: taskId})),
         },
         null,
         2,
@@ -4471,12 +4561,17 @@ function taskPublish() {
     )
 
 
+    // Persist the lifecycle handoff before launching the publisher. Replays of
+    // this operation retain one transition; completion remains DB-idempotent.
+    controlQuery(`SELECT control.record_publication_started(:'task_id',NULLIF(:'op','undefined')::uuid,:'execution'::bigint,:'verification'::bigint);`,
+      {task_id:taskId,op:process.env.BS_OPERATION_ID,execution:String(execution.execution_id),verification:String(verification.verification_run_id)})
+
     const publisher =
       execute(
         process.execPath,
         [
           path.join(
-            repoRoot,
+            controlSourceRoot,
             'tooling',
             'control-plane',
             'runner',
@@ -4494,6 +4589,13 @@ function taskPublish() {
         },
       )
 
+
+    if(publisher.code!==0 && !publisher.stdout){
+      const classification={failure_class:'transient-infrastructure',recovery_action:'wait-external',component:'publisher-transport'}
+      recordControlFailure(taskId,'publication','publisher_receipt_interrupted',{classification})
+      output({ok:false,command:'task-publish',task_id:taskId,error:'publisher_receipt_interrupted',classification},1)
+      return
+    }
 
     let publication
 
@@ -4617,36 +4719,54 @@ function engineTaskPacket(taskId) {
 }
 
 
-function invokeTaskAction(
-  action,
-  taskId,
-) {
-  const result =
-    execute(
-      process.execPath,
-      [
-        agentScriptPath,
-        action,
-        taskId,
-      ],
-      {
-        cwd:
-          repoRoot,
-
-        timeout:
-          70 * 60 * 1000,
-      },
-    )
-
-  return {
-    result,
-
-    payload:
-      parseJson(
-        result.stdout,
-        null,
-      ),
+function invokeTaskAction(action, taskId) {
+  if (!['task-run','task-retry','task-verify','task-publish','task-prepare','task-reaccept'].includes(action)) {
+    const result = execute(process.execPath, [agentScriptPath, action, taskId], { cwd: repoRoot, timeout: 70 * 60_000 })
+    return { result, payload: parseJson(result.stdout, null) }
   }
+  const snapshot = supervisorSnapshot(taskId)
+  const existing = snapshot.runtime_operations?.find(op => op.status !== 'consumed')
+  const claimed = existing ? { acquired: true, operation: existing } : parseControlJson(controlQuery(
+    `SELECT control.claim_runtime_operation(:'task_id', :'action', NULLIF(:'execution_id','')::bigint, :'descriptor'::jsonb, :'owner', :'token');`,
+    { task_id: taskId, action, execution_id: String(currentExecution(snapshot)?.execution_id ?? ''),
+      descriptor: JSON.stringify({ source: agentScriptPath, previous_execution_id: currentExecution(snapshot)?.execution_id ?? null }), owner: `${process.pid}@local`, token: randomUUID() },
+  ))
+  if (!claimed.acquired) return { result: { code: 0 }, payload: { ok: false, error: claimed.reason, classification: { failure_class: 'operator-wait', recovery_action: 'wait-operator' } } }
+  const op = claimed.operation
+  if (operationHasAuthoritativeSuccess(snapshot, op)) {
+    const payload = { ok: true, command: op.action, replayed_authoritative_state: true }
+    controlQuery(`SELECT control.set_runtime_operation_outcome(:'id'::uuid,'consumed',:'result'::jsonb);`, { id: op.operation_id, result: JSON.stringify(payload) })
+    return { result: { code: 0 }, payload }
+  }
+  if (Date.parse(op.next_wake_at) > Date.now()) return { result: { code: 0 }, payload: { ok: false, error: 'runtime_backoff_pending', classification: { failure_class: 'transient-infrastructure', recovery_action: 'wait-external' } } }
+  const reserved = snapshot.executions?.find(e => e.execution_id === op.execution_id)
+  const completedVerification = snapshot.verification_runs?.filter(v => v.execution_id === op.execution_id && v.status !== 'running').at(-1)
+  const phaseSettled = ['task-run','task-retry'].includes(op.action) && reserved && !['running','queued'].includes(reserved.status) && reserved.execution_id !== op.descriptor?.previous_execution_id
+    || op.action === 'task-verify' && completedVerification && ['passed','failed'].includes(snapshot.packet.task.status) && !requiresSameAttemptVerification(snapshot,op)
+  if (phaseSettled) {
+    const failure = snapshot.failures?.filter(f => f.execution_id === op.execution_id && !f.resolved_at).at(-1)
+    const passed = op.action === 'task-verify' ? completedVerification.status === 'passed' : reserved.status === 'succeeded'
+    const classification = reviewedProductFailure(snapshot,reserved) ? {failure_class:'verification-product-defect',recovery_action:'repair'} : completedVerification?.metadata?.classification ?? failure?.metadata?.classification ?? reserved?.metadata?.verification_probe_classification ?? { failure_class: 'unknown-outcome', recovery_action: 'reconcile' }
+    const payload = { ok: passed, execution_id: op.execution_id, command: op.action, replayed_authoritative_state: true, classification: passed ? null : classification, error: passed ? null : op.action==='task-verify'?'verification_failed':'authoritative_phase_failed' }
+    // Infrastructure formal failures need reverify, rather than replay forever.
+    if (!retryWithoutProductAttempt(classification) || passed) {
+      controlQuery(`SELECT control.set_runtime_operation_outcome(:'id'::uuid,'consumed',:'result'::jsonb);`, { id: op.operation_id, result: JSON.stringify(payload) })
+      return { result: { code: passed ? 0 : 1 }, payload }
+    }
+  }
+  const paths = receiptPaths(path.join(repoRoot, '.local', 'runtime-operations'), op.operation_id, op.infra_retries)
+  if (['task-run','task-retry'].includes(op.action) && recoverInterruptedHandoff(path.join(repoRoot, '.local', 'runtime-receipts'), op.operation_id, paths)) {
+    return { result: { code: 0 }, payload: { ok: false, error: 'worker_transport_interrupted', classification: { failure_class: 'transient-infrastructure', recovery_action: 'wait-external', component: 'worker-transport' }, operation_id: op.operation_id } }
+  }
+  startReceipt(paths, { program: process.execPath, args: [agentScriptPath, op.action, taskId], cwd: repoRoot, timeout: 70 * 60_000 }, { ...process.env, BS_OPERATION_ID: op.operation_id, BS_OPERATION_INFRA_GENERATION: String(op.infra_retries) })
+  // A short polling boundary lets n8n return while detached worker survives SSH.
+  let result = readJson(paths.result)
+  if (!result) return { result: { code: 0 }, payload: { ok: false, error: 'runtime_operation_in_flight', classification: { failure_class: 'transient-infrastructure', recovery_action: 'wait-external' }, operation_id: op.operation_id } }
+  const payload = parseJson(result.stdout, null) ?? { ok: false, error: 'malformed_child_response', classification: { failure_class: 'transient-infrastructure', recovery_action: 'wait-external' } }
+  const automatic = payload.ok !== true && retryWithoutProductAttempt(payload.classification)
+  controlQuery(`SELECT control.set_runtime_operation_outcome(:'id'::uuid,:'status',:'result'::jsonb,:'increment'::integer=1,:'backoff'::integer);`,
+    { status: automatic ? 'pending' : 'consumed', result: JSON.stringify({ result, payload }), increment: automatic ? '1' : '0', backoff: String(automatic ? recoveryBackoff(op.infra_retries) : 0), task_id: taskId, id: op.operation_id })
+  return { result, payload }
 }
 
 
@@ -4675,11 +4795,12 @@ function handleNoPublishableChanges(
 }
 
 
-function supervisorSnapshot(taskId) {
+export function supervisorSnapshot(taskId) {
   const result = controlQuery(
     `
       SELECT jsonb_build_object(
         'packet', control.generic_task_packet(:'task_id'),
+        'retry_accounting', control.product_retry_accounting(:'task_id'),
         'executions', COALESCE((
           SELECT jsonb_agg(to_jsonb(e) ORDER BY e.attempt)
           FROM control.executions e
@@ -4692,7 +4813,7 @@ function supervisorSnapshot(taskId) {
           WHERE e.task_id = :'task_id'
         ), '[]'::jsonb),
         'verification_results', COALESCE((
-          SELECT jsonb_agg(to_jsonb(v) ORDER BY v.verification_id)
+          SELECT jsonb_agg(to_jsonb(v)||jsonb_build_object('metadata',v.metadata||jsonb_build_object('failure_evidence',coalesce((SELECT review.evidence FROM control.verification_failure_reviews review WHERE review.verification_id=v.verification_id),v.metadata->'failure_evidence'))) ORDER BY v.verification_id)
           FROM control.verification_results v
           JOIN control.executions e USING (execution_id)
           WHERE e.task_id = :'task_id'
@@ -4721,13 +4842,20 @@ function supervisorSnapshot(taskId) {
           WHERE target.task_id = :'task_id'
             AND other.status IN ('in_progress', 'verification', 'passed', 'failed')
         ), '[]'::jsonb),
+        'publication_execution_eligible',(SELECT control.publication_execution_is_eligible(:'task_id',e.execution_id) FROM control.executions e WHERE task_id=:'task_id' ORDER BY attempt DESC,execution_id DESC LIMIT 1),
+        'run_publication_authority', control.current_run_publication_authority(:'task_id'),
+        'protected_publication_authority',control.current_protected_publication_authority(:'task_id'),
+        'workflow_run', (SELECT to_jsonb(r) FROM control.workflow_runs r WHERE current_task_id=:'task_id' ORDER BY started_at DESC LIMIT 1),
+        'runtime_operations', COALESCE((SELECT jsonb_agg(to_jsonb(o) ORDER BY created_at) FROM control.runtime_operations o WHERE task_id=:'task_id' AND status<>'consumed'),'[]'::jsonb),
         'recovery', control.current_task_recovery_condition(:'task_id')
       );
     `,
     { task_id: taskId },
   )
 
-  return parseControlJson(result)
+  const snapshot=parseControlJson(result)
+  if(snapshot) { snapshot.exhaustion_audit=auditAttempts(snapshot); snapshot.binding_recovery=strictBindingRecoveryEvidence(snapshot); snapshot.preexecution_binding_recovery=preexecutionBindingEvidence(snapshot,repoRoot) }
+  return snapshot
 }
 
 
@@ -4893,7 +5021,7 @@ function executableAvailable(program) {
 }
 
 
-function executionPreflightRuntime(snapshot) {
+export function executionPreflightRuntime(snapshot) {
   const packet = snapshot.packet
   const project = projectRuntime(packet)
   const repositoryRoot = path.resolve(repoRoot, project.repository_root)
@@ -4918,7 +5046,7 @@ function executionPreflightRuntime(snapshot) {
   let parent = null
   let parentError = null
   try {
-    parent = resolveStackParent(packet.suit.stack_key, project)
+    parent = packet.preparation?.parent ?? resolveStackParent(packet.suit.stack_key, project)
   }
   catch (error) {
     parentError = error.message
@@ -4945,7 +5073,7 @@ function executionPreflightRuntime(snapshot) {
   )
   const parentConsistent = Boolean(
     parent && parentPresent && parentRemoteSha.ok &&
-    parentRemoteSha.value === parent.parent_sha && parentPrConsistent,
+    (parentRemoteSha.value === parent.parent_sha || parentContinuation({sameBranch:true,oldPresent:parentPresent,newPresent:gitCheck(repositoryRoot,['cat-file','-e',`${parentRemoteSha.value}^{commit}`]).ok,ancestor:gitCheck(repositoryRoot,['merge-base','--is-ancestor',parent.parent_sha,parentRemoteSha.value]).ok,containsOld:true}).safe) && parentPrConsistent,
   )
 
   const expectedBranch = `codex/${packet.suit.stack_key}/${packet.task.task_id.toLowerCase()}`
@@ -4970,7 +5098,7 @@ function executionPreflightRuntime(snapshot) {
       path: targetPath,
       branch: branch.value,
       changed_files: changedFiles,
-      status: !existsSync(targetPath) || !branch.ok
+      status: !existsSync(targetPath) ? 'missing' : !branch.ok
         ? 'invalid'
         : branch.value !== expectedBranch || preparedWorktree.branch_name !== expectedBranch || !containsParent
           ? 'stale'
@@ -5040,24 +5168,29 @@ function executionPreflightRuntime(snapshot) {
 }
 
 
-function runExecutionPreflight(snapshot, purpose = 'implementation') {
+export function runExecutionPreflight(snapshot, purpose = 'implementation') {
   const runtime = executionPreflightRuntime(snapshot)
+  const repairBaselineFiles =
+    verifiedRepairBaselineFiles(snapshot, runtime, purpose)
+
   return evaluateExecutionPreflight({
     packet: snapshot.packet,
     runtime,
     executions: snapshot.executions,
     serializationConflicts: snapshot.serialization_conflicts,
+    retryAccounting: snapshot.retry_accounting,
     purpose,
+    repairBaselineFiles,
   })
 }
 
 
-function preflightRecoveryPlan(snapshot, preflight) {
+export function preflightRecoveryPlan(snapshot, preflight) {
   const supervisorPlan = planSupervisorStep(snapshot)
   return {
     kind: preflight.kind === 'ready' ? 'act' : preflight.kind,
-    next_action: preflight.next_action,
-    failure_class: preflight.failure_class,
+    next_action: preflight.ready ? supervisorPlan.next_action : preflight.next_action,
+    failure_class: preflight.ready ? supervisorPlan.failure_class : preflight.failure_class,
     reason: preflight.reason,
     recoverable: preflight.recoverable,
     fingerprint: supervisorPlan.fingerprint,
@@ -5080,7 +5213,7 @@ function taskExecutionPreflight() {
     const preflight = runExecutionPreflight(snapshot)
     const recoveryPlan = preflightRecoveryPlan(snapshot, preflight)
     recordSupervisorRecovery(snapshot, recoveryPlan, {
-      idempotencyKey: `preflight:${preflight.fingerprint}`,
+      idempotencyKey: `${randomUUID()}:preflight:${preflight.fingerprint}`,
       status: preflight.ready ? 'resolved' : preflight.kind === 'stop' ? 'resolved' : 'active',
       condition: { preflight: true, preflight_fingerprint: preflight.fingerprint, checks: preflight.checks },
       metadata: { preflight: true, context: preflight.context },
@@ -5105,10 +5238,11 @@ function recordSupervisorRecovery(snapshot, plan, options = {}) {
     .at(-1)
   const resumeIdentity = supervisorResumeIdentity(task.task_id)
   const heartbeat = options.heartbeat ?? new Date().toISOString()
-  const nextWake = plan.next_action === 'wait-external'
-    ? new Date(Date.now() + 5 * 60 * 1000).toISOString()
+  const nextWake = plan.kind === 'wait' && !['wait-operator','wait-decision','safety-stop'].includes(plan.next_action) || plan.kind === 'reconcile'
+    ? new Date(Date.now() + recoveryBackoff(snapshot.runtime_operations?.at(-1)?.infra_retries ?? 0)).toISOString()
     : ''
   const condition = {
+    ...(plan.reason==='retry_budget_exhausted'?{exhaustion_audit:snapshot.exhaustion_audit}:{}),
     fingerprint: plan.fingerprint,
     reason: plan.reason,
     route: plan.kind,
@@ -5121,8 +5255,7 @@ function recordSupervisorRecovery(snapshot, plan, options = {}) {
     supervisor: 'task-supervisor-v1',
     ...(options.metadata ?? {}),
   }
-  const result = controlQuery(
-    `
+  const recordSql = `
       SELECT control.record_recovery_condition(
         :'resume_identity', :'idempotency_key', :'failure_class',
         NULLIF(:'error_code', ''), :'next_action', :'recoverable'::boolean,
@@ -5134,7 +5267,11 @@ function recordSupervisorRecovery(snapshot, plan, options = {}) {
         NULLIF(:'lease_expires_at', '')::timestamptz,
         :'condition'::jsonb, :'metadata'::jsonb, :'status'
       );
-    `,
+    `
+  const result = controlQuery(
+    options.acquireLease
+      ? initialSupervisorLeaseSql(recordSql.trim().replace(/^SELECT\s+/, '').replace(/;$/, ''))
+      : recordSql,
     {
       resume_identity: resumeIdentity,
       idempotency_key: options.idempotencyKey ?? `decision:${plan.fingerprint}:${plan.next_action}`,
@@ -5274,7 +5411,7 @@ function externalWatcher() {
       }
 
       const observedAt = new Date()
-      const observation = probeExternalDependency(descriptor)
+      const observation = localReceiptWatchObservation(recovery) ?? probeExternalDependency(descriptor)
       const transition = watchTransition(recovery, observation, observedAt)
       const recorded = recordExternalWatchResult(recovery, token, transition)
       let resume = null
@@ -5321,6 +5458,7 @@ function externalWatcher() {
       ok: false,
       command: 'external-watch',
       error: error.message,
+      ...(error.sqlstate ? recoveryErrorEnvelope(error, command) : {}),
       checked: results.length,
       results,
     }, 1)
@@ -5328,31 +5466,12 @@ function externalWatcher() {
 }
 
 
-function acquireSupervisorLease(resumeIdentity, owner, token, expiresAt) {
-  const result = controlQuery(
-    `
-      WITH acquired AS (
-        UPDATE control.recovery_states AS recovery_state
-        SET lease_owner = :'owner', lease_token = :'token',
-            lease_expires_at = :'expires_at'::timestamptz,
-            heartbeat_at = now(), updated_at = now()
-        WHERE resume_identity = :'resume_identity'
-          AND status = 'active'
-          AND (
-            heartbeat_at IS NULL
-            OR lease_expires_at IS NULL OR lease_expires_at <= now()
-            OR lease_token = :'token'
-          )
-        RETURNING to_jsonb(recovery_state) AS recovery
-      )
-      SELECT jsonb_build_object(
-        'acquired', EXISTS(SELECT 1 FROM acquired),
-        'recovery', COALESCE((SELECT recovery FROM acquired), 'null'::jsonb)
-      );
-    `,
-    { resume_identity: resumeIdentity, owner, token, expires_at: expiresAt },
-  )
-  return parseControlJson(result)
+function acquireSupervisorLease(snapshot, plan, owner, token, expiresAt) {
+  return recordSupervisorRecovery(snapshot, plan, {
+    idempotencyKey: `${token}:initial`,
+    leaseOwner: owner, leaseToken: token, leaseExpiresAt: expiresAt,
+    acquireLease: true,
+  })
 }
 
 
@@ -5401,30 +5520,7 @@ function reclaimDeadLocalSupervisorLease(recovery) {
   if (!pid || localProcessAlive(pid)) return false
 
   const result = controlQuery(
-    `
-      WITH reclaimed AS (
-        UPDATE control.recovery_states
-        SET lease_owner = NULL,
-            lease_token = NULL,
-            lease_expires_at = NULL,
-            updated_at = now(),
-            metadata = COALESCE(metadata, '{}'::jsonb) ||
-              jsonb_build_object(
-                'dead_local_lease_reclaimed_at', now(),
-                'dead_local_lease_owner', :'lease_owner'
-              )
-        WHERE resume_identity = :'resume_identity'
-          AND status = 'active'
-          AND lease_owner = :'lease_owner'
-          AND lease_token = :'lease_token'
-          AND lease_expires_at > now()
-        RETURNING recovery_state_id
-      )
-      SELECT jsonb_build_object(
-        'reclaimed',
-        EXISTS(SELECT 1 FROM reclaimed)
-      );
-    `,
+    `SELECT control.reclaim_local_supervisor_lease(:'resume_identity',:'lease_owner',:'lease_token');`,
     {
       resume_identity: recovery.resume_identity,
       lease_owner: recovery.lease_owner,
@@ -5482,9 +5578,21 @@ function taskSupervisor() {
   const token = randomUUID()
   const leaseExpiresAt = new Date(Date.now() + 80 * 60 * 1000).toISOString()
   const trail = []
-  let leaseAcquired = false
 
   try {
+    const currentRun=parseControlJson(controlQuery(`SELECT to_jsonb(r) FROM control.workflow_runs r WHERE current_task_id=:'task' AND status='running' ORDER BY started_at DESC LIMIT 1;`,{task:taskId}))
+    if(currentRun?.run_id && !currentRun.admitted_repair_id) controlQuery(`SELECT control.reconcile_ordinary_run_publication(:'run'::uuid);`,{run:currentRun.run_id})
+    const bindingSnapshot=supervisorSnapshot(taskId)
+    if(bindingSnapshot?.preexecution_binding_recovery) {
+      controlQuery(`SELECT control.${taskId === 'SS-LAUNCH-TEAM-001' ? 'reconcile_preexecution_team_bindings' : 'reconcile_preexecution_auth_bindings'}(:'task',:'proof'::jsonb);`,{task:taskId,proof:JSON.stringify(bindingSnapshot.preexecution_binding_recovery)})
+      controlQuery(`SELECT control.reconcile_ordinary_run_publication(:'run'::uuid);`,{run:currentRun.run_id})
+    }
+    if(bindingSnapshot?.binding_recovery) {
+      trustedControlQuery(`SELECT control.reconcile_strict_verification_binding(:'task',:'proof'::jsonb);`,{task:taskId,proof:JSON.stringify(bindingSnapshot.binding_recovery)})
+      if(bindingSnapshot.workflow_run?.run_id && bindingSnapshot.run_publication_authority?.authorized) controlQuery(`SELECT control.refresh_dot_admission(:'run'::uuid);`,{run:bindingSnapshot.workflow_run.run_id})
+    }
+    controlQuery(`SELECT control.record_retry_exhaustion_audit(:'task',:'proof'::jsonb);`,{task:taskId,proof:JSON.stringify(supervisorSnapshot(taskId).exhaustion_audit)})
+    controlQuery(`SELECT control.audit_product_attempts(:'task');`,{task:taskId})
     let snapshot = supervisorSnapshot(taskId)
     if (!snapshot?.packet?.task) throw new Error(`Unknown task: ${taskId}`)
 
@@ -5519,7 +5627,6 @@ function taskSupervisor() {
 
     snapshot = evaluateSupervisorParentSatisfaction(snapshot)
     let plan = planSupervisorStep(snapshot)
-    recordSupervisorRecovery(snapshot, plan)
 
     if (plan.kind !== 'act') {
       const successfulTerminal = ['task_complete', 'task_cancelled'].includes(plan.reason)
@@ -5536,13 +5643,12 @@ function taskSupervisor() {
     }
 
     const lease = acquireSupervisorLease(
-      supervisorResumeIdentity(taskId), owner, token, leaseExpiresAt,
+      snapshot, plan, owner, token, leaseExpiresAt,
     )
     if (!lease?.acquired) {
-      output({ ok: true, command: 'task-supervise', task_id: taskId, status: 'wait', reason: 'supervisor_lease_contended', trail })
+      output({ ok: true, command: 'task-supervise', task_id: taskId, status: 'wait', reason: 'supervisor_lease_contended', lease_expires_at: lease?.recovery?.lease_expires_at ?? null, trail })
       return
     }
-    leaseAcquired = true
 
     for (let step = 1; step <= 16; step++) {
       snapshot = evaluateSupervisorParentSatisfaction(supervisorSnapshot(taskId))
@@ -5571,13 +5677,11 @@ function taskSupervisor() {
         return
       }
 
-      if (['task-run', 'task-retry'].includes(plan.command)) {
+      if (['task-run', 'task-retry'].includes(plan.command) && !plan.operation) {
         const preflight = runExecutionPreflight(
           snapshot,
           plan.command === 'task-retry'
-            ? snapshot.executions.at(-1)?.status === 'succeeded'
-              ? 'verification-product-repair'
-              : 'retry'
+            ? retryPurpose(snapshot)
             : 'implementation',
         )
         const recoveryPlan = preflightRecoveryPlan(snapshot, preflight)
@@ -5592,7 +5696,7 @@ function taskSupervisor() {
         const keepLeaseForReconciliation = Boolean(reconciliationAction)
 
         const persistedRecovery = recordSupervisorRecovery(snapshot, recoveryPlan, {
-          idempotencyKey: `preflight:${preflight.fingerprint}`,
+          idempotencyKey: `${token}:preflight:${step}:${preflight.fingerprint}`,
           status: preflight.ready ? 'active' : preflight.kind === 'stop' ? 'resolved' : 'active',
           leaseOwner: preflight.ready || keepLeaseForReconciliation ? owner : '',
           leaseToken: preflight.ready || keepLeaseForReconciliation ? token : '',
@@ -5641,6 +5745,7 @@ function taskSupervisor() {
             continue
           }
 
+          controlQuery(`SELECT control.audit_product_attempts(:'task');`,{task:taskId})
           const failedSnapshot = supervisorSnapshot(taskId)
           const classified = classifySupervisorFailure({
             command: reconciliation.command,
@@ -5649,7 +5754,7 @@ function taskSupervisor() {
                 reconciliation.error ??
                 `${reconciliation.command}_failed`,
             },
-            attempt: plan.execution?.attempt,
+            attempt: failedSnapshot.retry_accounting?.consumed ?? plan.execution?.attempt,
             maxAttempts: snapshot.packet.retry_policy?.max_attempts,
           })
 
@@ -5736,12 +5841,13 @@ function taskSupervisor() {
       })
 
       if (child.payload?.ok !== true) {
+        controlQuery(`SELECT control.audit_product_attempts(:'task');`,{task:taskId})
         const failedSnapshot = supervisorSnapshot(taskId)
         const classified = classifySupervisorFailure({
           command: plan.command,
           payload: child.payload,
-          attempt: plan.execution?.attempt,
-          maxAttempts: snapshot.packet.retry_policy?.max_attempts,
+          attempt: failedSnapshot.retry_accounting?.consumed ?? currentExecution(failedSnapshot)?.attempt,
+          maxAttempts: failedSnapshot.packet.retry_policy?.max_attempts,
         })
         classified.fingerprint = planSupervisorStep(failedSnapshot).fingerprint
         classified.execution = planSupervisorStep(failedSnapshot).execution
@@ -5760,6 +5866,7 @@ function taskSupervisor() {
           leaseOwner: classified.kind === 'act' ? owner : '',
           leaseToken: classified.kind === 'act' ? token : '',
           leaseExpiresAt: classified.kind === 'act' ? leaseExpiresAt : '',
+          condition: child.payload?.condition ?? {},
           metadata: { child_command: plan.command, child_exit_code: child.result.code },
         })
 
@@ -5776,13 +5883,13 @@ function taskSupervisor() {
     const exhaustedSnapshot = supervisorSnapshot(taskId)
     const exhaustedPlan = {
       ...planSupervisorStep(exhaustedSnapshot),
-      kind: 'terminal', next_action: 'safety-stop', failure_class: 'safety-stop',
-      reason: 'supervisor_step_limit_reached', recoverable: false,
+      kind: 'wait', next_action: 'wait-external', failure_class: 'transient-infrastructure',
+      reason: 'supervisor_time_slice_yield', recoverable: true,
     }
     recordSupervisorRecovery(exhaustedSnapshot, exhaustedPlan, {
-      idempotencyKey: `${token}:step-limit`, status: 'resolved',
+      idempotencyKey: `${token}:step-limit`, status: 'active',
     })
-    output({ ok: false, command: 'task-supervise', task_id: taskId, error: 'supervisor_step_limit_reached', trail }, 1)
+    output({ ok: true, command: 'task-supervise', task_id: taskId, status: 'wait', recovery: exhaustedPlan, trail })
   }
   catch (error) {
     if (isControlDatabaseConnectivityError(error)) {
@@ -5797,14 +5904,22 @@ function taskSupervisor() {
       return
     }
 
-    if (leaseAcquired) {
+    if(error.sqlstate){
+      const envelope=recoveryErrorEnvelope(error,'task-supervisor')
+      try{recordControlFailure(taskId,'supervisor',envelope.error_code,envelope)}catch{/* Preserve the original typed denial when persistence is unavailable. */}
+      output({command:'task-supervise',task_id:taskId,...envelope,trail},1)
+      return
+    }
+
+    {
       try {
+        controlQuery(`SELECT control.audit_product_attempts(:'task');`,{task:taskId})
         const failedSnapshot = supervisorSnapshot(taskId)
         const currentPlan = planSupervisorStep(failedSnapshot)
         const classified = classifySupervisorFailure({
           command: 'task-supervise',
           payload: { error: error.message },
-          attempt: currentPlan.execution?.attempt,
+          attempt: failedSnapshot.retry_accounting?.consumed ?? currentPlan.execution?.attempt,
           maxAttempts: failedSnapshot.packet.retry_policy?.max_attempts,
         })
         classified.fingerprint = currentPlan.fingerprint
@@ -5820,7 +5935,8 @@ function taskSupervisor() {
         // control database leaves the lease to expire rather than guessing.
       }
     }
-    output({ ok: false, command: 'task-supervise', task_id: taskId, error: error.message, trail }, 1)
+    output({ ok: false, command: 'task-supervise', task_id: taskId, error: error.message,
+      ...(error.sqlstate ? recoveryErrorEnvelope(error, command) : {}), trail }, 1)
   }
 }
 
@@ -5997,7 +6113,7 @@ function taskEngine() {
         const decision =
           retryDecision(
             retryPolicy,
-            execution.attempt,
+            supervisorSnapshot(taskId).retry_accounting?.consumed ?? execution.attempt,
           )
 
         const verificationFailure =
@@ -6478,6 +6594,203 @@ function taskEngine() {
 }
 
 
+function attachRuntimeExecution(executionId) {
+  if (!process.env.BS_OPERATION_ID) return
+  controlQuery(`SELECT control.attach_runtime_execution(:'id'::uuid,:'execution_id'::bigint);`, { id: process.env.BS_OPERATION_ID, execution_id: String(executionId) })
+}
+
+function reconcileNativeAdmission(runId){
+ // Configuration authority is frozen by the trusted whole-bound admission.
+ // The watchdog diagnoses debt; it does not invent or mutate task mappings.
+ return parseControlJson(controlQuery(`SELECT control.reconcile_native_run_admission(:'run'::uuid);`,{run:runId}))
+}
+
+async function recoveryWatch() {
+  const scanLocks=path.join(repoRoot,'.local','runtime-run-locks')
+  mkdirSync(scanLocks,{recursive:true,mode:0o700})
+  if(process.env.BS_DOT_WATCH_LOCKED!=='1'){
+    const scan=execute('flock',['-n',path.join(scanLocks,'dot-watch.lock'),process.execPath,agentScriptPath,'recovery-watch'],{cwd:repoRoot,timeout:240000,env:{...process.env,BS_DOT_WATCH_LOCKED:'1'}})
+    if(scan.code===1&&!scan.stdout?.trim()){output({ok:true,command:'recovery-watch',outcomes:[{action:'watchdog_scan_already_owned'}]});return}
+    output(parseJson(scan.stdout,{ok:false,error:'watchdog_scan_unavailable'}),scan.code??1);return
+  }
+  try {
+    // One Level 0 scan precedes all evidence and mutation. Browser reads use the
+    // independent local cache, never this path. Watermark bounds event consumption.
+    const scanSql=currentStateSql().trim().replace(/;$/,'')
+    const compact=parseControlJson(controlQuery(`WITH ready AS MATERIALIZED(SELECT control.dot_watch_ready() ok) SELECT CASE WHEN (SELECT ok FROM ready) THEN jsonb_build_object('inputs',(${scanSql}),'event_watermark',(SELECT coalesce(max(event_id),0) FROM control.dot_wake_events WHERE consumed_at IS NULL),'cleanup_due',NOT EXISTS(SELECT 1 FROM control.dot_cycles WHERE started_at>now()-interval '15 minutes' AND outcomes @> '[{"action":"safe_cleanup_scan"}]'::jsonb)) ELSE jsonb_build_object('coalesced',true) END;`))
+    if(compact.coalesced){recordEgress('bs31',{coalesced:1});output({ok:true,command:'recovery-watch',outcomes:[{action:'duplicate_or_derived_wake_coalesced'}],codex_invoked_by_scan:false});return}
+    const inputs=compact.inputs,rows=classifyCurrent(inputs,repoRoot)
+    recordEgress('bs31',{cycles:1,[compact.event_watermark>0?'event_triggered':'scheduled']:1})
+    const subjects=new Map(inputs.map((i,index)=>i.run?[i.run.run_id,{input:i,health:rows[index]}]:null).filter(Boolean))
+    const candidates=inputs.filter(i=>i.run).map(i=>i.run)
+    const evidence=cycleEvidenceCache(task=>{recordEgress('bs31',{heavy_evidence_loads:1});return supervisorSnapshot(task)})
+    const outcomes=[{action:'compact_health_collection',ok:true,llm_used:false,event_watermark:compact.event_watermark}]
+    await isolateRecoveryCandidates(candidates, async candidate => {
+      const subject=subjects.get(candidate.run_id)
+      // Exact persisted operator approval has its own incident identity. Never
+      // derive a new incident fingerprint or pick a newer unrelated human gate.
+      if(subject.input.approved_incident){
+        const approved=subject.input.approved_incident
+        const dispatch=parseControlJson(controlQuery(`SELECT control.claim_approved_dot_incident(:'run'::uuid,:'incident'::uuid,:'grant'::bigint);`,{run:candidate.run_id,incident:approved.incident_id,grant:String(approved.grant_id)}))
+        if(dispatch.claimed){const child=spawn(process.execPath,[path.join(controlSourceRoot,'tooling/control-plane/runner/dot-recovery-worker.mjs'),dispatch.job.incident_id],{cwd:repoRoot,env:process.env,detached:true,stdio:'ignore'});child.on('error',()=>{});child.unref()}
+        outcomes.push({run_id:candidate.run_id,action:'approved_incident_dispatch',...dispatch});return
+      }
+      if(!requiresWatchdogAction(subject.input,subject.health)){
+        outcomes.push({run_id:candidate.run_id,eligible:false,reason:subject.health.state,event_id:subject.health.latest_event_id,generation:subject.health.incident_generation,llm_used:false});return
+      }
+      controlQuery(`SELECT control.reconcile_dot_recovery_completion(); SELECT control.reconcile_reviewed_evidence_incidents();`)
+      const lifecycle=parseControlJson(controlQuery(`SELECT control.reconcile_empty_run(:'run'::uuid);`,{run:candidate.run_id}))
+      if(lifecycle?.closed){outcomes.push({action:'obsolete_run_closed',...lifecycle});return}
+      if(!candidate.current_task_id && candidate.status==='running' && !candidate.stop_requested && !candidate.maintenance_requested){const admission=reconcileNativeAdmission(candidate.run_id);if(admission)outcomes.push({run_id:candidate.run_id,action:'native_admission_diagnostics',task_id:admission.task_id,reason:admission.reason})}
+      if(candidate.current_task_id){const auditSnapshot=evidence.get(candidate.current_task_id);if(!auditSnapshot){outcomes.push({run_id:candidate.run_id,task_id:candidate.current_task_id,action:'snapshot_recheck',owner:'Dot',retry_after_ms:30000});return}const audit=auditSnapshot.exhaustion_audit;controlQuery(`SELECT control.record_retry_exhaustion_audit(:'task',:'proof'::jsonb);`,{task:candidate.current_task_id,proof:JSON.stringify(audit)})}
+      const nativeGate=parseControlJson(controlQuery(`SELECT control.reconcile_native_reacceptance_gate(:'run'::uuid);`,{run:candidate.run_id}))
+      if(nativeGate.reconciled){outcomes.push({action:'native_reacceptance_guard_reconciled',...nativeGate});return}
+      const observed=subject.health
+      if(observed?.worker_alive){outcomes.push({run_id:candidate.run_id,eligible:false,reason:'worker_active'});return}
+      const recoveryNeeded=needsRecovery(observed)
+      const receiptSnapshot=recoveryNeeded&&candidate.current_task_id?evidence.get(candidate.current_task_id):null
+      // Due local implementation, verification and publication receipts need
+      // supervisor polling. Incident investigation starves that path and escalates
+      // a known wait. Admission, timers, run locks and human gates remain below.
+      const localRuntimeReceipt=candidate.status==='running'
+        && receiptSnapshot?.recovery?.status==='active' && receiptSnapshot.recovery.recoverable===true
+        && (localReceiptWatchObservation(receiptSnapshot.recovery) || receiptSnapshot.exhaustion_audit?.action==='same-attempt-recovery' && receiptSnapshot.exhaustion_audit.entries?.at(-1)?.classification==='VERIFIER_INFRA' && receiptSnapshot.executions?.at(-1)?.status==='succeeded')
+        && ['task-run','task-verify','task-publish'].includes(receiptSnapshot.runtime_operations?.find(op=>op.status!=='consumed')?.action)
+      if(recoveryNeeded && !localRuntimeReceipt) {
+        const dispatch=await dispatchRecovery({health:observed,snapshot:receiptSnapshot,claim:(run,fingerprint,family,evidence)=>parseControlJson(controlQuery(`SELECT control.claim_dot_recovery(:'run'::uuid,:'fingerprint',:'family',:'evidence'::jsonb);`,{run,fingerprint,family,evidence:JSON.stringify(evidence)})),start:job=>{const child=spawn(process.execPath,[path.join(controlSourceRoot,'tooling/control-plane/runner/dot-recovery-worker.mjs'),job.incident_id],{cwd:repoRoot,env:process.env,detached:true,stdio:'ignore'});child.on('error',()=>{});child.unref()}})
+        outcomes.push({run_id:candidate.run_id,action:'general_recovery_dispatch',...dispatch})
+        return
+      } else if(candidate.status==='failed' && candidate.workstream_slug!=='shared') {return}
+      if(candidate.current_task_id) controlQuery(`SELECT control.audit_product_attempts(:'task');`,{task:candidate.current_task_id})
+      if (candidate.current_task_id && candidate.workstream_slug === 'shared') {
+        const audit=parseControlJson(controlQuery(`SELECT control.reconcile_shared_retry_exhaustion(:'id'::uuid);`, { id:candidate.run_id }))
+        if(audit.accounting) outcomes.push({run_id:candidate.run_id,task_id:candidate.current_task_id,action:'shared_retry_exhaustion_audit',...audit})
+      }
+      const row = parseControlJson(controlQuery(`SELECT to_jsonb(r) FROM control.workflow_runs r WHERE run_id=:'id'::uuid;`, { id: candidate.run_id }))
+      if(row.admitted_repair_id && !row.stop_requested && !row.maintenance_requested) {
+        const refresh=execute(process.execPath,[agentScriptPath,'run-refresh-admission',row.run_id],{cwd:repoRoot,timeout:30000})
+        if(refresh.code!==0){outcomes.push({run_id:row.run_id,eligible:false,reason:'admission_scope_gate',details:parseJson(refresh.stdout,null)});return}
+      }
+      if(!row.admitted_repair_id && !row.stop_requested && !row.maintenance_requested) {
+        try { controlQuery(`SELECT control.reconcile_ordinary_run_publication(:'run'::uuid);`,{run:row.run_id}) } catch(error) {outcomes.push({run_id:row.run_id,eligible:false,reason:'ordinary_publication_scope_gate',error:error.message});return}
+      }
+      // Authority/accounting writes may have changed this subject. Re-read only
+      // Level 0 for it; reload evidence solely on an observed state transition.
+      if(row.current_task_id){
+        const targeted=scanSql+`\nWHERE s.key='run:${row.run_id}'`
+        const latest=parseControlJson(controlQuery(targeted))?.[0]
+        if(latest&&JSON.stringify(latest)!==JSON.stringify(subject.input))evidence.invalidate(row.current_task_id)
+      }
+      const snapshot = row.current_task_id ? evidence.get(row.current_task_id) : null
+      const plan = snapshot ? planSupervisorStep(snapshot) : null
+      if (plan && !['execution_in_flight','runtime_operation_resume','verification_required','implementation_required','publication_pending'].includes(plan.reason)) {
+        const incident=incidentIdentity(snapshot,plan)
+        controlQuery(`SELECT control.record_dot_incident(:'run'::uuid,:'task',NULLIF(:'execution','')::bigint,:'fingerprint',:'classification',:'evidence'::jsonb);`,{run:row.run_id,task:incident.task_id,execution:String(incident.execution_id??''),fingerprint:incident.root_fingerprint,classification:incident.classification,evidence:JSON.stringify({plan,recovery:snapshot.recovery,operations:snapshot.runtime_operations})})
+      }
+      if(snapshot) snapshot.watchdog_plan=plan
+      const eligible = runWakeEligibility(row, snapshot?.recovery, snapshot?.runtime_operations?.at(-1), Date.now(), snapshot)
+      if (!eligible.eligible) { outcomes.push({ run_id: row.run_id, ...eligible }); return }
+      const lockDir = path.join(repoRoot,'.local','runtime-run-locks')
+      mkdirSync(lockDir,{ recursive:true,mode:0o700 })
+      const lock = path.join(lockDir,`${row.run_id}.lock`)
+      if (receiptLocked({lock})) { outcomes.push({ run_id: row.run_id, eligible:false,reason:'controller_process_active' }); return }
+      const child = spawn('flock',['-n',lock,process.execPath,agentScriptPath,'run-recover',row.run_id],{ cwd:repoRoot,env:process.env,detached:true,stdio:'ignore' })
+      child.unref()
+      outcomes.push({ run_id:row.run_id,task_id:row.current_task_id,action:'existing_run_wake',pid:child.pid })
+    }, (candidate, error) => outcomes.push({run_id:candidate.run_id,action:'candidate_recovery_failure',...error}))
+    if(compact.cleanup_due){
+      const state=parseControlJson(controlQuery(`WITH prepared AS (SELECT task_id,metadata#>'{preparation,worktree}' AS worktree FROM control.tasks WHERE status='complete'), roots AS (SELECT worktree->>'worktree_path' AS root,worktree->>'branch_name' AS branch FROM prepared WHERE worktree->>'worktree_path' IS NOT NULL)
+      SELECT jsonb_build_object('tasks',(SELECT coalesce(jsonb_agg(jsonb_build_object('task_id',t.task_id,'status',t.status,'metadata',jsonb_build_object('preparation',jsonb_build_object('worktree',CASE WHEN t.status='complete' THEN t.metadata#>'{preparation,worktree}' END)),'active_references',(SELECT coalesce(jsonb_agg(root),'[]') FROM roots WHERE strpos(to_jsonb(t)::text,root)>0))),'[]') FROM control.tasks t),'runs',(SELECT coalesce(jsonb_agg(jsonb_build_object('status',r.status,'current_task_id',r.current_task_id,'active_references',(SELECT coalesce(jsonb_agg(branch),'[]') FROM roots WHERE strpos(to_jsonb(r)::text,branch)>0))),'[]') FROM control.workflow_runs r),'publications',(SELECT coalesce(jsonb_agg(jsonb_build_object('task_id',p.task_id,'state',p.state)),'[]') FROM control.pull_requests p));`))
+      const cleanup=cleanupIntegratedWorktrees({repository:{root:repoRoot,github_repository:githubRepository,integration_branch:'stg'},...state})
+      outcomes.push({action:'safe_cleanup_scan',...cleanup})
+    }
+    // Reuse this cycle's observation. A later state transition emits another
+    // identifier event; no duplicate collection/snapshot download is needed.
+    controlQuery(`SELECT jsonb_build_object('written',control.record_dot_health(:'rows'::jsonb),'cycle',control.record_dot_compact_cycle(:'outcomes'::jsonb,:'watermark'::bigint));`,{rows:JSON.stringify(rows),outcomes:JSON.stringify(outcomes),watermark:String(compact.event_watermark)})
+    try{await fetch('http://127.0.0.1:8787/api/observation',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rows,collected_at:new Date().toISOString(),watchdog_last_cycle:new Date().toISOString()}),signal:AbortSignal.timeout(1000)})}catch{/* Independent 2 minute cache fallback remains. */}
+    output({ok:true,command:'recovery-watch',outcomes,codex_invoked_by_scan:false})
+  } catch(error) {
+    output({command:'recovery-watch',...recoveryErrorEnvelope(error,'watchdog')},1)
+  }
+}
+function recoverWorkflowRun() {
+  const [runId] = args
+  if (!validRunId(runId)) { output({ok:false,error:'valid_run_id_required'},64); return }
+  try {
+    // Same SQL authority as BS20. Stable watchdog owner token is not an n8n
+    // owner token and cannot bypass a currently held controller lease.
+    for(let step=0;step<25;step++) {
+      const gate = parseControlJson(controlQuery(`SELECT control.workflow_run_gate(:'id'::uuid);`,{id:runId}))
+      if (!gate.should_continue) { output({ok:true,status:gate.reason,run:gate}); return }
+      // Binding reconciliation can invalidate the claim's contract. Refresh it
+      // through the existing frozen-run authority before acquisition, as the
+      // ordinary watchdog does; acquisition still owns every admission gate.
+      reconcileNativeAdmission(runId)
+      controlQuery(`SELECT control.reconcile_ordinary_run_publication(:'run'::uuid);`,{run:runId})
+      const acquisition = parseControlJson(controlQuery(`SELECT control.acquire_workflow_run_task(:'id'::uuid,'cp-batch-v2',:'fingerprint',:'token','runner');`,{id:runId,fingerprint:process.env.BS_BATCH_CONTROLLER_FINGERPRINT ?? 'c51e2846c1fe3966ac5705a2ba6e21c11804e4f1e0ea3be37a14ef2c47cca075',token:`selfheal:${runId}`}))
+      if (!acquisition.acquired && acquisition.action !== 'credit_completion') { output({ok:true,status:'wait',run_id:runId,acquisition}); return }
+      const taskId = acquisition.packet?.task?.task_id ?? acquisition.task_id
+      if (!taskId) throw new Error('acquisition_task_identity_missing')
+      let response = { status:'terminal',ok:true,recovery:{reason:'task_complete'} }
+      if (acquisition.action !== 'credit_completion') {
+        const result = execute(process.execPath,[agentScriptPath,'task-supervise',taskId],{cwd:repoRoot,timeout:75*60_000})
+        response = parseJson(result.stdout,null)
+        if (!response) throw new Error('malformed_supervisor_response')
+      }
+      if (response.ok && response.status === 'terminal' && response.recovery?.reason === 'task_complete') {
+        controlQuery(`SELECT control.record_workflow_task_success(:'id'::uuid,:'task_id',:'key');`,{id:runId,task_id:taskId,key:`${runId}:${taskId}`})
+        continue
+      }
+      if (response.status === 'terminal' && response.recovery?.reason === 'retry_budget_exhausted') {
+        controlQuery(`SELECT control.finish_workflow_run(:'id'::uuid,'failed');`,{id:runId})
+      }
+      output({ok:true,command:'run-recover',run_id:runId,task_id:taskId,status:response.status,response});return
+    }
+    output({ok:true,command:'run-recover',run_id:runId,status:'time-slice-yield'})
+  } catch(error) { output({command:'run-recover',run_id:runId,...recoveryErrorEnvelope(error,'run-recovery')},1) }
+}
+function taskReaccept() {
+ const [taskId]=args
+ if(!validTaskId(taskId)){output({ok:false,error:'valid_task_id_required'},64);return}
+ try {
+  const snapshot=supervisorSnapshot(taskId),execution=currentExecution(snapshot)
+  const classification=effectiveFailureClass(snapshot,executionFailureClass(snapshot))
+  if(execution?.status!=='failed' || !['verification-configuration','verification-infrastructure'].includes(classification) || snapshot.run_publication_authority?.authorized!==true) throw new Error('bounded_same_attempt_reacceptance_not_authorized')
+  const directory=path.join(repoRoot,'.local','dot-reacceptance',taskId,String(execution.execution_id),process.env.BS_OPERATION_INFRA_GENERATION ?? '0')
+  mkdirSync(directory,{recursive:true,mode:0o700})
+  const packetPath=path.join(directory,'packet.json')
+  // Guarded reacceptance runs a strict superset of the original mandatory plan.
+  const commands=mergeVerificationConfig(snapshot.packet.project?.verification_config,snapshot.packet.workstream?.verification_config).commands
+  const probePacket={...snapshot.packet,task:{...snapshot.packet.task,verification_plan:[...(snapshot.packet.task.verification_plan??[]),...commands.filter(c=>c.required!==false).map(c=>c.name)]}}
+  writeFileSync(packetPath,JSON.stringify(probePacket),{mode:0o600})
+  const result=execute(process.execPath,[path.join(controlSourceRoot,'tooling/control-plane/runner/task-verifier.mjs'),execution.worktree_path,packetPath,directory,'probe'],{cwd:repoRoot,timeout:70*60_000})
+  const probe=parseJson(result.stdout,null)
+  if(!probe?.passed){
+    if(probe?.ok && probe.checks?.length) recordControlFailure(taskId,'verification','same_attempt_verification_failed',{classification:probe.classification,verification_probe:probe})
+    output({ok:false,error:'same_attempt_verification_failed',classification:probe?.classification ?? {failure_class:'verification-infrastructure',recovery_action:'wait-external'},probe},1);return}
+  const original=execution.metadata?.verification_probe_verified_state
+  const currentState={base_sha:original?.base_sha,files:probe.verified_state?.files?.map(f=>({...f,object:existsSync(path.join(execution.worktree_path,f.file))?gitCheck(execution.worktree_path,['hash-object','--',f.file]).value:'deleted'}))}
+  currentState.fingerprint=publicationStateFingerprint(currentState)
+  const review=snapshot.retry_accounting?.classifications?.find(c=>Number(c.execution_id)===Number(execution.execution_id) && (c.source==='human'||c.evidence?.proof?.every(e=>e.version===2&&e.review?.source?.length)) && ['VERIFIER_INFRA','CONFIGURATION'].includes(c.classification))
+  const verifierPaths=review?.evidence?.verifier_paths ?? review?.evidence?.proof?.flatMap(e=>e.review.source.map(s=>s.path)).filter(f=>f.includes('/tests/')) ?? (original?.files??[]).map(f=>f.file).filter(f=>f.includes('/tests/') && !f.includes('/migrations/'))
+  const requiredChecks=probe.checks.filter(c=>c.required!==false && c.status!=='skipped').map(c=>c.name)
+  if(!review && publicationStateFingerprint(currentState)!==publicationStateFingerprint(original)) throw new Error('automatic_reacceptance_source_changed')
+  validateVerifierOnlyReacceptance({execution,probe,currentState,verifierPaths,requiredChecks})
+  // This is a derived bounded authority, not a fabricated human approval.
+  const approval=parseControlJson(trustedControlQuery(`SELECT control.record_trusted_reacceptance(:'task',:'payload'::jsonb);`,{task:taskId,payload:JSON.stringify({run_id:snapshot.workflow_run.run_id,execution_id:execution.execution_id,attempt:execution.attempt,verifier_paths:verifierPaths,required_checks:requiredChecks,classification,source_unchanged:true})},process.env.BS_CONTROL_VERIFIER_USER))
+  const accepted=parseControlJson(trustedControlQuery(`SELECT control.reaccept_dot_verifier_only(:'task',:'execution'::bigint,:'approval'::bigint,:'probe'::jsonb);`,{task:taskId,execution:String(execution.execution_id),approval:String(approval.event_id),probe:JSON.stringify(probe)}))
+  output({ok:true,command:'task-reaccept',task_id:taskId,...accepted})
+ }catch(error){output({ok:false,error:error.message,...(error.sqlstate?recoveryErrorEnvelope(error,'run-refresh-admission'):{classification:{failure_class:'operator-wait',recovery_action:'wait-operator'}})},1)}
+}
+function executionFailureClass(snapshot){return snapshot.failures?.filter(f=>!f.resolved_at && f.execution_id===currentExecution(snapshot)?.execution_id).at(-1)?.failure_class}
+
+function observableTaskStatus() {
+  const [taskId] = args
+  if(!validTaskId(taskId)) {output({ok:false,error:'valid_task_id_required'},64);return}
+  try { const snapshot=supervisorSnapshot(taskId); const profile=snapshot.packet.task.model_profile ?? snapshot.packet.project.default_model_profile ?? 'standard'; output({ok:true,command:'task-status',...taskStatusEvidence(snapshot,resolveCodexRoute(profile))}) }
+  catch(error) {output({ok:false,error:error.message,...(error.sqlstate?recoveryErrorEnvelope(error,command):{})},1)}
+}
+
 function validRunId(value) {
   return (
     typeof value === 'string' &&
@@ -6510,25 +6823,42 @@ function workflowRunStart() {
   }
 
   try {
+    const existing = parseControlJson(controlQuery(`SELECT to_jsonb(r) FROM control.workflow_runs r WHERE suit_slug=:'suit' AND status='running' ORDER BY started_at DESC LIMIT 1;`,{suit:suitSlug}))
+    let readiness = null
+    if (!existing) {
+      const packets = parseControlJson(controlQuery(`SELECT coalesce(jsonb_agg(control.generic_task_packet(t.task_id) ORDER BY t.priority,t.sequence,t.created_at,t.task_id),'[]'::jsonb) FROM (SELECT task_id,priority,sequence,created_at FROM control.tasks WHERE suit_slug=:'suit' AND status NOT IN('complete','cancelled') ORDER BY priority,sequence,created_at,task_id LIMIT :'max'::integer) t;`,{suit:suitSlug,max:String(maxTasks)}))
+      readiness = boundedVerificationReadiness(packets,maxTasks,{sourceRoot:repoRoot,requireExecutables:true})
+      if (!readiness.ready) { output({ok:false,command:'run-start',readiness,status:'not-ready',run_created:false,product_attempts_consumed:0},1); return }
+    }
+    if(!existing && !process.env.BS_CONTROL_VERIFIER_USER)throw Error('trusted_admission_credentials_required')
+    const sourceSha=runtimeIdentity(controlSourceRoot).commit
     const result =
       controlQuery(
         `
           SELECT
-            control.start_workflow_run(
+            control.start_prevalidated_workflow_run(
               :'suit_slug',
-              :'max_tasks'::integer
+              :'max_tasks'::integer,
+              :'plans'::jsonb,
+              :'source_sha',
+              :'controller_fingerprint'
             );
         `,
         {
           suit_slug: suitSlug,
           max_tasks: String(maxTasks),
+          plans:JSON.stringify(readiness?.plans??[]),
+          source_sha:sourceSha,
+          controller_fingerprint:process.env.BS_BATCH_CONTROLLER_FINGERPRINT??'',
         },
+        process.env.BS_CONTROL_VERIFIER_USER,
       )
 
     const run =
       parseControlJson(result)
 
     output({
+      readiness,
       ok: run?.started === true,
       command: 'run-start',
       run,
@@ -6539,6 +6869,7 @@ function workflowRunStart() {
       ok: false,
       command: 'run-start',
       error: error.message,
+      ...(error.sqlstate ? recoveryErrorEnvelope(error, command) : {}),
     }, 1)
   }
 }
@@ -6581,6 +6912,7 @@ function workflowRunCheck() {
       ok: false,
       command: 'run-check',
       error: error.message,
+      ...(error.sqlstate ? recoveryErrorEnvelope(error, command) : {}),
     }, 1)
   }
 }
@@ -6588,7 +6920,8 @@ function workflowRunCheck() {
 function workflowRunCompleteTask() {
   const [runId, taskId, idempotencyKey] = args
 
-  const attributed = taskId != null || idempotencyKey != null
+  if (!taskId || !idempotencyKey) { output({ok:false,command:'run-complete-task',error:'attributed_task_credit_required'},64); return }
+  const attributed = true
   if (!validRunId(runId) || (attributed && (!validTaskId(taskId) || !idempotencyKey))) {
     output({
       ok: false,
@@ -6630,6 +6963,7 @@ function workflowRunCompleteTask() {
       ok: false,
       command: 'run-complete-task',
       error: error.message,
+      ...(error.sqlstate ? recoveryErrorEnvelope(error, command) : {}),
     }, 1)
   }
 }
@@ -6657,7 +6991,7 @@ function workflowRunAcquireTask() {
     }, acquisition?.acquired === true || acquisition?.action === 'wait_for_owner' || acquisition?.reason === 'no_admitted_task' ? 0 : 1)
   }
   catch (error) {
-    output({ ok:false,command:'run-acquire-task',run_id:runId,error:error.message },1)
+    output({ ok:false,command:'run-acquire-task',run_id:runId,error:error.message,...(error.sqlstate?recoveryErrorEnvelope(error,command):{}) },1)
   }
 }
 
@@ -6702,6 +7036,7 @@ function workflowRunStop() {
       ok: false,
       command: 'run-stop',
       error: error.message,
+      ...(error.sqlstate ? recoveryErrorEnvelope(error, command) : {}),
     }, 1)
   }
 }
@@ -6730,6 +7065,56 @@ function workflowRunFinish() {
   }
 
   try {
+    if (status === 'failed') {
+      const currentResult =
+        controlQuery(
+          `
+            SELECT COALESCE(
+              (
+                SELECT jsonb_build_object(
+                  'run_id', run.run_id,
+                  'status', run.status,
+                  'max_tasks', run.max_tasks,
+                  'completed_tasks', run.completed_tasks,
+                  'current_task_id', run.current_task_id,
+                  'admitted_repair_id', run.admitted_repair_id,
+                  'run_revision', run.run_revision,
+                  'task_status', task.status
+                )
+                FROM control.workflow_runs run
+                LEFT JOIN control.tasks task
+                  ON task.task_id = run.current_task_id
+                WHERE run.run_id = :'run_id'::uuid
+              ),
+              'null'::jsonb
+            );
+          `,
+          {
+            run_id: runId,
+          },
+        )
+
+      const current =
+        parseControlJson(
+          currentResult,
+        )
+
+      if (
+        preserveAttributedRun(current,
+          current?.current_task_id ? planSupervisorStep(supervisorSnapshot(current.current_task_id)) : null,
+        )
+      ) {
+        output({
+          ok: true,
+          command: 'run-finish',
+          run: current,
+          preserved: true,
+          reason: 'attributed_incomplete_run_preserved',
+        })
+        return
+      }
+    }
+
     const result =
       controlQuery(
         `
@@ -6756,10 +7141,12 @@ function workflowRunFinish() {
       ok: false,
       command: 'run-finish',
       error: error.message,
+      ...(error.sqlstate ? recoveryErrorEnvelope(error, command) : {}),
     }, 1)
   }
 }
 
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
 switch (command) {
   case 'ping':
     ping()
@@ -6841,6 +7228,36 @@ switch (command) {
     taskSupervisor()
     break
 
+  case 'operator-gates':
+    if(!validRunId(args[0])) output({ok:false,error:'valid_run_id_required'},64)
+    else {try {output({ok:true,run_id:args[0],...parseControlJson(controlQuery(`SELECT control.operator_gate_review(:'run'::uuid)||jsonb_build_object('blocked_state',(SELECT jsonb_build_object('task_id',r.current_task_id,'reason',s.error_code,'condition',s.condition,'protected_paths',f.metadata->'protected_paths','requested_authorization',CASE WHEN s.error_code='publication_protected_path_operator_wait' THEN 'Separate protected-path review and authorization required for the listed files; unavailable through ordinary publication approval.' ELSE NULL END) FROM control.workflow_runs r LEFT JOIN control.recovery_states s ON s.current_task_id=r.current_task_id AND s.status='active' LEFT JOIN control.failures f ON f.failure_id=s.failure_id WHERE r.run_id=:'run'::uuid ORDER BY s.updated_at DESC LIMIT 1));`,{run:args[0]}))})}catch(error){output({ok:false,error:error.message,...(error.sqlstate?recoveryErrorEnvelope(error,command):{})},1)}}
+    break
+
+  case 'operator-gate-resolve':
+    output({ok:false,error:'dedicated_authenticated_operator_transport_required'},77)
+    break
+
+  case 'run-refresh-admission':
+    if(!validRunId(args[0])) output({ok:false,error:'valid_run_id_required'},64)
+    else {try { output({ok:true,...parseControlJson(controlQuery(`SELECT control.refresh_dot_admission(:'run'::uuid);`,{run:args[0]}))}) } catch(error) {output({ok:false,error:error.message,...(error.sqlstate?recoveryErrorEnvelope(error,'task-reaccept'):{classification:{failure_class:'operator-wait',recovery_action:'wait-operator'}})},1)}}
+    break
+
+  case 'task-reaccept':
+    taskReaccept()
+    break
+
+  case 'recovery-watch':
+    recoveryWatch()
+    break
+
+  case 'run-recover':
+    recoverWorkflowRun()
+    break
+
+  case 'task-status':
+    observableTaskStatus()
+    break
+
   case 'external-watch':
     externalWatcher()
     break
@@ -6909,4 +7326,6 @@ switch (command) {
         'run-finish <run-id> <status>',
       ],
     }, 64)
+}
+
 }
