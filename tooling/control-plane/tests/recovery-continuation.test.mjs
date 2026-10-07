@@ -80,8 +80,8 @@ test('missing local HTTP fixture waits without masking a genuine database defect
  const gate={status:'fail',failure_class:missing}
  assert.equal(classifyVerificationResults([gate]).recovery_action,'wait-operator')
  assert.equal(classifyVerificationResults([gate,{status:'fail',failure_class:'verification-product-defect'}]).recovery_action,'repair')
- assert.equal(verificationCommandFailureClass({name:'shop-payment-evidence-http',passed:false,output:'AssertionError: outsider read private evidence'}),'verification-product-defect')
- assert.equal(verificationCommandFailureClass({name:'other-test',passed:false,output:'Error: SHOP_EVIDENCE_ANON_KEY is required for the disposable local evidence test'}),'verification-product-defect')
+ assert.equal(verificationCommandFailureClass({name:'shop-payment-evidence-http',passed:false,output:'AssertionError: outsider read private evidence'}),'unknown-outcome')
+ assert.equal(verificationCommandFailureClass({name:'other-test',passed:false,output:'Error: SHOP_EVIDENCE_ANON_KEY is required for the disposable local evidence test'}),'unknown-outcome')
 })
 
 test('required HTTP test cannot pass by exiting zero with skipped coverage',()=>{
@@ -102,7 +102,7 @@ test('required HTTP test cannot pass by exiting zero with skipped coverage',()=>
   try {execFileSync(process.execPath,['--test','--test-reporter=tap',f],{encoding:'utf8',env})} catch(error){failed=error.stdout}
   assert.ok(failed)
   assert.equal(requiredVerificationEvidenceMissing({name:'shop-payment-evidence-http',output:failed}),false)
-  assert.equal(verificationCommandFailureClass({name:'shop-payment-evidence-http',passed:false,output:failed}),'verification-product-defect')
+  assert.equal(verificationCommandFailureClass({name:'shop-payment-evidence-http',passed:false,output:failed}),'unknown-outcome')
   writeFileSync(f,"throw new Error('SHOP_EVIDENCE_ANON_KEY is required for the disposable local evidence test');\n")
   let unavailable=''
   try {execFileSync(process.execPath,['--test','--test-reporter=tap',f],{encoding:'utf8',env})} catch(error){unavailable=error.stdout}
@@ -197,6 +197,6 @@ test('persisted explicit external/operator classes retain their route without a 
 test('missing Shop HTTP identity fixture is unavailable even when node reports a failed test file', () => {
  const output = '# AssertionError [ERR_ASSERTION]: Disposable local payment-evidence fixture is required; missing: SHOP_EVIDENCE_ANON_KEY, SHOP_EVIDENCE_OWNER_TOKEN\n# fail 1\n';
  assert.equal(verificationCommandFailureClass({ name: 'shop-payment-evidence-http', passed: false, output }), 'verification-required-check-unavailable');
- assert.equal(verificationCommandFailureClass({ name: 'shop-payment-evidence-http', passed: false, output: '# AssertionError [ERR_ASSERTION]: outsider read returned 200\n# fail 1\n' }), 'verification-product-defect');
- assert.equal(verificationCommandFailureClass({ name: 'another-check', passed: false, output }), 'verification-product-defect');
+ assert.equal(verificationCommandFailureClass({ name: 'shop-payment-evidence-http', passed: false, output: '# AssertionError [ERR_ASSERTION]: outsider read returned 200\n# fail 1\n' }), 'unknown-outcome');
+ assert.equal(verificationCommandFailureClass({ name: 'another-check', passed: false, output }), 'unknown-outcome');
 });

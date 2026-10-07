@@ -1,7 +1,7 @@
 import {runIsActionable} from './run-lifecycle.mjs'
 import {admissionDiagnostic} from './native-admission.mjs'
 import {exhaustionHealth} from './retry-exhaustion-audit.mjs'
-export const HEALTH_STATES = Object.freeze(['RUNNING','VERIFYING','REPAIRING','PUBLISHING','WAITING_TIMER','WAITING_OPERATOR','WAITING_DEPENDENCY','WAITING_ADMISSION','RECONCILING','STUCK','FAILED','COMPLETE'])
+export const HEALTH_STATES = Object.freeze(['RUNNING','VERIFYING','REPAIRING','PUBLISHING','WAITING_TIMER','WAITING_OPERATOR','WAITING_DEPENDENCY','WAITING_ADMISSION','RECONCILING','STUCK','FAILED','COMPLETE','INVESTIGATING','IDLE','LIMIT_REACHED','CLOSED','CANCELLED','STOPPED','SUPERSEDED','FINISHED'])
 const time = value => Number.isFinite(Date.parse(value)) ? Date.parse(value) : 0
 export function classifyHealth(input, process = {}, now = Date.now(), graceMs = 60_000) {
  const {run,task,execution:e,verification:v,recovery:r,operation:o,publication:p,policy} = input
@@ -20,10 +20,10 @@ export function classifyHealth(input, process = {}, now = Date.now(), graceMs = 
  publication_state:p?.state??(task?.status==='passed'?'pending':'not_started'),observed_at:new Date(now).toISOString(),llm_used:false}
  const incident=input.incident_recovery
  if(incident){base.recovery_owner=incident.owner;base.recovery_action=incident.action;base.incident_id=incident.incident_id;base.recovery_started=incident.started_at;base.next_recovery_check=incident.next_check_at}
- const state=(value,why,next,needs=false)=>({...base,state:value,why,next_automatic_action:next,operator_action_required:needs})
- if(run && !runIsActionable(run))return state('COMPLETE',`Historical lifecycle ended: ${run.status}`,'None — historical run')
- if(!run&&['complete','cancelled'].includes(task?.status))return state('COMPLETE','Task completed','None')
- if(incident?.action==='incident-investigate' && incident?.status==='running')return state('RECONCILING','Execution-bound failure evidence investigation is active','Codex must review complete artifacts and persist the bound classification')
+ const state=(value,why,next,needs=false)=>({...base,state:value,activity_state:base.history_only?'IDLE':value,lifecycle_outcome:run?.status?.toUpperCase()??task?.status?.toUpperCase()??null,why,next_automatic_action:next,operator_action_required:needs})
+ if(run && !runIsActionable(run))return state(run.status.toUpperCase(),`Historical lifecycle ended: ${run.status}`,'None — historical run')
+ if(!run&&['complete','cancelled'].includes(task?.status))return state(task.status.toUpperCase(),'Task '+task.status,'None')
+ if(incident?.action==='incident-investigate' && incident?.status==='running')return state('INVESTIGATING','Execution-bound failure evidence investigation is active','Codex must review complete artifacts and persist the bound classification')
  if(incident?.status==='human-gate')return state('WAITING_OPERATOR',incident.evidence?.reason??'Incident investigation established a human gate','Resolve the recorded incident gate',true)
  if(run?.stop_requested||run?.maintenance_requested)return state('WAITING_OPERATOR',run.stop_requested?'Run stop requested':'Run maintenance hold','Operator must release the existing run hold',true)
  const audit=r?.condition?.exhaustion_audit

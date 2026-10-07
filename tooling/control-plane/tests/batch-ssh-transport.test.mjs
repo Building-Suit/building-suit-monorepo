@@ -82,7 +82,7 @@ test('actual BS-20 completion expression preserves task identity and replay key'
 })
 test('known n8n cd prefix preserves acquire arguments', () => accepted(`cd / ; ${acquire}`, acquireArgs))
 test('known n8n cd prefix preserves attributed completion arguments', () => accepted(`cd / ; ${complete}`, completeArgs))
-test('ordinary one-argument completion remains delegated to database policy', () => accepted(`bs-agent run-complete-task ${runId}`, ['run-complete-task', runId]))
+test('anonymous completion fails closed before any database or credit action', () => rejected(`bs-agent run-complete-task ${runId}`, 'attributed_task_credit_required'))
 test('acquire preserves child exit status', () => accepted(acquire, acquireArgs, 23))
 test('completion preserves child exit status', () => accepted(complete, completeArgs, 23))
 test('unrelated supervisor command is unchanged', () => accepted(`bs-agent task-supervise ${taskId}`, ['task-supervise', taskId]))

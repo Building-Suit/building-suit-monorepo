@@ -1,3 +1,4 @@
+import {semanticRecoveryCause} from './recovery-catalog.mjs'
 import { createHash } from 'node:crypto'
 // Families describe lifecycle semantics. Error strings and clocks never identify incidents.
 export function recoveryFamily(health, snapshot={}) {
@@ -20,7 +21,7 @@ export function recoveryFamily(health, snapshot={}) {
  return 'unknown-lifecycle'
 }
 export function recoveryIdentity(h) {
- return createHash('sha256').update(JSON.stringify({run:h.run_id,task:h.task_id,execution:h.execution_id,evidence_revision:h.evidence_revision??null,state:'STUCK',dispatcher:'general-v1'})).digest('hex')
+ return createHash('sha256').update(JSON.stringify({run:h.run_id,task:h.task_id,cause_fingerprint:h.cause_fingerprint??null,state:'STUCK',dispatcher:'general-v2'})).digest('hex')
 }
 export function needsRecovery(h,now=Date.now()) {
  return !h?.history_only && (!h?.run_status||['running','failed'].includes(h.run_status)) && ['STUCK','WAITING_ADMISSION','RECONCILING'].includes(h?.state)&&h.operator_action_required===false&&!h.worker_alive&&now-Date.parse(h.observed_at)<90_000
@@ -28,7 +29,8 @@ export function needsRecovery(h,now=Date.now()) {
 export async function dispatchRecovery({health,snapshot,claim,start,now=Date.now()}) {
  if(!needsRecovery(health,now))return {claimed:false,reason:'progress_or_human_gate'}
  const family=recoveryFamily(health,snapshot)
- const result=await claim(health.run_id,recoveryIdentity(health),family,{health,safety_scope:'existing-bounded-run',runtime:'dot-general-v1'})
+ const cause=semanticRecoveryCause(family,snapshot)
+ const result=await claim(health.run_id,recoveryIdentity({...health,cause_fingerprint:cause.cause_fingerprint}),family,{health,...cause,safety_scope:'existing-bounded-run',runtime:'dot-general-v2'})
  if(result.claimed)await start(result.job)
  return result
 }

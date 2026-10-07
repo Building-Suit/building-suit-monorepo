@@ -148,6 +148,7 @@ if (process.argv[2] === '--worker') {
       const maxBytes = 50 * 1024 * 1024
       child.stdout.on('data', chunk => { stdout = (stdout + chunk).slice(-maxBytes); identity.last_output_at=new Date().toISOString() })
       child.stderr.on('data', chunk => { stderr = (stderr + chunk).slice(-maxBytes); identity.last_output_at=new Date().toISOString() })
+      child.on('spawn', () => {identity.child.launched_at=new Date().toISOString();heartbeat()})
       child.on('error', value => { finish(1, value.code ?? 'worker_spawn_failed') })
       child.stdin.on('error', value => { error = value.code ?? 'worker_stdin_failed' })
       child.on('close', code => { finish(code) })

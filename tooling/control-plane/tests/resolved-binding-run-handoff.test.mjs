@@ -1,3 +1,4 @@
+import {isolateRecoveryCandidates,recoveryErrorEnvelope} from '../runner/recovery-error.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
@@ -26,11 +27,12 @@ function recover({ runGate = 'continue', authority = 'current', acquisitionGate 
   const responses = []
   let contractCurrent = false
   const context = {
-    args: [runId],
+    recoveryErrorEnvelope, args: [runId],
     reconcileNativeAdmission: () => null,
     validRunId: value => value === runId,
     parseControlJson: value => value,
     parseJson: value => JSON.parse(value),
+    isolateRecoveryCandidates,
     process: { execPath: '/inert/node', env: {} },
     agentScriptPath: '/inert/bs-agent.mjs',
     repoRoot: '/inert/repository',

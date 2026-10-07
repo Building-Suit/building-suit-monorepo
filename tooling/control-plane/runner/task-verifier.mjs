@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {verifierReceipt} from './trusted-verifier-receipt.mjs'
 import {failureEvidence,processFailureCategory,evidenceDigest} from './failure-evidence.mjs'
 import {emptyComponentFixture} from './retry-exhaustion-audit.mjs'
 
@@ -120,7 +121,7 @@ const controlDatabase = {
   host: process.env.AUTOMATION_CONTROL_DB_HOST ?? process.env.BS_CONTROL_DB_HOST ?? '127.0.0.1',
   port: process.env.AUTOMATION_CONTROL_DB_PORT ?? process.env.BS_CONTROL_DB_PORT ?? '54329',
   database: process.env.AUTOMATION_CONTROL_DB_NAME ?? process.env.BS_CONTROL_DB_NAME ?? 'building_suit_control',
-  user: process.env.AUTOMATION_CONTROL_DB_USER ?? process.env.BS_CONTROL_DB_USER ?? 'bs_control_app',
+  user: process.env.BS_CONTROL_VERIFIER_USER ?? process.env.AUTOMATION_CONTROL_DB_USER ?? process.env.BS_CONTROL_DB_USER ?? 'bs_control_app',
   sslmode: process.env.AUTOMATION_CONTROL_DB_SSLMODE ?? process.env.BS_CONTROL_DB_SSLMODE ?? 'prefer',
 }
 
@@ -154,7 +155,28 @@ function liveCheck(check) {
     input:`SELECT control.update_verification_check(:'run_id'::bigint,:'name',:'status',NULLIF(:'exit_code','')::integer,:'summary',:'log_path',:'elapsed_ms'::bigint,:'command',:'required'::boolean,:'metadata'::jsonb);\n`,
   }), { successful: value => value.status === 0 && !value.error })
   if (result.status !== 0) {
-    throw new Error(`live_verification_update_failed:${(result.stderr ?? '').trim()}`)
+    const error = new Error('live_verification_update_failed')
+    error.component = 'verifier'; error.code = 'VERIFIER_DATABASE_UPDATE_FAILED'
+    throw error
+  }
+  const id = Number(result.stdout.trim().split('\n').at(-1))
+  if (Number.isSafeInteger(id) && id > 0) check.verification_id = id
+  if (check.log_path && check.status !== 'running' && check.started_at && check.verification_id) {
+    const identity = spawnSync('psql', args.slice(0, args.indexOf('--set')), {
+      encoding: 'utf8', env: { ...process.env, PGSSLMODE: controlDatabase.sslmode },
+      input: `SELECT jsonb_build_object('execution_id',v.execution_id,'run_id',(SELECT r.run_id FROM control.workflow_runs r WHERE r.current_task_id=e.task_id ORDER BY r.started_at DESC LIMIT 1)) FROM control.verification_runs v JOIN control.executions e USING(execution_id) WHERE v.verification_run_id=${Number(verificationRunId)};\n`,
+    })
+    if (identity.status !== 0) throw new Error('trusted_receipt_execution_identity_unavailable')
+    const boundIdentity = JSON.parse(identity.stdout.trim())
+    check.trusted_receipt = verifierReceipt({ check, artifactRoot: worktreePath, sourceRoot: worktreePath,
+      executionId: Number(boundIdentity.execution_id), runId: boundIdentity.run_id, verificationRunId, taskId: task.task_id,
+      startedAt: check.started_at, finishedAt: check.finished_at })
+    const receiptArgs = args.slice(0, args.indexOf('--set')).concat(['--set', `receipt=${JSON.stringify(check.trusted_receipt)}`])
+    const persisted = spawnSync('psql', receiptArgs, {
+      encoding: 'utf8', env: { ...process.env, PGSSLMODE: controlDatabase.sslmode },
+      input: `SELECT control.capture_verifier_receipt(${check.verification_id}, :'receipt'::jsonb);\n`,
+    })
+    if (persisted.status !== 0) throw new Error('trusted_receipt_persistence_refused')
   }
 }
 
@@ -300,6 +322,8 @@ function runCheck({
     summary: missingEvidence ? 'Required HTTP coverage did not execute all checks; disposable fixture evidence is still required.\n' + summary : summary,
     log_path:
       logPath,
+    started_at: new Date(started).toISOString(),
+    finished_at: new Date().toISOString(),
     elapsed_ms:
       Date.now() - started,
   }

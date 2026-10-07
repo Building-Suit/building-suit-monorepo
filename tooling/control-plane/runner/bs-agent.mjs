@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import {recoveryErrorEnvelope,isolateRecoveryCandidates,controlQueryError} from './recovery-error.mjs'
+import {boundedVerificationReadiness} from './bounded-verification-readiness.mjs'
 import {reviewedAdmissionBindings} from './native-admission.mjs'
 import {auditAttempts} from './retry-exhaustion-audit.mjs'
 import { dispatchRecovery,needsRecovery } from './dot-general-recovery.mjs'
@@ -836,7 +838,7 @@ function controlQuery(
     )
   }
 
-  return executeWithControlDatabaseRetry(() => execute(
+  const result = executeWithControlDatabaseRetry(() => execute(
     'psql',
     [
       '-X',
@@ -846,6 +848,7 @@ function controlQuery(
 
       '-v',
       'ON_ERROR_STOP=1',
+      '-v', 'VERBOSITY=verbose',
 
       '-h',
       controlDatabase.host,
@@ -870,6 +873,8 @@ function controlQuery(
       },
     },
   ))
+  if (!successful(result)) throw controlQueryError(result)
+  return result
 }
 
 function parseControlJson(result) {
@@ -6665,15 +6670,15 @@ async function recoveryWatch() {
     const health=execute(process.execPath,[path.join(controlSourceRoot,'tooling/control-plane/runner/dot-health-collector.mjs')],{cwd:repoRoot,timeout:25000})
     const candidates = parseControlJson(controlQuery(`SELECT coalesce(jsonb_agg(to_jsonb(r)),'[]'::jsonb) FROM control.workflow_runs r WHERE control.run_is_actionable(r.status,r.current_task_id,r.finished_at);`))
     const outcomes = [{action:'health_collection',ok:health.code===0,llm_used:false}]
-    for (const candidate of candidates) {
+    await isolateRecoveryCandidates(candidates, async candidate => {
       const lifecycle=parseControlJson(controlQuery(`SELECT control.reconcile_empty_run(:'run'::uuid);`,{run:candidate.run_id}))
-      if(lifecycle?.closed){outcomes.push({action:'obsolete_run_closed',...lifecycle});continue}
+      if(lifecycle?.closed){outcomes.push({action:'obsolete_run_closed',...lifecycle});return}
       if(!candidate.current_task_id && candidate.status==='running' && !candidate.stop_requested && !candidate.maintenance_requested){const admission=reconcileNativeAdmission(candidate.run_id);if(admission)outcomes.push({run_id:candidate.run_id,action:'native_admission_diagnostics',task_id:admission.task_id,reason:admission.reason})}
-      if(candidate.current_task_id){const auditSnapshot=supervisorSnapshot(candidate.current_task_id);if(!auditSnapshot){outcomes.push({run_id:candidate.run_id,task_id:candidate.current_task_id,action:'snapshot_recheck',owner:'Dot',retry_after_ms:30000});continue}const audit=auditSnapshot.exhaustion_audit;controlQuery(`SELECT control.record_retry_exhaustion_audit(:'task',:'proof'::jsonb);`,{task:candidate.current_task_id,proof:JSON.stringify(audit)})}
+      if(candidate.current_task_id){const auditSnapshot=supervisorSnapshot(candidate.current_task_id);if(!auditSnapshot){outcomes.push({run_id:candidate.run_id,task_id:candidate.current_task_id,action:'snapshot_recheck',owner:'Dot',retry_after_ms:30000});return}const audit=auditSnapshot.exhaustion_audit;controlQuery(`SELECT control.record_retry_exhaustion_audit(:'task',:'proof'::jsonb);`,{task:candidate.current_task_id,proof:JSON.stringify(audit)})}
       const nativeGate=parseControlJson(controlQuery(`SELECT control.reconcile_native_reacceptance_gate(:'run'::uuid);`,{run:candidate.run_id}))
-      if(nativeGate.reconciled){outcomes.push({action:'native_reacceptance_guard_reconciled',...nativeGate});continue}
+      if(nativeGate.reconciled){outcomes.push({action:'native_reacceptance_guard_reconciled',...nativeGate});return}
       const observed=parseControlJson(controlQuery(`SELECT snapshot FROM control.dot_health_current WHERE run_id=:'run'::uuid;`,{run:candidate.run_id}))
-      if(observed?.worker_alive){outcomes.push({run_id:candidate.run_id,eligible:false,reason:'worker_active'});continue}
+      if(observed?.worker_alive){outcomes.push({run_id:candidate.run_id,eligible:false,reason:'worker_active'});return}
       const recoveryNeeded=needsRecovery(observed)
       const receiptSnapshot=recoveryNeeded&&candidate.current_task_id?supervisorSnapshot(candidate.current_task_id):null
       // Due local implementation, verification and publication receipts need
@@ -6686,8 +6691,8 @@ async function recoveryWatch() {
       if(recoveryNeeded && !localRuntimeReceipt) {
         const dispatch=await dispatchRecovery({health:observed,snapshot:receiptSnapshot,claim:(run,fingerprint,family,evidence)=>parseControlJson(controlQuery(`SELECT control.claim_dot_recovery(:'run'::uuid,:'fingerprint',:'family',:'evidence'::jsonb);`,{run,fingerprint,family,evidence:JSON.stringify(evidence)})),start:job=>{const child=spawn(process.execPath,[path.join(controlSourceRoot,'tooling/control-plane/runner/dot-recovery-worker.mjs'),job.incident_id],{cwd:repoRoot,env:process.env,detached:true,stdio:'ignore'});child.on('error',()=>{});child.unref()}})
         outcomes.push({run_id:candidate.run_id,action:'general_recovery_dispatch',...dispatch})
-        continue
-      } else if(candidate.status==='failed' && candidate.workstream_slug!=='shared') {continue}
+        return
+      } else if(candidate.status==='failed' && candidate.workstream_slug!=='shared') {return}
       if(candidate.current_task_id) controlQuery(`SELECT control.audit_product_attempts(:'task');`,{task:candidate.current_task_id})
       if (candidate.current_task_id && candidate.workstream_slug === 'shared') {
         controlQuery(`SELECT control.audit_product_attempts(:'task');`, { task:candidate.current_task_id })
@@ -6697,10 +6702,10 @@ async function recoveryWatch() {
       const row = parseControlJson(controlQuery(`SELECT to_jsonb(r) FROM control.workflow_runs r WHERE run_id=:'id'::uuid;`, { id: candidate.run_id }))
       if(row.admitted_repair_id && !row.stop_requested && !row.maintenance_requested) {
         const refresh=execute(process.execPath,[agentScriptPath,'run-refresh-admission',row.run_id],{cwd:repoRoot,timeout:30000})
-        if(refresh.code!==0){outcomes.push({run_id:row.run_id,eligible:false,reason:'admission_scope_gate',details:parseJson(refresh.stdout,null)});continue}
+        if(refresh.code!==0){outcomes.push({run_id:row.run_id,eligible:false,reason:'admission_scope_gate',details:parseJson(refresh.stdout,null)});return}
       }
       if(!row.admitted_repair_id && !row.stop_requested && !row.maintenance_requested) {
-        try { controlQuery(`SELECT control.reconcile_ordinary_run_publication(:'run'::uuid);`,{run:row.run_id}) } catch(error) {outcomes.push({run_id:row.run_id,eligible:false,reason:'ordinary_publication_scope_gate',error:error.message});continue}
+        try { controlQuery(`SELECT control.reconcile_ordinary_run_publication(:'run'::uuid);`,{run:row.run_id}) } catch(error) {outcomes.push({run_id:row.run_id,eligible:false,reason:'ordinary_publication_scope_gate',error:error.message});return}
       }
       const snapshot = row.current_task_id ? supervisorSnapshot(row.current_task_id) : null
       const plan = snapshot ? planSupervisorStep(snapshot) : null
@@ -6710,15 +6715,15 @@ async function recoveryWatch() {
       }
       if(snapshot) snapshot.watchdog_plan=plan
       const eligible = runWakeEligibility(row, snapshot?.recovery, snapshot?.runtime_operations?.at(-1), Date.now(), snapshot)
-      if (!eligible.eligible) { outcomes.push({ run_id: row.run_id, ...eligible }); continue }
+      if (!eligible.eligible) { outcomes.push({ run_id: row.run_id, ...eligible }); return }
       const lockDir = path.join(repoRoot,'.local','runtime-run-locks')
       mkdirSync(lockDir,{ recursive:true,mode:0o700 })
       const lock = path.join(lockDir,`${row.run_id}.lock`)
-      if (receiptLocked({lock})) { outcomes.push({ run_id: row.run_id, eligible:false,reason:'controller_process_active' }); continue }
+      if (receiptLocked({lock})) { outcomes.push({ run_id: row.run_id, eligible:false,reason:'controller_process_active' }); return }
       const child = spawn('flock',['-n',lock,process.execPath,agentScriptPath,'run-recover',row.run_id],{ cwd:repoRoot,env:process.env,detached:true,stdio:'ignore' })
       child.unref()
       outcomes.push({ run_id:row.run_id,task_id:row.current_task_id,action:'existing_run_wake',pid:child.pid })
-    }
+    }, (candidate, error) => outcomes.push({run_id:candidate.run_id,action:'candidate_recovery_failure',...error}))
     const lastCleanup=parseControlJson(controlQuery(`SELECT jsonb_build_object('due',NOT EXISTS(SELECT 1 FROM control.dot_cycles WHERE started_at>now()-interval '15 minutes' AND outcomes @> '[{"action":"safe_cleanup_scan"}]'::jsonb));`))
     if(lastCleanup.due){
       const state=parseControlJson(controlQuery(`SELECT jsonb_build_object('tasks',(SELECT coalesce(jsonb_agg(to_jsonb(t)),'[]') FROM control.tasks t),'runs',(SELECT coalesce(jsonb_agg(to_jsonb(r)),'[]') FROM control.workflow_runs r),'publications',(SELECT coalesce(jsonb_agg(to_jsonb(p)),'[]') FROM control.pull_requests p));`))
@@ -6731,7 +6736,7 @@ async function recoveryWatch() {
     controlQuery(`INSERT INTO control.dot_cycles(outcomes) VALUES(:'outcomes'::jsonb); UPDATE control.dot_wake_events SET consumed_at=now() WHERE consumed_at IS NULL;`,{outcomes:JSON.stringify(outcomes)})
     output({ok:true,command:'recovery-watch',outcomes,codex_invoked_by_scan:false})
   } catch(error) {
-    output({ok:false,command:'recovery-watch',reason:'control_database_unavailable',retry_after_ms:30_000,error:error.message},1)
+    output({command:'recovery-watch',...recoveryErrorEnvelope(error,'watchdog')},1)
   }
 }
 function recoverWorkflowRun() {
@@ -6768,7 +6773,7 @@ function recoverWorkflowRun() {
       output({ok:true,command:'run-recover',run_id:runId,task_id:taskId,status:response.status,response});return
     }
     output({ok:true,command:'run-recover',run_id:runId,status:'time-slice-yield'})
-  } catch(error) { output({ok:false,command:'run-recover',run_id:runId,error:error.message,classification:{failure_class:'transient-infrastructure',recovery_action:'wait-external'}},1) }
+  } catch(error) { output({command:'run-recover',run_id:runId,...recoveryErrorEnvelope(error,'run-recovery')},1) }
 }
 function taskReaccept() {
  const [taskId]=args
@@ -6844,6 +6849,13 @@ function workflowRunStart() {
   }
 
   try {
+    const existing = parseControlJson(controlQuery(`SELECT to_jsonb(r) FROM control.workflow_runs r WHERE suit_slug=:'suit' AND status='running' ORDER BY started_at DESC LIMIT 1;`,{suit:suitSlug}))
+    let readiness = null
+    if (!existing) {
+      const packets = parseControlJson(controlQuery(`SELECT coalesce(jsonb_agg(control.task_packet(t.task_id) ORDER BY t.sequence,t.task_id),'[]'::jsonb) FROM (SELECT task_id,sequence FROM control.tasks WHERE suit_slug=:'suit' AND status NOT IN('complete','cancelled') ORDER BY sequence,task_id LIMIT :'max'::integer) t;`,{suit:suitSlug,max:String(maxTasks)}))
+      readiness = boundedVerificationReadiness(packets,maxTasks)
+      if (!readiness.ready) { output({ok:false,command:'run-start',readiness,status:'not-ready',run_created:false,product_attempts_consumed:0},1); return }
+    }
     const result =
       controlQuery(
         `
@@ -6863,6 +6875,7 @@ function workflowRunStart() {
       parseControlJson(result)
 
     output({
+      readiness,
       ok: run?.started === true,
       command: 'run-start',
       run,
@@ -6922,7 +6935,8 @@ function workflowRunCheck() {
 function workflowRunCompleteTask() {
   const [runId, taskId, idempotencyKey] = args
 
-  const attributed = taskId != null || idempotencyKey != null
+  if (!taskId || !idempotencyKey) { output({ok:false,command:'run-complete-task',error:'attributed_task_credit_required'},64); return }
+  const attributed = true
   if (!validRunId(runId) || (attributed && (!validTaskId(taskId) || !idempotencyKey))) {
     output({
       ok: false,

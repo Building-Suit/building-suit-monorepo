@@ -5,7 +5,7 @@ import { operationHasAuthoritativeSuccess } from '../runner/bounded-publication.
 import { publicationHoldOutcome } from '../runner/recovery-evidence.mjs'
 import { planSupervisorStep, supervisorStateFingerprint } from '../runner/task-supervisor.mjs'
 import { runWakeEligibility } from '../runner/selfhealing.mjs'
-import { classifyPublicationFiles, evaluateVerificationAuthority, planPublicationReconciliation } from '../runner/publication-preflight.mjs'
+import { classifyPublicationFiles, evaluateVerificationAuthority } from '../runner/publication-preflight.mjs'
 const authority={authorized:true,mode:'ordinary-draft',run_id:'original-run',task_id:'CP-BOUND-001',contract_fingerprint:'pinned-contract'}
 const fixture=()=>({packet:{task:{task_id:'CP-BOUND-001',status:'passed',engine_stage:'publication'}},workflow_run:{status:'running',completed_tasks:0,max_tasks:9},executions:[{execution_id:10,attempt:1,status:'succeeded'}],verification_runs:[{execution_id:10,verification_run_id:11,status:'passed'}],run_publication_authority:authority})
 test('bounded 1 ordinary authorized PASS bypasses global hold and resumes publication',()=>{const s=fixture();assert.equal(publicationHoldOutcome({BS_CONTROL_PUBLICATION_HOLD:'1'},authority,'CP-BOUND-001'),null);assert.equal(planSupervisorStep(s).command,'task-publish');assert.equal(evaluateVerificationAuthority({verification:{execution_id:10,status:'passed',state_fingerprint:'same'},executionId:10,stateFingerprint:'same'}).authoritative,true)})

@@ -57,5 +57,6 @@ export function repairRetryDecision(policy, previousExecution, accounting = null
       || previousExecution.task_id && runningExecution.task_id !== previousExecution.task_id) throw new Error('same_task_running_reservation_required')
     return { allowed: true, resumed: true, next_attempt: runningExecution.attempt, next_profile: runningExecution.model_profile, max_attempts: validated.max_attempts }
   }
-  return retryDecision(validated, validated.policy_id === 'shared-foundation-five' ? accounting?.consumed ?? previousExecution.attempt : previousExecution.attempt)
+  if(accounting && (!Number.isSafeInteger(accounting.consumed)||accounting.consumed<1))return {allowed:false,reason:'reviewed_product_evidence_required',max_attempts:validated.max_attempts}
+  return retryDecision(validated, accounting?.consumed ?? previousExecution.attempt)
 }

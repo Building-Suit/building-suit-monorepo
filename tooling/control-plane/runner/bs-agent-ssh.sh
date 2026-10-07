@@ -366,10 +366,10 @@ case "$REQUESTED_COMMAND" in
       exit 64
     fi
 
-    # Retain the one-argument ordinary-run interface. The database continues
-    # to reject it for attributed/batch claims; the SSH adapter grants no credit.
+    # Anonymous credit cannot attribute a publication or task. Fail closed.
     if [[ -z "$TASK_ID" && -z "$IDEMPOTENCY_KEY" ]]; then
-      exec "$NODE_BIN" "$AGENT" run-complete-task "$RUN_ID"
+      printf '%s\n' '{"ok":false,"error":"attributed_task_credit_required"}'
+      exit 64
     fi
 
     # BS-20 emits an exact run:task key. Never evaluate a command string.

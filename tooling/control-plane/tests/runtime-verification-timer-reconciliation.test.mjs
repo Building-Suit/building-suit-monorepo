@@ -1,3 +1,4 @@
+import {isolateRecoveryCandidates,recoveryErrorEnvelope} from '../runner/recovery-error.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
@@ -42,6 +43,7 @@ async function cycle(state, { observed = health(state), locked = false, scopeHel
   const queries = [], launches = [], outputs = []
   let investigations = 0
   const watch = runInNewContext(`(${watchSource.trim()})`, {
+    isolateRecoveryCandidates,recoveryErrorEnvelope,
     process: { execPath: process.execPath, env: {BS_DOT_WATCH_LOCKED: '1'} }, path,
     repoRoot: '/fixture', controlSourceRoot: '/runtime', agentScriptPath: '/runtime/bs-agent.mjs',
     supervisorSnapshot: () => structuredClone(state), parseControlJson: value => value,

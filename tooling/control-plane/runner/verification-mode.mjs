@@ -568,5 +568,5 @@ export function verificationCommandFailureClass({ name, required = true, passed,
        /^(?:#\s*)?AssertionError \[ERR_ASSERTION\]: Disposable local payment-evidence fixture is required; missing: SHOP_EVIDENCE_[A-Z_]+(?:, SHOP_EVIDENCE_[A-Z_]+)*$/m.test(output))) {
     return 'verification-required-check-unavailable'
   }
-  return 'verification-product-defect'
+  return 'unknown-outcome'
 }
