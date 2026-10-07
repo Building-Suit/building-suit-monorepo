@@ -2215,6 +2215,7 @@ function taskVerify() {
   if (!process.env.BS_OPERATION_ID) { taskSupervisor(); return }
   const [taskId] = args
   let verificationLifecycleStage = 'load'
+  let resumedVerification = null
 
   if (!validTaskId(taskId)) {
     output({
@@ -2359,6 +2360,7 @@ function taskVerify() {
       execution.execution_id,
       packet.task.verification_mode ?? 'focused',
     )
+    if (verificationRun.resumed) resumedVerification = { ...verificationRun, execution_id: execution.execution_id }
 
     verificationLifecycleStage = 'execute'
 
@@ -2597,6 +2599,46 @@ function taskVerify() {
     }, finalResult.passed ? 0 : 1)
   }
   catch (error) {
+    // A restarted verifier cannot reset an already captured immutable check.
+    // Fail the interrupted generation through ordinary APIs, retaining all
+    // terminal evidence, so the same execution can receive a fresh verification.
+    if (verificationLifecycleStage === 'execute' && resumedVerification
+      && error.sqlstate === 'P0001' && /\bimmutable_verifier_receipt_conflict\b/.test(error.message)
+      && parseControlJson(controlQuery(`
+        SELECT EXISTS (
+          SELECT 1 FROM control.verification_results
+          WHERE verification_run_id = :'verification_run_id'::bigint AND trusted_receipt IS NOT NULL
+        ) AND NOT EXISTS (
+          SELECT 1 FROM control.verification_results
+          WHERE verification_run_id = :'verification_run_id'::bigint
+            AND NOT (check_name = 'verifier-resume-infrastructure' AND status = 'fail'
+              AND COALESCE(command,'') = '' AND trusted_receipt IS NULL
+              AND metadata->>'selection_reason' IS NOT DISTINCT FROM 'interrupted_verification_has_immutable_receipts'
+              AND metadata->>'failure_class' IS NOT DISTINCT FROM 'verification-infrastructure')
+            AND (status IN ('fail','not_run','unavailable')
+              OR (status = 'pass' AND COALESCE(metadata->>'required','true') <> 'false'
+                AND (trusted_receipt IS NULL OR trusted_registration IS NULL)))
+        );
+      `, { verification_run_id: String(resumedVerification.verification_run_id) })) === true) {
+      const classification = { failure_class: 'verification-infrastructure', recovery_action: 'wait-external' }
+      const check = {
+        name: 'verifier-resume-infrastructure', command: null, required: true, status: 'fail',
+        failure_class: classification.failure_class, exit_code: 1, log_path: null, elapsed_ms: 0,
+        selection_reason: 'interrupted_verification_has_immutable_receipts',
+        summary: 'Resumed verification attempted to reset an immutable trusted receipt; fresh same-execution verification required.',
+      }
+      const id = resumedVerification.verification_run_id
+      recordVerification(id, check)
+      skipUnselectedVerificationChecks(id, new Set([check.name]))
+      const result = finalizeVerification(taskId, id)
+      recordControlFailure(taskId, 'verification', check.selection_reason, {
+        verification_run_id: id, checks: [check], classification, interrupted_error: error.message,
+      })
+      output({ ok: false, command: 'task-verify', task_id: taskId,
+        execution_id: resumedVerification.execution_id, verification_run_id: id,
+        error: check.selection_reason, classification, result }, 1)
+      return
+    }
     if (error.sqlstate) {
       const envelope=recoveryErrorEnvelope(error,'verification')
       recordControlFailure(taskId,'verification',error.sqlstate,{...envelope,classification:envelope.classification})
