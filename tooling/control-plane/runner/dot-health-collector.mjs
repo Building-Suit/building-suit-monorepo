@@ -1,6 +1,5 @@
 import {recordEgress} from './dot-egress-telemetry.mjs'
 import {controlQueryError} from './recovery-error.mjs'
-import {historicalHealth} from './run-lifecycle.mjs'
 import { readFileSync,readdirSync,existsSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import path from 'node:path'
