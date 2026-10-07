@@ -261,3 +261,75 @@ that binds verification checks additionally requires registered v2 verifier
 evidence before catalog reuse. Pre-verification infrastructure failures do not
 require unrelated verifier evidence. Incident patches cannot replace the trusted
 verifier, release installer, operator or credential boundary modules.
+
+### Supervisor lifecycle protocol (`cp-lifecycle-v1`)
+
+BS-20 validates and starts the original bounded run, then delegates to
+`bs-agent run-supervise <run-id>`. The Supervisor owns claim, implementation,
+verification, repair, publication, exact completion credit and next acquisition.
+`run-recover` is a compatibility alias of this same entry point. BS-20 has no
+independent acquire/credit loop. Verifier and Publisher retain their evidence,
+source and authority boundaries. BS-22 retains all human authorization.
+
+Migration 097 adds a private durable Supervisor inbox. Authoritative task,
+execution, verification, publication, credit, dependency and operator changes
+signal the affected existing run and frozen dependent runs. Claimed inbox
+versions are acknowledged with a token; an older claim cannot acknowledge a
+newer change. Expired claims can be reclaimed. The persistent Supervisor service
+polls compact pending identities every five seconds, independently of webhooks
+and Dot. In-flight operations use bounded wake times. Unknown, dependency and
+human waits require an authoritative change. Graceful service shutdown releases
+its claim; a crash leaves a bounded three-minute lease.
+
+Dot is an outside watchdog. Healthy handoffs never dispatch ordinary work from
+BS-31. Missing progress, dead receipts, inconsistent states and explicit incidents
+may request a durable Supervisor wake or use the existing bounded incident owner.
+Derived audits, recovery observations and classifications do not recursively
+trigger the normal engine. Existing audit deduplication, local browser cache,
+paginated history and compact database projections remain in use.
+
+Failed generations use the common trusted classification adapter and an immutable
+`lifecycle_failure_generations` record with a current pointer. UNKNOWN takes
+precedence over stale legacy product verdicts. Only execution-bound reviewed
+product evidence can authorize a product charge. Historical classifications are
+preserved. Verifier recovery is reserved against task, run, execution, attempt,
+source changes, plan, verifier implementation, configuration and failed-check
+semantics. Poll timestamps, audit versions and new verification row IDs do not
+grant another action. The original failed generation's input fingerprint survives
+later reviews. A same-execution verification requires repaired inputs and can
+run only once for that fingerprint; an unchanged result waits for actual repair.
+
+Optional `verification_config.evidence_inputs` declares up to 32 independent
+verification inputs under `.local/verification-inputs/`, relative to the task
+worktree. Each must remain within the worktree and at most 64 KiB. Their content
+hashes participate in recovery progress; missing files have an explicit null hash.
+This declaration grants no product/publication authority and does not replace
+executable whole-bound readiness or external evidence acknowledgement.
+
+Actual Codex completion usage is stored with bounded durable receipts (up to 32
+completion rows). Missing counts remain unavailable. Scheduler claims and healthy
+monitoring produce no model usage. Unchanged completed incident inputs stop
+before another model launch. Existing maximum-three/45-minute/two-no-progress
+budgets remain ceilings, and an exact BS-22 extension authorizes one actual turn.
+
+Automatic incident installation still requires a mandatory focused regression
+and the complete control suite with zero failures or skips. Configure
+`BS_CONTROL_INCIDENT_TEST_CONTAINER` with an explicitly disposable
+`cp-remediation-disposable-YYYYMMDD` container. The trusted host creates an isolated
+control test database and a container-only PostgreSQL driver; tests receive no
+product/provider credentials. It drops only its own temporary database afterward.
+Incident patches cannot alter this test-routing or lifecycle guard code. Runtime
+activation restarts the Supervisor alongside health and event services.
+
+Disposable proofs:
+
+- `synthetic-runtime-e2e.mjs <evidence-directory> --supervisor-only` runs two real
+  implementation/verifier/publication/credit tasks without Dot calls.
+- `--supervisor-service` runs the persistent inbox consumer with no webhook and
+  restarts it during the existing run.
+- `supervisor-outbox-smoke.sql` verifies 100 unchanged recovery reservations,
+  duplicate wake coalescing, claim races and a frozen cross-run dependency wake.
+
+These fixtures do not authorize a live installation, business deployment or
+human approval. Activation and business-run reconciliation require the current
+user's authorization, immutable source provenance and provider identity checks.

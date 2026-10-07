@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Thin local trigger only. BS-31 and PostgreSQL continue to own all recovery.
+// Dot receives abnormal observations only. Supervisor consumes its own durable inbox.
 import {readFileSync,writeFileSync,mkdirSync,renameSync} from 'node:fs'
 import path from 'node:path'
 import {recordEgress} from './dot-egress-telemetry.mjs'
@@ -41,7 +41,7 @@ child.stdin.write('LISTEN bs_dot_wake;\n')
 // psql delivers asynchronous notifications after each command. This connection
 // Persisted events also cover missed notifications and reconnects through a
 // provider pooler. The observer reads the outbox; only BS-31 consumes it.
-const poll="SELECT 'bs_dot_event:' || coalesce(max(event_id),0)::text FROM control.dot_wake_events WHERE consumed_at IS NULL AND wake_kind='state' AND coalesce(payload->>'event_type','') NOT IN('retry_exhaustion_audited');\n"
+const poll="SELECT 'bs_dot_event:' || coalesce(max(event_id),0)::text FROM control.dot_wake_events WHERE consumed_at IS NULL AND wake_kind='state' AND origin IN('dot-health','dot_health_alerts','operator_gate_resolved') AND coalesce(payload->>'event_type','') NOT IN('retry_exhaustion_audited');\n"
 child.stdin.write(poll)
 const tick=setInterval(()=>{child.stdin.write(poll);if(pending)coalesce()},5000)
 process.on('SIGTERM',()=>{clearInterval(tick);clearTimeout(debounce);child.kill('SIGTERM');process.exit(0)})

@@ -1,3 +1,4 @@
+import {watchdogIntervention} from '../runner/lifecycle-policy.mjs'
 import {requiresWatchdogAction,cycleEvidenceCache} from '../runner/dot-current-state.mjs'
 import {isolateRecoveryCandidates,recoveryErrorEnvelope} from '../runner/recovery-error.mjs'
 import test from 'node:test'
@@ -48,7 +49,7 @@ async function cycle(state, { observed = health(state), locked = false, scopeHel
   const launches = [], queries = [], outputs = []
   let investigations = 0
   const watch = runInNewContext(`(${entryPoint.trim()})`, {
-    isolateRecoveryCandidates,recoveryErrorEnvelope,requiresWatchdogAction,cycleEvidenceCache,recordEgress:()=>{},fetch:async()=>({ok:true}),AbortSignal,
+    watchdogIntervention,isolateRecoveryCandidates,recoveryErrorEnvelope,requiresWatchdogAction,cycleEvidenceCache,recordEgress:()=>{},fetch:async()=>({ok:true}),AbortSignal,
     currentStateSql:()=> 'SELECT compact_state',classifyCurrent:()=>[observed],
     process: { execPath: process.execPath, env: {BS_DOT_WATCH_LOCKED: '1'} }, path,
     repoRoot: '/disposable-watchdog-fixture', controlSourceRoot: '/disposable-runtime',
@@ -95,11 +96,10 @@ for (const reason of ['runtime_operation_in_flight', 'runtime_backoff_pending', 
     for (let restart = 0; restart < 2; restart++) {
       const result = await cycle(state)
       assert.equal(result.investigations, 0)
-      assert.equal(result.launches.length, 1)
-      assert.deepEqual(Array.from(result.launches[0].args).slice(-3), ['/disposable-runtime/bs-agent.mjs', 'run-recover', state.workflow_run.run_id])
-      assert.equal(result.launches[0].program, 'flock')
-      assert.equal(result.launches[0].args[0], '-n')
-      assert.ok(result.queries.some(q => q.sql.includes('reconcile_ordinary_run_publication')))
+      assert.equal(result.launches.length, 0)
+      assert.ok(result.queries.some(q=>q.sql.includes('enqueue_supervisor_wake')))
+
+      assert.ok(!result.queries.some(q => q.sql.includes('reconcile_ordinary_run_publication')))
       assert.ok(!result.queries.some(q => /UPDATE control\.(executions|tasks|workflow_runs)|claim_runtime_operation/.test(q.sql)))
     }
     assert.equal(JSON.stringify(state), before)
@@ -149,7 +149,7 @@ test('unknown waits and missing/consumed/different operations retain incident in
     if (change === 'unrecoverable') state.recovery.recoverable = false
     if (change === 'failed-run') state.workflow_run.status = 'failed'
     const result = await cycle(state)
-    assert.equal(result.investigations, 1, change)
+    assert.equal(result.investigations, change==='failed-run'?0:1, change)
     assert.equal(result.launches.length, 0, change)
   }
 })

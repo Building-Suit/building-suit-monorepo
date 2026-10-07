@@ -1,3 +1,4 @@
+import vm from 'node:vm'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { mkdtempSync, writeFileSync, readFileSync, rmSync } from 'node:fs'
@@ -57,8 +58,9 @@ test('selfheal 23 task status keeps historical actual model separately from futu
 })
 test('selfheal 24 BS20 preserves explicit owner/no-ready/wait/gate statuses',()=>{
  assert.equal(acquisitionStatus({action:'wait_for_owner'}),'owner-wait');assert.equal(acquisitionStatus({action:'wait',reason:'no_admitted_task'}),'no-ready-task');assert.equal(acquisitionStatus({action:'wait',reason:'maintenance_requested'}),'wait');assert.equal(acquisitionStatus({acquired:true,action:'resume'}),'resumed')
- const wf=JSON.parse(readFileSync(new URL('../n8n/artifacts/pg0BEkbP9E4H4RqB.json',import.meta.url)));const code=wf.nodes.find(n=>n.name==='no-ready-task').parameters.jsCode
- for(const [acquisition,status] of [[{action:'wait_for_owner',reason:'controller_lease_active'},'owner-wait'],[{action:'wait',reason:'maintenance_requested'},'wait'],[{action:'wait',reason:'no_admitted_task'},'no-ready-task']]) assert.equal(new Function('$json',code)({acquisition})[0].json.status,status)
+ const wf=JSON.parse(readFileSync(new URL('../n8n/artifacts/pg0BEkbP9E4H4RqB.json',import.meta.url)));const code=wf.nodes.find(n=>n.name==='Run Result').parameters.jsCode
+ for(const status of ['wait','maintenance-wait','limit_reached','stop_requested'])assert.equal(vm.runInNewContext('(()=>{'+code+'})()',{$json:{payload:{status}}})[0].json.status,status)
+
 })
 test('selfheal 7/8/25 actual detached processes: concurrency, parent death, receipt replay',async()=>{
  const root=mkdtempSync(path.join(tmpdir(),'cp-sh-receipt-'));try{

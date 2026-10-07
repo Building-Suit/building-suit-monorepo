@@ -1,3 +1,5 @@
+import {runSupervisorLifecycle} from '../runner/lifecycle-policy.mjs'
+import path from 'node:path'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {admissionDiagnostic,reviewedAdmissionBindings,registryBindings} from '../runner/native-admission.mjs'
@@ -44,7 +46,8 @@ test('actual native reconciliation runs before same-run acquisition and dispatch
  const helper=source.slice(source.indexOf('function reconcileNativeAdmission(runId){'),source.indexOf('async function recoveryWatch()'))
  const recover=source.slice(source.indexOf('function recoverWorkflowRun()'),source.indexOf('\nfunction taskReaccept()',source.indexOf('function recoverWorkflowRun()')))
  const calls=[],outputs=[],d={task_id:registryBindings.task_id,dependencies:[],decisions:[],packet:{task:{verification_plan:registryBindings.entries},project:{project_id:'project'},workstream:{slug:'super-admin-suit'}}}
- const context={args:['existing'],process:{execPath:'node',env:{}},agentScriptPath:'bs-agent.mjs',repoRoot:'/fixture',validRunId:()=>true,parseControlJson:x=>x,parseJson:JSON.parse,reviewedAdmissionBindings,output:x=>outputs.push(x),controlQuery:(sql)=>{
+ const context={runSupervisorLifecycle,path,mkdirSync:()=>{},args:['existing'],process:{execPath:'node',env:{BS_RUN_SUPERVISOR_LOCKED:'1'}},agentScriptPath:'bs-agent.mjs',repoRoot:'/fixture',validRunId:()=>true,parseControlJson:x=>x,parseJson:JSON.parse,reviewedAdmissionBindings,output:x=>outputs.push(x),controlQuery:(sql)=>{
+  if(sql.includes('reconcile_lifecycle_incidents'))return {resolved:0}
   if(sql.includes('workflow_run_gate'))return {should_continue:true}
   if(sql.includes('diagnose_native_run_admission')){calls.push('diagnose');return d}
   if(sql.includes('UPDATE control.workstreams')){calls.push('bindings');return null}
@@ -54,7 +57,7 @@ test('actual native reconciliation runs before same-run acquisition and dispatch
   if(sql.includes('acquire_workflow_run_task')){calls.push('acquire');return {acquired:true,task_id:registryBindings.task_id}}
   throw Error('unexpected SQL')
  },execute:(_program,args)=>{calls.push('dispatch');assert.equal(args[1],'task-supervise');assert.equal(args[2],registryBindings.task_id);return {stdout:JSON.stringify({ok:true,status:'running'})}}}
- runInNewContext(helper+recover+'\nrecoverWorkflowRun()',context)
+ await runInNewContext(helper+recover+'\nrecoverWorkflowRun()',context)
  assert.deepEqual(calls,['contract','acquire','dispatch']);assert.equal(outputs[0].run_id,'existing')
  assert.equal(run.max_tasks,7);assert.equal(run.completed_tasks,0)
 })

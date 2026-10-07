@@ -1,3 +1,4 @@
+import {watchdogIntervention} from '../runner/lifecycle-policy.mjs'
 import {requiresWatchdogAction,cycleEvidenceCache} from '../runner/dot-current-state.mjs'
 import {isolateRecoveryCandidates,recoveryErrorEnvelope} from '../runner/recovery-error.mjs'
 import test from 'node:test'
@@ -44,7 +45,7 @@ async function cycle(state, { observed = health(state), locked = false, scopeHel
   const queries = [], launches = [], outputs = []
   let investigations = 0
   const watch = runInNewContext(`(${watchSource.trim()})`, {
-    isolateRecoveryCandidates,recoveryErrorEnvelope,requiresWatchdogAction,cycleEvidenceCache,recordEgress:()=>{},fetch:async()=>({ok:true}),AbortSignal,
+    watchdogIntervention,isolateRecoveryCandidates,recoveryErrorEnvelope,requiresWatchdogAction,cycleEvidenceCache,recordEgress:()=>{},fetch:async()=>({ok:true}),AbortSignal,
     currentStateSql:()=> 'SELECT compact_state',classifyCurrent:()=>[observed],
     process: { execPath: process.execPath, env: { BS_DOT_WATCH_LOCKED: '1' } }, path,
     repoRoot: '/fixture', controlSourceRoot: '/runtime', agentScriptPath: '/runtime/bs-agent.mjs',
@@ -85,11 +86,11 @@ for (const reason of ['runtime_operation_in_flight', 'runtime_backoff_pending', 
     for (let restart = 0; restart < 2; restart++) {
       const result = await cycle(state)
       assert.equal(result.investigations, 0)
-      assert.equal(result.launches.length, 1)
-      assert.equal(result.launches[0].program, 'flock')
-      assert.equal(result.launches[0].args[0], '-n')
-      assert.deepEqual(result.launches[0].args.slice(-3), ['/runtime/bs-agent.mjs', 'run-recover', state.workflow_run.run_id])
-      assert.ok(result.queries.some(q => q.sql.includes('reconcile_ordinary_run_publication')))
+      assert.equal(result.launches.length, 0)
+      assert.ok(result.queries.some(q=>q.sql.includes('enqueue_supervisor_wake')))
+
+
+      assert.ok(!result.queries.some(q => q.sql.includes('reconcile_ordinary_run_publication')))
       assert.ok(!result.queries.some(q => /UPDATE control\.(executions|tasks|workflow_runs)|claim_runtime_operation/.test(q.sql)))
     }
     const plan = planSupervisorStep(state)
@@ -142,7 +143,7 @@ test('unknown or missing receipts and product retry operations retain investigat
       state.packet.task.status = 'failed'
     }
     const result = await cycle(state)
-    assert.equal(result.investigations, 1, change)
+    assert.equal(result.investigations, change==='failed-run'?0:1, change)
     assert.equal(result.launches.length, 0, change)
   }
 })

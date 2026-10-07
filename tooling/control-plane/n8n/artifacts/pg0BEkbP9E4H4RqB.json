@@ -81,7 +81,7 @@
       }
     },
     {
-      "id": "bs20-resolved",
+      "id": "bs20-valid",
       "name": "Workstream Valid?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
@@ -111,7 +111,7 @@
       "typeVersion": 1.3,
       "position": [
         660,
-        -80
+        0
       ],
       "parameters": {
         "workflowId": {
@@ -145,13 +145,13 @@
       }
     },
     {
-      "id": "bs20-gate",
-      "name": "Check Graceful Run Gate",
+      "id": "bs20-supervisor",
+      "name": "Delegate Run to Supervisor",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
         880,
-        -80
+        0
       ],
       "parameters": {
         "workflowId": {
@@ -163,7 +163,7 @@
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "command": "={{ 'bs-agent run-check ' + $('Start Bounded Run').first().json.payload.run.run_id }}"
+            "command": "={{ 'bs-agent run-supervise ' + $('Start Bounded Run').first().json.payload.run.run_id }}"
           },
           "matchingColumns": [
             "command"
@@ -185,517 +185,26 @@
       }
     },
     {
-      "id": "bs20-gate-route",
-      "name": "Route Run Gate",
+      "id": "bs20-result",
+      "name": "Run Result",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
         1100,
-        -80
+        0
       ],
       "parameters": {
-        "jsCode": "const run=$json.payload?.run??{}; const state=run.reason==='maintenance_requested'?'maintenance-wait':run.reason==='stop_requested'?'stop-requested':run.reason==='limit_reached'?'task-limit':run.should_continue===true?'continue':'safety-stop'; return [{json:{...$json,state,run}}];"
+        "jsCode": "const r=$json.payload??$json;return [{json:{...r,lifecycle_owner:'Supervisor',run_preserved:true}}];"
       }
     },
     {
-      "id": "bs20-gate-switch",
-      "name": "Run Gate State",
-      "type": "n8n-nodes-base.switch",
-      "typeVersion": 3.2,
-      "position": [
-        1320,
-        -80
-      ],
-      "parameters": {
-        "rules": {
-          "values": [
-            {
-              "conditions": {
-                "conditions": [
-                  {
-                    "leftValue": "={{ $json.state }}",
-                    "rightValue": "continue",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
-                  }
-                ]
-              }
-            },
-            {
-              "conditions": {
-                "conditions": [
-                  {
-                    "leftValue": "={{ $json.state }}",
-                    "rightValue": "maintenance-wait",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
-                  }
-                ]
-              }
-            },
-            {
-              "conditions": {
-                "conditions": [
-                  {
-                    "leftValue": "={{ $json.state }}",
-                    "rightValue": "stop-requested",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
-                  }
-                ]
-              }
-            },
-            {
-              "conditions": {
-                "conditions": [
-                  {
-                    "leftValue": "={{ $json.state }}",
-                    "rightValue": "task-limit",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
-                  }
-                ]
-              }
-            },
-            {
-              "conditions": {
-                "conditions": [
-                  {
-                    "leftValue": "={{ $json.state }}",
-                    "rightValue": "safety-stop",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
-                  }
-                ]
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
-      "id": "bs20-acquire",
-      "name": "Acquire or Resume Admitted Task",
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        1540,
-        -240
-      ],
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "rzoRWvnSBG7sU1Oh",
-          "mode": "list",
-          "cachedResultName": "BS-00 — Runner Command"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "command": "={{ 'bs-agent run-acquire-task ' + $('Start Bounded Run').first().json.payload.run.run_id + ' cp-batch-v2 ' + $env.BS_BATCH_CONTROLLER_FINGERPRINT + ' ' + $execution.id }}"
-          },
-          "matchingColumns": [
-            "command"
-          ],
-          "schema": [
-            {
-              "id": "command",
-              "displayName": "command",
-              "type": "string",
-              "canBeUsedToMatch": true
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
-        },
-        "options": {
-          "waitForSubWorkflow": true
-        }
-      }
-    },
-    {
-      "id": "bs20-acquire-route",
-      "name": "Route Acquired Task",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1760,
-        -240
-      ],
-      "parameters": {
-        "jsCode": "const acquisition=$json.payload?.acquisition??{}; const state=acquisition.action==='credit_completion'?'credit-completion':acquisition.acquired===true&&['execute','resume'].includes(acquisition.action)?'execute':['wait','wait_for_owner'].includes(acquisition.action)?'wait':'safety-stop'; return [{json:{...$json,state,acquisition}}];"
-      }
-    },
-    {
-      "id": "bs20-acquire-switch",
-      "name": "Acquired Task State",
-      "type": "n8n-nodes-base.switch",
-      "typeVersion": 3.2,
-      "position": [
-        1980,
-        -240
-      ],
-      "parameters": {
-        "rules": {
-          "values": [
-            {
-              "conditions": {
-                "conditions": [
-                  {
-                    "leftValue": "={{ $json.state }}",
-                    "rightValue": "execute",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
-                  }
-                ]
-              }
-            },
-            {
-              "conditions": {
-                "conditions": [
-                  {
-                    "leftValue": "={{ $json.state }}",
-                    "rightValue": "credit-completion",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
-                  }
-                ]
-              }
-            },
-            {
-              "conditions": {
-                "conditions": [
-                  {
-                    "leftValue": "={{ $json.state }}",
-                    "rightValue": "wait",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
-                  }
-                ]
-              }
-            },
-            {
-              "conditions": {
-                "conditions": [
-                  {
-                    "leftValue": "={{ $json.state }}",
-                    "rightValue": "safety-stop",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
-                  }
-                ]
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
-      "id": "bs20-engine",
-      "name": "Delegate Claimed Task to Supervisor",
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        2200,
-        -320
-      ],
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "9aWPOijyhfmnEtRy",
-          "mode": "list",
-          "cachedResultName": "BS-10 — Task Engine"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "task_id": "={{ $('Acquire or Resume Admitted Task').first().json.payload.acquisition.packet.task.task_id }}"
-          },
-          "matchingColumns": [
-            "task_id"
-          ],
-          "schema": [
-            {
-              "id": "task_id",
-              "displayName": "task_id",
-              "type": "string",
-              "canBeUsedToMatch": true
-            }
-          ]
-        },
-        "options": {
-          "waitForSubWorkflow": true
-        }
-      }
-    },
-    {
-      "id": "bs20-outcome",
-      "name": "Supervisor State",
-      "type": "n8n-nodes-base.switch",
-      "typeVersion": 3.2,
-      "position": [
-        2420,
-        -320
-      ],
-      "parameters": {
-        "rules": {
-          "values": [
-            {
-              "conditions": {
-                "conditions": [
-                  {
-                    "leftValue": "={{ $json.status }}",
-                    "rightValue": "success",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
-                  }
-                ]
-              }
-            },
-            {
-              "conditions": {
-                "conditions": [
-                  {
-                    "leftValue": "={{ $json.status }}",
-                    "rightValue": "wait",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
-                  }
-                ]
-              }
-            },
-            {
-              "conditions": {
-                "conditions": [
-                  {
-                    "leftValue": "={{ $json.status }}",
-                    "rightValue": "safety-stop",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
-                  }
-                ]
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
-      "id": "bs20-complete",
-      "name": "Record Task Success",
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        2640,
-        -400
-      ],
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "rzoRWvnSBG7sU1Oh",
-          "mode": "list",
-          "cachedResultName": "BS-00 — Runner Command"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "command": "={{ 'bs-agent run-complete-task ' + $('Start Bounded Run').first().json.payload.run.run_id + ' ' + $('Acquire or Resume Admitted Task').first().json.payload.acquisition.packet.task.task_id + ' ' + $('Start Bounded Run').first().json.payload.run.run_id + ':' + $('Acquire or Resume Admitted Task').first().json.payload.acquisition.packet.task.task_id }}"
-          },
-          "matchingColumns": [
-            "command"
-          ],
-          "schema": [
-            {
-              "id": "command",
-              "displayName": "command",
-              "type": "string",
-              "canBeUsedToMatch": true
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
-        },
-        "options": {
-          "waitForSubWorkflow": true
-        }
-      }
-    },
-    {
-      "id": "bs20-finish-empty",
-      "name": "Wait Without Admitted Task",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1980,
-        -120
-      ],
-      "parameters": {
-        "jsCode": "return [{json:{...$json,status:'wait',reason:$json.acquisition?.reason??$json.payload?.acquisition?.reason??'acquisition_wait',run_preserved:true}}];"
-      }
-    },
-    {
-      "id": "bs20-finish-failed",
-      "name": "Finish Safety Stop",
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        2640,
-        -160
-      ],
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "rzoRWvnSBG7sU1Oh",
-          "mode": "list",
-          "cachedResultName": "BS-00 — Runner Command"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "command": "={{ 'bs-agent run-finish ' + $('Start Bounded Run').first().json.payload.run.run_id + ' failed' }}"
-          },
-          "matchingColumns": [
-            "command"
-          ],
-          "schema": [
-            {
-              "id": "command",
-              "displayName": "command",
-              "type": "string",
-              "canBeUsedToMatch": true
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
-        },
-        "options": {
-          "waitForSubWorkflow": true
-        }
-      }
-    },
-    {
-      "id": "bs20-success",
-      "name": "success",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        2860,
-        -400
-      ],
-      "parameters": {
-        "jsCode": "return [{json:{...$json,status:'success'}}];"
-      }
-    },
-    {
-      "id": "bs20-wait",
-      "name": "wait",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        2640,
-        -280
-      ],
-      "parameters": {
-        "jsCode": "return [{json:{...$json,status:'wait',run_preserved:true}}];"
-      }
-    },
-    {
-      "id": "bs20-empty",
-      "name": "no-ready-task",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        2200,
-        -120
-      ],
-      "parameters": {
-        "jsCode": "return [{json:{...$json,status:$json.acquisition?.action==='wait_for_owner'?'owner-wait':$json.acquisition?.reason==='no_admitted_task'||$json.acquisition?.reason==='no_ready_task'?'no-ready-task':'wait',reason:$json.acquisition?.reason??$json.reason??'acquisition_wait'}}];"
-      }
-    },
-    {
-      "id": "bs20-stopped",
-      "name": "stop-requested",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1540,
-        -40
-      ],
-      "parameters": {
-        "jsCode": "return [{json:{...$json,status:'stop-requested'}}];"
-      }
-    },
-    {
-      "id": "bs20-limit",
-      "name": "task-limit",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1540,
-        80
-      ],
-      "parameters": {
-        "jsCode": "return [{json:{...$json,status:'task-limit'}}];"
-      }
-    },
-    {
-      "id": "bs20-maintenance",
-      "name": "maintenance-wait",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1540,
-        20
-      ],
-      "parameters": {
-        "jsCode": "return [{json:{...$json,ok:true,status:'maintenance-wait',run_preserved:true,requires_explicit_resume:true}}];"
-      }
-    },
-    {
-      "id": "bs20-stop",
-      "name": "safety-stop",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        2860,
-        -160
-      ],
-      "parameters": {
-        "jsCode": "return [{json:{...$json,ok:false,status:'safety-stop'}}];"
-      }
-    },
-    {
-      "id": "bs20-invalid",
+      "id": "bs20-rejected",
       "name": "Rejected Workstream",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
         660,
-        100
+        180
       ],
       "parameters": {
         "jsCode": "return [{json:{ok:false,status:'safety-stop',reason:$json.payload?.error??'unknown_or_inactive_workstream'}}];"
@@ -747,191 +256,18 @@
       "main": [
         [
           {
-            "node": "Check Graceful Run Gate",
+            "node": "Delegate Run to Supervisor",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Check Graceful Run Gate": {
+    "Delegate Run to Supervisor": {
       "main": [
         [
           {
-            "node": "Route Run Gate",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Route Run Gate": {
-      "main": [
-        [
-          {
-            "node": "Run Gate State",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Run Gate State": {
-      "main": [
-        [
-          {
-            "node": "Acquire or Resume Admitted Task",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "maintenance-wait",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "stop-requested",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "task-limit",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Finish Safety Stop",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Acquire or Resume Admitted Task": {
-      "main": [
-        [
-          {
-            "node": "Route Acquired Task",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Route Acquired Task": {
-      "main": [
-        [
-          {
-            "node": "Acquired Task State",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Acquired Task State": {
-      "main": [
-        [
-          {
-            "node": "Delegate Claimed Task to Supervisor",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Record Task Success",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Wait Without Admitted Task",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Finish Safety Stop",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Delegate Claimed Task to Supervisor": {
-      "main": [
-        [
-          {
-            "node": "Supervisor State",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Supervisor State": {
-      "main": [
-        [
-          {
-            "node": "Record Task Success",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "wait",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Finish Safety Stop",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Record Task Success": {
-      "main": [
-        [
-          {
-            "node": "Check Graceful Run Gate",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Wait Without Admitted Task": {
-      "main": [
-        [
-          {
-            "node": "no-ready-task",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Finish Safety Stop": {
-      "main": [
-        [
-          {
-            "node": "safety-stop",
+            "node": "Run Result",
             "type": "main",
             "index": 0
           }
@@ -941,5 +277,9 @@
   },
   "settings": {
     "executionOrder": "v1"
+  },
+  "meta": {
+    "lifecycle_owner": "Supervisor",
+    "protocol": "cp-lifecycle-v1"
   }
 }

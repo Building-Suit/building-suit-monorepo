@@ -1,3 +1,4 @@
+import {completionUsage} from './codex-completion-usage.mjs'
 import { workerProcessClassification } from './dot.mjs'
 import { spawn, spawnSync } from 'node:child_process'
 import { mkdirSync, readFileSync, writeFileSync, renameSync, existsSync, readdirSync } from 'node:fs'
@@ -115,7 +116,7 @@ export function durableExecute(root, key, program, args, options = {}) {
     // Failed process invocations are immutable receipts. Retry as a new INFRA
     // generation, never a new product execution. Successful output is replayed.
     if (settled && settled.code !== 0 && (options.retryProcessFailure || options.retryTransportFailure && !settled.stdout?.trim()) && workerProcessClassification(settled).failure_class!=='operator-wait') { generation++; continue }
-    startReceipt(paths, { program, args, cwd: options.cwd, timeout: options.timeout, input: options.input }, options.env)
+    startReceipt(paths, { program, args, cwd: options.cwd, timeout: options.timeout, input: options.input, context: options.context }, options.env)
     return waitReceipt(paths, options.timeout ? options.timeout + 60_000 : undefined)
   }
 }
@@ -127,7 +128,7 @@ if (process.argv[2] === '--worker') {
     const request = readJson(path.join(dir, 'request.json'))
     atomicJson(path.join(dir, 'state.json'), { pid: process.pid, start_stamp: processStamp(process.pid), started_at: new Date().toISOString() })
     let child, timer, heartbeatTimer, error = null, stdout = '', stderr = '', eventBuffer = '', settled = false
-    const identity={pid:process.pid,start_stamp:processStamp(process.pid),started_at:new Date().toISOString(),worker_state:'spawning',heartbeat_at:new Date().toISOString(),deadline_at:request.timeout?new Date(Date.now()+request.timeout).toISOString():null}
+    const identity={pid:process.pid,start_stamp:processStamp(process.pid),started_at:new Date().toISOString(),usage:[],worker_state:'spawning',heartbeat_at:new Date().toISOString(),deadline_at:request.timeout?new Date(Date.now()+request.timeout).toISOString():null}
     const heartbeat=()=>{identity.heartbeat_at=new Date().toISOString();try{atomicJson(path.join(dir,'state.json'),identity)}catch{/* result receipt remains the lifecycle authority */}}
     const finish = (code, failure = error) => {
       if (settled) return
@@ -137,7 +138,7 @@ if (process.argv[2] === '--worker') {
       identity.worker_state='exited';identity.exit_code=typeof code==='number'?code:1;heartbeat()
       atomicJson(resultPath, { code: typeof code === 'number' ? code : 1, stdout: stdout.trim(), stderr: stderr.trim(), error: failure,
         ...(failure ? { classification: { failure_class: 'transient-infrastructure', recovery_action: 'wait-external', component: 'worker-transport' } } : {}),
-        finished_at: new Date().toISOString() })
+        usage:identity.usage,finished_at: new Date().toISOString() })
     }
     try {
       // Also normalizes immutable legacy requests when re-entered after restart.
@@ -152,6 +153,7 @@ if (process.argv[2] === '--worker') {
           eventBuffer+=chunk
           const lines=eventBuffer.split('\n');eventBuffer=lines.pop().slice(-1024*1024)
           for(const line of lines){let event;try{event=JSON.parse(line)}catch{continue}
+            const usage=completionUsage(event,request.context,Date.now()-Date.parse(identity.started_at));if(usage&&identity.usage.length<32)identity.usage.push(usage)
             if(['turn.started','turn.completed'].includes(event.type)&&!identity.child.model_started_at){identity.child.model_started_at=new Date().toISOString();heartbeat()}
           }
         }

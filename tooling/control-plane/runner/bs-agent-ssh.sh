@@ -54,6 +54,12 @@ case "$REQUESTED_COMMAND" in
     exec "$NODE_BIN" "$AGENT" runner ping
     ;;
 
+  "bs-agent run-supervise "*)
+    RUN_ID="${REQUESTED_COMMAND#bs-agent run-supervise }"
+    [[ "$RUN_ID" =~ ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ ]] || { printf '%s\n' '{"ok":false,"error":"invalid_run_supervise"}'; exit 64; }
+    exec "$NODE_BIN" "$AGENT" runner run-supervise "$RUN_ID"
+    ;;
+
   "bs-agent recovery-watch")
     exec "$NODE_BIN" "$AGENT" runner recovery-watch
     ;;
