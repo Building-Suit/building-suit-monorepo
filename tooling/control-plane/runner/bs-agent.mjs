@@ -17,7 +17,7 @@ import { repairEvidenceHeader, parentContinuation, effectiveFailureClass, worker
 import { operationHasAuthoritativeSuccess } from './bounded-publication.mjs'
 
 import { spawnSync, spawn } from 'node:child_process'
-import { randomUUID } from 'node:crypto'
+import { randomUUID, createHash } from 'node:crypto'
 import {
   readFileSync,
   mkdirSync,
@@ -5574,9 +5574,23 @@ function prepareTaskDependencies(worktreePath) {
 }
 
 
+function adoptRunRecovery(runId) {
+ const identity=runtimeIdentity(controlSourceRoot)
+ // Working-tree tests may use the committed source identity; installed workers
+ // always bind adoption to the independently verified immutable release.
+ const release=identity.release_id??createHash('sha256').update(identity.commit).digest('hex')
+ return parseControlJson(controlQuery(`SELECT control.adopt_lifecycle_recovery(:'run'::uuid,2,:'release');`,{run:runId,release}))
+}
 function recordAuthoritativeFailure(snapshot) {
  const task=snapshot.packet?.task,execution=currentExecution(snapshot)
  if(task?.status!=='failed'||!execution||execution.status==='running')return snapshot
+ const adoption=snapshot.authoritative_failure?.evidence
+ const verification=snapshot.verification_runs?.filter(v=>Number(v.execution_id)===Number(execution.execution_id)).at(-1)
+ if(adoption?.adoption_materialization===true&&Number(adoption.verification_run_id)===Number(verification?.verification_run_id)) {
+  const input=recoveryActionInput(snapshot,'classify',controlSourceRoot)
+  snapshot.recovery_readiness=parseControlJson(controlQuery(`SELECT control.recovery_action_readiness(:'execution'::bigint,'task-verify',:'fingerprint',:'source');`,{execution:String(execution.execution_id),fingerprint:input.fingerprint,source:input.evidence.source_fingerprint}))
+  return snapshot
+ }
  const audit=snapshot.exhaustion_audit?.entries?.find(e=>Number(e.execution_id)===Number(execution.execution_id))
  let input
  if(execution.worktree_path&&existsSync(execution.worktree_path))input=recoveryActionInput(snapshot,'classify',controlSourceRoot)
@@ -5602,6 +5616,7 @@ function taskSupervisor() {
 
   try {
     const currentRun=parseControlJson(controlQuery(`SELECT to_jsonb(r) FROM control.workflow_runs r WHERE current_task_id=:'task' AND status='running' ORDER BY started_at DESC LIMIT 1;`,{task:taskId}))
+    if(currentRun?.run_id)adoptRunRecovery(currentRun.run_id)
     if(currentRun?.run_id && !currentRun.admitted_repair_id) controlQuery(`SELECT control.reconcile_ordinary_run_publication(:'run'::uuid);`,{run:currentRun.run_id})
     const bindingSnapshot=supervisorSnapshot(taskId)
     if(bindingSnapshot?.preexecution_binding_recovery) {
@@ -6701,7 +6716,7 @@ async function superviseWorkflowRun() {
   try {
     const result=await runSupervisorLifecycle({
       gate:async()=>parseControlJson(controlQuery(`SELECT control.workflow_run_gate(:'id'::uuid);`,{id:runId})),
-      prepare:async()=>{controlQuery(`SELECT control.reconcile_lifecycle_incidents(:'run'::uuid);`,{run:runId});reconcileNativeAdmission(runId);controlQuery(`SELECT control.reconcile_ordinary_run_publication(:'run'::uuid);`,{run:runId})},
+      prepare:async()=>{adoptRunRecovery(runId);controlQuery(`SELECT control.reconcile_lifecycle_incidents(:'run'::uuid);`,{run:runId});reconcileNativeAdmission(runId);controlQuery(`SELECT control.reconcile_ordinary_run_publication(:'run'::uuid);`,{run:runId})},
       acquire:async()=>parseControlJson(controlQuery(`SELECT control.acquire_workflow_run_task(:'id'::uuid,'cp-batch-v2',:'fingerprint',:'token','runner');`,{id:runId,fingerprint:process.env.BS_BATCH_CONTROLLER_FINGERPRINT ?? 'c51e2846c1fe3966ac5705a2ba6e21c11804e4f1e0ea3be37a14ef2c47cca075',token:`selfheal:${runId}`})),
       supervise:async task=>{
         const result=execute(process.execPath,[agentScriptPath,'task-supervise',task],{cwd:repoRoot,timeout:75*60_000})

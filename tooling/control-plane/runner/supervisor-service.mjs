@@ -3,6 +3,8 @@ import {createPostgresSession} from './dot-postgres-session.mjs'
 import {spawn} from 'node:child_process'
 import {fileURLToPath} from 'node:url'
 import path from 'node:path'
+import {createHash} from 'node:crypto'
+import {runtimeIdentity} from './runtime-identity.mjs'
 
 const source=path.dirname(fileURLToPath(import.meta.url))
 let session
@@ -32,6 +34,11 @@ async function runSubject(job){
 }
 async function serve(){
  session=createPostgresSession(process.env)
+ const identity=runtimeIdentity(path.resolve(source,'../../..'))
+ const release=identity.release_id??createHash('sha256').update(identity.commit).digest('hex')
+ // Upgrade adoption runs once at startup, even when no webhook/inbox survived
+ // the old protocol. SQL excludes workers, stop/maintenance and terminal runs.
+ await session.query(`SELECT coalesce(jsonb_agg(control.adopt_lifecycle_recovery(run_id,2,${quote(release)})),'[]') FROM control.workflow_runs WHERE status='running' AND current_task_id IS NOT NULL AND NOT stop_requested AND NOT maintenance_requested;`)
  while(!stopping){
   try {
    const job=await session.query('SELECT control.claim_supervisor_wake();')

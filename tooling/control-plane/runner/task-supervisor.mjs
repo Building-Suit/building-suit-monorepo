@@ -150,7 +150,7 @@ export function planSupervisorStep(snapshot) {
     return decision('wait', 'wait-operator', 'operator-wait', run.stop_requested ? 'stop_requested' : run.maintenance_requested ? 'maintenance_requested' : run.completed_tasks >= run.max_tasks ? 'limit_reached' : 'run_not_running', { execution, fingerprint })
   }
   if(task.status==='failed'&&snapshot.recovery_readiness?.allowed===false)return decision('wait','wait-external','unknown-outcome','verifier_repair_without_progress',{execution,fingerprint})
-  if(task.status==='failed'&&snapshot.exhaustion_audit?.action==='investigate'&&!['operator-wait','decision-wait'].includes(executionFailure(snapshot,execution)?.failure_class))return decision('wait','wait-external','transient-infrastructure','retry_audit_investigation_required',{execution,fingerprint,exhaustion_audit:snapshot.exhaustion_audit})
+  if(task.status==='failed'&&snapshot.exhaustion_audit?.action==='investigate'&&(!snapshot.authoritative_failure||snapshot.authoritative_failure.classification==='UNKNOWN')&&!['operator-wait','decision-wait'].includes(executionFailure(snapshot,execution)?.failure_class))return decision('wait','wait-external','transient-infrastructure','retry_audit_investigation_required',{execution,fingerprint,exhaustion_audit:snapshot.exhaustion_audit})
   const reclassifyPublicationStop = publicationStopNeedsReclassification(snapshot)
   if (recovery?.next_action === 'safety-stop' && !reclassifyPublicationStop && recovery.condition?.fingerprint === fingerprint) {
     return decision('terminal','safety-stop',recovery.failure_class ?? 'safety-stop',recovery.error_code ?? 'persisted_safety_stop',{execution,verification,publication,fingerprint,persisted:true,recoverable:false})
@@ -210,6 +210,10 @@ export function planSupervisorStep(snapshot) {
     return decision('wait', 'wait-external', 'external-wait', 'execution_in_flight', {
       execution, verification, publication, fingerprint,
     })
+  }
+
+  if (task.status==='failed' && snapshot.authoritative_failure?.evidence?.adoption_materialization===true && Number(snapshot.authoritative_failure.evidence.verification_run_id)===Number(verification?.verification_run_id) && snapshot.recovery_readiness?.allowed===true) {
+    return decision('act','reverify','verification-infrastructure','legacy_trusted_evidence_materialization',{command:'task-verify',execution,verification,fingerprint})
   }
 
   if (task.status === 'in_progress') {

@@ -30,6 +30,7 @@ async function recover({ runGate = 'continue', authority = 'current', acquisitio
   let contractCurrent = false
   const context = {
     path,mkdirSync:()=>{},runSupervisorLifecycle,recoveryErrorEnvelope, args: [runId],
+    adoptRunRecovery: () => calls.push('adopt'),
     reconcileNativeAdmission: () => null,
     validRunId: value => value === runId,
     parseControlJson: value => value,
@@ -79,7 +80,7 @@ async function recover({ runGate = 'continue', authority = 'current', acquisitio
 test('resolved bindings refresh existing run contracts before acquisition and ordinary supervision', async () => {
   for (let replay = 0; replay < 2; replay++) {
     const result = await recover()
-    assert.deepEqual(result.calls, ['gate', 'reconcile', 'acquire', 'supervise'])
+    assert.deepEqual(result.calls, ['gate', 'adopt', 'reconcile', 'acquire', 'supervise'])
     assert.equal(result.responses[0].value.run_id, runId)
     assert.equal(result.responses[0].value.task_id, taskId)
     assert.equal(result.responses[0].value.response.recovery.reason, 'preflight_pending')
@@ -97,11 +98,11 @@ test('stopped, held, terminal and limit-reached runs never reconcile or dispatch
 test('absent or revoked ordinary authority cannot dispatch through reconciliation', async () => {
   for (const authority of ['absent', 'revoked']) {
     const result = await recover({ authority })
-    assert.deepEqual(result.calls, ['gate', 'reconcile', 'acquire'])
+    assert.deepEqual(result.calls, ['gate', 'adopt', 'reconcile', 'acquire'])
     assert.equal(result.responses[0].value.acquisition.action, 'safety_stop')
   }
   const changed = await recover({ authority: 'scope_changed' })
-  assert.deepEqual(changed.calls, ['gate', 'reconcile'])
+  assert.deepEqual(changed.calls, ['gate', 'adopt', 'reconcile'])
   assert.equal(changed.responses[0].code, 1)
   assert.equal(changed.responses[0].value.error, 'Frozen task scope changed or unauthorized task')
 })
@@ -114,7 +115,7 @@ test('controller contention, dependency and decision gates remain authoritative 
     { acquired: false, action: 'safety_stop', reason: 'attributed_claim_missing_or_stale' },
   ]) {
     const result = await recover({ acquisitionGate })
-    assert.deepEqual(result.calls, ['gate', 'reconcile', 'acquire'])
+    assert.deepEqual(result.calls, ['gate', 'adopt', 'reconcile', 'acquire'])
     assert.equal(result.responses[0].value.acquisition.reason, acquisitionGate.reason)
   }
 })
