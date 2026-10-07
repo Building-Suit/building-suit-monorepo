@@ -21,7 +21,9 @@ DO $$ DECLARE result jsonb; ex bigint; verification bigint; version bigint; curr
  SELECT execution_id INTO ex FROM control.executions WHERE task_id='CP-LIFECYCLE-A';
  SELECT verification_run_id INTO verification FROM control.verification_runs WHERE execution_id=ex;
  PERFORM control.record_lifecycle_failure('CP-LIFECYCLE-A',ex,repeat('b',64),'UNKNOWN',jsonb_build_object('source_fingerprint','same','protocol',1));
+ current_incident:=control.record_dot_incident('a0000000-0000-4000-8000-000000000097','CP-LIFECYCLE-A',ex,repeat('e',64),'UNKNOWN','{}');
  result:=control.adopt_lifecycle_recovery('a0000000-0000-4000-8000-000000000097',2,repeat('f',64));
+ IF (SELECT status FROM control.dot_incidents WHERE incident_id=current_incident)<>'superseded' THEN RAISE EXCEPTION 'Protocol-stamped legacy incident escaped first adoption';END IF;
  IF result->>'adopted'<>'true' OR result->>'materialize_evidence'<>'true' THEN RAISE EXCEPTION 'Legacy evidence not adopted: %',result;END IF;
  IF (SELECT status FROM control.dot_recovery_jobs WHERE incident_id='b0000000-0000-4000-8000-000000000099')<>'superseded' THEN RAISE EXCEPTION 'Stale incident retained';END IF;
  IF control.current_lifecycle_failure('CP-LIFECYCLE-A')->>'classification'<>'VERIFIER_INFRA' THEN RAISE EXCEPTION 'Missing receipt not verifier reconciliation';END IF;
@@ -32,6 +34,7 @@ DO $$ DECLARE result jsonb; ex bigint; verification bigint; version bigint; curr
  IF result->>'claimed'<>'true' THEN RAISE EXCEPTION 'One materialization blocked: %',result;END IF;
  FOR n IN 1..100 LOOP result:=control.claim_recovery_action('CP-LIFECYCLE-A',ex,'task-verify',repeat('c',64),'VERIFIER_INFRA',jsonb_build_object('source_fingerprint','same','verification_run_id',verification));IF result->>'claimed'<>'false' THEN RAISE EXCEPTION 'Legacy materialization repeated';END IF;END LOOP;
  current_incident:=control.record_dot_incident('a0000000-0000-4000-8000-000000000097','CP-LIFECYCLE-A',ex,repeat('d',64),'VERIFIER_INFRA','{"dispatcher":{"runtime":"dot-general-v2"}}');
+ IF current_incident<>control.record_dot_incident('a0000000-0000-4000-8000-000000000097','CP-LIFECYCLE-A',ex,repeat('d',64),'VERIFIER_INFRA','{}') THEN RAISE EXCEPTION 'Current context dedupe failed';END IF;
  PERFORM control.adopt_lifecycle_recovery('a0000000-0000-4000-8000-000000000097',2,repeat('f',64));
  IF (SELECT status FROM control.dot_incidents WHERE incident_id=current_incident)='superseded' THEN RAISE EXCEPTION 'Compatible current identity superseded';END IF;
  UPDATE control.dot_incidents SET evidence=jsonb_set(evidence,'{lifecycle,incident_id}','"another-identity"') WHERE incident_id=current_incident;
