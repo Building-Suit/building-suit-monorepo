@@ -41,7 +41,7 @@ child.stdin.write('LISTEN bs_dot_wake;\n')
 // psql delivers asynchronous notifications after each command. This connection
 // Persisted events also cover missed notifications and reconnects through a
 // provider pooler. The observer reads the outbox; only BS-31 consumes it.
-const poll="SELECT 'bs_dot_event:' || coalesce(max(event_id),0)::text FROM control.dot_wake_events WHERE consumed_at IS NULL;\n"
+const poll="SELECT 'bs_dot_event:' || coalesce(max(event_id),0)::text FROM control.dot_wake_events WHERE consumed_at IS NULL AND wake_kind='state' AND coalesce(payload->>'event_type','') NOT IN('retry_exhaustion_audited');\n"
 child.stdin.write(poll)
 const tick=setInterval(()=>{child.stdin.write(poll);if(pending)coalesce()},5000)
 process.on('SIGTERM',()=>{clearInterval(tick);clearTimeout(debounce);child.kill('SIGTERM');process.exit(0)})

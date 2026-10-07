@@ -51,7 +51,7 @@ async function cycle(state, { observed = health(state), locked = false, scopeHel
     supervisorSnapshot: () => structuredClone(state), parseControlJson: value => value,
     controlQuery: (sql, values) => {
       queries.push({ sql, values })
-      if (sql.includes('WITH compact')) return {inputs:[{run:structuredClone(state.workflow_run),task:state.packet.task,verification:state.verification_runs?.at(-1)}],event_watermark:0,cleanup_due:false}
+      if (sql.includes('WITH ready')) return {inputs:[{run:structuredClone(state.workflow_run),task:state.packet.task,verification:state.verification_runs?.at(-1)}],event_watermark:0,cleanup_due:false}
       if (sql.includes('reconcile_native_reacceptance_gate')) return { reconciled: false }
       if (sql.includes('SELECT snapshot FROM control.dot_health_current')) return observed
       if (sql.includes('reconcile_shared_retry_exhaustion')) return {}

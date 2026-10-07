@@ -6575,7 +6575,8 @@ async function recoveryWatch() {
     // One Level 0 scan precedes all evidence and mutation. Browser reads use the
     // independent local cache, never this path. Watermark bounds event consumption.
     const scanSql=currentStateSql().trim().replace(/;$/,'')
-    const compact=parseControlJson(controlQuery(`WITH compact(state) AS (${scanSql}) SELECT jsonb_build_object('inputs',(SELECT state FROM compact),'event_watermark',(SELECT coalesce(max(event_id),0) FROM control.dot_wake_events WHERE consumed_at IS NULL),'cleanup_due',NOT EXISTS(SELECT 1 FROM control.dot_cycles WHERE started_at>now()-interval '15 minutes' AND outcomes @> '[{"action":"safe_cleanup_scan"}]'::jsonb));`))
+    const compact=parseControlJson(controlQuery(`WITH ready AS MATERIALIZED(SELECT control.dot_watch_ready() ok) SELECT CASE WHEN (SELECT ok FROM ready) THEN jsonb_build_object('inputs',(${scanSql}),'event_watermark',(SELECT coalesce(max(event_id),0) FROM control.dot_wake_events WHERE consumed_at IS NULL),'cleanup_due',NOT EXISTS(SELECT 1 FROM control.dot_cycles WHERE started_at>now()-interval '15 minutes' AND outcomes @> '[{"action":"safe_cleanup_scan"}]'::jsonb)) ELSE jsonb_build_object('coalesced',true) END;`))
+    if(compact.coalesced){recordEgress('bs31',{coalesced:1});output({ok:true,command:'recovery-watch',outcomes:[{action:'duplicate_or_derived_wake_coalesced'}],codex_invoked_by_scan:false});return}
     const inputs=compact.inputs,rows=classifyCurrent(inputs,repoRoot)
     recordEgress('bs31',{cycles:1,[compact.event_watermark>0?'event_triggered':'scheduled']:1})
     const subjects=new Map(inputs.map((i,index)=>i.run?[i.run.run_id,{input:i,health:rows[index]}]:null).filter(Boolean))
