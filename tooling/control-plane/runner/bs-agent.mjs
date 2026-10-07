@@ -142,9 +142,9 @@ function execute(program, programArgs = [], options = {}) {
 
   if (process.env.BS_OPERATION_ID && (program === 'codex' && programArgs[0] === 'exec' || programArgs.some(arg => String(arg).endsWith('/task-verifier.mjs') || String(arg).endsWith('/task-publisher.mjs')))) {
     const publisherInvocation=programArgs.some(arg=>String(arg).endsWith('/task-publisher.mjs'))
-    const role = program === 'codex' ? 'codex' : publisherInvocation ? 'publisher' : `verifier:${programArgs[3] ?? 'probe'}:${process.env.BS_OPERATION_INFRA_GENERATION ?? 0}`
+    const role = program === 'codex' ? 'codex' : publisherInvocation ? 'publisher' : `verifier:${programArgs[4] ?? 'probe'}`
     return durableExecute(path.join(repoRoot, '.local', 'runtime-receipts'), `${process.env.BS_OPERATION_ID}:${role}`, program, programArgs, {
-      ...options, cwd: options.cwd ?? repoRoot, env: childEnv, retryProcessFailure: !publisherInvocation, retryTransportFailure:publisherInvocation,
+      ...options, cwd: options.cwd ?? repoRoot, env: childEnv, retryProcessFailure: program === 'codex', retryTransportFailure:publisherInvocation,
     })
   }
   const result = spawnSync(

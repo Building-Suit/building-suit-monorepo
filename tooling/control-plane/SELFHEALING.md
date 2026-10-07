@@ -49,3 +49,11 @@ incident report with no current actionable operator gate does not require a huma
 Relay debounce retains an observed authoritative identifier even if a later outbox
 poll is empty; only successful delivery advances the relay watermark. Audit-only
 events and recovery heartbeats continue to be suppressed.
+
+Built-in and registered checks can name the same command (for example
+`git-diff-check`). The verifier reuses that exact command/cwd/required identity
+once per verification run, preserving its receipt. A conflicting registration
+fails as configuration evidence without overwriting the first check. Verifier
+process receipts bind the actual verification run ID across infrastructure polls;
+a failed verifier process is not blindly restarted inside a generation whose
+checks already have immutable receipts.

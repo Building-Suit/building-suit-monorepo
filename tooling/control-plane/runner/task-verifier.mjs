@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {existingCommandIdentity} from './verification-command-identity.mjs'
 import {controlQueryError} from './recovery-error.mjs'
 import {fileURLToPath} from 'node:url'
 import {verifierReceipt,trustedCommandRegistration} from './trusted-verifier-receipt.mjs'
@@ -312,6 +313,7 @@ function runCheck({
   const missingEvidence = required && requiredVerificationEvidenceMissing({ name, output: combined })
   const check = {
     name,
+    working_directory: cwd,
     command:
       `${program} ${args.join(' ')}`,
     required,
@@ -710,6 +712,12 @@ for (const custom of verificationConfig.commands ?? []) {
       summary: 'No changed file matched this focused custom check.',
     }))
     continue
+  }
+  const identity=existingCommandIdentity(results,{...custom,cwd:custom.cwd?path.join(worktreePath,custom.cwd):worktreePath},worktreePath)
+  if(identity==='reuse')continue
+  if(identity==='conflict'){
+    const check=omittedCheck({name:`registered-identity-conflict-${custom.name}`,command:null,required:true,reason:'registered_verification_check_identity_conflict',summary:`Registered command ${custom.name} differs from the already captured check; preserve its immutable receipt.`,unavailable:true,failureClass:'verification-configuration'})
+    liveCheck(check);results.push(check);continue
   }
   results.push(runCheck({
     name: custom.name,
