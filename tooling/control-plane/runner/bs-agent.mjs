@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {persistedVerificationChecks} from './failure-evidence.mjs'
 import { runSupervisorLifecycle, watchdogIntervention, recoveryFingerprint } from './lifecycle-policy.mjs'
 import { recoveryActionInput } from './recovery-action-guard.mjs'
 import {recordEgress} from './dot-egress-telemetry.mjs'
@@ -2513,6 +2514,7 @@ function taskVerify() {
       }
     }
 
+    verification.checks=persistedVerificationChecks(verification.checks)
     verificationLifecycleStage = 'record'
     recordVerificationState(
       verificationRunId,
@@ -5596,6 +5598,8 @@ function recordAuthoritativeFailure(snapshot) {
  if(execution.worktree_path&&existsSync(execution.worktree_path))input=recoveryActionInput(snapshot,'classify',controlSourceRoot)
  else input={fingerprint:recoveryFingerprint({task_id:task.task_id,run_id:snapshot.workflow_run?.run_id,execution_id:execution.execution_id,attempt:execution.attempt,classification:audit?.classification??'UNKNOWN',source:execution.commit_sha,plan:task.verification_plan,checks:audit?.blocking_checks}),evidence:{source:'settled-runtime-failure'}}
  const classification=audit?.classification??'UNKNOWN'
+ const identity=runtimeIdentity(controlSourceRoot)
+ input.evidence.release_id=identity.release_id??createHash('sha256').update(identity.commit).digest('hex')
  snapshot.authoritative_failure=parseControlJson(controlQuery(`SELECT control.record_lifecycle_failure(:'task',:'execution'::bigint,:'fingerprint',:'classification',:'evidence'::jsonb);`,{task:task.task_id,execution:String(execution.execution_id),fingerprint:input.fingerprint,classification,evidence:JSON.stringify(input.evidence)}))
  if(!snapshot.authoritative_failure)return supervisorSnapshot(task.task_id)
  if(['VERIFIER_INFRA','CONFIGURATION','EXTERNAL_EVIDENCE'].includes(classification)&&input.evidence.source_fingerprint)snapshot.recovery_readiness=parseControlJson(controlQuery(`SELECT control.recovery_action_readiness(:'execution'::bigint,'task-verify',:'fingerprint',:'source');`,{execution:String(execution.execution_id),fingerprint:input.fingerprint,source:input.evidence.source_fingerprint}))

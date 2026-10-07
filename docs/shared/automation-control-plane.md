@@ -299,10 +299,10 @@ grant another action. The original failed generation's input fingerprint survive
 later reviews. A same-execution verification requires repaired inputs and can
 run only once for that fingerprint; an unchanged result waits for actual repair.
 
-Migrations 099–100 add bounded adoption of legacy recovery generations. On runtime
+Migrations 099–101 add bounded adoption of legacy recovery generations. On runtime
 startup and before existing-run supervision, current failed tasks are revalidated
 against their execution, latest verification, trusted evidence digest, lifecycle
-protocol and incident identity. Incompatible incidents/jobs are superseded through
+protocol, runtime release and incident identity. Incompatible incidents/jobs are superseded through
 audited transitions; their history, model invocations and operator grants remain.
 Each distinct adoption context enqueues one durable Supervisor wake. Active
 workers, stopped/held runs and current publication gates are preserved.
@@ -317,7 +317,9 @@ current canonical generation. New incidents bind their own identity and current
 verification/evidence generation, so stale health evidence cannot confer authority.
 Incident deduplication includes this lifecycle context; stamping a legacy incident
 with a current protocol cannot preserve it across canonical adoption. A failed
-legacy receipt cannot settle the new materialization runtime operation.
+legacy receipt cannot settle the new materialization runtime operation. Planned
+skipped placeholders never overwrite later executed checks with immutable receipts;
+conflicting executable outcomes fail closed.
 
 Optional `verification_config.evidence_inputs` declares up to 32 independent
 verification inputs under `.local/verification-inputs/`, relative to the task
