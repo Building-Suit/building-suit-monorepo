@@ -163,6 +163,7 @@ function resetSale() {
   nextTick(() => catalogInput.value?.focus())
 }
 function readableError(message?: string) {
+  if (message?.includes('SALE_OPEN_CASH_SHIFT_REQUIRED')) return t('sales.openCashShiftRequired')
   if (message?.includes('INSUFFICIENT_STOCK') || message?.includes('CROSS_LOCATION_STOCK')) return saleCopy(t, 'pos.insufficientStock', lines.value)
   if (message?.includes('SHOP_PERMISSION_DENIED')) return t('pos.permissionDenied')
   if (message?.includes('FULL_PAYMENT') || message?.includes('OVERPAYMENT')) return t('sales.fullPaymentRequired')

@@ -174,6 +174,7 @@ const { data: correctionState, pending: correctionLoading, error: correctionLoad
 )
 
 function readableError(message?: string) {
+  if (message?.includes('SALE_OPEN_CASH_SHIFT_REQUIRED')) return t('sales.openCashShiftRequired')
   if (message?.includes('INSUFFICIENT_STOCK')) return saleCopy(t, 'sales.insufficientStock', sale.value?.lines ?? [])
   if (message?.includes('OUTSTANDING_SALE_REQUIRES_CUSTOMER')) return t('sales.customerRequired')
   if (message?.includes('PAYMENT_OVERPAYMENT_REJECTED')) return t('payments.overpayment')
