@@ -133,6 +133,7 @@ function resetSale() {
   nextTick(() => catalogInput.value?.focus())
 }
 function readableError(message?: string) {
+  if (message?.includes('SALE_OPEN_CASH_SHIFT_REQUIRED')) return t('sales.openCashShiftRequired')
   if (message?.includes('INSUFFICIENT_STOCK') || message?.includes('CROSS_LOCATION_STOCK')) return t('pos.insufficientStock')
   if (message?.includes('SHOP_PERMISSION_DENIED')) return t('pos.permissionDenied')
   if (message?.includes('FULL_PAYMENT') || message?.includes('OVERPAYMENT')) return t('sales.fullPaymentRequired')
@@ -188,7 +189,7 @@ async function checkout() {
     const completedId = completed.data
     await Promise.all([refreshCatalog(), refreshContext(), refreshNuxtData('shop-data:sales'), refreshNuxtData('shop-data:inventory-overview'), refreshNuxtData('shop-data:recent-invoices')])
     pushToast({ tone: 'success', title: t('pos.success') }); resetSale(); await navigateTo({ path: `/sales/${completedId}/receipt`, query: { origin: 'pos' } })
-  } catch (error) { errorMessage.value = readableError(error instanceof Error ? error.message : String(error)) }
+  } catch (error) { errorMessage.value = readableError(shopCommandErrorMessage(error)) }
   finally { checkingOut.value = false }
 }
 

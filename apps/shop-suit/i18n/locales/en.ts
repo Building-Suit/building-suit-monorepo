@@ -75,6 +75,7 @@ export default defineI18nLocale(async () => ({
   },
 
   sales: {
+    openCashShiftRequired: 'Open the main cashier shift for this location in Cashier shifts, then retry. Drafts can still be saved.',
     title: 'Sales',
     subtitle: 'Save drafts and issue product, service, or mixed sales.',
     newSale: 'New sale',

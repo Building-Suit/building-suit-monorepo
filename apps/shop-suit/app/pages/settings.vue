@@ -63,6 +63,37 @@ const { data: receiptSettings, pending: receiptLoading, error: receiptLoadError,
   }, { watch: [currentId], default: () => null },
 )
 
+const cashRequired = ref(false)
+const cashPending = ref(false)
+const cashError = ref('')
+const cashSuccess = ref('')
+const { data: cashPolicy, pending: cashLoading, error: cashLoadError, refresh: refreshCashPolicy } = useAsyncData(
+  () => `shop-data:cash-policy:${currentId.value ?? 'none'}`,
+  async () => {
+    if (!currentId.value) return null
+    const { data, error } = await shopRpc.rpc('shop_cash_policy', { p_shop_id: currentId.value })
+    if (error) throw error
+    return data
+  }, { watch: [currentId], default: () => null },
+)
+watch([currentId, cashPolicy], () => {
+  cashRequired.value = cashPolicy.value === true
+  cashError.value = ''; cashSuccess.value = ''
+}, { immediate: true })
+async function saveCashPolicy() {
+  if (!currentId.value || !canManage.value || cashPending.value || cashPolicy.value === null) return
+  const shopId = currentId.value
+  cashPending.value = true; cashError.value = ''; cashSuccess.value = ''
+  try {
+    const { error } = await shopRpc.rpc('set_shop_cash_policy', { p_shop_id: shopId, p_required: cashRequired.value })
+    if (error) throw error
+    await refreshCashPolicy()
+    if (currentId.value === shopId) cashSuccess.value = isArabic.value ? 'اتحفظت سياسة ورديات الخزنة.' : 'Cashier shift policy saved.'
+  } catch {
+    if (currentId.value === shopId) cashError.value = isArabic.value ? 'مقدرناش نحفظ سياسة ورديات الخزنة. حاول تاني.' : 'Could not save the cashier shift policy. Try again.'
+  } finally { cashPending.value = false }
+}
+
 const copy = computed(() => isArabic.value ? {
   title: 'إعدادات النشاط', subtitle: 'ظبط طريقة الشغل المناسبة لنشاطك.',
   profileTitle: 'ملف المتجر', profileHelp: 'هذا اسم المتجر الذي يظهر في التنقل والقوائم والسجلات المستقبلية المناسبة. لا يغيّر اسم حسابك الشخصي أو بريدك الإلكتروني أو المستندات السابقة.',
@@ -318,7 +349,23 @@ async function saveReceiptSettings() {
     <p v-if="loading" role="status">{{ ui('loading') }}</p>
     <div v-else-if="shopError" role="alert" class="ls-error">{{ copy.failed }} <BsButton @click="reload()">{{ ui('retry') }}</BsButton></div>
     <p v-else-if="!current" role="status">{{ ui('empty') }}</p>
-    <section v-else id="shop-profile" class="scroll-mt-28 ls-card p-5 sm:p-6" aria-labelledby="shop-profile-title">
+    <section v-if="current" aria-labelledby="cash-policy-title" class="ls-card p-5 sm:p-6">
+      <h2 id="cash-policy-title" class="text-lg font-semibold">{{ isArabic ? 'سياسة ورديات الخزنة' : 'Cashier shift policy' }}</h2>
+      <p id="cash-policy-help" class="mt-2 text-sm leading-6 text-muted-foreground">{{ isArabic ? 'عند التفعيل، إصدار المبيعات والدفع يتطلبان وردية مفتوحة للخزنة الرئيسية في الفرع المحدد، حتى للدفع غير النقدي. حفظ المسودات يظل متاحًا. التغييرات مسجلة في سجل المراجعة.' : 'When enabled, issuing sales and taking payment require an open main cashier shift at the selected location, including non-cash payments. Draft saving remains available. Changes are audited.' }}</p>
+      <p v-if="cashLoading" role="status">{{ ui('loading') }}</p>
+      <p v-else-if="cashLoadError" role="alert" class="ls-error">{{ isArabic ? 'مقدرناش نحمّل سياسة ورديات الخزنة.' : 'Could not load the cashier shift policy.' }} <BsButton @click="refreshCashPolicy()">{{ ui('retry') }}</BsButton></p>
+      <BsForm v-else class="mt-4 space-y-4" :pending="cashPending" :error="cashError" @submit="saveCashPolicy">
+        <label class="flex items-start gap-3 text-sm font-medium">
+          <input v-model="cashRequired" type="checkbox" aria-describedby="cash-policy-help" :disabled="!canManage || cashPolicy === null">
+          {{ isArabic ? 'اشتراط وردية خزنة مفتوحة للمبيعات' : 'Require an open cashier shift for sales' }}
+        </label>
+        <p v-if="!canManage" role="status" class="text-sm text-muted-foreground">{{ copy.ownerOnly }}</p>
+        <p v-if="cashSuccess" role="status" class="text-sm">{{ cashSuccess }}</p>
+        <BsButton v-if="canManage" variant="primary" type="submit" :pending="cashPending" :disabled="cashPolicy === null || cashRequired === cashPolicy">{{ isArabic ? 'حفظ سياسة الخزنة' : 'Save cashier policy' }}</BsButton>
+      </BsForm>
+    </section>
+
+    <section v-if="current && !loading && !shopError" id="shop-profile" class="scroll-mt-28 ls-card p-5 sm:p-6" aria-labelledby="shop-profile-title">
       <h2 id="shop-profile-title" class="text-lg font-extrabold">{{ copy.profileTitle }}</h2>
       <p class="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{{ copy.profileHelp }}</p>
       <p v-if="!canManage" role="status" class="mt-5 rounded-xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-4 text-sm text-fg">{{ copy.profileOwnerOnly }}</p>

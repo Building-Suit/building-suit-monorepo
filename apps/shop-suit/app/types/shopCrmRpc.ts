@@ -4,6 +4,8 @@ export type ShopRpcDatabase = {
     Tables: Record<string, never>
     Views: Record<string, never>
     Functions: {
+      shop_cash_policy: { Args: { p_shop_id: string }; Returns: boolean }
+      set_shop_cash_policy: { Args: { p_shop_id: string; p_required: boolean }; Returns: boolean }
       create_owner_shop: {
         Args: {
           p_shop_name: string

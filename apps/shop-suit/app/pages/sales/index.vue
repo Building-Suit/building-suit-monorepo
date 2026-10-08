@@ -231,6 +231,7 @@ function validDraft(requireCustomer = false) {
 }
 
 function readableError(message?: string) {
+  if (message?.includes('SALE_OPEN_CASH_SHIFT_REQUIRED')) return t('sales.openCashShiftRequired')
   if (message?.includes('INSUFFICIENT_STOCK')) return t('sales.insufficientStock')
   if (message?.includes('OUTSTANDING_SALE_REQUIRES_CUSTOMER')) return t('sales.customerRequired')
   if (message?.includes('CUSTOMERLESS_CHECKOUT_REQUIRES_FULL_PAYMENT')) return t('sales.fullPaymentRequired')
@@ -262,7 +263,7 @@ async function persistDraft() {
     return data
   }
   catch (error) {
-    editorError.value = readableError(error instanceof Error ? error.message : undefined)
+    editorError.value = readableError(shopCommandErrorMessage(error))
     return null
   }
   finally { saving.value = false }
@@ -310,7 +311,7 @@ async function issue() {
     pushToast({ tone: 'success', title: t(customerId.value ? 'sales.issuedSuccess' : 'sales.checkoutSuccess') })
     await navigateTo(`/sales/${invoiceId}`)
   }
-  catch (error) { editorError.value = readableError(error instanceof Error ? error.message : undefined) }
+  catch (error) { editorError.value = readableError(shopCommandErrorMessage(error)) }
   finally { issuing.value = false }
 }
 
