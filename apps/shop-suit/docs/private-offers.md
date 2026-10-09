@@ -106,3 +106,35 @@ new forward migration, and advisor/type-generation evidence is unavailable.
 Preflight could not verify fetch/GitHub state. Database acceptance is **unverified**
 until both SQL commands exit successfully. No hosted database operations, commits,
 pushes, merges, or deployments were performed.
+
+## SAS secure issuance dependency
+
+The forward migration `20261009222852_secure_private_offer_handshake.sql` adds
+`register_secure_private_offer` and `revoke_secure_private_offer` to the existing
+signed `shop.billing.command` capability. Secure registration requires the same
+closed payload above plus an `entitlements` JSON object. The target generates a
+32-byte opaque token; only its SHA-256 digest is stored in the protected security
+record. The exact signed request retry returns its original protected result.
+The token is recipient, Shop, immutable version and target-environment bound.
+
+For these newly secured offers, call the existing redemption RPC with the extra
+`p_redemption_token` argument. The legacy nine-argument RPC remains compatible
+for old offers and explicitly refuses secured offers. No anonymous redemption,
+raw-table access or service-role redemption is granted. Expiry and revocation
+are enforced before redemption; redemption and revocation lock the same offer
+row. Revocation of already redeemed commercial terms is refused. Existing
+manual payment review and exact-once activation remain mandatory.
+
+Entitlements are copied into immutable catalog terms, submissions and approved
+commercial periods, alongside the existing price and resource-limit snapshots.
+The existing catalog projection is updated for its expanded composite row type.
+This dependency repairs the backend contract; customer offer-entry UI remains
+a separate source-scope prerequisite. Tokens must never appear in telemetry or
+public catalogs. This migration does not deploy or apply hosted SQL.
+
+Independent isolated database validation used project
+`building-suit-shop-sas-contract`, with the exact forward migration chain and a
+pre-migration legacy Basic/Pro fixture. Both focused bridge/offer SQL suites, all
+29 existing database suites, and the existing sale-correction, plan-limit and
+billing concurrency checks passed. The protocol handler tests passed 13/13.
+These are local acceptance results, not hosted staging receipts.

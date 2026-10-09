@@ -8,7 +8,7 @@ select gen_random_uuid() owner_id, gen_random_uuid() other_id, gen_random_uuid()
   null::uuid blocked_notice_id, null::jsonb catalog_before;
 grant select on private_offer_fixture to authenticated, service_role;
 insert into auth.users (id,email,encrypted_password,aud,role,raw_app_meta_data,raw_user_meta_data,created_at,updated_at)
-select id,id || '@private-offer.invalid','x','authenticated','authenticated','{}','{}',now(),now()
+select id,id || '@private-offer.invalid','x','authenticated','authenticated','{}'::jsonb,'{}'::jsonb,now(),now()
 from (select owner_id id from private_offer_fixture union all select other_id from private_offer_fixture
   union all select operator_id from private_offer_fixture) users;
 insert into public.platform_admins (user_id,role,display_name)
@@ -310,3 +310,136 @@ begin
   end;
 end;
 $$;
+
+-- Secure source-dependency acceptance: existing bridge / same redemption RPC.
+create temporary table secure_offer_fixture as select gen_random_uuid() offer_id,
+ gen_random_uuid() revoked_id,gen_random_uuid() expired_id,gen_random_uuid() request_id,
+ null::text token,null::text revoked_token,null::text expired_token,null::uuid notice_id;
+grant select on secure_offer_fixture to authenticated;
+create function pg_temp.secure_dispatch(p_action text,p_payload jsonb,p_request uuid default gen_random_uuid())
+returns jsonb language plpgsql as $$
+declare f private_offer_fixture; nonce uuid:=gen_random_uuid(); envelope jsonb; digest text;
+begin
+ select * into f from private_offer_fixture;
+ perform set_config('request.jwt.claim.role','service_role',true);
+ perform set_config('request.jwt.claim.sub','',true);
+ envelope:=jsonb_build_object('protocolVersion','1.0','operationVersion','1.0','operation','shop.billing.command',
+ 'requestId',p_request,'correlationId',f.request_id,'sourceBindingId',f.source_id,'targetBindingId',f.binding_id,
+ 'targetEnvironmentId',f.environment_id,'actor',jsonb_build_object('authorityBindingId',f.source_id,'subjectId',f.operator_id,
+ 'roleSnapshot','super-admin-operator','sessionId','secure-offer-test'),'reason','Reviewed secure offer source',
+ 'payload',jsonb_build_object('action',p_action,'payload',p_payload));
+ digest:=encode(extensions.digest(envelope::text,'sha256'),'hex');
+ perform public.shop_super_admin_bridge_accept_nonce(f.principal_id,'private-offer-test',nonce,p_request,
+ extract(epoch from clock_timestamp())::bigint,digest);
+ return public.shop_super_admin_bridge_invoke(f.principal_id,nonce,digest,envelope);
+end $$;
+do $$
+declare f private_offer_fixture; s secure_offer_fixture; result jsonb; first_request uuid:=gen_random_uuid(); payload jsonb;
+begin
+ select * into f from private_offer_fixture;select * into s from secure_offer_fixture;
+ payload:=pg_temp.offer_payload(s.offer_id,10,clock_timestamp()+interval '1 day')||'{"entitlements":{"appointments":true,"reports":false}}';
+ result:=pg_temp.secure_dispatch('register_secure_private_offer',payload,first_request);
+ update secure_offer_fixture set token=result#>>'{data,redemptionToken}';
+ if result#>>'{data,redemptionToken}'!~'^[A-Za-z0-9_-]{43}$' then raise exception 'opaque token missing'; end if;
+ result:=pg_temp.secure_dispatch('register_secure_private_offer',payload,first_request);
+ if not(result->>'replayed')::boolean or result#>>'{data,redemptionToken}' is distinct from (select token from secure_offer_fixture) then
+  raise exception 'issuance retry replaced token'; end if;
+ begin
+  perform pg_temp.secure_dispatch('register_secure_private_offer',payload||'{"entitlements":{"appointments":false}}',first_request);
+  raise exception 'changed signed terms replay accepted';
+ exception when invalid_parameter_value then if sqlerrm<>'SHOP_SUPER_ADMIN_IDEMPOTENCY_KEY_REUSED' then raise; end if;end;
+ result:=pg_temp.secure_dispatch('register_secure_private_offer',pg_temp.offer_payload(s.revoked_id,10,clock_timestamp()+interval '1 day')||'{"entitlements":{}}');
+ update secure_offer_fixture set revoked_token=result#>>'{data,redemptionToken}';
+ payload:=jsonb_build_object('offerId',s.revoked_id,'offerVersion',3,'targetBindingId',f.binding_id,'targetEnvironmentId',f.environment_id);
+ first_request:=gen_random_uuid();
+ result:=pg_temp.secure_dispatch('revoke_secure_private_offer',payload,first_request);
+ if result#>>'{data,state}'<>'revoked' then raise exception 'target revocation not committed'; end if;
+ result:=pg_temp.secure_dispatch('revoke_secure_private_offer',payload,first_request);
+ if not(result->>'replayed')::boolean then raise exception 'revocation retry mutated'; end if;
+ result:=pg_temp.secure_dispatch('register_secure_private_offer',pg_temp.offer_payload(s.expired_id,10,clock_timestamp()+interval '100 milliseconds')||'{"entitlements":{}}');
+ update secure_offer_fixture set expired_token=result#>>'{data,redemptionToken}';
+ perform pg_sleep(0.2);
+ if has_table_privilege('authenticated','public.shop_private_offer_security','select') or
+ has_function_privilege('authenticated','shop_private.secure_offer_command(uuid,text,text,jsonb)','execute') or
+ has_function_privilege('anon','public.redeem_shop_private_offer(uuid,uuid,integer,uuid,uuid,uuid,numeric,date,text,text)','execute') then
+  raise exception 'secure offer authority exposed'; end if;
+end $$;
+select set_config('request.jwt.claim.role','authenticated',true);
+select set_config('request.jwt.claim.sub',owner_id::text,true) from private_offer_fixture;
+set local role authenticated;
+do $$
+declare f private_offer_fixture; s secure_offer_fixture; notice uuid;
+begin
+ select * into f from private_offer_fixture;select * into s from secure_offer_fixture;
+ begin
+  perform public.redeem_shop_private_offer(s.request_id,s.offer_id,3,f.shop_id,f.binding_id,f.environment_id,123.45,current_date,'Secure transfer');
+  raise exception 'UUID path bypassed secure token';
+ exception when insufficient_privilege then if sqlerrm<>'SHOP_PRIVATE_OFFER_TOKEN_REQUIRED' then raise; end if;end;
+ begin
+  perform public.redeem_shop_private_offer(s.request_id,s.offer_id,3,f.shop_id,f.binding_id,f.environment_id,123.45,current_date,'Secure transfer',repeat('x',43));
+  raise exception 'wrong token accepted';
+ exception when insufficient_privilege then if sqlerrm<>'SHOP_PRIVATE_OFFER_TOKEN_INVALID' then raise; end if;end;
+ begin
+  perform public.redeem_shop_private_offer(s.request_id,s.offer_id,3,f.shop_id,f.binding_id,gen_random_uuid(),123.45,current_date,'Secure transfer',s.token);
+  raise exception 'wrong environment accepted';
+ exception when insufficient_privilege then null;end;
+ perform set_config('request.jwt.claim.sub',f.other_id::text,true);
+ begin
+  perform public.redeem_shop_private_offer(s.request_id,s.offer_id,3,f.other_shop_id,f.binding_id,f.environment_id,123.45,current_date,'Secure transfer',s.token);
+  raise exception 'recipient transplant accepted';
+ exception when insufficient_privilege then null;end;
+ perform set_config('request.jwt.claim.sub',f.owner_id::text,true);
+ begin
+  perform public.redeem_shop_private_offer(gen_random_uuid(),s.revoked_id,3,f.shop_id,f.binding_id,f.environment_id,123.45,current_date,'Revoked transfer',s.revoked_token);
+  raise exception 'revoked link accepted';
+ exception when insufficient_privilege then if sqlerrm<>'SHOP_PRIVATE_OFFER_REVOKED' then raise; end if;end;
+ begin
+  perform public.redeem_shop_private_offer(gen_random_uuid(),s.expired_id,3,f.shop_id,f.binding_id,f.environment_id,123.45,current_date,'Expired transfer',s.expired_token);
+  raise exception 'expired link accepted';
+ exception when invalid_parameter_value then if sqlerrm<>'SHOP_PRIVATE_OFFER_EXPIRED' then raise; end if;end;
+ notice:=public.redeem_shop_private_offer(s.request_id,s.offer_id,3,f.shop_id,f.binding_id,f.environment_id,123.45,current_date,'Secure transfer',s.token);
+ if notice is distinct from public.redeem_shop_private_offer(s.request_id,s.offer_id,3,f.shop_id,f.binding_id,f.environment_id,123.45,current_date,'Secure transfer',s.token) then
+  raise exception 'secure redemption retry duplicated notice'; end if;
+ begin
+  perform public.redeem_shop_private_offer(gen_random_uuid(),s.offer_id,3,f.shop_id,f.binding_id,f.environment_id,123.45,current_date,'Secure transfer',s.token);
+  raise exception 'one-time redemption accepted new request';
+ exception when unique_violation then if sqlerrm<>'SHOP_PRIVATE_OFFER_ALREADY_REDEEMED' then raise; end if;end;
+end $$;
+reset role;
+update secure_offer_fixture set notice_id=(select submission_id from public.shop_private_offer_redemptions where offer_id=secure_offer_fixture.offer_id);
+do $$
+declare s secure_offer_fixture;f private_offer_fixture;
+begin
+ select * into s from secure_offer_fixture;select * into f from private_offer_fixture;
+ if (select offer_entitlements from public.shop_billing_submissions where id=s.notice_id)<>'{"appointments":true,"reports":false}'::jsonb then
+  raise exception 'secure entitlement snapshot lost'; end if;
+ begin
+  update public.shop_billing_submissions set offer_entitlements='{}' where id=s.notice_id;
+  raise exception 'entitlement snapshot mutated';
+ exception when object_not_in_prerequisite_state then null;end;
+ begin
+  perform pg_temp.secure_dispatch('revoke_secure_private_offer',jsonb_build_object('offerId',s.offer_id,'offerVersion',3,'targetBindingId',f.binding_id,'targetEnvironmentId',f.environment_id));
+  raise exception 'redeemed terms revoked destructively';
+ exception when unique_violation then if sqlerrm<>'SHOP_PRIVATE_OFFER_ALREADY_REDEEMED' then raise; end if;end;
+end $$;
+select set_config('request.jwt.claim.role','authenticated',true);
+select set_config('request.jwt.claim.sub',operator_id::text,true) from private_offer_fixture;
+set local role authenticated;
+do $$
+declare s secure_offer_fixture; request uuid:=gen_random_uuid(); result jsonb;
+begin
+ select * into s from secure_offer_fixture;
+ perform public.platform_admin_billing_command(gen_random_uuid(),'mark_under_review',s.notice_id,'Review secure offer payment','{}');
+ result:=public.platform_admin_billing_command(request,'approve',s.notice_id,'Confirmed secure offer payment',jsonb_build_object('receivedAmount',123.45,'receivedReference','Secure transfer','receivedDate',current_date));
+ result:=public.platform_admin_billing_command(request,'approve',s.notice_id,'Confirmed secure offer payment',jsonb_build_object('receivedAmount',123.45,'receivedReference','Secure transfer','receivedDate',current_date));
+ if not(result->>'replayed')::boolean then raise exception 'secure payment replay duplicated activation'; end if;
+end $$;
+reset role;
+do $$
+declare s secure_offer_fixture;
+begin
+ select * into s from secure_offer_fixture;
+ if (select count(*) from public.subscription_commercial_periods where billing_submission_id=s.notice_id)<>1 or
+ (select offer_entitlements from public.subscription_commercial_periods where billing_submission_id=s.notice_id)<>'{"appointments":true,"reports":false}'::jsonb then
+ raise exception 'secure period snapshot or exactly-once activation failed';end if;
+end $$;
