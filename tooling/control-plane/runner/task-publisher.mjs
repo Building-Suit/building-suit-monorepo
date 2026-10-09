@@ -568,7 +568,7 @@ const changed =
 if (context.run_publication_authority?.unattended_queue_authority === true) {
   const reviewObjects = Object.fromEntries(ordinarySourceReviews.flatMap(review => [review.path, review.witness_path])
     .filter(file => existsSync(path.join(execution.worktree_path, file)))
-    .map(file => [file, git(['hash-object', '--', file]).trim()]))
+    .map(file => [file, requireSuccess(git(['hash-object', '--', file]), 'git_reviewed_source_hash_failed').trim()]))
   const reviewedOrdinaryPaths = reviewedOrdinarySourcePaths({task, execution, verification, objects: reviewObjects})
   const sensitive = unattendedSensitiveFiles(changed, {verifiedOwnerPaths: verifiedProtectedPaths, reviewedOrdinaryPaths})
   if (sensitive.length) fail('publication_security_sensitive_operator_wait', { protected_paths: sensitive, classification: { failure_class: 'operator-wait', recovery_action: 'wait-operator' } })
