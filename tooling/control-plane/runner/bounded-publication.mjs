@@ -1,3 +1,4 @@
+import {queueDraftSourcePaths} from './draft-source-policy.mjs'
 import {pathInScope,validPublicationPath,protectedPublicationPath,verifiedProtectedPublicationPaths} from './publication-preflight.mjs'
 // These receipts are supplied by PostgreSQL, not worker-generated task metadata.
 export function ordinaryRunAuthority(authority, taskId) {
@@ -7,7 +8,7 @@ export function ordinaryRunAuthority(authority, taskId) {
 export function supersededPublicationHold(snapshot) {
   return snapshot.packet?.task?.status === 'passed' &&
     snapshot.recovery?.next_action === 'wait-operator' &&
-    (snapshot.recovery?.error_code === 'publication_operator_hold' || supersededRegisteredScopeGate(snapshot) || supersededExactProtectedHold(snapshot)) &&
+    (snapshot.recovery?.error_code === 'publication_operator_hold' || supersededRegisteredScopeGate(snapshot) || supersededExactProtectedHold(snapshot) || supersededQueueSourceHold(snapshot)) &&
     ordinaryRunAuthority(snapshot.run_publication_authority, snapshot.packet.task.task_id)
 }
 export function supersededExactProtectedHold(snapshot) {
@@ -76,4 +77,13 @@ export function operationHasAuthoritativeSuccess(snapshot, op) {
   if (op.action === 'task-prepare') return task?.status === 'passed'
   return op.action === 'task-verify' && task?.status === 'passed' &&
     snapshot.verification_runs?.filter(v => Number(v.execution_id) === Number(execution.execution_id)).at(-1)?.status === 'passed'
+}
+
+export function supersededQueueSourceHold(snapshot) {
+ if(!['publication_protected_path_operator_wait','publication_scope_requires_operator','publication_security_sensitive_operator_wait'].includes(snapshot.recovery?.error_code))return false
+ const e=snapshot.executions?.at(-1),v=snapshot.verification_runs?.filter(v=>Number(v.execution_id)===Number(e?.execution_id)).at(-1),b=snapshot.packet?.publication_boundaries
+ const paths=queueDraftSourcePaths({authority:snapshot.run_publication_authority,task:snapshot.packet?.task,execution:e,verification:v?{...v,state_fingerprint:v.metadata?.verified_state?.fingerprint,verified_state:v.metadata?.verified_state}:null,taskPaths:b?.task_paths,projectPaths:b?.project_paths})
+ const f=snapshot.failures?.find(f=>Number(f.failure_id)===Number(snapshot.recovery.failure_id))
+ const waiting=f?.metadata?.protected_paths??f?.metadata?.classification?.waiting??f?.metadata?.classification?.blocked
+ return Number(f?.execution_id)===Number(e?.execution_id)&&waiting?.length>0&&waiting.every(p=>paths.includes(p))
 }

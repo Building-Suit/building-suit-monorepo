@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {queueDraftSourcePaths} from './draft-source-policy.mjs'
 import { unattendedSensitiveFiles, frozenDraftReplay } from './unattended-publication.mjs'
 import { ordinarySourceReviews, reviewedOrdinarySourcePaths } from './reviewed-source-artifacts.mjs'
 import { ordinaryRunAuthority } from './bounded-publication.mjs'
@@ -564,13 +565,15 @@ for (
 const changed =
   [...changedFiles]
     .sort()
+const queueSourcePaths=queueDraftSourcePaths({authority:context.run_publication_authority,task,execution,verification,taskPaths:publicationBoundaries.task_paths??[],projectPaths:publicationBoundaries.project_paths??[]})
+
 
 if (context.run_publication_authority?.unattended_queue_authority === true) {
   const reviewObjects = Object.fromEntries(ordinarySourceReviews.flatMap(review => [review.path, review.witness_path])
     .filter(file => existsSync(path.join(execution.worktree_path, file)))
     .map(file => [file, requireSuccess(git(['hash-object', '--', file]), 'git_reviewed_source_hash_failed').trim()]))
   const reviewedOrdinaryPaths = reviewedOrdinarySourcePaths({task, execution, verification, objects: reviewObjects})
-  const sensitive = unattendedSensitiveFiles(changed, {verifiedOwnerPaths: verifiedProtectedPaths, reviewedOrdinaryPaths})
+  const sensitive = unattendedSensitiveFiles(changed, {verifiedOwnerPaths: [...verifiedProtectedPaths,...queueSourcePaths], reviewedOrdinaryPaths})
   if (sensitive.length) fail('publication_security_sensitive_operator_wait', { protected_paths: sensitive, classification: { failure_class: 'operator-wait', recovery_action: 'wait-operator' } })
 }
 
@@ -586,10 +589,11 @@ const scopeClassification = classifyPublicationFiles({
   ordinaryAuthorizedPaths,
   protectedAuthorizedPaths,
   verifiedProtectedPaths,
+  queueSourcePaths,
 })
 
-if (ordinaryRunAuthority(context.run_publication_authority, task.task_id) && changed.some(file => protectedPublicationPath(file) && !verifiedProtectedPaths.includes(file))) {
-  fail('publication_protected_path_operator_wait', { protected_paths: changed.filter(file => protectedPublicationPath(file) && !verifiedProtectedPaths.includes(file)), classification: { failure_class: 'operator-wait', recovery_action: 'wait-operator' } })
+if (ordinaryRunAuthority(context.run_publication_authority, task.task_id) && changed.some(file => protectedPublicationPath(file) && !verifiedProtectedPaths.includes(file) && !queueSourcePaths.includes(file))) {
+  fail('publication_protected_path_operator_wait', { protected_paths: changed.filter(file => protectedPublicationPath(file) && !verifiedProtectedPaths.includes(file) && !queueSourcePaths.includes(file)), classification: { failure_class: 'operator-wait', recovery_action: 'wait-operator' } })
 }
 
 if (scopeClassification.blocked.length > 0) {
@@ -715,6 +719,7 @@ else {
     ordinaryAuthorizedPaths,
     protectedAuthorizedPaths,
   verifiedProtectedPaths,
+  queueSourcePaths,
   })
 
   if (stagedClassification.waiting.length > 0 || stagedClassification.blocked.length > 0) {
