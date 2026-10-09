@@ -6,9 +6,9 @@ queue grants 17–19 for the existing Shop, Super Admin and Shared runs. Migrati
 
 Publication requires current frozen membership and grant, passing latest trusted
 verification, matching execution, source blobs, parent and contract, task/project
-scope, separate Publisher ownership and an open Draft on a `codex/` branch. SQL
-migration files, Supabase configuration and task-scoped server API/middleware/plugin
-source are review artifacts. Publishing these sources authorizes no hosted execution.
+scope, separate Publisher ownership and an open Draft on a `codex/` branch. Application, shared-package and documentation source within the frozen task scope,
+including SQL migrations, Supabase configuration and server API/middleware/plugin
+source, are review artifacts. Publishing these sources authorizes no hosted execution.
 The Publisher retains verification, Git-parent, provider, Draft and replay checks.
 
 The sole ancillary exception is Solo execution 324's verified test harness

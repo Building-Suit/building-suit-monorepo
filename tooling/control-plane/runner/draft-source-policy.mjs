@@ -1,7 +1,7 @@
 import {pathInScope,validPublicationPath} from './publication-preflight.mjs'
 // Draft source authority is a control-plane policy, not a fabricated operator receipt.
 export function draftSourceArtifact(file) {
- return validPublicationPath(file) && /^apps\/[^/]+\/(?:supabase\/(?:migrations\/[^/]+\.sql|config\.toml)|server\/(?:api|middleware|plugins)\/.+)$/.test(file) && !/(?:^|\/)(?:secrets?|credentials?|\.env)(?:\/|\.|$)/i.test(file)
+ return validPublicationPath(file) && /^(?:apps|packages|docs)\//.test(file) && !/(?:^|\/)(?:\.github|n8n|vercel|deploy)(?:\/|\.|-|$)/i.test(file) && !/(?:^|\/)(?:secrets?|credentials?|\.env)(?:\/|\.|$)/i.test(file)
 }
 export function queueDraftSourcePaths({authority,task,execution,verification,taskPaths=[],projectPaths=[]}) {
  const p=authority?.draft_source_policy
