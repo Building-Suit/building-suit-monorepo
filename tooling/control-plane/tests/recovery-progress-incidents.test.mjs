@@ -290,3 +290,39 @@ test('successive repairs select only the latest verification identity without re
  assert.equal(selectVerifierRecipe(snapshot,recipes),undefined);
  assert.equal(execution.attempt,1);assert.equal(snapshot.executions.length,1);
 })
+
+test('Solo current local database product proof charges once without executing or passing the blocked obligation',()=>{
+ const root=mkdtempSync(path.join(tmpdir(),'cp-sas-bound-reviews-'))
+ try {
+  const git=args=>{const r=spawnSync('git',args,{cwd:root,encoding:'utf8'});assert.equal(r.status,0,r.stderr)}
+  git(['init','-q']);writeFileSync(path.join(root,'.gitignore'),'.local/\n');mkdirSync(path.join(root,'apps/shop-suit/supabase/migrations'),{recursive:true});mkdirSync(path.join(root,'.local/logs'),{recursive:true})
+  const migration='apps/shop-suit/supabase/migrations/billing.sql';writeFileSync(path.join(root,migration),"IF value IS DISTINCT FROM CASE action WHEN 'approve' THEN 'approved' END THEN NULL; END IF;")
+  git(['add','.']);git(['-c','user.name=Fixture','-c','user.email=fixture@example.test','commit','-qm','fixture'])
+  const execution={task_id:'SS-LAUNCH-SOLO-VARIANTS-001',execution_id:323,attempt:1,status:'succeeded',worktree_path:root},verification={execution_id:323,verification_run_id:357,status:'failed'},reviews={}
+  const checks=[['database-tests','PRODUCT_DEFECT','application-sql','Solo 2 renewal tried Solo 1'],['shop-database-regression','PRODUCT_DEFECT','application-sql','Solo 2 renewal tried Solo 1']].map(([name,classification,origin,log],i)=>{
+   const check={execution_id:323,verification_id:100+i,check_name:name,command:'pnpm db:test:shop',verification_run_id:357,status:'fail',exit_code:1,log_path:path.join(root,'.local/logs/'+name+'.log'),metadata:{required:true}}
+   writeFileSync(check.log_path,log)
+   check.trusted_registration=trustedCommandRegistration({check,executionId:323,verificationRunId:357,taskId:'SS-LAUNCH-SOLO-VARIANTS-001',registry:{version:1},obligationIds:[name],verifierBytes:'current verifier'})
+   check.trusted_receipt=verifierReceipt({check,artifactRoot:root,sourceRoot:root,executionId:323,verificationRunId:357,taskId:'SS-LAUNCH-SOLO-VARIANTS-001'})
+   reviews[name]={artifact_sha256:sha(log),classification,origin,root_cause:log,source_paths:[migration]}
+   return check
+  })
+  const prepared=prepareBoundFailureReviews({execution,verification,checks,reviews})
+  for(const check of checks)check.metadata.failure_evidence=prepared.find(p=>p.verification_id===check.verification_id).evidence
+  const blocked={execution_id:323,verification_run_id:357,check_name:'ss-launch-solo-variants-001-obligation-1-database',command:'pnpm supabase test db',status:'not_run',metadata:{required:true,selection_reason:'database_prerequisite_failed'}}
+  const snapshot={...sas,packet:{task:{task_id:'SS-LAUNCH-SOLO-VARIANTS-001',status:'failed'},retry_policy:{max_attempts:5}},executions:[execution],verification_runs:[verification],verification_results:[...checks,blocked]}
+  const audit=auditAttempts(snapshot),{entries,consumed}=audit
+  assert.equal(planSupervisorStep({...snapshot,exhaustion_audit:audit,authoritative_failure:{classification:'PRODUCT_DEFECT',execution_id:323,evidence:{verification_run_id:357}},retry_accounting:{consumed:1}}).command,'task-retry')
+  assert.equal(entries[0].classification,'PRODUCT_DEFECT');assert.equal(consumed,1);assert.equal(blocked.trusted_receipt,undefined)
+  assert.equal(entries[0].blocking_checks.find(c=>c.name===blocked.check_name).status,'not_run')
+  assert.ok(entries[0].proof.every(p=>p.classification==='PRODUCT_DEFECT'))
+  assert.equal(checks.length,2);assert.equal(blocked.metadata.failure_evidence,undefined)
+  const current=checks[1].trusted_receipt
+  checks[1].trusted_receipt={...current,verification_run_id:356}
+  assert.equal(auditAttempts(snapshot).action,'investigate');assert.equal(auditAttempts(snapshot).consumed,0)
+  checks[1].trusted_receipt=current
+  checks[1].metadata.failure_evidence=null
+  assert.equal(auditAttempts(snapshot).action,'investigate');assert.equal(auditAttempts(snapshot).consumed,0)
+
+ }finally{rmSync(root,{recursive:true,force:true})}
+})

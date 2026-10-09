@@ -26,6 +26,16 @@ function correctedLocaleSelector(root,check){
  if(!source.includes("name: 'ar', exact: true")||!source.includes("toHaveAttribute('dir', 'rtl')"))return null
  return {kind:'corrected-verifier-locale-selector',test_sha:digest(source),rtl_assertion_preserved:true}
 }
+// This omitted Solo obligation inherits accounting only from both exact current
+// registered local database prerequisites; it remains required and unrun.
+export function reviewedSoloDatabasePrerequisites(check,checks,execution,verification){
+ const name=check.name??check.check_name
+ if(execution.task_id!=='SS-LAUNCH-SOLO-VARIANTS-001'||name!=='ss-launch-solo-variants-001-obligation-1-database'||check.status!=='not_run'||(check.selection_reason??check.metadata?.selection_reason)!=='database_prerequisite_failed'||check.trusted_receipt)return []
+ const prerequisites=['database-tests','shop-database-regression'].map(name=>checks.find(c=>(c.name??c.check_name)===name))
+ if(prerequisites.some(c=>{const r=c?.trusted_receipt,registration=r?.registration;return !c||c.status!=='fail'||c.command!=='pnpm db:test:shop'||r?.version!==2||registration?.version!==1||r.task_id!==execution.task_id||registration.task_id!==execution.task_id||Number(r.execution_id)!==Number(execution.execution_id)||Number(registration.execution_id)!==Number(execution.execution_id)||Number(r.verification_run_id)!==Number(verification?.verification_run_id)||Number(registration.verification_run_id)!==Number(verification?.verification_run_id)||Number(registration.check_id)!==Number(c.verification_id)||registration.command_id!==(c.name??c.check_name)||registration.command!==c.command||!/^[a-f0-9]{64}$/.test(r.source_fingerprint??'')}))return []
+ if(prerequisites[0].trusted_receipt.source_fingerprint!==prerequisites[1].trusted_receipt.source_fingerprint||prerequisites[0].trusted_receipt.registration.verifier_sha256!==prerequisites[1].trusted_receipt.registration.verifier_sha256||prerequisites[0].trusted_receipt.registration.registry_version!==prerequisites[1].trusted_receipt.registration.registry_version)return []
+ return prerequisites
+}
 export function auditAttempts(snapshot){
  const executions=snapshot.executions??[],failures=snapshot.failures??[],results=snapshot.verification_results??[]
  const entries=executions.filter(e=>e.status!=='running').flatMap(e=>{
@@ -44,9 +54,10 @@ export function auditAttempts(snapshot){
    // required, but has no executed outcome to review/materialize. Inherit only
    // its exact current trusted prerequisite; never manufacture its own receipt.
    if(c.status==='not_run'&&c.selection_reason==='database_prerequisite_failed'){
-    const registered=registeredVerifierPrerequisites(c,checks,e,verification)
+    const exactRecipe=registeredVerifierPrerequisites(c,checks,e,verification)
+    const registered=exactRecipe.length?exactRecipe:reviewedSoloDatabasePrerequisites(c,checks,e,verification)
     const inherited=registered.map(p=>reconcileFailureEvidence(p,e,verification))
-    if(inherited.length&&inherited.every(b=>b.evidence&&b.classification==='VERIFIER_INFRA'))return inherited[0]
+    if(inherited.length&&inherited.every(b=>b.evidence&&['VERIFIER_INFRA','PRODUCT_DEFECT'].includes(b.classification)&&b.classification===inherited[0].classification))return inherited[0]
     const prerequisites=checks.filter(p=>p.status==='fail'&&p.name?.endsWith('-database-reset'))
     if(prerequisites.length===1)return reconcileFailureEvidence(prerequisites[0],e,verification)
    }
