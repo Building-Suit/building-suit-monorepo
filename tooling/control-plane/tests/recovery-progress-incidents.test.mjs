@@ -279,12 +279,14 @@ test('blocked mandatory check inherits only registered prerequisites and remains
 
 test('successive repairs select only the latest verification identity without resetting attempts',()=>{
  const task_id='SS-LAUNCH-SOLO-VARIANTS-001',execution={task_id,execution_id:323,attempt:1};
- const recipes=[{task_id,execution_id:323,verification_run_id:354,id:'trial'},{task_id,execution_id:323,verification_run_id:355,id:'renewal'}];
+ const recipes=[{task_id,execution_id:323,verification_run_id:354,id:'trial'},{task_id,execution_id:323,verification_run_id:355,id:'renewal'},{task_id,execution_id:323,verification_run_id:356,id:'lifecycle'}];
  const snapshot={packet:{task:{task_id}},executions:[execution],verification_runs:[{execution_id:323,verification_run_id:354}]};
  assert.equal(selectVerifierRecipe(snapshot,recipes).id,'trial');
  snapshot.verification_runs.push({execution_id:323,verification_run_id:355});
  assert.equal(selectVerifierRecipe(snapshot,recipes).id,'renewal');
  snapshot.verification_runs.push({execution_id:323,verification_run_id:356});
+ assert.equal(selectVerifierRecipe(snapshot,recipes).id,'lifecycle');
+ snapshot.verification_runs.push({execution_id:323,verification_run_id:357});
  assert.equal(selectVerifierRecipe(snapshot,recipes),undefined);
  assert.equal(execution.attempt,1);assert.equal(snapshot.executions.length,1);
 })

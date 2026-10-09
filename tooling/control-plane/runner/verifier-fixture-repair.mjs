@@ -2,7 +2,7 @@ import {existsSync,mkdirSync,readFileSync,writeFileSync,lstatSync,realpathSync,r
 import path from 'node:path'
 import {createHash} from 'node:crypto'
 import {validateTrustedReceipt,readBoundArtifact} from './trusted-verifier-receipt.mjs'
-const catalogNames=['shop-cash-policy.json','shop-solo-trial-catalog.json','shop-solo-renewal-fixture.json']
+const catalogNames=['shop-cash-policy.json','shop-solo-trial-catalog.json','shop-solo-renewal-fixture.json','shop-solo-lifecycle-fixtures.json']
 export function registeredVerifierRecipes(sourceRoot=new URL('../../..',import.meta.url).pathname){
  return catalogNames.map(name=>path.join(sourceRoot,'tooling/control-plane/verifier-repairs',name)).filter(existsSync).map(file=>JSON.parse(readFileSync(file,'utf8')))
 }
@@ -38,7 +38,8 @@ export function applyVerifierFixtureRepair(snapshot,recipe) {
  if(blocked.length!==(recipe.blocked_checks?.length??0)||executed.length!==recipe.checks.length||executed.some(c=>!recipe.checks.some(expected=>expected.name===c.check_name&&expected.artifact_sha256===c.trusted_receipt?.artifact?.sha256)))return {applied:false,reason:'reviewed_recipe_evidence_mismatch'}
  const targets=recipe.files.map(file=>{
   const legacyTrial=(recipe.id==='shop-solo-trial-catalog-v1'&&file.path==='apps/shop-suit/supabase/tests/shop_trial_onboarding.sql')||(recipe.id==='shop-solo-renewal-fixture-v1'&&file.path==='apps/shop-suit/supabase/tests/shop_plan_catalog_v2.sql')
-  if(!legacyTrial&&!/^apps\/[a-z-]+\/((supabase\/tests\/[^/]+\.test\.sql)|(tests\/e2e\/[^/]+\.(ts|mjs)))$/.test(file.path))throw Error('verifier_test_path_required')
+  const lifecycleFixture=recipe.id==='shop-solo-lifecycle-fixtures-v1'&&file.path==='apps/shop-suit/supabase/tests/shop_subscription_lifecycle.sql'
+  if(!legacyTrial&&!lifecycleFixture&&!/^apps\/[a-z-]+\/((supabase\/tests\/[^/]+\.test\.sql)|(tests\/e2e\/[^/]+\.(ts|mjs)))$/.test(file.path))throw Error('verifier_test_path_required')
   const target=path.join(root,file.path);let parent=root
   for(const part of file.path.split('/').slice(0,-1)){parent=path.join(parent,part);if(!existsSync(parent)||lstatSync(parent).isSymbolicLink())throw Error('verifier_path_boundary_required')}
   const before=existsSync(target)?digest(readBoundArtifact(target,root)):null
