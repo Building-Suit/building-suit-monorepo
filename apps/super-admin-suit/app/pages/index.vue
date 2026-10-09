@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { ActivityRow, ActivityQuery } from '../utils/activity'
 definePageMeta({ layout: false })
 const { t, locale } = useI18n()
 const { ready, state, pending, actionError, recheck, signIn, signOut } = useAdminSession()
@@ -19,6 +20,10 @@ onMounted(() => {
 const transfer = useManualTransfer(() => selection.value.item?.bindingId, () => state.value === 'success' && registryState.value === 'success' && selection.value.item?.module === 'manual-transfer')
 const { configuration, draft, reason, status: transferStatus, command, action: transferAction } = transfer
 const { visible: transferVisible, pending: transferPending, dirty: transferDirty, error: transferError } = transferAction
+const activity = useActivity(() => `${ready.data.value?.userId}:${ready.data.value?.authorityEnvironmentId}:${state.value}:${selection.value.suit?.key}:${selection.value.item?.key}`, () => state.value === 'success' && registryState.value === 'success' && selection.value.item?.module === 'activity')
+const { query: activityQuery, rows: activityRows, sources: activitySources, total: activityTotal, status: activityStatus, retrieving, remoteFailed } = activity
+const filterKeys = ['suit', 'environment', 'action', 'actor', 'target', 'from', 'to', 'requestId', 'correlationId'] as const satisfies readonly (keyof ActivityQuery)[]
+const activityColumns = computed(() => (['source', 'suit', 'environment', 'actor', 'action', 'target', 'status', 'reason', 'requestId', 'correlationId', 'occurredAt'] as const satisfies readonly (keyof ActivityRow)[]).map(field => ({ field, header: t(`activity.${field}`) })))
 const email = ref('')
 const password = ref('')
 useHead({ title: () => t('product.name') })
@@ -35,6 +40,28 @@ async function submit() {
       <BsStateSurface state="success" :title="t('auth.authorized')" />
       <BsStateSurface v-if="registryState !== 'success'" :state="registryState" :title="t(`registry.${registryState}`)" :action-label="registryState === 'loading' ? undefined : t('registry.retry')" @action="registry.refresh()" />
       <BsContentSection v-else :title="selection.item ? label(selection.item.label) : label(selection.suit!.label)" :description="label(selection.item?.description || selection.suit!.description)">
+        <div v-if="selection.item?.module === 'activity'" class="min-w-0 space-y-4" data-activity>
+          <p class="text-sm text-fg-muted">{{ t('activity.partial') }}</p>
+          <BsForm class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" @submit="activity.apply()">
+            <BsField v-for="key in filterKeys" :key="key" :for="`activity-${key}`" :label="t(`activity.${key}`)">
+              <BsInput :id="`activity-${key}`" v-model="activityQuery[key]" :maxlength="200" :placeholder="key === 'from' || key === 'to' ? '2026-01-01T00:00:00Z' : undefined" />
+            </BsField>
+            <BsButton type="submit" :disabled="activityStatus === 'loading'">{{ t('activity.filter') }}</BsButton>
+          </BsForm>
+          <BsStateSurface v-if="activityStatus !== 'success'" :state="activityStatus" :title="t(`activity.${activityStatus}`)" :action-label="activityStatus === 'error' ? t('activity.retry') : undefined" @action="activity.load()" />
+          <BsDataTable v-if="activityStatus === 'success'" :value="activityRows" :label="t('activity.title')" lazy paginator :rows="activityQuery.pageSize" :first="(activityQuery.page - 1) * activityQuery.pageSize" :total-records="activityTotal" :query-adapter="activity.queryAdapter" :sort-order="activityQuery.order === 'asc' ? 1 : -1" sort-field="occurredAt" :capabilities="{}" density="compact" :scroll-label="t('activity.title')">
+            <Column v-for="column in activityColumns" :key="column.field" :field="column.field" :header="column.header" :sortable="column.field === 'occurredAt'">
+              <template #body="{ data }"><span class="block max-w-64 break-words" :dir="column.field === 'requestId' || column.field === 'correlationId' ? 'ltr' : undefined">{{ data[column.field] || '—' }}</span></template>
+            </Column>
+          </BsDataTable>
+          <BsStateSurface v-if="remoteFailed" state="error" :title="t('activity.remoteError')" />
+          <div v-for="source in activitySources" :key="`${source.bindingId}:${source.stream}`" class="flex flex-wrap items-center gap-3 border-t border-line pt-3 text-sm" data-activity-source>
+            <span>{{ source.suit }} · {{ source.environment }} · {{ source.stream }}</span>
+            <span>{{ t('activity.observed') }}: {{ source.lastObservedAt || t('activity.never') }}</span>
+            <span v-if="source.lastFailedAt">{{ t('activity.failed') }}: {{ source.lastFailedAt }}</span>
+            <BsButton :pending="retrieving" :disabled="retrieving" @click="activity.retrieve(source)">{{ t('activity.retrieve') }} {{ source.nextPage }}</BsButton>
+          </div>
+        </div>
         <div v-if="selection.item?.module === 'manual-transfer'" class="max-w-3xl space-y-5" data-transfer>
           <p class="text-sm text-fg-muted">{{ t('transfer.manual') }}</p>
           <BsStateSurface :state="transferStatus === 'configured' ? 'success' : transferStatus === 'loading' ? 'loading' : transferStatus === 'error' ? 'error' : transferStatus === 'denied' ? 'denied' : 'empty'" :title="t(`transfer.${transferStatus}`)" :action-label="transferStatus === 'error' || transferStatus === 'denied' ? t('registry.retry') : undefined" @action="transfer.load()" />
