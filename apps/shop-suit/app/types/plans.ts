@@ -19,7 +19,7 @@ export type PlanUsageResource = {
 }
 
 export type ShopPlanInterval = 'monthly' | 'annual'
-export type ShopPlanVariant = 'standard' | 'multi_2' | 'multi_3'
+export type ShopPlanVariant = 'standard' | 'solo_1' | 'solo_2' | 'multi_2' | 'multi_3'
 
 export type ShopPlanOffer = {
   catalogTermsId: string
