@@ -235,18 +235,27 @@ test('blocked mandatory check inherits only registered prerequisites and remains
   check.metadata.failure_evidence=prepared[0].evidence
   const snapshot={packet:{task:{task_id:'SS-LAUNCH-SOLO-VARIANTS-001',status:'failed'}},workflow_run:{status:'running'},executions:[execution],verification_runs:[verification],verification_results:[check],authoritative_failure:{classification:'VERIFIER_INFRA',evidence:{verification_run_id:354}}}
   const recipe={id:'shop-solo-trial-catalog-v1',execution_id:323,verification_run_id:354,task_id:snapshot.packet.task.task_id,checks:[{verification_id:100,name:'cash-sql',artifact_sha256:reviews['cash-sql'].artifact_sha256}],files:[{path:fixture,before_sha256:sha(original),after_sha256:sha(repaired),content:repaired}]}
+  const second={...check,verification_id:102,check_name:'regression-sql',metadata:{required:true}}
+  second.trusted_registration=trustedCommandRegistration({check:second,executionId:323,verificationRunId:354,taskId:'SS-LAUNCH-SOLO-VARIANTS-001',registry:{version:1},obligationIds:['cash-matrix'],verifierBytes:'current verifier'})
+  second.trusted_receipt=verifierReceipt({check:second,artifactRoot:root,sourceRoot:root,executionId:323,verificationRunId:354,taskId:'SS-LAUNCH-SOLO-VARIANTS-001'})
+  second.metadata.failure_evidence=prepareBoundFailureReviews({execution,verification,checks:[second],reviews:{'regression-sql':reviews['cash-sql']}})[0].evidence
+  recipe.checks.push({name:'regression-sql',verification_id:102,artifact_sha256:reviews['cash-sql'].artifact_sha256})
+  snapshot.verification_results.push(second)
   const blocked={verification_id:101,verification_run_id:354,check_name:'mandatory-db',status:'not_run',metadata:{required:true,selection_reason:'database_prerequisite_failed'}}
-  recipe.blocked_checks=[{name:'mandatory-db',verification_id:101,selection_reason:'database_prerequisite_failed',prerequisites:['cash-sql']}]
+  recipe.blocked_checks=[{name:'mandatory-db',verification_id:101,selection_reason:'database_prerequisite_failed',prerequisites:['cash-sql','regression-sql']}]
   snapshot.verification_results.push(blocked)
-  assert.deepEqual(registeredVerifierPrerequisites(blocked,[check,blocked],execution,verification,[recipe]),[check])
-  assert.deepEqual(registeredVerifierPrerequisites({...blocked,verification_id:102},[check,blocked],execution,verification,[recipe]),[])
-  assert.deepEqual(registeredVerifierPrerequisites(blocked,[{...check,trusted_receipt:null},blocked],execution,verification,[recipe]),[])
-  assert.deepEqual(registeredVerifierPrerequisites(blocked,[check,blocked],{...execution,execution_id:324},verification,[recipe]),[])
+  assert.deepEqual(registeredVerifierPrerequisites(blocked,[check,second,blocked],execution,verification,[recipe]),[check,second])
+  assert.deepEqual(registeredVerifierPrerequisites({...blocked,verification_id:102},[check,second,blocked],execution,verification,[recipe]),[])
+  assert.deepEqual(registeredVerifierPrerequisites(blocked,[{...check,trusted_receipt:null},second,blocked],execution,verification,[recipe]),[])
+  assert.deepEqual(registeredVerifierPrerequisites(blocked,[check,second,blocked],{...execution,execution_id:324},verification,[recipe]),[])
   assert.equal(applyVerifierFixtureRepair({...snapshot,verification_results:[blocked]},recipe).applied,false)
   writeFileSync(check.log_path,'tampered')
   assert.throws(()=>applyVerifierFixtureRepair(snapshot,recipe),/trusted_artifact_digest_mismatch/)
   assert.equal(readFileSync(path.join(root,fixture),'utf8'),original)
   writeFileSync(check.log_path,'UNION text cannot cast to jsonb')
+  const reviewed=second.metadata.failure_evidence;second.metadata.failure_evidence=null
+  assert.throws(()=>applyVerifierFixtureRepair(snapshot,recipe),/trusted_verifier_review_required/)
+  second.metadata.failure_evidence=reviewed
   const result=applyVerifierFixtureRepair(snapshot,recipe)
   assert.equal(result.applied,true);assert.equal(result.receipt.product_attempts,0);assert.equal(result.receipt.execution_id,323)
   for(let n=0;n<100;n++)assert.equal(applyVerifierFixtureRepair(snapshot,recipe).reason,'already_repaired')
