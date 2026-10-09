@@ -326,3 +326,63 @@ test('Solo current local database product proof charges once without executing o
 
  }finally{rmSync(root,{recursive:true,force:true})}
 })
+
+test('exact concurrency harness repair preserves attempt two and rejects arbitrary tooling writes',()=>{
+ const root=mkdtempSync(path.join(tmpdir(),'cp-reviewed-fixture-'))
+ try{
+  const git=args=>{const r=spawnSync('git',args,{cwd:root,encoding:'utf8'});assert.equal(r.status,0,r.stderr)}
+  git(['init','-q']);writeFileSync(path.join(root,'.gitignore'),'.local/\n');mkdirSync(path.join(root,'tooling/database'),{recursive:true});mkdirSync(path.join(root,'.local/logs'),{recursive:true})
+  const fixture='tooling/database/test-shop-plan-limits-local.mjs', original='SELECT UNION fixture;', repaired='SELECT jsonb fixture;'
+  writeFileSync(path.join(root,fixture),original);git(['add','.']);git(['-c','user.name=Fixture','-c','user.email=fixture@example.test','commit','-qm','fixture'])
+  const check={verification_id:100,check_name:'cash-sql',command:'pnpm supabase test db',status:'fail',exit_code:1,verification_run_id:358,log_path:path.join(root,'.local/logs/check.log'),metadata:{required:true}}
+  writeFileSync(check.log_path,'UNION text cannot cast to jsonb')
+  check.trusted_registration=trustedCommandRegistration({check,executionId:324,verificationRunId:358,taskId:'SS-LAUNCH-SOLO-VARIANTS-001',registry:{version:1},obligationIds:['cash-matrix'],verifierBytes:'current verifier'})
+  check.trusted_receipt=verifierReceipt({check,artifactRoot:root,sourceRoot:root,executionId:324,verificationRunId:358,taskId:'SS-LAUNCH-SOLO-VARIANTS-001'})
+  const execution={task_id:'SS-LAUNCH-SOLO-VARIANTS-001',execution_id:324,attempt:2,status:'succeeded',worktree_path:root}, verification={execution_id:324,verification_run_id:358,status:'failed'}
+  const reviews={'cash-sql':{artifact_sha256:sha(readFileSync(check.log_path)),classification:'VERIFIER_INFRA',origin:'verifier-fixture',root_cause:'Fixture UNION literals are text',source_paths:[fixture]}}
+  const prepared=prepareBoundFailureReviews({execution,verification,checks:[check],reviews})
+  check.metadata.failure_evidence=prepared[0].evidence
+  const snapshot={packet:{task:{task_id:'SS-LAUNCH-SOLO-VARIANTS-001',status:'failed'}},workflow_run:{status:'running'},executions:[execution],verification_runs:[verification],verification_results:[check],authoritative_failure:{classification:'VERIFIER_INFRA',evidence:{verification_run_id:358}}}
+  const recipe={id:'shop-solo-concurrency-fixture-v1',execution_id:324,verification_run_id:358,task_id:snapshot.packet.task.task_id,checks:[{verification_id:100,name:'cash-sql',artifact_sha256:reviews['cash-sql'].artifact_sha256}],files:[{path:fixture,before_sha256:sha(original),after_sha256:sha(repaired),content:repaired}]}
+  const second={...check,verification_id:102,check_name:'regression-sql',metadata:{required:true}}
+  second.trusted_registration=trustedCommandRegistration({check:second,executionId:324,verificationRunId:358,taskId:'SS-LAUNCH-SOLO-VARIANTS-001',registry:{version:1},obligationIds:['cash-matrix'],verifierBytes:'current verifier'})
+  second.trusted_receipt=verifierReceipt({check:second,artifactRoot:root,sourceRoot:root,executionId:324,verificationRunId:358,taskId:'SS-LAUNCH-SOLO-VARIANTS-001'})
+  second.metadata.failure_evidence=prepareBoundFailureReviews({execution,verification,checks:[second],reviews:{'regression-sql':reviews['cash-sql']}})[0].evidence
+  recipe.checks.push({name:'regression-sql',verification_id:102,artifact_sha256:reviews['cash-sql'].artifact_sha256})
+  snapshot.verification_results.push(second)
+  const blocked={verification_id:101,verification_run_id:358,check_name:'mandatory-db',status:'not_run',metadata:{required:true,selection_reason:'database_prerequisite_failed'}}
+  recipe.blocked_checks=[{name:'mandatory-db',verification_id:101,selection_reason:'database_prerequisite_failed',prerequisites:['cash-sql','regression-sql']}]
+  snapshot.verification_results.push(blocked)
+  assert.deepEqual(registeredVerifierPrerequisites(blocked,[check,second,blocked],execution,verification,[recipe]),[check,second])
+  assert.deepEqual(registeredVerifierPrerequisites({...blocked,verification_id:102},[check,second,blocked],execution,verification,[recipe]),[])
+  assert.deepEqual(registeredVerifierPrerequisites(blocked,[{...check,trusted_receipt:null},second,blocked],execution,verification,[recipe]),[])
+  assert.deepEqual(registeredVerifierPrerequisites(blocked,[check,second,blocked],{...execution,execution_id:325},verification,[recipe]),[])
+  assert.equal(applyVerifierFixtureRepair({...snapshot,verification_results:[blocked]},recipe).applied,false)
+  const catalogRoot=mkdtempSync(path.join(tmpdir(),'registered-verifier-catalog-'))
+  try{
+   mkdirSync(path.join(catalogRoot,'tooling/control-plane/verifier-repairs'),{recursive:true})
+   recipe.reviews={'cash-sql':reviews['cash-sql'],'regression-sql':reviews['cash-sql']}
+   writeFileSync(path.join(catalogRoot,'tooling/control-plane/verifier-repairs/shop-solo-concurrency-fixture.json'),JSON.stringify(recipe))
+   const firstReview=check.metadata.failure_evidence,secondReview=second.metadata.failure_evidence
+   check.metadata.failure_evidence=null;second.metadata.failure_evidence=null
+   const proposals=registeredFailureReviews(snapshot,catalogRoot)
+   assert.equal(proposals.length,2);assert.deepEqual(proposals.map(p=>p.verification_id),[100,102]);assert.ok(proposals.every(p=>p.evidence.classification==='VERIFIER_INFRA'))
+   assert.equal(registeredFailureReviews({...snapshot,executions:[{...execution,execution_id:325}]},catalogRoot).length,0)
+   check.metadata.failure_evidence=firstReview;second.metadata.failure_evidence=secondReview
+  }finally{rmSync(catalogRoot,{recursive:true,force:true})}
+  writeFileSync(check.log_path,'tampered')
+  assert.throws(()=>applyVerifierFixtureRepair(snapshot,recipe),/trusted_artifact_digest_mismatch/)
+  assert.equal(readFileSync(path.join(root,fixture),'utf8'),original)
+  writeFileSync(check.log_path,'UNION text cannot cast to jsonb')
+  const reviewed=second.metadata.failure_evidence;second.metadata.failure_evidence=null
+  assert.throws(()=>applyVerifierFixtureRepair(snapshot,recipe),/trusted_verifier_review_required/)
+  second.metadata.failure_evidence=reviewed
+  assert.throws(()=>applyVerifierFixtureRepair(snapshot,{...recipe,files:[{...recipe.files[0],path:'tooling/database/cli.mjs'}]}),/verifier_test_path_required/)
+  const result=applyVerifierFixtureRepair(snapshot,recipe)
+  assert.equal(result.applied,true);assert.equal(result.receipt.product_attempts,0);assert.equal(result.receipt.execution_id,324)
+  for(let n=0;n<100;n++)assert.equal(applyVerifierFixtureRepair(snapshot,recipe).reason,'already_repaired')
+  assert.equal(blocked.status,'not_run');assert.equal(blocked.trusted_receipt,undefined);assert.equal(blocked.metadata.failure_evidence,undefined)
+  assert.equal(snapshot.executions.length,1);assert.equal(snapshot.executions[0].attempt,2)
+  assert.throws(()=>prepareBoundFailureReviews({execution,verification,checks:[check],reviews}),/trusted_source_fingerprint_stale/)
+ }finally{rmSync(root,{recursive:true,force:true})}
+})
