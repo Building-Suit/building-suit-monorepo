@@ -184,7 +184,7 @@ export default defineI18nLocale(async () => ({
     loading: 'بنحمّل…', loadError: 'مقدرناش نحمّل نقطة البيع.', retry: 'حاول تاني', noResults: 'مفيش نتايج مطابقة. جرّب بحث تاني، أو اطلب من المالك يجهّز قائمة الفرع.', stock: '{count} في المخزون',
     cart: 'البيعة الحالية', emptyCart: 'امسح باركود أو اختر عنصرًا للبدء.', quantity: 'الكمية', remove: 'حذف', total: 'الإجمالي',
     location: 'الفرع', staff: 'الموظف', selectStaff: 'اختر الموظف', appointment: 'الموعد', walkIn: 'بيع مباشر / بدون موعد',
-    customer: 'العميل', customerSearch: 'ابحث باسم العميل أو الهاتف', noCustomer: 'بدون عميل — بيع كاونتر مسدد بالكامل', clearCustomer: 'إلغاء اختيار العميل',
+    customer: 'العميل', customerNoResults: 'لا يوجد عملاء مطابقون.', customerSearchHint: 'اكتب حرفين على الأقل للبحث بالاسم أو الهاتف.', customerSearch: 'ابحث باسم العميل أو الهاتف', noCustomer: 'بدون عميل — بيع كاونتر مسدد بالكامل', clearCustomer: 'إلغاء اختيار العميل',
     paymentMethod: 'طريقة الدفع', reference: 'مرجع الدفع (اختياري)', notes: 'ملاحظات البيعة (اختياري)',
     pay: 'حصّل {amount}', paying: 'بنتمّم البيع…', confirm: 'تتمّم البيعة؟ النظام هيخصم المنتجات من المخزون ويسجل إن المبلغ اتدفع كامل.',
     success: 'تم إتمام البيع.', unknownBarcode: 'لم يتم العثور على الباركود {code}. ابحث في الكتالوج أو أضفه من المنتجات.',
