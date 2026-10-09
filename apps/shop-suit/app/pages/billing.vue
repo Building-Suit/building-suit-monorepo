@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import type { BillingPlanOption, BillingSubmission, ShopBilling } from '~/types/billing'
+import type { BillingPlanOption, BillingSubmission, PrivateOfferPreview, ShopBilling } from '~/types/billing'
 import type { PlanResourceKey, PlanUsageResource, ShopPlanInterval, ShopPlanOffer } from '~/types/plans'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
+import { parsePrivateOfferLink } from '~/utils/private-offer'
+import type { PrivateOfferEntry } from '~/utils/private-offer'
 
 definePageMeta({ layout: 'default', middleware: ['auth'] })
 
@@ -18,6 +20,54 @@ const form = reactive({ catalogTermsId: '', paidAmount: 0, transferDate: '', tra
 const submitPending = ref(false)
 const submitError = ref('')
 const submitRequestId = ref<string | null>(null)
+const privateLink = ref('')
+const privateEntry = shallowRef<PrivateOfferEntry | null>(null)
+const privatePreview = shallowRef<PrivateOfferPreview | null>(null)
+const privatePending = ref(false)
+const privateError = ref('')
+const user = useSupabaseUser()
+let privateGeneration = 0
+function clearPrivateOffer() {
+  ++privateGeneration
+  privateLink.value = ''; privateEntry.value = null; privatePreview.value = null
+  privatePending.value = false; privateError.value = ''; submitRequestId.value = null; submitPending.value = false
+}
+async function previewPrivateOffer() {
+  if (!currentId.value || !isOwner.value || privatePending.value) return
+  const generation = ++privateGeneration
+  privateError.value = ''; privatePreview.value = null; privateEntry.value = null; submitRequestId.value = null
+  const value = privateLink.value
+  privateLink.value = ''
+  privatePending.value = true
+  try {
+    const entry = parsePrivateOfferLink(value, window.location.origin)
+    const shopId = currentId.value
+    const { data, error: readError } = await rpc.rpc('shop_private_offer_read', {
+      p_shop_id: shopId, p_offer_id: entry.offerId, p_offer_version: entry.offerVersion,
+      p_target_binding_id: entry.targetBindingId, p_target_environment_id: entry.targetEnvironmentId,
+      p_redemption_token: entry.redemptionToken,
+    })
+    if (readError) throw readError
+    if (generation !== privateGeneration || shopId !== currentId.value || !isOwner.value) return
+    const offer = data as PrivateOfferPreview
+    if (!offer || offer.offerId !== entry.offerId || offer.offerVersion !== entry.offerVersion || offer.shopId !== shopId
+      || offer.targetBindingId !== entry.targetBindingId || offer.targetEnvironmentId !== entry.targetEnvironmentId) throw new Error('offer_response_mismatch')
+    privateEntry.value = entry; privatePreview.value = offer
+    form.paidAmount = offer.priceAmount
+  } catch {
+    if (generation === privateGeneration) privateError.value = copy.value.privateUnavailable
+  } finally {
+    if (generation === privateGeneration) privatePending.value = false
+  }
+}
+onMounted(() => {
+  if (!window.location.hash) return
+  const link = window.location.href
+  window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search)
+  privateLink.value = link
+  void previewPrivateOffer()
+})
+watch([currentId, isOwner, user], clearPrivateOffer, { flush: 'sync' })
 
 const { data: billing, pending, error, refresh } = await useAsyncData(
   'shop-data:billing',
@@ -39,6 +89,7 @@ const purchasablePlans = computed(() => (billing.value?.availablePlans ?? [])
   .filter((plan): plan is BillingPlanOption & { billingInterval: ShopPlanInterval } => publicCatalogTerms.value.has(plan.catalogTermsId)
     && (plan.billingInterval === 'monthly' || plan.billingInterval === 'annual')))
 const selectedPlan = computed(() => purchasablePlans.value.find(plan => plan.catalogTermsId === form.catalogTermsId) ?? null)
+const noticeQuote = computed(() => privatePreview.value ? { planName: privatePreview.value.displayName, effectivePriceAmount: privatePreview.value.priceAmount, currency: privatePreview.value.currency, billingInterval: privatePreview.value.billingInterval, priceSource: 'private_offer', blockers: privatePreview.value.blockers } : selectedPlan.value)
 const currentCatalogTermsId = computed(() => purchasablePlans.value.find(plan => plan.planSlug === billing.value?.subscription.planSlug
   && plan.planVariant === billing.value?.subscription.planVariant
   && plan.billingInterval === billing.value?.subscription.billingInterval)?.catalogTermsId ?? '')
@@ -71,7 +122,7 @@ watch([billing, purchasablePlans], () => {
 }, { immediate: true })
 
 watch(selectedPlan, value => {
-  if (value) form.paidAmount = value.effectivePriceAmount
+  if (value && !privatePreview.value) form.paidAmount = value.effectivePriceAmount
 }, { immediate: true })
 
 watch(currentId, () => {
@@ -102,47 +153,58 @@ function submissionMessage(submission: BillingSubmission) {
 }
 
 function choosePlan(plan: ShopPlanOffer) {
+  clearPrivateOffer()
   form.catalogTermsId = plan.catalogTermsId
 }
 
 async function submitNotice() {
   if (!currentId.value || !isOwner.value || submitPending.value) return
   submitError.value = ''
-  const plan = selectedPlan.value
+  const plan = noticeQuote.value
+  const entry = privateEntry.value
+  const shopId = currentId.value
+  const generation = privateGeneration
   if (!plan || !(form.paidAmount > 0) || !form.transferDate || form.transferReference.trim().length < 2) {
     submitError.value = copy.value.invalid
     return
   }
   const confirmed = await confirmation.ask(copy.value.confirmNotice(plan.planName, money(plan.effectivePriceAmount, plan.currency), money(form.paidAmount, plan.currency)))
-  if (!confirmed) return
+  if (!confirmed || generation !== privateGeneration || shopId !== currentId.value || !isOwner.value) return
   submitPending.value = true
   const requestId = submitRequestId.value ?? globalThis.crypto.randomUUID()
   submitRequestId.value = requestId
   try {
-    const { error: commandError } = await rpc.rpc('submit_shop_billing_notice', {
+    const { error: commandError } = entry ? await rpc.rpc('redeem_shop_private_offer', {
+      p_request_id: requestId, p_shop_id: shopId, p_offer_id: entry.offerId, p_offer_version: entry.offerVersion,
+      p_target_binding_id: entry.targetBindingId, p_target_environment_id: entry.targetEnvironmentId, p_redemption_token: entry.redemptionToken,
+      p_paid_amount: form.paidAmount, p_transfer_date: form.transferDate, p_transfer_reference: form.transferReference.trim(),
+    }) : await rpc.rpc('submit_shop_billing_notice', {
       p_request_id: requestId,
       p_shop_id: currentId.value,
-      p_requested_plan_slug: plan.planSlug,
-      p_requested_catalog_terms_id: plan.catalogTermsId,
+      p_requested_plan_slug: selectedPlan.value!.planSlug,
+      p_requested_catalog_terms_id: selectedPlan.value!.catalogTermsId,
       p_paid_amount: form.paidAmount,
       p_transfer_date: form.transferDate,
       p_transfer_reference: form.transferReference.trim(),
     })
     if (commandError) throw commandError
+    if (generation !== privateGeneration || shopId !== currentId.value || !isOwner.value) return
+    clearPrivateOffer()
     submitRequestId.value = null
     Object.assign(form, { paidAmount: plan.effectivePriceAmount, transferDate: '', transferReference: '' })
     await refresh()
     pushToast({ tone: 'success', title: copy.value.submitted })
   }
   catch {
-    submitError.value = copy.value.failed
+    if (generation === privateGeneration) submitError.value = copy.value.failed
   }
   finally {
-    submitPending.value = false
+    if (generation === privateGeneration) submitPending.value = false
   }
 }
 
 const en = {
+  privateTitle: 'Private offer', privateHelp: 'Sign in to the intended owner account, then open or paste the private offer link. Submitting starts manual payment review; it does not activate access.', privateLink: 'Private offer link', privatePreview: 'Review private terms', privateUnavailable: 'This offer is unavailable for this owner or shop. Check the link, expiry and recipient.', privateClear: 'Clear private offer', privateRedeemed: 'This offer already has a payment notice. Review its status below.',
   title: 'Subscription and billing', subtitle: 'Understand your plan, usage, and manually reviewed InstaPay requests.',
   ownerOnly: 'Ask the Shop owner to review billing or submit a transfer notice. Only the owner can access these details.',
   noBilling: 'No subscription information is available. Contact Building Suit support to review this shop’s billing.', loadFailed: 'Could not load billing information.', retry: 'Retry', plan: 'Current plan', access: 'Access state',
@@ -163,6 +225,7 @@ const en = {
 }
 
 const ar = {
+  privateTitle: 'عرض خاص', privateHelp: 'سجّل الدخول بحساب المالك المقصود، ثم افتح رابط العرض الخاص أو الصقه. الإرسال يبدأ مراجعة الدفع اليدوية ولا يفعّل الوصول.', privateLink: 'رابط العرض الخاص', privatePreview: 'مراجعة شروط العرض', privateUnavailable: 'هذا العرض غير متاح لهذا المالك أو المتجر. راجع الرابط والصلاحية والمستلم.', privateClear: 'مسح العرض الخاص', privateRedeemed: 'يوجد إشعار دفع لهذا العرض بالفعل. راجع حالته أدناه.',
   title: 'الاشتراك والدفع', subtitle: 'شوف خطتك واستخدامك، وتابع طلبات InstaPay اللي بنراجعها يدويًا.',
   ownerOnly: 'اطلب من مالك المتجر مراجعة الفوترة أو إرسال إشعار التحويل. هذه التفاصيل متاحة للمالك فقط.',
   noBilling: 'مفيش معلومات اشتراك متاحة. كلّم دعم Building Suit عشان يراجع اشتراك المتجر.', loadFailed: 'مقدرناش نحمّل معلومات الاشتراك.', retry: 'حاول تاني', plan: 'الخطة الحالية', access: 'حالة الاستخدام',
@@ -218,8 +281,24 @@ const ar = {
         <div v-if="billing.instructions.recipientAlias || billing.instructions.paymentLink || billing.instructions.qrImageUrl || (isArabic ? billing.instructions.instructionsAr : billing.instructions.instructionsEn)" class="mt-5 grid gap-4 md:grid-cols-2"><p v-if="billing.instructions.recipientAlias" class="rounded-xl border border-border p-4"><span class="block text-xs text-muted-foreground">{{ copy.recipient }}</span><strong dir="ltr" class="break-all">{{ billing.instructions.recipientAlias }}</strong></p><p v-if="billing.instructions.paymentLink" class="rounded-xl border border-border p-4"><span class="block text-xs text-muted-foreground">{{ copy.paymentLink }}</span><a class="break-all font-bold text-[var(--bs-link)] underline" :href="billing.instructions.paymentLink" target="_blank" rel="noopener noreferrer">{{ billing.instructions.paymentLink }}</a></p><div v-if="billing.instructions.qrImageUrl" class="rounded-xl border border-border p-4"><span class="mb-3 block text-xs text-muted-foreground">{{ copy.qr }}</span><img :src="billing.instructions.qrImageUrl" :alt="copy.qr" class="h-40 w-40 rounded-lg object-contain"></div><p v-if="isArabic ? billing.instructions.instructionsAr : billing.instructions.instructionsEn" class="whitespace-pre-line rounded-xl border border-border p-4 text-sm leading-6">{{ isArabic ? billing.instructions.instructionsAr : billing.instructions.instructionsEn }}</p></div><p v-else class="mt-5 text-sm text-muted-foreground">{{ copy.unavailable }}</p>
       </section>
 
+      <BsContentSection data-private-offer>
+        <BsSectionHeader :title="copy.privateTitle" :description="copy.privateHelp" />
+        <BsForm class="mt-4 flex flex-wrap items-end gap-3" :pending="privatePending" :error="privateError" @submit="previewPrivateOffer">
+          <BsField for="private-offer-link" :label="copy.privateLink" class="min-w-0 flex-1"><BsInput id="private-offer-link" v-model="privateLink" type="password" autocomplete="off" :maxlength="2048" /></BsField>
+          <BsButton type="submit" :pending="privatePending" :disabled="!privateLink">{{ copy.privatePreview }}</BsButton>
+        </BsForm>
+        <div v-if="privatePreview" class="mt-4 space-y-2" data-private-offer-preview>
+          <h3 class="font-semibold">{{ privatePreview.displayName }}</h3>
+          <p>{{ money(privatePreview.priceAmount, privatePreview.currency) }} · {{ intervalLabel(privatePreview.billingInterval) }} · {{ date(privatePreview.expiresAt) }}</p>
+          <dl class="grid gap-2 sm:grid-cols-2"><template v-for="(value, key) in privatePreview.resourceLimits" :key="key"><dt>{{ copy.resources[key as PlanResourceKey] }}</dt><dd>{{ value == null ? '∞' : value }}</dd></template></dl>
+          <p v-if="privatePreview.blockers.length" role="status">{{ copy.preservation }}</p>
+          <p v-if="privatePreview.submissionId" role="status">{{ copy.privateRedeemed }}</p>
+          <BsButton variant="text" @click="clearPrivateOffer">{{ copy.privateClear }}</BsButton>
+        </div>
+      </BsContentSection>
+
       <section class="ls-card p-5 sm:p-6"><h2 class="text-lg font-extrabold">{{ copy.notice }}</h2><p class="mt-1 text-sm text-muted-foreground">{{ copy.noticeHelp }}</p>
-        <BsForm class="mt-5 grid gap-4 sm:grid-cols-2" :pending="submitPending" :error="submitError" @submit="submitNotice"><div v-if="selectedPlan" class="rounded-xl border border-border p-4 text-sm sm:col-span-2"><p>{{ copy.requestedPlan }}: <strong>{{ selectedPlan.planName }}</strong> · {{ copy.expected }}: <strong>{{ money(selectedPlan.effectivePriceAmount, selectedPlan.currency) }}</strong> · {{ copy.interval }}: <strong>{{ intervalLabel(selectedPlan.billingInterval) }}</strong></p><p v-if="selectedPlan.priceSource === 'override'" class="mt-2 font-bold text-[var(--bs-link)]">{{ copy.negotiated }}</p><p v-if="selectedPlan.blockers.length" class="mt-3 rounded-lg bg-[var(--bs-status-warning-bg)] p-3 font-semibold leading-5">{{ copy.preservation }}</p></div><p v-else role="status" class="rounded-xl border border-border p-4 text-sm sm:col-span-2">{{ copy.noPurchasable }}</p><label class="grid gap-2 text-sm font-bold">{{ copy.paid }}<input v-model.number="form.paidAmount" class="ls-input min-h-11 min-w-0" type="number" min="0.01" step="0.01" :disabled="!selectedPlan" required></label><label class="grid gap-2 text-sm font-bold">{{ copy.transferDate }}<input v-model="form.transferDate" class="ls-input min-h-11 min-w-0" type="date" :max="new Date().toISOString().slice(0, 10)" :disabled="!selectedPlan" required></label><label class="grid gap-2 text-sm font-bold sm:col-span-2">{{ copy.reference }}<input v-model="form.transferReference" class="ls-input min-h-11 min-w-0" dir="ltr" minlength="2" maxlength="200" :disabled="!selectedPlan" required></label><p class="text-sm leading-6 text-muted-foreground sm:col-span-2">{{ copy.policyPrefix }} <NuxtLink class="font-bold text-[var(--bs-link)] underline" to="/terms">{{ copy.terms }}</NuxtLink> · <NuxtLink class="font-bold text-[var(--bs-link)] underline" to="/privacy">{{ copy.privacy }}</NuxtLink> · <NuxtLink class="font-bold text-[var(--bs-link)] underline" to="/refund-cancellation">{{ copy.refund }}</NuxtLink>.</p><div class="sm:col-span-2"><BsButton type="submit" variant="primary" :pending="submitPending" :disabled="!selectedPlan || hasOpenRequest">{{ submitPending ? copy.submitting : copy.submit }}</BsButton></div></BsForm>
+        <BsForm class="mt-5 grid gap-4 sm:grid-cols-2" :pending="submitPending" :error="submitError" @submit="submitNotice"><div v-if="noticeQuote" class="rounded-xl border border-border p-4 text-sm sm:col-span-2"><p>{{ copy.requestedPlan }}: <strong>{{ noticeQuote.planName }}</strong> · {{ copy.expected }}: <strong>{{ money(noticeQuote.effectivePriceAmount, noticeQuote.currency) }}</strong> · {{ copy.interval }}: <strong>{{ intervalLabel(noticeQuote.billingInterval) }}</strong></p><p v-if="noticeQuote.priceSource === 'override'" class="mt-2 font-bold text-[var(--bs-link)]">{{ copy.negotiated }}</p><p v-if="noticeQuote.blockers.length" class="mt-3 rounded-lg bg-[var(--bs-status-warning-bg)] p-3 font-semibold leading-5">{{ copy.preservation }}</p></div><p v-else role="status" class="rounded-xl border border-border p-4 text-sm sm:col-span-2">{{ copy.noPurchasable }}</p><label class="grid gap-2 text-sm font-bold">{{ copy.paid }}<input v-model.number="form.paidAmount" class="ls-input min-h-11 min-w-0" type="number" min="0.01" step="0.01" :disabled="!noticeQuote" required></label><label class="grid gap-2 text-sm font-bold">{{ copy.transferDate }}<input v-model="form.transferDate" class="ls-input min-h-11 min-w-0" type="date" :max="new Date().toISOString().slice(0, 10)" :disabled="!noticeQuote" required></label><label class="grid gap-2 text-sm font-bold sm:col-span-2">{{ copy.reference }}<input v-model="form.transferReference" class="ls-input min-h-11 min-w-0" dir="ltr" minlength="2" maxlength="200" :disabled="!noticeQuote" required></label><p class="text-sm leading-6 text-muted-foreground sm:col-span-2">{{ copy.policyPrefix }} <NuxtLink class="font-bold text-[var(--bs-link)] underline" to="/terms">{{ copy.terms }}</NuxtLink> · <NuxtLink class="font-bold text-[var(--bs-link)] underline" to="/privacy">{{ copy.privacy }}</NuxtLink> · <NuxtLink class="font-bold text-[var(--bs-link)] underline" to="/refund-cancellation">{{ copy.refund }}</NuxtLink>.</p><div class="sm:col-span-2"><BsButton type="submit" variant="primary" :pending="submitPending" :disabled="!noticeQuote || hasOpenRequest || !!privatePreview?.submissionId">{{ submitPending ? copy.submitting : copy.submit }}</BsButton></div></BsForm>
       </section>
 
       <section class="overflow-hidden ls-card"><div class="p-5"><h2 class="text-lg font-extrabold">{{ copy.history }}</h2></div><div class="overflow-x-auto"><BsDataTable :value="billing.submissions" data-key="id" :label="copy.history"><Column field="status"><template #header>{{ copy.access }}</template><template #body="{ data: item }"><StatusBadge :status="item.status" /> <span class="ms-2 text-sm">{{ statusLabel(item.status) }}</span></template></Column><Column field="requestedPlanName"><template #header>{{ copy.requestedPlan }}</template></Column><Column><template #header>{{ copy.expected }}</template><template #body="{ data: item }">{{ money(item.effectivePriceAmount, item.currency) }}</template></Column><Column><template #header>{{ copy.paid }}</template><template #body="{ data: item }">{{ money(item.paidAmount, item.currency) }}</template></Column><Column field="transferReference"><template #header>{{ copy.reference }}</template></Column><Column><template #header>{{ copy.transferDate }}</template><template #body="{ data: item }">{{ date(item.transferDate) }}</template></Column><Column field="reviewReason"><template #header>{{ copy.reviewReason }}</template></Column><template #empty><p class="p-6 text-center text-sm text-muted-foreground">{{ copy.empty }}</p></template></BsDataTable></div></section>

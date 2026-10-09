@@ -64,6 +64,14 @@ export type ShopRpcDatabase = {
         }
         Returns: unknown
       }
+      shop_private_offer_read: {
+        Args: { p_shop_id: string; p_offer_id: string; p_offer_version: number; p_target_binding_id: string; p_target_environment_id: string; p_redemption_token: string }
+        Returns: unknown
+      }
+      redeem_shop_private_offer: {
+        Args: { p_request_id: string; p_shop_id: string; p_offer_id: string; p_offer_version: number; p_target_binding_id: string; p_target_environment_id: string; p_redemption_token: string; p_paid_amount: number; p_transfer_date: string; p_transfer_reference: string }
+        Returns: string
+      }
       shop_billing_read: {
         Args: { p_shop_id: string }
         Returns: unknown

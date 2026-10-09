@@ -424,6 +424,8 @@ begin
 end $$;
 select set_config('request.jwt.claim.role','authenticated',true);
 select set_config('request.jwt.claim.sub',operator_id::text,true) from private_offer_fixture;
+create temporary table queue_projection_fixture(result jsonb);
+grant insert on queue_projection_fixture to authenticated;
 set local role authenticated;
 do $$
 declare s secure_offer_fixture; request uuid:=gen_random_uuid(); result jsonb;
@@ -433,13 +435,56 @@ begin
  result:=public.platform_admin_billing_command(request,'approve',s.notice_id,'Confirmed secure offer payment',jsonb_build_object('receivedAmount',123.45,'receivedReference','Secure transfer','receivedDate',current_date));
  result:=public.platform_admin_billing_command(request,'approve',s.notice_id,'Confirmed secure offer payment',jsonb_build_object('receivedAmount',123.45,'receivedReference','Secure transfer','receivedDate',current_date));
  if not(result->>'replayed')::boolean then raise exception 'secure payment replay duplicated activation'; end if;
+ result:=public.platform_admin_billing_read('queue',null,1,100);
+ result:=(select row from jsonb_array_elements(result->'items') row where row->>'id'=s.notice_id::text);
+ if result is null then raise exception 'secure offer missing from authorized queue';end if;
+ insert into queue_projection_fixture values(result);
 end $$;
 reset role;
 do $$
 declare s secure_offer_fixture;
 begin
  select * into s from secure_offer_fixture;
+ if exists(select 1 from queue_projection_fixture where
+ result->'resourceLimits' is distinct from (select resource_limits_snapshot from public.shop_billing_submissions where id=s.notice_id)
+ or result->'entitlements' is distinct from '{"appointments":true,"reports":false}'::jsonb
+ or result->>'privateOfferId' is distinct from s.offer_id::text
+ or result->>'commercialPeriodId' is distinct from (select id::text from public.subscription_commercial_periods where billing_submission_id=s.notice_id)
+ or result->>'subscriptionId' is distinct from (select subscription_id::text from public.subscription_commercial_periods where billing_submission_id=s.notice_id)
+ or result->'evidence' is distinct from '[]'::jsonb) then raise exception 'review queue lost frozen terms or exact period identity';end if;
  if (select count(*) from public.subscription_commercial_periods where billing_submission_id=s.notice_id)<>1 or
  (select offer_entitlements from public.subscription_commercial_periods where billing_submission_id=s.notice_id)<>'{"appointments":true,"reports":false}'::jsonb then
  raise exception 'secure period snapshot or exactly-once activation failed';end if;
+end $$;
+-- Real owner-read projection proves token/recipient/environment isolation.
+select set_config('request.jwt.claim.role','authenticated',true);
+select set_config('request.jwt.claim.sub',owner_id::text,true) from private_offer_fixture;
+set local role authenticated;
+do $$ declare f private_offer_fixture;s secure_offer_fixture;preview jsonb;
+begin
+ select * into f from private_offer_fixture;select * into s from secure_offer_fixture;
+ preview:=public.shop_private_offer_read(f.shop_id,s.offer_id,3,f.binding_id,f.environment_id,s.token);
+ if preview->>'offerId'<>s.offer_id::text or (preview->>'priceAmount')::numeric<>123.45
+ or preview->'entitlements'<>'{"appointments":true,"reports":false}'::jsonb
+ or preview->>'submissionId'<>s.notice_id::text or preview ? 'redemptionToken' or preview ? 'tokenDigest' then
+  raise exception 'owner preview lost frozen terms or leaked token';end if;
+ begin
+  perform public.shop_private_offer_read(f.shop_id,s.offer_id,3,f.binding_id,gen_random_uuid(),s.token);
+  raise exception 'owner preview accepted wrong environment';
+ exception when insufficient_privilege then null;end;
+ begin
+  perform public.shop_private_offer_read(f.shop_id,s.offer_id,3,f.binding_id,f.environment_id,repeat('A',43));
+  raise exception 'owner preview accepted invalid token';
+ exception when insufficient_privilege then null;end;
+ perform set_config('request.jwt.claim.sub',f.other_id::text,true);
+ begin
+  perform public.shop_private_offer_read(f.shop_id,s.offer_id,3,f.binding_id,f.environment_id,s.token);
+  raise exception 'owner preview exposed another recipient';
+ exception when insufficient_privilege then null;end;
+end $$;
+reset role;
+do $$ begin
+ if has_function_privilege('anon','public.shop_private_offer_read(uuid,uuid,integer,uuid,uuid,text)','execute')
+ or has_table_privilege('authenticated','public.shop_private_offer_security','select') then
+ raise exception 'private preview widened raw access';end if;
 end $$;
