@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import { businessModeSupportsProducts, businessModeSupportsServices } from '~/utils/businessMode'
+import { posCustomerOptions } from '~/utils/posCustomer.js'
 import { addOrIncrementCartLine, captureBarcodeKey, cartTotal, emptyScanState } from '~/utils/pos'
 
 definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
@@ -8,7 +9,8 @@ type PaymentMethod = 'cash' | 'bank_transfer' | 'card' | 'wallet' | 'cheque' | '
 type CatalogItem = { id: string; itemType: 'product' | 'service'; name: string; sku: string | null; barcode: string | null; unitPrice: number; discount: number; stock: number | null }
 type CartLine = CatalogItem & { key: string; sourceId: string; quantity: number }
 type Appointment = { id: string; staffId: string; customerId: string | null; customerName: string; startsAt: string; status: string; service: CatalogItem }
-type PosContext = { staff: Array<{ id: string; name: string }>; appointments: Appointment[]; customers: Array<{ id: string; name: string; phone: string | null }> }
+type Customer = { id: string; name: string; phone: string | null }
+type PosContext = { customerQuery?: string; staff: Array<{ id: string; name: string }>; appointments: Appointment[]; customers: Array<{ id: string; name: string; phone: string | null }> }
 type CatalogResult = { items: CatalogItem[]; total: number; page: number; pageSize: number; businessMode: 'product' | 'service' | 'mixed'; ambiguousBarcode: boolean }
 type Category = { id: string; name: string }
 
@@ -26,12 +28,13 @@ const catalogPage = ref(1)
 const customerSearch = ref('')
 const debouncedCustomerSearch = ref('')
 const catalogInput = ref<HTMLInputElement | null>(null)
-const customerInput = ref<HTMLInputElement | null>(null)
+const customerControl = ref<HTMLElement | null>(null)
 const lines = ref<CartLine[]>([])
 const staffId = ref('')
 const appointmentId = ref('')
 const customerId = ref('')
 const customerName = ref('')
+const customerPhone = ref<string | null>(null)
 const paymentMethod = ref<PaymentMethod>('cash')
 const paymentReference = ref('')
 const notes = ref('')
@@ -82,14 +85,34 @@ const { data: catalog, pending: catalogPending, error: catalogError, refresh: re
   }, { watch: [currentId, currentLocationId, debouncedSearch, itemType, categoryFilter, catalogPage], default: () => ({ items: [], total: 0, page: 1, pageSize: 30, businessMode: 'mixed', ambiguousBarcode: false }) },
 )
 
-const { data: context, pending: contextPending, error: contextError, refresh: refreshContext } = useAsyncData(
+// Resolve the initial context before deriving appointment state in SSR and hydration.
+const { data: context, pending: contextPending, error: contextError, refresh: refreshContext } = await useAsyncData(
   () => `shop-data:pos-context:${currentId.value ?? 'none'}:${currentLocationId.value ?? 'none'}:${debouncedCustomerSearch.value}`, async (): Promise<PosContext> => {
     if (!currentId.value || !currentLocationId.value) return { staff: [], appointments: [], customers: [] }
+    const query = debouncedCustomerSearch.value
     const { data, error } = await rpc.rpc('pos_checkout_context', { p_shop_id: currentId.value, p_location_id: currentLocationId.value, p_customer_search: debouncedCustomerSearch.value.length >= 2 ? debouncedCustomerSearch.value : null })
     if (error) throw error
-    return data as PosContext
-  }, { watch: [currentId, currentLocationId, debouncedCustomerSearch], default: () => ({ staff: [], appointments: [], customers: [] }) },
+    return { ...(data as PosContext), customerQuery: query }
+  }, { watch: [currentId, currentLocationId, debouncedCustomerSearch], default: (): PosContext => ({ staff: [], appointments: [], customers: [] }) },
 )
+
+const customerOptions = computed(() => posCustomerOptions({
+  search: customerSearch.value,
+  resolvedSearch: context.value.customerQuery,
+  pending: contextPending.value || Boolean(contextError.value),
+  customers: context.value.customers,
+  selected: customerId.value ? { id: customerId.value, name: customerName.value, phone: customerPhone.value } : null,
+}))
+const customerBusy = computed(() => contextPending.value || customerSearch.value.trim() !== debouncedCustomerSearch.value)
+function setCustomer(value: string | number | null | undefined) {
+  if (appointmentId.value || checkingOut.value || confirmingCheckout.value || locationChanged.value) return
+  const customer = customerOptions.value.find(item => item.id === value)
+  if (customer) chooseCustomer(customer)
+  else if (!value) clearCustomer()
+}
+function resetCustomerSearch() {
+  clearTimeout(customerTimer); customerSearch.value = ''; debouncedCustomerSearch.value = ''
+}
 
 function lockLocation() {
   if (!transactionLocationId.value) {
@@ -110,8 +133,11 @@ function setQuantity(line: CartLine, value: number) {
   line.quantity = Math.max(0.001, Math.min(1000000, Number(value) || 1)); invalidateRequests()
 }
 function removeLine(index: number) { lines.value.splice(index, 1); invalidateRequests() }
-function chooseCustomer(customer: { id: string; name: string }) { lockLocation(); customerId.value = customer.id; customerName.value = customer.name; customerSearch.value = ''; invalidateRequests() }
-function clearCustomer() { customerId.value = ''; customerName.value = ''; invalidateRequests() }
+function chooseCustomer(customer: Customer) { lockLocation(); customerId.value = customer.id; customerName.value = customer.name; customerPhone.value = customer.phone; invalidateRequests() }
+function clearCustomer() {
+  if (appointmentId.value || checkingOut.value || confirmingCheckout.value || locationChanged.value) return
+  customerId.value = ''; customerName.value = ''; customerPhone.value = null; resetCustomerSearch(); invalidateRequests()
+}
 function chooseAppointment(value: string) {
   appointmentId.value = value; lockLocation(); invalidateRequests()
   const appointment = context.value.appointments.find(item => item.id === value)
@@ -119,6 +145,7 @@ function chooseAppointment(value: string) {
   staffId.value = appointment.staffId
   customerId.value = appointment.customerId ?? ''
   customerName.value = appointment.customerName
+  customerPhone.value = null; resetCustomerSearch()
   addItem(appointment.service)
 }
 async function requestReset() {
@@ -128,6 +155,7 @@ async function requestReset() {
 }
 function resetSale() {
   lines.value = []; staffId.value = context.value.staff.some(member => member.id === currentMembership.value?.id) ? currentMembership.value!.id : ''
+  resetCustomerSearch(); customerPhone.value = null
   appointmentId.value = ''; customerId.value = ''; customerName.value = ''; paymentReference.value = ''; notes.value = ''
   transactionLocationId.value = null; transactionLocationName.value = ''; invoiceId.value = null; errorMessage.value = ''; scanMessage.value = ''; invalidateRequests()
   nextTick(() => catalogInput.value?.focus())
@@ -154,9 +182,9 @@ function handleKeyboard(event: KeyboardEvent) {
   if (event.ctrlKey || event.metaKey || event.altKey || checkingOut.value || confirmingCheckout.value) return
   const target = event.target instanceof HTMLElement ? event.target : null
   // Let shared dialogs and pickers own their Enter/Escape/focus behavior.
-  if (confirmation.current.value || document.querySelector('[role="listbox"]')) return
+  if (confirmation.current.value || document.querySelector('[role="combobox"][aria-expanded="true"]')) return
   if (event.key === 'F2') { event.preventDefault(); catalogInput.value?.focus(); return }
-  if (event.key === 'F4') { event.preventDefault(); customerInput.value?.focus(); return }
+  if (event.key === 'F4') { event.preventDefault(); customerControl.value?.querySelector<HTMLElement>('[role="combobox"]')?.focus(); return }
   if (event.key === 'F8') { event.preventDefault(); void checkout(); return }
   if (event.key === 'Escape') { errorMessage.value = ''; scanMessage.value = ''; return }
   if (target !== catalogInput.value && target?.closest('input, textarea, select, button, a, [role="combobox"], [contenteditable="true"]')) {
@@ -242,7 +270,8 @@ watch(context, value => {
 
         <aside class="flex min-h-0 min-w-0 flex-col ls-card p-4 xl:sticky xl:top-40 xl:max-h-[calc(100dvh-11rem)] xl:overflow-y-auto" aria-labelledby="pos-cart-title">
           <h2 id="pos-cart-title" tabindex="-1" class="scroll-mt-64 text-lg font-extrabold">{{ t('pos.cart') }}</h2>
-          <p v-if="contextPending" role="status" class="mt-3 text-sm">{{ t('pos.loading') }}</p>
+          <!-- Search loading belongs to the picker; keep its anchor still while results arrive. -->
+          <p v-if="contextPending && !customerSearch.trim()" role="status" class="mt-3 text-sm">{{ t('pos.loading') }}</p>
           <p v-else-if="contextError" role="alert" class="mt-3 rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm text-[var(--bs-status-error)]">{{ contextError?.message?.includes('SHOP_PERMISSION_DENIED') ? t('pos.permissionDenied') : t('pos.loadError') }} <BsButton variant="link" type="button" class="min-h-11 font-bold underline" @click="refreshContext()">{{ t('pos.retry') }}</BsButton></p>
           <div class="mt-3 grid grid-cols-2 gap-2 rounded-xl bg-muted p-3 text-xs"><span class="font-bold">{{ t('pos.location') }}</span><span>{{ transactionLocationName || currentLocation?.name || '—' }}</span><span class="font-bold">{{ t('pos.staff') }}</span><span>{{ selectedStaff?.name || t('pos.selectStaff') }}</span></div>
           <p v-if="!lines.length" class="grid flex-1 place-items-center py-8 text-center text-sm text-muted-foreground">{{ t('pos.emptyCart') }}</p>
@@ -250,7 +279,21 @@ watch(context, value => {
           <div class="mt-3 space-y-3 border-t border-border pt-3">
             <label class="grid gap-1 text-sm font-bold">{{ t('pos.appointment') }}<select :value="appointmentId" class="ls-select min-h-11" :disabled="checkingOut" @change="chooseAppointment(($event.target as HTMLSelectElement).value)"><option value="">{{ t('pos.walkIn') }}</option><option v-for="appointment in context.appointments" :key="appointment.id" :value="appointment.id">{{ appointmentLabel(appointment) }}</option></select></label>
             <label class="pos-staff-select grid min-w-0 gap-1 text-sm font-bold">{{ t('pos.staff') }}<BsSelect v-model="staffId" :label="t('pos.staff')" :options="context.staff" option-label="name" option-value="id" filter virtual :disabled="Boolean(appointmentId) || checkingOut" @change="lockLocation(); invalidateRequests()" /></label>
-            <div><label class="text-sm font-bold" for="pos-customer">{{ t('pos.customer') }}</label><div v-if="customerId" class="mt-1 flex min-h-11 items-center justify-between rounded-xl border border-border px-3"><span>{{ customerName }}</span><BsButton variant="link" type="button" class="min-h-11 text-sm font-bold text-[var(--bs-link)]" :disabled="Boolean(appointmentId)" @click="clearCustomer">{{ t('pos.clearCustomer') }}</BsButton></div><template v-else><input id="pos-customer" ref="customerInput" v-model="customerSearch" type="search" class="ls-input mt-1 min-h-11" :placeholder="t('pos.customerSearch')"><ul v-if="customerSearch.length >= 2 && context.customers.length" class="mt-1 max-h-32 overflow-y-auto ls-card-flat p-1"><li v-for="customer in context.customers" :key="customer.id"><BsButton type="button" class="min-h-11 w-full rounded-lg px-3 text-start text-sm hover:bg-muted" @click="chooseCustomer(customer)">{{ customer.name }} <span class="text-muted-foreground">{{ customer.phone }}</span></BsButton></li></ul><p class="mt-1 text-xs text-muted-foreground">{{ t('pos.noCustomer') }}</p></template></div>
+            <div ref="customerControl" class="pos-staff-select">
+              <label id="pos-customer-label" class="text-sm font-bold" for="pos-customer">{{ t('pos.customer') }}</label>
+              <BsSelect
+                input-id="pos-customer" :model-value="customerId || null" :label="t('pos.customer')" :options="customerOptions" option-label="identity" option-value="id"
+                filter :auto-filter-focus="true" :auto-option-focus="true" :filter-fields="['name', 'phone']" :filter-placeholder="t('pos.customerSearch')" :reset-filter-on-hide="true" :loading="customerBusy"
+                :disabled="Boolean(appointmentId) || checkingOut || confirmingCheckout || locationChanged" :placeholder="t('pos.noCustomer')" class="mt-1"
+                aria-labelledby="pos-customer-label" aria-describedby="pos-customer-help"
+                @filter="customerSearch = $event.value" @hide="resetCustomerSearch" @update:model-value="setCustomer">
+                <template #value><span>{{ customerId ? [customerName, customerPhone].filter(Boolean).join(' · ') : (appointmentId ? customerName || t('pos.noCustomer') : t('pos.noCustomer')) }}</span></template>
+                <template #empty>{{ customerBusy ? t('pos.loading') : t('pos.customerSearch') }}</template>
+                <template #emptyfilter>{{ customerBusy ? t('pos.loading') : (customerSearch.trim().length < 2 ? t('pos.customerSearch') : t('pos.customerNoResults')) }}</template>
+              </BsSelect>
+              <BsButton variant="link" class="mt-1 min-h-11" :disabled="Boolean(appointmentId) || checkingOut || confirmingCheckout || locationChanged" @click="clearCustomer">{{ customerId ? t('pos.clearCustomer') : t('pos.noCustomer') }}</BsButton>
+              <p id="pos-customer-help" class="mt-1 text-xs text-muted-foreground">{{ t('pos.customerSearchHint') }}</p>
+            </div>
             <div class="grid grid-cols-2 gap-2"><label class="grid gap-1 text-sm font-bold">{{ t('pos.paymentMethod') }}<select v-model="paymentMethod" class="ls-select min-h-11"><option v-for="method in ['cash','card','bank_transfer','wallet','cheque','other']" :key="method" :value="method">{{ t(`payments.methods.${method}`) }}</option></select></label><label class="grid gap-1 text-sm font-bold">{{ t('pos.reference') }}<input v-model="paymentReference" maxlength="200" class="ls-input min-h-11"></label></div>
             <label class="grid gap-1 text-sm font-bold">{{ t('pos.notes') }}<input v-model="notes" maxlength="2000" class="ls-input min-h-11"></label>
             <div class="flex items-end justify-between gap-3"><span class="text-sm font-bold">{{ t('pos.total') }}</span><strong class="text-2xl">{{ money(total) }}</strong></div>
