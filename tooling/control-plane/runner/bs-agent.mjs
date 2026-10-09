@@ -20,6 +20,7 @@ import { preexecutionBindingEvidence } from './preexecution-binding-recovery.mjs
 import { strictBindingRecoveryEvidence, requiresSameAttemptVerification } from './binding-recovery.mjs'
 import { repairEvidenceHeader, parentContinuation, effectiveFailureClass, workerProcessClassification } from './dot.mjs'
 import { operationHasAuthoritativeSuccess } from './bounded-publication.mjs'
+import { durableProtectedApprovalSql } from './durable-protected-approval.mjs'
 
 import { spawnSync, spawn } from 'node:child_process'
 import { randomUUID, createHash } from 'node:crypto'
@@ -4571,7 +4572,7 @@ function taskPublish() {
           run_publication_authority: runPublicationAuthority,
           publication_authorizations:
             packet.publication_authorizations,
-          protected_publication_authority: parseControlJson(controlQuery(`SELECT control.current_protected_publication_authority(:'task');`, {task: taskId})),
+          protected_publication_authority: protectedPublicationAuthority(taskId),
         },
         null,
         2,
@@ -4817,6 +4818,11 @@ function handleNoPublishableChanges(
 }
 
 
+export function protectedPublicationAuthority(taskId) {
+  const current = parseControlJson(controlQuery(`SELECT control.current_protected_publication_authority(:'task_id');`, {task_id: taskId}))
+  return current?.authorized === true ? current : parseControlJson(controlQuery(durableProtectedApprovalSql, {task_id: taskId}))
+}
+
 export function supervisorSnapshot(taskId) {
   const result = controlQuery(
     `
@@ -4878,7 +4884,7 @@ export function supervisorSnapshot(taskId) {
   )
 
   const snapshot=parseControlJson(result)
-  if(snapshot) { snapshot.exhaustion_audit=auditAttempts(snapshot); snapshot.binding_recovery=strictBindingRecoveryEvidence(snapshot); snapshot.preexecution_binding_recovery=preexecutionBindingEvidence(snapshot,repoRoot) }
+  if(snapshot) { snapshot.protected_publication_authority=protectedPublicationAuthority(taskId); snapshot.exhaustion_audit=auditAttempts(snapshot); snapshot.binding_recovery=strictBindingRecoveryEvidence(snapshot); snapshot.preexecution_binding_recovery=preexecutionBindingEvidence(snapshot,repoRoot) }
   return snapshot
 }
 

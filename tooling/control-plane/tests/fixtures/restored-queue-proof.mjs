@@ -14,10 +14,11 @@ export async function restoredQueueProof({source,env,agent,sql,quote,controlSnap
  const stop=async()=>{const previous=service;service=null;if(previous?.exitCode===null&&previous?.signalCode===null){const ended=new Promise(r=>previous.once('exit',r));const timer=setTimeout(()=>previous.kill('SIGKILL'),10000);previous.kill('SIGTERM');await ended;clearTimeout(timer)}}
  const counts=()=>json(`SELECT jsonb_build_object('executions',(SELECT count(*) FROM control.executions WHERE task_id='${first}'),'product',(control.product_retry_accounting('${first}')->>'consumed')::int,'credits',(SELECT count(*) FROM control.workflow_run_task_credits WHERE run_id='${runId}'),'publications',(SELECT count(*) FROM control.pull_requests WHERE task_id IN('${first}','CP-E2E-002')),'approvals',(SELECT count(*) FROM control.operator_authority_events WHERE run_id='${runId}' AND response='approve'))`)
  try {
- service=launch();const deadline=Date.now()+600000
+ service=launch();const deadline=Date.now()+Number(process.env.CP_RESTORED_QUEUE_TIMEOUT_MS??600000)
  while(Date.now()<deadline){
   const state=controlSnapshot()
-  if(!restarted&&state.executions.some(e=>e.status==='running')){await stop();service=launch();restarted=true}
+  writeFileSync(path.join(output,'restored-progress.json'),JSON.stringify({state,counts:counts()}))
+  if(!restarted&&state.executions.length>0){await stop();service=launch();restarted=true}
   const checks=json(`SELECT coalesce(jsonb_agg(to_jsonb(v)),'[]') FROM control.verification_results v JOIN control.verification_runs vr USING(verification_run_id) JOIN control.executions e ON e.execution_id=v.execution_id WHERE e.task_id='${first}' AND vr.status='failed' AND v.status='fail' AND v.trusted_receipt IS NOT NULL AND NOT EXISTS(SELECT 1 FROM control.verification_failure_reviews review WHERE review.verification_id=v.verification_id)`)
   for(const check of checks){
    if(reviewed.has(check.verification_id))continue
@@ -38,7 +39,9 @@ export async function restoredQueueProof({source,env,agent,sql,quote,controlSnap
   await pause(500)
  }
  await stop()
- const final=controlSnapshot(),c=counts();assert.ok(restarted,'persistent consumer crash/restart exercised');assert.equal(c.approvals,1,'no recurring owner approval');assert.equal(Number(sql('SELECT count(*) FROM control.dot_model_invocations')),0,'no assessor/investigator participates')
+ const final=controlSnapshot(),c=counts();
+ writeFileSync(path.join(output,'restored-final-diagnostic.json'),JSON.stringify({final,counts:c,restarted,recovery:json("SELECT coalesce(jsonb_agg(jsonb_build_object('task_id',current_task_id,'error_code',error_code,'next_action',next_action,'condition',condition,'metadata',metadata)),'[]') FROM control.recovery_states WHERE status='active'")},null,2))
+ assert.ok(restarted,'persistent consumer crash/restart exercised');assert.equal(c.approvals,1,'no recurring owner approval');assert.equal(Number(sql('SELECT count(*) FROM control.dot_model_invocations')),0,'no assessor/investigator participates')
  if(injectedFault==='restore-fifth'){assert.equal(final.status,'limit_reached');assert.equal(c.executions,5);assert.equal(c.product,4);assert.equal(c.credits,2);assert.equal(c.publications,2);assert.equal(reviewed.size,4)}
  if(injectedFault==='restore-ordinary'){assert.equal(final.status,'limit_reached');assert.equal(c.executions,1);assert.equal(c.product,0);assert.equal(c.credits,2);assert.equal(c.publications,2);assert.equal(json(`SELECT control.operator_gate_offers('${runId}')`).filter(g=>['ordinary-publication','task-shared-package-scope'].includes(g.action)).length,0)}
  if(['restore-exhaust','restore-wait'].includes(injectedFault)){

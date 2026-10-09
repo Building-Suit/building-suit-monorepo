@@ -1,7 +1,7 @@
 // A queue grant authorizes ordinary source publication. Existing protected-path
 // grants remain separate, and it does not authorize unknown access-control edits.
-export function unattendedSensitiveFiles(files) {
- return files.filter(file=>/^(?:packages\/(?:auth|contracts|data-access)\/|\.github\/|\.gitmodules$)|(?:^|\/)(?:auth|security|permissions?|polic(?:y|ies)|oauth|jwt)(?:\/|[.-])|(?:^|\/)server\/(?:api|middleware|plugins)\//i.test(file))
+export function unattendedSensitiveFiles(files, {verifiedOwnerPaths=[], reviewedOrdinaryPaths=[]} = {}) {
+ return files.filter(file=>!verifiedOwnerPaths.includes(file) && !reviewedOrdinaryPaths.includes(file) && /^(?:packages\/(?:auth|contracts|data-access)\/|\.github\/|\.gitmodules$)|(?:^|\/)(?:auth|security|permissions?|polic(?:y|ies)|oauth|jwt)(?:\/|[.-])|(?:^|\/)server\/(?:api|middleware|plugins)\//i.test(file))
 }
 
 // Reconcile a previously created exact Draft after another eligible task became

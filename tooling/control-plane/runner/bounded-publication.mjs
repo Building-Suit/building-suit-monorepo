@@ -7,8 +7,22 @@ export function ordinaryRunAuthority(authority, taskId) {
 export function supersededPublicationHold(snapshot) {
   return snapshot.packet?.task?.status === 'passed' &&
     snapshot.recovery?.next_action === 'wait-operator' &&
-    (snapshot.recovery?.error_code === 'publication_operator_hold' || supersededRegisteredScopeGate(snapshot)) &&
+    (snapshot.recovery?.error_code === 'publication_operator_hold' || supersededRegisteredScopeGate(snapshot) || supersededExactProtectedHold(snapshot)) &&
     ordinaryRunAuthority(snapshot.run_publication_authority, snapshot.packet.task.task_id)
+}
+export function supersededExactProtectedHold(snapshot) {
+ if(snapshot.recovery?.error_code!=='publication_protected_path_operator_wait')return false
+ const execution=snapshot.executions?.at(-1)
+ const v=snapshot.verification_runs?.filter(v=>Number(v.execution_id)===Number(execution?.execution_id)).at(-1)
+ if(v?.status!=='passed')return false
+ const verification={...v,state_fingerprint:v.metadata?.verified_state?.fingerprint,verified_state:v.metadata?.verified_state}
+ const packet=snapshot.packet
+ const verified=verifiedProtectedPublicationPaths({grant:snapshot.protected_publication_authority,task:packet?.task,execution,verification})
+ const failure=snapshot.failures?.find(f=>Number(f.failure_id)===Number(snapshot.recovery.failure_id))
+ const paths=failure?.metadata?.protected_paths
+ return paths?.length>0 && Number(failure.execution_id)===Number(execution?.execution_id) &&
+  failure.error_code==='publication_protected_path_operator_wait' && paths.every(file=>verified.includes(file) &&
+   pathInScope(file,packet?.publication_boundaries?.task_paths??[]) && pathInScope(file,packet?.publication_boundaries?.project_paths??[]))
 }
 // Reconcile a legacy exact-file gate only when every recorded waiting file is
 // already inside this task's registered, ordinary scope under a current DB grant.
