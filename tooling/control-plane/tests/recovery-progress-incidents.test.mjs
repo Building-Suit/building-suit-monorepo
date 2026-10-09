@@ -14,9 +14,9 @@ import {createHash} from 'node:crypto'
 import {trustedCommandRegistration,verifierReceipt} from '../runner/trusted-verifier-receipt.mjs'
 import {auditAttempts} from '../runner/retry-exhaustion-audit.mjs'
 import {requiresSameAttemptVerification} from '../runner/binding-recovery.mjs'
-import {prepareBoundFailureReviews} from '../runner/bound-failure-review.mjs'
+import {prepareBoundFailureReviews,registeredFailureReviews} from '../runner/bound-failure-review.mjs'
 import {recoveryActionInput} from '../runner/recovery-action-guard.mjs'
-import {applyVerifierFixtureRepair,registeredVerifierPrerequisites} from '../runner/verifier-fixture-repair.mjs'
+import {applyVerifierFixtureRepair,registeredVerifierPrerequisites,selectVerifierRecipe} from '../runner/verifier-fixture-repair.mjs'
 import {prepareRuntimeRelease,activateRuntimeRelease} from '../runner/runtime-release.mjs'
 
 const shop={run_id:'06124632-a51d-4d08-bb62-ee4e8cedb9dc',task_id:'SS-LAUNCH-CASH-POLICY-001',execution_id:316,attempt:1,source:'unchanged-product',verifier:'same-verifier',classification:'VERIFIER_INFRA',checks:[{name:'database',status:'fail',command:'db',classification:'VERIFIER_INFRA'}]}
@@ -249,6 +249,18 @@ test('blocked mandatory check inherits only registered prerequisites and remains
   assert.deepEqual(registeredVerifierPrerequisites(blocked,[{...check,trusted_receipt:null},second,blocked],execution,verification,[recipe]),[])
   assert.deepEqual(registeredVerifierPrerequisites(blocked,[check,second,blocked],{...execution,execution_id:324},verification,[recipe]),[])
   assert.equal(applyVerifierFixtureRepair({...snapshot,verification_results:[blocked]},recipe).applied,false)
+  const catalogRoot=mkdtempSync(path.join(tmpdir(),'registered-verifier-catalog-'))
+  try{
+   mkdirSync(path.join(catalogRoot,'tooling/control-plane/verifier-repairs'),{recursive:true})
+   recipe.reviews={'cash-sql':reviews['cash-sql'],'regression-sql':reviews['cash-sql']}
+   writeFileSync(path.join(catalogRoot,'tooling/control-plane/verifier-repairs/shop-solo-trial-catalog.json'),JSON.stringify(recipe))
+   const firstReview=check.metadata.failure_evidence,secondReview=second.metadata.failure_evidence
+   check.metadata.failure_evidence=null;second.metadata.failure_evidence=null
+   const proposals=registeredFailureReviews(snapshot,catalogRoot)
+   assert.equal(proposals.length,2);assert.deepEqual(proposals.map(p=>p.verification_id),[100,102]);assert.ok(proposals.every(p=>p.evidence.classification==='VERIFIER_INFRA'))
+   assert.equal(registeredFailureReviews({...snapshot,executions:[{...execution,execution_id:324}]},catalogRoot).length,0)
+   check.metadata.failure_evidence=firstReview;second.metadata.failure_evidence=secondReview
+  }finally{rmSync(catalogRoot,{recursive:true,force:true})}
   writeFileSync(check.log_path,'tampered')
   assert.throws(()=>applyVerifierFixtureRepair(snapshot,recipe),/trusted_artifact_digest_mismatch/)
   assert.equal(readFileSync(path.join(root,fixture),'utf8'),original)
@@ -263,4 +275,16 @@ test('blocked mandatory check inherits only registered prerequisites and remains
   assert.equal(snapshot.executions.length,1);assert.equal(snapshot.executions[0].attempt,1)
   assert.throws(()=>prepareBoundFailureReviews({execution,verification,checks:[check],reviews}),/trusted_source_fingerprint_stale/)
  }finally{rmSync(root,{recursive:true,force:true})}
+})
+
+test('successive repairs select only the latest verification identity without resetting attempts',()=>{
+ const task_id='SS-LAUNCH-SOLO-VARIANTS-001',execution={task_id,execution_id:323,attempt:1};
+ const recipes=[{task_id,execution_id:323,verification_run_id:354,id:'trial'},{task_id,execution_id:323,verification_run_id:355,id:'renewal'}];
+ const snapshot={packet:{task:{task_id}},executions:[execution],verification_runs:[{execution_id:323,verification_run_id:354}]};
+ assert.equal(selectVerifierRecipe(snapshot,recipes).id,'trial');
+ snapshot.verification_runs.push({execution_id:323,verification_run_id:355});
+ assert.equal(selectVerifierRecipe(snapshot,recipes).id,'renewal');
+ snapshot.verification_runs.push({execution_id:323,verification_run_id:356});
+ assert.equal(selectVerifierRecipe(snapshot,recipes),undefined);
+ assert.equal(execution.attempt,1);assert.equal(snapshot.executions.length,1);
 })

@@ -1,4 +1,5 @@
 import path from 'node:path'
+import {registeredVerifierRecipes,selectVerifierRecipe} from './verifier-fixture-repair.mjs'
 import {readFileSync,existsSync} from 'node:fs'
 import {createHash} from 'node:crypto'
 import {readBoundArtifact,validateTrustedReceipt} from './trusted-verifier-receipt.mjs'
@@ -23,8 +24,10 @@ export function prepareBoundFailureReviews({execution,verification,checks,review
 
 export function registeredFailureReviews(snapshot, sourceRoot) {
  const file=path.join(sourceRoot,'tooling/control-plane/verifier-repairs/sas-billing-reviews.json')
- if(!existsSync(file))return []
- const catalog=JSON.parse(readFileSync(file,'utf8')), task=snapshot.packet?.task,execution=snapshot.executions?.at(-1)
+ const registered=selectVerifierRecipe(snapshot,registeredVerifierRecipes(sourceRoot))
+ const catalog=registered?.reviews?registered:existsSync(file)?JSON.parse(readFileSync(file,'utf8')):null
+ if(!catalog)return []
+ const task=snapshot.packet?.task,execution=snapshot.executions?.at(-1)
  const verification=snapshot.verification_runs?.filter(v=>Number(v.execution_id)===Number(execution?.execution_id)).at(-1)
  if(task?.task_id!==catalog.task_id||task.status!=='failed'||execution?.status!=='succeeded'||verification?.status!=='failed')return []
  if(snapshot.workflow_run?.status!=='running'||snapshot.workflow_run.stop_requested||snapshot.workflow_run.maintenance_requested)return []
