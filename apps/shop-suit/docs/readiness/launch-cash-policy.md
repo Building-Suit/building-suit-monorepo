@@ -4,7 +4,7 @@ Implements SS-LAUNCH-R04 and approved decision SS-LAUNCH-D02. Business settings 
 
 The current POS/Cashier shifts flow uses the `main` register. When enabled, issuance and completed inbound customer payments require an open main shift at the authoritative sale/payment location. Invoice and payment triggers cover POS, Sales issue, customerless issue-and-take-payment, and legacy/location receipt RPCs. A shift in another location does not qualify. Checks lock the policy and shift until commit, so a concurrent policy update or shift closure cannot invalidate an accepted write. Any failure rolls back the atomic command. Saving/editing drafts and replaying completed idempotent commands remain available. Refund/reversal rules and exactly-once cash drawer capture are preserved; non-cash payments never create drawer cash events.
 
-POS and Sales translate `SALE_OPEN_CASH_SHIFT_REQUIRED` into EN/AR guidance to open Cashier shifts for the selected location and retry. This checkout currently uses the existing POS and customerless issue-and-take-payment commands; there is no separate Fast Pay RPC in this checkout.
+POS and Sales translate `SALE_OPEN_CASH_SHIFT_REQUIRED` into EN/AR guidance to open Cashier shifts for the selected location and retry. New Sale also uses the atomic `fast_pay_location_sale` command described in [Fast Pay](launch-fast-pay.md); its issuance/payment writes share these policy triggers.
 
 ## Verification
 

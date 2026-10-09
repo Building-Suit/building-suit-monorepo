@@ -4,6 +4,23 @@ export type ShopRpcDatabase = {
     Tables: Record<string, never>
     Views: Record<string, never>
     Functions: {
+      fast_pay_location_sale: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_location_id: string
+          p_invoice_id: string | null
+          p_customer_id: string | null
+          p_due_date: string | null
+          p_notes: string | null
+          p_lines: Array<{ item_type: 'product' | 'service'; source_id: string; quantity: number }>
+          p_amount: number
+          p_paid_at: string
+          p_method: 'cash' | 'bank_transfer' | 'card' | 'wallet' | 'cheque' | 'other'
+          p_reference: string | null
+        }
+        Returns: string
+      }
       shop_cash_policy: { Args: { p_shop_id: string }; Returns: boolean }
       set_shop_cash_policy: { Args: { p_shop_id: string; p_required: boolean }; Returns: boolean }
       create_owner_shop: {
