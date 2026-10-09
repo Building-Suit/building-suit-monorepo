@@ -7,7 +7,7 @@ export type PublicPlan = {
   name: string;
   slug: string;
   catalog_terms_id: string;
-  plan_variant: 'standard' | 'multi_2' | 'multi_3';
+  plan_variant: 'standard' | 'solo_1' | 'solo_2' | 'multi_2' | 'multi_3';
   variant_name: string;
   price_amount: number;
   currency: string;

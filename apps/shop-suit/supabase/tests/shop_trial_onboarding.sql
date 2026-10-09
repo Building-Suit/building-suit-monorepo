@@ -224,10 +224,16 @@ declare
   v_shop uuid := current_setting('ss_hot_onboard.mixed_shop')::uuid;
   v_billing jsonb := public.shop_billing_read(v_shop);
 begin
-  -- Four purchasable variants each expose monthly and annual terms.
+  -- Five purchasable variants each expose monthly and annual terms.
   if v_billing #>> '{subscription,planSlug}' <> 'full-product-trial'
-    or jsonb_array_length(v_billing -> 'availablePlans') <> 8
+    or jsonb_array_length(v_billing -> 'availablePlans') <> 10
+    or (select count(*) from jsonb_array_elements(v_billing -> 'availablePlans') plan
+        where plan ->> 'planSlug' = 'solo') <> 4
     or not (v_billing -> 'availablePlans' @> '[
+      {"planSlug":"solo","planVariant":"solo_1","billingInterval":"monthly"},
+      {"planSlug":"solo","planVariant":"solo_1","billingInterval":"annual"},
+      {"planSlug":"solo","planVariant":"solo_2","billingInterval":"monthly"},
+      {"planSlug":"solo","planVariant":"solo_2","billingInterval":"annual"},
       {"planSlug":"solo"},{"planSlug":"team"},{"planSlug":"multi"}
     ]'::jsonb)
     or exists (

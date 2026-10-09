@@ -61,7 +61,7 @@ test('database regression covers migration, trial, quota, downgrade, and idempot
   assert.match(databaseTest, /catalog reconciliation was not idempotent/)
   assert.match(databaseTest, /interval '7 days'/)
   assert.match(databaseTest, /Solo accepted a second active location/)
-  assert.match(databaseTest, /Solo accepted a third active member/)
+  assert.match(databaseTest, /Solo accepted a second active member/)
   assert.match(databaseTest, /over-limit downgrade succeeded/)
   assert.match(databaseTest, /submitted notice or approved paid period was rewritten/)
 })

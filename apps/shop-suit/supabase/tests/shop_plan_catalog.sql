@@ -23,7 +23,7 @@ begin
   where portal.key = 'shop-crm' and plan.slug in ('solo', 'team', 'multi');
 
   if v_catalog is distinct from '[
-    {"slug":"solo","name":"Solo","price":349,"currency":"EGP","interval":"monthly","trialDays":7,"limits":{"active_locations":1,"active_members":2,"active_products":250,"active_services":50,"active_customers":500,"active_suppliers":50},"active":true,"public":true,"purchasable":true,"inventory":true},
+    {"slug":"solo","name":"Solo","price":349,"currency":"EGP","interval":"monthly","trialDays":7,"limits":{"active_locations":1,"active_members":1,"active_products":250,"active_services":50,"active_customers":500,"active_suppliers":50},"active":true,"public":true,"purchasable":true,"inventory":true},
     {"slug":"team","name":"Team","price":699,"currency":"EGP","interval":"monthly","trialDays":7,"limits":{"active_locations":1,"active_members":8,"active_products":500,"active_services":100,"active_customers":2000,"active_suppliers":150},"active":true,"public":true,"purchasable":true,"inventory":true},
     {"slug":"multi","name":"Multi","price":999,"currency":"EGP","interval":"monthly","trialDays":7,"limits":{"active_locations":2,"active_members":16,"active_products":1000,"active_services":200,"active_customers":5000,"active_suppliers":300},"active":true,"public":true,"purchasable":true,"inventory":true}
   ]'::jsonb then
@@ -185,8 +185,8 @@ end;
 $$;
 reset role;
 
--- Member limits include the owner. The second active member fits Solo; the
--- third is rejected atomically without archiving either existing member.
+-- Member limits include the owner. The default Solo 1 rejects a second
+-- active member atomically; the task-specific suite covers Solo 2 reservations.
 do $$
 declare
   v_shop uuid := current_setting('ss_plan.solo_shop')::uuid;
@@ -196,21 +196,15 @@ begin
   insert into public.profiles (user_id, portal_id, display_name)
   select extra_user_a, v_portal, 'Second member' from shop_plan_catalog_fixture
   returning id into v_profile;
-  insert into public.shop_memberships (shop_id, profile_id, role)
-  values (v_shop, v_profile, 'employee');
-
-  insert into public.profiles (user_id, portal_id, display_name)
-  select extra_user_b, v_portal, 'Third member' from shop_plan_catalog_fixture
-  returning id into v_profile;
   begin
     insert into public.shop_memberships (shop_id, profile_id, role)
     values (v_shop, v_profile, 'employee');
-    raise exception 'Solo accepted a third active member';
+    raise exception 'Solo accepted a second active member';
   exception when check_violation then
     if sqlerrm not like 'PLAN_RESOURCE_LIMIT_REACHED:active_members:%' then raise; end if;
   end;
   if (select count(*) from public.shop_memberships
-      where shop_id = v_shop and status = 'active') <> 2 then
+      where shop_id = v_shop and status = 'active') <> 1 then
     raise exception 'member quota failure changed existing membership data';
   end if;
 end;

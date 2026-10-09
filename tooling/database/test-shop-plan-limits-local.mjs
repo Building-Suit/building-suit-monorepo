@@ -39,6 +39,7 @@ function assertOneWinner(results, errorCode, label) {
 const soloOwner = randomUUID()
 const multiOwner = randomUUID()
 const invitedUser = randomUUID()
+const fixtureOperator = randomUUID()
 let soloShop
 let multiShop
 
@@ -53,6 +54,31 @@ try {
     "select public.create_owner_shop('Plan limit race Multi','multi','mixed'::public.business_mode);"))).stdout)
 
   const soloProfile = lastLine((await runSql(`select profile_id from public.shop_memberships where shop_id='${soloShop}' and role='owner';`)).stdout)
+  // This reservation race requires two seats; default Solo now has one.
+  // Select Solo 2 through the existing billing approval path in this disposable fixture.
+  await runSql(`insert into auth.users (id,email,encrypted_password,aud,role,email_confirmed_at,
+    raw_app_meta_data,raw_user_meta_data,created_at,updated_at) values
+    ('${fixtureOperator}','${fixtureOperator}@plan-limit-race.invalid','x','authenticated','authenticated',now(),'{}','{}',now(),now());
+    insert into public.platform_admins(user_id,role,display_name)
+      values ('${fixtureOperator}','operator','Plan limit race operator');`)
+  const notice = lastLine((await runSql(authenticated(soloOwner,
+    `select public.submit_shop_billing_notice('${randomUUID()}','${soloShop}','solo',
+      (select catalog_terms_id from public.shop_public_plan_catalog()
+        where plan_variant='solo_2' and billing_interval='monthly'),
+      499,current_date,'SOLO2-RACE');`))).stdout)
+  await runSql(authenticated(fixtureOperator,
+    `select set_config('request.jwt.claim.role','authenticated',false);
+     select set_config('shop.billing_approval','approved',false);
+     select public.platform_admin_billing_command('${randomUUID()}','approve','${notice}',
+      'Matched Solo 2 race selection',jsonb_build_object('receivedAmount',499,
+        'receivedReference','SOLO2-RACE-BANK','receivedDate',current_date::text));`))
+  const selectedOffer = lastLine((await runSql(`select terms.plan_variant,
+    terms.billing_interval, terms.resource_limits ->> 'active_members'
+    from public.subscriptions subscription join public.plan_catalog_terms terms
+      on terms.id=subscription.catalog_terms_id
+    where subscription.profile_id='${soloProfile}';`)).stdout)
+  if (selectedOffer !== 'solo_2|monthly|2') throw new Error(`two-seat race fixture not selected: ${selectedOffer}`)
+
   const multiLocation = lastLine((await runSql(`select id from public.shop_locations where shop_id='${multiShop}' and is_default;`)).stdout)
   const soloLocation = lastLine((await runSql(`select id from public.shop_locations where shop_id='${soloShop}' and is_default;`)).stdout)
   const invitationCode = lastLine((await runSql(authenticated(soloOwner,
@@ -174,10 +200,12 @@ finally {
   if (shops.length) {
     await runSql(`set session_replication_role=replica;
       delete from public.shops where id in (${shops.map(id => `'${id}'`).join(',')});
-      delete from auth.users where id in ('${soloOwner}','${multiOwner}','${invitedUser}');
+      delete from public.platform_admins where user_id='${fixtureOperator}';
+      delete from auth.users where id in ('${soloOwner}','${multiOwner}','${invitedUser}','${fixtureOperator}');
       set session_replication_role=origin;`, { allowFailure: true })
   }
   else {
-    await runSql(`delete from auth.users where id in ('${soloOwner}','${multiOwner}','${invitedUser}');`, { allowFailure: true })
+    await runSql(`delete from public.platform_admins where user_id='${fixtureOperator}';
+      delete from auth.users where id in ('${soloOwner}','${multiOwner}','${invitedUser}','${fixtureOperator}');`, { allowFailure: true })
   }
 }
