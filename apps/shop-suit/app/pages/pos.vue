@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { saleCopy } from '~/utils/saleCopy'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import { businessModeSupportsProducts, businessModeSupportsServices } from '~/utils/businessMode'
 import { posCustomerOptions } from '~/utils/posCustomer.js'
@@ -161,7 +162,7 @@ function resetSale() {
   nextTick(() => catalogInput.value?.focus())
 }
 function readableError(message?: string) {
-  if (message?.includes('INSUFFICIENT_STOCK') || message?.includes('CROSS_LOCATION_STOCK')) return t('pos.insufficientStock')
+  if (message?.includes('INSUFFICIENT_STOCK') || message?.includes('CROSS_LOCATION_STOCK')) return saleCopy(t, 'pos.insufficientStock', lines.value)
   if (message?.includes('SHOP_PERMISSION_DENIED')) return t('pos.permissionDenied')
   if (message?.includes('FULL_PAYMENT') || message?.includes('OVERPAYMENT')) return t('sales.fullPaymentRequired')
   return t('pos.checkoutError')
@@ -200,7 +201,7 @@ async function checkout() {
   }
   confirmingCheckout.value = true
   let confirmed = false
-  try { confirmed = await confirmation.ask(t('pos.confirm')) }
+  try { confirmed = await confirmation.ask(saleCopy(t, 'pos.confirm', lines.value)) }
   finally { confirmingCheckout.value = false }
   if (!confirmed) return
   checkingOut.value = true; errorMessage.value = ''
@@ -296,7 +297,7 @@ watch(context, value => {
             <div class="grid grid-cols-2 gap-2"><label class="grid gap-1 text-sm font-bold">{{ t('pos.paymentMethod') }}<select v-model="paymentMethod" class="ls-select min-h-11"><option v-for="method in ['cash','card','bank_transfer','wallet','cheque','other']" :key="method" :value="method">{{ t(`payments.methods.${method}`) }}</option></select></label><label class="grid gap-1 text-sm font-bold">{{ t('pos.reference') }}<input v-model="paymentReference" maxlength="200" class="ls-input min-h-11"></label></div>
             <label class="grid gap-1 text-sm font-bold">{{ t('pos.notes') }}<input v-model="notes" maxlength="2000" class="ls-input min-h-11"></label>
             <div class="flex items-end justify-between gap-3"><span class="text-sm font-bold">{{ t('pos.total') }}</span><strong class="text-2xl">{{ money(total) }}</strong></div>
-            <p class="text-xs text-muted-foreground">{{ t('pos.serverTotal') }}</p>
+            <p class="text-xs text-muted-foreground">{{ saleCopy(t, 'pos.serverTotal', lines) }}</p>
             <BsButton variant="primary" class="min-h-12 w-full" :pending="checkingOut" :disabled="checkingOut || confirmingCheckout || contextPending || Boolean(contextError) || locationChanged || !lines.length || !staffId" @click="checkout">{{ checkingOut ? t('pos.paying') : t('pos.pay', { amount: money(total) }) }}</BsButton>
             <p class="text-center text-xs text-muted-foreground">{{ t('pos.shortcuts') }}</p>
           </div>

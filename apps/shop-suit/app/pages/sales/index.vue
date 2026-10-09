@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { saleCopy } from '~/utils/saleCopy'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 
 definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
@@ -231,7 +232,7 @@ function validDraft(requireCustomer = false) {
 }
 
 function readableError(message?: string) {
-  if (message?.includes('INSUFFICIENT_STOCK')) return t('sales.insufficientStock')
+  if (message?.includes('INSUFFICIENT_STOCK')) return saleCopy(t, 'sales.insufficientStock', lines.value)
   if (message?.includes('OUTSTANDING_SALE_REQUIRES_CUSTOMER')) return t('sales.customerRequired')
   if (message?.includes('CUSTOMERLESS_CHECKOUT_REQUIRES_FULL_PAYMENT')) return t('sales.fullPaymentRequired')
   if (message?.includes('INVALID_SALE') || message?.includes('UNSUPPORTED_SALE')) return t('sales.invalid')
@@ -280,7 +281,7 @@ async function issue() {
   if (!currentId.value || !currentLocationId.value || issuing.value || !salePage.value?.canIssue) return
   if (!validDraft()) { editorError.value = t('sales.invalid'); return }
   if (!customerId.value && !paymentAccess.value.can_receive) { editorError.value = t('sales.checkoutDenied'); return }
-  if (!await confirmation.ask(customerId.value ? t('sales.issueConfirm') : t('sales.checkoutConfirm'))) return
+  if (!await confirmation.ask(customerId.value ? saleCopy(t, 'sales.issueConfirm', lines.value) : saleCopy(t, 'sales.checkoutConfirm', lines.value))) return
   const invoiceId = issueRequestId.value && editingId.value ? editingId.value : await persistDraft()
   if (!invoiceId) return
   issuing.value = true
@@ -307,7 +308,7 @@ async function issue() {
       refreshNuxtData('shop-data:inventory-overview'),
       refreshNuxtData('shop-data:recent-invoices'),
     ])
-    pushToast({ tone: 'success', title: t(customerId.value ? 'sales.issuedSuccess' : 'sales.checkoutSuccess') })
+    pushToast({ tone: 'success', title: saleCopy(t, customerId.value ? 'sales.issuedSuccess' : 'sales.checkoutSuccess', lines.value) })
     await navigateTo(`/sales/${invoiceId}`)
   }
   catch (error) { editorError.value = readableError(error instanceof Error ? error.message : undefined) }
@@ -378,7 +379,7 @@ function handlePage(event: { page: number }) { page.value = event.page + 1 }
               <div class="flex items-end justify-end"><BsButton type="button" class="text-sm font-bold text-fg disabled:opacity-40" :disabled="lines.length === 1" @click="removeLine(index)">{{ t('sales.removeLine') }}</BsButton></div>
             </div>
           </div>
-          <div class="rounded-xl bg-muted p-4"><p class="text-sm">{{ t('sales.previewNotice') }}</p><p class="mt-1 text-sm">{{ t('sales.stockNotice') }}</p><p class="mt-3 text-xl font-extrabold">{{ t('sales.total') }}: {{ money(previewTotal) }}</p></div>
+          <div class="rounded-xl bg-muted p-4"><p class="text-sm">{{ t('sales.previewNotice') }}</p><p class="mt-1 text-sm">{{ saleCopy(t, 'sales.stockNotice', lines) }}</p><p class="mt-3 text-xl font-extrabold">{{ t('sales.total') }}: {{ money(previewTotal) }}</p></div>
       <template #actions="{ close }"><BsButton type="submit" :disabled="saving || issuing">{{ saving ? t('sales.saving') : t('sales.saveDraft') }}</BsButton><BsButton v-if="salePage?.canIssue" type="button" variant="primary" :disabled="saving || issuing" @click="issue">{{ issuing ? t('sales.issuing') : t(customerId ? 'sales.issue' : 'sales.checkout') }}</BsButton><BsButton type="button" :disabled="saving || issuing" @click="close">{{ t('sales.cancel') }}</BsButton></template>
     </BsRecordActionDialog>
   </div>
