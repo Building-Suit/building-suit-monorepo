@@ -1,3 +1,4 @@
+import {registeredVerifierPrerequisites} from './verifier-fixture-repair.mjs'
 import {canonicalFailure} from './lifecycle-policy.mjs'
 import {reconcileFailureEvidence} from './failure-evidence.mjs'
 import {redactText} from '../lib/redaction.mjs'
@@ -43,6 +44,9 @@ export function auditAttempts(snapshot){
    // required, but has no executed outcome to review/materialize. Inherit only
    // its exact current trusted prerequisite; never manufacture its own receipt.
    if(c.status==='not_run'&&c.selection_reason==='database_prerequisite_failed'){
+    const registered=registeredVerifierPrerequisites(c,checks,e,verification)
+    const inherited=registered.map(p=>reconcileFailureEvidence(p,e,verification))
+    if(inherited.length&&inherited.every(b=>b.evidence&&b.classification==='VERIFIER_INFRA'))return inherited[0]
     const prerequisites=checks.filter(p=>p.status==='fail'&&p.name?.endsWith('-database-reset'))
     if(prerequisites.length===1)return reconcileFailureEvidence(prerequisites[0],e,verification)
    }

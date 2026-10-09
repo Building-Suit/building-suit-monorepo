@@ -2,6 +2,19 @@ import {existsSync,mkdirSync,readFileSync,writeFileSync,lstatSync,realpathSync,r
 import path from 'node:path'
 import {createHash} from 'node:crypto'
 import {validateTrustedReceipt,readBoundArtifact} from './trusted-verifier-receipt.mjs'
+const catalogNames=['shop-cash-policy.json','shop-solo-trial-catalog.json']
+export function registeredVerifierRecipes(sourceRoot=new URL('../../..',import.meta.url).pathname){
+ return catalogNames.map(name=>path.join(sourceRoot,'tooling/control-plane/verifier-repairs',name)).filter(existsSync).map(file=>JSON.parse(readFileSync(file,'utf8')))
+}
+// Accounting inherits genuine prerequisite evidence only. The blocked check remains unrun.
+export function registeredVerifierPrerequisites(check,checks,execution,verification,recipes=registeredVerifierRecipes()){
+ const recipe=recipes.find(r=>Number(r.execution_id)===Number(execution.execution_id)&&Number(r.verification_run_id)===Number(verification?.verification_run_id)&&r.task_id===execution.task_id)
+ const blocked=recipe?.blocked_checks?.find(b=>b.name===(check.name??check.check_name)&&Number(b.verification_id)===Number(check.verification_id))
+ if(!blocked||check.status!=='not_run'||(check.selection_reason??check.metadata?.selection_reason)!==blocked.selection_reason||check.trusted_receipt)return []
+ const prerequisites=blocked.prerequisites.map(name=>checks.find(c=>(c.name??c.check_name)===name))
+ if(prerequisites.some(c=>!c||c.status!=='fail'||!recipe.checks.some(expected=>expected.name===(c.name??c.check_name)&&Number(expected.verification_id)===Number(c.verification_id)&&expected.artifact_sha256===c.trusted_receipt?.artifact?.sha256)))return []
+ return prerequisites
+}
 const digest=bytes=>createHash('sha256').update(bytes).digest('hex')
 
 // Exact reviewed patches inside the existing verifier-infrastructure lane.
@@ -13,11 +26,15 @@ export function applyVerifierFixtureRepair(snapshot,recipe) {
   ||snapshot.authoritative_failure?.classification!=='VERIFIER_INFRA'||snapshot.authoritative_failure?.evidence?.verification_run_id!==verification.verification_run_id)return {applied:false,reason:'current_trusted_verifier_failure_required'}
  if(snapshot.workflow_run&&(snapshot.workflow_run.status!=='running'||snapshot.workflow_run.stop_requested||snapshot.workflow_run.maintenance_requested))return {applied:false,reason:'run_held'}
  if(snapshot.recovery?.status==='active'&&['wait-operator','wait-decision','safety-stop'].includes(snapshot.recovery.next_action))return {applied:false,reason:'authority_boundary'}
+ if(recipe.execution_id&&Number(recipe.execution_id)!==Number(execution.execution_id)||recipe.verification_run_id&&Number(recipe.verification_run_id)!==Number(verification.verification_run_id))return {applied:false,reason:'reviewed_recipe_identity_mismatch'}
  const root=realpathSync(execution.worktree_path)
  const checks=(snapshot.verification_results??[]).filter(c=>Number(c.verification_run_id)===Number(verification.verification_run_id)&&c.metadata?.required!==false&&['fail','not_run','unavailable'].includes(c.status))
- if(checks.length!==recipe.checks.length||checks.some(c=>!recipe.checks.some(expected=>expected.name===c.check_name&&expected.artifact_sha256===c.trusted_receipt?.artifact?.sha256)))return {applied:false,reason:'reviewed_recipe_evidence_mismatch'}
+ const blocked=checks.filter(c=>registeredVerifierPrerequisites(c,checks,execution,verification,[recipe]).length)
+ const executed=checks.filter(c=>!blocked.includes(c))
+ if(blocked.length!==(recipe.blocked_checks?.length??0)||executed.length!==recipe.checks.length||executed.some(c=>!recipe.checks.some(expected=>expected.name===c.check_name&&expected.artifact_sha256===c.trusted_receipt?.artifact?.sha256)))return {applied:false,reason:'reviewed_recipe_evidence_mismatch'}
  const targets=recipe.files.map(file=>{
-  if(!/^apps\/[a-z-]+\/((supabase\/tests\/[^/]+\.test\.sql)|(tests\/e2e\/[^/]+\.(ts|mjs)))$/.test(file.path))throw Error('verifier_test_path_required')
+  const legacyTrial=recipe.id==='shop-solo-trial-catalog-v1'&&file.path==='apps/shop-suit/supabase/tests/shop_trial_onboarding.sql'
+  if(!legacyTrial&&!/^apps\/[a-z-]+\/((supabase\/tests\/[^/]+\.test\.sql)|(tests\/e2e\/[^/]+\.(ts|mjs)))$/.test(file.path))throw Error('verifier_test_path_required')
   const target=path.join(root,file.path);let parent=root
   for(const part of file.path.split('/').slice(0,-1)){parent=path.join(parent,part);if(!existsSync(parent)||lstatSync(parent).isSymbolicLink())throw Error('verifier_path_boundary_required')}
   const before=existsSync(target)?digest(readBoundArtifact(target,root)):null
@@ -26,7 +43,7 @@ export function applyVerifierFixtureRepair(snapshot,recipe) {
  })
  if(targets.every(f=>f.before===f.after_sha256))return {applied:false,reason:'already_repaired'}
  // Validate every exact trusted failure and all original source bytes BEFORE edits.
- for(const c of checks){const evidence=c.metadata?.failure_evidence;if(evidence?.classification!=='VERIFIER_INFRA')throw Error('trusted_verifier_review_required');validateTrustedReceipt(evidence,c,{executionId:execution.execution_id,verificationRunId:verification.verification_run_id,artifactRoot:root,sourceRoot:root})}
+ for(const c of executed){const evidence=c.metadata?.failure_evidence;if(evidence?.classification!=='VERIFIER_INFRA')throw Error('trusted_verifier_review_required');validateTrustedReceipt(evidence,c,{executionId:execution.execution_id,verificationRunId:verification.verification_run_id,artifactRoot:root,sourceRoot:root})}
  if(targets.some(f=>f.before===f.after_sha256))throw Error('partial_verifier_repair_requires_reconciliation')
  for(const f of targets){const temporary=f.target+'.verifier-repair.tmp';writeFileSync(temporary,f.content,{mode:0o600,flag:'wx'});renameSync(temporary,f.target)}
  const receipt={version:1,recipe_id:recipe.id,execution_id:execution.execution_id,verification_run_id:verification.verification_run_id,classification:'VERIFIER_INFRA',product_attempts:0,files:targets.map(f=>({path:f.path,before:f.before_sha256,after:f.after_sha256}))}
@@ -34,7 +51,6 @@ export function applyVerifierFixtureRepair(snapshot,recipe) {
  return {applied:true,receipt}
 }
 export function repairRegisteredVerifierFixtures(snapshot,sourceRoot){
- const catalog=path.join(sourceRoot,'tooling/control-plane/verifier-repairs/shop-cash-policy.json')
- if(!existsSync(catalog))return {applied:false,reason:'no_registered_fixture_repair'}
- return applyVerifierFixtureRepair(snapshot,JSON.parse(readFileSync(catalog,'utf8')))
+ const recipe=registeredVerifierRecipes(sourceRoot).find(r=>r.task_id===snapshot.packet?.task?.task_id)
+ return recipe?applyVerifierFixtureRepair(snapshot,recipe):{applied:false,reason:'no_registered_fixture_repair'}
 }

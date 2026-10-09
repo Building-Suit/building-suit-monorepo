@@ -16,7 +16,7 @@ import {auditAttempts} from '../runner/retry-exhaustion-audit.mjs'
 import {requiresSameAttemptVerification} from '../runner/binding-recovery.mjs'
 import {prepareBoundFailureReviews} from '../runner/bound-failure-review.mjs'
 import {recoveryActionInput} from '../runner/recovery-action-guard.mjs'
-import {applyVerifierFixtureRepair} from '../runner/verifier-fixture-repair.mjs'
+import {applyVerifierFixtureRepair,registeredVerifierPrerequisites} from '../runner/verifier-fixture-repair.mjs'
 import {prepareRuntimeRelease,activateRuntimeRelease} from '../runner/runtime-release.mjs'
 
 const shop={run_id:'06124632-a51d-4d08-bb62-ee4e8cedb9dc',task_id:'SS-LAUNCH-CASH-POLICY-001',execution_id:316,attempt:1,source:'unchanged-product',verifier:'same-verifier',classification:'VERIFIER_INFRA',checks:[{name:'database',status:'fail',command:'db',classification:'VERIFIER_INFRA'}]}
@@ -216,4 +216,42 @@ test('schema 105 activation failure restores the previous pointer and keeps life
   const unseal=directory=>{chmodSync(directory,0o700);for(const entry of readdirSync(directory,{withFileTypes:true}))if(entry.isDirectory())unseal(path.join(directory,entry.name))}
   unseal(root);rmSync(root,{recursive:true,force:true})
  }
+})
+
+test('blocked mandatory check inherits only registered prerequisites and remains unrun during fixture repair',()=>{
+ const root=mkdtempSync(path.join(tmpdir(),'cp-reviewed-fixture-'))
+ try{
+  const git=args=>{const r=spawnSync('git',args,{cwd:root,encoding:'utf8'});assert.equal(r.status,0,r.stderr)}
+  git(['init','-q']);writeFileSync(path.join(root,'.gitignore'),'.local/\n');mkdirSync(path.join(root,'apps/shop-suit/supabase/tests'),{recursive:true});mkdirSync(path.join(root,'.local/logs'),{recursive:true})
+  const fixture='apps/shop-suit/supabase/tests/shop_trial_onboarding.sql', original='SELECT UNION fixture;', repaired='SELECT jsonb fixture;'
+  writeFileSync(path.join(root,fixture),original);git(['add','.']);git(['-c','user.name=Fixture','-c','user.email=fixture@example.test','commit','-qm','fixture'])
+  const check={verification_id:100,check_name:'cash-sql',command:'pnpm supabase test db',status:'fail',exit_code:1,verification_run_id:354,log_path:path.join(root,'.local/logs/check.log'),metadata:{required:true}}
+  writeFileSync(check.log_path,'UNION text cannot cast to jsonb')
+  check.trusted_registration=trustedCommandRegistration({check,executionId:323,verificationRunId:354,taskId:'SS-LAUNCH-SOLO-VARIANTS-001',registry:{version:1},obligationIds:['cash-matrix'],verifierBytes:'current verifier'})
+  check.trusted_receipt=verifierReceipt({check,artifactRoot:root,sourceRoot:root,executionId:323,verificationRunId:354,taskId:'SS-LAUNCH-SOLO-VARIANTS-001'})
+  const execution={task_id:'SS-LAUNCH-SOLO-VARIANTS-001',execution_id:323,attempt:1,status:'succeeded',worktree_path:root}, verification={execution_id:323,verification_run_id:354,status:'failed'}
+  const reviews={'cash-sql':{artifact_sha256:sha(readFileSync(check.log_path)),classification:'VERIFIER_INFRA',origin:'verifier-fixture',root_cause:'Fixture UNION literals are text',source_paths:[fixture]}}
+  const prepared=prepareBoundFailureReviews({execution,verification,checks:[check],reviews})
+  check.metadata.failure_evidence=prepared[0].evidence
+  const snapshot={packet:{task:{task_id:'SS-LAUNCH-SOLO-VARIANTS-001',status:'failed'}},workflow_run:{status:'running'},executions:[execution],verification_runs:[verification],verification_results:[check],authoritative_failure:{classification:'VERIFIER_INFRA',evidence:{verification_run_id:354}}}
+  const recipe={id:'shop-solo-trial-catalog-v1',execution_id:323,verification_run_id:354,task_id:snapshot.packet.task.task_id,checks:[{verification_id:100,name:'cash-sql',artifact_sha256:reviews['cash-sql'].artifact_sha256}],files:[{path:fixture,before_sha256:sha(original),after_sha256:sha(repaired),content:repaired}]}
+  const blocked={verification_id:101,verification_run_id:354,check_name:'mandatory-db',status:'not_run',metadata:{required:true,selection_reason:'database_prerequisite_failed'}}
+  recipe.blocked_checks=[{name:'mandatory-db',verification_id:101,selection_reason:'database_prerequisite_failed',prerequisites:['cash-sql']}]
+  snapshot.verification_results.push(blocked)
+  assert.deepEqual(registeredVerifierPrerequisites(blocked,[check,blocked],execution,verification,[recipe]),[check])
+  assert.deepEqual(registeredVerifierPrerequisites({...blocked,verification_id:102},[check,blocked],execution,verification,[recipe]),[])
+  assert.deepEqual(registeredVerifierPrerequisites(blocked,[{...check,trusted_receipt:null},blocked],execution,verification,[recipe]),[])
+  assert.deepEqual(registeredVerifierPrerequisites(blocked,[check,blocked],{...execution,execution_id:324},verification,[recipe]),[])
+  assert.equal(applyVerifierFixtureRepair({...snapshot,verification_results:[blocked]},recipe).applied,false)
+  writeFileSync(check.log_path,'tampered')
+  assert.throws(()=>applyVerifierFixtureRepair(snapshot,recipe),/trusted_artifact_digest_mismatch/)
+  assert.equal(readFileSync(path.join(root,fixture),'utf8'),original)
+  writeFileSync(check.log_path,'UNION text cannot cast to jsonb')
+  const result=applyVerifierFixtureRepair(snapshot,recipe)
+  assert.equal(result.applied,true);assert.equal(result.receipt.product_attempts,0);assert.equal(result.receipt.execution_id,323)
+  for(let n=0;n<100;n++)assert.equal(applyVerifierFixtureRepair(snapshot,recipe).reason,'already_repaired')
+  assert.equal(blocked.status,'not_run');assert.equal(blocked.trusted_receipt,undefined);assert.equal(blocked.metadata.failure_evidence,undefined)
+  assert.equal(snapshot.executions.length,1);assert.equal(snapshot.executions[0].attempt,1)
+  assert.throws(()=>prepareBoundFailureReviews({execution,verification,checks:[check],reviews}),/trusted_source_fingerprint_stale/)
+ }finally{rmSync(root,{recursive:true,force:true})}
 })
