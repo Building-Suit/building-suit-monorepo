@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { unattendedSensitiveFiles, frozenDraftReplay } from './unattended-publication.mjs'
 import { ordinaryRunAuthority } from './bounded-publication.mjs'
 
 import {
@@ -385,7 +386,18 @@ const parentEvaluation = evaluatePublicationParent({
   parentDescendant: (liveParent.parent_branch===execution.parent_branch || recordedParentSha!==null) && git(['merge-base','--is-ancestor',execution.parent_sha,recordedParentSha ?? liveParent.parent_sha]).code===0,
 })
 
-if (!parentEvaluation.current) {
+let frozenDraftReconciliation = false
+if (!parentEvaluation.current && context.run_publication_authority?.unattended_queue_authority === true) {
+  const existing = run('gh', ['pr','list','--repo',repository,'--head',execution.branch_name,'--state','open','--json','number,state,isDraft,headRefName,headRefOid,baseRefName'])
+  requireSuccess(existing,'unable_to_inspect_draft_publication')
+  let drafts
+  try { drafts = JSON.parse(existing.stdout) } catch { fail('invalid_draft_publication_response') }
+  const remote = requireSuccess(git(['ls-remote','--heads','origin',`refs/heads/${execution.branch_name}`]),'unable_to_inspect_remote_branch').trim().split(/\s+/)[0]
+  const parent = git(['rev-parse',`origin/${execution.parent_branch}`])
+  const replayHead = requireSuccess(git(['rev-parse','HEAD']),'unable_to_read_head').trim()
+  frozenDraftReconciliation = drafts.length===1 && requireSuccess(git(['status','--porcelain','--untracked-files=all']),'unable_to_read_worktree_status').trim()==='' && frozenDraftReplay({pr:drafts[0],execution,localSha:replayHead,remoteSha:remote,recordedParentSha:parent.code===0?parent.stdout.trim():null,taskCommitsOnly:taskCommitsOnly(execution.parent_sha,'HEAD')})
+}
+if (!parentEvaluation.current && !frozenDraftReconciliation) {
   fail(
     'parent_changed_since_execution',
     {
@@ -551,6 +563,11 @@ for (
 const changed =
   [...changedFiles]
     .sort()
+
+if (context.run_publication_authority?.unattended_queue_authority === true) {
+  const sensitive = unattendedSensitiveFiles(changed)
+  if (sensitive.length) fail('publication_security_sensitive_operator_wait', { protected_paths: sensitive, classification: { failure_class: 'operator-wait', recovery_action: 'wait-operator' } })
+}
 
 const scopeClassification = classifyPublicationFiles({
   files: changed,

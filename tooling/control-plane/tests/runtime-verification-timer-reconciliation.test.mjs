@@ -159,7 +159,7 @@ test('ordinary receipt reconciliation consumes settled verification without rewr
     const before = JSON.stringify(state)
     const writes = []
     const invoke = runInNewContext(`(${actionSource.trim()})`, {
-      supervisorSnapshot: () => structuredClone(state), operationHasAuthoritativeSuccess, requiresSameAttemptVerification, reviewedProductFailure,
+      supervisorSnapshot: () => structuredClone(state), recordAuthoritativeFailure: snapshot => snapshot, operationHasAuthoritativeSuccess, requiresSameAttemptVerification, reviewedProductFailure,
       currentExecution, retryWithoutProductAttempt,
       controlQuery: (sql, values) => { writes.push({ sql, values }) },
     })

@@ -38,7 +38,16 @@ export function auditAttempts(snapshot){
   if(!latest&&!checks.length&&e.status==='succeeded')return []
   let classification='UNKNOWN',proof=null
   const text=checks.map(c=>c.summary??'').join('\n')+'\n'+(latest?.error_code??'')
-  const bound=checks.map(c=>reconcileFailureEvidence(c,e,verification??{verification_run_id:c.verification_run_id}))
+  const bound=checks.map(c=>{
+   // A registered database command blocked by a failed prerequisite is still
+   // required, but has no executed outcome to review/materialize. Inherit only
+   // its exact current trusted prerequisite; never manufacture its own receipt.
+   if(c.status==='not_run'&&c.selection_reason==='database_prerequisite_failed'){
+    const prerequisites=checks.filter(p=>p.status==='fail'&&p.name?.endsWith('-database-reset'))
+    if(prerequisites.length===1)return reconcileFailureEvidence(prerequisites[0],e,verification)
+   }
+   return reconcileFailureEvidence(c,e,verification??{verification_run_id:c.verification_run_id})
+  })
   if(bound.length&&bound.every(b=>b.evidence&&b.classification!=='UNKNOWN')){classification=canonicalFailure({trusted:bound.map(b=>b.evidence)});proof=bound.map(b=>b.evidence)}
   else if(bound.some(b=>b.evidence&&b.classification==='UNKNOWN'))classification='UNKNOWN'
   else if(checks.length&&checks.every(c=>emptyComponentFixture(e.worktree_path,c)||correctedLocaleSelector(e.worktree_path,c))){classification='VERIFIER_INFRA';proof=checks.map(c=>emptyComponentFixture(e.worktree_path,c)||correctedLocaleSelector(e.worktree_path,c))}

@@ -53,6 +53,9 @@ export function classifyHealth(input, process = {}, now = Date.now(), graceMs = 
   if(started && process.operation_alive && !process.publisher?.settled && time(started.at)>now-graceMs)return state('PUBLISHING','Authoritative publication_started handoff','Start/reconcile the persisted publisher receipt')
   return state('STUCK',!started&&due&&due<=now?'Publication recovery check expired before publication_started':'Publisher receipt missing, stale or exited before completion','Dot must reconcile the same publication operation; never spend a product attempt')
  }
+ // Classification work has no external prerequisite or executable timer.
+ // Repeated Supervisor observations must not postpone bounded investigation.
+ if(task?.status==='failed' && r?.error_code==='retry_audit_investigation_required' && base.failure_classification==='UNKNOWN')return state('STUCK','Current failure requires trusted classification','Dot must investigate the current bound failed checks')
  const timer=Math.max(time(r?.next_wake_at),time(o?.next_wake_at))
  const settledBackoff=!!o?.result || ['worker_transport_interrupted','process_recovery_required','malformed_child_response'].includes(r?.error_code)
  if(timer>now && (!(e?.status==='running')||settledBackoff))return state('WAITING_TIMER',r?.error_code??'Persisted recovery backoff','Wake the same operation at next_wake_at')

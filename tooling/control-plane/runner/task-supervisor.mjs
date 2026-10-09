@@ -212,6 +212,11 @@ export function planSupervisorStep(snapshot) {
     })
   }
 
+  if (task.status === 'failed' && snapshot.authoritative_failure?.classification === 'EXTERNAL_EVIDENCE'
+    && Number(snapshot.authoritative_failure.execution_id) === Number(execution?.execution_id)
+    && Number(snapshot.authoritative_failure.evidence?.verification_run_id) === Number(verification?.verification_run_id)) {
+    return decision('wait','wait-external','external-wait','trusted_external_evidence_required',{execution,verification,fingerprint})
+  }
   if(task.status==='failed'&&snapshot.recovery_readiness?.allowed===false&&['VERIFIER_INFRA','CONFIGURATION'].includes(snapshot.authoritative_failure?.classification))return decision('wait','reverify',snapshot.authoritative_failure.classification==='VERIFIER_INFRA'?'verification-infrastructure':'verification-configuration','verifier_repair_required',{execution,fingerprint})
   if(task.status==='failed'&&snapshot.recovery_readiness?.allowed===false)return decision('wait','wait-external','unknown-outcome','verifier_repair_without_progress',{execution,fingerprint})
 
@@ -334,7 +339,7 @@ export function planSupervisorStep(snapshot) {
       return decision('wait','wait-external','unknown-outcome','unknown_failure_outcome',{execution,verification,publication,fingerprint})
     }
     const policy = snapshot.packet.retry_policy ?? {}
-    const attemptsRemain = execution && (Number(snapshot.retry_accounting?.consumed ?? execution.attempt) < Number(policy.max_attempts ?? 0) || Number.isSafeInteger(policy.one_invocation_extension?.grant_id))
+    const attemptsRemain = execution && (Number(snapshot.retry_accounting?.consumed ?? execution.attempt) < Number(policy.max_attempts ?? 0) || (snapshot.run_publication_authority?.unattended_queue_authority!==true && Number.isSafeInteger(policy.one_invocation_extension?.grant_id)))
     if (!attemptsRemain&&!snapshot.exhaustion_audit)return decision('wait','wait-external','transient-infrastructure','retry_audit_required',{execution,fingerprint})
     if (!attemptsRemain && snapshot.retry_accounting && snapshot.retry_accounting.all_product !== true) {
       return decision('wait', 'wait-operator', 'operator-wait', 'retry_classification_review_required', { execution, verification, publication, fingerprint })

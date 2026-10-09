@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import {controlQueryError,recoveryErrorEnvelope} from './recovery-error.mjs'
+import {psqlStdinRequest} from '../lib/psql-stdin.mjs'
 import { spawnSync } from 'node:child_process'
 import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
@@ -21,6 +22,7 @@ const db = {
 }
 
 function result(program,args,cwd=controlRoot,input) {
+  if (program === 'psql') { const request=psqlStdinRequest(args,{input}); args=request.args; input=request.options.input }
   const value=spawnSync(program,args,{cwd,input,encoding:'utf8',env:{...process.env,NO_COLOR:'1',FORCE_COLOR:'0'},maxBuffer:50*1024*1024,timeout:10*60*1000})
   return {code:value.status??1,stdout:(value.stdout??'').trim(),stderr:(value.stderr??'').trim(),error:value.error?.message}
 }

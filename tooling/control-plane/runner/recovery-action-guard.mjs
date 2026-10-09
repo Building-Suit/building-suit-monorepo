@@ -4,6 +4,13 @@ import {spawnSync} from 'node:child_process'
 import {createHash} from 'node:crypto'
 import {readFileSync,existsSync} from 'node:fs'
 import path from 'node:path'
+// Preparation observations do not authorize another verification. Only the
+// declared schema/prerequisite identity and outcome are executable inputs.
+function stablePreparation(value){
+ const observationKeys=new Set(['prepared_at','created_at','updated_at','observed_at','started_at','finished_at','duration_ms','timestamp'])
+ const normalize=v=>Array.isArray(v)?v.map(normalize):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().filter(k=>!observationKeys.has(k)).map(k=>[k,normalize(v[k])])):v
+ return JSON.stringify(normalize(value))
+}
 export function recoveryActionInput(snapshot,action,sourceRoot){
  const execution=snapshot.executions?.at(-1),verification=snapshot.verification_runs?.filter(v=>Number(v.execution_id)===Number(execution?.execution_id)).at(-1)
  const checks=(snapshot.verification_results??[]).filter(c=>Number(c.verification_run_id)===Number(verification?.verification_run_id)&&c.metadata?.required!==false&&['fail','not_run','unavailable'].includes(c.status))
@@ -22,7 +29,7 @@ export function recoveryActionInput(snapshot,action,sourceRoot){
  const prepared=database?.kind==='supabase-local'&&database.local_only===true&&existsSync(path.join(execution.worktree_path,preparation))?[preparation]:[]
  const declared=[...prepared,...(snapshot.packet.project?.verification_config?.evidence_inputs??[]),...(snapshot.packet.workstream?.verification_config?.evidence_inputs??[])]
  if(declared.length>32||declared.some(f=>typeof f!=='string'||!/^\.local\/verification-inputs\/[a-zA-Z0-9_./-]+$/.test(f)||f.split('/').includes('..')))throw Error('bounded_verification_evidence_inputs_required')
- const evidenceInputs=[...new Set(declared)].sort().map(file=>{const full=path.join(execution.worktree_path,file);if(!existsSync(full))return [file,null];const bytes=readBoundArtifact(full,execution.worktree_path);if(bytes.length>65536)throw Error('verification_evidence_input_budget_exceeded');return [file,createHash('sha256').update(bytes).digest('hex')]})
+ const evidenceInputs=[...new Set(declared)].sort().map(file=>{const full=path.join(execution.worktree_path,file);if(!existsSync(full))return [file,null];const bytes=readBoundArtifact(full,execution.worktree_path);if(bytes.length>65536)throw Error('verification_evidence_input_budget_exceeded');const semantic=file===preparation?stablePreparation(JSON.parse(bytes)):bytes;return [file,createHash('sha256').update(semantic).digest('hex')]})
  const input={task_id:snapshot.packet.task.task_id,run_id:snapshot.workflow_run?.run_id,execution_id:execution.execution_id,attempt:execution.attempt,source:{head:head.stdout.trim(),diff:command.stdout,files},plan:snapshot.packet.task.verification_plan,configuration:{project:snapshot.packet.project?.verification_config,workstream:snapshot.packet.workstream?.verification_config,binding:snapshot.binding_recovery?{classification:snapshot.binding_recovery.classification,command:snapshot.binding_recovery.command,runner_sha256:snapshot.binding_recovery.runner_sha256,checks:snapshot.binding_recovery.checks}:null,evidence_inputs:evidenceInputs},verifier:verifierFiles,classification,checks:checks.map(c=>({name:c.check_name,status:c.status,command:c.command,exit_code:c.exit_code,classification:c.metadata?.failure_evidence?.classification,root_cause:c.metadata?.failure_evidence?.review?.root_cause}))}
  return {fingerprint:recoveryFingerprint(input),classification,evidence:{protocol:2,action,verification_run_id:verification?.verification_run_id,source_fingerprint:recoveryFingerprint({...input,classification:null,checks:[]}),failed_checks:input.checks,root_cause:[...new Set(input.checks.map(c=>c.root_cause).filter(Boolean))].join('; ')||null}}
 }

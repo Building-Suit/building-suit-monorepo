@@ -19,7 +19,7 @@ import { fileURLToPath } from 'node:url'
 import { healthQuery } from './dot-health-collector.mjs'
 import { receiptPaths,startReceipt,readJson } from './durable-process.mjs'
 import { redact } from '../lib/redaction.mjs'
-import { validateIncidentRepair } from './dot-general-recovery.mjs'
+import { handoffRecovery, validateIncidentRepair } from './dot-general-recovery.mjs'
 import { getProfile } from '../routing/router.mjs'
 const execute=promisify(execFile),root=process.env.BS_CONTROL_REPOSITORY_ROOT
 const source=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../../..')
@@ -152,7 +152,6 @@ async function run() {
  try {
   const current=query(`SELECT to_jsonb(r) FROM control.workflow_runs r WHERE run_id=${quote(job.run_id)}::uuid;`)
   if(!runIsActionable(current)||current.current_task_id!==job.task_id||current.stop_requested||current.maintenance_requested){finish('resolved',{reason:'subject_progressed_or_held'});return}
-  let runtime=source
   const cause=job.evidence?.cause_fingerprint
   const catalog=cause?query(`SELECT to_jsonb(c) FROM control.dot_semantic_recovery_catalog c WHERE root_family=${quote(job.root_family)} AND cause_fingerprint=${quote(cause)} ORDER BY created_at DESC LIMIT 1;`):null
   const regressionPath=catalog?.regression_test?path.join(source,catalog.regression_test):null
@@ -168,14 +167,13 @@ async function run() {
    finish('running',{recovery_owner:'Codex',action:'incident-investigate'})
    const repaired=await investigate(job)
    if(repaired.human_gate){finish('human-gate',repaired);return}
-   if(repaired.evidence_only)finish('running',repaired);else finish('running',repaired,repaired.runtime,repaired.regression);runtime=repaired.source
+   if(repaired.evidence_only)finish('running',repaired);else finish('running',repaired,repaired.runtime,repaired.regression)
   }
-  if(current.status==='failed')query(`SELECT control.claim_dot_stuck_recovery(${quote(job.run_id)}::uuid,${quote('general-reopen:'+jobId)});`)
-  const runLocks=path.join(root,'.local/runtime-run-locks');mkdirSync(runLocks,{recursive:true,mode:0o700})
-  const result=await command('flock',['-n',path.join(runLocks,`${job.run_id}.lock`),process.execPath,path.join(runtime,'tooling/control-plane/runner/bs-agent.mjs'),'run-recover',job.run_id],root,80*60_000)
-  const after=query(`SELECT jsonb_build_object('run',to_jsonb(r),'task_status',t.status) FROM control.workflow_runs r LEFT JOIN control.tasks t ON t.task_id=r.current_task_id WHERE r.run_id=${quote(job.run_id)}::uuid;`)
-  const progressed=after.run.current_task_id!==job.task_id||['in_progress','verification','complete'].includes(after.task_status)
-  finish(progressed?'resolved':'queued',{response:redact(JSON.parse(result.stdout)),same_run:true,product_attempts_added_by_dispatcher:0})
+  // Dot repairs/classifies incidents; the durable Supervisor alone owns task
+  // transitions and the run lock. Never nest run-recover inside another flock.
+  const handoff=await handoffRecovery(job,query)
+  if(!handoff?.handed_off)finish('queued',{reason:handoff?.reason??'supervisor_handoff_unavailable'})
+
  }catch(error){const human=/incident_(?:repair_outside_runtime_scope|protected_runtime_guard|existing_regression_modified|scope_invalid)/.test(error.message);finish(human?'human-gate':'queued',{error:redact(error.message),reason:human?'Repair requires changes outside the authorized runtime incident scope':undefined,...recoveryErrorEnvelope(error,'dot-incident-worker'),retryable_infrastructure:recoveryErrorEnvelope(error,'dot-incident-worker').classification.recoverable})}
  finally{clearInterval(heartbeat)}
 }

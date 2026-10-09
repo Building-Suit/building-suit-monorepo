@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import {existingCommandIdentity} from './verification-command-identity.mjs'
+import {psqlStdinRequest} from '../lib/psql-stdin.mjs'
 import {controlQueryError} from './recovery-error.mjs'
 import {fileURLToPath} from 'node:url'
 import {verifierReceipt,trustedCommandRegistration} from './trusted-verifier-receipt.mjs'
@@ -153,7 +154,7 @@ function liveCheck(check) {
   }
   const args = ['-X','-q','-A','-t','-v','ON_ERROR_STOP=1','-v','VERBOSITY=verbose','-h',controlDatabase.host,'-p',controlDatabase.port,'-U',controlDatabase.user,'-d',controlDatabase.database]
   for (const [key,value] of Object.entries(values)) args.push('--set',`${key}=${value}`)
-  const result = executeWithControlDatabaseRetry(() => spawnSync('psql',args,{
+  const result = executeWithControlDatabaseRetry(() => executePsql(args,{
     encoding:'utf8',
     env:{...process.env,PGSSLMODE:controlDatabase.sslmode},
     input:`SELECT control.update_verification_check(:'run_id'::bigint,:'name',:'status',NULLIF(:'exit_code','')::integer,:'summary',:'log_path',:'elapsed_ms'::bigint,:'command',:'required'::boolean,:'metadata'::jsonb);\n`,
@@ -166,7 +167,7 @@ function liveCheck(check) {
   const id = Number(result.stdout.trim().split('\n').at(-1))
   if (Number.isSafeInteger(id) && id > 0) check.verification_id = id
   if (check.log_path && check.status !== 'running' && check.started_at && check.verification_id) {
-    const identity = spawnSync('psql', args.slice(0, args.indexOf('--set')), {
+    const identity = executePsql(args.slice(0, args.indexOf('--set')), {
       encoding: 'utf8', env: { ...process.env, PGSSLMODE: controlDatabase.sslmode },
       input: `SELECT jsonb_build_object('execution_id',v.execution_id,'run_id',(SELECT r.run_id FROM control.workflow_runs r WHERE r.current_task_id=e.task_id ORDER BY r.started_at DESC LIMIT 1)) FROM control.verification_runs v JOIN control.executions e USING(execution_id) WHERE v.verification_run_id=${Number(verificationRunId)};\n`,
     })
@@ -175,19 +176,24 @@ function liveCheck(check) {
     const obligations=resolvedPlan.checks.filter(p=>p.name===check.name).map(p=>p.plan_entry)
     check.trusted_registration=trustedCommandRegistration({check,executionId:Number(boundIdentity.execution_id),verificationRunId,taskId:task.task_id,runId:boundIdentity.run_id,
       registry:{configuration:verificationConfig,plan:task.verification_plan},obligationIds:obligations.length?obligations.map(e=>evidenceDigest(e)):[`runtime:${check.name}`],verifierBytes:readFileSync(fileURLToPath(import.meta.url))})
-    const registered=spawnSync('psql',args.slice(0,args.indexOf('--set')).concat(['--set',`registration=${JSON.stringify(check.trusted_registration)}`]),{
+    const registered=executePsql(args.slice(0,args.indexOf('--set')).concat(['--set',`registration=${JSON.stringify(check.trusted_registration)}`]),{
       encoding:'utf8',env:{...process.env,PGSSLMODE:controlDatabase.sslmode},input:`SELECT control.register_trusted_verification_command(${check.verification_id}, :'registration'::jsonb);\n`})
     if(registered.status!==0)throw controlQueryError(registered)
     check.trusted_receipt = verifierReceipt({ check, artifactRoot: worktreePath, sourceRoot: worktreePath,
       executionId: Number(boundIdentity.execution_id), runId: boundIdentity.run_id, verificationRunId, taskId: task.task_id,
       startedAt: check.started_at, finishedAt: check.finished_at })
     const receiptArgs = args.slice(0, args.indexOf('--set')).concat(['--set', `receipt=${JSON.stringify(check.trusted_receipt)}`])
-    const persisted = spawnSync('psql', receiptArgs, {
+    const persisted = executePsql(receiptArgs, {
       encoding: 'utf8', env: { ...process.env, PGSSLMODE: controlDatabase.sslmode },
       input: `SELECT control.capture_verifier_receipt(${check.verification_id}, :'receipt'::jsonb);\n`,
     })
     if (persisted.status !== 0) throw controlQueryError(persisted)
   }
+}
+
+function executePsql(args, options) {
+  const request = psqlStdinRequest(args, options)
+  return spawnSync('psql', request.args, request.options)
 }
 
 mkdirSync(
@@ -684,51 +690,6 @@ if (
   }
 }
 
-for (const custom of verificationConfig.commands ?? []) {
-  if (!safeRegisteredVerificationCommand(custom)) {
-    results.push(omittedCheck({
-      name: custom?.name ?? `invalid-registered-command-${results.length + 1}`,
-      command: null,
-      required: custom?.required !== false,
-      reason: 'registered_verification_command_invalid',
-      summary: 'Registered verification command must use a safe program/argv definition and repository-relative cwd.',
-      unavailable: true,
-      failureClass: 'verification-configuration',
-    }))
-    continue
-  }
-  const selection = customCheckSelection({
-    check: custom,
-    changedFiles: [...changedFiles],
-    mode: verificationMode,
-    verificationPlanText,
-  })
-  if (!selection.selected) {
-    results.push(omittedCheck({
-      name: custom.name,
-      command: [custom.program, ...(custom.args ?? [])].join(' '),
-      required: custom.required !== false,
-      reason: selection.reason,
-      summary: 'No changed file matched this focused custom check.',
-    }))
-    continue
-  }
-  const identity=existingCommandIdentity(results,{...custom,cwd:custom.cwd?path.join(worktreePath,custom.cwd):worktreePath},worktreePath)
-  if(identity==='reuse')continue
-  if(identity==='conflict'){
-    const check=omittedCheck({name:`registered-identity-conflict-${custom.name}`,command:null,required:true,reason:'registered_verification_check_identity_conflict',summary:`Registered command ${custom.name} differs from the already captured check; preserve its immutable receipt.`,unavailable:true,failureClass:'verification-configuration'})
-    liveCheck(check);results.push(check);continue
-  }
-  results.push(runCheck({
-    name: custom.name,
-    program: custom.program,
-    args: custom.args ?? [],
-    cwd: custom.cwd ? path.join(worktreePath, custom.cwd) : worktreePath,
-    timeout: custom.timeout_ms ?? 15 * 60 * 1000,
-    required: custom.required !== false,
-    selectionReason: selection.reason,
-  }))
-}
 
 const changed =
   [...changedFiles]
@@ -839,6 +800,58 @@ if (databaseChanged) {
     }
   }
 }
+
+for (const custom of verificationConfig.commands ?? []) {
+  if (!safeRegisteredVerificationCommand(custom)) {
+    results.push(omittedCheck({
+      name: custom?.name ?? `invalid-registered-command-${results.length + 1}`,
+      command: null,
+      required: custom?.required !== false,
+      reason: 'registered_verification_command_invalid',
+      summary: 'Registered verification command must use a safe program/argv definition and repository-relative cwd.',
+      unavailable: true,
+      failureClass: 'verification-configuration',
+    }))
+    continue
+  }
+  const selection = customCheckSelection({
+    check: custom,
+    changedFiles: [...changedFiles],
+    mode: verificationMode,
+    verificationPlanText,
+  })
+  if (!selection.selected) {
+    results.push(omittedCheck({
+      name: custom.name,
+      command: [custom.program, ...(custom.args ?? [])].join(' '),
+      required: custom.required !== false,
+      reason: selection.reason,
+      summary: 'No changed file matched this focused custom check.',
+    }))
+    continue
+  }
+  const identity=existingCommandIdentity(results,{...custom,cwd:custom.cwd?path.join(worktreePath,custom.cwd):worktreePath},worktreePath)
+  if(identity==='reuse')continue
+  if(identity==='conflict'){
+    const check=omittedCheck({name:`registered-identity-conflict-${custom.name}`,command:null,required:true,reason:'registered_verification_check_identity_conflict',summary:`Registered command ${custom.name} differs from the already captured check; preserve its immutable receipt.`,unavailable:true,failureClass:'verification-configuration'})
+    liveCheck(check);results.push(check);continue
+  }
+  const databaseCommand=custom.program==='pnpm'&&(custom.args??[]).join(' ').includes('supabase test db')
+  if(databaseCommand&&results.some(result=>result.database_phase&&result.status!=='pass')){
+    const blocked=omittedCheck({name:custom.name,command:[custom.program,...(custom.args??[])].join(' '),required:custom.required!==false,reason:'database_prerequisite_failed',summary:'Registered database check blocked by the current failed prerequisite.',unavailable:true,failureClass:'verification-infrastructure'})
+    liveCheck(blocked);results.push(blocked);continue
+  }
+  results.push(runCheck({
+    name: custom.name,
+    program: custom.program,
+    args: custom.args ?? [],
+    cwd: custom.cwd ? path.join(worktreePath, custom.cwd) : worktreePath,
+    timeout: custom.timeout_ms ?? 15 * 60 * 1000,
+    required: custom.required !== false,
+    selectionReason: selection.reason,
+  }))
+}
+
 
 const explicitBrowserChecks = resolvedPlan.checks.filter(check =>
   Array.isArray(check.capabilities) && check.capabilities.includes('browser'),
