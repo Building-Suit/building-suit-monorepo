@@ -283,8 +283,9 @@ begin
   v_validation := public.shop_plan_change_validation(v_shop, 'solo');
   v_multi_validation := public.shop_plan_change_validation(v_shop, 'ss-plan-limits-downgrade');
   if (v_validation ->> 'mutated')::boolean
-    or jsonb_array_length(v_validation -> 'blockers') <> 1
+    or jsonb_array_length(v_validation -> 'blockers') <> 2
     or v_validation #>> '{blockers,0,resource}' <> 'active_locations'
+    or v_validation #>> '{blockers,1,resource}' <> 'active_members'
     or jsonb_array_length(v_multi_validation -> 'blockers') <> 2
     or v_multi_validation #>> '{blockers,0,resource}' <> 'active_locations'
     or v_multi_validation #>> '{blockers,1,resource}' <> 'active_members'
@@ -321,6 +322,9 @@ begin
   end if;
   update public.shop_locations set status = 'archived', archived_at = now()
   where shop_id = v_shop and status = 'active' and not is_default;
+  -- Solo 1 now requires reducing both location and member usage.
+  update public.shop_memberships set status = 'suspended'
+  where shop_id = v_shop and role <> 'owner' and status = 'active';
   update public.subscriptions set plan_id = v_solo where id = v_subscription;
   if (select plan.slug from public.subscriptions subscription
       join public.plans plan on plan.id = subscription.plan_id

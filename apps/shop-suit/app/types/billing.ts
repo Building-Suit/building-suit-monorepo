@@ -12,7 +12,7 @@ export type BillingSubmission = {
   requestedPlanId: string
   requestedPlanSlug: string
   requestedPlanName: string
-  planVariant: 'standard' | 'multi_2' | 'multi_3' | null
+  planVariant: 'standard' | 'solo_1' | 'solo_2' | 'multi_2' | 'multi_3' | null
   billingInterval: 'monthly' | 'quarterly' | 'annual'
   listPriceAmount: number
   effectivePriceAmount: number
@@ -34,7 +34,7 @@ export type BillingPlanOption = {
   planSlug: string
   planName: string
   catalogTermsId: string
-  planVariant: 'standard' | 'multi_2' | 'multi_3'
+  planVariant: 'standard' | 'solo_1' | 'solo_2' | 'multi_2' | 'multi_3'
   variantName: string
   billingInterval: 'monthly' | 'quarterly' | 'annual'
   currency: string
@@ -52,7 +52,7 @@ export type ShopBilling = {
     planId: string
     planSlug: string
     planName: string
-    planVariant: 'standard' | 'multi_2' | 'multi_3' | null
+    planVariant: 'standard' | 'solo_1' | 'solo_2' | 'multi_2' | 'multi_3' | null
     variantName: string | null
     priceAmount: number
     listPriceAmount: number

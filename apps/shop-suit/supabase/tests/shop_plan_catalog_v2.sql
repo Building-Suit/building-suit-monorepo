@@ -18,8 +18,10 @@ begin
   where portal.key = 'shop-crm' and plan.slug in ('solo', 'team', 'multi');
 
   if v_catalog is distinct from '[
-    {"family":"solo","variant":"standard","interval":"annual","price":2847.84,"trialDays":7,"locations":1},
-    {"family":"solo","variant":"standard","interval":"monthly","price":349.00,"trialDays":7,"locations":1},
+    {"family":"solo","variant":"solo_1","interval":"annual","price":2847.84,"trialDays":7,"locations":1},
+    {"family":"solo","variant":"solo_1","interval":"monthly","price":349.00,"trialDays":7,"locations":1},
+    {"family":"solo","variant":"solo_2","interval":"annual","price":4071.84,"trialDays":7,"locations":1},
+    {"family":"solo","variant":"solo_2","interval":"monthly","price":499.00,"trialDays":7,"locations":1},
     {"family":"team","variant":"standard","interval":"annual","price":5703.84,"trialDays":7,"locations":1},
     {"family":"team","variant":"standard","interval":"monthly","price":699.00,"trialDays":7,"locations":1},
     {"family":"multi","variant":"multi_2","interval":"annual","price":8151.84,"trialDays":7,"locations":2},
@@ -31,7 +33,7 @@ begin
   end if;
 
   if (select count(distinct id) from public.shop_public_plan_catalog()) <> 3
-    or (select count(*) from public.shop_public_plan_catalog()) <> 8
+    or (select count(*) from public.shop_public_plan_catalog()) <> 10
     or not exists (select 1 from public.plan_catalog_terms where trial_days = 14)
     or exists (select 1 from public.plan_catalog_terms
       where catalog_generation = 1 and trial_days = 14 and created_at > now()) then
@@ -40,7 +42,8 @@ begin
 
   if exists (
     with expected(slug, variant, limits) as (values
-      ('solo', 'standard', '{"active_locations":1,"active_members":2,"active_products":250,"active_services":50,"active_customers":500,"active_suppliers":50}'::jsonb),
+      ('solo', 'solo_1', '{"active_locations":1,"active_members":1,"active_products":250,"active_services":50,"active_customers":500,"active_suppliers":50}'::jsonb),
+      ('solo', 'solo_2', '{"active_locations":1,"active_members":2,"active_products":250,"active_services":50,"active_customers":500,"active_suppliers":50}'::jsonb),
       ('team', 'standard', '{"active_locations":1,"active_members":8,"active_products":500,"active_services":100,"active_customers":2000,"active_suppliers":150}'::jsonb),
       ('multi', 'multi_2', '{"active_locations":2,"active_members":16,"active_products":1000,"active_services":200,"active_customers":5000,"active_suppliers":300}'::jsonb),
       ('multi', 'multi_3', '{"active_locations":3,"active_members":25,"active_products":2000,"active_services":300,"active_customers":10000,"active_suppliers":500}'::jsonb)

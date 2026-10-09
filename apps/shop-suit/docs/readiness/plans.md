@@ -71,8 +71,9 @@ Task 08b provisionally set active service caps at Basic 50 and Pro 500. Those
 historical Basic/Pro values are not current commercial promises.
 
 Basic/Pro prices remain historical implementation evidence and are not sold to
-new customers. The approved Shop catalog is now Solo at EGP 349/month or
-EGP 2,847.84/year, Team at EGP 699/month or EGP 5,703.84/year, and one Multi
+new customers. The approved Shop catalog has one Solo family with 1-member (EGP 349/month or
+EGP 2,847.84/year) and 2-member (EGP 499/month or EGP 4,071.84/year)
+variants under SS-LAUNCH-D05, Team at EGP 699/month or EGP 5,703.84/year, and one Multi
 family with two-branch (EGP 999/month or EGP 8,151.84/year) and three-branch
 (EGP 1,199/month or EGP 9,783.84/year) variants. Yearly prices apply the approved
 32% reduction to monthly × 12. The selected immutable catalog term is authoritative
@@ -89,11 +90,17 @@ customer self-activation.
 | Resource | Solo | Team | Multi 2 | Multi 3 |
 |---|---:|---:|---:|---:|
 | Active locations | 1 | 1 | 2 | 3 |
-| Members including owner | 2 | 8 | 16 | 25 |
+| Members including owner | 1 or 2 by selected variant | 8 | 16 | 25 |
 | Active products | 250 | 500 | 1,000 | 2,000 |
 | Active services | 50 | 100 | 200 | 300 |
 | Active customers | 500 | 2,000 | 5,000 | 10,000 |
 | Active suppliers | 50 | 150 | 300 | 500 |
+
+Solo remains one of three public plan cards, with an English/Arabic member
+switch inside its card. Non-member quotas are identical for both variants.
+New selections use the current Solo generation; historical subscriptions retain
+their exact immutable terms, including the historical two-member EGP 349 offer.
+Pending unexpired invitations reserve member capacity and can block downgrades.
 
 The database is authoritative for all six resources. Active-customer and
 active-supplier writes use the same per-shop advisory-lock boundary as the

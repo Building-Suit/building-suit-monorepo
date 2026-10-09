@@ -141,7 +141,7 @@ declare
   v_profile uuid;
 begin
   v_shop := public.create_owner_shop(
-    'SS-SUB lifecycle shop', 'solo', 'service'::public.business_mode
+    'SS-SUB lifecycle shop', 'team', 'service'::public.business_mode
   );
   v_retry := public.create_owner_shop(
     'A retry must not rename the shop', 'multi', 'mixed'::public.business_mode
@@ -170,7 +170,7 @@ begin
         on subscription.profile_id = membership.profile_id
       where membership.shop_id = v_shop and membership.role = 'owner') <> 1
     or v_subscription.trial_end_at <> v_subscription.trial_start_at + interval '7 days'
-    or (select plan.slug from public.plans plan where plan.id = v_subscription.plan_id) <> 'solo'
+    or (select plan.slug from public.plans plan where plan.id = v_subscription.plan_id) <> 'team'
     or (select shop.business_mode from public.shops shop where shop.id = v_shop) <> 'service' then
     raise exception 'signup did not preserve exactly one selected 7-day trial';
   end if;
@@ -178,7 +178,7 @@ end;
 $$;
 
 -- A normal employee remains a tenant user, never a billing owner or platform
--- administrator. This second active member exactly fills the Solo seat limit.
+-- administrator. The Team fixture allows this ordinary employee alongside the owner.
 do $$
 declare
   v_shop uuid := current_setting('ss_sub.shop')::uuid;
@@ -273,7 +273,7 @@ begin
   from jsonb_array_elements(public.shop_billing_read(v_shop) -> 'submissions') item
   where (item ->> 'id')::uuid = v_notice;
   if v_notice <> v_replay
-    or public.shop_billing_read(v_shop) #>> '{subscription,planSlug}' <> 'solo'
+    or public.shop_billing_read(v_shop) #>> '{subscription,planSlug}' <> 'team'
     or v_item ->> 'requestedPlanSlug' <> 'multi'
     or (v_item ->> 'listPriceAmount')::numeric <> 999
     or (v_item ->> 'effectivePriceAmount')::numeric <> 599
@@ -418,7 +418,10 @@ declare v_shop uuid := current_setting('ss_sub.shop')::uuid; v_notice uuid;
 begin
   perform public.save_shop_location(v_shop, null, 'Second pilot branch', 'P2', null, null);
   v_notice := public.submit_shop_billing_notice(
-    gen_random_uuid(), v_shop, 'solo', 599, current_date,
+    gen_random_uuid(), v_shop, 'solo',
+    (select catalog_terms_id from public.shop_public_plan_catalog()
+      where slug='solo' and plan_variant='solo_2' and billing_interval='monthly'),
+    599, current_date,
     'INSTAPAY-SS-SUB-DOWNGRADE'
   );
   perform set_config('ss_sub.downgrade_notice', v_notice::text, true);
@@ -505,6 +508,23 @@ $$;
 
 -- Suspension/expiry leaves history readable and writes blocked. An audited
 -- renewal restores writes without rewriting the retained resources.
+do $$
+declare
+  v_subscription public.subscriptions;
+  v_terms public.plan_catalog_terms;
+begin
+  select * into v_subscription from public.subscriptions
+  where profile_id = current_setting('ss_sub.owner_profile')::uuid;
+  select * into v_terms from public.plan_catalog_terms
+  where id = v_subscription.catalog_terms_id;
+  if v_terms.plan_variant <> 'solo_2' or v_terms.billing_interval <> 'monthly'
+    or shop_private.plan_resource_usage(current_setting('ss_sub.shop')::uuid, 'active_members') <> 2 then
+    raise exception 'reactivation fixture must retain two members on Solo 2';
+  end if;
+  perform set_config('ss_sub.before_reactivation', to_jsonb(v_subscription)::text, true);
+end;
+$$;
+
 select set_config('request.jwt.claim.sub', operator_id::text, true),
   set_config('request.jwt.claim.role', 'authenticated', true)
 from shop_subscription_lifecycle_fixture;
@@ -545,6 +565,23 @@ select public.platform_plan_command(
   current_setting('ss_sub.shop')::uuid, '{}'::jsonb
 );
 reset role;
+
+do $$
+declare
+  v_before jsonb := current_setting('ss_sub.before_reactivation')::jsonb;
+  v_subscription public.subscriptions;
+  v_mutable_fields text[] := array['status', 'locked_at', 'updated_at',
+    'current_period_start', 'current_period_end'];
+begin
+  select * into v_subscription from public.subscriptions
+  where profile_id = current_setting('ss_sub.owner_profile')::uuid;
+  if (to_jsonb(v_subscription) - v_mutable_fields) is distinct from (v_before - v_mutable_fields)
+    or v_subscription.current_period_end is distinct from
+      (v_before ->> 'current_period_end')::timestamptz + interval '1 month' then
+    raise exception 'operator reactivation changed pinned terms, snapshots or renewal interval';
+  end if;
+end;
+$$;
 
 select set_config('request.jwt.claim.sub', owner_id::text, true),
   set_config('request.jwt.claim.role', 'authenticated', true)
