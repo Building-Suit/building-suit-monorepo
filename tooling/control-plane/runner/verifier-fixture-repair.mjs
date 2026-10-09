@@ -57,6 +57,32 @@ export function applyVerifierFixtureRepair(snapshot,recipe) {
  return {applied:true,receipt}
 }
 export function repairRegisteredVerifierFixtures(snapshot,sourceRoot){
- const recipe=selectVerifierRecipe(snapshot,registeredVerifierRecipes(sourceRoot))
+ const recipe=selectVerifierRecipe(snapshot,registeredVerifierRecipes(sourceRoot))??reviewedSetupRecipe(snapshot)
  return recipe?applyVerifierFixtureRepair(snapshot,recipe):{applied:false,reason:'no_registered_fixture_repair'}
+}
+
+// Deterministic setup-only transformations, admitted only by current trusted
+// infrastructure reviews. Assertions, product source and authority stay intact.
+export function reviewedSetupRecipe(snapshot){
+ const execution=snapshot.executions?.at(-1),verification=snapshot.verification_runs?.filter(v=>Number(v.execution_id)===Number(execution?.execution_id)).at(-1)
+ if(!execution||snapshot.packet?.task?.status!=='failed'||snapshot.authoritative_failure?.classification!=='VERIFIER_INFRA'||verification?.status!=='failed')return null
+ const checks=(snapshot.verification_results??[]).filter(c=>Number(c.verification_run_id)===Number(verification.verification_run_id)&&c.metadata?.required!==false&&['fail','not_run','unavailable'].includes(c.status))
+ if(!checks.length||checks.some(c=>c.status!=='fail'||c.metadata?.failure_evidence?.classification!=='VERIFIER_INFRA'))return null
+ const files=new Map()
+ for(const c of checks){
+  const evidence=c.metadata.failure_evidence
+  const log=readBoundArtifact(c.log_path,execution.worktree_path).toString('utf8')
+  let repaired=false
+  for(const src of evidence.review?.source??[]){
+   const sql=/^apps\/[a-z-]+\/supabase\/tests\/[^/]+\.test\.sql$/.test(src.path),browser=/^apps\/[a-z-]+\/tests\/e2e\/[^/]+\.spec\.ts$/.test(src.path)
+   if(!sql&&!browser)continue
+   const before=readBoundArtifact(path.join(execution.worktree_path,src.path),execution.worktree_path).toString('utf8')
+   let content=files.get(src.path)?.content??before
+   if(sql&&log.includes('raw_app_meta_data')&&log.includes('is of type jsonb but expression is of type text')&&content.includes('union all select')&&content.includes('raw_user_meta_data'))content=content.replaceAll("now(),'{}','{}',now(),now()","now(),'{}'::jsonb,'{}'::jsonb,now(),now()")
+   if(browser&&log.includes('locator.selectOption')&&/getByLabel\(['"](?:Method|الطريقة)['"]/.test(log))content=content.replaceAll("getByLabel(ar ? 'الطريقة' : 'Method', { exact: true })","getByRole('combobox', { name: ar ? 'الطريقة' : 'Method', exact: true })")
+   if(content!==before){validateTrustedReceipt(evidence,c,{executionId:execution.execution_id,verificationRunId:verification.verification_run_id,artifactRoot:execution.worktree_path,sourceRoot:execution.worktree_path});files.set(src.path,{path:src.path,before_sha256:digest(before),after_sha256:digest(content),content});repaired=true}
+  }
+  if(!repaired)return null
+ }
+ return {id:'reviewed-fixture-setup-v1',task_id:execution.task_id,execution_id:execution.execution_id,verification_run_id:verification.verification_run_id,checks:checks.map(c=>({name:c.check_name,verification_id:c.verification_id,artifact_sha256:c.trusted_receipt.artifact.sha256})),files:[...files.values()]}
 }

@@ -36,6 +36,16 @@ export function reviewedSoloDatabasePrerequisites(check,checks,execution,verific
  if(prerequisites[0].trusted_receipt.source_fingerprint!==prerequisites[1].trusted_receipt.source_fingerprint||prerequisites[0].trusted_receipt.registration.verifier_sha256!==prerequisites[1].trusted_receipt.registration.verifier_sha256||prerequisites[0].trusted_receipt.registration.registry_version!==prerequisites[1].trusted_receipt.registration.registry_version)return []
  return prerequisites
 }
+// A command explicitly omitted because the very same registered database
+// command failed inherits its accounting only. It remains mandatory and unrun.
+export function reviewedSameCommandPrerequisites(check,checks,execution,verification){
+ if(check.status!=='not_run'||(check.selection_reason??check.metadata?.selection_reason)!=='database_prerequisite_failed'||check.trusted_receipt||!/^pnpm exec supabase test db --local(?: |$)/.test(check.command??''))return []
+ const candidates=checks.filter(c=>c.status==='fail'&&c.command===check.command)
+ if(candidates.length!==1)return []
+ const c=candidates[0],r=c.trusted_receipt,g=r?.registration
+ if(r?.version!==2||g?.version!==1||r.task_id!==execution.task_id||g.task_id!==execution.task_id||Number(r.execution_id)!==Number(execution.execution_id)||Number(g.execution_id)!==Number(execution.execution_id)||Number(r.verification_run_id)!==Number(verification?.verification_run_id)||Number(g.verification_run_id)!==Number(verification?.verification_run_id)||Number(g.check_id)!==Number(c.verification_id)||g.command!==c.command||!r.source_fingerprint)return []
+ return candidates
+}
 export function auditAttempts(snapshot){
  const executions=snapshot.executions??[],failures=snapshot.failures??[],results=snapshot.verification_results??[]
  const entries=executions.filter(e=>e.status!=='running').flatMap(e=>{
@@ -55,7 +65,8 @@ export function auditAttempts(snapshot){
    // its exact current trusted prerequisite; never manufacture its own receipt.
    if(c.status==='not_run'&&c.selection_reason==='database_prerequisite_failed'){
     const exactRecipe=registeredVerifierPrerequisites(c,checks,e,verification)
-    const registered=exactRecipe.length?exactRecipe:reviewedSoloDatabasePrerequisites(c,checks,e,verification)
+    const solo=reviewedSoloDatabasePrerequisites(c,checks,e,verification)
+    const registered=exactRecipe.length?exactRecipe:solo.length?solo:reviewedSameCommandPrerequisites(c,checks,e,verification)
     const inherited=registered.map(p=>reconcileFailureEvidence(p,e,verification))
     if(inherited.length&&inherited.every(b=>b.evidence&&['VERIFIER_INFRA','PRODUCT_DEFECT'].includes(b.classification)&&b.classification===inherited[0].classification))return inherited[0]
     const prerequisites=checks.filter(p=>p.status==='fail'&&p.name?.endsWith('-database-reset'))
