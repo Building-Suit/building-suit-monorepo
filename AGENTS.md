@@ -30,6 +30,7 @@ User instructions take priority. Scoped rules specialize these rules within thei
 | `apps/ledger-suit/` | Ledger routes, features, financial rules, content and tests |
 | `apps/shop-suit/` | Shop routes, features, inventory/shop rules, content and tests |
 | `apps/inventory-suit/` | Inventory routes, stock domain rules, content and tests |
+| `apps/super-admin-suit/` | Super Admin control-plane routes, configuration orchestration, content and tests |
 | `apps/building-suit-docs/` | Building documentation, documentation rendering and component catalogue |
 | `packages/design-tokens/`, `packages/brand/` | Canonical tokens, generated outputs, fonts, icons and brand assets |
 | `packages/ui/`, `packages/ux/` | Shared atomic components/templates and interaction policies/controllers |
