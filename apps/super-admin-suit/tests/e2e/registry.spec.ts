@@ -23,7 +23,7 @@ for (const locale of ['en', 'ar']) {
       await expect(page.locator('[data-registry-pending]')).toBeVisible()
       const rail = page.getByRole('navigation', { name: locale === 'en' ? 'Managed Suits' : 'الحزم المُدارة', exact: true })
       const context = page.getByRole('navigation', { name: locale === 'en' ? 'Suit navigation' : 'تنقل الحزمة', exact: true })
-      const open = page.getByRole('button', { name: locale === 'en' ? 'Open menu' : 'فتح القائمة', exact: true })
+      const open = page.getByRole('button', { name: locale === 'en' ? 'Open navigation' : 'فتح القائمة', exact: true })
       async function showMenu() {
         if (mobile && !await context.isVisible()) await open.click()
       }
