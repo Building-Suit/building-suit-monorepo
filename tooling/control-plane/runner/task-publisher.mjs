@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {foundationImport, reviewedFoundationImportPaths} from './reviewed-foundation-import.mjs'
 import {queueDraftSourcePaths} from './draft-source-policy.mjs'
 import { unattendedSensitiveFiles, frozenDraftReplay } from './unattended-publication.mjs'
 import { ordinarySourceReviews, reviewedOrdinarySourcePaths } from './reviewed-source-artifacts.mjs'
@@ -569,10 +570,10 @@ const queueSourcePaths=queueDraftSourcePaths({authority:context.run_publication_
 
 
 if (context.run_publication_authority?.unattended_queue_authority === true) {
-  const reviewObjects = Object.fromEntries(ordinarySourceReviews.flatMap(review => [review.path, review.witness_path])
+  const reviewObjects = Object.fromEntries([...ordinarySourceReviews.flatMap(review => [review.path, review.witness_path]), ...Object.keys(foundationImport.files)]
     .filter(file => existsSync(path.join(execution.worktree_path, file)))
     .map(file => [file, requireSuccess(git(['hash-object', '--', file]), 'git_reviewed_source_hash_failed').trim()]))
-  const reviewedOrdinaryPaths = reviewedOrdinarySourcePaths({task, execution, verification, objects: reviewObjects})
+  const reviewedOrdinaryPaths = [...reviewedOrdinarySourcePaths({task, execution, verification, objects: reviewObjects}), ...reviewedFoundationImportPaths({task, execution, verification, objects: reviewObjects, authorizations: publicationAuthorizations.ordinary, contract: publicationContract, authority: context.run_publication_authority, projectPaths: publicationBoundaries.project_paths ?? []})]
   const sensitive = unattendedSensitiveFiles(changed, {verifiedOwnerPaths: [...verifiedProtectedPaths,...queueSourcePaths], reviewedOrdinaryPaths})
   if (sensitive.length) fail('publication_security_sensitive_operator_wait', { protected_paths: sensitive, classification: { failure_class: 'operator-wait', recovery_action: 'wait-operator' } })
 }
