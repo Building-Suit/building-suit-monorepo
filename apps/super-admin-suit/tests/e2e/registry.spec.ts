@@ -23,16 +23,16 @@ for (const locale of ['en', 'ar']) {
       await expect(page.locator('[data-registry-pending]')).toBeVisible()
       const rail = page.getByRole('navigation', { name: locale === 'en' ? 'Managed Suits' : 'الحزم المُدارة', exact: true })
       const context = page.getByRole('navigation', { name: locale === 'en' ? 'Suit navigation' : 'تنقل الحزمة', exact: true })
-      const open = page.locator('button[aria-controls="bs-primary-navigation"]')
+      const open = page.getByRole('button', { name: locale === 'en' ? 'Open menu' : 'فتح القائمة', exact: true })
       async function showMenu() {
-        if (mobile && !await rail.isVisible()) await open.click()
+        if (mobile && !await context.isVisible()) await open.click()
       }
       await showMenu()
-      await expect(rail.getByRole('link', { name: locale === 'en' ? 'Future Suit' : 'الحزمة المستقبلية', exact: true })).toHaveAttribute('aria-current', 'true')
+      await expect(rail.getByRole('button', { name: locale === 'en' ? 'Future Suit' : 'الحزمة المستقبلية', exact: true })).toHaveAttribute('aria-pressed', 'true')
       await expect(context.getByRole('link')).toHaveCount(1)
       await expect(context.getByRole('link')).toHaveAttribute('aria-current', 'page')
       await page.screenshot({ path: `/tmp/sas-registry-${locale}-${mobile}-future.png` })
-      const first = rail.getByRole('link', { name: locale === 'en' ? 'First Suit' : 'الحزمة الأولى', exact: true })
+      const first = rail.getByRole('button', { name: locale === 'en' ? 'First Suit' : 'الحزمة الأولى', exact: true })
       await first.focus()
       await expect(first).toBeFocused()
       await page.keyboard.press('Enter')
@@ -56,14 +56,14 @@ for (const locale of ['en', 'ar']) {
       await page.goto('/?suit=future-suit')
       await expect(page.locator('[data-state="empty"]')).toBeVisible()
       await showMenu()
-      await expect(rail.getByRole('link').first()).toHaveAccessibleName(locale === 'en' ? 'Renamed Suit' : 'الحزمة المعدلة')
+      await expect(rail.getByRole('button').first()).toHaveAccessibleName(locale === 'en' ? 'Renamed Suit' : 'الحزمة المعدلة')
       await page.screenshot({ path: `/tmp/sas-registry-${locale}-${mobile}-empty.png` })
       if (mobile) await page.keyboard.press('Escape')
       code = 503
       await page.evaluate(() => window.dispatchEvent(new Event('focus')))
       await expect(page.locator('[data-state="error"]')).toBeVisible()
       await showMenu()
-      await expect(rail.getByRole('link')).toHaveCount(0)
+      await expect(rail.getByRole('button')).toHaveCount(0)
       if (mobile) await page.keyboard.press('Escape')
       code = 200
       delayed = true

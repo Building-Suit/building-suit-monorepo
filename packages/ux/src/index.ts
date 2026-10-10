@@ -5,6 +5,36 @@ export function csvCell(value: unknown): string {
 }
 
 export type BsDataTableRowAction = 'edit' | 'delete' | 'archive' | 'void'
+export type BsDataTableAlign = 'start' | 'center' | 'end'
+export type BsDataTableWidth = 'selection' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'content'
+export type BsDataTableSticky = 'start' | 'end'
+
+/**
+ * Bs-owned column description. Presentation is intentionally semantic: Suit
+ * consumers cannot pass vendor classes, styles, or passthrough configuration.
+ * A `cell-${key}` slot may provide domain presentation while keeping the
+ * rendered content behind the Bs-only template boundary.
+ */
+export interface BsDataTableColumn<Row extends object = Record<string, unknown>> {
+  key: string
+  field?: string
+  header: string
+  footer?: string | number
+  value?: (row: Row) => unknown
+  format?: (value: unknown, row: Row) => string | number | null | undefined
+  align?: BsDataTableAlign
+  headerAlign?: BsDataTableAlign
+  width?: BsDataTableWidth
+  sticky?: BsDataTableSticky
+  sortable?: boolean
+  ariaSort?: 'none' | 'ascending' | 'descending' | 'other'
+  sortField?: string
+  filterField?: string
+  filterMatchMode?: string
+  hidden?: boolean
+  exportable?: boolean
+  selectionMode?: 'single' | 'multiple'
+}
 
 /**
  * Presentation capabilities are deliberately separate from server authority.
@@ -114,3 +144,39 @@ export const interactionPolicy = Object.freeze({
   protectDirtyForms: true,
   confirmationPresentation: 'modal',
 } as const)
+
+export { formatPresentationMoney, usagePercentage } from './presentation.ts'
+export type { BsMoneyFormatOptions } from './presentation.ts'
+
+/** App-owned registry data; selection is presentation state, never authority. */
+export interface BsSuitRailItem {
+  id: string
+  label: string
+  icon?: string
+  logo?: string
+  disabled?: boolean
+}
+
+export interface BsContextNavigationItem {
+  id: string
+  label: string
+  icon?: string
+  to?: string
+  disabled?: boolean
+}
+
+export interface BsContextNavigationGroup {
+  id: string
+  label: string
+  items: BsContextNavigationItem[]
+}
+
+export interface BsAdministrationShellLabels {
+  suits: string
+  navigation: string
+  open: string
+  close: string
+  loading: string
+  emptySuits: string
+  emptyNavigation: string
+}

@@ -1,5 +1,7 @@
 <script setup lang="ts" generic="Row extends object = Record<string, unknown>">
+import { createTextVNode, h, renderSlot, toDisplayString, type VNodeChild } from 'vue'
 import Column from 'primevue/column'
+import BsButton from '../atoms/BsButton.vue'
 import DataTable, {
   type DataTableFilterEvent,
   type DataTableFilterMeta,
@@ -9,6 +11,7 @@ import DataTable, {
 } from 'primevue/datatable'
 import type {
   BsDataTableActionLabels,
+  BsDataTableColumn,
   BsDataTableCapabilities,
   BsDataTableQueryAdapter,
   BsDataTableRowAction,
@@ -18,6 +21,8 @@ import { csvCell } from '@building-suit/ux'
 defineOptions({ inheritAttrs: false })
 const props = withDefaults(defineProps<{
   value?: ([Row] extends [never] ? object : Row)[] | null
+  columns?: BsDataTableColumn<Row>[]
+  rowKey?: keyof Row & string | ((row: Row) => string)
   label?: string
   density?: 'compact' | 'comfortable'
   stickyHeader?: boolean
@@ -36,12 +41,24 @@ const props = withDefaults(defineProps<{
   canRowAction?: (action: BsDataTableRowAction, row: Row) => boolean
   rowActionPending?: boolean | ((action: BsDataTableRowAction, row: Row) => boolean)
   queryAdapter?: BsDataTableQueryAdapter
+  paginator?: boolean
+  pageSize?: number
+  pageSizes?: number[]
+  first?: number
+  totalRecords?: number
+  filters?: DataTableFilterMeta
+  selectionMode?: 'single' | 'multiple'
+  sortField?: string
+  sortOrder?: 0 | 1 | -1
 }>(), {
-  value: () => [], label: undefined, density: 'comfortable', stickyHeader: false,
+  value: () => [], columns: () => [], rowKey: undefined, label: undefined, density: 'comfortable', stickyHeader: false,
   stickyFooter: false, maxHeight: undefined, scrollLabel: undefined, searchable: false,
   searchLabel: undefined, exportable: false, searchFields: () => [], lazy: false,
   loading: false, error: null, capabilities: () => ({}), actionLabels: () => ({}),
   canRowAction: undefined, rowActionPending: false, queryAdapter: undefined,
+  paginator: false, pageSize: 20, pageSizes: () => [10, 20, 50], first: 0,
+  totalRecords: undefined, selectionMode: undefined, sortField: undefined, sortOrder: undefined,
+  filters: undefined,
 })
 const emit = defineEmits<{
   search: [value: string]
@@ -55,6 +72,10 @@ const emit = defineEmits<{
   page: [event: DataTablePageEvent]
   sort: [event: DataTableSortEvent]
   filter: [event: DataTableFilterEvent]
+  'update:filters': [value: DataTableFilterMeta]
+  'update:selection': [value: Row | Row[] | null]
+  'update:sortField': [value: string | undefined]
+  'update:sortOrder': [value: 0 | 1 | -1 | undefined]
   'row-click': [event: DataTableRowClickEvent<Row>]
 }>()
 const ui = useUiCopy()
@@ -63,21 +84,31 @@ const attrs = useAttrs()
 
 // useAttrs/useSlots are updated in place by Vue, but are not reactive sources.
 // Read them during each render so native v-model updates cannot retain stale values.
-function forwardedAttrs() { const { filters: _filters, ...rest } = attrs; return rest }
+function forwardedAttrs() {
+  return Object.fromEntries(Object.entries(attrs).filter(([key]) => {
+    const normalized = key.replaceAll('-', '').toLowerCase()
+    return key !== 'filters'
+      && !['class', 'style', 'pt', 'ptoptions', 'tableclass', 'tablestyle', 'rowclass', 'rowstyle', 'headerclass', 'headerstyle', 'bodyclass', 'bodystyle'].includes(normalized)
+      && !normalized.endsWith('class')
+      && !normalized.endsWith('style')
+  }))
+}
 const table = ref<InstanceType<typeof DataTable> | null>(null)
 const search = ref('')
+const visibleColumns = computed(() => props.columns.filter(column => !column.hidden))
+const effectiveSelectionMode = computed(() => props.capabilities.select || !props.columns.length ? props.selectionMode : undefined)
 const exportEnabled = computed(() => props.exportable || props.capabilities.export === true)
 const rowActions = computed<BsDataTableRowAction[]>(() =>
   (['edit', 'delete', 'archive', 'void'] as const).filter(action => props.capabilities[action] === true),
 )
 const hasToolbar = computed(() => props.searchable || exportEnabled.value || props.capabilities.insert || slots.toolbar || slots.filters)
 
-function filters() {
+function resolvedFilters() {
   return props.searchable && !props.lazy
-    ? { ...(attrs.filters as DataTableFilterMeta || {}), global: { value: search.value, matchMode: 'contains' } }
-    : attrs.filters as DataTableFilterMeta | undefined
+    ? { ...(props.filters || {}), global: { value: search.value, matchMode: 'contains' } }
+    : props.filters
 }
-function forwardedSlots() { return Object.keys(slots).filter(key => !['default', 'empty', 'loading', 'toolbar', 'filters'].includes(key)) }
+function forwardedSlots() { return Object.keys(slots).filter(key => !['default', 'empty', 'loading', 'toolbar', 'filters'].includes(key) && !/^(?:cell|header|filter|footer)-/.test(key)) }
 const tableContainerPt = computed(() => ({
   class: 'overflow-auto',
   ...(props.scrollLabel ? { tabindex: 0, role: 'region', 'aria-label': props.scrollLabel } : {}),
@@ -94,6 +125,85 @@ function isRowActionPending(action: BsDataTableRowAction, row: Row) {
   return typeof props.rowActionPending === 'function' ? props.rowActionPending(action, row) : props.rowActionPending
 }
 function actionLabel(action: BsDataTableRowAction) { return props.actionLabels[action] || ui(action) }
+function cellValue(column: BsDataTableColumn<Row>, row: Row) {
+  const value = column.value ? column.value(row) : column.field ? getField(row, column.field) : undefined
+  return column.format ? column.format(value, row) : value
+}
+function getField(row: Row, field: string): unknown {
+  return field.split('.').reduce<unknown>((value, key) => value && typeof value === 'object' ? (value as Record<string, unknown>)[key] : undefined, row)
+}
+function columnClass(column: BsDataTableColumn<Row>, header = false) {
+  const align = header ? column.headerAlign || column.align : column.align
+  return [
+    align ? `bs-data-table__cell--${align}` : undefined,
+    column.width ? `bs-data-table__cell--${column.width}` : undefined,
+    column.sticky ? `bs-data-table__cell--sticky-${column.sticky}` : undefined,
+  ].filter(Boolean).join(' ')
+}
+// PrimeVue mounts column slots as functional components. Keep their identities
+// stable across table updates so an open dialog retains its connected opener.
+const columnTemplates = new Map<string, {
+  body: (scope: { data: Row; index: number }) => VNodeChild[]
+  header: () => VNodeChild[]
+  footer: () => VNodeChild[]
+  filter: (scope: Record<string, unknown>) => VNodeChild[]
+}>()
+function templatesFor(initialColumn: BsDataTableColumn<Row>) {
+  const key = initialColumn.key
+  let templates = columnTemplates.get(key)
+  if (!templates) {
+    const currentColumn = () => props.columns.find(column => column.key === key) ?? initialColumn
+    templates = {
+      body: ({ data, index }) => {
+        const column = currentColumn()
+        const value = cellValue(column, data)
+        return [renderSlot(slots, `cell-${key}`, { row: data, value, column, index }, () => [createTextVNode(toDisplayString(value))])]
+      },
+      header: () => [renderSlot(slots, `header-${key}`, { column: currentColumn() })],
+      footer: () => {
+        const column = currentColumn()
+        return [renderSlot(slots, `footer-${key}`, { column }, () => [createTextVNode(toDisplayString(column.footer))])]
+      },
+      filter: scope => [renderSlot(slots, `filter-${key}`, { ...scope, column: currentColumn() })],
+    }
+    columnTemplates.set(key, templates)
+  }
+  return templates
+}
+function columnVNode(column: BsDataTableColumn<Row>) {
+  const templates = templatesFor(column)
+  return h(Column, {
+    key: column.key, columnKey: column.key, field: column.field,
+    header: slots[`header-${column.key}`] ? undefined : column.header,
+    exportHeader: column.header,
+    footer: column.footer === undefined ? undefined : String(column.footer),
+    sortable: column.sortable,
+    pt: column.ariaSort ? { headerCell: { 'aria-sort': column.ariaSort } } : undefined,
+    sortField: column.sortField, filterField: column.filterField,
+    filterMatchMode: column.filterMatchMode, exportable: column.exportable,
+    selectionMode: column.selectionMode, frozen: Boolean(column.sticky), alignFrozen: column.sticky,
+    headerClass: columnClass(column, true), bodyClass: columnClass(column), footerClass: columnClass(column),
+  }, {
+    body: templates.body,
+    ...(slots[`header-${column.key}`] ? { header: templates.header } : {}),
+    ...(column.footer !== undefined || slots[`footer-${column.key}`] ? { footer: templates.footer } : {}),
+    ...(slots[`filter-${column.key}`] ? { filter: templates.filter } : {}),
+  })
+}
+const renderRowActions = ({ data }: { data: Row }) => [
+  ...rowActions.value.filter(action => rowActionVisible(action, data)).map(action => h(BsButton, {
+    key: action, variant: action === 'edit' ? 'link' : 'text', size: 'sm',
+    class: { 'bs-data-table__danger-action': action !== 'edit' },
+    pending: isRowActionPending(action, data),
+    onClick: (event: Event) => { event.stopPropagation(); emitRowAction(action, data) },
+  }, () => actionLabel(action))),
+  renderSlot(slots, 'row-actions', { row: data }),
+]
+const renderActionHeader = () => [props.actionLabels.actions || ui('actions')]
+const actionColumnVNode = () => h(Column, {
+  columnKey: 'bs-row-actions',
+  headerClass: 'text-end', bodyClass: 'whitespace-nowrap text-end',
+}, { header: renderActionHeader, body: renderRowActions })
 function emitRowAction(action: BsDataTableRowAction, row: Row) {
   if (action === 'edit') emit('edit', row)
   else if (action === 'delete') emit('delete', row)
@@ -103,6 +213,9 @@ function emitRowAction(action: BsDataTableRowAction, row: Row) {
 function onPage(event: DataTablePageEvent) { props.queryAdapter?.page?.(event); emit('page', event) }
 function onSort(event: DataTableSortEvent) { const sort = props.queryAdapter?.sort; sort?.(event); emit('sort', event) }
 function onFilter(event: DataTableFilterEvent) { props.queryAdapter?.filter?.(event); emit('filter', event) }
+function updateFilters(value: DataTableFilterMeta) { emit('update:filters', value) }
+function updateSortField(value: string | ((item: unknown) => string) | null | undefined) { emit('update:sortField', typeof value === 'string' ? value : undefined) }
+function updateSortOrder(value: number | null | undefined) { emit('update:sortOrder', value === 1 || value === -1 || value === 0 ? value : undefined) }
 watch(search, (value) => { props.queryAdapter?.search?.(value); emit('search', value) })
 defineExpose({ exportCSV: exportCsv })
 </script>
@@ -114,25 +227,36 @@ defineExpose({ exportCSV: exportCsv })
     :aria-label="label"
     :aria-busy="loading"
   >
-    <BsToolbar v-if="hasToolbar" class="bs-data-table__toolbar" :label="label || ui('tableTools')" variant="plain">
-      <BsInput v-if="searchable" v-model="search" type="search" class="max-w-sm" :aria-label="searchLabel || ui('search')" :placeholder="searchLabel || ui('search')" />
+    <BsTableToolbar v-if="hasToolbar" :label="label || ui('tableTools')">
+      <BsTableSearch v-if="searchable" v-model="search" :label="searchLabel || ui('search')" />
       <slot name="toolbar" />
-      <template v-if="slots.filters" #filters><slot name="filters" /></template>
+      <template v-if="slots.filters" #filters><BsTableFilters :label="label || ui('tableTools')"><slot name="filters" /></BsTableFilters></template>
       <template #actions>
-        <BsButton v-if="capabilities.insert" variant="primary" :disabled="loading" @click="emit('create')">
-          {{ actionLabels.insert || ui('create') }}
-        </BsButton>
-        <BsButton v-if="exportEnabled" :disabled="loading" @click="exportCsv">{{ ui('export') }}</BsButton>
+        <BsTableActions>
+          <BsButton v-if="capabilities.insert" variant="primary" :disabled="loading" @click="emit('create')">
+            {{ actionLabels.insert || ui('create') }}
+          </BsButton>
+          <BsButton v-if="exportEnabled" :disabled="loading" @click="exportCsv">{{ ui('export') }}</BsButton>
+        </BsTableActions>
       </template>
-    </BsToolbar>
+    </BsTableToolbar>
     <BsStateSurface v-if="error" state="error" :title="error" :action-label="ui('retry')" @action="emit('retry')" />
     <DataTable
       v-else
       ref="table"
       :value="value || []"
+      :data-key="rowKey"
       :lazy="lazy"
       :loading="loading"
-      :filters="filters()"
+      :paginator="paginator"
+      :rows="pageSize"
+      :rows-per-page-options="pageSizes"
+      :first="first"
+      :total-records="totalRecords"
+      :selection-mode="effectiveSelectionMode"
+      :sort-field="sortField"
+      :sort-order="sortOrder"
+      :filters="resolvedFilters()"
       :global-filter-fields="searchFields.length ? searchFields : undefined"
       :export-function="({ data }: { data: unknown }) => csvCell(data)"
       table-class="ls-table"
@@ -141,27 +265,18 @@ defineExpose({ exportCSV: exportCsv })
       @page="onPage"
       @sort="onSort"
       @filter="onFilter"
+      @update:filters="updateFilters"
+      @update:selection="emit('update:selection', $event)"
+      @update:sort-field="updateSortField"
+      @update:sort-order="updateSortOrder"
       @row-click="emit('row-click', $event)"
     >
-      <slot />
-      <Column v-if="rowActions.length" header-class="text-end" body-class="whitespace-nowrap text-end">
-        <template #header>{{ actionLabels.actions || ui('actions') }}</template>
-        <template #body="{ data }">
-          <template v-for="action in rowActions" :key="action">
-            <BsButton
-              v-if="rowActionVisible(action, data)"
-              :variant="action === 'edit' ? 'link' : 'text'"
-              size="sm"
-              :class="{ 'bs-data-table__danger-action': action !== 'edit' }"
-              :pending="isRowActionPending(action, data)"
-              @click.stop="emitRowAction(action, data)"
-            >
-              {{ actionLabel(action) }}
-            </BsButton>
-          </template>
-          <slot name="row-actions" :row="data" />
-        </template>
-      </Column>
+      <Column v-if="capabilities.select && selectionMode" :selection-mode="selectionMode" header-class="bs-data-table__cell--selection" body-class="bs-data-table__cell--selection" />
+      <component :is="columnVNode(column)" v-for="column in visibleColumns" :key="column.key" />
+      <!-- Migration-only compatibility. New Suit consumers use `columns` and `cell-*` slots. -->
+      <slot name="legacy-columns" />
+      <slot v-if="!columns.length" />
+      <component :is="actionColumnVNode()" v-if="rowActions.length" key="bs-action-column" />
       <template v-for="name in forwardedSlots()" :key="name" #[name]="scope"><slot :name="name" v-bind="scope || {}" /></template>
       <template #empty><slot name="empty"><BsStateSurface state="empty" :title="ui('empty')" /></slot></template>
       <template #loading><slot name="loading"><BsStateSurface state="loading" :title="ui('loading')" /></slot></template>
@@ -172,6 +287,18 @@ defineExpose({ exportCSV: exportCsv })
 <style>
 .bs-data-table__toolbar { padding: var(--bs-space-3); border-bottom: 1px solid var(--bs-border); }
 .bs-data-table__danger-action { color: var(--bs-status-error); }
+.bs-data-table__cell--start { text-align: start; }
+.bs-data-table__cell--center { text-align: center; }
+.bs-data-table__cell--end { text-align: end; }
+.bs-data-table__cell--selection { width: 3rem; }
+.bs-data-table__cell--xs { width: 5rem; }
+.bs-data-table__cell--sm { width: 8rem; }
+.bs-data-table__cell--md { width: 12rem; }
+.bs-data-table__cell--lg { width: 18rem; }
+.bs-data-table__cell--xl { width: 24rem; }
+.bs-data-table__cell--content { width: 1%; white-space: nowrap; }
+.bs-data-table__cell--sticky-start { position: sticky; inset-inline-start: 0; z-index: 2; background: var(--bs-surface); }
+.bs-data-table__cell--sticky-end { position: sticky; inset-inline-end: 0; z-index: 2; background: var(--bs-surface); }
 .bs-paginator, .bs-paginator-content { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .5rem; padding: .5rem; }
 .bs-data-table [data-pc-name='paginator'] { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .5rem; padding: 1rem; border-top: 1px solid var(--bs-border); }
 .bs-data-table [data-pc-name='paginator'] button { min-width: 2.75rem; min-height: 2.75rem; border-radius: var(--bs-radius-button); }

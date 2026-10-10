@@ -6,6 +6,9 @@ defineOptions({ inheritAttrs: false })
 type ButtonVariant = 'default' | 'primary' | 'secondary' | 'accent' | 'danger' | 'text' | 'link' | 'icon' | 'tab' | 'chip' | 'tile'
 
 const props = withDefaults(defineProps<{
+  block?: boolean
+  placement?: 'inline' | 'floating'
+  align?: 'start' | 'center'
   pending?: boolean
   disabled?: boolean
   variant?: ButtonVariant
@@ -13,7 +16,7 @@ const props = withDefaults(defineProps<{
   severity?: 'primary' | 'secondary' | 'danger'
   size?: 'default' | 'sm' | 'small' | 'large'
 }>(), {
-  pending: false,
+  block: false, placement: 'inline', align: 'center', pending: false,
   disabled: false,
   variant: 'default',
   severity: undefined,
@@ -50,7 +53,7 @@ const presentationClass = computed(() => {
   <Button
     type="button"
     v-bind="$attrs"
-    :class="presentationClass"
+    :class="[presentationClass, { 'bs-button--block': block, 'bs-button--start': align === 'start', 'bs-button--floating': placement === 'floating' }]"
     :disabled="disabled || pending"
     :loading="pending"
     :size="size === 'small' || size === 'large' ? size : undefined"

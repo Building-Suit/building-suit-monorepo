@@ -424,71 +424,164 @@ async function archiveVendor(vendor: Vendor) {
   } catch (error) { actionError.value = readableError(error instanceof Error ? error.message : undefined) }
   finally { archivingVendorId.value = null }
 }
+const supplierPicker = reactive(usePurchaseEntityPicker('supplier'))
+const productPicker = reactive(usePurchaseEntityPicker('product'))
 </script>
 
 <template>
-  <div class="space-y-6">
-    <header class="flex flex-wrap items-end justify-between gap-4">
-      <div><h1 class="text-3xl font-extrabold tracking-tight">{{ copy.title }}</h1><p class="mt-2 text-sm text-muted-foreground">{{ copy.subtitle }}</p></div>
-      <div v-if="current" class="flex flex-wrap gap-2"><BsButton v-if="canManageSuppliers" type="button" class="ls-btn" @click="openSupplierForm()">{{ copy.addSupplier }}</BsButton><BsButton v-if="canManagePurchases" type="button" class="ls-btn ls-btn-primary" :disabled="!activeVendors.length || !products.length" @click="openPurchaseForm">{{ copy.newPurchase }}</BsButton></div>
-    </header>
-
-    <div v-if="!current && !shopLoading" class="ls-card p-8 text-center text-sm"><p>{{ copy.noShop }}</p><NuxtLink to="/dashboard" class="mt-3 inline-block font-bold text-[var(--bs-link)] underline">{{ copy.dashboard }}</NuxtLink></div>
+  <BsStack>
+    <BsPageHeader  :title="copy.title" :subtitle="copy.subtitle">
+      <template #actions>
+        <BsInline v-if="current">
+          <BsButton v-if="canManageSuppliers" type="button" @click="openSupplierForm()">{{ copy.addSupplier }}</BsButton>
+          <BsButton v-if="canManagePurchases" type="button" :disabled="!activeVendors.length || !products.length" @click="openPurchaseForm">{{ copy.newPurchase }}</BsButton>
+        </BsInline>
+      </template>
+    </BsPageHeader>
+    <BsPanel v-if="!current && !shopLoading" padding="md">
+      <BsText as="p">{{ copy.noShop }}</BsText>
+      <BsLink to="/dashboard">{{ copy.dashboard }}</BsLink>
+    </BsPanel>
     <template v-else-if="current">
-      <p class="rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm dark:bg-[var(--bs-status-info-bg)]">{{ copy.scope }}</p>
-      <p v-if="successMessage" role="status" class="rounded-xl bg-[var(--bs-status-success-bg)] p-4 text-sm text-[var(--bs-status-success)]">{{ successMessage }}</p>
-      <p v-if="actionError && !supplierOpen && !purchaseOpen" role="alert" class="rounded-xl bg-[var(--bs-status-error-bg)] p-4 text-sm text-[var(--bs-status-error)]">{{ actionError }}</p>
-      <div v-if="!products.length && !pending" class="ls-card-flat p-5 text-sm"><p>{{ copy.noProducts }}</p><NuxtLink to="/products" class="mt-2 inline-block font-bold text-[var(--bs-link)] underline">{{ copy.products }}</NuxtLink></div>
-      <p v-if="!activeVendors.length && !pending" class="ls-card-flat p-5 text-sm">{{ copy.noSuppliers }}</p>
-
-      <section class="ls-card p-5">
-        <div class="mb-4 flex flex-wrap items-center justify-between gap-3"><h2 class="font-extrabold">{{ copy.suppliers }}</h2><div class="flex flex-wrap items-center gap-3"><input v-model="supplierSearch" :aria-label="copy.supplierSearch" type="search" :placeholder="copy.supplierSearch" class="ls-input max-w-xs"><label class="flex min-h-11 items-center gap-2 text-sm font-semibold"><input v-model="showArchivedSuppliers" type="checkbox">{{ copy.showArchived }}</label></div></div>
-        <div class="overflow-x-auto"><BsDataTable :value="vendors" :label="copy.suppliers" lazy paginator :rows="pageSize" :first="(supplierPage - 1) * pageSize" :total-records="purchaseData.vendorTotal" :always-show-paginator="false" data-key="id" :loading="pending" :row-class="() => 'border-t border-border'" @page="supplierPage = $event.page + 1"><Column header-class="px-3 py-3 text-start" body-class="px-3 py-3 font-bold"><template #header>{{ copy.supplier }}</template><template #body="{ data: vendor }">{{ vendor.name }}<span v-if="!vendor.is_active" class="ms-2 text-xs text-muted-foreground">({{ copy.archived }})</span></template></Column><Column header-class="px-3 py-3 text-start" body-class="px-3 py-3"><template #header>{{ copy.contact }}</template><template #body="{ data: vendor }"><p>{{ vendor.contact_name || '—' }}</p><p class="text-xs text-muted-foreground">{{ vendor.phone || vendor.email || '—' }}</p></template></Column><Column header-class="px-3 py-3 text-end" body-class="px-3 py-3 text-end font-bold"><template #header>{{ copy.payable }}</template><template #body="{ data: vendor }">{{ money(Number(vendor.payable)) }}</template></Column><Column header-class="px-3 py-3 text-end" body-class="px-3 py-3 text-end"><template #header>{{ copy.actions }}</template><template #body="{ data: vendor }"><span v-if="canManageSuppliers && vendor.is_active" class="inline-flex gap-3"><BsButton variant="link" class="text-[var(--bs-link)]" @click="openSupplierForm(vendor)">{{ copy.edit }}</BsButton><BsButton variant="text" class="text-[var(--bs-status-error)]" :disabled="archivingVendorId === vendor.id" @click="archiveVendor(vendor)">{{ copy.archive }}</BsButton></span></template></Column><template #empty><p class="p-6 text-center text-sm text-muted-foreground">{{ copy.noSuppliers }}</p></template></BsDataTable></div>
-      </section>
-
+      <BsText as="p" size="sm">{{ copy.scope }}</BsText>
+      <BsText v-if="successMessage" role="status" as="p" size="sm">{{ successMessage }}</BsText>
+      <BsText v-if="actionError && !supplierOpen && !purchaseOpen" role="alert" as="p" size="sm" tone="danger">{{ actionError }}</BsText>
+      <BsPanel v-if="!products.length && !pending" padding="md">
+        <BsText as="p">{{ copy.noProducts }}</BsText>
+        <BsLink to="/products">{{ copy.products }}</BsLink>
+      </BsPanel>
+      <BsText v-if="!activeVendors.length && !pending" as="p" size="sm">{{ copy.noSuppliers }}</BsText>
+      <BsPanel padding="md">
+        <BsInline justify="between">
+          <BsHeading :level="2">{{ copy.suppliers }}</BsHeading>
+          <BsInline>
+            <BsInput v-model="supplierSearch" :aria-label="copy.supplierSearch" type="search" :placeholder="copy.supplierSearch"/>
+            <BsCheckbox  v-model="showArchivedSuppliers" :label="copy.showArchived" />
+          </BsInline>
+        </BsInline>
+        <BsBox scroll="x">
+          <BsDataTable :value="vendors" :label="copy.suppliers" lazy paginator :rows="pageSize" :first="(supplierPage - 1) * pageSize" :total-records="purchaseData.vendorTotal" :always-show-paginator="false" data-key="id" :loading="pending" :columns="[{ key: 'column0', header: (copy.supplier) }, { key: 'column1', header: (copy.contact) }, { key: 'column2', header: (copy.payable), align: 'end' }, { key: 'column3', header: (copy.actions), align: 'end' }]" @page="supplierPage = $event.page + 1">
+            <template #cell-column0="{ row: vendor }">{{ vendor.name }}<BsText v-if="!vendor.is_active" as="span" size="xs" tone="muted">({{ copy.archived }})</BsText>
+            </template>
+            <template #cell-column1="{ row: vendor }">
+              <BsText as="p">{{ vendor.contact_name || '—' }}</BsText>
+              <BsText as="p" size="xs" tone="muted">{{ vendor.phone || vendor.email || '—' }}</BsText>
+            </template>
+            <template #cell-column2="{ row: vendor }">{{ money(Number(vendor.payable)) }}</template>
+            <template #cell-column3="{ row: vendor }">
+              <BsText v-if="canManageSuppliers && vendor.is_active" as="span">
+                <BsButton variant="link" @click="openSupplierForm(vendor)">{{ copy.edit }}</BsButton>
+                <BsButton variant="text" :disabled="archivingVendorId === vendor.id" @click="archiveVendor(vendor)">{{ copy.archive }}</BsButton>
+              </BsText>
+            </template>
+            <template #empty>
+              <BsText as="p" size="sm" tone="muted">{{ copy.noSuppliers }}</BsText>
+            </template>
+          </BsDataTable>
+        </BsBox>
+      </BsPanel>
       <BsRecordActionDialog v-model:visible="supplierOpen" :title="editingVendorId ? copy.edit : copy.addSupplier" :dirty="supplierDirty" :pending="supplierSaving" :error="actionError" :submit-label="copy.saveSupplier" :cancel-label="copy.cancel" @submit="saveSupplier">
-        <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ copy.supplierName }}<input v-model="supplierForm.name" type="text" minlength="2" maxlength="160" required class="ls-input"></label>
-        <label class="space-y-2 text-sm font-bold">{{ copy.contactName }}<input v-model="supplierForm.contactName" type="text" maxlength="160" class="ls-input"></label>
-        <label class="space-y-2 text-sm font-bold">{{ copy.phone }}<input v-model="supplierForm.phone" type="tel" maxlength="40" class="ls-input"></label>
-        <label class="space-y-2 text-sm font-bold">{{ copy.email }}<input v-model="supplierForm.email" type="email" maxlength="254" class="ls-input"></label>
-        <label class="space-y-2 text-sm font-bold">{{ copy.taxNumber }}<input v-model="supplierForm.taxNumber" type="text" maxlength="80" class="ls-input"></label>
-        <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ copy.address }}<textarea v-model="supplierForm.address" rows="2" maxlength="500" class="ls-input" /></label>
-        <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ copy.notes }}<textarea v-model="supplierForm.notes" rows="2" maxlength="1000" class="ls-input" /></label>
+        <BsField v-slot="field" :label="copy.supplierName">
+          <BsInput :id="field.id" v-model="supplierForm.name" :aria-describedby="field.describedby" type="text" :minlength="2" :maxlength="160" required/>
+        </BsField>
+        <BsField v-slot="field" :label="copy.contactName">
+          <BsInput :id="field.id" v-model="supplierForm.contactName" :aria-describedby="field.describedby" type="text" :maxlength="160"/>
+        </BsField>
+        <BsField v-slot="field" :label="copy.phone">
+          <BsInput :id="field.id" v-model="supplierForm.phone" :aria-describedby="field.describedby" type="tel" :maxlength="40"/>
+        </BsField>
+        <BsField v-slot="field" :label="copy.email">
+          <BsInput :id="field.id" v-model="supplierForm.email" :aria-describedby="field.describedby" type="email" :maxlength="254"/>
+        </BsField>
+        <BsField v-slot="field" :label="copy.taxNumber">
+          <BsInput :id="field.id" v-model="supplierForm.taxNumber" :aria-describedby="field.describedby" type="text" :maxlength="80"/>
+        </BsField>
+        <BsField v-slot="field" :label="copy.address">
+          <BsTextarea :id="field.id" v-model="supplierForm.address" :aria-describedby="field.describedby" :rows="2" :maxlength="500"/>
+        </BsField>
+        <BsField v-slot="field" :label="copy.notes">
+          <BsTextarea :id="field.id" v-model="supplierForm.notes" :aria-describedby="field.describedby" :rows="2" :maxlength="1000"/>
+        </BsField>
       </BsRecordActionDialog>
-
       <BsRecordActionDialog v-model:visible="purchaseOpen" :title="copy.newPurchase" :dirty="purchaseDirty" :pending="purchaseSaving" :error="actionError" :submit-label="copy.savePurchase" :cancel-label="copy.cancel" size="lg" @submit="savePurchase">
-        <div class="grid gap-4 sm:grid-cols-2">
-          <PurchaseEntityPicker v-model="purchaseForm.vendorId" kind="supplier" :label="copy.supplier" :selected="activeVendors.find(item => item.id === purchaseForm.vendorId)" @selected="chosenVendors.push($event)" />
-          <label class="space-y-2 text-sm font-bold">{{ copy.date }}<input v-model="purchaseForm.issuedOn" type="date" required class="ls-input"></label>
-          <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ copy.invoiceNumber }} ({{ copy.optional }})<input v-model="purchaseForm.invoiceNumber" type="text" maxlength="120" class="ls-input"></label>
-        </div>
-        <fieldset class="space-y-3"><legend class="text-sm font-extrabold">{{ copy.product }}</legend>
-          <div v-for="(line, index) in purchaseForm.lines" :key="line.key" class="grid gap-3 rounded-xl border border-border p-3 lg:grid-cols-[minmax(0,1fr)_8rem_9rem_auto]">
-            <PurchaseEntityPicker v-model="line.productId" kind="product" :label="`${copy.product} ${index + 1}`" :selected="products.find(item => item.id === line.productId)" @selected="chosenProducts.push($event)" />
-            <label class="space-y-2 text-sm font-bold">{{ copy.quantity }}<input v-model.number="line.quantity" type="number" min="0.001" max="1000000" step="0.001" required class="ls-input"></label>
-            <label class="space-y-2 text-sm font-bold">{{ copy.unitCost }}<input v-model.number="line.unitCost" type="number" min="0" max="999999999.99" step="0.01" required class="ls-input"></label>
-            <div class="flex items-end"><BsButton type="button" class="ls-btn" :disabled="purchaseForm.lines.length === 1" :aria-label="`${copy.removeLine} ${index + 1}`" @click="removeLine(line.key)">×</BsButton></div>
-          </div>
-          <BsButton v-if="purchaseForm.lines.length < 100" type="button" class="ls-btn" @click="addLine">{{ copy.addLine }}</BsButton>
-        </fieldset>
-        <label class="block space-y-2 text-sm font-bold">{{ copy.notes }}<textarea v-model="purchaseForm.notes" rows="2" maxlength="1000" class="ls-input" /></label>
-        <p class="border-t border-border pt-4 text-lg font-extrabold">{{ copy.total }}: {{ money(formTotal) }}</p>
+        <BsGrid :columns="2">
+          <BsEntityPicker :model-value="purchaseForm.vendorId" :label="copy.supplier" :options="supplierPicker.options(activeVendors.find(item => item.id === purchaseForm.vendorId))" option-label="name" option-value="id" :loading="supplierPicker.pending" :error="supplierPicker.error" :has-more="supplierPicker.hasMore" :load-more-label="supplierPicker.copy.more" :retry-label="supplierPicker.copy.retry" @retry="supplierPicker.retry" @search="supplierPicker.query" @load-more="supplierPicker.more" @update:model-value="value => { purchaseForm.vendorId = String(value ?? ''); const choice = supplierPicker.items.find(item => item.id === value); if (choice) chosenVendors.push(choice) }" />
+          <BsField v-slot="field" :label="copy.date">
+            <BsInput :id="field.id" v-model="purchaseForm.issuedOn" :aria-describedby="field.describedby" type="date" required/>
+          </BsField>
+          <BsField v-slot="field" :label="(copy.invoiceNumber) + ' (' + (copy.optional) + ')'">
+            <BsInput :id="field.id" v-model="purchaseForm.invoiceNumber" :aria-describedby="field.describedby" type="text" :maxlength="120"/>
+          </BsField>
+        </BsGrid>
+        <BsFieldGroup :legend="(copy.product)">
+          <BsGrid v-for="(line, index) in purchaseForm.lines" :key="line.key" :columns="1">
+            <BsEntityPicker :model-value="line.productId" :label="`${copy.product} ${index + 1}`" :options="productPicker.options(products.find(item => item.id === line.productId))" option-label="name" option-value="id" :loading="productPicker.pending" :error="productPicker.error" :has-more="productPicker.hasMore" :load-more-label="productPicker.copy.more" :retry-label="productPicker.copy.retry" @retry="productPicker.retry" @search="productPicker.query" @load-more="productPicker.more" @update:model-value="value => { line.productId = String(value ?? ''); const choice = productPicker.items.find(item => item.id === value); if (choice) chosenProducts.push(choice) }" />
+            <BsField v-slot="field" :label="copy.quantity">
+              <BsInput :id="field.id" v-model.number="line.quantity" :aria-describedby="field.describedby" type="number" :min="0.001" :max="1000000" :step="0.001" required/>
+            </BsField>
+            <BsField v-slot="field" :label="copy.unitCost">
+              <BsInput :id="field.id" v-model.number="line.unitCost" :aria-describedby="field.describedby" type="number" :min="0" :max="999999999.99" :step="0.01" required/>
+            </BsField>
+            <BsInline>
+              <BsButton type="button" :disabled="purchaseForm.lines.length === 1" :aria-label="`${copy.removeLine} ${index + 1}`" @click="removeLine(line.key)">×</BsButton>
+            </BsInline>
+          </BsGrid>
+          <BsButton v-if="purchaseForm.lines.length < 100" type="button" @click="addLine">{{ copy.addLine }}</BsButton>
+        </BsFieldGroup>
+        <BsField v-slot="field" :label="copy.notes">
+          <BsTextarea :id="field.id" v-model="purchaseForm.notes" :aria-describedby="field.describedby" :rows="2" :maxlength="1000"/>
+        </BsField>
+        <BsText as="p" size="lg" emphasis="semibold">{{ copy.total }}: {{ money(formTotal) }}</BsText>
       </BsRecordActionDialog>
-
-      <section class="ls-card p-5">
-        <div class="mb-4 space-y-3"><div class="flex flex-wrap items-center justify-between gap-3"><h2 class="font-extrabold">{{ copy.recent }}</h2><input v-model="search" :aria-label="copy.search" type="search" :placeholder="copy.search" class="ls-input max-w-sm"></div><div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5"><PurchaseEntityPicker v-model="vendorFilter" kind="supplier" :label="copy.supplier" :selected="activeVendors.find(item => item.id === vendorFilter)" clearable @selected="chosenVendors.push($event)" /><select v-model="statusFilter" :aria-label="copy.status" class="ls-input"><option value="">{{ copy.all }} — {{ copy.status }}</option><option value="posted">{{ copy.posted }}</option><option value="void">{{ copy.voided }}</option></select><select v-model="settlementFilter" :aria-label="copy.settlement" class="ls-input"><option value="">{{ copy.all }} — {{ copy.settlement }}</option><option value="unpaid">{{ copy.unpaid }}</option><option value="partial">{{ copy.partial }}</option><option value="paid">{{ copy.paid }}</option></select><label class="text-xs font-bold">{{ copy.from }}<input v-model="fromFilter" type="date" class="ls-input mt-1"></label><label class="text-xs font-bold">{{ copy.to }}<input v-model="toFilter" type="date" class="ls-input mt-1"></label></div></div>
-        <p v-if="pending" role="status" class="text-sm text-muted-foreground">{{ copy.loading }}</p>
-        <div v-else-if="error" role="alert" class="text-sm"><p>{{ copy.readError }}</p><BsButton class="mt-2" @click="refresh()">{{ copy.retry }}</BsButton></div>
-        <p v-else-if="!purchases.length" class="py-8 text-center text-sm text-muted-foreground">{{ totalPurchases ? copy.noResults : copy.empty }}</p>
-        <div v-else class="overflow-x-auto"><BsDataTable :value="purchases" :label="copy.recent" data-key="id" :row-class="() => 'border-b border-border last:border-0'">
-  <Column header-class="py-3 text-start" body-class="py-3"><template #header>{{ copy.date }}</template><template #body="{ data: purchase }">{{ displayDate(purchase.issuedAt) }}</template></Column>
-  <Column header-class="py-3 text-start" body-class="py-3 font-semibold"><template #header>{{ copy.supplier }}</template><template #body="{ data: purchase }"><NuxtLink :to="`/purchases/${purchase.id}`" class="inline-flex min-h-11 min-w-11 items-center text-[var(--bs-link)] hover:underline">{{ purchase.vendorNameSnapshot }}</NuxtLink><p v-if="purchase.invoiceNumber" class="text-xs font-normal text-muted-foreground">{{ purchase.invoiceNumber }}</p></template></Column>
-  <Column header-class="py-3 text-end" body-class="py-3 text-end font-bold"><template #header>{{ copy.total }}</template><template #body="{ data: purchase }">{{ money(Number(purchase.totalAmount)) }}</template></Column>
-  <Column header-class="py-3 text-end" body-class="py-3 text-end font-bold"><template #header>{{ copy.payable }}</template><template #body="{ data: purchase }">{{ money(Number(purchase.payable)) }}<p class="text-xs font-normal text-muted-foreground">{{ settlementLabel(purchase.settlementState) }}</p></template></Column>
-  <Column header-class="py-3 text-end" body-class="py-3 text-end"><template #header>{{ copy.status }}</template><template #body="{ data: purchase }">{{ statusLabel(purchase.status) }}</template></Column>
-  <Column header-class="py-3 text-end" body-class="py-3 text-end"><template #header>{{ copy.actions }}</template><template #body="{ data: purchase }"><span class="inline-flex gap-3"><NuxtLink :to="`/purchases/${purchase.id}`" class="ls-btn ls-btn-sm text-[var(--bs-link)]">{{ copy.details }}</NuxtLink><BsButton variant="text" v-if="canManagePurchases && purchase.status === 'posted' && Number(purchase.payable) === Number(purchase.totalAmount)" type="button" class="text-[var(--bs-status-error)]" :disabled="voidingId === purchase.id" @click="voidPurchase(purchase)">{{ copy.void }}</BsButton></span></template></Column>
-</BsDataTable><div v-if="totalPurchases > pageSize" class="mt-4 flex items-center justify-between text-sm"><BsButton class="ls-btn ls-btn-sm" :disabled="page === 1" @click="page--">{{ copy.previous }}</BsButton><span>{{ page }} / {{ pages }}</span><BsButton class="ls-btn ls-btn-sm" :disabled="page === pages" @click="page++">{{ copy.next }}</BsButton></div></div>
-      </section>
+      <BsPanel padding="md">
+        <BsStack>
+          <BsInline justify="between">
+            <BsHeading :level="2">{{ copy.recent }}</BsHeading>
+            <BsInput v-model="search" :aria-label="copy.search" type="search" :placeholder="copy.search"/>
+          </BsInline>
+          <BsGrid :columns="2">
+            <BsEntityPicker :model-value="vendorFilter" :label="copy.supplier" show-clear :options="supplierPicker.options(activeVendors.find(item => item.id === vendorFilter))" option-label="name" option-value="id" :loading="supplierPicker.pending" :error="supplierPicker.error" :has-more="supplierPicker.hasMore" :load-more-label="supplierPicker.copy.more" :retry-label="supplierPicker.copy.retry" @retry="supplierPicker.retry" @search="supplierPicker.query" @load-more="supplierPicker.more" @update:model-value="value => { vendorFilter = String(value ?? ''); const choice = supplierPicker.items.find(item => item.id === value); if (choice) chosenVendors.push(choice) }" />
+            <BsSelect v-model="statusFilter" :label="copy.status" :options="[{ value: '', label: (copy.all) + ' — ' + (copy.status), disabled: false }, { value: 'posted', label: (copy.posted), disabled: false }, { value: 'void', label: (copy.voided), disabled: false }]" option-label="label" option-value="value" option-disabled="disabled"/>
+            <BsSelect v-model="settlementFilter" :label="copy.settlement" :options="[{ value: '', label: (copy.all) + ' — ' + (copy.settlement), disabled: false }, { value: 'unpaid', label: (copy.unpaid), disabled: false }, { value: 'partial', label: (copy.partial), disabled: false }, { value: 'paid', label: (copy.paid), disabled: false }]" option-label="label" option-value="value" option-disabled="disabled"/>
+            <BsField v-slot="field" :label="copy.from">
+              <BsInput :id="field.id" v-model="fromFilter" :aria-describedby="field.describedby" type="date"/>
+            </BsField>
+            <BsField v-slot="field" :label="copy.to">
+              <BsInput :id="field.id" v-model="toFilter" :aria-describedby="field.describedby" type="date"/>
+            </BsField>
+          </BsGrid>
+        </BsStack>
+        <BsText v-if="pending" role="status" as="p" size="sm" tone="muted">{{ copy.loading }}</BsText>
+        <BsBox v-else-if="error" role="alert">
+          <BsText as="p">{{ copy.readError }}</BsText>
+          <BsButton @click="refresh()">{{ copy.retry }}</BsButton>
+        </BsBox>
+        <BsText v-else-if="!purchases.length" as="p" size="sm" tone="muted">{{ totalPurchases ? copy.noResults : copy.empty }}</BsText>
+        <BsBox v-else scroll="x">
+          <BsDataTable :value="purchases" :label="copy.recent" data-key="id" :columns="[{ key: 'column0', header: (copy.date) }, { key: 'column1', header: (copy.supplier) }, { key: 'column2', header: (copy.total), align: 'end' }, { key: 'column3', header: (copy.payable), align: 'end' }, { key: 'column4', header: (copy.status), align: 'end' }, { key: 'column5', header: (copy.actions), align: 'end' }]">
+            <template #cell-column0="{ row: purchase }">{{ displayDate(purchase.issuedAt) }}</template>
+            <template #cell-column1="{ row: purchase }">
+              <BsLink :to="`/purchases/${purchase.id}`">{{ purchase.vendorNameSnapshot }}</BsLink>
+              <BsText v-if="purchase.invoiceNumber" as="p" size="xs" tone="muted" emphasis="semibold">{{ purchase.invoiceNumber }}</BsText>
+            </template>
+            <template #cell-column2="{ row: purchase }">{{ money(Number(purchase.totalAmount)) }}</template>
+            <template #cell-column3="{ row: purchase }">{{ money(Number(purchase.payable)) }}<BsText as="p" size="xs" tone="muted" emphasis="semibold">{{ settlementLabel(purchase.settlementState) }}</BsText>
+            </template>
+            <template #cell-column4="{ row: purchase }">{{ statusLabel(purchase.status) }}</template>
+            <template #cell-column5="{ row: purchase }">
+              <BsText as="span">
+                <BsLink :to="`/purchases/${purchase.id}`">{{ copy.details }}</BsLink>
+                <BsButton v-if="canManagePurchases && purchase.status === 'posted' && Number(purchase.payable) === Number(purchase.totalAmount)" variant="text" type="button" :disabled="voidingId === purchase.id" @click="voidPurchase(purchase)">{{ copy.void }}</BsButton>
+              </BsText>
+            </template>
+          </BsDataTable>
+          <BsInline v-if="totalPurchases > pageSize" justify="between">
+            <BsButton :disabled="page === 1" @click="page--">{{ copy.previous }}</BsButton>
+            <BsText as="span">{{ page }} / {{ pages }}</BsText>
+            <BsButton :disabled="page === pages" @click="page++">{{ copy.next }}</BsButton>
+          </BsInline>
+        </BsBox>
+      </BsPanel>
     </template>
-  </div>
+  </BsStack>
 </template>
