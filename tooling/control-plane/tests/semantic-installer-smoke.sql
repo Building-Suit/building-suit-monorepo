@@ -1,0 +1,33 @@
+\set ON_ERROR_STOP on
+BEGIN;
+DO $$DECLARE r uuid;t text;id uuid;entry jsonb;manifest jsonb;denied boolean; release text:=repeat('d',64);BEGIN
+ SELECT task_id INTO t FROM control.tasks WHERE project_id IS NOT NULL AND workstream_slug IS NOT NULL LIMIT 1;
+ INSERT INTO control.workflow_runs(project_id,suit_slug,workstream_slug,status,max_tasks,current_task_id) SELECT project_id,suit_slug,workstream_slug,'running',2,t FROM control.tasks WHERE task_id=t RETURNING run_id INTO r;
+ id:=control.record_dot_incident(r,t,NULL,'semantic-install-fixture','UNKNOWN',jsonb_build_object('cause_fingerprint',repeat('a',64),'semantic',jsonb_build_object('checks','[]'::jsonb)));
+ INSERT INTO control.dot_recovery_jobs(incident_id,run_id,task_id,root_family,owner,action,status,evidence) VALUES(id,r,t,'synthetic-safe-unknown','Codex','investigate','running',jsonb_build_object('cause_fingerprint',repeat('a',64),'semantic',jsonb_build_object('checks','[]'::jsonb)));
+ manifest:=jsonb_build_object('release_id',release,'commit',repeat('b',40),'schema_version',84,'files',jsonb_build_object('tooling/control-plane/tests/synthetic-new.test.mjs',repeat('c',64)),'acceptance','{"tested":true}'::jsonb,'metadata','{"regression":{"failed":0,"skipped":0},"focused_regression":{"failed":0,"skipped":0}}'::jsonb);
+ entry:=jsonb_build_object('runtime_release',release,'learned_from',id,'root_family','synthetic-safe-unknown','cause_fingerprint',repeat('a',64),'protocol','cp-batch-v2','regression_test','tooling/control-plane/tests/synthetic-new.test.mjs','regression_version',repeat('c',64));
+ SET LOCAL ROLE bs_control_executor;
+ denied:=false;BEGIN PERFORM control.register_verified_runtime_release(manifest,repeat('e',64));EXCEPTION WHEN insufficient_privilege THEN denied:=true;END;
+ IF NOT denied THEN RAISE EXCEPTION 'Ordinary executor installed runtime';END IF;
+ RESET ROLE;
+ SET LOCAL ROLE bs_control_release_installer;
+ PERFORM control.register_verified_runtime_release(manifest,repeat('e',64));
+ denied:=false;BEGIN PERFORM control.register_semantic_recovery_handler(jsonb_set(entry,'{regression_version}',to_jsonb(repeat('0',64))));EXCEPTION WHEN OTHERS THEN denied:=true;END;
+ IF NOT denied THEN RAISE EXCEPTION 'Substituted regression digest accepted';END IF;
+ denied:=false;BEGIN PERFORM control.register_semantic_recovery_handler(jsonb_set(entry,'{cause_fingerprint}',to_jsonb(repeat('0',64))));EXCEPTION WHEN OTHERS THEN denied:=true;END;
+ IF NOT denied THEN RAISE EXCEPTION 'Different semantic cause accepted';END IF;
+ PERFORM control.register_semantic_recovery_handler(entry);
+ PERFORM control.register_semantic_recovery_handler(entry);
+ PERFORM control.record_runtime_activation(release,NULL,'activated','/synthetic/current','{"readiness_passed":true}');
+ RESET ROLE;
+ IF (SELECT count(*) FROM control.dot_semantic_recovery_catalog WHERE runtime_release=release)<>1 THEN RAISE EXCEPTION 'Catalog registration not exactly once';END IF;
+ IF EXISTS(SELECT 1 FROM control.dot_semantic_recovery_catalog WHERE runtime_release=release AND required_evidence ? 'trusted_verifier_receipt') THEN RAISE EXCEPTION 'Pre-verification incident required an unrelated verifier receipt';END IF;
+ UPDATE control.dot_recovery_jobs SET evidence=jsonb_build_object('cause_fingerprint',repeat('f',64),'semantic',jsonb_build_object('checks',jsonb_build_array(jsonb_build_object('name','bound-check')))) WHERE incident_id=id;
+ SET LOCAL ROLE bs_control_release_installer;
+ PERFORM control.register_semantic_recovery_handler(jsonb_set(entry,'{cause_fingerprint}',to_jsonb(repeat('f',64))));
+ RESET ROLE;
+ IF NOT EXISTS(SELECT 1 FROM control.dot_semantic_recovery_catalog WHERE runtime_release=release AND cause_fingerprint=repeat('f',64) AND required_evidence ? 'trusted_verifier_receipt') THEN RAISE EXCEPTION 'Verification-subject incident omitted registered verifier evidence';END IF;
+ IF (SELECT learned_from FROM control.dot_semantic_recovery_catalog WHERE runtime_release=release AND cause_fingerprint=repeat('a',64))<>id THEN RAISE EXCEPTION 'Learned handler lost original incident';END IF;
+END $$;
+ROLLBACK;
