@@ -124,6 +124,11 @@ file_size_limit = "50MiB"
 # allowed_mime_types = ["image/png", "image/jpeg"]
 # objects_path = "./images"
 
+[functions.shop-super-admin-bridge]
+# This endpoint authenticates the exact request bytes with the environment-bound
+# HMAC bridge protocol. It must never accept a browser Supabase JWT instead.
+verify_jwt = false
+
 # Allow connections via S3 compatible clients
 [storage.s3_protocol]
 enabled = true

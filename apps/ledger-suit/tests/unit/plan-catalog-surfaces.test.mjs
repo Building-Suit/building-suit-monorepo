@@ -6,14 +6,18 @@ const appRoot = new URL('../../', import.meta.url)
 const read = relative => readFileSync(new URL(relative, appRoot), 'utf8')
 
 test('all customer pricing surfaces render the shared server-catalog component', () => {
-  assert.match(read('app/pages/index.vue'), /<BillingCheckout surface="public"/)
-  assert.match(read('app/components/SubscriptionGate.vue'), /<BillingCheckout\s*\/>/)
-  assert.match(read('app/pages/billing.vue'), /<BillingCheckout :surface="pricingSurface"/)
+  const surfaces = ['index', 'subscribe', 'billing'].map(page => read(`app/pages/${page}.vue`))
+  for (const surface of surfaces) {
+    assert.match(surface, /:factory="useLedgerBillingCheckoutView"/)
+    assert.match(surface, /<BsMarketingPricing/)
+  }
+  assert.match(surfaces[0], /surface: 'public'/)
+  assert.match(surfaces[1], /:factory="useLedgerSubscriptionGateView"/)
+  assert.match(surfaces[2], /surface: \(pricingSurface\)/)
 
-  const pricing = read('app/components/BillingCheckout.vue')
+  const pricing = read('app/composables/useLedgerBillingCheckoutView.ts')
   assert.match(pricing, /rpc\('subscription_plan_catalog'\)/)
   assert.match(pricing, /const plans = computed\(\(\) => catalog\.value \?\? \[\]\)/)
-  assert.match(pricing, /<BsMarketingPricing/)
   assert.doesNotMatch(pricing, /<article\b/)
   assert.doesNotMatch(pricing, /name="billing-cycle"/)
   assert.doesNotMatch(pricing, /\b(?:39900|325584|59900|488784|109900|896784)\b/)
