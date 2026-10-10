@@ -204,11 +204,30 @@ test('canonical data table owns typed CRUD capabilities, query adapters, and act
     assert.match(source, new RegExp(`${event}: \\[`))
   }
   assert.match(contract, /interface BsDataTableQueryAdapter/)
-  assert.match(source, /<BsToolbar\b/)
+  assert.match(contract, /interface BsDataTableColumn<Row extends object/)
+  assert.match(source, /columns\?: BsDataTableColumn<Row>\[\]/)
+  assert.match(source, /<Column\s+v-for="column in visibleColumns"/)
+  assert.match(source, /`cell-\$\{column\.key\}`/)
+  assert.match(source, /<BsTableToolbar\b/)
+  assert.match(source, /<BsTableSearch\b/)
+  assert.match(source, /<BsTableFilters\b/)
+  assert.match(source, /<BsTableActions\b/)
   assert.match(source, /<BsStateSurface v-if="error"/)
   assert.match(source, /<Column v-if="rowActions\.length"/)
   assert.match(source, /<BsButton v-if="capabilities\.insert"/)
   assert.doesNotMatch(source, /<(?:button|InputText)\b/)
+})
+
+test('shared data presentation families are exported and remain product-neutral', () => {
+  const manifest = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
+  for (const name of ['BsTableToolbar', 'BsTableSearch', 'BsTableFilters', 'BsTableActions', 'BsPagination', 'BsEmptyState', 'BsStateSurface', 'BsSummaryGrid', 'BsDescriptionList', 'BsHistoryList', 'BsTimeline', 'BsDetailSection', 'BsDetailDialog', 'BsTagEditor', 'BsEntityPicker']) {
+    assert.ok(Object.keys(manifest.exports).some(key => key.endsWith(`/${name}`)), `${name} is not exported`)
+  }
+  for (const file of ['organisms/BsEntityPicker.vue', 'organisms/BsTagEditor.vue', 'organisms/BsDetailDialog.vue', 'molecules/BsTimeline.vue']) {
+    const source = readFileSync(new URL(`../src/${file}`, import.meta.url), 'utf8')
+    assert.doesNotMatch(source, /apps\//)
+    assert.doesNotMatch(source, /(?:\.from\(|\.rpc\(|\$fetch)/)
+  }
 })
 
 for (const language of ['en', 'ar']) test(`form and select provide localized accessible markup (${language})`, async () => {

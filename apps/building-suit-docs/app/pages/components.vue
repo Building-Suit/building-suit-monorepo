@@ -28,6 +28,19 @@ const selectedFile = ref<File | null>(null)
 const catalogueOtp = ref('123456')
 const tableState = ref<'data' | 'loading' | 'empty' | 'error'>('data')
 const density = ref<'compact' | 'comfortable'>('comfortable')
+const catalogueTags = ref(['shared', 'typed'])
+const selectedEntity = ref<string | number | null>('ledger')
+const entityOptions = ref([{ id: 'ledger', name: 'Ledger Suit' }, { id: 'shop', name: 'Shop Suit' }])
+const historyEntries = [
+  { id: 'created', title: 'Created', detail: 'Typed table contract' },
+  { id: 'reviewed', title: 'Reviewed', detail: 'Bs-only domain cells' },
+]
+const tableColumns = computed(() => [
+  { key: 'name', field: 'name', header: isArabic.value ? 'الاسم' : 'Name', sortable: true },
+  { key: 'category', field: 'category', header: isArabic.value ? 'التصنيف' : 'Category', sortable: true },
+  { key: 'status', field: 'status', header: isArabic.value ? 'الحالة' : 'Status' },
+  { key: 'amount', field: 'amount', header: isArabic.value ? 'القيمة' : 'Value', sortable: true, align: 'end' as const, width: 'sm' as const },
+])
 const pricingInterval = ref('monthly')
 const { success: toastSuccess } = useToasts()
 function verifyForm() { formError.value = isArabic.value ? 'راجع القيمة وحاول مرة أخرى.' : 'Review the value and try again.' }
@@ -156,22 +169,18 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
       </div>
       <div class="px-5 pb-3"><BsTableDensity v-model="density" :label="isArabic ? 'كثافة الجدول' : 'Table density'" :compact-label="isArabic ? 'مضغوط' : 'Compact'" :comfortable-label="isArabic ? 'مريح' : 'Comfortable'" /></div>
       <BsDataTable
-        v-model:selection="selected" v-model:filters="filters" :value="tableState === 'empty' ? [] : rows" data-key="id"
-        :search-fields="['name', 'category']" searchable exportable paginator :rows="2" :rows-per-page-options="[2, 5, 10]"
+        v-model:selection="selected" v-model:filters="filters" :value="tableState === 'empty' ? [] : rows" row-key="id" :columns="tableColumns"
+        :search-fields="['name', 'category']" searchable exportable paginator :page-size="2" :page-sizes="[2, 5, 10]"
         sort-mode="multiple" removable-sort resizable-columns reorderable-columns striped-rows selection-mode="multiple"
         :meta-key-selection="false" :density="density" :loading="tableState === 'loading'"
         :error="tableState === 'error' ? (isArabic ? 'تعذر تحميل المثال.' : 'The example could not be loaded.') : null"
         :label="isArabic ? 'أمثلة المكونات' : 'Component examples'"
-        :capabilities="{ insert: true, edit: true }"
+        :capabilities="{ insert: true, edit: true, select: true }"
         @create="add"
         @edit="edit"
         @retry="tableState = 'data'"
       >
-        <Column selection-mode="multiple" header-style="width: 3rem" />
-        <Column field="name" :header="isArabic ? 'الاسم' : 'Name'" sortable />
-        <Column field="category" :header="isArabic ? 'التصنيف' : 'Category'" sortable />
-        <Column field="status" :header="isArabic ? 'الحالة' : 'Status'"><template #body="{ data: row }"><BsStatusBadge :status="row.status" /></template></Column>
-        <Column field="amount" :header="isArabic ? 'القيمة' : 'Value'" sortable body-class="ls-num" />
+        <template #cell-status="{ row }"><BsStatusBadge :status="row.status" /></template>
       </BsDataTable>
     </section>
 
@@ -202,6 +211,20 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
     <BsContentSection :title="isArabic ? 'حالات المحتوى' : 'Content states'" variant="flat">
       <div class="grid gap-3 md:grid-cols-2"><BsStateSurface state="loading" :title="ui('loading')" /><BsStateSurface state="error" :title="isArabic ? 'تعذر التحميل' : 'Could not load'" :description="isArabic ? 'حاول مرة أخرى.' : 'Try again.'" :action-label="isArabic ? 'إعادة المحاولة' : 'Retry'" /></div>
       <BsPagination v-model:page="page" class="mt-4" :page-size="10" :total="42" :label="isArabic ? 'الصفحات' : 'Pages'" :previous-label="isArabic ? 'السابق' : 'Previous'" :next-label="isArabic ? 'التالي' : 'Next'" />
+    </BsContentSection>
+
+    <BsContentSection :title="isArabic ? 'عرض البيانات' : 'Data presentation'" :description="isArabic ? 'تفاصيل وسجل ووسوم واختيار كيانات بعقود مشتركة.' : 'Shared contracts for details, history, tags, and entity selection.'">
+      <BsStack gap="lg">
+        <BsDetailSection :title="isArabic ? 'تفاصيل السجل' : 'Record details'" :columns="2" divided>
+          <BsDescriptionItem :term="isArabic ? 'المالك' : 'Owner'">packages/ui</BsDescriptionItem>
+          <BsDescriptionItem :term="isArabic ? 'الحالة' : 'Status'"><BsStatusBadge status="active" /></BsDescriptionItem>
+        </BsDetailSection>
+        <BsHistoryList :entries="historyEntries" :label="isArabic ? 'سجل العقد' : 'Contract history'" item-key="id">
+          <template #default="{ entry }"><BsStack gap="none"><BsText emphasis="semibold">{{ entry.title }}</BsText><BsText size="sm" tone="muted">{{ entry.detail }}</BsText></BsStack></template>
+        </BsHistoryList>
+        <BsTagEditor v-model="catalogueTags" :label="isArabic ? 'الوسوم' : 'Tags'" :add-label="isArabic ? 'إضافة' : 'Add tag'" :remove-label="isArabic ? 'إزالة' : 'Remove'" />
+        <BsEntityPicker v-model="selectedEntity" :label="isArabic ? 'اختر المنتج' : 'Choose product'" :options="entityOptions" option-label="name" option-value="id" :load-more-label="isArabic ? 'تحميل المزيد' : 'Load more'" />
+      </BsStack>
     </BsContentSection>
 
     <BsContentSection :title="isArabic ? 'خطط التسويق' : 'Marketing plans'" :description="isArabic ? 'البطاقات ودورة الفوترة والإجراءات تأتي من مكوّن مشترك.' : 'Cards, billing-cycle controls, states, and actions come from one shared organism.'">
