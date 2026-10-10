@@ -3,7 +3,7 @@
   "mode": "migration",
   "auditedReference": {
     "branch": "codex/shared/bs-ui-zn-primitives-001",
-    "commit": "100ddd67f930259c1e84919c00bebd1f0e2658c7"
+    "commit": "0483123"
   },
   "scope": "apps/*-suit/app/**/*.vue",
   "owner": "packages/ui",
@@ -70966,10 +70966,34 @@
     },
     {
       "file": "apps/shop-suit/app/pages/auth/signup.vue",
+      "kind": "nuxt-or-vue-render-tag",
+      "evidence": "<NuxtLink>",
+      "location": {
+        "line": 221,
+        "column": 5
+      },
+      "target": "packages/ui/templates/Bs application-routing composition",
+      "ownerTask": "BS-UI-ZN-CONTRACT-001",
+      "status": "open"
+    },
+    {
+      "file": "apps/shop-suit/app/pages/auth/signup.vue",
+      "kind": "presentation-attribute",
+      "evidence": "class=\"font-bold underline\"",
+      "location": {
+        "line": 221,
+        "column": 42
+      },
+      "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
+      "ownerTask": "BS-UI-ZN-CONTRACT-001",
+      "status": "open"
+    },
+    {
+      "file": "apps/shop-suit/app/pages/auth/signup.vue",
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 203,
+        "line": 231,
         "column": 7
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -70981,7 +71005,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"space-y-4\"",
       "location": {
-        "line": 203,
+        "line": 231,
         "column": 30
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -70993,7 +71017,7 @@
       "kind": "vendor-tag",
       "evidence": "<InputText>",
       "location": {
-        "line": 204,
+        "line": 232,
         "column": 57
       },
       "target": "packages/ui/BsInputText",
@@ -71005,7 +71029,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-input\"",
       "location": {
-        "line": 204,
+        "line": 232,
         "column": 112
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -71017,7 +71041,7 @@
       "kind": "vendor-tag",
       "evidence": "<InputText>",
       "location": {
-        "line": 205,
+        "line": 233,
         "column": 51
       },
       "target": "packages/ui/BsInputText",
@@ -71029,7 +71053,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-input\"",
       "location": {
-        "line": 205,
+        "line": 233,
         "column": 101
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -71041,7 +71065,7 @@
       "kind": "vendor-tag",
       "evidence": "<InputText>",
       "location": {
-        "line": 206,
+        "line": 234,
         "column": 78
       },
       "target": "packages/ui/BsInputText",
@@ -71053,7 +71077,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-input\"",
       "location": {
-        "line": 206,
+        "line": 234,
         "column": 134
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -71065,7 +71089,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 208,
+        "line": 236,
         "column": 7
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -71077,7 +71101,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"space-y-4\"",
       "location": {
-        "line": 208,
+        "line": 236,
         "column": 19
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -71089,7 +71113,7 @@
       "kind": "vendor-tag",
       "evidence": "<InputText>",
       "location": {
-        "line": 209,
+        "line": 237,
         "column": 49
       },
       "target": "packages/ui/BsInputText",
@@ -71101,7 +71125,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-input\"",
       "location": {
-        "line": 209,
+        "line": 237,
         "column": 101
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -71113,7 +71137,7 @@
       "kind": "native-tag",
       "evidence": "<fieldset>",
       "location": {
-        "line": 210,
+        "line": 238,
         "column": 9
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -71125,7 +71149,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"grid gap-3 rounded-xl border border-border p-4 sm:grid-cols-2\"",
       "location": {
-        "line": 210,
+        "line": 238,
         "column": 19
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -71137,7 +71161,7 @@
       "kind": "native-tag",
       "evidence": "<legend>",
       "location": {
-        "line": 211,
+        "line": 239,
         "column": 11
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -71149,7 +71173,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"px-1 text-sm font-bold\"",
       "location": {
-        "line": 211,
+        "line": 239,
         "column": 19
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -71161,7 +71185,7 @@
       "kind": "vendor-tag",
       "evidence": "<InputText>",
       "location": {
-        "line": 212,
+        "line": 240,
         "column": 59
       },
       "target": "packages/ui/BsInputText",
@@ -71173,7 +71197,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-input\"",
       "location": {
-        "line": 212,
+        "line": 240,
         "column": 128
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -71185,7 +71209,7 @@
       "kind": "vendor-tag",
       "evidence": "<InputText>",
       "location": {
-        "line": 213,
+        "line": 241,
         "column": 59
       },
       "target": "packages/ui/BsInputText",
@@ -71197,7 +71221,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-input\"",
       "location": {
-        "line": 213,
+        "line": 241,
         "column": 133
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -71209,7 +71233,7 @@
       "kind": "vendor-tag",
       "evidence": "<InputText>",
       "location": {
-        "line": 214,
+        "line": 242,
         "column": 62
       },
       "target": "packages/ui/BsInputText",
@@ -71221,7 +71245,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-input\"",
       "location": {
-        "line": 214,
+        "line": 242,
         "column": 142
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -71233,7 +71257,7 @@
       "kind": "vendor-tag",
       "evidence": "<InputText>",
       "location": {
-        "line": 215,
+        "line": 243,
         "column": 60
       },
       "target": "packages/ui/BsInputText",
@@ -71245,7 +71269,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-input\"",
       "location": {
-        "line": 215,
+        "line": 243,
         "column": 136
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -71257,7 +71281,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 217,
+        "line": 245,
         "column": 9
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -71269,7 +71293,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"rounded-xl border border-border bg-muted/40 p-3\"",
       "location": {
-        "line": 217,
+        "line": 245,
         "column": 14
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -71281,7 +71305,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 217,
+        "line": 245,
         "column": 70
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -71293,7 +71317,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-sm font-bold\"",
       "location": {
-        "line": 217,
+        "line": 245,
         "column": 73
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -71305,7 +71329,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 217,
+        "line": 245,
         "column": 119
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -71317,7 +71341,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-1 text-xs text-fg-muted\"",
       "location": {
-        "line": 217,
+        "line": 245,
         "column": 122
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -71329,7 +71353,7 @@
       "kind": "native-tag",
       "evidence": "<fieldset>",
       "location": {
-        "line": 218,
+        "line": 246,
         "column": 9
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -71341,7 +71365,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"space-y-2\"",
       "location": {
-        "line": 218,
+        "line": 246,
         "column": 19
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -71353,7 +71377,7 @@
       "kind": "native-tag",
       "evidence": "<legend>",
       "location": {
-        "line": 219,
+        "line": 247,
         "column": 11
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -71365,7 +71389,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-sm font-bold\"",
       "location": {
-        "line": 219,
+        "line": 247,
         "column": 19
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -71377,7 +71401,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 220,
+        "line": 248,
         "column": 11
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -71389,7 +71413,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-xs text-fg-muted\"",
       "location": {
-        "line": 220,
+        "line": 248,
         "column": 14
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -71401,7 +71425,7 @@
       "kind": "native-tag",
       "evidence": "<label>",
       "location": {
-        "line": 221,
+        "line": 249,
         "column": 11
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -71413,7 +71437,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"flex cursor-pointer items-center gap-2 rounded-xl border border-border p-3\"",
       "location": {
-        "line": 221,
+        "line": 249,
         "column": 64
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -71425,7 +71449,7 @@
       "kind": "native-tag",
       "evidence": "<input>",
       "location": {
-        "line": 222,
+        "line": 250,
         "column": 13
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -71437,7 +71461,7 @@
       "kind": "native-tag",
       "evidence": "<span>",
       "location": {
-        "line": 223,
+        "line": 251,
         "column": 13
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -71449,7 +71473,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"font-semibold\"",
       "location": {
-        "line": 223,
+        "line": 251,
         "column": 19
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -71461,7 +71485,7 @@
       "kind": "nuxt-or-vue-render-tag",
       "evidence": "<NuxtLink>",
       "location": {
-        "line": 228,
+        "line": 256,
         "column": 23
       },
       "target": "packages/ui/templates/Bs application-routing composition",
@@ -71473,7 +71497,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"underline\"",
       "location": {
-        "line": 228,
+        "line": 256,
         "column": 50
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -71485,7 +71509,7 @@
       "kind": "nuxt-or-vue-render-tag",
       "evidence": "<NuxtLink>",
       "location": {
-        "line": 239,
+        "line": 267,
         "column": 23
       },
       "target": "packages/ui/templates/Bs application-routing composition",
@@ -71497,8 +71521,32 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"font-bold underline\"",
       "location": {
-        "line": 239,
+        "line": 267,
         "column": 50
+      },
+      "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
+      "ownerTask": "BS-UI-ZN-CONTRACT-001",
+      "status": "open"
+    },
+    {
+      "file": "apps/shop-suit/app/pages/auth/signup.vue",
+      "kind": "nuxt-or-vue-render-tag",
+      "evidence": "<NuxtLink>",
+      "location": {
+        "line": 267,
+        "column": 129
+      },
+      "target": "packages/ui/templates/Bs application-routing composition",
+      "ownerTask": "BS-UI-ZN-CONTRACT-001",
+      "status": "open"
+    },
+    {
+      "file": "apps/shop-suit/app/pages/auth/signup.vue",
+      "kind": "presentation-attribute",
+      "evidence": "class=\"underline\"",
+      "location": {
+        "line": 267,
+        "column": 166
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
       "ownerTask": "BS-UI-ZN-CONTRACT-001",
@@ -112253,6 +112301,102 @@
         "column": 11
       },
       "target": "packages/ui Bs component with product orchestration moved to script/composable",
+      "ownerTask": "BS-UI-ZN-CONTRACT-001",
+      "status": "open"
+    },
+    {
+      "file": "apps/super-admin-suit/app/app.vue",
+      "kind": "nuxt-or-vue-render-tag",
+      "evidence": "<NuxtLayout>",
+      "location": {
+        "line": 12,
+        "column": 3
+      },
+      "target": "packages/ui/templates/Bs application-routing composition",
+      "ownerTask": "BS-UI-ZN-CONTRACT-001",
+      "status": "open"
+    },
+    {
+      "file": "apps/super-admin-suit/app/app.vue",
+      "kind": "nuxt-or-vue-render-tag",
+      "evidence": "<NuxtPage>",
+      "location": {
+        "line": 12,
+        "column": 15
+      },
+      "target": "packages/ui/templates/Bs application-routing composition",
+      "ownerTask": "BS-UI-ZN-CONTRACT-001",
+      "status": "open"
+    },
+    {
+      "file": "apps/super-admin-suit/app/app.vue",
+      "kind": "non-bs-tag",
+      "evidence": "<ToastHost>",
+      "location": {
+        "line": 13,
+        "column": 3
+      },
+      "target": "packages/ui/organisms/BsToastHost",
+      "ownerTask": "BS-UI-ZN-CONTRACT-001",
+      "status": "open"
+    },
+    {
+      "file": "apps/super-admin-suit/app/layouts/default.vue",
+      "kind": "non-bs-tag",
+      "evidence": "<SettingsMenu>",
+      "location": {
+        "line": 6,
+        "column": 189
+      },
+      "target": "packages/ui/organisms/BsSettingsMenu",
+      "ownerTask": "BS-UI-ZN-CONTRACT-001",
+      "status": "open"
+    },
+    {
+      "file": "apps/super-admin-suit/app/layouts/default.vue",
+      "kind": "nuxt-or-vue-render-tag",
+      "evidence": "<slot>",
+      "location": {
+        "line": 6,
+        "column": 216
+      },
+      "target": "packages/ui/templates/Bs application-routing composition",
+      "ownerTask": "BS-UI-ZN-CONTRACT-001",
+      "status": "open"
+    },
+    {
+      "file": "apps/super-admin-suit/app/pages/index.vue",
+      "kind": "nuxt-or-vue-render-tag",
+      "evidence": "<NuxtLayout>",
+      "location": {
+        "line": 17,
+        "column": 3
+      },
+      "target": "packages/ui/templates/Bs application-routing composition",
+      "ownerTask": "BS-UI-ZN-CONTRACT-001",
+      "status": "open"
+    },
+    {
+      "file": "apps/super-admin-suit/app/pages/index.vue",
+      "kind": "native-tag",
+      "evidence": "<div>",
+      "location": {
+        "line": 35,
+        "column": 5
+      },
+      "target": "packages/ui/Bs semantic presentation primitive or composition",
+      "ownerTask": "BS-UI-ZN-CONTRACT-001",
+      "status": "open"
+    },
+    {
+      "file": "apps/super-admin-suit/app/pages/index.vue",
+      "kind": "presentation-attribute",
+      "evidence": "class=\"w-full space-y-5\"",
+      "location": {
+        "line": 35,
+        "column": 17
+      },
+      "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
       "ownerTask": "BS-UI-ZN-CONTRACT-001",
       "status": "open"
     }
