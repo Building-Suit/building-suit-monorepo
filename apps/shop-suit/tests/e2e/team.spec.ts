@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { pilotFixture } from './pilot-fixture'
+import { pilotFixture, fixtureGoto, fixtureRoute } from './pilot-fixture'
 
 const permissionKeys = ['products.view', 'products.manage', 'team.view', 'team.manage', 'team.permissions.manage']
 for (const locale of ['en', 'ar']) for (const mobile of [false, true]) for (const theme of ['light', 'dark']) {
@@ -21,7 +21,7 @@ for (const locale of ['en', 'ar']) for (const mobile of [false, true]) for (cons
       if (name === 'invite_shop_staff') return { kind: 'invited', invitationCode: '00000000-0000-4000-8000-000000000009' }
       return undefined
     })
-    await page.goto('/team')
+    await fixtureGoto(page, '/team')
     const ar = locale === 'ar'
     await expect(page.getByRole('heading', { name: ar ? 'الفريق والصلاحيات' : 'Team & permissions', exact: true })).toBeVisible()
     await expect(page.getByText('Reception member', { exact: true })).toBeVisible()
@@ -64,11 +64,11 @@ for (const locale of ['en', 'ar']) {
       if (name !== 'shop_team_read') return undefined
       return { canManage: false, canManagePermissions: false, canViewAudit: false, permissionKeys: [], grantablePermissionKeys: [], members: [], roles: [], locations: [], invitations: [], events: [] }
     })
-    await page.route('**/rest/v1/rpc/shop_team_read', async route => {
+    await fixtureRoute(page, '**/rest/v1/rpc/shop_team_read', async route => {
       if (denied) await route.fulfill({ status: 403, json: { message: 'SHOP_PERMISSION_DENIED' } })
       else await route.fallback()
     })
-    await page.goto('/team')
+    await fixtureGoto(page, '/team')
     await expect(page.getByRole('alert')).toContainText(locale === 'ar' ? 'معندكش صلاحية' : 'You do not have permission')
     await expect(page.getByRole('button', { name: locale === 'ar' ? 'إضافة أو دعوة موظف' : 'Add or invite staff' })).toHaveCount(0)
     denied = false
@@ -85,7 +85,7 @@ for (const locale of ['en', 'ar']) {
       if (name === 'shop_team_read') return { canManage: false, canManagePermissions: false, canViewAudit: false, permissionKeys: [], grantablePermissionKeys: [], members: [], roles: [], locations: [], invitations: [], events: [] }
       return undefined
     })
-    await page.goto(`/auth/team-invitation?invite=${code}`)
+    await fixtureGoto(page, `/auth/team-invitation?invite=${code}`)
     await expect(page.getByText('pilot@example.test', { exact: true })).toBeVisible()
     await expect(page.locator('input[type=password]')).toHaveCount(0)
     await page.getByRole('button', { name: locale === 'ar' ? 'قبول الدعوة' : 'Accept invitation', exact: true }).click()
