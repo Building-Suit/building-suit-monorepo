@@ -34,7 +34,7 @@ test('accounting tables retain BsDataTable and existing full-population totals',
   assert.match(reports, /trialBalance\.value\.reduce\(\(sum, row\) => sum \+ BigInt\(row\[field\]\), 0n\)/)
   assert.match(reports, /exportReport\('trial_balance'\)/)
   assert.match(journals, /useTransactionWorkspace\(\)/)
-  assert.match(journals, /<BsDataTable[^>]+:value="rows"[^>]+data-key="id"/)
+  assert.match(journals, /<BsDataTable[^>]+:value="rows"[^>]+row-key="id"/)
   assert.match(workspace, /p_limit: pageSize, p_offset: \(page\.value - 1\) \* pageSize/)
   assert.doesNotMatch(`${reports}\n${journals}`, /virtual(?:-|_)?scroller/i)
 })

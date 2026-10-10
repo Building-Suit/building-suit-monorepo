@@ -203,71 +203,78 @@ async function archive(service: Service) {
 </script>
 
 <template>
-  <div class="space-y-6">
-    <header class="flex flex-wrap items-end justify-between gap-4">
-      <div><h1 class="text-3xl font-extrabold tracking-tight">{{ copy.title }}</h1><p class="mt-2 text-sm text-muted-foreground">{{ copy.subtitle }}</p></div>
-      <div v-if="current" class="flex gap-2"><NuxtLink to="/catalog-import" class="ls-btn">{{ copy.import }}</NuxtLink></div>
-    </header>
-
-    <div v-if="!current && !shopLoading" class="ls-card p-8 text-center text-sm"><p>{{ copy.noShop }}</p><NuxtLink to="/dashboard" class="mt-3 inline-block font-bold text-[var(--bs-link)] underline">{{ copy.dashboard }}</NuxtLink></div>
+  <BsStack>
+    <BsPageHeader  :title="copy.title" :subtitle="copy.subtitle">
+      <template #actions>
+        <BsInline v-if="current">
+          <BsLink to="/catalog-import">{{ copy.import }}</BsLink>
+        </BsInline>
+      </template>
+    </BsPageHeader>
+    <BsPanel v-if="!current && !shopLoading" padding="md">
+      <BsText as="p">{{ copy.noShop }}</BsText>
+      <BsLink to="/dashboard">{{ copy.dashboard }}</BsLink>
+    </BsPanel>
     <template v-else-if="current">
-      <p v-if="actionError && !showForm" role="alert" class="rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm text-[var(--bs-status-error)]">{{ actionError }}</p>
-
+      <BsText v-if="actionError && !showForm" role="alert" as="p" size="sm" tone="danger">{{ actionError }}</BsText>
       <BsRecordActionDialog v-model:visible="showForm" :title="editingId ? copy.edit : copy.add" :dirty="formDirty" :pending="saving" :error="actionError" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="save">
-            <label class="grid gap-2 text-sm font-bold sm:col-span-2">{{ copy.name }}<input v-model="form.name" type="text" minlength="2" maxlength="160" required class="ls-input"></label>
-            <label class="grid gap-2 text-sm font-bold sm:col-span-2">{{ copy.description }}<textarea v-model="form.description" maxlength="1000" rows="2" class="ls-input" /></label>
-            <label class="grid gap-2 text-sm font-bold">{{ copy.price }}<input v-model.number="form.price" type="number" min="0" max="999999999.99" step="0.01" required class="ls-input"></label>
-            <label class="grid gap-2 text-sm font-bold">{{ copy.discountType }}<select v-model="form.discountType" class="ls-input"><option value="amount">{{ copy.amount }}</option><option value="percent">{{ copy.percent }}</option></select></label>
-            <label class="grid gap-2 text-sm font-bold">{{ copy.discountValue }}<input v-model.number="form.discountValue" type="number" min="0" step="0.01" required class="ls-input"></label>
-            <label class="grid gap-2 text-sm font-bold sm:col-span-2">{{ copy.category }}<select v-model="form.categoryId" class="ls-select"><option value="">{{ copy.allCategories }}</option><option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option></select></label>
-            <fieldset class="rounded-xl border border-border p-4 sm:col-span-2">
-              <label class="flex min-h-11 items-center gap-3 font-bold"><input v-model="form.schedulingEnabled" type="checkbox">{{ copy.scheduling }}</label>
-              <p class="mt-2 text-sm text-muted-foreground">{{ copy.schedulingHelp }}</p>
-              <p v-if="schedulingOptionsPending" role="status" class="mt-3 text-sm text-muted-foreground">{{ copy.loading }}</p>
-              <p v-else-if="schedulingOptionsError" role="alert" class="mt-3 text-sm text-[var(--bs-status-error)]">{{ readErrorMessage }}</p>
-              <div v-if="form.schedulingEnabled" class="mt-4 grid gap-4 sm:grid-cols-2">
-                <label class="grid gap-2 text-sm font-bold">{{ copy.duration }}<input v-model.number="form.durationMinutes" type="number" min="5" max="1440" step="1" required class="ls-input"></label>
-                <label class="grid gap-2 text-sm font-bold">{{ copy.cleanup }}<input v-model.number="form.cleanupMinutes" type="number" min="0" max="240" step="1" required class="ls-input"></label>
-                <fieldset><legend class="text-sm font-bold">{{ copy.locations }}</legend><label v-for="location in schedulingOptions.locations" :key="location.id" class="mt-2 flex min-h-11 items-center gap-2 text-sm"><input v-model="form.locationIds" type="checkbox" :value="location.id">{{ location.name }}</label></fieldset>
-                <fieldset><legend class="text-sm font-bold">{{ copy.staff }}</legend><label v-for="member in schedulingOptions.staff" :key="member.membershipId" class="mt-2 flex min-h-11 items-center gap-2 text-sm"><input v-model="form.staffMembershipIds" type="checkbox" :value="member.membershipId">{{ member.name }}</label></fieldset>
-              </div>
-            </fieldset>
+        <BsField v-slot="field" :label="copy.name">
+          <BsInput :id="field.id" v-model="form.name" :aria-describedby="field.describedby" type="text" :minlength="2" :maxlength="160" required/>
+        </BsField>
+        <BsField v-slot="field" :label="copy.description">
+          <BsTextarea :id="field.id" v-model="form.description" :aria-describedby="field.describedby" :maxlength="1000" :rows="2"/>
+        </BsField>
+        <BsField v-slot="field" :label="copy.price">
+          <BsInput :id="field.id" v-model.number="form.price" :aria-describedby="field.describedby" type="number" :min="0" :max="999999999.99" :step="0.01" required/>
+        </BsField>
+        <BsField v-slot="field" :label="copy.discountType">
+          <BsSelect v-model="form.discountType" :input-id="field.id" :aria-describedby="field.describedby" :label="copy.discountType" :options="[{ value: 'amount', label: (copy.amount), disabled: false }, { value: 'percent', label: (copy.percent), disabled: false }]" option-label="label" option-value="value" option-disabled="disabled"/>
+        </BsField>
+        <BsField v-slot="field" :label="copy.discountValue">
+          <BsInput :id="field.id" v-model.number="form.discountValue" :aria-describedby="field.describedby" type="number" :min="0" :step="0.01" required/>
+        </BsField>
+        <BsField v-slot="field" :label="copy.category">
+          <BsSelect v-model="form.categoryId" :input-id="field.id" :aria-describedby="field.describedby" :label="copy.category" :options="[{ value: '', label: (copy.allCategories), disabled: false }, ...(categories).map(category => ({ value: category.id, label: (category.name), disabled: false }))]" option-label="label" option-value="value" option-disabled="disabled"/>
+        </BsField>
+        <BsFieldGroup :legend="''">
+          <BsCheckbox  v-model="form.schedulingEnabled" :label="copy.scheduling" />
+          <BsText as="p" size="sm" tone="muted">{{ copy.schedulingHelp }}</BsText>
+          <BsText v-if="schedulingOptionsPending" role="status" as="p" size="sm" tone="muted">{{ copy.loading }}</BsText>
+          <BsText v-else-if="schedulingOptionsError" role="alert" as="p" size="sm" tone="danger">{{ readErrorMessage }}</BsText>
+          <BsGrid v-if="form.schedulingEnabled" :columns="2">
+            <BsField v-slot="field" :label="copy.duration">
+              <BsInput :id="field.id" v-model.number="form.durationMinutes" :aria-describedby="field.describedby" type="number" :min="5" :max="1440" :step="1" required/>
+            </BsField>
+            <BsField v-slot="field" :label="copy.cleanup">
+              <BsInput :id="field.id" v-model.number="form.cleanupMinutes" :aria-describedby="field.describedby" type="number" :min="0" :max="240" :step="1" required/>
+            </BsField>
+            <BsFieldGroup :legend="(copy.locations)">
+              <BsCheckbox v-for="location in schedulingOptions.locations" :key="location.id" v-model="form.locationIds" :value="location.id" :label="location.name" />
+            </BsFieldGroup>
+            <BsFieldGroup :legend="(copy.staff)">
+              <BsCheckbox v-for="member in schedulingOptions.staff" :key="member.membershipId" v-model="form.staffMembershipIds" :value="member.membershipId" :label="member.name" />
+            </BsFieldGroup>
+          </BsGrid>
+        </BsFieldGroup>
       </BsRecordActionDialog>
-
-      <section class="overflow-hidden ls-card">
-        <BsDataTable
-          :value="services"
-          :label="copy.title"
-          :loading="pending"
-          :error="error ? readErrorMessage : null"
-          :capabilities="{ insert: canManage, edit: canManage, archive: canManage }"
-          :action-labels="{ insert: copy.add, edit: copy.edit, archive: copy.archive }"
-          :row-action-pending="(action, service) => action === 'archive' && archivingId === service.id"
-          searchable
-          :search-label="copy.search"
-          lazy
-          paginator
-          :rows="pageSize"
-          :first="(page - 1) * pageSize"
-          :total-records="servicesPage.total"
-          :always-show-paginator="false"
-          data-key="id"
-          :row-class="() => 'border-b border-border last:border-0'"
-          @search="value => search = value"
-          @page="page = $event.page + 1"
-          @retry="refresh()"
-          @create="openCreate"
-          @edit="openEdit"
-          @archive="archive"
-        >
-          <template #filters><BsSelect v-model="categoryFilter" :label="copy.category" :options="[{ id: '', name: copy.allCategories }, ...categories]" option-label="name" option-value="id" /></template>
-          <Column header-class="py-3 text-start" body-class="py-3 font-semibold"><template #header>{{ copy.name }}</template><template #body="{ data: service }">{{ service.name }}<p v-if="service.description" class="text-xs font-normal text-muted-foreground">{{ service.description }}</p></template></Column>
-          <Column header-class="py-3 text-start" body-class="py-3"><template #header>{{ copy.category }}</template><template #body="{ data: service }">{{ service.categoryName || '—' }}</template></Column>
-          <Column header-class="py-3 text-end" body-class="py-3 text-end"><template #header>{{ copy.net }}</template><template #body="{ data: service }">{{ money(netPrice(service)) }}</template></Column>
-          <Column header-class="py-3 text-start" body-class="py-3 text-start"><template #header>{{ copy.scheduleSummary }}</template><template #body="{ data: service }"><span v-if="service.schedulingEnabled">{{ service.durationMinutes }} + {{ service.cleanupMinutes }} {{ isArabic ? 'دقيقة' : 'min' }}</span><span v-else>—</span></template></Column>
-          <template #empty><BsStateSurface state="empty" :title="servicesPage.total ? copy.noResults : copy.empty" /></template>
+      <BsPanel padding="md">
+        <BsDataTable :value="services" :label="copy.title" :loading="pending" :error="error ? readErrorMessage : null" :capabilities="{ insert: canManage, edit: canManage, archive: canManage }" :action-labels="{ insert: copy.add, edit: copy.edit, archive: copy.archive }" :row-action-pending="(action, service) => action === 'archive' && archivingId === service.id" searchable :search-label="copy.search" lazy paginator :rows="pageSize" :first="(page - 1) * pageSize" :total-records="servicesPage.total" :always-show-paginator="false" data-key="id" :columns="[{ key: 'column0', header: (copy.name) }, { key: 'column1', header: (copy.category) }, { key: 'column2', header: (copy.net), align: 'end' }, { key: 'column3', header: (copy.scheduleSummary) }]" @search="value => search = value" @page="page = $event.page + 1" @retry="refresh()" @create="openCreate" @edit="openEdit" @archive="archive">
+          <template #cell-column0="{ row: service }">{{ service.name }}<BsText v-if="service.description" as="p" size="xs" tone="muted" emphasis="semibold">{{ service.description }}</BsText>
+          </template>
+          <template #cell-column1="{ row: service }">{{ service.categoryName || '—' }}</template>
+          <template #cell-column2="{ row: service }">{{ money(netPrice(service)) }}</template>
+          <template #cell-column3="{ row: service }">
+            <BsText v-if="service.schedulingEnabled" as="span">{{ service.durationMinutes }} + {{ service.cleanupMinutes }} {{ isArabic ? 'دقيقة' : 'min' }}</BsText>
+            <BsText v-else as="span">—</BsText>
+          </template>
+          <template #filters>
+            <BsSelect v-model="categoryFilter" :label="copy.category" :options="[{ id: '', name: copy.allCategories }, ...categories]" option-label="name" option-value="id"/>
+          </template>
+          <template #empty>
+            <BsStateSurface state="empty" :title="servicesPage.total ? copy.noResults : copy.empty"/>
+          </template>
         </BsDataTable>
-      </section>
+      </BsPanel>
     </template>
-  </div>
+  </BsStack>
 </template>

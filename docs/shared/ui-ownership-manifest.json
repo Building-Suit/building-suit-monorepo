@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "scope": "apps/*-suit/app/components/**/*.vue",
+  "scope": "apps/*-suit/app/**/*.vue presentation ownership; components lists app-local Vue file ownership",
   "owner": "packages/ui",
   "interactionOwner": "packages/ux",
   "classifications": {
@@ -9,259 +9,269 @@
     "obsolete-duplicate": "A local duplicate already superseded by a shared UI primitive and awaiting removal."
   },
   "bypasses": [],
-  "components": [
+  "components": [],
+  "workflowFamilies": [
     {
-      "path": "apps/automation-suit/app/components/DashboardIncidentCard.vue",
-      "classification": "product-orchestration",
-      "rationale": "Maps Automation incident evidence and recovery fields from its product contract into canonical BsCard and status presentation.",
-      "approval": "BS-UI-CONVERGENCE-001"
+      "family": "money",
+      "owner": "packages/ui",
+      "components": [
+        "BsMoneyText"
+      ],
+      "adapterBoundary": "currency, locale and exact minor/major values; tenant currency resolution remains product-owned",
+      "auditSources": [
+        "apps/ledger-suit/app/components/MoneyText.vue"
+      ],
+      "task": "BS-UI-ZN-PATTERNS-001",
+      "migrationStatus": "shared-owner-available; product migration remains open"
     },
     {
-      "path": "apps/automation-suit/app/components/DashboardMetricCard.vue",
-      "classification": "product-orchestration",
-      "rationale": "Adapts Automation metric values and danger state into the canonical BsKpiCard presentation.",
-      "approval": "BS-UI-CONVERGENCE-001"
+      "family": "usage",
+      "owner": "packages/ui",
+      "components": [
+        "BsUsageMeter",
+        "BsUsageMeterGrid",
+        "BsResourceLimits",
+        "BsTrialCountdown",
+        "BsAccessGate"
+      ],
+      "adapterBoundary": "usage values, limits, translated display values and policy-derived tone/status",
+      "auditSources": [
+        "apps/ledger-suit/app/components/QuotaUsageMeter.vue",
+        "apps/ledger-suit/app/components/UsageMeters.vue",
+        "apps/shop-suit/app/components/PlanUsageMeter.vue"
+      ],
+      "task": "BS-UI-ZN-PATTERNS-001",
+      "migrationStatus": "shared-owner-available; product migration remains open"
     },
     {
-      "path": "apps/automation-suit/app/components/DashboardStatusPill.vue",
-      "classification": "product-orchestration",
-      "rationale": "Maps Automation execution vocabulary to canonical StatusBadge tones without duplicating badge presentation.",
-      "approval": "BS-UI-CONVERGENCE-001"
+      "family": "pricing",
+      "owner": "packages/ui",
+      "components": [
+        "BsBillingCycleToggle",
+        "BsPlanGrid",
+        "BsPlanCard",
+        "BsPlanFeatureList",
+        "BsMarketingPricing"
+      ],
+      "adapterBoundary": "existing Ledger-derived pricing; product plan catalogue, eligibility and billing commands",
+      "auditSources": [
+        "apps/shop-suit/app/components/ShopPlanCards.vue",
+        "apps/ledger-suit/app/components/BillingCheckout.vue"
+      ],
+      "task": "BS-UI-ZN-PATTERNS-001",
+      "migrationStatus": "shared-owner-available; product migration remains open"
     },
     {
-      "path": "apps/ledger-suit/app/components/AccountActivityDialog.vue",
-      "classification": "product-orchestration",
-      "rationale": "Coordinates Ledger account and journal RPC navigation inside BsDialog and BsDataTable. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-LEDGER-MIG-001"
+      "family": "setup",
+      "owner": "packages/ui",
+      "components": [
+        "BsSetupChecklist",
+        "BsSetupStep",
+        "BsOnboardingPanel"
+      ],
+      "adapterBoundary": "translated steps, completion, route targets and provisioning commands",
+      "auditSources": [
+        "apps/ledger-suit/app/components/SetupChecklist.vue",
+        "apps/shop-suit/app/components/BarberSetupGuide.vue"
+      ],
+      "task": "BS-UI-ZN-PATTERNS-001",
+      "migrationStatus": "shared-owner-available; product migration remains open"
     },
     {
-      "path": "apps/ledger-suit/app/components/AccountStatementClassificationDialog.vue",
-      "classification": "product-orchestration",
-      "rationale": "Owns Ledger statement classification queries, validation, and commands while composing shared overlays and tables. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-LEDGER-MIG-001"
+      "family": "entity",
+      "owner": "packages/ui",
+      "components": [
+        "BsEntityPicker",
+        "BsSearchField",
+        "BsPagination",
+        "BsSelect"
+      ],
+      "adapterBoundary": "existing shared lazy search intent; products fetch authorized entities",
+      "auditSources": [
+        "apps/shop-suit/app/components/PurchaseEntityPicker.vue"
+      ],
+      "task": "BS-UI-ZN-PATTERNS-001",
+      "migrationStatus": "shared-owner-available; product migration remains open"
     },
     {
-      "path": "apps/ledger-suit/app/components/AccountTree.vue",
-      "classification": "product-orchestration",
-      "rationale": "Presents Ledger chart-of-accounts hierarchy and accounting amounts through shared table primitives. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-LEDGER-MIG-001"
+      "family": "context",
+      "owner": "packages/ui",
+      "components": [
+        "BsNotificationMenu",
+        "BsContextSwitcher",
+        "BsScopeSwitcher",
+        "BsUserMenu",
+        "BsUserIdentity"
+      ],
+      "adapterBoundary": "existing shared notification/context inputs and callbacks",
+      "auditSources": [
+        "apps/ledger-suit/app/components/TeamMenu.vue"
+      ],
+      "task": "BS-UI-ZN-PATTERNS-001",
+      "migrationStatus": "shared-owner-available; product migration remains open"
     },
     {
-      "path": "apps/ledger-suit/app/components/AccountingTableDensity.vue",
-      "classification": "product-orchestration",
-      "rationale": "Adapts Ledger's translated density labels and preference type into canonical BsTableDensity presentation. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-LEDGER-MIG-001"
+      "family": "import",
+      "owner": "packages/ui",
+      "components": [
+        "BsImportWizard",
+        "BsFileInput",
+        "BsFileDrop",
+        "BsColumnMapping",
+        "BsImportPreview",
+        "BsImportValidationSummary",
+        "BsImportResult"
+      ],
+      "adapterBoundary": "schema, parsing, validation, mapping, phase transitions and apply commands",
+      "auditSources": [
+        "apps/ledger-suit/app/components/CsvImportDialog.vue",
+        "apps/shop-suit/app/pages/catalog-import.vue"
+      ],
+      "task": "BS-UI-ZN-PATTERNS-001",
+      "migrationStatus": "shared-owner-available; product migration remains open"
     },
     {
-      "path": "apps/ledger-suit/app/components/AddTransactionDialog.vue",
-      "classification": "product-orchestration",
-      "rationale": "Owns Ledger transaction validation, account selection, plan checks, and authorized creation workflow. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-LEDGER-MIG-001"
+      "family": "team",
+      "owner": "packages/ui",
+      "components": [
+        "BsTeamTable",
+        "BsInviteMemberDialog",
+        "BsRolePicker",
+        "BsAccessTabs",
+        "BsPermissionMatrix",
+        "BsRoleEditorDialog",
+        "BsMemberEditorDialog",
+        "BsInvitationTable"
+      ],
+      "adapterBoundary": "Translated descriptors, permission membership, role options, invitation action eligibility, tenant-scoped queries and authorized commands remain product-owned",
+      "auditSources": [
+        "apps/ledger-suit/app/pages/team.vue",
+        "apps/shop-suit/app/pages/team.vue"
+      ],
+      "task": "BS-LAUNCH-ACCESS-UI-001",
+      "migrationStatus": "Ledger access tabs/matrix/role editor and Ledger/Shop invitation/member editor consumers migrated"
     },
     {
-      "path": "apps/ledger-suit/app/components/BillingCheckout.vue",
-      "classification": "product-orchestration",
-      "rationale": "Coordinates Ledger plan selection, billing impact, payment methods, and checkout commands. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-LEDGER-MIG-001"
+      "family": "review-detail",
+      "owner": "packages/ui",
+      "components": [
+        "BsReviewPanel",
+        "BsDetailDialog",
+        "BsDetailSection",
+        "BsDescriptionList",
+        "BsSummaryGrid",
+        "BsHistoryList",
+        "BsTimeline"
+      ],
+      "adapterBoundary": "review data, permissions, history and command handlers",
+      "auditSources": [
+        "apps/ledger-suit/app/components/DocumentExtractionReview.vue",
+        "apps/ledger-suit/app/components/TransactionDetailDialog.vue"
+      ],
+      "task": "BS-UI-ZN-PATTERNS-001",
+      "migrationStatus": "shared-owner-available; product migration remains open"
     },
     {
-      "path": "apps/ledger-suit/app/components/CashFlowAllocationDialog.vue",
-      "classification": "product-orchestration",
-      "rationale": "Owns Ledger cash-flow allocation data, amount rules, and mutation flow inside BsDialog. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-LEDGER-MIG-001"
+      "family": "tags",
+      "owner": "packages/ui",
+      "components": [
+        "BsTagEditor",
+        "BsTagPicker"
+      ],
+      "adapterBoundary": "free-text tags or stable tag identifiers with assigned/available data and command intent",
+      "auditSources": [
+        "apps/ledger-suit/app/components/TransactionTags.vue"
+      ],
+      "task": "BS-UI-ZN-PATTERNS-001",
+      "migrationStatus": "shared-owner-available; product migration remains open"
     },
     {
-      "path": "apps/ledger-suit/app/components/ChartTemplateReview.vue",
-      "classification": "product-orchestration",
-      "rationale": "Presents and selects Ledger chart templates using product-owned account semantics. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-LEDGER-MIG-001"
+      "family": "charts",
+      "owner": "packages/ui",
+      "components": [
+        "BsMetricBarChart",
+        "BsChartLegend"
+      ],
+      "adapterBoundary": "series, points, preformatted values and accounting aggregation",
+      "auditSources": [
+        "apps/ledger-suit/app/components/RevenueExpenseChart.vue"
+      ],
+      "task": "BS-UI-ZN-PATTERNS-001",
+      "migrationStatus": "shared-owner-available; product migration remains open"
     },
     {
-      "path": "apps/ledger-suit/app/components/ControlReconciliationPanel.vue",
-      "classification": "product-orchestration",
-      "rationale": "Coordinates Ledger reconciliation queries, balances, account choices, and commands. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-LEDGER-MIG-001"
+      "family": "hierarchy-flow",
+      "owner": "packages/ui",
+      "components": [
+        "BsHierarchyTree",
+        "BsFlowMap"
+      ],
+      "adapterBoundary": "generic nodes/stages; account mapping, balances, actions and expansion scope",
+      "auditSources": [
+        "apps/ledger-suit/app/components/AccountTree.vue",
+        "apps/ledger-suit/app/components/FinancialSystemMap.vue"
+      ],
+      "task": "BS-UI-ZN-PATTERNS-001",
+      "migrationStatus": "shared-owner-available; product migration remains open"
     },
     {
-      "path": "apps/ledger-suit/app/components/CsvImportDialog.vue",
-      "classification": "product-orchestration",
-      "rationale": "Owns Ledger's multi-phase import, mapping, review, and result workflow, which is not a standard single-record create/edit action. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-LEDGER-MIG-001"
+      "family": "line-items",
+      "owner": "packages/ui",
+      "components": [
+        "BsLineItemsEditor",
+        "BsLineItemRow",
+        "BsQuantityInput"
+      ],
+      "adapterBoundary": "stable row IDs, bounds, errors, data slots and pricing/accounting callbacks",
+      "auditSources": [
+        "apps/ledger-suit/app/components/AddTransactionDialog.vue",
+        "apps/shop-suit/app/pages/purchases/index.vue"
+      ],
+      "task": "BS-UI-ZN-PATTERNS-001",
+      "migrationStatus": "shared-owner-available; product migration remains open"
     },
     {
-      "path": "apps/ledger-suit/app/components/DocumentExtractionReview.vue",
-      "classification": "product-orchestration",
-      "rationale": "Reviews Ledger-specific extracted transaction candidates and account mappings. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-LEDGER-MIG-001"
+      "family": "printable",
+      "owner": "packages/ui",
+      "components": [
+        "BsPrintableDocument",
+        "BsDocumentHeader",
+        "BsDocumentLines",
+        "BsDocumentTotals",
+        "BsPrintActions"
+      ],
+      "adapterBoundary": "issuer, snapshot, preformatted line/totals and print/share commands",
+      "auditSources": [
+        "apps/shop-suit/app/pages/sales/[id]/receipt.vue"
+      ],
+      "task": "BS-UI-ZN-PATTERNS-001",
+      "migrationStatus": "shared-owner-available; product migration remains open"
     },
     {
-      "path": "apps/ledger-suit/app/components/FinancialSystemMap.vue",
-      "classification": "product-orchestration",
-      "rationale": "Explains Ledger-specific accounting flows and links using the product domain model. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-LEDGER-MIG-001",
-      "domainEvidence": ["manualFlows", "postingChecks", "financialMap."]
+      "family": "filters",
+      "owner": "packages/ui",
+      "components": [
+        "BsFilterBar",
+        "BsDateRangeFilter",
+        "BsToolbar"
+      ],
+      "adapterBoundary": "existing date/search/select composition; report queries and exports",
+      "auditSources": [
+        "apps/ledger-suit/app/pages/reports.vue",
+        "apps/shop-suit/app/pages/reports/index.vue"
+      ],
+      "task": "BS-UI-ZN-PATTERNS-001",
+      "migrationStatus": "shared-owner-available; product migration remains open"
     },
     {
-      "path": "apps/ledger-suit/app/components/FxSubledgerPanel.vue",
-      "classification": "product-orchestration",
-      "rationale": "Coordinates Ledger foreign-currency subledger queries, periods, and monetary rendering. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-LEDGER-MIG-001"
-    },
-    {
-      "path": "apps/ledger-suit/app/components/KpiCard.vue",
-      "classification": "product-orchestration",
-      "rationale": "Adapts Ledger minor-unit amounts and accounting improvement direction into BsKpiCard. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-LEDGER-MIG-001"
-    },
-    {
-      "path": "apps/ledger-suit/app/components/LedgerPageHeader.vue",
-      "classification": "product-orchestration",
-      "rationale": "Builds Ledger tenant and reporting-period context, then delegates presentation to canonical BsPageHeader. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-LEDGER-MIG-001"
-    },
-    {
-      "path": "apps/ledger-suit/app/components/ManualPaymentCheckout.vue",
-      "classification": "product-orchestration",
-      "rationale": "Owns Ledger's payment-evidence lifecycle across draft, review, rejection, cancellation, and receipt history, which is not a standard single-record create/edit action. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-LEDGER-MIG-001"
-    },
-    {
-      "path": "apps/ledger-suit/app/components/MoneyText.vue",
-      "classification": "product-orchestration",
-      "rationale": "Applies Ledger tenant currency and exact minor-unit accounting display rules. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-LEDGER-MIG-001"
-    },
-    {
-      "path": "apps/ledger-suit/app/components/NotificationMenu.vue",
-      "classification": "product-orchestration",
-      "rationale": "Loads and presents tenant-scoped Ledger notifications with product navigation. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-LEDGER-MIG-001"
-    },
-    {
-      "path": "apps/ledger-suit/app/components/OperationsCenter.vue",
-      "classification": "product-orchestration",
-      "rationale": "Coordinates Ledger operational queues, quota state, domain choices, and commands. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-LEDGER-MIG-001"
-    },
-    {
-      "path": "apps/ledger-suit/app/components/OrganizationSetup.vue",
-      "classification": "product-orchestration",
-      "rationale": "Owns Ledger organization provisioning inputs, validation, and setup commands. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-LEDGER-MIG-001"
-    },
-    {
-      "path": "apps/ledger-suit/app/components/OrganizationSwitcher.vue",
-      "classification": "product-orchestration",
-      "rationale": "Coordinates Ledger tenant selection, billing state, creation, and route changes. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-LEDGER-MIG-001"
-    },
-    {
-      "path": "apps/ledger-suit/app/components/PublicLegalPage.vue",
-      "classification": "product-orchestration",
-      "rationale": "Supplies Ledger metadata, branding copy and its product-owned legal document to canonical BsPublicLegalPage. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-LEDGER-MIG-001"
-    },
-    {
-      "path": "apps/ledger-suit/app/components/QuotaUsageMeter.vue",
-      "classification": "product-orchestration",
-      "rationale": "Combines Ledger quota lookup, plan upgrade rules, localized units, and billing links. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-LEDGER-MIG-001"
-    },
-    {
-      "path": "apps/ledger-suit/app/components/RevenueExpenseChart.vue",
-      "classification": "product-orchestration",
-      "rationale": "Transforms Ledger revenue and expense amounts into accounting-specific chart and table views. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-LEDGER-MIG-001"
-    },
-    {
-      "path": "apps/ledger-suit/app/components/SetupChecklist.vue",
-      "classification": "product-orchestration",
-      "rationale": "Loads tenant-specific Ledger setup state and maps it to product routes. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-LEDGER-MIG-001"
-    },
-    {
-      "path": "apps/ledger-suit/app/components/SubscriptionGate.vue",
-      "classification": "product-orchestration",
-      "rationale": "Applies Ledger subscription and route policy around product-owned content. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-LEDGER-MIG-001"
-    },
-    {
-      "path": "apps/ledger-suit/app/components/SyntheticDemo.vue",
-      "classification": "product-orchestration",
-      "rationale": "Presents Ledger-specific synthetic transaction examples through BsDataTable. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-LEDGER-MIG-001"
-    },
-    {
-      "path": "apps/ledger-suit/app/components/TeamMenu.vue",
-      "classification": "product-orchestration",
-      "rationale": "Coordinates Ledger invitations, member quotas, permissions, and tenant commands. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-LEDGER-MIG-001"
-    },
-    {
-      "path": "apps/ledger-suit/app/components/TransactionDetailDialog.vue",
-      "classification": "product-orchestration",
-      "rationale": "Owns Ledger's read-oriented transaction detail, reversal, attachment, tagging, and audit workflow rather than a standard create/edit form. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-LEDGER-MIG-001"
-    },
-    {
-      "path": "apps/ledger-suit/app/components/TransactionTags.vue",
-      "classification": "product-orchestration",
-      "rationale": "Owns Ledger tag queries, billing capability checks, and transaction-tag mutations. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-LEDGER-MIG-001"
-    },
-    {
-      "path": "apps/ledger-suit/app/components/TrialCountdown.vue",
-      "classification": "product-orchestration",
-      "rationale": "Derives Ledger trial state from billing policy and routes users to product billing. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-LEDGER-MIG-001"
-    },
-    {
-      "path": "apps/ledger-suit/app/components/UsageMeters.vue",
-      "classification": "product-orchestration",
-      "rationale": "Maps Ledger plan quotas into the product-owned quota meter adapter. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-LEDGER-MIG-001"
-    },
-    {
-      "path": "apps/shop-suit/app/components/BarberSetupGuide.vue",
-      "classification": "product-orchestration",
-      "rationale": "Maps Shop setup state and barber-specific onboarding steps to product routes. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-SHOP-MIG-001"
-    },
-    {
-      "path": "apps/shop-suit/app/components/PlanUsageMeter.vue",
-      "classification": "product-orchestration",
-      "rationale": "Adapts Shop resource usage, plan-limit states, and localized domain labels. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-SHOP-MIG-001"
-    },
-    {
-      "path": "apps/shop-suit/app/components/PlatformPlanAdmin.vue",
-      "classification": "product-orchestration",
-      "rationale": "Coordinates Shop plan administration queries, commands, confirmations, dialogs, and tables. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-SHOP-MIG-001"
-    },
-    {
-      "path": "apps/shop-suit/app/components/PublicLegalPage.vue",
-      "classification": "product-orchestration",
-      "rationale": "Supplies Shop metadata, branding copy and its product-owned legal document to canonical BsPublicLegalPage. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-SHOP-MIG-001"
-    },
-    {
-      "path": "apps/shop-suit/app/components/PurchaseEntityPicker.vue",
-      "classification": "product-orchestration",
-      "rationale": "Owns Shop product and supplier queries, paging, selection contracts, and cache scope. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-SHOP-MIG-001"
-    },
-    {
-      "path": "apps/shop-suit/app/components/ShopPlanCards.vue",
-      "classification": "product-orchestration",
-      "rationale": "Applies Shop plan families, billing intervals, blockers, pricing, and resource rules. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-SHOP-MIG-001"
-    },
-    {
-      "path": "apps/shop-suit/app/components/ShopPricing.vue",
-      "classification": "product-orchestration",
-      "rationale": "Adapts Shop plan catalogue queries into the product-owned plan-card contract. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-SHOP-MIG-001"
+      "family": "multi-suit-administration",
+      "owner": "packages/ui",
+      "components": [
+        "BsAdministrationShell"
+      ],
+      "adapterBoundary": "App-supplied registry, context navigation, selection, translated labels and intent handlers; no product queries or authorization",
+      "task": "BS-SA-SHELL-001",
+      "migrationStatus": "shared-owner-available"
     }
   ]
 }

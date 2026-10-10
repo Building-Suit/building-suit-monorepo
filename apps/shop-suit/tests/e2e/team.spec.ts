@@ -1,5 +1,14 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import { pilotFixture } from './pilot-fixture'
+
+async function goToTeam(page: Page, locale: string) {
+  const link = page.getByRole('link', { name: locale === 'ar' ? 'الفريق' : 'Team', exact: true })
+  if (!await link.isVisible()) {
+    await page.getByRole('button', { name: locale === 'ar' ? 'فتح القائمة' : 'Open menu', exact: true }).click()
+  }
+  await link.click()
+  await expect(page).toHaveURL(/\/team(?:[?#]|$)/)
+}
 
 const permissionKeys = ['products.view', 'products.manage', 'team.view', 'team.manage', 'team.permissions.manage']
 for (const locale of ['en', 'ar']) for (const mobile of [false, true]) for (const theme of ['light', 'dark']) {
@@ -21,7 +30,7 @@ for (const locale of ['en', 'ar']) for (const mobile of [false, true]) for (cons
       if (name === 'invite_shop_staff') return { kind: 'invited', invitationCode: '00000000-0000-4000-8000-000000000009' }
       return undefined
     })
-    await page.goto('/team')
+    await goToTeam(page, locale)
     const ar = locale === 'ar'
     await expect(page.getByRole('heading', { name: ar ? 'الفريق والصلاحيات' : 'Team & permissions', exact: true })).toBeVisible()
     await expect(page.getByText('Reception member', { exact: true })).toBeVisible()
@@ -68,7 +77,7 @@ for (const locale of ['en', 'ar']) {
       if (denied) await route.fulfill({ status: 403, json: { message: 'SHOP_PERMISSION_DENIED' } })
       else await route.fallback()
     })
-    await page.goto('/team')
+    await goToTeam(page, locale)
     await expect(page.getByRole('alert')).toContainText(locale === 'ar' ? 'معندكش صلاحية' : 'You do not have permission')
     await expect(page.getByRole('button', { name: locale === 'ar' ? 'إضافة أو دعوة موظف' : 'Add or invite staff' })).toHaveCount(0)
     denied = false

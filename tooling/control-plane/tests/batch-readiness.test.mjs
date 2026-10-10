@@ -31,12 +31,6 @@ function executeCodeNode(workflowValue, name, json) {
   return run(json, { first: () => ({ json }) }, () => ({ first: () => ({ json: {} }) }))[0].json
 }
 
-function switchDestination(workflowValue, nodeName, state) {
-  const node = workflowValue.nodes.find(item => item.name === nodeName)
-  const rules = node.parameters.rules.values
-  const output = rules.findIndex(rule => rule.conditions.conditions[0].rightValue === state)
-  return workflowValue.connections[nodeName].main[output][0].node
-}
 
 const ids = {
   shared: [...RECONCILED_BATCH.shared, 'BS-SA-SHELL-001'],
@@ -218,7 +212,15 @@ test('planned and external obligations remain explicit blockers', () => {
     configuredCommands:config.commands,
     legacyMappings:config.legacy_plan_mappings,
   })
-  assert.deepEqual(resolved.blockers.map(item => item.kind), ['planned_test','external_gate'])
+  assert.deepEqual(resolved.blockers.map(item => item.kind), ['planned_test'])
+  assert.deepEqual(resolved.deferred.map(item => item.kind), ['external_gate'])
+  const publication = resolveVerificationPlan({
+    entries:['Supabase advisors/security review where available.'],
+    configuredCommands:config.commands,
+    legacyMappings:config.legacy_plan_mappings,
+    phase:'pre_publication',
+  })
+  assert.deepEqual(publication.blockers.map(item => item.kind), ['external_gate'])
   assert.deepEqual(resolved.unenforced, [])
 })
 
@@ -390,30 +392,9 @@ test('fresh state and task-parent evidence are independent from original provena
   assert.notEqual(report.evidence.digest, report.current_state.digest)
 })
 
-test('actual controller Code nodes preserve maintenance, dependency waits, and completed-claim credit', () => {
-  const controller = workflow()
-  const maintenance = executeCodeNode(controller, 'Route Run Gate', {
-    payload:{ run:{ reason:'maintenance_requested',should_continue:false,status:'running' } },
-  })
-  assert.equal(maintenance.state, 'maintenance-wait')
-  assert.equal(switchDestination(controller, 'Run Gate State', maintenance.state), 'maintenance-wait')
-
-  const acquired = executeCodeNode(controller, 'Route Acquired Task', {
-    payload:{ acquisition:{ acquired:true,action:'credit_completion',packet:{ task:{ task_id:'SS-SA-EVIDENCE-001' } } } },
-  })
-  assert.equal(acquired.state, 'credit-completion')
-  assert.equal(switchDestination(controller, 'Acquired Task State', acquired.state), 'Record Task Success')
-
-  const dependencyWait = executeCodeNode(controller, 'Route Acquired Task', {
-    payload:{ acquisition:{ acquired:false,action:'wait',reason:'dependency_wait',task_id:'SAS-M1-AUTH-001' } },
-  })
-  assert.equal(dependencyWait.state, 'wait')
-  assert.equal(switchDestination(controller, 'Acquired Task State', dependencyWait.state), 'Wait Without Admitted Task')
-
-  const claimNode = controller.nodes.find(node => node.name === 'Acquire or Resume Admitted Task')
-  const command = claimNode.parameters.workflowInputs.value.command
-  assert.match(command, /cp-batch-v2/)
-  assert.match(command, /BS_BATCH_CONTROLLER_FINGERPRINT/)
-  assert.match(command, /\$execution\.id/)
-  assert.doesNotMatch(command, /run-claim-task[^']* cp-batch-v2'\s*}}/)
+test('BS20 preserves Supervisor gate outcomes and contains no competing lifecycle transitions',()=>{
+ const controller=workflow()
+ for(const status of ['maintenance-wait','wait','limit_reached','stop_requested'])assert.equal(executeCodeNode(controller,'Run Result',{payload:{status}}).status,status)
+ const text=JSON.stringify(controller)
+ assert.match(text,/run-supervise/);assert.doesNotMatch(text,/run-acquire-task|run-complete-task|run-finish|task-claim/)
 })

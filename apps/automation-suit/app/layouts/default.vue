@@ -28,12 +28,20 @@ const labels = computed(() => ({
 <template>
   <BsAppShell home-path="/" :product-name="t('app.name')" :groups="groups" :labels="labels">
     <template #logo>
-      <div class="flex items-center gap-3">
-        <span class="grid h-9 w-9 place-items-center rounded-control border border-[var(--bs-border)] bg-surface-muted text-sm font-black">AS</span>
-        <span class="text-base font-black">{{ t('app.name') }}</span>
-      </div>
+      <BsInline>
+        <BsText as="span" size="sm">
+          AS
+        </BsText>
+        <BsText as="span">
+          {{ t('app.name') }}
+        </BsText>
+      </BsInline>
     </template>
-    <template #header><SettingsMenu /></template>
-    <div class="pb-16"><slot /></div>
+    <template #header>
+      <BsSettingsMenu />
+    </template>
+    <BsStack gap="sm">
+      <BsSlot :render="$slots.default" />
+    </BsStack>
   </BsAppShell>
 </template>
