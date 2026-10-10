@@ -96,5 +96,9 @@ test('signup survives session establishment and provisioning while operational c
     await nextTick()
     assert.equal(unmounts, 4, 'operational shop, location and account switches must discard the old page')
     assert.equal(mounts, 5)
+    user.value = null
+    await nextTick()
+    assert.equal(unmounts, 5, 'session loss must remove the protected page and its drafts')
+    assert.equal(mounts, 5, 'anonymous users must not mount an operational page')
   } finally { app.unmount() }
 })
