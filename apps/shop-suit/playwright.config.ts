@@ -12,6 +12,8 @@ import sharedUi from './playwright.shared-ui.config'
 // Workers reload this file without the runner's spec arguments. Persist the
 // selection in their inherited environment so their baseURL matches the server.
 process.env.SHOP_PLAYWRIGHT_SUITE ??= process.argv.some(argument =>
+  /(?:^|[/\\])super-admin-bridge\.spec(?:\.ts)?$/.test(argument),
+) ? 'public-legal' : process.argv.some(argument =>
   /(?:^|[/\\])shared-ui-foundation\.spec(?:\.ts)?$/.test(argument),
 ) ? 'shared-ui' : process.argv.some(argument =>
   /(?:^|[/\\])public-legal\.spec(?:\.ts)?$/.test(argument),
