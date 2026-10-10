@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { BsDataTableColumn } from '@building-suit/ux'
 import type { ActivityRow, ActivityQuery } from '../utils/activity'
 import type { OfferVersion } from '../utils/custom-offer'
 definePageMeta({ layout: false })
@@ -30,7 +29,7 @@ const offers = useCustomOffers(() => selection.value.item?.bindingId, () => stat
 const { versions: offerVersions, status: offerStatus, draft: offerDraft, reason: offerReason, command: offerRequest, revokeId, issueId, issuanceAvailable, customerLink } = offers
 const { visible: offerVisible, pending: offerPending, dirty: offerDirty, error: offerError } = offers.action
 const offerFields = ['recipientUserId', 'companyId', 'basePlanId', 'templateReference', 'displayName', 'priceAmount', 'currency', 'billingInterval', 'expiresAt'] as const
-const offerColumns = computed<BsDataTableColumn<OfferVersion>[]>(() => [{ key: 'displayName', field: 'displayName', header: t('offers.displayName') }, { key: 'version', field: 'version', header: t('offers.version') }, { key: 'priceAmount', field: 'priceAmount', header: t('offers.priceAmount') }, { key: 'currency', field: 'currency', header: t('offers.currency') }, { key: 'billingInterval', field: 'billingInterval', header: t('offers.billingInterval') }, { key: 'expiresAt', field: 'expiresAt', header: t('offers.expiresAt') }, { key: 'state', field: 'state', header: t('offers.state') }, { key: 'delivery', header: t('offers.delivery') }])
+const offerColumns = computed(() => [{ key: 'displayName', field: 'displayName' as const, header: t('offers.displayName') }, { key: 'version', field: 'version' as const, header: t('offers.version') }, { key: 'priceAmount', field: 'priceAmount' as const, header: t('offers.priceAmount') }, { key: 'currency', field: 'currency' as const, header: t('offers.currency') }, { key: 'billingInterval', field: 'billingInterval' as const, header: t('offers.billingInterval') }, { key: 'expiresAt', field: 'expiresAt' as const, header: t('offers.expiresAt') }, { key: 'state', field: 'state' as const, header: t('offers.state') }, { key: 'delivery', header: t('offers.delivery') }])
 const email = ref('')
 const password = ref('')
 useHead({ title: () => t('product.name') })
