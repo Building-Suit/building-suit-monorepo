@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict'
-import {readFileSync,writeFileSync,mkdirSync,symlinkSync,readlinkSync} from 'node:fs'
+import {writeFileSync,mkdirSync,symlinkSync,readlinkSync} from 'node:fs'
 import {spawnSync} from 'node:child_process'
 import path from 'node:path'
 import {prepareRuntimeRelease,activateRuntimeRelease,verifyRuntimeRelease} from '../../runner/runtime-release.mjs'
