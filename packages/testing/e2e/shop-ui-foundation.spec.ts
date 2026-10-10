@@ -22,7 +22,7 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) {
     await expect(page.locator('html')).toHaveAttribute('dir', locale === 'ar' ? 'rtl' : 'ltr')
     await expect(page.locator('html')).toHaveAttribute('data-theme', theme)
     const patterns = page.getByTestId('foundation-patterns')
-    const picker = patterns.getByRole('combobox')
+    const picker = patterns.getByRole('combobox', { name: locale === 'ar' ? 'الصنف' : 'Item', exact: true })
     await picker.focus()
     await page.keyboard.press('ArrowDown')
     await expect(page.getByRole('listbox')).toBeVisible()
