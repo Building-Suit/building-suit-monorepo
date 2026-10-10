@@ -18,7 +18,7 @@ const [
   process.argv.slice(2)
 
 const repoRoot = path.resolve(
-  controlRoot,
+  process.env.BS_CONTROL_REPOSITORY_ROOT??controlRoot,
   configuredRepoRoot ?? '.',
 )
 

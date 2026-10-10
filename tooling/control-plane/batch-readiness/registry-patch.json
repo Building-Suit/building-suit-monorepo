@@ -1,0 +1,102 @@
+{
+  "schema_version": "control-plane-verification-registry-v2",
+  "repair_id": "CP-BATCH-READY-001",
+  "reviewed": true,
+  "worker_output_used_as_scope_authority": false,
+  "workstreams": {
+    "shared": {
+      "verification_config": {
+        "commands": [
+          { "name": "root-typecheck", "program": "pnpm", "args": ["typecheck"], "required": true, "capabilities": ["typecheck"] },
+          { "name": "root-lint", "program": "pnpm", "args": ["lint"], "required": true, "capabilities": ["lint"] },
+          { "name": "workspace-check", "program": "pnpm", "args": ["check"], "required": true, "capabilities": ["workspace-boundaries", "source-ast"] },
+          { "name": "shared-ui-tests", "program": "node", "args": ["--test", "packages/ui/tests/foundation.test.mjs", "packages/ux/tests/export.test.mjs"], "required": true, "capabilities": ["shared-ui", "data-table"] },
+          { "name": "ledger-shared-ui-tests", "program": "node", "args": ["--test", "apps/ledger-suit/tests/unit/shared-ui-migration.test.mjs"], "required": true, "capabilities": ["ledger-migration"] },
+          { "name": "shop-shared-ui-tests", "program": "node", "args": ["--test", "apps/shop-suit/tests/unit/shared-ui-migration.test.mjs"], "required": true, "capabilities": ["shop-migration"] },
+          { "name": "ledger-build", "program": "pnpm", "args": ["--filter", "@building-suit/ledger-suit", "build"], "required": true, "capabilities": ["ledger-build"] },
+          { "name": "shop-build", "program": "pnpm", "args": ["--filter", "@building-suit/shop-suit", "build"], "required": true, "capabilities": ["shop-build"] },
+          { "name": "inventory-build", "program": "pnpm", "args": ["--filter", "@building-suit/inventory-suit", "build"], "required": true, "capabilities": ["inventory-build"] },
+          { "name": "automation-build", "program": "pnpm", "args": ["--filter", "@building-suit/automation-suit", "build"], "required": true, "capabilities": ["automation-build"] },
+          { "name": "docs-build", "program": "pnpm", "args": ["--filter", "@building-suit/docs", "build"], "required": true, "capabilities": ["docs-build"] },
+          { "name": "generator-tests", "program": "node", "args": ["--test", "tooling/new-platform/tests/generate.test.mjs"], "required": true, "capabilities": ["generator"] },
+          { "name": "ledger-foundation-browser", "program": "pnpm", "args": ["--filter", "@building-suit/ledger-suit", "exec", "playwright", "test", "tests/e2e/shared-ui-foundation.spec.ts", "--workers=1", "--retries=0", "--repeat-each=2"], "required": true, "capabilities": ["browser"] },
+          { "name": "shop-foundation-browser", "program": "pnpm", "args": ["--filter", "@building-suit/shop-suit", "exec", "playwright", "test", "tests/e2e/shared-ui-foundation.spec.ts", "--workers=1", "--retries=0", "--repeat-each=2"], "required": true, "capabilities": ["browser"] }
+        ],
+        "legacy_plan_mappings": {
+          "shared data-table tests": { "version": 2, "kind": "group", "commands": ["shared-ui-tests"], "requires": ["data-table"] },
+          "shared UI/UX tests": { "version": 2, "kind": "group", "commands": ["shared-ui-tests"], "requires": ["shared-ui"] },
+          "Shared UI/UX unit tests.": { "version": 2, "kind": "group", "commands": ["shared-ui-tests"], "requires": ["shared-ui"] },
+          "Ledger/Shop migration unit tests": { "version": 2, "kind": "group", "commands": ["ledger-shared-ui-tests", "shop-shared-ui-tests"], "requires": ["ledger-migration", "shop-migration"] },
+          "Ledger/Shop shared-ui migration unit tests": { "version": 2, "kind": "group", "commands": ["ledger-shared-ui-tests", "shop-shared-ui-tests"], "requires": ["ledger-migration", "shop-migration"] },
+          "Ledger shared-ui migration unit tests": { "version": 2, "kind": "command", "command": "ledger-shared-ui-tests", "requires": ["ledger-migration"] },
+          "Shop shared-ui migration unit tests": { "version": 2, "kind": "command", "command": "shop-shared-ui-tests", "requires": ["shop-migration"] },
+          "Ledger/Shop builds": { "version": 2, "kind": "group", "commands": ["ledger-build", "shop-build"], "requires": ["ledger-build", "shop-build"] },
+          "Ledger build": { "version": 2, "kind": "command", "command": "ledger-build", "requires": ["ledger-build"] },
+          "Shop build": { "version": 2, "kind": "command", "command": "shop-build", "requires": ["shop-build"] },
+          "Inventory build": { "version": 2, "kind": "command", "command": "inventory-build", "requires": ["inventory-build"] },
+          "Automation build": { "version": 2, "kind": "command", "command": "automation-build", "requires": ["automation-build"] },
+          "docs catalogue build": { "version": 2, "kind": "command", "command": "docs-build", "requires": ["docs-build"] },
+          "generator tests": { "version": 2, "kind": "command", "command": "generator-tests", "requires": ["generator"] },
+          "Ledger foundation browser test": { "version": 2, "kind": "command", "command": "ledger-foundation-browser", "requires": ["browser"] },
+          "Shop foundation browser test": { "version": 2, "kind": "command", "command": "shop-foundation-browser", "requires": ["browser"] },
+          "Ledger foundation Playwright spec with one worker and zero retries": { "version": 2, "kind": "command", "command": "ledger-foundation-browser", "requires": ["browser"] },
+          "Shop foundation Playwright spec with one worker and zero retries": { "version": 2, "kind": "command", "command": "shop-foundation-browser", "requires": ["browser"] },
+          "Ledger foundation browser": { "version": 2, "kind": "command", "command": "ledger-foundation-browser", "requires": ["browser"] },
+          "Shop foundation browser": { "version": 2, "kind": "command", "command": "shop-foundation-browser", "requires": ["browser"] },
+          "node tooling/checks/suit-template-boundaries.mjs": { "version": 2, "kind": "planned_test", "blocker": "missing_suit_template_boundary_runner", "expected_outputs": ["tooling/checks/suit-template-boundaries.mjs", "a registered command that executes the boundary runner"] },
+          "node tooling/checks/suit-template-boundaries.mjs --require-strict": { "version": 2, "kind": "planned_test", "blocker": "missing_strict_boundary_runner", "expected_outputs": ["a strict-mode boundary command", "strict boundary assertions for all required Suit members"] },
+          "node tooling/checks/suit-template-boundaries.mjs against generated fixture": { "version": 2, "kind": "planned_test", "blocker": "missing_generated_fixture_boundary_runner", "expected_outputs": ["a disposable generated-Suit fixture", "boundary assertions executed against that fixture"] },
+          "generator dry run into disposable path": { "version": 2, "kind": "planned_test", "blocker": "generator_disposable_fixture_runner_not_registered", "expected_outputs": ["a registered disposable generator command", "generated fixture validation results"] },
+          "future generator strict fixture": { "version": 2, "kind": "planned_test", "blocker": "future_generator_fixture_not_implemented", "expected_outputs": ["the strict generator fixture", "a registered command that executes it"] },
+          "all current Suit builds": { "version": 2, "kind": "group", "commands": ["ledger-build", "shop-build", "inventory-build", "automation-build", "docs-build"] }
+        }
+      }
+    },
+    "shop-suit": {
+      "verification_config": {
+        "commands": [
+          { "name": "shop-quality", "program": "pnpm", "args": ["exec", "turbo", "run", "typecheck", "lint", "build", "--filter=@building-suit/shop-suit"], "required": true, "capabilities": ["typecheck", "lint", "build"] },
+          { "name": "git-diff-check", "program": "git", "args": ["diff", "--check"], "required": true, "capabilities": ["diff-check"] },
+          { "name": "shop-database-regression", "program": "pnpm", "args": ["db:test:shop"], "required": true, "capabilities": ["database", "billing-regression", "plan-regression"] }
+        ],
+        "legacy_plan_mappings": {
+          "Storage RLS tests for owner, other tenant, anonymous and trusted review boundary.": { "version": 2, "kind": "planned_test", "blocker": "shop_storage_policy_coverage_not_implemented", "expected_outputs": ["executable owner/other-tenant/anonymous/trusted-review Storage policy tests", "bounded upload assertions"] },
+          "Upload/read/signed-access expiry tests using disposable files.": { "version": 2, "kind": "planned_test", "blocker": "shop_storage_http_signed_url_coverage_not_implemented", "expected_outputs": ["executable Storage HTTP upload/read tests", "signed URL expiry assertions using disposable files"] },
+          "Existing Shop billing database regression suite.": { "version": 2, "kind": "command", "command": "shop-database-regression", "requires": ["database", "billing-regression"] },
+          "Existing Shop plan/billing/subscription suite.": { "version": 2, "kind": "command", "command": "shop-database-regression", "requires": ["database", "plan-regression"] },
+          "Focused SQL/RPC/bridge tests for valid, expired, replayed and wrong-recipient offers.": { "version": 2, "kind": "planned_test", "blocker": "shop_custom_offer_bridge_coverage_not_implemented", "expected_outputs": ["executable valid/expired/replayed/wrong-recipient/wrong-environment offer tests"] },
+          "Quota-blocker and exact-price/commercial-period regression tests.": { "version": 2, "kind": "planned_test", "blocker": "shop_custom_offer_commercial_coverage_not_implemented", "expected_outputs": ["executable quota regression tests", "frozen-price and commercial-period assertions"] },
+          "Supabase advisors/security review where available.": { "version": 2, "kind": "external_gate", "blocker": "shop_security_advisor_evidence_unavailable" },
+          "Shop typecheck/lint/build and git diff --check.": { "version": 2, "kind": "group", "commands": ["shop-quality", "git-diff-check"], "requires": ["typecheck", "lint", "build", "diff-check"] }
+        }
+      }
+    },
+    "super-admin-suit": {
+      "verification_config": {
+        "commands": [
+          { "name": "super-admin-quality", "program": "pnpm", "args": ["exec", "turbo", "run", "typecheck", "lint", "build", "--filter=@building-suit/super-admin-suit"], "required": true, "capabilities": ["typecheck", "lint", "build"] },
+          { "name": "git-diff-check", "program": "git", "args": ["diff", "--check"], "required": true, "capabilities": ["diff-check"] }
+        ],
+        "database": {
+          "kind": "supabase-local",
+          "local_only": true,
+          "start_when_needed": true,
+          "start_commands": [{ "name": "super-admin-database-start", "program": "pnpm", "args": ["exec", "supabase", "start"], "cwd": "apps/super-admin-suit", "required": true }],
+          "reset_commands": [{ "name": "super-admin-database-reset", "program": "pnpm", "args": ["exec", "supabase", "db", "reset", "--local"], "cwd": "apps/super-admin-suit", "required": true }],
+          "test_commands": [{ "name": "super-admin-database-tests", "program": "pnpm", "args": ["exec", "supabase", "test", "db", "--local"], "cwd": "apps/super-admin-suit", "required": true }]
+        },
+        "legacy_plan_mappings": {
+          "Fresh local/disposable Supabase reset of the new Admin migration chain.": { "version": 2, "kind": "planned_test", "blocker": "super_admin_app_and_local_database_not_present", "expected_outputs": ["the Super Admin local Supabase project", "a registered start/reset command for its migration chain"] },
+          "Database tests for RLS denial, platform-admin authorization, immutable audit, config versioning and secret non-exposure.": { "version": 2, "kind": "planned_test", "blocker": "super_admin_security_database_tests_not_present", "expected_outputs": ["mandatory local database tests for every named security invariant"] },
+          "Generate TypeScript types from the resulting schema.": { "version": 2, "kind": "planned_test", "blocker": "super_admin_generated_type_check_not_present", "expected_outputs": ["generated TypeScript types from the reset local schema", "a clean diff or checked generated artifact"] },
+          "Run Supabase database advisors/security review where available.": { "version": 2, "kind": "external_gate", "blocker": "super_admin_advisor_evidence_unavailable" },
+          "Database/RLS tests for outsider, disabled admin and enabled admin.": { "version": 2, "kind": "planned_test", "blocker": "super_admin_authorization_tests_not_present", "expected_outputs": ["mandatory outsider/disabled-admin/enabled-admin RLS tests"] },
+          "Auth/session unit tests and browser denial/success coverage.": { "version": 2, "kind": "planned_test", "blocker": "super_admin_auth_browser_tests_not_present", "expected_outputs": ["auth/session unit tests", "browser denial and success scenarios"] },
+          "Inspect JWT/metadata authorization paths for user-editable claims.": { "version": 2, "kind": "planned_test", "blocker": "super_admin_claim_authority_review_not_present", "expected_outputs": ["an executable or human-reviewed claim-authority check proving provisioned identity is authoritative"] },
+          "Super Admin typecheck/lint plus git diff --check.": { "version": 2, "kind": "group", "commands": ["super-admin-quality", "git-diff-check"], "requires": ["typecheck", "lint", "diff-check"] },
+          "Super Admin typecheck, lint, build and git diff --check.": { "version": 2, "kind": "group", "commands": ["super-admin-quality", "git-diff-check"], "requires": ["typecheck", "lint", "build", "diff-check"] }
+        }
+      }
+    }
+  }
+}

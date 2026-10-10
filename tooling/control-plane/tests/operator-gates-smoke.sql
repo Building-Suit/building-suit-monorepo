@@ -1,0 +1,30 @@
+BEGIN;
+DO $$
+DECLARE r control.workflow_runs%ROWTYPE; t control.tasks%ROWTYPE; e control.executions%ROWTYPE; v bigint; offer jsonb; reply jsonb; rejected boolean:=false; count_before bigint;
+BEGIN
+ SELECT * INTO t FROM control.tasks WHERE task_id='CP-NATIVE-DRAFT-001';
+ UPDATE control.workflow_runs SET status='finished',finished_at=now() WHERE suit_slug=t.suit_slug AND status='running';
+ UPDATE control.tasks SET status='passed' WHERE task_id=t.task_id;
+ SELECT * INTO e FROM control.executions WHERE task_id=t.task_id ORDER BY attempt DESC LIMIT 1;
+ IF e.execution_id IS NULL THEN RAISE EXCEPTION 'Operator fixture execution missing';END IF;
+ UPDATE control.executions SET status='succeeded' WHERE execution_id=e.execution_id;
+ INSERT INTO control.verification_runs(execution_id,status,source,metadata) VALUES(e.execution_id,'passed','runner','{}') RETURNING verification_run_id INTO v;
+ PERFORM control.refresh_publication_readiness_contract(t.task_id,'operator-fixture');
+ INSERT INTO control.workflow_runs(project_id,suit_slug,workstream_slug,status,max_tasks,completed_tasks,current_task_id) VALUES(t.project_id,t.suit_slug,t.workstream_slug,'running',7,0,t.task_id) RETURNING * INTO r;
+ SELECT value INTO offer FROM jsonb_array_elements(control.operator_gate_offers(r.run_id)) WHERE value->>'action'='ordinary-publication';
+ IF offer IS NULL THEN RAISE EXCEPTION 'Ordinary gate not offered';END IF;
+ SELECT count(*) INTO count_before FROM control.executions WHERE task_id=t.task_id;
+ BEGIN PERFORM control.resolve_operator_task_gate(r.run_id,repeat('0',32),'approve','disposable explicit authorization');EXCEPTION WHEN OTHERS THEN rejected:=true;END;
+ IF NOT rejected THEN RAISE EXCEPTION 'Forged/stale gate accepted';END IF;
+ reply:=control.resolve_operator_task_gate(r.run_id,offer->>'gate_fingerprint','reject','disposable explicit rejection');
+ IF control.current_run_publication_authority(t.task_id)->>'authorized'='true' THEN RAISE EXCEPTION 'Reject authorized publication';END IF;
+ reply:=control.resolve_operator_task_gate(r.run_id,offer->>'gate_fingerprint','approve','disposable explicit authorization');
+ IF control.current_run_publication_authority(t.task_id)->>'authority_scope'<>'task-only' THEN RAISE EXCEPTION 'Task authority not bound';END IF;
+ reply:=control.resolve_operator_task_gate(r.run_id,offer->>'gate_fingerprint','approve','disposable duplicate authorization');
+ IF reply->>'idempotent'<>'true' OR (SELECT count(*) FROM control.operator_gate_resolutions WHERE run_id=r.run_id AND response='approve')<>1 THEN RAISE EXCEPTION 'Duplicate approval not idempotent';END IF;
+ INSERT INTO control.verification_runs(execution_id,status,source,metadata) VALUES(e.execution_id,'failed','runner','{}');
+ IF control.current_run_publication_authority(t.task_id)->>'authorized'='true' THEN RAISE EXCEPTION 'Stale verification retained authority';END IF;
+ IF (SELECT max_tasks FROM control.workflow_runs WHERE run_id=r.run_id)<>7 OR (SELECT count(*) FROM control.executions WHERE task_id=t.task_id)<>count_before THEN RAISE EXCEPTION 'Operator action changed run limit or attempts';END IF;
+ IF has_table_privilege('bs_control_app','control.operator_gate_resolutions','INSERT') THEN RAISE EXCEPTION 'Worker has arbitrary operator table writes';END IF;
+END $$;
+ROLLBACK;
