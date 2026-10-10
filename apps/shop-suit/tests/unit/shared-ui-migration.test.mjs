@@ -6,7 +6,8 @@ import test from 'node:test'
 const appRoot = new URL('../../app/', import.meta.url).pathname
 const workspaceRoot = new URL('../../../../', import.meta.url).pathname
 
-function vueFiles(directory) {
+function vueFiles(directory, optional = false) {
+  if (optional && !existsSync(directory)) return []
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const target = path.join(directory, entry.name)
     return entry.isDirectory() ? vueFiles(target) : entry.name.endsWith('.vue') ? [target] : []
@@ -50,7 +51,6 @@ test('Shop auth routes use the canonical shared auth and signup contracts', () =
 
 test('standard Shop record actions use the canonical dialog and controller', () => {
   const expected = [
-    'components/PlatformPlanAdmin.vue',
     'pages/catalog-import.vue',
     'pages/appointments/index.vue',
     'pages/cash-shifts.vue',
@@ -120,15 +120,24 @@ test('Shop authenticated chrome is adapter-only shared UI', () => {
   }
 })
 
-test('every remaining Shop component is approved product orchestration over shared UI', () => {
+test('Shop has no local Vue components or ownership exceptions', () => {
   const manifest = JSON.parse(readFileSync(path.join(workspaceRoot, 'docs/shared/ui-ownership-manifest.json'), 'utf8'))
-  const shop = manifest.components.filter(component => component.path.startsWith('apps/shop-suit/'))
-  const actual = vueFiles(path.join(appRoot, 'components'))
-    .map(file => `apps/shop-suit/app/components/${path.basename(file)}`)
-    .sort()
-  assert.deepEqual(shop.map(component => component.path).sort(), actual)
-  assert.ok(shop.every(component => component.classification === 'product-orchestration'))
-  assert.ok(shop.every(component => component.approval === 'BS-UI-SHOP-MIG-001'))
-  assert.ok(shop.every(component => component.rationale.includes('composes canonical shared UI primitives')))
-  assert.equal(existsSync(path.join(appRoot, 'components/AppLogo.vue')), false)
+  assert.deepEqual(manifest.components.filter(component => component.path.startsWith('apps/shop-suit/')), [])
+  assert.deepEqual(vueFiles(path.join(appRoot, 'components'), true), [])
+})
+
+test('every Shop template conforms to the exhaustive zero-native contract', async () => {
+  const { auditSuitTemplates } = await import('../../../../tooling/checks/suit-template-boundaries.mjs')
+  const audit = await auditSuitTemplates({ root: workspaceRoot })
+  assert.deepEqual(audit.parseFailures.filter(failure => failure.startsWith('apps/shop-suit/')), [])
+  assert.deepEqual(audit.debt.filter(item => item.file.startsWith('apps/shop-suit/')), [])
+})
+
+test('remaining authenticated root mutations use shared action dialogs', () => {
+  for (const file of ['pages/settings.vue', 'pages/billing.vue', 'pages/dashboard.vue', 'pages/platform-admin.vue']) {
+    const source = sources.find(item => item.file === file)?.source || ''
+    assert.doesNotMatch(source, /<BsForm\b/, `${file} retains a root mutation form`)
+    assert.match(source, /<BsRecordActionDialog\b/)
+    assert.match(source, /useRecordAction\(/)
+  }
 })

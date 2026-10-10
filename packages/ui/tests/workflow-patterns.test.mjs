@@ -22,6 +22,7 @@ const stub = tag => ({ inheritAttrs: false, setup: (_, { attrs, slots }) => () =
 async function render(file, props, slot) {
   const app = vue.createSSRApp({ render: () => vue.h(component(file), props, slot ? { default: () => slot } : undefined) })
   for (const [name, tag] of Object.entries({ BsButton: 'button', BsLink: 'a', BsInput: 'input', BsGrid: 'div', BsStack: 'div', BsInline: 'div', BsText: 'p', BsStatusBadge: 'span', BsAlert: 'aside', BsStateSurface: 'aside', BsIcon: 'svg', BsFormActions: 'footer', BsSectionHeader: 'header' })) app.component(name, stub(tag))
+  app.component('BsLineItemRow', component('molecules/BsLineItemRow.vue'))
   return renderToString(app)
 }
 
@@ -170,4 +171,23 @@ test('column mapping prevents duplicate source selection when requested and emit
   assert.deepEqual(updates, [{ first: 'name', second: 'reference' }])
   assert.deepEqual(initial, { first: 'name', second: null })
   mapping.app.unmount()
+})
+
+test('catalogue-driven line editing can suppress addition while retaining the existing rows', async () => {
+  const props = { items: [{ id: 'one' }], label: 'Cart', addLabel: 'Add line', removeLabel: 'Remove', rowLabel: () => 'Existing item' }
+  const hidden = await render('organisms/BsLineItemsEditor.vue', { ...props, showAdd: false })
+  assert.doesNotMatch(hidden, />Add line</)
+  assert.match(hidden, /Existing item/)
+  assert.match(await render('organisms/BsLineItemsEditor.vue', props), />Add line</)
+})
+
+test('print documents retain paper choice and language direction in shared presentation', async () => {
+  const html = await render('templates/BsPrintableDocument.vue', { label: 'Receipt', format: 'a4', dir: 'rtl', lang: 'ar' }, 'Issued snapshot')
+  assert.match(html, /data-format="a4"/)
+  assert.match(html, /dir="rtl"/)
+  assert.match(html, /lang="ar"/)
+  assert.match(html, /Issued snapshot/)
+  const css = readFileSync(new URL('../src/styles/base.css', import.meta.url), 'utf8')
+  assert.match(css, /@page bs-receipt \{ size: 80mm auto/)
+  assert.match(css, /@page bs-a4 \{ size: A4/)
 })

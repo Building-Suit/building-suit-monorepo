@@ -67,5 +67,5 @@ useHead(() => ({
 </script>
 
 <template>
-  <BsContactPage v-model="form" eyebrow="Shop Suit by Building Suit" :title="t('marketing.contact')" :intro="t('marketing.contactIntro')" :info="contactInfo" :form-copy="formCopy" :categories="categories" :identity-title="t('marketing.businessIdentity')" :identity-body="t('marketing.businessIdentityBody', { product: 'Shop Suit', parent: 'Building Suit' })" :pending="pending" :error="error" :sent="sent" @submit="submit" />
+  <BsContactPage v-model="form" eyebrow="Shop Suit by Building Suit" :title="t('marketing.contact')" :intro="t('marketing.contactIntro')" :info="contactInfo" :form-copy="formCopy" :categories="categories" :identity-title="t('marketing.businessIdentity')" :identity-body="t('marketing.businessIdentityBody', { product: 'Shop Suit', parent: 'Building Suit' })" :pending="pending" :error="error" :sent="sent" @submit="submit"/>
 </template>

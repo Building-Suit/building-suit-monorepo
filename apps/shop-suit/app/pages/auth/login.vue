@@ -95,14 +95,19 @@ watchEffect(async () => {
 </script>
 
 <template>
-  <BsAuthForm
-    eyebrow="Shop Suit" :title="t('auth.loginTitle')" :description="t('auth.loginSubtitle')"
-    :pending="pending" :error="errorMessage" :submit-label="t('auth.loginAction')" :pending-label="t('auth.loginAction')"
-    :data-client-ready="clientReady ? 'true' : 'false'" @submit="onSubmit"
-  >
-    <BsField :label="t('auth.email')" required><template #default="field"><BsInput v-model="email" :id="field.id" type="email" autocomplete="email" required dir="ltr" /></template></BsField>
-    <BsField :label="t('auth.password')" required><template #default="field"><BsInput v-model="password" :id="field.id" type="password" autocomplete="current-password" required dir="ltr" /></template></BsField>
+  <BsAuthForm eyebrow="Shop Suit" :title="t('auth.loginTitle')" :description="t('auth.loginSubtitle')" :pending="pending" :error="errorMessage" :submit-label="t('auth.loginAction')" :pending-label="t('auth.loginAction')" :data-client-ready="clientReady ? 'true' : 'false'" @submit="onSubmit">
+    <BsField :label="t('auth.email')" required>
+      <template #default="field">
+        <BsInput :id="field.id" v-model="email" type="email" autocomplete="email" required dir="ltr"/>
+      </template>
+    </BsField>
+    <BsField :label="t('auth.password')" required>
+      <template #default="field">
+        <BsInput :id="field.id" v-model="password" type="password" autocomplete="current-password" required dir="ltr"/>
+      </template>
+    </BsField>
     <BsLink to="/auth/forgot-password" variant="muted">{{ t('auth.forgotPassword') }}</BsLink>
-    <template #footer>{{ t('auth.noAccount') }} <BsLink to="/auth/signup" variant="standalone">{{ t('auth.signupAction') }}</BsLink></template>
+    <template #footer>{{ t('auth.noAccount') }} <BsLink to="/auth/signup" variant="standalone">{{ t('auth.signupAction') }}</BsLink>
+    </template>
   </BsAuthForm>
 </template>

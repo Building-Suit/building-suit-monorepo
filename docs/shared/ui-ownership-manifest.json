@@ -158,42 +158,6 @@
       "classification": "product-orchestration",
       "rationale": "Owns Ledger tag queries, billing capability checks, and transaction-tag mutations. It composes canonical shared UI primitives.",
       "approval": "BS-UI-LEDGER-MIG-001"
-    },
-    {
-      "path": "apps/shop-suit/app/components/BarberSetupGuide.vue",
-      "classification": "product-orchestration",
-      "rationale": "Maps Shop setup state and barber-specific onboarding steps to product routes. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-SHOP-MIG-001"
-    },
-    {
-      "path": "apps/shop-suit/app/components/PlanUsageMeter.vue",
-      "classification": "product-orchestration",
-      "rationale": "Adapts Shop resource usage, plan-limit states, and localized domain labels. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-SHOP-MIG-001"
-    },
-    {
-      "path": "apps/shop-suit/app/components/PlatformPlanAdmin.vue",
-      "classification": "product-orchestration",
-      "rationale": "Coordinates Shop plan administration queries, commands, confirmations, dialogs, and tables. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-SHOP-MIG-001"
-    },
-    {
-      "path": "apps/shop-suit/app/components/PurchaseEntityPicker.vue",
-      "classification": "product-orchestration",
-      "rationale": "Owns Shop product and supplier queries, paging, selection contracts, and cache scope. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-SHOP-MIG-001"
-    },
-    {
-      "path": "apps/shop-suit/app/components/ShopPlanCards.vue",
-      "classification": "product-orchestration",
-      "rationale": "Applies Shop plan families, billing intervals, blockers, pricing, and resource rules. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-SHOP-MIG-001"
-    },
-    {
-      "path": "apps/shop-suit/app/components/ShopPricing.vue",
-      "classification": "product-orchestration",
-      "rationale": "Adapts Shop plan catalogue queries into the product-owned plan-card contract. It composes canonical shared UI primitives.",
-      "approval": "BS-UI-SHOP-MIG-001"
     }
   ],
   "workflowFamilies": [

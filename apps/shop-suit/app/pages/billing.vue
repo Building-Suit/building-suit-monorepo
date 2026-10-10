@@ -132,6 +132,7 @@ async function submitNotice() {
     submitRequestId.value = null
     Object.assign(form, { paidAmount: plan.effectivePriceAmount, transferDate: '', transferReference: '' })
     await refresh()
+    noticeAction.complete()
     pushToast({ tone: 'success', title: copy.value.submitted })
   }
   catch {
@@ -181,49 +182,147 @@ const ar = {
   resources: { active_locations: 'الفروع النشطة', active_members: 'أعضاء الفريق', active_products: 'المنتجات النشطة', active_services: 'الخدمات النشطة', active_customers: 'العملاء النشطون', active_suppliers: 'الموردون النشطون' },
   intervals: { monthly: 'شهريًا', quarterly: 'كل ثلاثة أشهر', annual: 'سنويًا' },
 }
+const planPresentation = reactive(useShopPlanPresentation({ get offers() { return purchasablePlans.value }, get selectedCatalogTermsId() { return form.catalogTermsId }, get currentCatalogTermsId() { return currentCatalogTermsId.value }, action: 'select' }, choosePlan))
+const usagePresentation = useShopUsagePresentation()
+
+const noticeAction = useRecordAction(() => form)
+const { visible: noticeActionOpen, dirty: noticeActionDirty } = noticeAction
 </script>
 
 <template>
-  <div class="mx-auto max-w-6xl space-y-6">
-    <header><p class="text-xs font-bold uppercase tracking-[0.16em] text-[var(--bs-link)]">{{ current?.name }}</p><h1 class="mt-1 text-3xl font-extrabold tracking-tight">{{ copy.title }}</h1><p class="mt-2 text-sm text-muted-foreground">{{ copy.subtitle }}</p></header>
-    <p v-if="!isOwner" role="alert" class="rounded-2xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-5">{{ copy.ownerOnly }}</p>
-    <div v-else-if="pending" role="status" :aria-label="ui('loading')" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><div v-for="item in 4" :key="item" class="h-28 animate-pulse rounded-2xl bg-muted" /></div>
-    <div v-else-if="error" role="alert" class="ls-error"><p>{{ copy.loadFailed }}</p><BsButton class="mt-3" @click="refresh()">{{ copy.retry }}</BsButton></div>
+  <BsStack>
+    <BsBox as="header">
+      <BsText as="p" size="xs" emphasis="semibold">{{ current?.name }}</BsText>
+      <BsHeading :level="1">{{ copy.title }}</BsHeading>
+      <BsText as="p" size="sm" tone="muted">{{ copy.subtitle }}</BsText>
+    </BsBox>
+    <BsText v-if="!isOwner" role="alert" as="p" tone="warning">{{ copy.ownerOnly }}</BsText>
+    <BsGrid v-else-if="pending" role="status" :aria-label="ui('loading')" :columns="4">
+      <BsSkeleton v-for="item in 4" :key="item"/>
+    </BsGrid>
+    <BsBox v-else-if="error" role="alert">
+      <BsText as="p">{{ copy.loadFailed }}</BsText>
+      <BsButton @click="refresh()">{{ copy.retry }}</BsButton>
+    </BsBox>
     <template v-else-if="billing">
-      <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Current subscription">
-        <BsKpiCard :title="copy.plan"><span class="text-xl font-extrabold">{{ billing.subscription.planName }}</span></BsKpiCard>
-        <BsKpiCard :title="copy.access"><BsStatusBadge :status="billing.subscription.accessState" /> <span class="ms-2 text-sm font-bold">{{ statusLabel(billing.subscription.accessState) }}</span></BsKpiCard>
-        <BsKpiCard :title="billing.subscription.accessState === 'trialing' ? copy.trialEnd : copy.periodEnd"><span class="text-sm font-bold">{{ date(billing.subscription.accessState === 'trialing' ? billing.subscription.trialEndAt : billing.subscription.periodEnd) }}</span><p v-if="billing.subscription.accessState === 'trialing'" class="mt-1 text-xs text-muted-foreground">{{ billing.subscription.trialDaysRemaining }} {{ copy.days }}</p></BsKpiCard>
-        <BsKpiCard :title="copy.currentPrice"><span class="text-lg font-extrabold">{{ money(billing.subscription.effectivePriceAmount ?? billing.subscription.priceAmount, billing.subscription.currency) }}</span><p v-if="billing.subscription.priceSource === 'override'" class="mt-1 text-xs font-bold text-[var(--bs-link)]">{{ copy.negotiated }}</p><p v-if="billing.subscription.listPriceAmount !== billing.subscription.effectivePriceAmount" class="mt-1 text-xs text-muted-foreground">{{ copy.listPrice }}: {{ money(billing.subscription.listPriceAmount, billing.subscription.currency) }}</p></BsKpiCard>
-      </section>
-
-      <p v-if="['read_only', 'suspended'].includes(billing.subscription.accessState)" role="status" class="rounded-2xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-4 text-sm">{{ copy.readOnly }}</p>
-
-      <section v-if="latestSubmission" class="ls-card p-5" aria-live="polite">
-        <div class="flex flex-wrap items-center gap-3"><h2 class="font-extrabold">{{ copy.latest }}</h2><BsStatusBadge :status="latestSubmission.status" /><strong class="text-sm">{{ statusLabel(latestSubmission.status) }}</strong><span class="text-sm text-muted-foreground">{{ latestSubmission.requestedPlanName }} · {{ money(latestSubmission.effectivePriceAmount, latestSubmission.currency) }}</span></div>
-        <p class="mt-2 text-sm leading-6">{{ submissionMessage(latestSubmission) }}</p><p v-if="latestSubmission.reviewReason" class="mt-2 text-sm text-muted-foreground">{{ copy.reviewReason }}: {{ latestSubmission.reviewReason }}</p>
-      </section>
-
-      <section class="ls-card p-5 sm:p-6"><h2 class="text-lg font-extrabold">{{ copy.usage }}</h2><p class="mt-1 text-sm text-muted-foreground">{{ copy.usageHelp }}</p><div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3"><PlanUsageMeter v-for="resource in usageResources" :key="resource.resource" :usage="resource" /></div></section>
-
-      <section class="ls-card p-5 sm:p-6">
-        <h2 class="text-lg font-extrabold">{{ copy.compare }}</h2><p class="mt-1 text-sm text-muted-foreground">{{ copy.compareHelp }}</p>
-        <div v-if="catalogPending" role="status" class="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3"><div v-for="item in 3" :key="item" class="h-72 animate-pulse rounded-2xl bg-muted" /></div>
-        <div v-else-if="catalogError" role="alert" class="ls-error mt-5"><p>{{ copy.catalogFailed }}</p><BsButton class="mt-3" severity="secondary" @click="refreshCatalog()">{{ copy.retry }}</BsButton></div>
-        <p v-else-if="!purchasablePlans.length" role="status" class="mt-5 rounded-xl border border-border p-4 text-sm">{{ copy.noPurchasable }}</p>
-        <ShopPlanCards v-else class="mt-5" :offers="purchasablePlans" :selected-catalog-terms-id="form.catalogTermsId" :current-catalog-terms-id="currentCatalogTermsId" action="select" @select="choosePlan" />
-      </section>
-
-      <section class="ls-card p-5 sm:p-6"><div class="flex flex-wrap items-start justify-between gap-3"><div><h2 class="text-lg font-extrabold">{{ copy.instructions }}</h2><p class="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{{ copy.instructionsHelp }}</p></div><span class="rounded-full bg-muted px-3 py-1 text-xs font-bold">{{ copy.manual }}</span></div>
-        <div v-if="billing.instructions.recipientAlias || billing.instructions.paymentLink || billing.instructions.qrImageUrl || (isArabic ? billing.instructions.instructionsAr : billing.instructions.instructionsEn)" class="mt-5 grid gap-4 md:grid-cols-2"><p v-if="billing.instructions.recipientAlias" class="rounded-xl border border-border p-4"><span class="block text-xs text-muted-foreground">{{ copy.recipient }}</span><strong dir="ltr" class="break-all">{{ billing.instructions.recipientAlias }}</strong></p><p v-if="billing.instructions.paymentLink" class="rounded-xl border border-border p-4"><span class="block text-xs text-muted-foreground">{{ copy.paymentLink }}</span><a class="break-all font-bold text-[var(--bs-link)] underline" :href="billing.instructions.paymentLink" target="_blank" rel="noopener noreferrer">{{ billing.instructions.paymentLink }}</a></p><div v-if="billing.instructions.qrImageUrl" class="rounded-xl border border-border p-4"><span class="mb-3 block text-xs text-muted-foreground">{{ copy.qr }}</span><img :src="billing.instructions.qrImageUrl" :alt="copy.qr" class="h-40 w-40 rounded-lg object-contain"></div><p v-if="isArabic ? billing.instructions.instructionsAr : billing.instructions.instructionsEn" class="whitespace-pre-line rounded-xl border border-border p-4 text-sm leading-6">{{ isArabic ? billing.instructions.instructionsAr : billing.instructions.instructionsEn }}</p></div><p v-else class="mt-5 text-sm text-muted-foreground">{{ copy.unavailable }}</p>
-      </section>
-
-      <section class="ls-card p-5 sm:p-6"><h2 class="text-lg font-extrabold">{{ copy.notice }}</h2><p class="mt-1 text-sm text-muted-foreground">{{ copy.noticeHelp }}</p>
-        <BsForm class="mt-5 grid gap-4 sm:grid-cols-2" :pending="submitPending" :error="submitError" @submit="submitNotice"><div v-if="selectedPlan" class="rounded-xl border border-border p-4 text-sm sm:col-span-2"><p>{{ copy.requestedPlan }}: <strong>{{ selectedPlan.planName }}</strong> · {{ copy.expected }}: <strong>{{ money(selectedPlan.effectivePriceAmount, selectedPlan.currency) }}</strong> · {{ copy.interval }}: <strong>{{ intervalLabel(selectedPlan.billingInterval) }}</strong></p><p v-if="selectedPlan.priceSource === 'override'" class="mt-2 font-bold text-[var(--bs-link)]">{{ copy.negotiated }}</p><p v-if="selectedPlan.blockers.length" class="mt-3 rounded-lg bg-[var(--bs-status-warning-bg)] p-3 font-semibold leading-5">{{ copy.preservation }}</p></div><p v-else role="status" class="rounded-xl border border-border p-4 text-sm sm:col-span-2">{{ copy.noPurchasable }}</p><label class="grid gap-2 text-sm font-bold">{{ copy.paid }}<input v-model.number="form.paidAmount" class="ls-input min-h-11 min-w-0" type="number" min="0.01" step="0.01" :disabled="!selectedPlan" required></label><label class="grid gap-2 text-sm font-bold">{{ copy.transferDate }}<input v-model="form.transferDate" class="ls-input min-h-11 min-w-0" type="date" :max="new Date().toISOString().slice(0, 10)" :disabled="!selectedPlan" required></label><label class="grid gap-2 text-sm font-bold sm:col-span-2">{{ copy.reference }}<input v-model="form.transferReference" class="ls-input min-h-11 min-w-0" dir="ltr" minlength="2" maxlength="200" :disabled="!selectedPlan" required></label><p class="text-sm leading-6 text-muted-foreground sm:col-span-2">{{ copy.policyPrefix }} <NuxtLink class="font-bold text-[var(--bs-link)] underline" to="/terms">{{ copy.terms }}</NuxtLink> · <NuxtLink class="font-bold text-[var(--bs-link)] underline" to="/privacy">{{ copy.privacy }}</NuxtLink> · <NuxtLink class="font-bold text-[var(--bs-link)] underline" to="/refund-cancellation">{{ copy.refund }}</NuxtLink>.</p><div class="sm:col-span-2"><BsButton type="submit" variant="primary" :pending="submitPending" :disabled="!selectedPlan || hasOpenRequest">{{ submitPending ? copy.submitting : copy.submit }}</BsButton></div></BsForm>
-      </section>
-
-      <section class="overflow-hidden ls-card"><div class="p-5"><h2 class="text-lg font-extrabold">{{ copy.history }}</h2></div><div class="overflow-x-auto"><BsDataTable :value="billing.submissions" data-key="id" :label="copy.history"><Column field="status"><template #header>{{ copy.access }}</template><template #body="{ data: item }"><BsStatusBadge :status="item.status" /> <span class="ms-2 text-sm">{{ statusLabel(item.status) }}</span></template></Column><Column field="requestedPlanName"><template #header>{{ copy.requestedPlan }}</template></Column><Column><template #header>{{ copy.expected }}</template><template #body="{ data: item }">{{ money(item.effectivePriceAmount, item.currency) }}</template></Column><Column><template #header>{{ copy.paid }}</template><template #body="{ data: item }">{{ money(item.paidAmount, item.currency) }}</template></Column><Column field="transferReference"><template #header>{{ copy.reference }}</template></Column><Column><template #header>{{ copy.transferDate }}</template><template #body="{ data: item }">{{ date(item.transferDate) }}</template></Column><Column field="reviewReason"><template #header>{{ copy.reviewReason }}</template></Column><template #empty><p class="p-6 text-center text-sm text-muted-foreground">{{ copy.empty }}</p></template></BsDataTable></div></section>
+      <BsGrid aria-label="Current subscription" :columns="4">
+        <BsKpiCard :title="copy.plan">
+          <BsText as="span" size="lg" emphasis="semibold">{{ billing.subscription.planName }}</BsText>
+        </BsKpiCard>
+        <BsKpiCard :title="copy.access">
+          <BsStatusBadge :status="billing.subscription.accessState"/> <BsText as="span" size="sm" emphasis="semibold">{{ statusLabel(billing.subscription.accessState) }}</BsText>
+        </BsKpiCard>
+        <BsKpiCard :title="billing.subscription.accessState === 'trialing' ? copy.trialEnd : copy.periodEnd">
+          <BsText as="span" size="sm" emphasis="semibold">{{ date(billing.subscription.accessState === 'trialing' ? billing.subscription.trialEndAt : billing.subscription.periodEnd) }}</BsText>
+          <BsText v-if="billing.subscription.accessState === 'trialing'" as="p" size="xs" tone="muted">{{ billing.subscription.trialDaysRemaining }} {{ copy.days }}</BsText>
+        </BsKpiCard>
+        <BsKpiCard :title="copy.currentPrice">
+          <BsText as="span" size="lg" emphasis="semibold">{{ money(billing.subscription.effectivePriceAmount ?? billing.subscription.priceAmount, billing.subscription.currency) }}</BsText>
+          <BsText v-if="billing.subscription.priceSource === 'override'" as="p" size="xs" emphasis="semibold">{{ copy.negotiated }}</BsText>
+          <BsText v-if="billing.subscription.listPriceAmount !== billing.subscription.effectivePriceAmount" as="p" size="xs" tone="muted">{{ copy.listPrice }}: {{ money(billing.subscription.listPriceAmount, billing.subscription.currency) }}</BsText>
+        </BsKpiCard>
+      </BsGrid>
+      <BsText v-if="['read_only', 'suspended'].includes(billing.subscription.accessState)" role="status" as="p" size="sm" tone="warning">{{ copy.readOnly }}</BsText>
+      <BsPanel v-if="latestSubmission" aria-live="polite" padding="md">
+        <BsInline>
+          <BsHeading :level="2">{{ copy.latest }}</BsHeading>
+          <BsStatusBadge :status="latestSubmission.status"/>
+          <BsText as="strong" size="sm">{{ statusLabel(latestSubmission.status) }}</BsText>
+          <BsText as="span" size="sm" tone="muted">{{ latestSubmission.requestedPlanName }} · {{ money(latestSubmission.effectivePriceAmount, latestSubmission.currency) }}</BsText>
+        </BsInline>
+        <BsText as="p" size="sm">{{ submissionMessage(latestSubmission) }}</BsText>
+        <BsText v-if="latestSubmission.reviewReason" as="p" size="sm" tone="muted">{{ copy.reviewReason }}: {{ latestSubmission.reviewReason }}</BsText>
+      </BsPanel>
+      <BsPanel padding="md">
+        <BsHeading :level="2">{{ copy.usage }}</BsHeading>
+        <BsText as="p" size="sm" tone="muted">{{ copy.usageHelp }}</BsText>
+        <BsGrid :columns="3">
+          <BsUsageMeter v-for="resource in usageResources" :key="resource.resource" :item="usagePresentation(resource)"/>
+        </BsGrid>
+      </BsPanel>
+      <BsPanel padding="md">
+        <BsHeading :level="2">{{ copy.compare }}</BsHeading>
+        <BsText as="p" size="sm" tone="muted">{{ copy.compareHelp }}</BsText>
+        <BsGrid v-if="catalogPending" role="status" :columns="3">
+          <BsSkeleton v-for="item in 3" :key="item"/>
+        </BsGrid>
+        <BsBox v-else-if="catalogError" role="alert">
+          <BsText as="p">{{ copy.catalogFailed }}</BsText>
+          <BsButton severity="secondary" @click="refreshCatalog()">{{ copy.retry }}</BsButton>
+        </BsBox>
+        <BsText v-else-if="!purchasablePlans.length" role="status" as="p" size="sm">{{ copy.noPurchasable }}</BsText>
+        <BsMarketingPricing v-else :interval="planPresentation.interval" :plans="planPresentation.pricingPlans" :interval-options="[{ value: 'monthly', label: planPresentation.copy.monthly }, { value: 'annual', label: planPresentation.copy.yearly }]" :copy="{ cycleLabel: planPresentation.copy.cycle, loading: planPresentation.copy.loading, empty: planPresentation.copy.empty, retry: planPresentation.copy.retry, included: planPresentation.copy.included, notIncluded: planPresentation.copy.notIncluded }" :annual-saving="planPresentation.annualDiscount === null ? null : planPresentation.copy.annualSaving(planPresentation.annualDiscount)" :columns="3" :loading="false" :error="null" test-id="shop-plan-cards" @update:interval="value => { if (value === 'monthly' || value === 'annual') planPresentation.interval = value }" @update:variant="planPresentation.chooseVariant" @action="planPresentation.choose" @retry="refresh()"/>
+      </BsPanel>
+      <BsPanel padding="md">
+        <BsInline justify="between">
+          <BsBox>
+            <BsHeading :level="2">{{ copy.instructions }}</BsHeading>
+            <BsText as="p" size="sm" tone="muted">{{ copy.instructionsHelp }}</BsText>
+          </BsBox>
+          <BsText as="span" size="xs" emphasis="semibold">{{ copy.manual }}</BsText>
+        </BsInline>
+        <BsGrid v-if="billing.instructions.recipientAlias || billing.instructions.paymentLink || billing.instructions.qrImageUrl || (isArabic ? billing.instructions.instructionsAr : billing.instructions.instructionsEn)" :columns="2">
+          <BsText v-if="billing.instructions.recipientAlias" as="p">
+            <BsText as="span" size="xs" tone="muted">{{ copy.recipient }}</BsText>
+            <BsText dir="ltr" as="strong">{{ billing.instructions.recipientAlias }}</BsText>
+          </BsText>
+          <BsText v-if="billing.instructions.paymentLink" as="p">
+            <BsText as="span" size="xs" tone="muted">{{ copy.paymentLink }}</BsText>
+            <BsLink :to="billing.instructions.paymentLink" target="_blank" rel="noopener noreferrer" external>{{ billing.instructions.paymentLink }}</BsLink>
+          </BsText>
+          <BsBox v-if="billing.instructions.qrImageUrl" padding="md">
+            <BsText as="span" size="xs" tone="muted">{{ copy.qr }}</BsText>
+            <BsImage :src="billing.instructions.qrImageUrl" :alt="copy.qr"/>
+          </BsBox>
+          <BsText v-if="isArabic ? billing.instructions.instructionsAr : billing.instructions.instructionsEn" as="p" size="sm">{{ isArabic ? billing.instructions.instructionsAr : billing.instructions.instructionsEn }}</BsText>
+        </BsGrid>
+        <BsText v-else as="p" size="sm" tone="muted">{{ copy.unavailable }}</BsText>
+      </BsPanel>
+      <BsPanel padding="md">
+        <BsHeading :level="2">{{ copy.notice }}</BsHeading>
+        <BsText as="p" size="sm" tone="muted">{{ copy.noticeHelp }}</BsText>
+        <BsStack>
+          <BsButton :disabled="!selectedPlan || hasOpenRequest" @click="noticeAction.edit()">{{ copy.submit }}</BsButton>
+          <BsRecordActionDialog v-model:visible="noticeActionOpen" :title="copy.notice" :dirty="noticeActionDirty" :pending="submitPending" :error="submitError" :submit-label="copy.submit" :cancel-label="ui('cancel')" :submit-disabled="!selectedPlan || hasOpenRequest" @submit="submitNotice">
+            <BsBox v-if="selectedPlan" padding="md">
+              <BsText as="p">{{ copy.requestedPlan }}: <BsText as="strong">{{ selectedPlan.planName }}</BsText> · {{ copy.expected }}: <BsText as="strong">{{ money(selectedPlan.effectivePriceAmount, selectedPlan.currency) }}</BsText> · {{ copy.interval }}: <BsText as="strong">{{ intervalLabel(selectedPlan.billingInterval) }}</BsText>
+              </BsText>
+              <BsText v-if="selectedPlan.priceSource === 'override'" as="p" emphasis="semibold">{{ copy.negotiated }}</BsText>
+              <BsText v-if="selectedPlan.blockers.length" as="p" tone="warning" emphasis="semibold">{{ copy.preservation }}</BsText>
+            </BsBox>
+            <BsText v-else role="status" as="p" size="sm">{{ copy.noPurchasable }}</BsText>
+            <BsField v-slot="field" :label="copy.paid">
+              <BsInput :id="field.id" v-model.number="form.paidAmount" :aria-describedby="field.describedby" type="number" :min="0.01" :step="0.01" :disabled="!selectedPlan" required/>
+            </BsField>
+            <BsField v-slot="field" :label="copy.transferDate">
+              <BsInput :id="field.id" v-model="form.transferDate" :aria-describedby="field.describedby" type="date" :max="new Date().toISOString().slice(0, 10)" :disabled="!selectedPlan" required/>
+            </BsField>
+            <BsField v-slot="field" :label="copy.reference">
+              <BsInput :id="field.id" v-model="form.transferReference" :aria-describedby="field.describedby" dir="ltr" :minlength="2" :maxlength="200" :disabled="!selectedPlan" required/>
+            </BsField>
+            <BsText as="p" size="sm" tone="muted">{{ copy.policyPrefix }} <BsLink to="/terms">{{ copy.terms }}</BsLink> · <BsLink to="/privacy">{{ copy.privacy }}</BsLink> · <BsLink to="/refund-cancellation">{{ copy.refund }}</BsLink>.</BsText>
+          </BsRecordActionDialog>
+        </BsStack>
+      </BsPanel>
+      <BsPanel padding="md">
+        <BsBox padding="md">
+          <BsHeading :level="2">{{ copy.history }}</BsHeading>
+        </BsBox>
+        <BsBox scroll="x">
+          <BsDataTable :value="billing.submissions" data-key="id" :label="copy.history" :columns="[{ key: 'status', header: (copy.access), field: 'status' }, { key: 'requestedPlanName', header: (copy.requestedPlan), field: 'requestedPlanName' }, { key: 'column2', header: (copy.expected) }, { key: 'column3', header: (copy.paid) }, { key: 'transferReference', header: (copy.reference), field: 'transferReference' }, { key: 'column5', header: (copy.transferDate) }, { key: 'reviewReason', header: (copy.reviewReason), field: 'reviewReason' }]">
+            <template #cell-status="{ row: item }">
+              <BsStatusBadge :status="item.status"/> <BsText as="span" size="sm">{{ statusLabel(item.status) }}</BsText>
+            </template>
+            <template #cell-column2="{ row: item }">{{ money(item.effectivePriceAmount, item.currency) }}</template>
+            <template #cell-column3="{ row: item }">{{ money(item.paidAmount, item.currency) }}</template>
+            <template #cell-column5="{ row: item }">{{ date(item.transferDate) }}</template>
+            <template #empty>
+              <BsText as="p" size="sm" tone="muted">{{ copy.empty }}</BsText>
+            </template>
+          </BsDataTable>
+        </BsBox>
+      </BsPanel>
     </template>
-    <p v-else role="status" class="rounded-xl border border-border p-5 text-sm">{{ copy.noBilling }}</p>
-  </div>
+    <BsText v-else role="status" as="p" size="sm">{{ copy.noBilling }}</BsText>
+  </BsStack>
 </template>

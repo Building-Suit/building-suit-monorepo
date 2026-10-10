@@ -181,8 +181,42 @@ test('Shop POS uses the shared tile action without default button chrome', async
 
   const tile = page.getByRole('button', { name: /Haircut/ })
   await expect(tile).toBeVisible()
-  await expect(tile).toHaveClass(/\bls-action-tile\b/)
+  await expect(tile).toHaveClass(/\bbs-action-tile\b/)
   await expect(tile).not.toHaveClass(/\bls-btn\b/)
   await tile.click()
   await expect(page.locator('#pos-cart-title').locator('..')).toContainText('Haircut')
+  await page.keyboard.press('F2')
+  await expect(page.locator('#pos-catalog-search')).toBeFocused()
+  const quantity = page.getByRole('spinbutton', { name: 'Quantity', exact: true })
+  await quantity.fill('2')
+  await expect(quantity).toHaveValue('2')
+})
+
+
+test('Shop settings keeps profile edits in a shared modal with validation and focus return', async ({ page }) => {
+  await pilotFixture(page, 'en', 'owner', name => {
+    if (name === 'shop_permission_access') return { 'settings.manage': true }
+    if (name === 'shop_plan_usage') return { resources: [] }
+    if (name === 'receipt_settings') return { displayName: 'Pilot shop', address: null, phone: null, footer: null, paperSize: 'thermal_80', canManage: true }
+  })
+  await page.locator('#__nuxt').evaluate(async root => {
+    const app = (root as HTMLElement & { __vue_app__?: { config: { globalProperties: { $router?: { push: (to: string) => Promise<unknown> } } } } }).__vue_app__
+    await app?.config.globalProperties.$router?.push('/settings')
+  })
+  await expect(page).toHaveURL(/\/settings(?:[?#]|$)/)
+  await expect(page.getByRole('main').locator('form')).toHaveCount(0)
+  const trigger = page.getByRole('button', { name: 'Save Shop profile', exact: true })
+  await trigger.click()
+  const dialog = page.getByRole('dialog', { name: 'Shop profile', exact: true })
+  await expect(dialog).toBeVisible()
+  const input = dialog.getByRole('textbox', { name: 'Shop display name' })
+  await expect(input).toHaveValue('Pilot shop')
+  const save = dialog.getByRole('button', { name: 'Save Shop profile', exact: true })
+  await expect(save).toBeDisabled()
+  await input.fill('Revised shop')
+  await expect(save).toBeEnabled()
+  await input.fill('Pilot shop')
+  await dialog.getByRole('button', { name: 'Cancel', exact: true }).click()
+  await expect(dialog).toBeHidden()
+  await expect(trigger).toBeFocused()
 })
