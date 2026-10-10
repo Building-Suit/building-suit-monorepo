@@ -5,6 +5,16 @@ import {
   profileForAttempt,
   validateRetryPolicy,
 } from '../lib/retry-policy.mjs'
+import {
+  evaluatePublicationBoundaries,
+  validPublicationPath,
+} from './publication-preflight.mjs'
+import {
+  evaluatePublicationReadiness,
+  publicationReadinessOutcome,
+} from './publication-readiness.mjs'
+import { completePublicationPolicy } from '../lib/workstream-readiness.mjs'
+import { evaluateVerificationReadiness,verificationPlanHasEntries } from './verification-mode.mjs'
 
 function stable(value) {
   if (Array.isArray(value)) return value.map(stable)
@@ -47,15 +57,32 @@ function nonEmptyStrings(value) {
   )
 }
 
-function validPublicationPath(value) {
-  return typeof value === 'string' &&
-    value.length > 0 &&
-    !value.startsWith('/') &&
-    !value.includes('..') &&
-    value.endsWith('/')
+export function repairPreflightPublicationRuntimeFiles({
+  purpose,
+  runtimeFiles = [],
+  repairBaselineFiles = [],
+}) {
+  const runtime = [...new Set(runtimeFiles.filter(validPublicationPath))].sort()
+  if (purpose !== 'verification-product-repair') return runtime
+
+  const baseline = new Set(
+    repairBaselineFiles
+      .filter(validPublicationPath)
+      .map(value => String(value)),
+  )
+
+  return runtime.filter(file => !baseline.has(file))
 }
 
-export function evaluateExecutionPreflight({ packet, runtime, executions = [], serializationConflicts = [] }) {
+export function evaluateExecutionPreflight({
+  packet,
+  runtime,
+  executions = [],
+  serializationConflicts = [],
+  purpose = 'implementation',
+  repairBaselineFiles = [],
+  retryAccounting = null,
+}) {
   const checks = []
   const task = packet?.task
   const project = packet?.project
@@ -83,10 +110,44 @@ export function evaluateExecutionPreflight({ packet, runtime, executions = [], s
   }
   checks.push({ name: 'control_database_identity', status: 'pass', fingerprint: actualFingerprint })
 
-  if (task.status !== 'in_progress' || project.active !== true || workstream.active !== true || suit.status !== 'active') {
+  const latestExecution = [...executions]
+    .sort((left, right) => Number(left.attempt ?? 0) - Number(right.attempt ?? 0))
+    .at(-1)
+  const repairEligible =
+    purpose === 'verification-product-repair' &&
+    task.status === 'failed' &&
+    ['succeeded', 'failed'].includes(latestExecution?.status)
+  const retryEligible =
+    purpose === 'retry' &&
+    task.status === 'failed' &&
+    latestExecution?.status !== 'succeeded'
+  if (
+    (task.status !== 'in_progress' && !repairEligible && !retryEligible) ||
+    project.active !== true || workstream.active !== true || suit.status !== 'active'
+  ) {
     return failure('stop', 'safety-stop', 'safety-stop', 'task_not_execution_eligible', checks)
   }
-  checks.push({ name: 'task_lifecycle', status: 'pass' })
+  checks.push({
+    name: 'task_lifecycle',
+    status: 'pass',
+    purpose,
+    failed_verification_product_repair: repairEligible,
+    failed_execution_retry: retryEligible,
+  })
+
+  const executionAdmission = packet.execution_admission
+  if (!executionAdmission || executionAdmission.ready !== true) {
+    return failure('wait', 'wait-operator', 'verification-configuration',
+      executionAdmission?.reason ?? 'authoritative_execution_admission_missing', checks, {
+        execution_admission: executionAdmission ?? null,
+      })
+  }
+  checks.push({
+    name: 'authoritative_execution_admission',
+    status: 'pass',
+    run_id: executionAdmission.run_id ?? null,
+    run_owned: executionAdmission.run_owned === true,
+  })
 
   const hardDependency = (packet.dependencies ?? []).find(dependency =>
     dependency.dependency_type === 'hard' && dependency.status !== 'complete',
@@ -128,8 +189,9 @@ export function evaluateExecutionPreflight({ packet, runtime, executions = [], s
   const completedAttempts = executions.filter(execution =>
     ['succeeded', 'failed', 'cancelled'].includes(execution.status),
   ).length
-  const nextAttempt = completedAttempts + 1
-  if (nextAttempt > retryPolicy.max_attempts) {
+  const nextAttempt = Number(retryAccounting?.consumed ?? latestExecution?.attempt ?? 0) + 1
+  const reviewedExtra=nextAttempt>retryPolicy.max_attempts && Number.isSafeInteger(retryPolicy.one_invocation_extension?.grant_id)
+  if (nextAttempt > retryPolicy.max_attempts && !reviewedExtra) {
     return failure('stop', 'safety-stop', 'safety-stop', 'retry_budget_exhausted', checks, {
       completed_attempts: completedAttempts,
       max_attempts: retryPolicy.max_attempts,
@@ -138,7 +200,7 @@ export function evaluateExecutionPreflight({ packet, runtime, executions = [], s
 
   let profile
   try {
-    profile = profileForAttempt(retryPolicy, nextAttempt)
+    profile = reviewedExtra ? 'review' : profileForAttempt(retryPolicy, nextAttempt)
     const configuredProfile = getProfile(profile)
     if (!configuredProfile.uses_codex) throw new Error('implementation_profile_must_use_codex')
     if (task.model_profile) getProfile(task.model_profile)
@@ -153,7 +215,7 @@ export function evaluateExecutionPreflight({ packet, runtime, executions = [], s
     typeof task.title !== 'string' || !task.title.trim() ||
     typeof task.description !== 'string' || !task.description.trim() ||
     !nonEmptyStrings(task.acceptance_criteria) ||
-    !nonEmptyStrings(task.verification_plan)
+    !verificationPlanHasEntries(task.verification_plan)
   ) {
     return failure('wait', 'wait-operator', 'operator-wait', 'task_contract_incomplete', checks)
   }
@@ -162,18 +224,88 @@ export function evaluateExecutionPreflight({ packet, runtime, executions = [], s
   if (!Array.isArray(allowedPaths) || allowedPaths.length === 0 || !allowedPaths.every(validPublicationPath)) {
     return failure('wait', 'wait-operator', 'publication-scope', 'publication_scope_invalid', checks)
   }
+  const publicationBoundaries = evaluatePublicationBoundaries({
+    taskPaths: packet.publication_boundaries?.task_paths ?? task.allowed_paths ?? [],
+    sourcePaths: packet.publication_boundaries?.source_paths ?? [],
+    workstreamPaths: packet.publication_boundaries?.workstream_paths ?? [
+      `${String(workstream.application_path ?? suit.app_path ?? '').replace(/\/$/, '')}/`,
+    ],
+    projectPaths: packet.publication_boundaries?.project_paths ?? allowedPaths,
+  })
   if (!allowedPaths.some(prefix => String(workstream.application_path ?? suit.app_path ?? '').startsWith(prefix))) {
     return failure('wait', 'wait-operator', 'publication-scope', 'workstream_outside_publication_scope', checks)
   }
+  const runtimeFiles =
+    runtime?.repository?.worktree_target?.changed_files ?? []
+
+  const publicationRuntimeFiles =
+    repairPreflightPublicationRuntimeFiles({
+      purpose,
+      runtimeFiles,
+      repairBaselineFiles,
+    })
+
   if (
-    typeof workstream.publication_config?.merge_authorized !== 'boolean' ||
-    typeof workstream.publication_config?.deployment_authorized !== 'boolean' ||
-    typeof workstream.publication_config?.hosted_database_changes_authorized !== 'boolean' ||
-    typeof workstream.publication_config?.review_required_before_integration !== 'boolean'
+    purpose === 'verification-product-repair' &&
+    repairBaselineFiles.length > 0
   ) {
+    checks.push({
+      name: 'verified_repair_baseline',
+      status: 'pass',
+      ignored_for_repair_preflight_only: runtimeFiles
+        .filter(file => !publicationRuntimeFiles.includes(file))
+        .sort(),
+    })
+  }
+
+  const publicationReadiness = evaluatePublicationReadiness({
+    contract: packet.publication_contract,
+    taskPaths: publicationBoundaries.task_paths,
+    sourcePaths: publicationBoundaries.source_paths,
+    workstreamPaths: publicationBoundaries.workstream_paths,
+    projectPaths: publicationBoundaries.project_paths,
+    ordinaryAuthorizations: packet.publication_authorizations?.ordinary ?? [],
+    protectedAuthorizations: packet.publication_authorizations?.protected ?? [],
+    runtimeFiles: publicationRuntimeFiles,
+  })
+  const publicationOutcome = publicationReadinessOutcome(publicationReadiness)
+  if (!publicationReadiness.ready) {
+    return failure(
+      publicationOutcome.kind,
+      publicationOutcome.kind === 'stop' ? 'safety-stop' : 'wait-operator',
+      publicationOutcome.kind === 'stop' ? 'safety-stop' : 'publication-scope',
+      publicationOutcome.reason,
+      checks,
+      {
+        publication_boundaries: publicationBoundaries,
+        publication_readiness: publicationReadiness,
+        requested_paths: publicationReadiness.protected_authorization_required.length > 0
+          ? publicationReadiness.protected_authorization_required
+          : publicationReadiness.exact_authorization_required,
+      },
+    )
+  }
+  if (!completePublicationPolicy(workstream.publication_config)) {
     return failure('wait', 'wait-operator', 'publication-scope', 'publication_policy_incomplete', checks)
   }
-  checks.push({ name: 'task_contract_and_publication_scope', status: 'pass' })
+
+  const verificationReadiness = evaluateVerificationReadiness(packet)
+  if (!verificationReadiness.ready) {
+    return failure(
+      'wait',
+      'wait-operator',
+      'verification-configuration',
+      verificationReadiness.reason,
+      checks,
+      { unenforced: verificationReadiness.unenforced ?? [] },
+    )
+  }
+  checks.push({
+    name: 'task_contract_publication_and_verification_readiness',
+    status: 'pass',
+    publication_boundaries: publicationBoundaries,
+    publication_readiness: publicationReadiness,
+  })
 
   const missingExecutable = Object.entries(runtime?.executables ?? {})
     .find(([, available]) => available !== true)
@@ -210,18 +342,19 @@ export function evaluateExecutionPreflight({ packet, runtime, executions = [], s
   if (repository.worktree_target?.status === 'invalid') {
     return failure('stop', 'safety-stop', 'safety-stop', 'worktree_target_invalid', checks)
   }
-  const outOfScopeChange = (repository.worktree_target?.changed_files ?? []).find(file =>
-    !allowedPaths.some(prefix => file.startsWith(prefix)),
-  )
-  if (outOfScopeChange) {
-    return failure('wait', 'wait-operator', 'publication-scope', 'worktree_change_outside_publication_scope', checks, {
-      path: outOfScopeChange,
-    })
-  }
   checks.push({ name: 'repository_parent_and_worktree', status: 'pass' })
 
   if (runtime?.repository?.dependencies_ready !== true) {
-    return failure('reconcile', 'reconcile-runtime', 'transient-infrastructure', 'repository_dependencies_missing', checks)
+    return failure(
+      'reconcile',
+      'reconcile-runtime',
+      'transient-infrastructure',
+      'repository_dependencies_missing',
+      checks,
+      {
+        worktree_path: repository.worktree_target?.path ?? null,
+      },
+    )
   }
   checks.push({ name: 'repository_dependencies', status: 'pass' })
 
@@ -230,5 +363,7 @@ export function evaluateExecutionPreflight({ packet, runtime, executions = [], s
     profile,
     parent_sha: repository.parent.parent_sha,
     worktree_path: repository.worktree_target?.path ?? null,
+    publication_boundaries: publicationBoundaries,
+    publication_readiness: publicationReadiness,
   })
 }

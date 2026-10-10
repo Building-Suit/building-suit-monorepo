@@ -101,14 +101,14 @@ for (const locale of ['en', 'ar']) for (const width of [360, 768, 1440]) for (co
     await retailFixture(page, locale)
     await expect(page.locator('html')).toHaveAttribute('dir', locale === 'ar' ? 'rtl' : 'ltr')
     for (const [path, en, ar] of [
-      ['/dashboard', 'Operating dashboard', 'لوحة التشغيل'], ['/appointments', 'Appointments', 'المواعيد'],
+      ['/dashboard', 'Operating dashboard', 'لوحة التحكم'], ['/appointments', 'Appointments', 'المواعيد'],
       ['/pos', 'Point of sale', 'نقطة البيع'],
       ['/products', 'Products', 'المنتجات'], ['/services', 'Services', 'الخدمات'],
       ['/customers', 'Customers', 'العملاء'], ['/sales', 'Sales', 'المبيعات'],
       ['/inventory', 'Inventory', 'المخزون'], ['/expenses', 'Expenses', 'المصروفات'],
-      ['/cash-shifts', 'Cashier shifts', 'ورديات الخزنة'], ['/catalog-import', 'Catalog setup & import', 'إعداد الكتالوج والاستيراد'],
+      ['/cash-shifts', 'Cashier shifts', 'ورديات الخزنة'], ['/catalog-import', 'Catalog setup & import', 'إعداد قائمة المنتجات والخدمات'],
       ['/purchases', 'Purchases', 'المشتريات'], ['/reports', 'Operational reports', 'التقارير التشغيلية'],
-      ['/team', 'Team & permissions', 'الفريق والصلاحيات'], ['/billing', 'Subscription and billing', 'الاشتراك والفوترة'],
+      ['/team', 'Team & permissions', 'الفريق والصلاحيات'], ['/billing', 'Subscription and billing', 'الاشتراك والدفع'],
       ['/settings', 'Business settings', 'إعدادات النشاط'],
     ] as const) {
       await navigate(page, path)
@@ -124,10 +124,11 @@ for (const locale of ['en', 'ar']) for (const width of [360, 768, 1440]) for (co
     const account = page.locator('header').getByRole('button', { name: locale === 'ar' ? 'الحساب' : 'Account', exact: true })
     await target(account)
     await account.focus(); await page.keyboard.press('Enter')
-    await expect(page.getByRole('dialog', { name: locale === 'ar' ? 'الحساب' : 'Account', exact: true })).toBeVisible()
+    const accountMenu = page.getByRole('menu', { name: locale === 'ar' ? 'الحساب' : 'Account', exact: true })
+    await expect(accountMenu).toBeVisible()
     await page.keyboard.press('Escape')
     await expect(account).toBeFocused()
-    await expect(page.getByRole('dialog')).toHaveCount(0)
+    await expect(accountMenu).toHaveCount(0)
   })
 }
 
