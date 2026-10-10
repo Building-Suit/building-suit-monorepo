@@ -46,6 +46,7 @@ for (const locale of ['en', 'ar']) for (const mobile of [false, true]) {
   })
 }
 test('genuine staged customer reload preserves the already submitted private offer', async ({ browser }) => {
+  test.skip(process.env.BS_RUN_CUSTOM_OFFER_STAGING_ACCEPTANCE !== '1', 'Requires explicit authorization for live staging acceptance')
   const { targetSession, redemptionCase, targetEvidence } = await import('../custom-offer-target-evidence.mjs')
   const session = await targetSession()
   const { config, original, state, issued, args } = redemptionCase()

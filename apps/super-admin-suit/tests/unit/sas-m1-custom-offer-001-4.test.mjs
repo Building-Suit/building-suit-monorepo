@@ -1,4 +1,3 @@
-import { targetEvidence } from '../custom-offer-target-evidence.mjs'
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { readFileSync } from 'node:fs'
@@ -55,7 +54,8 @@ test('Admin mapping matches the registered Shop offer and frozen billing request
 
 // Target cases formerly blocked in issuer SQL: use real independently scoped
 // customer identities, current target RPC denials, and the completed request.
-test('installed staging redemption is idempotent, one-time and context-bound', async () => {
+test('installed staging redemption is idempotent, one-time and context-bound', { skip: process.env.BS_RUN_CUSTOM_OFFER_STAGING_ACCEPTANCE !== '1' ? 'Requires explicit authorization for live staging acceptance' : false }, async () => {
+  const { targetEvidence } = await import('../custom-offer-target-evidence.mjs')
   const evidence = await targetEvidence()
   assert.equal(evidence.submissionId, evidence.expectedSubmissionId)
   assert.equal(evidence.replayStatus, 200)
