@@ -185,3 +185,5 @@ export interface BsAdministrationShellLabels {
 export interface BsPermissionItem { key: string; label: string; section: string; sectionLabel: string }
 export interface BsPermissionRole { key: string; label: string }
 export interface BsInvitationAction { key: string; label: string; disabled?: boolean; tone?: 'default' | 'secondary' | 'danger' }
+
+export { administrationCapabilitySupported, administrationShellRegistration } from './administration.ts'

@@ -143,3 +143,10 @@ export interface BsHierarchyNode { id: string; label: string; description?: stri
 export interface BsFlowStage { id: string; title: string; description?: string; connectorLabel?: string; nodes: BsSetupStepData[] }
 export interface BsDocumentLine { id: string; label: string; description?: string; quantity?: string; unitPrice?: string; total: string }
 export interface BsDocumentTotal { id: string; label: string; value: string; emphasis?: boolean }
+
+export type {
+  BsSuitIdentity, BsAdministrationCapabilityReference, BsAdministrationNavigationItem,
+  BsAdministrationNavigationGroup, BsAdministrationOperation, BsAdministrationOperations,
+  BsAdministrationCapabilityDescriptor, BsAdministrationRequestContext,
+  BsAdministrationDescriptors, BsAdministrationAdapters, BsSuitAdministrationRegistration,
+} from './administration.ts'

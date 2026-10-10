@@ -9,6 +9,7 @@
 - [Manual Supabase setup](supabase-manual-setup.md): organizations, project refs, frontend keys, deployment secrets and Auth configuration.
 - [Identity architecture](../architecture/identity.md): separate product Auth and session boundaries.
 - [Scoped Realtime refresh](realtime.md): explicit scopes/filters, subscription cleanup and bounded refresh lifecycle.
+- [Future Suit administration](future-suit-administration.md): typed identity, context navigation and versioned read/command registration.
 - [Data table](data-table.md): PrimeVue integration and supported capabilities.
 
 The full original Building Suit requirements, architecture, security and brand documents are preserved in `apps/building-suit-docs/content/building-suit/`. The documentation app indexes those originals alongside these maintained specifications. Original prototypes and instructions under `reference/` are evidence, not active application code or agent rules.
