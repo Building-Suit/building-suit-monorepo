@@ -93,5 +93,16 @@ test('signup survives session establishment and provisioning while operational c
     await nextTick()
     assert.equal(unmounts, 5, 'session loss must remove the protected page and its drafts')
     assert.equal(mounts, 5, 'anonymous users must not mount an operational page')
+
+    for (const path of ['/about', '/contact', '/terms', '/privacy', '/delivery-shipping', '/refund-cancellation']) {
+      route.path = path
+      await nextTick()
+      assert.equal(mounts, 6, `anonymous visitors must render ${path}`)
+      assert.equal(unmounts, 5, 'public navigation must retain the anonymous layout')
+    }
+    route.path = '/dashboard'
+    await nextTick()
+    assert.equal(unmounts, 6, 'returning to a protected route must remove the public page')
+    assert.equal(mounts, 6, 'public access must not allow an anonymous operational page')
   } finally { app.unmount() }
 })
