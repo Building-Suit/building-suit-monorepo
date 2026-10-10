@@ -55,6 +55,11 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) {
     await expect(picker).toBeFocused()
     const input = patterns.getByRole('textbox', { name: locale === 'ar' ? 'القيمة' : 'Value', exact: true })
     await input.fill('test')
+    const consent = patterns.getByRole('checkbox', { name: locale === 'ar' ? 'أوافق على الشروط' : 'I agree to the terms', exact: true })
+    await patterns.getByRole('button', { name: locale === 'ar' ? 'حفظ' : 'Save', exact: true }).click()
+    await expect(patterns.getByRole('alert')).toHaveCount(0)
+    await expect(consent).toBeFocused()
+    await consent.check()
     await patterns.getByRole('button', { name: locale === 'ar' ? 'حفظ' : 'Save', exact: true }).click()
     await expect(patterns.getByRole('alert')).toBeFocused()
     await patterns.getByRole('button', { name: locale === 'ar' ? 'جارٍ التحميل…' : 'Loading…', exact: true }).click()
@@ -142,8 +147,8 @@ async function shopFixture(page: Page, locale = 'en') {
   await page.context().addCookies([{ name: 'building-suit-locale', value: locale, domain: '127.0.0.1', path: '/' }])
   await page.goto(`${shopBaseUrl}/auth/login`)
   await waitForNuxtHydration(page)
-  await page.locator('#login-email').fill(user.email)
-  await page.locator('#login-password').fill('fixture-password')
+  await page.getByRole('textbox', { name: locale === 'ar' ? /البريد الإلكتروني/ : /Email/ }).fill(user.email)
+  await page.getByLabel(locale === 'ar' ? /كلمة المرور/ : /Password/).fill('fixture-password')
   const loginResponse = page.waitForResponse(response =>
     response.url().startsWith('http://127.0.0.1:61321/auth/v1/token')
     && response.request().method() === 'POST',
