@@ -53,6 +53,7 @@ async function save() {
   catch (failure) { error.value = describeError(failure) }
   finally { pending.value = false }
 }
+const ledgerPresentation = useLedgerPresentation()
 </script>
 
 <template>
@@ -60,8 +61,8 @@ async function save() {
       <p>{{ accountName }}</p>
       <BsSectionSkeleton v-if="loading" variant="table" :rows="3" />
       <template v-else-if="context">
-        <p>{{ t('financialMapping.sourceAmount') }}: <MoneyText :amount-minor="context.amount_minor" /></p>
-        <div v-if="context.decision_id" class="text-sm text-fg-muted"><p>{{ t('financialMapping.previousAllocation') }}</p><p v-for="(value, section) in context.allocations" :key="section">{{ t(`financialMapping.lines.${section}`) }}: <MoneyText :amount-minor="value" /></p></div>
+        <p>{{ t('financialMapping.sourceAmount') }}: <BsMoneyText :amount="context.amount_minor" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" /></p>
+        <div v-if="context.decision_id" class="text-sm text-fg-muted"><p>{{ t('financialMapping.previousAllocation') }}</p><p v-for="(value, section) in context.allocations" :key="section">{{ t(`financialMapping.lines.${section}`) }}: <BsMoneyText :amount="value" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" /></p></div>
         <div class="space-y-3">
           <BsFloatingField v-for="key in (['operating', 'investing', 'financing'] as const)" :key="key" :label="t(`financialMapping.lines.${key}`)">
             <input v-model="amounts[key]" type="text" inputmode="decimal" class="ls-input" :disabled="pending">

@@ -19,6 +19,7 @@ export interface BsDataTableColumn<Row extends object = Record<string, unknown>>
   key: string
   field?: string
   header: string
+  footer?: string | number
   value?: (row: Row) => unknown
   format?: (value: unknown, row: Row) => string | number | null | undefined
   align?: BsDataTableAlign
@@ -26,6 +27,7 @@ export interface BsDataTableColumn<Row extends object = Record<string, unknown>>
   width?: BsDataTableWidth
   sticky?: BsDataTableSticky
   sortable?: boolean
+  ariaSort?: 'none' | 'ascending' | 'descending' | 'other'
   sortField?: string
   filterField?: string
   filterMatchMode?: string

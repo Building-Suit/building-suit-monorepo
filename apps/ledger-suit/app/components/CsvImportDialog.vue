@@ -347,6 +347,7 @@ async function confirmImport() {
 
 const { dirty, markSaved } = useRecordAction(() => ({ filename: filename.value, pasteText: pasteText.value, extractionFile: extractionFile.value?.name ?? '', mapping: { ...mapping } }), visible)
 onMounted(markSaved)
+const ledgerUsage = useLedgerUsagePresentation()
 </script>
 
 <template>
@@ -444,7 +445,7 @@ onMounted(markSaved)
         <section v-if="phase === 'mapping'" class="ls-card overflow-hidden">
           <div class="p-4"><h2 class="font-semibold">{{ t('imports.previewTitle') }}</h2></div>
           <div class="overflow-x-auto">
-            <BsDataTable :value="previewRows"><Column v-for="header in headers" :key="header" :field="header" :header="header"><template #body="{ data: row }">{{ row[header] || t('common.dash') }}</template></Column></BsDataTable>
+            <BsDataTable :value="previewRows" :columns="[...(headers ?? []).map((header) => ({ key: header, field: header, header: header }))]"><template v-for="header in headers" :key="header" #[`cell-${header}`]="{ row }">{{ row[header] || t('common.dash') }}</template></BsDataTable>
           </div>
           <div class="flex justify-end border-t border-[var(--bs-border)] p-4">
             <BsButton type="button" class="ls-btn ls-btn-accent" :disabled="!requiredMappingComplete || !!busy" @click="validateImport">
@@ -468,7 +469,7 @@ onMounted(markSaved)
                 <dd class="mt-1 text-xl font-bold">{{ batch[metric] }}</dd>
               </div>
             </dl>
-            <QuotaUsageMeter v-if="phase === 'validated'" quota-key="max_monthly_transactions" compact class="mt-5" />
+            <BsUsageMeter v-if="(phase === 'validated') && ledgerUsage.item('max_monthly_transactions')"  compact class="mt-5" :item="ledgerUsage.item('max_monthly_transactions')!" />
             <div class="mt-5 flex flex-wrap justify-end gap-2">
               <BsButton v-if="phase === 'results'" type="button" class="ls-btn" @click="reset">{{ t('imports.importAnother') }}</BsButton>
               <BsButton v-else type="button" class="ls-btn" :disabled="!!busy" @click="reset">{{ t('imports.startOver') }}</BsButton>
@@ -491,31 +492,20 @@ onMounted(markSaved)
               <p role="status" class="text-sm text-fg-muted">{{ t('imports.reviewRange', { from: reviewRangeStart, to: reviewRangeEnd, total: filteredResultRows.length }) }}</p>
             </div>
             <div class="overflow-x-auto">
-              <BsDataTable :value="displayRows" data-key="id" :label="t('imports.rowsCaption')">
-  <Column >
-    <template #header>{{ t('imports.row') }}</template>
-    <template #body="{ data: row }">{{ row.rowNumber }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('transactions.status') }}</template>
-    <template #body="{ data: row }"><BsStatusBadge :status="row.status" /></template>
-  </Column>
-  <Column >
-    <template #header>{{ t('transactions.type') }}</template>
-    <template #body="{ data: row }">{{ row.typeValue }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('transactions.date') }}</template>
-    <template #body="{ data: row }">{{ row.dateValue }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('transactions.amount') }}</template>
-    <template #body="{ data: row }">{{ row.amountValue }}</template>
-  </Column>
-  <Column body-class="max-w-80 text-xs text-fg-muted">
-    <template #header>{{ t('imports.issue') }}</template>
-    <template #body="{ data: row }">{{ row.issue || t('common.dash') }}</template>
-  </Column>
+              <BsDataTable :value="displayRows" row-key="id" :label="t('imports.rowsCaption')" :columns="[{ key: 'column1', header: (t('imports.row')) }, { key: 'column2', header: (t('transactions.status')) }, { key: 'column3', header: (t('transactions.type')) }, { key: 'column4', header: (t('transactions.date')) }, { key: 'column5', header: (t('transactions.amount')) }, { key: 'column6', header: (t('imports.issue')) }]">
+                <template #header-column1>{{ t('imports.row') }}</template>
+                <template #cell-column1="{ row }">{{ row.rowNumber }}</template>
+                <template #header-column2>{{ t('transactions.status') }}</template>
+                <template #cell-column2="{ row }"><BsStatusBadge :status="row.status" /></template>
+                <template #header-column3>{{ t('transactions.type') }}</template>
+                <template #cell-column3="{ row }">{{ row.typeValue }}</template>
+                <template #header-column4>{{ t('transactions.date') }}</template>
+                <template #cell-column4="{ row }">{{ row.dateValue }}</template>
+                <template #header-column5>{{ t('transactions.amount') }}</template>
+                <template #cell-column5="{ row }">{{ row.amountValue }}</template>
+                <template #header-column6>{{ t('imports.issue') }}</template>
+                <template #cell-column6="{ row }">{{ row.issue || t('common.dash') }}</template>
+
 </BsDataTable>
             </div>
             <div v-if="reviewPageCount > 1" class="flex items-center justify-end gap-2 border-t border-[var(--bs-border)] p-3">

@@ -134,15 +134,14 @@ function planName(key: unknown) {
       <p v-if="targetId" class="text-sm text-fg-muted">{{ t('admin.scopedResults') }}</p>
       <p v-if="pending" role="status">{{ t('app.loading') }}</p>
       <p v-else-if="!error && !rows.length">{{ t('admin.empty') }}</p>
-      <BsDataTable v-if="rows.length && !denied" :value="rows" data-key="id" :loading="pending">
-        <Column v-for="column in columns" :key="column.field" :field="column.field" :header="column.header" sortable>
-          <template #body="{ data }"><pre v-if="column.field.endsWith('_state')" class="max-w-80 overflow-auto text-xs" dir="ltr">{{ display(data[column.field]) }}</pre><span v-else class="break-words">{{ column.field === 'plan_key' ? planName(data[column.field]) : display(data[column.field]) }}</span></template>
-        </Column>
-        <Column v-if="resource === 'users' || resource === 'organizations'" :header="t('admin.memberships')"><template #body="{ data }"><BsButton type="button" class="ls-btn" :disabled="pending" @click="inspectMemberships(data)">{{ t('admin.memberships') }}</BsButton></template></Column>
-        <Column v-if="resource === 'organizations' && isPlatformAdmin" :header="t('admin.access')"><template #body="{ data }"><BsButton type="button" class="ls-btn" :disabled="pending" @click="open(data, 'access')">{{ data.operator_suspended ? t('admin.reactivate') : t('admin.suspend') }}</BsButton></template></Column>
-        <Column v-if="resource === 'subscriptions' && isPlatformAdmin" :header="t('admin.correction')"><template #body="{ data }"><BsButton type="button" class="ls-btn" :disabled="pending || data.provider !== 'manual'" @click="open(data, 'subscription')">{{ t('admin.correction') }}</BsButton></template></Column>
-        <Column v-if="resource === 'payments'" :header="t('admin.review')"><template #body="{ data }"><BsButton v-if="data.evidence_id" type="button" class="ls-btn" :disabled="pending" @click="open(data, 'payment')">{{ t('admin.review') }}</BsButton></template></Column>
-        <Column v-if="resource === 'support' && isPlatformAdmin" :header="t('admin.manage')"><template #body="{ data }"><BsButton type="button" class="ls-btn" :disabled="pending" @click="open(data, 'support')">{{ t('admin.manage') }}</BsButton></template></Column>
+      <BsDataTable v-if="rows.length && !denied" :value="rows" row-key="id" :loading="pending" :columns="[...(columns ?? []).map((column) => ({ key: column.field, field: column.field, header: column.header, sortable: true })), ...((resource === 'users' || resource === 'organizations') ? [{ key: 'column2', header: t('admin.memberships') }] : []), ...((resource === 'organizations' && isPlatformAdmin) ? [{ key: 'column3', header: t('admin.access') }] : []), ...((resource === 'subscriptions' && isPlatformAdmin) ? [{ key: 'column4', header: t('admin.correction') }] : []), ...((resource === 'payments') ? [{ key: 'column5', header: t('admin.review') }] : []), ...((resource === 'support' && isPlatformAdmin) ? [{ key: 'column6', header: t('admin.manage') }] : [])]">
+        <template v-for="column in columns" :key="column.field" #[`cell-${column.field}`]="{ row: data }"><pre v-if="column.field.endsWith('_state')" class="max-w-80 overflow-auto text-xs" dir="ltr">{{ display(data[column.field]) }}</pre><span v-else class="break-words">{{ column.field === 'plan_key' ? planName(data[column.field]) : display(data[column.field]) }}</span></template>
+        <template #cell-column2="{ row: data }"><BsButton type="button" class="ls-btn" :disabled="pending" @click="inspectMemberships(data)">{{ t('admin.memberships') }}</BsButton></template>
+        <template #cell-column3="{ row: data }"><BsButton type="button" class="ls-btn" :disabled="pending" @click="open(data, 'access')">{{ data.operator_suspended ? t('admin.reactivate') : t('admin.suspend') }}</BsButton></template>
+        <template #cell-column4="{ row: data }"><BsButton type="button" class="ls-btn" :disabled="pending || data.provider !== 'manual'" @click="open(data, 'subscription')">{{ t('admin.correction') }}</BsButton></template>
+        <template #cell-column5="{ row: data }"><BsButton v-if="data.evidence_id" type="button" class="ls-btn" :disabled="pending" @click="open(data, 'payment')">{{ t('admin.review') }}</BsButton></template>
+        <template #cell-column6="{ row: data }"><BsButton type="button" class="ls-btn" :disabled="pending" @click="open(data, 'support')">{{ t('admin.manage') }}</BsButton></template>
+
       </BsDataTable>
       <div v-if="role && resource !== 'status'" class="flex gap-3">
         <BsButton type="button" class="ls-btn" :disabled="pending || offset === 0" @click="page(-50)">{{ t('admin.previous') }}</BsButton>

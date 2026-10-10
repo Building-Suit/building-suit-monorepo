@@ -141,36 +141,27 @@ watch(currentId, () => fetchRows(), { immediate: true })
 
     <template v-else-if="rows.length">
       <div class="ls-card overflow-x-auto">
-        <BsDataTable :value="rows" data-key="id">
-  <Column body-class="whitespace-nowrap">
-    <template #header>{{ t('audit.date') }}</template>
-    <template #body="{ data: row }">{{ formatTimestamp(row.created_at) }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('audit.actor') }}</template>
-    <template #body="{ data: row }"><div dir="ltr">{{ row.actor_email || t('audit.system') }}</div></template>
-  </Column>
-  <Column >
-    <template #header>{{ t('audit.activity') }}</template>
-    <template #body="{ data: row }"><p class="font-medium">{{ activityLabel(row) }}</p>
-                <p class="text-xs text-fg-muted" dir="ltr">{{ row.action }}</p></template>
-  </Column>
-  <Column >
-    <template #header>{{ t('audit.record') }}</template>
-    <template #body="{ data: row }"><p>{{ entityLabel(row.entity_type) }}</p>
-                <p v-if="row.entity_id" class="text-xs text-fg-muted" dir="ltr">{{ row.entity_id }}</p></template>
-  </Column>
-  <Column >
-    <template #header>{{ t('audit.changes') }}</template>
-    <template #body="{ data: row }"><details>
-                  <summary class="cursor-pointer text-link">{{ t('audit.viewChanges') }}</summary>
-                  <div class="mt-3 grid min-w-80 gap-3 text-xs">
-                    <div><p class="font-semibold">{{ t('audit.before') }}</p><pre class="mt-1 overflow-auto rounded-control bg-background p-2" dir="ltr">{{ jsonText(row.before_state) }}</pre></div>
-                    <div><p class="font-semibold">{{ t('audit.after') }}</p><pre class="mt-1 overflow-auto rounded-control bg-background p-2" dir="ltr">{{ jsonText(row.after_state) }}</pre></div>
-                    <div><p class="font-semibold">{{ t('audit.metadata') }}</p><pre class="mt-1 overflow-auto rounded-control bg-background p-2" dir="ltr">{{ jsonText(row.metadata) }}</pre></div>
-                  </div>
-                </details></template>
-  </Column>
+        <BsDataTable :value="rows" row-key="id" :columns="[{ key: 'column1', header: (t('audit.date')) }, { key: 'column2', header: (t('audit.actor')) }, { key: 'column3', header: (t('audit.activity')) }, { key: 'column4', header: (t('audit.record')) }, { key: 'column5', header: (t('audit.changes')) }]">
+          <template #header-column1>{{ t('audit.date') }}</template>
+          <template #cell-column1="{ row }">{{ formatTimestamp(row.created_at) }}</template>
+          <template #header-column2>{{ t('audit.actor') }}</template>
+          <template #cell-column2="{ row }"><div dir="ltr">{{ row.actor_email || t('audit.system') }}</div></template>
+          <template #header-column3>{{ t('audit.activity') }}</template>
+          <template #cell-column3="{ row }"><p class="font-medium">{{ activityLabel(row) }}</p>
+          <p class="text-xs text-fg-muted" dir="ltr">{{ row.action }}</p></template>
+          <template #header-column4>{{ t('audit.record') }}</template>
+          <template #cell-column4="{ row }"><p>{{ entityLabel(row.entity_type) }}</p>
+          <p v-if="row.entity_id" class="text-xs text-fg-muted" dir="ltr">{{ row.entity_id }}</p></template>
+          <template #header-column5>{{ t('audit.changes') }}</template>
+          <template #cell-column5="{ row }"><details>
+            <summary class="cursor-pointer text-link">{{ t('audit.viewChanges') }}</summary>
+            <div class="mt-3 grid min-w-80 gap-3 text-xs">
+              <div><p class="font-semibold">{{ t('audit.before') }}</p><pre class="mt-1 overflow-auto rounded-control bg-background p-2" dir="ltr">{{ jsonText(row.before_state) }}</pre></div>
+              <div><p class="font-semibold">{{ t('audit.after') }}</p><pre class="mt-1 overflow-auto rounded-control bg-background p-2" dir="ltr">{{ jsonText(row.after_state) }}</pre></div>
+              <div><p class="font-semibold">{{ t('audit.metadata') }}</p><pre class="mt-1 overflow-auto rounded-control bg-background p-2" dir="ltr">{{ jsonText(row.metadata) }}</pre></div>
+            </div>
+          </details></template>
+
 </BsDataTable>
       </div>
 

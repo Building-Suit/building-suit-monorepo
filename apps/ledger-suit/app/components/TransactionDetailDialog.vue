@@ -200,6 +200,8 @@ async function reverse() {
   }
 }
 const { dirty: overlayDirty0 } = useRecordAction(() => ({ reason: reason.value, selectedTagId: selectedTagId.value }), computed(() => Boolean(props.transactionId)))
+const ledgerPresentation = useLedgerPresentation()
+const ledgerUsage = useLedgerUsagePresentation()
 </script>
 
 <template>
@@ -261,27 +263,22 @@ const { dirty: overlayDirty0 } = useRecordAction(() => ({ reason: reason.value, 
 
           <section aria-labelledby="journal-heading">
             <h3 id="journal-heading" class="mb-2 text-sm font-bold">{{ t('detail.journal') }}</h3>
-            <BsDataTable :value="entries">
-  <Column >
-    <template #header>{{ t('detail.account') }}</template>
-    <template #body="{ data: entry }"><span class="block">{{ entry.account_name }}</span>
-                    <span v-if="entry.memo" class="block text-xs text-fg-muted">{{ entry.memo }}</span></template>
-  </Column>
-  <Column header-class="text-end" body-class="ls-num">
-    <template #header>{{ t('detail.debit') }}</template>
-    <template #body="{ data: entry }"><MoneyText v-if="entry.side === 'debit'" :amount-minor="entry.amount_minor" :currency="entry.currency_code" />
-                    <span v-else class="text-fg-disabled">{{ t('common.dash') }}</span></template>
-  </Column>
-  <Column header-class="text-end" body-class="ls-num">
-    <template #header>{{ t('detail.credit') }}</template>
-    <template #body="{ data: entry }"><MoneyText v-if="entry.side === 'credit'" :amount-minor="entry.amount_minor" :currency="entry.currency_code" />
-                    <span v-else class="text-fg-disabled">{{ t('common.dash') }}</span></template>
-  </Column>
+            <BsDataTable :value="entries" :columns="[{ key: 'column1', header: (t('detail.account')) }, { key: 'column2', header: (t('detail.debit')), align: 'end' as const }, { key: 'column3', header: (t('detail.credit')), align: 'end' as const }]">
+              <template #header-column1>{{ t('detail.account') }}</template>
+              <template #cell-column1="{ row: entry }"><span class="block">{{ entry.account_name }}</span>
+              <span v-if="entry.memo" class="block text-xs text-fg-muted">{{ entry.memo }}</span></template>
+              <template #header-column2>{{ t('detail.debit') }}</template>
+              <template #cell-column2="{ row: entry }"><BsMoneyText v-if="entry.side === 'debit'" :amount="entry.amount_minor" :currency="ledgerPresentation.currency(entry.currency_code)" :locale="ledgerPresentation.locale" />
+              <span v-else class="text-fg-disabled">{{ t('common.dash') }}</span></template>
+              <template #header-column3>{{ t('detail.credit') }}</template>
+              <template #cell-column3="{ row: entry }"><BsMoneyText v-if="entry.side === 'credit'" :amount="entry.amount_minor" :currency="ledgerPresentation.currency(entry.currency_code)" :locale="ledgerPresentation.locale" />
+              <span v-else class="text-fg-disabled">{{ t('common.dash') }}</span></template>
+
 </BsDataTable>
             <div class="mt-3 flex flex-wrap justify-between gap-3 rounded-control bg-surface-muted p-3 text-sm font-semibold">
               <span>{{ t('journalCenter.lineTotals') }}</span>
-              <span>{{ t('detail.debit') }}: <MoneyText :amount-minor="transaction?.debit_minor" :currency="transaction?.currency_code ?? undefined" /></span>
-              <span>{{ t('detail.credit') }}: <MoneyText :amount-minor="transaction?.credit_minor" :currency="transaction?.currency_code ?? undefined" /></span>
+              <span>{{ t('detail.debit') }}: <BsMoneyText :amount="transaction?.debit_minor" :currency="ledgerPresentation.currency(transaction?.currency_code ?? undefined)" :locale="ledgerPresentation.locale" /></span>
+              <span>{{ t('detail.credit') }}: <BsMoneyText :amount="transaction?.credit_minor" :currency="ledgerPresentation.currency(transaction?.currency_code ?? undefined)" :locale="ledgerPresentation.locale" /></span>
             </div>
           </section>
 
@@ -289,8 +286,8 @@ const { dirty: overlayDirty0 } = useRecordAction(() => ({ reason: reason.value, 
 
           <section aria-labelledby="attachments-heading">
             <div class="mb-2 flex items-center justify-between"><h3 id="attachments-heading" class="text-sm font-bold">{{ t('operations.attachments') }}</h3><label v-if="can('attachments.create')" class="ls-btn ls-btn-sm cursor-pointer">{{ uploading ? t('common.saving') : t('operations.upload') }}<input type="file" class="sr-only" accept="application/pdf,image/png,image/jpeg,image/webp" :disabled="uploading" @change="uploadAttachment"></label></div>
-            <QuotaUsageMeter v-if="can('attachments.create')" quota-key="max_storage_bytes" compact class="mb-3" />
-            <div v-if="attachments.length" class="space-y-2"><div v-for="item in attachments" :key="item.id" class="flex items-center justify-between rounded-control bg-surface-muted px-3 py-2 text-sm"><BsButton variant="link" type="submit" class="truncate text-link" @click="downloadAttachment(item)">{{ item.file_name }}</BsButton><BsButton type="submit" v-if="can('attachments.delete')" class="ls-btn ls-btn-sm" :aria-label="t('common.delete')" @click="deleteAttachment(item)"><BsIcon name="delete" :size="18" /></BsButton></div></div><p v-else class="text-sm text-fg-muted">{{ t('operations.noAttachments') }}</p>
+            <BsUsageMeter v-if="(can('attachments.create')) && ledgerUsage.item('max_storage_bytes')"  compact class="mb-3" :item="ledgerUsage.item('max_storage_bytes')!" />
+            <div v-if="attachments.length" class="space-y-2"><div v-for="item in attachments" :key="item.id" class="flex items-center justify-between rounded-control bg-surface-muted px-3 py-2 text-sm"><BsButton variant="link" type="submit" class="truncate text-link" @click="downloadAttachment(item)">{{ item.file_name }}</BsButton><BsButton v-if="can('attachments.delete')" type="submit" class="ls-btn ls-btn-sm" :aria-label="t('common.delete')" @click="deleteAttachment(item)"><BsIcon name="delete" :size="18" /></BsButton></div></div><p v-else class="text-sm text-fg-muted">{{ t('operations.noAttachments') }}</p>
           </section>
 
           <section v-if="transaction?.reverses_transaction_id || transaction?.reversed_by_transaction_id || transaction?.correction_of_transaction_id" class="rounded-control bg-[var(--bs-status-info-bg)] px-3 py-3 text-sm text-[var(--bs-status-info)]" aria-labelledby="relationships-heading">

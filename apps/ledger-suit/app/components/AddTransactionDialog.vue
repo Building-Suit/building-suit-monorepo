@@ -414,8 +414,9 @@ async function submit() {
   }
 }
 
-
 const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Boolean(open.value)))
+const ledgerPresentation = useLedgerPresentation()
+const ledgerUsage = useLedgerUsagePresentation()
 </script>
 
 <template>
@@ -430,7 +431,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
         </div>
 
         <div class="min-h-0 flex-1 overflow-y-auto">
-          <QuotaUsageMeter quota-key="max_monthly_transactions" compact class="mb-4" />
+          <BsUsageMeter  v-if="ledgerUsage.item('max_monthly_transactions')" compact class="mb-4" :item="ledgerUsage.item('max_monthly_transactions')!" />
           <div class="grid gap-4 sm:grid-cols-2">
             <!-- Amount: every flow except the split ones -->
             <div v-if="!['liability_payment', 'adjustment'].includes(flow)">
@@ -721,8 +722,8 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
 
             <div class="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-control bg-surface-muted px-3 py-2 text-sm">
               <span>
-                {{ t('add.debitsTotal') }} <MoneyText :amount-minor="adjustmentTotals.debit" />
-                · {{ t('add.creditsTotal') }} <MoneyText :amount-minor="adjustmentTotals.credit" />
+                {{ t('add.debitsTotal') }} <BsMoneyText :amount="adjustmentTotals.debit" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
+                · {{ t('add.creditsTotal') }} <BsMoneyText :amount="adjustmentTotals.credit" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
               </span>
               <span
                 class="font-semibold"

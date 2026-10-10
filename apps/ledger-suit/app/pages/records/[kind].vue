@@ -182,6 +182,7 @@ const date = (row: TransactionRow | GenericRow, key: string) => {
   return formatDate(typeof raw === 'string' ? raw.slice(0, 10) : null, locale.value)
 }
 const { dirty: overlayDirty0 } = useRecordAction(() => commitmentAction, computed(() => Boolean(commitmentAction.id)))
+const ledgerPresentation = useLedgerPresentation()
 </script>
 
 <template>
@@ -211,145 +212,89 @@ const { dirty: overlayDirty0 } = useRecordAction(() => commitmentAction, compute
     <BsEmptyState v-else-if="rows.length === 0" :title="kind === 'tags' ? t('tagsGuide.emptyTitle') : t('recordPages.empty', { item: title })" :description="t(kind === 'tags' ? 'tagsGuide.emptyHint' : 'recordPages.emptyHint')" :action-label="canCreate ? (kind === 'tags' ? t('recordPages.addTag') : t('recordPages.add', { item: title })) : undefined" @action="addRecord" />
 
     <div v-else class="ls-card overflow-x-auto">
-      <BsDataTable v-if="isTransaction" :value="rows" :label="title" :row-class="() => 'cursor-pointer hover:bg-surface-muted'" @row-click="event => selectedId = text(event.data, 'id')">
-  <Column body-class="whitespace-nowrap">
-    <template #header>{{ t('transactions.date') }}</template>
-    <template #body="{ data: row }">{{ date(row, 'transaction_date') }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('transactions.description') }}</template>
-    <template #body="{ data: row }">{{ text(row, 'description') }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('transactions.category') }}</template>
-    <template #body="{ data: row }">{{ text(row, 'category_name') }}</template>
-  </Column>
-  <Column body-class="whitespace-nowrap text-fg-muted">
-    <template #header>{{ t('transactions.fromTo') }}</template>
-    <template #body="{ data: row }">{{ text(row, 'from_account_name') }} <BsIcon name="arrowRight" :size="14" directional class="inline-block" /> {{ text(row, 'to_account_name') }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('transactions.status') }}</template>
-    <template #body="{ data: row }"><BsStatusBadge :status="text(row, 'status')" /></template>
-  </Column>
-  <Column header-class="text-end" body-class="ls-num font-semibold">
-    <template #header>{{ t('transactions.amount') }}</template>
-    <template #body="{ data: row }"><MoneyText :amount-minor="number(row, 'amount_minor')" :currency="text(row, 'currency_code')" /></template>
-  </Column>
+      <BsDataTable v-if="isTransaction" :value="rows" :label="title" :columns="[{ key: 'column1', header: (t('transactions.date')) }, { key: 'column2', header: (t('transactions.description')) }, { key: 'column3', header: (t('transactions.category')) }, { key: 'column4', header: (t('transactions.fromTo')) }, { key: 'column5', header: (t('transactions.status')) }, { key: 'column6', header: (t('transactions.amount')), align: 'end' as const }]" @row-click="event => selectedId = text(event.data, 'id')">
+        <template #header-column1>{{ t('transactions.date') }}</template>
+        <template #cell-column1="{ row }">{{ date(row, 'transaction_date') }}</template>
+        <template #header-column2>{{ t('transactions.description') }}</template>
+        <template #cell-column2="{ row }">{{ text(row, 'description') }}</template>
+        <template #header-column3>{{ t('transactions.category') }}</template>
+        <template #cell-column3="{ row }">{{ text(row, 'category_name') }}</template>
+        <template #header-column4>{{ t('transactions.fromTo') }}</template>
+        <template #cell-column4="{ row }">{{ text(row, 'from_account_name') }} <BsIcon name="arrowRight" :size="14" directional class="inline-block" /> {{ text(row, 'to_account_name') }}</template>
+        <template #header-column5>{{ t('transactions.status') }}</template>
+        <template #cell-column5="{ row }"><BsStatusBadge :status="text(row, 'status')" /></template>
+        <template #header-column6>{{ t('transactions.amount') }}</template>
+        <template #cell-column6="{ row }"><BsMoneyText :amount="number(row, 'amount_minor')" :currency="ledgerPresentation.currency(text(row, 'currency_code'))" :locale="ledgerPresentation.locale" /></template>
+
 </BsDataTable>
 
-      <BsDataTable v-else-if="kind === 'commitments'" :value="rows">
-  <Column >
-    <template #header>{{ t('operations.name') }}</template>
-    <template #body="{ data: row }">{{ text(row, 'title') }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('recordPages.kind') }}</template>
-    <template #body="{ data: row }">{{ text(row, 'type').replaceAll('_', ' ') }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('add.dueDate') }}</template>
-    <template #body="{ data: row }">{{ date(row, 'due_date') }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('transactions.status') }}</template>
-    <template #body="{ data: row }"><BsStatusBadge :status="text(row, 'status')" /></template>
-  </Column>
-  <Column header-class="text-end" body-class="ls-num">
-    <template #header>{{ t('transactions.amount') }}</template>
-    <template #body="{ data: row }"><MoneyText :amount-minor="number(row, 'outstanding_minor')" :currency="text(row, 'currency_code')" /></template>
-  </Column>
-  <Column header-class="text-end" body-class="whitespace-nowrap text-end">
-    <template #header>{{ t('accounts.actions') }}</template>
-    <template #body="{ data: row }"><template v-if="!['paid','cancelled'].includes(text(row, 'status'))"><BsButton type="submit" v-if="can('commitments.settle')" class="ls-btn ls-btn-sm" @click="openCommitmentAction(text(row, 'id'), 'settle')">{{ t('operations.settle') }}</BsButton><BsButton type="submit" v-if="can('commitments.update')" class="ls-btn ls-btn-sm ms-1" @click="openCommitmentAction(text(row, 'id'), 'postpone')">{{ t('operations.postpone') }}</BsButton><BsButton type="submit" v-if="can('commitments.update')" class="ls-btn ls-btn-sm ms-1" :disabled="actionBusy" @click="cancelCommitment(text(row, 'id'))">{{ t('common.cancel') }}</BsButton></template></template>
-  </Column>
+      <BsDataTable v-else-if="kind === 'commitments'" :value="rows" :columns="[{ key: 'column1', header: (t('operations.name')) }, { key: 'column2', header: (t('recordPages.kind')) }, { key: 'column3', header: (t('add.dueDate')) }, { key: 'column4', header: (t('transactions.status')) }, { key: 'column5', header: (t('transactions.amount')), align: 'end' as const }, { key: 'column6', header: (t('accounts.actions')), align: 'end' as const }]">
+        <template #header-column1>{{ t('operations.name') }}</template>
+        <template #cell-column1="{ row }">{{ text(row, 'title') }}</template>
+        <template #header-column2>{{ t('recordPages.kind') }}</template>
+        <template #cell-column2="{ row }">{{ text(row, 'type').replaceAll('_', ' ') }}</template>
+        <template #header-column3>{{ t('add.dueDate') }}</template>
+        <template #cell-column3="{ row }">{{ date(row, 'due_date') }}</template>
+        <template #header-column4>{{ t('transactions.status') }}</template>
+        <template #cell-column4="{ row }"><BsStatusBadge :status="text(row, 'status')" /></template>
+        <template #header-column5>{{ t('transactions.amount') }}</template>
+        <template #cell-column5="{ row }"><BsMoneyText :amount="number(row, 'outstanding_minor')" :currency="ledgerPresentation.currency(text(row, 'currency_code'))" :locale="ledgerPresentation.locale" /></template>
+        <template #header-column6>{{ t('accounts.actions') }}</template>
+        <template #cell-column6="{ row }"><template v-if="!['paid','cancelled'].includes(text(row, 'status'))"><BsButton v-if="can('commitments.settle')" type="submit" class="ls-btn ls-btn-sm" @click="openCommitmentAction(text(row, 'id'), 'settle')">{{ t('operations.settle') }}</BsButton><BsButton v-if="can('commitments.update')" type="submit" class="ls-btn ls-btn-sm ms-1" @click="openCommitmentAction(text(row, 'id'), 'postpone')">{{ t('operations.postpone') }}</BsButton><BsButton v-if="can('commitments.update')" type="submit" class="ls-btn ls-btn-sm ms-1" :disabled="actionBusy" @click="cancelCommitment(text(row, 'id'))">{{ t('common.cancel') }}</BsButton></template></template>
+
 </BsDataTable>
 
-      <BsDataTable v-else-if="kind === 'recurring'" :value="rows">
-  <Column >
-    <template #header>{{ t('operations.name') }}</template>
-    <template #body="{ data: row }">{{ text(row, 'name') }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('transactions.type') }}</template>
-    <template #body="{ data: row }">{{ t(`types.${text(row, 'transaction_type')}`) }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('recordPages.schedule') }}</template>
-    <template #body="{ data: row }">{{ text(row, 'interval_count') }} × {{ text(row, 'frequency') }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('recordPages.nextRun') }}</template>
-    <template #body="{ data: row }">{{ date(row, 'next_run_on') }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('transactions.status') }}</template>
-    <template #body="{ data: row }"><BsStatusBadge :status="text(row, 'status')" /></template>
-  </Column>
-  <Column header-class="text-end" body-class="text-end">
-    <template #header>{{ t('accounts.actions') }}</template>
-    <template #body="{ data: row }"><BsButton type="submit" v-if="can('recurring.manage') && text(row, 'status') === 'active'" class="ls-btn ls-btn-sm" :disabled="actionBusy" @click="setRuleStatus(text(row, 'id'), 'paused')">{{ t('operations.pause') }}</BsButton><BsButton type="submit" v-else-if="can('recurring.manage') && ['paused','failed'].includes(text(row, 'status'))" class="ls-btn ls-btn-sm" :disabled="actionBusy" @click="setRuleStatus(text(row, 'id'), 'active')">{{ t('operations.resume') }}</BsButton></template>
-  </Column>
+      <BsDataTable v-else-if="kind === 'recurring'" :value="rows" :columns="[{ key: 'column1', header: (t('operations.name')) }, { key: 'column2', header: (t('transactions.type')) }, { key: 'column3', header: (t('recordPages.schedule')) }, { key: 'column4', header: (t('recordPages.nextRun')) }, { key: 'column5', header: (t('transactions.status')) }, { key: 'column6', header: (t('accounts.actions')), align: 'end' as const }]">
+        <template #header-column1>{{ t('operations.name') }}</template>
+        <template #cell-column1="{ row }">{{ text(row, 'name') }}</template>
+        <template #header-column2>{{ t('transactions.type') }}</template>
+        <template #cell-column2="{ row }">{{ t(`types.${text(row, 'transaction_type')}`) }}</template>
+        <template #header-column3>{{ t('recordPages.schedule') }}</template>
+        <template #cell-column3="{ row }">{{ text(row, 'interval_count') }} × {{ text(row, 'frequency') }}</template>
+        <template #header-column4>{{ t('recordPages.nextRun') }}</template>
+        <template #cell-column4="{ row }">{{ date(row, 'next_run_on') }}</template>
+        <template #header-column5>{{ t('transactions.status') }}</template>
+        <template #cell-column5="{ row }"><BsStatusBadge :status="text(row, 'status')" /></template>
+        <template #header-column6>{{ t('accounts.actions') }}</template>
+        <template #cell-column6="{ row }"><BsButton v-if="can('recurring.manage') && text(row, 'status') === 'active'" type="submit" class="ls-btn ls-btn-sm" :disabled="actionBusy" @click="setRuleStatus(text(row, 'id'), 'paused')">{{ t('operations.pause') }}</BsButton><BsButton v-else-if="can('recurring.manage') && ['paused','failed'].includes(text(row, 'status'))" type="submit" class="ls-btn ls-btn-sm" :disabled="actionBusy" @click="setRuleStatus(text(row, 'id'), 'active')">{{ t('operations.resume') }}</BsButton></template>
+
 </BsDataTable>
 
-      <BsDataTable v-else-if="kind === 'counterparties'" :value="rows">
-  <Column >
-    <template #header>{{ t('operations.name') }}</template>
-    <template #body="{ data: row }">{{ text(row, 'name') }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('recordPages.kind') }}</template>
-    <template #body="{ data: row }">{{ text(row, 'type') }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('auth.email') }}</template>
-    <template #body="{ data: row }">{{ text(row, 'email') }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('operations.phone') }}</template>
-    <template #body="{ data: row }">{{ text(row, 'phone') }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('transactions.status') }}</template>
-    <template #body="{ data: row }"><BsStatusBadge :status="value(row, 'is_archived') ? 'archived' : 'active'" /></template>
-  </Column>
+      <BsDataTable v-else-if="kind === 'counterparties'" :value="rows" :columns="[{ key: 'column1', header: (t('operations.name')) }, { key: 'column2', header: (t('recordPages.kind')) }, { key: 'column3', header: (t('auth.email')) }, { key: 'column4', header: (t('operations.phone')) }, { key: 'column5', header: (t('transactions.status')) }]">
+        <template #header-column1>{{ t('operations.name') }}</template>
+        <template #cell-column1="{ row }">{{ text(row, 'name') }}</template>
+        <template #header-column2>{{ t('recordPages.kind') }}</template>
+        <template #cell-column2="{ row }">{{ text(row, 'type') }}</template>
+        <template #header-column3>{{ t('auth.email') }}</template>
+        <template #cell-column3="{ row }">{{ text(row, 'email') }}</template>
+        <template #header-column4>{{ t('operations.phone') }}</template>
+        <template #cell-column4="{ row }">{{ text(row, 'phone') }}</template>
+        <template #header-column5>{{ t('transactions.status') }}</template>
+        <template #cell-column5="{ row }"><BsStatusBadge :status="value(row, 'is_archived') ? 'archived' : 'active'" /></template>
+
 </BsDataTable>
 
-      <BsDataTable v-else-if="kind === 'tags'" :value="rows" :label="t('operations.tabs.tags')">
-  <Column >
-    <template #header>{{ t('operations.name') }}</template>
-    <template #body="{ data: row }"><span class="inline-flex items-center gap-2 font-semibold"><span class="size-3 shrink-0 rounded-full" aria-hidden="true" :style="{ backgroundColor: text(row, 'color') }" />{{ text(row, 'name') }}</span></template>
-  </Column>
-  <Column >
-    <template #header>{{ t('recordPages.created') }}</template>
-    <template #body="{ data: row }">{{ date(row, 'created_at') }}</template>
-  </Column>
-  <Column v-if="can('transactions.read')" :header="t('accounts.actions')" body-class="text-end">
-    <template #body="{ data: row }"><NuxtLink :to="{ path: '/transactions', query: { tag: text(row, 'id') } }" class="ls-btn ls-btn-sm">{{ t('tagsGuide.viewTransactions') }}</NuxtLink></template>
-  </Column>
+      <BsDataTable v-else-if="kind === 'tags'" :value="rows" :label="t('operations.tabs.tags')" :columns="[{ key: 'column1', header: (t('operations.name')) }, { key: 'column2', header: (t('recordPages.created')) }, ...((can('transactions.read')) ? [{ key: 'column3', header: t('accounts.actions'), align: 'end' as const }] : [])]">
+        <template #header-column1>{{ t('operations.name') }}</template>
+        <template #cell-column1="{ row }"><span class="inline-flex items-center gap-2 font-semibold"><span class="size-3 shrink-0 rounded-full" aria-hidden="true" :style="{ backgroundColor: text(row, 'color') }" />{{ text(row, 'name') }}</span></template>
+        <template #header-column2>{{ t('recordPages.created') }}</template>
+        <template #cell-column2="{ row }">{{ date(row, 'created_at') }}</template>
+        <template #cell-column3="{ row }"><NuxtLink :to="{ path: '/transactions', query: { tag: text(row, 'id') } }" class="ls-btn ls-btn-sm">{{ t('tagsGuide.viewTransactions') }}</NuxtLink></template>
+
 </BsDataTable>
 
-      <BsDataTable v-else :value="rows">
-  <Column >
-    <template #header>{{ t('auth.email') }}</template>
-    <template #body="{ data: row }">{{ text(row, 'email') }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('recordPages.role') }}</template>
-    <template #body="{ data: row }">{{ roleLabel(text(row, 'role'), text(row, 'role_id')) }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('transactions.status') }}</template>
-    <template #body="{ data: row }"><BsStatusBadge :status="text(row, 'status')" /></template>
-  </Column>
-  <Column >
-    <template #header>{{ t('recordPages.created') }}</template>
-    <template #body="{ data: row }">{{ date(row, 'created_at') }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('recordPages.expires') }}</template>
-    <template #body="{ data: row }">{{ date(row, 'expires_at') }}</template>
-  </Column>
+      <BsDataTable v-else :value="rows" :columns="[{ key: 'column1', header: (t('auth.email')) }, { key: 'column2', header: (t('recordPages.role')) }, { key: 'column3', header: (t('transactions.status')) }, { key: 'column4', header: (t('recordPages.created')) }, { key: 'column5', header: (t('recordPages.expires')) }]">
+        <template #header-column1>{{ t('auth.email') }}</template>
+        <template #cell-column1="{ row }">{{ text(row, 'email') }}</template>
+        <template #header-column2>{{ t('recordPages.role') }}</template>
+        <template #cell-column2="{ row }">{{ roleLabel(text(row, 'role'), text(row, 'role_id')) }}</template>
+        <template #header-column3>{{ t('transactions.status') }}</template>
+        <template #cell-column3="{ row }"><BsStatusBadge :status="text(row, 'status')" /></template>
+        <template #header-column4>{{ t('recordPages.created') }}</template>
+        <template #cell-column4="{ row }">{{ date(row, 'created_at') }}</template>
+        <template #header-column5>{{ t('recordPages.expires') }}</template>
+        <template #cell-column5="{ row }">{{ date(row, 'expires_at') }}</template>
+
 </BsDataTable>
     </div>
 

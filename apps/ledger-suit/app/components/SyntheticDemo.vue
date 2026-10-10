@@ -25,11 +25,12 @@ function reset() { state.value = resetSyntheticDemo(state.value) }
       <p class="mt-1">{{ t('demo.noRealOrganization') }}</p>
     </div>
 
-    <BsDataTable :value="state.accounts" data-key="code" :label="t('demo.title')" :table-style="{ minWidth: '520px' }">
-      <Column field="code" :header="t('accounts.code')"><template #body="{ data: account }"><span class="font-mono text-xs" dir="ltr">{{ account.code }}</span></template></Column>
-      <Column :header="t('accounts.account')"><template #body="{ data: account }">{{ t(`chartTemplates.accounts.${account.nameKey}`) }}</template></Column>
-      <Column :header="t('opening.debit')" header-class="text-end" body-class="ls-num"><template #body="{ data: account }">{{ amount(account.debitMinor) }}</template></Column>
-      <Column :header="t('opening.credit')" header-class="text-end" body-class="ls-num"><template #body="{ data: account }">{{ amount(account.creditMinor) }}</template></Column>
+    <BsDataTable :value="state.accounts" row-key="code" :label="t('demo.title')" :table-style="{ minWidth: '520px' }" :columns="[{ key: 'code', field: 'code', header: t('accounts.code') }, { key: 'column2', header: t('accounts.account') }, { key: 'column3', header: t('opening.debit'), align: 'end' as const }, { key: 'column4', header: t('opening.credit'), align: 'end' as const }]">
+      <template #cell-code="{ row: account }"><span class="font-mono text-xs" dir="ltr">{{ account.code }}</span></template>
+      <template #cell-column2="{ row: account }">{{ t(`chartTemplates.accounts.${account.nameKey}`) }}</template>
+      <template #cell-column3="{ row: account }">{{ amount(account.debitMinor) }}</template>
+      <template #cell-column4="{ row: account }">{{ amount(account.creditMinor) }}</template>
+
     </BsDataTable>
 
     <div class="flex flex-wrap gap-2">

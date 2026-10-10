@@ -123,6 +123,7 @@ async function submitAdjustment() {
   }
   submitting.value = false
 }
+const ledgerPresentation = useLedgerPresentation()
 </script>
 
 <template>
@@ -138,14 +139,15 @@ async function submitAdjustment() {
     </div>
     <p v-if="loading" class="p-4 text-sm text-fg-muted" role="status">{{ t('accounts.loading') }}</p>
     <p v-else-if="loadError" class="ls-error m-4" role="alert">{{ loadError }}</p>
-    <BsDataTable v-else :value="rows" data-key="control_account_id" :table-props="{ 'aria-label': t('controls.reconciliation') }">
-      <Column :header="t('accounts.account')"><template #body="{ data }"><span class="font-medium">{{ data.account_name }}</span><span v-if="data.account_code" class="ms-2 font-mono text-xs text-fg-muted">{{ data.account_code }}</span></template></Column>
-      <Column :header="t('controls.subledgerType')"><template #body="{ data }">{{ t(`controls.subledgers.${data.subledger_type}`) }}</template></Column>
-      <Column :header="t('controls.glBalance')" body-class="ls-num"><template #body="{ data }"><MoneyText :amount-minor="data.gl_balance_minor" /></template></Column>
-      <Column :header="t('controls.subledgerBalance')" body-class="ls-num"><template #body="{ data }"><MoneyText v-if="data.subledger_balance_minor !== null" :amount-minor="data.subledger_balance_minor" /><span v-else>{{ t('controls.subledgerUnavailable') }}</span></template></Column>
-      <Column :header="t('controls.variance')" body-class="ls-num"><template #body="{ data }"><MoneyText v-if="data.variance_minor !== null" :amount-minor="data.variance_minor" /><span v-else>{{ t('common.dash') }}</span></template></Column>
-      <Column :header="t('controls.status')"><template #body="{ data }"><BsStatusBadge :status="data.status" :label="t(`controls.statuses.${data.status}`)" :tone="data.status === 'reconciled' ? 'success' : data.status === 'unreconciled' ? 'danger' : 'warning'" /><p v-if="data.explanation_reason" class="mt-1 text-xs text-fg-muted">{{ data.explanation_reason }} · {{ data.explanation_reference }}</p></template></Column>
-      <Column v-if="can('controls.adjust')" :header="t('accounts.actions')"><template #body="{ data }"><NuxtLink v-if="data.subledger_type === 'inventory' && can('inventory.read')" to="/inventory-accounting" class="text-link underline">{{ t('inventory.sourceLink') }}</NuxtLink><BsButton v-else-if="data.subledger_type !== 'inventory'" type="button" class="ls-btn ls-btn-sm" @click="openAdjustment(data.control_account_id)">{{ t('controls.adjust') }}</BsButton></template></Column>
+    <BsDataTable v-else :value="rows" row-key="control_account_id" :label="t('controls.reconciliation')" :columns="[{ key: 'column1', header: t('accounts.account') }, { key: 'column2', header: t('controls.subledgerType') }, { key: 'column3', header: t('controls.glBalance'), align: 'end' as const }, { key: 'column4', header: t('controls.subledgerBalance'), align: 'end' as const }, { key: 'column5', header: t('controls.variance'), align: 'end' as const }, { key: 'column6', header: t('controls.status') }, ...((can('controls.adjust')) ? [{ key: 'column7', header: t('accounts.actions') }] : [])]">
+      <template #cell-column1="{ row: data }"><span class="font-medium">{{ data.account_name }}</span><span v-if="data.account_code" class="ms-2 font-mono text-xs text-fg-muted">{{ data.account_code }}</span></template>
+      <template #cell-column2="{ row: data }">{{ t(`controls.subledgers.${data.subledger_type}`) }}</template>
+      <template #cell-column3="{ row: data }"><BsMoneyText :amount="data.gl_balance_minor" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" /></template>
+      <template #cell-column4="{ row: data }"><BsMoneyText v-if="data.subledger_balance_minor !== null" :amount="data.subledger_balance_minor" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" /><span v-else>{{ t('controls.subledgerUnavailable') }}</span></template>
+      <template #cell-column5="{ row: data }"><BsMoneyText v-if="data.variance_minor !== null" :amount="data.variance_minor" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" /><span v-else>{{ t('common.dash') }}</span></template>
+      <template #cell-column6="{ row: data }"><BsStatusBadge :status="data.status" :label="t(`controls.statuses.${data.status}`)" :tone="data.status === 'reconciled' ? 'success' : data.status === 'unreconciled' ? 'danger' : 'warning'" /><p v-if="data.explanation_reason" class="mt-1 text-xs text-fg-muted">{{ data.explanation_reason }} · {{ data.explanation_reference }}</p></template>
+      <template #cell-column7="{ row: data }"><NuxtLink v-if="data.subledger_type === 'inventory' && can('inventory.read')" to="/inventory-accounting" class="text-link underline">{{ t('inventory.sourceLink') }}</NuxtLink><BsButton v-else-if="data.subledger_type !== 'inventory'" type="button" class="ls-btn ls-btn-sm" @click="openAdjustment(data.control_account_id)">{{ t('controls.adjust') }}</BsButton></template>
+
     </BsDataTable>
   </section>
 

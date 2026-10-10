@@ -41,11 +41,12 @@ async function save() {
 }
 function run() { offset.value = 0; void load() }
 function page(event: { first: number }) { offset.value = event.first; void load() }
+const ledgerPresentation = useLedgerPresentation()
 </script>
 
 <template>
   <div class="space-y-6">
-    <LedgerPageHeader :title="t('inventory.title')" :subtitle="t('inventory.policy')" :as-of="asOf" />
+    <BsPageHeader :title="t('inventory.title')" :subtitle="t('inventory.policy')" :context="ledgerPresentation.context(undefined, undefined, asOf)" :context-label="ledgerPresentation.t('pageContext.label')" />
     <p class="ls-card p-4" role="note">{{ t('inventory.boundary') }}</p>
     <p v-if="!can('inventory.read')" role="status">{{ t('inventory.denied') }}</p>
     <template v-else>
@@ -63,22 +64,21 @@ function page(event: { first: number }) { offset.value = event.first; void load(
           <h2 class="text-h2 font-bold">{{ source.source_key }}</h2>
           <p :data-inventory-status="source.status" :class="inventoryReconciles(source) ? 'text-success' : 'text-warning'">{{ t(`inventory.status.${source.status}`) }}</p>
           <dl class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div v-for="key in (['inventory_minor', 'inventory_gl_minor', 'inventory_variance_minor', 'cogs_minor', 'cogs_gl_minor', 'cogs_variance_minor', 'cogs_closing_minor'] as const)" :key="key"><dt>{{ t(`inventory.amounts.${key}`) }}</dt><dd><MoneyText :amount-minor="source[key]" :currency="workspace.currency" /></dd></div>
+            <div v-for="key in (['inventory_minor', 'inventory_gl_minor', 'inventory_variance_minor', 'cogs_minor', 'cogs_gl_minor', 'cogs_variance_minor', 'cogs_closing_minor'] as const)" :key="key"><dt>{{ t(`inventory.amounts.${key}`) }}</dt><dd><BsMoneyText :amount="source[key]" :currency="ledgerPresentation.currency(workspace.currency)" :locale="ledgerPresentation.locale" /></dd></div>
           </dl>
           <p class="text-sm text-fg-muted">{{ t('inventory.snapshot') }}: {{ source.latest_sequence ?? '—' }} · {{ t('inventory.closingNote') }}</p>
           <dl class="grid gap-2 break-all text-sm sm:grid-cols-2"><div><dt>{{ t('inventory.sourceId') }}</dt><dd>{{ source.id }}</dd></div><div><dt>{{ t('inventory.actor') }}</dt><dd>{{ source.actor_id }}</dd></div></dl>
         </section>
         <section class="ls-card overflow-hidden">
           <h2 class="p-4 text-h2 font-bold">{{ t('inventory.facts') }}</h2>
-          <BsDataTable :value="workspace.facts" data-key="id" lazy paginator :rows="25" :first="offset" :total-records="workspace.total" :table-props="{ 'aria-label': t('inventory.facts') }" @page="page">
+          <BsDataTable :value="workspace.facts" row-key="id" lazy paginator :rows="25" :first="offset" :total-records="workspace.total" :label="t('inventory.facts')" :columns="[{ key: 'accounting_date', field: 'accounting_date', header: t('inventory.accountingDate') }, { key: 'effective_date', field: 'effective_date', header: t('inventory.effectiveDate') }, { key: 'column3', header: t('inventory.movement') }, { key: 'column4', header: t('inventory.valuation') }, { key: 'column5', header: t('inventory.inventoryDelta') }, { key: 'column6', header: t('inventory.cogsDelta') }, { key: 'column7', header: t('inventory.trace') }]" @page="page">
             <template #empty>{{ t('inventory.empty') }}</template>
-            <Column field="accounting_date" :header="t('inventory.accountingDate')" />
-            <Column field="effective_date" :header="t('inventory.effectiveDate')" />
-            <Column :header="t('inventory.movement')"><template #body="{ data: fact }"><span>{{ fact.movement_id }} · {{ fact.movement_version }}</span><span class="block text-sm">{{ t(`inventory.kinds.${fact.kind}`) }}</span></template></Column>
-            <Column :header="t('inventory.valuation')"><template #body="{ data: fact }">{{ fact.valuation_id }} · {{ fact.valuation_version }}<span class="block text-sm">{{ fact.costing_method }} · {{ fact.policy_version }}</span></template></Column>
-            <Column :header="t('inventory.inventoryDelta')"><template #body="{ data: fact }"><MoneyText :amount-minor="fact.inventory_delta_minor" :currency="workspace.currency" /></template></Column>
-            <Column :header="t('inventory.cogsDelta')"><template #body="{ data: fact }"><MoneyText :amount-minor="fact.cogs_delta_minor" :currency="workspace.currency" /></template></Column>
-            <Column :header="t('inventory.trace')"><template #body="{ data: fact }"><NuxtLink :to="{ path: '/transactions', query: { q: fact.journal_reference } }" class="text-link underline">{{ fact.journal_reference }}</NuxtLink><span class="block break-all text-xs">{{ fact.id }}</span><span v-if="fact.related_fact_id" class="block break-all text-xs">{{ t('inventory.related') }}: {{ fact.related_fact_id }}</span><span class="block text-sm">{{ fact.reason }}</span></template></Column>
+            <template #cell-column3="{ row: fact }"><span>{{ fact.movement_id }} · {{ fact.movement_version }}</span><span class="block text-sm">{{ t(`inventory.kinds.${fact.kind}`) }}</span></template>
+            <template #cell-column4="{ row: fact }">{{ fact.valuation_id }} · {{ fact.valuation_version }}<span class="block text-sm">{{ fact.costing_method }} · {{ fact.policy_version }}</span></template>
+            <template #cell-column5="{ row: fact }"><BsMoneyText :amount="fact.inventory_delta_minor" :currency="ledgerPresentation.currency(workspace.currency)" :locale="ledgerPresentation.locale" /></template>
+            <template #cell-column6="{ row: fact }"><BsMoneyText :amount="fact.cogs_delta_minor" :currency="ledgerPresentation.currency(workspace.currency)" :locale="ledgerPresentation.locale" /></template>
+            <template #cell-column7="{ row: fact }"><NuxtLink :to="{ path: '/transactions', query: { q: fact.journal_reference } }" class="text-link underline">{{ fact.journal_reference }}</NuxtLink><span class="block break-all text-xs">{{ fact.id }}</span><span v-if="fact.related_fact_id" class="block break-all text-xs">{{ t('inventory.related') }}: {{ fact.related_fact_id }}</span><span class="block text-sm">{{ fact.reason }}</span></template>
+
           </BsDataTable>
         </section>
       </template>

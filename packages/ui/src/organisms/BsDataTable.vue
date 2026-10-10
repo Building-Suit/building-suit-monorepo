@@ -106,7 +106,7 @@ function resolvedFilters() {
     ? { ...(props.filters || {}), global: { value: search.value, matchMode: 'contains' } }
     : props.filters
 }
-function forwardedSlots() { return Object.keys(slots).filter(key => !['default', 'empty', 'loading', 'toolbar', 'filters'].includes(key) && !/^(?:cell|header|filter)-/.test(key)) }
+function forwardedSlots() { return Object.keys(slots).filter(key => !['default', 'empty', 'loading', 'toolbar', 'filters'].includes(key) && !/^(?:cell|header|filter|footer)-/.test(key)) }
 const tableContainerPt = computed(() => ({
   class: 'overflow-auto',
   ...(props.scrollLabel ? { tabindex: 0, role: 'region', 'aria-label': props.scrollLabel } : {}),
@@ -211,7 +211,9 @@ defineExpose({ exportCSV: exportCsv })
         :key="column.key"
         :field="column.field"
         :header="column.header"
+        :footer="column.footer === undefined ? undefined : String(column.footer)"
         :sortable="column.sortable"
+        :pt="column.ariaSort ? { headerCell: { 'aria-sort': column.ariaSort } } : undefined"
         :sort-field="column.sortField"
         :filter-field="column.filterField"
         :filter-match-mode="column.filterMatchMode"
@@ -221,9 +223,11 @@ defineExpose({ exportCSV: exportCsv })
         :align-frozen="column.sticky"
         :header-class="columnClass(column, true)"
         :body-class="columnClass(column)"
+        :footer-class="columnClass(column)"
       >
         <template #header><slot :name="`header-${column.key}`" :column="column">{{ column.header }}</slot></template>
         <template #body="{ data, index }"><slot :name="`cell-${column.key}`" :row="data" :value="cellValue(column, data)" :column="column" :index="index">{{ cellValue(column, data) }}</slot></template>
+        <template v-if="column.footer !== undefined || slots[`footer-${column.key}`]" #footer><slot :name="`footer-${column.key}`" :column="column">{{ column.footer }}</slot></template>
         <template v-if="slots[`filter-${column.key}`]" #filter="scope"><slot :name="`filter-${column.key}`" v-bind="scope || {}" :column="column" /></template>
       </Column>
       <!-- Migration-only compatibility. New Suit consumers use `columns` and `cell-*` slots. -->

@@ -46,7 +46,7 @@ async function openImportFromRoute() {
   await router.replace({ query })
 }
 watch(() => route.query.import, () => void openImportFromRoute())
-function ariaSort(column: string) { return sort.column === column ? sort.direction === 'asc' ? 'ascending' : 'descending' : 'none' }
+function ariaSort(column: string): 'none' | 'ascending' | 'descending' { return sort.column === column ? sort.direction === 'asc' ? 'ascending' : 'descending' : 'none' }
 function applySavedView() {
   const view = savedViews.value.find(item => item.id === savedViewId.value)
   if (view) applySnapshot(view)
@@ -71,20 +71,21 @@ async function deleteSavedView() {
   finally { savingView.value = false }
 }
 useHead({ title: () => `${t('transactions.title')} · ${t('app.name')}` })
+const ledgerPresentation = useLedgerPresentation()
 </script>
 
 <template>
   <div class="space-y-4">
-    <LedgerPageHeader :title="t('transactions.title')" :subtitle="t('transactionWorkspace.subtitle')" :from="filters.from" :to="filters.to">
+    <BsPageHeader :title="t('transactions.title')" :subtitle="t('transactionWorkspace.subtitle')"  :context="ledgerPresentation.context(filters.from, filters.to, undefined)" :context-label="ledgerPresentation.t('pageContext.label')">
       <template #actions>
         <BsButton v-if="can('imports.create') && writesAllowed" type="button" class="ls-btn" :disabled="!hydrated" @click="importOpen = true">{{ t('imports.entryPoint') }}</BsButton>
         <BsButton v-if="canCreate" type="button" class="ls-btn ls-btn-primary" :disabled="!hydrated" @click="addTransaction"><BsIcon name="add" :size="18" />{{ t('transactionWorkspace.new') }}</BsButton>
       </template>
-    </LedgerPageHeader>
+    </BsPageHeader>
 
     <div v-if="can('transactions.read')" class="ls-card space-y-4 p-4 sm:p-5">
       <div class="flex flex-wrap gap-2" role="group" :aria-label="t('transactions.type')">
-        <BsButton variant="chip" v-for="type in QUICK_TYPES" :key="type" type="button" :aria-pressed="filters.type === type" :disabled="!hydrated" @click="filters.type = type">{{ type ? t(`types.${type}`) : t('transactionWorkspace.all') }}</BsButton>
+        <BsButton v-for="type in QUICK_TYPES" :key="type" variant="chip" type="button" :aria-pressed="filters.type === type" :disabled="!hydrated" @click="filters.type = type">{{ type ? t(`types.${type}`) : t('transactionWorkspace.all') }}</BsButton>
       </div>
       <div class="grid items-end gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <BsFloatingField class="min-w-0 sm:col-span-2" :label="t('transactions.searchLabel')"><input id="search" v-model="filters.search" type="search" class="ls-input" :placeholder="t('transactions.searchPlaceholder')" :disabled="!hydrated"></BsFloatingField>
@@ -141,46 +142,33 @@ useHead({ title: () => `${t('transactions.title')} · ${t('app.name')}` })
 
     <div v-else class="ls-card overflow-hidden">
       <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">
-        <AccountingTableDensity v-model="tableDensity" :disabled="!tablePreferenceHydrated" />
+        <BsTableDensity v-model="tableDensity" :disabled="!tablePreferenceHydrated" :label="ledgerPresentation.t('accountingTable.density')" :compact-label="ledgerPresentation.t('accountingTable.compact')" :comfortable-label="ledgerPresentation.t('accountingTable.comfortable')" />
         <p role="status" class="text-sm text-fg-muted">{{ t('transactions.showing', { from: rangeStart, to: rangeEnd, total }) }}</p>
       </div>
       <!-- Wide financial table on desktop -->
       <div class="hidden md:block">
-        <BsDataTable :value="rows" data-key="id" :label="t('transactions.caption')" :density="tableDensity" sticky-header max-height="38rem" :scroll-label="t('accountingTable.journalScroll')" :row-class="() => 'cursor-pointer hover:bg-surface-muted'" @row-click="event => selectedId = event.data.id">
-  <Column header-class="ls-sticky-start" body-class="ls-sticky-start whitespace-nowrap" :pt="{ headerCell: { 'aria-sort': ariaSort('journal_reference') } }">
-    <template #header><BsButton variant="link" type="button" class="hover:underline" @click="toggleSort('journal_reference')">{{ t('journalCenter.journalReference') }}</BsButton></template>
-    <template #body="{ data: row }">
-      <BsButton variant="link" type="button" class="font-semibold text-link hover:underline" @click.stop="selectedId = row.id">{{ row.journal_reference }}</BsButton>
-      <p class="mt-1 max-w-48 truncate text-xs text-fg-muted" :title="row.from_account_name || undefined">{{ row.from_account_name || t('common.dash') }}</p>
-      <p class="max-w-48 truncate text-xs text-fg-muted" :title="row.to_account_name || undefined"><BsIcon name="arrowRight" :size="14" directional class="inline-block" /> {{ row.to_account_name || t('common.dash') }}</p>
-    </template>
-  </Column>
-  <Column body-class="whitespace-nowrap" :pt="{ headerCell: { 'aria-sort': ariaSort('transaction_date') } }">
-    <template #header><BsButton variant="link" type="button" class="hover:underline" @click="toggleSort('transaction_date')">{{ t('transactions.date') }}</BsButton></template>
-    <template #body="{ data: row }">{{ formatDate(row.transaction_date, locale) }}</template>
-  </Column>
-  <Column body-class="max-w-64">
-    <template #header>{{ t('transactions.description') }}</template>
-    <template #body="{ data: row }"><BsButton variant="link" type="button" class="block max-w-56 truncate text-start font-semibold text-link hover:underline" @click.stop="selectedId = row.id">{{ row.description || t('common.dash') }}</BsButton>
-                <span v-if="row.reference || row.category_name || row.counterparty_name" class="block max-w-56 truncate text-xs text-fg-muted">{{ [row.reference, row.category_name, row.counterparty_name].filter(Boolean).join(' · ') }}</span>
-                <ul v-if="row.tags?.length" class="mt-2 flex flex-wrap gap-1" :aria-label="t('operations.tabs.tags')"><li v-for="tag in row.tags" :key="tag" class="rounded-control border border-line bg-surface-muted px-2 py-1 text-xs break-words">{{ tag }}</li></ul></template>
-  </Column>
-  <Column body-class="whitespace-nowrap" :pt="{ headerCell: { 'aria-sort': ariaSort('source') } }">
-    <template #header><BsButton variant="link" type="button" class="hover:underline" @click="toggleSort('source')">{{ t('journalCenter.source') }}</BsButton></template>
-    <template #body="{ data: row }"><span>{{ t(`journalSources.${row.source}`) }}</span><span class="block text-xs text-fg-muted">{{ t(`types.${row.type}`) }}</span></template>
-  </Column>
-  <Column  :pt="{ headerCell: { 'aria-sort': ariaSort('status') } }">
-    <template #header><BsButton variant="link" type="button" class="hover:underline" @click="toggleSort('status')">{{ t('transactions.status') }}</BsButton></template>
-    <template #body="{ data: row }"><BsStatusBadge :status="row.status" /></template>
-  </Column>
-  <Column header-class="ls-sticky-end-offset text-end" body-class="ls-sticky-end-offset ls-num font-semibold" :pt="{ headerCell: { 'aria-sort': ariaSort('debit') } }">
-    <template #header><BsButton variant="link" type="button" class="hover:underline" @click="toggleSort('debit')">{{ t('detail.debit') }}</BsButton></template>
-    <template #body="{ data: row }"><MoneyText :amount-minor="row.debit_minor" :currency="row.currency_code" /></template>
-  </Column>
-  <Column header-class="ls-sticky-end text-end" body-class="ls-sticky-end ls-num font-semibold" :pt="{ headerCell: { 'aria-sort': ariaSort('credit') } }">
-    <template #header><BsButton variant="link" type="button" class="hover:underline" @click="toggleSort('credit')">{{ t('detail.credit') }}</BsButton></template>
-    <template #body="{ data: row }"><MoneyText :amount-minor="row.credit_minor" :currency="row.currency_code" /></template>
-  </Column>
+        <BsDataTable :value="rows" row-key="id" :label="t('transactions.caption')" :density="tableDensity" sticky-header max-height="38rem" :scroll-label="t('accountingTable.journalScroll')" :columns="[{ key: 'column1', header: '', sticky: 'start' as const, ariaSort: ariaSort('journal_reference') }, { key: 'column2', header: '', ariaSort: ariaSort('transaction_date') }, { key: 'column3', header: (t('transactions.description')) }, { key: 'column4', header: '', ariaSort: ariaSort('source') }, { key: 'column5', header: '', ariaSort: ariaSort('status') }, { key: 'column6', header: '', sticky: 'end' as const, width: 'sm' as const, ariaSort: ariaSort('debit'), align: 'end' as const }, { key: 'column7', header: '', sticky: 'end' as const, width: 'sm' as const, ariaSort: ariaSort('credit'), align: 'end' as const }]" @row-click="event => selectedId = event.data.id">
+          <template #header-column1><BsButton variant="link" type="button" class="hover:underline" @click="toggleSort('journal_reference')">{{ t('journalCenter.journalReference') }}</BsButton></template>
+          <template #cell-column1="{ row }">
+            <BsButton variant="link" type="button" class="font-semibold text-link hover:underline" @click.stop="selectedId = row.id">{{ row.journal_reference }}</BsButton>
+            <p class="mt-1 max-w-48 truncate text-xs text-fg-muted" :title="row.from_account_name || undefined">{{ row.from_account_name || t('common.dash') }}</p>
+            <p class="max-w-48 truncate text-xs text-fg-muted" :title="row.to_account_name || undefined"><BsIcon name="arrowRight" :size="14" directional class="inline-block" /> {{ row.to_account_name || t('common.dash') }}</p>
+          </template>
+          <template #header-column2><BsButton variant="link" type="button" class="hover:underline" @click="toggleSort('transaction_date')">{{ t('transactions.date') }}</BsButton></template>
+          <template #cell-column2="{ row }">{{ formatDate(row.transaction_date, locale) }}</template>
+          <template #header-column3>{{ t('transactions.description') }}</template>
+          <template #cell-column3="{ row }"><BsButton variant="link" type="button" class="block max-w-56 truncate text-start font-semibold text-link hover:underline" @click.stop="selectedId = row.id">{{ row.description || t('common.dash') }}</BsButton>
+            <span v-if="row.reference || row.category_name || row.counterparty_name" class="block max-w-56 truncate text-xs text-fg-muted">{{ [row.reference, row.category_name, row.counterparty_name].filter(Boolean).join(' · ') }}</span>
+          <ul v-if="row.tags?.length" class="mt-2 flex flex-wrap gap-1" :aria-label="t('operations.tabs.tags')"><li v-for="tag in row.tags" :key="tag" class="rounded-control border border-line bg-surface-muted px-2 py-1 text-xs break-words">{{ tag }}</li></ul></template>
+          <template #header-column4><BsButton variant="link" type="button" class="hover:underline" @click="toggleSort('source')">{{ t('journalCenter.source') }}</BsButton></template>
+          <template #cell-column4="{ row }"><span>{{ t(`journalSources.${row.source}`) }}</span><span class="block text-xs text-fg-muted">{{ t(`types.${row.type}`) }}</span></template>
+          <template #header-column5><BsButton variant="link" type="button" class="hover:underline" @click="toggleSort('status')">{{ t('transactions.status') }}</BsButton></template>
+          <template #cell-column5="{ row }"><BsStatusBadge :status="row.status" /></template>
+          <template #header-column6><BsButton variant="link" type="button" class="hover:underline" @click="toggleSort('debit')">{{ t('detail.debit') }}</BsButton></template>
+          <template #cell-column6="{ row }"><BsMoneyText :amount="row.debit_minor" :currency="ledgerPresentation.currency(row.currency_code)" :locale="ledgerPresentation.locale" /></template>
+          <template #header-column7><BsButton variant="link" type="button" class="hover:underline" @click="toggleSort('credit')">{{ t('detail.credit') }}</BsButton></template>
+          <template #cell-column7="{ row }"><BsMoneyText :amount="row.credit_minor" :currency="ledgerPresentation.currency(row.currency_code)" :locale="ledgerPresentation.locale" /></template>
+
 </BsDataTable>
       </div>
 
@@ -197,8 +185,8 @@ useHead({ title: () => `${t('transactions.title')} · ${t('app.name')}` })
                 </p>
               </div>
               <div class="shrink-0 text-end text-sm">
-                <p><span class="text-xs text-fg-muted">{{ t('detail.debit') }}</span> <MoneyText class="font-semibold" :amount-minor="row.debit_minor" :currency="row.currency_code" /></p>
-                <p><span class="text-xs text-fg-muted">{{ t('detail.credit') }}</span> <MoneyText class="font-semibold" :amount-minor="row.credit_minor" :currency="row.currency_code" /></p>
+                <p><span class="text-xs text-fg-muted">{{ t('detail.debit') }}</span> <BsMoneyText class="font-semibold" :amount="row.debit_minor" :currency="ledgerPresentation.currency(row.currency_code)" :locale="ledgerPresentation.locale" /></p>
+                <p><span class="text-xs text-fg-muted">{{ t('detail.credit') }}</span> <BsMoneyText class="font-semibold" :amount="row.credit_minor" :currency="ledgerPresentation.currency(row.currency_code)" :locale="ledgerPresentation.locale" /></p>
                 <BsStatusBadge class="mt-1 block" :status="row.status" />
               </div>
             </div>
