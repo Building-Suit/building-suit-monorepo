@@ -43,7 +43,7 @@ async function closeMobileNav(restoreFocus = true) {
         :class="{ 'text-accent': isActive(item.to) }"
         :aria-current="isActive(item.to) ? 'page' : undefined"
       >
-        <AppIcon v-if="item.icon" :name="item.icon" :size="22" />
+        <BsIcon v-if="item.icon" :name="item.icon" :size="22" />
         <span>{{ item.label }}</span>
       </NuxtLink>
     </nav>

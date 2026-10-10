@@ -167,39 +167,80 @@ function money(value: number) { return new Intl.NumberFormat(isArabic.value ? 'a
 </script>
 
 <template>
-  <div class="space-y-6">
-    <header><h1 class="text-3xl font-extrabold tracking-tight">{{ copy.title }}</h1><p class="mt-2 text-sm text-muted-foreground">{{ copy.subtitle }}</p></header>
-    <p v-if="!current && !shopLoading" class="ls-card p-8 text-center text-sm">{{ copy.noShop }}</p>
+  <BsStack>
+    <BsBox as="header">
+      <BsHeading :level="1">{{ copy.title }}</BsHeading>
+      <BsText as="p" size="sm" tone="muted">{{ copy.subtitle }}</BsText>
+    </BsBox>
+    <BsText v-if="!current && !shopLoading" as="p" size="sm">{{ copy.noShop }}</BsText>
     <template v-else-if="current">
-      <section class="ls-card p-5">
-        <div class="flex flex-wrap items-center justify-between gap-3"><h2 class="text-lg font-extrabold">{{ copy.categories }}</h2><BsButton variant="primary" @click="categoryName = ''; categoryError = ''; categoryOpen = true">{{ copy.addCategory }}</BsButton></div>
-        <div class="mt-3 flex flex-wrap gap-2"><span v-for="category in categories" :key="category.id" class="ls-badge bg-muted">{{ category.name }}</span></div>
-      </section>
-
+      <BsPanel padding="md">
+        <BsInline justify="between">
+          <BsHeading :level="2">{{ copy.categories }}</BsHeading>
+          <BsButton variant="primary" @click="categoryName = ''; categoryError = ''; categoryOpen = true">{{ copy.addCategory }}</BsButton>
+        </BsInline>
+        <BsInline>
+          <BsText v-for="category in categories" :key="category.id" as="span">{{ category.name }}</BsText>
+        </BsInline>
+      </BsPanel>
       <BsRecordActionDialog v-model:visible="categoryOpen" :title="copy.addCategory" :dirty="categoryDirty" :pending="categoryPending" :error="categoryError" :submit-label="copy.addCategory" @submit="addCategory">
-        <BsField :label="copy.categoryName"><BsInput v-model="categoryName" minlength="2" maxlength="80" required /></BsField>
+        <BsField :label="copy.categoryName">
+          <BsInput v-model="categoryName" :minlength="2" :maxlength="80" required/>
+        </BsField>
       </BsRecordActionDialog>
-
-      <section class="ls-card p-5">
-        <div class="flex flex-wrap items-center justify-between gap-3"><h2 class="text-lg font-extrabold">{{ copy.importTitle }}</h2><BsButton severity="secondary" @click="template">{{ copy.template }}</BsButton></div>
-        <div class="mt-4 grid gap-4 md:grid-cols-2">
-          <label class="space-y-2 text-sm font-bold">{{ copy.importTitle }}<select v-model="kind" :disabled="pending" class="ls-select"><option value="products">{{ copy.products }}</option><option value="customers">{{ copy.customers }}</option><option value="suppliers">{{ copy.suppliers }}</option></select></label>
-          <label class="space-y-2 text-sm font-bold">{{ copy.choose }}<input type="file" :disabled="pending" accept=".csv,text/csv" class="ls-input" @change="readFile"></label>
-        </div>
-        <p v-if="filename" class="mt-3 text-sm">{{ filename }} · {{ rows.length }}</p>
-        <p v-if="parsingError" role="alert" class="mt-3 rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm text-[var(--bs-status-error)]">{{ parsingError }}</p>
-        <div class="mt-4 flex flex-wrap gap-2"><BsButton severity="secondary" :disabled="!rows.length || pending" @click="runImport(true)">{{ pending ? copy.validating : copy.validate }}</BsButton><BsButton :pending="pending" :disabled="!result?.valid || !result.dryRun" @click="runImport(false)">{{ copy.apply }}</BsButton></div>
-        <p v-if="result?.valid" role="status" class="mt-3 rounded-xl bg-[var(--bs-status-success-bg)] p-3 text-sm">{{ result.dryRun ? copy.valid : copy.applied }} <span v-if="!result.dryRun">{{ result.created }} / {{ result.updated }} / {{ result.openingStockPosted }}</span></p>
-        <div v-if="result?.errors.length" class="mt-4 overflow-x-auto"><BsDataTable :value="result.errors"><Column field="row" :header="copy.row"/><Column field="field" :header="copy.field"/><Column field="code" :header="copy.issue"/></BsDataTable></div>
-      </section>
-
-      <section class="ls-card p-5">
-        <div class="flex flex-wrap items-center justify-between gap-3"><h2 class="text-lg font-extrabold">{{ copy.report }}</h2><BsButton severity="secondary" :pending="exporting" @click="exportLabels">{{ copy.labels }}</BsButton></div>
-        <div class="mt-4 grid gap-3 sm:grid-cols-3"><label class="space-y-2 text-sm font-bold">{{ copy.category }}<select v-model="categoryFilter" class="ls-select"><option value="">{{ copy.allCategories }}</option><option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option></select></label><label class="space-y-2 text-sm font-bold">{{ copy.from }}<input v-model="reportFrom" type="date" class="ls-input"></label><label class="space-y-2 text-sm font-bold">{{ copy.to }}<input v-model="reportTo" type="date" class="ls-input"></label></div>
-        <p v-if="reportPending" role="status" class="p-5 text-sm text-muted-foreground">{{ copy.validating }}</p>
-        <div v-else-if="reportError" role="alert" class="mt-4">{{ copy.reportError }} <BsButton @click="refreshReport()">{{ copy.retry }}</BsButton></div>
-        <div v-else class="mt-4 overflow-x-auto"><BsDataTable :value="salesReport.items"><Column field="name" :header="copy.item"/><Column field="category" :header="copy.category"/><Column field="quantity" :header="copy.quantity"/><Column :header="copy.amount"><template #body="{ data }">{{ money(Number(data.amount)) }}</template></Column><template #empty><p class="p-6 text-center text-sm text-muted-foreground">{{ copy.noData }}</p></template></BsDataTable></div>
-      </section>
+      <BsPanel padding="md">
+        <BsInline justify="between">
+          <BsHeading :level="2">{{ copy.importTitle }}</BsHeading>
+          <BsButton severity="secondary" @click="template">{{ copy.template }}</BsButton>
+        </BsInline>
+        <BsGrid :columns="2">
+          <BsField v-slot="field" :label="copy.importTitle">
+            <BsSelect v-model="kind" :input-id="field.id" :aria-describedby="field.describedby" :disabled="pending" :label="copy.importTitle" :options="[{ value: 'products', label: (copy.products), disabled: false }, { value: 'customers', label: (copy.customers), disabled: false }, { value: 'suppliers', label: (copy.suppliers), disabled: false }]" option-label="label" option-value="value" option-disabled="disabled"/>
+          </BsField>
+          <BsField v-slot="field" :label="copy.choose">
+            <BsFileInput :input-id="field.id" :label="copy.choose" :describedby="field.describedby" :disabled="pending" accept=".csv,text/csv" @change="readFile"/>
+          </BsField>
+        </BsGrid>
+        <BsText v-if="filename" as="p" size="sm">{{ filename }} · {{ rows.length }}</BsText>
+        <BsText v-if="parsingError" role="alert" as="p" size="sm" tone="danger">{{ parsingError }}</BsText>
+        <BsInline>
+          <BsButton severity="secondary" :disabled="!rows.length || pending" @click="runImport(true)">{{ pending ? copy.validating : copy.validate }}</BsButton>
+          <BsButton :pending="pending" :disabled="!result?.valid || !result.dryRun" @click="runImport(false)">{{ copy.apply }}</BsButton>
+        </BsInline>
+        <BsText v-if="result?.valid" role="status" as="p" size="sm">{{ result.dryRun ? copy.valid : copy.applied }} <BsText v-if="!result.dryRun" as="span">{{ result.created }} / {{ result.updated }} / {{ result.openingStockPosted }}</BsText>
+        </BsText>
+        <BsBox v-if="result?.errors.length" scroll="x">
+          <BsDataTable :value="result.errors" :columns="[{ key: 'row', header: copy.row, field: 'row' }, { key: 'field', header: copy.field, field: 'field' }, { key: 'code', header: copy.issue, field: 'code' }]"/>
+        </BsBox>
+      </BsPanel>
+      <BsPanel padding="md">
+        <BsInline justify="between">
+          <BsHeading :level="2">{{ copy.report }}</BsHeading>
+          <BsButton severity="secondary" :pending="exporting" @click="exportLabels">{{ copy.labels }}</BsButton>
+        </BsInline>
+        <BsGrid :columns="3">
+          <BsField v-slot="field" :label="copy.category">
+            <BsSelect v-model="categoryFilter" :input-id="field.id" :aria-describedby="field.describedby" :label="copy.category" :options="[{ value: '', label: (copy.allCategories), disabled: false }, ...(categories).map(category => ({ value: category.id, label: (category.name), disabled: false }))]" option-label="label" option-value="value" option-disabled="disabled"/>
+          </BsField>
+          <BsField v-slot="field" :label="copy.from">
+            <BsInput :id="field.id" v-model="reportFrom" :aria-describedby="field.describedby" type="date"/>
+          </BsField>
+          <BsField v-slot="field" :label="copy.to">
+            <BsInput :id="field.id" v-model="reportTo" :aria-describedby="field.describedby" type="date"/>
+          </BsField>
+        </BsGrid>
+        <BsText v-if="reportPending" role="status" as="p" size="sm" tone="muted">{{ copy.validating }}</BsText>
+        <BsBox v-else-if="reportError" role="alert">{{ copy.reportError }} <BsButton @click="refreshReport()">{{ copy.retry }}</BsButton>
+        </BsBox>
+        <BsBox v-else scroll="x">
+          <BsDataTable :value="salesReport.items" :columns="[{ key: 'name', header: copy.item, field: 'name' }, { key: 'category', header: copy.category, field: 'category' }, { key: 'quantity', header: copy.quantity, field: 'quantity' }, { key: 'column3', header: copy.amount }]">
+            <template #cell-column3="{ row: data }">{{ money(Number(data.amount)) }}</template>
+            <template #empty>
+              <BsText as="p" size="sm" tone="muted">{{ copy.noData }}</BsText>
+            </template>
+          </BsDataTable>
+        </BsBox>
+      </BsPanel>
     </template>
-  </div>
+  </BsStack>
 </template>

@@ -48,23 +48,16 @@ async function signIn() {
 
 <template>
   <BsAuthLayout :product-name="t('app.name')" :home-label="t('marketing.home')" :title="t('auth.welcomeTitle')" :description="t('auth.welcomeBody')">
-    <template #logo="{ tone }"><BsProductLogo name="Ledger Suit" asset-prefix="/brand/ledger-suit" :tone="tone" class="h-auto w-56" /></template>
+    <template #logo="{ tone }"><BsProductLogo name="Ledger Suit" asset-prefix="/brand/ledger-suit" :tone="tone" size="auth" /></template>
         <BsAuthForm
           :eyebrow="t('auth.welcomeEyebrow')" :title="t('auth.signIn')" :description="t('auth.subtitle')"
           :pending="pending" :error="error" :submit-label="t('auth.signIn')" :pending-label="t('auth.signingIn')"
           :data-hydrated="hydrated" @submit="signIn"
         >
-          <FloatingField :label="t('auth.email')">
-            <input id="email" v-model="email" type="email" autocomplete="email" required dir="ltr" class="ls-input">
-          </FloatingField>
-          <FloatingField :label="t('auth.password')">
-            <input id="password" v-model="password" type="password" autocomplete="current-password" required dir="ltr" class="ls-input">
-          </FloatingField>
-          <template #footer>{{ t('auth.needAccount') }} <NuxtLink to="/signup" class="font-bold text-fg underline underline-offset-4">{{ t('landing.startTrial') }}</NuxtLink></template>
+          <BsField :label="t('auth.email')" required><template #default="field"><BsInput v-model="email" :id="field.id" type="email" autocomplete="email" required dir="ltr" /></template></BsField>
+          <BsField :label="t('auth.password')" required><template #default="field"><BsInput v-model="password" :id="field.id" type="password" autocomplete="current-password" required dir="ltr" /></template></BsField>
+          <template #footer>{{ t('auth.needAccount') }} <BsLink to="/signup" variant="standalone">{{ t('landing.startTrial') }}</BsLink></template>
         </BsAuthForm>
-        <nav class="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs text-fg-muted" :aria-label="t('auth.legalNavigation')">
-          <NuxtLink to="/privacy" class="hover:text-fg">{{ t('marketing.privacy') }}</NuxtLink>
-          <NuxtLink to="/contact" class="hover:text-fg">{{ t('marketing.contact') }}</NuxtLink>
-        </nav>
+        <BsInline as="nav" justify="center"><BsLink to="/privacy" variant="muted">{{ t('marketing.privacy') }}</BsLink><BsLink to="/contact" variant="muted">{{ t('marketing.contact') }}</BsLink></BsInline>
   </BsAuthLayout>
 </template>

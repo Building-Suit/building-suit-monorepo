@@ -218,48 +218,69 @@ async function exportReport() {
 </script>
 
 <template>
-  <div class="space-y-6">
-    <header class="flex flex-wrap items-start justify-between gap-4">
-      <div><p class="text-xs font-bold uppercase tracking-[0.16em] text-[var(--bs-link)]">{{ current?.name }}</p><h1 class="mt-1 text-3xl font-extrabold">{{ copy.title }}</h1><p class="mt-2 text-sm text-muted-foreground">{{ copy.subtitle }}</p></div>
-      <BsButton variant="primary" :pending="exporting" :disabled="pending || !result.total || !canView || costDenied" @click="exportReport">{{ exporting ? copy.exporting : copy.export }}</BsButton>
-    </header>
-
-    <p class="rounded-xl border border-[var(--bs-status-warning)]/25 bg-[var(--bs-status-warning-bg)] p-4 text-sm">{{ copy.operational }}</p>
-    <p v-if="report === 'margin'" class="ls-card-flat p-4 text-sm text-muted-foreground">{{ copy.fifoNotice }}</p>
-
-    <section class="ls-card p-4 sm:p-5" :aria-label="copy.title">
-      <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <label class="text-xs font-bold text-muted-foreground">{{ copy.title }}<select v-model="report" class="ls-select mt-1 w-full"><option v-for="option in reportOptions" :key="option.value" :value="option.value">{{ option.label }}</option></select></label>
-        <label class="text-xs font-bold text-muted-foreground">{{ copy.location }}<select v-model="locationId" class="ls-select mt-1 w-full"><option value="all">{{ copy.allLocations }}</option><option v-for="location in activeLocations" :key="location.id" :value="location.id">{{ location.name }}</option></select></label>
-        <label class="text-xs font-bold text-muted-foreground">{{ copy.from }}<input v-model="fromDate" type="date" class="ls-input mt-1 w-full" :disabled="report === 'inventory' || report === 'receivables'"></label>
-        <label class="text-xs font-bold text-muted-foreground">{{ copy.to }}<input v-model="toDate" type="date" class="ls-input mt-1 w-full" :disabled="report === 'inventory' || report === 'receivables'"></label>
-      </div><p class="mt-3 text-xs text-muted-foreground">{{ copy.fullHistory }}</p>
-    </section>
-
-    <p v-if="accessError || error" role="alert" class="rounded-xl border border-[var(--bs-status-error)]/30 bg-[var(--bs-status-error-bg)] p-4 text-sm text-[var(--bs-status-error)]">{{ copy.failed }} <BsButton @click="refreshAccess(); refresh()">{{ copy.retry }}</BsButton></p>
-    <p v-else-if="exportError" role="alert" class="text-sm text-[var(--bs-status-error)]">{{ exportError }}</p>
-    <p v-if="accessPending || pending" role="status" class="text-sm text-muted-foreground">{{ copy.loading }}</p>
-    <p v-else-if="!canView" class="ls-card-flat p-6 text-sm text-muted-foreground">{{ copy.denied }}</p>
-    <p v-else-if="costDenied" class="ls-card-flat p-6 text-sm text-muted-foreground">{{ copy.costDenied }}</p>
-
+  <BsStack>
+    <BsPageHeader  :title="copy.title" :subtitle="copy.subtitle">
+      <template #actions>
+        <BsText as="p" size="xs" emphasis="semibold">{{ current?.name }}</BsText>
+        <BsButton variant="primary" :pending="exporting" :disabled="pending || !result.total || !canView || costDenied" @click="exportReport">{{ exporting ? copy.exporting : copy.export }}</BsButton>
+      </template>
+    </BsPageHeader>
+    <BsText as="p" size="sm" tone="warning">{{ copy.operational }}</BsText>
+    <BsText v-if="report === 'margin'" as="p" size="sm" tone="muted">{{ copy.fifoNotice }}</BsText>
+    <BsFilterBar :label="copy.title">
+      <BsGrid :columns="4">
+        <BsField v-slot="field" :label="copy.title">
+          <BsSelect v-model="report" :input-id="field.id" :aria-describedby="field.describedby" :label="copy.title" :options="[...(reportOptions).map(option => ({ value: option.value, label: (option.label), disabled: false }))]" option-label="label" option-value="value" option-disabled="disabled"/>
+        </BsField>
+        <BsField v-slot="field" :label="copy.location">
+          <BsSelect v-model="locationId" :input-id="field.id" :aria-describedby="field.describedby" :label="copy.location" :options="[{ value: 'all', label: (copy.allLocations), disabled: false }, ...(activeLocations).map(location => ({ value: location.id, label: (location.name), disabled: false }))]" option-label="label" option-value="value" option-disabled="disabled"/>
+        </BsField>
+        <BsField v-slot="field" :label="copy.from">
+          <BsInput :id="field.id" v-model="fromDate" :aria-describedby="field.describedby" type="date" :disabled="report === 'inventory' || report === 'receivables'"/>
+        </BsField>
+        <BsField v-slot="field" :label="copy.to">
+          <BsInput :id="field.id" v-model="toDate" :aria-describedby="field.describedby" type="date" :disabled="report === 'inventory' || report === 'receivables'"/>
+        </BsField>
+      </BsGrid>
+      <BsText as="p" size="xs" tone="muted">{{ copy.fullHistory }}</BsText>
+    </BsFilterBar>
+    <BsText v-if="accessError || error" role="alert" as="p" size="sm" tone="danger">{{ copy.failed }} <BsButton @click="refreshAccess(); refresh()">{{ copy.retry }}</BsButton>
+    </BsText>
+    <BsText v-else-if="exportError" role="alert" as="p" size="sm" tone="danger">{{ exportError }}</BsText>
+    <BsText v-if="accessPending || pending" role="status" as="p" size="sm" tone="muted">{{ copy.loading }}</BsText>
+    <BsText v-else-if="!canView" as="p" size="sm" tone="muted">{{ copy.denied }}</BsText>
+    <BsText v-else-if="costDenied" as="p" size="sm" tone="muted">{{ copy.costDenied }}</BsText>
     <template v-else>
-      <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <NuxtLink v-for="(value, key) in result.summary" v-show="key !== 'costBasis' && key !== 'snapshot'" :key="key" :to="summaryPath(String(key))" class="ls-card p-4 transition hover:border-[var(--bs-accent)]"><p class="text-xs font-bold text-muted-foreground">{{ labels[key] || key }}</p><p class="mt-2 text-xl font-extrabold">{{ display(value, summaryFormat(String(key))) }}</p><span class="mt-2 block text-xs font-bold text-[var(--bs-link)]">{{ copy.open }}</span></NuxtLink>
-      </section>
-
-      <section id="report-results" class="scroll-mt-24 overflow-hidden ls-card">
-        <div class="overflow-x-auto">
-          <BsDataTable :value="result.items" data-key="id" :row-class="() => 'border-b border-border last:border-0'">
-            <Column v-for="column in columns" :key="column.key" header-class="px-4 py-3 text-start" body-class="px-4 py-3 text-start whitespace-nowrap">
-              <template #header>{{ column.label }}</template>
-              <template #body="{ data: row }"><NuxtLink v-if="column.primary && sourcePath(row)" :to="sourcePath(row)" class="inline-flex min-h-11 min-w-11 items-center font-bold text-[var(--bs-link)] hover:underline">{{ display(row[column.key], column.format) }}</NuxtLink><span v-else>{{ display(row[column.key], column.format) }}</span></template>
-            </Column>
-            <Column header-class="px-4 py-3 text-end" body-class="px-4 py-3 text-end"><template #header>{{ copy.open }}</template><template #body="{ data: row }"><NuxtLink v-if="sourcePath(row)" :to="sourcePath(row)" class="inline-flex min-h-11 min-w-11 items-center font-bold text-[var(--bs-link)] hover:underline">{{ copy.open }}</NuxtLink></template></Column>
-            <template #empty><p class="p-8 text-center text-sm text-muted-foreground">{{ copy.empty }}</p></template>
+      <BsGrid :columns="4">
+        <BsActionTile v-for="(value, key) in result.summary" v-show="key !== 'costBasis' && key !== 'snapshot'" :key="key" :to="summaryPath(String(key))">
+          <BsText as="p" size="xs" tone="muted" emphasis="semibold">{{ labels[key] || key }}</BsText>
+          <BsText as="p" size="lg" emphasis="semibold">{{ display(value, summaryFormat(String(key))) }}</BsText>
+          <BsText as="span" size="xs" emphasis="semibold">{{ copy.open }}</BsText>
+        </BsActionTile>
+      </BsGrid>
+      <BsPanel id="report-results" padding="md">
+        <BsBox scroll="x">
+          <BsDataTable :value="result.items" data-key="id" :columns="[...(columns).map(column => ({ key: column.key, header: column.label ?? column.key })), { key: 'column1', header: (copy.open), align: 'end' }]">
+            <template v-for="column in columns" :key="column.key" #[`cell-${column.key}`]="{ row: row }">
+              <BsLink v-if="column.primary && sourcePath(row)" :to="sourcePath(row)">{{ display(row[column.key], column.format) }}</BsLink>
+              <BsText v-else as="span">{{ display(row[column.key], column.format) }}</BsText>
+            </template>
+            <template #cell-column1="{ row: row }">
+              <BsLink v-if="sourcePath(row)" :to="sourcePath(row)">{{ copy.open }}</BsLink>
+            </template>
+            <template #empty>
+              <BsText as="p" size="sm" tone="muted">{{ copy.empty }}</BsText>
+            </template>
           </BsDataTable>
-        </div>
-        <footer v-if="result.total" class="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-3 text-sm"><p class="text-muted-foreground">{{ result.total }} {{ copy.records }} · {{ copy.page }} {{ page }} {{ copy.of }} {{ totalPages }}</p><div class="flex gap-2"><BsButton :disabled="page <= 1" @click="page--">{{ copy.previous }}</BsButton><BsButton :disabled="page >= totalPages" @click="page++">{{ copy.next }}</BsButton></div></footer>
-      </section>
+        </BsBox>
+        <BsInline v-if="result.total" justify="between">
+          <BsText as="p" tone="muted">{{ result.total }} {{ copy.records }} · {{ copy.page }} {{ page }} {{ copy.of }} {{ totalPages }}</BsText>
+          <BsInline>
+            <BsButton :disabled="page <= 1" @click="page--">{{ copy.previous }}</BsButton>
+            <BsButton :disabled="page >= totalPages" @click="page++">{{ copy.next }}</BsButton>
+          </BsInline>
+        </BsInline>
+      </BsPanel>
     </template>
-  </div>
+  </BsStack>
 </template>

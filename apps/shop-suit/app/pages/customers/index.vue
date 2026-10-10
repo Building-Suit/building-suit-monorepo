@@ -158,102 +158,61 @@ function formatDate(value: string) {
 </script>
 
 <template>
-  <div class="space-y-6">
-    <header class="flex flex-wrap items-end justify-between gap-4">
-      <div>
-        <h1 class="text-3xl font-extrabold tracking-tight">{{ t('customers.title') }}</h1>
-        <p class="mt-2 text-sm text-muted-foreground">{{ t('customers.subtitle') }}</p>
-      </div>
-    </header>
-
-    <div v-if="!current && !shopLoading" class="ls-card p-8 text-center text-sm">
-      <p>{{ t('customers.noShop') }}</p>
-      <NuxtLink to="/dashboard" class="mt-3 inline-block font-bold text-[var(--bs-link)] underline">{{ t('customers.dashboard') }}</NuxtLink>
-    </div>
-
+  <BsStack>
+    <BsPageHeader  :title="t('customers.title')" :subtitle="t('customers.subtitle')"/>
+    <BsPanel v-if="!current && !shopLoading" padding="md">
+      <BsText as="p">{{ t('customers.noShop') }}</BsText>
+      <BsLink to="/dashboard">{{ t('customers.dashboard') }}</BsLink>
+    </BsPanel>
     <template v-else-if="current">
-      <p class="rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm">
-        {{ t('customers.historyNotice') }}
-      </p>
-
-      <p v-if="customerPage?.permissionDenied" role="alert" class="rounded-xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-4 text-sm">
-        {{ t('customers.permissionDenied') }}
-      </p>
-      <p v-else-if="customerPage && !canManage" class="rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm">
-        {{ t('customers.manageDenied') }}
-      </p>
-
+      <BsText as="p" size="sm">{{ t('customers.historyNotice') }}</BsText>
+      <BsText v-if="customerPage?.permissionDenied" role="alert" as="p" size="sm" tone="warning">{{ t('customers.permissionDenied') }}</BsText>
+      <BsText v-else-if="customerPage && !canManage" as="p" size="sm">{{ t('customers.manageDenied') }}</BsText>
       <BsRecordActionDialog v-model:visible="showForm" :title="t('customers.createTitle')" :dirty="formDirty" :pending="saving" :error="actionError" :submit-label="t('customers.save')" :cancel-label="t('customers.cancel')" @submit="save">
-            <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ t('customers.name') }}<input v-model="form.name" type="text" minlength="2" maxlength="160" required class="ls-input"></label>
-            <label class="space-y-2 text-sm font-bold">{{ t('customers.phone') }}<input v-model="form.phone" type="tel" maxlength="50" autocomplete="tel" class="ls-input"></label>
-            <label class="space-y-2 text-sm font-bold">{{ t('customers.email') }}<input v-model="form.email" type="email" maxlength="254" autocomplete="email" class="ls-input"></label>
-            <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ t('customers.address') }}<textarea v-model="form.address" maxlength="500" rows="2" class="ls-input" /></label>
-            <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ t('customers.notes') }}<textarea v-model="form.notes" maxlength="2000" rows="3" class="ls-input" /></label>
+        <BsField v-slot="field" :label="(t('customers.name'))">
+          <BsInput :id="field.id" v-model="form.name" :aria-describedby="field.describedby" type="text" :minlength="2" :maxlength="160" required/>
+        </BsField>
+        <BsField v-slot="field" :label="(t('customers.phone'))">
+          <BsInput :id="field.id" v-model="form.phone" :aria-describedby="field.describedby" type="tel" :maxlength="50" autocomplete="tel"/>
+        </BsField>
+        <BsField v-slot="field" :label="(t('customers.email'))">
+          <BsInput :id="field.id" v-model="form.email" :aria-describedby="field.describedby" type="email" :maxlength="254" autocomplete="email"/>
+        </BsField>
+        <BsField v-slot="field" :label="(t('customers.address'))">
+          <BsTextarea :id="field.id" v-model="form.address" :aria-describedby="field.describedby" :maxlength="500" :rows="2"/>
+        </BsField>
+        <BsField v-slot="field" :label="(t('customers.notes'))">
+          <BsTextarea :id="field.id" v-model="form.notes" :aria-describedby="field.describedby" :maxlength="2000" :rows="3"/>
+        </BsField>
       </BsRecordActionDialog>
-
-      <div v-if="!customerPage?.permissionDenied" class="overflow-hidden ls-card">
-        <BsDataTable
-          :value="customerPage?.items ?? []"
-          :loading="pending"
-          :error="error ? t('customers.loadError') : null"
-          :label="t('customers.title')"
-          :capabilities="{ insert: canManage }"
-          :action-labels="{ insert: t('customers.add') }"
-          searchable
-          :search-label="t('customers.search')"
-          data-key="id"
-          lazy
-          paginator
-          :rows="pageSize"
-          :first="(page - 1) * pageSize"
-          :total-records="customerPage?.total ?? 0"
-          :always-show-paginator="false"
-          :row-class="() => 'border-t border-border'"
-          @search="value => search = value"
-          @page="handlePage"
-          @retry="refresh()"
-          @create="openCreate"
-        >
+      <BsPanel v-if="!customerPage?.permissionDenied" padding="md">
+        <BsDataTable :value="customerPage?.items ?? []" :loading="pending" :error="error ? t('customers.loadError') : null" :label="t('customers.title')" :capabilities="{ insert: canManage }" :action-labels="{ insert: t('customers.add') }" searchable :search-label="t('customers.search')" data-key="id" lazy paginator :rows="pageSize" :first="(page - 1) * pageSize" :total-records="customerPage?.total ?? 0" :always-show-paginator="false" :columns="[{ key: 'column0', header: (t('customers.name')) }, { key: 'column1', header: (t('customers.contact')) }, { key: 'column2', header: (t('customers.status')) }, { key: 'column3', header: (t('customers.updated')) }]" @search="value => search = value" @page="handlePage" @retry="refresh()" @create="openCreate">
+          <template #cell-column0="{ row: customer }">
+            <BsLink :to="`/customers/${customer.id}`">{{ customer.name }}</BsLink>
+          </template>
+          <template #cell-column1="{ row: customer }">
+            <BsStack>
+              <BsText as="p">{{ customer.phone || '—' }}</BsText>
+              <BsText as="p" size="xs" tone="muted">{{ customer.email || '—' }}</BsText>
+            </BsStack>
+          </template>
+          <template #cell-column2="{ row: customer }">
+            <BsText as="span">{{ customer.is_active ? t('customers.active') : t('customers.archived') }}</BsText>
+          </template>
+          <template #cell-column3="{ row: customer }">{{ formatDate(customer.updated_at) }}</template>
           <template #filters>
             <BsSelect
-              v-model="statusFilter"
-              :label="t('customers.status')"
-              :options="[
-              { value: 'active', label: t('customers.active') },
-              { value: 'archived', label: t('customers.archived') },
-              { value: 'all', label: t('customers.all') },
-              ]"
-              option-label="label"
-              option-value="value"
-            />
+              v-model="statusFilter" :label="t('customers.status')" :options="[
+                { value: 'active', label: t('customers.active') },
+                { value: 'archived', label: t('customers.archived') },
+                { value: 'all', label: t('customers.all') },
+              ]" option-label="label" option-value="value"/>
           </template>
-          <Column header-class="px-5 py-3 text-start" body-class="px-5 py-4">
-            <template #header>{{ t('customers.name') }}</template>
-            <template #body="{ data: customer }">
-              <NuxtLink :to="`/customers/${customer.id}`" class="font-bold text-[var(--bs-link)] underline-offset-4 hover:underline">{{ customer.name }}</NuxtLink>
-            </template>
-          </Column>
-          <Column header-class="px-5 py-3 text-start" body-class="px-5 py-4">
-            <template #header>{{ t('customers.contact') }}</template>
-            <template #body="{ data: customer }">
-              <div class="space-y-1"><p>{{ customer.phone || '—' }}</p><p class="text-xs text-muted-foreground">{{ customer.email || '—' }}</p></div>
-            </template>
-          </Column>
-          <Column header-class="px-5 py-3 text-start" body-class="px-5 py-4">
-            <template #header>{{ t('customers.status') }}</template>
-            <template #body="{ data: customer }">
-              <span class="ls-badge" :class="customer.is_active ? 'bg-[var(--bs-status-success-bg)] text-fg' : 'bg-muted text-muted-foreground'">
-                {{ customer.is_active ? t('customers.active') : t('customers.archived') }}
-              </span>
-            </template>
-          </Column>
-          <Column header-class="px-5 py-3 text-start" body-class="px-5 py-4">
-            <template #header>{{ t('customers.updated') }}</template>
-            <template #body="{ data: customer }">{{ formatDate(customer.updated_at) }}</template>
-          </Column>
-          <template #empty><p class="p-8 text-center text-sm text-muted-foreground">{{ t('customers.noCustomers') }}</p></template>
+          <template #empty>
+            <BsText as="p" size="sm" tone="muted">{{ t('customers.noCustomers') }}</BsText>
+          </template>
         </BsDataTable>
-      </div>
+      </BsPanel>
     </template>
-  </div>
+  </BsStack>
 </template>

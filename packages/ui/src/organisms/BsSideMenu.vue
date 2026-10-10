@@ -75,7 +75,7 @@ watch(() => props.open, async (open) => {
           :aria-label="labels.close"
           @click="emit('close', true)"
         >
-          <AppIcon name="close" />
+          <BsIcon name="close" />
         </BsButton>
       </div>
 
@@ -89,7 +89,7 @@ watch(() => props.open, async (open) => {
           :class="{ 'ls-nav-link-active': isActive(homePath) }"
           :aria-current="isActive(homePath) ? 'page' : undefined"
         >
-          <AppIcon name="dashboard" />
+          <BsIcon name="dashboard" />
           <span>{{ labels.dashboard }}</span>
         </NuxtLink>
         <section v-for="group in groups" :key="group.key">
@@ -103,7 +103,7 @@ watch(() => props.open, async (open) => {
               :class="{ 'ls-nav-link-active': isActive(item.to) }"
               :aria-current="isActive(item.to) ? 'page' : undefined"
             >
-              <AppIcon v-if="item.icon" :name="item.icon" />
+              <BsIcon v-if="item.icon" :name="item.icon" />
               <span>{{ item.label }}</span>
             </NuxtLink>
           </div>

@@ -84,8 +84,9 @@ export async function pilotFixture(page: Page, locale: string, role = 'owner', o
   // SSR-visible controls are not sufficient: wait until Vue has mounted
   // and the form submit handler is attached before interacting.
   const loginForm = page.locator('form')
-  const emailInput = page.locator('#login-email')
-  const passwordInput = page.locator('#login-password')
+  // Label text includes BsField's aria-hidden required marker.
+  const emailInput = page.getByLabel(locale === 'ar' ? /^البريد الإلكتروني\s*\*?$/ : /^Email\s*\*?$/)
+  const passwordInput = page.getByLabel(locale === 'ar' ? /^كلمة المرور\s*\*?$/ : /^Password\s*\*?$/)
   const submitButton = page.locator('form button[type="submit"]')
 
   await expect(loginForm).toHaveAttribute(

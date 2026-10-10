@@ -1,0 +1,2 @@
+<script setup lang="ts">defineProps<{ label?: string; index?: string }>()</script>
+<template><div class="ls-landing-preview-stage relative min-w-0" data-landing-preview><div class="ls-landing-preview-rule" aria-hidden="true"><span>{{ label || 'Building Suit' }}</span></div><div class="ls-landing-preview-shell"><slot /></div><div class="ls-landing-preview-index" aria-hidden="true">{{ index || '01 / PRODUCT' }}</div></div></template>
