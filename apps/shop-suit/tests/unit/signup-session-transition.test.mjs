@@ -61,7 +61,7 @@ test('signup survives session establishment and provisioning while operational c
   const app = renderer.createApp(Root)
   const { descriptor: appRootDescriptor } = parse(await readFile(new URL('../../../../packages/ui/src/templates/BsAppRoot.vue', import.meta.url), 'utf8'))
   const appRootCode = stripTypeScriptTypes(compileScript(appRootDescriptor, { id: 'shared-app-root', inlineTemplate: true }).content)
-    .replace(/from (['\"])vue\1/g, `from '${import.meta.resolve('vue')}'`)
+    .replace(/from (['"])vue\1/g, `from '${import.meta.resolve('vue')}'`)
   const { default: SharedAppRoot } = await import(`data:text/javascript;base64,${Buffer.from(appRootCode).toString('base64')}`)
   app.component('BsAppRoot', SharedAppRoot)
   app.component('NuxtLayout', defineComponent({ props: ['name'], setup: (_, { slots }) => () => slots.default?.() }))
