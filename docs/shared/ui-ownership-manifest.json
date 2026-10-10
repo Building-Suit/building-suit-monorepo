@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "scope": "apps/*-suit/app/components/**/*.vue",
+  "scope": "apps/*-suit/app/**/*.vue presentation ownership; components lists app-local Vue file ownership",
   "owner": "packages/ui",
   "interactionOwner": "packages/ux",
   "classifications": {
