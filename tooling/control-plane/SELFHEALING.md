@@ -57,3 +57,21 @@ fails as configuration evidence without overwriting the first check. Verifier
 process receipts bind the actual verification run ID across infrastructure polls;
 a failed verifier process is not blindly restarted inside a generation whose
 checks already have immutable receipts.
+# Reviewed verifier setup continuation
+
+Trusted `VERIFIER_INFRA` reviews now admit two deterministic test setup repairs:
+explicit JSONB casts for the known `auth.users` UNION fixture type error, and the
+accessible combobox locator for the known Method/الطريقة select timeout. Every
+failed check must match a recognized transformation in its reviewed test file.
+The host checks the original complete source fingerprint, artifact and reviewed
+file hashes, then uses the existing atomic fixture recipe mechanism. Runtime,
+credentials, deployment files and business assertions are not transformed.
+Unknown patterns still require independent investigation; this is not authority
+to weaken tests or label product defects as infrastructure.
+
+A mandatory database command omitted because that exact registered command
+failed inherits the independently reviewed prerequisite's retry accounting.
+Execution, task, command and verification identities must match. Its status
+remains `not_run`, with no fabricated receipt, and it must actually pass before
+publication. This prevents the audit from disagreeing with a genuine product
+charge solely because the dependent obligation did not execute.

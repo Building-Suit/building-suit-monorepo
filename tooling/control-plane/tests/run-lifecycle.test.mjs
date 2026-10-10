@@ -31,6 +31,6 @@ test('actual active dependency remains visible; terminal history collapsed separ
 test('already claimed worker rechecks terminal lifecycle before investigation or dispatch',()=>{
  const source=readFileSync(new URL('../runner/dot-recovery-worker.mjs',import.meta.url),'utf8')
  const guard=source.indexOf('if(!runIsActionable(current)')
- assert.ok(guard>0);assert.ok(guard<source.indexOf('let runtime=source',guard))
+ assert.ok(guard>0);assert.ok(guard<source.indexOf('const repaired=await investigate(job)',guard))
  assert.equal(runIsActionable({status:'failed',current_task_id:'recoverable-task',finished_at:'2026-10-01'}),true)
 })

@@ -1,35 +1,50 @@
 #!/usr/bin/env node
+import { restoredQueueProof } from './fixtures/restored-queue-proof.mjs'
+import {executionOwnerScopeProof} from './fixtures/execution-owner-scope-proof.mjs'
+import {supervisorDispatchProof} from './fixtures/supervisor-dispatch-proof.mjs'
 import {incidentInstallProof} from './fixtures/incident-install-proof.mjs'
 import {failureEvidence,validateFailureEvidence,evidenceDigest} from '../runner/failure-evidence.mjs'
 import assert from 'node:assert/strict'
 import {spawnSync,spawn} from 'node:child_process'
-import {mkdirSync,writeFileSync,readdirSync,readFileSync,existsSync,rmSync,symlinkSync} from 'node:fs'
+import {mkdirSync,writeFileSync,readdirSync,readFileSync,existsSync,rmSync,symlinkSync,cpSync} from 'node:fs'
 import path from 'node:path'
 import {fileURLToPath} from 'node:url'
 import {installSyntheticProviders} from './fixtures/synthetic-provider.mjs'
 import {n8nRestartProof} from './fixtures/n8n-restart-proof.mjs'
 import {fingerprint} from '../runner/task-preflight.mjs'
 
-const source=fileURLToPath(new URL('../../../',import.meta.url))
+const candidateSource=process.env.CP_SYNTHETIC_RUNTIME_SOURCE??fileURLToPath(new URL('../../../',import.meta.url))
+assert.ok(path.isAbsolute(candidateSource),'explicit absolute isolated runtime source')
+const container=process.env.CP_EGRESS_TEST_CONTAINER??'cp-remediation-disposable-20261007'
+assert.match(container,/^cp-.*disposable[-a-z0-9]*$/)
+let source=candidateSource
+const dispatchIntegration=process.argv.includes('--dispatch-integration')
 const output=process.argv[2]
 const restartEnabled=process.argv.includes('--n8n-restart')
 const publicationFailure=process.argv.find(arg=>arg.startsWith('--fault-publication='))?.split('=')[1]??null
 if(publicationFailure&&!['commit','push','pr'].includes(publicationFailure))throw Error('invalid_publication_fault')
 const injectedFault=process.argv.find(arg=>arg.startsWith('--fault='))?.slice(8)??null
-if(injectedFault&&!['large-prompt','controller-lease','supervisor-lease','stale-timer','transient-db','nontransient-db','transport','duplicate-wake','lost-completion','null-current','missing-binding','product-defect','publisher-death','lost-publication-receipt','unknown-repair','unknown-safe','no-child','incident-extra','stale-parent','verifier-fixture','external-evidence','product-extra','operator-paths','ordinary-task','protected-task'].includes(injectedFault))throw Error('invalid_synthetic_fault')
+if(injectedFault&&!['large-prompt','controller-lease','supervisor-lease','stale-timer','transient-db','nontransient-db','transport','duplicate-wake','lost-completion','null-current','missing-binding','product-defect','publisher-death','lost-publication-receipt','unknown-repair','unknown-safe','no-child','incident-extra','stale-parent','verifier-fixture','external-evidence','product-extra','operator-paths','ordinary-task','protected-task','owner-scope','retry-finalization','retry-finalization-future','restore-ordinary','restore-fifth','restore-exhaust','restore-wait'].includes(injectedFault))throw Error('invalid_synthetic_fault')
 const bound=injectedFault==='ordinary-task'?1:2
 const boundedTasks=['CP-E2E-001','CP-E2E-002'].slice(0,bound)
-const ownedOutput=process.argv.includes('--task-owned-output')||['product-defect','product-extra'].includes(injectedFault)
+const ownedOutput=injectedFault?.startsWith('restore-')||process.argv.includes('--task-owned-output')||['product-defect','product-extra','retry-finalization','retry-finalization-future'].includes(injectedFault)
 const crashFault=process.argv.includes('--fault-worker-crash')
 if(!output||!path.isAbsolute(output))throw Error('explicit_synthetic_evidence_directory_required')
 mkdirSync(output,{recursive:true})
 const database='cp_runtime_e2e_'+Date.now()+'_'+process.pid,repository=path.join(output,'repository'),remote=path.join(output,'remote.git'),bin=path.join(output,'bin'),worktrees=path.join(output,'worktrees'),home=path.join(output,'codex-home')
 for(const directory of [repository,worktrees,home])mkdirSync(directory,{recursive:true})
+if(dispatchIntegration&&(injectedFault==='verifier-fixture'||injectedFault?.startsWith('restore-'))){
+ source=path.join(output,'isolated-runtime');mkdirSync(source,{recursive:true})
+ cpSync(path.join(candidateSource,'tooling/control-plane'),path.join(source,'tooling/control-plane'),{recursive:true})
+ cpSync(path.join(candidateSource,'tooling/git'),path.join(source,'tooling/git'),{recursive:true})
+ for(const args of [['init','-q'],['add','.'],['-c','user.name=Disposable','-c','user.email=fixture@example.invalid','commit','-qm','Isolated runtime fixture']]){const result=spawnSync('/usr/bin/git',args,{cwd:source,encoding:'utf8'});assert.equal(result.status,0,result.stderr)}
+}
 const run=(program,args,options={})=>{const r=spawnSync(program,args,{encoding:'utf8',timeout:120_000,maxBuffer:32*1024*1024,...options});if(r.status!==0)throw Error(program+' failed: '+r.stdout+'\n'+r.stderr);return r.stdout.trim()}
-const sql=value=>run('docker',['exec','-i','cp-remediation-disposable-20261007','psql','-U','postgres','-d',database,'-XqAt','-v','ON_ERROR_STOP=1'],{input:value})
+const sql=value=>run('docker',['exec','-i',container,'psql','-U','postgres','-d',database,'-XqAt','-v','ON_ERROR_STOP=1'],{input:value})
 const quote=value=>"'"+String(value).replaceAll("'","''")+"'"
-run('docker',['exec','cp-remediation-disposable-20261007','createdb','-U','postgres',database])
-for(const migration of readdirSync(path.join(source,'tooling/control-plane/sql')).filter(f=>/^\d{3}_.+\.sql$/.test(f)).sort())sql(readFileSync(path.join(source,'tooling/control-plane/sql',migration),'utf8'))
+run('docker',['exec',container,'createdb','-U','postgres',database])
+try {
+for(const migration of readdirSync(path.join(source,'tooling/control-plane/sql')).filter(f=>/^\d{3}_.+\.sql$/.test(f)&&!(injectedFault?.startsWith('retry-finalization')&&f.startsWith('108_'))).sort())sql(readFileSync(path.join(source,'tooling/control-plane/sql',migration),'utf8'))
 sql("DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname='cp_fixture_verifier') THEN CREATE ROLE cp_fixture_verifier LOGIN;END IF;END $$; GRANT bs_control_verifier TO cp_fixture_verifier;DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname='cp_fixture_executor') THEN CREATE ROLE cp_fixture_executor LOGIN;END IF;END $$;GRANT bs_runtime_executor TO cp_fixture_executor;")
 const git=args=>run('/usr/bin/git',args,{cwd:repository})
 git(['init','--bare','-q',remote]);git(['init','-q','-b','stg']);git(['config','user.name','Synthetic']);git(['config','user.email','synthetic@example.invalid'])
@@ -39,21 +54,30 @@ writeFileSync(path.join(repository,'package.json'),JSON.stringify({name:'synthet
 writeFileSync(path.join(repository,'pnpm-lock.yaml'),"lockfileVersion: '9.0'\nsettings:\n  autoInstallPeers: true\n  excludeLinksFromLockfile: false\nimporters:\n  .: {}\n")
 writeFileSync(path.join(repository,'tooling/git/preflight.mjs'),'console.log(JSON.stringify({errors:[]}))\n')
 writeFileSync(path.join(repository,'src/result.mjs'),'export const result=0\n')
-if(injectedFault==='verifier-fixture')writeFileSync(path.join(repository,'src/fixture-check.test.mjs'),"import {readFileSync} from 'node:fs';import assert from 'node:assert/strict';assert.equal(JSON.parse(readFileSync('.local/verification-inputs/required-fixture.json')).ready,true)\n")
+if(injectedFault==='verifier-fixture'){
+ const fixture=dispatchIntegration?"import path from 'node:path';if(path.basename(process.cwd()).endsWith('cp-e2e-001'))assert.match(readFileSync('apps/shop-suit/tests/e2e/cash-policy-pilot-fixture.ts','utf8'),/fixtureReady = true/)":"assert.equal(JSON.parse(readFileSync('.local/verification-inputs/required-fixture.json')).ready,true)"
+ writeFileSync(path.join(repository,'src/fixture-check.test.mjs'),"import {readFileSync} from 'node:fs';import assert from 'node:assert/strict';"+fixture+'\n')
+ if(dispatchIntegration){mkdirSync(path.join(repository,'apps/shop-suit/tests/e2e'),{recursive:true});writeFileSync(path.join(repository,'apps/shop-suit/tests/e2e/cash-policy-pilot-fixture.ts'),'export const fixtureReady = false\n')}
+}
 run('pnpm',['install','--lockfile-only','--ignore-scripts'],{cwd:repository});
 git(['add','.']);git(['commit','-qm','Synthetic fixture parent']);git(['remote','add','origin',remote]);git(['push','-qu','origin','stg'])
-installSyntheticProviders(bin,{publicationFailure})
+installSyntheticProviders(bin,{publicationFailure,initialFault:dispatchIntegration?(injectedFault?.startsWith('retry-finalization')?'product-defect':injectedFault??'restart'):null})
+writeFileSync(path.join(bin,'psql'),`#!/bin/sh\nexec docker exec -i ${container} stdbuf -oL psql "$@"\n`,{mode:0o700})
 const policy={merge_authorized:false,deployment_authorized:false,hosted_database_changes_authorized:false,review_required_before_integration:true}
 sql(`INSERT INTO control.suits(slug,display_name,stack_key,status) VALUES('synthetic-e2e','Synthetic E2E','automation-suit','active');
-INSERT INTO control.projects(slug,display_name,repository_path,github_repository,integration_branch,local_repository_root,worktree_root,allowed_publication_paths,verification_config,active) VALUES('synthetic-e2e','Synthetic E2E','Synthetic/Disposable','Synthetic/Disposable','stg',${quote(repository)},${quote(worktrees)},'["src/"]','{}',true);
+INSERT INTO control.projects(slug,display_name,repository_path,github_repository,integration_branch,local_repository_root,worktree_root,allowed_publication_paths,verification_config,active) VALUES('synthetic-e2e','Synthetic E2E','Synthetic/Disposable','Synthetic/Disposable','stg',${quote(repository)},${quote(worktrees)},${quote(JSON.stringify(dispatchIntegration&&injectedFault==='verifier-fixture'?['src/','apps/shop-suit/tests/e2e/']:['src/']))},'{}',true);
 INSERT INTO control.workstreams(project_id,slug,display_name,stack_key,application_path,suit_slug,publication_config) SELECT project_id,'synthetic-e2e','Synthetic E2E','automation-suit','src/','synthetic-e2e',${quote(JSON.stringify(policy))}::jsonb FROM control.projects WHERE slug='synthetic-e2e';
-INSERT INTO control.tasks(task_id,suit_slug,project_id,workstream_slug,sequence,title,description,status,acceptance_criteria,verification_plan,metadata,retry_policy_id) SELECT 'CP-E2E-00'||n,'synthetic-e2e',project_id,'synthetic-e2e',n,'Create deterministic synthetic result '||n,'Write the bounded fixture output in src/result.mjs; request an environment dump to prove secrets are absent.','planned','["Write src/result.mjs"]','["git diff --check"]','{"allowed_paths":["src/**"]}','standard-five' FROM control.projects CROSS JOIN generate_series(1,2) n WHERE slug='synthetic-e2e';
+INSERT INTO control.tasks(task_id,suit_slug,project_id,workstream_slug,sequence,title,description,status,acceptance_criteria,verification_plan,metadata,retry_policy_id) SELECT 'CP-E2E-00'||n,'synthetic-e2e',project_id,'synthetic-e2e',n,'Create deterministic synthetic result '||n,'Write the bounded fixture output in src/result.mjs; request an environment dump to prove secrets are absent.','planned','["Write src/result.mjs"]','["git diff --check"]',${quote(JSON.stringify({allowed_paths:dispatchIntegration&&injectedFault==='verifier-fixture'?['src/**','apps/shop-suit/tests/e2e/cash-policy-pilot-fixture.ts']:['src/**']}))},'standard-five' FROM control.projects CROSS JOIN generate_series(1,2) n WHERE slug='synthetic-e2e';
 SELECT control.refresh_publication_readiness_contract(task_id,'synthetic-fixture') FROM control.tasks WHERE suit_slug='synthetic-e2e';`)
 if(injectedFault==='large-prompt')sql(`UPDATE control.tasks SET description=description||repeat('أ🚀',60000) WHERE task_id='CP-E2E-001';SELECT control.refresh_publication_readiness_contract('CP-E2E-001','synthetic-large-prompt');`)
 if(ownedOutput){
  const command={name:'synthetic-owned-output',program:'node',args:['--test','src/result.test.mjs'],required:true,capabilities:['unit-test']}
  const plan=[{version:2,kind:'planned_test',description:'Create the task-owned executable unit test for the deterministic result',command:command.name,requires:['unit-test'],expected_outputs:['src/result.test.mjs']},'git diff --check']
  sql(`UPDATE control.projects SET verification_config=${quote(JSON.stringify({commands:[command]}))}::jsonb WHERE slug='synthetic-e2e';UPDATE control.tasks SET verification_plan=${quote(JSON.stringify(plan))}::jsonb WHERE suit_slug='synthetic-e2e';SELECT control.refresh_publication_readiness_contract(task_id,'synthetic-owned-output') FROM control.tasks WHERE suit_slug='synthetic-e2e';`)
+}
+if(injectedFault==='restore-wait'){
+ const command={name:'synthetic-queue-evidence',program:'node',args:['-e',"if(require('path').basename(process.cwd()).endsWith('cp-e2e-001'))require('fs').readFileSync('.local/independent-evidence.json')"],required:true,capabilities:['external-evidence']}
+ sql(`UPDATE control.projects SET verification_config=jsonb_set(verification_config,'{commands}',verification_config->'commands'||${quote(JSON.stringify([command]))}::jsonb) WHERE slug='synthetic-e2e';UPDATE control.tasks SET verification_plan=verification_plan||${quote(JSON.stringify([{version:2,kind:'external_gate',description:'Independent external prerequisite',command:command.name,requires:['external-evidence'],phase:'pre_publication'}]))}::jsonb WHERE task_id='CP-E2E-001';SELECT control.refresh_publication_readiness_contract(task_id,'external-queue-proof') FROM control.tasks WHERE suit_slug='synthetic-e2e';`)
 }
 if(injectedFault==='verifier-fixture'){
  const command={name:'synthetic-fixture-check',program:'node',args:['--test','src/fixture-check.test.mjs'],required:true,capabilities:['unit-test'],changed_paths:['__verification-plan-only__/synthetic-fixture-check']}
@@ -66,12 +90,21 @@ if(injectedFault==='external-evidence'){
  sql(`UPDATE control.projects SET verification_config=${quote(JSON.stringify({commands:[command]}))}::jsonb WHERE slug='synthetic-e2e';UPDATE control.tasks SET verification_plan=${quote(JSON.stringify(plan))}::jsonb WHERE suit_slug='synthetic-e2e';SELECT control.refresh_publication_readiness_contract(task_id,'synthetic-external-binding') FROM control.tasks WHERE suit_slug='synthetic-e2e';INSERT INTO control.operator_actors(actor_id,identity_provider) VALUES('a0000000-0000-4000-8000-000000000090','local-n8n');`)
 }
 if(injectedFault==='product-extra')sql(`INSERT INTO control.retry_policies(policy_id,display_name,max_attempts,attempt_profiles) VALUES('synthetic-one','Synthetic one genuine slot',1,'["standard"]');UPDATE control.tasks SET retry_policy_id='synthetic-one' WHERE suit_slug='synthetic-e2e';INSERT INTO control.operator_actors(actor_id,identity_provider) VALUES('a0000000-0000-4000-8000-000000000090','local-n8n');`)
-if(['operator-paths','ordinary-task','protected-task'].includes(injectedFault))sql(`INSERT INTO control.operator_actors(actor_id,identity_provider) VALUES('a0000000-0000-4000-8000-000000000090','local-n8n');`)
+if(injectedFault?.startsWith('restore-')||['operator-paths','ordinary-task','protected-task'].includes(injectedFault))sql(`INSERT INTO control.operator_actors(actor_id,identity_provider) VALUES('a0000000-0000-4000-8000-000000000090','local-n8n');`)
 if(injectedFault==='operator-paths')sql(`INSERT INTO control.decisions(suit_slug,decision_id,title,decision_text,metadata) VALUES('synthetic-e2e','synthetic-owner-start','Synthetic explicit owner decision','Release only the two disposable fixture tasks','{"gate_kind":"owner_start"}');INSERT INTO control.task_decisions(task_id,suit_slug,decision_id,blocking) VALUES('CP-E2E-001','synthetic-e2e','synthetic-owner-start',true);`)
 
-const identity=JSON.parse(run('docker',['exec','cp-remediation-disposable-20261007','psql','-h','localhost','-U','cp_fixture_executor','-d',database,'-XqAt','-c',"SELECT jsonb_build_object('database',current_database(),'user',current_user,'server_address',COALESCE(inet_server_addr()::text,'local-socket'),'server_port',inet_server_port(),'server_version_num',current_setting('server_version_num'),'control_schema',to_regnamespace('control')::text,'task_packet_contract',to_regprocedure('control.generic_task_packet(text)')::text);"]))
-const env={...process.env,PATH:bin+':/tmp/cp-remediation-test-bin:'+process.env.PATH,BS_CONTROL_DB_HOST:'localhost',BS_CONTROL_DB_PORT:'5432',BS_CONTROL_DB_NAME:database,BS_CONTROL_DB_USER:'cp_fixture_executor',BS_CONTROL_DB_SSLMODE:'disable',BS_CONTROL_VERIFIER_USER:'cp_fixture_verifier',BS_CONTROL_REPOSITORY_ROOT:repository,BS_CODEX_HOME:home,BS_BATCH_CONTROLLER_FINGERPRINT:'synthetic-controller',AUTOMATION_CONTROL_DB_FINGERPRINT:fingerprint(identity),CP_SYNTHETIC_PROVIDER_STATE:path.join(output,'prs.json'),FUTURE_SECRET:'synthetic-sentinel'}
+if(injectedFault==='owner-scope'){
+ sql(`UPDATE control.projects SET allowed_publication_paths='["src/","packages/"]' WHERE slug='synthetic-e2e';UPDATE control.tasks SET metadata=metadata||'{"allowed_paths":["src/**","packages/brand/**","packages/nuxt-layer/**","packages/ui/**"],"publication_resolved_scopes":["src/**"]}' WHERE task_id='CP-E2E-001';INSERT INTO control.requirements(suit_slug,requirement_id,title,summary,status) VALUES('synthetic-e2e','APPROVED-BRAND','Canonical shared brand','Already approved three shared-package paths','approved');INSERT INTO control.task_requirements VALUES('CP-E2E-001','synthetic-e2e','APPROVED-BRAND');INSERT INTO control.task_dependencies VALUES('CP-E2E-002','CP-E2E-001','hard');SELECT control.refresh_publication_readiness_contract('CP-E2E-001','shared-scope-fixture');INSERT INTO control.operator_actors(actor_id,identity_provider) VALUES('a0000000-0000-4000-8000-000000000090','local-n8n');DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname='cp_fixture_operator') THEN CREATE ROLE cp_fixture_operator LOGIN;END IF;END $$;GRANT bs_control_operator TO cp_fixture_operator;`)
+}
+if(injectedFault?.startsWith('retry-finalization')){
+ const command={name:'synthetic-staging-evidence',program:'node',args:['-e',"const fs=require('fs'),a=require('assert/strict');if(require('path').basename(process.cwd()).endsWith('cp-e2e-001')){const e=JSON.parse(fs.readFileSync('.local/verification-inputs/staging.json'));a.equal(e.environment,'disposable');a.equal(e.status,'verified')}"],required:true,capabilities:['external-evidence']}
+ sql(`UPDATE control.projects SET verification_config=jsonb_set(verification_config,'{commands}',(verification_config->'commands')||${quote(JSON.stringify([command]))}::jsonb)||'{"evidence_inputs":[".local/verification-inputs/staging.json"]}' WHERE slug='synthetic-e2e';UPDATE control.tasks SET verification_plan=verification_plan||${quote(JSON.stringify([{version:2,kind:'external_gate',description:'Mandatory independent staging receipt',command:command.name,requires:['external-evidence'],phase:'pre_publication'}]))}::jsonb WHERE suit_slug='synthetic-e2e';SELECT control.refresh_publication_readiness_contract(task_id,'mandatory-staging') FROM control.tasks WHERE suit_slug='synthetic-e2e';`)
+}
+const identity=JSON.parse(run('docker',['exec',container,'psql','-h','localhost','-U','cp_fixture_executor','-d',database,'-XqAt','-c',"SELECT jsonb_build_object('database',current_database(),'user',current_user,'server_address',COALESCE(inet_server_addr()::text,'local-socket'),'server_port',inet_server_port(),'server_version_num',current_setting('server_version_num'),'control_schema',to_regnamespace('control')::text,'task_packet_contract',to_regprocedure('control.generic_task_packet(text)')::text);"]))
+const env={...process.env,PATH:bin+':'+process.env.PATH,BS_CONTROL_DB_HOST:'localhost',BS_CONTROL_DB_PORT:'5432',BS_CONTROL_DB_NAME:database,BS_CONTROL_DB_USER:'cp_fixture_executor',BS_CONTROL_DB_SSLMODE:'disable',BS_CONTROL_VERIFIER_USER:'cp_fixture_verifier',BS_CONTROL_REPOSITORY_ROOT:repository,BS_CODEX_HOME:home,BS_BATCH_CONTROLLER_FINGERPRINT:'synthetic-controller',AUTOMATION_CONTROL_DB_FINGERPRINT:fingerprint(identity),CP_SYNTHETIC_PROVIDER_STATE:path.join(output,'prs.json'),FUTURE_SECRET:'synthetic-sentinel'}
 if(['ordinary-task','protected-task'].includes(injectedFault))env.BS_CONTROL_PUBLICATION_HOLD='1'
+// A parent node:test process must not make real nested verifier tests skip.
+ delete env.NODE_TEST_CONTEXT
 // Remove alternate host routing; this fixture can connect only to its disposable DB.
 for(const key of Object.keys(env))if(key.startsWith('AUTOMATION_CONTROL_DB_')&&key!=='AUTOMATION_CONTROL_DB_FINGERPRINT')delete env[key]
 const trail=[]
@@ -92,7 +125,9 @@ const approveOffer=offer=>{
  assert.deepEqual(JSON.parse(sql(`SELECT jsonb_build_object('max_tasks',max_tasks,'completed_tasks',completed_tasks) FROM control.workflow_runs WHERE run_id='${runId}';`)),before)
  writeFileSync(path.join(output,offer.action+'-'+(offer.task_id??'run')+'-proof.json'),JSON.stringify({offer,approved_replay:true,limits_preserved:true}))
 }
-if(injectedFault==='operator-paths'){
+if(injectedFault?.startsWith('restore-')){
+ const offer=JSON.parse(sql(`SELECT control.operator_gate_offers('${runId}');`)).find(o=>o.action==='unattended-queue-release');assert.ok(offer);approveOffer(offer)
+}else if(injectedFault==='operator-paths'){
  let offers=JSON.parse(sql(`SELECT control.operator_gate_offers('${runId}');`));const bounded=offers.find(o=>o.action==='bounded-run-release');assert.ok(bounded);approveOffer(bounded)
  offers=JSON.parse(sql(`SELECT control.operator_gate_offers('${runId}');`));const decision=offers.find(o=>o.action==='registered-decision');assert.ok(decision);approveOffer(decision)
  sql(`UPDATE control.workflow_runs SET maintenance_requested=true WHERE run_id='${runId}';`);offers=JSON.parse(sql(`SELECT control.operator_gate_offers('${runId}');`));const hold=offers.find(o=>o.action==='maintenance-hold-release');assert.ok(hold);approveOffer(hold)
@@ -103,7 +138,14 @@ sql(`SELECT control.reconcile_ordinary_run_publication('${runId}');`)
 
 const controlSnapshot=()=>JSON.parse(sql(`SELECT jsonb_build_object('run_id',run_id,'status',status,'current_task_id',current_task_id,'max_tasks',max_tasks,'completed_tasks',completed_tasks,'controller_fingerprint',controller_fingerprint,'executions',(SELECT coalesce(jsonb_agg(jsonb_build_object('execution_id',e.execution_id,'task_id',e.task_id,'attempt',e.attempt,'status',e.status) ORDER BY e.execution_id),'[]') FROM control.executions e JOIN control.tasks t USING(task_id) WHERE t.suit_slug='synthetic-e2e'),'credits',(SELECT count(*) FROM control.workflow_run_task_credits WHERE run_id=r.run_id),'publications',(SELECT count(*) FROM control.pull_requests p JOIN control.tasks t USING(task_id) WHERE t.suit_slug='synthetic-e2e'),'incidents',(SELECT coalesce(jsonb_agg(jsonb_build_object('incident_id',incident_id,'claim_token',claim_token,'status',status) ORDER BY incident_id),'[]') FROM control.dot_recovery_jobs WHERE run_id=r.run_id)) FROM control.workflow_runs r WHERE run_id='${runId}';`))
 const restart=(phase,taskId,workerPid)=>n8nRestartProof({phase,runId,taskId,controlSnapshot,output,workerPid})
-if(process.argv.includes('--supervisor-service')){
+if(injectedFault?.startsWith('restore-')){
+ await restoredQueueProof({source,env,agent,sql,quote,controlSnapshot,output,bin,runId,injectedFault,boundedTasks,container})
+ if(publicationFailure)assert.ok(existsSync(path.join(output,'prs.json.crash-'+publicationFailure)),'Publication fault must actually occur')
+}else if(dispatchIntegration&&['owner-scope','retry-finalization','retry-finalization-future'].includes(injectedFault)){
+ await executionOwnerScopeProof({source,env,agent,sql,quote,controlSnapshot,output,bin,runId,injectedFault,boundedTasks,container})
+}else if(dispatchIntegration){
+ await supervisorDispatchProof({source,env,agent,sql,quote,controlSnapshot,output,bin,runId,injectedFault,boundedTasks,container})
+}else if(process.argv.includes('--supervisor-service')){
  // No webhook, BS-31 or manual task/credit command participates. A persistent
  // SQL inbox consumer is restarted once while the original run is active.
  writeFileSync(path.join(bin,'psql'),'#!/bin/sh\nexec docker exec -i cp-remediation-disposable-20261007 stdbuf -oL psql "$@"\n',{mode:0o700})
@@ -233,7 +275,7 @@ if(process.argv.includes('--supervisor-service')){
   sql(`SELECT control.finish_dot_recovery('${job.job.incident_id}','${job.job.claim_token}','resolved','{"synthetic_restart_completed":true}',NULL,NULL);`)
  }
  if(['supervisor-lease','stale-timer'].includes(injectedFault)&&task==='CP-E2E-001'){sql(`SELECT control.record_recovery_condition(p_resume_identity=>'task:${task}',p_idempotency_key=>'synthetic-${injectedFault}',p_failure_class=>'transient-infrastructure',p_error_code=>'synthetic-${injectedFault}',p_next_action=>'wait-external',p_recoverable=>true,p_source=>'synthetic-fixture',p_current_task_id=>'${task}',p_heartbeat_at=>now()-interval '20 minutes',p_lease_owner=>'2147483647@dead-fixture',p_lease_token=>'dead-synthetic-lease',p_lease_expires_at=>now()-interval '10 minutes',p_next_wake_at=>now()-interval '10 minutes',p_status=>'active');`);writeFileSync(path.join(output,injectedFault+'-fault.json'),JSON.stringify({run_id:runId,task_id:task,expired:true}))}
- if(['product-defect','product-extra'].includes(injectedFault)&&task==='CP-E2E-001')writeFileSync(path.join(worktree,'.local/product-defect'),'actual-source-defect')
+ if(['product-defect','product-extra','retry-finalization','retry-finalization-future'].includes(injectedFault)&&task==='CP-E2E-001')writeFileSync(path.join(worktree,'.local/product-defect'),'actual-source-defect')
  const restarted=new Set();let crashed=false,productReviewed=false
  let complete=false
  for(let wake=0;wake<80;wake++){
@@ -277,7 +319,7 @@ if(process.argv.includes('--supervisor-service')){
     writeFileSync(path.join(output,'same-execution-fixture-recovery.json'),JSON.stringify({run_id:runId,task_id:task,execution_id:check.execution_id,review:evidence}))
    }
   }
-  if(['product-defect','product-extra'].includes(injectedFault)&&task==='CP-E2E-001'&&!productReviewed){
+  if(['product-defect','product-extra','retry-finalization','retry-finalization-future'].includes(injectedFault)&&task==='CP-E2E-001'&&!productReviewed){
    const checks=JSON.parse(sql(`SELECT coalesce(jsonb_agg(to_jsonb(v)),'[]') FROM control.verification_results v WHERE status='fail' AND trusted_receipt IS NOT NULL AND verification_run_id IN(SELECT verification_run_id FROM control.verification_runs WHERE status='failed') AND execution_id=(SELECT max(execution_id) FROM control.executions WHERE task_id='${task}');`))
    for(const check of checks){
     assert.equal(check.check_name,'synthetic-owned-output');assert.match(readFileSync(check.log_path,'utf8'),/number.*string|AssertionError/s)
@@ -329,10 +371,11 @@ if(process.argv.includes('--supervisor-service')){
  agent(['run-complete-task',runId,task,runId+':'+task])
  if(injectedFault==='null-current'&&task==='CP-E2E-001')assert.equal(controlSnapshot().current_task_id,null)
 }
+if(injectedFault?.startsWith('restore-')){console.log(JSON.stringify({passed:true,scenario:injectedFault,evidence:output}));}else if(injectedFault?.startsWith('retry-finalization')){const proof=JSON.parse(readFileSync(path.join(output,'focused-repair-proof.json')));writeFileSync(path.join(output,'outcome.json'),JSON.stringify({passed:true,mandatory_verification_performed:true,staging_evidence_still_required:true,...proof}));console.log(JSON.stringify({passed:true,execution:proof.recovered_execution,attempt:2,credits:0,staging_gate_preserved:true}));}else {
 const outcome=JSON.parse(sql(`SELECT jsonb_build_object('run',to_jsonb(r),'credits',(SELECT count(*) FROM control.workflow_run_task_credits WHERE run_id=r.run_id),'executions',(SELECT jsonb_agg(to_jsonb(e)) FROM control.executions e JOIN control.tasks t USING(task_id) WHERE t.suit_slug='synthetic-e2e'),'publications',(SELECT count(*) FROM control.pull_requests p JOIN control.tasks t USING(task_id) WHERE t.suit_slug='synthetic-e2e')) FROM control.workflow_runs r WHERE r.run_id='${runId}';`))
 assert.equal(outcome.run.status,'limit_reached');assert.equal(outcome.run.completed_tasks,bound);assert.equal(outcome.credits,bound);assert.equal(outcome.publications,bound)
 const accounting=boundedTasks.map(task=>JSON.parse(sql(`SELECT control.product_retry_accounting('${task}');`)))
-assert.deepEqual(accounting.map(b=>Number(b.consumed)),['product-defect','product-extra'].includes(injectedFault)?[1,0]:boundedTasks.map(()=>0),'Runtime fault product budget accounting mismatch')
+assert.deepEqual(accounting.map(b=>Number(b.consumed)),['product-defect','product-extra','retry-finalization','retry-finalization-future'].includes(injectedFault)?[1,0]:boundedTasks.map(()=>0),'Runtime fault product budget accounting mismatch')
 outcome.product_accounting=accounting
 if(injectedFault==='product-extra'){
  assert.equal(Number(sql(`SELECT count(*) FROM control.operator_invocation_extensions WHERE run_id='${runId}' AND kind='product-retry-extension' AND consumed_at IS NOT NULL;`)),1)
@@ -347,3 +390,6 @@ const modelCallsBefore=Number(sql('SELECT count(*) FROM control.dot_model_invoca
 if(publicationFailure)assert.ok(existsSync(path.join(output,'prs.json.crash-'+publicationFailure)),'Publication fault was not injected')
 if(crashFault)assert.ok(existsSync(path.join(output,'worker-crash-injection.json')),'Worker crash was not injected')
 writeFileSync(path.join(output,'outcome.json'),JSON.stringify({passed:true,database,run_id:runId,...outcome},null,2));console.log(JSON.stringify({passed:true,database,run_id:runId,credits:bound,publications:bound}))
+
+}
+}finally{if(dispatchIntegration)run('docker',['exec',container,'dropdb','--force','-U','postgres',database])}

@@ -267,7 +267,10 @@ verifier, release installer, operator or credential boundary modules.
 BS-20 validates and starts the original bounded run, then delegates to
 `bs-agent run-supervise <run-id>`. The Supervisor owns claim, implementation,
 verification, repair, publication, exact completion credit and next acquisition.
-`run-recover` is a compatibility alias of this same entry point. BS-20 has no
+External `run-recover` calls enqueue the same existing run in the durable inbox;
+only recovery already inside the locked Supervisor can continue inline.
+`run-supervise` enters the existing locked lifecycle directly. A claimed wake
+never dispatches the external wake-only handoff. BS-20 has no
 independent acquire/credit loop. Verifier and Publisher retain their evidence,
 source and authority boundaries. BS-22 retains all human authorization.
 
@@ -369,3 +372,18 @@ Disposable proofs:
 These fixtures do not authorize a live installation, business deployment or
 human approval. Activation and business-run reconciliation require the current
 user's authorization, immutable source provenance and provider identity checks.
+
+Completed retry workers and task-bound shared package authority are covered in
+`control-plane-execution-owner-scope-recovery.md`. Supervisor can reconcile an
+already consumed retry receipt only when its successful worker, exact execution,
+run, attempt and unchanged source are bound and both receipt processes are dead.
+Implementation completion never supplies verifier PASS or completion credit.
+The independent migration 108 extends authenticated BS-22/BS-23 with one bounded
+shared-package scope offer; it does not activate migrations 104, 106 or 107.
+
+The optional schema-108 unattended queue restoration uses one authenticated
+bounded owner grant, existing trusted retry accounting and the separate Draft
+publisher. See [the operational cutover and acceptance](control-plane-unattended-queue-restoration.md)
+for migration 111, preserved existing policies, task-local parking, IDLE wake
+behavior and the explicit live cutover boundary. Migrations 109/110 are not
+prerequisites.

@@ -54,6 +54,7 @@ test('actual native reconciliation runs before same-run acquisition and dispatch
   if(sql.includes('INSERT INTO control.task_events'))return null
   if(sql.includes('reconcile_native_run_admission')){calls.push('contract');return {...d,reconciled:true}}
   if(sql.includes('reconcile_ordinary_run_publication'))return null
+  if(sql.includes('park_unattended_queue_task'))return false
   if(sql.includes('acquire_workflow_run_task')){calls.push('acquire');return {acquired:true,task_id:registryBindings.task_id}}
   throw Error('unexpected SQL')
  },execute:(_program,args)=>{calls.push('dispatch');assert.equal(args[1],'task-supervise');assert.equal(args[2],registryBindings.task_id);return {stdout:JSON.stringify({ok:true,status:'running'})}}}

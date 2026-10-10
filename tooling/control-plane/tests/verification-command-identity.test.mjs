@@ -5,7 +5,7 @@ import {runInNewContext} from 'node:vm'
 import path from 'node:path'
 import {existingCommandIdentity} from '../runner/verification-command-identity.mjs'
 const source=readFileSync(new URL('../runner/task-verifier.mjs',import.meta.url),'utf8')
-const loop=source.slice(source.indexOf('for (const custom of verificationConfig.commands'),source.indexOf('\nconst changed =',source.indexOf('for (const custom of verificationConfig.commands')))
+const loop=source.slice(source.indexOf('for (const custom of verificationConfig.commands'),source.indexOf('\nconst explicitBrowserChecks',source.indexOf('for (const custom of verificationConfig.commands')))
 const command={name:'git-diff-check',program:'git',args:['diff','--check'],required:true}
 const prior={name:command.name,command:'git diff --check',status:'pass',required:true,trusted_receipt:{version:2},working_directory:'/worktree'}
 function run(custom){const results=[structuredClone(prior)],before=JSON.stringify(results[0]),launched=[],persisted=[];runInNewContext(loop,{verificationConfig:{commands:[custom]},results,existingCommandIdentity,worktreePath:'/worktree',path,safeRegisteredVerificationCommand:()=>true,customCheckSelection:()=>({selected:true,reason:'required'}),changedFiles:[],verificationMode:'focused',verificationPlanText:'',runCheck:x=>{launched.push(x);return x},omittedCheck:x=>({...x,status:'not_run'}),liveCheck:x=>persisted.push(x)});assert.equal(JSON.stringify(results[0]),before);return {results,launched,persisted}}

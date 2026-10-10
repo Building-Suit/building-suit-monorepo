@@ -24,10 +24,10 @@ export function requiresSameAttemptVerification(snapshot, operation) {
  const e=snapshot.executions?.at(-1)
  const latest=snapshot.verification_runs?.filter(v=>Number(v.execution_id)===Number(e?.execution_id)).at(-1)
  const adoption=snapshot.authoritative_failure?.evidence
- if(operation.action==='task-verify'&&Number(operation.execution_id)===Number(e?.execution_id)&&latest?.status==='failed'&&adoption?.adoption_materialization===true&&Number(adoption.verification_run_id)===Number(latest.verification_run_id))return true
+ if(operation.action==='task-verify'&&Number(operation.execution_id)===Number(e?.execution_id)&&latest?.status==='failed'&&snapshot.recovery_readiness?.allowed===true&&adoption?.adoption_materialization===true&&Number(adoption.verification_run_id)===Number(latest.verification_run_id))return true
  const audited=snapshot.exhaustion_audit?.entries?.find(r=>Number(r.execution_id)===Number(e?.execution_id))
  if(operation.action==='task-verify'&&Number(operation.execution_id)===Number(e?.execution_id)&&latest?.status==='failed'
- && ['VERIFIER_INFRA','CONFIGURATION'].includes(audited?.classification)&&audited.proof?.length
+ && snapshot.recovery_readiness?.allowed===true && ['VERIFIER_INFRA','CONFIGURATION'].includes(audited?.classification)&&audited.proof?.length
  && audited.proof.every(p=>p.version===2&&Number(p.verification_run_id)===Number(latest.verification_run_id)))return true
  const proof=snapshot.binding_recovery
  const reviewed=snapshot.retry_accounting?.classifications?.find(c=>Number(c.execution_id)===Number(proof?.execution_id))

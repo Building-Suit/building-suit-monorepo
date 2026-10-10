@@ -44,3 +44,8 @@ export function validateIncidentRepair({files,regression,rootFamily,base,head}) 
  return true
 }
 export const protectedIncidentModules=Object.freeze(['dot-recovery-worker.mjs','dot-general-recovery.mjs','publication-preflight.mjs','verifier-only-reacceptance.mjs','trusted-verifier-receipt.mjs','failure-evidence.mjs','task-verifier.mjs','reaccept-verifier-probe.mjs','runtime-release.mjs','runtime-bootstrap.mjs','runtime-identity.mjs','incident-release-installer.mjs','operator-gate.mjs','schema-provenance.mjs','control-adoption.mjs','recovery-catalog.mjs','codex-child-environment.mjs','incident-test-environment.mjs','lifecycle-policy.mjs','recovery-action-guard.mjs','supervisor-service.mjs'])
+
+export async function handoffRecovery(job,query){
+ if(!/^[-0-9a-f]{36}$/.test(job.incident_id??'')||!/^[-0-9a-f]{36}$/.test(job.claim_token??''))throw Error('incident_handoff_identity_required')
+ return query(`SELECT control.handoff_dot_recovery('${job.incident_id}'::uuid,'${job.claim_token}'::uuid);`)
+}

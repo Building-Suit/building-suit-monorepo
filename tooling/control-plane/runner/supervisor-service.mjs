@@ -13,6 +13,7 @@ let stopping=false,child=null,activeJob=null
 const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms))
 export function supervisorRetrySeconds(result){
  if(!result||result.ok!==true||result.status==='time-slice-yield')return 30
+ if(result.status==='idle'&&result.acquisition?.next_wake_at){const when=Date.parse(result.acquisition.next_wake_at);return Number.isFinite(when)?Math.min(3600,Math.max(1,Math.ceil((when-Date.now())/1000))):null}
  const response=result.response??result,reason=response.reason??response.recovery?.reason
  if(['supervisor_lease_active','supervisor_lease_contended'].includes(reason))return 30
  if(['runtime_operation_in_flight','runtime_operation_resume','runtime_backoff_pending','execution_in_flight','supervisor_time_slice_yield','control_database_unavailable'].includes(reason)){

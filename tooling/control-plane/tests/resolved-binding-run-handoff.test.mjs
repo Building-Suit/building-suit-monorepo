@@ -62,6 +62,7 @@ async function recover({ runGate = 'continue', authority = 'current', acquisitio
         if (!contractCurrent) return { acquired: false, action: 'safety_stop', reason: 'ordinary_claim_missing_or_stale' }
         return { acquired: true, action: 'resume', task_id: taskId }
       }
+      if(sql.includes('control.park_unattended_queue_task('))return false
       throw new Error(`Unexpected database operation: ${sql}`)
     },
     execute(program, argv) {

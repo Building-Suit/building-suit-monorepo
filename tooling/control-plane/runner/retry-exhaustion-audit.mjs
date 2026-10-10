@@ -1,3 +1,4 @@
+import {registeredVerifierPrerequisites} from './verifier-fixture-repair.mjs'
 import {canonicalFailure} from './lifecycle-policy.mjs'
 import {reconcileFailureEvidence} from './failure-evidence.mjs'
 import {redactText} from '../lib/redaction.mjs'
@@ -25,6 +26,26 @@ function correctedLocaleSelector(root,check){
  if(!source.includes("name: 'ar', exact: true")||!source.includes("toHaveAttribute('dir', 'rtl')"))return null
  return {kind:'corrected-verifier-locale-selector',test_sha:digest(source),rtl_assertion_preserved:true}
 }
+// This omitted Solo obligation inherits accounting only from both exact current
+// registered local database prerequisites; it remains required and unrun.
+export function reviewedSoloDatabasePrerequisites(check,checks,execution,verification){
+ const name=check.name??check.check_name
+ if(execution.task_id!=='SS-LAUNCH-SOLO-VARIANTS-001'||name!=='ss-launch-solo-variants-001-obligation-1-database'||check.status!=='not_run'||(check.selection_reason??check.metadata?.selection_reason)!=='database_prerequisite_failed'||check.trusted_receipt)return []
+ const prerequisites=['database-tests','shop-database-regression'].map(name=>checks.find(c=>(c.name??c.check_name)===name))
+ if(prerequisites.some(c=>{const r=c?.trusted_receipt,registration=r?.registration;return !c||c.status!=='fail'||c.command!=='pnpm db:test:shop'||r?.version!==2||registration?.version!==1||r.task_id!==execution.task_id||registration.task_id!==execution.task_id||Number(r.execution_id)!==Number(execution.execution_id)||Number(registration.execution_id)!==Number(execution.execution_id)||Number(r.verification_run_id)!==Number(verification?.verification_run_id)||Number(registration.verification_run_id)!==Number(verification?.verification_run_id)||Number(registration.check_id)!==Number(c.verification_id)||registration.command_id!==(c.name??c.check_name)||registration.command!==c.command||!/^[a-f0-9]{64}$/.test(r.source_fingerprint??'')}))return []
+ if(prerequisites[0].trusted_receipt.source_fingerprint!==prerequisites[1].trusted_receipt.source_fingerprint||prerequisites[0].trusted_receipt.registration.verifier_sha256!==prerequisites[1].trusted_receipt.registration.verifier_sha256||prerequisites[0].trusted_receipt.registration.registry_version!==prerequisites[1].trusted_receipt.registration.registry_version)return []
+ return prerequisites
+}
+// A command explicitly omitted because the very same registered database
+// command failed inherits its accounting only. It remains mandatory and unrun.
+export function reviewedSameCommandPrerequisites(check,checks,execution,verification){
+ if(check.status!=='not_run'||(check.selection_reason??check.metadata?.selection_reason)!=='database_prerequisite_failed'||check.trusted_receipt||!/^pnpm exec supabase test db --local(?: |$)/.test(check.command??''))return []
+ const candidates=checks.filter(c=>c.status==='fail'&&c.command===check.command)
+ if(candidates.length!==1)return []
+ const c=candidates[0],r=c.trusted_receipt,g=r?.registration
+ if(r?.version!==2||g?.version!==1||r.task_id!==execution.task_id||g.task_id!==execution.task_id||Number(r.execution_id)!==Number(execution.execution_id)||Number(g.execution_id)!==Number(execution.execution_id)||Number(r.verification_run_id)!==Number(verification?.verification_run_id)||Number(g.verification_run_id)!==Number(verification?.verification_run_id)||Number(g.check_id)!==Number(c.verification_id)||g.command!==c.command||!r.source_fingerprint)return []
+ return candidates
+}
 export function auditAttempts(snapshot){
  const executions=snapshot.executions??[],failures=snapshot.failures??[],results=snapshot.verification_results??[]
  const entries=executions.filter(e=>e.status!=='running').flatMap(e=>{
@@ -38,7 +59,21 @@ export function auditAttempts(snapshot){
   if(!latest&&!checks.length&&e.status==='succeeded')return []
   let classification='UNKNOWN',proof=null
   const text=checks.map(c=>c.summary??'').join('\n')+'\n'+(latest?.error_code??'')
-  const bound=checks.map(c=>reconcileFailureEvidence(c,e,verification??{verification_run_id:c.verification_run_id}))
+  const bound=checks.map(c=>{
+   // A registered database command blocked by a failed prerequisite is still
+   // required, but has no executed outcome to review/materialize. Inherit only
+   // its exact current trusted prerequisite; never manufacture its own receipt.
+   if(c.status==='not_run'&&c.selection_reason==='database_prerequisite_failed'){
+    const exactRecipe=registeredVerifierPrerequisites(c,checks,e,verification)
+    const solo=reviewedSoloDatabasePrerequisites(c,checks,e,verification)
+    const registered=exactRecipe.length?exactRecipe:solo.length?solo:reviewedSameCommandPrerequisites(c,checks,e,verification)
+    const inherited=registered.map(p=>reconcileFailureEvidence(p,e,verification))
+    if(inherited.length&&inherited.every(b=>b.evidence&&['VERIFIER_INFRA','PRODUCT_DEFECT'].includes(b.classification)&&b.classification===inherited[0].classification))return inherited[0]
+    const prerequisites=checks.filter(p=>p.status==='fail'&&p.name?.endsWith('-database-reset'))
+    if(prerequisites.length===1)return reconcileFailureEvidence(prerequisites[0],e,verification)
+   }
+   return reconcileFailureEvidence(c,e,verification??{verification_run_id:c.verification_run_id})
+  })
   if(bound.length&&bound.every(b=>b.evidence&&b.classification!=='UNKNOWN')){classification=canonicalFailure({trusted:bound.map(b=>b.evidence)});proof=bound.map(b=>b.evidence)}
   else if(bound.some(b=>b.evidence&&b.classification==='UNKNOWN'))classification='UNKNOWN'
   else if(checks.length&&checks.every(c=>emptyComponentFixture(e.worktree_path,c)||correctedLocaleSelector(e.worktree_path,c))){classification='VERIFIER_INFRA';proof=checks.map(c=>emptyComponentFixture(e.worktree_path,c)||correctedLocaleSelector(e.worktree_path,c))}

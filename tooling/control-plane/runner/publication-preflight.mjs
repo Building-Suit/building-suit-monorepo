@@ -162,9 +162,11 @@ export function classifyPublicationFiles({
   ordinaryAuthorizedPaths = [],
   protectedAuthorizedPaths = [],
   verifiedProtectedPaths = [],
+  queueSourcePaths = [],
 }) {
   const decisions = [...new Set(files)].sort().map(file => {
     const normalized = normalize(file)
+    if (validPublicationPath(normalized) && queueSourcePaths.includes(normalized) && pathInScope(normalized, projectPaths)) return {file:normalized,decision:"allow",boundary:"queue-source",reason:"verified_queue_draft_source_policy"}
     if (protectedPublicationPath(normalized)) {
       if (
         (requiredPaths.map(normalize).includes(normalized) &&

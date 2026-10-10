@@ -22,7 +22,7 @@ function stable(value){
 // Verification row IDs, timestamps, audit versions and scheduler claims are
 // observations. Only changed executable inputs or failure semantics grant work.
 export function recoveryFingerprint(input){
- const checks=(input.checks??[]).map(c=>({name:c.name??c.check_name,status:c.status,command:c.command,exit_code:c.exit_code,classification:c.classification,root_cause:c.root_cause})).sort((a,b)=>String(a.name).localeCompare(String(b.name)))
+ const checks=(input.checks??[]).map(c=>({name:c.name??c.check_name,status:c.status,command:c.command,exit_code:c.exit_code,classification:c.classification})).sort((a,b)=>String(a.name).localeCompare(String(b.name)))
  return createHash('sha256').update(JSON.stringify(stable({task_id:input.task_id,run_id:input.run_id,execution_id:input.execution_id,attempt:input.attempt,source:input.source,plan:input.plan,verifier:input.verifier,configuration:input.configuration,classification:input.classification,checks}))).digest('hex')
 }
 export function watchdogIntervention(input,health,now=Date.now()){
@@ -35,17 +35,21 @@ export function watchdogIntervention(input,health,now=Date.now()){
  // grace period to detect a dead/missing consumer, never the ordinary handoff.
  return Number.isFinite(progress)&&now-progress>180000&&['RUNNING','VERIFYING','REPAIRING','PUBLISHING','WAITING_TIMER'].includes(health.state)
 }
-export async function runSupervisorLifecycle({gate,prepare,acquire,supervise,credit,maxSteps=25}){
+export async function runSupervisorLifecycle({gate,prepare,acquire,supervise,credit,park=async()=>false,maxSteps=25}){
  for(let step=0;step<maxSteps;step++){
   const admission=await gate()
   if(!admission.should_continue)return {ok:true,status:admission.reason,run:admission}
   await prepare()
   const acquisition=await acquire()
-  if(!acquisition.acquired&&acquisition.action!=='credit_completion')return {ok:true,status:'wait',acquisition}
+  if(!acquisition.acquired&&acquisition.action!=='credit_completion'){
+   if(acquisition.task_id&&await park(acquisition.task_id))continue
+   return {ok:true,status:acquisition.state==='IDLE'?'idle':'wait',acquisition}
+  }
   const task=acquisition.packet?.task?.task_id??acquisition.task_id
   if(!task)throw Error('acquisition_task_identity_missing')
   const response=acquisition.action==='credit_completion'?{ok:true,status:'terminal',recovery:{reason:'task_complete'}}:await supervise(task)
   if(response.ok&&response.status==='terminal'&&response.recovery?.reason==='task_complete'){await credit(task);continue}
+  if(await park(task))continue
   return {ok:true,task_id:task,status:response.status,response}
  }
  return {ok:true,status:'time-slice-yield'}

@@ -51,8 +51,9 @@ test('evidence progress preserves the semantic incident budget; a distinct cause
 test('duplicate watchdog scans serialize before consuming database sessions',()=>{const source=readFileSync(new URL('../runner/bs-agent.mjs',import.meta.url),'utf8');const watch=source.slice(source.indexOf('async function recoveryWatch()'),source.indexOf('function recoverWorkflowRun()'));assert.ok(watch.indexOf('dot-watch.lock')<watch.indexOf('controlQuery'));assert.match(watch,/watchdog_scan_already_owned/);assert.match(watch,/BS_DOT_WATCH_LOCKED/);})
 
 test('reviewed non-product receipt must reverify, never replay its old failed phase',()=>{
- const s={executions:[{execution_id:30,status:'succeeded',attempt:1}],verification_runs:[{execution_id:30,verification_run_id:20,status:'failed'}],exhaustion_audit:{entries:[{execution_id:30,classification:'VERIFIER_INFRA',proof:[{version:2,verification_run_id:20}]}]}}
+ const s={recovery_readiness:{allowed:true},executions:[{execution_id:30,status:'succeeded',attempt:1}],verification_runs:[{execution_id:30,verification_run_id:20,status:'failed'}],exhaustion_audit:{entries:[{execution_id:30,classification:'VERIFIER_INFRA',proof:[{version:2,verification_run_id:20}]}]}}
  const op={action:'task-verify',execution_id:30}
+ assert.equal(requiresSameAttemptVerification({...s,recovery_readiness:{allowed:false}},op),false)
  assert.equal(requiresSameAttemptVerification(s,op),true)
  assert.equal(requiresSameAttemptVerification(JSON.parse(JSON.stringify(s)),op),true)
  assert.equal(requiresSameAttemptVerification({...s,verification_runs:[...s.verification_runs,{execution_id:30,verification_run_id:21,status:'passed'}]},op),false)
