@@ -283,6 +283,8 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
       <div class="mt-5"><BsButton variant="danger" @click="confirmExample">{{ isArabic ? 'إزالة سجل' : 'Remove record' }}</BsButton><p class="mt-3" role="status">{{ confirmationResult }}</p></div>
     </BsCard>
 
+    <WorkflowPatternCatalogue />
+
     <BsToastHost />
     <BsRecordActionDialog
       v-model:visible="visible"

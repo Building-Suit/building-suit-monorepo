@@ -99,7 +99,11 @@
       "classification": "product-orchestration",
       "rationale": "Explains Ledger-specific accounting flows and links using the product domain model. It composes canonical shared UI primitives.",
       "approval": "BS-UI-LEDGER-MIG-001",
-      "domainEvidence": ["manualFlows", "postingChecks", "financialMap."]
+      "domainEvidence": [
+        "manualFlows",
+        "postingChecks",
+        "financialMap."
+      ]
     },
     {
       "path": "apps/ledger-suit/app/components/FxSubledgerPanel.vue",
@@ -238,6 +242,255 @@
       "classification": "product-orchestration",
       "rationale": "Adapts Shop plan catalogue queries into the product-owned plan-card contract. It composes canonical shared UI primitives.",
       "approval": "BS-UI-SHOP-MIG-001"
+    }
+  ],
+  "workflowFamilies": [
+    {
+      "family": "money",
+      "owner": "packages/ui",
+      "components": [
+        "BsMoneyText"
+      ],
+      "adapterBoundary": "currency, locale and exact minor/major values; tenant currency resolution remains product-owned",
+      "auditSources": [
+        "apps/ledger-suit/app/components/MoneyText.vue"
+      ],
+      "task": "BS-UI-ZN-PATTERNS-001",
+      "migrationStatus": "shared-owner-available; product migration remains open"
+    },
+    {
+      "family": "usage",
+      "owner": "packages/ui",
+      "components": [
+        "BsUsageMeter",
+        "BsUsageMeterGrid",
+        "BsResourceLimits",
+        "BsTrialCountdown",
+        "BsAccessGate"
+      ],
+      "adapterBoundary": "usage values, limits, translated display values and policy-derived tone/status",
+      "auditSources": [
+        "apps/ledger-suit/app/components/QuotaUsageMeter.vue",
+        "apps/ledger-suit/app/components/UsageMeters.vue",
+        "apps/shop-suit/app/components/PlanUsageMeter.vue"
+      ],
+      "task": "BS-UI-ZN-PATTERNS-001",
+      "migrationStatus": "shared-owner-available; product migration remains open"
+    },
+    {
+      "family": "pricing",
+      "owner": "packages/ui",
+      "components": [
+        "BsBillingCycleToggle",
+        "BsPlanGrid",
+        "BsPlanCard",
+        "BsPlanFeatureList",
+        "BsMarketingPricing"
+      ],
+      "adapterBoundary": "existing Ledger-derived pricing; product plan catalogue, eligibility and billing commands",
+      "auditSources": [
+        "apps/shop-suit/app/components/ShopPlanCards.vue",
+        "apps/ledger-suit/app/components/BillingCheckout.vue"
+      ],
+      "task": "BS-UI-ZN-PATTERNS-001",
+      "migrationStatus": "shared-owner-available; product migration remains open"
+    },
+    {
+      "family": "setup",
+      "owner": "packages/ui",
+      "components": [
+        "BsSetupChecklist",
+        "BsSetupStep",
+        "BsOnboardingPanel"
+      ],
+      "adapterBoundary": "translated steps, completion, route targets and provisioning commands",
+      "auditSources": [
+        "apps/ledger-suit/app/components/SetupChecklist.vue",
+        "apps/shop-suit/app/components/BarberSetupGuide.vue"
+      ],
+      "task": "BS-UI-ZN-PATTERNS-001",
+      "migrationStatus": "shared-owner-available; product migration remains open"
+    },
+    {
+      "family": "entity",
+      "owner": "packages/ui",
+      "components": [
+        "BsEntityPicker",
+        "BsSearchField",
+        "BsPagination",
+        "BsSelect"
+      ],
+      "adapterBoundary": "existing shared lazy search intent; products fetch authorized entities",
+      "auditSources": [
+        "apps/shop-suit/app/components/PurchaseEntityPicker.vue"
+      ],
+      "task": "BS-UI-ZN-PATTERNS-001",
+      "migrationStatus": "shared-owner-available; product migration remains open"
+    },
+    {
+      "family": "context",
+      "owner": "packages/ui",
+      "components": [
+        "BsNotificationMenu",
+        "BsContextSwitcher",
+        "BsScopeSwitcher",
+        "BsUserMenu",
+        "BsUserIdentity"
+      ],
+      "adapterBoundary": "existing shared notification/context inputs and callbacks",
+      "auditSources": [
+        "apps/ledger-suit/app/components/TeamMenu.vue"
+      ],
+      "task": "BS-UI-ZN-PATTERNS-001",
+      "migrationStatus": "shared-owner-available; product migration remains open"
+    },
+    {
+      "family": "import",
+      "owner": "packages/ui",
+      "components": [
+        "BsImportWizard",
+        "BsFileInput",
+        "BsFileDrop",
+        "BsColumnMapping",
+        "BsImportPreview",
+        "BsImportValidationSummary",
+        "BsImportResult"
+      ],
+      "adapterBoundary": "schema, parsing, validation, mapping, phase transitions and apply commands",
+      "auditSources": [
+        "apps/ledger-suit/app/components/CsvImportDialog.vue",
+        "apps/shop-suit/app/pages/catalog-import.vue"
+      ],
+      "task": "BS-UI-ZN-PATTERNS-001",
+      "migrationStatus": "shared-owner-available; product migration remains open"
+    },
+    {
+      "family": "team",
+      "owner": "packages/ui",
+      "components": [
+        "BsTeamTable",
+        "BsInviteMemberDialog",
+        "BsRolePicker"
+      ],
+      "adapterBoundary": "typed table columns, member state, roles, capacity notice and authorized commands",
+      "auditSources": [
+        "apps/ledger-suit/app/pages/team.vue",
+        "apps/shop-suit/app/pages/team.vue"
+      ],
+      "task": "BS-UI-ZN-PATTERNS-001",
+      "migrationStatus": "shared-owner-available; product migration remains open"
+    },
+    {
+      "family": "review-detail",
+      "owner": "packages/ui",
+      "components": [
+        "BsReviewPanel",
+        "BsDetailDialog",
+        "BsDetailSection",
+        "BsDescriptionList",
+        "BsSummaryGrid",
+        "BsHistoryList",
+        "BsTimeline"
+      ],
+      "adapterBoundary": "review data, permissions, history and command handlers",
+      "auditSources": [
+        "apps/ledger-suit/app/components/DocumentExtractionReview.vue",
+        "apps/ledger-suit/app/components/TransactionDetailDialog.vue"
+      ],
+      "task": "BS-UI-ZN-PATTERNS-001",
+      "migrationStatus": "shared-owner-available; product migration remains open"
+    },
+    {
+      "family": "tags",
+      "owner": "packages/ui",
+      "components": [
+        "BsTagEditor",
+        "BsTagPicker"
+      ],
+      "adapterBoundary": "free-text tags or stable tag identifiers with assigned/available data and command intent",
+      "auditSources": [
+        "apps/ledger-suit/app/components/TransactionTags.vue"
+      ],
+      "task": "BS-UI-ZN-PATTERNS-001",
+      "migrationStatus": "shared-owner-available; product migration remains open"
+    },
+    {
+      "family": "charts",
+      "owner": "packages/ui",
+      "components": [
+        "BsMetricBarChart",
+        "BsChartLegend"
+      ],
+      "adapterBoundary": "series, points, preformatted values and accounting aggregation",
+      "auditSources": [
+        "apps/ledger-suit/app/components/RevenueExpenseChart.vue"
+      ],
+      "task": "BS-UI-ZN-PATTERNS-001",
+      "migrationStatus": "shared-owner-available; product migration remains open"
+    },
+    {
+      "family": "hierarchy-flow",
+      "owner": "packages/ui",
+      "components": [
+        "BsHierarchyTree",
+        "BsFlowMap"
+      ],
+      "adapterBoundary": "generic nodes/stages; account mapping, balances, actions and expansion scope",
+      "auditSources": [
+        "apps/ledger-suit/app/components/AccountTree.vue",
+        "apps/ledger-suit/app/components/FinancialSystemMap.vue"
+      ],
+      "task": "BS-UI-ZN-PATTERNS-001",
+      "migrationStatus": "shared-owner-available; product migration remains open"
+    },
+    {
+      "family": "line-items",
+      "owner": "packages/ui",
+      "components": [
+        "BsLineItemsEditor",
+        "BsLineItemRow",
+        "BsQuantityInput"
+      ],
+      "adapterBoundary": "stable row IDs, bounds, errors, data slots and pricing/accounting callbacks",
+      "auditSources": [
+        "apps/ledger-suit/app/components/AddTransactionDialog.vue",
+        "apps/shop-suit/app/pages/purchases/index.vue"
+      ],
+      "task": "BS-UI-ZN-PATTERNS-001",
+      "migrationStatus": "shared-owner-available; product migration remains open"
+    },
+    {
+      "family": "printable",
+      "owner": "packages/ui",
+      "components": [
+        "BsPrintableDocument",
+        "BsDocumentHeader",
+        "BsDocumentLines",
+        "BsDocumentTotals",
+        "BsPrintActions"
+      ],
+      "adapterBoundary": "issuer, snapshot, preformatted line/totals and print/share commands",
+      "auditSources": [
+        "apps/shop-suit/app/pages/sales/[id]/receipt.vue"
+      ],
+      "task": "BS-UI-ZN-PATTERNS-001",
+      "migrationStatus": "shared-owner-available; product migration remains open"
+    },
+    {
+      "family": "filters",
+      "owner": "packages/ui",
+      "components": [
+        "BsFilterBar",
+        "BsDateRangeFilter",
+        "BsToolbar"
+      ],
+      "adapterBoundary": "existing date/search/select composition; report queries and exports",
+      "auditSources": [
+        "apps/ledger-suit/app/pages/reports.vue",
+        "apps/shop-suit/app/pages/reports/index.vue"
+      ],
+      "task": "BS-UI-ZN-PATTERNS-001",
+      "migrationStatus": "shared-owner-available; product migration remains open"
     }
   ]
 }
