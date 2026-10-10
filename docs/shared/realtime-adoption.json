@@ -1,0 +1,61 @@
+{
+  "taskId": "BS-REALTIME-ADOPTION-001",
+  "requirementId": "BS-LAUNCH-R14",
+  "reviewedCommit": "48ac8fb1ff44da62f283aa646d3fcf2753f6d4b9",
+  "shopLaunchIndependent": true,
+  "decisions": [
+    {
+      "suit": "ledger-suit",
+      "status": "blocked",
+      "workflows": ["journal search and posting/approval/reversal", "account balances and financial reports", "organization notifications and team administration"],
+      "reason": "Other users can change the journal and derived balances while a reader is mounted. Local revision watchers and explicit refresh do not observe other sessions. No maintained migration declares a Supabase Realtime publication; transport enablement in config.toml alone does not establish table eligibility. The journal query scope also has no opaque session identity. Enabling subscriptions now would imply freshness without verified delivery or complete lifecycle integration.",
+      "evidence": [
+        { "path": "apps/ledger-suit/app/composables/useTransactionWorkspace.ts", "anchor": "watch(revision" },
+        { "path": "apps/ledger-suit/app/composables/useTransactionWorkspace.ts", "anchor": "scopedQueryKey" },
+        { "path": "apps/ledger-suit/app/pages/accounts.vue", "anchor": "refreshBalances" },
+        { "path": "apps/ledger-suit/app/pages/reports.vue", "anchor": "refreshOverview" },
+        { "path": "apps/ledger-suit/app/layouts/default.vue", "anchor": "refreshNotifications" },
+        { "path": "apps/ledger-suit/app/pages/team.vue", "anchor": "refreshPlanUsage" },
+        { "path": "apps/ledger-suit/app/composables/useTenant.ts", "anchor": "clearNuxtData" },
+        { "path": "apps/ledger-suit/supabase/migrations/20260830124500_transactions.sql", "anchor": "enable row level security" }
+      ],
+      "unblock": [
+        "Declare eligible product-owned tables in a forward publication migration and verify INSERT/UPDATE delivery and cross-tenant/capability denial in a disposable Ledger backend; assess DELETE filter limitations explicitly.",
+        "Wire a mounted client feature to createScopedRealtime from packages/data-access with non-secret session replacement identity, organization, environment, feature/query context and scoped data keys.",
+        "Verify immediate invalidation on logout, session replacement, organization and query changes; observe cleanup failures and dispose on unmount. Reconcile authorized RPC reads on reconnect without applying stale results or overwriting drafts."
+      ]
+    },
+    {
+      "suit": "inventory-suit",
+      "status": "not-needed",
+      "workflows": ["current bootstrap welcome page"],
+      "reason": "The current page has no business reads or concurrent writes. Tenant/RLS, stock movements, reservations and counting are future product work, not implemented workflows. There is nothing useful to subscribe to in this reviewed checkout.",
+      "evidence": [
+        { "path": "apps/inventory-suit/app/pages/index.vue", "anchor": "t('welcome')" },
+        { "path": "apps/inventory-suit/README.md", "anchor": "provides no authentication workflow" },
+        { "path": "apps/inventory-suit/docs/readiness/tasks.md", "anchor": "IS-TEN-001" },
+        { "path": "docs/architecture/identity.md", "anchor": "Inventory's hosted projects remain unprovisioned" }
+      ],
+      "unblock": [
+        "Revisit when Inventory owns authenticated tenant/warehouse-scoped stock, reservation or count readers and an authorized concurrent writer. Future adoption is blocked until its own schema, RLS, publication and session lifecycle exist; bootstrap is not realtime acceptance."
+      ]
+    },
+    {
+      "suit": "automation-suit",
+      "status": "blocked",
+      "workflows": ["runner/task/verification/incident dashboard", "task detail", "project registration and retry-policy administration"],
+      "reason": "Runner and operator changes make concurrent refresh useful, but the current source is server-only PostgreSQL in the control schema behind dashboard authentication, not a browser Supabase Auth/RLS subscription. The overview already reconciles via bounded polling; task detail has explicit refresh. Adapting the Supabase contract would require a separately designed authorized transport and identity scope. Do not expose reader/operator connection strings or reuse another Suit's Supabase client.",
+      "evidence": [
+        { "path": "apps/automation-suit/server/utils/controlDb.ts", "anchor": "postgres(connectionString" },
+        { "path": "apps/automation-suit/server/middleware/dashboard-auth.ts", "anchor": "Basic " },
+        { "path": "apps/automation-suit/app/pages/index.vue", "anchor": "setInterval" },
+        { "path": "apps/automation-suit/app/pages/index.vue", "anchor": "clearInterval" },
+        { "path": "apps/automation-suit/app/pages/tasks/[id].vue", "anchor": "refresh()" },
+        { "path": "apps/automation-suit/README.md", "anchor": "control` schema" }
+      ],
+      "unblock": [
+        "Establish an approved browser-safe event transport with server-side dashboard authorization, project/filter isolation and disconnect/reconnect reconciliation before evaluating shared-contract compatibility. Keep current server reads and polling until then."
+      ]
+    }
+  ]
+}
