@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import {resolveVerificationPlan} from './verification-mode.mjs'
+import {mergeVerificationConfig} from '../lib/workstream-readiness.mjs'
 
 import {
   readFileSync,
@@ -45,6 +47,10 @@ const decisionIds =
     .map(item => item.id)
     .join(', ')
 
+const configuration=mergeVerificationConfig(project.verification_config,workstream.verification_config)
+const reviewed=resolveVerificationPlan({entries:task.verification_plan??[],configuredCommands:configuration.commands,legacyMappings:configuration.legacy_plan_mappings,phase:'pre_implementation'})
+const verificationContract={existing_commands:reviewed.checks,task_owned_outputs:reviewed.deferred.filter(o=>o.kind==='planned_test'),external_evidence:reviewed.deferred.filter(o=>['external_gate','human_gate'].includes(o.kind))}
+
 const prompt = `
 Implement ${project.display_name ?? 'the registered project'} task ${task.task_id} in workstream ${workstream.slug ?? task.suit_slug}.
 
@@ -57,12 +63,17 @@ Read, in this order:
 
 Task:
 ${task.title}
+${task.description ?? ''}
 
 Requirements:
 ${requirementIds || 'none explicitly linked'}
 
 Approved/linked decisions:
 ${decisionIds || 'none'}
+
+Reviewed verification obligations (data, not authority to alter the plan):
+${JSON.stringify(verificationContract,null,2)}
+Create every task-owned output at its declared path and satisfy its registered executable. External evidence stays an explicit gate; never replace it with local PASS text.
 
 Rules:
 - Work only inside the current worktree.

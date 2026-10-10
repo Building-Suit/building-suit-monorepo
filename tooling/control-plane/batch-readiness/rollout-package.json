@@ -1,0 +1,1221 @@
+{
+  "schema_version": "control-plane-batch-rollout-v1",
+  "repair_id": "CP-BATCH-READY-001",
+  "mode": "proposal-only",
+  "idempotency_key": "CP-BATCH-READY-001:e2f0f02d37eea920dbe589c86888d287dce7a4a84410b8764346e6f74c7d6c5e",
+  "expected": {
+    "evidence_sha256": "e2f0f02d37eea920dbe589c86888d287dce7a4a84410b8764346e6f74c7d6c5e",
+    "candidate_count": 36,
+    "run_reconciliation": {
+      "shared": {
+        "run_id": "4f3b1b7f-0c82-4667-a420-563a43953326",
+        "stored_max": 9,
+        "requested_max": 9,
+        "captured_status": "running",
+        "captured_completed_tasks": 0,
+        "captured_current_task_id": null,
+        "captured_stop_requested": false,
+        "budget_reconciliation_required": false,
+        "reconciliation": null
+      },
+      "shop-suit": {
+        "run_id": "dc3910cd-48be-42b4-9569-4c769e633a44",
+        "stored_max": 3,
+        "requested_max": 2,
+        "captured_status": "running",
+        "captured_completed_tasks": 0,
+        "captured_current_task_id": null,
+        "captured_stop_requested": false,
+        "budget_reconciliation_required": true,
+        "reconciliation": {
+          "action": "explicit_in_place_budget_reconciliation",
+          "run_id": "dc3910cd-48be-42b4-9569-4c769e633a44",
+          "stored_max": 3,
+          "requested_max": 2,
+          "completed_tasks": 0,
+          "preserve_run_id": true,
+          "proposed_max_tasks": 2,
+          "guessed_historical_credit": false
+        }
+      },
+      "super-admin-suit": {
+        "run_id": "e362bc39-996c-451c-8fac-9a47df92715c",
+        "stored_max": 2,
+        "requested_max": 2,
+        "captured_status": "running",
+        "captured_completed_tasks": 0,
+        "captured_current_task_id": null,
+        "captured_stop_requested": false,
+        "budget_reconciliation_required": false,
+        "reconciliation": null
+      }
+    },
+    "registry_transition": {
+      "shared": {
+        "existing": {
+          "commands": [
+            {
+              "args": [
+                "typecheck"
+              ],
+              "name": "root-typecheck",
+              "program": "pnpm",
+              "required": true
+            },
+            {
+              "args": [
+                "lint"
+              ],
+              "name": "root-lint",
+              "program": "pnpm",
+              "required": true
+            },
+            {
+              "args": [
+                "--test",
+                "packages/ui/tests/foundation.test.mjs",
+                "packages/ux/tests/export.test.mjs"
+              ],
+              "name": "shared-ui-tests",
+              "program": "node",
+              "required": true,
+              "changed_paths": [
+                "packages/ui/",
+                "packages/ux/",
+                "packages/nuxt-layer/",
+                "apps/"
+              ]
+            },
+            {
+              "args": [
+                "--test",
+                "apps/ledger-suit/tests/unit/shared-ui-migration.test.mjs"
+              ],
+              "name": "ledger-shared-ui-tests",
+              "program": "node",
+              "required": true,
+              "changed_paths": [
+                "apps/ledger-suit/",
+                "packages/ui/",
+                "packages/ux/"
+              ]
+            },
+            {
+              "args": [
+                "--test",
+                "apps/shop-suit/tests/unit/shared-ui-migration.test.mjs"
+              ],
+              "name": "shop-shared-ui-tests",
+              "program": "node",
+              "required": true,
+              "changed_paths": [
+                "apps/shop-suit/",
+                "packages/ui/",
+                "packages/ux/"
+              ]
+            },
+            {
+              "args": [
+                "--filter",
+                "@building-suit/ledger-suit",
+                "build"
+              ],
+              "name": "ledger-build",
+              "program": "pnpm",
+              "required": true,
+              "changed_paths": [
+                "apps/ledger-suit/",
+                "packages/ui/",
+                "packages/ux/",
+                "packages/nuxt-layer/"
+              ]
+            },
+            {
+              "args": [
+                "--filter",
+                "@building-suit/shop-suit",
+                "build"
+              ],
+              "name": "shop-build",
+              "program": "pnpm",
+              "required": true,
+              "changed_paths": [
+                "apps/shop-suit/",
+                "packages/ui/",
+                "packages/ux/",
+                "packages/nuxt-layer/"
+              ]
+            },
+            {
+              "args": [
+                "--filter",
+                "@building-suit/inventory-suit",
+                "build"
+              ],
+              "name": "inventory-build",
+              "program": "pnpm",
+              "required": true,
+              "changed_paths": [
+                "packages/ui/",
+                "packages/ux/",
+                "packages/nuxt-layer/",
+                "apps/inventory-suit/"
+              ]
+            },
+            {
+              "args": [
+                "--filter",
+                "@building-suit/automation-suit",
+                "build"
+              ],
+              "name": "automation-build",
+              "program": "pnpm",
+              "required": true,
+              "changed_paths": [
+                "packages/ui/",
+                "packages/ux/",
+                "packages/nuxt-layer/",
+                "apps/automation-suit/"
+              ]
+            },
+            {
+              "args": [
+                "--filter",
+                "@building-suit/docs",
+                "build"
+              ],
+              "name": "docs-build",
+              "program": "pnpm",
+              "required": true,
+              "changed_paths": [
+                "packages/ui/",
+                "packages/ux/",
+                "packages/nuxt-layer/",
+                "apps/building-suit-docs/"
+              ]
+            },
+            {
+              "args": [
+                "--filter",
+                "@building-suit/ledger-suit",
+                "exec",
+                "playwright",
+                "test",
+                "tests/e2e/shared-ui-foundation.spec.ts",
+                "--workers=1",
+                "--retries=0"
+              ],
+              "name": "ledger-foundation-browser",
+              "program": "pnpm",
+              "required": true,
+              "changed_paths": [
+                "apps/ledger-suit/tests/e2e/shared-ui-foundation.spec.ts"
+              ]
+            },
+            {
+              "args": [
+                "--filter",
+                "@building-suit/shop-suit",
+                "exec",
+                "playwright",
+                "test",
+                "tests/e2e/shared-ui-foundation.spec.ts",
+                "--workers=1",
+                "--retries=0"
+              ],
+              "name": "shop-foundation-browser",
+              "program": "pnpm",
+              "required": true,
+              "changed_paths": [
+                "apps/shop-suit/tests/e2e/shared-ui-foundation.spec.ts"
+              ]
+            }
+          ]
+        },
+        "resulting": {
+          "commands": [
+            {
+              "name": "automation-build",
+              "program": "pnpm",
+              "args": [
+                "--filter",
+                "@building-suit/automation-suit",
+                "build"
+              ],
+              "required": true,
+              "capabilities": [
+                "automation-build"
+              ]
+            },
+            {
+              "name": "docs-build",
+              "program": "pnpm",
+              "args": [
+                "--filter",
+                "@building-suit/docs",
+                "build"
+              ],
+              "required": true,
+              "capabilities": [
+                "docs-build"
+              ]
+            },
+            {
+              "name": "generator-tests",
+              "program": "node",
+              "args": [
+                "--test",
+                "tooling/new-platform/tests/generate.test.mjs"
+              ],
+              "required": true,
+              "capabilities": [
+                "generator"
+              ]
+            },
+            {
+              "name": "inventory-build",
+              "program": "pnpm",
+              "args": [
+                "--filter",
+                "@building-suit/inventory-suit",
+                "build"
+              ],
+              "required": true,
+              "capabilities": [
+                "inventory-build"
+              ]
+            },
+            {
+              "name": "ledger-build",
+              "program": "pnpm",
+              "args": [
+                "--filter",
+                "@building-suit/ledger-suit",
+                "build"
+              ],
+              "required": true,
+              "capabilities": [
+                "ledger-build"
+              ]
+            },
+            {
+              "name": "ledger-foundation-browser",
+              "program": "pnpm",
+              "args": [
+                "--filter",
+                "@building-suit/ledger-suit",
+                "exec",
+                "playwright",
+                "test",
+                "tests/e2e/shared-ui-foundation.spec.ts",
+                "--workers=1",
+                "--retries=0",
+                "--repeat-each=2"
+              ],
+              "required": true,
+              "capabilities": [
+                "browser"
+              ]
+            },
+            {
+              "name": "ledger-shared-ui-tests",
+              "program": "node",
+              "args": [
+                "--test",
+                "apps/ledger-suit/tests/unit/shared-ui-migration.test.mjs"
+              ],
+              "required": true,
+              "capabilities": [
+                "ledger-migration"
+              ]
+            },
+            {
+              "name": "root-lint",
+              "program": "pnpm",
+              "args": [
+                "lint"
+              ],
+              "required": true,
+              "capabilities": [
+                "lint"
+              ]
+            },
+            {
+              "name": "root-typecheck",
+              "program": "pnpm",
+              "args": [
+                "typecheck"
+              ],
+              "required": true,
+              "capabilities": [
+                "typecheck"
+              ]
+            },
+            {
+              "name": "shared-ui-tests",
+              "program": "node",
+              "args": [
+                "--test",
+                "packages/ui/tests/foundation.test.mjs",
+                "packages/ux/tests/export.test.mjs"
+              ],
+              "required": true,
+              "capabilities": [
+                "shared-ui",
+                "data-table"
+              ]
+            },
+            {
+              "name": "shop-build",
+              "program": "pnpm",
+              "args": [
+                "--filter",
+                "@building-suit/shop-suit",
+                "build"
+              ],
+              "required": true,
+              "capabilities": [
+                "shop-build"
+              ]
+            },
+            {
+              "name": "shop-foundation-browser",
+              "program": "pnpm",
+              "args": [
+                "--filter",
+                "@building-suit/shop-suit",
+                "exec",
+                "playwright",
+                "test",
+                "tests/e2e/shared-ui-foundation.spec.ts",
+                "--workers=1",
+                "--retries=0",
+                "--repeat-each=2"
+              ],
+              "required": true,
+              "capabilities": [
+                "browser"
+              ]
+            },
+            {
+              "name": "shop-shared-ui-tests",
+              "program": "node",
+              "args": [
+                "--test",
+                "apps/shop-suit/tests/unit/shared-ui-migration.test.mjs"
+              ],
+              "required": true,
+              "capabilities": [
+                "shop-migration"
+              ]
+            },
+            {
+              "name": "workspace-check",
+              "program": "pnpm",
+              "args": [
+                "check"
+              ],
+              "required": true,
+              "capabilities": [
+                "workspace-boundaries",
+                "source-ast"
+              ]
+            }
+          ],
+          "legacy_plan_mappings": {
+            "shared data-table tests": {
+              "version": 2,
+              "kind": "group",
+              "commands": [
+                "shared-ui-tests"
+              ],
+              "requires": [
+                "data-table"
+              ]
+            },
+            "shared UI/UX tests": {
+              "version": 2,
+              "kind": "group",
+              "commands": [
+                "shared-ui-tests"
+              ],
+              "requires": [
+                "shared-ui"
+              ]
+            },
+            "Shared UI/UX unit tests.": {
+              "version": 2,
+              "kind": "group",
+              "commands": [
+                "shared-ui-tests"
+              ],
+              "requires": [
+                "shared-ui"
+              ]
+            },
+            "Ledger/Shop migration unit tests": {
+              "version": 2,
+              "kind": "group",
+              "commands": [
+                "ledger-shared-ui-tests",
+                "shop-shared-ui-tests"
+              ],
+              "requires": [
+                "ledger-migration",
+                "shop-migration"
+              ]
+            },
+            "Ledger/Shop shared-ui migration unit tests": {
+              "version": 2,
+              "kind": "group",
+              "commands": [
+                "ledger-shared-ui-tests",
+                "shop-shared-ui-tests"
+              ],
+              "requires": [
+                "ledger-migration",
+                "shop-migration"
+              ]
+            },
+            "Ledger shared-ui migration unit tests": {
+              "version": 2,
+              "kind": "command",
+              "command": "ledger-shared-ui-tests",
+              "requires": [
+                "ledger-migration"
+              ]
+            },
+            "Shop shared-ui migration unit tests": {
+              "version": 2,
+              "kind": "command",
+              "command": "shop-shared-ui-tests",
+              "requires": [
+                "shop-migration"
+              ]
+            },
+            "Ledger/Shop builds": {
+              "version": 2,
+              "kind": "group",
+              "commands": [
+                "ledger-build",
+                "shop-build"
+              ],
+              "requires": [
+                "ledger-build",
+                "shop-build"
+              ]
+            },
+            "Ledger build": {
+              "version": 2,
+              "kind": "command",
+              "command": "ledger-build",
+              "requires": [
+                "ledger-build"
+              ]
+            },
+            "Shop build": {
+              "version": 2,
+              "kind": "command",
+              "command": "shop-build",
+              "requires": [
+                "shop-build"
+              ]
+            },
+            "Inventory build": {
+              "version": 2,
+              "kind": "command",
+              "command": "inventory-build",
+              "requires": [
+                "inventory-build"
+              ]
+            },
+            "Automation build": {
+              "version": 2,
+              "kind": "command",
+              "command": "automation-build",
+              "requires": [
+                "automation-build"
+              ]
+            },
+            "docs catalogue build": {
+              "version": 2,
+              "kind": "command",
+              "command": "docs-build",
+              "requires": [
+                "docs-build"
+              ]
+            },
+            "generator tests": {
+              "version": 2,
+              "kind": "command",
+              "command": "generator-tests",
+              "requires": [
+                "generator"
+              ]
+            },
+            "Ledger foundation browser test": {
+              "version": 2,
+              "kind": "command",
+              "command": "ledger-foundation-browser",
+              "requires": [
+                "browser"
+              ]
+            },
+            "Shop foundation browser test": {
+              "version": 2,
+              "kind": "command",
+              "command": "shop-foundation-browser",
+              "requires": [
+                "browser"
+              ]
+            },
+            "Ledger foundation Playwright spec with one worker and zero retries": {
+              "version": 2,
+              "kind": "command",
+              "command": "ledger-foundation-browser",
+              "requires": [
+                "browser"
+              ]
+            },
+            "Shop foundation Playwright spec with one worker and zero retries": {
+              "version": 2,
+              "kind": "command",
+              "command": "shop-foundation-browser",
+              "requires": [
+                "browser"
+              ]
+            },
+            "Ledger foundation browser": {
+              "version": 2,
+              "kind": "command",
+              "command": "ledger-foundation-browser",
+              "requires": [
+                "browser"
+              ]
+            },
+            "Shop foundation browser": {
+              "version": 2,
+              "kind": "command",
+              "command": "shop-foundation-browser",
+              "requires": [
+                "browser"
+              ]
+            },
+            "node tooling/checks/suit-template-boundaries.mjs": {
+              "version": 2,
+              "kind": "planned_test",
+              "blocker": "missing_suit_template_boundary_runner",
+              "expected_outputs": [
+                "tooling/checks/suit-template-boundaries.mjs",
+                "a registered command that executes the boundary runner"
+              ]
+            },
+            "node tooling/checks/suit-template-boundaries.mjs --require-strict": {
+              "version": 2,
+              "kind": "planned_test",
+              "blocker": "missing_strict_boundary_runner",
+              "expected_outputs": [
+                "a strict-mode boundary command",
+                "strict boundary assertions for all required Suit members"
+              ]
+            },
+            "node tooling/checks/suit-template-boundaries.mjs against generated fixture": {
+              "version": 2,
+              "kind": "planned_test",
+              "blocker": "missing_generated_fixture_boundary_runner",
+              "expected_outputs": [
+                "a disposable generated-Suit fixture",
+                "boundary assertions executed against that fixture"
+              ]
+            },
+            "generator dry run into disposable path": {
+              "version": 2,
+              "kind": "planned_test",
+              "blocker": "generator_disposable_fixture_runner_not_registered",
+              "expected_outputs": [
+                "a registered disposable generator command",
+                "generated fixture validation results"
+              ]
+            },
+            "future generator strict fixture": {
+              "version": 2,
+              "kind": "planned_test",
+              "blocker": "future_generator_fixture_not_implemented",
+              "expected_outputs": [
+                "the strict generator fixture",
+                "a registered command that executes it"
+              ]
+            },
+            "all current Suit builds": {
+              "version": 2,
+              "kind": "group",
+              "commands": [
+                "ledger-build",
+                "shop-build",
+                "inventory-build",
+                "automation-build",
+                "docs-build"
+              ]
+            }
+          }
+        },
+        "existing_fingerprint": "b7fd1531cc246e8ac0a088a3aef4ff21c19d5bbd51e096592f53191494a9ae8a",
+        "resulting_fingerprint": "fb4518161090ae3825cd260fb64830db1d015c2dfea007fe47a406a947e9024a",
+        "preserves_unrelated_keys": true
+      },
+      "shop-suit": {
+        "existing": {
+          "mode": "focused",
+          "commands": [
+            {
+              "args": [
+                "test"
+              ],
+              "name": "shop-unit-regression",
+              "program": "pnpm",
+              "required": true,
+              "timeout_ms": 1800000,
+              "changed_paths": [
+                "__verification-plan-only__/shop-unit-regression"
+              ]
+            },
+            {
+              "args": [
+                "db:test:shop"
+              ],
+              "name": "shop-database-regression",
+              "program": "pnpm",
+              "required": true,
+              "timeout_ms": 1800000,
+              "changed_paths": [
+                "__verification-plan-only__/shop-database-regression"
+              ]
+            },
+            {
+              "args": [
+                "--test",
+                "tooling/database/tests/environment.test.mjs"
+              ],
+              "name": "shop-environment-isolation",
+              "program": "node",
+              "required": true,
+              "changed_paths": [
+                "__verification-plan-only__/shop-environment-isolation"
+              ]
+            }
+          ],
+          "legacy_plan_mappings": {
+            "No hosted production mutation.": "shop-environment-isolation",
+            "Secret/log/browser payload inspection.": "shop-environment-isolation",
+            "Shop typecheck, lint, build and git diff --check.": "git diff --check",
+            "Existing Shop admin/billing/plan database regression suite.": "shop-database-regression",
+            "Focused Shop database/function/Edge Function tests for valid, invalid, wrong-environment and replayed calls.": "shop-unit-regression"
+          }
+        },
+        "resulting": {
+          "mode": "focused",
+          "commands": [
+            {
+              "name": "git-diff-check",
+              "program": "git",
+              "args": [
+                "diff",
+                "--check"
+              ],
+              "required": true,
+              "capabilities": [
+                "diff-check"
+              ]
+            },
+            {
+              "name": "shop-database-regression",
+              "program": "pnpm",
+              "args": [
+                "db:test:shop"
+              ],
+              "required": true,
+              "capabilities": [
+                "database",
+                "billing-regression",
+                "plan-regression"
+              ]
+            },
+            {
+              "args": [
+                "--test",
+                "tooling/database/tests/environment.test.mjs"
+              ],
+              "name": "shop-environment-isolation",
+              "program": "node",
+              "required": true,
+              "changed_paths": [
+                "__verification-plan-only__/shop-environment-isolation"
+              ]
+            },
+            {
+              "name": "shop-quality",
+              "program": "pnpm",
+              "args": [
+                "exec",
+                "turbo",
+                "run",
+                "typecheck",
+                "lint",
+                "build",
+                "--filter=@building-suit/shop-suit"
+              ],
+              "required": true,
+              "capabilities": [
+                "typecheck",
+                "lint",
+                "build"
+              ]
+            },
+            {
+              "args": [
+                "test"
+              ],
+              "name": "shop-unit-regression",
+              "program": "pnpm",
+              "required": true,
+              "timeout_ms": 1800000,
+              "changed_paths": [
+                "__verification-plan-only__/shop-unit-regression"
+              ]
+            }
+          ],
+          "legacy_plan_mappings": {
+            "No hosted production mutation.": "shop-environment-isolation",
+            "Secret/log/browser payload inspection.": "shop-environment-isolation",
+            "Shop typecheck, lint, build and git diff --check.": "git diff --check",
+            "Existing Shop admin/billing/plan database regression suite.": "shop-database-regression",
+            "Focused Shop database/function/Edge Function tests for valid, invalid, wrong-environment and replayed calls.": "shop-unit-regression",
+            "Storage RLS tests for owner, other tenant, anonymous and trusted review boundary.": {
+              "version": 2,
+              "kind": "planned_test",
+              "blocker": "shop_storage_policy_coverage_not_implemented",
+              "expected_outputs": [
+                "executable owner/other-tenant/anonymous/trusted-review Storage policy tests",
+                "bounded upload assertions"
+              ]
+            },
+            "Upload/read/signed-access expiry tests using disposable files.": {
+              "version": 2,
+              "kind": "planned_test",
+              "blocker": "shop_storage_http_signed_url_coverage_not_implemented",
+              "expected_outputs": [
+                "executable Storage HTTP upload/read tests",
+                "signed URL expiry assertions using disposable files"
+              ]
+            },
+            "Existing Shop billing database regression suite.": {
+              "version": 2,
+              "kind": "command",
+              "command": "shop-database-regression",
+              "requires": [
+                "database",
+                "billing-regression"
+              ]
+            },
+            "Existing Shop plan/billing/subscription suite.": {
+              "version": 2,
+              "kind": "command",
+              "command": "shop-database-regression",
+              "requires": [
+                "database",
+                "plan-regression"
+              ]
+            },
+            "Focused SQL/RPC/bridge tests for valid, expired, replayed and wrong-recipient offers.": {
+              "version": 2,
+              "kind": "planned_test",
+              "blocker": "shop_custom_offer_bridge_coverage_not_implemented",
+              "expected_outputs": [
+                "executable valid/expired/replayed/wrong-recipient/wrong-environment offer tests"
+              ]
+            },
+            "Quota-blocker and exact-price/commercial-period regression tests.": {
+              "version": 2,
+              "kind": "planned_test",
+              "blocker": "shop_custom_offer_commercial_coverage_not_implemented",
+              "expected_outputs": [
+                "executable quota regression tests",
+                "frozen-price and commercial-period assertions"
+              ]
+            },
+            "Supabase advisors/security review where available.": {
+              "version": 2,
+              "kind": "external_gate",
+              "blocker": "shop_security_advisor_evidence_unavailable"
+            },
+            "Shop typecheck/lint/build and git diff --check.": {
+              "version": 2,
+              "kind": "group",
+              "commands": [
+                "shop-quality",
+                "git-diff-check"
+              ],
+              "requires": [
+                "typecheck",
+                "lint",
+                "build",
+                "diff-check"
+              ]
+            }
+          }
+        },
+        "existing_fingerprint": "ff66695ee80ed91c74594e5b6f9cc1eb577586032b874b9782120a5b7b26203b",
+        "resulting_fingerprint": "5cc8d9f4567ce7d8dd35173bf995733c78077d3ee73f6b5fad91c8b3b090d19c",
+        "preserves_unrelated_keys": true
+      },
+      "super-admin-suit": {
+        "existing": {
+          "commands": [
+            {
+              "args": [
+                "exec",
+                "turbo",
+                "run",
+                "typecheck",
+                "lint",
+                "build",
+                "--filter=@building-suit/super-admin-suit"
+              ],
+              "name": "super-admin-quality",
+              "program": "pnpm",
+              "required": true,
+              "timeout_ms": 1800000,
+              "changed_paths": [
+                "apps/super-admin-suit/"
+              ]
+            },
+            {
+              "args": [
+                "--test",
+                "apps/super-admin-suit/tests/unit/bootstrap.test.mjs"
+              ],
+              "name": "super-admin-bootstrap-static-inspection",
+              "program": "node",
+              "required": true,
+              "changed_paths": [
+                "apps/super-admin-suit/",
+                "supabase/environments/super-admin-suit/"
+              ]
+            }
+          ],
+          "database": {
+            "kind": "supabase-local",
+            "local_only": true,
+            "test_commands": [
+              {
+                "cwd": "apps/super-admin-suit",
+                "args": [
+                  "exec",
+                  "supabase",
+                  "test",
+                  "db",
+                  "--local"
+                ],
+                "name": "super-admin-database-tests",
+                "program": "pnpm",
+                "required": false,
+                "timeout_ms": 900000
+              }
+            ],
+            "reset_commands": [
+              {
+                "cwd": "apps/super-admin-suit",
+                "args": [
+                  "exec",
+                  "supabase",
+                  "db",
+                  "reset",
+                  "--local"
+                ],
+                "name": "super-admin-database-reset",
+                "program": "pnpm",
+                "required": true,
+                "timeout_ms": 1200000
+              }
+            ],
+            "start_commands": [
+              {
+                "cwd": "apps/super-admin-suit",
+                "args": [
+                  "exec",
+                  "supabase",
+                  "start"
+                ],
+                "name": "super-admin-database-start",
+                "program": "pnpm",
+                "required": true,
+                "timeout_ms": 1200000
+              }
+            ],
+            "start_when_needed": true
+          },
+          "legacy_plan_mappings": {
+            "Affected root tests/tooling checks.": "pnpm test",
+            "Super Admin typecheck, lint and production build.": "super-admin-quality",
+            "pnpm check or current repository workspace check.": "pnpm check",
+            "Static inspection for secrets/project refs/runtime business configuration.": "super-admin-bootstrap-static-inspection"
+          }
+        },
+        "resulting": {
+          "commands": [
+            {
+              "name": "git-diff-check",
+              "program": "git",
+              "args": [
+                "diff",
+                "--check"
+              ],
+              "required": true,
+              "capabilities": [
+                "diff-check"
+              ]
+            },
+            {
+              "args": [
+                "--test",
+                "apps/super-admin-suit/tests/unit/bootstrap.test.mjs"
+              ],
+              "name": "super-admin-bootstrap-static-inspection",
+              "program": "node",
+              "required": true,
+              "changed_paths": [
+                "apps/super-admin-suit/",
+                "supabase/environments/super-admin-suit/"
+              ]
+            },
+            {
+              "name": "super-admin-quality",
+              "program": "pnpm",
+              "args": [
+                "exec",
+                "turbo",
+                "run",
+                "typecheck",
+                "lint",
+                "build",
+                "--filter=@building-suit/super-admin-suit"
+              ],
+              "required": true,
+              "capabilities": [
+                "typecheck",
+                "lint",
+                "build"
+              ]
+            }
+          ],
+          "database": {
+            "kind": "supabase-local",
+            "local_only": true,
+            "start_when_needed": true,
+            "start_commands": [
+              {
+                "name": "super-admin-database-start",
+                "program": "pnpm",
+                "args": [
+                  "exec",
+                  "supabase",
+                  "start"
+                ],
+                "cwd": "apps/super-admin-suit",
+                "required": true
+              }
+            ],
+            "reset_commands": [
+              {
+                "name": "super-admin-database-reset",
+                "program": "pnpm",
+                "args": [
+                  "exec",
+                  "supabase",
+                  "db",
+                  "reset",
+                  "--local"
+                ],
+                "cwd": "apps/super-admin-suit",
+                "required": true
+              }
+            ],
+            "test_commands": [
+              {
+                "name": "super-admin-database-tests",
+                "program": "pnpm",
+                "args": [
+                  "exec",
+                  "supabase",
+                  "test",
+                  "db",
+                  "--local"
+                ],
+                "cwd": "apps/super-admin-suit",
+                "required": true
+              }
+            ]
+          },
+          "legacy_plan_mappings": {
+            "Affected root tests/tooling checks.": "pnpm test",
+            "Super Admin typecheck, lint and production build.": "super-admin-quality",
+            "pnpm check or current repository workspace check.": "pnpm check",
+            "Static inspection for secrets/project refs/runtime business configuration.": "super-admin-bootstrap-static-inspection",
+            "Fresh local/disposable Supabase reset of the new Admin migration chain.": {
+              "version": 2,
+              "kind": "planned_test",
+              "blocker": "super_admin_app_and_local_database_not_present",
+              "expected_outputs": [
+                "the Super Admin local Supabase project",
+                "a registered start/reset command for its migration chain"
+              ]
+            },
+            "Database tests for RLS denial, platform-admin authorization, immutable audit, config versioning and secret non-exposure.": {
+              "version": 2,
+              "kind": "planned_test",
+              "blocker": "super_admin_security_database_tests_not_present",
+              "expected_outputs": [
+                "mandatory local database tests for every named security invariant"
+              ]
+            },
+            "Generate TypeScript types from the resulting schema.": {
+              "version": 2,
+              "kind": "planned_test",
+              "blocker": "super_admin_generated_type_check_not_present",
+              "expected_outputs": [
+                "generated TypeScript types from the reset local schema",
+                "a clean diff or checked generated artifact"
+              ]
+            },
+            "Run Supabase database advisors/security review where available.": {
+              "version": 2,
+              "kind": "external_gate",
+              "blocker": "super_admin_advisor_evidence_unavailable"
+            },
+            "Database/RLS tests for outsider, disabled admin and enabled admin.": {
+              "version": 2,
+              "kind": "planned_test",
+              "blocker": "super_admin_authorization_tests_not_present",
+              "expected_outputs": [
+                "mandatory outsider/disabled-admin/enabled-admin RLS tests"
+              ]
+            },
+            "Auth/session unit tests and browser denial/success coverage.": {
+              "version": 2,
+              "kind": "planned_test",
+              "blocker": "super_admin_auth_browser_tests_not_present",
+              "expected_outputs": [
+                "auth/session unit tests",
+                "browser denial and success scenarios"
+              ]
+            },
+            "Inspect JWT/metadata authorization paths for user-editable claims.": {
+              "version": 2,
+              "kind": "planned_test",
+              "blocker": "super_admin_claim_authority_review_not_present",
+              "expected_outputs": [
+                "an executable or human-reviewed claim-authority check proving provisioned identity is authoritative"
+              ]
+            },
+            "Super Admin typecheck/lint plus git diff --check.": {
+              "version": 2,
+              "kind": "group",
+              "commands": [
+                "super-admin-quality",
+                "git-diff-check"
+              ],
+              "requires": [
+                "typecheck",
+                "lint",
+                "diff-check"
+              ]
+            },
+            "Super Admin typecheck, lint, build and git diff --check.": {
+              "version": 2,
+              "kind": "group",
+              "commands": [
+                "super-admin-quality",
+                "git-diff-check"
+              ],
+              "requires": [
+                "typecheck",
+                "lint",
+                "build",
+                "diff-check"
+              ]
+            }
+          }
+        },
+        "existing_fingerprint": "37285d3d0b6e44c823418ae98f740f5b56cbe958ce18e44e9b733a9fabdfca4d",
+        "resulting_fingerprint": "90a352dd1aca403cac8f5514524231cab8e697449b478c0a3a1f90021045c5ff",
+        "preserves_unrelated_keys": true
+      }
+    },
+    "no_active_task_executions_for_claims": true,
+    "deployed_controller_export_required": true
+  },
+  "apply": [
+    "re-read identities, revisions, run states, current tasks, recovery leases and deployed controller export",
+    "request maintenance through the run lease control and wait for acknowledged quiescence",
+    "apply versioned schema migration 028_batch_admission_safe_resume.sql",
+    "apply reviewed registry patch through control.apply_batch_readiness_registry_patch",
+    "refresh contracts transactionally and recompute unresolved scopes and authorization gates",
+    "generate a fresh admission report and compare every expected identity and revision",
+    "reconcile the existing Shop run budget in place only after explicit operator approval",
+    "resume only an admitted run through a compatible lease-owning controller"
+  ],
+  "rollback": [
+    "request maintenance and wait for the controller lease to quiesce",
+    "revoke the repair generation so claims and resume fail closed",
+    "restore captured registry JSON from the migration audit event without changing task/history/run IDs",
+    "refresh contracts from restored approved sources",
+    "leave every run maintenance-blocked pending a new admission report; do not auto-unpause"
+  ],
+  "may_resume": false,
+  "refusal_reasons": [
+    "BS-UI-ZN-BROWSER-001:post_refresh_authorization_review_required",
+    "BS-UI-ZN-BROWSER-001:publication_contract_refresh_required",
+    "BS-UI-ZN-BROWSER-001:task_parent_context_unverified",
+    "BS-UI-ZN-BROWSER-001:verification_command_or_fixture_missing",
+    "BS-UI-ZN-DATA-001:post_refresh_authorization_review_required",
+    "BS-UI-ZN-DATA-001:publication_contract_refresh_required",
+    "BS-UI-ZN-DATA-001:task_parent_context_unverified",
+    "BS-UI-ZN-FINAL-001:post_refresh_authorization_review_required",
+    "BS-UI-ZN-FINAL-001:publication_contract_refresh_required",
+    "BS-UI-ZN-FINAL-001:task_parent_context_unverified",
+    "BS-UI-ZN-FINAL-001:verification_command_or_fixture_missing",
+    "BS-UI-ZN-FINAL-001:verification_plan_mapping_required",
+    "BS-UI-ZN-GENERATOR-001:post_refresh_authorization_review_required",
+    "BS-UI-ZN-GENERATOR-001:publication_contract_refresh_required",
+    "BS-UI-ZN-GENERATOR-001:task_parent_context_unverified",
+    "BS-UI-ZN-LEDGER-001:post_refresh_authorization_review_required",
+    "BS-UI-ZN-LEDGER-001:publication_contract_refresh_required",
+    "BS-UI-ZN-LEDGER-001:task_parent_context_unverified",
+    "BS-UI-ZN-LEDGER-001:verification_command_or_fixture_missing",
+    "BS-UI-ZN-OTHER-SUITS-001:post_refresh_authorization_review_required",
+    "BS-UI-ZN-OTHER-SUITS-001:publication_contract_refresh_required",
+    "BS-UI-ZN-OTHER-SUITS-001:task_parent_context_unverified",
+    "BS-UI-ZN-PATTERNS-001:post_refresh_authorization_review_required",
+    "BS-UI-ZN-PATTERNS-001:publication_contract_refresh_required",
+    "BS-UI-ZN-PATTERNS-001:task_parent_context_unverified",
+    "BS-UI-ZN-SHOP-001:post_refresh_authorization_review_required",
+    "BS-UI-ZN-SHOP-001:publication_contract_refresh_required",
+    "BS-UI-ZN-SHOP-001:task_parent_context_unverified",
+    "BS-UI-ZN-SHOP-001:verification_command_or_fixture_missing",
+    "SAS-M1-AUTH-001:publication_contract_refresh_required",
+    "SAS-M1-AUTH-001:task_parent_context_unverified",
+    "SAS-M1-CONFIG-001:publication_contract_refresh_required",
+    "SAS-M1-CONFIG-001:task_parent_context_unverified",
+    "SAS-M1-CONFIG-001:verification_obligation_blocked",
+    "SS-SA-CUSTOM-OFFER-001:database_lifecycle_missing_or_invalid",
+    "SS-SA-CUSTOM-OFFER-001:publication_contract_refresh_required",
+    "SS-SA-CUSTOM-OFFER-001:task_parent_context_unverified",
+    "SS-SA-EVIDENCE-001:database_lifecycle_missing_or_invalid",
+    "SS-SA-EVIDENCE-001:publication_contract_refresh_required",
+    "SS-SA-EVIDENCE-001:task_parent_context_unverified",
+    "SS-SA-EVIDENCE-001:verification_obligation_blocked",
+    "current_state_snapshot_missing",
+    "deployed_controller_export_unavailable",
+    "run_budget_reconciliation_required"
+  ]
+}
