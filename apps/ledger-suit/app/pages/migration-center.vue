@@ -123,7 +123,6 @@ function mappingOptions(decision: MigrationMappingDecision) {
 }
 
 const mappingReady = computed(() => mappingDecisions.value.length > 0 && mappingDecisions.value.every(item => item.create_reviewed || item.target_id) && reviewNote.value.trim().length >= 8)
-const sectionClass = (state: string) => state === 'complete' ? 'text-success' : state === 'warning' ? 'text-warning' : state === 'not_applicable' ? 'text-fg-muted' : 'text-danger'
 function isApplicable(key: string) {
   const operational = center.context.value?.operational_batches[0]
   if (!operational) return false
@@ -133,147 +132,284 @@ function isApplicable(key: string) {
   if (key === 'inventory') return operational.inventory_applicable
   return operational.tax_applicable
 }
+const ledgerPresentation = useLedgerPresentation()
 </script>
 
 <template>
-  <div class="space-y-6" data-migration-center>
-    <LedgerPageHeader :title="t('migration.title')" :subtitle="t('migration.subtitle')" :as-of="center.context.value?.project.cutover_date" />
-
-    <p v-if="!can('migrations.read')" class="ls-card p-6 text-fg-muted">{{ t('migration.noAccess') }}</p>
+  <BsStack data-migration-center gap="lg">
+    <BsPageHeader
+      :title="t('migration.title')"
+      :subtitle="t('migration.subtitle')"
+      :context="ledgerPresentation.context(undefined, undefined, center.context.value?.project.cutover_date)"
+      :context-label="ledgerPresentation.t('pageContext.label')"
+    />
+    <BsText v-if="!can('migrations.read')" tone="muted">{{ t('migration.noAccess') }}</BsText>
     <template v-else>
-      <section class="ls-card space-y-4 p-5" aria-labelledby="migration-projects">
-        <div class="flex flex-wrap items-end justify-between gap-3">
-          <FloatingField class="min-w-64 flex-1" :label="t('migration.project')">
-            <BsSelect id="migration-project" v-model="selectedProjectId" :label="t('migration.project')" :placeholder="t('migration.chooseProject')" :options="projectOptions" option-label="label" option-value="id" />
-          </FloatingField>
-          <BsButton v-if="can('migrations.manage')" type="button" variant="primary" @click="createError = ''; createOpen = true">{{ t('migration.newProject') }}</BsButton>
-        </div>
-      </section>
-      <BsRecordActionDialog v-if="createOpen" v-model:visible="createOpen" :title="t('migration.newProject')" :dirty="createDirty" :pending="center.pending.value === 'create'" :error="createError" size="lg" :submit-label="t('migration.createProject')" :cancel-label="t('common.cancel')" @submit="createProject">
-        <div class="grid gap-4 md:grid-cols-2">
-          <FloatingField :label="t('migration.projectName')"><input v-model="createForm.name" class="ls-input" required maxlength="160"></FloatingField>
-          <FloatingField :label="t('migration.sourceType')"><select v-model="createForm.sourceType" class="ls-input"><option value="excel_csv">{{ t('migration.sourceTypes.excel_csv') }}</option><option value="other_system_export">{{ t('migration.sourceTypes.other_system_export') }}</option><option value="accountant_paper_workbook">{{ t('migration.sourceTypes.accountant_paper_workbook') }}</option></select></FloatingField>
-          <FloatingField :label="t('migration.cutoverDate')"><input v-model="createForm.cutoverDate" class="ls-input" type="date" required></FloatingField>
-          <FloatingField :label="t('migration.depth')"><select v-model="createForm.depth" class="ls-input"><option value="fast_cutover">{{ t('migration.depths.fast_cutover') }}</option><option value="current_fiscal_year">{{ t('migration.depths.current_fiscal_year') }}</option><option value="full_history">{{ t('migration.depths.full_history') }}</option></select></FloatingField>
-          <p class="text-sm text-fg-muted md:col-span-2">{{ t('migration.fastCutoverPolicy') }}</p>
-        </div>
+      <BsCard aria-labelledby="migration-projects" as="section" padding="md">
+        <BsStack gap="md">
+          <BsInline gap="md" :wrap="true" align="end" justify="between">
+            <BsFloatingField :label="t('migration.project')">
+              <BsSelect
+                id="migration-project"
+                v-model="selectedProjectId"
+                :label="t('migration.project')"
+                :placeholder="t('migration.chooseProject')"
+                :options="projectOptions"
+                option-label="label"
+                option-value="id"
+              />
+            </BsFloatingField>
+            <BsButton v-if="can('migrations.manage')" type="button" variant="primary" @click="createError = ''; createOpen = true">{{ t('migration.newProject') }}</BsButton>
+          </BsInline>
+        </BsStack>
+      </BsCard>
+      <BsRecordActionDialog
+        v-if="createOpen"
+        v-model:visible="createOpen"
+        :title="t('migration.newProject')"
+        :dirty="createDirty"
+        :pending="center.pending.value === 'create'"
+        :error="createError"
+        size="lg"
+        :submit-label="t('migration.createProject')"
+        :cancel-label="t('common.cancel')"
+        @submit="createProject"
+      >
+        <BsGrid :columns="2" gap="md">
+          <BsFloatingField :label="t('migration.projectName')">
+            <BsInput v-model="createForm.name" required maxlength="160" />
+          </BsFloatingField>
+          <BsFloatingField :label="t('migration.sourceType')">
+            <BsSelect v-model="createForm.sourceType" native>
+              <BsSelectOption value="excel_csv">{{ t('migration.sourceTypes.excel_csv') }}</BsSelectOption>
+              <BsSelectOption value="other_system_export">{{ t('migration.sourceTypes.other_system_export') }}</BsSelectOption>
+              <BsSelectOption value="accountant_paper_workbook">{{ t('migration.sourceTypes.accountant_paper_workbook') }}</BsSelectOption>
+            </BsSelect>
+          </BsFloatingField>
+          <BsFloatingField :label="t('migration.cutoverDate')">
+            <BsInput v-model="createForm.cutoverDate" type="date" required />
+          </BsFloatingField>
+          <BsFloatingField :label="t('migration.depth')">
+            <BsSelect v-model="createForm.depth" native>
+              <BsSelectOption value="fast_cutover">{{ t('migration.depths.fast_cutover') }}</BsSelectOption>
+              <BsSelectOption value="current_fiscal_year">{{ t('migration.depths.current_fiscal_year') }}</BsSelectOption>
+              <BsSelectOption value="full_history">{{ t('migration.depths.full_history') }}</BsSelectOption>
+            </BsSelect>
+          </BsFloatingField>
+          <BsText size="sm" tone="muted">{{ t('migration.fastCutoverPolicy') }}</BsText>
+        </BsGrid>
       </BsRecordActionDialog>
-
-      <p v-if="center.error.value" class="ls-error" role="alert">{{ t('migration.loadFailed') }}</p>
-      <SectionSkeleton v-else-if="center.pending.value === 'context'" variant="table" :rows="6" />
-
+      <BsText v-if="center.error.value" role="alert" tone="danger">{{ t('migration.loadFailed') }}</BsText>
+      <BsSectionSkeleton v-else-if="center.pending.value === 'context'" variant="table" :rows="6" />
       <template v-else-if="center.context.value">
-        <section class="ls-card p-5" aria-labelledby="migration-progress">
-          <h2 id="migration-progress" class="text-h2 font-bold">{{ t('migration.progress') }}</h2>
-          <ol class="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4" data-migration-progress>
-            <li v-for="(section, index) in progress" :key="section.key" class="rounded-control border border-line p-3" :data-section="section.key" :data-state="section.state">
-              <span class="text-xs text-fg-muted">{{ index + 1 }}</span>
-              <p class="font-semibold">{{ t(`migration.sections.${section.key}`) }}</p>
-              <p class="text-sm" :class="sectionClass(section.state)">{{ t(`migration.states.${section.state}`) }}</p>
-            </li>
-          </ol>
-        </section>
-
-        <section class="ls-card space-y-4 p-5" aria-labelledby="migration-source">
-          <div><h2 id="migration-source" class="text-h2 font-bold">{{ t('migration.sections.source') }}</h2><p class="text-sm text-fg-muted">{{ t('migration.sourceHint') }}</p></div>
-          <div class="flex flex-wrap gap-2">
-            <BsButton type="button" class="ls-btn ls-btn-sm" @click="downloadCsv(`migration-source-${locale}.csv`, migrationSourceTemplate(locale))">{{ t('migration.sourceTemplate') }}</BsButton>
-            <BsButton type="button" class="ls-btn ls-btn-sm" @click="downloadCsv('migration-open-items.csv', migrationOpenItemsTemplate())">{{ t('migration.openItemsTemplate') }}</BsButton>
-            <BsButton type="button" class="ls-btn ls-btn-sm" @click="downloadCsv('migration-operational-registers.csv', migrationOperationalTemplate())">{{ t('migration.operationalTemplate') }}</BsButton>
-            <NuxtLink to="/opening-balances" class="ls-btn ls-btn-sm">{{ t('migration.openingTemplate') }}</NuxtLink>
-          </div>
-          <label v-if="can('migrations.manage') && !center.context.value.approval" class="ls-btn ls-btn-primary w-fit cursor-pointer" for="migration-source-file">{{ t('migration.uploadSource') }}</label>
-          <input id="migration-source-file" class="sr-only" type="file" accept=".csv,text/csv" :disabled="Boolean(center.pending.value)" @change="selectSource">
-          <div v-if="center.context.value.sources[0]" class="rounded-control bg-surface-muted p-3 text-sm">
-            <p class="font-semibold">{{ center.context.value.sources[0].filename }} · {{ t('migration.revision', { revision: center.context.value.sources[0].revision }) }}</p>
-            <p class="break-all text-fg-muted">SHA-256: {{ center.context.value.sources[0].content_sha256 }}</p>
-            <p>{{ t('migration.originalRows', { count: sourceRows.length }) }}</p>
-          </div>
-          <BsDataTable v-if="sourceRows.length" :value="sourceRows" data-key="source_row" :label="t('migration.sourcePreview')" :table-style="{ minWidth: '680px' }">
-            <Column field="source_row" header="#" />
-            <Column :header="t('migration.sourceKind')"><template #body="{ data }">{{ t(`migration.kinds.${data.raw_payload.source_kind}`) }}</template></Column>
-            <Column :header="t('migration.sourceKey')"><template #body="{ data }">{{ data.raw_payload.source_key }}</template></Column>
-            <Column :header="t('migration.sourceName')"><template #body="{ data }">{{ data.raw_payload.source_name }}</template></Column>
-            <Column :header="t('migration.rowIssues')"><template #body="{ data }"><span v-if="rowIssues(data.source_row).length" class="text-danger">{{ rowIssues(data.source_row).join(', ') }}</span><span v-else-if="center.context.value?.project.current_staging_batch_id" class="text-success">{{ t('migration.rowValid') }}</span><span v-else>—</span></template></Column>
-          </BsDataTable>
-        </section>
-
-        <section v-if="mappingDecisions.length" class="ls-card space-y-4 p-5" aria-labelledby="migration-mapping">
-          <div><h2 id="migration-mapping" class="text-h2 font-bold">{{ t('migration.sections.accounts') }}</h2><p class="text-sm text-fg-muted">{{ t('migration.mappingHint') }}</p></div>
-          <BsDataTable :value="mappingDecisions" data-key="source_key" :label="t('migration.mappingReview')" :table-style="{ minWidth: '760px' }">
-            <Column :header="t('migration.sourceKind')"><template #body="{ data }">{{ t(`migration.kinds.${data.source_kind}`) }}</template></Column>
-            <Column field="source_key" :header="t('migration.sourceKey')" />
-            <Column field="source_name" :header="t('migration.sourceName')" />
-            <Column :header="t('migration.ledgerTarget')"><template #body="{ data }"><select class="ls-input min-w-64" :value="mappingTarget(data)" @change="onMappingTarget(data, $event)"><option value="">{{ t('migration.chooseTarget') }}</option><option v-for="option in mappingOptions(data)" :key="option.id" :value="option.id">{{ option.label }}</option><option v-if="data.source_kind !== 'account'" value="__create__">{{ t('migration.reviewedCreation') }}</option></select></template></Column>
-          </BsDataTable>
-          <FloatingField :label="t('migration.reviewNote')"><textarea v-model="reviewNote" class="ls-input min-h-24" minlength="8" maxlength="1000" /></FloatingField>
-          <BsButton type="button" class="ls-btn ls-btn-primary" :disabled="!mappingReady || Boolean(center.pending.value)" @click="act(() => center.reviewMappings(mappingDecisions, reviewNote), 'migration.mappingSaved')">{{ center.pending.value === 'mapping' ? t('common.saving') : t('migration.validateMapping') }}</BsButton>
-        </section>
-
-        <section v-else-if="center.context.value.mapping_entries.length" class="ls-card space-y-4 p-5" aria-labelledby="migration-mapping-reviewed">
-          <div><h2 id="migration-mapping-reviewed" class="text-h2 font-bold">{{ t('migration.mappingReview') }}</h2><p class="text-sm text-fg-muted">{{ center.context.value.mapping_revisions[0]?.review_note }}</p></div>
-          <BsDataTable :value="center.context.value.mapping_entries" data-key="id" :label="t('migration.mappingReview')" :table-style="{ minWidth: '680px' }">
-            <Column field="source_kind" :header="t('migration.sourceKind')" />
-            <Column field="source_key" :header="t('migration.sourceKey')" />
-            <Column field="resolution" :header="t('migration.resolution')" />
-            <Column :header="t('migration.ledgerTarget')"><template #body="{ data }">{{ data.target_account_id || data.target_counterparty_id || data.proposed_record?.name }}</template></Column>
-          </BsDataTable>
-        </section>
-
-        <section class="ls-card space-y-4 p-5" aria-labelledby="migration-opening">
-          <div><h2 id="migration-opening" class="text-h2 font-bold">{{ t('migration.sections.opening') }}</h2><p class="text-sm text-fg-muted">{{ t('migration.openingHint') }}</p></div>
-          <div v-if="!center.context.value.project.opening_balance_batch_id" class="flex flex-wrap items-end gap-3">
-            <FloatingField class="min-w-72 flex-1" :label="t('migration.openingBatch')"><select v-model="selectedOpeningId" class="ls-input"><option value="">{{ t('migration.chooseOpening') }}</option><option v-for="batch in center.context.value.opening_candidates" :key="batch.id" :value="batch.id">{{ batch.source_filename }} · {{ t(`opening.status.${batch.status}`) }}</option></select></FloatingField>
-            <BsButton type="button" class="ls-btn ls-btn-primary" :disabled="!selectedOpeningId || Boolean(center.pending.value)" @click="act(() => center.linkOpeningBalance(selectedOpeningId), 'migration.openingLinked')">{{ t('migration.linkOpening') }}</BsButton>
-            <NuxtLink to="/opening-balances" class="ls-btn">{{ t('migration.prepareOpening') }}</NuxtLink>
-          </div>
-          <p v-else class="rounded-control bg-surface-muted p-3 text-sm">{{ t('migration.openingLinkedStatus', { status: t(`opening.status.${center.context.value.opening_batch?.status}`) }) }}</p>
-        </section>
-
-        <section class="ls-card space-y-4 p-5" aria-labelledby="migration-modules">
-          <div><h2 id="migration-modules" class="text-h2 font-bold">{{ t('migration.modulesTitle') }}</h2><p class="text-sm text-fg-muted">{{ t('migration.modulesHint') }}</p></div>
-          <div v-if="center.context.value.operational_batches[0]" class="grid gap-2 sm:grid-cols-5">
-            <p v-for="key in ['open_items','assets','bank','inventory','tax']" :key="key" class="rounded-control border border-line p-3 text-sm"><span class="font-semibold">{{ t(`migration.moduleNames.${key}`) }}</span><br>{{ isApplicable(key) ? t('migration.applicable') : t('migration.notApplicable') }}</p>
-          </div>
-          <BsButton v-else-if="center.context.value.project.status === 'validated' && can('migrations.manage')" type="button" class="ls-btn" :disabled="Boolean(center.pending.value)" @click="act(() => center.markModulesNotApplicable(), 'migration.modulesSaved')">{{ t('migration.allModulesNotApplicable') }}</BsButton>
-          <p class="rounded-control border border-warning bg-[var(--bs-status-warning-bg)] p-3 text-sm">{{ t('migration.historyPolicy') }}</p>
-        </section>
-
-        <section v-if="center.review.value" class="ls-card space-y-5 p-5" aria-labelledby="migration-final-review" data-final-review>
-          <div><h2 id="migration-final-review" class="text-h2 font-bold">{{ t('migration.sections.final_review') }}</h2><p class="text-sm text-fg-muted">{{ t('migration.finalReviewHint', { revision: center.review.value.source_revision }) }}</p></div>
-          <div class="grid gap-3 sm:grid-cols-3">
-            <p><span class="text-fg-muted">{{ t('opening.debitTotal') }}</span><br><strong>{{ amount(openingReview?.debit_total_minor) }}</strong></p>
-            <p><span class="text-fg-muted">{{ t('opening.creditTotal') }}</span><br><strong>{{ amount(openingReview?.credit_total_minor) }}</strong></p>
-            <p><span class="text-fg-muted">{{ t('opening.difference') }}</span><br><strong>{{ amount(openingReview?.difference_minor) }}</strong></p>
-          </div>
-          <BsDataTable v-if="center.review.value.variances.length" :value="center.review.value.variances" :label="t('migration.reconciliations')" :table-style="{ minWidth: '680px' }">
-            <Column field="module" :header="t('migration.module')" />
-            <Column :header="t('migration.moduleDetail')"><template #body="{ data }">{{ amount(data.detail_minor) }}</template></Column>
-            <Column :header="t('migration.glBalance')"><template #body="{ data }">{{ amount(data.gl_minor) }}</template></Column>
-            <Column :header="t('opening.difference')"><template #body="{ data }"><span :class="data.variance_minor === '0' ? 'text-success' : 'text-danger'">{{ amount(data.variance_minor) }}</span></template></Column>
-          </BsDataTable>
-          <div v-if="center.review.value.errors.length" class="ls-error" role="alert"><p class="font-semibold">{{ t('migration.approvalBlocked') }}</p><ul class="mt-2 list-disc ps-5"><li v-for="code in center.review.value.errors" :key="code">{{ t(`migration.errors.${code}`) }}</li></ul></div>
-          <div v-else class="rounded-control bg-[var(--bs-status-success-bg)] p-3 text-success" role="status">{{ t('migration.reconciled') }}</div>
-          <div v-if="center.review.value.approved" class="rounded-control border border-success p-4" data-cutover-approved>
-            <p class="font-bold text-success">{{ t('migration.approved') }}</p>
-            <p class="text-sm">{{ t('migration.approvedEvidence', { time: dateTime(center.review.value.approved_at!), revision: center.review.value.source_revision }) }}</p>
-            <div class="mt-3 flex flex-wrap gap-2">
-              <NuxtLink to="/reports" class="ls-btn ls-btn-sm">{{ t('nav.reports') }}</NuxtLink>
-              <NuxtLink v-if="isApplicable('open_items')" to="/receivables" class="ls-btn ls-btn-sm">{{ t('ar.title') }}</NuxtLink>
-              <NuxtLink v-if="isApplicable('open_items')" to="/payables" class="ls-btn ls-btn-sm">{{ t('ap.title') }}</NuxtLink>
-              <NuxtLink v-if="isApplicable('bank')" to="/bank-reconciliation" class="ls-btn ls-btn-sm">{{ t('nav.bankReconciliation') }}</NuxtLink>
-              <NuxtLink v-if="isApplicable('assets')" to="/fixed-assets" class="ls-btn ls-btn-sm">{{ t('nav.fixedAssets') }}</NuxtLink>
-              <NuxtLink v-if="isApplicable('inventory')" to="/inventory-accounting" class="ls-btn ls-btn-sm">{{ t('nav.inventoryAccounting') }}</NuxtLink>
-              <NuxtLink v-if="isApplicable('tax')" to="/tax-vat" class="ls-btn ls-btn-sm">{{ t('nav.taxVat') }}</NuxtLink>
-            </div>
-          </div>
-          <template v-else>
-            <label class="flex items-start gap-2 text-sm"><input v-model="approvalAcknowledged" type="checkbox" class="mt-1"><span>{{ t('migration.approvalAcknowledgement', { revision: center.review.value.source_revision, date: center.review.value.cutover_date }) }}</span></label>
-            <p class="text-sm text-fg-muted">{{ t('migration.correctionPolicy') }}</p>
-            <BsButton type="button" class="ls-btn ls-btn-primary" :disabled="!canApprove || Boolean(center.pending.value)" @click="act(() => center.approve(), 'migration.approvalSuccess')">{{ center.pending.value === 'approve' ? t('common.saving') : t('migration.finalApprove') }}</BsButton>
-          </template>
-        </section>
+        <BsCard aria-labelledby="migration-progress" as="section" padding="md">
+          <BsHeading id="migration-progress" :level="2" size="h2">{{ t('migration.progress') }}</BsHeading>
+          <BsList data-migration-progress :ordered="true" marker="none">
+            <BsListItem v-for="(section, index) in progress" :key="section.key" :data-section="section.key" :data-state="section.state">
+              <BsText as="span" size="xs" tone="muted">{{ index + 1 }}</BsText>
+              <BsText emphasis="semibold">{{ t(`migration.sections.${section.key}`) }}</BsText>
+              <BsText size="sm" :tone="section.state === 'complete' ? 'success' : section.state === 'warning' ? 'warning' : section.state === 'not_applicable' ? 'muted' : 'danger'">{{ t(`migration.states.${section.state}`) }}</BsText>
+            </BsListItem>
+          </BsList>
+        </BsCard>
+        <BsCard aria-labelledby="migration-source" as="section" padding="md">
+          <BsStack gap="md">
+            <BsBox>
+              <BsHeading id="migration-source" :level="2" size="h2">{{ t('migration.sections.source') }}</BsHeading>
+              <BsText size="sm" tone="muted">{{ t('migration.sourceHint') }}</BsText>
+            </BsBox>
+            <BsInline gap="sm" :wrap="true">
+              <BsButton type="button" size="sm" @click="downloadCsv(`migration-source-${locale}.csv`, migrationSourceTemplate(locale))">{{ t('migration.sourceTemplate') }}</BsButton>
+              <BsButton type="button" size="sm" @click="downloadCsv('migration-open-items.csv', migrationOpenItemsTemplate())">{{ t('migration.openItemsTemplate') }}</BsButton>
+              <BsButton type="button" size="sm" @click="downloadCsv('migration-operational-registers.csv', migrationOperationalTemplate())">{{ t('migration.operationalTemplate') }}</BsButton>
+              <BsLink to="/opening-balances">{{ t('migration.openingTemplate') }}</BsLink>
+            </BsInline>
+            <BsFieldLabel v-if="can('migrations.manage') && !center.context.value.approval" for="migration-source-file">{{ t('migration.uploadSource') }}</BsFieldLabel>
+            <BsFileInput id="migration-source-file" accept=".csv,text/csv" :disabled="Boolean(center.pending.value)" bare @change="selectSource"  hide-control />
+            <BsBox v-if="center.context.value.sources[0]" padding="md" surface="muted" radius="control">
+              <BsText emphasis="semibold">{{ center.context.value.sources[0].filename }} · {{ t('migration.revision', { revision: center.context.value.sources[0].revision }) }}</BsText>
+              <BsText tone="muted">SHA-256: {{ center.context.value.sources[0].content_sha256 }}</BsText>
+              <BsText>{{ t('migration.originalRows', { count: sourceRows.length }) }}</BsText>
+            </BsBox>
+            <BsDataTable
+              v-if="sourceRows.length"
+              :value="sourceRows"
+              row-key="source_row"
+              :label="t('migration.sourcePreview')"
+              :columns="[{ key: 'source_row', field: 'source_row', header: '#' }, { key: 'column2', header: t('migration.sourceKind') }, { key: 'column3', header: t('migration.sourceKey') }, { key: 'column4', header: t('migration.sourceName') }, { key: 'column5', header: t('migration.rowIssues') }]"
+            >
+              <template #cell-column2="{ row: data }">{{ t(`migration.kinds.${data.raw_payload.source_kind}`) }}</template>
+              <template #cell-column3="{ row: data }">{{ data.raw_payload.source_key }}</template>
+              <template #cell-column4="{ row: data }">{{ data.raw_payload.source_name }}</template>
+              <template #cell-column5="{ row: data }">
+                <BsText v-if="rowIssues(data.source_row).length" as="span" tone="danger">{{ rowIssues(data.source_row).join(', ') }}</BsText>
+                <BsText v-else-if="center.context.value?.project.current_staging_batch_id" as="span" tone="success">{{ t('migration.rowValid') }}</BsText>
+                <BsText v-else as="span">—</BsText>
+              </template>
+            </BsDataTable>
+          </BsStack>
+        </BsCard>
+        <BsCard v-if="mappingDecisions.length" aria-labelledby="migration-mapping" as="section" padding="md">
+          <BsStack gap="md">
+            <BsBox>
+              <BsHeading id="migration-mapping" :level="2" size="h2">{{ t('migration.sections.accounts') }}</BsHeading>
+              <BsText size="sm" tone="muted">{{ t('migration.mappingHint') }}</BsText>
+            </BsBox>
+            <BsDataTable
+              :value="mappingDecisions"
+              row-key="source_key"
+              :label="t('migration.mappingReview')"
+              :columns="[{ key: 'column1', header: t('migration.sourceKind') }, { key: 'source_key', field: 'source_key', header: t('migration.sourceKey') }, { key: 'source_name', field: 'source_name', header: t('migration.sourceName') }, { key: 'column4', header: t('migration.ledgerTarget') }]"
+            >
+              <template #cell-column1="{ row: data }">{{ t(`migration.kinds.${data.source_kind}`) }}</template>
+              <template #cell-column4="{ row: data }">
+                <BsSelect :value="mappingTarget(data)" native @change="onMappingTarget(data, $event)">
+                  <BsSelectOption value="">{{ t('migration.chooseTarget') }}</BsSelectOption>
+                  <BsSelectOption v-for="option in mappingOptions(data)" :key="option.id" :value="option.id">{{ option.label }}</BsSelectOption>
+                  <BsSelectOption v-if="data.source_kind !== 'account'" value="__create__">{{ t('migration.reviewedCreation') }}</BsSelectOption>
+                </BsSelect>
+              </template>
+            </BsDataTable>
+            <BsFloatingField :label="t('migration.reviewNote')">
+              <BsTextarea v-model="reviewNote" minlength="8" maxlength="1000" />
+            </BsFloatingField>
+            <BsButton
+              type="button"
+              :disabled="!mappingReady || Boolean(center.pending.value)"
+              variant="primary"
+              @click="act(() => center.reviewMappings(mappingDecisions, reviewNote), 'migration.mappingSaved')"
+            >{{ center.pending.value === 'mapping' ? t('common.saving') : t('migration.validateMapping') }}</BsButton>
+          </BsStack>
+        </BsCard>
+        <BsCard v-else-if="center.context.value.mapping_entries.length" aria-labelledby="migration-mapping-reviewed" as="section" padding="md">
+          <BsStack gap="md">
+            <BsBox>
+              <BsHeading id="migration-mapping-reviewed" :level="2" size="h2">{{ t('migration.mappingReview') }}</BsHeading>
+              <BsText size="sm" tone="muted">{{ center.context.value.mapping_revisions[0]?.review_note }}</BsText>
+            </BsBox>
+            <BsDataTable
+              :value="center.context.value.mapping_entries"
+              row-key="id"
+              :label="t('migration.mappingReview')"
+              :columns="[{ key: 'source_kind', field: 'source_kind', header: t('migration.sourceKind') }, { key: 'source_key', field: 'source_key', header: t('migration.sourceKey') }, { key: 'resolution', field: 'resolution', header: t('migration.resolution') }, { key: 'column4', header: t('migration.ledgerTarget') }]"
+            >
+              <template #cell-column4="{ row: data }">{{ data.target_account_id || data.target_counterparty_id || data.proposed_record?.name }}</template>
+            </BsDataTable>
+          </BsStack>
+        </BsCard>
+        <BsCard aria-labelledby="migration-opening" as="section" padding="md">
+          <BsStack gap="md">
+            <BsBox>
+              <BsHeading id="migration-opening" :level="2" size="h2">{{ t('migration.sections.opening') }}</BsHeading>
+              <BsText size="sm" tone="muted">{{ t('migration.openingHint') }}</BsText>
+            </BsBox>
+            <BsInline v-if="!center.context.value.project.opening_balance_batch_id" gap="md" :wrap="true" align="end">
+              <BsFloatingField :label="t('migration.openingBatch')">
+                <BsSelect v-model="selectedOpeningId" native>
+                  <BsSelectOption value="">{{ t('migration.chooseOpening') }}</BsSelectOption>
+                  <BsSelectOption v-for="batch in center.context.value.opening_candidates" :key="batch.id" :value="batch.id">{{ batch.source_filename }} · {{ t(`opening.status.${batch.status}`) }}</BsSelectOption>
+                </BsSelect>
+              </BsFloatingField>
+              <BsButton
+                type="button"
+                :disabled="!selectedOpeningId || Boolean(center.pending.value)"
+                variant="primary"
+                @click="act(() => center.linkOpeningBalance(selectedOpeningId), 'migration.openingLinked')"
+              >{{ t('migration.linkOpening') }}</BsButton>
+              <BsLink to="/opening-balances">{{ t('migration.prepareOpening') }}</BsLink>
+            </BsInline>
+            <BsText v-else size="sm">{{ t('migration.openingLinkedStatus', { status: t(`opening.status.${center.context.value.opening_batch?.status}`) }) }}</BsText>
+          </BsStack>
+        </BsCard>
+        <BsCard aria-labelledby="migration-modules" as="section" padding="md">
+          <BsStack gap="md">
+            <BsBox>
+              <BsHeading id="migration-modules" :level="2" size="h2">{{ t('migration.modulesTitle') }}</BsHeading>
+              <BsText size="sm" tone="muted">{{ t('migration.modulesHint') }}</BsText>
+            </BsBox>
+            <BsGrid v-if="center.context.value.operational_batches[0]" :columns="5" gap="sm">
+              <BsText v-for="key in ['open_items','assets','bank','inventory','tax']" :key="key" size="sm"><BsText as="span" emphasis="semibold">{{ t(`migration.moduleNames.${key}`) }}</BsText><BsLineBreak />{{ isApplicable(key) ? t('migration.applicable') : t('migration.notApplicable') }}</BsText>
+            </BsGrid>
+            <BsButton
+              v-else-if="center.context.value.project.status === 'validated' && can('migrations.manage')"
+              type="button"
+              :disabled="Boolean(center.pending.value)"
+              @click="act(() => center.markModulesNotApplicable(), 'migration.modulesSaved')"
+            >{{ t('migration.allModulesNotApplicable') }}</BsButton>
+            <BsText size="sm">{{ t('migration.historyPolicy') }}</BsText>
+          </BsStack>
+        </BsCard>
+        <BsCard v-if="center.review.value" aria-labelledby="migration-final-review" data-final-review as="section" padding="md">
+          <BsStack gap="md">
+            <BsBox>
+              <BsHeading id="migration-final-review" :level="2" size="h2">{{ t('migration.sections.final_review') }}</BsHeading>
+              <BsText size="sm" tone="muted">{{ t('migration.finalReviewHint', { revision: center.review.value.source_revision }) }}</BsText>
+            </BsBox>
+            <BsGrid :columns="3" gap="md">
+              <BsText>
+                <BsText as="span" tone="muted">{{ t('opening.debitTotal') }}</BsText>
+                <BsLineBreak />
+                <BsText as="strong">{{ amount(openingReview?.debit_total_minor) }}</BsText>
+              </BsText>
+              <BsText>
+                <BsText as="span" tone="muted">{{ t('opening.creditTotal') }}</BsText>
+                <BsLineBreak />
+                <BsText as="strong">{{ amount(openingReview?.credit_total_minor) }}</BsText>
+              </BsText>
+              <BsText>
+                <BsText as="span" tone="muted">{{ t('opening.difference') }}</BsText>
+                <BsLineBreak />
+                <BsText as="strong">{{ amount(openingReview?.difference_minor) }}</BsText>
+              </BsText>
+            </BsGrid>
+            <BsDataTable
+              v-if="center.review.value.variances.length"
+              :value="center.review.value.variances"
+              :label="t('migration.reconciliations')"
+              :columns="[{ key: 'module', field: 'module', header: t('migration.module') }, { key: 'column2', header: t('migration.moduleDetail') }, { key: 'column3', header: t('migration.glBalance') }, { key: 'column4', header: t('opening.difference') }]"
+            >
+              <template #cell-column2="{ row: data }">{{ amount(data.detail_minor) }}</template>
+              <template #cell-column3="{ row: data }">{{ amount(data.gl_minor) }}</template>
+              <template #cell-column4="{ row: data }">
+                <BsText as="span" :tone="data.variance_minor === '0' ? 'success' : 'danger'">{{ amount(data.variance_minor) }}</BsText>
+              </template>
+            </BsDataTable>
+            <BsBox v-if="center.review.value.errors.length" role="alert">
+              <BsText emphasis="semibold">{{ t('migration.approvalBlocked') }}</BsText>
+              <BsList :ordered="false" marker="disc">
+                <BsListItem v-for="code in center.review.value.errors" :key="code">{{ t(`migration.errors.${code}`) }}</BsListItem>
+              </BsList>
+            </BsBox>
+            <BsBox v-else role="status" padding="md" radius="control">{{ t('migration.reconciled') }}</BsBox>
+            <BsBox v-if="center.review.value.approved" data-cutover-approved padding="lg" border radius="control">
+              <BsText tone="success" emphasis="bold">{{ t('migration.approved') }}</BsText>
+              <BsText size="sm">{{ t('migration.approvedEvidence', { time: dateTime(center.review.value.approved_at!), revision: center.review.value.source_revision }) }}</BsText>
+              <BsInline gap="sm" :wrap="true">
+                <BsLink to="/reports">{{ t('nav.reports') }}</BsLink>
+                <BsLink v-if="isApplicable('open_items')" to="/receivables">{{ t('ar.title') }}</BsLink>
+                <BsLink v-if="isApplicable('open_items')" to="/payables">{{ t('ap.title') }}</BsLink>
+                <BsLink v-if="isApplicable('bank')" to="/bank-reconciliation">{{ t('nav.bankReconciliation') }}</BsLink>
+                <BsLink v-if="isApplicable('assets')" to="/fixed-assets">{{ t('nav.fixedAssets') }}</BsLink>
+                <BsLink v-if="isApplicable('inventory')" to="/inventory-accounting">{{ t('nav.inventoryAccounting') }}</BsLink>
+                <BsLink v-if="isApplicable('tax')" to="/tax-vat">{{ t('nav.taxVat') }}</BsLink>
+              </BsInline>
+            </BsBox>
+            <template v-else>
+              <BsFieldLabel>
+                <BsCheckbox v-model="approvalAcknowledged" bare />
+                <BsText as="span">{{ t('migration.approvalAcknowledgement', { revision: center.review.value.source_revision, date: center.review.value.cutover_date }) }}</BsText>
+              </BsFieldLabel>
+              <BsText size="sm" tone="muted">{{ t('migration.correctionPolicy') }}</BsText>
+              <BsButton
+                type="button"
+                :disabled="!canApprove || Boolean(center.pending.value)"
+                variant="primary"
+                @click="act(() => center.approve(), 'migration.approvalSuccess')"
+              >{{ center.pending.value === 'approve' ? t('common.saving') : t('migration.finalApprove') }}</BsButton>
+            </template>
+          </BsStack>
+        </BsCard>
       </template>
     </template>
-  </div>
+  </BsStack>
 </template>

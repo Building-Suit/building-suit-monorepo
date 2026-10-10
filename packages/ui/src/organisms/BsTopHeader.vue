@@ -25,7 +25,7 @@ defineExpose({ focusNavigationTrigger })
       :aria-expanded="navigationOpen"
       @click="emit('openNavigation')"
     >
-      <AppIcon name="menu" />
+      <BsIcon name="menu" />
     </BsButton>
 
     <div class="min-w-0 flex-1"><slot name="leading" /></div>
