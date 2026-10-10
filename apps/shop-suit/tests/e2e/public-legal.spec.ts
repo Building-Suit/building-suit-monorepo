@@ -97,9 +97,11 @@ for (const theme of ['light', 'dark'] as const) {
     await page.addInitScript(value => localStorage.setItem('building-suit.theme', value), theme)
     for (const path of ['/', '/auth/login', '/terms']) {
       await page.goto(path)
-      const logo = page.locator('[role="img"][aria-label="Shop Suit by Building Suit"]').first()
+      const logo = page.locator('[role="img"][aria-label="Shop Suit by Building Suit"]:visible').first()
       await expect(logo).toBeVisible()
-      await expect(logo.locator('img:visible')).toHaveAttribute('src', `/brand/shop-suit-wordmark-${theme === 'dark' ? 'light' : 'dark'}.svg`)
+      // The desktop auth showcase has a dark background in both themes.
+      const tone = path === '/auth/login' || theme === 'dark' ? 'light' : 'dark'
+      await expect(logo.locator('img:visible')).toHaveAttribute('src', `/brand/shop-suit-wordmark-${tone}.svg`)
       await expect(logo.locator('span span')).toHaveCount(0)
     }
   })
