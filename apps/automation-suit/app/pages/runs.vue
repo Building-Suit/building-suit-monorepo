@@ -1,5 +1,36 @@
 <script setup lang="ts">
+import { automationStatusTone } from '../utils/automationStatusTone'
 import type { DashboardResponse } from '../../types/dashboard'
 const { data, error } = await useFetch<DashboardResponse>('/api/dashboard')
 </script>
-<template><main class="space-y-5"><div><p class="text-xs font-bold uppercase tracking-widest text-fg-muted">Batch execution</p><h1 class="mt-2 text-3xl font-black">Runs</h1></div><p v-if="error" class="text-danger">{{ error.message }}</p><BsCard v-for="run in data?.workflowRuns || []" :key="run.run_id"><div class="flex justify-between gap-3"><div><h2 class="font-black">{{ run.suit_slug }}</h2><p class="font-mono text-xs text-fg-muted">{{ run.run_id }}</p></div><DashboardStatusPill :value="run.status" /></div><p class="mt-3 text-sm">{{ run.completed_tasks }} / {{ run.max_tasks }} tasks · stop requested: {{ run.stop_requested ? 'yes' : 'no' }}</p></BsCard></main></template>
+<template>
+  <BsPage padding="none" width="full">
+    <BsStack gap="sm">
+      <BsText size="xs" tone="muted" emphasis="semibold">
+        Batch execution
+      </BsText>
+      <BsHeading :level="1">
+        Runs
+      </BsHeading>
+    </BsStack>
+    <BsAlert v-if="error" tone="error" :description="error.message" />
+    <BsCard v-for="run in data?.workflowRuns || []" :key="run.run_id">
+      <BsStack gap="sm">
+        <BsInline justify="between">
+          <BsStack gap="sm">
+            <BsHeading :level="2">
+              {{ run.suit_slug }}
+            </BsHeading>
+            <BsText size="xs" tone="muted">
+              {{ run.run_id }}
+            </BsText>
+          </BsStack>
+          <BsStatusBadge :status="run.status" :label="(run.status) || 'unknown'" :tone="automationStatusTone(run.status)" />
+        </BsInline>
+        <BsText size="sm">
+          {{ run.completed_tasks }} / {{ run.max_tasks }} tasks · stop requested: {{ run.stop_requested ? 'yes' : 'no' }}
+        </BsText>
+      </BsStack>
+    </BsCard>
+  </BsPage>
+</template>

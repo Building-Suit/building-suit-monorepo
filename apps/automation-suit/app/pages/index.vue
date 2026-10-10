@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import type { DashboardResponse, IncidentSeverity } from '../../types/dashboard'
+import { automationStatusTone } from '../utils/automationStatusTone'
+import type { BsDataTable } from '#components'
+import type { TaskRow, ExecutionRow, DashboardResponse, IncidentSeverity } from '../../types/dashboard'
 
 const { t } = useI18n()
 const config = useRuntimeConfig()
@@ -61,201 +63,414 @@ function progress(run: { completed_tasks: number; max_tasks: number }) {
   if (!run.max_tasks) return 0
   return Math.min(100, Math.round((run.completed_tasks / run.max_tasks) * 100))
 }
+
+// Derive the public column contract from Nuxt's registered shared component.
+type BsDataTableColumn<Row extends object> = NonNullable<Parameters<typeof BsDataTable<Row>>[0]['columns']>[number]
+
+const taskColumns: BsDataTableColumn<TaskRow>[] = [
+  { key: 'task_id', header: 'Task', field: 'task_id', width: 'content' },
+  { key: 'suit_slug', header: 'Suit', field: 'suit_slug' },
+  { key: 'title', header: 'Title', field: 'title', width: 'xl' },
+  { key: 'status', header: 'Status', field: 'status' },
+  { key: 'risk_model', header: 'Risk / model' },
+  { key: 'updated_at', header: 'Updated', field: 'updated_at', width: 'content' },
+]
+const executionColumns: BsDataTableColumn<ExecutionRow>[] = [
+  { key: 'execution_id', header: 'ID', field: 'execution_id', width: 'content' },
+  { key: 'task_id', header: 'Task', field: 'task_id', width: 'content' },
+  { key: 'status', header: 'Status', field: 'status' },
+  { key: 'attempt', header: 'Attempt', field: 'attempt' },
+  { key: 'branch_name', header: 'Branch', field: 'branch_name' },
+  { key: 'started', header: 'Started', width: 'content' },
+]
 </script>
 
 <template>
-  <main class="space-y-6">
-    <section class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-      <div>
-        <p class="text-xs font-bold uppercase tracking-[0.18em] text-fg-muted">{{ t('dashboard.eyebrow') }}</p>
-        <h1 class="mt-2 text-3xl font-black text-fg">{{ t('dashboard.title') }}</h1>
-        <p class="mt-2 max-w-3xl text-sm text-fg-muted">{{ t('dashboard.subtitle') }}</p>
-      </div>
-
-      <div class="flex flex-wrap items-center gap-2">
-        <BsSelect v-model="selectedSuit" :label="t('dashboard.allSuits')" :options="suitOptions" option-label="label" option-value="value" class="min-w-48" />
+  <BsPage padding="none" width="full">
+    <BsInline justify="between" align="start" collapse="md" as="section">
+      <BsStack gap="sm">
+        <BsText size="xs" tone="muted" emphasis="semibold">
+          {{ t('dashboard.eyebrow') }}
+        </BsText>
+        <BsHeading :level="1">
+          {{ t('dashboard.title') }}
+        </BsHeading>
+        <BsText size="sm" tone="muted">
+          {{ t('dashboard.subtitle') }}
+        </BsText>
+      </BsStack>
+      <BsInline>
+        <BsSelect v-model="selectedSuit" :label="t('dashboard.allSuits')" :options="suitOptions" option-label="label" option-value="value" />
         <BsButton @click="refresh()">
           {{ t('dashboard.refresh') }}
         </BsButton>
-      </div>
-    </section>
-
-    <BsCard v-if="error" as="section" class="border-danger/40 bg-[var(--bs-status-danger-bg)]">
-      <h2 class="font-black text-danger">{{ t('dashboard.loadFailed') }}</h2>
-      <p class="mt-1 text-sm text-fg">{{ error.message }}</p>
+      </BsInline>
+    </BsInline>
+    <BsAlert v-if="error" tone="error" :title="t('dashboard.loadFailed')" :description="error.message" />
+    <BsCard v-if="status === 'pending' && !data" as="section" padding="lg" aria-busy="true">
+      <BsStack gap="sm">
+        {{ t('dashboard.loading') }}
+      </BsStack>
     </BsCard>
-
-    <BsCard v-if="status === 'pending' && !data" as="section" padding="lg" class="text-center text-sm text-fg-muted" aria-busy="true">
-      {{ t('dashboard.loading') }}
-    </BsCard>
-
     <template v-if="data && summary">
       <BsCard as="section" padding="sm">
-        <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <div class="flex flex-wrap items-center gap-2">
-              <DashboardStatusPill :value="data.runtimeTelemetryAvailable ? 'runtime telemetry on' : 'control-plane only'" />
-              <span class="text-xs text-fg-muted">{{ t('dashboard.generated') }} {{ formatDate(data.generatedAt) }}</span>
-            </div>
-            <p class="mt-2 text-sm text-fg-muted">
-              {{ data.runtimeTelemetryAvailable ? t('dashboard.runtimeTruthOn') : t('dashboard.runtimeTruthOff') }}
-            </p>
-          </div>
-          <div class="text-xs text-fg-muted lg:text-end">
-            <div><strong class="text-fg">DB:</strong> {{ data.database.database }}</div>
-            <div><strong class="text-fg">Role:</strong> {{ data.database.user }}</div>
-            <div><strong class="text-fg">Server:</strong> {{ data.database.server_addr || 'managed' }}<template v-if="data.database.server_port">:{{ data.database.server_port }}</template></div>
-          </div>
-        </div>
+        <BsInline justify="between" collapse="md">
+          <BsStack gap="sm">
+            <BsInline>
+              <BsStatusBadge :status="data.runtimeTelemetryAvailable ? 'runtime telemetry on' : 'control-plane only'" :label="data.runtimeTelemetryAvailable ? 'runtime telemetry on' : 'control-plane only'" :tone="automationStatusTone(data.runtimeTelemetryAvailable ? 'runtime telemetry on' : 'control-plane only')" />
+              <BsText size="xs" tone="muted">{{ t('dashboard.generated') }} {{ formatDate(data.generatedAt) }}</BsText>
+            </BsInline>
+            <BsText size="sm" tone="muted">{{ data.runtimeTelemetryAvailable ? t('dashboard.runtimeTruthOn') : t('dashboard.runtimeTruthOff') }}</BsText>
+          </BsStack>
+          <BsDescriptionList density="compact">
+            <BsDescriptionItem term="DB" orientation="inline">{{ data.database.database }}</BsDescriptionItem>
+            <BsDescriptionItem term="Role" orientation="inline">{{ data.database.user }}</BsDescriptionItem>
+            <BsDescriptionItem term="Server" orientation="inline">{{ data.database.server_addr || 'managed' }}<template v-if="data.database.server_port">:{{ data.database.server_port }}</template></BsDescriptionItem>
+          </BsDescriptionList>
+        </BsInline>
       </BsCard>
-
-      <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-6">
-        <DashboardMetricCard :label="t('metrics.total')" :value="summary.total_tasks" />
-        <DashboardMetricCard :label="t('metrics.finished')" :value="summary.finished_tasks" />
-        <DashboardMetricCard :label="t('metrics.activeTasks')" :value="summary.in_progress_tasks" />
-        <DashboardMetricCard :label="t('metrics.verifying')" :value="summary.verification_tasks" />
-        <DashboardMetricCard :label="t('metrics.blocked')" :value="summary.blocked_tasks" :danger="summary.blocked_tasks > 0" />
-        <DashboardMetricCard :label="t('metrics.failed')" :value="summary.failed_tasks" :danger="summary.failed_tasks > 0" />
-        <DashboardMetricCard :label="t('metrics.ready')" :value="summary.ready_tasks" />
-        <DashboardMetricCard :label="t('metrics.runningFlows')" :value="summary.running_workflows" />
-        <DashboardMetricCard :label="t('metrics.runningExecutions')" :value="summary.running_executions" />
-        <DashboardMetricCard :label="t('metrics.decisions')" :value="summary.open_blocking_decisions" :danger="summary.open_blocking_decisions > 0" />
-        <DashboardMetricCard :label="t('metrics.incidents')" :value="data.incidents.length" :danger="data.incidents.some(row => row.severity === 'critical')" />
-        <DashboardMetricCard :label="t('metrics.unfinished')" :value="summary.unfinished_tasks" />
-      </section>
-
-      <section>
-        <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 class="text-xl font-black text-fg">{{ t('incidents.title') }}</h2>
-            <p class="text-sm text-fg-muted">{{ t('incidents.subtitle') }}</p>
-          </div>
-          <BsSelect v-model="severity" :label="t('incidents.title')" :options="severityOptions" option-label="label" option-value="value" class="min-w-40" />
-        </div>
-        <div v-if="incidents.length" class="grid gap-3 xl:grid-cols-2">
-          <DashboardIncidentCard v-for="incident in incidents" :key="incident.id" :incident="incident" />
-        </div>
-        <BsCard v-else padding="lg" class="text-sm text-fg-muted">{{ t('incidents.empty') }}</BsCard>
-      </section>
-
-      <section class="grid gap-4 xl:grid-cols-2">
-        <BsCard padding="sm">
-          <div class="flex items-center justify-between gap-3">
-            <div>
-              <h2 class="font-black text-fg">{{ t('runtime.title') }}</h2>
-              <p class="text-xs text-fg-muted">{{ t('runtime.subtitle') }}</p>
-            </div>
-            <DashboardStatusPill :value="data.runtimeTelemetryAvailable ? 'available' : 'not installed'" />
-          </div>
-          <div v-if="data.runtimeTelemetryAvailable && activeRuntime.length" class="mt-4 space-y-3">
-            <div v-for="row in activeRuntime" :key="row.n8n_execution_id" class="rounded-control border border-[var(--bs-border)] p-3">
-              <div class="flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <p class="font-bold text-fg">{{ row.suit_slug || 'Unresolved Suit' }}</p>
-                  <p class="font-mono text-xs text-fg-muted">{{ row.task_id || 'No task' }} · {{ row.n8n_execution_id }}</p>
-                </div>
-                <DashboardStatusPill :value="row.runtime_status" />
-              </div>
-              <dl class="mt-3 grid gap-2 text-xs sm:grid-cols-2">
-                <div><dt class="text-fg-muted">Node</dt><dd class="font-semibold text-fg">{{ row.current_node || '—' }}</dd></div>
-                <div><dt class="text-fg-muted">Stage</dt><dd class="font-semibold text-fg">{{ row.current_stage || '—' }}</dd></div>
-                <div><dt class="text-fg-muted">Started</dt><dd class="text-fg">{{ formatDate(row.started_at) }}</dd></div>
-                <div><dt class="text-fg-muted">Heartbeat</dt><dd class="text-fg">{{ formatDate(row.last_heartbeat_at) }}</dd></div>
-              </dl>
-            </div>
-          </div>
-          <p v-else-if="!data.runtimeTelemetryAvailable" class="mt-4 rounded-control border border-warning/40 bg-[var(--bs-status-warning-bg)] p-3 text-sm text-fg">{{ t('runtime.installHint') }}</p>
-          <p v-else class="mt-4 text-sm text-fg-muted">{{ t('runtime.idle') }}</p>
+      <BsGrid columns="auto" min-item-width="sm" as="section">
+        <BsKpiCard :title="t('metrics.total')">
+          <BsText as="span" size="lg" emphasis="bold">
+            {{ summary.total_tasks }}
+          </BsText>
+        </BsKpiCard>
+        <BsKpiCard :title="t('metrics.finished')">
+          <BsText as="span" size="lg" emphasis="bold">
+            {{ summary.finished_tasks }}
+          </BsText>
+        </BsKpiCard>
+        <BsKpiCard :title="t('metrics.activeTasks')">
+          <BsText as="span" size="lg" emphasis="bold">
+            {{ summary.in_progress_tasks }}
+          </BsText>
+        </BsKpiCard>
+        <BsKpiCard :title="t('metrics.verifying')">
+          <BsText as="span" size="lg" emphasis="bold">
+            {{ summary.verification_tasks }}
+          </BsText>
+        </BsKpiCard>
+        <BsKpiCard :title="t('metrics.blocked')"  :tone="(summary.blocked_tasks > 0) ? 'danger' : 'neutral'">
+          <BsText as="span" size="lg" emphasis="bold" :tone="(summary.blocked_tasks > 0) ? 'danger' : 'default'">
+            {{ summary.blocked_tasks }}
+          </BsText>
+        </BsKpiCard>
+        <BsKpiCard :title="t('metrics.failed')"  :tone="(summary.failed_tasks > 0) ? 'danger' : 'neutral'">
+          <BsText as="span" size="lg" emphasis="bold" :tone="(summary.failed_tasks > 0) ? 'danger' : 'default'">
+            {{ summary.failed_tasks }}
+          </BsText>
+        </BsKpiCard>
+        <BsKpiCard :title="t('metrics.ready')">
+          <BsText as="span" size="lg" emphasis="bold">
+            {{ summary.ready_tasks }}
+          </BsText>
+        </BsKpiCard>
+        <BsKpiCard :title="t('metrics.runningFlows')">
+          <BsText as="span" size="lg" emphasis="bold">
+            {{ summary.running_workflows }}
+          </BsText>
+        </BsKpiCard>
+        <BsKpiCard :title="t('metrics.runningExecutions')">
+          <BsText as="span" size="lg" emphasis="bold">
+            {{ summary.running_executions }}
+          </BsText>
+        </BsKpiCard>
+        <BsKpiCard :title="t('metrics.decisions')"  :tone="(summary.open_blocking_decisions > 0) ? 'danger' : 'neutral'">
+          <BsText as="span" size="lg" emphasis="bold" :tone="(summary.open_blocking_decisions > 0) ? 'danger' : 'default'">
+            {{ summary.open_blocking_decisions }}
+          </BsText>
+        </BsKpiCard>
+        <BsKpiCard :title="t('metrics.incidents')"  :tone="(data.incidents.some(row => row.severity === 'critical')) ? 'danger' : 'neutral'">
+          <BsText as="span" size="lg" emphasis="bold" :tone="(data.incidents.some(row => row.severity === 'critical')) ? 'danger' : 'default'">
+            {{ data.incidents.length }}
+          </BsText>
+        </BsKpiCard>
+        <BsKpiCard :title="t('metrics.unfinished')">
+          <BsText as="span" size="lg" emphasis="bold">
+            {{ summary.unfinished_tasks }}
+          </BsText>
+        </BsKpiCard>
+      </BsGrid>
+      <BsStack gap="sm" as="section">
+        <BsInline justify="between">
+          <BsStack gap="sm">
+            <BsHeading :level="2">
+              {{ t('incidents.title') }}
+            </BsHeading>
+            <BsText size="sm" tone="muted">
+              {{ t('incidents.subtitle') }}
+            </BsText>
+          </BsStack>
+          <BsSelect v-model="severity" :label="t('incidents.title')" :options="severityOptions" option-label="label" option-value="value" />
+        </BsInline>
+        <BsGrid v-if="incidents.length" columns="auto">
+          <BsCard v-for="incident in incidents" :key="incident.id" padding="sm">
+            <BsStack gap="sm">
+              <BsStack gap="sm">
+                <BsInline justify="between">
+                  <BsInline>
+                    <BsStatusBadge :status="incident.severity" :label="incident.severity" :tone="automationStatusTone(incident.severity)" />
+                    <BsText size="xs" tone="muted">
+                      {{ incident.kind }}
+                    </BsText>
+                  </BsInline>
+                  <BsText size="xs" tone="muted">
+                    {{ incident.suit_slug }} {{ incident.task_id }}
+                  </BsText>
+                </BsInline>
+                <BsAlert :tone="incident.severity === 'critical' ? 'error' : incident.severity" :title="incident.title" :description="incident.detail" />
+                <BsContentSection title="Recovery" variant="flat">
+                  <BsText size="sm">
+                    {{ incident.recovery }}
+                  </BsText>
+                </BsContentSection>
+                <BsDisclosure summary="Evidence">
+                  <BsCodeBlock language="json" :code="JSON.stringify(incident.evidence, null, 2)" />
+                </BsDisclosure>
+              </BsStack>
+            </BsStack>
+          </BsCard>
+        </BsGrid>
+        <BsCard v-else padding="lg">
+          <BsStack gap="sm">
+            {{ t('incidents.empty') }}
+          </BsStack>
         </BsCard>
-
+      </BsStack>
+      <BsGrid :columns="2" as="section">
         <BsCard padding="sm">
-          <h2 class="font-black text-fg">{{ t('runs.title') }}</h2>
-          <p class="text-xs text-fg-muted">{{ t('runs.subtitle') }}</p>
-          <div v-if="activeRuns.length" class="mt-4 space-y-3">
-            <div v-for="run in activeRuns" :key="run.run_id" class="rounded-control border border-[var(--bs-border)] p-3">
-              <div class="flex items-center justify-between gap-2">
-                <div><p class="font-bold text-fg">{{ run.suit_slug }}</p><p class="font-mono text-xs text-fg-muted">{{ compactId(run.run_id) }}</p></div>
-                <DashboardStatusPill :value="run.status" />
-              </div>
-              <div class="mt-3 h-2 overflow-hidden rounded-full bg-surface-muted"><div class="h-full bg-fg" :style="{ width: `${progress(run)}%` }" /></div>
-              <div class="mt-2 flex justify-between text-xs text-fg-muted"><span>{{ run.completed_tasks }} / {{ run.max_tasks }}</span><span>{{ progress(run) }}%</span></div>
-            </div>
-          </div>
-          <p v-else class="mt-4 text-sm text-fg-muted">{{ t('runs.idle') }}</p>
+          <BsStack gap="sm">
+            <BsInline justify="between">
+              <BsStack gap="sm">
+                <BsHeading :level="2">
+                  {{ t('runtime.title') }}
+                </BsHeading>
+                <BsText size="xs" tone="muted">
+                  {{ t('runtime.subtitle') }}
+                </BsText>
+              </BsStack>
+              <BsStatusBadge :status="data.runtimeTelemetryAvailable ? 'available' : 'not installed'" :label="data.runtimeTelemetryAvailable ? 'available' : 'not installed'" :tone="automationStatusTone(data.runtimeTelemetryAvailable ? 'available' : 'not installed')" />
+            </BsInline>
+            <BsStack v-if="data.runtimeTelemetryAvailable && activeRuntime.length" gap="sm">
+              <BsCard v-for="row in activeRuntime" :key="row.n8n_execution_id" variant="flat" padding="sm">
+                <BsStack gap="sm">
+                  <BsInline justify="between">
+                    <BsStack gap="sm">
+                      <BsText emphasis="semibold">
+                        {{ row.suit_slug || 'Unresolved Suit' }}
+                      </BsText>
+                      <BsText size="xs" tone="muted">
+                        {{ row.task_id || 'No task' }} · {{ row.n8n_execution_id }}
+                      </BsText>
+                    </BsStack>
+                    <BsStatusBadge :status="row.runtime_status" :label="(row.runtime_status) || 'unknown'" :tone="automationStatusTone(row.runtime_status)" />
+                  </BsInline>
+                  <BsDescriptionList density="compact" :columns="2">
+                    <BsDescriptionItem term="Node">
+                      {{ row.current_node || '—' }}
+                    </BsDescriptionItem>
+                    <BsDescriptionItem term="Stage">
+                      {{ row.current_stage || '—' }}
+                    </BsDescriptionItem>
+                    <BsDescriptionItem term="Started">
+                      {{ formatDate(row.started_at) }}
+                    </BsDescriptionItem>
+                    <BsDescriptionItem term="Heartbeat">
+                      {{ formatDate(row.last_heartbeat_at) }}
+                    </BsDescriptionItem>
+                  </BsDescriptionList>
+                </BsStack>
+              </BsCard>
+            </BsStack>
+            <BsText v-else-if="!data.runtimeTelemetryAvailable" size="sm">
+              {{ t('runtime.installHint') }}
+            </BsText>
+            <BsText v-else size="sm" tone="muted">
+              {{ t('runtime.idle') }}
+            </BsText>
+          </BsStack>
         </BsCard>
-      </section>
-
+        <BsCard padding="sm">
+          <BsStack gap="sm">
+            <BsHeading :level="2">
+              {{ t('runs.title') }}
+            </BsHeading>
+            <BsText size="xs" tone="muted">
+              {{ t('runs.subtitle') }}
+            </BsText>
+            <BsStack v-if="activeRuns.length" gap="sm">
+              <BsCard v-for="run in activeRuns" :key="run.run_id" variant="flat" padding="sm">
+                <BsStack gap="sm">
+                  <BsInline justify="between">
+                    <BsStack gap="sm">
+                      <BsText emphasis="semibold">
+                        {{ run.suit_slug }}
+                      </BsText>
+                      <BsText size="xs" tone="muted">
+                        {{ compactId(run.run_id) }}
+                      </BsText>
+                    </BsStack>
+                    <BsStatusBadge :status="run.status" :label="(run.status) || 'unknown'" :tone="automationStatusTone(run.status)" />
+                  </BsInline>
+                  <BsUsageMeter :item="{ id: run.run_id, label: t('runs.title'), used: run.completed_tasks, limit: run.max_tasks || null, valueLabel: `${run.completed_tasks} / ${run.max_tasks} · ${progress(run)}%` }" compact />
+                </BsStack>
+              </BsCard>
+            </BsStack>
+            <BsText v-else size="sm" tone="muted">
+              {{ t('runs.idle') }}
+            </BsText>
+          </BsStack>
+        </BsCard>
+      </BsGrid>
       <BsCard as="section" padding="none">
-        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--bs-border)] p-4">
-          <div><h2 class="font-black text-fg">{{ t('tasks.title') }}</h2><p class="text-xs text-fg-muted">{{ t('tasks.subtitle') }}</p></div>
-          <label class="flex items-center gap-2 text-xs font-semibold text-fg-muted"><input v-model="showCompleted" type="checkbox"> {{ t('tasks.showCompleted') }}</label>
-        </div>
-        <BsDataTable :value="visibleTasks" data-key="task_id" :label="t('tasks.title')" scroll-label="Tasks" class="overflow-x-auto">
-          <Column field="task_id" header="Task" body-class="font-mono text-xs" />
-          <Column field="suit_slug" header="Suit" />
-          <Column field="title" header="Title" body-class="max-w-xl font-semibold" />
-          <Column field="status" header="Status"><template #body="{ data: task }"><DashboardStatusPill :value="task.status" /></template></Column>
-          <Column header="Risk / model" body-class="text-xs text-fg-muted"><template #body="{ data: task }">{{ task.risk_level }} · {{ task.model_profile }}</template></Column>
-          <Column field="updated_at" header="Updated" body-class="whitespace-nowrap text-xs text-fg-muted"><template #body="{ data: task }">{{ formatDate(task.updated_at) }}</template></Column>
-        </BsDataTable>
-      </BsCard>
-
-      <section class="grid gap-4 xl:grid-cols-2">
-        <BsCard padding="sm">
-          <h2 class="font-black text-fg">{{ t('verification.title') }}</h2>
-          <p class="text-xs text-fg-muted">{{ t('verification.subtitle') }}</p>
-          <div v-if="failingVerification.length" class="mt-4 space-y-3">
-            <div v-for="row in failingVerification.slice(0, 12)" :key="row.verification_id" class="rounded-control border border-[var(--bs-border)] p-3">
-              <div class="flex items-center justify-between gap-2"><span class="font-mono text-xs text-fg">{{ row.task_id }}</span><DashboardStatusPill :value="row.status" /></div>
-              <p class="mt-2 font-bold text-fg">{{ row.check_name }}</p><p class="mt-1 text-xs text-fg-muted">{{ row.summary || row.command || 'No summary recorded' }}</p>
-            </div>
-          </div>
-          <p v-else class="mt-4 text-sm text-fg-muted">{{ t('verification.empty') }}</p>
-        </BsCard>
-
-        <BsCard padding="sm">
-          <h2 class="font-black text-fg">{{ t('decisions.title') }}</h2>
-          <p class="text-xs text-fg-muted">{{ t('decisions.subtitle') }}</p>
-          <div v-if="openDecisions.length" class="mt-4 space-y-3">
-            <div v-for="row in openDecisions.slice(0, 12)" :key="`${row.suit_slug}:${row.decision_id}`" class="rounded-control border border-[var(--bs-border)] p-3">
-              <div class="flex items-center justify-between gap-2"><span class="font-mono text-xs text-fg">{{ row.decision_id }}</span><span class="text-xs font-bold text-fg-muted">{{ row.blocking_tasks }} blocking</span></div>
-              <p class="mt-2 font-bold text-fg">{{ row.title }}</p><p class="mt-1 text-xs text-fg-muted">{{ row.decision_text || 'No decision text' }}</p>
-            </div>
-          </div>
-          <p v-else class="mt-4 text-sm text-fg-muted">{{ t('decisions.empty') }}</p>
-        </BsCard>
-      </section>
-
-      <section class="grid gap-4 2xl:grid-cols-2">
-        <BsCard padding="none">
-          <div class="border-b border-[var(--bs-border)] p-4"><h2 class="font-black text-fg">{{ t('executions.title') }}</h2><p class="text-xs text-fg-muted">{{ t('executions.subtitle') }}</p></div>
-          <BsDataTable :value="data.executions" data-key="execution_id" label="Executions" density="compact" sticky-header max-height="34rem" scroll-label="Executions">
-            <Column field="execution_id" header="ID" body-class="font-mono text-xs" />
-            <Column field="task_id" header="Task" body-class="font-mono text-xs" />
-            <Column field="status" header="Status"><template #body="{ data: row }"><DashboardStatusPill :value="row.status" /></template></Column>
-            <Column field="attempt" header="Attempt" />
-            <Column field="branch_name" header="Branch" body-class="max-w-56 truncate font-mono text-fg-muted"><template #body="{ data: row }">{{ row.branch_name || '—' }}</template></Column>
-            <Column header="Started" body-class="whitespace-nowrap text-fg-muted"><template #body="{ data: row }">{{ formatDate(row.started_at || row.created_at) }}</template></Column>
+        <BsStack gap="sm">
+          <BsInline justify="between">
+            <BsStack gap="sm">
+              <BsHeading :level="2">
+                {{ t('tasks.title') }}
+              </BsHeading>
+              <BsText size="xs" tone="muted">
+                {{ t('tasks.subtitle') }}
+              </BsText>
+            </BsStack>
+            <BsCheckbox v-model="showCompleted" :label="t('tasks.showCompleted')" />
+          </BsInline>
+          <BsDataTable :value="visibleTasks" row-key="task_id" :label="t('tasks.title')" scroll-label="Tasks" :columns="taskColumns">
+            <template #cell-status="{ row: task }">
+              <BsStatusBadge :status="task.status" :label="(task.status) || 'unknown'" :tone="automationStatusTone(task.status)" />
+            </template>
+            <template #cell-risk_model="{ row: task }">
+              <BsText size="xs" tone="muted">
+                {{ task.risk_level }} · {{ task.model_profile }}
+              </BsText>
+            </template>
+            <template #cell-updated_at="{ row: task }">
+              <BsText size="xs" tone="muted">
+                {{ formatDate(task.updated_at) }}
+              </BsText>
+            </template>
           </BsDataTable>
+        </BsStack>
+      </BsCard>
+      <BsGrid :columns="2" as="section">
+        <BsCard padding="sm">
+          <BsStack gap="sm">
+            <BsHeading :level="2">
+              {{ t('verification.title') }}
+            </BsHeading>
+            <BsText size="xs" tone="muted">
+              {{ t('verification.subtitle') }}
+            </BsText>
+            <BsStack v-if="failingVerification.length" gap="sm">
+              <BsCard v-for="row in failingVerification.slice(0, 12)" :key="row.verification_id" variant="flat" padding="sm">
+                <BsStack gap="sm">
+                  <BsInline justify="between">
+                    <BsText as="span" size="xs">
+                      {{ row.task_id }}
+                    </BsText>
+                    <BsStatusBadge :status="row.status" :label="(row.status) || 'unknown'" :tone="automationStatusTone(row.status)" />
+                  </BsInline>
+                  <BsText emphasis="semibold">
+                    {{ row.check_name }}
+                  </BsText>
+                  <BsText size="xs" tone="muted">
+                    {{ row.summary || row.command || 'No summary recorded' }}
+                  </BsText>
+                </BsStack>
+              </BsCard>
+            </BsStack>
+            <BsText v-else size="sm" tone="muted">
+              {{ t('verification.empty') }}
+            </BsText>
+          </BsStack>
         </BsCard>
-
+        <BsCard padding="sm">
+          <BsStack gap="sm">
+            <BsHeading :level="2">
+              {{ t('decisions.title') }}
+            </BsHeading>
+            <BsText size="xs" tone="muted">
+              {{ t('decisions.subtitle') }}
+            </BsText>
+            <BsStack v-if="openDecisions.length" gap="sm">
+              <BsCard v-for="row in openDecisions.slice(0, 12)" :key="`${row.suit_slug}:${row.decision_id}`" variant="flat" padding="sm">
+                <BsStack gap="sm">
+                  <BsInline justify="between">
+                    <BsText as="span" size="xs">
+                      {{ row.decision_id }}
+                    </BsText>
+                    <BsText as="span" size="xs" tone="muted" emphasis="semibold">
+                      {{ row.blocking_tasks }} blocking
+                    </BsText>
+                  </BsInline>
+                  <BsText emphasis="semibold">
+                    {{ row.title }}
+                  </BsText>
+                  <BsText size="xs" tone="muted">
+                    {{ row.decision_text || 'No decision text' }}
+                  </BsText>
+                </BsStack>
+              </BsCard>
+            </BsStack>
+            <BsText v-else size="sm" tone="muted">
+              {{ t('decisions.empty') }}
+            </BsText>
+          </BsStack>
+        </BsCard>
+      </BsGrid>
+      <BsGrid :columns="2" as="section">
         <BsCard padding="none">
-          <div class="border-b border-[var(--bs-border)] p-4"><h2 class="font-black text-fg">{{ t('events.title') }}</h2><p class="text-xs text-fg-muted">{{ t('events.subtitle') }}</p></div>
-          <div class="max-h-[34rem] overflow-auto divide-y divide-[var(--bs-border)]">
-            <details v-for="row in data.events" :key="row.event_id" class="p-3">
-              <summary class="cursor-pointer list-none">
-                <div class="flex flex-wrap items-center justify-between gap-2"><div><span class="font-mono text-xs font-bold text-fg">{{ row.task_id }}</span><span class="ms-2 text-xs text-fg-muted">{{ row.event_type }}</span></div><span class="text-xs text-fg-muted">{{ formatDate(row.created_at) }}</span></div>
-                <div class="mt-1 text-xs text-fg-muted">{{ row.source }} · {{ row.from_status || '—' }} → {{ row.to_status || '—' }}</div>
-              </summary>
-              <pre class="mt-3 overflow-auto rounded-control bg-background p-3 font-mono text-[11px] leading-5 text-fg">{{ JSON.stringify(row.payload, null, 2) }}</pre>
-            </details>
-          </div>
+          <BsStack gap="sm">
+            <BsStack gap="sm">
+              <BsHeading :level="2">
+                {{ t('executions.title') }}
+              </BsHeading>
+              <BsText size="xs" tone="muted">
+                {{ t('executions.subtitle') }}
+              </BsText>
+            </BsStack>
+            <BsDataTable :value="data.executions" row-key="execution_id" label="Executions" density="compact" sticky-header max-height="34rem" scroll-label="Executions" :columns="executionColumns">
+              <template #cell-status="{ row }">
+                <BsStatusBadge :status="row.status" :label="(row.status) || 'unknown'" :tone="automationStatusTone(row.status)" />
+              </template>
+              <template #cell-branch_name="{ row }">
+                <BsText size="xs" tone="muted">
+                  {{ row.branch_name || '—' }}
+                </BsText>
+              </template>
+              <template #cell-started="{ row }">
+                <BsText size="xs" tone="muted">
+                  {{ formatDate(row.started_at || row.created_at) }}
+                </BsText>
+              </template>
+            </BsDataTable>
+          </BsStack>
         </BsCard>
-      </section>
-
-      <BsCard as="section" padding="sm" class="text-xs text-fg-muted">
-        {{ t('dashboard.readOnlyFooter') }}
+        <BsCard padding="none">
+          <BsStack gap="sm">
+            <BsStack gap="sm">
+              <BsHeading :level="2">
+                {{ t('events.title') }}
+              </BsHeading>
+              <BsText size="xs" tone="muted">
+                {{ t('events.subtitle') }}
+              </BsText>
+            </BsStack>
+            <BsStack gap="sm">
+              <BsDisclosure v-for="row in data.events" :key="row.event_id" :summary="`${row.task_id} · ${row.event_type} · ${formatDate(row.created_at)} · ${row.source} · ${row.from_status || '—'} → ${row.to_status || '—'}`">
+                <BsCodeBlock>
+                  {{ JSON.stringify(row.payload, null, 2) }}
+                </BsCodeBlock>
+              </BsDisclosure>
+            </BsStack>
+          </BsStack>
+        </BsCard>
+      </BsGrid>
+      <BsCard as="section" padding="sm">
+        <BsStack gap="sm">
+          {{ t('dashboard.readOnlyFooter') }}
+        </BsStack>
       </BsCard>
     </template>
-  </main>
+  </BsPage>
 </template>
