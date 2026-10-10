@@ -7,6 +7,7 @@ const appRoot = new URL('../../app/', import.meta.url).pathname
 const workspaceRoot = new URL('../../../../', import.meta.url).pathname
 
 function vueFiles(directory) {
+  if (!existsSync(directory)) return []
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const target = path.join(directory, entry.name)
     return entry.isDirectory() ? vueFiles(target) : entry.name.endsWith('.vue') ? [target] : []
