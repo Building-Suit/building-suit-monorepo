@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 
-const fixtureUrl = 'http://127.0.0.1:64321'
+const fixtureUrl = 'http://127.0.0.1:4432'
 
 async function resetFixture(page: Page, locale = 'en') {
   await fetch(`${fixtureUrl}/__reset`)
@@ -17,7 +17,7 @@ async function waitForHydration(page: Page) {
   })
 }
 
-async function startSignup(page: Page, email = 'owner@example.test', mode: 'mixed' | 'service' = 'mixed') {
+async function startSignup(page: Page, email = 'owner@example.test', mode: 'mixed' | 'service' = 'mixed', recovery = false) {
   await page.goto('/auth/signup')
   await waitForHydration(page)
   const continueButton = page.getByRole('button', { name: 'Continue', exact: true })
@@ -36,7 +36,7 @@ async function startSignup(page: Page, email = 'owner@example.test', mode: 'mixe
   if (mode === 'service') await page.getByRole('radio', { name: 'Services only' }).check()
   await expect(page.locator('#signup-plan')).toHaveCount(0)
   await page.getByRole('button', { name: 'Create shop', exact: true }).click()
-  await expect(page.getByRole('heading', { name: 'Verify your email' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: recovery ? 'Continue signup safely' : 'Verify your email' })).toBeVisible()
 }
 
 async function enterOtp(page: Page, code: string) {
@@ -101,6 +101,15 @@ test('start over clears the pending draft and permits a different email', async 
 test('an existing unconfirmed identity is resent instead of dead-ending', async ({ page }) => {
   await resetFixture(page)
   await startSignup(page, 'existing@example.test')
+  await expect(page.getByRole('link', { name: 'Reset password' })).toBeVisible()
+  await page.evaluate(() => {
+    const key = 'shop-suit.pending-onboarding'
+    const draft = JSON.parse(sessionStorage.getItem(key)!)
+    draft.resendAt = 0
+    sessionStorage.setItem(key, JSON.stringify(draft))
+  })
+  await page.reload()
+  await page.getByRole('button', { name: 'Send another code', exact: true }).click()
   await expect(page.getByRole('status')).toContainText('new verification code')
   const state = await fetch(`${fixtureUrl}/__state`).then(response => response.json())
   expect(state.signupCalls).toBe(1)
@@ -154,7 +163,7 @@ test('signup main location, selected mode, editing, restore, and capacity persis
   await page.goto('/settings')
   await waitForHydration(page)
   await expect(page.getByRole('radio', { name: 'Services only' })).toBeChecked()
-  const mainRow = page.getByRole('listitem').filter({ hasText: 'Downtown' })
+  const mainRow = page.locator('#locations').getByRole('row').filter({ hasText: 'Downtown' })
   await mainRow.getByRole('button', { name: 'Edit', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Save location', exact: true })).toBeVisible()
   await page.getByLabel('Location name', { exact: true }).fill('Downtown flagship')
@@ -175,16 +184,18 @@ test('signup main location, selected mode, editing, restore, and capacity persis
   await waitForHydration(page)
   await expect(page.getByLabel('Shop display name', { exact: true })).toHaveValue('OTP flagship Shop')
   await page.getByRole('button', { name: 'Account', exact: true }).click()
-  await expect(page.getByRole('dialog')).toContainText('owner@example.test')
-  await page.getByRole('button', { name: 'Close', exact: true }).click()
+  await expect(page.getByRole('menu', { name: 'Account', exact: true })).toContainText('lifecycle@example.test')
+  await page.getByRole('button', { name: 'Account', exact: true }).click()
 
-  await page.getByLabel('Location name', { exact: true }).fill('North branch')
   await page.getByRole('button', { name: 'Add location', exact: true }).click()
+  const addLocationDialog = page.getByRole('dialog', { name: 'Add location', exact: true })
+  await addLocationDialog.getByLabel('Location name', { exact: true }).fill('North branch')
+  await addLocationDialog.getByRole('button', { name: 'Add location', exact: true }).click()
   await expect(page.getByText('Using 2 of 2 active locations.')).toBeVisible()
   await expect(page.getByText(/active-location limit is full/)).toBeVisible()
   await expect(page.getByRole('button', { name: 'Add location', exact: true })).toHaveCount(0)
 
-  const branchRow = page.getByRole('listitem').filter({ hasText: 'North branch' })
+  const branchRow = page.locator('#locations').getByRole('row').filter({ hasText: 'North branch' })
   await branchRow.getByRole('button', { name: 'Archive', exact: true }).click()
   await page.getByRole('button', { name: 'Confirm', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Add location', exact: true })).toBeVisible()
@@ -200,4 +211,85 @@ test('signup main location, selected mode, editing, restore, and capacity persis
   await expect(page.getByText(/عنوان الفرع الرئيسي وهاتفه بيانات فرع/)).toBeVisible()
   const state = await fetch(`${fixtureUrl}/__state`).then(response => response.json())
   expect(state.shopName).toBe('OTP flagship Shop')
+})
+
+for (const email of ['Confirmed@Example.test', 'Masked@Example.test']) {
+  test(`confirmed duplicate ${email} recovers without provisioning or automatic resend`, async ({ page }) => {
+    await resetFixture(page)
+    await startSignup(page, email, 'mixed', true)
+    await expect(page.getByText(/if you have an account, sign in or reset your password/)).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Sign in instead' })).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Reset password' })).toHaveAttribute('href', '/auth/forgot-password')
+    await page.reload()
+    await expect(page.getByRole('heading', { name: 'Continue signup safely' })).toBeVisible()
+    const state = await fetch(`${fixtureUrl}/__state`).then(response => response.json())
+    expect(state.signupPayload.email).toBe(email.toLowerCase())
+    expect(state.signupCalls).toBe(1)
+    expect(state.resendCalls).toBe(0)
+    expect(state.verifyCalls).toBe(0)
+    expect(state.createCalls).toBe(0)
+    await page.getByRole('button', { name: 'Sign in instead' }).click()
+    await expect(page).toHaveURL(/\/auth\/login$/)
+    expect(await page.evaluate(() => sessionStorage.getItem('shop-suit.pending-onboarding'))).toBeNull()
+  })
+}
+
+test('an ambiguous duplicate can request OTP, refresh and retry without another signup', async ({ page }) => {
+  await resetFixture(page)
+  await startSignup(page, 'Ambiguous@Example.test', 'mixed', true)
+  await page.getByRole('button', { name: 'Send another code', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Verify your email' })).toBeVisible()
+  await page.reload()
+  await expect(page.getByRole('heading', { name: 'Verify your email' })).toBeVisible()
+  await enterOtp(page, '654321')
+  await page.getByRole('button', { name: 'Verify your email', exact: true }).click()
+  await page.waitForFunction(() => location.pathname === '/dashboard' || Boolean(document.querySelector('[role="alert"]')))
+  const retry = page.getByRole('button', { name: 'Retry', exact: true })
+  if (await retry.isVisible()) await retry.click()
+  await expect(page).toHaveURL(/\/dashboard$/)
+  const state = await fetch(`${fixtureUrl}/__state`).then(response => response.json())
+  expect(state.signupCalls).toBe(1)
+  expect(state.resendCalls).toBe(1)
+  expect(state.resendPayload.email).toBe('ambiguous@example.test')
+  expect(state.verifyPayload.email).toBe('ambiguous@example.test')
+  expect(state.createCalls).toBe(1)
+  expect(state.locations).toHaveLength(1)
+})
+
+test('Arabic duplicate recovery offers sign-in, reset and start-over after refresh', async ({ page }) => {
+  await resetFixture(page, 'ar')
+  await page.goto('/auth/signup')
+  await page.evaluate(() => sessionStorage.setItem('shop-suit.pending-onboarding', JSON.stringify({
+    version: 1, savedAt: Date.now(), expiresAt: 0, resendAt: 0, recovery: true,
+    form: { displayName: 'مالك', email: 'CONFIRMED@example.test', shopName: 'متجر', businessMode: 'mixed' },
+  })))
+  await page.reload()
+  await expect(page.getByRole('heading', { name: 'كمّل التسجيل بأمان' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'سجّل دخول بدل كده' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'استرجع كلمة المرور' })).toHaveAttribute('href', '/auth/forgot-password')
+  await page.getByRole('button', { name: /غيّر الإيميل/ }).click()
+  await expect(page.getByLabel('البريد الإلكتروني', { exact: true })).toHaveValue('')
+  expect(await page.evaluate(() => sessionStorage.getItem('shop-suit.pending-onboarding'))).toBeNull()
+})
+
+test('resend failure keeps duplicate recovery and a cooldown across refresh', async ({ page }) => {
+  await resetFixture(page)
+  await startSignup(page, 'ambiguous-failed@example.test', 'mixed', true)
+  await page.getByRole('button', { name: 'Send another code', exact: true }).click()
+  await expect(page.getByRole('alert')).toContainText('could not be sent')
+  await page.reload()
+  await expect(page.getByRole('heading', { name: 'Continue signup safely' })).toBeVisible()
+  await expect(page.getByRole('button', { name: /Request another code in/ })).toBeDisabled()
+  await page.getByRole('button', { name: /Change email/ }).click()
+  await expect(page.getByLabel('Email', { exact: true })).toBeEditable()
+})
+
+test('verification for a different identity cannot provision the pending shop', async ({ page }) => {
+  await resetFixture(page)
+  await startSignup(page, 'wrong-session@example.test')
+  await enterOtp(page, '654321')
+  await page.getByRole('button', { name: 'Verify your email', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Continue signup safely' })).toBeVisible()
+  const state = await fetch(`${fixtureUrl}/__state`).then(response => response.json())
+  expect(state.createCalls).toBe(0)
 })

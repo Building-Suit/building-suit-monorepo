@@ -1,5 +1,20 @@
 <script setup lang="ts">
 const { t } = useI18n()
 useHead({ title: () => t('product.name') })
+const showWorkflow = ref(false)
+const sample = computed(() => ({ title: t('feature'), description: t('featureBody') }))
+function openWorkflow() {
+  showWorkflow.value = true
+}
 </script>
-<template><BsContentSection :title="t('welcome')" :description="t('description')" padding="lg" /></template>
+
+<template>
+  <BsContentSection :title="t('welcome')" :description="t('description')" padding="lg">
+    <BsStack>
+      <BsContentSection v-bind="sample">
+        <BsButton variant="primary" :disabled="showWorkflow" @click="openWorkflow">{{ t('workflow') }}</BsButton>
+      </BsContentSection>
+      <BsText v-if="showWorkflow" role="status">{{ t('workflowBody') }}</BsText>
+    </BsStack>
+  </BsContentSection>
+</template>
