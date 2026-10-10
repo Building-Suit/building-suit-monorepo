@@ -57849,6 +57849,30 @@
       "status": "open"
     },
     {
+      "file": "apps/shop-suit/app/pages/auth/signup.vue",
+      "kind": "nuxt-or-vue-render-tag",
+      "evidence": "<NuxtLink>",
+      "location": {
+        "line": 221,
+        "column": 5
+      },
+      "target": "packages/ui/templates/Bs application-routing composition",
+      "ownerTask": "BS-UI-ZN-CONTRACT-001",
+      "status": "open"
+    },
+    {
+      "file": "apps/shop-suit/app/pages/auth/signup.vue",
+      "kind": "presentation-attribute",
+      "evidence": "class=\"font-bold underline\"",
+      "location": {
+        "line": 221,
+        "column": 42
+      },
+      "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
+      "ownerTask": "BS-UI-ZN-CONTRACT-001",
+      "status": "open"
+    },
+    {
       "file": "apps/shop-suit/app/pages/billing.vue",
       "kind": "native-tag",
       "evidence": "<div>",
@@ -97527,6 +97551,102 @@
       "location": {
         "line": 327,
         "column": 378
+      },
+      "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
+      "ownerTask": "BS-UI-ZN-CONTRACT-001",
+      "status": "open"
+    },
+    {
+      "file": "apps/super-admin-suit/app/app.vue",
+      "kind": "nuxt-or-vue-render-tag",
+      "evidence": "<NuxtLayout>",
+      "location": {
+        "line": 12,
+        "column": 3
+      },
+      "target": "packages/ui/templates/Bs application-routing composition",
+      "ownerTask": "BS-UI-ZN-CONTRACT-001",
+      "status": "open"
+    },
+    {
+      "file": "apps/super-admin-suit/app/app.vue",
+      "kind": "nuxt-or-vue-render-tag",
+      "evidence": "<NuxtPage>",
+      "location": {
+        "line": 12,
+        "column": 15
+      },
+      "target": "packages/ui/templates/Bs application-routing composition",
+      "ownerTask": "BS-UI-ZN-CONTRACT-001",
+      "status": "open"
+    },
+    {
+      "file": "apps/super-admin-suit/app/app.vue",
+      "kind": "non-bs-tag",
+      "evidence": "<ToastHost>",
+      "location": {
+        "line": 13,
+        "column": 3
+      },
+      "target": "packages/ui/organisms/BsToastHost",
+      "ownerTask": "BS-UI-ZN-CONTRACT-001",
+      "status": "open"
+    },
+    {
+      "file": "apps/super-admin-suit/app/layouts/default.vue",
+      "kind": "non-bs-tag",
+      "evidence": "<SettingsMenu>",
+      "location": {
+        "line": 6,
+        "column": 189
+      },
+      "target": "packages/ui/organisms/BsSettingsMenu",
+      "ownerTask": "BS-UI-ZN-CONTRACT-001",
+      "status": "open"
+    },
+    {
+      "file": "apps/super-admin-suit/app/layouts/default.vue",
+      "kind": "nuxt-or-vue-render-tag",
+      "evidence": "<slot>",
+      "location": {
+        "line": 6,
+        "column": 216
+      },
+      "target": "packages/ui/templates/Bs application-routing composition",
+      "ownerTask": "BS-UI-ZN-CONTRACT-001",
+      "status": "open"
+    },
+    {
+      "file": "apps/super-admin-suit/app/pages/index.vue",
+      "kind": "nuxt-or-vue-render-tag",
+      "evidence": "<NuxtLayout>",
+      "location": {
+        "line": 17,
+        "column": 3
+      },
+      "target": "packages/ui/templates/Bs application-routing composition",
+      "ownerTask": "BS-UI-ZN-CONTRACT-001",
+      "status": "open"
+    },
+    {
+      "file": "apps/super-admin-suit/app/pages/index.vue",
+      "kind": "native-tag",
+      "evidence": "<div>",
+      "location": {
+        "line": 35,
+        "column": 5
+      },
+      "target": "packages/ui/Bs semantic presentation primitive or composition",
+      "ownerTask": "BS-UI-ZN-CONTRACT-001",
+      "status": "open"
+    },
+    {
+      "file": "apps/super-admin-suit/app/pages/index.vue",
+      "kind": "presentation-attribute",
+      "evidence": "class=\"w-full space-y-5\"",
+      "location": {
+        "line": 35,
+        "column": 17
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
       "ownerTask": "BS-UI-ZN-CONTRACT-001",

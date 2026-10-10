@@ -35,6 +35,10 @@ The controller contract is:
 - BS-20 checks the run gate before every claim and after every successful task,
   so stop requests prevent the next claim. A recoverable task wait preserves the
   logical run.
+- BS-20 treats maintenance as a distinct resumable wait. It passes the protocol,
+  the operator-reviewed `BS_BATCH_CONTROLLER_FINGERPRINT`, and the n8n execution
+  ID separately to the acquire/resume API; the protocol label is never accepted
+  as content proof, and a concurrent controller receives a lease wait.
 - BS-20 and BS-21 accept a workstream reference and validate it against active
   control-plane projects/workstreams before using its internal Suit routing key.
 
@@ -44,3 +48,16 @@ change-detection state. The watcher probes only the persisted dependency
 and calls `task-supervise` when it becomes actionable; it does not invoke Codex
 or own task lifecycle/retry behavior. No generated or running n8n workflow is
 changed or activated by this interface.
+
+BS-22 — Operator Gates is a separate authenticated operator form at
+`/form/building-suit-operator-gates`. It reads current offers from the private
+control-plane API, shows the exact run/task/reason/authorization, then records
+Approve or Reject against the reviewed fingerprint. Stale offers fail closed;
+repeated submissions are idempotent. An ordinary publication grant is scoped to
+one task and its exact passing verification/contract, never the remaining run.
+Registered decisions are offered only for existing bounded task scope and
+`owner_start` / `bounded_scope_release` gates. Rejection grants no authority.
+Protected paths, new scope, retry-budget increases, merge, deployment and hosted
+product migrations are deliberately unavailable. Dot resumes approvals through
+the existing supervisor and run controller; the form does not credit tasks.
+Generate its inactive artifact with `node tooling/control-plane/n8n/operator-gates.mjs`.

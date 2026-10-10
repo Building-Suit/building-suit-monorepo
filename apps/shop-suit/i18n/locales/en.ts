@@ -393,7 +393,7 @@ export default defineI18nLocale(async () => ({
 
   /* Landing Inventory */
   inventory: {
-    proPlanOnly: 'Pro plan only',
+    proPlanOnly: 'Available with inventory access',
     neverLoseTrackOfYour: 'Never lose track of your',
     stock: 'stock',
     again: 'again',
