@@ -11,6 +11,7 @@ const contextKey = computed(() => `${user.value?.id ?? 'anonymous'}:${currentId.
 const signupActive = computed(() => route.path === '/auth/signup')
 const layoutKey = computed(() => signupActive.value ? 'signup' : user.value?.id ?? 'anonymous')
 const pageKey = computed(() => signupActive.value ? 'signup' : contextKey.value)
+const canRenderPage = computed(() => !!user.value || route.path.startsWith('/auth/') || route.path === '/')
 
 watch(() => user.value?.id, () => {
   clearNuxtData(key => key.startsWith('shop-data:') || key.startsWith('platform-admin:'))
@@ -39,7 +40,7 @@ useHead(() => ({
 </script>
 
 <template>
-  <NuxtLayout :key="layoutKey">
+  <NuxtLayout v-if="canRenderPage" :key="layoutKey">
     <NuxtPage :key="pageKey" />
   </NuxtLayout>
   <BsConfirmHost />

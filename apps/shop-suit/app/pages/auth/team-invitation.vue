@@ -35,7 +35,7 @@ async function switchAccount() {
   pending.value = true
   error.value = ''
   try {
-    const { error: signOutError } = await supabase.auth.signOut()
+    const { error: signOutError } = await supabase.auth.signOut({ scope: 'local' })
     if (signOutError) throw signOutError
     await navigateTo({ path: '/auth/login', query: { invite: code.value } })
   } catch { error.value = copy.value.failed }
