@@ -210,7 +210,8 @@ defineExpose({ exportCSV: exportCsv })
         v-for="column in visibleColumns"
         :key="column.key"
         :field="column.field"
-        :header="column.header"
+        :header="slots[`header-${column.key}`] ? undefined : column.header"
+        :export-header="column.header"
         :footer="column.footer === undefined ? undefined : String(column.footer)"
         :sortable="column.sortable"
         :pt="column.ariaSort ? { headerCell: { 'aria-sort': column.ariaSort } } : undefined"
@@ -225,7 +226,7 @@ defineExpose({ exportCSV: exportCsv })
         :body-class="columnClass(column)"
         :footer-class="columnClass(column)"
       >
-        <template #header><slot :name="`header-${column.key}`" :column="column">{{ column.header }}</slot></template>
+        <template v-if="slots[`header-${column.key}`]" #header><slot :name="`header-${column.key}`" :column="column" /></template>
         <template #body="{ data, index }"><slot :name="`cell-${column.key}`" :row="data" :value="cellValue(column, data)" :column="column" :index="index">{{ cellValue(column, data) }}</slot></template>
         <template v-if="column.footer !== undefined || slots[`footer-${column.key}`]" #footer><slot :name="`footer-${column.key}`" :column="column">{{ column.footer }}</slot></template>
         <template v-if="slots[`filter-${column.key}`]" #filter="scope"><slot :name="`filter-${column.key}`" v-bind="scope || {}" :column="column" /></template>
