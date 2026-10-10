@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "mode": "migration",
   "auditedReference": {
-    "branch": "codex/shared/bs-ui-zn-primitives-001",
-    "commit": "0483123"
+    "branch": "codex/shared/bs-ui-zn-forms-001",
+    "commit": "b52f9fa"
   },
   "scope": "apps/*-suit/app/**/*.vue",
   "owner": "packages/ui",
