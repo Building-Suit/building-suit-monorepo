@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "mode": "migration",
   "auditedReference": {
-    "branch": "codex/shared/bs-ui-zn-public-chrome-001",
-    "commit": "2331daf69ce056ceb62e9fd5deb510cc0d8e2538"
+    "branch": "codex/shared/bs-ui-zn-other-suits-001",
+    "commit": "b46be75e6adad757a2a01479ba217007319c2dc7"
   },
   "scope": "apps/*-suit/app/**/*.vue",
   "owner": "packages/ui",

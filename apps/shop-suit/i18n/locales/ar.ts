@@ -393,7 +393,7 @@ export default defineI18nLocale(async () => ({
 
   /* Landing Inventory */
   inventory: {
-    proPlanOnly: 'الخطة الـ Pro فقط',
+    proPlanOnly: 'متاح مع صلاحية إدارة المخزون',
     neverLoseTrackOfYour: 'مش هتضيع منك حركة',
     stock: 'المخزون',
     again: 'تاني',
