@@ -1,0 +1,425 @@
+{
+  "task": "SS-VAL-001",
+  "date": "2026-10-10T14:13:06.528Z",
+  "source_revision": "80e24abef406669e5bb4226b42348620e1bde39d",
+  "evidence_kind": "local execution; not independent/provider/deployment evidence",
+  "results": [
+    {
+      "name": "git-diff-check",
+      "cwd": ".",
+      "program": "git",
+      "args": [
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "duration_seconds": 0.324
+    },
+    {
+      "name": "shop-database-regression",
+      "cwd": ".",
+      "program": "pnpm",
+      "args": [
+        "db:test:shop"
+      ],
+      "exit_code": 1,
+      "status": "failed",
+      "duration_seconds": 0.565,
+      "failure": "Docker API permission denied at /var/run/docker.sock; no SQL suite executed"
+    },
+    {
+      "name": "shop-environment-isolation",
+      "cwd": ".",
+      "program": "node",
+      "args": [
+        "--test",
+        "tooling/database/tests/environment.test.mjs"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "duration_seconds": 0.14
+    },
+    {
+      "name": "shop-launch-baseline-copy-inspection",
+      "cwd": ".",
+      "program": "node",
+      "args": [
+        "-e",
+        "const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'); const hits=[]; function walk(dir){for(const e of fs.readdirSync(dir,{withFileTypes:true})){const f=path.join(dir,e.name);if(e.isDirectory())walk(f);else if(/\\.(vue|ts|js|json)$/.test(e.name)){const lines=fs.readFileSync(f,'utf8').split('\\n');lines.forEach((line,i)=>{if(/\\b(?:Basic|Pro)\\b/.test(line))hits.push({file:f,line:i+1,text:line.trim()});});}}} walk('apps/shop-suit/app');walk('apps/shop-suit/i18n');console.log(JSON.stringify({scope:'browser-reachable Shop source and i18n',legacy_commercial_wording:hits,internal_compatibility_identifiers:'Lowercase persisted basic/pro identifiers and key names such as proPlanOnly remain technical identifiers; this gate rejects standalone Basic/Pro commercial wording, including EN/AR text.'},null,2));assert.equal(hits.length,0,'Customer-facing legacy Basic/Pro commercial wording remains');"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "duration_seconds": 0.052
+    },
+    {
+      "name": "shop-launch-baseline-unit-review",
+      "cwd": ".",
+      "program": "node",
+      "args": [
+        "--test",
+        "apps/shop-suit/tests/unit/appointments.test.mjs",
+        "apps/shop-suit/tests/unit/arabic-copy.test.mjs",
+        "apps/shop-suit/tests/unit/barber-service-scheduling.test.mjs",
+        "apps/shop-suit/tests/unit/billing.test.mjs",
+        "apps/shop-suit/tests/unit/cash-shifts.test.mjs",
+        "apps/shop-suit/tests/unit/catalog-import.test.mjs",
+        "apps/shop-suit/tests/unit/expenses.test.mjs",
+        "apps/shop-suit/tests/unit/general-copy.test.mjs",
+        "apps/shop-suit/tests/unit/locations.test.mjs",
+        "apps/shop-suit/tests/unit/operating-reports.test.mjs",
+        "apps/shop-suit/tests/unit/payment-evidence.test.mjs",
+        "apps/shop-suit/tests/unit/pilot-safety.test.mjs",
+        "apps/shop-suit/tests/unit/plan-catalog.test.mjs",
+        "apps/shop-suit/tests/unit/plan-ui.test.mjs",
+        "apps/shop-suit/tests/unit/platform-admin.test.mjs",
+        "apps/shop-suit/tests/unit/platform-plan-admin.test.mjs",
+        "apps/shop-suit/tests/unit/pos.test.mjs",
+        "apps/shop-suit/tests/unit/public-legal.test.mjs",
+        "apps/shop-suit/tests/unit/receipt-allocations.test.mjs",
+        "apps/shop-suit/tests/unit/sale-receipt.test.mjs",
+        "apps/shop-suit/tests/unit/shared-ui-migration.test.mjs",
+        "apps/shop-suit/tests/unit/shop-context.test.mjs",
+        "apps/shop-suit/tests/unit/shop-profile-settings.test.mjs",
+        "apps/shop-suit/tests/unit/signup-otp-recovery.test.mjs",
+        "apps/shop-suit/tests/unit/subscription-qualification.test.mjs",
+        "apps/shop-suit/tests/unit/super-admin-bridge.test.mjs",
+        "apps/shop-suit/tests/unit/team.test.mjs",
+        "apps/shop-suit/tests/unit/ux-async-actions.test.mjs"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "duration_seconds": 1.246
+    },
+    {
+      "name": "shop-offer-workspace-check",
+      "cwd": ".",
+      "program": "pnpm",
+      "args": [
+        "check"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "duration_seconds": 1.056
+    },
+    {
+      "name": "shop-quality",
+      "cwd": ".",
+      "program": "pnpm",
+      "args": [
+        "exec",
+        "turbo",
+        "run",
+        "typecheck",
+        "lint",
+        "build",
+        "--filter=@building-suit/shop-suit"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "duration_seconds": 53.495
+    },
+    {
+      "name": "shop-security-advisors-evidence-001",
+      "cwd": "apps/shop-suit",
+      "program": "pnpm",
+      "args": [
+        "exec",
+        "supabase",
+        "db",
+        "advisors",
+        "--local",
+        "--type",
+        "security",
+        "--level",
+        "info",
+        "--fail-on",
+        "warn",
+        "--output-format",
+        "json"
+      ],
+      "exit_code": 1,
+      "status": "failed",
+      "duration_seconds": 1.154,
+      "failure": "Supabase CLI cannot write telemetry under read-only user directory (EROFS); SQL/advisor evidence not obtained"
+    },
+    {
+      "name": "shop-unit-regression",
+      "cwd": ".",
+      "program": "pnpm",
+      "args": [
+        "test"
+      ],
+      "exit_code": 1,
+      "status": "failed",
+      "duration_seconds": 6.817,
+      "failure": "91/93 files passed; tooling/control-plane/tests/batch-ssh-transport.test.mjs and tooling/git/tests/dev-worktrees.test.mjs fail on spawnSync EPERM; all Shop files pass"
+    },
+    {
+      "name": "shop-auth-e2e",
+      "cwd": ".",
+      "program": "pnpm",
+      "args": [
+        "exec",
+        "playwright",
+        "test",
+        "--config",
+        "apps/shop-suit/playwright.auth-otp.config.ts",
+        "--workers=1",
+        "--retries=0"
+      ],
+      "exit_code": 1,
+      "status": "failed",
+      "duration_seconds": 1.25,
+      "failure": "Configured local webServer failed before browser tests; direct fixture/server diagnostics report listen EPERM"
+    },
+    {
+      "name": "ss-launch-support-001-obligation-3-browser",
+      "cwd": ".",
+      "program": "pnpm",
+      "args": [
+        "exec",
+        "playwright",
+        "test",
+        "--config",
+        "apps/shop-suit/tests/e2e/ss-launch-support-001-3.config.ts",
+        "--workers=1",
+        "--retries=0"
+      ],
+      "exit_code": 1,
+      "status": "failed",
+      "duration_seconds": 1.364,
+      "failure": "Configured local webServer failed before browser tests; direct fixture/server diagnostics report listen EPERM"
+    },
+    {
+      "name": "ss-launch-solo-variants-001-obligation-2-browser",
+      "cwd": ".",
+      "program": "pnpm",
+      "args": [
+        "exec",
+        "playwright",
+        "test",
+        "--config",
+        "apps/shop-suit/tests/e2e/ss-launch-solo-variants-001-2.config.ts",
+        "--workers=1",
+        "--retries=0"
+      ],
+      "exit_code": 1,
+      "status": "failed",
+      "duration_seconds": 1.431,
+      "failure": "Configured local webServer failed before browser tests; direct fixture/server diagnostics report listen EPERM"
+    },
+    {
+      "name": "ss-launch-single-session-001-obligation-2-browser",
+      "cwd": ".",
+      "program": "pnpm",
+      "args": [
+        "exec",
+        "playwright",
+        "test",
+        "--config",
+        "apps/shop-suit/tests/e2e/ss-launch-single-session-001-2.config.ts",
+        "--workers=1",
+        "--retries=0"
+      ],
+      "exit_code": 1,
+      "status": "failed",
+      "duration_seconds": 1.26,
+      "failure": "Configured local webServer failed before browser tests; direct fixture/server diagnostics report listen EPERM"
+    },
+    {
+      "name": "ss-launch-legal-audit-001-obligation-1-browser",
+      "cwd": ".",
+      "program": "pnpm",
+      "args": [
+        "exec",
+        "playwright",
+        "test",
+        "--config",
+        "apps/shop-suit/tests/e2e/ss-launch-legal-audit-001-1.config.ts",
+        "--workers=1",
+        "--retries=0"
+      ],
+      "exit_code": 1,
+      "status": "failed",
+      "duration_seconds": 1.329,
+      "failure": "Configured local webServer failed before browser tests; direct fixture/server diagnostics report listen EPERM"
+    },
+    {
+      "name": "ss-val-001-obligation-1-unit",
+      "cwd": ".",
+      "program": "node",
+      "args": [
+        "--test",
+        "apps/shop-suit/tests/unit/ss-val-001-1.test.mjs"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "duration_seconds": 0.133
+    },
+    {
+      "name": "ss-val-001-obligation-2-unit",
+      "cwd": ".",
+      "program": "node",
+      "args": [
+        "--test",
+        "apps/shop-suit/tests/unit/ss-val-001-2.test.mjs"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "duration_seconds": 0.134
+    },
+    {
+      "name": "ss-val-001-obligation-1-browser",
+      "cwd": ".",
+      "program": "pnpm",
+      "args": [
+        "exec",
+        "playwright",
+        "test",
+        "--config",
+        "apps/shop-suit/tests/e2e/ss-val-001-1.config.ts",
+        "--workers=1",
+        "--retries=0"
+      ],
+      "exit_code": 1,
+      "status": "failed",
+      "duration_seconds": 50.951,
+      "failure": "Configured local webServer failed before browser tests; direct fixture/server diagnostics report listen EPERM"
+    },
+    {
+      "name": "ss-launch-cash-policy-001-1-database",
+      "cwd": "apps/shop-suit",
+      "program": "pnpm",
+      "args": [
+        "exec",
+        "supabase",
+        "test",
+        "db",
+        "--local",
+        "supabase/tests/ss-launch-cash-policy-001-1.test.sql"
+      ],
+      "exit_code": 1,
+      "status": "failed",
+      "duration_seconds": 1.024,
+      "failure": "Supabase CLI cannot write telemetry under read-only user directory (EROFS); SQL/advisor evidence not obtained"
+    },
+    {
+      "name": "ss-launch-support-001-1-database",
+      "cwd": "apps/shop-suit",
+      "program": "pnpm",
+      "args": [
+        "exec",
+        "supabase",
+        "test",
+        "db",
+        "--local",
+        "supabase/tests/ss-launch-support-001-1.test.sql"
+      ],
+      "exit_code": 1,
+      "status": "failed",
+      "duration_seconds": 0.962,
+      "failure": "Supabase CLI cannot write telemetry under read-only user directory (EROFS); SQL/advisor evidence not obtained"
+    },
+    {
+      "name": "ss-launch-solo-variants-001-1-database",
+      "cwd": "apps/shop-suit",
+      "program": "pnpm",
+      "args": [
+        "exec",
+        "supabase",
+        "test",
+        "db",
+        "--local",
+        "supabase/tests/ss-launch-solo-variants-001-1.test.sql"
+      ],
+      "exit_code": 1,
+      "status": "failed",
+      "duration_seconds": 0.947,
+      "failure": "Supabase CLI cannot write telemetry under read-only user directory (EROFS); SQL/advisor evidence not obtained"
+    },
+    {
+      "name": "ss-launch-fast-pay-001-1-database",
+      "cwd": "apps/shop-suit",
+      "program": "pnpm",
+      "args": [
+        "exec",
+        "supabase",
+        "test",
+        "db",
+        "--local",
+        "supabase/tests/ss-launch-fast-pay-001-1.test.sql"
+      ],
+      "exit_code": 1,
+      "status": "failed",
+      "duration_seconds": 0.988,
+      "failure": "Supabase CLI cannot write telemetry under read-only user directory (EROFS); SQL/advisor evidence not obtained"
+    },
+    {
+      "name": "ss-launch-realtime-001-2-database",
+      "cwd": "apps/shop-suit",
+      "program": "pnpm",
+      "args": [
+        "exec",
+        "supabase",
+        "test",
+        "db",
+        "--local",
+        "supabase/tests/ss-launch-realtime-001-2.test.sql"
+      ],
+      "exit_code": 1,
+      "status": "failed",
+      "duration_seconds": 0.919,
+      "failure": "Supabase CLI cannot write telemetry under read-only user directory (EROFS); SQL/advisor evidence not obtained"
+    },
+    {
+      "name": "launch-inventory-purchases-browser",
+      "cwd": ".",
+      "program": "pnpm",
+      "args": [
+        "exec",
+        "playwright",
+        "test",
+        "--config",
+        "packages/testing/playwright.shop-ux.config.ts",
+        "cross-workflow-usability.spec.ts",
+        "--grep",
+        "retail routes, labels and responsive states|paged purchase choices, explicit stock confirmation and pending save",
+        "--workers=1",
+        "--retries=0"
+      ],
+      "exit_code": 1,
+      "status": "failed",
+      "duration_seconds": 1.405,
+      "failure": "Configured local webServer failed before browser tests; direct fixture/server diagnostics report listen EPERM"
+    }
+  ],
+  "supplementary_checks": [
+    {
+      "command": "pnpm agent:preflight",
+      "exit_code": 1,
+      "result": "GitHub/fetch state not verified"
+    },
+    {
+      "command": "node --test apps/shop-suit/tests/unit/*.test.mjs",
+      "exit_code": 0,
+      "result": "45 files passed, zero failures/skips"
+    },
+    {
+      "command": "pnpm exec playwright test --config apps/shop-suit/tests/e2e/ss-val-001-1.config.ts --workers=1 --retries=0 --list",
+      "exit_code": 0,
+      "result": "101 tests discovered in six imported suites; discovery only"
+    },
+    {
+      "command": "node apps/shop-suit/tests/run-launch-qualification.mjs --list",
+      "exit_code": 0,
+      "result": "Exact matrix argv listed"
+    },
+    {
+      "command": "pnpm --filter @building-suit/shop-suit exec eslint --no-ignore tests/e2e/ss-val-001-1.config.ts tests/e2e/ss-val-001-1.spec.ts tests/unit/ss-val-001-1.test.mjs tests/unit/ss-val-001-2.test.mjs tests/run-launch-qualification.mjs tests/unit/plan-ui.test.mjs tests/unit/pos-customer-ssr.test.mjs",
+      "exit_code": 0,
+      "result": "Changed test/runner files linted, no findings"
+    }
+  ],
+  "matrix_runner_exit_code": 1
+}

@@ -1,0 +1,528 @@
+{
+  "task": "SS-VAL-001",
+  "scope": "Current Shop first-launch stack only",
+  "excluded": [
+    "Egypt ETA",
+    "Offline operation",
+    "Optional private offers",
+    "Deferred roadmap packages"
+  ],
+  "external_gates": [
+    "Resend sender/domain, secret, dispatcher scheduling and support inbox delivery",
+    "Supabase native single-session setting and JWT expiry in each Shop environment; two real provider sessions",
+    "Supabase Realtime publication and tenant/location isolation on deployed schema",
+    "Public HTTPS canonical branding assets, Auth URLs, SMTP and environment/project mapping",
+    "Deployed application SHA and applied migrations; production smoke evidence"
+  ],
+  "commands": [
+    {
+      "name": "git-diff-check",
+      "program": "git",
+      "args": [
+        "diff",
+        "--check"
+      ]
+    },
+    {
+      "name": "shop-database-regression",
+      "program": "pnpm",
+      "args": [
+        "db:test:shop"
+      ]
+    },
+    {
+      "name": "shop-environment-isolation",
+      "program": "node",
+      "args": [
+        "--test",
+        "tooling/database/tests/environment.test.mjs"
+      ]
+    },
+    {
+      "name": "shop-launch-baseline-copy-inspection",
+      "program": "node",
+      "args": [
+        "-e",
+        "const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'); const hits=[]; function walk(dir){for(const e of fs.readdirSync(dir,{withFileTypes:true})){const f=path.join(dir,e.name);if(e.isDirectory())walk(f);else if(/\\.(vue|ts|js|json)$/.test(e.name)){const lines=fs.readFileSync(f,'utf8').split('\\n');lines.forEach((line,i)=>{if(/\\b(?:Basic|Pro)\\b/.test(line))hits.push({file:f,line:i+1,text:line.trim()});});}}} walk('apps/shop-suit/app');walk('apps/shop-suit/i18n');console.log(JSON.stringify({scope:'browser-reachable Shop source and i18n',legacy_commercial_wording:hits,internal_compatibility_identifiers:'Lowercase persisted basic/pro identifiers and key names such as proPlanOnly remain technical identifiers; this gate rejects standalone Basic/Pro commercial wording, including EN/AR text.'},null,2));assert.equal(hits.length,0,'Customer-facing legacy Basic/Pro commercial wording remains');"
+      ]
+    },
+    {
+      "name": "shop-launch-baseline-unit-review",
+      "program": "node",
+      "args": [
+        "--test",
+        "apps/shop-suit/tests/unit/appointments.test.mjs",
+        "apps/shop-suit/tests/unit/arabic-copy.test.mjs",
+        "apps/shop-suit/tests/unit/barber-service-scheduling.test.mjs",
+        "apps/shop-suit/tests/unit/billing.test.mjs",
+        "apps/shop-suit/tests/unit/cash-shifts.test.mjs",
+        "apps/shop-suit/tests/unit/catalog-import.test.mjs",
+        "apps/shop-suit/tests/unit/expenses.test.mjs",
+        "apps/shop-suit/tests/unit/general-copy.test.mjs",
+        "apps/shop-suit/tests/unit/locations.test.mjs",
+        "apps/shop-suit/tests/unit/operating-reports.test.mjs",
+        "apps/shop-suit/tests/unit/payment-evidence.test.mjs",
+        "apps/shop-suit/tests/unit/pilot-safety.test.mjs",
+        "apps/shop-suit/tests/unit/plan-catalog.test.mjs",
+        "apps/shop-suit/tests/unit/plan-ui.test.mjs",
+        "apps/shop-suit/tests/unit/platform-admin.test.mjs",
+        "apps/shop-suit/tests/unit/platform-plan-admin.test.mjs",
+        "apps/shop-suit/tests/unit/pos.test.mjs",
+        "apps/shop-suit/tests/unit/public-legal.test.mjs",
+        "apps/shop-suit/tests/unit/receipt-allocations.test.mjs",
+        "apps/shop-suit/tests/unit/sale-receipt.test.mjs",
+        "apps/shop-suit/tests/unit/shared-ui-migration.test.mjs",
+        "apps/shop-suit/tests/unit/shop-context.test.mjs",
+        "apps/shop-suit/tests/unit/shop-profile-settings.test.mjs",
+        "apps/shop-suit/tests/unit/signup-otp-recovery.test.mjs",
+        "apps/shop-suit/tests/unit/subscription-qualification.test.mjs",
+        "apps/shop-suit/tests/unit/super-admin-bridge.test.mjs",
+        "apps/shop-suit/tests/unit/team.test.mjs",
+        "apps/shop-suit/tests/unit/ux-async-actions.test.mjs"
+      ]
+    },
+    {
+      "name": "shop-offer-workspace-check",
+      "program": "pnpm",
+      "args": [
+        "check"
+      ]
+    },
+    {
+      "name": "shop-quality",
+      "program": "pnpm",
+      "args": [
+        "exec",
+        "turbo",
+        "run",
+        "typecheck",
+        "lint",
+        "build",
+        "--filter=@building-suit/shop-suit"
+      ]
+    },
+    {
+      "name": "shop-security-advisors-evidence-001",
+      "program": "pnpm",
+      "args": [
+        "exec",
+        "supabase",
+        "db",
+        "advisors",
+        "--local",
+        "--type",
+        "security",
+        "--level",
+        "info",
+        "--fail-on",
+        "warn",
+        "--output-format",
+        "json"
+      ],
+      "cwd": "apps/shop-suit"
+    },
+    {
+      "name": "shop-unit-regression",
+      "program": "pnpm",
+      "args": [
+        "test"
+      ]
+    },
+    {
+      "name": "shop-auth-e2e",
+      "program": "pnpm",
+      "args": [
+        "exec",
+        "playwright",
+        "test",
+        "--config",
+        "apps/shop-suit/playwright.auth-otp.config.ts",
+        "--workers=1",
+        "--retries=0"
+      ]
+    },
+    {
+      "name": "ss-launch-support-001-obligation-3-browser",
+      "program": "pnpm",
+      "args": [
+        "exec",
+        "playwright",
+        "test",
+        "--config",
+        "apps/shop-suit/tests/e2e/ss-launch-support-001-3.config.ts",
+        "--workers=1",
+        "--retries=0"
+      ]
+    },
+    {
+      "name": "ss-launch-solo-variants-001-obligation-2-browser",
+      "program": "pnpm",
+      "args": [
+        "exec",
+        "playwright",
+        "test",
+        "--config",
+        "apps/shop-suit/tests/e2e/ss-launch-solo-variants-001-2.config.ts",
+        "--workers=1",
+        "--retries=0"
+      ]
+    },
+    {
+      "name": "ss-launch-single-session-001-obligation-2-browser",
+      "program": "pnpm",
+      "args": [
+        "exec",
+        "playwright",
+        "test",
+        "--config",
+        "apps/shop-suit/tests/e2e/ss-launch-single-session-001-2.config.ts",
+        "--workers=1",
+        "--retries=0"
+      ]
+    },
+    {
+      "name": "ss-launch-legal-audit-001-obligation-1-browser",
+      "program": "pnpm",
+      "args": [
+        "exec",
+        "playwright",
+        "test",
+        "--config",
+        "apps/shop-suit/tests/e2e/ss-launch-legal-audit-001-1.config.ts",
+        "--workers=1",
+        "--retries=0"
+      ]
+    },
+    {
+      "name": "ss-val-001-obligation-1-unit",
+      "program": "node",
+      "args": [
+        "--test",
+        "apps/shop-suit/tests/unit/ss-val-001-1.test.mjs"
+      ]
+    },
+    {
+      "name": "ss-val-001-obligation-2-unit",
+      "program": "node",
+      "args": [
+        "--test",
+        "apps/shop-suit/tests/unit/ss-val-001-2.test.mjs"
+      ]
+    },
+    {
+      "name": "ss-val-001-obligation-1-browser",
+      "program": "pnpm",
+      "args": [
+        "exec",
+        "playwright",
+        "test",
+        "--config",
+        "apps/shop-suit/tests/e2e/ss-val-001-1.config.ts",
+        "--workers=1",
+        "--retries=0"
+      ]
+    },
+    {
+      "name": "ss-launch-cash-policy-001-1-database",
+      "program": "pnpm",
+      "cwd": "apps/shop-suit",
+      "args": [
+        "exec",
+        "supabase",
+        "test",
+        "db",
+        "--local",
+        "supabase/tests/ss-launch-cash-policy-001-1.test.sql"
+      ]
+    },
+    {
+      "name": "ss-launch-support-001-1-database",
+      "program": "pnpm",
+      "cwd": "apps/shop-suit",
+      "args": [
+        "exec",
+        "supabase",
+        "test",
+        "db",
+        "--local",
+        "supabase/tests/ss-launch-support-001-1.test.sql"
+      ]
+    },
+    {
+      "name": "ss-launch-solo-variants-001-1-database",
+      "program": "pnpm",
+      "cwd": "apps/shop-suit",
+      "args": [
+        "exec",
+        "supabase",
+        "test",
+        "db",
+        "--local",
+        "supabase/tests/ss-launch-solo-variants-001-1.test.sql"
+      ]
+    },
+    {
+      "name": "ss-launch-fast-pay-001-1-database",
+      "program": "pnpm",
+      "cwd": "apps/shop-suit",
+      "args": [
+        "exec",
+        "supabase",
+        "test",
+        "db",
+        "--local",
+        "supabase/tests/ss-launch-fast-pay-001-1.test.sql"
+      ]
+    },
+    {
+      "name": "ss-launch-realtime-001-2-database",
+      "program": "pnpm",
+      "cwd": "apps/shop-suit",
+      "args": [
+        "exec",
+        "supabase",
+        "test",
+        "db",
+        "--local",
+        "supabase/tests/ss-launch-realtime-001-2.test.sql"
+      ]
+    },
+    {
+      "name": "launch-inventory-purchases-browser",
+      "program": "pnpm",
+      "args": [
+        "exec",
+        "playwright",
+        "test",
+        "--config",
+        "packages/testing/playwright.shop-ux.config.ts",
+        "cross-workflow-usability.spec.ts",
+        "--grep",
+        "retail routes, labels and responsive states|paged purchase choices, explicit stock confirmation and pending save",
+        "--workers=1",
+        "--retries=0"
+      ]
+    }
+  ],
+  "requirements": [
+    {
+      "id": "SS-LAUNCH-R01",
+      "title": "Clean launch baseline and legacy commercial copy",
+      "implemented": "present in launch stack; local verification is separate",
+      "checks": [
+        "shop-launch-baseline-copy-inspection",
+        "shop-unit-regression",
+        "launch-inventory-purchases-browser"
+      ],
+      "independently_verified": "pending control-plane verification",
+      "provider_configured": "unverified",
+      "deployed": "unverified",
+      "production_smoke_tested": "unverified",
+      "implementation_evidence": [
+        "apps/shop-suit/app/pages/inventory/index.vue",
+        "apps/shop-suit/app/pages/purchases/index.vue"
+      ]
+    },
+    {
+      "id": "SS-LAUNCH-R02",
+      "title": "Safe existing-email signup handling",
+      "implemented": "present in launch stack; local verification is separate",
+      "checks": [
+        "shop-unit-regression",
+        "shop-auth-e2e"
+      ],
+      "independently_verified": "pending control-plane verification",
+      "provider_configured": "unverified",
+      "deployed": "unverified",
+      "production_smoke_tested": "unverified",
+      "implementation_evidence": [
+        "apps/shop-suit/app/pages/auth/signup.vue"
+      ]
+    },
+    {
+      "id": "SS-LAUNCH-R03",
+      "title": "Ledger-parity Shop team, roles and permissions",
+      "implemented": "present in launch stack; local verification is separate",
+      "checks": [
+        "shop-database-regression",
+        "ss-val-001-obligation-1-browser"
+      ],
+      "independently_verified": "pending control-plane verification",
+      "provider_configured": "unverified",
+      "deployed": "unverified",
+      "production_smoke_tested": "unverified",
+      "implementation_evidence": [
+        "apps/shop-suit/app/pages/team.vue",
+        "apps/shop-suit/supabase/migrations/20261007010000_launch_team_controls.sql"
+      ]
+    },
+    {
+      "id": "SS-LAUNCH-R04",
+      "title": "Optional open-cashier-shift enforcement",
+      "implemented": "present in launch stack; local verification is separate",
+      "checks": [
+        "ss-launch-cash-policy-001-1-database",
+        "ss-val-001-obligation-1-browser"
+      ],
+      "independently_verified": "pending control-plane verification",
+      "provider_configured": "unverified",
+      "deployed": "unverified",
+      "production_smoke_tested": "unverified",
+      "implementation_evidence": [
+        "apps/shop-suit/docs/readiness/launch-cash-policy.md"
+      ]
+    },
+    {
+      "id": "SS-LAUNCH-R05",
+      "title": "Functional Contact Us email delivery",
+      "implemented": "present in launch stack; local verification is separate",
+      "checks": [
+        "shop-unit-regression",
+        "ss-launch-support-001-1-database",
+        "ss-launch-support-001-obligation-3-browser"
+      ],
+      "independently_verified": "pending control-plane verification",
+      "provider_configured": "unverified",
+      "deployed": "unverified",
+      "production_smoke_tested": "unverified",
+      "implementation_evidence": [
+        "apps/shop-suit/docs/SS-LAUNCH-SUPPORT-001.md",
+        "apps/shop-suit/supabase/migrations/20261008160000_support_notification_delivery.sql"
+      ]
+    },
+    {
+      "id": "SS-LAUNCH-R06",
+      "title": "Public canonical Shop branding",
+      "implemented": "present in launch stack; local verification is separate",
+      "checks": [
+        "shop-unit-regression",
+        "ss-launch-legal-audit-001-obligation-1-browser"
+      ],
+      "independently_verified": "pending control-plane verification",
+      "provider_configured": "unverified",
+      "deployed": "unverified",
+      "production_smoke_tested": "unverified",
+      "implementation_evidence": [
+        "apps/shop-suit/nuxt.config.ts",
+        "apps/shop-suit/tests/unit/ss-launch-brand-001-2.test.mjs"
+      ]
+    },
+    {
+      "id": "SS-LAUNCH-R07",
+      "title": "Solo one-member and two-member variants",
+      "implemented": "present in launch stack; local verification is separate",
+      "checks": [
+        "ss-launch-solo-variants-001-1-database",
+        "ss-launch-solo-variants-001-obligation-2-browser"
+      ],
+      "independently_verified": "pending control-plane verification",
+      "provider_configured": "unverified",
+      "deployed": "unverified",
+      "production_smoke_tested": "unverified",
+      "implementation_evidence": [
+        "apps/shop-suit/docs/tasks/SS-LAUNCH-SOLO-VARIANTS-001.md"
+      ]
+    },
+    {
+      "id": "SS-LAUNCH-R08",
+      "title": "Product/service-aware sales messaging",
+      "implemented": "present in launch stack; local verification is separate",
+      "checks": [
+        "shop-unit-regression",
+        "ss-val-001-obligation-1-browser"
+      ],
+      "independently_verified": "pending control-plane verification",
+      "provider_configured": "unverified",
+      "deployed": "unverified",
+      "production_smoke_tested": "unverified",
+      "implementation_evidence": [
+        "apps/shop-suit/app/utils/saleCopy.js"
+      ]
+    },
+    {
+      "id": "SS-LAUNCH-R09",
+      "title": "POS customer dropdown",
+      "implemented": "present in launch stack; local verification is separate",
+      "checks": [
+        "shop-unit-regression",
+        "ss-val-001-obligation-1-browser"
+      ],
+      "independently_verified": "pending control-plane verification",
+      "provider_configured": "unverified",
+      "deployed": "unverified",
+      "production_smoke_tested": "unverified",
+      "implementation_evidence": [
+        "apps/shop-suit/app/pages/pos.vue",
+        "apps/shop-suit/app/utils/posCustomer.js"
+      ]
+    },
+    {
+      "id": "SS-LAUNCH-R10",
+      "title": "Atomic Fast Pay",
+      "implemented": "present in launch stack; local verification is separate",
+      "checks": [
+        "ss-launch-fast-pay-001-1-database",
+        "ss-val-001-obligation-1-browser"
+      ],
+      "independently_verified": "pending control-plane verification",
+      "provider_configured": "unverified",
+      "deployed": "unverified",
+      "production_smoke_tested": "unverified",
+      "implementation_evidence": [
+        "apps/shop-suit/docs/readiness/launch-fast-pay.md"
+      ]
+    },
+    {
+      "id": "SS-LAUNCH-R11",
+      "title": "One active device/session per user",
+      "implemented": "Client session-loss cleanup and local logout implemented; provider-native single-session enforcement remains unverified",
+      "checks": [
+        "shop-unit-regression",
+        "ss-launch-single-session-001-obligation-2-browser"
+      ],
+      "independently_verified": "pending control-plane verification",
+      "provider_configured": "unverified",
+      "deployed": "unverified",
+      "production_smoke_tested": "unverified",
+      "implementation_evidence": [
+        "apps/shop-suit/app/plugins/session-loss.client.ts",
+        "apps/shop-suit/docs/single-session.md"
+      ]
+    },
+    {
+      "id": "SS-LAUNCH-R12",
+      "title": "Shop realtime operational refresh",
+      "implemented": "present in launch stack; local verification is separate",
+      "checks": [
+        "shop-unit-regression",
+        "ss-launch-realtime-001-2-database",
+        "ss-val-001-obligation-1-browser"
+      ],
+      "independently_verified": "pending control-plane verification",
+      "provider_configured": "unverified",
+      "deployed": "unverified",
+      "production_smoke_tested": "unverified",
+      "implementation_evidence": [
+        "apps/shop-suit/app/composables/useShopRealtime.ts",
+        "apps/shop-suit/supabase/migrations/20261010110000_shop_scoped_realtime.sql"
+      ]
+    },
+    {
+      "id": "SS-LAUNCH-R13",
+      "title": "Legal/policy reconciliation against launch behavior",
+      "implemented": "present in launch stack; local verification is separate",
+      "checks": [
+        "shop-unit-regression",
+        "ss-launch-legal-audit-001-obligation-1-browser"
+      ],
+      "independently_verified": "pending control-plane verification",
+      "provider_configured": "unverified",
+      "deployed": "unverified",
+      "production_smoke_tested": "unverified",
+      "implementation_evidence": [
+        "apps/shop-suit/app/utils/legal.ts",
+        "apps/shop-suit/docs/SS-LAUNCH-LEGAL-AUDIT-001.md"
+      ]
+    }
+  ]
+}
