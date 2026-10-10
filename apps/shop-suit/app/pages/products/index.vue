@@ -179,6 +179,8 @@ function money(value: number) {
     style: 'currency', currency: 'EGP', maximumFractionDigits: 2,
   }).format(value)
 }
+
+useShopRealtime('products', () => formDirty.value)
 </script>
 
 <template>

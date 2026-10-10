@@ -200,6 +200,8 @@ async function archive(service: Service) {
   } catch (caught) { actionError.value = readableError(caught instanceof Error ? caught.message : undefined) }
   finally { archivingId.value = null }
 }
+
+useShopRealtime('services', () => formDirty.value)
 </script>
 
 <template>

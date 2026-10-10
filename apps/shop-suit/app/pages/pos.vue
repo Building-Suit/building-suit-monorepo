@@ -231,6 +231,8 @@ watch(context, value => {
   const requested = typeof route.query.appointment === 'string' ? route.query.appointment : ''
   if (requested && value.appointments.some(item => item.id === requested) && !appointmentId.value) chooseAppointment(requested)
 }, { immediate: true })
+
+useShopRealtime('pos', () => lines.value.length > 0 || checkingOut.value || confirmingCheckout.value)
 </script>
 
 <template>
