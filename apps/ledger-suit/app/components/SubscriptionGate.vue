@@ -20,9 +20,9 @@ function checkAgain() {
         <p class="mt-2 text-sm text-fg-muted">{{ t('billing.gateDescription') }}</p>
       </div>
       <ul class="grid gap-2 text-sm sm:grid-cols-3">
-        <li class="flex items-center gap-2"><AppIcon name="check" :size="18" class="text-[var(--bs-status-success)]" />{{ t('billing.featureAccounting') }}</li>
-        <li class="flex items-center gap-2"><AppIcon name="check" :size="18" class="text-[var(--bs-status-success)]" />{{ t('billing.featureAutomation') }}</li>
-        <li class="flex items-center gap-2"><AppIcon name="check" :size="18" class="text-[var(--bs-status-success)]" />{{ t('billing.featureTeam') }}</li>
+        <li class="flex items-center gap-2"><BsIcon name="check" :size="18" class="text-[var(--bs-status-success)]" />{{ t('billing.featureAccounting') }}</li>
+        <li class="flex items-center gap-2"><BsIcon name="check" :size="18" class="text-[var(--bs-status-success)]" />{{ t('billing.featureAutomation') }}</li>
+        <li class="flex items-center gap-2"><BsIcon name="check" :size="18" class="text-[var(--bs-status-success)]" />{{ t('billing.featureTeam') }}</li>
       </ul>
       <div v-if="processing" class="rounded-control bg-surface-muted p-3 text-sm" role="status">
         <p class="font-semibold">{{ t('billing.confirming') }}</p>

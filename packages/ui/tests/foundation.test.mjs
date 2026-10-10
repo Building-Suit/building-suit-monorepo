@@ -21,7 +21,7 @@ function component(file, language = 'en') {
 }
 async function render(file, props, slot, language) {
   const app = vue.createSSRApp({ render: () => vue.h(component(file, language), props, slot ? () => slot : undefined) })
-  app.component('AppIcon', { render: () => vue.h('svg', { 'aria-hidden': 'true' }) })
+  app.component('BsIcon', { render: () => vue.h('svg', { 'aria-hidden': 'true' }) })
   app.config.globalProperties.$primevue = { config: { unstyled: true, locale: { emptySelectionMessage: 'No selection', selectionMessage: '{0} selected' } } }
   return renderToString(app)
 }
@@ -49,14 +49,14 @@ test('semantic action variants do not inherit default button chrome', async () =
 
 test('primitive inventory centrally owns fields, choices, states, navigation, and composition', () => {
   const manifest = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
-  for (const component of ['BsInput', 'BsTextarea', 'BsField', 'BsChoiceGroup', 'BsTabs', 'BsPagination', 'BsStateSurface', 'BsSectionHeader', 'BsContentSection', 'BsToolbar', 'BsMenu']) {
+  for (const component of ['BsAppRoot', 'BsBox', 'BsPage', 'BsPageBody', 'BsContainer', 'BsStack', 'BsInline', 'BsGrid', 'BsText', 'BsHeading', 'BsLink', 'BsIcon', 'BsImage', 'BsDivider', 'BsList', 'BsListItem', 'BsDescriptionList', 'BsDescriptionItem', 'BsDisclosure', 'BsCodeBlock', 'BsVisuallyHidden', 'BsSurface', 'BsPanel', 'BsActionTile', 'BsInteractiveCard', 'BsAlert', 'BsSkeleton', 'BsStatusBadge', 'BsInput', 'BsTextarea', 'BsField', 'BsChoiceGroup', 'BsTabs', 'BsSegmentedControl', 'BsPagination', 'BsStateSurface', 'BsSectionHeader', 'BsContentSection', 'BsToolbar', 'BsMenu']) {
     assert.ok(Object.keys(manifest.exports).some(key => key.endsWith(`/${component}`)), `${component} is not exported`)
   }
   const styles = readFileSync(new URL('../src/styles/base.css', import.meta.url), 'utf8')
   for (const className of ['ls-field', 'ls-choice-group', 'ls-tabs', 'ls-state-surface', 'ls-pagination', 'ls-section-header', 'ls-toolbar', 'ls-menu__panel']) {
     assert.match(styles, new RegExp(`\\.${className.replaceAll('-', '\\-')}`))
   }
-  const empty = readFileSync(new URL('../src/molecules/EmptyState.vue', import.meta.url), 'utf8')
+  const empty = readFileSync(new URL('../src/molecules/BsEmptyState.vue', import.meta.url), 'utf8')
   assert.match(empty, /<BsStateSurface state="empty"/)
   assert.doesNotMatch(empty, /<button\b/)
 })
@@ -98,14 +98,14 @@ test('shared auth owns split geometry, form shells, wizard controls, and verific
   assert.match(wizard, /<BsButton type="submit" variant="primary"/)
 
   const verification = readFileSync(new URL('../src/organisms/BsVerificationForm.vue', import.meta.url), 'utf8')
-  assert.match(verification, /<OtpInput v-if="!verified" v-model="code"/)
+  assert.match(verification, /<BsOtpInput v-if="!verified" v-model="code"/)
   assert.match(verification, /aria-live="polite"/)
   assert.match(verification, /@click="emit\('resend'\)"/)
 })
 
 test('authenticated chrome is composed from canonical shared organisms', () => {
   const manifest = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
-  for (const name of ['BsSideMenu', 'BsTopHeader', 'BsUserMenu', 'SettingsMenu', 'BsAppShell']) {
+  for (const name of ['BsSideMenu', 'BsTopHeader', 'BsUserMenu', 'BsSettingsMenu', 'BsAppShell']) {
     assert.ok(Object.keys(manifest.exports).some(key => key.endsWith(`/${name}`)), `${name} is not exported`)
   }
   const shell = readFileSync(new URL('../src/templates/BsAppShell.vue', import.meta.url), 'utf8')
@@ -121,13 +121,13 @@ test('authenticated chrome is composed from canonical shared organisms', () => {
   assert.match(sideMenu, /class="fixed inset-0 z-30 ls-scrim lg:hidden"/)
   assert.match(topHeader, /aria-controls="bs-primary-navigation"/)
   assert.match(userMenu, /<BsUserIdentity\b/)
-  assert.match(userMenu, /<SettingsMenu embedded/)
+  assert.match(userMenu, /<BsSettingsMenu embedded/)
   assert.match(userMenu, /v-for="action in actions"/)
   assert.match(userMenu, /@click="emit\('signOut'\)"/)
 })
 
 test('status badges expose written labels and semantic tone instead of color alone', async () => {
-  const html = await render('atoms/StatusBadge.vue', { status: 'custom', label: 'Needs review', tone: 'warning', icon: false })
+  const html = await render('atoms/BsStatusBadge.vue', { status: 'custom', label: 'Needs review', tone: 'warning', icon: false })
   assert.match(html, />Needs review</)
   assert.match(html, /--bs-status-warning-bg/)
   assert.doesNotMatch(html, /<svg/)
@@ -176,7 +176,7 @@ for (const language of ['en', 'ar']) test(`form and select provide localized acc
   assert.match(picker, /role="combobox"/)
   assert.match(picker, /aria-label="(?:الصنف|Item)"/)
   assert.match(picker, /Chosen/)
-  const toast = await render('organisms/ToastHost.vue', {}, null, language)
+  const toast = await render('organisms/BsToastHost.vue', {}, null, language)
   assert.match(toast, /role="status"/); assert.match(toast, /Saved/)
   assert.match(toast, /aria-label="(?:إغلاق|Close)"/)
 })
@@ -262,7 +262,7 @@ test('workspace enforcement corroborates ownership and semantic action variants 
 test('Automation and Inventory consume the final shared presentation contracts', () => {
   const automation = vueFiles(path.join(workspaceRoot, 'apps/automation-suit/app'))
     .map(file => readFileSync(file, 'utf8')).join('\n')
-  for (const component of ['BsDataTable', 'BsRecordActionDialog', 'BsButton', 'BsSelect', 'BsCard', 'BsKpiCard', 'StatusBadge', 'BsAppShell']) {
+  for (const component of ['BsDataTable', 'BsRecordActionDialog', 'BsButton', 'BsSelect', 'BsCard', 'BsKpiCard', 'BsStatusBadge', 'BsAppShell']) {
     assert.match(automation, new RegExp(`<${component}\\b`), `Automation does not consume ${component}`)
   }
   assert.match(readFileSync(path.join(workspaceRoot, 'apps/inventory-suit/app/pages/index.vue'), 'utf8'), /<BsCard\b/)
@@ -275,5 +275,6 @@ test('shared UI exports are explicit and cover every governed source', () => {
   assert.ok(Object.values(manifest.exports).every(target => typeof target === 'string' && !target.includes('*')))
   const components = vueFiles(path.join(workspaceRoot, 'packages/ui/src'))
     .map(file => `./${path.relative(path.join(workspaceRoot, 'packages/ui'), file).replaceAll(path.sep, '/')}`)
+  assert.ok(components.every(file => path.basename(file, '.vue').startsWith('Bs')), 'every renderable shared component must have a canonical Bs-prefixed name')
   assert.deepEqual(Object.values(manifest.exports).sort(), [...components, './src/styles/base.css'].sort())
 })

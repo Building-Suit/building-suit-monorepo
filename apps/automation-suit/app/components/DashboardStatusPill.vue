@@ -12,5 +12,5 @@ const tone = computed(() => {
 </script>
 
 <template>
-  <StatusBadge :status="normalized" :label="value || 'unknown'" :tone="tone === 'active' ? 'info' : tone" />
+  <BsStatusBadge :status="normalized" :label="value || 'unknown'" :tone="tone === 'active' ? 'info' : tone" />
 </template>

@@ -26,15 +26,15 @@ const content = computed<LandingContent>(() => ({
             <p class="text-xs font-bold text-fg">Shop Suit</p>
             <div class="mt-7 space-y-1.5">
               <div v-for="(feature, index) in content.features" :key="feature.title" class="flex items-center gap-2 rounded-control px-2 py-2 text-[.65rem]" :class="index === 0 ? 'bg-surface-muted text-fg' : 'text-fg-muted'">
-                <AppIcon :name="feature.icon" :size="15" /><span class="truncate">{{ feature.title }}</span>
+                <BsIcon :name="feature.icon" :size="15" /><span class="truncate">{{ feature.title }}</span>
               </div>
             </div>
           </div>
           <div class="min-w-0 p-4 sm:p-5">
-            <div class="flex items-center justify-between gap-3 border-b border-[var(--bs-border)] pb-4"><div><p class="text-[.65rem] text-fg-muted">{{ content.eyebrow }}</p><p class="mt-1 text-base font-bold">{{ content.featuresTitle }}</p></div><span class="grid h-8 w-8 place-items-center rounded-full border border-[var(--bs-border)]"><AppIcon name="user" :size="16" /></span></div>
+            <div class="flex items-center justify-between gap-3 border-b border-[var(--bs-border)] pb-4"><div><p class="text-[.65rem] text-fg-muted">{{ content.eyebrow }}</p><p class="mt-1 text-base font-bold">{{ content.featuresTitle }}</p></div><span class="grid h-8 w-8 place-items-center rounded-full border border-[var(--bs-border)]"><BsIcon name="user" :size="16" /></span></div>
             <div class="mt-5 grid gap-3 sm:grid-cols-2">
               <article v-for="(feature, index) in content.features" :key="feature.title" class="min-h-28 border-b border-[var(--bs-border)] pb-4" :class="index % 2 === 0 ? 'sm:border-e sm:pe-4' : 'sm:ps-1'">
-                <AppIcon :name="feature.icon" :size="20" class="text-brand-gold" />
+                <BsIcon :name="feature.icon" :size="20" class="text-brand-gold" />
                 <p class="mt-4 text-xs font-bold leading-5">{{ feature.title }}</p>
               </article>
             </div>

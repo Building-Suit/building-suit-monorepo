@@ -50,13 +50,13 @@ function page(event: { first: number }) { offset.value = event.first; void load(
     <p v-if="!can('inventory.read')" role="status">{{ t('inventory.denied') }}</p>
     <template v-else>
       <BsForm class="ls-card flex flex-wrap items-end gap-4 p-4" @submit.prevent="run">
-        <FloatingField :label="t('inventory.asOf')"><input v-model="asOf" type="date" class="ls-input" required></FloatingField>
+        <BsFloatingField :label="t('inventory.asOf')"><input v-model="asOf" type="date" class="ls-input" required></BsFloatingField>
         <BsButton type="submit" class="ls-btn" :disabled="pending">{{ t('inventory.run') }}</BsButton>
         <BsButton v-if="can('inventory.configure')" type="button" class="ls-btn" :disabled="readOnly || pending" @click="begin('control')">{{ t('inventory.newControl') }}</BsButton>
         <BsButton v-if="can('inventory.configure')" type="button" class="ls-btn ls-btn-primary" :disabled="readOnly || pending" @click="begin('source')">{{ t('inventory.configure') }}</BsButton>
       </BsForm>
       <p v-if="error" class="ls-error" role="alert">{{ t('inventory.loadError') }} <BsButton type="submit" class="ls-btn" @click="load">{{ t('common.retry') }}</BsButton></p>
-      <SectionSkeleton v-else-if="pending" variant="table" :rows="5" />
+      <BsSectionSkeleton v-else-if="pending" variant="table" :rows="5" />
       <template v-else-if="workspace">
         <p v-if="!workspace.sources.length" class="ls-card p-5" role="status">{{ t('inventory.noSource') }}</p>
         <section v-for="source in workspace.sources" :key="source.id" class="ls-card space-y-4 p-5">
@@ -84,15 +84,15 @@ function page(event: { first: number }) { offset.value = event.first; void load(
       </template>
     </template>
     <BsRecordActionDialog v-model:visible="visible" :title="t(mode === 'control' ? 'inventory.newControl' : 'inventory.configure')" :pending="saving" :dirty="dirty" :error="saveError" size="lg" :submit-label="t('common.save')" :cancel-label="t('common.cancel')" :submit-disabled="readOnly" @submit="save">
-        <FloatingField v-if="mode === 'control'" :label="t('inventory.controlName')"><input v-model="form.name" class="ls-input" required></FloatingField>
+        <BsFloatingField v-if="mode === 'control'" :label="t('inventory.controlName')"><input v-model="form.name" class="ls-input" required></BsFloatingField>
         <template v-else>
           <p>{{ t('inventory.setupPolicy') }}</p>
-          <FloatingField :label="t('inventory.sourceKey')"><input v-model="form.source" class="ls-input" required maxlength="200"></FloatingField>
-          <FloatingField :label="t('inventory.actor')"><input v-model="form.actor" class="ls-input" required></FloatingField>
-          <FloatingField :label="t('inventory.effectiveDate')"><input v-model="form.effective" type="date" class="ls-input" required></FloatingField>
-          <FloatingField :label="t('inventory.control')"><select v-model="form.control" class="ls-input" required><option value="" /><option v-for="a in controls" :key="a.id" :value="a.id">{{ a.code }} {{ a.name }}</option></select></FloatingField>
-          <FloatingField :label="t('inventory.cogs')"><select v-model="form.cogs" class="ls-input" required><option value="" /><option v-for="a in cogs" :key="a.id" :value="a.id">{{ a.code }} {{ a.name }}</option></select></FloatingField>
-          <FloatingField :label="t('inventory.offset')"><select v-model="form.offset" class="ls-input" required><option value="" /><option v-for="a in offsets" :key="a.id" :value="a.id">{{ a.code }} {{ a.name }}</option></select></FloatingField>
+          <BsFloatingField :label="t('inventory.sourceKey')"><input v-model="form.source" class="ls-input" required maxlength="200"></BsFloatingField>
+          <BsFloatingField :label="t('inventory.actor')"><input v-model="form.actor" class="ls-input" required></BsFloatingField>
+          <BsFloatingField :label="t('inventory.effectiveDate')"><input v-model="form.effective" type="date" class="ls-input" required></BsFloatingField>
+          <BsFloatingField :label="t('inventory.control')"><select v-model="form.control" class="ls-input" required><option value="" /><option v-for="a in controls" :key="a.id" :value="a.id">{{ a.code }} {{ a.name }}</option></select></BsFloatingField>
+          <BsFloatingField :label="t('inventory.cogs')"><select v-model="form.cogs" class="ls-input" required><option value="" /><option v-for="a in cogs" :key="a.id" :value="a.id">{{ a.code }} {{ a.name }}</option></select></BsFloatingField>
+          <BsFloatingField :label="t('inventory.offset')"><select v-model="form.offset" class="ls-input" required><option value="" /><option v-for="a in offsets" :key="a.id" :value="a.id">{{ a.code }} {{ a.name }}</option></select></BsFloatingField>
         </template>
     </BsRecordActionDialog>
   </div>

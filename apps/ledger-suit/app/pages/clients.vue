@@ -57,12 +57,12 @@ async function openClient(row: ClientHealthRow) {
 
     <section class="ls-card space-y-4 p-4" :aria-label="t('clientPortfolio.filters.label')">
       <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_16rem_auto] md:items-end">
-        <FloatingField :label="t('clientPortfolio.searchLabel')">
+        <BsFloatingField :label="t('clientPortfolio.searchLabel')">
           <input v-model="query" type="search" class="ls-input" :placeholder="t('clientPortfolio.searchPlaceholder')">
-        </FloatingField>
-        <FloatingField :label="t('clientPortfolio.healthFilter')">
+        </BsFloatingField>
+        <BsFloatingField :label="t('clientPortfolio.healthFilter')">
           <BsSelect v-model="filter" :label="t('clientPortfolio.healthFilter')" :options="filterOptions" option-label="label" option-value="value" />
-        </FloatingField>
+        </BsFloatingField>
         <BsButton type="button" class="ls-btn" :disabled="pending" @click="load">
           {{ t('clientPortfolio.refresh') }}
         </BsButton>
@@ -70,7 +70,7 @@ async function openClient(row: ClientHealthRow) {
       <p class="text-sm text-fg-muted">{{ t('clientPortfolio.signalNote') }}</p>
     </section>
 
-    <SectionSkeleton v-if="pending && !rows.length" variant="table" :rows="5" />
+    <BsSectionSkeleton v-if="pending && !rows.length" variant="table" :rows="5" />
 
     <section v-else-if="error" class="ls-card space-y-3 p-6" role="alert">
       <h2 class="font-bold">{{ t('clientPortfolio.loadFailed') }}</h2>
@@ -78,7 +78,7 @@ async function openClient(row: ClientHealthRow) {
       <BsButton type="button" class="ls-btn" @click="load">{{ t('common.retry') }}</BsButton>
     </section>
 
-    <EmptyState
+    <BsEmptyState
       v-else-if="!filteredRows.length"
       :title="t(rows.length ? 'clientPortfolio.noMatches' : 'clientPortfolio.empty')"
       :description="t(rows.length ? 'clientPortfolio.noMatchesHint' : 'clientPortfolio.emptyHint')"
@@ -99,7 +99,7 @@ async function openClient(row: ClientHealthRow) {
           <Column>
             <template #header>{{ t('clientPortfolio.health') }}</template>
             <template #body="{ data: row }">
-              <StatusBadge class="whitespace-nowrap" :status="row.health" :label="t(`clientPortfolio.healthStates.${row.health}`)" :tone="healthTone(row.health)" />
+              <BsStatusBadge class="whitespace-nowrap" :status="row.health" :label="t(`clientPortfolio.healthStates.${row.health}`)" :tone="healthTone(row.health)" />
             </template>
           </Column>
           <Column body-class="whitespace-nowrap">

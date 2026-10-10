@@ -33,7 +33,7 @@ const labels = computed(() => ({
         <span class="text-base font-black">{{ t('app.name') }}</span>
       </div>
     </template>
-    <template #header><SettingsMenu /></template>
+    <template #header><BsSettingsMenu /></template>
     <div class="pb-16"><slot /></div>
   </BsAppShell>
 </template>

@@ -146,14 +146,14 @@ function acceptProposal() {
 
         <div class="mt-4 grid gap-4 sm:grid-cols-2">
           <div v-for="field in fields" :key="field">
-            <FloatingField :label="t(`imports.fields.${field}`)">
+            <BsFloatingField :label="t(`imports.fields.${field}`)">
               <select v-if="field === 'type'" v-model="candidate.fields[field]!.value" class="ls-input">
                 <option value="">{{ t('common.select') }}</option>
                 <option value="income">{{ t('types.income') }}</option>
                 <option value="expense">{{ t('types.expense') }}</option>
               </select>
               <input v-else v-model="candidate.fields[field]!.value" class="ls-input" type="text">
-            </FloatingField>
+            </BsFloatingField>
             <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs">
               <span :class="candidate.fields[field]!.confidence !== null && candidate.fields[field]!.confidence! < 0.6 ? 'text-[var(--bs-status-danger)]' : 'text-fg-muted'">
                 {{ confidenceLabel(candidate.fields[field]!.confidence) }}

@@ -93,23 +93,23 @@ async function save() {
 <template>
   <BsRecordActionDialog :visible="true" :title="t('statementClassification.title')" size="lg" :dirty="dirty" :pending="pending" :error="error" :submit-label="t('statementClassification.schedule')" :cancel-label="t('common.cancel')" :submit-disabled="!context || !canSchedule || loading || !form.reason.trim()" @update:visible="value => { if (!value) emit('close') }" @submit="save">
       <p class="font-semibold">{{ account.name }}</p>
-      <FloatingField :label="t('financialMapping.dimension')"><select v-model="dimension" class="ls-input" :disabled="pending">
+      <BsFloatingField :label="t('financialMapping.dimension')"><select v-model="dimension" class="ls-input" :disabled="pending">
         <option v-for="item in dimensions" :key="item" :value="item">{{ t(`financialMapping.dimensions.${item}`) }}</option>
-      </select></FloatingField>
+      </select></BsFloatingField>
       <p class="text-sm text-fg-muted">{{ t('financialMapping.hint') }}</p>
-      <SectionSkeleton v-if="loading" variant="table" :rows="3" />
+      <BsSectionSkeleton v-if="loading" variant="table" :rows="3" />
       <template v-else>
         <BsButton v-if="error" type="button" class="ls-btn" :disabled="pending" @click="load">{{ t('statementClassification.reload') }}</BsButton>
         <template v-if="context">
           <p v-if="!canSchedule" class="text-sm text-fg-muted">{{ t('statementClassification.readOnly') }}</p>
           <div v-else class="space-y-4">
-            <FloatingField :label="t('statementClassification.line')"><select id="statement-line" v-model="form.statementLine" class="ls-input" required :disabled="pending">
+            <BsFloatingField :label="t('statementClassification.line')"><select id="statement-line" v-model="form.statementLine" class="ls-input" required :disabled="pending">
               <option value="" disabled>{{ t('statementClassification.choose') }}</option>
               <option v-for="line in options" :key="line" :value="line">{{ dimension === 'balance_sheet' ? t(`statementClassification.lines.${line}`) : t(`financialMapping.lines.${line}`) }}</option>
-            </select></FloatingField>
-            <FloatingField :label="t('statementClassification.effectiveFrom')"><input id="statement-effective" v-model="form.effectiveFrom" type="date" class="ls-input" required :min="minDate" :disabled="pending"></FloatingField>
+            </select></BsFloatingField>
+            <BsFloatingField :label="t('statementClassification.effectiveFrom')"><input id="statement-effective" v-model="form.effectiveFrom" type="date" class="ls-input" required :min="minDate" :disabled="pending"></BsFloatingField>
             <p class="text-sm text-fg-muted">{{ t('statementClassification.minimum', { date: formatDate(minDate, locale) }) }}</p>
-            <FloatingField :label="t('statementClassification.reason')"><textarea id="statement-reason" v-model="form.reason" class="ls-input" rows="3" required maxlength="1000" :disabled="pending" /></FloatingField>
+            <BsFloatingField :label="t('statementClassification.reason')"><textarea id="statement-reason" v-model="form.reason" class="ls-input" rows="3" required maxlength="1000" :disabled="pending" /></BsFloatingField>
           </div>
           <h3 class="font-semibold">{{ t('statementClassification.history') }}</h3>
           <p v-if="!history.length" class="text-sm text-fg-muted">{{ t('statementClassification.noHistory') }}</p>

@@ -49,7 +49,7 @@ async function onSubmit() {
       <div class="space-y-2">
         <label for="reset-email" class="text-sm font-semibold">{{ t('auth.email') }}</label>
         <div class="relative">
-          <AppIcon name="mail" class="pointer-events-none absolute start-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <BsIcon name="mail" class="pointer-events-none absolute start-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <input id="reset-email" v-model="email" type="email" autocomplete="email" required class="ls-input" :placeholder="t('auth.emailPlaceholder')">
         </div>
       </div>

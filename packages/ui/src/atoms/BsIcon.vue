@@ -30,7 +30,7 @@ import {
   Wallet04Icon,
 } from '@hugeicons/core-free-icons'
 
-const icons = {
+const bsIcons = {
   eye: ViewIcon,
   eyeOff: ViewOffSlashIcon,
   lock: LockPasswordIcon,
@@ -67,7 +67,7 @@ const props = withDefaults(defineProps<{
   directional?: boolean
 }>(), { size: 20, directional: false })
 
-const icon = computed(() => icons[props.name as keyof typeof icons] ?? DashboardSquare01Icon)
+const icon = computed(() => bsIcons[props.name as keyof typeof bsIcons] ?? DashboardSquare01Icon)
 </script>
 
 <template>

@@ -380,7 +380,7 @@ async function reviewChange(planKey: LaunchPlanKey) {
                 target: planNameForKey(planImpact.target_plan_key),
               }) }}</p>
             </div>
-            <BsButton variant="icon" type="button"  :aria-label="t('common.close')" @click="dismiss"><AppIcon name="close" :size="20" /></BsButton>
+            <BsButton variant="icon" type="button"  :aria-label="t('common.close')" @click="dismiss"><BsIcon name="close" :size="20" /></BsButton>
           </div>
 
           <div class="mt-5 rounded-card bg-surface-muted p-4 text-sm">

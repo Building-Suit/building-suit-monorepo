@@ -32,7 +32,7 @@ test('Ledger reusable controls and tables come from shared UI', () => {
   assert.ok(sources.some(({ source }) => source.includes('<BsSelect')))
   assert.ok(sources.some(({ source }) => source.includes('<BsCard')))
   assert.ok(sources.some(({ source }) => source.includes('<BsKpiCard')))
-  assert.ok(sources.some(({ source }) => source.includes('<StatusBadge')))
+  assert.ok(sources.some(({ source }) => source.includes('<BsStatusBadge')))
 })
 
 test('Ledger auth routes use the canonical shared auth and signup contracts', () => {

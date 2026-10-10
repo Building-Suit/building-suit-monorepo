@@ -203,7 +203,7 @@ const ar = {
     <template v-else-if="shopPlan?.subscription">
       <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <BsKpiCard :title="copy.currentPlan">{{ shopPlan.subscription.planName }}</BsKpiCard>
-        <BsKpiCard :title="copy.access"><StatusBadge :status="shopPlan.subscription.accessState" /></BsKpiCard>
+        <BsKpiCard :title="copy.access"><BsStatusBadge :status="shopPlan.subscription.accessState" /></BsKpiCard>
         <BsKpiCard :title="copy.effectivePrice">{{ money(shopPlan.subscription.effectivePriceAmount, shopPlan.subscription.currency) }}<span v-if="shopPlan.subscription.priceSource === 'override'" class="ms-1 text-xs">({{ copy.negotiatedPrice }})</span></BsKpiCard>
         <BsKpiCard :title="copy.pendingBilling">{{ shopPlan.subscription.pendingBillingRequests }}</BsKpiCard>
       </div>

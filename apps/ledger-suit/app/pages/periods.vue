@@ -133,7 +133,7 @@ async function closeYear() {
 
     <p v-if="!can('periods.read')" class="ls-card p-6 text-fg-muted" role="status">{{ t('periods.noAccess') }}</p>
     <p v-else-if="error" class="ls-error" role="alert">{{ t('periods.loadFailed') }}</p>
-    <SectionSkeleton v-else-if="pending" variant="table" :rows="5" />
+    <BsSectionSkeleton v-else-if="pending" variant="table" :rows="5" />
     <template v-else>
       <section class="ls-card space-y-3 p-5" aria-labelledby="fiscal-year-heading">
         <h2 id="fiscal-year-heading" class="text-h2 font-bold">{{ t('periods.fiscalYear') }}</h2>
@@ -143,19 +143,19 @@ async function closeYear() {
 
       <BsButton v-if="can('periods.manage')" type="button" variant="primary" @click="createOpen = true">{{ t('periods.create') }}</BsButton>
       <BsRecordActionDialog v-if="createOpen" v-model:visible="createOpen" :title="t('periods.create')" :dirty="createDirty" :pending="pendingAction === 'create'" :error="createError" :submit-label="t('periods.create')" :cancel-label="t('common.cancel')" @submit="createPeriod">
-        <FloatingField :label="t('periods.startDate')"><input id="period-start" v-model="createForm.start" type="date" class="ls-input" required></FloatingField>
-        <FloatingField :label="t('periods.endDate')"><input id="period-end" v-model="createForm.end" type="date" class="ls-input" :min="createForm.start" required></FloatingField>
+        <BsFloatingField :label="t('periods.startDate')"><input id="period-start" v-model="createForm.start" type="date" class="ls-input" required></BsFloatingField>
+        <BsFloatingField :label="t('periods.endDate')"><input id="period-end" v-model="createForm.end" type="date" class="ls-input" :min="createForm.start" required></BsFloatingField>
       </BsRecordActionDialog>
 
-      <EmptyState v-if="!periods.length" :title="t('periods.empty')" :description="t('periods.emptyHint')" />
+      <BsEmptyState v-if="!periods.length" :title="t('periods.empty')" :description="t('periods.emptyHint')" />
       <section v-for="period in periods" :key="period.id" class="ls-card space-y-4 p-5" :data-period-status="period.status" :data-period-start="period.start_date">
         <div class="flex flex-wrap items-start justify-between gap-3">
           <div><h2 class="font-bold">{{ date(period.start_date) }} — {{ date(period.end_date) }}</h2><p class="text-sm text-fg-muted">{{ t('periods.fiscalRange', { start: date(period.fiscal_year_start), end: date(period.fiscal_year_end) }) }}</p></div>
-          <StatusBadge :status="period.status" :label="statusLabel(period.status)" :tone="period.status === 'open' ? 'success' : period.status === 'soft_closed' ? 'warning' : 'neutral'" />
+          <BsStatusBadge :status="period.status" :label="statusLabel(period.status)" :tone="period.status === 'open' ? 'success' : period.status === 'soft_closed' ? 'warning' : 'neutral'" />
         </div>
 
         <div v-if="can('periods.manage')" class="space-y-3 border-t border-line pt-4">
-          <FloatingField :label="t('periods.reason')"><input :id="`reason-${period.id}`" v-model="actionReason[period.id]" class="ls-input" :placeholder="t('periods.reasonHint')"></FloatingField>
+          <BsFloatingField :label="t('periods.reason')"><input :id="`reason-${period.id}`" v-model="actionReason[period.id]" class="ls-input" :placeholder="t('periods.reasonHint')"></BsFloatingField>
           <div class="flex flex-wrap gap-2">
             <BsButton v-for="target in transitionOptions(period)" :key="target" type="button" class="ls-btn" :class="{ 'ls-btn-primary': target !== 'open' }" :disabled="Boolean(pendingAction) || (reopening(period, target) && !actionReason[period.id]?.trim())" @click="transition(period, target)">
               {{ pendingAction === `${period.id}:${target}` ? t('common.saving') : target === 'soft_closed' && period.status === 'hard_closed' ? t('periods.reopen') : target === 'soft_closed' ? t('periods.softClose') : target === 'hard_closed' ? t('periods.hardClose') : t('periods.reopen') }}
@@ -181,8 +181,8 @@ async function closeYear() {
       </section>
 
       <BsForm v-if="can('periods.year_end_close')" class="ls-card grid gap-3 p-5 sm:grid-cols-[1fr_2fr_auto] sm:items-end" :aria-busy="pendingAction === 'year-end'" @submit.prevent="closeYear">
-        <FloatingField :label="t('periods.fiscalYearStart')"><input id="year-start" v-model="closeForm.fiscalYearStart" type="date" class="ls-input" required></FloatingField>
-        <FloatingField :label="t('periods.yearEndReason')"><input id="year-end-reason" v-model="closeForm.reason" class="ls-input" required></FloatingField>
+        <BsFloatingField :label="t('periods.fiscalYearStart')"><input id="year-start" v-model="closeForm.fiscalYearStart" type="date" class="ls-input" required></BsFloatingField>
+        <BsFloatingField :label="t('periods.yearEndReason')"><input id="year-end-reason" v-model="closeForm.reason" class="ls-input" required></BsFloatingField>
         <BsButton type="submit" class="ls-btn ls-btn-primary" :disabled="Boolean(pendingAction) || !closeForm.reason.trim()">{{ pendingAction === 'year-end' ? t('common.saving') : t('periods.yearEnd') }}</BsButton>
       </BsForm>
     </template>

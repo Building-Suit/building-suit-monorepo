@@ -705,7 +705,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
                   :aria-label="t('add.removeLine', { index: index + 1 })"
                   @click="removeLine(index)"
                 >
-                  <AppIcon name="delete" :size="18" />
+                  <BsIcon name="delete" :size="18" />
                 </BsButton>
                 </div>
                 <div v-if="can('dimensions.allocate') && dimensionWorkspace?.values.some(value => value.status==='active')" class="mt-3 space-y-2 border-t border-[var(--bs-border)] pt-3">
@@ -713,7 +713,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Bool
                   <div v-for="(allocation, allocationIndex) in line.allocations" :key="allocationIndex" class="grid grid-cols-[1fr_8rem_2rem] gap-2">
                     <select v-model="allocation.valueId" class="ls-input"><option value="">{{ t(`dimensions.kinds.${allocation.kind}`) }}</option><option v-for="value in dimensionWorkspace.values.filter(item=>item.kind===allocation.kind && item.status==='active')" :key="value.id" :value="value.id">{{ value.code }} · {{ value.name }}</option></select>
                     <input v-model="allocation.amount" class="ls-input" inputmode="decimal" :aria-label="t('dimensions.allocationAmount')">
-                    <BsButton type="button" class="ls-btn ls-btn-sm" :aria-label="t('dimensions.removeAllocation')" @click="line.allocations.splice(allocationIndex,1)"><AppIcon name="delete" :size="18" /></BsButton>
+                    <BsButton type="button" class="ls-btn ls-btn-sm" :aria-label="t('dimensions.removeAllocation')" @click="line.allocations.splice(allocationIndex,1)"><BsIcon name="delete" :size="18" /></BsButton>
                   </div>
                 </div>
               </div>

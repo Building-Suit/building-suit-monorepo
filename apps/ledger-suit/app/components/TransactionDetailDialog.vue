@@ -211,12 +211,12 @@ const { dirty: overlayDirty0 } = useRecordAction(() => ({ reason: reason.value, 
               {{ transaction?.description || t('detail.title') }}
             </h2>
             <p class="mt-1 flex items-center gap-2 text-sm text-fg-muted">
-              <StatusBadge v-if="transaction?.status" :status="transaction.status" />
+              <BsStatusBadge v-if="transaction?.status" :status="transaction.status" />
               <span v-if="transaction?.type">{{ t(`types.${transaction.type}`) }}</span>
               <span v-if="transaction?.journal_reference" class="font-semibold">{{ transaction.journal_reference }}</span>
             </p>
           </div>
-          <BsButton type="button" class="ls-btn ls-btn-sm" :aria-label="t('common.close')" @click="dismiss"><AppIcon name="close" /></BsButton>
+          <BsButton type="button" class="ls-btn ls-btn-sm" :aria-label="t('common.close')" @click="dismiss"><BsIcon name="close" /></BsButton>
         </header>
 
         <div class="min-h-0 flex-1 space-y-6 overflow-y-auto px-6 py-4">
@@ -290,7 +290,7 @@ const { dirty: overlayDirty0 } = useRecordAction(() => ({ reason: reason.value, 
           <section aria-labelledby="attachments-heading">
             <div class="mb-2 flex items-center justify-between"><h3 id="attachments-heading" class="text-sm font-bold">{{ t('operations.attachments') }}</h3><label v-if="can('attachments.create')" class="ls-btn ls-btn-sm cursor-pointer">{{ uploading ? t('common.saving') : t('operations.upload') }}<input type="file" class="sr-only" accept="application/pdf,image/png,image/jpeg,image/webp" :disabled="uploading" @change="uploadAttachment"></label></div>
             <QuotaUsageMeter v-if="can('attachments.create')" quota-key="max_storage_bytes" compact class="mb-3" />
-            <div v-if="attachments.length" class="space-y-2"><div v-for="item in attachments" :key="item.id" class="flex items-center justify-between rounded-control bg-surface-muted px-3 py-2 text-sm"><BsButton variant="link" type="submit" class="truncate text-link" @click="downloadAttachment(item)">{{ item.file_name }}</BsButton><BsButton type="submit" v-if="can('attachments.delete')" class="ls-btn ls-btn-sm" :aria-label="t('common.delete')" @click="deleteAttachment(item)"><AppIcon name="delete" :size="18" /></BsButton></div></div><p v-else class="text-sm text-fg-muted">{{ t('operations.noAttachments') }}</p>
+            <div v-if="attachments.length" class="space-y-2"><div v-for="item in attachments" :key="item.id" class="flex items-center justify-between rounded-control bg-surface-muted px-3 py-2 text-sm"><BsButton variant="link" type="submit" class="truncate text-link" @click="downloadAttachment(item)">{{ item.file_name }}</BsButton><BsButton type="submit" v-if="can('attachments.delete')" class="ls-btn ls-btn-sm" :aria-label="t('common.delete')" @click="deleteAttachment(item)"><BsIcon name="delete" :size="18" /></BsButton></div></div><p v-else class="text-sm text-fg-muted">{{ t('operations.noAttachments') }}</p>
           </section>
 
           <section v-if="transaction?.reverses_transaction_id || transaction?.reversed_by_transaction_id || transaction?.correction_of_transaction_id" class="rounded-control bg-[var(--bs-status-info-bg)] px-3 py-3 text-sm text-[var(--bs-status-info)]" aria-labelledby="relationships-heading">

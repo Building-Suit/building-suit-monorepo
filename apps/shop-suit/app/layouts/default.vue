@@ -103,7 +103,7 @@ async function logout() {
         </div>
         <slot v-else />
     <template #overlays>
-      <ToastHost />
+      <BsToastHost />
     </template>
   </BsAppShell>
 </template>

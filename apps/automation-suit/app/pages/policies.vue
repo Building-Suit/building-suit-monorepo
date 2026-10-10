@@ -41,11 +41,11 @@ async function save() {
     </div>
     <BsRecordActionDialog v-model:visible="visible" :title="mode === 'edit' ? 'Edit retry policy' : 'Create retry policy'" :dirty="dirty" :pending="pending" :error="actionError" :submit-disabled="!operator?.writesEnabled" submit-label="Validate and save" @submit="save">
       <div class="grid gap-3 md:grid-cols-3">
-        <FloatingField label="Policy ID"><input v-model="form.policy_id" class="ls-input" required></FloatingField>
-        <FloatingField label="Display name"><input v-model="form.display_name" class="ls-input" required></FloatingField>
-        <FloatingField label="Max attempts"><input v-model.number="form.max_attempts" type="number" min="1" max="20" class="ls-input" required></FloatingField>
+        <BsFloatingField label="Policy ID"><input v-model="form.policy_id" class="ls-input" required></BsFloatingField>
+        <BsFloatingField label="Display name"><input v-model="form.display_name" class="ls-input" required></BsFloatingField>
+        <BsFloatingField label="Max attempts"><input v-model.number="form.max_attempts" type="number" min="1" max="20" class="ls-input" required></BsFloatingField>
       </div>
-      <FloatingField label="Attempt profiles, comma-separated"><input v-model="form.attempt_profiles" class="ls-input font-mono" required></FloatingField>
+      <BsFloatingField label="Attempt profiles, comma-separated"><input v-model="form.attempt_profiles" class="ls-input font-mono" required></BsFloatingField>
       <label class="flex items-center gap-2 text-sm"><input v-model="form.active" type="checkbox">Active</label>
       <p class="text-xs text-fg-muted">{{ operator?.writesEnabled ? 'Operator writes enabled' : 'Configure NUXT_CONTROL_OPERATOR_DATABASE_URL to save' }}</p>
     </BsRecordActionDialog>
