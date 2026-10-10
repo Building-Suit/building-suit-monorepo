@@ -1,0 +1,52 @@
+\set ON_ERROR_STOP on
+BEGIN;
+DO $$
+DECLARE r uuid; actor uuid:='a0000000-0000-4000-8000-000000000001'; offer jsonb; reply jsonb; denied boolean; first_id bigint;
+BEGIN
+ INSERT INTO control.operator_actors(actor_id,identity_provider) VALUES(actor,'local-n8n');
+ INSERT INTO control.workflow_runs(project_id,suit_slug,workstream_slug,status,max_tasks,maintenance_requested)
+ SELECT project_id,suit_slug,workstream_slug,'running',4,true FROM control.tasks WHERE project_id IS NOT NULL AND workstream_slug IS NOT NULL LIMIT 1 RETURNING run_id INTO r;
+ SELECT value INTO offer FROM jsonb_array_elements(control.operator_gate_offers(r)) WHERE value->>'action'='maintenance-hold-release';
+ IF offer IS NULL OR offer->>'gate_id' IS NULL THEN RAISE EXCEPTION 'Exact hold gate missing';END IF;
+ SET LOCAL ROLE bs_control_app;
+ denied:=false;
+ BEGIN PERFORM control.resolve_authenticated_operator_gate(actor,r,offer->>'gate_fingerprint','approve');EXCEPTION WHEN insufficient_privilege THEN denied:=true;END;
+ IF NOT denied THEN RAISE EXCEPTION 'Executor granted operator authority';END IF;
+ RESET ROLE;
+ SET LOCAL ROLE bs_control_operator;
+ denied:=false;
+ BEGIN PERFORM control.resolve_authenticated_operator_gate('a0000000-0000-4000-8000-000000000002',r,offer->>'gate_fingerprint','approve');EXCEPTION WHEN OTHERS THEN denied:=true;END;
+ IF NOT denied THEN RAISE EXCEPTION 'Unregistered actor accepted';END IF;
+ denied:=false;
+ BEGIN PERFORM control.resolve_authenticated_operator_gate(actor,r,repeat('0',32),'approve');EXCEPTION WHEN OTHERS THEN denied:=true;END;
+ IF NOT denied THEN RAISE EXCEPTION 'Stale/forged offer accepted';END IF;
+ reply:=control.resolve_authenticated_operator_gate(actor,r,offer->>'gate_fingerprint','reject');
+ first_id:=(reply->>'event_id')::bigint;
+ reply:=control.resolve_authenticated_operator_gate(actor,r,offer->>'gate_fingerprint','reject');
+ IF reply->>'replayed'<>'true' OR (reply->>'event_id')::bigint<>first_id THEN RAISE EXCEPTION 'Reject replay not idempotent';END IF;
+ denied:=false;
+ BEGIN PERFORM control.resolve_authenticated_operator_gate(actor,r,offer->>'gate_fingerprint','approve');EXCEPTION WHEN OTHERS THEN denied:=true;END;
+ IF NOT denied THEN RAISE EXCEPTION 'Contradictory response accepted';END IF;
+ RESET ROLE;
+ IF NOT (SELECT maintenance_requested FROM control.workflow_runs WHERE run_id=r) THEN RAISE EXCEPTION 'Reject released hold';END IF;
+ UPDATE control.workflow_runs SET run_revision=run_revision+1 WHERE run_id=r;
+ SELECT value INTO offer FROM jsonb_array_elements(control.operator_gate_offers(r)) WHERE value->>'action'='maintenance-hold-release';
+ IF offer IS NULL THEN RAISE EXCEPTION 'New generation offer missing';END IF;
+ SET LOCAL ROLE bs_control_operator;
+ reply:=control.resolve_authenticated_operator_gate(actor,r,offer->>'gate_fingerprint','approve');
+ first_id:=(reply->>'event_id')::bigint;
+ reply:=control.resolve_authenticated_operator_gate(actor,r,offer->>'gate_fingerprint','approve');
+ IF reply->>'replayed'<>'true' OR (reply->>'event_id')::bigint<>first_id THEN RAISE EXCEPTION 'Approve replay not idempotent';END IF;
+ RESET ROLE;
+ IF (SELECT maintenance_requested FROM control.workflow_runs WHERE run_id=r) THEN RAISE EXCEPTION 'Approve failed to release hold';END IF;
+ IF (SELECT max_tasks FROM control.workflow_runs WHERE run_id=r)<>4 THEN RAISE EXCEPTION 'Limit changed';END IF;
+ SET LOCAL ROLE bs_control_operator;
+ reply:=control.resolve_authenticated_operator_gate(actor,r,offer->>'gate_fingerprint','revoke');
+ reply:=control.resolve_authenticated_operator_gate(actor,r,offer->>'gate_fingerprint','revoke');
+ IF reply->>'replayed'<>'true' THEN RAISE EXCEPTION 'Revoke replay not idempotent';END IF;
+ RESET ROLE;
+ IF NOT (SELECT maintenance_requested FROM control.workflow_runs WHERE run_id=r) THEN RAISE EXCEPTION 'Unused hold release was not revoked';END IF;
+ IF (SELECT actor_id FROM control.operator_authority_events WHERE event_id=first_id)<>actor THEN RAISE EXCEPTION 'Actor not persisted';END IF;
+ IF has_table_privilege('bs_control_operator','control.workflow_runs','UPDATE') OR has_table_privilege('bs_control_operator','control.operator_authority_events','INSERT') THEN RAISE EXCEPTION 'Direct authority writes available';END IF;
+END $$;
+ROLLBACK;

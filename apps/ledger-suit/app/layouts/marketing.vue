@@ -29,7 +29,7 @@ const legalLinks = [
 
 <template>
   <BsMarketingLayout :navigation="navigation.map(item => ({ ...item, label: t(item.label) }))" :legal-links="legalLinks.map(item => ({ ...item, label: t(item.label) }))" :signed-in="!!user" :labels="{ home: t('marketing.home'), navigation: t('landing.navigation'), openApp: t('landing.openApp'), signIn: t('auth.signIn'), startTrial: t('landing.startTrial'), close: t('nav.close'), open: t('nav.open'), footer: t('landing.footer'), footerNavigation: t('marketing.footerNavigation') }">
-    <template #logo><BsProductLogo name="Ledger Suit" asset-prefix="/brand/ledger-suit" class="my-2 h-auto w-auto max-w-36 sm:max-w-52" /></template>
-    <slot />
+    <template #logo><BsProductLogo name="Ledger Suit" asset-prefix="/brand/ledger-suit" size="marketing" /></template>
+    <BsSlot :render="$slots.default" />
   </BsMarketingLayout>
 </template>

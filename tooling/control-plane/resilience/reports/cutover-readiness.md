@@ -33,7 +33,7 @@ Mandatory scenarios: 40/40 passed. The deterministic harness used no destructive
 | idempotent-run-completion-credit | the controller reconnects after task completion credit was persisted | credit once → replay without increment | credit once → replay without increment | 0 | 0 | 0 | PASS |
 | resume-without-deployed-controller-proof | a repaired batch is considered for resume without a live controller export | safety stop | safety stop | 0 | 0 | 0 | PASS |
 | focused-verification-isolation | an unrelated workspace check is failing outside the focused changed scope | skip unrelated check → preserve implementation retry budget | outside_focused_changed_scope → retry budget unchanged | 0 | 0 | 0 | PASS |
-| focused-repair-exhaustion | focused verification keeps failing through the final allowed attempt | bounded repair → safety-stop | repair attempts 1-4 → safety-stop | 5 | 5 | 0 | PASS |
+| focused-repair-exhaustion | focused verification keeps failing through the final allowed attempt | bounded repair → exact operator extension gate | repair attempts 1-4 → wait-operator | 5 | 5 | 0 | PASS |
 | milestone-required-check-contract | changed paths do not match a required milestone check | select required check | required_by_milestone_contract | 0 | 0 | 0 | PASS |
 | evidence-backed-parent-satisfaction | task is already satisfied by verified parent lineage | complete without implementation | complete without implementation | 0 | 0 | 0 | PASS |
 | unexplained-empty-diff | publication discovers an empty diff without parent-satisfaction evidence | bounded no-change review | handle-no-publishable-changes | 1 | 1 | 1 | PASS |

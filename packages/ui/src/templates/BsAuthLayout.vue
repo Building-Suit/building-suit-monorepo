@@ -12,7 +12,7 @@ useTheme()
         </NuxtLink>
         <slot />
         <slot name="legal" />
-        <div class="bs-auth-layout__settings"><SettingsMenu /></div>
+        <div class="bs-auth-layout__settings"><BsSettingsMenu /></div>
       </div>
     </section>
     <section class="ls-auth-showcase relative hidden overflow-hidden lg:flex lg:items-center lg:justify-center" :aria-label="productName">

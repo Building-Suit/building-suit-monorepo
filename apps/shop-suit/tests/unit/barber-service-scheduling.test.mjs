@@ -39,7 +39,7 @@ test('service form is bilingual, responsive, paginated, and stateful', () => {
   assert.match(page, /list_services/)
   assert.match(page, /p_page: page\.value/)
   assert.match(page, /service_scheduling_options/)
-  assert.match(page, /sm:grid-cols-2/)
+  assert.match(page, /:columns="2"/)
   assert.match(page, /role="status"/)
   assert.match(page, /role="alert"/)
   assert.match(page, /pushToast/)

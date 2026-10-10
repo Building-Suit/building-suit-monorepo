@@ -182,75 +182,53 @@ function money(value: number) {
 </script>
 
 <template>
-  <div class="space-y-6">
-    <header class="flex flex-wrap items-end justify-between gap-4">
-      <div><h1 class="text-3xl font-extrabold tracking-tight">{{ copy.title }}</h1><p class="mt-2 text-sm text-muted-foreground">{{ copy.subtitle }}</p></div>
-      <div v-if="current" class="flex flex-wrap gap-2"><NuxtLink to="/catalog-import" class="ls-btn">{{ copy.import }}</NuxtLink></div>
-    </header>
-
-    <div v-if="!current && !shopLoading" class="ls-card p-8 text-center text-sm"><p>{{ copy.noShop }}</p><NuxtLink to="/dashboard" class="mt-3 inline-block font-bold text-[var(--bs-link)] underline">{{ copy.dashboard }}</NuxtLink></div>
+  <BsStack>
+    <BsPageHeader  :title="copy.title" :subtitle="copy.subtitle">
+      <template #actions>
+        <BsInline v-if="current">
+          <BsLink to="/catalog-import">{{ copy.import }}</BsLink>
+        </BsInline>
+      </template>
+    </BsPageHeader>
+    <BsPanel v-if="!current && !shopLoading" padding="md">
+      <BsText as="p">{{ copy.noShop }}</BsText>
+      <BsLink to="/dashboard">{{ copy.dashboard }}</BsLink>
+    </BsPanel>
     <template v-else-if="current">
-      <p class="rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm dark:bg-[var(--bs-status-info-bg)]">{{ copy.stockLater }}</p>
-      <p v-if="actionError && !showForm" role="alert" class="rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm text-[var(--bs-status-error)]">{{ actionError }}</p>
-
+      <BsText as="p" size="sm">{{ copy.stockLater }}</BsText>
+      <BsText v-if="actionError && !showForm" role="alert" as="p" size="sm" tone="danger">{{ actionError }}</BsText>
       <BsRecordActionDialog v-model:visible="showForm" :title="editingId ? copy.edit : copy.add" :dirty="formDirty" :pending="saving" :error="actionError" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="save">
-        <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ copy.name }}<input v-model="form.name" type="text" minlength="2" maxlength="160" required class="ls-input"></label>
-        <label class="space-y-2 text-sm font-bold">{{ copy.sku }}<input v-model="form.sku" type="text" maxlength="80" class="ls-input"></label>
-        <label class="space-y-2 text-sm font-bold">{{ copy.barcode }}<input v-model="form.barcode" type="text" maxlength="80" class="ls-input"></label>
-        <label class="space-y-2 text-sm font-bold">{{ copy.price }}<input v-model.number="form.salePrice" type="number" min="0" step="0.01" required class="ls-input"></label>
-        <label class="space-y-2 text-sm font-bold">{{ copy.category }}<select v-model="form.categoryId" class="ls-select"><option value="">{{ copy.allCategories }}</option><option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option></select></label>
+        <BsField v-slot="field" :label="copy.name">
+          <BsInput :id="field.id" v-model="form.name" :aria-describedby="field.describedby" type="text" :minlength="2" :maxlength="160" required/>
+        </BsField>
+        <BsField v-slot="field" :label="copy.sku">
+          <BsInput :id="field.id" v-model="form.sku" :aria-describedby="field.describedby" type="text" :maxlength="80"/>
+        </BsField>
+        <BsField v-slot="field" :label="copy.barcode">
+          <BsInput :id="field.id" v-model="form.barcode" :aria-describedby="field.describedby" type="text" :maxlength="80"/>
+        </BsField>
+        <BsField v-slot="field" :label="copy.price">
+          <BsInput :id="field.id" v-model.number="form.salePrice" :aria-describedby="field.describedby" type="number" :min="0" :step="0.01" required/>
+        </BsField>
+        <BsField v-slot="field" :label="copy.category">
+          <BsSelect v-model="form.categoryId" :input-id="field.id" :aria-describedby="field.describedby" :label="copy.category" :options="[{ value: '', label: (copy.allCategories), disabled: false }, ...(categories).map(category => ({ value: category.id, label: (category.name), disabled: false }))]" option-label="label" option-value="value" option-disabled="disabled"/>
+        </BsField>
       </BsRecordActionDialog>
-
-      <div class="overflow-hidden ls-card">
-        <BsDataTable
-          :value="products"
-          :label="copy.title"
-          :loading="pending"
-          :error="error ? copy.readError : null"
-          :capabilities="{ insert: canManage, edit: canManage, archive: canManage }"
-          :action-labels="{ insert: copy.add, edit: copy.edit, archive: copy.archive }"
-          :row-action-pending="(action, product) => action === 'archive' && archivingId === product.id"
-          searchable
-          :search-label="copy.search"
-          lazy
-          paginator
-          :rows="pageSize"
-          :first="(page - 1) * pageSize"
-          :total-records="productPage.total"
-          :always-show-paginator="false"
-          data-key="id"
-          :row-class="() => 'border-t border-border'"
-          @search="value => search = value"
-          @page="page = $event.page + 1"
-          @retry="refresh()"
-          @create="openCreate"
-          @edit="openEdit"
-          @archive="archive"
-        >
-  <template #filters><BsSelect v-model="categoryFilter" :label="copy.category" :options="[{ id: '', name: copy.allCategories }, ...categories]" option-label="name" option-value="id" /></template>
-  <Column header-class="px-5 py-3 text-start" body-class="px-5 py-4 font-bold">
-    <template #header>{{ copy.name }}</template>
-    <template #body="{ data: product }">{{ product.name }}</template>
-  </Column>
-  <Column header-class="px-5 py-3 text-start" body-class="px-5 py-4">
-    <template #header>{{ copy.category }}</template>
-    <template #body="{ data: product }">{{ product.category_name || '—' }}</template>
-  </Column>
-  <Column header-class="px-5 py-3 text-start" body-class="px-5 py-4">
-    <template #header>{{ copy.sku }}</template>
-    <template #body="{ data: product }">{{ product.sku || '—' }}</template>
-  </Column>
-  <Column header-class="px-5 py-3 text-start" body-class="px-5 py-4">
-    <template #header>{{ copy.barcode }}</template>
-    <template #body="{ data: product }">{{ product.barcode || '—' }}</template>
-  </Column>
-  <Column header-class="px-5 py-3 text-end" body-class="px-5 py-4 text-end">
-    <template #header>{{ copy.price }}</template>
-    <template #body="{ data: product }">{{ money(Number(product.sale_price)) }}</template>
-  </Column>
-  <template #empty><BsStateSurface state="empty" :title="search || categoryFilter ? copy.noResults : copy.empty" /></template>
-</BsDataTable>
-      </div>
+      <BsPanel padding="md">
+        <BsDataTable :value="products" :label="copy.title" :loading="pending" :error="error ? copy.readError : null" :capabilities="{ insert: canManage, edit: canManage, archive: canManage }" :action-labels="{ insert: copy.add, edit: copy.edit, archive: copy.archive }" :row-action-pending="(action, product) => action === 'archive' && archivingId === product.id" searchable :search-label="copy.search" lazy paginator :rows="pageSize" :first="(page - 1) * pageSize" :total-records="productPage.total" :always-show-paginator="false" data-key="id" :columns="[{ key: 'column0', header: (copy.name) }, { key: 'column1', header: (copy.category) }, { key: 'column2', header: (copy.sku) }, { key: 'column3', header: (copy.barcode) }, { key: 'column4', header: (copy.price), align: 'end' }]" @search="value => search = value" @page="page = $event.page + 1" @retry="refresh()" @create="openCreate" @edit="openEdit" @archive="archive">
+          <template #cell-column0="{ row: product }">{{ product.name }}</template>
+          <template #cell-column1="{ row: product }">{{ product.category_name || '—' }}</template>
+          <template #cell-column2="{ row: product }">{{ product.sku || '—' }}</template>
+          <template #cell-column3="{ row: product }">{{ product.barcode || '—' }}</template>
+          <template #cell-column4="{ row: product }">{{ money(Number(product.sale_price)) }}</template>
+          <template #filters>
+            <BsSelect v-model="categoryFilter" :label="copy.category" :options="[{ id: '', name: copy.allCategories }, ...categories]" option-label="name" option-value="id"/>
+          </template>
+          <template #empty>
+            <BsStateSurface state="empty" :title="search || categoryFilter ? copy.noResults : copy.empty"/>
+          </template>
+        </BsDataTable>
+      </BsPanel>
     </template>
-  </div>
+  </BsStack>
 </template>

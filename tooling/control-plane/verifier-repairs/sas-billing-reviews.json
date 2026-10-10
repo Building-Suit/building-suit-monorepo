@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "task_id": "SAS-M1-BILLING-001",
+  "reviews": {
+    "app-unit": {
+      "artifact_sha256": "5fbff168abb057dc414add2adac8425a1e9c43414e1389c887e5f1b32d8d481a",
+      "classification": "EXTERNAL_EVIDENCE",
+      "origin": "external-evidence",
+      "source_paths": [
+        "apps/super-admin-suit/tests/unit/sas-m1-billing-001-1.staging-evidence.test.mjs"
+      ],
+      "root_cause": "The independent staging-evidence executable requires SAS_BILLING_STAGING_EVIDENCE for the exact source and both declared payment journeys. The bound artifact proves this input is absent. Local synthetic fixtures cannot substitute for independently reviewed staging receipts. No actual human-authority requirement is established merely by missing receipts."
+    },
+    "verification-obligation-blocked-15": {
+      "artifact_sha256": "32b48e7a7bd18e76489658a5971c6791f4ad2d74bcf6b3e4a4272d4e2a3a8e71",
+      "classification": "VERIFIER_INFRA",
+      "origin": "verifier-fixture",
+      "source_paths": [
+        "apps/super-admin-suit/supabase/tests/sas-m1-billing-001-2.test.sql",
+        "apps/super-admin-suit/supabase/migrations/20261007220000_payment_review_control.sql"
+      ],
+      "root_cause": "Task-specific database obligations run before the registered clean-reset prerequisite. The audit assertion expects the new billing wrapper, but its migration subsequently fails compilation. These results are not evidence against a successfully prepared current schema. Repair prerequisite ordering and keep the failed audit assertion and separate migration PRODUCT_DEFECT review; do not turn stale prerequisite evidence into an additional product attempt."
+    },
+    "sas-m1-billing-001-obligation-1-staging-evidence": {
+      "artifact_sha256": "0a82ebc37053aeb44ad8a5b9c114d741d88c073722319a3c260973c5cd8b80ab",
+      "classification": "EXTERNAL_EVIDENCE",
+      "origin": "external-evidence",
+      "source_paths": [
+        "apps/super-admin-suit/tests/unit/sas-m1-billing-001-1.staging-evidence.test.mjs"
+      ],
+      "root_cause": "The independent staging-evidence executable requires SAS_BILLING_STAGING_EVIDENCE for the exact source and both declared payment journeys. The bound artifact proves this input is absent. Local synthetic fixtures cannot substitute for independently reviewed staging receipts. No actual human-authority requirement is established merely by missing receipts."
+    },
+    "sas-m1-billing-001-obligation-2-database": {
+      "artifact_sha256": "f850b4d5d241f3943ae5d9f9457cdac32c376d70af879a930f3cf66b6f91c2aa",
+      "classification": "VERIFIER_INFRA",
+      "origin": "verifier-fixture",
+      "source_paths": [
+        "apps/super-admin-suit/supabase/tests/sas-m1-billing-001-2.test.sql",
+        "apps/super-admin-suit/supabase/migrations/20261007220000_payment_review_control.sql"
+      ],
+      "root_cause": "Task-specific database obligations run before the registered clean-reset prerequisite. The audit assertion expects the new billing wrapper, but its migration subsequently fails compilation. These results are not evidence against a successfully prepared current schema. Repair prerequisite ordering and keep the failed audit assertion and separate migration PRODUCT_DEFECT review; do not turn stale prerequisite evidence into an additional product attempt."
+    },
+    "sas-m1-billing-001-obligation-4-database": {
+      "artifact_sha256": "70f2689600f68dcde884db1208d667f98aa2ebff4cdcb480e4c8048440734206",
+      "classification": "VERIFIER_INFRA",
+      "origin": "verifier-fixture",
+      "source_paths": [
+        "apps/super-admin-suit/supabase/tests/sas-m1-billing-001-4.test.sql",
+        "apps/super-admin-suit/supabase/migrations/20261005120000_configuration_authority.sql"
+      ],
+      "root_cause": "The revocation fixture sets platform_admins.enabled=false but leaves disabled_at=NULL at line50. The authoritative check constraint requires disabled_at when disabled. The artifact reports this fixture constraint violation after five assertions; no disabled-owner product denial assertion executes. Repair the fixture without weakening the constraint or required assertions."
+    },
+    "sas-m1-billing-001-obligation-5-browser": {
+      "artifact_sha256": "d351cf2980794dc1a4b14d89bc8de5714e67341b7a444cc5eea74a630de835f3",
+      "classification": "VERIFIER_INFRA",
+      "origin": "verifier-fixture",
+      "source_paths": [
+        "apps/super-admin-suit/tests/e2e/sas-m1-billing-001-5.spec.ts",
+        "packages/ui/src/organisms/BsDataTable.vue"
+      ],
+      "root_cause": "All four browser cases reach the payment queue, then time out on the styled internal class .p-paginator-next at line42. The shared unstyled data table uses custom paginator classes; the recorded page snapshot contains enabled Next Page. The test selector is incompatible with the current shared table. Use its accessible navigation control and preserve pagination, locale, theme and payment assertions."
+    },
+    "super-admin-database-reset": {
+      "artifact_sha256": "fcf9fa8f0c486dedc1d84d0382289df84daffda3961a9cef7789e1fffe8e24f2",
+      "classification": "PRODUCT_DEFECT",
+      "origin": "application-sql",
+      "phase": "migration",
+      "source_paths": [
+        "apps/super-admin-suit/supabase/migrations/20261007220000_payment_review_control.sql"
+      ],
+      "root_cause": "The exact source migration 20261007220000_payment_review_control.sql added by execution 317 fails PL/pgSQL compilation in statement 4, public.super_admin_adapter_complete, with SQLSTATE 42601. Its IF condition contains an unparenthesized CASE expression after IS DISTINCT FROM; THEN within CASE terminates the PL/pgSQL IF expression scan. This is a deterministic syntax defect in current product migration source, not stale disposable database state. Preserve this product-defect evidence; infrastructure summaries and blocked subsequent checks do not erase it."
+    }
+  }
+}
