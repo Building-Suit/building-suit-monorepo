@@ -345,6 +345,8 @@ function formatDate(value: string | null) {
   return new Intl.DateTimeFormat(locale.value === 'ar' ? 'ar-EG' : 'en-EG', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
 }
 function lineMovements(lineId: string) { return sale.value?.movements.filter(movement => movement.invoiceItemId === lineId) ?? [] }
+
+useShopRealtime('sales', () => paymentDirty.value || correctionDirty.value)
 </script>
 
 <template>

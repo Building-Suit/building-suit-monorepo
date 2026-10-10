@@ -372,6 +372,8 @@ function formatDate(value: string | null) {
   return new Intl.DateTimeFormat(locale.value === 'ar' ? 'ar-EG' : 'en-EG', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
 }
 function handlePage(event: { page: number }) { page.value = event.page + 1 }
+
+useShopRealtime('sales', () => editorDirty.value)
 </script>
 
 <template>

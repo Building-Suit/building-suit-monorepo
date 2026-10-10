@@ -28,7 +28,8 @@
     "@hugeicons/vue": "1.0.6",
     "zod": "3.25.76",
     "@building-suit/nuxt-layer": "workspace:*",
-    "@building-suit/contracts": "workspace:*"
+    "@building-suit/contracts": "workspace:*",
+    "@building-suit/data-access": "workspace:*"
   },
   "devDependencies": {
     "typescript": "5.9.3",

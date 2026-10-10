@@ -298,6 +298,8 @@ async function saveRole(archive = false) {
 function formatDate(value: string) {
   return new Intl.DateTimeFormat(isArabic.value ? 'ar-EG' : 'en-EG', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
 }
+
+useShopRealtime('team', () => roleDirty.value || inviteDirty.value || editDirty.value || transferDirty.value)
 </script>
 
 <template>

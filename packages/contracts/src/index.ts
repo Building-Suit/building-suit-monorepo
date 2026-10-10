@@ -65,4 +65,23 @@ export interface MarketingPricingCopy {
   notIncluded: string
 }
 export interface DataScope { environment: string; portal: string; userId: string; tenantId: string }
+/** Opaque auth/session identity, never an access token. Null location means tenant-wide. */
+export interface RealtimeScope extends DataScope {
+  sessionId: string
+  locationId: string | null
+  contextKey: string
+}
+export interface RealtimeFilter {
+  schema: string
+  table: string
+  event: '*' | 'INSERT' | 'UPDATE' | 'DELETE'
+  filter?: string
+}
+export interface RealtimeRefreshRequest {
+  scope: Readonly<RealtimeScope>
+  dataKeys: readonly string[]
+  signal: AbortSignal
+  /** Check again before committing an asynchronous result to client state. */
+  isCurrent(): boolean
+}
 export interface CapabilityAdapter { can(capability: string): boolean }

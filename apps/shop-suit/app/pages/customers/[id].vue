@@ -245,6 +245,8 @@ function money(value: number) {
   return new Intl.NumberFormat(locale.value === 'ar' ? 'ar-EG' : 'en-EG', { style: 'currency', currency: 'EGP', maximumFractionDigits: 2 }).format(value)
 }
 const overdueCount = computed(() => overdue.value.total)
+
+useShopRealtime('customers', () => receiptDirty.value || formDirty.value)
 </script>
 
 <template>
