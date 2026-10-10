@@ -12,16 +12,13 @@ if [[ -f "$CONTROL_DB_ENV_FILE" ]]; then
   set +a
 fi
 
-CONTROL_ROOT="$HOME/Dev/building-suit-monorepo"
-
-if [[ ! -f "$CONTROL_ROOT/tooling/control-plane/runner/bs-agent.mjs" ]]; then
-  printf '%s\n' \
-    '{"ok":false,"error":"control_plane_runner_not_found"}'
-
-  exit 127
-fi
-
-AGENT="$CONTROL_ROOT/tooling/control-plane/runner/bs-agent.mjs"
+CONTROL_ROOT="${BS_CONTROL_REPOSITORY_ROOT:-$HOME/Dev/building-suit-monorepo}"
+export BS_CONTROL_REPOSITORY_ROOT="$CONTROL_ROOT"
+RELEASE_HOME="${BS_CONTROL_RELEASE_HOME:-$HOME/.local/lib/building-suit-control-plane}"
+RELEASE_ROOT="$(readlink -f "$RELEASE_HOME/current" || true)"
+[[ -n "$RELEASE_ROOT" && -f "$RELEASE_ROOT/release.json" ]] || { printf '%s\n' '{"ok":false,"error":"verified_runtime_release_required"}'; exit 127; }
+export BS_CONTROL_PINNED_RUNTIME_ROOT="$RELEASE_ROOT"
+AGENT="$RELEASE_ROOT/tooling/control-plane/runner/runtime-bootstrap.mjs"
 
 NODE_BIN="$(command -v node || true)"
 
@@ -44,45 +41,63 @@ if [[ "$REQUESTED_COMMAND" == "$N8N_CWD_PREFIX"* ]]; then
 fi
 
 case "$REQUESTED_COMMAND" in
+ "bs-agent operator-gates "*)
+  RUN_ID="${REQUESTED_COMMAND#bs-agent operator-gates }"
+  [[ "$RUN_ID" =~ ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ ]] || exit 64
+  exec "$NODE_BIN" "$AGENT" runner operator-gates "$RUN_ID" ;;
+ "bs-agent operator-gate-resolve "*)
+  printf '%s\n' '{"ok":false,"error":"dedicated_operator_transport_required"}'
+  exit 77 ;;
+
 
   "bs-agent ping")
-    exec "$NODE_BIN" "$AGENT" ping
+    exec "$NODE_BIN" "$AGENT" runner ping
+    ;;
+
+  "bs-agent run-supervise "*)
+    RUN_ID="${REQUESTED_COMMAND#bs-agent run-supervise }"
+    [[ "$RUN_ID" =~ ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ ]] || { printf '%s\n' '{"ok":false,"error":"invalid_run_supervise"}'; exit 64; }
+    exec "$NODE_BIN" "$AGENT" runner run-supervise "$RUN_ID"
+    ;;
+
+  "bs-agent recovery-watch")
+    exec "$NODE_BIN" "$AGENT" runner recovery-watch
     ;;
 
   "bs-agent repo-state")
-    exec "$NODE_BIN" "$AGENT" repo-state
+    exec "$NODE_BIN" "$AGENT" runner repo-state
     ;;
 
   "bs-agent preflight")
-    exec "$NODE_BIN" "$AGENT" preflight
+    exec "$NODE_BIN" "$AGENT" runner preflight
     ;;
 
   "bs-agent codex-status")
-    exec "$NODE_BIN" "$AGENT" codex-status
+    exec "$NODE_BIN" "$AGENT" runner codex-status
     ;;
 
   "bs-agent route no_ai")
-    exec "$NODE_BIN" "$AGENT" route no_ai
+    exec "$NODE_BIN" "$AGENT" runner route no_ai
     ;;
 
   "bs-agent route fast")
-    exec "$NODE_BIN" "$AGENT" route fast
+    exec "$NODE_BIN" "$AGENT" runner route fast
     ;;
 
   "bs-agent route standard")
-    exec "$NODE_BIN" "$AGENT" route standard
+    exec "$NODE_BIN" "$AGENT" runner route standard
     ;;
 
   "bs-agent route deep")
-    exec "$NODE_BIN" "$AGENT" route deep
+    exec "$NODE_BIN" "$AGENT" runner route deep
     ;;
 
   "bs-agent route review")
-    exec "$NODE_BIN" "$AGENT" route review
+    exec "$NODE_BIN" "$AGENT" runner route review
     ;;
 
   "bs-agent codex-smoke fast")
-    exec "$NODE_BIN" "$AGENT" codex-smoke fast
+    exec "$NODE_BIN" "$AGENT" runner codex-smoke fast
     ;;
 
   "bs-agent pr-check "*)
@@ -95,7 +110,7 @@ case "$REQUESTED_COMMAND" in
       exit 64
     fi
 
-    exec "$NODE_BIN" "$AGENT" pr-check "$PR_NUMBER"
+    exec "$NODE_BIN" "$AGENT" runner pr-check "$PR_NUMBER"
     ;;
 
   "bs-agent task-next "*)
@@ -109,7 +124,7 @@ case "$REQUESTED_COMMAND" in
     fi
 
     exec "$NODE_BIN" \
-      "$AGENT" \
+      "$AGENT" runner \
       task-next \
       "$SUIT_SLUG"
     ;;
@@ -126,7 +141,7 @@ case "$REQUESTED_COMMAND" in
     fi
 
     exec "$NODE_BIN" \
-      "$AGENT" \
+      "$AGENT" runner \
       task-packet \
       "$TASK_ID"
     ;;
@@ -143,7 +158,7 @@ case "$REQUESTED_COMMAND" in
     fi
 
     exec "$NODE_BIN" \
-      "$AGENT" \
+      "$AGENT" runner \
       task-claim \
       "$SUIT_SLUG"
     ;;
@@ -160,7 +175,7 @@ case "$REQUESTED_COMMAND" in
     fi
 
     exec "$NODE_BIN" \
-      "$AGENT" \
+      "$AGENT" runner \
       task-release \
       "$TASK_ID"
     ;;
@@ -176,7 +191,7 @@ case "$REQUESTED_COMMAND" in
     fi
 
     exec "$NODE_BIN" \
-      "$AGENT" \
+      "$AGENT" runner \
       task-run \
       "$TASK_ID"
     ;;
@@ -192,7 +207,7 @@ case "$REQUESTED_COMMAND" in
     fi
 
     exec "$NODE_BIN" \
-      "$AGENT" \
+      "$AGENT" runner \
       task-verify \
       "$TASK_ID"
     ;;
@@ -208,7 +223,7 @@ case "$REQUESTED_COMMAND" in
     fi
 
     exec "$NODE_BIN" \
-      "$AGENT" \
+      "$AGENT" runner \
       task-retry \
       "$TASK_ID"
     ;;
@@ -224,7 +239,7 @@ case "$REQUESTED_COMMAND" in
     fi
 
     exec "$NODE_BIN" \
-      "$AGENT" \
+      "$AGENT" runner \
       task-engine \
       "$TASK_ID"
     ;;
@@ -240,13 +255,13 @@ case "$REQUESTED_COMMAND" in
     fi
 
     exec "$NODE_BIN" \
-      "$AGENT" \
+      "$AGENT" runner \
       task-supervise \
       "$TASK_ID"
     ;;
 
   "bs-agent external-watch" )
-    exec "$NODE_BIN" "$AGENT" external-watch
+    exec "$NODE_BIN" "$AGENT" runner external-watch
     ;;
 
   "bs-agent external-watch "*)
@@ -259,7 +274,7 @@ case "$REQUESTED_COMMAND" in
       exit 64
     fi
 
-    exec "$NODE_BIN" "$AGENT" external-watch "$LIMIT"
+    exec "$NODE_BIN" "$AGENT" runner external-watch "$LIMIT"
     ;;
 
   "bs-agent workstream-resolve "*)
@@ -273,7 +288,7 @@ case "$REQUESTED_COMMAND" in
     fi
 
     exec "$NODE_BIN" \
-      "$AGENT" \
+      "$AGENT" runner \
       workstream-resolve \
       "$WORKSTREAM_REF"
     ;;
@@ -289,7 +304,7 @@ case "$REQUESTED_COMMAND" in
     fi
 
     exec "$NODE_BIN" \
-      "$AGENT" \
+      "$AGENT" runner \
       task-publish \
       "$TASK_ID"
     ;;
@@ -310,7 +325,7 @@ case "$REQUESTED_COMMAND" in
     fi
 
     exec "$NODE_BIN" \
-      "$AGENT" \
+      "$AGENT" runner \
       run-start \
       "$SUIT_SLUG" \
       "$MAX_TASKS"
@@ -321,7 +336,7 @@ case "$REQUESTED_COMMAND" in
     RUN_ID="${REQUESTED_COMMAND#bs-agent run-check }"
 
     exec "$NODE_BIN" \
-      "$AGENT" \
+      "$AGENT" runner \
       run-check \
       "$RUN_ID"
     ;;
@@ -341,7 +356,7 @@ case "$REQUESTED_COMMAND" in
       exit 64
     fi
 
-    exec "$NODE_BIN" "$AGENT" run-acquire-task \
+    exec "$NODE_BIN" "$AGENT" runner run-acquire-task \
       "$RUN_ID" "$CONTROLLER_PROTOCOL" "$CONTROLLER_FINGERPRINT" "$LEASE_TOKEN"
     ;;
 
@@ -357,10 +372,10 @@ case "$REQUESTED_COMMAND" in
       exit 64
     fi
 
-    # Retain the one-argument ordinary-run interface. The database continues
-    # to reject it for attributed/batch claims; the SSH adapter grants no credit.
+    # Anonymous credit cannot attribute a publication or task. Fail closed.
     if [[ -z "$TASK_ID" && -z "$IDEMPOTENCY_KEY" ]]; then
-      exec "$NODE_BIN" "$AGENT" run-complete-task "$RUN_ID"
+      printf '%s\n' '{"ok":false,"error":"attributed_task_credit_required"}'
+      exit 64
     fi
 
     # BS-20 emits an exact run:task key. Never evaluate a command string.
@@ -370,7 +385,7 @@ case "$REQUESTED_COMMAND" in
       exit 64
     fi
 
-    exec "$NODE_BIN" "$AGENT" run-complete-task "$RUN_ID" "$TASK_ID" "$IDEMPOTENCY_KEY"
+    exec "$NODE_BIN" "$AGENT" runner run-complete-task "$RUN_ID" "$TASK_ID" "$IDEMPOTENCY_KEY"
     ;;
 
   "bs-agent run-stop "*)
@@ -384,7 +399,7 @@ case "$REQUESTED_COMMAND" in
     fi
 
     exec "$NODE_BIN" \
-      "$AGENT" \
+      "$AGENT" runner \
       run-stop \
       "$SUIT_SLUG"
     ;;
@@ -405,7 +420,7 @@ case "$REQUESTED_COMMAND" in
     fi
 
     exec "$NODE_BIN" \
-      "$AGENT" \
+      "$AGENT" runner \
       run-finish \
       "$RUN_ID" \
       "$STATUS"
