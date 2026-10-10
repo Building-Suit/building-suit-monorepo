@@ -15,11 +15,13 @@ export function validateRetryPolicy(policy) {
   for (const profile of policy.attempt_profiles) {
     if (!profiles.has(profile)) throw new Error(`unsupported_attempt_profile:${profile}`)
   }
+  if (policy.one_invocation_extension && (!Number.isSafeInteger(policy.one_invocation_extension.grant_id) || policy.one_invocation_extension.grant_id<1 || policy.one_invocation_extension.profile!=='review')) throw new Error('registered_single_invocation_extension_required')
   return {
     policy_id: policy.policy_id,
     max_attempts: policy.max_attempts,
     attempt_profiles: [...policy.attempt_profiles],
     inherited_from: policy.inherited_from ?? null,
+    ...(policy.one_invocation_extension?{one_invocation_extension:{...policy.one_invocation_extension}}:{}),
   }
 }
 
@@ -46,4 +48,20 @@ export function retryDecision(policy, completedAttempt) {
     next_profile: profileForAttempt(validated, nextAttempt),
     max_attempts: validated.max_attempts,
   }
+}
+
+// Resume an already-reserved execution using its recorded profile. It does not
+// ask for a new slot, even when that reservation occupies the final slot.
+export function repairRetryDecision(policy, previousExecution, accounting = null, runningExecution = null) {
+  const validated = validateRetryPolicy(policy)
+  if (runningExecution) {
+    if (runningExecution.status !== 'running' || runningExecution.attempt <= previousExecution.attempt
+      || previousExecution.task_id && runningExecution.task_id !== previousExecution.task_id) throw new Error('same_task_running_reservation_required')
+    return { allowed: true, resumed: true, next_attempt: runningExecution.attempt, next_profile: runningExecution.model_profile, max_attempts: validated.max_attempts }
+  }
+  if(accounting && (!Number.isSafeInteger(accounting.consumed)||accounting.consumed<1))return {allowed:false,reason:'reviewed_product_evidence_required',max_attempts:validated.max_attempts}
+  if ((accounting?.consumed ?? previousExecution.attempt)>=validated.max_attempts && Number.isSafeInteger(policy.one_invocation_extension?.grant_id)) {
+    return {allowed:true,next_attempt:(accounting?.consumed ?? previousExecution.attempt)+1,next_profile:'review',max_attempts:validated.max_attempts,operator_grant_id:policy.one_invocation_extension.grant_id}
+  }
+  return retryDecision(validated, accounting?.consumed ?? previousExecution.attempt)
 }
