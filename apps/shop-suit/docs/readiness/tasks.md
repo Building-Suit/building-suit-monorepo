@@ -555,10 +555,12 @@ Before the later named packages:
 
 ### SS-VAL-001 — Launch qualification
 
-- Requirements: VAL-01/10..13, PLAN continuity.
-- Prerequisites: all accepted launch packages.
-- Capability: disposable DB regression, authenticated browser matrix, report reconciliation, staging verification, restore/cutover evidence and honest capability claims.
-- No deployment/merge occurs without separate authorization.
+- Requirements: SS-LAUNCH-R01 through SS-LAUNCH-R13, current first-launch stack.
+- Gate: [qualification report](../SS-VAL-001-verification.md) and [executable matrix](../../tests/launch-qualification.json); historical task lists do not add deferred optional packages.
+- Capability: full local DB/unit/review/quality and focused browser evidence, with EN/AR, RTL/LTR, phone/desktop, permission and tenant-isolation boundaries.
+- Statuses remain separate: implemented, locally checked, independently verified, provider-configured, deployed and production-smoke-tested.
+- Provider/hosted evidence remains an explicit external gate. Local PASS cannot establish it. ETA, offline and optional private offers remain excluded.
+- No deployment, provider mutation, hosted DB change, merge, push or commit occurs for this qualification.
 
 ## Exact next proposed task
 

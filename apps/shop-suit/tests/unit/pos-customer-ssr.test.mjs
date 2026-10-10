@@ -17,7 +17,7 @@ function component(file, globals) {
   const module = { exports: {} }
   const localRequire = name => {
     if (!name.startsWith('~/')) return require(name)
-    const extension = name.endsWith('/businessMode') ? '.ts' : name.endsWith('/pos') ? '.js' : ''
+    const extension = name.endsWith('/businessMode') ? '.ts' : /\/(pos|posCustomer|saleCopy)$/.test(name) ? '.js' : ''
     return require(new URL(`../../app/${name.slice(2)}${extension}`, import.meta.url).pathname)
   }
   new Function('require', 'module', 'exports', ...Object.keys(globals), code)(localRequire, module, module.exports, ...Object.values(globals))
@@ -33,6 +33,8 @@ for (const customerId of ['customer-1', null]) test(`SSR locks appointment custo
     ref: vue.ref, computed: vue.computed, watch: vue.watch, nextTick: vue.nextTick,
     onMounted: vue.onMounted, onBeforeUnmount: vue.onBeforeUnmount,
     definePageMeta: () => {}, useRoute: () => ({ query: { appointment: 'appointment-1' } }),
+    // Realtime registers only on the client; this fixture exercises initial SSR.
+    useShopRealtime: () => {},
     useI18n: () => ({ locale: vue.ref('en'), t: key => key }),
     useConfirmation: () => ({ current: vue.ref(null), ask: async () => false }), useToasts: () => ({ push: () => {} }),
     useShop: () => ({ current: vue.ref({ business_mode: 'service' }), currentId: vue.ref('shop-1'), currentLocationId: vue.ref('location-1'), currentLocation: vue.ref({ name: 'Main' }), currentMembership: vue.ref({ id: 'membership-1' }), loading: vue.ref(false) }),

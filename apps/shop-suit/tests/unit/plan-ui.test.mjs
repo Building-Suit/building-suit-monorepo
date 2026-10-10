@@ -20,7 +20,10 @@ test('inventory and purchase access notices describe subscription access in both
 test('owner billing uses the canonical purchasable catalog and effective server quote', () => {
   assert.match(billing, /usePlans\(\)/)
   assert.match(billing, /publicCatalogTerms/)
-  assert.match(billing, /p_requested_catalog_terms_id: plan\.catalogTermsId/)
+  // Public requests use the selected catalog option; the displayed quote can
+  // also represent a separate private offer. Keep the public terms binding exact.
+  assert.match(billing, /p_requested_catalog_terms_id: selectedPlan\.value!\.catalogTermsId/)
+  assert.match(billing, /p_requested_plan_slug: selectedPlan\.value!\.planSlug/)
   assert.match(billing, /effectivePriceAmount/)
   assert.match(billing, /priceSource === 'override'/)
   assert.doesNotMatch(billing, /349|699|1099/)

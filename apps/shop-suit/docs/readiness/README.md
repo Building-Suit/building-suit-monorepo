@@ -1,5 +1,7 @@
 # Shop Suit readiness work
 
+Current first-launch qualification: [SS-VAL-001](../SS-VAL-001-verification.md), with the repeatable [launch matrix](../../tests/launch-qualification.json). This supersedes historical readiness task lists as the launch gate; deferred roadmap items are not required. Implementation, local execution, independent verification, provider configuration, deployment and production smoke are separate statuses.
+
 The bounded two-branch barber gate is maintained in the [SS-PILOT-001 runbook](../SS-PILOT-001-runbook.md) and [execution evidence](../SS-PILOT-001-verification.md). That gate remains blocked until its outstanding checks pass; the historical baseline below is not current pilot sign-off.
 
 The broader small-shop gate is maintained in the [SS-MARKET-VAL-001 runbook](../SS-MARKET-VAL-001-runbook.md) and [execution evidence](../SS-MARKET-VAL-001-verification.md). General product/service/mixed marketing remains blocked pending qualification; ETA compliance and offline operation are explicitly excluded.
