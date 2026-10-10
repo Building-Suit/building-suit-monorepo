@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "mode": "migration",
   "auditedReference": {
-    "branch": "codex/shared/bs-ui-zn-public-chrome-001",
-    "commit": "2331daf69ce056ceb62e9fd5deb510cc0d8e2538"
+    "branch": "codex/shared/bs-ui-zn-shop-001",
+    "commit": "a8fa48584e34dec16deb23b04bfa512a3ad15fbc"
   },
   "scope": "apps/*-suit/app/**/*.vue",
   "owner": "packages/ui",
@@ -52901,6 +52901,102 @@
         "column": 5
       },
       "target": "packages/ui Bs component with product orchestration moved to script/composable",
+      "ownerTask": "BS-UI-ZN-CONTRACT-001",
+      "status": "open"
+    },
+    {
+      "file": "apps/super-admin-suit/app/app.vue",
+      "kind": "nuxt-or-vue-render-tag",
+      "evidence": "<NuxtLayout>",
+      "location": {
+        "line": 12,
+        "column": 3
+      },
+      "target": "packages/ui/templates/Bs application-routing composition",
+      "ownerTask": "BS-UI-ZN-CONTRACT-001",
+      "status": "open"
+    },
+    {
+      "file": "apps/super-admin-suit/app/app.vue",
+      "kind": "nuxt-or-vue-render-tag",
+      "evidence": "<NuxtPage>",
+      "location": {
+        "line": 12,
+        "column": 15
+      },
+      "target": "packages/ui/templates/Bs application-routing composition",
+      "ownerTask": "BS-UI-ZN-CONTRACT-001",
+      "status": "open"
+    },
+    {
+      "file": "apps/super-admin-suit/app/app.vue",
+      "kind": "non-bs-tag",
+      "evidence": "<ToastHost>",
+      "location": {
+        "line": 13,
+        "column": 3
+      },
+      "target": "packages/ui/organisms/BsToastHost",
+      "ownerTask": "BS-UI-ZN-CONTRACT-001",
+      "status": "open"
+    },
+    {
+      "file": "apps/super-admin-suit/app/layouts/default.vue",
+      "kind": "non-bs-tag",
+      "evidence": "<SettingsMenu>",
+      "location": {
+        "line": 6,
+        "column": 189
+      },
+      "target": "packages/ui/organisms/BsSettingsMenu",
+      "ownerTask": "BS-UI-ZN-CONTRACT-001",
+      "status": "open"
+    },
+    {
+      "file": "apps/super-admin-suit/app/layouts/default.vue",
+      "kind": "nuxt-or-vue-render-tag",
+      "evidence": "<slot>",
+      "location": {
+        "line": 6,
+        "column": 216
+      },
+      "target": "packages/ui/templates/Bs application-routing composition",
+      "ownerTask": "BS-UI-ZN-CONTRACT-001",
+      "status": "open"
+    },
+    {
+      "file": "apps/super-admin-suit/app/pages/index.vue",
+      "kind": "nuxt-or-vue-render-tag",
+      "evidence": "<NuxtLayout>",
+      "location": {
+        "line": 17,
+        "column": 3
+      },
+      "target": "packages/ui/templates/Bs application-routing composition",
+      "ownerTask": "BS-UI-ZN-CONTRACT-001",
+      "status": "open"
+    },
+    {
+      "file": "apps/super-admin-suit/app/pages/index.vue",
+      "kind": "native-tag",
+      "evidence": "<div>",
+      "location": {
+        "line": 35,
+        "column": 5
+      },
+      "target": "packages/ui/Bs semantic presentation primitive or composition",
+      "ownerTask": "BS-UI-ZN-CONTRACT-001",
+      "status": "open"
+    },
+    {
+      "file": "apps/super-admin-suit/app/pages/index.vue",
+      "kind": "presentation-attribute",
+      "evidence": "class=\"w-full space-y-5\"",
+      "location": {
+        "line": 35,
+        "column": 17
+      },
+      "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
       "ownerTask": "BS-UI-ZN-CONTRACT-001",
       "status": "open"
     }
