@@ -65,15 +65,33 @@ test('shared marketing owns the landing frame and Ledger-derived pricing present
   const landing = readFileSync(new URL('../src/templates/BsLandingPage.vue', import.meta.url), 'utf8')
   const frame = readFileSync(new URL('../src/templates/BsMarketingLayout.vue', import.meta.url), 'utf8')
   const pricing = readFileSync(new URL('../src/organisms/BsMarketingPricing.vue', import.meta.url), 'utf8')
-  assert.match(frame, /<header class="bs-marketing-header/)
-  assert.match(frame, /id="marketing-mobile-navigation"/)
-  assert.match(frame, /<footer class="bs-marketing-footer/)
-  for (const section of ['ls-landing-hero', 'id="features"', 'id="workflow"', 'id="pricing"']) assert.match(landing, new RegExp(section))
-  assert.match(pricing, /v-for="option in intervalOptions"/)
-  assert.match(pricing, /v-for="plan in plans"/)
-  assert.match(pricing, /<NuxtLink v-if="plan\.action\?\.to/)
-  assert.match(pricing, /<BsButton v-else-if="plan\.action"/)
+  const header = readFileSync(new URL('../src/organisms/BsLandingTopHeader.vue', import.meta.url), 'utf8')
+  const footer = readFileSync(new URL('../src/organisms/BsLandingFooter.vue', import.meta.url), 'utf8')
+  const planCard = readFileSync(new URL('../src/organisms/BsPlanCard.vue', import.meta.url), 'utf8')
+  assert.match(frame, /<BsLandingTopHeader\b/)
+  assert.match(frame, /<BsLandingFooter\b/)
+  assert.match(header, /id="marketing-mobile-navigation"/)
+  assert.match(footer, /<footer class="bs-marketing-footer/)
+  for (const component of ['BsLandingHero', 'BsLandingSection', 'BsFeatureGrid', 'BsWorkflowSteps', 'BsProductPreview']) assert.match(landing, new RegExp(`<${component}\\b`))
+  assert.match(pricing, /<BsBillingCycleToggle\b/)
+  assert.match(pricing, /<BsPlanGrid\b/)
+  assert.match(planCard, /<BsPlanFeatureList\b/)
+  assert.match(planCard, /<BsPlanStatus\b/)
+  assert.match(planCard, /<NuxtLink v-if="plan\.action\?\.to/)
+  assert.match(planCard, /<BsButton v-else-if="plan\.action"/)
   assert.match(pricing, /<BsStateSurface v-if="loading/)
+})
+
+test('contact and public legal routes consume shared presentation directly', () => {
+  const manifest = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
+  for (const name of ['BsContactPage', 'BsSupportRequestForm', 'BsContactInfoGrid', 'BsPublicLegalPage']) assert.ok(Object.keys(manifest.exports).some(key => key.endsWith(`/${name}`)))
+  for (const suit of ['ledger-suit', 'shop-suit']) {
+    const contact = readFileSync(path.join(workspaceRoot, `apps/${suit}/app/pages/contact.vue`), 'utf8')
+    assert.match(contact, /<BsContactPage\b/)
+    assert.doesNotMatch(contact, /<(?:main|section|form|input|select|textarea)\b/)
+    assert.equal(existsSync(path.join(workspaceRoot, `apps/${suit}/app/components/PublicLegalPage.vue`)), false)
+    for (const page of ['about', 'privacy', 'terms', 'delivery-shipping', 'refund-cancellation']) assert.match(readFileSync(path.join(workspaceRoot, `apps/${suit}/app/pages/${page}.vue`), 'utf8'), /<BsPublicLegalPage\b/)
+  }
 })
 
 test('shared auth owns split geometry, form shells, wizard controls, and verification presentation', () => {
@@ -105,7 +123,7 @@ test('shared auth owns split geometry, form shells, wizard controls, and verific
 
 test('authenticated chrome is composed from canonical shared organisms', () => {
   const manifest = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
-  for (const name of ['BsSideMenu', 'BsTopHeader', 'BsUserMenu', 'BsSettingsMenu', 'BsAppShell']) {
+  for (const name of ['BsSideMenu', 'BsTopHeader', 'BsUserMenu', 'BsSettingsMenu', 'BsContextSwitcher', 'BsScopeSwitcher', 'BsNotificationMenu', 'BsTrialCountdown', 'BsReadOnlyBanner', 'BsAccessGate', 'BsAppShell']) {
     assert.ok(Object.keys(manifest.exports).some(key => key.endsWith(`/${name}`)), `${name} is not exported`)
   }
   const shell = readFileSync(new URL('../src/templates/BsAppShell.vue', import.meta.url), 'utf8')

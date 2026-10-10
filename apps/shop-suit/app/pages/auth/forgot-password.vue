@@ -46,14 +46,8 @@ async function onSubmit() {
       :description="isArabic ? 'لو البريد مسجّل عندنا، هتوصلك رسالة فيها رابط آمن لتغيير كلمة المرور.' : 'If the address is registered, you will receive a secure link to choose a new password.'"
     />
     <template v-else>
-      <div class="space-y-2">
-        <label for="reset-email" class="text-sm font-semibold">{{ t('auth.email') }}</label>
-        <div class="relative">
-          <BsIcon name="mail" class="pointer-events-none absolute start-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <input id="reset-email" v-model="email" type="email" autocomplete="email" required class="ls-input" :placeholder="t('auth.emailPlaceholder')">
-        </div>
-      </div>
+      <BsField :label="t('auth.email')" required><template #default="field"><BsInput v-model="email" :id="field.id" type="email" autocomplete="email" required :placeholder="t('auth.emailPlaceholder')" /></template></BsField>
     </template>
-    <template #footer><NuxtLink to="/auth/login" class="font-bold text-foreground underline decoration-[var(--bs-accent)] decoration-2 underline-offset-4">{{ t('auth.backToLogin') }}</NuxtLink></template>
+    <template #footer><BsLink to="/auth/login" variant="standalone">{{ t('auth.backToLogin') }}</BsLink></template>
   </BsAuthForm>
 </template>

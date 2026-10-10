@@ -100,9 +100,9 @@ watchEffect(async () => {
     :pending="pending" :error="errorMessage" :submit-label="t('auth.loginAction')" :pending-label="t('auth.loginAction')"
     :data-client-ready="clientReady ? 'true' : 'false'" @submit="onSubmit"
   >
-    <BsFloatingField :label="t('auth.email')"><InputText id="login-email" v-model="email" type="email" autocomplete="email" required dir="ltr" class="ls-input" /></BsFloatingField>
-    <BsFloatingField :label="t('auth.password')"><InputText id="login-password" v-model="password" type="password" autocomplete="current-password" required dir="ltr" class="ls-input" /></BsFloatingField>
-    <NuxtLink to="/auth/forgot-password" class="text-xs text-fg-muted underline">{{ t('auth.forgotPassword') }}</NuxtLink>
-    <template #footer>{{ t('auth.noAccount') }} <NuxtLink to="/auth/signup" class="font-bold text-fg underline underline-offset-4">{{ t('auth.signupAction') }}</NuxtLink></template>
+    <BsField :label="t('auth.email')" required><template #default="field"><BsInput v-model="email" :id="field.id" type="email" autocomplete="email" required dir="ltr" /></template></BsField>
+    <BsField :label="t('auth.password')" required><template #default="field"><BsInput v-model="password" :id="field.id" type="password" autocomplete="current-password" required dir="ltr" /></template></BsField>
+    <BsLink to="/auth/forgot-password" variant="muted">{{ t('auth.forgotPassword') }}</BsLink>
+    <template #footer>{{ t('auth.noAccount') }} <BsLink to="/auth/signup" variant="standalone">{{ t('auth.signupAction') }}</BsLink></template>
   </BsAuthForm>
 </template>
