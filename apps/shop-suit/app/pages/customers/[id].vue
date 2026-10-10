@@ -248,87 +248,157 @@ const overdueCount = computed(() => overdue.value.total)
 </script>
 
 <template>
-  <div class="space-y-6">
-    <NuxtLink to="/customers" class="inline-flex font-semibold text-[var(--bs-link)] underline-offset-4 hover:underline">{{ t('customers.back') }}</NuxtLink>
-
-    <div v-if="pending" class="space-y-4">
-      <div class="h-10 w-64 animate-pulse rounded-lg bg-muted" />
-      <div class="h-52 animate-pulse rounded-2xl bg-muted" />
-    </div>
-    <div v-else-if="error" role="alert" class="rounded-2xl border border-[var(--bs-status-error)]/30 bg-[var(--bs-status-error-bg)] p-5 text-sm text-fg">
-      <p>{{ error.message.includes('SHOP_PERMISSION_DENIED') ? t('customers.permissionDenied') : t('customers.detailError') }}</p>
-      <BsButton variant="link" type="button" class="mt-3 font-bold underline" @click="refresh()">{{ t('common.retry') }}</BsButton>
-    </div>
-    <div v-else-if="!customer" class="ls-card p-8 text-center text-sm text-muted-foreground">
-      {{ t('customers.notFound') }}
-    </div>
-
+  <BsStack>
+    <BsLink to="/customers">{{ t('customers.back') }}</BsLink>
+    <BsStack v-if="pending">
+      <BsSkeleton/>
+      <BsSkeleton/>
+    </BsStack>
+    <BsBox v-else-if="error" role="alert" padding="md">
+      <BsText as="p">{{ error.message.includes('SHOP_PERMISSION_DENIED') ? t('customers.permissionDenied') : t('customers.detailError') }}</BsText>
+      <BsButton variant="link" type="button" @click="refresh()">{{ t('common.retry') }}</BsButton>
+    </BsBox>
+    <BsPanel v-else-if="!customer" padding="md">{{ t('customers.notFound') }}</BsPanel>
     <template v-else>
-      <header class="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <div class="flex flex-wrap items-center gap-3">
-            <h1 class="text-3xl font-extrabold tracking-tight">{{ customer.name }}</h1>
-            <span class="ls-badge" :class="customer.is_active ? 'bg-[var(--bs-status-success-bg)] text-fg' : 'bg-muted text-muted-foreground'">
-              {{ customer.is_active ? t('customers.active') : t('customers.archived') }}
-            </span>
-          </div>
-          <p class="mt-2 text-sm text-muted-foreground">{{ t('customers.details') }}</p>
-        </div>
-        <div v-if="customer.can_manage && customer.is_active" class="flex flex-wrap gap-2">
-          <BsButton type="button" class="ls-btn" @click="openEdit">{{ t('customers.edit') }}</BsButton>
-          <BsButton type="button" class="ls-btn text-fg" :disabled="archiving" @click="archive">{{ t('customers.archive') }}</BsButton>
-        </div>
-      </header>
-
-      <p v-if="actionError && !showForm" role="alert" class="rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm text-fg">{{ actionError }}</p>
-      <p v-if="!customer.can_manage" class="rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm">{{ t('customers.manageDenied') }}</p>
-
-      <div class="grid gap-5 lg:grid-cols-2">
-        <section class="ls-card p-5">
-          <h2 class="text-lg font-bold">{{ t('customers.contact') }}</h2>
-          <dl class="mt-4 grid gap-4 sm:grid-cols-2">
-            <div><dt class="text-xs font-bold uppercase tracking-wide text-muted-foreground">{{ t('customers.phone') }}</dt><dd class="mt-1 break-words">{{ customer.phone || '—' }}</dd></div>
-            <div><dt class="text-xs font-bold uppercase tracking-wide text-muted-foreground">{{ t('customers.email') }}</dt><dd class="mt-1 break-words">{{ customer.email || '—' }}</dd></div>
-            <div class="sm:col-span-2"><dt class="text-xs font-bold uppercase tracking-wide text-muted-foreground">{{ t('customers.address') }}</dt><dd class="mt-1 whitespace-pre-wrap">{{ customer.address || '—' }}</dd></div>
-            <div class="sm:col-span-2"><dt class="text-xs font-bold uppercase tracking-wide text-muted-foreground">{{ t('customers.notes') }}</dt><dd class="mt-1 whitespace-pre-wrap">{{ customer.notes || '—' }}</dd></div>
-          </dl>
-        </section>
-        <section class="ls-card p-5">
-          <h2 class="text-lg font-bold">{{ t('customers.details') }}</h2>
-          <dl class="mt-4 space-y-4">
-            <div><dt class="text-xs font-bold uppercase tracking-wide text-muted-foreground">{{ t('customers.created') }}</dt><dd class="mt-1">{{ formatDate(customer.created_at) }}</dd></div>
-            <div><dt class="text-xs font-bold uppercase tracking-wide text-muted-foreground">{{ t('customers.updated') }}</dt><dd class="mt-1">{{ formatDate(customer.updated_at) }}</dd></div>
-            <div v-if="customer.archived_at"><dt class="text-xs font-bold uppercase tracking-wide text-muted-foreground">{{ t('customers.archivedOn') }}</dt><dd class="mt-1">{{ formatDate(customer.archived_at) }}</dd></div>
-          </dl>
-        </section>
-      </div>
-
-      <section class="ls-card p-5"><div class="flex flex-wrap items-start justify-between gap-4"><div><h2 class="text-lg font-bold">{{ t('customers.receivables') }}</h2><p class="mt-1 text-sm text-muted-foreground">{{ t('customers.overdueCount', { count: overdueCount }) }}</p></div><div class="flex flex-wrap items-center gap-3"><p class="text-2xl font-extrabold">{{ money(Number(statement.outstanding)) }}</p><BsButton v-if="customer.is_active && paymentAccess?.can_receive && outstanding.total > 0" type="button" class="ls-btn ls-btn-primary" @click="openReceipt">{{ t('payments.recordReceipt') }}</BsButton></div></div><p v-if="outstandingError" role="alert" class="mt-4 text-sm text-fg">{{ t('payments.loadError') }} <BsButton variant="link" type="button" class="font-bold underline" @click="refreshOutstanding()">{{ t('common.retry') }}</BsButton></p><div v-else class="mt-4 overflow-x-auto"><BsDataTable :value="outstanding.items" :label="t('customers.receivables')" lazy paginator :rows="outstandingPageSize" :first="(outstandingPage - 1) * outstandingPageSize" :total-records="outstanding.total" :loading="outstandingPending" data-key="id" :row-class="() => 'border-t border-border'" @page="outstandingPage = $event.page + 1"><Column header-class="px-4 py-3 text-start" body-class="px-4 py-3"><template #header>{{ t('sales.invoiceNumber') }}</template><template #body="{ data: invoice }"><NuxtLink :to="`/sales/${invoice.id}`" class="font-bold text-[var(--bs-link)]">{{ invoice.invoice_number }}</NuxtLink></template></Column><Column header-class="px-4 py-3 text-start" body-class="px-4 py-3"><template #header>{{ t('payments.settlementLabel') }}</template><template #body="{ data: invoice }">{{ t(`payments.settlement.${invoice.settlement_state}`) }}</template></Column><Column header-class="px-4 py-3 text-start" body-class="px-4 py-3"><template #header>{{ t('sales.dueDate') }}</template><template #body="{ data: invoice }"><span :class="invoice.overdue ? 'font-bold text-fg' : ''">{{ invoice.due_date || '—' }}</span></template></Column><Column header-class="px-4 py-3 text-end" body-class="px-4 py-3 text-end font-bold"><template #header>{{ t('payments.outstanding') }}</template><template #body="{ data: invoice }">{{ money(Number(invoice.outstanding)) }}</template></Column><template #empty><p class="p-6 text-center text-sm text-muted-foreground">{{ t('customers.noOutstanding') }}</p></template></BsDataTable></div></section>
-
-      <section class="ls-card p-5"><h2 class="text-lg font-bold">{{ t('customers.statement') }}</h2><p v-if="statementError" role="alert" class="mt-4 text-sm text-fg">{{ t('payments.loadError') }} <BsButton variant="link" type="button" class="font-bold underline" @click="refreshStatement()">{{ t('common.retry') }}</BsButton></p><div v-else class="mt-4 overflow-x-auto"><BsDataTable :value="statement.items" :label="t('customers.statement')" lazy paginator :rows="statementPageSize" :first="(statementPageNumber - 1) * statementPageSize" :total-records="statement.total" :loading="statementPending" data-key="event_id" :row-class="() => 'border-t border-border'" @page="statementPageNumber = $event.page + 1"><Column header-class="px-4 py-3 text-start" body-class="px-4 py-3"><template #header>{{ t('sales.date') }}</template><template #body="{ data: event }">{{ formatDate(event.event_at) }}</template></Column><Column header-class="px-4 py-3 text-start" body-class="px-4 py-3"><template #header>{{ t('payments.event') }}</template><template #body="{ data: event }"><p class="font-bold">{{ t(`payments.events.${event.event_type}`) }}</p><NuxtLink :to="`/sales/${event.invoice_id}`" class="text-[var(--bs-link)]">{{ event.document_number }}</NuxtLink></template></Column><Column header-class="px-4 py-3 text-end" body-class="px-4 py-3 text-end"><template #header>{{ t('payments.debit') }}</template><template #body="{ data: event }">{{ Number(event.debit) ? money(Number(event.debit)) : '—' }}</template></Column><Column header-class="px-4 py-3 text-end" body-class="px-4 py-3 text-end"><template #header>{{ t('payments.credit') }}</template><template #body="{ data: event }">{{ Number(event.credit) ? money(Number(event.credit)) : '—' }}</template></Column><Column header-class="px-4 py-3 text-end" body-class="px-4 py-3 text-end font-bold"><template #header>{{ t('payments.runningBalance') }}</template><template #body="{ data: event }">{{ money(Number(event.running_balance)) }}</template></Column><template #empty><p class="p-6 text-center text-sm text-muted-foreground">{{ t('customers.noStatement') }}</p></template></BsDataTable></div></section>
-
+      <BsInline justify="between">
+        <BsBox>
+          <BsInline>
+            <BsHeading :level="1">{{ customer.name }}</BsHeading>
+            <BsText as="span">{{ customer.is_active ? t('customers.active') : t('customers.archived') }}</BsText>
+          </BsInline>
+          <BsText as="p" size="sm" tone="muted">{{ t('customers.details') }}</BsText>
+        </BsBox>
+        <BsInline v-if="customer.can_manage && customer.is_active">
+          <BsButton type="button" @click="openEdit">{{ t('customers.edit') }}</BsButton>
+          <BsButton type="button" :disabled="archiving" @click="archive">{{ t('customers.archive') }}</BsButton>
+        </BsInline>
+      </BsInline>
+      <BsText v-if="actionError && !showForm" role="alert" as="p" size="sm" tone="danger">{{ actionError }}</BsText>
+      <BsText v-if="!customer.can_manage" as="p" size="sm">{{ t('customers.manageDenied') }}</BsText>
+      <BsGrid :columns="2">
+        <BsPanel padding="md">
+          <BsHeading :level="2">{{ t('customers.contact') }}</BsHeading>
+          <BsDescriptionList>
+            <BsDescriptionItem :term="(t('customers.phone'))">
+              <BsText as="span">{{ customer.phone || '—' }}</BsText>
+            </BsDescriptionItem>
+            <BsDescriptionItem :term="(t('customers.email'))">
+              <BsText as="span">{{ customer.email || '—' }}</BsText>
+            </BsDescriptionItem>
+            <BsDescriptionItem :term="(t('customers.address'))">
+              <BsText as="span">{{ customer.address || '—' }}</BsText>
+            </BsDescriptionItem>
+            <BsDescriptionItem :term="(t('customers.notes'))">
+              <BsText as="span">{{ customer.notes || '—' }}</BsText>
+            </BsDescriptionItem>
+          </BsDescriptionList>
+        </BsPanel>
+        <BsPanel padding="md">
+          <BsHeading :level="2">{{ t('customers.details') }}</BsHeading>
+          <BsDescriptionList>
+            <BsDescriptionItem :term="(t('customers.created'))">
+              <BsText as="span">{{ formatDate(customer.created_at) }}</BsText>
+            </BsDescriptionItem>
+            <BsDescriptionItem :term="(t('customers.updated'))">
+              <BsText as="span">{{ formatDate(customer.updated_at) }}</BsText>
+            </BsDescriptionItem>
+            <BsDescriptionItem v-if="customer.archived_at" :term="(t('customers.archivedOn'))">
+              <BsText as="span">{{ formatDate(customer.archived_at) }}</BsText>
+            </BsDescriptionItem>
+          </BsDescriptionList>
+        </BsPanel>
+      </BsGrid>
+      <BsPanel padding="md">
+        <BsInline justify="between">
+          <BsBox>
+            <BsHeading :level="2">{{ t('customers.receivables') }}</BsHeading>
+            <BsText as="p" size="sm" tone="muted">{{ t('customers.overdueCount', { count: overdueCount }) }}</BsText>
+          </BsBox>
+          <BsInline>
+            <BsText as="p" size="lg" emphasis="semibold">{{ money(Number(statement.outstanding)) }}</BsText>
+            <BsButton v-if="customer.is_active && paymentAccess?.can_receive && outstanding.total > 0" type="button" @click="openReceipt">{{ t('payments.recordReceipt') }}</BsButton>
+          </BsInline>
+        </BsInline>
+        <BsText v-if="outstandingError" role="alert" as="p" size="sm">{{ t('payments.loadError') }} <BsButton variant="link" type="button" @click="refreshOutstanding()">{{ t('common.retry') }}</BsButton>
+        </BsText>
+        <BsBox v-else scroll="x">
+          <BsDataTable :value="outstanding.items" :label="t('customers.receivables')" lazy paginator :rows="outstandingPageSize" :first="(outstandingPage - 1) * outstandingPageSize" :total-records="outstanding.total" :loading="outstandingPending" data-key="id" :columns="[{ key: 'column0', header: (t('sales.invoiceNumber')) }, { key: 'column1', header: (t('payments.settlementLabel')) }, { key: 'column2', header: (t('sales.dueDate')) }, { key: 'column3', header: (t('payments.outstanding')), align: 'end' }]" @page="outstandingPage = $event.page + 1">
+            <template #cell-column0="{ row: invoice }">
+              <BsLink :to="`/sales/${invoice.id}`">{{ invoice.invoice_number }}</BsLink>
+            </template>
+            <template #cell-column1="{ row: invoice }">{{ t(`payments.settlement.${invoice.settlement_state}`) }}</template>
+            <template #cell-column2="{ row: invoice }">
+              <BsText as="span">{{ invoice.due_date || '—' }}</BsText>
+            </template>
+            <template #cell-column3="{ row: invoice }">{{ money(Number(invoice.outstanding)) }}</template>
+            <template #empty>
+              <BsText as="p" size="sm" tone="muted">{{ t('customers.noOutstanding') }}</BsText>
+            </template>
+          </BsDataTable>
+        </BsBox>
+      </BsPanel>
+      <BsPanel padding="md">
+        <BsHeading :level="2">{{ t('customers.statement') }}</BsHeading>
+        <BsText v-if="statementError" role="alert" as="p" size="sm">{{ t('payments.loadError') }} <BsButton variant="link" type="button" @click="refreshStatement()">{{ t('common.retry') }}</BsButton>
+        </BsText>
+        <BsBox v-else scroll="x">
+          <BsDataTable :value="statement.items" :label="t('customers.statement')" lazy paginator :rows="statementPageSize" :first="(statementPageNumber - 1) * statementPageSize" :total-records="statement.total" :loading="statementPending" data-key="event_id" :columns="[{ key: 'column0', header: (t('sales.date')) }, { key: 'column1', header: (t('payments.event')) }, { key: 'column2', header: (t('payments.debit')), align: 'end' }, { key: 'column3', header: (t('payments.credit')), align: 'end' }, { key: 'column4', header: (t('payments.runningBalance')), align: 'end' }]" @page="statementPageNumber = $event.page + 1">
+            <template #cell-column0="{ row: event }">{{ formatDate(event.event_at) }}</template>
+            <template #cell-column1="{ row: event }">
+              <BsText as="p" emphasis="semibold">{{ t(`payments.events.${event.event_type}`) }}</BsText>
+              <BsLink :to="`/sales/${event.invoice_id}`">{{ event.document_number }}</BsLink>
+            </template>
+            <template #cell-column2="{ row: event }">{{ Number(event.debit) ? money(Number(event.debit)) : '—' }}</template>
+            <template #cell-column3="{ row: event }">{{ Number(event.credit) ? money(Number(event.credit)) : '—' }}</template>
+            <template #cell-column4="{ row: event }">{{ money(Number(event.running_balance)) }}</template>
+            <template #empty>
+              <BsText as="p" size="sm" tone="muted">{{ t('customers.noStatement') }}</BsText>
+            </template>
+          </BsDataTable>
+        </BsBox>
+      </BsPanel>
       <BsRecordActionDialog v-model:visible="receiptOpen" :title="t('payments.recordReceipt')" :dirty="receiptDirty" :pending="receiptPending" :error="receiptError" :submit-label="t('payments.save')" :cancel-label="t('customers.cancel')" :submit-disabled="receiptAmount <= 0" size="lg" @submit="saveReceipt">
-            <p class="text-sm text-muted-foreground">{{ t('payments.allocateInvoices') }}</p>
-            <BsDataTable :value="outstanding.items" :label="t('customers.receivables')" :loading="outstandingPending" :error="outstandingError ? t('payments.loadError') : null" lazy paginator :rows="outstandingPageSize" :first="(outstandingPage - 1) * outstandingPageSize" :total-records="outstanding.total" @page="outstandingPage = $event.page + 1" @retry="refreshOutstanding()">
-              <Column :header="t('sales.invoiceNumber')"><template #body="{ data: invoice }">{{ invoice.invoice_number }}<p>{{ t('payments.outstanding') }}: {{ money(Number(invoice.outstanding)) }}</p></template></Column>
-              <Column :header="t('payments.amount')"><template #body="{ data: invoice }"><input v-model.number="receiptAllocations[invoice.id]" type="number" min="0" :max="invoice.outstanding" step="0.01" class="ls-input w-36" :aria-label="`${invoice.invoice_number} ${t('payments.amount')}`"></template></Column>
-            </BsDataTable>
-            <p class="font-bold">{{ t('payments.amount') }}: {{ money(receiptAmount) }}</p>
-            <div class="grid gap-4 sm:grid-cols-2">
-              <label class="space-y-2 text-sm font-bold">{{ t('payments.date') }}<input v-model="receiptDate" type="date" required class="ls-input"></label>
-              <label class="space-y-2 text-sm font-bold">{{ t('payments.method') }}<select v-model="receiptMethod" class="ls-select"><option v-for="method in ['cash','bank_transfer','card','wallet','cheque','other']" :key="method" :value="method">{{ t(`payments.methods.${method}`) }}</option></select></label>
-              <label class="space-y-2 text-sm font-bold">{{ t('payments.reference') }}<input v-model="receiptReference" maxlength="200" class="ls-input"></label>
-              <label class="space-y-2 text-sm font-bold">{{ t('payments.notes') }}<input v-model="receiptNotes" maxlength="2000" class="ls-input"></label>
-            </div>
+        <BsText as="p" size="sm" tone="muted">{{ t('payments.allocateInvoices') }}</BsText>
+        <BsDataTable :value="outstanding.items" :label="t('customers.receivables')" :loading="outstandingPending" :error="outstandingError ? t('payments.loadError') : null" lazy paginator :rows="outstandingPageSize" :first="(outstandingPage - 1) * outstandingPageSize" :total-records="outstanding.total" :columns="[{ key: 'column0', header: t('sales.invoiceNumber') }, { key: 'column1', header: t('payments.amount') }]" @page="outstandingPage = $event.page + 1" @retry="refreshOutstanding()">
+          <template #cell-column0="{ row: invoice }">{{ invoice.invoice_number }}<BsText as="p">{{ t('payments.outstanding') }}: {{ money(Number(invoice.outstanding)) }}</BsText>
+          </template>
+          <template #cell-column1="{ row: invoice }">
+            <BsInput v-model.number="receiptAllocations[invoice.id]" type="number" :min="0" :max="invoice.outstanding" :step="0.01" :aria-label="`${invoice.invoice_number} ${t('payments.amount')}`"/>
+          </template>
+        </BsDataTable>
+        <BsText as="p" emphasis="semibold">{{ t('payments.amount') }}: {{ money(receiptAmount) }}</BsText>
+        <BsGrid :columns="2">
+          <BsField v-slot="field" :label="(t('payments.date'))">
+            <BsInput :id="field.id" v-model="receiptDate" :aria-describedby="field.describedby" type="date" required/>
+          </BsField>
+          <BsField v-slot="field" :label="(t('payments.method'))">
+            <BsSelect v-model="receiptMethod" :input-id="field.id" :aria-describedby="field.describedby" :label="(t('payments.method'))" :options="[...(['cash','bank_transfer','card','wallet','cheque','other']).map(method => ({ value: method, label: (t(`payments.methods.${method}`)), disabled: false }))]" option-label="label" option-value="value" option-disabled="disabled"/>
+          </BsField>
+          <BsField v-slot="field" :label="(t('payments.reference'))">
+            <BsInput :id="field.id" v-model="receiptReference" :aria-describedby="field.describedby" :maxlength="200"/>
+          </BsField>
+          <BsField v-slot="field" :label="(t('payments.notes'))">
+            <BsInput :id="field.id" v-model="receiptNotes" :aria-describedby="field.describedby" :maxlength="2000"/>
+          </BsField>
+        </BsGrid>
       </BsRecordActionDialog>
-
       <BsRecordActionDialog v-model:visible="showForm" :title="t('customers.editTitle')" :dirty="formDirty" :pending="saving" :error="actionError" :submit-label="t('customers.save')" :cancel-label="t('customers.cancel')" @submit="save">
-            <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ t('customers.name') }}<input v-model="form.name" type="text" minlength="2" maxlength="160" required class="ls-input"></label>
-            <label class="space-y-2 text-sm font-bold">{{ t('customers.phone') }}<input v-model="form.phone" type="tel" maxlength="50" autocomplete="tel" class="ls-input"></label>
-            <label class="space-y-2 text-sm font-bold">{{ t('customers.email') }}<input v-model="form.email" type="email" maxlength="254" autocomplete="email" class="ls-input"></label>
-            <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ t('customers.address') }}<textarea v-model="form.address" maxlength="500" rows="2" class="ls-input" /></label>
-            <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ t('customers.notes') }}<textarea v-model="form.notes" maxlength="2000" rows="3" class="ls-input" /></label>
+        <BsField v-slot="field" :label="(t('customers.name'))">
+          <BsInput :id="field.id" v-model="form.name" :aria-describedby="field.describedby" type="text" :minlength="2" :maxlength="160" required/>
+        </BsField>
+        <BsField v-slot="field" :label="(t('customers.phone'))">
+          <BsInput :id="field.id" v-model="form.phone" :aria-describedby="field.describedby" type="tel" :maxlength="50" autocomplete="tel"/>
+        </BsField>
+        <BsField v-slot="field" :label="(t('customers.email'))">
+          <BsInput :id="field.id" v-model="form.email" :aria-describedby="field.describedby" type="email" :maxlength="254" autocomplete="email"/>
+        </BsField>
+        <BsField v-slot="field" :label="(t('customers.address'))">
+          <BsTextarea :id="field.id" v-model="form.address" :aria-describedby="field.describedby" :maxlength="500" :rows="2"/>
+        </BsField>
+        <BsField v-slot="field" :label="(t('customers.notes'))">
+          <BsTextarea :id="field.id" v-model="form.notes" :aria-describedby="field.describedby" :maxlength="2000" :rows="3"/>
+        </BsField>
       </BsRecordActionDialog>
     </template>
-  </div>
+  </BsStack>
 </template>
