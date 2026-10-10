@@ -171,7 +171,7 @@ const scaffoldSources = {
 for (const component of ['BsAppShell', 'BsProductLogo', 'BsSettingsMenu', 'BsSlot']) {
   if (!new RegExp(`<${component}\\b`).test(scaffoldSources.layout)) failures.push(`tooling/new-platform: default layout must compose ${component}`)
 }
-for (const component of ['BsAppRouter', 'BsToastHost', 'BsConfirmHost']) {
+for (const component of ['BsAppRoot']) {
   if (!new RegExp(`<${component}\\b`).test(scaffoldSources.app)) failures.push(`tooling/new-platform: app root must compose ${component}`)
 }
 if (!/<BsContentSection\b/.test(scaffoldSources.page)) failures.push('tooling/new-platform: starter page must use shared page composition')

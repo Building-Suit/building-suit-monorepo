@@ -1,1 +1,1 @@
-<template><BsAppRouter /><BsToastHost /><BsConfirmHost /></template>
+<template><BsAppRoot toast-host /></template>
