@@ -8,6 +8,7 @@
 - [Database development](database.md): product-specific local commands, environment verification and hosted release procedure.
 - [Manual Supabase setup](supabase-manual-setup.md): organizations, project refs, frontend keys, deployment secrets and Auth configuration.
 - [Identity architecture](../architecture/identity.md): separate product Auth and session boundaries.
+- [Scoped Realtime refresh](realtime.md): explicit scopes/filters, subscription cleanup and bounded refresh lifecycle.
 - [Super Admin trust and adapter contract](../architecture/super-admin-trust-adapter-contract.md): database-owned configuration, cross-Suit request authentication, capability discovery, idempotency and failure handling.
 - [Data table](data-table.md): PrimeVue integration and supported capabilities.
 
