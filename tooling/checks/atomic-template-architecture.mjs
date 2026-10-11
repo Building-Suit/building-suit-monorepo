@@ -208,11 +208,15 @@ export async function validateAtomicTemplateArchitecture({ root = defaultRoot } 
     const script = descriptor ? [descriptor.script?.content, descriptor.scriptSetup?.content].filter(Boolean).join('\n') : text
     const ast = ts.createSourceFile(file, script, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS)
     const forbiddenBindings = new Set(forbiddenUiCalls)
+    const renderContractBindings = new Set(['VNode', 'VNodeChild', 'Component', 'DefineComponent', 'RenderFunction', 'Slot', 'Slots', 'FunctionalComponent'])
     for (const statement of ast.statements) {
       if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier)) continue
       const module = statement.moduleSpecifier.text
       if (/^(?:~|@)\/|(?:^|\/)apps\/|^@building-suit\/(?:auth|data-access)(?:\/|$)/.test(module)) failures.push(`${file}: UI may not import product/identity/data infrastructure ${module}`)
       const named = statement.importClause?.namedBindings
+      if (named && ts.isNamedImports(named) && ['vue', '@vue/runtime-core'].includes(module)) for (const binding of named.elements) {
+        if (renderContractBindings.has(binding.propertyName?.text ?? binding.name.text)) renderContractBindings.add(binding.name.text)
+      }
       if (named && ts.isNamedImports(named)) for (const binding of named.elements) {
         if (await callableOrigin(absolute, module, binding.propertyName?.text ?? binding.name.text, forbiddenUiCalls)) forbiddenBindings.add(binding.name.text)
       }
@@ -250,7 +254,14 @@ export async function validateAtomicTemplateArchitecture({ root = defaultRoot } 
         if (ts.isIdentifier(node.expression) && forbiddenBindings.has(node.expression.text)) failures.push(`${file}: product query/context behavior ${node.expression.text} is forbidden in UI`)
         if (ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === 'factory') failures.push(`${file}: product scope factories are forbidden in UI`)
       }
-      if (registry.pageTemplates?.includes(path.basename(file, '.vue')) && (node.kind === ts.SyntaxKind.AnyKeyword || (ts.isTypeReferenceNode(node) && node.typeName.getText(ast) === 'Record' && node.typeArguments?.some(argument => argument.kind === ts.SyntaxKind.UnknownKeyword)))) failures.push(`${file}: page presentation contracts may not contain untyped state bags`)
+      let propType = false
+      for (let ancestor = node; ancestor.parent; ancestor = ancestor.parent) {
+        const parent = ancestor.parent
+        if (ts.isCallExpression(parent) && ts.isIdentifier(parent.expression) && parent.expression.text === 'defineProps' && parent.typeArguments?.includes(ancestor)) { propType = true; break }
+      }
+      const isPresentationContract = file.includes('/src/types/') || (registry.pageTemplates?.includes(path.basename(file, '.vue')) && propType)
+      if (isPresentationContract && (ts.isFunctionTypeNode(node) || (ts.isTypeReferenceNode(node) && renderContractBindings.has(node.typeName.getText(ast))))) failures.push(`${file}: presentation contracts may not accept callbacks, components or render recipes`)
+      if (isPresentationContract && (node.kind === ts.SyntaxKind.AnyKeyword || (ts.isTypeReferenceNode(node) && node.typeName.getText(ast) === 'Record' && node.typeArguments?.some(argument => argument.kind === ts.SyntaxKind.UnknownKeyword)))) failures.push(`${file}: page presentation contracts may not contain untyped state bags`)
       ts.forEachChild(node, inspectUi)
     }
     inspectUi(ast)

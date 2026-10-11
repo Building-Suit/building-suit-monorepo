@@ -161,7 +161,6 @@
     "./atoms/BsHierarchyLeaf": "./src/atoms/BsHierarchyLeaf.vue",
     "./atoms/BsFieldLabel": "./src/atoms/BsFieldLabel.vue",
     "./molecules/BsHierarchyBranch": "./src/molecules/BsHierarchyBranch.vue",
-    "./molecules/BsWorkflowScope": "./src/molecules/BsWorkflowScope.vue",
     "./atoms/BsColorSwatch": "./src/atoms/BsColorSwatch.vue",
     "./molecules/BsFlowBlock": "./src/molecules/BsFlowBlock.vue",
     "./organisms/BsDashboardPreview": "./src/organisms/BsDashboardPreview.vue",
@@ -297,7 +296,16 @@
     "./organisms/BsAccountClassificationDialog": "./src/organisms/BsAccountClassificationDialog.vue",
     "./organisms/BsControlReconciliationPanel": "./src/organisms/BsControlReconciliationPanel.vue",
     "./organisms/BsChartTemplateReview": "./src/organisms/BsChartTemplateReview.vue",
-    "./templates/BsFinancialAccountsPage": "./src/templates/BsFinancialAccountsPage.vue"
+    "./templates/BsFinancialAccountsPage": "./src/templates/BsFinancialAccountsPage.vue",
+    "./organisms/BsFinancialSystemMap": "./src/organisms/BsFinancialSystemMap.vue",
+    "./organisms/BsWorkspaceOnboarding": "./src/organisms/BsWorkspaceOnboarding.vue",
+    "./organisms/BsOperationalCreationDialog": "./src/organisms/BsOperationalCreationDialog.vue",
+    "./types/operationalCreationPresentation": "./src/types/operationalCreationPresentation.ts",
+    "./organisms/BsJournalCreationDialog": "./src/organisms/BsJournalCreationDialog.vue",
+    "./types/journalCreationPresentation": "./src/types/journalCreationPresentation.ts",
+    "./types/workspaceShellPresentation": "./src/types/workspaceShellPresentation.ts",
+    "./types/financialSystemMapCopy": "./src/types/financialSystemMapCopy.ts",
+    "./types/workspaceOnboardingCopy": "./src/types/workspaceOnboardingCopy.ts"
   },
   "dependencies": {
     "primevue": "4.5.5",

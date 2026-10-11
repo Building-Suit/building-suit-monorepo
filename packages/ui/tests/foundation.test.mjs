@@ -134,57 +134,6 @@ test('table cell actions retain their nodes when a parent opens and closes a dia
   app.unmount()
 })
 
-test('workflow scopes preserve writable models, live inputs, events and effect disposal', async () => {
-  const root = { children: [] }
-  const renderer = vue.createRenderer({
-    createElement: tag => ({ tag, children: [] }),
-    createText: text => ({ text }), createComment: text => ({ text }),
-    setText: (node, text) => { node.text = text },
-    setElementText: (node, text) => { node.text = text },
-    parentNode: node => node.parent,
-    nextSibling: node => node.parent?.children[node.parent.children.indexOf(node) + 1] || null,
-    patchProp: () => {},
-    insert: (node, parent, anchor) => {
-      if (node.parent) node.parent.children = node.parent.children.filter(child => child !== node)
-      node.parent = parent
-      const index = anchor ? parent.children.indexOf(anchor) : -1
-      if (index < 0) parent.children.push(node)
-      else parent.children.splice(index, 0, node)
-    },
-    remove: node => { node.parent.children = node.parent.children.filter(child => child !== node) },
-  })
-  const input = vue.reactive({ selected: 'first', tenant: 'tenant-a' })
-  let exposed, created = 0, disposed = 0, changes = 0
-  const Scope = component('molecules/BsWorkflowScope.vue')
-  const factory = (values, emit) => {
-    created++
-    vue.watch(() => values.tenant, () => { changes++ }, { flush: 'sync' })
-    vue.onBeforeUnmount(() => { disposed++ })
-    const selected = vue.computed({ get: () => values.selected, set: value => emit('update:selected', value) })
-    return { selected, localDraft: vue.ref('draft'), tenant: vue.computed(() => values.tenant) }
-  }
-  const app = renderer.createApp({ render: () => vue.h(Scope, {
-    factory, input: { ...input }, 'onUpdate:selected': value => { input.selected = value },
-  }, { default: ({ state }) => { exposed = state; return vue.h('span', state.selected) } }) })
-  app.mount(root)
-  exposed.selected = 'second'
-  exposed.localDraft = 'edited'
-  await vue.nextTick()
-  assert.equal(input.selected, 'second')
-  assert.equal(exposed.selected, 'second')
-  assert.equal(exposed.localDraft, 'edited')
-  input.tenant = 'tenant-b'
-  await vue.nextTick()
-  assert.equal(exposed.tenant, 'tenant-b')
-  assert.equal(changes, 1)
-  assert.equal(created, 1)
-  app.unmount()
-  input.tenant = 'tenant-c'
-  await vue.nextTick()
-  assert.equal(changes, 1)
-  assert.equal(disposed, 1)
-})
-
 test('native select options and bare choices retain external label/control semantics', async () => {
   const select = await render('molecules/BsSelect.vue', { native: true, modelValue: 'b', id: 'period', 'aria-label': 'Ledger Account 1' }, [
     vue.h(component('atoms/BsSelectOption.vue'), { value: 'a' }, () => 'First'),
@@ -547,7 +496,7 @@ test('shared UI exports are explicit and cover every governed source', () => {
   const components = vueFiles(path.join(workspaceRoot, 'packages/ui/src'))
     .map(file => `./${path.relative(path.join(workspaceRoot, 'packages/ui'), file).replaceAll(path.sep, '/')}`)
   assert.ok(components.every(file => path.basename(file, '.vue').startsWith('Bs')), 'every renderable shared component must have a canonical Bs-prefixed name')
-  assert.deepEqual(Object.values(manifest.exports).sort(), [...components, './src/styles/base.css', ...readdirSync(path.join(workspaceRoot, 'packages/ui/src/types')).filter(file => file.endsWith('.ts')).map(file => `./src/types/${file}`)].sort())
+  assert.deepEqual(Object.values(manifest.exports).sort(), [...components, './src/styles/base.css', ...readdirSync(path.join(workspaceRoot, 'packages/ui/src/utils')).filter(file => file.endsWith('.ts')).map(file => `./src/utils/${file}`), ...readdirSync(path.join(workspaceRoot, 'packages/ui/src/types')).filter(file => file.endsWith('.ts')).map(file => `./src/types/${file}`)].sort())
 })
 
 

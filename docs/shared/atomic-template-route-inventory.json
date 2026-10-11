@@ -432,8 +432,8 @@
         "BsUserMenu",
         "BsWorkflowScope"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "destination": "packages/ui/src/templates/BsWorkspaceShell.vue",
+      "status": "implemented-pending-cross-suit-acceptance",
       "domainAdapter": "apps/ledger-suit/app/layouts/default.vue",
       "dependencies": [
         "~/composables/useLedgerAddTransactionDialogView",

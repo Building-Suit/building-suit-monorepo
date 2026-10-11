@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { BsPermissionItem, BsPermissionRole } from '@building-suit/ux'
-const props = defineProps<{ items: BsPermissionItem[]; roles?: BsPermissionRole[]; label: string; editable?: boolean; selected?: string[]; disabled?: boolean; disabledPermissions?: string[]; granted?: (role: string, permission: string) => boolean }>()
+const props = defineProps<{ items: BsPermissionItem[]; roles?: BsPermissionRole[]; label: string; editable?: boolean; selected?: string[]; disabled?: boolean; disabledPermissions?: string[]; grants?: { role: string; permissions: string[] }[] }>()
 const emit = defineEmits<{ toggle: [key: string, checked: boolean] }>()
 const columns = computed(() => [{ key: 'permission', header: props.label }, ...(props.editable ? [] : (props.roles ?? []).map(role => ({ key: role.key, header: role.label, align: 'center' as const })))])
 </script>
@@ -14,7 +14,7 @@ const columns = computed(() => [{ key: 'permission', header: props.label }, ...(
       <BsText v-else emphasis="semibold">{{ row.label }}</BsText>
     </template>
     <template v-for="role in editable ? [] : roles" :key="role.key" #[`cell-${role.key}`]="{ row }">
-      <BsIcon v-if="granted?.(role.key, row.key)" name="check" :size="18" />
+      <BsIcon v-if="grants?.find(grant => grant.role === role.key)?.permissions.includes(row.key)" name="check" :size="18" />
       <BsText v-else as="span" tone="muted">—</BsText>
     </template>
     <template #groupheader="{ data: row }"><BsBox surface="muted">{{ row.sectionLabel }}</BsBox></template>

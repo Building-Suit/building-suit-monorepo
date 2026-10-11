@@ -243,3 +243,7 @@ export { useDebouncedTask } from './composables/useDebouncedTask.ts'
 export { useNavigationPosition } from './composables/useNavigationPosition.ts'
 export { openPrintSession } from './utils/printSession.ts'
 export { useTreeExpansion } from './composables/useTreeExpansion.ts'
+
+export { useOverlayState } from './composables/useOverlayState.ts'
+
+export { replaceDraftRow, appendDraftRow, removeDraftRow } from './utils/draftCollection.ts'

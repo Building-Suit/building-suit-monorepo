@@ -1,5 +1,7 @@
 # Zero-native UI convergence — BS-UI-ZN-FINAL-001
 
+Historical report, superseded by the atomic-template migration. The workflow-scope compatibility component has been removed; Suit routes/layouts now use typed full shared templates. Current acceptance evidence is recorded in `atomic-template-unification-checkpoint.md`.
+
 Repair attempt 3: **strict source gate passes; independent browser/final acceptance remains pending**. Changes are uncommitted in the existing task worktree. No branch/worktree creation, commit, push, merge, deployment, provider or hosted database operation occurred.
 
 ## Recorded failure and repair

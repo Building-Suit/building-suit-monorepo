@@ -1,7 +1,7 @@
 import type { Database } from '~~/types/database.types'
 
 /** Ledger-owned orchestration; mounted by a shared workflow scope in its route/layout. */
-export function useLedgerAddTransactionDialogView(_values: Record<string, unknown>, _emit: (event: string, ...args: unknown[]) => void) {
+export function useLedgerAddTransactionDialogView() {
 /**
  * The single entry point for recording money.
  *
@@ -197,6 +197,8 @@ function positiveRate(input: string): number | null {
   }
   return rate
 }
+
+watch(currentId, () => { close(); resetForm() }, { flush: 'sync' })
 
 async function submit() {
   if (submitting.value || !currentId.value) return
@@ -397,6 +399,7 @@ async function submit() {
 
     const { error } = await supabase.rpc(rpc.fn as never, rpc.args as never)
     if (error) throw error
+    if (currentId.value !== org) return
 
     await refreshPlanUsage()
     markChanged()

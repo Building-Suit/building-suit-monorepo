@@ -1,11 +1,7 @@
 import type { Database } from '~~/types/database.types'
 
 /** Ledger-owned orchestration; mounted by a shared workflow scope in its route/layout. */
-export function useLedgerTeamMenuView(_values: Record<string, unknown>, _emit: (event: string, ...args: unknown[]) => void) {
-const _props = new Proxy(_values, { get: (target, key) => Reflect.get(target, key) ?? Reflect.get({
-  showTrigger: true,
-}, key) })
-const showTrigger = computed(() => _props.showTrigger as boolean)
+export function useLedgerTeamMenuView() {
 const supabase = useSupabaseClient<Database>()
 const { currentId, can, roleLabel } = useTenant()
 const { t } = useI18n()
@@ -21,9 +17,12 @@ const { refresh: refreshPlanUsage } = usePlanUsage()
 
 watch(open, async (isOpen) => {
   if (!isOpen || !currentId.value) return
+  const organizationId = currentId.value
   const { data } = await supabase.from('organization_roles').select('id, key, name_en, name_ar').eq('organization_id', currentId.value).order('created_at')
-  customRoles.value = data ?? []
+  if (currentId.value === organizationId && open.value) customRoles.value = data ?? []
 })
+
+watch(currentId, () => { close(); email.value = ''; role.value = 'system:viewer'; customRoles.value = []; errorMessage.value = '' }, { flush: 'sync' })
 
 async function invite() {
   if (!currentId.value) return
@@ -52,5 +51,5 @@ async function invite() {
 }
 const { dirty: overlayDirty0 } = useRecordAction(() => ({ email: email.value, role: role.value }), computed(() => Boolean(open.value)))
 const ledgerUsage = useLedgerUsagePresentation()
-return { supabase, currentId, can, roleLabel, t, open, show, close, markChanged, email, role, customRoles, pending, errorMessage, describeError, toasts, refreshPlanUsage, invite, overlayDirty0, ledgerUsage, showTrigger }
+return { supabase, currentId, can, roleLabel, t, open, show, close, markChanged, email, role, customRoles, pending, errorMessage, describeError, toasts, refreshPlanUsage, invite, overlayDirty0, ledgerUsage }
 }

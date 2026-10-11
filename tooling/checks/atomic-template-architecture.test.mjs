@@ -73,3 +73,19 @@ test('architecture resolves a renamed callable through two re-export modules', a
   await writeFile(path.join(root, 'apps/example-suit/app/second.ts'), 'export { make as draw } from "./first"')
   assert.ok((await validateAtomicTemplateArchitecture({ root })).failures.some(message => /render factory draw/.test(message)))
 })
+
+for (const [name, declaration] of [
+ ['opaque imported state', 'export interface PageData { payload: Record<string, unknown> }'],
+ ['imported callback recipe', 'export interface PageData { render: () => string }'],
+ ['aliased imported component recipe', 'import type { Component as Recipe } from "vue"; export interface PageData { body: Recipe }'],
+]) test(`architecture follows ${name} into the shared contract source`, async t => {
+ const root = await fixture(t, '<template><BsExamplePage /></template>')
+ await mkdir(path.join(root, 'packages/ui/src/types'))
+ await writeFile(path.join(root, 'packages/ui/src/types/page.ts'), declaration)
+ await writeFile(path.join(root, 'packages/ui/src/templates/BsExamplePage.vue'), '<script setup lang="ts">import type { PageData } from "../types/page"; defineProps<{ data: PageData }>()</script><template><main/></template>')
+ assert.ok((await validateAtomicTemplateArchitecture({ root })).failures.some(message => /untyped state|render recipes/.test(message)))
+})
+test('architecture does not interpret documentation copy as executable behavior', async t => {
+ const root = await fixture(t, '<script setup>const copy = "useFetch, h and a controller factory are forbidden"</script><template><BsExamplePage :title="copy"/></template>')
+ assert.deepEqual((await validateAtomicTemplateArchitecture({ root })).failures, [])
+})

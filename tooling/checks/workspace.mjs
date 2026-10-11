@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto'
 import path from 'node:path'
 import ts from 'typescript'
 import { validateSuitTemplateBoundaries } from './suit-template-boundaries.mjs'
+import { validateAtomicTemplateArchitecture } from './atomic-template-architecture.mjs'
 
 const root = new URL('../../', import.meta.url).pathname
 const failures = []
@@ -11,6 +12,8 @@ const ownershipManifestPath = 'docs/shared/ui-ownership-manifest.json'
 
 const suitBoundary = await validateSuitTemplateBoundaries({ root })
 failures.push(...suitBoundary.failures)
+const atomicArchitecture = await validateAtomicTemplateArchitecture({ root })
+failures.push(...atomicArchitecture.failures)
 
 async function exists(relative) {
   try { await readFile(path.join(root, relative)); return true }
@@ -208,4 +211,4 @@ for (const directory of ['apps', 'packages']) for (const entry of await readdir(
 }
 
 if (failures.length) { console.error(failures.join('\n')); process.exitCode = 1 }
-else console.log(`Workspace boundaries pass for ${appDirectories.length} dynamically discovered Suits and ${localComponents.length} classified local components; ${migrations} historical migrations unchanged.`)
+else console.log(`Workspace boundaries pass for ${appDirectories.length} dynamically discovered Suits and ${localComponents.length} classified local components; ${migrations} historical migrations unchanged; ${atomicArchitecture.routes} full route templates with zero migration debt.`)

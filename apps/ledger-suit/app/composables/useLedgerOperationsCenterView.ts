@@ -2,7 +2,7 @@ import type { Database } from '~~/types/database.types'
 import type { QuotaKey } from '~/composables/usePlanUsage'
 
 /** Ledger-owned orchestration; mounted by a shared workflow scope in its route/layout. */
-export function useLedgerOperationsCenterView(_values: Record<string, unknown>, _emit: (event: string, ...args: unknown[]) => void) {
+export function useLedgerOperationsCenterView() {
 const supabase = useSupabaseClient<Database>()
 const { currentId, baseCurrency, can } = useTenant()
 const { open, tab, close, markChanged } = useOperationsCenter()
@@ -27,6 +27,14 @@ const recurringForm = reactive({ name: '', transactionType: 'expense', amount: '
 const counterpartyForm = reactive({ name: '', type: 'other', email: '', phone: '', taxIdentifier: '', notes: '' })
 const tagForm = reactive({ name: '', color: '#2F77C9' })
 
+watch(currentId, () => {
+  close(); errorMessage.value = null
+  Object.assign(commitmentForm, { type: 'payable', title: '', description: '', amount: '', dueDate: today(), categoryId: '', counterpartyId: '', autoConvert: false, paymentAccountId: '', reminderDays: 3 })
+  Object.assign(recurringForm, { name: '', transactionType: 'expense', amount: '', principal: '', interest: '', fees: '', liabilityAccountId: '', categoryId: '', paymentAccountId: '', frequency: 'monthly', intervalCount: 1, startDate: today(), endDate: '', maxOccurrences: '', mode: 'requires_confirmation' })
+  Object.assign(counterpartyForm, { name: '', type: 'other', email: '', phone: '', taxIdentifier: '', notes: '' })
+  Object.assign(tagForm, { name: '', color: '#2F77C9' })
+}, { flush: 'sync' })
+
 const title = computed(() => t(tab.value === 'commitments' ? 'operations.addCommitment' : tab.value === 'recurring' ? 'operations.addRule' : tab.value === 'counterparties' ? 'recordPages.addCounterparty' : 'recordPages.addTag'))
 const quotaKey = computed<QuotaKey | null>(() => tab.value === 'recurring' ? 'max_recurring_rules' : tab.value === 'counterparties' ? 'max_counterparties' : null)
 
@@ -35,10 +43,13 @@ watch(open, (isOpen) => {
 })
 
 async function run(kind: OperationsTab, action: () => Promise<void>) {
+  if (busy.value || !currentId.value) return
+  const organizationId = currentId.value
   busy.value = true
   errorMessage.value = null
   try {
     await action()
+    if (organizationId !== currentId.value) return
     if (quotaKey.value) await refreshPlanUsage()
     markChanged(kind)
     if (kind === 'counterparties') clearNuxtData('org:counterparties')

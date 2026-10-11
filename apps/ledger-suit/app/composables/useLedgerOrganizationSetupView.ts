@@ -1,8 +1,9 @@
 import type { Database } from '~~/types/database.types'
 
 /** Ledger-owned orchestration; mounted by a shared workflow scope in its route/layout. */
-export function useLedgerOrganizationSetupView(_values: Record<string, unknown>, _emit: (event: string, ...args: unknown[]) => void) {
+export function useLedgerOrganizationSetupView() {
 const supabase = useSupabaseClient<Database>()
+const nuxtApp = useNuxtApp()
 const { loadOrganizations } = useTenant()
 const { t } = useI18n()
 const describeError = useErrorMessage()
@@ -13,7 +14,6 @@ const currency = ref('EGP')
 const invitationToken = ref('')
 const pending = ref(false)
 const errorMessage = ref<string | null>(null)
-const showDemo = ref(false)
 
 onMounted(() => {
   if (typeof route.query.invitation === 'string') invitationToken.value = route.query.invitation
@@ -44,7 +44,7 @@ async function createOrganization() {
       p_base_currency: currency.value,
     })
     if (error) throw error
-    await loadOrganizations(undefined, { force: true }); await refreshNuxtData()
+    await loadOrganizations(undefined, { force: true }); await nuxtApp.runWithContext(() => refreshNuxtData())
   }
   catch (error) { errorMessage.value = describeError(error) }
   finally { pending.value = false }
@@ -55,10 +55,10 @@ async function acceptInvitation() {
   try {
     const { error } = await supabase.rpc('accept_organization_invitation' as never, { p_token: invitationToken.value.trim() } as never)
     if (error) throw error
-    await loadOrganizations(undefined, { force: true }); await refreshNuxtData()
+    await loadOrganizations(undefined, { force: true }); await nuxtApp.runWithContext(() => refreshNuxtData())
   }
   catch (error) { errorMessage.value = describeError(error) }
   finally { pending.value = false }
 }
-return { supabase, loadOrganizations, t, describeError, route, name, legalName, currency, invitationToken, pending, errorMessage, showDemo, createOrganization, acceptInvitation }
+return { supabase, loadOrganizations, t, describeError, route, name, legalName, currency, invitationToken, pending, errorMessage, createOrganization, acceptInvitation }
 }
