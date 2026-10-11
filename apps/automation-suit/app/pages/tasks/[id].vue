@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { automationStatusTone } from '../../utils/automationStatusTone'
 const route = useRoute()
 const id = computed(() => String(route.params.id))
 interface DetailTask { task_id: string; title: string; description?: string; status: string; engine_stage?: string }
@@ -34,9 +35,132 @@ function codexPrompt() { return `${chatGptPrompt()}\n\nUse the existing worktree
 async function copy(value: string) { await navigator.clipboard.writeText(value) }
 </script>
 
-<template><main class="space-y-5"><BsCard v-if="error" padding="sm" class="border-danger/40 text-danger">{{ error.message }}</BsCard><template v-if="packet"><div class="flex flex-wrap items-start justify-between gap-3"><div><p class="font-mono text-xs font-bold text-fg-muted">{{ packet.project?.slug }} / {{ packet.workstream?.slug }}</p><h1 class="mt-2 text-3xl font-black">{{ packet.task.task_id }} · {{ packet.task.title }}</h1><p class="mt-2 max-w-4xl text-sm text-fg-muted">{{ packet.task.description }}</p></div><div class="flex items-center gap-2"><DashboardStatusPill :value="packet.task.status" /><BsButton @click="refresh()">Refresh</BsButton></div></div>
-<section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><DashboardMetricCard label="Attempt" :value="`${latest?.attempt ?? 0}/${packet.retry_policy?.max_attempts ?? '?'}`" :hint="packet.retry_policy?.policy_id" /><DashboardMetricCard label="Profile" :value="latest?.model_profile || packet.retry_policy?.attempt_profiles?.[0] || 'unresolved'" :hint="`${latest?.model_name || 'model unresolved'} · ${latest?.reasoning_effort || 'reasoning unresolved'}`" /><DashboardMetricCard label="Engine stage" :value="latest?.engine_stage || 'pending'" /><DashboardMetricCard label="Usage" value="unavailable" hint="No token estimate is invented." /></section>
-<BsCard as="section" title="Manual actions"><p class="text-xs text-fg-muted">Only actions legal for the current recorded state are shown. Execute with the generic CLI.</p><div class="mt-3 flex flex-wrap gap-2"><BsButton v-for="availableAction in legalActions" :key="availableAction" size="sm" @click="copy(`pnpm automation task ${availableAction} ${packet.task.task_id}`)">Copy {{ availableAction }} command</BsButton><BsButton size="sm" @click="copy(chatGptPrompt())">Copy for ChatGPT</BsButton><BsButton size="sm" @click="copy(codexPrompt())">Generate Codex Repair Prompt</BsButton></div></BsCard>
-<BsCard as="section" title="Live verification"><div class="space-y-2"><div v-for="check in currentChecks" :key="check.verification_id" class="flex flex-wrap items-center justify-between gap-3 rounded-control border border-[var(--bs-border)] p-3"><div><strong>{{ check.check_name }}</strong><p class="mt-1 max-w-3xl text-xs text-fg-muted">{{ check.summary || check.command }}</p></div><div class="text-end"><DashboardStatusPill :value="check.status" /><p class="mt-1 text-xs text-fg-muted">{{ check.elapsed_ms == null ? 'waiting' : `${Math.round(check.elapsed_ms/1000)}s` }}</p></div></div></div></BsCard>
-<section class="grid gap-4 xl:grid-cols-2"><BsCard title="Git and process"><dl class="space-y-2 text-sm"><div><dt class="text-fg-muted">Worktree</dt><dd class="break-all font-mono text-xs">{{ latest?.worktree_path || '—' }}</dd></div><div><dt class="text-fg-muted">Branch</dt><dd class="font-mono text-xs">{{ latest?.branch_name || '—' }}</dd></div><div><dt class="text-fg-muted">Parent</dt><dd class="font-mono text-xs">{{ latest?.parent_branch || '—' }}@{{ latest?.parent_sha || '—' }}</dd></div><div><dt class="text-fg-muted">Prompt</dt><dd class="break-all font-mono text-xs">{{ latest?.prompt_path || '—' }}</dd></div><div><dt class="text-fg-muted">Log</dt><dd class="break-all font-mono text-xs">{{ latest?.run_log_path || '—' }}</dd></div></dl></BsCard><BsCard title="Task packet"><pre class="max-h-96 overflow-auto rounded-control bg-background p-3 text-[11px]">{{ JSON.stringify(packet.task, null, 2) }}</pre></BsCard></section>
-<BsCard as="section" title="Timeline"><div class="divide-y divide-[var(--bs-border)]"><details v-for="event in data?.events || []" :key="event.event_id" class="py-3"><summary class="cursor-pointer text-sm"><strong>{{ event.event_type }}</strong><span class="ms-2 text-xs text-fg-muted">{{ event.source }} · {{ event.created_at }}</span></summary><pre class="mt-2 overflow-auto rounded-control bg-background p-3 text-[11px]">{{ JSON.stringify(event.payload, null, 2) }}</pre></details></div></BsCard></template></main></template>
+<template>
+  <BsPage padding="none" width="full">
+    <BsAlert v-if="error" tone="error" :description="error.message" />
+    <template v-if="packet">
+      <BsInline justify="between" align="start">
+        <BsStack gap="sm">
+          <BsText size="xs" tone="muted" emphasis="semibold">
+            {{ packet.project?.slug }} / {{ packet.workstream?.slug }}
+          </BsText>
+          <BsHeading :level="1">
+            {{ packet.task.task_id }} · {{ packet.task.title }}
+          </BsHeading>
+          <BsText size="sm" tone="muted">
+            {{ packet.task.description }}
+          </BsText>
+        </BsStack>
+        <BsInline>
+          <BsStatusBadge :status="packet.task.status" :label="(packet.task.status) || 'unknown'" :tone="automationStatusTone(packet.task.status)" />
+          <BsButton @click="refresh()">
+            Refresh
+          </BsButton>
+        </BsInline>
+      </BsInline>
+      <BsGrid :columns="2" as="section">
+        <BsKpiCard title="Attempt" :hint="packet.retry_policy?.policy_id">
+          <BsText as="span" size="lg" emphasis="bold">
+            {{ `${latest?.attempt ?? 0}/${packet.retry_policy?.max_attempts ?? '?'}` }}
+          </BsText>
+        </BsKpiCard>
+        <BsKpiCard title="Profile" :hint="`${latest?.model_name || 'model unresolved'} · ${latest?.reasoning_effort || 'reasoning unresolved'}`">
+          <BsText as="span" size="lg" emphasis="bold">
+            {{ latest?.model_profile || packet.retry_policy?.attempt_profiles?.[0] || 'unresolved' }}
+          </BsText>
+        </BsKpiCard>
+        <BsKpiCard title="Engine stage">
+          <BsText as="span" size="lg" emphasis="bold">
+            {{ latest?.engine_stage || 'pending' }}
+          </BsText>
+        </BsKpiCard>
+        <BsKpiCard title="Usage" hint="No token estimate is invented.">
+          <BsText as="span" size="lg" emphasis="bold">
+            unavailable
+          </BsText>
+        </BsKpiCard>
+      </BsGrid>
+      <BsCard as="section" title="Manual actions">
+        <BsStack gap="sm">
+          <BsText size="xs" tone="muted">
+            Only actions legal for the current recorded state are shown. Execute with the generic CLI.
+          </BsText>
+          <BsInline>
+            <BsButton v-for="availableAction in legalActions" :key="availableAction" size="sm" @click="copy(`pnpm automation task ${availableAction} ${packet.task.task_id}`)">
+              Copy {{ availableAction }} command
+            </BsButton>
+            <BsButton size="sm" @click="copy(chatGptPrompt())">
+              Copy for ChatGPT
+            </BsButton>
+            <BsButton size="sm" @click="copy(codexPrompt())">
+              Generate Codex Repair Prompt
+            </BsButton>
+          </BsInline>
+        </BsStack>
+      </BsCard>
+      <BsCard as="section" title="Live verification">
+        <BsStack gap="sm">
+          <BsStack gap="sm">
+            <BsInline v-for="check in currentChecks" :key="check.verification_id" justify="between">
+              <BsStack gap="sm">
+                <BsText as="strong" emphasis="semibold">
+                  {{ check.check_name }}
+                </BsText>
+                <BsText size="xs" tone="muted">
+                  {{ check.summary || check.command }}
+                </BsText>
+              </BsStack>
+              <BsStack gap="sm">
+                <BsStatusBadge :status="check.status" :label="(check.status) || 'unknown'" :tone="automationStatusTone(check.status)" />
+                <BsText size="xs" tone="muted">
+                  {{ check.elapsed_ms == null ? 'waiting' : `${Math.round(check.elapsed_ms/1000)}s` }}
+                </BsText>
+              </BsStack>
+            </BsInline>
+          </BsStack>
+        </BsStack>
+      </BsCard>
+      <BsGrid :columns="2" as="section">
+        <BsCard title="Git and process">
+          <BsStack gap="sm">
+            <BsDescriptionList density="compact">
+              <BsDescriptionItem term="Worktree">
+                {{ latest?.worktree_path || '—' }}
+              </BsDescriptionItem>
+              <BsDescriptionItem term="Branch">
+                {{ latest?.branch_name || '—' }}
+              </BsDescriptionItem>
+              <BsDescriptionItem term="Parent">
+                {{ latest?.parent_branch || '—' }}@{{ latest?.parent_sha || '—' }}
+              </BsDescriptionItem>
+              <BsDescriptionItem term="Prompt">
+                {{ latest?.prompt_path || '—' }}
+              </BsDescriptionItem>
+              <BsDescriptionItem term="Log">
+                {{ latest?.run_log_path || '—' }}
+              </BsDescriptionItem>
+            </BsDescriptionList>
+          </BsStack>
+        </BsCard>
+        <BsCard title="Task packet">
+          <BsStack gap="sm">
+            <BsCodeBlock>
+              {{ JSON.stringify(packet.task, null, 2) }}
+            </BsCodeBlock>
+          </BsStack>
+        </BsCard>
+      </BsGrid>
+      <BsCard as="section" title="Timeline">
+        <BsStack gap="sm">
+          <BsStack gap="sm">
+            <BsDisclosure v-for="event in data?.events || []" :key="event.event_id" :summary="`${event.event_type} · ${event.source} · ${event.created_at}`">
+              <BsCodeBlock>
+                {{ JSON.stringify(event.payload, null, 2) }}
+              </BsCodeBlock>
+            </BsDisclosure>
+          </BsStack>
+        </BsStack>
+      </BsCard>
+    </template>
+  </BsPage>
+</template>

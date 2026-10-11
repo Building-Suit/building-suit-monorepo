@@ -1,0 +1,32 @@
+{
+  "schema_version": "control-plane-verification-registry-v2",
+  "workstreams": {
+    "shared": {
+      "verification_config": {
+        "commands": [
+          {
+            "name": "generator-disposable-fixture",
+            "program": "node",
+            "args": ["tooling/new-platform/verify-fixture.mjs"],
+            "required": true,
+            "capabilities": ["generator", "generated-fixture", "strict-boundary"]
+          }
+        ],
+        "legacy_plan_mappings": {
+          "generator dry run into disposable path": {
+            "version": 2,
+            "kind": "command",
+            "command": "generator-disposable-fixture",
+            "requires": ["generator", "generated-fixture"]
+          },
+          "node tooling/checks/suit-template-boundaries.mjs against generated fixture": {
+            "version": 2,
+            "kind": "command",
+            "command": "generator-disposable-fixture",
+            "requires": ["generated-fixture", "strict-boundary"]
+          }
+        }
+      }
+    }
+  }
+}

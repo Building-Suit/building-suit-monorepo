@@ -78,7 +78,7 @@ onMounted(() => {
 
 <template>
   <BsAuthLayout :product-name="t('app.name')" :home-label="t('marketing.home')" :title="t('onboarding.otpTitle')" :description="t('onboarding.otpDescription')">
-    <template #logo="{ tone }"><BsProductLogo name="Ledger Suit" asset-prefix="/brand/ledger-suit" :tone="tone" class="h-auto w-56" /></template>
+    <template #logo="{ tone }"><BsProductLogo name="Ledger Suit" asset-prefix="/brand/ledger-suit" :tone="tone" size="auth" /></template>
     <BsVerificationForm
       v-model="otp" :eyebrow="t('onboarding.otpEyebrow')" :title="t('onboarding.otpTitle')"
       :description="t('onboarding.otpDescription')" :email="email" :code-label="t('onboarding.otpLabel')"

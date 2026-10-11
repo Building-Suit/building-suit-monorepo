@@ -60,6 +60,10 @@ export function classifyControlDatabaseFailure(failure) {
   const text = failureText(failure)
   const code = typeof failure === 'object' ? failure?.code ?? failure?.error_code : null
 
+  // PostgreSQL aborts these transactions. Reuse the bounded transport retry;
+  // no implementation or product attempt is created for a lock conflict.
+  if (['40P01','40001'].includes(code) || /(?:ERROR|FATAL):\s+(?:40P01|40001):/.test(text)) return { transient: true, category: 'transaction_conflict' }
+
   if (NON_TRANSIENT_PATTERNS.some(pattern => pattern.test(text))) {
     return { transient: false, category: 'non_transient_database_error' }
   }

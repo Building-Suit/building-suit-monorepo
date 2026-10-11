@@ -5,15 +5,22 @@ import { test } from 'node:test'
 const read = path => readFile(new URL(`../../${path}`, import.meta.url), 'utf8')
 const routes = ['about', 'contact', 'terms', 'privacy', 'delivery-shipping', 'refund-cancellation']
 
-test('all Shop public and legal routes use the Shop-owned landing structure', async () => {
+test('Shop legal routes retain product metadata through the shared legal template', async () => {
   for (const route of routes) {
     const source = await read(`app/pages/${route}.vue`)
     assert.match(source, /layout: 'landing'/)
     assert.doesNotMatch(source, /ledger-suit|Ledger Suit/)
   }
-  const page = await read('app/components/PublicLegalPage.vue')
-  assert.match(page, /Shop Suit by Building Suit/)
-  assert.match(page, /title: `\$\{props\.document\.title\} · Shop Suit`/)
+  for (const route of ['about', 'terms', 'privacy', 'delivery-shipping', 'refund-cancellation']) {
+    const source = await read(`app/pages/${route}.vue`)
+    assert.match(source, /<BsPublicLegalPage/)
+    assert.match(source, /eyebrow="Shop Suit by Building Suit"/)
+    assert.match(source, /title: `\$\{document\.value\.title\} · Shop Suit`/)
+  }
+  const page = await read('../../packages/ui/src/templates/BsPublicLegalPage.vue')
+  assert.match(page, /document\.title/)
+  assert.match(page, /document\.sections/)
+  assert.match(page, /lastUpdatedLabel/)
 })
 
 test('legal copy is bilingual and describes Shop manual digital delivery accurately', async () => {

@@ -10,12 +10,14 @@ const ui = useUiCopy()
     size="sm"
     @update:visible="value => { if (!value) answer(false) }"
   >
-    <p>{{ current.message }}</p>
+    <BsText>{{ current.message }}</BsText>
     <template #footer>
-      <BsButton type="button" autofocus @click="answer(false)">{{ current.cancelLabel || ui('cancel') }}</BsButton>
-      <BsButton type="button" :variant="current.tone === 'danger' ? 'danger' : 'primary'" @click="answer(true)">
-        {{ current.confirmLabel || ui('confirm') }}
-      </BsButton>
+      <BsFormActions>
+        <BsButton type="button" autofocus @click="answer(false)">{{ current.cancelLabel || ui('cancel') }}</BsButton>
+        <BsButton type="button" :variant="current.tone === 'danger' ? 'danger' : 'primary'" @click="answer(true)">
+          {{ current.confirmLabel || ui('confirm') }}
+        </BsButton>
+      </BsFormActions>
     </template>
   </BsDialog>
 </template>

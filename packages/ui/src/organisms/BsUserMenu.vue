@@ -108,12 +108,12 @@ watch(() => route.fullPath, () => close())
         role="menuitem"
         @click="close()"
       >
-        <AppIcon v-if="action.icon" :name="action.icon" />
+        <BsIcon v-if="action.icon" :name="action.icon" />
         <span>{{ action.label }}</span>
       </NuxtLink>
 
       <hr v-if="actions.length" class="border-[var(--bs-border)]">
-      <SettingsMenu embedded />
+      <BsSettingsMenu embedded />
       <hr class="border-[var(--bs-border)]">
       <p v-if="error" class="ls-error px-2 text-sm" role="alert">{{ error }}</p>
       <BsButton

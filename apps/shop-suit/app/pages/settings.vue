@@ -80,6 +80,14 @@ watch([currentId, cashPolicy], () => {
   cashRequired.value = cashPolicy.value === true
   cashError.value = ''; cashSuccess.value = ''
 }, { immediate: true })
+const cashAction = useRecordAction(() => cashRequired.value)
+const { visible: cashActionOpen, dirty: cashActionDirty } = cashAction
+function editCashPolicy() {
+  cashRequired.value = cashPolicy.value ?? false
+  cashError.value = ''
+  cashAction.edit()
+}
+
 async function saveCashPolicy() {
   if (!currentId.value || !canManage.value || cashPending.value || cashPolicy.value === null) return
   const shopId = currentId.value
@@ -88,7 +96,10 @@ async function saveCashPolicy() {
     const { error } = await shopRpc.rpc('set_shop_cash_policy', { p_shop_id: shopId, p_required: cashRequired.value })
     if (error) throw error
     await refreshCashPolicy()
-    if (currentId.value === shopId) cashSuccess.value = isArabic.value ? 'اتحفظت سياسة ورديات الخزنة.' : 'Cashier shift policy saved.'
+    if (currentId.value === shopId) {
+      cashSuccess.value = isArabic.value ? 'اتحفظت سياسة ورديات الخزنة.' : 'Cashier shift policy saved.'
+      cashAction.complete()
+    }
   } catch {
     if (currentId.value === shopId) cashError.value = isArabic.value ? 'مقدرناش نحفظ سياسة ورديات الخزنة. حاول تاني.' : 'Could not save the cashier shift policy. Try again.'
   } finally { cashPending.value = false }
@@ -198,6 +209,7 @@ async function saveMode() {
     if (error) throw error
     await reload()
     successMessage.value = copy.value.success
+    modeAction.complete()
     success(copy.value.success)
   } catch {
     errorMessage.value = copy.value.failed
@@ -221,6 +233,7 @@ async function saveProfile() {
     if (error) throw error
     await reload()
     profileSuccess.value = copy.value.profileSaved
+    profileAction.complete()
     success(copy.value.profileSaved)
   } catch {
     profileError.value = copy.value.profileFailed
@@ -331,131 +344,155 @@ async function saveReceiptSettings() {
     if (error) throw error
     await refreshReceiptSettings()
     receiptSuccess.value = copy.value.receiptSaved
+    receiptAction.complete()
     success(copy.value.receiptSaved)
   }
   catch { receiptError.value = copy.value.receiptFailed }
   finally { receiptPending.value = false }
 }
+
+const profileAction = useRecordAction(() => profileForm)
+const { visible: profileActionOpen, dirty: profileActionDirty } = profileAction
+
+const modeAction = useRecordAction(() => selectedMode.value)
+const { visible: modeActionOpen, dirty: modeActionDirty } = modeAction
+
+const receiptAction = useRecordAction(() => receiptForm)
+const { visible: receiptActionOpen, dirty: receiptActionDirty } = receiptAction
 </script>
 
 <template>
-  <div class="mx-auto max-w-4xl space-y-6">
-    <header>
-      <p class="text-xs font-bold uppercase tracking-[0.16em] text-[var(--bs-link)]">{{ current?.name }}</p>
-      <h1 class="mt-1 text-3xl font-extrabold tracking-tight">{{ copy.title }}</h1>
-      <p class="mt-2 text-sm text-muted-foreground">{{ copy.subtitle }}</p>
-    </header>
+  <BsStack>
+    <BsBox as="header">
+      <BsText as="p" size="xs" emphasis="semibold">{{ current?.name }}</BsText>
+      <BsHeading :level="1">{{ copy.title }}</BsHeading>
+      <BsText as="p" size="sm" tone="muted">{{ copy.subtitle }}</BsText>
+    </BsBox>
+    <BsText v-if="loading" role="status" as="p">{{ ui('loading') }}</BsText>
+    <BsBox v-else-if="shopError" role="alert">{{ copy.failed }} <BsButton @click="reload()">{{ ui('retry') }}</BsButton>
+    </BsBox>
+    <BsText v-else-if="!current" role="status" as="p">{{ ui('empty') }}</BsText>
+    <BsPanel v-if="current" aria-labelledby="cash-policy-title" padding="md">
+      <BsHeading id="cash-policy-title" :level="2">{{ isArabic ? 'سياسة ورديات الخزنة' : 'Cashier shift policy' }}</BsHeading>
+      <BsText as="p" id="cash-policy-help">{{ isArabic ? 'عند التفعيل، إصدار المبيعات والدفع يتطلبان وردية مفتوحة للخزنة الرئيسية في الفرع المحدد، حتى للدفع غير النقدي. حفظ المسودات يظل متاحًا. التغييرات مسجلة في سجل المراجعة.' : 'When enabled, issuing sales and taking payment require an open main cashier shift at the selected location, including non-cash payments. Draft saving remains available. Changes are audited.' }}</BsText>
+      <BsText as="p" v-if="cashLoading" role="status">{{ ui('loading') }}</BsText>
+      <BsText as="p" v-else-if="cashLoadError" role="alert">{{ isArabic ? 'مقدرناش نحمّل سياسة ورديات الخزنة.' : 'Could not load the cashier shift policy.' }} <BsButton @click="refreshCashPolicy()">{{ ui('retry') }}</BsButton></BsText>
+      <BsStack v-else>
+        <BsCheckbox :model-value="cashPolicy ?? false" :label="isArabic ? 'اشتراط وردية خزنة مفتوحة للمبيعات' : 'Require an open cashier shift for sales'" describedby="cash-policy-help" disabled />
+        <BsText v-if="!canManage" role="status" as="p">{{ copy.ownerOnly }}</BsText>
+        <BsText v-if="cashSuccess" role="status" as="p">{{ cashSuccess }}</BsText>
+        <BsButton v-if="canManage" :disabled="cashPolicy === null" @click="editCashPolicy">{{ isArabic ? 'تعديل سياسة الخزنة' : 'Edit cashier policy' }}</BsButton>
+      </BsStack>
+      <BsRecordActionDialog v-model:visible="cashActionOpen" :title="isArabic ? 'سياسة ورديات الخزنة' : 'Cashier shift policy'" :dirty="cashActionDirty" :pending="cashPending" :error="cashError" :submit-label="isArabic ? 'حفظ سياسة الخزنة' : 'Save cashier policy'" :submit-disabled="cashPolicy === null || cashRequired === cashPolicy" @submit="saveCashPolicy">
+        <BsCheckbox v-model="cashRequired" :label="isArabic ? 'اشتراط وردية خزنة مفتوحة للمبيعات' : 'Require an open cashier shift for sales'" describedby="cash-policy-help" :disabled="!canManage || cashPolicy === null" />
+      </BsRecordActionDialog>
+    </BsPanel>
 
-    <p v-if="loading" role="status">{{ ui('loading') }}</p>
-    <div v-else-if="shopError" role="alert" class="ls-error">{{ copy.failed }} <BsButton @click="reload()">{{ ui('retry') }}</BsButton></div>
-    <p v-else-if="!current" role="status">{{ ui('empty') }}</p>
-    <section v-if="current" aria-labelledby="cash-policy-title" class="ls-card p-5 sm:p-6">
-      <h2 id="cash-policy-title" class="text-lg font-semibold">{{ isArabic ? 'سياسة ورديات الخزنة' : 'Cashier shift policy' }}</h2>
-      <p id="cash-policy-help" class="mt-2 text-sm leading-6 text-muted-foreground">{{ isArabic ? 'عند التفعيل، إصدار المبيعات والدفع يتطلبان وردية مفتوحة للخزنة الرئيسية في الفرع المحدد، حتى للدفع غير النقدي. حفظ المسودات يظل متاحًا. التغييرات مسجلة في سجل المراجعة.' : 'When enabled, issuing sales and taking payment require an open main cashier shift at the selected location, including non-cash payments. Draft saving remains available. Changes are audited.' }}</p>
-      <p v-if="cashLoading" role="status">{{ ui('loading') }}</p>
-      <p v-else-if="cashLoadError" role="alert" class="ls-error">{{ isArabic ? 'مقدرناش نحمّل سياسة ورديات الخزنة.' : 'Could not load the cashier shift policy.' }} <BsButton @click="refreshCashPolicy()">{{ ui('retry') }}</BsButton></p>
-      <BsForm v-else class="mt-4 space-y-4" :pending="cashPending" :error="cashError" @submit="saveCashPolicy">
-        <label class="flex items-start gap-3 text-sm font-medium">
-          <input v-model="cashRequired" type="checkbox" aria-describedby="cash-policy-help" :disabled="!canManage || cashPolicy === null">
-          {{ isArabic ? 'اشتراط وردية خزنة مفتوحة للمبيعات' : 'Require an open cashier shift for sales' }}
-        </label>
-        <p v-if="!canManage" role="status" class="text-sm text-muted-foreground">{{ copy.ownerOnly }}</p>
-        <p v-if="cashSuccess" role="status" class="text-sm">{{ cashSuccess }}</p>
-        <BsButton v-if="canManage" variant="primary" type="submit" :pending="cashPending" :disabled="cashPolicy === null || cashRequired === cashPolicy">{{ isArabic ? 'حفظ سياسة الخزنة' : 'Save cashier policy' }}</BsButton>
-      </BsForm>
-    </section>
-
-    <section v-if="current && !loading && !shopError" id="shop-profile" class="scroll-mt-28 ls-card p-5 sm:p-6" aria-labelledby="shop-profile-title">
-      <h2 id="shop-profile-title" class="text-lg font-extrabold">{{ copy.profileTitle }}</h2>
-      <p class="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{{ copy.profileHelp }}</p>
-      <p v-if="!canManage" role="status" class="mt-5 rounded-xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-4 text-sm text-fg">{{ copy.profileOwnerOnly }}</p>
-      <p v-if="profileSuccess" role="status" class="mt-4 rounded-xl border border-[var(--bs-status-success)]/30 bg-[var(--bs-status-success-bg)] p-3 text-sm text-fg">{{ profileSuccess }}</p>
-      <BsForm class="mt-5 space-y-4" :pending="profilePending" :error="profileError" @submit="saveProfile">
-        <label class="grid max-w-xl gap-1 text-sm font-bold">
-          {{ copy.shopDisplayName }}
-          <input v-model="profileForm.displayName" class="ls-input min-h-11" autocomplete="organization" required minlength="2" maxlength="120" :disabled="!canManage">
-        </label>
-        <div class="rounded-xl border border-border bg-background p-4 text-sm leading-6 text-muted-foreground">
-          <p>{{ copy.profileLocationHelp }}</p>
-          <a href="#locations" class="mt-1 inline-block min-h-11 py-2 font-bold text-[var(--bs-link)] underline">{{ copy.manageLocations }}</a>
-        </div>
-        <BsButton type="submit" class="ls-btn ls-btn-primary" :pending="profilePending" :disabled="!canManage || profileForm.displayName.trim().length < 2 || profileForm.displayName.trim() === current.name">{{ profilePending ? copy.savingProfile : copy.saveProfile }}</BsButton>
-      </BsForm>
-    </section>
-    <section v-if="current" class="ls-card p-5 sm:p-6">
-      <h2 class="text-lg font-extrabold">{{ copy.modeTitle }}</h2>
-      <p class="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{{ copy.modeHelp }}</p>
-
-      <p v-if="!canManage" role="status" class="mt-5 rounded-xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-4 text-sm text-fg">{{ copy.ownerOnly }}</p>
-      <p class="mt-5 rounded-xl border border-border bg-background p-4 text-sm leading-6">{{ copy.preserve }}</p>
-      <p v-if="successMessage" role="status" class="mt-4 rounded-xl border border-[var(--bs-status-success)]/30 bg-[var(--bs-status-success-bg)] p-3 text-sm text-fg">{{ successMessage }}</p>
-
-      <BsForm class="mt-5 space-y-5" :pending="pending" :error="errorMessage" @submit="saveMode">
-        <fieldset class="grid gap-3 md:grid-cols-3" :disabled="!canManage || pending">
-          <legend class="sr-only">{{ copy.modeTitle }}</legend>
-          <label v-for="mode in modeOptions" :key="mode.value" class="cursor-pointer rounded-2xl border p-4 transition disabled:cursor-not-allowed" :class="selectedMode === mode.value ? 'border-[var(--bs-accent)] ring-2 ring-[var(--bs-accent)]/15' : 'border-border'">
-            <span class="flex items-center gap-2">
-              <input v-model="selectedMode" type="radio" name="business-mode" :value="mode.value">
-              <strong>{{ mode.label }}</strong>
-            </span>
-            <span class="mt-2 block text-sm leading-6 text-muted-foreground">{{ mode.body }}</span>
-          </label>
-        </fieldset>
-        <BsButton type="submit" class="ls-btn ls-btn-primary" :pending="pending" :disabled="!canManage || !current || selectedMode === current.business_mode">{{ pending ? copy.saving : copy.save }}</BsButton>
-      </BsForm>
-    </section>
-
-    <section v-if="current" id="locations" class="scroll-mt-28 ls-card p-5 sm:p-6">
-      <h2 class="text-lg font-extrabold">{{ copy.locationsTitle }}</h2>
-      <p class="mt-2 text-sm leading-6 text-muted-foreground">{{ copy.locationsHelp }}</p>
-      <p v-if="locationUsageLabel" class="mt-2 text-sm font-semibold text-muted-foreground">{{ locationUsageLabel }}</p>
-      <div v-if="locationCapacityFull && !editingLocationId" role="status" class="mt-4 rounded-xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-4 text-sm">
-        <p>{{ copy.locationLimit }}</p>
-        <NuxtLink to="/billing" class="mt-2 inline-block font-bold underline">{{ copy.upgradePlan }}</NuxtLink>
-      </div>
-      <BsDataTable
-        class="mt-5"
-        :value="locations"
-        data-key="id"
-        :label="copy.locationsTitle"
-        :capabilities="{ insert: canManage && !locationCapacityFull, edit: canManage, archive: canManage }"
-        :action-labels="{ insert: copy.addLocation, edit: copy.editLocation, archive: copy.archiveLocation }"
-        :can-row-action="(action, location) => action !== 'archive' || (!location.is_default && location.status === 'active')"
-        :row-action-pending="locationPending"
-        @create="createLocation"
-        @edit="editLocation"
-        @archive="location => archiveLocation(location.id)"
-      >
-        <Column field="name" :header="copy.locationName" />
-        <Column :header="copy.locationCode"><template #body="{ data: location }">{{ location.code || location.address || '—' }}</template></Column>
-        <Column :header="copy.defaultLocation"><template #body="{ data: location }"><StatusBadge v-if="location.is_default" status="default" :label="copy.defaultLocation" tone="neutral" /><StatusBadge v-else-if="location.status === 'archived'" status="archived" :label="copy.archivedLocation" tone="neutral" /></template></Column>
-        <template #row-actions="{ row: location }"><BsButton v-if="canManage && location.status === 'archived'" variant="link" :disabled="locationPending || locationCapacityFull" @click="restoreLocation(location.id)">{{ copy.restoreLocation }}</BsButton></template>
+    <BsPanel v-if="current && !loading && !shopError" id="shop-profile" aria-labelledby="shop-profile-title" padding="md">
+      <BsHeading id="shop-profile-title" :level="2">{{ copy.profileTitle }}</BsHeading>
+      <BsText as="p" size="sm" tone="muted">{{ copy.profileHelp }}</BsText>
+      <BsText v-if="!canManage" role="status" as="p" size="sm" tone="warning">{{ copy.profileOwnerOnly }}</BsText>
+      <BsText v-if="profileSuccess" role="status" as="p" size="sm">{{ profileSuccess }}</BsText>
+      <BsStack>
+        <BsText emphasis="semibold">{{ current?.name }}</BsText>
+        <BsButton :disabled="!canManage" @click="profileAction.edit()">{{ copy.saveProfile }}</BsButton>
+        <BsRecordActionDialog v-model:visible="profileActionOpen" :title="copy.profileTitle" :dirty="profileActionDirty" :pending="profilePending" :error="profileError" :submit-label="copy.saveProfile" :cancel-label="copy.cancelEdit" :submit-disabled="!canManage || profileForm.displayName.trim().length < 2 || profileForm.displayName.trim() === current?.name" @submit="saveProfile">
+          <BsField v-slot="field" :label="(copy.shopDisplayName) + ' '">
+            <BsInput :id="field.id" v-model="profileForm.displayName" :aria-describedby="field.describedby" autocomplete="organization" required :minlength="2" :maxlength="120" :disabled="!canManage"/>
+          </BsField>
+          <BsBox padding="md">
+            <BsText as="p">{{ copy.profileLocationHelp }}</BsText>
+            <BsLink to="#locations" external>{{ copy.manageLocations }}</BsLink>
+          </BsBox>
+        </BsRecordActionDialog>
+      </BsStack>
+    </BsPanel>
+    <BsPanel v-if="current" padding="md">
+      <BsHeading :level="2">{{ copy.modeTitle }}</BsHeading>
+      <BsText as="p" size="sm" tone="muted">{{ copy.modeHelp }}</BsText>
+      <BsText v-if="!canManage" role="status" as="p" size="sm" tone="warning">{{ copy.ownerOnly }}</BsText>
+      <BsText as="p" size="sm">{{ copy.preserve }}</BsText>
+      <BsText v-if="successMessage" role="status" as="p" size="sm">{{ successMessage }}</BsText>
+      <BsStack>
+        <BsText>{{ modeOptions.find(mode => mode.value === current?.business_mode)?.label }}</BsText>
+        <BsButton :disabled="!canManage" @click="modeAction.edit()">{{ copy.save }}</BsButton>
+        <BsRecordActionDialog v-model:visible="modeActionOpen" :title="copy.modeTitle" :dirty="modeActionDirty" :pending="pending" :error="errorMessage" :submit-label="copy.save" :cancel-label="copy.cancelEdit" :submit-disabled="!canManage || !current || selectedMode === current.business_mode" @submit="saveMode">
+          <BsChoiceGroup v-model="selectedMode" type="radio" :legend="copy.modeTitle" :options="modeOptions.map(mode => ({ value: mode.value, label: mode.label, description: mode.body }))" :disabled="!canManage || pending" />
+        </BsRecordActionDialog>
+      </BsStack>
+    </BsPanel>
+    <BsPanel v-if="current" id="locations" padding="md">
+      <BsHeading :level="2">{{ copy.locationsTitle }}</BsHeading>
+      <BsText as="p" size="sm" tone="muted">{{ copy.locationsHelp }}</BsText>
+      <BsText v-if="locationUsageLabel" as="p" size="sm" tone="muted" emphasis="semibold">{{ locationUsageLabel }}</BsText>
+      <BsBox v-if="locationCapacityFull && !editingLocationId" role="status" padding="md">
+        <BsText as="p">{{ copy.locationLimit }}</BsText>
+        <BsLink to="/billing">{{ copy.upgradePlan }}</BsLink>
+      </BsBox>
+      <BsDataTable :value="locations" data-key="id" :label="copy.locationsTitle" :capabilities="{ insert: canManage && !locationCapacityFull, edit: canManage, archive: canManage }" :action-labels="{ insert: copy.addLocation, edit: copy.editLocation, archive: copy.archiveLocation }" :can-row-action="(action, location) => action !== 'archive' || (!location.is_default && location.status === 'active')" :row-action-pending="locationPending" :columns="[{ key: 'name', header: copy.locationName, field: 'name' }, { key: 'column1', header: copy.locationCode }, { key: 'column2', header: copy.defaultLocation }]" @create="createLocation" @edit="editLocation" @archive="location => archiveLocation(location.id)">
+        <template #cell-column1="{ row: location }">{{ location.code || location.address || '—' }}</template>
+        <template #cell-column2="{ row: location }">
+          <BsStatusBadge v-if="location.is_default" status="default" :label="copy.defaultLocation" tone="neutral"/>
+          <BsStatusBadge v-else-if="location.status === 'archived'" status="archived" :label="copy.archivedLocation" tone="neutral"/>
+        </template>
+        <template #row-actions="{ row: location }">
+          <BsButton v-if="canManage && location.status === 'archived'" variant="link" :disabled="locationPending || locationCapacityFull" @click="restoreLocation(location.id)">{{ copy.restoreLocation }}</BsButton>
+        </template>
       </BsDataTable>
       <BsRecordActionDialog v-model:visible="locationDialogOpen" :title="editingLocationId ? copy.editLocation : copy.addLocation" :dirty="locationDirty" :pending="locationPending" :error="locationError" :submit-label="editingLocationId ? copy.saveLocation : copy.addLocation" :cancel-label="copy.cancelEdit" @submit="saveLocation">
-        <label class="grid gap-1 text-sm"><span>{{ copy.locationName }}</span><input v-model="locationForm.name" class="ls-input" required minlength="2" maxlength="120"></label>
-        <label class="grid gap-1 text-sm"><span>{{ copy.locationCode }}</span><input v-model="locationForm.code" class="ls-input" maxlength="32"></label>
-        <label class="grid gap-1 text-sm"><span>{{ copy.locationAddress }}</span><input v-model="locationForm.address" class="ls-input"></label>
-        <label class="grid gap-1 text-sm"><span>{{ copy.locationPhone }}</span><input v-model="locationForm.phone" class="ls-input"></label>
+        <BsField v-slot="field" :label="copy.locationName">
+          <BsInput :id="field.id" v-model="locationForm.name" :aria-describedby="field.describedby" required :minlength="2" :maxlength="120"/>
+        </BsField>
+        <BsField v-slot="field" :label="copy.locationCode">
+          <BsInput :id="field.id" v-model="locationForm.code" :aria-describedby="field.describedby" :maxlength="32"/>
+        </BsField>
+        <BsField v-slot="field" :label="copy.locationAddress">
+          <BsInput :id="field.id" v-model="locationForm.address" :aria-describedby="field.describedby"/>
+        </BsField>
+        <BsField v-slot="field" :label="copy.locationPhone">
+          <BsInput :id="field.id" v-model="locationForm.phone" :aria-describedby="field.describedby"/>
+        </BsField>
       </BsRecordActionDialog>
-    </section>
-
-    <section v-if="current" class="ls-card p-5 sm:p-6" aria-labelledby="receipt-settings-title">
-      <h2 id="receipt-settings-title" class="text-lg font-extrabold">{{ copy.receiptTitle }}</h2>
-      <p class="mt-2 text-sm leading-6 text-muted-foreground">{{ copy.receiptHelp }}</p>
-      <p v-if="receiptLoading" role="status" class="mt-4">{{ ui('loading') }}</p>
-      <p v-else-if="receiptLoadError" role="alert" class="mt-4 text-sm text-[var(--bs-status-error)]">{{ copy.receiptFailed }} <BsButton variant="link" type="button" class="min-h-11 font-bold underline" @click="refreshReceiptSettings()">{{ ui('retry') }}</BsButton></p>
+    </BsPanel>
+    <BsPanel v-if="current" aria-labelledby="receipt-settings-title" padding="md">
+      <BsHeading id="receipt-settings-title" :level="2">{{ copy.receiptTitle }}</BsHeading>
+      <BsText as="p" size="sm" tone="muted">{{ copy.receiptHelp }}</BsText>
+      <BsText v-if="receiptLoading" role="status" as="p">{{ ui('loading') }}</BsText>
+      <BsText v-else-if="receiptLoadError" role="alert" as="p" size="sm" tone="danger">{{ copy.receiptFailed }} <BsButton variant="link" type="button" @click="refreshReceiptSettings()">{{ ui('retry') }}</BsButton>
+      </BsText>
       <template v-else-if="receiptSettings">
-        <p v-if="!canManage" role="status" class="mt-5 rounded-xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-4 text-sm">{{ copy.receiptOwnerOnly }}</p>
-        <p v-if="receiptSuccess" role="status" class="mt-4 rounded-xl bg-[var(--bs-status-success-bg)] p-3 text-sm">{{ receiptSuccess }}</p>
-        <BsForm class="mt-5 grid gap-4 sm:grid-cols-2" :pending="receiptPending" :error="receiptError" @submit="saveReceiptSettings">
-          <label class="grid gap-1 text-sm font-bold sm:col-span-2">{{ copy.receiptDisplayName }}<input v-model="receiptForm.displayName" class="ls-input min-h-11" required minlength="2" maxlength="160" :disabled="!canManage"></label>
-          <label class="grid gap-1 text-sm font-bold">{{ copy.receiptAddress }}<input v-model="receiptForm.address" class="ls-input min-h-11" maxlength="500" :disabled="!canManage"></label>
-          <label class="grid gap-1 text-sm font-bold">{{ copy.receiptPhone }}<input v-model="receiptForm.phone" class="ls-input min-h-11" maxlength="80" dir="auto" :disabled="!canManage"></label>
-          <label class="grid gap-1 text-sm font-bold sm:col-span-2">{{ copy.receiptFooter }}<textarea v-model="receiptForm.footer" class="ls-input" rows="3" maxlength="500" :disabled="!canManage" /></label>
-          <fieldset class="sm:col-span-2" :disabled="!canManage || receiptPending"><legend class="text-sm font-bold">{{ copy.receiptPaper }}</legend><div class="mt-2 grid gap-3 sm:grid-cols-2"><label v-for="size in ['thermal_80', 'a4'] as const" :key="size" class="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border border-border p-3"><input v-model="receiptForm.paperSize" type="radio" name="receipt-paper" :value="size"><span class="font-bold">{{ size === 'thermal_80' ? copy.thermal80 : copy.a4 }}</span></label></div></fieldset>
-          <div class="sm:col-span-2"><BsButton type="submit" :pending="receiptPending" :disabled="!canManage || receiptForm.displayName.trim().length < 2">{{ receiptPending ? copy.savingReceipt : copy.saveReceipt }}</BsButton></div>
-        </BsForm>
+        <BsText v-if="!canManage" role="status" as="p" size="sm" tone="warning">{{ copy.receiptOwnerOnly }}</BsText>
+        <BsText v-if="receiptSuccess" role="status" as="p" size="sm">{{ receiptSuccess }}</BsText>
+        <BsStack>
+          <BsDescriptionList density="compact">
+            <BsDescriptionItem :term="copy.receiptDisplayName">{{ receiptSettings.displayName }}</BsDescriptionItem>
+            <BsDescriptionItem :term="copy.receiptAddress">{{ receiptSettings.address || '—' }}</BsDescriptionItem>
+            <BsDescriptionItem :term="copy.receiptPhone">{{ receiptSettings.phone || '—' }}</BsDescriptionItem>
+            <BsDescriptionItem :term="copy.receiptFooter">{{ receiptSettings.footer || '—' }}</BsDescriptionItem>
+            <BsDescriptionItem :term="copy.receiptPaper">{{ receiptSettings.paperSize === 'thermal_80' ? copy.thermal80 : copy.a4 }}</BsDescriptionItem>
+          </BsDescriptionList>
+          <BsButton :disabled="!canManage" @click="receiptAction.edit()">{{ copy.saveReceipt }}</BsButton>
+          <BsRecordActionDialog v-model:visible="receiptActionOpen" :title="copy.receiptTitle" :dirty="receiptActionDirty" :pending="receiptPending" :error="receiptError" :submit-label="copy.saveReceipt" :cancel-label="copy.cancelEdit" :submit-disabled="!canManage || receiptForm.displayName.trim().length < 2" @submit="saveReceiptSettings">
+            <BsField v-slot="field" :label="copy.receiptDisplayName">
+              <BsInput :id="field.id" v-model="receiptForm.displayName" :aria-describedby="field.describedby" required :minlength="2" :maxlength="160" :disabled="!canManage"/>
+            </BsField>
+            <BsField v-slot="field" :label="copy.receiptAddress">
+              <BsInput :id="field.id" v-model="receiptForm.address" :aria-describedby="field.describedby" :maxlength="500" :disabled="!canManage"/>
+            </BsField>
+            <BsField v-slot="field" :label="copy.receiptPhone">
+              <BsInput :id="field.id" v-model="receiptForm.phone" :aria-describedby="field.describedby" :maxlength="80" dir="auto" :disabled="!canManage"/>
+            </BsField>
+            <BsField v-slot="field" :label="copy.receiptFooter">
+              <BsTextarea :id="field.id" v-model="receiptForm.footer" :aria-describedby="field.describedby" :rows="3" :maxlength="500" :disabled="!canManage"/>
+            </BsField>
+            <BsFieldGroup :disabled="!canManage || receiptPending" :legend="(copy.receiptPaper)">
+              <BsGrid :columns="2">
+                <BsRadio v-for="size in ['thermal_80', 'a4'] as const" :key="size" v-model="receiptForm.paperSize" name="receipt-paper" :value="size" :label="(size === 'thermal_80' ? copy.thermal80 : copy.a4)" />
+              </BsGrid>
+            </BsFieldGroup>
+          </BsRecordActionDialog>
+        </BsStack>
       </template>
-    </section>
-  </div>
+    </BsPanel>
+  </BsStack>
 </template>
