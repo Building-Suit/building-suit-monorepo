@@ -58,7 +58,11 @@ for (const locale of ['en', 'ar']) for (const kind of ['product', 'service', 'mi
         const editor = page.getByRole('dialog')
         await expectEffect(editor, kind, ar)
         const label = action === 'fast-pay' ? (ar ? 'دفع سريع' : 'Fast Pay') : customer ? (ar ? 'إصدار البيعة' : 'Issue sale') : (ar ? 'إصدار وتحصيل المبلغ' : 'Issue and take payment')
+        // Let the shared dialog complete its initial focus placement before
+        // exercising the user's keyboard activation of an action.
+        await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))))
         await editor.getByRole('button', { name: label, exact: true }).focus()
+        await expect(editor.getByRole('button', { name: label, exact: true })).toBeFocused()
         await page.keyboard.press('Enter')
         const confirm = page.getByRole('dialog', { name: confirmLabel, exact: true })
         await expectEffect(confirm, kind, ar)
