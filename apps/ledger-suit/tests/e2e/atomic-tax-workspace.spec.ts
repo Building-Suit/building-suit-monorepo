@@ -30,7 +30,7 @@ async function mockApi(page: Page) {
   return { calls, report }
 }
 
-for (const locale of ['en', 'ar'] as const) for (const theme of ['light', 'dark']) for (const width of [390, 1440]) {
+for (const locale of ['en', 'ar'] as const) for (const theme of ['light', 'dark']) for (const width of [390, 768, 1440]) {
   test(`VAT reconciliation and immutable reversal: ${locale}, ${theme}, ${width}`, async ({ page, context }) => {
     const copy = locale === 'ar' ? ar : en
     await page.setViewportSize({ width, height: 1000 })

@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { expectNoPageOverflow, navigateFixture } from './browser-foundation'
 export function landingBrowserMatrix(config: { login: string; backend: number; rpc: string; catalog: object[]; signup: string; yearly: { en: string; ar: string }; initialPrice: RegExp; annualPrice: RegExp }) {
-  for (const locale of ['en', 'ar'] as const) for (const theme of ['light', 'dark']) for (const width of [390, 1440]) {
+  for (const locale of ['en', 'ar'] as const) for (const theme of ['light', 'dark']) for (const width of [390, 768, 1440]) {
     test(`shared landing pricing and trial navigation: ${locale}, ${theme}, ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height: 1000 })
       await page.emulateMedia({ reducedMotion: 'reduce' })

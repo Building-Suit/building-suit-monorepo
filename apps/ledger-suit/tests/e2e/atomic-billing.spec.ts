@@ -5,7 +5,7 @@ import en from '../../i18n/locales/en.json' with { type: 'json' }
 import ar from '../../i18n/locales/ar.json' with { type: 'json' }
 const catalog = [{ plan_key: 'solo', name: 'Solo', description: 'Independent workspace', display_order: 1, is_purchasable: true, prices: { monthly: { amount_minor: 39900 }, yearly: { amount_minor: 325584 } }, entitlements: { max_members: { limit_value: 1 } } }]
 catalog.push({ ...catalog[0]!, plan_key: 'starter', name: 'Starter', display_order: 2, prices: { monthly: { amount_minor: 59900 }, yearly: { amount_minor: 488784 } } })
-for (const locale of ['en', 'ar'] as const) for (const theme of ['light', 'dark']) for (const width of [390, 1440]) {
+for (const locale of ['en', 'ar'] as const) for (const theme of ['light', 'dark']) for (const width of [390, 768, 1440]) {
   test(`plan impact and manual request activation: ${locale}, ${theme}, ${width}`, async ({ page }) => {
     const copy = locale === 'ar' ? ar : en
     await page.setViewportSize({ width, height: 1000 })

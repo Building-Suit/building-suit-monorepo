@@ -3,7 +3,7 @@ import { ledgerFixture, fixtureOrganization } from './atomic-ledger-fixture'
 import { expectNoPageOverflow } from '../../../../packages/testing/browser-foundation'
 import en from '../../i18n/locales/en.json' with { type: 'json' }
 import ar from '../../i18n/locales/ar.json' with { type: 'json' }
-for (const family of ['ar', 'ap'] as const) for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (const width of [390, 1440]) {
+for (const family of ['ar', 'ap'] as const) for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (const width of [390, 768, 1440]) {
   test(`exact ${family} obligation and linked reversal: ${locale}, ${theme}, ${width}`, async ({ page }) => {
     const copy = locale === 'ar' ? ar : en
     const c = copy[family]

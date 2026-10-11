@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test'
 import { pilotFixture, fixtureGoto } from './pilot-fixture'
 import { expectNoPageOverflow } from '../../../../packages/testing/browser-foundation'
 
-for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (const width of [390, 1440]) {
+for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (const width of [390, 768, 1440]) {
   test(`expense history adapter commands: ${locale}, ${theme}, ${width}`, async ({ page }) => {
     await page.setViewportSize({ width, height: 1000 })
     await page.addInitScript(value => localStorage.setItem('building-suit.theme', value), theme)

@@ -1,8 +1,9 @@
 import { mkdir } from 'node:fs/promises'
 import { test, expect } from '@playwright/test'
 import { expectNoPageOverflow } from '../browser-foundation'
-for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (const width of [390, 1440]) {
+for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (const width of [390, 768, 1440]) {
   test(`access template configurations: ${locale}, ${theme}, ${width}`, async ({ browser }, testInfo) => {
+    const geometries = []
     for (const suit of ['ledger', 'shop']) {
       const context = await browser.newContext({ viewport: { width, height: 1000 }, reducedMotion: 'reduce' })
       await context.addCookies([{ name: 'building-suit-locale', value: locale, domain: '127.0.0.1', path: '/' }])
@@ -12,6 +13,7 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
       page.on('pageerror', error => errors.push(error.message))
       await page.goto(`http://127.0.0.1:4322/templates/access?suit=${suit}`)
       const memberTab = page.getByRole('tab', { name: locale === 'ar' ? /الأعضاء/ : /Members/ })
+      geometries.push(await memberTab.evaluate(element => { const box = element.getBoundingClientRect(), style = getComputedStyle(element); return { width: Math.round(box.width), height: Math.round(box.height), font: style.fontFamily, size: style.fontSize, padding: style.padding, border: style.borderColor, radius: style.borderRadius } }))
       await expect(memberTab).toHaveAttribute('aria-selected', 'true')
       await expect(page.getByText('Sample member', { exact: true })).toBeVisible()
       await expectNoPageOverflow(page)
@@ -48,5 +50,6 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
       expect(errors).toEqual([])
       await context.close()
     }
+    expect(geometries[0]).toEqual(geometries[1])
   })
 }

@@ -18,7 +18,7 @@ function fixture(name: string) {
  if (name.startsWith('record_') || name === 'create_adjustment') return '47000000-0000-4000-8000-000000000079'
  return undefined
 }
-for (const locale of ['en', 'ar'] as const) for (const theme of ['light', 'dark']) for (const width of [390, 1440]) {
+for (const locale of ['en', 'ar'] as const) for (const theme of ['light', 'dark']) for (const width of [390, 768, 1440]) {
  test(`workspace shell and journal editor parity: ${locale}, ${theme}, ${width}`, async ({ page }) => {
   const copy = locale === 'ar' ? ar : en
   await page.setViewportSize({ width, height: 1000 })

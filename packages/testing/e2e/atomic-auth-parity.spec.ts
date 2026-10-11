@@ -1,15 +1,17 @@
 import { mkdir } from 'node:fs/promises'
 import { test, expect } from '@playwright/test'
-import { expectNoPageOverflow } from '../browser-foundation'
+import { atomicAuthPorts, expectNoPageOverflow, trackRouteCoverage } from '../browser-foundation'
+const [ledgerPort, shopPort] = atomicAuthPorts()
 
-for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (const width of [390, 1440]) {
+for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (const width of [390, 768, 1440]) {
   test(`shared sign-in parity: ${locale}, ${theme}, ${width}`, async ({ browser }, testInfo) => {
     const geometries = []
-    for (const product of [{ name: 'ledger', port: 4320, path: '/login' }, { name: 'shop', port: 4321, path: '/auth/login' }]) {
+    for (const product of [{ name: 'ledger', port: ledgerPort, path: '/login' }, { name: 'shop', port: shopPort, path: '/auth/login' }]) {
       const context = await browser.newContext({ viewport: { width, height: 1000 }, reducedMotion: 'reduce' })
       await context.addCookies([{ name: 'building-suit-locale', value: locale, domain: '127.0.0.1', path: '/' }])
       await context.addInitScript(value => localStorage.setItem('building-suit.theme', value), theme)
       const page = await context.newPage()
+      trackRouteCoverage(page)
       const errors: string[] = []
       page.on('pageerror', error => errors.push(error.message))
       let release: () => void = () => {}

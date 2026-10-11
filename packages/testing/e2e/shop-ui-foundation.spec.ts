@@ -129,8 +129,8 @@ async function shopFixture(page: Page, locale = 'en') {
       case 'list_inventory_history': data = { items: [{ id: `movement-${args.p_page}`, event_at: '2026-01-01', source_type: 'manual_receipt', reference: `Movement page ${args.p_page}`, quantity_change: 1, value_change: 10 }], total: 125 }; break
       case 'list_stock_counts': data = { items: [{ id: `count-${args.p_page}`, counted_at: '2026-01-01', reference: `Count page ${args.p_page}`, expected_quantity: 1, counted_quantity: 2, variance_quantity: 1 }], total: 125 }; break
       case 'customer_access': data = [{ can_view: true, can_manage: true }]; break
-      case 'list_customers': data = { items: [{ id: 'customer-1', name: customerName, is_active: true }], total: 1, canManage: true }; break
-      case 'get_customer': data = [{ id: 'customer-1', name: customerName, is_active: true, can_manage: true }]; break
+      case 'list_customers': data = { items: [{ id: 'customer-1', name: customerName, phone: null, email: null, address: null, notes: null, is_active: true, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z', archived_at: null }], total: 1, canManage: true }; break
+      case 'get_customer': data = [{ id: 'customer-1', name: customerName, phone: null, email: null, address: null, notes: null, is_active: true, can_manage: true, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z', archived_at: null }]; break
       case 'customer_statement': data = { items: [], total: 0, outstanding: 250 }; break
       case 'list_outstanding_invoices': data = { items: [{ id: `invoice-${args.p_page}`, invoice_number: `INV-${args.p_page}`, outstanding: 100, total_amount: 100, settlement_state: 'unpaid' }], total: 125 }; break
       case 'save_customer': customerName = String(args.p_name); data = 'customer-1'; break
@@ -177,6 +177,8 @@ test('Shop inventory pages beyond 100 and clean/dirty dialog behavior', async ({
 })
 
 test('Shop virtualized sale picker, receipt allocations across pages, settings save', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', error => errors.push(error.message))
   const calls = await shopFixture(page)
   await page.locator('a[href="/sales"]').first().click()
   await page.getByRole('button', { name: 'New sale', exact: true }).click()
@@ -208,6 +210,7 @@ test('Shop virtualized sale picker, receipt allocations across pages, settings s
   await expect(modeDialog).toHaveCount(0)
   await expect(page.getByRole('status').filter({ hasText: 'Business operation mode updated.' }).first()).toBeVisible()
   expect(calls.some(call => call.name === 'set_shop_business_mode' && call.args.p_business_mode === 'service')).toBe(true)
+  expect(errors).toEqual([])
 })
 
 test('Shop inventory distinguishes permission denial from empty data', async ({ page }) => {

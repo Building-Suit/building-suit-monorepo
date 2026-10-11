@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { pilotFixture, fixtureGoto } from './pilot-fixture'
-import { expectNoPageOverflow } from '../../../../packages/testing/browser-foundation'
-for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (const width of [390, 1440]) {
+import { recordShellGeometry, expectNoPageOverflow } from '../../../../packages/testing/browser-foundation'
+for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (const width of [390, 768, 1440]) {
   test(`operating dashboard amounts and location source query: ${locale}, ${theme}, ${width}`, async ({ page }) => {
     const ar = locale === 'ar'
     await page.setViewportSize({ width, height: 1000 })
@@ -21,6 +21,7 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
     await page.getByRole('button', { name: ar ? 'أسبوع' : 'Week', exact: true }).click()
     await expect.poll(() => calls.filter(call => call.name === 'shop_operating_report').at(-1)?.args.p_period).toBe('week')
     await expectNoPageOverflow(page)
+   await recordShellGeometry(page)
     await page.screenshot({ path: `.local/atomic-template-evidence/screenshots/dashboard-shop-${locale}-${theme}-${width}.png`, fullPage: true, animations: 'disabled' })
     await page.getByRole('button', { name: 'First branch', exact: true }).click()
     await expect.poll(() => new URL(page.url()).pathname).toBe('/sales')

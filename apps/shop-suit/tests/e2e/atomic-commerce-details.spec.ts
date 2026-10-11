@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 import { pilotFixture, fixtureGoto } from './pilot-fixture'
 import { expectNoPageOverflow } from '../../../../packages/testing/browser-foundation'
 
-for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (const width of [390, 1440]) {
+for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (const width of [390, 768, 1440]) {
   test(`supplier detail payment and immutable reversal: ${locale}, ${theme}, ${width}`, async ({ page }) => {
     const ar = locale === 'ar'
     await page.setViewportSize({ width, height: 1000 })

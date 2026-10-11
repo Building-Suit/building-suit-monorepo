@@ -7,7 +7,7 @@ const accountId = '47000000-0000-4000-8000-000000000041'
 const trial = { account_id: accountId, code: '101', name: 'Fixture bank', type: 'asset', opening_debit_minor: '10000', opening_credit_minor: '0', period_debit_minor: '5000', period_credit_minor: '0', closing_debit_minor: '15000', closing_credit_minor: '0' }
 const profit = [{ section: 'operating_revenue', account_id: accountId, code: '101', name: 'Fixture revenue', amount_minor: 5000 }]
 const balance = [{ section: 'asset', account_id: accountId, code: '101', name: 'Fixture bank', amount_minor: '15000', statement_line: 'current_assets', effective_from: '2026-01-01' }]
-for (const locale of ['en', 'ar'] as const) for (const theme of ['light', 'dark']) for (const width of [390, 1440]) {
+for (const locale of ['en', 'ar'] as const) for (const theme of ['light', 'dark']) for (const width of [390, 768, 1440]) {
  test(`five financial report surfaces and activity drilldown: ${locale}, ${theme}, ${width}`, async ({ page }) => {
   const copy = locale === 'ar' ? ar : en
   await page.setViewportSize({ width, height: 1000 })

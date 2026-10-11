@@ -1,10 +1,11 @@
 import { expect, type Page } from '@playwright/test'
-import { navigateFixture } from '../../../../packages/testing/browser-foundation'
+import { navigateFixture, trackRouteCoverage } from '../../../../packages/testing/browser-foundation'
 import en from '../../i18n/locales/en.json' with { type: 'json' }
 import ar from '../../i18n/locales/ar.json' with { type: 'json' }
 export const fixtureOrganization = '47000000-0000-4000-8000-000000000011'
 export const fixtureActor = '47000000-0000-4000-8000-000000000012'
 export async function ledgerFixture(page: Page, locale: 'en' | 'ar', capabilities: string[], handler: (name: string, args: Record<string, unknown>, request: { url: string; method: string }) => unknown, options: { landing?: string; login?: string } = {}) {
+  trackRouteCoverage(page)
   const calls: { name: string; args: Record<string, unknown> }[] = []
   const user = { id: fixtureActor, aud: 'authenticated', role: 'authenticated', email: 'ledger@test.local', email_confirmed_at: '2026-01-01', app_metadata: {}, user_metadata: {}, created_at: '2026-01-01' }
   await page.context().addCookies([{ name: 'building-suit-locale', value: locale, domain: '127.0.0.1', path: '/' }])

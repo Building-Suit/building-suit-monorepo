@@ -1,9 +1,9 @@
 import { expect, test } from '@playwright/test'
 import { ledgerFixture } from './atomic-ledger-fixture'
-import { expectNoPageOverflow } from '../../../../packages/testing/browser-foundation'
+import { recordShellGeometry, expectNoPageOverflow } from '../../../../packages/testing/browser-foundation'
 import en from '../../i18n/locales/en.json' with { type: 'json' }
 import ar from '../../i18n/locales/ar.json' with { type: 'json' }
-for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (const width of [390, 1440]) {
+for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (const width of [390, 768, 1440]) {
   test(`financial dashboard exact summary and chart range: ${locale}, ${theme}, ${width}`, async ({ page }) => {
     const copy = locale === 'ar' ? ar : en
     await page.setViewportSize({ width, height: 1000 })
@@ -22,6 +22,7 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
     await page.getByRole('button', { name: copy.dashboard.months.replace('{count}', '3'), exact: true }).click()
     await expect.poll(() => calls.filter(call => call.name === 'report_monthly_series').at(-1)?.args.p_months).toBe(3)
     await expectNoPageOverflow(page)
+   await recordShellGeometry(page)
     await page.screenshot({ path: `.local/atomic-template-evidence/screenshots/dashboard-ledger-${locale}-${theme}-${width}.png`, fullPage: true, animations: 'disabled' })
   })
 }

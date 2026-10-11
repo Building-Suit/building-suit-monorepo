@@ -1,18 +1,19 @@
 import { mkdir } from 'node:fs/promises'
 import { test, expect } from '@playwright/test'
-import { expectNoPageOverflow, navigateFixture } from '../browser-foundation'
+import { recordShellGeometry, expectNoPageOverflow, navigateFixture, trackRouteCoverage } from '../browser-foundation'
 
 const dashboard = {
   generatedAt: '2026-10-11T12:00:00Z', selectedSuit: null, database: { database: 'fixture', user: 'reader', server_addr: null, server_port: null }, runtimeTelemetryAvailable: false,
   summary: { total_tasks: 2, finished_tasks: 1, unfinished_tasks: 1, in_progress_tasks: 0, verification_tasks: 0, blocked_tasks: 0, failed_tasks: 1, planned_tasks: 0, ready_tasks: 0, open_blocking_decisions: 0, running_workflows: 0, running_executions: 0 },
   suits: [{ slug: 'fixture', display_name: 'Fixture Suit' }], tasks: [{ task_id: 'T-1', suit_slug: 'fixture', title: 'Repair recorded failure', status: 'failed', risk_level: 'low', model_profile: 'standard', updated_at: '2026-10-11T12:00:00Z' }, { task_id: 'T-2', suit_slug: 'fixture', title: 'Completed fixture', status: 'complete', risk_level: 'low', model_profile: 'standard', updated_at: '2026-10-11T12:00:00Z' }], workflowRuns: [], executions: [], verificationResults: [], decisions: [], pullRequests: [], events: [], runtimeExecutions: [], incidents: [],
 }
-for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (const width of [390, 1440]) {
+for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (const width of [390, 768, 1440]) {
   test(`Automation adapters preserve workflows: ${locale}, ${theme}, ${width}`, async ({ browser }, testInfo) => {
     const context = await browser.newContext({ viewport: { width, height: 1000 }, reducedMotion: 'reduce' })
     await context.addCookies([{ name: 'building-suit-locale', value: locale, domain: '127.0.0.1', path: '/' }])
     await context.addInitScript(value => localStorage.setItem('building-suit.theme', value), theme)
     const page = await context.newPage()
+      trackRouteCoverage(page)
     const errors: string[] = []
     page.on('pageerror', error => errors.push(error.message))
     let savedPolicy: Record<string, unknown> | undefined
@@ -20,6 +21,7 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
       const path = new URL(route.request().url()).pathname
       let body: unknown = {}
       if (path === '/api/dashboard') body = dashboard
+      if (path === '/api/errors') body = { failures: [{ failure_id: 1, task_id: 'T-1', stage: 'verification', summary: 'Synthetic failure evidence', raw_error: 'Synthetic diagnostic', attempt: 1, created_at: '2026-10-11T12:00:00Z', legal_actions: ['inspect'] }] }
       if (path === '/api/operator/status') body = { writesEnabled: true }
       if (path === '/api/policies') body = { policies: [{ policy_id: 'standard', display_name: 'Fixture retry', active: true, max_attempts: 2, attempt_profiles: ['standard', 'deep'] }] }
       if (path === '/api/operator/policies') { savedPolicy = route.request().postDataJSON(); body = { ok: true } }
@@ -38,6 +40,7 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
     await page.getByRole('checkbox').check()
     await expect(tasks.getByText('Completed fixture')).toBeVisible()
     await expectNoPageOverflow(page)
+   await recordShellGeometry(page)
     await navigateFixture(page, '/policies')
     await expect(page.getByRole('heading', { name: 'Fixture retry' })).toBeVisible()
     await page.getByRole('button', { name: 'Edit', exact: true }).click()
@@ -64,6 +67,12 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
     const screenshot = `.local/atomic-template-evidence/screenshots/automation-detail-${locale}-${theme}-${width}.png`
     await page.screenshot({ path: screenshot, fullPage: true })
     await testInfo.attach('automation-detail', { path: screenshot, contentType: 'image/png' })
+    for (const [path, heading] of [['/tasks', 'Tasks'], ['/runs', 'Runs'], ['/errors', 'Error center']]) {
+      await navigateFixture(page, path)
+      await expect(page.getByRole('heading', { name: heading, exact: true })).toBeVisible()
+      await expectNoPageOverflow(page)
+    }
+    await expect(page.getByText('Synthetic failure evidence', { exact: true })).toBeVisible()
     expect(errors).toEqual([])
     await context.close()
   })

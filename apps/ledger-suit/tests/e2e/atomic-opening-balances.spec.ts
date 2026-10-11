@@ -5,7 +5,7 @@ import { ledgerFixture, fixtureOrganization } from './atomic-ledger-fixture'
 import en from '../../i18n/locales/en.json' with { type: 'json' }
 import ar from '../../i18n/locales/ar.json' with { type: 'json' }
 
-for (const locale of ['en', 'ar'] as const) for (const theme of ['light', 'dark']) for (const width of [390, 1440]) {
+for (const locale of ['en', 'ar'] as const) for (const theme of ['light', 'dark']) for (const width of [390, 768, 1440]) {
   test(`opening balances mapping, validation, posting and reversal: ${locale}, ${theme}, ${width}`, async ({ page }) => {
     const copy = locale === 'ar' ? ar : en
     await page.setViewportSize({ width, height: 1000 })
