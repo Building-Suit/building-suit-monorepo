@@ -1,11 +1,8 @@
 import type { ChartAccount } from '~/utils/accountTree'
 
-/** Ledger-owned orchestration; mounted by a shared workflow scope in its route/layout. */
-export function useLedgerControlReconciliationPanelView(_values: { accounts: ChartAccount[] }, _emit: (event: string, ...args: unknown[]) => void) {
-const _props = new Proxy(_values, { get: (target, key) => Reflect.get(target, key) ?? Reflect.get({}, key) })
-const accounts = computed(() => _props.accounts)
-const props = _props
-const emit = _emit as <K extends keyof ({ changed: [] })>(event: K, ...args: ({ changed: [] })[K]) => void
+/** Ledger-owned control-account reconciliation and authorized adjustment commands. */
+export function useLedgerControlReconciliationPanelView(props: { accounts: ChartAccount[]; active?: boolean }, emit: (event: 'changed') => void) {
+const accounts = computed(() => props.accounts)
 const supabase = useSupabaseClient()
 const { currentId, can, baseCurrency } = useTenant()
 const { t } = useI18n()
@@ -31,17 +28,23 @@ const asOfDate = ref(new Date().toISOString().slice(0, 10))
 const rows = ref<ReconciliationRow[]>([])
 const loading = ref(false)
 const loadError = ref<string | null>(null)
+let generation = 0
+onBeforeUnmount(() => { generation++ })
+
+function isActive() { return props.active !== false }
 
 async function load() {
-  if (!currentId.value || !can('controls.reconcile')) return
+  if (props.active === false || !currentId.value || !can('controls.reconcile')) return
+  const version = ++generation
+  const requestedDate = asOfDate.value
   loading.value = true
   loadError.value = null
   const organizationId = currentId.value
   const { data, error } = await supabase.rpc('reconcile_control_accounts' as never, {
     p_organization_id: organizationId,
-    p_as_of_date: asOfDate.value,
+    p_as_of_date: requestedDate,
   } as never)
-  if (currentId.value !== organizationId) return
+  if (version !== generation || currentId.value !== organizationId || asOfDate.value !== requestedDate || !isActive()) return
   if (error) loadError.value = describeError(error)
   else rows.value = (data ?? []) as ReconciliationRow[]
   loading.value = false
@@ -51,7 +54,7 @@ const controlAccountIds = computed(() => props.accounts
   .map(account => account.account_id)
   .sort()
   .join(','))
-watch([currentId, asOfDate, controlAccountIds], () => { void load() }, { immediate: true })
+watch([currentId, asOfDate, controlAccountIds, () => props.active], () => { void load() }, { immediate: true })
 
 const dialogOpen = ref(false)
 const selected = ref<ChartAccount | null>(null)
@@ -68,6 +71,7 @@ const form = reactive({
   idempotencyKey: '',
 })
 const { dirty } = useRecordAction(() => form, computed(() => dialogOpen.value))
+watch(() => [currentId.value, props.active], () => { generation++; rows.value = []; loading.value = false; loadError.value = null; dialogOpen.value = false; selected.value = null; formError.value = null; Object.assign(form, { date: asOfDate.value, counterpartAccountId: '', controlSide: 'debit', amount: '', description: '', reason: '', reference: '', idempotencyKey: '' }) }, { flush: 'sync' })
 const postingAccounts = computed(() => props.accounts.filter(account =>
   account.account_role === 'posting' && !account.is_archived,
 ))
@@ -101,10 +105,11 @@ async function submitAdjustment() {
     formError.value = t('controls.adjustmentRequired')
     return
   }
+  const organizationId = currentId.value
   submitting.value = true
   const opposite = form.controlSide === 'debit' ? 'credit' : 'debit'
   const { error } = await supabase.rpc('create_control_adjustment' as never, {
-    p_organization_id: currentId.value,
+    p_organization_id: organizationId,
     p_control_account_id: selected.value.account_id,
     p_transaction_date: form.date,
     p_lines: [
@@ -117,6 +122,7 @@ async function submitAdjustment() {
     p_reconciliation_reference: form.reference.trim(),
     p_idempotency_key: form.idempotencyKey,
   } as never)
+  if (organizationId !== currentId.value || props.active === false) { submitting.value = false; return }
   if (error) formError.value = describeError(error)
   else {
     dialogOpen.value = false

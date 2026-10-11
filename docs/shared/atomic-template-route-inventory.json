@@ -63,7 +63,8 @@
     "BsSubscriptionCheckoutPage": "packages/ui/src/templates/BsSubscriptionCheckoutPage.vue",
     "BsPlatformAdministrationPage": "packages/ui/src/templates/BsPlatformAdministrationPage.vue",
     "BsOperationalRecordsPage": "packages/ui/src/templates/BsOperationalRecordsPage.vue",
-    "BsJournalWorkspacePage": "packages/ui/src/templates/BsJournalWorkspacePage.vue"
+    "BsJournalWorkspacePage": "packages/ui/src/templates/BsJournalWorkspacePage.vue",
+    "BsFinancialAccountsPage": "packages/ui/src/templates/BsFinancialAccountsPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -565,8 +566,8 @@
         "BsVisuallyHidden",
         "BsWorkflowScope"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "destination": "packages/ui/src/templates/BsFinancialAccountsPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/ledger-suit/app/pages/accounts.vue",
       "dependencies": [
         "~/utils/templateElement",
@@ -580,7 +581,8 @@
         "~~/types/accounts-reports-rpc.types",
         "~/utils/accountTree"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "financial-accounts"
     },
     {
       "source": "apps/ledger-suit/app/pages/audit.vue",
@@ -2182,6 +2184,7 @@
     "BsTaskDetailPage",
     "BsTaskWorklistPage",
     "BsTaxWorkspacePage",
-    "BsWelcomePage"
+    "BsWelcomePage",
+    "BsFinancialAccountsPage"
   ]
 }

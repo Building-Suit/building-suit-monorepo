@@ -291,7 +291,13 @@
     "./types/accountActivityPresentation": "./src/types/accountActivityPresentation.ts",
     "./organisms/BsAccountActivityDialog": "./src/organisms/BsAccountActivityDialog.vue",
     "./organisms/BsCashAllocationDialog": "./src/organisms/BsCashAllocationDialog.vue",
-    "./utils/reportDocument": "./src/utils/reportDocument.ts"
+    "./utils/reportDocument": "./src/utils/reportDocument.ts",
+    "./types/financialAccountsPresentation": "./src/types/financialAccountsPresentation.ts",
+    "./organisms/BsAccountEditorDialog": "./src/organisms/BsAccountEditorDialog.vue",
+    "./organisms/BsAccountClassificationDialog": "./src/organisms/BsAccountClassificationDialog.vue",
+    "./organisms/BsControlReconciliationPanel": "./src/organisms/BsControlReconciliationPanel.vue",
+    "./organisms/BsChartTemplateReview": "./src/organisms/BsChartTemplateReview.vue",
+    "./templates/BsFinancialAccountsPage": "./src/templates/BsFinancialAccountsPage.vue"
   },
   "dependencies": {
     "primevue": "4.5.5",

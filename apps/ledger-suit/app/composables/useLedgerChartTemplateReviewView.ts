@@ -1,7 +1,7 @@
 import { reviewedChartTemplates, type ChartTemplateKey } from '~/utils/setupExperience'
 
-/** Ledger-owned orchestration; mounted by a shared workflow scope in its route/layout. */
-export function useLedgerChartTemplateReviewView(_values: Record<string, unknown>, _emit: (event: string, ...args: unknown[]) => void) {
+/** Product-owned reviewed chart blueprints and route selection. */
+export function useLedgerChartTemplateReviewView() {
 const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
