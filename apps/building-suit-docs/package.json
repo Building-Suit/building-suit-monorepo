@@ -25,7 +25,8 @@
     "@hugeicons/core-free-icons": "4.2.1",
     "@hugeicons/vue": "1.0.6",
     "zod": "3.25.76",
-    "@building-suit/nuxt-layer": "workspace:*"
+    "@building-suit/nuxt-layer": "workspace:*",
+    "@building-suit/contracts": "workspace:*"
   },
   "devDependencies": {
     "vue-tsc": "3.3.11",

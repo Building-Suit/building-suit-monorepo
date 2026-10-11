@@ -150,3 +150,4 @@ export type {
   BsAdministrationCapabilityDescriptor, BsAdministrationRequestContext,
   BsAdministrationDescriptors, BsAdministrationAdapters, BsSuitAdministrationRegistration,
 } from './administration.ts'
+export * from './changelog.ts'
