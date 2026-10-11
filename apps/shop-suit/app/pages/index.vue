@@ -63,7 +63,7 @@ const publicPricing = reactive(useShopPlanPresentation({ get offers() { return p
               </BsText>
             </BsInline>
             <BsGrid :columns="2">
-              <BsBox v-for="feature in content.features" :key="feature.title" as="article">
+              <BsBox v-for="feature in content.features" :key="feature.title" as="article" surface="muted">
                 <BsIcon :name="feature.icon" :size="20"/>
                 <BsText as="p" size="xs" emphasis="semibold">{{ feature.title }}</BsText>
               </BsBox>

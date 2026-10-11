@@ -1,4 +1,9 @@
 #!/usr/bin/env node
+import {foundationImport, reviewedFoundationImportPaths} from './reviewed-foundation-import.mjs'
+import {queueDraftSourcePaths} from './draft-source-policy.mjs'
+import { unattendedSensitiveFiles, frozenDraftReplay } from './unattended-publication.mjs'
+import { ordinarySourceReviews, reviewedOrdinarySourcePaths } from './reviewed-source-artifacts.mjs'
+import { ordinaryRunAuthority } from './bounded-publication.mjs'
 
 import {
   existsSync,
@@ -15,6 +20,8 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
   classifyPublicationFiles,
+  verifiedProtectedPublicationPaths,
+  protectedPublicationPath,
   evaluatePublicationParent,
   evaluateVerificationAuthority,
   planPublicationReconciliation,
@@ -89,9 +96,21 @@ const {
   requirements,
   verification,
   publication_boundaries: publicationBoundaries = {},
+  publication_contract: publicationContract = {},
+  publication_authorizations: publicationAuthorizations = {},
   project = {},
   workstream = {},
 } = context
+
+const contractRequiredPaths = (publicationContract.required_paths ?? [])
+  .map(item => typeof item === 'string' ? item : item?.path)
+  .filter(Boolean)
+const authorizationPaths = authorizations => (authorizations ?? []).flatMap(item =>
+  item.revoked_at ? [] : (item.authorized_paths ?? item.requested_paths ?? []),
+)
+const ordinaryAuthorizedPaths = authorizationPaths(publicationAuthorizations.ordinary)
+const protectedAuthorizedPaths = authorizationPaths(publicationAuthorizations.protected)
+const verifiedProtectedPaths = verifiedProtectedPublicationPaths({grant:context.protected_publication_authority,task,execution,verification})
 
 const repository =
   project.github_repository ??
@@ -267,6 +286,19 @@ if (
 }
 
 
+if (ordinaryRunAuthority(context.run_publication_authority, task.task_id)) {
+  if (!execution.branch_name.startsWith(`codex/${suit.stack_key}/`) || ['main','stg',project.integration_branch].includes(execution.branch_name)) {
+    fail('publication_branch_operator_wait', { classification: { failure_class: 'operator-wait', recovery_action: 'wait-operator' } })
+  }
+  const existing = run('gh', ['pr','list','--repo',repository,'--head',execution.branch_name,'--state','open','--json','number,isDraft,baseRefName'])
+  requireSuccess(existing, 'unable_to_inspect_draft_publication')
+  let prs
+  try { prs = JSON.parse(existing.stdout) } catch { fail('invalid_draft_publication_response') }
+  if (prs.some(pr => pr.isDraft !== true)) {
+    fail('publication_nondraft_operator_wait', { classification: { failure_class: 'operator-wait', recovery_action: 'wait-operator' } })
+  }
+}
+
 requireSuccess(
   git([
     'fetch',
@@ -296,7 +328,7 @@ const liveParentResult =
     ],
     {
       cwd:
-        controlRoot,
+        worktreePath,
     },
   )
 
@@ -354,9 +386,21 @@ const parentEvaluation = evaluatePublicationParent({
   liveParent,
   execution,
   recordedParentSha,
+  parentDescendant: (liveParent.parent_branch===execution.parent_branch || recordedParentSha!==null) && git(['merge-base','--is-ancestor',execution.parent_sha,recordedParentSha ?? liveParent.parent_sha]).code===0,
 })
 
-if (!parentEvaluation.current) {
+let frozenDraftReconciliation = false
+if (!parentEvaluation.current && context.run_publication_authority?.unattended_queue_authority === true) {
+  const existing = run('gh', ['pr','list','--repo',repository,'--head',execution.branch_name,'--state','open','--json','number,state,isDraft,headRefName,headRefOid,baseRefName'])
+  requireSuccess(existing,'unable_to_inspect_draft_publication')
+  let drafts
+  try { drafts = JSON.parse(existing.stdout) } catch { fail('invalid_draft_publication_response') }
+  const remote = requireSuccess(git(['ls-remote','--heads','origin',`refs/heads/${execution.branch_name}`]),'unable_to_inspect_remote_branch').trim().split(/\s+/)[0]
+  const parent = git(['rev-parse',`origin/${execution.parent_branch}`])
+  const replayHead = requireSuccess(git(['rev-parse','HEAD']),'unable_to_read_head').trim()
+  frozenDraftReconciliation = drafts.length===1 && requireSuccess(git(['status','--porcelain','--untracked-files=all']),'unable_to_read_worktree_status').trim()==='' && frozenDraftReplay({pr:drafts[0],execution,localSha:replayHead,remoteSha:remote,recordedParentSha:parent.code===0?parent.stdout.trim():null,taskCommitsOnly:taskCommitsOnly(execution.parent_sha,'HEAD')})
+}
+if (!parentEvaluation.current && !frozenDraftReconciliation) {
   fail(
     'parent_changed_since_execution',
     {
@@ -522,15 +566,36 @@ for (
 const changed =
   [...changedFiles]
     .sort()
+const queueSourcePaths=queueDraftSourcePaths({authority:context.run_publication_authority,task,execution,verification,taskPaths:publicationBoundaries.task_paths??[],projectPaths:publicationBoundaries.project_paths??[]})
+
+
+if (context.run_publication_authority?.unattended_queue_authority === true) {
+  const reviewObjects = Object.fromEntries([...ordinarySourceReviews.flatMap(review => [review.path, review.witness_path]), ...Object.keys(foundationImport.files)]
+    .filter(file => existsSync(path.join(execution.worktree_path, file)))
+    .map(file => [file, requireSuccess(git(['hash-object', '--', file]), 'git_reviewed_source_hash_failed').trim()]))
+  const reviewedOrdinaryPaths = [...reviewedOrdinarySourcePaths({task, execution, verification, objects: reviewObjects}), ...reviewedFoundationImportPaths({task, execution, verification, objects: reviewObjects, authorizations: publicationAuthorizations.ordinary, contract: publicationContract, authority: context.run_publication_authority, projectPaths: publicationBoundaries.project_paths ?? []})]
+  const sensitive = unattendedSensitiveFiles(changed, {verifiedOwnerPaths: [...verifiedProtectedPaths,...queueSourcePaths], reviewedOrdinaryPaths})
+  if (sensitive.length) fail('publication_security_sensitive_operator_wait', { protected_paths: sensitive, classification: { failure_class: 'operator-wait', recovery_action: 'wait-operator' } })
+}
 
 const scopeClassification = classifyPublicationFiles({
   files: changed,
   task,
   taskPaths: publicationBoundaries.task_paths ?? [],
+  ordinaryRunAuthorized: ordinaryRunAuthority(context.run_publication_authority, task.task_id),
   sourcePaths: publicationBoundaries.source_paths ?? [],
   workstreamPaths: publicationBoundaries.workstream_paths ?? allowedPaths,
   projectPaths: publicationBoundaries.project_paths ?? [],
+  requiredPaths: contractRequiredPaths,
+  ordinaryAuthorizedPaths,
+  protectedAuthorizedPaths,
+  verifiedProtectedPaths,
+  queueSourcePaths,
 })
+
+if (ordinaryRunAuthority(context.run_publication_authority, task.task_id) && changed.some(file => protectedPublicationPath(file) && !verifiedProtectedPaths.includes(file) && !queueSourcePaths.includes(file))) {
+  fail('publication_protected_path_operator_wait', { protected_paths: changed.filter(file => protectedPublicationPath(file) && !verifiedProtectedPaths.includes(file) && !queueSourcePaths.includes(file)), classification: { failure_class: 'operator-wait', recovery_action: 'wait-operator' } })
+}
 
 if (scopeClassification.blocked.length > 0) {
   fail('publication_scope_safety_stop', { classification: scopeClassification })
@@ -647,9 +712,15 @@ else {
     files: stagedFiles,
     task,
     taskPaths: publicationBoundaries.task_paths ?? [],
+  ordinaryRunAuthorized: ordinaryRunAuthority(context.run_publication_authority, task.task_id),
     sourcePaths: publicationBoundaries.source_paths ?? [],
     workstreamPaths: publicationBoundaries.workstream_paths ?? allowedPaths,
     projectPaths: publicationBoundaries.project_paths ?? [],
+    requiredPaths: contractRequiredPaths,
+    ordinaryAuthorizedPaths,
+    protectedAuthorizedPaths,
+  verifiedProtectedPaths,
+  queueSourcePaths,
   })
 
   if (stagedClassification.waiting.length > 0 || stagedClassification.blocked.length > 0) {
@@ -904,7 +975,7 @@ const existingPrResult =
     ],
     {
       cwd:
-        controlRoot,
+        worktreePath,
     },
   )
 
@@ -1014,7 +1085,7 @@ else {
       ],
       {
         cwd:
-          controlRoot,
+          worktreePath,
       },
     )
 
@@ -1048,7 +1119,7 @@ else {
       ],
       {
         cwd:
-          controlRoot,
+          worktreePath,
       },
     )
 
@@ -1088,10 +1159,12 @@ const prCheck =
       String(
         pr.number,
       ),
+      '--repository',
+      repository,
     ],
     {
       cwd:
-        controlRoot,
+        worktreePath,
 
       timeout:
         10 * 60 * 1000,

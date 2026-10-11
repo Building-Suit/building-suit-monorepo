@@ -39,5 +39,5 @@ if (checkOnly) {
   for (const [file, contents] of outputs) writeFileSync(path.join(reportRoot, file), contents)
 }
 
-process.stdout.write(`${JSON.stringify({ ok: report.cutover_ready, check: checkOnly, summary: report.summary, reports: [...outputs.keys()] }, null, 2)}\n`)
-if (!report.cutover_ready) process.exitCode = 1
+process.stdout.write(`${JSON.stringify({ ok: report.harness_ready, deployed_cutover_ready:report.cutover_ready, check: checkOnly, summary: report.summary, reports: [...outputs.keys()] }, null, 2)}\n`)
+if (!report.harness_ready) process.exitCode = 1

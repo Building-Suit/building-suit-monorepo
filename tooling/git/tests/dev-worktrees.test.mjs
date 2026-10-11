@@ -94,7 +94,7 @@ test('shared changes reach all apps and deleted source files are counted', async
   const shared = f.tree('shared')
   await mkdir(join(shared, 'packages/ui'), { recursive: true })
   await writeFile(join(shared, 'packages/ui/theme.css'), 'shared')
-  for (const app of ['ledger', 'shop', 'inventory', 'docs']) assert.equal(selectWorktree((await f.inspect(app)).trees, f.root).path, shared)
+  for (const app of ['ledger', 'shop', 'inventory', 'super-admin', 'docs']) assert.equal(selectWorktree((await f.inspect(app)).trees, f.root).path, shared)
   await rm(join(shared, 'packages'), { recursive: true })
   await rm(join(shared, 'apps/ledger-suit/page.vue'))
   assert.equal(selectWorktree((await f.inspect('ledger')).trees, f.root).path, shared)
@@ -105,6 +105,14 @@ test('Inventory is a first-class dev target with an isolated port and package', 
     directory: 'inventory-suit',
     package: '@building-suit/inventory-suit',
     port: 3003,
+  })
+})
+
+test('Super Admin is a first-class dev target with an isolated port and package', () => {
+  assert.deepEqual(applications['super-admin'], {
+    directory: 'super-admin-suit',
+    package: '@building-suit/super-admin-suit',
+    port: 3004,
   })
 })
 

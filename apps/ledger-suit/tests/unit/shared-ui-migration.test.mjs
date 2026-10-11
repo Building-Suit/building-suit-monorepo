@@ -7,8 +7,8 @@ import { parse } from '@vue/compiler-sfc'
 const appRoot = new URL('../../app/', import.meta.url).pathname
 const workspaceRoot = new URL('../../../../', import.meta.url).pathname
 
-function vueFiles(directory) {
-  if (!existsSync(directory)) return []
+function vueFiles(directory, optional = false) {
+  if (optional && !existsSync(directory)) return []
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const target = path.join(directory, entry.name)
     return entry.isDirectory() ? vueFiles(target) : entry.name.endsWith('.vue') ? [target] : []
@@ -145,7 +145,7 @@ test('Ledger authenticated chrome is adapter-only shared UI', () => {
 test('Ledger has no local Vue component layer or ownership debt', () => {
   const manifest = JSON.parse(readFileSync(path.join(workspaceRoot, 'docs/shared/ui-ownership-manifest.json'), 'utf8'))
   const ledger = manifest.components.filter(component => component.path.startsWith('apps/ledger-suit/'))
-  const actual = vueFiles(path.join(appRoot, 'components'))
+  const actual = vueFiles(path.join(appRoot, 'components'), true)
     .map(file => `apps/ledger-suit/app/components/${path.basename(file)}`)
     .sort()
   assert.deepEqual(actual, [], 'Ledger presentation must live in shared Bs components')

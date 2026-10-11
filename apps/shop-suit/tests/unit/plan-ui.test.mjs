@@ -9,6 +9,15 @@ const usage = await readFile(new URL('../../app/composables/useShopUsagePresenta
 const awaitSharedUsage = await readFile(new URL('../../../../packages/ui/src/molecules/BsUsageMeter.vue', import.meta.url), 'utf8')
 const quota = await readFile(new URL('../../app/utils/planQuotaError.ts', import.meta.url), 'utf8')
 
+test('inventory and purchase access notices describe subscription access in both locales', async () => {
+  for (const page of ['inventory', 'purchases']) {
+    const source = await readFile(new URL(`../../app/pages/${page}/index.vue`, import.meta.url), 'utf8')
+    assert.match(source, /require an active subscription with inventory access\./)
+    assert.match(source, /تتطلب اشتراكًا نشطًا يتيح إدارة المخزون\./)
+    assert.doesNotMatch(source, /\b(?:Basic|Pro)\b/)
+  }
+})
+
 test('owner billing uses the canonical purchasable catalog and effective server quote', () => {
   assert.match(billing, /usePlans\(\)/)
   assert.match(billing, /publicCatalogTerms/)

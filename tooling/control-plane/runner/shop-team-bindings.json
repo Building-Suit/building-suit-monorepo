@@ -1,0 +1,138 @@
+{
+  "task_id": "SS-LAUNCH-TEAM-001",
+  "workstream_slug": "shop-suit",
+  "entries": [
+    "DB tests for role CRUD, permission escalation denial, invitation races/replay, existing/new user acceptance, suspension and owner continuity.",
+    "Full pnpm db:test:shop if Shop schema/RPCs change.",
+    "EN/AR desktop/mobile Team E2E and Shop typecheck/lint/build."
+  ],
+  "files": [
+    "apps/shop-suit/package.json",
+    "apps/shop-suit/tests/unit/team.test.mjs",
+    "apps/shop-suit/supabase/tests/shop_team_management.sql",
+    "apps/shop-suit/supabase/tests/shop_plan_limits.sql",
+    "tooling/database/test-shop-local.mjs",
+    "apps/shop-suit/tests/e2e/cross-workflow-usability.spec.ts",
+    "packages/testing/playwright.shop-ux.config.ts"
+  ],
+  "config": {
+    "commands": [
+      {
+        "name": "shop-team-database",
+        "program": "pnpm",
+        "args": [
+          "db:test:shop"
+        ],
+        "capabilities": [
+          "database"
+        ],
+        "required": true,
+        "timeout_ms": 1800000,
+        "changed_paths": [
+          "__verification-plan-only__/shop-team-database"
+        ]
+      },
+      {
+        "name": "shop-team-unit",
+        "program": "node",
+        "args": [
+          "--test",
+          "apps/shop-suit/tests/unit/team.test.mjs"
+        ],
+        "capabilities": [
+          "unit"
+        ],
+        "required": true,
+        "timeout_ms": 1800000,
+        "changed_paths": [
+          "__verification-plan-only__/shop-team-unit"
+        ]
+      },
+      {
+        "name": "shop-team-quality",
+        "program": "pnpm",
+        "args": [
+          "exec",
+          "turbo",
+          "run",
+          "typecheck",
+          "lint",
+          "build",
+          "--filter=@building-suit/shop-suit"
+        ],
+        "capabilities": [
+          "typecheck",
+          "lint",
+          "build"
+        ],
+        "required": true,
+        "timeout_ms": 1800000,
+        "changed_paths": [
+          "__verification-plan-only__/shop-team-quality"
+        ]
+      },
+      {
+        "name": "shop-team-browser",
+        "program": "pnpm",
+        "args": [
+          "exec",
+          "playwright",
+          "test",
+          "--config",
+          "packages/testing/playwright.shop-ux.config.ts",
+          "cross-workflow-usability.spec.ts",
+          "--grep",
+          "retail routes, labels and responsive states"
+        ],
+        "capabilities": [
+          "browser",
+          "e2e"
+        ],
+        "required": true,
+        "timeout_ms": 1800000,
+        "changed_paths": [
+          "__verification-plan-only__/shop-team-browser"
+        ]
+      }
+    ],
+    "legacy_plan_mappings": {
+      "DB tests for role CRUD, permission escalation denial, invitation races/replay, existing/new user acceptance, suspension and owner continuity.": {
+        "version": 2,
+        "kind": "group",
+        "commands": [
+          "shop-team-database",
+          "shop-team-unit"
+        ],
+        "requires": [
+          "database",
+          "unit"
+        ]
+      },
+      "Full pnpm db:test:shop if Shop schema/RPCs change.": {
+        "version": 2,
+        "kind": "group",
+        "commands": [
+          "shop-team-database"
+        ],
+        "requires": [
+          "database"
+        ]
+      },
+      "EN/AR desktop/mobile Team E2E and Shop typecheck/lint/build.": {
+        "version": 2,
+        "kind": "group",
+        "commands": [
+          "shop-team-quality",
+          "shop-team-browser"
+        ],
+        "requires": [
+          "browser",
+          "e2e",
+          "typecheck",
+          "lint",
+          "build"
+        ]
+      }
+    }
+  }
+}

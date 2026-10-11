@@ -45,7 +45,7 @@ onBeforeUnmount(() => { if (visible.value) restoreFocus() })
     <div v-if="confirmDiscard" ref="discardPrompt" role="alert" aria-live="assertive" class="bs-dialog__discard">
       <BsText>{{ ui('discard') }}</BsText>
       <BsFormActions align="start" :stack-on-mobile="false">
-        <BsButton type="button" @click="confirmDiscard = false">{{ ui('cancel') }}</BsButton>
+        <BsButton type="button" autofocus @click="confirmDiscard = false">{{ ui('cancel') }}</BsButton>
         <BsButton type="button" variant="primary" @click="discard">{{ ui('confirm') }}</BsButton>
       </BsFormActions>
     </div>

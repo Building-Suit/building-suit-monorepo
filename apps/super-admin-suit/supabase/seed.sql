@@ -1,0 +1,2 @@
+-- Intentionally empty. Super Admin identities, configuration, navigation, and
+-- business records are introduced only by authorized forward-migration tasks.

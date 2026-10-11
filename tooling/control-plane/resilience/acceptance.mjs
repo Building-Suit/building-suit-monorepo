@@ -1,11 +1,23 @@
 import { createHash } from 'node:crypto'
+import {
+  CONTROL_DATABASE_RETRY_POLICY,
+  controlDatabaseWaitOutcome,
+  executeWithControlDatabaseRetry,
+} from '../lib/control-database.mjs'
 import { inspectWorkflowSnapshot, validateControllerReplacements } from '../lib/n8n-workflows.mjs'
 import { continuousRunTransition } from '../lib/n8n-controller.mjs'
 import { acceptanceCriteriaDigest, evaluateParentSatisfaction } from '../runner/parent-satisfaction.mjs'
-import { classifyPublicationFiles, planPublicationReconciliation } from '../runner/publication-preflight.mjs'
-import { classifySupervisorFailure, planSupervisorStep } from '../runner/task-supervisor.mjs'
+import {
+  classifyPublicationFiles,
+  evaluatePublicationBoundaries,
+  planPublicationReconciliation,
+  validatePublicationAuthorization,
+} from '../runner/publication-preflight.mjs'
+import { evaluatePublicationReadiness } from '../runner/publication-readiness.mjs'
+import { classifySupervisorFailure, planSupervisorStep, preflightReconciliationAction } from '../runner/task-supervisor.mjs'
 import { customCheckSelection } from '../runner/verification-mode.mjs'
 import { isDueExternalRecovery, watchTransition } from '../runner/external-state-watcher.mjs'
+import { applyCompletionCredit, evaluateSafeResume, planActiveRunStart } from '../lib/batch-readiness.mjs'
 
 const ZERO_COUNTS = Object.freeze({
   implementation_attempts: 0,
@@ -19,15 +31,15 @@ function sha256(value) {
   return createHash('sha256').update(value).digest('hex')
 }
 
-function fixture({ taskStatus = 'in_progress', executionStatus = null, attempt = 1, verificationStatus = null, publication = null } = {}) {
+function fixture({ taskStatus = 'in_progress', executionStatus = null, attempt = 1, verificationStatus = null, publication = null, productFailure = false } = {}) {
   return {
     packet: {
       task: { task_id: 'CP-FI-001', status: taskStatus, engine_stage: 'implementation' },
       retry_policy: { policy_id: 'critical-five', max_attempts: 5, attempt_profiles: Array(5).fill('standard') },
     },
     executions: executionStatus ? [{ execution_id: 41, attempt, status: executionStatus, engine_stage: 'implementation' }] : [],
-    verification_runs: verificationStatus ? [{ verification_run_id: 71, execution_id: 41, status: verificationStatus }] : [],
-    verification_results: [],
+    verification_runs: verificationStatus ? [{ verification_run_id: 71, execution_id: 41, status: verificationStatus,metadata:productFailure?{failure_class:'verification-product-defect'}:{} }] : [],
+    verification_results: verificationStatus === 'passed' ? [{verification_run_id:71,status:'pass',metadata:{required:true},trusted_receipt:{version:2},trusted_registration:{version:1}}] : [],
     failures: [],
     publications: publication ? [{ pull_request_id: 91, state: 'open', ...publication }] : [],
     recovery: null,
@@ -53,7 +65,7 @@ function lifecycleScenarios() {
   const initial = planSupervisorStep(fixture())
   const running = planSupervisorStep(fixture({ executionStatus: 'running' }))
   const succeeded = planSupervisorStep(fixture({ executionStatus: 'succeeded' }))
-  const failedVerification = planSupervisorStep(fixture({ taskStatus: 'failed', executionStatus: 'succeeded', verificationStatus: 'failed' }))
+  const failedVerification = planSupervisorStep(fixture({ taskStatus: 'failed', executionStatus: 'succeeded', verificationStatus: 'failed', productFailure:true }))
   const verificationResume = planSupervisorStep(fixture({ taskStatus: 'verification', executionStatus: 'succeeded' }))
   const passed = planSupervisorStep(fixture({ taskStatus: 'passed', executionStatus: 'succeeded', verificationStatus: 'passed' }))
 
@@ -139,6 +151,13 @@ function recoveryScenarios(now) {
       classified_external: repositoryFailure.failure_class === 'external-wait',
       dependency_becomes_actionable: readyPoll.actionable,
     }, { implementation_attempts: 1, ai_calls: 1, implementation_retry_budget_consumed: 1 }),
+    scenario('fresh-task-auto-reconciliation', 'a freshly claimed task has no worktree and then no installed dependencies', ['task-prepare', 'prepare-dependencies'], [
+      preflightReconciliationAction({ kind: 'reconcile', reason: 'worktree_not_prepared' }),
+      preflightReconciliationAction({ kind: 'reconcile', reason: 'repository_dependencies_missing' }),
+    ], {
+      missing_worktree_is_prepared: preflightReconciliationAction({ kind: 'reconcile', reason: 'worktree_not_prepared' }) === 'task-prepare',
+      missing_dependencies_are_prepared: preflightReconciliationAction({ kind: 'reconcile', reason: 'repository_dependencies_missing' }) === 'prepare-dependencies',
+    }),
     scenario('active-controller-lease-collision', 'a second controller attempts ownership before the current lease expires', ['leave lease owner unchanged', 'wait'], [isDueExternalRecovery(activeLease, now) ? 'claim' : 'wait'], {
       active_lease_prevents_claim: !isDueExternalRecovery(activeLease, now),
     }),
@@ -159,7 +178,7 @@ function recoveryScenarios(now) {
 function policyScenarios() {
   const focused = customCheckSelection({ check: { name: 'unrelated-workspace-check', required: true, changed_paths: ['apps/shop-suit/'] }, changedFiles: ['tooling/control-plane/runner/task-supervisor.mjs'], mode: 'focused' })
   const milestone = customCheckSelection({ check: { name: 'full-regression', required: true, changed_paths: ['apps/shop-suit/'] }, changedFiles: ['tooling/control-plane/runner/task-supervisor.mjs'], mode: 'milestone' })
-  const exhausted = classifySupervisorFailure({ command: 'task-verify', payload: { error: 'verification_failed' }, attempt: 5, maxAttempts: 5 })
+  const exhausted = classifySupervisorFailure({ command: 'task-verify', payload: { error: 'verification_failed',classification:{failure_class:'verification-product-defect'} }, attempt: 5, maxAttempts: 5 })
   const criteria = ['Verified behavior is already present.']
   const parentPacket = { task: { task_id: 'CP-FI-001', status: 'in_progress', acceptance_criteria: criteria, parent_satisfaction: { source_task_id: 'CP-SOURCE-001', verification_run_id: 71, acceptance_criteria_digest: acceptanceCriteriaDigest(criteria), reason: 'Verified source is in the resolved parent.' } } }
   const parent = evaluateParentSatisfaction({
@@ -169,14 +188,78 @@ function policyScenarios() {
     sourceCommitInParent: true,
   })
   const noChange = classifySupervisorFailure({ command: 'task-publish', payload: { error: 'no_publishable_changes' }, attempt: 1, maxAttempts: 5 })
-  const scope = classifyPublicationFiles({ files: ['tooling/control-plane/resilience/acceptance.mjs', 'docs/shared/automation-control-plane.md'], task: { title: 'Add fault-injection acceptance gate', description: 'Add recovery verification and documentation.' }, taskPaths: ['tooling/control-plane/resilience/acceptance.mjs'], workstreamPaths: ['tooling/control-plane/'], projectPaths: ['tooling/', 'docs/'] })
+  const missingScope = evaluatePublicationBoundaries({
+    taskPaths: [], sourcePaths: ['packages/ui/'], workstreamPaths: ['apps/shop-suit/'], projectPaths: ['apps/', 'packages/'],
+  })
+  const approvedScope = evaluatePublicationBoundaries({
+    taskPaths: ['packages/ui/'], sourcePaths: ['packages/ui/'], workstreamPaths: ['apps/shop-suit/'], projectPaths: ['apps/', 'packages/'],
+  })
+  const authorizedPaths = validatePublicationAuthorization({
+    requestedPaths: missingScope.missing_authority, projectPaths: ['apps/', 'packages/'],
+  })
+  const passedSnapshot = fixture({ taskStatus: 'passed', executionStatus: 'succeeded', verificationStatus: 'passed' })
+  const publicationResume = planSupervisorStep(passedSnapshot)
   const ambiguous = classifyPublicationFiles({ files: ['apps/shop-suit/app.vue'], task: { title: 'Control-plane acceptance' }, taskPaths: ['tooling/control-plane/resilience/'], workstreamPaths: ['tooling/control-plane/'], projectPaths: ['apps/', 'tooling/', 'docs/'] })
+  const activeRun = { run_id:'run-1',status:'running',max_tasks:3,completed_tasks:0,current_task_id:'SS-SA-EVIDENCE-001',maintenance_requested:true,controller_fingerprint:'controller-v2' }
+  const budgetPlan = planActiveRunStart(activeRun,2)
+  const firstCredit = applyCompletionCredit({ run:activeRun,taskId:'SS-SA-EVIDENCE-001',idempotencyKey:'run-1:SS-SA-EVIDENCE-001' })
+  const replayCredit = applyCompletionCredit({ run:{ ...activeRun,completed_tasks:1,current_task_id:null },taskId:'SS-SA-EVIDENCE-001',idempotencyKey:'run-1:SS-SA-EVIDENCE-001',credits:[firstCredit.credit] })
+  const resumeWithoutProof = evaluateSafeResume({ run:activeRun,controllerProof:{ available:false },admissions:[{ current:true,blockers:[] }] })
+  const readinessBase = {
+    contract: {
+      contract_version: 1, required_paths: ['package.json'], unresolved_scopes: [], source: 'approved-task-contract',
+      task_paths: ['apps/shop-suit/'], source_paths: ['package.json'], workstream_paths: ['apps/shop-suit/'], project_paths: ['apps/', 'package.json'],
+    },
+    taskPaths: ['apps/shop-suit/'], sourcePaths: ['package.json'], workstreamPaths: ['apps/shop-suit/'],
+    projectPaths: ['apps/', 'package.json'], ordinaryAuthorizations: [], protectedAuthorizations: [],
+  }
+  const readinessWait = evaluatePublicationReadiness(readinessBase)
+  const readinessReady = evaluatePublicationReadiness({
+    ...readinessBase,
+    ordinaryAuthorizations: [{ authorization_kind: 'ordinary', authorized_paths: ['package.json'] }],
+  })
+  const protectedPath = 'apps/shop-suit/supabase/migrations/20261003000000_safe.sql'
+  const protectedWait = evaluatePublicationReadiness({
+    ...readinessBase,
+    contract: {
+      contract_version: 1, required_paths: [protectedPath], unresolved_scopes: [], source: 'approved-requirement',
+      task_paths: ['apps/shop-suit/'], source_paths: [], workstream_paths: ['apps/shop-suit/'], project_paths: ['apps/'],
+    },
+    taskPaths: ['apps/shop-suit/'],
+    sourcePaths: [],
+    projectPaths: ['apps/'],
+  })
+  const protectedRuntime = evaluatePublicationReadiness({
+    ...readinessBase,
+    contract: {
+      contract_version: 1, required_paths: [], unresolved_scopes: [], source: 'approved-requirement',
+      task_paths: ['apps/shop-suit/'], source_paths: [], workstream_paths: ['apps/shop-suit/'], project_paths: ['apps/'],
+    },
+    taskPaths: ['apps/shop-suit/'],
+    sourcePaths: [],
+    projectPaths: ['apps/'],
+    runtimeFiles: [protectedPath],
+  })
   return [
+    scenario('active-run-budget-reconciliation', 'an already active run is started with a different requested task limit', ['preserve run id', 'require explicit reconciliation'], [budgetPlan.action], {
+      explicit_reconciliation_required: budgetPlan.action === 'explicit_reconciliation_required',
+      run_identity_preserved: budgetPlan.run_id === activeRun.run_id,
+      historical_credit_not_guessed: budgetPlan.completed_tasks === 0,
+    }),
+    scenario('idempotent-run-completion-credit', 'the controller reconnects after task completion credit was persisted', ['credit once', 'replay without increment'], [firstCredit.applied ? 'credit once' : 'failed', replayCredit.idempotent ? 'replay without increment' : 'double count'], {
+      first_credit_applied: firstCredit.applied,
+      replay_is_idempotent: replayCredit.idempotent,
+      replay_count_unchanged: replayCredit.completed_tasks === 1,
+    }),
+    scenario('resume-without-deployed-controller-proof', 'a repaired batch is considered for resume without a live controller export', ['safety stop'], [resumeWithoutProof.resumable ? 'resume' : 'safety stop'], {
+      resume_refused: !resumeWithoutProof.resumable,
+      explicit_reason: resumeWithoutProof.reasons.includes('deployed_controller_proof_missing'),
+    }),
     scenario('focused-verification-isolation', 'an unrelated workspace check is failing outside the focused changed scope', ['skip unrelated check', 'preserve implementation retry budget'], [focused.reason, 'retry budget unchanged'], {
       unrelated_check_not_selected: !focused.selected && focused.reason === 'outside_focused_changed_scope',
     }),
-    scenario('focused-repair-exhaustion', 'focused verification keeps failing through the final allowed attempt', ['bounded repair', 'safety-stop'], ['repair attempts 1-4', exhausted.next_action], {
-      exhausted_reaches_explicit_terminal_state: exhausted.kind === 'terminal' && exhausted.next_action === 'safety-stop',
+    scenario('focused-repair-exhaustion', 'focused verification keeps failing through the final allowed attempt', ['bounded repair', 'exact operator extension gate'], ['repair attempts 1-4', exhausted.next_action], {
+      exhausted_reaches_explicit_operator_gate: exhausted.kind === 'wait' && exhausted.next_action === 'wait-operator',
     }, { implementation_attempts: 5, verification_runs: 5, ai_calls: 5, implementation_retry_budget_consumed: 5 }),
     scenario('milestone-required-check-contract', 'changed paths do not match a required milestone check', ['select required check'], [milestone.reason], {
       required_check_selected: milestone.selected && milestone.reason === 'required_by_milestone_contract',
@@ -187,14 +270,29 @@ function policyScenarios() {
     scenario('unexplained-empty-diff', 'publication discovers an empty diff without parent-satisfaction evidence', ['bounded no-change review'], [noChange.command], {
       does_not_silently_complete: noChange.command === 'handle-no-publishable-changes' && noChange.recoverable === false,
     }, { implementation_attempts: 1, verification_runs: 1, publication_attempts: 1, ai_calls: 1, implementation_retry_budget_consumed: 1 }),
-    scenario('mechanical-publication-scope-repair', 'a directly implied companion documentation file is outside the explicit task path', ['allow task file', 'repair documentation scope'], [...scope.allowed, ...scope.repaired], {
-      task_file_allowed: scope.allowed.includes('tooling/control-plane/resilience/acceptance.mjs'),
-      docs_repaired: scope.repaired.includes('docs/shared/automation-control-plane.md'),
-      no_wait_or_stop: scope.waiting.length === 0 && scope.blocked.length === 0,
+    scenario('publication-scope-before-implementation', 'a Shop task requests the shared UI path used by the BS-UI-ZN-PUBLIC-CHROME-001 class without explicit authority', ['wait before implementation', 'authorize exact shared path'], [missingScope.missing_authority.length ? 'wait before implementation' : 'implementation', ...authorizedPaths], {
+      missing_cross_workstream_scope_waits: missingScope.missing_authority.includes('packages/ui/'),
+      explicit_scope_clears_wait: approvedScope.missing_authority.length === 0,
+      no_implementation_attempt_consumed: true,
     }),
+    scenario('publication-scope-authorization-resume', 'a passed and verified task waits on the exact shared UI publication path', ['merge exact task scope', 'resume publication'], [authorizedPaths[0], publicationResume.command], {
+      resumes_at_publication: publicationResume.command === 'task-publish',
+      execution_identifier_preserved: publicationResume.execution?.execution_id === 41,
+      verification_identifier_preserved: publicationResume.verification?.verification_run_id === 71,
+    }, { implementation_attempts: 1, verification_runs: 1, publication_attempts: 1, ai_calls: 1, implementation_retry_budget_consumed: 1 }),
     scenario('ambiguous-publication-scope', 'an unrelated product behavior file appears in the publication diff', ['wait-operator'], ambiguous.waiting, {
       unrelated_product_file_waits: ambiguous.waiting.includes('apps/shop-suit/app.vue'),
       not_auto_repaired: ambiguous.repaired.length === 0,
+    }),
+    scenario('authoritative-publication-readiness', 'an approved root structural path lacks exact task authorization before implementation', ['exact authorization required', 'ready without execution'], [readinessWait.classification, readinessReady.classification], {
+      waits_before_implementation: readinessWait.classification === 'exact_authorization_required',
+      exact_authorization_is_sufficient: readinessReady.ready,
+      runtime_output_is_not_authority: readinessWait.evidence.uses_runtime_files_as_authority === false,
+    }),
+    scenario('protected-publication-readiness', 'a protected migration is approved but lacks distinct human authorization', ['protected authorization required', 'unexpected runtime file safety-stop'], [protectedWait.classification, protectedRuntime.classification], {
+      protected_path_never_auto_authorized: protectedWait.classification === 'protected_authorization_required',
+      runtime_only_protected_path_stops: protectedRuntime.classification === 'unexpected_runtime_change',
+      no_implementation_attempt_consumed: true,
     }),
   ]
 }
@@ -220,6 +318,59 @@ function controllerScenarios() {
   ]
 }
 
+function controlDatabaseScenarios() {
+  const noDelay = { sleep: () => {} }
+  let recoveredAttempts = 0
+  const recovered = executeWithControlDatabaseRetry(() => {
+    recoveredAttempts++
+    return recoveredAttempts === 1
+      ? { code: 2, stderr: 'could not translate host name: Temporary failure in name resolution' }
+      : { code: 0, stdout: '{"status":"in_progress"}' }
+  }, noDelay)
+
+  let exhaustedAttempts = 0
+  let exhaustedError
+  try {
+    executeWithControlDatabaseRetry(() => {
+      exhaustedAttempts++
+      return { code: 2, stderr: 'connection to server failed: Connection timed out' }
+    }, noDelay)
+  }
+  catch (error) {
+    exhaustedError = error
+  }
+  const wait = controlDatabaseWaitOutcome({
+    taskId: 'CP-FI-001',
+    command: 'task-supervise',
+    error: exhaustedError,
+    now: new Date('2026-10-02T12:00:00.000Z'),
+  })
+
+  let rejectedAttempts = 0
+  const rejected = executeWithControlDatabaseRetry(() => {
+    rejectedAttempts++
+    return { code: 2, stderr: 'FATAL: password authentication failed for user "runtime"' }
+  }, noDelay)
+
+  return [
+    scenario('control-database-transient-then-success', 'the first control-database connection attempt encounters a transient DNS failure', ['bounded backoff', 'repeat original command', 'continue same lifecycle'], ['bounded backoff', `attempt ${recoveredAttempts}`, recovered.code === 0 ? 'continue same lifecycle' : 'failed'], {
+      original_command_retried: recoveredAttempts === 2,
+      successful_result_returned: recovered.code === 0,
+      no_implementation_attempt_created: true,
+    }),
+    scenario('control-database-transient-retries-exhausted', 'every bounded control-database connection attempt times out', ['bounded retries', 'wait-external', 'preserve task and run'], [`${exhaustedAttempts} attempts`, wait.recovery.next_action, wait.ok ? 'preserve task and run' : 'failed'], {
+      retries_are_bounded: exhaustedAttempts === CONTROL_DATABASE_RETRY_POLICY.max_attempts,
+      wait_is_recoverable: wait.status === 'wait' && wait.recovery.recoverable,
+      lifecycle_identity_is_preserved: wait.recovery.resume_identity === 'task:CP-FI-001',
+      implementation_budget_is_unchanged: wait.recovery.controller_retry.implementation_retry_budget_consumed === 0,
+    }),
+    scenario('control-database-non-transient-rejection', 'the control database rejects authentication immediately', ['no retry', 'safety handling'], [`${rejectedAttempts} attempt`, rejected.code === 0 ? 'continued' : 'safety handling'], {
+      rejected_immediately: rejectedAttempts === 1,
+      original_failure_is_preserved: /password authentication failed/.test(rejected.stderr),
+    }),
+  ]
+}
+
 function artifactScenarios({ workflows, manifest, baselineFixture, baselineFixtureAfter = baselineFixture }) {
   const validation = validateControllerReplacements(workflows)
   const compatibility = inspectWorkflowSnapshot(workflows)
@@ -231,7 +382,7 @@ function artifactScenarios({ workflows, manifest, baselineFixture, baselineFixtu
   const baselineDigestAfter = sha256(baselineFixtureAfter)
   return [
     scenario('generated-n8n-replacement-compatibility', 'generated BS-10, BS-20, and BS-21 fixtures are evaluated as cutover candidates', ['validate identities', 'reject retry graph', 'reject hardcoded registry'], validation.valid ? ['identities valid', 'no retry graph', 'no hardcoded registry'] : validation.errors, {
-      three_workflows_present: workflows.length === 3,
+      three_controllers_and_optional_watchdog_present: workflows.length === 3 || workflows.length === 4 && workflows.some(w => w.id === 'BS31SelfHealingRecovery'),
       controller_contract_valid: validation.valid,
       compatibility_clean: compatibility.compatible,
       generated_inactive: workflows.every(workflow => workflow.active === false),
@@ -254,17 +405,24 @@ export function runResilienceAcceptance(input) {
     ...recoveryScenarios(now),
     ...policyScenarios(),
     ...controllerScenarios(),
+    ...controlDatabaseScenarios(),
     ...artifactScenarios(input),
   ]
   const mandatory = scenarios.filter(item => item.mandatory)
   const passed = mandatory.filter(item => item.result === 'pass').length
   return {
     schema_version: 1,
-    task_id: 'CP-RES-009',
+    task_id: 'CP-RES-014',
     deterministic: true,
     destructive_faults_used: false,
     live_n8n_contacted: false,
-    cutover_ready: passed === mandatory.length,
+    harness_ready: passed === mandatory.length,
+    cutover_ready: false,
+    release_blockers: [
+      'live_controller_export_and_fingerprint_not_verified',
+      'disposable_postgresql_migration_and_concurrency_gate_required',
+      'independent_batch_admission_review_required',
+    ],
     summary: { mandatory: mandatory.length, passed, failed: mandatory.length - passed },
     scenarios,
   }
@@ -276,7 +434,9 @@ export function renderResilienceReport(report) {
     '',
     `Task: ${report.task_id}`,
     '',
-    `Cutover ready: **${report.cutover_ready ? 'YES' : 'NO'}**`,
+    `Deterministic repository harness: **${report.harness_ready ? 'PASS' : 'FAIL'}**`,
+    '',
+    'Deployed cutover ready: **NO**. Live controller proof, disposable PostgreSQL migration/concurrency results, and independent admission review remain separate gates.',
     '',
     `Mandatory scenarios: ${report.summary.passed}/${report.summary.mandatory} passed. The deterministic harness used no destructive faults and did not contact or mutate live n8n.`,
     '',

@@ -1,10 +1,18 @@
 #!/usr/bin/env node
+import {existingCommandIdentity} from './verification-command-identity.mjs'
+import {psqlStdinRequest} from '../lib/psql-stdin.mjs'
+import {controlQueryError} from './recovery-error.mjs'
+import {fileURLToPath} from 'node:url'
+import {verifierReceipt,trustedCommandRegistration} from './trusted-verifier-receipt.mjs'
+import {failureEvidence,processFailureCategory,evidenceDigest} from './failure-evidence.mjs'
+import {emptyComponentFixture} from './retry-exhaustion-audit.mjs'
 
 import {
   existsSync,
   mkdirSync,
   readFileSync,
   writeFileSync,
+  realpathSync,
 } from 'node:fs'
 
 import {
@@ -15,20 +23,31 @@ import path from 'node:path'
 
 import {
   applicationScopeSelected,
+  classifyVerificationResults,
+  verificationCommandFailureClass,
+  requiredVerificationEvidenceMissing,
   commandResultStatus,
+  controlPlaneRootLintSelection,
   customCheckSelection,
   isMilestoneVerification,
+  resolveDatabaseVerification,
+  resolveVerificationPlan,
   resolveVerificationMode,
+  safeRegisteredVerificationCommand,
 } from './verification-mode.mjs'
+import { localShopMigrationReadiness } from './local-migration-readiness.mjs'
+import { mergeVerificationConfig } from '../lib/workstream-readiness.mjs'
 import { publicationStateFingerprint } from './publication-preflight.mjs'
+import { executeWithControlDatabaseRetry } from '../lib/control-database.mjs'
 
 const [
   worktreePath,
   packetPath,
-  runDirectory,
+  suppliedRunDirectory,
   verificationRunId,
   persistedVerificationMode,
 ] = process.argv.slice(2)
+const runDirectory=suppliedRunDirectory?path.join(suppliedRunDirectory,String(verificationRunId)):null
 
 const verificationProbe =
   verificationRunId === 'probe'
@@ -82,23 +101,15 @@ const suit =
 
 const project = packet.project ?? {}
 const workstream = packet.workstream ?? {}
-const configuredCommands = new Map()
-for (
-  const config
-  of [
-    project.verification_config,
-    workstream.verification_config,
-  ]
-) {
-  for (const command of config?.commands ?? []) {
-    configuredCommands.set(command.name, command)
-  }
-}
-const verificationConfig = {
-  ...(project.verification_config ?? {}),
-  ...(workstream.verification_config ?? {}),
-  commands: [...configuredCommands.values()],
-}
+const verificationConfig = mergeVerificationConfig(
+  project.verification_config,
+  workstream.verification_config,
+)
+const resolvedPlan = resolveVerificationPlan({
+  entries: task.verification_plan ?? [],
+  configuredCommands: verificationConfig.commands ?? [],
+  legacyMappings: verificationConfig.legacy_plan_mappings ?? {},
+})
 
 const verificationMode =
   persistedVerificationMode ??
@@ -115,7 +126,7 @@ const controlDatabase = {
   host: process.env.AUTOMATION_CONTROL_DB_HOST ?? process.env.BS_CONTROL_DB_HOST ?? '127.0.0.1',
   port: process.env.AUTOMATION_CONTROL_DB_PORT ?? process.env.BS_CONTROL_DB_PORT ?? '54329',
   database: process.env.AUTOMATION_CONTROL_DB_NAME ?? process.env.BS_CONTROL_DB_NAME ?? 'building_suit_control',
-  user: process.env.AUTOMATION_CONTROL_DB_USER ?? process.env.BS_CONTROL_DB_USER ?? 'bs_control_app',
+  user: process.env.BS_CONTROL_VERIFIER_USER ?? process.env.AUTOMATION_CONTROL_DB_USER ?? process.env.BS_CONTROL_DB_USER ?? 'bs_control_app',
   sslmode: process.env.AUTOMATION_CONTROL_DB_SSLMODE ?? process.env.BS_CONTROL_DB_SSLMODE ?? 'prefer',
 }
 
@@ -137,18 +148,52 @@ function liveCheck(check) {
     metadata: JSON.stringify({
       verification_mode: verificationMode,
       selection_reason: check.selection_reason ?? 'unspecified',
+      failure_class: check.failure_class ?? null,
+      failure_evidence: check.failure_evidence ?? null,
     }),
   }
-  const args = ['-X','-q','-A','-t','-v','ON_ERROR_STOP=1','-h',controlDatabase.host,'-p',controlDatabase.port,'-U',controlDatabase.user,'-d',controlDatabase.database]
+  const args = ['-X','-q','-A','-t','-v','ON_ERROR_STOP=1','-v','VERBOSITY=verbose','-h',controlDatabase.host,'-p',controlDatabase.port,'-U',controlDatabase.user,'-d',controlDatabase.database]
   for (const [key,value] of Object.entries(values)) args.push('--set',`${key}=${value}`)
-  const result = spawnSync('psql',args,{
+  const result = executeWithControlDatabaseRetry(() => executePsql(args,{
     encoding:'utf8',
     env:{...process.env,PGSSLMODE:controlDatabase.sslmode},
     input:`SELECT control.update_verification_check(:'run_id'::bigint,:'name',:'status',NULLIF(:'exit_code','')::integer,:'summary',:'log_path',:'elapsed_ms'::bigint,:'command',:'required'::boolean,:'metadata'::jsonb);\n`,
-  })
+  }), { successful: value => value.status === 0 && !value.error })
   if (result.status !== 0) {
-    throw new Error(`live_verification_update_failed:${(result.stderr ?? '').trim()}`)
+    const error = controlQueryError(result)
+    error.component = 'verifier'
+    throw error
   }
+  const id = Number(result.stdout.trim().split('\n').at(-1))
+  if (Number.isSafeInteger(id) && id > 0) check.verification_id = id
+  if (check.log_path && check.status !== 'running' && check.started_at && check.verification_id) {
+    const identity = executePsql(args.slice(0, args.indexOf('--set')), {
+      encoding: 'utf8', env: { ...process.env, PGSSLMODE: controlDatabase.sslmode },
+      input: `SELECT jsonb_build_object('execution_id',v.execution_id,'run_id',(SELECT r.run_id FROM control.workflow_runs r WHERE r.current_task_id=e.task_id ORDER BY r.started_at DESC LIMIT 1)) FROM control.verification_runs v JOIN control.executions e USING(execution_id) WHERE v.verification_run_id=${Number(verificationRunId)};\n`,
+    })
+    if (identity.status !== 0) throw controlQueryError(identity)
+    const boundIdentity = JSON.parse(identity.stdout.trim())
+    const obligations=resolvedPlan.checks.filter(p=>p.name===check.name).map(p=>p.plan_entry)
+    check.trusted_registration=trustedCommandRegistration({check,executionId:Number(boundIdentity.execution_id),verificationRunId,taskId:task.task_id,runId:boundIdentity.run_id,
+      registry:{configuration:verificationConfig,plan:task.verification_plan},obligationIds:obligations.length?obligations.map(e=>evidenceDigest(e)):[`runtime:${check.name}`],verifierBytes:readFileSync(fileURLToPath(import.meta.url))})
+    const registered=executePsql(args.slice(0,args.indexOf('--set')).concat(['--set',`registration=${JSON.stringify(check.trusted_registration)}`]),{
+      encoding:'utf8',env:{...process.env,PGSSLMODE:controlDatabase.sslmode},input:`SELECT control.register_trusted_verification_command(${check.verification_id}, :'registration'::jsonb);\n`})
+    if(registered.status!==0)throw controlQueryError(registered)
+    check.trusted_receipt = verifierReceipt({ check, artifactRoot: worktreePath, sourceRoot: worktreePath,
+      executionId: Number(boundIdentity.execution_id), runId: boundIdentity.run_id, verificationRunId, taskId: task.task_id,
+      startedAt: check.started_at, finishedAt: check.finished_at })
+    const receiptArgs = args.slice(0, args.indexOf('--set')).concat(['--set', `receipt=${JSON.stringify(check.trusted_receipt)}`])
+    const persisted = executePsql(receiptArgs, {
+      encoding: 'utf8', env: { ...process.env, PGSSLMODE: controlDatabase.sslmode },
+      input: `SELECT control.capture_verifier_receipt(${check.verification_id}, :'receipt'::jsonb);\n`,
+    })
+    if (persisted.status !== 0) throw controlQueryError(persisted)
+  }
+}
+
+function executePsql(args, options) {
+  const request = psqlStdinRequest(args, options)
+  return spawnSync('psql', request.args, request.options)
 }
 
 mkdirSync(
@@ -174,6 +219,21 @@ function runCheck({
   required = true,
   selectionReason = 'required_by_verification_policy',
 }) {
+  if(name==='ledger-shared-ui-tests')emptyComponentFixture(worktreePath,{name,summary:'ENOENT app/components'},true)
+  if (suit.slug === 'shop-suit' && ['shop-database-regression', 'database-tests'].includes(name)) {
+    const freshness = localShopMigrationReadiness({ worktreePath, changedFiles: [...changedFiles] })
+    if (!freshness.ready) {
+      const check = omittedCheck({
+        name, command: `${program} ${args.join(' ')}`, required,
+        reason: freshness.reason, unavailable: true,
+        failureClass: freshness.failure_class,
+        summary: `Local disposable database is not evidence for the current migration source: ${freshness.reason}; files: ${(freshness.files ?? []).join(', ')}`,
+      })
+      liveCheck(check)
+      return check
+    }
+  }
+
   const started =
     Date.now()
 
@@ -222,30 +282,9 @@ function runCheck({
       ? result.status
       : 1
 
-  const logPath =
-    path.join(
-      runDirectory,
-      `${sanitizeName(name)}.log`,
-    )
-
-  writeFileSync(
-    logPath,
-
-    [
-      `$ ${program} ${args.join(' ')}`,
-      '',
-      '--- STDOUT ---',
-      stdout,
-      '',
-      '--- STDERR ---',
-      stderr,
-      '',
-    ].join('\n'),
-
-    {
-      mode: 0o600,
-    },
-  )
+  const logContent=[`$ ${program} ${args.join(' ')}`,'','--- STDOUT ---',stdout,'','--- STDERR ---',stderr,''].join('\n')
+  const logPath=path.join(runDirectory,`${sanitizeName(name)}-${evidenceDigest(logContent)}.log`)
+  if(!existsSync(logPath))writeFileSync(logPath,logContent,{mode:0o600,flag:'wx'})
 
   const unavailable =
     result.error?.code === 'ENOENT'
@@ -277,27 +316,36 @@ function runCheck({
           'Command failed'
         )
 
+  const missingEvidence = required && requiredVerificationEvidenceMissing({ name, output: combined })
   const check = {
     name,
+    working_directory: cwd,
     command:
       `${program} ${args.join(' ')}`,
     required,
     selection_reason: selectionReason,
     status:
-      commandResultStatus({
+      missingEvidence ? 'not_run' : commandResultStatus({
         required,
         exitCode,
         errorCode: result.error?.code,
       }),
+    failure_class:
+      verificationCommandFailureClass({
+        name, required, passed, errorCode: result.error?.code, signal: result.signal, output: combined, missingEvidence,
+      }),
     exit_code:
       exitCode,
-    summary,
+    summary: missingEvidence ? 'Required HTTP coverage did not execute all checks; disposable fixture evidence is still required.\n' + summary : summary,
     log_path:
       logPath,
+    started_at: new Date(started).toISOString(),
+    finished_at: new Date().toISOString(),
     elapsed_ms:
       Date.now() - started,
   }
 
+  check.failure_evidence=failureEvidence({execution_id:null,verification_run_id:verificationRunId,check,artifact:readFileSync(logPath,'utf8'),classification:processFailureCategory(result,missingEvidence),phase:result.error?'spawn':'test',origin:result.error?'process':'unknown',result:{signal:result.signal??null,error_code:result.error?.code??null}})
   liveCheck(check)
 
   return check
@@ -380,6 +428,7 @@ function omittedCheck({
   reason,
   summary,
   unavailable = false,
+  failureClass = null,
 }) {
   return {
     name,
@@ -390,6 +439,7 @@ function omittedCheck({
       unavailable && required
         ? 'not_run'
         : 'skipped',
+    failure_class: failureClass,
     exit_code: null,
     summary,
     log_path: null,
@@ -436,6 +486,30 @@ results.push(
       'required_for_changed_files',
   }),
 )
+
+const rootLintSelection =
+  controlPlaneRootLintSelection({
+    changedFiles: [...changedFiles],
+  })
+
+if (rootLintSelection.selected) {
+  results.push(
+    runCheck({
+      name:
+        'root-lint',
+
+      program:
+        'pnpm',
+
+      args: [
+        'lint',
+      ],
+
+      selectionReason:
+        rootLintSelection.reason,
+    }),
+  )
+}
 
 if (
   isMilestoneVerification(verificationMode) ||
@@ -616,33 +690,6 @@ if (
   }
 }
 
-for (const custom of verificationConfig.commands ?? []) {
-  const selection = customCheckSelection({
-    check: custom,
-    changedFiles: [...changedFiles],
-    mode: verificationMode,
-    verificationPlanText,
-  })
-  if (!selection.selected) {
-    results.push(omittedCheck({
-      name: custom.name,
-      command: [custom.program, ...(custom.args ?? [])].join(' '),
-      required: custom.required !== false,
-      reason: selection.reason,
-      summary: 'No changed file matched this focused custom check.',
-    }))
-    continue
-  }
-  results.push(runCheck({
-    name: custom.name,
-    program: custom.program,
-    args: custom.args ?? [],
-    cwd: custom.cwd ? path.join(worktreePath, custom.cwd) : worktreePath,
-    timeout: custom.timeout_ms ?? 15 * 60 * 1000,
-    required: custom.required !== false,
-    selectionReason: selection.reason,
-  }))
-}
 
 const changed =
   [...changedFiles]
@@ -683,186 +730,135 @@ const changedDatabaseTests =
     : []
 
 if (databaseChanged) {
+  const databaseVerification = resolveDatabaseVerification({
+    verificationConfig,
+    suitSlug: suit.slug,
+    appPath,
+    changedDatabaseTests,
+  })
 
-  if (
-    suit.slug === 'ledger-suit'
-  ) {
-
-    const ledgerAppPath =
-      path.join(
-        worktreePath,
-        appPath,
-      )
-
-
-    const databaseReset =
-      runCheck({
-        name:
-          'database-reset',
-
-        program:
-          'pnpm',
-
-        args: [
-          'exec',
-          'supabase',
-          'db',
-          'reset',
-          '--local',
-        ],
-
-        cwd:
-          ledgerAppPath,
-
-        timeout:
-          20 * 60 * 1000,
-
-        selectionReason:
-          'database_scope_changed',
-      })
-
-
-    results.push(
-      databaseReset,
-    )
-
-
-    if (
-      databaseReset.status === 'pass'
-    ) {
-
-      if (
-        changedDatabaseTests.length > 0
-      ) {
-
-        results.push(
-          runCheck({
-            name:
-              'database-tests',
-
-            program:
-              'pnpm',
-
-            args: [
-              'exec',
-              'supabase',
-              'test',
-              'db',
-
-              ...changedDatabaseTests,
-
-              '--local',
-            ],
-
-            cwd:
-              ledgerAppPath,
-
-            timeout:
-              15 * 60 * 1000,
-
-            selectionReason:
-              'database_scope_changed',
-          }),
-        )
-
-      }
-      else {
-
-        results.push({
-          name:
-            'database-tests',
-
-          command:
-            null,
-
-          required:
-            true,
-
-          selection_reason:
-            'required_database_test_unavailable',
-
-          status:
-            'not_run',
-
-          exit_code:
-            null,
-
-          summary:
-            'Ledger database changed but this task changed no task-specific pgTAP test.',
-
-          log_path:
-            null,
-
-          elapsed_ms:
-            0,
-        })
-
-      }
-
-    }
-
-  }
-  else if (
-    suit.slug === 'shop-suit'
-  ) {
-
-    results.push(
-      runCheck({
-        name:
-          'database-tests',
-
-        program:
-          'pnpm',
-
-        args: [
-          'db:test:shop',
-        ],
-
-        timeout:
-          30 * 60 * 1000,
-
-        selectionReason:
-          'database_scope_changed',
-      }),
-    )
-
+  if (databaseVerification.commands.length === 0) {
+    results.push(omittedCheck({
+      name: 'database-tests',
+      command: null,
+      required: true,
+      reason: 'required_database_runner_unavailable',
+      summary: databaseVerification.source === 'invalid_configuration'
+        ? `The registered database verification command for ${suit.slug} is invalid.`
+        : `No registered database verification command is configured for ${suit.slug}.`,
+      unavailable: true,
+      failureClass: 'verification-configuration',
+    }))
   }
   else {
+    for (const command of databaseVerification.commands) {
+      // A failed prerequisite makes later database evidence unavailable rather
+      // than executing against an unprepared local database.
+      const prerequisiteFailed = results.some(result =>
+        result.database_phase && result.status !== 'pass',
+      )
+      if (prerequisiteFailed) {
+        results.push(omittedCheck({
+          name: command.name,
+          command: [command.program, ...(command.args ?? [])].join(' '),
+          required: command.required !== false,
+          reason: 'database_prerequisite_failed',
+          summary: 'Database verification prerequisite failed.',
+          unavailable: true,
+          failureClass: 'verification-infrastructure',
+        }))
+        continue
+      }
+      const databaseResult = runCheck({
+        name: command.name,
+        program: command.program,
+        args: command.args ?? [],
+        cwd: command.cwd ? path.join(worktreePath, command.cwd) : worktreePath,
+        timeout: command.timeout_ms ?? 15 * 60 * 1000,
+        required: command.required !== false,
+        selectionReason: databaseVerification.source.startsWith('registered_')
+          ? 'registered_database_verification_contract'
+          : 'database_scope_changed',
+      })
+      databaseResult.database_phase = command.phase ?? 'test'
+      results.push(databaseResult)
+    }
 
-    results.push({
-      name:
-        'database-tests',
-
-      command:
-        null,
-
-      required:
-        true,
-
-      selection_reason:
-        'required_database_runner_unavailable',
-
-      status:
-        'not_run',
-
-      exit_code:
-        null,
-
-      summary:
-        `No database verification command configured for ${suit.slug}.`,
-
-      log_path:
-        null,
-
-      elapsed_ms:
-        0,
-    })
-
+    if (
+      databaseVerification.source === 'legacy_ledger_compatibility' &&
+      changedDatabaseTests.length === 0
+    ) {
+      results.push(omittedCheck({
+        name: 'database-tests',
+        command: null,
+        required: true,
+        reason: 'required_database_test_unavailable',
+        summary: 'Ledger database changed but this task changed no task-specific pgTAP test.',
+        unavailable: true,
+        failureClass: 'verification-configuration',
+      }))
+    }
   }
-
 }
 
+for (const custom of verificationConfig.commands ?? []) {
+  if (!safeRegisteredVerificationCommand(custom)) {
+    results.push(omittedCheck({
+      name: custom?.name ?? `invalid-registered-command-${results.length + 1}`,
+      command: null,
+      required: custom?.required !== false,
+      reason: 'registered_verification_command_invalid',
+      summary: 'Registered verification command must use a safe program/argv definition and repository-relative cwd.',
+      unavailable: true,
+      failureClass: 'verification-configuration',
+    }))
+    continue
+  }
+  const selection = customCheckSelection({
+    check: custom,
+    changedFiles: [...changedFiles],
+    mode: verificationMode,
+    verificationPlanText,
+  })
+  if (!selection.selected) {
+    results.push(omittedCheck({
+      name: custom.name,
+      command: [custom.program, ...(custom.args ?? [])].join(' '),
+      required: custom.required !== false,
+      reason: selection.reason,
+      summary: 'No changed file matched this focused custom check.',
+    }))
+    continue
+  }
+  const identity=existingCommandIdentity(results,{...custom,cwd:custom.cwd?path.join(worktreePath,custom.cwd):worktreePath},worktreePath)
+  if(identity==='reuse')continue
+  if(identity==='conflict'){
+    const check=omittedCheck({name:`registered-identity-conflict-${custom.name}`,command:null,required:true,reason:'registered_verification_check_identity_conflict',summary:`Registered command ${custom.name} differs from the already captured check; preserve its immutable receipt.`,unavailable:true,failureClass:'verification-configuration'})
+    liveCheck(check);results.push(check);continue
+  }
+  const databaseCommand=custom.program==='pnpm'&&(custom.args??[]).join(' ').includes('supabase test db')
+  if(databaseCommand&&results.some(result=>result.database_phase&&result.status!=='pass')){
+    const blocked=omittedCheck({name:custom.name,command:[custom.program,...(custom.args??[])].join(' '),required:custom.required!==false,reason:'database_prerequisite_failed',summary:'Registered database check blocked by the current failed prerequisite.',unavailable:true,failureClass:'verification-infrastructure'})
+    liveCheck(blocked);results.push(blocked);continue
+  }
+  results.push(runCheck({
+    name: custom.name,
+    program: custom.program,
+    args: custom.args ?? [],
+    cwd: custom.cwd ? path.join(worktreePath, custom.cwd) : worktreePath,
+    timeout: custom.timeout_ms ?? 15 * 60 * 1000,
+    required: custom.required !== false,
+    selectionReason: selection.reason,
+  }))
+}
+
+
+const explicitBrowserChecks = resolvedPlan.checks.filter(check =>
+  Array.isArray(check.capabilities) && check.capabilities.includes('browser'),
+)
+
 const browserRequired =
+  explicitBrowserChecks.length === 0 &&
   /e2e|browser|playwright/.test(
     verificationPlanText,
   )
@@ -1004,6 +1000,152 @@ if (browserRequired) {
 
 }
 
+for (const planned of resolvedPlan.checks) {
+  const existing = results.find(result =>
+    result.name === planned.name && result.status !== 'skipped',
+  )
+  if (existing) continue
+
+  results.push(runCheck({
+    name: planned.name,
+    program: planned.program,
+    args: planned.args,
+    cwd: planned.cwd ? path.join(worktreePath, planned.cwd) : worktreePath,
+    timeout: planned.timeout_ms ?? 15 * 60 * 1000,
+    required: true,
+    selectionReason: 'required_by_task_verification_plan',
+  }))
+}
+
+function existingResult(...names) {
+  return results.find(result => names.includes(result.name))
+}
+
+function plannedCompatibilityCovered(blocker) {
+  if (blocker.kind !== 'planned_test') return false
+
+  if(blocker.registered_checks?.length){
+    const root=realpathSync(worktreePath)
+    if(blocker.expected_outputs.some(output=>!existsSync(path.join(root,output))||!realpathSync(path.join(root,output)).startsWith(root+path.sep)))return false
+    return blocker.registered_checks.every(check=>existingResult(check.name))
+  }
+
+  if (['generator_disposable_fixture_runner_not_registered','missing_generated_fixture_boundary_runner','future_generator_fixture_not_implemented'].includes(blocker.blocker)) {
+    const fixture = 'tooling/new-platform/verify-fixture.mjs'
+    if (!existsSync(path.join(worktreePath, fixture))) return false
+    results.push(runCheck({name: `verification-obligation-blocked-${results.length + 1}`, program:'node', args:[fixture], required:true, selectionReason:'planned_test_materialized_as_executable'}))
+    return true
+  }
+
+  if (blocker.blocker==='missing_strict_boundary_runner' && blocker.plan_entry==='node tooling/checks/suit-template-boundaries.mjs --require-strict') {
+    const runner='tooling/checks/suit-template-boundaries.mjs'
+    if(!existsSync(path.join(worktreePath,runner))) return false
+    results.push(runCheck({name:`verification-obligation-blocked-${results.length+1}`,program:'node',args:[runner,'--require-strict'],required:true,selectionReason:'existing_strict_boundary_binding_reconciled'}))
+    return true
+  }
+
+  if (blocker.blocker === 'missing_suit_template_boundary_runner') {
+    const match = String(blocker.plan_entry).match(
+      /^node\s+([A-Za-z0-9._/-]+\.(?:mjs|js))$/,
+    )
+    if (!match || match[1].split('/').includes('..')) return false
+
+    const relativePath = match[1]
+    if (!existsSync(path.join(worktreePath, relativePath))) return false
+
+    results.push(runCheck({
+      name: 'suit-template-boundaries',
+      program: 'node',
+      args: [relativePath],
+      required: blocker.required !== false,
+      selectionReason: 'planned_test_materialized_as_executable',
+    }))
+    return true
+  }
+
+  if (blocker.blocker === 'shop_storage_policy_coverage_not_implemented') {
+    if (changedDatabaseTests.length === 0) return false
+    return Boolean(existingResult('shop-database-regression', 'database-tests'))
+  }
+
+  if (blocker.blocker === 'shop_storage_http_signed_url_coverage_not_implemented') {
+    if (!appPath) return false
+    const relativePath =
+      `${appPath}/tests/integration/payment-evidence-http.mjs`
+    if (!existsSync(path.join(worktreePath, relativePath))) return false
+
+    results.push(runCheck({
+      name: 'shop-payment-evidence-http',
+      program: 'node',
+      args: ['--test', '--test-reporter=tap', relativePath],
+      required: blocker.required !== false,
+      selectionReason: 'planned_test_materialized_as_executable',
+    }))
+    return true
+  }
+
+  if (blocker.blocker === 'super_admin_app_and_local_database_not_present') {
+    return Boolean(existingResult('super-admin-database-reset'))
+  }
+
+  if (blocker.blocker === 'super_admin_security_database_tests_not_present') {
+    return Boolean(existingResult('super-admin-database-tests'))
+  }
+
+  if (blocker.blocker === 'super_admin_generated_type_check_not_present') {
+    if (!appPath) return false
+    const typeFile =
+      path.join(worktreePath, appPath, 'app', 'types', 'database.types.ts')
+    if (!existsSync(typeFile)) return false
+
+    results.push(runCheck({
+      name: 'super-admin-generated-types',
+      program: 'node',
+      args: [new URL('./check-generated-types.mjs', import.meta.url).pathname, typeFile, path.join(runDirectory, 'super-admin-generated-types.expected.ts')],
+      cwd: path.join(worktreePath, appPath),
+      timeout: 5 * 60 * 1000,
+      required: blocker.required !== false,
+      selectionReason: 'planned_test_materialized_as_executable',
+    }))
+    return true
+  }
+
+  return false
+}
+
+for (const blocker of resolvedPlan.blockers) {
+  if (plannedCompatibilityCovered(blocker)) continue
+
+  const failureClass =
+    blocker.kind === 'planned_test'
+      ? 'verification-product-defect'
+      : blocker.kind === 'external_gate'
+        ? 'verification-required-check-unavailable'
+        : 'verification-configuration'
+
+  results.push(omittedCheck({
+    name: `verification-obligation-blocked-${results.length + 1}`,
+    command: null,
+    required: blocker.required !== false,
+    reason: blocker.blocker,
+    summary: `Required verification obligation is blocked (${blocker.kind}): ${blocker.plan_entry}`,
+    unavailable: true,
+    failureClass,
+  }))
+}
+
+for (const entry of resolvedPlan.unenforced) {
+  results.push(omittedCheck({
+    name: `verification-plan-unenforced-${results.length + 1}`,
+    command: null,
+    required: true,
+    reason: 'verification_plan_entry_unenforced',
+    summary: `Required verification-plan entry is not a known safe check or registered command: ${entry}`,
+    unavailable: true,
+    failureClass: 'verification-configuration',
+  }))
+}
+
 const passed =
   results.every(
     result =>
@@ -1026,11 +1168,16 @@ const verifiedState = {
 verifiedState.fingerprint =
   publicationStateFingerprint(verifiedState)
 
+const classification =
+  classifyVerificationResults(results)
+
 process.stdout.write(
   `${JSON.stringify({
     ok: true,
 
     passed,
+
+    classification,
 
     task_id:
       task.task_id,

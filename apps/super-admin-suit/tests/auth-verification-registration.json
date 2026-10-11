@@ -1,0 +1,43 @@
+{
+  "commands": [
+    {
+      "name": "super-admin-auth-unit",
+      "program": "node",
+      "args": ["--test", "apps/super-admin-suit/tests/unit/auth.test.mjs"],
+      "required": true
+    },
+    {
+      "name": "super-admin-auth-browser",
+      "program": "pnpm",
+      "args": ["--filter", "@building-suit/super-admin-suit", "exec", "playwright", "test", "tests/e2e/auth.spec.ts", "--workers=1", "--retries=0", "--repeat-each=2"],
+      "required": true
+    },
+    {
+      "name": "super-admin-claim-authority-review",
+      "program": "node",
+      "args": ["--test", "apps/super-admin-suit/tests/unit/auth.test.mjs"],
+      "capabilities": ["security-review"],
+      "required": true
+    }
+  ],
+  "legacy_plan_mappings": {
+    "Database/RLS tests for outsider, disabled admin and enabled admin.": {
+      "kind": "command",
+      "version": 2,
+      "command": "super-admin-database-tests",
+      "required": true
+    },
+    "Auth/session unit tests and browser denial/success coverage.": {
+      "kind": "group",
+      "version": 2,
+      "commands": ["super-admin-auth-unit", "super-admin-auth-browser"]
+    },
+    "Inspect JWT/metadata authorization paths for user-editable claims.": {
+      "kind": "command",
+      "version": 2,
+      "command": "super-admin-claim-authority-review",
+      "required": true,
+      "requires": ["security-review"]
+    }
+  }
+}

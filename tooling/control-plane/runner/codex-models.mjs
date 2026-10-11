@@ -2,6 +2,7 @@
 
 import { spawn } from 'node:child_process'
 import readline from 'node:readline'
+import { codexChildEnvironment } from './codex-child-environment.mjs'
 
 const timeoutMs = 15_000
 
@@ -12,7 +13,7 @@ const child = spawn(
     '--stdio',
   ],
   {
-    env: process.env,
+    env: codexChildEnvironment(process.env, { codexHome: process.env.CODEX_HOME }),
     stdio: [
       'pipe',
       'pipe',

@@ -21,6 +21,16 @@ export function resumeSchedule(payload, now = new Date()) {
     }
   }
 
+  if (payload?.status === 'reconcile') {
+    return {
+      outcome: 'wait',
+      automatic_resume: false,
+      wake_at: null,
+      reason: recovery?.reason ?? payload?.reason ?? 'supervisor_reconcile',
+      lease_active: leaseActive,
+    }
+  }
+
   if (payload?.status !== 'wait') return null
   return {
     outcome: 'wait',

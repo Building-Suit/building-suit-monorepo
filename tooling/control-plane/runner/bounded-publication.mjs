@@ -1,0 +1,89 @@
+import {queueDraftSourcePaths} from './draft-source-policy.mjs'
+import {pathInScope,validPublicationPath,protectedPublicationPath,verifiedProtectedPublicationPaths} from './publication-preflight.mjs'
+// These receipts are supplied by PostgreSQL, not worker-generated task metadata.
+export function ordinaryRunAuthority(authority, taskId) {
+  return authority?.authorized === true && authority.mode === 'ordinary-draft' &&
+    authority.task_id === taskId && Boolean(authority.run_id) && Boolean(authority.contract_fingerprint)
+}
+export function supersededPublicationHold(snapshot) {
+  return snapshot.packet?.task?.status === 'passed' &&
+    snapshot.recovery?.next_action === 'wait-operator' &&
+    (snapshot.recovery?.error_code === 'publication_operator_hold' || supersededRegisteredScopeGate(snapshot) || supersededExactProtectedHold(snapshot) || supersededQueueSourceHold(snapshot)) &&
+    ordinaryRunAuthority(snapshot.run_publication_authority, snapshot.packet.task.task_id)
+}
+export function supersededExactProtectedHold(snapshot) {
+ if(snapshot.recovery?.error_code!=='publication_protected_path_operator_wait')return false
+ const execution=snapshot.executions?.at(-1)
+ const v=snapshot.verification_runs?.filter(v=>Number(v.execution_id)===Number(execution?.execution_id)).at(-1)
+ if(v?.status!=='passed')return false
+ const verification={...v,state_fingerprint:v.metadata?.verified_state?.fingerprint,verified_state:v.metadata?.verified_state}
+ const packet=snapshot.packet
+ const verified=verifiedProtectedPublicationPaths({grant:snapshot.protected_publication_authority,task:packet?.task,execution,verification})
+ const failure=snapshot.failures?.find(f=>Number(f.failure_id)===Number(snapshot.recovery.failure_id))
+ const paths=failure?.metadata?.protected_paths
+ return paths?.length>0 && Number(failure.execution_id)===Number(execution?.execution_id) &&
+  failure.error_code==='publication_protected_path_operator_wait' && paths.every(file=>verified.includes(file) &&
+   pathInScope(file,packet?.publication_boundaries?.task_paths??[]) && pathInScope(file,packet?.publication_boundaries?.project_paths??[]))
+}
+// Reconcile a legacy exact-file gate only when every recorded waiting file is
+// already inside this task's registered, ordinary scope under a current DB grant.
+export function supersededRegisteredScopeGate(snapshot){
+ if(snapshot.recovery?.error_code!=='publication_scope_requires_operator')return false
+ const failure=snapshot.failures?.find(f=>Number(f.failure_id)===Number(snapshot.recovery.failure_id))
+ const proof=failure?.metadata?.classification,boundaries=snapshot.packet?.publication_boundaries
+ const execution=snapshot.executions?.at(-1),v=snapshot.verification_runs?.filter(v=>Number(v.execution_id)===Number(execution?.execution_id)).at(-1)
+ const verified=verifiedProtectedPublicationPaths({grant:snapshot.protected_publication_authority,task:snapshot.packet?.task,execution,verification:v?{...v,state_fingerprint:v.metadata?.verified_state?.fingerprint,verified_state:v.metadata?.verified_state}:null})
+ if(failure?.error_code==='publication_scope_safety_stop' && proof?.blocked?.length>0 && (proof.waiting??[]).length===0 && proof.blocked.every(file=>verified.includes(file)&&pathInScope(file,boundaries?.task_paths??[])&&pathInScope(file,boundaries?.project_paths??[]))) return true
+ return failure?.error_code==='publication_scope_operator_wait' && proof?.waiting?.length>0 && proof.blocked?.length===0
+  && proof.waiting.every(file=>validPublicationPath(file)&&!protectedPublicationPath(file)
+   && pathInScope(file,boundaries?.task_paths??[])&&pathInScope(file,boundaries?.project_paths??[]))
+}
+// Repair only the historical nested-publisher classification bug. Re-enter
+// publication, which must enforce the current scope, verification and gates;
+// never treat a typed operator wait as publication authorization.
+export function publicationStopNeedsReclassification(snapshot) {
+  const recovery = snapshot.recovery
+  const execution = [...(snapshot.executions ?? [])].sort((a, b) => a.attempt - b.attempt).at(-1)
+  const verification = [...(snapshot.verification_runs ?? [])]
+    .filter(v => Number(v.execution_id) === Number(execution?.execution_id))
+    .sort((a, b) => a.verification_run_id - b.verification_run_id).at(-1)
+  // A previously rejected eligibility guard is superseded only by current DB
+  // proof of the exact latest execution and a current ordinary run grant. The
+  // publisher still performs every protected-path/scope/verification preflight.
+  if(snapshot.packet?.task?.status==='passed' && verification?.status==='passed' && snapshot.publication_execution_eligible===true
+    && ordinaryRunAuthority(snapshot.run_publication_authority,snapshot.packet.task.task_id)
+    && recovery?.next_action==='safety-stop' && recovery.metadata?.child_command==='task-publish'
+    && /^Latest execution lacks successful implementation or exact guarded reacceptance\.?$/.test(recovery.error_code??''))return true
+  const failure = snapshot.failures?.find(f => Number(f.failure_id) === Number(recovery?.failure_id))
+  return snapshot.packet?.task?.status === 'passed' && execution?.status === 'succeeded' && verification?.status === 'passed' &&
+    recovery?.next_action === 'safety-stop' && recovery.failure_class === 'safety-stop' &&
+    recovery.error_code === 'publication_protected_path_operator_wait' && recovery.metadata?.child_command === 'task-publish' &&
+    Number(recovery.execution_id) === Number(execution.execution_id) &&
+    failure?.resolved_at == null && failure?.stage === 'publication' &&
+    Number(failure.execution_id) === Number(execution.execution_id) && failure.error_code === recovery.error_code &&
+    failure.failure_class === 'operator-wait' && failure.recovery_action === 'wait-operator' &&
+    failure.metadata?.classification?.failure_class === 'operator-wait' && failure.metadata.classification.recovery_action === 'wait-operator'
+}
+export function operationHasAuthoritativeSuccess(snapshot, op) {
+  const task = snapshot.packet?.task
+  if (task?.status === 'complete') return true
+  const execution = snapshot.executions?.find(e => Number(e.execution_id) === Number(op.execution_id))
+  if(op.action==='task-reaccept') return task?.status==='passed' && snapshot.verification_runs?.filter(v=>Number(v.execution_id)===Number(op.execution_id) && v.status==='passed' && v.metadata?.verifier_only_reacceptance===true).length>0
+  if (!execution || execution.status !== 'succeeded') return false
+  if (['task-run','task-retry'].includes(op.action)) {
+    return ['passed','verification'].includes(task?.status) ||
+      op.descriptor?.previous_execution_id != null && Number(op.descriptor.previous_execution_id) !== Number(execution.execution_id)
+  }
+  if (op.action === 'task-prepare') return task?.status === 'passed'
+  return op.action === 'task-verify' && task?.status === 'passed' &&
+    snapshot.verification_runs?.filter(v => Number(v.execution_id) === Number(execution.execution_id)).at(-1)?.status === 'passed'
+}
+
+export function supersededQueueSourceHold(snapshot) {
+ if(!['publication_protected_path_operator_wait','publication_scope_requires_operator','publication_security_sensitive_operator_wait'].includes(snapshot.recovery?.error_code))return false
+ const e=snapshot.executions?.at(-1),v=snapshot.verification_runs?.filter(v=>Number(v.execution_id)===Number(e?.execution_id)).at(-1),b=snapshot.packet?.publication_boundaries
+ const paths=queueDraftSourcePaths({authority:snapshot.run_publication_authority,task:snapshot.packet?.task,execution:e,verification:v?{...v,state_fingerprint:v.metadata?.verified_state?.fingerprint,verified_state:v.metadata?.verified_state}:null,taskPaths:b?.task_paths,projectPaths:b?.project_paths})
+ const f=snapshot.failures?.find(f=>Number(f.failure_id)===Number(snapshot.recovery.failure_id))
+ const waiting=f?.metadata?.protected_paths??f?.metadata?.classification?.waiting??f?.metadata?.classification?.blocked
+ return Number(f?.execution_id)===Number(e?.execution_id)&&waiting?.length>0&&waiting.every(p=>paths.includes(p))
+}

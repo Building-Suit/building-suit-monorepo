@@ -53,7 +53,7 @@ watch(currentId, () => { adjustmentOpen.value = false; countOpen.value = false; 
 
 const text = computed(() => ar.value ? {
   loading: 'جارٍ التحميل…', title: 'المخزون', subtitle: 'الجرد الفعلي، وتنبيهات إعادة الطلب، وسجل تصحيحات FIFO.', noShop: 'أنشئ متجرًا أولًا من لوحة التحكم.', dashboard: 'لوحة التحكم',
-  denied: 'ليست لديك صلاحية عرض المخزون.', plan: 'تعديلات المخزون تتطلب خطة Pro نشطة.', loadError: 'تعذّر تحميل المخزون.', retry: 'إعادة المحاولة', all: 'كل المخزون', lowOnly: 'منخفض المخزون',
+  denied: 'ليست لديك صلاحية عرض المخزون.', plan: 'تعديلات المخزون تتطلب اشتراكًا نشطًا يتيح إدارة المخزون.', loadError: 'تعذّر تحميل المخزون.', retry: 'إعادة المحاولة', all: 'كل المخزون', lowOnly: 'منخفض المخزون',
   totalValue: 'إجمالي قيمة المخزون', lowCount: 'منتجات منخفضة', product: 'المنتج', onHand: 'المتاح', threshold: 'حد إعادة الطلب', value: 'القيمة', actions: 'الإجراءات', low: 'منخفض', archived: 'مؤرشف',
   receive: 'استلام يدوي', writeoff: 'شطب', count: 'تسجيل جرد', history: 'السجل', setThreshold: 'تعديل الحد', noProducts: 'لا توجد منتجات مطابقة.', products: 'المنتجات', quantity: 'الكمية', unitCost: 'تكلفة الوحدة',
   reason: 'السبب', reference: 'المرجع', countedAt: 'وقت الجرد', expected: 'المتوقع', counted: 'المعدود', variance: 'الفرق', positiveCost: 'تكلفة وحدة الفرق الموجب', save: 'حفظ', saving: 'جاري الحفظ...', close: 'إغلاق',
@@ -63,7 +63,7 @@ const text = computed(() => ar.value ? {
   sources: { physical_count: 'جرد فعلي', manual_receipt: 'استلام يدوي', manual_writeoff: 'شطب يدوي', purchase_return: 'مرتجع شراء', sale: 'بيع', purchase_receipt: 'استلام شراء', adjustment: 'تصحيح', in: 'إضافة', out: 'صرف' },
 } : {
   loading: 'Loading…', title: 'Inventory', subtitle: 'Physical counts, reorder alerts, and traceable FIFO corrections.', noShop: 'Create a shop from the dashboard first.', dashboard: 'Dashboard',
-  denied: 'You do not have permission to view inventory.', plan: 'Inventory changes require an active Pro plan.', loadError: 'Could not load inventory.', retry: 'Retry', all: 'All inventory', lowOnly: 'Low stock',
+  denied: 'You do not have permission to view inventory.', plan: 'Inventory changes require an active subscription with inventory access.', loadError: 'Could not load inventory.', retry: 'Retry', all: 'All inventory', lowOnly: 'Low stock',
   totalValue: 'Inventory valuation', lowCount: 'Low-stock products', product: 'Product', onHand: 'On hand', threshold: 'Reorder threshold', value: 'Value', actions: 'Actions', low: 'Low stock', archived: 'Archived',
   receive: 'Manual receipt', writeoff: 'Write off', count: 'Record count', history: 'History', setThreshold: 'Set threshold', noProducts: 'No matching products.', products: 'Products', quantity: 'Quantity', unitCost: 'Unit cost',
   reason: 'Reason', reference: 'Reference', countedAt: 'Counted at', expected: 'Expected', counted: 'Counted', variance: 'Variance', positiveCost: 'Positive variance unit cost', save: 'Save', saving: 'Saving...', close: 'Close',

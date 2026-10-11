@@ -1,9 +1,16 @@
 <script setup lang="ts">
 const user = useSupabaseUser()
+const route = useRoute()
 const { currentId, currentLocationId, loadShops } = useShop()
 const confirmation = useConfirmation()
 const { toasts } = useToasts()
 const contextKey = computed(() => `${user.value?.id ?? 'anonymous'}:${currentId.value ?? 'none'}:${currentLocationId.value ?? 'none'}`)
+// OTP verification establishes a session before provisioning finishes. Keep
+// that signup instance alive so its retry/error and identity checks can finish.
+// Operational pages still remount whenever their account or tenant changes.
+const signupActive = computed(() => route.path === '/auth/signup')
+const layoutKey = computed(() => signupActive.value ? 'signup' : user.value?.id ?? 'anonymous')
+const pageKey = computed(() => signupActive.value ? 'signup' : contextKey.value)
 
 watch(() => user.value?.id, () => {
   clearNuxtData(key => key.startsWith('shop-data:') || key.startsWith('platform-admin:'))
@@ -31,6 +38,4 @@ useHead(() => ({
 }));
 </script>
 
-<template>
-  <BsAppRoot :layout-key="user?.id ?? 'anonymous'" :page-key="contextKey"/>
-</template>
+<template><BsAppRoot :layout-key="layoutKey" :page-key="pageKey" /></template>

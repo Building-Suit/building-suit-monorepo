@@ -1,6 +1,6 @@
 # Building Suit monorepo
 
-Ledger Suit, Shop Suit, Inventory Suit and the Building Suit documentation app share one pnpm/Turbo workspace, Nuxt layer, Building design tokens, Atomic Design components and interaction controllers. Original source repositories remain untouched.
+Ledger Suit, Shop Suit, Inventory Suit, Super Admin Suit and the Building Suit documentation app share one pnpm/Turbo workspace, Nuxt layer, Building design tokens, Atomic Design components and interaction controllers. Original source repositories remain untouched.
 
 Each product owns an independent Supabase production/staging pair in its own organization. Business tables and API objects use `public`. Auth identities and sessions are separate; Single Auth is deferred. Ledger and Shop's four hosted project refs are verified; Inventory's hosted pair remains intentionally unprovisioned. Shop's Production schema and scoped data copy are verified; its Staging schema is initialized and tested. SMTP, application deployment and final cutover remain pending. See [manual Supabase setup](docs/shared/supabase-manual-setup.md), the [Shop transfer record](docs/migration/shop-dedicated-projects.md) and [status](docs/work-packages/STATUS.md).
 
@@ -14,13 +14,16 @@ pnpm run setup
 cp apps/ledger-suit/.env.example apps/ledger-suit/.env
 cp apps/shop-suit/.env.example apps/shop-suit/.env
 cp apps/inventory-suit/.env.example apps/inventory-suit/.env
+cp apps/super-admin-suit/.env.example apps/super-admin-suit/.env
 pnpm db ledger-suit start
 pnpm db shop-suit start
 pnpm db inventory-suit start
+pnpm db super-admin-suit start
 pnpm dev:ledger  # http://localhost:3000
 pnpm dev:shop    # http://localhost:3001
 pnpm dev:docs    # http://localhost:3002
 pnpm dev:inventory # http://localhost:3003
+pnpm dev:super-admin # http://localhost:3004
 ```
 
 The root `dev:*` commands select the active worktree with the newest changes relevant to the requested app or shared packages. They print the selected branch, path and commit before starting Nuxt. Newer uncommitted edits count; equal source activity prefers the deeper stack. Merged/closed PRs, detached and prunable worktrees are excluded. With no relevant active worktree, the original (primary) checkout is served as it stands, without switching or pulling its branch.
@@ -31,6 +34,7 @@ pnpm dev:shop --dry-run        # show selection and launch arguments
 pnpm dev:ledger --current      # serve the checkout where this command runs
 pnpm dev:shop --worktree codex/shop-suit/my-feature
 pnpm dev:inventory --current
+pnpm dev:super-admin --current
 pnpm dev:docs -- --port 3102    # forward Nuxt options
 ```
 
@@ -43,6 +47,7 @@ Fill each ignored app `.env` with its local API URL and browser-safe publishable
 | Ledger | `apps/ledger-suit/supabase` | 60321 | 60322 | 60324 |
 | Shop | `apps/shop-suit/supabase` | 61321 | 61322 | 61324 |
 | Inventory | `apps/inventory-suit/supabase` | 62321 | 62322 | 62324 |
+| Super Admin | `apps/super-admin-suit/supabase` | 64321 | 64322 | 64324 |
 
 Verified production/staging refs are recorded in `docs/architecture/environments.json`. Account membership roles, including the requested CEO Owner arrangement, still require verification against Supabase's Free-project quota rules in [manual setup](docs/shared/supabase-manual-setup.md). No paid resources or hosted changes are created by workspace setup.
 
@@ -55,7 +60,7 @@ Verified production/staging refs are recorded in `docs/architecture/environments
 | `pnpm automation <resource> <action>` | Operate the project-independent Automation Suit control plane |
 | `pnpm automation:n8n:export` | Export and normalize local n8n workflows through supported interfaces |
 | `pnpm automation:resilience` | Run the deterministic control-plane fault-injection and crash-resume acceptance gate |
-| `pnpm build` | Build all four apps |
+| `pnpm build` | Build all workspace apps |
 | `pnpm typecheck` | Check apps and imported shared TypeScript |
 | `pnpm lint` | Lint apps, shared components and tooling |
 | `pnpm check` | Check tokens, package boundaries and preserved historical SQL |
@@ -73,7 +78,7 @@ Set `BUILDING_TEST_BACKEND=1` when running browser tests to include Shop signup,
 
 ## Navigation
 
-- `apps/ledger-suit`, `apps/shop-suit`, `apps/inventory-suit`: product pages, domain logic, content and app-owned Supabase projects.
+- `apps/ledger-suit`, `apps/shop-suit`, `apps/inventory-suit`, `apps/super-admin-suit`: product pages, domain logic, content and app-owned Supabase projects.
 - `apps/building-suit-docs`: searchable documentation and `/components` catalogue; original documents under `content/building-suit`, prototype evidence under `reference`.
 - `packages/ui`, `packages/ux`: atomic components/templates and shared record/dialog/wizard/confirmation behavior.
 - `packages/design-tokens`, `packages/brand`, `packages/i18n`: canonical design resources and common UI messages.

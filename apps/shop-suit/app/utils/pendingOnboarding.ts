@@ -21,6 +21,7 @@ export interface PendingOnboardingDraft {
   expiresAt: number
   resendAt: number
   form: PendingOnboardingForm
+  recovery?: boolean
 }
 
 export type PendingOnboardingRestore =
@@ -38,7 +39,7 @@ function readForm(value: unknown): PendingOnboardingForm | null {
   if (!BUSINESS_MODES.includes(form.businessMode as BusinessMode)) return null
   return {
     displayName: String(form.displayName),
-    email: String(form.email),
+    email: normalizeSignupEmail(String(form.email)),
     shopName: String(form.shopName),
     businessMode: form.businessMode as BusinessMode,
     mainLocationName: typeof form.mainLocationName === 'string'
@@ -63,7 +64,7 @@ export function createPendingOnboardingDraft(
     resendAt: timers.resendAt,
     form: {
       displayName: form.displayName,
-      email: form.email,
+      email: normalizeSignupEmail(form.email),
       shopName: form.shopName,
       businessMode: form.businessMode,
       mainLocationName: form.mainLocationName,
@@ -94,6 +95,7 @@ export function restorePendingOnboarding(raw: string | null, now = Date.now()): 
       expiresAt: value.expiresAt,
       resendAt: value.resendAt,
       form,
+      recovery: value.recovery === true,
     }
     return { status: draft.expiresAt <= now ? 'expired' : 'active', draft }
   }
@@ -122,4 +124,15 @@ export function classifyOtpFailure(error: unknown, locallyExpired: boolean): 'ex
   // otp_expired code. The browser timer is the reliable distinction here.
   if ((code.includes('expired') || message.includes('expired')) && !message.includes('invalid')) return 'expired'
   return 'invalid'
+}
+
+/** One canonical address for Auth requests and refresh recovery. */
+export function normalizeSignupEmail(email: string): string {
+  return email.trim().toLowerCase()
+}
+
+/** GoTrue can conceal a confirmed duplicate behind an empty identity list. */
+export function signupNeedsRecovery(user: { identities?: unknown } | null, error: unknown): boolean {
+  return isExistingIdentityError(error)
+    || (Array.isArray(user?.identities) && user.identities.length === 0)
 }

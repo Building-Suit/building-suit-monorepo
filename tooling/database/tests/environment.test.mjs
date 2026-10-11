@@ -7,6 +7,7 @@ function fixture() {
       'ledger-suit': { organizationId: 'ledger-org', production: { projectRef: 'a'.repeat(20) }, staging: { projectRef: 'b'.repeat(20) } },
       'shop-suit': { organizationId: 'shop-org', production: { projectRef: 'c'.repeat(20), appUrl: 'https://shop.example.com' }, staging: { projectRef: 'd'.repeat(20) } },
       'inventory-suit': { organizationId: '', production: { projectRef: '', appUrl: '' }, staging: { projectRef: '', appUrl: '' } },
+      'super-admin-suit': { organizationId: '', production: { projectRef: '', appUrl: '' }, staging: { projectRef: '', appUrl: '' } },
     },
     sources: { 'shop-suit': { projectRef: 'e'.repeat(20) } },
   }
@@ -61,4 +62,10 @@ test('keeps an unprovisioned Inventory product distinct and refuses hosted prefl
   const state = fixture()
   assert.equal(state.registry.products['inventory-suit'].production.projectRef, '')
   assert.throws(() => validateEnvironment(state.registry, 'inventory-suit', 'production', {}, {}), /verified project ref/)
+})
+
+test('keeps Super Admin provider identifiers absent and refuses hosted preflight', () => {
+  const state = fixture()
+  assert.equal(state.registry.products['super-admin-suit'].production.projectRef, '')
+  assert.throws(() => validateEnvironment(state.registry, 'super-admin-suit', 'production', {}, {}), /verified project ref/)
 })

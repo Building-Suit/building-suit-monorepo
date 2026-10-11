@@ -49,6 +49,7 @@ pnpm automation task reverify V2-IMP-013 --reason "local database recovered"
 pnpm automation task retry V2-IMP-013
 pnpm automation task resume V2-IMP-013
 pnpm automation task publish V2-IMP-013
+pnpm automation task authorize-publication V2-IMP-013 --path packages/ui/src/Component.vue
 pnpm automation task reparent V2-IMP-013 --to-current-parent --dry-run
 pnpm automation task reparent V2-IMP-013 --to-current-parent
 pnpm automation task cancel V2-IMP-013 --reason "superseded"
@@ -75,7 +76,9 @@ The metadata contract is `parent_satisfaction: { source_task_id, verification_ru
 
 Before every initial or retry implementation attempt, the supervisor runs the same deterministic readiness gate exposed by `task preflight`; no execution row is created and Codex is not invoked until that gate passes. A stable task resume identity and an atomic database lease prevent concurrent supervisors from duplicating implementation, verification, commits, or draft pull requests. The supervisor resumes at the first incomplete stage, records its heartbeat, classification, recovery action, and next wake condition, and stops explicitly for external, decision, operator, or safety conditions. Retry and repair decisions use the resolved retry-policy budget.
 
-The execution preflight checks the expected control-database fingerprint, executable task state, hard dependencies, blocking decisions, workstream serialization, retry budget/profile, task contract and publication scope, required executables/dependencies/environment, and the fetched integration/parent/PR/worktree lineage. Configure the non-secret expected fingerprint as `AUTOMATION_CONTROL_DB_FINGERPRINT` (or as `environment_routing.control_database_fingerprint` in the project registry). The reported fingerprint is the SHA-256 digest of the live database identity fields returned by `task preflight`; configure an expected value only after independently verifying that identity. A mismatch safety-stops. Recoverable repository/runtime conditions use reconcile actions, unresolved decisions and external prerequisites use explicit waits, and unchanged results reuse one durable recovery event through the preflight fingerprint.
+The execution preflight checks the expected control-database fingerprint, executable task state, hard dependencies, blocking decisions, workstream serialization, retry budget/profile, task contract and publication scope, required executables/dependencies/environment, and the fetched integration/parent/PR/worktree lineage. Its result reports the authoritative task, source, workstream, project, and effective publication boundaries. Workstream scope is always available to its task; cross-workstream source scope requires an explicit task `allowed_paths` grant inside the project boundary before the first implementation attempt. Source paths and files later modified by Codex are evidence, not authority. Configure the non-secret expected fingerprint as `AUTOMATION_CONTROL_DB_FINGERPRINT` (or as `environment_routing.control_database_fingerprint` in the project registry). The reported fingerprint is the SHA-256 digest of the live database identity fields returned by `task preflight`; configure an expected value only after independently verifying that identity. A mismatch safety-stops. Recoverable repository/runtime conditions use reconcile actions, unresolved decisions and external prerequisites use explicit waits, and unchanged results reuse one durable recovery event through the preflight fingerprint.
+
+`task create` accepts top-level `allowed_paths`; it validates them against the project publication boundary and persists them as authoritative task scope. If publication later reaches `publication_scope_operator_wait`, `task authorize-publication` accepts repeated `--path` arguments only when they exactly equal the current waiting file set. The command rejects globs, protected areas, and paths outside the project boundary; merges the grant into existing task scope; audits old/new scope; resolves only the matching failure and recovery condition; and resumes at publication. Replays are idempotent. A successful implementation execution and its passed verification run are retained—authorization does not create another Codex attempt or reverify changed repository state.
 
 The existing `run`, `verify`, `retry`, `publish`, `resume`, and diagnostic commands remain lower-level compatibility primitives. `resume` retains its prior engine behavior; new automation should invoke `supervise`. `reverify` creates a new verification run on the same succeeded execution. `reparent` refuses published branches, snapshots all task changes, moves the local task branch to the live parent, restores the snapshot with three-way conflict detection, and records metadata only after success. A conflict is left for human review with the snapshot path reported.
 
@@ -150,7 +153,7 @@ pnpm automation:resilience
 
 The exporter uses the n8n public API when `N8N_API_URL` and `N8N_API_KEY` are configured. Otherwise it uses the supported `n8n export:workflow` CLI inside `N8N_CONTAINER_NAME` (default `n8n`). It writes normalized JSON and a human-readable graph under ignored `.local/automation/n8n/`. It never reads or mutates n8n's internal database and never imports a workflow.
 
-`automation:resilience` is the deterministic CP-RES-009 acceptance gate. It exercises interruption boundaries across implementation, verification and publication; external waits and lease recovery; focused versus milestone verification; parent satisfaction and no-change handling; publication scope; continuous-run stops; and repeated supervisor, watcher and publisher reconciliation. It also validates the generated BS-10, BS-20 and BS-21 replacements, their manifest digests and the immutable sanitized pre-cutover export digest. The command runs in check mode, reads only repository fixtures, makes no AI calls, and never contacts or mutates live n8n. Machine-readable and human-readable evidence live in `tooling/control-plane/resilience/reports/`; `cutover_ready` is true only when every mandatory scenario passes. Live activation remains a separate explicitly authorized operation.
+`automation:resilience` is the deterministic control-plane acceptance gate established by CP-RES-009 and extended by CP-RES-010. It exercises interruption boundaries across implementation, verification and publication; external waits and lease recovery; focused versus milestone verification; parent satisfaction and no-change handling; pre-implementation publication authority; exact-path authorization/resume; continuous-run stops; and repeated supervisor, watcher and publisher reconciliation. It also validates the generated BS-10, BS-20 and BS-21 replacements, their manifest digests and the immutable sanitized pre-cutover export digest. The command runs in check mode, reads only repository fixtures, makes no AI calls, and never contacts or mutates live n8n. Machine-readable and human-readable evidence live in `tooling/control-plane/resilience/reports/`; `cutover_ready` is true only when every mandatory scenario passes. Live activation remains a separate explicitly authorized operation.
 
 ## Dashboard
 
@@ -166,3 +169,221 @@ psql "$DISPOSABLE_CONTROL_DATABASE_URL" -f tooling/control-plane/tests/recovery-
 ```
 
 The transactions roll back after proving the existing lifecycle plus recovery taxonomy, create/update/resume behavior, idempotency, audit history and compatibility with existing evidence. Never point these fixtures at a hosted product database.
+
+### Audited runtime authority and immutable installation
+
+The remediation separates observer, executor, verifier, operator, migration-owner
+and release-installer capabilities. Runtime logins cannot directly rewrite
+control history, grant authority, change policies or mint trusted verification.
+The verifier records receipt version 2 against the exact task, run, execution,
+verification generation, registered command/version, source fingerprint and
+artifact bytes. Unknown results require bounded investigation; they do not
+consume a product retry. A later infrastructure observation does not erase an
+already reviewed historical product charge.
+
+BS-22 uses n8n's authenticated form trigger (2.6). Its signed-in actor is obtained
+from the trigger's trusted user output, then sent through BS-23's dedicated
+operator SSH capability. Ordinary SSH can read gates but cannot resolve them.
+Offers bind their subject generation and expose typed approval, rejection and
+revocation. Replays retain the original event. Consumed authority cannot be
+revoked. Genuine exhausted product budgets remain on the same existing run at
+an operator wait; a grant permits one review-profile execution without changing
+the configured maximum. Incident grants similarly permit one actual model turn.
+Process setup and authentication failures before a model turn consume no turn.
+
+An external acknowledgement requires a passing version-2 result from the latest
+verification and a registered external command in that run's frozen plan.
+Acknowledgement never collects, invents or waives evidence. Publication still
+validates the artifact bytes and source before consuming the acknowledgement.
+
+Whole-bound admission resolves every remaining task before attempt one. The
+categories are existing executable, task-owned output, external evidence and
+unresolved configuration. Task-owned tests have explicit file paths and executable
+registrations, and must actually exist and pass after implementation. Freezing a
+registered cross-workstream prerequisite preserves its identity; it does not
+complete or waive the dependency. Claiming still waits for actual completion.
+`remaining-plan-review.mjs` prepares a proposal only and performs no database or
+provider changes.
+
+Every runtime component pins the same content-addressed release through one
+`current` pointer. The business repository is resolved through
+`BS_CONTROL_REPOSITORY_ROOT`, independently of immutable executable source.
+Publisher PR validation passes the configured repository explicitly to
+`check-pr.mjs <number> --repository <owner/name>`. Activation uses a serialized
+compare-and-swap and complete readiness checks. Failure restores the pointer and
+services; a failed first activation removes its new pointer and calls the
+previous-service restoration callback.
+
+The Linux event relay requires `stdbuf` alongside `psql` so piped query output
+arrives immediately. Its observer connection listens for notifications and also
+reads the persisted unconsumed wake-event watermark every five seconds. An
+unchanged watermark makes no webhook or model call; missed notifications and
+restarts can wake BS-31 from persisted state. Only the lifecycle executor consumes
+events. The forced runner permits the exact `bs-agent recovery-watch` command;
+extra arguments and shell operators remain forbidden.
+The canonical BS-31 definition pins a stable webhook identity, registering
+`/webhook/building-suit-dot-wake` across regeneration and import.
+
+Schema adoption compares canonical and live object definitions, ownership,
+privileges, policies, constraints, triggers and role capabilities. The append-only
+baseline explicitly does not assert pre-ledger application order. Future control
+migrations are exact-checksum, environment-bound, serialized transactions. A
+published product migration file is never evidence of hosted application.
+
+Disposable behavioral acceptance is available through
+`node tooling/control-plane/tests/synthetic-runtime-e2e.mjs <absolute-evidence-directory>`.
+The harness uses its explicitly disposable control PostgreSQL container, local
+Git repositories and deterministic publication/model providers. It must not be
+pointed at a business database. Its fault flags exercise actual runtime operations,
+receipt loss, worker/publisher death, exact credit replay, trusted re-verification,
+operator authority and bounded investigation. `--n8n-restart` additionally checks
+persisted same-execution resumption on the isolated n8n fixture. The authenticated
+form proof under `tests/fixtures/` runs only inside that disposable n8n instance and
+keeps cookies and tokens out of its output. These fixtures do not authorize live
+activation, product deployment, merge or provider mutation.
+
+Initial CONTROL adoption uses `runner/control-adoption.mjs` inside one privileged,
+environment-bound transaction. It validates every migration byte against the
+immutable release, applies only the post-ledger-boundary migrations, compares
+complete canonical/live schema snapshots, and checks preserved business-history
+row counts and digests before recording provenance. A mismatch rolls back the
+entire adoption. Versions 001–059 are historical schema snapshots; versions
+060–091 are recorded as executed in this adoption transaction. Migration 090
+also removes pre-ledger default grants to ordinary roles so they cannot leak
+onto newly created functions, tables, or sequences. Default privileges are part
+of the schema fingerprint. ACL comparison preserves each permission's grant
+option and normalizes ordering and redundant owner privileges across PostgreSQL
+17 and 18.
+
+Migration 091 makes learned recovery evidence subject-specific: exact semantic
+health and an independently executed regression are always required. A cause
+that binds verification checks additionally requires registered v2 verifier
+evidence before catalog reuse. Pre-verification infrastructure failures do not
+require unrelated verifier evidence. Incident patches cannot replace the trusted
+verifier, release installer, operator or credential boundary modules.
+
+### Supervisor lifecycle protocol (`cp-lifecycle-v2`)
+
+BS-20 validates and starts the original bounded run, then delegates to
+`bs-agent run-supervise <run-id>`. The Supervisor owns claim, implementation,
+verification, repair, publication, exact completion credit and next acquisition.
+External `run-recover` calls enqueue the same existing run in the durable inbox;
+only recovery already inside the locked Supervisor can continue inline.
+`run-supervise` enters the existing locked lifecycle directly. A claimed wake
+never dispatches the external wake-only handoff. BS-20 has no
+independent acquire/credit loop. Verifier and Publisher retain their evidence,
+source and authority boundaries. BS-22 retains all human authorization.
+
+Migration 097 adds a private durable Supervisor inbox. Authoritative task,
+execution, verification, publication, credit, dependency and operator changes
+signal the affected existing run and frozen dependent runs. Claimed inbox
+versions are acknowledged with a token; an older claim cannot acknowledge a
+newer change. Expired claims can be reclaimed. The persistent Supervisor service
+polls compact pending identities every five seconds, independently of webhooks
+and Dot. In-flight operations use bounded wake times. Unknown, dependency and
+human waits require an authoritative change. Graceful service shutdown releases
+its claim; a crash leaves a bounded three-minute lease.
+
+Dot is an outside watchdog. Healthy handoffs never dispatch ordinary work from
+BS-31. Missing progress, dead receipts, inconsistent states and explicit incidents
+may request a durable Supervisor wake or use the existing bounded incident owner.
+Derived audits, recovery observations and classifications do not recursively
+trigger the normal engine. Existing audit deduplication, local browser cache,
+paginated history and compact database projections remain in use.
+
+Failed generations use the common trusted classification adapter and an immutable
+`lifecycle_failure_generations` record with a current pointer. UNKNOWN takes
+precedence over stale legacy product verdicts. Only execution-bound reviewed
+product evidence can authorize a product charge. Historical classifications are
+preserved. Verifier recovery is reserved against task, run, execution, attempt,
+source changes, plan, verifier implementation, configuration and failed-check
+semantics. Poll timestamps, audit versions and new verification row IDs do not
+grant another action. The original failed generation's input fingerprint survives
+later reviews. A same-execution verification requires repaired inputs and can
+run only once for that fingerprint; an unchanged result waits for actual repair.
+
+Migrations 102–103 converge recovery state when the current execution's newest trusted
+failed-check reviews replace its failure classification. An incompatible prior
+recovery generation is resolved in the audit history and preserved in the new
+state; incompatible incidents and jobs are superseded. The transition emits one
+durable Supervisor wake per evidence generation. A late legacy operation cannot
+restore an incompatible wait: the same trusted generation reasserts its recovery
+state without repeating the wake. Verifier infrastructure uses
+`reverify`, with unchanged inputs blocked until the prerequisite is repaired.
+For registered disposable local Supabase databases, a bounded, stable
+`.local/verification-inputs/database-preparation.json` receipt binds the prepared
+migration chain into verifier input identity. It does not change product source
+or product-attempt accounting. Active owners and genuine authority gates retain
+precedence.
+
+Migrations 099–101 add bounded adoption of legacy recovery generations. On runtime
+startup and before existing-run supervision, current failed tasks are revalidated
+against their execution, latest verification, trusted evidence digest, lifecycle
+protocol, runtime release and incident identity. Incompatible incidents/jobs are superseded through
+audited transitions; their history, model invocations and operator grants remain.
+Each distinct adoption context enqueues one durable Supervisor wake. Active
+workers, stopped/held runs and current publication gates are preserved.
+
+If a legacy failed verification has no registered trusted receipts, adoption
+classifies that evidence debt as VERIFIER_INFRA and permits exactly one
+same-execution verification to materialize receipts, with no product charge.
+This exception is reserved atomically once per execution/protocol and cannot
+repeat on 100 unchanged wakes. Subsequent verification uses the ordinary repaired
+input guard and authoritative classifier. A legacy retry audit cannot override a
+current canonical generation. New incidents bind their own identity and current
+verification/evidence generation, so stale health evidence cannot confer authority.
+Incident deduplication includes this lifecycle context; stamping a legacy incident
+with a current protocol cannot preserve it across canonical adoption. A failed
+legacy receipt cannot settle the new materialization runtime operation. Planned
+skipped placeholders never overwrite later executed checks with immutable receipts;
+conflicting executable outcomes fail closed.
+
+Optional `verification_config.evidence_inputs` declares up to 32 independent
+verification inputs under `.local/verification-inputs/`, relative to the task
+worktree. Each must remain within the worktree and at most 64 KiB. Their content
+hashes participate in recovery progress; missing files have an explicit null hash.
+This declaration grants no product/publication authority and does not replace
+executable whole-bound readiness or external evidence acknowledgement.
+
+Actual Codex completion usage is stored with bounded durable receipts (up to 32
+completion rows). Missing counts remain unavailable. Scheduler claims and healthy
+monitoring produce no model usage. Unchanged completed incident inputs stop
+before another model launch. Existing maximum-three/45-minute/two-no-progress
+budgets remain ceilings, and an exact BS-22 extension authorizes one actual turn.
+
+Automatic incident installation still requires a mandatory focused regression
+and the complete control suite with zero failures or skips. Configure
+`BS_CONTROL_INCIDENT_TEST_CONTAINER` with an explicitly disposable
+`cp-remediation-disposable-YYYYMMDD` container. The trusted host creates an isolated
+control test database and a container-only PostgreSQL driver; tests receive no
+product/provider credentials. It drops only its own temporary database afterward.
+Incident patches cannot alter this test-routing or lifecycle guard code. Runtime
+activation restarts the Supervisor alongside health and event services.
+
+Disposable proofs:
+
+- `synthetic-runtime-e2e.mjs <evidence-directory> --supervisor-only` runs two real
+  implementation/verifier/publication/credit tasks without Dot calls.
+- `--supervisor-service` runs the persistent inbox consumer with no webhook and
+  restarts it during the existing run.
+- `supervisor-outbox-smoke.sql` verifies 100 unchanged recovery reservations,
+  duplicate wake coalescing, claim races and a frozen cross-run dependency wake.
+
+These fixtures do not authorize a live installation, business deployment or
+human approval. Activation and business-run reconciliation require the current
+user's authorization, immutable source provenance and provider identity checks.
+
+Completed retry workers and task-bound shared package authority are covered in
+`control-plane-execution-owner-scope-recovery.md`. Supervisor can reconcile an
+already consumed retry receipt only when its successful worker, exact execution,
+run, attempt and unchanged source are bound and both receipt processes are dead.
+Implementation completion never supplies verifier PASS or completion credit.
+The independent migration 108 extends authenticated BS-22/BS-23 with one bounded
+shared-package scope offer; it does not activate migrations 104, 106 or 107.
+
+The optional schema-108 unattended queue restoration uses one authenticated
+bounded owner grant, existing trusted retry accounting and the separate Draft
+publisher. See [the operational cutover and acceptance](control-plane-unattended-queue-restoration.md)
+for migration 111, preserved existing policies, task-local parking, IDLE wake
+behavior and the explicit live cutover boundary. Migrations 109/110 are not
+prerequisites.
