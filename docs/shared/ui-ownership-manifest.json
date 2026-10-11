@@ -257,6 +257,16 @@
       ],
       "task": "BS-UI-ZN-PATTERNS-001",
       "migrationStatus": "shared-owner-available; product migration remains open"
+    },
+    {
+      "family": "multi-suit-administration",
+      "owner": "packages/ui",
+      "components": [
+        "BsAdministrationShell"
+      ],
+      "adapterBoundary": "App-supplied registry, context navigation, selection, translated labels and intent handlers; no product queries or authorization",
+      "task": "BS-SA-SHELL-001",
+      "migrationStatus": "shared-owner-available"
     }
   ]
 }
