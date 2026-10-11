@@ -60,3 +60,15 @@ Recipient-bound private registration and authenticated redemption are documented
 in [private offers](private-offers.md). Registration is the bounded
 `register_private_offer` member of `shop.billing.command`; approval continues
 through the existing billing command.
+
+## Secure private offers
+
+The existing billing capability additionally advertises
+`register_secure_private_offer` and `revoke_secure_private_offer`. The registration
+result includes a recipient-bound opaque redemption token, immutable entitlement
+snapshot and exact target binding/environment. Its signed result is private SAS
+owner data; do not log it or expose it in public catalogs. Revocation is an
+explicit signed, reasoned command, serialized with redemption. Existing legacy
+registration remains compatible and cannot bypass secure-offer token checks.
+No hosted migration, payment confirmation or deployment is authorized by
+source publication. See `private-offers.md` for the precise RPC contract.

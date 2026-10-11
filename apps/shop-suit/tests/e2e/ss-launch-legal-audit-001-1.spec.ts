@@ -5,7 +5,7 @@ import './public-legal.spec'
 for (const locale of ['en', 'ar'] as const) {
   test(`launch claims and policy navigation remain visible: ${locale}`, async ({ page, context }) => {
     await context.addCookies([{ name: 'building-suit-locale', value: locale, domain: '127.0.0.1', path: '/' }])
-    await page.route('http://127.0.0.1:61321/**', route => route.fulfill({ json: [] }))
+    await page.route(/^http:\/\/127\.0\.0\.1:(61321|46421)\//, route => route.fulfill({ json: [] }))
     await page.goto('/terms')
     const main = page.getByRole('main')
     await expect(main).toContainText(locale === 'en' ? 'Solo (1 or 2 members)' : 'Solo (عضو واحد أو عضوان)')

@@ -353,7 +353,7 @@
       "production_smoke_tested": "unverified",
       "implementation_evidence": [
         "apps/shop-suit/app/pages/team.vue",
-        "apps/shop-suit/supabase/migrations/20261007010000_launch_team_controls.sql"
+        "apps/shop-suit/supabase/migrations/20261011120000_launch_team_controls.sql"
       ]
     },
     {
@@ -387,7 +387,7 @@
       "production_smoke_tested": "unverified",
       "implementation_evidence": [
         "apps/shop-suit/docs/SS-LAUNCH-SUPPORT-001.md",
-        "apps/shop-suit/supabase/migrations/20261008160000_support_notification_delivery.sql"
+        "apps/shop-suit/supabase/migrations/20261011120200_support_notification_delivery.sql"
       ]
     },
     {

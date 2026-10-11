@@ -31,7 +31,7 @@ test('commercial and team claims trace to current Shop terms and authorization',
   assert.match(solo, /max_members.*8/)
   assert.match(solo, /max_members.*16/)
   assert.match(solo, /members when 1/)
-  const team = await read('supabase/migrations/20261007010000_launch_team_controls.sql')
+  const team = await read('supabase/migrations/20261011120000_launch_team_controls.sql')
   assert.match(team, /not shop_private.has_permission/)
   assert.match(body(legalDocuments.terms.en), /Solo \(1 or 2 members\).*Team \(8 members\).*25 members/)
   assert.match(body(legalDocuments.terms.ar), /Solo \(عضو واحد أو عضوان\).*Team \(8 أعضاء\).*25 عضوًا/)

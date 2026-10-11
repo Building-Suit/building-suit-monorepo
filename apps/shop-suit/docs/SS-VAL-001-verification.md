@@ -52,9 +52,9 @@ for all rows; no local result promotes those statuses.
 |---|---|---|
 | SS-LAUNCH-R01 — Clean launch baseline and legacy commercial copy | [index.vue](../app/pages/inventory/index.vue), [index.vue](../app/pages/purchases/index.vue) | Blocked; see bound checks in matrix |
 | SS-LAUNCH-R02 — Safe existing-email signup handling | [signup.vue](../app/pages/auth/signup.vue) | Blocked; see bound checks in matrix |
-| SS-LAUNCH-R03 — Ledger-parity Shop team, roles and permissions | [team.vue](../app/pages/team.vue), [20261007010000_launch_team_controls.sql](../supabase/migrations/20261007010000_launch_team_controls.sql) | Blocked; see bound checks in matrix |
+| SS-LAUNCH-R03 — Ledger-parity Shop team, roles and permissions | [team.vue](../app/pages/team.vue), [20261011120000_launch_team_controls.sql](../supabase/migrations/20261011120000_launch_team_controls.sql) | Blocked; see bound checks in matrix |
 | SS-LAUNCH-R04 — Optional open-cashier-shift enforcement | [launch-cash-policy.md](../docs/readiness/launch-cash-policy.md) | Blocked; see bound checks in matrix |
-| SS-LAUNCH-R05 — Functional Contact Us email delivery | [SS-LAUNCH-SUPPORT-001.md](../docs/SS-LAUNCH-SUPPORT-001.md), [20261008160000_support_notification_delivery.sql](../supabase/migrations/20261008160000_support_notification_delivery.sql) | Blocked; see bound checks in matrix |
+| SS-LAUNCH-R05 — Functional Contact Us email delivery | [SS-LAUNCH-SUPPORT-001.md](../docs/SS-LAUNCH-SUPPORT-001.md), [20261011120200_support_notification_delivery.sql](../supabase/migrations/20261011120200_support_notification_delivery.sql) | Blocked; see bound checks in matrix |
 | SS-LAUNCH-R06 — Public canonical Shop branding | [nuxt.config.ts](../nuxt.config.ts), [ss-launch-brand-001-2.test.mjs](../tests/unit/ss-launch-brand-001-2.test.mjs) | Blocked; see bound checks in matrix |
 | SS-LAUNCH-R07 — Solo one-member and two-member variants | [SS-LAUNCH-SOLO-VARIANTS-001.md](../docs/tasks/SS-LAUNCH-SOLO-VARIANTS-001.md) | Blocked; see bound checks in matrix |
 | SS-LAUNCH-R08 — Product/service-aware sales messaging | [saleCopy.js](../app/utils/saleCopy.js) | Blocked; see bound checks in matrix |

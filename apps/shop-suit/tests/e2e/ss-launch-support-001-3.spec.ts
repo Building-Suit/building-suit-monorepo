@@ -16,7 +16,7 @@ for (const locale of ['en', 'ar'] as const) {
         let calls = 0
         let release: (() => void) | undefined
         let lastPayload: Record<string, unknown> = {}
-        await page.route('http://127.0.0.1:61321/**', async (route) => {
+        await page.route(/^http:\/\/127\.0\.0\.1:(61321|46421)\//, async (route) => {
           if (route.request().url().includes('/rpc/submit_support_request')) {
             calls++
             lastPayload = route.request().postDataJSON()
@@ -36,8 +36,8 @@ for (const locale of ['en', 'ar'] as const) {
         await expect(page.locator('html')).toHaveAttribute('data-theme', theme)
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
         const form = main.locator('form')
-        const field = main.getByLabel(labels.subject, { exact: true })
-        const bounds = await form.boundingBox()
+        const field = main.getByRole('textbox', { name: labels.subject, exact: true })
+        const bounds = await field.boundingBox()
         const surface = await main.locator('section').first().boundingBox()
         expect(bounds).not.toBeNull()
         expect(surface).not.toBeNull()
@@ -51,8 +51,8 @@ for (const locale of ['en', 'ar'] as const) {
         await expect(main.getByRole('alert')).toContainText(labels.validation)
         expect(calls).toBe(0)
         await field.fill(locale === 'ar' ? 'طلب دعم تجريبي طويل' : 'Support request with a longer subject')
-        await main.getByLabel(labels.message, { exact: true }).fill('Synthetic support message. رسالة دعم تجريبية.\n'.repeat(20))
-        await main.getByLabel(labels.email, { exact: true }).fill('support-e2e@example.test')
+        await main.getByRole('textbox', { name: labels.message, exact: true }).fill('Synthetic support message. رسالة دعم تجريبية.\n'.repeat(20))
+        await main.getByRole('textbox', { name: labels.email, exact: true }).fill('support-e2e@example.test')
         await main.getByLabel(new RegExp(labels.consent)).check()
         outcome = 'pending'
         await submit.click()
@@ -67,7 +67,7 @@ for (const locale of ['en', 'ar'] as const) {
         await expect(field).toHaveValue('')
 
         await field.fill('Retry')
-        await main.getByLabel(labels.message, { exact: true }).fill('Synthetic retry')
+        await main.getByRole('textbox', { name: labels.message, exact: true }).fill('Synthetic retry')
         await main.getByLabel(new RegExp(labels.consent)).check()
         outcome = 'rate'
         await submit.click()

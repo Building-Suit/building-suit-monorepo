@@ -334,7 +334,7 @@ async function fastPay() {
     if (!fastPayAttempt.value) {
       const shopId = currentId.value
       const locationId = currentLocationId.value
-      if (!await confirmation.ask(t('sales.fastPayConfirm', { amount: money(previewTotal.value), method: t(`payments.methods.${paymentMethod.value}`) }))) return
+      if (!await confirmation.ask(saleCopy(t, 'sales.fastPayConfirm', lines.value, { amount: money(previewTotal.value), method: t(`payments.methods.${paymentMethod.value}`) }))) return
       if (currentId.value !== shopId || currentLocationId.value !== locationId || !editorOpen.value) return
       fastPayAttempt.value = {
         p_request_id: crypto.randomUUID(), p_shop_id: shopId,

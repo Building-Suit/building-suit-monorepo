@@ -11,7 +11,7 @@ const routes = [
 ] as const
 
 async function publicBackend(page: Page, support: { response?: 'success' | 'rate' | 'error'; calls: number }) {
-  await page.route('http://127.0.0.1:61321/**', async (route) => {
+  await page.route(/^http:\/\/127\.0\.0\.1:(61321|46421)\//, async (route) => {
     const url = new URL(route.request().url())
     if (url.pathname.endsWith('/rpc/submit_support_request')) {
       support.calls += 1

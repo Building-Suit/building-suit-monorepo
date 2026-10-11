@@ -15,6 +15,7 @@ export function parseWorktrees(output) {
 }
 
 export function stackKey(branch) {
+  if (branch === 'integration/shop-suit-release') return 'shop-suit'
   return branch?.match(/^codex\/([^/]+)\/.+/)?.[1] ?? null
 }
 

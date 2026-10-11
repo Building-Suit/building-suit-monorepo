@@ -3,9 +3,12 @@ import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 
+const container = process.env.BS_SHOP_DISPOSABLE_CONTAINER ?? 'supabase_db_building-suit-shop'
+if (container !== 'supabase_db_building-suit-shop' && !/^supabase_db_bs-[a-z0-9-]+$/.test(container)) throw new Error('An explicit disposable local Shop container is required')
+
 function sql(input, allowFailure = false, admin = false) {
   return new Promise((resolve, reject) => {
-    const child = spawn('docker', ['exec', '-i', 'supabase_db_building-suit-shop', 'psql', '-U', admin ? 'supabase_admin' : 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-At'])
+    const child = spawn('docker', ['exec', '-i', container, 'psql', '-U', admin ? 'supabase_admin' : 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-At'])
     let output = ''; let error = ''
     child.stdout.on('data', chunk => { output += chunk })
     child.stderr.on('data', chunk => { error += chunk })
@@ -23,7 +26,7 @@ try {
     ('${owner}','${owner}@team-race.invalid','x','authenticated','authenticated',now(),'{}','{}',now(),now()),
     ('${staff}','${staff}@team-race.invalid','x','authenticated','authenticated',now(),'{}','{}',now(),now());`)
   created = true
-  shop = last(await sql(asUser(owner, "select public.create_owner_shop('Team race fixture','solo','mixed'::public.business_mode);")))
+  shop = last(await sql(asUser(owner, "select public.create_owner_shop('Team race fixture','team','mixed'::public.business_mode);")))
   const location = last(await sql(`select id from public.shop_locations where shop_id='${shop}' and is_default;`))
   const invite = request => asUser(owner, `select public.invite_shop_staff('${request}','${shop}','${staff}@team-race.invalid','Race colleague','Receptionist','staff',array['${location}'::uuid])->>'invitationCode';`)
   const results = await Promise.all([sql(invite(randomUUID()), true), sql(invite(randomUUID()), true)])
