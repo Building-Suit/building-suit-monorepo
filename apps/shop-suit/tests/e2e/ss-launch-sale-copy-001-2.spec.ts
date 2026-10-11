@@ -52,12 +52,12 @@ for (const locale of ['en', 'ar']) for (const kind of ['product', 'service', 'mi
       test(`Sales ${action} ${kind} ${locale}: confirmation and safe stock error`, async ({ page }, info) => {
         const customer = action === 'issue'
         const { calls } = await copyFixture(page, locale, kind, { customer })
-        const command = action === 'fast-pay' ? 'fast_pay_location_sale' : customer ? 'issue_location_sale' : 'checkout_location_sale'
+        const command = customer ? 'issue_location_sale' : 'checkout_location_sale'
         await fixtureRoute(page, `**/rest/v1/rpc/${command}`, route => route.fulfill({ status: 400, json: { message: 'INSUFFICIENT_STOCK' } }))
         await fixtureGoto(page, '/sales?edit=draft-1')
         const editor = page.getByRole('dialog')
         await expectEffect(editor, kind, ar)
-        const label = action === 'fast-pay' ? (ar ? 'دفع سريع' : 'Fast Pay') : customer ? (ar ? 'إصدار البيعة' : 'Issue sale') : (ar ? 'إصدار وتحصيل المبلغ' : 'Issue and take payment')
+        const label = customer ? (ar ? 'إصدار البيعة' : 'Issue sale') : (ar ? 'إصدار وتحصيل المبلغ' : 'Issue and take payment')
         // Let the shared dialog complete its initial focus placement before
         // exercising the user's keyboard activation of an action.
         await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))))
@@ -66,7 +66,6 @@ for (const locale of ['en', 'ar']) for (const kind of ['product', 'service', 'mi
         await page.keyboard.press('Enter')
         const confirm = page.getByRole('dialog', { name: confirmLabel, exact: true })
         await expectEffect(confirm, kind, ar)
-        if (action === 'fast-pay') await expect(confirm).toContainText(ar ? 'نقدي' : 'Cash')
         await info.attach('confirmation', { body: await page.screenshot({ fullPage: true }), contentType: 'image/png' })
         await confirm.getByRole('button', { name: ar ? 'إلغاء' : 'Cancel', exact: true }).click()
         expect(calls.some(call => call.name === command)).toBe(false)

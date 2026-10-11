@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { shopCommandErrorMessage } from '~/utils/shopCommandErrorMessage'
 import { saleCopy } from '~/utils/saleCopy'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 
@@ -263,7 +264,7 @@ async function persistDraft() {
     return data
   }
   catch (error) {
-    editorError.value = readableError(error instanceof Error ? error.message : undefined)
+    editorError.value = readableError(shopCommandErrorMessage(error))
     return null
   }
   finally { saving.value = false }
@@ -311,7 +312,7 @@ async function issue() {
     pushToast({ tone: 'success', title: saleCopy(t, customerId.value ? 'sales.issuedSuccess' : 'sales.checkoutSuccess', lines.value) })
     await navigateTo(`/sales/${invoiceId}`)
   }
-  catch (error) { editorError.value = readableError(error instanceof Error ? error.message : undefined) }
+  catch (error) { editorError.value = readableError(shopCommandErrorMessage(error)) }
   finally { issuing.value = false }
 }
 

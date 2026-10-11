@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { shopCommandErrorMessage } from '~/utils/shopCommandErrorMessage'
 import { saleCopy } from '~/utils/saleCopy'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import { businessModeSupportsProducts, businessModeSupportsServices } from '~/utils/businessMode'
@@ -217,7 +218,7 @@ async function checkout() {
     const completedId = completed.data
     await Promise.all([refreshCatalog(), refreshContext(), refreshNuxtData('shop-data:sales'), refreshNuxtData('shop-data:inventory-overview'), refreshNuxtData('shop-data:recent-invoices')])
     pushToast({ tone: 'success', title: t('pos.success') }); resetSale(); await navigateTo({ path: `/sales/${completedId}/receipt`, query: { origin: 'pos' } })
-  } catch (error) { errorMessage.value = readableError(error instanceof Error ? error.message : String(error)) }
+  } catch (error) { errorMessage.value = readableError(shopCommandErrorMessage(error)) }
   finally { checkingOut.value = false }
 }
 

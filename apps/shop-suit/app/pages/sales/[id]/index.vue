@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { shopCommandErrorMessage } from '~/utils/shopCommandErrorMessage'
 import { saleCopy } from '~/utils/saleCopy'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import type { SaleReceiptSnapshot } from '~/types/receipt'
@@ -226,7 +227,7 @@ async function submitCorrection() {
     pushToast({ tone: 'success', title: t('saleCorrections.saved') })
   }
   catch (correctionError) {
-    actionError.value = readableError(correctionError instanceof Error ? correctionError.message : undefined)
+    actionError.value = readableError(shopCommandErrorMessage(correctionError))
   }
   finally { correctionPending.value = false }
 }
@@ -304,7 +305,7 @@ async function submitPayment() {
     await Promise.all([refresh(), refreshReceipt(), refreshNuxtData('shop-data:sales'), refreshNuxtData('shop-data:customer-statement')])
     pushToast({ tone: 'success', title: t('payments.saved') })
   }
-  catch (paymentError) { actionError.value = readableError(paymentError instanceof Error ? paymentError.message : undefined) }
+  catch (paymentError) { actionError.value = readableError(shopCommandErrorMessage(paymentError)) }
   finally { paymentPending.value = false }
 }
 
@@ -332,7 +333,7 @@ async function issue() {
     ])
     pushToast({ tone: 'success', title: saleCopy(t, 'sales.issuedSuccess', sale.value?.lines ?? []) })
   }
-  catch (issueError) { actionError.value = readableError(issueError instanceof Error ? issueError.message : undefined) }
+  catch (issueError) { actionError.value = readableError(shopCommandErrorMessage(issueError)) }
   finally { issuing.value = false }
 }
 

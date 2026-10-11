@@ -3,7 +3,7 @@
   "mode": "migration",
   "auditedReference": {
     "branch": "codex/shop-suit/release-integration-20261011",
-    "commit": "501d6a8"
+    "commit": "2bb6edb"
   },
   "scope": "apps/*-suit/app/**/*.vue",
   "owner": "packages/ui",
@@ -92773,7 +92773,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 236,
+        "line": 237,
         "column": 3
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -92785,7 +92785,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"space-y-4\"",
       "location": {
-        "line": 236,
+        "line": 237,
         "column": 8
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -92797,7 +92797,7 @@
       "kind": "native-tag",
       "evidence": "<header>",
       "location": {
-        "line": 237,
+        "line": 238,
         "column": 5
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -92809,7 +92809,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"flex flex-wrap items-end justify-between gap-3\"",
       "location": {
-        "line": 237,
+        "line": 238,
         "column": 13
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -92821,7 +92821,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 237,
+        "line": 238,
         "column": 68
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -92833,7 +92833,7 @@
       "kind": "native-tag",
       "evidence": "<h1>",
       "location": {
-        "line": 237,
+        "line": 238,
         "column": 73
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -92845,7 +92845,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-3xl font-extrabold tracking-tight\"",
       "location": {
-        "line": 237,
+        "line": 238,
         "column": 77
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -92857,7 +92857,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 237,
+        "line": 238,
         "column": 149
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -92869,7 +92869,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-1 text-sm text-muted-foreground\"",
       "location": {
-        "line": 237,
+        "line": 238,
         "column": 152
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -92881,7 +92881,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"min-h-11\"",
       "location": {
-        "line": 237,
+        "line": 238,
         "column": 259
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -92893,7 +92893,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 238,
+        "line": 239,
         "column": 5
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -92905,7 +92905,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-card p-8 text-center text-sm\"",
       "location": {
-        "line": 238,
+        "line": 239,
         "column": 40
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -92917,7 +92917,7 @@
       "kind": "native-tag",
       "evidence": "<section>",
       "location": {
-        "line": 240,
+        "line": 241,
         "column": 7
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -92929,7 +92929,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"sticky top-20 z-10 flex flex-wrap items-center justify-between gap-2 ls-card-flat p-3\"",
       "location": {
-        "line": 240,
+        "line": 241,
         "column": 16
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -92941,7 +92941,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 241,
+        "line": 242,
         "column": 9
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -92953,7 +92953,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"min-w-0 break-words text-sm\"",
       "location": {
-        "line": 241,
+        "line": 242,
         "column": 12
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -92965,7 +92965,7 @@
       "kind": "native-tag",
       "evidence": "<strong>",
       "location": {
-        "line": 241,
+        "line": 242,
         "column": 48
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -92977,7 +92977,7 @@
       "kind": "native-tag",
       "evidence": "<strong>",
       "location": {
-        "line": 241,
+        "line": 242,
         "column": 154
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -92989,7 +92989,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 242,
+        "line": 243,
         "column": 9
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93001,7 +93001,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"flex flex-wrap gap-2\"",
       "location": {
-        "line": 242,
+        "line": 243,
         "column": 14
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93013,7 +93013,7 @@
       "kind": "native-tag",
       "evidence": "<a>",
       "location": {
-        "line": 243,
+        "line": 244,
         "column": 11
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93025,7 +93025,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-btn xl:hidden\"",
       "location": {
-        "line": 243,
+        "line": 244,
         "column": 40
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93037,7 +93037,7 @@
       "kind": "native-tag",
       "evidence": "<a>",
       "location": {
-        "line": 244,
+        "line": 245,
         "column": 11
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93049,7 +93049,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-btn ls-btn-primary xl:hidden\"",
       "location": {
-        "line": 244,
+        "line": 245,
         "column": 37
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93061,7 +93061,7 @@
       "kind": "nuxt-or-vue-render-tag",
       "evidence": "<NuxtLink>",
       "location": {
-        "line": 245,
+        "line": 246,
         "column": 11
       },
       "target": "packages/ui/templates/Bs application-routing composition",
@@ -93073,7 +93073,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-btn\"",
       "location": {
-        "line": 245,
+        "line": 246,
         "column": 39
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93085,7 +93085,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 248,
+        "line": 249,
         "column": 7
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93097,7 +93097,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"rounded-xl bg-[var(--bs-status-error-bg)] p-4 text-sm text-[var(--bs-status-error)]\"",
       "location": {
-        "line": 248,
+        "line": 249,
         "column": 46
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93109,7 +93109,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 249,
+        "line": 250,
         "column": 7
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93121,7 +93121,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"rounded-xl bg-[var(--bs-status-error-bg)] p-4 text-sm text-[var(--bs-status-error)]\"",
       "location": {
-        "line": 249,
+        "line": 250,
         "column": 43
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93133,7 +93133,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 250,
+        "line": 251,
         "column": 7
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93145,7 +93145,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"sr-only\"",
       "location": {
-        "line": 250,
+        "line": 251,
         "column": 10
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93157,7 +93157,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 251,
+        "line": 252,
         "column": 7
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93169,7 +93169,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-sm font-bold\"",
       "location": {
-        "line": 251,
+        "line": 252,
         "column": 43
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93181,7 +93181,7 @@
       "kind": "native-tag",
       "evidence": "<fieldset>",
       "location": {
-        "line": 252,
+        "line": 253,
         "column": 7
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93193,7 +93193,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"min-w-0\"",
       "location": {
-        "line": 252,
+        "line": 253,
         "column": 87
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93205,7 +93205,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 253,
+        "line": 254,
         "column": 7
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93217,7 +93217,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"grid min-h-[calc(100vh-12rem)] gap-4 xl:grid-cols-[minmax(0,1fr)_25rem]\"",
       "location": {
-        "line": 253,
+        "line": 254,
         "column": 12
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93229,7 +93229,7 @@
       "kind": "native-tag",
       "evidence": "<section>",
       "location": {
-        "line": 254,
+        "line": 255,
         "column": 9
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93241,7 +93241,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"min-w-0 ls-card p-4\"",
       "location": {
-        "line": 254,
+        "line": 255,
         "column": 18
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93253,7 +93253,7 @@
       "kind": "native-tag",
       "evidence": "<h2>",
       "location": {
-        "line": 255,
+        "line": 256,
         "column": 11
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93265,7 +93265,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"scroll-mt-64 text-lg font-extrabold\"",
       "location": {
-        "line": 255,
+        "line": 256,
         "column": 52
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93277,7 +93277,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 256,
+        "line": 257,
         "column": 11
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93289,7 +93289,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-3 grid gap-3 sm:grid-cols-[1fr_auto_auto]\"",
       "location": {
-        "line": 256,
+        "line": 257,
         "column": 16
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93301,7 +93301,7 @@
       "kind": "native-tag",
       "evidence": "<input>",
       "location": {
-        "line": 257,
+        "line": 258,
         "column": 13
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93313,7 +93313,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-input min-h-11\"",
       "location": {
-        "line": 257,
+        "line": 258,
         "column": 77
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93325,7 +93325,7 @@
       "kind": "native-tag",
       "evidence": "<select>",
       "location": {
-        "line": 258,
+        "line": 259,
         "column": 13
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93337,7 +93337,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-select min-h-11\"",
       "location": {
-        "line": 258,
+        "line": 259,
         "column": 46
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93349,7 +93349,7 @@
       "kind": "native-tag",
       "evidence": "<option>",
       "location": {
-        "line": 258,
+        "line": 259,
         "column": 128
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93361,7 +93361,7 @@
       "kind": "native-tag",
       "evidence": "<option>",
       "location": {
-        "line": 258,
+        "line": 259,
         "column": 211
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93373,7 +93373,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 259,
+        "line": 260,
         "column": 13
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93385,7 +93385,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"flex rounded-xl border border-border p-1\"",
       "location": {
-        "line": 259,
+        "line": 260,
         "column": 18
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93397,7 +93397,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"min-h-11 rounded-lg px-3 text-sm font-bold\"",
       "location": {
-        "line": 259,
+        "line": 260,
         "column": 197
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93409,7 +93409,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 261,
+        "line": 262,
         "column": 11
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93421,7 +93421,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-3 rounded-xl bg-muted p-3 text-sm\"",
       "location": {
-        "line": 261,
+        "line": 262,
         "column": 33
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93433,7 +93433,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 262,
+        "line": 263,
         "column": 11
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93445,7 +93445,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"p-8 text-center text-sm text-muted-foreground\"",
       "location": {
-        "line": 262,
+        "line": 263,
         "column": 50
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93457,7 +93457,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 263,
+        "line": 264,
         "column": 11
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93469,7 +93469,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"p-8 text-center text-sm\"",
       "location": {
-        "line": 263,
+        "line": 264,
         "column": 54
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93481,7 +93481,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 263,
+        "line": 264,
         "column": 86
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93493,7 +93493,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-3\"",
       "location": {
-        "line": 263,
+        "line": 264,
         "column": 236
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93505,7 +93505,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 264,
+        "line": 265,
         "column": 11
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93517,7 +93517,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"p-8 text-center text-sm text-muted-foreground\"",
       "location": {
-        "line": 264,
+        "line": 265,
         "column": 48
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93529,7 +93529,7 @@
       "kind": "native-tag",
       "evidence": "<ul>",
       "location": {
-        "line": 265,
+        "line": 266,
         "column": 11
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93541,7 +93541,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3\"",
       "location": {
-        "line": 265,
+        "line": 266,
         "column": 22
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93553,7 +93553,7 @@
       "kind": "native-tag",
       "evidence": "<li>",
       "location": {
-        "line": 266,
+        "line": 267,
         "column": 13
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93565,7 +93565,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"min-h-20 p-3\"",
       "location": {
-        "line": 266,
+        "line": 267,
         "column": 123
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93577,7 +93577,7 @@
       "kind": "native-tag",
       "evidence": "<strong>",
       "location": {
-        "line": 266,
+        "line": 267,
         "column": 210
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93589,7 +93589,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"block\"",
       "location": {
-        "line": 266,
+        "line": 267,
         "column": 218
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93601,7 +93601,7 @@
       "kind": "native-tag",
       "evidence": "<span>",
       "location": {
-        "line": 266,
+        "line": 267,
         "column": 256
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93613,7 +93613,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-1 flex justify-between gap-2 text-xs text-muted-foreground\"",
       "location": {
-        "line": 266,
+        "line": 267,
         "column": 262
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93625,7 +93625,7 @@
       "kind": "native-tag",
       "evidence": "<span>",
       "location": {
-        "line": 266,
+        "line": 267,
         "column": 332
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93637,7 +93637,7 @@
       "kind": "native-tag",
       "evidence": "<span>",
       "location": {
-        "line": 266,
+        "line": 267,
         "column": 434
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93649,7 +93649,7 @@
       "kind": "native-tag",
       "evidence": "<span>",
       "location": {
-        "line": 266,
+        "line": 267,
         "column": 510
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93661,7 +93661,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-1 block text-xs\"",
       "location": {
-        "line": 266,
+        "line": 267,
         "column": 542
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93673,7 +93673,7 @@
       "kind": "presentation-attribute",
       "evidence": ":class=\"item.stock > 0 ? 'text-[var(--bs-status-success)]' : 'text-[var(--bs-status-error)]'\"",
       "location": {
-        "line": 266,
+        "line": 267,
         "column": 569
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93685,7 +93685,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 268,
+        "line": 269,
         "column": 11
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93697,7 +93697,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-4 flex items-center justify-center gap-2\"",
       "location": {
-        "line": 268,
+        "line": 269,
         "column": 56
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93709,7 +93709,7 @@
       "kind": "native-tag",
       "evidence": "<span>",
       "location": {
-        "line": 268,
+        "line": 269,
         "column": 229
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93721,7 +93721,7 @@
       "kind": "native-tag",
       "evidence": "<span>",
       "location": {
-        "line": 268,
+        "line": 269,
         "column": 305
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93733,7 +93733,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-sm\"",
       "location": {
-        "line": 268,
+        "line": 269,
         "column": 311
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93745,7 +93745,7 @@
       "kind": "native-tag",
       "evidence": "<span>",
       "location": {
-        "line": 268,
+        "line": 269,
         "column": 499
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93757,7 +93757,7 @@
       "kind": "native-tag",
       "evidence": "<aside>",
       "location": {
-        "line": 271,
+        "line": 272,
         "column": 9
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93769,7 +93769,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"flex min-h-0 min-w-0 flex-col ls-card p-4 xl:sticky xl:top-40 xl:max-h-[calc(100dvh-11rem)] xl:overflow-y-auto\"",
       "location": {
-        "line": 271,
+        "line": 272,
         "column": 16
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93781,7 +93781,7 @@
       "kind": "native-tag",
       "evidence": "<h2>",
       "location": {
-        "line": 272,
+        "line": 273,
         "column": 11
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93793,7 +93793,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"scroll-mt-64 text-lg font-extrabold\"",
       "location": {
-        "line": 272,
+        "line": 273,
         "column": 49
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93805,7 +93805,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 274,
+        "line": 275,
         "column": 11
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93817,7 +93817,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-3 text-sm\"",
       "location": {
-        "line": 274,
+        "line": 275,
         "column": 76
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93829,7 +93829,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 275,
+        "line": 276,
         "column": 11
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93841,7 +93841,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-3 rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm text-[var(--bs-status-error)]\"",
       "location": {
-        "line": 275,
+        "line": 276,
         "column": 52
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93853,7 +93853,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"min-h-11 font-bold underline\"",
       "location": {
-        "line": 275,
+        "line": 276,
         "column": 301
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93865,7 +93865,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 276,
+        "line": 277,
         "column": 11
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93877,7 +93877,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-3 grid grid-cols-2 gap-2 rounded-xl bg-muted p-3 text-xs\"",
       "location": {
-        "line": 276,
+        "line": 277,
         "column": 16
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93889,7 +93889,7 @@
       "kind": "native-tag",
       "evidence": "<span>",
       "location": {
-        "line": 276,
+        "line": 277,
         "column": 84
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93901,7 +93901,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"font-bold\"",
       "location": {
-        "line": 276,
+        "line": 277,
         "column": 90
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93913,7 +93913,7 @@
       "kind": "native-tag",
       "evidence": "<span>",
       "location": {
-        "line": 276,
+        "line": 277,
         "column": 138
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93925,7 +93925,7 @@
       "kind": "native-tag",
       "evidence": "<span>",
       "location": {
-        "line": 276,
+        "line": 277,
         "column": 212
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93937,7 +93937,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"font-bold\"",
       "location": {
-        "line": 276,
+        "line": 277,
         "column": 218
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93949,7 +93949,7 @@
       "kind": "native-tag",
       "evidence": "<span>",
       "location": {
-        "line": 276,
+        "line": 277,
         "column": 263
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93961,7 +93961,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 277,
+        "line": 278,
         "column": 11
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93973,7 +93973,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"grid flex-1 place-items-center py-8 text-center text-sm text-muted-foreground\"",
       "location": {
-        "line": 277,
+        "line": 278,
         "column": 35
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -93985,7 +93985,7 @@
       "kind": "native-tag",
       "evidence": "<ul>",
       "location": {
-        "line": 278,
+        "line": 279,
         "column": 11
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -93997,7 +93997,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-3 flex-1 space-y-2 overflow-y-auto pe-1\"",
       "location": {
-        "line": 278,
+        "line": 279,
         "column": 22
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -94009,7 +94009,7 @@
       "kind": "native-tag",
       "evidence": "<li>",
       "location": {
-        "line": 278,
+        "line": 279,
         "column": 73
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -94021,7 +94021,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"rounded-xl border border-border p-3\"",
       "location": {
-        "line": 278,
+        "line": 279,
         "column": 124
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -94033,7 +94033,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 278,
+        "line": 279,
         "column": 168
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -94045,7 +94045,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"flex justify-between gap-2\"",
       "location": {
-        "line": 278,
+        "line": 279,
         "column": 173
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -94057,7 +94057,7 @@
       "kind": "native-tag",
       "evidence": "<strong>",
       "location": {
-        "line": 278,
+        "line": 279,
         "column": 208
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -94069,7 +94069,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"min-h-11 px-2 text-sm font-bold text-[var(--bs-status-error)]\"",
       "location": {
-        "line": 278,
+        "line": 279,
         "column": 279
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -94081,7 +94081,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 278,
+        "line": 279,
         "column": 414
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -94093,7 +94093,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-2 flex items-center justify-between gap-3\"",
       "location": {
-        "line": 278,
+        "line": 279,
         "column": 419
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -94105,7 +94105,7 @@
       "kind": "native-tag",
       "evidence": "<label>",
       "location": {
-        "line": 278,
+        "line": 279,
         "column": 472
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -94117,7 +94117,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-xs font-bold\"",
       "location": {
-        "line": 278,
+        "line": 279,
         "column": 479
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -94129,7 +94129,7 @@
       "kind": "native-tag",
       "evidence": "<input>",
       "location": {
-        "line": 278,
+        "line": 279,
         "column": 528
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -94141,7 +94141,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-input mt-1 min-h-11 w-24\"",
       "location": {
-        "line": 278,
+        "line": 279,
         "column": 607
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -94153,7 +94153,7 @@
       "kind": "native-tag",
       "evidence": "<span>",
       "location": {
-        "line": 278,
+        "line": 279,
         "column": 730
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -94165,7 +94165,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"font-extrabold\"",
       "location": {
-        "line": 278,
+        "line": 279,
         "column": 736
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -94177,7 +94177,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 279,
+        "line": 280,
         "column": 11
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -94189,7 +94189,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-3 space-y-3 border-t border-border pt-3\"",
       "location": {
-        "line": 279,
+        "line": 280,
         "column": 16
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -94201,7 +94201,7 @@
       "kind": "native-tag",
       "evidence": "<label>",
       "location": {
-        "line": 280,
+        "line": 281,
         "column": 13
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -94213,7 +94213,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"grid gap-1 text-sm font-bold\"",
       "location": {
-        "line": 280,
+        "line": 281,
         "column": 20
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -94225,7 +94225,7 @@
       "kind": "native-tag",
       "evidence": "<select>",
       "location": {
-        "line": 280,
+        "line": 281,
         "column": 83
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -94237,7 +94237,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-select min-h-11\"",
       "location": {
-        "line": 280,
+        "line": 281,
         "column": 114
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -94249,7 +94249,7 @@
       "kind": "native-tag",
       "evidence": "<option>",
       "location": {
-        "line": 280,
+        "line": 281,
         "column": 237
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -94261,7 +94261,7 @@
       "kind": "native-tag",
       "evidence": "<option>",
       "location": {
-        "line": 280,
+        "line": 281,
         "column": 284
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -94273,7 +94273,7 @@
       "kind": "native-tag",
       "evidence": "<label>",
       "location": {
-        "line": 281,
+        "line": 282,
         "column": 13
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -94285,7 +94285,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"pos-staff-select grid min-w-0 gap-1 text-sm font-bold\"",
       "location": {
-        "line": 281,
+        "line": 282,
         "column": 20
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -94297,7 +94297,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 282,
+        "line": 283,
         "column": 13
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -94309,7 +94309,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"pos-staff-select\"",
       "location": {
-        "line": 282,
+        "line": 283,
         "column": 40
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -94321,7 +94321,7 @@
       "kind": "native-tag",
       "evidence": "<label>",
       "location": {
-        "line": 283,
+        "line": 284,
         "column": 15
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -94333,7 +94333,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-sm font-bold\"",
       "location": {
-        "line": 283,
+        "line": 284,
         "column": 46
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -94345,7 +94345,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-1\"",
       "location": {
-        "line": 287,
+        "line": 288,
         "column": 143
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -94357,7 +94357,7 @@
       "kind": "native-tag",
       "evidence": "<span>",
       "location": {
-        "line": 290,
+        "line": 291,
         "column": 34
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -94369,7 +94369,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-1 min-h-11\"",
       "location": {
-        "line": 294,
+        "line": 295,
         "column": 40
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -94381,7 +94381,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 295,
+        "line": 296,
         "column": 15
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -94393,7 +94393,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-1 text-xs text-muted-foreground\"",
       "location": {
-        "line": 295,
+        "line": 296,
         "column": 41
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -94405,7 +94405,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 297,
+        "line": 298,
         "column": 13
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -94417,7 +94417,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"grid grid-cols-2 gap-2\"",
       "location": {
-        "line": 297,
+        "line": 298,
         "column": 18
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -94429,7 +94429,7 @@
       "kind": "native-tag",
       "evidence": "<label>",
       "location": {
-        "line": 297,
+        "line": 298,
         "column": 49
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -94441,7 +94441,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"grid gap-1 text-sm font-bold\"",
       "location": {
-        "line": 297,
+        "line": 298,
         "column": 56
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -94453,7 +94453,7 @@
       "kind": "native-tag",
       "evidence": "<select>",
       "location": {
-        "line": 297,
+        "line": 298,
         "column": 121
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -94465,7 +94465,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-select min-h-11\"",
       "location": {
-        "line": 297,
+        "line": 298,
         "column": 153
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -94477,7 +94477,7 @@
       "kind": "native-tag",
       "evidence": "<option>",
       "location": {
-        "line": 297,
+        "line": 298,
         "column": 180
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -94489,7 +94489,7 @@
       "kind": "native-tag",
       "evidence": "<label>",
       "location": {
-        "line": 297,
+        "line": 298,
         "column": 357
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -94501,7 +94501,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"grid gap-1 text-sm font-bold\"",
       "location": {
-        "line": 297,
+        "line": 298,
         "column": 364
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -94513,7 +94513,7 @@
       "kind": "native-tag",
       "evidence": "<input>",
       "location": {
-        "line": 297,
+        "line": 298,
         "column": 425
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -94525,7 +94525,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-input min-h-11\"",
       "location": {
-        "line": 297,
+        "line": 298,
         "column": 475
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -94537,7 +94537,7 @@
       "kind": "native-tag",
       "evidence": "<label>",
       "location": {
-        "line": 298,
+        "line": 299,
         "column": 13
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -94549,7 +94549,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"grid gap-1 text-sm font-bold\"",
       "location": {
-        "line": 298,
+        "line": 299,
         "column": 20
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -94561,7 +94561,7 @@
       "kind": "native-tag",
       "evidence": "<input>",
       "location": {
-        "line": 298,
+        "line": 299,
         "column": 77
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -94573,7 +94573,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-input min-h-11\"",
       "location": {
-        "line": 298,
+        "line": 299,
         "column": 117
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -94585,7 +94585,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 299,
+        "line": 300,
         "column": 13
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -94597,7 +94597,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"flex items-end justify-between gap-3\"",
       "location": {
-        "line": 299,
+        "line": 300,
         "column": 18
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -94609,7 +94609,7 @@
       "kind": "native-tag",
       "evidence": "<span>",
       "location": {
-        "line": 299,
+        "line": 300,
         "column": 63
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -94621,7 +94621,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-sm font-bold\"",
       "location": {
-        "line": 299,
+        "line": 300,
         "column": 69
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -94633,7 +94633,7 @@
       "kind": "native-tag",
       "evidence": "<strong>",
       "location": {
-        "line": 299,
+        "line": 300,
         "column": 122
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -94645,7 +94645,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-2xl\"",
       "location": {
-        "line": 299,
+        "line": 300,
         "column": 130
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -94657,7 +94657,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 300,
+        "line": 301,
         "column": 13
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -94669,7 +94669,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-xs text-muted-foreground\"",
       "location": {
-        "line": 300,
+        "line": 301,
         "column": 16
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -94681,7 +94681,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"min-h-12 w-full\"",
       "location": {
-        "line": 301,
+        "line": 302,
         "column": 41
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -94693,7 +94693,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 302,
+        "line": 303,
         "column": 13
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -94705,7 +94705,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-center text-xs text-muted-foreground\"",
       "location": {
-        "line": 302,
+        "line": 303,
         "column": 16
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -94717,7 +94717,7 @@
       "kind": "style-block",
       "evidence": "<style scoped>",
       "location": {
-        "line": 311,
+        "line": 312,
         "column": 1
       },
       "target": "packages/ui shared styles and semantic component props",
@@ -101689,7 +101689,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 350,
+        "line": 351,
         "column": 3
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -101701,7 +101701,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"space-y-6\"",
       "location": {
-        "line": 350,
+        "line": 351,
         "column": 8
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -101713,7 +101713,7 @@
       "kind": "nuxt-or-vue-render-tag",
       "evidence": "<NuxtLink>",
       "location": {
-        "line": 351,
+        "line": 352,
         "column": 5
       },
       "target": "packages/ui/templates/Bs application-routing composition",
@@ -101725,7 +101725,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"inline-flex font-semibold text-[var(--bs-link)] underline-offset-4 hover:underline\"",
       "location": {
-        "line": 351,
+        "line": 352,
         "column": 27
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -101737,7 +101737,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 352,
+        "line": 353,
         "column": 5
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -101749,7 +101749,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"space-y-4\"",
       "location": {
-        "line": 352,
+        "line": 353,
         "column": 25
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -101761,7 +101761,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 352,
+        "line": 353,
         "column": 43
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -101773,7 +101773,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"h-10 w-64 animate-pulse rounded-lg bg-muted\"",
       "location": {
-        "line": 352,
+        "line": 353,
         "column": 48
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -101785,7 +101785,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 352,
+        "line": 353,
         "column": 101
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -101797,7 +101797,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"h-64 animate-pulse rounded-2xl bg-muted\"",
       "location": {
-        "line": 352,
+        "line": 353,
         "column": 106
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -101809,7 +101809,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 353,
+        "line": 354,
         "column": 5
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -101821,7 +101821,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"rounded-2xl border border-[var(--bs-status-error)]/30 bg-[var(--bs-status-error-bg)] p-5 text-sm text-fg\"",
       "location": {
-        "line": 353,
+        "line": 354,
         "column": 41
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -101833,7 +101833,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 353,
+        "line": 354,
         "column": 154
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -101845,7 +101845,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-3 font-bold underline\"",
       "location": {
-        "line": 353,
+        "line": 354,
         "column": 226
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -101857,7 +101857,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 354,
+        "line": 355,
         "column": 5
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -101869,7 +101869,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-card p-8 text-center text-sm text-muted-foreground\"",
       "location": {
-        "line": 354,
+        "line": 355,
         "column": 28
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -101881,7 +101881,7 @@
       "kind": "native-tag",
       "evidence": "<header>",
       "location": {
-        "line": 356,
+        "line": 357,
         "column": 7
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -101893,7 +101893,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"flex flex-wrap items-end justify-between gap-4\"",
       "location": {
-        "line": 356,
+        "line": 357,
         "column": 15
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -101905,7 +101905,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 357,
+        "line": 358,
         "column": 9
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -101917,7 +101917,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 357,
+        "line": 358,
         "column": 14
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -101929,7 +101929,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"flex flex-wrap items-center gap-3\"",
       "location": {
-        "line": 357,
+        "line": 358,
         "column": 19
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -101941,7 +101941,7 @@
       "kind": "native-tag",
       "evidence": "<h1>",
       "location": {
-        "line": 357,
+        "line": 358,
         "column": 61
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -101953,7 +101953,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-3xl font-extrabold tracking-tight\"",
       "location": {
-        "line": 357,
+        "line": 358,
         "column": 65
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -101965,7 +101965,7 @@
       "kind": "native-tag",
       "evidence": "<span>",
       "location": {
-        "line": 357,
+        "line": 358,
         "column": 168
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -101977,7 +101977,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-badge\"",
       "location": {
-        "line": 357,
+        "line": 358,
         "column": 174
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -101989,7 +101989,7 @@
       "kind": "presentation-attribute",
       "evidence": ":class=\"sale.status === 'issued' ? 'bg-[var(--bs-status-success-bg)] text-fg' : 'bg-muted text-muted-foreground'\"",
       "location": {
-        "line": 357,
+        "line": 358,
         "column": 191
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -102001,7 +102001,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 357,
+        "line": 358,
         "column": 349
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102013,7 +102013,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-2 text-sm text-muted-foreground\"",
       "location": {
-        "line": 357,
+        "line": 358,
         "column": 352
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -102025,7 +102025,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 358,
+        "line": 359,
         "column": 9
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102037,7 +102037,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"flex flex-wrap gap-2\"",
       "location": {
-        "line": 358,
+        "line": 359,
         "column": 14
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -102049,7 +102049,7 @@
       "kind": "nuxt-or-vue-render-tag",
       "evidence": "<NuxtLink>",
       "location": {
-        "line": 358,
+        "line": 359,
         "column": 84
       },
       "target": "packages/ui/templates/Bs application-routing composition",
@@ -102061,7 +102061,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-btn\"",
       "location": {
-        "line": 358,
+        "line": 359,
         "column": 167
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -102073,7 +102073,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-btn ls-btn-primary\"",
       "location": {
-        "line": 358,
+        "line": 359,
         "column": 264
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -102085,7 +102085,7 @@
       "kind": "nuxt-or-vue-render-tag",
       "evidence": "<NuxtLink>",
       "location": {
-        "line": 358,
+        "line": 359,
         "column": 629
       },
       "target": "packages/ui/templates/Bs application-routing composition",
@@ -102097,7 +102097,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-btn ls-btn-primary\"",
       "location": {
-        "line": 358,
+        "line": 359,
         "column": 673
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -102109,7 +102109,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 360,
+        "line": 361,
         "column": 7
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102121,7 +102121,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm text-fg\"",
       "location": {
-        "line": 360,
+        "line": 361,
         "column": 42
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -102133,7 +102133,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 361,
+        "line": 362,
         "column": 7
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102145,7 +102145,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm text-fg\"",
       "location": {
-        "line": 361,
+        "line": 362,
         "column": 41
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -102157,7 +102157,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 362,
+        "line": 363,
         "column": 7
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102169,7 +102169,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm\"",
       "location": {
-        "line": 362,
+        "line": 363,
         "column": 42
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -102181,7 +102181,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 363,
+        "line": 364,
         "column": 7
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102193,7 +102193,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm\"",
       "location": {
-        "line": 363,
+        "line": 364,
         "column": 41
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -102205,7 +102205,7 @@
       "kind": "native-tag",
       "evidence": "<section>",
       "location": {
-        "line": 365,
+        "line": 366,
         "column": 7
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102217,7 +102217,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-card p-5\"",
       "location": {
-        "line": 365,
+        "line": 366,
         "column": 48
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -102229,7 +102229,7 @@
       "kind": "native-tag",
       "evidence": "<h2>",
       "location": {
-        "line": 366,
+        "line": 367,
         "column": 9
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102241,7 +102241,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-lg font-bold\"",
       "location": {
-        "line": 366,
+        "line": 367,
         "column": 13
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -102253,7 +102253,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 367,
+        "line": 368,
         "column": 9
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102265,7 +102265,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-3 text-sm text-muted-foreground\"",
       "location": {
-        "line": 367,
+        "line": 368,
         "column": 37
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -102277,7 +102277,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 368,
+        "line": 369,
         "column": 9
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102289,7 +102289,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-3 rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm\"",
       "location": {
-        "line": 368,
+        "line": 369,
         "column": 59
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -102301,7 +102301,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 368,
+        "line": 369,
         "column": 126
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102313,7 +102313,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-2\"",
       "location": {
-        "line": 368,
+        "line": 369,
         "column": 214
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -102325,7 +102325,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 369,
+        "line": 370,
         "column": 9
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102337,7 +102337,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-4 rounded-xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-4 text-sm\"",
       "location": {
-        "line": 369,
+        "line": 370,
         "column": 54
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -102349,7 +102349,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 370,
+        "line": 371,
         "column": 11
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102361,7 +102361,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"font-bold\"",
       "location": {
-        "line": 370,
+        "line": 371,
         "column": 14
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -102373,7 +102373,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 371,
+        "line": 372,
         "column": 11
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102385,7 +102385,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-1 text-muted-foreground\"",
       "location": {
-        "line": 371,
+        "line": 372,
         "column": 14
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -102397,7 +102397,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 372,
+        "line": 373,
         "column": 11
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102409,7 +102409,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-2 whitespace-pre-wrap\"",
       "location": {
-        "line": 372,
+        "line": 373,
         "column": 14
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -102421,7 +102421,7 @@
       "kind": "native-tag",
       "evidence": "<dl>",
       "location": {
-        "line": 373,
+        "line": 374,
         "column": 11
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102433,7 +102433,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-3 grid gap-3 sm:grid-cols-2\"",
       "location": {
-        "line": 373,
+        "line": 374,
         "column": 15
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -102445,7 +102445,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 373,
+        "line": 374,
         "column": 54
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102457,7 +102457,7 @@
       "kind": "native-tag",
       "evidence": "<dt>",
       "location": {
-        "line": 373,
+        "line": 374,
         "column": 59
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102469,7 +102469,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-xs font-bold text-muted-foreground\"",
       "location": {
-        "line": 373,
+        "line": 374,
         "column": 63
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -102481,7 +102481,7 @@
       "kind": "native-tag",
       "evidence": "<dd>",
       "location": {
-        "line": 373,
+        "line": 374,
         "column": 151
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102493,7 +102493,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 373,
+        "line": 374,
         "column": 226
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102505,7 +102505,7 @@
       "kind": "native-tag",
       "evidence": "<dt>",
       "location": {
-        "line": 373,
+        "line": 374,
         "column": 231
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102517,7 +102517,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-xs font-bold text-muted-foreground\"",
       "location": {
-        "line": 373,
+        "line": 374,
         "column": 235
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -102529,7 +102529,7 @@
       "kind": "native-tag",
       "evidence": "<dd>",
       "location": {
-        "line": 373,
+        "line": 374,
         "column": 323
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102541,7 +102541,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 375,
+        "line": 376,
         "column": 9
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102553,7 +102553,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-3 text-sm text-muted-foreground\"",
       "location": {
-        "line": 375,
+        "line": 376,
         "column": 40
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -102565,7 +102565,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 376,
+        "line": 377,
         "column": 9
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102577,7 +102577,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-3 text-sm text-muted-foreground\"",
       "location": {
-        "line": 376,
+        "line": 377,
         "column": 12
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -102589,7 +102589,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 379,
+        "line": 380,
         "column": 7
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102601,7 +102601,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"grid gap-5 lg:grid-cols-2\"",
       "location": {
-        "line": 379,
+        "line": 380,
         "column": 12
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -102613,7 +102613,7 @@
       "kind": "native-tag",
       "evidence": "<section>",
       "location": {
-        "line": 380,
+        "line": 381,
         "column": 9
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102625,7 +102625,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-card p-5\"",
       "location": {
-        "line": 380,
+        "line": 381,
         "column": 18
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -102637,7 +102637,7 @@
       "kind": "native-tag",
       "evidence": "<h2>",
       "location": {
-        "line": 380,
+        "line": 381,
         "column": 38
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102649,7 +102649,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-lg font-bold\"",
       "location": {
-        "line": 380,
+        "line": 381,
         "column": 42
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -102661,7 +102661,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 380,
+        "line": 381,
         "column": 106
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102673,7 +102673,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-4 space-y-2 text-sm\"",
       "location": {
-        "line": 380,
+        "line": 381,
         "column": 144
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -102685,7 +102685,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 380,
+        "line": 381,
         "column": 175
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102697,7 +102697,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"font-bold\"",
       "location": {
-        "line": 380,
+        "line": 381,
         "column": 178
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -102709,7 +102709,7 @@
       "kind": "nuxt-or-vue-render-tag",
       "evidence": "<NuxtLink>",
       "location": {
-        "line": 380,
+        "line": 381,
         "column": 196
       },
       "target": "packages/ui/templates/Bs application-routing composition",
@@ -102721,7 +102721,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-[var(--bs-link)]\"",
       "location": {
-        "line": 380,
+        "line": 381,
         "column": 265
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -102733,7 +102733,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 380,
+        "line": 381,
         "column": 400
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102745,7 +102745,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 380,
+        "line": 381,
         "column": 446
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102757,7 +102757,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 380,
+        "line": 381,
         "column": 492
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102769,7 +102769,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 380,
+        "line": 381,
         "column": 546
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102781,7 +102781,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-4 text-sm text-muted-foreground\"",
       "location": {
-        "line": 380,
+        "line": 381,
         "column": 556
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -102793,7 +102793,7 @@
       "kind": "native-tag",
       "evidence": "<section>",
       "location": {
-        "line": 381,
+        "line": 382,
         "column": 9
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102805,7 +102805,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-card p-5\"",
       "location": {
-        "line": 381,
+        "line": 382,
         "column": 18
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -102817,7 +102817,7 @@
       "kind": "native-tag",
       "evidence": "<h2>",
       "location": {
-        "line": 381,
+        "line": 382,
         "column": 38
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102829,7 +102829,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-lg font-bold\"",
       "location": {
-        "line": 381,
+        "line": 382,
         "column": 42
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -102841,7 +102841,7 @@
       "kind": "native-tag",
       "evidence": "<dl>",
       "location": {
-        "line": 381,
+        "line": 382,
         "column": 97
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102853,7 +102853,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-4 grid gap-4 sm:grid-cols-2\"",
       "location": {
-        "line": 381,
+        "line": 382,
         "column": 101
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -102865,7 +102865,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 381,
+        "line": 382,
         "column": 140
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102877,7 +102877,7 @@
       "kind": "native-tag",
       "evidence": "<dt>",
       "location": {
-        "line": 381,
+        "line": 382,
         "column": 145
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102889,7 +102889,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-xs font-bold text-muted-foreground\"",
       "location": {
-        "line": 381,
+        "line": 382,
         "column": 149
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -102901,7 +102901,7 @@
       "kind": "native-tag",
       "evidence": "<dd>",
       "location": {
-        "line": 381,
+        "line": 382,
         "column": 228
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102913,7 +102913,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 381,
+        "line": 382,
         "column": 276
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102925,7 +102925,7 @@
       "kind": "native-tag",
       "evidence": "<dt>",
       "location": {
-        "line": 381,
+        "line": 382,
         "column": 281
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102937,7 +102937,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-xs font-bold text-muted-foreground\"",
       "location": {
-        "line": 381,
+        "line": 382,
         "column": 285
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -102949,7 +102949,7 @@
       "kind": "native-tag",
       "evidence": "<dd>",
       "location": {
-        "line": 381,
+        "line": 382,
         "column": 363
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102961,7 +102961,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 381,
+        "line": 382,
         "column": 410
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102973,7 +102973,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"sm:col-span-2\"",
       "location": {
-        "line": 381,
+        "line": 382,
         "column": 415
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -102985,7 +102985,7 @@
       "kind": "native-tag",
       "evidence": "<dt>",
       "location": {
-        "line": 381,
+        "line": 382,
         "column": 437
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -102997,7 +102997,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-xs font-bold text-muted-foreground\"",
       "location": {
-        "line": 381,
+        "line": 382,
         "column": 441
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103009,7 +103009,7 @@
       "kind": "native-tag",
       "evidence": "<dd>",
       "location": {
-        "line": 381,
+        "line": 382,
         "column": 516
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103021,7 +103021,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"whitespace-pre-wrap\"",
       "location": {
-        "line": 381,
+        "line": 382,
         "column": 520
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103033,7 +103033,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 381,
+        "line": 382,
         "column": 582
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103045,7 +103045,7 @@
       "kind": "native-tag",
       "evidence": "<dt>",
       "location": {
-        "line": 381,
+        "line": 382,
         "column": 587
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103057,7 +103057,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-xs font-bold text-muted-foreground\"",
       "location": {
-        "line": 381,
+        "line": 382,
         "column": 591
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103069,7 +103069,7 @@
       "kind": "native-tag",
       "evidence": "<dd>",
       "location": {
-        "line": 381,
+        "line": 382,
         "column": 669
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103081,7 +103081,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 381,
+        "line": 382,
         "column": 725
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103093,7 +103093,7 @@
       "kind": "native-tag",
       "evidence": "<dt>",
       "location": {
-        "line": 381,
+        "line": 382,
         "column": 730
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103105,7 +103105,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-xs font-bold text-muted-foreground\"",
       "location": {
-        "line": 381,
+        "line": 382,
         "column": 734
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103117,7 +103117,7 @@
       "kind": "native-tag",
       "evidence": "<dd>",
       "location": {
-        "line": 381,
+        "line": 382,
         "column": 809
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103129,7 +103129,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-xl font-extrabold\"",
       "location": {
-        "line": 381,
+        "line": 382,
         "column": 813
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103141,7 +103141,7 @@
       "kind": "native-tag",
       "evidence": "<section>",
       "location": {
-        "line": 384,
+        "line": 385,
         "column": 7
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103153,7 +103153,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-card p-5\"",
       "location": {
-        "line": 384,
+        "line": 385,
         "column": 48
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103165,7 +103165,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 385,
+        "line": 386,
         "column": 9
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103177,7 +103177,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"flex flex-wrap items-start justify-between gap-4\"",
       "location": {
-        "line": 385,
+        "line": 386,
         "column": 14
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103189,7 +103189,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 385,
+        "line": 386,
         "column": 71
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103201,7 +103201,7 @@
       "kind": "native-tag",
       "evidence": "<h2>",
       "location": {
-        "line": 385,
+        "line": 386,
         "column": 76
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103213,7 +103213,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-lg font-bold\"",
       "location": {
-        "line": 385,
+        "line": 386,
         "column": 80
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103225,7 +103225,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 385,
+        "line": 386,
         "column": 136
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103237,7 +103237,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-1 text-sm text-muted-foreground\"",
       "location": {
-        "line": 385,
+        "line": 386,
         "column": 139
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103249,7 +103249,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-btn ls-btn-primary\"",
       "location": {
-        "line": 385,
+        "line": 386,
         "column": 512
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103261,7 +103261,7 @@
       "kind": "native-tag",
       "evidence": "<dl>",
       "location": {
-        "line": 386,
+        "line": 387,
         "column": 9
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103273,7 +103273,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-4 grid gap-4 sm:grid-cols-4\"",
       "location": {
-        "line": 386,
+        "line": 387,
         "column": 13
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103285,7 +103285,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 386,
+        "line": 387,
         "column": 52
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103297,7 +103297,7 @@
       "kind": "native-tag",
       "evidence": "<dt>",
       "location": {
-        "line": 386,
+        "line": 387,
         "column": 57
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103309,7 +103309,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-xs font-bold text-muted-foreground\"",
       "location": {
-        "line": 386,
+        "line": 387,
         "column": 61
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103321,7 +103321,7 @@
       "kind": "native-tag",
       "evidence": "<dd>",
       "location": {
-        "line": 386,
+        "line": 387,
         "column": 136
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103333,7 +103333,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"font-bold\"",
       "location": {
-        "line": 386,
+        "line": 387,
         "column": 140
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103345,7 +103345,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 386,
+        "line": 387,
         "column": 207
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103357,7 +103357,7 @@
       "kind": "native-tag",
       "evidence": "<dt>",
       "location": {
-        "line": 386,
+        "line": 387,
         "column": 212
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103369,7 +103369,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-xs font-bold text-muted-foreground\"",
       "location": {
-        "line": 386,
+        "line": 387,
         "column": 216
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103381,7 +103381,7 @@
       "kind": "native-tag",
       "evidence": "<dd>",
       "location": {
-        "line": 386,
+        "line": 387,
         "column": 293
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103393,7 +103393,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"font-bold\"",
       "location": {
-        "line": 386,
+        "line": 387,
         "column": 297
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103405,7 +103405,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 386,
+        "line": 387,
         "column": 434
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103417,7 +103417,7 @@
       "kind": "native-tag",
       "evidence": "<dt>",
       "location": {
-        "line": 386,
+        "line": 387,
         "column": 439
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103429,7 +103429,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-xs font-bold text-muted-foreground\"",
       "location": {
-        "line": 386,
+        "line": 387,
         "column": 443
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103441,7 +103441,7 @@
       "kind": "native-tag",
       "evidence": "<dd>",
       "location": {
-        "line": 386,
+        "line": 387,
         "column": 527
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103453,7 +103453,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"font-bold\"",
       "location": {
-        "line": 386,
+        "line": 387,
         "column": 531
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103465,7 +103465,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 386,
+        "line": 387,
         "column": 597
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103477,7 +103477,7 @@
       "kind": "native-tag",
       "evidence": "<dt>",
       "location": {
-        "line": 386,
+        "line": 387,
         "column": 602
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103489,7 +103489,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-xs font-bold text-muted-foreground\"",
       "location": {
-        "line": 386,
+        "line": 387,
         "column": 606
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103501,7 +103501,7 @@
       "kind": "native-tag",
       "evidence": "<dd>",
       "location": {
-        "line": 386,
+        "line": 387,
         "column": 683
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103513,7 +103513,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 387,
+        "line": 388,
         "column": 9
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103525,7 +103525,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-4 rounded-xl bg-[var(--bs-status-success-bg)] p-3 text-sm text-fg\"",
       "location": {
-        "line": 387,
+        "line": 388,
         "column": 35
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103537,7 +103537,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 388,
+        "line": 389,
         "column": 9
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103549,7 +103549,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-5 space-y-3\"",
       "location": {
-        "line": 388,
+        "line": 389,
         "column": 14
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103561,7 +103561,7 @@
       "kind": "native-tag",
       "evidence": "<h3>",
       "location": {
-        "line": 388,
+        "line": 389,
         "column": 37
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103573,7 +103573,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"font-bold\"",
       "location": {
-        "line": 388,
+        "line": 389,
         "column": 41
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103585,7 +103585,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 388,
+        "line": 389,
         "column": 91
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103597,7 +103597,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-sm text-muted-foreground\"",
       "location": {
-        "line": 388,
+        "line": 389,
         "column": 123
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103609,7 +103609,7 @@
       "kind": "native-tag",
       "evidence": "<article>",
       "location": {
-        "line": 388,
+        "line": 389,
         "column": 190
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103621,7 +103621,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-4 text-sm\"",
       "location": {
-        "line": 388,
+        "line": 389,
         "column": 246
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103633,7 +103633,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 388,
+        "line": 389,
         "column": 348
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103645,7 +103645,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 388,
+        "line": 389,
         "column": 353
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103657,7 +103657,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"font-bold\"",
       "location": {
-        "line": 388,
+        "line": 389,
         "column": 356
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103669,7 +103669,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 388,
+        "line": 389,
         "column": 459
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103681,7 +103681,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-muted-foreground\"",
       "location": {
-        "line": 388,
+        "line": 389,
         "column": 462
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103693,7 +103693,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 388,
+        "line": 389,
         "column": 682
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103705,7 +103705,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-1\"",
       "location": {
-        "line": 388,
+        "line": 389,
         "column": 705
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103717,7 +103717,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 388,
+        "line": 389,
         "column": 746
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103729,7 +103729,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"flex gap-2\"",
       "location": {
-        "line": 388,
+        "line": 389,
         "column": 870
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103741,7 +103741,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-btn ls-btn-sm\"",
       "location": {
-        "line": 388,
+        "line": 389,
         "column": 943
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103753,7 +103753,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-btn ls-btn-sm\"",
       "location": {
-        "line": 388,
+        "line": 389,
         "column": 1102
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103765,7 +103765,7 @@
       "kind": "native-tag",
       "evidence": "<section>",
       "location": {
-        "line": 391,
+        "line": 392,
         "column": 7
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103777,7 +103777,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"overflow-hidden ls-card\"",
       "location": {
-        "line": 391,
+        "line": 392,
         "column": 16
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103789,7 +103789,7 @@
       "kind": "native-tag",
       "evidence": "<h2>",
       "location": {
-        "line": 391,
+        "line": 392,
         "column": 48
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103801,7 +103801,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"border-b border-border p-5 text-lg font-bold\"",
       "location": {
-        "line": 391,
+        "line": 392,
         "column": 52
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103813,7 +103813,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 391,
+        "line": 392,
         "column": 132
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103825,7 +103825,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"overflow-x-auto\"",
       "location": {
-        "line": 391,
+        "line": 392,
         "column": 137
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103837,7 +103837,7 @@
       "kind": "presentation-attribute",
       "evidence": ":row-class=\"() => 'border-t border-border'\"",
       "location": {
-        "line": 391,
+        "line": 392,
         "column": 208
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103849,7 +103849,7 @@
       "kind": "vendor-tag",
       "evidence": "<Column>",
       "location": {
-        "line": 391,
+        "line": 392,
         "column": 252
       },
       "target": "packages/ui/organisms/BsDataTable column contract",
@@ -103861,7 +103861,7 @@
       "kind": "presentation-attribute",
       "evidence": "header-class=\"px-5 py-3 text-start\"",
       "location": {
-        "line": 391,
+        "line": 392,
         "column": 260
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103873,7 +103873,7 @@
       "kind": "presentation-attribute",
       "evidence": "body-class=\"px-5 py-4\"",
       "location": {
-        "line": 391,
+        "line": 392,
         "column": 296
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103885,7 +103885,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 391,
+        "line": 392,
         "column": 402
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103897,7 +103897,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"font-bold\"",
       "location": {
-        "line": 391,
+        "line": 392,
         "column": 405
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103909,7 +103909,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 391,
+        "line": 392,
         "column": 447
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -103921,7 +103921,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-xs text-muted-foreground\"",
       "location": {
-        "line": 391,
+        "line": 392,
         "column": 450
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103933,7 +103933,7 @@
       "kind": "vendor-tag",
       "evidence": "<Column>",
       "location": {
-        "line": 391,
+        "line": 392,
         "column": 634
       },
       "target": "packages/ui/organisms/BsDataTable column contract",
@@ -103945,7 +103945,7 @@
       "kind": "presentation-attribute",
       "evidence": "header-class=\"px-5 py-3 text-end\"",
       "location": {
-        "line": 391,
+        "line": 392,
         "column": 642
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103957,7 +103957,7 @@
       "kind": "presentation-attribute",
       "evidence": "body-class=\"px-5 py-4 text-end\"",
       "location": {
-        "line": 391,
+        "line": 392,
         "column": 676
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103969,7 +103969,7 @@
       "kind": "vendor-tag",
       "evidence": "<Column>",
       "location": {
-        "line": 391,
+        "line": 392,
         "column": 842
       },
       "target": "packages/ui/organisms/BsDataTable column contract",
@@ -103981,7 +103981,7 @@
       "kind": "presentation-attribute",
       "evidence": "header-class=\"px-5 py-3 text-end\"",
       "location": {
-        "line": 391,
+        "line": 392,
         "column": 850
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -103993,7 +103993,7 @@
       "kind": "presentation-attribute",
       "evidence": "body-class=\"px-5 py-4 text-end\"",
       "location": {
-        "line": 391,
+        "line": 392,
         "column": 884
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -104005,7 +104005,7 @@
       "kind": "vendor-tag",
       "evidence": "<Column>",
       "location": {
-        "line": 391,
+        "line": 392,
         "column": 1060
       },
       "target": "packages/ui/organisms/BsDataTable column contract",
@@ -104017,7 +104017,7 @@
       "kind": "presentation-attribute",
       "evidence": "header-class=\"px-5 py-3 text-end\"",
       "location": {
-        "line": 391,
+        "line": 392,
         "column": 1068
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -104029,7 +104029,7 @@
       "kind": "presentation-attribute",
       "evidence": "body-class=\"px-5 py-4 text-end\"",
       "location": {
-        "line": 391,
+        "line": 392,
         "column": 1102
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -104041,7 +104041,7 @@
       "kind": "vendor-tag",
       "evidence": "<Column>",
       "location": {
-        "line": 391,
+        "line": 392,
         "column": 1282
       },
       "target": "packages/ui/organisms/BsDataTable column contract",
@@ -104053,7 +104053,7 @@
       "kind": "presentation-attribute",
       "evidence": "header-class=\"px-5 py-3 text-end\"",
       "location": {
-        "line": 391,
+        "line": 392,
         "column": 1290
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -104065,7 +104065,7 @@
       "kind": "presentation-attribute",
       "evidence": "body-class=\"px-5 py-4 text-end font-bold\"",
       "location": {
-        "line": 391,
+        "line": 392,
         "column": 1324
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -104077,7 +104077,7 @@
       "kind": "native-tag",
       "evidence": "<section>",
       "location": {
-        "line": 393,
+        "line": 394,
         "column": 7
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -104089,7 +104089,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-card p-5\"",
       "location": {
-        "line": 393,
+        "line": 394,
         "column": 16
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -104101,7 +104101,7 @@
       "kind": "native-tag",
       "evidence": "<h2>",
       "location": {
-        "line": 393,
+        "line": 394,
         "column": 36
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -104113,7 +104113,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-lg font-bold\"",
       "location": {
-        "line": 393,
+        "line": 394,
         "column": 40
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -104125,7 +104125,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 393,
+        "line": 394,
         "column": 102
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -104137,7 +104137,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-4 text-sm text-muted-foreground\"",
       "location": {
-        "line": 393,
+        "line": 394,
         "column": 135
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -104149,7 +104149,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 393,
+        "line": 394,
         "column": 216
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -104161,7 +104161,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-4 space-y-4\"",
       "location": {
-        "line": 393,
+        "line": 394,
         "column": 228
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -104173,7 +104173,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 393,
+        "line": 394,
         "column": 348
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -104185,7 +104185,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"grid gap-2 rounded-xl border border-border p-4 text-sm sm:grid-cols-4\"",
       "location": {
-        "line": 393,
+        "line": 394,
         "column": 415
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -104197,7 +104197,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 393,
+        "line": 394,
         "column": 493
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -104209,7 +104209,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"font-bold\"",
       "location": {
-        "line": 393,
+        "line": 394,
         "column": 496
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -104221,7 +104221,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 393,
+        "line": 394,
         "column": 538
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -104233,7 +104233,7 @@
       "kind": "native-tag",
       "evidence": "<span>",
       "location": {
-        "line": 393,
+        "line": 394,
         "column": 541
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -104245,7 +104245,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-muted-foreground\"",
       "location": {
-        "line": 393,
+        "line": 394,
         "column": 547
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -104257,7 +104257,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 393,
+        "line": 394,
         "column": 662
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -104269,7 +104269,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"break-all\"",
       "location": {
-        "line": 393,
+        "line": 394,
         "column": 665
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -104281,7 +104281,7 @@
       "kind": "native-tag",
       "evidence": "<span>",
       "location": {
-        "line": 393,
+        "line": 394,
         "column": 683
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -104293,7 +104293,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-muted-foreground\"",
       "location": {
-        "line": 393,
+        "line": 394,
         "column": 689
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -104305,7 +104305,7 @@
       "kind": "nuxt-or-vue-render-tag",
       "evidence": "<NuxtLink>",
       "location": {
-        "line": 393,
+        "line": 394,
         "column": 776
       },
       "target": "packages/ui/templates/Bs application-routing composition",
@@ -104317,7 +104317,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"font-bold text-[var(--bs-link)]\"",
       "location": {
-        "line": 393,
+        "line": 394,
         "column": 835
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -104329,7 +104329,7 @@
       "kind": "native-tag",
       "evidence": "<label>",
       "location": {
-        "line": 396,
+        "line": 397,
         "column": 291
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -104341,7 +104341,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"space-y-2 text-sm font-bold\"",
       "location": {
-        "line": 396,
+        "line": 397,
         "column": 298
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -104353,7 +104353,7 @@
       "kind": "native-tag",
       "evidence": "<input>",
       "location": {
-        "line": 396,
+        "line": 397,
         "column": 360
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -104365,7 +104365,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-input\"",
       "location": {
-        "line": 396,
+        "line": 397,
         "column": 444
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -104377,7 +104377,7 @@
       "kind": "native-tag",
       "evidence": "<label>",
       "location": {
-        "line": 396,
+        "line": 397,
         "column": 469
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -104389,7 +104389,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"space-y-2 text-sm font-bold\"",
       "location": {
-        "line": 396,
+        "line": 397,
         "column": 476
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -104401,7 +104401,7 @@
       "kind": "native-tag",
       "evidence": "<input>",
       "location": {
-        "line": 396,
+        "line": 397,
         "column": 536
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -104413,7 +104413,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-input\"",
       "location": {
-        "line": 396,
+        "line": 397,
         "column": 586
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -104425,7 +104425,7 @@
       "kind": "native-tag",
       "evidence": "<label>",
       "location": {
-        "line": 396,
+        "line": 397,
         "column": 611
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -104437,7 +104437,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"space-y-2 text-sm font-bold\"",
       "location": {
-        "line": 396,
+        "line": 397,
         "column": 654
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -104449,7 +104449,7 @@
       "kind": "native-tag",
       "evidence": "<select>",
       "location": {
-        "line": 396,
+        "line": 397,
         "column": 716
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -104461,7 +104461,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-select\"",
       "location": {
-        "line": 396,
+        "line": 397,
         "column": 748
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -104473,7 +104473,7 @@
       "kind": "native-tag",
       "evidence": "<option>",
       "location": {
-        "line": 396,
+        "line": 397,
         "column": 766
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -104485,7 +104485,7 @@
       "kind": "native-tag",
       "evidence": "<label>",
       "location": {
-        "line": 396,
+        "line": 397,
         "column": 943
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -104497,7 +104497,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"space-y-2 text-sm font-bold\"",
       "location": {
-        "line": 396,
+        "line": 397,
         "column": 986
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -104509,7 +104509,7 @@
       "kind": "native-tag",
       "evidence": "<input>",
       "location": {
-        "line": 396,
+        "line": 397,
         "column": 1051
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -104521,7 +104521,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-input\"",
       "location": {
-        "line": 396,
+        "line": 397,
         "column": 1101
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -104533,7 +104533,7 @@
       "kind": "native-tag",
       "evidence": "<label>",
       "location": {
-        "line": 396,
+        "line": 397,
         "column": 1126
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -104545,7 +104545,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"space-y-2 text-sm font-bold sm:col-span-2\"",
       "location": {
-        "line": 396,
+        "line": 397,
         "column": 1168
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -104557,7 +104557,7 @@
       "kind": "native-tag",
       "evidence": "<textarea>",
       "location": {
-        "line": 396,
+        "line": 397,
         "column": 1244
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -104569,7 +104569,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-input\"",
       "location": {
-        "line": 396,
+        "line": 397,
         "column": 1327
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -104581,7 +104581,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 398,
+        "line": 399,
         "column": 303
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -104593,7 +104593,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"rounded-xl bg-[var(--bs-status-warning-bg)] p-3 text-sm sm:col-span-2\"",
       "location": {
-        "line": 398,
+        "line": 399,
         "column": 306
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -104605,7 +104605,7 @@
       "kind": "native-tag",
       "evidence": "<label>",
       "location": {
-        "line": 398,
+        "line": 399,
         "column": 451
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -104617,7 +104617,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"space-y-2 text-sm font-bold\"",
       "location": {
-        "line": 398,
+        "line": 399,
         "column": 458
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -104629,7 +104629,7 @@
       "kind": "native-tag",
       "evidence": "<input>",
       "location": {
-        "line": 398,
+        "line": 399,
         "column": 525
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -104641,7 +104641,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-input\"",
       "location": {
-        "line": 398,
+        "line": 399,
         "column": 578
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -104653,7 +104653,7 @@
       "kind": "native-tag",
       "evidence": "<label>",
       "location": {
-        "line": 398,
+        "line": 399,
         "column": 603
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -104665,7 +104665,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"space-y-2 text-sm font-bold\"",
       "location": {
-        "line": 398,
+        "line": 399,
         "column": 610
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -104677,7 +104677,7 @@
       "kind": "native-tag",
       "evidence": "<input>",
       "location": {
-        "line": 398,
+        "line": 399,
         "column": 682
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -104689,7 +104689,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-input\"",
       "location": {
-        "line": 398,
+        "line": 399,
         "column": 735
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -104701,7 +104701,7 @@
       "kind": "native-tag",
       "evidence": "<label>",
       "location": {
-        "line": 398,
+        "line": 399,
         "column": 760
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -104713,7 +104713,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"space-y-2 text-sm font-bold sm:col-span-2\"",
       "location": {
-        "line": 398,
+        "line": 399,
         "column": 767
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -104725,7 +104725,7 @@
       "kind": "native-tag",
       "evidence": "<textarea>",
       "location": {
-        "line": 398,
+        "line": 399,
         "column": 850
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -104737,7 +104737,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-input\"",
       "location": {
-        "line": 398,
+        "line": 399,
         "column": 936
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -106201,7 +106201,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 329,
+        "line": 330,
         "column": 3
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -106213,7 +106213,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"space-y-6\"",
       "location": {
-        "line": 329,
+        "line": 330,
         "column": 8
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -106225,7 +106225,7 @@
       "kind": "native-tag",
       "evidence": "<header>",
       "location": {
-        "line": 330,
+        "line": 331,
         "column": 5
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -106237,7 +106237,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"flex flex-wrap items-end justify-between gap-4\"",
       "location": {
-        "line": 330,
+        "line": 331,
         "column": 13
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -106249,7 +106249,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 331,
+        "line": 332,
         "column": 7
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -106261,7 +106261,7 @@
       "kind": "native-tag",
       "evidence": "<h1>",
       "location": {
-        "line": 331,
+        "line": 332,
         "column": 12
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -106273,7 +106273,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-3xl font-extrabold tracking-tight\"",
       "location": {
-        "line": 331,
+        "line": 332,
         "column": 16
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -106285,7 +106285,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 331,
+        "line": 332,
         "column": 90
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -106297,7 +106297,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-2 text-sm text-muted-foreground\"",
       "location": {
-        "line": 331,
+        "line": 332,
         "column": 93
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -106309,7 +106309,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-btn ls-btn-primary\"",
       "location": {
-        "line": 332,
+        "line": 333,
         "column": 69
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -106321,7 +106321,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 335,
+        "line": 336,
         "column": 5
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -106333,7 +106333,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-card p-8 text-center text-sm\"",
       "location": {
-        "line": 335,
+        "line": 336,
         "column": 42
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -106345,7 +106345,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 337,
+        "line": 338,
         "column": 7
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -106357,7 +106357,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"rounded-xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-4 text-sm\"",
       "location": {
-        "line": 337,
+        "line": 338,
         "column": 57
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -106369,7 +106369,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 338,
+        "line": 339,
         "column": 7
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -106381,7 +106381,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm\"",
       "location": {
-        "line": 338,
+        "line": 339,
         "column": 54
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -106393,7 +106393,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 339,
+        "line": 340,
         "column": 7
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -106405,7 +106405,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm\"",
       "location": {
-        "line": 339,
+        "line": 340,
         "column": 10
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -106417,7 +106417,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 341,
+        "line": 342,
         "column": 7
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -106429,7 +106429,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"overflow-hidden ls-card\"",
       "location": {
-        "line": 341,
+        "line": 342,
         "column": 47
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -106441,7 +106441,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 342,
+        "line": 343,
         "column": 9
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -106453,7 +106453,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"grid gap-3 border-b border-border p-4 sm:grid-cols-2 xl:grid-cols-5\"",
       "location": {
-        "line": 342,
+        "line": 343,
         "column": 14
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -106465,7 +106465,7 @@
       "kind": "native-tag",
       "evidence": "<input>",
       "location": {
-        "line": 343,
+        "line": 344,
         "column": 11
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -106477,7 +106477,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-input xl:col-span-2\"",
       "location": {
-        "line": 343,
+        "line": 344,
         "column": 114
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -106489,7 +106489,7 @@
       "kind": "native-tag",
       "evidence": "<select>",
       "location": {
-        "line": 344,
+        "line": 345,
         "column": 11
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -106501,7 +106501,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-select\"",
       "location": {
-        "line": 344,
+        "line": 345,
         "column": 74
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -106513,7 +106513,7 @@
       "kind": "native-tag",
       "evidence": "<option>",
       "location": {
-        "line": 344,
+        "line": 345,
         "column": 92
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -106525,7 +106525,7 @@
       "kind": "native-tag",
       "evidence": "<option>",
       "location": {
-        "line": 344,
+        "line": 345,
         "column": 149
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -106537,7 +106537,7 @@
       "kind": "native-tag",
       "evidence": "<option>",
       "location": {
-        "line": 344,
+        "line": 345,
         "column": 202
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -106549,7 +106549,7 @@
       "kind": "native-tag",
       "evidence": "<label>",
       "location": {
-        "line": 345,
+        "line": 346,
         "column": 11
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -106561,7 +106561,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-xs font-bold text-muted-foreground\"",
       "location": {
-        "line": 345,
+        "line": 346,
         "column": 18
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -106573,7 +106573,7 @@
       "kind": "native-tag",
       "evidence": "<input>",
       "location": {
-        "line": 345,
+        "line": 346,
         "column": 87
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -106585,7 +106585,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-input mt-1\"",
       "location": {
-        "line": 345,
+        "line": 346,
         "column": 125
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -106597,7 +106597,7 @@
       "kind": "native-tag",
       "evidence": "<label>",
       "location": {
-        "line": 346,
+        "line": 347,
         "column": 11
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -106609,7 +106609,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-xs font-bold text-muted-foreground\"",
       "location": {
-        "line": 346,
+        "line": 347,
         "column": 18
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -106621,7 +106621,7 @@
       "kind": "native-tag",
       "evidence": "<input>",
       "location": {
-        "line": 346,
+        "line": 347,
         "column": 85
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -106633,7 +106633,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-input mt-1\"",
       "location": {
-        "line": 346,
+        "line": 347,
         "column": 121
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -106645,7 +106645,7 @@
       "kind": "presentation-attribute",
       "evidence": ":row-class=\"() => 'border-t border-border'\"",
       "location": {
-        "line": 348,
+        "line": 349,
         "column": 289
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -106657,7 +106657,7 @@
       "kind": "vendor-tag",
       "evidence": "<Column>",
       "location": {
-        "line": 349,
+        "line": 350,
         "column": 11
       },
       "target": "packages/ui/organisms/BsDataTable column contract",
@@ -106669,7 +106669,7 @@
       "kind": "presentation-attribute",
       "evidence": "header-class=\"px-5 py-3 text-start\"",
       "location": {
-        "line": 349,
+        "line": 350,
         "column": 19
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -106681,7 +106681,7 @@
       "kind": "presentation-attribute",
       "evidence": "body-class=\"px-5 py-4\"",
       "location": {
-        "line": 349,
+        "line": 350,
         "column": 55
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -106693,7 +106693,7 @@
       "kind": "nuxt-or-vue-render-tag",
       "evidence": "<NuxtLink>",
       "location": {
-        "line": 349,
+        "line": 350,
         "column": 170
       },
       "target": "packages/ui/templates/Bs application-routing composition",
@@ -106705,7 +106705,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"font-bold text-[var(--bs-link)]\"",
       "location": {
-        "line": 349,
+        "line": 350,
         "column": 206
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -106717,7 +106717,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 349,
+        "line": 350,
         "column": 308
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -106729,7 +106729,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-xs text-muted-foreground\"",
       "location": {
-        "line": 349,
+        "line": 350,
         "column": 311
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -106741,7 +106741,7 @@
       "kind": "vendor-tag",
       "evidence": "<Column>",
       "location": {
-        "line": 350,
+        "line": 351,
         "column": 11
       },
       "target": "packages/ui/organisms/BsDataTable column contract",
@@ -106753,7 +106753,7 @@
       "kind": "presentation-attribute",
       "evidence": "header-class=\"px-5 py-3 text-start\"",
       "location": {
-        "line": 350,
+        "line": 351,
         "column": 19
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -106765,7 +106765,7 @@
       "kind": "presentation-attribute",
       "evidence": "body-class=\"px-5 py-4\"",
       "location": {
-        "line": 350,
+        "line": 351,
         "column": 55
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -106777,7 +106777,7 @@
       "kind": "vendor-tag",
       "evidence": "<Column>",
       "location": {
-        "line": 351,
+        "line": 352,
         "column": 11
       },
       "target": "packages/ui/organisms/BsDataTable column contract",
@@ -106789,7 +106789,7 @@
       "kind": "presentation-attribute",
       "evidence": "header-class=\"px-5 py-3 text-start\"",
       "location": {
-        "line": 351,
+        "line": 352,
         "column": 19
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -106801,7 +106801,7 @@
       "kind": "presentation-attribute",
       "evidence": "body-class=\"px-5 py-4\"",
       "location": {
-        "line": 351,
+        "line": 352,
         "column": 55
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -106813,7 +106813,7 @@
       "kind": "native-tag",
       "evidence": "<span>",
       "location": {
-        "line": 351,
+        "line": 352,
         "column": 163
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -106825,7 +106825,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-badge\"",
       "location": {
-        "line": 351,
+        "line": 352,
         "column": 169
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -106837,7 +106837,7 @@
       "kind": "presentation-attribute",
       "evidence": ":class=\"sale.status === 'issued' ? 'bg-[var(--bs-status-success-bg)] text-fg' : 'bg-muted text-muted-foreground'\"",
       "location": {
-        "line": 351,
+        "line": 352,
         "column": 186
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -106849,7 +106849,7 @@
       "kind": "vendor-tag",
       "evidence": "<Column>",
       "location": {
-        "line": 352,
+        "line": 353,
         "column": 11
       },
       "target": "packages/ui/organisms/BsDataTable column contract",
@@ -106861,7 +106861,7 @@
       "kind": "presentation-attribute",
       "evidence": "header-class=\"px-5 py-3 text-end\"",
       "location": {
-        "line": 352,
+        "line": 353,
         "column": 19
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -106873,7 +106873,7 @@
       "kind": "presentation-attribute",
       "evidence": "body-class=\"px-5 py-4 text-end\"",
       "location": {
-        "line": 352,
+        "line": 353,
         "column": 53
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -106885,7 +106885,7 @@
       "kind": "vendor-tag",
       "evidence": "<Column>",
       "location": {
-        "line": 353,
+        "line": 354,
         "column": 11
       },
       "target": "packages/ui/organisms/BsDataTable column contract",
@@ -106897,7 +106897,7 @@
       "kind": "presentation-attribute",
       "evidence": "header-class=\"px-5 py-3 text-end\"",
       "location": {
-        "line": 353,
+        "line": 354,
         "column": 19
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -106909,7 +106909,7 @@
       "kind": "presentation-attribute",
       "evidence": "body-class=\"px-5 py-4 text-end\"",
       "location": {
-        "line": 353,
+        "line": 354,
         "column": 53
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -106921,7 +106921,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 353,
+        "line": 354,
         "column": 168
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -106933,7 +106933,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-1 text-sm font-bold text-[var(--bs-link)]\"",
       "location": {
-        "line": 353,
+        "line": 354,
         "column": 319
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -106945,7 +106945,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 354,
+        "line": 355,
         "column": 28
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -106957,7 +106957,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"p-8 text-center text-sm text-muted-foreground\"",
       "location": {
-        "line": 354,
+        "line": 355,
         "column": 31
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -106969,7 +106969,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 359,
+        "line": 360,
         "column": 5
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -106981,7 +106981,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-error\"",
       "location": {
-        "line": 359,
+        "line": 360,
         "column": 55
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -106993,7 +106993,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 361,
+        "line": 362,
         "column": 11
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -107005,7 +107005,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 362,
+        "line": 363,
         "column": 11
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -107017,7 +107017,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"grid gap-4 sm:grid-cols-2\"",
       "location": {
-        "line": 362,
+        "line": 363,
         "column": 16
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -107029,7 +107029,7 @@
       "kind": "native-tag",
       "evidence": "<label>",
       "location": {
-        "line": 363,
+        "line": 364,
         "column": 13
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -107041,7 +107041,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"space-y-2 text-sm font-bold\"",
       "location": {
-        "line": 363,
+        "line": 364,
         "column": 20
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -107053,7 +107053,7 @@
       "kind": "native-tag",
       "evidence": "<label>",
       "location": {
-        "line": 364,
+        "line": 365,
         "column": 13
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -107065,7 +107065,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"space-y-2 text-sm font-bold\"",
       "location": {
-        "line": 364,
+        "line": 365,
         "column": 20
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -107077,7 +107077,7 @@
       "kind": "native-tag",
       "evidence": "<input>",
       "location": {
-        "line": 364,
+        "line": 365,
         "column": 80
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -107089,7 +107089,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-input\"",
       "location": {
-        "line": 364,
+        "line": 365,
         "column": 117
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -107101,7 +107101,7 @@
       "kind": "native-tag",
       "evidence": "<label>",
       "location": {
-        "line": 365,
+        "line": 366,
         "column": 13
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -107113,7 +107113,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"space-y-2 text-sm font-bold sm:col-span-2\"",
       "location": {
-        "line": 365,
+        "line": 366,
         "column": 20
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -107125,7 +107125,7 @@
       "kind": "native-tag",
       "evidence": "<input>",
       "location": {
-        "line": 365,
+        "line": 366,
         "column": 92
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -107137,7 +107137,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-input\"",
       "location": {
-        "line": 365,
+        "line": 366,
         "column": 132
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -107149,7 +107149,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 367,
+        "line": 368,
         "column": 11
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -107161,7 +107161,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"grid gap-4 rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 sm:grid-cols-2\"",
       "location": {
-        "line": 367,
+        "line": 368,
         "column": 35
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -107173,7 +107173,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 368,
+        "line": 369,
         "column": 13
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -107185,7 +107185,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-sm sm:col-span-2\"",
       "location": {
-        "line": 368,
+        "line": 369,
         "column": 16
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -107197,7 +107197,7 @@
       "kind": "native-tag",
       "evidence": "<label>",
       "location": {
-        "line": 369,
+        "line": 370,
         "column": 13
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -107209,7 +107209,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"space-y-2 text-sm font-bold\"",
       "location": {
-        "line": 369,
+        "line": 370,
         "column": 20
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -107221,7 +107221,7 @@
       "kind": "native-tag",
       "evidence": "<select>",
       "location": {
-        "line": 369,
+        "line": 370,
         "column": 82
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -107233,7 +107233,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-select\"",
       "location": {
-        "line": 369,
+        "line": 370,
         "column": 114
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -107245,7 +107245,7 @@
       "kind": "native-tag",
       "evidence": "<option>",
       "location": {
-        "line": 369,
+        "line": 370,
         "column": 132
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -107257,7 +107257,7 @@
       "kind": "native-tag",
       "evidence": "<label>",
       "location": {
-        "line": 370,
+        "line": 371,
         "column": 13
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -107269,7 +107269,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"space-y-2 text-sm font-bold\"",
       "location": {
-        "line": 370,
+        "line": 371,
         "column": 20
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -107281,7 +107281,7 @@
       "kind": "native-tag",
       "evidence": "<input>",
       "location": {
-        "line": 370,
+        "line": 371,
         "column": 85
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -107293,7 +107293,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-input\"",
       "location": {
-        "line": 370,
+        "line": 371,
         "column": 135
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -107305,7 +107305,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 372,
+        "line": 373,
         "column": 11
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -107317,7 +107317,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"space-y-3\"",
       "location": {
-        "line": 372,
+        "line": 373,
         "column": 16
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -107329,7 +107329,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 373,
+        "line": 374,
         "column": 13
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -107341,7 +107341,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"flex items-center justify-between\"",
       "location": {
-        "line": 373,
+        "line": 374,
         "column": 18
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -107353,7 +107353,7 @@
       "kind": "native-tag",
       "evidence": "<h2>",
       "location": {
-        "line": 373,
+        "line": 374,
         "column": 60
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -107365,7 +107365,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"font-bold\"",
       "location": {
-        "line": 373,
+        "line": 374,
         "column": 64
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -107377,7 +107377,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-btn ls-btn-sm\"",
       "location": {
-        "line": 373,
+        "line": 374,
         "column": 133
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -107389,7 +107389,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 374,
+        "line": 375,
         "column": 13
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -107401,7 +107401,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"grid gap-3 rounded-xl border border-border p-4 sm:grid-cols-2 lg:grid-cols-6\"",
       "location": {
-        "line": 374,
+        "line": 375,
         "column": 65
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -107413,7 +107413,7 @@
       "kind": "native-tag",
       "evidence": "<label>",
       "location": {
-        "line": 375,
+        "line": 376,
         "column": 15
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -107425,7 +107425,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"space-y-1 text-xs font-bold\"",
       "location": {
-        "line": 375,
+        "line": 376,
         "column": 22
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -107437,7 +107437,7 @@
       "kind": "native-tag",
       "evidence": "<span>",
       "location": {
-        "line": 375,
+        "line": 376,
         "column": 58
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -107449,7 +107449,7 @@
       "kind": "native-tag",
       "evidence": "<select>",
       "location": {
-        "line": 375,
+        "line": 376,
         "column": 93
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -107461,7 +107461,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-select\"",
       "location": {
-        "line": 375,
+        "line": 376,
         "column": 125
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -107473,7 +107473,7 @@
       "kind": "native-tag",
       "evidence": "<option>",
       "location": {
-        "line": 375,
+        "line": 376,
         "column": 174
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -107485,7 +107485,7 @@
       "kind": "native-tag",
       "evidence": "<label>",
       "location": {
-        "line": 376,
+        "line": 377,
         "column": 15
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -107497,7 +107497,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"space-y-1 text-xs font-bold sm:col-span-2\"",
       "location": {
-        "line": 376,
+        "line": 377,
         "column": 22
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -107509,7 +107509,7 @@
       "kind": "native-tag",
       "evidence": "<span>",
       "location": {
-        "line": 376,
+        "line": 377,
         "column": 72
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -107521,7 +107521,7 @@
       "kind": "native-tag",
       "evidence": "<label>",
       "location": {
-        "line": 377,
+        "line": 378,
         "column": 15
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -107533,7 +107533,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"space-y-1 text-xs font-bold\"",
       "location": {
-        "line": 377,
+        "line": 378,
         "column": 22
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -107545,7 +107545,7 @@
       "kind": "native-tag",
       "evidence": "<span>",
       "location": {
-        "line": 377,
+        "line": 378,
         "column": 58
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -107557,7 +107557,7 @@
       "kind": "native-tag",
       "evidence": "<input>",
       "location": {
-        "line": 377,
+        "line": 378,
         "column": 96
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -107569,7 +107569,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"ls-input\"",
       "location": {
-        "line": 377,
+        "line": 378,
         "column": 196
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -107581,7 +107581,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 378,
+        "line": 379,
         "column": 15
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -107593,7 +107593,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-sm\"",
       "location": {
-        "line": 378,
+        "line": 379,
         "column": 20
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -107605,7 +107605,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 378,
+        "line": 379,
         "column": 36
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -107617,7 +107617,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-xs font-bold text-muted-foreground\"",
       "location": {
-        "line": 378,
+        "line": 379,
         "column": 39
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -107629,7 +107629,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 378,
+        "line": 379,
         "column": 117
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -107641,7 +107641,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-2 font-bold\"",
       "location": {
-        "line": 378,
+        "line": 379,
         "column": 120
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -107653,7 +107653,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 378,
+        "line": 379,
         "column": 183
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -107665,7 +107665,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-xs text-muted-foreground\"",
       "location": {
-        "line": 378,
+        "line": 379,
         "column": 220
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -107677,7 +107677,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 379,
+        "line": 380,
         "column": 15
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -107689,7 +107689,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"flex items-end justify-end\"",
       "location": {
-        "line": 379,
+        "line": 380,
         "column": 20
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -107701,7 +107701,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-sm font-bold text-fg disabled:opacity-40\"",
       "location": {
-        "line": 379,
+        "line": 380,
         "column": 79
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -107713,7 +107713,7 @@
       "kind": "native-tag",
       "evidence": "<div>",
       "location": {
-        "line": 382,
+        "line": 383,
         "column": 11
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -107725,7 +107725,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"rounded-xl bg-muted p-4\"",
       "location": {
-        "line": 382,
+        "line": 383,
         "column": 16
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -107737,7 +107737,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 382,
+        "line": 383,
         "column": 48
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -107749,7 +107749,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"text-sm\"",
       "location": {
-        "line": 382,
+        "line": 383,
         "column": 51
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -107761,7 +107761,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 382,
+        "line": 383,
         "column": 101
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -107773,7 +107773,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-1 text-sm\"",
       "location": {
-        "line": 382,
+        "line": 383,
         "column": 104
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
@@ -107785,7 +107785,7 @@
       "kind": "native-tag",
       "evidence": "<p>",
       "location": {
-        "line": 382,
+        "line": 383,
         "column": 174
       },
       "target": "packages/ui/Bs semantic presentation primitive or composition",
@@ -107797,7 +107797,7 @@
       "kind": "presentation-attribute",
       "evidence": "class=\"mt-3 text-xl font-extrabold\"",
       "location": {
-        "line": 382,
+        "line": 383,
         "column": 177
       },
       "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
