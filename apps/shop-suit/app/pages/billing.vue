@@ -164,7 +164,7 @@ async function submitNotice() {
   const entry = privateEntry.value
   const shopId = currentId.value
   const generation = privateGeneration
-  if (!plan || !(form.paidAmount > 0) || !form.transferDate || form.transferReference.trim().length < 2) {
+  if (!plan || (!entry && !selectedPlan.value) || !(form.paidAmount > 0) || !form.transferDate || form.transferReference.trim().length < 2) {
     submitError.value = copy.value.invalid
     return
   }
