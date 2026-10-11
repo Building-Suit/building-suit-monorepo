@@ -202,3 +202,27 @@ export { useClientReady } from './composables/useClientReady.ts'
 
 export { useFormInteraction } from './composables/useFormInteraction.ts'
 export { useDialogInteraction } from './composables/useDialogInteraction.ts'
+
+export { useDebouncedChange } from './composables/useDebouncedChange.ts'
+
+export { useFileSelection } from './composables/useFileSelection.ts'
+
+export { useCheckboxSelection } from './composables/useCheckboxSelection.ts'
+
+export { useTagSelection } from './composables/useTagSelection.ts'
+
+export { useMenuNavigation } from './composables/useMenuNavigation.ts'
+
+export { useSideNavigation } from './composables/useSideNavigation.ts'
+
+export { useFloatingMenu } from './composables/useFloatingMenu.ts'
+
+export { useTableQueryInteraction } from './composables/useTableQueryInteraction.ts'
+
+export { useDocumentPrint } from './composables/useDocumentPrint.ts'
+
+export { useBrowserShare } from './composables/useBrowserShare.ts'
+
+export { useCodeEntry } from './composables/useCodeEntry.ts'
+
+export { useFileDrop } from './composables/useFileDrop.ts'

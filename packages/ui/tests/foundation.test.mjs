@@ -7,6 +7,7 @@ import { parse, compileScript } from 'vue/compiler-sfc'
 import { renderToString } from 'vue/server-renderer'
 import * as vue from 'vue'
 import ts from 'typescript'
+import { useTableQueryInteraction } from '../../ux/src/composables/useTableQueryInteraction.ts'
 import { useFormInteraction } from '../../ux/src/composables/useFormInteraction.ts'
 import { useNavigationDisclosure } from '../../ux/src/composables/useNavigationDisclosure.ts'
 
@@ -83,7 +84,7 @@ test('table cell actions retain their nodes when a parent opens and closes a dia
   })
   const Table = component('organisms/BsDataTable.vue', 'en', {
     'primevue/column': { default: Column }, 'primevue/datatable': { default: DataTable },
-    '@building-suit/ux': { csvCell: String }, '../atoms/BsButton.vue': { default: RowButton },
+    '@building-suit/ux': { csvCell: String, useTableQueryInteraction }, '../atoms/BsButton.vue': { default: RowButton },
   })
   const dialogOpen = vue.ref(false)
   const label = vue.ref('Branch cash 01')
@@ -325,8 +326,7 @@ test('authenticated chrome is composed from canonical shared organisms', () => {
   assert.match(shell, /<BsTopHeader\b/)
   assert.doesNotMatch(shell, /<aside\b|<header\b/)
   assert.match(sideMenu, /id="bs-primary-navigation"/)
-  assert.match(sideMenu, /event\.key === 'Escape'/)
-  assert.match(sideMenu, /event\.key !== 'Tab'/)
+  assert.match(sideMenu, /useSideNavigation/)
   assert.match(sideMenu, /class="fixed inset-0 z-30 ls-scrim lg:hidden"/)
   assert.match(topHeader, /aria-controls="bs-primary-navigation"/)
   assert.match(userMenu, /<BsUserIdentity\b/)

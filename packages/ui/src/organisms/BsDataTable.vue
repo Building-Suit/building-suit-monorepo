@@ -16,7 +16,7 @@ import type {
   BsDataTableQueryAdapter,
   BsDataTableRowAction,
 } from '@building-suit/ux'
-import { csvCell } from '@building-suit/ux'
+import { csvCell, useTableQueryInteraction } from '@building-suit/ux'
 
 defineOptions({ inheritAttrs: false })
 const props = withDefaults(defineProps<{
@@ -94,7 +94,9 @@ function forwardedAttrs() {
   }))
 }
 const table = ref<InstanceType<typeof DataTable> | null>(null)
-const search = ref('')
+const { search, onPage, onSort, onFilter } = useTableQueryInteraction<DataTablePageEvent, DataTableSortEvent, DataTableFilterEvent>(() => props.queryAdapter, {
+  search: value => emit('search', value), page: event => emit('page', event), sort: event => emit('sort', event), filter: event => emit('filter', event),
+})
 const visibleColumns = computed(() => props.columns.filter(column => !column.hidden))
 const effectiveSelectionMode = computed(() => props.capabilities.select || !props.columns.length ? props.selectionMode : undefined)
 const exportEnabled = computed(() => props.exportable || props.capabilities.export === true)
@@ -210,13 +212,9 @@ function emitRowAction(action: BsDataTableRowAction, row: Row) {
   else if (action === 'archive') emit('archive', row)
   else emit('void', row)
 }
-function onPage(event: DataTablePageEvent) { props.queryAdapter?.page?.(event); emit('page', event) }
-function onSort(event: DataTableSortEvent) { const sort = props.queryAdapter?.sort; sort?.(event); emit('sort', event) }
-function onFilter(event: DataTableFilterEvent) { props.queryAdapter?.filter?.(event); emit('filter', event) }
 function updateFilters(value: DataTableFilterMeta) { emit('update:filters', value) }
 function updateSortField(value: string | ((item: unknown) => string) | null | undefined) { emit('update:sortField', typeof value === 'string' ? value : undefined) }
 function updateSortOrder(value: number | null | undefined) { emit('update:sortOrder', value === 1 || value === -1 || value === 0 ? value : undefined) }
-watch(search, (value) => { props.queryAdapter?.search?.(value); emit('search', value) })
 defineExpose({ exportCSV: exportCsv })
 </script>
 

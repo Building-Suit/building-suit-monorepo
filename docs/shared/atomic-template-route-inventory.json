@@ -36,7 +36,11 @@
     "BsInvitationAcceptancePage": "packages/ui/src/templates/BsInvitationAcceptancePage.vue",
     "BsAuditHistoryPage": "packages/ui/src/templates/BsAuditHistoryPage.vue",
     "BsClientPortfolioPage": "packages/ui/src/templates/BsClientPortfolioPage.vue",
-    "BsProductAuthFrame": "packages/ui/src/templates/BsProductAuthFrame.vue"
+    "BsProductAuthFrame": "packages/ui/src/templates/BsProductAuthFrame.vue",
+    "BsCustomerDirectoryPage": "packages/ui/src/templates/BsCustomerDirectoryPage.vue",
+    "BsStarterWorkflowPage": "packages/ui/src/templates/BsStarterWorkflowPage.vue",
+    "BsReceiptPage": "packages/ui/src/templates/BsReceiptPage.vue",
+    "BsCustomerProfilePage": "packages/ui/src/templates/BsCustomerProfilePage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -1887,29 +1891,14 @@
     {
       "source": "apps/shop-suit/app/pages/customers/[id].vue",
       "kind": "route",
-      "currentSharedTemplates": [],
-      "renderedBsComponents": [
-        "BsBox",
-        "BsButton",
-        "BsDataTable",
-        "BsDescriptionItem",
-        "BsDescriptionList",
-        "BsField",
-        "BsGrid",
-        "BsHeading",
-        "BsInline",
-        "BsInput",
-        "BsLink",
-        "BsPanel",
-        "BsRecordActionDialog",
-        "BsSelect",
-        "BsSkeleton",
-        "BsStack",
-        "BsText",
-        "BsTextarea"
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsCustomerProfilePage.vue"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "renderedBsComponents": [
+        "BsCustomerProfilePage"
+      ],
+      "destination": "packages/ui/src/templates/BsCustomerProfilePage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/shop-suit/app/pages/customers/[id].vue",
       "dependencies": [
         "~/utils/receiptAllocations",
@@ -1920,22 +1909,14 @@
     {
       "source": "apps/shop-suit/app/pages/customers/index.vue",
       "kind": "route",
-      "currentSharedTemplates": [],
-      "renderedBsComponents": [
-        "BsDataTable",
-        "BsField",
-        "BsInput",
-        "BsLink",
-        "BsPageHeader",
-        "BsPanel",
-        "BsRecordActionDialog",
-        "BsSelect",
-        "BsStack",
-        "BsText",
-        "BsTextarea"
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsCustomerDirectoryPage.vue"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "renderedBsComponents": [
+        "BsCustomerDirectoryPage"
+      ],
+      "destination": "packages/ui/src/templates/BsCustomerDirectoryPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/shop-suit/app/pages/customers/index.vue",
       "dependencies": [
         "~/types/shopCrmRpc"
@@ -2359,28 +2340,13 @@
       "source": "apps/shop-suit/app/pages/sales/[id]/receipt.vue",
       "kind": "route",
       "currentSharedTemplates": [
-        "packages/ui/src/templates/BsPrintableDocument.vue"
+        "packages/ui/src/templates/BsReceiptPage.vue"
       ],
       "renderedBsComponents": [
-        "BsAlert",
-        "BsButton",
-        "BsChoiceGroup",
-        "BsContentSection",
-        "BsDescriptionItem",
-        "BsDescriptionList",
-        "BsDocumentHeader",
-        "BsDocumentLines",
-        "BsDocumentTotals",
-        "BsInline",
-        "BsPage",
-        "BsPrintActions",
-        "BsPrintableDocument",
-        "BsSelect",
-        "BsStateSurface",
-        "BsText"
+        "BsReceiptPage"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "destination": "packages/ui/src/templates/BsReceiptPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/shop-suit/app/pages/sales/[id]/receipt.vue",
       "dependencies": [
         "~/types/shopCrmRpc",
@@ -2658,6 +2624,10 @@
     "BsCataloguePage",
     "BsInvitationAcceptancePage",
     "BsAuditHistoryPage",
-    "BsClientPortfolioPage"
+    "BsClientPortfolioPage",
+    "BsCustomerDirectoryPage",
+    "BsStarterWorkflowPage",
+    "BsReceiptPage",
+    "BsCustomerProfilePage"
   ]
 }

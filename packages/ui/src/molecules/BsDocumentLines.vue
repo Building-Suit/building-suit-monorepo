@@ -20,8 +20,8 @@ defineProps<{ lines: BsDocumentLine[]; label: string; itemLabel: string; quantit
           <th scope="row">{{ line.label }}<small v-if="line.description">{{ line.description }}</small>
           </th>
           <td dir="auto">{{ line.quantity }}</td>
-          <td dir="auto">{{ line.unitPrice }}</td>
-          <td dir="auto">{{ line.total }}</td>
+          <td dir="auto">{{ line.unitPrice?.replace(/\u00a0/g, ' ') }}</td>
+          <td dir="auto">{{ line.total.replace(/\u00a0/g, ' ') }}</td>
         </tr>
       </tbody>
     </table>

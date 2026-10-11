@@ -9,10 +9,9 @@ withDefaults(defineProps<{
   elevated?: boolean
 }>(), { signedIn: false, loginPath: '/login', signupPath: '/signup', dashboardPath: '/dashboard', elevated: false })
 
-const open = ref(false)
 const route = useRoute()
-watch(() => route.fullPath, () => { open.value = false })
-defineExpose({ close: () => { open.value = false } })
+const { open, close } = useNavigationDisclosure(() => route.fullPath)
+defineExpose({ close })
 </script>
 
 <template>

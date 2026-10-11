@@ -1,10 +1,9 @@
 <script setup lang="ts">
+import { useTagSelection } from '@building-suit/ux'
 /** Product adapters commit emitted intent; assignment is never optimistic here. */
 const props = defineProps<{ label: string; tags: Array<{ id: string; label: string }>; options: Array<{ id: string; label: string }>; addLabel: string; removeLabel: string; emptyLabel: string; loading?: boolean; error?: string | null; pending?: boolean; readonly?: boolean }>()
 const emit = defineEmits<{ add: [id: string]; remove: [id: string] }>()
-const selected = ref<string | number | null>(null)
-const available = computed(() => props.options.filter(option => !props.tags.some(tag => tag.id === option.id)))
-watch(available, options => { if (!options.some(option => option.id === selected.value)) selected.value = null })
+const { selected, available } = useTagSelection(() => props.tags, () => props.options)
 </script>
 <template>
   <BsStack gap="sm" :aria-label="label" :aria-busy="loading || pending">

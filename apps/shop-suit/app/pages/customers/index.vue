@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { BsCustomerDirectoryCopy, BsCustomerDirectoryRow, BsCustomerIdentityForm } from '@building-suit/ui/types/customerDirectoryPresentation'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 
 definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
@@ -37,18 +38,13 @@ const pageSize = 20
 const form = reactive({ name: '', phone: '', email: '', address: '', notes: '' })
 const actionError = ref('')
 const { visible: showForm, pending: saving, dirty: formDirty, complete } = useRecordAction(() => form)
-let searchTimer: ReturnType<typeof setTimeout> | undefined
-
-watch(search, (value) => {
-  if (searchTimer) clearTimeout(searchTimer)
-  searchTimer = setTimeout(() => {
-    debouncedSearch.value = value.trim()
-    page.value = 1
-  }, 300)
+const { cancel: cancelSearch } = useDebouncedChange(search, (value) => {
+  debouncedSearch.value = value.trim()
+  page.value = 1
 })
-onBeforeUnmount(() => { if (searchTimer) clearTimeout(searchTimer) })
 watch(statusFilter, () => { page.value = 1 })
 watch(currentId, () => {
+  cancelSearch()
   page.value = 1
   search.value = ''
   debouncedSearch.value = ''
@@ -157,64 +153,40 @@ function formatDate(value: string) {
 }
 
 useShopRealtime('customers', () => formDirty.value)
+
+const copy = computed<BsCustomerDirectoryCopy>(() => ({
+  title: t('customers.title'),
+  subtitle: t('customers.subtitle'),
+  noShop: t('customers.noShop'),
+  dashboard: t('customers.dashboard'),
+  historyNotice: t('customers.historyNotice'),
+  permissionDenied: t('customers.permissionDenied'),
+  manageDenied: t('customers.manageDenied'),
+  createTitle: t('customers.createTitle'),
+  save: t('customers.save'),
+  cancel: t('customers.cancel'),
+  name: t('customers.name'),
+  phone: t('customers.phone'),
+  email: t('customers.email'),
+  address: t('customers.address'),
+  notes: t('customers.notes'),
+  add: t('customers.add'),
+  search: t('customers.search'),
+  contact: t('customers.contact'),
+  status: t('customers.status'),
+  updated: t('customers.updated'),
+  noCustomers: t('customers.noCustomers'),
+}))
+const rows = computed<BsCustomerDirectoryRow[]>(() => (customerPage.value?.items ?? []).map(customer => ({
+  id: customer.id, name: customer.name, href: `/customers/${customer.id}`,
+  phone: customer.phone || '—', email: customer.email || '—',
+  status: t(customer.is_active ? 'customers.active' : 'customers.archived'), updated: formatDate(customer.updated_at),
+})))
+const editorForm = computed<BsCustomerIdentityForm>({ get: () => ({ ...form }), set: value => Object.assign(form, value) })
+const statusModel = computed<string>({ get: () => statusFilter.value, set: value => { if (value === 'active' || value === 'archived' || value === 'all') statusFilter.value = value } })
+const statusOptions = computed(() => ['active', 'archived', 'all'].map(value => ({ value, label: t(`customers.${value}`) })))
 </script>
 
 <template>
-  <BsStack>
-    <BsPageHeader  :title="t('customers.title')" :subtitle="t('customers.subtitle')"/>
-    <BsPanel v-if="!current && !shopLoading" padding="md">
-      <BsText as="p">{{ t('customers.noShop') }}</BsText>
-      <BsLink to="/dashboard">{{ t('customers.dashboard') }}</BsLink>
-    </BsPanel>
-    <template v-else-if="current">
-      <BsText as="p" size="sm">{{ t('customers.historyNotice') }}</BsText>
-      <BsText v-if="customerPage?.permissionDenied" role="alert" as="p" size="sm" tone="warning">{{ t('customers.permissionDenied') }}</BsText>
-      <BsText v-else-if="customerPage && !canManage" as="p" size="sm">{{ t('customers.manageDenied') }}</BsText>
-      <BsRecordActionDialog v-model:visible="showForm" :title="t('customers.createTitle')" :dirty="formDirty" :pending="saving" :error="actionError" :submit-label="t('customers.save')" :cancel-label="t('customers.cancel')" @submit="save">
-        <BsField v-slot="field" :label="(t('customers.name'))">
-          <BsInput :id="field.id" v-model="form.name" :aria-describedby="field.describedby" type="text" :minlength="2" :maxlength="160" required/>
-        </BsField>
-        <BsField v-slot="field" :label="(t('customers.phone'))">
-          <BsInput :id="field.id" v-model="form.phone" :aria-describedby="field.describedby" type="tel" :maxlength="50" autocomplete="tel"/>
-        </BsField>
-        <BsField v-slot="field" :label="(t('customers.email'))">
-          <BsInput :id="field.id" v-model="form.email" :aria-describedby="field.describedby" type="email" :maxlength="254" autocomplete="email"/>
-        </BsField>
-        <BsField v-slot="field" :label="(t('customers.address'))">
-          <BsTextarea :id="field.id" v-model="form.address" :aria-describedby="field.describedby" :maxlength="500" :rows="2"/>
-        </BsField>
-        <BsField v-slot="field" :label="(t('customers.notes'))">
-          <BsTextarea :id="field.id" v-model="form.notes" :aria-describedby="field.describedby" :maxlength="2000" :rows="3"/>
-        </BsField>
-      </BsRecordActionDialog>
-      <BsPanel v-if="!customerPage?.permissionDenied" padding="md">
-        <BsDataTable :value="customerPage?.items ?? []" :loading="pending" :error="error ? t('customers.loadError') : null" :label="t('customers.title')" :capabilities="{ insert: canManage }" :action-labels="{ insert: t('customers.add') }" searchable :search-label="t('customers.search')" data-key="id" lazy paginator :rows="pageSize" :first="(page - 1) * pageSize" :total-records="customerPage?.total ?? 0" :always-show-paginator="false" :columns="[{ key: 'column0', header: (t('customers.name')) }, { key: 'column1', header: (t('customers.contact')) }, { key: 'column2', header: (t('customers.status')) }, { key: 'column3', header: (t('customers.updated')) }]" @search="value => search = value" @page="handlePage" @retry="refresh()" @create="openCreate">
-          <template #cell-column0="{ row: customer }">
-            <BsLink :to="`/customers/${customer.id}`">{{ customer.name }}</BsLink>
-          </template>
-          <template #cell-column1="{ row: customer }">
-            <BsStack>
-              <BsText as="p">{{ customer.phone || '—' }}</BsText>
-              <BsText as="p" size="xs" tone="muted">{{ customer.email || '—' }}</BsText>
-            </BsStack>
-          </template>
-          <template #cell-column2="{ row: customer }">
-            <BsText as="span">{{ customer.is_active ? t('customers.active') : t('customers.archived') }}</BsText>
-          </template>
-          <template #cell-column3="{ row: customer }">{{ formatDate(customer.updated_at) }}</template>
-          <template #filters>
-            <BsSelect
-              v-model="statusFilter" :label="t('customers.status')" :options="[
-                { value: 'active', label: t('customers.active') },
-                { value: 'archived', label: t('customers.archived') },
-                { value: 'all', label: t('customers.all') },
-              ]" option-label="label" option-value="value"/>
-          </template>
-          <template #empty>
-            <BsText as="p" size="sm" tone="muted">{{ t('customers.noCustomers') }}</BsText>
-          </template>
-        </BsDataTable>
-      </BsPanel>
-    </template>
-  </BsStack>
+  <BsCustomerDirectoryPage v-model:form="editorForm" v-model:visible="showForm" v-model:status="statusModel" :copy="copy" :rows="rows" :context-available="Boolean(current)" :context-loading="shopLoading" :permission-denied="Boolean(customerPage?.permissionDenied)" :can-manage="canManage" :loading="pending" :error="error ? t('customers.loadError') : null" :page="page" :page-size="pageSize" :total="customerPage?.total ?? 0" :editor-dirty="formDirty" :saving="saving" :action-error="actionError" :status-options="statusOptions" @search="search = $event" @page="handlePage" @retry="refresh()" @create="openCreate" @save="save"/>
 </template>

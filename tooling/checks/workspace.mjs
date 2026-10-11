@@ -177,13 +177,13 @@ const scaffoldSources = {
   layout: await readFile(path.join(root, 'tooling/new-platform/templates/app/layouts/default.vue.template'), 'utf8'),
   page: await readFile(path.join(root, 'tooling/new-platform/templates/app/pages/index.vue.template'), 'utf8'),
 }
-for (const component of ['BsAppShell', 'BsProductLogo', 'BsSettingsMenu', 'BsSlot']) {
+for (const component of ['BsWorkspaceShell']) {
   if (!new RegExp(`<${component}\\b`).test(scaffoldSources.layout)) failures.push(`tooling/new-platform: default layout must compose ${component}`)
 }
 for (const component of ['BsAppRoot']) {
   if (!new RegExp(`<${component}\\b`).test(scaffoldSources.app)) failures.push(`tooling/new-platform: app root must compose ${component}`)
 }
-if (!/<BsContentSection\b/.test(scaffoldSources.page)) failures.push('tooling/new-platform: starter page must use shared page composition')
+if (!/<BsStarterWorkflowPage\b/.test(scaffoldSources.page)) failures.push('tooling/new-platform: starter page must use its complete shared page template')
 if (/\bls-(?:card|btn|input|select)\b|<(?:button|form|section)\b[^>]*class=/.test(scaffoldSources.page)) {
   failures.push('tooling/new-platform: starter page recreates shared presentation')
 }

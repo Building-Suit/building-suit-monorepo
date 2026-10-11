@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useFileSelection } from '@building-suit/ux'
 defineOptions({ inheritAttrs: false })
 
 type FileModel = File | File[] | null
@@ -37,22 +38,13 @@ const emit = defineEmits<{
 }>()
 const generatedId = useId()
 const id = computed(() => props.inputId || generatedId)
-const input = ref<HTMLInputElement | null>(null)
-defineExpose({ nativeElement: input, click: () => input.value?.click(), focus: () => input.value?.focus() })
-const selectedFiles = computed(() => props.modelValue == null ? [] : Array.isArray(props.modelValue) ? props.modelValue : [props.modelValue])
-const selectedText = computed(() => props.selectedLabel || selectedFiles.value.map(file => file.name).join(', ') || props.emptyLabel)
-
-function update(event: Event) {
-  const files = Array.from((event.target as HTMLInputElement).files || [])
-  const value = props.multiple ? files : files[0] || null
+const { input, selectedFiles, update, click, focus } = useFileSelection(() => props.modelValue, () => props.multiple, (value, event) => {
   emit('update:modelValue', value)
   emit('select', value)
   emit('change', event)
-}
-
-watch(() => props.modelValue, (value) => {
-  if (value == null && input.value) input.value.value = ''
 })
+defineExpose({ nativeElement: input, click, focus })
+const selectedText = computed(() => props.selectedLabel || selectedFiles.value.map(file => file.name).join(', ') || props.emptyLabel)
 </script>
 
 <template>

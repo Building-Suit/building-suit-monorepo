@@ -206,7 +206,15 @@
     "./templates/BsAuditHistoryPage": "./src/templates/BsAuditHistoryPage.vue",
     "./types/auditPresentation": "./src/types/auditPresentation.ts",
     "./templates/BsClientPortfolioPage": "./src/templates/BsClientPortfolioPage.vue",
-    "./types/portfolioPresentation": "./src/types/portfolioPresentation.ts"
+    "./types/portfolioPresentation": "./src/types/portfolioPresentation.ts",
+    "./templates/BsCustomerDirectoryPage": "./src/templates/BsCustomerDirectoryPage.vue",
+    "./types/customerDirectoryPresentation": "./src/types/customerDirectoryPresentation.ts",
+    "./templates/BsStarterWorkflowPage": "./src/templates/BsStarterWorkflowPage.vue",
+    "./templates/BsReceiptPage": "./src/templates/BsReceiptPage.vue",
+    "./types/receiptPresentation": "./src/types/receiptPresentation.ts",
+    "./templates/BsCustomerProfilePage": "./src/templates/BsCustomerProfilePage.vue",
+    "./types/customerProfilePresentation": "./src/types/customerProfilePresentation.ts",
+    "./organisms/BsCustomerIdentityFields": "./src/organisms/BsCustomerIdentityFields.vue"
   },
   "dependencies": {
     "primevue": "4.5.5",

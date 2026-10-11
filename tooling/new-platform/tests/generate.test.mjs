@@ -26,6 +26,8 @@ async function fixture(t) {
   const root = await mkdtemp(path.join(os.tmpdir(), 'bs-generator-'))
   t.after(() => rm(root, { recursive: true, force: true }))
   await writeFile(path.join(root, 'package.json'), await readFile(path.join(workspaceRoot, 'package.json')))
+  await mkdir(path.join(root, 'packages/ui'), { recursive: true })
+  await writeFile(path.join(root, 'packages/ui/package.json'), await readFile(path.join(workspaceRoot, 'packages/ui/package.json')))
   return { root, app: path.join(root, 'apps', slug) }
 }
 
@@ -53,8 +55,8 @@ test('dry run is side-effect free and matches the generated disposable Suit', as
   assert.ok(!preview.some(file => file.includes('/app/components/') || /\.(css|scss|sass|less)$/.test(file)))
   assert.equal((await readFile(path.join(app, 'app/app.vue'), 'utf8')).trim(), '<template><BsAppRoot toast-host /></template>')
   const page = await readFile(path.join(app, 'app/pages/index.vue'), 'utf8')
-  assert.match(page, /v-bind="sample"/)
-  assert.match(page, /@click="openWorkflow"/)
+  assert.match(page, /<BsStarterWorkflowPage\b/)
+  assert.match(page, /@start="startWorkflow"/)
   const guidance = await readFile(path.join(app, 'AGENTS.md'), 'utf8')
   for (const required of ['ZERO-NATIVE', 'packages/ui', 'packages/ux', 'Do not create Vue files under `app/components`']) assert.ok(guidance.includes(required))
   const { dependencies } = JSON.parse(await readFile(path.join(app, 'package.json'), 'utf8'))

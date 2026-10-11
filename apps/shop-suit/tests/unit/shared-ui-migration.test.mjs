@@ -19,6 +19,13 @@ const sources = vueFiles(appRoot).map(file => ({
   source: readFileSync(file, 'utf8'),
 }))
 
+
+function presentationFor(file) {
+  const source = sources.find(item => item.file === file)?.source || ''
+  const entry = JSON.parse(readFileSync(path.join(workspaceRoot, 'docs/shared/atomic-template-route-inventory.json'), 'utf8')).entries.find(entry => entry.source === `apps/shop-suit/app/${file}`)
+  return entry?.destination ? readFileSync(path.join(workspaceRoot, entry.destination), 'utf8') : source
+}
+
 test('Shop reusable controls and tables come from shared UI', () => {
   for (const { file, source } of sources) {
     assert.doesNotMatch(source, /<table\b/, `${file} contains a native reusable data table`)
@@ -36,14 +43,14 @@ test('Shop auth routes use the canonical shared auth and signup contracts', () =
   const login = sources.find(item => item.file === 'pages/auth/login.vue')?.source || ''
   const signup = sources.find(item => item.file === 'pages/auth/signup.vue')?.source || ''
   const recovery = sources.filter(item => ['pages/auth/forgot-password.vue', 'pages/auth/reset-password.vue'].includes(item.file))
-  assert.match(layout, /<BsAuthLayout\b/)
-  assert.match(login, /<BsAuthForm\b/)
+  assert.match(layout, /<BsProductAuthFrame\b/)
+  assert.match(login, /<BsSignInPage\b/)
   assert.match(signup, /<BsAuthForm\b/)
   assert.match(signup, /<BsSignupWizard\b/)
   assert.match(signup, /<BsVerificationForm\b/)
   assert.match(signup, /useVerificationTimer\(\)/)
   assert.equal(existsSync(path.join(appRoot, 'composables/useShopVerificationTimer.ts')), false)
-  for (const { source } of recovery) assert.match(source, /<BsAuthForm\b/)
+  for (const { source } of recovery) assert.match(source, /<BsPasswordRecoveryPage\b/)
   for (const source of [login, signup, ...recovery.map(item => item.source)]) {
     assert.doesNotMatch(source, /\bls-auth-(?:card|eyebrow)\b/)
   }
@@ -71,7 +78,9 @@ test('standard Shop record actions use the canonical dialog and controller', () 
     const source = sources.find(item => item.file === file)?.source
     assert.ok(source, `${file} is missing`)
     assert.match(source, /useRecordAction\(/, `${file} does not use the shared controller`)
-    assert.match(source, /<BsRecordActionDialog\b/, `${file} does not use the shared record-action dialog`)
+    const entry = JSON.parse(readFileSync(path.join(workspaceRoot, 'docs/shared/atomic-template-route-inventory.json'), 'utf8')).entries.find(entry => entry.source === `apps/shop-suit/app/${file}`)
+    const presentation = entry?.destination ? readFileSync(path.join(workspaceRoot, entry.destination), 'utf8') : source
+    assert.match(presentation, /<BsRecordActionDialog\b|<BsAccessIdentityEditor\b|<BsAccessRoleEditor\b/, `${file} does not delegate to shared record-action presentation`)
   }
 })
 
@@ -84,7 +93,7 @@ test('Shop catalog category CRUD uses the canonical record dialog', () => {
 
 test('Shop CRUD tables use shared capabilities, toolbar controls, pagination, and row actions', () => {
   for (const file of ['pages/products/index.vue', 'pages/services/index.vue']) {
-    const source = sources.find(item => item.file === file)?.source || ''
+    const source = presentationFor(file)
     assert.match(source, /<BsDataTable[\s\S]+:capabilities="\{ insert:/, `${file} lacks shared capabilities`)
     assert.match(source, /searchable/, `${file} lacks shared search`)
     assert.match(source, /paginator/, `${file} lacks shared pagination`)
@@ -92,9 +101,9 @@ test('Shop CRUD tables use shared capabilities, toolbar controls, pagination, an
     assert.match(source, /@edit=/, `${file} lacks shared edit action`)
     assert.doesNotMatch(source, /<nav v-if="[^"]*total > pageSize"/, `${file} retains local pagination`)
   }
-  const customers = sources.find(item => item.file === 'pages/customers/index.vue')?.source || ''
+  const customers = presentationFor('pages/customers/index.vue')
   assert.match(customers, /:capabilities="\{ insert: canManage \}"/)
-  assert.match(customers, /@create="openCreate"/)
+  assert.match(customers, /@create=/)
   const settings = sources.find(item => item.file === 'pages/settings.vue')?.source || ''
   assert.match(settings, /<BsDataTable[\s\S]+copy\.locationsTitle/)
   assert.match(settings, /<BsRecordActionDialog v-model:visible="locationDialogOpen"/)
@@ -113,7 +122,7 @@ test('remaining direct dialogs are materially different shared-overlay workflows
 test('Shop authenticated chrome is adapter-only shared UI', () => {
   const layouts = sources.filter(({ file }) => file.startsWith('layouts/'))
   for (const file of ['layouts/default.vue', 'layouts/platform-admin.vue']) {
-    const source = layouts.find(item => item.file === file)?.source || ''
+    const source = presentationFor(file)
     assert.match(source, /<BsAppShell\b/)
     assert.match(source, /<BsUserMenu\b/)
     assert.doesNotMatch(source, /<SettingsMenu\b|accountOpen|role="menu"/)

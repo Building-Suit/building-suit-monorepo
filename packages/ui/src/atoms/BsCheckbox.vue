@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useCheckboxSelection } from '@building-suit/ux'
 defineOptions({ inheritAttrs: false })
 
 type ChoiceValue = string | number
@@ -36,30 +37,14 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{ 'update:modelValue': [value: CheckboxModel]; change: [checked: boolean, event: Event]; nativeChange: [event: Event] }>()
 const generatedId = useId()
 const id = computed(() => props.inputId || generatedId)
-const input = ref<HTMLInputElement | null>(null)
-defineExpose({ nativeElement: input, focus: () => input.value?.focus() })
-const checked = computed(() => props.checked ?? (Array.isArray(props.modelValue)
-  ? props.value !== undefined && props.modelValue.some(item => Object.is(item, props.value))
-  : Boolean(props.modelValue)))
-
-function update(event: Event) {
-  const selected = (event.target as HTMLInputElement).checked
-  if (Array.isArray(props.modelValue)) {
-    const current = props.modelValue
-    const value = props.value
-    if (value === undefined) return
-    emit('update:modelValue', selected
-      ? current.some(item => Object.is(item, value)) ? current : [...current, value]
-      : current.filter(item => !Object.is(item, value)))
-  }
-  else emit('update:modelValue', selected)
+const { input, checked, update, focus } = useCheckboxSelection({
+  model: () => props.modelValue, checked: () => props.checked, choice: () => props.value, indeterminate: () => props.indeterminate,
+}, (value, selected, event) => {
+  emit('update:modelValue', value)
   emit('change', selected, event)
   emit('nativeChange', event)
-}
-
-watchEffect(() => {
-  if (input.value) input.value.indeterminate = props.indeterminate
 })
+defineExpose({ nativeElement: input, focus })
 </script>
 
 <template>

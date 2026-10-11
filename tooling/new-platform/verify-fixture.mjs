@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises'
+import { mkdtemp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import { spawnSync } from 'node:child_process'
@@ -28,6 +28,8 @@ try {
   assert.deepEqual(generated, preview, 'Generated files must match the dry-run preview')
   assert.deepEqual(await inventory(path.join(root, 'apps')), preview.toSorted())
   console.log(`Disposable generator dry run verified: ${preview.length} files match the generated fixture.`)
+  await mkdir(path.join(root, 'packages/ui'), { recursive: true })
+  await writeFile(path.join(root, 'packages/ui/package.json'), await readFile(path.join(workspaceRoot, 'packages/ui/package.json')))
 
   const result = spawnSync(process.execPath, [
     path.join(workspaceRoot, 'tooling/checks/suit-template-boundaries.mjs'), '--root', root, '--strict',

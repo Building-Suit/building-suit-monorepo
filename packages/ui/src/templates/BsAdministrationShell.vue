@@ -17,7 +17,7 @@ const emit = defineEmits<{
   'selectContext': [item: BsContextNavigationItem]
 }>()
 const navigationId = useId()
-const { open, trigger, close, onKeydown } = useNavigationDisclosure()
+const { open, trigger, close, onKeydown } = useNavigationDisclosure(() => props.selectedSuit)
 const hasItems = computed(() => props.groups.some(group => group.items.length))
 function selectSuit(item: BsSuitRailItem) {
   if (props.loading || item.disabled) return
@@ -30,7 +30,6 @@ function selectContext(item: BsContextNavigationItem) {
   emit('selectContext', item)
   void close(true)
 }
-watch(() => props.selectedSuit, () => { void close() })
 </script>
 
 <template>

@@ -1,3 +1,4 @@
+import { useFileDrop } from '../../ux/src/composables/useFileDrop.ts'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
@@ -8,7 +9,7 @@ import * as vue from 'vue'
 import ts from 'typescript'
 
 const require = createRequire(import.meta.url)
-const helpers = { exports: {} }
+const helpers = { exports: { useFileDrop } }
 new Function('exports', ts.transpileModule(readFileSync(new URL('../../ux/src/presentation.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText)(helpers.exports)
 function component(file) {
   const { descriptor } = parse(readFileSync(new URL(`../src/${file}`, import.meta.url), 'utf8'))
