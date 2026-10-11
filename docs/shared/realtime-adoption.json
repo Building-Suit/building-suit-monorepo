@@ -102,11 +102,11 @@
         },
         {
           "path": "apps/automation-suit/app/pages/index.vue",
-          "anchor": "setInterval"
+          "anchor": "usePolling(refresh"
         },
         {
           "path": "apps/automation-suit/app/pages/index.vue",
-          "anchor": "clearInterval"
+          "anchor": "Math.max(5,"
         },
         {
           "path": "apps/automation-suit/app/pages/tasks/[id].vue",

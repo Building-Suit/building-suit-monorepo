@@ -52,7 +52,10 @@ test('Inventory has no current business reader; Automation retains server reads 
   const dashboard = read('apps/automation-suit/app/pages/index.vue')
   assert.match(dashboard, /useFetch<DashboardResponse>\('\/api\/dashboard'/)
   assert.match(dashboard, /Math\.max\(5,/)
-  assert.match(dashboard, /onBeforeUnmount\(.*clearInterval/)
+  assert.match(dashboard, /usePolling\(refresh,/)
+  const polling = read('packages/ux/src/composables/usePolling.ts')
+  assert.match(polling, /onMounted\(.*setInterval/)
+  assert.match(polling, /onBeforeUnmount\(.*clearInterval/)
   assert.match(read('apps/automation-suit/server/utils/controlDb.ts'), /postgres\(connectionString/)
 })
 

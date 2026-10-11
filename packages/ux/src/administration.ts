@@ -1,5 +1,5 @@
 import type { BsAdministrationCapabilityReference, BsAdministrationCapabilityDescriptor, BsAdministrationNavigationGroup, BsSuitIdentity } from '@building-suit/contracts'
-import type { BsContextNavigationGroup, BsSuitRailItem } from './index.ts'
+import type { BsContextNavigationGroup, BsSuitRailItem } from './administrationTypes.ts'
 
 /** Structural view permits heterogeneous product operation maps in one registry.
  * Adapter invocation retains its product registration's input/output types. */
