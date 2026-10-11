@@ -9,7 +9,7 @@ const copy = computed(() => isArabic.value
   : { console: 'Platform administration', navigation: 'Platform administration', dashboard: 'Overview', account: 'Account', logout: 'Sign out', open: 'Open menu', close: 'Close menu' })
 
 async function logout() {
-  await supabase.auth.signOut()
+  await supabase.auth.signOut({ scope: 'local' })
   await nuxtApp.runWithContext(() => navigateTo('/auth/login?operator=1'))
 }
 </script>

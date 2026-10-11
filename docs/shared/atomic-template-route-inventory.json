@@ -1,0 +1,2692 @@
+{
+  "schemaVersion": 1,
+  "task": "atomic-template-unification",
+  "parentPr": 238,
+  "parentSha": "089381052fccdd9768d20ad403037f12bd3fa0d9",
+  "sourceReconciliation": [
+    "cf5eb9cd6349f4517ca18beb6025d88167c3e279",
+    "18dcf90f33335c06c74a2c9b98ce794b90991837"
+  ],
+  "registeredTemplates": {
+    "BsPrintableDocument": "packages/ui/src/templates/BsPrintableDocument.vue",
+    "BsPublicLegalPage": "packages/ui/src/templates/BsPublicLegalPage.vue",
+    "BsLandingPage": "packages/ui/src/templates/BsLandingPage.vue",
+    "BsMarketingLayout": "packages/ui/src/templates/BsMarketingLayout.vue",
+    "BsContactPage": "packages/ui/src/templates/BsContactPage.vue",
+    "BsAppShell": "packages/ui/src/templates/BsAppShell.vue",
+    "BsAuthLayout": "packages/ui/src/templates/BsAuthLayout.vue",
+    "BsAppRoot": "packages/ui/src/templates/BsAppRoot.vue",
+    "BsAdministrationShell": "packages/ui/src/templates/BsAdministrationShell.vue"
+  },
+  "originalInventory": {
+    "suitVueFiles": 86,
+    "localComponents": 0,
+    "routes": 74
+  },
+  "currentInventory": {
+    "suitVueFiles": 90,
+    "localComponents": 0,
+    "routes": 76,
+    "layouts": 9,
+    "roots": 5
+  },
+  "acceptance": "incomplete; this discovery inventory is not an enforceable route-template registry",
+  "entries": [
+    {
+      "source": "apps/automation-suit/app/app.vue",
+      "kind": "root",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAppRoot.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAppRoot"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/automation-suit/app/app.vue",
+      "dependencies": [],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/automation-suit/app/layouts/default.vue",
+      "kind": "layout",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAppShell.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAppShell",
+        "BsInline",
+        "BsSettingsMenu",
+        "BsSlot",
+        "BsStack",
+        "BsText"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/automation-suit/app/layouts/default.vue",
+      "dependencies": [],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/automation-suit/app/pages/errors.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsAlert",
+        "BsButton",
+        "BsCard",
+        "BsHeading",
+        "BsInline",
+        "BsLink",
+        "BsPage",
+        "BsStack",
+        "BsStatusBadge",
+        "BsText"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/automation-suit/app/pages/errors.vue",
+      "dependencies": [
+        "../utils/automationStatusTone"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/automation-suit/app/pages/index.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsAlert",
+        "BsButton",
+        "BsCard",
+        "BsCheckbox",
+        "BsCodeBlock",
+        "BsContentSection",
+        "BsDataTable",
+        "BsDescriptionItem",
+        "BsDescriptionList",
+        "BsDisclosure",
+        "BsGrid",
+        "BsHeading",
+        "BsInline",
+        "BsKpiCard",
+        "BsPage",
+        "BsSelect",
+        "BsStack",
+        "BsStatusBadge",
+        "BsText",
+        "BsUsageMeter"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/automation-suit/app/pages/index.vue",
+      "dependencies": [
+        "../utils/automationStatusTone",
+        "#components",
+        "../../types/dashboard"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/automation-suit/app/pages/n8n.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsAlert",
+        "BsButton",
+        "BsCard",
+        "BsHeading",
+        "BsInline",
+        "BsPage",
+        "BsStack",
+        "BsStatusBadge",
+        "BsText"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/automation-suit/app/pages/n8n.vue",
+      "dependencies": [
+        "../utils/automationStatusTone"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/automation-suit/app/pages/policies.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsAlert",
+        "BsButton",
+        "BsCard",
+        "BsCheckbox",
+        "BsField",
+        "BsGrid",
+        "BsHeading",
+        "BsInline",
+        "BsInput",
+        "BsList",
+        "BsListItem",
+        "BsPage",
+        "BsRecordActionDialog",
+        "BsStack",
+        "BsStatusBadge",
+        "BsText"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/automation-suit/app/pages/policies.vue",
+      "dependencies": [
+        "../utils/automationStatusTone",
+        "../../types/operations"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/automation-suit/app/pages/projects.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsAlert",
+        "BsButton",
+        "BsCard",
+        "BsCheckbox",
+        "BsCodeBlock",
+        "BsDisclosure",
+        "BsField",
+        "BsGrid",
+        "BsHeading",
+        "BsInline",
+        "BsInput",
+        "BsPage",
+        "BsRecordActionDialog",
+        "BsSelect",
+        "BsStack",
+        "BsStatusBadge",
+        "BsText",
+        "BsTextarea"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/automation-suit/app/pages/projects.vue",
+      "dependencies": [
+        "../utils/automationStatusTone",
+        "../../types/operations"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/automation-suit/app/pages/runs.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsAlert",
+        "BsCard",
+        "BsHeading",
+        "BsInline",
+        "BsPage",
+        "BsStack",
+        "BsStatusBadge",
+        "BsText"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/automation-suit/app/pages/runs.vue",
+      "dependencies": [
+        "../utils/automationStatusTone",
+        "../../types/dashboard"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/automation-suit/app/pages/tasks/[id].vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsAlert",
+        "BsButton",
+        "BsCard",
+        "BsCodeBlock",
+        "BsDescriptionItem",
+        "BsDescriptionList",
+        "BsDisclosure",
+        "BsGrid",
+        "BsHeading",
+        "BsInline",
+        "BsKpiCard",
+        "BsPage",
+        "BsStack",
+        "BsStatusBadge",
+        "BsText"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/automation-suit/app/pages/tasks/[id].vue",
+      "dependencies": [
+        "../../utils/automationStatusTone"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/automation-suit/app/pages/tasks/index.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsAlert",
+        "BsCard",
+        "BsDataTable",
+        "BsHeading",
+        "BsInline",
+        "BsLink",
+        "BsPage",
+        "BsSelect",
+        "BsStack",
+        "BsStatusBadge",
+        "BsText"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/automation-suit/app/pages/tasks/index.vue",
+      "dependencies": [
+        "../../utils/automationStatusTone",
+        "#components",
+        "../../../types/dashboard"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/inventory-suit/app/app.vue",
+      "kind": "root",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAppRoot.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAppRoot"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/inventory-suit/app/app.vue",
+      "dependencies": [],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/inventory-suit/app/layouts/default.vue",
+      "kind": "layout",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAppShell.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAppShell",
+        "BsSettingsMenu",
+        "BsSlot",
+        "BsText"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/inventory-suit/app/layouts/default.vue",
+      "dependencies": [],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/inventory-suit/app/pages/index.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsCard",
+        "BsHeading",
+        "BsPage",
+        "BsStack",
+        "BsText"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/inventory-suit/app/pages/index.vue",
+      "dependencies": [],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/ledger-suit/app/app.vue",
+      "kind": "root",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAppRoot.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAppRoot"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/ledger-suit/app/app.vue",
+      "dependencies": [],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/ledger-suit/app/layouts/default.vue",
+      "kind": "layout",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAppShell.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAlert",
+        "BsAppShell",
+        "BsBox",
+        "BsButton",
+        "BsCard",
+        "BsCheckbox",
+        "BsContextSwitcher",
+        "BsDataTable",
+        "BsDialog",
+        "BsField",
+        "BsFieldLabel",
+        "BsFloatingField",
+        "BsFlowBlock",
+        "BsForm",
+        "BsGrid",
+        "BsHeading",
+        "BsIcon",
+        "BsInline",
+        "BsInput",
+        "BsLink",
+        "BsMoneyText",
+        "BsNotificationMenu",
+        "BsPageBody",
+        "BsProductLogo",
+        "BsReadOnlyBanner",
+        "BsRecordActionDialog",
+        "BsSelect",
+        "BsSelectOption",
+        "BsSlot",
+        "BsStack",
+        "BsStateSurface",
+        "BsText",
+        "BsToastHost",
+        "BsTrialCountdown",
+        "BsUsageMeter",
+        "BsUserMenu",
+        "BsWorkflowScope"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/ledger-suit/app/layouts/default.vue",
+      "dependencies": [
+        "~/composables/useLedgerAddTransactionDialogView",
+        "~/composables/useLedgerFinancialSystemMapView",
+        "~/composables/useLedgerOperationsCenterView",
+        "~/composables/useLedgerOrganizationSetupView",
+        "~/composables/useLedgerOrganizationSwitcherView",
+        "~/composables/useLedgerSyntheticDemoView",
+        "~/composables/useLedgerTeamMenuView",
+        "~~/types/database.types"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/ledger-suit/app/layouts/marketing.vue",
+      "kind": "layout",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsMarketingLayout.vue"
+      ],
+      "renderedBsComponents": [
+        "BsMarketingLayout",
+        "BsProductLogo",
+        "BsSlot"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/ledger-suit/app/layouts/marketing.vue",
+      "dependencies": [],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/about.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsPublicLegalPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsPublicLegalPage"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/ledger-suit/app/pages/about.vue",
+      "dependencies": [
+        "~/utils/legal"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/accept-invitation.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAuthLayout.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAlert",
+        "BsAuthForm",
+        "BsAuthLayout",
+        "BsField",
+        "BsInput",
+        "BsProductLogo",
+        "BsSectionSkeleton",
+        "BsStateSurface",
+        "BsVerificationForm"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/ledger-suit/app/pages/accept-invitation.vue",
+      "dependencies": [
+        "~~/types/database.types"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/accounting-dimensions.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsBox",
+        "BsButton",
+        "BsCard",
+        "BsDataTable",
+        "BsFloatingField",
+        "BsForm",
+        "BsHeading",
+        "BsInline",
+        "BsInput",
+        "BsMoneyText",
+        "BsPageHeader",
+        "BsRecordActionDialog",
+        "BsSectionSkeleton",
+        "BsSelect",
+        "BsSelectOption",
+        "BsStack",
+        "BsText",
+        "BsTextarea"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/ledger-suit/app/pages/accounting-dimensions.vue",
+      "dependencies": [
+        "~/utils/accountingDimensions",
+        "~/utils/accountingDimensions"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/accounts.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsBadge",
+        "BsBox",
+        "BsButton",
+        "BsCard",
+        "BsCheckbox",
+        "BsDataTable",
+        "BsDialog",
+        "BsDisclosure",
+        "BsEmptyState",
+        "BsFieldLabel",
+        "BsFloatingField",
+        "BsForm",
+        "BsGrid",
+        "BsHeading",
+        "BsHierarchyBranch",
+        "BsHierarchyLeaf",
+        "BsIcon",
+        "BsInline",
+        "BsInput",
+        "BsLink",
+        "BsMoneyText",
+        "BsPageHeader",
+        "BsRecordActionDialog",
+        "BsSectionSkeleton",
+        "BsSelect",
+        "BsSelectOption",
+        "BsStack",
+        "BsStatusBadge",
+        "BsText",
+        "BsTextarea",
+        "BsUsageMeter",
+        "BsVisuallyHidden",
+        "BsWorkflowScope"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/ledger-suit/app/pages/accounts.vue",
+      "dependencies": [
+        "~/utils/templateElement",
+        "~/composables/useLedgerAccountActivityDialogView",
+        "~/composables/useLedgerAccountStatementClassificationDialogView",
+        "~/composables/useLedgerAccountTreeView",
+        "~/composables/useLedgerChartTemplateReviewView",
+        "~/composables/useLedgerControlReconciliationPanelView",
+        "@building-suit/data-access",
+        "~~/types/database.types",
+        "~~/types/accounts-reports-rpc.types",
+        "~/utils/accountTree"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/audit.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsBox",
+        "BsButton",
+        "BsCard",
+        "BsCodeBlock",
+        "BsDataTable",
+        "BsDisclosure",
+        "BsEmptyState",
+        "BsGrid",
+        "BsHeading",
+        "BsInline",
+        "BsSectionSkeleton",
+        "BsStack",
+        "BsText"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/ledger-suit/app/pages/audit.vue",
+      "dependencies": [
+        "~~/types/database.types"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/bank-reconciliation.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsBox",
+        "BsButton",
+        "BsCard",
+        "BsCheckbox",
+        "BsDataTable",
+        "BsDescriptionList",
+        "BsDescriptionTerm",
+        "BsDescriptionValue",
+        "BsDisclosure",
+        "BsEmptyState",
+        "BsFileInput",
+        "BsFloatingField",
+        "BsGrid",
+        "BsHeading",
+        "BsInline",
+        "BsInput",
+        "BsList",
+        "BsListItem",
+        "BsMoneyText",
+        "BsPageHeader",
+        "BsRecordActionDialog",
+        "BsSectionSkeleton",
+        "BsSelect",
+        "BsSelectOption",
+        "BsStack",
+        "BsText"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/ledger-suit/app/pages/bank-reconciliation.vue",
+      "dependencies": [
+        "~/utils/bankReconciliation",
+        "~/utils/bankReconciliation"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/billing.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsBox",
+        "BsButton",
+        "BsCard",
+        "BsContentSection",
+        "BsDescriptionList",
+        "BsDescriptionTerm",
+        "BsDescriptionValue",
+        "BsDialog",
+        "BsFieldLabel",
+        "BsFileInput",
+        "BsFloatingField",
+        "BsForm",
+        "BsHeading",
+        "BsI18nText",
+        "BsIcon",
+        "BsInline",
+        "BsLink",
+        "BsList",
+        "BsListItem",
+        "BsMarketingPricing",
+        "BsStack",
+        "BsStateSurface",
+        "BsStatusBadge",
+        "BsText",
+        "BsTextarea",
+        "BsUsageMeterGrid",
+        "BsWorkflowScope"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/ledger-suit/app/pages/billing.vue",
+      "dependencies": [
+        "~/composables/useLedgerBillingCheckoutView",
+        "~/composables/useLedgerManualPaymentCheckoutView"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/clients.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsBox",
+        "BsButton",
+        "BsCard",
+        "BsDataTable",
+        "BsEmptyState",
+        "BsFloatingField",
+        "BsGrid",
+        "BsHeading",
+        "BsInput",
+        "BsKpiCard",
+        "BsPageHeader",
+        "BsSectionSkeleton",
+        "BsSelect",
+        "BsStack",
+        "BsStatusBadge",
+        "BsText",
+        "BsVisuallyHidden"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/ledger-suit/app/pages/clients.vue",
+      "dependencies": [
+        "~/utils/clientHealth",
+        "~/utils/clientHealth"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/contact.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsContactPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsContactPage"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/ledger-suit/app/pages/contact.vue",
+      "dependencies": [
+        "../../types/support-rpc.types",
+        "~/utils/legal"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/dashboard.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsBox",
+        "BsButton",
+        "BsCard",
+        "BsDataTable",
+        "BsEmptyState",
+        "BsFloatingField",
+        "BsGrid",
+        "BsHeading",
+        "BsIcon",
+        "BsInline",
+        "BsInput",
+        "BsKpiCard",
+        "BsLink",
+        "BsMetricBarChart",
+        "BsMoneyText",
+        "BsSectionSkeleton",
+        "BsSetupChecklist",
+        "BsStack",
+        "BsStateSurface",
+        "BsStatusBadge",
+        "BsText"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/ledger-suit/app/pages/dashboard.vue",
+      "dependencies": [
+        "~~/types/database.types",
+        "~~/types/dashboard-rpc.types",
+        "~/composables/useLedgerPresentation"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/delivery-shipping.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsPublicLegalPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsPublicLegalPage"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/ledger-suit/app/pages/delivery-shipping.vue",
+      "dependencies": [
+        "~/utils/legal"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/fixed-assets.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsBox",
+        "BsButton",
+        "BsCard",
+        "BsDataTable",
+        "BsDescriptionList",
+        "BsDescriptionTerm",
+        "BsDescriptionValue",
+        "BsDisclosure",
+        "BsEmptyState",
+        "BsFloatingField",
+        "BsGrid",
+        "BsHeading",
+        "BsInline",
+        "BsInput",
+        "BsLink",
+        "BsList",
+        "BsListItem",
+        "BsMoneyText",
+        "BsPageHeader",
+        "BsRecordActionDialog",
+        "BsSectionSkeleton",
+        "BsSelect",
+        "BsSelectOption",
+        "BsStack",
+        "BsText"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/ledger-suit/app/pages/fixed-assets.vue",
+      "dependencies": [
+        "~/utils/fixedAssets",
+        "~/utils/fixedAssets",
+        "~/utils/money"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/imports.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsBox"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/ledger-suit/app/pages/imports.vue",
+      "dependencies": [],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/index.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsLandingPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsBox",
+        "BsButton",
+        "BsCard",
+        "BsDashboardPreview",
+        "BsDialog",
+        "BsFieldLabel",
+        "BsFileInput",
+        "BsFloatingField",
+        "BsForm",
+        "BsHeading",
+        "BsI18nText",
+        "BsIcon",
+        "BsInline",
+        "BsLandingPage",
+        "BsLink",
+        "BsList",
+        "BsListItem",
+        "BsMarketingPricing",
+        "BsStack",
+        "BsText",
+        "BsTextarea",
+        "BsWorkflowScope"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/ledger-suit/app/pages/index.vue",
+      "dependencies": [
+        "~/composables/useLedgerBillingCheckoutView",
+        "~/composables/useLedgerManualPaymentCheckoutView"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/inventory-accounting.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsBox",
+        "BsButton",
+        "BsCard",
+        "BsDataTable",
+        "BsDescriptionList",
+        "BsDescriptionTerm",
+        "BsDescriptionValue",
+        "BsFloatingField",
+        "BsForm",
+        "BsHeading",
+        "BsInput",
+        "BsLink",
+        "BsMoneyText",
+        "BsPageHeader",
+        "BsRecordActionDialog",
+        "BsSectionSkeleton",
+        "BsSelect",
+        "BsSelectOption",
+        "BsStack",
+        "BsText"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/ledger-suit/app/pages/inventory-accounting.vue",
+      "dependencies": [
+        "~/utils/inventoryAccounting"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/login.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAuthLayout.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAuthForm",
+        "BsAuthLayout",
+        "BsField",
+        "BsInline",
+        "BsInput",
+        "BsLink",
+        "BsProductLogo"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/ledger-suit/app/pages/login.vue",
+      "dependencies": [],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/migration-center.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsBox",
+        "BsButton",
+        "BsCard",
+        "BsCheckbox",
+        "BsDataTable",
+        "BsFieldLabel",
+        "BsFileInput",
+        "BsFloatingField",
+        "BsGrid",
+        "BsHeading",
+        "BsInline",
+        "BsInput",
+        "BsLineBreak",
+        "BsLink",
+        "BsList",
+        "BsListItem",
+        "BsPageHeader",
+        "BsRecordActionDialog",
+        "BsSectionSkeleton",
+        "BsSelect",
+        "BsSelectOption",
+        "BsStack",
+        "BsText",
+        "BsTextarea"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/ledger-suit/app/pages/migration-center.vue",
+      "dependencies": [
+        "~~/types/database.types",
+        "~~/types/migration-rpc.types",
+        "~/composables/useMigrationCenter",
+        "~/utils/csv",
+        "~/utils/migrationCenter"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/opening-balances.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsBox",
+        "BsButton",
+        "BsCard",
+        "BsDataTable",
+        "BsEmptyState",
+        "BsFieldLabel",
+        "BsFileInput",
+        "BsFloatingField",
+        "BsForm",
+        "BsGrid",
+        "BsHeading",
+        "BsInline",
+        "BsInput",
+        "BsLineBreak",
+        "BsLink",
+        "BsList",
+        "BsListItem",
+        "BsPageHeader",
+        "BsSectionSkeleton",
+        "BsSelect",
+        "BsSelectOption",
+        "BsStack",
+        "BsText"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/ledger-suit/app/pages/opening-balances.vue",
+      "dependencies": [
+        "~~/types/database.types",
+        "~/utils/csv",
+        "~/utils/openingBalanceCsv"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/payables.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsBox",
+        "BsButton",
+        "BsCard",
+        "BsDataTable",
+        "BsDescriptionList",
+        "BsDescriptionTerm",
+        "BsDescriptionValue",
+        "BsDisclosure",
+        "BsFieldGroup",
+        "BsFloatingField",
+        "BsForm",
+        "BsGrid",
+        "BsHeading",
+        "BsInline",
+        "BsInput",
+        "BsLink",
+        "BsMoneyText",
+        "BsPageHeader",
+        "BsRecordActionDialog",
+        "BsSectionSkeleton",
+        "BsSelect",
+        "BsSelectOption",
+        "BsStack",
+        "BsTableDensity",
+        "BsText",
+        "BsWorkflowScope"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/ledger-suit/app/pages/payables.vue",
+      "dependencies": [
+        "~/composables/useLedgerFxSubledgerPanelView",
+        "~/composables/useSupplierSubledger",
+        "~/utils/supplierSubledger",
+        "~/utils/supplierSubledger"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/periods.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsBox",
+        "BsButton",
+        "BsCard",
+        "BsDisclosure",
+        "BsEmptyState",
+        "BsFloatingField",
+        "BsForm",
+        "BsHeading",
+        "BsInline",
+        "BsInput",
+        "BsLink",
+        "BsList",
+        "BsListItem",
+        "BsMoneyText",
+        "BsPageHeader",
+        "BsRecordActionDialog",
+        "BsSectionSkeleton",
+        "BsStack",
+        "BsStatusBadge",
+        "BsText"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/ledger-suit/app/pages/periods.vue",
+      "dependencies": [
+        "~~/types/database.types"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/platform-admin.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAppShell.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAppShell",
+        "BsButton",
+        "BsCodeBlock",
+        "BsDataTable",
+        "BsFloatingField",
+        "BsHeading",
+        "BsInline",
+        "BsInput",
+        "BsLink",
+        "BsProductLogo",
+        "BsRecordActionDialog",
+        "BsSelect",
+        "BsSelectOption",
+        "BsStack",
+        "BsText",
+        "BsTextarea",
+        "BsUserMenu"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/ledger-suit/app/pages/platform-admin.vue",
+      "dependencies": [
+        "~~/types/database.types",
+        "~/composables/usePlatformAdmin"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/privacy.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsPublicLegalPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsPublicLegalPage"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/ledger-suit/app/pages/privacy.vue",
+      "dependencies": [
+        "~/utils/legal"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/receivables.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsBox",
+        "BsButton",
+        "BsCard",
+        "BsDataTable",
+        "BsDescriptionList",
+        "BsDescriptionTerm",
+        "BsDescriptionValue",
+        "BsDisclosure",
+        "BsFieldGroup",
+        "BsFloatingField",
+        "BsForm",
+        "BsGrid",
+        "BsHeading",
+        "BsInline",
+        "BsInput",
+        "BsLink",
+        "BsMoneyText",
+        "BsPageHeader",
+        "BsRecordActionDialog",
+        "BsSectionSkeleton",
+        "BsSelect",
+        "BsSelectOption",
+        "BsStack",
+        "BsTableDensity",
+        "BsText",
+        "BsWorkflowScope"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/ledger-suit/app/pages/receivables.vue",
+      "dependencies": [
+        "~/composables/useLedgerFxSubledgerPanelView",
+        "~/composables/useCustomerSubledger",
+        "~/utils/customerSubledger",
+        "~/utils/customerSubledger"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/records/[kind].vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsBox",
+        "BsButton",
+        "BsCard",
+        "BsColorSwatch",
+        "BsDataTable",
+        "BsDescriptionList",
+        "BsDescriptionTerm",
+        "BsDescriptionValue",
+        "BsDialog",
+        "BsEmptyState",
+        "BsFieldLabel",
+        "BsFileInput",
+        "BsFloatingField",
+        "BsGrid",
+        "BsHeading",
+        "BsIcon",
+        "BsInline",
+        "BsInput",
+        "BsLink",
+        "BsList",
+        "BsListItem",
+        "BsMoneyText",
+        "BsRecordActionDialog",
+        "BsSectionSkeleton",
+        "BsSelect",
+        "BsSelectOption",
+        "BsStack",
+        "BsStatusBadge",
+        "BsText",
+        "BsUsageMeter",
+        "BsWorkflowScope"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/ledger-suit/app/pages/records/[kind].vue",
+      "dependencies": [
+        "~/composables/useLedgerTransactionDetailDialogView",
+        "~/composables/useLedgerTransactionTagsView",
+        "@building-suit/data-access",
+        "~~/types/database.types"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/refund-cancellation.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsPublicLegalPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsPublicLegalPage"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/ledger-suit/app/pages/refund-cancellation.vue",
+      "dependencies": [
+        "~/utils/legal"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/reports.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsBadge",
+        "BsBox",
+        "BsButton",
+        "BsCard",
+        "BsDataTable",
+        "BsDescriptionList",
+        "BsDescriptionTerm",
+        "BsDescriptionValue",
+        "BsDialog",
+        "BsDisclosure",
+        "BsEmptyState",
+        "BsFloatingField",
+        "BsForm",
+        "BsGrid",
+        "BsHeading",
+        "BsIcon",
+        "BsInline",
+        "BsInput",
+        "BsKpiCard",
+        "BsMoneyText",
+        "BsPageHeader",
+        "BsRecordActionDialog",
+        "BsSectionSkeleton",
+        "BsSelect",
+        "BsSelectOption",
+        "BsStack",
+        "BsTableDensity",
+        "BsText",
+        "BsTextarea",
+        "BsWorkflowScope"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/ledger-suit/app/pages/reports.vue",
+      "dependencies": [
+        "~/utils/templateElement",
+        "~/composables/useLedgerAccountActivityDialogView",
+        "~/composables/useLedgerCashFlowAllocationDialogView",
+        "@building-suit/data-access",
+        "~~/types/database.types",
+        "~~/types/accounts-reports-rpc.types",
+        "../utils/reportFormats"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/signup.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAuthLayout.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAuthForm",
+        "BsAuthLayout",
+        "BsField",
+        "BsGrid",
+        "BsInline",
+        "BsInput",
+        "BsLegalConsent",
+        "BsLink",
+        "BsProductLogo",
+        "BsSelect",
+        "BsSignupWizard",
+        "BsText",
+        "BsVerificationForm"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/ledger-suit/app/pages/signup.vue",
+      "dependencies": [
+        "~~/types/database.types"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/subscribe.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAppShell.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAlert",
+        "BsAppShell",
+        "BsBox",
+        "BsButton",
+        "BsCard",
+        "BsContextSwitcher",
+        "BsDialog",
+        "BsField",
+        "BsFieldLabel",
+        "BsFileInput",
+        "BsFloatingField",
+        "BsForm",
+        "BsHeading",
+        "BsI18nText",
+        "BsIcon",
+        "BsInline",
+        "BsInput",
+        "BsLink",
+        "BsList",
+        "BsListItem",
+        "BsMarketingPricing",
+        "BsProductLogo",
+        "BsRecordActionDialog",
+        "BsSelect",
+        "BsStack",
+        "BsText",
+        "BsTextarea",
+        "BsUserMenu",
+        "BsWorkflowScope"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/ledger-suit/app/pages/subscribe.vue",
+      "dependencies": [
+        "~/composables/useLedgerBillingCheckoutView",
+        "~/composables/useLedgerManualPaymentCheckoutView",
+        "~/composables/useLedgerOrganizationSwitcherView",
+        "~/composables/useLedgerSubscriptionGateView"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/tax-vat.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsBox",
+        "BsButton",
+        "BsCard",
+        "BsDataTable",
+        "BsDescriptionList",
+        "BsDescriptionTerm",
+        "BsDescriptionValue",
+        "BsFloatingField",
+        "BsForm",
+        "BsGrid",
+        "BsHeading",
+        "BsInline",
+        "BsInput",
+        "BsLink",
+        "BsMoneyText",
+        "BsPageHeader",
+        "BsRecordActionDialog",
+        "BsSectionSkeleton",
+        "BsSelect",
+        "BsSelectOption",
+        "BsStack",
+        "BsText"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/ledger-suit/app/pages/tax-vat.vue",
+      "dependencies": [
+        "~/utils/egyptVat",
+        "~/utils/egyptVat"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/team.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsAccessTabs",
+        "BsBadge",
+        "BsBox",
+        "BsButton",
+        "BsCard",
+        "BsDialog",
+        "BsEmptyState",
+        "BsFieldLabel",
+        "BsFloatingField",
+        "BsGrid",
+        "BsHeading",
+        "BsIcon",
+        "BsInline",
+        "BsInput",
+        "BsInvitationTable",
+        "BsMemberEditorDialog",
+        "BsPermissionMatrix",
+        "BsRecordActionDialog",
+        "BsRoleEditorDialog",
+        "BsSectionSkeleton",
+        "BsSelect",
+        "BsSelectOption",
+        "BsStack",
+        "BsStatusBadge",
+        "BsTeamTable",
+        "BsText",
+        "BsUsageMeter",
+        "BsVisuallyHidden",
+        "BsWorkflowScope"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/ledger-suit/app/pages/team.vue",
+      "dependencies": [
+        "~/composables/useLedgerTeamMenuView",
+        "~~/types/database.types"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/terms.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsPublicLegalPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsPublicLegalPage"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/ledger-suit/app/pages/terms.vue",
+      "dependencies": [
+        "~/utils/legal"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/transactions.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsBox",
+        "BsButton",
+        "BsCard",
+        "BsCheckbox",
+        "BsColorSwatch",
+        "BsDataTable",
+        "BsDescriptionList",
+        "BsDescriptionTerm",
+        "BsDescriptionValue",
+        "BsDialog",
+        "BsEmptyState",
+        "BsFieldLabel",
+        "BsFileInput",
+        "BsFloatingField",
+        "BsGrid",
+        "BsHeading",
+        "BsIcon",
+        "BsInline",
+        "BsInput",
+        "BsLink",
+        "BsList",
+        "BsListItem",
+        "BsMoneyText",
+        "BsPageHeader",
+        "BsSectionSkeleton",
+        "BsSelect",
+        "BsSelectOption",
+        "BsStack",
+        "BsStatusBadge",
+        "BsTableDensity",
+        "BsText",
+        "BsTextarea",
+        "BsUsageMeter",
+        "BsWorkflowScope"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/ledger-suit/app/pages/transactions.vue",
+      "dependencies": [
+        "~/utils/templateElement",
+        "~/composables/useLedgerCsvImportDialogView",
+        "~/composables/useLedgerDocumentExtractionReviewView",
+        "~/composables/useLedgerTransactionDetailDialogView",
+        "~/composables/useLedgerTransactionTagsView"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/verify-email.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAuthLayout.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAuthLayout",
+        "BsProductLogo",
+        "BsVerificationForm"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/ledger-suit/app/pages/verify-email.vue",
+      "dependencies": [
+        "~~/types/database.types"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/app.vue",
+      "kind": "root",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAppRoot.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAppRoot"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/app.vue",
+      "dependencies": [],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/layouts/auth.vue",
+      "kind": "layout",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAuthLayout.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAuthLayout",
+        "BsProductLogo",
+        "BsSlot",
+        "BsStack"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/layouts/auth.vue",
+      "dependencies": [],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/layouts/default.vue",
+      "kind": "layout",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAppShell.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAppShell",
+        "BsProductLogo",
+        "BsScopeSwitcher",
+        "BsSectionSkeleton",
+        "BsSlot",
+        "BsStateSurface",
+        "BsToastHost",
+        "BsUserMenu"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/layouts/default.vue",
+      "dependencies": [
+        "~/utils/businessMode"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/layouts/landing.vue",
+      "kind": "layout",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsMarketingLayout.vue"
+      ],
+      "renderedBsComponents": [
+        "BsMarketingLayout",
+        "BsProductLogo",
+        "BsSlot"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/layouts/landing.vue",
+      "dependencies": [],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/layouts/platform-admin.vue",
+      "kind": "layout",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAppShell.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAppShell",
+        "BsConfirmHost",
+        "BsProductLogo",
+        "BsSlot",
+        "BsText",
+        "BsToastHost",
+        "BsUserMenu"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/layouts/platform-admin.vue",
+      "dependencies": [],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/about.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsPublicLegalPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsPublicLegalPage"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/pages/about.vue",
+      "dependencies": [
+        "~/utils/legal"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/appointments/index.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsButton",
+        "BsCheckbox",
+        "BsDialog",
+        "BsDisclosure",
+        "BsField",
+        "BsFieldGroup",
+        "BsFilterBar",
+        "BsForm",
+        "BsGrid",
+        "BsHeading",
+        "BsInline",
+        "BsInput",
+        "BsLink",
+        "BsList",
+        "BsListItem",
+        "BsPageHeader",
+        "BsPanel",
+        "BsRadio",
+        "BsRecordActionDialog",
+        "BsSelect",
+        "BsStack",
+        "BsStatusBadge",
+        "BsText",
+        "BsTextarea",
+        "BsToolbar"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/pages/appointments/index.vue",
+      "dependencies": [
+        "~/types/shopCrmRpc"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/auth/forgot-password.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsAuthForm",
+        "BsField",
+        "BsInput",
+        "BsLink",
+        "BsStateSurface"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/pages/auth/forgot-password.vue",
+      "dependencies": [],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/auth/login.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsAuthForm",
+        "BsField",
+        "BsInput",
+        "BsLink"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/pages/auth/login.vue",
+      "dependencies": [],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/auth/reset-password.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsAuthForm",
+        "BsButton",
+        "BsField",
+        "BsIcon",
+        "BsInput",
+        "BsStateSurface"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/pages/auth/reset-password.vue",
+      "dependencies": [],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/auth/signup.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsAlert",
+        "BsAuthForm",
+        "BsButton",
+        "BsChoiceGroup",
+        "BsField",
+        "BsFieldGroup",
+        "BsInput",
+        "BsLink",
+        "BsSignupWizard",
+        "BsStack",
+        "BsVerificationForm"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/pages/auth/signup.vue",
+      "dependencies": [
+        "~/types/shopCrmRpc",
+        "~/utils/businessMode",
+        "~/utils/businessMode",
+        "~/utils/pendingOnboarding"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/auth/team-invitation.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsAuthForm",
+        "BsButton",
+        "BsField",
+        "BsInput",
+        "BsLink",
+        "BsStack",
+        "BsText",
+        "BsVerificationForm"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/pages/auth/team-invitation.vue",
+      "dependencies": [
+        "~/types/shopCrmRpc"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/billing.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsBox",
+        "BsButton",
+        "BsContentSection",
+        "BsDataTable",
+        "BsField",
+        "BsFileInput",
+        "BsForm",
+        "BsGrid",
+        "BsHeading",
+        "BsImage",
+        "BsInline",
+        "BsInput",
+        "BsKpiCard",
+        "BsLink",
+        "BsList",
+        "BsListItem",
+        "BsMarketingPricing",
+        "BsPanel",
+        "BsRecordActionDialog",
+        "BsSkeleton",
+        "BsStack",
+        "BsStatusBadge",
+        "BsText",
+        "BsUsageMeter"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/pages/billing.vue",
+      "dependencies": [
+        "~/types/billing",
+        "~/types/plans",
+        "~/types/shopCrmRpc",
+        "~/utils/private-offer",
+        "~/utils/private-offer"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/cash-shifts.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsBox",
+        "BsButton",
+        "BsDataTable",
+        "BsDescriptionItem",
+        "BsDescriptionList",
+        "BsField",
+        "BsFieldGroup",
+        "BsGrid",
+        "BsHeading",
+        "BsInline",
+        "BsInput",
+        "BsPageHeader",
+        "BsPanel",
+        "BsRadio",
+        "BsRecordActionDialog",
+        "BsSelect",
+        "BsSkeleton",
+        "BsStack",
+        "BsText",
+        "BsTextarea"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/pages/cash-shifts.vue",
+      "dependencies": [
+        "~/types/shopCrmRpc"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/catalog-import.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsBox",
+        "BsButton",
+        "BsDataTable",
+        "BsField",
+        "BsFileInput",
+        "BsGrid",
+        "BsHeading",
+        "BsInline",
+        "BsInput",
+        "BsPanel",
+        "BsRecordActionDialog",
+        "BsSelect",
+        "BsStack",
+        "BsText"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/pages/catalog-import.vue",
+      "dependencies": [
+        "~/types/shopCrmRpc",
+        "~/utils/catalogImport"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/contact.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsContactPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsContactPage"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/pages/contact.vue",
+      "dependencies": [
+        "~/types/supportRpc",
+        "~/utils/legal"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/customers/[id].vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsBox",
+        "BsButton",
+        "BsDataTable",
+        "BsDescriptionItem",
+        "BsDescriptionList",
+        "BsField",
+        "BsGrid",
+        "BsHeading",
+        "BsInline",
+        "BsInput",
+        "BsLink",
+        "BsPanel",
+        "BsRecordActionDialog",
+        "BsSelect",
+        "BsSkeleton",
+        "BsStack",
+        "BsText",
+        "BsTextarea"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/pages/customers/[id].vue",
+      "dependencies": [
+        "~/utils/receiptAllocations",
+        "~/types/shopCrmRpc"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/customers/index.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsDataTable",
+        "BsField",
+        "BsInput",
+        "BsLink",
+        "BsPageHeader",
+        "BsPanel",
+        "BsRecordActionDialog",
+        "BsSelect",
+        "BsStack",
+        "BsText",
+        "BsTextarea"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/pages/customers/index.vue",
+      "dependencies": [
+        "~/types/shopCrmRpc"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/dashboard.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsActionTile",
+        "BsBox",
+        "BsButton",
+        "BsCard",
+        "BsDataTable",
+        "BsField",
+        "BsFieldGroup",
+        "BsFilterBar",
+        "BsGrid",
+        "BsHeading",
+        "BsIcon",
+        "BsInline",
+        "BsInput",
+        "BsKpiCard",
+        "BsLink",
+        "BsPageHeader",
+        "BsPanel",
+        "BsRadio",
+        "BsRecordActionDialog",
+        "BsSelect",
+        "BsSetupChecklist",
+        "BsSkeleton",
+        "BsStack",
+        "BsText"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/pages/dashboard.vue",
+      "dependencies": [
+        "~/types/shopCrmRpc",
+        "~/utils/businessMode",
+        "~/utils/businessMode"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/delivery-shipping.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsPublicLegalPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsPublicLegalPage"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/pages/delivery-shipping.vue",
+      "dependencies": [
+        "~/utils/legal"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/expenses/index.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsBox",
+        "BsButton",
+        "BsDataTable",
+        "BsField",
+        "BsGrid",
+        "BsInline",
+        "BsInput",
+        "BsLink",
+        "BsPageHeader",
+        "BsPanel",
+        "BsRecordActionDialog",
+        "BsSelect",
+        "BsStack",
+        "BsText",
+        "BsTextarea"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/pages/expenses/index.vue",
+      "dependencies": [
+        "~/types/shopCrmRpc"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/index.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsLandingPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsBox",
+        "BsGrid",
+        "BsIcon",
+        "BsInline",
+        "BsLandingPage",
+        "BsMarketingPricing",
+        "BsStack",
+        "BsText"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/pages/index.vue",
+      "dependencies": [
+        "@building-suit/contracts",
+        "~/types/plans"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/inventory/index.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsBox",
+        "BsButton",
+        "BsDataTable",
+        "BsField",
+        "BsGrid",
+        "BsHeading",
+        "BsInline",
+        "BsInput",
+        "BsLink",
+        "BsPanel",
+        "BsRecordActionDialog",
+        "BsSelect",
+        "BsStack",
+        "BsText",
+        "BsTextarea"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/pages/inventory/index.vue",
+      "dependencies": [
+        "~/types/shopCrmRpc"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/platform-admin.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsBox",
+        "BsButton",
+        "BsCheckbox",
+        "BsCodeBlock",
+        "BsDataTable",
+        "BsDialog",
+        "BsField",
+        "BsFieldGroup",
+        "BsGrid",
+        "BsHeading",
+        "BsInline",
+        "BsInput",
+        "BsKpiCard",
+        "BsList",
+        "BsListItem",
+        "BsPageHeader",
+        "BsPanel",
+        "BsRecordActionDialog",
+        "BsSelect",
+        "BsSkeleton",
+        "BsStack",
+        "BsStatusBadge",
+        "BsText",
+        "BsTextarea"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/pages/platform-admin.vue",
+      "dependencies": [
+        "~/types/shopCrmRpc",
+        "~/types/billing",
+        "~/types/platformAdmin"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/pos.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsActionTile",
+        "BsBox",
+        "BsButton",
+        "BsField",
+        "BsFieldGroup",
+        "BsFilterBar",
+        "BsGrid",
+        "BsHeading",
+        "BsInline",
+        "BsInput",
+        "BsLineItemsEditor",
+        "BsLink",
+        "BsList",
+        "BsListItem",
+        "BsPageHeader",
+        "BsPanel",
+        "BsQuantityInput",
+        "BsSelect",
+        "BsStack",
+        "BsText",
+        "BsVisuallyHidden"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/pages/pos.vue",
+      "dependencies": [
+        "~/utils/shopCommandErrorMessage",
+        "~/utils/saleCopy",
+        "~/types/shopCrmRpc",
+        "~/utils/businessMode",
+        "~/utils/posCustomer.js",
+        "~/utils/pos"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/privacy.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsPublicLegalPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsPublicLegalPage"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/pages/privacy.vue",
+      "dependencies": [
+        "~/utils/legal"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/products/index.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsDataTable",
+        "BsField",
+        "BsInline",
+        "BsInput",
+        "BsLink",
+        "BsPageHeader",
+        "BsPanel",
+        "BsRecordActionDialog",
+        "BsSelect",
+        "BsStack",
+        "BsStateSurface",
+        "BsText"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/pages/products/index.vue",
+      "dependencies": [
+        "~/types/shopCrmRpc"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/purchases/[id].vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsBox",
+        "BsButton",
+        "BsDataTable",
+        "BsField",
+        "BsGrid",
+        "BsHeading",
+        "BsInline",
+        "BsInput",
+        "BsLink",
+        "BsPageHeader",
+        "BsPanel",
+        "BsRecordActionDialog",
+        "BsSelect",
+        "BsStack",
+        "BsText",
+        "BsTextarea"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/pages/purchases/[id].vue",
+      "dependencies": [
+        "~/types/shopCrmRpc"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/purchases/index.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsBox",
+        "BsButton",
+        "BsCheckbox",
+        "BsDataTable",
+        "BsEntityPicker",
+        "BsField",
+        "BsFieldGroup",
+        "BsGrid",
+        "BsHeading",
+        "BsInline",
+        "BsInput",
+        "BsLink",
+        "BsPageHeader",
+        "BsPanel",
+        "BsRecordActionDialog",
+        "BsSelect",
+        "BsStack",
+        "BsText",
+        "BsTextarea"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/pages/purchases/index.vue",
+      "dependencies": [
+        "~/types/shopCrmRpc"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/refund-cancellation.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsPublicLegalPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsPublicLegalPage"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/pages/refund-cancellation.vue",
+      "dependencies": [
+        "~/utils/legal"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/reports/index.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsActionTile",
+        "BsBox",
+        "BsButton",
+        "BsDataTable",
+        "BsField",
+        "BsFilterBar",
+        "BsGrid",
+        "BsInline",
+        "BsInput",
+        "BsLink",
+        "BsPageHeader",
+        "BsPanel",
+        "BsSelect",
+        "BsStack",
+        "BsText"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/pages/reports/index.vue",
+      "dependencies": [
+        "~/types/shopCrmRpc",
+        "~/types/reporting",
+        "~/utils/catalogImport"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/sales/[id]/index.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsBox",
+        "BsButton",
+        "BsDataTable",
+        "BsDescriptionItem",
+        "BsDescriptionList",
+        "BsField",
+        "BsGrid",
+        "BsHeading",
+        "BsInline",
+        "BsInput",
+        "BsLink",
+        "BsPanel",
+        "BsRecordActionDialog",
+        "BsSelect",
+        "BsSkeleton",
+        "BsStack",
+        "BsText",
+        "BsTextarea"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/pages/sales/[id]/index.vue",
+      "dependencies": [
+        "~/utils/shopCommandErrorMessage",
+        "~/utils/saleCopy",
+        "~/types/shopCrmRpc",
+        "~/types/receipt"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/sales/[id]/receipt.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsPrintableDocument.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAlert",
+        "BsButton",
+        "BsChoiceGroup",
+        "BsContentSection",
+        "BsDescriptionItem",
+        "BsDescriptionList",
+        "BsDocumentHeader",
+        "BsDocumentLines",
+        "BsDocumentTotals",
+        "BsInline",
+        "BsPage",
+        "BsPrintActions",
+        "BsPrintableDocument",
+        "BsSelect",
+        "BsStateSurface",
+        "BsText"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/pages/sales/[id]/receipt.vue",
+      "dependencies": [
+        "~/types/shopCrmRpc",
+        "~/types/receipt",
+        "~/utils/receipt"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/sales/index.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsBox",
+        "BsButton",
+        "BsDataTable",
+        "BsField",
+        "BsFieldGroup",
+        "BsGrid",
+        "BsHeading",
+        "BsInline",
+        "BsInput",
+        "BsLink",
+        "BsPageHeader",
+        "BsPanel",
+        "BsRecordActionDialog",
+        "BsSelect",
+        "BsStack",
+        "BsText"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/pages/sales/index.vue",
+      "dependencies": [
+        "~/utils/shopCommandErrorMessage",
+        "~/utils/saleCopy",
+        "~/types/shopCrmRpc"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/services/index.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsCheckbox",
+        "BsDataTable",
+        "BsField",
+        "BsFieldGroup",
+        "BsGrid",
+        "BsInline",
+        "BsInput",
+        "BsLink",
+        "BsPageHeader",
+        "BsPanel",
+        "BsRecordActionDialog",
+        "BsSelect",
+        "BsStack",
+        "BsStateSurface",
+        "BsText",
+        "BsTextarea"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/pages/services/index.vue",
+      "dependencies": [
+        "~/types/shopCrmRpc"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/settings.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsBox",
+        "BsButton",
+        "BsCheckbox",
+        "BsChoiceGroup",
+        "BsContentSection",
+        "BsDataTable",
+        "BsDescriptionItem",
+        "BsDescriptionList",
+        "BsField",
+        "BsFieldGroup",
+        "BsForm",
+        "BsGrid",
+        "BsHeading",
+        "BsInput",
+        "BsLink",
+        "BsPanel",
+        "BsRadio",
+        "BsRecordActionDialog",
+        "BsStack",
+        "BsStatusBadge",
+        "BsText",
+        "BsTextarea"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/pages/settings.vue",
+      "dependencies": [
+        "~/types/shopCrmRpc",
+        "~/types/plans",
+        "~/types/receipt",
+        "~/utils/businessMode",
+        "~/composables/useShop",
+        "~/utils/businessMode"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/team.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsAccessTabs",
+        "BsBox",
+        "BsButton",
+        "BsCheckbox",
+        "BsDataTable",
+        "BsField",
+        "BsFieldGroup",
+        "BsHeading",
+        "BsInline",
+        "BsInput",
+        "BsInvitationTable",
+        "BsMemberEditorDialog",
+        "BsPageHeader",
+        "BsPanel",
+        "BsRecordActionDialog",
+        "BsSelect",
+        "BsStack",
+        "BsStatusBadge",
+        "BsTeamTable",
+        "BsText",
+        "BsTextarea"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/pages/team.vue",
+      "dependencies": [
+        "~/types/shopCrmRpc",
+        "~/types/team"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/terms.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsPublicLegalPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsPublicLegalPage"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/shop-suit/app/pages/terms.vue",
+      "dependencies": [
+        "~/utils/legal"
+      ],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/super-admin-suit/app/app.vue",
+      "kind": "root",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAppRoot.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAppRoot"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/super-admin-suit/app/app.vue",
+      "dependencies": [],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/super-admin-suit/app/layouts/default.vue",
+      "kind": "layout",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAppShell.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAppShell",
+        "BsProductLogo",
+        "BsSettingsMenu",
+        "BsSlot"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/super-admin-suit/app/layouts/default.vue",
+      "dependencies": [],
+      "verification": "not-yet-accepted"
+    },
+    {
+      "source": "apps/super-admin-suit/app/pages/index.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAuthLayout.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAuthForm",
+        "BsAuthLayout",
+        "BsButton",
+        "BsContentSection",
+        "BsField",
+        "BsInput",
+        "BsProductLogo",
+        "BsRouteLayout",
+        "BsStack",
+        "BsStateSurface"
+      ],
+      "destination": null,
+      "status": "pending-complete-composition-review",
+      "domainAdapter": "apps/super-admin-suit/app/pages/index.vue",
+      "dependencies": [],
+      "verification": "not-yet-accepted"
+    }
+  ],
+  "verifiedSharedHeads": [
+    {
+      "branch": "codex/shared/bs-ui-zn-public-chrome-001",
+      "sha": "05cc2a52bb52f22ab009a5eca540a03b7ecc580a"
+    },
+    {
+      "branch": "codex/shared/bs-ui-zn-data-001",
+      "sha": "980d7cd76f36696abe4dd26f0641ad3cbfcf4dde"
+    },
+    {
+      "branch": "codex/shared/bs-ui-zn-patterns-001",
+      "sha": "a677a38c5af8444e44cf21cb1a2047c502869f75"
+    },
+    {
+      "branch": "codex/shared/bs-ui-zn-ledger-001",
+      "sha": "42c207c4dbed752c456b8e573e0b13c4fd9d81bd"
+    },
+    {
+      "branch": "codex/shared/bs-ui-zn-shop-001",
+      "sha": "9653677335702b5bb53f78577972434d6fc1e72e"
+    },
+    {
+      "branch": "codex/shared/bs-ui-zn-other-suits-001",
+      "sha": "0b1a3fc608b406ca6bcee98612ea969931f1dd3c"
+    },
+    {
+      "branch": "codex/shared/bs-ui-zn-generator-001",
+      "sha": "cb2e61ce031234d427bc1171bc1fc3e9bcc08cf9"
+    },
+    {
+      "branch": "codex/shared/bs-ui-zn-browser-001",
+      "sha": "ae596e2e714e7367fe954b40313679a99920ebb1"
+    },
+    {
+      "branch": "codex/shared/bs-ui-zn-final-001",
+      "sha": "54f4f1e310bb9bc705b0a8b3249ff0c98fccde1b"
+    },
+    {
+      "branch": "codex/shared/bs-sa-shell-001",
+      "sha": "db6672e3444ae431b856de86480facbe62db3fdb"
+    },
+    {
+      "branch": "codex/shared/bs-launch-access-ui-001",
+      "sha": "c0ee21f8feb12acbbe4d227cffa9b88488ee2517"
+    },
+    {
+      "branch": "codex/shared/bs-realtime-foundation-001",
+      "sha": "cf5eb9cd6349f4517ca18beb6025d88167c3e279"
+    },
+    {
+      "branch": "codex/shared/bs-realtime-adoption-001",
+      "sha": "38eb0147faa274ae8e64b30c4080465666c26441"
+    },
+    {
+      "branch": "codex/shared/bs-sa-future-suit-001",
+      "sha": "089381052fccdd9768d20ad403037f12bd3fa0d9"
+    }
+  ]
+}

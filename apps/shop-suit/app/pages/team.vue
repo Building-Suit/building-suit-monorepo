@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
-import type { TeamMember, TeamSnapshot } from '~/types/team'
+import type { TeamMember, TeamSnapshot, TeamRole } from '~/types/team'
 
 definePageMeta({ layout: 'default', middleware: ['auth'] })
 
 const route = useRoute()
+const sessionUser = useSupabaseUser()
+const runtime = useRuntimeConfig()
 const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
 const { locale } = useI18n()
-const { current, currentId, currentMembership, loading: shopLoading, reload } = useShop()
+const { current, currentId, currentMembership, loading: shopLoading, reload, selectShop } = useShop()
 const confirmation = useConfirmation()
 const { push: pushToast } = useToasts()
 const isArabic = computed(() => locale.value === 'ar')
@@ -17,23 +19,29 @@ const acceptError = ref('')
 const actionError = ref('')
 const actionPending = ref(false)
 const invitationLink = ref('')
+const inviteRequestId = ref('')
 const showInvite = ref(false)
 const showEdit = ref(false)
 const showTransfer = ref(false)
 const selectedMember = ref<TeamMember | null>(null)
-const inviteForm = reactive({ name: '', email: '', roleKey: 'staff', locationIds: [] as string[] })
-const editForm = reactive({ roleKey: 'staff', locationIds: [] as string[] })
+const view = ref('members')
+const statusFilter = ref('')
+const showRole = ref(false)
+const roleForm = reactive({ key: null as string | null, name: '', nameAr: '', permissionKeys: [] as string[] })
+const { dirty: roleDirty } = useRecordAction(() => roleForm, showRole)
+const inviteForm = reactive({ name: '', jobTitle: '', email: '', roleKey: 'staff', locationIds: [] as string[] })
+const editForm = reactive({ name: '', jobTitle: '', roleKey: 'staff', locationIds: [] as string[] })
 const transferReason = ref('')
 const { dirty: inviteDirty } = useRecordAction(() => inviteForm, showInvite)
 const { dirty: editDirty } = useRecordAction(() => editForm, showEdit)
 const { dirty: transferDirty } = useRecordAction(() => transferReason.value, showTransfer)
 
 const copy = computed(() => isArabic.value ? {
-  title: 'الفريق والصلاحيات', subtitle: 'ضيف الموظفين، وحدد دور كل واحد وفروعه، واقفل وصوله من غير ما تحذف سجله.',
+  members: 'الأعضاء', roles: 'الأدوار والصلاحيات', newRole: 'إضافة دور', editRole: 'تعديل الصلاحيات', nameAr: 'اسم الدور بالعربية', nameEn: 'اسم الدور بالإنجليزية', jobTitle: 'المسمى الوظيفي', search: 'بحث الأعضاء', allStatuses: 'كل الحالات', archiveRole: 'أرشفة الدور', confirmArchive: 'تأرشف الدور؟ لازم تنقل الأعضاء والدعوات النشطة لدور تاني الأول.', claimHelp: 'الموظف هيقبل الدعوة بحسابه أو ينشئ حسابه ويختار كلمة المرور بنفسه.', title: 'الفريق والصلاحيات', subtitle: 'ضيف الموظفين، وحدد دور كل واحد وفروعه، واقفل وصوله من غير ما تحذف سجله.',
   invite: 'إضافة أو دعوة موظف', inviteTitle: 'إضافة عضو للفريق', name: 'الاسم', email: 'البريد الإلكتروني', role: 'الدور', locations: 'الفروع', permissions: 'الصلاحيات', status: 'الحالة', actions: 'الإجراءات',
   manager: 'مدير', cashier: 'كاشير', barber: 'مقدم خدمة', staff: 'موظف', owner: 'المالك',
   active: 'نشط', suspended: 'موقوف', removed: 'مزال', invited: 'مدعو', pending: 'بانتظار القبول', accepted: 'مقبولة', expired: 'منتهية', revoked: 'ملغاة',
-  save: 'حفظ', saving: 'بنحفظ…', cancel: 'إلغاء', edit: 'تعديل الدور والفروع', suspend: 'إيقاف', reactivate: 'تشغيل تاني', remove: 'إزالة', transfer: 'نقل الملكية',
+  save: 'حفظ', saving: 'بنحفظ…', cancel: 'إلغاء', edit: 'تعديل بيانات العضو', suspend: 'إيقاف', reactivate: 'تشغيل تاني', remove: 'إزالة', transfer: 'نقل الملكية',
   acceptTitle: 'دعوة للانضمام للفريق', acceptHelp: 'اقبل الدعوة بالحساب اللي بريده هو نفس البريد المدعو.', accept: 'اقبل الدعوة', accepting: 'بنقبل الدعوة…',
   noTeam: 'مفيش أعضاء في الفريق لسه.', invitations: 'الدعوات', noInvitations: 'مفيش دعوات.', audit: 'سجل إدارة الفريق', noAudit: 'مفيش إجراءات متسجلة.',
   reason: 'سبب نقل الملكية', transferHelp: 'العضو اللي اخترته هيبقى المالك، والمالك الحالي هيبقى مدير. كل السجلات هتفضل محفوظة.',
@@ -43,11 +51,11 @@ const copy = computed(() => isArabic.value ? {
   revoke: 'إلغاء الدعوة', confirmRevoke: 'تلغي الدعوة دي؟ رابط القبول مش هيشتغل بعدها.',
   date: 'التاريخ', action: 'الإجراء', actor: 'نفّذه', member: 'العضو', retry: 'حاول تاني', close: 'إغلاق',
 } : {
-  title: 'Team & permissions', subtitle: 'Invite staff, assign roles and locations, and stop access without deleting history.',
+  members: 'Members', roles: 'Roles & permissions', newRole: 'Add role', editRole: 'Edit permissions', nameAr: 'Role name in Arabic', nameEn: 'Role name in English', jobTitle: 'Job title', search: 'Search members', allStatuses: 'All statuses', archiveRole: 'Archive role', confirmArchive: 'Archive this role? Reassign its members and live invitations first.', claimHelp: 'Staff accept with their existing account or create an account and choose their own password.', title: 'Team & permissions', subtitle: 'Invite staff, assign roles and locations, and stop access without deleting history.',
   invite: 'Add or invite staff', inviteTitle: 'Add a team member', name: 'Name', email: 'Email', role: 'Role', locations: 'Locations', permissions: 'Permissions', status: 'Status', actions: 'Actions',
   manager: 'Manager', cashier: 'Cashier', barber: 'Operator / service provider', staff: 'Staff', owner: 'Owner',
   active: 'Active', suspended: 'Suspended', removed: 'Removed', invited: 'Invited', pending: 'Pending', accepted: 'Accepted', expired: 'Expired', revoked: 'Revoked',
-  save: 'Save', saving: 'Saving…', cancel: 'Cancel', edit: 'Edit role & locations', suspend: 'Suspend', reactivate: 'Reactivate', remove: 'Remove', transfer: 'Transfer ownership',
+  save: 'Save', saving: 'Saving…', cancel: 'Cancel', edit: 'Edit member', suspend: 'Suspend', reactivate: 'Reactivate', remove: 'Remove', transfer: 'Transfer ownership',
   acceptTitle: 'Team invitation', acceptHelp: 'Accept with the account whose email matches the invitation.', accept: 'Accept invitation', accepting: 'Accepting…',
   noTeam: 'No team members yet.', invitations: 'Invitations', noInvitations: 'No invitations.', audit: 'Team administration audit', noAudit: 'No recorded actions.',
   reason: 'Ownership-transfer reason', transferHelp: 'The selected member becomes owner and the current owner becomes a manager. All history is preserved.',
@@ -60,11 +68,11 @@ const copy = computed(() => isArabic.value ? {
 
 const emptySnapshot = (): TeamSnapshot => ({
   canManage: false, canManagePermissions: false, canViewAudit: false,
-  members: [], roles: [], locations: [], invitations: [], events: [],
+  permissionKeys: [], grantablePermissionKeys: [], members: [], roles: [], locations: [], invitations: [], events: [],
 })
 
 const { data: team, pending, error, refresh } = useAsyncData(
-  'shop-data:team',
+  computed(() => `shop-data:team:${runtime.public.supabase.url}:shop-crm:${sessionUser.value?.id ?? ''}:${currentId.value ?? ''}`),
   async (): Promise<TeamSnapshot> => {
     if (!currentId.value) return emptySnapshot()
     const { data, error: readError } = await shopRpc.rpc('shop_team_read', { p_shop_id: currentId.value })
@@ -74,10 +82,20 @@ const { data: team, pending, error, refresh } = useAsyncData(
   { watch: [currentId], default: emptySnapshot },
 )
 
+const teamErrorMessage = computed(() => error.value?.message.includes('SHOP_PERMISSION_DENIED') ? copy.value.permissionDenied : copy.value.loadError)
 const activeLocations = computed(() => team.value.locations.filter(location => location.status === 'active'))
 const isOwner = computed(() => currentMembership.value?.role === 'owner')
 
+const visibleMembers = computed(() => team.value.members.filter(member => !statusFilter.value || member.status === statusFilter.value))
+const displayedRoles = computed(() => [{ key: 'owner', name: copy.value.owner, nameAr: copy.value.owner, isSystem: true, permissionKeys: team.value.permissionKeys }, ...team.value.roles.filter(role => role.key !== 'owner')])
+const assignableRoles = computed(() => team.value.roles.filter(role => role.key !== 'owner' && (team.value.canManagePermissions || role.key !== 'manager') && role.permissionKeys.every(key => team.value.grantablePermissionKeys.includes(key))))
+const tabs = computed(() => [{ key: 'members', label: copy.value.members, count: team.value.members.length }, { key: 'roles', label: copy.value.roles, count: displayedRoles.value.length }, ...(team.value.canManage ? [{ key: 'invitations', label: copy.value.invitations, count: team.value.invitations.length }] : [])])
+
+watch([currentId, () => sessionUser.value?.id], () => { showInvite.value = false; showEdit.value = false; showRole.value = false; showTransfer.value = false; selectedMember.value = null; invitationLink.value = ''; actionError.value = ''; statusFilter.value = ''; view.value = 'members' })
+
 function roleLabel(key: string) {
+  const role = team.value.roles.find(role => role.key === key)
+  if (role && !role.isSystem) return isArabic.value ? role.nameAr || role.name : role.name
   return copy.value[key as 'manager' | 'cashier' | 'barber' | 'staff' | 'owner'] ?? key
 }
 
@@ -95,7 +113,7 @@ function permissionLabel(permission: string) {
     reports: 'التقارير', settings: 'الإعدادات', discounts: 'الخصومات', team: 'الفريق',
     view: 'عرض', manage: 'إدارة', issue: 'إصدار', receive: 'تحصيل', reverse: 'عكس',
     refund: 'استرداد', record: 'تسجيل', adjust: 'تسوية', audit: 'التدقيق',
-    permissions: 'الصلاحيات', cost_profit: 'التكلفة والربح',
+    appointments: 'المواعيد', schedule: 'جدول العمل', cash_shifts: 'ورديات الخزنة', use: 'استخدام', permissions: 'الصلاحيات', cost_profit: 'التكلفة والربح',
   }
   return permission.split('.').map(part => labels[part] ?? part).join(' · ')
 }
@@ -109,7 +127,8 @@ function locationNames(ids: string[]) {
 }
 
 function resetInvite() {
-  Object.assign(inviteForm, { name: '', email: '', roleKey: 'staff', locationIds: [] })
+  inviteRequestId.value = crypto.randomUUID()
+  Object.assign(inviteForm, { name: '', jobTitle: '', email: '', roleKey: 'staff', locationIds: [] })
   actionError.value = ''
   invitationLink.value = ''
 }
@@ -122,6 +141,8 @@ function openInvite() {
 
 function openEdit(member: TeamMember) {
   selectedMember.value = member
+  editForm.name = member.name || ''
+  editForm.jobTitle = member.jobTitle || ''
   editForm.roleKey = member.roleKey === 'owner' ? 'manager' : member.roleKey
   editForm.locationIds = [...member.locationIds]
   actionError.value = ''
@@ -129,21 +150,21 @@ function openEdit(member: TeamMember) {
 }
 
 async function sendInvite() {
-  if (!currentId.value || actionPending.value || !team.value.canManage) return
+  if (!currentId.value || actionPending.value || !team.value.canManage || invitationLink.value) return
   if (!inviteForm.locationIds.length) { actionError.value = copy.value.chooseLocation; return }
   actionPending.value = true
   actionError.value = ''
   invitationLink.value = ''
   try {
-    const { data, error: commandError } = await shopRpc.rpc('invite_shop_member', {
-      p_request_id: crypto.randomUUID(), p_shop_id: currentId.value,
-      p_email: inviteForm.email.trim(), p_display_name: inviteForm.name.trim() || null,
+    const { data, error: commandError } = await shopRpc.rpc('invite_shop_staff', {
+      p_request_id: inviteRequestId.value, p_shop_id: currentId.value,
+      p_email: inviteForm.email.trim(), p_job_title: inviteForm.jobTitle.trim() || null, p_display_name: inviteForm.name.trim(),
       p_role_key: inviteForm.roleKey, p_location_ids: inviteForm.locationIds,
     })
     if (commandError) throw commandError
     const result = data as { kind: 'added' | 'invited'; invitationCode?: string }
     if (result.kind === 'invited' && result.invitationCode) {
-      invitationLink.value = `${window.location.origin}/team?invite=${result.invitationCode}`
+      invitationLink.value = `${window.location.origin}/auth/team-invitation?invite=${result.invitationCode}`
     } else {
       pushToast({ tone: 'success', title: copy.value.added })
       showInvite.value = false
@@ -160,22 +181,12 @@ async function saveMember() {
   actionPending.value = true
   actionError.value = ''
   try {
-    if (team.value.canManagePermissions && editForm.roleKey !== member.roleKey) {
-      const { error: roleError } = await shopRpc.rpc('manage_shop_member', {
-        p_request_id: crypto.randomUUID(), p_shop_id: currentId.value, p_membership_id: member.id,
-        p_action: 'change_role', p_role_key: editForm.roleKey,
-      })
-      if (roleError) throw roleError
-    }
-    const previous = [...member.locationIds].sort().join(',')
-    const next = [...editForm.locationIds].sort().join(',')
-    if (next !== previous) {
-      const { error: locationError } = await shopRpc.rpc('manage_shop_member', {
-        p_request_id: crypto.randomUUID(), p_shop_id: currentId.value, p_membership_id: member.id,
-        p_action: 'assign_locations', p_location_ids: editForm.locationIds,
-      })
-      if (locationError) throw locationError
-    }
+    const { error: memberError } = await shopRpc.rpc('save_shop_team_member', {
+      p_request_id: crypto.randomUUID(), p_shop_id: currentId.value, p_membership_id: member.id,
+      p_full_name: editForm.name.trim(), p_job_title: editForm.jobTitle.trim() || null,
+      p_role_key: editForm.roleKey, p_location_ids: editForm.locationIds,
+    })
+    if (memberError) throw memberError
     showEdit.value = false
     await refresh()
     pushToast({ tone: 'success', title: copy.value.updated })
@@ -232,12 +243,13 @@ async function acceptInvitation() {
   accepting.value = true
   acceptError.value = ''
   try {
-    const { error: commandError } = await shopRpc.rpc('accept_shop_invitation', {
+    const { data: acceptedShop, error: commandError } = await shopRpc.rpc('accept_shop_invitation', {
       p_request_id: crypto.randomUUID(), p_invitation_code: inviteCode.value,
     })
     if (commandError) throw commandError
     await navigateTo('/team', { replace: true })
     await reload()
+    if (acceptedShop) await selectShop(acceptedShop)
     await refresh()
     pushToast({ tone: 'success', title: copy.value.acceptedInvite })
   } catch { acceptError.value = copy.value.actionFailed }
@@ -259,9 +271,35 @@ async function revokeInvitation(invitationId: string) {
   finally { actionPending.value = false }
 }
 
+function openRole(role?: TeamRole) {
+  Object.assign(roleForm, { key: role?.key ?? null, name: role?.name ?? '', nameAr: role?.nameAr || (role ? roleLabel(role.key) : ''), permissionKeys: [...(role?.permissionKeys ?? [])] })
+  actionError.value = ''
+  showRole.value = true
+}
+
+async function saveRole(archive = false) {
+  if (!currentId.value || actionPending.value || !team.value.canManagePermissions) return
+  if (archive && !await confirmation.ask(copy.value.confirmArchive)) return
+  actionPending.value = true
+  actionError.value = ''
+  try {
+    const { error: roleError } = await shopRpc.rpc('save_shop_team_role', {
+      p_request_id: crypto.randomUUID(), p_shop_id: currentId.value, p_role_key: roleForm.key,
+      p_name: roleForm.name.trim(), p_name_ar: roleForm.nameAr.trim(), p_permission_keys: roleForm.permissionKeys, p_archive: archive,
+    })
+    if (roleError) throw roleError
+    showRole.value = false
+    await refresh()
+    pushToast({ tone: 'success', title: copy.value.updated })
+  } catch { actionError.value = copy.value.actionFailed }
+  finally { actionPending.value = false }
+}
+
 function formatDate(value: string) {
   return new Intl.DateTimeFormat(isArabic.value ? 'ar-EG' : 'en-EG', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
 }
+
+useShopRealtime('team', () => roleDirty.value || inviteDirty.value || editDirty.value || transferDirty.value)
 </script>
 
 <template>
@@ -278,16 +316,18 @@ function formatDate(value: string) {
       </template>
     </BsPageHeader>
     <BsText v-if="shopLoading || pending" role="status" as="p">…</BsText>
-    <BsBox v-else-if="error" role="alert">{{ copy.permissionDenied }} <BsButton @click="refresh()">{{ copy.retry }}</BsButton>
+    <BsBox v-else-if="error" role="alert">{{ teamErrorMessage }} <BsButton @click="refresh()">{{ copy.retry }}</BsButton>
     </BsBox>
     <BsText v-else-if="!current" as="p" size="sm">{{ copy.noTeam }}</BsText>
     <template v-else>
       <BsText v-if="actionError" role="alert" as="p" size="sm" tone="danger">{{ actionError }}</BsText>
-      <BsPanel padding="md">
-        <BsTeamTable :members="team.members" row-key="id" :label="copy.title" :columns="[{ key: 'column0', header: (copy.member) }, { key: 'column1', header: (copy.role) }, { key: 'column2', header: (copy.locations) }, { key: 'column3', header: (copy.status) }, { key: 'column4', header: (copy.actions), hidden: !(team.canManage), align: 'end' }]">
+      <BsAccessTabs v-model="view" :label="copy.title" :tabs="tabs" />
+      <BsSelect v-if="view === 'members'" v-model="statusFilter" :label="copy.status" :options="[{ value: '', label: copy.allStatuses }, ...['active', 'suspended', 'removed'].map(value => ({ value, label: statusLabel(value) }))]" option-label="label" option-value="value" />
+      <BsPanel v-if="view === 'members'" padding="md">
+        <BsTeamTable :members="visibleMembers" row-key="id" :label="copy.title" :columns="[{ key: 'column0', header: (copy.member) }, { key: 'column1', header: (copy.role) }, { key: 'column2', header: (copy.locations) }, { key: 'column3', header: (copy.status) }, { key: 'column4', header: (copy.actions), hidden: !(team.canManage), align: 'end' }]">
           <template #cell-column0="{ row: member }">
             <BsText as="p" emphasis="semibold">{{ memberName(member) }}</BsText>
-            <BsText as="p" size="xs" tone="muted">{{ member.email || '—' }}</BsText>
+            <BsText as="p" size="xs" tone="muted">{{ member.email || '—' }}</BsText><BsText size="xs" tone="muted">{{ member.jobTitle }}</BsText>
           </template>
           <template #cell-column1="{ row: member }">{{ roleLabel(member.roleKey) }}</template>
           <template #cell-column2="{ row: member }">{{ member.roleKey === 'owner' ? activeLocations.map(location => location.name).join(', ') : locationNames(member.locationIds) }}</template>
@@ -308,20 +348,15 @@ function formatDate(value: string) {
           </template>
         </BsTeamTable>
       </BsPanel>
-      <BsPanel padding="md">
-        <BsHeading :level="2">{{ copy.permissions }}</BsHeading>
-        <BsGrid :columns="4">
-          <BsBox v-for="role in team.roles" :key="role.key" as="article" padding="md">
-            <BsHeading :level="3">{{ roleLabel(role.key) }}</BsHeading>
-            <BsList :aria-label="`${copy.permissions}: ${roleLabel(role.key)}`">
-              <BsListItem v-for="permission in role.permissionKeys" :key="permission">{{ permissionLabel(permission) }}</BsListItem>
-            </BsList>
-          </BsBox>
-        </BsGrid>
+      <BsPanel v-if="view === 'roles'" padding="md">
+        <BsDataTable :value="displayedRoles" data-key="key" :label="copy.roles" :columns="[{ key: 'role', header: copy.role }, { key: 'permissions', header: copy.permissions }]" :capabilities="{ insert: team.canManagePermissions, edit: team.canManagePermissions }" :action-labels="{ insert: copy.newRole, edit: copy.editRole }" :can-row-action="(_action, role) => role.key !== 'owner'" @create="openRole()" @edit="openRole">
+          <template #cell-role="{ row: role }">{{ roleLabel(role.key) }}</template>
+          <template #cell-permissions="{ row: role }">{{ role.permissionKeys.map(permissionLabel).join(', ') || '—' }}</template>
+        </BsDataTable>
       </BsPanel>
-      <BsPanel v-if="team.canManage" padding="md">
+      <BsPanel v-if="view === 'invitations' && team.canManage" padding="md">
         <BsHeading :level="2">{{ copy.invitations }}</BsHeading>
-        <BsInvitationTable :invitations="team.invitations" row-key="id" actions-key="column4" :pending="actionPending" :actions="invitation => invitation.status === 'pending' ? [{ key: 'revoke', label: copy.revoke, tone: 'secondary' as const }] : []" @action="(_key, invitation) => revokeInvitation(invitation.id)" :label="copy.invitations" :columns="[{ key: 'email', header: (copy.email), field: 'email' }, { key: 'column1', header: (copy.role) }, { key: 'column2', header: (copy.status) }, { key: 'column3', header: (copy.date) }, { key: 'column4', header: (copy.actions) }]">
+        <BsInvitationTable :invitations="team.invitations" row-key="id" actions-key="column4" :pending="actionPending" :actions="invitation => invitation.status === 'pending' ? [{ key: 'revoke', label: copy.revoke, tone: 'secondary' as const }] : []" :label="copy.invitations" :columns="[{ key: 'email', header: (copy.email), field: 'email' }, { key: 'column1', header: (copy.role) }, { key: 'column2', header: (copy.status) }, { key: 'column3', header: (copy.date) }, { key: 'column4', header: (copy.actions) }]" @action="(_key, invitation) => revokeInvitation(invitation.id)">
           <template #cell-column1="{ row: invitation }">{{ roleLabel(invitation.roleKey) }}</template>
           <template #cell-column2="{ row: invitation }">{{ statusLabel(invitation.status) }}</template>
           <template #cell-column3="{ row: invitation }">{{ formatDate(invitation.createdAt) }}</template>
@@ -331,7 +366,7 @@ function formatDate(value: string) {
           </template>
         </BsInvitationTable>
       </BsPanel>
-      <BsPanel v-if="team.canViewAudit" padding="md">
+      <BsPanel v-if="view === 'members' && team.canViewAudit" padding="md">
         <BsHeading :level="2">{{ copy.audit }}</BsHeading>
         <BsDataTable :value="team.events" data-key="id" :label="copy.audit" :columns="[{ key: 'action', header: (copy.action), field: 'action' }, { key: 'actorEmail', header: (copy.actor), field: 'actorEmail' }, { key: 'reason', header: (copy.reason), field: 'reason' }, { key: 'column3', header: (copy.date) }]">
           <template #cell-column3="{ row: event }">{{ formatDate(event.occurredAt) }}</template>
@@ -341,18 +376,20 @@ function formatDate(value: string) {
         </BsDataTable>
       </BsPanel>
     </template>
-    <BsRecordActionDialog v-model:visible="showInvite" :title="copy.inviteTitle" :dirty="inviteDirty" :pending="actionPending" :error="actionError" :submit-label="copy.save" :cancel-label="invitationLink ? copy.close : copy.cancel" @submit="sendInvite">
+    <BsRecordActionDialog v-model:visible="showInvite" :title="copy.inviteTitle" :dirty="inviteDirty && !invitationLink" :submit-disabled="Boolean(invitationLink)" :pending="actionPending" :error="actionError" :submit-label="copy.save" :cancel-label="invitationLink ? copy.close : copy.cancel" @submit="sendInvite">
       <BsField v-slot="field" :label="copy.name">
-        <BsInput :id="field.id" v-model="inviteForm.name" :aria-describedby="field.describedby" :maxlength="160"/>
+        <BsInput :id="field.id" v-model="inviteForm.name" :disabled="Boolean(invitationLink)" :aria-describedby="field.describedby" :maxlength="160" required minlength="2"/>
       </BsField>
+      <BsField v-slot="field" :label="copy.jobTitle"><BsInput :id="field.id" v-model="inviteForm.jobTitle" :disabled="Boolean(invitationLink)" maxlength="160" /></BsField>
+      <BsText>{{ copy.claimHelp }}</BsText>
       <BsField v-slot="field" :label="copy.email">
-        <BsInput :id="field.id" v-model="inviteForm.email" :aria-describedby="field.describedby" type="email" required :maxlength="254"/>
+        <BsInput :id="field.id" v-model="inviteForm.email" :disabled="Boolean(invitationLink)" :aria-describedby="field.describedby" type="email" required :maxlength="254"/>
       </BsField>
       <BsField v-slot="field" :label="copy.role">
-        <BsSelect v-model="inviteForm.roleKey" :input-id="field.id" :aria-describedby="field.describedby" :label="copy.role" :options="[...(team.roles).map(role => ({ value: role.key, label: (roleLabel(role.key)), disabled: role.key === 'manager' && !team.canManagePermissions }))]" option-label="label" option-value="value" option-disabled="disabled"/>
+        <BsSelect v-model="inviteForm.roleKey" :disabled="Boolean(invitationLink)" :input-id="field.id" :aria-describedby="field.describedby" :label="copy.role" :options="assignableRoles.map(role => ({ value: role.key, label: roleLabel(role.key), disabled: false }))" option-label="label" option-value="value" option-disabled="disabled"/>
       </BsField>
       <BsFieldGroup :legend="(copy.locations)">
-        <BsCheckbox v-for="location in activeLocations" :key="location.id" v-model="inviteForm.locationIds" :value="location.id" :label="location.name" />
+        <BsCheckbox v-for="location in activeLocations" :key="location.id" v-model="inviteForm.locationIds" :disabled="Boolean(invitationLink)" :value="location.id" :label="location.name" />
       </BsFieldGroup>
       <BsText v-if="invitationLink" role="status" as="p" size="sm">
         <BsText as="strong">{{ copy.invitationReady }}</BsText>
@@ -360,15 +397,23 @@ function formatDate(value: string) {
       </BsText>
     </BsRecordActionDialog>
     <BsMemberEditorDialog v-model:visible="showEdit" :title="copy.edit" :dirty="editDirty" :pending="actionPending" :error="actionError" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="saveMember">
+      <BsField v-slot="field" :label="copy.name"><BsInput :id="field.id" v-model="editForm.name" required minlength="2" maxlength="160" /></BsField>
+      <BsField v-slot="field" :label="copy.jobTitle"><BsInput :id="field.id" v-model="editForm.jobTitle" maxlength="160" /></BsField>
       <template #role>
       <BsField v-slot="field" :label="copy.role">
-        <BsSelect v-model="editForm.roleKey" :input-id="field.id" :aria-describedby="field.describedby" :disabled="!team.canManagePermissions" :label="copy.role" :options="[...(team.roles).map(role => ({ value: role.key, label: (roleLabel(role.key)), disabled: false }))]" option-label="label" option-value="value" option-disabled="disabled"/>
+        <BsSelect v-model="editForm.roleKey" :input-id="field.id" :aria-describedby="field.describedby" :disabled="!team.canManagePermissions" :label="copy.role" :options="assignableRoles.map(role => ({ value: role.key, label: roleLabel(role.key), disabled: false }))" option-label="label" option-value="value" option-disabled="disabled"/>
       </BsField>
       </template>
       <BsFieldGroup :legend="(copy.locations)">
         <BsCheckbox v-for="location in activeLocations" :key="location.id" v-model="editForm.locationIds" :value="location.id" :label="location.name" />
       </BsFieldGroup>
     </BsMemberEditorDialog>
+    <BsRecordActionDialog v-model:visible="showRole" :title="roleForm.key ? copy.editRole : copy.newRole" :dirty="roleDirty" :pending="actionPending" :error="actionError" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="saveRole()">
+      <BsField v-slot="field" :label="copy.nameEn"><BsInput :id="field.id" v-model="roleForm.name" required minlength="2" maxlength="160" /></BsField>
+      <BsField v-slot="field" :label="copy.nameAr"><BsInput :id="field.id" v-model="roleForm.nameAr" required minlength="2" maxlength="160" dir="rtl" /></BsField>
+      <BsFieldGroup :legend="copy.permissions"><BsCheckbox v-for="key in team.permissionKeys" :key="key" v-model="roleForm.permissionKeys" :value="key" :label="permissionLabel(key)" :disabled="!team.grantablePermissionKeys.includes(key)" /></BsFieldGroup>
+      <BsButton v-if="roleForm.key && !team.roles.find(role => role.key === roleForm.key)?.isSystem" variant="danger" :disabled="actionPending" @click="saveRole(true)">{{ copy.archiveRole }}</BsButton>
+    </BsRecordActionDialog>
     <BsRecordActionDialog v-model:visible="showTransfer" :title="copy.transfer" :dirty="transferDirty" :pending="actionPending" :error="actionError" :submit-label="copy.transfer" :cancel-label="copy.cancel" @submit="transferOwnership">
       <BsText as="p" size="sm">{{ copy.transferHelp }}</BsText>
       <BsField v-slot="field" :label="copy.reason">

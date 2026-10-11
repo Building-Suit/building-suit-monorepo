@@ -129,6 +129,10 @@ file_size_limit = "50MiB"
 # HMAC bridge protocol. It must never accept a browser Supabase JWT instead.
 verify_jwt = false
 
+[functions.shop-support-sender]
+# This worker requires its own server-only bearer token; browser JWTs are denied.
+verify_jwt = false
+
 # Allow connections via S3 compatible clients
 [storage.s3_protocol]
 enabled = true

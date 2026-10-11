@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { shopCommandErrorMessage } from '~/utils/shopCommandErrorMessage'
+import { saleCopy } from '~/utils/saleCopy'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 
 definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
@@ -68,6 +70,9 @@ const { dirty: editorDirty } = useRecordAction(() => ({ customerId: customerId.v
 const draftRequestId = ref<string | null>(null)
 const issueRequestId = ref<string | null>(null)
 const checkoutPaidAt = ref<string | null>(null)
+// Keep the exact confirmed command after an uncertain response. Retry must
+// neither regenerate its timestamp/key nor save an independently issued draft.
+const fastPayAttempt = ref<ShopRpcDatabase['public']['Functions']['fast_pay_location_sale']['Args'] | null>(null)
 let searchTimer: ReturnType<typeof setTimeout> | undefined
 
 watch(search, (value) => {
@@ -75,7 +80,7 @@ watch(search, (value) => {
   searchTimer = setTimeout(() => { debouncedSearch.value = value.trim(); page.value = 1 }, 300)
 })
 watch([statusFilter, fromDate, toDate], () => { page.value = 1 })
-watch([currentId, currentLocationId], () => { closeEditor(); page.value = 1 })
+watch([currentId, currentLocationId], () => { closeEditor(); fastPayAttempt.value = null; page.value = 1 })
 watch([customerId, dueDate, notes, paymentMethod, paymentReference, lines], () => {
   if (!saving.value && !issuing.value) {
     draftRequestId.value = null
@@ -166,6 +171,7 @@ function lineAmounts(line: DraftLine) {
 const previewTotal = computed(() => lines.value.reduce((sum, line) => sum + lineAmounts(line).total, 0))
 
 function resetEditor() {
+  fastPayAttempt.value = null
   editingId.value = null
   customerId.value = ''
   dueDate.value = ''
@@ -196,6 +202,7 @@ async function openEdit(saleId: string) {
   if (error) { editorError.value = readableError(error.message); return }
   const sale = data as SaleDetail | null
   if (!sale || sale.status !== 'draft' || !sale.canManage) return
+  fastPayAttempt.value = null
   editingId.value = sale.id
   customerId.value = sale.client_id ?? ''
   dueDate.value = sale.due_date ?? ''
@@ -231,9 +238,11 @@ function validDraft(requireCustomer = false) {
 }
 
 function readableError(message?: string) {
-  if (message?.includes('INSUFFICIENT_STOCK')) return t('sales.insufficientStock')
+  if (message?.includes('SALE_OPEN_CASH_SHIFT_REQUIRED')) return t('sales.openCashShiftRequired')
+  if (message?.includes('INSUFFICIENT_STOCK')) return saleCopy(t, 'sales.insufficientStock', lines.value)
   if (message?.includes('OUTSTANDING_SALE_REQUIRES_CUSTOMER')) return t('sales.customerRequired')
   if (message?.includes('CUSTOMERLESS_CHECKOUT_REQUIRES_FULL_PAYMENT')) return t('sales.fullPaymentRequired')
+  if (message?.includes('FAST_PAY_REQUIRES_FULL_PAYMENT')) return t('sales.fullPaymentRequired')
   if (message?.includes('INVALID_SALE') || message?.includes('UNSUPPORTED_SALE')) return t('sales.invalid')
   if (message?.includes('SHOP_PERMISSION_DENIED') || message?.includes('SHOP_SUBSCRIPTION_INACTIVE')) return t('sales.manageDenied')
   return t('sales.saveError')
@@ -262,13 +271,14 @@ async function persistDraft() {
     return data
   }
   catch (error) {
-    editorError.value = readableError(error instanceof Error ? error.message : undefined)
+    editorError.value = readableError(shopCommandErrorMessage(error))
     return null
   }
   finally { saving.value = false }
 }
 
 async function saveDraft() {
+  if (fastPayAttempt.value || issuing.value || saving.value) return
   if (!validDraft()) { editorError.value = t('sales.invalid'); return }
   if (await persistDraft()) {
     closeEditor()
@@ -277,10 +287,10 @@ async function saveDraft() {
 }
 
 async function issue() {
-  if (!currentId.value || !currentLocationId.value || issuing.value || !salePage.value?.canIssue) return
+  if (!currentId.value || !currentLocationId.value || issuing.value || saving.value || fastPayAttempt.value || !salePage.value?.canIssue) return
   if (!validDraft()) { editorError.value = t('sales.invalid'); return }
   if (!customerId.value && !paymentAccess.value.can_receive) { editorError.value = t('sales.checkoutDenied'); return }
-  if (!await confirmation.ask(customerId.value ? t('sales.issueConfirm') : t('sales.checkoutConfirm'))) return
+  if (!await confirmation.ask(customerId.value ? saleCopy(t, 'sales.issueConfirm', lines.value) : saleCopy(t, 'sales.checkoutConfirm', lines.value))) return
   const invoiceId = issueRequestId.value && editingId.value ? editingId.value : await persistDraft()
   if (!invoiceId) return
   issuing.value = true
@@ -307,10 +317,51 @@ async function issue() {
       refreshNuxtData('shop-data:inventory-overview'),
       refreshNuxtData('shop-data:recent-invoices'),
     ])
-    pushToast({ tone: 'success', title: t(customerId.value ? 'sales.issuedSuccess' : 'sales.checkoutSuccess') })
+    pushToast({ tone: 'success', title: saleCopy(t, customerId.value ? 'sales.issuedSuccess' : 'sales.checkoutSuccess', lines.value) })
     await navigateTo(`/sales/${invoiceId}`)
   }
-  catch (error) { editorError.value = readableError(error instanceof Error ? error.message : undefined) }
+  catch (error) { editorError.value = readableError(shopCommandErrorMessage(error)) }
+  finally { issuing.value = false }
+}
+
+async function fastPay() {
+  if (!currentId.value || !currentLocationId.value || saving.value || issuing.value
+    || !salePage.value?.canManage || !salePage.value.canIssue || !paymentAccess.value.can_receive) return
+  if (!validDraft() || previewTotal.value <= 0) { editorError.value = t('sales.invalid'); return }
+  issuing.value = true
+  editorError.value = ''
+  try {
+    if (!fastPayAttempt.value) {
+      const shopId = currentId.value
+      const locationId = currentLocationId.value
+      if (!await confirmation.ask(saleCopy(t, 'sales.fastPayConfirm', lines.value, { amount: money(previewTotal.value), method: t(`payments.methods.${paymentMethod.value}`) }))) return
+      if (currentId.value !== shopId || currentLocationId.value !== locationId || !editorOpen.value) return
+      fastPayAttempt.value = {
+        p_request_id: crypto.randomUUID(), p_shop_id: shopId,
+        p_location_id: locationId, p_invoice_id: editingId.value,
+        p_customer_id: customerId.value || null,
+        p_due_date: customerId.value && dueDate.value ? dueDate.value : null,
+        p_notes: notes.value.trim() || null,
+        p_lines: lines.value.map(line => ({ item_type: line.itemType, source_id: line.sourceId, quantity: Number(line.quantity) })),
+        p_amount: previewTotal.value, p_paid_at: new Date().toISOString(),
+        p_method: paymentMethod.value, p_reference: paymentReference.value.trim() || null,
+      }
+    }
+    const attempt = fastPayAttempt.value
+    const { data, error } = await shopRpc.rpc('fast_pay_location_sale', attempt)
+    if (error) throw error
+    if (!data) throw new Error('FAST_PAY_RESULT_MISSING')
+    if (currentId.value !== attempt.p_shop_id || currentLocationId.value !== attempt.p_location_id) return
+    closeEditor()
+    // Refresh failures must not prevent handing off a committed payment.
+    void Promise.allSettled([
+      refresh(), refreshCatalog(), refreshNuxtData('shop-data:inventory-overview'),
+      refreshNuxtData('shop-data:recent-invoices'), refreshNuxtData('shop-data:customer-statement'),
+      refreshNuxtData('shop-data:cash-shifts'),
+    ])
+    await navigateTo(`/sales/${data}/receipt`)
+  }
+  catch (error) { editorError.value = readableError(shopCommandErrorMessage(error)) }
   finally { issuing.value = false }
 }
 
@@ -322,6 +373,8 @@ function formatDate(value: string | null) {
   return new Intl.DateTimeFormat(locale.value === 'ar' ? 'ar-EG' : 'en-EG', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
 }
 function handlePage(event: { page: number }) { page.value = event.page + 1 }
+
+useShopRealtime('sales', () => editorDirty.value)
 </script>
 
 <template>
@@ -369,6 +422,7 @@ function handlePage(event: { page: number }) { page.value = event.page + 1 }
     </template>
     <BsText v-if="editorError && !editorOpen" role="alert" as="p">{{ editorError }}</BsText>
     <BsRecordActionDialog v-model:visible="editorOpen" :title="editingId ? t('sales.editDraft') : t('sales.newSale')" :dirty="editorDirty" :pending="saving || issuing" :error="editorError" size="lg" @submit="saveDraft">
+      <BsFieldGroup :disabled="Boolean(fastPayAttempt)" :legend="t('sales.lines')">
       <BsText v-if="catalogError" role="alert" as="p">{{ t('sales.catalogError') }} <BsButton @click="refreshCatalog()">{{ t('common.retry') }}</BsButton>
       </BsText>
       <BsGrid :columns="2">
@@ -418,12 +472,15 @@ function handlePage(event: { page: number }) { page.value = event.page + 1 }
       </BsStack>
       <BsBox padding="md">
         <BsText as="p" size="sm">{{ t('sales.previewNotice') }}</BsText>
-        <BsText as="p" size="sm">{{ t('sales.stockNotice') }}</BsText>
+        <BsText as="p" size="sm">{{ saleCopy(t, 'sales.stockNotice', lines) }}</BsText>
         <BsText as="p" size="lg" emphasis="semibold">{{ t('sales.total') }}: {{ money(previewTotal) }}</BsText>
       </BsBox>
+      </BsFieldGroup>
+      <BsText v-if="fastPayAttempt" role="status">{{ t('sales.fastPayRetry') }}</BsText>
       <template #actions="{ close }">
-        <BsButton type="submit" :disabled="saving || issuing">{{ saving ? t('sales.saving') : t('sales.saveDraft') }}</BsButton>
-        <BsButton v-if="salePage?.canIssue" type="button" variant="primary" :disabled="saving || issuing" @click="issue">{{ issuing ? t('sales.issuing') : t(customerId ? 'sales.issue' : 'sales.checkout') }}</BsButton>
+        <BsButton v-if="salePage?.canManage && salePage.canIssue && paymentAccess.can_receive" type="button" variant="primary" :pending="issuing" :disabled="saving || issuing" @click="fastPay">{{ t('sales.fastPay') }}</BsButton>
+        <BsButton type="submit" :disabled="saving || issuing || Boolean(fastPayAttempt)">{{ saving ? t('sales.saving') : t('sales.saveDraft') }}</BsButton>
+        <BsButton v-if="salePage?.canIssue" type="button" variant="primary" :disabled="saving || issuing || Boolean(fastPayAttempt)" @click="issue">{{ issuing ? t('sales.issuing') : t(customerId ? 'sales.issue' : 'sales.checkout') }}</BsButton>
         <BsButton type="button" :disabled="saving || issuing" @click="close">{{ t('sales.cancel') }}</BsButton>
       </template>
     </BsRecordActionDialog>

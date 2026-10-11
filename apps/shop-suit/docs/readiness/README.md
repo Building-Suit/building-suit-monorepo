@@ -1,12 +1,25 @@
 # Shop Suit readiness work
 
+## Current integration status — 2026-10-11
+
+Shop source is integrated through [#241](https://github.com/Building-Suit/building-suit-monorepo/pull/241) and [#242](https://github.com/Building-Suit/building-suit-monorepo/pull/242), staging merge `699b57afed66439e7a0b76bc5a7fc52dc50df5d6`. See the [current qualification evidence](../SS-VAL-001-verification.md#current-integration-status--2026-10-11) for exact candidate, CI, browser/SQL and staging observations. Replacement integration does not make #230 or #235 GitHub-merged.
+
+**SS-LAUNCH-R11 / SS-LAUNCH-SINGLE-SESSION-001:** client-side session handling implemented; provider-enforced single-session behavior **blocked** pending supported Supabase configuration and real-device verification. Closure comparison found and restored the missing invitation account-switch local-logout argument and its regression assertion. No other intended source change from #230/#235 is missing; shared-root presentation, release migration filenames and harness fixes are reconciled changes.
+
+**SS-VAL-001 / SS-LAUNCH-R01–R13:** qualification implementation integrated; independently verified launch, provider configuration, live delivery and production acceptance remain separate pending/blocked gates. R05 worker installation does not establish inbox delivery. Exact acceptance criteria and the executable matrix are preserved in the qualification report.
+
+Historical baseline tables and execution results below retain their dates and failures; they are not current staging status. Execution history remains preserved.
+
+
+Current first-launch qualification: [SS-VAL-001](../SS-VAL-001-verification.md), with the repeatable [launch matrix](../../tests/launch-qualification.json). This supersedes historical readiness task lists as the launch gate; deferred roadmap items are not required. Implementation, local execution, independent verification, provider configuration, deployment and production smoke are separate statuses.
+
 The bounded two-branch barber gate is maintained in the [SS-PILOT-001 runbook](../SS-PILOT-001-runbook.md) and [execution evidence](../SS-PILOT-001-verification.md). That gate remains blocked until its outstanding checks pass; the historical baseline below is not current pilot sign-off.
 
 The broader small-shop gate is maintained in the [SS-MARKET-VAL-001 runbook](../SS-MARKET-VAL-001-runbook.md) and [execution evidence](../SS-MARKET-VAL-001-verification.md). General product/service/mixed marketing remains blocked pending qualification; ETA compliance and offline operation are explicitly excluded.
 
 The current plans lifecycle gate is maintained in the [SS-SUB-001 commercial runbook](../SS-SUB-001-runbook.md) and [candidate evidence](../SS-SUB-001-verification.md). Code-complete acceptance fixtures do not imply automated, manual, deployed, or commercially approved status; use that record for the current candidate state.
 
-Updated: 2026-09-30. Status: **not ready for sale**.
+Updated: 2026-10-11. Status: **not ready for sale**.
 
 This is the current implementation guide. Earlier documents under `docs/rebuild/`
 and the batch notes in the root README describe historical work; their claims of
@@ -17,7 +30,9 @@ Current development targets the dedicated Shop projects recorded in
 `public`. Records below that name `jkdncdexqcymwbihwdhp` or `shop_crm` describe
 historical pre-transfer checkpoints only; they are not active deployment targets.
 
-## Working agreement
+## Historical checkpoint working agreement
+
+These checkpoint constraints are historical. Current root/scoped agent rules, shared runbooks and explicit user authorization govern ongoing work.
 
 - Complete one bounded task, update this documentation, verify it, and commit locally.
 - Do not push to GitHub or deploy the frontend.

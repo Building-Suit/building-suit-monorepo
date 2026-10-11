@@ -1,13 +1,24 @@
 # Shop Suit Requirements V1 — canonical implementation tracker
 
-Status: SS-SUB-001 commercial lifecycle acceptance implemented; candidate verification is recorded separately.
-Last updated: 2026-09-30.
+## Current integration status — 2026-10-11
+
+Shop source is integrated through [#241](https://github.com/Building-Suit/building-suit-monorepo/pull/241) and [#242](https://github.com/Building-Suit/building-suit-monorepo/pull/242), staging merge `699b57afed66439e7a0b76bc5a7fc52dc50df5d6`. See the [current qualification evidence](../SS-VAL-001-verification.md#current-integration-status--2026-10-11) for exact candidate, CI, browser/SQL and staging observations. Replacement integration does not make #230 or #235 GitHub-merged.
+
+**SS-LAUNCH-R11 / SS-LAUNCH-SINGLE-SESSION-001:** client-side session handling implemented; provider-enforced single-session behavior **blocked** pending supported Supabase configuration and real-device verification. Closure comparison found and restored the missing invitation account-switch local-logout argument and its regression assertion. No other intended source change from #230/#235 is missing; shared-root presentation, release migration filenames and harness fixes are reconciled changes.
+
+**SS-VAL-001 / SS-LAUNCH-R01–R13:** qualification implementation integrated; independently verified launch, provider configuration, live delivery and production acceptance remain separate pending/blocked gates. R05 worker installation does not establish inbox delivery. Exact acceptance criteria and the executable matrix are preserved in the qualification report.
+
+Historical baseline tables and execution results below retain their dates and failures; they are not current staging status. Execution history remains preserved.
+
+
+Status: source integration merged; launch acceptance remains blocked as recorded above.
+Last updated: 2026-10-11.
 
 This file is the sole canonical implementation tracker for the Shop Suit Requirements Pack V1 stream. It replaces the former coarse backlog in this path. Other files in `apps/shop-suit/docs/readiness/` and `docs/rebuild/` remain dated evidence, not parallel status authorities.
 
 > Source limitation: the SS-BASE-001 attachment enumerates all 197 requirement IDs and supplies domain audit criteria, but it does not include the underlying per-ID Pack V1 wording. The short summaries below are traceability labels inferred from that brief. Where exact semantics affect classification, the status is `unverified`; future sessions must replace labels with verbatim-approved summaries when the pack is supplied, without silently inventing policy.
 
-## Baseline metadata
+## Historical baseline metadata
 
 | Field | Value |
 |---|---|
@@ -22,7 +33,7 @@ This file is the sole canonical implementation tracker for the Shop Suit Require
 | Database inspected | Checked-in four-migration chain and disposable local Shop database after applying pending local version `20260919091222` |
 | Remote/provider scope | No remote database access or mutation; no deployment/provider/secret activity |
 
-## Accepted and pending task ledger
+## Historical 2026-09-23 task ledger
 
 | Task | State | Scope/evidence |
 |---|---|---|
@@ -555,12 +566,14 @@ Before the later named packages:
 
 ### SS-VAL-001 — Launch qualification
 
-- Requirements: VAL-01/10..13, PLAN continuity.
-- Prerequisites: all accepted launch packages.
-- Capability: disposable DB regression, authenticated browser matrix, report reconciliation, staging verification, restore/cutover evidence and honest capability claims.
-- No deployment/merge occurs without separate authorization.
+- Requirements: SS-LAUNCH-R01 through SS-LAUNCH-R13, current first-launch stack.
+- Gate: [qualification report](../SS-VAL-001-verification.md) and [executable matrix](../../tests/launch-qualification.json); historical task lists do not add deferred optional packages.
+- Capability: full local DB/unit/review/quality and focused browser evidence, with EN/AR, RTL/LTR, phone/desktop, permission and tenant-isolation boundaries.
+- Statuses remain separate: implemented, locally checked, independently verified, provider-configured, deployed and production-smoke-tested.
+- Provider/hosted evidence remains an explicit external gate. Local PASS cannot establish it. ETA, offline and optional private offers remain excluded.
+- No deployment, provider mutation, hosted DB change, merge, push or commit occurs for this qualification.
 
-## Exact next proposed task
+## Historical baseline next-task proposal
 
 ### SS-BIZ-001 — Operational business mode independent of subscription
 

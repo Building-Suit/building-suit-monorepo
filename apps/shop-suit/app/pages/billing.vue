@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import type { BillingPlanOption, BillingSubmission, ShopBilling } from '~/types/billing'
+import type { BillingPlanOption, BillingSubmission, PrivateOfferPreview, ShopBilling } from '~/types/billing'
 import type { PlanResourceKey, PlanUsageResource, ShopPlanInterval, ShopPlanOffer } from '~/types/plans'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
+import { parsePrivateOfferLink } from '~/utils/private-offer'
+import type { PrivateOfferEntry } from '~/utils/private-offer'
 
 definePageMeta({ layout: 'default', middleware: ['auth'] })
 
-const rpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const client = useSupabaseClient<ShopRpcDatabase>()
+const rpc = client.schema('public')
 const { locale } = useI18n()
 const ui = useUiCopy()
 const { current, currentId, isOwner } = useShop()
@@ -18,6 +21,54 @@ const form = reactive({ catalogTermsId: '', paidAmount: 0, transferDate: '', tra
 const submitPending = ref(false)
 const submitError = ref('')
 const submitRequestId = ref<string | null>(null)
+const privateLink = ref('')
+const privateEntry = shallowRef<PrivateOfferEntry | null>(null)
+const privatePreview = shallowRef<PrivateOfferPreview | null>(null)
+const privatePending = ref(false)
+const privateError = ref('')
+const user = useSupabaseUser()
+let privateGeneration = 0
+function clearPrivateOffer() {
+  ++privateGeneration
+  privateLink.value = ''; privateEntry.value = null; privatePreview.value = null
+  privatePending.value = false; privateError.value = ''; submitRequestId.value = null; submitPending.value = false
+}
+async function previewPrivateOffer() {
+  if (!currentId.value || !isOwner.value || privatePending.value) return
+  const generation = ++privateGeneration
+  privateError.value = ''; privatePreview.value = null; privateEntry.value = null; submitRequestId.value = null
+  const value = privateLink.value
+  privateLink.value = ''
+  privatePending.value = true
+  try {
+    const entry = parsePrivateOfferLink(value, window.location.origin)
+    const shopId = currentId.value
+    const { data, error: readError } = await rpc.rpc('shop_private_offer_read', {
+      p_shop_id: shopId, p_offer_id: entry.offerId, p_offer_version: entry.offerVersion,
+      p_target_binding_id: entry.targetBindingId, p_target_environment_id: entry.targetEnvironmentId,
+      p_redemption_token: entry.redemptionToken,
+    })
+    if (readError) throw readError
+    if (generation !== privateGeneration || shopId !== currentId.value || !isOwner.value) return
+    const offer = data as PrivateOfferPreview
+    if (!offer || offer.offerId !== entry.offerId || offer.offerVersion !== entry.offerVersion || offer.shopId !== shopId
+      || offer.targetBindingId !== entry.targetBindingId || offer.targetEnvironmentId !== entry.targetEnvironmentId) throw new Error('offer_response_mismatch')
+    privateEntry.value = entry; privatePreview.value = offer
+    form.paidAmount = offer.priceAmount
+  } catch {
+    if (generation === privateGeneration) privateError.value = copy.value.privateUnavailable
+  } finally {
+    if (generation === privateGeneration) privatePending.value = false
+  }
+}
+onMounted(() => {
+  if (!window.location.hash) return
+  const link = window.location.href
+  window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search)
+  privateLink.value = link
+  void previewPrivateOffer()
+})
+watch([currentId, isOwner, user], clearPrivateOffer, { flush: 'sync' })
 
 const { data: billing, pending, error, refresh } = await useAsyncData(
   'shop-data:billing',
@@ -39,10 +90,82 @@ const purchasablePlans = computed(() => (billing.value?.availablePlans ?? [])
   .filter((plan): plan is BillingPlanOption & { billingInterval: ShopPlanInterval } => publicCatalogTerms.value.has(plan.catalogTermsId)
     && (plan.billingInterval === 'monthly' || plan.billingInterval === 'annual')))
 const selectedPlan = computed(() => purchasablePlans.value.find(plan => plan.catalogTermsId === form.catalogTermsId) ?? null)
+const noticeQuote = computed(() => privatePreview.value ? { planName: privatePreview.value.displayName, effectivePriceAmount: privatePreview.value.priceAmount, currency: privatePreview.value.currency, billingInterval: privatePreview.value.billingInterval, priceSource: 'private_offer', blockers: privatePreview.value.blockers } : selectedPlan.value)
 const currentCatalogTermsId = computed(() => purchasablePlans.value.find(plan => plan.planSlug === billing.value?.subscription.planSlug
   && plan.planVariant === billing.value?.subscription.planVariant
   && plan.billingInterval === billing.value?.subscription.billingInterval)?.catalogTermsId ?? '')
 const latestSubmission = computed(() => billing.value?.submissions?.[0] ?? null)
+const evidenceSubmission = computed(() => billing.value?.submissions.find(item => ['submitted', 'under_review'].includes(item.status)) ?? null)
+const evidenceFile = shallowRef<File | null>(null)
+const evidenceInputVersion = ref(0)
+const evidencePending = ref(false)
+const evidenceError = ref('')
+const evidenceSaved = ref(false)
+const evidenceFiles = ref<Array<{ evidenceId: string; originalFileName: string; sha256: string }>>([])
+let evidenceGeneration = 0
+let reservation: { evidenceId: string; bucket: string; objectName: string; mimeType: string; sizeBytes: number } | null = null
+watch([currentId, isOwner, user, () => evidenceSubmission.value?.id], async () => {
+  const generation = ++evidenceGeneration
+  evidenceFile.value = null; reservation = null; evidenceError.value = ''; evidenceSaved.value = false
+  evidenceFiles.value = []; evidencePending.value = false
+  ++evidenceInputVersion.value
+  const submission = evidenceSubmission.value
+  if (!submission || !isOwner.value) return
+  try {
+    const { data, error } = await rpc.rpc('shop_billing_payment_evidence_read', { p_submission_id: submission.id })
+    if (error) throw error
+    if (generation === evidenceGeneration) evidenceFiles.value = data ?? []
+  } catch {
+    if (generation === evidenceGeneration) evidenceError.value = copy.value.evidenceFailed
+  }
+}, { immediate: true, flush: 'sync' })
+function selectEvidence(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0] ?? null
+  evidenceError.value = ''; evidenceSaved.value = false
+  if (file && (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size < 1 || file.size > 5242880
+    || file.name.trim().length > 160 || /[/\\]/.test(file.name) || Array.from(file.name).some(char => char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127))) {
+    evidenceError.value = copy.value.evidenceInvalid
+    input.value = ''; evidenceFile.value = null; reservation = null
+    return
+  }
+  if (file !== evidenceFile.value) reservation = null
+  evidenceFile.value = file
+}
+async function uploadEvidence() {
+  const file = evidenceFile.value
+  const submission = evidenceSubmission.value
+  if (!file || !submission || !isOwner.value || evidencePending.value) return
+  const generation = evidenceGeneration
+  evidencePending.value = true; evidenceError.value = ''; evidenceSaved.value = false
+  try {
+    const bytes = await file.arrayBuffer()
+    const digest = await crypto.subtle.digest('SHA-256', bytes)
+    const sha256 = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('')
+    if (generation !== evidenceGeneration) return
+    if (!reservation) {
+      const { data, error } = await rpc.rpc('reserve_shop_billing_payment_evidence', {
+        p_submission_id: submission.id, p_original_file_name: file.name, p_mime_type: file.type, p_size_bytes: file.size, p_sha256: sha256,
+      })
+      if (error || !data) throw error ?? new Error('reservation_missing')
+      if (generation !== evidenceGeneration) return
+      reservation = data
+    }
+    const { error: uploadError } = await client.storage.from(reservation.bucket).upload(reservation.objectName, bytes, { contentType: reservation.mimeType, upsert: false })
+    if (generation !== evidenceGeneration) return
+    // Read completed evidence even on a lost upload response; never replace a receipt.
+    const { data, error: readError } = await rpc.rpc('shop_billing_payment_evidence_read', { p_submission_id: submission.id })
+    if (generation !== evidenceGeneration) return
+    if (readError || !data?.some(item => item.evidenceId === reservation?.evidenceId)) throw uploadError ?? readError ?? new Error('upload_incomplete')
+    evidenceFiles.value = data; evidenceSaved.value = true; evidenceFile.value = null; reservation = null
+    ++evidenceInputVersion.value
+  } catch {
+    if (generation === evidenceGeneration) evidenceError.value = copy.value.evidenceFailed
+  } finally {
+    if (generation === evidenceGeneration) evidencePending.value = false
+  }
+}
+
 const hasOpenRequest = computed(() => billing.value?.submissions?.some(item => ['submitted', 'under_review'].includes(item.status)) ?? false)
 const usageResources = computed<PlanUsageResource[]>(() => {
   if (!billing.value) return []
@@ -71,7 +194,7 @@ watch([billing, purchasablePlans], () => {
 }, { immediate: true })
 
 watch(selectedPlan, value => {
-  if (value) form.paidAmount = value.effectivePriceAmount
+  if (value && !privatePreview.value) form.paidAmount = value.effectivePriceAmount
 }, { immediate: true })
 
 watch(currentId, () => {
@@ -102,6 +225,7 @@ function submissionMessage(submission: BillingSubmission) {
 }
 
 function choosePlan(plan: ShopPlanOffer) {
+  clearPrivateOffer()
   form.catalogTermsId = plan.catalogTermsId
 }
 
@@ -109,26 +233,35 @@ async function submitNotice() {
   if (!currentId.value || !isOwner.value || submitPending.value) return
   submitError.value = ''
   const plan = selectedPlan.value
-  if (!plan || !(form.paidAmount > 0) || !form.transferDate || form.transferReference.trim().length < 2) {
+  const entry = privateEntry.value
+  const shopId = currentId.value
+  const generation = privateGeneration
+  if (!plan || (!entry && !selectedPlan.value) || !(form.paidAmount > 0) || !form.transferDate || form.transferReference.trim().length < 2) {
     submitError.value = copy.value.invalid
     return
   }
   const confirmed = await confirmation.ask(copy.value.confirmNotice(plan.planName, money(plan.effectivePriceAmount, plan.currency), money(form.paidAmount, plan.currency)))
-  if (!confirmed) return
+  if (!confirmed || generation !== privateGeneration || shopId !== currentId.value || !isOwner.value) return
   submitPending.value = true
   const requestId = submitRequestId.value ?? globalThis.crypto.randomUUID()
   submitRequestId.value = requestId
   try {
-    const { error: commandError } = await rpc.rpc('submit_shop_billing_notice', {
+    const { error: commandError } = entry ? await rpc.rpc('redeem_shop_private_offer', {
+      p_request_id: requestId, p_shop_id: shopId, p_offer_id: entry.offerId, p_offer_version: entry.offerVersion,
+      p_target_binding_id: entry.targetBindingId, p_target_environment_id: entry.targetEnvironmentId, p_redemption_token: entry.redemptionToken,
+      p_paid_amount: form.paidAmount, p_transfer_date: form.transferDate, p_transfer_reference: form.transferReference.trim(),
+    }) : await rpc.rpc('submit_shop_billing_notice', {
       p_request_id: requestId,
       p_shop_id: currentId.value,
-      p_requested_plan_slug: plan.planSlug,
-      p_requested_catalog_terms_id: plan.catalogTermsId,
+      p_requested_plan_slug: selectedPlan.value!.planSlug,
+      p_requested_catalog_terms_id: selectedPlan.value!.catalogTermsId,
       p_paid_amount: form.paidAmount,
       p_transfer_date: form.transferDate,
       p_transfer_reference: form.transferReference.trim(),
     })
     if (commandError) throw commandError
+    if (generation !== privateGeneration || shopId !== currentId.value || !isOwner.value) return
+    clearPrivateOffer()
     submitRequestId.value = null
     Object.assign(form, { paidAmount: plan.effectivePriceAmount, transferDate: '', transferReference: '' })
     await refresh()
@@ -136,14 +269,16 @@ async function submitNotice() {
     pushToast({ tone: 'success', title: copy.value.submitted })
   }
   catch {
-    submitError.value = copy.value.failed
+    if (generation === privateGeneration) submitError.value = copy.value.failed
   }
   finally {
-    submitPending.value = false
+    if (generation === privateGeneration) submitPending.value = false
   }
 }
 
 const en = {
+  evidenceTitle: 'Payment receipt image', evidenceHelp: 'After transferring, submit your payment notice, then upload the receipt image for that request. JPEG, PNG or WebP, up to 5 MB.', evidenceSelect: 'Receipt image', evidenceUpload: 'Upload receipt', evidenceUploading: 'Uploading…', evidenceFirst: 'Submit a payment notice above to attach your receipt.', evidenceInvalid: 'Choose a JPEG, PNG or WebP image between 1 byte and 5 MB with a filename up to 160 characters.', evidenceFailed: 'Could not load or upload the receipt. Retry safely; your payment notice is already saved.', evidenceSaved: 'Receipt image sent for review.', evidenceAttached: 'Attached receipts',
+  privateTitle: 'Private offer', privateHelp: 'Sign in to the intended owner account, then open or paste the private offer link. Submitting starts manual payment review; it does not activate access.', privateLink: 'Private offer link', privatePreview: 'Review private terms', privateUnavailable: 'This offer is unavailable for this owner or shop. Check the link, expiry and recipient.', privateClear: 'Clear private offer', privateRedeemed: 'This offer already has a payment notice. Review its status below.',
   title: 'Subscription and billing', subtitle: 'Understand your plan, usage, and manually reviewed InstaPay requests.',
   ownerOnly: 'Ask the Shop owner to review billing or submit a transfer notice. Only the owner can access these details.',
   noBilling: 'No subscription information is available. Contact Building Suit support to review this shop’s billing.', loadFailed: 'Could not load billing information.', retry: 'Retry', plan: 'Current plan', access: 'Access state',
@@ -164,6 +299,8 @@ const en = {
 }
 
 const ar = {
+  evidenceTitle: 'صورة إيصال الدفع', evidenceHelp: 'بعد التحويل، ابعت إشعار الدفع ثم ارفع صورة الإيصال للطلب. JPEG أو PNG أو WebP بحد أقصى ٥ ميجابايت.', evidenceSelect: 'صورة الإيصال', evidenceUpload: 'ارفع الإيصال', evidenceUploading: 'بنرفع…', evidenceFirst: 'ابعت إشعار الدفع بالأعلى عشان ترفق صورة الإيصال.', evidenceInvalid: 'اختار صورة JPEG أو PNG أو WebP بحجم من بايت واحد إلى ٥ ميجابايت واسم لا يتجاوز ١٦٠ حرفًا.', evidenceFailed: 'مقدرناش نحمّل أو نرفع الإيصال. حاول تاني بأمان؛ إشعار الدفع محفوظ بالفعل.', evidenceSaved: 'اتبعت صورة الإيصال للمراجعة.', evidenceAttached: 'الإيصالات المرفقة',
+  privateTitle: 'عرض خاص', privateHelp: 'سجّل الدخول بحساب المالك المقصود، ثم افتح رابط العرض الخاص أو الصقه. الإرسال يبدأ مراجعة الدفع اليدوية ولا يفعّل الوصول.', privateLink: 'رابط العرض الخاص', privatePreview: 'مراجعة شروط العرض', privateUnavailable: 'هذا العرض غير متاح لهذا المالك أو المتجر. راجع الرابط والصلاحية والمستلم.', privateClear: 'مسح العرض الخاص', privateRedeemed: 'يوجد إشعار دفع لهذا العرض بالفعل. راجع حالته أدناه.',
   title: 'الاشتراك والدفع', subtitle: 'شوف خطتك واستخدامك، وتابع طلبات InstaPay اللي بنراجعها يدويًا.',
   ownerOnly: 'اطلب من مالك المتجر مراجعة الفوترة أو إرسال إشعار التحويل. هذه التفاصيل متاحة للمالك فقط.',
   noBilling: 'مفيش معلومات اشتراك متاحة. كلّم دعم Building Suit عشان يراجع اشتراك المتجر.', loadFailed: 'مقدرناش نحمّل معلومات الاشتراك.', retry: 'حاول تاني', plan: 'الخطة الحالية', access: 'حالة الاستخدام',
@@ -187,6 +324,8 @@ const usagePresentation = useShopUsagePresentation()
 
 const noticeAction = useRecordAction(() => form)
 const { visible: noticeActionOpen, dirty: noticeActionDirty } = noticeAction
+
+useShopRealtime('billing', () => submitPending.value || privatePending.value || !!privateLink.value || !!privatePreview.value || !!form.transferReference || !!form.transferDate || form.paidAmount > 0)
 </script>
 
 <template>
@@ -278,32 +417,63 @@ const { visible: noticeActionOpen, dirty: noticeActionDirty } = noticeAction
         </BsGrid>
         <BsText v-else as="p" size="sm" tone="muted">{{ copy.unavailable }}</BsText>
       </BsPanel>
+      <BsContentSection :title="copy.privateTitle" :description="copy.privateHelp" data-private-offer>
+        <BsForm :pending="privatePending" :error="privateError" @submit="previewPrivateOffer">
+          <BsField v-slot="field" :label="copy.privateLink"><BsInput :id="field.id" v-model="privateLink" type="password" autocomplete="off" maxlength="2048" /></BsField>
+          <BsButton type="submit" :pending="privatePending">{{ copy.privatePreview }}</BsButton>
+        </BsForm>
+        <BsStack v-if="privatePreview" data-private-offer-preview>
+          <BsHeading :level="3">{{ privatePreview.displayName }}</BsHeading>
+          <BsText>{{ money(privatePreview.priceAmount, privatePreview.currency) }} · {{ intervalLabel(privatePreview.billingInterval) }} · {{ date(privatePreview.expiresAt) }}</BsText>
+          <BsList><BsListItem v-for="(value, key) in privatePreview.resourceLimits" :key="key">{{ copy.resources[key as PlanResourceKey] }}: {{ value == null ? '∞' : value }}</BsListItem></BsList>
+          <BsText v-if="privatePreview.blockers.length" role="status">{{ copy.preservation }}</BsText>
+          <BsText v-if="privatePreview.submissionId" role="status">{{ copy.privateRedeemed }}</BsText>
+          <BsButton variant="text" @click="clearPrivateOffer">{{ copy.privateClear }}</BsButton>
+        </BsStack>
+      </BsContentSection>
       <BsPanel padding="md">
         <BsHeading :level="2">{{ copy.notice }}</BsHeading>
         <BsText as="p" size="sm" tone="muted">{{ copy.noticeHelp }}</BsText>
         <BsStack>
-          <BsButton :disabled="!selectedPlan || hasOpenRequest" @click="noticeAction.edit()">{{ copy.submit }}</BsButton>
-          <BsRecordActionDialog v-model:visible="noticeActionOpen" :title="copy.notice" :dirty="noticeActionDirty" :pending="submitPending" :error="submitError" :submit-label="copy.submit" :cancel-label="ui('cancel')" :submit-disabled="!selectedPlan || hasOpenRequest" @submit="submitNotice">
-            <BsBox v-if="selectedPlan" padding="md">
-              <BsText as="p">{{ copy.requestedPlan }}: <BsText as="strong">{{ selectedPlan.planName }}</BsText> · {{ copy.expected }}: <BsText as="strong">{{ money(selectedPlan.effectivePriceAmount, selectedPlan.currency) }}</BsText> · {{ copy.interval }}: <BsText as="strong">{{ intervalLabel(selectedPlan.billingInterval) }}</BsText>
+          <BsButton :disabled="!noticeQuote || hasOpenRequest || !!privatePreview?.submissionId" @click="noticeAction.edit()">{{ copy.submit }}</BsButton>
+          <BsRecordActionDialog v-model:visible="noticeActionOpen" :title="copy.notice" :dirty="noticeActionDirty" :pending="submitPending" :error="submitError" :submit-label="copy.submit" :cancel-label="ui('cancel')" :submit-disabled="!noticeQuote || hasOpenRequest || !!privatePreview?.submissionId" @submit="submitNotice">
+            <BsBox v-if="noticeQuote" padding="md">
+              <BsText as="p">{{ copy.requestedPlan }}: <BsText as="strong">{{ noticeQuote.planName }}</BsText> · {{ copy.expected }}: <BsText as="strong">{{ money(noticeQuote.effectivePriceAmount, noticeQuote.currency) }}</BsText> · {{ copy.interval }}: <BsText as="strong">{{ intervalLabel(noticeQuote.billingInterval) }}</BsText>
               </BsText>
-              <BsText v-if="selectedPlan.priceSource === 'override'" as="p" emphasis="semibold">{{ copy.negotiated }}</BsText>
-              <BsText v-if="selectedPlan.blockers.length" as="p" tone="warning" emphasis="semibold">{{ copy.preservation }}</BsText>
+              <BsText v-if="noticeQuote.priceSource === 'override'" as="p" emphasis="semibold">{{ copy.negotiated }}</BsText>
+              <BsText v-if="noticeQuote.blockers.length" as="p" tone="warning" emphasis="semibold">{{ copy.preservation }}</BsText>
             </BsBox>
             <BsText v-else role="status" as="p" size="sm">{{ copy.noPurchasable }}</BsText>
             <BsField v-slot="field" :label="copy.paid">
-              <BsInput :id="field.id" v-model.number="form.paidAmount" :aria-describedby="field.describedby" type="number" :min="0.01" :step="0.01" :disabled="!selectedPlan" required/>
+              <BsInput :id="field.id" v-model.number="form.paidAmount" :aria-describedby="field.describedby" type="number" :min="0.01" :step="0.01" :disabled="!noticeQuote" required/>
             </BsField>
             <BsField v-slot="field" :label="copy.transferDate">
-              <BsInput :id="field.id" v-model="form.transferDate" :aria-describedby="field.describedby" type="date" :max="new Date().toISOString().slice(0, 10)" :disabled="!selectedPlan" required/>
+              <BsInput :id="field.id" v-model="form.transferDate" :aria-describedby="field.describedby" type="date" :max="new Date().toISOString().slice(0, 10)" :disabled="!noticeQuote" required/>
             </BsField>
             <BsField v-slot="field" :label="copy.reference">
-              <BsInput :id="field.id" v-model="form.transferReference" :aria-describedby="field.describedby" dir="ltr" :minlength="2" :maxlength="200" :disabled="!selectedPlan" required/>
+              <BsInput :id="field.id" v-model="form.transferReference" :aria-describedby="field.describedby" dir="ltr" :minlength="2" :maxlength="200" :disabled="!noticeQuote" required/>
             </BsField>
             <BsText as="p" size="sm" tone="muted">{{ copy.policyPrefix }} <BsLink to="/terms">{{ copy.terms }}</BsLink> · <BsLink to="/privacy">{{ copy.privacy }}</BsLink> · <BsLink to="/refund-cancellation">{{ copy.refund }}</BsLink>.</BsText>
           </BsRecordActionDialog>
         </BsStack>
       </BsPanel>
+      <BsContentSection data-payment-evidence :title="copy.evidenceTitle" :description="copy.evidenceHelp">
+        <BsStack v-if="evidenceSubmission">
+          <BsText size="sm">{{ copy.reference }}: <BsText as="span" dir="ltr">{{ evidenceSubmission.transferReference }}</BsText></BsText>
+          <BsForm :pending="evidencePending" :error="evidenceError" @submit="uploadEvidence">
+            <BsStack>
+              <BsField for="payment-receipt" :label="copy.evidenceSelect">
+                <BsFileInput :key="evidenceInputVersion" input-id="payment-receipt" :model-value="evidenceFile" :label="copy.evidenceSelect" accept="image/jpeg,image/png,image/webp" required @change="selectEvidence" />
+              </BsField>
+              <BsButton type="submit" :pending="evidencePending" :disabled="!evidenceFile">{{ evidencePending ? copy.evidenceUploading : copy.evidenceUpload }}</BsButton>
+            </BsStack>
+          </BsForm>
+          <BsText v-if="evidenceSaved" role="status" size="sm">{{ copy.evidenceSaved }}</BsText>
+          <BsStack v-if="evidenceFiles.length" gap="sm"><BsText size="sm" emphasis="semibold">{{ copy.evidenceAttached }}</BsText><BsList><BsListItem v-for="file in evidenceFiles" :key="file.evidenceId"><BsText size="sm">{{ file.originalFileName }}</BsText></BsListItem></BsList></BsStack>
+        </BsStack>
+        <BsText v-else role="status" size="sm" tone="muted">{{ copy.evidenceFirst }}</BsText>
+      </BsContentSection>
+
       <BsPanel padding="md">
         <BsBox padding="md">
           <BsHeading :level="2">{{ copy.history }}</BsHeading>

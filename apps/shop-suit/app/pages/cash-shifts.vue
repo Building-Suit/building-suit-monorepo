@@ -131,6 +131,8 @@ async function closeShift() {
   } catch (caught) { if (inScope()) actionError.value = errorText(caught instanceof Error ? caught.message : String(caught)) }
   finally { closing.value = false }
 }
+
+useShopRealtime('cash-shifts', () => openDirty.value || movementDirty.value || closeDirty.value)
 </script>
 
 <template>

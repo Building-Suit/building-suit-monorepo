@@ -57,7 +57,7 @@ export function useShopPlanPresentation(props: PlanPresentationInput, onSelect?:
     const selected = props.offers.find(offer => offer.catalogTermsId === catalogTermsId)
     if (!selected) return
     interval.value = selected.billingInterval
-    if (selected.planVariant !== 'standard') multiVariant.value = selected.planVariant
+    if (selected.planVariant === 'multi_2' || selected.planVariant === 'multi_3') multiVariant.value = selected.planVariant
   }, { immediate: true })
 
   watch([interval, multiVariant], () => {

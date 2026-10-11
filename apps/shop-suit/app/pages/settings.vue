@@ -63,6 +63,37 @@ const { data: receiptSettings, pending: receiptLoading, error: receiptLoadError,
   }, { watch: [currentId], default: () => null },
 )
 
+const cashRequired = ref(false)
+const cashPending = ref(false)
+const cashError = ref('')
+const cashSuccess = ref('')
+const { data: cashPolicy, pending: cashLoading, error: cashLoadError, refresh: refreshCashPolicy } = useAsyncData(
+  () => `shop-data:cash-policy:${currentId.value ?? 'none'}`,
+  async () => {
+    if (!currentId.value) return null
+    const { data, error } = await shopRpc.rpc('shop_cash_policy', { p_shop_id: currentId.value })
+    if (error) throw error
+    return data
+  }, { watch: [currentId], default: () => null },
+)
+watch([currentId, cashPolicy], () => {
+  cashRequired.value = cashPolicy.value === true
+  cashError.value = ''; cashSuccess.value = ''
+}, { immediate: true })
+async function saveCashPolicy() {
+  if (!currentId.value || !canManage.value || cashPending.value || cashPolicy.value === null) return
+  const shopId = currentId.value
+  cashPending.value = true; cashError.value = ''; cashSuccess.value = ''
+  try {
+    const { error } = await shopRpc.rpc('set_shop_cash_policy', { p_shop_id: shopId, p_required: cashRequired.value })
+    if (error) throw error
+    await refreshCashPolicy()
+    if (currentId.value === shopId) cashSuccess.value = isArabic.value ? 'اتحفظت سياسة ورديات الخزنة.' : 'Cashier shift policy saved.'
+  } catch {
+    if (currentId.value === shopId) cashError.value = isArabic.value ? 'مقدرناش نحفظ سياسة ورديات الخزنة. حاول تاني.' : 'Could not save the cashier shift policy. Try again.'
+  } finally { cashPending.value = false }
+}
+
 const copy = computed(() => isArabic.value ? {
   title: 'إعدادات النشاط', subtitle: 'ظبط طريقة الشغل المناسبة لنشاطك.',
   profileTitle: 'ملف المتجر', profileHelp: 'هذا اسم المتجر الذي يظهر في التنقل والقوائم والسجلات المستقبلية المناسبة. لا يغيّر اسم حسابك الشخصي أو بريدك الإلكتروني أو المستندات السابقة.',
@@ -330,7 +361,18 @@ const { visible: receiptActionOpen, dirty: receiptActionDirty } = receiptAction
     <BsBox v-else-if="shopError" role="alert">{{ copy.failed }} <BsButton @click="reload()">{{ ui('retry') }}</BsButton>
     </BsBox>
     <BsText v-else-if="!current" role="status" as="p">{{ ui('empty') }}</BsText>
-    <BsPanel v-else id="shop-profile" aria-labelledby="shop-profile-title" padding="md">
+    <BsContentSection v-if="current" :title="isArabic ? 'سياسة ورديات الخزنة' : 'Cashier shift policy'">
+      <BsText id="cash-policy-help">{{ isArabic ? 'عند التفعيل، إصدار المبيعات والدفع يتطلبان وردية مفتوحة للخزنة الرئيسية في الفرع المحدد، حتى للدفع غير النقدي. حفظ المسودات يظل متاحًا. التغييرات مسجلة في سجل المراجعة.' : 'When enabled, issuing sales and taking payment require an open main cashier shift at the selected location, including non-cash payments. Draft saving remains available. Changes are audited.' }}</BsText>
+      <BsText v-if="cashLoading" role="status">{{ ui('loading') }}</BsText>
+      <BsText v-else-if="cashLoadError" role="alert">{{ copy.failed }} <BsButton @click="refreshCashPolicy()">{{ ui('retry') }}</BsButton></BsText>
+      <BsForm v-else :pending="cashPending" :error="cashError" @submit="saveCashPolicy">
+        <BsCheckbox v-model="cashRequired" :label="isArabic ? 'اشتراط وردية خزنة مفتوحة للمبيعات' : 'Require an open cashier shift for sales'" aria-describedby="cash-policy-help" :disabled="!canManage || cashPolicy === null" />
+        <BsText v-if="!canManage" role="status">{{ copy.ownerOnly }}</BsText>
+        <BsText v-if="cashSuccess" role="status">{{ cashSuccess }}</BsText>
+        <BsButton v-if="canManage" type="submit" :pending="cashPending" :disabled="cashPolicy === null || cashRequired === cashPolicy">{{ isArabic ? 'حفظ سياسة الخزنة' : 'Save cashier policy' }}</BsButton>
+      </BsForm>
+    </BsContentSection>
+    <BsPanel v-if="current && !loading && !shopError" id="shop-profile" aria-labelledby="shop-profile-title" padding="md">
       <BsHeading id="shop-profile-title" :level="2">{{ copy.profileTitle }}</BsHeading>
       <BsText as="p" size="sm" tone="muted">{{ copy.profileHelp }}</BsText>
       <BsText v-if="!canManage" role="status" as="p" size="sm" tone="warning">{{ copy.profileOwnerOnly }}</BsText>

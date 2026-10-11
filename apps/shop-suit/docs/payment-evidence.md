@@ -6,6 +6,16 @@ file is review evidence only; approval still requires the existing
 `platform_admin_billing_command` validation, bank-receipt fields, amount
 mismatch reason, quota checks, idempotency and immutable billing audit.
 
+## Billing page
+
+On `/billing`, the owner submits the transfer notice, then attaches a JPEG,
+PNG or WebP receipt (up to 5 MiB) to the pending request in the payment receipt
+section. Completed filenames remain visible after refresh. Failed uploads
+retain their reservation for a safe retry without resubmitting the payment
+notice or replacing an immutable receipt. Account, owner and Shop changes
+clear the selected image and upload feedback. The operator's free-form
+instruction paragraph is omitted; recipient, payment link and QR stay visible.
+
 ## Owner upload contract
 
 The authenticated user who owns the Shop and submitted an eligible billing

@@ -221,13 +221,14 @@ from shop_report_fixture fixture join public.shops shop on shop.id = current_set
 
 select set_config('request.jwt.claim.sub', owner_id::text, true) from shop_report_fixture;
 set local role authenticated;
-select public.invite_shop_member(gen_random_uuid(), current_setting('ss_report.shop')::uuid,
+select set_config('ss_report.invite', (public.invite_shop_member(gen_random_uuid(), current_setting('ss_report.shop')::uuid,
   'barber@ss-report.invalid', 'Ordinary barber', 'barber',
-  array[current_setting('ss_report.default')::uuid]);
+  array[current_setting('ss_report.default')::uuid])) ->> 'invitationCode', true);
 reset role;
 
 select set_config('request.jwt.claim.sub', barber_id::text, true) from shop_report_fixture;
 set local role authenticated;
+select public.accept_shop_invitation(gen_random_uuid(),current_setting('ss_report.invite')::uuid);
 do $$
 begin
   begin

@@ -90,3 +90,5 @@ Set `BUILDING_TEST_BACKEND=1` when running browser tests to include Shop signup,
 Each feature has a short-lived `codex/<stack>/<feature>` branch and review PR. Fixes remain on that branch; every new feature in the same stack starts from its latest verified active worktree tip and targets that parent. Different app/shared stacks may each have one active root PR into `stg`; cross-stack parenting is invalid. Always check live GitHub state before continuing after a manual merge. Feature pushes receive lightweight CI; each staging root receives full validation. See the branch workflow for provider filters and setup requirements.
 
 The finite [implementation plan](PLAN.md), [source audit](docs/source-audit.json) and `docs/migration` record one-time work. They do not add tasks to future agent work.
+
+After building Shop (or the workspace), `pnpm test:built-assets` verifies production public asset responses and rendered Shop favicon links. Run it after the build; ordinary `pnpm test` checks source inputs without requiring `.output`.
