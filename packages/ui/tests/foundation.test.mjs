@@ -186,12 +186,13 @@ test('workflow scopes preserve writable models, live inputs, events and effect d
 })
 
 test('native select options and bare choices retain external label/control semantics', async () => {
-  const select = await render('molecules/BsSelect.vue', { native: true, modelValue: 'b', id: 'period' }, [
+  const select = await render('molecules/BsSelect.vue', { native: true, modelValue: 'b', id: 'period', 'aria-label': 'Ledger Account 1' }, [
     vue.h(component('atoms/BsSelectOption.vue'), { value: 'a' }, () => 'First'),
     vue.h(component('atoms/BsSelectOption.vue'), { value: 'b' }, () => 'Second'),
   ])
   assert.match(select, /<select[^>]+id="period"/)
   assert.match(select, /value="b"[^>]*selected/)
+  assert.match(select, /aria-label="Ledger Account 1"/)
   const controlled = await render('molecules/BsSelect.vue', { native: true, value: 'b' }, [
     vue.h(component('atoms/BsSelectOption.vue'), { value: 'a' }, () => 'First'),
     vue.h(component('atoms/BsSelectOption.vue'), { value: 'b' }, () => 'Second'),

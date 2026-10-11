@@ -20,16 +20,18 @@ const nativeSelect = ref<HTMLSelectElement | null>(null)
 const select = ref<InstanceType<typeof Select> | null>(null)
 const focusController = useControlFocus(nativeSelect, select)
 defineExpose({ focus: focusController.focus })
+const attrs = useAttrs()
+const accessibleLabel = computed(() => props.label || (typeof attrs['aria-label'] === 'string' ? attrs['aria-label'] : undefined))
 const ui = useUiCopy()
 </script>
 
 <template>
-  <select v-if="native" ref="nativeSelect" v-bind="$attrs" v-model="nativeModel" class="ls-input" :aria-label="label"><slot /></select>
+  <select v-if="native" ref="nativeSelect" v-bind="$attrs" v-model="nativeModel" class="ls-input" :aria-label="accessibleLabel"><slot /></select>
   <Select
     v-else
     ref="select"
     v-bind="$attrs" v-model="model" :options="options" :option-label="optionLabel" :option-value="optionValue"
-    :aria-label="label"
+    :aria-label="accessibleLabel"
     :empty-message="ui('empty')" :empty-filter-message="ui('empty')"
     :virtual-scroller-options="virtual || virtualScrollerOptions ? { ...virtualScrollerOptions, itemSize: 44 } : undefined"
     :pt="{

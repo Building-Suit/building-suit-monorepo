@@ -21,6 +21,9 @@ test('a thin registered adapter passes without debt allowances', async t => {
 for (const [name, source, pattern] of [
   ['counterfeit prefix', '<script setup>import BsExamplePage from "./LocalPanel.vue"</script><template><BsExamplePage /></template>', /shadowed/],
   ['slot recipe', '<template><BsExamplePage><template #default><BsText /></template></BsExamplePage></template>', /render composition/],
+  ['bound class', '<template><BsExamplePage :class="recipe" /></template>', /slot recipe/],
+  ['bound style', '<template><BsExamplePage :style="recipe" /></template>', /slot recipe/],
+  ['dynamic namespace render', '<script setup>const renderer = await import("vue"); const view = renderer.h("div")</script><template><BsExamplePage /></template>', /render factory/],
   ['raw html', '<template><BsExamplePage v-html="html" /></template>', /slot recipe/],
   ['aliased render', '<script setup>import { h as render } from "vue"; const view = render("div")</script><template><BsExamplePage /></template>', /render factory/],
   ['namespace render', '<script setup>import * as renderer from "vue"; const view = renderer.createVNode("div")</script><template><BsExamplePage /></template>', /render factory/],
@@ -35,6 +38,9 @@ for (const [name, source, pattern] of [
 })
 
 for (const [name, source, pattern] of [
+  ['variable query alias', '<script setup>const load = useFetch; load("/api/example")</script><template><main /></template>', /product query/],
+  ['namespace query', '<script setup>import * as queries from "#imports"; queries.useFetch("/api/example")</script><template><main /></template>', /product query/],
+  ['dynamic infrastructure', '<script setup>const session = await import("@building-suit/auth")</script><template><main /></template>', /infrastructure/],
   ['query alias', '<script setup>import { useFetch as load } from "#imports"; load("/api/example")</script><template><main /></template>', /product query/],
   ['product infrastructure', '<script setup>import { useSession } from "@building-suit/auth"</script><template><main /></template>', /infrastructure/],
   ['untyped state bag', '<script setup lang="ts">defineProps<{ state: Record<string, unknown> }>()</script><template><main /></template>', /untyped state/],
@@ -53,4 +59,11 @@ test('layout rejects a disguised scoped render outlet', async t => {
   await writeFile(registryPath, JSON.stringify(registry))
   await writeFile(path.join(root, 'apps/example-suit/app/layouts/default.vue'), '<template><BsExamplePage><slot :renderer="view" /></BsExamplePage></template>')
   assert.ok((await validateAtomicTemplateArchitecture({ root })).failures.some(message => /unscoped route outlet/.test(message)))
+})
+
+test('architecture resolves a renamed callable through two re-export modules', async t => {
+  const root = await fixture(t, '<script setup>import { draw } from "../second"; draw("div")</script><template><BsExamplePage /></template>')
+  await writeFile(path.join(root, 'apps/example-suit/app/first.ts'), 'export { h as make } from "vue"')
+  await writeFile(path.join(root, 'apps/example-suit/app/second.ts'), 'export { make as draw } from "./first"')
+  assert.ok((await validateAtomicTemplateArchitecture({ root })).failures.some(message => /render factory draw/.test(message)))
 })

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { NavigationGroup, NavigationLink } from '@building-suit/contracts'
-withDefaults(defineProps<{ homePath?: string; productName: string; groups: NavigationGroup[]; mobileLinks?: NavigationLink[]; labels: { close: string; open: string; navigation: string; dashboard: string } }>(), { homePath: '/dashboard', mobileLinks: () => [] })
+withDefaults(defineProps<{ homePath?: string; floatingActions?: boolean; productName: string; groups: NavigationGroup[]; mobileLinks?: NavigationLink[]; labels: { close: string; open: string; navigation: string; dashboard: string } }>(), { homePath: '/dashboard', floatingActions: false, mobileLinks: () => [] })
 const { mobileNavOpen, topHeader, closeMobileNav, isActive } = useWorkspaceNavigation()
 </script>
 <template>
@@ -15,7 +15,7 @@ const { mobileNavOpen, topHeader, closeMobileNav, isActive } = useWorkspaceNavig
         <slot name="header" />
       </BsTopHeader>
 
-      <main class="mx-auto w-full max-w-[1440px] min-w-0 flex-1 px-4 py-6 pb-24 lg:px-8 lg:pb-6">
+      <main class="mx-auto w-full max-w-[1440px] min-w-0 flex-1 px-4 py-6 lg:px-8" :class="floatingActions ? 'pb-40 lg:pb-24' : 'pb-24 lg:pb-6'">
         <slot />
       </main>
     </div>

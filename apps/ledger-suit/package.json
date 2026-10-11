@@ -37,7 +37,8 @@
     "@building-suit/nuxt-layer": "workspace:*",
     "@building-suit/contracts": "workspace:*",
     "@building-suit/data-access": "workspace:*",
-    "@building-suit/ui": "workspace:*"
+    "@building-suit/ui": "workspace:*",
+    "@building-suit/ux": "workspace:*"
   },
   "devDependencies": {
     "@playwright/test": "1.62.1",

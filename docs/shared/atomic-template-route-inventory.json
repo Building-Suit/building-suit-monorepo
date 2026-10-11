@@ -47,7 +47,11 @@
     "BsPurchasingPage": "packages/ui/src/templates/BsPurchasingPage.vue",
     "BsExpenseHistoryPage": "packages/ui/src/templates/BsExpenseHistoryPage.vue",
     "BsInventoryManagementPage": "packages/ui/src/templates/BsInventoryManagementPage.vue",
-    "BsPointOfSalePage": "packages/ui/src/templates/BsPointOfSalePage.vue"
+    "BsPointOfSalePage": "packages/ui/src/templates/BsPointOfSalePage.vue",
+    "BsSignupPage": "packages/ui/src/templates/BsSignupPage.vue",
+    "BsTaxWorkspacePage": "packages/ui/src/templates/BsTaxWorkspacePage.vue",
+    "BsCatalogImportPage": "packages/ui/src/templates/BsCatalogImportPage.vue",
+    "BsOpeningBalancesPage": "packages/ui/src/templates/BsOpeningBalancesPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -975,41 +979,22 @@
     {
       "source": "apps/ledger-suit/app/pages/opening-balances.vue",
       "kind": "route",
-      "currentSharedTemplates": [],
-      "renderedBsComponents": [
-        "BsBox",
-        "BsButton",
-        "BsCard",
-        "BsDataTable",
-        "BsEmptyState",
-        "BsFieldLabel",
-        "BsFileInput",
-        "BsFloatingField",
-        "BsForm",
-        "BsGrid",
-        "BsHeading",
-        "BsInline",
-        "BsInput",
-        "BsLineBreak",
-        "BsLink",
-        "BsList",
-        "BsListItem",
-        "BsPageHeader",
-        "BsSectionSkeleton",
-        "BsSelect",
-        "BsSelectOption",
-        "BsStack",
-        "BsText"
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsOpeningBalancesPage.vue"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "renderedBsComponents": [
+        "BsOpeningBalancesPage"
+      ],
+      "destination": "packages/ui/src/templates/BsOpeningBalancesPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/ledger-suit/app/pages/opening-balances.vue",
       "dependencies": [
         "~~/types/database.types",
         "~/utils/csv",
         "~/utils/openingBalanceCsv"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "opening-balances"
     },
     {
       "source": "apps/ledger-suit/app/pages/payables.vue",
@@ -1303,30 +1288,19 @@
       "source": "apps/ledger-suit/app/pages/signup.vue",
       "kind": "route",
       "currentSharedTemplates": [
-        "packages/ui/src/templates/BsAuthLayout.vue"
+        "packages/ui/src/templates/BsSignupPage.vue"
       ],
       "renderedBsComponents": [
-        "BsAuthForm",
-        "BsAuthLayout",
-        "BsField",
-        "BsGrid",
-        "BsInline",
-        "BsInput",
-        "BsLegalConsent",
-        "BsLink",
-        "BsProductLogo",
-        "BsSelect",
-        "BsSignupWizard",
-        "BsText",
-        "BsVerificationForm"
+        "BsSignupPage"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "destination": "packages/ui/src/templates/BsSignupPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/ledger-suit/app/pages/signup.vue",
       "dependencies": [
         "~~/types/database.types"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "signup"
     },
     {
       "source": "apps/ledger-suit/app/pages/subscribe.vue",
@@ -1379,39 +1353,21 @@
     {
       "source": "apps/ledger-suit/app/pages/tax-vat.vue",
       "kind": "route",
-      "currentSharedTemplates": [],
-      "renderedBsComponents": [
-        "BsBox",
-        "BsButton",
-        "BsCard",
-        "BsDataTable",
-        "BsDescriptionList",
-        "BsDescriptionTerm",
-        "BsDescriptionValue",
-        "BsFloatingField",
-        "BsForm",
-        "BsGrid",
-        "BsHeading",
-        "BsInline",
-        "BsInput",
-        "BsLink",
-        "BsMoneyText",
-        "BsPageHeader",
-        "BsRecordActionDialog",
-        "BsSectionSkeleton",
-        "BsSelect",
-        "BsSelectOption",
-        "BsStack",
-        "BsText"
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsTaxWorkspacePage.vue"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "renderedBsComponents": [
+        "BsTaxWorkspacePage"
+      ],
+      "destination": "packages/ui/src/templates/BsTaxWorkspacePage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/ledger-suit/app/pages/tax-vat.vue",
       "dependencies": [
         "~/utils/egyptVat",
         "~/utils/egyptVat"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "tax-workspace"
     },
     {
       "source": "apps/ledger-suit/app/pages/team.vue",
@@ -1723,22 +1679,14 @@
     {
       "source": "apps/shop-suit/app/pages/auth/signup.vue",
       "kind": "route",
-      "currentSharedTemplates": [],
-      "renderedBsComponents": [
-        "BsAlert",
-        "BsAuthForm",
-        "BsButton",
-        "BsChoiceGroup",
-        "BsField",
-        "BsFieldGroup",
-        "BsInput",
-        "BsLink",
-        "BsSignupWizard",
-        "BsStack",
-        "BsVerificationForm"
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsSignupPage.vue"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "renderedBsComponents": [
+        "BsSignupPage"
+      ],
+      "destination": "packages/ui/src/templates/BsSignupPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/shop-suit/app/pages/auth/signup.vue",
       "dependencies": [
         "~/types/shopCrmRpc",
@@ -1746,7 +1694,8 @@
         "~/utils/businessMode",
         "~/utils/pendingOnboarding"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "signup"
     },
     {
       "source": "apps/shop-suit/app/pages/auth/team-invitation.vue",
@@ -1834,31 +1783,21 @@
     {
       "source": "apps/shop-suit/app/pages/catalog-import.vue",
       "kind": "route",
-      "currentSharedTemplates": [],
-      "renderedBsComponents": [
-        "BsBox",
-        "BsButton",
-        "BsDataTable",
-        "BsField",
-        "BsFileInput",
-        "BsGrid",
-        "BsHeading",
-        "BsInline",
-        "BsInput",
-        "BsPanel",
-        "BsRecordActionDialog",
-        "BsSelect",
-        "BsStack",
-        "BsText"
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsCatalogImportPage.vue"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "renderedBsComponents": [
+        "BsCatalogImportPage"
+      ],
+      "destination": "packages/ui/src/templates/BsCatalogImportPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/shop-suit/app/pages/catalog-import.vue",
       "dependencies": [
         "~/types/shopCrmRpc",
         "~/utils/catalogImport"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "catalog-import"
     },
     {
       "source": "apps/shop-suit/app/pages/contact.vue",
@@ -2545,6 +2484,10 @@
     "BsPurchasingPage",
     "BsExpenseHistoryPage",
     "BsInventoryManagementPage",
-    "BsPointOfSalePage"
+    "BsPointOfSalePage",
+    "BsSignupPage",
+    "BsTaxWorkspacePage",
+    "BsCatalogImportPage",
+    "BsOpeningBalancesPage"
   ]
 }

@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./barcode": "./src/utils/barcode.js"
+    "./barcode": "./src/utils/barcode.js",
+    "./downloadText": "./src/utils/downloadText.js"
   },
   "dependencies": {
     "@building-suit/contracts": "workspace:*",

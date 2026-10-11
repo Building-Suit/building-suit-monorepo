@@ -166,6 +166,7 @@ watch(currentId, async (value, previous) => {
   <BsAppShell
     v-else
     :product-name="t('app.name')"
+    :floating-actions="!!current"
     :groups="NAV_GROUPS.map(group => ({ ...group, label: t(`nav.groups.${group.key}`), links: group.links.map(item => ({ ...item, label: t(item.label) })) }))"
     :mobile-links="PRIMARY_NAV.map(item => ({ ...item, label: t(`nav.${item.key}`) }))"
     :labels="{ close: t('nav.close'), open: t('nav.open'), navigation: t('nav.primary'), dashboard: t('nav.dashboard') }"

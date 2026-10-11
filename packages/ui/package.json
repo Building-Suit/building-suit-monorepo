@@ -228,7 +228,16 @@
     "./templates/BsInventoryManagementPage": "./src/templates/BsInventoryManagementPage.vue",
     "./types/inventoryPresentation": "./src/types/inventoryPresentation.ts",
     "./templates/BsPointOfSalePage": "./src/templates/BsPointOfSalePage.vue",
-    "./types/pointOfSalePresentation": "./src/types/pointOfSalePresentation.ts"
+    "./types/pointOfSalePresentation": "./src/types/pointOfSalePresentation.ts",
+    "./templates/BsSignupPage": "./src/templates/BsSignupPage.vue",
+    "./organisms/BsSignupEnrollment": "./src/organisms/BsSignupEnrollment.vue",
+    "./types/signupPresentation": "./src/types/signupPresentation.ts",
+    "./templates/BsTaxWorkspacePage": "./src/templates/BsTaxWorkspacePage.vue",
+    "./types/taxWorkspacePresentation": "./src/types/taxWorkspacePresentation.ts",
+    "./templates/BsCatalogImportPage": "./src/templates/BsCatalogImportPage.vue",
+    "./types/catalogImportPresentation": "./src/types/catalogImportPresentation.ts",
+    "./templates/BsOpeningBalancesPage": "./src/templates/BsOpeningBalancesPage.vue",
+    "./types/openingBalancePresentation": "./src/types/openingBalancePresentation.ts"
   },
   "dependencies": {
     "primevue": "4.5.5",
