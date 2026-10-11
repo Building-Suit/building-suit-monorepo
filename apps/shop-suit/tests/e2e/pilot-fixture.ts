@@ -12,7 +12,10 @@ export async function fixtureReload(page: Page) {
   await fixtureMounted(page)
 }
 async function fixtureMounted(page: Page) {
-  await page.waitForFunction(() => Boolean((document.getElementById('__nuxt') as HTMLElement & { __vue_app__?: unknown })?.__vue_app__))
+  await page.waitForFunction(() => {
+    const root = document.getElementById('__nuxt') as HTMLElement & { __vue_app__?: { config?: { globalProperties?: { $nuxt?: { isHydrating?: boolean } } } } }
+    return root?.__vue_app__?.config?.globalProperties?.$nuxt?.isHydrating === false
+  })
 }
 
 // Both transports execute the same synthetic fixture handlers, including test
