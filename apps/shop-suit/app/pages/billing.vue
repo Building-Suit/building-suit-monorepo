@@ -244,6 +244,8 @@ const ar = {
   resources: { active_locations: 'الفروع النشطة', active_members: 'أعضاء الفريق', active_products: 'المنتجات النشطة', active_services: 'الخدمات النشطة', active_customers: 'العملاء النشطون', active_suppliers: 'الموردون النشطون' },
   intervals: { monthly: 'شهريًا', quarterly: 'كل ثلاثة أشهر', annual: 'سنويًا' },
 }
+
+useShopRealtime('billing', () => submitPending.value || privatePending.value || !!privateLink.value || !!privatePreview.value || !!form.transferReference || !!form.transferDate || form.paidAmount > 0)
 </script>
 
 <template>

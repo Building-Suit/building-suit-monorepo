@@ -4,6 +4,25 @@ export type ShopRpcDatabase = {
     Tables: Record<string, never>
     Views: Record<string, never>
     Functions: {
+      fast_pay_location_sale: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_location_id: string
+          p_invoice_id: string | null
+          p_customer_id: string | null
+          p_due_date: string | null
+          p_notes: string | null
+          p_lines: Array<{ item_type: 'product' | 'service'; source_id: string; quantity: number }>
+          p_amount: number
+          p_paid_at: string
+          p_method: 'cash' | 'bank_transfer' | 'card' | 'wallet' | 'cheque' | 'other'
+          p_reference: string | null
+        }
+        Returns: string
+      }
+      shop_cash_policy: { Args: { p_shop_id: string }; Returns: boolean }
+      set_shop_cash_policy: { Args: { p_shop_id: string; p_required: boolean }; Returns: boolean }
       create_owner_shop: {
         Args: {
           p_shop_name: string
@@ -103,7 +122,7 @@ export type ShopRpcDatabase = {
           name: string
           slug: string
           catalog_terms_id: string
-          plan_variant: 'standard' | 'multi_2' | 'multi_3'
+          plan_variant: 'standard' | 'solo_1' | 'solo_2' | 'multi_2' | 'multi_3'
           variant_name: string
           price_amount: number
           currency: string
@@ -198,6 +217,22 @@ export type ShopRpcDatabase = {
           p_location_ids: string[]
         }
         Returns: unknown
+      }
+      invite_shop_staff: {
+        Args: { p_request_id: string; p_shop_id: string; p_email: string; p_display_name: string; p_job_title: string | null; p_role_key: string; p_location_ids: string[] }
+        Returns: unknown
+      }
+      save_shop_team_role: {
+        Args: { p_request_id: string; p_shop_id: string; p_role_key: string | null; p_name: string; p_name_ar: string; p_permission_keys: string[]; p_archive?: boolean }
+        Returns: string
+      }
+      save_shop_team_member: {
+        Args: { p_request_id: string; p_shop_id: string; p_membership_id: string; p_full_name: string; p_job_title: string | null; p_role_key: string; p_location_ids: string[] }
+        Returns: undefined
+      }
+      save_shop_member_details: {
+        Args: { p_request_id: string; p_shop_id: string; p_membership_id: string; p_full_name: string; p_job_title: string | null }
+        Returns: undefined
       }
       accept_shop_invitation: {
         Args: { p_request_id: string; p_invitation_code: string }

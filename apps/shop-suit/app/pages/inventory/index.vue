@@ -156,6 +156,8 @@ async function saveThreshold() {
   try { const result = await rpc.rpc('set_reorder_threshold', { p_shop_id: currentId.value, p_product_id: thresholdProductId.value, p_threshold: value }); if (result.error) throw result.error; thresholdOpen.value = false; await refreshAll(); success(text.value.saved) }
   catch (error) { actionError.value = readableError(error instanceof Error ? error.message : undefined) } finally { thresholdPending.value = false }
 }
+
+useShopRealtime('inventory', () => adjustmentDirty.value || countDirty.value || thresholdDirty.value)
 </script>
 
 <template>

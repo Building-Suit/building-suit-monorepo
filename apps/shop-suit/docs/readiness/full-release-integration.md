@@ -1,0 +1,15 @@
+# Full Shop release integration
+
+This release starts at staging merge #241 (`072c9072ebaa6847d9fc8f30033276c8c63c12ba`) and uses `integration/shop-suit-release`. It must reach staging through one integration PR only. Original PRs remain open until the final release is merged and their intended functionality is compared with the integrated result; replacement commits do not make their original PRs GitHub-merged.
+
+Included new feature source: Team controls #218, cash policy #220, support delivery #223, Solo variants/pinned renewal #224, atomic Fast Pay #227, Fast Pay inventory-aware messaging #228, full legal reconciliation #234 and qualification #235. Existing #241 branding #221, POS/customer selection #225, private-owner entry #229 and session-loss handling #230 remain intact; additional private-offer database regression/docs and invitation-local-logout changes are reconciled here.
+
+Shop realtime #233 includes its SQL in this release. Its application adoption includes only the shared realtime controller/contracts/exports/security tests explicitly authorized for this release; its original controller bytes are preserved. No Shared or Super Admin PR ancestry is merged. No new Super Admin source is included.
+
+All seven unapplied Shop SQL sources are assigned forward versions after the verified 50-version staging history, retaining their original SQL bytes. See `release-migration-map.json` for exact source-to-release filenames and hashes. Applied migration source files remain unchanged. Merging SQL source does not authorize hosted application. Existing staging Git automation applies migrations and deploys the support worker, so the final merge requires separate explicit mutation approval after validation/recovery gates.
+
+Disposable validation uses only `bs-full-shop-20261011`, with historical fixtures seeded at version `20260930170000`, upgrading the exact current 50-migration schema and then seven forward migrations. The second migration run applies no files. All 36 maintained/launch/security SQL suites pass, including existing private offers and bridge contracts. Historical `shop_crm` test identifiers are normalized by the established test harness; transactions roll back. Team concurrency uses a Team fixture with available seats, preserving duplicate/retry/acceptance race assertions alongside separate Solo seat-limit tests.
+
+The repository remains in its existing UI migration mode. The exact Shop feature debt inventory is refreshed without changing any non-Shop debt entry or weakening the boundary checker. Existing shared interactive primitives are reused; this release does not import the unmerged strict UI framework.
+
+External launch gates remain explicit: Supabase Free does not provide verified single-session enforcement; support sender secrets/invocation and real delivery are unconfigured/unverified; original qualification results are historical evidence, not a claim that this release was deployed or independently verified. No provider setting, secret, hosted SQL, manual deployment, production operation, n8n restart or control-plane intervention is authorized by these source changes.

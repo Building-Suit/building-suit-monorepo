@@ -18,12 +18,18 @@ const isArabic = computed(() => locale.value === 'ar')
 const copy = computed(() => isArabic.value ? ar : en)
 const interval = ref<ShopPlanInterval>('monthly')
 const multiVariant = ref<Extract<ShopPlanVariant, 'multi_2' | 'multi_3'>>('multi_2')
+const soloVariant = ref<Extract<ShopPlanVariant, 'solo_1' | 'solo_2'>>('solo_1')
+function familyVariant(slug: string) {
+  if (slug === 'multi') return multiVariant.value
+  if (slug === 'solo') return soloVariant.value
+  return 'standard'
+}
 const familyOrder = ['solo', 'team', 'multi'] as const
 const resources: PlanResourceKey[] = ['active_locations', 'active_members', 'active_products', 'active_services', 'active_customers', 'active_suppliers']
 
 const selectedOffer = computed(() => props.offers.find(offer => offer.catalogTermsId === props.selectedCatalogTermsId) ?? null)
 const cards = computed(() => familyOrder.map((slug) => {
-  const variant = slug === 'multi' ? multiVariant.value : 'standard'
+  const variant = familyVariant(slug)
   return props.offers.find(offer => offer.planSlug === slug && offer.planVariant === variant && offer.billingInterval === interval.value) ?? null
 }).filter((offer): offer is ShopPlanOffer => offer !== null))
 const annualDiscount = computed(() => {
@@ -52,6 +58,10 @@ const pricingPlans = computed<MarketingPricingPlan[]>(() => cards.value.map(offe
     legend: copy.value.variants,
     value: multiVariant.value,
     options: [{ value: 'multi_2', label: copy.value.twoBranches }, { value: 'multi_3', label: copy.value.threeBranches }],
+  } : offer.planSlug === 'solo' ? {
+    legend: copy.value.soloVariants,
+    value: soloVariant.value,
+    options: [{ value: 'solo_1', label: copy.value.oneMember }, { value: 'solo_2', label: copy.value.twoMembers }],
   } : undefined,
   notice: offer.blockers.length ? {
     title: copy.value.blocked,
@@ -68,15 +78,16 @@ watch(() => props.selectedCatalogTermsId, (catalogTermsId) => {
   const selected = props.offers.find(offer => offer.catalogTermsId === catalogTermsId)
   if (!selected) return
   interval.value = selected.billingInterval
-  if (selected.planVariant !== 'standard') multiVariant.value = selected.planVariant
+  if (selected.planVariant === 'multi_2' || selected.planVariant === 'multi_3') multiVariant.value = selected.planVariant
+  if (selected.planVariant === 'solo_1' || selected.planVariant === 'solo_2') soloVariant.value = selected.planVariant
 }, { immediate: true })
 
-watch([interval, multiVariant], () => {
+watch([interval, multiVariant, soloVariant], () => {
   if (props.action !== 'select' || !selectedOffer.value) return
   const selectedFamily = selectedOffer.value.planSlug
   const matching = props.offers.find(offer => offer.planSlug === selectedFamily
     && offer.billingInterval === interval.value
-    && offer.planVariant === (selectedFamily === 'multi' ? multiVariant.value : 'standard'))
+    && offer.planVariant === familyVariant(selectedFamily))
   if (matching && matching.catalogTermsId !== selectedOffer.value.catalogTermsId) emit('select', matching)
 })
 
@@ -107,10 +118,14 @@ function choose(planId: string) {
   const offer = cards.value.find(candidate => candidate.planSlug === planId)
   if (offer && props.action === 'select') emit('select', offer)
 }
-function chooseVariant(_: string, value: string) { multiVariant.value = value as typeof multiVariant.value }
+function chooseVariant(planId: string, value: string) {
+  if (planId === 'solo' && (value === 'solo_1' || value === 'solo_2')) soloVariant.value = value
+  if (planId === 'multi' && (value === 'multi_2' || value === 'multi_3')) multiVariant.value = value
+}
 
 const en = {
   cycle: 'Billing cycle', monthly: 'Monthly', yearly: 'Yearly', annualSaving: (percent: number) => `Save ${percent}% with yearly billing`,
+  soloVariants: 'Solo member allowance', oneMember: '1 member', twoMembers: '2 members',
   variants: 'Multi branch allowance', twoBranches: '2 branches', threeBranches: '3 branches', discount: (percent: number) => `${percent}% off`, perMonth: 'per month',
   yearlyEquivalent: (monthly: string, yearly: string) => `${monthly}/month · billed ${yearly} per year`, negotiated: 'Founder / negotiated price', publicList: 'Public list price', current: 'Current',
   choose: 'Choose plan', selected: 'Selected', startTrial: 'Start 7-day free trial', blocked: 'Plan change blockers', blockers: 'Approval waits until you resolve each excess resource below.',
@@ -121,6 +136,7 @@ const en = {
 }
 const ar = {
   cycle: 'دورة الفوترة', monthly: 'شهري', yearly: 'سنوي', annualSaving: (percent: number) => `وفّر ${new Intl.NumberFormat('ar-EG').format(percent)}٪ مع الدفع السنوي`,
+  soloVariants: 'عدد الأعضاء في خطة سولو', oneMember: 'عضو واحد', twoMembers: 'عضوان',
   variants: 'عدد الفروع في خطة مالتي', twoBranches: 'فرعان', threeBranches: '٣ فروع', discount: (percent: number) => `خصم ${percent}٪`, perMonth: 'شهريًا',
   yearlyEquivalent: (monthly: string, yearly: string) => `${monthly} شهريًا · تُدفع ${yearly} سنويًا`, negotiated: 'سعر مؤسس / تفاوضي', publicList: 'السعر المعلن للجمهور', current: 'الحالية',
   choose: 'اختيار الخطة', selected: 'تم الاختيار', startTrial: 'ابدأ تجربة مجانية ٧ أيام', blocked: 'عوائق تغيير الخطة', blockers: 'ينتظر الاعتماد حتى تعالج كل مورد زائد موضح أدناه.',

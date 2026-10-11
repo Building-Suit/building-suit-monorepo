@@ -22,6 +22,7 @@ test('owner billing uses the canonical purchasable catalog and effective server 
   assert.match(billing, /publicCatalogTerms/)
   assert.match(billing, /p_requested_catalog_terms_id: selectedPlan\.value!\.catalogTermsId/)
   assert.match(billing, /!entry && !selectedPlan\.value/)
+  assert.match(billing, /p_requested_plan_slug: selectedPlan\.value!\.planSlug/)
   assert.match(billing, /effectivePriceAmount/)
   assert.match(billing, /priceSource === 'override'/)
   assert.doesNotMatch(billing, /349|699|1099/)

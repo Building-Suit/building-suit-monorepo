@@ -75,7 +75,7 @@ export const legalDocuments: Record<
     en: {
       title: 'Privacy Policy',
       intro: 'This Privacy Policy explains how Shop Suit by Building Suit collects, uses, stores, and protects information when you use our website and software service.',
-      updated: '30 September 2026',
+      updated: '10 October 2026',
       sections: [
         {
           title: '1. Information we collect',
@@ -84,7 +84,7 @@ export const legalDocuments: Record<
             'Operational information entered by you or authorized team members, including shops, locations, customers, vendors, products, services, sales, payments, expenses, inventory, appointments, and related records.',
             'Subscription and billing metadata, including plan details, transfer notices, transfer references, payment status, and operator review records.',
             'Technical and security information needed to operate and protect the service, such as device/browser information, request metadata, logs, and security events.',
-            'Support communications and the information you provide when contacting us.',
+            'Support requests, including reply email, category, subject, message, consent, and related account context where available; notification and delivery-status records.',
           ],
         },
         {
@@ -92,6 +92,7 @@ export const legalDocuments: Record<
           bullets: [
             'To create and operate your Shop Suit account and shop workspace.',
             'To provide shop operations, reporting, collaboration, subscription, and support functionality.',
+            'To manage authentication sessions and refresh authorized workspace data using shop/location-scoped change signals. Session identifiers and account/workspace context are used to scope subscriptions and clear local workspace state when the session ends.',
             'To review payment notices, activate approved subscription access, and maintain billing records.',
             'To secure the service, prevent abuse, investigate incidents, and maintain auditability.',
             'To improve reliability, usability, and performance and comply with applicable obligations.',
@@ -106,7 +107,7 @@ export const legalDocuments: Record<
         },
         {
           title: '4. Service providers',
-          paragraphs: ['We use service providers for infrastructure, database and authentication, email delivery, and monitoring. They process information only as needed to provide their services and under their own security and privacy obligations.'],
+          paragraphs: ['The contact form records your request before email delivery. The support notification uses Resend to send your reply email, subject, message, category, priority, and request reference to our support mailbox. We retain the notification payload, provider message identifier, and delivery status for delivery tracking and retries. Recording a request does not guarantee email delivery or a response time.', 'We use service providers for infrastructure, database and authentication, email delivery, and monitoring. They process information only as needed to provide their services and under their own security and privacy obligations.'],
         },
         {
           title: '5. Security and retention',
@@ -130,7 +131,7 @@ export const legalDocuments: Record<
     ar: {
       title: 'سياسة الخصوصية',
       intro: 'توضح هذه السياسة كيفية جمع واستخدام وحفظ وحماية المعلومات عند استخدام موقع وخدمة Shop Suit by Building Suit.',
-      updated: '30 سبتمبر 2026',
+      updated: '10 أكتوبر 2026',
       sections: [
         {
           title: '1. المعلومات التي نجمعها',
@@ -139,7 +140,7 @@ export const legalDocuments: Record<
             'بيانات التشغيل التي تدخلها أنت أو أعضاء الفريق المصرح لهم، ومنها المتاجر والفروع والعملاء والموردون والمنتجات والخدمات والمبيعات والمدفوعات والمصروفات والمخزون والمواعيد والسجلات المرتبطة بها.',
             'بيانات الاشتراك والفوترة، ومنها تفاصيل الخطة وإشعارات التحويل ومراجع التحويل وحالة الدفع وسجلات مراجعة المسؤول.',
             'البيانات التقنية والأمنية اللازمة لتشغيل الخدمة وحمايتها، مثل بيانات الجهاز والمتصفح والطلبات والسجلات والأحداث الأمنية.',
-            'مراسلات الدعم والمعلومات التي تقدمها عند التواصل معنا.',
+            'طلبات الدعم، ومنها بريد الرد والتصنيف والموضوع والرسالة والموافقة وسياق الحساب المرتبط عند توفره؛ وسجلات الإشعارات وحالة التسليم.',
           ],
         },
         {
@@ -147,6 +148,7 @@ export const legalDocuments: Record<
           bullets: [
             'إنشاء وتشغيل حساب Shop Suit ومساحة عمل متجرك.',
             'تقديم وظائف تشغيل المتجر والتقارير والتعاون والاشتراكات والدعم.',
+            'إدارة جلسات تسجيل الدخول وتحديث بيانات مساحة العمل المصرح بها باستخدام إشارات تغيير خاصة بالمتجر والفرع. تُستخدم معرّفات الجلسات وسياق الحساب ومساحة العمل لتحديد نطاق اشتراكات التحديث ومسح حالة مساحة العمل المحلية عند انتهاء الجلسة.',
             'مراجعة إشعارات الدفع وتفعيل الوصول المعتمد والاحتفاظ بسجلات الفوترة.',
             'حماية الخدمة ومنع إساءة الاستخدام والتحقيق في الحوادث والحفاظ على سجلات المراجعة.',
             'تحسين الاعتمادية وسهولة الاستخدام والأداء والوفاء بالالتزامات المطبقة.',
@@ -159,7 +161,7 @@ export const legalDocuments: Record<
             'يحتفظ Shop Suit ببيانات الفوترة ومرجع التحويل اللازمة لمراجعة طلب الاشتراك وتدقيقه، ولا يدّعي توفير معالجة آلية للبطاقات أو تحقق بنكي تلقائي.',
           ],
         },
-        { title: '4. مزودو الخدمة', paragraphs: ['نستخدم مزودي خدمات للبنية التحتية وقواعد البيانات وتسجيل الدخول وإرسال البريد الإلكتروني والمراقبة. وتتم معالجة المعلومات بالقدر اللازم لتقديم تلك الخدمات ووفق التزامات الأمان والخصوصية الخاصة بهم.'] },
+        { title: '4. مزودو الخدمة', paragraphs: ['يسجل نموذج التواصل طلبك قبل تسليم البريد. يستخدم إشعار الدعم Resend لإرسال بريد الرد والموضوع والرسالة والتصنيف والأولوية ومرجع الطلب إلى بريد الدعم. نحتفظ بمحتوى الإشعار ومعرّف الرسالة لدى المزود وحالة التسليم لمتابعة التسليم وإعادة المحاولة. لا يضمن تسجيل الطلب تسليم البريد أو مدة محددة للرد.', 'نستخدم مزودي خدمات للبنية التحتية وقواعد البيانات وتسجيل الدخول وإرسال البريد الإلكتروني والمراقبة. وتتم معالجة المعلومات بالقدر اللازم لتقديم تلك الخدمات ووفق التزامات الأمان والخصوصية الخاصة بهم.'] },
         {
           title: '5. الأمان والاحتفاظ',
           paragraphs: [
@@ -260,15 +262,16 @@ export const legalDocuments: Record<
     en: {
       title: 'Terms & Conditions',
       intro: 'These Terms & Conditions govern access to and use of Shop Suit by Building Suit.',
-      updated: '30 September 2026',
+      updated: '10 October 2026',
       sections: [
         { title: '1. The service', paragraphs: ['Shop Suit is a hosted business-operations service. Features and limits depend on the active plan, account eligibility, and the capabilities made available in the product.'] },
-        { title: '2. Accounts and authority', bullets: ['Provide accurate account and business information.', 'Protect credentials and use team permissions appropriately.', 'Only enter or manage information that you are authorized to use.', 'The Shop owner is responsible for authorized team access and activity in the workspace.'] },
+        { title: '2. Accounts and authority', bullets: ['Provide accurate account and business information.', 'Protect credentials and use team permissions appropriately.', 'Only enter or manage information that you are authorized to use.', 'The Shop owner is responsible for authorized team access and activity in the workspace.', 'Team members use their own accounts and accept invitations. Team actions depend on assigned permissions and locations; delegated administrators cannot grant permissions they do not hold.', 'Each user account is intended for one active device/session at a time. Provider enforcement is not currently verified as enabled; where enabled, the newest sign-in takes precedence at session refresh, and already-issued access tokens may remain valid until expiry. This is not an instant-revocation or credential-sharing prevention guarantee. Normal logout ends only the current session.'] },
         { title: '3. Customer records', paragraphs: ['You control the business records entered into your workspace and are responsible for their accuracy, legality, and necessary notices or permissions. Shop Suit supports operations and reports but does not replace professional legal, tax, or accounting advice.'] },
         {
           title: '4. Trials, plans, and payment',
           paragraphs: [
             'New eligible accounts receive the trial described at signup. Plan availability, limits, price, currency, and subscription interval are shown before a payment notice is submitted.',
+            'Current public plans are Solo (1 or 2 members), Team (8 members), and Multi (16 members for 2 branches or 25 members for 3 branches). Member limits include the owner; unexpired pending invitations reserve capacity. The selected catalog terms govern the price, interval, and resource limits; existing subscriptions retain their agreed terms. Plan changes can be blocked by usage above the selected limits and do not automatically delete or archive business records.',
             'Current payments use operator-configured InstaPay or instant-transfer instructions. A notice starts manual review only. Paid access begins or changes only after an authorized operator verifies the external transfer and approves the request.',
           ],
         },
@@ -282,15 +285,16 @@ export const legalDocuments: Record<
     ar: {
       title: 'الشروط والأحكام',
       intro: 'تحكم هذه الشروط والأحكام الوصول إلى Shop Suit by Building Suit واستخدامه.',
-      updated: '30 سبتمبر 2026',
+      updated: '10 أكتوبر 2026',
       sections: [
         { title: '1. الخدمة', paragraphs: ['Shop Suit خدمة مستضافة لإدارة عمليات النشاط. تعتمد المميزات والحدود على الخطة النشطة وأهلية الحساب والقدرات المتاحة داخل المنتج.'] },
-        { title: '2. الحسابات والصلاحيات', bullets: ['قدّم بيانات حساب ونشاط دقيقة.', 'احمِ بيانات الدخول واستخدم صلاحيات الفريق بطريقة مناسبة.', 'لا تدخل أو تدير إلا المعلومات المصرح لك باستخدامها.', 'يتحمل مالك المتجر مسؤولية وصول أعضاء الفريق المصرح لهم ونشاطهم داخل مساحة العمل.'] },
+        { title: '2. الحسابات والصلاحيات', bullets: ['قدّم بيانات حساب ونشاط دقيقة.', 'احمِ بيانات الدخول واستخدم صلاحيات الفريق بطريقة مناسبة.', 'لا تدخل أو تدير إلا المعلومات المصرح لك باستخدامها.', 'يتحمل مالك المتجر مسؤولية وصول أعضاء الفريق المصرح لهم ونشاطهم داخل مساحة العمل.', 'يستخدم أعضاء الفريق حساباتهم الخاصة ويقبلون الدعوات. تعتمد إجراءات الفريق على الصلاحيات والفروع المسندة، ولا يمكن للمسؤول المفوّض منح صلاحيات لا يملكها.', 'كل حساب مستخدم مخصص لجهاز أو جلسة نشطة واحدة في الوقت نفسه. لم يتم التحقق حاليًا من تفعيل هذا القيد لدى مزود تسجيل الدخول؛ وعند تفعيله تكون الأولوية لأحدث تسجيل دخول عند تحديث الجلسة، وقد تظل رموز الوصول الصادرة صالحة حتى انتهاء مدتها. لا يعني ذلك ضمان الإلغاء الفوري أو منع مشاركة بيانات الدخول. ينهي تسجيل الخروج العادي الجلسة الحالية فقط.'] },
         { title: '3. سجلات العميل', paragraphs: ['أنت تتحكم في سجلات النشاط التي تدخلها إلى مساحة العمل وتتحمل مسؤولية دقتها ومشروعيتها وتقديم الإشعارات أو الحصول على الموافقات اللازمة. يساعد Shop Suit في العمليات والتقارير لكنه لا يحل محل الاستشارة القانونية أو الضريبية أو المحاسبية المتخصصة.'] },
         {
           title: '4. التجربة والخطط والدفع',
           paragraphs: [
             'تحصل الحسابات الجديدة المؤهلة على الفترة التجريبية الموضحة أثناء التسجيل. وتظهر الخطط المتاحة وحدودها وسعرها وعملتها ومدة الاشتراك قبل إرسال إشعار الدفع.',
+            'الخطط العامة الحالية هي Solo (عضو واحد أو عضوان)، وTeam (8 أعضاء)، وMulti (16 عضوًا لفرعين أو 25 عضوًا لثلاثة فروع). تشمل حدود الأعضاء المالك، وتحجز الدعوات المعلقة غير المنتهية سعة ضمن الحد. تحكم شروط الكتالوج المختارة السعر والمدة وحدود الموارد، وتحتفظ الاشتراكات القائمة بشروطها المتفق عليها. قد يُمنع تغيير الخطة إذا تجاوز الاستخدام حدود الخطة المختارة، ولا يؤدي تغييرها إلى حذف سجلات النشاط أو أرشفتها تلقائيًا.',
             'تستخدم المدفوعات الحالية تعليمات InstaPay أو التحويل الفوري التي يضبطها مسؤول المنصة. يبدأ الإشعار المراجعة اليدوية فقط، ولا يبدأ الوصول المدفوع أو يتغير إلا بعد تحقق مسؤول مخوّل من التحويل الخارجي واعتماد الطلب.',
           ],
         },

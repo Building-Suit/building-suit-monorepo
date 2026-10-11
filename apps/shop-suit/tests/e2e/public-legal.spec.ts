@@ -11,7 +11,7 @@ const routes = [
 ] as const
 
 async function publicBackend(page: Page, support: { response?: 'success' | 'rate' | 'error'; calls: number }) {
-  await page.route('http://127.0.0.1:61321/**', async (route) => {
+  await page.route(/^http:\/\/127\.0\.0\.1:(61321|46421)\//, async (route) => {
     const url = new URL(route.request().url())
     if (url.pathname.endsWith('/rpc/submit_support_request')) {
       support.calls += 1
@@ -97,9 +97,11 @@ for (const theme of ['light', 'dark'] as const) {
     await page.addInitScript(value => localStorage.setItem('building-suit.theme', value), theme)
     for (const path of ['/', '/auth/login', '/terms']) {
       await page.goto(path)
-      const logo = page.locator('[role="img"][aria-label="Shop Suit by Building Suit"]').first()
+      const logo = page.locator('[role="img"][aria-label="Shop Suit by Building Suit"]:visible').first()
       await expect(logo).toBeVisible()
-      await expect(logo.locator('img:visible')).toHaveAttribute('src', `/brand/shop-suit-wordmark-${theme === 'dark' ? 'light' : 'dark'}.svg`)
+      // The desktop auth showcase has a dark background in both themes.
+      const tone = path === '/auth/login' || theme === 'dark' ? 'light' : 'dark'
+      await expect(logo.locator('img:visible')).toHaveAttribute('src', `/brand/shop-suit-wordmark-${tone}.svg`)
       await expect(logo.locator('span span')).toHaveCount(0)
     }
   })

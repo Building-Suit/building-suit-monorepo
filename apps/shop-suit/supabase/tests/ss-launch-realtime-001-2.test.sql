@@ -1,0 +1,60 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path=public,extensions;
+select plan(16);
+create temporary table realtime_fixture(owner_id uuid,other_id uuid,staff_id uuid,shop_a uuid,shop_b uuid,shop_staff uuid,location_a uuid,location_b uuid);
+insert into realtime_fixture values(gen_random_uuid(),gen_random_uuid(),gen_random_uuid(),null,null,null,null,null);
+grant all on realtime_fixture to authenticated;
+insert into auth.users(id,email,encrypted_password,aud,role,email_confirmed_at,raw_app_meta_data,raw_user_meta_data,created_at,updated_at)
+select id,id::text||'@realtime.invalid','x','authenticated','authenticated',now(),'{}','{}',now(),now() from realtime_fixture cross join lateral unnest(array[owner_id,other_id,staff_id]) id;
+select set_config('request.jwt.claim.sub',owner_id::text,true),set_config('request.jwt.claim.role','authenticated',true) from realtime_fixture;
+set local role authenticated;
+update realtime_fixture set shop_a=public.create_owner_shop('Realtime owner','multi','service');
+update realtime_fixture set location_a=(select id from public.shop_locations where shop_id=shop_a and is_default);
+update realtime_fixture set location_b=public.save_shop_location(shop_a,null,'Branch B','B',null,null);
+reset role;
+select set_config('request.jwt.claim.sub',other_id::text,true) from realtime_fixture;
+set local role authenticated;
+update realtime_fixture set shop_b=public.create_owner_shop('Realtime other','multi','service');
+reset role;
+select set_config('request.jwt.claim.sub',staff_id::text,true) from realtime_fixture;
+set local role authenticated;
+update realtime_fixture set shop_staff=public.create_owner_shop('Realtime staff own','multi','service');
+reset role;
+insert into public.shop_memberships(shop_id,profile_id,role,status)
+select f.shop_a,p.id,'employee','active' from realtime_fixture f join public.profiles p on p.user_id=f.staff_id;
+insert into public.membership_location_assignments(shop_id,location_id,membership_id)
+select f.shop_a,f.location_a,m.id from realtime_fixture f join public.profiles p on p.user_id=f.staff_id join public.shop_memberships m on m.profile_id=p.id and m.shop_id=f.shop_a
+on conflict do nothing;
+-- Trigger publication is a narrow signal; business/private tables are not exposed.
+select ok(exists(select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='shop_realtime_versions'),'Signal table in Realtime publication');
+select ok((select relrowsecurity from pg_class where oid='public.shop_realtime_versions'::regclass),'Signal RLS enabled');
+select ok(not has_table_privilege('anon','public.shop_realtime_versions','SELECT'),'Anonymous cannot read');
+select ok(not has_table_privilege('authenticated','public.shop_realtime_versions','INSERT'),'Browser cannot invent signals');
+select ok(not has_table_privilege('authenticated','public.shop_realtime_versions','UPDATE'),'Browser cannot alter signals');
+select ok(not has_table_privilege('authenticated','public.shop_realtime_versions','DELETE'),'Browser cannot delete signals');
+select ok(not has_function_privilege('authenticated','shop_private.bump_realtime(uuid,uuid,text)','EXECUTE'),'Private emitter not callable');
+select ok(not has_function_privilege('authenticated','shop_private.realtime_changed()','EXECUTE'),'Private trigger not callable');
+select ok(not has_table_privilege('authenticated','public.shop_billing_submissions','SELECT'),'Payment notices remain private');
+select ok(not has_table_privilege('authenticated','public.subscriptions','SELECT'),'Subscription metadata remains private');
+select shop_private.bump_realtime(shop_a,location_a,'appointments'),shop_private.bump_realtime(shop_a,location_b,'appointments'),shop_private.bump_realtime(shop_b,null,'customers') from realtime_fixture;
+select set_config('request.jwt.claim.sub',owner_id::text,true) from realtime_fixture;
+set local role authenticated;
+select is((select count(*) from public.shop_realtime_versions r,realtime_fixture f where r.shop_id=f.shop_b),0::bigint,'Other tenant invisible');
+select is((select count(*) from public.shop_realtime_versions r,realtime_fixture f where r.shop_id=f.shop_a and feature='appointments'),2::bigint,'Owner reads assigned locations');
+reset role;
+select set_config('request.jwt.claim.sub',staff_id::text,true) from realtime_fixture;
+set local role authenticated;
+select is((select count(*) from public.shop_realtime_versions r,realtime_fixture f where r.shop_id=f.shop_a and r.location_id=f.location_b),0::bigint,'Unassigned location invisible');
+select is((select count(*) from public.shop_realtime_versions r,realtime_fixture f where r.shop_id=f.shop_a and r.location_id=f.location_a and r.feature='appointments'),1::bigint,'Assigned location signal visible');
+reset role;
+select set_config('request.jwt.claim.sub',owner_id::text,true) from realtime_fixture;
+set local role authenticated;
+select public.save_customer(shop_a,null,'Realtime customer',null,null,null,null) from realtime_fixture;
+reset role;
+select ok(exists(select 1 from public.shop_realtime_versions r,realtime_fixture f where r.shop_id=f.shop_a and r.feature='customers'),'Genuine customer command emits signal');
+create temporary table billing_revision as select r.revision from public.shop_realtime_versions r,realtime_fixture f where r.shop_id=f.shop_a and feature='billing';
+update public.subscriptions set updated_at=clock_timestamp() where profile_id=(select p.id from public.profiles p,realtime_fixture f where p.user_id=f.owner_id);
+select ok(exists(select 1 from public.shop_realtime_versions r,realtime_fixture f,billing_revision b where r.shop_id=f.shop_a and feature='billing' and r.revision>b.revision),'Subscription change invalidates billing without publishing billing payload');
+select * from finish();
+rollback;

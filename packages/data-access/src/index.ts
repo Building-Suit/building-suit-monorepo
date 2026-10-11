@@ -1,4 +1,6 @@
 import type { DataScope } from '@building-suit/contracts'
+export { createScopedRealtime } from './realtime.ts'
+export type { RealtimeBinding, RealtimeChannel, RealtimeClient } from './realtime.ts'
 /** Structured keys prevent cross-portal, cross-account and cross-tenant cache collisions. */
 export function scopedQueryKey(scope: DataScope, feature: string, parameters: unknown = null): string {
   return JSON.stringify(['building-suit', scope.environment, scope.portal, scope.userId, scope.tenantId, feature, parameters])

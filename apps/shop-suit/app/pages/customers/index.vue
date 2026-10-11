@@ -155,6 +155,8 @@ function handlePage(event: { page: number }) {
 function formatDate(value: string) {
   return new Intl.DateTimeFormat(locale.value === 'ar' ? 'ar-EG' : 'en-EG', { dateStyle: 'medium' }).format(new Date(value))
 }
+
+useShopRealtime('customers', () => formDirty.value)
 </script>
 
 <template>

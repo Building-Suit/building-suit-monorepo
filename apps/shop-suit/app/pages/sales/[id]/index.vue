@@ -174,6 +174,7 @@ const { data: correctionState, pending: correctionLoading, error: correctionLoad
 )
 
 function readableError(message?: string) {
+  if (message?.includes('SALE_OPEN_CASH_SHIFT_REQUIRED')) return t('sales.openCashShiftRequired')
   if (message?.includes('INSUFFICIENT_STOCK')) return saleCopy(t, 'sales.insufficientStock', sale.value?.lines ?? [])
   if (message?.includes('OUTSTANDING_SALE_REQUIRES_CUSTOMER')) return t('sales.customerRequired')
   if (message?.includes('PAYMENT_OVERPAYMENT_REJECTED')) return t('payments.overpayment')
@@ -345,6 +346,8 @@ function formatDate(value: string | null) {
   return new Intl.DateTimeFormat(locale.value === 'ar' ? 'ar-EG' : 'en-EG', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
 }
 function lineMovements(lineId: string) { return sale.value?.movements.filter(movement => movement.invoiceItemId === lineId) ?? [] }
+
+useShopRealtime('sales', () => paymentDirty.value || correctionDirty.value)
 </script>
 
 <template>
