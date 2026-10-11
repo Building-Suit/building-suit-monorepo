@@ -4,7 +4,7 @@ This release starts at staging merge #241 (`072c9072ebaa6847d9fc8f30033276c8c63c
 
 Included new feature source: Team controls #218, cash policy #220, support delivery #223, Solo variants/pinned renewal #224, atomic Fast Pay #227, Fast Pay inventory-aware messaging #228, full legal reconciliation #234 and qualification #235. Existing #241 branding #221, POS/customer selection #225, private-owner entry #229 and session-loss handling #230 remain intact; additional private-offer database regression/docs and invitation-local-logout changes are reconciled here.
 
-Shop realtime #233 includes its SQL in this release. Its application adoption is awaiting explicit authorization for the minimal shared realtime controller/contracts/exports/tests absent from staging. No Shared or Super Admin PR ancestry is merged. No new Super Admin source is included.
+Shop realtime #233 includes its SQL in this release. Its application adoption includes only the shared realtime controller/contracts/exports/security tests explicitly authorized for this release; its original controller bytes are preserved. No Shared or Super Admin PR ancestry is merged. No new Super Admin source is included.
 
 All seven unapplied Shop SQL sources are assigned forward versions after the verified 50-version staging history, retaining their original SQL bytes. See `release-migration-map.json` for exact source-to-release filenames and hashes. Applied migration source files remain unchanged. Merging SQL source does not authorize hosted application. Existing staging Git automation applies migrations and deploys the support worker, so the final merge requires separate explicit mutation approval after validation/recovery gates.
 

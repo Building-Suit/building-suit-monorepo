@@ -301,6 +301,8 @@ watch([currentId, currentLocationId], () => {
 }, { flush: 'sync' })
 const canCreate = computed(() => Boolean(locationId.value && eligibleServices.value.length && locationStaff.value.length && !optionsPending.value && !pending.value && !optionsError.value && !error.value))
 const weekdayNames = computed(() => Array.from({ length: 7 }, (_, weekday) => new Intl.DateTimeFormat(isArabic.value ? 'ar-EG' : 'en-EG', { weekday: 'long' }).format(addDays(new Date('2026-09-27T12:00:00'), weekday))))
+
+useShopRealtime('appointments', () => formDirty.value || scheduleDirty.value)
 </script>
 
 <template>

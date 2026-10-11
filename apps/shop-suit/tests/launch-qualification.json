@@ -504,7 +504,7 @@
       "production_smoke_tested": "unverified",
       "implementation_evidence": [
         "apps/shop-suit/app/composables/useShopRealtime.ts",
-        "apps/shop-suit/supabase/migrations/20261010110000_shop_scoped_realtime.sql"
+        "apps/shop-suit/supabase/migrations/20261011120600_shop_scoped_realtime.sql"
       ]
     },
     {

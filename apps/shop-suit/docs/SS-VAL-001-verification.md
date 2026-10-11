@@ -61,7 +61,7 @@ for all rows; no local result promotes those statuses.
 | SS-LAUNCH-R09 — POS customer dropdown | [pos.vue](../app/pages/pos.vue), [posCustomer.js](../app/utils/posCustomer.js) | Blocked; see bound checks in matrix |
 | SS-LAUNCH-R10 — Atomic Fast Pay | [launch-fast-pay.md](../docs/readiness/launch-fast-pay.md) | Blocked; see bound checks in matrix |
 | SS-LAUNCH-R11 — One active device/session per user | [session-loss.client.ts](../app/plugins/session-loss.client.ts), [single-session.md](../docs/single-session.md) | Blocked; see bound checks in matrix |
-| SS-LAUNCH-R12 — Shop realtime operational refresh | [useShopRealtime.ts](../app/composables/useShopRealtime.ts), [20261010110000_shop_scoped_realtime.sql](../supabase/migrations/20261010110000_shop_scoped_realtime.sql) | Blocked; see bound checks in matrix |
+| SS-LAUNCH-R12 — Shop realtime operational refresh | [useShopRealtime.ts](../app/composables/useShopRealtime.ts), [20261011120600_shop_scoped_realtime.sql](../supabase/migrations/20261011120600_shop_scoped_realtime.sql) | Blocked; see bound checks in matrix |
 | SS-LAUNCH-R13 — Legal/policy reconciliation against launch behavior | [legal.ts](../app/utils/legal.ts), [SS-LAUNCH-LEGAL-AUDIT-001.md](../docs/SS-LAUNCH-LEGAL-AUDIT-001.md) | Blocked; see bound checks in matrix |
 
 R11 has client session-loss cleanup and local logout implementation; provider-native
