@@ -172,6 +172,7 @@ const { data: correctionState, pending: correctionLoading, error: correctionLoad
 )
 
 function readableError(message?: string) {
+  if (message?.includes('SALE_OPEN_CASH_SHIFT_REQUIRED')) return t('sales.openCashShiftRequired')
   if (message?.includes('INSUFFICIENT_STOCK')) return t('sales.insufficientStock')
   if (message?.includes('OUTSTANDING_SALE_REQUIRES_CUSTOMER')) return t('sales.customerRequired')
   if (message?.includes('PAYMENT_OVERPAYMENT_REJECTED')) return t('payments.overpayment')
@@ -303,7 +304,7 @@ async function submitPayment() {
     await Promise.all([refresh(), refreshReceipt(), refreshNuxtData('shop-data:sales'), refreshNuxtData('shop-data:customer-statement')])
     pushToast({ tone: 'success', title: t('payments.saved') })
   }
-  catch (paymentError) { actionError.value = readableError(paymentError instanceof Error ? paymentError.message : undefined) }
+  catch (paymentError) { actionError.value = readableError(shopCommandErrorMessage(paymentError)) }
   finally { paymentPending.value = false }
 }
 
@@ -331,7 +332,7 @@ async function issue() {
     ])
     pushToast({ tone: 'success', title: t('sales.issuedSuccess') })
   }
-  catch (issueError) { actionError.value = readableError(issueError instanceof Error ? issueError.message : undefined) }
+  catch (issueError) { actionError.value = readableError(shopCommandErrorMessage(issueError)) }
   finally { issuing.value = false }
 }
 
