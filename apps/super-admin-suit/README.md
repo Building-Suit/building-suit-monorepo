@@ -164,3 +164,61 @@ presentation only. `supabase/tests/registry_navigation.sql` independently covers
 real database projection, scoped capability denial, latest-manifest rejection,
 retirement, authorization and audited ordering. Browser screenshots are written
 to `/tmp/sas-registry-*` only when the suite executes successfully.
+
+## Shop adapter (SAS-M1-SHOP-ADAPTER-001)
+
+`POST /api/adapters/shop` accepts only `bindingId`, a reviewed protocol
+`operation`, UUID `requestId`/`correlationId`, `reason` (null for queries;
+8–1000 characters for commands), and an object `payload`. It checks Admin Auth
+and current database authority, then enqueues an immutable dispatch under that
+user's JWT. The database resolves the active environment pair, registration,
+capability policy, latest fresh verified manifest, provider, integration policy
+and Vault reference. Missing, disabled, stale and incompatible data fail closed.
+The current protocol supports 1.0 and same-kind environment pairs only.
+
+Provision the existing configuration tables through their audited commands.
+For each binding, the active provider's `adapter-dispatch-policy` object setting
+(schema 1.0) supplies `targetBindingId`, `timeoutMs` and `maxResponseBytes`.
+The binding's base URL is the HTTPS origin; `egress_policy.allowedHosts` lists
+exact permitted hostnames. `adapter-signing` secret references select the newest
+active key version. The referenced Vault value is unpadded base64url HMAC material
+of at least 32 bytes, matching the separately provisioned Shop verifier.
+Manifest observations use the Shop bridge capability shape
+`{"operation":"<operation>","version":"1.0"}`. Scope policy must explicitly
+permit each operation. No target service-role credential is used.
+
+Only the server uses the **Admin project's** service credential for narrow
+claim/complete RPCs. Vault material remains inside private database helpers;
+only a transient per-attempt signature reaches the server transport. DNS answers
+must all be public IPv4 addresses; the validated address is pinned for the TLS
+connection. The transport validates hostname certificates, bounds time/response
+size and follows no redirects. IPv6 egress is conservatively unavailable.
+
+Verified responses echo the exact envelope and request digest and have a checked
+HMAC. Raw target errors are discarded; the client receives stable error codes
+and request/correlation IDs. Lost/unsigned/tampered responses are
+`outcome_unknown`. Retry the same input and request ID to obtain a fresh nonce;
+never invent a compensating command. Envelopes, configuration versions,
+nonces, key-reference metadata and safe outcomes remain append-only in protected
+Admin dispatch/attempt tables; target audit IDs join successful Shop outcomes.
+No payload, signature or secret is logged. Registry UI is unchanged.
+
+Verification:
+
+```sh
+node --test apps/super-admin-suit/tests/unit/sas-m1-shop-adapter-001-1.test.mjs
+node --test apps/super-admin-suit/tests/unit/sas-m1-shop-adapter-001-4.test.mjs
+node --test apps/super-admin-suit/tests/unit/*.test.mjs
+pnpm exec turbo run typecheck lint build --filter=@building-suit/super-admin-suit
+pnpm exec playwright test --config apps/super-admin-suit/tests/e2e/sas-m1-shop-adapter-001-2.config.ts --workers=1 --retries=0
+pnpm db super-admin-suit test db --local
+git diff --check
+```
+
+The browser test inspects real unauthenticated endpoint responses, loaded assets
+and browser requests with a synthetic server-secret sentinel. Configured
+transport/results use unit fixtures; SQL authorization, Vault signing and
+configuration rejection are independently covered in
+`supabase/tests/shop_adapter_dispatch.sql`. Actual authenticated Shop round trips
+require provisioned disposable databases and verified matching integration
+configuration. No hosted setup is implied by these local checks.
