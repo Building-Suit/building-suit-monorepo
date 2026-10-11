@@ -2,9 +2,9 @@
 -- this fixture to the approved catalog while preserving the legacy rows.
 insert into public.portals (key, name) values ('shop-crm', 'Shop Suit local fixture') on conflict (key) do nothing;
 insert into public.plans (portal_id, name, slug, price_amount, currency, trial_days, features)
-select id, 'Basic', 'basic', 799, 'EGP', 14, '{"max_products":100,"max_services":50}' from public.portals where key='shop-crm';
+select id, 'Basic', 'basic', 799, 'EGP', 7, '{"max_products":100,"max_services":50}' from public.portals where key='shop-crm';
 insert into public.plans (portal_id, name, slug, price_amount, currency, trial_days, features)
-select id, 'Pro', 'pro', 1199, 'EGP', 14, '{"inventory":true,"max_products":1000,"max_services":500}' from public.portals where key='shop-crm';
+select id, 'Pro', 'pro', 1199, 'EGP', 7, '{"inventory":true,"max_products":1000,"max_services":500}' from public.portals where key='shop-crm';
 select shop_private.reconcile_plan_catalog();
 insert into public.permissions (portal_id, key, description)
 select portal.id, permission.key, permission.description
