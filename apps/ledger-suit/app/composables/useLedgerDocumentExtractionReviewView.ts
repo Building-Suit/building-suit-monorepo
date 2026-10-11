@@ -8,8 +8,8 @@ import {
   parseDocumentExtractionProposal,
 } from '~/utils/documentExtraction'
 
-/** Ledger-owned orchestration; mounted by a shared workflow scope in its route/layout. */
-export function useLedgerDocumentExtractionReviewView(_values: Record<string, unknown>, _emit: (event: string, ...args: unknown[]) => void) {
+/** Product-owned document evidence, parsing and human approval requirements. */
+export function useLedgerDocumentExtractionReviewView(options: { active?: boolean }, _emit: (event: string, ...args: unknown[]) => void) {
 const emit = _emit as <K extends keyof ({ accepted: [payload: { parsed: ParsedCsv, file: File }] })>(event: K, ...args: ({ accepted: [payload: { parsed: ParsedCsv, file: File }] })[K]) => void
 const { t } = useI18n()
 
@@ -20,8 +20,8 @@ const candidates = ref<DocumentExtractionCandidate[]>([])
 const reviewed = ref(false)
 const errorCode = ref('')
 const hashing = ref(false)
-const proposalInput = ref<HTMLInputElement | null>(null)
-const documentInput = ref<HTMLInputElement | null>(null)
+const inputReset = useFileInputReset()
+let generation = 0
 const fields = ['type', 'date', 'amount', 'account', 'category', 'description', 'reference', 'counterparty', 'currency', 'exchange_rate'] as const
 
 const requiredComplete = computed(() => documentExtractionRequiredFieldsComplete(candidates.value))
@@ -44,6 +44,7 @@ async function sha256(file: File) {
 }
 
 async function onDocumentSelected(event: Event) {
+  const version = ++generation
   errorCode.value = ''
   sourceFile.value = null
   sourceSha256.value = ''
@@ -56,14 +57,17 @@ async function onDocumentSelected(event: Event) {
   }
   hashing.value = true
   try {
-    sourceSha256.value = await sha256(file)
+    const digest = await sha256(file)
+    if (version !== generation || options.active === false) return
+    sourceSha256.value = digest
     sourceFile.value = file
   }
-  catch { errorCode.value = 'DOCUMENT_EXTRACTION_DOCUMENT_INVALID' }
-  finally { hashing.value = false }
+  catch { if (version === generation && options.active !== false) errorCode.value = 'DOCUMENT_EXTRACTION_DOCUMENT_INVALID' }
+  finally { if (version === generation) hashing.value = false }
 }
 
 async function onProposalSelected(event: Event) {
+  const version = generation
   errorCode.value = ''
   proposal.value = null
   candidates.value = []
@@ -73,10 +77,11 @@ async function onProposalSelected(event: Event) {
   try {
     if (file.size < 1 || file.size > DOCUMENT_EXTRACTION_MAX_PROPOSAL_BYTES) throw new Error('DOCUMENT_EXTRACTION_PROPOSAL_FILE_INVALID')
     const parsed = parseDocumentExtractionProposal(await file.text())
+    if (version !== generation || options.active === false) return
     proposal.value = parsed
     candidates.value = cloneDocumentExtractionCandidates(parsed)
   }
-  catch (error) { errorCode.value = error instanceof Error ? error.message : 'DOCUMENT_EXTRACTION_JSON_INVALID' }
+  catch (error) { if (version === generation && options.active !== false) errorCode.value = error instanceof Error ? error.message : 'DOCUMENT_EXTRACTION_JSON_INVALID' }
 }
 
 function confidenceLabel(confidence: number | null) {
@@ -87,15 +92,19 @@ function confidenceLabel(confidence: number | null) {
 }
 
 function rejectProposal() {
+  hashing.value = false
   sourceFile.value = null
   sourceSha256.value = ''
   proposal.value = null
   candidates.value = []
   reviewed.value = false
   errorCode.value = ''
-  if (proposalInput.value) proposalInput.value.value = ''
-  if (documentInput.value) documentInput.value.value = ''
+  generation++
+  inputReset.reset()
 }
+
+watch(() => options.active, active => { if (active === false) rejectProposal() }, { flush: 'sync' })
+onBeforeUnmount(() => { generation++ })
 
 function acceptProposal() {
   if (!canAccept.value || !proposal.value || !sourceFile.value) return
@@ -109,5 +118,5 @@ function acceptProposal() {
     file: sourceFile.value,
   })
 }
-return { DOCUMENT_EXTRACTION_MAX_PROPOSAL_BYTES, buildDocumentExtractionRows, cloneDocumentExtractionCandidates, documentExtractionRequiredFieldsComplete, parseDocumentExtractionProposal, emit, t, sourceFile, sourceSha256, proposal, candidates, reviewed, errorCode, hashing, proposalInput, documentInput, fields, requiredComplete, sourceMatches, canAccept, readableError, sha256, onDocumentSelected, onProposalSelected, confidenceLabel, rejectProposal, acceptProposal }
+return { DOCUMENT_EXTRACTION_MAX_PROPOSAL_BYTES, buildDocumentExtractionRows, cloneDocumentExtractionCandidates, documentExtractionRequiredFieldsComplete, parseDocumentExtractionProposal, emit, t, sourceFile, sourceSha256, proposal, candidates, reviewed, errorCode, hashing, inputReset, fields, requiredComplete, sourceMatches, canAccept, readableError, sha256, onDocumentSelected, onProposalSelected, confidenceLabel, rejectProposal, acceptProposal }
 }

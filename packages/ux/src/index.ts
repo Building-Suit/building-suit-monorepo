@@ -235,3 +235,8 @@ export { downloadText, downloadBlob } from './utils/downloadText.js'
 export { useBoundedPolling } from './composables/useBoundedPolling.ts'
 
 export { useExpiringValue } from './composables/useExpiringValue.ts'
+
+export { openExternalLink, clearFileSelection, runPrimaryEnter, exclusiveChoiceOptions } from './utils/browserActions.ts'
+
+export { useFileInputReset } from './composables/useFileInputReset.ts'
+export { useDebouncedTask } from './composables/useDebouncedTask.ts'

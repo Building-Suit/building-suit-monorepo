@@ -1,14 +1,12 @@
 import { scopedQueryKey } from '@building-suit/data-access'
 import type { Database } from '~~/types/database.types'
 
-/** Ledger-owned orchestration; mounted by a shared workflow scope in its route/layout. */
-export function useLedgerTransactionTagsView(_values: ({ transactionId: string | null }) & { selected?: unknown; pending?: unknown }, _emit: (event: string, ...args: unknown[]) => void) {
-const _props = new Proxy(_values, { get: (target, key) => Reflect.get(target, key) ?? Reflect.get({}, key) })
-const transactionId = computed(() => _props.transactionId)
-const props = _props
-const emit = _emit as <K extends keyof ({ changed: [] })>(event: K, ...args: ({ changed: [] })[K]) => void
-const selected = computed<string>({ get: () => (_values.selected ?? '') as string, set: value => _emit('update:selected', value) })
-const busy = computed<boolean>({ get: () => (_values.pending ?? false) as boolean, set: value => _emit('update:pending', value) })
+/** Product-owned assignment queries and tag authorization. */
+type JournalTagEvents = { changed: []; 'update:selected': [value: string]; 'update:pending': [value: boolean] }
+export function useLedgerTransactionTagsView(props: { transactionId: string | null; selected?: string; pending?: boolean }, emit: <K extends keyof JournalTagEvents>(event: K, ...args: JournalTagEvents[K]) => void) {
+const transactionId = computed(() => props.transactionId)
+const selected = computed<string>({ get: () => props.selected ?? '', set: value => emit('update:selected', value) })
+const busy = computed<boolean>({ get: () => props.pending ?? false, set: value => emit('update:pending', value) })
 const { t } = useI18n()
 const { can, currentId } = useTenant()
 const { writesAllowed } = useBilling()

@@ -275,7 +275,16 @@
     "./organisms/BsAdminPlanDialogs": "./src/organisms/BsAdminPlanDialogs.vue",
     "./organisms/BsAdminAuditTable": "./src/organisms/BsAdminAuditTable.vue",
     "./organisms/BsAdminCommerceDialogs": "./src/organisms/BsAdminCommerceDialogs.vue",
-    "./organisms/BsAdminCommerceWorkspace": "./src/organisms/BsAdminCommerceWorkspace.vue"
+    "./organisms/BsAdminCommerceWorkspace": "./src/organisms/BsAdminCommerceWorkspace.vue",
+    "./types/journalDetailPresentation": "./src/types/journalDetailPresentation.ts",
+    "./organisms/BsJournalDetailDialog": "./src/organisms/BsJournalDetailDialog.vue",
+    "./types/operationalRecordsPresentation": "./src/types/operationalRecordsPresentation.ts",
+    "./templates/BsOperationalRecordsPage": "./src/templates/BsOperationalRecordsPage.vue",
+    "./organisms/BsJournalImportDialog": "./src/organisms/BsJournalImportDialog.vue",
+    "./organisms/BsDocumentExtractionReview": "./src/organisms/BsDocumentExtractionReview.vue",
+    "./types/journalImportPresentation": "./src/types/journalImportPresentation.ts",
+    "./types/journalWorkspacePresentation": "./src/types/journalWorkspacePresentation.ts",
+    "./templates/BsJournalWorkspacePage": "./src/templates/BsJournalWorkspacePage.vue"
   },
   "dependencies": {
     "primevue": "4.5.5",

@@ -1,9 +1,11 @@
+import { scopedQueryKey } from '@building-suit/data-access'
+import { openExternalLink, clearFileSelection } from '@building-suit/ux'
 import type { Database } from '~~/types/database.types'
 
-/** Ledger-owned orchestration; mounted by a shared workflow scope in its route/layout. */
-export function useLedgerTransactionDetailDialogView(_values: { transactionId: string | null }, _emit: (event: string, ...args: unknown[]) => void) {
-const _props = new Proxy(_values, { get: (target, key) => Reflect.get(target, key) ?? Reflect.get({}, key) })
-const transactionId = computed(() => _props.transactionId)
+type JournalDetailEvents = { close: []; changed: []; navigate: [id: string] }
+/** Ledger-owned queries and authorized journal/attachment commands. */
+export function useLedgerTransactionDetailDialogView(props: { transactionId: string | null }, emit: <K extends keyof JournalDetailEvents>(event: K, ...args: JournalDetailEvents[K]) => void) {
+const transactionId = computed(() => props.transactionId)
 /**
  * Transaction detail, including the journal behind it.
  *
@@ -13,11 +15,12 @@ const transactionId = computed(() => _props.transactionId)
  * thing the database permits.
  */
 
-const props = _props
-const emit = _emit as <K extends keyof ({ close: [], changed: [], navigate: [id: string] })>(event: K, ...args: ({ close: [], changed: [], navigate: [id: string] })[K]) => void
 
 const supabase = useSupabaseClient<Database>()
 const { can, currentId } = useTenant()
+const user = useSupabaseUser()
+const config = useRuntimeConfig()
+const queryScope = computed(() => scopedQueryKey({ environment: String(config.public.supabase.url), portal: 'ledger-suit', userId: user.value?.id ?? '', tenantId: currentId.value ?? '' }, 'journal-detail', { transactionId: props.transactionId ?? '' }))
 const toasts = useToasts()
 const { t, locale } = useI18n()
 const describeError = useErrorMessage()
@@ -30,9 +33,9 @@ const errorMessage = ref<string | null>(null)
 const selectedTagId = ref('')
 const tagPending = ref(false)
 const uploading = ref(false)
-watch(() => props.transactionId, () => { selectedTagId.value = ''; tagPending.value = false }, { flush: 'sync' })
+watch(() => props.transactionId, () => { selectedTagId.value = ''; tagPending.value = false; reason.value = ''; confirming.value = false; errorMessage.value = null }, { flush: 'sync' })
 
-const { data: attachments, refresh: refreshAttachments } = useLazyAsyncData('transaction-detail-attachments', async () => {
+const { data: attachments, refresh: refreshAttachments } = useLazyAsyncData(() => `org:${queryScope.value}:attachments`, async () => {
   if (!props.transactionId) return []
   const { data, error } = await supabase.from('attachments').select('*').eq('entity_type', 'transaction').eq('entity_id', props.transactionId).order('created_at')
   if (error) throw error
@@ -79,13 +82,13 @@ async function uploadAttachment(event: Event) {
     await refreshAttachments(); await refreshPlanUsage(); emit('changed')
   }
   catch (error) { errorMessage.value = describeError(error) }
-  finally { uploading.value = false; (event.target as HTMLInputElement).value = '' }
+  finally { uploading.value = false; clearFileSelection(event) }
 }
 
 async function downloadAttachment(item: NonNullable<typeof attachments.value>[number]) {
   const { data, error } = await supabase.storage.from(item.storage_bucket).createSignedUrl(item.storage_key, 60)
   if (error) return (errorMessage.value = describeError(error))
-  if (data.signedUrl) window.open(data.signedUrl, '_blank', 'noopener')
+  if (data.signedUrl) openExternalLink(data.signedUrl)
 }
 
 async function deleteAttachment(item: NonNullable<typeof attachments.value>[number]) {
@@ -96,8 +99,8 @@ async function deleteAttachment(item: NonNullable<typeof attachments.value>[numb
   await refreshAttachments(); await refreshPlanUsage(); emit('changed')
 }
 
-const { data: detail, refresh } = useLazyAsyncData(
-  'transaction-detail',
+const { data: detail, pending: detailPending, error: detailError, refresh } = useLazyAsyncData(
+  () => `org:${queryScope.value}`,
   async () => {
     if (!props.transactionId) return null
 
@@ -205,5 +208,5 @@ async function reverse() {
 const { dirty: overlayDirty0 } = useRecordAction(() => ({ reason: reason.value, selectedTagId: selectedTagId.value }), computed(() => Boolean(props.transactionId)))
 const ledgerPresentation = useLedgerPresentation()
 const ledgerUsage = useLedgerUsagePresentation()
-return { props, emit, supabase, can, currentId, toasts, t, locale, describeError, refreshPlanUsage, reversing, reason, confirming, errorMessage, selectedTagId, tagPending, uploading, attachments, refreshAttachments, uploadAttachment, downloadAttachment, deleteAttachment, detail, refresh, transaction, entries, relationships, relationship, periodLocked, periodStatus, periodRestriction, canReverse, sourceLink, reverse, overlayDirty0, ledgerPresentation, ledgerUsage, transactionId }
+return { props, emit, supabase, can, currentId, toasts, t, locale, describeError, refreshPlanUsage, reversing, reason, confirming, errorMessage, selectedTagId, tagPending, uploading, attachments, refreshAttachments, uploadAttachment, downloadAttachment, deleteAttachment, detail, detailPending, detailError, refresh, transaction, entries, relationships, relationship, periodLocked, periodStatus, periodRestriction, canReverse, sourceLink, reverse, overlayDirty0, ledgerPresentation, ledgerUsage, transactionId }
 }

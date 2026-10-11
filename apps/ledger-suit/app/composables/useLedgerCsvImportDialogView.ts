@@ -3,9 +3,9 @@ import type { ParsedCsv } from '~/utils/csv'
 import { parseCsv, parseSpreadsheetPaste, downloadCsv } from '~/utils/csv'
 import { documentExtractionImportFilename } from '~/utils/documentExtraction'
 
-/** Ledger-owned orchestration; mounted by a shared workflow scope in its route/layout. */
-export function useLedgerCsvImportDialogView(_values: (Record<string, unknown>) & { visible?: unknown }, _emit: (event: string, ...args: unknown[]) => void) {
-const visible = computed<boolean>({ get: () => (_values.visible ?? false) as boolean, set: value => _emit('update:visible', value) })
+/** Product-owned import parsing, validation, immutable evidence and posting commands. */
+export function useLedgerCsvImportDialogView(_values: { visible: boolean }, _emit: (event: string, ...args: unknown[]) => void) {
+const visible = computed<boolean>({ get: () => _values.visible, set: value => _emit('update:visible', value) })
 const nuxtApp = useNuxtApp()
 const user = useSupabaseUser()
 const { writesAllowed } = useBilling()
@@ -221,9 +221,6 @@ function useExtractedRows(payload: { parsed: ParsedCsv, file: File }) {
   useParsedRows(payload.parsed, documentExtractionImportFilename(payload.file.name))
 }
 
-function onPasteKeydown(event: KeyboardEvent) {
-  if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') usePastedRows()
-}
 
 async function loadBatch(batchId: string, version: number, requestScope: string) {
   const batchResult = await supabase.from('import_batches').select('*').eq('id', batchId).abortSignal(reads.signal).single()
@@ -349,5 +346,5 @@ async function confirmImport() {
 const { dirty, markSaved } = useRecordAction(() => ({ filename: filename.value, pasteText: pasteText.value, extractionFile: extractionFile.value?.name ?? '', mapping: { ...mapping } }), visible)
 onMounted(markSaved)
 const ledgerUsage = useLedgerUsagePresentation()
-return { visible, parseCsv, parseSpreadsheetPaste, downloadCsv, documentExtractionImportFilename, nuxtApp, user, writesAllowed, markChanged, supabase, currentId, can, baseCurrency, t, te, translations, describeError, refreshPlanUsage, importsEnabled, featurePending, scope, generation, reads, isCurrent, REQUIRED_FIELDS, ALL_FIELDS, METRICS, phase, busy, filename, pasteText, headers, sourceRows, mapping, batch, resultRows, errorMessage, extractionFile, stagedBatchId, extractionAttachmentCommitted, reviewFilter, reviewPage, REVIEW_PAGE_SIZE, previewRows, requiredMappingComplete, canConfirm, steps, filteredResultRows, reviewPageCount, visibleResultRows, reviewRangeStart, reviewRangeEnd, reviewCounts, displayRows, localizedType, downloadTemplate, isRequiredField, localizedIssue, reset, readableError, useParsedRows, onFileSelected, usePastedRows, useExtractedRows, onPasteKeydown, loadBatch, uploadImportAttachment, validateImport, confirmImport, dirty, markSaved, ledgerUsage }
+return { visible, parseCsv, parseSpreadsheetPaste, downloadCsv, documentExtractionImportFilename, nuxtApp, user, writesAllowed, markChanged, supabase, currentId, can, baseCurrency, t, te, translations, describeError, refreshPlanUsage, importsEnabled, featurePending, scope, generation, reads, isCurrent, REQUIRED_FIELDS, ALL_FIELDS, METRICS, phase, busy, filename, pasteText, headers, sourceRows, mapping, batch, resultRows, errorMessage, extractionFile, stagedBatchId, extractionAttachmentCommitted, reviewFilter, reviewPage, REVIEW_PAGE_SIZE, previewRows, requiredMappingComplete, canConfirm, steps, filteredResultRows, reviewPageCount, visibleResultRows, reviewRangeStart, reviewRangeEnd, reviewCounts, displayRows, localizedType, downloadTemplate, isRequiredField, localizedIssue, reset, readableError, useParsedRows, onFileSelected, usePastedRows, useExtractedRows, loadBatch, uploadImportAttachment, validateImport, confirmImport, dirty, markSaved, ledgerUsage }
 }
