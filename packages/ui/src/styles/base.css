@@ -626,6 +626,8 @@ body {
 
   .ls-state-surface {
     display: flex;
+    min-width: 0;
+    flex-wrap: wrap;
     min-height: 8rem;
     align-items: center;
     justify-content: center;
