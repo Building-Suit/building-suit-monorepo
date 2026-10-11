@@ -7,5 +7,5 @@ export default defineConfig({
   workers: 1, retries: 0, reporter: 'list',
   outputDir: '../../../../test-results/ss-launch-sale-copy-001',
   use: { baseURL: 'http://127.0.0.1:4326', browserName: 'chromium', trace: 'retain-on-failure' },
-  webServer: [{ ...shopServer, command: 'pnpm --filter @building-suit/shop-suit build && node apps/shop-suit/tests/e2e/cash-policy-fixture-server.mjs', url: 'http://127.0.0.1:4326', reuseExistingServer: false, env: { ...shopServer.env, SUPABASE_URL: 'http://127.0.0.1:46421', NUXT_PUBLIC_SUPABASE_URL: 'http://127.0.0.1:46421' } }],
+  webServer: [{ ...shopServer, command: 'node apps/shop-suit/tests/e2e/cash-policy-fixture-server.mjs', url: 'http://127.0.0.1:4326', reuseExistingServer: false, env: { ...shopServer.env, SUPABASE_URL: 'http://127.0.0.1:46421', NUXT_PUBLIC_SUPABASE_URL: 'http://127.0.0.1:46421' } }],
 })

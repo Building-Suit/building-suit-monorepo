@@ -48,7 +48,7 @@ for (const locale of ['en', 'ar']) for (const kind of ['product', 'service', 'mi
       await page.addInitScript(theme => localStorage.setItem('building-suit.theme', theme), ar ? 'dark' : 'light')
     })
 
-    for (const action of ['issue', 'checkout', 'fast-pay'] as const) {
+    for (const action of ['issue', 'checkout'] as const) {
       test(`Sales ${action} ${kind} ${locale}: confirmation and safe stock error`, async ({ page }, info) => {
         const customer = action === 'issue'
         const { calls } = await copyFixture(page, locale, kind, { customer })

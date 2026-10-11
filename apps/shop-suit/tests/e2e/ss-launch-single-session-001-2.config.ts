@@ -9,6 +9,6 @@ export default defineConfig({
   use: { baseURL: 'http://127.0.0.1:4338', browserName: 'chromium', trace: 'retain-on-failure' },
   webServer: [
     { command: 'node apps/shop-suit/tests/e2e/single-session-fixture-server.mjs', cwd: shopServer.cwd, url: 'http://127.0.0.1:4438/ready', reuseExistingServer: false },
-    { ...shopServer, command: 'pnpm --filter @building-suit/shop-suit build && node apps/shop-suit/.output/server/index.mjs', url: 'http://127.0.0.1:4338/auth/login', env: { ...shopServer.env, PORT: '4338', NUXT_PUBLIC_SUPABASE_URL: 'http://127.0.0.1:4438' } },
+    { ...shopServer, command: 'node apps/shop-suit/.output/server/index.mjs', url: 'http://127.0.0.1:4338/auth/login', env: { ...shopServer.env, PORT: '4338', NUXT_PUBLIC_SUPABASE_URL: 'http://127.0.0.1:4438' } },
   ],
 })
