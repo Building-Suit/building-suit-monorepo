@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useFloatingMenu } from '@building-suit/ux'
 withDefaults(defineProps<{
   alwaysShowLabel?: boolean
   embedded?: boolean
@@ -11,52 +12,7 @@ const { locale, locales, setLocale } = useI18n()
 const ui = useUiCopy()
 const { preference, set: setTheme } = useTheme()
 
-const open = ref(false)
-const root = ref<HTMLElement | null>(null)
-const hydrated = ref(false)
-
-const position = ref<'top' | 'bottom'>('bottom')
-
-let resizeTimer: ReturnType<typeof setTimeout> | undefined
-
-function updatePosition() {
-  if (!root.value) return
-
-  const menuElement = root.value.querySelector('.ls-card') as HTMLElement | null
-
-  if (!menuElement)
-    return
-
-  const rootRect = root.value.getBoundingClientRect()
-
-  // Because v-show makes the element display:none while closed,
-  // only measure it after it has been opened.
-  const menuHeight = menuElement.offsetHeight
-
-  const viewportHeight = window.innerHeight
-
-  const spaceBelow = viewportHeight - rootRect.bottom
-  const spaceAbove = rootRect.top
-
-  // Prefer opening downward.
-  // Only flip upward if there isn't enough space below
-  // and there is more room above.
-  if (spaceBelow >= menuHeight) {
-    position.value = 'bottom'
-  }
-  else if (spaceAbove >= menuHeight) {
-    position.value = 'top'
-  }
-  else {
-    // Neither direction fits completely.
-    // Use whichever side has more available space.
-    position.value = spaceBelow >= spaceAbove ? 'bottom' : 'top'
-  }
-}
-
-useClickOutside(root, () => {
-  open.value = false
-})
+const { open, root, hydrated, position, openMenu } = useFloatingMenu('.ls-card')
 
 const available = computed(() =>
   (locales.value as Array<{ code: string, name?: string }>).map(l => ({
@@ -71,41 +27,6 @@ const THEMES: Array<{ value: 'light' | 'dark' | 'system', labelKey: 'themeLight'
   { value: 'system', labelKey: 'themeSystem' },
 ]
 
-async function openMenu() {
-  open.value = !open.value
-
-  if (!open.value)
-    return
-
-  // Wait until v-show has actually rendered the menu.
-  await nextTick()
-
-  updatePosition()
-}
-
-function handleResize() {
-  if (!open.value)
-    return
-
-  if (resizeTimer)
-    clearTimeout(resizeTimer)
-
-  resizeTimer = setTimeout(() => {
-    updatePosition()
-  }, 150)
-}
-
-onMounted(() => {
-  hydrated.value = true
-  window.addEventListener('resize', handleResize)
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('resize', handleResize)
-
-  if (resizeTimer)
-    clearTimeout(resizeTimer)
-})
 </script>
 
 <template>

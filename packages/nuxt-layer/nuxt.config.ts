@@ -9,7 +9,7 @@ export default defineNuxtConfig({
   vite: { plugins: [tailwindcss()] },
   components: [
     { path: here('./app/components'), pathPrefix: false },
-    { path: here('../ui/src'), pathPrefix: false },
+    { path: here('../ui/src'), pathPrefix: false, extensions: ['vue'] },
   ],
   imports: { dirs: [here('../ux/src/composables'), here('../auth/src/composables'), here('../data-access/src/composables')] },
   primevue: { options: { unstyled: true }, components: { include: ['InputText','InputNumber','Textarea','Select','MultiSelect','DatePicker','Checkbox','RadioButton','ToggleSwitch','FloatLabel','Dialog','Drawer','Popover','Menu','DataTable','Column','Paginator','FileUpload','Toast','ConfirmDialog','ProgressBar','Tag','Badge','Button','Tree','Accordion','ColumnGroup','Row'] } },

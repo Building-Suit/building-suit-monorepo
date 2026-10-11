@@ -121,64 +121,26 @@ async function fetchRows(append = false) {
 }
 
 watch(currentId, () => fetchRows(), { immediate: true })
+
+const auditViews = computed(() => rows.value.map(row => ({ id: String(row.id), timestamp: formatTimestamp(row.created_at), actor: row.actor_email || t('audit.system'), activity: activityLabel(row), action: row.action, entity: entityLabel(row.entity_type), entityId: row.entity_id ?? undefined, before: jsonText(row.before_state), after: jsonText(row.after_state), metadata: jsonText(row.metadata) })))
+const windowLabel = computed(() => windowUnlimited.value ? t('audit.windowUnlimited') : windowDays.value ? t('audit.window', { days: windowDays.value }) : '')
+const copy = computed(() => ({
+  title: t('audit.title'),
+  subtitle: t('audit.subtitle'),
+  stored: t('audit.stored'),
+  empty: t('audit.empty'),
+  date: t('audit.date'),
+  actor: t('audit.actor'),
+  activity: t('audit.activity'),
+  record: t('audit.record'),
+  changes: t('audit.changes'),
+  viewChanges: t('audit.viewChanges'),
+  before: t('audit.before'),
+  after: t('audit.after'),
+  metadata: t('audit.metadata'),
+  loadMore: t('audit.loadMore'),
+}))
 </script>
-
 <template>
-  <div class="space-y-6">
-    <header>
-      <h1 class="text-h1 font-bold">{{ t('audit.title') }}</h1>
-      <p class="mt-1 text-sm text-fg-muted">{{ t('audit.subtitle') }}</p>
-    </header>
-
-    <section v-if="windowUnlimited || windowDays" class="ls-card space-y-1 p-4" role="status">
-      <p class="font-semibold">{{ windowUnlimited ? t('audit.windowUnlimited') : t('audit.window', { days: windowDays }) }}</p>
-      <p class="text-sm text-fg-muted">{{ t('audit.stored') }}</p>
-    </section>
-
-    <p v-if="errorMessage" class="ls-error" role="alert">{{ errorMessage }}</p>
-    <BsSectionSkeleton v-if="loading" variant="table" :rows="7" />
-    <BsEmptyState v-else-if="!rows.length && !errorMessage" :title="t('audit.empty')" />
-
-    <template v-else-if="rows.length">
-      <div class="ls-card overflow-x-auto">
-        <BsDataTable :value="rows" data-key="id">
-  <Column body-class="whitespace-nowrap">
-    <template #header>{{ t('audit.date') }}</template>
-    <template #body="{ data: row }">{{ formatTimestamp(row.created_at) }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('audit.actor') }}</template>
-    <template #body="{ data: row }"><div dir="ltr">{{ row.actor_email || t('audit.system') }}</div></template>
-  </Column>
-  <Column >
-    <template #header>{{ t('audit.activity') }}</template>
-    <template #body="{ data: row }"><p class="font-medium">{{ activityLabel(row) }}</p>
-                <p class="text-xs text-fg-muted" dir="ltr">{{ row.action }}</p></template>
-  </Column>
-  <Column >
-    <template #header>{{ t('audit.record') }}</template>
-    <template #body="{ data: row }"><p>{{ entityLabel(row.entity_type) }}</p>
-                <p v-if="row.entity_id" class="text-xs text-fg-muted" dir="ltr">{{ row.entity_id }}</p></template>
-  </Column>
-  <Column >
-    <template #header>{{ t('audit.changes') }}</template>
-    <template #body="{ data: row }"><details>
-                  <summary class="cursor-pointer text-link">{{ t('audit.viewChanges') }}</summary>
-                  <div class="mt-3 grid min-w-80 gap-3 text-xs">
-                    <div><p class="font-semibold">{{ t('audit.before') }}</p><pre class="mt-1 overflow-auto rounded-control bg-background p-2" dir="ltr">{{ jsonText(row.before_state) }}</pre></div>
-                    <div><p class="font-semibold">{{ t('audit.after') }}</p><pre class="mt-1 overflow-auto rounded-control bg-background p-2" dir="ltr">{{ jsonText(row.after_state) }}</pre></div>
-                    <div><p class="font-semibold">{{ t('audit.metadata') }}</p><pre class="mt-1 overflow-auto rounded-control bg-background p-2" dir="ltr">{{ jsonText(row.metadata) }}</pre></div>
-                  </div>
-                </details></template>
-  </Column>
-</BsDataTable>
-      </div>
-
-      <div v-if="hasMore" class="flex justify-center">
-        <BsButton type="button" class="ls-btn" :disabled="loadingMore" @click="fetchRows(true)">
-          {{ t('audit.loadMore') }}
-        </BsButton>
-      </div>
-    </template>
-  </div>
+  <BsAuditHistoryPage :items="auditViews" :copy="copy" :window-label="windowLabel" :error-message="errorMessage" :loading="loading" :loading-more="loadingMore" :has-more="hasMore" @load-more="fetchRows(true)" />
 </template>

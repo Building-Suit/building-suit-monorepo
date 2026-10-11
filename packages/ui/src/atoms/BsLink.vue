@@ -4,7 +4,7 @@ const props = withDefaults(defineProps<{
   external?: boolean
   target?: '_self' | '_blank' | '_parent' | '_top'
   rel?: string
-  variant?: 'default' | 'muted' | 'standalone' | 'unstyled'
+  variant?: 'default' | 'muted' | 'standalone' | 'unstyled' | 'flow'
   underline?: 'hover' | 'always' | 'none'
   ariaLabel?: string
   disabled?: boolean

@@ -1,11 +1,13 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import test from 'node:test'
+import { readPresentationTree } from '../../../../packages/testing/presentation-source.mjs'
 
 const migration = await readFile(new URL('../../supabase/migrations/20260929220000_platform_plan_catalog_subscription_controls.sql', import.meta.url), 'utf8')
 const databaseTest = await readFile(new URL('../../supabase/tests/shop_plan_admin.sql', import.meta.url), 'utf8')
 const page = await readFile(new URL('../../app/pages/platform-admin.vue', import.meta.url), 'utf8')
-const component = await readFile(new URL('../../app/components/PlatformPlanAdmin.vue', import.meta.url), 'utf8')
+const presentation = await readPresentationTree(new URL('../../../../', import.meta.url).pathname, 'apps/shop-suit/app/pages/platform-admin.vue')
+const component = await readFile(new URL('../../app/composables/usePlatformPlanAdmin.ts', import.meta.url), 'utf8')
 
 test('catalog mutations append versions and preserve referenced history', () => {
   assert.match(migration, /create table public\.platform_plan_events/)
@@ -24,7 +26,8 @@ test('observer/operator boundaries and reasons are enforced server-side', () => 
   assert.match(migration, /PLATFORM_PLAN_COMMAND_KEY_REUSED/)
   assert.match(databaseTest, /observer mutated plan catalog/)
   assert.match(databaseTest, /tenant owner read platform plan controls/)
-  assert.match(component, /v-if="canMutate"/)
+  assert.match(presentation, /v-if="view\.canMutate"/)
+  assert.match(page, /canMutate: Boolean\(session\.value\?\.canMutate\)/)
 })
 
 test('subscription controls expose exact blockers and bounded commercial actions', () => {
@@ -36,13 +39,13 @@ test('subscription controls expose exact blockers and bounded commercial actions
   assert.match(migration, /subscription_price_override_revocations/)
   assert.match(databaseTest, /over-limit downgrade was forced/)
   assert.match(databaseTest, /removed negotiated price remained effective/)
-  assert.match(component, /pendingBillingRequests/)
-  assert.match(component, /pendingPlanChange/)
+  assert.match(page, /pendingBillingRequests/)
+  assert.match(page, /pendingPlanChange/)
 })
 
 test('the dedicated bilingual plan view replaces arbitrary subscription row edits', () => {
-  assert.match(page, /view === 'plans'/)
-  assert.match(page, /<PlatformPlanAdmin/)
+  assert.match(presentation, /view\.selected === 'plans'/)
+  assert.match(page, /usePlatformPlanAdmin\(/)
   assert.doesNotMatch(page, /activate_subscription: 'Activate subscription'/)
   assert.doesNotMatch(page, /extend_subscription: 'Extend subscription'/)
   assert.match(component, /const en = \{/)

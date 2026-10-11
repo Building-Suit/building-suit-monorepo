@@ -5,18 +5,20 @@ withDefaults(defineProps<{
   monogram?: string
   kind?: 'wordmark' | 'mark'
   tone?: 'auto' | 'light' | 'dark'
+  size?: 'default' | 'navigation' | 'marketing' | 'auth'
 }>(), {
   assetPrefix: undefined,
   monogram: undefined,
   kind: 'wordmark',
   tone: 'auto',
+  size: 'default',
 })
 </script>
 
 <template>
   <span
     class="ls-logo inline-grid shrink-0 place-items-center"
-    :class="[`ls-logo-${kind}`, `ls-logo-${tone}`]"
+    :class="[`ls-logo-${kind}`, `ls-logo-${tone}`, `bs-product-logo--${size}`]"
     role="img"
     :aria-label="`${name} by Building Suit`"
     dir="ltr"
@@ -44,3 +46,6 @@ withDefaults(defineProps<{
     </span>
   </span>
 </template>
+<style>
+.bs-product-logo--navigation { width: auto; max-width: 13rem; height: 3.5rem; }.bs-product-logo--marketing { width: auto; max-width: 9rem; height: auto; margin-block: var(--bs-space-2); }.bs-product-logo--auth { width: 14rem; max-width: 100%; height: auto; margin-block: var(--bs-space-4); }@media (min-width: 640px) { .bs-product-logo--marketing { max-width: 13rem; } }
+</style>

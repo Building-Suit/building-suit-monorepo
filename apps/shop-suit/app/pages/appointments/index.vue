@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { BsAppointmentForm, BsAppointmentScheduleForm, BsAppointmentCard, BsAppointmentsView, BsAppointmentChoices } from '@building-suit/ui/types/appointmentsPresentation'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 
 definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
@@ -103,8 +104,8 @@ const locationId = computed<string | null>(() => {
     : null
 })
 
-async function handleAppointmentLocationChange(event: Event) {
-  const nextLocationId = (event.target as HTMLSelectElement).value
+async function handleAppointmentLocationChange(value: string | number | null) {
+  const nextLocationId = String(value ?? '')
 
   if (
     !nextLocationId
@@ -157,12 +158,6 @@ function formatDay(day: Date) { return new Intl.DateTimeFormat(isArabic.value ? 
 function formatTime(value: string) { return new Intl.DateTimeFormat(isArabic.value ? 'ar-EG' : 'en-EG', { hour: 'numeric', minute: '2-digit' }).format(new Date(value)) }
 function move(amount: number) { selectedDate.value = dateKey(addDays(localMidnight(selectedDate.value), amount * (view.value === 'week' ? 7 : 1))) }
 function goToday() { selectedDate.value = dateKey(new Date()) }
-function statusClass(status: AppointmentStatus) {
-  if (status === 'completed') return 'bg-[var(--bs-status-success-bg)] text-[var(--bs-status-success)]'
-  if (status === 'cancelled' || status === 'no_show') return 'bg-[var(--bs-status-error-bg)] text-[var(--bs-status-error)]'
-  if (status === 'in_service') return 'bg-primary/15 text-primary'
-  return 'bg-muted text-foreground'
-}
 const queue = computed(() => calendar.value.appointments.filter(item => ['arrived', 'waiting', 'in_service'].includes(item.status)))
 
 const editingId = ref<string | null>(null)
@@ -303,82 +298,30 @@ const canCreate = computed(() => Boolean(locationId.value && eligibleServices.va
 const weekdayNames = computed(() => Array.from({ length: 7 }, (_, weekday) => new Intl.DateTimeFormat(isArabic.value ? 'ar-EG' : 'en-EG', { weekday: 'long' }).format(addDays(new Date('2026-09-27T12:00:00'), weekday))))
 
 useShopRealtime('appointments', () => formDirty.value || scheduleDirty.value)
+
+const appointmentForm = computed<BsAppointmentForm>({ get: () => ({ ...form }), set: value => { Object.assign(form, value, { identityKind: value.identityKind === 'walk_in' ? 'walk_in' : 'customer' }) } })
+const appointmentSchedule = computed<BsAppointmentScheduleForm>({ get: () => ({ weekdays: scheduleForm.weekdays.map(day => ({ ...day })), blockKind: scheduleForm.blockKind, blockStarts: scheduleForm.blockStarts, blockEnds: scheduleForm.blockEnds, blockNote: scheduleForm.blockNote }), set: value => { Object.assign(scheduleForm, value, { blockKind: value.blockKind === 'time_off' ? 'time_off' : 'break' }) } })
+function appointmentCard(item: Appointment): BsAppointmentCard {
+  const terminal = ['completed', 'cancelled', 'no_show'].includes(item.status)
+  const actions: BsAppointmentCard['actions'] = []
+  if (options.value.canManage && !terminal) {
+    if (item.status === 'booked') actions.push({ id: 'arrived', label: copy.value.markArrived, text: false })
+    if (['booked', 'arrived'].includes(item.status)) actions.push({ id: 'waiting', label: copy.value.markWaiting, text: false })
+    if (['arrived', 'waiting'].includes(item.status)) actions.push({ id: 'in_service', label: copy.value.startService, text: false })
+    if (item.status === 'in_service') actions.push({ id: 'completed', label: copy.value.complete, text: true })
+    if (['booked', 'arrived', 'waiting'].includes(item.status)) actions.push({ id: 'no_show', label: copy.value.noShow, text: true })
+    actions.push({ id: 'cancelled', label: copy.value.cancelAppointment, text: true })
+  }
+  return { id: item.id, time: `${formatTime(item.startsAt)}–${formatTime(item.endsAt)}`, queueTime: formatTime(item.startsAt), status: item.status, statusLabel: copy.value[item.status], tone: item.status === 'completed' ? 'success' : ['cancelled', 'no_show'].includes(item.status) ? 'danger' : item.status === 'in_service' ? 'info' : 'neutral', customerName: item.customerName, detail: `${item.serviceName} · ${item.staffName}`, queueDetail: `${formatTime(item.startsAt)} · ${item.staffName}`, pending: transitionId.value === item.id, canEdit: options.value.canManage && ['booked', 'arrived', 'waiting'].includes(item.status), actions, queueAction: options.value.canManage ? { id: item.status === 'in_service' ? 'completed' : 'in_service', label: item.status === 'in_service' ? copy.value.complete : copy.value.startService } : null, history: (item.history ?? []).map(event => ({ id: `${event.occurredAt}-${event.action}`, label: `${new Date(event.occurredAt).toLocaleString(isArabic.value ? 'ar-EG' : 'en-EG')} · ${copy.value[event.status]}` })), link: item.saleId ? { to: `/sales/${item.saleId}`, label: copy.value.sale } : options.value.canManage && !['cancelled', 'no_show'].includes(item.status) ? { to: `/pos?appointment=${encodeURIComponent(item.id)}`, label: isArabic.value ? 'تحصيل الموعد' : 'Check out appointment' } : null }
+}
+const appointmentPresentation = computed<BsAppointmentsView>(() => ({ exists: Boolean(current.value), shopLoading: shopLoading.value, canManage: options.value.canManage, canSchedule: options.value.canManageSchedule, scheduleDisabled: !locationId.value || !locationStaff.value.length || pending.value || optionsPending.value || Boolean(error.value || optionsError.value), canCreate: canCreate.value, locationId: locationId.value, locationName: options.value.locations.find(item => item.id === locationId.value)?.name || copy.value.noLocation, staffName: locationStaff.value.find(item => item.membershipId === staffId.value)?.name || copy.value.allBarbers, loading: optionsPending.value || pending.value, failed: Boolean(optionsError.value || error.value), failureMessage: (optionsError.value || error.value)?.message?.includes('SHOP_PERMISSION_DENIED') ? copy.value.denied : copy.value.loadError, noStaff: !optionsPending.value && !pending.value && !optionsError.value && !error.value && Boolean(locationId.value) && (!locationStaff.value.length || !eligibleServices.value.length), error: actionError.value, transitioning: Boolean(transitionId.value), formTitle: editingId.value ? copy.value.edit : copy.value.create, formDirty: formDirty.value, saving: saving.value, scheduleDirty: scheduleDirty.value, scheduleSaving: scheduleSaving.value, previousSymbol: isArabic.value ? '›' : '‹', nextSymbol: isArabic.value ? '‹' : '›', days: visibleDays.value.map(day => ({ id: dateKey(day), label: formatDay(day), appointments: appointmentsForDay(day).map(appointmentCard) })), queue: queue.value.map(appointmentCard), weekdayNames: weekdayNames.value, blocks: scheduleForm.blocks.map((block, index) => ({ id: `${block.startsAt}-${index}`, index, label: `${block.kind === 'break' ? copy.value.break : copy.value.timeOff} · ${new Date(block.startsAt).toLocaleString(isArabic.value ? 'ar-EG' : 'en-EG')}–${new Date(block.endsAt).toLocaleString(isArabic.value ? 'ar-EG' : 'en-EG')}` })), constraints: { nameMin: 2, nameMax: 160, phoneMax: 40, notesMax: 1000, blockNoteMax: 500 } }))
+const appointmentChoices = computed<BsAppointmentChoices>(() => ({ locations: options.value.locations.map(item => ({ value: item.id, label: item.name })), staff: [{ value: null, label: copy.value.allBarbers }, ...locationStaff.value.map(item => ({ value: item.membershipId, label: item.name }))], scheduleStaff: locationStaff.value.map(item => ({ value: item.membershipId, label: item.name })), services: eligibleServices.value.map(item => ({ value: item.id, label: item.name })), eligibleStaff: eligibleStaff.value.map(item => ({ value: item.membershipId, label: item.name })), customers: options.value.customers.map(item => ({ value: item.id, label: item.name })) }))
+function editAppointment(id: string) { const item = calendar.value.appointments.find(row => row.id === id); if (item) openEdit(item) }
+async function transitionAppointment(id: string, status: string) { const item = calendar.value.appointments.find(row => row.id === id); if (item && ['arrived','waiting','in_service','completed','cancelled','no_show'].includes(status)) await transition(item, status as Exclude<AppointmentStatus, 'booked'>) }
+async function retryAppointments() { await Promise.all([refreshOptions(), refresh()]) }
+function removeScheduleBlock(index: number) { scheduleForm.blocks.splice(index, 1) }
+const appointmentView = computed({ get: () => view.value, set: value => { if (value === 'day' || value === 'week') view.value = value } })
 </script>
-
 <template>
-  <div class="space-y-6">
-    <header class="flex flex-wrap items-end justify-between gap-4">
-      <div><h1 class="text-3xl font-extrabold tracking-tight">{{ copy.title }}</h1><p class="mt-2 text-sm text-muted-foreground">{{ copy.subtitle }}</p></div>
-      <BsButton v-if="options.canManageSchedule" severity="secondary" :disabled="!locationId || !locationStaff.length || pending || optionsPending || Boolean(error || optionsError)" @click="openSchedule">{{ copy.schedule }}</BsButton>
-    </header>
-
-    <div v-if="!current && !shopLoading" class="ls-card p-8 text-center text-sm">{{ copy.noShop }}</div>
-    <template v-else-if="current">
-      <section class="sticky top-20 z-10 flex flex-wrap items-center justify-between gap-3 ls-card-flat p-3" :aria-label="copy.title">
-        <p class="min-w-0 break-words text-sm"><strong>{{ copy.branch }}:</strong> {{ options.locations.find(item => item.id === locationId)?.name || copy.noLocation }} · <strong>{{ copy.barber }}:</strong> {{ locationStaff.find(item => item.membershipId === staffId)?.name || copy.allBarbers }}</p>
-        <div v-if="options.canManage" class="flex flex-wrap gap-2">
-          <BsButton variant="primary" :disabled="!canCreate" @click="openCreate()">{{ copy.add }}</BsButton>
-          <BsButton :disabled="!canCreate" @click="openCreate(true)">{{ copy.walkIn }}</BsButton>
-        </div>
-      </section>
-      <p v-if="actionError && !showForm && !showSchedule" role="alert" class="rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm text-[var(--bs-status-error)]">{{ actionError }}</p>
-      <section class="grid gap-3 ls-card p-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto_auto]">
-        <label class="grid gap-1 text-sm font-bold">{{ copy.branch }}<select class="ls-input min-h-11" :value="locationId ?? ''" @change="handleAppointmentLocationChange"><option v-for="location in options.locations" :key="location.id" :value="location.id">{{ location.name }}</option></select></label>
-        <label class="grid gap-1 text-sm font-bold">{{ copy.barber }}<select v-model="staffId" class="ls-input min-h-11"><option :value="null">{{ copy.allBarbers }}</option><option v-for="member in locationStaff" :key="member.membershipId" :value="member.membershipId">{{ member.name }}</option></select></label>
-        <div class="flex items-end gap-1"><BsButton severity="secondary" :aria-label="copy.previous" @click="move(-1)"><span aria-hidden="true">{{ isArabic ? '›' : '‹' }}</span></BsButton><BsButton severity="secondary" @click="goToday">{{ copy.today }}</BsButton><BsButton severity="secondary" :aria-label="copy.next" @click="move(1)"><span aria-hidden="true">{{ isArabic ? '‹' : '›' }}</span></BsButton></div>
-        <div class="flex items-end"><div class="flex rounded-xl border border-border p-1" role="group"><BsButton variant="chip" type="button" class="min-h-11 rounded-lg px-3 text-sm font-bold" :aria-pressed="view === 'day'" @click="view = 'day'">{{ copy.day }}</BsButton><BsButton variant="chip" type="button" class="min-h-11 rounded-lg px-3 text-sm font-bold" :aria-pressed="view === 'week'" @click="view = 'week'">{{ copy.week }}</BsButton></div></div>
-      </section>
-
-      <p v-if="optionsPending || pending" role="status" class="ls-card p-8 text-center text-sm text-muted-foreground">{{ copy.loading }}</p>
-      <div v-else-if="optionsError || error" role="alert" class="ls-card p-8 text-center text-sm"><p>{{ (optionsError || error)?.message?.includes('SHOP_PERMISSION_DENIED') ? copy.denied : copy.loadError }}</p><BsButton severity="secondary" class="mt-3" @click="refreshOptions(); refresh()">{{ copy.retry }}</BsButton></div>
-      <p v-else-if="!locationId" class="ls-card p-8 text-center text-sm">{{ copy.noLocation }}</p>
-      <div v-else class="grid gap-4" :class="view === 'week' ? 'md:grid-cols-2 xl:grid-cols-7' : ''">
-        <section v-for="day in visibleDays" :key="dateKey(day)" class="min-w-0 ls-card p-3">
-          <h2 class="border-b border-border pb-3 text-sm font-extrabold">{{ formatDay(day) }}</h2>
-          <p v-if="!appointmentsForDay(day).length" class="py-8 text-center text-xs text-muted-foreground">{{ copy.empty }}</p>
-          <ol v-else class="mt-3 space-y-3">
-            <li v-for="appointment in appointmentsForDay(day)" :key="appointment.id" class="rounded-xl border border-border p-3 text-sm">
-              <div class="flex flex-wrap items-center justify-between gap-2"><strong>{{ formatTime(appointment.startsAt) }}–{{ formatTime(appointment.endsAt) }}</strong><span class="rounded-full px-2 py-1 text-xs font-bold" :class="statusClass(appointment.status)">{{ copy[appointment.status] }}</span></div>
-              <p class="mt-2 font-bold">{{ appointment.customerName }}</p><p class="text-xs text-muted-foreground">{{ appointment.serviceName }} · {{ appointment.staffName }}</p>
-              <div v-if="options.canManage && !['completed','cancelled','no_show'].includes(appointment.status)" class="mt-3 flex flex-wrap gap-2" :aria-busy="transitionId === appointment.id">
-                <BsButton variant="link" v-if="['booked','arrived','waiting'].includes(appointment.status)" class="text-[var(--bs-link)]" :disabled="Boolean(transitionId)" @click="openEdit(appointment)">{{ copy.reschedule }}</BsButton>
-                <BsButton variant="link" v-if="appointment.status === 'booked'" class="text-[var(--bs-link)]" :disabled="Boolean(transitionId)" @click="transition(appointment, 'arrived')">{{ copy.markArrived }}</BsButton>
-                <BsButton variant="link" v-if="['booked','arrived'].includes(appointment.status)" class="text-[var(--bs-link)]" :disabled="Boolean(transitionId)" @click="transition(appointment, 'waiting')">{{ copy.markWaiting }}</BsButton>
-                <BsButton variant="link" v-if="['arrived','waiting'].includes(appointment.status)" class="text-[var(--bs-link)]" :disabled="Boolean(transitionId)" @click="transition(appointment, 'in_service')">{{ copy.startService }}</BsButton>
-                <BsButton variant="text" v-if="appointment.status === 'in_service'" class="text-[var(--bs-status-success)]" :disabled="Boolean(transitionId)" @click="transition(appointment, 'completed')">{{ copy.complete }}</BsButton>
-                <BsButton variant="text" v-if="['booked','arrived','waiting'].includes(appointment.status)" class="text-[var(--bs-status-error)]" :disabled="Boolean(transitionId)" @click="transition(appointment, 'no_show')">{{ copy.noShow }}</BsButton>
-                <BsButton variant="text" class="text-[var(--bs-status-error)]" :disabled="Boolean(transitionId)" @click="transition(appointment, 'cancelled')">{{ copy.cancelAppointment }}</BsButton>
-                <span v-if="transitionId === appointment.id" role="status" class="self-center text-xs">{{ copy.saving }}</span>
-              </div>
-              <details v-if="appointment.history?.length" class="mt-3 text-xs"><summary class="min-h-11 cursor-pointer py-3 font-bold text-[var(--bs-link)]">{{ copy.history }}</summary><ol class="mt-2 space-y-1 text-muted-foreground"><li v-for="event in appointment.history" :key="`${event.occurredAt}-${event.action}`">{{ new Date(event.occurredAt).toLocaleString(isArabic ? 'ar-EG' : 'en-EG') }} · {{ copy[event.status] }}</li></ol></details>
-              <NuxtLink v-if="appointment.saleId" :to="`/sales/${appointment.saleId}`" class="mt-3 inline-flex min-h-11 items-center font-bold text-[var(--bs-link)] underline">{{ copy.sale }}</NuxtLink>
-              <NuxtLink v-else-if="options.canManage && !['cancelled','no_show'].includes(appointment.status)" :to="{ path: '/pos', query: { appointment: appointment.id } }" class="mt-3 inline-flex min-h-11 items-center font-bold text-[var(--bs-link)] underline">{{ isArabic ? 'تحصيل الموعد' : 'Check out appointment' }}</NuxtLink>
-            </li>
-          </ol>
-        </section>
-      </div>
-
-      <p v-if="!optionsPending && !pending && !optionsError && !error && locationId && (!locationStaff.length || !eligibleServices.length)" role="status" class="rounded-xl border border-border p-4 text-sm">{{ copy.noStaff }}</p>
-      <section v-if="!optionsPending && !pending && !optionsError && !error && locationId" class="ls-card p-5"><h2 class="text-lg font-extrabold">{{ copy.queue }}</h2><p v-if="!queue.length" class="mt-4 text-sm text-muted-foreground">{{ copy.queueEmpty }}</p><ol v-else class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3"><li v-for="appointment in queue" :key="appointment.id" class="rounded-xl border border-border p-4"><div class="flex items-center justify-between gap-2"><strong>{{ appointment.customerName }}</strong><span class="rounded-full px-2 py-1 text-xs font-bold" :class="statusClass(appointment.status)">{{ copy[appointment.status] }}</span></div><p class="mt-1 text-xs text-muted-foreground">{{ formatTime(appointment.startsAt) }} · {{ appointment.staffName }}</p><BsButton v-if="appointment.status !== 'in_service' && options.canManage" severity="secondary" class="mt-3" :disabled="Boolean(transitionId)" :pending="transitionId === appointment.id" @click="transition(appointment, 'in_service')">{{ copy.startService }}</BsButton><BsButton v-else-if="options.canManage" severity="secondary" class="mt-3" :disabled="Boolean(transitionId)" :pending="transitionId === appointment.id" @click="transition(appointment, 'completed')">{{ copy.complete }}</BsButton></li></ol></section>
-    </template>
-
-    <BsRecordActionDialog v-model:visible="showForm" :title="editingId ? copy.edit : copy.create" :dirty="formDirty" :pending="saving" :error="actionError" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="save">
-        <label class="grid gap-2 text-sm font-bold">{{ copy.service }}<BsSelect v-model="form.serviceId" :label="copy.service" :options="eligibleServices" option-label="name" option-value="id" filter virtual :aria-required="true" /></label>
-        <label class="grid gap-2 text-sm font-bold">{{ copy.barber }}<BsSelect v-model="form.membershipId" :label="copy.barber" :options="eligibleStaff" option-label="name" option-value="membershipId" filter virtual :aria-required="true" /></label>
-        <label class="grid gap-2 text-sm font-bold sm:col-span-2">{{ copy.start }}<input v-model="form.startsLocal" type="datetime-local" required class="ls-input min-h-11 min-w-0"></label>
-        <fieldset class="sm:col-span-2"><legend class="text-sm font-bold">{{ copy.customerType }}</legend><div class="mt-2 flex flex-wrap gap-4"><label class="flex min-h-11 items-center gap-2"><input v-model="form.identityKind" type="radio" value="customer">{{ copy.customer }}</label><label class="flex min-h-11 items-center gap-2"><input v-model="form.identityKind" type="radio" value="walk_in">{{ copy.walkIn }}</label></div></fieldset>
-        <label v-if="form.identityKind === 'customer'" class="grid gap-2 text-sm font-bold sm:col-span-2">{{ copy.customer }}<BsSelect v-model="form.customerId" :label="copy.customer" :options="options.customers" option-label="name" option-value="id" :placeholder="copy.selectCustomer" filter virtual :aria-required="true" /></label>
-        <template v-else><label class="grid gap-2 text-sm font-bold">{{ copy.name }}<input v-model="form.walkInName" minlength="2" maxlength="160" required class="ls-input min-h-11 min-w-0"></label><label class="grid gap-2 text-sm font-bold">{{ copy.phone }}<input v-model="form.walkInPhone" maxlength="40" class="ls-input min-h-11 min-w-0" dir="ltr"></label></template>
-        <label class="grid gap-2 text-sm font-bold sm:col-span-2">{{ copy.notes }}<textarea v-model="form.notes" maxlength="1000" rows="2" class="ls-input min-h-11 min-w-0" /></label>
-    </BsRecordActionDialog>
-
-    <BsDialog v-model:visible="showSchedule" :title="copy.scheduleTitle" size="lg" :dirty="scheduleDirty" :pending="scheduleSaving">
-      <template #default="{ close }"><BsForm class="space-y-5" :pending="scheduleSaving" :error="actionError" @submit="saveSchedule">
-        <label class="grid gap-2 text-sm font-bold">{{ copy.barber }}<select v-model="scheduleMemberId" required class="ls-input min-h-11 min-w-0" @change="loadScheduleMember"><option v-for="member in locationStaff" :key="member.membershipId" :value="member.membershipId">{{ member.name }}</option></select></label>
-        <fieldset><legend class="text-sm font-bold">{{ copy.workDays }}</legend><div class="mt-3 space-y-2"><div v-for="day in scheduleForm.weekdays" :key="day.weekday" class="grid grid-cols-2 items-center gap-2 rounded-xl border border-border p-2 sm:grid-cols-[minmax(7rem,1fr)_1fr_1fr]"><label class="col-span-2 flex min-h-11 items-center gap-2 text-sm sm:col-span-1"><input v-model="day.enabled" type="checkbox">{{ weekdayNames[day.weekday] }}</label><input v-model="day.startsLocal" type="time" class="ls-input min-h-11 min-w-0" :aria-label="`${weekdayNames[day.weekday]} · ${copy.from}`" :disabled="!day.enabled"><input v-model="day.endsLocal" type="time" class="ls-input min-h-11 min-w-0" :aria-label="`${weekdayNames[day.weekday]} · ${copy.to}`" :disabled="!day.enabled"></div></div></fieldset>
-        <fieldset><legend class="text-sm font-bold">{{ copy.break }} / {{ copy.timeOff }}</legend><div class="mt-3 grid gap-3 sm:grid-cols-2"><label class="grid gap-1 text-sm">{{ copy.blockKind }}<select v-model="scheduleForm.blockKind" class="ls-input min-h-11 min-w-0"><option value="break">{{ copy.break }}</option><option value="time_off">{{ copy.timeOff }}</option></select></label><label class="grid gap-1 text-sm">{{ copy.blockNote }}<input v-model="scheduleForm.blockNote" maxlength="500" class="ls-input min-h-11 min-w-0"></label><label class="grid gap-1 text-sm">{{ copy.blockStart }}<input v-model="scheduleForm.blockStarts" type="datetime-local" class="ls-input min-h-11 min-w-0"></label><label class="grid gap-1 text-sm">{{ copy.blockEnd }}<input v-model="scheduleForm.blockEnds" type="datetime-local" class="ls-input min-h-11 min-w-0"></label><BsButton severity="secondary" class="sm:col-span-2" @click="addBlock">{{ copy.addBlock }}</BsButton></div><ul class="mt-3 space-y-2"><li v-for="(block, index) in scheduleForm.blocks" :key="`${block.startsAt}-${index}`" class="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border p-3 text-sm"><span>{{ block.kind === 'break' ? copy.break : copy.timeOff }} · {{ new Date(block.startsAt).toLocaleString(isArabic ? 'ar-EG' : 'en-EG') }}–{{ new Date(block.endsAt).toLocaleString(isArabic ? 'ar-EG' : 'en-EG') }}</span><BsButton variant="text" type="button" class="min-h-11 min-w-11 font-bold text-[var(--bs-status-error)]" @click="scheduleForm.blocks.splice(index, 1)">{{ copy.remove }}</BsButton></li></ul></fieldset>
-        <div class="flex gap-2"><BsButton type="submit" :pending="scheduleSaving">{{ copy.saveSchedule }}</BsButton><BsButton severity="secondary" :disabled="scheduleSaving" @click="close">{{ copy.cancel }}</BsButton></div>
-      </BsForm></template>
-    </BsDialog>
-  </div>
+  <BsAppointmentsPage v-model:view="appointmentView" v-model:staff-id="staffId" v-model:show-form="showForm" v-model:show-schedule="showSchedule" v-model:form="appointmentForm" v-model:schedule-form="appointmentSchedule" v-model:schedule-member-id="scheduleMemberId" :copy="copy" :presentation="appointmentPresentation" :choices="appointmentChoices" @create="openCreate" @edit="editAppointment" @transition="transitionAppointment" @move="move" @today="goToday" @retry="retryAppointments" @location="handleAppointmentLocationChange" @save="save" @open-schedule="openSchedule" @schedule-member="loadScheduleMember" @save-schedule="saveSchedule" @add-block="addBlock" @remove-block="removeScheduleBlock" />
 </template>

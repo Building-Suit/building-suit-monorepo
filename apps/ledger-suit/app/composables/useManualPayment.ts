@@ -1,3 +1,4 @@
+import { downloadBlob } from '@building-suit/ux'
 import type { ManualPaymentDatabase, ManualPaymentEvidence, ManualPaymentHistory, ManualPaymentRequest } from '~~/types/manual-payment.types'
 import type { BillingInterval, LaunchPlanKey } from './useBilling'
 
@@ -14,19 +15,20 @@ export function useManualPayment() {
   const describeError = useErrorMessage()
   const { t } = useI18n()
   let generation = 0
-  const initialScope = `${currentId.value}:${user.value?.id}`
-  const current = () => initialScope === `${currentId.value}:${user.value?.id}` && !disposed
+  let contextVersion = 0
   let disposed = false
   onBeforeUnmount(() => { disposed = true; generation++ })
   watch([currentId, user], () => {
-    generation++; requests.value = []; selected.value = null; evidence.value = []; history.value = []; error.value = ''
+    generation++; contextVersion++; pending.value = false; requests.value = []; selected.value = null; evidence.value = []; history.value = []; error.value = ''
   })
 
-  async function run(work: () => Promise<void>) {
-    if (pending.value || !current() || !can('billing.manage')) return
+  async function run(work: (current: () => boolean) => Promise<void>) {
+    if (pending.value || disposed || !can('billing.manage')) return
+    const version = contextVersion
+    const current = () => !disposed && version === contextVersion
     pending.value = true
     error.value = ''
-    try { await work() }
+    try { await work(current) }
     catch (failure) {
       if (current()) {
         const message = failure && typeof failure === 'object' && 'message' in failure ? String(failure.message) : ''
@@ -36,7 +38,7 @@ export function useManualPayment() {
     }
     finally { if (current()) pending.value = false }
   }
-  async function details(payment: ManualPaymentRequest) {
+  async function details(payment: ManualPaymentRequest, current: () => boolean) {
     const version = ++generation
     const [receipts, events, latest] = await Promise.all([
       client.from('manual_payment_evidence').select('*').eq('request_id', payment.id).order('submitted_at'),
@@ -51,7 +53,7 @@ export function useManualPayment() {
     requests.value = requests.value.map(row => row.id === payment.id ? latest.data : row)
   }
   async function load(plan?: LaunchPlanKey, interval?: BillingInterval, quoteId?: string) {
-    await run(async () => {
+    await run(async (current) => {
       const result = await client.from('manual_payment_requests').select('*').eq('organization_id', currentId.value!).order('created_at', { ascending: false }).limit(50)
       if (result.error) throw result.error
       if (!current()) return
@@ -65,38 +67,35 @@ export function useManualPayment() {
         requests.value.unshift(payment)
       }
       payment ??= result.data[0]
-      if (payment) await details(payment)
+      if (payment) await details(payment, current)
     })
   }
   async function submit(file: File, reason: string, evidenceId: string) {
-    await run(async () => {
+    await run(async (current) => {
       if (!selected.value) return
       const body = new FormData()
       body.set('requestId', selected.value.id); body.set('evidenceId', evidenceId); body.set('reason', reason); body.set('receipt', file)
       const result = await client.functions.invoke('manual-payment', { body })
       if (result.error) throw new Error(await edgeFunctionErrorMessage(result.error, t('billing.manual.failed')))
       if (!current()) return
-      await details(result.data.request as ManualPaymentRequest)
+      await details(result.data.request as ManualPaymentRequest, current)
     })
   }
   async function cancel(reason: string) {
-    await run(async () => {
+    await run(async (current) => {
       if (!selected.value) return
       const result = await client.rpc('cancel_manual_payment', { p_request_id: selected.value.id, p_reason: reason })
       if (result.error) throw result.error
-      if (current()) await details(result.data)
+      if (current()) await details(result.data, current)
     })
   }
   async function download(receipt: ManualPaymentEvidence) {
-    await run(async () => {
+    await run(async (current) => {
       const result = await client.storage.from('manual-payment-receipts').download(receipt.storage_key)
       if (result.error) throw result.error
       if (!current()) return
-      const url = URL.createObjectURL(result.data)
-      const anchor = document.createElement('a')
-      anchor.href = url; anchor.download = receipt.filename; anchor.click()
-      setTimeout(() => URL.revokeObjectURL(url), 1000)
+      downloadBlob(receipt.filename, result.data, { cleanupDelayMs: 1000 })
     })
   }
-  return { requests, selected, evidence, history, pending, error, load, submit, cancel, download, select: (payment: ManualPaymentRequest) => run(() => details(payment)) }
+  return { requests, selected, evidence, history, pending, error, load, submit, cancel, download, select: (payment: ManualPaymentRequest) => run(current => details(payment, current)) }
 }

@@ -20,16 +20,7 @@ const ui = useUiCopy()
 const attrs = useAttrs()
 const formAttrs = () => Object.fromEntries(Object.entries(attrs).filter(([key]) => key !== 'class'))
 const errorId = useId()
-const summary = ref<HTMLElement | null>(null)
-watch(() => props.error, async (error) => {
-  if (error) { await nextTick(); summary.value?.focus() }
-})
-async function submit(event: Event) {
-  if (props.pending) return
-  emit('submit', event)
-  await nextTick()
-  if (props.error) summary.value?.focus()
-}
+const { summary, submit } = useFormInteraction(props, event => emit('submit', event))
 </script>
 
 <template>

@@ -1,19 +1,27 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { test } from 'node:test'
+import { readPresentationTree } from '../../../../packages/testing/presentation-source.mjs'
 
 const read = path => readFile(new URL(`../../${path}`, import.meta.url), 'utf8')
 const routes = ['about', 'contact', 'terms', 'privacy', 'delivery-shipping', 'refund-cancellation']
 
-test('all Shop public and legal routes use the Shop-owned landing structure', async () => {
+test('Shop legal routes retain product metadata through the shared legal template', async () => {
   for (const route of routes) {
     const source = await read(`app/pages/${route}.vue`)
     assert.match(source, /layout: 'landing'/)
     assert.doesNotMatch(source, /ledger-suit|Ledger Suit/)
   }
-  const page = await read('app/components/PublicLegalPage.vue')
-  assert.match(page, /Shop Suit by Building Suit/)
-  assert.match(page, /title: `\$\{props\.document\.title\} · Shop Suit`/)
+  for (const route of ['about', 'terms', 'privacy', 'delivery-shipping', 'refund-cancellation']) {
+    const source = await read(`app/pages/${route}.vue`)
+    assert.match(source, /<BsPublicLegalPage/)
+    assert.match(source, /eyebrow="Shop Suit by Building Suit"/)
+    assert.match(source, /title: `\$\{document\.value\.title\} · Shop Suit`/)
+  }
+  const page = await read('../../packages/ui/src/templates/BsPublicLegalPage.vue')
+  assert.match(page, /document\.title/)
+  assert.match(page, /document\.sections/)
+  assert.match(page, /lastUpdatedLabel/)
 })
 
 test('legal copy is bilingual and describes Shop manual digital delivery accurately', async () => {
@@ -32,7 +40,7 @@ test('legal copy is bilingual and describes Shop manual digital delivery accurat
 test('contact intake and paid-plan boundary include all required protections and policies', async () => {
   const contact = await read('app/pages/contact.vue')
   const migration = await read('supabase/migrations/20260930200000_public_support_requests.sql')
-  const billing = await read('app/pages/billing.vue')
+  const billing = await readPresentationTree(new URL('../../../../', import.meta.url).pathname, 'apps/shop-suit/app/pages/billing.vue')
   for (const field of ['category', 'subject', 'message', 'email', 'consent', 'honeypot']) assert.match(contact, new RegExp(field))
   assert.match(migration, /pg_advisory_xact_lock/)
   assert.match(migration, /interval '10 minutes'/)
@@ -44,8 +52,9 @@ test('contact intake and paid-plan boundary include all required protections and
 test('Shop logo resolves canonical light and dark marks and wordmarks', async () => {
   for (const layout of ['auth', 'default', 'landing', 'platform-admin']) {
     const source = await read(`app/layouts/${layout}.vue`)
-    assert.match(source, /<BsProductLogo/)
-    assert.match(source, /asset-prefix="\/brand\/shop-suit"/)
+    const presentation = await readPresentationTree(new URL('../../../../', import.meta.url).pathname, `apps/shop-suit/app/layouts/${layout}.vue`)
+    assert.match(presentation, /<BsProductLogo/)
+    assert.match(source, /\/brand\/shop-suit/)
     assert.doesNotMatch(source, /<AppLogo/)
   }
   for (const asset of ['mark-light', 'mark-dark', 'wordmark-light', 'wordmark-dark']) {

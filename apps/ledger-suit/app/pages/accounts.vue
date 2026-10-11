@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import { formatPresentationMoney } from '@building-suit/ui/utils/presentation'
+import type { BsFinancialAccountCopy, BsFinancialAccountFilters, BsFinancialAccountForm, BsFinancialAccountRow, BsFinancialAccountsView } from '@building-suit/ui/types/financialAccountsPresentation'
+import { useLedgerAccountTreeView } from '~/composables/useLedgerAccountTreeView'
+import { useLedgerChartTemplateReviewView } from '~/composables/useLedgerChartTemplateReviewView'
 import { scopedQueryKey } from '@building-suit/data-access'
 import type { Database } from '~~/types/database.types'
 import type { AccountsReportsRpcDatabase } from '~~/types/accounts-reports-rpc.types'
@@ -28,7 +32,7 @@ useHead({ title: () => `${t('accounts.title')} · ${t('app.name')}` })
 const hydrated = ref(false)
 onMounted(() => { hydrated.value = true })
 
-const view = computed(() => route.query.view === 'table' || (!route.query.view && route.query.tab) ? 'table' : 'tree')
+const view = computed<'tree' | 'table'>(() => route.query.view === 'table' || (!route.query.view && route.query.tab) ? 'table' : 'tree')
 function selectView(value: 'tree' | 'table') { void router.replace({ query: { ...route.query, view: value } }) }
 const showArchived = ref(false)
 const search = ref('')
@@ -36,7 +40,6 @@ const firstRow = ref(0)
 const sortField = ref('code')
 const sortOrder = ref<1 | -1>(1)
 const lastSavedId = ref<string | null>(null)
-const searchInput = ref<HTMLInputElement | null>(null)
 
 const { data: canMultiCurrency } = usePlanFeature('multi_currency')
 
@@ -112,7 +115,7 @@ const activeGroup = computed(() => groups.value.find(group => group.type === tab
 
 const filteredRows = computed(() => {
   const query = search.value.trim().toLocaleLowerCase()
-  return activeGroup.value.rows.filter(account =>
+  return activeGroup.value.rows.filter((account: ChartAccount) =>
     !query || account.name.toLocaleLowerCase().includes(query) || account.code?.toLocaleLowerCase().includes(query),
   )
 })
@@ -127,7 +130,6 @@ watch([search, showArchived, tab, currentId], () => { firstRow.value = 0 })
 
 function clearSearch() {
   search.value = ''
-  searchInput.value?.focus()
 }
 
 async function revealSavedAccount() {
@@ -136,13 +138,6 @@ async function revealSavedAccount() {
   search.value = account.name
   if (account.is_archived) showArchived.value = true
   await router.replace({ query: { ...route.query, view: view.value, tab: account.type } })
-  searchInput.value?.focus()
-}
-
-const sortColumnPt = {
-  columnHeaderContent: { class: 'flex items-center gap-2' },
-  sortIcon: { class: 'h-3 w-3 shrink-0', 'aria-hidden': true },
-  headerCell: { class: 'cursor-pointer select-none' },
 }
 
 const hasAccounts = computed(() => scopedBalances.value.length > 0)
@@ -229,24 +224,24 @@ watch(() => form.subtype, () => {
 
 const natureLocked = computed(() => Boolean(editing.value && (
   editing.value.account_role === 'group' || editing.value.control_subledger_type === 'inventory' || editing.value.classification_locked || editing.value.is_system
-  || scopedBalances.value.some(account => account.contra_account_id === editing.value?.account_id)
+  || scopedBalances.value.some((account: ChartAccount) => account.contra_account_id === editing.value?.account_id)
 )))
-const contraOptions = computed(() => scopedBalances.value.filter(account =>
+const contraOptions = computed(() => scopedBalances.value.filter((account: ChartAccount) =>
   account.account_role === 'posting' && account.account_id !== editing.value?.account_id && !account.is_archived
   && !account.contra_account_id && account.type === form.type && account.currency === form.currency
   && account.normal_balance !== form.normalBalance,
 ))
 watch([() => form.normalBalance, () => form.currency], () => {
-  if (!natureLocked.value && !contraOptions.value.some(account => account.account_id === form.contraAccountId)) {
+  if (!natureLocked.value && !contraOptions.value.some((account: ChartAccount) => account.account_id === form.contraAccountId)) {
     form.contraAccountId = ''
   }
 })
-const parentOptions = computed(() => scopedBalances.value.filter(account =>
+const parentOptions = computed(() => scopedBalances.value.filter((account: ChartAccount) =>
   account.account_role === 'group' && !account.is_archived
   && account.type === form.type && account.currency === form.currency,
 ))
 watch([() => form.type, () => form.currency], () => {
-  if (!editing.value && !parentOptions.value.some(account => account.account_id === form.parentAccountId)) form.parentAccountId = ''
+  if (!editing.value && !parentOptions.value.some((account: ChartAccount) => account.account_id === form.parentAccountId)) form.parentAccountId = ''
 })
 watch(() => form.accountRole, (role) => {
   if (editing.value) return
@@ -264,7 +259,7 @@ watch(() => form.controlSubledgerType, (subledger) => {
   form.normalBalance = subledger === 'customer' ? 'debit' : 'credit'
 })
 function accountName(id: string) {
-  return scopedBalances.value.find(account => account.account_id === id)?.name ?? t('common.dash')
+  return scopedBalances.value.find((account: ChartAccount) => account.account_id === id)?.name ?? t('common.dash')
 }
 
 async function saveAccount() {
@@ -322,247 +317,39 @@ async function archiveAccount(row: BalanceRow) {
   await refreshNuxtData(['org:accounts', 'org:categories'])
 }
 const { dirty: overlayDirty0 } = useRecordAction(() => form, computed(() => Boolean(editorOpen.value)))
+const ledgerPresentation = useLedgerPresentation()
+const ledgerUsage = useLedgerUsagePresentation()
+const treePresentation = reactive(useLedgerAccountTreeView(reactive({ get accounts() { return visible.value }, get search() { return search.value }, get scope() { return balanceKey.value }, get hydrated() { return hydrated.value } })))
+const chartReview = reactive(useLedgerChartTemplateReviewView())
+const controls = useLedgerControlPresentation(reactive({ get accounts() { return scopedBalances.value }, get active() { return can('controls.reconcile') && scopedBalances.value.some(account => account.account_role === 'control') } }), () => { void refreshBalances(); void refreshNuxtData(['org:accounts']) })
+const classificationPresentation = useLedgerAccountClassificationPresentation(reactive({ get account() { return statementAccount.value }, get scope() { return balanceKey.value } }), () => { statementAccount.value = null })
+const activityPresentation = useLedgerActivityPresentation(reactive({ get accountId() { return activityAccountId.value }, get scope() { return balanceKey.value } }), () => { activityAccountId.value = null })
+const activityForm = activityPresentation.form
+const classificationForm = classificationPresentation.form
+const adjustmentForm = controls.form
+const editorForm = computed<BsFinancialAccountForm>({ get: () => ({ ...form }), set: value => { Object.assign(form, { ...value, type: value.type as typeof form.type }) } })
+const pageFilters = computed<BsFinancialAccountFilters>({ get: () => ({ view: view.value, tab: tab.value, search: search.value, archived: showArchived.value, first: firstRow.value, sortField: sortField.value, sortOrder: sortOrder.value, template: chartReview.selected, controlDate: controls.date.value }), set: value => { if (value.view !== view.value) selectView(value.view); if (value.tab !== tab.value && GROUP_TYPES.includes(value.tab as BalanceRow['type'])) selectTab(value.tab as BalanceRow['type']); search.value = value.search; showArchived.value = value.archived; firstRow.value = value.first; sortField.value = value.sortField; sortOrder.value = value.sortOrder; if (chartReview.reviewedChartTemplates.some(template => template.key === value.template)) chartReview.selected = value.template as typeof chartReview.selected; controls.date.value = value.controlDate } })
+const pageCopy = computed<BsFinancialAccountCopy>(() => ({
+ title: t('accounts.title'), subtitle: t('accountTree.subtitle'), context: t('pageContext.label'), showArchived: t('accounts.showArchived'), archived: t('accounts.archived'), add: t('accounts.add'), edit: t('accounts.edit'), archive: t('accounts.archive'), classify: t('statementClassification.title'), addChild: t('accountTree.addChild'), more: t('accountTree.more'), treeView: t('accountTree.treeView'), tableView: t('accountTree.tableView'), view: t('accountTree.view'), tabs: t('accounts.tabsLabel'), search: t('accounts.searchLabel'), searchPlaceholder: t('accounts.searchPlaceholder'), clear: t('accounts.clearSearch'), reveal: t('accounts.revealSaved'), loading: t('accounts.loading'), failed: t('accounts.loadError'), failedHint: t('accounts.loadErrorHint'), retry: t('accounts.retry'), empty: t('accounts.emptyTitle'), emptyHint: t('accounts.emptyHint'), noResults: t('accounts.noResults'), noResultsHint: t('accounts.noResultsHint'), treeTitle: t('accountTree.title'), expandAll: t('accountTree.expandAll'), collapseAll: t('accountTree.collapseAll'), account: t('accounts.account'), code: t('accounts.code'), role: t('accounts.role'), subledger: t('controls.subledgerType'), subtype: t('accounts.subtype'), normal: t('accounts.normalBalance'), contra: t('accounts.contraAccount'), currency: t('accounts.currency'), entries: t('accounts.entries'), balance: t('accounts.balance'), actions: t('accounts.actions'), previous: t('accounts.previousPage'), next: t('accounts.nextPage'), pages: t('accounts.pages'), liquid: t('accounts.liquid'), bindingLocked: t('controls.bindingLocked'), save: t('common.save'), cancel: t('common.cancel'), name: t('accounts.name'), roleHint: t('accounts.roleHint'), directBlocked: t('controls.directPostingBlocked'), bindingHint: t('controls.bindingLockedHint'), type: t('accounts.type'), multiCurrency: t('accounts.multiCurrencyUpgrade'), parent: t('accounts.parentGroup'), natureHint: t('accounts.natureHint'), contraHint: t('accounts.contraHint'), natureLocked: t('accounts.natureLocked'),
+}))
+function displayAccountMoney(amount: bigint | number | string) { return formatPresentationMoney(amount, { currency: ledgerPresentation.currency(), locale: ledgerPresentation.locale, unit: 'minor', numberingSystem: 'latn' }) }
+function accountDisplay(account: ChartAccount, tree = false): BsFinancialAccountRow {
+ const balance = accountBalanceDisplay(account.net_debit_minor)
+ return { id: account.account_id, code: account.code || t('common.dash'), name: account.name, role: t(`accounts.roles.${account.account_role}`), subledger: account.control_subledger_type ? t(`controls.subledgers.${account.control_subledger_type}`) : t('common.dash'), subtype: t(`accounts.subtypes.${account.subtype}`), normal: t(`accounts.sides.${account.normal_balance}`), contra: account.contra_account_id ? accountName(account.contra_account_id) : t('common.dash'), currency: account.currency, entries: String(account.entry_count), balance: account.account_role === 'group' ? t('accounts.groupBalance') : displayAccountMoney(balance.amount), side: account.account_role === 'group' ? '' : t(`accounts.sides.${balance.side}`), archived: account.is_archived, liquid: account.is_liquid, bindingLocked: account.control_binding_locked, canActivity: account.account_role !== 'group' && canReadActivity.value, canEdit: can('accounts.update') && (!tree || treePresentation.writesAllowed), canArchive: can('accounts.archive') && !account.is_archived && (!tree || treePresentation.writesAllowed), canClassify: ['posting', 'control'].includes(account.account_role), canCreateChild: tree && account.account_role === 'group' && !account.is_archived && can('accounts.create') && treePresentation.writesAllowed }
+}
+const pageView = computed<BsFinancialAccountsView>(() => ({
+ ready: hydrated.value, context: ledgerPresentation.context(), canCreate: can('accounts.create'), loading: balancesPending.value, failed: !!balancesError.value, hasAccounts: hasAccounts.value, searchCount: view.value === 'table' ? t('accounts.resultCount', { count: filteredRows.value.length, total: activeGroup.value.rows.length, group: activeGroup.value.label }) : t('accountTree.accountCount', { count: visible.value.length }), savedHidden: hiddenSavedAccount.value ? t('accounts.savedHidden', { name: hiddenSavedAccount.value.name }) : '', treeHint: t('accountTree.hint', { currency: baseCurrency.value }), groupLabel: activeGroup.value.label, groupTotal: displayAccountMoney(activeGroup.value.total), totalHint: t('accounts.totalHint', { currency: baseCurrency.value }), emptyTitle: search.value || hasArchivedInGroup.value ? t('accounts.noResults') : t('accounts.emptyGroupTitle', { group: activeGroup.value.label }), emptyHint: search.value || hasArchivedInGroup.value ? t('accounts.noResultsHint') : t('accounts.emptyGroupHint'), emptyAction: search.value ? t('accounts.clearSearch') : hasArchivedInGroup.value ? t('accounts.showArchived') : can('accounts.create') ? t('accounts.add') : '', groups: GROUP_TYPES.map(value => ({ value, label: t(`accounts.groups.${value}`) })), rows: filteredRows.value.map(account => accountDisplay(account)),
+ treeRows: treePresentation.rows.map(node => ({ ...(node.account ? accountDisplay(node.account, true) : { id: node.id, code: '', name: node.label, role: '', subledger: '', subtype: '', normal: '', contra: '', currency: '', entries: '', balance: '', side: '', archived: false, liquid: false, bindingLocked: false, canActivity: false, canEdit: false, canArchive: false, canClassify: false, canCreateChild: false }), id: node.id, name: node.label, depth: node.depth, hasChildren: !!node.children.length, expanded: node.expanded, count: node.kind !== 'account' || node.children.length ? t('accountTree.accountCount', { count: node.count }) : '', toggleLabel: t(node.expanded ? 'accountTree.collapse' : 'accountTree.expand', { name: node.label }), detail: node.account ? `${t(`accounts.roles.${node.account.account_role}`)}${node.account.control_subledger_type ? ` · ${t(`controls.subledgers.${node.account.control_subledger_type}`)}` : node.account.account_role === 'posting' ? ` · ${t(`accounts.subtypes.${node.account.subtype}`)}` : ''}` : '', balance: node.account && node.account.account_role !== 'group' && !node.children.length ? displayAccountMoney(accountBalanceDisplay(node.account.net_debit_minor).amount) : displayAccountMoney(node.total), side: node.account && node.account.account_role !== 'group' && !node.children.length ? t(`accounts.sides.${accountBalanceDisplay(node.account.net_debit_minor).side}`) : '', subtotal: node.children.length ? t('accountTree.subtotal') : '', direct: node.children.length && node.account?.account_role === 'posting' ? `${t('accountTree.directBalance')}: ${displayAccountMoney(accountBalanceDisplay(node.account.net_debit_minor).amount)} ${t(`accounts.sides.${accountBalanceDisplay(node.account.net_debit_minor).side}`)}` : '', actionsLabel: t('accountTree.actionsFor', { name: node.label }) })),
+ editor: { visible: editorOpen.value, title: t(editing.value ? 'accounts.edit' : 'accounts.add'), editing: !!editing.value, pending: submitting.value, dirty: overlayDirty0.value, error: editorError.value, usage: ledgerUsage.item('max_accounts'), canConfigureControls: can('controls.configure'), bindingLocked: !!editing.value?.control_binding_locked, multiCurrency: !!canMultiCurrency.value, natureLocked: natureLocked.value, parentName: editing.value && form.parentAccountId ? accountName(form.parentAccountId) : '', roles: ['posting', ...(can('controls.configure') ? ['control'] : []), 'group'].map(value => ({ value, label: t(`accounts.roles.${value}`) })), subledgers: ['customer', 'supplier'].map(value => ({ value, label: t(`controls.subledgers.${value}`) })), types: GROUP_TYPES.map(value => ({ value, label: t(`accounts.groups.${value}`) })), subtypes: subtypeOptions[form.type].map(value => ({ value, label: t(`accounts.subtypes.${value}`) })), currencies: currencies.value.map(value => ({ value: value.code, label: `${value.code} — ${value.name}` })), parents: [{ value: '', label: t('accounts.noParent') }, ...parentOptions.value.map(value => ({ value: value.account_id, label: value.name }))], natures: ['debit', 'credit'].map(value => ({ value, label: t(`accounts.sides.${value}`) })), contras: [{ value: '', label: t('accounts.noContra') }, ...(natureLocked.value && form.contraAccountId ? [{ value: form.contraAccountId, label: accountName(form.contraAccountId) }] : natureLocked.value ? [] : contraOptions.value.map(value => ({ value: value.account_id, label: value.name })))] },
+ templates: { visible: chartReview.visible, title: t('chartTemplates.title'), hint: t('chartTemplates.hint'), review: t('chartTemplates.reviewRequired'), noApply: t('chartTemplates.noApply'), choose: t('chartTemplates.choose'), close: t('common.close'), preview: t('chartTemplates.preview'), parent: t('chartTemplates.parent'), presentation: t('chartTemplates.presentation'), description: t(`chartTemplates.templates.${chartReview.selected}.description`), choices: chartReview.reviewedChartTemplates.map(template => ({ value: template.key, label: t(`chartTemplates.templates.${template.key}.title`) })), rows: chartReview.template.accounts.map(account => ({ id: account.code, code: account.code, name: t(`chartTemplates.accounts.${account.nameKey}`), parent: account.parentCode || t('common.dash'), role: t(`accounts.roles.${account.role}`), line: account.statementLine ? t(`chartTemplates.lines.${account.statementLine}`) : t('common.dash') })) }, controls: { copy: controls.copy.value, view: controls.view.value }, classification: { copy: classificationPresentation.copy.value, view: classificationPresentation.view.value }, activity: { copy: activityPresentation.copy.value, view: activityPresentation.view.value },
+}))
+function accountById(id: string) { return scopedBalances.value.find(account => account.account_id === id) }
+function createAccountFromPresentation(id?: string) { openCreate(id ? accountById(id) : undefined) }
+function editAccountFromPresentation(id: string) { const account = accountById(id); if (account) openEdit(account) }
+function archiveAccountFromPresentation(id: string) { const account = accountById(id); if (account) return archiveAccount(account) }
+function classifyAccountFromPresentation(id: string) { statementAccount.value = accountById(id) || null }
+function emptyAccountAction() { if (search.value) clearSearch(); else if (hasArchivedInGroup.value) showArchived.value = true; else openCreate() }
 </script>
-
 <template>
-  <div class="space-y-6" :data-hydrated="hydrated">
-    <LedgerPageHeader :title="t('accounts.title')" :subtitle="t('accountTree.subtitle')">
-      <template #actions>
-        <label class="flex items-center gap-2 text-sm text-fg-muted">
-          <input v-model="showArchived" type="checkbox" class="rounded-sm border-[var(--bs-border)]">
-          {{ t('accounts.showArchived') }}
-        </label>
-        <BsButton v-if="view === 'tree' && can('accounts.create')" type="button" class="ls-btn ls-btn-primary" :disabled="!hydrated" @click="openCreate()">
-          {{ t('accounts.add') }}
-        </BsButton>
-      </template>
-    </LedgerPageHeader>
-
-    <ChartTemplateReview />
-
-    <div class="flex flex-wrap gap-2" :aria-label="t('accountTree.view')" role="group">
-      <BsButton variant="chip" type="button" :aria-pressed="view === 'tree'" :disabled="!hydrated" @click="selectView('tree')">{{ t('accountTree.treeView') }}</BsButton>
-      <BsButton variant="chip" type="button" :aria-pressed="view === 'table'" :disabled="!hydrated" @click="selectView('table')">{{ t('accountTree.tableView') }}</BsButton>
-    </div>
-
-    <div v-if="view === 'table'" class="flex gap-1 overflow-x-auto border-b border-[var(--bs-border)]" role="tablist" :aria-label="t('accounts.tabsLabel')">
-      <BsButton variant="tab"
-        v-for="type in GROUP_TYPES"
-        :id="`account-tab-${type}`"
-        :key="type"
-        type="button"
-        role="tab"
-        :aria-controls="`account-panel-${type}`"
-        :aria-selected="tab === type"
-        class="-mb-px whitespace-nowrap"
-        @click="selectTab(type)"
-      >
-        {{ t(`accounts.groups.${type}`) }}
-      </BsButton>
-    </div>
-
-    <div class="flex flex-wrap items-end gap-3">
-      <div class="w-full min-w-0 sm:w-auto sm:flex-1 sm:max-w-md">
-        <label for="account-search" class="mb-2 block text-sm font-semibold">{{ t('accounts.searchLabel') }}</label>
-        <input id="account-search" ref="searchInput" v-model="search" type="search" class="ls-input" :placeholder="t('accounts.searchPlaceholder')" :aria-controls="view === 'tree' ? 'accounts-tree' : 'accounts-table'" :disabled="!hydrated || balancesPending || !!balancesError">
-      </div>
-      <BsButton v-if="search" type="button" class="ls-btn" @click="clearSearch">{{ t('accounts.clearSearch') }}</BsButton>
-      <p v-if="!balancesPending && !balancesError" class="py-2 text-sm text-fg-muted" role="status" data-testid="account-result-count">
-        {{ view === 'table' ? t('accounts.resultCount', { count: filteredRows.length, total: activeGroup.rows.length, group: activeGroup.label }) : t('accountTree.accountCount', { count: visible.length }) }}
-      </p>
-    </div>
-
-    <div v-if="hiddenSavedAccount && !balancesPending && !balancesError" class="ls-card flex flex-wrap items-center justify-between gap-3 p-4" role="status">
-      <p class="text-sm">{{ t('accounts.savedHidden', { name: hiddenSavedAccount.name }) }}</p>
-      <BsButton type="button" class="ls-btn" @click="revealSavedAccount">{{ t('accounts.revealSaved') }}</BsButton>
-    </div>
-
-    <div v-if="balancesPending" role="status" :aria-label="t('accounts.loading')">
-      <span class="sr-only">{{ t('accounts.loading') }}</span>
-      <BsSectionSkeleton variant="table" :rows="8" />
-    </div>
-
-    <div v-else-if="balancesError" class="ls-card space-y-3 p-6" role="alert">
-      <h2 class="font-bold">{{ t('accounts.loadError') }}</h2>
-      <p class="text-sm text-fg-muted">{{ t('accounts.loadErrorHint') }}</p>
-      <BsButton type="button" class="ls-btn" @click="refreshBalances()">{{ t('accounts.retry') }}</BsButton>
-    </div>
-
-    <BsEmptyState
-      v-else-if="!hasAccounts && view === 'table'"
-      :title="t('accounts.emptyTitle')"
-      :description="t('accounts.emptyHint')"
-      :action-label="can('accounts.create') ? t('accounts.add') : undefined"
-      @action="openCreate()"
-    />
-
-    <AccountTree v-else-if="view === 'tree'" :accounts="visible" :search="search" :scope="balanceKey" :hydrated="hydrated" @activity="account => activityAccountId = account.account_id" @edit="openEdit" @archive="archiveAccount" @classify="account => statementAccount = account" @create-child="openCreate" />
-
-    <section
-      v-else
-      :id="`account-panel-${activeGroup.type}`"
-      class="ls-card overflow-hidden"
-      role="tabpanel"
-      :aria-labelledby="`account-tab-${activeGroup.type}`"
-    >
-        <div class="flex items-center justify-between border-b border-[var(--bs-border)] px-6 py-3">
-          <h2 class="text-sm font-bold">{{ activeGroup.label }}</h2>
-          <MoneyText class="text-sm font-bold" :amount-minor="activeGroup.total" />
-        </div>
-
-        <p class="px-6 py-2 text-xs text-fg-muted">{{ t('accounts.totalHint', { currency: baseCurrency }) }}</p>
-        <BsDataTable
-          id="accounts-table"
-          v-model:first="firstRow"
-          v-model:sort-field="sortField"
-          v-model:sort-order="sortOrder"
-          paginator
-          :rows="25"
-          :always-show-paginator="false"
-          :value="filteredRows"
-          data-key="account_id"
-          :capabilities="{ insert: can('accounts.create'), edit: can('accounts.update'), archive: can('accounts.archive') }"
-          :action-labels="{ insert: t('accounts.add'), edit: t('accounts.edit'), archive: t('accounts.archive'), actions: t('accounts.actions') }"
-          :can-row-action="(action, account) => action !== 'archive' || !account.is_archived"
-          table-class="ls-table"
-          :table-props="{ 'aria-label': t('accounts.caption', { group: activeGroup.label }) }"
-          :pt="{ tableContainer: { class: 'overflow-x-auto', tabindex: 0, role: 'region', 'aria-label': t('accounts.tableScroll') } }"
-          @create="openCreate()"
-          @edit="openEdit"
-          @archive="archiveAccount"
-        >
-          <Column field="code" :header="t('accounts.code')" sortable :pt="sortColumnPt">
-            <template #body="{ data: account }">
-              <span class="font-mono text-xs text-fg-muted" dir="ltr">{{ account.code || t('common.dash') }}</span>
-            </template>
-          </Column>
-          <Column field="name" :header="t('accounts.account')" sortable :pt="sortColumnPt">
-            <template #body="{ data: account }">
-              <BsButton variant="link" v-if="account.account_role !== 'group' && canReadActivity" type="button" :disabled="!hydrated" class="text-start font-medium text-link hover:underline" :class="{ 'ps-4': account.parent_account_id }" @click="activityAccountId = account.account_id">{{ account.name }}</BsButton>
-              <span v-else :class="{ 'ps-4': account.parent_account_id, 'font-semibold': activeGroup.parentIds.has(account.account_id) }">{{ account.name }}</span>
-              <BsStatusBadge v-if="account.is_archived" class="ms-2" status="archived" :label="t('accounts.archived')" tone="neutral" />
-              <BsStatusBadge v-else-if="account.is_liquid" class="ms-2" status="liquid" :label="t('accounts.liquid')" tone="info" />
-            </template>
-          </Column>
-          <Column field="account_role" :header="t('accounts.role')">
-            <template #body="{ data: account }">{{ t(`accounts.roles.${account.account_role}`) }}</template>
-          </Column>
-          <Column field="control_subledger_type" :header="t('controls.subledgerType')">
-            <template #body="{ data: account }">
-              <span v-if="account.control_subledger_type">{{ t(`controls.subledgers.${account.control_subledger_type}`) }}</span>
-              <span v-else>{{ t('common.dash') }}</span>
-              <BsStatusBadge v-if="account.control_binding_locked" class="ms-2" status="locked" :label="t('controls.bindingLocked')" tone="neutral" />
-            </template>
-          </Column>
-          <Column field="subtype" :header="t('accounts.subtype')">
-            <template #body="{ data: account }">{{ t(`accounts.subtypes.${account.subtype}`) }}</template>
-          </Column>
-          <Column field="normal_balance" :header="t('accounts.normalBalance')">
-            <template #body="{ data: account }">{{ t(`accounts.sides.${account.normal_balance}`) }}</template>
-          </Column>
-          <Column field="contra_account_id" :header="t('accounts.contraAccount')">
-            <template #body="{ data: account }">{{ account.contra_account_id ? accountName(account.contra_account_id) : t('common.dash') }}</template>
-          </Column>
-          <Column field="currency" :header="t('accounts.currency')">
-            <template #body="{ data: account }"><span class="text-fg-muted" dir="ltr">{{ account.currency }}</span></template>
-          </Column>
-          <Column field="entry_count" :header="t('accounts.entries')" body-class="ls-num text-fg-muted" />
-          <Column field="net_debit_minor" :header="t('accounts.balance')" body-class="ls-num whitespace-nowrap">
-            <template #body="{ data: account }">
-              <span v-if="account.account_role === 'group'" class="text-fg-muted">{{ t('accounts.groupBalance') }}</span>
-              <template v-else>
-                <MoneyText :amount-minor="accountBalanceDisplay(account.net_debit_minor).amount" />
-                <span class="ms-2">{{ t(`accounts.sides.${accountBalanceDisplay(account.net_debit_minor).side}`) }}</span>
-              </template>
-            </template>
-          </Column>
-          <template #row-actions="{ row: account }">
-              <BsButton v-if="['posting', 'control'].includes(account.account_role)" type="button" class="ls-btn ls-btn-sm me-1" @click="statementAccount = account">{{ t('statementClassification.title') }}</BsButton>
-          </template>
-          <template #paginatorcontainer="{ page, pageCount, prevPageCallback, nextPageCallback }">
-            <nav class="flex flex-wrap items-center justify-center gap-3 border-t border-[var(--bs-border)] p-3" :aria-label="t('accounts.pages')">
-              <BsButton type="button" class="ls-btn ls-btn-sm" :disabled="page === 0" @click="prevPageCallback">{{ t('accounts.previousPage') }}</BsButton>
-              <span class="text-sm text-fg-muted">{{ t('accounts.pageCount', { page: page + 1, total: pageCount }) }}</span>
-              <BsButton type="button" class="ls-btn ls-btn-sm" :disabled="page + 1 >= (pageCount ?? 1)" @click="nextPageCallback">{{ t('accounts.nextPage') }}</BsButton>
-            </nav>
-          </template>
-          <template #empty>
-            <BsEmptyState
-              class="m-4"
-              :title="search || hasArchivedInGroup ? t('accounts.noResults') : t('accounts.emptyGroupTitle', { group: activeGroup.label })"
-              :description="search || hasArchivedInGroup ? t('accounts.noResultsHint') : t('accounts.emptyGroupHint')"
-              :action-label="search ? t('accounts.clearSearch') : hasArchivedInGroup ? t('accounts.showArchived') : can('accounts.create') ? t('accounts.add') : undefined"
-              @action="search ? clearSearch() : hasArchivedInGroup ? showArchived = true : openCreate()"
-            />
-          </template>
-        </BsDataTable>
-    </section>
-      <ControlReconciliationPanel
-        v-if="can('controls.reconcile') && scopedBalances.some(account => account.account_role === 'control')"
-        :accounts="scopedBalances"
-        @changed="async () => { await refreshBalances(); await refreshNuxtData(['org:accounts']) }"
-      />
-      <AccountActivityDialog v-if="activityAccountId" :key="`${balanceKey}:${activityAccountId}`" :account-id="activityAccountId" :scope="balanceKey" @close="activityAccountId = null" />
-      <AccountStatementClassificationDialog v-if="statementAccount" :key="`${balanceKey}:${statementAccount.account_id}`" :account="statementAccount" :scope="balanceKey" @close="statementAccount = null" />
-      <BsRecordActionDialog v-if="editorOpen" v-model:visible="editorOpen" :title="editing ? t('accounts.edit') : t('accounts.add')" size="md" :dirty="overlayDirty0" :pending="submitting" :error="editorError" :submit-label="t('common.save')" :cancel-label="t('common.cancel')" @submit="saveAccount">
-          <QuotaUsageMeter v-if="!editing" quota-key="max_accounts" compact />
-          <BsFloatingField :label="t('accounts.name')"><input id="account-name" v-model="form.name" class="ls-input" required></BsFloatingField>
-          <BsFloatingField :label="t('accounts.code')"><input id="account-code" v-model="form.code" class="ls-input" dir="ltr"></BsFloatingField>
-          <BsFloatingField :label="t('accounts.role')">
-            <select id="account-role" v-model="form.accountRole" class="ls-input" :disabled="!!editing" aria-describedby="account-role-help">
-              <option value="posting">{{ t('accounts.roles.posting') }}</option>
-              <option v-if="can('controls.configure')" value="control">{{ t('accounts.roles.control') }}</option>
-              <option value="group">{{ t('accounts.roles.group') }}</option>
-            </select>
-          </BsFloatingField>
-          <p id="account-role-help" class="text-sm text-fg-muted">{{ t('accounts.roleHint') }}</p>
-          <BsFloatingField v-if="form.accountRole === 'control' && !editing" :label="t('controls.subledgerType')">
-            <select id="control-subledger-type" v-model="form.controlSubledgerType" class="ls-input" required>
-              <option value="customer">{{ t('controls.subledgers.customer') }}</option>
-              <option value="supplier">{{ t('controls.subledgers.supplier') }}</option>
-            </select>
-          </BsFloatingField>
-          <p v-if="form.accountRole === 'control'" class="text-sm text-fg-muted">{{ t('controls.directPostingBlocked') }}</p>
-          <p v-if="editing?.control_binding_locked" class="text-sm text-fg-muted">{{ t('controls.bindingLockedHint') }}</p>
-          <template v-if="!editing">
-            <BsFloatingField :label="t('accounts.type')"><select id="account-type" v-model="form.type" class="ls-input" :disabled="form.accountRole === 'control'"><option v-for="type in GROUP_TYPES" :key="type" :value="type">{{ t(`accounts.groups.${type}`) }}</option></select></BsFloatingField>
-            <BsFloatingField :label="t('accounts.subtype')"><select id="account-subtype" v-model="form.subtype" class="ls-input" :disabled="form.accountRole === 'control'"><option v-for="subtype in subtypeOptions[form.type]" :key="subtype" :value="subtype">{{ t(`accounts.subtypes.${subtype}`) }}</option></select></BsFloatingField>
-            <BsFloatingField v-if="canMultiCurrency" :label="t('accounts.currency')">
-              <select id="account-currency" v-model="form.currency" class="ls-input">
-                <option v-for="currency in currencies" :key="currency.code" :value="currency.code">
-                  {{ currency.code }} — {{ currency.name }}
-                </option>
-              </select>
-            </BsFloatingField>
-            <p v-else class="text-sm text-fg-muted">{{ t('accounts.multiCurrencyUpgrade') }}</p>
-          </template>
-          <BsFloatingField v-if="!editing" :label="t('accounts.parentGroup')">
-            <select id="account-parent" v-model="form.parentAccountId" class="ls-input">
-              <option value="">{{ t('accounts.noParent') }}</option>
-              <option v-for="account in parentOptions" :key="account.account_id" :value="account.account_id">{{ account.name }}</option>
-            </select>
-          </BsFloatingField>
-          <p v-else-if="form.parentAccountId" class="text-sm text-fg-muted">{{ t('accounts.parentAccount') }}: {{ accountName(form.parentAccountId) }}</p>
-          <template v-if="form.accountRole !== 'group'">
-          <BsFloatingField :label="t('accounts.normalBalance')">
-            <select id="account-normal-balance" v-model="form.normalBalance" class="ls-input" :disabled="natureLocked || form.accountRole === 'control'" aria-describedby="account-nature-help">
-              <option value="debit">{{ t('accounts.sides.debit') }}</option>
-              <option value="credit">{{ t('accounts.sides.credit') }}</option>
-            </select>
-          </BsFloatingField>
-          <p id="account-nature-help" class="text-sm text-fg-muted">{{ t('accounts.natureHint') }}</p>
-          <BsFloatingField v-if="form.accountRole === 'posting'" :label="t('accounts.contraAccount')">
-            <select id="account-contra" v-model="form.contraAccountId" class="ls-input" :disabled="natureLocked" aria-describedby="account-contra-help">
-              <option value="">{{ t('accounts.noContra') }}</option>
-              <option v-if="natureLocked && form.contraAccountId" :value="form.contraAccountId">{{ accountName(form.contraAccountId) }}</option>
-              <option v-for="account in natureLocked ? [] : contraOptions" :key="account.account_id" :value="account.account_id">{{ account.name }}</option>
-            </select>
-          </BsFloatingField>
-          <p v-if="form.accountRole === 'posting'" id="account-contra-help" class="text-sm text-fg-muted">{{ t('accounts.contraHint') }}</p>
-          <p v-if="natureLocked" class="text-sm text-fg-muted">{{ t('accounts.natureLocked') }}</p>
-          </template>
-      </BsRecordActionDialog>
-  </div>
+ <BsFinancialAccountsPage v-model:filters="pageFilters" v-model:editor="editorForm" v-model:classification="classificationForm" v-model:adjustment="adjustmentForm" v-model:activity="activityForm" :copy="pageCopy" :view="pageView" @create="createAccountFromPresentation" @edit="editAccountFromPresentation" @archive="archiveAccountFromPresentation" @classify="classifyAccountFromPresentation" @open-activity="activityAccountId = $event" @clear-search="clearSearch" @reveal="revealSavedAccount" @retry="refreshBalances" @toggle="treePresentation.toggle" @expand-all="treePresentation.expandAll" @collapse-all="treePresentation.collapseAll" @empty-action="emptyAccountAction" @close-templates="chartReview.close" @close-editor="editorOpen = false" @save-editor="saveAccount" @close-classification="statementAccount = null" @save-classification="classificationPresentation.save" @retry-classification="classificationPresentation.retry" @open-adjustment="controls.open" @close-adjustment="controls.close" @save-adjustment="controls.save" @close-activity="activityAccountId = null" @activity-back="activityPresentation.back" @activity-apply="activityPresentation.apply" @activity-retry="activityPresentation.retry" @activity-page="activityPresentation.page" @activity-journal="activityPresentation.journal" @activity-account="activityPresentation.account"/>
 </template>
-
-undefined

@@ -1,13 +1,8 @@
 <script setup lang="ts">
-const localeHead = useLocaleHead()
-
-useHead(() => ({
-  title: 'Automation Suit',
-  htmlAttrs: {
-    lang: localeHead.value.htmlAttrs?.lang,
-    dir: localeHead.value.htmlAttrs?.dir,
-  },
-}))
+useLocaleDocument()
+useHead({ title: 'Automation Suit' })
 </script>
 
-<template><BsAppRoot toast-host /></template>
+<template>
+  <BsAppRoot toast-host />
+</template>

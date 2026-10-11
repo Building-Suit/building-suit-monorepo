@@ -5,6 +5,7 @@ import test from 'node:test'
 const migration = await readFile(new URL('../../supabase/migrations/20260929150000_expense_history_delegation.sql', import.meta.url), 'utf8')
 const databaseTest = await readFile(new URL('../../supabase/tests/shop_crm_expense_ledger.sql', import.meta.url), 'utf8')
 const page = await readFile(new URL('../../app/pages/expenses/index.vue', import.meta.url), 'utf8')
+const presentation = await readFile(new URL('../../../../packages/ui/src/templates/BsExpenseHistoryPage.vue', import.meta.url), 'utf8')
 const rpc = await readFile(new URL('../../app/types/shopCrmRpc.ts', import.meta.url), 'utf8')
 
 test('expense mutations preserve original rows and append trace evidence', () => {
@@ -44,7 +45,7 @@ test('expense SQL coverage exercises delegation, pagination, retries, closure, a
 
 test('expense UI uses the server contract and exposes bilingual traceable correction', () => {
   assert.match(page, /rpc\.rpc\('list_expenses'/)
-  assert.match(page, /lazy paginator/)
+  assert.match(presentation, /lazy paginator/)
   assert.match(page, /p_correction_reason/)
   assert.match(page, /p_reason: reason/)
   assert.match(page, /سبب التصحيح/)

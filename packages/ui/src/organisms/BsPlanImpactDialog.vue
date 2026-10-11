@@ -1,0 +1,8 @@
+<script setup lang="ts">
+import type { BsPlanImpactView } from '../types/billingPresentation'
+defineProps<{ view: BsPlanImpactView }>()
+defineEmits<{ close: [] }>()
+</script>
+<template>
+  <BsDialog :visible="view.visible" :title="view.title" :aria-label="view.title" size="md" @update:visible="value => { if (!value) $emit('close') }"><BsStack data-testid="plan-change-impact" padding="lg"><BsText tone="muted">{{ view.summary }}</BsText><BsPanel padding="lg"><BsText emphasis="bold">{{ view.noDeletion }}</BsText><BsText tone="muted">{{ view.price }}</BsText></BsPanel><BsHeading :level="3">{{ view.capacity }}</BsHeading><BsList><BsListItem v-for="quota in view.quotas" :key="quota.id" :data-impact-quota="quota.id"><BsInline justify="between"><BsText emphasis="semibold">{{ quota.label }}</BsText><BsText :tone="quota.blocked ? 'danger' : 'success'">{{ quota.state }}</BsText></BsInline><BsText tone="muted">{{ quota.detail }}</BsText></BsListItem></BsList><template v-if="view.gained.length"><BsHeading :level="3">{{ view.gainedTitle }}</BsHeading><BsList><BsListItem v-for="item in view.gained" :key="item">{{ item }}</BsListItem></BsList></template><template v-if="view.lost.length"><BsHeading :level="3">{{ view.lostTitle }}</BsHeading><BsList><BsListItem v-for="item in view.lost" :key="item">{{ item }}</BsListItem></BsList></template><BsPanel v-if="view.handoff" role="note" padding="lg"><BsText emphasis="bold">{{ view.handoffTitle }}</BsText><BsText tone="muted">{{ view.handoff }}</BsText></BsPanel><BsText v-else tone="muted">{{ view.noChange }}</BsText><BsButton variant="primary" @click="$emit('close')">{{ view.close }}</BsButton></BsStack></BsDialog>
+</template>

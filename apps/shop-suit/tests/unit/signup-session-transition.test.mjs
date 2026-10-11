@@ -23,6 +23,7 @@ test('signup survives session establishment and provisioning while operational c
     clearNuxtData: predicate => cleared.push(predicate),
     useLocaleHead: () => ref({ htmlAttrs: { lang: 'en', dir: 'ltr' }, link: [], meta: [] }),
     useHead: () => {},
+    useLocaleDocument: () => {},
   }
   const { descriptor } = parse(await readFile(new URL('../../app/app.vue', import.meta.url), 'utf8'))
   const compiled = stripTypeScriptTypes(compileScript(descriptor, { id: 'signup-session', inlineTemplate: true }).content)

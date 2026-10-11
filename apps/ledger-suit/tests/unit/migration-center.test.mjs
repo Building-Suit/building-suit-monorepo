@@ -5,6 +5,7 @@ import test from 'node:test'
 const migration = await readFile(new URL('../../supabase/migrations/20260928210000_migration_center_final_cutover.sql', import.meta.url), 'utf8')
 const databaseTest = await readFile(new URL('../../supabase/tests/76_migration_center_final_cutover_test.sql', import.meta.url), 'utf8')
 const page = await readFile(new URL('../../app/pages/migration-center.vue', import.meta.url), 'utf8')
+const template = await readFile(new URL('../../../../packages/ui/src/templates/BsMigrationCenterPage.vue', import.meta.url), 'utf8')
 const utility = await readFile(new URL('../../app/utils/migrationCenter.ts', import.meta.url), 'utf8')
 const en = JSON.parse(await readFile(new URL('../../i18n/locales/en.json', import.meta.url), 'utf8'))
 const ar = JSON.parse(await readFile(new URL('../../i18n/locales/ar.json', import.meta.url), 'utf8'))
@@ -28,8 +29,8 @@ test('approval evidence binds the source revision and remains immutable', () => 
 
 test('Migration Center exposes bilingual resumable and fail-closed review states', () => {
   for (const state of ['complete', 'warning', 'blocked', 'not_applicable']) assert.match(utility, new RegExp(`'${state}'`))
-  assert.match(page, /data-migration-progress/)
-  assert.match(page, /data-final-review/)
+  assert.match(template, /data-migration-progress/)
+  assert.match(template, /data-final-review/)
   assert.match(page, /approvalAcknowledged/)
   assert.match(page, /migrationOpenItemsTemplate/)
   assert.match(page, /migrationOperationalTemplate/)

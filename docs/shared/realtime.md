@@ -1,5 +1,7 @@
 # Scoped Realtime refresh
 
+See the [cross-Suit adoption review](realtime-adoption.md) for BS-LAUNCH-R14 decisions and source evidence. Adoption prerequisites in other Suits do not change a passed Shop launch qualification.
+
 `createScopedRealtime` from `@building-suit/data-access` owns one mounted feature's Supabase Postgres Changes subscription. It accepts an explicit Supabase client, scope, schema/table/event/row filters, data keys and refresh callback. It contains no product queries, global client, global registry, UI notifications or auth watcher. There is no additional UX policy needed for this foundation.
 
 Create a controller in client-side feature setup, never in module scope or during SSR. Reuse it for the feature's lifetime. Call `update(binding)` whenever auth identity, tenant, location, context, filters or data keys change; call `update(null)` immediately when auth/scope is unavailable and `dispose()` on unmount. Observe returned promises to surface setup/cleanup failures. A new Supabase client/project needs a new controller after disposal of the old one. Multiple mounted independent features deliberately have independent controllers; do not create controllers in reactive watchers.

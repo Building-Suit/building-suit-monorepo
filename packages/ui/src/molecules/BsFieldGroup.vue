@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const props = withDefaults(defineProps<{
-  legend: string
+  legend?: string
   description?: string
   hint?: string
   error?: string | null
@@ -9,7 +9,7 @@ const props = withDefaults(defineProps<{
   layout?: 'stack' | 'grid' | 'inline'
   columns?: 1 | 2 | 3 | 4
 }>(), {
-  description: undefined,
+  legend: undefined, description: undefined,
   hint: undefined,
   error: null,
   required: false,
@@ -39,7 +39,7 @@ const describedby = computed(() => [
     :data-layout="layout"
     :data-columns="columns"
   >
-    <legend class="bs-field-group__legend">{{ legend }}<span v-if="required" aria-hidden="true"> *</span></legend>
+    <legend class="bs-field-group__legend"><slot name="legend">{{ legend }}</slot><span v-if="required" aria-hidden="true"> *</span></legend>
     <p v-if="description" :id="descriptionId" class="bs-field-group__description">{{ description }}</p>
     <div class="bs-field-group__content">
       <slot :describedby="describedby" :invalid="Boolean(error)" :required="required" />

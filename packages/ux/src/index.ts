@@ -5,6 +5,36 @@ export function csvCell(value: unknown): string {
 }
 
 export type BsDataTableRowAction = 'edit' | 'delete' | 'archive' | 'void'
+export type BsDataTableAlign = 'start' | 'center' | 'end'
+export type BsDataTableWidth = 'selection' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'content'
+export type BsDataTableSticky = 'start' | 'end'
+
+/**
+ * Bs-owned column description. Presentation is intentionally semantic: Suit
+ * consumers cannot pass vendor classes, styles, or passthrough configuration.
+ * A `cell-${key}` slot may provide domain presentation while keeping the
+ * rendered content behind the Bs-only template boundary.
+ */
+export interface BsDataTableColumn<Row extends object = Record<string, unknown>> {
+  key: string
+  field?: string
+  header: string
+  footer?: string | number
+  value?: (row: Row) => unknown
+  format?: (value: unknown, row: Row) => string | number | null | undefined
+  align?: BsDataTableAlign
+  headerAlign?: BsDataTableAlign
+  width?: BsDataTableWidth
+  sticky?: BsDataTableSticky
+  sortable?: boolean
+  ariaSort?: 'none' | 'ascending' | 'descending' | 'other'
+  sortField?: string
+  filterField?: string
+  filterMatchMode?: string
+  hidden?: boolean
+  exportable?: boolean
+  selectionMode?: 'single' | 'multiple'
+}
 
 /**
  * Presentation capabilities are deliberately separate from server authority.
@@ -114,3 +144,104 @@ export const interactionPolicy = Object.freeze({
   protectDirtyForms: true,
   confirmationPresentation: 'modal',
 } as const)
+
+
+/** App-owned registry data; selection is presentation state, never authority. */
+export interface BsSuitRailItem {
+  id: string
+  label: string
+  icon?: string
+  logo?: string
+  disabled?: boolean
+}
+
+export interface BsContextNavigationItem {
+  id: string
+  label: string
+  icon?: string
+  to?: string
+  disabled?: boolean
+}
+
+export interface BsContextNavigationGroup {
+  id: string
+  label: string
+  items: BsContextNavigationItem[]
+}
+
+export interface BsAdministrationShellLabels {
+  suits: string
+  navigation: string
+  open: string
+  close: string
+  loading: string
+  emptySuits: string
+  emptyNavigation: string
+}
+
+/** Access presentation descriptors. Products retain permission policy and commands. */
+export interface BsPermissionItem { key: string; label: string; section: string; sectionLabel: string }
+export interface BsPermissionRole { key: string; label: string }
+export interface BsInvitationAction { key: string; label: string; disabled?: boolean; tone?: 'default' | 'secondary' | 'danger' }
+
+export { administrationCapabilitySupported, administrationShellRegistration } from './administration.ts'
+
+export { tabNavigationTarget } from './tabNavigation.ts'
+export { permissionSelection } from './permissionSelection.ts'
+
+export { useWorkspaceNavigation } from './composables/useWorkspaceNavigation.ts'
+
+export { usePolling } from './composables/usePolling.ts'
+
+export { useMarketingHeader } from './composables/useMarketingHeader.ts'
+
+export { useVerificationTimer } from './composables/useVerificationTimer.ts'
+export { useClientReady } from './composables/useClientReady.ts'
+
+export { useFormInteraction } from './composables/useFormInteraction.ts'
+export { useDialogInteraction } from './composables/useDialogInteraction.ts'
+
+export { useDebouncedChange } from './composables/useDebouncedChange.ts'
+
+export { useFileSelection } from './composables/useFileSelection.ts'
+
+export { useCheckboxSelection } from './composables/useCheckboxSelection.ts'
+
+export { useTagSelection } from './composables/useTagSelection.ts'
+
+export { useMenuNavigation } from './composables/useMenuNavigation.ts'
+
+export { useSideNavigation } from './composables/useSideNavigation.ts'
+
+export { useFloatingMenu } from './composables/useFloatingMenu.ts'
+
+export { useTableQueryInteraction } from './composables/useTableQueryInteraction.ts'
+
+export { useDocumentPrint } from './composables/useDocumentPrint.ts'
+
+export { useBrowserShare } from './composables/useBrowserShare.ts'
+
+export { useCodeEntry } from './composables/useCodeEntry.ts'
+
+export { useFileDrop } from './composables/useFileDrop.ts'
+
+export { usePointOfSaleKeyboard } from './composables/usePointOfSaleKeyboard.ts'
+export { captureBarcodeKey, emptyScanState } from './utils/barcode.js'
+export { useControlFocus } from './composables/useControlFocus.ts'
+export { downloadText, downloadBlob } from './utils/downloadText.js'
+
+export { useBoundedPolling } from './composables/useBoundedPolling.ts'
+
+export { useExpiringValue } from './composables/useExpiringValue.ts'
+
+export { openExternalLink, clearFileSelection, runPrimaryEnter, exclusiveChoiceOptions } from './utils/browserActions.ts'
+
+export { useFileInputReset } from './composables/useFileInputReset.ts'
+export { useDebouncedTask } from './composables/useDebouncedTask.ts'
+export { useNavigationPosition } from './composables/useNavigationPosition.ts'
+export { openPrintSession } from './utils/printSession.ts'
+export { useTreeExpansion } from './composables/useTreeExpansion.ts'
+
+export { useOverlayState } from './composables/useOverlayState.ts'
+
+export { replaceDraftRow, appendDraftRow, removeDraftRow } from './utils/draftCollection.ts'

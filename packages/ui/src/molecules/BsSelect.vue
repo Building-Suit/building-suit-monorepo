@@ -1,23 +1,51 @@
 <script setup lang="ts">
 import Select from 'primevue/select'
 import type { SelectProps } from 'primevue/select'
+import { provide } from 'vue'
 defineOptions({ inheritAttrs: false })
 const model = defineModel<string | number | null>({ default: null })
-withDefaults(defineProps<{
-  label: string
-  options: SelectProps['options']
+const props = withDefaults(defineProps<{
+  value?: string | number | null
+  label?: string
+  options?: SelectProps['options']
+  native?: boolean
   optionLabel?: SelectProps['optionLabel']
   optionValue?: SelectProps['optionValue']
+  optionDisabled?: SelectProps['optionDisabled']
   virtual?: boolean
   virtualScrollerOptions?: SelectProps['virtualScrollerOptions']
-}>(), { virtual: false, optionLabel: undefined, optionValue: undefined, virtualScrollerOptions: undefined })
+}>(), { value: undefined, label: undefined, options: undefined, native: false, virtual: false, optionLabel: undefined, optionValue: undefined, optionDisabled: undefined, virtualScrollerOptions: undefined })
+function optionField(option: unknown, field: string | ((option: unknown) => unknown) | undefined): unknown {
+  if (typeof field === 'function') return field(option)
+  if (field && typeof option === 'object' && option !== null) return (option as Record<string, unknown>)[field]
+  return option
+}
+const nativeOptions = computed(() => (props.options ?? []).map((option: unknown) => {
+  const value = optionField(option, props.optionValue)
+  return {
+    value: typeof value === 'string' || typeof value === 'number' ? value : '',
+    label: String(optionField(option, props.optionLabel) ?? ''),
+    disabled: props.optionDisabled ? Boolean(optionField(option, props.optionDisabled)) : false,
+  }
+}))
+const nativeModel = computed({ get: () => props.value !== undefined ? props.value : model.value, set: value => { model.value = value } })
+provide('bs-native-select-value', nativeModel)
+const nativeSelect = ref<HTMLSelectElement | null>(null)
+const select = ref<InstanceType<typeof Select> | null>(null)
+const focusController = useControlFocus(nativeSelect, select)
+defineExpose({ focus: focusController.focus })
+const attrs = useAttrs()
+const accessibleLabel = computed(() => props.label || (typeof attrs['aria-label'] === 'string' ? attrs['aria-label'] : undefined))
 const ui = useUiCopy()
 </script>
 
 <template>
+  <select v-if="native" ref="nativeSelect" v-bind="$attrs" v-model="nativeModel" class="ls-input" :aria-label="accessibleLabel"><slot v-if="$slots.default" /><template v-else><option v-for="(option, index) in nativeOptions" :key="index" :value="option.value" :disabled="option.disabled">{{ option.label }}</option></template></select>
   <Select
-    v-bind="$attrs" v-model="model" :options="options" :option-label="optionLabel" :option-value="optionValue"
-    :aria-label="label"
+    v-else
+    ref="select"
+    v-bind="$attrs" v-model="model" :options="options" :option-label="optionLabel" :option-value="optionValue" :option-disabled="optionDisabled"
+    :aria-label="accessibleLabel"
     :empty-message="ui('empty')" :empty-filter-message="ui('empty')"
     :virtual-scroller-options="virtual || virtualScrollerOptions ? { ...virtualScrollerOptions, itemSize: 44 } : undefined"
     :pt="{

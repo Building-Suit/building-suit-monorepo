@@ -23,20 +23,7 @@ watch(contextKey, () => {
   toasts.value = []
 }, { flush: 'sync' })
 
-const i18nHead = useLocaleHead({
-  // seo: {
-  //   canonicalQueries: ['foo'],
-  // },
-});
-
-useHead(() => ({
-  htmlAttrs: {
-    lang: i18nHead.value.htmlAttrs!.lang,
-    dir: i18nHead.value.htmlAttrs!.dir as 'ltr' | 'rtl' | 'auto',
-  },
-  link: [...(i18nHead.value.link || [])],
-  meta: [...(i18nHead.value.meta || [])],
-}));
+useLocaleDocument()
 </script>
 
 <template><BsAppRoot v-if="canRenderPage" :layout-key="layoutKey" :page-key="pageKey" /></template>

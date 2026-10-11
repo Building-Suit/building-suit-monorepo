@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { BsAccessIdentityForm, BsAccessRoleForm, BsAccessPageCopy, BsAccessRoleView, BsAccessInvitationView, BsAccessMemberView, BsAccessMemberAction  } from '@building-suit/ui/access-presentation'
+import { useLedgerTeamMenuView } from '~/composables/useLedgerTeamMenuView'
 import type { Database } from '~~/types/database.types'
 const confirmation = useConfirmation()
 
@@ -291,12 +293,6 @@ function openEditSystemRole(role: Role) {
   roleModalOpen.value = true
 }
 
-function toggleRoleCap(key: string, checked: boolean) {
-  const next = new Set(roleForm.value.caps)
-  if (checked) next.add(key)
-  else next.delete(key)
-  roleForm.value = { ...roleForm.value, caps: next }
-}
 
 function slugKey(name: string) {
   const slug = name.toLowerCase().replaceAll(/[^a-z0-9]+/g, '_').replaceAll(/^_+|_+$/g, '').slice(0, 40)
@@ -383,188 +379,108 @@ async function resendInvitation(invitation: InvitationRow) {
   finally { saving.value = false }
 }
 const permissionRows = computed(() => permissionMenuGroups.value.flatMap(group => group.domains.flatMap(domain => domain.items.map(capability => ({ capability, groupKey: group.key, domainKey: domain.key, section: `${group.key}.${domain.key}` })))))
+const sharedPermissions = computed(() => permissionRows.value.map(row => ({ key: row.capability.key, label: capabilityTitle(row.capability), section: row.section, sectionLabel: `${t(`nav.groups.${row.groupKey}`)} / ${t(`access.permissionAreas.${row.domainKey}`)}` })))
+const sharedRoles = computed(() => [...roles.map(role => ({ key: role, label: t(`org.roles.${role}`) })), ...customRoles.value.map(role => ({ key: role.id, label: roleLabel(null, role.id) }))])
+const memberRoleOptions = computed(() => [
+  ...assignableRoles.value.map(role => ({ value: `system:${role}`, label: t(`org.roles.${role}`), description: `${rolePermissionCount(role)} / ${capabilities.value.length} ${t('access.permissionsMatrix').toLocaleLowerCase()}` })),
+  ...customRoles.value.map(role => ({ value: `custom:${role.id}`, label: roleLabel(null, role.id), description: `${customPermissionCount(role.id)} / ${capabilities.value.length} ${t('access.permissionsMatrix').toLocaleLowerCase()}` })),
+])
+function matrixGranted(role: string, key: string) {
+  return roles.includes(role as Role) ? hasRolePermission(role as Role, key) : customCapabilitiesFor(role).has(key)
+}
+function invitationActions(invitation: InvitationRow) {
+  if (invitation.status !== 'pending') return []
+  return [ ...(can('members.invite') ? [{ key: 'resend', label: t('access.resend') }] : []), ...(can('members.update') ? [{ key: 'revoke', label: t('access.revoke') }] : []) ]
+}
+function invitationAction(key: string, invitation: InvitationRow) {
+  if (key === 'resend') return resendInvitation(invitation)
+  if (key === 'revoke') return revokeInvitation(invitation)
+}
 const { dirty: overlayDirty0 } = useRecordAction(() => ({ role: editRoleChoice.value, status: editStatus.value }), computed(() => Boolean(editingMember.value)))
 const { dirty: overlayDirty2 } = useRecordAction(() => roleForm.value, computed(() => Boolean(roleModalOpen.value)))
+const ledgerUsage = useLedgerUsagePresentation()
+const memberViews = computed<BsAccessMemberView[]>(() => visibleMembers.value.map(member => {
+  const actions: BsAccessMemberAction[] = []
+  if (can('members.update') && member.role !== 'owner') actions.push({ key: 'edit', label: t('access.editAccess') })
+  if (can('members.update') && member.role !== 'owner' && member.user_id !== user.value?.id) actions.push({ key: member.status === 'active' ? 'suspend' : 'reactivate', label: t(member.status === 'active' ? 'access.suspend' : 'access.reactivate') })
+  if (can('members.remove') && member.role !== 'owner' && member.user_id !== user.value?.id) actions.push({ key: 'remove', label: t('access.remove') })
+  return { id: member.id, name: member.profile?.full_name || member.profile?.email || '', email: member.profile?.email || '', jobTitle: member.profile?.job_title || undefined, role: roleLabel(member.role, member.role_id), roleNote: member.granted_capabilities.length || member.revoked_capabilities.length ? t('access.customized') : undefined, status: member.status, joined: formatDate(member.joined_at), actions }
+}))
+function memberViewAction(key: BsAccessMemberAction['key'], id: string) {
+  const member = members.value.find(row => row.id === id)
+  if (!member) return
+  if (key === 'edit') openEditor(member)
+  else if (key === 'suspend' || key === 'reactivate') void quickStatus(member)
+  else if (key === 'remove') void removeMember(member)
+}
+const invitationViews = computed<BsAccessInvitationView[]>(() => invitations.value.map(invitation => ({ id: invitation.id, email: invitation.email, role: roleLabel(invitation.role, invitation.role_id), status: invitation.status, sender: invitation.inviter?.full_name || '—', senderDetail: invitation.inviter?.job_title || undefined, sent: formatDate(invitation.created_at), expires: formatDate(invitation.expires_at), actions: invitationActions(invitation) })))
+function invitationViewAction(key: string, id: string) {
+  const invitation = invitations.value.find(row => row.id === id)
+  if (invitation) invitationAction(key, invitation)
+}
+const accessCopy = computed<BsAccessPageCopy>(() => ({
+  title: t('access.title'), subtitle: t('access.subtitle'), eyebrow: t('access.eyebrow'), members: t('access.members'), roles: t('access.roleSummary'), invitations: t('access.invitations'), noMembers: t('access.noMembers'), noInvitations: t('access.noInvitations'), search: t('access.searchMembers'), memberCount: t('access.memberCount', members.value.length), invitationCount: t('access.invitationCount', invitations.value.length), roleSummary: t('access.roleSummary'), roleSummaryHint: t('access.roleSummaryHint'), invite: t('org.invite'), newRole: t('access.newRole'), matrix: t('access.permissionsMatrix'), retry: t('common.retry'), noTeam: t('access.noMembers'),
+  memberColumns: { name: t('access.name'), role: t('access.role'), status: t('access.status'), joined: t('access.joined'), actions: t('access.actions') },
+  invitationColumns: { email: t('auth.email'), role: t('access.role'), status: t('access.status'), sender: t('access.invitedBy'), sent: t('access.sent'), expires: t('access.expires'), actions: t('access.actions') },
+}))
+const roleViews = computed<BsAccessRoleView[]>(() => [
+  ...roles.map(role => ({ id: `system:${role}`, label: t(`org.roles.${role}`), description: t(`access.roles.${role}`), permissions: `${rolePermissionCount(role)} / ${capabilities.value.length} ${t('access.permissionsMatrix').toLocaleLowerCase()}`, actions: can('members.update') && role !== 'owner' ? [{ key: 'edit' as const, label: t('access.editRole') }] : [] })),
+  ...customRoles.value.map(role => ({ id: `custom:${role.id}`, label: roleLabel(null, role.id), description: `${role.name_en} · ${role.name_ar}`, permissions: `${customPermissionCount(role.id)} / ${capabilities.value.length} ${t('access.permissionsMatrix').toLocaleLowerCase()}`, actions: can('members.update') ? [{ key: 'edit' as const, label: t('access.editRole') }, { key: 'remove' as const, label: t('access.remove') }] : [] })),
+])
+function roleViewAction(key: 'edit' | 'remove', id: string) {
+  if (id.startsWith('system:')) { if (key === 'edit') openEditSystemRole(id.slice(7) as Role); return }
+  const role = customRoles.value.find(row => row.id === id.slice(7))
+  if (!role) return
+  if (key === 'edit') openEditRole(role)
+  else void deleteRole(role)
+}
+const invitationView = useLedgerTeamMenuView()
+const invitationPresentationForm = computed<BsAccessIdentityForm>({ get: () => ({ name: '', jobTitle: '', email: invitationView.email.value, role: invitationView.role.value, locationIds: [] }), set: value => { invitationView.email.value = value.email; invitationView.role.value = value.role } })
+const memberPresentationForm = computed<BsAccessIdentityForm>({ get: () => ({ name: '', jobTitle: '', email: editingMember.value?.profile?.email || '', role: editRoleChoice.value, locationIds: [] }), set: value => { editRoleChoice.value = value.role } })
+const rolePresentationForm = computed<BsAccessRoleForm>({ get: () => ({ name: roleForm.value.name_en, nameAr: roleForm.value.name_ar, permissions: [...roleForm.value.caps] }), set: value => { roleForm.value.name_en = value.name; roleForm.value.name_ar = value.nameAr; roleForm.value.caps = new Set(value.permissions) } })
+const invitationEditor = computed(() => ({ state: { visible: invitationView.open.value && can('members.invite'), title: t('org.invite'), dirty: invitationView.overlayDirty0.value, pending: invitationView.pending.value, error: invitationView.errorMessage.value, submitLabel: t('org.createInvite'), cancelLabel: t('common.cancel') }, copy: { email: t('auth.email'), role: t('team.role'), help: t('access.inviteDescription'), deliveryTitle: t('access.emailDelivery'), deliveryHint: t('access.emailDeliveryHint') }, roles: [...['admin', 'accountant', 'data_entry', 'viewer'].map(key => ({ value: `system:${key}`, label: t(`org.roles.${key}`) })), ...invitationView.customRoles.value.map(role => ({ value: `custom:${role.id}`, label: roleLabel(null, role.id) }))], usage: invitationView.ledgerUsage.item('max_members') || undefined }))
+const memberEditor = computed(() => ({ state: { visible: Boolean(editingMember.value), title: t('access.editAccessFor', { name: editingMember.value?.profile?.full_name || editingMember.value?.profile?.email }), dirty: overlayDirty0.value, pending: saving.value, error: errorMessage.value, submitLabel: t('access.saveAccess'), cancelLabel: t('common.cancel') }, copy: { email: t('auth.email'), role: t('access.role') }, roles: memberRoleOptions.value }))
+const roleEditor = computed(() => ({ state: { visible: roleModalOpen.value, title: roleForm.value.systemRole ? t('access.editRoleFor', { role: t(`org.roles.${roleForm.value.systemRole}`) }) : roleForm.value.id ? t('access.editRole') : t('access.newRole'), dirty: overlayDirty2.value, pending: roleSaving.value, error: errorMessage.value, submitLabel: t('access.createRole'), cancelLabel: t('common.cancel') }, names: !roleForm.value.systemRole ? { english: t('access.roleNameEn'), arabic: t('access.roleNameAr'), maxLength: 80 } : undefined, permissionLabel: t('access.permission'), permissions: sharedPermissions.value, usage: !roleForm.value.id && !roleForm.value.systemRole ? ledgerUsage.item('max_custom_roles') || undefined : undefined }))
+const matrixPresentation = computed(() => ({ visible: matrixOpen.value, title: t('access.permissionsMatrix'), hint: t('access.matrixHint'), permissionLabel: t('access.permission'), closeLabel: t('common.close'), items: sharedPermissions.value, roles: sharedRoles.value, grants: sharedRoles.value.map(role => ({ role: role.key, permissions: sharedPermissions.value.filter(item => matrixGranted(role.key, item.key)).map(item => item.key) })) }))
 </script>
 
 <template>
-  <div class="space-y-6">
-    <header class="flex flex-wrap items-end justify-between gap-4">
-      <div class="max-w-3xl">
-        <p class="text-xs font-bold uppercase tracking-[.18em] text-fg-muted">{{ t('access.eyebrow') }}</p>
-        <h1 class="mt-2 text-h1 font-bold">{{ t('access.title') }}</h1>
-        <p class="mt-2 text-sm leading-6 text-fg-muted">{{ t('access.subtitle') }}</p>
-      </div>
-      <div class="flex flex-wrap gap-2">
-        <BsButton v-if="can('members.read')" type="button" class="ls-btn" @click="openMatrix">{{ t('access.permissionsMatrix') }}</BsButton>
-        <BsButton v-if="can('members.update')" type="button" class="ls-btn ls-btn-primary" @click="openCreateRole"><BsIcon name="add" :size="18" /> {{ t('access.newRole') }}</BsButton>
-        <BsButton v-if="can('members.invite')" type="button" class="ls-btn ls-btn-primary" @click="showInvitation">
-          <BsIcon name="add" :size="18" /> {{ t('org.invite') }}
-        </BsButton>
-      </div>
-    </header>
-
-    <div class="ls-card flex flex-wrap gap-1 p-1.5" role="tablist" :aria-label="t('access.title')">
-      <BsButton variant="tab"
-        v-for="tab in tabs"
-        :key="tab.key"
-        type="button"
-        role="tab"
-        :aria-selected="activeTab === tab.key"
-        class="min-h-11 rounded-control px-4 text-sm font-bold transition-colors"
-        @click="activeTab = tab.key"
-      >
-        {{ tab.label }} <span v-if="tab.count !== undefined" class="ms-1 opacity-70">{{ tab.count }}</span>
-      </BsButton>
-    </div>
-
-    <BsSectionSkeleton v-if="loading" variant="table" :rows="6" />
-    <p v-else-if="errorMessage && !editingMember && !matrixOpen && !roleModalOpen" class="ls-error" role="alert">{{ errorMessage }}</p>
-
-    <template v-else-if="activeTab === 'members'">
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <p class="text-sm font-semibold text-fg-muted">{{ t('access.memberCount', members.length) }}</p>
-        <label class="relative w-full sm:w-72">
-          <span class="sr-only">{{ t('access.searchMembers') }}</span>
-          <input v-model="search" type="search" class="ls-input" :placeholder="t('access.searchMembers')">
-        </label>
-      </div>
-      <div v-if="visibleMembers.length" class="ls-card overflow-x-auto">
-        <BsDataTable :value="visibleMembers" data-key="id">
-  <Column >
-    <template #header>{{ t('access.name') }}</template>
-    <template #body="{ data: member }"><div class="flex items-center gap-3"><span class="grid size-9 shrink-0 place-items-center rounded-full bg-surface-muted font-black">{{ (member.profile?.full_name || member.profile?.email || '?').slice(0, 1).toUpperCase() }}</span><div><p class="font-bold">{{ member.profile?.full_name || member.profile?.email }}</p><p class="text-xs text-fg-muted" dir="ltr">{{ member.profile?.email }}</p><p v-if="member.profile?.job_title" class="text-xs text-fg-muted">{{ member.profile.job_title }}</p></div></div></template>
-  </Column>
-  <Column >
-    <template #header>{{ t('access.role') }}</template>
-    <template #body="{ data: member }"><span class="ls-badge bg-surface-muted">{{ roleLabel(member.role, member.role_id) }}</span><span v-if="member.granted_capabilities.length || member.revoked_capabilities.length" class="ms-1 text-xs text-fg-muted">{{ t('access.customized') }}</span></template>
-  </Column>
-  <Column >
-    <template #header>{{ t('access.status') }}</template>
-    <template #body="{ data: member }"><BsStatusBadge :status="member.status" /></template>
-  </Column>
-  <Column body-class="whitespace-nowrap">
-    <template #header>{{ t('access.joined') }}</template>
-    <template #body="{ data: member }">{{ formatDate(member.joined_at) }}</template>
-  </Column>
-  <Column header-class="text-end" body-class="whitespace-nowrap text-end">
-    <template #header>{{ t('access.actions') }}</template>
-    <template #body="{ data: member }"><BsButton v-if="can('members.update') && member.role !== 'owner'" type="button" class="ls-btn ls-btn-sm" @click="openEditor(member)">{{ t('access.editAccess') }}</BsButton><BsButton v-if="can('members.update') && member.role !== 'owner' && member.user_id !== user?.id" type="button" class="ls-btn ls-btn-sm ms-1" @click="quickStatus(member)">{{ t(member.status === 'active' ? 'access.suspend' : 'access.reactivate') }}</BsButton><BsButton v-if="can('members.remove') && member.role !== 'owner' && member.user_id !== user?.id" type="button" class="ls-btn ls-btn-sm ms-1 text-danger" @click="removeMember(member)">{{ t('access.remove') }}</BsButton></template>
-  </Column>
-</BsDataTable>
-      </div>
-      <BsEmptyState v-else :title="t('access.noMembers')" />
-    </template>
-
-    <template v-else-if="activeTab === 'roles'">
-      <div>
-        <h2 class="text-lg font-bold">{{ t('access.roleSummary') }}</h2>
-        <p class="mt-1 text-sm text-fg-muted">{{ t('access.roleSummaryHint') }}</p>
-      </div>
-
-      <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        <article v-for="role in roles" :key="role" class="ls-card p-5">
-          <div class="flex items-start justify-between gap-2">
-            <span class="grid size-10 place-items-center rounded-control bg-brand-navy text-brand-gold"><BsIcon :name="role === 'viewer' ? 'user' : 'team'" /></span>
-            <BsButton v-if="can('members.update') && role !== 'owner'" type="button" class="ls-btn ls-btn-sm" @click="openEditSystemRole(role)">{{ t('access.editRole') }}</BsButton>
-          </div>
-          <h3 class="mt-4 font-bold">{{ t(`org.roles.${role}`) }}</h3>
-          <p class="mt-2 min-h-16 text-sm leading-5 text-fg-muted">{{ t(`access.roles.${role}`) }}</p>
-          <p class="mt-4 text-xs font-bold text-fg-muted">{{ rolePermissionCount(role) }} / {{ capabilities.length }} {{ t('access.permissionsMatrix').toLocaleLowerCase() }}</p>
-        </article>
-        <article v-for="role in customRoles" :key="role.id" class="ls-card p-5">
-          <div class="flex items-start justify-between gap-2">
-            <span class="grid size-10 place-items-center rounded-control bg-brand-navy text-brand-gold"><BsIcon name="team" /></span>
-            <div v-if="can('members.update')" class="flex gap-1">
-              <BsButton type="button" class="ls-btn ls-btn-sm" @click="openEditRole(role)">{{ t('access.editRole') }}</BsButton>
-              <BsButton type="button" class="ls-btn ls-btn-sm text-danger" @click="deleteRole(role)">{{ t('access.remove') }}</BsButton>
-            </div>
-          </div>
-          <h3 class="mt-4 font-bold">{{ roleLabel(null, role.id) }}</h3>
-          <p class="text-xs text-fg-muted" dir="ltr">{{ role.name_en }} · {{ role.name_ar }}</p>
-          <p class="mt-4 text-xs font-bold text-fg-muted">{{ customPermissionCount(role.id) }} / {{ capabilities.length }} {{ t('access.permissionsMatrix').toLocaleLowerCase() }}</p>
-        </article>
-      </div>
-    </template>
-
-    <template v-else>
-      <p class="text-sm font-semibold text-fg-muted">{{ t('access.invitationCount', invitations.length) }}</p>
-      <div v-if="invitations.length" class="ls-card overflow-x-auto">
-        <BsDataTable :value="invitations" data-key="id">
-  <Column >
-    <template #header>{{ t('auth.email') }}</template>
-    <template #body="{ data: invitation }"><div dir="ltr">{{ invitation.email }}</div></template>
-  </Column>
-  <Column >
-    <template #header>{{ t('access.role') }}</template>
-    <template #body="{ data: invitation }">{{ roleLabel(invitation.role, invitation.role_id) }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('access.status') }}</template>
-    <template #body="{ data: invitation }"><BsStatusBadge :status="invitation.status" /></template>
-  </Column>
-  <Column >
-    <template #header>{{ t('access.invitedBy') }}</template>
-    <template #body="{ data: invitation }"><p>{{ invitation.inviter?.full_name || '—' }}</p><p v-if="invitation.inviter?.job_title" class="text-xs text-fg-muted">{{ invitation.inviter.job_title }}</p></template>
-  </Column>
-  <Column body-class="whitespace-nowrap">
-    <template #header>{{ t('access.sent') }}</template>
-    <template #body="{ data: invitation }">{{ formatDate(invitation.created_at) }}</template>
-  </Column>
-  <Column body-class="whitespace-nowrap">
-    <template #header>{{ t('access.expires') }}</template>
-    <template #body="{ data: invitation }">{{ formatDate(invitation.expires_at) }}</template>
-  </Column>
-  <Column header-class="text-end" body-class="whitespace-nowrap text-end">
-    <template #header>{{ t('access.actions') }}</template>
-    <template #body="{ data: invitation }"><template v-if="invitation.status === 'pending'"><BsButton v-if="can('members.invite')" type="button" class="ls-btn ls-btn-sm" :disabled="saving" @click="resendInvitation(invitation)">{{ t('access.resend') }}</BsButton><BsButton v-if="can('members.update')" type="button" class="ls-btn ls-btn-sm ms-1 text-danger" :disabled="saving" @click="revokeInvitation(invitation)">{{ t('access.revoke') }}</BsButton></template></template>
-  </Column>
-</BsDataTable>
-      </div>
-      <BsEmptyState v-else :title="t('access.noInvitations')" />
-    </template>
-
-    <TeamMenu :show-trigger="false" />
-      <!-- Edit access: role menu only -->
-        <BsRecordActionDialog v-if="editingMember" :visible="true" :title="t('access.editAccessFor', { name: editingMember.profile?.full_name || editingMember.profile?.email })" size="lg" :dirty="overlayDirty0" :pending="saving" :error="errorMessage" :submit-label="t('access.saveAccess')" :cancel-label="t('common.cancel')" @update:visible="value => { if (!value) editingMember = null }" @submit="saveMember">
-            <p class="text-sm text-fg-muted" dir="ltr">{{ editingMember.profile?.email }}</p>
-            <fieldset class="mt-6">
-              <legend class="text-sm font-bold">{{ t('access.role') }}</legend>
-              <div class="mt-3 grid gap-2">
-                <label v-for="role in assignableRoles" :key="role" class="flex cursor-pointer items-center justify-between gap-3 rounded-card border p-3 text-sm transition-colors" :class="editRoleChoice === `system:${role}` ? 'border-fg bg-surface-muted' : 'border-[var(--bs-border)] hover:bg-surface-muted'"><span class="flex items-center gap-3"><input v-model="editRoleChoice" type="radio" name="edit-member-role" :value="`system:${role}`" class="size-4 accent-[var(--bs-accent)]"><span class="font-bold">{{ t(`org.roles.${role}`) }}</span></span><span class="text-xs text-fg-muted">{{ rolePermissionCount(role) }} / {{ capabilities.length }} {{ t('access.permissionsMatrix').toLocaleLowerCase() }}</span></label>
-                <label v-for="role in customRoles" :key="role.id" class="flex cursor-pointer items-center justify-between gap-3 rounded-card border p-3 text-sm transition-colors" :class="editRoleChoice === `custom:${role.id}` ? 'border-fg bg-surface-muted' : 'border-[var(--bs-border)] hover:bg-surface-muted'"><span class="flex items-center gap-3"><input v-model="editRoleChoice" type="radio" name="edit-member-role" :value="`custom:${role.id}`" class="size-4 accent-[var(--bs-accent)]"><span class="font-bold">{{ roleLabel(null, role.id) }}</span></span><span class="text-xs text-fg-muted">{{ customPermissionCount(role.id) }} / {{ capabilities.length }} {{ t('access.permissionsMatrix').toLocaleLowerCase() }}</span></label>
-              </div>
-            </fieldset>
-        </BsRecordActionDialog>
-
-      <!-- Permission matrix -->
-        <BsDialog v-if="matrixOpen" :visible="true" :title="t('access.permissionsMatrix')" :aria-label="t('access.permissionsMatrix')" :show-header="false" size="lg" :pending="saving" @update:visible="value => { if (!value) matrixOpen = false }"><template #default="{ close: dismiss }">
-<div class="overflow-y-auto p-6">
-            <div class="flex items-start justify-between gap-4"><div><h2 class="text-lg font-bold">{{ t('access.permissionsMatrix') }}</h2><p class="mt-1 text-sm text-fg-muted">{{ t('access.matrixHint') }}</p></div><BsButton type="button" class="ls-btn ls-btn-sm" :aria-label="t('common.close')" @click="dismiss"><BsIcon name="close" /></BsButton></div>
-            <div class="mt-6 overflow-x-auto">
-              <BsDataTable :value="permissionRows" row-group-mode="subheader" group-rows-by="section">
-  <Column :header="t('access.permission')"><template #body="{ data: row }"><p class="font-semibold">{{ capabilityTitle(row.capability) }}</p></template></Column>
-  <Column v-for="role in roles" :key="role" :header="t(`org.roles.${role}`)" header-class="text-center" body-class="text-center"><template #body="{ data: row }"><BsIcon v-if="hasRolePermission(role, row.capability.key)" name="check" :size="18" class="mx-auto text-success" /><span v-else class="text-fg-muted">—</span></template></Column>
-  <Column v-for="role in customRoles" :key="role.id" :header="roleLabel(null, role.id)" header-class="text-center" body-class="text-center"><template #body="{ data: row }"><BsIcon v-if="customCapabilitiesFor(role.id).has(row.capability.key)" name="check" :size="18" class="mx-auto text-success" /><span v-else class="text-fg-muted">—</span></template></Column>
-<template #groupheader="{ data: row }"><div class="bg-surface-muted font-bold">{{ t(`nav.groups.${row.groupKey}`) }} / {{ t(`access.permissionAreas.${row.domainKey}`) }}</div></template></BsDataTable>
-            </div>
-          </div>
-</template></BsDialog>
-
-      <!-- Create / edit custom role -->
-        <BsRecordActionDialog v-if="roleModalOpen" :visible="true" :title="roleForm.systemRole ? t('access.editRoleFor', { role: t(`org.roles.${roleForm.systemRole}`) }) : roleForm.id ? t('access.editRole') : t('access.newRole')" size="lg" :dirty="overlayDirty2" :pending="roleSaving" :error="errorMessage" :submit-label="t('access.createRole')" :cancel-label="t('common.cancel')" @update:visible="value => { if (!value) roleModalOpen = false }" @submit="saveRole">
-            <QuotaUsageMeter v-if="!roleForm.id && !roleForm.systemRole" quota-key="max_custom_roles" compact class="mt-4" />
-            <div v-if="!roleForm.systemRole" class="mt-6 grid gap-4 sm:grid-cols-2">
-              <BsFloatingField :label="t('access.roleNameEn')"><input v-model="roleForm.name_en" type="text" class="ls-input" dir="ltr" required maxlength="80"></BsFloatingField>
-              <BsFloatingField :label="t('access.roleNameAr')"><input v-model="roleForm.name_ar" type="text" class="ls-input" dir="rtl" required maxlength="80"></BsFloatingField>
-            </div>
-            <div class="mt-7 overflow-x-auto">
-              <BsDataTable :value="permissionRows" row-group-mode="subheader" group-rows-by="section">
-  <Column :header="t('access.permission')"><template #body="{ data: row }"><label class="flex cursor-pointer items-center gap-3"><input type="checkbox" class="size-4 shrink-0 accent-[var(--bs-accent)]" :checked="roleForm.caps.has(row.capability.key)" @change="toggleRoleCap(row.capability.key, ($event.target as HTMLInputElement).checked)"><span class="font-semibold">{{ capabilityTitle(row.capability) }}</span></label></template></Column>
-<template #groupheader="{ data: row }"><div class="bg-surface-muted font-bold">{{ t(`nav.groups.${row.groupKey}`) }} / {{ t(`access.permissionAreas.${row.domainKey}`) }}</div></template></BsDataTable>
-            </div>
-        </BsRecordActionDialog>
-  </div>
+  <BsAccessManagementPage
+    v-model:invitation-form="invitationPresentationForm"
+    v-model:member-form="memberPresentationForm"
+    v-model:role-form="rolePresentationForm"
+    :copy="accessCopy"
+    :tabs="tabs"
+    :active-tab="activeTab"
+    :members="memberViews"
+    :roles="roleViews"
+    :invitations="invitationViews"
+    :loading="loading"
+    :error="errorMessage && !editingMember && !matrixOpen && !roleModalOpen ? errorMessage : null"
+    :can-invite="can('members.invite')"
+    :can-create-role="can('members.update')"
+    :can-view-matrix="can('members.read')"
+    :search="search"
+    :pending="saving"
+    :invitation-editor="invitationEditor"
+    :member-editor="memberEditor"
+    :role-editor="roleEditor"
+    :matrix="matrixPresentation"
+    @update:active-tab="activeTab = $event as Tab"
+    @update:search="search = $event"
+    @invite="showInvitation"
+    @create-role="openCreateRole"
+    @matrix="openMatrix"
+    @retry="loadAccess"
+    @member-action="memberViewAction"
+    @invitation-action="invitationViewAction"
+    @role-action="roleViewAction"
+    @close-invitation="invitationView.close"
+    @submit-invitation="invitationView.invite"
+    @close-member="editingMember = null"
+    @submit-member="saveMember"
+    @close-role="roleModalOpen = false"
+    @submit-role="saveRole"
+    @close-matrix="matrixOpen = false"
+  />
 </template>
-
-undefined

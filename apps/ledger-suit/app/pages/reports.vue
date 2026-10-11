@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import { renderPendingPrintDocument } from '@building-suit/ui/utils/reportDocument'
+import { formatPresentationMoney } from '@building-suit/ui/utils/presentation'
+import { openPrintSession } from '@building-suit/ux'
+import type { BsFinancialReportCell, BsFinancialReportColumn, BsFinancialReportCopy, BsFinancialReportFilters, BsFinancialReportSection, BsFinancialReportsView } from '@building-suit/ui/types/financialReportsPresentation'
 import { scopedQueryKey } from '@building-suit/data-access'
 import type { Database } from '~~/types/database.types'
 import type { AccountsReportsRpcDatabase } from '~~/types/accounts-reports-rpc.types'
@@ -235,11 +239,8 @@ const profitLossPending = computed(() => tab.value === 'overview' ? overviewPend
 const balanceSheet = computed(() => tab.value === 'overview' ? (overview.value?.balance_sheet ?? []) : balanceSheetDetail.value)
 const balanceSheetPending = computed(() => tab.value === 'overview' ? overviewPending.value : balanceSheetDetailPending.value)
 const trialBalance = computed(() => overview.value?.trial_balance ?? [])
-const trialBalancePending = computed(() => overviewPending.value)
-const trialBalanceError = computed(() => overviewError.value)
 const statementReconciliation = computed(() => overview.value?.reconciliation ?? null)
 const integrity = computed(() => overview.value?.integrity ?? null)
-function refreshTrialBalance() { return refreshOverview() }
 
 function sectionTotal(rows: ReportRow[] | null, section: string) {
   return (rows ?? []).filter(r => r.section === section)
@@ -277,14 +278,6 @@ const trialTotals = computed(() => ({
 const trialBalanced = computed(() => trialTotals.value.openingDebit === trialTotals.value.openingCredit
   && trialTotals.value.periodDebit === trialTotals.value.periodCredit
   && trialTotals.value.closingDebit === trialTotals.value.closingCredit)
-const trialTotalCells = computed(() => [
-  { key: 'openingDebit', amount: trialTotals.value.openingDebit },
-  { key: 'openingCredit', amount: trialTotals.value.openingCredit },
-  { key: 'periodDebit', amount: trialTotals.value.periodDebit },
-  { key: 'periodCredit', amount: trialTotals.value.periodCredit },
-  { key: 'closingDebit', amount: trialTotals.value.closingDebit },
-  { key: 'closingCredit', amount: trialTotals.value.closingCredit },
-])
 
 const allocationEntry = ref<CashDetail | null>(null)
 const trialDrilldown = ref<{ accountId: string, from: string, to: string } | null>(null)
@@ -383,16 +376,8 @@ function exportMetadata(report: ExportReport, exportLocale: string): ReportForma
 
 async function exportReport(report: ExportReport, format: ExportFormat = 'csv') {
   if (!currentId.value || exportPending.value) return
-  const printWindow = format === 'print' ? window.open('', '_blank') : null
-  if (format === 'print' && !printWindow) {
-    exportError.value = t('reports.popupBlocked')
-    return
-  }
-  if (printWindow) {
-    printWindow.opener = null
-    printWindow.document.write(`<!doctype html><html lang="${locale.value}" dir="${locale.value.startsWith('ar') ? 'rtl' : 'ltr'}"><head><meta charset="utf-8"><title>${t('reports.preparing')}</title></head><body><p>${t('reports.preparing')}</p></body></html>`)
-    printWindow.document.close()
-  }
+  const printWindow = format === 'print' ? openPrintSession(renderPendingPrintDocument(t('reports.preparing'), locale.value.startsWith('ar') ? 'rtl' : 'ltr', t('reports.preparing'))) : null
+  if (format === 'print' && !printWindow) { exportError.value = t('reports.popupBlocked'); return }
   const requestedScope = exportScope(report)
   const exportLocale = locale.value
   const exportPeriod = ['profit_loss', 'trial_balance', 'cash_flow', 'general_ledger'].includes(report) ? `${from.value}_${to.value}` : asOf.value
@@ -420,11 +405,7 @@ async function exportReport(report: ExportReport, format: ExportFormat = 'csv') 
     if (format === 'csv') downloadCsv(`${filename}.csv`, localizedCsv)
     else if (format === 'excel') downloadReportXlsx(`${filename}.xlsx`, buildReportXlsx(localizedCsv, report, metadata))
     else if (printWindow) {
-      printWindow.document.open()
-      printWindow.document.write(buildPrintableReportHtml(localizedCsv, report, metadata))
-      printWindow.document.close()
-      printWindow.focus()
-      printWindow.print()
+      printWindow.print(buildPrintableReportHtml(localizedCsv, report, metadata))
     }
   }
   catch {
@@ -435,290 +416,64 @@ async function exportReport(report: ExportReport, format: ExportFormat = 'csv') 
     exportPending.value = false
   }
 }
+const ledgerPresentation = useLedgerPresentation()
+const activityPresentation = useLedgerActivityPresentation(reactive({ get accountId() { return trialDrilldown.value?.accountId ?? null }, get scope() { return trialScope.value }, get initialFrom() { return trialDrilldown.value?.from }, get initialTo() { return trialDrilldown.value?.to } }), () => { trialDrilldown.value = null })
+const allocationPresentation = useLedgerCashAllocationPresentation(reactive({ get entryId() { return allocationEntry.value?.entry_id ?? null }, get accountName() { return allocationEntry.value ? accountName(allocationEntry.value.account_id) : '' } }), { close: () => { allocationEntry.value = null }, saved: () => { void refreshCashFlow(); void refreshCashDetail() } })
+const activityForm = activityPresentation.form
+const allocationForm = allocationPresentation.form
+const financialFilters = computed<BsFinancialReportFilters>({ get: () => ({ tab: tab.value, from: from.value, to: to.value, asOf: asOf.value, account: ledgerAccountId.value, density: tableDensity.value }), set: value => { if (value.tab !== tab.value) selectTab(value.tab); from.value = value.from; to.value = value.to; asOf.value = value.asOf; ledgerAccountId.value = value.account; tableDensity.value = value.density } })
+const financialCopy = computed<BsFinancialReportCopy>(() => ({ title: t('reports.title'), subtitle: t('reports.csvExports'), context: t('pageContext.label'), from: t('reports.from'), to: t('reports.to'), asOf: t('reports.asOf'), account: t('reports.account'), density: t('accountingTable.density'), compact: t('accountingTable.compact'), comfortable: t('accountingTable.comfortable'), retry: t('accounts.retry'), failed: t('reports.loadError'), empty: t('reports.emptyTitle'), emptyHint: t('reports.emptyRange'), total: t('reports.total'), csv: t('common.exportCsv'), excel: t('reports.exportExcel'), print: t('reports.printPdf'), allocate: t('financialMapping.allocate'), reconciliation: t('financialMapping.reconciliationDetails'), trialBalance: t('reports.trialBalance'), scroll: t('accountingTable.trialBalanceScroll') }))
+function displayReportMoney(value: number | string | bigint, _signed = false) { return formatPresentationMoney(value, { currency: ledgerPresentation.currency(), locale: locale.value, unit: 'minor', numberingSystem: 'latn' }) }
+function reportCell(value: string, account?: string | null, period: 'range' | 'asof' | 'opening' | 'period' | 'closing' = 'range', label?: string): BsFinancialReportCell { return { value, ...(account ? { action: { account, period } } : {}), ...(label ? { label } : {}) } }
+const financialView = computed<BsFinancialReportsView>(() => {
+ const active = tab.value
+ const column = (key: string, label: string, total = '') => ({ key, label, total })
+ const amountColumn = column('amount', t('transactions.amount'))
+ let columns: BsFinancialReportColumn[] = [amountColumn]
+ let sections: BsFinancialReportSection[] = []
+ let failed = false; let loading = false; let empty = false; let errorLabel = t('reports.loadError'); let emptyHint = t('reports.emptyRange')
+ const warnings: string[] = []
+ const totals: { label: string; value: string }[] = []
+ if (active === 'overview') {
+  failed = !!overviewError.value; loading = overviewPending.value; empty = !trialBalance.value.length
+  columns = trialColumns.map(item => column(item.field, t(`reports.${item.label}`), displayReportMoney(sumTrial(item.field))))
+  sections = [{ id: 'trial', title: `${t('reports.trialBalance')} · ${baseCurrency.value}`, total: '', rows: trialBalance.value.map(row => ({ id: row.account_id, name: row.name, code: row.code || t('common.dash'), cells: trialColumns.map(item => reportCell(displayReportMoney(row[item.field]), row.account_id, item.scope, t('reports.drilldownAmount', { column: t(`reports.${item.label}`), account: row.name }))) })) }]
+  if (integrity.value?.balanced === false) warnings.push(`${t('reports.integrityTitle')} ${t('reports.integrityBody', { difference: formatMoney(Number(integrity.value.difference_minor), baseCurrency.value, locale.value) })}`)
+  if (statementReconciliation.value && (statementReconciliation.value.profit_loss_difference_minor !== 0 || statementReconciliation.value.balance_sheet_difference_minor !== 0 || !statementReconciliation.value.mapping_complete)) warnings.push(t('financialMapping.reconciliationWarning'))
+ } else if (active === 'profit-loss') {
+  failed = !!profitLossError.value; loading = profitLossPending.value; empty = !profitLoss.value.length
+  if (plMappingIncomplete.value) warnings.push(t('financialMapping.incomplete'))
+  sections = plSections.map(section => ({ id: section.key, title: t(section.labelKey), total: displayReportMoney(sectionTotal(profitLoss.value, section.key)), rows: rowsIn(profitLoss.value, section.key).map((row, index) => ({ id: row.account_id || `${section.key}-${index}`, name: row.name, code: row.code || '', cells: [reportCell(displayReportMoney(row.amount_minor), row.account_id)] })) })).filter(section => section.rows.length)
+  totals.push({ label: t('reports.netProfit'), value: displayReportMoney(netProfit.value, true) }, { label: t('financialMapping.grossProfit'), value: displayReportMoney(grossProfit.value, true) }, { label: t('financialMapping.operatingResult'), value: displayReportMoney(operatingResult.value, true) })
+ } else if (active === 'balance-sheet') {
+  failed = !!balanceSheetError.value; loading = balanceSheetPending.value; empty = !balanceSheet.value.length; errorLabel = t('statementClassification.reportError'); emptyHint = t('reports.emptyAsOf')
+  if (bsMappingIncomplete.value) warnings.push(t('financialMapping.incomplete'))
+  columns = [column('effective', t('statementClassification.effectiveFrom')), amountColumn]
+  sections = STATEMENT_LINES.map(line => ({ id: line, title: t(`statementClassification.lines.${line}`), total: displayReportMoney(sumStatementAmounts(balanceSheet.value, line, 'statement_line')), rows: bsRows.value.filter(row => row.statement_line === line).map((row, index) => ({ id: row.account_id || `${line}-${index}`, name: row.displayName, code: '', cells: [reportCell(row.effective_from ? formatDate(row.effective_from, locale.value) : t('common.dash')), reportCell(displayReportMoney(row.amount_minor), row.account_id, 'asof')] })) })).filter(section => section.rows.length)
+ } else if (active === 'cash-flow') {
+  failed = !!cashFlowError.value || !!cashDetailError.value; loading = cashFlowPending.value; empty = !cashFlow.value; emptyHint = t('reports.emptyCashHint')
+  if (cashFlow.value && (!cashFlow.value.classification_complete || !cashFlow.value.reconciled)) warnings.push(t('financialMapping.cashIncomplete'))
+  columns = [column('activity', t('reports.activity')), amountColumn]
+  sections = [{ id: 'sources', title: '', total: '', rows: (cashDetail.value || []).map(row => ({ id: row.entry_id, name: accountName(row.account_id), code: '', cells: [reportCell(t(`financialMapping.lines.${row.section}`)), reportCell(displayReportMoney(row.amount_minor, true), row.account_id)], allocationId: row.entry_id })) }]
+ } else {
+  failed = !!ledgerError.value; loading = ledgerPending.value; empty = !ledger.value.length; emptyHint = t('reports.emptyLedgerHint')
+  columns = [column('date', t('transactions.date')), column('reference', t('transactions.reference')), column('debit', t('detail.debit')), column('credit', t('detail.credit')), column('balance', t('reports.runningBalance'))]
+  sections = [{ id: 'ledger', title: '', total: '', rows: ledger.value.map(row => ({ id: row.entry_id, name: row.description || row.memo || t('common.dash'), code: '', cells: [reportCell(formatDate(row.entry_date, locale.value)), reportCell(row.reference || t('common.dash')), reportCell(Number(row.debit_minor) ? displayReportMoney(row.debit_minor) : t('common.dash')), reportCell(Number(row.credit_minor) ? displayReportMoney(row.credit_minor) : t('common.dash')), reportCell(displayReportMoney(row.running_balance_minor))] })) }]
+ }
+ const cashKeys = ['net_profit', 'operating_adjustments', 'operating_cash', 'investing_cash', 'financing_cash', 'unclassified_cash', 'net_cash_change', 'opening_cash', 'closing_cash'] as const
+ return { context: ledgerPresentation.context(active === 'balance-sheet' ? undefined : from.value, active === 'balance-sheet' ? undefined : to.value, active === 'balance-sheet' ? asOf.value : undefined), tabs: TABS.map(item => ({ value: item.key, label: t(item.labelKey) })), accounts: accounts.value.map(account => ({ value: account.id, label: `${account.code ? `${account.code} · ` : ''}${account.name}` })), preferenceReady: tablePreferenceHydrated.value, canExport: can('reports.export'), canAllocate: can('accounts.update'), exporting: exportPending.value, exportError: exportError.value, invalidPeriod: periodInvalid.value ? t('reports.invalidPeriod') : '', loading, failed, errorLabel, emptyHint, warnings, columns, sections, totals,
+  metrics: active === 'overview' ? [['assets', assets.value], ['liabilities', liabilities.value], ['equity', equity.value], ['netProfitPeriod', netProfit.value]].map(([key, value]) => ({ id: key!, label: t(`reports.${key}`), value: displayReportMoney(value!), hint: ledgerPresentation.kpi(value!, null, 'neutral').label || '', tone: 'neutral' as const })) : [],
+  equation: active === 'balance-sheet' ? `${t('statementClassification.reportHint', { date: formatDate(asOf.value, locale.value) })} ${t('reports.equation', { assets: formatMoney(assets.value, baseCurrency.value, locale.value), liabilities: formatMoney(liabilities.value, baseCurrency.value, locale.value), equity: formatMoney(equity.value, baseCurrency.value, locale.value) })}` : '', equationTone: BigInt(assets.value) === BigInt(liabilities.value) + BigInt(equity.value) ? 'muted' : 'danger',
+  reconciliation: active === 'overview' ? (statementReconciliation.value?.accounts || []).map((row, index) => ({ id: `${row.account_id}-${index}`, name: accountName(row.account_id), code: '', cells: [reportCell(t(`financialMapping.dimensions.${row.statement}`), row.account_id, row.statement === 'balance_sheet' ? 'asof' : 'range'), reportCell(displayReportMoney(row.statement_minor, true)), reportCell(displayReportMoney(row.ledger_minor, true)), reportCell(displayReportMoney(row.difference_minor, true))] })) : [], reconciliationColumns: [column('dimension', t('financialMapping.dimension')), column('statement', t('financialMapping.statementAmount')), column('ledger', t('financialMapping.ledgerAmount')), column('difference', t('financialMapping.difference'))],
+  diagnostic: active === 'cash-flow' && cashFlow.value ? t('financialMapping.cashDiagnostic', { difference: formatMoney(cashFlow.value.operating_adjustment_difference_minor, baseCurrency.value, locale.value) }) : '', cashSummary: active === 'cash-flow' && cashFlow.value ? cashKeys.map(key => ({ label: t(`financialMapping.cashLines.${key}`), value: displayReportMoney(cashFlow.value![`${key}_minor`], true) })) : [],
+  adjustments: active === 'cash-flow' ? (cashFlow.value?.operating_adjustments || []).map(row => ({ id: row.account_id, name: `${row.code} · ${row.name}`, code: '', cells: [reportCell('', row.account_id), reportCell(displayReportMoney(row.amount_minor, true), row.account_id)] })) : [], adjustmentTitle: t('financialMapping.adjustmentSources'), cashSourceTitle: t('financialMapping.cashSources'), balanceLabel: active === 'overview' ? t(trialBalanced.value ? 'reports.inBalance' : 'reports.outOfBalance') : '', balanced: trialBalanced.value, empty,
+ }
+})
+function reportDrilldown(accountId: string, period: 'range' | 'asof' | 'opening' | 'period' | 'closing') { if (['opening', 'period', 'closing'].includes(period)) { const row = trialBalance.value.find(row => row.account_id === accountId); if (row) openTrialDrilldown(row, period as 'opening' | 'period' | 'closing') } else openStatementDrilldown(accountId, period as 'range' | 'asof') }
+function reportAllocate(id: string) { allocationEntry.value = cashDetail.value?.find(row => row.entry_id === id) ?? null }
+function retryReport() { if (tab.value === 'overview') return refreshOverview(); if (tab.value === 'profit-loss') return refreshProfitLoss(); if (tab.value === 'balance-sheet') return refreshBalanceSheet(); if (tab.value === 'cash-flow') return refreshCashFlowSurface(); return refreshLedger() }
+function exportCurrentReport(format: ExportFormat) { const reports: Record<TabKey, ExportReport> = { overview: 'trial_balance', 'profit-loss': 'profit_loss', 'balance-sheet': 'balance_sheet', 'cash-flow': 'cash_flow', ledger: 'general_ledger' }; return exportReport(reports[tab.value], format) }
 </script>
-
 <template>
-  <div class="min-w-0 space-y-6">
-    <LedgerPageHeader
-      :title="t('reports.title')"
-      :subtitle="t('reports.csvExports')"
-      :from="tab === 'balance-sheet' ? undefined : from"
-      :to="tab === 'balance-sheet' ? undefined : to"
-      :as-of="tab === 'balance-sheet' ? asOf : undefined"
-    />
-
-    <p v-if="exportError" class="ls-error" role="alert">{{ exportError }}</p>
-
-    <div class="flex max-w-full gap-1 overflow-x-auto border-b border-[var(--bs-border)]" role="tablist">
-      <BsButton variant="tab"
-        v-for="item in TABS"
-        :key="item.key"
-        type="button"
-        role="tab"
-        :aria-selected="tab === item.key"
-        class="-mb-px"
-        @click="selectTab(item.key)"
-      >
-        {{ t(item.labelKey) }}
-      </BsButton>
-    </div>
-
-    <div class="flex flex-wrap items-end gap-3">
-      <template v-if="tab !== 'balance-sheet'">
-        <BsFloatingField :label="t('reports.from')"><input id="from" v-model="from" type="date" class="ls-input"></BsFloatingField>
-        <BsFloatingField :label="t('reports.to')"><input id="to" v-model="to" type="date" :min="from" class="ls-input"></BsFloatingField>
-      </template>
-      <BsFloatingField v-else :label="t('reports.asOf')"><input id="asof" v-model="asOf" type="date" class="ls-input"></BsFloatingField>
-
-      <BsFloatingField v-if="tab === 'ledger'" class="min-w-56" :label="t('reports.account')">
-        <select id="ledger-account" v-model="ledgerAccountId" class="ls-input">
-          <option v-for="a in accounts" :key="a.id" :value="a.id">
-            {{ a.code ? `${a.code} · ` : '' }}{{ a.name }}
-          </option>
-        </select>
-      </BsFloatingField>
-      <AccountingTableDensity v-model="tableDensity" :disabled="!tablePreferenceHydrated" />
-    </div>
-
-    <!-- Overview -->
-    <section v-if="tab === 'overview'" class="space-y-4" role="tabpanel" :aria-label="t('reports.tabs.overview')">
-      <div v-if="overviewError" role="alert" class="ls-card space-y-3 p-6">
-        <p>{{ t('reports.loadError') }}</p>
-        <BsButton type="button" class="ls-btn" @click="refreshOverview()">{{ t('accounts.retry') }}</BsButton>
-      </div>
-      <template v-else>
-      <div
-        v-if="integrity && integrity.balanced === false"
-        class="rounded-control border border-[var(--bs-status-error)] bg-[var(--bs-status-error-bg)] px-4 py-3 text-sm text-[var(--bs-status-error)]"
-        role="alert"
-      >
-        <p class="font-bold">{{ t('reports.integrityTitle') }}</p>
-        <p class="mt-1">
-          {{ t('reports.integrityBody', {
-            difference: formatMoney(Number(integrity.difference_minor), baseCurrency, locale),
-          }) }}
-        </p>
-      </div>
-
-      <p v-if="statementReconciliation && (statementReconciliation.profit_loss_difference_minor !== 0 || statementReconciliation.balance_sheet_difference_minor !== 0 || !statementReconciliation.mapping_complete)" role="alert" class="ls-error">{{ t('financialMapping.reconciliationWarning') }}</p>
-      <details v-if="statementReconciliation?.accounts?.length" class="ls-card p-4">
-        <summary class="cursor-pointer font-semibold">{{ t('financialMapping.reconciliationDetails') }}</summary>
-        <BsDataTable :value="statementReconciliation.accounts" :label="t('financialMapping.reconciliationDetails')" :density="tableDensity" class="mt-3">
-          <Column :header="t('financialMapping.dimension')"><template #body="{ data: row }">{{ t(`financialMapping.dimensions.${row.statement}`) }}</template></Column>
-          <Column :header="t('reports.account')"><template #body="{ data: row }"><BsButton variant="link" type="button" class="text-link underline" @click="openStatementDrilldown(row.account_id, row.statement === 'balance_sheet' ? 'asof' : 'range')">{{ accountName(row.account_id) }}</BsButton></template></Column>
-          <Column :header="t('financialMapping.statementAmount')"><template #body="{ data: row }"><MoneyText :amount-minor="row.statement_minor" signed /></template></Column>
-          <Column :header="t('financialMapping.ledgerAmount')"><template #body="{ data: row }"><MoneyText :amount-minor="row.ledger_minor" signed /></template></Column>
-          <Column :header="t('financialMapping.difference')"><template #body="{ data: row }"><MoneyText :amount-minor="row.difference_minor" signed /></template></Column>
-        </BsDataTable>
-      </details>
-      <BsSectionSkeleton v-if="balanceSheetPending || profitLossPending" variant="cards" />
-      <div v-else class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiCard :title="t('reports.assets')" :amount-minor="assets" good-direction="neutral" />
-        <KpiCard :title="t('reports.liabilities')" :amount-minor="liabilities" good-direction="neutral" />
-        <KpiCard :title="t('reports.equity')" :amount-minor="equity" good-direction="neutral" />
-        <KpiCard :title="t('reports.netProfitPeriod')" :amount-minor="netProfit" good-direction="neutral" />
-      </div>
-
-      <p v-if="periodInvalid" role="alert" class="ls-error">{{ t('reports.invalidPeriod') }}</p>
-      <div v-else-if="trialBalanceError" role="alert" class="ls-card space-y-3 p-6"><p>{{ t('reports.trialBalanceError') }}</p><BsButton type="button" class="ls-btn" @click="refreshTrialBalance()">{{ t('accounts.retry') }}</BsButton></div>
-      <BsSectionSkeleton v-else-if="trialBalancePending" variant="table" :rows="7" />
-      <BsEmptyState v-else-if="!trialBalance.length" :title="t('reports.emptyTitle')" :description="t('reports.emptyRange')" />
-      <section v-else class="ls-card overflow-hidden" aria-labelledby="tb-heading">
-        <div class="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
-          <h2 id="tb-heading" class="text-base font-bold">{{ t('reports.trialBalance') }} · <span dir="ltr">{{ baseCurrency }}</span></h2>
-          <div class="flex items-center gap-3">
-            <p class="text-sm font-semibold" :class="trialBalanced ? 'text-[var(--bs-status-success)]' : 'text-[var(--bs-status-error)]'">
-              {{ trialBalanced ? t('reports.inBalance') : t('reports.outOfBalance') }}
-            </p>
-            <template v-if="can('reports.export')">
-              <BsButton type="button" class="ls-btn ls-btn-sm" :disabled="exportPending" @click="exportReport('trial_balance')">{{ t('common.exportCsv') }}</BsButton>
-              <BsButton type="button" class="ls-btn ls-btn-sm" :disabled="exportPending" @click="exportReport('trial_balance', 'excel')">{{ t('reports.exportExcel') }}</BsButton>
-              <BsButton type="button" class="ls-btn ls-btn-sm" :disabled="exportPending" @click="exportReport('trial_balance', 'print')">{{ t('reports.printPdf') }}</BsButton>
-            </template>
-          </div>
-        </div>
-        <div>
-          <BsDataTable :value="trialBalance" data-key="account_id" :label="t('reports.trialBalance')" :density="tableDensity" sticky-header sticky-footer max-height="38rem" :scroll-label="t('accountingTable.trialBalanceScroll')">
-  <Column header-class="ls-sticky-start" body-class="ls-sticky-start">
-    <template #header>{{ t('reports.account') }}</template>
-    <template #body="{ data: row }"><span class="block font-semibold">{{ row.name }}</span><span class="block font-mono text-xs text-fg-muted" dir="ltr">{{ row.code || t('common.dash') }}</span></template>
-  </Column>
-  <Column v-for="column in trialColumns" :key="column.field" :header="t(`reports.${column.label}`)" header-class="min-w-36 whitespace-nowrap text-end" body-class="ls-num whitespace-nowrap">
-    <template #body="{ data: row }"><BsButton variant="link" type="button" class="rounded-control px-1 text-link hover:underline focus-visible:outline focus-visible:outline-2" :aria-label="t('reports.drilldownAmount', { column: t(`reports.${column.label}`), account: row.name })" @click="openTrialDrilldown(row, column.scope)"><MoneyText :amount-minor="row[column.field]" /></BsButton></template>
-  </Column>
-  <ColumnGroup type="footer"><Row><Column :footer="t('reports.total')" footer-class="ls-sticky-start font-bold" /><Column v-for="total in trialTotalCells" :key="total.key" footer-class="ls-num whitespace-nowrap"><template #footer><MoneyText :amount-minor="total.amount" /></template></Column></Row></ColumnGroup>
-</BsDataTable>
-        </div>
-      </section>
-      </template>
-    </section>
-
-    <!-- Profit & Loss -->
-    <section v-else-if="tab === 'profit-loss'" class="space-y-4" role="tabpanel" :aria-label="t('reports.tabs.profitLoss')">
-      <div v-if="can('reports.export')" class="flex flex-wrap justify-end gap-2">
-        <BsButton type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('profit_loss')">{{ t('common.exportCsv') }}</BsButton>
-        <BsButton type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('profit_loss', 'excel')">{{ t('reports.exportExcel') }}</BsButton>
-        <BsButton type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('profit_loss', 'print')">{{ t('reports.printPdf') }}</BsButton>
-      </div>
-
-      <div v-if="profitLossError" role="alert" class="ls-card space-y-3 p-6"><p>{{ t('reports.loadError') }}</p><BsButton type="button" class="ls-btn" @click="refreshProfitLoss()">{{ t('accounts.retry') }}</BsButton></div>
-      <BsSectionSkeleton v-else-if="profitLossPending" variant="table" :rows="7" />
-
-      <BsEmptyState
-        v-else-if="!profitLoss?.length"
-        :title="t('reports.emptyTitle')"
-        :description="t('reports.emptyRange')"
-      />
-
-      <p v-if="!profitLossError && plMappingIncomplete" role="alert" class="ls-error">{{ t('financialMapping.incomplete') }}</p>
-      <div v-if="!profitLossError && profitLoss?.length" class="ls-card overflow-hidden">
-        <BsDataTable :label="t('reports.tabs.profitLoss')" :value="plSections.flatMap(section => rowsIn(profitLoss, section.key).map(row => ({ ...row, groupKey: section.key, groupLabel: section.labelKey })))" :density="tableDensity" row-group-mode="subheader" group-rows-by="groupKey">
-  <Column :header="t('reports.account')" body-class="ps-8"><template #body="{ data: row }"><BsButton variant="link" type="button" class="text-link underline" @click="openStatementDrilldown(row.account_id)">{{ row.name }}</BsButton></template></Column>
-  <Column :header="t('transactions.amount')" body-class="ls-num"><template #body="{ data: row }"><MoneyText :amount-minor="row.amount_minor" /></template></Column>
-  <template #groupheader="{ data: row }"><div class="flex justify-between gap-4 bg-surface-muted font-bold"><span>{{ t(row.groupLabel) }}</span><MoneyText :amount-minor="sectionTotal(profitLoss, row.groupKey)" /></div></template>
-  <template #footer><div class="flex justify-between gap-4 text-base font-bold"><span>{{ t('reports.netProfit') }}</span><MoneyText :amount-minor="netProfit" signed /></div></template>
-</BsDataTable>
-        <dl class="grid gap-2 border-t border-line p-4 sm:grid-cols-2">
-          <div class="flex justify-between"><dt>{{ t('financialMapping.grossProfit') }}</dt><dd><MoneyText :amount-minor="grossProfit" signed /></dd></div>
-          <div class="flex justify-between"><dt>{{ t('financialMapping.operatingResult') }}</dt><dd><MoneyText :amount-minor="operatingResult" signed /></dd></div>
-        </dl>
-      </div>
-    </section>
-
-    <!-- Balance sheet -->
-    <section v-else-if="tab === 'balance-sheet'" class="space-y-4" role="tabpanel" :aria-label="t('reports.tabs.balanceSheet')">
-      <div v-if="can('reports.export')" class="flex flex-wrap justify-end gap-2">
-        <BsButton type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('balance_sheet')">{{ t('common.exportCsv') }}</BsButton>
-        <BsButton type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('balance_sheet', 'excel')">{{ t('reports.exportExcel') }}</BsButton>
-        <BsButton type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('balance_sheet', 'print')">{{ t('reports.printPdf') }}</BsButton>
-      </div>
-
-      <p class="text-sm text-fg-muted">{{ t('statementClassification.reportHint', { date: formatDate(asOf, locale) }) }}</p>
-      <div v-if="balanceSheetError" class="ls-card space-y-3 p-6" role="alert"><p class="ls-error">{{ t('statementClassification.reportError') }}</p><BsButton type="button" class="ls-btn" @click="refreshBalanceSheet()">{{ t('statementClassification.reload') }}</BsButton></div>
-      <BsSectionSkeleton v-else-if="balanceSheetPending" variant="table" :rows="7" />
-
-      <BsEmptyState
-        v-else-if="!balanceSheet?.length"
-        :title="t('reports.emptyTitle')"
-        :description="t('reports.emptyAsOf')"
-      />
-
-      <template v-else>
-        <p v-if="bsMappingIncomplete" role="alert" class="ls-error">{{ t('financialMapping.incomplete') }}</p>
-        <div class="ls-card overflow-hidden">
-          <BsDataTable :label="t('reports.tabs.balanceSheet')" :value="bsRows" :density="tableDensity" row-group-mode="subheader" group-rows-by="statement_line">
-  <Column :header="t('reports.account')" body-class="ps-8"><template #body="{ data: row }"><BsButton variant="link" v-if="row.account_id" type="button" class="text-link underline" @click="openStatementDrilldown(row.account_id, 'asof')">{{ row.displayName }}</BsButton><span v-else>{{ row.displayName }}</span></template></Column>
-  <Column :header="t('statementClassification.effectiveFrom')"><template #body="{ data: row }">{{ row.effective_from ? formatDate(row.effective_from, locale) : t('common.dash') }}</template></Column>
-  <Column :header="t('transactions.amount')" body-class="ls-num"><template #body="{ data: row }"><MoneyText :amount-minor="row.amount_minor" /></template></Column>
-  <template #groupheader="{ data: row }"><div class="flex justify-between gap-4 bg-surface-muted font-bold"><span>{{ t(`statementClassification.lines.${row.statement_line}`) }}</span><MoneyText :amount-minor="sumStatementAmounts(balanceSheet, row.statement_line, 'statement_line')" /></div></template>
-</BsDataTable>
-        </div>
-
-        <p class="text-sm" :class="BigInt(assets) === BigInt(liabilities) + BigInt(equity) ? 'text-fg-muted' : 'text-[var(--bs-status-error)]'">
-          {{ t('reports.equation', {
-            assets: formatMoney(assets, baseCurrency, locale),
-            liabilities: formatMoney(liabilities, baseCurrency, locale),
-            equity: formatMoney(equity, baseCurrency, locale),
-          }) }}
-        </p>
-      </template>
-    </section>
-
-    <!-- Cash flow -->
-    <section v-else-if="tab === 'cash-flow'" class="space-y-4" role="tabpanel" :aria-label="t('reports.tabs.cashFlow')">
-      <div v-if="can('reports.export')" class="flex flex-wrap justify-end gap-2">
-        <BsButton type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('cash_flow')">{{ t('common.exportCsv') }}</BsButton>
-        <BsButton type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('cash_flow', 'excel')">{{ t('reports.exportExcel') }}</BsButton>
-        <BsButton type="button" class="ls-btn" :disabled="exportPending" @click="exportReport('cash_flow', 'print')">{{ t('reports.printPdf') }}</BsButton>
-      </div>
-      <div v-if="cashFlowError || cashDetailError" role="alert" class="ls-card space-y-3 p-6"><p>{{ t('reports.loadError') }}</p><BsButton type="button" class="ls-btn" @click="refreshCashFlowSurface">{{ t('accounts.retry') }}</BsButton></div>
-      <BsSectionSkeleton v-else-if="cashFlowPending" variant="table" :rows="5" />
-
-      <BsEmptyState v-else-if="!cashFlow" :title="t('reports.emptyCashTitle')" :description="t('reports.emptyCashHint')" />
-      <div v-else class="ls-card space-y-4 p-5">
-        <p v-if="!cashFlow.classification_complete || !cashFlow.reconciled" role="alert" class="ls-error">{{ t('financialMapping.cashIncomplete') }}</p>
-        <dl class="grid gap-3 sm:grid-cols-2">
-          <div
-            v-for="item in [
-            ['net_profit', cashFlow.net_profit_minor],
-            ['operating_adjustments', cashFlow.operating_adjustments_minor],
-            ['operating_cash', cashFlow.operating_cash_minor],
-            ['investing_cash', cashFlow.investing_cash_minor],
-            ['financing_cash', cashFlow.financing_cash_minor],
-            ['unclassified_cash', cashFlow.unclassified_cash_minor],
-            ['net_cash_change', cashFlow.net_cash_change_minor],
-            ['opening_cash', cashFlow.opening_cash_minor],
-            ['closing_cash', cashFlow.closing_cash_minor],
-          ]" :key="item[0]" class="flex justify-between border-b border-line py-2">
-            <dt>{{ t(`financialMapping.cashLines.${item[0]}`) }}</dt><dd><MoneyText :amount-minor="item[1]" signed /></dd>
-          </div>
-        </dl>
-        <p class="text-sm text-fg-muted">{{ t('financialMapping.cashDiagnostic', { difference: formatMoney(cashFlow.operating_adjustment_difference_minor, baseCurrency, locale) }) }}</p>
-        <h3 class="font-semibold">{{ t('financialMapping.adjustmentSources') }}</h3>
-        <BsDataTable :value="cashFlow.operating_adjustments" data-key="account_id" :label="t('financialMapping.adjustmentSources')" :density="tableDensity">
-          <Column :header="t('reports.account')"><template #body="{ data: row }"><BsButton variant="link" type="button" class="text-link underline" @click="openStatementDrilldown(row.account_id)">{{ row.code }} · {{ row.name }}</BsButton></template></Column>
-          <Column :header="t('transactions.amount')"><template #body="{ data: row }"><MoneyText :amount-minor="row.amount_minor" signed /></template></Column>
-        </BsDataTable>
-        <h3 class="font-semibold">{{ t('financialMapping.cashSources') }}</h3>
-        <BsDataTable :value="cashDetail ?? []" :label="t('financialMapping.cashSources')" :density="tableDensity">
-          <Column :header="t('reports.account')"><template #body="{ data: row }"><BsButton variant="link" type="button" class="text-link underline" @click="openStatementDrilldown(row.account_id)">{{ accountName(row.account_id) }}</BsButton></template></Column>
-          <Column :header="t('reports.activity')"><template #body="{ data: row }">{{ t(`financialMapping.lines.${row.section}`) }}</template></Column>
-          <Column :header="t('transactions.amount')"><template #body="{ data: row }"><MoneyText :amount-minor="row.amount_minor" signed /></template></Column>
-          <Column v-if="can('accounts.update')" :header="t('financialMapping.allocate')"><template #body="{ data: row }"><BsButton type="button" class="ls-btn ls-btn-sm" @click="allocationEntry = row">{{ t('financialMapping.allocate') }}</BsButton></template></Column>
-        </BsDataTable>
-      </div>
-    </section>
-
-    <!-- General ledger -->
-    <section v-else class="space-y-4" role="tabpanel" :aria-label="t('reports.tabs.ledger')">
-      <div v-if="can('reports.export')" class="flex flex-wrap justify-end gap-2">
-        <BsButton type="button" class="ls-btn" :disabled="exportPending || !ledgerAccountId" @click="exportReport('general_ledger')">{{ t('common.exportCsv') }}</BsButton>
-        <BsButton type="button" class="ls-btn" :disabled="exportPending || !ledgerAccountId" @click="exportReport('general_ledger', 'excel')">{{ t('reports.exportExcel') }}</BsButton>
-        <BsButton type="button" class="ls-btn" :disabled="exportPending || !ledgerAccountId" @click="exportReport('general_ledger', 'print')">{{ t('reports.printPdf') }}</BsButton>
-      </div>
-      <div v-if="ledgerError" role="alert" class="ls-card space-y-3 p-6"><p>{{ t('reports.loadError') }}</p><BsButton type="button" class="ls-btn" @click="refreshLedger()">{{ t('accounts.retry') }}</BsButton></div>
-      <BsSectionSkeleton v-else-if="ledgerPending" variant="table" :rows="8" />
-
-      <BsEmptyState
-        v-else-if="!ledger?.length"
-        :title="t('reports.emptyLedgerTitle')"
-        :description="t('reports.emptyLedgerHint')"
-      />
-
-      <div v-else class="ls-card overflow-x-auto">
-        <BsDataTable :value="ledger" data-key="entry_id" :label="t('reports.tabs.ledger')" :density="tableDensity">
-  <Column body-class="whitespace-nowrap">
-    <template #header>{{ t('transactions.date') }}</template>
-    <template #body="{ data: row }">{{ formatDate(row.entry_date, locale) }}</template>
-  </Column>
-  <Column body-class="text-fg-muted">
-    <template #header>{{ t('transactions.reference') }}</template>
-    <template #body="{ data: row }">{{ row.reference || t('common.dash') }}</template>
-  </Column>
-  <Column body-class="max-w-64 truncate">
-    <template #header>{{ t('transactions.description') }}</template>
-    <template #body="{ data: row }">{{ row.description || row.memo || t('common.dash') }}</template>
-  </Column>
-  <Column header-class="text-end" body-class="ls-num">
-    <template #header>{{ t('detail.debit') }}</template>
-    <template #body="{ data: row }"><MoneyText v-if="Number(row.debit_minor)" :amount-minor="row.debit_minor" />
-                <span v-else class="text-fg-disabled">{{ t('common.dash') }}</span></template>
-  </Column>
-  <Column header-class="text-end" body-class="ls-num">
-    <template #header>{{ t('detail.credit') }}</template>
-    <template #body="{ data: row }"><MoneyText v-if="Number(row.credit_minor)" :amount-minor="row.credit_minor" />
-                <span v-else class="text-neutral-300">—</span></template>
-  </Column>
-  <Column header-class="text-end" body-class="ls-num font-semibold">
-    <template #header>{{ t('reports.runningBalance') }}</template>
-    <template #body="{ data: row }"><MoneyText :amount-minor="row.running_balance_minor" /></template>
-  </Column>
-</BsDataTable>
-      </div>
-    </section>
-    <CashFlowAllocationDialog v-if="allocationEntry" :entry-id="allocationEntry.entry_id" :account-name="accountName(allocationEntry.account_id)" @close="allocationEntry = null" @saved="() => { refreshCashFlow(); refreshCashDetail() }" />
-    <AccountActivityDialog v-if="trialDrilldown" :account-id="trialDrilldown.accountId" :scope="trialScope" :initial-from="trialDrilldown.from" :initial-to="trialDrilldown.to" @close="trialDrilldown = null" />
-  </div>
+ <BsReportsPage v-model:financial-filters="financialFilters" v-model:activity-form="activityForm" v-model:allocation-form="allocationForm" :financial="{ copy: financialCopy, view: financialView }" :activity="{ copy: activityPresentation.copy.value, view: activityPresentation.view.value }" :allocation="{ copy: allocationPresentation.copy.value, view: allocationPresentation.view.value }" @financial-export="exportCurrentReport" @financial-retry="retryReport" @drilldown="reportDrilldown" @allocate="reportAllocate" @close-activity="trialDrilldown = null" @activity-back="activityPresentation.back" @activity-apply="activityPresentation.apply" @activity-retry="activityPresentation.retry" @activity-page="activityPresentation.page" @activity-journal="activityPresentation.journal" @activity-account="activityPresentation.account" @close-allocation="allocationEntry = null" @save-allocation="allocationPresentation.save"/>
 </template>
-
-undefined

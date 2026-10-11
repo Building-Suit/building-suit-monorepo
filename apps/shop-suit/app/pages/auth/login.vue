@@ -1,5 +1,5 @@
 <script setup lang="ts">
-definePageMeta({ layout: 'auth' })
+definePageMeta({ layout: false })
 
 const supabase = useSupabaseClient()
 const nuxtApp = useNuxtApp()
@@ -98,14 +98,11 @@ watchEffect(async () => {
 </script>
 
 <template>
-  <BsAuthForm
-    eyebrow="Shop Suit" :title="t('auth.loginTitle')" :description="t('auth.loginSubtitle')"
-    :pending="pending" :error="errorMessage" :submit-label="t('auth.loginAction')" :pending-label="t('auth.loginAction')"
-    :data-client-ready="clientReady ? 'true' : 'false'" @submit="onSubmit"
-  >
-    <BsFloatingField :label="t('auth.email')"><InputText id="login-email" v-model="email" type="email" autocomplete="email" required dir="ltr" class="ls-input" /></BsFloatingField>
-    <BsFloatingField :label="t('auth.password')"><InputText id="login-password" v-model="password" type="password" autocomplete="current-password" required dir="ltr" class="ls-input" /></BsFloatingField>
-    <NuxtLink to="/auth/forgot-password" class="text-xs text-fg-muted underline">{{ t('auth.forgotPassword') }}</NuxtLink>
-    <template #footer>{{ t('auth.noAccount') }} <NuxtLink to="/auth/signup" class="font-bold text-fg underline underline-offset-4">{{ t('auth.signupAction') }}</NuxtLink></template>
-  </BsAuthForm>
+  <BsSignInPage
+    v-model:email="email" v-model:password="password"
+    :product="{ name: 'Shop Suit', assetPrefix: '/brand/shop-suit', homeLabel: locale === 'ar' ? 'الرئيسية' : 'Home', title: `${t('hero.title')} ${t('hero.subtitle')}`, description: t('hero.description') }"
+    :copy="{ eyebrow: 'Shop Suit', title: t('auth.loginTitle'), description: t('auth.loginSubtitle'), email: t('auth.email'), password: t('auth.password'), submit: t('auth.loginAction'), pending: t('auth.loginAction'), accountPrompt: t('auth.noAccount'), signup: t('auth.signupAction') }"
+    signup-to="/auth/signup" :forgot="{ to: '/auth/forgot-password', label: t('auth.forgotPassword') }"
+    :pending="pending" :error="errorMessage" :hydrated="clientReady" @submit="onSubmit"
+  />
 </template>

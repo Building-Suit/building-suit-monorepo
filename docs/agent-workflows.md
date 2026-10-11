@@ -39,6 +39,8 @@ Apply workflow 1 first. Every new feature stacks on the latest verified active w
 6. Verify relevant language/direction/theme, mobile/desktop, keyboard/focus and loading/error/empty/success/permission states in every affected product.
 7. Run affected component/browser checks and `pnpm check`; the workspace check dynamically discovers every `apps/*-suit` application and rejects unclassified local components and shared UI bypasses. Stop when the requested change's acceptance criteria pass.
 
+For final zero-native acceptance, run `node tooling/checks/suit-template-boundaries.mjs --require-strict`. This requires a strict, empty debt manifest as well as zero actual violations; `--strict` is the manifest-free check for disposable generator fixtures. Normal `pnpm check` honors the manifest's mode. Passing migration mode does not close the foundation gate. Record actual inventory and verification limitations in `docs/shared/zero-native-ui-convergence-report.md` before claiming acceptance.
+
 ## 4. Fix a bug
 
 1. Reproduce the reported behavior in the appropriate environment with a representative scenario.

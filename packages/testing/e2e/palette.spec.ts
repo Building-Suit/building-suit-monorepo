@@ -52,8 +52,8 @@ for (const app of [
     if (app.product) {
       await page.goto(`http://127.0.0.1:${app.port}/`)
       // Landing previews intentionally stay charcoal, including on light pages.
-      await expect(page.locator('.ls-hero-preview')).toHaveCSS('background-color', 'rgb(20, 20, 22)')
-      await expect(page.locator('.ls-hero-preview .bg-surface-muted').first()).toHaveCSS('background-color', 'rgb(28, 28, 31)')
+      await expect(page.locator('.ls-hero-preview').first()).toHaveCSS('background-color', 'rgb(20, 20, 22)')
+      await expect(page.locator('.ls-hero-preview .bg-surface-muted, .ls-hero-preview .bs-box--surface-muted').first()).toHaveCSS('background-color', 'rgb(28, 28, 31)')
     }
   })
 }

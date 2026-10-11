@@ -1,9 +1,11 @@
 import { expect, type Page, type Route } from '@playwright/test'
+import { trackRouteCoverage } from '../../../../packages/testing/browser-foundation'
 import { createServer } from 'node:http'
 
 
 // SSR controls are visible before Vue has attached event handlers.
 export async function fixtureGoto(page: Page, url: string) {
+  trackRouteCoverage(page)
   await page.goto(url)
   await fixtureMounted(page)
 }
