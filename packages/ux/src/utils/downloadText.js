@@ -1,6 +1,6 @@
-/** Download prepared text; optional delayed cleanup supports mounted native anchors. */
-export function downloadText(filename, text, mimeType, options = {}) {
-  const url = URL.createObjectURL(new Blob([text], { type: mimeType }))
+/** Download prepared content; optional delayed cleanup supports native anchors. */
+export function downloadBlob(filename, blob, options = {}) {
+  const url = URL.createObjectURL(blob)
   let link
   const cleanup = () => { if (options.mount) link?.remove(); URL.revokeObjectURL(url) }
   try {
@@ -12,4 +12,8 @@ export function downloadText(filename, text, mimeType, options = {}) {
   } catch (failure) { cleanup(); throw failure }
   if (options.cleanupDelayMs > 0) setTimeout(cleanup, options.cleanupDelayMs)
   else cleanup()
+}
+
+export function downloadText(filename, text, mimeType, options = {}) {
+  return downloadBlob(filename, new Blob([text], { type: mimeType }), options)
 }

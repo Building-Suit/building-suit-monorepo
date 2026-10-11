@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { BsBillingCopy, BsBillingView, BsBillingForm } from '@building-suit/ui/types/billingPresentation'
 import type { BillingPlanOption, BillingSubmission, PrivateOfferPreview, ShopBilling } from '~/types/billing'
 import type { PlanResourceKey, PlanUsageResource, ShopPlanInterval, ShopPlanOffer } from '~/types/plans'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
@@ -326,173 +327,46 @@ const noticeAction = useRecordAction(() => form)
 const { visible: noticeActionOpen, dirty: noticeActionDirty } = noticeAction
 
 useShopRealtime('billing', () => submitPending.value || privatePending.value || !!privateLink.value || !!privatePreview.value || !!form.transferReference || !!form.transferDate || form.paidAmount > 0)
+
+const billingForm = computed<BsBillingForm>({ get: () => ({ paidAmount: form.paidAmount, transferDate: form.transferDate, transferReference: form.transferReference, privateLink: privateLink.value, reason: '' }), set: value => { form.paidAmount = value.paidAmount; form.transferDate = value.transferDate; form.transferReference = value.transferReference; privateLink.value = value.privateLink } })
+const billingCopy = computed<BsBillingCopy>(() => ({
+  title: copy.value.title, subtitle: copy.value.subtitle, loading: ui('loading'), retry: copy.value.retry, cancel: ui('cancel'), denied: copy.value.ownerOnly, failed: copy.value.loadFailed, unavailable: copy.value.noBilling,
+  usage: copy.value.usage, usageHelp: copy.value.usageHelp, usageLoading: ui('loading'), usageError: copy.value.loadFailed, compare: copy.value.compare, compareHelp: copy.value.compareHelp,
+  instructions: copy.value.instructions, instructionsHelp: copy.value.instructionsHelp, manual: copy.value.manual, recipient: copy.value.recipient, paymentLink: copy.value.paymentLink, qr: copy.value.qr, instructionsUnavailable: copy.value.unavailable,
+  privateTitle: copy.value.privateTitle, privateHelp: copy.value.privateHelp, privateLink: copy.value.privateLink, privatePreview: copy.value.privatePreview, privateClear: copy.value.privateClear,
+  notice: copy.value.notice, noticeHelp: copy.value.noticeHelp, submit: copy.value.submit, requestedPlan: copy.value.requestedPlan, expected: copy.value.expected, interval: copy.value.interval, paid: copy.value.paid, transferDate: copy.value.transferDate, reference: copy.value.reference,
+  policyPrefix: copy.value.policyPrefix, terms: copy.value.terms, privacy: copy.value.privacy, refund: copy.value.refund, noPurchasable: copy.value.noPurchasable,
+  evidenceTitle: copy.value.evidenceTitle, evidenceHelp: copy.value.evidenceHelp, evidenceSelect: copy.value.evidenceSelect, evidenceUpload: copy.value.evidenceUpload, evidenceUploading: copy.value.evidenceUploading, evidenceFirst: copy.value.evidenceFirst, evidenceSaved: copy.value.evidenceSaved, evidenceAttached: copy.value.evidenceAttached,
+  history: copy.value.history, empty: copy.value.empty, access: copy.value.access, reviewReason: copy.value.reviewReason, reason: copy.value.reviewReason, refresh: copy.value.retry, requests: copy.value.history, inspect: copy.value.evidenceAttached, openSubscription: copy.value.title, cancelRequest: ui('cancel'),
+}))
+const billingView = computed<BsBillingView>(() => {
+  const value = billing.value
+  const sub = value?.subscription
+  const quote = noticeQuote.value
+  const preview = privatePreview.value
+  const latest = latestSubmission.value
+  return {
+    workspace: current.value?.name ?? '', loading: pending.value, failed: !!error.value, denied: !isOwner.value, available: !!value,
+    summary: sub ? [
+      { id: 'plan', label: copy.value.plan, value: sub.planName },
+      { id: 'access', label: copy.value.access, value: statusLabel(sub.accessState), status: sub.accessState },
+      { id: 'ends', label: sub.accessState === 'trialing' ? copy.value.trialEnd : copy.value.periodEnd, value: date(sub.accessState === 'trialing' ? sub.trialEndAt : sub.periodEnd), note: sub.accessState === 'trialing' ? `${sub.trialDaysRemaining} ${copy.value.days}` : '' },
+      { id: 'price', label: copy.value.currentPrice, value: money(sub.effectivePriceAmount ?? sub.priceAmount, sub.currency), note: [sub.priceSource === 'override' ? copy.value.negotiated : '', sub.listPriceAmount !== sub.effectivePriceAmount ? `${copy.value.listPrice}: ${money(sub.listPriceAmount, sub.currency)}` : ''].filter(Boolean).join(' · ') },
+    ] : [],
+    notice: sub && ['read_only', 'suspended'].includes(sub.accessState) ? copy.value.readOnly : '', details: [], providerNotice: '',
+    latest: latest ? { title: copy.value.latest, status: latest.status, statusLabel: statusLabel(latest.status), summary: `${latest.requestedPlanName} · ${money(latest.effectivePriceAmount, latest.currency)}`, message: submissionMessage(latest), reason: latest.reviewReason ?? '' } : null,
+    usage: { items: usageResources.value.map(usagePresentation), loading: false, failed: false },
+    pricing: { interval: planPresentation.interval, plans: planPresentation.pricingPlans, intervalOptions: [{ value: 'monthly', label: planPresentation.copy.monthly }, { value: 'annual', label: planPresentation.copy.yearly }], copy: { cycleLabel: planPresentation.copy.cycle, loading: planPresentation.copy.loading, empty: copy.value.noPurchasable, retry: planPresentation.copy.retry, included: planPresentation.copy.included, notIncluded: planPresentation.copy.notIncluded }, annualSaving: planPresentation.annualDiscount === null ? null : planPresentation.copy.annualSaving(planPresentation.annualDiscount), columns: 3, loading: catalogPending.value, error: catalogError.value ? copy.value.catalogFailed : null, testId: 'shop-plan-cards' },
+    instructions: value ? { recipient: value.instructions.recipientAlias ?? '', link: value.instructions.paymentLink ?? '', qr: value.instructions.qrImageUrl ?? '', text: (isArabic.value ? value.instructions.instructionsAr : value.instructions.instructionsEn) ?? '' } : null,
+    privateOffer: { pending: privatePending.value, error: privateError.value, title: preview?.displayName ?? '', summary: preview ? `${money(preview.priceAmount, preview.currency)} · ${intervalLabel(preview.billingInterval)} · ${date(preview.expiresAt)}` : '', limits: preview ? Object.entries(preview.resourceLimits).map(([key, limit]) => ({ key, label: copy.value.resources[key as PlanResourceKey], value: limit == null ? '∞' : String(limit) })) : [], notice: preview?.blockers.length ? copy.value.preservation : '', redeemed: preview?.submissionId ? copy.value.privateRedeemed : '' },
+    transfer: { visible: noticeActionOpen.value, dirty: noticeActionDirty.value, pending: submitPending.value, error: submitError.value, disabled: !quote || hasOpenRequest.value || !!preview?.submissionId, quote: quote ? `${copy.value.requestedPlan}: ${quote.planName} · ${copy.value.expected}: ${money(quote.effectivePriceAmount, quote.currency)} · ${copy.value.interval}: ${intervalLabel(quote.billingInterval)}` : '', quoteNotice: quote ? [quote.priceSource === 'override' ? copy.value.negotiated : '', quote.blockers.length ? copy.value.preservation : ''].filter(Boolean).join(' · ') : '', maximumDate: new Date().toISOString().slice(0, 10) },
+    evidence: evidenceSubmission.value ? { reference: evidenceSubmission.value.transferReference, pending: evidencePending.value, error: evidenceError.value, saved: evidenceSaved.value, inputVersion: evidenceInputVersion.value, filenames: evidenceFiles.value.map(file => file.originalFileName) } : null,
+    showEvidence: true, showHistory: true, history: (value?.submissions ?? []).map(item => ({ id: item.id, status: item.status, statusLabel: statusLabel(item.status), plan: item.requestedPlanName, expected: money(item.effectivePriceAmount, item.currency), paid: money(item.paidAmount, item.currency), reference: item.transferReference, date: date(item.transferDate), reason: item.reviewReason ?? '' })),
+    trial: null, policy: null, paymentNotice: '', paymentRequired: '', compatibilityNotice: '', pricingError: '', canRequests: false,
+  }
+})
+function chooseBillingInterval(value: string) { if (value === 'monthly' || value === 'annual') planPresentation.interval = value }
 </script>
-
 <template>
-  <BsStack>
-    <BsBox as="header">
-      <BsText as="p" size="xs" emphasis="semibold">{{ current?.name }}</BsText>
-      <BsHeading :level="1">{{ copy.title }}</BsHeading>
-      <BsText as="p" size="sm" tone="muted">{{ copy.subtitle }}</BsText>
-    </BsBox>
-    <BsText v-if="!isOwner" role="alert" as="p" tone="warning">{{ copy.ownerOnly }}</BsText>
-    <BsGrid v-else-if="pending" role="status" :aria-label="ui('loading')" :columns="4">
-      <BsSkeleton v-for="item in 4" :key="item"/>
-    </BsGrid>
-    <BsBox v-else-if="error" role="alert">
-      <BsText as="p">{{ copy.loadFailed }}</BsText>
-      <BsButton @click="refresh()">{{ copy.retry }}</BsButton>
-    </BsBox>
-    <template v-else-if="billing">
-      <BsGrid aria-label="Current subscription" :columns="4">
-        <BsKpiCard :title="copy.plan">
-          <BsText as="span" size="lg" emphasis="semibold">{{ billing.subscription.planName }}</BsText>
-        </BsKpiCard>
-        <BsKpiCard :title="copy.access">
-          <BsStatusBadge :status="billing.subscription.accessState"/> <BsText as="span" size="sm" emphasis="semibold">{{ statusLabel(billing.subscription.accessState) }}</BsText>
-        </BsKpiCard>
-        <BsKpiCard :title="billing.subscription.accessState === 'trialing' ? copy.trialEnd : copy.periodEnd">
-          <BsText as="span" size="sm" emphasis="semibold">{{ date(billing.subscription.accessState === 'trialing' ? billing.subscription.trialEndAt : billing.subscription.periodEnd) }}</BsText>
-          <BsText v-if="billing.subscription.accessState === 'trialing'" as="p" size="xs" tone="muted">{{ billing.subscription.trialDaysRemaining }} {{ copy.days }}</BsText>
-        </BsKpiCard>
-        <BsKpiCard :title="copy.currentPrice">
-          <BsText as="span" size="lg" emphasis="semibold">{{ money(billing.subscription.effectivePriceAmount ?? billing.subscription.priceAmount, billing.subscription.currency) }}</BsText>
-          <BsText v-if="billing.subscription.priceSource === 'override'" as="p" size="xs" emphasis="semibold">{{ copy.negotiated }}</BsText>
-          <BsText v-if="billing.subscription.listPriceAmount !== billing.subscription.effectivePriceAmount" as="p" size="xs" tone="muted">{{ copy.listPrice }}: {{ money(billing.subscription.listPriceAmount, billing.subscription.currency) }}</BsText>
-        </BsKpiCard>
-      </BsGrid>
-      <BsText v-if="['read_only', 'suspended'].includes(billing.subscription.accessState)" role="status" as="p" size="sm" tone="warning">{{ copy.readOnly }}</BsText>
-      <BsPanel v-if="latestSubmission" aria-live="polite" padding="md">
-        <BsInline>
-          <BsHeading :level="2">{{ copy.latest }}</BsHeading>
-          <BsStatusBadge :status="latestSubmission.status"/>
-          <BsText as="strong" size="sm">{{ statusLabel(latestSubmission.status) }}</BsText>
-          <BsText as="span" size="sm" tone="muted">{{ latestSubmission.requestedPlanName }} · {{ money(latestSubmission.effectivePriceAmount, latestSubmission.currency) }}</BsText>
-        </BsInline>
-        <BsText as="p" size="sm">{{ submissionMessage(latestSubmission) }}</BsText>
-        <BsText v-if="latestSubmission.reviewReason" as="p" size="sm" tone="muted">{{ copy.reviewReason }}: {{ latestSubmission.reviewReason }}</BsText>
-      </BsPanel>
-      <BsPanel padding="md">
-        <BsHeading :level="2">{{ copy.usage }}</BsHeading>
-        <BsText as="p" size="sm" tone="muted">{{ copy.usageHelp }}</BsText>
-        <BsGrid :columns="3">
-          <BsUsageMeter v-for="resource in usageResources" :key="resource.resource" :item="usagePresentation(resource)"/>
-        </BsGrid>
-      </BsPanel>
-      <BsPanel padding="md">
-        <BsHeading :level="2">{{ copy.compare }}</BsHeading>
-        <BsText as="p" size="sm" tone="muted">{{ copy.compareHelp }}</BsText>
-        <BsGrid v-if="catalogPending" role="status" :columns="3">
-          <BsSkeleton v-for="item in 3" :key="item"/>
-        </BsGrid>
-        <BsBox v-else-if="catalogError" role="alert">
-          <BsText as="p">{{ copy.catalogFailed }}</BsText>
-          <BsButton severity="secondary" @click="refreshCatalog()">{{ copy.retry }}</BsButton>
-        </BsBox>
-        <BsText v-else-if="!purchasablePlans.length" role="status" as="p" size="sm">{{ copy.noPurchasable }}</BsText>
-        <BsMarketingPricing v-else :interval="planPresentation.interval" :plans="planPresentation.pricingPlans" :interval-options="[{ value: 'monthly', label: planPresentation.copy.monthly }, { value: 'annual', label: planPresentation.copy.yearly }]" :copy="{ cycleLabel: planPresentation.copy.cycle, loading: planPresentation.copy.loading, empty: planPresentation.copy.empty, retry: planPresentation.copy.retry, included: planPresentation.copy.included, notIncluded: planPresentation.copy.notIncluded }" :annual-saving="planPresentation.annualDiscount === null ? null : planPresentation.copy.annualSaving(planPresentation.annualDiscount)" :columns="3" :loading="false" :error="null" test-id="shop-plan-cards" @update:interval="value => { if (value === 'monthly' || value === 'annual') planPresentation.interval = value }" @update:variant="planPresentation.chooseVariant" @action="planPresentation.choose" @retry="refresh()"/>
-      </BsPanel>
-      <BsPanel padding="md">
-        <BsInline justify="between">
-          <BsBox>
-            <BsHeading :level="2">{{ copy.instructions }}</BsHeading>
-            <BsText as="p" size="sm" tone="muted">{{ copy.instructionsHelp }}</BsText>
-          </BsBox>
-          <BsText as="span" size="xs" emphasis="semibold">{{ copy.manual }}</BsText>
-        </BsInline>
-        <BsGrid v-if="billing.instructions.recipientAlias || billing.instructions.paymentLink || billing.instructions.qrImageUrl || (isArabic ? billing.instructions.instructionsAr : billing.instructions.instructionsEn)" :columns="2">
-          <BsText v-if="billing.instructions.recipientAlias" as="p">
-            <BsText as="span" size="xs" tone="muted">{{ copy.recipient }}</BsText>
-            <BsText dir="ltr" as="strong">{{ billing.instructions.recipientAlias }}</BsText>
-          </BsText>
-          <BsText v-if="billing.instructions.paymentLink" as="p">
-            <BsText as="span" size="xs" tone="muted">{{ copy.paymentLink }}</BsText>
-            <BsLink :to="billing.instructions.paymentLink" target="_blank" rel="noopener noreferrer" external>{{ billing.instructions.paymentLink }}</BsLink>
-          </BsText>
-          <BsBox v-if="billing.instructions.qrImageUrl" padding="md">
-            <BsText as="span" size="xs" tone="muted">{{ copy.qr }}</BsText>
-            <BsImage :src="billing.instructions.qrImageUrl" :alt="copy.qr"/>
-          </BsBox>
-          <BsText v-if="isArabic ? billing.instructions.instructionsAr : billing.instructions.instructionsEn" as="p" size="sm">{{ isArabic ? billing.instructions.instructionsAr : billing.instructions.instructionsEn }}</BsText>
-        </BsGrid>
-        <BsText v-else as="p" size="sm" tone="muted">{{ copy.unavailable }}</BsText>
-      </BsPanel>
-      <BsContentSection :title="copy.privateTitle" :description="copy.privateHelp" data-private-offer>
-        <BsForm :pending="privatePending" :error="privateError" @submit="previewPrivateOffer">
-          <BsField v-slot="field" :label="copy.privateLink"><BsInput :id="field.id" v-model="privateLink" type="password" autocomplete="off" maxlength="2048" /></BsField>
-          <BsButton type="submit" :pending="privatePending">{{ copy.privatePreview }}</BsButton>
-        </BsForm>
-        <BsStack v-if="privatePreview" data-private-offer-preview>
-          <BsHeading :level="3">{{ privatePreview.displayName }}</BsHeading>
-          <BsText>{{ money(privatePreview.priceAmount, privatePreview.currency) }} · {{ intervalLabel(privatePreview.billingInterval) }} · {{ date(privatePreview.expiresAt) }}</BsText>
-          <BsList><BsListItem v-for="(value, key) in privatePreview.resourceLimits" :key="key">{{ copy.resources[key as PlanResourceKey] }}: {{ value == null ? '∞' : value }}</BsListItem></BsList>
-          <BsText v-if="privatePreview.blockers.length" role="status">{{ copy.preservation }}</BsText>
-          <BsText v-if="privatePreview.submissionId" role="status">{{ copy.privateRedeemed }}</BsText>
-          <BsButton variant="text" @click="clearPrivateOffer">{{ copy.privateClear }}</BsButton>
-        </BsStack>
-      </BsContentSection>
-      <BsPanel padding="md">
-        <BsHeading :level="2">{{ copy.notice }}</BsHeading>
-        <BsText as="p" size="sm" tone="muted">{{ copy.noticeHelp }}</BsText>
-        <BsStack>
-          <BsButton :disabled="!noticeQuote || hasOpenRequest || !!privatePreview?.submissionId" @click="noticeAction.edit()">{{ copy.submit }}</BsButton>
-          <BsRecordActionDialog v-model:visible="noticeActionOpen" :title="copy.notice" :dirty="noticeActionDirty" :pending="submitPending" :error="submitError" :submit-label="copy.submit" :cancel-label="ui('cancel')" :submit-disabled="!noticeQuote || hasOpenRequest || !!privatePreview?.submissionId" @submit="submitNotice">
-            <BsBox v-if="noticeQuote" padding="md">
-              <BsText as="p">{{ copy.requestedPlan }}: <BsText as="strong">{{ noticeQuote.planName }}</BsText> · {{ copy.expected }}: <BsText as="strong">{{ money(noticeQuote.effectivePriceAmount, noticeQuote.currency) }}</BsText> · {{ copy.interval }}: <BsText as="strong">{{ intervalLabel(noticeQuote.billingInterval) }}</BsText>
-              </BsText>
-              <BsText v-if="noticeQuote.priceSource === 'override'" as="p" emphasis="semibold">{{ copy.negotiated }}</BsText>
-              <BsText v-if="noticeQuote.blockers.length" as="p" tone="warning" emphasis="semibold">{{ copy.preservation }}</BsText>
-            </BsBox>
-            <BsText v-else role="status" as="p" size="sm">{{ copy.noPurchasable }}</BsText>
-            <BsField v-slot="field" :label="copy.paid">
-              <BsInput :id="field.id" v-model.number="form.paidAmount" :aria-describedby="field.describedby" type="number" :min="0.01" :step="0.01" :disabled="!noticeQuote" required/>
-            </BsField>
-            <BsField v-slot="field" :label="copy.transferDate">
-              <BsInput :id="field.id" v-model="form.transferDate" :aria-describedby="field.describedby" type="date" :max="new Date().toISOString().slice(0, 10)" :disabled="!noticeQuote" required/>
-            </BsField>
-            <BsField v-slot="field" :label="copy.reference">
-              <BsInput :id="field.id" v-model="form.transferReference" :aria-describedby="field.describedby" dir="ltr" :minlength="2" :maxlength="200" :disabled="!noticeQuote" required/>
-            </BsField>
-            <BsText as="p" size="sm" tone="muted">{{ copy.policyPrefix }} <BsLink to="/terms">{{ copy.terms }}</BsLink> · <BsLink to="/privacy">{{ copy.privacy }}</BsLink> · <BsLink to="/refund-cancellation">{{ copy.refund }}</BsLink>.</BsText>
-          </BsRecordActionDialog>
-        </BsStack>
-      </BsPanel>
-      <BsContentSection data-payment-evidence :title="copy.evidenceTitle" :description="copy.evidenceHelp">
-        <BsStack v-if="evidenceSubmission">
-          <BsText size="sm">{{ copy.reference }}: <BsText as="span" dir="ltr">{{ evidenceSubmission.transferReference }}</BsText></BsText>
-          <BsForm :pending="evidencePending" :error="evidenceError" @submit="uploadEvidence">
-            <BsStack>
-              <BsField for="payment-receipt" :label="copy.evidenceSelect">
-                <BsFileInput :key="evidenceInputVersion" input-id="payment-receipt" :model-value="evidenceFile" :label="copy.evidenceSelect" accept="image/jpeg,image/png,image/webp" required @change="selectEvidence" />
-              </BsField>
-              <BsButton type="submit" :pending="evidencePending" :disabled="!evidenceFile">{{ evidencePending ? copy.evidenceUploading : copy.evidenceUpload }}</BsButton>
-            </BsStack>
-          </BsForm>
-          <BsText v-if="evidenceSaved" role="status" size="sm">{{ copy.evidenceSaved }}</BsText>
-          <BsStack v-if="evidenceFiles.length" gap="sm"><BsText size="sm" emphasis="semibold">{{ copy.evidenceAttached }}</BsText><BsList><BsListItem v-for="file in evidenceFiles" :key="file.evidenceId"><BsText size="sm">{{ file.originalFileName }}</BsText></BsListItem></BsList></BsStack>
-        </BsStack>
-        <BsText v-else role="status" size="sm" tone="muted">{{ copy.evidenceFirst }}</BsText>
-      </BsContentSection>
-
-      <BsPanel padding="md">
-        <BsBox padding="md">
-          <BsHeading :level="2">{{ copy.history }}</BsHeading>
-        </BsBox>
-        <BsBox scroll="x">
-          <BsDataTable :value="billing.submissions" data-key="id" :label="copy.history" :columns="[{ key: 'status', header: (copy.access), field: 'status' }, { key: 'requestedPlanName', header: (copy.requestedPlan), field: 'requestedPlanName' }, { key: 'column2', header: (copy.expected) }, { key: 'column3', header: (copy.paid) }, { key: 'transferReference', header: (copy.reference), field: 'transferReference' }, { key: 'column5', header: (copy.transferDate) }, { key: 'reviewReason', header: (copy.reviewReason), field: 'reviewReason' }]">
-            <template #cell-status="{ row: item }">
-              <BsStatusBadge :status="item.status"/> <BsText as="span" size="sm">{{ statusLabel(item.status) }}</BsText>
-            </template>
-            <template #cell-column2="{ row: item }">{{ money(item.effectivePriceAmount, item.currency) }}</template>
-            <template #cell-column3="{ row: item }">{{ money(item.paidAmount, item.currency) }}</template>
-            <template #cell-column5="{ row: item }">{{ date(item.transferDate) }}</template>
-            <template #empty>
-              <BsText as="p" size="sm" tone="muted">{{ copy.empty }}</BsText>
-            </template>
-          </BsDataTable>
-        </BsBox>
-      </BsPanel>
-    </template>
-    <BsText v-else role="status" as="p" size="sm">{{ copy.noBilling }}</BsText>
-  </BsStack>
+  <BsBillingPage v-model:form="billingForm" v-model:evidence-file="evidenceFile" :copy="billingCopy" :view="billingView" @retry="refresh()" @usage-retry="refresh()" @pricing-retry="refreshCatalog()" @interval="chooseBillingInterval" @variant="planPresentation.chooseVariant" @plan="planPresentation.choose" @private-preview="previewPrivateOffer" @private-clear="clearPrivateOffer" @transfer-open="noticeAction.edit()" @transfer-close="noticeActionOpen = false" @transfer-submit="submitNotice" @evidence-select="selectEvidence" @evidence-upload="uploadEvidence"/>
 </template>

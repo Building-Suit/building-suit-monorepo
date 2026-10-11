@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { downloadText } from '../src/utils/downloadText.js'
+import { downloadText, downloadBlob } from '../src/utils/downloadText.js'
 
 test('text downloads retain filename and content and release the object URL after success or failure', () => {
   const create = URL.createObjectURL
@@ -44,6 +44,24 @@ test('mounted downloads defer cleanup and retain native anchor behavior', () => 
     assert.deepEqual(events, ['append', 'click', 'remove', 'revoke'])
   } finally {
     URL.createObjectURL = prior.create; URL.revokeObjectURL = prior.revoke; globalThis.setTimeout = prior.timer
+    if (prior.document === undefined) delete globalThis.document; else globalThis.document = prior.document
+  }
+})
+
+
+test('receipt downloads pass the original immutable blob without re-encoding it', () => {
+  const prior = { create: URL.createObjectURL, revoke: URL.revokeObjectURL, document: globalThis.document }
+  const receipt = new Blob([new Uint8Array([0, 255, 128, 10])], { type: 'application/pdf' })
+  let consumed, filename
+  URL.createObjectURL = value => { consumed = value; return 'blob:receipt' }
+  URL.revokeObjectURL = value => assert.equal(value, 'blob:receipt')
+  globalThis.document = { createElement: () => ({ set download(value) { filename = value }, click() {} }) }
+  try {
+    downloadBlob('original.pdf', receipt)
+    assert.equal(consumed, receipt)
+    assert.equal(filename, 'original.pdf')
+  } finally {
+    URL.createObjectURL = prior.create; URL.revokeObjectURL = prior.revoke
     if (prior.document === undefined) delete globalThis.document; else globalThis.document = prior.document
   }
 })

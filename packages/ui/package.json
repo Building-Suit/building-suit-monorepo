@@ -261,7 +261,14 @@
     "./organisms/BsForeignExchangeWorkspace": "./src/organisms/BsForeignExchangeWorkspace.vue",
     "./types/subledgerPresentation": "./src/types/subledgerPresentation.ts",
     "./types/foreignExchangePresentation": "./src/types/foreignExchangePresentation.ts",
-    "./types/landingPresentation": "./src/types/landingPresentation.ts"
+    "./types/landingPresentation": "./src/types/landingPresentation.ts",
+    "./templates/BsBillingPage": "./src/templates/BsBillingPage.vue",
+    "./organisms/BsManualPaymentDialog": "./src/organisms/BsManualPaymentDialog.vue",
+    "./organisms/BsPlanImpactDialog": "./src/organisms/BsPlanImpactDialog.vue",
+    "./types/billingPresentation": "./src/types/billingPresentation.ts",
+    "./templates/BsSubscriptionCheckoutPage": "./src/templates/BsSubscriptionCheckoutPage.vue",
+    "./organisms/BsWorkspaceCreationDialog": "./src/organisms/BsWorkspaceCreationDialog.vue",
+    "./types/workspaceCreationPresentation": "./src/types/workspaceCreationPresentation.ts"
   },
   "dependencies": {
     "primevue": "4.5.5",

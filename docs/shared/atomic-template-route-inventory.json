@@ -58,7 +58,9 @@
     "BsReportsPage": "packages/ui/src/templates/BsReportsPage.vue",
     "BsInventoryAccountingPage": "packages/ui/src/templates/BsInventoryAccountingPage.vue",
     "BsAssetRegisterPage": "packages/ui/src/templates/BsAssetRegisterPage.vue",
-    "BsBankReconciliationPage": "packages/ui/src/templates/BsBankReconciliationPage.vue"
+    "BsBankReconciliationPage": "packages/ui/src/templates/BsBankReconciliationPage.vue",
+    "BsBillingPage": "packages/ui/src/templates/BsBillingPage.vue",
+    "BsSubscriptionCheckoutPage": "packages/ui/src/templates/BsSubscriptionCheckoutPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -627,44 +629,20 @@
     {
       "source": "apps/ledger-suit/app/pages/billing.vue",
       "kind": "route",
-      "currentSharedTemplates": [],
-      "renderedBsComponents": [
-        "BsBox",
-        "BsButton",
-        "BsCard",
-        "BsContentSection",
-        "BsDescriptionList",
-        "BsDescriptionTerm",
-        "BsDescriptionValue",
-        "BsDialog",
-        "BsFieldLabel",
-        "BsFileInput",
-        "BsFloatingField",
-        "BsForm",
-        "BsHeading",
-        "BsI18nText",
-        "BsIcon",
-        "BsInline",
-        "BsLink",
-        "BsList",
-        "BsListItem",
-        "BsMarketingPricing",
-        "BsStack",
-        "BsStateSurface",
-        "BsStatusBadge",
-        "BsText",
-        "BsTextarea",
-        "BsUsageMeterGrid",
-        "BsWorkflowScope"
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsBillingPage.vue"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "renderedBsComponents": [
+        "BsBillingPage"
+      ],
+      "destination": "packages/ui/src/templates/BsBillingPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/ledger-suit/app/pages/billing.vue",
       "dependencies": [
-        "~/composables/useLedgerBillingCheckoutView",
-        "~/composables/useLedgerManualPaymentCheckoutView"
+        "~/composables/useLedgerBillingPresentation"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "subscription-billing"
     },
     {
       "source": "apps/ledger-suit/app/pages/clients.vue",
@@ -1136,49 +1114,21 @@
       "source": "apps/ledger-suit/app/pages/subscribe.vue",
       "kind": "route",
       "currentSharedTemplates": [
-        "packages/ui/src/templates/BsAppShell.vue"
+        "packages/ui/src/templates/BsSubscriptionCheckoutPage.vue"
       ],
       "renderedBsComponents": [
-        "BsAlert",
-        "BsAppShell",
-        "BsBox",
-        "BsButton",
-        "BsCard",
-        "BsContextSwitcher",
-        "BsDialog",
-        "BsField",
-        "BsFieldLabel",
-        "BsFileInput",
-        "BsFloatingField",
-        "BsForm",
-        "BsHeading",
-        "BsI18nText",
-        "BsIcon",
-        "BsInline",
-        "BsInput",
-        "BsLink",
-        "BsList",
-        "BsListItem",
-        "BsMarketingPricing",
-        "BsProductLogo",
-        "BsRecordActionDialog",
-        "BsSelect",
-        "BsStack",
-        "BsText",
-        "BsTextarea",
-        "BsUserMenu",
-        "BsWorkflowScope"
+        "BsSubscriptionCheckoutPage"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "destination": "packages/ui/src/templates/BsSubscriptionCheckoutPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/ledger-suit/app/pages/subscribe.vue",
       "dependencies": [
-        "~/composables/useLedgerBillingCheckoutView",
-        "~/composables/useLedgerManualPaymentCheckoutView",
-        "~/composables/useLedgerOrganizationSwitcherView",
-        "~/composables/useLedgerSubscriptionGateView"
+        "~/composables/useLedgerBillingPresentation",
+        "~/composables/useLedgerWorkspacePresentation",
+        "@building-suit/ux"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "subscription-checkout"
     },
     {
       "source": "apps/ledger-suit/app/pages/tax-vat.vue",
@@ -1526,35 +1476,14 @@
     {
       "source": "apps/shop-suit/app/pages/billing.vue",
       "kind": "route",
-      "currentSharedTemplates": [],
-      "renderedBsComponents": [
-        "BsBox",
-        "BsButton",
-        "BsContentSection",
-        "BsDataTable",
-        "BsField",
-        "BsFileInput",
-        "BsForm",
-        "BsGrid",
-        "BsHeading",
-        "BsImage",
-        "BsInline",
-        "BsInput",
-        "BsKpiCard",
-        "BsLink",
-        "BsList",
-        "BsListItem",
-        "BsMarketingPricing",
-        "BsPanel",
-        "BsRecordActionDialog",
-        "BsSkeleton",
-        "BsStack",
-        "BsStatusBadge",
-        "BsText",
-        "BsUsageMeter"
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsBillingPage.vue"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "renderedBsComponents": [
+        "BsBillingPage"
+      ],
+      "destination": "packages/ui/src/templates/BsBillingPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/shop-suit/app/pages/billing.vue",
       "dependencies": [
         "~/types/billing",
@@ -1563,7 +1492,8 @@
         "~/utils/private-offer",
         "~/utils/private-offer"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "subscription-billing"
     },
     {
       "source": "apps/shop-suit/app/pages/cash-shifts.vue",
@@ -2202,6 +2132,7 @@
     "BsAssetRegisterPage",
     "BsAuditHistoryPage",
     "BsBankReconciliationPage",
+    "BsBillingPage",
     "BsBusinessSettingsPage",
     "BsCashShiftsPage",
     "BsCatalogImportPage",
@@ -2236,6 +2167,7 @@
     "BsSignupPage",
     "BsStarterWorkflowPage",
     "BsSubledgerPage",
+    "BsSubscriptionCheckoutPage",
     "BsTaskDetailPage",
     "BsTaskWorklistPage",
     "BsTaxWorkspacePage",

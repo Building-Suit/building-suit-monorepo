@@ -230,4 +230,6 @@ export { useFileDrop } from './composables/useFileDrop.ts'
 export { usePointOfSaleKeyboard } from './composables/usePointOfSaleKeyboard.ts'
 export { captureBarcodeKey, emptyScanState } from './utils/barcode.js'
 export { useControlFocus } from './composables/useControlFocus.ts'
-export { downloadText } from './utils/downloadText.js'
+export { downloadText, downloadBlob } from './utils/downloadText.js'
+
+export { useBoundedPolling } from './composables/useBoundedPolling.ts'

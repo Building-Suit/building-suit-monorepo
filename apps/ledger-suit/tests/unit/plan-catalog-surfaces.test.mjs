@@ -10,13 +10,13 @@ const read = relative => readFileSync(new URL(relative, appRoot), 'utf8')
 test('all customer pricing surfaces render the shared server-catalog component', async () => {
   const surfaces = ['index', 'subscribe', 'billing'].map(page => read(`app/pages/${page}.vue`))
   for (const [index, surface] of surfaces.entries()) {
-    assert.match(surface, /useLedgerBillingCheckoutView/)
+    assert.match(surface, /useLedgerBilling(?:CheckoutView|Presentation)/)
     const tree = await readPresentationTree(fileURLToPath(new URL('../../../../', import.meta.url)), `apps/ledger-suit/app/pages/${['index', 'subscribe', 'billing'][index]}.vue`)
     assert.match(tree, /<BsMarketingPricing/)
   }
   assert.match(surfaces[0], /surface: 'public'/)
-  assert.match(surfaces[1], /:factory="useLedgerSubscriptionGateView"/)
-  assert.match(surfaces[2], /surface: \(pricingSurface\)/)
+  assert.match(surfaces[1], /<BsSubscriptionCheckoutPage/)
+  assert.match(surfaces[2], /get surface\(\) \{ return pricingSurface\.value \}/)
 
   const pricing = read('app/composables/useLedgerBillingCheckoutView.ts')
   assert.match(pricing, /rpc\('subscription_plan_catalog'\)/)

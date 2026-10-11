@@ -1,7 +1,7 @@
 import type { Database } from '~~/types/database.types'
 
-/** Ledger-owned orchestration; mounted by a shared workflow scope in its route/layout. */
-export function useLedgerOrganizationSwitcherView(_values: Record<string, unknown>, _emit: (event: string, ...args: unknown[]) => void) {
+/** Ledger-owned workspace eligibility and atomic creation/switching commands. */
+export function useLedgerOrganizationSwitcherView() {
 const supabase = useSupabaseClient<Database>()
 const { organizations, current, setOrganization, loadOrganizations, roleLabel } = useTenant()
 const { paymentRequired, load: loadBilling } = useBilling()

@@ -668,3 +668,16 @@ test('native select renders configured options and preserves explicit slot owner
   assert.match(slotted, /Custom/)
   assert.doesNotMatch(slotted, /First|Second/)
 })
+
+test('billing displays its page heading by default and suppresses it only for embedded checkout', async () => {
+  const Page = component('templates/BsBillingPage.vue')
+  async function heading(showHeader) {
+    const app = vue.createSSRApp({ render: () => vue.h(Page, { copy: { title: 'Subscription', subtitle: 'Reviewed access', unavailable: 'No subscription' }, view: { workspace: '', denied: false, loading: false, failed: false, available: false }, form: {}, ...(showHeader === undefined ? {} : { showHeader }) }) })
+    app.component('BsStack', { render() { return vue.h('main', this.$slots.default?.()) } })
+    app.component('BsPageHeader', { props: ['title'], render() { return vue.h('h1', this.title) } })
+    app.component('BsStateSurface', { render: () => vue.h('aside') })
+    return renderToString(app)
+  }
+  assert.match(await heading(), /<h1[^>]*>Subscription<\/h1>/)
+  assert.doesNotMatch(await heading(false), /<h1\b/)
+})
