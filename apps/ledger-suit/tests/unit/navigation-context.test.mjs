@@ -14,7 +14,7 @@ test('accounting routes remain capability-gated and grouped in one app shell', (
     '/accounting-dimensions',
   ]) assert.ok(layout.includes(`to: '${route}'`), `${route} is missing`)
   for (const group of ['ledger', 'subledgers', 'insights']) assert.match(layout, new RegExp(`key: '${group}'`))
-  assert.equal((layout.match(/<BsAppShell/g) ?? []).length, 1)
+  assert.equal((layout.match(/<BsWorkspaceShell/g) ?? []).length, 1)
 })
 
 test('module headers expose organization and applicable reporting context', () => {

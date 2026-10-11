@@ -89,3 +89,19 @@ test('architecture does not interpret documentation copy as executable behavior'
  const root = await fixture(t, '<script setup>const copy = "useFetch, h and a controller factory are forbidden"</script><template><BsExamplePage :title="copy"/></template>')
  assert.deepEqual((await validateAtomicTemplateArchitecture({ root })).failures, [])
 })
+
+test('architecture follows executable wrapper bodies behind conditional package exports', async t => {
+ const root = await fixture(t, '<script setup>import { draw } from "@building-suit/renderer"; draw()</script><template><BsExamplePage/></template>')
+ await mkdir(path.join(root, 'packages/renderer'))
+ await writeFile(path.join(root, 'packages/renderer/package.json'), JSON.stringify({ exports: { '.': { import: './index.ts', default: './index.ts' } } }))
+ await writeFile(path.join(root, 'packages/renderer/index.ts'), 'import { h as create } from "vue"; export function draw() { return create("div") }')
+ assert.ok((await validateAtomicTemplateArchitecture({ root })).failures.some(message => /render factory draw/.test(message)))
+})
+
+test('UI cannot hide queries behind imported executable wrappers', async t => {
+ const root = await fixture(t, '<template><BsExamplePage/></template>')
+ await mkdir(path.join(root, 'packages/ui/src/utils'))
+ await writeFile(path.join(root, 'packages/ui/src/utils/query.ts'), 'import { useFetch as request } from "#imports"; export const load = () => request("/api/business")')
+ await writeFile(path.join(root, 'packages/ui/src/templates/BsExamplePage.vue'), '<script setup>import { load } from "../utils/query"; load()</script><template><main/></template>')
+ assert.ok((await validateAtomicTemplateArchitecture({ root })).failures.some(message => /product query\/context behavior load/.test(message)))
+})

@@ -39,7 +39,17 @@ export async function validateAtomicTemplateArchitecture({ root = defaultRoot } 
       try {
         const manifest = JSON.parse(await readFile(path.join(root, 'packages', name, 'package.json'), 'utf8'))
         const entry = manifest.exports?.[subpath.length ? `./${subpath.join('/')}` : '.']
-        if (typeof entry === 'string') target = path.join(root, 'packages', name, entry)
+        function exportSource(value) {
+          if (typeof value === 'string') return value
+          if (!value || typeof value !== 'object') return null
+          for (const condition of ['import', 'node', 'default', 'require', 'types']) {
+            const source = exportSource(value[condition])
+            if (source) return source
+          }
+          return null
+        }
+        const source = exportSource(entry)
+        if (source) target = path.join(root, 'packages', name, source)
       } catch { /* Unavailable modules still receive direct boundary checks. */ }
     }
     if (!target) return null
@@ -69,6 +79,20 @@ export async function validateAtomicTemplateArchitecture({ root = defaultRoot } 
       if (visitedLocals.has(name)) return false
       visitedLocals.add(name)
       for (const statement of ast.statements) {
+        const callableBodies = []
+        if (ts.isFunctionDeclaration(statement) && statement.name?.text === name && statement.body) callableBodies.push(statement.body)
+        if (ts.isVariableStatement(statement)) for (const declaration of statement.declarationList.declarations) {
+          if (ts.isIdentifier(declaration.name) && declaration.name.text === name && declaration.initializer && (ts.isArrowFunction(declaration.initializer) || ts.isFunctionExpression(declaration.initializer))) callableBodies.push(declaration.initializer.body)
+        }
+        for (const body of callableBodies) {
+          const calls = []
+          function collect(node) {
+            if (ts.isCallExpression(node) && ts.isIdentifier(node.expression)) calls.push(node.expression.text)
+            ts.forEachChild(node, collect)
+          }
+          collect(body)
+          for (const call of calls) if (wanted.has(call) || await localOrigin(call)) return true
+        }
         if (ts.isImportDeclaration(statement) && ts.isStringLiteral(statement.moduleSpecifier) && !statement.importClause?.isTypeOnly) {
           const clause = statement.importClause
           if (clause?.name?.text === name && await callableOrigin(file, statement.moduleSpecifier.text, 'default', wanted, seen)) return true

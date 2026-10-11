@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import test from 'node:test'
+import { readPresentationTree } from '../../../../packages/testing/presentation-source.mjs'
 import { accountingTablePreferenceKey, parseAccountingTableDensity } from '../../app/utils/accountingTablePreferences.ts'
 
 const scope = {
@@ -25,16 +26,18 @@ test('only supported density values are restored', () => {
   assert.equal(parseAccountingTableDensity(null), 'comfortable')
 })
 
-test('accounting tables retain BsDataTable and existing full-population totals', () => {
+test('accounting tables retain BsDataTable and existing full-population totals', async () => {
   const root = new URL('../../', import.meta.url)
   const reports = readFileSync(new URL('app/pages/reports.vue', root), 'utf8')
   const journals = readFileSync(new URL('app/pages/transactions.vue', root), 'utf8')
   const workspace = readFileSync(new URL('app/composables/useTransactionWorkspace.ts', root), 'utf8')
-  assert.match(reports, /<BsDataTable[^>]+:value="trialBalance"/)
+  const presentation = await readPresentationTree(new URL('../../../../', import.meta.url).pathname, 'apps/ledger-suit/app/pages/reports.vue')
+  assert.match(presentation, /<BsDataTable/)
   assert.match(reports, /trialBalance\.value\.reduce\(\(sum, row\) => sum \+ BigInt\(row\[field\]\), 0n\)/)
-  assert.match(reports, /exportReport\('trial_balance'\)/)
+  assert.match(reports, /report === 'trial_balance'/)
   assert.match(journals, /useTransactionWorkspace\(\)/)
-  assert.match(journals, /<BsDataTable[^>]+:value="rows"[^>]+row-key="id"/)
+  const journalPresentation = await readPresentationTree(new URL('../../../../', import.meta.url).pathname, 'apps/ledger-suit/app/pages/transactions.vue')
+  assert.match(journalPresentation, /<BsDataTable[^>]+:value="view.rows"/)
   assert.match(workspace, /p_limit: pageSize, p_offset: \(page\.value - 1\) \* pageSize/)
   assert.doesNotMatch(`${reports}\n${journals}`, /virtual(?:-|_)?scroller/i)
 })

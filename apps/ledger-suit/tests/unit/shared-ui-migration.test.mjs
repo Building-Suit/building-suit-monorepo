@@ -3,6 +3,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import test from 'node:test'
 import { parse } from '@vue/compiler-sfc'
+import { readPresentationTree } from '../../../../packages/testing/presentation-source.mjs'
 
 const appRoot = new URL('../../app/', import.meta.url).pathname
 const workspaceRoot = new URL('../../../../', import.meta.url).pathname
@@ -20,6 +21,8 @@ const sources = vueFiles(appRoot).map(file => ({
   source: readFileSync(file, 'utf8'),
 }))
 
+const presentationSources = await Promise.all(sources.map(async item => ({ ...item, source: await readPresentationTree(workspaceRoot, `apps/ledger-suit/app/${item.file}`) })))
+
 test('Ledger reusable controls and tables come from shared UI', () => {
   for (const { file, source } of sources) {
     assert.doesNotMatch(source, /<table\b/, `${file} contains a native reusable data table`)
@@ -27,21 +30,21 @@ test('Ledger reusable controls and tables come from shared UI', () => {
     assert.doesNotMatch(source, /<(?:DataTable|Dialog)\b/, `${file} bypasses the Building Suit wrapper`)
     assert.doesNotMatch(source, /\b(?:window\.)?confirm\s*\(/, `${file} bypasses shared confirmation`)
   }
-  assert.ok(sources.some(({ source }) => source.includes('<BsDataTable')))
-  assert.ok(sources.some(({ source }) => source.includes('<BsRecordActionDialog')))
-  assert.ok(sources.some(({ source }) => source.includes('<BsButton')))
-  assert.ok(sources.some(({ source }) => source.includes('<BsForm')))
-  assert.ok(sources.some(({ source }) => source.includes('<BsSelect')))
-  assert.ok(sources.some(({ source }) => source.includes('<BsCard')))
-  assert.ok(sources.some(({ source }) => source.includes('<BsKpiCard')))
-  assert.ok(sources.some(({ source }) => source.includes('<BsStatusBadge')))
+  assert.ok(presentationSources.some(({ source }) => source.includes('<BsDataTable')))
+  assert.ok(presentationSources.some(({ source }) => source.includes('<BsRecordActionDialog')))
+  assert.ok(presentationSources.some(({ source }) => source.includes('<BsButton')))
+  assert.ok(presentationSources.some(({ source }) => source.includes('<BsForm')))
+  assert.ok(presentationSources.some(({ source }) => source.includes('<BsSelect')))
+  assert.ok(presentationSources.some(({ source }) => source.includes('<BsCard')))
+  assert.ok(presentationSources.some(({ source }) => source.includes('<BsKpiCard')))
+  assert.ok(presentationSources.some(({ source }) => source.includes('<BsStatusBadge')))
 })
 
 test('Ledger auth routes use the canonical shared auth and signup contracts', () => {
-  const login = sources.find(item => item.file === 'pages/login.vue')?.source || ''
-  const signup = sources.find(item => item.file === 'pages/signup.vue')?.source || ''
-  const verification = sources.find(item => item.file === 'pages/verify-email.vue')?.source || ''
-  const invitation = sources.find(item => item.file === 'pages/accept-invitation.vue')?.source || ''
+  const login = presentationSources.find(item => item.file === 'pages/login.vue')?.source || ''
+  const signup = presentationSources.find(item => item.file === 'pages/signup.vue')?.source || ''
+  const verification = presentationSources.find(item => item.file === 'pages/verify-email.vue')?.source || ''
+  const invitation = presentationSources.find(item => item.file === 'pages/accept-invitation.vue')?.source || ''
   assert.match(login, /<BsAuthLayout\b/)
   assert.match(login, /<BsAuthForm\b/)
   assert.match(signup, /<BsAuthLayout\b/)
@@ -53,7 +56,8 @@ test('Ledger auth routes use the canonical shared auth and signup contracts', ()
   assert.match(invitation, /<BsAuthLayout\b/)
   assert.match(invitation, /<BsAuthForm\b/)
   assert.match(invitation, /<BsVerificationForm\b/)
-  for (const source of [login, signup, verification, invitation]) {
+  for (const file of ['pages/login.vue', 'pages/signup.vue', 'pages/verify-email.vue', 'pages/accept-invitation.vue']) {
+    const source = sources.find(item => item.file === file).source
     assert.doesNotMatch(source, /\bls-auth-(?:page|panel|form-shell|card|eyebrow)\b/)
   }
 })
@@ -98,47 +102,32 @@ test('standard Ledger record actions use the canonical dialog and controller', (
       : sources.find(item => item.file === file)?.source
     assert.ok(source, `${file} orchestration is missing`)
     assert.match(source, /useRecordAction\(/, `${file} does not use the shared controller`)
-    const presentation = route ? sources.find(item => item.file === route).source : source
+    const presentation = presentationSources.find(item => item.file === (route || file)).source
     assert.match(presentation, /<BsRecordActionDialog\b/, `${file} does not use the shared record-action dialog`)
-    if (route) assert.ok(presentation.includes(`:factory="useLedger${name}View"`), `${file} adapter is not connected`)
+    if (route) assert.doesNotMatch(presentation, /:factory=/, `${file} must not inject controllers into presentation`)
   }
 })
 
-test('Ledger account CRUD actions are capability-driven by the shared table', () => {
-  const accounts = sources.find(item => item.file === 'pages/accounts.vue')?.source || ''
-  assert.match(accounts, /<BsDataTable[\s\S]+:capabilities="\{ insert:/)
-  assert.match(accounts, /@create="openCreate\(\)"/)
-  assert.match(accounts, /@edit="openEdit"/)
-  assert.match(accounts, /@archive="archiveAccount"/)
-  assert.match(accounts, /<template #row-actions=/)
-})
-
-test('Ledger dimension CRUD actions use shared table capabilities and record dialogs', () => {
-  const dimensions = sources.find(item => item.file === 'pages/accounting-dimensions.vue')?.source || ''
-  assert.match(dimensions, /<BsDataTable[\s\S]+:capabilities="\{ insert:/)
-  assert.match(dimensions, /@create="editPolicy\(\)"/)
-  assert.match(dimensions, /@edit="editPolicy"/)
-  assert.match(dimensions, /<BsRecordActionDialog\s+v-model:visible="policyOpen"/)
-  assert.doesNotMatch(dimensions, /<BsForm class="grid gap-4 md:grid-cols-4"/)
-})
-
-test('remaining direct dialogs are materially different shared-overlay workflows', () => {
-  const allowed = new Set([
-    'layouts/default.vue', 'pages/accounts.vue', 'pages/billing.vue',
-    'pages/index.vue', 'pages/records/[kind].vue', 'pages/reports.vue',
-    'pages/subscribe.vue', 'pages/team.vue', 'pages/transactions.vue',
-  ])
-  const actual = sources.filter(({ source }) => /<BsDialog\b/.test(source)).map(({ file }) => file)
-  assert.deepEqual(actual.sort(), [...allowed].sort())
-})
-
-test('Ledger authenticated chrome is adapter-only shared UI', () => {
-  for (const file of ['layouts/default.vue', 'pages/platform-admin.vue', 'pages/subscribe.vue']) {
-    const source = sources.find(item => item.file === file)?.source || ''
-    assert.match(source, /<BsAppShell\b/)
-    assert.match(source, /<BsUserMenu\b/)
-    assert.doesNotMatch(source, /<SettingsMenu\b|<AccountMenu\b|role="menu"/)
+test('Ledger account and dimension CRUD retain semantic shared commands', () => {
+  for (const route of ['accounts', 'accounting-dimensions']) {
+    const adapter = sources.find(item => item.file === `pages/${route}.vue`).source
+    const presentation = presentationSources.find(item => item.file === `pages/${route}.vue`).source
+    assert.match(presentation, /<BsDataTable/)
+    assert.match(presentation, /:capabilities=/)
+    assert.match(presentation, /<BsRecordActionDialog/)
+    assert.match(adapter, /@(?:create|create-policy)=/)
+    assert.match(adapter, /@(?:edit|edit-policy)=/)
+    assert.match(adapter, /@(?:save-editor|save-policy)=/)
   }
+})
+
+test('Suit routes contain no direct dialogs or reusable chrome', () => {
+  for (const { file, source } of sources) assert.doesNotMatch(source, /<Bs(?:Dialog|RecordActionDialog|AppShell|UserMenu)\b/, file)
+  const layout = sources.find(item => item.file === 'layouts/default.vue').source
+  assert.match(layout, /<BsWorkspaceShell\b/)
+  const presentation = presentationSources.find(item => item.file === 'layouts/default.vue').source
+  assert.match(presentation, /<BsAppShell\b/)
+  assert.match(presentation, /<BsUserMenu\b/)
   assert.equal(existsSync(path.join(appRoot, 'components/AccountMenu.vue')), false)
 })
 
@@ -162,7 +151,7 @@ test('all Ledger tables use Bs-owned column schemas and domain cell slots', () =
     assert.equal(descriptor.styles.length, 0, `${file}: local CSS`)
     function visit(node) {
       if (node.type === 1) {
-        assert.ok(node.tag === 'template' || node.tag.startsWith('Bs'), `${file}: non-Bs tag ${node.tag}`)
+        assert.ok(['template', 'slot', 'NuxtPage', 'NuxtLayout'].includes(node.tag) || node.tag.startsWith('Bs'), `${file}: non-Bs tag ${node.tag}`)
         assert.ok(!node.props.some(prop => prop.type === 6 && ['class', 'style'].includes(prop.name) || prop.type === 7 && prop.name === 'bind' && ['class', 'style', 'pt'].includes(prop.arg?.content)), `${file}: local presentation styling`)
         assert.ok(!['Column', 'ColumnGroup', 'Row', 'DataTable'].includes(node.tag), `${file}: vendor table tag ${node.tag}`)
         if (node.tag === 'BsDataTable') {
@@ -175,7 +164,8 @@ test('all Ledger tables use Bs-owned column schemas and domain cell slots', () =
     if (descriptor.template?.ast) visit(descriptor.template.ast)
     assert.doesNotMatch(source, /#(?:cell|header)-[^=]+="\{\s*data\b/, `${file}: vendor slot scope`)
   }
-  assert.ok(tables > 0)
+  assert.equal(tables, 0, 'data tables belong inside shared page templates')
+  assert.ok(presentationSources.some(item => /<BsDataTable/.test(item.source)))
 })
 
 test('migrated presentation wrappers are removed and report values are preserved', () => {
@@ -184,9 +174,9 @@ test('migrated presentation wrappers are removed and report values are preserved
     for (const { file, source } of sources) assert.doesNotMatch(source, new RegExp(`<${name}\\b`), file)
   }
   const reports = sources.find(item => item.file === 'pages/reports.vue').source
-  assert.match(reports, /#\[`footer-\$\{column.field\}`\]/)
-  assert.match(reports, /:amount="sumTrial\(column.field\)"/)
-  const dashboard = sources.find(item => item.file === 'pages/dashboard.vue').source
+  assert.match(reports, /displayReportMoney\(sumTrial\(item.field\)\)/)
+  assert.match(reports, /trialBalance.value.map/)
+  const dashboard = presentationSources.find(item => item.file === 'pages/dashboard.vue').source
   assert.match(dashboard, /<BsMetricBarChart/)
-  assert.match(dashboard, /:table-series="ledgerPresentation.chartTableSeries"/)
+  assert.match(dashboard, /:table-series=/)
 })

@@ -40,7 +40,7 @@ test('legal copy is bilingual and describes Shop manual digital delivery accurat
 test('contact intake and paid-plan boundary include all required protections and policies', async () => {
   const contact = await read('app/pages/contact.vue')
   const migration = await read('supabase/migrations/20260930200000_public_support_requests.sql')
-  const billing = await read('app/pages/billing.vue')
+  const billing = await readPresentationTree(new URL('../../../../', import.meta.url).pathname, 'apps/shop-suit/app/pages/billing.vue')
   for (const field of ['category', 'subject', 'message', 'email', 'consent', 'honeypot']) assert.match(contact, new RegExp(field))
   assert.match(migration, /pg_advisory_xact_lock/)
   assert.match(migration, /interval '10 minutes'/)

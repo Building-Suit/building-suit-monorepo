@@ -77,7 +77,7 @@ test('demo orchestration has no backend client and template review exposes no ap
   assert.doesNotMatch(demo, /useSupabaseClient|\.from\(|\.rpc\(/)
   assert.doesNotMatch(templates, /useSupabaseClient|applyTemplate|create_account/)
   assert.doesNotMatch(checklist, /\.insert\(|\.update\(|\.delete\(|\.rpc\(/)
-  assert.match(readFileSync(new URL('../../app/pages/accounts.vue', import.meta.url), 'utf8'), /data-chart-template-review/)
+  assert.match(readFileSync(new URL('../../../../packages/ui/src/organisms/BsChartTemplateReview.vue', import.meta.url), 'utf8'), /data-chart-template-review/)
 })
 
 test('English and Arabic expose every setup, template and demo account label', () => {
