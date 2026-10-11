@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { BsCommerceDocumentCopy, BsCommerceDocumentForm, BsCommerceCorrectionForm, BsCommerceDocumentView } from '@building-suit/ui/types/commerceDocumentPresentation'
+
 import { shopCommandErrorMessage } from '~/utils/shopCommandErrorMessage'
 import { saleCopy } from '~/utils/saleCopy'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
@@ -345,212 +347,39 @@ function formatDate(value: string | null) {
   if (!value) return '—'
   return new Intl.DateTimeFormat(locale.value === 'ar' ? 'ar-EG' : 'en-EG', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
 }
-function lineMovements(lineId: string) { return sale.value?.movements.filter(movement => movement.invoiceItemId === lineId) ?? [] }
 
 useShopRealtime('sales', () => paymentDirty.value || correctionDirty.value)
+
+const commerceMethods = computed(() => (['cash', 'bank_transfer', 'card', 'wallet', 'cheque', 'other'] as PaymentMethod[]).map(value => ({ value, label: t(`payments.methods.${value}`) })))
+const commerceForm = computed<BsCommerceDocumentForm>({ get: () => ({ amount: paymentAmount.value, date: paymentDate.value, method: paymentMethod.value, reference: paymentReference.value, notes: '', reason: paymentReason.value, quantities: {} }), set: value => { paymentAmount.value = value.amount; paymentDate.value = value.date; if (commerceMethods.value.some(method => method.value === value.method)) paymentMethod.value = value.method as PaymentMethod; paymentReference.value = value.reference; paymentReason.value = value.reason } })
+const commerceCorrectionForm = computed<BsCommerceCorrectionForm>({ get: () => ({ date: correctionDate.value, reference: correctionReference.value, reason: correctionReason.value }), set: value => { correctionDate.value = value.date; correctionReference.value = value.reference; correctionReason.value = value.reason } })
+const commerceCopy = computed<BsCommerceDocumentCopy>(() => ({
+  back: t('sales.back'), loading: t('common.loading'), loadError: t('sales.loadError'), retry: t('sales.retry'), notFound: t('sales.notFound'), party: t('sales.customerSnapshot'), date: t('sales.issuedAt'), created: t('sales.createdAt'), notes: t('sales.notes'), total: t('sales.total'), balance: t('payments.outstanding'), discount: t('sales.discount'), paid: t('payments.paid'), due: t('sales.dueDate'), settlement: t('payments.title'), lines: t('sales.lines'), item: t('sales.item'), quantity: t('sales.quantity'), price: t('sales.unitPrice'), available: '', payments: t('payments.history'), credits: '', inventory: t('sales.inventoryTrace'), empty: t('payments.empty'), noInventory: t('sales.noInventoryEffect'), noParty: t('sales.noCustomer'), details: t('sales.details'), batch: t('sales.batch'), open: t('sales.open'), recordPayment: t('payments.recordReceipt'), recordCredit: '', recordReturn: '', reverse: t('payments.reverse'), refund: t('payments.refund'), issue: t('sales.issue'), issuing: t('sales.issuing'), edit: t('sales.editDraft'), reprint: t('receipt.reprint'), share: t('receipt.share'), amount: t('payments.amount'), method: t('payments.method'), reference: t('payments.reference'), reason: t('payments.reason'), save: t('payments.save'), cancel: t('sales.cancel'), correction: t('saleCorrections.title'), correctionLoading: t('saleCorrections.loading'), correctionError: t('saleCorrections.loadError'), refunded: t('saleCorrections.refunded'), restored: t('saleCorrections.restored'), correct: t('saleCorrections.action'), correctionDialog: t('saleCorrections.dialogTitle'), correctionSubmit: t('saleCorrections.submit'),
+}))
+const commerceView = computed<BsCommerceDocumentView>(() => {
+  const value = sale.value
+  const correction = correctionState.value?.correction
+  const issued = value?.status === 'issued'
+  const draft = value?.status === 'draft'
+  return {
+    loading: pending.value, error: Boolean(error.value), found: Boolean(value), title: value?.invoice_number || t('sales.draftNumber'), subtitle: t('sales.details'), status: value ? t(`sales.${value.status}`) : '', actionError: [actionError.value, shareError.value].filter(Boolean).join(' · '), success: '', notice: [issued ? t('sales.immutable') : t('sales.paymentBoundary'), issued && !value?.client_id ? t('payments.customerlessPaid') : ''].filter(Boolean).join(' '),
+    party: { name: value?.client_name_snapshot || '', to: value?.client_id ? `/customers/${value.client_id}` : '', phone: value?.client_phone_snapshot || '—', email: value?.client_email_snapshot || '—', address: value?.client_address_snapshot || '—' },
+    detail: { date: formatDate(value?.issued_at || null), created: formatDate(value?.created_at || null), notes: value?.notes || '—', total: money(Number(value?.total_amount || 0)), balance: money(Number(value?.outstanding || 0)), discount: money(Number(value?.discount_amount || 0)), paid: money(Number(correction ? correction.refundAmount : value?.amountPaid || 0)), due: value?.due_date || '—', settlement: issued ? [correction ? t('payments.settlement.corrected') : t(`payments.settlement.${value?.settlementState}`), value?.overdue && !correction ? t('payments.overdue') : ''].filter(Boolean).join(' · ') : '' },
+    showCreated: true, showDiscount: true, showNotes: true, showPaid: Boolean(issued), showDue: Boolean(issued), showAvailable: false, showPayments: Boolean(issued), showCredits: false, inventoryTable: false,
+    canPayment: Boolean(issued && value?.client_id && value.outstanding > 0 && value.canReceivePayment), canCredit: false, canReturn: false, canIssue: Boolean(draft && value?.canIssue), issuing: issuing.value, editTo: draft && value?.canManage ? `/sales?edit=${value.id}` : '', receiptTo: !draft && receiptSnapshot.value && value ? `/sales/${value.id}/receipt` : '', canShare: Boolean(!draft && receiptSnapshot.value), sharing: sharingReceipt.value,
+    lines: (value?.lines || []).map(line => ({ id: line.id, name: line.item_name, description: [t(`sales.${line.item_type}`), line.product_sku_snapshot].filter(Boolean).join(' · '), quantity: String(Number(line.quantity)), price: money(Number(line.unit_price)), total: money(Number(line.total_amount)), discount: money(Number(line.discount_amount)), available: '', returnMaximum: 0 })),
+    events: (value?.payments || []).map(event => ({ id: event.id, title: `${t(`payments.events.${event.eventType}`)} · ${money(Number(event.amount))}`, description: [formatDate(event.eventAt), event.method ? t(`payments.methods.${event.method}`) : '', event.reference].filter(Boolean).join(' · '), reason: event.reason || '', canReverse: Boolean(event.eventType === 'receipt' && value?.client_id && !correction && event.remainingEffective > 0 && value.canReversePayment), canRefund: Boolean(event.eventType === 'receipt' && value?.client_id && !correction && event.remainingEffective > 0 && value.canRefundPayment) })), credits: [],
+    movements: (value?.lines || []).filter(line => line.item_type === 'product').flatMap(line => (value?.movements || []).filter(movement => movement.invoiceItemId === line.id).map(movement => ({ id: movement.id, date: '', name: line.item_name, quantity: String(Math.abs(Number(movement.quantityChange))), cost: '', batch: movement.batchId, to: `/inventory?product=${movement.productId}` }))),
+    correction: { visible: Boolean(issued), loading: correctionLoading.value, error: Boolean(correctionLoadError.value), canCorrect: Boolean(issued && correctionState.value?.canCorrect), title: correction ? t(`saleCorrections.kinds.${correction.kind}`) : '', description: correction ? [formatDate(correction.effectiveAt), correction.reference].filter(Boolean).join(' · ') : '', reason: correction?.reason || '', refunded: correction ? money(Number(correction.refundAmount)) : '', restored: correction ? String(Number(correction.restoredQuantity)) : '', notice: correctionState.value ? t(correctionState.value.canCorrect ? 'saleCorrections.available' : 'saleCorrections.readOnly') : '', fullOnly: t('saleCorrections.fullOnly') },
+    dialog: { title: paymentDialog.value ? t(`payments.${paymentDialog.value}Title`) : '', dirty: paymentDirty.value, pending: paymentPending.value, maximum: undefined, showAmount: true, showMethod: paymentDialog.value !== 'reversal', showReference: paymentDialog.value !== 'reversal', showNotes: false, showReason: paymentDialog.value !== 'receipt', showQuantities: false, total: '' },
+    correctionDialog: { dirty: correctionDirty.value, pending: correctionPending.value, warning: saleCopy(t, 'saleCorrections.warning', value?.lines || []) },
+  }
+})
+function reverseCommerceEvent(id: string) { const event = sale.value?.payments.find(event => event.id === id); if (event) openAdjustment('reversal', event) }
+function refundCommerceEvent(id: string) { const event = sale.value?.payments.find(event => event.id === id); if (event) openAdjustment('refund', event) }
+function shareCommerceReceipt() { if (receiptSnapshot.value) return shareReceipt(receiptSnapshot.value) }
 </script>
 
 <template>
-  <BsStack>
-    <BsLink to="/sales">{{ t('sales.back') }}</BsLink>
-    <BsStack v-if="pending">
-      <BsSkeleton/>
-      <BsSkeleton/>
-    </BsStack>
-    <BsBox v-else-if="error" role="alert" padding="md">
-      <BsText as="p">{{ t('sales.loadError') }}</BsText>
-      <BsButton variant="link" type="button" @click="refresh()">{{ t('sales.retry') }}</BsButton>
-    </BsBox>
-    <BsPanel v-else-if="!sale" padding="md">{{ t('sales.notFound') }}</BsPanel>
-    <template v-else>
-      <BsInline justify="between">
-        <BsBox>
-          <BsInline>
-            <BsHeading :level="1">{{ sale.invoice_number || t('sales.draftNumber') }}</BsHeading>
-            <BsText as="span">{{ t(`sales.${sale.status}`) }}</BsText>
-          </BsInline>
-          <BsText as="p" size="sm" tone="muted">{{ t('sales.details') }}</BsText>
-        </BsBox>
-        <BsInline>
-          <template v-if="sale.status === 'draft'">
-            <BsLink v-if="sale.canManage" :to="{ path: '/sales', query: { edit: sale.id } }">{{ t('sales.editDraft') }}</BsLink>
-            <BsButton v-if="sale.canIssue" type="button" :disabled="issuing" @click="issue">{{ issuing ? t('sales.issuing') : t('sales.issue') }}</BsButton>
-          </template>
-          <template v-else>
-            <BsButton v-if="correctionState?.canCorrect" type="button" severity="danger" :disabled="correctionPending" @click="openCorrection">{{ t('saleCorrections.action') }}</BsButton>
-            <template v-if="receiptSnapshot">
-              <BsLink :to="`/sales/${sale.id}/receipt`">{{ t('receipt.reprint') }}</BsLink>
-              <BsButton type="button" severity="secondary" :pending="sharingReceipt" @click="shareReceipt(receiptSnapshot)">{{ t('receipt.share') }}</BsButton>
-            </template>
-          </template>
-        </BsInline>
-      </BsInline>
-      <BsText v-if="actionError" role="alert" as="p" size="sm" tone="danger">{{ actionError }}</BsText>
-      <BsText v-if="shareError" role="alert" as="p" size="sm" tone="danger">{{ shareError }}</BsText>
-      <BsText v-if="sale.status === 'issued'" as="p" size="sm">{{ t('sales.immutable') }}</BsText>
-      <BsText v-if="sale.status === 'draft'" as="p" size="sm">{{ t('sales.paymentBoundary') }}</BsText>
-      <BsPanel v-if="sale.status === 'issued'" padding="md">
-        <BsHeading :level="2">{{ t('saleCorrections.title') }}</BsHeading>
-        <BsText v-if="correctionLoading" as="p" size="sm" tone="muted">{{ t('saleCorrections.loading') }}</BsText>
-        <BsBox v-else-if="correctionLoadError" role="alert">
-          <BsText as="p">{{ t('saleCorrections.loadError') }}</BsText>
-          <BsButton type="button" severity="secondary" @click="refreshCorrection()">{{ t('common.retry') }}</BsButton>
-        </BsBox>
-        <BsBox v-else-if="correctionState?.correction" padding="md">
-          <BsText as="p" emphasis="semibold">{{ t(`saleCorrections.kinds.${correctionState.correction.kind}`) }}</BsText>
-          <BsText as="p" tone="muted">{{ formatDate(correctionState.correction.effectiveAt) }}<template v-if="correctionState.correction.reference"> · {{ correctionState.correction.reference }}</template>
-          </BsText>
-          <BsText as="p">{{ correctionState.correction.reason }}</BsText>
-          <BsDescriptionList>
-            <BsDescriptionItem :term="(t('saleCorrections.refunded'))">
-              <BsText as="span">{{ money(Number(correctionState.correction.refundAmount)) }}</BsText>
-            </BsDescriptionItem>
-            <BsDescriptionItem :term="(t('saleCorrections.restored'))">
-              <BsText as="span">{{ Number(correctionState.correction.restoredQuantity) }}</BsText>
-            </BsDescriptionItem>
-          </BsDescriptionList>
-        </BsBox>
-        <BsText v-else-if="correctionState" as="p" size="sm" tone="muted">{{ t(correctionState.canCorrect ? 'saleCorrections.available' : 'saleCorrections.readOnly') }}</BsText>
-        <BsText as="p" size="sm" tone="muted">{{ t('saleCorrections.fullOnly') }}</BsText>
-      </BsPanel>
-      <BsGrid :columns="2">
-        <BsPanel padding="md">
-          <BsHeading :level="2">{{ t('sales.customerSnapshot') }}</BsHeading>
-          <BsStack v-if="sale.client_name_snapshot">
-            <BsText as="p" emphasis="semibold">
-              <BsLink v-if="sale.client_id" :to="`/customers/${sale.client_id}`">{{ sale.client_name_snapshot }}</BsLink>
-              <template v-else>{{ sale.client_name_snapshot }}</template>
-            </BsText>
-            <BsText as="p">{{ sale.client_phone_snapshot || '—' }}</BsText>
-            <BsText as="p">{{ sale.client_email_snapshot || '—' }}</BsText>
-            <BsText as="p">{{ sale.client_address_snapshot || '—' }}</BsText>
-          </BsStack>
-          <BsText v-else as="p" size="sm" tone="muted">{{ t('sales.noCustomer') }}</BsText>
-        </BsPanel>
-        <BsPanel padding="md">
-          <BsHeading :level="2">{{ t('sales.details') }}</BsHeading>
-          <BsDescriptionList>
-            <BsDescriptionItem :term="(t('sales.createdAt'))">
-              <BsText as="span">{{ formatDate(sale.created_at) }}</BsText>
-            </BsDescriptionItem>
-            <BsDescriptionItem :term="(t('sales.issuedAt'))">
-              <BsText as="span">{{ formatDate(sale.issued_at) }}</BsText>
-            </BsDescriptionItem>
-            <BsDescriptionItem :term="(t('sales.notes'))">
-              <BsText as="span">{{ sale.notes || '—' }}</BsText>
-            </BsDescriptionItem>
-            <BsDescriptionItem :term="(t('sales.discount'))">
-              <BsText as="span">{{ money(Number(sale.discount_amount)) }}</BsText>
-            </BsDescriptionItem>
-            <BsDescriptionItem :term="(t('sales.total'))">
-              <BsText as="span" size="lg" emphasis="semibold">{{ money(Number(sale.total_amount)) }}</BsText>
-            </BsDescriptionItem>
-          </BsDescriptionList>
-        </BsPanel>
-      </BsGrid>
-      <BsPanel v-if="sale.status === 'issued'" padding="md">
-        <BsInline justify="between">
-          <BsBox>
-            <BsHeading :level="2">{{ t('payments.title') }}</BsHeading>
-            <BsText as="p" size="sm" tone="muted">{{ correctionState?.correction ? t('payments.settlement.corrected') : t(`payments.settlement.${sale.settlementState}`) }}<template v-if="sale.overdue && !correctionState?.correction"> · {{ t('payments.overdue') }}</template>
-            </BsText>
-          </BsBox>
-          <BsButton v-if="sale.client_id && sale.outstanding > 0 && sale.canReceivePayment" type="button" @click="openReceipt">{{ t('payments.recordReceipt') }}</BsButton>
-        </BsInline>
-        <BsDescriptionList>
-          <BsDescriptionItem :term="(t('sales.total'))">
-            <BsText as="span" emphasis="semibold">{{ money(Number(sale.total_amount)) }}</BsText>
-          </BsDescriptionItem>
-          <BsDescriptionItem :term="(t('payments.paid'))">
-            <BsText as="span" emphasis="semibold">{{ money(Number(correctionState?.correction ? correctionState.correction.refundAmount : sale.amountPaid)) }}</BsText>
-          </BsDescriptionItem>
-          <BsDescriptionItem :term="(t('payments.outstanding'))">
-            <BsText as="span" emphasis="semibold">{{ money(Number(sale.outstanding)) }}</BsText>
-          </BsDescriptionItem>
-          <BsDescriptionItem :term="(t('sales.dueDate'))">
-            <BsText as="span">{{ sale.due_date || '—' }}</BsText>
-          </BsDescriptionItem>
-        </BsDescriptionList>
-        <BsText v-if="!sale.client_id" as="p" size="sm">{{ t('payments.customerlessPaid') }}</BsText>
-        <BsStack>
-          <BsHeading :level="3">{{ t('payments.history') }}</BsHeading>
-          <BsText v-if="!sale.payments.length" as="p" size="sm" tone="muted">{{ t('payments.empty') }}</BsText>
-          <BsInline v-for="event in sale.payments" :key="event.id" justify="between">
-            <BsBox>
-              <BsText as="p" emphasis="semibold">{{ t(`payments.events.${event.eventType}`) }} · {{ money(Number(event.amount)) }}</BsText>
-              <BsText as="p" tone="muted">{{ formatDate(event.eventAt) }}<template v-if="event.method"> · {{ t(`payments.methods.${event.method}`) }}</template>
-                <template v-if="event.reference"> · {{ event.reference }}</template>
-              </BsText>
-              <BsText v-if="event.reason" as="p">{{ event.reason }}</BsText>
-            </BsBox>
-            <BsInline v-if="event.eventType === 'receipt' && sale.client_id && !correctionState?.correction && event.remainingEffective > 0">
-              <BsButton v-if="sale.canReversePayment" type="button" @click="openAdjustment('reversal', event)">{{ t('payments.reverse') }}</BsButton>
-              <BsButton v-if="sale.canRefundPayment" type="button" @click="openAdjustment('refund', event)">{{ t('payments.refund') }}</BsButton>
-            </BsInline>
-          </BsInline>
-        </BsStack>
-      </BsPanel>
-      <BsPanel padding="md">
-        <BsHeading :level="2">{{ t('sales.lines') }}</BsHeading>
-        <BsBox scroll="x">
-          <BsDataTable :value="sale.lines" data-key="id" :columns="[{ key: 'column0', header: (t('sales.item')) }, { key: 'column1', header: (t('sales.quantity')), align: 'end' }, { key: 'column2', header: (t('sales.unitPrice')), align: 'end' }, { key: 'column3', header: (t('sales.discount')), align: 'end' }, { key: 'column4', header: (t('sales.lineTotal')), align: 'end' }]">
-            <template #cell-column0="{ row: line }">
-              <BsText as="p" emphasis="semibold">{{ line.item_name }}</BsText>
-              <BsText as="p" size="xs" tone="muted">{{ t(`sales.${line.item_type}`) }}<template v-if="line.product_sku_snapshot"> · {{ line.product_sku_snapshot }}</template>
-              </BsText>
-            </template>
-            <template #cell-column1="{ row: line }">{{ Number(line.quantity) }}</template>
-            <template #cell-column2="{ row: line }">{{ money(Number(line.unit_price)) }}</template>
-            <template #cell-column3="{ row: line }">{{ money(Number(line.discount_amount)) }}</template>
-            <template #cell-column4="{ row: line }">{{ money(Number(line.total_amount)) }}</template>
-          </BsDataTable>
-        </BsBox>
-      </BsPanel>
-      <BsPanel padding="md">
-        <BsHeading :level="2">{{ t('sales.inventoryTrace') }}</BsHeading>
-        <BsText v-if="!sale.movements.length" as="p" size="sm" tone="muted">{{ t('sales.noInventoryEffect') }}</BsText>
-        <BsStack v-else>
-          <template v-for="line in sale.lines.filter(item => item.item_type === 'product')" :key="line.id">
-            <BsGrid v-for="movement in lineMovements(line.id)" :key="movement.id" :columns="4">
-              <BsText as="p" emphasis="semibold">{{ line.item_name }}</BsText>
-              <BsText as="p">
-                <BsText as="span" tone="muted">{{ t('sales.movement') }}:</BsText> {{ Math.abs(Number(movement.quantityChange)) }}</BsText>
-              <BsText as="p">
-                <BsText as="span" tone="muted">{{ t('sales.batch') }}:</BsText> {{ movement.batchId }}</BsText>
-              <BsLink :to="`/inventory?product=${movement.productId}`">{{ t('sales.open') }}</BsLink>
-            </BsGrid>
-          </template>
-        </BsStack>
-      </BsPanel>
-    </template>
-    <BsRecordActionDialog v-model:visible="paymentDialogOpen" :title="paymentDialog ? t(`payments.${paymentDialog}Title`) : ''" :dirty="paymentDirty" :pending="paymentPending" :error="actionError" :submit-label="t('payments.save')" :cancel-label="t('sales.cancel')" @submit="submitPayment">
-      <BsField v-slot="field" :label="(t('payments.amount'))">
-        <BsInput :id="field.id" v-model.number="paymentAmount" :aria-describedby="field.describedby" type="number" :min="0.01" :step="0.01" required/>
-      </BsField>
-      <BsField v-slot="field" :label="(t('payments.date'))">
-        <BsInput :id="field.id" v-model="paymentDate" :aria-describedby="field.describedby" type="date" required/>
-      </BsField>
-      <BsField v-if="paymentDialog !== 'reversal'" v-slot="field" :label="(t('payments.method'))">
-        <BsSelect v-model="paymentMethod" :input-id="field.id" :aria-describedby="field.describedby" :label="t('payments.method')" :options="[...(['cash','bank_transfer','card','wallet','cheque','other']).map(method => ({ value: method, label: (t(`payments.methods.${method}`)), disabled: false }))]" option-label="label" option-value="value" option-disabled="disabled"/>
-      </BsField>
-      <BsField v-if="paymentDialog !== 'reversal'" v-slot="field" :label="(t('payments.reference'))">
-        <BsInput :id="field.id" v-model="paymentReference" :aria-describedby="field.describedby" :maxlength="200"/>
-      </BsField>
-      <BsField v-if="paymentDialog !== 'receipt'" v-slot="field" :label="(t('payments.reason'))">
-        <BsTextarea :id="field.id" v-model="paymentReason" :aria-describedby="field.describedby" :minlength="2" :maxlength="1000" required :rows="3"/>
-      </BsField>
-    </BsRecordActionDialog>
-    <BsRecordActionDialog v-model:visible="correctionOpen" :title="t('saleCorrections.dialogTitle')" :dirty="correctionDirty" :pending="correctionPending" :error="actionError" :submit-label="t('saleCorrections.submit')" :cancel-label="t('sales.cancel')" submit-tone="danger" @submit="submitCorrection">
-      <BsText as="p" size="sm" tone="warning">{{ saleCopy(t, 'saleCorrections.warning', sale?.lines ?? []) }}</BsText>
-      <BsField v-slot="field" :label="(t('saleCorrections.date'))">
-        <BsInput :id="field.id" v-model="correctionDate" :aria-describedby="field.describedby" type="date" required/>
-      </BsField>
-      <BsField v-slot="field" :label="(t('saleCorrections.reference'))">
-        <BsInput :id="field.id" v-model="correctionReference" :aria-describedby="field.describedby" :maxlength="200"/>
-      </BsField>
-      <BsField v-slot="field" :label="(t('saleCorrections.reason'))">
-        <BsTextarea :id="field.id" v-model="correctionReason" :aria-describedby="field.describedby" :minlength="2" :maxlength="1000" required :rows="4"/>
-      </BsField>
-    </BsRecordActionDialog>
-  </BsStack>
+  <BsCommerceDocumentPage v-model:form="commerceForm" v-model:correction-form="commerceCorrectionForm" v-model:dialog-open="paymentDialogOpen" v-model:correction-open="correctionOpen" :copy="commerceCopy" :view="commerceView" back-to="/sales" inventory-to="" :methods="commerceMethods" :constraints="{ referenceLength: 200, notesLength: 2000, reasonMinimum: 2, reasonMaximum: 1000, amountMinimum: 0.01, amountStep: 0.01, quantityStep: 0.001 }" @retry="refresh()" @issue="issue" @share="shareCommerceReceipt" @payment="openReceipt" @reverse="reverseCommerceEvent" @refund="refundCommerceEvent" @correct="openCorrection" @retry-correction="refreshCorrection()" @submit="submitPayment" @submit-correction="submitCorrection"/>
 </template>

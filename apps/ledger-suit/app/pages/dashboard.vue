@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { BsDashboardCopy, BsDashboardFilters, BsDashboardSetupForm, BsDashboardView, BsDashboardTable, BsDashboardMetric, BsDashboardRow } from '@building-suit/ui/types/dashboardPresentation'
+
 import type { Database } from '~~/types/database.types'
 import type { DashboardRpcDatabase } from '~~/types/dashboard-rpc.types'
 import type { LedgerSeriesPoint as SeriesPoint } from '~/composables/useLedgerPresentation'
@@ -102,266 +104,30 @@ const payableHint = computed(() =>
 )
 const ledgerPresentation = useLedgerPresentation()
 const setupChecklist = useLedgerSetupChecklist()
+
+const dashboardSetupOpen = ref(false)
+const dashboardSetupForm = ref<BsDashboardSetupForm>({ name: '', mode: '' })
+const dashboardFilters = computed<BsDashboardFilters>({ get: () => ({ period: '', date: '', location: '', months: months.value, custom: customRange.value, from: customFrom.value, to: customTo.value }), set: value => { months.value = value.months; customRange.value = value.custom; customFrom.value = value.from; customTo.value = value.to } })
+const dashboardMonths = computed(() => [3, 6, 12].map(value => ({ value, label: t('dashboard.months', { count: value }) })))
+const dashboardCopy = computed<BsDashboardCopy>(() => ({ retry: t('common.retry'), cancel: t('common.cancel'), create: '', name: '', mode: '', plan: '', filters: '', location: '', date: '', range: t('dashboard.chartRange'), custom: t('dashboard.custom'), from: t('reports.from'), to: t('reports.to'), source: t('dashboard.viewAll'), manage: t('dashboard.manage'), start: t('dashboard.emptyAction') }))
+const dashboardView = computed<BsDashboardView>(() => {
+ const value = summary.value
+ const metric = (id: string, title: string, amount: number | null | undefined, previous: number | null | undefined = null, direction: 'neutral' | 'up' | 'down' = 'neutral', hint = ''): BsDashboardMetric => ({ id, title, value: formatMoney(amount || 0, baseCurrency.value, locale.value), hint, changeLabel: ledgerPresentation.kpi(amount, previous, direction).label || '', tone: ledgerPresentation.kpi(amount, previous, direction).tone, to: '', source: null })
+ const row = (id: string, name: string, cells: Record<string, string>, status = ''): BsDashboardRow => ({ id, name, cells, status, to: '', source: null })
+ const table = (title: string, empty: string, rows: BsDashboardRow[], columns: BsDashboardTable['columns'], loading: boolean, error: string, to = '', action = false): BsDashboardTable => ({ title, empty, rows, columns, loading, error, to, action })
+ return {
+  title: t('dashboard.title'), subtitle: '', workspace: '', role: '', notice: '', available: true, loading: recentPending.value, error: recentError.value ? t('dashboard.recentLoadError') : '', denied: '', empty: !hasActivity.value && !recentPending.value && !recentError.value ? t('dashboard.emptyTitle') : '', emptyDescription: t('dashboard.emptyHint'), canStart: can('transactions.create'), errorDescription: t('dashboard.loadErrorHint'),
+  checklist: { visible: true, title: t('setupChecklist.title'), description: t('setupChecklist.hint'), progress: setupChecklist.progress, steps: setupChecklist.steps, loading: setupChecklist.pending, error: setupChecklist.error ? t('setupChecklist.loadFailed') : null, empty: t('setupChecklist.optional') },
+  setup: { title: '', description: '', trial: '', modeHelp: '', dirty: false, pending: false, error: '' }, plan: { visible: false, error: '', name: '', status: '', dateLabel: '', date: '' }, periodFilter: false,
+  metricsLoading: summaryPending.value || commitmentsPending.value, metricsError: summaryError.value ? t('dashboard.summaryLoadError') : '', metricsTitle: t('dashboard.kpis'), metrics: [metric('assets', t('dashboard.totalAssets'), value?.total_assets_minor), metric('liabilities', t('dashboard.totalLiabilities'), value?.total_liabilities_minor), metric('worth', t('dashboard.netWorth'), value?.net_worth_minor, null, 'neutral', t('dashboard.netWorthHint')), metric('cash', t('dashboard.cashAndBank'), value?.cash_and_bank_minor), metric('revenue', t('dashboard.revenueThisMonth'), value?.revenue_this_month_minor, value?.revenue_previous_month_minor, 'up'), metric('expenses', t('dashboard.expensesThisMonth'), value?.expenses_this_month_minor, value?.expenses_previous_month_minor, 'down'), metric('profit', t('dashboard.netProfitThisMonth'), value?.net_profit_this_month_minor, value?.net_profit_previous_month_minor, 'up'), metric('receivable', t('dashboard.receivable'), value?.accounts_receivable_minor, null, 'neutral', payableHint.value), ...(can('commitments.read') && !commitmentsError.value ? [metric('upcoming', t('dashboard.upcomingCommitments'), upcomingCommitments.value), metric('overdue', t('dashboard.overdueCommitments'), overdueCommitments.value, null, 'down')] : [])], highlightsLoading: false, highlights: [],
+  reportLink: { visible: false, title: '', description: '', to: '' }, chart: { visible: true, loading: seriesPending.value, error: seriesError.value ? t('dashboard.seriesLoadError') : '', title: t('dashboard.revenueVsExpenses'), pointLabel: t('dashboard.month'), tableLabel: t('common.showAsTable'), empty: t('dashboard.noLiquidAccounts'), points: ledgerPresentation.chartPoints(series.value || []), series: ledgerPresentation.chartSeries, tableSeries: ledgerPresentation.chartTableSeries },
+  cashPosition: table(t('dashboard.cashPosition'), t('dashboard.noLiquidAccounts'), (liquid.value || []).map(account => row(String(account.account_id), account.name, { amount: formatMoney(account.net_debit_minor, baseCurrency.value, locale.value) })), [{ key: 'name', header: '' }, { key: 'amount', header: '', align: 'end' }], liquidPending.value, liquidError.value ? t('dashboard.liquidLoadError') : ''),
+  commitments: can('commitments.read') ? table(t('dashboard.commitments'), t('dashboard.noCommitments'), commitments.value.map(item => row(String(item.id), item.title || '', { date: formatDate(item.due_date, locale.value), amount: formatMoney(item.outstanding_minor || 0, item.currency_code || baseCurrency.value, locale.value) }, item.display_status || 'unknown')), [{ key: 'name', header: '' }, { key: 'date', header: '' }, { key: 'status', header: '' }, { key: 'amount', header: '', align: 'end' }], commitmentsPending.value, commitmentsError.value ? t('dashboard.commitmentsLoadError') : '', '', true) : null,
+  recent: table(t('dashboard.recent'), t('common.dash'), (recent.value || []).map(item => row(String(item.id), '', { date: formatDate(item.transaction_date, locale.value), description: item.description || t('common.dash'), category: item.category_name || t('common.dash'), account: `${item.from_account_name || ''} → ${item.to_account_name || ''}`, amount: formatMoney(Math.max(item.debit_minor, item.credit_minor), item.currency_code || baseCurrency.value, locale.value) }, item.status)), [{ key: 'date', header: t('transactions.date') }, { key: 'description', header: t('transactions.description') }, { key: 'category', header: t('transactions.category') }, { key: 'account', header: t('transactions.account') }, { key: 'status', header: t('transactions.status') }, { key: 'amount', header: t('transactions.amount'), align: 'end' }], false, '', '/transactions'),
+  salesMix: { visible: false, title: '', empty: '', rows: [] }, paymentMix: { visible: false, title: '', empty: '', rows: [] }, appointments: { visible: false, title: '', empty: '', source: null, metrics: [], busiestTitle: '', busiest: [] }, cash: { visible: false, title: '', source: null, metrics: [] }, customers: null, staff: null, locations: null,
+ }
+})
 </script>
-
 <template>
-  <BsStack gap="lg">
-    <BsHeading :level="1" size="h1">{{ t('dashboard.title') }}</BsHeading>
-    <BsSetupChecklist
-      data-setup-checklist
-      :title="t('setupChecklist.title')"
-      :progress-label="setupChecklist.progress"
-      :description="t('setupChecklist.hint')"
-      :steps="setupChecklist.steps"
-      :loading="setupChecklist.pending"
-      :error="setupChecklist.error ? t('setupChecklist.loadFailed') : null"
-      :empty-label="t('setupChecklist.optional')"
-      :retry-label="t('common.retry')"
-      @retry="setupChecklist.refresh()"
-    />
-    <BsStack v-if="recentPending" gap="lg">
-      <BsSectionSkeleton variant="cards" />
-      <BsGrid :columns="3" gap="lg">
-        <BsSectionSkeleton variant="chart" />
-        <BsSectionSkeleton variant="table" :rows="4" />
-      </BsGrid>
-    </BsStack>
-    <BsStateSurface
-      v-else-if="recentError"
-      state="error"
-      :title="t('dashboard.recentLoadError')"
-      :description="t('dashboard.loadErrorHint')"
-      :action-label="t('common.retry')"
-      @action="refreshRecent()"
-    />
-    <BsEmptyState
-      v-else-if="!hasActivity"
-      :title="t('dashboard.emptyTitle')"
-      :description="t('dashboard.emptyHint')"
-      :action-label="can('transactions.create') ? t('dashboard.emptyAction') : undefined"
-      @action="start('expense')"
-    />
-    <template v-else>
-      <BsSectionSkeleton v-if="summaryPending || commitmentsPending" variant="cards" />
-      <BsStateSurface
-        v-else-if="summaryError"
-        state="error"
-        :title="t('dashboard.summaryLoadError')"
-        :description="t('dashboard.loadErrorHint')"
-        :action-label="t('common.retry')"
-        @action="refreshSummary()"
-      />
-      <BsStack v-else aria-labelledby="kpis" as="section" gap="md">
-        <BsHeading id="kpis" :level="2" size="body">{{ t('dashboard.kpis') }}</BsHeading>
-        <BsGrid :columns="4" gap="md">
-          <BsKpiCard
-            :title="t('dashboard.totalAssets')"
-            :change-label="ledgerPresentation.kpi(summary?.total_assets_minor, null, 'neutral').label"
-            :tone="ledgerPresentation.kpi(summary?.total_assets_minor, null, 'neutral').tone"
-          >
-            <BsMoneyText :amount="summary?.total_assets_minor" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
-          </BsKpiCard>
-          <BsKpiCard
-            :title="t('dashboard.totalLiabilities')"
-            :change-label="ledgerPresentation.kpi(summary?.total_liabilities_minor, null, 'neutral').label"
-            :tone="ledgerPresentation.kpi(summary?.total_liabilities_minor, null, 'neutral').tone"
-          >
-            <BsMoneyText :amount="summary?.total_liabilities_minor" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
-          </BsKpiCard>
-          <BsKpiCard
-            :title="t('dashboard.netWorth')"
-            :hint="t('dashboard.netWorthHint')"
-            :change-label="ledgerPresentation.kpi(summary?.net_worth_minor, null, 'neutral').label"
-            :tone="ledgerPresentation.kpi(summary?.net_worth_minor, null, 'neutral').tone"
-          >
-            <BsMoneyText :amount="summary?.net_worth_minor" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
-          </BsKpiCard>
-          <BsKpiCard
-            :title="t('dashboard.cashAndBank')"
-            :change-label="ledgerPresentation.kpi(summary?.cash_and_bank_minor, null, 'neutral').label"
-            :tone="ledgerPresentation.kpi(summary?.cash_and_bank_minor, null, 'neutral').tone"
-          >
-            <BsMoneyText :amount="summary?.cash_and_bank_minor" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
-          </BsKpiCard>
-          <BsKpiCard
-            :title="t('dashboard.revenueThisMonth')"
-            :change-label="ledgerPresentation.kpi(summary?.revenue_this_month_minor, summary?.revenue_previous_month_minor, 'up').label"
-            :tone="ledgerPresentation.kpi(summary?.revenue_this_month_minor, summary?.revenue_previous_month_minor, 'up').tone"
-          >
-            <BsMoneyText :amount="summary?.revenue_this_month_minor" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
-          </BsKpiCard>
-          <BsKpiCard
-            :title="t('dashboard.expensesThisMonth')"
-            :change-label="ledgerPresentation.kpi(summary?.expenses_this_month_minor, summary?.expenses_previous_month_minor, 'down').label"
-            :tone="ledgerPresentation.kpi(summary?.expenses_this_month_minor, summary?.expenses_previous_month_minor, 'down').tone"
-          >
-            <BsMoneyText :amount="summary?.expenses_this_month_minor" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
-          </BsKpiCard>
-          <BsKpiCard
-            :title="t('dashboard.netProfitThisMonth')"
-            :change-label="ledgerPresentation.kpi(summary?.net_profit_this_month_minor, summary?.net_profit_previous_month_minor, 'up').label"
-            :tone="ledgerPresentation.kpi(summary?.net_profit_this_month_minor, summary?.net_profit_previous_month_minor, 'up').tone"
-          >
-            <BsMoneyText :amount="summary?.net_profit_this_month_minor" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
-          </BsKpiCard>
-          <BsKpiCard
-            :title="t('dashboard.receivable')"
-            :hint="payableHint"
-            :change-label="ledgerPresentation.kpi(summary?.accounts_receivable_minor, null, 'neutral').label"
-            :tone="ledgerPresentation.kpi(summary?.accounts_receivable_minor, null, 'neutral').tone"
-          >
-            <BsMoneyText :amount="summary?.accounts_receivable_minor" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
-          </BsKpiCard>
-          <BsKpiCard
-            v-if="can('commitments.read') && !commitmentsError"
-            :title="t('dashboard.upcomingCommitments')"
-            :change-label="ledgerPresentation.kpi(upcomingCommitments, null, 'neutral').label"
-            :tone="ledgerPresentation.kpi(upcomingCommitments, null, 'neutral').tone"
-          >
-            <BsMoneyText :amount="upcomingCommitments" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
-          </BsKpiCard>
-          <BsKpiCard
-            v-if="can('commitments.read') && !commitmentsError"
-            :title="t('dashboard.overdueCommitments')"
-            :change-label="ledgerPresentation.kpi(overdueCommitments, null, 'down').label"
-            :tone="ledgerPresentation.kpi(overdueCommitments, null, 'down').tone"
-          >
-            <BsMoneyText :amount="overdueCommitments" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
-          </BsKpiCard>
-        </BsGrid>
-      </BsStack>
-      <BsGrid :columns="3" gap="lg">
-        <BsSectionSkeleton v-if="seriesPending" variant="chart" />
-        <BsStateSurface
-          v-else-if="seriesError"
-          state="error"
-          :title="t('dashboard.seriesLoadError')"
-          :description="t('dashboard.loadErrorHint')"
-          :action-label="t('common.retry')"
-          @action="refreshSeries()"
-        />
-        <BsCard v-else aria-labelledby="chart-heading" as="section" padding="lg" :span="2">
-          <BsInline gap="md" :wrap="true" justify="between">
-            <BsHeading id="chart-heading" :level="2" size="body">{{ t('dashboard.revenueVsExpenses') }}</BsHeading>
-            <BsInline role="group" :aria-label="t('dashboard.chartRange')" gap="xs" :wrap="false">
-              <BsButton
-                v-for="option in [3, 6, 12]"
-                :key="option"
-                variant="chip"
-                type="button"
-                :aria-pressed="months === option"
-                @click="months = option; customRange = false"
-              >{{ t('dashboard.months', { count: option }) }}</BsButton>
-              <BsButton type="button" size="sm" :variant="(customRange ) ? 'primary' : 'default'" @click="customRange = !customRange">{{ t('dashboard.custom') }}</BsButton>
-            </BsInline>
-          </BsInline>
-          <BsInline v-if="customRange" gap="sm" :wrap="true">
-            <BsFloatingField :label="t('reports.from')">
-              <BsInput v-model="customFrom" type="date" />
-            </BsFloatingField>
-            <BsFloatingField :label="t('reports.to')">
-              <BsInput v-model="customTo" type="date" />
-            </BsFloatingField>
-          </BsInline>
-          <BsMetricBarChart
-            :points="ledgerPresentation.chartPoints(series ?? [])"
-            :series="ledgerPresentation.chartSeries"
-            :table-series="ledgerPresentation.chartTableSeries"
-            :point-label="t('dashboard.month')"
-            :label="ledgerPresentation.t('dashboard.revenueVsExpenses')"
-            :table-label="ledgerPresentation.t('common.showAsTable')"
-            :empty-label="ledgerPresentation.t('dashboard.noLiquidAccounts')"
-          />
-        </BsCard>
-        <BsSectionSkeleton v-if="liquidPending" variant="table" :rows="4" />
-        <BsCard v-else-if="liquidError" role="alert" aria-labelledby="liquid-error-heading" as="section" padding="lg">
-          <BsStack gap="md">
-            <BsHeading id="liquid-error-heading" :level="2" size="body">{{ t('dashboard.liquidLoadError') }}</BsHeading>
-            <BsText size="sm" tone="muted">{{ t('dashboard.loadErrorHint') }}</BsText>
-            <BsButton type="button" @click="refreshLiquid()">{{ t('common.retry') }}</BsButton>
-          </BsStack>
-        </BsCard>
-        <BsCard v-else aria-labelledby="cash-heading" as="section" padding="lg">
-          <BsHeading id="cash-heading" :level="2" size="body">{{ t('dashboard.cashPosition') }}</BsHeading>
-          <BsDataTable
-            v-if="liquid?.length"
-            :value="liquid"
-            :label="t('dashboard.cashPositionCaption')"
-            :columns="[{ key: 'column1', header: '' }, { key: 'column2', header: '', align: 'end' as const }]"
-          >
-            <template #cell-column1="{ row: account }">{{ account.name }}</template>
-            <template #cell-column2="{ row: account }">
-              <BsMoneyText :amount="account.net_debit_minor" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
-            </template>
-          </BsDataTable>
-          <BsText v-else size="sm" tone="muted">{{ t('dashboard.noLiquidAccounts') }}</BsText>
-        </BsCard>
-      </BsGrid>
-      <BsSectionSkeleton v-if="can('commitments.read') && commitmentsPending" variant="table" :rows="4" />
-      <BsCard v-else-if="can('commitments.read') && commitmentsError" role="alert" aria-labelledby="commitments-error-heading" as="section" padding="lg">
-        <BsStack gap="md">
-          <BsHeading id="commitments-error-heading" :level="2" size="body">{{ t('dashboard.commitmentsLoadError') }}</BsHeading>
-          <BsText size="sm" tone="muted">{{ t('dashboard.loadErrorHint') }}</BsText>
-          <BsButton type="button" @click="refreshCommitments()">{{ t('common.retry') }}</BsButton>
-        </BsStack>
-      </BsCard>
-      <BsCard v-else-if="can('commitments.read')" aria-labelledby="commitments-heading" as="section" padding="none" overflow="hidden">
-        <BsInline gap="none" :wrap="false" justify="between">
-          <BsHeading id="commitments-heading" :level="2" size="body">{{ t('dashboard.commitments') }}</BsHeading>
-          <BsButton type="submit" size="sm" @click="showOperations('commitments')">{{ t('dashboard.manage') }}</BsButton>
-        </BsInline>
-        <BsBox v-if="commitments.length">
-          <BsDataTable :value="commitments" :columns="[{ key: 'column1', header: '' }, { key: 'column2', header: '' }, { key: 'column3', header: '' }, { key: 'column4', header: '', align: 'end' as const }]">
-            <template #cell-column1="{ row: item }">{{ item.title }}</template>
-            <template #cell-column2="{ row: item }">{{ formatDate(item.due_date, locale) }}</template>
-            <template #cell-column3="{ row: item }">
-              <BsStatusBadge :status="item.display_status ?? 'unknown'" />
-            </template>
-            <template #cell-column4="{ row: item }">
-              <BsMoneyText
-                :amount="item.outstanding_minor ?? 0"
-                :currency="ledgerPresentation.currency(item.currency_code ?? undefined)"
-                :locale="ledgerPresentation.locale"
-              />
-            </template>
-          </BsDataTable>
-        </BsBox>
-        <BsText v-else size="sm" tone="muted">{{ t('dashboard.noCommitments') }}</BsText>
-      </BsCard>
-      <BsSectionSkeleton v-if="recentPending" variant="table" :rows="8" />
-      <BsCard v-else aria-labelledby="recent-heading" as="section" padding="none" overflow="hidden">
-        <BsInline gap="none" :wrap="false" justify="between">
-          <BsHeading id="recent-heading" :level="2" size="body">{{ t('dashboard.recent') }}</BsHeading>
-          <BsLink to="/transactions">{{ t('dashboard.viewAll') }}</BsLink>
-        </BsInline>
-        <BsBox>
-          <BsDataTable
-            :value="recent"
-            row-key="id"
-            :columns="[{ key: 'column1', header: (t('transactions.date')) }, { key: 'column2', header: (t('transactions.description')) }, { key: 'column3', header: (t('transactions.category')) }, { key: 'column4', header: (t('transactions.account')) }, { key: 'column5', header: (t('transactions.status')) }, { key: 'column6', header: (t('transactions.amount')), align: 'end' as const }]"
-          >
-            <template #header-column1>{{ t('transactions.date') }}</template>
-            <template #cell-column1="{ row }">{{ formatDate(row.transaction_date, locale) }}</template>
-            <template #header-column2>{{ t('transactions.description') }}</template>
-            <template #cell-column2="{ row }">{{ row.description || t('common.dash') }}</template>
-            <template #header-column3>{{ t('transactions.category') }}</template>
-            <template #cell-column3="{ row }">{{ row.category_name || t('common.dash') }}</template>
-            <template #header-column4>{{ t('transactions.account') }}</template>
-            <template #cell-column4="{ row }">{{ row.from_account_name }} <BsIcon name="arrowRight" :size="14" directional /> {{ row.to_account_name }}</template>
-            <template #header-column5>{{ t('transactions.status') }}</template>
-            <template #cell-column5="{ row }">
-              <BsStatusBadge :status="row.status" />
-            </template>
-            <template #header-column6>{{ t('transactions.amount') }}</template>
-            <template #cell-column6="{ row }">
-              <BsMoneyText :amount="row.amount_minor" :currency="ledgerPresentation.currency(row.currency_code)" :locale="ledgerPresentation.locale" />
-            </template>
-          </BsDataTable>
-        </BsBox>
-      </BsCard>
-    </template>
-  </BsStack>
+  <BsDashboardPage v-model:filters="dashboardFilters" v-model:setup-form="dashboardSetupForm" v-model:setup-open="dashboardSetupOpen" :copy="dashboardCopy" :view="dashboardView" :locations="[]" :periods="[]" :month-options="dashboardMonths" :modes="[]" :constraints="{ nameMinimum: 2, nameMaximum: 120 }" @retry="refreshRecent()" @retry-checklist="setupChecklist.refresh()" @retry-metrics="refreshSummary()" @retry-chart="refreshSeries()" @retry-cash-position="refreshLiquid()" @retry-commitments="refreshCommitments()" @manage-commitments="showOperations('commitments')" @start="start('expense')"/>
 </template>
-
-undefined
-undefined

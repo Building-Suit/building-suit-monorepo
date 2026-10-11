@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import test from 'node:test'
+import { readPresentationTree } from '../../../../packages/testing/presentation-source.mjs'
 
 const appRoot = new URL('../../app/', import.meta.url).pathname
 const workspaceRoot = new URL('../../../../', import.meta.url).pathname
@@ -26,28 +27,30 @@ function presentationFor(file) {
   return entry?.destination ? readFileSync(path.join(workspaceRoot, entry.destination), 'utf8') : source
 }
 
-test('Shop reusable controls and tables come from shared UI', () => {
+test('Shop reusable controls and tables come from shared UI', async () => {
   for (const { file, source } of sources) {
     assert.doesNotMatch(source, /<table\b/, `${file} contains a native reusable data table`)
     assert.doesNotMatch(source, /<(?:button|form)\b[^>]*class=["'][^"']*(?:\bls-(?:btn|action|card)\b|rounded-(?:card|control|xl|2xl)[^"']{0,64}(?:border|bg-|p[xy]?-[0-9]))/, `${file} owns a reusable native control recipe`)
     assert.doesNotMatch(source, /<(?:DataTable|Dialog)\b/, `${file} bypasses the Building Suit wrapper`)
     assert.doesNotMatch(source, /\b(?:window\.)?confirm\s*\(/, `${file} bypasses shared confirmation`)
   }
+  const presentation = (await Promise.all(sources.map(({ file }) => readPresentationTree(workspaceRoot, `apps/shop-suit/app/${file}`)))).join('\n')
   for (const component of ['BsDataTable', 'BsRecordActionDialog', 'BsButton', 'BsForm', 'BsSelect', 'BsCard', 'BsKpiCard', 'BsStatusBadge']) {
-    assert.ok(sources.some(({ source }) => source.includes(`<${component}`)), `Shop does not consume ${component}`)
+    assert.ok(presentation.includes(`<${component}`), `Shop does not consume ${component}`)
   }
 })
 
-test('Shop auth routes use the canonical shared auth and signup contracts', () => {
+test('Shop auth routes use the canonical shared auth and signup contracts', async () => {
   const layout = sources.find(item => item.file === 'layouts/auth.vue')?.source || ''
   const login = sources.find(item => item.file === 'pages/auth/login.vue')?.source || ''
   const signup = sources.find(item => item.file === 'pages/auth/signup.vue')?.source || ''
   const recovery = sources.filter(item => ['pages/auth/forgot-password.vue', 'pages/auth/reset-password.vue'].includes(item.file))
   assert.match(layout, /<BsProductAuthFrame\b/)
   assert.match(login, /<BsSignInPage\b/)
-  assert.match(signup, /<BsAuthForm\b/)
-  assert.match(signup, /<BsSignupWizard\b/)
-  assert.match(signup, /<BsVerificationForm\b/)
+  assert.match(signup, /<BsSignupPage\b/)
+  const enrollment = await readPresentationTree(workspaceRoot, 'apps/shop-suit/app/pages/auth/signup.vue')
+  assert.match(enrollment, /<BsSignupWizard\b/)
+  assert.match(enrollment, /<BsVerificationForm\b/)
   assert.match(signup, /useVerificationTimer\(\)/)
   assert.equal(existsSync(path.join(appRoot, 'composables/useShopVerificationTimer.ts')), false)
   for (const { source } of recovery) assert.match(source, /<BsPasswordRecoveryPage\b/)
@@ -87,7 +90,7 @@ test('standard Shop record actions use the canonical dialog and controller', () 
 test('Shop catalog category CRUD uses the canonical record dialog', () => {
   const catalog = sources.find(item => item.file === 'pages/catalog-import.vue')?.source || ''
   assert.match(catalog, /useRecordAction\(/)
-  assert.match(catalog, /<BsRecordActionDialog v-model:visible="categoryOpen"/)
+  assert.match(presentationFor('pages/catalog-import.vue'), /<BsRecordActionDialog v-model:visible="categoryOpen"/)
   assert.doesNotMatch(catalog, /<BsForm class="mt-4 flex flex-col gap-3 md:flex-row"/)
 })
 
@@ -110,22 +113,17 @@ test('Shop CRUD tables use shared capabilities, toolbar controls, pagination, an
   assert.doesNotMatch(settings, /<BsForm v-if="canManage && \(editingLocationId/)
 })
 
-test('remaining direct dialogs are materially different shared-overlay workflows', () => {
-  const allowed = new Set([
-    'pages/appointments/index.vue',
-    'pages/platform-admin.vue',
-  ])
+test('Suit routes do not own direct overlay presentation', () => {
   const actual = sources.filter(({ source }) => /<BsDialog\b/.test(source)).map(({ file }) => file)
-  assert.deepEqual(actual.sort(), [...allowed].sort())
+  assert.deepEqual(actual, [])
 })
 
-test('Shop authenticated chrome is adapter-only shared UI', () => {
-  const layouts = sources.filter(({ file }) => file.startsWith('layouts/'))
+test('Shop authenticated chrome is adapter-only shared UI', async () => {
   for (const file of ['layouts/default.vue', 'layouts/platform-admin.vue']) {
-    const source = presentationFor(file)
+    const source = await readPresentationTree(workspaceRoot, `apps/shop-suit/app/${file}`)
     assert.match(source, /<BsAppShell\b/)
     assert.match(source, /<BsUserMenu\b/)
-    assert.doesNotMatch(source, /<SettingsMenu\b|accountOpen|role="menu"/)
+    assert.doesNotMatch(sources.find(item => item.file === file)?.source || '', /<SettingsMenu\b|accountOpen|role="menu"/)
   }
 })
 

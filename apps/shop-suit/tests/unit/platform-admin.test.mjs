@@ -32,14 +32,16 @@ test('admin mutations are bounded, reasoned, idempotent and append-only', () => 
   assert.match(sqlSuite, /platform audit was mutable/)
 })
 
-test('operator surface uses only authenticated RPCs and clears on identity changes', () => {
+test('operator surface uses only authenticated RPCs and clears on identity changes', async () => {
   assert.match(page, /rpc\('platform_admin_session'\)/)
   assert.match(page, /rpc\('platform_admin_read'/)
   assert.match(page, /rpc\('platform_admin_command'/)
   assert.match(page, /watch\(userId,[\s\S]*session\.value = null/)
   assert.match(page, /await confirmation\.ask/)
   assert.match(page, /const ar = \{/)
-  assert.match(layout, /BsUserMenu/)
+  assert.match(layout, /BsWorkspaceShell/)
+  const shell = await readFile(new URL('../../../../packages/ui/src/templates/BsWorkspaceShell.vue', import.meta.url), 'utf8')
+  assert.match(shell, /BsUserMenu/)
   assert.doesNotMatch(`${page}\n${layout}`, /service[_-]?role/i)
   assert.doesNotMatch(`${migration}\n${page}`, /impersonat/i)
 })

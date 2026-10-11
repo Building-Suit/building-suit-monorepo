@@ -251,7 +251,12 @@
     "./templates/BsAssetRegisterPage": "./src/templates/BsAssetRegisterPage.vue",
     "./types/assetRegisterPresentation": "./src/types/assetRegisterPresentation.ts",
     "./templates/BsBankReconciliationPage": "./src/templates/BsBankReconciliationPage.vue",
-    "./types/bankReconciliationPresentation": "./src/types/bankReconciliationPresentation.ts"
+    "./types/bankReconciliationPresentation": "./src/types/bankReconciliationPresentation.ts",
+    "./templates/BsCommerceDocumentPage": "./src/templates/BsCommerceDocumentPage.vue",
+    "./types/commerceDocumentPresentation": "./src/types/commerceDocumentPresentation.ts",
+    "./templates/BsDashboardPage": "./src/templates/BsDashboardPage.vue",
+    "./organisms/BsDashboardTable": "./src/organisms/BsDashboardTable.vue",
+    "./types/dashboardPresentation": "./src/types/dashboardPresentation.ts"
   },
   "dependencies": {
     "primevue": "4.5.5",

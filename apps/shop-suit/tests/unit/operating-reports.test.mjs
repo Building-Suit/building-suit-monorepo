@@ -6,6 +6,8 @@ const migration = await readFile(new URL('../../supabase/migrations/202609290900
 const fullMigration = await readFile(new URL('../../supabase/migrations/20260929170000_full_operational_reporting.sql', import.meta.url), 'utf8')
 const databaseTest = await readFile(new URL('../../supabase/tests/shop_operating_reports.sql', import.meta.url), 'utf8')
 const dashboard = await readFile(new URL('../../app/pages/dashboard.vue', import.meta.url), 'utf8')
+const dashboardTemplate = await readFile(new URL('../../../../packages/ui/src/templates/BsDashboardPage.vue', import.meta.url), 'utf8')
+const dashboardTable = await readFile(new URL('../../../../packages/ui/src/organisms/BsDashboardTable.vue', import.meta.url), 'utf8')
 const reportTemplate = await readFile(new URL('../../../../packages/ui/src/templates/BsReportsPage.vue', import.meta.url), 'utf8')
 const reports = await readFile(new URL('../../app/pages/reports/index.vue', import.meta.url), 'utf8')
 const sales = await readFile(new URL('../../app/pages/sales/index.vue', import.meta.url), 'utf8')
@@ -22,9 +24,12 @@ test('dashboard supports three periods, all locations, source drill-through, and
   for (const evidence of [
     'shop_operating_report', 'allLocations', "'day', 'week', 'month'", 'salesMix',
     'paymentMix', 'outstanding', 'busiestTimes', 'cashVariance', 'staffPerformance',
-    'branchComparison', 'BsDataTable', ':columns="2"', ':columns="4"',
+    'branchComparison', 'BsDashboardPage',
     'not accounting profit or a financial statement', 'مش حساب للربح المحاسبي',
   ]) assert.match(dashboard, new RegExp(evidence))
+  assert.match(dashboardTable, /BsDataTable/)
+  assert.match(dashboardTemplate, /:columns="2"/)
+  assert.match(dashboardTemplate, /:columns="4"/)
   assert.match(sales, /route\.query\.from/)
 })
 

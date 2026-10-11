@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { test } from 'node:test'
+import { readPresentationTree } from '../../../../packages/testing/presentation-source.mjs'
 
 const read = path => readFile(new URL(`../../${path}`, import.meta.url), 'utf8')
 const routes = ['about', 'contact', 'terms', 'privacy', 'delivery-shipping', 'refund-cancellation']
@@ -51,8 +52,9 @@ test('contact intake and paid-plan boundary include all required protections and
 test('Shop logo resolves canonical light and dark marks and wordmarks', async () => {
   for (const layout of ['auth', 'default', 'landing', 'platform-admin']) {
     const source = await read(`app/layouts/${layout}.vue`)
-    assert.match(source, /<BsProductLogo/)
-    assert.match(source, /asset-prefix="\/brand\/shop-suit"/)
+    const presentation = await readPresentationTree(new URL('../../../../', import.meta.url).pathname, `apps/shop-suit/app/layouts/${layout}.vue`)
+    assert.match(presentation, /<BsProductLogo/)
+    assert.match(source, /\/brand\/shop-suit/)
     assert.doesNotMatch(source, /<AppLogo/)
   }
   for (const asset of ['mark-light', 'mark-dark', 'wordmark-light', 'wordmark-dark']) {

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { BsCommerceDocumentCopy, BsCommerceDocumentForm, BsCommerceCorrectionForm, BsCommerceDocumentView } from '@building-suit/ui/types/commerceDocumentPresentation'
+
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 
 definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
@@ -178,178 +180,46 @@ async function saveReversal() {
     await finish(copy.value.reversalSaved)
   } catch (error) { if (inScope()) actionError.value = readableError(error) } finally { pendingAction.value = false }
 }
+
+const commerceDialogOpen = computed({ get: () => paymentOpen.value || creditOpen.value || returnOpen.value || reversalOpen.value, set: value => { if (!value) paymentOpen.value = creditOpen.value = returnOpen.value = reversalOpen.value = false } })
+const unusedCorrectionOpen = ref(false)
+const unusedCorrectionForm = ref<BsCommerceCorrectionForm>({ date: '', reference: '', reason: '' })
+const commerceForm = computed<BsCommerceDocumentForm>({
+  get: () => ({ amount: paymentOpen.value ? paymentForm.amount : creditOpen.value ? creditForm.amount : reversalForm.amount, date: paymentOpen.value ? paymentForm.date : creditOpen.value ? creditForm.date : returnOpen.value ? returnForm.date : reversalForm.date, method: paymentForm.method, reference: paymentOpen.value ? paymentForm.reference : creditOpen.value ? creditForm.reference : returnOpen.value ? returnForm.reference : reversalForm.reference, notes: paymentForm.notes, reason: creditOpen.value ? creditForm.reason : returnOpen.value ? returnForm.reason : reversalForm.reason, quantities: { ...returnForm.quantities } }),
+  set: value => {
+    if (paymentOpen.value) Object.assign(paymentForm, { amount: value.amount, date: value.date, method: paymentMethods.includes(value.method as PaymentMethod) ? value.method : paymentForm.method, reference: value.reference, notes: value.notes })
+    else if (creditOpen.value) Object.assign(creditForm, { amount: value.amount, date: value.date, reason: value.reason, reference: value.reference })
+    else if (returnOpen.value) Object.assign(returnForm, { date: value.date, reason: value.reason, reference: value.reference, quantities: { ...value.quantities } })
+    else if (reversalOpen.value) Object.assign(reversalForm, { amount: value.amount, date: value.date, reason: value.reason, reference: value.reference })
+  },
+})
+const commerceMethods = computed(() => paymentMethods.map(value => ({ value, label: methodLabel(value) })))
+const commerceCopy = computed<BsCommerceDocumentCopy>(() => ({
+  back: copy.value.back, loading: copy.value.loading, loadError: copy.value.loadError, retry: copy.value.retry, notFound: copy.value.notFound, party: copy.value.supplier, date: copy.value.date, created: copy.value.date, notes: copy.value.notes, total: copy.value.total, balance: copy.value.payable, discount: '', paid: '', due: '', settlement: copy.value.status,
+  lines: copy.value.lines, item: copy.value.product, quantity: copy.value.quantity, price: copy.value.unitCost, available: copy.value.available, payments: copy.value.payments, credits: copy.value.credits, inventory: copy.value.inventory, empty: copy.value.empty, noInventory: copy.value.empty, noParty: copy.value.empty, details: copy.value.invoice, batch: '', open: '', recordPayment: copy.value.recordPayment, recordCredit: copy.value.recordCredit, recordReturn: copy.value.recordReturn, reverse: copy.value.reverse, refund: '', issue: '', issuing: '', edit: '', reprint: '', share: '', amount: copy.value.amount, method: copy.value.method, reference: copy.value.reference, reason: copy.value.reason, save: copy.value.save, cancel: copy.value.cancel, correction: '', correctionLoading: '', correctionError: '', refunded: '', restored: '', correct: '', correctionDialog: '', correctionSubmit: '',
+}))
+const commerceView = computed<BsCommerceDocumentView>(() => {
+  const value = purchase.value
+  const actionable = value?.status === 'posted' && Number(value.payable) > 0
+  return {
+    loading: pending.value, error: Boolean(error.value), found: Boolean(value), title: copy.value.title, subtitle: value?.invoiceNumber || '', status: '', actionError: actionError.value, success: success.value, notice: '',
+    party: { name: value?.vendorNameSnapshot || '', to: '', phone: '', email: '', address: '' },
+    detail: { date: value ? displayDate(value.issuedAt) : '', created: '', notes: value?.notes || '—', total: money(Number(value?.totalAmount || 0)), balance: money(Number(value?.payable || 0)), discount: '', paid: '', due: '', settlement: value ? settlementLabel(value.settlementState) : '' },
+    showCreated: false, showDiscount: false, showNotes: false, showPaid: false, showDue: false, showAvailable: true, showPayments: true, showCredits: true, inventoryTable: true,
+    canPayment: Boolean(actionable && value?.canRecordPayment), canCredit: Boolean(actionable && value?.canRecordCredit), canReturn: Boolean(actionable && value?.canReturnStock && value.items.some(item => Number(item.availableToReturn) > 0)), canIssue: false, issuing: false, editTo: '', receiptTo: '', canShare: false, sharing: false,
+    lines: (value?.items || []).map(item => ({ id: item.id, name: item.productName, description: '', quantity: String(item.quantity), price: money(item.unitCost), total: money(item.totalCost), discount: '', available: String(item.availableToReturn), returnMaximum: Number(item.availableToReturn) })),
+    events: (value?.paymentEvents || []).map(event => ({ id: event.id, title: `${eventLabel(event)} · ${money(event.amount)}`, description: [displayDate(event.eventAt), event.method ? methodLabel(event.method) : '', event.reference].filter(Boolean).join(' · '), reason: event.reason || '', canReverse: Boolean(event.eventType === 'payment' && value?.canReversePayment && Number(event.remainingEffective) > 0), canRefund: false })),
+    credits: (value?.credits || []).map(credit => ({ id: credit.id, title: `${money(credit.amount)} · ${credit.purchaseReturnId ? copy.value.returns : copy.value.recordCredit}`, description: [displayDate(credit.effectiveAt), credit.reference].filter(Boolean).join(' · '), reason: credit.reason, canReverse: false, canRefund: false })),
+    movements: (value?.receiptMovements || []).map(movement => ({ id: movement.id, date: displayDate(movement.createdAt), name: value?.items.find(item => item.productId === movement.productId)?.productName || '—', quantity: String(movement.quantityChange), cost: money(movement.unitCostSnapshot), batch: '', to: '' })),
+    correction: { visible: false, loading: false, error: false, canCorrect: false, title: '', description: '', reason: '', refunded: '', restored: '', notice: '', fullOnly: '' },
+    dialog: { title: paymentOpen.value ? copy.value.recordPayment : creditOpen.value ? copy.value.recordCredit : returnOpen.value ? copy.value.recordReturn : copy.value.reversal, dirty: paymentOpen.value ? paymentDirty.value : creditOpen.value ? creditDirty.value : returnOpen.value ? returnDirty.value : reversalDirty.value, pending: pendingAction.value, maximum: reversalOpen.value ? selectedPayment.value?.remainingEffective : value?.payable, showAmount: !returnOpen.value, showMethod: paymentOpen.value, showReference: true, showNotes: paymentOpen.value, showReason: !paymentOpen.value, showQuantities: returnOpen.value, total: money(returnTotal.value) },
+    correctionDialog: { dirty: false, pending: false, warning: '' },
+  }
+})
+function reverseCommerceEvent(id: string) { const event = purchase.value?.paymentEvents.find(event => event.id === id); if (event) openReversal(event) }
+function submitCommerce() { if (paymentOpen.value) return savePayment(); if (creditOpen.value) return saveCredit(); if (returnOpen.value) return saveReturn(); if (reversalOpen.value) return saveReversal() }
 </script>
 
 <template>
-  <BsStack>
-    <BsLink to="/purchases">{{ copy.back }}</BsLink>
-    <BsText v-if="pending" role="status" as="p" size="sm" tone="muted">{{ copy.loading }}</BsText>
-    <BsBox v-else-if="error" role="alert" padding="md">
-      <BsText as="p">{{ copy.loadError }}</BsText>
-      <BsButton @click="refresh()">{{ copy.retry }}</BsButton>
-    </BsBox>
-    <BsText v-else-if="!purchase" as="p" size="sm" tone="muted">{{ copy.notFound }}</BsText>
-    <template v-else>
-      <BsPageHeader  :title="copy.title">
-        <template #actions>
-          <BsInline v-if="purchase.status === 'posted' && Number(purchase.payable) > 0">
-            <BsButton v-if="purchase.canRecordPayment" @click="openPayment">{{ copy.recordPayment }}</BsButton>
-            <BsButton v-if="purchase.canRecordCredit" @click="openCredit">{{ copy.recordCredit }}</BsButton>
-            <BsButton v-if="purchase.canReturnStock && purchase.items.some(item => Number(item.availableToReturn) > 0)" @click="openReturn">{{ copy.recordReturn }}</BsButton>
-          </BsInline>
-        </template>
-      </BsPageHeader>
-      <BsText v-if="success" role="status" as="p" size="sm">{{ success }}</BsText>
-      <BsText v-if="actionError && !paymentOpen && !creditOpen && !returnOpen && !reversalOpen" role="alert" as="p" size="sm" tone="danger">{{ actionError }}</BsText>
-      <BsPanel padding="md">
-        <BsBox>
-          <BsText as="p" size="xs" tone="muted" emphasis="semibold">{{ copy.supplier }}</BsText>
-          <BsText as="p" emphasis="semibold">{{ purchase.vendorNameSnapshot }}</BsText>
-        </BsBox>
-        <BsBox>
-          <BsText as="p" size="xs" tone="muted" emphasis="semibold">{{ copy.date }}</BsText>
-          <BsText as="p">{{ displayDate(purchase.issuedAt) }}</BsText>
-        </BsBox>
-        <BsBox>
-          <BsText as="p" size="xs" tone="muted" emphasis="semibold">{{ copy.total }}</BsText>
-          <BsText as="p" emphasis="semibold">{{ money(purchase.totalAmount) }}</BsText>
-        </BsBox>
-        <BsBox>
-          <BsText as="p" size="xs" tone="muted" emphasis="semibold">{{ copy.payable }}</BsText>
-          <BsText as="p" size="lg" emphasis="semibold">{{ money(purchase.payable) }}</BsText>
-        </BsBox>
-        <BsBox>
-          <BsText as="p" size="xs" tone="muted" emphasis="semibold">{{ copy.status }}</BsText>
-          <BsText as="p" emphasis="semibold">{{ settlementLabel(purchase.settlementState) }}</BsText>
-        </BsBox>
-      </BsPanel>
-      <BsPanel padding="md">
-        <BsHeading :level="2">{{ copy.lines }}</BsHeading>
-        <BsBox scroll="x">
-          <BsDataTable :value="purchase.items" data-key="id" :columns="[{ key: 'column0', header: (copy.product) }, { key: 'column1', header: (copy.quantity), align: 'end' }, { key: 'column2', header: (copy.available), align: 'end' }, { key: 'column3', header: (copy.unitCost), align: 'end' }, { key: 'column4', header: (copy.total), align: 'end' }]">
-            <template #cell-column0="{ row: item }">{{ item.productName }}</template>
-            <template #cell-column1="{ row: item }">{{ item.quantity }}</template>
-            <template #cell-column2="{ row: item }">{{ item.availableToReturn }}</template>
-            <template #cell-column3="{ row: item }">{{ money(item.unitCost) }}</template>
-            <template #cell-column4="{ row: item }">{{ money(item.totalCost) }}</template>
-          </BsDataTable>
-        </BsBox>
-      </BsPanel>
-      <BsGrid :columns="2">
-        <BsPanel padding="md">
-          <BsHeading :level="2">{{ copy.payments }}</BsHeading>
-          <BsStack>
-            <BsText v-if="!purchase.paymentEvents.length" as="p" size="sm" tone="muted">{{ copy.empty }}</BsText>
-            <BsInline v-for="event in purchase.paymentEvents" :key="event.id" justify="between">
-              <BsBox>
-                <BsText as="p" emphasis="semibold">{{ eventLabel(event) }} · {{ money(event.amount) }}</BsText>
-                <BsText as="p" size="xs" tone="muted">{{ displayDate(event.eventAt) }}<BsText v-if="event.method" as="span"> · {{ methodLabel(event.method) }}</BsText>
-                  <BsText v-if="event.reference" as="span"> · {{ event.reference }}</BsText>
-                </BsText>
-                <BsText v-if="event.reason" as="p" size="sm">{{ event.reason }}</BsText>
-              </BsBox>
-              <BsButton v-if="event.eventType === 'payment' && purchase.canReversePayment && Number(event.remainingEffective) > 0" @click="openReversal(event)">{{ copy.reverse }}</BsButton>
-            </BsInline>
-          </BsStack>
-        </BsPanel>
-        <BsPanel padding="md">
-          <BsHeading :level="2">{{ copy.credits }}</BsHeading>
-          <BsStack>
-            <BsText v-if="!purchase.credits.length" as="p" size="sm" tone="muted">{{ copy.empty }}</BsText>
-            <BsBox v-for="credit in purchase.credits" :key="credit.id" as="article">
-              <BsText as="p" emphasis="semibold">{{ money(credit.amount) }} · {{ credit.purchaseReturnId ? copy.returns : copy.recordCredit }}</BsText>
-              <BsText as="p" size="xs" tone="muted">{{ displayDate(credit.effectiveAt) }}<BsText v-if="credit.reference" as="span"> · {{ credit.reference }}</BsText>
-              </BsText>
-              <BsText as="p" size="sm">{{ credit.reason }}</BsText>
-            </BsBox>
-          </BsStack>
-        </BsPanel>
-      </BsGrid>
-      <BsPanel padding="md">
-        <BsInline justify="between">
-          <BsHeading :level="2">{{ copy.inventory }}</BsHeading>
-          <BsLink to="/inventory">{{ copy.inventory }}</BsLink>
-        </BsInline>
-        <BsBox scroll="x">
-          <BsDataTable :value="purchase.receiptMovements" data-key="id" :columns="[{ key: 'column0', header: (copy.date) }, { key: 'column1', header: (copy.product) }, { key: 'column2', header: (copy.quantity), align: 'end' }, { key: 'column3', header: (copy.unitCost), align: 'end' }]">
-            <template #cell-column0="{ row: movement }">{{ displayDate(movement.createdAt) }}</template>
-            <template #cell-column1="{ row: movement }">{{ purchase.items.find(item => item.productId === movement.productId)?.productName || '—' }}</template>
-            <template #cell-column2="{ row: movement }">{{ movement.quantityChange }}</template>
-            <template #cell-column3="{ row: movement }">{{ money(movement.unitCostSnapshot) }}</template>
-            <template #empty>
-              <BsText as="p" size="sm" tone="muted">{{ copy.empty }}</BsText>
-            </template>
-          </BsDataTable>
-        </BsBox>
-      </BsPanel>
-      <BsRecordActionDialog v-model:visible="paymentOpen" :title="copy.recordPayment" :dirty="paymentDirty" :pending="pendingAction" :error="actionError" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="savePayment">
-        <BsField v-slot="field" :label="copy.amount">
-          <BsInput :id="field.id" v-model.number="paymentForm.amount" :aria-describedby="field.describedby" type="number" :min="0.01" :max="purchase.payable" :step="0.01" required/>
-        </BsField>
-        <BsField v-slot="field" :label="copy.date">
-          <BsInput :id="field.id" v-model="paymentForm.date" :aria-describedby="field.describedby" type="date" required/>
-        </BsField>
-        <BsField v-slot="field" :label="copy.method">
-          <BsSelect v-model="paymentForm.method" :input-id="field.id" :aria-describedby="field.describedby" :label="copy.method" :options="[...(paymentMethods).map(method => ({ value: method, label: (methodLabel(method)), disabled: false }))]" option-label="label" option-value="value" option-disabled="disabled"/>
-        </BsField>
-        <BsField v-slot="field" :label="copy.reference">
-          <BsInput :id="field.id" v-model="paymentForm.reference" :aria-describedby="field.describedby" :maxlength="200"/>
-        </BsField>
-        <BsField v-slot="field" :label="copy.notes">
-          <BsTextarea :id="field.id" v-model="paymentForm.notes" :aria-describedby="field.describedby" :maxlength="2000" :rows="2"/>
-        </BsField>
-      </BsRecordActionDialog>
-      <BsRecordActionDialog v-model:visible="creditOpen" :title="copy.recordCredit" :dirty="creditDirty" :pending="pendingAction" :error="actionError" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="saveCredit">
-        <BsField v-slot="field" :label="copy.amount">
-          <BsInput :id="field.id" v-model.number="creditForm.amount" :aria-describedby="field.describedby" type="number" :min="0.01" :max="purchase.payable" :step="0.01" required/>
-        </BsField>
-        <BsField v-slot="field" :label="copy.date">
-          <BsInput :id="field.id" v-model="creditForm.date" :aria-describedby="field.describedby" type="date" required/>
-        </BsField>
-        <BsField v-slot="field" :label="copy.reason">
-          <BsTextarea :id="field.id" v-model="creditForm.reason" :aria-describedby="field.describedby" :minlength="2" :maxlength="1000" required :rows="2"/>
-        </BsField>
-        <BsField v-slot="field" :label="copy.reference">
-          <BsInput :id="field.id" v-model="creditForm.reference" :aria-describedby="field.describedby" :maxlength="200"/>
-        </BsField>
-      </BsRecordActionDialog>
-      <BsRecordActionDialog v-model:visible="returnOpen" :title="copy.recordReturn" :dirty="returnDirty" :pending="pendingAction" :error="actionError" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="saveReturn">
-        <BsGrid v-for="item in purchase.items" :key="item.id" :columns="1">
-          <BsBox>
-            <BsText as="p" emphasis="semibold">{{ item.productName }}</BsText>
-            <BsText as="p" size="xs" tone="muted">{{ copy.available }}: {{ item.availableToReturn }} · {{ copy.unitCost }}: {{ money(item.unitCost) }}</BsText>
-          </BsBox>
-          <BsField v-slot="field" :label="copy.quantity">
-            <BsInput :id="field.id" v-model.number="returnForm.quantities[item.id]" :aria-describedby="field.describedby" type="number" :min="0" :max="item.availableToReturn" :step="0.001"/>
-          </BsField>
-        </BsGrid>
-        <BsGrid :columns="2">
-          <BsField v-slot="field" :label="copy.date">
-            <BsInput :id="field.id" v-model="returnForm.date" :aria-describedby="field.describedby" type="date" required/>
-          </BsField>
-          <BsField v-slot="field" :label="copy.reference">
-            <BsInput :id="field.id" v-model="returnForm.reference" :aria-describedby="field.describedby" :maxlength="200"/>
-          </BsField>
-          <BsField v-slot="field" :label="copy.reason">
-            <BsTextarea :id="field.id" v-model="returnForm.reason" :aria-describedby="field.describedby" :minlength="2" :maxlength="1000" required :rows="2"/>
-          </BsField>
-        </BsGrid>
-        <BsText as="p" size="lg" emphasis="semibold">{{ copy.total }}: {{ money(returnTotal) }}</BsText>
-      </BsRecordActionDialog>
-      <BsRecordActionDialog v-model:visible="reversalOpen" :title="copy.reversal" :dirty="reversalDirty" :pending="pendingAction" :error="actionError" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="saveReversal">
-        <BsField v-slot="field" :label="copy.amount">
-          <BsInput :id="field.id" v-model.number="reversalForm.amount" :aria-describedby="field.describedby" type="number" :min="0.01" :max="selectedPayment?.remainingEffective" :step="0.01" required/>
-        </BsField>
-        <BsField v-slot="field" :label="copy.date">
-          <BsInput :id="field.id" v-model="reversalForm.date" :aria-describedby="field.describedby" type="date" required/>
-        </BsField>
-        <BsField v-slot="field" :label="copy.reason">
-          <BsTextarea :id="field.id" v-model="reversalForm.reason" :aria-describedby="field.describedby" :minlength="2" :maxlength="1000" required :rows="2"/>
-        </BsField>
-        <BsField v-slot="field" :label="copy.reference">
-          <BsInput :id="field.id" v-model="reversalForm.reference" :aria-describedby="field.describedby" :maxlength="200"/>
-        </BsField>
-      </BsRecordActionDialog>
-    </template>
-  </BsStack>
+  <BsCommerceDocumentPage v-model:form="commerceForm" v-model:correction-form="unusedCorrectionForm" v-model:dialog-open="commerceDialogOpen" v-model:correction-open="unusedCorrectionOpen" :copy="commerceCopy" :view="commerceView" back-to="/purchases" inventory-to="/inventory" :methods="commerceMethods" :constraints="{ referenceLength: 200, notesLength: 2000, reasonMinimum: 2, reasonMaximum: 1000, amountMinimum: 0.01, amountStep: 0.01, quantityStep: 0.001 }" @retry="refresh()" @payment="openPayment" @credit="openCredit" @return="openReturn" @reverse="reverseCommerceEvent" @submit="submitCommerce"/>
 </template>

@@ -721,39 +721,22 @@
     {
       "source": "apps/ledger-suit/app/pages/dashboard.vue",
       "kind": "route",
-      "currentSharedTemplates": [],
-      "renderedBsComponents": [
-        "BsBox",
-        "BsButton",
-        "BsCard",
-        "BsDataTable",
-        "BsEmptyState",
-        "BsFloatingField",
-        "BsGrid",
-        "BsHeading",
-        "BsIcon",
-        "BsInline",
-        "BsInput",
-        "BsKpiCard",
-        "BsLink",
-        "BsMetricBarChart",
-        "BsMoneyText",
-        "BsSectionSkeleton",
-        "BsSetupChecklist",
-        "BsStack",
-        "BsStateSurface",
-        "BsStatusBadge",
-        "BsText"
+      "currentSharedTemplates": [
+        "BsDashboardPage"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "renderedBsComponents": [
+        "BsDashboardPage"
+      ],
+      "destination": "packages/ui/src/templates/BsDashboardPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/ledger-suit/app/pages/dashboard.vue",
       "dependencies": [
         "~~/types/database.types",
         "~~/types/dashboard-rpc.types",
         "~/composables/useLedgerPresentation"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "workspace-dashboard"
     },
     {
       "source": "apps/ledger-suit/app/pages/delivery-shipping.vue",
@@ -1749,42 +1732,22 @@
     {
       "source": "apps/shop-suit/app/pages/dashboard.vue",
       "kind": "route",
-      "currentSharedTemplates": [],
-      "renderedBsComponents": [
-        "BsActionTile",
-        "BsBox",
-        "BsButton",
-        "BsCard",
-        "BsDataTable",
-        "BsField",
-        "BsFieldGroup",
-        "BsFilterBar",
-        "BsGrid",
-        "BsHeading",
-        "BsIcon",
-        "BsInline",
-        "BsInput",
-        "BsKpiCard",
-        "BsLink",
-        "BsPageHeader",
-        "BsPanel",
-        "BsRadio",
-        "BsRecordActionDialog",
-        "BsSelect",
-        "BsSetupChecklist",
-        "BsSkeleton",
-        "BsStack",
-        "BsText"
+      "currentSharedTemplates": [
+        "BsDashboardPage"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "renderedBsComponents": [
+        "BsDashboardPage"
+      ],
+      "destination": "packages/ui/src/templates/BsDashboardPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/shop-suit/app/pages/dashboard.vue",
       "dependencies": [
         "~/types/shopCrmRpc",
         "~/utils/businessMode",
         "~/utils/businessMode"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "workspace-dashboard"
     },
     {
       "source": "apps/shop-suit/app/pages/delivery-shipping.vue",
@@ -1976,32 +1939,20 @@
     {
       "source": "apps/shop-suit/app/pages/purchases/[id].vue",
       "kind": "route",
-      "currentSharedTemplates": [],
-      "renderedBsComponents": [
-        "BsBox",
-        "BsButton",
-        "BsDataTable",
-        "BsField",
-        "BsGrid",
-        "BsHeading",
-        "BsInline",
-        "BsInput",
-        "BsLink",
-        "BsPageHeader",
-        "BsPanel",
-        "BsRecordActionDialog",
-        "BsSelect",
-        "BsStack",
-        "BsText",
-        "BsTextarea"
+      "currentSharedTemplates": [
+        "BsCommerceDocumentPage"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "renderedBsComponents": [
+        "BsCommerceDocumentPage"
+      ],
+      "destination": "packages/ui/src/templates/BsCommerceDocumentPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/shop-suit/app/pages/purchases/[id].vue",
       "dependencies": [
         "~/types/shopCrmRpc"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "commerce-document-detail"
     },
     {
       "source": "apps/shop-suit/app/pages/purchases/index.vue",
@@ -2062,29 +2013,14 @@
     {
       "source": "apps/shop-suit/app/pages/sales/[id]/index.vue",
       "kind": "route",
-      "currentSharedTemplates": [],
-      "renderedBsComponents": [
-        "BsBox",
-        "BsButton",
-        "BsDataTable",
-        "BsDescriptionItem",
-        "BsDescriptionList",
-        "BsField",
-        "BsGrid",
-        "BsHeading",
-        "BsInline",
-        "BsInput",
-        "BsLink",
-        "BsPanel",
-        "BsRecordActionDialog",
-        "BsSelect",
-        "BsSkeleton",
-        "BsStack",
-        "BsText",
-        "BsTextarea"
+      "currentSharedTemplates": [
+        "BsCommerceDocumentPage"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "renderedBsComponents": [
+        "BsCommerceDocumentPage"
+      ],
+      "destination": "packages/ui/src/templates/BsCommerceDocumentPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/shop-suit/app/pages/sales/[id]/index.vue",
       "dependencies": [
         "~/utils/shopCommandErrorMessage",
@@ -2092,7 +2028,8 @@
         "~/types/shopCrmRpc",
         "~/types/receipt"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "commerce-document-detail"
     },
     {
       "source": "apps/shop-suit/app/pages/sales/[id]/receipt.vue",
@@ -2375,6 +2312,8 @@
     "BsReportsPage",
     "BsInventoryAccountingPage",
     "BsAssetRegisterPage",
-    "BsBankReconciliationPage"
+    "BsBankReconciliationPage",
+    "BsCommerceDocumentPage",
+    "BsDashboardPage"
   ]
 }
