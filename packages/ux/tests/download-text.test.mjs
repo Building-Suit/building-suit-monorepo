@@ -27,3 +27,23 @@ test('text downloads retain filename and content and release the object URL afte
     if (priorDocument === undefined) delete globalThis.document; else globalThis.document = priorDocument
   }
 })
+
+test('mounted downloads defer cleanup and retain native anchor behavior', () => {
+  const prior = { create: URL.createObjectURL, revoke: URL.revokeObjectURL, document: globalThis.document, timer: globalThis.setTimeout }
+  const events = [], link = { click: () => events.push('click'), remove: () => events.push('remove') }
+  let cleanup
+  URL.createObjectURL = () => 'blob:mounted'
+  URL.revokeObjectURL = () => events.push('revoke')
+  globalThis.document = { createElement: () => link, body: { append: () => events.push('append') } }
+  globalThis.setTimeout = (callback, delay) => { cleanup = callback; assert.equal(delay, 1000) }
+  try {
+    downloadText('ledger.csv', 'data', 'text/csv', { mount: true, cleanupDelayMs: 1000 })
+    assert.deepEqual(events, ['append', 'click'])
+    assert.equal(link.hidden, true)
+    cleanup()
+    assert.deepEqual(events, ['append', 'click', 'remove', 'revoke'])
+  } finally {
+    URL.createObjectURL = prior.create; URL.revokeObjectURL = prior.revoke; globalThis.setTimeout = prior.timer
+    if (prior.document === undefined) delete globalThis.document; else globalThis.document = prior.document
+  }
+})

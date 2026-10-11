@@ -237,7 +237,13 @@
     "./templates/BsCatalogImportPage": "./src/templates/BsCatalogImportPage.vue",
     "./types/catalogImportPresentation": "./src/types/catalogImportPresentation.ts",
     "./templates/BsOpeningBalancesPage": "./src/templates/BsOpeningBalancesPage.vue",
-    "./types/openingBalancePresentation": "./src/types/openingBalancePresentation.ts"
+    "./types/openingBalancePresentation": "./src/types/openingBalancePresentation.ts",
+    "./templates/BsAccountingPeriodsPage": "./src/templates/BsAccountingPeriodsPage.vue",
+    "./types/accountingPeriodPresentation": "./src/types/accountingPeriodPresentation.ts",
+    "./templates/BsMigrationCenterPage": "./src/templates/BsMigrationCenterPage.vue",
+    "./types/migrationCenterPresentation": "./src/types/migrationCenterPresentation.ts",
+    "./templates/BsAppointmentsPage": "./src/templates/BsAppointmentsPage.vue",
+    "./types/appointmentsPresentation": "./src/types/appointmentsPresentation.ts"
   },
   "dependencies": {
     "primevue": "4.5.5",

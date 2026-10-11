@@ -73,3 +73,16 @@ test('debounced changes coalesce and cancellation/disposal prevent stale commits
   await new Promise(resolve => setTimeout(resolve, 25))
   assert.deepEqual(calls, ['last'])
 })
+
+ test('file reset after selection is opt-in and preserves the committed file', () => {
+  const scope = effectScope(), reset = ref(false), calls = []
+  const control = scope.run(() => useFileSelection(() => null, () => false, file => calls.push(file), () => reset.value))
+  const file = { name: 'same.csv' }, event = { target: { files: [file], value: 'same.csv' } }
+  control.update(event)
+  assert.equal(event.target.value, 'same.csv')
+  reset.value = true
+  control.update(event)
+  assert.equal(event.target.value, '')
+  assert.deepEqual(calls, [file, file])
+  scope.stop()
+})

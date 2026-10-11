@@ -1,12 +1,15 @@
-/** Download a prepared text document and release its temporary browser resource. */
-export function downloadText(filename, text, mimeType) {
+/** Download prepared text; optional delayed cleanup supports mounted native anchors. */
+export function downloadText(filename, text, mimeType, options = {}) {
   const url = URL.createObjectURL(new Blob([text], { type: mimeType }))
+  let link
+  const cleanup = () => { if (options.mount) link?.remove(); URL.revokeObjectURL(url) }
   try {
-    const link = document.createElement('a')
+    link = document.createElement('a')
     link.href = url
     link.download = filename
+    if (options.mount) { link.hidden = true; document.body.append(link) }
     link.click()
-  } finally {
-    URL.revokeObjectURL(url)
-  }
+  } catch (failure) { cleanup(); throw failure }
+  if (options.cleanupDelayMs > 0) setTimeout(cleanup, options.cleanupDelayMs)
+  else cleanup()
 }

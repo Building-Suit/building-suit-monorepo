@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { formatPresentationMoney } from '@building-suit/ux'
+import type { BsAccountingPeriodCopy, BsAccountingPeriodView, BsAccountingPeriodCreateForm, BsAccountingPeriodCloseForm } from '@building-suit/ui/types/accountingPeriodPresentation'
 import type { Database } from '~~/types/database.types'
 
 definePageMeta({ layout: 'default' })
@@ -126,100 +128,52 @@ async function closeYear() {
   finally { pendingAction.value = '' }
 }
 const ledgerPresentation = useLedgerPresentation()
-</script>
 
+const periodCopy = computed<BsAccountingPeriodCopy>(() => ({
+  common_cancel: t('common.cancel'),
+  common_saving: t('common.saving'),
+  periods_closingJournal: t('periods.closingJournal'),
+  periods_create: t('periods.create'),
+  periods_empty: t('periods.empty'),
+  periods_emptyHint: t('periods.emptyHint'),
+  periods_endDate: t('periods.endDate'),
+  periods_fiscalHint: t('periods.fiscalHint'),
+  periods_fiscalMonth: t('periods.fiscalMonth', { month: fiscalMonth.value }),
+  periods_fiscalYear: t('periods.fiscalYear'),
+  periods_fiscalYearStart: t('periods.fiscalYearStart'),
+  periods_hardClose: t('periods.hardClose'),
+  periods_history: t('periods.history'),
+  periods_loadFailed: t('periods.loadFailed'),
+  periods_netResult: t('periods.netResult'),
+  periods_noAccess: t('periods.noAccess'),
+  periods_reason: t('periods.reason'),
+  periods_reasonHint: t('periods.reasonHint'),
+  periods_reopen: t('periods.reopen'),
+  periods_softClose: t('periods.softClose'),
+  periods_startDate: t('periods.startDate'),
+  periods_subtitle: t('periods.subtitle'),
+  periods_title: t('periods.title'),
+  periods_yearEnd: t('periods.yearEnd'),
+  periods_yearEndComplete: t('periods.yearEndComplete'),
+  periods_yearEndReason: t('periods.yearEndReason'),
+}))
+const periodCreateForm = computed<BsAccountingPeriodCreateForm>({ get: () => ({ ...createForm }), set: value => Object.assign(createForm, value) })
+const periodCloseForm = computed<BsAccountingPeriodCloseForm>({ get: () => ({ ...closeForm }), set: value => Object.assign(closeForm, value) })
+const periodView = computed<BsAccountingPeriodView>(() => ({
+  context: ledgerPresentation.context(currentPeriod.value?.start_date, currentPeriod.value?.end_date), contextLabel: t('pageContext.label'), canRead: can('periods.read'), canManage: can('periods.manage'), canCloseYear: can('periods.year_end_close'), pending: pending.value, loadError: Boolean(error.value),
+  createDirty: createDirty.value, createPending: pendingAction.value === 'create', createError: createError.value, closePending: pendingAction.value === 'year-end', closeDisabled: Boolean(pendingAction.value) || !closeForm.reason.trim(), closeLabel: pendingAction.value === 'year-end' ? t('common.saving') : t('periods.yearEnd'),
+  periods: periods.value.map(period => {
+    const yearClose = closeFor(period)
+    return { id: period.id, status: period.status, start: period.start_date, title: `${date(period.start_date)} — ${date(period.end_date)}`, fiscalRange: t('periods.fiscalRange', { start: date(period.fiscal_year_start), end: date(period.fiscal_year_end) }), statusLabel: statusLabel(period.status), statusTone: period.status === 'open' ? 'success' : period.status === 'soft_closed' ? 'warning' : 'neutral', reason: actionReason[period.id] ?? '',
+      actions: transitionOptions(period).map(target => ({ id: target, label: pendingAction.value === `${period.id}:${target}` ? t('common.saving') : target === 'soft_closed' && period.status === 'hard_closed' ? t('periods.reopen') : target === 'soft_closed' ? t('periods.softClose') : target === 'hard_closed' ? t('periods.hardClose') : t('periods.reopen'), primary: target !== 'open', disabled: Boolean(pendingAction.value) || (reopening(period, target) && !actionReason[period.id]?.trim()) })),
+      close: yearClose ? { net: formatPresentationMoney(yearClose.net_income_minor, { currency: ledgerPresentation.currency(), locale: locale.value, unit: 'minor', numberingSystem: 'latn' }), journalTo: `/transactions?q=${encodeURIComponent(yearClose.closing_transaction_id ?? '')}` } : null,
+      history: transitionsFor(period.id).map(item => ({ id: String(item.id), transition: `${statusLabel(item.previous_status)} → ${statusLabel(item.new_status)}`, description: `${timestamp(item.transitioned_at)}${item.reason ? ` · ${item.reason}` : ''}` })),
+    }
+  }),
+}))
+function updatePeriodReason(id: string, reason: string) { actionReason[id] = reason }
+async function transitionPeriod(id: string, action: string) { const period = periods.value.find(row => row.id === id); if (period && (action === 'open' || action === 'soft_closed' || action === 'hard_closed')) await transition(period, action) }
+</script>
 <template>
-  <BsStack gap="lg">
-    <BsPageHeader
-      :title="t('periods.title')"
-      :subtitle="t('periods.subtitle')"
-      :context="ledgerPresentation.context(currentPeriod?.start_date, currentPeriod?.end_date, undefined)"
-      :context-label="ledgerPresentation.t('pageContext.label')"
-    />
-    <BsText v-if="!can('periods.read')" role="status" tone="muted">{{ t('periods.noAccess') }}</BsText>
-    <BsText v-else-if="error" role="alert" tone="danger">{{ t('periods.loadFailed') }}</BsText>
-    <BsSectionSkeleton v-else-if="pending" variant="table" :rows="5" />
-    <template v-else>
-      <BsCard aria-labelledby="fiscal-year-heading" as="section" padding="md">
-        <BsStack gap="md">
-          <BsHeading id="fiscal-year-heading" :level="2" size="h2">{{ t('periods.fiscalYear') }}</BsHeading>
-          <BsText>{{ t('periods.fiscalMonth', { month: fiscalMonth }) }}</BsText>
-          <BsText size="sm" tone="muted">{{ t('periods.fiscalHint') }}</BsText>
-        </BsStack>
-      </BsCard>
-      <BsButton v-if="can('periods.manage')" type="button" variant="primary" @click="createOpen = true">{{ t('periods.create') }}</BsButton>
-      <BsRecordActionDialog
-        v-if="createOpen"
-        v-model:visible="createOpen"
-        :title="t('periods.create')"
-        :dirty="createDirty"
-        :pending="pendingAction === 'create'"
-        :error="createError"
-        :submit-label="t('periods.create')"
-        :cancel-label="t('common.cancel')"
-        @submit="createPeriod"
-      >
-        <BsFloatingField :label="t('periods.startDate')">
-          <BsInput id="period-start" v-model="createForm.start" type="date" required />
-        </BsFloatingField>
-        <BsFloatingField :label="t('periods.endDate')">
-          <BsInput id="period-end" v-model="createForm.end" type="date" :min="createForm.start" required />
-        </BsFloatingField>
-      </BsRecordActionDialog>
-      <BsEmptyState v-if="!periods.length" :title="t('periods.empty')" :description="t('periods.emptyHint')" />
-      <BsCard v-for="period in periods" :key="period.id" :data-period-status="period.status" :data-period-start="period.start_date" as="section" padding="md">
-        <BsStack gap="md">
-          <BsInline gap="md" :wrap="true" align="start" justify="between">
-            <BsBox>
-              <BsHeading :level="2" size="body">{{ date(period.start_date) }} — {{ date(period.end_date) }}</BsHeading>
-              <BsText size="sm" tone="muted">{{ t('periods.fiscalRange', { start: date(period.fiscal_year_start), end: date(period.fiscal_year_end) }) }}</BsText>
-            </BsBox>
-            <BsStatusBadge
-              :status="period.status"
-              :label="statusLabel(period.status)"
-              :tone="period.status === 'open' ? 'success' : period.status === 'soft_closed' ? 'warning' : 'neutral'"
-            />
-          </BsInline>
-          <BsStack v-if="can('periods.manage')" gap="md">
-            <BsFloatingField :label="t('periods.reason')">
-              <BsInput :id="`reason-${period.id}`" v-model="actionReason[period.id]" :placeholder="t('periods.reasonHint')" />
-            </BsFloatingField>
-            <BsInline gap="sm" :wrap="true">
-              <BsButton
-                v-for="target in transitionOptions(period)"
-                :key="target"
-                type="button"
-                :disabled="Boolean(pendingAction) || (reopening(period, target) && !actionReason[period.id]?.trim())"
-                :variant="(target !== 'open' ) ? 'primary' : 'default'"
-                @click="transition(period, target)"
-              >{{ pendingAction === `${period.id}:${target}` ? t('common.saving') : target === 'soft_closed' && period.status === 'hard_closed' ? t('periods.reopen') : target === 'soft_closed' ? t('periods.softClose') : target === 'hard_closed' ? t('periods.hardClose') : t('periods.reopen') }}</BsButton>
-            </BsInline>
-          </BsStack>
-          <BsBox v-if="closeFor(period)" padding="md" surface="muted" radius="control">
-            <BsText emphasis="semibold">{{ t('periods.yearEndComplete') }}</BsText>
-            <BsText>{{ t('periods.netResult') }}: <BsMoneyText :amount="closeFor(period)!.net_income_minor" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" /></BsText>
-            <BsLink :to="{ path: '/transactions', query: { q: closeFor(period)!.closing_transaction_id } }">{{ t('periods.closingJournal') }}</BsLink>
-          </BsBox>
-          <BsDisclosure v-if="transitionsFor(period.id).length">
-            <template #summary>{{ t('periods.history') }}</template>
-            <BsList :ordered="true" marker="none">
-              <BsListItem v-for="item in transitionsFor(period.id)" :key="item.id">
-                <BsText>{{ statusLabel(item.previous_status) }} → {{ statusLabel(item.new_status) }}</BsText>
-                <BsText tone="muted">{{ timestamp(item.transitioned_at) }}<template v-if="item.reason"> · {{ item.reason }}</template></BsText>
-              </BsListItem>
-            </BsList>
-          </BsDisclosure>
-        </BsStack>
-      </BsCard>
-      <BsForm v-if="can('periods.year_end_close')" :aria-busy="pendingAction === 'year-end'" layout="grid" @submit.prevent="closeYear">
-        <BsFloatingField :label="t('periods.fiscalYearStart')">
-          <BsInput id="year-start" v-model="closeForm.fiscalYearStart" type="date" required />
-        </BsFloatingField>
-        <BsFloatingField :label="t('periods.yearEndReason')">
-          <BsInput id="year-end-reason" v-model="closeForm.reason" required />
-        </BsFloatingField>
-        <BsButton type="submit" :disabled="Boolean(pendingAction) || !closeForm.reason.trim()" variant="primary">{{ pendingAction === 'year-end' ? t('common.saving') : t('periods.yearEnd') }}</BsButton>
-      </BsForm>
-    </template>
-  </BsStack>
+  <BsAccountingPeriodsPage v-model:create-open="createOpen" v-model:create-form="periodCreateForm" v-model:close-form="periodCloseForm" :copy="periodCopy" :view="periodView" @create="createPeriod" @close-year="closeYear" @transition="transitionPeriod" @reason="updatePeriodReason" />
 </template>

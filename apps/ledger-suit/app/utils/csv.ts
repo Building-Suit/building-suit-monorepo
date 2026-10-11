@@ -1,3 +1,4 @@
+import { downloadText } from '@building-suit/ux/downloadText'
 export interface ParsedCsv {
   headers: string[]
   rows: Record<string, string>[]
@@ -71,15 +72,5 @@ export function serializeCsv(rows: readonly (readonly string[])[]): string {
 }
 
 export function downloadCsv(filename: string, csv: string) {
-  const url = URL.createObjectURL(new Blob([`\uFEFF${csv.replace(/^\uFEFF/, '')}`], { type: 'text/csv;charset=utf-8' }))
-  const link = document.createElement('a')
-  link.href = url
-  link.download = filename
-  link.hidden = true
-  document.body.append(link)
-  link.click()
-  setTimeout(() => {
-    link.remove()
-    URL.revokeObjectURL(url)
-  }, 1000)
+  downloadText(filename, `\uFEFF${csv.replace(/^\uFEFF/, '')}`, 'text/csv;charset=utf-8', { mount: true, cleanupDelayMs: 1000 })
 }

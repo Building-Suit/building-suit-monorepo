@@ -51,7 +51,10 @@
     "BsSignupPage": "packages/ui/src/templates/BsSignupPage.vue",
     "BsTaxWorkspacePage": "packages/ui/src/templates/BsTaxWorkspacePage.vue",
     "BsCatalogImportPage": "packages/ui/src/templates/BsCatalogImportPage.vue",
-    "BsOpeningBalancesPage": "packages/ui/src/templates/BsOpeningBalancesPage.vue"
+    "BsOpeningBalancesPage": "packages/ui/src/templates/BsOpeningBalancesPage.vue",
+    "BsAccountingPeriodsPage": "packages/ui/src/templates/BsAccountingPeriodsPage.vue",
+    "BsMigrationCenterPage": "packages/ui/src/templates/BsMigrationCenterPage.vue",
+    "BsAppointmentsPage": "packages/ui/src/templates/BsAppointmentsPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -937,35 +940,14 @@
     {
       "source": "apps/ledger-suit/app/pages/migration-center.vue",
       "kind": "route",
-      "currentSharedTemplates": [],
-      "renderedBsComponents": [
-        "BsBox",
-        "BsButton",
-        "BsCard",
-        "BsCheckbox",
-        "BsDataTable",
-        "BsFieldLabel",
-        "BsFileInput",
-        "BsFloatingField",
-        "BsGrid",
-        "BsHeading",
-        "BsInline",
-        "BsInput",
-        "BsLineBreak",
-        "BsLink",
-        "BsList",
-        "BsListItem",
-        "BsPageHeader",
-        "BsRecordActionDialog",
-        "BsSectionSkeleton",
-        "BsSelect",
-        "BsSelectOption",
-        "BsStack",
-        "BsText",
-        "BsTextarea"
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsMigrationCenterPage.vue"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "renderedBsComponents": [
+        "BsMigrationCenterPage"
+      ],
+      "destination": "packages/ui/src/templates/BsMigrationCenterPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/ledger-suit/app/pages/migration-center.vue",
       "dependencies": [
         "~~/types/database.types",
@@ -974,7 +956,8 @@
         "~/utils/csv",
         "~/utils/migrationCenter"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "migration-center"
     },
     {
       "source": "apps/ledger-suit/app/pages/opening-balances.vue",
@@ -1042,36 +1025,20 @@
     {
       "source": "apps/ledger-suit/app/pages/periods.vue",
       "kind": "route",
-      "currentSharedTemplates": [],
-      "renderedBsComponents": [
-        "BsBox",
-        "BsButton",
-        "BsCard",
-        "BsDisclosure",
-        "BsEmptyState",
-        "BsFloatingField",
-        "BsForm",
-        "BsHeading",
-        "BsInline",
-        "BsInput",
-        "BsLink",
-        "BsList",
-        "BsListItem",
-        "BsMoneyText",
-        "BsPageHeader",
-        "BsRecordActionDialog",
-        "BsSectionSkeleton",
-        "BsStack",
-        "BsStatusBadge",
-        "BsText"
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAccountingPeriodsPage.vue"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "renderedBsComponents": [
+        "BsAccountingPeriodsPage"
+      ],
+      "destination": "packages/ui/src/templates/BsAccountingPeriodsPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/ledger-suit/app/pages/periods.vue",
       "dependencies": [
         "~~/types/database.types"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "accounting-periods"
     },
     {
       "source": "apps/ledger-suit/app/pages/platform-admin.vue",
@@ -1592,41 +1559,20 @@
     {
       "source": "apps/shop-suit/app/pages/appointments/index.vue",
       "kind": "route",
-      "currentSharedTemplates": [],
-      "renderedBsComponents": [
-        "BsButton",
-        "BsCheckbox",
-        "BsDialog",
-        "BsDisclosure",
-        "BsField",
-        "BsFieldGroup",
-        "BsFilterBar",
-        "BsForm",
-        "BsGrid",
-        "BsHeading",
-        "BsInline",
-        "BsInput",
-        "BsLink",
-        "BsList",
-        "BsListItem",
-        "BsPageHeader",
-        "BsPanel",
-        "BsRadio",
-        "BsRecordActionDialog",
-        "BsSelect",
-        "BsStack",
-        "BsStatusBadge",
-        "BsText",
-        "BsTextarea",
-        "BsToolbar"
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAppointmentsPage.vue"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "renderedBsComponents": [
+        "BsAppointmentsPage"
+      ],
+      "destination": "packages/ui/src/templates/BsAppointmentsPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/shop-suit/app/pages/appointments/index.vue",
       "dependencies": [
         "~/types/shopCrmRpc"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "appointments"
     },
     {
       "source": "apps/shop-suit/app/pages/auth/forgot-password.vue",
@@ -2488,6 +2434,9 @@
     "BsSignupPage",
     "BsTaxWorkspacePage",
     "BsCatalogImportPage",
-    "BsOpeningBalancesPage"
+    "BsOpeningBalancesPage",
+    "BsAccountingPeriodsPage",
+    "BsMigrationCenterPage",
+    "BsAppointmentsPage"
   ]
 }

@@ -12,6 +12,7 @@ const props = withDefaults(defineProps<{
   selectedLabel?: string
   emptyLabel?: string
   multiple?: boolean
+  resetAfterSelect?: boolean
   disabled?: boolean
   required?: boolean
   invalid?: boolean
@@ -23,6 +24,7 @@ const props = withDefaults(defineProps<{
   selectedLabel: undefined,
   emptyLabel: undefined,
   multiple: false,
+  resetAfterSelect: false,
   disabled: false,
   required: false,
   invalid: false,
@@ -42,7 +44,7 @@ const { input, selectedFiles, update, click, focus } = useFileSelection(() => pr
   emit('update:modelValue', value)
   emit('select', value)
   emit('change', event)
-})
+}, () => props.resetAfterSelect)
 defineExpose({ nativeElement: input, click, focus })
 const selectedText = computed(() => props.selectedLabel || selectedFiles.value.map(file => file.name).join(', ') || props.emptyLabel)
 </script>

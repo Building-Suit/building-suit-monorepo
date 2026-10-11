@@ -4,6 +4,7 @@ import test from 'node:test'
 
 const migration = await readFile(new URL('../../supabase/migrations/20260928220000_staff_appointments_calendar_queue.sql', import.meta.url), 'utf8')
 const databaseTest = await readFile(new URL('../../supabase/tests/shop_appointments.sql', import.meta.url), 'utf8')
+const template = await readFile(new URL('../../../../packages/ui/src/templates/BsAppointmentsPage.vue', import.meta.url), 'utf8')
 const page = await readFile(new URL('../../app/pages/appointments/index.vue', import.meta.url), 'utf8')
 const shell = await readFile(new URL('../../app/layouts/default.vue', import.meta.url), 'utf8')
 
@@ -40,15 +41,15 @@ test('database regression covers concurrency, permissions, transitions and immut
 test('calendar exposes bilingual responsive day/week and pointer-free queue workflows', () => {
   assert.match(page, /تقويم الفريق/)
   assert.match(page, /Team calendar/)
-  assert.match(page, /view === 'week'/)
+  assert.match(template, /view === 'week'/)
   assert.match(page, /appointment_calendar/)
   assert.match(page, /save_appointment/)
   assert.match(page, /transition_appointment/)
   assert.match(page, /save_staff_schedule/)
   assert.match(page, /walk_in/)
-  assert.match(page, /:columns="view === 'week' \? 7 : 1"/)
-  assert.match(page, /role="status"/)
-  assert.match(page, /role="alert"/)
+  assert.match(template, /:columns="view === 'week' \? 7 : 1"/)
+  assert.match(template, /role="status"/)
+  assert.match(template, /role="alert"/)
   assert.doesNotMatch(page, /draggable|dragstart|drop=/)
   assert.match(shell, /to: '\/appointments'/)
 })

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { BsMigrationCenterCopy, BsMigrationCenterView, BsMigrationCenterCreateForm, BsMigrationCenterChoices } from '@building-suit/ui/types/migrationCenterPresentation'
 import type { Database } from '~~/types/database.types'
 import type { MigrationDepth, MigrationSourceType } from '~~/types/migration-rpc.types'
 import type { MigrationMappingDecision } from '~/composables/useMigrationCenter'
@@ -97,10 +98,8 @@ async function createProject() {
   }
 }
 
-async function selectSource(event: Event) {
-  const file = (event.target as HTMLInputElement).files?.[0]
+async function selectSource(file: File | null) {
   if (file) await act(() => center.uploadSource(file), 'migration.sourceUploaded')
-  ;(event.target as HTMLInputElement).value = ''
 }
 
 function setMappingTarget(decision: MigrationMappingDecision, value: string) {
@@ -108,9 +107,6 @@ function setMappingTarget(decision: MigrationMappingDecision, value: string) {
   decision.target_id = decision.create_reviewed ? '' : value
 }
 
-function onMappingTarget(decision: MigrationMappingDecision, event: Event) {
-  setMappingTarget(decision, (event.target as HTMLSelectElement).value)
-}
 
 function mappingTarget(decision: MigrationMappingDecision) {
   return decision.create_reviewed ? '__create__' : decision.target_id
@@ -133,283 +129,125 @@ function isApplicable(key: string) {
   return operational.tax_applicable
 }
 const ledgerPresentation = useLedgerPresentation()
-</script>
 
+const migrationCopy = computed<BsMigrationCenterCopy>(() => ({
+  ap_title: t('ap.title'),
+  ar_title: t('ar.title'),
+  common_cancel: t('common.cancel'),
+  common_saving: t('common.saving'),
+  migration_allModulesNotApplicable: t('migration.allModulesNotApplicable'),
+  migration_applicable: t('migration.applicable'),
+  migration_approvalAcknowledgement: t('migration.approvalAcknowledgement', { revision: center.review.value?.source_revision ?? 0, date: center.review.value?.cutover_date ?? '' }),
+  migration_approvalBlocked: t('migration.approvalBlocked'),
+  migration_approved: t('migration.approved'),
+  migration_approvedEvidence: center.review.value?.approved_at ? t('migration.approvedEvidence', { time: dateTime(center.review.value.approved_at), revision: center.review.value.source_revision }) : '',
+  migration_chooseOpening: t('migration.chooseOpening'),
+  migration_chooseProject: t('migration.chooseProject'),
+  migration_chooseTarget: t('migration.chooseTarget'),
+  migration_correctionPolicy: t('migration.correctionPolicy'),
+  migration_createProject: t('migration.createProject'),
+  migration_cutoverDate: t('migration.cutoverDate'),
+  migration_depth: t('migration.depth'),
+  migration_depths_current_fiscal_year: t('migration.depths.current_fiscal_year'),
+  migration_depths_fast_cutover: t('migration.depths.fast_cutover'),
+  migration_depths_full_history: t('migration.depths.full_history'),
+  migration_fastCutoverPolicy: t('migration.fastCutoverPolicy'),
+  migration_finalApprove: t('migration.finalApprove'),
+  migration_finalReviewHint: t('migration.finalReviewHint', { revision: center.review.value?.source_revision ?? 0 }),
+  migration_glBalance: t('migration.glBalance'),
+  migration_historyPolicy: t('migration.historyPolicy'),
+  migration_ledgerTarget: t('migration.ledgerTarget'),
+  migration_linkOpening: t('migration.linkOpening'),
+  migration_loadFailed: t('migration.loadFailed'),
+  migration_mappingHint: t('migration.mappingHint'),
+  migration_mappingReview: t('migration.mappingReview'),
+  migration_module: t('migration.module'),
+  migration_moduleDetail: t('migration.moduleDetail'),
+  migration_modulesHint: t('migration.modulesHint'),
+  migration_modulesTitle: t('migration.modulesTitle'),
+  migration_newProject: t('migration.newProject'),
+  migration_noAccess: t('migration.noAccess'),
+  migration_notApplicable: t('migration.notApplicable'),
+  migration_openItemsTemplate: t('migration.openItemsTemplate'),
+  migration_openingBatch: t('migration.openingBatch'),
+  migration_openingHint: t('migration.openingHint'),
+  migration_openingLinkedStatus: t('migration.openingLinkedStatus', { status: t(`opening.status.${center.context.value?.opening_batch?.status}`) }),
+  migration_openingTemplate: t('migration.openingTemplate'),
+  migration_operationalTemplate: t('migration.operationalTemplate'),
+  migration_originalRows: t('migration.originalRows', { count: sourceRows.value.length }),
+  migration_prepareOpening: t('migration.prepareOpening'),
+  migration_progress: t('migration.progress'),
+  migration_project: t('migration.project'),
+  migration_projectName: t('migration.projectName'),
+  migration_reconciled: t('migration.reconciled'),
+  migration_reconciliations: t('migration.reconciliations'),
+  migration_resolution: t('migration.resolution'),
+  migration_reviewNote: t('migration.reviewNote'),
+  migration_reviewedCreation: t('migration.reviewedCreation'),
+  migration_rowIssues: t('migration.rowIssues'),
+  migration_rowValid: t('migration.rowValid'),
+  migration_sections_accounts: t('migration.sections.accounts'),
+  migration_sections_final_review: t('migration.sections.final_review'),
+  migration_sections_opening: t('migration.sections.opening'),
+  migration_sections_source: t('migration.sections.source'),
+  migration_sourceHint: t('migration.sourceHint'),
+  migration_sourceKey: t('migration.sourceKey'),
+  migration_sourceKind: t('migration.sourceKind'),
+  migration_sourceName: t('migration.sourceName'),
+  migration_sourcePreview: t('migration.sourcePreview'),
+  migration_sourceTemplate: t('migration.sourceTemplate'),
+  migration_sourceType: t('migration.sourceType'),
+  migration_sourceTypes_accountant_paper_workbook: t('migration.sourceTypes.accountant_paper_workbook'),
+  migration_sourceTypes_excel_csv: t('migration.sourceTypes.excel_csv'),
+  migration_sourceTypes_other_system_export: t('migration.sourceTypes.other_system_export'),
+  migration_subtitle: t('migration.subtitle'),
+  migration_title: t('migration.title'),
+  migration_uploadSource: t('migration.uploadSource'),
+  migration_validateMapping: t('migration.validateMapping'),
+  nav_bankReconciliation: t('nav.bankReconciliation'),
+  nav_fixedAssets: t('nav.fixedAssets'),
+  nav_inventoryAccounting: t('nav.inventoryAccounting'),
+  nav_reports: t('nav.reports'),
+  nav_taxVat: t('nav.taxVat'),
+  opening_creditTotal: t('opening.creditTotal'),
+  opening_debitTotal: t('opening.debitTotal'),
+  opening_difference: t('opening.difference'),
+  pageContext_label: t('pageContext.label'),
+  sourceHashLabel: 'SHA-256',
+}))
+const migrationCreateForm = computed<BsMigrationCenterCreateForm>({ get: () => ({ ...createForm }), set: value => {
+  createForm.name = value.name; createForm.cutoverDate = value.cutoverDate
+  if (['excel_csv', 'other_system_export', 'accountant_paper_workbook'].includes(value.sourceType)) createForm.sourceType = value.sourceType as MigrationSourceType
+  if (['fast_cutover', 'current_fiscal_year', 'full_history'].includes(value.depth)) createForm.depth = value.depth as MigrationDepth
+} })
+function displayString(value: unknown): string { return typeof value === 'string' ? value : '' }
+function reviewedTarget(row: Record<string, unknown>): string {
+  const proposed = row.proposed_record
+  const name = proposed && typeof proposed === 'object' && 'name' in proposed ? displayString(proposed.name) : ''
+  return displayString(row.target_account_id) || displayString(row.target_counterparty_id) || name
+}
+const migrationView = computed<BsMigrationCenterView>(() => ({
+  context: ledgerPresentation.context(undefined, undefined, center.context.value?.project.cutover_date), contextLabel: t('pageContext.label'), canRead: can('migrations.read'), canManage: can('migrations.manage'), available: Boolean(center.context.value), loading: center.pending.value === 'context', error: Boolean(center.error.value), busy: Boolean(center.pending.value), createDirty: createDirty.value, createPending: center.pending.value === 'create', createError: createError.value, projectNameMaxLength: 160, reviewNoteMinLength: 8, reviewNoteMaxLength: 1000,
+  progress: progress.value.map(section => ({ key: section.key, state: section.state, label: t(`migration.sections.${section.key}`), description: t(`migration.states.${section.state}`), tone: section.state === 'complete' ? 'success' : section.state === 'warning' ? 'warning' : section.state === 'not_applicable' ? 'muted' : 'danger' })), canUpload: can('migrations.manage') && !center.context.value?.approval,
+  source: center.context.value?.sources[0] ? { name: center.context.value.sources[0].filename, revision: t('migration.revision', { revision: center.context.value.sources[0].revision }), hash: center.context.value.sources[0].content_sha256 } : null,
+  sourceRows: sourceRows.value.map(row => ({ sourceRow: row.source_row, kind: t(`migration.kinds.${row.raw_payload.source_kind}`), key: row.raw_payload.source_key ?? '', name: row.raw_payload.source_name ?? '', issues: rowIssues(row.source_row).join(', ') })), staged: Boolean(center.context.value?.project.current_staging_batch_id),
+  mappings: mappingDecisions.value.map(decision => ({ id: `${decision.source_kind}:${decision.source_key}`, kind: t(`migration.kinds.${decision.source_kind}`), sourceKey: decision.source_key, sourceName: decision.source_name, target: mappingTarget(decision), choices: [...mappingOptions(decision).map(option => ({ value: option.id, label: option.label })), ...(decision.source_kind !== 'account' ? [{ value: '__create__', label: t('migration.reviewedCreation') }] : [])] })), mappingDisabled: !mappingReady.value || Boolean(center.pending.value), mappingLabel: center.pending.value === 'mapping' ? t('common.saving') : t('migration.validateMapping'), mappingNote: center.context.value?.mapping_revisions[0]?.review_note ?? '',
+  reviewedMappings: (center.context.value?.mapping_entries ?? []).map(row => ({ id: displayString(row.id), kind: displayString(row.source_kind), sourceKey: displayString(row.source_key), resolution: displayString(row.resolution), target: reviewedTarget(row) })), openingLinked: Boolean(center.context.value?.project.opening_balance_batch_id), openingLinkDisabled: !selectedOpeningId.value || Boolean(center.pending.value),
+  modules: center.context.value?.operational_batches[0] ? ['open_items', 'assets', 'bank', 'inventory', 'tax'].map(key => ({ id: key, label: t(`migration.moduleNames.${key}`), status: t(isApplicable(key) ? 'migration.applicable' : 'migration.notApplicable') })) : [], canMarkModules: center.context.value?.project.status === 'validated' && can('migrations.manage'),
+  review: center.review.value ? { debit: amount(openingReview.value?.debit_total_minor), credit: amount(openingReview.value?.credit_total_minor), difference: amount(openingReview.value?.difference_minor), variances: center.review.value.variances.map((row, index) => ({ id: String(index), module: row.module, detail: amount(row.detail_minor), gl: amount(row.gl_minor), variance: amount(row.variance_minor), tone: row.variance_minor === '0' ? 'success' : 'danger' })), errors: center.review.value.errors.map(code => t(`migration.errors.${code}`)), approved: center.review.value.approved, links: [{ to: '/reports', label: t('nav.reports') }, ...(isApplicable('open_items') ? [{ to: '/receivables', label: t('ar.title') }, { to: '/payables', label: t('ap.title') }] : []), ...(['bank', 'assets', 'inventory', 'tax'] as const).filter(isApplicable).map(key => ({ to: { bank: '/bank-reconciliation', assets: '/fixed-assets', inventory: '/inventory-accounting', tax: '/tax-vat' }[key], label: t({ bank: 'nav.bankReconciliation', assets: 'nav.fixedAssets', inventory: 'nav.inventoryAccounting', tax: 'nav.taxVat' }[key]) }))] } : null,
+  approveDisabled: !canApprove.value || Boolean(center.pending.value), approveLabel: center.pending.value === 'approve' ? t('common.saving') : t('migration.finalApprove'), openingTo: '/opening-balances',
+}))
+const migrationChoices = computed<BsMigrationCenterChoices>(() => ({ projects: projectOptions.value.map(option => ({ value: option.id, label: option.label })), sourceTypes: ['excel_csv', 'other_system_export', 'accountant_paper_workbook'].map(value => ({ value, label: t(`migration.sourceTypes.${value}`) })), depths: ['fast_cutover', 'current_fiscal_year', 'full_history'].map(value => ({ value, label: t(`migration.depths.${value}`) })), openings: (center.context.value?.opening_candidates ?? []).map(batch => ({ value: batch.id, label: `${batch.source_filename} · ${t(`opening.status.${batch.status}`)}` })) }))
+function openMigrationProject() { createError.value = ''; createOpen.value = true }
+function mapMigrationTarget(id: string, value: string) { const decision = mappingDecisions.value.find(row => `${row.source_kind}:${row.source_key}` === id); if (decision) setMappingTarget(decision, value) }
+function downloadMigrationSource() { downloadCsv(`migration-source-${locale.value}.csv`, migrationSourceTemplate(locale.value)) }
+function downloadMigrationOpenItems() { downloadCsv('migration-open-items.csv', migrationOpenItemsTemplate()) }
+function downloadMigrationOperational() { downloadCsv('migration-operational-registers.csv', migrationOperationalTemplate()) }
+async function reviewMigrationMappings() { await act(() => center.reviewMappings(mappingDecisions.value, reviewNote.value), 'migration.mappingSaved') }
+async function linkMigrationOpening() { await act(() => center.linkOpeningBalance(selectedOpeningId.value), 'migration.openingLinked') }
+async function markMigrationModules() { await act(() => center.markModulesNotApplicable(), 'migration.modulesSaved') }
+async function approveMigration() { await act(() => center.approve(), 'migration.approvalSuccess') }
+</script>
 <template>
-  <BsStack data-migration-center gap="lg">
-    <BsPageHeader
-      :title="t('migration.title')"
-      :subtitle="t('migration.subtitle')"
-      :context="ledgerPresentation.context(undefined, undefined, center.context.value?.project.cutover_date)"
-      :context-label="ledgerPresentation.t('pageContext.label')"
-    />
-    <BsText v-if="!can('migrations.read')" tone="muted">{{ t('migration.noAccess') }}</BsText>
-    <template v-else>
-      <BsCard aria-labelledby="migration-projects" as="section" padding="md">
-        <BsStack gap="md">
-          <BsInline gap="md" :wrap="true" align="end" justify="between">
-            <BsFloatingField :label="t('migration.project')">
-              <BsSelect
-                id="migration-project"
-                v-model="selectedProjectId"
-                :label="t('migration.project')"
-                :placeholder="t('migration.chooseProject')"
-                :options="projectOptions"
-                option-label="label"
-                option-value="id"
-              />
-            </BsFloatingField>
-            <BsButton v-if="can('migrations.manage')" type="button" variant="primary" @click="createError = ''; createOpen = true">{{ t('migration.newProject') }}</BsButton>
-          </BsInline>
-        </BsStack>
-      </BsCard>
-      <BsRecordActionDialog
-        v-if="createOpen"
-        v-model:visible="createOpen"
-        :title="t('migration.newProject')"
-        :dirty="createDirty"
-        :pending="center.pending.value === 'create'"
-        :error="createError"
-        size="lg"
-        :submit-label="t('migration.createProject')"
-        :cancel-label="t('common.cancel')"
-        @submit="createProject"
-      >
-        <BsGrid :columns="2" gap="md">
-          <BsFloatingField :label="t('migration.projectName')">
-            <BsInput v-model="createForm.name" required maxlength="160" />
-          </BsFloatingField>
-          <BsFloatingField :label="t('migration.sourceType')">
-            <BsSelect v-model="createForm.sourceType" native>
-              <BsSelectOption value="excel_csv">{{ t('migration.sourceTypes.excel_csv') }}</BsSelectOption>
-              <BsSelectOption value="other_system_export">{{ t('migration.sourceTypes.other_system_export') }}</BsSelectOption>
-              <BsSelectOption value="accountant_paper_workbook">{{ t('migration.sourceTypes.accountant_paper_workbook') }}</BsSelectOption>
-            </BsSelect>
-          </BsFloatingField>
-          <BsFloatingField :label="t('migration.cutoverDate')">
-            <BsInput v-model="createForm.cutoverDate" type="date" required />
-          </BsFloatingField>
-          <BsFloatingField :label="t('migration.depth')">
-            <BsSelect v-model="createForm.depth" native>
-              <BsSelectOption value="fast_cutover">{{ t('migration.depths.fast_cutover') }}</BsSelectOption>
-              <BsSelectOption value="current_fiscal_year">{{ t('migration.depths.current_fiscal_year') }}</BsSelectOption>
-              <BsSelectOption value="full_history">{{ t('migration.depths.full_history') }}</BsSelectOption>
-            </BsSelect>
-          </BsFloatingField>
-          <BsText size="sm" tone="muted">{{ t('migration.fastCutoverPolicy') }}</BsText>
-        </BsGrid>
-      </BsRecordActionDialog>
-      <BsText v-if="center.error.value" role="alert" tone="danger">{{ t('migration.loadFailed') }}</BsText>
-      <BsSectionSkeleton v-else-if="center.pending.value === 'context'" variant="table" :rows="6" />
-      <template v-else-if="center.context.value">
-        <BsCard aria-labelledby="migration-progress" as="section" padding="md">
-          <BsHeading id="migration-progress" :level="2" size="h2">{{ t('migration.progress') }}</BsHeading>
-          <BsList data-migration-progress :ordered="true" marker="none">
-            <BsListItem v-for="(section, index) in progress" :key="section.key" :data-section="section.key" :data-state="section.state">
-              <BsText as="span" size="xs" tone="muted">{{ index + 1 }}</BsText>
-              <BsText emphasis="semibold">{{ t(`migration.sections.${section.key}`) }}</BsText>
-              <BsText size="sm" :tone="section.state === 'complete' ? 'success' : section.state === 'warning' ? 'warning' : section.state === 'not_applicable' ? 'muted' : 'danger'">{{ t(`migration.states.${section.state}`) }}</BsText>
-            </BsListItem>
-          </BsList>
-        </BsCard>
-        <BsCard aria-labelledby="migration-source" as="section" padding="md">
-          <BsStack gap="md">
-            <BsBox>
-              <BsHeading id="migration-source" :level="2" size="h2">{{ t('migration.sections.source') }}</BsHeading>
-              <BsText size="sm" tone="muted">{{ t('migration.sourceHint') }}</BsText>
-            </BsBox>
-            <BsInline gap="sm" :wrap="true">
-              <BsButton type="button" size="sm" @click="downloadCsv(`migration-source-${locale}.csv`, migrationSourceTemplate(locale))">{{ t('migration.sourceTemplate') }}</BsButton>
-              <BsButton type="button" size="sm" @click="downloadCsv('migration-open-items.csv', migrationOpenItemsTemplate())">{{ t('migration.openItemsTemplate') }}</BsButton>
-              <BsButton type="button" size="sm" @click="downloadCsv('migration-operational-registers.csv', migrationOperationalTemplate())">{{ t('migration.operationalTemplate') }}</BsButton>
-              <BsLink to="/opening-balances">{{ t('migration.openingTemplate') }}</BsLink>
-            </BsInline>
-            <BsFieldLabel v-if="can('migrations.manage') && !center.context.value.approval" for="migration-source-file">{{ t('migration.uploadSource') }}</BsFieldLabel>
-            <BsFileInput id="migration-source-file" accept=".csv,text/csv" :disabled="Boolean(center.pending.value)" bare @change="selectSource"  hide-control />
-            <BsBox v-if="center.context.value.sources[0]" padding="md" surface="muted" radius="control">
-              <BsText emphasis="semibold">{{ center.context.value.sources[0].filename }} · {{ t('migration.revision', { revision: center.context.value.sources[0].revision }) }}</BsText>
-              <BsText tone="muted">SHA-256: {{ center.context.value.sources[0].content_sha256 }}</BsText>
-              <BsText>{{ t('migration.originalRows', { count: sourceRows.length }) }}</BsText>
-            </BsBox>
-            <BsDataTable
-              v-if="sourceRows.length"
-              :value="sourceRows"
-              row-key="source_row"
-              :label="t('migration.sourcePreview')"
-              :columns="[{ key: 'source_row', field: 'source_row', header: '#' }, { key: 'column2', header: t('migration.sourceKind') }, { key: 'column3', header: t('migration.sourceKey') }, { key: 'column4', header: t('migration.sourceName') }, { key: 'column5', header: t('migration.rowIssues') }]"
-            >
-              <template #cell-column2="{ row: data }">{{ t(`migration.kinds.${data.raw_payload.source_kind}`) }}</template>
-              <template #cell-column3="{ row: data }">{{ data.raw_payload.source_key }}</template>
-              <template #cell-column4="{ row: data }">{{ data.raw_payload.source_name }}</template>
-              <template #cell-column5="{ row: data }">
-                <BsText v-if="rowIssues(data.source_row).length" as="span" tone="danger">{{ rowIssues(data.source_row).join(', ') }}</BsText>
-                <BsText v-else-if="center.context.value?.project.current_staging_batch_id" as="span" tone="success">{{ t('migration.rowValid') }}</BsText>
-                <BsText v-else as="span">—</BsText>
-              </template>
-            </BsDataTable>
-          </BsStack>
-        </BsCard>
-        <BsCard v-if="mappingDecisions.length" aria-labelledby="migration-mapping" as="section" padding="md">
-          <BsStack gap="md">
-            <BsBox>
-              <BsHeading id="migration-mapping" :level="2" size="h2">{{ t('migration.sections.accounts') }}</BsHeading>
-              <BsText size="sm" tone="muted">{{ t('migration.mappingHint') }}</BsText>
-            </BsBox>
-            <BsDataTable
-              :value="mappingDecisions"
-              row-key="source_key"
-              :label="t('migration.mappingReview')"
-              :columns="[{ key: 'column1', header: t('migration.sourceKind') }, { key: 'source_key', field: 'source_key', header: t('migration.sourceKey') }, { key: 'source_name', field: 'source_name', header: t('migration.sourceName') }, { key: 'column4', header: t('migration.ledgerTarget') }]"
-            >
-              <template #cell-column1="{ row: data }">{{ t(`migration.kinds.${data.source_kind}`) }}</template>
-              <template #cell-column4="{ row: data }">
-                <BsSelect :value="mappingTarget(data)" native @change="onMappingTarget(data, $event)">
-                  <BsSelectOption value="">{{ t('migration.chooseTarget') }}</BsSelectOption>
-                  <BsSelectOption v-for="option in mappingOptions(data)" :key="option.id" :value="option.id">{{ option.label }}</BsSelectOption>
-                  <BsSelectOption v-if="data.source_kind !== 'account'" value="__create__">{{ t('migration.reviewedCreation') }}</BsSelectOption>
-                </BsSelect>
-              </template>
-            </BsDataTable>
-            <BsFloatingField :label="t('migration.reviewNote')">
-              <BsTextarea v-model="reviewNote" minlength="8" maxlength="1000" />
-            </BsFloatingField>
-            <BsButton
-              type="button"
-              :disabled="!mappingReady || Boolean(center.pending.value)"
-              variant="primary"
-              @click="act(() => center.reviewMappings(mappingDecisions, reviewNote), 'migration.mappingSaved')"
-            >{{ center.pending.value === 'mapping' ? t('common.saving') : t('migration.validateMapping') }}</BsButton>
-          </BsStack>
-        </BsCard>
-        <BsCard v-else-if="center.context.value.mapping_entries.length" aria-labelledby="migration-mapping-reviewed" as="section" padding="md">
-          <BsStack gap="md">
-            <BsBox>
-              <BsHeading id="migration-mapping-reviewed" :level="2" size="h2">{{ t('migration.mappingReview') }}</BsHeading>
-              <BsText size="sm" tone="muted">{{ center.context.value.mapping_revisions[0]?.review_note }}</BsText>
-            </BsBox>
-            <BsDataTable
-              :value="center.context.value.mapping_entries"
-              row-key="id"
-              :label="t('migration.mappingReview')"
-              :columns="[{ key: 'source_kind', field: 'source_kind', header: t('migration.sourceKind') }, { key: 'source_key', field: 'source_key', header: t('migration.sourceKey') }, { key: 'resolution', field: 'resolution', header: t('migration.resolution') }, { key: 'column4', header: t('migration.ledgerTarget') }]"
-            >
-              <template #cell-column4="{ row: data }">{{ data.target_account_id || data.target_counterparty_id || data.proposed_record?.name }}</template>
-            </BsDataTable>
-          </BsStack>
-        </BsCard>
-        <BsCard aria-labelledby="migration-opening" as="section" padding="md">
-          <BsStack gap="md">
-            <BsBox>
-              <BsHeading id="migration-opening" :level="2" size="h2">{{ t('migration.sections.opening') }}</BsHeading>
-              <BsText size="sm" tone="muted">{{ t('migration.openingHint') }}</BsText>
-            </BsBox>
-            <BsInline v-if="!center.context.value.project.opening_balance_batch_id" gap="md" :wrap="true" align="end">
-              <BsFloatingField :label="t('migration.openingBatch')">
-                <BsSelect v-model="selectedOpeningId" native>
-                  <BsSelectOption value="">{{ t('migration.chooseOpening') }}</BsSelectOption>
-                  <BsSelectOption v-for="batch in center.context.value.opening_candidates" :key="batch.id" :value="batch.id">{{ batch.source_filename }} · {{ t(`opening.status.${batch.status}`) }}</BsSelectOption>
-                </BsSelect>
-              </BsFloatingField>
-              <BsButton
-                type="button"
-                :disabled="!selectedOpeningId || Boolean(center.pending.value)"
-                variant="primary"
-                @click="act(() => center.linkOpeningBalance(selectedOpeningId), 'migration.openingLinked')"
-              >{{ t('migration.linkOpening') }}</BsButton>
-              <BsLink to="/opening-balances">{{ t('migration.prepareOpening') }}</BsLink>
-            </BsInline>
-            <BsText v-else size="sm">{{ t('migration.openingLinkedStatus', { status: t(`opening.status.${center.context.value.opening_batch?.status}`) }) }}</BsText>
-          </BsStack>
-        </BsCard>
-        <BsCard aria-labelledby="migration-modules" as="section" padding="md">
-          <BsStack gap="md">
-            <BsBox>
-              <BsHeading id="migration-modules" :level="2" size="h2">{{ t('migration.modulesTitle') }}</BsHeading>
-              <BsText size="sm" tone="muted">{{ t('migration.modulesHint') }}</BsText>
-            </BsBox>
-            <BsGrid v-if="center.context.value.operational_batches[0]" :columns="5" gap="sm">
-              <BsText v-for="key in ['open_items','assets','bank','inventory','tax']" :key="key" size="sm"><BsText as="span" emphasis="semibold">{{ t(`migration.moduleNames.${key}`) }}</BsText><BsLineBreak />{{ isApplicable(key) ? t('migration.applicable') : t('migration.notApplicable') }}</BsText>
-            </BsGrid>
-            <BsButton
-              v-else-if="center.context.value.project.status === 'validated' && can('migrations.manage')"
-              type="button"
-              :disabled="Boolean(center.pending.value)"
-              @click="act(() => center.markModulesNotApplicable(), 'migration.modulesSaved')"
-            >{{ t('migration.allModulesNotApplicable') }}</BsButton>
-            <BsText size="sm">{{ t('migration.historyPolicy') }}</BsText>
-          </BsStack>
-        </BsCard>
-        <BsCard v-if="center.review.value" aria-labelledby="migration-final-review" data-final-review as="section" padding="md">
-          <BsStack gap="md">
-            <BsBox>
-              <BsHeading id="migration-final-review" :level="2" size="h2">{{ t('migration.sections.final_review') }}</BsHeading>
-              <BsText size="sm" tone="muted">{{ t('migration.finalReviewHint', { revision: center.review.value.source_revision }) }}</BsText>
-            </BsBox>
-            <BsGrid :columns="3" gap="md">
-              <BsText>
-                <BsText as="span" tone="muted">{{ t('opening.debitTotal') }}</BsText>
-                <BsLineBreak />
-                <BsText as="strong">{{ amount(openingReview?.debit_total_minor) }}</BsText>
-              </BsText>
-              <BsText>
-                <BsText as="span" tone="muted">{{ t('opening.creditTotal') }}</BsText>
-                <BsLineBreak />
-                <BsText as="strong">{{ amount(openingReview?.credit_total_minor) }}</BsText>
-              </BsText>
-              <BsText>
-                <BsText as="span" tone="muted">{{ t('opening.difference') }}</BsText>
-                <BsLineBreak />
-                <BsText as="strong">{{ amount(openingReview?.difference_minor) }}</BsText>
-              </BsText>
-            </BsGrid>
-            <BsDataTable
-              v-if="center.review.value.variances.length"
-              :value="center.review.value.variances"
-              :label="t('migration.reconciliations')"
-              :columns="[{ key: 'module', field: 'module', header: t('migration.module') }, { key: 'column2', header: t('migration.moduleDetail') }, { key: 'column3', header: t('migration.glBalance') }, { key: 'column4', header: t('opening.difference') }]"
-            >
-              <template #cell-column2="{ row: data }">{{ amount(data.detail_minor) }}</template>
-              <template #cell-column3="{ row: data }">{{ amount(data.gl_minor) }}</template>
-              <template #cell-column4="{ row: data }">
-                <BsText as="span" :tone="data.variance_minor === '0' ? 'success' : 'danger'">{{ amount(data.variance_minor) }}</BsText>
-              </template>
-            </BsDataTable>
-            <BsBox v-if="center.review.value.errors.length" role="alert">
-              <BsText emphasis="semibold">{{ t('migration.approvalBlocked') }}</BsText>
-              <BsList :ordered="false" marker="disc">
-                <BsListItem v-for="code in center.review.value.errors" :key="code">{{ t(`migration.errors.${code}`) }}</BsListItem>
-              </BsList>
-            </BsBox>
-            <BsBox v-else role="status" padding="md" radius="control">{{ t('migration.reconciled') }}</BsBox>
-            <BsBox v-if="center.review.value.approved" data-cutover-approved padding="lg" border radius="control">
-              <BsText tone="success" emphasis="bold">{{ t('migration.approved') }}</BsText>
-              <BsText size="sm">{{ t('migration.approvedEvidence', { time: dateTime(center.review.value.approved_at!), revision: center.review.value.source_revision }) }}</BsText>
-              <BsInline gap="sm" :wrap="true">
-                <BsLink to="/reports">{{ t('nav.reports') }}</BsLink>
-                <BsLink v-if="isApplicable('open_items')" to="/receivables">{{ t('ar.title') }}</BsLink>
-                <BsLink v-if="isApplicable('open_items')" to="/payables">{{ t('ap.title') }}</BsLink>
-                <BsLink v-if="isApplicable('bank')" to="/bank-reconciliation">{{ t('nav.bankReconciliation') }}</BsLink>
-                <BsLink v-if="isApplicable('assets')" to="/fixed-assets">{{ t('nav.fixedAssets') }}</BsLink>
-                <BsLink v-if="isApplicable('inventory')" to="/inventory-accounting">{{ t('nav.inventoryAccounting') }}</BsLink>
-                <BsLink v-if="isApplicable('tax')" to="/tax-vat">{{ t('nav.taxVat') }}</BsLink>
-              </BsInline>
-            </BsBox>
-            <template v-else>
-              <BsFieldLabel>
-                <BsCheckbox v-model="approvalAcknowledged" bare />
-                <BsText as="span">{{ t('migration.approvalAcknowledgement', { revision: center.review.value.source_revision, date: center.review.value.cutover_date }) }}</BsText>
-              </BsFieldLabel>
-              <BsText size="sm" tone="muted">{{ t('migration.correctionPolicy') }}</BsText>
-              <BsButton
-                type="button"
-                :disabled="!canApprove || Boolean(center.pending.value)"
-                variant="primary"
-                @click="act(() => center.approve(), 'migration.approvalSuccess')"
-              >{{ center.pending.value === 'approve' ? t('common.saving') : t('migration.finalApprove') }}</BsButton>
-            </template>
-          </BsStack>
-        </BsCard>
-      </template>
-    </template>
-  </BsStack>
+  <BsMigrationCenterPage v-model:create-open="createOpen" v-model:create-form="migrationCreateForm" v-model:selected-project-id="selectedProjectId" v-model:selected-opening-id="selectedOpeningId" v-model:review-note="reviewNote" v-model:approval-acknowledged="approvalAcknowledged" :copy="migrationCopy" :view="migrationView" :choices="migrationChoices" @open-create="openMigrationProject" @create-project="createProject" @download-source="downloadMigrationSource" @download-open-items="downloadMigrationOpenItems" @download-operational="downloadMigrationOperational" @file="selectSource" @map-target="mapMigrationTarget" @review-mappings="reviewMigrationMappings" @link-opening="linkMigrationOpening" @mark-modules="markMigrationModules" @approve="approveMigration" />
 </template>
