@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { shopCommandErrorMessage } from '~/utils/shopCommandErrorMessage'
+import { saleCopy } from '~/utils/saleCopy'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import type { SaleReceiptSnapshot } from '~/types/receipt'
 
@@ -172,7 +174,7 @@ const { data: correctionState, pending: correctionLoading, error: correctionLoad
 )
 
 function readableError(message?: string) {
-  if (message?.includes('INSUFFICIENT_STOCK')) return t('sales.insufficientStock')
+  if (message?.includes('INSUFFICIENT_STOCK')) return saleCopy(t, 'sales.insufficientStock', sale.value?.lines ?? [])
   if (message?.includes('OUTSTANDING_SALE_REQUIRES_CUSTOMER')) return t('sales.customerRequired')
   if (message?.includes('PAYMENT_OVERPAYMENT_REJECTED')) return t('payments.overpayment')
   if (message?.includes('PAYMENT_ADJUSTMENT_EXCEEDS_EFFECTIVE_AMOUNT')) return t('payments.adjustmentExceeded')
@@ -198,7 +200,7 @@ async function submitCorrection() {
   if (!currentId.value || !currentLocationId.value || !sale.value
     || !correctionState.value?.canCorrect || correctionPending.value
     || correctionReason.value.trim().length < 2) return
-  if (!await confirmation.ask(t('saleCorrections.confirm'))) return
+  if (!await confirmation.ask(saleCopy(t, 'saleCorrections.confirm', sale.value?.lines ?? []))) return
   correctionPending.value = true
   actionError.value = ''
   correctionRequestId.value ??= crypto.randomUUID()
@@ -225,7 +227,7 @@ async function submitCorrection() {
     pushToast({ tone: 'success', title: t('saleCorrections.saved') })
   }
   catch (correctionError) {
-    actionError.value = readableError(correctionError instanceof Error ? correctionError.message : undefined)
+    actionError.value = readableError(shopCommandErrorMessage(correctionError))
   }
   finally { correctionPending.value = false }
 }
@@ -303,14 +305,14 @@ async function submitPayment() {
     await Promise.all([refresh(), refreshReceipt(), refreshNuxtData('shop-data:sales'), refreshNuxtData('shop-data:customer-statement')])
     pushToast({ tone: 'success', title: t('payments.saved') })
   }
-  catch (paymentError) { actionError.value = readableError(paymentError instanceof Error ? paymentError.message : undefined) }
+  catch (paymentError) { actionError.value = readableError(shopCommandErrorMessage(paymentError)) }
   finally { paymentPending.value = false }
 }
 
 async function issue() {
   if (!currentId.value || !currentLocationId.value || !sale.value || sale.value.status !== 'draft' || !sale.value.canIssue || issuing.value) return
   if (!sale.value.client_id) { actionError.value = t('sales.customerRequired'); return }
-  if (!await confirmation.ask(t('sales.issueConfirm'))) return
+  if (!await confirmation.ask(saleCopy(t, 'sales.issueConfirm', sale.value?.lines ?? []))) return
   issuing.value = true
   actionError.value = ''
   issueRequestId.value ??= crypto.randomUUID()
@@ -329,9 +331,9 @@ async function issue() {
       refreshNuxtData('shop-data:inventory-overview'),
       refreshNuxtData('shop-data:recent-invoices'),
     ])
-    pushToast({ tone: 'success', title: t('sales.issuedSuccess') })
+    pushToast({ tone: 'success', title: saleCopy(t, 'sales.issuedSuccess', sale.value?.lines ?? []) })
   }
-  catch (issueError) { actionError.value = readableError(issueError instanceof Error ? issueError.message : undefined) }
+  catch (issueError) { actionError.value = readableError(shopCommandErrorMessage(issueError)) }
   finally { issuing.value = false }
 }
 
@@ -394,6 +396,6 @@ function lineMovements(lineId: string) { return sale.value?.movements.filter(mov
 
     <BsRecordActionDialog v-model:visible="paymentDialogOpen" :title="paymentDialog ? t(`payments.${paymentDialog}Title`) : ''" :dirty="paymentDirty" :pending="paymentPending" :error="actionError" :submit-label="t('payments.save')" :cancel-label="t('sales.cancel')" @submit="submitPayment"><label class="space-y-2 text-sm font-bold">{{ t('payments.amount') }}<input v-model.number="paymentAmount" type="number" min="0.01" step="0.01" required class="ls-input"></label><label class="space-y-2 text-sm font-bold">{{ t('payments.date') }}<input v-model="paymentDate" type="date" required class="ls-input"></label><label v-if="paymentDialog !== 'reversal'" class="space-y-2 text-sm font-bold">{{ t('payments.method') }}<select v-model="paymentMethod" class="ls-select"><option v-for="method in ['cash','bank_transfer','card','wallet','cheque','other']" :key="method" :value="method">{{ t(`payments.methods.${method}`) }}</option></select></label><label v-if="paymentDialog !== 'reversal'" class="space-y-2 text-sm font-bold">{{ t('payments.reference') }}<input v-model="paymentReference" maxlength="200" class="ls-input"></label><label v-if="paymentDialog !== 'receipt'" class="space-y-2 text-sm font-bold sm:col-span-2">{{ t('payments.reason') }}<textarea v-model="paymentReason" minlength="2" maxlength="1000" required rows="3" class="ls-input" /></label></BsRecordActionDialog>
 
-    <BsRecordActionDialog v-model:visible="correctionOpen" :title="t('saleCorrections.dialogTitle')" :dirty="correctionDirty" :pending="correctionPending" :error="actionError" :submit-label="t('saleCorrections.submit')" :cancel-label="t('sales.cancel')" submit-tone="danger" @submit="submitCorrection"><p class="rounded-xl bg-[var(--bs-status-warning-bg)] p-3 text-sm sm:col-span-2">{{ t('saleCorrections.warning') }}</p><label class="space-y-2 text-sm font-bold">{{ t('saleCorrections.date') }}<input v-model="correctionDate" type="date" required class="ls-input"></label><label class="space-y-2 text-sm font-bold">{{ t('saleCorrections.reference') }}<input v-model="correctionReference" maxlength="200" class="ls-input"></label><label class="space-y-2 text-sm font-bold sm:col-span-2">{{ t('saleCorrections.reason') }}<textarea v-model="correctionReason" minlength="2" maxlength="1000" required rows="4" class="ls-input" /></label></BsRecordActionDialog>
+    <BsRecordActionDialog v-model:visible="correctionOpen" :title="t('saleCorrections.dialogTitle')" :dirty="correctionDirty" :pending="correctionPending" :error="actionError" :submit-label="t('saleCorrections.submit')" :cancel-label="t('sales.cancel')" submit-tone="danger" @submit="submitCorrection"><p class="rounded-xl bg-[var(--bs-status-warning-bg)] p-3 text-sm sm:col-span-2">{{ saleCopy(t, 'saleCorrections.warning', sale?.lines ?? []) }}</p><label class="space-y-2 text-sm font-bold">{{ t('saleCorrections.date') }}<input v-model="correctionDate" type="date" required class="ls-input"></label><label class="space-y-2 text-sm font-bold">{{ t('saleCorrections.reference') }}<input v-model="correctionReference" maxlength="200" class="ls-input"></label><label class="space-y-2 text-sm font-bold sm:col-span-2">{{ t('saleCorrections.reason') }}<textarea v-model="correctionReason" minlength="2" maxlength="1000" required rows="4" class="ls-input" /></label></BsRecordActionDialog>
   </div>
 </template>

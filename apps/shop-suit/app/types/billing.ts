@@ -12,11 +12,11 @@ export type BillingSubmission = {
   requestedPlanId: string
   requestedPlanSlug: string
   requestedPlanName: string
-  planVariant: 'standard' | 'multi_2' | 'multi_3' | null
+  planVariant: 'standard' | 'multi_2' | 'multi_3' | 'private_offer' | null
   billingInterval: 'monthly' | 'quarterly' | 'annual'
   listPriceAmount: number
   effectivePriceAmount: number
-  priceSource: 'catalog' | 'override'
+  priceSource: 'catalog' | 'override' | 'private_offer'
   transferDate: string
   transferReference: string
   reviewReason: string | null
@@ -52,12 +52,12 @@ export type ShopBilling = {
     planId: string
     planSlug: string
     planName: string
-    planVariant: 'standard' | 'multi_2' | 'multi_3' | null
+    planVariant: 'standard' | 'multi_2' | 'multi_3' | 'private_offer' | null
     variantName: string | null
     priceAmount: number
     listPriceAmount: number
     effectivePriceAmount: number
-    priceSource: 'catalog' | 'override'
+    priceSource: 'catalog' | 'override' | 'private_offer'
     priceOverrideId: string | null
     priceOverrideReason: string | null
     priceOverrideEffectiveFrom: string | null
@@ -97,6 +97,12 @@ export type ShopBilling = {
 export type PlatformBillingQueueItem = BillingSubmission & {
   shopId: string
   shopName: string
+  resourceLimits: PlanResourceLimits
+  privateOfferId: string | null
+  entitlements: Record<string, unknown> | null
+  commercialPeriodId: string | null
+  subscriptionId: string | null
+  evidence: Array<{ id: string; originalFileName: string; mimeType: string; sizeBytes: number; sha256: string; retainedUntil: string }>
   currentPlanSlug: string
   currentPlanName: string
   usageBlockers: Array<{ resource: string, used: number, limit: number, excess: number }>
@@ -109,4 +115,11 @@ export type PlatformBillingConfiguration = {
   instructionsEn: string
   instructionsAr: string
   updatedAt: string
+}
+
+export type PrivateOfferPreview = {
+  offerId: string; offerVersion: number; shopId: string; targetBindingId: string; targetEnvironmentId: string
+  displayName: string; priceAmount: number; currency: string; billingInterval: 'monthly' | 'annual'; expiresAt: string
+  resourceLimits: PlanResourceLimits; entitlements: Record<string, unknown>; submissionId: string | null
+  blockers: Array<{ resource: string; used: number; limit: number; excess: number }>
 }

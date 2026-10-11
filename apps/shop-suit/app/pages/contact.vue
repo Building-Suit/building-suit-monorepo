@@ -61,7 +61,7 @@ useHead(() => ({
 
 <template>
   <main class="mx-auto max-w-5xl px-4 py-10 lg:px-8 lg:py-14">
-    <section class="ls-card overflow-hidden">
+    <BsCard as="section" padding="none" class="overflow-hidden">
       <div class="border-b border-[var(--bs-border)] bg-surface-muted px-6 py-8 sm:px-10">
         <p class="text-xs font-bold uppercase tracking-[.18em] text-brand-gold-highlight">Shop Suit by Building Suit</p>
         <h1 class="mt-3 text-3xl font-black tracking-[-.04em] sm:text-4xl">{{ t('marketing.contact') }}</h1>
@@ -83,27 +83,28 @@ useHead(() => ({
         </div>
       </div>
 
-      <BsForm class="grid gap-4 px-6 py-8 sm:px-10" :pending="pending" :error="error" novalidate @submit="submit">
-        <h2 class="text-xl font-black">{{ t('marketing.contactFormTitle') }}</h2>
-        <p class="text-sm text-fg-muted">{{ t('marketing.contactFormIntro') }}</p>
-        <div class="grid gap-4 md:grid-cols-2">
-          <label class="grid gap-2"><span>{{ t('marketing.contactCategory') }}</span><select v-model="form.category" class="ls-select"><option value="general">{{ t('marketing.contactCategories.general') }}</option><option value="product">{{ t('marketing.contactCategories.product') }}</option><option value="billing">{{ t('marketing.contactCategories.billing') }}</option><option value="technical">{{ t('marketing.contactCategories.technical') }}</option><option value="account">{{ t('marketing.contactCategories.account') }}</option></select></label>
-          <label class="grid gap-2"><span>{{ t('marketing.contactReplyEmail') }}</span><input v-model="form.email" class="ls-input" type="email" required autocomplete="email"></label>
-        </div>
-        <label class="grid gap-2"><span>{{ t('marketing.contactSubject') }}</span><input v-model="form.subject" class="ls-input" maxlength="200" required></label>
-        <label class="grid gap-2"><span>{{ t('marketing.contactMessage') }}</span><textarea v-model="form.message" class="ls-input min-h-36" maxlength="10000" required /></label>
-        <label class="hidden" aria-hidden="true"><span>Website</span><input v-model="form.honeypot" tabindex="-1" autocomplete="off"></label>
-        <label class="flex items-start gap-2"><input v-model="form.consent" type="checkbox" required><span class="text-sm">{{ t('marketing.contactConsent') }}</span></label>
-        <p v-if="sent" role="status" class="text-sm text-success">{{ t('marketing.contactSuccess') }}</p>
-        <BsButton class="w-fit" type="submit" variant="primary" :pending="pending">{{ pending ? t('marketing.contactPending') : t('marketing.contactSubmit') }}</BsButton>
-      </BsForm>
+      <div class="px-6 py-8 sm:px-10 sm:py-10">
+        <BsContentSection variant="plain" :title="t('marketing.contactFormTitle')" :description="t('marketing.contactFormIntro')">
+          <BsForm class="grid gap-5" :pending="pending" :error="error" novalidate @submit="submit">
+            <div class="grid gap-4 md:grid-cols-2">
+              <label class="grid gap-2"><span>{{ t('marketing.contactCategory') }}</span><select v-model="form.category" class="ls-select"><option value="general">{{ t('marketing.contactCategories.general') }}</option><option value="product">{{ t('marketing.contactCategories.product') }}</option><option value="billing">{{ t('marketing.contactCategories.billing') }}</option><option value="technical">{{ t('marketing.contactCategories.technical') }}</option><option value="account">{{ t('marketing.contactCategories.account') }}</option></select></label>
+              <label class="grid gap-2"><span>{{ t('marketing.contactReplyEmail') }}</span><input v-model="form.email" class="ls-input" type="email" required autocomplete="email"></label>
+            </div>
+            <label class="grid gap-2"><span>{{ t('marketing.contactSubject') }}</span><input v-model="form.subject" class="ls-input" maxlength="200" required></label>
+            <label class="grid gap-2"><span>{{ t('marketing.contactMessage') }}</span><textarea v-model="form.message" class="ls-input min-h-36" maxlength="10000" required /></label>
+            <label class="hidden" aria-hidden="true"><span>Website</span><input v-model="form.honeypot" tabindex="-1" autocomplete="off"></label>
+            <label class="flex items-start gap-2"><input v-model="form.consent" type="checkbox" required><span class="text-sm">{{ t('marketing.contactConsent') }}</span></label>
+            <p v-if="sent" role="status" class="text-sm text-success">{{ t('marketing.contactSuccess') }}</p>
+            <BsButton class="w-fit" type="submit" variant="primary" :pending="pending">{{ pending ? t('marketing.contactPending') : t('marketing.contactSubmit') }}</BsButton>
+          </BsForm>
+        </BsContentSection>
+      </div>
 
-      <div class="px-6 pb-8 sm:px-10">
-        <h2 class="text-xl font-black">{{ t('marketing.businessIdentity') }}</h2>
+      <BsContentSection variant="plain" class="border-t border-line px-6 py-8 sm:px-10" :title="t('marketing.businessIdentity')">
         <p class="mt-3 text-sm leading-7 text-fg-muted sm:text-base">
           <i18n-t keypath="marketing.businessIdentityBody" tag="span" scope="global"><template #product><bdi dir="ltr">Shop Suit</bdi></template><template #parent><bdi dir="ltr">Building Suit</bdi></template></i18n-t>
         </p>
-      </div>
-    </section>
+      </BsContentSection>
+    </BsCard>
   </main>
 </template>
