@@ -2,9 +2,25 @@ import { expect, test, type Locator, type Page, type TestInfo } from '@playwrigh
 
 /** Geometry assertions complement roles and interactions; screenshots are review evidence. */
 export async function expectNoPageOverflow(page: Page) {
-  await expect.poll(() => page.evaluate(() =>
-    document.documentElement.scrollWidth - document.documentElement.clientWidth,
-  )).toBeLessThanOrEqual(1)
+  try {
+    await expect.poll(() => page.evaluate(() =>
+      document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    )).toBeLessThanOrEqual(1)
+  } catch (error) {
+    const boundaries = await page.evaluate(() => {
+      const width = document.documentElement.clientWidth
+      return [...document.querySelectorAll('*')].flatMap(element => {
+        const box = element.getBoundingClientRect()
+        if (!box.width || (box.left >= -1 && box.right <= width + 1)) return []
+        const style = getComputedStyle(element)
+        return [{ tag: element.tagName, class: element.getAttribute('class'), left: box.left, right: box.right,
+          width: box.width, parentWidth: element.parentElement?.getBoundingClientRect().width,
+          display: style.display, minimum: style.minWidth, columns: style.gridTemplateColumns }]
+      }).slice(0, 20)
+    }).catch(() => [])
+    console.error('Overflow boundaries (no form values):', JSON.stringify(boundaries))
+    throw error
+  }
 }
 
 export async function expectChromeFree(control: Locator) {

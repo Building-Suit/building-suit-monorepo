@@ -42,7 +42,7 @@ const { summary, submit } = useFormInteraction(props, event => emit('submit', ev
 .bs-form-error { color: var(--bs-text); }
 .bs-form-fields { min-width: 0; border: 0; padding: 0; margin: 0; }
 .bs-form-pending { margin: 0 0 var(--bs-space-3); color: var(--bs-text-muted); font-size: var(--bs-type-body-m-size); }
-.bs-form-fields[data-layout='stack'], .bs-form-fields[data-layout='grid'] { display: grid; gap: var(--bs-space-5); }
+.bs-form-fields[data-layout='stack'], .bs-form-fields[data-layout='grid'] { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--bs-space-5); }
 .bs-form-fields[data-layout='grid'][data-columns='2'] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .bs-form-fields[data-layout='grid'][data-columns='3'] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .bs-form-fields[data-layout='grid'][data-columns='4'] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
