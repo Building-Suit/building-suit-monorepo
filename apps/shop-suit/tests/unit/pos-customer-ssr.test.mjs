@@ -17,7 +17,7 @@ function component(file, globals) {
   const module = { exports: {} }
   const localRequire = name => {
     if (!name.startsWith('~/')) return require(name)
-    const extension = name.endsWith('/businessMode') ? '.ts' : name.endsWith('/pos') ? '.js' : ''
+    const extension = (name.endsWith('/businessMode') || name.endsWith('/shopCommandErrorMessage')) ? '.ts' : name.endsWith('/pos') ? '.js' : ''
     return require(new URL(`../../app/${name.slice(2)}${extension}`, import.meta.url).pathname)
   }
   new Function('require', 'module', 'exports', ...Object.keys(globals), code)(localRequire, module, module.exports, ...Object.values(globals))
