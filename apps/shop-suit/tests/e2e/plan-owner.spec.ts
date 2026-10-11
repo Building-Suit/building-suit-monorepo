@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test'
-import { pilotFixture } from './pilot-fixture'
+import { pilotFixture, fixtureRoute } from './pilot-fixture'
 
 type RequestStatus = 'submitted' | 'under_review' | 'approved' | 'rejected' | null
 
@@ -275,5 +275,57 @@ for (const locale of ['en', 'ar']) {
       await navigate(page, '/billing')
       await expect(page.getByRole('main').getByText(message)).toBeVisible()
     }
+  })
+}
+
+for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) {
+  test(`payment receipt upload retries one private reservation: ${locale}, ${theme}`, async ({ page }) => {
+    await page.setViewportSize({ width: locale === 'ar' ? 360 : 1440, height: 900 })
+    const files: Array<{ evidenceId: string; originalFileName: string; sha256: string }> = []
+    const { calls } = await pilotFixture(page, locale, 'owner', (name, args) => {
+      if (name === 'shop_public_plan_catalog') return catalog
+      if (name === 'shop_billing_read') {
+        const value = billing('submitted')
+        value.instructions.instructionsEn = 'Synthetic submissions do not represent received funds.'
+        value.instructions.instructionsAr = 'بيئة الاختبار: الطلبات الاصطناعية لا تمثل أموالًا مستلمة.'
+        return value
+      }
+      if (name === 'shop_billing_payment_evidence_read') return files
+      if (name === 'reserve_shop_billing_payment_evidence') return { evidenceId: 'evidence-1', bucket: 'shop-payment-evidence', objectName: 'shop-1/submission-1/evidence-1.png', mimeType: args.p_mime_type, sizeBytes: args.p_size_bytes }
+      return undefined
+    })
+    await page.evaluate(theme => { document.documentElement.classList.toggle('dark', theme === 'dark'); document.documentElement.dataset.theme = theme }, theme)
+    let uploads = 0
+    await fixtureRoute(page, /\/storage\/v1\/object\/shop-payment-evidence\//, async route => {
+      uploads++
+      if (uploads === 1) { await route.fulfill({ status: 503, json: { message: 'retry' } }); return }
+      files.push({ evidenceId: 'evidence-1', originalFileName: 'receipt.png', sha256: String(calls.find(call => call.name === 'reserve_shop_billing_payment_evidence')?.args.p_sha256) })
+      await route.fulfill({ json: { Key: 'shop-1/submission-1/evidence-1.png' } })
+    })
+    await navigate(page, '/billing')
+    await expect(page.getByText(/Synthetic submissions|الطلبات الاصطناعية/)).toHaveCount(0)
+    const evidence = page.locator('[data-payment-evidence]')
+    await evidence.scrollIntoViewIfNeeded()
+    const input = evidence.locator('input[type=file]')
+    await input.setInputFiles({ name: 'invalid.txt', mimeType: 'text/plain', buffer: Buffer.from('invalid') })
+    await expect(evidence.getByRole('alert')).toContainText('JPEG')
+    await input.setInputFiles({ name: 'large.png', mimeType: 'image/png', buffer: Buffer.alloc(5242881) })
+    await expect(evidence.getByRole('alert')).toContainText('JPEG')
+    const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/l1cAAAAASUVORK5CYII=', 'base64')
+    await input.setInputFiles({ name: 'receipt.png', mimeType: 'image/png', buffer: png })
+    const upload = evidence.getByRole('button', { name: locale === 'ar' ? 'ارفع الإيصال' : 'Upload receipt', exact: true })
+    await upload.focus()
+    await expect(upload).toBeFocused()
+    await page.keyboard.press('Enter')
+    await expect(evidence.getByRole('alert')).toContainText(locale === 'ar' ? 'حاول تاني' : 'Retry safely')
+    await upload.click()
+    await expect(evidence.getByRole('status')).toContainText(locale === 'ar' ? 'اتبعت صورة الإيصال' : 'Receipt image sent')
+    await expect(evidence.getByText('receipt.png', { exact: true })).toBeVisible()
+    expect(calls.filter(call => call.name === 'reserve_shop_billing_payment_evidence')).toHaveLength(1)
+    expect(calls.find(call => call.name === 'reserve_shop_billing_payment_evidence')?.args.p_sha256).toMatch(/^[a-f0-9]{64}$/)
+    expect(calls.filter(call => call.name === 'submit_shop_billing_notice')).toHaveLength(0)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    await page.screenshot({ path: `test-results/receipt-${locale}-${theme}.png`, fullPage: true })
+    await evidence.screenshot({ path: `test-results/receipt-form-${locale}-${theme}.png` })
   })
 }

@@ -7,7 +7,8 @@ import type { PrivateOfferEntry } from '~/utils/private-offer'
 
 definePageMeta({ layout: 'default', middleware: ['auth'] })
 
-const rpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const client = useSupabaseClient<ShopRpcDatabase>()
+const rpc = client.schema('public')
 const { locale } = useI18n()
 const ui = useUiCopy()
 const { current, currentId, isOwner } = useShop()
@@ -94,6 +95,77 @@ const currentCatalogTermsId = computed(() => purchasablePlans.value.find(plan =>
   && plan.planVariant === billing.value?.subscription.planVariant
   && plan.billingInterval === billing.value?.subscription.billingInterval)?.catalogTermsId ?? '')
 const latestSubmission = computed(() => billing.value?.submissions?.[0] ?? null)
+const evidenceSubmission = computed(() => billing.value?.submissions.find(item => ['submitted', 'under_review'].includes(item.status)) ?? null)
+const evidenceFile = shallowRef<File | null>(null)
+const evidenceInputVersion = ref(0)
+const evidencePending = ref(false)
+const evidenceError = ref('')
+const evidenceSaved = ref(false)
+const evidenceFiles = ref<Array<{ evidenceId: string; originalFileName: string; sha256: string }>>([])
+let evidenceGeneration = 0
+let reservation: { evidenceId: string; bucket: string; objectName: string; mimeType: string; sizeBytes: number } | null = null
+watch([currentId, isOwner, user, () => evidenceSubmission.value?.id], async () => {
+  const generation = ++evidenceGeneration
+  evidenceFile.value = null; reservation = null; evidenceError.value = ''; evidenceSaved.value = false
+  evidenceFiles.value = []; evidencePending.value = false
+  ++evidenceInputVersion.value
+  const submission = evidenceSubmission.value
+  if (!submission || !isOwner.value) return
+  try {
+    const { data, error } = await rpc.rpc('shop_billing_payment_evidence_read', { p_submission_id: submission.id })
+    if (error) throw error
+    if (generation === evidenceGeneration) evidenceFiles.value = data ?? []
+  } catch {
+    if (generation === evidenceGeneration) evidenceError.value = copy.value.evidenceFailed
+  }
+}, { immediate: true, flush: 'sync' })
+function selectEvidence(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0] ?? null
+  evidenceError.value = ''; evidenceSaved.value = false
+  if (file && (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size < 1 || file.size > 5242880
+    || file.name.trim().length > 160 || /[/\\]/.test(file.name) || Array.from(file.name).some(char => char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127))) {
+    evidenceError.value = copy.value.evidenceInvalid
+    input.value = ''; evidenceFile.value = null; reservation = null
+    return
+  }
+  if (file !== evidenceFile.value) reservation = null
+  evidenceFile.value = file
+}
+async function uploadEvidence() {
+  const file = evidenceFile.value
+  const submission = evidenceSubmission.value
+  if (!file || !submission || !isOwner.value || evidencePending.value) return
+  const generation = evidenceGeneration
+  evidencePending.value = true; evidenceError.value = ''; evidenceSaved.value = false
+  try {
+    const bytes = await file.arrayBuffer()
+    const digest = await crypto.subtle.digest('SHA-256', bytes)
+    const sha256 = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('')
+    if (generation !== evidenceGeneration) return
+    if (!reservation) {
+      const { data, error } = await rpc.rpc('reserve_shop_billing_payment_evidence', {
+        p_submission_id: submission.id, p_original_file_name: file.name, p_mime_type: file.type, p_size_bytes: file.size, p_sha256: sha256,
+      })
+      if (error || !data) throw error ?? new Error('reservation_missing')
+      if (generation !== evidenceGeneration) return
+      reservation = data
+    }
+    const { error: uploadError } = await client.storage.from(reservation.bucket).upload(reservation.objectName, bytes, { contentType: reservation.mimeType, upsert: false })
+    if (generation !== evidenceGeneration) return
+    // Read completed evidence even on a lost upload response; never replace a receipt.
+    const { data, error: readError } = await rpc.rpc('shop_billing_payment_evidence_read', { p_submission_id: submission.id })
+    if (generation !== evidenceGeneration) return
+    if (readError || !data?.some(item => item.evidenceId === reservation?.evidenceId)) throw uploadError ?? readError ?? new Error('upload_incomplete')
+    evidenceFiles.value = data; evidenceSaved.value = true; evidenceFile.value = null; reservation = null
+    ++evidenceInputVersion.value
+  } catch {
+    if (generation === evidenceGeneration) evidenceError.value = copy.value.evidenceFailed
+  } finally {
+    if (generation === evidenceGeneration) evidencePending.value = false
+  }
+}
+
 const hasOpenRequest = computed(() => billing.value?.submissions?.some(item => ['submitted', 'under_review'].includes(item.status)) ?? false)
 const usageResources = computed<PlanUsageResource[]>(() => {
   if (!billing.value) return []
@@ -204,6 +276,7 @@ async function submitNotice() {
 }
 
 const en = {
+  evidenceTitle: 'Payment receipt image', evidenceHelp: 'After transferring, submit your payment notice, then upload the receipt image for that request. JPEG, PNG or WebP, up to 5 MB.', evidenceSelect: 'Receipt image', evidenceUpload: 'Upload receipt', evidenceUploading: 'Uploading…', evidenceFirst: 'Submit a payment notice above to attach your receipt.', evidenceInvalid: 'Choose a JPEG, PNG or WebP image between 1 byte and 5 MB with a filename up to 160 characters.', evidenceFailed: 'Could not load or upload the receipt. Retry safely; your payment notice is already saved.', evidenceSaved: 'Receipt image sent for review.', evidenceAttached: 'Attached receipts',
   privateTitle: 'Private offer', privateHelp: 'Sign in to the intended owner account, then open or paste the private offer link. Submitting starts manual payment review; it does not activate access.', privateLink: 'Private offer link', privatePreview: 'Review private terms', privateUnavailable: 'This offer is unavailable for this owner or shop. Check the link, expiry and recipient.', privateClear: 'Clear private offer', privateRedeemed: 'This offer already has a payment notice. Review its status below.',
   title: 'Subscription and billing', subtitle: 'Understand your plan, usage, and manually reviewed InstaPay requests.',
   ownerOnly: 'Ask the Shop owner to review billing or submit a transfer notice. Only the owner can access these details.',
@@ -225,6 +298,7 @@ const en = {
 }
 
 const ar = {
+  evidenceTitle: 'صورة إيصال الدفع', evidenceHelp: 'بعد التحويل، ابعت إشعار الدفع ثم ارفع صورة الإيصال للطلب. JPEG أو PNG أو WebP بحد أقصى ٥ ميجابايت.', evidenceSelect: 'صورة الإيصال', evidenceUpload: 'ارفع الإيصال', evidenceUploading: 'بنرفع…', evidenceFirst: 'ابعت إشعار الدفع بالأعلى عشان ترفق صورة الإيصال.', evidenceInvalid: 'اختار صورة JPEG أو PNG أو WebP بحجم من بايت واحد إلى ٥ ميجابايت واسم لا يتجاوز ١٦٠ حرفًا.', evidenceFailed: 'مقدرناش نحمّل أو نرفع الإيصال. حاول تاني بأمان؛ إشعار الدفع محفوظ بالفعل.', evidenceSaved: 'اتبعت صورة الإيصال للمراجعة.', evidenceAttached: 'الإيصالات المرفقة',
   privateTitle: 'عرض خاص', privateHelp: 'سجّل الدخول بحساب المالك المقصود، ثم افتح رابط العرض الخاص أو الصقه. الإرسال يبدأ مراجعة الدفع اليدوية ولا يفعّل الوصول.', privateLink: 'رابط العرض الخاص', privatePreview: 'مراجعة شروط العرض', privateUnavailable: 'هذا العرض غير متاح لهذا المالك أو المتجر. راجع الرابط والصلاحية والمستلم.', privateClear: 'مسح العرض الخاص', privateRedeemed: 'يوجد إشعار دفع لهذا العرض بالفعل. راجع حالته أدناه.',
   title: 'الاشتراك والدفع', subtitle: 'شوف خطتك واستخدامك، وتابع طلبات InstaPay اللي بنراجعها يدويًا.',
   ownerOnly: 'اطلب من مالك المتجر مراجعة الفوترة أو إرسال إشعار التحويل. هذه التفاصيل متاحة للمالك فقط.',
@@ -280,7 +354,7 @@ useShopRealtime('billing', () => submitPending.value || privatePending.value || 
       </section>
 
       <section class="ls-card p-5 sm:p-6"><div class="flex flex-wrap items-start justify-between gap-3"><div><h2 class="text-lg font-extrabold">{{ copy.instructions }}</h2><p class="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{{ copy.instructionsHelp }}</p></div><span class="rounded-full bg-muted px-3 py-1 text-xs font-bold">{{ copy.manual }}</span></div>
-        <div v-if="billing.instructions.recipientAlias || billing.instructions.paymentLink || billing.instructions.qrImageUrl || (isArabic ? billing.instructions.instructionsAr : billing.instructions.instructionsEn)" class="mt-5 grid gap-4 md:grid-cols-2"><p v-if="billing.instructions.recipientAlias" class="rounded-xl border border-border p-4"><span class="block text-xs text-muted-foreground">{{ copy.recipient }}</span><strong dir="ltr" class="break-all">{{ billing.instructions.recipientAlias }}</strong></p><p v-if="billing.instructions.paymentLink" class="rounded-xl border border-border p-4"><span class="block text-xs text-muted-foreground">{{ copy.paymentLink }}</span><a class="break-all font-bold text-[var(--bs-link)] underline" :href="billing.instructions.paymentLink" target="_blank" rel="noopener noreferrer">{{ billing.instructions.paymentLink }}</a></p><div v-if="billing.instructions.qrImageUrl" class="rounded-xl border border-border p-4"><span class="mb-3 block text-xs text-muted-foreground">{{ copy.qr }}</span><img :src="billing.instructions.qrImageUrl" :alt="copy.qr" class="h-40 w-40 rounded-lg object-contain"></div><p v-if="isArabic ? billing.instructions.instructionsAr : billing.instructions.instructionsEn" class="whitespace-pre-line rounded-xl border border-border p-4 text-sm leading-6">{{ isArabic ? billing.instructions.instructionsAr : billing.instructions.instructionsEn }}</p></div><p v-else class="mt-5 text-sm text-muted-foreground">{{ copy.unavailable }}</p>
+        <div v-if="billing.instructions.recipientAlias || billing.instructions.paymentLink || billing.instructions.qrImageUrl" class="mt-5 grid gap-4 md:grid-cols-2"><p v-if="billing.instructions.recipientAlias" class="rounded-xl border border-border p-4"><span class="block text-xs text-muted-foreground">{{ copy.recipient }}</span><strong dir="ltr" class="break-all">{{ billing.instructions.recipientAlias }}</strong></p><p v-if="billing.instructions.paymentLink" class="rounded-xl border border-border p-4"><span class="block text-xs text-muted-foreground">{{ copy.paymentLink }}</span><a class="break-all font-bold text-[var(--bs-link)] underline" :href="billing.instructions.paymentLink" target="_blank" rel="noopener noreferrer">{{ billing.instructions.paymentLink }}</a></p><div v-if="billing.instructions.qrImageUrl" class="rounded-xl border border-border p-4"><span class="mb-3 block text-xs text-muted-foreground">{{ copy.qr }}</span><img :src="billing.instructions.qrImageUrl" :alt="copy.qr" class="h-40 w-40 rounded-lg object-contain"></div></div><p v-else class="mt-5 text-sm text-muted-foreground">{{ copy.unavailable }}</p>
       </section>
 
       <BsContentSection data-private-offer>
@@ -302,6 +376,23 @@ useShopRealtime('billing', () => submitPending.value || privatePending.value || 
       <section class="ls-card p-5 sm:p-6"><h2 class="text-lg font-extrabold">{{ copy.notice }}</h2><p class="mt-1 text-sm text-muted-foreground">{{ copy.noticeHelp }}</p>
         <BsForm class="mt-5 grid gap-4 sm:grid-cols-2" :pending="submitPending" :error="submitError" @submit="submitNotice"><div v-if="noticeQuote" class="rounded-xl border border-border p-4 text-sm sm:col-span-2"><p>{{ copy.requestedPlan }}: <strong>{{ noticeQuote.planName }}</strong> · {{ copy.expected }}: <strong>{{ money(noticeQuote.effectivePriceAmount, noticeQuote.currency) }}</strong> · {{ copy.interval }}: <strong>{{ intervalLabel(noticeQuote.billingInterval) }}</strong></p><p v-if="noticeQuote.priceSource === 'override'" class="mt-2 font-bold text-[var(--bs-link)]">{{ copy.negotiated }}</p><p v-if="noticeQuote.blockers.length" class="mt-3 rounded-lg bg-[var(--bs-status-warning-bg)] p-3 font-semibold leading-5">{{ copy.preservation }}</p></div><p v-else role="status" class="rounded-xl border border-border p-4 text-sm sm:col-span-2">{{ copy.noPurchasable }}</p><label class="grid gap-2 text-sm font-bold">{{ copy.paid }}<input v-model.number="form.paidAmount" class="ls-input min-h-11 min-w-0" type="number" min="0.01" step="0.01" :disabled="!noticeQuote" required></label><label class="grid gap-2 text-sm font-bold">{{ copy.transferDate }}<input v-model="form.transferDate" class="ls-input min-h-11 min-w-0" type="date" :max="new Date().toISOString().slice(0, 10)" :disabled="!noticeQuote" required></label><label class="grid gap-2 text-sm font-bold sm:col-span-2">{{ copy.reference }}<input v-model="form.transferReference" class="ls-input min-h-11 min-w-0" dir="ltr" minlength="2" maxlength="200" :disabled="!noticeQuote" required></label><p class="text-sm leading-6 text-muted-foreground sm:col-span-2">{{ copy.policyPrefix }} <NuxtLink class="font-bold text-[var(--bs-link)] underline" to="/terms">{{ copy.terms }}</NuxtLink> · <NuxtLink class="font-bold text-[var(--bs-link)] underline" to="/privacy">{{ copy.privacy }}</NuxtLink> · <NuxtLink class="font-bold text-[var(--bs-link)] underline" to="/refund-cancellation">{{ copy.refund }}</NuxtLink>.</p><div class="sm:col-span-2"><BsButton type="submit" variant="primary" :pending="submitPending" :disabled="!noticeQuote || hasOpenRequest || !!privatePreview?.submissionId">{{ submitPending ? copy.submitting : copy.submit }}</BsButton></div></BsForm>
       </section>
+
+      <BsContentSection data-payment-evidence :title="copy.evidenceTitle" :description="copy.evidenceHelp">
+        <BsStack v-if="evidenceSubmission">
+          <BsText size="sm">{{ copy.reference }}: <BsText as="span" dir="ltr">{{ evidenceSubmission.transferReference }}</BsText></BsText>
+          <BsForm :pending="evidencePending" :error="evidenceError" @submit="uploadEvidence">
+            <BsStack>
+              <BsField for="payment-receipt" :label="copy.evidenceSelect">
+                <BsFileInput :key="evidenceInputVersion" input-id="payment-receipt" :model-value="evidenceFile" :label="copy.evidenceSelect" accept="image/jpeg,image/png,image/webp" required @change="selectEvidence" />
+              </BsField>
+              <BsButton type="submit" :pending="evidencePending" :disabled="!evidenceFile">{{ evidencePending ? copy.evidenceUploading : copy.evidenceUpload }}</BsButton>
+            </BsStack>
+          </BsForm>
+          <BsText v-if="evidenceSaved" role="status" size="sm">{{ copy.evidenceSaved }}</BsText>
+          <BsStack v-if="evidenceFiles.length" gap="sm"><BsText size="sm" emphasis="semibold">{{ copy.evidenceAttached }}</BsText><BsList><BsListItem v-for="file in evidenceFiles" :key="file.evidenceId"><BsText size="sm">{{ file.originalFileName }}</BsText></BsListItem></BsList></BsStack>
+        </BsStack>
+        <BsText v-else role="status" size="sm" tone="muted">{{ copy.evidenceFirst }}</BsText>
+      </BsContentSection>
 
       <section class="overflow-hidden ls-card"><div class="p-5"><h2 class="text-lg font-extrabold">{{ copy.history }}</h2></div><div class="overflow-x-auto"><BsDataTable :value="billing.submissions" data-key="id" :label="copy.history"><Column field="status"><template #header>{{ copy.access }}</template><template #body="{ data: item }"><BsStatusBadge :status="item.status" /> <span class="ms-2 text-sm">{{ statusLabel(item.status) }}</span></template></Column><Column field="requestedPlanName"><template #header>{{ copy.requestedPlan }}</template></Column><Column><template #header>{{ copy.expected }}</template><template #body="{ data: item }">{{ money(item.effectivePriceAmount, item.currency) }}</template></Column><Column><template #header>{{ copy.paid }}</template><template #body="{ data: item }">{{ money(item.paidAmount, item.currency) }}</template></Column><Column field="transferReference"><template #header>{{ copy.reference }}</template></Column><Column><template #header>{{ copy.transferDate }}</template><template #body="{ data: item }">{{ date(item.transferDate) }}</template></Column><Column field="reviewReason"><template #header>{{ copy.reviewReason }}</template></Column><template #empty><p class="p-6 text-center text-sm text-muted-foreground">{{ copy.empty }}</p></template></BsDataTable></div></section>
     </template>
