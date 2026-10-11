@@ -10,13 +10,13 @@ import ts from 'typescript'
 
 const require = createRequire(import.meta.url)
 const helpers = { exports: { useFileDrop } }
-new Function('exports', ts.transpileModule(readFileSync(new URL('../../ux/src/presentation.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText)(helpers.exports)
+new Function('exports', ts.transpileModule(readFileSync(new URL('../src/utils/presentation.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText)(helpers.exports)
 function component(file) {
   const { descriptor } = parse(readFileSync(new URL(`../src/${file}`, import.meta.url), 'utf8'))
   const code = ts.transpileModule(compileScript(descriptor, { id: file, inlineTemplate: true }).content, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText
   const module = { exports: {} }
   const globals = { ref: vue.ref, computed: vue.computed, watch: vue.watch, useId: vue.useId }
-  new Function('require', 'module', 'exports', ...Object.keys(globals), code)(name => name === '@building-suit/ux' ? helpers.exports : require(name), module, module.exports, ...Object.values(globals))
+  new Function('require', 'module', 'exports', ...Object.keys(globals), code)(name => ['@building-suit/ux', '../utils/presentation'].includes(name) ? helpers.exports : require(name), module, module.exports, ...Object.values(globals))
   return module.exports.default
 }
 const stub = tag => ({ inheritAttrs: false, setup: (_, { attrs, slots }) => () => vue.h(tag, attrs, slots.default?.()) })

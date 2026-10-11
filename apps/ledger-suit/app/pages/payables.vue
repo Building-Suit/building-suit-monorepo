@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useLedgerFxPresentation } from '~/composables/useLedgerFxPresentation'
-import { formatPresentationMoney } from '@building-suit/ux'
+import { formatPresentationMoney } from '@building-suit/ui/utils/presentation'
 import type { BsSubledgerCopy, BsSubledgerForm, BsSubledgerFilters, BsSubledgerView, BsSubledgerChoices } from '@building-suit/ui/types/subledgerPresentation'
 import { useSupplierSubledger } from '~/composables/useSupplierSubledger'
 import type { ApKind, ApMovement } from '~/utils/supplierSubledger'

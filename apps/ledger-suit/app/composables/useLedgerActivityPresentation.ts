@@ -1,4 +1,4 @@
-import { formatPresentationMoney } from '@building-suit/ux'
+import { formatPresentationMoney } from '@building-suit/ui/utils/presentation'
 import type { BsAccountActivityCopy, BsAccountActivityForm, BsAccountActivityView, BsCashAllocationCopy, BsCashAllocationForm, BsCashAllocationView } from '@building-suit/ui/types/accountActivityPresentation'
 export function useLedgerActivityPresentation(options: { accountId: string | null; scope: string; initialFrom?: string; initialTo?: string }, close: () => void) {
  const source = reactive(useLedgerAccountActivityDialogView(options, close))

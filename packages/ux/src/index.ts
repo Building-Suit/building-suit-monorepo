@@ -145,8 +145,6 @@ export const interactionPolicy = Object.freeze({
   confirmationPresentation: 'modal',
 } as const)
 
-export { formatPresentationMoney, usagePercentage } from './presentation.ts'
-export type { BsMoneyFormatOptions } from './presentation.ts'
 
 /** App-owned registry data; selection is presentation state, never authority. */
 export interface BsSuitRailItem {

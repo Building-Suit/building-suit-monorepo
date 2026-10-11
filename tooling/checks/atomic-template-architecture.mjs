@@ -290,6 +290,31 @@ export async function validateAtomicTemplateArchitecture({ root = defaultRoot } 
     }
     inspectUi(ast)
   }
+  let uxSources = []
+  try { uxSources = await walk(path.join(root, 'packages/ux/src')) }
+  catch (error) { if (error.code !== 'ENOENT') throw error }
+  for (const absolute of uxSources) {
+    const file = normalized(path.relative(root, absolute))
+    if (/\.(?:vue|css|scss|sass|less)$/.test(file)) { failures.push(`${file}: UX may not own presentation files`); continue }
+    if (!/\.[jt]sx?$/.test(file)) continue
+    const ast = ts.createSourceFile(file, await readFile(absolute, 'utf8'), ts.ScriptTarget.Latest, true, /x$/.test(file) ? ts.ScriptKind.TSX : ts.ScriptKind.TS)
+    const renderBindings = new Set(renderCalls)
+    for (const statement of ast.statements) {
+      if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier)) continue
+      const specifier = statement.moduleSpecifier.text
+      if (/^@building-suit\/ui(?:\/|$)|(?:^|\/)apps\//.test(specifier)) failures.push(`${file}: UX must remain independent of UI and product presentation`)
+      const bindings = statement.importClause?.namedBindings
+      if (bindings && ts.isNamedImports(bindings)) for (const binding of bindings.elements) {
+        if (!binding.isTypeOnly && await callableOrigin(absolute, specifier, binding.propertyName?.text ?? binding.name.text, renderCalls)) renderBindings.add(binding.name.text)
+      }
+    }
+    function inspectUx(node) {
+      const renderCall = ts.isCallExpression(node) && ((ts.isIdentifier(node.expression) && renderBindings.has(node.expression.text)) || (ts.isPropertyAccessExpression(node.expression) && renderCalls.has(node.expression.name.text)) || (ts.isElementAccessExpression(node.expression) && ts.isStringLiteral(node.expression.argumentExpression) && renderCalls.has(node.expression.argumentExpression.text)))
+      if (ts.isJsxElement(node) || ts.isJsxSelfClosingElement(node) || ts.isJsxFragment(node) || renderCall) failures.push(`${file}: UX may not render presentation`)
+      ts.forEachChild(node, inspectUx)
+    }
+    inspectUx(ast)
+  }
   const purposes = new Map()
   for (const entry of registry.entries.filter(entry => entry.kind === 'route' && entry.purpose && entry.destination)) {
     const destination = purposes.get(entry.purpose)

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { formatPresentationMoney } from '@building-suit/ux'
+import { formatPresentationMoney } from '@building-suit/ui/utils/presentation'
 import type { BsInventoryAccountingCopy, BsInventoryAccountingView, BsInventoryAccountingForm, BsInventoryAccountingChoices } from '@building-suit/ui/types/inventoryAccountingPresentation'
 import { inventoryReconciles } from '~/utils/inventoryAccounting'
 

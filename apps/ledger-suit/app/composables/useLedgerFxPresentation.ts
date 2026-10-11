@@ -1,4 +1,4 @@
-import { formatPresentationMoney } from '@building-suit/ux'
+import { formatPresentationMoney } from '@building-suit/ui/utils/presentation'
 import type { BsFxChoices, BsFxCopy, BsFxForm, BsFxView } from '@building-suit/ui/types/foreignExchangePresentation'
 import type { FxSubledgerType } from '~/utils/fxSubledger'
 import { useLedgerFxSubledgerPanelView } from './useLedgerFxSubledgerPanelView'

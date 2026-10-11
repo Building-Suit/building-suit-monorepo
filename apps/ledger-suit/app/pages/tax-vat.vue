@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { formatPresentationMoney } from '@building-suit/ux'
+import { formatPresentationMoney } from '@building-suit/ui/utils/presentation'
 import type { BsTaxWorkspaceCopy, BsTaxWorkspaceSetupForm, BsTaxWorkspaceDocumentForm, BsTaxWorkspaceView, BsTaxWorkspaceChoices } from '@building-suit/ui/types/taxWorkspacePresentation'
 import type { VatDirection, VatDocumentKind, VatDocumentRow } from '~/utils/egyptVat'
 import { calculateVatMinor, vatReportReconciles } from '~/utils/egyptVat'

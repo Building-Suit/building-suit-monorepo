@@ -1,4 +1,4 @@
-import { formatPresentationMoney } from '@building-suit/ux'
+import { formatPresentationMoney } from '@building-suit/ui/utils/presentation'
 import type { ChartAccount } from '~/utils/accountTree'
 import type { BsAccountClassificationCopy, BsAccountClassificationForm, BsAccountClassificationView, BsControlAdjustmentForm, BsControlReconciliationCopy, BsControlReconciliationView } from '@building-suit/ui/types/financialAccountsPresentation'
 export function useLedgerAccountClassificationPresentation(options: { account: ChartAccount | null; scope: string }, close: () => void) {

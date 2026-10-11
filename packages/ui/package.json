@@ -305,7 +305,8 @@
     "./types/journalCreationPresentation": "./src/types/journalCreationPresentation.ts",
     "./types/workspaceShellPresentation": "./src/types/workspaceShellPresentation.ts",
     "./types/financialSystemMapCopy": "./src/types/financialSystemMapCopy.ts",
-    "./types/workspaceOnboardingCopy": "./src/types/workspaceOnboardingCopy.ts"
+    "./types/workspaceOnboardingCopy": "./src/types/workspaceOnboardingCopy.ts",
+    "./utils/presentation": "./src/utils/presentation.ts"
   },
   "dependencies": {
     "primevue": "4.5.5",

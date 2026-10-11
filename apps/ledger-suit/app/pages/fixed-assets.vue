@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { formatPresentationMoney } from '@building-suit/ux'
+import { formatPresentationMoney } from '@building-suit/ui/utils/presentation'
 import type { BsAssetRegisterCopy, BsAssetRegisterView, BsAssetRegisterForm, BsAssetRegisterChoices } from '@building-suit/ui/types/assetRegisterPresentation'
 import { assetTotals } from '~/utils/fixedAssets'
 import type { AssetEventRow, AssetScheduleRow, FixedAssetRow } from '~/utils/fixedAssets'

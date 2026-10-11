@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { formatPresentationMoney } from '@building-suit/ux'
+import { formatPresentationMoney } from '@building-suit/ui/utils/presentation'
 import type { BsCommitmentActionForm, BsOperationalRecordsCopy, BsOperationalRecordsView } from '@building-suit/ui/types/operationalRecordsPresentation'
 import { scopedQueryKey } from '@building-suit/data-access'
 import type { Database } from '~~/types/database.types'

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { renderPendingPrintDocument } from '@building-suit/ui/utils/reportDocument'
-import { formatPresentationMoney, openPrintSession } from '@building-suit/ux'
+import { formatPresentationMoney } from '@building-suit/ui/utils/presentation'
+import { openPrintSession } from '@building-suit/ux'
 import type { BsFinancialReportCell, BsFinancialReportColumn, BsFinancialReportCopy, BsFinancialReportFilters, BsFinancialReportSection, BsFinancialReportsView } from '@building-suit/ui/types/financialReportsPresentation'
 import { scopedQueryKey } from '@building-suit/data-access'
 import type { Database } from '~~/types/database.types'

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { formatPresentationMoney } from '@building-suit/ux'
+import { formatPresentationMoney } from '@building-suit/ui/utils/presentation'
 import type { BsJournalWorkspaceChoices, BsJournalWorkspaceCopy, BsJournalWorkspaceFilters, BsJournalWorkspaceView } from '@building-suit/ui/types/journalWorkspacePresentation'
 definePageMeta({ layout: 'default' })
 const { can } = useTenant()

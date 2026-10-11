@@ -105,3 +105,15 @@ test('UI cannot hide queries behind imported executable wrappers', async t => {
  await writeFile(path.join(root, 'packages/ui/src/templates/BsExamplePage.vue'), '<script setup>import { load } from "../utils/query"; load()</script><template><main/></template>')
  assert.ok((await validateAtomicTemplateArchitecture({ root })).failures.some(message => /product query\/context behavior load/.test(message)))
 })
+
+for (const [name, file, source] of [
+ ['Vue presentation', 'Panel.vue', '<template><div/></template>'],
+ ['aliased render', 'view.ts', 'import { h as draw } from "vue"; export const panel = () => draw("div")'],
+ ['namespace render', 'view.ts', 'import * as vue from "vue"; export const panel = () => vue.h("div")'],
+ ['UI dependency', 'view.ts', 'import { formatPresentationMoney } from "@building-suit/ui/utils/presentation"'],
+]) test(`UX boundary rejects ${name}`, async t => {
+ const root = await fixture(t, '<template><BsExamplePage/></template>')
+ await mkdir(path.join(root, 'packages/ux/src'), { recursive: true })
+ await writeFile(path.join(root, 'packages/ux/src', file), source)
+ assert.ok((await validateAtomicTemplateArchitecture({ root })).failures.some(message => /UX (?:may not|must remain)/.test(message)))
+})

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { formatPresentationMoney } from '@building-suit/ux'
+import { formatPresentationMoney } from '@building-suit/ui/utils/presentation'
 import type { BsFinancialAccountCopy, BsFinancialAccountFilters, BsFinancialAccountForm, BsFinancialAccountRow, BsFinancialAccountsView } from '@building-suit/ui/types/financialAccountsPresentation'
 import { useLedgerAccountTreeView } from '~/composables/useLedgerAccountTreeView'
 import { useLedgerChartTemplateReviewView } from '~/composables/useLedgerChartTemplateReviewView'

@@ -1,4 +1,4 @@
-import { formatPresentationMoney } from '@building-suit/ux'
+import { formatPresentationMoney } from '@building-suit/ui/utils/presentation'
 import type { BsJournalDetailCopy, BsJournalDetailForm, BsJournalDetailView } from '@building-suit/ui/types/journalDetailPresentation'
 export function useLedgerJournalDetailPresentation(options: { transactionId: string | null }, events: { close: () => void; changed: () => unknown; navigate?: (id: string) => void }) {
   const router = useRouter()

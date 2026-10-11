@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { BsUsageItem } from '@building-suit/contracts'
-import { usagePercentage } from '@building-suit/ux'
+import { usagePercentage } from '../utils/presentation'
 const props = defineProps<{ item: BsUsageItem; compact?: boolean }>()
 const ratio = computed(() => usagePercentage(props.item.used, props.item.limit))
 </script>
