@@ -1,13 +1,26 @@
 # SS-VAL-001 — Current Shop first-launch qualification
 
-Date: 2026-10-10. **Qualification BLOCKED; review package implemented.**
+## Current integration status — 2026-10-11
+
+The Shop source release is in `stg` through [#241](https://github.com/Building-Suit/building-suit-monorepo/pull/241) (merge `072c9072ebaa6847d9fc8f30033276c8c63c12ba`) and [#242](https://github.com/Building-Suit/building-suit-monorepo/pull/242) (merge `699b57afed66439e7a0b76bc5a7fc52dc50df5d6`, candidate `19a39a5bbc955c89e463b8babad39a69d6e40fff`). Replacement integration does not make #230 or #235 GitHub-merged. Their remaining requirements belong in this canonical documentation.
+
+[Final candidate evidence](https://github.com/Building-Suit/building-suit-monorepo/pull/242#issuecomment-6106802677) records 18/18 workspace quality tasks, 207 Shop unit tests, 36 SQL suites, Team concurrency, 125 production-build browser cases, a separate session-loss case and canonical asset acceptance. [Post-merge evidence](https://github.com/Building-Suit/building-suit-monorepo/pull/242#issuecomment-6106860804) records successful [staging CI](https://github.com/Building-Suit/building-suit-monorepo/actions/runs/38122506170), automatic Shop staging deployment, migration history 50→57, support sender v1 installation and read-only Realtime publication/RLS checks. These are recorded release observations, not independent launch or production acceptance. No provider settings, secrets or delivery invocation were changed by this cleanup.
+
+- **SS-LAUNCH-R11 / SS-LAUNCH-SINGLE-SESSION-001 (#230):** client-side session-loss/cache cleanup and normal local logout implemented; provider-enforced newest-login-wins behavior remains **blocked** pending supported Supabase configuration and real-device verification. Source comparison found and restored the missing invitation account-switch local-scope argument and its regression assertion. No other intended source change from #230/#235 is missing; shared-root presentation, release migration filenames and harness fixes are reconciled changes. Provider configuration, JWT expiry/refresh semantics, losing-client cleanup, winning-session survival, unrelated-account isolation and winner reversal must all be evidenced as specified in [single-session readiness](single-session.md).
+- **SS-VAL-001 (#235), SS-LAUNCH-R01–R13:** qualification implementation integrated. Independently verified launch, provider configuration, live delivery and production acceptance remain **separate pending/blocked gates**. R05 intake/outbox and worker installation do not prove support inbox delivery; R11 does not establish hosted single-session enforcement. Use the [qualification report](SS-VAL-001-verification.md) and its unchanged executable matrix for exact checks. Real-device, assistive-technology, native-speaker and authorized production smoke acceptance remain unverified.
+
+Historical baseline tables and execution results below retain their original dates and failures. They do not describe the current staging tree or negate later release evidence. The original results JSON is preserved as execution history.
+
+## Historical qualification run — 2026-10-10
+
+**Qualification BLOCKED; review package implemented.**
 This report replaces historical roadmap-driven launch qualification for
 SS-LAUNCH-R01 through SS-LAUNCH-R13. ETA, offline operation, optional private
 offers and deferred roadmap packages do not become first-launch prerequisites.
 Existing safety checks remain required; excluding optional features does not
 relax tenant, payment, inventory, permission or audit invariants.
 
-Candidate: `codex/shop-suit/ss-val-001`, committed baseline
+Historical candidate: `codex/shop-suit/ss-val-001`, committed baseline
 `80e24abef406669e5bb4226b42348620e1bde39d` plus the uncommitted task changes.
 This SHA identifies the source baseline, not a deployed or accepted artifact.
 No commit, push, merge, deployment, provider mutation or hosted database change
@@ -40,7 +53,7 @@ existing transports/configs. All browser runs use one worker and zero retries.
 Synthetic protocol/UI tests establish rendered behavior only; SQL tests and
 real-provider evidence are separate. Discovery is not browser execution.
 
-## Requirement evidence and status
+## Historical 2026-10-10 requirement evidence and status
 
 “Implemented” describes source present in the candidate. Every local requirement
 remains partially checked because its browser/DB evidence could not run here.
@@ -89,7 +102,7 @@ secrets for each external gate:
   for the launch journeys and authorization boundaries under separate authorization.
 
 These are explicit gates, not requests to change providers to make local review
-pass. Hosted inspection/deployment and production smoke were not performed.
+pass. Hosted inspection/deployment were not performed in the original qualification run; later staging observations are linked above. Production smoke remains unverified.
 Real-device, assistive-technology and native-speaker review are also unverified;
 synthetic desktop/phone and bilingual fixtures do not replace them.
 
@@ -102,7 +115,7 @@ the client-only realtime composable. It now supports those imports and supplies
 a no-op for SSR, retaining appointment customer lock, disabled action and initial
 cart assertions. No product behavior, schema, migration or DB runner changed.
 
-## Executed results
+## Historical executed results (2026-10-10)
 
 The final full matrix runner exited **1**, correctly retaining failed gates.
 Exact commands/argv, working directories and exit codes are in the linked JSON.

@@ -1,5 +1,16 @@
 # Shop single-session readiness — SS-LAUNCH-SINGLE-SESSION-001
 
+## Current integration status — 2026-10-11
+
+Shop source is integrated through [#241](https://github.com/Building-Suit/building-suit-monorepo/pull/241) and [#242](https://github.com/Building-Suit/building-suit-monorepo/pull/242), staging merge `699b57afed66439e7a0b76bc5a7fc52dc50df5d6`. See the [current qualification evidence](SS-VAL-001-verification.md#current-integration-status--2026-10-11) for exact candidate, CI, browser/SQL and staging observations. Replacement integration does not make #230 or #235 GitHub-merged.
+
+**SS-LAUNCH-R11 / SS-LAUNCH-SINGLE-SESSION-001:** client-side session handling implemented; provider-enforced single-session behavior **blocked** pending supported Supabase configuration and real-device verification. Closure comparison found and restored the missing invitation account-switch local-logout argument and its regression assertion. No other intended source change from #230/#235 is missing; shared-root presentation, release migration filenames and harness fixes are reconciled changes.
+
+**SS-VAL-001 / SS-LAUNCH-R01–R13:** qualification implementation integrated; independently verified launch, provider configuration, live delivery and production acceptance remain separate pending/blocked gates. R05 worker installation does not establish inbox delivery. Exact acceptance criteria and the executable matrix are preserved in the qualification report.
+
+Historical baseline tables and execution results below retain their dates and failures; they are not current staging status. Execution history remains preserved.
+
+
 Decision SS-LAUNCH-D06 / requirement SS-LAUNCH-R11: newest login wins for one
 user account. This does not prevent sequential credential sharing.
 
@@ -59,7 +70,7 @@ Documentation checked 2026-10-10, including the current HTML changelog. The
 markdown changelog fetch was unavailable (web content-type error; shell DNS
 failure). No applicable Auth session breaking change was found in recent entries.
 
-## Local verification record (2026-10-10)
+## Historical local verification record (2026-10-10)
 
 - Each required executable ran successfully:
   `node --test apps/shop-suit/tests/unit/ss-launch-single-session-001-1.test.mjs`,
