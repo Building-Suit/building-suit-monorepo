@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { BsExpenseForm, BsExpenseFilters, BsExpenseView, BsExpenseRow } from '@building-suit/ui/types/expensePresentation'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 
 definePageMeta({ layout: 'default', middleware: ['auth'] })
@@ -42,7 +43,7 @@ const statusFilter = ref<'all' | ExpenseStatus>('all')
 const categoryFilter = ref('')
 const fromDate = ref('')
 const toDate = ref('')
-let searchTimer: ReturnType<typeof setTimeout> | undefined
+
 
 const editingId = ref<string | null>(null)
 const saveRequestId = ref<string | null>(null)
@@ -99,11 +100,7 @@ const copy = computed(() => isArabic.value ? {
   changed: 'This expense changed after you opened it. Refresh the list and try again.', filterInvalid: 'Review the search and date filters, then try again.', readOnly: 'You can view expenses only. Ask the owner for expense-management permission to record, correct, or void one.', confirmSave: 'Record this paid expense? It increases expense totals by the amount shown.', confirmCorrection: 'Replace this expense? The original is preserved as voided and totals use the new amount.', saved: 'Expense and trace history saved.', branch: 'Location',
 })
 
-watch(search, value => {
-  if (searchTimer) clearTimeout(searchTimer)
-  searchTimer = setTimeout(() => { debouncedSearch.value = value.trim(); page.value = 1 }, 300)
-})
-onBeforeUnmount(() => { if (searchTimer) clearTimeout(searchTimer) })
+useDebouncedChange(search, value => { debouncedSearch.value = value.trim(); page.value = 1 }, 300)
 watch([statusFilter, categoryFilter, fromDate, toDate], () => { page.value = 1 })
 
 const { data: categories } = useAsyncData(() => `shop-data:expense-categories:${currentId.value ?? 'none'}`, async () => {
@@ -231,91 +228,17 @@ async function submitVoid() {
     if (inScope()) actionError.value = readableError(voidError)
   } finally { voidPending.value = false }
 }
-function handlePage(event: { page: number }) { page.value = event.page + 1 }
+
+
+const expenseForm = computed<BsExpenseForm>({ get: () => ({ ...form }), set: value => Object.assign(form, value) })
+const expenseFilters = computed<BsExpenseFilters>({ get: () => ({ status: statusFilter.value, category: categoryFilter.value, from: fromDate.value, to: toDate.value }), set: value => { if (value.status === 'all' || value.status === 'paid' || value.status === 'void') statusFilter.value = value.status; categoryFilter.value = value.category; fromDate.value = value.from; toDate.value = value.to } })
+const expenseView = computed<BsExpenseView>(() => ({ available: !!current.value, loadingContext: shopLoading.value, hasLocation: !!currentLocationId.value, locationName: currentLocation.value?.name ?? '', canManage: canManage.value, loading: pending.value, error: error.value ? readErrorMessage.value : '', actionError: actionError.value, editing: !!editingId.value, dirty: formDirty.value, saving: saving.value, voidDirty: voidDirty.value, voidPending: voidPending.value, total: expensePage.value?.total ?? 0, pageSize }))
+const expenseRows = computed<BsExpenseRow[]>(() => (expensePage.value?.items ?? []).map(expense => ({ id: expense.id, title: expense.title, notes: expense.notes ?? '', reason: expense.change_reason ?? '', category: expense.category_name || '—', date: displayDate(expense.expense_date), history: historyLabel(expense.history_kind), actor: expense.created_by_name || '—', amount: money(expense.amount), status: expense.status === 'paid' ? copy.value.paid : copy.value.voided, editable: canManage.value && expense.status === 'paid' })))
+const expenseCategoryOptions = computed(() => [{ value: '', label: copy.value.allCategories }, ...categories.value.map(category => ({ value: category.id, label: category.name }))])
+function correctExpense(id: string) { const expense = expensePage.value?.items.find(item => item.id === id); if (expense) openCorrection(expense) }
+function voidExpense(id: string) { const expense = expensePage.value?.items.find(item => item.id === id); if (expense) openVoid(expense) }
 </script>
 
 <template>
-  <BsStack>
-    <BsPageHeader  :title="copy.title" :subtitle="copy.subtitle">
-      <template #actions>
-        <BsButton v-if="current && currentLocationId && canManage" type="button" @click="openCreate">{{ copy.add }}</BsButton>
-      </template>
-    </BsPageHeader>
-    <BsPanel v-if="!current && !shopLoading" padding="md">
-      <BsText as="p">{{ copy.noShop }}</BsText>
-      <BsLink to="/dashboard">{{ copy.dashboard }}</BsLink>
-    </BsPanel>
-    <template v-else-if="current">
-      <BsText as="p" size="sm">{{ copy.incomeBoundary }}</BsText>
-      <BsText v-if="!currentLocationId" role="alert" as="p" size="sm" tone="warning">{{ copy.noLocation }}</BsText>
-      <BsText v-else-if="!pending && !error && !canManage" as="p" size="sm">{{ copy.readOnly }}</BsText>
-      <BsText v-if="actionError && !showForm && !voidOpen" role="alert" as="p">{{ actionError }}</BsText>
-      <BsRecordActionDialog v-model:visible="showForm" :title="editingId ? copy.correct : copy.add" :dirty="formDirty" :pending="saving" :error="actionError" :submit-label="editingId ? copy.saveCorrection : copy.save" :cancel-label="copy.cancel" @submit="save">
-        <BsText v-if="editingId" as="p" size="sm">{{ copy.correctionHelp }}</BsText>
-        <BsField v-slot="field" :label="copy.name">
-          <BsInput :id="field.id" v-model="form.title" :aria-describedby="field.describedby" type="text" :minlength="2" :maxlength="160" required/>
-        </BsField>
-        <BsField v-slot="field" :label="copy.amount">
-          <BsInput :id="field.id" v-model.number="form.amount" :aria-describedby="field.describedby" type="number" :min="0.01" :max="999999999.99" :step="0.01" required/>
-        </BsField>
-        <BsField v-slot="field" :label="copy.date">
-          <BsInput :id="field.id" v-model="form.date" :aria-describedby="field.describedby" type="date" required/>
-        </BsField>
-        <BsField v-slot="field" :label="(copy.category) + ''">
-          <BsInput :id="field.id" v-model="form.category" :aria-describedby="field.describedby" type="text" list="shop-expense-categories" :minlength="2" :maxlength="80" required :placeholder="copy.categoryHint"/>
-        </BsField>
-        <BsField v-slot="field" :label="copy.notes">
-          <BsTextarea :id="field.id" v-model="form.notes" :aria-describedby="field.describedby" :rows="2" :maxlength="1000"/>
-        </BsField>
-        <BsField v-if="editingId" v-slot="field" :label="copy.correctionReason">
-          <BsTextarea :id="field.id" v-model="form.correctionReason" :aria-describedby="field.describedby" :rows="2" :minlength="2" :maxlength="500" required/>
-        </BsField>
-      </BsRecordActionDialog>
-      <BsRecordActionDialog v-model:visible="voidOpen" :title="copy.voidTitle" :dirty="voidDirty" :pending="voidPending" :error="actionError" :submit-label="copy.void" :cancel-label="copy.cancel" submit-tone="danger" size="sm" @submit="submitVoid">
-        <BsText as="p" size="sm" tone="muted">{{ copy.voidHelp }}</BsText>
-        <BsField v-slot="field" :label="copy.voidReason">
-          <BsTextarea :id="field.id" v-model="voidReason" :aria-describedby="field.describedby" :rows="3" :minlength="2" :maxlength="500" required/>
-        </BsField>
-      </BsRecordActionDialog>
-      <BsPanel v-if="currentLocationId" padding="md">
-        <BsGrid :columns="2">
-          <BsInput v-model="search" type="search" :placeholder="copy.search" :aria-label="copy.search"/>
-          <BsSelect v-model="statusFilter" :label="copy.status" :options="[{ value: 'all', label: (copy.allStatuses), disabled: false }, { value: 'paid', label: (copy.paid), disabled: false }, { value: 'void', label: (copy.voided), disabled: false }]" option-label="label" option-value="value" option-disabled="disabled"/>
-          <BsSelect v-model="categoryFilter" :label="copy.category" :options="[{ value: '', label: (copy.allCategories), disabled: false }, ...(categories).map(category => ({ value: category.id, label: (category.name), disabled: false }))]" option-label="label" option-value="value" option-disabled="disabled"/>
-          <BsField v-slot="field" :label="copy.from">
-            <BsInput :id="field.id" v-model="fromDate" :aria-describedby="field.describedby" type="date"/>
-          </BsField>
-          <BsField v-slot="field" :label="copy.to">
-            <BsInput :id="field.id" v-model="toDate" :aria-describedby="field.describedby" type="date"/>
-          </BsField>
-        </BsGrid>
-        <BsBox>
-          <BsText as="strong">{{ copy.branch }}:</BsText> {{ currentLocation?.name }}</BsBox>
-        <BsDataTable :value="expensePage?.items ?? []" :loading="pending" :error="error ? readErrorMessage : null" :label="copy.title" data-key="id" lazy paginator :rows="pageSize" :first="(page - 1) * pageSize" :total-records="expensePage?.total ?? 0" :always-show-paginator="false" :columns="[{ key: 'column0', header: (copy.name) }, { key: 'column1', header: (copy.category) }, { key: 'column2', header: (copy.date) }, { key: 'column3', header: (copy.history) }, { key: 'column4', header: (copy.amount), align: 'end' }, { key: 'column5', header: (copy.status), align: 'end' }]" @page="handlePage" @retry="refresh()">
-          <template #cell-column0="{ row: expense }">
-            <BsText as="p" emphasis="semibold">{{ expense.title }}</BsText>
-            <BsText v-if="expense.notes" as="p" size="xs" tone="muted">{{ expense.notes }}</BsText>
-            <BsText v-if="expense.change_reason" as="p" size="xs" tone="muted">{{ expense.change_reason }}</BsText>
-          </template>
-          <template #cell-column1="{ row: expense }">{{ expense.category_name || '—' }}</template>
-          <template #cell-column2="{ row: expense }">{{ displayDate(expense.expense_date) }}</template>
-          <template #cell-column3="{ row: expense }">
-            <BsText as="span">{{ historyLabel(expense.history_kind) }}</BsText>
-            <BsText as="p" size="xs" tone="muted">{{ expense.created_by_name || '—' }}</BsText>
-          </template>
-          <template #cell-column4="{ row: expense }">{{ money(expense.amount) }}</template>
-          <template #cell-column5="{ row: expense }">
-            <BsText as="span">{{ expense.status === 'paid' ? copy.paid : copy.voided }}</BsText>
-            <BsInline v-if="canManage && expense.status === 'paid'">
-              <BsButton variant="link" type="button" @click="openCorrection(expense)">{{ copy.correct }}</BsButton>
-              <BsButton variant="text" type="button" @click="openVoid(expense)">{{ copy.void }}</BsButton>
-            </BsInline>
-          </template>
-          <template #empty>
-            <BsText as="p" size="sm" tone="muted">{{ copy.empty }}</BsText>
-          </template>
-        </BsDataTable>
-      </BsPanel>
-    </template>
-  </BsStack>
+  <BsExpenseHistoryPage v-model:form="expenseForm" v-model:filters="expenseFilters" v-model:search="search" v-model:page="page" v-model:editor-open="showForm" v-model:void-open="voidOpen" v-model:void-reason="voidReason" :copy="copy" :view="expenseView" :rows="expenseRows" :category-options="expenseCategoryOptions" @create="openCreate" @save="save" @void="submitVoid" @retry="refresh" @correct="correctExpense" @open-void="voidExpense" />
 </template>

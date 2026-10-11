@@ -226,3 +226,7 @@ export { useBrowserShare } from './composables/useBrowserShare.ts'
 export { useCodeEntry } from './composables/useCodeEntry.ts'
 
 export { useFileDrop } from './composables/useFileDrop.ts'
+
+export { usePointOfSaleKeyboard } from './composables/usePointOfSaleKeyboard.ts'
+export { captureBarcodeKey, emptyScanState } from './utils/barcode.js'
+export { useControlFocus } from './composables/useControlFocus.ts'

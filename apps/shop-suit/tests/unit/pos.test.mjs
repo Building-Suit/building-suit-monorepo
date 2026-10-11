@@ -5,6 +5,8 @@ import { addOrIncrementCartLine, captureBarcodeKey, cartTotal, emptyScanState } 
 
 const migration = await readFile(new URL('../../supabase/migrations/20260928223000_counter_pos_checkout.sql', import.meta.url), 'utf8')
 const page = await readFile(new URL('../../app/pages/pos.vue', import.meta.url), 'utf8')
+const presentation = await readFile(new URL('../../../../packages/ui/src/templates/BsPointOfSalePage.vue', import.meta.url), 'utf8')
+const keyboard = await readFile(new URL('../../../../packages/ux/src/composables/usePointOfSaleKeyboard.ts', import.meta.url), 'utf8')
 const databaseTest = await readFile(new URL('../../supabase/tests/shop_pos_checkout.sql', import.meta.url), 'utf8')
 
 test('keyboard-wedge scans require a fast sequence and terminate on Enter', () => {
@@ -26,7 +28,7 @@ test('repeat scans increment one deterministic cart line and totals stay decimal
 })
 
 test('POS page covers scanner recovery, locked context, keyboard and bilingual responsive states', () => {
-  for (const evidence of ['scanBarcode', 'unknownBarcode', 'locationChanged', "event.key === 'F2'", "event.key === 'F8'", 'BsActionTile', 'BsLineItemsEditor', 'role="alert"', 'aria-live="polite"', 'checkout_pos_sale']) assert.match(page, new RegExp(evidence))
+  for (const evidence of ['scanBarcode', 'unknownBarcode', 'locationChanged', "event.key === 'F2'", "event.key === 'F8'", 'BsActionTile', 'BsLineItemsEditor', 'role="alert"', 'aria-live="polite"', 'checkout_pos_sale']) assert.match(page + presentation + keyboard, new RegExp(evidence))
   assert.match(page, /save_pos_sale_draft/)
   assert.match(page, /pos_catalog_search/)
   assert.match(page, /pos_checkout_context/)

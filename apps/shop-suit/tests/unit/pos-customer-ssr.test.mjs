@@ -6,6 +6,8 @@ import { parse, compileScript } from 'vue/compiler-sfc'
 import { renderToString } from 'vue/server-renderer'
 import * as vue from 'vue'
 import ts from 'typescript'
+import { useDebouncedChange } from '../../../../packages/ux/src/composables/useDebouncedChange.ts'
+import { usePointOfSaleKeyboard } from '../../../../packages/ux/src/composables/usePointOfSaleKeyboard.ts'
 
 const require = createRequire(import.meta.url)
 const service = { id: 'service-1', name: 'Haircut', itemType: 'service', unitPrice: 100, discount: 0, stock: null, sku: null, barcode: null }
@@ -30,7 +32,7 @@ for (const customerId of ['customer-1', null]) test(`SSR locks appointment custo
     appointments: [{ id: 'appointment-1', staffId: 'membership-1', customerId, customerName: 'Booked customer', startsAt: '2026-10-09T10:00:00Z', status: 'arrived', service }],
   }
   const globals = {
-    useId: vue.useId, ref: vue.ref, computed: vue.computed, watch: vue.watch, nextTick: vue.nextTick,
+    useId: vue.useId, useDebouncedChange, usePointOfSaleKeyboard, ref: vue.ref, computed: vue.computed, watch: vue.watch, nextTick: vue.nextTick,
     onMounted: vue.onMounted, onBeforeUnmount: vue.onBeforeUnmount,
     definePageMeta: () => {}, useRoute: () => ({ query: { appointment: 'appointment-1' } }),
     // Realtime registers only on the client; this fixture exercises initial SSR.
@@ -50,6 +52,7 @@ for (const customerId of ['customer-1', null]) test(`SSR locks appointment custo
     },
   }
   const app = vue.createSSRApp(component(new URL('../../app/pages/pos.vue', import.meta.url), globals))
+  app.component('BsPointOfSalePage', component(new URL('../../../../packages/ui/src/templates/BsPointOfSalePage.vue', import.meta.url), globals))
   app.component('BsButton', component(new URL('../../../../packages/ui/src/atoms/BsButton.vue', import.meta.url), globals))
   // Render the shared field and repeating-row owners so scoped slots receive
   // their real contract; unresolved custom elements cannot emulate that API.

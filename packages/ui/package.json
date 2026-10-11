@@ -222,7 +222,13 @@
     "./templates/BsSalesDirectoryPage": "./src/templates/BsSalesDirectoryPage.vue",
     "./types/salesDirectoryPresentation": "./src/types/salesDirectoryPresentation.ts",
     "./templates/BsPurchasingPage": "./src/templates/BsPurchasingPage.vue",
-    "./types/purchasingPresentation": "./src/types/purchasingPresentation.ts"
+    "./types/purchasingPresentation": "./src/types/purchasingPresentation.ts",
+    "./templates/BsExpenseHistoryPage": "./src/templates/BsExpenseHistoryPage.vue",
+    "./types/expensePresentation": "./src/types/expensePresentation.ts",
+    "./templates/BsInventoryManagementPage": "./src/templates/BsInventoryManagementPage.vue",
+    "./types/inventoryPresentation": "./src/types/inventoryPresentation.ts",
+    "./templates/BsPointOfSalePage": "./src/templates/BsPointOfSalePage.vue",
+    "./types/pointOfSalePresentation": "./src/types/pointOfSalePresentation.ts"
   },
   "dependencies": {
     "primevue": "4.5.5",

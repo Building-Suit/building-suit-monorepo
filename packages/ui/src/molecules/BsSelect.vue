@@ -18,12 +18,8 @@ const nativeModel = computed({ get: () => props.value !== undefined ? props.valu
 provide('bs-native-select-value', nativeModel)
 const nativeSelect = ref<HTMLSelectElement | null>(null)
 const select = ref<InstanceType<typeof Select> | null>(null)
-defineExpose({ focus: () => {
-  if (nativeSelect.value) { nativeSelect.value.focus(); return }
-  const root = (select.value as unknown as { $el?: HTMLElement } | null)?.$el
-  const control = root?.querySelector<HTMLElement>('[role="combobox"]') ?? root
-  control?.focus()
-} })
+const focusController = useControlFocus(nativeSelect, select)
+defineExpose({ focus: focusController.focus })
 const ui = useUiCopy()
 </script>
 

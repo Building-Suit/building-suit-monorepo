@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { BsInventoryAdjustmentForm, BsInventoryCountForm, BsInventoryView, BsInventoryStockRow, BsInventoryMovementRow, BsInventoryCountRow } from '@building-suit/ui/types/inventoryPresentation'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 
 defineOptions({ name: 'InventoryIndexPage' })
@@ -73,7 +74,7 @@ const text = computed(() => ar.value ? {
   sources: { physical_count: 'Physical count', manual_receipt: 'Manual receipt', manual_writeoff: 'Manual write-off', purchase_return: 'Purchase return', sale: 'Sale', purchase_receipt: 'Purchase receipt', adjustment: 'Correction', in: 'Stock in', out: 'Stock out' },
 })
 
-const { data: access, pending: accessPending, error: accessError, refresh: refreshAccess } = useAsyncData('shop-data:inventory-access', async () => {
+const { data: access, pending: accessPending, error: accessError, refresh: refreshAccess } = await useAsyncData('shop-data:inventory-access', async () => {
   if (!currentId.value) return null
   const { data, error } = await rpc.rpc('inventory_access', { p_shop_id: currentId.value })
   if (error) throw error
@@ -158,160 +159,19 @@ async function saveThreshold() {
 }
 
 useShopRealtime('inventory', () => adjustmentDirty.value || countDirty.value || thresholdDirty.value)
+
+const inventoryAdjustmentForm = computed<BsInventoryAdjustmentForm>({ get: () => ({ productId: productId.value, quantity: quantity.value, unitCost: unitCost.value, reason: reason.value }), set: value => { productId.value = value.productId; quantity.value = value.quantity; unitCost.value = value.unitCost; reason.value = value.reason } })
+const inventoryCountForm = computed<BsInventoryCountForm>({ get: () => ({ quantity: countedQuantity.value, date: countedAt.value, unitCost: countUnitCost.value, reference: countReference.value, reason: countReason.value }), set: value => { countedQuantity.value = value.quantity; countedAt.value = value.date; countUnitCost.value = value.unitCost; countReference.value = value.reference; countReason.value = value.reason } })
+const inventoryView = computed<BsInventoryView>(() => ({ available: !!current.value, loadingContext: shopLoading.value, accessError: !!accessError.value, accessLoading: accessPending.value, canView: !!access.value?.can_view, planNotice: !!access.value?.can_manage && !access.value.inventory_enabled, canAdjust: !!access.value?.can_manage && !!access.value.inventory_enabled && !!activeStock.value.length, valuation: money(stock.value.total_valuation), lowCount: String(stock.value.low_stock_count), loading: pending.value, error: error.value ? text.value.loadError : '', actionError: actionError.value, historyName: historyProduct.value?.name ?? '', historyError: !!historyError.value || !!countsError.value, movementsLoading: historyPending.value, movementsTotal: movements.value.total, countsLoading: countsPending.value, countsTotal: counts.value.total, historyPageSize, adjustmentTitle: mode.value === 'receive' ? text.value.receive : text.value.writeoff, receive: mode.value === 'receive', countProduct: countProduct.value?.name ?? '', countExpected: String(Number(countProduct.value?.quantity_on_hand ?? 0)), countVariance: String(variance.value), positiveVariance: variance.value > 0 }))
+const inventoryRows = computed<BsInventoryStockRow[]>(() => stock.value.items.map(row => ({ id: row.product_id, name: row.name, sku: row.sku ?? '', archived: !row.is_active, quantity: String(Number(row.quantity_on_hand)), threshold: String(Number(row.reorder_threshold)), value: money(row.inventory_value), low: row.is_low_stock, canCount: !!access.value?.can_manage && !!access.value.inventory_enabled, canThreshold: row.is_active && !!access.value?.can_manage && !!access.value.inventory_enabled })))
+const movementRows = computed<BsInventoryMovementRow[]>(() => movements.value.items.map(event => ({ id: event.id, date: date(event.event_at), source: source(event.source_type), reference: event.reference, reason: event.reason ?? '', quantity: String(Number(event.quantity_change)), value: event.value_change == null ? '—' : money(event.value_change), actor: event.actor_name || '—' })))
+const countRows = computed<BsInventoryCountRow[]>(() => counts.value.items.map(event => ({ id: event.id, date: date(event.counted_at), reference: event.reference, reason: event.reason, expected: String(Number(event.expected_quantity)), counted: String(Number(event.counted_quantity)), variance: String(Number(event.variance_quantity)) })))
+const inventoryProductOptions = computed(() => activeStock.value.map(row => ({ id: row.product_id, name: row.name })))
+function countById(id: string) { const row = stock.value.items.find(item => item.product_id === id); if (row) openCount(row) }
+function thresholdById(id: string) { const row = stock.value.items.find(item => item.product_id === id); if (row) openThreshold(row) }
+async function retryInventoryHistory() { await Promise.all([refreshHistory(), refreshCounts()]) }
 </script>
 
 <template>
-  <BsStack>
-    <BsBox as="header">
-      <BsHeading :level="1">{{ text.title }}</BsHeading>
-      <BsText as="p" size="sm" tone="muted">{{ text.subtitle }}</BsText>
-    </BsBox>
-    <BsPanel v-if="!current && !shopLoading" padding="md">
-      <BsText as="p">{{ text.noShop }}</BsText>
-      <BsLink to="/dashboard">{{ text.dashboard }}</BsLink>
-    </BsPanel>
-    <template v-else-if="current">
-      <BsText v-if="accessError" role="alert" as="p" size="sm" tone="danger">{{ text.denied }} <BsButton variant="link" @click="refreshAccess()">{{ text.retry }}</BsButton>
-      </BsText>
-      <BsText v-else-if="accessPending" role="status" as="p">{{ text.loading }}</BsText>
-      <BsText v-else-if="!access?.can_view" role="alert" as="p">{{ text.denied }}</BsText>
-      <template v-else>
-        <BsText v-if="access?.can_manage && !access.inventory_enabled" as="p" size="sm" tone="warning">{{ text.plan }}</BsText>
-        <BsGrid :columns="2">
-          <BsPanel padding="md">
-            <BsText as="p" size="sm" tone="muted">{{ text.totalValue }}</BsText>
-            <BsText as="p" size="lg" emphasis="semibold">{{ money(stock.total_valuation) }}</BsText>
-          </BsPanel>
-          <BsPanel padding="md">
-            <BsText as="p" size="sm" tone="muted">{{ text.lowCount }}</BsText>
-            <BsText as="p" size="lg" emphasis="semibold">{{ stock.low_stock_count }}</BsText>
-          </BsPanel>
-        </BsGrid>
-        <BsInline justify="between">
-          <BsInline>
-            <BsButton variant="chip" :aria-pressed="!lowOnly" @click="lowOnly = false">{{ text.all }}</BsButton>
-            <BsButton variant="chip" :aria-pressed="lowOnly" @click="lowOnly = true">{{ text.lowOnly }}</BsButton>
-          </BsInline>
-          <BsInline v-if="access?.can_manage && access.inventory_enabled && activeStock.length">
-            <BsButton @click="openAdjustment('receive')">{{ text.receive }}</BsButton>
-            <BsButton @click="openAdjustment('writeoff')">{{ text.writeoff }}</BsButton>
-          </BsInline>
-        </BsInline>
-        <BsPanel padding="md">
-          <BsDataTable :value="stock.items" paginator :rows="20" data-key="product_id" :loading="pending" :error="error ? text.loadError : null" :label="text.title" :columns="[{ key: 'column0', header: (text.product) }, { key: 'column1', header: (text.onHand), align: 'end' }, { key: 'column2', header: (text.threshold), align: 'end' }, { key: 'column3', header: (text.value), align: 'end' }, { key: 'column4', header: (text.actions), align: 'end' }]" @retry="refresh()">
-            <template #cell-column0="{ row: row }">
-              <BsText as="p" emphasis="semibold">{{ row.name }} <BsText v-if="!row.is_active" as="span" size="xs" tone="muted">({{ text.archived }})</BsText>
-              </BsText>
-              <BsText v-if="row.sku" as="p" size="xs" tone="muted">{{ row.sku }}</BsText>
-            </template>
-            <template #cell-column1="{ row: row }">
-              <BsText as="span">{{ Number(row.quantity_on_hand) }}</BsText>
-              <BsText v-if="row.is_low_stock" as="span" size="xs">{{ text.low }}</BsText>
-            </template>
-            <template #cell-column2="{ row: row }">{{ Number(row.reorder_threshold) }}</template>
-            <template #cell-column3="{ row: row }">{{ money(row.inventory_value) }}</template>
-            <template #cell-column4="{ row: row }">
-              <BsText as="span">
-                <BsButton variant="link" @click="historyProductId = row.product_id">{{ text.history }}</BsButton>
-                <BsButton v-if="access?.can_manage && access.inventory_enabled" variant="link" @click="openCount(row)">{{ text.count }}</BsButton>
-                <BsButton v-if="row.is_active && access?.can_manage && access.inventory_enabled" variant="link" @click="openThreshold(row)">{{ text.setThreshold }}</BsButton>
-              </BsText>
-            </template>
-            <template #empty>
-              <BsBox padding="md">
-                <BsText as="p">{{ text.noProducts }}</BsText>
-                <BsLink to="/products">{{ text.products }}</BsLink>
-              </BsBox>
-            </template>
-          </BsDataTable>
-        </BsPanel>
-        <BsText as="p" size="xs" tone="muted">{{ text.archivedHint }}</BsText>
-        <BsPanel v-if="historyProduct" padding="md">
-          <BsInline justify="between">
-            <BsBox>
-              <BsHeading :level="2">{{ historyProduct.name }}</BsHeading>
-              <BsText as="p" size="sm" tone="muted">{{ text.history }}</BsText>
-            </BsBox>
-            <BsButton @click="historyProductId = ''">{{ text.close }}</BsButton>
-          </BsInline>
-          <BsText v-if="historyError || countsError" role="alert" as="p" size="sm">{{ text.loadError }} <BsButton variant="link" @click="refreshHistory(); refreshCounts()">{{ text.retry }}</BsButton>
-          </BsText>
-          <BsBox scroll="x">
-            <BsHeading :level="3">{{ text.movements }}</BsHeading>
-            <BsDataTable :value="movements.items" :label="text.movements" lazy paginator :rows="historyPageSize" :first="(historyPage - 1) * historyPageSize" :total-records="movements.total" :loading="historyPending" data-key="id" :columns="[{ key: 'column0', header: (text.date) }, { key: 'column1', header: (text.source) }, { key: 'column2', header: (text.quantity), align: 'end' }, { key: 'column3', header: (text.value), align: 'end' }, { key: 'column4', header: (text.actor) }]" @page="historyPage = $event.page + 1">
-              <template #cell-column0="{ row: event }">{{ date(event.event_at) }}</template>
-              <template #cell-column1="{ row: event }">
-                <BsText as="p" emphasis="semibold">{{ source(event.source_type) }}</BsText>
-                <BsText as="p" size="xs" tone="muted">{{ event.reference }}<template v-if="event.reason"> · {{ event.reason }}</template>
-                </BsText>
-              </template>
-              <template #cell-column2="{ row: event }">{{ Number(event.quantity_change) }}</template>
-              <template #cell-column3="{ row: event }">{{ event.value_change == null ? '—' : money(event.value_change) }}</template>
-              <template #cell-column4="{ row: event }">{{ event.actor_name || '—' }}</template>
-              <template #empty>
-                <BsText as="p" size="sm" tone="muted">{{ text.emptyHistory }}</BsText>
-              </template>
-            </BsDataTable>
-          </BsBox>
-          <BsBox scroll="x">
-            <BsHeading :level="3">{{ text.counts }}</BsHeading>
-            <BsDataTable :value="counts.items" :label="text.counts" :loading="countsPending" lazy paginator :rows="historyPageSize" :first="(countsPage - 1) * historyPageSize" :total-records="counts.total" data-key="id" :columns="[{ key: 'column0', header: (text.date) }, { key: 'column1', header: (text.reference) }, { key: 'column2', header: (text.expected), align: 'end' }, { key: 'column3', header: (text.counted), align: 'end' }, { key: 'column4', header: (text.variance), align: 'end' }]" @page="countsPage = $event.page + 1">
-              <template #cell-column0="{ row: event }">{{ date(event.counted_at) }}</template>
-              <template #cell-column1="{ row: event }">
-                <BsText as="p" emphasis="semibold">{{ event.reference }}</BsText>
-                <BsText as="p" size="xs" tone="muted">{{ event.reason }}</BsText>
-              </template>
-              <template #cell-column2="{ row: event }">{{ Number(event.expected_quantity) }}</template>
-              <template #cell-column3="{ row: event }">{{ Number(event.counted_quantity) }}</template>
-              <template #cell-column4="{ row: event }">{{ Number(event.variance_quantity) }}</template>
-            </BsDataTable>
-          </BsBox>
-        </BsPanel>
-      </template>
-    </template>
-    <BsRecordActionDialog v-model:visible="adjustmentOpen" :title="mode === 'receive' ? text.receive : text.writeoff" :dirty="adjustmentDirty" :pending="adjustmentPending" :error="actionError" :submit-label="text.save" @submit="saveAdjustment">
-      <BsGrid :columns="2">
-        <BsField v-slot="field" :label="text.product">
-          <BsSelect v-model="productId" :input-id="field.id" :aria-describedby="field.describedby" :label="text.product" :options="activeStock" option-label="name" option-value="product_id" filter virtual :aria-required="true" :disabled="adjustmentPending"/>
-        </BsField>
-        <BsField v-slot="field" :label="text.quantity">
-          <BsInput :id="field.id" v-model.number="quantity" :aria-describedby="field.describedby" type="number" :min="0.01" :max="1000000" :step="0.01" required/>
-        </BsField>
-        <BsField v-if="mode === 'receive'" v-slot="field" :label="text.unitCost">
-          <BsInput :id="field.id" v-model.number="unitCost" :aria-describedby="field.describedby" type="number" :min="0" :step="0.01" required/>
-        </BsField>
-        <BsField v-slot="field" :label="text.reason">
-          <BsInput :id="field.id" v-model="reason" :aria-describedby="field.describedby" :maxlength="500" :required="mode === 'writeoff'"/>
-        </BsField>
-      </BsGrid>
-    </BsRecordActionDialog>
-    <BsRecordActionDialog v-model:visible="countOpen" :title="text.count" :dirty="countDirty" :pending="countPending" :error="actionError" :submit-label="text.save" @submit="saveCount">
-      <BsBox>
-        <BsText as="p" emphasis="semibold">{{ countProduct?.name }}</BsText>
-        <BsText as="p" tone="muted">{{ text.expected }}: {{ Number(countProduct?.quantity_on_hand ?? 0) }} · {{ text.variance }}: {{ variance }}</BsText>
-      </BsBox>
-      <BsGrid :columns="2">
-        <BsField v-slot="field" :label="text.counted">
-          <BsInput :id="field.id" v-model.number="countedQuantity" :aria-describedby="field.describedby" type="number" :min="0" :max="1000000" :step="0.01" required/>
-        </BsField>
-        <BsField v-slot="field" :label="text.countedAt">
-          <BsInput :id="field.id" v-model="countedAt" :aria-describedby="field.describedby" type="datetime-local" required/>
-        </BsField>
-        <BsField v-if="variance > 0" v-slot="field" :label="text.positiveCost">
-          <BsInput :id="field.id" v-model.number="countUnitCost" :aria-describedby="field.describedby" type="number" :min="0" :step="0.01" required/>
-        </BsField>
-        <BsField v-slot="field" :label="text.reference">
-          <BsInput :id="field.id" v-model="countReference" :aria-describedby="field.describedby" :maxlength="200" required/>
-        </BsField>
-        <BsField v-slot="field" :label="text.reason">
-          <BsTextarea :id="field.id" v-model="countReason" :aria-describedby="field.describedby" :minlength="3" :maxlength="500" :rows="2" required/>
-        </BsField>
-      </BsGrid>
-    </BsRecordActionDialog>
-    <BsRecordActionDialog v-model:visible="thresholdOpen" :title="text.setThreshold" :dirty="thresholdDirty" :pending="thresholdPending" :error="actionError" :submit-label="text.save" @submit="saveThreshold">
-      <BsField v-slot="field" :label="text.threshold">
-        <BsInput :id="field.id" v-model.number="thresholdValue" :aria-describedby="field.describedby" type="number" :min="0" :max="1000000" :step="0.01" required/>
-      </BsField>
-    </BsRecordActionDialog>
-  </BsStack>
+  <BsInventoryManagementPage v-model:adjustment-form="inventoryAdjustmentForm" v-model:count-form="inventoryCountForm" v-model:threshold-value="thresholdValue" v-model:low-only="lowOnly" v-model:adjustment-open="adjustmentOpen" v-model:count-open="countOpen" v-model:threshold-open="thresholdOpen" v-model:history-product-id="historyProductId" v-model:history-page="historyPage" v-model:counts-page="countsPage" :text="text" :view="inventoryView" :rows="inventoryRows" :movement-rows="movementRows" :count-rows="countRows" :product-options="inventoryProductOptions" :adjustment-editor="{ dirty: adjustmentDirty, pending: adjustmentPending }" :count-editor="{ dirty: countDirty, pending: countPending }" :threshold-editor="{ dirty: thresholdDirty, pending: thresholdPending }" @retry-access="refreshAccess" @retry="refresh" @retry-history="retryInventoryHistory" @save-adjustment="saveAdjustment" @save-count="saveCount" @save-threshold="saveThreshold" @count="countById" @threshold="thresholdById" @adjust="openAdjustment" />
 </template>

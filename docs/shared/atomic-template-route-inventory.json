@@ -44,7 +44,10 @@
     "BsBusinessSettingsPage": "packages/ui/src/templates/BsBusinessSettingsPage.vue",
     "BsCashShiftsPage": "packages/ui/src/templates/BsCashShiftsPage.vue",
     "BsSalesDirectoryPage": "packages/ui/src/templates/BsSalesDirectoryPage.vue",
-    "BsPurchasingPage": "packages/ui/src/templates/BsPurchasingPage.vue"
+    "BsPurchasingPage": "packages/ui/src/templates/BsPurchasingPage.vue",
+    "BsExpenseHistoryPage": "packages/ui/src/templates/BsExpenseHistoryPage.vue",
+    "BsInventoryManagementPage": "packages/ui/src/templates/BsInventoryManagementPage.vue",
+    "BsPointOfSalePage": "packages/ui/src/templates/BsPointOfSalePage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -1974,31 +1977,20 @@
     {
       "source": "apps/shop-suit/app/pages/expenses/index.vue",
       "kind": "route",
-      "currentSharedTemplates": [],
-      "renderedBsComponents": [
-        "BsBox",
-        "BsButton",
-        "BsDataTable",
-        "BsField",
-        "BsGrid",
-        "BsInline",
-        "BsInput",
-        "BsLink",
-        "BsPageHeader",
-        "BsPanel",
-        "BsRecordActionDialog",
-        "BsSelect",
-        "BsStack",
-        "BsText",
-        "BsTextarea"
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsExpenseHistoryPage.vue"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "renderedBsComponents": [
+        "BsExpenseHistoryPage"
+      ],
+      "destination": "packages/ui/src/templates/BsExpenseHistoryPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/shop-suit/app/pages/expenses/index.vue",
       "dependencies": [
         "~/types/shopCrmRpc"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "expense-history"
     },
     {
       "source": "apps/shop-suit/app/pages/index.vue",
@@ -2028,31 +2020,20 @@
     {
       "source": "apps/shop-suit/app/pages/inventory/index.vue",
       "kind": "route",
-      "currentSharedTemplates": [],
-      "renderedBsComponents": [
-        "BsBox",
-        "BsButton",
-        "BsDataTable",
-        "BsField",
-        "BsGrid",
-        "BsHeading",
-        "BsInline",
-        "BsInput",
-        "BsLink",
-        "BsPanel",
-        "BsRecordActionDialog",
-        "BsSelect",
-        "BsStack",
-        "BsText",
-        "BsTextarea"
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsInventoryManagementPage.vue"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "renderedBsComponents": [
+        "BsInventoryManagementPage"
+      ],
+      "destination": "packages/ui/src/templates/BsInventoryManagementPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/shop-suit/app/pages/inventory/index.vue",
       "dependencies": [
         "~/types/shopCrmRpc"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "inventory-management"
     },
     {
       "source": "apps/shop-suit/app/pages/platform-admin.vue",
@@ -2097,32 +2078,14 @@
     {
       "source": "apps/shop-suit/app/pages/pos.vue",
       "kind": "route",
-      "currentSharedTemplates": [],
-      "renderedBsComponents": [
-        "BsActionTile",
-        "BsBox",
-        "BsButton",
-        "BsField",
-        "BsFieldGroup",
-        "BsFilterBar",
-        "BsGrid",
-        "BsHeading",
-        "BsInline",
-        "BsInput",
-        "BsLineItemsEditor",
-        "BsLink",
-        "BsList",
-        "BsListItem",
-        "BsPageHeader",
-        "BsPanel",
-        "BsQuantityInput",
-        "BsSelect",
-        "BsStack",
-        "BsText",
-        "BsVisuallyHidden"
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsPointOfSalePage.vue"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "renderedBsComponents": [
+        "BsPointOfSalePage"
+      ],
+      "destination": "packages/ui/src/templates/BsPointOfSalePage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/shop-suit/app/pages/pos.vue",
       "dependencies": [
         "~/utils/shopCommandErrorMessage",
@@ -2132,7 +2095,8 @@
         "~/utils/posCustomer.js",
         "~/utils/pos"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "point-of-sale"
     },
     {
       "source": "apps/shop-suit/app/pages/privacy.vue",
@@ -2578,6 +2542,9 @@
     "BsBusinessSettingsPage",
     "BsCashShiftsPage",
     "BsSalesDirectoryPage",
-    "BsPurchasingPage"
+    "BsPurchasingPage",
+    "BsExpenseHistoryPage",
+    "BsInventoryManagementPage",
+    "BsPointOfSalePage"
   ]
 }

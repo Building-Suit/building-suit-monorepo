@@ -1,10 +1,11 @@
 <script setup lang="ts">
+import type { BsPointOfSaleCopy, BsPointOfSaleView, BsPointOfSaleCatalogItem, BsPointOfSaleCartLine, BsPointOfSalePaymentForm } from '@building-suit/ui/types/pointOfSalePresentation'
 import { shopCommandErrorMessage } from '~/utils/shopCommandErrorMessage'
 import { saleCopy } from '~/utils/saleCopy'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import { businessModeSupportsProducts, businessModeSupportsServices } from '~/utils/businessMode'
 import { posCustomerOptions } from '~/utils/posCustomer.js'
-import { addOrIncrementCartLine, captureBarcodeKey, cartTotal, emptyScanState } from '~/utils/pos'
+import { addOrIncrementCartLine, cartTotal } from '~/utils/pos'
 
 definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
 type PaymentMethod = 'cash' | 'bank_transfer' | 'card' | 'wallet' | 'cheque' | 'other'
@@ -29,8 +30,8 @@ const categoryFilter = ref('')
 const catalogPage = ref(1)
 const customerSearch = ref('')
 const debouncedCustomerSearch = ref('')
-const catalogInput = ref<{ focus: () => void } | null>(null)
-const customerControl = ref<{ $el: HTMLElement } | null>(null)
+const posPage = ref<{ focusCatalog: () => void } | null>(null)
+
 const lines = ref<CartLine[]>([])
 const staffId = ref('')
 const appointmentId = ref('')
@@ -58,12 +59,8 @@ const issueRequestId = ref<string | null>(null)
 const paymentRequestId = ref<string | null>(null)
 const appointmentRequestId = ref<string | null>(null)
 const checkoutPaidAt = ref<string | null>(null)
-let searchTimer: ReturnType<typeof setTimeout> | undefined
-let customerTimer: ReturnType<typeof setTimeout> | undefined
-let scanState = emptyScanState()
-
-watch(catalogSearch, value => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { debouncedSearch.value = value.trim(); catalogPage.value = 1 }, 250) })
-watch(customerSearch, value => { clearTimeout(customerTimer); customerTimer = setTimeout(() => { debouncedCustomerSearch.value = value.trim() }, 250) })
+useDebouncedChange(catalogSearch, value => { debouncedSearch.value = value.trim(); catalogPage.value = 1 }, 250)
+const customerSearchInteraction = useDebouncedChange(customerSearch, value => { debouncedCustomerSearch.value = value.trim() }, 250)
 watch(itemType, () => { catalogPage.value = 1 })
 watch(categoryFilter, () => { catalogPage.value = 1 })
 
@@ -113,7 +110,7 @@ function setCustomer(value: string | number | null | undefined) {
   else if (!value) clearCustomer()
 }
 function resetCustomerSearch() {
-  clearTimeout(customerTimer); customerSearch.value = ''; debouncedCustomerSearch.value = ''
+  customerSearchInteraction.cancel(); customerSearch.value = ''; debouncedCustomerSearch.value = ''
 }
 
 function lockLocation() {
@@ -160,7 +157,7 @@ function resetSale() {
   resetCustomerSearch(); customerPhone.value = null
   appointmentId.value = ''; customerId.value = ''; customerName.value = ''; paymentReference.value = ''; notes.value = ''
   transactionLocationId.value = null; transactionLocationName.value = ''; invoiceId.value = null; errorMessage.value = ''; scanMessage.value = ''; invalidateRequests()
-  nextTick(() => catalogInput.value?.focus())
+  nextTick(() => posPage.value?.focusCatalog())
 }
 function readableError(message?: string) {
   if (message?.includes('SALE_OPEN_CASH_SHIFT_REQUIRED')) return t('sales.openCashShiftRequired')
@@ -178,23 +175,7 @@ async function scanBarcode(code: string) {
   if (result.ambiguousBarcode) scanMessage.value = t('pos.ambiguousBarcode')
   else if (result.items.length === 1) addItem(result.items[0]!)
   else scanMessage.value = t('pos.unknownBarcode', { code })
-  await nextTick(); catalogInput.value?.focus()
-}
-function handleKeyboard(event: KeyboardEvent) {
-  if (event.ctrlKey || event.metaKey || event.altKey || checkingOut.value || confirmingCheckout.value) return
-  const target = event.target instanceof HTMLElement ? event.target : null
-  // Let shared dialogs and pickers own their Enter/Escape/focus behavior.
-  if (confirmation.current.value || document.querySelector('[role="combobox"][aria-expanded="true"]')) return
-  if (event.key === 'F2') { event.preventDefault(); catalogInput.value?.focus(); return }
-  if (event.key === 'F4') { event.preventDefault(); customerControl.value?.$el.querySelector<HTMLElement>('[role="combobox"]')?.focus(); return }
-  if (event.key === 'F8') { event.preventDefault(); void checkout(); return }
-  if (event.key === 'Escape') { errorMessage.value = ''; scanMessage.value = ''; return }
-  if (target?.id !== 'pos-catalog-search' && target?.closest('input, textarea, select, button, a, [role="combobox"], [contenteditable="true"]')) {
-    scanState = emptyScanState(); return
-  }
-  const captured = captureBarcodeKey(scanState, event.key, performance.now())
-  scanState = captured.state
-  if (captured.code) { event.preventDefault(); void scanBarcode(captured.code) }
+  await nextTick(); posPage.value?.focusCatalog()
 }
 
 async function checkout() {
@@ -225,8 +206,7 @@ async function checkout() {
 
 function money(value: number) { return new Intl.NumberFormat(locale.value === 'ar' ? 'ar-EG' : 'en-EG', { style: 'currency', currency: 'EGP', maximumFractionDigits: 2 }).format(value) }
 function appointmentLabel(appointment: Appointment) { return `${new Intl.DateTimeFormat(locale.value === 'ar' ? 'ar-EG' : 'en-EG', { weekday: 'short', hour: 'numeric', minute: '2-digit' }).format(new Date(appointment.startsAt))} · ${appointment.customerName} · ${appointment.service.name}` }
-onMounted(() => { window.addEventListener('keydown', handleKeyboard); nextTick(() => catalogInput.value?.focus()) })
-onBeforeUnmount(() => { window.removeEventListener('keydown', handleKeyboard); clearTimeout(searchTimer); clearTimeout(customerTimer) })
+
 watch(context, value => {
   if (!staffId.value && value.staff.some(member => member.id === currentMembership.value?.id)) staffId.value = currentMembership.value!.id
   const requested = typeof route.query.appointment === 'string' ? route.query.appointment : ''
@@ -234,136 +214,61 @@ watch(context, value => {
 }, { immediate: true })
 
 useShopRealtime('pos', () => lines.value.length > 0 || checkingOut.value || confirmingCheckout.value)
+
+const posPaymentForm = computed<BsPointOfSalePaymentForm>({ get: () => ({ method: paymentMethod.value, reference: paymentReference.value, notes: notes.value }), set: value => { if (['cash','bank_transfer','card','wallet','cheque','other'].includes(value.method)) paymentMethod.value = value.method as PaymentMethod; paymentReference.value = value.reference; notes.value = value.notes } })
+const posItemType = computed<string>({ get: () => itemType.value, set: value => { if (value === 'all' || value === 'product' || value === 'service') itemType.value = value } })
+const posCatalogItems = computed<BsPointOfSaleCatalogItem[]>(() => catalog.value.items.map(item => ({ id: item.id, key: `${item.itemType}:${item.id}`, name: item.name, description: item.sku || t(item.itemType === 'service' ? 'sales.service' : 'sales.product'), price: money(Math.max(0, item.unitPrice - item.discount)), stock: item.stock != null ? t('pos.stock', { count: item.stock }) : '' })))
+const posCartLines = computed<BsPointOfSaleCartLine[]>(() => lines.value.map(line => ({ id: line.key, name: line.name, quantity: line.quantity, total: money((line.unitPrice - line.discount) * line.quantity) })))
+const posView = computed<BsPointOfSaleView>(() => ({ available: !!current.value, loadingContext: shopLoading.value, location: transactionLocationName.value || currentLocation.value?.name || '—', staff: selectedStaff.value?.name || t('pos.selectStaff'), locationChanged: locationChanged.value, error: errorMessage.value, scanMessage: scanMessage.value, checkingOut: checkingOut.value, confirming: confirmingCheckout.value, shortcutBlocked: checkingOut.value || confirmingCheckout.value || !!confirmation.current.value, catalogLoading: catalogPending.value, catalogError: catalogError.value ? t(catalogError.value.message?.includes('SHOP_PERMISSION_DENIED') ? 'pos.permissionDenied' : 'pos.loadError') : '', catalogTotal: catalog.value.total, catalogPageSize: catalog.value.pageSize, contextLoading: contextPending.value, contextError: contextError.value ? t(contextError.value.message?.includes('SHOP_PERMISSION_DENIED') ? 'pos.permissionDenied' : 'pos.loadError') : '', appointmentLocked: !!appointmentId.value, customerDisabled: !!appointmentId.value || checkingOut.value || confirmingCheckout.value || locationChanged.value, customerBusy: customerBusy.value, customerDisplay: customerId.value ? [customerName.value, customerPhone.value].filter(Boolean).join(' · ') : (appointmentId.value ? customerName.value || t('pos.noCustomer') : t('pos.noCustomer')), customerEmpty: customerBusy.value ? t('pos.loading') : t('pos.customerSearch'), customerEmptyFilter: customerBusy.value ? t('pos.loading') : (customerSearch.value.trim().length < 2 ? t('pos.customerSearch') : t('pos.customerNoResults')), hasCustomer: !!customerId.value, checkoutDisabled: checkingOut.value || confirmingCheckout.value || contextPending.value || !!contextError.value || locationChanged.value || !lines.value.length || !staffId.value, total: money(total.value), reviewLabel: t('pos.reviewSale', { count: lines.value.length }), payLabel: t('pos.pay', { amount: money(total.value) }) }))
+function addPosItem(key: string) { const item = catalog.value.items.find(item => `${item.itemType}:${item.id}` === key); if (item) addItem(item) }
+function removePosLine(id: string) { const index = lines.value.findIndex(line => line.key === id); if (index >= 0) removeLine(index) }
+function setPosQuantity(id: string, value: number) { const line = lines.value.find(line => line.key === id); if (line) setQuantity(line, value) }
+function setPosStaff(id: string) { staffId.value = id; lockLocation(); invalidateRequests() }
+function dismissPosFeedback() { errorMessage.value = ''; scanMessage.value = '' }
+const posCopy = computed<BsPointOfSaleCopy>(() => ({
+  appointment: t('pos.appointment'),
+  cart: t('pos.cart'),
+  catalog: t('pos.catalog'),
+  clearCustomer: t('pos.clearCustomer'),
+  closeShift: t('pos.closeShift'),
+  customer: t('pos.customer'),
+  customerNoResults: t('pos.customerNoResults'),
+  customerSearch: t('pos.customerSearch'),
+  customerSearchHint: t('pos.customerSearchHint'),
+  emptyCart: t('pos.emptyCart'),
+  loadError: t('pos.loadError'),
+  loading: t('pos.loading'),
+  location: t('pos.location'),
+  locationChanged: t('pos.locationChanged'),
+  noCustomer: t('pos.noCustomer'),
+  noResults: t('pos.noResults'),
+  notes: t('pos.notes'),
+  paying: t('pos.paying'),
+  paymentMethod: t('pos.paymentMethod'),
+  permissionDenied: t('pos.permissionDenied'),
+  quantity: t('pos.quantity'),
+  reference: t('pos.reference'),
+  remove: t('pos.remove'),
+  reset: t('pos.reset'),
+  retry: t('pos.retry'),
+  search: t('pos.search'),
+  selectStaff: t('pos.selectStaff'),
+  serverTotal: saleCopy(t, 'pos.serverTotal', lines.value),
+  shortcuts: t('pos.shortcuts'),
+  staff: t('pos.staff'),
+  subtitle: t('pos.subtitle'),
+  title: t('pos.title'),
+  total: t('pos.total'),
+  walkIn: t('pos.walkIn'),
+  noShop: t('sales.noShop'), category: locale.value === 'ar' ? 'التصنيف' : 'Category', previous: t('customers.previous'), next: t('customers.next'), previousGlyph: locale.value === 'ar' ? '›' : '‹', nextGlyph: locale.value === 'ar' ? '‹' : '›',
+}))
+const posTypeOptions = computed(() => availableItemTypes.value.map(value => ({ value, label: t(`pos.${value === 'product' ? 'products' : value === 'service' ? 'services' : 'all'}`) })))
+const posCategoryOptions = computed(() => [{ value: '', label: locale.value === 'ar' ? 'كل التصنيفات' : 'All categories' }, ...categories.value.map(category => ({ value: category.id, label: category.name }))])
+const posAppointmentOptions = computed(() => [{ value: '', label: t('pos.walkIn') }, ...context.value.appointments.map(appointment => ({ value: appointment.id, label: appointmentLabel(appointment) }))])
+const posStaffOptions = computed(() => context.value.staff.map(staff => ({ value: staff.id, label: staff.name })))
+const posPaymentOptions = computed(() => ['cash','card','bank_transfer','wallet','cheque','other'].map(value => ({ value, label: t(`payments.methods.${value}`) })))
 </script>
 
 <template>
-  <BsStack>
-    <BsPageHeader  :title="t('pos.title')" :subtitle="t('pos.subtitle')">
-      <template #actions>
-        <BsButton severity="secondary" :disabled="checkingOut || confirmingCheckout" @click="requestReset">{{ t('pos.reset') }}</BsButton>
-      </template>
-    </BsPageHeader>
-    <BsText v-if="!current && !shopLoading" as="p" size="sm">{{ t('sales.noShop') }}</BsText>
-    <template v-else-if="current">
-      <BsPanel :aria-label="t('pos.cart')" padding="md">
-        <BsText as="p" size="sm">
-          <BsText as="strong">{{ t('pos.location') }}:</BsText> {{ transactionLocationName || currentLocation?.name || '—' }} · <BsText as="strong">{{ t('pos.staff') }}:</BsText> {{ selectedStaff?.name || t('pos.selectStaff') }}</BsText>
-        <BsInline>
-          <BsLink to="#pos-catalog-title" external>{{ t('pos.catalog') }}</BsLink>
-          <BsLink to="#pos-cart-title" external>{{ t('pos.reviewSale', { count: lines.length }) }} · {{ money(total) }}</BsLink>
-          <BsLink to="/cash-shifts">{{ t('pos.closeShift') }}</BsLink>
-        </BsInline>
-      </BsPanel>
-      <BsText v-if="locationChanged" role="alert" as="p" size="sm" tone="danger">{{ t('pos.locationChanged') }}</BsText>
-      <BsText v-if="errorMessage" role="alert" as="p" size="sm" tone="danger">{{ errorMessage }}</BsText>
-      <BsVisuallyHidden aria-live="polite">{{ scanMessage }}</BsVisuallyHidden>
-      <BsText v-if="checkingOut" role="status" as="p" size="sm" emphasis="semibold">{{ t('pos.paying') }}</BsText>
-      <BsFieldGroup :disabled="checkingOut" :inert="checkingOut" :aria-busy="checkingOut" :legend="''">
-        <BsGrid :columns="2">
-          <BsPanel aria-labelledby="pos-catalog-title" padding="md">
-            <BsHeading id="pos-catalog-title" tabindex="-1" :level="2">{{ t('pos.catalog') }}</BsHeading>
-            <BsFilterBar :label="t('pos.catalog')">
-              <BsInput id="pos-catalog-search" ref="catalogInput" v-model="catalogSearch" type="search" :placeholder="t('pos.search')" :aria-label="t('pos.search')"/>
-              <BsSelect v-model="categoryFilter" :label="locale === 'ar' ? 'التصنيف' : 'Category'" :options="[{ value: '', label: (locale === 'ar' ? 'كل التصنيفات' : 'All categories'), disabled: false }, ...(categories).map(category => ({ value: category.id, label: (category.name), disabled: false }))]" option-label="label" option-value="value" option-disabled="disabled"/>
-              <BsInline :aria-label="t('pos.catalog')" role="group">
-                <BsButton v-for="kind in availableItemTypes" :key="kind" variant="chip" type="button" :aria-pressed="itemType === kind" @click="itemType = kind">{{ t(`pos.${kind === 'product' ? 'products' : kind === 'service' ? 'services' : 'all'}`) }}</BsButton>
-              </BsInline>
-            </BsFilterBar>
-            <BsText v-if="scanMessage" as="p" size="sm">{{ scanMessage }}</BsText>
-            <BsText v-if="catalogPending" role="status" as="p" size="sm" tone="muted">{{ t('pos.loading') }}</BsText>
-            <BsBox v-else-if="catalogError" role="alert" padding="md">
-              <BsText as="p">{{ catalogError?.message?.includes('SHOP_PERMISSION_DENIED') ? t('pos.permissionDenied') : t('pos.loadError') }}</BsText>
-              <BsButton severity="secondary" @click="refreshCatalog()">{{ t('pos.retry') }}</BsButton>
-            </BsBox>
-            <BsText v-else-if="!catalog.items.length" as="p" size="sm" tone="muted">{{ t('pos.noResults') }}</BsText>
-            <BsList v-else :aria-label="t('pos.catalog')">
-              <BsListItem v-for="item in catalog.items" :key="`${item.itemType}:${item.id}`">
-                <BsActionTile type="button" :disabled="locationChanged || checkingOut" @click="addItem(item)">
-                  <BsText as="strong">{{ item.name }}</BsText>
-                  <BsText as="span" size="xs" tone="muted">
-                    <BsText as="span">{{ item.sku || (item.itemType === 'service' ? t('sales.service') : t('sales.product')) }}</BsText>
-                    <BsText as="span">{{ money(Math.max(0, item.unitPrice - item.discount)) }}</BsText>
-                  </BsText>
-                  <BsText v-if="item.stock != null" as="span" size="xs">{{ t('pos.stock', { count: item.stock }) }}</BsText>
-                </BsActionTile>
-              </BsListItem>
-            </BsList>
-            <BsInline v-if="catalog.total > catalog.pageSize">
-              <BsButton severity="secondary" :disabled="catalogPage <= 1" :aria-label="t('customers.previous')" @click="catalogPage--">
-                <BsText aria-hidden="true" as="span">{{ locale === 'ar' ? '›' : '‹' }}</BsText>
-              </BsButton>
-              <BsText as="span" size="sm">{{ catalogPage }}</BsText>
-              <BsButton severity="secondary" :disabled="catalogPage * catalog.pageSize >= catalog.total" :aria-label="t('customers.next')" @click="catalogPage++">
-                <BsText aria-hidden="true" as="span">{{ locale === 'ar' ? '‹' : '›' }}</BsText>
-              </BsButton>
-            </BsInline>
-          </BsPanel>
-          <BsPanel aria-labelledby="pos-cart-title" padding="md">
-            <BsHeading id="pos-cart-title" tabindex="-1" :level="2">{{ t('pos.cart') }}</BsHeading>
-            <BsText v-if="contextPending" role="status" as="p" size="sm">{{ t('pos.loading') }}</BsText>
-            <BsText v-else-if="contextError" role="alert" as="p" size="sm" tone="danger">{{ contextError?.message?.includes('SHOP_PERMISSION_DENIED') ? t('pos.permissionDenied') : t('pos.loadError') }} <BsButton variant="link" type="button" @click="refreshContext()">{{ t('pos.retry') }}</BsButton>
-            </BsText>
-            <BsGrid :columns="2">
-              <BsText as="span" emphasis="semibold">{{ t('pos.location') }}</BsText>
-              <BsText as="span">{{ transactionLocationName || currentLocation?.name || '—' }}</BsText>
-              <BsText as="span" emphasis="semibold">{{ t('pos.staff') }}</BsText>
-              <BsText as="span">{{ selectedStaff?.name || t('pos.selectStaff') }}</BsText>
-            </BsGrid>
-            <BsText v-if="!lines.length" as="p" size="sm" tone="muted">{{ t('pos.emptyCart') }}</BsText>
-            <BsLineItemsEditor v-else :items="lines.map(line => ({ id: line.key, line }))" :label="t('pos.cart')" :add-label="t('pos.catalog')" :remove-label="t('pos.remove')" :row-label="item => item.line.name" :show-add="false" :pending="checkingOut" @remove="item => removeLine(lines.findIndex(line => line.key === item.id))">
-              <template #default="{ item: { line } }">
-                <BsInline justify="between">
-                  <BsText as="strong">{{ line.name }}</BsText>
-                </BsInline>
-                <BsInline justify="between">
-                  <BsField v-slot="field" :label="(t('pos.quantity'))">
-                    <BsQuantityInput :id="field.id" :aria-describedby="field.describedby" :model-value="line.quantity" :label="t('pos.quantity')"  :min="0.001" :max="1000000" :step="1" @update:model-value="value => setQuantity(line, Number(value))"/>
-                  </BsField>
-                  <BsText as="span" emphasis="semibold">{{ money((line.unitPrice - line.discount) * line.quantity) }}</BsText>
-                </BsInline>
-              </template>
-            </BsLineItemsEditor>
-            <BsStack>
-              <BsField v-slot="field" :label="(t('pos.appointment'))">
-                <BsSelect :input-id="field.id" :aria-describedby="field.describedby" :model-value="appointmentId" :disabled="checkingOut" :label="(t('pos.appointment'))" :options="[{ value: '', label: (t('pos.walkIn')), disabled: false }, ...(context.appointments).map(appointment => ({ value: appointment.id, label: (appointmentLabel(appointment)), disabled: false }))]" option-label="label" option-value="value" option-disabled="disabled" @update:model-value="value => chooseAppointment(String(value ?? ''))"/>
-              </BsField>
-              <BsField v-slot="field" :label="(t('pos.staff'))">
-                <BsSelect v-model="staffId" :input-id="field.id" :aria-describedby="field.describedby" :label="t('pos.staff')" :options="context.staff" option-label="name" option-value="id" filter virtual :disabled="Boolean(appointmentId) || checkingOut" @change="lockLocation(); invalidateRequests()"/>
-              </BsField>
-              <BsSelect
-                ref="customerControl" input-id="pos-customer" :model-value="customerId || null" :label="t('pos.customer')" :options="customerOptions" option-label="identity" option-value="id"
-                filter :auto-filter-focus="true" :auto-option-focus="true" :filter-fields="['name', 'phone']" :filter-placeholder="t('pos.customerSearch')" :reset-filter-on-hide="true" :loading="customerBusy"
-                :disabled="Boolean(appointmentId) || checkingOut || confirmingCheckout || locationChanged" :placeholder="t('pos.noCustomer')"
-                @filter="customerSearch = $event.value" @hide="resetCustomerSearch" @update:model-value="setCustomer">
-                <template #value><BsText as="span">{{ customerId ? [customerName, customerPhone].filter(Boolean).join(' · ') : (appointmentId ? customerName || t('pos.noCustomer') : t('pos.noCustomer')) }}</BsText></template>
-                <template #empty>{{ customerBusy ? t('pos.loading') : t('pos.customerSearch') }}</template>
-                <template #emptyfilter>{{ customerBusy ? t('pos.loading') : (customerSearch.trim().length < 2 ? t('pos.customerSearch') : t('pos.customerNoResults')) }}</template>
-              </BsSelect>
-              <BsButton variant="link" :disabled="Boolean(appointmentId) || checkingOut || confirmingCheckout || locationChanged" @click="clearCustomer">{{ customerId ? t('pos.clearCustomer') : t('pos.noCustomer') }}</BsButton>
-              <BsText size="xs" tone="muted">{{ t('pos.customerSearchHint') }}</BsText>
-              <BsText v-if="!customerId" size="xs" tone="muted">{{ t('pos.noCustomer') }}</BsText>
-              <BsGrid :columns="2">
-                <BsField v-slot="field" :label="(t('pos.paymentMethod'))">
-                  <BsSelect v-model="paymentMethod" :input-id="field.id" :aria-describedby="field.describedby" :label="(t('pos.paymentMethod'))" :options="[...(['cash','card','bank_transfer','wallet','cheque','other']).map(method => ({ value: method, label: (t(`payments.methods.${method}`)), disabled: false }))]" option-label="label" option-value="value" option-disabled="disabled"/>
-                </BsField>
-                <BsField v-slot="field" :label="(t('pos.reference'))">
-                  <BsInput :id="field.id" v-model="paymentReference" :aria-describedby="field.describedby" :maxlength="200"/>
-                </BsField>
-              </BsGrid>
-              <BsField v-slot="field" :label="(t('pos.notes'))">
-                <BsInput :id="field.id" v-model="notes" :aria-describedby="field.describedby" :maxlength="2000"/>
-              </BsField>
-              <BsInline justify="between">
-                <BsText as="span" size="sm" emphasis="semibold">{{ t('pos.total') }}</BsText>
-                <BsText as="strong" size="lg">{{ money(total) }}</BsText>
-              </BsInline>
-              <BsText as="p" size="xs" tone="muted">{{ t('pos.serverTotal') }}</BsText>
-              <BsButton variant="primary" :pending="checkingOut" :disabled="checkingOut || confirmingCheckout || contextPending || Boolean(contextError) || locationChanged || !lines.length || !staffId" @click="checkout">{{ checkingOut ? t('pos.paying') : t('pos.pay', { amount: money(total) }) }}</BsButton>
-              <BsText as="p" size="xs" tone="muted">{{ t('pos.shortcuts') }}</BsText>
-            </BsStack>
-          </BsPanel>
-        </BsGrid>
-      </BsFieldGroup>
-    </template>
-  </BsStack>
+  <BsPointOfSalePage ref="posPage" v-model:catalog-search="catalogSearch" v-model:category-filter="categoryFilter" v-model:item-type="posItemType" v-model:catalog-page="catalogPage" v-model:payment-form="posPaymentForm" :copy="posCopy" :view="posView" :catalog-items="posCatalogItems" :cart-lines="posCartLines" :customer-options="customerOptions" :staff-id="staffId" :appointment-id="appointmentId" :customer-id="customerId" :item-type-options="posTypeOptions" :category-options="posCategoryOptions" :appointment-options="posAppointmentOptions" :staff-options="posStaffOptions" :payment-options="posPaymentOptions" @reset="requestReset" @checkout="checkout" @retry-catalog="refreshCatalog" @retry-context="refreshContext" @add="addPosItem" @remove="removePosLine" @quantity="setPosQuantity" @appointment="chooseAppointment" @staff="setPosStaff" @customer-search="customerSearch = $event" @reset-customer-search="resetCustomerSearch" @customer="setCustomer" @clear-customer="clearCustomer" @dismiss-feedback="dismissPosFeedback" @barcode="scanBarcode" />
 </template>

@@ -9,6 +9,7 @@ import * as vue from 'vue'
 import ts from 'typescript'
 import { useTableQueryInteraction } from '../../ux/src/composables/useTableQueryInteraction.ts'
 import { useFormInteraction } from '../../ux/src/composables/useFormInteraction.ts'
+import { useControlFocus } from '../../ux/src/composables/useControlFocus.ts'
 import { useNavigationDisclosure } from '../../ux/src/composables/useNavigationDisclosure.ts'
 
 const require = createRequire(import.meta.url)
@@ -18,7 +19,7 @@ function component(file, language = 'en', imports = {}) {
   const code = ts.transpileModule(script.content, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText
   const module = { exports: {} }
   const copy = language === 'ar' ? { close: 'إغلاق', saving: 'جارٍ الحفظ…', search: 'بحث', empty: 'لا توجد سجلات' } : { close: 'Close', saving: 'Saving…', search: 'Search', empty: 'No records found' }
-  const globals = { useFormInteraction, useNavigationDisclosure, ref: vue.ref, computed: vue.computed, watch: vue.watch, watchEffect: vue.watchEffect, nextTick: vue.nextTick, onMounted: vue.onMounted, onBeforeUnmount: vue.onBeforeUnmount, useId: vue.useId, useAttrs: vue.useAttrs, useSlots: vue.useSlots, useI18n: () => ({ t: key => key, te: () => false }), useToasts: () => ({ toasts: vue.ref([{ id: 1, title: 'Saved', tone: 'success' }]), dismiss: () => {} }), useUiCopy: () => key => copy[key] }
+  const globals = { useControlFocus, useFormInteraction, useNavigationDisclosure, ref: vue.ref, computed: vue.computed, watch: vue.watch, watchEffect: vue.watchEffect, nextTick: vue.nextTick, onMounted: vue.onMounted, onBeforeUnmount: vue.onBeforeUnmount, useId: vue.useId, useAttrs: vue.useAttrs, useSlots: vue.useSlots, useI18n: () => ({ t: key => key, te: () => false }), useToasts: () => ({ toasts: vue.ref([{ id: 1, title: 'Saved', tone: 'success' }]), dismiss: () => {} }), useUiCopy: () => key => copy[key] }
   new Function('require', 'module', 'exports', ...Object.keys(globals), code)(name => imports[name] ?? require(name), module, module.exports, ...Object.values(globals))
   return module.exports.default
 }
