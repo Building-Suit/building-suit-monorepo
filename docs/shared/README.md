@@ -2,8 +2,9 @@
 
 - [Git and staging workflow](git-workflow.md): preflight, short-lived features, stacked/parallel PRs, manual-merge recovery and deployment controls.
 - [Design system](design-system.md): tokens, branding, Atomic Design and shared templates.
-- [Shared UI ownership](ui-ownership.md): library-first ownership, migration inventory and mechanical enforcement for every Suit.
-- [Shared UI convergence report](ui-convergence-report.md): final component inventory, valid product wrappers, exception status and cross-Suit evidence.
+- [Shared UI ownership](ui-ownership.md): complete template ownership and strict zero-debt enforcement for every Suit.
+- [Shared UI convergence report](ui-convergence-report.md): historical component-convergence evidence, superseded by complete template ownership.
+- [Atomic template acceptance](atomic-template-unification-acceptance.md): all 76 route mappings, final local verification and publication prerequisites.
 - [Interaction policy](interactions.md): record actions, dialogs, signup and feedback.
 - [Database development](database.md): product-specific local commands, environment verification and hosted release procedure.
 - [Manual Supabase setup](supabase-manual-setup.md): organizations, project refs, frontend keys, deployment secrets and Auth configuration.

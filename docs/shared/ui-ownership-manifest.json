@@ -22,7 +22,7 @@
         "apps/ledger-suit/app/components/MoneyText.vue"
       ],
       "task": "BS-UI-ZN-PATTERNS-001",
-      "migrationStatus": "template-migrated; final browser acceptance in progress"
+      "migrationStatus": "verified-local: canonical template ownership and browser acceptance complete"
     },
     {
       "family": "usage",
@@ -41,7 +41,7 @@
         "apps/shop-suit/app/components/PlanUsageMeter.vue"
       ],
       "task": "BS-UI-ZN-PATTERNS-001",
-      "migrationStatus": "template-migrated; final browser acceptance in progress"
+      "migrationStatus": "verified-local: canonical template ownership and browser acceptance complete"
     },
     {
       "family": "pricing",
@@ -59,7 +59,7 @@
         "apps/ledger-suit/app/components/BillingCheckout.vue"
       ],
       "task": "BS-UI-ZN-PATTERNS-001",
-      "migrationStatus": "template-migrated; final browser acceptance in progress"
+      "migrationStatus": "verified-local: canonical template ownership and browser acceptance complete"
     },
     {
       "family": "setup",
@@ -75,7 +75,7 @@
         "apps/shop-suit/app/components/BarberSetupGuide.vue"
       ],
       "task": "BS-UI-ZN-PATTERNS-001",
-      "migrationStatus": "template-migrated; final browser acceptance in progress"
+      "migrationStatus": "verified-local: canonical template ownership and browser acceptance complete"
     },
     {
       "family": "entity",
@@ -91,7 +91,7 @@
         "apps/shop-suit/app/components/PurchaseEntityPicker.vue"
       ],
       "task": "BS-UI-ZN-PATTERNS-001",
-      "migrationStatus": "template-migrated; final browser acceptance in progress"
+      "migrationStatus": "verified-local: canonical template ownership and browser acceptance complete"
     },
     {
       "family": "context",
@@ -108,7 +108,7 @@
         "apps/ledger-suit/app/components/TeamMenu.vue"
       ],
       "task": "BS-UI-ZN-PATTERNS-001",
-      "migrationStatus": "template-migrated; final browser acceptance in progress"
+      "migrationStatus": "verified-local: canonical template ownership and browser acceptance complete"
     },
     {
       "family": "import",
@@ -128,7 +128,7 @@
         "apps/shop-suit/app/pages/catalog-import.vue"
       ],
       "task": "BS-UI-ZN-PATTERNS-001",
-      "migrationStatus": "template-migrated; final browser acceptance in progress"
+      "migrationStatus": "verified-local: canonical template ownership and browser acceptance complete"
     },
     {
       "family": "team",
@@ -149,7 +149,7 @@
         "apps/shop-suit/app/pages/team.vue"
       ],
       "task": "BS-LAUNCH-ACCESS-UI-001",
-      "migrationStatus": "template-migrated; final browser acceptance in progress"
+      "migrationStatus": "verified-local: canonical template ownership and browser acceptance complete"
     },
     {
       "family": "review-detail",
@@ -169,7 +169,7 @@
         "apps/ledger-suit/app/components/TransactionDetailDialog.vue"
       ],
       "task": "BS-UI-ZN-PATTERNS-001",
-      "migrationStatus": "template-migrated; final browser acceptance in progress"
+      "migrationStatus": "verified-local: canonical template ownership and browser acceptance complete"
     },
     {
       "family": "tags",
@@ -183,7 +183,7 @@
         "apps/ledger-suit/app/components/TransactionTags.vue"
       ],
       "task": "BS-UI-ZN-PATTERNS-001",
-      "migrationStatus": "template-migrated; final browser acceptance in progress"
+      "migrationStatus": "verified-local: canonical template ownership and browser acceptance complete"
     },
     {
       "family": "charts",
@@ -197,7 +197,7 @@
         "apps/ledger-suit/app/components/RevenueExpenseChart.vue"
       ],
       "task": "BS-UI-ZN-PATTERNS-001",
-      "migrationStatus": "template-migrated; final browser acceptance in progress"
+      "migrationStatus": "verified-local: canonical template ownership and browser acceptance complete"
     },
     {
       "family": "hierarchy-flow",
@@ -212,7 +212,7 @@
         "apps/ledger-suit/app/components/FinancialSystemMap.vue"
       ],
       "task": "BS-UI-ZN-PATTERNS-001",
-      "migrationStatus": "template-migrated; final browser acceptance in progress"
+      "migrationStatus": "verified-local: canonical template ownership and browser acceptance complete"
     },
     {
       "family": "line-items",
@@ -228,7 +228,7 @@
         "apps/shop-suit/app/pages/purchases/index.vue"
       ],
       "task": "BS-UI-ZN-PATTERNS-001",
-      "migrationStatus": "template-migrated; final browser acceptance in progress"
+      "migrationStatus": "verified-local: canonical template ownership and browser acceptance complete"
     },
     {
       "family": "printable",
@@ -245,7 +245,7 @@
         "apps/shop-suit/app/pages/sales/[id]/receipt.vue"
       ],
       "task": "BS-UI-ZN-PATTERNS-001",
-      "migrationStatus": "template-migrated; final browser acceptance in progress"
+      "migrationStatus": "verified-local: canonical template ownership and browser acceptance complete"
     },
     {
       "family": "filters",
@@ -261,7 +261,7 @@
         "apps/shop-suit/app/pages/reports/index.vue"
       ],
       "task": "BS-UI-ZN-PATTERNS-001",
-      "migrationStatus": "template-migrated; final browser acceptance in progress"
+      "migrationStatus": "verified-local: canonical template ownership and browser acceptance complete"
     },
     {
       "family": "multi-suit-administration",
@@ -271,7 +271,7 @@
       ],
       "adapterBoundary": "App-supplied registry, context navigation, selection, translated labels and intent handlers; no product queries or authorization",
       "task": "BS-SA-SHELL-001",
-      "migrationStatus": "template-migrated; final browser acceptance in progress"
+      "migrationStatus": "verified-local: canonical template ownership and browser acceptance complete"
     }
   ]
 }

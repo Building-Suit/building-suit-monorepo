@@ -1,6 +1,6 @@
 # Shared atomic template unification checkpoint
 
-Status: in progress. The requested architecture migration is **not complete**.
+Status: all requested local implementation and acceptance phases complete. Publication is pending verified provider deployment suppression. [Final acceptance and reproduction](atomic-template-unification-acceptance.md) supersede the historical progress sections below.
 Task: `atomic-template-unification` (interactive Codex owner).
 
 ## Baseline and ownership
@@ -203,3 +203,13 @@ Ten browser cases passed across English/Arabic, light/dark and mobile/desktop, i
 Ledger now consumes the same `BsWorkspaceShell` as the other Suits. Typed shared organisms present all nine journal creation flows, operational creation, onboarding/demo, invitations and the financial system map. Commands, quotas, trusted organization context and precise amounts remain product-owned; immutable draft edits, overlays, navigation, polling and focus live in UX. Compatibility workflow factories and their obsolete adapters are removed. Permission matrices receive explicit grants rather than executable callbacks.
 
 The normal workspace check now executes the strict atomic architecture validator: all 76 routes resolve to registered shared templates with zero migration debt. Imported page contracts reject opaque bags, callback props and render recipes. Docs exposes the canonical template catalogue. Six consumer typechecks, all six production builds, all Suit/shared lint and 97 UI/UX/architecture regressions passed. Shell browser evidence covers the eight locale/theme/width combinations, all nine exact bilingual journal commands, operational commands and single-owner invitations. Final all-route browser coverage, additional journal evidence/reversal checks and cross-Suit acceptance remain ongoing; this is not final task acceptance.
+
+### Final local acceptance closure
+
+All 76 routes, nine layouts and five roots are thin adapters to canonical templates; all five Suits consume `BsWorkspaceShell`. Normal architecture checks pass with zero migration debt and no compatibility factories. Pure money/usage presentation moved from UX to UI, and strict checks now reject UI files/render functions/dependencies in UX. Future generation registers the same complete owners. Earlier local-wrapper and migration allowances are removed from maintained guidance.
+
+Final verification: six fresh typechecks, builds and lint checks; 140 UI/UX/architecture/generator regressions; 122 Ledger and 213 Shop unit checks; full 205-case Ledger / 208-case Shop browser baselines plus 116 Ledger and 88 Shop supplemental cases; 36 auth/public, 32 Docs, 12 Automation, 12 Inventory/Super Admin and 12 final Shop shell cases; 111 normal repository browser cases; and the separately executed real disposable-backend persistence/session case all pass. All 76 routes have passing browser evidence. Exact shell measurements match across five Suits and twelve EN/AR × light/dark × 390/768/1440 combinations. The backend setup required correcting two stale local seed trial constants to the existing seven-day contract; no migrations, hosted data or provider settings changed.
+
+The source inventory is accepted locally and records current imports, with reconciliation history retained. Canonical detailed evidence, exact commands and legitimate configuration differences are in the final acceptance record. GitHub preflight confirmed unchanged open parent #238 and ancestors, no policy errors, and parallel #246 remains excluded. No child PR, push, deployment, hosted mutation, provider change or merge was performed. Publication's next action is read-only suppression verification followed by fresh stack/PR review and a draft child publication when safe.
+
+Final contract review narrowed dashboard column projections to data-only metadata. The strict checker now follows imported, re-exported, namespace and inline types, rejecting hidden callbacks/components/opaque values while accepting neutral data. Ten additional contract regressions bring the shared suite to 140 passing cases, including 47 architecture cases.
