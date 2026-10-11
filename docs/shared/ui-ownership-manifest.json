@@ -4,9 +4,9 @@
   "owner": "packages/ui",
   "interactionOwner": "packages/ux",
   "classifications": {
-    "shared-presentation-debt": "Reusable presentation that remains local only as recorded migration debt.",
-    "product-orchestration": "Valid product/domain orchestration that composes shared UI and may remain app-owned.",
-    "obsolete-duplicate": "A local duplicate already superseded by a shared UI primitive and awaiting removal."
+    "shared-presentation-debt": "Historical classification; no current Suit presentation debt is permitted.",
+    "product-orchestration": "Product business/data/configuration in Suit scripts and composables; Suit-local Vue composition is forbidden.",
+    "obsolete-duplicate": "Historical classification for removed local duplicates."
   },
   "bypasses": [],
   "components": [],
@@ -22,7 +22,7 @@
         "apps/ledger-suit/app/components/MoneyText.vue"
       ],
       "task": "BS-UI-ZN-PATTERNS-001",
-      "migrationStatus": "shared-owner-available; product migration remains open"
+      "migrationStatus": "template-migrated; final browser acceptance in progress"
     },
     {
       "family": "usage",
@@ -41,7 +41,7 @@
         "apps/shop-suit/app/components/PlanUsageMeter.vue"
       ],
       "task": "BS-UI-ZN-PATTERNS-001",
-      "migrationStatus": "shared-owner-available; product migration remains open"
+      "migrationStatus": "template-migrated; final browser acceptance in progress"
     },
     {
       "family": "pricing",
@@ -59,7 +59,7 @@
         "apps/ledger-suit/app/components/BillingCheckout.vue"
       ],
       "task": "BS-UI-ZN-PATTERNS-001",
-      "migrationStatus": "shared-owner-available; product migration remains open"
+      "migrationStatus": "template-migrated; final browser acceptance in progress"
     },
     {
       "family": "setup",
@@ -75,7 +75,7 @@
         "apps/shop-suit/app/components/BarberSetupGuide.vue"
       ],
       "task": "BS-UI-ZN-PATTERNS-001",
-      "migrationStatus": "shared-owner-available; product migration remains open"
+      "migrationStatus": "template-migrated; final browser acceptance in progress"
     },
     {
       "family": "entity",
@@ -91,7 +91,7 @@
         "apps/shop-suit/app/components/PurchaseEntityPicker.vue"
       ],
       "task": "BS-UI-ZN-PATTERNS-001",
-      "migrationStatus": "shared-owner-available; product migration remains open"
+      "migrationStatus": "template-migrated; final browser acceptance in progress"
     },
     {
       "family": "context",
@@ -108,7 +108,7 @@
         "apps/ledger-suit/app/components/TeamMenu.vue"
       ],
       "task": "BS-UI-ZN-PATTERNS-001",
-      "migrationStatus": "shared-owner-available; product migration remains open"
+      "migrationStatus": "template-migrated; final browser acceptance in progress"
     },
     {
       "family": "import",
@@ -128,7 +128,7 @@
         "apps/shop-suit/app/pages/catalog-import.vue"
       ],
       "task": "BS-UI-ZN-PATTERNS-001",
-      "migrationStatus": "shared-owner-available; product migration remains open"
+      "migrationStatus": "template-migrated; final browser acceptance in progress"
     },
     {
       "family": "team",
@@ -149,7 +149,7 @@
         "apps/shop-suit/app/pages/team.vue"
       ],
       "task": "BS-LAUNCH-ACCESS-UI-001",
-      "migrationStatus": "Ledger access tabs/matrix/role editor and Ledger/Shop invitation/member editor consumers migrated"
+      "migrationStatus": "template-migrated; final browser acceptance in progress"
     },
     {
       "family": "review-detail",
@@ -169,7 +169,7 @@
         "apps/ledger-suit/app/components/TransactionDetailDialog.vue"
       ],
       "task": "BS-UI-ZN-PATTERNS-001",
-      "migrationStatus": "shared-owner-available; product migration remains open"
+      "migrationStatus": "template-migrated; final browser acceptance in progress"
     },
     {
       "family": "tags",
@@ -183,7 +183,7 @@
         "apps/ledger-suit/app/components/TransactionTags.vue"
       ],
       "task": "BS-UI-ZN-PATTERNS-001",
-      "migrationStatus": "shared-owner-available; product migration remains open"
+      "migrationStatus": "template-migrated; final browser acceptance in progress"
     },
     {
       "family": "charts",
@@ -197,7 +197,7 @@
         "apps/ledger-suit/app/components/RevenueExpenseChart.vue"
       ],
       "task": "BS-UI-ZN-PATTERNS-001",
-      "migrationStatus": "shared-owner-available; product migration remains open"
+      "migrationStatus": "template-migrated; final browser acceptance in progress"
     },
     {
       "family": "hierarchy-flow",
@@ -212,7 +212,7 @@
         "apps/ledger-suit/app/components/FinancialSystemMap.vue"
       ],
       "task": "BS-UI-ZN-PATTERNS-001",
-      "migrationStatus": "shared-owner-available; product migration remains open"
+      "migrationStatus": "template-migrated; final browser acceptance in progress"
     },
     {
       "family": "line-items",
@@ -228,7 +228,7 @@
         "apps/shop-suit/app/pages/purchases/index.vue"
       ],
       "task": "BS-UI-ZN-PATTERNS-001",
-      "migrationStatus": "shared-owner-available; product migration remains open"
+      "migrationStatus": "template-migrated; final browser acceptance in progress"
     },
     {
       "family": "printable",
@@ -245,7 +245,7 @@
         "apps/shop-suit/app/pages/sales/[id]/receipt.vue"
       ],
       "task": "BS-UI-ZN-PATTERNS-001",
-      "migrationStatus": "shared-owner-available; product migration remains open"
+      "migrationStatus": "template-migrated; final browser acceptance in progress"
     },
     {
       "family": "filters",
@@ -261,7 +261,7 @@
         "apps/shop-suit/app/pages/reports/index.vue"
       ],
       "task": "BS-UI-ZN-PATTERNS-001",
-      "migrationStatus": "shared-owner-available; product migration remains open"
+      "migrationStatus": "template-migrated; final browser acceptance in progress"
     },
     {
       "family": "multi-suit-administration",
@@ -271,7 +271,7 @@
       ],
       "adapterBoundary": "App-supplied registry, context navigation, selection, translated labels and intent handlers; no product queries or authorization",
       "task": "BS-SA-SHELL-001",
-      "migrationStatus": "shared-owner-available"
+      "migrationStatus": "template-migrated; final browser acceptance in progress"
     }
   ]
 }

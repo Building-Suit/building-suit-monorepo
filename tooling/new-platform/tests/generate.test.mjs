@@ -7,6 +7,7 @@ import test from 'node:test'
 import { spawnSync } from 'node:child_process'
 import { generatePlatform } from '../generate.mjs'
 import { validateSuitTemplateBoundaries } from '../../checks/suit-template-boundaries.mjs'
+import { validateAtomicTemplateArchitecture } from '../../checks/atomic-template-architecture.mjs'
 
 const workspaceRoot = fileURLToPath(new URL('../../../', import.meta.url))
 const slug = 'generator-fixture-suit'
@@ -67,6 +68,25 @@ test('dry run is side-effect free and matches the generated disposable Suit', as
     assert.equal(JSON.parse(await readFile(path.join(app, `i18n/locales/${locale}.json`), 'utf8')).product.name, 'Fixture Suit')
   }
   await assert.rejects(generatePlatform({ root, slug }), /Refusing to overwrite/)
+})
+
+test('generation registers canonical page, layout and root owners without accepting unverified product behavior', async t => {
+  const { root } = await fixture(t)
+  const { cp } = await import('node:fs/promises')
+  await cp(path.join(workspaceRoot, 'packages/ui/src'), path.join(root, 'packages/ui/src'), { recursive: true })
+  await mkdir(path.join(root, 'docs/shared'), { recursive: true })
+  const registryPath = path.join(root, 'docs/shared/atomic-template-route-inventory.json')
+  const registeredTemplates = Object.fromEntries(['BsAppRoot', 'BsWorkspaceShell', 'BsStarterWorkflowPage'].map(name => [name, `packages/ui/src/templates/${name}.vue`]))
+  const initial = JSON.stringify({ registeredTemplates, pageTemplates: ['BsStarterWorkflowPage'], entries: [], currentInventory: { suitVueFiles: 0, routes: 0, layouts: 0, roots: 0, localComponents: 0 } })
+  await writeFile(registryPath, initial)
+  await generatePlatform({ root, slug, dryRun: true })
+  assert.equal(await readFile(registryPath, 'utf8'), initial)
+  await generatePlatform({ root, slug })
+  const registry = JSON.parse(await readFile(registryPath, 'utf8'))
+  assert.equal(registry.entries.length, 3)
+  assert.ok(registry.entries.every(entry => entry.verification === 'not-yet-accepted'))
+  assert.deepEqual(registry.currentInventory, { suitVueFiles: 3, routes: 1, layouts: 1, roots: 1, localComponents: 0 })
+  assert.deepEqual((await validateAtomicTemplateArchitecture({ root })).failures, [])
 })
 
 const regressions = [

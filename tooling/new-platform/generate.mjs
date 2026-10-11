@@ -13,6 +13,18 @@ export async function generatePlatform({ slug, title = slug, dryRun = false, roo
   try { await access(target); throw new Error(`Refusing to overwrite ${target}`) }
   catch (error) { if (error.code !== 'ENOENT') throw error }
   const rootPackage = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'))
+  const registryPath = path.join(root, 'docs/shared/atomic-template-route-inventory.json')
+  let registry
+  try { registry = JSON.parse(await readFile(registryPath, 'utf8')) }
+  catch (error) { if (error.code !== 'ENOENT') throw error }
+  const owners = [
+    ['app/app.vue', 'root', 'BsAppRoot'],
+    ['app/layouts/default.vue', 'layout', 'BsWorkspaceShell'],
+    ['app/pages/index.vue', 'route', 'BsStarterWorkflowPage'],
+  ]
+  if (registry) for (const [, , owner] of owners) {
+    if (registry.registeredTemplates?.[owner] !== `packages/ui/src/templates/${owner}.vue`) throw new Error(`Missing canonical starter template: ${owner}`)
+  }
   // Apps own the Nuxt runtime; the shared layer owns presentation modules, fonts and vendors.
   const dependencies = Object.fromEntries(['nuxt', 'vue', 'vue-router'].map(name => [name, rootPackage.devDependencies[name]]))
   dependencies['@building-suit/nuxt-layer'] = 'workspace:*'
@@ -39,6 +51,16 @@ export async function generatePlatform({ slug, title = slug, dryRun = false, roo
     for (const [file, contents] of files) {
       await mkdir(path.dirname(path.join(target, file)), { recursive: true })
       await writeFile(path.join(target, file), contents, { flag: 'wx' })
+    }
+    if (registry) {
+      registry.entries.push(...owners.map(([file, kind, owner]) => ({ source: `apps/${slug}/${file}`, kind, destination: registry.registeredTemplates[owner], domainAdapter: `apps/${slug}/${file}`, ...(kind === 'route' ? { purpose: 'starter-workflow' } : {}), status: 'generated; product acceptance pending', verification: 'not-yet-accepted', dependencies: [] })))
+      if (registry.currentInventory) {
+        registry.currentInventory.suitVueFiles += 3
+        registry.currentInventory.routes += 1
+        registry.currentInventory.layouts += 1
+        registry.currentInventory.roots += 1
+      }
+      await writeFile(registryPath, JSON.stringify(registry, null, 2) + '\n')
     }
   }
   return inventory
