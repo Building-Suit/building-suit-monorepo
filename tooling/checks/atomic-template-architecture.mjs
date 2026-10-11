@@ -122,6 +122,15 @@ export async function validateAtomicTemplateArchitecture({ root = defaultRoot } 
       }
       const localBindings = new Set()
       function discoverBindings(node) {
+        if (ts.isVariableDeclaration(node) && ts.isObjectBindingPattern(node.name) && node.initializer) {
+          const value = ts.isAwaitExpression(node.initializer) ? node.initializer.expression : node.initializer
+          const vue = ts.isCallExpression(value) && value.expression.kind === ts.SyntaxKind.ImportKeyword && ts.isStringLiteral(value.arguments[0]) && value.arguments[0].text === 'vue'
+          const namespace = ts.isIdentifier(value) && namespaces.has(value.text)
+          if (vue || namespace) for (const element of node.name.elements) {
+            const key = element.propertyName?.getText(ast).replace(/^['"]|['"]$/g, '') ?? element.name.getText(ast)
+            if (ts.isIdentifier(element.name) && renderCalls.has(key)) renderBindings.add(element.name.text)
+          }
+        }
         if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name)) {
           localBindings.add(node.name.text)
           const value = node.initializer
@@ -132,6 +141,7 @@ export async function validateAtomicTemplateArchitecture({ root = defaultRoot } 
             if (namespaces.has(value.text)) namespaces.add(node.name.text)
           }
           if (value && ts.isPropertyAccessExpression(value) && ts.isIdentifier(value.expression) && namespaces.has(value.expression.text) && renderCalls.has(value.name.text)) renderBindings.add(node.name.text)
+          if (value && ts.isElementAccessExpression(value) && ts.isIdentifier(value.expression) && namespaces.has(value.expression.text) && ts.isStringLiteral(value.argumentExpression) && renderCalls.has(value.argumentExpression.text)) renderBindings.add(node.name.text)
         }
         if ((ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node)) && node.name) localBindings.add(node.name.text)
         ts.forEachChild(node, discoverBindings)
@@ -156,6 +166,9 @@ export async function validateAtomicTemplateArchitecture({ root = defaultRoot } 
         if (!entry?.destination || owner?.source !== entry.destination) failures.push(`${file}: root/layout must resolve to its registered shared template`)
         if (roots.length === 1) {
           if (localBindings.has(roots[0].tag) || (bindings.has(roots[0].tag) && bindings.get(roots[0].tag) !== owner?.specifier)) failures.push(`${file}: root/layout template name is shadowed`)
+          for (const prop of roots[0].props) {
+            if ((prop.type === 6 && ['class', 'style'].includes(prop.name)) || (prop.type === 7 && (['html', 'slot'].includes(prop.name) || (prop.name === 'bind' && ['class', 'style'].includes(prop.arg?.content))))) failures.push(`${file}: presentation/slot recipe must be owned by its template`)
+          }
           const children = roots[0].children.filter(node => node.type === 1)
           if (children.length > 1 || children.some(node => node.tag !== 'slot' || node.props.length || node.children.length)) failures.push(`${file}: layout may expose only one direct unscoped route outlet`)
         }
@@ -209,8 +222,20 @@ export async function validateAtomicTemplateArchitecture({ root = defaultRoot } 
       if (ts.isImportDeclaration(statement) && statement.importClause?.namedBindings && ts.isNamespaceImport(statement.importClause.namedBindings)) queryNamespaces.add(statement.importClause.namedBindings.name.text)
     }
     function discoverUiAliases(node) {
+      if (ts.isVariableDeclaration(node) && ts.isObjectBindingPattern(node.name) && node.initializer) {
+        const value = ts.isAwaitExpression(node.initializer) ? node.initializer.expression : node.initializer
+        const imported = ts.isCallExpression(value) && value.expression.kind === ts.SyntaxKind.ImportKeyword
+        if (imported || (ts.isIdentifier(value) && queryNamespaces.has(value.text))) for (const element of node.name.elements) {
+          const key = element.propertyName?.getText(ast).replace(/^['"]|['"]$/g, '') ?? element.name.getText(ast)
+          if (ts.isIdentifier(element.name) && forbiddenUiCalls.has(key)) forbiddenBindings.add(element.name.text)
+        }
+      }
       if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer) {
         const value = node.initializer
+        const dynamic = ts.isAwaitExpression(value) ? value.expression : value
+        if (ts.isCallExpression(dynamic) && dynamic.expression.kind === ts.SyntaxKind.ImportKeyword) queryNamespaces.add(node.name.text)
+        if (ts.isIdentifier(value) && queryNamespaces.has(value.text)) queryNamespaces.add(node.name.text)
+        if (ts.isElementAccessExpression(value) && ts.isStringLiteral(value.argumentExpression) && forbiddenUiCalls.has(value.argumentExpression.text)) forbiddenBindings.add(node.name.text)
         if (ts.isIdentifier(value) && forbiddenBindings.has(value.text)) forbiddenBindings.add(node.name.text)
         if (ts.isPropertyAccessExpression(value) && forbiddenUiCalls.has(value.name.text)) forbiddenBindings.add(node.name.text)
       }
@@ -221,6 +246,7 @@ export async function validateAtomicTemplateArchitecture({ root = defaultRoot } 
       if (ts.isCallExpression(node)) {
         if (node.expression.kind === ts.SyntaxKind.ImportKeyword && ts.isStringLiteral(node.arguments[0]) && /^(?:~|@)\/|(?:^|\/)apps\/|^@building-suit\/(?:auth|data-access)(?:\/|$)/.test(node.arguments[0].text)) failures.push(`${file}: UI may not import product/identity/data infrastructure ${node.arguments[0].text}`)
         if (ts.isPropertyAccessExpression(node.expression) && ts.isIdentifier(node.expression.expression) && queryNamespaces.has(node.expression.expression.text) && forbiddenUiCalls.has(node.expression.name.text)) failures.push(`${file}: product query/context behavior ${node.expression.getText(ast)} is forbidden in UI`)
+        if (ts.isElementAccessExpression(node.expression) && ts.isIdentifier(node.expression.expression) && queryNamespaces.has(node.expression.expression.text) && ts.isStringLiteral(node.expression.argumentExpression) && forbiddenUiCalls.has(node.expression.argumentExpression.text)) failures.push(`${file}: product query/context behavior ${node.expression.getText(ast)} is forbidden in UI`)
         if (ts.isIdentifier(node.expression) && forbiddenBindings.has(node.expression.text)) failures.push(`${file}: product query/context behavior ${node.expression.text} is forbidden in UI`)
         if (ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === 'factory') failures.push(`${file}: product scope factories are forbidden in UI`)
       }

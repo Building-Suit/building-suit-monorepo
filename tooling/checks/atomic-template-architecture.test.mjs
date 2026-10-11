@@ -23,6 +23,9 @@ for (const [name, source, pattern] of [
   ['slot recipe', '<template><BsExamplePage><template #default><BsText /></template></BsExamplePage></template>', /render composition/],
   ['bound class', '<template><BsExamplePage :class="recipe" /></template>', /slot recipe/],
   ['bound style', '<template><BsExamplePage :style="recipe" /></template>', /slot recipe/],
+  ['dynamic destructured render', '<script setup>const { h: draw } = await import("vue"); draw("div")</script><template><BsExamplePage /></template>', /render factory/],
+  ['destructured namespace render', '<script setup>import * as vue from "vue"; const { h: draw } = vue; draw("div")</script><template><BsExamplePage /></template>', /render factory/],
+  ['indexed render alias', '<script setup>import * as vue from "vue"; const draw = vue["h"]; draw("div")</script><template><BsExamplePage /></template>', /render factory/],
   ['dynamic namespace render', '<script setup>const renderer = await import("vue"); const view = renderer.h("div")</script><template><BsExamplePage /></template>', /render factory/],
   ['raw html', '<template><BsExamplePage v-html="html" /></template>', /slot recipe/],
   ['aliased render', '<script setup>import { h as render } from "vue"; const view = render("div")</script><template><BsExamplePage /></template>', /render factory/],
@@ -38,6 +41,9 @@ for (const [name, source, pattern] of [
 })
 
 for (const [name, source, pattern] of [
+  ['destructured query namespace', '<script setup>import * as nuxt from "#imports"; const { useFetch: load } = nuxt; load("/api")</script><template><main /></template>', /product query/],
+  ['dynamic destructured query', '<script setup>const { useFetch: load } = await import("#imports"); load("/api")</script><template><main /></template>', /product query/],
+  ['indexed query namespace alias', '<script setup>import * as nuxt from "#imports"; const copy = nuxt; copy["useFetch"]("/api")</script><template><main /></template>', /product query/],
   ['variable query alias', '<script setup>const load = useFetch; load("/api/example")</script><template><main /></template>', /product query/],
   ['namespace query', '<script setup>import * as queries from "#imports"; queries.useFetch("/api/example")</script><template><main /></template>', /product query/],
   ['dynamic infrastructure', '<script setup>const session = await import("@building-suit/auth")</script><template><main /></template>', /infrastructure/],

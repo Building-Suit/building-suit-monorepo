@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { BsReportsView, BsReportFilters, BsReportChoices } from '@building-suit/ui/types/reportsPresentation'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import type { OperationalReportKind, OperationalReportPage, OperationalReportRow } from '~/types/reporting'
 import { downloadCsv, encodeCsv } from '~/utils/catalogImport'
@@ -61,7 +62,7 @@ const reportOptions = computed<Array<{ value: OperationalReportKind; label: stri
 ])
 const costReports: OperationalReportKind[] = ['suppliers', 'expenses', 'inventory', 'margin']
 
-const { data: access, pending: accessPending, error: accessError, refresh: refreshAccess } = useAsyncData(
+const { data: access, pending: accessPending, error: accessError, refresh: refreshAccess } = await useAsyncData(
   () => `shop-data:report-access:${currentId.value ?? 'none'}`,
   async () => {
     if (!currentId.value) return { 'reports.view': false, 'reports.cost_profit.view': false }
@@ -215,72 +216,13 @@ async function exportReport() {
     if (stillCurrent()) exportError.value = copy.value.exportFailed
   } finally { exporting.value = false }
 }
-</script>
 
+const reportFilters = computed<BsReportFilters>({ get: () => ({ report: report.value, location: locationId.value, from: fromDate.value, to: toDate.value }), set: value => { if (reportKinds.includes(value.report as OperationalReportKind)) report.value = value.report as OperationalReportKind; if (value.location === 'all' || activeLocations.value.some(item => item.id === value.location)) locationId.value = value.location; fromDate.value = value.from; toDate.value = value.to } })
+const reportView = computed<BsReportsView>(() => ({ workspace: current.value?.name ?? '', exporting: exporting.value, exportDisabled: pending.value || !result.value.total || !canView.value || costDenied.value, exportLabel: exporting.value ? copy.value.exporting : copy.value.export, notice: copy.value.operational, detailNotice: report.value === 'margin' ? copy.value.fifoNotice : '', dateDisabled: ['inventory', 'receivables'].includes(report.value), failed: Boolean(accessError.value || error.value), exportError: exportError.value, loading: accessPending.value || pending.value, denied: !canView.value, restricted: costDenied.value, summary: Object.entries(result.value.summary).filter(([key]) => !['costBasis', 'snapshot'].includes(key)).map(([key, value]) => ({ id: key, label: labels.value[key] || key, value: display(value, summaryFormat(key)), to: summaryPath(key) })), columns: columns.value.map(column => ({ key: column.key, label: column.label ?? column.key, primary: Boolean(column.primary) })), rows: result.value.items.map((row, index) => ({ id: String(row.id ?? index), cells: Object.fromEntries(columns.value.map(column => [column.key, display(row[column.key], column.format)])), sourceTo: sourcePath(row) })), total: result.value.total, pagination: `${result.value.total} ${copy.value.records} · ${copy.value.page} ${page.value} ${copy.value.of} ${totalPages.value}`, previousDisabled: page.value <= 1, nextDisabled: page.value >= totalPages.value }))
+const reportChoices = computed<BsReportChoices>(() => ({ reports: reportOptions.value, locations: [{ value: 'all', label: copy.value.allLocations }, ...activeLocations.value.map(item => ({ value: item.id, label: item.name }))] }))
+async function retryReport() { await Promise.all([refreshAccess(), refresh()]) }
+function changeReportPage(direction: number) { page.value = Math.max(1, Math.min(totalPages.value, page.value + direction)) }
+</script>
 <template>
-  <BsStack>
-    <BsPageHeader  :title="copy.title" :subtitle="copy.subtitle">
-      <template #actions>
-        <BsText as="p" size="xs" emphasis="semibold">{{ current?.name }}</BsText>
-        <BsButton variant="primary" :pending="exporting" :disabled="pending || !result.total || !canView || costDenied" @click="exportReport">{{ exporting ? copy.exporting : copy.export }}</BsButton>
-      </template>
-    </BsPageHeader>
-    <BsText as="p" size="sm" tone="warning">{{ copy.operational }}</BsText>
-    <BsText v-if="report === 'margin'" as="p" size="sm" tone="muted">{{ copy.fifoNotice }}</BsText>
-    <BsFilterBar :label="copy.title">
-      <BsGrid :columns="4">
-        <BsField v-slot="field" :label="copy.title">
-          <BsSelect v-model="report" :input-id="field.id" :aria-describedby="field.describedby" :label="copy.title" :options="[...(reportOptions).map(option => ({ value: option.value, label: (option.label), disabled: false }))]" option-label="label" option-value="value" option-disabled="disabled"/>
-        </BsField>
-        <BsField v-slot="field" :label="copy.location">
-          <BsSelect v-model="locationId" :input-id="field.id" :aria-describedby="field.describedby" :label="copy.location" :options="[{ value: 'all', label: (copy.allLocations), disabled: false }, ...(activeLocations).map(location => ({ value: location.id, label: (location.name), disabled: false }))]" option-label="label" option-value="value" option-disabled="disabled"/>
-        </BsField>
-        <BsField v-slot="field" :label="copy.from">
-          <BsInput :id="field.id" v-model="fromDate" :aria-describedby="field.describedby" type="date" :disabled="report === 'inventory' || report === 'receivables'"/>
-        </BsField>
-        <BsField v-slot="field" :label="copy.to">
-          <BsInput :id="field.id" v-model="toDate" :aria-describedby="field.describedby" type="date" :disabled="report === 'inventory' || report === 'receivables'"/>
-        </BsField>
-      </BsGrid>
-      <BsText as="p" size="xs" tone="muted">{{ copy.fullHistory }}</BsText>
-    </BsFilterBar>
-    <BsText v-if="accessError || error" role="alert" as="p" size="sm" tone="danger">{{ copy.failed }} <BsButton @click="refreshAccess(); refresh()">{{ copy.retry }}</BsButton>
-    </BsText>
-    <BsText v-else-if="exportError" role="alert" as="p" size="sm" tone="danger">{{ exportError }}</BsText>
-    <BsText v-if="accessPending || pending" role="status" as="p" size="sm" tone="muted">{{ copy.loading }}</BsText>
-    <BsText v-else-if="!canView" as="p" size="sm" tone="muted">{{ copy.denied }}</BsText>
-    <BsText v-else-if="costDenied" as="p" size="sm" tone="muted">{{ copy.costDenied }}</BsText>
-    <template v-else>
-      <BsGrid :columns="4">
-        <BsActionTile v-for="(value, key) in result.summary" v-show="key !== 'costBasis' && key !== 'snapshot'" :key="key" :to="summaryPath(String(key))">
-          <BsText as="p" size="xs" tone="muted" emphasis="semibold">{{ labels[key] || key }}</BsText>
-          <BsText as="p" size="lg" emphasis="semibold">{{ display(value, summaryFormat(String(key))) }}</BsText>
-          <BsText as="span" size="xs" emphasis="semibold">{{ copy.open }}</BsText>
-        </BsActionTile>
-      </BsGrid>
-      <BsPanel id="report-results" padding="md">
-        <BsBox scroll="x">
-          <BsDataTable :value="result.items" data-key="id" :columns="[...(columns).map(column => ({ key: column.key, header: column.label ?? column.key })), { key: 'column1', header: (copy.open), align: 'end' }]">
-            <template v-for="column in columns" :key="column.key" #[`cell-${column.key}`]="{ row: row }">
-              <BsLink v-if="column.primary && sourcePath(row)" :to="sourcePath(row)">{{ display(row[column.key], column.format) }}</BsLink>
-              <BsText v-else as="span">{{ display(row[column.key], column.format) }}</BsText>
-            </template>
-            <template #cell-column1="{ row: row }">
-              <BsLink v-if="sourcePath(row)" :to="sourcePath(row)">{{ copy.open }}</BsLink>
-            </template>
-            <template #empty>
-              <BsText as="p" size="sm" tone="muted">{{ copy.empty }}</BsText>
-            </template>
-          </BsDataTable>
-        </BsBox>
-        <BsInline v-if="result.total" justify="between">
-          <BsText as="p" tone="muted">{{ result.total }} {{ copy.records }} · {{ copy.page }} {{ page }} {{ copy.of }} {{ totalPages }}</BsText>
-          <BsInline>
-            <BsButton :disabled="page <= 1" @click="page--">{{ copy.previous }}</BsButton>
-            <BsButton :disabled="page >= totalPages" @click="page++">{{ copy.next }}</BsButton>
-          </BsInline>
-        </BsInline>
-      </BsPanel>
-    </template>
-  </BsStack>
+  <BsReportsPage v-model:filters="reportFilters" :copy="copy" :view="reportView" :choices="reportChoices" @export="exportReport" @retry="retryReport" @page="changeReportPage" />
 </template>

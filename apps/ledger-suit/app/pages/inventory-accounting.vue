@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import { formatPresentationMoney } from '@building-suit/ux'
+import type { BsInventoryAccountingCopy, BsInventoryAccountingView, BsInventoryAccountingForm, BsInventoryAccountingChoices } from '@building-suit/ui/types/inventoryAccountingPresentation'
 import { inventoryReconciles } from '~/utils/inventoryAccounting'
 
 definePageMeta({ layout: 'default' })
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const { currentId, can } = useTenant()
 const user = useSupabaseUser()
 const { readOnly } = useBilling()
@@ -42,137 +44,51 @@ async function save() {
 function run() { offset.value = 0; void load() }
 function page(event: { first: number }) { offset.value = event.first; void load() }
 const ledgerPresentation = useLedgerPresentation()
-</script>
 
+const inventoryCopy = computed<BsInventoryAccountingCopy>(() => ({
+  common_cancel: t('common.cancel'),
+  common_retry: t('common.retry'),
+  common_save: t('common.save'),
+  inventory_accountingDate: t('inventory.accountingDate'),
+  inventory_actor: t('inventory.actor'),
+  inventory_asOf: t('inventory.asOf'),
+  inventory_boundary: t('inventory.boundary'),
+  inventory_closingNote: t('inventory.closingNote'),
+  inventory_cogs: t('inventory.cogs'),
+  inventory_cogsDelta: t('inventory.cogsDelta'),
+  inventory_configure: t('inventory.configure'),
+  inventory_control: t('inventory.control'),
+  inventory_controlName: t('inventory.controlName'),
+  inventory_denied: t('inventory.denied'),
+  inventory_effectiveDate: t('inventory.effectiveDate'),
+  inventory_empty: t('inventory.empty'),
+  inventory_facts: t('inventory.facts'),
+  inventory_inventoryDelta: t('inventory.inventoryDelta'),
+  inventory_loadError: t('inventory.loadError'),
+  inventory_movement: t('inventory.movement'),
+  inventory_newControl: t('inventory.newControl'),
+  inventory_noSource: t('inventory.noSource'),
+  inventory_offset: t('inventory.offset'),
+  inventory_policy: t('inventory.policy'),
+  inventory_related: t('inventory.related'),
+  inventory_run: t('inventory.run'),
+  inventory_setupPolicy: t('inventory.setupPolicy'),
+  inventory_snapshot: t('inventory.snapshot'),
+  inventory_sourceId: t('inventory.sourceId'),
+  inventory_sourceKey: t('inventory.sourceKey'),
+  inventory_title: t('inventory.title'),
+  inventory_trace: t('inventory.trace'),
+  inventory_valuation: t('inventory.valuation'),
+  pageContext_label: t('pageContext.label'),
+}))
+
+const inventoryForm = computed<BsInventoryAccountingForm>({ get: () => ({ ...form }), set: value => Object.assign(form, value) })
+const inventoryAmount = (value: string | number, currency: string) => formatPresentationMoney(value, { currency: ledgerPresentation.currency(currency), locale: locale.value, unit: 'minor', numberingSystem: 'latn' })
+const inventoryView = computed<BsInventoryAccountingView>(() => ({ context: ledgerPresentation.context(undefined, undefined, asOf.value), contextLabel: t('pageContext.label'), canRead: can('inventory.read'), canConfigure: can('inventory.configure'), pending: pending.value, failed: Boolean(error.value), available: Boolean(workspace.value), configurationDisabled: readOnly.value || pending.value, sources: (workspace.value?.sources ?? []).map(source => ({ id: source.id, key: source.source_key, status: source.status, statusLabel: t(`inventory.status.${source.status}`), tone: inventoryReconciles(source) ? 'success' : 'warning', amounts: (['inventory_minor', 'inventory_gl_minor', 'inventory_variance_minor', 'cogs_minor', 'cogs_gl_minor', 'cogs_variance_minor', 'cogs_closing_minor'] as const).map(key => ({ id: key, label: t(`inventory.amounts.${key}`), value: inventoryAmount(source[key], workspace.value!.currency) })), sequence: String(source.latest_sequence ?? '—'), actor: source.actor_id })), facts: (workspace.value?.facts ?? []).map(fact => ({ id: fact.id, accountingDate: fact.accounting_date, effectiveDate: fact.effective_date, movement: `${fact.movement_id} · ${fact.movement_version}`, kind: t(`inventory.kinds.${fact.kind}`), valuation: `${fact.valuation_id} · ${fact.valuation_version}`, policy: `${fact.costing_method} · ${fact.policy_version}`, inventory: inventoryAmount(fact.inventory_delta_minor, workspace.value!.currency), cogs: inventoryAmount(fact.cogs_delta_minor, workspace.value!.currency), journal: fact.journal_reference, journalTo: `/transactions?q=${encodeURIComponent(fact.journal_reference)}`, related: fact.related_fact_id ?? '', reason: fact.reason ?? '' })), first: offset.value, total: workspace.value?.total ?? 0, pageSize: 25, controlMode: mode.value === 'control', formTitle: t(mode.value === 'control' ? 'inventory.newControl' : 'inventory.configure'), saving: saving.value, dirty: dirty.value, formError: saveError.value, readOnly: readOnly.value, sourceKeyMaxLength: 200 }))
+const inventoryChoices = computed<BsInventoryAccountingChoices>(() => ({ controls: controls.value.map(a => ({ value: a.id, label: `${a.code} ${a.name}` })), cogs: cogs.value.map(a => ({ value: a.id, label: `${a.code} ${a.name}` })), offsets: offsets.value.map(a => ({ value: a.id, label: `${a.code} ${a.name}` })) }))
+function beginInventory(mode: string) { if (mode === 'control' || mode === 'source') begin(mode) }
+function inventoryPage(first: number) { page({ first }) }
+</script>
 <template>
-  <BsStack gap="lg">
-    <BsPageHeader
-      :title="t('inventory.title')"
-      :subtitle="t('inventory.policy')"
-      :context="ledgerPresentation.context(undefined, undefined, asOf)"
-      :context-label="ledgerPresentation.t('pageContext.label')"
-    />
-    <BsText role="note">{{ t('inventory.boundary') }}</BsText>
-    <BsText v-if="!can('inventory.read')" role="status">{{ t('inventory.denied') }}</BsText>
-    <template v-else>
-      <BsForm @submit.prevent="run">
-        <BsFloatingField :label="t('inventory.asOf')">
-          <BsInput v-model="asOf" type="date" required />
-        </BsFloatingField>
-        <BsButton type="submit" :disabled="pending">{{ t('inventory.run') }}</BsButton>
-        <BsButton v-if="can('inventory.configure')" type="button" :disabled="readOnly || pending" @click="begin('control')">{{ t('inventory.newControl') }}</BsButton>
-        <BsButton v-if="can('inventory.configure')" type="button" :disabled="readOnly || pending" variant="primary" @click="begin('source')">{{ t('inventory.configure') }}</BsButton>
-      </BsForm>
-      <BsText v-if="error" role="alert" tone="danger">{{ t('inventory.loadError') }} <BsButton type="submit" @click="load">{{ t('common.retry') }}</BsButton></BsText>
-      <BsSectionSkeleton v-else-if="pending" variant="table" :rows="5" />
-      <template v-else-if="workspace">
-        <BsText v-if="!workspace.sources.length" role="status">{{ t('inventory.noSource') }}</BsText>
-        <BsCard v-for="source in workspace.sources" :key="source.id" as="section" padding="md">
-          <BsStack gap="md">
-            <BsHeading :level="2" size="h2">{{ source.source_key }}</BsHeading>
-            <BsText :data-inventory-status="source.status" :tone="inventoryReconciles(source) ? 'success' : 'warning'">{{ t(`inventory.status.${source.status}`) }}</BsText>
-            <BsDescriptionList :columns="3">
-              <BsBox v-for="key in (['inventory_minor', 'inventory_gl_minor', 'inventory_variance_minor', 'cogs_minor', 'cogs_gl_minor', 'cogs_variance_minor', 'cogs_closing_minor'] as const)" :key="key">
-                <BsDescriptionTerm>{{ t(`inventory.amounts.${key}`) }}</BsDescriptionTerm>
-                <BsDescriptionValue>
-                  <BsMoneyText :amount="source[key]" :currency="ledgerPresentation.currency(workspace.currency)" :locale="ledgerPresentation.locale" />
-                </BsDescriptionValue>
-              </BsBox>
-            </BsDescriptionList>
-            <BsText size="sm" tone="muted">{{ t('inventory.snapshot') }}: {{ source.latest_sequence ?? '—' }} · {{ t('inventory.closingNote') }}</BsText>
-            <BsDescriptionList :columns="2">
-              <BsBox>
-                <BsDescriptionTerm>{{ t('inventory.sourceId') }}</BsDescriptionTerm>
-                <BsDescriptionValue>{{ source.id }}</BsDescriptionValue>
-              </BsBox>
-              <BsBox>
-                <BsDescriptionTerm>{{ t('inventory.actor') }}</BsDescriptionTerm>
-                <BsDescriptionValue>{{ source.actor_id }}</BsDescriptionValue>
-              </BsBox>
-            </BsDescriptionList>
-          </BsStack>
-        </BsCard>
-        <BsCard as="section" padding="none" overflow="hidden">
-          <BsHeading :level="2" size="h2">{{ t('inventory.facts') }}</BsHeading>
-          <BsDataTable
-            :value="workspace.facts"
-            row-key="id"
-            lazy
-            paginator
-            :rows="25"
-            :first="offset"
-            :total-records="workspace.total"
-            :label="t('inventory.facts')"
-            :columns="[{ key: 'accounting_date', field: 'accounting_date', header: t('inventory.accountingDate') }, { key: 'effective_date', field: 'effective_date', header: t('inventory.effectiveDate') }, { key: 'column3', header: t('inventory.movement') }, { key: 'column4', header: t('inventory.valuation') }, { key: 'column5', header: t('inventory.inventoryDelta') }, { key: 'column6', header: t('inventory.cogsDelta') }, { key: 'column7', header: t('inventory.trace') }]"
-            @page="page"
-          >
-            <template #empty>{{ t('inventory.empty') }}</template>
-            <template #cell-column3="{ row: fact }">
-              <BsText as="span">{{ fact.movement_id }} · {{ fact.movement_version }}</BsText>
-              <BsText as="span" size="sm">{{ t(`inventory.kinds.${fact.kind}`) }}</BsText>
-            </template>
-            <template #cell-column4="{ row: fact }">{{ fact.valuation_id }} · {{ fact.valuation_version }}<BsText as="span" size="sm">{{ fact.costing_method }} · {{ fact.policy_version }}</BsText></template>
-            <template #cell-column5="{ row: fact }">
-              <BsMoneyText :amount="fact.inventory_delta_minor" :currency="ledgerPresentation.currency(workspace.currency)" :locale="ledgerPresentation.locale" />
-            </template>
-            <template #cell-column6="{ row: fact }">
-              <BsMoneyText :amount="fact.cogs_delta_minor" :currency="ledgerPresentation.currency(workspace.currency)" :locale="ledgerPresentation.locale" />
-            </template>
-            <template #cell-column7="{ row: fact }">
-              <BsLink :to="{ path: '/transactions', query: { q: fact.journal_reference } }">{{ fact.journal_reference }}</BsLink>
-              <BsText as="span" size="xs">{{ fact.id }}</BsText>
-              <BsText v-if="fact.related_fact_id" as="span" size="xs">{{ t('inventory.related') }}: {{ fact.related_fact_id }}</BsText>
-              <BsText as="span" size="sm">{{ fact.reason }}</BsText>
-            </template>
-          </BsDataTable>
-        </BsCard>
-      </template>
-    </template>
-    <BsRecordActionDialog
-      v-model:visible="visible"
-      :title="t(mode === 'control' ? 'inventory.newControl' : 'inventory.configure')"
-      :pending="saving"
-      :dirty="dirty"
-      :error="saveError"
-      size="lg"
-      :submit-label="t('common.save')"
-      :cancel-label="t('common.cancel')"
-      :submit-disabled="readOnly"
-      @submit="save"
-    >
-      <BsFloatingField v-if="mode === 'control'" :label="t('inventory.controlName')">
-        <BsInput v-model="form.name" required />
-      </BsFloatingField>
-      <template v-else>
-        <BsText>{{ t('inventory.setupPolicy') }}</BsText>
-        <BsFloatingField :label="t('inventory.sourceKey')">
-          <BsInput v-model="form.source" required maxlength="200" />
-        </BsFloatingField>
-        <BsFloatingField :label="t('inventory.actor')">
-          <BsInput v-model="form.actor" required />
-        </BsFloatingField>
-        <BsFloatingField :label="t('inventory.effectiveDate')">
-          <BsInput v-model="form.effective" type="date" required />
-        </BsFloatingField>
-        <BsFloatingField :label="t('inventory.control')">
-          <BsSelect v-model="form.control" required native>
-            <BsSelectOption value="" />
-            <BsSelectOption v-for="a in controls" :key="a.id" :value="a.id">{{ a.code }} {{ a.name }}</BsSelectOption>
-          </BsSelect>
-        </BsFloatingField>
-        <BsFloatingField :label="t('inventory.cogs')">
-          <BsSelect v-model="form.cogs" required native>
-            <BsSelectOption value="" />
-            <BsSelectOption v-for="a in cogs" :key="a.id" :value="a.id">{{ a.code }} {{ a.name }}</BsSelectOption>
-          </BsSelect>
-        </BsFloatingField>
-        <BsFloatingField :label="t('inventory.offset')">
-          <BsSelect v-model="form.offset" required native>
-            <BsSelectOption value="" />
-            <BsSelectOption v-for="a in offsets" :key="a.id" :value="a.id">{{ a.code }} {{ a.name }}</BsSelectOption>
-          </BsSelect>
-        </BsFloatingField>
-      </template>
-    </BsRecordActionDialog>
-  </BsStack>
+  <BsInventoryAccountingPage v-model:as-of="asOf" v-model:visible="visible" v-model:form="inventoryForm" :copy="inventoryCopy" :view="inventoryView" :choices="inventoryChoices" @run="run" @reload="load" @begin="beginInventory" @save="save" @page="inventoryPage" />
 </template>

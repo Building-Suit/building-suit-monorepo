@@ -26,10 +26,12 @@ export async function captureFoundation(page: Page, testInfo: TestInfo, name: st
 
 /** Client routing keeps synthetic sessions in-browser rather than asking SSR for an auth session. */
 export async function navigateFixture(page: Page, path: string) {
-  await page.locator('#__nuxt').evaluate(async (root, to) => {
+  await page.locator('#__nuxt').evaluate((root, to) => {
     const app = (root as HTMLElement & { __vue_app__?: { config: { globalProperties: { $router?: { push: (path: string) => Promise<unknown> } } } } }).__vue_app__
     if (!app?.config.globalProperties.$router) throw new Error('Fixture navigation requires a hydrated app')
-    await app.config.globalProperties.$router.push(to)
+    // Router promises can lose their remote handle while Nuxt replaces the login tree.
+    // Observe the resulting URL from Playwright instead of retaining that handle.
+    void app.config.globalProperties.$router.push(to)
   }, path)
   await expect.poll(() => new URL(page.url()).pathname).toBe(path.split('?')[0])
 }

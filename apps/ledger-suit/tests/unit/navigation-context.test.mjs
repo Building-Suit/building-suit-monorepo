@@ -2,6 +2,8 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import test from 'node:test'
 
+const inventory = JSON.parse(readFileSync(new URL('../../../../docs/shared/atomic-template-route-inventory.json', import.meta.url), 'utf8'))
+const normalizeContext = source => source.replaceAll('.value', '').replaceAll(', undefined)', ')')
 const read = path => readFileSync(new URL(`../../${path}`, import.meta.url), 'utf8')
 
 test('accounting routes remain capability-gated and grouped in one app shell', () => {
@@ -30,11 +32,14 @@ test('module headers expose organization and applicable reporting context', () =
   ])
   for (const [path, bindings] of expected) {
     const page = read(`app/${path}`)
-    assert.match(page, /<BsPageHeader/)
-    for (const binding of bindings) assert.ok(page.includes(binding), `${path} is missing ${binding}`)
+    const registered = inventory.entries.find(entry => entry.source === `apps/ledger-suit/app/${path}`)
+    const presentation = registered?.destination ? read(`../../${registered.destination}`) : page
+    assert.match(presentation, /<BsPageHeader/)
+    for (const binding of bindings) assert.ok(normalizeContext(page).includes(normalizeContext(binding)), `${path} is missing ${binding}`)
   }
   for (const path of ['accounts', 'opening-balances']) {
-    assert.match(read(`app/pages/${path}.vue`), /<BsPageHeader/)
+    const registered = inventory.entries.find(entry => entry.source === `apps/ledger-suit/app/pages/${path}.vue`)
+    assert.match(registered?.destination ? read(`../../${registered.destination}`) : read(`app/pages/${path}.vue`), /<BsPageHeader/)
   }
   const header = read('app/composables/useLedgerPresentation.ts')
   assert.match(header, /current\.value\?\.name/)
@@ -47,8 +52,11 @@ test('mobile navigation declares state and restores keyboard focus', () => {
   const topHeader = read('../../packages/ui/src/organisms/BsTopHeader.vue')
   assert.match(topHeader, /aria-controls="bs-primary-navigation"/)
   assert.match(topHeader, /:aria-expanded="navigationOpen"/)
-  assert.match(sideMenu, /event\.key === 'Escape'/)
-  assert.match(sideMenu, /event\.key !== 'Tab'/)
+  const navigation = read('../../packages/ux/src/composables/useSideNavigation.ts')
+  assert.match(sideMenu, /useSideNavigation/)
+  assert.match(navigation, /event\.key === 'Escape'/)
+  assert.match(navigation, /event\.key !== 'Tab'/)
   assert.match(sideMenu, /data-side-menu-close/)
-  assert.match(shell, /focusNavigationTrigger/)
+  assert.match(shell, /useWorkspaceNavigation/)
+  assert.match(read('../../packages/ux/src/composables/useWorkspaceNavigation.ts'), /focusNavigationTrigger/)
 })

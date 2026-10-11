@@ -243,7 +243,15 @@
     "./templates/BsMigrationCenterPage": "./src/templates/BsMigrationCenterPage.vue",
     "./types/migrationCenterPresentation": "./src/types/migrationCenterPresentation.ts",
     "./templates/BsAppointmentsPage": "./src/templates/BsAppointmentsPage.vue",
-    "./types/appointmentsPresentation": "./src/types/appointmentsPresentation.ts"
+    "./types/appointmentsPresentation": "./src/types/appointmentsPresentation.ts",
+    "./templates/BsReportsPage": "./src/templates/BsReportsPage.vue",
+    "./types/reportsPresentation": "./src/types/reportsPresentation.ts",
+    "./templates/BsInventoryAccountingPage": "./src/templates/BsInventoryAccountingPage.vue",
+    "./types/inventoryAccountingPresentation": "./src/types/inventoryAccountingPresentation.ts",
+    "./templates/BsAssetRegisterPage": "./src/templates/BsAssetRegisterPage.vue",
+    "./types/assetRegisterPresentation": "./src/types/assetRegisterPresentation.ts",
+    "./templates/BsBankReconciliationPage": "./src/templates/BsBankReconciliationPage.vue",
+    "./types/bankReconciliationPresentation": "./src/types/bankReconciliationPresentation.ts"
   },
   "dependencies": {
     "primevue": "4.5.5",

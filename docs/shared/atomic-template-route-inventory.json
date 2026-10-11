@@ -54,7 +54,11 @@
     "BsOpeningBalancesPage": "packages/ui/src/templates/BsOpeningBalancesPage.vue",
     "BsAccountingPeriodsPage": "packages/ui/src/templates/BsAccountingPeriodsPage.vue",
     "BsMigrationCenterPage": "packages/ui/src/templates/BsMigrationCenterPage.vue",
-    "BsAppointmentsPage": "packages/ui/src/templates/BsAppointmentsPage.vue"
+    "BsAppointmentsPage": "packages/ui/src/templates/BsAppointmentsPage.vue",
+    "BsReportsPage": "packages/ui/src/templates/BsReportsPage.vue",
+    "BsInventoryAccountingPage": "packages/ui/src/templates/BsInventoryAccountingPage.vue",
+    "BsAssetRegisterPage": "packages/ui/src/templates/BsAssetRegisterPage.vue",
+    "BsBankReconciliationPage": "packages/ui/src/templates/BsBankReconciliationPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -604,43 +608,21 @@
     {
       "source": "apps/ledger-suit/app/pages/bank-reconciliation.vue",
       "kind": "route",
-      "currentSharedTemplates": [],
-      "renderedBsComponents": [
-        "BsBox",
-        "BsButton",
-        "BsCard",
-        "BsCheckbox",
-        "BsDataTable",
-        "BsDescriptionList",
-        "BsDescriptionTerm",
-        "BsDescriptionValue",
-        "BsDisclosure",
-        "BsEmptyState",
-        "BsFileInput",
-        "BsFloatingField",
-        "BsGrid",
-        "BsHeading",
-        "BsInline",
-        "BsInput",
-        "BsList",
-        "BsListItem",
-        "BsMoneyText",
-        "BsPageHeader",
-        "BsRecordActionDialog",
-        "BsSectionSkeleton",
-        "BsSelect",
-        "BsSelectOption",
-        "BsStack",
-        "BsText"
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsBankReconciliationPage.vue"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "renderedBsComponents": [
+        "BsBankReconciliationPage"
+      ],
+      "destination": "packages/ui/src/templates/BsBankReconciliationPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/ledger-suit/app/pages/bank-reconciliation.vue",
       "dependencies": [
         "~/utils/bankReconciliation",
         "~/utils/bankReconciliation"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "bank-reconciliation"
     },
     {
       "source": "apps/ledger-suit/app/pages/billing.vue",
@@ -794,43 +776,22 @@
     {
       "source": "apps/ledger-suit/app/pages/fixed-assets.vue",
       "kind": "route",
-      "currentSharedTemplates": [],
-      "renderedBsComponents": [
-        "BsBox",
-        "BsButton",
-        "BsCard",
-        "BsDataTable",
-        "BsDescriptionList",
-        "BsDescriptionTerm",
-        "BsDescriptionValue",
-        "BsDisclosure",
-        "BsEmptyState",
-        "BsFloatingField",
-        "BsGrid",
-        "BsHeading",
-        "BsInline",
-        "BsInput",
-        "BsLink",
-        "BsList",
-        "BsListItem",
-        "BsMoneyText",
-        "BsPageHeader",
-        "BsRecordActionDialog",
-        "BsSectionSkeleton",
-        "BsSelect",
-        "BsSelectOption",
-        "BsStack",
-        "BsText"
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAssetRegisterPage.vue"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "renderedBsComponents": [
+        "BsAssetRegisterPage"
+      ],
+      "destination": "packages/ui/src/templates/BsAssetRegisterPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/ledger-suit/app/pages/fixed-assets.vue",
       "dependencies": [
         "~/utils/fixedAssets",
         "~/utils/fixedAssets",
         "~/utils/money"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "asset-register"
     },
     {
       "source": "apps/ledger-suit/app/pages/imports.vue",
@@ -890,36 +851,20 @@
     {
       "source": "apps/ledger-suit/app/pages/inventory-accounting.vue",
       "kind": "route",
-      "currentSharedTemplates": [],
-      "renderedBsComponents": [
-        "BsBox",
-        "BsButton",
-        "BsCard",
-        "BsDataTable",
-        "BsDescriptionList",
-        "BsDescriptionTerm",
-        "BsDescriptionValue",
-        "BsFloatingField",
-        "BsForm",
-        "BsHeading",
-        "BsInput",
-        "BsLink",
-        "BsMoneyText",
-        "BsPageHeader",
-        "BsRecordActionDialog",
-        "BsSectionSkeleton",
-        "BsSelect",
-        "BsSelectOption",
-        "BsStack",
-        "BsText"
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsInventoryAccountingPage.vue"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "renderedBsComponents": [
+        "BsInventoryAccountingPage"
+      ],
+      "destination": "packages/ui/src/templates/BsInventoryAccountingPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/ledger-suit/app/pages/inventory-accounting.vue",
       "dependencies": [
         "~/utils/inventoryAccounting"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "inventory-accounting"
     },
     {
       "source": "apps/ledger-suit/app/pages/login.vue",
@@ -2097,33 +2042,22 @@
     {
       "source": "apps/shop-suit/app/pages/reports/index.vue",
       "kind": "route",
-      "currentSharedTemplates": [],
-      "renderedBsComponents": [
-        "BsActionTile",
-        "BsBox",
-        "BsButton",
-        "BsDataTable",
-        "BsField",
-        "BsFilterBar",
-        "BsGrid",
-        "BsInline",
-        "BsInput",
-        "BsLink",
-        "BsPageHeader",
-        "BsPanel",
-        "BsSelect",
-        "BsStack",
-        "BsText"
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsReportsPage.vue"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "renderedBsComponents": [
+        "BsReportsPage"
+      ],
+      "destination": "packages/ui/src/templates/BsReportsPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/shop-suit/app/pages/reports/index.vue",
       "dependencies": [
         "~/types/shopCrmRpc",
         "~/types/reporting",
         "~/utils/catalogImport"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "reports"
     },
     {
       "source": "apps/shop-suit/app/pages/sales/[id]/index.vue",
@@ -2437,6 +2371,10 @@
     "BsOpeningBalancesPage",
     "BsAccountingPeriodsPage",
     "BsMigrationCenterPage",
-    "BsAppointmentsPage"
+    "BsAppointmentsPage",
+    "BsReportsPage",
+    "BsInventoryAccountingPage",
+    "BsAssetRegisterPage",
+    "BsBankReconciliationPage"
   ]
 }

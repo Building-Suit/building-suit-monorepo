@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { formatPresentationMoney } from '@building-suit/ux'
+import type { BsBankReconciliationCopy, BsBankReconciliationView, BsBankReconciliationForm, BsBankReconciliationChoices } from '@building-suit/ui/types/bankReconciliationPresentation'
 import { bankStatementTemplate, minorToDecimalInput, parseBankStatementCsv, selectedMinorTotal } from '~/utils/bankReconciliation'
 import type { BankCandidate, BankMatch, BankOutstanding, BankStatementLine } from '~/utils/bankReconciliation'
 
 definePageMeta({ layout: 'default' })
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const { currentId, can } = useTenant()
 const user = useSupabaseUser()
 const { readOnly } = useBilling()
@@ -25,7 +27,6 @@ const lineStates = ['matched', 'unmatched', 'unresolved'] as const
 const stateSummary = computed(() => lineStates.map(status => ({ status, count: data.value?.lines.filter(line => line.status === status).length ?? 0, amount: (data.value?.lines.filter(line => line.status === status && line.amount_minor !== null).reduce((sum, line) => sum + BigInt(line.amount_minor!), 0n) ?? 0n).toString() })))
 watch(selectedId, () => { selectedLines.value = new Set(); selectedTransactions.value = new Set() })
 watch([currentId, () => user.value?.id], () => { visible.value = false; selectedLines.value = new Set(); selectedTransactions.value = new Set() }, { flush: 'sync' })
-function toggle(kind: 'line' | 'transaction', id: string, checked: boolean) { const selection = kind === 'line' ? selectedLines : selectedTransactions; const next = new Set(selection.value); if (checked) next.add(id); else next.delete(id); selection.value = next }
 function begin(mode: typeof action.mode, target: BankStatementLine | BankMatch | BankCandidate | BankOutstanding | null = null) {
   const minor = 'amount_minor' in (target ?? {}) ? (target as BankStatementLine).amount_minor : null
   Object.assign(action, { mode, target: target?.id ?? '', date: 'date' in (target ?? {}) ? (target as BankStatementLine).date ?? '' : '', amount: minor && current.value ? minorToDecimalInput(minor, current.value.currency_code) : '', description: 'description' in (target ?? {}) ? (target as BankStatementLine).description : '', reference: 'external_reference' in (target ?? {}) ? (target as BankStatementLine).external_reference ?? '' : '', reason: '', offset: '', file: null, account: bankAccounts.value[0]?.id ?? '', start: '', end: '', opening: '', closing: '', key: crypto.randomUUID() })
@@ -84,265 +85,79 @@ async function completeReconciliation() {
 }
 function downloadTemplate() { downloadCsv('bank-statement-template.csv', bankStatementTemplate({ date: t('bank.csv.date'), amount: t('bank.csv.amount'), description: t('bank.csv.description'), reference: t('bank.csv.reference'), example: t('bank.csv.example') })) }
 const ledgerPresentation = useLedgerPresentation()
-</script>
 
+const bankCopy = computed<BsBankReconciliationCopy>(() => ({
+  bank_actions: t('bank.actions'),
+  bank_active: t('bank.active'),
+  bank_adjust: t('bank.adjust'),
+  bank_amount: t('bank.amount'),
+  bank_auditHistory: t('bank.auditHistory'),
+  bank_bankAccount: t('bank.bankAccount'),
+  bank_closing: t('bank.closing'),
+  bank_complete: t('bank.complete'),
+  bank_correct: t('bank.correct'),
+  bank_date: t('bank.date'),
+  bank_denied: t('bank.denied'),
+  bank_description: t('bank.description'),
+  bank_difference: t('bank.difference'),
+  bank_empty: t('bank.empty'),
+  bank_emptyHint: t('bank.emptyHint'),
+  bank_end: t('bank.end'),
+  bank_equation: t('bank.equation'),
+  bank_equationPolicy: t('bank.equationPolicy'),
+  bank_errors_load: t('bank.errors.load'),
+  bank_file: t('bank.file'),
+  bank_import: t('bank.import'),
+  bank_journal: t('bank.journal'),
+  bank_ledgerBalance: t('bank.ledgerBalance'),
+  bank_ledgerCandidates: t('bank.ledgerCandidates'),
+  bank_markOutstanding: t('bank.markOutstanding'),
+  bank_matchExact: t('bank.matchExact'),
+  bank_matchHistory: t('bank.matchHistory'),
+  bank_noCandidates: t('bank.noCandidates'),
+  bank_noLines: t('bank.noLines'),
+  bank_noMatches: t('bank.noMatches'),
+  bank_noOutstanding: t('bank.noOutstanding'),
+  bank_offsetAccount: t('bank.offsetAccount'),
+  bank_opening: t('bank.opening'),
+  bank_outstanding: t('bank.outstanding'),
+  bank_outstandingTotal: t('bank.outstandingTotal'),
+  bank_policy: t('bank.policy'),
+  bank_reason: t('bank.reason'),
+  bank_reconciliation: t('bank.reconciliation'),
+  bank_reference: t('bank.reference'),
+  bank_remove: t('bank.remove'),
+  bank_reopen: t('bank.reopen'),
+  bank_retry: t('bank.retry'),
+  bank_select: t('bank.select'),
+  bank_selectedTotals: t('bank.selectedTotals'),
+  bank_start: t('bank.start'),
+  bank_state: t('bank.state'),
+  bank_statementBalance: t('bank.statementBalance'),
+  bank_statementLines: t('bank.statementLines'),
+  bank_statementMismatch: t('bank.statementMismatch'),
+  bank_template: t('bank.template'),
+  bank_title: t('bank.title'),
+  bank_unmatch: t('bank.unmatch'),
+  bank_unmatched: t('bank.unmatched'),
+  common_cancel: t('common.cancel'),
+  common_save: t('common.save'),
+  pageContext_label: t('pageContext.label'),
+}))
+
+const bankForm = computed<BsBankReconciliationForm>({ get: () => ({ date: action.date, amount: action.amount, description: action.description, reference: action.reference, reason: action.reason, offset: action.offset, account: action.account, start: action.start, end: action.end, opening: action.opening, closing: action.closing }), set: value => Object.assign(action, value) })
+const bankLineSelection = computed({ get: () => [...selectedLines.value], set: (value: string[]) => { selectedLines.value = new Set(value) } })
+const bankTransactionSelection = computed({ get: () => [...selectedTransactions.value], set: (value: string[]) => { selectedTransactions.value = new Set(value) } })
+const bankMoney = (value: string | bigint | null) => value == null ? '' : formatPresentationMoney(value.toString(), { currency: ledgerPresentation.currency(current.value?.currency_code), locale: locale.value, unit: 'minor', numberingSystem: 'latn' })
+const bankView = computed<BsBankReconciliationView>(() => ({ context: ledgerPresentation.context(current.value?.statement_start, current.value?.statement_end), contextLabel: t('pageContext.label'), canRead: can('bank.read'), canImport: can('bank.import'), readOnly: readOnly.value, failed: Boolean(error.value), pending: pending.value, saving: saving.value, dirty: dirty.value, formError: formError.value, formTitle: t(`bank.dialogs.${action.mode}`), importForm: action.mode === 'import', correctionForm: action.mode === 'correct', adjustmentForm: action.mode === 'adjust', reasonField: action.mode !== 'import', current: current.value ? { title: current.value.file_name, detail: `${current.value.statement_start} — ${current.value.statement_end} · ${current.value.currency_code} · ${t(`bank.statuses.${current.value.status}`)}`, canComplete: current.value.status !== 'completed' && can('bank.complete'), canReopen: current.value.status === 'completed' && can('bank.reopen'), editable: current.value.status !== 'completed', mismatch: Boolean(current.value.import_errors.length) } : null, equation: data.value?.equation ? { statement: bankMoney(data.value.equation.statement_minor), outstanding: bankMoney(data.value.equation.outstanding_minor), ledger: bankMoney(data.value.equation.ledger_minor), difference: bankMoney(data.value.equation.difference_minor) } : null, states: stateSummary.value.map(summary => ({ ...summary, label: t(`bank.lineStatuses.${summary.status}`), amount: bankMoney(summary.amount) })), lines: (data.value?.lines ?? []).map(row => ({ id: row.id, date: row.date ?? '', description: row.description, reference: row.external_reference ?? '', amount: bankMoney(row.amount_minor), status: row.status, statusLabel: t(`bank.lineStatuses.${row.status}`), error: row.validation_error ? t(`bank.validation.${row.validation_error}`) : '', selectable: row.status === 'unmatched' && !row.validation_error && current.value?.status !== 'completed', selectionLabel: t('bank.selectLine', { row: row.source_row }), canCorrect: can('bank.import') && row.status !== 'matched', canAdjust: can('bank.adjust') && row.status === 'unmatched' && !row.validation_error })), candidates: (data.value?.candidates ?? []).map(row => ({ id: row.id, date: row.date, description: row.description, reference: row.reference ?? '', amount: bankMoney(row.effect_minor), selectable: current.value?.status !== 'completed', selectionLabel: t('bank.selectTransaction', { reference: row.reference || row.description }), canOutstanding: can('bank.match') && current.value?.status !== 'completed' })), lineTotal: bankMoney(lineTotal.value), transactionTotal: bankMoney(transactionTotal.value), canMatch: can('bank.match'), matchDisabled: !exact.value || saving.value || readOnly.value, outstanding: (data.value?.outstanding ?? []).filter(row => row.active).map(row => ({ id: row.id, journal: row.transaction_id, reason: row.reason, amount: bankMoney(row.bank_effect_minor), canRemove: can('bank.match') && current.value?.status !== 'completed' })), matches: (data.value?.matches ?? []).map(row => ({ id: row.id, date: row.matched_at, amount: bankMoney(row.statement_total_minor), statusLabel: t(row.active ? 'bank.active' : 'bank.unmatched'), reason: row.unmatch_reason ?? '', canUnmatch: row.active && can('bank.match') && current.value?.status !== 'completed' })), events: (data.value?.events ?? []).map(event => ({ id: String(event.id), time: event.occurred_at, label: t(`bank.events.${event.event_type}`), reason: event.reason ?? '' })) }))
+const bankChoices = computed<BsBankReconciliationChoices>(() => ({ reconciliations: (data.value?.reconciliations ?? []).map(item => ({ value: item.id, label: `${item.file_name} · ${item.statement_end} · ${t(`bank.statuses.${item.status}`)}` })), banks: bankAccounts.value.map(account => ({ value: account.id, label: `${account.name} · ${account.currency}` })), offsets: offsetAccounts.value.map(account => ({ value: account.id, label: account.name })) }))
+function beginBank(mode: string, id: string) {
+  if (!['import','adjust','correct','unmatch','outstanding','removeOutstanding','reopen'].includes(mode)) return
+  const target = mode === 'correct' || mode === 'adjust' ? data.value?.lines.find(row => row.id === id) : mode === 'unmatch' ? data.value?.matches.find(row => row.id === id) : mode === 'outstanding' ? data.value?.candidates.find(row => row.id === id) : mode === 'removeOutstanding' ? data.value?.outstanding.find(row => row.id === id) : null
+  begin(mode as typeof action.mode, target ?? null)
+}
+function bankFile(file: File | null) { action.file = file }
+</script>
 <template>
-  <BsStack gap="lg">
-    <BsPageHeader
-      :title="t('bank.title')"
-      :subtitle="t('bank.policy')"
-      :context="ledgerPresentation.context(current?.statement_start, current?.statement_end, undefined)"
-      :context-label="ledgerPresentation.t('pageContext.label')"
-    >
-      <template #actions>
-        <BsButton v-if="can('bank.import')" type="submit" :disabled="readOnly" @click="begin('import')">{{ t('bank.import') }}</BsButton>
-        <BsButton type="submit" @click="downloadTemplate">{{ t('bank.template') }}</BsButton>
-      </template>
-    </BsPageHeader>
-    <BsText v-if="!can('bank.read')" role="status">{{ t('bank.denied') }}</BsText>
-    <template v-else>
-      <BsCard v-if="data?.reconciliations.length" as="div" padding="md">
-        <BsFloatingField :label="t('bank.reconciliation')">
-          <BsSelect id="bank-reconciliation" v-model="selectedId" native>
-            <BsSelectOption v-for="item in data.reconciliations" :key="item.id" :value="item.id">{{ item.file_name }} · {{ item.statement_end }} · {{ t(`bank.statuses.${item.status}`) }}</BsSelectOption>
-          </BsSelect>
-        </BsFloatingField>
-      </BsCard>
-      <BsText v-if="error" role="alert" tone="danger">{{ t('bank.errors.load') }} <BsButton type="submit" @click="load">{{ t('bank.retry') }}</BsButton></BsText>
-      <BsSectionSkeleton v-else-if="pending" variant="table" :rows="5" />
-      <BsEmptyState v-else-if="!current" :title="t('bank.empty')" :description="t('bank.emptyHint')" />
-      <template v-else-if="data">
-        <BsCard as="section" padding="md">
-          <BsInline gap="md" :wrap="true" justify="between">
-            <BsBox>
-              <BsHeading :level="2" size="h2">{{ current.file_name }}</BsHeading>
-              <BsText>{{ current.statement_start }} — {{ current.statement_end }} · {{ current.currency_code }} · {{ t(`bank.statuses.${current.status}`) }}</BsText>
-            </BsBox>
-            <BsInline gap="sm" :wrap="false">
-              <BsButton
-                v-if="current.status !== 'completed' && can('bank.complete')"
-                type="submit"
-                :disabled="readOnly || saving"
-                variant="primary"
-                @click="completeReconciliation"
-              >{{ t('bank.complete') }}</BsButton>
-              <BsButton v-if="current.status === 'completed' && can('bank.reopen')" type="submit" :disabled="readOnly" @click="begin('reopen')">{{ t('bank.reopen') }}</BsButton>
-            </BsInline>
-          </BsInline>
-          <BsText v-if="current.import_errors.length" tone="danger">{{ t('bank.statementMismatch') }}</BsText>
-        </BsCard>
-        <BsCard aria-labelledby="bank-equation" as="section" padding="md">
-          <BsHeading id="bank-equation" :level="2" size="h2">{{ t('bank.equation') }}</BsHeading>
-          <BsText size="sm" tone="muted">{{ t('bank.equationPolicy') }}</BsText>
-          <BsDescriptionList v-if="data.equation" :columns="3">
-            <BsBox>
-              <BsDescriptionTerm>{{ t('bank.statementBalance') }}</BsDescriptionTerm>
-              <BsDescriptionValue>
-                <BsMoneyText :amount="data.equation.statement_minor" :currency="ledgerPresentation.currency(current.currency_code)" :locale="ledgerPresentation.locale" />
-              </BsDescriptionValue>
-            </BsBox>
-            <BsBox>
-              <BsDescriptionTerm>{{ t('bank.outstandingTotal') }}</BsDescriptionTerm>
-              <BsDescriptionValue>
-                <BsMoneyText
-                  :amount="data.equation.outstanding_minor"
-                  :currency="ledgerPresentation.currency(current.currency_code)"
-                  :locale="ledgerPresentation.locale"
-                />
-              </BsDescriptionValue>
-            </BsBox>
-            <BsBox>
-              <BsDescriptionTerm>{{ t('bank.ledgerBalance') }}</BsDescriptionTerm>
-              <BsDescriptionValue>
-                <BsMoneyText :amount="data.equation.ledger_minor" :currency="ledgerPresentation.currency(current.currency_code)" :locale="ledgerPresentation.locale" />
-              </BsDescriptionValue>
-            </BsBox>
-            <BsBox>
-              <BsDescriptionTerm>{{ t('bank.difference') }}</BsDescriptionTerm>
-              <BsDescriptionValue data-bank-difference>
-                <BsMoneyText :amount="data.equation.difference_minor" :currency="ledgerPresentation.currency(current.currency_code)" :locale="ledgerPresentation.locale" />
-              </BsDescriptionValue>
-            </BsBox>
-          </BsDescriptionList>
-        </BsCard>
-        <BsCard as="section" padding="none" overflow="hidden">
-          <BsHeading :level="2" size="h2">{{ t('bank.statementLines') }}</BsHeading>
-          <BsDescriptionList :columns="3">
-            <BsBox v-for="summary in stateSummary" :key="summary.status" :data-bank-state-total="summary.status">
-              <BsDescriptionTerm>{{ t(`bank.lineStatuses.${summary.status}`) }} · {{ summary.count }}</BsDescriptionTerm>
-              <BsDescriptionValue>
-                <BsMoneyText :amount="summary.amount" :currency="ledgerPresentation.currency(current.currency_code)" :locale="ledgerPresentation.locale" />
-              </BsDescriptionValue>
-            </BsBox>
-          </BsDescriptionList>
-          <BsDataTable
-            :value="data.lines"
-            row-key="id"
-            :label="t('bank.statementLines')"
-            :columns="[{ key: 'column1', header: t('bank.select') }, { key: 'date', field: 'date', header: t('bank.date') }, { key: 'description', field: 'description', header: t('bank.description') }, { key: 'external_reference', field: 'external_reference', header: t('bank.reference') }, { key: 'column5', header: t('bank.amount') }, { key: 'column6', header: t('bank.state') }, { key: 'column7', header: t('bank.actions') }]"
-          >
-            <template #empty>{{ t('bank.noLines') }}</template>
-            <template #cell-column1="{ row }">
-              <BsCheckbox
-                v-if="row.status === 'unmatched' && !row.validation_error && current.status !== 'completed'"
-                :aria-label="t('bank.selectLine', { row: row.source_row })"
-                :checked="selectedLines.has(row.id)"
-                bare
-                @native-change="toggle('line', row.id, ($event.target as HTMLInputElement).checked)"
-              />
-            </template>
-            <template #cell-column5="{ row }">
-              <BsMoneyText
-                v-if="row.amount_minor"
-                :amount="row.amount_minor"
-                :currency="ledgerPresentation.currency(current.currency_code)"
-                :locale="ledgerPresentation.locale"
-              />
-            </template>
-            <template #cell-column6="{ row }">
-              <BsText :data-bank-state="row.status" as="span">{{ t(`bank.lineStatuses.${row.status}`) }}</BsText>
-              <BsText v-if="row.validation_error" size="xs" tone="danger">{{ t(`bank.validation.${row.validation_error}`) }}</BsText>
-            </template>
-            <template #cell-column7="{ row }">
-              <BsInline v-if="current.status !== 'completed'" gap="xs" :wrap="false">
-                <BsButton v-if="can('bank.import') && row.status !== 'matched'" type="submit" @click="begin('correct', row)">{{ t('bank.correct') }}</BsButton>
-                <BsButton v-if="can('bank.adjust') && row.status === 'unmatched' && !row.validation_error" type="submit" @click="begin('adjust', row)">{{ t('bank.adjust') }}</BsButton>
-              </BsInline>
-            </template>
-          </BsDataTable>
-        </BsCard>
-        <BsCard as="section" padding="none" overflow="hidden">
-          <BsHeading :level="2" size="h2">{{ t('bank.ledgerCandidates') }}</BsHeading>
-          <BsDataTable
-            :value="data.candidates"
-            row-key="id"
-            :label="t('bank.ledgerCandidates')"
-            :columns="[{ key: 'column1', header: t('bank.select') }, { key: 'date', field: 'date', header: t('bank.date') }, { key: 'description', field: 'description', header: t('bank.description') }, { key: 'reference', field: 'reference', header: t('bank.reference') }, { key: 'column5', header: t('bank.amount') }, { key: 'column6', header: t('bank.actions') }]"
-          >
-            <template #empty>{{ t('bank.noCandidates') }}</template>
-            <template #cell-column1="{ row }">
-              <BsCheckbox
-                v-if="current.status !== 'completed'"
-                :aria-label="t('bank.selectTransaction', { reference: row.reference || row.description })"
-                :checked="selectedTransactions.has(row.id)"
-                bare
-                @native-change="toggle('transaction', row.id, ($event.target as HTMLInputElement).checked)"
-              />
-            </template>
-            <template #cell-column5="{ row }">
-              <BsMoneyText :amount="row.effect_minor" :currency="ledgerPresentation.currency(current.currency_code)" :locale="ledgerPresentation.locale" />
-            </template>
-            <template #cell-column6="{ row }">
-              <BsButton v-if="can('bank.match') && current.status !== 'completed'" type="submit" @click="begin('outstanding', row)">{{ t('bank.markOutstanding') }}</BsButton>
-            </template>
-          </BsDataTable>
-          <BsInline v-if="current.status !== 'completed'" gap="md" :wrap="true" justify="between" padding="lg">
-            <BsText>{{ t('bank.selectedTotals') }}: <BsMoneyText :amount="lineTotal" :currency="ledgerPresentation.currency(current.currency_code)" :locale="ledgerPresentation.locale" /> = <BsMoneyText :amount="transactionTotal" :currency="ledgerPresentation.currency(current.currency_code)" :locale="ledgerPresentation.locale" /></BsText>
-            <BsButton v-if="can('bank.match')" type="submit" :disabled="!exact || saving || readOnly" variant="primary" @click="matchSelected">{{ t('bank.matchExact') }}</BsButton>
-          </BsInline>
-        </BsCard>
-        <BsCard as="section" padding="none" overflow="hidden">
-          <BsHeading :level="2" size="h2">{{ t('bank.outstanding') }}</BsHeading>
-          <BsDataTable
-            :value="data.outstanding.filter(item => item.active)"
-            row-key="id"
-            :table-props="{ 'aria-label': t('bank.outstanding') }"
-            :columns="[{ key: 'transaction_id', field: 'transaction_id', header: t('bank.journal') }, { key: 'reason', field: 'reason', header: t('bank.reason') }, { key: 'column3', header: t('bank.amount') }, { key: 'column4', header: t('bank.actions') }]"
-          >
-            <template #empty>{{ t('bank.noOutstanding') }}</template>
-            <template #cell-column3="{ row }">
-              <BsMoneyText :amount="row.bank_effect_minor" :currency="ledgerPresentation.currency(current.currency_code)" :locale="ledgerPresentation.locale" />
-            </template>
-            <template #cell-column4="{ row }">
-              <BsButton v-if="can('bank.match') && current.status !== 'completed'" type="submit" @click="begin('removeOutstanding', row)">{{ t('bank.remove') }}</BsButton>
-            </template>
-          </BsDataTable>
-        </BsCard>
-        <BsCard as="section" padding="none" overflow="hidden">
-          <BsHeading :level="2" size="h2">{{ t('bank.matchHistory') }}</BsHeading>
-          <BsDataTable
-            :value="data.matches"
-            row-key="id"
-            :label="t('bank.matchHistory')"
-            :columns="[{ key: 'matched_at', field: 'matched_at', header: t('bank.date') }, { key: 'column2', header: t('bank.amount') }, { key: 'column3', header: t('bank.state') }, { key: 'column4', header: t('bank.actions') }]"
-          >
-            <template #empty>{{ t('bank.noMatches') }}</template>
-            <template #cell-column2="{ row }">
-              <BsMoneyText :amount="row.statement_total_minor" :currency="ledgerPresentation.currency(current.currency_code)" :locale="ledgerPresentation.locale" />
-            </template>
-            <template #cell-column3="{ row }">{{ row.active ? t('bank.active') : t('bank.unmatched') }}<BsText>{{ row.unmatch_reason }}</BsText></template>
-            <template #cell-column4="{ row }">
-              <BsButton v-if="row.active && can('bank.match') && current.status !== 'completed'" type="submit" @click="begin('unmatch', row)">{{ t('bank.unmatch') }}</BsButton>
-            </template>
-          </BsDataTable>
-        </BsCard>
-        <BsDisclosure>
-          <template #summary>{{ t('bank.auditHistory') }}</template>
-          <BsList :ordered="true" marker="none">
-            <BsListItem v-for="event in data.events" :key="event.id"><BsText as="time">{{ event.occurred_at }}</BsText> · {{ t(`bank.events.${event.event_type}`) }}<BsText v-if="event.reason" as="span"> · {{ event.reason }}</BsText></BsListItem>
-          </BsList>
-        </BsDisclosure>
-      </template>
-    </template>
-    <BsRecordActionDialog
-      v-model:visible="visible"
-      :title="t(`bank.dialogs.${action.mode}`)"
-      :pending="saving"
-      :dirty="dirty"
-      :error="formError"
-      size="lg"
-      :submit-label="t('common.save')"
-      :cancel-label="t('common.cancel')"
-      :submit-disabled="readOnly"
-      @submit="save"
-    >
-      <template v-if="action.mode === 'import'">
-        <BsFloatingField :label="t('bank.bankAccount')">
-          <BsSelect id="bank-account" v-model="action.account" required native>
-            <BsSelectOption v-for="account in bankAccounts" :key="account.id" :value="account.id">{{ account.name }} · {{ account.currency }}</BsSelectOption>
-          </BsSelect>
-        </BsFloatingField>
-        <BsFloatingField :label="t('bank.file')">
-          <BsFileInput id="bank-file" accept=".csv,text/csv" required bare @change="action.file = ($event.target as HTMLInputElement).files?.[0] ?? null" />
-        </BsFloatingField>
-        <BsGrid :columns="2" gap="md">
-          <BsFloatingField :label="t('bank.start')">
-            <BsInput id="bank-start" v-model="action.start" type="date" required />
-          </BsFloatingField>
-          <BsFloatingField :label="t('bank.end')">
-            <BsInput id="bank-end" v-model="action.end" type="date" :min="action.start" required />
-          </BsFloatingField>
-          <BsFloatingField :label="t('bank.opening')">
-            <BsInput id="bank-opening" v-model="action.opening" inputmode="decimal" required />
-          </BsFloatingField>
-          <BsFloatingField :label="t('bank.closing')">
-            <BsInput id="bank-closing" v-model="action.closing" inputmode="decimal" required />
-          </BsFloatingField>
-        </BsGrid>
-      </template>
-      <template v-if="action.mode === 'correct'">
-        <BsFloatingField :label="t('bank.date')">
-          <BsInput id="bank-correct-date" v-model="action.date" type="date" required />
-        </BsFloatingField>
-        <BsFloatingField :label="t('bank.amount')">
-          <BsInput id="bank-correct-amount" v-model="action.amount" required />
-        </BsFloatingField>
-        <BsFloatingField :label="t('bank.description')">
-          <BsInput id="bank-correct-description" v-model="action.description" required />
-        </BsFloatingField>
-        <BsFloatingField :label="t('bank.reference')">
-          <BsInput id="bank-correct-reference" v-model="action.reference" />
-        </BsFloatingField>
-      </template>
-      <BsFloatingField v-if="action.mode === 'adjust'" :label="t('bank.offsetAccount')">
-        <BsSelect id="bank-offset" v-model="action.offset" required native>
-          <BsSelectOption value="" />
-          <BsSelectOption v-for="account in offsetAccounts" :key="account.id" :value="account.id">{{ account.name }}</BsSelectOption>
-        </BsSelect>
-      </BsFloatingField>
-      <BsFloatingField v-if="action.mode !== 'import'" :label="t('bank.reason')">
-        <BsInput id="bank-reason" v-model="action.reason" required />
-      </BsFloatingField>
-    </BsRecordActionDialog>
-  </BsStack>
+  <BsBankReconciliationPage v-model:selected-id="selectedId" v-model:selected-lines="bankLineSelection" v-model:selected-transactions="bankTransactionSelection" v-model:visible="visible" v-model:form="bankForm" :copy="bankCopy" :view="bankView" :choices="bankChoices" @download="downloadTemplate" @reload="load" @begin="beginBank" @match="matchSelected" @complete="completeReconciliation" @save="save" @file="bankFile" />
 </template>
