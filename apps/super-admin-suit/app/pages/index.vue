@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ActivityRow, ActivityQuery } from '../utils/activity'
+import type { OfferVersion } from '../utils/custom-offer'
 definePageMeta({ layout: false })
 const { t, locale } = useI18n()
 const { ready, state, pending, actionError, recheck, signIn, signOut } = useAdminSession()
@@ -13,7 +14,7 @@ watch(state, (value) => {
 onMounted(() => {
   // Periodically re-resolve configuration and manifest expiry without a rebuild.
   const timer = setInterval(() => {
-    if (state.value === 'success' && !transferVisible.value && document.visibilityState === 'visible') void registry.refresh()
+    if (state.value === 'success' && !transferVisible.value && !offerVisible.value && !offerRequest.value && document.visibilityState === 'visible') void registry.refresh()
   }, 30_000)
   onScopeDispose(() => { clearInterval(timer); registry.clear() })
 })
@@ -24,6 +25,11 @@ const activity = useActivity(() => `${ready.data.value?.userId}:${ready.data.val
 const { query: activityQuery, rows: activityRows, sources: activitySources, total: activityTotal, status: activityStatus, retrieving, remoteFailed } = activity
 const filterKeys = ['suit', 'environment', 'action', 'actor', 'target', 'from', 'to', 'requestId', 'correlationId'] as const satisfies readonly (keyof ActivityQuery)[]
 const activityColumns = computed(() => (['source', 'suit', 'environment', 'actor', 'action', 'target', 'status', 'reason', 'requestId', 'correlationId', 'occurredAt'] as const satisfies readonly (keyof ActivityRow)[]).map(field => ({ key: field, field, header: t(`activity.${field}`), sortable: field === 'occurredAt' })))
+const offers = useCustomOffers(() => selection.value.item?.bindingId, () => state.value === 'success' && registryState.value === 'success' && selection.value.item?.module === 'custom-offers')
+const { versions: offerVersions, status: offerStatus, draft: offerDraft, reason: offerReason, command: offerRequest, revokeId, issueId, issuanceAvailable, customerLink } = offers
+const { visible: offerVisible, pending: offerPending, dirty: offerDirty, error: offerError } = offers.action
+const offerFields = ['recipientUserId', 'companyId', 'basePlanId', 'templateReference', 'displayName', 'priceAmount', 'currency', 'billingInterval', 'expiresAt'] as const
+const offerColumns = computed(() => [{ key: 'displayName', field: 'displayName' as const, header: t('offers.displayName') }, { key: 'version', field: 'version' as const, header: t('offers.version') }, { key: 'priceAmount', field: 'priceAmount' as const, header: t('offers.priceAmount') }, { key: 'currency', field: 'currency' as const, header: t('offers.currency') }, { key: 'billingInterval', field: 'billingInterval' as const, header: t('offers.billingInterval') }, { key: 'expiresAt', field: 'expiresAt' as const, header: t('offers.expiresAt') }, { key: 'state', field: 'state' as const, header: t('offers.state') }, { key: 'delivery', header: t('offers.delivery') }])
 const email = ref('')
 const password = ref('')
 useHead({ title: () => t('product.name') })
@@ -86,6 +92,29 @@ async function submit() {
               <BsField for="transfer-qr" :label="t('transfer.qrAsset')"><BsInput id="transfer-qr" v-model="draft.qr.assetUrl" dir="ltr" :maxlength="4000" /></BsField>
               <BsField v-for="lang in (['en', 'ar'] as const)" :key="`alt-${lang}`" :for="`transfer-alt-${lang}`" :label="t(`transfer.alt${lang}`)"><BsInput :id="`transfer-alt-${lang}`" v-model="draft.qr.alt[lang]" :dir="lang === 'ar' ? 'rtl' : 'ltr'" :maxlength="4000" /></BsField>
               <BsField for="transfer-reason" :label="t('transfer.reason')" required><BsTextarea id="transfer-reason" v-model="reason" required :minlength="8" :maxlength="1000" /></BsField>
+            </BsFieldGroup>
+          </BsRecordActionDialog>
+        </BsStack>
+        <BsStack v-if="selection.item?.module === 'custom-offers'" gap="lg" data-offers>
+          <BsStateSurface v-if="!issuanceAvailable" state="empty" :title="t('offers.issuanceBlocked')" :description="t('offers.manual')" />
+          <BsStateSurface v-if="offerStatus !== 'success'" :state="offerStatus" :title="t(`offers.${offerStatus}`)" :action-label="['error', 'denied'].includes(offerStatus) ? t('registry.retry') : undefined" @action="offers.load()" />
+          <BsDataTable v-if="['success', 'empty'].includes(offerStatus)" :value="offerVersions" :columns="offerColumns" :label="t('offers.title')" :capabilities="{ insert: true, edit: true, void: true }" :action-labels="{ insert: t('offers.create'), edit: t('offers.amend'), void: t('offers.revoke') }" :can-row-action="(action, row) => action !== 'void' || ['saved', 'issued'].includes(row.state)" @create="offers.edit()" @edit="offers.edit($event as unknown as OfferVersion)" @void="offers.revoke($event as unknown as OfferVersion)">
+            <template #cell-state="{ row }">{{ t(`offers.${row.state}`) }}</template>
+            <template #cell-delivery="{ row }">
+              <BsButton v-if="row.state === 'saved' && issuanceAvailable" @click="offers.issue(row)">{{ t('offers.issue') }}</BsButton>
+              <BsButton v-if="row.state === 'issued' && row.customerLink" variant="text" @click="offers.viewLink(row)">{{ t('offers.viewLink') }}</BsButton>
+            </template>
+          </BsDataTable>
+          <BsField v-if="customerLink" for="offer-customer-link" :label="t('offers.customerLink')"><BsInput id="offer-customer-link" :model-value="customerLink" type="password" readonly autocomplete="off" /><BsButton @click="offers.copyLink()">{{ t('offers.copyLink') }}</BsButton></BsField>
+          <BsRecordActionDialog v-model:visible="offerVisible" :title="revokeId ? t('offers.revoke') : issueId ? t('offers.issue') : t('offers.create')" :pending="offerPending" :dirty="offerDirty" :error="offerError" :submit-label="offerRequest ? t('transfer.retrySave') : revokeId ? t('offers.revoke') : issueId ? t('offers.issue') : t('offers.save')" @submit="offers.save()">
+            <BsFieldGroup :disabled="!!offerRequest">
+              <template v-if="!revokeId && !issueId">
+                <BsField v-for="field in offerFields" :key="field" :for="`offer-${field}`" :label="t(`offers.${field}`)" :required="field !== 'templateReference'">
+                  <BsInput :id="`offer-${field}`" v-model="offerDraft[field]" :required="field !== 'templateReference'" :maxlength="field === 'displayName' ? 80 : 500" />
+                </BsField>
+                <BsField v-for="field in (['resourceLimits', 'entitlements'] as const)" :key="field" :for="`offer-${field}`" :label="t(`offers.${field}`)" required><BsTextarea :id="`offer-${field}`" v-model="offerDraft[field]" required dir="ltr" :maxlength="8192" /></BsField>
+              </template>
+              <BsField for="offer-reason" :label="t('transfer.reason')" required><BsTextarea id="offer-reason" v-model="offerReason" required :minlength="8" :maxlength="1000" /></BsField>
             </BsFieldGroup>
           </BsRecordActionDialog>
         </BsStack>

@@ -299,3 +299,7 @@ Verification commands and current limitations are recorded in
 [activity verification](tests/activity-verification.md). Apply the forward
 migration and regenerate database types from a disposable Admin database before
 independent database verification. This task does not change any Shop schema.
+
+### Live private-offer acceptance
+
+Default unit and browser suites run locally without hosted staging credentials. Two existing private-offer acceptance checks authenticate synthetic staging identities and replay a previously submitted request against the target project. They remain available only with `BS_RUN_CUSTOM_OFFER_STAGING_ACCEPTANCE=1`, after the operator explicitly authorizes that live staging scope and verifies the maintained environment map and recovery evidence. They must not be enabled for ordinary CI or migration-only merge authorization. Skipped live checks are not staging acceptance evidence; the offline mapper, server authorization, local SQL and browser fixture checks remain required.
