@@ -1,12 +1,18 @@
 <script setup lang="ts">
 import type { BsReportsCopy, BsReportsView, BsReportFilters, BsReportChoices } from '../types/reportsPresentation'
-defineProps<{ copy: BsReportsCopy; view: BsReportsView; choices: BsReportChoices }>()
-const filters = defineModel<BsReportFilters>('filters', { required: true })
-const emit = defineEmits<{ export: []; retry: []; page: [direction: number] }>()
+import type { BsFinancialReportCopy, BsFinancialReportFilters, BsFinancialReportsView } from '../types/financialReportsPresentation'
+import type { BsAccountActivityCopy, BsAccountActivityForm, BsAccountActivityView, BsCashAllocationCopy, BsCashAllocationForm, BsCashAllocationView } from '../types/accountActivityPresentation'
+defineProps<{ copy?: BsReportsCopy; view?: BsReportsView; choices?: BsReportChoices; financial?: { copy: BsFinancialReportCopy; view: BsFinancialReportsView }; activity?: { copy: BsAccountActivityCopy; view: BsAccountActivityView }; allocation?: { copy: BsCashAllocationCopy; view: BsCashAllocationView } }>()
+const financialFilters = defineModel<BsFinancialReportFilters>('financialFilters', { default: () => ({ tab: 'overview', from: '', to: '', asOf: '', account: '', density: 'comfortable' }) })
+const activityForm = defineModel<BsAccountActivityForm>('activityForm', { default: () => ({ from: '', to: '' }) })
+const allocationForm = defineModel<BsCashAllocationForm>('allocationForm', { default: () => ({ operating: '', investing: '', financing: '', reason: '' }) })
+const filters = defineModel<BsReportFilters>('filters', { default: () => ({ report: '', location: '', from: '', to: '' }) })
+const emit = defineEmits<{ export: []; retry: []; page: [direction: number]; financialExport: [format: 'csv' | 'excel' | 'print']; financialRetry: []; drilldown: [account: string, period: 'range' | 'asof' | 'opening' | 'period' | 'closing']; allocate: [id: string]; closeActivity: []; activityBack: []; activityApply: []; activityRetry: []; activityPage: [direction: number]; activityJournal: [id: string, entryId: string]; activityAccount: [id: string, entryId: string]; closeAllocation: []; saveAllocation: [] }>()
 function updateFilter(key: keyof BsReportFilters, value: string | number | boolean | null | undefined) { filters.value = { ...filters.value, [key]: String(value ?? '') } }
 </script>
 <template>
-  <BsStack>
+  <BsStack v-if="financial"><BsFinancialReportsWorkspace v-model:filters="financialFilters" :copy="financial.copy" :view="financial.view" @export="emit('financialExport', $event)" @retry="emit('financialRetry')" @drilldown="(account, period) => emit('drilldown', account, period)" @allocate="emit('allocate', $event)"/><BsAccountActivityDialog v-if="activity" v-model:form="activityForm" :copy="activity.copy" :view="activity.view" @close="emit('closeActivity')" @back="emit('activityBack')" @apply="emit('activityApply')" @retry="emit('activityRetry')" @page="emit('activityPage', $event)" @journal="(id, entryId) => emit('activityJournal', id, entryId)" @account="(id, entryId) => emit('activityAccount', id, entryId)"/><BsCashAllocationDialog v-if="allocation" v-model:form="allocationForm" :copy="allocation.copy" :view="allocation.view" @close="emit('closeAllocation')" @save="emit('saveAllocation')"/></BsStack>
+  <BsStack v-else-if="copy && view && choices">
     <BsPageHeader  :title="copy.title" :subtitle="copy.subtitle">
       <template #actions>
         <BsText as="p" size="xs" emphasis="semibold">{{ view.workspace }}</BsText>

@@ -1,12 +1,9 @@
 import type { Database } from '~~/types/database.types'
 
-/** Ledger-owned orchestration; mounted by a shared workflow scope in its route/layout. */
-export function useLedgerCashFlowAllocationDialogView(_values: { entryId: string, accountName: string }, _emit: (event: string, ...args: unknown[]) => void) {
-const _props = new Proxy(_values, { get: (target, key) => Reflect.get(target, key) ?? Reflect.get({}, key) })
-const entryId = computed(() => _props.entryId)
-const accountName = computed(() => _props.accountName)
-const props = _props
-const emit = _emit as <K extends keyof ({ close: [], saved: [] })>(event: K, ...args: ({ close: [], saved: [] })[K]) => void
+/** Ledger-owned cash allocation rules and authorized classification command. */
+export function useLedgerCashFlowAllocationDialogView(props: { entryId: string | null, accountName: string }, emit: (event: 'close' | 'saved') => void) {
+const entryId = computed(() => props.entryId)
+const accountName = computed(() => props.accountName)
 const supabase = useSupabaseClient<Database>()
 const { currentId, baseCurrency, can } = useTenant()
 const { t } = useI18n()
@@ -26,17 +23,30 @@ const total = computed(() => {
 })
 const valid = computed(() => context.value && total.value === BigInt(context.value.amount_minor) && reason.value.trim().length > 0)
 watch([reason, () => amounts.operating, () => amounts.investing, () => amounts.financing], () => { requestId = undefined })
-onMounted(async () => {
-  if (!currentId.value) return
+let generation = 0
+onBeforeUnmount(() => { generation++ })
+async function load() {
+  const version = ++generation
+  const organization = currentId.value
+  const requested = props.entryId
+  if (!currentId.value || !requested) return
+  loading.value = true
   const { data, error: failure } = await supabase.rpc('cash_flow_allocation_context', {
-    p_organization_id: currentId.value, p_entry_id: props.entryId,
+    p_organization_id: currentId.value, p_entry_id: requested,
   })
+  if (version !== generation || organization !== currentId.value || requested !== props.entryId) return
   if (failure) error.value = describeError(failure)
   else context.value = data as unknown as typeof context.value
   loading.value = false
-})
+}
+let mounted = false
+onMounted(() => { mounted = true; void load() })
+watch(() => [props.entryId, currentId.value], () => {
+  generation++; context.value = undefined; reason.value = ''; Object.assign(amounts, { operating: '', investing: '', financing: '' }); error.value = ''; requestId = undefined; loading.value = false
+  if (mounted) void load()
+}, { flush: 'sync' })
 async function save() {
-  if (!valid.value || !currentId.value || !can('accounts.update') || pending.value) return
+  if (!props.entryId || !valid.value || !currentId.value || !can('accounts.update') || pending.value) return
   pending.value = true
   error.value = ''
   requestId ??= crypto.randomUUID()

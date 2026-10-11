@@ -8,6 +8,7 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
     await page.setViewportSize({ width, height: 1000 })
     await page.addInitScript(value => localStorage.setItem('building-suit.theme', value), theme)
     const { calls } = await pilotFixture(page, locale, 'owner', (name, args) => {
+      if (name === 'shop_operating_report') return { locationId: args.p_location_id, period: args.p_period, fromDate: '2026-10-01', toDateExclusive: '2026-10-02', canViewCosts: false, sales: 0, saleCount: 0, averageTicket: 0, paymentsIn: 0, salesMix: [], paymentMix: [], outstanding: { amount: 0, customerCount: 0, customers: [] }, expenses: { amount: null, count: null, operatingBalance: null }, appointments: { total: 0, completed: 0, cancelled: 0, noShow: 0, busiestTimes: [] }, cash: { closedShifts: 0, expected: 0, counted: 0, variance: 0 }, staff: [], locations: [] }
       if (name === 'shop_permission_access') return { 'reports.view': true, 'reports.cost_profit.view': true }
       if (name === 'shop_operational_report') return { report: args.p_report, items: [{ id: `row-${args.p_page}`, invoice_number: `Fixture invoice ${args.p_page}`, occurred_at: '2026-10-01T10:00:00Z', item_type: 'product', item_name: '=protected', quantity: 2, amount: 123.45, location_name: 'First branch', source_path: '/sales' }], total: args.p_page_size === 500 ? 1 : 21, summary: { sales: 123.45, costBasis: 'FIFO' } }
       return undefined

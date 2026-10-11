@@ -165,7 +165,9 @@ for (const file of uiTypeFiles) {
     if (!allowed) failures.push(`${file}: presentation contracts must contain only type declarations and type-only imports`)
   }
 }
-const expectedUiTargets = [...uiFiles, ...uiTypeFiles, 'packages/ui/src/styles/base.css'].map(file => `./${file.slice('packages/ui/'.length)}`).sort()
+// Detached document renderers are presentation sources, governed by the same strict UI boundary.
+const uiPresentationFiles = (await walk('packages/ui/src/utils')).filter(file => file.endsWith('.ts'))
+const expectedUiTargets = [...uiFiles, ...uiTypeFiles, ...uiPresentationFiles, 'packages/ui/src/styles/base.css'].map(file => `./${file.slice('packages/ui/'.length)}`).sort()
 const actualUiTargets = Object.values(uiExports).sort()
 for (const target of expectedUiTargets) if (!actualUiTargets.includes(target)) failures.push(`packages/ui/package.json: missing explicit export for ${target}`)
 for (const target of actualUiTargets) if (!expectedUiTargets.includes(target)) failures.push(`packages/ui/package.json: export target is not a governed UI source ${target}`)

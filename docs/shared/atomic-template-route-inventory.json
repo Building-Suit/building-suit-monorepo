@@ -1083,8 +1083,8 @@
         "BsTextarea",
         "BsWorkflowScope"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "destination": "packages/ui/src/templates/BsReportsPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/ledger-suit/app/pages/reports.vue",
       "dependencies": [
         "~/utils/templateElement",
@@ -1095,7 +1095,8 @@
         "~~/types/accounts-reports-rpc.types",
         "../utils/reportFormats"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "reports"
     },
     {
       "source": "apps/ledger-suit/app/pages/signup.vue",

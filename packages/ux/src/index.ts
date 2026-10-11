@@ -240,3 +240,5 @@ export { openExternalLink, clearFileSelection, runPrimaryEnter, exclusiveChoiceO
 
 export { useFileInputReset } from './composables/useFileInputReset.ts'
 export { useDebouncedTask } from './composables/useDebouncedTask.ts'
+export { useNavigationPosition } from './composables/useNavigationPosition.ts'
+export { openPrintSession } from './utils/printSession.ts'

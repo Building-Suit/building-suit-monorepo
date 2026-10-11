@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { resolveTemplateElement } from '~/utils/templateElement'
-import { useLedgerAccountActivityDialogView } from '~/composables/useLedgerAccountActivityDialogView'
-import { useLedgerCashFlowAllocationDialogView } from '~/composables/useLedgerCashFlowAllocationDialogView'
+import { renderPendingPrintDocument } from '@building-suit/ui/utils/reportDocument'
+import { formatPresentationMoney, openPrintSession } from '@building-suit/ux'
+import type { BsFinancialReportCell, BsFinancialReportColumn, BsFinancialReportCopy, BsFinancialReportFilters, BsFinancialReportSection, BsFinancialReportsView } from '@building-suit/ui/types/financialReportsPresentation'
 import { scopedQueryKey } from '@building-suit/data-access'
 import type { Database } from '~~/types/database.types'
 import type { AccountsReportsRpcDatabase } from '~~/types/accounts-reports-rpc.types'
@@ -238,11 +238,8 @@ const profitLossPending = computed(() => tab.value === 'overview' ? overviewPend
 const balanceSheet = computed(() => tab.value === 'overview' ? (overview.value?.balance_sheet ?? []) : balanceSheetDetail.value)
 const balanceSheetPending = computed(() => tab.value === 'overview' ? overviewPending.value : balanceSheetDetailPending.value)
 const trialBalance = computed(() => overview.value?.trial_balance ?? [])
-const trialBalancePending = computed(() => overviewPending.value)
-const trialBalanceError = computed(() => overviewError.value)
 const statementReconciliation = computed(() => overview.value?.reconciliation ?? null)
 const integrity = computed(() => overview.value?.integrity ?? null)
-function refreshTrialBalance() { return refreshOverview() }
 
 function sectionTotal(rows: ReportRow[] | null, section: string) {
   return (rows ?? []).filter(r => r.section === section)
@@ -378,16 +375,8 @@ function exportMetadata(report: ExportReport, exportLocale: string): ReportForma
 
 async function exportReport(report: ExportReport, format: ExportFormat = 'csv') {
   if (!currentId.value || exportPending.value) return
-  const printWindow = format === 'print' ? window.open('', '_blank') : null
-  if (format === 'print' && !printWindow) {
-    exportError.value = t('reports.popupBlocked')
-    return
-  }
-  if (printWindow) {
-    printWindow.opener = null
-    printWindow.document.write(`<!doctype html><html lang="${locale.value}" dir="${locale.value.startsWith('ar') ? 'rtl' : 'ltr'}"><head><meta charset="utf-8"><title>${t('reports.preparing')}</title></head><body><p>${t('reports.preparing')}</p></body></html>`)
-    printWindow.document.close()
-  }
+  const printWindow = format === 'print' ? openPrintSession(renderPendingPrintDocument(t('reports.preparing'), locale.value.startsWith('ar') ? 'rtl' : 'ltr', t('reports.preparing'))) : null
+  if (format === 'print' && !printWindow) { exportError.value = t('reports.popupBlocked'); return }
   const requestedScope = exportScope(report)
   const exportLocale = locale.value
   const exportPeriod = ['profit_loss', 'trial_balance', 'cash_flow', 'general_ledger'].includes(report) ? `${from.value}_${to.value}` : asOf.value
@@ -415,11 +404,7 @@ async function exportReport(report: ExportReport, format: ExportFormat = 'csv') 
     if (format === 'csv') downloadCsv(`${filename}.csv`, localizedCsv)
     else if (format === 'excel') downloadReportXlsx(`${filename}.xlsx`, buildReportXlsx(localizedCsv, report, metadata))
     else if (printWindow) {
-      printWindow.document.open()
-      printWindow.document.write(buildPrintableReportHtml(localizedCsv, report, metadata))
-      printWindow.document.close()
-      printWindow.focus()
-      printWindow.print()
+      printWindow.print(buildPrintableReportHtml(localizedCsv, report, metadata))
     }
   }
   catch {
@@ -431,629 +416,63 @@ async function exportReport(report: ExportReport, format: ExportFormat = 'csv') 
   }
 }
 const ledgerPresentation = useLedgerPresentation()
+const activityPresentation = useLedgerActivityPresentation(reactive({ get accountId() { return trialDrilldown.value?.accountId ?? null }, get scope() { return trialScope.value }, get initialFrom() { return trialDrilldown.value?.from }, get initialTo() { return trialDrilldown.value?.to } }), () => { trialDrilldown.value = null })
+const allocationPresentation = useLedgerCashAllocationPresentation(reactive({ get entryId() { return allocationEntry.value?.entry_id ?? null }, get accountName() { return allocationEntry.value ? accountName(allocationEntry.value.account_id) : '' } }), { close: () => { allocationEntry.value = null }, saved: () => { void refreshCashFlow(); void refreshCashDetail() } })
+const activityForm = activityPresentation.form
+const allocationForm = allocationPresentation.form
+const financialFilters = computed<BsFinancialReportFilters>({ get: () => ({ tab: tab.value, from: from.value, to: to.value, asOf: asOf.value, account: ledgerAccountId.value, density: tableDensity.value }), set: value => { if (value.tab !== tab.value) selectTab(value.tab); from.value = value.from; to.value = value.to; asOf.value = value.asOf; ledgerAccountId.value = value.account; tableDensity.value = value.density } })
+const financialCopy = computed<BsFinancialReportCopy>(() => ({ title: t('reports.title'), subtitle: t('reports.csvExports'), context: t('pageContext.label'), from: t('reports.from'), to: t('reports.to'), asOf: t('reports.asOf'), account: t('reports.account'), density: t('accountingTable.density'), compact: t('accountingTable.compact'), comfortable: t('accountingTable.comfortable'), retry: t('accounts.retry'), failed: t('reports.loadError'), empty: t('reports.emptyTitle'), emptyHint: t('reports.emptyRange'), total: t('reports.total'), csv: t('common.exportCsv'), excel: t('reports.exportExcel'), print: t('reports.printPdf'), allocate: t('financialMapping.allocate'), reconciliation: t('financialMapping.reconciliationDetails'), trialBalance: t('reports.trialBalance'), scroll: t('accountingTable.trialBalanceScroll') }))
+function displayReportMoney(value: number | string | bigint, _signed = false) { return formatPresentationMoney(value, { currency: ledgerPresentation.currency(), locale: locale.value, unit: 'minor', numberingSystem: 'latn' }) }
+function reportCell(value: string, account?: string | null, period: 'range' | 'asof' | 'opening' | 'period' | 'closing' = 'range', label?: string): BsFinancialReportCell { return { value, ...(account ? { action: { account, period } } : {}), ...(label ? { label } : {}) } }
+const financialView = computed<BsFinancialReportsView>(() => {
+ const active = tab.value
+ const column = (key: string, label: string, total = '') => ({ key, label, total })
+ const amountColumn = column('amount', t('transactions.amount'))
+ let columns: BsFinancialReportColumn[] = [amountColumn]
+ let sections: BsFinancialReportSection[] = []
+ let failed = false; let loading = false; let empty = false; let errorLabel = t('reports.loadError'); let emptyHint = t('reports.emptyRange')
+ const warnings: string[] = []
+ const totals: { label: string; value: string }[] = []
+ if (active === 'overview') {
+  failed = !!overviewError.value; loading = overviewPending.value; empty = !trialBalance.value.length
+  columns = trialColumns.map(item => column(item.field, t(`reports.${item.label}`), displayReportMoney(sumTrial(item.field))))
+  sections = [{ id: 'trial', title: `${t('reports.trialBalance')} · ${baseCurrency.value}`, total: '', rows: trialBalance.value.map(row => ({ id: row.account_id, name: row.name, code: row.code || t('common.dash'), cells: trialColumns.map(item => reportCell(displayReportMoney(row[item.field]), row.account_id, item.scope, t('reports.drilldownAmount', { column: t(`reports.${item.label}`), account: row.name }))) })) }]
+  if (integrity.value?.balanced === false) warnings.push(`${t('reports.integrityTitle')} ${t('reports.integrityBody', { difference: formatMoney(Number(integrity.value.difference_minor), baseCurrency.value, locale.value) })}`)
+  if (statementReconciliation.value && (statementReconciliation.value.profit_loss_difference_minor !== 0 || statementReconciliation.value.balance_sheet_difference_minor !== 0 || !statementReconciliation.value.mapping_complete)) warnings.push(t('financialMapping.reconciliationWarning'))
+ } else if (active === 'profit-loss') {
+  failed = !!profitLossError.value; loading = profitLossPending.value; empty = !profitLoss.value.length
+  if (plMappingIncomplete.value) warnings.push(t('financialMapping.incomplete'))
+  sections = plSections.map(section => ({ id: section.key, title: t(section.labelKey), total: displayReportMoney(sectionTotal(profitLoss.value, section.key)), rows: rowsIn(profitLoss.value, section.key).map((row, index) => ({ id: row.account_id || `${section.key}-${index}`, name: row.name, code: row.code || '', cells: [reportCell(displayReportMoney(row.amount_minor), row.account_id)] })) })).filter(section => section.rows.length)
+  totals.push({ label: t('reports.netProfit'), value: displayReportMoney(netProfit.value, true) }, { label: t('financialMapping.grossProfit'), value: displayReportMoney(grossProfit.value, true) }, { label: t('financialMapping.operatingResult'), value: displayReportMoney(operatingResult.value, true) })
+ } else if (active === 'balance-sheet') {
+  failed = !!balanceSheetError.value; loading = balanceSheetPending.value; empty = !balanceSheet.value.length; errorLabel = t('statementClassification.reportError'); emptyHint = t('reports.emptyAsOf')
+  if (bsMappingIncomplete.value) warnings.push(t('financialMapping.incomplete'))
+  columns = [column('effective', t('statementClassification.effectiveFrom')), amountColumn]
+  sections = STATEMENT_LINES.map(line => ({ id: line, title: t(`statementClassification.lines.${line}`), total: displayReportMoney(sumStatementAmounts(balanceSheet.value, line, 'statement_line')), rows: bsRows.value.filter(row => row.statement_line === line).map((row, index) => ({ id: row.account_id || `${line}-${index}`, name: row.displayName, code: '', cells: [reportCell(row.effective_from ? formatDate(row.effective_from, locale.value) : t('common.dash')), reportCell(displayReportMoney(row.amount_minor), row.account_id, 'asof')] })) })).filter(section => section.rows.length)
+ } else if (active === 'cash-flow') {
+  failed = !!cashFlowError.value || !!cashDetailError.value; loading = cashFlowPending.value; empty = !cashFlow.value; emptyHint = t('reports.emptyCashHint')
+  if (cashFlow.value && (!cashFlow.value.classification_complete || !cashFlow.value.reconciled)) warnings.push(t('financialMapping.cashIncomplete'))
+  columns = [column('activity', t('reports.activity')), amountColumn]
+  sections = [{ id: 'sources', title: '', total: '', rows: (cashDetail.value || []).map(row => ({ id: row.entry_id, name: accountName(row.account_id), code: '', cells: [reportCell(t(`financialMapping.lines.${row.section}`)), reportCell(displayReportMoney(row.amount_minor, true), row.account_id)], allocationId: row.entry_id })) }]
+ } else {
+  failed = !!ledgerError.value; loading = ledgerPending.value; empty = !ledger.value.length; emptyHint = t('reports.emptyLedgerHint')
+  columns = [column('date', t('transactions.date')), column('reference', t('transactions.reference')), column('debit', t('detail.debit')), column('credit', t('detail.credit')), column('balance', t('reports.runningBalance'))]
+  sections = [{ id: 'ledger', title: '', total: '', rows: ledger.value.map(row => ({ id: row.entry_id, name: row.description || row.memo || t('common.dash'), code: '', cells: [reportCell(formatDate(row.entry_date, locale.value)), reportCell(row.reference || t('common.dash')), reportCell(Number(row.debit_minor) ? displayReportMoney(row.debit_minor) : t('common.dash')), reportCell(Number(row.credit_minor) ? displayReportMoney(row.credit_minor) : t('common.dash')), reportCell(displayReportMoney(row.running_balance_minor))] })) }]
+ }
+ const cashKeys = ['net_profit', 'operating_adjustments', 'operating_cash', 'investing_cash', 'financing_cash', 'unclassified_cash', 'net_cash_change', 'opening_cash', 'closing_cash'] as const
+ return { context: ledgerPresentation.context(active === 'balance-sheet' ? undefined : from.value, active === 'balance-sheet' ? undefined : to.value, active === 'balance-sheet' ? asOf.value : undefined), tabs: TABS.map(item => ({ value: item.key, label: t(item.labelKey) })), accounts: accounts.value.map(account => ({ value: account.id, label: `${account.code ? `${account.code} · ` : ''}${account.name}` })), preferenceReady: tablePreferenceHydrated.value, canExport: can('reports.export'), canAllocate: can('accounts.update'), exporting: exportPending.value, exportError: exportError.value, invalidPeriod: periodInvalid.value ? t('reports.invalidPeriod') : '', loading, failed, errorLabel, emptyHint, warnings, columns, sections, totals,
+  metrics: active === 'overview' ? [['assets', assets.value], ['liabilities', liabilities.value], ['equity', equity.value], ['netProfitPeriod', netProfit.value]].map(([key, value]) => ({ id: key!, label: t(`reports.${key}`), value: displayReportMoney(value!), hint: ledgerPresentation.kpi(value!, null, 'neutral').label || '', tone: 'neutral' as const })) : [],
+  equation: active === 'balance-sheet' ? `${t('statementClassification.reportHint', { date: formatDate(asOf.value, locale.value) })} ${t('reports.equation', { assets: formatMoney(assets.value, baseCurrency.value, locale.value), liabilities: formatMoney(liabilities.value, baseCurrency.value, locale.value), equity: formatMoney(equity.value, baseCurrency.value, locale.value) })}` : '', equationTone: BigInt(assets.value) === BigInt(liabilities.value) + BigInt(equity.value) ? 'muted' : 'danger',
+  reconciliation: active === 'overview' ? (statementReconciliation.value?.accounts || []).map((row, index) => ({ id: `${row.account_id}-${index}`, name: accountName(row.account_id), code: '', cells: [reportCell(t(`financialMapping.dimensions.${row.statement}`), row.account_id, row.statement === 'balance_sheet' ? 'asof' : 'range'), reportCell(displayReportMoney(row.statement_minor, true)), reportCell(displayReportMoney(row.ledger_minor, true)), reportCell(displayReportMoney(row.difference_minor, true))] })) : [], reconciliationColumns: [column('dimension', t('financialMapping.dimension')), column('statement', t('financialMapping.statementAmount')), column('ledger', t('financialMapping.ledgerAmount')), column('difference', t('financialMapping.difference'))],
+  diagnostic: active === 'cash-flow' && cashFlow.value ? t('financialMapping.cashDiagnostic', { difference: formatMoney(cashFlow.value.operating_adjustment_difference_minor, baseCurrency.value, locale.value) }) : '', cashSummary: active === 'cash-flow' && cashFlow.value ? cashKeys.map(key => ({ label: t(`financialMapping.cashLines.${key}`), value: displayReportMoney(cashFlow.value![`${key}_minor`], true) })) : [],
+  adjustments: active === 'cash-flow' ? (cashFlow.value?.operating_adjustments || []).map(row => ({ id: row.account_id, name: `${row.code} · ${row.name}`, code: '', cells: [reportCell('', row.account_id), reportCell(displayReportMoney(row.amount_minor, true), row.account_id)] })) : [], adjustmentTitle: t('financialMapping.adjustmentSources'), cashSourceTitle: t('financialMapping.cashSources'), balanceLabel: active === 'overview' ? t(trialBalanced.value ? 'reports.inBalance' : 'reports.outOfBalance') : '', balanced: trialBalanced.value, empty,
+ }
+})
+function reportDrilldown(accountId: string, period: 'range' | 'asof' | 'opening' | 'period' | 'closing') { if (['opening', 'period', 'closing'].includes(period)) { const row = trialBalance.value.find(row => row.account_id === accountId); if (row) openTrialDrilldown(row, period as 'opening' | 'period' | 'closing') } else openStatementDrilldown(accountId, period as 'range' | 'asof') }
+function reportAllocate(id: string) { allocationEntry.value = cashDetail.value?.find(row => row.entry_id === id) ?? null }
+function retryReport() { if (tab.value === 'overview') return refreshOverview(); if (tab.value === 'profit-loss') return refreshProfitLoss(); if (tab.value === 'balance-sheet') return refreshBalanceSheet(); if (tab.value === 'cash-flow') return refreshCashFlowSurface(); return refreshLedger() }
+function exportCurrentReport(format: ExportFormat) { const reports: Record<TabKey, ExportReport> = { overview: 'trial_balance', 'profit-loss': 'profit_loss', 'balance-sheet': 'balance_sheet', 'cash-flow': 'cash_flow', ledger: 'general_ledger' }; return exportReport(reports[tab.value], format) }
 </script>
-
 <template>
-  <BsStack gap="lg">
-    <BsPageHeader
-      :title="t('reports.title')"
-      :subtitle="t('reports.csvExports')"
-      :context="ledgerPresentation.context(tab === 'balance-sheet' ? undefined : from, tab === 'balance-sheet' ? undefined : to, tab === 'balance-sheet' ? asOf : undefined)"
-      :context-label="ledgerPresentation.t('pageContext.label')"
-    />
-    <BsText v-if="exportError" role="alert" tone="danger">{{ exportError }}</BsText>
-    <BsInline role="tablist" gap="xs" :wrap="false">
-      <BsButton v-for="item in TABS" :key="item.key" variant="tab" type="button" role="tab" :aria-selected="tab === item.key" @click="selectTab(item.key)">{{ t(item.labelKey) }}</BsButton>
-    </BsInline>
-    <BsInline gap="md" :wrap="true" align="end">
-      <template v-if="tab !== 'balance-sheet'">
-        <BsFloatingField :label="t('reports.from')">
-          <BsInput id="from" v-model="from" type="date" />
-        </BsFloatingField>
-        <BsFloatingField :label="t('reports.to')">
-          <BsInput id="to" v-model="to" type="date" :min="from" />
-        </BsFloatingField>
-      </template>
-      <BsFloatingField v-else :label="t('reports.asOf')">
-        <BsInput id="asof" v-model="asOf" type="date" />
-      </BsFloatingField>
-      <BsFloatingField v-if="tab === 'ledger'" :label="t('reports.account')">
-        <BsSelect id="ledger-account" v-model="ledgerAccountId" native>
-          <BsSelectOption v-for="a in accounts" :key="a.id" :value="a.id">{{ a.code ? `${a.code} · ` : '' }}{{ a.name }}</BsSelectOption>
-        </BsSelect>
-      </BsFloatingField>
-      <BsTableDensity
-        v-model="tableDensity"
-        :disabled="!tablePreferenceHydrated"
-        :label="ledgerPresentation.t('accountingTable.density')"
-        :compact-label="ledgerPresentation.t('accountingTable.compact')"
-        :comfortable-label="ledgerPresentation.t('accountingTable.comfortable')"
-      />
-    </BsInline>
-    <!-- Overview -->
-    <BsStack v-if="tab === 'overview'" role="tabpanel" :aria-label="t('reports.tabs.overview')" as="section" gap="md">
-      <BsCard v-if="overviewError" role="alert" as="div" padding="lg">
-        <BsStack gap="md">
-          <BsText>{{ t('reports.loadError') }}</BsText>
-          <BsButton type="button" @click="refreshOverview()">{{ t('accounts.retry') }}</BsButton>
-        </BsStack>
-      </BsCard>
-      <template v-else>
-        <BsBox v-if="integrity && integrity.balanced === false" role="alert" border radius="control">
-          <BsText emphasis="bold">{{ t('reports.integrityTitle') }}</BsText>
-          <BsText>{{ t('reports.integrityBody', {
-            difference: formatMoney(Number(integrity.difference_minor), baseCurrency, locale),
-          }) }}</BsText>
-        </BsBox>
-        <BsText
-          v-if="statementReconciliation && (statementReconciliation.profit_loss_difference_minor !== 0 || statementReconciliation.balance_sheet_difference_minor !== 0 || !statementReconciliation.mapping_complete)"
-          role="alert"
-          tone="danger"
-        >{{ t('financialMapping.reconciliationWarning') }}</BsText>
-        <BsDisclosure v-if="statementReconciliation?.accounts?.length">
-          <template #summary>{{ t('financialMapping.reconciliationDetails') }}</template>
-          <BsDataTable
-            :value="statementReconciliation.accounts"
-            :label="t('financialMapping.reconciliationDetails')"
-            :density="tableDensity"
-            :columns="[{ key: 'column1', header: t('financialMapping.dimension') }, { key: 'column2', header: t('reports.account') }, { key: 'column3', header: t('financialMapping.statementAmount') }, { key: 'column4', header: t('financialMapping.ledgerAmount') }, { key: 'column5', header: t('financialMapping.difference') }]"
-          >
-            <template #cell-column1="{ row }">{{ t(`financialMapping.dimensions.${row.statement}`) }}</template>
-            <template #cell-column2="{ row }">
-              <BsButton variant="link" type="button" @click="openStatementDrilldown(row.account_id, row.statement === 'balance_sheet' ? 'asof' : 'range')">{{ accountName(row.account_id) }}</BsButton>
-            </template>
-            <template #cell-column3="{ row }">
-              <BsMoneyText :amount="row.statement_minor" signed :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
-            </template>
-            <template #cell-column4="{ row }">
-              <BsMoneyText :amount="row.ledger_minor" signed :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
-            </template>
-            <template #cell-column5="{ row }">
-              <BsMoneyText :amount="row.difference_minor" signed :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
-            </template>
-          </BsDataTable>
-        </BsDisclosure>
-        <BsSectionSkeleton v-if="balanceSheetPending || profitLossPending" variant="cards" />
-        <BsGrid v-else :columns="4" gap="md">
-          <BsKpiCard
-            :title="t('reports.assets')"
-            :change-label="ledgerPresentation.kpi(assets, null, 'neutral').label"
-            :tone="ledgerPresentation.kpi(assets, null, 'neutral').tone"
-          >
-            <BsMoneyText :amount="assets" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
-          </BsKpiCard>
-          <BsKpiCard
-            :title="t('reports.liabilities')"
-            :change-label="ledgerPresentation.kpi(liabilities, null, 'neutral').label"
-            :tone="ledgerPresentation.kpi(liabilities, null, 'neutral').tone"
-          >
-            <BsMoneyText :amount="liabilities" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
-          </BsKpiCard>
-          <BsKpiCard
-            :title="t('reports.equity')"
-            :change-label="ledgerPresentation.kpi(equity, null, 'neutral').label"
-            :tone="ledgerPresentation.kpi(equity, null, 'neutral').tone"
-          >
-            <BsMoneyText :amount="equity" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
-          </BsKpiCard>
-          <BsKpiCard
-            :title="t('reports.netProfitPeriod')"
-            :change-label="ledgerPresentation.kpi(netProfit, null, 'neutral').label"
-            :tone="ledgerPresentation.kpi(netProfit, null, 'neutral').tone"
-          >
-            <BsMoneyText :amount="netProfit" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
-          </BsKpiCard>
-        </BsGrid>
-        <BsText v-if="periodInvalid" role="alert" tone="danger">{{ t('reports.invalidPeriod') }}</BsText>
-        <BsCard v-else-if="trialBalanceError" role="alert" as="div" padding="lg">
-          <BsStack gap="md">
-            <BsText>{{ t('reports.trialBalanceError') }}</BsText>
-            <BsButton type="button" @click="refreshTrialBalance()">{{ t('accounts.retry') }}</BsButton>
-          </BsStack>
-        </BsCard>
-        <BsSectionSkeleton v-else-if="trialBalancePending" variant="table" :rows="7" />
-        <BsEmptyState v-else-if="!trialBalance.length" :title="t('reports.emptyTitle')" :description="t('reports.emptyRange')" />
-        <BsCard v-else aria-labelledby="tb-heading" as="section" padding="none" overflow="hidden">
-          <BsInline gap="md" :wrap="true" justify="between">
-            <BsHeading id="tb-heading" :level="2" size="body">{{ t('reports.trialBalance') }} · <BsText dir="ltr" as="span">{{ baseCurrency }}</BsText></BsHeading>
-            <BsInline gap="md" :wrap="false">
-              <BsText size="sm" emphasis="semibold" :tone="trialBalanced ? 'success' : 'danger'">{{ trialBalanced ? t('reports.inBalance') : t('reports.outOfBalance') }}</BsText>
-              <template v-if="can('reports.export')">
-                <BsButton type="button" :disabled="exportPending" size="sm" @click="exportReport('trial_balance')">{{ t('common.exportCsv') }}</BsButton>
-                <BsButton type="button" :disabled="exportPending" size="sm" @click="exportReport('trial_balance', 'excel')">{{ t('reports.exportExcel') }}</BsButton>
-                <BsButton type="button" :disabled="exportPending" size="sm" @click="exportReport('trial_balance', 'print')">{{ t('reports.printPdf') }}</BsButton>
-              </template>
-            </BsInline>
-          </BsInline>
-          <BsBox>
-            <BsDataTable
-              :value="trialBalance"
-              row-key="account_id"
-              :label="t('reports.trialBalance')"
-              :density="tableDensity"
-              sticky-header
-              sticky-footer
-              max-height="38rem"
-              :scroll-label="t('accountingTable.trialBalanceScroll')"
-              :columns="[{ key: 'column1', header: (t('reports.account')), sticky: 'start' as const, width: 'lg' as const, footer: t('reports.total') }, ...(trialColumns ?? []).map((column) => ({ key: column.field, header: t(`reports.${column.label}`), align: 'end' as const }))]"
-            >
-              <template #header-column1>{{ t('reports.account') }}</template>
-              <template #cell-column1="{ row }">
-                <BsText as="span" emphasis="semibold">{{ row.name }}</BsText>
-                <BsText dir="ltr" as="span" size="xs" tone="muted">{{ row.code || t('common.dash') }}</BsText>
-              </template>
-              <template v-for="column in trialColumns" :key="column.field" #[`cell-${column.field}`]="{ row }">
-                <BsButton
-                  variant="link"
-                  type="button"
-                  :aria-label="t('reports.drilldownAmount', { column: t(`reports.${column.label}`), account: row.name })"
-                  @click="openTrialDrilldown(row, column.scope)"
-                >
-                  <BsMoneyText :amount="row[column.field]" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
-                </BsButton>
-              </template>
-              <template v-for="column in trialColumns" :key="column.field" #[`footer-${column.field}`]>
-                <BsMoneyText :amount="sumTrial(column.field)" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
-              </template>
-            </BsDataTable>
-          </BsBox>
-        </BsCard>
-      </template>
-    </BsStack>
-    <!-- Profit & Loss -->
-    <BsStack v-else-if="tab === 'profit-loss'" role="tabpanel" :aria-label="t('reports.tabs.profitLoss')" as="section" gap="md">
-      <BsInline v-if="can('reports.export')" gap="sm" :wrap="true" justify="end">
-        <BsButton type="button" :disabled="exportPending" @click="exportReport('profit_loss')">{{ t('common.exportCsv') }}</BsButton>
-        <BsButton type="button" :disabled="exportPending" @click="exportReport('profit_loss', 'excel')">{{ t('reports.exportExcel') }}</BsButton>
-        <BsButton type="button" :disabled="exportPending" @click="exportReport('profit_loss', 'print')">{{ t('reports.printPdf') }}</BsButton>
-      </BsInline>
-      <BsCard v-if="profitLossError" role="alert" as="div" padding="lg">
-        <BsStack gap="md">
-          <BsText>{{ t('reports.loadError') }}</BsText>
-          <BsButton type="button" @click="refreshProfitLoss()">{{ t('accounts.retry') }}</BsButton>
-        </BsStack>
-      </BsCard>
-      <BsSectionSkeleton v-else-if="profitLossPending" variant="table" :rows="7" />
-      <BsEmptyState v-else-if="!profitLoss?.length" :title="t('reports.emptyTitle')" :description="t('reports.emptyRange')" />
-      <BsText v-if="!profitLossError && plMappingIncomplete" role="alert" tone="danger">{{ t('financialMapping.incomplete') }}</BsText>
-      <BsCard v-if="!profitLossError && profitLoss?.length" as="div" padding="none" overflow="hidden">
-        <BsDataTable
-          :label="t('reports.tabs.profitLoss')"
-          :value="plSections.flatMap(section => rowsIn(profitLoss, section.key).map(row => ({ ...row, groupKey: section.key, groupLabel: section.labelKey })))"
-          :density="tableDensity"
-          row-group-mode="subheader"
-          group-rows-by="groupKey"
-          :columns="[{ key: 'column1', header: t('reports.account') }, { key: 'column2', header: t('transactions.amount'), align: 'end' as const }]"
-        >
-          <template #cell-column1="{ row }">
-            <BsButton variant="link" type="button" @click="openStatementDrilldown(row.account_id)">{{ row.name }}</BsButton>
-          </template>
-          <template #cell-column2="{ row }">
-            <BsMoneyText :amount="row.amount_minor" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
-          </template>
-          <template #groupheader="{ data: row }">
-            <BsInline gap="md" :wrap="false" justify="between" surface="muted">
-              <BsText as="span">{{ t(row.groupLabel) }}</BsText>
-              <BsMoneyText :amount="sectionTotal(profitLoss, row.groupKey)" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
-            </BsInline>
-          </template>
-          <template #footer>
-            <BsInline gap="md" :wrap="false" justify="between">
-              <BsText as="span">{{ t('reports.netProfit') }}</BsText>
-              <BsMoneyText :amount="netProfit" signed :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
-            </BsInline>
-          </template>
-        </BsDataTable>
-        <BsDescriptionList :columns="2">
-          <BsInline gap="none" :wrap="false" justify="between">
-            <BsDescriptionTerm>{{ t('financialMapping.grossProfit') }}</BsDescriptionTerm>
-            <BsDescriptionValue>
-              <BsMoneyText :amount="grossProfit" signed :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
-            </BsDescriptionValue>
-          </BsInline>
-          <BsInline gap="none" :wrap="false" justify="between">
-            <BsDescriptionTerm>{{ t('financialMapping.operatingResult') }}</BsDescriptionTerm>
-            <BsDescriptionValue>
-              <BsMoneyText :amount="operatingResult" signed :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
-            </BsDescriptionValue>
-          </BsInline>
-        </BsDescriptionList>
-      </BsCard>
-    </BsStack>
-    <!-- Balance sheet -->
-    <BsStack v-else-if="tab === 'balance-sheet'" role="tabpanel" :aria-label="t('reports.tabs.balanceSheet')" as="section" gap="md">
-      <BsInline v-if="can('reports.export')" gap="sm" :wrap="true" justify="end">
-        <BsButton type="button" :disabled="exportPending" @click="exportReport('balance_sheet')">{{ t('common.exportCsv') }}</BsButton>
-        <BsButton type="button" :disabled="exportPending" @click="exportReport('balance_sheet', 'excel')">{{ t('reports.exportExcel') }}</BsButton>
-        <BsButton type="button" :disabled="exportPending" @click="exportReport('balance_sheet', 'print')">{{ t('reports.printPdf') }}</BsButton>
-      </BsInline>
-      <BsText size="sm" tone="muted">{{ t('statementClassification.reportHint', { date: formatDate(asOf, locale) }) }}</BsText>
-      <BsCard v-if="balanceSheetError" role="alert" as="div" padding="lg">
-        <BsStack gap="md">
-          <BsText tone="danger">{{ t('statementClassification.reportError') }}</BsText>
-          <BsButton type="button" @click="refreshBalanceSheet()">{{ t('statementClassification.reload') }}</BsButton>
-        </BsStack>
-      </BsCard>
-      <BsSectionSkeleton v-else-if="balanceSheetPending" variant="table" :rows="7" />
-      <BsEmptyState v-else-if="!balanceSheet?.length" :title="t('reports.emptyTitle')" :description="t('reports.emptyAsOf')" />
-      <template v-else>
-        <BsText v-if="bsMappingIncomplete" role="alert" tone="danger">{{ t('financialMapping.incomplete') }}</BsText>
-        <BsCard as="div" padding="none" overflow="hidden">
-          <BsDataTable
-            :label="t('reports.tabs.balanceSheet')"
-            :value="bsRows"
-            :density="tableDensity"
-            row-group-mode="subheader"
-            group-rows-by="statement_line"
-            :columns="[{ key: 'column1', header: t('reports.account') }, { key: 'column2', header: t('statementClassification.effectiveFrom') }, { key: 'column3', header: t('transactions.amount'), align: 'end' as const }]"
-          >
-            <template #cell-column1="{ row }">
-              <BsButton v-if="row.account_id" variant="link" type="button" @click="openStatementDrilldown(row.account_id, 'asof')">{{ row.displayName }}</BsButton>
-              <BsText v-else as="span">{{ row.displayName }}</BsText>
-            </template>
-            <template #cell-column2="{ row }">{{ row.effective_from ? formatDate(row.effective_from, locale) : t('common.dash') }}</template>
-            <template #cell-column3="{ row }">
-              <BsMoneyText :amount="row.amount_minor" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
-            </template>
-            <template #groupheader="{ data: row }">
-              <BsInline gap="md" :wrap="false" justify="between" surface="muted">
-                <BsText as="span">{{ t(`statementClassification.lines.${row.statement_line}`) }}</BsText>
-                <BsMoneyText
-                  :amount="sumStatementAmounts(balanceSheet, row.statement_line, 'statement_line')"
-                  :currency="ledgerPresentation.currency()"
-                  :locale="ledgerPresentation.locale"
-                />
-              </BsInline>
-            </template>
-          </BsDataTable>
-        </BsCard>
-        <BsText size="sm" :tone="BigInt(assets) === BigInt(liabilities) + BigInt(equity) ? 'muted' : 'danger'">{{ t('reports.equation', {
-            assets: formatMoney(assets, baseCurrency, locale),
-            liabilities: formatMoney(liabilities, baseCurrency, locale),
-            equity: formatMoney(equity, baseCurrency, locale),
-          }) }}</BsText>
-      </template>
-    </BsStack>
-    <!-- Cash flow -->
-    <BsStack v-else-if="tab === 'cash-flow'" role="tabpanel" :aria-label="t('reports.tabs.cashFlow')" as="section" gap="md">
-      <BsInline v-if="can('reports.export')" gap="sm" :wrap="true" justify="end">
-        <BsButton type="button" :disabled="exportPending" @click="exportReport('cash_flow')">{{ t('common.exportCsv') }}</BsButton>
-        <BsButton type="button" :disabled="exportPending" @click="exportReport('cash_flow', 'excel')">{{ t('reports.exportExcel') }}</BsButton>
-        <BsButton type="button" :disabled="exportPending" @click="exportReport('cash_flow', 'print')">{{ t('reports.printPdf') }}</BsButton>
-      </BsInline>
-      <BsCard v-if="cashFlowError || cashDetailError" role="alert" as="div" padding="lg">
-        <BsStack gap="md">
-          <BsText>{{ t('reports.loadError') }}</BsText>
-          <BsButton type="button" @click="refreshCashFlowSurface">{{ t('accounts.retry') }}</BsButton>
-        </BsStack>
-      </BsCard>
-      <BsSectionSkeleton v-else-if="cashFlowPending" variant="table" :rows="5" />
-      <BsEmptyState v-else-if="!cashFlow" :title="t('reports.emptyCashTitle')" :description="t('reports.emptyCashHint')" />
-      <BsCard v-else as="div" padding="md">
-        <BsStack gap="md">
-          <BsText v-if="!cashFlow.classification_complete || !cashFlow.reconciled" role="alert" tone="danger">{{ t('financialMapping.cashIncomplete') }}</BsText>
-          <BsDescriptionList :columns="2">
-            <BsInline
-              v-for="item in [
-            ['net_profit', cashFlow.net_profit_minor],
-            ['operating_adjustments', cashFlow.operating_adjustments_minor],
-            ['operating_cash', cashFlow.operating_cash_minor],
-            ['investing_cash', cashFlow.investing_cash_minor],
-            ['financing_cash', cashFlow.financing_cash_minor],
-            ['unclassified_cash', cashFlow.unclassified_cash_minor],
-            ['net_cash_change', cashFlow.net_cash_change_minor],
-            ['opening_cash', cashFlow.opening_cash_minor],
-            ['closing_cash', cashFlow.closing_cash_minor],
-          ]"
-              :key="item[0]"
-              gap="none"
-              :wrap="false"
-              justify="between"
-            >
-              <BsDescriptionTerm>{{ t(`financialMapping.cashLines.${item[0]}`) }}</BsDescriptionTerm>
-              <BsDescriptionValue>
-                <BsMoneyText :amount="item[1]" signed :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
-              </BsDescriptionValue>
-            </BsInline>
-          </BsDescriptionList>
-          <BsText size="sm" tone="muted">{{ t('financialMapping.cashDiagnostic', { difference: formatMoney(cashFlow.operating_adjustment_difference_minor, baseCurrency, locale) }) }}</BsText>
-          <BsHeading :level="3" size="body">{{ t('financialMapping.adjustmentSources') }}</BsHeading>
-          <BsDataTable
-            :value="cashFlow.operating_adjustments"
-            row-key="account_id"
-            :label="t('financialMapping.adjustmentSources')"
-            :density="tableDensity"
-            :columns="[{ key: 'column1', header: t('reports.account') }, { key: 'column2', header: t('transactions.amount') }]"
-          >
-            <template #cell-column1="{ row }">
-              <BsButton variant="link" type="button" @click="openStatementDrilldown(row.account_id)">{{ row.code }} · {{ row.name }}</BsButton>
-            </template>
-            <template #cell-column2="{ row }">
-              <BsMoneyText :amount="row.amount_minor" signed :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
-            </template>
-          </BsDataTable>
-          <BsHeading :level="3" size="body">{{ t('financialMapping.cashSources') }}</BsHeading>
-          <BsDataTable
-            :value="cashDetail ?? []"
-            :label="t('financialMapping.cashSources')"
-            :density="tableDensity"
-            :columns="[{ key: 'column1', header: t('reports.account') }, { key: 'column2', header: t('reports.activity') }, { key: 'column3', header: t('transactions.amount') }, ...((can('accounts.update')) ? [{ key: 'column4', header: t('financialMapping.allocate') }] : [])]"
-          >
-            <template #cell-column1="{ row }">
-              <BsButton variant="link" type="button" @click="openStatementDrilldown(row.account_id)">{{ accountName(row.account_id) }}</BsButton>
-            </template>
-            <template #cell-column2="{ row }">{{ t(`financialMapping.lines.${row.section}`) }}</template>
-            <template #cell-column3="{ row }">
-              <BsMoneyText :amount="row.amount_minor" signed :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
-            </template>
-            <template #cell-column4="{ row }">
-              <BsButton type="button" size="sm" @click="allocationEntry = row">{{ t('financialMapping.allocate') }}</BsButton>
-            </template>
-          </BsDataTable>
-        </BsStack>
-      </BsCard>
-    </BsStack>
-    <!-- General ledger -->
-    <BsStack v-else role="tabpanel" :aria-label="t('reports.tabs.ledger')" as="section" gap="md">
-      <BsInline v-if="can('reports.export')" gap="sm" :wrap="true" justify="end">
-        <BsButton type="button" :disabled="exportPending || !ledgerAccountId" @click="exportReport('general_ledger')">{{ t('common.exportCsv') }}</BsButton>
-        <BsButton type="button" :disabled="exportPending || !ledgerAccountId" @click="exportReport('general_ledger', 'excel')">{{ t('reports.exportExcel') }}</BsButton>
-        <BsButton type="button" :disabled="exportPending || !ledgerAccountId" @click="exportReport('general_ledger', 'print')">{{ t('reports.printPdf') }}</BsButton>
-      </BsInline>
-      <BsCard v-if="ledgerError" role="alert" as="div" padding="lg">
-        <BsStack gap="md">
-          <BsText>{{ t('reports.loadError') }}</BsText>
-          <BsButton type="button" @click="refreshLedger()">{{ t('accounts.retry') }}</BsButton>
-        </BsStack>
-      </BsCard>
-      <BsSectionSkeleton v-else-if="ledgerPending" variant="table" :rows="8" />
-      <BsEmptyState v-else-if="!ledger?.length" :title="t('reports.emptyLedgerTitle')" :description="t('reports.emptyLedgerHint')" />
-      <BsCard v-else as="div" padding="none">
-        <BsDataTable
-          :value="ledger"
-          row-key="entry_id"
-          :label="t('reports.tabs.ledger')"
-          :density="tableDensity"
-          :columns="[{ key: 'column1', header: (t('transactions.date')) }, { key: 'column2', header: (t('transactions.reference')) }, { key: 'column3', header: (t('transactions.description')) }, { key: 'column4', header: (t('detail.debit')), align: 'end' as const }, { key: 'column5', header: (t('detail.credit')), align: 'end' as const }, { key: 'column6', header: (t('reports.runningBalance')), align: 'end' as const }]"
-        >
-          <template #header-column1>{{ t('transactions.date') }}</template>
-          <template #cell-column1="{ row }">{{ formatDate(row.entry_date, locale) }}</template>
-          <template #header-column2>{{ t('transactions.reference') }}</template>
-          <template #cell-column2="{ row }">{{ row.reference || t('common.dash') }}</template>
-          <template #header-column3>{{ t('transactions.description') }}</template>
-          <template #cell-column3="{ row }">{{ row.description || row.memo || t('common.dash') }}</template>
-          <template #header-column4>{{ t('detail.debit') }}</template>
-          <template #cell-column4="{ row }">
-            <BsMoneyText v-if="Number(row.debit_minor)" :amount="row.debit_minor" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
-            <BsText v-else as="span">{{ t('common.dash') }}</BsText>
-          </template>
-          <template #header-column5>{{ t('detail.credit') }}</template>
-          <template #cell-column5="{ row }">
-            <BsMoneyText v-if="Number(row.credit_minor)" :amount="row.credit_minor" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
-            <BsText v-else as="span">—</BsText>
-          </template>
-          <template #header-column6>{{ t('reports.runningBalance') }}</template>
-          <template #cell-column6="{ row }">
-            <BsMoneyText :amount="row.running_balance_minor" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
-          </template>
-        </BsDataTable>
-      </BsCard>
-    </BsStack>
-    <BsWorkflowScope
-      v-if="allocationEntry"
-      :factory="useLedgerCashFlowAllocationDialogView"
-      :input="{ entryId: (allocationEntry.entry_id), accountName: (accountName(allocationEntry.account_id)) }"
-      @close="allocationEntry = null"
-      @saved="() => { refreshCashFlow(); refreshCashDetail() }"
-    >
-      <template #default="{ state: ledgerView14 }">
-        <BsRecordActionDialog
-          :visible="true"
-          :title="ledgerView14.t('financialMapping.allocate')"
-          size="md"
-          :dirty="ledgerView14.dirty"
-          :pending="ledgerView14.pending"
-          :error="ledgerView14.error"
-          :submit-label="ledgerView14.t('common.save')"
-          :cancel-label="ledgerView14.t('common.cancel')"
-          :submit-disabled="!ledgerView14.valid || ledgerView14.loading"
-          @update:visible="(value: boolean) => { if (!value) ledgerView14.emit('close') }"
-          @submit="ledgerView14.save"
-        >
-          <BsText>{{ ledgerView14.accountName }}</BsText>
-          <BsSectionSkeleton v-if="ledgerView14.loading" variant="table" :rows="3" />
-          <template v-else-if="ledgerView14.context">
-            <BsText>{{ ledgerView14.t('financialMapping.sourceAmount') }}: <BsMoneyText :amount="ledgerView14.context.amount_minor" :currency="ledgerView14.ledgerPresentation.currency()" :locale="ledgerView14.ledgerPresentation.locale" /></BsText>
-            <BsBox v-if="ledgerView14.context.decision_id">
-              <BsText>{{ ledgerView14.t('financialMapping.previousAllocation') }}</BsText>
-              <BsText v-for="(value, section) in ledgerView14.context.allocations" :key="section">{{ ledgerView14.t(`financialMapping.lines.${section}`) }}: <BsMoneyText :amount="value" :currency="ledgerView14.ledgerPresentation.currency()" :locale="ledgerView14.ledgerPresentation.locale" /></BsText>
-            </BsBox>
-            <BsStack gap="md">
-              <BsFloatingField v-for="key in (['operating', 'investing', 'financing'] as const)" :key="key" :label="ledgerView14.t(`financialMapping.lines.${key}`)">
-                <BsInput v-model="ledgerView14.amounts[key]" type="text" inputmode="decimal" :disabled="ledgerView14.pending" />
-              </BsFloatingField>
-              <BsFloatingField :label="ledgerView14.t('statementClassification.reason')">
-                <BsTextarea v-model="ledgerView14.reason" required maxlength="1000" :disabled="ledgerView14.pending" />
-              </BsFloatingField>
-              <BsText v-if="ledgerView14.total !== BigInt(ledgerView14.context.amount_minor)" role="alert" tone="danger">{{ ledgerView14.t('financialMapping.allocationMismatch') }}</BsText>
-            </BsStack>
-          </template>
-        </BsRecordActionDialog>
-      </template>
-    </BsWorkflowScope>
-    <BsWorkflowScope
-      v-if="trialDrilldown"
-      :factory="useLedgerAccountActivityDialogView"
-      :input="{ accountId: (trialDrilldown.accountId), scope: (trialScope), initialFrom: (trialDrilldown.from), initialTo: (trialDrilldown.to) }"
-      @close="trialDrilldown = null"
-    >
-      <template #default="{ state: ledgerView15 }">
-        <BsDialog :visible="true" :title="ledgerView15.title" size="lg" @update:visible="(value: boolean) => { if (!value) ledgerView15.emit('close') }">
-          <BsStack :ref="el => { ledgerView15.content = resolveTemplateElement(el) }" gap="md">
-            <BsButton v-if="ledgerView15.views.length > 1" type="button" size="sm" @click="ledgerView15.back"><BsText as="span"><BsIcon name="arrowRight" directional :size="16" /></BsText>{{ ledgerView15.t('accountActivity.back') }}</BsButton>
-            <BsHeading :ref="el => { ledgerView15.heading = resolveTemplateElement(el) }" tabindex="-1" :level="2" size="h3">{{ ledgerView15.activity?.account.name || ledgerView15.journal?.description || ledgerView15.title }}</BsHeading>
-            <template v-if="ledgerView15.current.kind === 'account'">
-              <BsInline v-if="ledgerView15.activity" gap="sm" :wrap="true">
-                <BsBadge v-if="ledgerView15.activity.account.code">{{ ledgerView15.activity.account.code }}</BsBadge>
-                <BsText as="span">{{ ledgerView15.t(`accounts.groups.${ledgerView15.activity.account.type}`) }}</BsText>
-                <BsBadge v-if="ledgerView15.activity.account.is_archived">{{ ledgerView15.t('accounts.archived') }}</BsBadge>
-                <BsText as="span">{{ ledgerView15.t('accountActivity.baseCurrency', { currency: ledgerView15.activity.currency }) }}</BsText>
-              </BsInline>
-              <BsForm layout="grid" :columns="2" @submit.prevent="ledgerView15.applyPeriod">
-                <BsFloatingField :label="ledgerView15.t('reports.from')">
-                  <BsInput id="activity-from" v-model="ledgerView15.current.from" type="date" required :disabled="ledgerView15.loading" />
-                </BsFloatingField>
-                <BsFloatingField :label="ledgerView15.t('reports.to')">
-                  <BsInput id="activity-to" v-model="ledgerView15.current.to" type="date" required :min="ledgerView15.current.from" :disabled="ledgerView15.loading" />
-                </BsFloatingField>
-                <BsButton type="submit" :disabled="ledgerView15.loading || ledgerView15.periodInvalid" variant="primary">{{ ledgerView15.t('accountActivity.apply') }}</BsButton>
-              </BsForm>
-            </template>
-            <BsText v-if="ledgerView15.error" role="alert" tone="danger">{{ ledgerView15.error }} <BsButton type="button" size="sm" @click="ledgerView15.load(true)">{{ ledgerView15.t('accounts.retry') }}</BsButton></BsText>
-            <BsSectionSkeleton v-if="ledgerView15.loading" variant="table" :rows="5" />
-            <template v-else-if="!ledgerView15.error && ledgerView15.activity">
-              <BsText size="sm" tone="muted">{{ ledgerView15.t('accountActivity.period', { from: formatDate(ledgerView15.activity.from_date, ledgerView15.locale), to: formatDate(ledgerView15.activity.to_date, ledgerView15.locale) }) }}</BsText>
-              <BsGrid :columns="4" gap="md">
-                <BsCard v-for="card in ledgerView15.cards" :key="card.key" :data-testid="`activity-${card.key}`" as="div" variant="flat" padding="sm">
-                  <BsText size="xs" tone="muted">{{ ledgerView15.t(`accountActivity.${card.key}`) }}</BsText>
-                  <BsText emphasis="bold">
-                    <BsMoneyText
-                      :amount="card.signed ? accountBalanceDisplay(card.amount).amount : card.amount"
-                      :currency="ledgerView15.ledgerPresentation.currency(ledgerView15.activity.currency)"
-                      :locale="ledgerView15.ledgerPresentation.locale"
-                    />
-                  </BsText>
-                  <BsText v-if="card.signed" size="xs" tone="muted">{{ ledgerView15.t(`accounts.sides.${accountBalanceDisplay(card.amount).side}`) }}</BsText>
-                </BsCard>
-              </BsGrid>
-              <BsText v-if="!ledgerView15.activity.total" size="sm">{{ ledgerView15.t('accountActivity.empty') }}</BsText>
-              <BsBox v-else>
-                <BsDataTable
-                  :label="ledgerView15.t('accountActivity.title')"
-                  :value="ledgerView15.activity.rows"
-                  row-key="entry_id"
-                  :columns="[{ key: 'column1', header: ledgerView15.t('transactions.date') }, { key: 'column2', header: ledgerView15.t('transactions.description') }, { key: 'column3', header: ledgerView15.t('detail.debit'), align: 'end' as const }, { key: 'column4', header: ledgerView15.t('detail.credit'), align: 'end' as const }, { key: 'column5', header: ledgerView15.t('accountActivity.running'), align: 'end' as const }]"
-                >
-                  <template #cell-column1="{ row }">
-                    <BsText as="span" wrap="nowrap">{{ formatDate(row.entry_date, ledgerView15.locale) }}</BsText>
-                  </template>
-                  <template #cell-column2="{ row }">
-                    <BsButton
-                      variant="link"
-                      type="button"
-                      :data-nav-id="`entry-${row.entry_id}`"
-                      align="start"
-                      @click="ledgerView15.openJournal(row.transaction_id, row.entry_id)"
-                    >{{ row.description || ledgerView15.t('accountActivity.journal') }}</BsButton>
-                    <BsText v-if="row.reference || row.memo" size="xs" tone="muted">{{ row.reference || row.memo }}</BsText>
-                  </template>
-                  <template #cell-column3="{ row }">
-                    <BsMoneyText
-                      :amount="row.debit_minor"
-                      :currency="ledgerView15.ledgerPresentation.currency(ledgerView15.activity.currency)"
-                      :locale="ledgerView15.ledgerPresentation.locale"
-                    />
-                  </template>
-                  <template #cell-column4="{ row }">
-                    <BsMoneyText
-                      :amount="row.credit_minor"
-                      :currency="ledgerView15.ledgerPresentation.currency(ledgerView15.activity.currency)"
-                      :locale="ledgerView15.ledgerPresentation.locale"
-                    />
-                  </template>
-                  <template #cell-column5="{ row }">
-                    <BsMoneyText
-                      :amount="accountBalanceDisplay(row.balance_minor).amount"
-                      :currency="ledgerView15.ledgerPresentation.currency(ledgerView15.activity.currency)"
-                      :locale="ledgerView15.ledgerPresentation.locale"
-                    />
-                    <BsText as="span" size="xs" tone="muted">{{ ledgerView15.t(`accounts.sides.${accountBalanceDisplay(row.balance_minor).side}`) }}</BsText>
-                  </template>
-                </BsDataTable>
-                <BsInline
-                  v-if="ledgerView15.current.kind === 'account'"
-                  :aria-label="ledgerView15.t('accountActivity.pages')"
-                  as="nav"
-                  gap="md"
-                  :wrap="true"
-                  justify="between"
-                >
-                  <BsButton
-                    type="button"
-                    :disabled="ledgerView15.current.offset === 0"
-                    size="sm"
-                    @click="ledgerView15.page(Math.max(0, ledgerView15.current.offset - ledgerView15.pageSize))"
-                  >{{ ledgerView15.t('accounts.previousPage') }}</BsButton>
-                  <BsText as="span">{{ ledgerView15.t('accountActivity.showing', { from: ledgerView15.current.offset + 1, to: Math.min(ledgerView15.current.offset + ledgerView15.pageSize, ledgerView15.activity.total), total: ledgerView15.activity.total }) }}</BsText>
-                  <BsButton
-                    type="button"
-                    :disabled="ledgerView15.current.offset + ledgerView15.pageSize >= ledgerView15.activity.total"
-                    size="sm"
-                    @click="ledgerView15.page(ledgerView15.current.offset + ledgerView15.pageSize)"
-                  >{{ ledgerView15.t('accounts.nextPage') }}</BsButton>
-                </BsInline>
-              </BsBox>
-            </template>
-            <template v-else-if="!ledgerView15.error && ledgerView15.journal">
-              <BsInline gap="md" :wrap="true">
-                <BsText as="span">{{ formatDate(ledgerView15.journal.date, ledgerView15.locale) }}</BsText>
-                <BsText v-if="ledgerView15.journal.reference" as="span">{{ ledgerView15.journal.reference }}</BsText>
-                <BsText as="span">{{ ledgerView15.t(`types.${ledgerView15.journal.type}`) }}</BsText>
-                <BsBadge>{{ ledgerView15.t(`status.${ledgerView15.journal.status}`) }}</BsBadge>
-              </BsInline>
-              <BsText v-if="ledgerView15.journal.reverses_transaction_id || ledgerView15.journal.reversed_by_transaction_id" size="sm">{{ ledgerView15.t('accountActivity.reversal') }}</BsText>
-              <BsText size="sm" tone="muted">{{ ledgerView15.t('accountActivity.journalHint', { currency: ledgerView15.journal.currency }) }}</BsText>
-              <BsBox>
-                <BsDataTable
-                  :label="ledgerView15.t('accountActivity.journal')"
-                  :value="ledgerView15.journal.rows"
-                  row-key="entry_id"
-                  :columns="[{ key: 'column1', header: ledgerView15.t('detail.account') }, { key: 'column2', header: ledgerView15.t('detail.debit'), align: 'end' as const }, { key: 'column3', header: ledgerView15.t('detail.credit'), align: 'end' as const }]"
-                >
-                  <template #cell-column1="{ row }">
-                    <BsButton
-                      variant="link"
-                      type="button"
-                      :data-nav-id="`account-${row.entry_id}`"
-                      align="start"
-                      @click="ledgerView15.openAccount(row.account_id, row.entry_id)"
-                    >{{ row.account_name }}</BsButton>
-                    <BsText size="xs" tone="muted">{{ row.account_code }}<BsText v-if="row.memo" as="span"> · {{ row.memo }}</BsText></BsText>
-                    <BsText v-if="row.original_currency !== ledgerView15.journal.currency" size="xs" tone="muted">
-                      <BsMoneyText
-                        :amount="row.original_amount_minor"
-                        :currency="ledgerView15.ledgerPresentation.currency(row.original_currency)"
-                        :locale="ledgerView15.ledgerPresentation.locale"
-                      />
-                    </BsText>
-                  </template>
-                  <template #cell-column2="{ row }">
-                    <BsMoneyText
-                      :amount="row.debit_minor"
-                      :currency="ledgerView15.ledgerPresentation.currency(ledgerView15.journal.currency)"
-                      :locale="ledgerView15.ledgerPresentation.locale"
-                    />
-                  </template>
-                  <template #cell-column3="{ row }">
-                    <BsMoneyText
-                      :amount="row.credit_minor"
-                      :currency="ledgerView15.ledgerPresentation.currency(ledgerView15.journal.currency)"
-                      :locale="ledgerView15.ledgerPresentation.locale"
-                    />
-                  </template>
-                </BsDataTable>
-              </BsBox>
-              <BsInline gap="md" :wrap="true" justify="between" padding="lg" surface="muted" radius="control">
-                <BsText as="span">{{ ledgerView15.t('accountActivity.balanced') }}</BsText>
-                <BsText as="span">{{ ledgerView15.t('detail.debit') }}: <BsMoneyText :amount="ledgerView15.journal.debit_minor" :currency="ledgerView15.ledgerPresentation.currency(ledgerView15.journal.currency)" :locale="ledgerView15.ledgerPresentation.locale" /></BsText>
-                <BsText as="span">{{ ledgerView15.t('detail.credit') }}: <BsMoneyText :amount="ledgerView15.journal.credit_minor" :currency="ledgerView15.ledgerPresentation.currency(ledgerView15.journal.currency)" :locale="ledgerView15.ledgerPresentation.locale" /></BsText>
-              </BsInline>
-            </template>
-          </BsStack>
-        </BsDialog>
-      </template>
-    </BsWorkflowScope>
-  </BsStack>
+ <BsReportsPage v-model:financial-filters="financialFilters" v-model:activity-form="activityForm" v-model:allocation-form="allocationForm" :financial="{ copy: financialCopy, view: financialView }" :activity="{ copy: activityPresentation.copy.value, view: activityPresentation.view.value }" :allocation="{ copy: allocationPresentation.copy.value, view: allocationPresentation.view.value }" @financial-export="exportCurrentReport" @financial-retry="retryReport" @drilldown="reportDrilldown" @allocate="reportAllocate" @close-activity="trialDrilldown = null" @activity-back="activityPresentation.back" @activity-apply="activityPresentation.apply" @activity-retry="activityPresentation.retry" @activity-page="activityPresentation.page" @activity-journal="activityPresentation.journal" @activity-account="activityPresentation.account" @close-allocation="allocationEntry = null" @save-allocation="allocationPresentation.save"/>
 </template>
-
-undefined

@@ -284,7 +284,14 @@
     "./organisms/BsDocumentExtractionReview": "./src/organisms/BsDocumentExtractionReview.vue",
     "./types/journalImportPresentation": "./src/types/journalImportPresentation.ts",
     "./types/journalWorkspacePresentation": "./src/types/journalWorkspacePresentation.ts",
-    "./templates/BsJournalWorkspacePage": "./src/templates/BsJournalWorkspacePage.vue"
+    "./templates/BsJournalWorkspacePage": "./src/templates/BsJournalWorkspacePage.vue",
+    "./types/financialReportsPresentation": "./src/types/financialReportsPresentation.ts",
+    "./organisms/BsFinancialReportTable": "./src/organisms/BsFinancialReportTable.vue",
+    "./organisms/BsFinancialReportsWorkspace": "./src/organisms/BsFinancialReportsWorkspace.vue",
+    "./types/accountActivityPresentation": "./src/types/accountActivityPresentation.ts",
+    "./organisms/BsAccountActivityDialog": "./src/organisms/BsAccountActivityDialog.vue",
+    "./organisms/BsCashAllocationDialog": "./src/organisms/BsCashAllocationDialog.vue",
+    "./utils/reportDocument": "./src/utils/reportDocument.ts"
   },
   "dependencies": {
     "primevue": "4.5.5",
