@@ -452,6 +452,7 @@ body {
   .ls-select,
   .ls-input {
     width: 100%;
+    min-width: 0;
     min-height: var(--bs-input-height);
     padding: 0 var(--bs-space-4);
     border: 1px solid var(--bs-border);
