@@ -3,9 +3,9 @@ import type { FxRevaluationLine } from '../../types/fx-rpc.types'
 import type { FxSubledgerType } from '~/utils/fxSubledger'
 import { convertMinorExact, parsePositiveDecimal } from '~/utils/fxMoney'
 
-/** Ledger-owned orchestration; mounted by a shared workflow scope in its route/layout. */
-export function useLedgerFxSubledgerPanelView(_values: { subledger: FxSubledgerType, asOf: string, readOnly: boolean }, _emit: (event: string, ...args: unknown[]) => void) {
-const _props = new Proxy(_values, { get: (target, key) => Reflect.get(target, key) ?? Reflect.get({}, key) })
+/** Ledger-owned foreign-exchange rules and authorized commands. */
+export function useLedgerFxSubledgerPanelView(options: { subledger: FxSubledgerType, asOf: string, readOnly: boolean }) {
+const _props = options
 const subledger = computed(() => _props.subledger)
 const asOf = computed(() => _props.asOf)
 const readOnly = computed(() => _props.readOnly)

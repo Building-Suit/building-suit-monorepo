@@ -799,37 +799,16 @@
         "packages/ui/src/templates/BsLandingPage.vue"
       ],
       "renderedBsComponents": [
-        "BsBox",
-        "BsButton",
-        "BsCard",
-        "BsDashboardPreview",
-        "BsDialog",
-        "BsFieldLabel",
-        "BsFileInput",
-        "BsFloatingField",
-        "BsForm",
-        "BsHeading",
-        "BsI18nText",
-        "BsIcon",
-        "BsInline",
-        "BsLandingPage",
-        "BsLink",
-        "BsList",
-        "BsListItem",
-        "BsMarketingPricing",
-        "BsStack",
-        "BsText",
-        "BsTextarea",
-        "BsWorkflowScope"
+        "BsLandingPage"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "destination": "packages/ui/src/templates/BsLandingPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/ledger-suit/app/pages/index.vue",
       "dependencies": [
-        "~/composables/useLedgerBillingCheckoutView",
-        "~/composables/useLedgerManualPaymentCheckoutView"
+        "~/composables/useLedgerBillingCheckoutView"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "product-landing"
     },
     {
       "source": "apps/ledger-suit/app/pages/inventory-accounting.vue",
@@ -910,37 +889,14 @@
     {
       "source": "apps/ledger-suit/app/pages/payables.vue",
       "kind": "route",
-      "currentSharedTemplates": [],
-      "renderedBsComponents": [
-        "BsBox",
-        "BsButton",
-        "BsCard",
-        "BsDataTable",
-        "BsDescriptionList",
-        "BsDescriptionTerm",
-        "BsDescriptionValue",
-        "BsDisclosure",
-        "BsFieldGroup",
-        "BsFloatingField",
-        "BsForm",
-        "BsGrid",
-        "BsHeading",
-        "BsInline",
-        "BsInput",
-        "BsLink",
-        "BsMoneyText",
-        "BsPageHeader",
-        "BsRecordActionDialog",
-        "BsSectionSkeleton",
-        "BsSelect",
-        "BsSelectOption",
-        "BsStack",
-        "BsTableDensity",
-        "BsText",
-        "BsWorkflowScope"
+      "currentSharedTemplates": [
+        "BsSubledgerPage"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "renderedBsComponents": [
+        "BsSubledgerPage"
+      ],
+      "destination": "packages/ui/src/templates/BsSubledgerPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/ledger-suit/app/pages/payables.vue",
       "dependencies": [
         "~/composables/useLedgerFxSubledgerPanelView",
@@ -948,7 +904,8 @@
         "~/utils/supplierSubledger",
         "~/utils/supplierSubledger"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "party-subledger"
     },
     {
       "source": "apps/ledger-suit/app/pages/periods.vue",
@@ -1023,37 +980,14 @@
     {
       "source": "apps/ledger-suit/app/pages/receivables.vue",
       "kind": "route",
-      "currentSharedTemplates": [],
-      "renderedBsComponents": [
-        "BsBox",
-        "BsButton",
-        "BsCard",
-        "BsDataTable",
-        "BsDescriptionList",
-        "BsDescriptionTerm",
-        "BsDescriptionValue",
-        "BsDisclosure",
-        "BsFieldGroup",
-        "BsFloatingField",
-        "BsForm",
-        "BsGrid",
-        "BsHeading",
-        "BsInline",
-        "BsInput",
-        "BsLink",
-        "BsMoneyText",
-        "BsPageHeader",
-        "BsRecordActionDialog",
-        "BsSectionSkeleton",
-        "BsSelect",
-        "BsSelectOption",
-        "BsStack",
-        "BsTableDensity",
-        "BsText",
-        "BsWorkflowScope"
+      "currentSharedTemplates": [
+        "BsSubledgerPage"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "renderedBsComponents": [
+        "BsSubledgerPage"
+      ],
+      "destination": "packages/ui/src/templates/BsSubledgerPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/ledger-suit/app/pages/receivables.vue",
       "dependencies": [
         "~/composables/useLedgerFxSubledgerPanelView",
@@ -1061,7 +995,8 @@
         "~/utils/customerSubledger",
         "~/utils/customerSubledger"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "party-subledger"
     },
     {
       "source": "apps/ledger-suit/app/pages/records/[kind].vue",
@@ -1408,25 +1343,19 @@
       "source": "apps/shop-suit/app/layouts/default.vue",
       "kind": "layout",
       "currentSharedTemplates": [
-        "packages/ui/src/templates/BsAppShell.vue"
+        "BsWorkspaceShell"
       ],
       "renderedBsComponents": [
-        "BsAppShell",
-        "BsProductLogo",
-        "BsScopeSwitcher",
-        "BsSectionSkeleton",
-        "BsSlot",
-        "BsStateSurface",
-        "BsToastHost",
-        "BsUserMenu"
+        "BsWorkspaceShell"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "destination": "packages/ui/src/templates/BsWorkspaceShell.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/shop-suit/app/layouts/default.vue",
       "dependencies": [
         "~/utils/businessMode"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "authenticated-workspace-shell"
     },
     {
       "source": "apps/shop-suit/app/layouts/landing.vue",
@@ -1792,23 +1721,17 @@
         "packages/ui/src/templates/BsLandingPage.vue"
       ],
       "renderedBsComponents": [
-        "BsBox",
-        "BsGrid",
-        "BsIcon",
-        "BsInline",
-        "BsLandingPage",
-        "BsMarketingPricing",
-        "BsStack",
-        "BsText"
+        "BsLandingPage"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "destination": "packages/ui/src/templates/BsLandingPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/shop-suit/app/pages/index.vue",
       "dependencies": [
         "@building-suit/contracts",
         "~/types/plans"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "product-landing"
     },
     {
       "source": "apps/shop-suit/app/pages/inventory/index.vue",
@@ -2272,48 +2195,50 @@
   ],
   "pageTemplates": [
     "BsAccessManagementPage",
-    "BsPublicLegalPage",
-    "BsContactPage",
-    "BsSignInPage",
-    "BsPasswordRecoveryPage",
-    "BsWelcomePage",
-    "BsAdministrationEntryPage",
-    "BsRedirectPage",
-    "BsEmailVerificationPage",
-    "BsExecutionActivityPage",
-    "BsTaskWorklistPage",
     "BsAccountingDimensionsPage",
-    "BsRoutingPolicyPage",
-    "BsProjectRegistryPage",
-    "BsTaskDetailPage",
-    "BsOperationsDashboardPage",
-    "BsCataloguePage",
-    "BsInvitationAcceptancePage",
+    "BsAccountingPeriodsPage",
+    "BsAdministrationEntryPage",
+    "BsAppointmentsPage",
+    "BsAssetRegisterPage",
     "BsAuditHistoryPage",
-    "BsClientPortfolioPage",
-    "BsCustomerDirectoryPage",
-    "BsStarterWorkflowPage",
-    "BsReceiptPage",
-    "BsCustomerProfilePage",
+    "BsBankReconciliationPage",
     "BsBusinessSettingsPage",
     "BsCashShiftsPage",
-    "BsSalesDirectoryPage",
-    "BsPurchasingPage",
-    "BsExpenseHistoryPage",
-    "BsInventoryManagementPage",
-    "BsPointOfSalePage",
-    "BsSignupPage",
-    "BsTaxWorkspacePage",
     "BsCatalogImportPage",
-    "BsOpeningBalancesPage",
-    "BsAccountingPeriodsPage",
-    "BsMigrationCenterPage",
-    "BsAppointmentsPage",
-    "BsReportsPage",
-    "BsInventoryAccountingPage",
-    "BsAssetRegisterPage",
-    "BsBankReconciliationPage",
+    "BsCataloguePage",
+    "BsClientPortfolioPage",
     "BsCommerceDocumentPage",
-    "BsDashboardPage"
+    "BsContactPage",
+    "BsCustomerDirectoryPage",
+    "BsCustomerProfilePage",
+    "BsDashboardPage",
+    "BsEmailVerificationPage",
+    "BsExecutionActivityPage",
+    "BsExpenseHistoryPage",
+    "BsInventoryAccountingPage",
+    "BsInventoryManagementPage",
+    "BsInvitationAcceptancePage",
+    "BsLandingPage",
+    "BsMigrationCenterPage",
+    "BsOpeningBalancesPage",
+    "BsOperationsDashboardPage",
+    "BsPasswordRecoveryPage",
+    "BsPointOfSalePage",
+    "BsProjectRegistryPage",
+    "BsPublicLegalPage",
+    "BsPurchasingPage",
+    "BsReceiptPage",
+    "BsRedirectPage",
+    "BsReportsPage",
+    "BsRoutingPolicyPage",
+    "BsSalesDirectoryPage",
+    "BsSignInPage",
+    "BsSignupPage",
+    "BsStarterWorkflowPage",
+    "BsSubledgerPage",
+    "BsTaskDetailPage",
+    "BsTaskWorklistPage",
+    "BsTaxWorkspacePage",
+    "BsWelcomePage"
   ]
 }

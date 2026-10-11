@@ -34,49 +34,16 @@ const publicOffers = computed<ShopPlanOffer[]>(() => (plans.value ?? [])
   })))
 
 const publicPricing = reactive(useShopPlanPresentation({ get offers() { return publicOffers.value }, action: 'signup' }))
+const landingPricing = computed(() => ({
+  interval: publicPricing.interval, plans: publicPricing.pricingPlans,
+  intervalOptions: [{ value: 'monthly', label: publicPricing.copy.monthly }, { value: 'annual', label: publicPricing.copy.yearly }],
+  copy: { cycleLabel: publicPricing.copy.cycle, loading: publicPricing.copy.loading, empty: t('pricing.empty'), retry: publicPricing.copy.retry, included: publicPricing.copy.included, notIncluded: publicPricing.copy.notIncluded },
+  annualSaving: publicPricing.annualDiscount === null ? null : publicPricing.copy.annualSaving(publicPricing.annualDiscount),
+  columns: 3 as const, intro: t('pricing.notes.allPlansIncludeFreeTrial'), loading: isLoading.value,
+  error: error.value ? t('pricing.loadError') : null, testId: 'shop-plan-cards',
+}))
+function chooseInterval(value: string) { if (value === 'monthly' || value === 'annual') publicPricing.interval = value }
 </script>
 <template>
-  <BsLandingPage :content="content" signup-path="/auth/signup">
-    <template #preview>
-      <BsBox>
-        <BsInline>
-          <BsText as="span" emphasis="semibold">Shop Suit</BsText>
-        </BsInline>
-        <BsGrid :columns="1">
-          <BsBox padding="md">
-            <BsText as="p" size="xs" emphasis="semibold">Shop Suit</BsText>
-            <BsStack>
-              <BsInline v-for="feature in content.features" :key="feature.title">
-                <BsIcon :name="feature.icon" :size="15"/>
-                <BsText as="span">{{ feature.title }}</BsText>
-              </BsInline>
-            </BsStack>
-          </BsBox>
-          <BsBox padding="md">
-            <BsInline justify="between">
-              <BsBox>
-                <BsText as="p" tone="muted">{{ content.eyebrow }}</BsText>
-                <BsText as="p" emphasis="semibold">{{ content.featuresTitle }}</BsText>
-              </BsBox>
-              <BsText as="span">
-                <BsIcon name="user" :size="16"/>
-              </BsText>
-            </BsInline>
-            <BsGrid :columns="2">
-              <BsBox v-for="feature in content.features" :key="feature.title" as="article" surface="muted">
-                <BsIcon :name="feature.icon" :size="20"/>
-                <BsText as="p" size="xs" emphasis="semibold">{{ feature.title }}</BsText>
-              </BsBox>
-            </BsGrid>
-            <BsInline>
-              <BsText as="span" tone="muted">{{ content.workflow[2]?.title }}</BsText>
-            </BsInline>
-          </BsBox>
-        </BsGrid>
-      </BsBox>
-    </template>
-    <template #pricing>
-      <BsMarketingPricing :interval="publicPricing.interval" :plans="publicPricing.pricingPlans" :interval-options="[{ value: 'monthly', label: publicPricing.copy.monthly }, { value: 'annual', label: publicPricing.copy.yearly }]" :copy="{ cycleLabel: publicPricing.copy.cycle, loading: publicPricing.copy.loading, empty: t('pricing.empty'), retry: publicPricing.copy.retry, included: publicPricing.copy.included, notIncluded: publicPricing.copy.notIncluded }" :annual-saving="publicPricing.annualDiscount === null ? null : publicPricing.copy.annualSaving(publicPricing.annualDiscount)" :columns="3" :intro="t('pricing.notes.allPlansIncludeFreeTrial')"  :loading="isLoading" :error="error ? t('pricing.loadError') : null" test-id="shop-plan-cards" @update:interval="value => { if (value === 'monthly' || value === 'annual') publicPricing.interval = value }" @update:variant="publicPricing.chooseVariant" @action="publicPricing.choose" @retry="refresh()"/>
-    </template>
-  </BsLandingPage>
+  <BsLandingPage :content="content" :preview="{ kind: 'features' }" :pricing="landingPricing" signup-path="/auth/signup" @interval="chooseInterval" @variant="publicPricing.chooseVariant" @action="publicPricing.choose" @retry="refresh()"/>
 </template>

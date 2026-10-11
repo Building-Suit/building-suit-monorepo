@@ -1,15 +1,18 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import test from 'node:test'
+import { fileURLToPath } from 'node:url'
+import { readPresentationTree } from '../../../../packages/testing/presentation-source.mjs'
 
 const appRoot = new URL('../../', import.meta.url)
 const read = relative => readFileSync(new URL(relative, appRoot), 'utf8')
 
-test('all customer pricing surfaces render the shared server-catalog component', () => {
+test('all customer pricing surfaces render the shared server-catalog component', async () => {
   const surfaces = ['index', 'subscribe', 'billing'].map(page => read(`app/pages/${page}.vue`))
-  for (const surface of surfaces) {
-    assert.match(surface, /:factory="useLedgerBillingCheckoutView"/)
-    assert.match(surface, /<BsMarketingPricing/)
+  for (const [index, surface] of surfaces.entries()) {
+    assert.match(surface, /useLedgerBillingCheckoutView/)
+    const tree = await readPresentationTree(fileURLToPath(new URL('../../../../', import.meta.url)), `apps/ledger-suit/app/pages/${['index', 'subscribe', 'billing'][index]}.vue`)
+    assert.match(tree, /<BsMarketingPricing/)
   }
   assert.match(surfaces[0], /surface: 'public'/)
   assert.match(surfaces[1], /:factory="useLedgerSubscriptionGateView"/)

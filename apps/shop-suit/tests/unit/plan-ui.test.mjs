@@ -1,9 +1,12 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import test from 'node:test'
+import { fileURLToPath } from 'node:url'
+import { readPresentationTree } from '../../../../packages/testing/presentation-source.mjs'
 
 const billing = await readFile(new URL('../../app/pages/billing.vue', import.meta.url), 'utf8')
 const pricing = await readFile(new URL('../../app/pages/index.vue', import.meta.url), 'utf8')
+const pricingTree = await readPresentationTree(fileURLToPath(new URL('../../../../', import.meta.url)), 'apps/shop-suit/app/pages/index.vue')
 const cards = await readFile(new URL('../../app/composables/useShopPlanPresentation.ts', import.meta.url), 'utf8')
 const usage = await readFile(new URL('../../app/composables/useShopUsagePresentation.ts', import.meta.url), 'utf8')
 const awaitSharedUsage = await readFile(new URL('../../../../packages/ui/src/molecules/BsUsageMeter.vue', import.meta.url), 'utf8')
@@ -29,7 +32,7 @@ test('owner billing uses the canonical purchasable catalog and effective server 
   assert.doesNotMatch(billing, /349|699|1099/)
   assert.match(pricing, /usePlans\(\)/)
   assert.match(pricing, /plan\.is_purchasable && !plan\.is_coming_soon/)
-  assert.match(pricing, /<BsMarketingPricing/)
+  assert.match(pricingTree, /<BsMarketingPricing/)
   assert.match(pricing, /pricing\.notes\.allPlansIncludeFreeTrial/)
   assert.doesNotMatch(pricing, /2847\.84|5703\.84|8151\.84|9783\.84/)
   assert.match(cards, /familyOrder = \['solo', 'team', 'multi'\]/)

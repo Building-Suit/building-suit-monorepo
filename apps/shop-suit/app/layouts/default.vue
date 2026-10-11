@@ -70,26 +70,13 @@ async function logout() {
   } catch { signOutError.value = copy.value.signOutFailed }
   finally { signingOut.value = false }
 }
-</script>
 
+const shellHeaderScopes = computed(() => [
+  ...(shops.value.length ? [{ key: 'workspace', value: currentId.value, label: copy.value.shop, options: shopOptions.value, visibility: 'desktop' as const }] : []),
+  ...(activeLocations.value.length ? [{ key: 'location', value: currentLocationId.value, label: copy.value.location, options: locationOptions.value }] : []),
+])
+function selectShellScope(key: string, value: string | null) { if (!value) return; if (key === 'workspace') return selectShop(value); if (key === 'location') return selectLocation(value) }
+</script>
 <template>
-  <BsAppShell product-name="Shop Suit" :groups="groups" :mobile-links="[...(groups[0]?.links.slice(0, 3) ?? []), { to: '/dashboard', label: copy.reports, icon: 'dashboard' }]" :labels="{ close: copy.closeMenu, open: copy.openMenu, navigation: copy.shop, dashboard: copy.dashboard }">
-    <template #logo>
-      <BsProductLogo name="Shop Suit" asset-prefix="/brand/shop-suit"/>
-    </template>
-    <template #context>
-      <BsScopeSwitcher v-if="shops.length" :model-value="currentId" :label="copy.shop" :options="shopOptions" visibility="mobile" @update:model-value="value => { if (value) selectShop(value) }"/>
-    </template>
-    <template #header>
-      <BsScopeSwitcher v-if="shops.length" :model-value="currentId" :label="copy.shop" :options="shopOptions" compact visibility="desktop" @update:model-value="value => { if (value) selectShop(value) }"/>
-      <BsScopeSwitcher v-if="activeLocations.length" :model-value="currentLocationId" :label="copy.location" :options="locationOptions" compact @update:model-value="value => { if (value) selectLocation(value) }"/>
-      <BsUserMenu :name="fullName" :email="user?.email" :account-label="copy.account" :sign-out-label="copy.logout" :sign-out-pending="signingOut" :error="signOutError" @sign-out="logout"/>
-    </template>
-    <BsStateSurface v-if="loadError" state="error" :title="copy.loadFailed" :description="showErrorDetails ? loadError : undefined" :action-label="copy.retry" @action="loadShops({ force: true })"/>
-    <BsSectionSkeleton v-else-if="loading" variant="cards"/>
-    <BsSlot v-else :render="$slots.default"/>
-    <template #overlays>
-      <BsToastHost/>
-    </template>
-  </BsAppShell>
+  <BsWorkspaceShell product-name="Shop Suit" :groups="groups" :mobile-links="[...(groups[0]?.links.slice(0, 3) ?? []), { to: '/dashboard', label: copy.reports, icon: 'dashboard' }]" :labels="{ close: copy.closeMenu, open: copy.openMenu, navigation: copy.shop, dashboard: copy.dashboard }" :logo="{ kind: 'product', assetPrefix: '/brand/shop-suit' }" :context-scope="shops.length ? { key: 'workspace', value: currentId, label: copy.shop, options: shopOptions } : undefined" :header-scopes="shellHeaderScopes" :account="{ name: fullName, email: user?.email, label: copy.account, signOut: copy.logout, pending: signingOut, error: signOutError }" :state="{ loading, error: Boolean(loadError), title: copy.loadFailed, description: showErrorDetails ? loadError || undefined : undefined, retry: copy.retry }" feedback @scope="selectShellScope" @retry="loadShops({ force: true })" @sign-out="logout"><slot /></BsWorkspaceShell>
 </template>

@@ -2,14 +2,13 @@ import type { Database, Json } from '~~/types/database.types'
 import type { MarketingPricingPlan } from '@building-suit/contracts'
 import type { LaunchPlanKey } from '~/composables/useBilling'
 
-/** Ledger-owned orchestration; mounted by a shared workflow scope in its route/layout. */
+/** Ledger-owned catalogue, eligibility and checkout commands. */
 export function useLedgerBillingCheckoutView(_values: {
   compact?: boolean
   surface?: 'checkout' | 'public' | 'display' | 'manage'
-}, _emit: (event: string, ...args: unknown[]) => void) {
-const _props = new Proxy(_values, { get: (target, key) => Reflect.get(target, key) ?? Reflect.get({compact: false,surface: 'checkout'}, key) })
-const compact = computed(() => _props.compact)
-const surface = computed(() => _props.surface ?? 'checkout')
+}) {
+const compact = computed(() => _values.compact ?? false)
+const surface = computed(() => _values.surface ?? 'checkout')
 const supabase = useSupabaseClient<Database>()
 const { currentId, can } = useTenant()
 const user = useSupabaseUser()

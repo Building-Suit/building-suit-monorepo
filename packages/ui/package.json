@@ -256,7 +256,12 @@
     "./types/commerceDocumentPresentation": "./src/types/commerceDocumentPresentation.ts",
     "./templates/BsDashboardPage": "./src/templates/BsDashboardPage.vue",
     "./organisms/BsDashboardTable": "./src/organisms/BsDashboardTable.vue",
-    "./types/dashboardPresentation": "./src/types/dashboardPresentation.ts"
+    "./types/dashboardPresentation": "./src/types/dashboardPresentation.ts",
+    "./templates/BsSubledgerPage": "./src/templates/BsSubledgerPage.vue",
+    "./organisms/BsForeignExchangeWorkspace": "./src/organisms/BsForeignExchangeWorkspace.vue",
+    "./types/subledgerPresentation": "./src/types/subledgerPresentation.ts",
+    "./types/foreignExchangePresentation": "./src/types/foreignExchangePresentation.ts",
+    "./types/landingPresentation": "./src/types/landingPresentation.ts"
   },
   "dependencies": {
     "primevue": "4.5.5",

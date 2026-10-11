@@ -657,3 +657,14 @@ test('access page defaults to displaying supplied data when availability is omit
   assert.match(html, /Members displayed/)
   assert.doesNotMatch(html, /No team/)
 })
+
+
+test('native select renders configured options and preserves explicit slot ownership', async () => {
+  const props = { native: true, modelValue: 2, options: [{ id: 1, name: 'First', blocked: true }, { id: 2, name: 'Second', blocked: false }], optionLabel: 'name', optionValue: 'id', optionDisabled: 'blocked' }
+  const html = await render('molecules/BsSelect.vue', props)
+  assert.match(html, /<option value="1" disabled>First<\/option>/)
+  assert.match(html, /<option value="2">Second<\/option>/)
+  const slotted = await render('molecules/BsSelect.vue', props, [vue.h('option', { value: 'custom' }, 'Custom')])
+  assert.match(slotted, /Custom/)
+  assert.doesNotMatch(slotted, /First|Second/)
+})
