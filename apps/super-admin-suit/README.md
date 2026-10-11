@@ -263,3 +263,39 @@ remain unverified until that target contract is available.
 
 Task verification and execution limitations are recorded in
 [tests/instapay-verification.md](tests/instapay-verification.md).
+
+## Normalized activity — SAS-M1-AUDIT-001
+
+Provision an enabled navigation row with `moduleKind: activity`, no required
+capability, an empty route descriptor and the existing owner visibility policy
+through the configuration authority. Labels, Suit selection and bindings remain
+database records; this task seeds no navigation or connection settings.
+
+The activity module composes `BsForm` and a read-only, lazy `BsDataTable`.
+`GET /api/activity` authorizes the current Admin identity and queries Admin events,
+command dispatch outcomes and observed Shop projections with server pagination,
+exact Suit/environment/action/actor/target/request/correlation filters, time
+bounds and ascending/descending time order. Source and environment are explicit.
+No operational-history write or edit/delete control is exposed.
+
+`POST /api/activity` retrieves one bounded audit page from a configured binding
+and platform/billing/plan query stream through the existing signed adapter.
+Supabase persists immutable normalized observations, verified command audit
+correlations and the next retrieval page. Earlier verified target audit receipts
+are backfilled into correlation state. Rejections can correlate to bridge audit;
+only successful responses supply domain audit evidence. Unsigned/unknown outcomes
+never supply correlation evidence. Concurrent cursor changes fail without
+advancing the cursor. End-of-scan wraps to page one for later refreshes; offset
+paging over a changing remote list does **not** establish complete coverage.
+
+All remote coverage remains explicitly partial. The screen shows last observation
+and failure timestamps, and remote failures remain visible alongside local data.
+Reasons are masked in full; payloads, snapshots, provider information and arbitrary
+actor/target text are excluded from this support projection. Original immutable
+records remain with their authority. Browser roles have no direct privileges on
+the new tables; privileged persistence and response verification stay server-side.
+
+Verification commands and current limitations are recorded in
+[activity verification](tests/activity-verification.md). Apply the forward
+migration and regenerate database types from a disposable Admin database before
+independent database verification. This task does not change any Shop schema.

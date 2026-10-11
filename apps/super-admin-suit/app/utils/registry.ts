@@ -2,7 +2,7 @@ export interface RegistryItem {
   key: string
   label: Record<string, string>
   description: Record<string, string>
-  module: 'overview' | 'capabilities' | 'manual-transfer'
+  module: 'overview' | 'capabilities' | 'manual-transfer' | 'activity'
   bindingId?: string
 }
 export interface RegistrySuit {
@@ -47,7 +47,7 @@ export function parseRegistry(value: unknown): Registry {
       const item = record(rawItem)
       if (item.enabled === false) continue
       if (typeof item.key !== 'string' || !keyPattern.test(item.key) || itemKeys.has(item.key)) continue
-      if (item.module !== 'overview' && item.module !== 'capabilities' && item.module !== 'manual-transfer') continue
+      if (item.module !== 'overview' && item.module !== 'capabilities' && item.module !== 'manual-transfer' && item.module !== 'activity') continue
       if (item.module === 'manual-transfer' && (typeof item.bindingId !== 'string' || !/^[0-9a-f-]{36}$/i.test(item.bindingId))) continue
       const itemLabel = copy(item.label)
       if (!Object.keys(itemLabel).length) continue

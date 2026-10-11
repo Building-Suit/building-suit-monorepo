@@ -56,5 +56,33 @@
     "alten": "QR description · English",
     "altar": "QR description · Arabic",
     "reason": "Reason for change"
+  },
+  "activity": {
+    "title": "Activity",
+    "source": "Source",
+    "suit": "Suit",
+    "environment": "Environment",
+    "actor": "Actor",
+    "action": "Action",
+    "target": "Target",
+    "status": "Status",
+    "reason": "Reason (masked)",
+    "requestId": "Request ID",
+    "correlationId": "Correlation ID",
+    "occurredAt": "Time",
+    "from": "From (ISO time)",
+    "to": "To (ISO time)",
+    "filter": "Apply filters",
+    "loading": "Loading activity…",
+    "empty": "No observed activity matches these filters",
+    "error": "Activity unavailable",
+    "denied": "Activity access denied",
+    "retry": "Retry",
+    "partial": "Remote observations are partial and may be stale. Missing records do not prove that no action occurred. Reasons are masked to protect sensitive information.",
+    "remoteError": "Remote retrieval failed; coverage remains partial.",
+    "observed": "Last observed",
+    "never": "Not observed",
+    "failed": "Last failure",
+    "retrieve": "Retrieve page"
   }
 }
