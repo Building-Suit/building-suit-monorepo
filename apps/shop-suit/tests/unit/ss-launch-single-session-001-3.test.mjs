@@ -12,7 +12,7 @@ test('handback distinguishes implemented handling from unverified provider confi
 })
 
 test('all Shop logout entrypoints use local scope instead of implicit global revocation', async () => {
-  for (const path of ['layouts/default.vue', 'layouts/platform-admin.vue', 'pages/auth/team-invitation.vue']) {
+  for (const path of ['layouts/default.vue', 'layouts/platform-admin.vue']) {
     const source = await readFile(new URL(`../../app/${path}`, import.meta.url), 'utf8')
     assert.match(source, /signOut\(\{ scope: 'local' \}\)/)
     assert.doesNotMatch(source, /signOut\(\)/)

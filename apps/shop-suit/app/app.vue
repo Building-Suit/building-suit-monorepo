@@ -11,7 +11,7 @@ const contextKey = computed(() => `${user.value?.id ?? 'anonymous'}:${currentId.
 const signupActive = computed(() => route.path === '/auth/signup')
 const layoutKey = computed(() => signupActive.value ? 'signup' : user.value?.id ?? 'anonymous')
 const pageKey = computed(() => signupActive.value ? 'signup' : contextKey.value)
-const canRenderPage = computed(() => !!user.value || route.path.startsWith('/auth/') || ['/', '/pricing', '/contact', '/terms', '/privacy', '/delivery', '/refund'].includes(route.path))
+const canRenderPage = computed(() => !!user.value || route.path.startsWith('/auth/') || ['/', '/pricing', '/contact', '/terms', '/privacy', '/delivery-policy', '/refund-cancellation'].includes(route.path))
 
 watch(() => user.value?.id, () => {
   clearNuxtData(key => key.startsWith('shop-data:') || key.startsWith('platform-admin:'))
