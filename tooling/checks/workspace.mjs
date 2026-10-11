@@ -1,11 +1,15 @@
 import { readdir, readFile } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import path from 'node:path'
+import { validateSuitTemplateBoundaries } from './suit-template-boundaries.mjs'
 
 const root = new URL('../../', import.meta.url).pathname
 const failures = []
 const atomicLayers = ['atoms', 'molecules', 'organisms', 'templates']
 const ownershipManifestPath = 'docs/shared/ui-ownership-manifest.json'
+
+const suitBoundary = await validateSuitTemplateBoundaries({ root })
+failures.push(...suitBoundary.failures)
 
 async function exists(relative) {
   try { await readFile(path.join(root, relative)); return true }
@@ -164,10 +168,10 @@ const scaffoldSources = {
   layout: await readFile(path.join(root, 'tooling/new-platform/templates/app/layouts/default.vue.template'), 'utf8'),
   page: await readFile(path.join(root, 'tooling/new-platform/templates/app/pages/index.vue.template'), 'utf8'),
 }
-for (const component of ['BsAppShell', 'BsProductLogo', 'SettingsMenu']) {
+for (const component of ['BsAppShell', 'BsProductLogo', 'BsSettingsMenu', 'BsSlot']) {
   if (!new RegExp(`<${component}\\b`).test(scaffoldSources.layout)) failures.push(`tooling/new-platform: default layout must compose ${component}`)
 }
-for (const component of ['ToastHost', 'BsConfirmHost']) {
+for (const component of ['BsAppRoot']) {
   if (!new RegExp(`<${component}\\b`).test(scaffoldSources.app)) failures.push(`tooling/new-platform: app root must compose ${component}`)
 }
 if (!/<BsContentSection\b/.test(scaffoldSources.page)) failures.push('tooling/new-platform: starter page must use shared page composition')

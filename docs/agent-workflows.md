@@ -31,13 +31,15 @@ Apply workflow 1 first. Every new feature stacks on the latest verified active w
 
 ## 3. Add or change shared UI or interaction behavior
 
-1. Search `packages/ui`, `packages/ux`, the explicit package exports and `docs/shared/ui-ownership-manifest.json` before adding UI. Locate the atomic component/template, token source and interaction-policy owner, then search all consumers.
+1. Search `packages/ui`, `packages/ux`, the explicit package exports, `docs/shared/ui-ownership-manifest.json` and `docs/shared/suit-ui-boundary-debt.json` before adding UI. Locate the atomic component/template, token source and interaction-policy owner, then search all consumers.
 2. Extend the existing typed interface/configuration/slots where appropriate; avoid per-product forks.
 3. Change tokens at their source and regenerate outputs when visual foundations change.
 4. Implement common presentation in `packages/ui`, interaction logic in `packages/ux` and framework integration in the shared Nuxt layer.
-5. Keep Atomic Design dependencies at the same layer or downward. Update explicit package exports, the component catalogue, contracts, affected consumers and the canonical ownership/migration manifest together.
+5. Keep Atomic Design dependencies at the same layer or downward. Update explicit package exports, the component catalogue, contracts, affected consumers and the canonical ownership/migration manifests together. Every `apps/*-suit/app/**/*.vue` template may render only `Bs`-prefixed components; Vue's non-rendering `<template>` control tag is the sole exception. Do not add native/Nuxt/vendor/non-`Bs`/product-local tags, template class/style or passthrough styling props, `v-html`, local style blocks or direct UI-vendor imports. Remove the matching exact debt entry whenever a violation is migrated; strict mode requires empty debt and no app-local Vue components.
 6. Verify relevant language/direction/theme, mobile/desktop, keyboard/focus and loading/error/empty/success/permission states in every affected product.
 7. Run affected component/browser checks and `pnpm check`; the workspace check dynamically discovers every `apps/*-suit` application and rejects unclassified local components and shared UI bypasses. Stop when the requested change's acceptance criteria pass.
+
+For final zero-native acceptance, run `node tooling/checks/suit-template-boundaries.mjs --require-strict`. This requires a strict, empty debt manifest as well as zero actual violations; `--strict` is the manifest-free check for disposable generator fixtures. Normal `pnpm check` honors the manifest's mode. Passing migration mode does not close the foundation gate. Record actual inventory and verification limitations in `docs/shared/zero-native-ui-convergence-report.md` before claiming acceptance.
 
 ## 4. Fix a bug
 

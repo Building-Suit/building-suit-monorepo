@@ -39,6 +39,10 @@ const countries = [
 ]
 const supportedCurrencies = ['EGP', 'SAR', 'AED', 'USD', 'GBP', 'EUR'] as const
 const businessTypes: BusinessType[] = ['sole_proprietorship', 'partnership', 'limited_liability', 'corporation', 'nonprofit', 'other']
+const businessTypeOptions = computed(() => businessTypes.map(value => ({ value, label: t(`onboarding.businessTypes.${value}`) })))
+const countryOptions = computed(() => countries.map(country => ({ value: country.code, label: t(`onboarding.countries.${country.code}`) })))
+const currencyOptions = supportedCurrencies.map(value => ({ value, label: value }))
+const fiscalMonthOptions = computed(() => Array.from({ length: 12 }, (_, index) => ({ value: index + 1, label: t(`onboarding.months.${index + 1}`) })))
 const otpExpired = computed(() => awaitingOtp.value && otpExpiresIn.value === 0)
 
 const submitButtonText = computed(() => {
@@ -377,7 +381,7 @@ async function restoreAuthenticatedOnboarding() {
 
 <template>
   <BsAuthLayout :product-name="t('app.name')" :home-label="t('marketing.home')" :title="t('onboarding.title')" :description="t('onboarding.subtitle')" wide>
-    <template #logo="{ tone }"><BsProductLogo name="Ledger Suit" asset-prefix="/brand/ledger-suit" :tone="tone" class="h-auto w-56" /></template>
+    <template #logo="{ tone }"><BsProductLogo name="Ledger Suit" asset-prefix="/brand/ledger-suit" :tone="tone" size="auth" /></template>
         <BsAuthForm v-if="!awaitingOtp" :title="t('onboarding.title')" :description="t('onboarding.noCardTrial')" :pending="pending" :data-hydrated="hydrated" @submit="step === 1 ? next() : finishOnboarding()">
           <BsSignupWizard
             :step="step"
@@ -387,41 +391,26 @@ async function restoreAuthenticatedOnboarding() {
           >
 
 
-          <div v-if="step === 1" class="grid gap-4 sm:grid-cols-2">
-            <FloatingField class="sm:col-span-2" :label="t('onboarding.fullName')"><input id="owner-name" v-model="form.fullName" class="ls-input" autocomplete="name" required></FloatingField>
-            <FloatingField :label="t('onboarding.phone')"><input id="owner-phone" v-model="form.phone" class="ls-input" autocomplete="tel" dir="ltr" required></FloatingField>
-            <FloatingField :label="t('onboarding.jobTitle')"><input id="owner-role" v-model="form.jobTitle" class="ls-input" required></FloatingField>
-            <FloatingField :label="t('auth.email')"><input id="owner-email" v-model="form.email" type="email" class="ls-input" autocomplete="email" dir="ltr" :readonly="existingAccountOnboarding" required></FloatingField>
-            <div v-if="!existingAccountOnboarding"><FloatingField :label="t('auth.password')"><input id="owner-password" v-model="form.password" type="password" minlength="8" class="ls-input" autocomplete="new-password" dir="ltr" required></FloatingField><p class="ls-hint">{{ t('onboarding.passwordHint') }}</p></div>
-          </div>
+          <BsGrid v-if="step === 1" :columns="2">
+            <BsField :label="t('onboarding.fullName')" required><template #default="field"><BsInput v-model="form.fullName" :id="field.id" autocomplete="name" required /></template></BsField>
+            <BsField :label="t('onboarding.phone')" required><template #default="field"><BsInput v-model="form.phone" :id="field.id" type="tel" autocomplete="tel" dir="ltr" required /></template></BsField>
+            <BsField :label="t('onboarding.jobTitle')" required><template #default="field"><BsInput v-model="form.jobTitle" :id="field.id" required /></template></BsField>
+            <BsField :label="t('auth.email')" required><template #default="field"><BsInput v-model="form.email" :id="field.id" type="email" autocomplete="email" dir="ltr" :readonly="existingAccountOnboarding" required /></template></BsField>
+            <BsField v-if="!existingAccountOnboarding" :label="t('auth.password')" :hint="t('onboarding.passwordHint')" required><template #default="field"><BsInput v-model="form.password" :id="field.id" type="password" :minlength="8" autocomplete="new-password" dir="ltr" required /></template></BsField>
+          </BsGrid>
 
-          <div v-else-if="step === 2" class="grid gap-4 sm:grid-cols-2">
-            <FloatingField :label="t('org.name')"><input id="org-display-name" v-model="form.organizationName" class="ls-input" required></FloatingField>
-            <FloatingField :label="t('onboarding.legalName')"><input id="org-legal-name" v-model="form.legalName" class="ls-input" required></FloatingField>
-            <FloatingField :label="t('onboarding.businessType')"><select id="org-type" v-model="form.businessType" class="ls-input"><option v-for="type in businessTypes" :key="type" :value="type">{{ t(`onboarding.businessTypes.${type}`) }}</option></select></FloatingField>
-            <FloatingField :label="t('onboarding.country')"><select id="org-country" v-model="form.countryCode" class="ls-input"><option v-for="country in countries" :key="country.code" :value="country.code">{{ t(`onboarding.countries.${country.code}`) }}</option></select></FloatingField>
-              <FloatingField :label="t('accounts.currency')"><select id="org-currency" v-model="form.currency" class="ls-input"><option v-for="currency in supportedCurrencies" :key="currency">{{ currency }}</option></select></FloatingField>
-            <FloatingField :label="t('onboarding.timezone')"><input id="org-timezone" v-model="form.timezone" class="ls-input" dir="ltr" required></FloatingField>
-            <FloatingField :label="t('onboarding.fiscalYear')"><select id="org-fiscal" v-model.number="form.fiscalYearStartMonth" class="ls-input"><option v-for="month in 12" :key="month" :value="month">{{ t(`onboarding.months.${month}`) }}</option></select></FloatingField>
-            <div><FloatingField :label="t('onboarding.taxIdentifier')"><input id="org-tax" v-model="form.taxIdentifier" class="ls-input"></FloatingField><p class="ls-hint">{{ t('onboarding.optional') }}</p></div>
-          </div>
+          <BsGrid v-else-if="step === 2" :columns="2">
+            <BsField :label="t('org.name')" required><template #default="field"><BsInput v-model="form.organizationName" :id="field.id" required /></template></BsField>
+            <BsField :label="t('onboarding.legalName')" required><template #default="field"><BsInput v-model="form.legalName" :id="field.id" required /></template></BsField>
+            <BsField :label="t('onboarding.businessType')"><BsSelect v-model="form.businessType" :label="t('onboarding.businessType')" :options="businessTypeOptions" option-label="label" option-value="value" /></BsField>
+            <BsField :label="t('onboarding.country')"><BsSelect v-model="form.countryCode" :label="t('onboarding.country')" :options="countryOptions" option-label="label" option-value="value" /></BsField>
+            <BsField :label="t('accounts.currency')"><BsSelect v-model="form.currency" :label="t('accounts.currency')" :options="currencyOptions" option-label="label" option-value="value" /></BsField>
+            <BsField :label="t('onboarding.timezone')" required><template #default="field"><BsInput v-model="form.timezone" :id="field.id" dir="ltr" required /></template></BsField>
+            <BsField :label="t('onboarding.fiscalYear')"><BsSelect v-model="form.fiscalYearStartMonth" :label="t('onboarding.fiscalYear')" :options="fiscalMonthOptions" option-label="label" option-value="value" /></BsField>
+            <BsField :label="t('onboarding.taxIdentifier')" :hint="t('onboarding.optional')"><template #default="field"><BsInput v-model="form.taxIdentifier" :id="field.id" /></template></BsField>
+          </BsGrid>
 
-          <div v-if="step === 2" class="mt-6 flex items-start gap-3 rounded-control border border-[var(--bs-border)] bg-surface-muted p-4 text-sm leading-6">
-            <input id="signup-consent" v-model="consentAccepted" type="checkbox" required class="mt-1 size-4 shrink-0 accent-[var(--bs-primary)]">
-            <label for="signup-consent">
-              <i18n-t keypath="onboarding.consent" tag="span" scope="global">
-                <template #terms>
-                  <NuxtLink to="/terms" target="_blank" rel="noopener" class="font-semibold text-link underline underline-offset-4">{{ t('marketing.terms') }}</NuxtLink>
-                </template>
-                <template #refund>
-                  <NuxtLink to="/refund-cancellation" target="_blank" rel="noopener" class="font-semibold text-link underline underline-offset-4">{{ t('marketing.refundCancellation') }}</NuxtLink>
-                </template>
-                <template #privacy>
-                  <NuxtLink to="/privacy" target="_blank" rel="noopener" class="font-semibold text-link underline underline-offset-4">{{ t('marketing.privacy') }}</NuxtLink>
-                </template>
-              </i18n-t>
-            </label>
-          </div>
+          <BsLegalConsent v-if="step === 2" v-model="consentAccepted" keypath="onboarding.consent" :terms-label="t('marketing.terms')" terms-to="/terms" :refund-label="t('marketing.refundCancellation')" refund-to="/refund-cancellation" :privacy-label="t('marketing.privacy')" privacy-to="/privacy" required />
 
           <template v-if="step === 2" #footer>{{ t('onboarding.noCardRequired') }}</template>
           </BsSignupWizard>
@@ -438,6 +427,6 @@ async function restoreAuthenticatedOnboarding() {
           @submit="verifyOtpAndContinue" @resend="resendOtp"
         />
 
-    <template #legal><p class="mt-4 text-sm text-fg-muted"><NuxtLink to="/login" class="underline">{{ t('auth.signIn') }}</NuxtLink> · <NuxtLink to="/contact" class="underline">{{ t('marketing.contact') }}</NuxtLink></p></template>
+    <template #legal><BsInline justify="center"><BsLink to="/login">{{ t('auth.signIn') }}</BsLink><BsText tone="muted">·</BsText><BsLink to="/contact">{{ t('marketing.contact') }}</BsLink></BsInline></template>
   </BsAuthLayout>
 </template>

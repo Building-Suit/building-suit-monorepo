@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { automationStatusTone } from '../utils/automationStatusTone'
 import type { RetryPolicyRow } from '../../types/operations'
 const { data, error, refresh } = await useFetch<{ policies: RetryPolicyRow[] }>('/api/policies')
 const { data: operator } = await useFetch<{ writesEnabled: boolean }>('/api/operator/status')
@@ -27,27 +28,75 @@ async function save() {
 }
 </script>
 <template>
-  <main class="space-y-5">
-    <div class="flex flex-wrap items-start justify-between gap-3">
-      <div><p class="text-xs font-bold uppercase tracking-widest text-fg-muted">Routing</p><h1 class="mt-2 text-3xl font-black">Retry policies</h1><p class="mt-1 text-sm text-fg-muted">Every attempt has an explicit profile. Assignments inherit global → project → workstream → task.</p></div>
-      <BsButton variant="primary" @click="create">Create policy</BsButton>
-    </div>
-    <p v-if="error" class="text-danger">{{ error.message }}</p>
-    <div class="grid gap-4 xl:grid-cols-2">
+  <BsPage padding="none" width="full">
+    <BsInline justify="between" align="start">
+      <BsStack gap="sm">
+        <BsText size="xs" tone="muted" emphasis="semibold">
+          Routing
+        </BsText>
+        <BsHeading :level="1">
+          Retry policies
+        </BsHeading>
+        <BsText size="sm" tone="muted">
+          Every attempt has an explicit profile. Assignments inherit global → project → workstream → task.
+        </BsText>
+      </BsStack>
+      <BsButton variant="primary" @click="create">
+        Create policy
+      </BsButton>
+    </BsInline>
+    <BsAlert v-if="error" tone="error" :description="error.message" />
+    <BsGrid columns="auto">
       <BsCard v-for="policy in data?.policies || []" :key="policy.policy_id">
-        <div class="flex justify-between gap-3"><div><h2 class="font-black">{{ policy.display_name }}</h2><p class="font-mono text-xs text-fg-muted">{{ policy.policy_id }}</p></div><div class="flex items-start gap-2"><DashboardStatusPill :value="policy.active ? 'active' : 'inactive'" /><BsButton size="sm" @click="edit(policy)">Edit</BsButton></div></div>
-        <ol class="mt-4 grid gap-2 sm:grid-cols-2"><li v-for="(profile,index) in policy.attempt_profiles" :key="index" class="rounded-control border border-[var(--bs-border)] p-3 text-sm"><span class="text-fg-muted">Attempt {{ index + 1 }}</span><strong class="ms-2">{{ profile }}</strong></li></ol>
+        <BsStack gap="sm">
+          <BsInline justify="between">
+            <BsStack gap="sm">
+              <BsHeading :level="2">
+                {{ policy.display_name }}
+              </BsHeading>
+              <BsText size="xs" tone="muted">
+                {{ policy.policy_id }}
+              </BsText>
+            </BsStack>
+            <BsInline align="start">
+              <BsStatusBadge :status="policy.active ? 'active' : 'inactive'" :label="policy.active ? 'active' : 'inactive'" :tone="automationStatusTone(policy.active ? 'active' : 'inactive')" />
+              <BsButton size="sm" @click="edit(policy)">
+                Edit
+              </BsButton>
+            </BsInline>
+          </BsInline>
+          <BsList ordered>
+            <BsListItem v-for="(profile,index) in policy.attempt_profiles" :key="index">
+              <BsText as="span" tone="muted">
+                Attempt {{ index + 1 }}
+              </BsText>
+              <BsText as="strong" emphasis="semibold">
+                {{ profile }}
+              </BsText>
+            </BsListItem>
+          </BsList>
+        </BsStack>
       </BsCard>
-    </div>
+    </BsGrid>
     <BsRecordActionDialog v-model:visible="visible" :title="mode === 'edit' ? 'Edit retry policy' : 'Create retry policy'" :dirty="dirty" :pending="pending" :error="actionError" :submit-disabled="!operator?.writesEnabled" submit-label="Validate and save" @submit="save">
-      <div class="grid gap-3 md:grid-cols-3">
-        <FloatingField label="Policy ID"><input v-model="form.policy_id" class="ls-input" required></FloatingField>
-        <FloatingField label="Display name"><input v-model="form.display_name" class="ls-input" required></FloatingField>
-        <FloatingField label="Max attempts"><input v-model.number="form.max_attempts" type="number" min="1" max="20" class="ls-input" required></FloatingField>
-      </div>
-      <FloatingField label="Attempt profiles, comma-separated"><input v-model="form.attempt_profiles" class="ls-input font-mono" required></FloatingField>
-      <label class="flex items-center gap-2 text-sm"><input v-model="form.active" type="checkbox">Active</label>
-      <p class="text-xs text-fg-muted">{{ operator?.writesEnabled ? 'Operator writes enabled' : 'Configure NUXT_CONTROL_OPERATOR_DATABASE_URL to save' }}</p>
+      <BsGrid columns="auto">
+        <BsField v-slot="{ id, describedby }" label="Policy ID">
+          <BsInput :id="id" v-model="form.policy_id" :aria-describedby="describedby" required />
+        </BsField>
+        <BsField v-slot="{ id, describedby }" label="Display name">
+          <BsInput :id="id" v-model="form.display_name" :aria-describedby="describedby" required />
+        </BsField>
+        <BsField v-slot="{ id, describedby }" label="Max attempts">
+          <BsInput :id="id" v-model.number="form.max_attempts" :aria-describedby="describedby" type="number" min="1" max="20" required />
+        </BsField>
+      </BsGrid>
+      <BsField v-slot="{ id, describedby }" label="Attempt profiles, comma-separated">
+        <BsInput :id="id" v-model="form.attempt_profiles" :aria-describedby="describedby" required />
+      </BsField>
+      <BsCheckbox v-model="form.active" label="Active" />
+      <BsText size="xs" tone="muted">
+        {{ operator?.writesEnabled ? 'Operator writes enabled' : 'Configure NUXT_CONTROL_OPERATOR_DATABASE_URL to save' }}
+      </BsText>
     </BsRecordActionDialog>
-  </main>
+  </BsPage>
 </template>

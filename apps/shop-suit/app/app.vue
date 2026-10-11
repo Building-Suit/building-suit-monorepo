@@ -38,9 +38,4 @@ useHead(() => ({
 }));
 </script>
 
-<template>
-  <NuxtLayout :key="layoutKey">
-    <NuxtPage :key="pageKey" />
-  </NuxtLayout>
-  <BsConfirmHost />
-</template>
+<template><BsAppRoot :layout-key="layoutKey" :page-key="pageKey" /></template>

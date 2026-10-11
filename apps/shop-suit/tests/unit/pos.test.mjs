@@ -26,7 +26,7 @@ test('repeat scans increment one deterministic cart line and totals stay decimal
 })
 
 test('POS page covers scanner recovery, locked context, keyboard and bilingual responsive states', () => {
-  for (const evidence of ['scanBarcode', 'unknownBarcode', 'locationChanged', "event.key === 'F2'", "event.key === 'F8'", 'min-h-11', 'xl:grid-cols', 'role="alert"', 'aria-live="polite"', 'checkout_pos_sale']) assert.match(page, new RegExp(evidence))
+  for (const evidence of ['scanBarcode', 'unknownBarcode', 'locationChanged', "event.key === 'F2'", "event.key === 'F8'", 'BsActionTile', 'BsLineItemsEditor', 'role="alert"', 'aria-live="polite"', 'checkout_pos_sale']) assert.match(page, new RegExp(evidence))
   assert.match(page, /save_pos_sale_draft/)
   assert.match(page, /pos_catalog_search/)
   assert.match(page, /pos_checkout_context/)

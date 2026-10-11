@@ -43,7 +43,7 @@ test('team UI exposes bilingual responsive management and invite acceptance', ()
   assert.match(page, /<BsDataTable/)
   assert.match(page, /accept_shop_invitation/)
   assert.match(page, /transfer_shop_ownership/)
-  assert.match(page, /overflow-x-auto/)
+  assert.match(page, /:columns="\[/)
   for (const delegatedPage of [products, services, settings]) {
     assert.match(delegatedPage, /shop_permission_access/)
     assert.doesNotMatch(delegatedPage, /isOwner/)

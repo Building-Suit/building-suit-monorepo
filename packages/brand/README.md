@@ -43,3 +43,5 @@ pnpm exec turbo run typecheck lint build --filter=@building-suit/shop-suit
 node --test apps/shop-suit/tests/unit/ss-launch-brand-001-1.test.mjs
 node --test apps/shop-suit/tests/unit/ss-launch-brand-001-2.test.mjs
 ```
+
+Production acceptance runs with `pnpm test:built-assets` after `pnpm build` (or a Shop build). It checks the compiled HTTP pipeline for all six canonical assets, exact bytes/MIME types and rendered favicon links. CI review checks validate source images without requiring stale build output; the full CI job runs production acceptance after its build.

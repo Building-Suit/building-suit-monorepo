@@ -12,6 +12,13 @@ const pending = ref(false)
 const sent = ref(false)
 const error = ref('')
 const emailPattern = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
+const contactInfo = computed(() => [
+  { key: 'email', label: t('marketing.email'), value: publicBusiness.supportEmail, href: `mailto:${publicBusiness.supportEmail}`, direction: 'ltr' as const },
+  { key: 'phone', label: t('marketing.phone'), value: publicBusiness.phone, href: `tel:${publicBusiness.phone}`, direction: 'ltr' as const },
+  { key: 'address', label: t('marketing.businessAddress'), value: locale.value === 'ar' ? publicBusiness.addressAr : publicBusiness.addressEn },
+])
+const categories = computed(() => ['general', 'product', 'billing', 'technical', 'account'].map(value => ({ value, label: t(`marketing.contactCategories.${value}`) })))
+const formCopy = computed(() => ({ title: t('marketing.contactFormTitle'), intro: t('marketing.contactFormIntro'), category: t('marketing.contactCategory'), replyEmail: t('marketing.contactReplyEmail'), subject: t('marketing.contactSubject'), message: t('marketing.contactMessage'), consent: t('marketing.contactConsent'), success: t('marketing.contactSuccess'), submit: t('marketing.contactSubmit'), pending: t('marketing.contactPending'), website: 'Website' }))
 
 watch(user, (value) => {
   if (value?.email && !form.email) form.email = value.email
@@ -60,51 +67,5 @@ useHead(() => ({
 </script>
 
 <template>
-  <main class="mx-auto max-w-5xl px-4 py-10 lg:px-8 lg:py-14">
-    <BsCard as="section" padding="none" class="overflow-hidden">
-      <div class="border-b border-[var(--bs-border)] bg-surface-muted px-6 py-8 sm:px-10">
-        <p class="text-xs font-bold uppercase tracking-[.18em] text-brand-gold-highlight">Shop Suit by Building Suit</p>
-        <h1 class="mt-3 text-3xl font-black tracking-[-.04em] sm:text-4xl">{{ t('marketing.contact') }}</h1>
-        <p class="mt-4 max-w-3xl text-sm leading-7 text-fg-muted sm:text-base">{{ t('marketing.contactIntro') }}</p>
-      </div>
-
-      <div class="grid gap-px bg-[var(--bs-border)] md:grid-cols-3">
-        <div class="bg-surface p-6 sm:p-8">
-          <p class="text-xs font-bold uppercase tracking-[.14em] text-fg-muted">{{ t('marketing.email') }}</p>
-          <a :href="`mailto:${publicBusiness.supportEmail}`" class="mt-3 block break-all font-bold text-link" dir="ltr">{{ publicBusiness.supportEmail }}</a>
-        </div>
-        <div class="bg-surface p-6 sm:p-8">
-          <p class="text-xs font-bold uppercase tracking-[.14em] text-fg-muted">{{ t('marketing.phone') }}</p>
-          <a :href="`tel:${publicBusiness.phone}`" class="mt-3 block font-bold text-link" dir="ltr">{{ publicBusiness.phone }}</a>
-        </div>
-        <div class="bg-surface p-6 sm:p-8">
-          <p class="text-xs font-bold uppercase tracking-[.14em] text-fg-muted">{{ t('marketing.businessAddress') }}</p>
-          <p class="mt-3 font-bold">{{ locale === 'ar' ? publicBusiness.addressAr : publicBusiness.addressEn }}</p>
-        </div>
-      </div>
-
-      <div class="px-6 py-8 sm:px-10 sm:py-10">
-        <BsContentSection variant="plain" :title="t('marketing.contactFormTitle')" :description="t('marketing.contactFormIntro')">
-          <BsForm class="grid gap-5" :pending="pending" :error="error" novalidate @submit="submit">
-            <div class="grid gap-4 md:grid-cols-2">
-              <label class="grid gap-2"><span>{{ t('marketing.contactCategory') }}</span><select v-model="form.category" class="ls-select"><option value="general">{{ t('marketing.contactCategories.general') }}</option><option value="product">{{ t('marketing.contactCategories.product') }}</option><option value="billing">{{ t('marketing.contactCategories.billing') }}</option><option value="technical">{{ t('marketing.contactCategories.technical') }}</option><option value="account">{{ t('marketing.contactCategories.account') }}</option></select></label>
-              <label class="grid gap-2"><span>{{ t('marketing.contactReplyEmail') }}</span><input v-model="form.email" class="ls-input" type="email" required autocomplete="email"></label>
-            </div>
-            <label class="grid gap-2"><span>{{ t('marketing.contactSubject') }}</span><input v-model="form.subject" class="ls-input" maxlength="200" required></label>
-            <label class="grid gap-2"><span>{{ t('marketing.contactMessage') }}</span><textarea v-model="form.message" class="ls-input min-h-36" maxlength="10000" required /></label>
-            <label class="hidden" aria-hidden="true"><span>Website</span><input v-model="form.honeypot" tabindex="-1" autocomplete="off"></label>
-            <label class="flex items-start gap-2"><input v-model="form.consent" type="checkbox" required><span class="text-sm">{{ t('marketing.contactConsent') }}</span></label>
-            <p v-if="sent" role="status" class="text-sm text-success">{{ t('marketing.contactSuccess') }}</p>
-            <BsButton class="w-fit" type="submit" variant="primary" :pending="pending">{{ pending ? t('marketing.contactPending') : t('marketing.contactSubmit') }}</BsButton>
-          </BsForm>
-        </BsContentSection>
-      </div>
-
-      <BsContentSection variant="plain" class="border-t border-line px-6 py-8 sm:px-10" :title="t('marketing.businessIdentity')">
-        <p class="mt-3 text-sm leading-7 text-fg-muted sm:text-base">
-          <i18n-t keypath="marketing.businessIdentityBody" tag="span" scope="global"><template #product><bdi dir="ltr">Shop Suit</bdi></template><template #parent><bdi dir="ltr">Building Suit</bdi></template></i18n-t>
-        </p>
-      </BsContentSection>
-    </BsCard>
-  </main>
+  <BsContactPage v-model="form" eyebrow="Shop Suit by Building Suit" :title="t('marketing.contact')" :intro="t('marketing.contactIntro')" :info="contactInfo" :form-copy="formCopy" :categories="categories" :identity-title="t('marketing.businessIdentity')" :identity-body="t('marketing.businessIdentityBody', { product: 'Shop Suit', parent: 'Building Suit' })" :pending="pending" :error="error" :sent="sent" @submit="submit"/>
 </template>

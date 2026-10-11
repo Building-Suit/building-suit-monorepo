@@ -95,15 +95,15 @@ async function resend() {
 
 <template>
   <BsVerificationForm v-if="verifying && !user" v-model="form.otp" :email="form.email" :code-label="copy.otp" :title="copy.title" :description="copy.help" :pending="pending" :error="error" :notice="notice" :submit-label="copy.verify" :pending-label="copy.verify" :resend-label="timer.resendIn.value > 0 ? `${copy.wait} ${timer.format(timer.resendIn.value)}` : copy.resend" :resend-disabled="timer.resendIn.value > 0" :expired="timer.expired.value" :expiry-label="`${copy.expires} ${timer.format(timer.expiresIn.value)}`" :expired-label="copy.failed" @submit="verify" @resend="resend">
-    <template #secondary><NuxtLink :to="{ path: '/auth/login', query: { invite: code } }" class="underline">{{ copy.login }}</NuxtLink></template>
+    <template #secondary><BsLink :to="{ path: '/auth/login', query: { invite: code } }">{{ copy.login }}</BsLink></template>
   </BsVerificationForm>
   <BsAuthForm v-else eyebrow="Shop Suit" :title="copy.title" :description="copy.help" :pending="pending" :error="code ? error : copy.invalid" :submit-disabled="!code" :submit-label="user ? copy.accept : copy.create" :pending-label="user ? copy.accept : copy.create" @submit="submit">
     <template v-if="!user && code">
-      <label class="grid gap-2">{{ copy.email }}<input v-model="form.email" class="ls-input" type="email" autocomplete="email" required maxlength="254"></label>
-      <label class="grid gap-2">{{ copy.password }}<input v-model="form.password" class="ls-input" type="password" autocomplete="new-password" required minlength="8"></label>
+      <BsField v-slot="field" :label="copy.email" required><BsInput :id="field.id" v-model="form.email" type="email" autocomplete="email" required maxlength="254" /></BsField>
+      <BsField v-slot="field" :label="copy.password" required><BsInput :id="field.id" v-model="form.password" type="password" autocomplete="new-password" required minlength="8" /></BsField>
     </template>
-    <p v-if="user" class="text-sm">{{ user.email }}</p>
+    <BsText v-if="user" size="sm">{{ user.email }}</BsText>
     <BsButton v-if="user" variant="secondary" :disabled="pending" @click="switchAccount">{{ copy.switchAccount }}</BsButton>
-    <template #footer><div class="grid gap-3"><NuxtLink :to="{ path: '/auth/login', query: { invite: code } }" class="underline">{{ copy.login }}</NuxtLink><NuxtLink to="/auth/forgot-password" class="underline">{{ copy.recover }}</NuxtLink></div></template>
+    <template #footer><BsStack gap="sm"><BsLink :to="{ path: '/auth/login', query: { invite: code } }">{{ copy.login }}</BsLink><BsLink to="/auth/forgot-password">{{ copy.recover }}</BsLink></BsStack></template>
   </BsAuthForm>
 </template>

@@ -1,7 +1,54 @@
 <script setup lang="ts">
+import { automationStatusTone } from '../utils/automationStatusTone'
 interface N8nNode { id: string | null; name: string; type: string }
 interface N8nWorkflow { id: string | null; name: string; active: boolean; updatedAt: string | null; nodes: N8nNode[]; connections: unknown[] }
 interface N8nResponse { available: boolean; message?: string; workflows: N8nWorkflow[] }
 const { data, error, refresh } = await useFetch<N8nResponse>('/api/n8n')
 </script>
-<template><main class="space-y-5"><div class="flex justify-between gap-3"><div><p class="text-xs font-bold uppercase tracking-widest text-fg-muted">Optional adapter</p><h1 class="mt-2 text-3xl font-black">n8n inspection</h1><p class="mt-1 text-sm text-fg-muted">Read-only normalized workflow snapshots. The control plane remains authoritative.</p></div><BsButton @click="refresh()">Refresh</BsButton></div><p v-if="error" class="text-danger">{{ error.message }}</p><BsCard v-if="!data?.available" padding="sm" class="border-warning/40 bg-[var(--bs-status-warning-bg)]"><p>{{ data?.message }}</p></BsCard><BsCard v-for="workflow in data?.workflows || []" :key="workflow.id || workflow.name"><div class="flex justify-between"><h2 class="font-black">{{ workflow.name }}</h2><DashboardStatusPill :value="workflow.active ? 'published' : 'inactive'" /></div><p class="mt-1 text-xs text-fg-muted">{{ workflow.nodes.length }} nodes · {{ workflow.connections.length }} connections · {{ workflow.updatedAt || 'unknown sync time' }}</p><div class="mt-4 space-y-2"><BsCard v-for="node in workflow.nodes" :key="node.id || node.name" variant="flat" padding="sm"><strong>{{ node.name }}</strong><span class="ms-2 font-mono text-xs text-fg-muted">{{ node.type }}</span></BsCard></div></BsCard></main></template>
+<template>
+  <BsPage padding="none" width="full">
+    <BsInline justify="between">
+      <BsStack gap="sm">
+        <BsText size="xs" tone="muted" emphasis="semibold">
+          Optional adapter
+        </BsText>
+        <BsHeading :level="1">
+          n8n inspection
+        </BsHeading>
+        <BsText size="sm" tone="muted">
+          Read-only normalized workflow snapshots. The control plane remains authoritative.
+        </BsText>
+      </BsStack>
+      <BsButton @click="refresh()">
+        Refresh
+      </BsButton>
+    </BsInline>
+    <BsAlert v-if="error" tone="error" :description="error.message" />
+    <BsAlert v-if="!data?.available" tone="warning" :description="data?.message" />
+    <BsCard v-for="workflow in data?.workflows || []" :key="workflow.id || workflow.name">
+      <BsStack gap="sm">
+        <BsInline justify="between">
+          <BsHeading :level="2">
+            {{ workflow.name }}
+          </BsHeading>
+          <BsStatusBadge :status="workflow.active ? 'published' : 'inactive'" :label="workflow.active ? 'published' : 'inactive'" :tone="automationStatusTone(workflow.active ? 'published' : 'inactive')" />
+        </BsInline>
+        <BsText size="xs" tone="muted">
+          {{ workflow.nodes.length }} nodes · {{ workflow.connections.length }} connections · {{ workflow.updatedAt || 'unknown sync time' }}
+        </BsText>
+        <BsStack gap="sm">
+          <BsCard v-for="node in workflow.nodes" :key="node.id || node.name" variant="flat" padding="sm">
+            <BsStack gap="sm">
+              <BsText as="strong" emphasis="semibold">
+                {{ node.name }}
+              </BsText>
+              <BsText as="span" size="xs" tone="muted">
+                {{ node.type }}
+              </BsText>
+            </BsStack>
+          </BsCard>
+        </BsStack>
+      </BsStack>
+    </BsCard>
+  </BsPage>
+</template>

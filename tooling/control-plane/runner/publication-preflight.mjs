@@ -31,14 +31,18 @@ const protectedPublicationPaths = [
   /(^|\/)(?:secrets?|credentials?)(?:\/|\.|$)/i,
   /(^|\/)supabase\/migrations\//,
   /(^|\/)supabase\/(?:config\.toml|seed\.sql)$/,
-  /(^|\/)n8n(?:\/|\.|-)/i,
   /(^|\/)\.github\/workflows\//,
   /(^|\/)(?:vercel|deploy)(?:\/|\.|-)/i,
 ]
 
 export function protectedPublicationPath(value) {
   const candidate = normalize(value)
-  return protectedPublicationPaths.some(pattern => pattern.test(candidate))
+  // An n8n-named Nuxt UI component is not an executable workflow. Keep all
+  // other protected categories, and n8n directories/configuration, gated.
+  const n8nUi = /^apps\/[^/]+\/app\/(?:pages|components)\/(?:[^/]+\/)*n8n(?:-[^/]+)?\.vue$/i.test(candidate) &&
+    !/(^|\/)n8n(?:\/|\.|-)/i.test(path.posix.dirname(candidate))
+  return protectedPublicationPaths.some(pattern => pattern.test(candidate)) ||
+    /(^|\/)n8n(?:\/|\.|-)/i.test(candidate) && !n8nUi
 }
 
 export function evaluatePublicationBoundaries({
@@ -149,19 +153,25 @@ export function taskPublicationMetadata({
 
 export function classifyPublicationFiles({
   files = [],
+  taskPaths = [],
+  ordinaryRunAuthorized = false,
   sourcePaths = [],
   workstreamPaths = [],
   projectPaths = [],
   requiredPaths = [],
   ordinaryAuthorizedPaths = [],
   protectedAuthorizedPaths = [],
+  verifiedProtectedPaths = [],
+  queueSourcePaths = [],
 }) {
   const decisions = [...new Set(files)].sort().map(file => {
     const normalized = normalize(file)
+    if (validPublicationPath(normalized) && queueSourcePaths.includes(normalized) && pathInScope(normalized, projectPaths)) return {file:normalized,decision:"allow",boundary:"queue-source",reason:"verified_queue_draft_source_policy"}
     if (protectedPublicationPath(normalized)) {
       if (
-        requiredPaths.map(normalize).includes(normalized) &&
-        protectedAuthorizedPaths.map(normalize).includes(normalized)
+        (requiredPaths.map(normalize).includes(normalized) &&
+        protectedAuthorizedPaths.map(normalize).includes(normalized)) ||
+        (validPublicationPath(normalized) && verifiedProtectedPaths.includes(normalized) && pathInScope(normalized, taskPaths) && pathInScope(normalized, projectPaths))
       ) {
         return { file: normalized, decision: 'allow', boundary: 'protected-exact', reason: 'protected_exact_human_authorization' }
       }
@@ -169,6 +179,9 @@ export function classifyPublicationFiles({
     }
     if (pathInScope(normalized, workstreamPaths)) {
       return { file: normalized, decision: 'allow', boundary: 'workstream', reason: 'workstream_publication_path' }
+    }
+    if (ordinaryRunAuthorized && validPublicationPath(normalized) && pathInScope(normalized, taskPaths) && pathInScope(normalized, projectPaths)) {
+      return { file: normalized, decision: 'allow', boundary: 'run-task', reason: 'current_run_registered_ordinary_scope' }
     }
     if (pathInScope(normalized, ordinaryAuthorizedPaths)) {
       return { file: normalized, decision: 'allow', boundary: 'task-exact', reason: 'exact_human_authorization' }
@@ -226,7 +239,7 @@ export function evaluateVerificationAuthority({ verification, executionId, state
   return { authoritative: true, reason: 'latest_passed_verification_matches_repository_state' }
 }
 
-export function evaluatePublicationParent({ liveParent, execution, recordedParentSha = null }) {
+export function evaluatePublicationParent({ liveParent, execution, recordedParentSha = null, parentDescendant = false }) {
   if (
     liveParent?.parent_branch === execution?.parent_branch &&
     liveParent?.parent_sha === execution?.parent_sha
@@ -240,6 +253,7 @@ export function evaluatePublicationParent({ liveParent, execution, recordedParen
   ) {
     return { current: true, reason: 'task_own_pr_is_current_stack_leaf' }
   }
+  if(parentDescendant && (liveParent?.parent_branch===execution?.parent_branch || liveParent?.parent_branch===execution?.branch_name && liveParent?.parent_pr?.base_branch===execution?.parent_branch)) return {current:true,reason:'actual_parent_advanced_preserved_base'}
   return { current: false, reason: 'parent_changed_since_execution' }
 }
 
@@ -260,4 +274,9 @@ export function planPublicationReconciliation({
   if (localSha !== parentSha && !localTaskCommits) return { action: 'safety-stop', reason: 'unexpected_existing_commits', pr }
   if (pr) return { action: 'reuse_existing_pr', pr }
   return { action: remoteSha ? 'create_pr' : 'push_and_create_pr', pr: null }
+}
+
+export function verifiedProtectedPublicationPaths({grant,task,execution,verification}) {
+ if(grant?.authorized !== true || grant.task_id !== task?.task_id || Number(grant.execution_id) !== Number(execution?.execution_id) || Number(grant.verification_run_id) !== Number(verification?.verification_run_id) || grant.verified_state_fingerprint !== verification?.state_fingerprint) return []
+ return (grant.protected_files ?? []).filter(item=>validPublicationPath(item.path) && protectedPublicationPath(item.path) && verification.verified_state?.files?.some(file=>file.file===item.path && file.object===item.object)).map(item=>item.path)
 }

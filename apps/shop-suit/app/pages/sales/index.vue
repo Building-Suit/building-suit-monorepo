@@ -326,61 +326,107 @@ function handlePage(event: { page: number }) { page.value = event.page + 1 }
 </script>
 
 <template>
-  <div class="space-y-6">
-    <header class="flex flex-wrap items-end justify-between gap-4">
-      <div><h1 class="text-3xl font-extrabold tracking-tight">{{ t('sales.title') }}</h1><p class="mt-2 text-sm text-muted-foreground">{{ t('sales.subtitle') }}</p></div>
-      <BsButton v-if="current && salePage?.canManage" type="button" class="ls-btn ls-btn-primary" :disabled="catalogPending" @click="openCreate">{{ t('sales.newSale') }}</BsButton>
-    </header>
-
-    <div v-if="!current && !shopLoading" class="ls-card p-8 text-center text-sm">{{ t('sales.noShop') }}</div>
+  <BsStack>
+    <BsPageHeader  :title="t('sales.title')" :subtitle="t('sales.subtitle')">
+      <template #actions>
+        <BsButton v-if="current && salePage?.canManage" type="button" :disabled="catalogPending" @click="openCreate">{{ t('sales.newSale') }}</BsButton>
+      </template>
+    </BsPageHeader>
+    <BsPanel v-if="!current && !shopLoading" padding="md">{{ t('sales.noShop') }}</BsPanel>
     <template v-else-if="current">
-      <p v-if="salePage?.permissionDenied" role="alert" class="rounded-xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-4 text-sm">{{ t('sales.permissionDenied') }}</p>
-      <p v-else-if="salePage && !salePage.canManage" class="rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm">{{ t('sales.manageDenied') }}</p>
-      <p class="rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm">{{ t('sales.paymentBoundary') }}</p>
-
-      <div v-if="!salePage?.permissionDenied" class="overflow-hidden ls-card">
-        <div class="grid gap-3 border-b border-border p-4 sm:grid-cols-2 xl:grid-cols-5">
-          <input v-model="search" type="search" :placeholder="t('sales.search')" :aria-label="t('sales.search')" class="ls-input xl:col-span-2">
-          <select v-model="statusFilter" :aria-label="t('sales.status')" class="ls-select"><option value="all">{{ t('sales.allStatuses') }}</option><option value="draft">{{ t('sales.draft') }}</option><option value="issued">{{ t('sales.issued') }}</option></select>
-          <label class="text-xs font-bold text-muted-foreground">{{ t('sales.from') }}<input v-model="fromDate" type="date" class="ls-input mt-1"></label>
-          <label class="text-xs font-bold text-muted-foreground">{{ t('sales.to') }}<input v-model="toDate" type="date" class="ls-input mt-1"></label>
-        </div>
-        <BsDataTable :value="salePage?.items ?? []" :loading="pending" :error="error ? t('sales.loadError') : null" :label="t('sales.title')" data-key="id" lazy paginator :rows="pageSize" :first="(page - 1) * pageSize" :total-records="salePage?.total ?? 0" :always-show-paginator="false" :row-class="() => 'border-t border-border'" @page="handlePage" @retry="refresh()">
-          <Column header-class="px-5 py-3 text-start" body-class="px-5 py-4"><template #header>{{ t('sales.invoiceNumber') }}</template><template #body="{ data: sale }"><NuxtLink :to="`/sales/${sale.id}`" class="font-bold text-[var(--bs-link)]">{{ sale.invoice_number || t('sales.draftNumber') }}</NuxtLink><p class="text-xs text-muted-foreground">{{ sale.line_count }} {{ t('sales.lines') }}</p></template></Column>
-          <Column header-class="px-5 py-3 text-start" body-class="px-5 py-4"><template #header>{{ t('sales.customer') }}</template><template #body="{ data: sale }">{{ sale.client_name_snapshot || '—' }}</template></Column>
-          <Column header-class="px-5 py-3 text-start" body-class="px-5 py-4"><template #header>{{ t('sales.status') }}</template><template #body="{ data: sale }"><span class="ls-badge" :class="sale.status === 'issued' ? 'bg-[var(--bs-status-success-bg)] text-fg' : 'bg-muted text-muted-foreground'">{{ t(`sales.${sale.status}`) }}</span></template></Column>
-          <Column header-class="px-5 py-3 text-end" body-class="px-5 py-4 text-end"><template #header>{{ t('sales.total') }}</template><template #body="{ data: sale }">{{ money(Number(sale.total_amount)) }}</template></Column>
-          <Column header-class="px-5 py-3 text-end" body-class="px-5 py-4 text-end"><template #header>{{ t('sales.date') }}</template><template #body="{ data: sale }"><p>{{ formatDate(sale.issued_at || sale.created_at) }}</p><BsButton variant="link" v-if="sale.status === 'draft' && salePage?.canManage" type="button" class="mt-1 text-sm font-bold text-[var(--bs-link)]" @click="openEdit(sale.id)">{{ t('sales.edit') }}</BsButton></template></Column>
-          <template #empty><p class="p-8 text-center text-sm text-muted-foreground">{{ t('sales.empty') }}</p></template>
+      <BsText v-if="salePage?.permissionDenied" role="alert" as="p" size="sm" tone="warning">{{ t('sales.permissionDenied') }}</BsText>
+      <BsText v-else-if="salePage && !salePage.canManage" as="p" size="sm">{{ t('sales.manageDenied') }}</BsText>
+      <BsText as="p" size="sm">{{ t('sales.paymentBoundary') }}</BsText>
+      <BsPanel v-if="!salePage?.permissionDenied" padding="md">
+        <BsGrid :columns="2">
+          <BsInput v-model="search" type="search" :placeholder="t('sales.search')" :aria-label="t('sales.search')"/>
+          <BsSelect v-model="statusFilter" :label="t('sales.status')" :options="[{ value: 'all', label: (t('sales.allStatuses')), disabled: false }, { value: 'draft', label: (t('sales.draft')), disabled: false }, { value: 'issued', label: (t('sales.issued')), disabled: false }]" option-label="label" option-value="value" option-disabled="disabled"/>
+          <BsField v-slot="field" :label="(t('sales.from'))">
+            <BsInput :id="field.id" v-model="fromDate" :aria-describedby="field.describedby" type="date"/>
+          </BsField>
+          <BsField v-slot="field" :label="(t('sales.to'))">
+            <BsInput :id="field.id" v-model="toDate" :aria-describedby="field.describedby" type="date"/>
+          </BsField>
+        </BsGrid>
+        <BsDataTable :value="salePage?.items ?? []" :loading="pending" :error="error ? t('sales.loadError') : null" :label="t('sales.title')" data-key="id" lazy paginator :rows="pageSize" :first="(page - 1) * pageSize" :total-records="salePage?.total ?? 0" :always-show-paginator="false" :columns="[{ key: 'column0', header: (t('sales.invoiceNumber')) }, { key: 'column1', header: (t('sales.customer')) }, { key: 'column2', header: (t('sales.status')) }, { key: 'column3', header: (t('sales.total')), align: 'end' }, { key: 'column4', header: (t('sales.date')), align: 'end' }]" @page="handlePage" @retry="refresh()">
+          <template #cell-column0="{ row: sale }">
+            <BsLink :to="`/sales/${sale.id}`">{{ sale.invoice_number || t('sales.draftNumber') }}</BsLink>
+            <BsText as="p" size="xs" tone="muted">{{ sale.line_count }} {{ t('sales.lines') }}</BsText>
+          </template>
+          <template #cell-column1="{ row: sale }">{{ sale.client_name_snapshot || '—' }}</template>
+          <template #cell-column2="{ row: sale }">
+            <BsText as="span">{{ t(`sales.${sale.status}`) }}</BsText>
+          </template>
+          <template #cell-column3="{ row: sale }">{{ money(Number(sale.total_amount)) }}</template>
+          <template #cell-column4="{ row: sale }">
+            <BsText as="p">{{ formatDate(sale.issued_at || sale.created_at) }}</BsText>
+            <BsButton v-if="sale.status === 'draft' && salePage?.canManage" variant="link" type="button" @click="openEdit(sale.id)">{{ t('sales.edit') }}</BsButton>
+          </template>
+          <template #empty>
+            <BsText as="p" size="sm" tone="muted">{{ t('sales.empty') }}</BsText>
+          </template>
         </BsDataTable>
-      </div>
+      </BsPanel>
     </template>
-
-    <p v-if="editorError && !editorOpen" role="alert" class="ls-error">{{ editorError }}</p>
+    <BsText v-if="editorError && !editorOpen" role="alert" as="p">{{ editorError }}</BsText>
     <BsRecordActionDialog v-model:visible="editorOpen" :title="editingId ? t('sales.editDraft') : t('sales.newSale')" :dirty="editorDirty" :pending="saving || issuing" :error="editorError" size="lg" @submit="saveDraft">
-          <p v-if="catalogError" role="alert">{{ t('sales.catalogError') }} <BsButton @click="refreshCatalog()">{{ t('common.retry') }}</BsButton></p>
-          <div class="grid gap-4 sm:grid-cols-2">
-            <label class="space-y-2 text-sm font-bold">{{ t('sales.customer') }}<BsSelect v-model="customerId" :label="t('sales.customer')" :options="[{ id: '', name: t('sales.selectCustomer') }, ...(catalog?.customers ?? [])]" option-label="name" option-value="id" filter virtual :disabled="catalogPending || saving || issuing" /></label>
-            <label class="space-y-2 text-sm font-bold">{{ t('sales.dueDate') }}<input v-model="dueDate" type="date" class="ls-input" :disabled="!customerId"></label>
-            <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ t('sales.notes') }}<input v-model="notes" maxlength="2000" class="ls-input"></label>
-          </div>
-          <div v-if="!customerId" class="grid gap-4 rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 sm:grid-cols-2">
-            <p class="text-sm sm:col-span-2">{{ t('sales.customerlessNotice') }}</p>
-            <label class="space-y-2 text-sm font-bold">{{ t('payments.method') }}<select v-model="paymentMethod" class="ls-select"><option v-for="method in ['cash','bank_transfer','card','wallet','cheque','other']" :key="method" :value="method">{{ t(`payments.methods.${method}`) }}</option></select></label>
-            <label class="space-y-2 text-sm font-bold">{{ t('payments.reference') }}<input v-model="paymentReference" maxlength="200" class="ls-input"></label>
-          </div>
-          <div class="space-y-3">
-            <div class="flex items-center justify-between"><h2 class="font-bold">{{ t('sales.lines') }}</h2><BsButton type="button" class="ls-btn ls-btn-sm" @click="addLine">{{ t('sales.addLine') }}</BsButton></div>
-            <div v-for="(line, index) in lines" :key="line.key" class="grid gap-3 rounded-xl border border-border p-4 sm:grid-cols-2 lg:grid-cols-6">
-              <label class="space-y-1 text-xs font-bold"><span>{{ t('sales.lines') }}</span><select v-model="line.itemType" class="ls-select" @change="changeLineType(line)"><option v-for="type in availableLineTypes" :key="type" :value="type">{{ t(`sales.${type}`) }}</option></select></label>
-              <label class="space-y-1 text-xs font-bold sm:col-span-2"><span>{{ t('sales.item') }}</span><BsSelect v-model="line.sourceId" :label="t('sales.item')" :options="lineCatalog(line)" :option-label="itemLabel" option-value="id" :placeholder="t('sales.selectItem')" :invalid="Boolean(editorError) && !line.sourceId" :aria-required="true" :disabled="catalogPending || saving || issuing" filter virtual /></label>
-              <label class="space-y-1 text-xs font-bold"><span>{{ t('sales.quantity') }}</span><input v-model.number="line.quantity" type="number" min="0.001" max="1000000" step="0.001" required class="ls-input"></label>
-              <div class="text-sm"><p class="text-xs font-bold text-muted-foreground">{{ t('sales.lineTotal') }}</p><p class="mt-2 font-bold">{{ money(lineAmounts(line).total) }}</p><p v-if="lineAmounts(line).discount" class="text-xs text-muted-foreground">{{ t('sales.discount') }}: {{ money(lineAmounts(line).discount) }}</p></div>
-              <div class="flex items-end justify-end"><BsButton type="button" class="text-sm font-bold text-fg disabled:opacity-40" :disabled="lines.length === 1" @click="removeLine(index)">{{ t('sales.removeLine') }}</BsButton></div>
-            </div>
-          </div>
-          <div class="rounded-xl bg-muted p-4"><p class="text-sm">{{ t('sales.previewNotice') }}</p><p class="mt-1 text-sm">{{ t('sales.stockNotice') }}</p><p class="mt-3 text-xl font-extrabold">{{ t('sales.total') }}: {{ money(previewTotal) }}</p></div>
-      <template #actions="{ close }"><BsButton type="submit" :disabled="saving || issuing">{{ saving ? t('sales.saving') : t('sales.saveDraft') }}</BsButton><BsButton v-if="salePage?.canIssue" type="button" variant="primary" :disabled="saving || issuing" @click="issue">{{ issuing ? t('sales.issuing') : t(customerId ? 'sales.issue' : 'sales.checkout') }}</BsButton><BsButton type="button" :disabled="saving || issuing" @click="close">{{ t('sales.cancel') }}</BsButton></template>
+      <BsText v-if="catalogError" role="alert" as="p">{{ t('sales.catalogError') }} <BsButton @click="refreshCatalog()">{{ t('common.retry') }}</BsButton>
+      </BsText>
+      <BsGrid :columns="2">
+        <BsField v-slot="field" :label="(t('sales.customer'))">
+          <BsSelect v-model="customerId" :input-id="field.id" :aria-describedby="field.describedby" :label="t('sales.customer')" :options="[{ id: '', name: t('sales.selectCustomer') }, ...(catalog?.customers ?? [])]" option-label="name" option-value="id" filter virtual :disabled="catalogPending || saving || issuing"/>
+        </BsField>
+        <BsField v-slot="field" :label="(t('sales.dueDate'))">
+          <BsInput :id="field.id" v-model="dueDate" :aria-describedby="field.describedby" type="date" :disabled="!customerId"/>
+        </BsField>
+        <BsField v-slot="field" :label="(t('sales.notes'))">
+          <BsInput :id="field.id" v-model="notes" :aria-describedby="field.describedby" :maxlength="2000"/>
+        </BsField>
+      </BsGrid>
+      <BsGrid v-if="!customerId" :columns="2">
+        <BsText as="p" size="sm">{{ t('sales.customerlessNotice') }}</BsText>
+        <BsField v-slot="field" :label="(t('payments.method'))">
+          <BsSelect v-model="paymentMethod" :input-id="field.id" :aria-describedby="field.describedby" :label="(t('payments.method'))" :options="[...(['cash','bank_transfer','card','wallet','cheque','other']).map(method => ({ value: method, label: (t(`payments.methods.${method}`)), disabled: false }))]" option-label="label" option-value="value" option-disabled="disabled"/>
+        </BsField>
+        <BsField v-slot="field" :label="(t('payments.reference'))">
+          <BsInput :id="field.id" v-model="paymentReference" :aria-describedby="field.describedby" :maxlength="200"/>
+        </BsField>
+      </BsGrid>
+      <BsStack>
+        <BsInline justify="between">
+          <BsHeading :level="2">{{ t('sales.lines') }}</BsHeading>
+          <BsButton type="button" @click="addLine">{{ t('sales.addLine') }}</BsButton>
+        </BsInline>
+        <BsGrid v-for="(line, index) in lines" :key="line.key" :columns="2">
+          <BsField v-slot="field" :label="(t('sales.lines'))">
+            <BsSelect v-model="line.itemType" :input-id="field.id" :aria-describedby="field.describedby" :label="(t('sales.lines'))" :options="[...(availableLineTypes).map(type => ({ value: type, label: (t(`sales.${type}`)), disabled: false }))]" option-label="label" option-value="value" option-disabled="disabled" @change="changeLineType(line)"/>
+          </BsField>
+          <BsField v-slot="field" :label="(t('sales.item'))">
+            <BsSelect v-model="line.sourceId" :input-id="field.id" :aria-describedby="field.describedby" :label="t('sales.item')" :options="lineCatalog(line)" :option-label="itemLabel" option-value="id" :placeholder="t('sales.selectItem')" :invalid="Boolean(editorError) && !line.sourceId" :aria-required="true" :disabled="catalogPending || saving || issuing" filter virtual/>
+          </BsField>
+          <BsField v-slot="field" :label="(t('sales.quantity'))">
+            <BsInput :id="field.id" v-model.number="line.quantity" :aria-describedby="field.describedby" type="number" :min="0.001" :max="1000000" :step="0.001" required/>
+          </BsField>
+          <BsBox>
+            <BsText as="p" size="xs" tone="muted" emphasis="semibold">{{ t('sales.lineTotal') }}</BsText>
+            <BsText as="p" emphasis="semibold">{{ money(lineAmounts(line).total) }}</BsText>
+            <BsText v-if="lineAmounts(line).discount" as="p" size="xs" tone="muted">{{ t('sales.discount') }}: {{ money(lineAmounts(line).discount) }}</BsText>
+          </BsBox>
+          <BsInline>
+            <BsButton type="button" :disabled="lines.length === 1" @click="removeLine(index)">{{ t('sales.removeLine') }}</BsButton>
+          </BsInline>
+        </BsGrid>
+      </BsStack>
+      <BsBox padding="md">
+        <BsText as="p" size="sm">{{ t('sales.previewNotice') }}</BsText>
+        <BsText as="p" size="sm">{{ t('sales.stockNotice') }}</BsText>
+        <BsText as="p" size="lg" emphasis="semibold">{{ t('sales.total') }}: {{ money(previewTotal) }}</BsText>
+      </BsBox>
+      <template #actions="{ close }">
+        <BsButton type="submit" :disabled="saving || issuing">{{ saving ? t('sales.saving') : t('sales.saveDraft') }}</BsButton>
+        <BsButton v-if="salePage?.canIssue" type="button" variant="primary" :disabled="saving || issuing" @click="issue">{{ issuing ? t('sales.issuing') : t(customerId ? 'sales.issue' : 'sales.checkout') }}</BsButton>
+        <BsButton type="button" :disabled="saving || issuing" @click="close">{{ t('sales.cancel') }}</BsButton>
+      </template>
     </BsRecordActionDialog>
-  </div>
+  </BsStack>
 </template>
