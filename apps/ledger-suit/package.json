@@ -36,7 +36,8 @@
     "@nuxt/eslint": "1.17.0",
     "@building-suit/nuxt-layer": "workspace:*",
     "@building-suit/contracts": "workspace:*",
-    "@building-suit/data-access": "workspace:*"
+    "@building-suit/data-access": "workspace:*",
+    "@building-suit/ui": "workspace:*"
   },
   "devDependencies": {
     "@playwright/test": "1.62.1",

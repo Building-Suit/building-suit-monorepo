@@ -535,7 +535,7 @@ test('shared UI exports are explicit and cover every governed source', () => {
   const components = vueFiles(path.join(workspaceRoot, 'packages/ui/src'))
     .map(file => `./${path.relative(path.join(workspaceRoot, 'packages/ui'), file).replaceAll(path.sep, '/')}`)
   assert.ok(components.every(file => path.basename(file, '.vue').startsWith('Bs')), 'every renderable shared component must have a canonical Bs-prefixed name')
-  assert.deepEqual(Object.values(manifest.exports).sort(), [...components, './src/styles/base.css'].sort())
+  assert.deepEqual(Object.values(manifest.exports).sort(), [...components, './src/styles/base.css', './src/types/accessPresentation.ts'].sort())
 })
 
 
@@ -595,4 +595,38 @@ test('permission editor preserves controlled selection, translated groups and to
   assert.match(html, /checked disabled/)
   controls[0].onNativeChange({ target: { checked: false } })
   assert.deepEqual(toggles, [{ key: 'read', checked: false }])
+})
+
+test('access role editor preserves locked permissions and emits immutable selection updates', async () => {
+  const original = { name: 'Staff', nameAr: 'الفريق', permissions: ['locked'] }
+  const updates = []
+  let toggle
+  const selection = ts.transpileModule(readFileSync(new URL('../../ux/src/permissionSelection.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText
+  const behavior = { exports: {} }
+  new Function('exports', selection)(behavior.exports)
+  const app = vue.createSSRApp({ render: () => vue.h(component('organisms/BsAccessRoleEditor.vue', 'en', { '@building-suit/ux': behavior.exports }), {
+    modelValue: original,
+    'onUpdate:modelValue': value => updates.push(value),
+    state: { visible: true, title: 'Role', dirty: false, pending: false, submitLabel: 'Save', cancelLabel: 'Cancel' },
+    permissionLabel: 'Permissions', permissions: [{ key: 'locked', label: 'Locked', disabled: true }, { key: 'allowed', label: 'Allowed' }],
+  }) })
+  app.component('BsRoleEditorDialog', { inheritAttrs: false, setup: (_, { attrs }) => { toggle = attrs.onToggle; return () => vue.h('section') } })
+  await renderToString(app)
+  toggle('locked', false)
+  assert.equal(updates.length, 0)
+  toggle('allowed', true)
+  assert.deepEqual(updates[0].permissions, ['locked', 'allowed'])
+  assert.deepEqual(original.permissions, ['locked'])
+})
+
+test('both access routes delegate their entire render tree to the same page template', () => {
+  for (const product of ['ledger-suit', 'shop-suit']) {
+    const file = path.join(workspaceRoot, 'apps', product, 'app/pages/team.vue')
+    const { descriptor } = parse(readFileSync(file, 'utf8'))
+    const content = descriptor.template.content.trim()
+    assert.match(content, /^<BsAccessManagementPage\b/)
+    assert.equal((content.match(/<Bs[A-Z]/g) ?? []).length, 1)
+    assert.doesNotMatch(content, /<template|<slot|class=|style=/)
+    assert.match(descriptor.scriptSetup.content, /memberViews/)
+  }
 })

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { BsPermissionItem, BsPermissionRole } from '@building-suit/ux'
-const props = defineProps<{ items: BsPermissionItem[]; roles?: BsPermissionRole[]; label: string; editable?: boolean; selected?: string[]; disabled?: boolean; granted?: (role: string, permission: string) => boolean }>()
+const props = defineProps<{ items: BsPermissionItem[]; roles?: BsPermissionRole[]; label: string; editable?: boolean; selected?: string[]; disabled?: boolean; disabledPermissions?: string[]; granted?: (role: string, permission: string) => boolean }>()
 const emit = defineEmits<{ toggle: [key: string, checked: boolean] }>()
 const columns = computed(() => [{ key: 'permission', header: props.label }, ...(props.editable ? [] : (props.roles ?? []).map(role => ({ key: role.key, header: role.label, align: 'center' as const })))])
 </script>
@@ -8,7 +8,7 @@ const columns = computed(() => [{ key: 'permission', header: props.label }, ...(
   <BsDataTable :value="items" row-key="key" :label="label" row-group-mode="subheader" group-rows-by="section" :columns="columns">
     <template #cell-permission="{ row }">
       <BsFieldLabel v-if="editable">
-        <BsCheckbox :checked="selected?.includes(row.key) ?? false" :disabled="disabled" bare @native-change="emit('toggle', row.key, ($event.target as HTMLInputElement).checked)" />
+        <BsCheckbox :checked="selected?.includes(row.key) ?? false" :disabled="disabled || disabledPermissions?.includes(row.key)" bare @native-change="emit('toggle', row.key, ($event.target as HTMLInputElement).checked)" />
         <BsText as="span" emphasis="semibold">{{ row.label }}</BsText>
       </BsFieldLabel>
       <BsText v-else emphasis="semibold">{{ row.label }}</BsText>

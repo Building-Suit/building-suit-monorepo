@@ -170,7 +170,13 @@
     "./organisms/BsPermissionMatrix": "./src/organisms/BsPermissionMatrix.vue",
     "./organisms/BsRoleEditorDialog": "./src/organisms/BsRoleEditorDialog.vue",
     "./organisms/BsMemberEditorDialog": "./src/organisms/BsMemberEditorDialog.vue",
-    "./organisms/BsInvitationTable": "./src/organisms/BsInvitationTable.vue"
+    "./organisms/BsInvitationTable": "./src/organisms/BsInvitationTable.vue",
+    "./organisms/BsAccessMemberTable": "./src/organisms/BsAccessMemberTable.vue",
+    "./organisms/BsAccessInvitationTable": "./src/organisms/BsAccessInvitationTable.vue",
+    "./access-presentation": "./src/types/accessPresentation.ts",
+    "./templates/BsAccessManagementPage": "./src/templates/BsAccessManagementPage.vue",
+    "./organisms/BsAccessIdentityEditor": "./src/organisms/BsAccessIdentityEditor.vue",
+    "./organisms/BsAccessRoleEditor": "./src/organisms/BsAccessRoleEditor.vue"
   },
   "dependencies": {
     "primevue": "4.5.5",

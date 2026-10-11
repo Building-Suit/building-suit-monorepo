@@ -16,7 +16,8 @@
     "BsAppShell": "packages/ui/src/templates/BsAppShell.vue",
     "BsAuthLayout": "packages/ui/src/templates/BsAuthLayout.vue",
     "BsAppRoot": "packages/ui/src/templates/BsAppRoot.vue",
-    "BsAdministrationShell": "packages/ui/src/templates/BsAdministrationShell.vue"
+    "BsAdministrationShell": "packages/ui/src/templates/BsAdministrationShell.vue",
+    "BsAccessManagementPage": "packages/ui/src/templates/BsAccessManagementPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -1412,46 +1413,21 @@
     {
       "source": "apps/ledger-suit/app/pages/team.vue",
       "kind": "route",
-      "currentSharedTemplates": [],
-      "renderedBsComponents": [
-        "BsAccessTabs",
-        "BsBadge",
-        "BsBox",
-        "BsButton",
-        "BsCard",
-        "BsDialog",
-        "BsEmptyState",
-        "BsFieldLabel",
-        "BsFloatingField",
-        "BsGrid",
-        "BsHeading",
-        "BsIcon",
-        "BsInline",
-        "BsInput",
-        "BsInvitationTable",
-        "BsMemberEditorDialog",
-        "BsPermissionMatrix",
-        "BsRecordActionDialog",
-        "BsRoleEditorDialog",
-        "BsSectionSkeleton",
-        "BsSelect",
-        "BsSelectOption",
-        "BsStack",
-        "BsStatusBadge",
-        "BsTeamTable",
-        "BsText",
-        "BsUsageMeter",
-        "BsVisuallyHidden",
-        "BsWorkflowScope"
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAccessManagementPage.vue"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "renderedBsComponents": [
+        "BsAccessManagementPage"
+      ],
+      "destination": "packages/ui/src/templates/BsAccessManagementPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/ledger-suit/app/pages/team.vue",
       "dependencies": [
         "~/composables/useLedgerTeamMenuView",
         "~~/types/database.types"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "access-management"
     },
     {
       "source": "apps/ledger-suit/app/pages/terms.vue",
@@ -2523,38 +2499,21 @@
     {
       "source": "apps/shop-suit/app/pages/team.vue",
       "kind": "route",
-      "currentSharedTemplates": [],
-      "renderedBsComponents": [
-        "BsAccessTabs",
-        "BsBox",
-        "BsButton",
-        "BsCheckbox",
-        "BsDataTable",
-        "BsField",
-        "BsFieldGroup",
-        "BsHeading",
-        "BsInline",
-        "BsInput",
-        "BsInvitationTable",
-        "BsMemberEditorDialog",
-        "BsPageHeader",
-        "BsPanel",
-        "BsRecordActionDialog",
-        "BsSelect",
-        "BsStack",
-        "BsStatusBadge",
-        "BsTeamTable",
-        "BsText",
-        "BsTextarea"
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAccessManagementPage.vue"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "renderedBsComponents": [
+        "BsAccessManagementPage"
+      ],
+      "destination": "packages/ui/src/templates/BsAccessManagementPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/shop-suit/app/pages/team.vue",
       "dependencies": [
         "~/types/shopCrmRpc",
         "~/types/team"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "access-management"
     },
     {
       "source": "apps/shop-suit/app/pages/terms.vue",

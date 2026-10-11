@@ -1,6 +1,7 @@
 import { readdir, readFile } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import path from 'node:path'
+import ts from 'typescript'
 import { validateSuitTemplateBoundaries } from './suit-template-boundaries.mjs'
 
 const root = new URL('../../', import.meta.url).pathname
@@ -156,7 +157,15 @@ const uiExports = uiPackage.exports || {}
 if (Object.keys(uiExports).some(key => key.includes('*')) || Object.values(uiExports).some(target => typeof target !== 'string' || target.includes('*'))) {
   failures.push('packages/ui/package.json: shared UI exports must be explicit')
 }
-const expectedUiTargets = [...uiFiles, 'packages/ui/src/styles/base.css'].map(file => `./${file.slice('packages/ui/'.length)}`).sort()
+const uiTypeFiles = (await walk('packages/ui/src/types')).filter(file => file.endsWith('.ts'))
+for (const file of uiTypeFiles) {
+  const source = ts.createSourceFile(file, await readFile(path.join(root, file), 'utf8'), ts.ScriptTarget.Latest, true)
+  for (const statement of source.statements) {
+    const allowed = ts.isInterfaceDeclaration(statement) || ts.isTypeAliasDeclaration(statement) || (ts.isImportDeclaration(statement) && statement.importClause?.isTypeOnly)
+    if (!allowed) failures.push(`${file}: presentation contracts must contain only type declarations and type-only imports`)
+  }
+}
+const expectedUiTargets = [...uiFiles, ...uiTypeFiles, 'packages/ui/src/styles/base.css'].map(file => `./${file.slice('packages/ui/'.length)}`).sort()
 const actualUiTargets = Object.values(uiExports).sort()
 for (const target of expectedUiTargets) if (!actualUiTargets.includes(target)) failures.push(`packages/ui/package.json: missing explicit export for ${target}`)
 for (const target of actualUiTargets) if (!expectedUiTargets.includes(target)) failures.push(`packages/ui/package.json: export target is not a governed UI source ${target}`)

@@ -187,3 +187,6 @@ export interface BsPermissionRole { key: string; label: string }
 export interface BsInvitationAction { key: string; label: string; disabled?: boolean; tone?: 'default' | 'secondary' | 'danger' }
 
 export { administrationCapabilitySupported, administrationShellRegistration } from './administration.ts'
+
+export { tabNavigationTarget } from './tabNavigation'
+export { permissionSelection } from './permissionSelection'
