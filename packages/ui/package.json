@@ -306,7 +306,9 @@
     "./types/workspaceShellPresentation": "./src/types/workspaceShellPresentation.ts",
     "./types/financialSystemMapCopy": "./src/types/financialSystemMapCopy.ts",
     "./types/workspaceOnboardingCopy": "./src/types/workspaceOnboardingCopy.ts",
-    "./utils/presentation": "./src/utils/presentation.ts"
+    "./utils/presentation": "./src/utils/presentation.ts",
+    "./molecules/BsChangelogCard": "./src/molecules/BsChangelogCard.vue",
+    "./organisms/BsChangelogTimeline": "./src/organisms/BsChangelogTimeline.vue"
   },
   "dependencies": {
     "primevue": "4.5.5",

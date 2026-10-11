@@ -140,6 +140,9 @@ importers:
 
   apps/building-suit-docs:
     dependencies:
+      '@building-suit/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@building-suit/nuxt-layer':
         specifier: workspace:*
         version: link:../../packages/nuxt-layer

@@ -272,6 +272,17 @@
       "adapterBoundary": "App-supplied registry, context navigation, selection, translated labels and intent handlers; no product queries or authorization",
       "task": "BS-SA-SHELL-001",
       "migrationStatus": "verified-local: canonical template ownership and browser acceptance complete"
+    },
+    {
+      "family": "changelog",
+      "owner": "packages/ui",
+      "components": [
+        "BsChangelogCard",
+        "BsChangelogTimeline"
+      ],
+      "adapterBoundary": "Authorized, curated bilingual feed and authoritative serverNow; publishing and visibility authorization remain service-owned",
+      "task": "BS-CHANGELOG-VERSION-001",
+      "migrationStatus": "shared-owner-available"
     }
   ]
 }

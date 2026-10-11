@@ -1,4 +1,22 @@
 <script setup lang="ts">
+import type { ChangelogFeed, ChangelogCopy } from '@building-suit/contracts'
+const changelogState = ref<'ready' | 'loading' | 'error' | 'denied'>('ready')
+const changelogFeed: ChangelogFeed = {
+  serverNow: '2026-10-10T12:00:00Z',
+  suits: ['shop', 'ledger', 'inventory', 'automation', 'future'].map(id => ({ id: `${id}-suit`, name: { en: `${id[0]!.toUpperCase()}${id.slice(1)} Suit`, ar: ({ shop: 'شوب سوت', ledger: 'ليدجر سوت', inventory: 'إنفنتوري سوت', automation: 'أوتوميشن سوت', future: 'سوت مستقبلي' } as Record<string, string>)[id]! } })),
+  entries: ['shop', 'ledger', 'inventory', 'automation', 'future'].map((id, index) => ({
+    id: `example-${id}`, suit: `${id}-suit`, visibility: 'public' as const, publishedAt: '2026-10-09T12:00:00Z',
+    title: { en: 'Example workspace update', ar: 'مثال لتحديث مساحة العمل' },
+    summary: { en: 'Catalogue demonstration only.', ar: 'عرض توضيحي للمكتبة فقط.' },
+    details: { en: 'Curated release content supplied by the owning Suit. This example is not an actual release.', ar: 'محتوى تحديث من التطبيق المسؤول. هذا المثال ليس إصداراً فعلياً.' }, links: [],
+    ...(index % 2 === 0 ? { status: 'released' as const, version: '1.0.0', releasedAt: '2026-10-09T10:00:00Z' } : { status: 'coming-soon' as const, targetVersion: '1.1.0-beta.1' }),
+  })),
+}
+const changelogCopy = computed<ChangelogCopy>(() => isArabic.value ? {
+  timeline: 'سجل التحديثات', suit: 'التطبيق', status: 'حالة الإصدار', allSuits: 'كل التطبيقات', allStatuses: 'كل الحالات', released: 'تم الإصدار', comingSoon: 'قريباً', targetVersion: 'الإصدار المستهدف', new: 'جديد', published: 'تاريخ النشر', releasedAt: 'تاريخ الإصدار', empty: 'لا توجد تحديثات', loading: 'جار تحميل التحديثات', error: 'تعذر تحميل التحديثات', denied: 'الوصول غير مسموح', retry: 'إعادة المحاولة',
+} : {
+  timeline: 'Changelog', suit: 'Suit', status: 'Release status', allSuits: 'All Suits', allStatuses: 'All statuses', released: 'Released', comingSoon: 'Coming Soon', targetVersion: 'Target version', new: 'New', published: 'Published', releasedAt: 'Released', empty: 'No updates', loading: 'Loading updates', error: 'Unable to load updates', denied: 'Access denied', retry: 'Retry',
+})
 const shellSuit = ref('alpha')
 const shellContext = ref('overview')
 const shellState = ref<'normal' | 'loading' | 'empty' | 'overflow'>('normal')
@@ -117,6 +135,11 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
     />
 
     <BsContentSection :title="isArabic ? 'قوالب الصفحات' : 'Page templates'"><BsLink to="/templates/access?suit=ledger">Ledger access template</BsLink><BsLink to="/templates/access?suit=shop">Shop access template</BsLink></BsContentSection>
+    <BsContentSection id="changelog" :title="isArabic ? 'سجل التحديثات' : 'Changelog'">
+      <BsInline><BsButton v-for="state in (['ready', 'loading', 'error', 'denied'] as const)" :key="state" :aria-pressed="changelogState === state" @click="changelogState = state">{{ state }}</BsButton></BsInline>
+      <BsChangelogTimeline :feed="changelogFeed" :locale="isArabic ? 'ar' : 'en'" :copy="changelogCopy" :state="changelogState" @retry="changelogState = 'ready'" />
+    </BsContentSection>
+
     <BsContentSection id="administration-shell" :title="isArabic ? 'هيكل الإدارة' : 'Administration shell'" :description="isArabic ? 'أمثلة التنقل والحالات من بيانات التطبيق.' : 'App-owned descriptors, controlled selection and normal/loading/empty/overflow examples.'">
       <BsInline>
         <BsButton v-for="state in (['normal', 'loading', 'empty', 'overflow'] as const)" :key="state" :aria-pressed="shellState === state" @click="shellState = state">{{ state }}</BsButton>
