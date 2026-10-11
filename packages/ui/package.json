@@ -268,7 +268,14 @@
     "./types/billingPresentation": "./src/types/billingPresentation.ts",
     "./templates/BsSubscriptionCheckoutPage": "./src/templates/BsSubscriptionCheckoutPage.vue",
     "./organisms/BsWorkspaceCreationDialog": "./src/organisms/BsWorkspaceCreationDialog.vue",
-    "./types/workspaceCreationPresentation": "./src/types/workspaceCreationPresentation.ts"
+    "./types/workspaceCreationPresentation": "./src/types/workspaceCreationPresentation.ts",
+    "./templates/BsPlatformAdministrationPage": "./src/templates/BsPlatformAdministrationPage.vue",
+    "./organisms/BsAdminResourceWorkspace": "./src/organisms/BsAdminResourceWorkspace.vue",
+    "./types/platformAdministrationPresentation": "./src/types/platformAdministrationPresentation.ts",
+    "./organisms/BsAdminPlanDialogs": "./src/organisms/BsAdminPlanDialogs.vue",
+    "./organisms/BsAdminAuditTable": "./src/organisms/BsAdminAuditTable.vue",
+    "./organisms/BsAdminCommerceDialogs": "./src/organisms/BsAdminCommerceDialogs.vue",
+    "./organisms/BsAdminCommerceWorkspace": "./src/organisms/BsAdminCommerceWorkspace.vue"
   },
   "dependencies": {
     "primevue": "4.5.5",

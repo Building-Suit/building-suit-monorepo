@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { BsPlatformAdministrationCopy, BsAdminCommerceCopy, BsAdminCommerceView, BsAdminSupportForm, BsAdminReceiptReviewForm, BsAdminPriceForm, BsAdminPaymentConfigurationForm, BsAdminAuditRow } from '@building-suit/ui/types/platformAdministrationPresentation'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import type { PlatformBillingConfiguration, PlatformBillingQueueItem } from '~/types/billing'
 import type { PlatformAdminEvent, PlatformAdminSession, PlatformDashboard, PlatformPage, PlatformShopDetail, PlatformShopRow } from '~/types/platformAdmin'
@@ -48,17 +49,8 @@ const priceOverride = reactive({ shopId: '', shopName: '', amount: 0, currency: 
 const { visible: actionOpen, pending: actionPending, dirty: actionDirty, open: showAction, complete: completeAction } = useRecordAction(() => action)
 const { dirty: billingReviewDirty } = useRecordAction(() => billingReview, billingReviewOpen)
 const { dirty: priceOverrideDirty } = useRecordAction(() => priceOverride, priceOverrideOpen)
-let searchTimer: ReturnType<typeof setTimeout> | undefined
-
-watch(search, value => {
-  if (searchTimer) clearTimeout(searchTimer)
-  searchTimer = setTimeout(() => {
-    debouncedSearch.value = value.trim()
-    page.value = 1
-  }, 300)
-})
+const searchInteraction = useDebouncedChange(search, value => { debouncedSearch.value = value.trim(); page.value = 1 }, 300)
 watch(status, () => { page.value = 1 })
-onBeforeUnmount(() => { if (searchTimer) clearTimeout(searchTimer) })
 
 async function callRead<T>(resource: 'dashboard' | 'shops' | 'shop' | 'audit', options: Partial<ShopRpcDatabase['public']['Functions']['platform_admin_read']['Args']> = {}) {
   const { data, error } = await rpc.rpc('platform_admin_read', { p_resource: resource, ...options })
@@ -84,6 +76,7 @@ const { data: session, pending: sessionPending, refresh: refreshSession } = awai
 )
 
 watch(userId, () => {
+  searchInteraction.cancel()
   session.value = null
   selectedShopId.value = null
   actionOpen.value = false
@@ -389,7 +382,6 @@ function handleShopPage(event: { page: number }) { page.value = event.page + 1 }
 function handleAuditPage(event: { page: number }) { auditPage.value = event.page + 1 }
 function handleBillingPage(event: { page: number }) { billingPage.value = event.page + 1 }
 function handleBillingAuditPage(event: { page: number }) { billingAuditPage.value = event.page + 1 }
-function handleDetailVisibility(value: boolean) { if (!value) selectedShopId.value = null }
 async function refreshPlanConsumers() {
   await Promise.all([refreshDashboard(), refreshShops(), refreshDetail(), refreshAudit(), refreshBillingQueue(), refreshBillingSummary(), refreshBillingAudit()])
 }
@@ -432,518 +424,72 @@ const shopControls = reactive(await usePlatformPlanAdmin(reactive({ mode: 'shop'
 
 const configurationAction = useRecordAction(() => billingConfiguration)
 const { visible: configurationActionOpen, dirty: configurationActionDirty } = configurationAction
-</script>
 
+const catalogPresentation = useShopPlatformPlanPresentation(catalogControls)
+const tenantPresentation = useShopPlatformPlanPresentation(shopControls)
+const catalogTerms = catalogPresentation.terms
+const catalogAvailability = catalogPresentation.availability
+const catalogChange = catalogPresentation.change
+const catalogPrice = catalogPresentation.price
+const tenantTerms = tenantPresentation.terms
+const tenantAvailability = tenantPresentation.availability
+const tenantChange = tenantPresentation.change
+const tenantPrice = tenantPresentation.price
+const planCopy = catalogPresentation.copy
+const supportForm = computed<BsAdminSupportForm>({ get: () => ({ reason: action.reason, days: action.days, reference: action.billingReference, billingNote: action.billingNote, note: action.note }), set: value => Object.assign(action, { reason: value.reason, days: value.days, billingReference: value.reference, billingNote: value.billingNote, note: value.note }) })
+const receiptForm = computed<BsAdminReceiptReviewForm>({ get: () => ({ reason: billingReview.reason, amount: billingReview.receivedAmount, reference: billingReview.receivedReference, date: billingReview.receivedDate, mismatchReason: billingReview.amountOverrideReason }), set: value => Object.assign(billingReview, { reason: value.reason, receivedAmount: value.amount, receivedReference: value.reference, receivedDate: value.date, amountOverrideReason: value.mismatchReason }) })
+const priceForm = computed<BsAdminPriceForm>({ get: () => ({ amount: priceOverride.amount, effectiveFrom: priceOverride.effectiveFrom, expiresAt: priceOverride.expiresAt, reason: priceOverride.reason }), set: value => Object.assign(priceOverride, value) })
+const configurationForm = computed<BsAdminPaymentConfigurationForm>({ get: () => ({ recipient: billingConfiguration.recipientAlias, paymentLink: billingConfiguration.paymentLink, qrImageUrl: billingConfiguration.qrImageUrl, instructionsEn: billingConfiguration.instructionsEn, instructionsAr: billingConfiguration.instructionsAr, reason: billingConfiguration.reason }), set: value => Object.assign(billingConfiguration, { recipientAlias: value.recipient, paymentLink: value.paymentLink, qrImageUrl: value.qrImageUrl, instructionsEn: value.instructionsEn, instructionsAr: value.instructionsAr, reason: value.reason }) })
+const presentationCopy = computed<BsPlatformAdministrationCopy>(() => ({ title: copy.value.title, subtitle: copy.value.subtitle, saved: copy.value.commandSucceeded, view: copy.value.overview, search: copy.value.search, filter: copy.value.status, apply: copy.value.save, clear: copy.value.cancel, refresh: copy.value.retry, loading: ui('loading'), empty: copy.value.noRows, scoped: copy.value.controls, memberships: copy.value.members, review: copy.value.review, manage: copy.value.controls, previous: '', next: '', action: copy.value.action, targetPlan: copy.value.requestedPlan, currentPlan: copy.value.currentPlan, inspect: copy.value.open, openReceipt: copy.value.open, reason: copy.value.reason, context: copy.value.note, cancel: copy.value.cancel, submit: copy.value.save }))
+const commerceCopy = computed<BsAdminCommerceCopy>(() => ({
+  overview: copy.value.overview, plans: copy.value.plans, audit: copy.value.audit, billingQueue: copy.value.billingQueue, denied: copy.value.accessDenied, accessHint: copy.value.accessHint, retry: copy.value.retry, loading: ui('loading'), loadFailed: copy.value.loadFailed,
+  tenants: copy.value.shops, tenant: copy.value.shop, owner: copy.value.owner, access: copy.value.access, plan: copy.value.plan, members: copy.value.members, search: copy.value.search, status: copy.value.status, open: copy.value.open, noRows: copy.value.noRows, recentEvents: copy.value.recentEvents, noEvents: copy.value.noEvents, action: copy.value.action, reason: copy.value.reason, actor: copy.value.actor, occurred: copy.value.occurred,
+  currentPlan: copy.value.currentPlan, requestedPlan: copy.value.requestedPlan, listPrice: copy.value.listPrice, effectivePrice: copy.value.effectivePrice, paid: copy.value.paidAmount, blockers: copy.value.blockers, negotiated: copy.value.negotiated, reference: copy.value.transferReference, date: copy.value.transferDate, review: copy.value.review, startReview: copy.value.markUnderReview, approve: copy.value.approve, reject: copy.value.reject, overridePrice: copy.value.priceOverride, emptyBilling: copy.value.emptyBilling,
+  configuration: copy.value.configuration, configurationHelp: copy.value.configurationHelp, recipient: copy.value.recipientAlias, paymentLink: copy.value.paymentLink, qrImageUrl: copy.value.qrImageUrl, instructionsEn: copy.value.instructionsEn, instructionsAr: copy.value.instructionsAr, save: copy.value.save, cancel: copy.value.cancel, usage: copy.value.usage, controls: copy.value.controls, billingHistory: copy.value.billing, sensitive: copy.value.sensitive, notes: copy.value.supportNotes, emptySensitive: copy.value.emptySensitive, emptyNotes: copy.value.emptyNotes,
+  days: copy.value.days, billingReference: copy.value.billingReference, billingNote: copy.value.billingNote, note: copy.value.note, receivedAmount: copy.value.receivedAmount, receivedReference: copy.value.receivedReference, receivedDate: copy.value.receivedDate, mismatchReason: copy.value.amountOverrideReason, overrideAmount: copy.value.overrideAmount, effectiveFrom: copy.value.effectiveFrom, expiresAt: copy.value.expiresAt,
+}))
+function auditRows(items: PlatformAdminEvent[] | undefined, translated = false): BsAdminAuditRow[] { return (items ?? []).map(event => ({ id: event.id, tenant: event.shopName, action: translated ? actionLabel(event.action) : event.action, reason: event.reason, actor: event.actorUserId, occurred: date(event.occurredAt) })) }
+const commerceView = computed<BsAdminCommerceView>(() => {
+  const currentDetail = detail.value
+  const subscription = shopControls.shopPlan?.subscription
+  const pendingChange = subscription?.pendingPlanChange
+  return {
+    selected: view.value, role: session.value ? (session.value.role === 'operator' ? copy.value.operator : copy.value.observer) : '', loading: sessionPending.value, denied: !session.value, error: showDevelopmentErrors ? sessionError.value : '', canMutate: Boolean(session.value?.canMutate), overviewPending: dashboardPending.value, overviewError: dashboardError.value || shopsError.value ? copy.value.loadFailed : null,
+    metrics: [['shops', 'shops'], ['activeShops', 'activeShops'], ['suspendedShops', 'suspendedShops'], ['locations', 'locations'], ['members', 'members'], ['activeTrials', 'activeTrials'], ['trialsSoon', 'trialsExpiringSoon'], ['activeSubscriptions', 'activeSubscriptions'], ['readOnly', 'readOnlySubscriptions']].map(([label, key]) => ({ label: copy.value[label as keyof typeof copy.value] as string, value: String(dashboard.value?.[key as keyof PlatformDashboard] ?? '—') })).concat([{ label: copy.value.pendingBilling, value: String(billingSummary.value?.open ?? '—') }]),
+    search: search.value, status: status.value, statusChoices: [{ value: '', label: copy.value.allStates }, { value: 'active', label: copy.value.activeShops }, { value: 'suspended', label: copy.value.suspendedShops }, { value: 'read_only', label: copy.value.readOnly }],
+    tenants: { rows: (shops.value?.items ?? []).map(row => ({ id: row.id, name: row.name, owner: row.ownerName || '—', email: row.ownerEmail || '—', status: row.accessState, plan: row.planSlug || '—', members: String(row.memberCount) })), loading: shopsPending.value, error: shopsError.value ? copy.value.loadFailed : null, total: shops.value?.total ?? 0, first: (page.value - 1) * 20 },
+    recent: { rows: auditRows(dashboard.value?.recentEvents, true), loading: dashboardPending.value, error: null, total: 0, first: 0 }, audit: { rows: auditRows(audit.value?.items, true), loading: auditPending.value, error: auditError.value ? copy.value.loadFailed : null, total: audit.value?.total ?? 0, first: (auditPage.value - 1) * 25 }, plans: catalogPresentation.view.value,
+    billing: { rows: (billingQueue.value?.items ?? []).map(item => ({ id: item.id, tenant: item.shopName, status: item.status, currentPlan: item.currentPlanName, requestedPlan: `${item.requestedPlanName} · ${item.billingInterval}`, listPrice: `${item.listPriceAmount} ${item.currency}`, effectivePrice: `${item.effectivePriceAmount} ${item.currency}`, negotiated: item.priceSource === 'override', paid: `${item.paidAmount} ${item.currency}`, blockers: item.usageBlockers.length ? usageBlockersLabel(item.usageBlockers) : copy.value.noBlockers, reference: item.transferReference, date: date(item.transferDate), canStart: item.status === 'submitted', canReview: ['submitted', 'under_review'].includes(item.status), approveDisabled: item.usageBlockers.length > 0 })), loading: billingQueuePending.value, error: billingQueueError.value ? copy.value.loadFailed : null, total: billingQueue.value?.total ?? 0, first: (billingPage.value - 1) * 25, status: billingStatus.value, statusChoices: [{ value: '', label: copy.value.allStates }, ...(['submitted', 'under_review', 'approved', 'rejected'] as const).map(value => ({ value, label: value === 'under_review' ? copy.value.underReview : copy.value[value] }))] },
+    billingAudit: { rows: auditRows(billingAudit.value?.items), loading: billingAuditPending.value, error: billingAuditError.value ? copy.value.loadFailed : null, total: billingAudit.value?.total ?? 0, first: (billingAuditPage.value - 1) * 25 },
+    detail: { visible: Boolean(selectedShopId.value), title: currentDetail?.shop.name || copy.value.shop, pending: detailPending.value, error: detailError.value ? copy.value.loadFailed : null, available: !!currentDetail,
+      metrics: [{ label: copy.value.owner, value: currentDetail?.owner?.name || currentDetail?.owner?.email || '—' }, { label: copy.value.access, value: '', status: currentDetail ? detailAccessState(currentDetail) : undefined }, { label: copy.value.plan, value: currentDetail?.subscription?.planName || '—' }, { label: copy.value.members, value: String(currentDetail?.usage.members ?? 0) }], trial: `${copy.value.trialStart}: ${date(currentDetail?.subscription?.trialStartAt)} · ${copy.value.trialEnd}: ${date(currentDetail?.subscription?.trialEndAt)} · ${copy.value.periodEnd}: ${date(currentDetail?.subscription?.periodEnd)}`, usage: `${copy.value.locations}: ${currentDetail?.usage.locations ?? 0} · ${copy.value.members}: ${currentDetail?.usage.members ?? 0} · ${isArabic.value ? 'المنتجات' : 'Products'}: ${currentDetail?.usage.products ?? 0} · ${isArabic.value ? 'الخدمات' : 'Services'}: ${currentDetail?.usage.services ?? 0}`, limits: JSON.stringify(currentDetail?.usage.limits || {}, null, 2),
+      subscriptionPending: shopControls.shopPending, subscriptionError: shopControls.shopError ? shopControls.copy.loadFailed : null, subscriptionAvailable: !!subscription, subscriptionMetrics: [{ label: shopControls.copy.currentPlan, value: subscription?.planName ?? '' }, { label: shopControls.copy.access, value: '', status: subscription?.accessState }, { label: shopControls.copy.effectivePrice, value: subscription ? `${shopControls.money(subscription.effectivePriceAmount, subscription.currency)}${subscription.priceSource === 'override' ? ` (${shopControls.copy.negotiatedPrice})` : ''}` : '' }, { label: shopControls.copy.pendingBilling, value: String(subscription?.pendingBillingRequests ?? 0) }], resources: (subscription?.usage.resources ?? []).map(item => ({ id: item.resource, label: shopControls.copy[item.resource as keyof typeof shopControls.copy], value: `${item.used} / ${shopControls.limit(item.limit)}${item.overLimit ? ` · +${item.used - (item.limit || 0)} ${shopControls.copy.excess}` : ''}` })), pendingChange: pendingChange ? `${pendingChange.targetPlanName} · ${shopControls.date(pendingChange.effectiveAt)} · ${pendingChange.reason}` : shopControls.copy.noPendingChange, canRemovePrice: !!subscription?.priceOverrideId, controls: (Object.keys(copy.value.actions) as ActionKey[]).map(value => ({ value, label: actionLabel(value) })),
+      billing: (currentDetail?.billingHistory ?? []).map(item => ({ id: item.id, action: item.kind, status: item.status, reference: item.reference || '', occurred: date(item.submittedAt) })), sensitive: (currentDetail?.sensitiveEvents ?? []).map(item => ({ id: item.id, status: item.type, action: item.action, reason: item.reason || '', occurred: date(item.occurredAt) })), notes: (currentDetail?.supportNotes ?? []).map(item => ({ id: item.id, note: item.note, detail: `${item.reason} · ${date(item.createdAt)}` })),
+    }, tenantPlanDialog: tenantPresentation.dialog.value,
+    supportDialog: { visible: actionOpen.value, title: actionLabel(action.key), dirty: actionDirty.value, pending: actionPending.value, error: commandError.value, showDays: action.key === 'extend_trial', showBilling: action.key === 'correct_billing_metadata', showNote: action.key === 'add_support_note' },
+    receiptDialog: { visible: billingReviewOpen.value, title: billingReview.action === 'approve' ? copy.value.approve : billingReview.action === 'reject' ? copy.value.reject : copy.value.markUnderReview, dirty: billingReviewDirty.value, pending: billingReviewPending.value, error: billingReviewError.value, approving: billingReview.action === 'approve', mismatched: Boolean(billingReview.submission && (billingReview.receivedAmount !== billingReview.submission.effectivePriceAmount || billingReview.submission.paidAmount !== billingReview.submission.effectivePriceAmount)), maxDate: new Date().toISOString().slice(0, 10) }, priceDialog: { visible: priceOverrideOpen.value, title: `${copy.value.priceOverride} · ${priceOverride.shopName}`, dirty: priceOverrideDirty.value, pending: priceOverridePending.value, error: priceOverrideError.value }, configuration: { visible: configurationActionOpen.value, dirty: configurationActionDirty.value, pending: configurationPending.value, error: configurationError.value, loadError: billingConfigurationLoadError.value ? copy.value.loadFailed : null },
+  }
+})
+async function retryPresentation(key: 'session' | 'overview' | 'tenants' | 'catalog' | 'audit' | 'billing' | 'billingAudit' | 'configuration' | 'detail' | 'subscription') {
+  if (key === 'session') await refreshSession()
+  else if (key === 'overview') await Promise.all([refreshDashboard(), refreshShops()])
+  else if (key === 'tenants') await refreshShops()
+  else if (key === 'catalog') await catalogControls.refreshCatalog()
+  else if (key === 'audit') await refreshAudit()
+  else if (key === 'billing') await refreshBillingQueue()
+  else if (key === 'billingAudit') await refreshBillingAudit()
+  else if (key === 'configuration') await refreshBillingConfiguration()
+  else if (key === 'detail') await refreshDetail()
+  else await shopControls.refreshShop()
+}
+function pagePresentation(key: 'tenants' | 'audit' | 'billing' | 'billingAudit', event: { page: number }) { if (key === 'tenants') handleShopPage(event); else if (key === 'audit') handleAuditPage(event); else if (key === 'billing') handleBillingPage(event); else handleBillingAuditPage(event) }
+function closeDialog(key: 'support' | 'receipt' | 'price' | 'configuration') { if (key === 'support') actionOpen.value = false; else if (key === 'receipt') billingReviewOpen.value = false; else if (key === 'price') priceOverrideOpen.value = false; else configurationActionOpen.value = false }
+function reviewById(id: string, actionKey: 'mark_under_review' | 'approve' | 'reject') { const item = billingQueue.value?.items.find(item => item.id === id); if (item) openBillingReview(item, actionKey) }
+function priceById(id: string) { const item = billingQueue.value?.items.find(item => item.id === id); if (item) openPriceOverride(item) }
+function supportByKey(key: string) { if (Object.hasOwn(copy.value.actions, key)) openAction(key as ActionKey) }
+function selectBillingStatus(value: string) { if (['', 'submitted', 'under_review', 'approved', 'rejected'].includes(value)) billingStatus.value = value as typeof billingStatus.value }
+async function planCommand(scope: 'catalog' | 'tenant', command: Parameters<typeof catalogPresentation.command>[0], id?: string) { await (scope === 'catalog' ? catalogPresentation : tenantPresentation).command(command, id) }
+</script>
 <template>
-  <BsStack>
-    <BsPageHeader  :title="copy.title" :subtitle="copy.subtitle">
-      <template #actions>
-        <BsStatusBadge v-if="session" :status="session.role === 'operator' ? 'active' : 'read_only'"/>
-      </template>
-    </BsPageHeader>
-    <BsGrid v-if="sessionPending" role="status" :aria-label="ui('loading')" :columns="4">
-      <BsSkeleton v-for="item in 8" :key="item"/>
-    </BsGrid>
-    <BsBox v-else-if="!session" role="alert" as="section" padding="md">
-      <BsHeading :level="2">{{ copy.accessDenied }}</BsHeading>
-      <BsText as="p" size="sm">{{ copy.accessHint }}</BsText>
-      <BsButton @click="refreshSession()">{{ copy.retry }}</BsButton>
-      <BsText v-if="sessionError && showDevelopmentErrors" as="p" size="xs">{{ sessionError }}</BsText>
-    </BsBox>
-    <template v-else>
-      <BsInline role="group" :aria-label="copy.title">
-        <BsButton variant="chip" :aria-pressed="view === 'overview'" @click="view = 'overview'">{{ copy.overview }}</BsButton>
-        <BsButton variant="chip" :aria-pressed="view === 'plans'" @click="view = 'plans'">{{ copy.plans }}</BsButton>
-        <BsButton variant="chip" :aria-pressed="view === 'billing'" @click="view = 'billing'">{{ copy.billingQueue }}</BsButton>
-        <BsButton variant="chip" :aria-pressed="view === 'audit'" @click="view = 'audit'">{{ copy.audit }}</BsButton>
-      </BsInline>
-      <template v-if="view === 'overview'">
-        <BsText v-if="dashboardError || shopsError" role="alert" as="p">{{ copy.loadFailed }} <BsButton variant="link" @click="refreshDashboard(); refreshShops()">{{ copy.retry }}</BsButton>
-        </BsText>
-        <BsGrid :aria-busy="dashboardPending" :columns="2">
-          <BsKpiCard :title="copy.shops">{{ dashboard?.shops ?? '—' }}</BsKpiCard>
-          <BsKpiCard :title="copy.activeShops">{{ dashboard?.activeShops ?? '—' }}</BsKpiCard>
-          <BsKpiCard :title="copy.suspendedShops">{{ dashboard?.suspendedShops ?? '—' }}</BsKpiCard>
-          <BsKpiCard :title="copy.locations">{{ dashboard?.locations ?? '—' }}</BsKpiCard>
-          <BsKpiCard :title="copy.members">{{ dashboard?.members ?? '—' }}</BsKpiCard>
-          <BsKpiCard :title="copy.activeTrials">{{ dashboard?.activeTrials ?? '—' }}</BsKpiCard>
-          <BsKpiCard :title="copy.trialsSoon">{{ dashboard?.trialsExpiringSoon ?? '—' }}</BsKpiCard>
-          <BsKpiCard :title="copy.activeSubscriptions">{{ dashboard?.activeSubscriptions ?? '—' }}</BsKpiCard>
-          <BsKpiCard :title="copy.readOnly">{{ dashboard?.readOnlySubscriptions ?? '—' }}</BsKpiCard>
-          <BsKpiCard :title="copy.pendingBilling">{{ billingSummary?.open ?? '—' }}</BsKpiCard>
-        </BsGrid>
-        <BsPanel padding="md">
-          <BsStack>
-            <BsInput v-model="search" type="search" :placeholder="copy.search" :aria-label="copy.search"/>
-            <BsSelect v-model="status" :label="copy.status" :options="[{ value: '', label: (copy.allStates), disabled: false }, { value: 'active', label: (copy.activeShops), disabled: false }, { value: 'suspended', label: (copy.suspendedShops), disabled: false }, { value: 'read_only', label: (copy.readOnly), disabled: false }]" option-label="label" option-value="value" option-disabled="disabled"/>
-          </BsStack>
-          <BsDataTable :value="shops?.items ?? []" :loading="shopsPending" :error="shopsError ? copy.loadFailed : null" :label="copy.shops" data-key="id" lazy paginator :rows="20" :first="(page - 1) * 20" :total-records="shops?.total ?? 0" :always-show-paginator="false" :columns="[{ key: 'column0', header: (copy.shop) }, { key: 'column1', header: (copy.owner) }, { key: 'column2', header: (copy.access) }, { key: 'column3', header: (copy.plan) }, { key: 'column4', header: (copy.members) }, { key: 'column5', header: '' }]" @page="handleShopPage" @retry="refreshShops()">
-            <template #cell-column0="{ row: row }">
-              <BsText as="p" emphasis="semibold">{{ row.name }}</BsText>
-              <BsText as="p" size="xs" tone="muted">{{ row.id }}</BsText>
-            </template>
-            <template #cell-column1="{ row: row }">
-              <BsText as="p">{{ row.ownerName || '—' }}</BsText>
-              <BsText as="p" size="xs" tone="muted">{{ row.ownerEmail || '—' }}</BsText>
-            </template>
-            <template #cell-column2="{ row: row }">
-              <BsStatusBadge :status="row.accessState"/>
-            </template>
-            <template #cell-column3="{ row: row }">{{ row.planSlug || '—' }}</template>
-            <template #cell-column4="{ row: row }">{{ row.memberCount }}</template>
-            <template #cell-column5="{ row: row }">
-              <BsButton variant="link" @click="selectedShopId = row.id">{{ copy.open }}</BsButton>
-            </template>
-            <template #empty>
-              <BsText as="p" size="sm" tone="muted">{{ copy.noRows }}</BsText>
-            </template>
-          </BsDataTable>
-        </BsPanel>
-        <BsPanel padding="md">
-          <BsHeading :level="2">{{ copy.recentEvents }}</BsHeading>
-          <BsBox scroll="x">
-            <BsDataTable :value="dashboard?.recentEvents ?? []" :loading="dashboardPending" data-key="id" :label="copy.recentEvents" :columns="[{ key: 'shopName', header: (copy.shop), field: 'shopName' }, { key: 'action', header: (copy.action), field: 'action' }, { key: 'reason', header: (copy.reason), field: 'reason' }, { key: 'column3', header: (copy.occurred) }]">
-              <template #cell-action="{ row: event }">{{ actionLabel(event.action) || event.action }}</template>
-              <template #cell-column3="{ row: event }">{{ date(event.occurredAt) }}</template>
-              <template #empty>
-                <BsText as="p" size="sm" tone="muted">{{ copy.noEvents }}</BsText>
-              </template>
-            </BsDataTable>
-          </BsBox>
-        </BsPanel>
-      </template>
-      <template v-else-if="view === 'plans'">
-        <BsPanel padding="md">
-          <BsBox padding="md">
-            <BsHeading :level="2">{{ catalogControls.copy.catalog }}</BsHeading>
-            <BsText as="p" size="sm" tone="muted">{{ catalogControls.copy.catalogHelp }}</BsText>
-            <BsText v-if="!session.canMutate" as="p" size="sm" emphasis="semibold">{{ catalogControls.copy.observer }}</BsText>
-          </BsBox>
-          <BsDataTable :value="catalogControls.catalog?.items ?? []" :loading="catalogControls.catalogPending" :error="catalogControls.catalogError ? catalogControls.copy.loadFailed : null" :label="catalogControls.copy.catalog" data-key="id" :columns="[{ key: 'column0', header: (catalogControls.copy.plan) }, { key: 'column1', header: (catalogControls.copy.state) }, { key: 'column2', header: (catalogControls.copy.price) }, { key: 'column3', header: (catalogControls.copy.limits) }, { key: 'column4', header: (catalogControls.copy.version) }, { key: 'subscriptionCount', header: (catalogControls.copy.subscriptions), field: 'subscriptionCount' }, { key: 'column6', header: (catalogControls.copy.actions), hidden: !(session.canMutate) }]" @retry="catalogControls.refreshCatalog()">
-            <template #cell-column0="{ row: plan }">
-              <BsText as="p" emphasis="semibold">{{ plan.name }}</BsText>
-              <BsText as="p" size="xs" tone="muted">{{ plan.slug }}</BsText>
-            </template>
-            <template #cell-column1="{ row: plan }">
-              <BsText as="p">{{ plan.isActive ? catalogControls.copy.active : catalogControls.copy.inactive }} · {{ plan.isPublic ? catalogControls.copy.public : catalogControls.copy.private }}</BsText>
-              <BsText as="p" size="xs" tone="muted">{{ plan.isPurchasable ? catalogControls.copy.purchasable : catalogControls.copy.unavailable }}<BsText v-if="plan.isComingSoon" as="span"> · {{ catalogControls.copy.comingSoon }}</BsText>
-              </BsText>
-            </template>
-            <template #cell-column2="{ row: plan }">{{ catalogControls.money(plan.priceAmount, plan.currency) }} / {{ plan.billingInterval }}</template>
-            <template #cell-column3="{ row: plan }">
-              <BsList>
-                <BsListItem v-for="key in catalogControls.resourceKeys" :key="key">{{ catalogControls.copy[key] }}: {{ catalogControls.limit(plan.resourceLimits[key]) }}</BsListItem>
-              </BsList>
-            </template>
-            <template #cell-column4="{ row: plan }">
-              <BsText as="p">v{{ plan.catalogVersion }} · {{ catalogControls.date(plan.effectiveFrom) }}</BsText>
-              <BsText v-if="plan.nextTerms" as="p" size="xs" tone="warning" emphasis="semibold">{{ catalogControls.copy.nextVersion }} v{{ plan.nextTerms.version }} · {{ catalogControls.date(plan.nextTerms.effectiveFrom) }}</BsText>
-            </template>
-            <template #cell-column6="{ row: plan }">
-              <BsInline>
-                <BsButton @click="catalogControls.openTerms(plan)">{{ catalogControls.copy.editTerms }}</BsButton>
-                <BsButton @click="catalogControls.openAvailability(plan)">{{ catalogControls.copy.availability }}</BsButton>
-              </BsInline>
-            </template>
-            <template #empty>
-              <BsText as="p" size="sm" tone="muted">{{ catalogControls.copy.noPlans }}</BsText>
-            </template>
-          </BsDataTable>
-        </BsPanel>
-        <BsRecordActionDialog :visible="catalogControls.dialog === 'terms'" :title="`${catalogControls.copy.editTerms} · ${catalogControls.selectedPlan?.name || ''}`" :dirty="catalogControls.dialogDirty" :pending="catalogControls.pending" :error="catalogControls.commandError" :submit-label="catalogControls.copy.save" :cancel-label="catalogControls.copy.cancel" @update:visible="value => { if (!value) catalogControls.dialog = null }" @submit="catalogControls.publishTerms">
-          <BsField v-slot="field" :label="(catalogControls.copy.displayName)">
-            <BsInput :id="field.id" v-model="catalogControls.terms.displayName" :aria-describedby="field.describedby" :maxlength="120" required/>
-          </BsField>
-          <BsGrid :columns="2">
-            <BsField v-slot="field" :label="(catalogControls.copy.price)">
-              <BsInput :id="field.id" v-model.number="catalogControls.terms.priceAmount" :aria-describedby="field.describedby" type="number" :min="0" :step="1" required/>
-            </BsField>
-            <BsField v-slot="field" :label="(catalogControls.copy.currency)">
-              <BsInput :id="field.id" v-model="catalogControls.terms.currency" :aria-describedby="field.describedby" :maxlength="3" required/>
-            </BsField>
-            <BsField v-slot="field" :label="(catalogControls.copy.interval)">
-              <BsSelect v-model="catalogControls.terms.billingInterval" :input-id="field.id" :aria-describedby="field.describedby" :label="(catalogControls.copy.interval)" :options="[{ value: 'monthly', label: 'monthly', disabled: false }, { value: 'quarterly', label: 'quarterly', disabled: false }, { value: 'annual', label: 'annual', disabled: false }]" option-label="label" option-value="value" option-disabled="disabled"/>
-            </BsField>
-            <BsField v-slot="field" :label="(catalogControls.copy.effectiveFrom)">
-              <BsInput :id="field.id" v-model="catalogControls.terms.effectiveFrom" :aria-describedby="field.describedby" type="datetime-local" required/>
-            </BsField>
-            <BsField v-for="key in catalogControls.resourceKeys" :key="key" v-slot="field" :label="(catalogControls.copy[key])">
-              <BsInput :id="field.id" v-model.number="catalogControls.terms[key]" :aria-describedby="field.describedby" type="number" :min="1" :step="1" :placeholder="catalogControls.copy.unlimited"/>
-            </BsField>
-          </BsGrid>
-          <BsField v-slot="field" :label="(catalogControls.copy.reason)">
-            <BsTextarea :id="field.id" v-model="catalogControls.terms.reason" :aria-describedby="field.describedby" :minlength="2" :maxlength="1000" required/>
-          </BsField>
-        </BsRecordActionDialog>
-        <BsRecordActionDialog :visible="catalogControls.dialog === 'availability'" :title="`${catalogControls.copy.availability} · ${catalogControls.selectedPlan?.name || ''}`" :dirty="catalogControls.dialogDirty" :pending="catalogControls.pending" :error="catalogControls.commandError" :submit-label="catalogControls.copy.save" :cancel-label="catalogControls.copy.cancel" @update:visible="value => { if (!value) catalogControls.dialog = null }" @submit="catalogControls.saveAvailability">
-          <BsCheckbox  v-model="catalogControls.availability.isActive" :label="(catalogControls.copy.active)" />
-          <BsCheckbox  v-model="catalogControls.availability.isPublic" :label="(catalogControls.copy.public)" />
-          <BsCheckbox  v-model="catalogControls.availability.isPurchasable" :label="(catalogControls.copy.purchasable)" />
-          <BsCheckbox  v-model="catalogControls.availability.isComingSoon" :label="(catalogControls.copy.comingSoon)" />
-          <BsField v-slot="field" :label="(catalogControls.copy.reason)">
-            <BsTextarea :id="field.id" v-model="catalogControls.availability.reason" :aria-describedby="field.describedby" :minlength="2" :maxlength="1000" required/>
-          </BsField>
-        </BsRecordActionDialog>
-        <BsRecordActionDialog :visible="catalogControls.dialog === 'change'" :title="catalogControls.copy.changePlan" :dirty="catalogControls.dialogDirty" :pending="catalogControls.pending" :error="catalogControls.commandError" :submit-disabled="Boolean(catalogControls.targetPlan?.blockers.length)" @update:visible="value => { if (!value) catalogControls.dialog = null }" @submit="catalogControls.changePlan">
-          <BsField v-slot="field" :label="(catalogControls.copy.targetPlan)">
-            <BsSelect v-model="catalogControls.subscriptionAction.planId" :input-id="field.id" :aria-describedby="field.describedby" :label="(catalogControls.copy.targetPlan)" :options="[...(catalogControls.shopPlan?.availablePlans || []).map(plan => ({ value: plan.planId, label: (plan.planName) + ' · ' + (catalogControls.money(plan.listPriceAmount, plan.currency)), disabled: false }))]" option-label="label" option-value="value" option-disabled="disabled"/>
-          </BsField>
-          <BsField v-slot="field" :label="(catalogControls.copy.timing)">
-            <BsSelect v-model="catalogControls.subscriptionAction.timing" :input-id="field.id" :aria-describedby="field.describedby" :label="(catalogControls.copy.timing)" :options="[{ value: 'automatic', label: (catalogControls.copy.automatic), disabled: false }, { value: 'period_end', label: (catalogControls.copy.periodEnd), disabled: false }, { value: 'immediate', label: (catalogControls.copy.immediate), disabled: false }]" option-label="label" option-value="value" option-disabled="disabled"/>
-          </BsField>
-          <BsBox v-if="catalogControls.targetPlan?.blockers.length" role="alert">
-            <BsText as="p" emphasis="semibold">{{ catalogControls.copy.blockers }}</BsText>
-            <BsList>
-              <BsListItem v-for="blocker in catalogControls.targetPlan.blockers" :key="blocker.resource">{{ catalogControls.copy[blocker.resource as keyof typeof catalogControls.copy] }}: {{ blocker.used }} / {{ blocker.limit }} (+{{ blocker.excess }})</BsListItem>
-            </BsList>
-          </BsBox>
-          <BsField v-slot="field" :label="(catalogControls.copy.reason)">
-            <BsTextarea :id="field.id" v-model="catalogControls.subscriptionAction.reason" :aria-describedby="field.describedby" :minlength="2" :maxlength="1000" required/>
-          </BsField>
-          <template #actions="{ close }">
-            <BsButton type="submit" variant="primary" :disabled="Boolean(catalogControls.targetPlan?.blockers.length)">{{ catalogControls.copy.changePlan }}</BsButton>
-            <BsButton type="button" @click="catalogControls.simpleAction('renew_subscription')">{{ catalogControls.copy.renew }}</BsButton>
-            <BsButton type="button" @click="catalogControls.simpleAction('suspend_subscription')">{{ catalogControls.copy.suspend }}</BsButton>
-            <BsButton type="button" @click="close">{{ catalogControls.copy.cancel }}</BsButton>
-          </template>
-        </BsRecordActionDialog>
-        <BsRecordActionDialog :visible="catalogControls.dialog === 'override'" :title="catalogControls.copy.negotiatedPrice" :dirty="catalogControls.dialogDirty" :pending="catalogControls.pending" :error="catalogControls.commandError" @update:visible="value => { if (!value) catalogControls.dialog = null }" @submit="catalogControls.saveOverride">
-          <BsField v-slot="field" :label="(catalogControls.copy.amount)">
-            <BsInput :id="field.id" v-model.number="catalogControls.price.amount" :aria-describedby="field.describedby" type="number" :min="0.01" :step="0.01" required/>
-          </BsField>
-          <BsField v-slot="field" :label="(catalogControls.copy.currency)">
-            <BsInput :id="field.id" v-model="catalogControls.price.currency" :aria-describedby="field.describedby" :maxlength="3" required/>
-          </BsField>
-          <BsField v-slot="field" :label="(catalogControls.copy.effectiveFrom)">
-            <BsInput :id="field.id" v-model="catalogControls.price.effectiveFrom" :aria-describedby="field.describedby" type="datetime-local" required/>
-          </BsField>
-          <BsField v-slot="field" :label="(catalogControls.copy.expiresAt)">
-            <BsInput :id="field.id" v-model="catalogControls.price.expiresAt" :aria-describedby="field.describedby" type="datetime-local"/>
-          </BsField>
-          <BsField v-slot="field" :label="(catalogControls.copy.reason)">
-            <BsTextarea :id="field.id" v-model="catalogControls.price.reason" :aria-describedby="field.describedby" :minlength="2" :maxlength="1000" required/>
-          </BsField>
-          <template #actions="{ close }">
-            <BsButton type="submit" variant="primary">{{ catalogControls.copy.setPrice }}</BsButton>
-            <BsButton v-if="catalogControls.shopPlan?.subscription?.priceOverrideId" type="button" @click="catalogControls.simpleAction('remove_price_override')">{{ catalogControls.copy.removePrice }}</BsButton>
-            <BsButton type="button" @click="close">{{ catalogControls.copy.cancel }}</BsButton>
-          </template>
-        </BsRecordActionDialog>
-      </template>
-      <BsPanel v-else-if="view === 'audit'" padding="md">
-        <BsDataTable :value="audit?.items ?? []" :loading="auditPending" :error="auditError ? copy.loadFailed : null" :label="copy.audit" data-key="id" lazy paginator :rows="25" :first="(auditPage - 1) * 25" :total-records="audit?.total ?? 0" :always-show-paginator="false" :columns="[{ key: 'shopName', header: (copy.shop), field: 'shopName' }, { key: 'action', header: (copy.action), field: 'action' }, { key: 'reason', header: (copy.reason), field: 'reason' }, { key: 'actorUserId', header: (copy.actor), field: 'actorUserId' }, { key: 'column4', header: (copy.occurred) }]" @page="handleAuditPage" @retry="refreshAudit()">
-          <template #cell-action="{ row: event }">{{ actionLabel(event.action) || event.action }}</template>
-          <template #cell-column4="{ row: event }">{{ date(event.occurredAt) }}</template>
-          <template #empty>
-            <BsText as="p" size="sm" tone="muted">{{ copy.noEvents }}</BsText>
-          </template>
-        </BsDataTable>
-      </BsPanel>
-      <BsStack v-else>
-        <BsPanel padding="md">
-          <BsHeading :level="2">{{ copy.configuration }}</BsHeading>
-          <BsText as="p" size="sm" tone="muted">{{ copy.configurationHelp }}</BsText>
-          <BsText v-if="billingConfigurationLoadError" role="alert" as="p">{{ copy.loadFailed }} <BsButton @click="refreshBillingConfiguration()">{{ copy.retry }}</BsButton>
-          </BsText>
-          <template v-else>
-            <BsButton :disabled="!session?.canMutate" @click="configurationAction.edit()">{{ copy.save }}</BsButton>
-            <BsRecordActionDialog v-model:visible="configurationActionOpen" :title="copy.configuration" :dirty="configurationActionDirty" :pending="configurationPending" :error="configurationError" :submit-label="copy.save" :cancel-label="copy.cancel" :submit-disabled="!session?.canMutate" @submit="saveBillingConfiguration">
-              <BsFieldGroup :disabled="!session.canMutate || configurationPending" :legend="''">
-                <BsField v-slot="field" :label="copy.recipientAlias">
-                  <BsInput :id="field.id" v-model="billingConfiguration.recipientAlias" :aria-describedby="field.describedby" dir="ltr" :maxlength="200"/>
-                </BsField>
-                <BsField v-slot="field" :label="copy.paymentLink">
-                  <BsInput :id="field.id" v-model="billingConfiguration.paymentLink" :aria-describedby="field.describedby" dir="ltr" :maxlength="1000"/>
-                </BsField>
-                <BsField v-slot="field" :label="copy.qrImageUrl">
-                  <BsInput :id="field.id" v-model="billingConfiguration.qrImageUrl" :aria-describedby="field.describedby" dir="ltr" :maxlength="1000"/>
-                </BsField>
-                <BsField v-slot="field" :label="copy.instructionsEn">
-                  <BsTextarea :id="field.id" v-model="billingConfiguration.instructionsEn" :aria-describedby="field.describedby" dir="ltr" :maxlength="2000" :rows="4"/>
-                </BsField>
-                <BsField v-slot="field" :label="copy.instructionsAr">
-                  <BsTextarea :id="field.id" v-model="billingConfiguration.instructionsAr" :aria-describedby="field.describedby" dir="rtl" :maxlength="2000" :rows="4"/>
-                </BsField>
-                <BsField v-slot="field" :label="copy.reason">
-                  <BsTextarea :id="field.id" v-model="billingConfiguration.reason" :aria-describedby="field.describedby" :minlength="2" :maxlength="1000" required :rows="2"/>
-                </BsField>
-              </BsFieldGroup>
-            </BsRecordActionDialog>
-          </template>
-        </BsPanel>
-        <BsPanel padding="md">
-          <BsInline>
-            <BsHeading :level="2">{{ copy.billingQueue }}</BsHeading>
-            <BsSelect v-model="billingStatus" :label="copy.status" :options="[{ value: '', label: (copy.allStates), disabled: false }, { value: 'submitted', label: (copy.submitted), disabled: false }, { value: 'under_review', label: (copy.underReview), disabled: false }, { value: 'approved', label: (copy.approved), disabled: false }, { value: 'rejected', label: (copy.rejected), disabled: false }]" option-label="label" option-value="value" option-disabled="disabled"/>
-          </BsInline>
-          <BsDataTable :value="billingQueue?.items ?? []" :loading="billingQueuePending" :error="billingQueueError ? copy.loadFailed : null" :label="copy.billingQueue" data-key="id" lazy paginator :rows="25" :first="(billingPage - 1) * 25" :total-records="billingQueue?.total ?? 0" :always-show-paginator="false" :columns="[{ key: 'shopName', header: (copy.shop), field: 'shopName' }, { key: 'status', header: (copy.status), field: 'status' }, { key: 'column2', header: (copy.currentPlan) }, { key: 'column3', header: (copy.requestedPlan) }, { key: 'column4', header: (copy.listPrice) }, { key: 'column5', header: (copy.effectivePrice) }, { key: 'column6', header: (copy.paidAmount) }, { key: 'column7', header: (copy.blockers) }, { key: 'transferReference', header: (copy.transferReference), field: 'transferReference' }, { key: 'column9', header: (copy.transferDate) }, { key: 'column10', header: (copy.review), hidden: !(session.canMutate) }]" @page="handleBillingPage" @retry="refreshBillingQueue()">
-            <template #cell-status="{ row: item }">
-              <BsStatusBadge :status="item.status"/>
-            </template>
-            <template #cell-column2="{ row: item }">{{ item.currentPlanName }}</template>
-            <template #cell-column3="{ row: item }">{{ item.requestedPlanName }} · {{ item.billingInterval }}</template>
-            <template #cell-column4="{ row: item }">{{ item.listPriceAmount }} {{ item.currency }}</template>
-            <template #cell-column5="{ row: item }">{{ item.effectivePriceAmount }} {{ item.currency }}<BsText v-if="item.priceSource === 'override'" as="span" size="xs" emphasis="semibold">{{ copy.negotiated }}</BsText>
-            </template>
-            <template #cell-column6="{ row: item }">{{ item.paidAmount }} {{ item.currency }}</template>
-            <template #cell-column7="{ row: item }">
-              <BsText v-if="item.usageBlockers.length" as="span" tone="warning">{{ usageBlockersLabel(item.usageBlockers) }}</BsText>
-              <BsText v-else as="span">{{ copy.noBlockers }}</BsText>
-            </template>
-            <template #cell-column9="{ row: item }">{{ date(item.transferDate) }}</template>
-            <template #cell-column10="{ row: item }">
-              <BsInline>
-                <template v-if="['submitted','under_review'].includes(item.status)">
-                  <BsButton v-if="item.status === 'submitted'" @click="openBillingReview(item, 'mark_under_review')">{{ copy.markUnderReview }}</BsButton>
-                  <BsButton :disabled="item.usageBlockers.length > 0" @click="openBillingReview(item, 'approve')">{{ copy.approve }}</BsButton>
-                  <BsButton @click="openBillingReview(item, 'reject')">{{ copy.reject }}</BsButton>
-                </template>
-                <BsButton @click="openPriceOverride(item)">{{ copy.priceOverride }}</BsButton>
-              </BsInline>
-            </template>
-            <template #empty>
-              <BsText as="p" size="sm" tone="muted">{{ copy.emptyBilling }}</BsText>
-            </template>
-          </BsDataTable>
-        </BsPanel>
-        <BsPanel padding="md">
-          <BsBox padding="md">
-            <BsHeading :level="2">{{ copy.billingQueue }} · {{ copy.audit }}</BsHeading>
-          </BsBox>
-          <BsDataTable :value="billingAudit?.items ?? []" :loading="billingAuditPending" :error="billingAuditError ? copy.loadFailed : null" :label="`${copy.billingQueue} ${copy.audit}`" data-key="id" lazy paginator :rows="25" :first="(billingAuditPage - 1) * 25" :total-records="billingAudit?.total ?? 0" :always-show-paginator="false" :columns="[{ key: 'shopName', header: (copy.shop), field: 'shopName' }, { key: 'action', header: (copy.action), field: 'action' }, { key: 'reason', header: (copy.reason), field: 'reason' }, { key: 'actorUserId', header: (copy.actor), field: 'actorUserId' }, { key: 'column4', header: (copy.occurred) }]" @page="handleBillingAuditPage" @retry="refreshBillingAudit()">
-            <template #cell-column4="{ row: event }">{{ date(event.occurredAt) }}</template>
-            <template #empty>
-              <BsText as="p" size="sm" tone="muted">{{ copy.noEvents }}</BsText>
-            </template>
-          </BsDataTable>
-        </BsPanel>
-      </BsStack>
-    </template>
-    <BsDialog :visible="Boolean(selectedShopId)" :title="detail?.shop.name || copy.shop" size="lg" :pending="detailPending" @update:visible="handleDetailVisibility">
-      <BsText v-if="detailError" role="alert" as="p">{{ copy.loadFailed }} <BsButton variant="link" @click="refreshDetail()">{{ copy.retry }}</BsButton>
-      </BsText>
-      <BsStack v-else-if="detail">
-        <BsGrid :columns="4">
-          <BsKpiCard :title="copy.owner">{{ detail.owner?.name || detail.owner?.email || '—' }}</BsKpiCard>
-          <BsKpiCard :title="copy.access">
-            <BsStatusBadge :status="detailAccessState(detail)"/>
-          </BsKpiCard>
-          <BsKpiCard :title="copy.plan">{{ detail.subscription?.planName || '—' }}</BsKpiCard>
-          <BsKpiCard :title="copy.members">{{ detail.usage.members }}</BsKpiCard>
-        </BsGrid>
-        <BsBox as="section">
-          <BsHeading :level="3">{{ copy.usage }}</BsHeading>
-          <BsText as="p" size="sm" tone="muted">{{ copy.trialStart }}: {{ date(detail.subscription?.trialStartAt) }} · {{ copy.trialEnd }}: {{ date(detail.subscription?.trialEndAt) }} · {{ copy.periodEnd }}: {{ date(detail.subscription?.periodEnd) }}</BsText>
-          <BsText as="p" size="sm" tone="muted">{{ copy.locations }}: {{ detail.usage.locations }} · {{ copy.members }}: {{ detail.usage.members }} · {{ isArabic ? 'المنتجات' : 'Products' }}: {{ detail.usage.products }} · {{ isArabic ? 'الخدمات' : 'Services' }}: {{ detail.usage.services }}</BsText>
-          <BsCodeBlock>{{ JSON.stringify(detail.usage.limits || {}, null, 2) }}</BsCodeBlock>
-        </BsBox>
-        <BsStack>
-          <BsText v-if="shopControls.shopError" role="alert" as="p">{{ shopControls.copy.loadFailed }} <BsButton @click="shopControls.refreshShop()">{{ shopControls.copy.retry }}</BsButton>
-          </BsText>
-          <BsSkeleton v-else-if="shopControls.shopPending"/>
-          <template v-else-if="shopControls.shopPlan?.subscription">
-            <BsGrid :columns="4">
-              <BsKpiCard :title="shopControls.copy.currentPlan">{{ shopControls.shopPlan.subscription.planName }}</BsKpiCard>
-              <BsKpiCard :title="shopControls.copy.access">
-                <BsStatusBadge :status="shopControls.shopPlan.subscription.accessState"/>
-              </BsKpiCard>
-              <BsKpiCard :title="shopControls.copy.effectivePrice">{{ shopControls.money(shopControls.shopPlan.subscription.effectivePriceAmount, shopControls.shopPlan.subscription.currency) }}<BsText v-if="shopControls.shopPlan.subscription.priceSource === 'override'" as="span" size="xs">({{ shopControls.copy.negotiatedPrice }})</BsText>
-              </BsKpiCard>
-              <BsKpiCard :title="shopControls.copy.pendingBilling">{{ shopControls.shopPlan.subscription.pendingBillingRequests }}</BsKpiCard>
-            </BsGrid>
-            <BsBox>
-              <BsHeading :level="4">{{ shopControls.copy.usage }}</BsHeading>
-              <BsGrid :columns="2">
-                <BsBox v-for="resource in shopControls.shopPlan.subscription.usage.resources" :key="resource.resource">
-                  <BsText as="p" emphasis="semibold">{{ shopControls.copy[resource.resource as keyof typeof shopControls.copy] }}</BsText>
-                  <BsText as="p">{{ resource.used }} / {{ shopControls.limit(resource.limit) }}<BsText v-if="resource.overLimit" as="span"> · +{{ resource.used - (resource.limit || 0) }} {{ shopControls.copy.excess }}</BsText>
-                  </BsText>
-                </BsBox>
-              </BsGrid>
-            </BsBox>
-            <BsBox padding="md">
-              <BsHeading :level="4">{{ shopControls.copy.pendingChange }}</BsHeading>
-              <BsText v-if="shopControls.shopPlan?.subscription?.pendingPlanChange" as="p" size="sm">{{ shopControls.shopPlan?.subscription?.pendingPlanChange.targetPlanName }} · {{ shopControls.date(shopControls.shopPlan?.subscription?.pendingPlanChange.effectiveAt) }} · {{ shopControls.shopPlan?.subscription?.pendingPlanChange.reason }}</BsText>
-              <BsText v-else as="p" size="sm" tone="muted">{{ shopControls.copy.noPendingChange }}</BsText>
-            </BsBox>
-            <BsInline v-if="Boolean(session?.canMutate)">
-              <BsButton @click="shopControls.openChange">{{ shopControls.copy.changePlan }}</BsButton>
-              <BsButton @click="shopControls.subscriptionAction.reason = ''; shopControls.commandError = ''; shopControls.requestId = null; shopControls.dialog = 'change'">{{ shopControls.copy.renew }}</BsButton>
-              <BsButton @click="shopControls.openOverride">{{ shopControls.copy.setPrice }}</BsButton>
-              <BsButton v-if="shopControls.shopPlan?.subscription?.priceOverrideId" @click="shopControls.price.reason = ''; shopControls.commandError = ''; shopControls.requestId = null; shopControls.dialog = 'override'">{{ shopControls.copy.removePrice }}</BsButton>
-              <BsButton @click="shopControls.subscriptionAction.reason = ''; shopControls.commandError = ''; shopControls.requestId = null; shopControls.dialog = 'change'">{{ shopControls.copy.suspend }}</BsButton>
-            </BsInline>
-          </template>
-        </BsStack>
-        <BsRecordActionDialog :visible="shopControls.dialog === 'terms'" :title="`${shopControls.copy.editTerms} · ${shopControls.selectedPlan?.name || ''}`" :dirty="shopControls.dialogDirty" :pending="shopControls.pending" :error="shopControls.commandError" :submit-label="shopControls.copy.save" :cancel-label="shopControls.copy.cancel" @update:visible="value => { if (!value) shopControls.dialog = null }" @submit="shopControls.publishTerms">
-          <BsField v-slot="field" :label="(shopControls.copy.displayName)">
-            <BsInput :id="field.id" v-model="shopControls.terms.displayName" :aria-describedby="field.describedby" :maxlength="120" required/>
-          </BsField>
-          <BsGrid :columns="2">
-            <BsField v-slot="field" :label="(shopControls.copy.price)">
-              <BsInput :id="field.id" v-model.number="shopControls.terms.priceAmount" :aria-describedby="field.describedby" type="number" :min="0" :step="1" required/>
-            </BsField>
-            <BsField v-slot="field" :label="(shopControls.copy.currency)">
-              <BsInput :id="field.id" v-model="shopControls.terms.currency" :aria-describedby="field.describedby" :maxlength="3" required/>
-            </BsField>
-            <BsField v-slot="field" :label="(shopControls.copy.interval)">
-              <BsSelect v-model="shopControls.terms.billingInterval" :input-id="field.id" :aria-describedby="field.describedby" :label="(shopControls.copy.interval)" :options="[{ value: 'monthly', label: 'monthly', disabled: false }, { value: 'quarterly', label: 'quarterly', disabled: false }, { value: 'annual', label: 'annual', disabled: false }]" option-label="label" option-value="value" option-disabled="disabled"/>
-            </BsField>
-            <BsField v-slot="field" :label="(shopControls.copy.effectiveFrom)">
-              <BsInput :id="field.id" v-model="shopControls.terms.effectiveFrom" :aria-describedby="field.describedby" type="datetime-local" required/>
-            </BsField>
-            <BsField v-for="key in shopControls.resourceKeys" :key="key" v-slot="field" :label="(shopControls.copy[key])">
-              <BsInput :id="field.id" v-model.number="shopControls.terms[key]" :aria-describedby="field.describedby" type="number" :min="1" :step="1" :placeholder="shopControls.copy.unlimited"/>
-            </BsField>
-          </BsGrid>
-          <BsField v-slot="field" :label="(shopControls.copy.reason)">
-            <BsTextarea :id="field.id" v-model="shopControls.terms.reason" :aria-describedby="field.describedby" :minlength="2" :maxlength="1000" required/>
-          </BsField>
-        </BsRecordActionDialog>
-        <BsRecordActionDialog :visible="shopControls.dialog === 'availability'" :title="`${shopControls.copy.availability} · ${shopControls.selectedPlan?.name || ''}`" :dirty="shopControls.dialogDirty" :pending="shopControls.pending" :error="shopControls.commandError" :submit-label="shopControls.copy.save" :cancel-label="shopControls.copy.cancel" @update:visible="value => { if (!value) shopControls.dialog = null }" @submit="shopControls.saveAvailability">
-          <BsCheckbox  v-model="shopControls.availability.isActive" :label="(shopControls.copy.active)" />
-          <BsCheckbox  v-model="shopControls.availability.isPublic" :label="(shopControls.copy.public)" />
-          <BsCheckbox  v-model="shopControls.availability.isPurchasable" :label="(shopControls.copy.purchasable)" />
-          <BsCheckbox  v-model="shopControls.availability.isComingSoon" :label="(shopControls.copy.comingSoon)" />
-          <BsField v-slot="field" :label="(shopControls.copy.reason)">
-            <BsTextarea :id="field.id" v-model="shopControls.availability.reason" :aria-describedby="field.describedby" :minlength="2" :maxlength="1000" required/>
-          </BsField>
-        </BsRecordActionDialog>
-        <BsRecordActionDialog :visible="shopControls.dialog === 'change'" :title="shopControls.copy.changePlan" :dirty="shopControls.dialogDirty" :pending="shopControls.pending" :error="shopControls.commandError" :submit-disabled="Boolean(shopControls.targetPlan?.blockers.length)" @update:visible="value => { if (!value) shopControls.dialog = null }" @submit="shopControls.changePlan">
-          <BsField v-slot="field" :label="(shopControls.copy.targetPlan)">
-            <BsSelect v-model="shopControls.subscriptionAction.planId" :input-id="field.id" :aria-describedby="field.describedby" :label="(shopControls.copy.targetPlan)" :options="[...(shopControls.shopPlan?.availablePlans || []).map(plan => ({ value: plan.planId, label: (plan.planName) + ' · ' + (shopControls.money(plan.listPriceAmount, plan.currency)), disabled: false }))]" option-label="label" option-value="value" option-disabled="disabled"/>
-          </BsField>
-          <BsField v-slot="field" :label="(shopControls.copy.timing)">
-            <BsSelect v-model="shopControls.subscriptionAction.timing" :input-id="field.id" :aria-describedby="field.describedby" :label="(shopControls.copy.timing)" :options="[{ value: 'automatic', label: (shopControls.copy.automatic), disabled: false }, { value: 'period_end', label: (shopControls.copy.periodEnd), disabled: false }, { value: 'immediate', label: (shopControls.copy.immediate), disabled: false }]" option-label="label" option-value="value" option-disabled="disabled"/>
-          </BsField>
-          <BsBox v-if="shopControls.targetPlan?.blockers.length" role="alert">
-            <BsText as="p" emphasis="semibold">{{ shopControls.copy.blockers }}</BsText>
-            <BsList>
-              <BsListItem v-for="blocker in shopControls.targetPlan.blockers" :key="blocker.resource">{{ shopControls.copy[blocker.resource as keyof typeof shopControls.copy] }}: {{ blocker.used }} / {{ blocker.limit }} (+{{ blocker.excess }})</BsListItem>
-            </BsList>
-          </BsBox>
-          <BsField v-slot="field" :label="(shopControls.copy.reason)">
-            <BsTextarea :id="field.id" v-model="shopControls.subscriptionAction.reason" :aria-describedby="field.describedby" :minlength="2" :maxlength="1000" required/>
-          </BsField>
-          <template #actions="{ close }">
-            <BsButton type="submit" variant="primary" :disabled="Boolean(shopControls.targetPlan?.blockers.length)">{{ shopControls.copy.changePlan }}</BsButton>
-            <BsButton type="button" @click="shopControls.simpleAction('renew_subscription')">{{ shopControls.copy.renew }}</BsButton>
-            <BsButton type="button" @click="shopControls.simpleAction('suspend_subscription')">{{ shopControls.copy.suspend }}</BsButton>
-            <BsButton type="button" @click="close">{{ shopControls.copy.cancel }}</BsButton>
-          </template>
-        </BsRecordActionDialog>
-        <BsRecordActionDialog :visible="shopControls.dialog === 'override'" :title="shopControls.copy.negotiatedPrice" :dirty="shopControls.dialogDirty" :pending="shopControls.pending" :error="shopControls.commandError" @update:visible="value => { if (!value) shopControls.dialog = null }" @submit="shopControls.saveOverride">
-          <BsField v-slot="field" :label="(shopControls.copy.amount)">
-            <BsInput :id="field.id" v-model.number="shopControls.price.amount" :aria-describedby="field.describedby" type="number" :min="0.01" :step="0.01" required/>
-          </BsField>
-          <BsField v-slot="field" :label="(shopControls.copy.currency)">
-            <BsInput :id="field.id" v-model="shopControls.price.currency" :aria-describedby="field.describedby" :maxlength="3" required/>
-          </BsField>
-          <BsField v-slot="field" :label="(shopControls.copy.effectiveFrom)">
-            <BsInput :id="field.id" v-model="shopControls.price.effectiveFrom" :aria-describedby="field.describedby" type="datetime-local" required/>
-          </BsField>
-          <BsField v-slot="field" :label="(shopControls.copy.expiresAt)">
-            <BsInput :id="field.id" v-model="shopControls.price.expiresAt" :aria-describedby="field.describedby" type="datetime-local"/>
-          </BsField>
-          <BsField v-slot="field" :label="(shopControls.copy.reason)">
-            <BsTextarea :id="field.id" v-model="shopControls.price.reason" :aria-describedby="field.describedby" :minlength="2" :maxlength="1000" required/>
-          </BsField>
-          <template #actions="{ close }">
-            <BsButton type="submit" variant="primary">{{ shopControls.copy.setPrice }}</BsButton>
-            <BsButton v-if="shopControls.shopPlan?.subscription?.priceOverrideId" type="button" @click="shopControls.simpleAction('remove_price_override')">{{ shopControls.copy.removePrice }}</BsButton>
-            <BsButton type="button" @click="close">{{ shopControls.copy.cancel }}</BsButton>
-          </template>
-        </BsRecordActionDialog>
-        <BsBox v-if="session?.canMutate" as="section">
-          <BsHeading :level="3">{{ copy.controls }}</BsHeading>
-          <BsInline>
-            <BsButton v-for="key in (Object.keys(copy.actions) as ActionKey[])" :key="key" @click="openAction(key)">{{ actionLabel(key) }}</BsButton>
-          </BsInline>
-        </BsBox>
-        <BsBox as="section">
-          <BsHeading :level="3">{{ copy.billing }}</BsHeading>
-          <BsDataTable :value="detail.billingHistory" data-key="id" :label="copy.billing" :columns="[{ key: 'kind', header: (copy.action), field: 'kind' }, { key: 'status', header: (copy.status), field: 'status' }, { key: 'reference', header: (copy.billingReference), field: 'reference' }, { key: 'column3', header: (copy.occurred) }]">
-            <template #cell-status="{ row: item }">
-              <BsStatusBadge :status="item.status"/>
-            </template>
-            <template #cell-column3="{ row: item }">{{ date(item.submittedAt) }}</template>
-            <template #empty>
-              <BsText as="p" size="sm" tone="muted">{{ copy.emptyBilling }}</BsText>
-            </template>
-          </BsDataTable>
-        </BsBox>
-        <BsBox as="section">
-          <BsHeading :level="3">{{ copy.sensitive }}</BsHeading>
-          <BsDataTable :value="detail.sensitiveEvents" data-key="id" :label="copy.sensitive" :columns="[{ key: 'type', header: (copy.status), field: 'type' }, { key: 'action', header: (copy.action), field: 'action' }, { key: 'reason', header: (copy.reason), field: 'reason' }, { key: 'column3', header: (copy.occurred) }]">
-            <template #cell-column3="{ row: event }">{{ date(event.occurredAt) }}</template>
-            <template #empty>
-              <BsText as="p" size="sm" tone="muted">{{ copy.emptySensitive }}</BsText>
-            </template>
-          </BsDataTable>
-        </BsBox>
-        <BsBox as="section">
-          <BsHeading :level="3">{{ copy.supportNotes }}</BsHeading>
-          <BsList v-if="detail.supportNotes.length">
-            <BsListItem v-for="note in detail.supportNotes" :key="note.id">
-              <BsText as="p">{{ note.note }}</BsText>
-              <BsText as="p" size="xs" tone="muted">{{ note.reason }} · {{ date(note.createdAt) }}</BsText>
-            </BsListItem>
-          </BsList>
-          <BsText v-else as="p" size="sm" tone="muted">{{ copy.emptyNotes }}</BsText>
-        </BsBox>
-      </BsStack>
-    </BsDialog>
-    <BsRecordActionDialog v-model:visible="actionOpen" :title="actionLabel(action.key)" :dirty="actionDirty" :pending="actionPending" :error="commandError" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="runAction">
-      <BsField v-slot="field" :label="copy.reason">
-        <BsTextarea :id="field.id" v-model="action.reason" :aria-describedby="field.describedby" :minlength="2" :maxlength="1000" required :rows="3"/>
-      </BsField>
-      <BsField v-if="action.key === 'extend_trial'" v-slot="field" :label="copy.days">
-        <BsInput :id="field.id" v-model.number="action.days" :aria-describedby="field.describedby" type="number" :min="1" :max="365" :step="1" required/>
-      </BsField>
-      <template v-if="action.key === 'correct_billing_metadata'">
-        <BsField v-slot="field" :label="copy.billingReference">
-          <BsInput :id="field.id" v-model="action.billingReference" :aria-describedby="field.describedby" :maxlength="200"/>
-        </BsField>
-        <BsField v-slot="field" :label="copy.billingNote">
-          <BsTextarea :id="field.id" v-model="action.billingNote" :aria-describedby="field.describedby" :maxlength="1000" :rows="3"/>
-        </BsField>
-      </template>
-      <BsField v-if="action.key === 'add_support_note'" v-slot="field" :label="copy.note">
-        <BsTextarea :id="field.id" v-model="action.note" :aria-describedby="field.describedby" :minlength="2" :maxlength="2000" required :rows="5"/>
-      </BsField>
-    </BsRecordActionDialog>
-    <BsRecordActionDialog v-model:visible="billingReviewOpen" :title="billingReview.action === 'approve' ? copy.approve : billingReview.action === 'reject' ? copy.reject : copy.markUnderReview" :dirty="billingReviewDirty" :pending="billingReviewPending" :error="billingReviewError" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="runBillingReview">
-      <BsField v-slot="field" :label="copy.reason">
-        <BsTextarea :id="field.id" v-model="billingReview.reason" :aria-describedby="field.describedby" :minlength="2" :maxlength="1000" required :rows="3"/>
-      </BsField>
-      <template v-if="billingReview.action === 'approve'">
-        <BsField v-slot="field" :label="copy.receivedAmount">
-          <BsInput :id="field.id" v-model.number="billingReview.receivedAmount" :aria-describedby="field.describedby" type="number" :min="0.01" :step="0.01" required/>
-        </BsField>
-        <BsField v-slot="field" :label="copy.receivedReference">
-          <BsInput :id="field.id" v-model="billingReview.receivedReference" :aria-describedby="field.describedby" dir="ltr" :minlength="2" :maxlength="200" required/>
-        </BsField>
-        <BsField v-slot="field" :label="copy.receivedDate">
-          <BsInput :id="field.id" v-model="billingReview.receivedDate" :aria-describedby="field.describedby" type="date" :max="new Date().toISOString().slice(0, 10)" required/>
-        </BsField>
-        <BsField v-if="billingReview.submission && (billingReview.receivedAmount !== billingReview.submission.effectivePriceAmount || billingReview.submission.paidAmount !== billingReview.submission.effectivePriceAmount)" v-slot="field" :label="copy.amountOverrideReason">
-          <BsTextarea :id="field.id" v-model="billingReview.amountOverrideReason" :aria-describedby="field.describedby" :minlength="2" :maxlength="1000" required :rows="3"/>
-        </BsField>
-      </template>
-    </BsRecordActionDialog>
-    <BsRecordActionDialog v-model:visible="priceOverrideOpen" :title="`${copy.priceOverride} · ${priceOverride.shopName}`" :dirty="priceOverrideDirty" :pending="priceOverridePending" :error="priceOverrideError" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="savePriceOverride">
-      <BsField v-slot="field" :label="copy.overrideAmount">
-        <BsInput :id="field.id" v-model.number="priceOverride.amount" :aria-describedby="field.describedby" type="number" :min="0.01" :step="0.01" required/>
-      </BsField>
-      <BsField v-slot="field" :label="copy.effectiveFrom">
-        <BsInput :id="field.id" v-model="priceOverride.effectiveFrom" :aria-describedby="field.describedby" type="date" required/>
-      </BsField>
-      <BsField v-slot="field" :label="copy.expiresAt">
-        <BsInput :id="field.id" v-model="priceOverride.expiresAt" :aria-describedby="field.describedby" type="date" :min="priceOverride.effectiveFrom"/>
-      </BsField>
-      <BsField v-slot="field" :label="copy.reason">
-        <BsTextarea :id="field.id" v-model="priceOverride.reason" :aria-describedby="field.describedby" :minlength="2" :maxlength="1000" required :rows="3"/>
-      </BsField>
-    </BsRecordActionDialog>
-  </BsStack>
+  <BsPlatformAdministrationPage v-model:catalog-terms="catalogTerms" v-model:catalog-availability="catalogAvailability" v-model:catalog-change="catalogChange" v-model:catalog-price="catalogPrice" v-model:tenant-terms="tenantTerms" v-model:tenant-availability="tenantAvailability" v-model:tenant-change="tenantChange" v-model:tenant-price="tenantPrice" v-model:support="supportForm" v-model:receipt="receiptForm" v-model:price="priceForm" v-model:configuration="configurationForm" :copy="presentationCopy" :commerce="commerceView" :commerce-copy="commerceCopy" :plan-copy="planCopy" @select="view = $event" @search="search = $event" @status="status = $event" @retry="retryPresentation" @commerce-page="pagePresentation" @open-tenant="selectedShopId = $event" @close-tenant="selectedShopId = null" @billing-status="selectBillingStatus" @plan="planCommand" @review="reviewById" @price="priceById" @support="supportByKey" @configure="configurationAction.edit()" @close-dialog="closeDialog" @submit-support="runAction" @submit-receipt="runBillingReview" @submit-price="savePriceOverride" @submit-configuration="saveBillingConfiguration"/>
 </template>

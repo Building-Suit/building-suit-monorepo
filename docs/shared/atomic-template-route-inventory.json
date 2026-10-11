@@ -60,7 +60,8 @@
     "BsAssetRegisterPage": "packages/ui/src/templates/BsAssetRegisterPage.vue",
     "BsBankReconciliationPage": "packages/ui/src/templates/BsBankReconciliationPage.vue",
     "BsBillingPage": "packages/ui/src/templates/BsBillingPage.vue",
-    "BsSubscriptionCheckoutPage": "packages/ui/src/templates/BsSubscriptionCheckoutPage.vue"
+    "BsSubscriptionCheckoutPage": "packages/ui/src/templates/BsSubscriptionCheckoutPage.vue",
+    "BsPlatformAdministrationPage": "packages/ui/src/templates/BsPlatformAdministrationPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -928,14 +929,15 @@
         "BsTextarea",
         "BsUserMenu"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "destination": "packages/ui/src/templates/BsPlatformAdministrationPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/ledger-suit/app/pages/platform-admin.vue",
       "dependencies": [
         "~~/types/database.types",
         "~/composables/usePlatformAdmin"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "platform-administration"
     },
     {
       "source": "apps/ledger-suit/app/pages/privacy.vue",
@@ -1711,15 +1713,16 @@
         "BsText",
         "BsTextarea"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "destination": "packages/ui/src/templates/BsPlatformAdministrationPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/shop-suit/app/pages/platform-admin.vue",
       "dependencies": [
         "~/types/shopCrmRpc",
         "~/types/billing",
         "~/types/platformAdmin"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "platform-administration"
     },
     {
       "source": "apps/shop-suit/app/pages/pos.vue",
@@ -2154,6 +2157,7 @@
     "BsOpeningBalancesPage",
     "BsOperationsDashboardPage",
     "BsPasswordRecoveryPage",
+    "BsPlatformAdministrationPage",
     "BsPointOfSalePage",
     "BsProjectRegistryPage",
     "BsPublicLegalPage",

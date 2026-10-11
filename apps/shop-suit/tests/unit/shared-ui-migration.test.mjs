@@ -59,7 +59,7 @@ test('Shop auth routes use the canonical shared auth and signup contracts', asyn
   }
 })
 
-test('standard Shop record actions use the canonical dialog and controller', () => {
+test('standard Shop record actions use the canonical dialog and controller', async () => {
   const expected = [
     'pages/catalog-import.vue',
     'pages/appointments/index.vue',
@@ -82,7 +82,7 @@ test('standard Shop record actions use the canonical dialog and controller', () 
     assert.ok(source, `${file} is missing`)
     assert.match(source, /useRecordAction\(/, `${file} does not use the shared controller`)
     const entry = JSON.parse(readFileSync(path.join(workspaceRoot, 'docs/shared/atomic-template-route-inventory.json'), 'utf8')).entries.find(entry => entry.source === `apps/shop-suit/app/${file}`)
-    const presentation = entry?.destination ? readFileSync(path.join(workspaceRoot, entry.destination), 'utf8') : source
+    const presentation = entry?.destination ? await readPresentationTree(workspaceRoot, entry.destination) : source
     assert.match(presentation, /<BsRecordActionDialog\b|<BsAccessIdentityEditor\b|<BsAccessRoleEditor\b/, `${file} does not delegate to shared record-action presentation`)
   }
 })
@@ -140,11 +140,11 @@ test('every Shop template conforms to the exhaustive zero-native contract', asyn
   assert.deepEqual(audit.debt.filter(item => item.file.startsWith('apps/shop-suit/')), [])
 })
 
-test('remaining authenticated root mutations use shared action dialogs', () => {
+test('remaining authenticated root mutations use shared action dialogs', async () => {
   for (const file of ['pages/settings.vue', 'pages/billing.vue', 'pages/dashboard.vue', 'pages/platform-admin.vue']) {
     const source = sources.find(item => item.file === file)?.source || ''
     assert.doesNotMatch(source, /<BsForm\b/, `${file} retains a root mutation form`)
-    assert.match(presentationFor(file), /<BsRecordActionDialog\b/)
+    assert.match(await readPresentationTree(workspaceRoot, `apps/shop-suit/app/${file}`), /<BsRecordActionDialog\b/)
     assert.match(source, /useRecordAction\(/)
   }
 })

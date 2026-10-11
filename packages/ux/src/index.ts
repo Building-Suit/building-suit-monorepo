@@ -233,3 +233,5 @@ export { useControlFocus } from './composables/useControlFocus.ts'
 export { downloadText, downloadBlob } from './utils/downloadText.js'
 
 export { useBoundedPolling } from './composables/useBoundedPolling.ts'
+
+export { useExpiringValue } from './composables/useExpiringValue.ts'
