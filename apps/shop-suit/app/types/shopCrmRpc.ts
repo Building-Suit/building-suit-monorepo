@@ -84,6 +84,14 @@ export type ShopRpcDatabase = {
         Args: { p_shop_id: string; p_target_plan_slug: string }
         Returns: unknown
       }
+      reserve_shop_billing_payment_evidence: {
+        Args: { p_submission_id: string; p_original_file_name: string; p_mime_type: string; p_size_bytes: number; p_sha256: string }
+        Returns: { evidenceId: string; bucket: string; objectName: string; mimeType: string; sizeBytes: number }
+      }
+      shop_billing_payment_evidence_read: {
+        Args: { p_submission_id: string }
+        Returns: Array<{ evidenceId: string; originalFileName: string; sha256: string }>
+      }
       submit_shop_billing_notice: {
         Args: {
           p_request_id: string
