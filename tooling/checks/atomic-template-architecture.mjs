@@ -25,7 +25,7 @@ export async function validateAtomicTemplateArchitecture({ root = defaultRoot } 
   // Resolve callable aliases across real source imports and re-exports instead of
   // trusting the identifier chosen by an adapter or presentation helper.
   const moduleAsts = new Map()
-  async function sourceModule(from, specifier) {
+  async function sourceModule(from, specifier, typeOnly = false) {
     let target
     if (specifier.startsWith('.')) target = path.resolve(path.dirname(from), specifier)
     else if (/^(?:~|@)\//.test(specifier)) {
@@ -42,7 +42,7 @@ export async function validateAtomicTemplateArchitecture({ root = defaultRoot } 
         function exportSource(value) {
           if (typeof value === 'string') return value
           if (!value || typeof value !== 'object') return null
-          for (const condition of ['import', 'node', 'default', 'require', 'types']) {
+          for (const condition of typeOnly ? ['types', 'import', 'node', 'default', 'require'] : ['import', 'node', 'default', 'require', 'types']) {
             const source = exportSource(value[condition])
             if (source) return source
           }
@@ -223,6 +223,60 @@ export async function validateAtomicTemplateArchitecture({ root = defaultRoot } 
     }
   }
   for (const entry of registry.entries.filter(entry => entry.kind === 'route')) if (!actualRoutes.includes(entry.source)) failures.push(`${entry.source}: stale registered route`)
+  // Page contracts must remain data-only through imported aliases/re-exports,
+  // rather than accepting a callback or opaque bag hidden in another package.
+  async function contractViolation(file, ast, node, seen = new Set()) {
+    if (ts.isFunctionTypeNode(node) || ts.isConstructorTypeNode(node) || ts.isMethodSignature(node) || ts.isCallSignatureDeclaration(node) || ts.isTypeQueryNode(node)) return 'callbacks, components or render recipes'
+    if ([ts.SyntaxKind.AnyKeyword, ts.SyntaxKind.UnknownKeyword].includes(node.kind)) return 'untyped state bags'
+    async function named(name, sourceFile = file, sourceAst = ast) {
+      const key = `${sourceFile}:${name}`
+      if (seen.has(key)) return null
+      seen.add(key)
+      for (const statement of sourceAst.statements) {
+        if ((ts.isInterfaceDeclaration(statement) || ts.isTypeAliasDeclaration(statement)) && statement.name.text === name) return contractViolation(sourceFile, sourceAst, statement, seen)
+        if (ts.isImportDeclaration(statement) && ts.isStringLiteral(statement.moduleSpecifier) && statement.importClause?.namedBindings && ts.isNamedImports(statement.importClause.namedBindings)) {
+          const binding = statement.importClause.namedBindings.elements.find(item => item.name.text === name)
+          if (!binding) continue
+          const exported = binding.propertyName?.text ?? name
+          if (['vue', '@vue/runtime-core'].includes(statement.moduleSpecifier.text) && ['VNode', 'VNodeChild', 'Component', 'DefineComponent', 'RenderFunction', 'Slot', 'Slots', 'FunctionalComponent'].includes(exported)) return 'callbacks, components or render recipes'
+          const resolved = await sourceModule(sourceFile, statement.moduleSpecifier.text, true)
+          if (resolved) return named(exported, resolved.file, resolved.ast)
+        }
+        if (ts.isExportDeclaration(statement) && statement.moduleSpecifier && ts.isStringLiteral(statement.moduleSpecifier)) {
+          const binding = statement.exportClause && ts.isNamedExports(statement.exportClause) ? statement.exportClause.elements.find(item => item.name.text === name) : null
+          if (!binding && statement.exportClause) continue
+          const resolved = await sourceModule(sourceFile, statement.moduleSpecifier.text, true)
+          if (resolved) { const problem = await named(binding?.propertyName?.text ?? name, resolved.file, resolved.ast); if (problem) return problem }
+        }
+      }
+      return null
+    }
+    if (ts.isTypeReferenceNode(node) && ts.isIdentifier(node.typeName)) {
+      const problem = await named(node.typeName.text)
+      if (problem) return problem
+    }
+    if (ts.isTypeReferenceNode(node) && ts.isQualifiedName(node.typeName) && ts.isIdentifier(node.typeName.left)) {
+      const namespace = ast.statements.find(statement => ts.isImportDeclaration(statement) && statement.importClause?.namedBindings && ts.isNamespaceImport(statement.importClause.namedBindings) && statement.importClause.namedBindings.name.text === node.typeName.left.text)
+      if (namespace && ts.isStringLiteral(namespace.moduleSpecifier)) {
+        if (['vue', '@vue/runtime-core'].includes(namespace.moduleSpecifier.text) && ['VNode', 'VNodeChild', 'Component', 'DefineComponent', 'RenderFunction', 'Slot', 'Slots', 'FunctionalComponent'].includes(node.typeName.right.text)) return 'callbacks, components or render recipes'
+        const resolved = await sourceModule(file, namespace.moduleSpecifier.text, true)
+        if (resolved) { const problem = await named(node.typeName.right.text, resolved.file, resolved.ast); if (problem) return problem }
+      }
+    }
+    if (ts.isImportTypeNode(node) && ts.isLiteralTypeNode(node.argument) && ts.isStringLiteral(node.argument.literal) && node.qualifier && ts.isIdentifier(node.qualifier)) {
+      if (['vue', '@vue/runtime-core'].includes(node.argument.literal.text) && ['VNode', 'VNodeChild', 'Component', 'DefineComponent', 'RenderFunction', 'Slot', 'Slots', 'FunctionalComponent'].includes(node.qualifier.text)) return 'callbacks, components or render recipes'
+      const resolved = await sourceModule(file, node.argument.literal.text, true)
+      if (resolved) { const problem = await named(node.qualifier.text, resolved.file, resolved.ast); if (problem) return problem }
+    }
+    if (ts.isExpressionWithTypeArguments(node) && ts.isIdentifier(node.expression)) {
+      const problem = await named(node.expression.text)
+      if (problem) return problem
+    }
+    const children = []
+    ts.forEachChild(node, child => { children.push(child) })
+    for (const child of children) { const problem = await contractViolation(file, ast, child, seen); if (problem) return problem }
+    return null
+  }
   const forbiddenUiCalls = new Set(['fetch', '$fetch', 'useFetch', 'useAsyncData', 'useSupabaseClient', 'useSupabaseUser', 'useTenant', 'useShop', 'useRuntimeConfig', 'useState'])
   for (const absolute of await walk(path.join(root, 'packages/ui/src'))) {
     if (!/\.(vue|ts|tsx|js|jsx)$/.test(absolute)) continue
@@ -270,6 +324,7 @@ export async function validateAtomicTemplateArchitecture({ root = defaultRoot } 
       ts.forEachChild(node, discoverUiAliases)
     }
     discoverUiAliases(ast)
+    const contractReferences = []
     function inspectUi(node) {
       if (ts.isCallExpression(node)) {
         if (node.expression.kind === ts.SyntaxKind.ImportKeyword && ts.isStringLiteral(node.arguments[0]) && /^(?:~|@)\/|(?:^|\/)apps\/|^@building-suit\/(?:auth|data-access)(?:\/|$)/.test(node.arguments[0].text)) failures.push(`${file}: UI may not import product/identity/data infrastructure ${node.arguments[0].text}`)
@@ -284,11 +339,16 @@ export async function validateAtomicTemplateArchitecture({ root = defaultRoot } 
         if (ts.isCallExpression(parent) && ts.isIdentifier(parent.expression) && parent.expression.text === 'defineProps' && parent.typeArguments?.includes(ancestor)) { propType = true; break }
       }
       const isPresentationContract = file.includes('/src/types/') || (registry.pageTemplates?.includes(path.basename(file, '.vue')) && propType)
-      if (isPresentationContract && (ts.isFunctionTypeNode(node) || (ts.isTypeReferenceNode(node) && renderContractBindings.has(node.typeName.getText(ast))))) failures.push(`${file}: presentation contracts may not accept callbacks, components or render recipes`)
-      if (isPresentationContract && (node.kind === ts.SyntaxKind.AnyKeyword || (ts.isTypeReferenceNode(node) && node.typeName.getText(ast) === 'Record' && node.typeArguments?.some(argument => argument.kind === ts.SyntaxKind.UnknownKeyword)))) failures.push(`${file}: page presentation contracts may not contain untyped state bags`)
+      if (isPresentationContract && (ts.isTypeReferenceNode(node) || ts.isImportTypeNode(node))) contractReferences.push(node)
+      if (isPresentationContract && (ts.isFunctionTypeNode(node) || ts.isTypeQueryNode(node) || (ts.isTypeReferenceNode(node) && renderContractBindings.has(node.typeName.getText(ast))))) failures.push(`${file}: presentation contracts may not accept callbacks, components or render recipes`)
+      if (isPresentationContract && ([ts.SyntaxKind.AnyKeyword, ts.SyntaxKind.UnknownKeyword].includes(node.kind) || (ts.isTypeReferenceNode(node) && node.typeName.getText(ast) === 'Record' && node.typeArguments?.some(argument => argument.kind === ts.SyntaxKind.UnknownKeyword)))) failures.push(`${file}: page presentation contracts may not contain untyped state bags`)
       ts.forEachChild(node, inspectUi)
     }
     inspectUi(ast)
+    for (const reference of contractReferences) {
+      const violation = await contractViolation(absolute, ast, reference)
+      if (violation) failures.push(`${file}: imported presentation contracts may not contain ${violation}`)
+    }
   }
   let uxSources = []
   try { uxSources = await walk(path.join(root, 'packages/ux/src')) }

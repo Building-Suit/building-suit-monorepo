@@ -1,8 +1,8 @@
 import type { BsChartPoint, BsChartSeries, BsSetupStepData } from '@building-suit/contracts'
-import type { BsDataTableColumn } from '@building-suit/ux'
+export interface BsDashboardColumn { key: string; header: string; align?: 'start' | 'center' | 'end'; hidden?: boolean }
 export interface BsDashboardMetric { id: string; title: string; value: string; hint: string; changeLabel: string; tone: string; to: string; source: { location: string; path: string } | null }
 export interface BsDashboardRow { id: string; name: string; to: string; status: string; cells: Record<string, string>; source: { location: string; path: string } | null }
-export interface BsDashboardTable { title: string; empty: string; rows: BsDashboardRow[]; columns: BsDataTableColumn<BsDashboardRow>[]; loading: boolean; error: string; to: string; action: boolean }
+export interface BsDashboardTable { title: string; empty: string; rows: BsDashboardRow[]; columns: BsDashboardColumn[]; loading: boolean; error: string; to: string; action: boolean }
 export interface BsDashboardFilters { period: string; date: string; location: string; months: number; custom: boolean; from: string; to: string }
 export interface BsDashboardSetupForm { name: string; mode: string }
 export interface BsDashboardView {

@@ -117,3 +117,33 @@ for (const [name, file, source] of [
  await writeFile(path.join(root, 'packages/ux/src', file), source)
  assert.ok((await validateAtomicTemplateArchitecture({ root })).failures.some(message => /UX (?:may not|must remain)/.test(message)))
 })
+
+for (const [name, shape, importDeclaration, propType, invalid] of [
+ ['callback through re-export', 'export interface View { columns: { value?: (row: string) => string }[] }', 'import type { PublicView } from "../utils/public"', 'PublicView', true],
+ ['opaque imported bag', 'export type View = Record<string, unknown>', 'import type { View } from "../utils/model"', 'View', true],
+ ['Vue component type alias', 'import type { Component as Renderable } from "vue"; export interface View { panel: Renderable }', 'import type { View } from "../utils/model"', 'View', true],
+ ['namespace callback model', 'export interface View { format: () => string }', 'import type * as Models from "../utils/model"', 'Models.View', true],
+ ['inline imported callback model', 'export interface View { format: () => string }', '', 'import("../utils/model").View', true],
+ ['namespace Vue component', '', 'import type * as Models from "vue"', 'Models.Component', true],
+ ['inline Vue component', '', '', 'import("vue").Component', true],
+ ['computed callback type', 'declare const renderer: () => string; export interface View { render: typeof renderer }', 'import type { View } from "../utils/model"', 'View', true],
+ ['neutral imported data', 'export interface View { title: string; rows: { key: string; amount: string }[] }', 'import type { PublicView } from "../utils/public"', 'PublicView', false],
+]) test(`page contract resolves ${name}`, async t => {
+ const root = await fixture(t, '<template><BsExamplePage/></template>')
+ await mkdir(path.join(root, 'packages/ui/src/utils'))
+ await writeFile(path.join(root, 'packages/ui/src/utils/model.ts'), shape)
+ await writeFile(path.join(root, 'packages/ui/src/utils/public.ts'), 'export type { View as PublicView } from "./model"')
+ await writeFile(path.join(root, 'packages/ui/src/templates/BsExamplePage.vue'), `<script setup lang="ts">${importDeclaration}; defineProps<{ view: ${propType} }>()</script><template><main/></template>`)
+ const result = await validateAtomicTemplateArchitecture({ root })
+ assert.equal(result.failures.some(message => /imported presentation contracts/.test(message)), invalid, result.failures.join('\n'))
+})
+
+test('page contract follows the types condition rather than the runtime export', async t => {
+ const root = await fixture(t, '<template><BsExamplePage/></template>')
+ await mkdir(path.join(root, 'packages/model'))
+ await writeFile(path.join(root, 'packages/model/package.json'), JSON.stringify({ exports: { '.': { types: './model.d.ts', import: './model.js' } } }))
+ await writeFile(path.join(root, 'packages/model/model.js'), 'export const label = "Runtime only"')
+ await writeFile(path.join(root, 'packages/model/model.d.ts'), 'export interface View { render: () => string }')
+ await writeFile(path.join(root, 'packages/ui/src/templates/BsExamplePage.vue'), '<script setup lang="ts">import type { View } from "@building-suit/model"; defineProps<{ view: View }>()</script><template><main/></template>')
+ assert.ok((await validateAtomicTemplateArchitecture({ root })).failures.some(message => /imported presentation contracts/.test(message)))
+})
