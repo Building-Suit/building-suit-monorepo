@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { BsInvitationAction } from '@building-suit/ux'
 import type { BsAccessInvitationView } from '../types/accessPresentation'
 const props = defineProps<{
   invitations: BsAccessInvitationView[]

@@ -152,6 +152,12 @@ function makeDebt(file, kind, evidence, loc, target) {
 export async function auditSuitTemplates({ root = defaultRoot } = {}) {
   const { suits, files } = await discoverSuitVueFiles(root)
   const relativeFiles = files.map(file => slash(path.relative(root, file)))
+  let templateNames = new Set()
+  try {
+    const manifest = JSON.parse(await readFile(path.join(root, 'packages/ui/package.json'), 'utf8'))
+    templateNames = new Set(Object.values(manifest.exports || {}).filter(target => typeof target === 'string' && /^\.\/src\/templates\/Bs[A-Z]\w*\.vue$/.test(target)).map(target => path.basename(target, '.vue')))
+  } catch (error) { if (error.code !== 'ENOENT') throw error }
+
   const localNamesBySuit = new Map()
   for (const suit of suits) {
     const prefix = `apps/${suit}/app/components/`
@@ -176,9 +182,13 @@ export async function auditSuitTemplates({ root = defaultRoot } = {}) {
 
     if (descriptor.template?.ast) {
       const localNames = localNamesBySuit.get(suit) || new Set()
+      const roots = descriptor.template.ast.children.filter(node => node.type === 1)
+      const rootTemplate = roots.length === 1 && templateNames.has(roots[0].tag) ? roots[0] : undefined
+      const outlet = file.includes('/app/layouts/') && rootTemplate?.children.filter(node => node.type === 1).length === 1
+        ? rootTemplate.children.find(node => node.type === 1 && node.tag === 'slot' && node.props.length === 0 && node.children.length === 0) : undefined
       function visit(node) {
         if (node.type === 1) {
-          const kind = tagKind(node, localNames)
+          const kind = node === outlet ? null : tagKind(node, localNames)
           if (kind) debt.push(makeDebt(file, kind, `<${node.tag}>`, location(node.loc), targetForTag(node.tag, kind)))
           for (const prop of node.props) {
             const attribute = presentationAttribute(prop)

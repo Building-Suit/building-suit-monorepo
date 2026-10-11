@@ -188,5 +188,5 @@ export interface BsInvitationAction { key: string; label: string; disabled?: boo
 
 export { administrationCapabilitySupported, administrationShellRegistration } from './administration.ts'
 
-export { tabNavigationTarget } from './tabNavigation'
-export { permissionSelection } from './permissionSelection'
+export { tabNavigationTarget } from './tabNavigation.ts'
+export { permissionSelection } from './permissionSelection.ts'

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { BsDimensionValueForm, BsDimensionPolicyForm, BsDimensionReportFilter, BsDimensionsCopy } from '@building-suit/ui/dimension-presentation'
 import type { DimensionKind, DimensionValueRow } from '~/utils/accountingDimensions'
 import { dimensionReportReconciles } from '~/utils/accountingDimensions'
 
@@ -57,178 +58,33 @@ async function runReport() {
 }
 watch([currentId, () => user.value?.id], () => { visible.value = false; tab.value = 'values' }, { flush: 'sync' })
 const ledgerPresentation = useLedgerPresentation()
+const pageCopy = computed<BsDimensionsCopy>(() => ({ title: t('dimensions.title'), denied: t('dimensions.denied'), values: t('dimensions.values'), policies: t('dimensions.policies'), policiesHint: t('dimensions.policiesHint'), add: t('dimensions.add'), edit: t('dimensions.edit'), archive: t('dimensions.archive'), kind: t('dimensions.kind'), code: t('dimensions.code'), name: t('dimensions.name'), description: t('dimensions.description'), empty: t('dimensions.empty'), account: t('dimensions.account'), requirement: t('dimensions.requirement'), reportType: t('dimensions.reportType'), from: t('dimensions.from'), to: t('dimensions.to'), filter: t('dimensions.filter'), run: t('dimensions.run'), reconciled: t('dimensions.reconciled'), notReconciled: t('dimensions.notReconciled'), grouped: t('dimensions.grouped'), openingDebit: t('dimensions.openingDebit'), openingCredit: t('dimensions.openingCredit'), periodDebit: t('dimensions.periodDebit'), periodCredit: t('dimensions.periodCredit'), subtitle: t('dimensions.policy'), loadError: t('dimensions.errors.load'), status: t('dimensions.statusLabel'), retry: t('common.retry'), save: t('common.save'), cancel: t('common.cancel') }))
+const valuePresentationForm = computed<BsDimensionValueForm>({ get: () => ({ ...valueForm }), set: value => { Object.assign(valueForm, { ...value, kind: value.kind as DimensionKind }) } })
+const policyPresentationForm = computed<BsDimensionPolicyForm>({ get: () => ({ ...policy }), set: value => { Object.assign(policy, { ...value, kind: value.kind as DimensionKind, requirement: value.requirement as 'optional' | 'required' }) } })
+const reportPresentationFilter = computed<BsDimensionReportFilter>({ get: () => ({ ...reportFilter }), set: value => { Object.assign(reportFilter, { ...value, kind: value.kind as DimensionKind, report: value.report as typeof reportFilter.report }) } })
+const dimensionViews = computed(() => (workspace.value?.values ?? []).map(value => ({ id: value.id, kindLabel: t(`dimensions.kinds.${value.kind}`), code: value.code, name: value.name, statusLabel: t(`dimensions.status.${value.status}`), editable: value.status === 'active' })))
+const policyViews = computed(() => (workspace.value?.policies ?? []).map(value => ({ id: `${value.account_id}:${value.kind}`, accountName: workspace.value?.accounts.find(account => account.id === value.account_id)?.name || '', kindLabel: t(`dimensions.kinds.${value.kind}`), requirementLabel: t(`dimensions.requirements.${value.requirement}`) })))
+const reportViews = computed(() => report.value ? report.value.groups.map((value, index) => ({ id: `${value.dimension_value_id ?? 'unassigned'}:${value.code}:${index}`, code: value.code, name: value.dimension_value_id ? value.name : t('dimensions.unassigned'), openingDebit: value.opening_debit_minor, openingCredit: value.opening_credit_minor, periodDebit: value.period_debit_minor, periodCredit: value.period_credit_minor })) : null)
+const kindOptions = computed(() => ['cost_center', 'project'].map(value => ({ value, label: t(`dimensions.kinds.${value}`) })))
+const reportOptions = computed(() => ['general_ledger', 'trial_balance', 'profit_loss', 'balance_sheet', 'cash_flow'].map(value => ({ value, label: t(`dimensions.reports.${value}`) })))
+const requirementOptions = computed(() => ['optional', 'required'].map(value => ({ value, label: t(`dimensions.requirements.${value}`) })))
+const valueOptions = computed(() => [{ value: '', label: t('common.any') }, ...(workspace.value?.values ?? []).filter(value => value.kind === reportFilter.kind).map(value => ({ value: value.id, label: `${value.code} · ${value.name}${value.status === 'inactive' ? ` (${t('dimensions.status.inactive')})` : ''}` }))])
+const accountOptions = computed(() => (workspace.value?.accounts ?? []).filter(value => !value.archived).map(value => ({ value: value.id, label: `${value.code} · ${value.name}` })))
+const pageTabs = computed(() => ['values', 'policies', ...(can('reports.read') ? ['reports'] : [])].map(value => ({ value, label: t(`dimensions.tabs.${value}`) })))
+function editValueById(id: string) { const value = workspace.value?.values.find(value => value.id === id); if (value) editValue(value) }
+function archiveValueById(id: string) { const value = workspace.value?.values.find(value => value.id === id); if (value) void archive(value) }
+function editPolicyById(id: string) { const value = workspace.value?.policies.find(value => `${value.account_id}:${value.kind}` === id); if (value) editPolicy(value) }
 </script>
 
 <template>
-  <BsStack gap="lg">
-    <BsPageHeader
-      :title="t('dimensions.title')"
-      :subtitle="t('dimensions.policy')"
-      :context="ledgerPresentation.context(tab === 'reports' ? reportFilter.from : undefined, tab === 'reports' ? reportFilter.to : undefined, undefined)"
-      :context-label="ledgerPresentation.t('pageContext.label')"
-    />
-    <BsText v-if="!can('dimensions.read')" role="status">{{ t('dimensions.denied') }}</BsText>
-    <template v-else>
-      <BsInline :aria-label="t('dimensions.title')" as="nav" gap="sm" :wrap="true">
-        <template v-for="item in ['values','policies','reports'] as const" :key="item">
-          <BsButton v-if="item!=='reports' || can('reports.read')" type="submit" :variant="tab===item ? 'primary' : 'default'" @click="tab=item">{{ t(`dimensions.tabs.${item}`) }}</BsButton>
-        </template>
-      </BsInline>
-      <BsText v-if="error" role="alert" tone="danger">{{ t('dimensions.errors.load') }} <BsButton type="submit" @click="load">{{ t('common.retry') }}</BsButton></BsText>
-      <BsSectionSkeleton v-else-if="pending" variant="table" :rows="5" />
-      <template v-else-if="workspace">
-        <BsBox v-if="workspace.legacy_uncontrolled_count" role="status" as="aside" padding="lg" border radius="control">{{ t('dimensions.legacyWarning', { count: workspace.legacy_uncontrolled_count }) }}</BsBox>
-        <BsCard v-if="tab==='values'" as="section" padding="none" overflow="hidden">
-          <BsHeading :level="2" size="h2">{{ t('dimensions.values') }}</BsHeading>
-          <BsDataTable
-            :value="workspace.values"
-            row-key="id"
-            :label="t('dimensions.values')"
-            :capabilities="{ insert: can('dimensions.manage') && !readOnly, edit: can('dimensions.manage') && !readOnly, archive: can('dimensions.manage') && !readOnly }"
-            :action-labels="{ insert: t('dimensions.add'), edit: t('dimensions.edit'), archive: t('dimensions.archive') }"
-            :can-row-action="(_action, row) => row.status === 'active'"
-            :columns="[{ key: 'kind', field: 'kind', header: t('dimensions.kind') }, { key: 'code', field: 'code', header: t('dimensions.code') }, { key: 'name', field: 'name', header: t('dimensions.name') }, { key: 'status', field: 'status', header: t('dimensions.statusLabel') }]"
-            @create="editValue()"
-            @edit="editValue"
-            @archive="archive"
-          >
-            <template #empty>{{ t('dimensions.empty') }}</template>
-            <template #cell-kind="{ row }">{{ t(`dimensions.kinds.${row.kind}`) }}</template>
-            <template #cell-status="{ row }">{{ t(`dimensions.status.${row.status}`) }}</template>
-          </BsDataTable>
-        </BsCard>
-        <BsCard v-else-if="tab==='policies'" as="section" padding="md">
-          <BsStack gap="md">
-            <BsHeading :level="2" size="h2">{{ t('dimensions.policies') }}</BsHeading>
-            <BsText tone="muted">{{ t('dimensions.policiesHint') }}</BsText>
-            <BsDataTable
-              :value="workspace.policies"
-              row-key="account_id"
-              :label="t('dimensions.policies')"
-              :capabilities="{ insert: can('dimensions.configure') && !readOnly, edit: can('dimensions.configure') && !readOnly }"
-              :action-labels="{ insert: t('dimensions.add'), edit: t('dimensions.edit') }"
-              :columns="[{ key: 'column1', header: t('dimensions.account') }, { key: 'column2', header: t('dimensions.kind') }, { key: 'column3', header: t('dimensions.requirement') }]"
-              @create="editPolicy()"
-              @edit="editPolicy"
-            >
-              <template #cell-column1="{ row }">{{ workspace.accounts.find(account=>account.id===row.account_id)?.name }}</template>
-              <template #cell-column2="{ row }">{{ t(`dimensions.kinds.${row.kind}`) }}</template>
-              <template #cell-column3="{ row }">{{ t(`dimensions.requirements.${row.requirement}`) }}</template>
-            </BsDataTable>
-          </BsStack>
-        </BsCard>
-        <BsStack v-else as="section" gap="md">
-          <BsForm layout="grid" :columns="4" @submit.prevent="runReport">
-            <BsFloatingField :label="t('dimensions.reportType')">
-              <BsSelect v-model="reportFilter.report" native>
-                <BsSelectOption v-for="kind in ['general_ledger','trial_balance','profit_loss','balance_sheet','cash_flow'] as const" :key="kind" :value="kind">{{ t(`dimensions.reports.${kind}`) }}</BsSelectOption>
-              </BsSelect>
-            </BsFloatingField>
-            <BsFloatingField :label="t('dimensions.kind')">
-              <BsSelect v-model="reportFilter.kind" native>
-                <BsSelectOption value="cost_center">{{ t('dimensions.kinds.cost_center') }}</BsSelectOption>
-                <BsSelectOption value="project">{{ t('dimensions.kinds.project') }}</BsSelectOption>
-              </BsSelect>
-            </BsFloatingField>
-            <BsFloatingField :label="t('dimensions.from')">
-              <BsInput v-model="reportFilter.from" type="date" required />
-            </BsFloatingField>
-            <BsFloatingField :label="t('dimensions.to')">
-              <BsInput v-model="reportFilter.to" type="date" required />
-            </BsFloatingField>
-            <BsFloatingField :label="t('dimensions.filter')">
-              <BsSelect v-model="reportFilter.valueId" native>
-                <BsSelectOption value="">{{ t('common.any') }}</BsSelectOption>
-                <BsSelectOption v-for="value in workspace.values.filter(item=>item.kind===reportFilter.kind)" :key="value.id" :value="value.id">{{ value.code }} · {{ value.name }}{{ value.status==='inactive' ? ` (${t('dimensions.status.inactive')})` : '' }}</BsSelectOption>
-              </BsSelect>
-            </BsFloatingField>
-            <BsButton type="submit" variant="primary">{{ t('dimensions.run') }}</BsButton>
-          </BsForm>
-          <template v-if="report">
-            <BsText :data-dimension-reconciled="reconciled" :tone="reconciled ? 'success' : 'danger'">{{ reconciled ? t('dimensions.reconciled') : t('dimensions.notReconciled') }}</BsText>
-            <BsCard as="section" padding="none" overflow="hidden">
-              <BsHeading :level="2" size="h2">{{ t('dimensions.grouped') }}</BsHeading>
-              <BsDataTable
-                :value="report.groups"
-                row-key="code"
-                :label="t('dimensions.grouped')"
-                :columns="[{ key: 'code', field: 'code', header: t('dimensions.code') }, { key: 'name', field: 'name', header: t('dimensions.name') }, { key: 'column3', header: t('dimensions.openingDebit') }, { key: 'column4', header: t('dimensions.openingCredit') }, { key: 'column5', header: t('dimensions.periodDebit') }, { key: 'column6', header: t('dimensions.periodCredit') }]"
-              >
-                <template #cell-name="{ row }">{{ row.dimension_value_id ? row.name : t('dimensions.unassigned') }}</template>
-                <template #cell-column3="{ row }">
-                  <BsMoneyText :amount="row.opening_debit_minor" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
-                </template>
-                <template #cell-column4="{ row }">
-                  <BsMoneyText :amount="row.opening_credit_minor" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
-                </template>
-                <template #cell-column5="{ row }">
-                  <BsMoneyText :amount="row.period_debit_minor" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
-                </template>
-                <template #cell-column6="{ row }">
-                  <BsMoneyText :amount="row.period_credit_minor" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
-                </template>
-              </BsDataTable>
-            </BsCard>
-          </template>
-        </BsStack>
-      </template>
-    </template>
-    <BsRecordActionDialog
-      v-model:visible="visible"
-      :title="valueForm.id ? t('dimensions.edit') : t('dimensions.add')"
-      :pending="saving"
-      :dirty="dirty"
-      :error="formError"
-      :submit-label="t('common.save')"
-      :cancel-label="t('common.cancel')"
-      :submit-disabled="readOnly"
-      @submit="saveValue"
-    >
-      <BsFloatingField :label="t('dimensions.kind')">
-        <BsSelect v-model="valueForm.kind" :disabled="Boolean(valueForm.id)" native>
-          <BsSelectOption value="cost_center">{{ t('dimensions.kinds.cost_center') }}</BsSelectOption>
-          <BsSelectOption value="project">{{ t('dimensions.kinds.project') }}</BsSelectOption>
-        </BsSelect>
-      </BsFloatingField>
-      <BsFloatingField :label="t('dimensions.code')">
-        <BsInput v-model="valueForm.code" required maxlength="50" />
-      </BsFloatingField>
-      <BsFloatingField :label="t('dimensions.name')">
-        <BsInput v-model="valueForm.name" required maxlength="160" />
-      </BsFloatingField>
-      <BsFloatingField :label="t('dimensions.description')">
-        <BsTextarea v-model="valueForm.description" maxlength="500" />
-      </BsFloatingField>
-    </BsRecordActionDialog>
-    <BsRecordActionDialog
-      v-model:visible="policyOpen"
-      :title="t('dimensions.policies')"
-      :pending="policySaving"
-      :dirty="policyDirty"
-      :error="policyError"
-      :submit-label="t('common.save')"
-      :cancel-label="t('common.cancel')"
-      :submit-disabled="readOnly"
-      @submit="savePolicy"
-    >
-      <BsFloatingField :label="t('dimensions.account')">
-        <BsSelect v-model="policy.accountId" required native>
-          <BsSelectOption value="" />
-          <BsSelectOption v-for="account in workspace?.accounts.filter(item=>!item.archived)" :key="account.id" :value="account.id">{{ account.code }} · {{ account.name }}</BsSelectOption>
-        </BsSelect>
-      </BsFloatingField>
-      <BsFloatingField :label="t('dimensions.kind')">
-        <BsSelect v-model="policy.kind" native>
-          <BsSelectOption value="cost_center">{{ t('dimensions.kinds.cost_center') }}</BsSelectOption>
-          <BsSelectOption value="project">{{ t('dimensions.kinds.project') }}</BsSelectOption>
-        </BsSelect>
-      </BsFloatingField>
-      <BsFloatingField :label="t('dimensions.requirement')">
-        <BsSelect v-model="policy.requirement" native>
-          <BsSelectOption value="optional">{{ t('dimensions.requirements.optional') }}</BsSelectOption>
-          <BsSelectOption value="required">{{ t('dimensions.requirements.required') }}</BsSelectOption>
-        </BsSelect>
-      </BsFloatingField>
-    </BsRecordActionDialog>
-  </BsStack>
+  <BsAccountingDimensionsPage
+    v-model:value-form="valuePresentationForm" v-model:policy="policyPresentationForm" v-model:report-filter="reportPresentationFilter" v-model:visible="visible" v-model:policy-open="policyOpen"
+    :tab="tab" :copy="pageCopy" :context="ledgerPresentation.context(tab === 'reports' ? reportFilter.from : undefined, tab === 'reports' ? reportFilter.to : undefined, undefined)" :context-label="ledgerPresentation.t('pageContext.label')"
+    :tabs="pageTabs" :can-read="can('dimensions.read')" :can-manage="can('dimensions.manage') && !readOnly" :can-configure="can('dimensions.configure') && !readOnly" :read-only="readOnly"
+    :available="Boolean(workspace)" :pending="pending" :error="Boolean(error)" :legacy-warning="workspace?.legacy_uncontrolled_count ? t('dimensions.legacyWarning', { count: workspace.legacy_uncontrolled_count }) : undefined"
+    :values="dimensionViews" :policies="policyViews" :groups="reportViews" :reconciled="reconciled" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale"
+    :kind-options="kindOptions" :report-options="reportOptions" :value-options="valueOptions" :account-options="accountOptions" :requirement-options="requirementOptions"
+    :saving="saving" :dirty="dirty" :form-error="formError" :policy-saving="policySaving" :policy-dirty="policyDirty" :policy-error="policyError"
+    @update:tab="tab = $event as 'values' | 'policies' | 'reports'" @retry="load" @create-value="editValue()" @edit-value="editValueById" @archive-value="archiveValueById" @create-policy="editPolicy()" @edit-policy="editPolicyById" @save-value="saveValue" @save-policy="savePolicy" @run-report="runReport"
+  />
 </template>

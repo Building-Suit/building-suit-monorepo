@@ -116,6 +116,7 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
       :context="[{ label: isArabic ? 'الاتجاه' : 'Direction', value: isArabic ? 'RTL' : 'LTR' }, { label: isArabic ? 'المصدر' : 'Owner', value: 'packages/ui' }]"
     />
 
+    <BsContentSection :title="isArabic ? 'قوالب الصفحات' : 'Page templates'"><BsLink to="/templates/access?suit=ledger">Ledger access template</BsLink><BsLink to="/templates/access?suit=shop">Shop access template</BsLink></BsContentSection>
     <BsContentSection id="administration-shell" :title="isArabic ? 'هيكل الإدارة' : 'Administration shell'" :description="isArabic ? 'أمثلة التنقل والحالات من بيانات التطبيق.' : 'App-owned descriptors, controlled selection and normal/loading/empty/overflow examples.'">
       <BsInline>
         <BsButton v-for="state in (['normal', 'loading', 'empty', 'overflow'] as const)" :key="state" :aria-pressed="shellState === state" @click="shellState = state">{{ state }}</BsButton>

@@ -47,17 +47,11 @@ async function signIn() {
 </script>
 
 <template>
-  <BsAuthLayout :product-name="t('app.name')" :home-label="t('marketing.home')" :title="t('auth.welcomeTitle')" :description="t('auth.welcomeBody')">
-    <template #logo="{ tone }"><BsProductLogo name="Ledger Suit" asset-prefix="/brand/ledger-suit" :tone="tone" size="auth" /></template>
-        <BsAuthForm
-          :eyebrow="t('auth.welcomeEyebrow')" :title="t('auth.signIn')" :description="t('auth.subtitle')"
-          :pending="pending" :error="error" :submit-label="t('auth.signIn')" :pending-label="t('auth.signingIn')"
-          :data-hydrated="hydrated" @submit="signIn"
-        >
-          <BsField :label="t('auth.email')" required><template #default="field"><BsInput v-model="email" :id="field.id" type="email" autocomplete="email" required dir="ltr" /></template></BsField>
-          <BsField :label="t('auth.password')" required><template #default="field"><BsInput v-model="password" :id="field.id" type="password" autocomplete="current-password" required dir="ltr" /></template></BsField>
-          <template #footer>{{ t('auth.needAccount') }} <BsLink to="/signup" variant="standalone">{{ t('landing.startTrial') }}</BsLink></template>
-        </BsAuthForm>
-        <BsInline as="nav" justify="center"><BsLink to="/privacy" variant="muted">{{ t('marketing.privacy') }}</BsLink><BsLink to="/contact" variant="muted">{{ t('marketing.contact') }}</BsLink></BsInline>
-  </BsAuthLayout>
+  <BsSignInPage
+    v-model:email="email" v-model:password="password"
+    :product="{ name: t('app.name'), assetPrefix: '/brand/ledger-suit', homeLabel: t('marketing.home'), title: t('auth.welcomeTitle'), description: t('auth.welcomeBody') }"
+    :copy="{ eyebrow: t('auth.welcomeEyebrow'), title: t('auth.signIn'), description: t('auth.subtitle'), email: t('auth.email'), password: t('auth.password'), submit: t('auth.signIn'), pending: t('auth.signingIn'), accountPrompt: t('auth.needAccount'), signup: t('landing.startTrial') }"
+    signup-to="/signup" :legal="[{ to: '/privacy', label: t('marketing.privacy') }, { to: '/contact', label: t('marketing.contact') }]"
+    :pending="pending" :error="error" :hydrated="hydrated" @submit="signIn"
+  />
 </template>

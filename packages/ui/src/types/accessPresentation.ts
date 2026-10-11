@@ -91,6 +91,7 @@ export interface BsAccessIdentityCopy {
   name?: string
   jobTitle?: string
   email: string
+  emailMaxLength?: number
   role: string
   locations?: string
   help?: string

@@ -524,7 +524,8 @@ test('Automation and Inventory consume the final shared presentation contracts',
   for (const component of ['BsDataTable', 'BsRecordActionDialog', 'BsButton', 'BsSelect', 'BsCard', 'BsKpiCard', 'BsStatusBadge', 'BsAppShell']) {
     assert.match(automation, new RegExp(`<${component}\\b`), `Automation does not consume ${component}`)
   }
-  assert.match(readFileSync(path.join(workspaceRoot, 'apps/inventory-suit/app/pages/index.vue'), 'utf8'), /<BsCard\b/)
+  assert.match(readFileSync(path.join(workspaceRoot, 'apps/inventory-suit/app/pages/index.vue'), 'utf8'), /<BsWelcomePage\b/)
+  assert.match(readFileSync(new URL('../src/templates/BsWelcomePage.vue', import.meta.url), 'utf8'), /<BsCard\b/)
   assert.match(readFileSync(path.join(workspaceRoot, 'apps/inventory-suit/app/layouts/default.vue'), 'utf8'), /<BsAppShell\b/)
 })
 
@@ -535,7 +536,7 @@ test('shared UI exports are explicit and cover every governed source', () => {
   const components = vueFiles(path.join(workspaceRoot, 'packages/ui/src'))
     .map(file => `./${path.relative(path.join(workspaceRoot, 'packages/ui'), file).replaceAll(path.sep, '/')}`)
   assert.ok(components.every(file => path.basename(file, '.vue').startsWith('Bs')), 'every renderable shared component must have a canonical Bs-prefixed name')
-  assert.deepEqual(Object.values(manifest.exports).sort(), [...components, './src/styles/base.css', './src/types/accessPresentation.ts'].sort())
+  assert.deepEqual(Object.values(manifest.exports).sort(), [...components, './src/styles/base.css', ...readdirSync(path.join(workspaceRoot, 'packages/ui/src/types')).filter(file => file.endsWith('.ts')).map(file => `./src/types/${file}`)].sort())
 })
 
 
@@ -629,4 +630,19 @@ test('both access routes delegate their entire render tree to the same page temp
     assert.doesNotMatch(content, /<template|<slot|class=|style=/)
     assert.match(descriptor.scriptSetup.content, /memberViews/)
   }
+})
+
+test('access page defaults to displaying supplied data when availability is omitted', async () => {
+  const app = vue.createSSRApp({ render: () => vue.h(component('templates/BsAccessManagementPage.vue'), {
+    copy: { title: 'Team', subtitle: '', members: 'Members', roles: 'Roles', invitations: 'Invitations', noMembers: 'No members', noInvitations: 'No invitations', retry: 'Retry', noTeam: 'No team', memberColumns: { name: 'Name', role: 'Role', status: 'Status', actions: 'Actions' }, invitationColumns: { email: 'Email', role: 'Role', status: 'Status', sent: 'Sent', actions: 'Actions' } },
+    activeTab: 'members', tabs: [], members: [], roles: [], invitations: [],
+  }) })
+  for (const name of ['BsStack', 'BsInline']) app.component(name, { setup: (_, { slots }) => () => vue.h('div', slots.default?.()) })
+  app.component('BsPageHeader', { render: () => vue.h('header') })
+  app.component('BsAccessTabs', { render: () => vue.h('nav') })
+  app.component('BsAccessMemberTable', { render: () => vue.h('section', 'Members displayed') })
+  app.component('BsEmptyState', { render: () => vue.h('aside', 'No team') })
+  const html = await renderToString(app)
+  assert.match(html, /Members displayed/)
+  assert.doesNotMatch(html, /No team/)
 })

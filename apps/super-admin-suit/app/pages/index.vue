@@ -14,28 +14,9 @@ async function submit() {
 </script>
 
 <template>
-  <BsRouteLayout v-if="state === 'success'" name="default">
-    <BsContentSection :title="t('welcome')" :description="t('description')" padding="lg">
-      <BsStateSurface state="success" :title="t('auth.authorized')" />
-      <BsStateSurface state="empty" :title="t('auth.empty')" />
-      <BsButton :pending="pending" @click="signOut">{{ t('auth.signOut') }}</BsButton>
-      <BsStateSurface v-if="actionError" state="error" :title="t('auth.actionError')" />
-    </BsContentSection>
-  </BsRouteLayout>
-  <BsAuthLayout v-else :product-name="t('product.name')" :home-label="t('product.name')" :title="t('product.name')" :description="t('auth.description')">
-    <template #logo="{ tone }"><BsProductLogo :name="t('product.name')" :tone="tone" /></template>
-    <BsAuthForm v-if="state === 'signed-out'" :title="t('auth.signIn')" :description="t('auth.description')" :pending="pending" :error="actionError ? t('auth.signInError') : null" :submit-label="t('auth.signIn')" :pending-label="t('auth.pending')" @submit="submit">
-      <BsField for="admin-email" :label="t('auth.email')" required>
-        <BsInput id="admin-email" v-model="email" type="email" autocomplete="username" required />
-      </BsField>
-      <BsField for="admin-password" :label="t('auth.password')" required>
-        <BsInput id="admin-password" v-model="password" type="password" autocomplete="current-password" required />
-      </BsField>
-    </BsAuthForm>
-    <BsStack v-else gap="lg">
-      <BsStateSurface :state="state" :title="t(`auth.${state}`)" :description="state === 'denied' ? t('auth.deniedDescription') : undefined" :action-label="state === 'loading' ? undefined : t('auth.retry')" @action="recheck" />
-      <BsButton v-if="state !== 'loading'" :pending="pending" @click="signOut">{{ t('auth.signOut') }}</BsButton>
-      <BsStateSurface v-if="actionError" state="error" :title="t('auth.actionError')" />
-    </BsStack>
-  </BsAuthLayout>
+  <BsAdministrationEntryPage
+    v-model:email="email" v-model:password="password" :state="state" :pending="pending" :action-error="actionError" :product-name="t('product.name')"
+    :copy="{ welcome: t('welcome'), description: t('description'), authDescription: t('auth.description'), authorized: t('auth.authorized'), empty: t('auth.empty'), signOut: t('auth.signOut'), actionError: t('auth.actionError'), signIn: t('auth.signIn'), signInError: t('auth.signInError'), pending: t('auth.pending'), email: t('auth.email'), password: t('auth.password'), stateTitle: t(`auth.${state}`), deniedDescription: t('auth.deniedDescription'), retry: t('auth.retry') }"
+    @sign-in="submit" @sign-out="signOut" @retry="recheck"
+  />
 </template>

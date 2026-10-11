@@ -8,12 +8,12 @@ const props = defineProps<{
   state: BsAccessEditorState
   names?: { english: string; arabic: string; maxLength: number; minLength?: number }
   permissionLabel: string
-  permissions: { key: string; label: string; disabled?: boolean }[]
+  permissions: { key: string; label: string; disabled?: boolean; section?: string; sectionLabel?: string }[]
   archiveLabel?: string
   usage?: BsUsageItem
 }>()
 const emit = defineEmits<{ close: []; submit: []; archive: [] }>()
-const items = computed<BsPermissionItem[]>(() => props.permissions.map(permission => ({ key: permission.key, label: permission.label, section: 'permissions', sectionLabel: props.permissionLabel })))
+const items = computed<BsPermissionItem[]>(() => props.permissions.map(permission => ({ key: permission.key, label: permission.label, section: permission.section ?? 'permissions', sectionLabel: permission.sectionLabel ?? props.permissionLabel })))
 const disabledPermissions = computed(() => props.permissions.filter(permission => permission.disabled).map(permission => permission.key))
 function toggle(key: string, checked: boolean) {
   const permissions = permissionSelection(form.value.permissions, key, checked, disabledPermissions.value, props.state.pending)
@@ -24,8 +24,8 @@ function toggle(key: string, checked: boolean) {
   <BsRoleEditorDialog v-if="state.visible" :visible="true" :title="state.title" :dirty="state.dirty" :pending="state.pending" :error="state.error" :submit-label="state.submitLabel" :cancel-label="state.cancelLabel" :items="items" :selected="form.permissions" :permission-label="permissionLabel" :disabled-permissions="disabledPermissions" @toggle="toggle" @update:visible="value => { if (!value) emit('close') }" @submit="emit('submit')">
     <BsUsageMeter v-if="usage" compact :item="usage" />
     <BsGrid v-if="names" :columns="2" gap="md">
-      <BsField v-slot="field" :label="names.english"><BsInput :id="field.id" :model-value="form.name" @update:model-value="form = { ...form, name: String($event ?? '') }" dir="ltr" required :maxlength="names.maxLength" :minlength="names.minLength" /></BsField>
-      <BsField v-slot="field" :label="names.arabic"><BsInput :id="field.id" :model-value="form.nameAr" @update:model-value="form = { ...form, nameAr: String($event ?? '') }" dir="rtl" required :maxlength="names.maxLength" :minlength="names.minLength" /></BsField>
+      <BsField v-slot="field" :label="names.english"><BsInput :id="field.id" :model-value="form.name" dir="ltr" required :maxlength="names.maxLength" :minlength="names.minLength" @update:model-value="form = { ...form, name: String($event ?? '') }" /></BsField>
+      <BsField v-slot="field" :label="names.arabic"><BsInput :id="field.id" :model-value="form.nameAr" dir="rtl" required :maxlength="names.maxLength" :minlength="names.minLength" @update:model-value="form = { ...form, nameAr: String($event ?? '') }" /></BsField>
     </BsGrid>
 
     <BsButton v-if="archiveLabel" variant="danger" :disabled="state.pending" @click="emit('archive')">{{ archiveLabel }}</BsButton>

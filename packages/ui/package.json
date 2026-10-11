@@ -176,7 +176,20 @@
     "./access-presentation": "./src/types/accessPresentation.ts",
     "./templates/BsAccessManagementPage": "./src/templates/BsAccessManagementPage.vue",
     "./organisms/BsAccessIdentityEditor": "./src/organisms/BsAccessIdentityEditor.vue",
-    "./organisms/BsAccessRoleEditor": "./src/organisms/BsAccessRoleEditor.vue"
+    "./organisms/BsAccessRoleEditor": "./src/organisms/BsAccessRoleEditor.vue",
+    "./templates/BsSignInPage": "./src/templates/BsSignInPage.vue",
+    "./templates/BsPasswordRecoveryPage": "./src/templates/BsPasswordRecoveryPage.vue",
+    "./templates/BsWelcomePage": "./src/templates/BsWelcomePage.vue",
+    "./templates/BsAdministrationEntryPage": "./src/templates/BsAdministrationEntryPage.vue",
+    "./templates/BsRedirectPage": "./src/templates/BsRedirectPage.vue",
+    "./templates/BsEmailVerificationPage": "./src/templates/BsEmailVerificationPage.vue",
+    "./templates/BsProductAuthFrame": "./src/templates/BsProductAuthFrame.vue",
+    "./activity-presentation": "./src/types/activityPresentation.ts",
+    "./templates/BsExecutionActivityPage": "./src/templates/BsExecutionActivityPage.vue",
+    "./task-presentation": "./src/types/taskPresentation.ts",
+    "./templates/BsTaskWorklistPage": "./src/templates/BsTaskWorklistPage.vue",
+    "./dimension-presentation": "./src/types/dimensionPresentation.ts",
+    "./templates/BsAccountingDimensionsPage": "./src/templates/BsAccountingDimensionsPage.vue"
   },
   "dependencies": {
     "primevue": "4.5.5",

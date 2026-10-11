@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { navigateFixture } from '../../../../packages/testing/browser-foundation'
 import en from '../../i18n/locales/en.json' with { type: 'json' }
 import ar from '../../i18n/locales/ar.json' with { type: 'json' }
 
@@ -34,15 +35,18 @@ for (const locale of ['en', 'ar'] as const) test(`${locale}: dimensions expose c
   await page.goto('/login')
   await page.getByLabel(copy.auth.email).fill('dimensions@test.local')
   await page.getByLabel(copy.auth.password).fill('fixture-password')
+  const loginResponse = page.waitForResponse(response => response.url().includes('/auth/v1/token') && response.request().method() === 'POST')
   await page.getByRole('button', { name: copy.auth.signIn, exact: true }).click()
-  await page.goto('/accounting-dimensions')
+  await loginResponse
+  await expect(page).toHaveURL(/\/dashboard/)
+  await navigateFixture(page, '/accounting-dimensions')
   await expect(page.getByRole('heading', { name: copy.dimensions.title, exact: true })).toBeVisible()
   await expect(page.locator('html')).toHaveAttribute('dir', locale === 'ar' ? 'rtl' : 'ltr')
-  await expect(page.getByRole('table', { name: copy.dimensions.values })).toContainText('CC-CAI')
-  await expect(page.getByRole('status')).toContainText('2')
+  await expect(page.getByRole('region', { name: copy.dimensions.values, exact: true }).getByRole('table')).toContainText('CC-CAI')
+  await expect(page.getByRole('status').filter({ hasText: '2' })).toContainText('2')
   await page.getByRole('button', { name: copy.dimensions.tabs.reports }).click()
   await page.getByRole('button', { name: copy.dimensions.run }).click()
-  await expect(page.getByRole('table', { name: copy.dimensions.grouped })).toContainText(copy.dimensions.unassigned)
+  await expect(page.getByRole('region', { name: copy.dimensions.grouped, exact: true }).getByRole('table')).toContainText(copy.dimensions.unassigned)
   await expect(page.locator('[data-dimension-reconciled="true"]')).toContainText(copy.dimensions.reconciled)
   await page.setViewportSize({ width: 390, height: 844 })
   await expect(page.getByRole('heading', { name: copy.dimensions.grouped })).toBeVisible()

@@ -2,14 +2,14 @@
 import type { BsAccessMemberView, BsAccessMemberAction, BsAccessInvitationView, BsAccessRoleView, BsAccessAuditView, BsAccessPageCopy, BsAccessEditorState, BsAccessIdentityForm, BsAccessIdentityCopy, BsAccessRoleForm } from '../types/accessPresentation'
 import type { BsUsageItem } from '@building-suit/contracts'
 import type { BsPermissionItem, BsPermissionRole } from '@building-suit/ux'
-const invitationForm = defineModel<BsAccessIdentityForm>('invitationForm')
-const memberForm = defineModel<BsAccessIdentityForm>('memberForm')
-const roleForm = defineModel<BsAccessRoleForm>('roleForm')
-const transferReason = defineModel<string>('transferReason')
-const props = defineProps<{
+const invitationForm = defineModel<BsAccessIdentityForm>('invitationForm', { default: () => ({ name: '', jobTitle: '', email: '', role: '', locationIds: [] }) })
+const memberForm = defineModel<BsAccessIdentityForm>('memberForm', { default: () => ({ name: '', jobTitle: '', email: '', role: '', locationIds: [] }) })
+const roleForm = defineModel<BsAccessRoleForm>('roleForm', { default: () => ({ name: '', nameAr: '', permissions: [] }) })
+const transferReason = defineModel<string>('transferReason', { default: '' })
+const props = withDefaults(defineProps<{
   invitationEditor?: { state: BsAccessEditorState; copy: BsAccessIdentityCopy; roles: { value: string; label: string; disabled?: boolean }[]; locations?: { id: string; name: string }[]; link?: string; usage?: BsUsageItem }
   memberEditor?: { state: BsAccessEditorState; copy: BsAccessIdentityCopy; roles: { value: string; label: string; description?: string; disabled?: boolean }[]; locations?: { id: string; name: string }[]; roleDisabled?: boolean }
-  roleEditor?: { state: BsAccessEditorState; names?: { english: string; arabic: string; maxLength: number; minLength?: number }; permissionLabel: string; permissions: { key: string; label: string; disabled?: boolean }[]; archiveLabel?: string; usage?: BsUsageItem }
+  roleEditor?: { state: BsAccessEditorState; names?: { english: string; arabic: string; maxLength: number; minLength?: number }; permissionLabel: string; permissions: { key: string; label: string; disabled?: boolean; section?: string; sectionLabel?: string }[]; archiveLabel?: string; usage?: BsUsageItem }
   matrix?: { visible: boolean; title: string; hint: string; permissionLabel: string; closeLabel: string; items: BsPermissionItem[]; roles: BsPermissionRole[]; granted: (role: string, permission: string) => boolean }
   transferEditor?: { state: BsAccessEditorState; help: string; reasonLabel: string }
   acceptance?: { title: string; help: string; error: string; pending: boolean; actionLabel: string }
@@ -32,7 +32,7 @@ const props = defineProps<{
   statusFilter?: string
   statusOptions?: { value: string; label: string }[]
   statusLabel?: string
-}>()
+}>(), { available: true, invitationEditor: undefined, memberEditor: undefined, roleEditor: undefined, matrix: undefined, transferEditor: undefined, acceptance: undefined, audit: undefined, loading: false, error: null, actionError: null, pending: false, canInvite: false, canCreateRole: false, canViewMatrix: false, search: undefined, statusFilter: undefined, statusOptions: undefined, statusLabel: undefined })
 const emit = defineEmits<{
   'update:activeTab': [value: string]
   'update:search': [value: string]
