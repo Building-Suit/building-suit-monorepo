@@ -25,8 +25,8 @@ const categoryFilter = ref('')
 const catalogPage = ref(1)
 const customerSearch = ref('')
 const debouncedCustomerSearch = ref('')
-const catalogInput = ref<HTMLInputElement | null>(null)
-const customerInput = ref<HTMLInputElement | null>(null)
+const catalogInput = ref<{ focus: () => void } | null>(null)
+const customerInput = ref<{ focus: () => void } | null>(null)
 const lines = ref<CartLine[]>([])
 const staffId = ref('')
 const appointmentId = ref('')
@@ -158,7 +158,7 @@ function handleKeyboard(event: KeyboardEvent) {
   if (event.key === 'F4') { event.preventDefault(); customerInput.value?.focus(); return }
   if (event.key === 'F8') { event.preventDefault(); void checkout(); return }
   if (event.key === 'Escape') { errorMessage.value = ''; scanMessage.value = ''; return }
-  if (target !== catalogInput.value && target?.closest('input, textarea, select, button, a, [role="combobox"], [contenteditable="true"]')) {
+  if (target?.id !== 'pos-catalog-search' && target?.closest('input, textarea, select, button, a, [role="combobox"], [contenteditable="true"]')) {
     scanState = emptyScanState(); return
   }
   const captured = captureBarcodeKey(scanState, event.key, performance.now())
@@ -204,70 +204,123 @@ watch(context, value => {
 </script>
 
 <template>
-  <div class="space-y-4">
-    <header class="flex flex-wrap items-end justify-between gap-3"><div><h1 class="text-3xl font-extrabold tracking-tight">{{ t('pos.title') }}</h1><p class="mt-1 text-sm text-muted-foreground">{{ t('pos.subtitle') }}</p></div><BsButton severity="secondary" class="min-h-11" :disabled="checkingOut || confirmingCheckout" @click="requestReset">{{ t('pos.reset') }}</BsButton></header>
-    <p v-if="!current && !shopLoading" class="ls-card p-8 text-center text-sm">{{ t('sales.noShop') }}</p>
+  <BsStack>
+    <BsPageHeader  :title="t('pos.title')" :subtitle="t('pos.subtitle')">
+      <template #actions>
+        <BsButton severity="secondary" :disabled="checkingOut || confirmingCheckout" @click="requestReset">{{ t('pos.reset') }}</BsButton>
+      </template>
+    </BsPageHeader>
+    <BsText v-if="!current && !shopLoading" as="p" size="sm">{{ t('sales.noShop') }}</BsText>
     <template v-else-if="current">
-      <section class="sticky top-20 z-10 flex flex-wrap items-center justify-between gap-2 ls-card-flat p-3" :aria-label="t('pos.cart')">
-        <p class="min-w-0 break-words text-sm"><strong>{{ t('pos.location') }}:</strong> {{ transactionLocationName || currentLocation?.name || '—' }} · <strong>{{ t('pos.staff') }}:</strong> {{ selectedStaff?.name || t('pos.selectStaff') }}</p>
-        <div class="flex flex-wrap gap-2">
-          <a href="#pos-catalog-title" class="ls-btn xl:hidden">{{ t('pos.catalog') }}</a>
-          <a href="#pos-cart-title" class="ls-btn ls-btn-primary xl:hidden">{{ t('pos.reviewSale', { count: lines.length }) }} · {{ money(total) }}</a>
-          <NuxtLink to="/cash-shifts" class="ls-btn">{{ t('pos.closeShift') }}</NuxtLink>
-        </div>
-      </section>
-      <p v-if="locationChanged" role="alert" class="rounded-xl bg-[var(--bs-status-error-bg)] p-4 text-sm text-[var(--bs-status-error)]">{{ t('pos.locationChanged') }}</p>
-      <p v-if="errorMessage" role="alert" class="rounded-xl bg-[var(--bs-status-error-bg)] p-4 text-sm text-[var(--bs-status-error)]">{{ errorMessage }}</p>
-      <p class="sr-only" aria-live="polite">{{ scanMessage }}</p>
-      <p v-if="checkingOut" role="status" class="text-sm font-bold">{{ t('pos.paying') }}</p>
-      <fieldset :disabled="checkingOut" :inert="checkingOut" :aria-busy="checkingOut" class="min-w-0">
-      <div class="grid min-h-[calc(100vh-12rem)] gap-4 xl:grid-cols-[minmax(0,1fr)_25rem]">
-        <section class="min-w-0 ls-card p-4" aria-labelledby="pos-catalog-title">
-          <h2 id="pos-catalog-title" tabindex="-1" class="scroll-mt-64 text-lg font-extrabold">{{ t('pos.catalog') }}</h2>
-          <div class="mt-3 grid gap-3 sm:grid-cols-[1fr_auto_auto]">
-            <input ref="catalogInput" v-model="catalogSearch" type="search" class="ls-input min-h-11" :placeholder="t('pos.search')" :aria-label="t('pos.search')">
-            <select v-model="categoryFilter" class="ls-select min-h-11" :aria-label="locale === 'ar' ? 'التصنيف' : 'Category'"><option value="">{{ locale === 'ar' ? 'كل التصنيفات' : 'All categories' }}</option><option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option></select>
-            <div class="flex rounded-xl border border-border p-1" :aria-label="t('pos.catalog')" role="group"><BsButton variant="chip" v-for="kind in availableItemTypes" :key="kind" type="button" class="min-h-11 rounded-lg px-3 text-sm font-bold" :aria-pressed="itemType === kind" @click="itemType = kind">{{ t(`pos.${kind === 'product' ? 'products' : kind === 'service' ? 'services' : 'all'}`) }}</BsButton></div>
-          </div>
-          <p v-if="scanMessage" class="mt-3 rounded-xl bg-muted p-3 text-sm">{{ scanMessage }}</p>
-          <p v-if="catalogPending" role="status" class="p-8 text-center text-sm text-muted-foreground">{{ t('pos.loading') }}</p>
-          <div v-else-if="catalogError" role="alert" class="p-8 text-center text-sm"><p>{{ catalogError?.message?.includes('SHOP_PERMISSION_DENIED') ? t('pos.permissionDenied') : t('pos.loadError') }}</p><BsButton severity="secondary" class="mt-3" @click="refreshCatalog()">{{ t('pos.retry') }}</BsButton></div>
-          <p v-else-if="!catalog.items.length" class="p-8 text-center text-sm text-muted-foreground">{{ t('pos.noResults') }}</p>
-          <ul v-else class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3" :aria-label="t('pos.catalog')">
-            <li v-for="item in catalog.items" :key="`${item.itemType}:${item.id}`"><BsButton variant="tile" type="button" class="min-h-20 p-3" :disabled="locationChanged || checkingOut" @click="addItem(item)"><strong class="block">{{ item.name }}</strong><span class="mt-1 flex justify-between gap-2 text-xs text-muted-foreground"><span>{{ item.sku || (item.itemType === 'service' ? t('sales.service') : t('sales.product')) }}</span><span>{{ money(Math.max(0, item.unitPrice - item.discount)) }}</span></span><span v-if="item.stock != null" class="mt-1 block text-xs" :class="item.stock > 0 ? 'text-[var(--bs-status-success)]' : 'text-[var(--bs-status-error)]'">{{ t('pos.stock', { count: item.stock }) }}</span></BsButton></li>
-          </ul>
-          <div v-if="catalog.total > catalog.pageSize" class="mt-4 flex items-center justify-center gap-2"><BsButton severity="secondary" :disabled="catalogPage <= 1" :aria-label="t('customers.previous')" @click="catalogPage--"><span aria-hidden="true">{{ locale === 'ar' ? '›' : '‹' }}</span></BsButton><span class="text-sm">{{ catalogPage }}</span><BsButton severity="secondary" :disabled="catalogPage * catalog.pageSize >= catalog.total" :aria-label="t('customers.next')" @click="catalogPage++"><span aria-hidden="true">{{ locale === 'ar' ? '‹' : '›' }}</span></BsButton></div>
-        </section>
-
-        <aside class="flex min-h-0 min-w-0 flex-col ls-card p-4 xl:sticky xl:top-40 xl:max-h-[calc(100dvh-11rem)] xl:overflow-y-auto" aria-labelledby="pos-cart-title">
-          <h2 id="pos-cart-title" tabindex="-1" class="scroll-mt-64 text-lg font-extrabold">{{ t('pos.cart') }}</h2>
-          <p v-if="contextPending" role="status" class="mt-3 text-sm">{{ t('pos.loading') }}</p>
-          <p v-else-if="contextError" role="alert" class="mt-3 rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm text-[var(--bs-status-error)]">{{ contextError?.message?.includes('SHOP_PERMISSION_DENIED') ? t('pos.permissionDenied') : t('pos.loadError') }} <BsButton variant="link" type="button" class="min-h-11 font-bold underline" @click="refreshContext()">{{ t('pos.retry') }}</BsButton></p>
-          <div class="mt-3 grid grid-cols-2 gap-2 rounded-xl bg-muted p-3 text-xs"><span class="font-bold">{{ t('pos.location') }}</span><span>{{ transactionLocationName || currentLocation?.name || '—' }}</span><span class="font-bold">{{ t('pos.staff') }}</span><span>{{ selectedStaff?.name || t('pos.selectStaff') }}</span></div>
-          <p v-if="!lines.length" class="grid flex-1 place-items-center py-8 text-center text-sm text-muted-foreground">{{ t('pos.emptyCart') }}</p>
-          <ul v-else class="mt-3 flex-1 space-y-2 overflow-y-auto pe-1"><li v-for="(line, index) in lines" :key="line.key" class="rounded-xl border border-border p-3"><div class="flex justify-between gap-2"><strong>{{ line.name }}</strong><BsButton variant="text" type="button" class="min-h-11 px-2 text-sm font-bold text-[var(--bs-status-error)]" @click="removeLine(index)">{{ t('pos.remove') }}</BsButton></div><div class="mt-2 flex items-center justify-between gap-3"><label class="text-xs font-bold">{{ t('pos.quantity') }}<input :value="line.quantity" type="number" min="0.001" max="1000000" step="1" class="ls-input mt-1 min-h-11 w-24" @change="setQuantity(line, Number(($event.target as HTMLInputElement).value))"></label><span class="font-extrabold">{{ money((line.unitPrice - line.discount) * line.quantity) }}</span></div></li></ul>
-          <div class="mt-3 space-y-3 border-t border-border pt-3">
-            <label class="grid gap-1 text-sm font-bold">{{ t('pos.appointment') }}<select :value="appointmentId" class="ls-select min-h-11" :disabled="checkingOut" @change="chooseAppointment(($event.target as HTMLSelectElement).value)"><option value="">{{ t('pos.walkIn') }}</option><option v-for="appointment in context.appointments" :key="appointment.id" :value="appointment.id">{{ appointmentLabel(appointment) }}</option></select></label>
-            <label class="pos-staff-select grid min-w-0 gap-1 text-sm font-bold">{{ t('pos.staff') }}<BsSelect v-model="staffId" :label="t('pos.staff')" :options="context.staff" option-label="name" option-value="id" filter virtual :disabled="Boolean(appointmentId) || checkingOut" @change="lockLocation(); invalidateRequests()" /></label>
-            <div><label class="text-sm font-bold" for="pos-customer">{{ t('pos.customer') }}</label><div v-if="customerId" class="mt-1 flex min-h-11 items-center justify-between rounded-xl border border-border px-3"><span>{{ customerName }}</span><BsButton variant="link" type="button" class="min-h-11 text-sm font-bold text-[var(--bs-link)]" :disabled="Boolean(appointmentId)" @click="clearCustomer">{{ t('pos.clearCustomer') }}</BsButton></div><template v-else><input id="pos-customer" ref="customerInput" v-model="customerSearch" type="search" class="ls-input mt-1 min-h-11" :placeholder="t('pos.customerSearch')"><ul v-if="customerSearch.length >= 2 && context.customers.length" class="mt-1 max-h-32 overflow-y-auto ls-card-flat p-1"><li v-for="customer in context.customers" :key="customer.id"><BsButton type="button" class="min-h-11 w-full rounded-lg px-3 text-start text-sm hover:bg-muted" @click="chooseCustomer(customer)">{{ customer.name }} <span class="text-muted-foreground">{{ customer.phone }}</span></BsButton></li></ul><p class="mt-1 text-xs text-muted-foreground">{{ t('pos.noCustomer') }}</p></template></div>
-            <div class="grid grid-cols-2 gap-2"><label class="grid gap-1 text-sm font-bold">{{ t('pos.paymentMethod') }}<select v-model="paymentMethod" class="ls-select min-h-11"><option v-for="method in ['cash','card','bank_transfer','wallet','cheque','other']" :key="method" :value="method">{{ t(`payments.methods.${method}`) }}</option></select></label><label class="grid gap-1 text-sm font-bold">{{ t('pos.reference') }}<input v-model="paymentReference" maxlength="200" class="ls-input min-h-11"></label></div>
-            <label class="grid gap-1 text-sm font-bold">{{ t('pos.notes') }}<input v-model="notes" maxlength="2000" class="ls-input min-h-11"></label>
-            <div class="flex items-end justify-between gap-3"><span class="text-sm font-bold">{{ t('pos.total') }}</span><strong class="text-2xl">{{ money(total) }}</strong></div>
-            <p class="text-xs text-muted-foreground">{{ t('pos.serverTotal') }}</p>
-            <BsButton variant="primary" class="min-h-12 w-full" :pending="checkingOut" :disabled="checkingOut || confirmingCheckout || contextPending || Boolean(contextError) || locationChanged || !lines.length || !staffId" @click="checkout">{{ checkingOut ? t('pos.paying') : t('pos.pay', { amount: money(total) }) }}</BsButton>
-            <p class="text-center text-xs text-muted-foreground">{{ t('pos.shortcuts') }}</p>
-          </div>
-        </aside>
-      </div>
-      </fieldset>
+      <BsPanel :aria-label="t('pos.cart')" padding="md">
+        <BsText as="p" size="sm">
+          <BsText as="strong">{{ t('pos.location') }}:</BsText> {{ transactionLocationName || currentLocation?.name || '—' }} · <BsText as="strong">{{ t('pos.staff') }}:</BsText> {{ selectedStaff?.name || t('pos.selectStaff') }}</BsText>
+        <BsInline>
+          <BsLink to="#pos-catalog-title" external>{{ t('pos.catalog') }}</BsLink>
+          <BsLink to="#pos-cart-title" external>{{ t('pos.reviewSale', { count: lines.length }) }} · {{ money(total) }}</BsLink>
+          <BsLink to="/cash-shifts">{{ t('pos.closeShift') }}</BsLink>
+        </BsInline>
+      </BsPanel>
+      <BsText v-if="locationChanged" role="alert" as="p" size="sm" tone="danger">{{ t('pos.locationChanged') }}</BsText>
+      <BsText v-if="errorMessage" role="alert" as="p" size="sm" tone="danger">{{ errorMessage }}</BsText>
+      <BsVisuallyHidden aria-live="polite">{{ scanMessage }}</BsVisuallyHidden>
+      <BsText v-if="checkingOut" role="status" as="p" size="sm" emphasis="semibold">{{ t('pos.paying') }}</BsText>
+      <BsFieldGroup :disabled="checkingOut" :inert="checkingOut" :aria-busy="checkingOut" :legend="''">
+        <BsGrid :columns="2">
+          <BsPanel aria-labelledby="pos-catalog-title" padding="md">
+            <BsHeading id="pos-catalog-title" tabindex="-1" :level="2">{{ t('pos.catalog') }}</BsHeading>
+            <BsFilterBar :label="t('pos.catalog')">
+              <BsInput id="pos-catalog-search" ref="catalogInput" v-model="catalogSearch" type="search" :placeholder="t('pos.search')" :aria-label="t('pos.search')"/>
+              <BsSelect v-model="categoryFilter" :label="locale === 'ar' ? 'التصنيف' : 'Category'" :options="[{ value: '', label: (locale === 'ar' ? 'كل التصنيفات' : 'All categories'), disabled: false }, ...(categories).map(category => ({ value: category.id, label: (category.name), disabled: false }))]" option-label="label" option-value="value" option-disabled="disabled"/>
+              <BsInline :aria-label="t('pos.catalog')" role="group">
+                <BsButton v-for="kind in availableItemTypes" :key="kind" variant="chip" type="button" :aria-pressed="itemType === kind" @click="itemType = kind">{{ t(`pos.${kind === 'product' ? 'products' : kind === 'service' ? 'services' : 'all'}`) }}</BsButton>
+              </BsInline>
+            </BsFilterBar>
+            <BsText v-if="scanMessage" as="p" size="sm">{{ scanMessage }}</BsText>
+            <BsText v-if="catalogPending" role="status" as="p" size="sm" tone="muted">{{ t('pos.loading') }}</BsText>
+            <BsBox v-else-if="catalogError" role="alert" padding="md">
+              <BsText as="p">{{ catalogError?.message?.includes('SHOP_PERMISSION_DENIED') ? t('pos.permissionDenied') : t('pos.loadError') }}</BsText>
+              <BsButton severity="secondary" @click="refreshCatalog()">{{ t('pos.retry') }}</BsButton>
+            </BsBox>
+            <BsText v-else-if="!catalog.items.length" as="p" size="sm" tone="muted">{{ t('pos.noResults') }}</BsText>
+            <BsList v-else :aria-label="t('pos.catalog')">
+              <BsListItem v-for="item in catalog.items" :key="`${item.itemType}:${item.id}`">
+                <BsActionTile type="button" :disabled="locationChanged || checkingOut" @click="addItem(item)">
+                  <BsText as="strong">{{ item.name }}</BsText>
+                  <BsText as="span" size="xs" tone="muted">
+                    <BsText as="span">{{ item.sku || (item.itemType === 'service' ? t('sales.service') : t('sales.product')) }}</BsText>
+                    <BsText as="span">{{ money(Math.max(0, item.unitPrice - item.discount)) }}</BsText>
+                  </BsText>
+                  <BsText v-if="item.stock != null" as="span" size="xs">{{ t('pos.stock', { count: item.stock }) }}</BsText>
+                </BsActionTile>
+              </BsListItem>
+            </BsList>
+            <BsInline v-if="catalog.total > catalog.pageSize">
+              <BsButton severity="secondary" :disabled="catalogPage <= 1" :aria-label="t('customers.previous')" @click="catalogPage--">
+                <BsText aria-hidden="true" as="span">{{ locale === 'ar' ? '›' : '‹' }}</BsText>
+              </BsButton>
+              <BsText as="span" size="sm">{{ catalogPage }}</BsText>
+              <BsButton severity="secondary" :disabled="catalogPage * catalog.pageSize >= catalog.total" :aria-label="t('customers.next')" @click="catalogPage++">
+                <BsText aria-hidden="true" as="span">{{ locale === 'ar' ? '‹' : '›' }}</BsText>
+              </BsButton>
+            </BsInline>
+          </BsPanel>
+          <BsPanel aria-labelledby="pos-cart-title" padding="md">
+            <BsHeading id="pos-cart-title" tabindex="-1" :level="2">{{ t('pos.cart') }}</BsHeading>
+            <BsText v-if="contextPending" role="status" as="p" size="sm">{{ t('pos.loading') }}</BsText>
+            <BsText v-else-if="contextError" role="alert" as="p" size="sm" tone="danger">{{ contextError?.message?.includes('SHOP_PERMISSION_DENIED') ? t('pos.permissionDenied') : t('pos.loadError') }} <BsButton variant="link" type="button" @click="refreshContext()">{{ t('pos.retry') }}</BsButton>
+            </BsText>
+            <BsGrid :columns="2">
+              <BsText as="span" emphasis="semibold">{{ t('pos.location') }}</BsText>
+              <BsText as="span">{{ transactionLocationName || currentLocation?.name || '—' }}</BsText>
+              <BsText as="span" emphasis="semibold">{{ t('pos.staff') }}</BsText>
+              <BsText as="span">{{ selectedStaff?.name || t('pos.selectStaff') }}</BsText>
+            </BsGrid>
+            <BsText v-if="!lines.length" as="p" size="sm" tone="muted">{{ t('pos.emptyCart') }}</BsText>
+            <BsLineItemsEditor v-else :items="lines.map(line => ({ id: line.key, line }))" :label="t('pos.cart')" :add-label="t('pos.catalog')" :remove-label="t('pos.remove')" :row-label="item => item.line.name" :show-add="false" :pending="checkingOut" @remove="item => removeLine(lines.findIndex(line => line.key === item.id))">
+              <template #default="{ item: { line } }">
+                <BsInline justify="between">
+                  <BsText as="strong">{{ line.name }}</BsText>
+                </BsInline>
+                <BsInline justify="between">
+                  <BsField v-slot="field" :label="(t('pos.quantity'))">
+                    <BsQuantityInput :id="field.id" :aria-describedby="field.describedby" :model-value="line.quantity" :label="t('pos.quantity')"  :min="0.001" :max="1000000" :step="1" @update:model-value="value => setQuantity(line, Number(value))"/>
+                  </BsField>
+                  <BsText as="span" emphasis="semibold">{{ money((line.unitPrice - line.discount) * line.quantity) }}</BsText>
+                </BsInline>
+              </template>
+            </BsLineItemsEditor>
+            <BsStack>
+              <BsField v-slot="field" :label="(t('pos.appointment'))">
+                <BsSelect :input-id="field.id" :aria-describedby="field.describedby" :model-value="appointmentId" :disabled="checkingOut" :label="(t('pos.appointment'))" :options="[{ value: '', label: (t('pos.walkIn')), disabled: false }, ...(context.appointments).map(appointment => ({ value: appointment.id, label: (appointmentLabel(appointment)), disabled: false }))]" option-label="label" option-value="value" option-disabled="disabled" @update:model-value="value => chooseAppointment(String(value ?? ''))"/>
+              </BsField>
+              <BsField v-slot="field" :label="(t('pos.staff'))">
+                <BsSelect v-model="staffId" :input-id="field.id" :aria-describedby="field.describedby" :label="t('pos.staff')" :options="context.staff" option-label="name" option-value="id" filter virtual :disabled="Boolean(appointmentId) || checkingOut" @change="lockLocation(); invalidateRequests()"/>
+              </BsField>
+              <BsEntityPicker ref="customerInput" :model-value="customerId || null" :label="t('pos.customer')" :options="customerId ? [{ id: customerId, name: customerName }] : context.customers" option-label="name" option-value="id" :load-more-label="t('pos.customerSearch')" show-clear :disabled="Boolean(appointmentId) || checkingOut" :loading="contextPending" @search="customerSearch = $event" @update:model-value="value => { const customer = context.customers.find(item => item.id === value); if (customer) chooseCustomer(customer); else if (!value) clearCustomer() }" />
+              <BsText v-if="!customerId" size="xs" tone="muted">{{ t('pos.noCustomer') }}</BsText>
+              <BsGrid :columns="2">
+                <BsField v-slot="field" :label="(t('pos.paymentMethod'))">
+                  <BsSelect v-model="paymentMethod" :input-id="field.id" :aria-describedby="field.describedby" :label="(t('pos.paymentMethod'))" :options="[...(['cash','card','bank_transfer','wallet','cheque','other']).map(method => ({ value: method, label: (t(`payments.methods.${method}`)), disabled: false }))]" option-label="label" option-value="value" option-disabled="disabled"/>
+                </BsField>
+                <BsField v-slot="field" :label="(t('pos.reference'))">
+                  <BsInput :id="field.id" v-model="paymentReference" :aria-describedby="field.describedby" :maxlength="200"/>
+                </BsField>
+              </BsGrid>
+              <BsField v-slot="field" :label="(t('pos.notes'))">
+                <BsInput :id="field.id" v-model="notes" :aria-describedby="field.describedby" :maxlength="2000"/>
+              </BsField>
+              <BsInline justify="between">
+                <BsText as="span" size="sm" emphasis="semibold">{{ t('pos.total') }}</BsText>
+                <BsText as="strong" size="lg">{{ money(total) }}</BsText>
+              </BsInline>
+              <BsText as="p" size="xs" tone="muted">{{ t('pos.serverTotal') }}</BsText>
+              <BsButton variant="primary" :pending="checkingOut" :disabled="checkingOut || confirmingCheckout || contextPending || Boolean(contextError) || locationChanged || !lines.length || !staffId" @click="checkout">{{ checkingOut ? t('pos.paying') : t('pos.pay', { amount: money(total) }) }}</BsButton>
+              <BsText as="p" size="xs" tone="muted">{{ t('pos.shortcuts') }}</BsText>
+            </BsStack>
+          </BsPanel>
+        </BsGrid>
+      </BsFieldGroup>
     </template>
-  </div>
+  </BsStack>
 </template>
-
-<style scoped>
-.pos-staff-select :deep(.bs-select) {
-  width: 100%;
-  min-width: 0;
-  max-width: 100%;
-}
-</style>

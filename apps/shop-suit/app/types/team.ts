@@ -4,6 +4,7 @@ export interface TeamMember {
   id: string
   name: string | null
   email: string | null
+  jobTitle: string | null
   roleKey: string
   status: TeamMemberState
   locationIds: string[]
@@ -13,6 +14,8 @@ export interface TeamMember {
 export interface TeamRole {
   key: string
   name: string
+  nameAr: string | null
+  isSystem: boolean
   permissionKeys: string[]
 }
 
@@ -26,6 +29,7 @@ export interface TeamInvitation {
   id: string
   email: string
   name: string | null
+  jobTitle: string | null
   roleKey: string
   status: 'pending' | 'accepted' | 'revoked' | 'expired'
   expiresAt: string
@@ -42,6 +46,8 @@ export interface TeamEvent {
 }
 
 export interface TeamSnapshot {
+  permissionKeys: string[]
+  grantablePermissionKeys: string[]
   canManage: boolean
   canManagePermissions: boolean
   canViewAudit: boolean

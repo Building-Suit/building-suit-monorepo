@@ -24,7 +24,7 @@ test('reconciliation keeps non-cash visible without changing expected drawer cas
 })
 
 test('cash shift page is bilingual, responsive, recoverable, and confirms drawer effects', () => {
-  for (const evidence of ['ورديات الخزنة', 'Cashier shifts', 'sm:grid-cols-2', 'lg:grid-cols-4', 'role="alert"', 'animate-pulse', 'BsDataTable', 'BsRecordActionDialog', 'useRecordAction', 'useConfirmation', 'refresh()', 'record_cash_movement']) assert.match(page, new RegExp(evidence))
+  for (const evidence of ['ورديات الخزنة', 'Cashier shifts', '<BsGrid', ':columns="4"', 'role="alert"', 'BsSkeleton', 'BsDataTable', 'BsRecordActionDialog', 'useRecordAction', 'useConfirmation', 'refresh()', 'record_cash_movement']) assert.match(page, new RegExp(evidence))
   assert.match(layout, /\/cash-shifts/)
 })
 

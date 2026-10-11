@@ -21,7 +21,7 @@ test('dashboard supports three periods, all locations, source drill-through, and
   for (const evidence of [
     'shop_operating_report', 'allLocations', "'day', 'week', 'month'", 'salesMix',
     'paymentMix', 'outstanding', 'busiestTimes', 'cashVariance', 'staffPerformance',
-    'branchComparison', 'BsDataTable', 'sm:grid-cols-2', 'xl:grid-cols-4',
+    'branchComparison', 'BsDataTable', ':columns="2"', ':columns="4"',
     'not accounting profit or a financial statement', 'مش حساب للربح المحاسبي',
   ]) assert.match(dashboard, new RegExp(evidence))
   assert.match(sales, /route\.query\.from/)

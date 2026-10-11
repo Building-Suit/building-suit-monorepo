@@ -162,13 +162,14 @@ from shop_cash_fixture fixture
 join public.shops shop on shop.id = current_setting('ss_cash.shop')::uuid;
 
 set local role authenticated;
-select public.invite_shop_member(gen_random_uuid(), current_setting('ss_cash.shop')::uuid,
+select set_config('ss_cash.invite', (public.invite_shop_member(gen_random_uuid(), current_setting('ss_cash.shop')::uuid,
   'cashier@ss-cash.invalid', 'Branch cashier', 'cashier',
-  array[current_setting('ss_cash.location')::uuid]);
+  array[current_setting('ss_cash.location')::uuid])) ->> 'invitationCode', true);
 reset role;
 
 select set_config('request.jwt.claim.sub', cashier_id::text, true) from shop_cash_fixture;
 set local role authenticated;
+select public.accept_shop_invitation(gen_random_uuid(),current_setting('ss_cash.invite')::uuid);
 do $$
 declare v_session uuid;
 begin

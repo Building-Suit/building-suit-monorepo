@@ -11,6 +11,8 @@ const props = withDefaults(defineProps<{
 }>(), { modelValue: '', invalid: false, type: 'text', modelModifiers: () => ({}) })
 
 const emit = defineEmits<{ 'update:modelValue': [value: string | number] }>()
+const input = ref<HTMLInputElement | null>(null)
+defineExpose({ focus: () => input.value?.focus(), select: () => input.value?.select() })
 
 function update(event: Event) {
   let value: string | number = (event.target as HTMLInputElement).value
@@ -30,6 +32,7 @@ function onChange(event: Event) {
 
 <template>
   <input
+    ref="input"
     v-bind="$attrs"
     class="ls-input"
     :type="type"

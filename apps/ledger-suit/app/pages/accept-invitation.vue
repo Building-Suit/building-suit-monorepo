@@ -158,11 +158,9 @@ onBeforeUnmount(() => clearInterval(timer))
     :product-name="t('app.name')" :home-label="t('marketing.home')"
     :title="preview?.organization_name || t('app.name')" :description="t('auth.welcomeBody')"
   >
-    <template #logo="{ tone }"><BsProductLogo name="Ledger Suit" asset-prefix="/brand/ledger-suit" :tone="tone" class="h-auto w-56" /></template>
+    <template #logo="{ tone }"><BsProductLogo name="Ledger Suit" asset-prefix="/brand/ledger-suit" :tone="tone" size="auth" /></template>
 
-    <div v-if="step === 'loading'" aria-busy="true" class="w-full">
-      <BsSectionSkeleton variant="table" :rows="4" />
-    </div>
+    <BsSectionSkeleton v-if="step === 'loading'" variant="table" :rows="4" />
 
     <BsAuthForm
       v-else-if="step === 'invalid'" :title="t('access.inviteFlow.invalid')"
@@ -194,32 +192,17 @@ onBeforeUnmount(() => clearInterval(timer))
       :submit-disabled="step === 'password' && (password.length < 8 || confirmPassword.length < 8)"
       :data-hydrated="hydrated" @submit="step === 'ready' ? sendOtp() : finish()"
     >
-      <BsFloatingField :label="t('access.inviteFlow.emailLabel')">
-        <input :value="preview.email" type="email" class="ls-input" readonly dir="ltr" aria-readonly="true">
-      </BsFloatingField>
+      <BsField :label="t('access.inviteFlow.emailLabel')"><template #default="field"><BsInput :id="field.id" :model-value="preview.email" type="email" readonly dir="ltr" aria-readonly="true" /></template></BsField>
 
       <template v-if="step === 'password'">
-        <BsFloatingField :label="t('onboarding.fullName')">
-          <input v-model="fullName" type="text" autocomplete="name" class="ls-input" required>
-        </BsFloatingField>
-        <BsFloatingField :label="t('onboarding.phone')">
-          <input v-model="phone" type="tel" autocomplete="tel" class="ls-input" required dir="ltr">
-        </BsFloatingField>
-        <BsFloatingField :label="t('onboarding.jobTitle')">
-          <input v-model="jobTitle" type="text" autocomplete="organization-title" class="ls-input" required>
-        </BsFloatingField>
-        <BsFloatingField :label="t('access.inviteFlow.password')">
-          <input v-model="password" type="password" minlength="8" autocomplete="new-password" class="ls-input" required dir="ltr">
-        </BsFloatingField>
-        <BsFloatingField :label="t('access.inviteFlow.confirmPassword')">
-          <input v-model="confirmPassword" type="password" minlength="8" autocomplete="new-password" class="ls-input" required dir="ltr">
-        </BsFloatingField>
+        <BsField :label="t('onboarding.fullName')" required><template #default="field"><BsInput v-model="fullName" :id="field.id" type="text" autocomplete="name" required /></template></BsField>
+        <BsField :label="t('onboarding.phone')" required><template #default="field"><BsInput v-model="phone" :id="field.id" type="tel" autocomplete="tel" required dir="ltr" /></template></BsField>
+        <BsField :label="t('onboarding.jobTitle')" required><template #default="field"><BsInput v-model="jobTitle" :id="field.id" type="text" autocomplete="organization-title" required /></template></BsField>
+        <BsField :label="t('access.inviteFlow.password')" required><template #default="field"><BsInput v-model="password" :id="field.id" type="password" :minlength="8" autocomplete="new-password" required dir="ltr" /></template></BsField>
+        <BsField :label="t('access.inviteFlow.confirmPassword')" required><template #default="field"><BsInput v-model="confirmPassword" :id="field.id" type="password" :minlength="8" autocomplete="new-password" required dir="ltr" /></template></BsField>
       </template>
 
-      <div class="flex items-start gap-3 ls-card-muted p-4 text-xs leading-5 text-fg-muted">
-        <BsIcon name="checkBadge" :size="19" class="mt-0.5 shrink-0 text-success" />
-        <p>{{ t('access.inviteFlow.security') }}</p>
-      </div>
+      <BsAlert tone="success" :description="t('access.inviteFlow.security')" />
     </BsAuthForm>
   </BsAuthLayout>
 </template>

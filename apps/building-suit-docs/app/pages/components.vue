@@ -1,4 +1,7 @@
 <script setup lang="ts">
+const shellSuit = ref('alpha')
+const shellContext = ref('overview')
+const shellState = ref<'normal' | 'loading' | 'empty' | 'overflow'>('normal')
 const { locale } = useI18n()
 const ui = useUiCopy()
 const isArabic = computed(() => locale.value === 'ar')
@@ -28,6 +31,19 @@ const selectedFile = ref<File | null>(null)
 const catalogueOtp = ref('123456')
 const tableState = ref<'data' | 'loading' | 'empty' | 'error'>('data')
 const density = ref<'compact' | 'comfortable'>('comfortable')
+const catalogueTags = ref(['shared', 'typed'])
+const selectedEntity = ref<string | number | null>('ledger')
+const entityOptions = ref([{ id: 'ledger', name: 'Ledger Suit' }, { id: 'shop', name: 'Shop Suit' }])
+const historyEntries = [
+  { id: 'created', title: 'Created', detail: 'Typed table contract' },
+  { id: 'reviewed', title: 'Reviewed', detail: 'Bs-only domain cells' },
+]
+const tableColumns = computed(() => [
+  { key: 'name', field: 'name', header: isArabic.value ? 'الاسم' : 'Name', sortable: true, footer: isArabic.value ? 'الإجمالي' : 'Total' },
+  { key: 'category', field: 'category', header: isArabic.value ? 'التصنيف' : 'Category', sortable: true },
+  { key: 'status', field: 'status', header: isArabic.value ? 'الحالة' : 'Status' },
+  { key: 'amount', field: 'amount', header: isArabic.value ? 'القيمة' : 'Value', sortable: true, align: 'end' as const, width: 'sm' as const },
+])
 const pricingInterval = ref('monthly')
 const { success: toastSuccess } = useToasts()
 function verifyForm() { formError.value = isArabic.value ? 'راجع القيمة وحاول مرة أخرى.' : 'Review the value and try again.' }
@@ -68,6 +84,26 @@ async function save() {
     else rows.value.push({ id: String(rows.value.length + 1), name: name.value.trim(), category: 'Example', amount: 0, status: 'draft' })
   }, () => isArabic.value ? 'أدخل اسماً قبل الحفظ.' : 'Enter a name before saving.')
 }
+const shellSuits = computed(() => shellState.value === 'empty' ? [] : Array.from({ length: shellState.value === 'overflow' ? 24 : 3 }, (_, index) => ({
+  id: index === 0 ? 'alpha' : `suit-${index}`,
+  label: isArabic.value ? `مساحة العمل ${index + 1}` : `Workspace ${index + 1}`,
+  icon: 'dashboard', disabled: index === 2,
+})))
+const shellGroups = computed(() => shellState.value === 'empty' ? [] : [{
+  id: 'workspace', label: isArabic.value ? 'الإدارة' : 'Administration',
+  items: Array.from({ length: shellState.value === 'overflow' ? 32 : 3 }, (_, index) => ({
+    id: index === 0 ? 'overview' : `context-${index}`,
+    label: index === 0 ? (isArabic.value ? 'نظرة عامة' : 'Overview') : (isArabic.value ? `إعدادات مساحة العمل وعناصر التنقل الطويلة ${index}` : `Workspace settings and long navigation item ${index}`),
+    to: index === 1 ? '#administration-shell' : undefined,
+    disabled: index === 2,
+  })),
+}])
+const shellLabels = computed(() => ({
+  suits: isArabic.value ? 'مساحات العمل' : 'Workspaces', navigation: isArabic.value ? 'تنقل السياق' : 'Context navigation',
+  open: isArabic.value ? 'فتح التنقل' : 'Open navigation', close: isArabic.value ? 'إغلاق التنقل' : 'Close navigation',
+  loading: isArabic.value ? 'جارٍ التحميل' : 'Loading navigation', emptySuits: isArabic.value ? 'لا توجد مساحات عمل' : 'No workspaces',
+  emptyNavigation: isArabic.value ? 'لا توجد عناصر تنقل' : 'No navigation items',
+}))
 useHead({ title: 'Shared component catalogue · Building Suit' })
 </script>
 
@@ -79,6 +115,18 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
       :context-label="isArabic ? 'سياق المعاينة' : 'Preview context'"
       :context="[{ label: isArabic ? 'الاتجاه' : 'Direction', value: isArabic ? 'RTL' : 'LTR' }, { label: isArabic ? 'المصدر' : 'Owner', value: 'packages/ui' }]"
     />
+
+    <BsContentSection id="administration-shell" :title="isArabic ? 'هيكل الإدارة' : 'Administration shell'" :description="isArabic ? 'أمثلة التنقل والحالات من بيانات التطبيق.' : 'App-owned descriptors, controlled selection and normal/loading/empty/overflow examples.'">
+      <BsInline>
+        <BsButton v-for="state in (['normal', 'loading', 'empty', 'overflow'] as const)" :key="state" :aria-pressed="shellState === state" @click="shellState = state">{{ state }}</BsButton>
+      </BsInline>
+      <BsAdministrationShell v-model:selected-suit="shellSuit" v-model:selected-context="shellContext" :suits="shellSuits" :groups="shellGroups" :labels="shellLabels" :loading="shellState === 'loading'" :context-title="isArabic ? 'مساحة العمل النشطة' : 'Active workspace'">
+        <template #header><BsText>{{ isArabic ? 'أدوات مساحة العمل' : 'Workspace tools' }}</BsText></template>
+        <BsHeading :level="2">{{ isArabic ? 'مساحة العمل' : 'Working area' }}</BsHeading>
+        <BsText>{{ isArabic ? 'يملك التطبيق البيانات والإجراءات والتفويض.' : 'The app owns data, actions and authorization.' }}</BsText>
+        <BsButton>{{ isArabic ? 'إجراء تجريبي' : 'Example action' }}</BsButton>
+      </BsAdministrationShell>
+    </BsContentSection>
 
     <BsContentSection
       :title="isArabic ? 'الدلالات والتخطيط' : 'Semantic content and layout'"
@@ -156,22 +204,19 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
       </div>
       <div class="px-5 pb-3"><BsTableDensity v-model="density" :label="isArabic ? 'كثافة الجدول' : 'Table density'" :compact-label="isArabic ? 'مضغوط' : 'Compact'" :comfortable-label="isArabic ? 'مريح' : 'Comfortable'" /></div>
       <BsDataTable
-        v-model:selection="selected" v-model:filters="filters" :value="tableState === 'empty' ? [] : rows" data-key="id"
-        :search-fields="['name', 'category']" searchable exportable paginator :rows="2" :rows-per-page-options="[2, 5, 10]"
+        v-model:selection="selected" v-model:filters="filters" :value="tableState === 'empty' ? [] : rows" row-key="id" :columns="tableColumns"
+        :search-fields="['name', 'category']" searchable exportable paginator :page-size="2" :page-sizes="[2, 5, 10]"
         sort-mode="multiple" removable-sort resizable-columns reorderable-columns striped-rows selection-mode="multiple"
         :meta-key-selection="false" :density="density" :loading="tableState === 'loading'"
         :error="tableState === 'error' ? (isArabic ? 'تعذر تحميل المثال.' : 'The example could not be loaded.') : null"
         :label="isArabic ? 'أمثلة المكونات' : 'Component examples'"
-        :capabilities="{ insert: true, edit: true }"
+        :capabilities="{ insert: true, edit: true, select: true }"
         @create="add"
         @edit="edit"
         @retry="tableState = 'data'"
       >
-        <Column selection-mode="multiple" header-style="width: 3rem" />
-        <Column field="name" :header="isArabic ? 'الاسم' : 'Name'" sortable />
-        <Column field="category" :header="isArabic ? 'التصنيف' : 'Category'" sortable />
-        <Column field="status" :header="isArabic ? 'الحالة' : 'Status'"><template #body="{ data: row }"><BsStatusBadge :status="row.status" /></template></Column>
-        <Column field="amount" :header="isArabic ? 'القيمة' : 'Value'" sortable body-class="ls-num" />
+        <template #cell-status="{ row }"><BsStatusBadge :status="row.status" /></template>
+        <template #footer-amount><BsText numeric>{{ rows.reduce((sum, row) => sum + row.amount, 0) }}</BsText></template>
       </BsDataTable>
     </section>
 
@@ -183,6 +228,11 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
           <template #actions><BsButton>{{ isArabic ? 'تطبيق' : 'Apply' }}</BsButton></template>
         </BsFilterBar>
         <BsSelect v-model="choice" :label="isArabic ? 'الصنف' : 'Item'" :options="choices" option-label="name" option-value="id" filter virtual />
+        <BsFieldLabel for="catalogue-native-plan">{{ isArabic ? 'الخطة' : 'Plan' }}</BsFieldLabel>
+        <BsSelect id="catalogue-native-plan" v-model="searchValue" native>
+          <BsSelectOption value="standard">{{ isArabic ? 'قياسية' : 'Standard' }}</BsSelectOption>
+          <BsSelectOption value="advanced">{{ isArabic ? 'متقدمة' : 'Advanced' }}</BsSelectOption>
+        </BsSelect>
         <BsForm :pending="formPending" :error="formError" layout="grid" :columns="2" @submit="verifyForm">
           <BsField v-slot="field" :label="isArabic ? 'القيمة' : 'Value'" for="catalogue-value" :description="isArabic ? 'وصف الحقل' : 'Field description'" :hint="isArabic ? 'حقل نصي مشترك' : 'Shared text field'" required><BsInput id="catalogue-value" v-model="formValue" required :aria-describedby="field.describedby" :invalid="field.invalid" /></BsField>
           <BsField v-slot="field" :label="isArabic ? 'ملاحظات' : 'Notes'" for="catalogue-notes"><BsTextarea id="catalogue-notes" v-model="notes" :aria-describedby="field.describedby" /></BsField>
@@ -204,6 +254,25 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
       <BsPagination v-model:page="page" class="mt-4" :page-size="10" :total="42" :label="isArabic ? 'الصفحات' : 'Pages'" :previous-label="isArabic ? 'السابق' : 'Previous'" :next-label="isArabic ? 'التالي' : 'Next'" />
     </BsContentSection>
 
+    <BsContentSection :title="isArabic ? 'عرض البيانات' : 'Data presentation'" :description="isArabic ? 'تفاصيل وسجل ووسوم واختيار كيانات بعقود مشتركة.' : 'Shared contracts for details, history, tags, and entity selection.'">
+      <BsStack gap="lg">
+        <BsHierarchyBranch :depth="1"><BsHierarchyLeaf /><BsText>{{ isArabic ? 'فرع متداخل' : 'Nested branch' }}</BsText></BsHierarchyBranch>
+        <BsFlowBlock part="branches" :columns="2">
+          <BsFlowBlock part="node" state="start"><BsHeading size="body">{{ isArabic ? 'المدخلات' : 'Input' }}</BsHeading></BsFlowBlock>
+          <BsFlowBlock part="node"><BsHeading size="body">{{ isArabic ? 'المراجعة' : 'Review' }}</BsHeading><BsColorSwatch color="#16293B" /></BsFlowBlock>
+        </BsFlowBlock>
+        <BsDetailSection :title="isArabic ? 'تفاصيل السجل' : 'Record details'" :columns="2" divided>
+          <BsDescriptionItem :term="isArabic ? 'المالك' : 'Owner'">packages/ui</BsDescriptionItem>
+          <BsDescriptionItem :term="isArabic ? 'الحالة' : 'Status'"><BsStatusBadge status="active" /></BsDescriptionItem>
+        </BsDetailSection>
+        <BsHistoryList :entries="historyEntries" :label="isArabic ? 'سجل العقد' : 'Contract history'" item-key="id">
+          <template #default="{ entry }"><BsStack gap="none"><BsText emphasis="semibold">{{ entry.title }}</BsText><BsText size="sm" tone="muted">{{ entry.detail }}</BsText></BsStack></template>
+        </BsHistoryList>
+        <BsTagEditor v-model="catalogueTags" :label="isArabic ? 'الوسوم' : 'Tags'" :add-label="isArabic ? 'إضافة' : 'Add tag'" :remove-label="isArabic ? 'إزالة' : 'Remove'" />
+        <BsEntityPicker v-model="selectedEntity" :label="isArabic ? 'اختر المنتج' : 'Choose product'" :options="entityOptions" option-label="name" option-value="id" :load-more-label="isArabic ? 'تحميل المزيد' : 'Load more'" show-clear :retry-label="isArabic ? 'إعادة المحاولة' : 'Retry'" />
+      </BsStack>
+    </BsContentSection>
+
     <BsContentSection :title="isArabic ? 'خطط التسويق' : 'Marketing plans'" :description="isArabic ? 'البطاقات ودورة الفوترة والإجراءات تأتي من مكوّن مشترك.' : 'Cards, billing-cycle controls, states, and actions come from one shared organism.'">
       <BsMarketingPricing
         :interval="pricingInterval"
@@ -217,6 +286,15 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
         :columns="3"
         @update:interval="pricingInterval = $event"
       />
+    </BsContentSection>
+
+    <BsContentSection :title="isArabic ? 'سياق التطبيق والحالة' : 'Application context and status'" :description="isArabic ? 'مبدّل السياق والإشعارات وحالات التجربة والقراءة فقط مملوكة للنظام المشترك.' : 'Context switching, notifications, trial state, and read-only presentation are shared.'">
+      <div class="grid gap-4 md:grid-cols-2">
+        <BsScopeSwitcher model-value="main" :label="isArabic ? 'مساحة العمل' : 'Workspace'" :options="[{ id: 'main', label: isArabic ? 'المساحة الرئيسية' : 'Main workspace' }, { id: 'second', label: isArabic ? 'المساحة الثانية' : 'Second workspace' }]" />
+        <BsNotificationMenu :items="[{ id: 'notice', title: isArabic ? 'اكتمل التقرير' : 'Report complete', body: isArabic ? 'التقرير جاهز للمراجعة.' : 'The report is ready for review.', read: false }]" :label="isArabic ? 'الإشعارات' : 'Notifications'" :empty-label="ui('empty')" :mark-all-label="isArabic ? 'تحديد الكل كمقروء' : 'Mark all read'" />
+        <BsTrialCountdown to="#" :label="isArabic ? 'متبقي ٤ أيام' : '4 days remaining'" :compact-label="isArabic ? '٤ أيام' : '4 days'" />
+        <BsReadOnlyBanner :title="isArabic ? 'وضع القراءة فقط' : 'Read-only mode'" :description="isArabic ? 'يمكنك عرض البيانات دون تعديلها.' : 'You can view data without changing it.'" />
+      </div>
     </BsContentSection>
 
     <BsContentSection
@@ -250,6 +328,8 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
       </BsForm>
       <div class="mt-5"><BsButton variant="danger" @click="confirmExample">{{ isArabic ? 'إزالة سجل' : 'Remove record' }}</BsButton><p class="mt-3" role="status">{{ confirmationResult }}</p></div>
     </BsCard>
+
+    <WorkflowPatternCatalogue />
 
     <BsToastHost />
     <BsRecordActionDialog
