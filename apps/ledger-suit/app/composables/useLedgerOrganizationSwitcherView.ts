@@ -1,6 +1,7 @@
-<script setup lang="ts">
 import type { Database } from '~~/types/database.types'
 
+/** Ledger-owned orchestration; mounted by a shared workflow scope in its route/layout. */
+export function useLedgerOrganizationSwitcherView(_values: Record<string, unknown>, _emit: (event: string, ...args: unknown[]) => void) {
 const supabase = useSupabaseClient<Database>()
 const { organizations, current, setOrganization, loadOrganizations, roleLabel } = useTenant()
 const { paymentRequired, load: loadBilling } = useBilling()
@@ -87,17 +88,5 @@ async function createAndStartTrial() {
 }
 
 const { dirty: overlayDirty0 } = useRecordAction(() => ({ name: name.value, legalName: legalName.value, currency: currency.value }), computed(() => createOpen.value))
-</script>
-
-<template>
-  <BsContextSwitcher :model-value="current?.id ?? null" :label="t('org.switcher')" :placeholder="t('org.none')" :options="contextOptions" :create-label="!ownsOrganization ? t('org.createAnother') : undefined" @update:model-value="value => { if (value) choose(value) }" @create="showCreate" />
-  <BsRecordActionDialog v-if="createOpen" :visible="true" :title="t('org.createAnother')" size="md" :dirty="overlayDirty0" :pending="pending" :error="errorMessage" @update:visible="value => { if (!value) closeCreate() }" @submit="createAndStartTrial">
-    <BsText tone="link" emphasis="semibold">{{ t('org.additionalEyebrow') }}</BsText>
-    <BsText tone="muted">{{ t('org.additionalBillingHint') }}</BsText>
-    <BsField :label="t('org.name')" required><template #default="field"><BsInput v-model="name" :id="field.id" required /></template></BsField>
-    <BsField :label="t('onboarding.legalName')" required><template #default="field"><BsInput v-model="legalName" :id="field.id" required /></template></BsField>
-    <BsField :label="t('accounts.currency')"><BsSelect v-model="currency" :label="t('accounts.currency')" :options="['EGP', 'USD', 'EUR', 'GBP', 'SAR', 'AED']" /></BsField>
-    <BsAlert tone="info" :title="t('org.separateSubscriptionTitle')" :description="t('org.separateSubscriptionBody')" />
-    <template #actions="{ close }"><BsButton type="button" :disabled="pending" @click="close">{{ t('common.cancel') }}</BsButton><BsButton type="submit" variant="accent" :pending="pending">{{ t('org.createAndStartTrial') }}</BsButton></template>
-  </BsRecordActionDialog>
-</template>
+return { supabase, organizations, current, setOrganization, loadOrganizations, roleLabel, paymentRequired, loadBilling, t, route, describeError, createOpen, name, legalName, currency, pending, errorMessage, ownsOrganization, contextOptions, choose, showCreate, closeCreate, createAndStartTrial, overlayDirty0 }
+}

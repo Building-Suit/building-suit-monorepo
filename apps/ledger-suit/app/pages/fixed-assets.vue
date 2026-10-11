@@ -89,40 +89,265 @@ const ledgerPresentation = useLedgerPresentation()
 </script>
 
 <template>
-  <div class="space-y-6">
-    <BsPageHeader :title="t('assets.title')" :subtitle="t('assets.policy')" :context="ledgerPresentation.context(undefined, undefined, asOfDate)" :context-label="ledgerPresentation.t('pageContext.label')"><template #actions><BsButton v-if="can('assets.register')" type="submit" class="ls-btn ls-btn-primary" :disabled="readOnly || !data?.acquisition_journals.length" @click="begin('register')">{{ t('assets.register') }}</BsButton></template></BsPageHeader>
-    <p v-if="!can('assets.read')" class="ls-card p-5" role="status">{{ t('assets.denied') }}</p>
+  <BsStack gap="lg">
+    <BsPageHeader
+      :title="t('assets.title')"
+      :subtitle="t('assets.policy')"
+      :context="ledgerPresentation.context(undefined, undefined, asOfDate)"
+      :context-label="ledgerPresentation.t('pageContext.label')"
+    >
+      <template #actions>
+        <BsButton
+          v-if="can('assets.register')"
+          type="submit"
+          :disabled="readOnly || !data?.acquisition_journals.length"
+          variant="primary"
+          @click="begin('register')"
+        >{{ t('assets.register') }}</BsButton>
+      </template>
+    </BsPageHeader>
+    <BsText v-if="!can('assets.read')" role="status">{{ t('assets.denied') }}</BsText>
     <template v-else>
-      <div class="ls-card p-4"><BsFloatingField :label="t('assets.asOf')"><input id="assets-as-of" v-model="asOfDate" type="date" class="ls-input"></BsFloatingField></div>
-      <p v-if="error" class="ls-error" role="alert">{{ t('assets.errors.load') }} <BsButton type="submit" class="ls-btn" @click="load">{{ t('assets.retry') }}</BsButton></p>
+      <BsCard as="div" padding="md">
+        <BsFloatingField :label="t('assets.asOf')">
+          <BsInput id="assets-as-of" v-model="asOfDate" type="date" />
+        </BsFloatingField>
+      </BsCard>
+      <BsText v-if="error" role="alert" tone="danger">{{ t('assets.errors.load') }} <BsButton type="submit" @click="load">{{ t('assets.retry') }}</BsButton></BsText>
       <BsSectionSkeleton v-else-if="pending" variant="table" :rows="5" />
       <BsEmptyState v-else-if="!data?.assets.length" :title="t('assets.empty')" :description="t('assets.emptyHint')" />
       <template v-else-if="data">
-        <dl class="grid gap-4 sm:grid-cols-3"><div class="ls-card p-4"><dt>{{ t('assets.cost') }}</dt><dd class="text-h2 font-bold"><BsMoneyText :amount="totals.cost.toString()" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" /></dd></div><div class="ls-card p-4"><dt>{{ t('assets.accumulated') }}</dt><dd class="text-h2 font-bold"><BsMoneyText :amount="totals.accumulated.toString()" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" /></dd></div><div class="ls-card p-4"><dt>{{ t('assets.nbv') }}</dt><dd class="text-h2 font-bold" data-assets-nbv><BsMoneyText :amount="totals.nbv.toString()" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" /></dd></div></dl>
-        <section class="ls-card overflow-hidden"><h2 class="p-4 text-h2 font-bold">{{ t('assets.registerTitle') }}</h2><BsDataTable :value="data.assets" row-key="id" :label="t('assets.registerTitle')" :columns="[{ key: 'code', field: 'code', header: t('assets.code') }, { key: 'name', field: 'name', header: t('assets.name') }, { key: 'column3', header: t('assets.statusLabel') }, { key: 'column4', header: t('assets.cost') }, { key: 'column5', header: t('assets.accumulated') }, { key: 'column6', header: t('assets.nbv') }, { key: 'column7', header: t('assets.actions') }]"><template #cell-column3="{ row }">{{ t(`assets.status.${row.status}`) }}</template>
-          <template #cell-column4="{ row }"><BsMoneyText :amount="row.cost_minor" :currency="ledgerPresentation.currency(row.currency)" :locale="ledgerPresentation.locale" /></template>
-          <template #cell-column5="{ row }"><BsMoneyText :amount="row.accumulated_minor" :currency="ledgerPresentation.currency(row.currency)" :locale="ledgerPresentation.locale" /></template>
-          <template #cell-column6="{ row }"><BsMoneyText :amount="row.nbv_minor" :currency="ledgerPresentation.currency(row.currency)" :locale="ledgerPresentation.locale" /></template>
-          <template #cell-column7="{ row }"><BsButton type="submit" class="ls-btn" @click="selectedId=row.id">{{ t('assets.review') }}</BsButton></template></BsDataTable></section>
-        <section v-if="selected" class="ls-card p-5"><div class="flex flex-wrap items-start justify-between gap-3"><div><h2 class="text-h2 font-bold">{{ selected.code }} · {{ selected.name }}</h2><p>{{ t(`assets.methods.${selected.method}`) }} · {{ t('assets.lifeValue', { months: selected.life_months }) }} · {{ selected.in_service_date }}</p><NuxtLink class="text-link underline" :to="{ path: '/transactions', query: { q: selected.acquisition_transaction_id } }">{{ t('assets.acquisitionJournal') }}</NuxtLink></div><div class="flex flex-wrap gap-2"><template v-if="selected.status === 'active'"><BsButton v-if="can('assets.adjust')" type="submit" class="ls-btn" :disabled="readOnly" @click="begin('policy', selected)">{{ t('assets.changePolicy') }}</BsButton><BsButton v-if="can('assets.adjust')" type="submit" class="ls-btn" :disabled="readOnly" @click="begin('impair', selected)">{{ t('assets.impair') }}</BsButton><BsButton v-if="can('assets.dispose')" type="submit" class="ls-btn" :disabled="readOnly" @click="begin('dispose', selected)">{{ t('assets.dispose') }}</BsButton></template><BsButton v-else-if="selected.status === 'corrected' && can('assets.register')" type="submit" class="ls-btn ls-btn-primary" :disabled="readOnly || !data.acquisition_journals.length" @click="begin('register', selected)">{{ t('assets.registerReplacement') }}</BsButton></div></div></section>
-        <section v-if="selected" class="ls-card overflow-hidden"><h2 class="p-4 text-h2 font-bold">{{ t('assets.schedule') }}</h2><BsDataTable :value="schedule" row-key="id" :label="t('assets.schedule')" :columns="[{ key: 'period_start', field: 'period_start', header: t('assets.periodStart') }, { key: 'period_end', field: 'period_end', header: t('assets.periodEnd') }, { key: 'column3', header: t('assets.depreciation') }, { key: 'column4', header: t('assets.closingNbv') }, { key: 'column5', header: t('assets.statusLabel') }, { key: 'column6', header: t('assets.actions') }]"><template #empty>{{ t('assets.noSchedule') }}</template><template #cell-column3="{ row }"><BsMoneyText :amount="row.amount_minor" :currency="ledgerPresentation.currency(selected.currency)" :locale="ledgerPresentation.locale" /></template>
-          <template #cell-column4="{ row }"><BsMoneyText :amount="row.closing_nbv_minor" :currency="ledgerPresentation.currency(selected.currency)" :locale="ledgerPresentation.locale" /></template>
-          <template #cell-column5="{ row }">{{ t(`assets.scheduleStatus.${row.status}`) }}</template>
-          <template #cell-column6="{ row }"><BsButton v-if="row.status === 'scheduled' && can('assets.depreciate')" type="submit" class="ls-btn" :disabled="readOnly" @click="post(row)">{{ t('assets.post') }}</BsButton></template></BsDataTable></section>
-        <section class="ls-card overflow-hidden"><div class="flex items-center justify-between p-4"><h2 class="text-h2 font-bold">{{ t('assets.reconciliation') }}</h2><span :data-assets-reconciled="balanced">{{ balanced ? t('assets.reconciled') : t('assets.variance') }}</span></div><BsDataTable :value="data.reconciliation" row-key="account_id" :label="t('assets.reconciliation')" :columns="[{ key: 'column1', header: t('assets.account') }, { key: 'column2', header: t('assets.registerBalance') }, { key: 'column3', header: t('assets.glBalance') }, { key: 'column4', header: t('assets.variance') }]"><template #cell-column1="{ row }">{{ data.accounts.find(account => account.id === row.account_id)?.name }}</template>
-          <template #cell-column2="{ row }"><BsMoneyText :amount="row.register_minor" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" /></template>
-          <template #cell-column3="{ row }"><BsMoneyText :amount="row.gl_minor" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" /></template>
-          <template #cell-column4="{ row }"><BsMoneyText :amount="row.variance_minor" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" /></template></BsDataTable></section>
-        <details v-if="selected" class="ls-card p-4"><summary class="cursor-pointer font-bold">{{ t('assets.history') }}</summary><ol class="mt-3 space-y-2"><li v-for="event in events" :key="event.id"><time>{{ event.date }}</time> · {{ t(`assets.events.${event.kind}`) }} · {{ event.reason }} <NuxtLink v-if="event.transaction_id" class="text-link underline" :to="{ path: '/transactions', query: { q: event.transaction_id } }">{{ t('assets.journal') }}</NuxtLink> <BsButton v-if="event.kind !== 'reversal' && !reversedEventIds.has(event.id) && can('assets.reverse')" type="submit" class="ls-btn ms-2" @click="begin('reverse', event)">{{ t('assets.reverse') }}</BsButton></li></ol></details>
+        <BsDescriptionList :columns="3">
+          <BsCard as="div" padding="md">
+            <BsDescriptionTerm>{{ t('assets.cost') }}</BsDescriptionTerm>
+            <BsDescriptionValue>
+              <BsMoneyText :amount="totals.cost.toString()" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
+            </BsDescriptionValue>
+          </BsCard>
+          <BsCard as="div" padding="md">
+            <BsDescriptionTerm>{{ t('assets.accumulated') }}</BsDescriptionTerm>
+            <BsDescriptionValue>
+              <BsMoneyText :amount="totals.accumulated.toString()" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
+            </BsDescriptionValue>
+          </BsCard>
+          <BsCard as="div" padding="md">
+            <BsDescriptionTerm>{{ t('assets.nbv') }}</BsDescriptionTerm>
+            <BsDescriptionValue data-assets-nbv>
+              <BsMoneyText :amount="totals.nbv.toString()" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
+            </BsDescriptionValue>
+          </BsCard>
+        </BsDescriptionList>
+        <BsCard as="section" padding="none" overflow="hidden">
+          <BsHeading :level="2" size="h2">{{ t('assets.registerTitle') }}</BsHeading>
+          <BsDataTable
+            :value="data.assets"
+            row-key="id"
+            :label="t('assets.registerTitle')"
+            :columns="[{ key: 'code', field: 'code', header: t('assets.code') }, { key: 'name', field: 'name', header: t('assets.name') }, { key: 'column3', header: t('assets.statusLabel') }, { key: 'column4', header: t('assets.cost') }, { key: 'column5', header: t('assets.accumulated') }, { key: 'column6', header: t('assets.nbv') }, { key: 'column7', header: t('assets.actions') }]"
+          >
+            <template #cell-column3="{ row }">{{ t(`assets.status.${row.status}`) }}</template>
+            <template #cell-column4="{ row }">
+              <BsMoneyText :amount="row.cost_minor" :currency="ledgerPresentation.currency(row.currency)" :locale="ledgerPresentation.locale" />
+            </template>
+            <template #cell-column5="{ row }">
+              <BsMoneyText :amount="row.accumulated_minor" :currency="ledgerPresentation.currency(row.currency)" :locale="ledgerPresentation.locale" />
+            </template>
+            <template #cell-column6="{ row }">
+              <BsMoneyText :amount="row.nbv_minor" :currency="ledgerPresentation.currency(row.currency)" :locale="ledgerPresentation.locale" />
+            </template>
+            <template #cell-column7="{ row }">
+              <BsButton type="submit" @click="selectedId=row.id">{{ t('assets.review') }}</BsButton>
+            </template>
+          </BsDataTable>
+        </BsCard>
+        <BsCard v-if="selected" as="section" padding="md">
+          <BsInline gap="md" :wrap="true" align="start" justify="between">
+            <BsBox>
+              <BsHeading :level="2" size="h2">{{ selected.code }} · {{ selected.name }}</BsHeading>
+              <BsText>{{ t(`assets.methods.${selected.method}`) }} · {{ t('assets.lifeValue', { months: selected.life_months }) }} · {{ selected.in_service_date }}</BsText>
+              <BsLink :to="{ path: '/transactions', query: { q: selected.acquisition_transaction_id } }">{{ t('assets.acquisitionJournal') }}</BsLink>
+            </BsBox>
+            <BsInline gap="sm" :wrap="true">
+              <template v-if="selected.status === 'active'">
+                <BsButton v-if="can('assets.adjust')" type="submit" :disabled="readOnly" @click="begin('policy', selected)">{{ t('assets.changePolicy') }}</BsButton>
+                <BsButton v-if="can('assets.adjust')" type="submit" :disabled="readOnly" @click="begin('impair', selected)">{{ t('assets.impair') }}</BsButton>
+                <BsButton v-if="can('assets.dispose')" type="submit" :disabled="readOnly" @click="begin('dispose', selected)">{{ t('assets.dispose') }}</BsButton>
+              </template>
+              <BsButton
+                v-else-if="selected.status === 'corrected' && can('assets.register')"
+                type="submit"
+                :disabled="readOnly || !data.acquisition_journals.length"
+                variant="primary"
+                @click="begin('register', selected)"
+              >{{ t('assets.registerReplacement') }}</BsButton>
+            </BsInline>
+          </BsInline>
+        </BsCard>
+        <BsCard v-if="selected" as="section" padding="none" overflow="hidden">
+          <BsHeading :level="2" size="h2">{{ t('assets.schedule') }}</BsHeading>
+          <BsDataTable
+            :value="schedule"
+            row-key="id"
+            :label="t('assets.schedule')"
+            :columns="[{ key: 'period_start', field: 'period_start', header: t('assets.periodStart') }, { key: 'period_end', field: 'period_end', header: t('assets.periodEnd') }, { key: 'column3', header: t('assets.depreciation') }, { key: 'column4', header: t('assets.closingNbv') }, { key: 'column5', header: t('assets.statusLabel') }, { key: 'column6', header: t('assets.actions') }]"
+          >
+            <template #empty>{{ t('assets.noSchedule') }}</template>
+            <template #cell-column3="{ row }">
+              <BsMoneyText :amount="row.amount_minor" :currency="ledgerPresentation.currency(selected.currency)" :locale="ledgerPresentation.locale" />
+            </template>
+            <template #cell-column4="{ row }">
+              <BsMoneyText :amount="row.closing_nbv_minor" :currency="ledgerPresentation.currency(selected.currency)" :locale="ledgerPresentation.locale" />
+            </template>
+            <template #cell-column5="{ row }">{{ t(`assets.scheduleStatus.${row.status}`) }}</template>
+            <template #cell-column6="{ row }">
+              <BsButton v-if="row.status === 'scheduled' && can('assets.depreciate')" type="submit" :disabled="readOnly" @click="post(row)">{{ t('assets.post') }}</BsButton>
+            </template>
+          </BsDataTable>
+        </BsCard>
+        <BsCard as="section" padding="none" overflow="hidden">
+          <BsInline gap="none" :wrap="false" justify="between" padding="lg">
+            <BsHeading :level="2" size="h2">{{ t('assets.reconciliation') }}</BsHeading>
+            <BsText :data-assets-reconciled="balanced" as="span">{{ balanced ? t('assets.reconciled') : t('assets.variance') }}</BsText>
+          </BsInline>
+          <BsDataTable
+            :value="data.reconciliation"
+            row-key="account_id"
+            :label="t('assets.reconciliation')"
+            :columns="[{ key: 'column1', header: t('assets.account') }, { key: 'column2', header: t('assets.registerBalance') }, { key: 'column3', header: t('assets.glBalance') }, { key: 'column4', header: t('assets.variance') }]"
+          >
+            <template #cell-column1="{ row }">{{ data.accounts.find(account => account.id === row.account_id)?.name }}</template>
+            <template #cell-column2="{ row }">
+              <BsMoneyText :amount="row.register_minor" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
+            </template>
+            <template #cell-column3="{ row }">
+              <BsMoneyText :amount="row.gl_minor" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
+            </template>
+            <template #cell-column4="{ row }">
+              <BsMoneyText :amount="row.variance_minor" :currency="ledgerPresentation.currency()" :locale="ledgerPresentation.locale" />
+            </template>
+          </BsDataTable>
+        </BsCard>
+        <BsDisclosure v-if="selected">
+          <template #summary>{{ t('assets.history') }}</template>
+          <BsList :ordered="true" marker="none">
+            <BsListItem v-for="event in events" :key="event.id"><BsText as="time">{{ event.date }}</BsText> · {{ t(`assets.events.${event.kind}`) }} · {{ event.reason }} <BsLink v-if="event.transaction_id" :to="{ path: '/transactions', query: { q: event.transaction_id } }">{{ t('assets.journal') }}</BsLink> <BsButton v-if="event.kind !== 'reversal' && !reversedEventIds.has(event.id) && can('assets.reverse')" type="submit" @click="begin('reverse', event)">{{ t('assets.reverse') }}</BsButton></BsListItem>
+          </BsList>
+        </BsDisclosure>
       </template>
     </template>
-
-    <BsRecordActionDialog v-model:visible="visible" :title="t(`assets.dialogs.${form.mode}`)" :pending="saving" :dirty="dirty" :error="formError" size="lg" :submit-label="t('common.save')" :cancel-label="t('common.cancel')" :submit-disabled="readOnly" @submit="save">
-      <template v-if="form.mode === 'register'"><div class="grid gap-3 sm:grid-cols-2"><BsFloatingField :label="t('assets.code')"><input id="asset-code" v-model="form.code" class="ls-input" required></BsFloatingField><BsFloatingField :label="t('assets.name')"><input id="asset-name" v-model="form.name" class="ls-input" required></BsFloatingField></div><BsFloatingField :label="t('assets.acquisitionJournal')"><select id="asset-journal" v-model="form.journal" class="ls-input" required><option value="" /><option v-for="journal in data?.acquisition_journals" :key="journal.id" :value="journal.id">{{ journal.date }} · {{ journal.reference || journal.description }}</option></select></BsFloatingField><div class="grid gap-3 sm:grid-cols-2"><BsFloatingField :label="t('assets.acquisitionDate')"><input id="asset-acquisition-date" v-model="form.acquisitionDate" type="date" class="ls-input" required readonly></BsFloatingField><BsFloatingField :label="t('assets.serviceDate')"><input id="asset-service-date" v-model="form.serviceDate" type="date" class="ls-input" :min="form.acquisitionDate" required></BsFloatingField><BsFloatingField :label="t('assets.cost')"><input id="asset-cost" v-model="form.cost" inputmode="decimal" class="ls-input" required></BsFloatingField><BsFloatingField :label="t('assets.residual')"><input id="asset-residual" v-model="form.residual" inputmode="decimal" class="ls-input" required></BsFloatingField></div><BsFloatingField :label="t('assets.costAccount')"><select id="asset-cost-account" v-model="form.costAccount" class="ls-input" required><option value="" /><option v-for="account in costAccounts" :key="account.id" :value="account.id">{{ account.name }}</option></select></BsFloatingField><BsFloatingField :label="t('assets.accumulatedAccount')"><select id="asset-accumulated-account" v-model="form.accumulatedAccount" class="ls-input" required><option value="" /><option v-for="account in accumulatedAccounts" :key="account.id" :value="account.id">{{ account.name }}</option></select></BsFloatingField><BsFloatingField :label="t('assets.expenseAccount')"><select id="asset-expense-account" v-model="form.expenseAccount" class="ls-input" required><option value="" /><option v-for="account in expenseAccounts" :key="account.id" :value="account.id">{{ account.name }}</option></select></BsFloatingField><BsFloatingField :label="t('assets.impairmentAccount')"><select id="asset-impairment-account" v-model="form.impairmentAccount" class="ls-input" required><option value="" /><option v-for="account in expenseAccounts" :key="account.id" :value="account.id">{{ account.name }}</option></select></BsFloatingField><BsFloatingField :label="t('assets.gainLossAccount')"><select id="asset-gain-loss-account" v-model="form.gainLossAccount" class="ls-input" required><option value="" /><option v-for="account in gainLossAccounts" :key="account.id" :value="account.id">{{ account.name }}</option></select></BsFloatingField></template>
-      <template v-if="form.mode === 'register' || form.mode === 'policy'"><div class="grid gap-3 sm:grid-cols-2"><BsFloatingField :label="t('assets.life')"><input id="asset-life" v-model="form.life" type="number" min="1" max="1200" class="ls-input" required></BsFloatingField><BsFloatingField :label="t('assets.method')"><select id="asset-method" v-model="form.method" class="ls-input"><option value="straight_line">{{ t('assets.methods.straight_line') }}</option><option value="declining_balance">{{ t('assets.methods.declining_balance') }}</option></select></BsFloatingField><BsFloatingField v-if="form.method === 'declining_balance'" :label="t('assets.rate')"><input id="asset-rate" v-model="form.rate" type="number" min="0.01" max="100" step="0.01" class="ls-input" required></BsFloatingField><BsFloatingField v-if="form.mode === 'policy'" :label="t('assets.residual')"><input id="asset-policy-residual" v-model="form.residual" class="ls-input" required></BsFloatingField></div></template>
-      <template v-if="form.mode === 'dispose'"><BsFloatingField :label="t('assets.proceeds')"><input id="asset-proceeds" v-model="form.proceeds" class="ls-input" required></BsFloatingField><BsFloatingField :label="t('assets.proceedsAccount')"><select id="asset-proceeds-account" v-model="form.proceedsAccount" class="ls-input"><option value="" /><option v-for="account in proceedsAccounts" :key="account.id" :value="account.id">{{ account.name }}</option></select></BsFloatingField></template>
-      <BsFloatingField v-if="form.mode === 'impair'" :label="t('assets.impairmentAmount')"><input id="asset-impairment" v-model="form.cost" class="ls-input" required></BsFloatingField>
-      <template v-if="form.mode !== 'register'"><BsFloatingField :label="form.mode === 'policy' ? t('assets.effectiveDate') : t('assets.date')"><input id="asset-action-date" v-model="form.date" type="date" class="ls-input" required></BsFloatingField><BsFloatingField :label="t('assets.reason')"><input id="asset-reason" v-model="form.reason" class="ls-input" required></BsFloatingField></template>
+    <BsRecordActionDialog
+      v-model:visible="visible"
+      :title="t(`assets.dialogs.${form.mode}`)"
+      :pending="saving"
+      :dirty="dirty"
+      :error="formError"
+      size="lg"
+      :submit-label="t('common.save')"
+      :cancel-label="t('common.cancel')"
+      :submit-disabled="readOnly"
+      @submit="save"
+    >
+      <template v-if="form.mode === 'register'">
+        <BsGrid :columns="2" gap="md">
+          <BsFloatingField :label="t('assets.code')">
+            <BsInput id="asset-code" v-model="form.code" required />
+          </BsFloatingField>
+          <BsFloatingField :label="t('assets.name')">
+            <BsInput id="asset-name" v-model="form.name" required />
+          </BsFloatingField>
+        </BsGrid>
+        <BsFloatingField :label="t('assets.acquisitionJournal')">
+          <BsSelect id="asset-journal" v-model="form.journal" required native>
+            <BsSelectOption value="" />
+            <BsSelectOption v-for="journal in data?.acquisition_journals" :key="journal.id" :value="journal.id">{{ journal.date }} · {{ journal.reference || journal.description }}</BsSelectOption>
+          </BsSelect>
+        </BsFloatingField>
+        <BsGrid :columns="2" gap="md">
+          <BsFloatingField :label="t('assets.acquisitionDate')">
+            <BsInput id="asset-acquisition-date" v-model="form.acquisitionDate" type="date" required readonly />
+          </BsFloatingField>
+          <BsFloatingField :label="t('assets.serviceDate')">
+            <BsInput id="asset-service-date" v-model="form.serviceDate" type="date" :min="form.acquisitionDate" required />
+          </BsFloatingField>
+          <BsFloatingField :label="t('assets.cost')">
+            <BsInput id="asset-cost" v-model="form.cost" inputmode="decimal" required />
+          </BsFloatingField>
+          <BsFloatingField :label="t('assets.residual')">
+            <BsInput id="asset-residual" v-model="form.residual" inputmode="decimal" required />
+          </BsFloatingField>
+        </BsGrid>
+        <BsFloatingField :label="t('assets.costAccount')">
+          <BsSelect id="asset-cost-account" v-model="form.costAccount" required native>
+            <BsSelectOption value="" />
+            <BsSelectOption v-for="account in costAccounts" :key="account.id" :value="account.id">{{ account.name }}</BsSelectOption>
+          </BsSelect>
+        </BsFloatingField>
+        <BsFloatingField :label="t('assets.accumulatedAccount')">
+          <BsSelect id="asset-accumulated-account" v-model="form.accumulatedAccount" required native>
+            <BsSelectOption value="" />
+            <BsSelectOption v-for="account in accumulatedAccounts" :key="account.id" :value="account.id">{{ account.name }}</BsSelectOption>
+          </BsSelect>
+        </BsFloatingField>
+        <BsFloatingField :label="t('assets.expenseAccount')">
+          <BsSelect id="asset-expense-account" v-model="form.expenseAccount" required native>
+            <BsSelectOption value="" />
+            <BsSelectOption v-for="account in expenseAccounts" :key="account.id" :value="account.id">{{ account.name }}</BsSelectOption>
+          </BsSelect>
+        </BsFloatingField>
+        <BsFloatingField :label="t('assets.impairmentAccount')">
+          <BsSelect id="asset-impairment-account" v-model="form.impairmentAccount" required native>
+            <BsSelectOption value="" />
+            <BsSelectOption v-for="account in expenseAccounts" :key="account.id" :value="account.id">{{ account.name }}</BsSelectOption>
+          </BsSelect>
+        </BsFloatingField>
+        <BsFloatingField :label="t('assets.gainLossAccount')">
+          <BsSelect id="asset-gain-loss-account" v-model="form.gainLossAccount" required native>
+            <BsSelectOption value="" />
+            <BsSelectOption v-for="account in gainLossAccounts" :key="account.id" :value="account.id">{{ account.name }}</BsSelectOption>
+          </BsSelect>
+        </BsFloatingField>
+      </template>
+      <template v-if="form.mode === 'register' || form.mode === 'policy'">
+        <BsGrid :columns="2" gap="md">
+          <BsFloatingField :label="t('assets.life')">
+            <BsInput id="asset-life" v-model="form.life" type="number" min="1" max="1200" required />
+          </BsFloatingField>
+          <BsFloatingField :label="t('assets.method')">
+            <BsSelect id="asset-method" v-model="form.method" native>
+              <BsSelectOption value="straight_line">{{ t('assets.methods.straight_line') }}</BsSelectOption>
+              <BsSelectOption value="declining_balance">{{ t('assets.methods.declining_balance') }}</BsSelectOption>
+            </BsSelect>
+          </BsFloatingField>
+          <BsFloatingField v-if="form.method === 'declining_balance'" :label="t('assets.rate')">
+            <BsInput id="asset-rate" v-model="form.rate" type="number" min="0.01" max="100" step="0.01" required />
+          </BsFloatingField>
+          <BsFloatingField v-if="form.mode === 'policy'" :label="t('assets.residual')">
+            <BsInput id="asset-policy-residual" v-model="form.residual" required />
+          </BsFloatingField>
+        </BsGrid>
+      </template>
+      <template v-if="form.mode === 'dispose'">
+        <BsFloatingField :label="t('assets.proceeds')">
+          <BsInput id="asset-proceeds" v-model="form.proceeds" required />
+        </BsFloatingField>
+        <BsFloatingField :label="t('assets.proceedsAccount')">
+          <BsSelect id="asset-proceeds-account" v-model="form.proceedsAccount" native>
+            <BsSelectOption value="" />
+            <BsSelectOption v-for="account in proceedsAccounts" :key="account.id" :value="account.id">{{ account.name }}</BsSelectOption>
+          </BsSelect>
+        </BsFloatingField>
+      </template>
+      <BsFloatingField v-if="form.mode === 'impair'" :label="t('assets.impairmentAmount')">
+        <BsInput id="asset-impairment" v-model="form.cost" required />
+      </BsFloatingField>
+      <template v-if="form.mode !== 'register'">
+        <BsFloatingField :label="form.mode === 'policy' ? t('assets.effectiveDate') : t('assets.date')">
+          <BsInput id="asset-action-date" v-model="form.date" type="date" required />
+        </BsFloatingField>
+        <BsFloatingField :label="t('assets.reason')">
+          <BsInput id="asset-reason" v-model="form.reason" required />
+        </BsFloatingField>
+      </template>
     </BsRecordActionDialog>
-  </div>
+  </BsStack>
 </template>

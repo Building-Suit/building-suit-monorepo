@@ -153,7 +153,18 @@
     "./molecules/BsPrintActions": "./src/molecules/BsPrintActions.vue",
     "./templates/BsPrintableDocument": "./src/templates/BsPrintableDocument.vue",
     "./molecules/BsFileDrop": "./src/molecules/BsFileDrop.vue",
-    "./organisms/BsTagPicker": "./src/organisms/BsTagPicker.vue"
+    "./organisms/BsTagPicker": "./src/organisms/BsTagPicker.vue",
+    "./atoms/BsDescriptionTerm": "./src/atoms/BsDescriptionTerm.vue",
+    "./atoms/BsSelectOption": "./src/atoms/BsSelectOption.vue",
+    "./atoms/BsLineBreak": "./src/atoms/BsLineBreak.vue",
+    "./atoms/BsDescriptionValue": "./src/atoms/BsDescriptionValue.vue",
+    "./atoms/BsHierarchyLeaf": "./src/atoms/BsHierarchyLeaf.vue",
+    "./atoms/BsFieldLabel": "./src/atoms/BsFieldLabel.vue",
+    "./molecules/BsHierarchyBranch": "./src/molecules/BsHierarchyBranch.vue",
+    "./molecules/BsWorkflowScope": "./src/molecules/BsWorkflowScope.vue",
+    "./atoms/BsColorSwatch": "./src/atoms/BsColorSwatch.vue",
+    "./molecules/BsFlowBlock": "./src/molecules/BsFlowBlock.vue",
+    "./organisms/BsDashboardPreview": "./src/organisms/BsDashboardPreview.vue"
   },
   "dependencies": {
     "primevue": "4.5.5",

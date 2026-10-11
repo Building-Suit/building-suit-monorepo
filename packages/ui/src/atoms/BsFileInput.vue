@@ -5,7 +5,9 @@ type FileModel = File | File[] | null
 
 const props = withDefaults(defineProps<{
   modelValue?: FileModel
-  label: string
+  label?: string
+  bare?: boolean
+  hideControl?: boolean
   selectedLabel?: string
   emptyLabel?: string
   multiple?: boolean
@@ -16,7 +18,7 @@ const props = withDefaults(defineProps<{
   describedby?: string
   variant?: 'control' | 'button'
 }>(), {
-  modelValue: null,
+  modelValue: null, label: '', bare: false, hideControl: false,
   selectedLabel: undefined,
   emptyLabel: undefined,
   multiple: false,
@@ -36,6 +38,7 @@ const emit = defineEmits<{
 const generatedId = useId()
 const id = computed(() => props.inputId || generatedId)
 const input = ref<HTMLInputElement | null>(null)
+defineExpose({ nativeElement: input, click: () => input.value?.click(), focus: () => input.value?.focus() })
 const selectedFiles = computed(() => props.modelValue == null ? [] : Array.isArray(props.modelValue) ? props.modelValue : [props.modelValue])
 const selectedText = computed(() => props.selectedLabel || selectedFiles.value.map(file => file.name).join(', ') || props.emptyLabel)
 
@@ -53,12 +56,12 @@ watch(() => props.modelValue, (value) => {
 </script>
 
 <template>
-  <label class="bs-file-input" :data-variant="variant" :data-disabled="disabled || undefined" :data-invalid="invalid || undefined">
+  <component :is="bare ? 'span' : 'label'" :class="bare ? 'bs-bare-control' : 'bs-file-input'" :data-variant="variant" :data-disabled="disabled || undefined" :data-invalid="invalid || undefined">
     <input
       :id="id"
       ref="input"
       v-bind="$attrs"
-      class="bs-file-input__native"
+      :class="hideControl ? 'sr-only' : bare ? 'ls-input' : 'bs-file-input__native'"
       type="file"
       :multiple="multiple"
       :disabled="disabled"
@@ -67,7 +70,7 @@ watch(() => props.modelValue, (value) => {
       :aria-describedby="describedby"
       @change="update"
     >
-    <span class="bs-file-input__label">{{ label }}</span>
-    <span v-if="selectedText" class="bs-file-input__selection" aria-live="polite">{{ selectedText }}</span>
-  </label>
+    <span v-if="!bare" class="bs-file-input__label">{{ label }}</span>
+    <span v-if="!bare && selectedText" class="bs-file-input__selection" aria-live="polite">{{ selectedText }}</span>
+  </component>
 </template>

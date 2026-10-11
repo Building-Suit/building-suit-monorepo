@@ -1,5 +1,7 @@
-<script setup lang="ts">
 import type { Database } from '~~/types/database.types'
+
+/** Ledger-owned orchestration; mounted by a shared workflow scope in its route/layout. */
+export function useLedgerOrganizationSetupView(_values: Record<string, unknown>, _emit: (event: string, ...args: unknown[]) => void) {
 const supabase = useSupabaseClient<Database>()
 const { loadOrganizations } = useTenant()
 const { t } = useI18n()
@@ -58,18 +60,5 @@ async function acceptInvitation() {
   catch (error) { errorMessage.value = describeError(error) }
   finally { pending.value = false }
 }
-</script>
-
-<template>
-  <div class="mx-auto grid max-w-3xl gap-6 md:grid-cols-2">
-    <BsForm class="ls-card space-y-4 p-6" @submit.prevent="createOrganization"><h2 class="text-lg font-bold">{{ t('org.create') }}</h2><p class="text-sm text-fg-muted">{{ t('org.createHint') }}</p><BsFloatingField :label="t('org.name')"><input id="org-name" v-model="name" class="ls-input" required></BsFloatingField><BsFloatingField :label="t('onboarding.legalName')"><input id="org-legal-name" v-model="legalName" class="ls-input" required></BsFloatingField><BsFloatingField :label="t('accounts.currency')"><select id="org-currency" v-model="currency" class="ls-input"><option v-for="code in ['EGP','USD','EUR','GBP','SAR','AED']" :key="code">{{ code }}</option></select></BsFloatingField><BsButton type="submit" class="ls-btn ls-btn-primary w-full" :disabled="pending">{{ t('org.create') }}</BsButton></BsForm>
-    <BsForm class="ls-card space-y-4 p-6" @submit.prevent="acceptInvitation"><h2 class="text-lg font-bold">{{ t('org.acceptInvite') }}</h2><p class="text-sm text-fg-muted">{{ t('org.acceptInviteHint') }}</p><BsFloatingField :label="t('org.inviteToken')"><input id="invite-token" v-model="invitationToken" class="ls-input" dir="ltr" required></BsFloatingField><BsButton type="submit" class="ls-btn w-full" :disabled="pending">{{ t('org.acceptInvite') }}</BsButton></BsForm>
-    <p v-if="errorMessage" class="ls-error md:col-span-2" role="alert">{{ errorMessage }}</p>
-    <section v-if="!showDemo" class="ls-card space-y-3 p-6 md:col-span-2" aria-labelledby="demo-invitation-title">
-      <h2 id="demo-invitation-title" class="text-lg font-bold">{{ t('demo.invitationTitle') }}</h2>
-      <p class="text-sm text-fg-muted">{{ t('demo.invitationHint') }}</p>
-      <BsButton type="button" class="ls-btn" @click="showDemo = true">{{ t('demo.open') }}</BsButton>
-    </section>
-    <SyntheticDemo v-else @close="showDemo = false" />
-  </div>
-</template>
+return { supabase, loadOrganizations, t, describeError, route, name, legalName, currency, invitationToken, pending, errorMessage, showDemo, createOrganization, acceptInvitation }
+}

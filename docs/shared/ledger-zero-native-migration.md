@@ -1,5 +1,7 @@
 # BS-UI-ZN-LEDGER-001 — local implementation status
 
+This inherited implementation snapshot is superseded by the [final repair convergence report](zero-native-ui-convergence-report.md). Its counts and verification results describe the earlier source state.
+
 Status: **in progress; acceptance is not complete**. Changes are uncommitted in the task worktree. No publication, deployment or database operations were performed.
 
 The current changes migrate 318 direct table columns and the grouped trial-balance footer to the shared column/schema/cell/footer contract. The shared schema preserves controlled sort accessibility and aligned totals. Eight local presentation wrappers are removed: MoneyText, KpiCard, LedgerPageHeader, AccountingTableDensity, RevenueExpenseChart, SetupChecklist, QuotaUsageMeter and UsageMeters. Currency/context/KPI/chart, setup queries and quota guidance remain in Ledger composables. Shared chart tables retain net values without adding another plotted series. The component catalogue demonstrates column footers and table-only chart series.

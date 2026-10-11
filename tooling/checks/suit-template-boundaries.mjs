@@ -77,7 +77,7 @@ function targetForTag(tag, kind) {
 
 function tagKind(node, localNames) {
   if (node.tag === 'template') return null
-  if (node.tag.startsWith('Bs')) return null
+  if (/^Bs[A-Z]/.test(node.tag)) return null
   if (node.tagType === 0) return 'native-tag'
   if (node.tag.startsWith('Nuxt') || node.tag === 'ClientOnly' || vueControlTags.has(node.tag)) return 'nuxt-or-vue-render-tag'
   if (vendorTags.has(node.tag)) return 'vendor-tag'
@@ -211,12 +211,52 @@ export async function auditSuitTemplates({ root = defaultRoot } = {}) {
   return { suits, files: relativeFiles, debt: debt.sort(compareDebt), parseFailures }
 }
 
-export async function validateSuitTemplateBoundaries({ root = defaultRoot, manifestPath = defaultDebtManifest, strict = false } = {}) {
+async function strictSourceFailures(root, suits) {
+  const failures = []
+  async function walk(directory) {
+    let entries
+    try { entries = await readdir(directory, { withFileTypes: true }) }
+    catch (error) { if (error.code === 'ENOENT') return; throw error }
+    for (const entry of entries) {
+      const absolute = path.join(directory, entry.name)
+      if (entry.isDirectory()) { await walk(absolute); continue }
+      const file = slash(path.relative(root, absolute))
+      if (/\.(css|scss|sass|less)$/.test(entry.name)) {
+        const source = (await readFile(absolute, 'utf8')).replace(/\/\*[\s\S]*?\*\//g, '').trim()
+        if (source) failures.push(`${file}: Suit presentation CSS must be shared-package owned`)
+      }
+      if (!/\.(vue|ts|tsx|js|mjs)$/.test(entry.name)) continue
+      const source = await readFile(absolute, 'utf8')
+      const blocks = entry.name.endsWith('.vue')
+        ? (() => { const { descriptor } = parse(source); return [descriptor.script, descriptor.scriptSetup] })()
+        : [{ content: source, lang: /\.tsx?$/.test(entry.name) ? 'ts' : 'js', loc: { start: { line: 1 } } }]
+      for (const block of blocks) for (const item of importSpecifiers(block)) {
+        if (isVendorImport(item.module)) failures.push(`${file}:${item.line}: direct UI-vendor import ${item.module}`)
+        if (item.module.startsWith('@building-suit/ui/') && aliases.has(item.module.split('/').at(-1))) {
+          failures.push(`${file}:${item.line}: stale unprefixed shared component import ${item.module}`)
+        }
+      }
+    }
+  }
+  for (const suit of suits) await walk(path.join(root, 'apps', suit, 'app'))
+  try {
+    const manifest = JSON.parse(await readFile(path.join(root, 'packages/ui/package.json'), 'utf8'))
+    for (const [name, target] of Object.entries(manifest.exports || {})) {
+      if (typeof target === 'string' && target.endsWith('.vue') && (!/^Bs[A-Z]/.test(name.split('/').at(-1)) || !/^Bs[A-Z]/.test(path.basename(target, '.vue')))) {
+        failures.push(`packages/ui/package.json: renderable export ${name} must be Bs-prefixed`)
+      }
+    }
+  } catch (error) { if (error.code !== 'ENOENT') throw error }
+  return failures
+}
+
+export async function validateSuitTemplateBoundaries({ root = defaultRoot, manifestPath = defaultDebtManifest, strict = false, requireStrict = false } = {}) {
   const audit = await auditSuitTemplates({ root })
   const failures = [...audit.parseFailures]
   if (strict) {
     if (!audit.suits.length || !audit.files.length) failures.push('Strict Suit UI boundary requires a discovered Suit with Vue files')
     for (const item of audit.debt) failures.push(`${debtKey(item)}: forbidden in strict mode`)
+    failures.push(...await strictSourceFailures(root, audit.suits))
     return { ...audit, failures }
   }
   let manifest
@@ -224,12 +264,20 @@ export async function validateSuitTemplateBoundaries({ root = defaultRoot, manif
   catch (error) { return { ...audit, failures: [...failures, `${manifestPath}: ${error.message}`] } }
 
   if (manifest.schemaVersion !== 1) failures.push(`${manifestPath}: schemaVersion must be 1`)
-  if (manifest.mode !== 'migration') failures.push(`${manifestPath}: mode must be "migration"`)
+  if (!['migration', 'strict'].includes(manifest.mode)) failures.push(`${manifestPath}: mode must be "migration" or "strict"`)
+  if (requireStrict && manifest.mode !== 'strict') failures.push(`${manifestPath}: strict mode is required`)
   if (!manifest.auditedReference || typeof manifest.auditedReference.branch !== 'string' || typeof manifest.auditedReference.commit !== 'string') {
     failures.push(`${manifestPath}: auditedReference requires branch and commit`)
   }
   if (!Array.isArray(manifest.violations)) failures.push(`${manifestPath}: violations must be an array`)
   const recorded = Array.isArray(manifest.violations) ? manifest.violations : []
+  if (manifest.mode === 'strict' || requireStrict) {
+    if (recorded.length) failures.push(`${manifestPath}: strict mode requires an empty violations array`)
+    if (!audit.suits.length || !audit.files.length) failures.push('Strict Suit UI boundary requires a discovered Suit with Vue files')
+    for (const item of audit.debt) failures.push(`${debtKey(item)}: forbidden in strict mode`)
+    failures.push(...await strictSourceFailures(root, audit.suits))
+    return { ...audit, manifest, failures }
+  }
   const actualByKey = new Map(audit.debt.map(item => [debtKey(item), item]))
   const recordedByKey = new Map()
   for (const item of recorded) {
@@ -256,6 +304,10 @@ export async function validateSuitTemplateBoundaries({ root = defaultRoot, manif
 
 export async function writeSuitTemplateDebt({ root = defaultRoot, manifestPath = defaultDebtManifest, branch, commit } = {}) {
   if (!branch || !commit) throw new Error('--write requires --branch and --commit')
+  try {
+    const existing = JSON.parse(await readFile(path.join(root, manifestPath), 'utf8'))
+    if (existing.mode === 'strict') throw new Error('Refusing to downgrade a strict Suit UI boundary manifest to migration mode')
+  } catch (error) { if (error.code !== 'ENOENT') throw error }
   const audit = await auditSuitTemplates({ root })
   if (audit.parseFailures.length) throw new Error(audit.parseFailures.join('\n'))
   const manifest = {
@@ -283,12 +335,12 @@ async function main() {
     console.log(`Recorded ${result.debt.length} exact Suit UI boundary violations across ${result.files.length} Vue files in ${result.suits.length} dynamically discovered Suits.`)
     return
   }
-  const result = await validateSuitTemplateBoundaries({ root, manifestPath, strict: args.includes('--strict') })
+  const result = await validateSuitTemplateBoundaries({ root, manifestPath, strict: args.includes('--strict'), requireStrict: args.includes('--require-strict') })
   if (result.failures.length) {
     console.error(result.failures.join('\n'))
     process.exitCode = 1
   } else {
-    console.log(args.includes('--strict')
+    console.log(args.includes('--strict') || result.manifest?.mode === 'strict'
       ? `Suit UI boundary passes in strict mode: ${result.files.length} Vue files in ${result.suits.length} dynamically discovered Suits; zero violations.`
       : `Suit UI boundary passes in migration mode: ${result.debt.length} recorded violations across ${result.files.length} Vue files in ${result.suits.length} dynamically discovered Suits; no new or stale debt.`)
   }

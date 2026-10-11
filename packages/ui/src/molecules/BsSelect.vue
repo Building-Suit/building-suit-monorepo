@@ -1,18 +1,25 @@
 <script setup lang="ts">
 import Select from 'primevue/select'
 import type { SelectProps } from 'primevue/select'
+import { provide } from 'vue'
 defineOptions({ inheritAttrs: false })
 const model = defineModel<string | number | null>({ default: null })
-withDefaults(defineProps<{
-  label: string
-  options: SelectProps['options']
+const props = withDefaults(defineProps<{
+  value?: string | number | null
+  label?: string
+  options?: SelectProps['options']
+  native?: boolean
   optionLabel?: SelectProps['optionLabel']
   optionValue?: SelectProps['optionValue']
   virtual?: boolean
   virtualScrollerOptions?: SelectProps['virtualScrollerOptions']
-}>(), { virtual: false, optionLabel: undefined, optionValue: undefined, virtualScrollerOptions: undefined })
+}>(), { value: undefined, label: undefined, options: undefined, native: false, virtual: false, optionLabel: undefined, optionValue: undefined, virtualScrollerOptions: undefined })
+const nativeModel = computed({ get: () => props.value !== undefined ? props.value : model.value, set: value => { model.value = value } })
+provide('bs-native-select-value', nativeModel)
+const nativeSelect = ref<HTMLSelectElement | null>(null)
 const select = ref<InstanceType<typeof Select> | null>(null)
 defineExpose({ focus: () => {
+  if (nativeSelect.value) { nativeSelect.value.focus(); return }
   const root = (select.value as unknown as { $el?: HTMLElement } | null)?.$el
   const control = root?.querySelector<HTMLElement>('[role="combobox"]') ?? root
   control?.focus()
@@ -21,7 +28,9 @@ const ui = useUiCopy()
 </script>
 
 <template>
+  <select v-if="native" ref="nativeSelect" v-bind="$attrs" v-model="nativeModel" class="ls-input" :aria-label="label"><slot /></select>
   <Select
+    v-else
     ref="select"
     v-bind="$attrs" v-model="model" :options="options" :option-label="optionLabel" :option-value="optionValue"
     :aria-label="label"
