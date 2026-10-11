@@ -33,3 +33,24 @@ for (const [name, source, pattern] of [
   const result = await validateAtomicTemplateArchitecture({ root })
   assert.ok(result.failures.some(message => pattern.test(message)), JSON.stringify(result))
 })
+
+for (const [name, source, pattern] of [
+  ['query alias', '<script setup>import { useFetch as load } from "#imports"; load("/api/example")</script><template><main /></template>', /product query/],
+  ['product infrastructure', '<script setup>import { useSession } from "@building-suit/auth"</script><template><main /></template>', /infrastructure/],
+  ['untyped state bag', '<script setup lang="ts">defineProps<{ state: Record<string, unknown> }>()</script><template><main /></template>', /untyped state/],
+  ['scope factory', '<script setup>const state = props.factory(props.input)</script><template><main /></template>', /scope factories/],
+]) test(`UI presentation rejects ${name}`, async t => {
+  const root = await fixture(t, '<template><BsExamplePage /></template>')
+  await writeFile(path.join(root, 'packages/ui/src/templates/BsExamplePage.vue'), source)
+  assert.ok((await validateAtomicTemplateArchitecture({ root })).failures.some(message => pattern.test(message)))
+})
+test('layout rejects a disguised scoped render outlet', async t => {
+  const root = await fixture(t, '<template><BsExamplePage /></template>')
+  await mkdir(path.join(root, 'apps/example-suit/app/layouts'))
+  const registryPath = path.join(root, 'docs/shared/atomic-template-route-inventory.json')
+  const registry = JSON.parse(await (await import('node:fs/promises')).readFile(registryPath, 'utf8'))
+  registry.entries.push({ source: 'apps/example-suit/app/layouts/default.vue', kind: 'layout', destination: 'packages/ui/src/templates/BsExamplePage.vue' })
+  await writeFile(registryPath, JSON.stringify(registry))
+  await writeFile(path.join(root, 'apps/example-suit/app/layouts/default.vue'), '<template><BsExamplePage><slot :renderer="view" /></BsExamplePage></template>')
+  assert.ok((await validateAtomicTemplateArchitecture({ root })).failures.some(message => /unscoped route outlet/.test(message)))
+})

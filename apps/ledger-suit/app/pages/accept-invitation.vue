@@ -40,10 +40,8 @@ const password = ref('')
 const confirmPassword = ref('')
 const pending = ref(false)
 const errorMessage = ref('')
-const hydrated = ref(false)
-const resendAvailableAt = ref(0)
-const now = ref(Date.now())
-const resendIn = computed(() => Math.max(0, Math.ceil((resendAvailableAt.value - now.value) / 1000)))
+const verificationTimer = useVerificationTimer()
+const resendIn = verificationTimer.resendIn
 
 useHead({ title: () => `${preview.value?.organization_name ?? t('access.invitations')} · ${t('app.name')}` })
 
@@ -89,7 +87,7 @@ async function sendOtp() {
     if (error) throw error
     otp.value = ''
     step.value = 'otp'
-    resendAvailableAt.value = Date.now() + 60 * 1000
+    verificationTimer.start()
   }
   catch { errorMessage.value = t('auth.failed') }
   finally { pending.value = false }
@@ -143,66 +141,19 @@ async function finish() {
   finally { pending.value = false }
 }
 
-let timer: ReturnType<typeof setInterval> | undefined
-onMounted(() => {
-  restore()
-  hydrated.value = true
-  void loadPreview()
-  timer = setInterval(() => (now.value = Date.now()), 1000)
+onMounted(() => { restore(); void loadPreview() })
+const identityForm = computed({
+  get: () => ({ email: preview.value?.email ?? '', name: fullName.value, phone: phone.value, jobTitle: jobTitle.value, password: password.value, confirmation: confirmPassword.value }),
+  set: (value: import('@building-suit/ui/types/invitationPresentation').BsInvitationIdentityForm) => { fullName.value = value.name; phone.value = value.phone; jobTitle.value = value.jobTitle; password.value = value.password; confirmPassword.value = value.confirmation },
 })
-onBeforeUnmount(() => clearInterval(timer))
+const pageCopy = computed(() => ({
+  eyebrow: t('access.inviteFlow.eyebrow'), title: step.value === 'ready' ? t('access.inviteFlow.title', { organization: preview.value?.organization_name }) : t('access.inviteFlow.passwordTitle'),
+  description: step.value === 'ready' ? t('access.inviteFlow.subtitle', { name: preview.value?.inviter_name, jobTitle: preview.value?.inviter_job_title || t('org.roles.admin'), role: previewRoleLabel.value }) : t('access.inviteFlow.passwordBody'),
+  submit: step.value === 'ready' ? t('access.inviteFlow.sendOtp') : t('access.inviteFlow.finish'), pending: step.value === 'ready' ? t('access.inviteFlow.sendingOtp') : t('access.inviteFlow.finishing'), invalid: t('access.inviteFlow.invalid'), backToLogin: t('access.inviteFlow.backToLogin'), email: t('access.inviteFlow.emailLabel'), password: t('access.inviteFlow.password'), confirmation: t('access.inviteFlow.confirmPassword'), name: t('onboarding.fullName'), phone: t('onboarding.phone'), jobTitle: t('onboarding.jobTitle'), security: t('access.inviteFlow.security'),
+  verification: { eyebrow: t('access.inviteFlow.eyebrow'), title: t('access.inviteFlow.otpTitle'), description: t('access.inviteFlow.otpBody', { email: preview.value?.email ?? '' }), code: t('onboarding.otpLabel'), submit: t('access.inviteFlow.verifyOtp'), pending: t('access.inviteFlow.verifyingOtp'), resend: resendIn.value ? t('onboarding.otpResendIn', { time: `00:${String(resendIn.value).padStart(2, '0')}` }) : t('access.inviteFlow.resend'), expired: t('onboarding.otpExpired'), security: t('access.inviteFlow.security') },
+}))
+const pageStage = computed(() => step.value === 'otp' ? 'verification' : step.value === 'password' ? 'profile' : step.value)
 </script>
-
 <template>
-  <BsAuthLayout
-    :product-name="t('app.name')" :home-label="t('marketing.home')"
-    :title="preview?.organization_name || t('app.name')" :description="t('auth.welcomeBody')"
-  >
-    <template #logo="{ tone }"><BsProductLogo name="Ledger Suit" asset-prefix="/brand/ledger-suit" :tone="tone" size="auth" /></template>
-
-    <BsSectionSkeleton v-if="step === 'loading'" variant="table" :rows="4" />
-
-    <BsAuthForm
-      v-else-if="step === 'invalid'" :title="t('access.inviteFlow.invalid')"
-      :data-hydrated="hydrated" :submit-label="t('access.inviteFlow.backToLogin')"
-      @submit="navigateTo('/login')"
-    >
-      <BsStateSurface state="error" :title="t('access.inviteFlow.invalid')" />
-    </BsAuthForm>
-
-    <BsVerificationForm
-      v-else-if="preview && step === 'otp'" v-model="otp"
-      :eyebrow="t('access.inviteFlow.eyebrow')" :title="t('access.inviteFlow.otpTitle')"
-      :description="t('access.inviteFlow.otpBody', { email: preview.email })" :email="preview.email"
-      :code-label="t('onboarding.otpLabel')" :pending="pending" :error="errorMessage"
-      :expired-label="t('onboarding.otpExpired')" :submit-label="t('access.inviteFlow.verifyOtp')"
-      :pending-label="t('access.inviteFlow.verifyingOtp')"
-      :resend-label="resendIn ? t('onboarding.otpResendIn', { time: `00:${String(resendIn).padStart(2, '0')}` }) : t('access.inviteFlow.resend')"
-      :resend-disabled="resendIn > 0" :security-body="t('access.inviteFlow.security')"
-      @submit="verifyOtp" @resend="sendOtp"
-    />
-
-    <BsAuthForm
-      v-else-if="preview" :eyebrow="t('access.inviteFlow.eyebrow')"
-      :title="step === 'ready' ? t('access.inviteFlow.title', { organization: preview.organization_name }) : t('access.inviteFlow.passwordTitle')"
-      :description="step === 'ready' ? t('access.inviteFlow.subtitle', { name: preview.inviter_name, jobTitle: preview.inviter_job_title || t('org.roles.admin'), role: previewRoleLabel }) : t('access.inviteFlow.passwordBody')"
-      :pending="pending" :error="errorMessage"
-      :submit-label="step === 'ready' ? t('access.inviteFlow.sendOtp') : t('access.inviteFlow.finish')"
-      :pending-label="step === 'ready' ? t('access.inviteFlow.sendingOtp') : t('access.inviteFlow.finishing')"
-      :submit-disabled="step === 'password' && (password.length < 8 || confirmPassword.length < 8)"
-      :data-hydrated="hydrated" @submit="step === 'ready' ? sendOtp() : finish()"
-    >
-      <BsField :label="t('access.inviteFlow.emailLabel')"><template #default="field"><BsInput :id="field.id" :model-value="preview.email" type="email" readonly dir="ltr" aria-readonly="true" /></template></BsField>
-
-      <template v-if="step === 'password'">
-        <BsField :label="t('onboarding.fullName')" required><template #default="field"><BsInput v-model="fullName" :id="field.id" type="text" autocomplete="name" required /></template></BsField>
-        <BsField :label="t('onboarding.phone')" required><template #default="field"><BsInput v-model="phone" :id="field.id" type="tel" autocomplete="tel" required dir="ltr" /></template></BsField>
-        <BsField :label="t('onboarding.jobTitle')" required><template #default="field"><BsInput v-model="jobTitle" :id="field.id" type="text" autocomplete="organization-title" required /></template></BsField>
-        <BsField :label="t('access.inviteFlow.password')" required><template #default="field"><BsInput v-model="password" :id="field.id" type="password" :minlength="8" autocomplete="new-password" required dir="ltr" /></template></BsField>
-        <BsField :label="t('access.inviteFlow.confirmPassword')" required><template #default="field"><BsInput v-model="confirmPassword" :id="field.id" type="password" :minlength="8" autocomplete="new-password" required dir="ltr" /></template></BsField>
-      </template>
-
-      <BsAlert tone="success" :description="t('access.inviteFlow.security')" />
-    </BsAuthForm>
-  </BsAuthLayout>
+  <BsInvitationAcceptancePage v-model:form="identityForm" v-model:code="otp" :product="{ name: t('app.name'), assetPrefix: '/brand/ledger-suit', homeLabel: t('marketing.home'), title: preview?.organization_name || t('app.name'), description: t('auth.welcomeBody') }" :stage="pageStage" :copy="pageCopy" :email="preview?.email ?? ''" :pending="pending" :error="errorMessage" :submit-disabled="step === 'password' && (password.length < 8 || confirmPassword.length < 8)" login-to="/login" :verification="{ resendDisabled: resendIn > 0 }" @submit="step === 'ready' ? sendOtp() : finish()" @verify="verifyOtp" @resend="sendOtp" @login="navigateTo('/login')" />
 </template>

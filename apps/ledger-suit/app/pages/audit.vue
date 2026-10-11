@@ -121,71 +121,26 @@ async function fetchRows(append = false) {
 }
 
 watch(currentId, () => fetchRows(), { immediate: true })
-</script>
 
+const auditViews = computed(() => rows.value.map(row => ({ id: String(row.id), timestamp: formatTimestamp(row.created_at), actor: row.actor_email || t('audit.system'), activity: activityLabel(row), action: row.action, entity: entityLabel(row.entity_type), entityId: row.entity_id ?? undefined, before: jsonText(row.before_state), after: jsonText(row.after_state), metadata: jsonText(row.metadata) })))
+const windowLabel = computed(() => windowUnlimited.value ? t('audit.windowUnlimited') : windowDays.value ? t('audit.window', { days: windowDays.value }) : '')
+const copy = computed(() => ({
+  title: t('audit.title'),
+  subtitle: t('audit.subtitle'),
+  stored: t('audit.stored'),
+  empty: t('audit.empty'),
+  date: t('audit.date'),
+  actor: t('audit.actor'),
+  activity: t('audit.activity'),
+  record: t('audit.record'),
+  changes: t('audit.changes'),
+  viewChanges: t('audit.viewChanges'),
+  before: t('audit.before'),
+  after: t('audit.after'),
+  metadata: t('audit.metadata'),
+  loadMore: t('audit.loadMore'),
+}))
+</script>
 <template>
-  <BsStack gap="lg">
-    <BsBox as="header">
-      <BsHeading :level="1" size="h1">{{ t('audit.title') }}</BsHeading>
-      <BsText size="sm" tone="muted">{{ t('audit.subtitle') }}</BsText>
-    </BsBox>
-    <BsCard v-if="windowUnlimited || windowDays" role="status" as="section" padding="md">
-      <BsStack gap="xs">
-        <BsText emphasis="semibold">{{ windowUnlimited ? t('audit.windowUnlimited') : t('audit.window', { days: windowDays }) }}</BsText>
-        <BsText size="sm" tone="muted">{{ t('audit.stored') }}</BsText>
-      </BsStack>
-    </BsCard>
-    <BsText v-if="errorMessage" role="alert" tone="danger">{{ errorMessage }}</BsText>
-    <BsSectionSkeleton v-if="loading" variant="table" :rows="7" />
-    <BsEmptyState v-else-if="!rows.length && !errorMessage" :title="t('audit.empty')" />
-    <template v-else-if="rows.length">
-      <BsCard as="div" padding="none">
-        <BsDataTable
-          :value="rows"
-          row-key="id"
-          :columns="[{ key: 'column1', header: (t('audit.date')) }, { key: 'column2', header: (t('audit.actor')) }, { key: 'column3', header: (t('audit.activity')) }, { key: 'column4', header: (t('audit.record')) }, { key: 'column5', header: (t('audit.changes')) }]"
-        >
-          <template #header-column1>{{ t('audit.date') }}</template>
-          <template #cell-column1="{ row }">{{ formatTimestamp(row.created_at) }}</template>
-          <template #header-column2>{{ t('audit.actor') }}</template>
-          <template #cell-column2="{ row }">
-            <BsBox dir="ltr">{{ row.actor_email || t('audit.system') }}</BsBox>
-          </template>
-          <template #header-column3>{{ t('audit.activity') }}</template>
-          <template #cell-column3="{ row }">
-            <BsText>{{ activityLabel(row) }}</BsText>
-            <BsText dir="ltr" size="xs" tone="muted">{{ row.action }}</BsText>
-          </template>
-          <template #header-column4>{{ t('audit.record') }}</template>
-          <template #cell-column4="{ row }">
-            <BsText>{{ entityLabel(row.entity_type) }}</BsText>
-            <BsText v-if="row.entity_id" dir="ltr" size="xs" tone="muted">{{ row.entity_id }}</BsText>
-          </template>
-          <template #header-column5>{{ t('audit.changes') }}</template>
-          <template #cell-column5="{ row }">
-            <BsDisclosure>
-              <template #summary>{{ t('audit.viewChanges') }}</template>
-              <BsGrid :columns="1" gap="md">
-                <BsBox>
-                  <BsText emphasis="semibold">{{ t('audit.before') }}</BsText>
-                  <BsCodeBlock dir="ltr">{{ jsonText(row.before_state) }}</BsCodeBlock>
-                </BsBox>
-                <BsBox>
-                  <BsText emphasis="semibold">{{ t('audit.after') }}</BsText>
-                  <BsCodeBlock dir="ltr">{{ jsonText(row.after_state) }}</BsCodeBlock>
-                </BsBox>
-                <BsBox>
-                  <BsText emphasis="semibold">{{ t('audit.metadata') }}</BsText>
-                  <BsCodeBlock dir="ltr">{{ jsonText(row.metadata) }}</BsCodeBlock>
-                </BsBox>
-              </BsGrid>
-            </BsDisclosure>
-          </template>
-        </BsDataTable>
-      </BsCard>
-      <BsInline v-if="hasMore" gap="none" :wrap="false" justify="center">
-        <BsButton type="button" :disabled="loadingMore" @click="fetchRows(true)">{{ t('audit.loadMore') }}</BsButton>
-      </BsInline>
-    </template>
-  </BsStack>
+  <BsAuditHistoryPage :items="auditViews" :copy="copy" :window-label="windowLabel" :error-message="errorMessage" :loading="loading" :loading-more="loadingMore" :has-more="hasMore" @load-more="fetchRows(true)" />
 </template>

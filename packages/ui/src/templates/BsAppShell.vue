@@ -1,21 +1,7 @@
 <script setup lang="ts">
 import type { NavigationGroup, NavigationLink } from '@building-suit/contracts'
 withDefaults(defineProps<{ homePath?: string; productName: string; groups: NavigationGroup[]; mobileLinks?: NavigationLink[]; labels: { close: string; open: string; navigation: string; dashboard: string } }>(), { homePath: '/dashboard', mobileLinks: () => [] })
-const route = useRoute()
-const mobileNavOpen = ref(false)
-const topHeader = ref<{ focusNavigationTrigger: () => void } | null>(null)
-useTheme()
-watch(() => route.fullPath, () => {
-  if (mobileNavOpen.value) void closeMobileNav(false)
-})
-function isActive(to: string) { return route.path === to || route.path.startsWith(`${to}/`) }
-async function closeMobileNav(restoreFocus = true) {
-  mobileNavOpen.value = false
-  if (restoreFocus) {
-    await nextTick()
-    topHeader.value?.focusNavigationTrigger()
-  }
-}
+const { mobileNavOpen, topHeader, closeMobileNav, isActive } = useWorkspaceNavigation()
 </script>
 <template>
   <div class="min-h-dvh bg-background lg:grid lg:grid-cols-[17rem_1fr] lg:gap-4 lg:p-4">

@@ -46,85 +46,37 @@ async function openClient(row: ClientHealthRow) {
   }
 }
 const ledgerPresentation = useLedgerPresentation()
-</script>
 
+const clientViews = computed(() => filteredRows.value.map(row => ({ id: row.id, name: row.name, legalName: row.legalName ?? undefined, identity: `${roleLabel(row.role, row.roleId)} · ${row.baseCurrency}`, health: row.health, healthLabel: t(`clientPortfolio.healthStates.${row.health}`), healthTone: healthTone(row.health), period: signalText(row.period, 'clientPortfolio.periodStates'), reconciliation: signalText(row.reconciliation, 'clientPortfolio.reconciliationStates'), activity: row.lastActivity.state === 'unavailable' ? t('clientPortfolio.unavailable') : row.lastActivity.value ? formatDate(row.lastActivity.value, locale.value) : t('clientPortfolio.noActivity') })))
+const metrics = computed(() => FILTER_OPTIONS.map(status => ({ id: status, label: t(`clientPortfolio.filters.${status}`), value: counts.value[status] })))
+const copy = computed(() => ({
+  title: t('clientPortfolio.title'),
+  subtitle: t('clientPortfolio.subtitle'),
+  summary: t('clientPortfolio.summary'),
+  filters: t('clientPortfolio.filters.label'),
+  searchLabel: t('clientPortfolio.searchLabel'),
+  searchPlaceholder: t('clientPortfolio.searchPlaceholder'),
+  healthFilter: t('clientPortfolio.healthFilter'),
+  refresh: t('clientPortfolio.refresh'),
+  signalNote: t('clientPortfolio.signalNote'),
+  loadFailed: t('clientPortfolio.loadFailed'),
+  loadFailedHint: t('clientPortfolio.loadFailedHint'),
+  tableLabel: t('clientPortfolio.tableLabel'),
+  client: t('clientPortfolio.client'),
+  health: t('clientPortfolio.health'),
+  period: t('clientPortfolio.period'),
+  reconciliation: t('clientPortfolio.reconciliation'),
+  lastActivity: t('clientPortfolio.lastActivity'),
+  unavailable: t('clientPortfolio.unavailable'),
+  noActivity: t('clientPortfolio.noActivity'),
+  actions: t('clientPortfolio.actions'),
+  opening: t('clientPortfolio.opening'),
+  openClient: t('clientPortfolio.openClient'),
+  retry: t('common.retry'), emptyTitle: t(rows.value.length ? 'clientPortfolio.noMatches' : 'clientPortfolio.empty'), emptyDescription: t(rows.value.length ? 'clientPortfolio.noMatchesHint' : 'clientPortfolio.emptyHint'),
+}))
+function setFilter(value: string) { if (FILTER_OPTIONS.includes(value as PortfolioFilter)) filter.value = value as PortfolioFilter }
+function openClientById(id: string) { const row = rows.value.find(row => row.id === id); if (row) return openClient(row) }
+</script>
 <template>
-  <BsStack data-client-portfolio gap="lg">
-    <BsPageHeader
-      :title="t('clientPortfolio.title')"
-      :subtitle="t('clientPortfolio.subtitle')"
-      :context="ledgerPresentation.context(undefined, undefined, undefined)"
-      :context-label="ledgerPresentation.t('pageContext.label')"
-    />
-    <BsGrid :aria-label="t('clientPortfolio.summary')" :columns="4" gap="md" as="section">
-      <BsKpiCard v-for="status in FILTER_OPTIONS" :key="status" :title="t(`clientPortfolio.filters.${status}`)">
-        <BsText as="span" numeric>{{ counts[status] }}</BsText>
-      </BsKpiCard>
-    </BsGrid>
-    <BsCard :aria-label="t('clientPortfolio.filters.label')" as="section" padding="md">
-      <BsStack gap="md">
-        <BsGrid :columns="1" gap="md">
-          <BsFloatingField :label="t('clientPortfolio.searchLabel')">
-            <BsInput v-model="query" type="search" :placeholder="t('clientPortfolio.searchPlaceholder')" />
-          </BsFloatingField>
-          <BsFloatingField :label="t('clientPortfolio.healthFilter')">
-            <BsSelect v-model="filter" :label="t('clientPortfolio.healthFilter')" :options="filterOptions" option-label="label" option-value="value" />
-          </BsFloatingField>
-          <BsButton type="button" :disabled="pending" @click="load">{{ t('clientPortfolio.refresh') }}</BsButton>
-        </BsGrid>
-        <BsText size="sm" tone="muted">{{ t('clientPortfolio.signalNote') }}</BsText>
-      </BsStack>
-    </BsCard>
-    <BsSectionSkeleton v-if="pending && !rows.length" variant="table" :rows="5" />
-    <BsCard v-else-if="error" role="alert" as="section" padding="lg">
-      <BsStack gap="md">
-        <BsHeading :level="2" size="body">{{ t('clientPortfolio.loadFailed') }}</BsHeading>
-        <BsText size="sm" tone="muted">{{ t('clientPortfolio.loadFailedHint') }}</BsText>
-        <BsButton type="button" @click="load">{{ t('common.retry') }}</BsButton>
-      </BsStack>
-    </BsCard>
-    <BsEmptyState
-      v-else-if="!filteredRows.length"
-      :title="t(rows.length ? 'clientPortfolio.noMatches' : 'clientPortfolio.empty')"
-      :description="t(rows.length ? 'clientPortfolio.noMatchesHint' : 'clientPortfolio.emptyHint')"
-    />
-    <BsCard v-else aria-labelledby="client-portfolio-table-heading" as="section" padding="none" overflow="hidden">
-      <BsHeading id="client-portfolio-table-heading" :level="2" size="body">{{ t('clientPortfolio.tableLabel') }}</BsHeading>
-      <BsBox>
-        <BsDataTable
-          :value="filteredRows"
-          row-key="id"
-          :label="t('clientPortfolio.tableLabel')"
-          :columns="[{ key: 'column1', header: (t('clientPortfolio.client')) }, { key: 'column2', header: (t('clientPortfolio.health')) }, { key: 'column3', header: (t('clientPortfolio.period')) }, { key: 'column4', header: (t('clientPortfolio.reconciliation')) }, { key: 'column5', header: (t('clientPortfolio.lastActivity')) }, { key: 'column6', header: '', align: 'end' as const }]"
-        >
-          <template #header-column1>{{ t('clientPortfolio.client') }}</template>
-          <template #cell-column1="{ row }">
-            <BsText emphasis="semibold">{{ row.name }}</BsText>
-            <BsText v-if="row.legalName" size="xs" tone="muted">{{ row.legalName }}</BsText>
-            <BsText size="xs" tone="muted">{{ roleLabel(row.role, row.roleId) }} · {{ row.baseCurrency }}</BsText>
-          </template>
-          <template #header-column2>{{ t('clientPortfolio.health') }}</template>
-          <template #cell-column2="{ row }">
-            <BsStatusBadge :status="row.health" :label="t(`clientPortfolio.healthStates.${row.health}`)" :tone="healthTone(row.health)" />
-          </template>
-          <template #header-column3>{{ t('clientPortfolio.period') }}</template>
-          <template #cell-column3="{ row }">{{ signalText(row.period, 'clientPortfolio.periodStates') }}</template>
-          <template #header-column4>{{ t('clientPortfolio.reconciliation') }}</template>
-          <template #cell-column4="{ row }">{{ signalText(row.reconciliation, 'clientPortfolio.reconciliationStates') }}</template>
-          <template #header-column5>{{ t('clientPortfolio.lastActivity') }}</template>
-          <template #cell-column5="{ row }">{{ row.lastActivity.state === 'unavailable'
-              ? t('clientPortfolio.unavailable')
-              : row.lastActivity.value
-                ? formatDate(row.lastActivity.value, locale)
-                : t('clientPortfolio.noActivity') }}</template>
-          <template #header-column6>
-            <BsVisuallyHidden>{{ t('clientPortfolio.actions') }}</BsVisuallyHidden>
-          </template>
-          <template #cell-column6="{ row }">
-            <BsButton type="button" :disabled="Boolean(openingId)" size="sm" @click="openClient(row)">{{ openingId === row.id ? t('clientPortfolio.opening') : t('clientPortfolio.openClient') }}</BsButton>
-          </template>
-        </BsDataTable>
-      </BsBox>
-    </BsCard>
-  </BsStack>
+  <BsClientPortfolioPage v-model:query="query" :filter="filter" :items="clientViews" :copy="copy" :context="ledgerPresentation.context(undefined, undefined, undefined)" :context-label="ledgerPresentation.t('pageContext.label')" :metrics="metrics" :filter-options="filterOptions" :pending="pending" :error="Boolean(error)" :has-rows="Boolean(rows.length)" :opening-id="openingId" @update:filter="setFilter" @refresh="load" @open-client="openClientById" />
 </template>

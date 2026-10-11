@@ -190,3 +190,15 @@ export { administrationCapabilitySupported, administrationShellRegistration } fr
 
 export { tabNavigationTarget } from './tabNavigation.ts'
 export { permissionSelection } from './permissionSelection.ts'
+
+export { useWorkspaceNavigation } from './composables/useWorkspaceNavigation.ts'
+
+export { usePolling } from './composables/usePolling.ts'
+
+export { useMarketingHeader } from './composables/useMarketingHeader.ts'
+
+export { useVerificationTimer } from './composables/useVerificationTimer.ts'
+export { useClientReady } from './composables/useClientReady.ts'
+
+export { useFormInteraction } from './composables/useFormInteraction.ts'
+export { useDialogInteraction } from './composables/useDialogInteraction.ts'

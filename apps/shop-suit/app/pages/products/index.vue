@@ -181,56 +181,16 @@ function money(value: number) {
 }
 
 useShopRealtime('products', () => formDirty.value)
-</script>
 
+const categoryOptions = computed(() => [{ value: '', label: copy.value.allCategories }, ...categories.value.map(category => ({ value: category.id, label: category.name }))])
+const itemViews = computed(() => products.value.map(product => ({ id: product.id, name: product.name, category: product.category_name || '—', sku: product.sku || '—', barcode: product.barcode || '—', price: money(Number(product.sale_price)), schedule: '' })))
+const editorForm = computed({
+  get: () => ({ name: form.name, description: '', sku: form.sku, barcode: form.barcode, price: form.salePrice, category: form.categoryId, discount: { type: '', value: 0 }, schedule: { enabled: false, duration: null, cleanup: 0, locations: [], staff: [] } }),
+  set: (value: import('@building-suit/ui/types/cataloguePresentation').BsCatalogueForm) => Object.assign(form, { name: value.name, sku: value.sku, barcode: value.barcode, salePrice: value.price, categoryId: value.category }),
+})
+function editById(id: string) { const row = products.value.find(product => product.id === id); if (row) openEdit(row) }
+function archiveById(id: string) { const row = products.value.find(product => product.id === id); if (row) return archive(row) }
+</script>
 <template>
-  <BsStack>
-    <BsPageHeader  :title="copy.title" :subtitle="copy.subtitle">
-      <template #actions>
-        <BsInline v-if="current">
-          <BsLink to="/catalog-import">{{ copy.import }}</BsLink>
-        </BsInline>
-      </template>
-    </BsPageHeader>
-    <BsPanel v-if="!current && !shopLoading" padding="md">
-      <BsText as="p">{{ copy.noShop }}</BsText>
-      <BsLink to="/dashboard">{{ copy.dashboard }}</BsLink>
-    </BsPanel>
-    <template v-else-if="current">
-      <BsText as="p" size="sm">{{ copy.stockLater }}</BsText>
-      <BsText v-if="actionError && !showForm" role="alert" as="p" size="sm" tone="danger">{{ actionError }}</BsText>
-      <BsRecordActionDialog v-model:visible="showForm" :title="editingId ? copy.edit : copy.add" :dirty="formDirty" :pending="saving" :error="actionError" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="save">
-        <BsField v-slot="field" :label="copy.name">
-          <BsInput :id="field.id" v-model="form.name" :aria-describedby="field.describedby" type="text" :minlength="2" :maxlength="160" required/>
-        </BsField>
-        <BsField v-slot="field" :label="copy.sku">
-          <BsInput :id="field.id" v-model="form.sku" :aria-describedby="field.describedby" type="text" :maxlength="80"/>
-        </BsField>
-        <BsField v-slot="field" :label="copy.barcode">
-          <BsInput :id="field.id" v-model="form.barcode" :aria-describedby="field.describedby" type="text" :maxlength="80"/>
-        </BsField>
-        <BsField v-slot="field" :label="copy.price">
-          <BsInput :id="field.id" v-model.number="form.salePrice" :aria-describedby="field.describedby" type="number" :min="0" :step="0.01" required/>
-        </BsField>
-        <BsField v-slot="field" :label="copy.category">
-          <BsSelect v-model="form.categoryId" :input-id="field.id" :aria-describedby="field.describedby" :label="copy.category" :options="[{ value: '', label: (copy.allCategories), disabled: false }, ...(categories).map(category => ({ value: category.id, label: (category.name), disabled: false }))]" option-label="label" option-value="value" option-disabled="disabled"/>
-        </BsField>
-      </BsRecordActionDialog>
-      <BsPanel padding="md">
-        <BsDataTable :value="products" :label="copy.title" :loading="pending" :error="error ? copy.readError : null" :capabilities="{ insert: canManage, edit: canManage, archive: canManage }" :action-labels="{ insert: copy.add, edit: copy.edit, archive: copy.archive }" :row-action-pending="(action, product) => action === 'archive' && archivingId === product.id" searchable :search-label="copy.search" lazy paginator :rows="pageSize" :first="(page - 1) * pageSize" :total-records="productPage.total" :always-show-paginator="false" data-key="id" :columns="[{ key: 'column0', header: (copy.name) }, { key: 'column1', header: (copy.category) }, { key: 'column2', header: (copy.sku) }, { key: 'column3', header: (copy.barcode) }, { key: 'column4', header: (copy.price), align: 'end' }]" @search="value => search = value" @page="page = $event.page + 1" @retry="refresh()" @create="openCreate" @edit="openEdit" @archive="archive">
-          <template #cell-column0="{ row: product }">{{ product.name }}</template>
-          <template #cell-column1="{ row: product }">{{ product.category_name || '—' }}</template>
-          <template #cell-column2="{ row: product }">{{ product.sku || '—' }}</template>
-          <template #cell-column3="{ row: product }">{{ product.barcode || '—' }}</template>
-          <template #cell-column4="{ row: product }">{{ money(Number(product.sale_price)) }}</template>
-          <template #filters>
-            <BsSelect v-model="categoryFilter" :label="copy.category" :options="[{ id: '', name: copy.allCategories }, ...categories]" option-label="name" option-value="id"/>
-          </template>
-          <template #empty>
-            <BsStateSurface state="empty" :title="search || categoryFilter ? copy.noResults : copy.empty"/>
-          </template>
-        </BsDataTable>
-      </BsPanel>
-    </template>
-  </BsStack>
+  <BsCataloguePage v-model:form="editorForm" v-model:visible="showForm" v-model:category="categoryFilter" kind="product" :copy="copy" :context="{ available: Boolean(current), loading: shopLoading, dashboardTo: '/dashboard', importTo: '/catalog-import' }" :rows="itemViews" :categories="categoryOptions" :table="{ loading: pending, error: error ? copy.readError : null, canManage, archivePendingId: archivingId, pageSize, page, total: productPage.total, filtered: Boolean(search || categoryFilter) }" :editor="{ editing: Boolean(editingId), dirty: formDirty, pending: saving, error: actionError }"  @search="search = $event" @page="page = $event" @retry="refresh()" @create="openCreate" @edit="editById" @archive="archiveById" @submit="save" />
 </template>

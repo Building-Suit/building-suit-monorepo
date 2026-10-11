@@ -15,20 +15,5 @@ async function logout() {
 </script>
 
 <template>
-  <BsAppShell product-name="Shop Suit" home-path="/platform-admin" :groups="[]" :labels="{ close: copy.close, open: copy.open, navigation: copy.navigation, dashboard: copy.dashboard }">
-    <template #logo>
-      <BsProductLogo name="Shop Suit" asset-prefix="/brand/shop-suit"/>
-    </template>
-    <template #context>
-      <BsText as="p" size="xs" tone="muted" emphasis="semibold">{{ copy.console }}</BsText>
-    </template>
-    <template #header>
-      <BsUserMenu :email="user?.email" :account-label="copy.account" :sign-out-label="copy.logout" @sign-out="logout"/>
-    </template>
-    <BsSlot :render="$slots.default" />
-    <template #overlays>
-      <BsToastHost/>
-      <BsConfirmHost/>
-    </template>
-  </BsAppShell>
+  <BsWorkspaceShell product-name="Shop Suit" home-path="/platform-admin" :groups="[]" :labels="{ close: copy.close, open: copy.open, navigation: copy.navigation, dashboard: copy.dashboard }" :logo="{ kind: 'product', assetPrefix: '/brand/shop-suit' }" :context="copy.console" :account="{ email: user?.email, label: copy.account, signOut: copy.logout }" feedback @sign-out="logout"><slot /></BsWorkspaceShell>
 </template>

@@ -77,7 +77,7 @@ const copy = computed(() => isArabic.value ? {
   archiveConfirm: 'Archive this service? Historical sales will remain unchanged.',
 })
 
-const { data: permissionAccess } = useAsyncData('shop-data:service-permissions', async () => {
+const { data: permissionAccess } = await useAsyncData('shop-data:service-permissions', async () => {
   if (!currentId.value) return { 'services.manage': false }
   const { data, error } = await shopRpc.rpc('shop_permission_access', {
     p_shop_id: currentId.value, p_permission_keys: ['services.manage'],
@@ -202,81 +202,17 @@ async function archive(service: Service) {
 }
 
 useShopRealtime('services', () => formDirty.value)
-</script>
 
+const categoryOptions = computed(() => [{ value: '', label: copy.value.allCategories }, ...categories.value.map(category => ({ value: category.id, label: category.name }))])
+const itemViews = computed(() => services.value.map(service => ({ id: service.id, name: service.name, description: service.description ?? undefined, category: service.categoryName || '—', sku: '', barcode: '', price: money(netPrice(service)), schedule: service.schedulingEnabled ? `${service.durationMinutes} + ${service.cleanupMinutes} ${isArabic.value ? 'دقيقة' : 'min'}` : '—' })))
+const editorForm = computed({
+  get: () => ({ name: form.name, description: form.description, sku: '', barcode: '', price: form.price, category: form.categoryId, discount: { type: form.discountType, value: form.discountValue }, schedule: { enabled: form.schedulingEnabled, duration: form.durationMinutes, cleanup: form.cleanupMinutes, locations: [...form.locationIds], staff: [...form.staffMembershipIds] } }),
+  set: (value: import('@building-suit/ui/types/cataloguePresentation').BsCatalogueForm) => Object.assign(form, { name: value.name, description: value.description, price: value.price, categoryId: value.category, discountType: value.discount.type as 'amount' | 'percent', discountValue: value.discount.value, schedulingEnabled: value.schedule.enabled, durationMinutes: value.schedule.duration, cleanupMinutes: value.schedule.cleanup, locationIds: value.schedule.locations, staffMembershipIds: value.schedule.staff }),
+})
+const schedulingView = computed(() => ({ loading: schedulingOptionsPending.value, error: schedulingOptionsError.value ? readErrorMessage.value : null, locations: schedulingOptions.value.locations.map(location => ({ value: location.id, label: location.name })), staff: schedulingOptions.value.staff.map(member => ({ value: member.membershipId, label: member.name })) }))
+function editById(id: string) { const row = services.value.find(service => service.id === id); if (row) openEdit(row) }
+function archiveById(id: string) { const row = services.value.find(service => service.id === id); if (row) return archive(row) }
+</script>
 <template>
-  <BsStack>
-    <BsPageHeader  :title="copy.title" :subtitle="copy.subtitle">
-      <template #actions>
-        <BsInline v-if="current">
-          <BsLink to="/catalog-import">{{ copy.import }}</BsLink>
-        </BsInline>
-      </template>
-    </BsPageHeader>
-    <BsPanel v-if="!current && !shopLoading" padding="md">
-      <BsText as="p">{{ copy.noShop }}</BsText>
-      <BsLink to="/dashboard">{{ copy.dashboard }}</BsLink>
-    </BsPanel>
-    <template v-else-if="current">
-      <BsText v-if="actionError && !showForm" role="alert" as="p" size="sm" tone="danger">{{ actionError }}</BsText>
-      <BsRecordActionDialog v-model:visible="showForm" :title="editingId ? copy.edit : copy.add" :dirty="formDirty" :pending="saving" :error="actionError" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="save">
-        <BsField v-slot="field" :label="copy.name">
-          <BsInput :id="field.id" v-model="form.name" :aria-describedby="field.describedby" type="text" :minlength="2" :maxlength="160" required/>
-        </BsField>
-        <BsField v-slot="field" :label="copy.description">
-          <BsTextarea :id="field.id" v-model="form.description" :aria-describedby="field.describedby" :maxlength="1000" :rows="2"/>
-        </BsField>
-        <BsField v-slot="field" :label="copy.price">
-          <BsInput :id="field.id" v-model.number="form.price" :aria-describedby="field.describedby" type="number" :min="0" :max="999999999.99" :step="0.01" required/>
-        </BsField>
-        <BsField v-slot="field" :label="copy.discountType">
-          <BsSelect v-model="form.discountType" :input-id="field.id" :aria-describedby="field.describedby" :label="copy.discountType" :options="[{ value: 'amount', label: (copy.amount), disabled: false }, { value: 'percent', label: (copy.percent), disabled: false }]" option-label="label" option-value="value" option-disabled="disabled"/>
-        </BsField>
-        <BsField v-slot="field" :label="copy.discountValue">
-          <BsInput :id="field.id" v-model.number="form.discountValue" :aria-describedby="field.describedby" type="number" :min="0" :step="0.01" required/>
-        </BsField>
-        <BsField v-slot="field" :label="copy.category">
-          <BsSelect v-model="form.categoryId" :input-id="field.id" :aria-describedby="field.describedby" :label="copy.category" :options="[{ value: '', label: (copy.allCategories), disabled: false }, ...(categories).map(category => ({ value: category.id, label: (category.name), disabled: false }))]" option-label="label" option-value="value" option-disabled="disabled"/>
-        </BsField>
-        <BsFieldGroup :legend="''">
-          <BsCheckbox  v-model="form.schedulingEnabled" :label="copy.scheduling" />
-          <BsText as="p" size="sm" tone="muted">{{ copy.schedulingHelp }}</BsText>
-          <BsText v-if="schedulingOptionsPending" role="status" as="p" size="sm" tone="muted">{{ copy.loading }}</BsText>
-          <BsText v-else-if="schedulingOptionsError" role="alert" as="p" size="sm" tone="danger">{{ readErrorMessage }}</BsText>
-          <BsGrid v-if="form.schedulingEnabled" :columns="2">
-            <BsField v-slot="field" :label="copy.duration">
-              <BsInput :id="field.id" v-model.number="form.durationMinutes" :aria-describedby="field.describedby" type="number" :min="5" :max="1440" :step="1" required/>
-            </BsField>
-            <BsField v-slot="field" :label="copy.cleanup">
-              <BsInput :id="field.id" v-model.number="form.cleanupMinutes" :aria-describedby="field.describedby" type="number" :min="0" :max="240" :step="1" required/>
-            </BsField>
-            <BsFieldGroup :legend="(copy.locations)">
-              <BsCheckbox v-for="location in schedulingOptions.locations" :key="location.id" v-model="form.locationIds" :value="location.id" :label="location.name" />
-            </BsFieldGroup>
-            <BsFieldGroup :legend="(copy.staff)">
-              <BsCheckbox v-for="member in schedulingOptions.staff" :key="member.membershipId" v-model="form.staffMembershipIds" :value="member.membershipId" :label="member.name" />
-            </BsFieldGroup>
-          </BsGrid>
-        </BsFieldGroup>
-      </BsRecordActionDialog>
-      <BsPanel padding="md">
-        <BsDataTable :value="services" :label="copy.title" :loading="pending" :error="error ? readErrorMessage : null" :capabilities="{ insert: canManage, edit: canManage, archive: canManage }" :action-labels="{ insert: copy.add, edit: copy.edit, archive: copy.archive }" :row-action-pending="(action, service) => action === 'archive' && archivingId === service.id" searchable :search-label="copy.search" lazy paginator :rows="pageSize" :first="(page - 1) * pageSize" :total-records="servicesPage.total" :always-show-paginator="false" data-key="id" :columns="[{ key: 'column0', header: (copy.name) }, { key: 'column1', header: (copy.category) }, { key: 'column2', header: (copy.net), align: 'end' }, { key: 'column3', header: (copy.scheduleSummary) }]" @search="value => search = value" @page="page = $event.page + 1" @retry="refresh()" @create="openCreate" @edit="openEdit" @archive="archive">
-          <template #cell-column0="{ row: service }">{{ service.name }}<BsText v-if="service.description" as="p" size="xs" tone="muted" emphasis="semibold">{{ service.description }}</BsText>
-          </template>
-          <template #cell-column1="{ row: service }">{{ service.categoryName || '—' }}</template>
-          <template #cell-column2="{ row: service }">{{ money(netPrice(service)) }}</template>
-          <template #cell-column3="{ row: service }">
-            <BsText v-if="service.schedulingEnabled" as="span">{{ service.durationMinutes }} + {{ service.cleanupMinutes }} {{ isArabic ? 'دقيقة' : 'min' }}</BsText>
-            <BsText v-else as="span">—</BsText>
-          </template>
-          <template #filters>
-            <BsSelect v-model="categoryFilter" :label="copy.category" :options="[{ id: '', name: copy.allCategories }, ...categories]" option-label="name" option-value="id"/>
-          </template>
-          <template #empty>
-            <BsStateSurface state="empty" :title="servicesPage.total ? copy.noResults : copy.empty"/>
-          </template>
-        </BsDataTable>
-      </BsPanel>
-    </template>
-  </BsStack>
+  <BsCataloguePage v-model:form="editorForm" v-model:visible="showForm" v-model:category="categoryFilter" kind="service" :copy="{ ...copy, tablePrice: copy.net }" :context="{ available: Boolean(current), loading: shopLoading, dashboardTo: '/dashboard', importTo: '/catalog-import' }" :rows="itemViews" :categories="categoryOptions" :table="{ loading: pending, error: error ? readErrorMessage : null, canManage, archivePendingId: archivingId, pageSize, page, total: servicesPage.total, filtered: Boolean(servicesPage.total) }" :editor="{ editing: Boolean(editingId), dirty: formDirty, pending: saving, error: actionError, priceMax: 999999999.99 }" :scheduling="schedulingView" :discounts="[{ value: 'amount', label: copy.amount }, { value: 'percent', label: copy.percent }]" @search="search = $event" @page="page = $event" @retry="refresh()" @create="openCreate" @edit="editById" @archive="archiveById" @submit="save" />
 </template>

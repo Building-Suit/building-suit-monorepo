@@ -26,7 +26,17 @@
     "BsEmailVerificationPage": "packages/ui/src/templates/BsEmailVerificationPage.vue",
     "BsExecutionActivityPage": "packages/ui/src/templates/BsExecutionActivityPage.vue",
     "BsTaskWorklistPage": "packages/ui/src/templates/BsTaskWorklistPage.vue",
-    "BsAccountingDimensionsPage": "packages/ui/src/templates/BsAccountingDimensionsPage.vue"
+    "BsAccountingDimensionsPage": "packages/ui/src/templates/BsAccountingDimensionsPage.vue",
+    "BsWorkspaceShell": "packages/ui/src/templates/BsWorkspaceShell.vue",
+    "BsRoutingPolicyPage": "packages/ui/src/templates/BsRoutingPolicyPage.vue",
+    "BsProjectRegistryPage": "packages/ui/src/templates/BsProjectRegistryPage.vue",
+    "BsTaskDetailPage": "packages/ui/src/templates/BsTaskDetailPage.vue",
+    "BsOperationsDashboardPage": "packages/ui/src/templates/BsOperationsDashboardPage.vue",
+    "BsCataloguePage": "packages/ui/src/templates/BsCataloguePage.vue",
+    "BsInvitationAcceptancePage": "packages/ui/src/templates/BsInvitationAcceptancePage.vue",
+    "BsAuditHistoryPage": "packages/ui/src/templates/BsAuditHistoryPage.vue",
+    "BsClientPortfolioPage": "packages/ui/src/templates/BsClientPortfolioPage.vue",
+    "BsProductAuthFrame": "packages/ui/src/templates/BsProductAuthFrame.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -51,8 +61,8 @@
       "renderedBsComponents": [
         "BsAppRoot"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "destination": "packages/ui/src/templates/BsAppRoot.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/automation-suit/app/app.vue",
       "dependencies": [],
       "verification": "not-yet-accepted"
@@ -71,8 +81,8 @@
         "BsStack",
         "BsText"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "destination": "packages/ui/src/templates/BsWorkspaceShell.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/automation-suit/app/layouts/default.vue",
       "dependencies": [],
       "verification": "not-yet-accepted"
@@ -121,15 +131,16 @@
         "BsText",
         "BsUsageMeter"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "destination": "packages/ui/src/templates/BsOperationsDashboardPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/automation-suit/app/pages/index.vue",
       "dependencies": [
         "../utils/automationStatusTone",
         "#components",
         "../../types/dashboard"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "operations-monitoring-dashboard"
     },
     {
       "source": "apps/automation-suit/app/pages/n8n.vue",
@@ -171,14 +182,15 @@
         "BsStatusBadge",
         "BsText"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "destination": "packages/ui/src/templates/BsRoutingPolicyPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/automation-suit/app/pages/policies.vue",
       "dependencies": [
         "../utils/automationStatusTone",
         "../../types/operations"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "routing-policy-management"
     },
     {
       "source": "apps/automation-suit/app/pages/projects.vue",
@@ -204,14 +216,15 @@
         "BsText",
         "BsTextarea"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "destination": "packages/ui/src/templates/BsProjectRegistryPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/automation-suit/app/pages/projects.vue",
       "dependencies": [
         "../utils/automationStatusTone",
         "../../types/operations"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "project-registration"
     },
     {
       "source": "apps/automation-suit/app/pages/runs.vue",
@@ -253,13 +266,14 @@
         "BsStatusBadge",
         "BsText"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "destination": "packages/ui/src/templates/BsTaskDetailPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/automation-suit/app/pages/tasks/[id].vue",
       "dependencies": [
         "../../utils/automationStatusTone"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "task-detail"
     },
     {
       "source": "apps/automation-suit/app/pages/tasks/index.vue",
@@ -290,8 +304,8 @@
       "renderedBsComponents": [
         "BsAppRoot"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "destination": "packages/ui/src/templates/BsAppRoot.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/inventory-suit/app/app.vue",
       "dependencies": [],
       "verification": "not-yet-accepted"
@@ -308,8 +322,8 @@
         "BsSlot",
         "BsText"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "destination": "packages/ui/src/templates/BsWorkspaceShell.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/inventory-suit/app/layouts/default.vue",
       "dependencies": [],
       "verification": "not-yet-accepted"
@@ -339,8 +353,8 @@
       "renderedBsComponents": [
         "BsAppRoot"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "destination": "packages/ui/src/templates/BsAppRoot.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/ledger-suit/app/app.vue",
       "dependencies": [],
       "verification": "not-yet-accepted"
@@ -416,8 +430,8 @@
         "BsProductLogo",
         "BsSlot"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "destination": "packages/ui/src/templates/BsMarketingLayout.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/ledger-suit/app/layouts/marketing.vue",
       "dependencies": [],
       "verification": "not-yet-accepted"
@@ -457,13 +471,14 @@
         "BsStateSurface",
         "BsVerificationForm"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "destination": "packages/ui/src/templates/BsInvitationAcceptancePage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/ledger-suit/app/pages/accept-invitation.vue",
       "dependencies": [
         "~~/types/database.types"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "invitation-acceptance"
     },
     {
       "source": "apps/ledger-suit/app/pages/accounting-dimensions.vue",
@@ -559,13 +574,14 @@
         "BsStack",
         "BsText"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "destination": "packages/ui/src/templates/BsAuditHistoryPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/ledger-suit/app/pages/audit.vue",
       "dependencies": [
         "~~/types/database.types"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "audit-history"
     },
     {
       "source": "apps/ledger-suit/app/pages/bank-reconciliation.vue",
@@ -673,14 +689,15 @@
         "BsText",
         "BsVisuallyHidden"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "destination": "packages/ui/src/templates/BsClientPortfolioPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/ledger-suit/app/pages/clients.vue",
       "dependencies": [
         "~/utils/clientHealth",
         "~/utils/clientHealth"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "client-portfolio"
     },
     {
       "source": "apps/ledger-suit/app/pages/contact.vue",
@@ -1501,8 +1518,8 @@
       "renderedBsComponents": [
         "BsAppRoot"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "destination": "packages/ui/src/templates/BsAppRoot.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/shop-suit/app/app.vue",
       "dependencies": [],
       "verification": "not-yet-accepted"
@@ -1519,8 +1536,8 @@
         "BsSlot",
         "BsStack"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "destination": "packages/ui/src/templates/BsProductAuthFrame.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/shop-suit/app/layouts/auth.vue",
       "dependencies": [],
       "verification": "not-yet-accepted"
@@ -1560,8 +1577,8 @@
         "BsProductLogo",
         "BsSlot"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "destination": "packages/ui/src/templates/BsMarketingLayout.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/shop-suit/app/layouts/landing.vue",
       "dependencies": [],
       "verification": "not-yet-accepted"
@@ -1581,8 +1598,8 @@
         "BsToastHost",
         "BsUserMenu"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "destination": "packages/ui/src/templates/BsWorkspaceShell.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/shop-suit/app/layouts/platform-admin.vue",
       "dependencies": [],
       "verification": "not-yet-accepted"
@@ -1734,13 +1751,14 @@
         "BsText",
         "BsVerificationForm"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "destination": "packages/ui/src/templates/BsInvitationAcceptancePage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/shop-suit/app/pages/auth/team-invitation.vue",
       "dependencies": [
         "~/types/shopCrmRpc"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "invitation-acceptance"
     },
     {
       "source": "apps/shop-suit/app/pages/billing.vue",
@@ -2181,13 +2199,14 @@
         "BsStateSurface",
         "BsText"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "destination": "packages/ui/src/templates/BsCataloguePage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/shop-suit/app/pages/products/index.vue",
       "dependencies": [
         "~/types/shopCrmRpc"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "catalogue-management"
     },
     {
       "source": "apps/shop-suit/app/pages/purchases/[id].vue",
@@ -2424,13 +2443,14 @@
         "BsText",
         "BsTextarea"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "destination": "packages/ui/src/templates/BsCataloguePage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/shop-suit/app/pages/services/index.vue",
       "dependencies": [
         "~/types/shopCrmRpc"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "catalogue-management"
     },
     {
       "source": "apps/shop-suit/app/pages/settings.vue",
@@ -2519,8 +2539,8 @@
       "renderedBsComponents": [
         "BsAppRoot"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "destination": "packages/ui/src/templates/BsAppRoot.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/super-admin-suit/app/app.vue",
       "dependencies": [],
       "verification": "not-yet-accepted"
@@ -2537,8 +2557,8 @@
         "BsSettingsMenu",
         "BsSlot"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "destination": "packages/ui/src/templates/BsWorkspaceShell.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/super-admin-suit/app/layouts/default.vue",
       "dependencies": [],
       "verification": "not-yet-accepted"
@@ -2630,6 +2650,14 @@
     "BsEmailVerificationPage",
     "BsExecutionActivityPage",
     "BsTaskWorklistPage",
-    "BsAccountingDimensionsPage"
+    "BsAccountingDimensionsPage",
+    "BsRoutingPolicyPage",
+    "BsProjectRegistryPage",
+    "BsTaskDetailPage",
+    "BsOperationsDashboardPage",
+    "BsCataloguePage",
+    "BsInvitationAcceptancePage",
+    "BsAuditHistoryPage",
+    "BsClientPortfolioPage"
   ]
 }

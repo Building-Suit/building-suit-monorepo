@@ -74,6 +74,18 @@ export async function validateAtomicTemplateArchitecture({ root = defaultRoot } 
         ts.forEachChild(node, inspect)
       }
       inspect(ast)
+      if (descriptor && (file.includes('/app/layouts/') || file.endsWith('/app/app.vue'))) {
+        const entry = registry.entries.find(entry => entry.source === file)
+        const roots = descriptor.template?.ast?.children.filter(node => node.type === 1) ?? []
+        const owner = roots.length === 1 ? templateOwners.get(roots[0].tag) : undefined
+        if (!entry?.destination || owner?.source !== entry.destination) failures.push(`${file}: root/layout must resolve to its registered shared template`)
+        if (roots.length === 1) {
+          if (localBindings.has(roots[0].tag) || (bindings.has(roots[0].tag) && bindings.get(roots[0].tag) !== owner?.specifier)) failures.push(`${file}: root/layout template name is shadowed`)
+          const children = roots[0].children.filter(node => node.type === 1)
+          if (children.length > 1 || children.some(node => node.tag !== 'slot' || node.props.length || node.children.length)) failures.push(`${file}: layout may expose only one direct unscoped route outlet`)
+        }
+        if (descriptor.styles.length) failures.push(`${file}: root/layout styles must be owned by packages/ui`)
+      }
       if (!file.includes('/app/pages/') || !file.endsWith('.vue')) continue
       actualRoutes.push(file)
       const entry = registry.entries.find(entry => entry.source === file && entry.kind === 'route')
@@ -99,6 +111,34 @@ export async function validateAtomicTemplateArchitecture({ root = defaultRoot } 
     }
   }
   for (const entry of registry.entries.filter(entry => entry.kind === 'route')) if (!actualRoutes.includes(entry.source)) failures.push(`${entry.source}: stale registered route`)
+  const forbiddenUiCalls = new Set(['fetch', '$fetch', 'useFetch', 'useAsyncData', 'useSupabaseClient', 'useSupabaseUser', 'useTenant', 'useShop', 'useRuntimeConfig', 'useState'])
+  for (const absolute of await walk(path.join(root, 'packages/ui/src'))) {
+    if (!/\.(vue|ts|tsx|js|jsx)$/.test(absolute)) continue
+    const file = normalized(path.relative(root, absolute))
+    const text = await readFile(absolute, 'utf8')
+    const descriptor = file.endsWith('.vue') ? parse(text, { filename: file }).descriptor : undefined
+    const script = descriptor ? [descriptor.script?.content, descriptor.scriptSetup?.content].filter(Boolean).join('\n') : text
+    const ast = ts.createSourceFile(file, script, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS)
+    const forbiddenBindings = new Set(forbiddenUiCalls)
+    for (const statement of ast.statements) {
+      if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier)) continue
+      const module = statement.moduleSpecifier.text
+      if (/^(?:~|@)\/|(?:^|\/)apps\/|^@building-suit\/(?:auth|data-access)(?:\/|$)/.test(module)) failures.push(`${file}: UI may not import product/identity/data infrastructure ${module}`)
+      const named = statement.importClause?.namedBindings
+      if (named && ts.isNamedImports(named)) for (const binding of named.elements) {
+        if (forbiddenUiCalls.has(binding.propertyName?.text ?? binding.name.text)) forbiddenBindings.add(binding.name.text)
+      }
+    }
+    function inspectUi(node) {
+      if (ts.isCallExpression(node)) {
+        if (ts.isIdentifier(node.expression) && forbiddenBindings.has(node.expression.text)) failures.push(`${file}: product query/context behavior ${node.expression.text} is forbidden in UI`)
+        if (ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === 'factory') failures.push(`${file}: product scope factories are forbidden in UI`)
+      }
+      if (registry.pageTemplates?.includes(path.basename(file, '.vue')) && (node.kind === ts.SyntaxKind.AnyKeyword || (ts.isTypeReferenceNode(node) && node.typeName.getText(ast) === 'Record' && node.typeArguments?.some(argument => argument.kind === ts.SyntaxKind.UnknownKeyword)))) failures.push(`${file}: page presentation contracts may not contain untyped state bags`)
+      ts.forEachChild(node, inspectUi)
+    }
+    inspectUi(ast)
+  }
   const purposes = new Map()
   for (const entry of registry.entries.filter(entry => entry.kind === 'route' && entry.purpose && entry.destination)) {
     const destination = purposes.get(entry.purpose)

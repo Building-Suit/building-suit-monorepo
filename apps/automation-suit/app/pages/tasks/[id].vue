@@ -32,135 +32,23 @@ function chatGptPrompt() {
   return [`Project/workstream/task: ${packet.value?.project?.slug}/${packet.value?.workstream?.slug}/${packet.value?.task?.task_id}`,`Task: ${packet.value?.task?.title}`,`Status: ${packet.value?.task?.status}`,`Attempt: ${latest.value?.attempt ?? 0}/${packet.value?.retry_policy?.max_attempts ?? '?'}`,`Profile/model/reasoning: ${latest.value?.model_profile ?? 'unresolved'} / ${latest.value?.model_name ?? 'unresolved'} / ${latest.value?.reasoning_effort ?? 'unresolved'}`,`Last stage: ${latest.value?.engine_stage ?? packet.value?.task?.engine_stage ?? 'unknown'}`,`Verification failures: ${JSON.stringify(failed)}`,`Branch/worktree/parent: ${latest.value?.branch_name ?? 'none'} / ${latest.value?.worktree_path ?? 'none'} / ${latest.value?.parent_branch ?? 'none'}@${latest.value?.parent_sha ?? 'none'}`,`Retry policy: ${JSON.stringify(packet.value?.retry_policy ?? {})}`,'Explain the failure and recommend the safest next action without restarting completed work.'].join('\n')
 }
 function codexPrompt() { return `${chatGptPrompt()}\n\nUse the existing worktree. Preserve already-correct work. Fix recorded failures only. Do not expand scope, create a branch/worktree, commit, push, merge, deploy, or modify a hosted database. Run only focused local checks; leave final verification to the control plane.` }
-async function copy(value: string) { await navigator.clipboard.writeText(value) }
-</script>
+const { copyText: copy } = useClipboard()
 
+const taskView = computed(() => packet.value ? ({
+  context: `${packet.value.project?.slug ?? ''} / ${packet.value.workstream?.slug ?? ''}`,
+  title: `${packet.value.task.task_id} · ${packet.value.task.title}`, description: packet.value.task.description,
+  status: packet.value.task.status, statusLabel: packet.value.task.status || 'unknown', statusTone: automationStatusTone(packet.value.task.status),
+  attempt: { label: 'Attempt', value: `${latest.value?.attempt ?? 0}/${packet.value.retry_policy?.max_attempts ?? '?'}`, hint: packet.value.retry_policy?.policy_id },
+  profile: { label: 'Profile', value: latest.value?.model_profile || packet.value.retry_policy?.attempt_profiles?.[0] || 'unresolved', hint: `${latest.value?.model_name || 'model unresolved'} · ${latest.value?.reasoning_effort || 'reasoning unresolved'}` },
+  stage: { label: 'Engine stage', value: latest.value?.engine_stage || 'pending' }, usage: { label: 'Usage', value: 'unavailable', hint: 'No token estimate is invented.' },
+  actions: legalActions.value.map(action => ({ id: action, label: `Copy ${action} command` })),
+  checks: currentChecks.value.map(check => ({ id: String(check.verification_id), name: check.check_name, description: check.summary || check.command || '', elapsed: check.elapsed_ms == null ? 'waiting' : `${Math.round(check.elapsed_ms / 1000)}s`, status: check.status, statusLabel: check.status || 'unknown', statusTone: automationStatusTone(check.status) })),
+  process: { worktree: latest.value?.worktree_path || '—', branch: latest.value?.branch_name || '—', parent: `${latest.value?.parent_branch || '—'}@${latest.value?.parent_sha || '—'}`, prompt: latest.value?.prompt_path || '—', log: latest.value?.run_log_path || '—' },
+  packet: JSON.stringify(packet.value.task, null, 2), events: (data.value?.events ?? []).map(event => ({ id: String(event.event_id), summary: `${event.event_type} · ${event.source} · ${event.created_at}`, payload: JSON.stringify(event.payload, null, 2) })),
+}) : null)
+const copyLabels = { refresh: 'Refresh', actions: 'Manual actions', actionHint: 'Only actions legal for the current recorded state are shown. Execute with the generic CLI.', chatPrompt: 'Copy for ChatGPT', repairPrompt: 'Generate Codex Repair Prompt', verification: 'Live verification', process: 'Git and process', packet: 'Task packet', timeline: 'Timeline', worktree: 'Worktree', branch: 'Branch', parent: 'Parent', prompt: 'Prompt', log: 'Log' }
+function copyAction(action: string) { if (legalActions.value.includes(action)) return copy(`pnpm automation task ${action} ${packet.value?.task.task_id}`) }
+</script>
 <template>
-  <BsPage padding="none" width="full">
-    <BsAlert v-if="error" tone="error" :description="error.message" />
-    <template v-if="packet">
-      <BsInline justify="between" align="start">
-        <BsStack gap="sm">
-          <BsText size="xs" tone="muted" emphasis="semibold">
-            {{ packet.project?.slug }} / {{ packet.workstream?.slug }}
-          </BsText>
-          <BsHeading :level="1">
-            {{ packet.task.task_id }} · {{ packet.task.title }}
-          </BsHeading>
-          <BsText size="sm" tone="muted">
-            {{ packet.task.description }}
-          </BsText>
-        </BsStack>
-        <BsInline>
-          <BsStatusBadge :status="packet.task.status" :label="(packet.task.status) || 'unknown'" :tone="automationStatusTone(packet.task.status)" />
-          <BsButton @click="refresh()">
-            Refresh
-          </BsButton>
-        </BsInline>
-      </BsInline>
-      <BsGrid :columns="2" as="section">
-        <BsKpiCard title="Attempt" :hint="packet.retry_policy?.policy_id">
-          <BsText as="span" size="lg" emphasis="bold">
-            {{ `${latest?.attempt ?? 0}/${packet.retry_policy?.max_attempts ?? '?'}` }}
-          </BsText>
-        </BsKpiCard>
-        <BsKpiCard title="Profile" :hint="`${latest?.model_name || 'model unresolved'} · ${latest?.reasoning_effort || 'reasoning unresolved'}`">
-          <BsText as="span" size="lg" emphasis="bold">
-            {{ latest?.model_profile || packet.retry_policy?.attempt_profiles?.[0] || 'unresolved' }}
-          </BsText>
-        </BsKpiCard>
-        <BsKpiCard title="Engine stage">
-          <BsText as="span" size="lg" emphasis="bold">
-            {{ latest?.engine_stage || 'pending' }}
-          </BsText>
-        </BsKpiCard>
-        <BsKpiCard title="Usage" hint="No token estimate is invented.">
-          <BsText as="span" size="lg" emphasis="bold">
-            unavailable
-          </BsText>
-        </BsKpiCard>
-      </BsGrid>
-      <BsCard as="section" title="Manual actions">
-        <BsStack gap="sm">
-          <BsText size="xs" tone="muted">
-            Only actions legal for the current recorded state are shown. Execute with the generic CLI.
-          </BsText>
-          <BsInline>
-            <BsButton v-for="availableAction in legalActions" :key="availableAction" size="sm" @click="copy(`pnpm automation task ${availableAction} ${packet.task.task_id}`)">
-              Copy {{ availableAction }} command
-            </BsButton>
-            <BsButton size="sm" @click="copy(chatGptPrompt())">
-              Copy for ChatGPT
-            </BsButton>
-            <BsButton size="sm" @click="copy(codexPrompt())">
-              Generate Codex Repair Prompt
-            </BsButton>
-          </BsInline>
-        </BsStack>
-      </BsCard>
-      <BsCard as="section" title="Live verification">
-        <BsStack gap="sm">
-          <BsStack gap="sm">
-            <BsInline v-for="check in currentChecks" :key="check.verification_id" justify="between">
-              <BsStack gap="sm">
-                <BsText as="strong" emphasis="semibold">
-                  {{ check.check_name }}
-                </BsText>
-                <BsText size="xs" tone="muted">
-                  {{ check.summary || check.command }}
-                </BsText>
-              </BsStack>
-              <BsStack gap="sm">
-                <BsStatusBadge :status="check.status" :label="(check.status) || 'unknown'" :tone="automationStatusTone(check.status)" />
-                <BsText size="xs" tone="muted">
-                  {{ check.elapsed_ms == null ? 'waiting' : `${Math.round(check.elapsed_ms/1000)}s` }}
-                </BsText>
-              </BsStack>
-            </BsInline>
-          </BsStack>
-        </BsStack>
-      </BsCard>
-      <BsGrid :columns="2" as="section">
-        <BsCard title="Git and process">
-          <BsStack gap="sm">
-            <BsDescriptionList density="compact">
-              <BsDescriptionItem term="Worktree">
-                {{ latest?.worktree_path || '—' }}
-              </BsDescriptionItem>
-              <BsDescriptionItem term="Branch">
-                {{ latest?.branch_name || '—' }}
-              </BsDescriptionItem>
-              <BsDescriptionItem term="Parent">
-                {{ latest?.parent_branch || '—' }}@{{ latest?.parent_sha || '—' }}
-              </BsDescriptionItem>
-              <BsDescriptionItem term="Prompt">
-                {{ latest?.prompt_path || '—' }}
-              </BsDescriptionItem>
-              <BsDescriptionItem term="Log">
-                {{ latest?.run_log_path || '—' }}
-              </BsDescriptionItem>
-            </BsDescriptionList>
-          </BsStack>
-        </BsCard>
-        <BsCard title="Task packet">
-          <BsStack gap="sm">
-            <BsCodeBlock>
-              {{ JSON.stringify(packet.task, null, 2) }}
-            </BsCodeBlock>
-          </BsStack>
-        </BsCard>
-      </BsGrid>
-      <BsCard as="section" title="Timeline">
-        <BsStack gap="sm">
-          <BsStack gap="sm">
-            <BsDisclosure v-for="event in data?.events || []" :key="event.event_id" :summary="`${event.event_type} · ${event.source} · ${event.created_at}`">
-              <BsCodeBlock>
-                {{ JSON.stringify(event.payload, null, 2) }}
-              </BsCodeBlock>
-            </BsDisclosure>
-          </BsStack>
-        </BsStack>
-      </BsCard>
-    </template>
-  </BsPage>
+  <BsTaskDetailPage :task="taskView" :copy="copyLabels" :error="error?.message" @refresh="refresh()" @copy-action="copyAction" @copy-chat-prompt="copy(chatGptPrompt())" @copy-repair-prompt="copy(codexPrompt())" />
 </template>

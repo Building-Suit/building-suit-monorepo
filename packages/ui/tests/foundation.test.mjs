@@ -7,6 +7,7 @@ import { parse, compileScript } from 'vue/compiler-sfc'
 import { renderToString } from 'vue/server-renderer'
 import * as vue from 'vue'
 import ts from 'typescript'
+import { useFormInteraction } from '../../ux/src/composables/useFormInteraction.ts'
 import { useNavigationDisclosure } from '../../ux/src/composables/useNavigationDisclosure.ts'
 
 const require = createRequire(import.meta.url)
@@ -16,7 +17,7 @@ function component(file, language = 'en', imports = {}) {
   const code = ts.transpileModule(script.content, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText
   const module = { exports: {} }
   const copy = language === 'ar' ? { close: 'إغلاق', saving: 'جارٍ الحفظ…', search: 'بحث', empty: 'لا توجد سجلات' } : { close: 'Close', saving: 'Saving…', search: 'Search', empty: 'No records found' }
-  const globals = { useNavigationDisclosure, ref: vue.ref, computed: vue.computed, watch: vue.watch, watchEffect: vue.watchEffect, nextTick: vue.nextTick, onMounted: vue.onMounted, onBeforeUnmount: vue.onBeforeUnmount, useId: vue.useId, useAttrs: vue.useAttrs, useSlots: vue.useSlots, useI18n: () => ({ t: key => key, te: () => false }), useToasts: () => ({ toasts: vue.ref([{ id: 1, title: 'Saved', tone: 'success' }]), dismiss: () => {} }), useUiCopy: () => key => copy[key] }
+  const globals = { useFormInteraction, useNavigationDisclosure, ref: vue.ref, computed: vue.computed, watch: vue.watch, watchEffect: vue.watchEffect, nextTick: vue.nextTick, onMounted: vue.onMounted, onBeforeUnmount: vue.onBeforeUnmount, useId: vue.useId, useAttrs: vue.useAttrs, useSlots: vue.useSlots, useI18n: () => ({ t: key => key, te: () => false }), useToasts: () => ({ toasts: vue.ref([{ id: 1, title: 'Saved', tone: 'success' }]), dismiss: () => {} }), useUiCopy: () => key => copy[key] }
   new Function('require', 'module', 'exports', ...Object.keys(globals), code)(name => imports[name] ?? require(name), module, module.exports, ...Object.values(globals))
   return module.exports.default
 }
@@ -518,15 +519,23 @@ test('workspace enforcement corroborates ownership and semantic action variants 
   assert.doesNotMatch(source, /if \(\/<button\\b\/\.test\(text\)\)/)
 })
 
-test('Automation and Inventory consume the final shared presentation contracts', () => {
-  const automation = vueFiles(path.join(workspaceRoot, 'apps/automation-suit/app'))
-    .map(file => readFileSync(file, 'utf8')).join('\n')
-  for (const component of ['BsDataTable', 'BsRecordActionDialog', 'BsButton', 'BsSelect', 'BsCard', 'BsKpiCard', 'BsStatusBadge', 'BsAppShell']) {
-    assert.match(automation, new RegExp(`<${component}\\b`), `Automation does not consume ${component}`)
+test('Automation and Inventory delegate presentation to shared page and shell templates', () => {
+  const automationRoutes = vueFiles(path.join(workspaceRoot, 'apps/automation-suit/app/pages'))
+  for (const file of automationRoutes) {
+    const { descriptor } = parse(readFileSync(file, 'utf8'))
+    const roots = descriptor.template.ast.children.filter(node => node.type === 1)
+    assert.equal(roots.length, 1, file)
+    assert.ok(existsSync(new URL(`../src/templates/${roots[0].tag}.vue`, import.meta.url)), file)
+    assert.equal(roots[0].children.filter(node => node.type === 1).length, 0, file)
   }
+  const dashboard = readFileSync(new URL('../src/templates/BsOperationsDashboardPage.vue', import.meta.url), 'utf8')
+  assert.match(dashboard, /<BsDataTable\b/)
+  assert.doesNotMatch(dashboard, /automationStatusTone|useFetch|\$fetch|useRuntimeConfig/)
   assert.match(readFileSync(path.join(workspaceRoot, 'apps/inventory-suit/app/pages/index.vue'), 'utf8'), /<BsWelcomePage\b/)
   assert.match(readFileSync(new URL('../src/templates/BsWelcomePage.vue', import.meta.url), 'utf8'), /<BsCard\b/)
-  assert.match(readFileSync(path.join(workspaceRoot, 'apps/inventory-suit/app/layouts/default.vue'), 'utf8'), /<BsAppShell\b/)
+  for (const suit of ['automation', 'inventory', 'super-admin']) {
+    assert.match(readFileSync(path.join(workspaceRoot, `apps/${suit}-suit/app/layouts/default.vue`), 'utf8'), /<BsWorkspaceShell\b/)
+  }
 })
 
 test('shared UI exports are explicit and cover every governed source', () => {

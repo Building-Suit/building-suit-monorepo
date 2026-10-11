@@ -5,6 +5,7 @@ import test from 'node:test'
 const migration = await readFile(new URL('../../supabase/migrations/20260928215000_barber_service_scheduling_foundation.sql', import.meta.url), 'utf8')
 const databaseTest = await readFile(new URL('../../supabase/tests/shop_barber_service_scheduling.sql', import.meta.url), 'utf8')
 const page = await readFile(new URL('../../app/pages/services/index.vue', import.meta.url), 'utf8')
+const template = await readFile(new URL('../../../../packages/ui/src/templates/BsCataloguePage.vue', import.meta.url), 'utf8')
 
 test('barber scheduling is opt-in and tenant/location/staff scoped', () => {
   assert.match(migration, /scheduling_enabled boolean not null default false/)
@@ -39,8 +40,9 @@ test('service form is bilingual, responsive, paginated, and stateful', () => {
   assert.match(page, /list_services/)
   assert.match(page, /p_page: page\.value/)
   assert.match(page, /service_scheduling_options/)
-  assert.match(page, /:columns="2"/)
-  assert.match(page, /role="status"/)
-  assert.match(page, /role="alert"/)
+  assert.match(page, /<BsCataloguePage\b/)
+  assert.match(template, /:columns="2"/)
+  assert.match(template, /role="status"/)
+  assert.match(template, /role="alert"/)
   assert.match(page, /pushToast/)
 })

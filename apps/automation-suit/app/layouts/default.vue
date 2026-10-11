@@ -26,22 +26,5 @@ const labels = computed(() => ({
 </script>
 
 <template>
-  <BsAppShell home-path="/" :product-name="t('app.name')" :groups="groups" :labels="labels">
-    <template #logo>
-      <BsInline>
-        <BsText as="span" size="sm">
-          AS
-        </BsText>
-        <BsText as="span">
-          {{ t('app.name') }}
-        </BsText>
-      </BsInline>
-    </template>
-    <template #header>
-      <BsSettingsMenu />
-    </template>
-    <BsStack gap="sm">
-      <BsSlot :render="$slots.default" />
-    </BsStack>
-  </BsAppShell>
+  <BsWorkspaceShell home-path="/" :product-name="t('app.name')" :groups="groups" :labels="labels" :logo="{ kind: 'initials', initials: 'AS' }"><slot /></BsWorkspaceShell>
 </template>

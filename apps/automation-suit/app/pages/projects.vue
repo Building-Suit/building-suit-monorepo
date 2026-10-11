@@ -12,7 +12,6 @@ const form = reactive({
   allowed_publication_paths: '["apps/", "packages/"]', verification_commands: '[]',
   workstreams: '[{"slug":"frontend","display_name":"Frontend","stack_key":"frontend","application_path":"apps/web"}]', active: false,
 })
-const registrationFields = ['display_name','slug','repository_path','github_repository','integration_branch','production_branch','local_repository_root','worktree_root','retry_policy_id'] as const
 const action = useRecordAction(() => form)
 const { visible: showWizard, dirty, pending, error: actionError } = action
 const { success } = useToasts()
@@ -49,115 +48,24 @@ async function validate(save = false) {
   catch { action.fail(save ? 'The project could not be saved.' : 'The project configuration is not valid.') }
   finally { pending.value = false }
 }
-</script>
 
+const projectViews = computed(() => (data.value?.projects ?? []).map(project => ({
+  id: project.project_id, name: project.display_name, subtitle: `${project.slug} · ${project.github_repository}`,
+  status: project.active ? 'active' : 'inactive', statusLabel: project.active ? 'active' : 'inactive', statusTone: automationStatusTone(project.active ? 'active' : 'inactive'),
+  branchSummary: `${project.integration_branch} → ${project.production_branch}`, policySummary: `${project.retry_policy_id || 'global retry policy'} · ${project.default_model_profile}`,
+  configuration: JSON.stringify(project, null, 2),
+  workstreams: streamsFor(project.project_id).map(stream => ({ id: stream.slug, name: stream.display_name, subtitle: `${stream.slug} · ${stream.stack_key}`, application: stream.application_path || 'No application path', status: stream.active ? 'active' : 'inactive', statusLabel: stream.active ? 'active' : 'inactive', statusTone: automationStatusTone(stream.active ? 'active' : 'inactive') })),
+})))
+const editorForm = computed({
+  get: () => ({ name: form.display_name, slug: form.slug, repositoryPath: form.repository_path, repository: form.github_repository, integrationBranch: form.integration_branch, productionBranch: form.production_branch, localRoot: form.local_repository_root, worktreeRoot: form.worktree_root, retryPolicy: form.retry_policy_id, modelProfile: form.default_model_profile, workstreams: form.workstreams, publicationPaths: form.allowed_publication_paths, verificationCommands: form.verification_commands, active: form.active }),
+  set: (value: import('@building-suit/ui/types/projectRegistryPresentation').BsProjectRegistrationForm) => Object.assign(form, { display_name: value.name, slug: value.slug, repository_path: value.repositoryPath, github_repository: value.repository, integration_branch: value.integrationBranch, production_branch: value.productionBranch, local_repository_root: value.localRoot, worktree_root: value.worktreeRoot, retry_policy_id: value.retryPolicy, default_model_profile: value.modelProfile, workstreams: value.workstreams, allowed_publication_paths: value.publicationPaths, verification_commands: value.verificationCommands, active: value.active }),
+})
+const copy = computed(() => ({
+  eyebrow: 'Registry', title: 'Projects', description: 'Repository, branch, policy, workstream and concurrency configuration.', register: 'Register project', refresh: 'Refresh', configuration: 'Configuration', editorTitle: 'Project registration wizard', editorDescription: 'Validate first. New projects default to inactive; secrets are rejected.', submit: 'Save project', validate: 'Validate / dry-run', activate: 'Activate immediately',
+  writeStatus: operator.value?.writesEnabled ? 'Operator writes enabled' : 'Configure NUXT_CONTROL_OPERATOR_DATABASE_URL to save',
+  fields: { name: 'display_name', slug: 'slug', repositoryPath: 'repository_path', repository: 'github_repository', integrationBranch: 'integration_branch', productionBranch: 'production_branch', localRoot: 'local_repository_root', worktreeRoot: 'worktree_root', retryPolicy: 'retry_policy_id', modelProfile: 'Default model profile', workstreams: 'Workstreams JSON', publicationPaths: 'Allowed publication paths JSON', verificationCommands: 'Verification commands JSON' },
+}))
+</script>
 <template>
-  <BsPage padding="none" width="full">
-    <BsInline justify="between">
-      <BsStack gap="sm">
-        <BsText size="xs" tone="muted" emphasis="semibold">
-          Registry
-        </BsText>
-        <BsHeading :level="1">
-          Projects
-        </BsHeading>
-        <BsText size="sm" tone="muted">
-          Repository, branch, policy, workstream and concurrency configuration.
-        </BsText>
-      </BsStack>
-      <BsInline>
-        <BsButton variant="primary" @click="openWizard">
-          Register project
-        </BsButton>
-        <BsButton @click="refresh()">
-          Refresh
-        </BsButton>
-      </BsInline>
-    </BsInline>
-    <BsAlert v-if="error" tone="error" :description="error.message" />
-    <BsCard v-for="project in data?.projects || []" :key="project.project_id">
-      <BsStack gap="sm">
-        <BsInline justify="between">
-          <BsStack gap="sm">
-            <BsInline>
-              <BsHeading :level="2">
-                {{ project.display_name }}
-              </BsHeading>
-              <BsStatusBadge :status="project.active ? 'active' : 'inactive'" :label="project.active ? 'active' : 'inactive'" :tone="automationStatusTone(project.active ? 'active' : 'inactive')" />
-            </BsInline>
-            <BsText size="xs" tone="muted">
-              {{ project.slug }} · {{ project.github_repository }}
-            </BsText>
-          </BsStack>
-          <BsStack gap="sm">
-            <BsText>
-              {{ project.integration_branch }} → {{ project.production_branch }}
-            </BsText>
-            <BsText>
-              {{ project.retry_policy_id || 'global retry policy' }} · {{ project.default_model_profile }}
-            </BsText>
-          </BsStack>
-        </BsInline>
-        <BsGrid columns="auto">
-          <BsCard v-for="stream in streamsFor(project.project_id)" :key="stream.slug" variant="flat" padding="sm">
-            <BsStack gap="sm">
-              <BsInline justify="between">
-                <BsText as="strong" emphasis="semibold">
-                  {{ stream.display_name }}
-                </BsText>
-                <BsStatusBadge :status="stream.active ? 'active' : 'inactive'" :label="stream.active ? 'active' : 'inactive'" :tone="automationStatusTone(stream.active ? 'active' : 'inactive')" />
-              </BsInline>
-              <BsText size="xs" tone="muted">
-                {{ stream.slug }} · {{ stream.stack_key }}
-              </BsText>
-              <BsText size="xs" tone="muted">
-                {{ stream.application_path || 'No application path' }}
-              </BsText>
-            </BsStack>
-          </BsCard>
-        </BsGrid>
-        <BsDisclosure summary="Configuration">
-          <BsCodeBlock>
-            {{ JSON.stringify(project, null, 2) }}
-          </BsCodeBlock>
-        </BsDisclosure>
-      </BsStack>
-    </BsCard>
-    <BsRecordActionDialog v-model:visible="showWizard" title="Project registration wizard" size="lg" :dirty="dirty" :pending="pending" :error="actionError" :submit-disabled="!operator?.writesEnabled" submit-label="Save project" @submit="validate(true)">
-      <BsText size="sm" tone="muted">
-        Validate first. New projects default to inactive; secrets are rejected.
-      </BsText>
-      <BsGrid columns="auto">
-        <BsField v-for="field in registrationFields" :key="field" v-slot="{ id, describedby }" :label="field">
-          <BsInput :id="id" v-model="form[field]" :aria-describedby="describedby" />
-        </BsField>
-        <BsField v-slot="{ id, describedby }" label="Default model profile">
-          <BsSelect :id="id" v-model="form.default_model_profile" :aria-describedby="describedby" label="Default model profile" :options="['no_ai','fast','standard','deep','review']" />
-        </BsField>
-      </BsGrid>
-      <BsField v-slot="{ id, describedby }" label="Workstreams JSON">
-        <BsTextarea :id="id" v-model="form.workstreams" :aria-describedby="describedby" :rows="5" />
-      </BsField>
-      <BsGrid columns="auto">
-        <BsField v-slot="{ id, describedby }" label="Allowed publication paths JSON">
-          <BsTextarea :id="id" v-model="form.allowed_publication_paths" :aria-describedby="describedby" :rows="3" />
-        </BsField>
-        <BsField v-slot="{ id, describedby }" label="Verification commands JSON">
-          <BsTextarea :id="id" v-model="form.verification_commands" :aria-describedby="describedby" :rows="3" />
-        </BsField>
-      </BsGrid>
-      <BsCheckbox v-model="form.active" label="Activate immediately" />
-      <BsInline>
-        <BsButton :pending="pending" @click="validate(false)">
-          Validate / dry-run
-        </BsButton>
-        <BsText as="span" size="xs" tone="muted">
-          {{ operator?.writesEnabled ? 'Operator writes enabled' : 'Configure NUXT_CONTROL_OPERATOR_DATABASE_URL to save' }}
-        </BsText>
-      </BsInline>
-      <BsText v-if="validation" role="status" size="sm">
-        {{ validation }}
-      </BsText>
-    </BsRecordActionDialog>
-  </BsPage>
+  <BsProjectRegistryPage v-model:form="editorForm" v-model:visible="showWizard" :projects="projectViews" :model-profiles="['no_ai', 'fast', 'standard', 'deep', 'review']" :copy="copy" :error="error?.message" :editor="{ dirty, pending, error: actionError, canSubmit: Boolean(operator?.writesEnabled), validation }" @register="openWizard" @refresh="refresh()" @validate="validate(false)" @submit="validate(true)" />
 </template>
