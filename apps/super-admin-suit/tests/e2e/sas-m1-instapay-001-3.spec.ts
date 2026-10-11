@@ -17,11 +17,14 @@ for (const locale of ['en', 'ar']) for (const mobile of [false, true]) {
       if (body.operation === 'shop.billing.command') {
         commands.push(body)
         if (failSave) { failSave = false; await route.fulfill({ status: 503, json: { data: { code: 'outcome_unknown' } } }); return }
-        configuration = { ...body.payload.configuration, version: 5 }
-        await route.fulfill({ json: { data: { configuration }, targetAuditId: 'synthetic-target-audit' } })
+        const c = body.payload.payload
+        expect(body.payload.action).toBe('configure_instructions')
+        expect(c.expectedVersion).toBe(4)
+        configuration = { version: 5, enabled: c.enabled, recipientAlias: c.recipientAlias, recipientDetails: c.recipientDetails, instructions: { en: c.instructionsEn, ar: c.instructionsAr }, paymentLink: c.paymentLink, qr: { assetUrl: c.qrImageUrl, alt: { en: c.qrAltEn, ar: c.qrAltAr } } }
+        await route.fulfill({ json: { data: { version: configuration.version, enabled: configuration.enabled, recipient_alias: configuration.recipientAlias, recipient_details: configuration.recipientDetails, instructions_en: configuration.instructions.en, instructions_ar: configuration.instructions.ar, payment_link: configuration.paymentLink, qr_image_url: configuration.qr.assetUrl, qr_alt_en: configuration.qr.alt.en, qr_alt_ar: configuration.qr.alt.ar }, targetAuditId: 'synthetic-target-audit' } })
       } else {
-        expect(body.payload).toEqual({ resource: 'manual-transfer' })
-        await route.fulfill({ status: queryCode, json: queryCode === 200 ? { data: { configuration } } : { statusCode: queryCode } })
+        expect(body.payload).toEqual({ resource: 'configuration' })
+        await route.fulfill({ status: queryCode, json: queryCode === 200 ? { data: configuration ? { version: configuration.version, enabled: configuration.enabled, recipientAlias: configuration.recipientAlias, recipientDetails: configuration.recipientDetails, instructionsEn: configuration.instructions.en, instructionsAr: configuration.instructions.ar, paymentLink: configuration.paymentLink, qrImageUrl: configuration.qr.assetUrl, qrAltEn: configuration.qr.alt.en, qrAltAr: configuration.qr.alt.ar } : null } : { statusCode: queryCode } })
       }
     })
     const url = '/?suit=synthetic-suit&item=transfer'

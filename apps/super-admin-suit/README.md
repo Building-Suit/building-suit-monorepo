@@ -303,3 +303,16 @@ independent database verification. This task does not change any Shop schema.
 ### Live private-offer acceptance
 
 Default unit and browser suites run locally without hosted staging credentials. Two existing private-offer acceptance checks authenticate synthetic staging identities and replay a previously submitted request against the target project. They remain available only with `BS_RUN_CUSTOM_OFFER_STAGING_ACCEPTANCE=1`, after the operator explicitly authorizes that live staging scope and verifies the maintained environment map and recovery evidence. They must not be enabled for ordinary CI or migration-only merge authorization. Skipped live checks are not staging acceptance evidence; the offline mapper, server authorization, local SQL and browser fixture checks remain required.
+
+## Payment review (SAS-M1-BILLING-001)
+
+The database-configured `payment-review` module composes the shared lazy table
+and record dialog over Shop's existing billing queue and review commands.
+Approval requires external bank verification and respects Shop quota/replay
+semantics. Missing frozen limits block approval; evidence never confirms payment.
+The current target queue omits frozen resource limits, private-offer identity and
+evidence metadata, and the approval result omits the commercial-period ID.
+Those target contract extensions and independent staging receipts remain gates.
+See [billing verification and handoff](tests/billing-verification.md) for exact
+contracts, commands, actual results and limitations. No Shop or hosted state is
+changed by this Super Admin implementation.

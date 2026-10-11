@@ -20,15 +20,15 @@ test('edit command pins expected version, reason, actor binding and immutable re
   const original = JSON.stringify(request)
   draft.recipientAlias = 'Later draft'
   assert.equal(JSON.stringify(request), original)
-  assert.equal(request.payload.expectedVersion, 4)
+  assert.equal(request.payload.payload.expectedVersion, 4)
   assert.equal(request.operation, 'shop.billing.command')
-  assert.equal(request.payload.action, 'configure-manual-transfer')
+  assert.equal(request.payload.action, 'configure_instructions')
   assert.equal(request.reason, 'Synthetic reviewed change')
   assert.equal(id, 2)
   assert.throws(() => transferCommand('binding', emptyTransfer(), 'Synthetic reason', () => 'id'))
   assert.throws(() => transferCommand('binding', fixture(), 'short', () => 'id'))
   assert.throws(() => transferCommand('binding', { ...fixture(), instructions: { en: '', ar: '' } }, 'Synthetic reason', () => 'id'))
-  assert.equal(transferCommand('binding', { ...fixture(), enabled: false, recipientAlias: '' }, 'Synthetic reason', () => 'id').payload.configuration.enabled, false)
+  assert.equal(transferCommand('binding', { ...fixture(), enabled: false, recipientAlias: '' }, 'Synthetic reason', () => 'id').payload.payload.enabled, false)
 })
 test('payment URLs reject executable protocols and embedded credentials', () => {
   for (const url of ['//evil.invalid', 'data:text/html,x', 'http://example.invalid', 'https://user:password@example.invalid']) assert.equal(safeTransferUrl(url), false)
@@ -40,7 +40,7 @@ test('ambiguous save retries identical command and requires confirmed audit plus
   const transport = async value => {
     sent.push(JSON.stringify(value))
     if (sent.length === 1) throw new Error('outcome_unknown')
-    return { targetAuditId: 'synthetic-audit', data: { configuration: { ...fixture(), version: 5 } } }
+    return { targetAuditId: 'synthetic-audit', data: { version: 5, enabled: true, recipient_alias: 'Synthetic recipient', recipient_details: 'Synthetic details', instructions_en: 'Synthetic instructions', instructions_ar: 'تعليمات اختبار', payment_link: 'https://payment.example.invalid/share', qr_image_url: 'https://assets.example.invalid/qr.png', qr_alt_en: 'Synthetic QR', qr_alt_ar: 'رمز اختبار' } }
   }
   await assert.rejects(confirmTransferCommand(request, transport))
   assert.equal((await confirmTransferCommand(request, transport)).version, 5)

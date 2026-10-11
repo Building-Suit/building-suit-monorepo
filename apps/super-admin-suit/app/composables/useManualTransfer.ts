@@ -1,10 +1,10 @@
-import { emptyTransfer, parseTransfer, transferState, transferCommand, confirmTransferCommand } from '../utils/manual-transfer'
+import { emptyTransfer, parseShopTransfer, transferState, transferCommand, confirmTransferCommand } from '../utils/manual-transfer'
 import type { TransferRequest } from '../utils/manual-transfer'
 
 export function useManualTransfer(binding: () => string | undefined, active: () => boolean) {
   const { t } = useI18n()
   const fetch = useRequestFetch()
-  const configuration = ref<ReturnType<typeof parseTransfer>>(null)
+  const configuration = ref<ReturnType<typeof parseShopTransfer>>(null)
   const draft = ref(emptyTransfer())
   const reason = ref('')
   const status = ref('loading')
@@ -17,11 +17,11 @@ export function useManualTransfer(binding: () => string | undefined, active: () 
     status.value = 'loading'
     if (!binding() || !active()) return
     try {
-      const result = await fetch<{ data: { configuration: unknown } }>('/api/adapters/shop', { method: 'POST', body: {
-        bindingId: binding(), operation: 'shop.billing.query', requestId: crypto.randomUUID(), correlationId: crypto.randomUUID(), reason: null, payload: { resource: 'manual-transfer' },
+      const result = await fetch<{ data: unknown }>('/api/adapters/shop', { method: 'POST', body: {
+        bindingId: binding(), operation: 'shop.billing.query', requestId: crypto.randomUUID(), correlationId: crypto.randomUUID(), reason: null, payload: { resource: 'configuration' },
       } })
       if (current !== generation) return
-      configuration.value = parseTransfer(result.data.configuration)
+      configuration.value = parseShopTransfer(result.data)
       status.value = transferState(configuration.value)
     } catch (cause) {
       if (current !== generation) return
@@ -39,7 +39,7 @@ export function useManualTransfer(binding: () => string | undefined, active: () 
     const current = generation
     await action.run(async () => {
       command.value ||= transferCommand(binding()!, draft.value, reason.value, () => crypto.randomUUID())
-      const saved = await confirmTransferCommand(command.value, request => fetch<{ data: { configuration: unknown }; targetAuditId?: string }>('/api/adapters/shop', { method: 'POST', body: request }))
+      const saved = await confirmTransferCommand(command.value, request => fetch<{ data: unknown; targetAuditId?: string }>('/api/adapters/shop', { method: 'POST', body: request }))
       if (current !== generation || !active()) return
       configuration.value = saved
       status.value = transferState(configuration.value)

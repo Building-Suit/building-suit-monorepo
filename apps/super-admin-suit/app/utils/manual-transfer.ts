@@ -43,13 +43,26 @@ export function transferCommand(bindingId: string, configuration: TransferConfig
     || !safeTransferUrl(configuration.paymentLink) || !safeTransferUrl(configuration.qr.assetUrl)
     || (configuration.enabled && transferState(configuration) !== 'configured')) throw new Error('invalid_request')
   return { bindingId, operation: 'shop.billing.command', requestId: uuid(), correlationId: uuid(), reason: reason.trim(),
-    payload: { action: 'configure-manual-transfer', expectedVersion: configuration.version, configuration: JSON.parse(JSON.stringify(configuration)) } }
+    payload: { action: 'configure_instructions', submissionId: null, payload: { expectedVersion: configuration.version, enabled: configuration.enabled, recipientAlias: configuration.recipientAlias, recipientDetails: configuration.recipientDetails, instructionsEn: configuration.instructions.en, instructionsAr: configuration.instructions.ar, paymentLink: configuration.paymentLink, qrImageUrl: configuration.qr.assetUrl, qrAltEn: configuration.qr.alt.en, qrAltAr: configuration.qr.alt.ar } } }
 }
 
-export async function confirmTransferCommand(request: TransferRequest, send: (request: TransferRequest) => Promise<{ data: { configuration: unknown }; targetAuditId?: string }>) {
+export async function confirmTransferCommand(request: TransferRequest, send: (request: TransferRequest) => Promise<{ data: unknown; targetAuditId?: string }>) {
   const result = await send(request)
   if (!result.targetAuditId) throw new Error('outcome_unknown')
-  const configuration = parseTransfer(result.data.configuration)
-  if (!configuration || configuration.version <= Number(request.payload.expectedVersion)) throw new Error('outcome_unknown')
+  const configuration = parseShopTransfer(result.data, true)
+  if (!configuration || configuration.version <= Number((request.payload.payload as Record<string, unknown>).expectedVersion)) throw new Error('outcome_unknown')
   return configuration
+}
+
+/** Project Shop's authoritative database response; require its real persisted version. */
+export function parseShopTransfer(value: unknown, auditSnapshot = false): TransferConfiguration | null {
+ if (value === null) return null
+ const c = value as Record<string, unknown>
+ if (!c || typeof c !== 'object') throw new Error('configuration_unavailable')
+ const get = (camel: string, snake: string) => c[auditSnapshot ? snake : camel]
+ return parseTransfer({ version: c.version, enabled: c.enabled,
+  recipientAlias: get('recipientAlias','recipient_alias') ?? '', recipientDetails: get('recipientDetails','recipient_details'),
+  instructions: { en: get('instructionsEn','instructions_en'), ar: get('instructionsAr','instructions_ar') },
+  paymentLink: get('paymentLink','payment_link') ?? '',
+  qr: { assetUrl: get('qrImageUrl','qr_image_url') ?? '', alt: { en: get('qrAltEn','qr_alt_en'), ar: get('qrAltAr','qr_alt_ar') } } })
 }

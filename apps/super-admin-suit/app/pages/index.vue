@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { ActivityRow, ActivityQuery } from '../utils/activity'
 import type { OfferVersion } from '../utils/custom-offer'
+import Column from 'primevue/column'
+import { approvalBlocked, paymentStatuses } from '../utils/payment-review'
 definePageMeta({ layout: false })
 const { t, locale } = useI18n()
 const { ready, state, pending, actionError, recheck, signIn, signOut } = useAdminSession()
@@ -14,7 +16,7 @@ watch(state, (value) => {
 onMounted(() => {
   // Periodically re-resolve configuration and manifest expiry without a rebuild.
   const timer = setInterval(() => {
-    if (state.value === 'success' && !transferVisible.value && !offerVisible.value && !offerRequest.value && document.visibilityState === 'visible') void registry.refresh()
+    if (state.value === 'success' && !transferVisible.value && !offerVisible.value && !offerRequest.value && !billingVisible.value && !reviewCommand.value && document.visibilityState === 'visible') void registry.refresh()
   }, 30_000)
   onScopeDispose(() => { clearInterval(timer); registry.clear() })
 })
@@ -30,6 +32,10 @@ const { versions: offerVersions, status: offerStatus, draft: offerDraft, reason:
 const { visible: offerVisible, pending: offerPending, dirty: offerDirty, error: offerError } = offers.action
 const offerFields = ['recipientUserId', 'companyId', 'basePlanId', 'templateReference', 'displayName', 'priceAmount', 'currency', 'billingInterval', 'expiresAt'] as const
 const offerColumns = computed(() => [{ key: 'displayName', field: 'displayName' as const, header: t('offers.displayName') }, { key: 'version', field: 'version' as const, header: t('offers.version') }, { key: 'priceAmount', field: 'priceAmount' as const, header: t('offers.priceAmount') }, { key: 'currency', field: 'currency' as const, header: t('offers.currency') }, { key: 'billingInterval', field: 'billingInterval' as const, header: t('offers.billingInterval') }, { key: 'expiresAt', field: 'expiresAt' as const, header: t('offers.expiresAt') }, { key: 'state', field: 'state' as const, header: t('offers.state') }, { key: 'delivery', header: t('offers.delivery') }])
+const billing = usePaymentReview(() => selection.value.item?.bindingId, () => state.value === 'success' && registryState.value === 'success' && selection.value.item?.module === 'payment-review')
+const { queue, status: billingStatus, filter: billingFilter, page: billingPage, selected: payment, draft: reviewDraft, command: reviewCommand, receipt, evidence, evidencePending, evidenceError, action: billingAction } = billing
+const { visible: billingVisible, pending: billingPending, dirty: billingDirty, error: billingError } = billingAction
+const amount = (value: number, currency: string) => new Intl.NumberFormat(locale.value, { style: 'currency', currency }).format(value)
 const email = ref('')
 const password = ref('')
 useHead({ title: () => t('product.name') })
@@ -46,6 +52,56 @@ async function submit() {
       <BsStateSurface state="success" :title="t('auth.authorized')" />
       <BsStateSurface v-if="registryState !== 'success'" :state="registryState" :title="t(`registry.${registryState}`)" :action-label="registryState === 'loading' ? undefined : t('registry.retry')" @action="registry.refresh()" />
       <BsContentSection v-else :title="selection.item ? label(selection.item.label) : label(selection.suit!.label)" :description="label(selection.item?.description || selection.suit!.description)">
+        <div v-if="selection.item?.module === 'payment-review'" class="space-y-4 min-w-0" data-payment-review>
+          <p class="text-sm text-fg-muted">{{ t('billing.manual') }}</p>
+          <BsField for="billing-filter" :label="t('billing.status')" class="max-w-xs">
+            <BsSelect id="billing-filter" v-model="billingFilter" :label="t('billing.status')" :options="[{ label: t('billing.all'), value: '' }, ...paymentStatuses.map(value => ({ label: t(`billing.${value}`), value }))]" option-label="label" option-value="value" @update:model-value="billingPage = 1" />
+          </BsField>
+          <BsStateSurface v-if="billingStatus !== 'success'" :state="billingStatus" :title="t(`billing.${billingStatus}`)" :action-label="billingStatus === 'error' || billingStatus === 'denied' ? t('billing.reload') : undefined" @action="billing.load()" />
+          <BsDataTable v-if="queue" :value="queue.items" :label="t('billing.queue')" lazy paginator :rows="25" :total-records="queue.total" :first="(billingPage - 1) * 25" data-key="id" :capabilities="{ edit: billingStatus === 'success' }" :loading="billingStatus === 'loading'" :action-labels="{ edit: t('billing.review') }" @edit="billing.review" @page="billingPage = $event.page + 1">
+            <Column field="shopName" :header="t('billing.shop')" />
+            <Column field="requestedPlanName" :header="t('billing.terms')" />
+            <Column field="status" :header="t('billing.status')"><template #body="{ data }">{{ t(`billing.${data.status}`) }}</template></Column>
+            <Column field="effectivePriceAmount" :header="t('billing.effectivePrice')"><template #body="{ data }">{{ amount(data.effectivePriceAmount, data.currency) }}</template></Column>
+            <Column field="transferReference" :header="t('billing.transferReference')" />
+          </BsDataTable>
+          <BsButton v-if="reviewCommand && !billingVisible" @click="billingVisible = true">{{ t('billing.retry') }}</BsButton>
+          <div v-if="receipt" role="status" class="space-y-2 break-all" data-payment-receipt>
+            <p class="font-semibold">{{ t('billing.confirmed') }} · {{ t(`billing.${receipt.status}`) }} <span v-if="receipt.replayed">· {{ t('billing.replayed') }}</span></p>
+            <p>{{ t('billing.request') }}: {{ receipt.requestId }} · {{ t('billing.correlation') }}: {{ receipt.correlationId }}</p>
+            <p>{{ t('billing.audit') }}: {{ receipt.targetAuditId }} · {{ t('billing.resultVersion') }}: {{ receipt.targetResultVersion }}</p>
+            <p v-if="receipt.subscriptionId">{{ t('billing.subscription') }}: {{ receipt.subscriptionId }} · {{ t('billing.periodEnd') }}: {{ receipt.periodEnd }}</p>
+            <p v-if="receipt.status === 'approved'">{{ t('billing.commercialPeriod') }}: {{ receipt.commercialPeriodId || t('billing.unavailable') }}</p>
+          </div>
+          <BsRecordActionDialog v-model:visible="billingVisible" :title="t('billing.review')" :submit-disabled="!reviewCommand && (!payment || !['submitted', 'under_review'].includes(payment.status))" :pending="billingPending" :dirty="billingDirty" :error="billingError" :submit-label="reviewCommand ? t('billing.retry') : t('billing.submit')" @submit="billing.save()">
+            <div v-if="payment" class="space-y-4 min-w-0 break-words" data-payment-detail>
+              <p class="font-semibold">{{ payment.shopName }} · {{ payment.requestedPlanName }}</p>
+              <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                <div><dt class="text-fg-muted">{{ t('billing.terms') }}</dt><dd>{{ payment.requestedPlanSlug }} · {{ payment.privateOfferId || t('billing.offerIdentityUnavailable') }}</dd></div>
+                <div><dt class="text-fg-muted">{{ t('billing.interval') }}</dt><dd>{{ payment.billingInterval }}</dd></div>
+                <div><dt class="text-fg-muted">{{ t('billing.listPrice') }}</dt><dd>{{ amount(payment.listPriceAmount, payment.currency) }}</dd></div>
+                <div><dt class="text-fg-muted">{{ t('billing.effectivePrice') }}</dt><dd>{{ amount(payment.effectivePriceAmount, payment.currency) }} · {{ payment.priceSource }}</dd></div>
+                <div><dt class="text-fg-muted">{{ t('billing.paidAmount') }}</dt><dd>{{ amount(payment.paidAmount, payment.currency) }}</dd></div>
+                <div><dt class="text-fg-muted">{{ t('billing.transferReference') }}</dt><dd>{{ payment.transferReference }} · {{ payment.transferDate }}</dd></div>
+              </dl>
+              <div><h3 class="font-semibold">{{ t('billing.limits') }}</h3><p v-if="!payment.resourceLimits">{{ t('billing.missingTerms') }}</p><dl v-else class="text-sm"><div v-for="(limit, resource) in payment.resourceLimits" :key="resource"><dt>{{ resource }}</dt><dd>{{ limit === null ? t('billing.unlimited') : limit }}</dd></div></dl></div>
+              <div><h3 class="font-semibold">{{ t('billing.blockers') }}</h3><p v-if="!payment.usageBlockers.length">{{ t('billing.noBlockers') }}</p><ul v-else><li v-for="blocker in payment.usageBlockers" :key="blocker.resource">{{ blocker.resource }}: {{ blocker.usage }} / {{ blocker.limit }}</li></ul></div>
+              <div><h3 class="font-semibold">{{ t('billing.evidence') }}</h3><p v-if="payment.evidence === null">{{ t('billing.evidenceUnavailable') }}</p><p v-else-if="!payment.evidence.length">{{ t('billing.noEvidence') }}</p><div v-for="file in payment.evidence || []" :key="file.id" class="space-y-2"><p>{{ file.originalFileName }} · {{ file.mimeType }} · {{ file.sizeBytes }} {{ t('billing.bytes') }}</p><p class="text-xs break-all">SHA-256: {{ file.sha256 }}</p><BsButton :disabled="evidencePending" @click="billing.openEvidence(file.id)">{{ t('billing.openEvidence') }}</BsButton><a v-if="evidence?.id === file.id" :href="evidence.signedUrl" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer" class="block underline">{{ t('billing.evidenceLink') }}</a></div><p v-if="evidenceError" role="alert">{{ t('billing.evidenceError') }}</p></div>
+              <fieldset :disabled="!!reviewCommand || !['submitted', 'under_review'].includes(payment.status)" class="space-y-4 border-0 p-0 m-0">
+                <BsField for="billing-action" :label="t('billing.action')" required><BsSelect id="billing-action" v-model="reviewDraft.action" :label="t('billing.action')" :options="[{ label: t('billing.markReview'), value: 'mark_under_review', disabled: payment.status !== 'submitted' }, { label: t('billing.reject'), value: 'reject' }, { label: t('billing.approve'), value: 'approve', disabled: approvalBlocked(payment) }]" option-label="label" option-value="value" option-disabled="disabled" /></BsField>
+                <p v-if="approvalBlocked(payment)" role="status">{{ t('billing.approvalBlocked') }}</p>
+                <BsField for="billing-reason" :label="t('billing.reason')" required><BsTextarea id="billing-reason" v-model="reviewDraft.reason" :maxlength="1000" /></BsField>
+                <template v-if="reviewDraft.action === 'approve'">
+                  <BsField for="billing-verified" :label="t('billing.externalVerification')" required><BsSelect id="billing-verified" :model-value="reviewDraft.externallyVerified ? 1 : 0" :label="t('billing.externalVerification')" :options="[{ label: t('billing.unverified'), value: 0 }, { label: t('billing.verified'), value: 1 }]" option-label="label" option-value="value" @update:model-value="reviewDraft.externallyVerified = $event === 1" /></BsField>
+                  <BsField for="billing-amount" :label="t('billing.receivedAmount')" required><BsInput id="billing-amount" v-model="reviewDraft.receivedAmount" inputmode="decimal" dir="ltr" /></BsField>
+                  <BsField for="billing-reference" :label="t('billing.receivedReference')" required><BsInput id="billing-reference" v-model="reviewDraft.receivedReference" :maxlength="200" /></BsField>
+                  <BsField for="billing-date" :label="t('billing.receivedDate')" required><BsInput id="billing-date" v-model="reviewDraft.receivedDate" type="date" dir="ltr" /></BsField>
+                  <BsField for="billing-override" :label="t('billing.overrideReason')"><BsTextarea id="billing-override" v-model="reviewDraft.amountOverrideReason" :maxlength="1000" /></BsField>
+                </template>
+              </fieldset>
+            </div>
+          </BsRecordActionDialog>
+        </div>
         <BsStack v-if="selection.item?.module === 'activity'" data-activity>
           <BsText size="sm" tone="muted">{{ t('activity.partial') }}</BsText>
           <BsForm layout="grid" :columns="3" @submit="activity.apply()">
