@@ -136,15 +136,20 @@
       "components": [
         "BsTeamTable",
         "BsInviteMemberDialog",
-        "BsRolePicker"
+        "BsRolePicker",
+        "BsAccessTabs",
+        "BsPermissionMatrix",
+        "BsRoleEditorDialog",
+        "BsMemberEditorDialog",
+        "BsInvitationTable"
       ],
-      "adapterBoundary": "typed table columns, member state, roles, capacity notice and authorized commands",
+      "adapterBoundary": "Translated descriptors, permission membership, role options, invitation action eligibility, tenant-scoped queries and authorized commands remain product-owned",
       "auditSources": [
         "apps/ledger-suit/app/pages/team.vue",
         "apps/shop-suit/app/pages/team.vue"
       ],
-      "task": "BS-UI-ZN-PATTERNS-001",
-      "migrationStatus": "shared-owner-available; product migration remains open"
+      "task": "BS-LAUNCH-ACCESS-UI-001",
+      "migrationStatus": "Ledger access tabs/matrix/role editor and Ledger/Shop invitation/member editor consumers migrated"
     },
     {
       "family": "review-detail",

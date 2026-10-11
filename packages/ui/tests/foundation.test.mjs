@@ -556,3 +556,43 @@ test('administration shell renders caller-owned selection, disabled items and st
   assert.match(loading, /Pending registry/)
   assert.doesNotMatch(loading, /Caller A|Caller action/)
 })
+
+test('access invitation actions forward the original row and lock during pending commands', async () => {
+  const row = { id: 'invitation-1', email: 'member@example.test' }
+  const intents = []
+  const controls = []
+  const app = vue.createSSRApp({ render: () => vue.h(component('organisms/BsInvitationTable.vue'), {
+    invitations: [row], rowKey: 'id', label: 'Invitations', columns: [{ key: 'email', header: 'Email' }, { key: 'actions', header: 'Actions' }],
+    actionsKey: 'actions', pending: true, actions: item => item === row ? [{ key: 'revoke', label: 'Revoke', tone: 'secondary' }] : [],
+    onAction: (key, item) => intents.push({ key, item }),
+  }, { 'cell-email': ({ row: item }) => vue.h('span', item.email) }) })
+  app.component('BsDataTable', { props: ['value'], setup(props, { slots }) { return () => vue.h('section', props.value.flatMap(item => [slots['cell-email']?.({ row: item }), slots['cell-actions']?.({ row: item })])) } })
+  app.component('BsButton', { setup(_, { attrs, slots }) { controls.push(attrs); return () => vue.h('button', attrs, slots.default?.()) } })
+  const html = await renderToString(app)
+  assert.match(html, /member@example.test/)
+  assert.match(html, /disabled/)
+  assert.equal(controls.length, 1)
+  assert.equal(controls[0].variant, 'secondary')
+  controls[0].onClick()
+  assert.equal(intents[0].key, 'revoke')
+  assert.equal(intents[0].item, row)
+})
+
+test('permission editor preserves controlled selection, translated groups and toggle intent', async () => {
+  const toggles = []
+  const controls = []
+  const items = [{ key: 'read', label: 'قراءة الأعضاء', section: 'workspace', sectionLabel: 'مساحة العمل' }]
+  const app = vue.createSSRApp({ render: () => vue.h(component('organisms/BsPermissionMatrix.vue'), {
+    items, label: 'الصلاحية', editable: true, selected: ['read'], disabled: true,
+    onToggle: (key, checked) => toggles.push({ key, checked }),
+  }) })
+  app.component('BsDataTable', { props: ['value', 'columns'], setup(props, { slots }) { return () => vue.h('section', [vue.h('h2', props.columns[0].header), slots.groupheader?.({ data: props.value[0] }), slots['cell-permission']?.({ row: props.value[0] })]) } })
+  for (const name of ['BsBox', 'BsFieldLabel', 'BsText']) app.component(name, { setup(_, { slots }) { return () => vue.h('span', slots.default?.()) } })
+  app.component('BsCheckbox', { setup(_, { attrs }) { controls.push(attrs); return () => vue.h('input', { type: 'checkbox', checked: attrs.checked, disabled: attrs.disabled }) } })
+  const html = await renderToString(app)
+  assert.match(html, /قراءة الأعضاء/)
+  assert.match(html, /مساحة العمل/)
+  assert.match(html, /checked disabled/)
+  controls[0].onNativeChange({ target: { checked: false } })
+  assert.deepEqual(toggles, [{ key: 'read', checked: false }])
+})

@@ -9,7 +9,7 @@ const account = (index: number) => ({ organization_id: organizationId, account_i
   entry_count: 1, is_archived: false, is_liquid: true })
 
 /** Only browser-intercepted local responses. No backend or financial write is executed. */
-export async function ledgerFoundationFixture(page: Page, catalog: unknown[]) {
+export async function ledgerFoundationFixture(page: Page, catalog: unknown[], access = false) {
   const calls: Array<{ name: string; args: Record<string, unknown> }> = []
   const user = { id: '00000000-0000-4000-8000-000000000001', email: 'foundation@example.test', aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {} }
   const token = `${Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url')}.${Buffer.from(JSON.stringify({ sub: user.id, role: 'authenticated', exp: Math.floor(Date.now() / 1000) + 3600 })).toString('base64url')}.mock`
@@ -25,11 +25,11 @@ export async function ledgerFoundationFixture(page: Page, catalog: unknown[]) {
     calls.push({ name, args })
     let data: unknown = []
     switch (name) {
-      case 'organization_members': data = [{ role: 'owner', role_id: null, organizations: { id: organizationId, name: 'Foundation ledger', legal_name: 'Foundation Ltd', slug: 'foundation', base_currency: 'EGP', timezone: 'Africa/Cairo', status: 'active' } }]; break
+      case 'organization_members': if (access && !url.searchParams.get('select')?.includes('organizations')) { data = [{ id: 'member-1', user_id: 'other-user', role: 'viewer', role_id: null, status: 'active', granted_capabilities: [], revoked_capabilities: [], joined_at: '2026-10-01', profile: { email: 'member@example.test', full_name: 'Foundation member', job_title: 'Operator' } }]; break } data = [{ role: 'owner', role_id: null, organizations: { id: organizationId, name: 'Foundation ledger', legal_name: 'Foundation Ltd', slug: 'foundation', base_currency: 'EGP', timezone: 'Africa/Cairo', status: 'active' } }]; break
       case 'subscription_plan_catalog': data = catalog; break
       case 'profiles': data = { full_name: 'Foundation owner' }; break
       // Account activity requires report access as well as account/transaction access.
-      case 'my_capabilities': data = ['accounts.read', 'accounts.create', 'accounts.update', 'reports.read', 'transactions.read', 'transactions.create', 'billing.read', 'billing.manage']; break
+      case 'my_capabilities': data = [...(access ? ['members.read', 'members.update', 'members.invite', 'members.remove'] : []), 'accounts.read', 'accounts.create', 'accounts.update', 'reports.read', 'transactions.read', 'transactions.create', 'billing.read', 'billing.manage']; break
       case 'subscription_access_state': data = 'active'; break
       case 'subscriptions': data = { status: 'active', billing_interval: 'monthly', current_period_end: '2099-01-01', cancel_at_period_end: false }; break
       case 'subscription_usage_summary': data = [{ plan_key: 'starter', subscription_status: 'active', writes_allowed: true, quota_key: 'max_accounts', used_value: 26, limit_value: 100, remaining_value: 74, is_unlimited: false, is_at_limit: false, is_over_limit: false }]; break
@@ -40,6 +40,9 @@ export async function ledgerFoundationFixture(page: Page, catalog: unknown[]) {
       case 'search_transactions': data = [{ id: 'transaction-1', organization_id: organizationId, description: 'Foundation receipt', transaction_date: '2026-10-01', type: 'income', status: 'posted', amount_minor: 1000, currency_code: 'EGP', total_count: 1 }]; break
       case 'dashboard_summary': data = { base_currency: 'EGP', total_assets_minor: 1000, total_liabilities_minor: 0, net_worth_minor: 1000, cash_and_bank_minor: 1000, accounts_receivable_minor: 0, accounts_payable_minor: 0, revenue_this_month_minor: 1000, expenses_this_month_minor: 0, net_profit_this_month_minor: 1000, revenue_previous_month_minor: 0, expenses_previous_month_minor: 0, net_profit_previous_month_minor: 0 }; break
       case 'plan_has_feature': data = false; break
+      case 'organization_invitations': data = access ? [{ id: 'invite-1', email: 'invite@example.test', role: 'viewer', role_id: null, status: 'pending', created_at: '2026-10-01', expires_at: '2026-10-08', inviter: { full_name: 'Foundation owner', job_title: null } }] : []; break
+      case 'capabilities': data = access ? [{ key: 'organization.read', domain: 'organization', description: 'Read workspace', description_ar: 'قراءة مساحة العمل' }, { key: 'members.read', domain: 'members', description: 'Read members', description_ar: 'قراءة الأعضاء' }] : []; break
+      case 'role_capabilities': data = access ? [{ role: 'viewer', role_id: null, capability_key: 'organization.read' }] : []; break
       case 'currencies': data = [{ code: 'EGP', name: 'Egyptian pound' }]; break
     }
     await route.fulfill({ json: data })

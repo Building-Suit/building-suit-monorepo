@@ -384,6 +384,23 @@ async function resendInvitation(invitation: InvitationRow) {
   finally { saving.value = false }
 }
 const permissionRows = computed(() => permissionMenuGroups.value.flatMap(group => group.domains.flatMap(domain => domain.items.map(capability => ({ capability, groupKey: group.key, domainKey: domain.key, section: `${group.key}.${domain.key}` })))))
+const sharedPermissions = computed(() => permissionRows.value.map(row => ({ key: row.capability.key, label: capabilityTitle(row.capability), section: row.section, sectionLabel: `${t(`nav.groups.${row.groupKey}`)} / ${t(`access.permissionAreas.${row.domainKey}`)}` })))
+const sharedRoles = computed(() => [...roles.map(role => ({ key: role, label: t(`org.roles.${role}`) })), ...customRoles.value.map(role => ({ key: role.id, label: roleLabel(null, role.id) }))])
+const memberRoleOptions = computed(() => [
+  ...assignableRoles.value.map(role => ({ value: `system:${role}`, label: t(`org.roles.${role}`), description: `${rolePermissionCount(role)} / ${capabilities.value.length} ${t('access.permissionsMatrix').toLocaleLowerCase()}` })),
+  ...customRoles.value.map(role => ({ value: `custom:${role.id}`, label: roleLabel(null, role.id), description: `${customPermissionCount(role.id)} / ${capabilities.value.length} ${t('access.permissionsMatrix').toLocaleLowerCase()}` })),
+])
+function matrixGranted(role: string, key: string) {
+  return roles.includes(role as Role) ? hasRolePermission(role as Role, key) : customCapabilitiesFor(role).has(key)
+}
+function invitationActions(invitation: InvitationRow) {
+  if (invitation.status !== 'pending') return []
+  return [ ...(can('members.invite') ? [{ key: 'resend', label: t('access.resend') }] : []), ...(can('members.update') ? [{ key: 'revoke', label: t('access.revoke') }] : []) ]
+}
+function invitationAction(key: string, invitation: InvitationRow) {
+  if (key === 'resend') return resendInvitation(invitation)
+  if (key === 'revoke') return revokeInvitation(invitation)
+}
 const { dirty: overlayDirty0 } = useRecordAction(() => ({ role: editRoleChoice.value, status: editStatus.value }), computed(() => Boolean(editingMember.value)))
 const { dirty: overlayDirty2 } = useRecordAction(() => roleForm.value, computed(() => Boolean(roleModalOpen.value)))
 const ledgerUsage = useLedgerUsagePresentation()
@@ -403,11 +420,7 @@ const ledgerUsage = useLedgerUsagePresentation()
         <BsButton v-if="can('members.invite')" type="button" variant="primary" @click="showInvitation"><BsIcon name="add" :size="18" /> {{ t('org.invite') }}</BsButton>
       </BsInline>
     </BsInline>
-    <BsCard role="tablist" :aria-label="t('access.title')" as="div" padding="sm">
-      <BsStack gap="xs">
-        <BsButton v-for="tab in tabs" :key="tab.key" variant="tab" type="button" role="tab" :aria-selected="activeTab === tab.key" @click="activeTab = tab.key">{{ tab.label }} <BsText v-if="tab.count !== undefined" as="span">{{ tab.count }}</BsText></BsButton>
-      </BsStack>
-    </BsCard>
+    <BsAccessTabs :model-value="activeTab" :tabs="tabs" :label="t('access.title')" @update:model-value="activeTab = $event as Tab" />
     <BsSectionSkeleton v-if="loading" variant="table" :rows="6" />
     <BsText v-else-if="errorMessage && !editingMember && !matrixOpen && !roleModalOpen" role="alert" tone="danger">{{ errorMessage }}</BsText>
     <template v-else-if="activeTab === 'members'">
@@ -419,8 +432,8 @@ const ledgerUsage = useLedgerUsagePresentation()
         </BsFieldLabel>
       </BsInline>
       <BsCard v-if="visibleMembers.length" as="div" padding="none">
-        <BsDataTable
-          :value="visibleMembers"
+        <BsTeamTable
+          :members="visibleMembers" :label="t('access.members')"
           row-key="id"
           :columns="[{ key: 'column1', header: (t('access.name')) }, { key: 'column2', header: (t('access.role')) }, { key: 'column3', header: (t('access.status')) }, { key: 'column4', header: (t('access.joined')) }, { key: 'column5', header: (t('access.actions')), align: 'end' as const }]"
         >
@@ -452,7 +465,7 @@ const ledgerUsage = useLedgerUsagePresentation()
             <BsButton v-if="can('members.update') && member.role !== 'owner' && member.user_id !== user?.id" type="button" size="sm" @click="quickStatus(member)">{{ t(member.status === 'active' ? 'access.suspend' : 'access.reactivate') }}</BsButton>
             <BsButton v-if="can('members.remove') && member.role !== 'owner' && member.user_id !== user?.id" type="button" size="sm" @click="removeMember(member)">{{ t('access.remove') }}</BsButton>
           </template>
-        </BsDataTable>
+        </BsTeamTable>
       </BsCard>
       <BsEmptyState v-else :title="t('access.noMembers')" />
     </template>
@@ -492,8 +505,8 @@ const ledgerUsage = useLedgerUsagePresentation()
     <template v-else>
       <BsText size="sm" tone="muted" emphasis="semibold">{{ t('access.invitationCount', invitations.length) }}</BsText>
       <BsCard v-if="invitations.length" as="div" padding="none">
-        <BsDataTable
-          :value="invitations"
+        <BsInvitationTable
+          :invitations="invitations" :label="t('access.invitations')" actions-key="column7" :actions="invitationActions" :pending="saving" @action="invitationAction"
           row-key="id"
           :columns="[{ key: 'column1', header: (t('auth.email')) }, { key: 'column2', header: (t('access.role')) }, { key: 'column3', header: (t('access.status')) }, { key: 'column4', header: (t('access.invitedBy')) }, { key: 'column5', header: (t('access.sent')) }, { key: 'column6', header: (t('access.expires')) }, { key: 'column7', header: (t('access.actions')), align: 'end' as const }]"
         >
@@ -517,13 +530,8 @@ const ledgerUsage = useLedgerUsagePresentation()
           <template #header-column6>{{ t('access.expires') }}</template>
           <template #cell-column6="{ row: invitation }">{{ formatDate(invitation.expires_at) }}</template>
           <template #header-column7>{{ t('access.actions') }}</template>
-          <template #cell-column7="{ row: invitation }">
-            <template v-if="invitation.status === 'pending'">
-              <BsButton v-if="can('members.invite')" type="button" :disabled="saving" size="sm" @click="resendInvitation(invitation)">{{ t('access.resend') }}</BsButton>
-              <BsButton v-if="can('members.update')" type="button" :disabled="saving" size="sm" @click="revokeInvitation(invitation)">{{ t('access.revoke') }}</BsButton>
-            </template>
-          </template>
-        </BsDataTable>
+
+        </BsInvitationTable>
       </BsCard>
       <BsEmptyState v-else :title="t('access.noInvitations')" />
     </template>
@@ -567,11 +575,11 @@ const ledgerUsage = useLedgerUsagePresentation()
       </template>
     </BsWorkflowScope>
     <!-- Edit access: role menu only -->
-    <BsRecordActionDialog
+    <BsMemberEditorDialog
       v-if="editingMember"
       :visible="true"
       :title="t('access.editAccessFor', { name: editingMember.profile?.full_name || editingMember.profile?.email })"
-      size="lg"
+      size="lg" v-model:role="editRoleChoice" :role-label="t('access.role')" :roles="memberRoleOptions"
       :dirty="overlayDirty0"
       :pending="saving"
       :error="errorMessage"
@@ -580,27 +588,8 @@ const ledgerUsage = useLedgerUsagePresentation()
       @update:visible="(value: boolean) => { if (!value) editingMember = null }"
       @submit="saveMember"
     >
-      <BsText dir="ltr" size="sm" tone="muted">{{ editingMember.profile?.email }}</BsText>
-      <BsFieldGroup>
-        <template #legend>{{ t('access.role') }}</template>
-        <BsGrid :columns="1" gap="sm">
-          <BsFieldLabel v-for="role in assignableRoles" :key="role">
-            <BsInline as="span" gap="md" :wrap="false">
-              <BsRadio v-model="editRoleChoice" name="edit-member-role" :value="`system:${role}`" bare />
-              <BsText as="span" emphasis="bold">{{ t(`org.roles.${role}`) }}</BsText>
-            </BsInline>
-            <BsText as="span" size="xs" tone="muted">{{ rolePermissionCount(role) }} / {{ capabilities.length }} {{ t('access.permissionsMatrix').toLocaleLowerCase() }}</BsText>
-          </BsFieldLabel>
-          <BsFieldLabel v-for="role in customRoles" :key="role.id">
-            <BsInline as="span" gap="md" :wrap="false">
-              <BsRadio v-model="editRoleChoice" name="edit-member-role" :value="`custom:${role.id}`" bare />
-              <BsText as="span" emphasis="bold">{{ roleLabel(null, role.id) }}</BsText>
-            </BsInline>
-            <BsText as="span" size="xs" tone="muted">{{ customPermissionCount(role.id) }} / {{ capabilities.length }} {{ t('access.permissionsMatrix').toLocaleLowerCase() }}</BsText>
-          </BsFieldLabel>
-        </BsGrid>
-      </BsFieldGroup>
-    </BsRecordActionDialog>
+      <template #identity><BsText dir="ltr" size="sm" tone="muted">{{ editingMember.profile?.email }}</BsText></template>
+    </BsMemberEditorDialog>
     <!-- Permission matrix -->
     <BsDialog
       v-if="matrixOpen"
@@ -624,37 +613,17 @@ const ledgerUsage = useLedgerUsagePresentation()
             </BsButton>
           </BsInline>
           <BsBox>
-            <BsDataTable
-              :value="permissionRows"
-              row-group-mode="subheader"
-              group-rows-by="section"
-              :columns="[{ key: 'column1', header: t('access.permission') }, ...(roles ?? []).map((role) => ({ key: role, header: t(`org.roles.${role}`), align: 'center' as const })), ...(customRoles ?? []).map((role) => ({ key: role.id, header: roleLabel(null, role.id), align: 'center' as const }))]"
-            >
-              <template #cell-column1="{ row }">
-                <BsText emphasis="semibold">{{ capabilityTitle(row.capability) }}</BsText>
-              </template>
-              <template v-for="role in roles" :key="role" #[`cell-${role}`]="{ row }">
-                <BsIcon v-if="hasRolePermission(role, row.capability.key)" name="check" :size="18" />
-                <BsText v-else as="span" tone="muted">—</BsText>
-              </template>
-              <template v-for="role in customRoles" :key="role.id" #[`cell-${role.id}`]="{ row }">
-                <BsIcon v-if="customCapabilitiesFor(role.id).has(row.capability.key)" name="check" :size="18" />
-                <BsText v-else as="span" tone="muted">—</BsText>
-              </template>
-              <template #groupheader="{ data: row }">
-                <BsBox surface="muted">{{ t(`nav.groups.${row.groupKey}`) }} / {{ t(`access.permissionAreas.${row.domainKey}`) }}</BsBox>
-              </template>
-            </BsDataTable>
+            <BsPermissionMatrix :items="sharedPermissions" :roles="sharedRoles" :label="t('access.permission')" :granted="matrixGranted" />
           </BsBox>
         </BsBox>
       </template>
     </BsDialog>
     <!-- Create / edit custom role -->
-    <BsRecordActionDialog
+    <BsRoleEditorDialog
       v-if="roleModalOpen"
       :visible="true"
       :title="roleForm.systemRole ? t('access.editRoleFor', { role: t(`org.roles.${roleForm.systemRole}`) }) : roleForm.id ? t('access.editRole') : t('access.newRole')"
-      size="lg"
+      :items="sharedPermissions" :selected="[...roleForm.caps]" :permission-label="t('access.permission')" @toggle="toggleRoleCap"
       :dirty="overlayDirty2"
       :pending="roleSaving"
       :error="errorMessage"
@@ -676,24 +645,7 @@ const ledgerUsage = useLedgerUsagePresentation()
           <BsInput v-model="roleForm.name_ar" type="text" dir="rtl" required maxlength="80" />
         </BsFloatingField>
       </BsGrid>
-      <BsBox>
-        <BsDataTable :value="permissionRows" row-group-mode="subheader" group-rows-by="section" :columns="[{ key: 'column1', header: t('access.permission') }]">
-          <template #cell-column1="{ row }">
-            <BsFieldLabel>
-              <BsCheckbox
-                :checked="roleForm.caps.has(row.capability.key)"
-                bare
-                @native-change="toggleRoleCap(row.capability.key, ($event.target as HTMLInputElement).checked)"
-              />
-              <BsText as="span" emphasis="semibold">{{ capabilityTitle(row.capability) }}</BsText>
-            </BsFieldLabel>
-          </template>
-          <template #groupheader="{ data: row }">
-            <BsBox surface="muted">{{ t(`nav.groups.${row.groupKey}`) }} / {{ t(`access.permissionAreas.${row.domainKey}`) }}</BsBox>
-          </template>
-        </BsDataTable>
-      </BsBox>
-    </BsRecordActionDialog>
+    </BsRoleEditorDialog>
   </BsStack>
 </template>
 

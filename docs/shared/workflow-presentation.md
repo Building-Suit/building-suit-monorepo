@@ -47,3 +47,26 @@ The documentation `/components` page includes the bilingual `WorkflowPatternCata
 Run the task's full local verification plan: `node tooling/checks/suit-template-boundaries.mjs`, `pnpm check`, `pnpm typecheck`, `pnpm lint`, `node --test packages/ui/tests/*.test.mjs packages/ux/tests/*.test.mjs`, and the docs, Ledger and Shop builds. Render the catalogue at desktop/mobile in English/light and Arabic/dark, inspect keyboard focus and the state controls, and verify print actions are hidden under print media. Report actual results separately; these instructions are not a passing verification record.
 
 Charts may supply `pointLabel` for the first table column and a separate `tableSeries` list for additional table-only values. Ledger uses this to retain net amounts in the accessible table while plotting only revenue and expenses. All values and formatting remain product inputs.
+
+## Access-management catalogue (BS-LAUNCH-ACCESS-UI-001)
+
+| Shared component | Inputs and intent | Consumers |
+|---|---|---|
+| BsAccessTabs | controlled tab key, translated labels/counts, disabled state | Ledger Team |
+| BsTeamTable | typed product rows/columns, cell slots and table states | Ledger and Shop Team |
+| BsInvitationTable | typed rows/columns, action-column key, product-supplied eligible actions; emits action key and original row | Ledger and Shop Team |
+| BsPermissionMatrix | translated flat permission rows with stable section IDs, role headings and product-supplied membership callback; editable selection emits key/checked | Ledger matrix and role editor |
+| BsRoleEditorDialog | permission selection plus product name/quota fields in the default slot | Ledger system/custom role editor |
+| BsMemberEditorDialog | identity/role/extra-field slots or translated radio role choices; controlled role and visibility | Ledger and Shop member editors |
+
+Permission and invitation descriptors are exported from `@building-suit/ux`. The shared owners never infer role authority, pending invitation eligibility, tenant context or permission membership. Products retain all queries, capability mappings, quota calculations, confirmations and commands. Dialogs delegate pending, dirty-close protection, keyboard focus and error feedback to `BsRecordActionDialog`; no new overlay policy is introduced. Permission rows must be ordered by section for table grouping; role keys must be unique and must not use the reserved `permission` column key.
+
+The extraction preserves Ledger's tab counts, member search, role permission counts, system/custom choices and resend/revoke rules. Shop retains its location assignments, ownership transfer and fixed-role permissions. The shared invitation action buttons lock while a command is pending. The role-editor checkboxes and default member role radios lock while saving.
+
+Local verification for this extraction (2026-10-06): the full shared foundation/UX export tests, Ledger and Shop migration regressions, `pnpm typecheck`, `pnpm check`, and changed shared-source ESLint checks passed. The initial docs typecheck failed on a missing generated index; `pnpm docs:generate` resolved it. Ledger's migration helper now accepts an absent app-local component directory, as required by strict ownership.
+
+Browser commands were attempted with one worker and no retries: Ledger/Shop `tests/e2e/shared-ui-foundation.spec.ts` (each repeated twice), and the shared `packages/testing/e2e/shared-ui.spec.ts` suite. They could not start their local web servers in the sandbox; a direct localhost listen probe failed with `EPERM`. No screenshots or rendered UI acceptance are claimed. The new Ledger access scenario is registered by Playwright and remains to be executed in an environment permitting localhost servers. It covers member role/dirty handling, permission matrix/editing, invitation revocation and desktop light English/narrow dark Arabic captures.
+
+The catalogue inventory above and ownership manifest are updated within approved task paths. Live documentation-app catalogue integration is pending scope authorization because `apps/building-suit-docs` is excluded from this task's allowed paths. No hosted database or product authorization contract changed.
+
+The final Ledger and Shop production builds and documentation catalogue build exited successfully. Remaining acceptance blockers are localhost browser execution and live catalogue scope authorization; the worktree is uncommitted for control-plane publication.
