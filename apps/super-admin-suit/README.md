@@ -222,3 +222,44 @@ configuration rejection are independently covered in
 `supabase/tests/shop_adapter_dispatch.sql`. Actual authenticated Shop round trips
 require provisioned disposable databases and verified matching integration
 configuration. No hosted setup is implied by these local checks.
+
+## Manual transfer control (SAS-M1-INSTAPAY-001)
+
+The reviewed `manual-transfer` navigation module composes the shared settings
+form and record dialog in the existing page. Provision navigation through the
+existing audited configuration command, with empty route descriptor, owner
+visibility and required capability `shop.billing.query` version `1.0`. No rows
+or payment values are seeded. Its binding is projected only when exactly one
+active binding in the operator's environment passes the dispatcher's policy,
+manifest, signing and environment checks for both billing query and command.
+
+The control reads `shop.billing.query` with `{resource: "manual-transfer"}` and
+expects `data.configuration` to be null or the versioned presentation record:
+`{version, enabled, recipientAlias, recipientDetails, instructions: {en, ar},
+paymentLink, qr: {assetUrl, alt: {en, ar}}}`. Payment and QR URLs must use HTTPS
+without embedded credentials. Missing, incomplete or disabled records expose no
+payment preview. The form has no invented recipient, enablement or instructions.
+InstaPay is presented as a manual transfer channel, with manual payment review.
+
+Writes use `shop.billing.command` with `{action: "configure-manual-transfer",
+expectedVersion, configuration}` and an operator reason. An unconfirmed save
+retains identical request/correlation IDs and payload for retry; its fields are
+locked until closed. Signed success must contain `targetAuditId`,
+`targetResultVersion` and `data: {configuration, before, after}`. The migration
+requires a closed presentation evidence schema, matching submitted values,
+expected before version and exactly the next after version. It records actor,
+reason, Suit/environment, binding, request/correlation IDs and safe before/after
+in the immutable Admin audit, linked to the Shop audit. Unsigned/invalid/missing
+evidence remains an unknown outcome.
+
+**Target integration gate:** The inherited published Shop adapter contract does
+not declare this manual-transfer resource/action. These are the explicit
+Super Admin side contract for this control, not evidence of an implemented Shop
+handler. The target-owned bridge must implement or confirm these bounded
+contracts using Shop's configuration/audit authority and runtime Shop consumer.
+No target internals, migrations, hosted databases or commercial state machines
+were changed here. Real cross-project persistence and Shop runtime consumption
+remain unverified until that target contract is available.
+
+Task verification and execution limitations are recorded in
+[tests/instapay-verification.md](tests/instapay-verification.md).

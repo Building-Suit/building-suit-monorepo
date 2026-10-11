@@ -30,5 +30,31 @@
     "error": "Unable to load Suit configuration.",
     "retry": "Reload configuration",
     "pending": "Adapter operations are not available in this workspace."
+  },
+  "transfer": {
+    "manual": "Manual transfer configuration. Payment confirmation remains a manual review; this channel does not verify bank transfers.",
+    "configured": "Manual transfer configured",
+    "empty": "No manual-transfer configuration",
+    "disabled": "Manual transfer disabled",
+    "incomplete": "Configuration incomplete; payment instructions are unavailable",
+    "loading": "Loading manual-transfer configuration…",
+    "error": "Unable to read configuration",
+    "denied": "Configuration access denied",
+    "edit": "Edit manual transfer",
+    "save": "Save configuration",
+    "retrySave": "Retry exact request",
+    "saveError": "Save was not confirmed. Retry the same request to resolve its outcome; close and reload before making another change.",
+    "enabled": "Channel state",
+    "on": "Enabled",
+    "off": "Disabled",
+    "alias": "Recipient alias",
+    "details": "Recipient details",
+    "instructionsen": "Instructions · English",
+    "instructionsar": "Instructions · Arabic",
+    "link": "Payment / share link",
+    "qrAsset": "QR asset URL",
+    "alten": "QR description · English",
+    "altar": "QR description · Arabic",
+    "reason": "Reason for change"
   }
 }

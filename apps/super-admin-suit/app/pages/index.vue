@@ -1,6 +1,6 @@
 <script setup lang="ts">
 definePageMeta({ layout: false })
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const { ready, state, pending, actionError, recheck, signIn, signOut } = useAdminSession()
 await ready
 const { registry, selection, state: registryState, label } = useAdminRegistry()
@@ -12,10 +12,13 @@ watch(state, (value) => {
 onMounted(() => {
   // Periodically re-resolve configuration and manifest expiry without a rebuild.
   const timer = setInterval(() => {
-    if (state.value === 'success' && document.visibilityState === 'visible') void registry.refresh()
+    if (state.value === 'success' && !transferVisible.value && document.visibilityState === 'visible') void registry.refresh()
   }, 30_000)
   onScopeDispose(() => { clearInterval(timer); registry.clear() })
 })
+const transfer = useManualTransfer(() => selection.value.item?.bindingId, () => state.value === 'success' && registryState.value === 'success' && selection.value.item?.module === 'manual-transfer')
+const { configuration, draft, reason, status: transferStatus, command, action: transferAction } = transfer
+const { visible: transferVisible, pending: transferPending, dirty: transferDirty, error: transferError } = transferAction
 const email = ref('')
 const password = ref('')
 useHead({ title: () => t('product.name') })
@@ -32,6 +35,35 @@ async function submit() {
       <BsStateSurface state="success" :title="t('auth.authorized')" />
       <BsStateSurface v-if="registryState !== 'success'" :state="registryState" :title="t(`registry.${registryState}`)" :action-label="registryState === 'loading' ? undefined : t('registry.retry')" @action="registry.refresh()" />
       <BsContentSection v-else :title="selection.item ? label(selection.item.label) : label(selection.suit!.label)" :description="label(selection.item?.description || selection.suit!.description)">
+        <BsStack v-if="selection.item?.module === 'manual-transfer'" gap="lg" data-transfer>
+          <BsText size="sm" tone="muted">{{ t('transfer.manual') }}</BsText>
+          <BsStateSurface :state="transferStatus === 'configured' ? 'success' : transferStatus === 'loading' ? 'loading' : transferStatus === 'error' ? 'error' : transferStatus === 'denied' ? 'denied' : 'empty'" :title="t(`transfer.${transferStatus}`)" :action-label="transferStatus === 'error' || transferStatus === 'denied' ? t('registry.retry') : undefined" @action="transfer.load()" />
+          <BsStack v-if="transferStatus === 'configured' && configuration" data-transfer-preview gap="sm">
+            <BsText emphasis="semibold">{{ configuration.recipientAlias }}</BsText>
+            <BsText wrap="preserve">{{ configuration.recipientDetails }}</BsText>
+            <BsText wrap="preserve">{{ configuration.instructions[locale === 'ar' ? 'ar' : 'en'] }}</BsText>
+            <BsLink v-if="configuration.paymentLink" :to="configuration.paymentLink" external target="_blank" rel="noopener noreferrer" underline="always">{{ t('transfer.link') }}</BsLink>
+            <BsImage v-if="configuration.qr.assetUrl" :src="configuration.qr.assetUrl" :alt="configuration.qr.alt[locale === 'ar' ? 'ar' : 'en']" :width="192" fit="contain" loading="lazy" referrerpolicy="no-referrer" />
+            <BsText v-if="configuration.qr.assetUrl" size="sm">{{ t('transfer.qrAsset') }}: {{ configuration.qr.assetUrl }} — {{ configuration.qr.alt[locale === 'ar' ? 'ar' : 'en'] }}</BsText>
+          </BsStack>
+          <BsButton v-if="['configured', 'empty', 'disabled', 'incomplete'].includes(transferStatus)" @click="transfer.edit()">{{ t('transfer.edit') }}</BsButton>
+          <BsRecordActionDialog v-model:visible="transferVisible" :title="t('transfer.edit')" :pending="transferPending" :dirty="transferDirty" :error="transferError" :submit-label="command ? t('transfer.retrySave') : t('transfer.save')" @submit="transfer.save()">
+            <BsFieldGroup :disabled="!!command">
+              <BsField for="transfer-enabled" :label="t('transfer.enabled')" required>
+                <BsSelect id="transfer-enabled" :label="t('transfer.enabled')" :model-value="draft.enabled === null ? null : draft.enabled ? 1 : 0" :options="[{ label: t('transfer.on'), value: 1 }, { label: t('transfer.off'), value: 0 }]" option-label="label" option-value="value" @update:model-value="draft.enabled = $event === null ? null : $event === 1" />
+              </BsField>
+              <BsField for="transfer-alias" :label="t('transfer.alias')"><BsInput id="transfer-alias" v-model="draft.recipientAlias" :maxlength="4000" /></BsField>
+              <BsField for="transfer-details" :label="t('transfer.details')"><BsTextarea id="transfer-details" v-model="draft.recipientDetails" :maxlength="4000" /></BsField>
+              <BsField v-for="lang in (['en', 'ar'] as const)" :key="lang" :for="`transfer-instructions-${lang}`" :label="t(`transfer.instructions${lang}`)">
+                <BsTextarea :id="`transfer-instructions-${lang}`" v-model="draft.instructions[lang]" :dir="lang === 'ar' ? 'rtl' : 'ltr'" :maxlength="4000" />
+              </BsField>
+              <BsField for="transfer-link" :label="t('transfer.link')"><BsInput id="transfer-link" v-model="draft.paymentLink" dir="ltr" :maxlength="4000" /></BsField>
+              <BsField for="transfer-qr" :label="t('transfer.qrAsset')"><BsInput id="transfer-qr" v-model="draft.qr.assetUrl" dir="ltr" :maxlength="4000" /></BsField>
+              <BsField v-for="lang in (['en', 'ar'] as const)" :key="`alt-${lang}`" :for="`transfer-alt-${lang}`" :label="t(`transfer.alt${lang}`)"><BsInput :id="`transfer-alt-${lang}`" v-model="draft.qr.alt[lang]" :dir="lang === 'ar' ? 'rtl' : 'ltr'" :maxlength="4000" /></BsField>
+              <BsField for="transfer-reason" :label="t('transfer.reason')" required><BsTextarea id="transfer-reason" v-model="reason" required :minlength="8" :maxlength="1000" /></BsField>
+            </BsFieldGroup>
+          </BsRecordActionDialog>
+        </BsStack>
         <BsStateSurface v-if="selection.item?.module === 'capabilities'" state="empty" data-registry-pending :title="t('registry.pending')" />
       </BsContentSection>
       <BsButton :pending="pending" @click="signOut">{{ t('auth.signOut') }}</BsButton>

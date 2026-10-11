@@ -2,7 +2,8 @@ export interface RegistryItem {
   key: string
   label: Record<string, string>
   description: Record<string, string>
-  module: 'overview' | 'capabilities'
+  module: 'overview' | 'capabilities' | 'manual-transfer'
+  bindingId?: string
 }
 export interface RegistrySuit {
   key: string
@@ -46,11 +47,12 @@ export function parseRegistry(value: unknown): Registry {
       const item = record(rawItem)
       if (item.enabled === false) continue
       if (typeof item.key !== 'string' || !keyPattern.test(item.key) || itemKeys.has(item.key)) continue
-      if (item.module !== 'overview' && item.module !== 'capabilities') continue
+      if (item.module !== 'overview' && item.module !== 'capabilities' && item.module !== 'manual-transfer') continue
+      if (item.module === 'manual-transfer' && (typeof item.bindingId !== 'string' || !/^[0-9a-f-]{36}$/i.test(item.bindingId))) continue
       const itemLabel = copy(item.label)
       if (!Object.keys(itemLabel).length) continue
       itemKeys.add(item.key)
-      items.push({ key: item.key, label: itemLabel, description: copy(item.description), module: item.module })
+      items.push({ key: item.key, label: itemLabel, description: copy(item.description), module: item.module, ...(item.module === 'manual-transfer' ? { bindingId: item.bindingId as string } : {}) })
     }
     suits.push({ key: suit.key, label, description: copy(suit.description), asset: safeAsset(suit.asset), items })
   }
