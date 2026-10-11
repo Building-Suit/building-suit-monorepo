@@ -16,7 +16,14 @@ test('Approved minimum Foundation contracts remain intact as workspace dependenc
   assert.equal(createHash('sha256').update(declaration.getText(ast)).digest('hex'),hash,name)
  }
  for(const [p,object] of Object.entries({'packages/data-access/src/index.ts':'0a768c25d63217619bbcc684b216a8fb0a45e427','packages/data-access/src/realtime.ts':'a4cfc2b2769c6b17fcaa8324c8e7152b501846de'})){
-  const b=readFileSync(new URL(p,root));assert.equal(createHash('sha1').update(`blob ${b.length}\0`).update(b).digest('hex'),object,p)
+  let b=readFileSync(new URL(p,root))
+  if(p==='packages/data-access/src/index.ts'){
+   // #246 adds a reviewed export; the original Foundation bytes stay pinned.
+   const addition="\nexport { createChangelogClient } from './changelog.ts'\n"
+   assert.ok(b.toString().endsWith(addition),'Only the reviewed changelog export may extend the Foundation barrel')
+   b=b.subarray(0,b.length-Buffer.byteLength(addition))
+  }
+  assert.equal(createHash('sha1').update(`blob ${b.length}\0`).update(b).digest('hex'),object,p)
  }
 })
 test('Every launch feature is scoped to exact tenant and location; injection rejected',()=>{
