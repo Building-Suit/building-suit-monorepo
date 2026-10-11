@@ -95,3 +95,72 @@ tests; the browser registration preserves the exact repeat/retry command.
 Applying this patch and independently rerunning verification belong to the
 control plane. Until that registration changes, its three `planned_test`
 blockers remain unresolved even if the corresponding local tests pass.
+
+## Registry navigation (SAS-M1-REGISTRY-001)
+
+`GET /api/registry` verifies the current Admin identity and reads the `registry`
+resource of `super_admin_configuration_read`. Its private SQL projection returns
+only localized display metadata, canonical local asset references and permitted
+navigation descriptors. It omits endpoints, audiences, environment identifiers,
+secret references and executable route/component names. Empty configuration has
+no source-owned fallback. All configuration comes from this Admin database;
+there is no access to target Suit databases.
+
+The forward migration adds `suit_registry.sort_order`; use the existing audited,
+versioned configuration command's `sortOrder` payload for changes. Rail order uses
+that value then the stable key. Only active Suits on contract `1.0` with an active
+binding in the operator's authority environment and active target environment
+appear. Context order uses navigation order then stable key. Both `en` and `ar`
+metadata are supported, falling back to available localized text.
+
+The reviewed generic module descriptors currently supported are `overview`
+(no required capability) and `capabilities` (requires
+`adapter.capabilities.read` version `1.0`). Both require an empty route descriptor
+and either empty visibility policy or `{"role":"owner"}`. Other module,
+visibility, route and capability descriptors fail closed. Capability contexts
+also require active adapter registration, protocol/schema `1.0`, an enabled
+policy with exact `1.0` bounds and the `adapter.capabilities.read` query scope.
+The latest manifest observation must be verified, unexpired, within the adapter's
+freshness interval and advertise protocol `1.0` plus a capability entry shaped
+as `{"key":"adapter.capabilities.read","version":"1.0","queryScopes":["adapter.capabilities.read"]}`.
+No older verified manifest replaces a newer rejected one. This is a conservative
+version contract; extending supported versions/modules requires reviewed logic.
+The capability context shows pending availability and supplies no dispatch
+controls; adapter execution is outside this task.
+
+The page composes the rail and selected context through the existing shared
+`BsAppShell` context slot, reusing its narrow-screen drawer, keyboard trap,
+Escape handling and focus return. This checkout does **not** contain the linked
+BS-SA-SHELL-001 dedicated two-chamber shared template. That dependency must be
+reconciled before claiming acceptance against that specific shared shell.
+No shared package was changed under this app-only task's allowed paths.
+
+Selection uses `/?suit=<stable-key>&item=<stable-key>` so reload, back/forward and
+shared deep links resolve against current authorized data. An explicit removed
+or inaccessible key stays denied; it never silently selects another Suit. With
+no explicit Suit, the first available row is selected. Reads refresh on session
+recheck/focus and every 30 seconds while visible, or immediately through the
+reload action. Pending/error reads remove previous navigation; auth transitions
+and sign-out clear registry data and cancel outstanding reads.
+
+Required local verification includes the **entire** app unit suite and quality
+command above, `pnpm check`, `pnpm test`, and the entire local SQL suite after an
+explicit disposable reset. Regenerate `app/types/database.types.ts` from the
+reset local schema; the added `sort_order` field is not yet in the checked type
+artifact and must not be patched manually. The app currently uses the existing
+JSON-returning configuration RPC contract, so this does not prevent typecheck.
+Run the task browser spec plus the changed auth regression spec:
+
+```sh
+pnpm --filter @building-suit/super-admin-suit exec playwright test tests/e2e/registry.spec.ts --workers=1 --retries=0
+pnpm --filter @building-suit/super-admin-suit exec playwright test tests/e2e/auth.spec.ts --workers=1 --retries=0 --repeat-each=2
+```
+
+The registry browser suite covers two data-driven Suits, active rail/context
+indicators, selection changes, deep links, back navigation, metadata/order/menu
+refresh, unknown descriptors, loading/error/denied/empty states, keyboard focus,
+English/Arabic and desktop light/mobile dark. Controlled endpoint fixtures prove
+presentation only. `supabase/tests/registry_navigation.sql` independently covers
+real database projection, scoped capability denial, latest-manifest rejection,
+retirement, authorization and audited ordering. Browser screenshots are written
+to `/tmp/sas-registry-*` only when the suite executes successfully.

@@ -7,16 +7,17 @@ import { parse, compileScript } from 'vue/compiler-sfc'
 import { renderToString } from 'vue/server-renderer'
 import * as vue from 'vue'
 import ts from 'typescript'
+import { useNavigationDisclosure } from '../../ux/src/composables/useNavigationDisclosure.ts'
 
 const require = createRequire(import.meta.url)
-function component(file, language = 'en') {
+function component(file, language = 'en', imports = {}) {
   const { descriptor } = parse(readFileSync(new URL(`../src/${file}`, import.meta.url), 'utf8'))
   const script = compileScript(descriptor, { id: file, inlineTemplate: true })
   const code = ts.transpileModule(script.content, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText
   const module = { exports: {} }
   const copy = language === 'ar' ? { close: 'إغلاق', saving: 'جارٍ الحفظ…', search: 'بحث', empty: 'لا توجد سجلات' } : { close: 'Close', saving: 'Saving…', search: 'Search', empty: 'No records found' }
-  const globals = { ref: vue.ref, computed: vue.computed, watch: vue.watch, watchEffect: vue.watchEffect, nextTick: vue.nextTick, onMounted: vue.onMounted, onBeforeUnmount: vue.onBeforeUnmount, useId: vue.useId, useAttrs: vue.useAttrs, useSlots: vue.useSlots, useI18n: () => ({ t: key => key, te: () => false }), useToasts: () => ({ toasts: vue.ref([{ id: 1, title: 'Saved', tone: 'success' }]), dismiss: () => {} }), useUiCopy: () => key => copy[key] }
-  new Function('require', 'module', 'exports', ...Object.keys(globals), code)(require, module, module.exports, ...Object.values(globals))
+  const globals = { useNavigationDisclosure, ref: vue.ref, computed: vue.computed, watch: vue.watch, watchEffect: vue.watchEffect, nextTick: vue.nextTick, onMounted: vue.onMounted, onBeforeUnmount: vue.onBeforeUnmount, useId: vue.useId, useAttrs: vue.useAttrs, useSlots: vue.useSlots, useI18n: () => ({ t: key => key, te: () => false }), useToasts: () => ({ toasts: vue.ref([{ id: 1, title: 'Saved', tone: 'success' }]), dismiss: () => {} }), useUiCopy: () => key => copy[key] }
+  new Function('require', 'module', 'exports', ...Object.keys(globals), code)(name => imports[name] ?? require(name), module, module.exports, ...Object.values(globals))
   return module.exports.default
 }
 async function render(file, props, slot, language) {
@@ -25,6 +26,195 @@ async function render(file, props, slot, language) {
   app.config.globalProperties.$primevue = { config: { unstyled: true, locale: { emptySelectionMessage: 'No selection', selectionMessage: '{0} selected' } } }
   return renderToString(app)
 }
+
+test('table cell actions retain their nodes when a parent opens and closes a dialog', async () => {
+  const root = { children: [] }
+  const renderer = vue.createRenderer({
+    createElement: tag => ({ tag, children: [] }),
+    createText: text => ({ text }), createComment: text => ({ text }),
+    setText: (node, text) => { node.text = text },
+    setElementText: (node, text) => { node.text = text },
+    parentNode: node => node.parent,
+    nextSibling: node => node.parent?.children[node.parent.children.indexOf(node) + 1] || null,
+    patchProp: (node, key, previous, value) => { node[key] = value },
+    insert: (node, parent, anchor) => {
+      if (node.parent) node.parent.children = node.parent.children.filter(child => child !== node)
+      node.parent = parent
+      const index = anchor ? parent.children.indexOf(anchor) : -1
+      if (index < 0) parent.children.push(node)
+      else parent.children.splice(index, 0, node)
+    },
+    remove: node => { node.parent.children = node.parent.children.filter(child => child !== node); node.parent = null },
+  })
+  // PrimeVue renders each Column body slot as a functional component. Changing
+  // that function's identity unmounts its controls, even with stable row keys.
+  const { HelperSet } = createRequire(require.resolve('primevue/datatable'))('@primevue/core/utils')
+  const Column = vue.defineComponent({
+    name: 'Column', inheritAttrs: false,
+    setup() {
+      const columns = vue.inject('columns')
+      const instance = vue.getCurrentInstance()
+      vue.onMounted(() => columns.add(instance))
+      vue.onBeforeUnmount(() => columns.delete(instance))
+      return () => null
+    },
+  })
+  const DataTable = vue.defineComponent({
+    inheritAttrs: false, props: ['value'],
+    setup(props, { slots }) {
+      const columns = vue.reactive(new HelperSet({ type: 'Column' }))
+      vue.provide('columns', columns)
+      const instance = vue.getCurrentInstance()
+      const effectiveColumns = vue.computed(() => columns.get(instance.proxy) ?? [])
+      return () => vue.h('div', [slots.default?.(), ...effectiveColumns.value.map(column => {
+        const body = column.children?.body
+        return vue.h('section', { key: column.key }, [
+          vue.h('h2', column.props.header),
+          body && vue.h(body, { data: props.value[0], index: 0 }),
+        ])
+      })])
+    },
+  })
+  const RowButton = vue.defineComponent({
+    setup(props, { attrs, slots }) {
+      return () => vue.h('button', { ...attrs, ref: element => { rowActionTrigger = element } }, slots.default?.())
+    },
+  })
+  const Table = component('organisms/BsDataTable.vue', 'en', {
+    'primevue/column': { default: Column }, 'primevue/datatable': { default: DataTable },
+    '@building-suit/ux': { csvCell: String }, '../atoms/BsButton.vue': { default: RowButton },
+  })
+  const dialogOpen = vue.ref(false)
+  const label = vue.ref('Branch cash 01')
+  const row = { id: 'cash' }
+  let mounts = 0, unmounts = 0, trigger, rowActionTrigger, editedRow
+  const Action = vue.defineComponent({
+    setup() {
+      vue.onMounted(() => { mounts++ })
+      vue.onBeforeUnmount(() => { unmounts++ })
+      return () => vue.h('button', { ref: element => { trigger = element } }, label.value)
+    },
+  })
+  const app = renderer.createApp({ render: () => vue.h('main', [
+    vue.h(Table, {
+      value: [row], rowKey: 'id', columns: [{ key: 'account', header: label.value }],
+      'data-dialog-open': dialogOpen.value, capabilities: { edit: true },
+      actionLabels: { edit: `Edit ${label.value}` }, onEdit: value => { editedRow = value },
+    }, { 'cell-account': () => vue.h(Action) }),
+  ]) })
+  for (const name of ['BsTableSearch', 'BsTableFilters', 'BsTableActions', 'BsTableToolbar', 'BsStateSurface']) app.component(name, { render: () => null })
+  app.component('BsButton', RowButton)
+  app.mount(root)
+  await vue.nextTick()
+  const opener = trigger
+  const editOpener = rowActionTrigger
+  assert.ok(opener)
+  assert.ok(editOpener)
+  dialogOpen.value = true
+  await vue.nextTick()
+  assert.ok(trigger === opener, 'opening a dialog must keep its table opener connected')
+  dialogOpen.value = false
+  label.value = 'Branch cash renamed'
+  await vue.nextTick()
+  assert.ok(trigger === opener, 'closing and refreshing content must preserve the same control')
+  assert.ok(rowActionTrigger === editOpener, 'record-action openers must also stay connected')
+  assert.equal(rowActionTrigger.children[0].text, 'Edit Branch cash renamed')
+  let stopped = false
+  rowActionTrigger.onClick({ stopPropagation: () => { stopped = true } })
+  assert.ok(stopped)
+  assert.equal(editedRow, row)
+  assert.equal(trigger.text, 'Branch cash renamed')
+  const find = (node, tag) => node.tag === tag ? node : node.children?.map(child => find(child, tag)).find(Boolean)
+  assert.equal(find(root, 'h2').text, 'Branch cash renamed', 'column descriptors must refresh alongside their cells')
+  assert.equal(mounts, 1)
+  assert.equal(unmounts, 0)
+  app.unmount()
+})
+
+test('workflow scopes preserve writable models, live inputs, events and effect disposal', async () => {
+  const root = { children: [] }
+  const renderer = vue.createRenderer({
+    createElement: tag => ({ tag, children: [] }),
+    createText: text => ({ text }), createComment: text => ({ text }),
+    setText: (node, text) => { node.text = text },
+    setElementText: (node, text) => { node.text = text },
+    parentNode: node => node.parent,
+    nextSibling: node => node.parent?.children[node.parent.children.indexOf(node) + 1] || null,
+    patchProp: () => {},
+    insert: (node, parent, anchor) => {
+      if (node.parent) node.parent.children = node.parent.children.filter(child => child !== node)
+      node.parent = parent
+      const index = anchor ? parent.children.indexOf(anchor) : -1
+      if (index < 0) parent.children.push(node)
+      else parent.children.splice(index, 0, node)
+    },
+    remove: node => { node.parent.children = node.parent.children.filter(child => child !== node) },
+  })
+  const input = vue.reactive({ selected: 'first', tenant: 'tenant-a' })
+  let exposed, created = 0, disposed = 0, changes = 0
+  const Scope = component('molecules/BsWorkflowScope.vue')
+  const factory = (values, emit) => {
+    created++
+    vue.watch(() => values.tenant, () => { changes++ }, { flush: 'sync' })
+    vue.onBeforeUnmount(() => { disposed++ })
+    const selected = vue.computed({ get: () => values.selected, set: value => emit('update:selected', value) })
+    return { selected, localDraft: vue.ref('draft'), tenant: vue.computed(() => values.tenant) }
+  }
+  const app = renderer.createApp({ render: () => vue.h(Scope, {
+    factory, input: { ...input }, 'onUpdate:selected': value => { input.selected = value },
+  }, { default: ({ state }) => { exposed = state; return vue.h('span', state.selected) } }) })
+  app.mount(root)
+  exposed.selected = 'second'
+  exposed.localDraft = 'edited'
+  await vue.nextTick()
+  assert.equal(input.selected, 'second')
+  assert.equal(exposed.selected, 'second')
+  assert.equal(exposed.localDraft, 'edited')
+  input.tenant = 'tenant-b'
+  await vue.nextTick()
+  assert.equal(exposed.tenant, 'tenant-b')
+  assert.equal(changes, 1)
+  assert.equal(created, 1)
+  app.unmount()
+  input.tenant = 'tenant-c'
+  await vue.nextTick()
+  assert.equal(changes, 1)
+  assert.equal(disposed, 1)
+})
+
+test('native select options and bare choices retain external label/control semantics', async () => {
+  const select = await render('molecules/BsSelect.vue', { native: true, modelValue: 'b', id: 'period' }, [
+    vue.h(component('atoms/BsSelectOption.vue'), { value: 'a' }, () => 'First'),
+    vue.h(component('atoms/BsSelectOption.vue'), { value: 'b' }, () => 'Second'),
+  ])
+  assert.match(select, /<select[^>]+id="period"/)
+  assert.match(select, /value="b"[^>]*selected/)
+  const controlled = await render('molecules/BsSelect.vue', { native: true, value: 'b' }, [
+    vue.h(component('atoms/BsSelectOption.vue'), { value: 'a' }, () => 'First'),
+    vue.h(component('atoms/BsSelectOption.vue'), { value: 'b' }, () => 'Second'),
+  ])
+  assert.match(controlled, /value="b"[^>]*selected/)
+  const checkbox = await render('atoms/BsCheckbox.vue', { bare: true, checked: true, id: 'permission', 'aria-label': 'Permission' })
+  assert.doesNotMatch(checkbox, /<label/)
+  assert.match(checkbox, /type="checkbox"[^>]*checked/)
+  assert.match(checkbox, /aria-label="Permission"/)
+  const file = await render('atoms/BsFileInput.vue', { bare: true, id: 'import', accept: '.csv', required: true })
+  assert.match(file, /type="file"/)
+  assert.match(file, /accept=".csv"/)
+  assert.match(file, /required/)
+  assert.match(await render('atoms/BsFileInput.vue', { bare: true, hideControl: true }), /class="sr-only"/)
+})
+
+test('translated rich text forwards named policy-link slots', async () => {
+  const app = vue.createSSRApp({ render: () => vue.h(component('molecules/BsI18nText.vue'), { keypath: 'policy' }, {
+    terms: () => vue.h('a', { href: '/terms' }, 'Terms'),
+    refund: () => vue.h('a', { href: '/refund' }, 'Refund'),
+  }) })
+  app.component('i18n-t', { setup: (_, { slots }) => () => vue.h('p', [slots.terms?.(), slots.refund?.()]) })
+  const html = await renderToString(app)
+  assert.match(html, /href="\/terms"[^>]*>Terms/)
+  assert.match(html, /href="\/refund"[^>]*>Refund/)
+})
 
 test('PrimeVue button defaults safely and preserves explicit submit/label/disabled semantics', async () => {
   const button = await render('atoms/BsButton.vue', { 'aria-label': 'Remove line', pending: true, disabled: false }, 'Remove')
@@ -65,15 +255,33 @@ test('shared marketing owns the landing frame and Ledger-derived pricing present
   const landing = readFileSync(new URL('../src/templates/BsLandingPage.vue', import.meta.url), 'utf8')
   const frame = readFileSync(new URL('../src/templates/BsMarketingLayout.vue', import.meta.url), 'utf8')
   const pricing = readFileSync(new URL('../src/organisms/BsMarketingPricing.vue', import.meta.url), 'utf8')
-  assert.match(frame, /<header class="bs-marketing-header/)
-  assert.match(frame, /id="marketing-mobile-navigation"/)
-  assert.match(frame, /<footer class="bs-marketing-footer/)
-  for (const section of ['ls-landing-hero', 'id="features"', 'id="workflow"', 'id="pricing"']) assert.match(landing, new RegExp(section))
-  assert.match(pricing, /v-for="option in intervalOptions"/)
-  assert.match(pricing, /v-for="plan in plans"/)
-  assert.match(pricing, /<NuxtLink v-if="plan\.action\?\.to/)
-  assert.match(pricing, /<BsButton v-else-if="plan\.action"/)
+  const header = readFileSync(new URL('../src/organisms/BsLandingTopHeader.vue', import.meta.url), 'utf8')
+  const footer = readFileSync(new URL('../src/organisms/BsLandingFooter.vue', import.meta.url), 'utf8')
+  const planCard = readFileSync(new URL('../src/organisms/BsPlanCard.vue', import.meta.url), 'utf8')
+  assert.match(frame, /<BsLandingTopHeader\b/)
+  assert.match(frame, /<BsLandingFooter\b/)
+  assert.match(header, /id="marketing-mobile-navigation"/)
+  assert.match(footer, /<footer class="bs-marketing-footer/)
+  for (const component of ['BsLandingHero', 'BsLandingSection', 'BsFeatureGrid', 'BsWorkflowSteps', 'BsProductPreview']) assert.match(landing, new RegExp(`<${component}\\b`))
+  assert.match(pricing, /<BsBillingCycleToggle\b/)
+  assert.match(pricing, /<BsPlanGrid\b/)
+  assert.match(planCard, /<BsPlanFeatureList\b/)
+  assert.match(planCard, /<BsPlanStatus\b/)
+  assert.match(planCard, /<NuxtLink v-if="plan\.action\?\.to/)
+  assert.match(planCard, /<BsButton v-else-if="plan\.action"/)
   assert.match(pricing, /<BsStateSurface v-if="loading/)
+})
+
+test('contact and public legal routes consume shared presentation directly', () => {
+  const manifest = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
+  for (const name of ['BsContactPage', 'BsSupportRequestForm', 'BsContactInfoGrid', 'BsPublicLegalPage']) assert.ok(Object.keys(manifest.exports).some(key => key.endsWith(`/${name}`)))
+  for (const suit of ['ledger-suit', 'shop-suit']) {
+    const contact = readFileSync(path.join(workspaceRoot, `apps/${suit}/app/pages/contact.vue`), 'utf8')
+    assert.match(contact, /<BsContactPage\b/)
+    assert.doesNotMatch(contact, /<(?:main|section|form|input|select|textarea)\b/)
+    assert.equal(existsSync(path.join(workspaceRoot, `apps/${suit}/app/components/PublicLegalPage.vue`)), false)
+    for (const page of ['about', 'privacy', 'terms', 'delivery-shipping', 'refund-cancellation']) assert.match(readFileSync(path.join(workspaceRoot, `apps/${suit}/app/pages/${page}.vue`), 'utf8'), /<BsPublicLegalPage\b/)
+  }
 })
 
 test('shared auth owns split geometry, form shells, wizard controls, and verification presentation', () => {
@@ -105,7 +313,7 @@ test('shared auth owns split geometry, form shells, wizard controls, and verific
 
 test('authenticated chrome is composed from canonical shared organisms', () => {
   const manifest = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
-  for (const name of ['BsSideMenu', 'BsTopHeader', 'BsUserMenu', 'BsSettingsMenu', 'BsAppShell']) {
+  for (const name of ['BsSideMenu', 'BsTopHeader', 'BsUserMenu', 'BsSettingsMenu', 'BsContextSwitcher', 'BsScopeSwitcher', 'BsNotificationMenu', 'BsTrialCountdown', 'BsReadOnlyBanner', 'BsAccessGate', 'BsAppShell']) {
     assert.ok(Object.keys(manifest.exports).some(key => key.endsWith(`/${name}`)), `${name} is not exported`)
   }
   const shell = readFileSync(new URL('../src/templates/BsAppShell.vue', import.meta.url), 'utf8')
@@ -186,11 +394,30 @@ test('canonical data table owns typed CRUD capabilities, query adapters, and act
     assert.match(source, new RegExp(`${event}: \\[`))
   }
   assert.match(contract, /interface BsDataTableQueryAdapter/)
-  assert.match(source, /<BsToolbar\b/)
+  assert.match(contract, /interface BsDataTableColumn<Row extends object/)
+  assert.match(source, /columns\?: BsDataTableColumn<Row>\[\]/)
+  assert.match(source, /:is="columnVNode\(column\)" v-for="column in visibleColumns"/)
+  assert.match(source, /`cell-\$\{key\}`/)
+  assert.match(source, /<BsTableToolbar\b/)
+  assert.match(source, /<BsTableSearch\b/)
+  assert.match(source, /<BsTableFilters\b/)
+  assert.match(source, /<BsTableActions\b/)
   assert.match(source, /<BsStateSurface v-if="error"/)
-  assert.match(source, /<Column v-if="rowActions\.length"/)
+  assert.match(source, /:is="actionColumnVNode\(\)" v-if="rowActions\.length"/)
   assert.match(source, /<BsButton v-if="capabilities\.insert"/)
   assert.doesNotMatch(source, /<(?:button|InputText)\b/)
+})
+
+test('shared data presentation families are exported and remain product-neutral', () => {
+  const manifest = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
+  for (const name of ['BsTableToolbar', 'BsTableSearch', 'BsTableFilters', 'BsTableActions', 'BsPagination', 'BsEmptyState', 'BsStateSurface', 'BsSummaryGrid', 'BsDescriptionList', 'BsHistoryList', 'BsTimeline', 'BsDetailSection', 'BsDetailDialog', 'BsTagEditor', 'BsEntityPicker']) {
+    assert.ok(Object.keys(manifest.exports).some(key => key.endsWith(`/${name}`)), `${name} is not exported`)
+  }
+  for (const file of ['organisms/BsEntityPicker.vue', 'organisms/BsTagEditor.vue', 'organisms/BsDetailDialog.vue', 'molecules/BsTimeline.vue']) {
+    const source = readFileSync(new URL(`../src/${file}`, import.meta.url), 'utf8')
+    assert.doesNotMatch(source, /apps\//)
+    assert.doesNotMatch(source, /(?:\.from\(|\.rpc\(|\$fetch)/)
+  }
 })
 
 for (const language of ['en', 'ar']) test(`form and select provide localized accessible markup (${language})`, async () => {
@@ -309,4 +536,23 @@ test('shared UI exports are explicit and cover every governed source', () => {
     .map(file => `./${path.relative(path.join(workspaceRoot, 'packages/ui'), file).replaceAll(path.sep, '/')}`)
   assert.ok(components.every(file => path.basename(file, '.vue').startsWith('Bs')), 'every renderable shared component must have a canonical Bs-prefixed name')
   assert.deepEqual(Object.values(manifest.exports).sort(), [...components, './src/styles/base.css'].sort())
+})
+
+
+test('administration shell renders caller-owned selection, disabled items and state copy', async () => {
+  const labels = { suits: 'Registry', navigation: 'Context', open: 'Expand', close: 'Collapse', loading: 'Pending registry', emptySuits: 'Empty registry', emptyNavigation: 'Empty context' }
+  const props = { labels, contextTitle: 'Caller context', suits: [{ id: 'a', label: 'Caller A' }, { id: 'b', label: 'Caller B', disabled: true }], groups: [{ id: 'g', label: 'Caller group', items: [{ id: 'x', label: 'Caller action' }] }], selectedSuit: 'a', selectedContext: 'x' }
+  const html = await render('templates/BsAdministrationShell.vue', props)
+  assert.match(html, /aria-label="Caller A"[^>]*aria-pressed="true"/)
+  assert.match(html, /aria-label="Caller B"[^>]*disabled/)
+  assert.match(html, /aria-pressed="true"[^>]*>[^]*Caller action/)
+  assert.match(html, /Caller context/)
+  assert.doesNotMatch(html, /Super Admin|Shop Suit|Ledger Suit|supabase/i)
+  const empty = await render('templates/BsAdministrationShell.vue', { ...props, suits: [], groups: [] })
+  assert.match(empty, /Empty registry/)
+  assert.match(empty, /Empty context/)
+  const loading = await render('templates/BsAdministrationShell.vue', { ...props, loading: true })
+  assert.match(loading, /aria-busy="true"/)
+  assert.match(loading, /Pending registry/)
+  assert.doesNotMatch(loading, /Caller A|Caller action/)
 })

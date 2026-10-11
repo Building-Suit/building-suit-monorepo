@@ -70,14 +70,14 @@ test('synthetic demo uses exact minor units and reset rejects any real-tenant-sh
   )
 })
 
-test('demo component has no backend client and template review exposes no apply action', () => {
-  const demo = readFileSync(new URL('../../app/components/SyntheticDemo.vue', import.meta.url), 'utf8')
-  const templates = readFileSync(new URL('../../app/components/ChartTemplateReview.vue', import.meta.url), 'utf8')
-  const checklist = readFileSync(new URL('../../app/components/SetupChecklist.vue', import.meta.url), 'utf8')
+test('demo orchestration has no backend client and template review exposes no apply action', () => {
+  const demo = readFileSync(new URL('../../app/composables/useLedgerSyntheticDemoView.ts', import.meta.url), 'utf8')
+  const templates = readFileSync(new URL('../../app/composables/useLedgerChartTemplateReviewView.ts', import.meta.url), 'utf8')
+  const checklist = readFileSync(new URL('../../app/composables/useLedgerSetupChecklist.ts', import.meta.url), 'utf8')
   assert.doesNotMatch(demo, /useSupabaseClient|\.from\(|\.rpc\(/)
   assert.doesNotMatch(templates, /useSupabaseClient|applyTemplate|create_account/)
   assert.doesNotMatch(checklist, /\.insert\(|\.update\(|\.delete\(|\.rpc\(/)
-  assert.match(templates, /data-chart-template-review/)
+  assert.match(readFileSync(new URL('../../app/pages/accounts.vue', import.meta.url), 'utf8'), /data-chart-template-review/)
 })
 
 test('English and Arabic expose every setup, template and demo account label', () => {

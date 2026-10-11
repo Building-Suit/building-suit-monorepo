@@ -1,9 +1,10 @@
 import type { Database } from '../types/database.types'
+import type { AdminSession } from '../../server/utils/authorize'
 
 export function useAdminSession() {
   const client = useSupabaseClient<Database>()
   const requestFetch = useRequestFetch()
-  const session = useAsyncData('super-admin-session', () => requestFetch('/api/session'), { dedupe: 'cancel' })
+  const session = useAsyncData('super-admin-session', () => requestFetch<AdminSession>('/api/session'), { dedupe: 'cancel' })
   const pending = ref(false)
   const actionError = ref(false)
   const action = ref<'sign-in' | 'sign-out' | null>(null)
@@ -17,6 +18,7 @@ export function useAdminSession() {
     return 'error'
   })
   function clear() {
+    clearNuxtData(key => key.startsWith('super-admin-registry:'))
     session.clear()
     actionError.value = false
   }

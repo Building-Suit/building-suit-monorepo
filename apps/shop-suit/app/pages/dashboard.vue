@@ -246,108 +246,277 @@ async function createShop() {
     await reload()
     if (!currentId.value) throw new Error(copy.value.noShopAfterCreate)
     await Promise.all([refreshSubscription(), refreshReport()])
+    setupAction.complete()
   } catch (error) {
     setupError.value = setupErrorText(error instanceof Error ? error.message : undefined)
   } finally {
     setupPending.value = false
   }
 }
+const setupGuide = reactive(useShopSetupGuide())
+
+const setupAction = useRecordAction(() => ({ name: setupName.value, mode: setupMode.value }))
+const { visible: setupActionOpen, dirty: setupActionDirty } = setupAction
+const ui = useUiCopy()
 </script>
 
 <template>
-  <div class="space-y-8">
-    <p v-if="modeDisabledNotice" role="status" class="rounded-xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-4 text-sm text-[var(--bs-status-warning)]">{{ copy.modeDisabled }}</p>
-    <section v-if="!current" class="mx-auto max-w-3xl pt-6 lg:pt-12">
-      <div class="overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
-        <div class="border-b border-border bg-[var(--bs-deep-structure-navy)] p-6 text-white sm:p-8">
-          <div class="mb-5 grid size-12 place-items-center rounded-2xl border border-[var(--bs-accent)]/30 bg-[var(--bs-primary)]"><BsIcon name="store" class="size-6 text-[var(--bs-highlight-gold)]" /></div>
-          <h1 class="text-2xl font-extrabold sm:text-3xl">{{ copy.setupTitle }}</h1>
-          <p class="mt-2 max-w-xl text-sm leading-6 text-white/60">{{ copy.setupBody }}</p>
-        </div>
-        <BsForm class="space-y-6 p-6 sm:p-8" :pending="setupPending" :error="setupError" @submit="createShop">
-          <div class="space-y-2"><label for="shop-name" class="text-sm font-bold">{{ copy.shopName }}</label><input id="shop-name" v-model="setupName" type="text" minlength="2" maxlength="120" required class="ls-input"></div>
-          <fieldset class="space-y-3">
-            <legend class="text-sm font-bold">{{ copy.businessMode }}</legend>
-            <p class="text-sm text-muted-foreground">{{ copy.businessModeHelp }}</p>
-            <div class="grid gap-3 sm:grid-cols-3">
-              <label v-for="mode in modeOptions" :key="mode.value" class="cursor-pointer rounded-2xl border p-4" :class="setupMode === mode.value ? 'border-[var(--bs-accent)] ring-2 ring-[var(--bs-accent)]/15' : 'border-border'">
-                <input v-model="setupMode" type="radio" name="business-mode" :value="mode.value" class="me-2">
-                <span class="font-extrabold">{{ mode.label }}</span>
-                <span class="mt-2 block text-xs leading-5 text-muted-foreground">{{ mode.body }}</span>
-              </label>
-            </div>
-          </fieldset>
-          <div class="rounded-2xl border border-border bg-muted/40 p-4"><p class="font-extrabold">{{ copy.fullTrial }}</p><p class="mt-1 text-sm text-muted-foreground">{{ copy.setupBody }}</p></div>
-          <BsButton type="submit" variant="primary" class="w-full" :pending="setupPending">{{ setupPending ? copy.creating : copy.createShop }}</BsButton>
-        </BsForm>
-      </div>
-    </section>
-
+  <BsStack>
+    <BsText v-if="modeDisabledNotice" role="status" as="p" size="sm" tone="warning">{{ copy.modeDisabled }}</BsText>
+    <BsBox v-if="!current" as="section">
+      <BsBox>
+        <BsBox padding="md">
+          <BsGrid :columns="1">
+            <BsIcon name="store"/>
+          </BsGrid>
+          <BsHeading :level="1">{{ copy.setupTitle }}</BsHeading>
+          <BsText as="p" size="sm" tone="muted">{{ copy.setupBody }}</BsText>
+        </BsBox>
+        <BsStack>
+          <BsButton :disabled="false" @click="setupAction.edit()">{{ copy.createShop }}</BsButton>
+          <BsRecordActionDialog v-model:visible="setupActionOpen" :title="copy.setupTitle" :dirty="setupActionDirty" :pending="setupPending" :error="setupError" :submit-label="copy.createShop" :cancel-label="ui('cancel')" :submit-disabled="false" @submit="createShop">
+            <BsField v-slot="field" :label="copy.shopName" for="shop-name">
+              <BsInput :id="field.id" v-model="setupName" type="text" :minlength="2" :maxlength="120" required :aria-describedby="field.describedby" />
+            </BsField>
+            <BsFieldGroup :legend="(copy.businessMode)">
+              <BsText as="p" size="sm" tone="muted">{{ copy.businessModeHelp }}</BsText>
+              <BsGrid :columns="3">
+                <BsRadio v-for="mode in modeOptions" :key="mode.value" v-model="setupMode" name="business-mode" :value="mode.value" :label="(mode.label) + (mode.body)" />
+              </BsGrid>
+            </BsFieldGroup>
+            <BsBox padding="md">
+              <BsText as="p" emphasis="semibold">{{ copy.fullTrial }}</BsText>
+              <BsText as="p" size="sm" tone="muted">{{ copy.setupBody }}</BsText>
+            </BsBox>
+          </BsRecordActionDialog>
+        </BsStack>
+      </BsBox>
+    </BsBox>
     <template v-else>
-      <header class="flex flex-wrap items-end justify-between gap-4">
-        <div><p class="mb-1 text-xs font-bold uppercase tracking-[0.16em] text-[var(--bs-link)]">{{ current.name }}</p><h1 class="text-3xl font-extrabold tracking-tight">{{ copy.title }}</h1><p class="mt-2 text-sm text-muted-foreground">{{ copy.subtitle }}</p></div>
-        <span class="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-bold">{{ isOwner ? copy.owner : copy.employee }}</span>
-      </header>
-
-      <BarberSetupGuide />
-
-      <section v-if="isOwner" class="ls-card p-4 sm:p-5">
-        <div class="flex flex-wrap items-center gap-x-8 gap-y-2 text-sm">
-          <h2 class="font-extrabold">{{ copy.planStatus }}</h2>
-          <p v-if="subscriptionError" role="alert" class="text-[var(--bs-status-error)]">{{ copy.loadFailed }} <BsButton variant="link" type="button" class="underline" @click="refreshSubscription()">{{ copy.retry }}</BsButton></p>
-          <template v-else-if="subscription"><p><span class="text-muted-foreground">{{ currentPlan?.name || (subscription.status === 'trialing' ? copy.fullTrial : copy.plan) }}:</span> <strong>{{ subscription.status }}</strong></p><p v-if="subscription.trial_end_at"><span class="text-muted-foreground">{{ copy.trialEnds }}:</span> {{ formatDate(subscription.trial_end_at) }}</p><p v-else-if="subscription.current_period_end"><span class="text-muted-foreground">{{ copy.periodEnds }}:</span> {{ formatDate(subscription.current_period_end) }}</p></template>
-        </div>
-      </section>
-
-      <section class="ls-card p-4 sm:p-5" :aria-label="isArabic ? 'مرشحات التقارير' : 'Report filters'">
-        <div class="grid gap-4 sm:grid-cols-3">
-          <label class="text-xs font-bold text-muted-foreground">{{ copy.location }}
-            <select v-model="reportLocationId" class="ls-select mt-1 w-full"><option value="all">{{ copy.allLocations }}</option><option v-for="location in activeLocations" :key="location.id" :value="location.id">{{ location.name }}</option></select>
-          </label>
-          <label class="text-xs font-bold text-muted-foreground">{{ copy.reportDate }}<input v-model="reportAnchor" type="date" class="ls-input mt-1 w-full"></label>
-          <fieldset><legend class="text-xs font-bold text-muted-foreground">{{ copy.date }}</legend><div class="mt-1 grid grid-cols-3 gap-1 rounded-xl bg-muted p-1"><BsButton variant="chip" v-for="value in periodOptions" :key="value" type="button" class="min-h-11 rounded-lg px-2 text-sm font-bold" :aria-pressed="reportPeriod === value" @click="reportPeriod = value">{{ copy[value] }}</BsButton></div></fieldset>
-        </div>
-      </section>
-
-      <NuxtLink v-if="canViewReports" to="/reports" class="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[var(--bs-accent)]/40 bg-[var(--bs-accent)]/5 p-5 transition hover:border-[var(--bs-accent)]">
-        <span><strong class="block">{{ copy.fullReports }}</strong><span class="mt-1 block text-sm text-muted-foreground">{{ copy.fullReportsBody }}</span></span><span class="font-bold text-[var(--bs-link)]">{{ copy.openSource }}</span>
-      </NuxtLink>
-
-      <p v-if="reportAccessError || reportError || highlightsError" role="alert" class="rounded-xl border border-[var(--bs-status-error)]/30 bg-[var(--bs-status-error-bg)] p-4 text-sm text-[var(--bs-status-error)]">{{ copy.loadFailed }} <BsButton variant="link" type="button" class="min-h-11 min-w-11 underline" @click="refreshReportAccess(); refreshReport(); refreshHighlights()">{{ copy.retry }}</BsButton></p>
-      <p v-else-if="reportAccessPending" role="status">{{ copy.loadingReport }}</p>
-      <p v-else-if="!canViewReports" role="status" class="ls-card-flat p-6 text-sm text-muted-foreground">{{ copy.reportDenied }}</p>
-      <div v-else-if="reportPending" class="space-y-4" aria-live="polite"><p class="text-sm text-muted-foreground">{{ copy.loadingReport }}</p><div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><div v-for="index in 8" :key="index" class="h-28 animate-pulse rounded-2xl bg-muted" /></div></div>
-
+      <BsPageHeader  :title="copy.title" :subtitle="copy.subtitle">
+        <template #actions>
+          <BsText as="p" size="xs" emphasis="semibold">{{ current.name }}</BsText>
+          <BsText as="span" size="xs" emphasis="semibold">{{ isOwner ? copy.owner : copy.employee }}</BsText>
+        </template>
+      </BsPageHeader>
+      <BsSetupChecklist v-if="isOwner && current?.business_mode !== 'product'" :title="setupGuide.copy.title" :description="setupGuide.copy.help" :steps="setupGuide.steps" :progress-label="setupGuide.copy.help" :empty-label="copy.noData" :retry-label="copy.retry"/>
+      <BsPanel v-if="isOwner" padding="md">
+        <BsInline>
+          <BsHeading :level="2">{{ copy.planStatus }}</BsHeading>
+          <BsText v-if="subscriptionError" role="alert" as="p" tone="danger">{{ copy.loadFailed }} <BsButton variant="link" type="button" @click="refreshSubscription()">{{ copy.retry }}</BsButton>
+          </BsText>
+          <template v-else-if="subscription">
+            <BsText as="p">
+              <BsText as="span" tone="muted">{{ currentPlan?.name || (subscription.status === 'trialing' ? copy.fullTrial : copy.plan) }}:</BsText> <BsText as="strong">{{ subscription.status }}</BsText>
+            </BsText>
+            <BsText v-if="subscription.trial_end_at" as="p">
+              <BsText as="span" tone="muted">{{ copy.trialEnds }}:</BsText> {{ formatDate(subscription.trial_end_at) }}</BsText>
+            <BsText v-else-if="subscription.current_period_end" as="p">
+              <BsText as="span" tone="muted">{{ copy.periodEnds }}:</BsText> {{ formatDate(subscription.current_period_end) }}</BsText>
+          </template>
+        </BsInline>
+      </BsPanel>
+      <BsFilterBar :label="isArabic ? 'مرشحات التقارير' : 'Report filters'">
+        <BsGrid :columns="3">
+          <BsField v-slot="field" :label="(copy.location) + ' '">
+            <BsSelect v-model="reportLocationId" :input-id="field.id" :aria-describedby="field.describedby" :label="(copy.location) + ' '" :options="[{ value: 'all', label: (copy.allLocations), disabled: false }, ...(activeLocations).map(location => ({ value: location.id, label: (location.name), disabled: false }))]" option-label="label" option-value="value" option-disabled="disabled"/>
+          </BsField>
+          <BsField v-slot="field" :label="copy.reportDate">
+            <BsInput :id="field.id" v-model="reportAnchor" :aria-describedby="field.describedby" type="date"/>
+          </BsField>
+          <BsFieldGroup :legend="(copy.date)">
+            <BsGrid :columns="3">
+              <BsButton v-for="value in periodOptions" :key="value" variant="chip" type="button" :aria-pressed="reportPeriod === value" @click="reportPeriod = value">{{ copy[value] }}</BsButton>
+            </BsGrid>
+          </BsFieldGroup>
+        </BsGrid>
+      </BsFilterBar>
+      <BsActionTile v-if="canViewReports" to="/reports">
+        <BsText as="span">
+          <BsText as="strong">{{ copy.fullReports }}</BsText>
+          <BsText as="span" size="sm" tone="muted">{{ copy.fullReportsBody }}</BsText>
+        </BsText>
+        <BsText as="span" emphasis="semibold">{{ copy.openSource }}</BsText>
+      </BsActionTile>
+      <BsText v-if="reportAccessError || reportError || highlightsError" role="alert" as="p" size="sm" tone="danger">{{ copy.loadFailed }} <BsButton variant="link" type="button" @click="refreshReportAccess(); refreshReport(); refreshHighlights()">{{ copy.retry }}</BsButton>
+      </BsText>
+      <BsText v-else-if="reportAccessPending" role="status" as="p">{{ copy.loadingReport }}</BsText>
+      <BsText v-else-if="!canViewReports" role="status" as="p" size="sm" tone="muted">{{ copy.reportDenied }}</BsText>
+      <BsStack v-else-if="reportPending" aria-live="polite">
+        <BsText as="p" size="sm" tone="muted">{{ copy.loadingReport }}</BsText>
+        <BsGrid :columns="4">
+          <BsSkeleton v-for="index in 8" :key="index"/>
+        </BsGrid>
+      </BsStack>
       <template v-else-if="report">
-        <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <BsButton variant="tile" v-if="report.locationId" type="button" class="p-5" @click="openLocationSource(report.locationId, '/sales')"><p class="text-sm text-muted-foreground">{{ copy.sales }}</p><p class="mt-2 text-2xl font-extrabold">{{ money(report.sales) }}</p><p class="mt-1 text-xs text-[var(--bs-link)]">{{ report.saleCount }} {{ copy.salesCount }}</p></BsButton>
-          <article v-else class="ls-card p-5"><p class="text-sm text-muted-foreground">{{ copy.sales }}</p><p class="mt-2 text-2xl font-extrabold">{{ money(report.sales) }}</p><p class="mt-1 text-xs text-muted-foreground">{{ report.saleCount }} {{ copy.salesCount }}</p></article>
-          <article class="ls-card p-5"><p class="text-sm text-muted-foreground">{{ copy.collections }}</p><p class="mt-2 text-2xl font-extrabold">{{ money(report.paymentsIn) }}</p><p class="mt-1 text-xs text-muted-foreground">{{ copy.averageTicket }}: {{ money(report.averageTicket) }}</p></article>
-          <NuxtLink v-if="report.canViewCosts" to="/expenses" class="ls-card p-5 transition hover:border-[var(--bs-accent)]"><p class="text-sm text-muted-foreground">{{ copy.expenses }}</p><p class="mt-2 text-2xl font-extrabold">{{ money(report.expenses.amount) }}</p><p class="mt-1 text-xs text-[var(--bs-link)]">{{ report.expenses.count }} {{ copy.openSource }}</p></NuxtLink>
-          <article v-if="report.canViewCosts" class="ls-card p-5"><p class="text-sm text-muted-foreground">{{ copy.operatingBalance }}</p><p class="mt-2 text-2xl font-extrabold">{{ money(report.expenses.operatingBalance) }}</p><p class="mt-1 text-xs leading-5 text-muted-foreground">{{ copy.accountingNotice }}</p></article>
-        </section>
-
-        <section v-if="reportHighlights || highlightsPending" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <template v-if="reportHighlights"><NuxtLink to="/reports?report=suppliers" class="ls-card p-5"><p class="text-sm text-muted-foreground">{{ copy.supplierPayable }}</p><p class="mt-2 text-2xl font-extrabold">{{ money(reportHighlights.payable) }}</p></NuxtLink><NuxtLink to="/reports?report=inventory" class="ls-card p-5"><p class="text-sm text-muted-foreground">{{ copy.lowStock }}</p><p class="mt-2 text-2xl font-extrabold">{{ reportHighlights.lowStockCount }}</p></NuxtLink><NuxtLink to="/reports?report=inventory" class="ls-card p-5"><p class="text-sm text-muted-foreground">{{ copy.inventoryValue }}</p><p class="mt-2 text-2xl font-extrabold">{{ money(reportHighlights.inventoryValue) }}</p></NuxtLink><NuxtLink to="/reports?report=margin" class="ls-card p-5"><p class="text-sm text-muted-foreground">{{ copy.fifoMargin }}</p><p class="mt-2 text-2xl font-extrabold">{{ money(reportHighlights.margin) }}</p></NuxtLink></template>
-          <template v-else><div v-for="index in 4" :key="index" class="h-28 animate-pulse rounded-2xl bg-muted" /></template>
-        </section>
-
-        <section class="grid gap-4 lg:grid-cols-2">
-          <article class="ls-card p-5"><h2 class="font-extrabold">{{ copy.salesMix }}</h2><div v-if="report.salesMix.length" class="mt-4 space-y-3"><div v-for="item in report.salesMix" :key="item.type" class="flex items-center justify-between gap-4 rounded-xl bg-muted/60 p-3"><div><p class="font-bold">{{ copy[item.type] }}</p><p class="text-xs text-muted-foreground">{{ copy.quantity }}: {{ whole(item.quantity) }}</p></div><strong>{{ money(item.amount) }}</strong></div></div><p v-else class="mt-4 text-sm text-muted-foreground">{{ copy.noData }}</p></article>
-          <article class="ls-card p-5"><h2 class="font-extrabold">{{ copy.paymentMix }}</h2><div v-if="report.paymentMix.length" class="mt-4 space-y-3"><div v-for="item in report.paymentMix" :key="item.method" class="rounded-xl bg-muted/60 p-3"><div class="flex justify-between gap-4"><strong>{{ methodLabel(item.method) }}</strong><strong>{{ money(item.net) }}</strong></div><p class="mt-1 text-xs text-muted-foreground">{{ copy.collected }} {{ money(item.collected) }} · {{ copy.refunded }} {{ money(item.refunded) }}</p></div></div><p v-else class="mt-4 text-sm text-muted-foreground">{{ copy.noData }}</p></article>
-        </section>
-
-        <section class="grid gap-4 lg:grid-cols-2">
-          <article class="ls-card p-5"><div class="flex items-center justify-between gap-3"><h2 class="font-extrabold">{{ copy.appointments }}</h2><BsButton variant="link" v-if="report.locationId" type="button" class="text-sm font-bold text-[var(--bs-link)]" @click="openLocationSource(report.locationId, '/appointments')">{{ copy.openSource }}</BsButton></div><div v-if="report.appointments.total" class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4"><div class="rounded-xl bg-muted p-3"><p class="text-xs text-muted-foreground">{{ copy.appointments }}</p><strong class="text-xl">{{ report.appointments.total }}</strong></div><div class="rounded-xl bg-muted p-3"><p class="text-xs text-muted-foreground">{{ copy.completed }}</p><strong class="text-xl">{{ report.appointments.completed }}</strong></div><div class="rounded-xl bg-muted p-3"><p class="text-xs text-muted-foreground">{{ copy.cancelled }}</p><strong class="text-xl">{{ report.appointments.cancelled }}</strong></div><div class="rounded-xl bg-muted p-3"><p class="text-xs text-muted-foreground">{{ copy.noShow }}</p><strong class="text-xl">{{ report.appointments.noShow }}</strong></div></div><p v-else class="mt-4 text-sm text-muted-foreground">{{ copy.noAppointments }}</p><div v-if="report.appointments.busiestTimes.length" class="mt-4"><p class="text-xs font-bold text-muted-foreground">{{ copy.busiestTimes }}</p><div class="mt-2 flex flex-wrap gap-2"><span v-for="time in report.appointments.busiestTimes" :key="time.hour" class="rounded-full border border-border px-3 py-1 text-sm">{{ hourLabel(time.hour) }} · {{ time.count }}</span></div></div></article>
-          <article class="ls-card p-5"><div class="flex items-center justify-between gap-3"><h2 class="font-extrabold">{{ copy.cashVariance }}</h2><BsButton variant="link" v-if="report.locationId" type="button" class="text-sm font-bold text-[var(--bs-link)]" @click="openLocationSource(report.locationId, '/cash-shifts')">{{ copy.openSource }}</BsButton></div><div class="mt-4 grid grid-cols-2 gap-3"><div class="rounded-xl bg-muted p-3"><p class="text-xs text-muted-foreground">{{ copy.closedShifts }}</p><strong class="text-xl">{{ report.cash.closedShifts }}</strong></div><div class="rounded-xl bg-muted p-3"><p class="text-xs text-muted-foreground">{{ copy.cashVariance }}</p><strong class="text-xl" :class="Number(report.cash.variance) ? 'text-[var(--bs-status-warning)]' : ''">{{ money(report.cash.variance) }}</strong></div><div class="rounded-xl bg-muted p-3"><p class="text-xs text-muted-foreground">{{ copy.expected }}</p><strong>{{ money(report.cash.expected) }}</strong></div><div class="rounded-xl bg-muted p-3"><p class="text-xs text-muted-foreground">{{ copy.counted }}</p><strong>{{ money(report.cash.counted) }}</strong></div></div></article>
-        </section>
-
-        <section class="overflow-hidden ls-card"><div class="border-b border-border px-5 py-4"><h2 class="font-extrabold">{{ copy.outstanding }} · {{ money(report.outstanding.amount) }}</h2></div><div v-if="report.outstanding.customers.length" class="overflow-x-auto"><BsDataTable :value="report.outstanding.customers" data-key="customerId"><Column header-class="px-5 py-3 text-start" body-class="px-5 py-4 font-semibold"><template #header>{{ copy.customer }}</template><template #body="{ data: customer }"><NuxtLink :to="`/customers/${customer.customerId}`" class="text-[var(--bs-link)] hover:underline">{{ customer.name }}</NuxtLink></template></Column><Column header-class="px-5 py-3 text-end" body-class="px-5 py-4 text-end font-bold"><template #header>{{ copy.amount }}</template><template #body="{ data: customer }">{{ money(customer.amount) }}</template></Column></BsDataTable></div><p v-else class="p-6 text-sm text-muted-foreground">{{ copy.noOutstanding }}</p></section>
-
-        <section class="overflow-hidden ls-card"><div class="border-b border-border px-5 py-4"><h2 class="font-extrabold">{{ copy.staffPerformance }}</h2></div><div v-if="report.staff.length" class="overflow-x-auto"><BsDataTable :value="report.staff" data-key="membershipId"><Column header-class="px-5 py-3 text-start" body-class="px-5 py-4 font-semibold"><template #header>{{ copy.staffMember }}</template><template #body="{ data: member }">{{ member.name }}</template></Column><Column header-class="px-5 py-3 text-end" body-class="px-5 py-4 text-end"><template #header>{{ copy.sales }}</template><template #body="{ data: member }">{{ money(member.sales) }}</template></Column><Column header-class="px-5 py-3 text-end" body-class="px-5 py-4 text-end"><template #header>{{ copy.salesCount }}</template><template #body="{ data: member }">{{ member.saleCount }}</template></Column><Column header-class="px-5 py-3 text-end" body-class="px-5 py-4 text-end"><template #header>{{ copy.serviceCount }}</template><template #body="{ data: member }">{{ whole(member.serviceCount) }}</template></Column></BsDataTable></div><p v-else class="p-6 text-sm text-muted-foreground">{{ copy.noData }}</p></section>
-
-        <section class="overflow-hidden ls-card"><div class="border-b border-border px-5 py-4"><h2 class="font-extrabold">{{ copy.branchComparison }}</h2></div><div class="overflow-x-auto"><BsDataTable :value="report.locations" data-key="locationId"><Column header-class="px-5 py-3 text-start" body-class="px-5 py-4 font-semibold"><template #header>{{ copy.location }}</template><template #body="{ data: branch }"><BsButton variant="link" type="button" class="text-[var(--bs-link)] hover:underline" @click="openLocationSource(branch.locationId, '/sales')">{{ branch.name }}</BsButton></template></Column><Column header-class="px-5 py-3 text-end" body-class="px-5 py-4 text-end"><template #header>{{ copy.sales }}</template><template #body="{ data: branch }">{{ money(branch.sales) }}</template></Column><Column header-class="px-5 py-3 text-end" body-class="px-5 py-4 text-end"><template #header>{{ copy.collections }}</template><template #body="{ data: branch }">{{ money(branch.collections) }}</template></Column><Column v-if="report.canViewCosts" header-class="px-5 py-3 text-end" body-class="px-5 py-4 text-end"><template #header>{{ copy.expenses }}</template><template #body="{ data: branch }">{{ money(branch.expenses) }}</template></Column><Column header-class="px-5 py-3 text-end" body-class="px-5 py-4 text-end"><template #header>{{ copy.cashVariance }}</template><template #body="{ data: branch }">{{ money(branch.cashVariance) }}</template></Column></BsDataTable></div></section>
+        <BsGrid :columns="4">
+          <BsActionTile v-if="report.locationId" type="button" @click="openLocationSource(report.locationId, '/sales')">
+            <BsText as="p" size="sm" tone="muted">{{ copy.sales }}</BsText>
+            <BsText as="p" size="lg" emphasis="semibold">{{ money(report.sales) }}</BsText>
+            <BsText as="p" size="xs">{{ report.saleCount }} {{ copy.salesCount }}</BsText>
+          </BsActionTile>
+          <BsKpiCard v-else :title="copy.sales" :hint="`${report.saleCount} ${copy.salesCount}`">{{ money(report.sales) }}</BsKpiCard>
+          <BsKpiCard  :title="copy.collections" :hint="`${copy.averageTicket}: ${money(report.averageTicket)}`">{{ money(report.paymentsIn) }}</BsKpiCard>
+          <BsActionTile v-if="report.canViewCosts" to="/expenses">
+            <BsText as="p" size="sm" tone="muted">{{ copy.expenses }}</BsText>
+            <BsText as="p" size="lg" emphasis="semibold">{{ money(report.expenses.amount) }}</BsText>
+            <BsText as="p" size="xs">{{ report.expenses.count }} {{ copy.openSource }}</BsText>
+          </BsActionTile>
+          <BsKpiCard v-if="report.canViewCosts" :title="copy.operatingBalance" :hint="copy.accountingNotice">{{ money(report.expenses.operatingBalance) }}</BsKpiCard>
+        </BsGrid>
+        <BsGrid v-if="reportHighlights || highlightsPending" :columns="4">
+          <template v-if="reportHighlights">
+            <BsActionTile to="/reports?report=suppliers">
+              <BsText as="p" size="sm" tone="muted">{{ copy.supplierPayable }}</BsText>
+              <BsText as="p" size="lg" emphasis="semibold">{{ money(reportHighlights.payable) }}</BsText>
+            </BsActionTile>
+            <BsActionTile to="/reports?report=inventory">
+              <BsText as="p" size="sm" tone="muted">{{ copy.lowStock }}</BsText>
+              <BsText as="p" size="lg" emphasis="semibold">{{ reportHighlights.lowStockCount }}</BsText>
+            </BsActionTile>
+            <BsActionTile to="/reports?report=inventory">
+              <BsText as="p" size="sm" tone="muted">{{ copy.inventoryValue }}</BsText>
+              <BsText as="p" size="lg" emphasis="semibold">{{ money(reportHighlights.inventoryValue) }}</BsText>
+            </BsActionTile>
+            <BsActionTile to="/reports?report=margin">
+              <BsText as="p" size="sm" tone="muted">{{ copy.fifoMargin }}</BsText>
+              <BsText as="p" size="lg" emphasis="semibold">{{ money(reportHighlights.margin) }}</BsText>
+            </BsActionTile>
+          </template>
+          <template v-else>
+            <BsSkeleton v-for="index in 4" :key="index"/>
+          </template>
+        </BsGrid>
+        <BsGrid :columns="2">
+          <BsCard as="article" padding="md">
+            <BsHeading :level="2">{{ copy.salesMix }}</BsHeading>
+            <BsStack v-if="report.salesMix.length">
+              <BsInline v-for="item in report.salesMix" :key="item.type" justify="between">
+                <BsBox>
+                  <BsText as="p" emphasis="semibold">{{ copy[item.type] }}</BsText>
+                  <BsText as="p" size="xs" tone="muted">{{ copy.quantity }}: {{ whole(item.quantity) }}</BsText>
+                </BsBox>
+                <BsText as="strong">{{ money(item.amount) }}</BsText>
+              </BsInline>
+            </BsStack>
+            <BsText v-else as="p" size="sm" tone="muted">{{ copy.noData }}</BsText>
+          </BsCard>
+          <BsCard as="article" padding="md">
+            <BsHeading :level="2">{{ copy.paymentMix }}</BsHeading>
+            <BsStack v-if="report.paymentMix.length">
+              <BsBox v-for="item in report.paymentMix" :key="item.method">
+                <BsInline justify="between">
+                  <BsText as="strong">{{ methodLabel(item.method) }}</BsText>
+                  <BsText as="strong">{{ money(item.net) }}</BsText>
+                </BsInline>
+                <BsText as="p" size="xs" tone="muted">{{ copy.collected }} {{ money(item.collected) }} · {{ copy.refunded }} {{ money(item.refunded) }}</BsText>
+              </BsBox>
+            </BsStack>
+            <BsText v-else as="p" size="sm" tone="muted">{{ copy.noData }}</BsText>
+          </BsCard>
+        </BsGrid>
+        <BsGrid :columns="2">
+          <BsCard as="article" padding="md">
+            <BsInline justify="between">
+              <BsHeading :level="2">{{ copy.appointments }}</BsHeading>
+              <BsButton v-if="report.locationId" variant="link" type="button" @click="openLocationSource(report.locationId, '/appointments')">{{ copy.openSource }}</BsButton>
+            </BsInline>
+            <BsGrid v-if="report.appointments.total" :columns="4">
+              <BsBox>
+                <BsText as="p" size="xs" tone="muted">{{ copy.appointments }}</BsText>
+                <BsText as="strong" size="lg">{{ report.appointments.total }}</BsText>
+              </BsBox>
+              <BsBox>
+                <BsText as="p" size="xs" tone="muted">{{ copy.completed }}</BsText>
+                <BsText as="strong" size="lg">{{ report.appointments.completed }}</BsText>
+              </BsBox>
+              <BsBox>
+                <BsText as="p" size="xs" tone="muted">{{ copy.cancelled }}</BsText>
+                <BsText as="strong" size="lg">{{ report.appointments.cancelled }}</BsText>
+              </BsBox>
+              <BsBox>
+                <BsText as="p" size="xs" tone="muted">{{ copy.noShow }}</BsText>
+                <BsText as="strong" size="lg">{{ report.appointments.noShow }}</BsText>
+              </BsBox>
+            </BsGrid>
+            <BsText v-else as="p" size="sm" tone="muted">{{ copy.noAppointments }}</BsText>
+            <BsBox v-if="report.appointments.busiestTimes.length">
+              <BsText as="p" size="xs" tone="muted" emphasis="semibold">{{ copy.busiestTimes }}</BsText>
+              <BsInline>
+                <BsText v-for="time in report.appointments.busiestTimes" :key="time.hour" as="span" size="sm">{{ hourLabel(time.hour) }} · {{ time.count }}</BsText>
+              </BsInline>
+            </BsBox>
+          </BsCard>
+          <BsCard as="article" padding="md">
+            <BsInline justify="between">
+              <BsHeading :level="2">{{ copy.cashVariance }}</BsHeading>
+              <BsButton v-if="report.locationId" variant="link" type="button" @click="openLocationSource(report.locationId, '/cash-shifts')">{{ copy.openSource }}</BsButton>
+            </BsInline>
+            <BsGrid :columns="2">
+              <BsBox>
+                <BsText as="p" size="xs" tone="muted">{{ copy.closedShifts }}</BsText>
+                <BsText as="strong" size="lg">{{ report.cash.closedShifts }}</BsText>
+              </BsBox>
+              <BsBox>
+                <BsText as="p" size="xs" tone="muted">{{ copy.cashVariance }}</BsText>
+                <BsText as="strong" size="lg">{{ money(report.cash.variance) }}</BsText>
+              </BsBox>
+              <BsBox>
+                <BsText as="p" size="xs" tone="muted">{{ copy.expected }}</BsText>
+                <BsText as="strong">{{ money(report.cash.expected) }}</BsText>
+              </BsBox>
+              <BsBox>
+                <BsText as="p" size="xs" tone="muted">{{ copy.counted }}</BsText>
+                <BsText as="strong">{{ money(report.cash.counted) }}</BsText>
+              </BsBox>
+            </BsGrid>
+          </BsCard>
+        </BsGrid>
+        <BsPanel padding="md">
+          <BsBox>
+            <BsHeading :level="2">{{ copy.outstanding }} · {{ money(report.outstanding.amount) }}</BsHeading>
+          </BsBox>
+          <BsBox v-if="report.outstanding.customers.length" scroll="x">
+            <BsDataTable :value="report.outstanding.customers" data-key="customerId" :columns="[{ key: 'column0', header: (copy.customer) }, { key: 'column1', header: (copy.amount), align: 'end' }]">
+              <template #cell-column0="{ row: customer }">
+                <BsLink :to="`/customers/${customer.customerId}`">{{ customer.name }}</BsLink>
+              </template>
+              <template #cell-column1="{ row: customer }">{{ money(customer.amount) }}</template>
+            </BsDataTable>
+          </BsBox>
+          <BsText v-else as="p" size="sm" tone="muted">{{ copy.noOutstanding }}</BsText>
+        </BsPanel>
+        <BsPanel padding="md">
+          <BsBox>
+            <BsHeading :level="2">{{ copy.staffPerformance }}</BsHeading>
+          </BsBox>
+          <BsBox v-if="report.staff.length" scroll="x">
+            <BsDataTable :value="report.staff" data-key="membershipId" :columns="[{ key: 'column0', header: (copy.staffMember) }, { key: 'column1', header: (copy.sales), align: 'end' }, { key: 'column2', header: (copy.salesCount), align: 'end' }, { key: 'column3', header: (copy.serviceCount), align: 'end' }]">
+              <template #cell-column0="{ row: member }">{{ member.name }}</template>
+              <template #cell-column1="{ row: member }">{{ money(member.sales) }}</template>
+              <template #cell-column2="{ row: member }">{{ member.saleCount }}</template>
+              <template #cell-column3="{ row: member }">{{ whole(member.serviceCount) }}</template>
+            </BsDataTable>
+          </BsBox>
+          <BsText v-else as="p" size="sm" tone="muted">{{ copy.noData }}</BsText>
+        </BsPanel>
+        <BsPanel padding="md">
+          <BsBox>
+            <BsHeading :level="2">{{ copy.branchComparison }}</BsHeading>
+          </BsBox>
+          <BsBox scroll="x">
+            <BsDataTable :value="report.locations" data-key="locationId" :columns="[{ key: 'column0', header: (copy.location) }, { key: 'column1', header: (copy.sales), align: 'end' }, { key: 'column2', header: (copy.collections), align: 'end' }, { key: 'column3', header: (copy.expenses), hidden: !(report.canViewCosts), align: 'end' }, { key: 'column4', header: (copy.cashVariance), align: 'end' }]">
+              <template #cell-column0="{ row: branch }">
+                <BsButton variant="link" type="button" @click="openLocationSource(branch.locationId, '/sales')">{{ branch.name }}</BsButton>
+              </template>
+              <template #cell-column1="{ row: branch }">{{ money(branch.sales) }}</template>
+              <template #cell-column2="{ row: branch }">{{ money(branch.collections) }}</template>
+              <template #cell-column3="{ row: branch }">{{ money(branch.expenses) }}</template>
+              <template #cell-column4="{ row: branch }">{{ money(branch.cashVariance) }}</template>
+            </BsDataTable>
+          </BsBox>
+        </BsPanel>
       </template>
     </template>
-  </div>
+  </BsStack>
 </template>

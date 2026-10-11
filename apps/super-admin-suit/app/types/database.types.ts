@@ -695,6 +695,7 @@ export type Database = {
           description: Json
           display_name: Json
           id: string
+          sort_order: number
           stable_key: string
           status: string
           updated_at: string
@@ -707,6 +708,7 @@ export type Database = {
           description?: Json
           display_name: Json
           id?: string
+          sort_order?: number
           stable_key: string
           status?: string
           updated_at?: string
@@ -719,6 +721,7 @@ export type Database = {
           description?: Json
           display_name?: Json
           id?: string
+          sort_order?: number
           stable_key?: string
           status?: string
           updated_at?: string

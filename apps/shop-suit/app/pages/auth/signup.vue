@@ -218,7 +218,7 @@ onMounted(async () => {
     v-if="recovery" eyebrow="Shop Suit" :title="copy.recoveryTitle" :description="copy.existingPending"
     :pending="pending" :error="errorMessage" :submit-label="copy.signIn" @submit="clearDraft(); navigateTo('/auth/login')"
   >
-    <NuxtLink to="/auth/forgot-password" class="font-bold underline" @click="clearDraft">{{ copy.recover }}</NuxtLink>
+    <BsLink to="/auth/forgot-password" @click="clearDraft">{{ copy.recover }}</BsLink>
     <BsButton type="button" variant="secondary" :disabled="pending || verification.resendIn.value > 0" @click="resend">{{ verification.resendIn.value > 0 ? `${copy.wait} ${verification.format(verification.resendIn.value)}` : copy.resend }}</BsButton>
     <template #footer><BsButton type="button" variant="link" :disabled="pending" @click="startOver">{{ copy.changeEmail }} · {{ copy.startOver }}</BsButton></template>
   </BsAuthForm>
@@ -228,32 +228,58 @@ onMounted(async () => {
       :pending="pending" :error="errorMessage" :notice="noticeMessage" :back-label="copy.back"
       :submit-label="step === 1 ? copy.next : copy.create" :pending-label="copy.pending" @back="back"
     >
-      <div v-if="step === 1" class="space-y-4">
-        <BsFloatingField :label="t('auth.displayName')"><InputText id="signup-name" v-model="form.displayName" class="ls-input" autocomplete="name" required /></BsFloatingField>
-        <BsFloatingField :label="t('auth.email')"><InputText id="signup-email" v-model="form.email" class="ls-input" type="email" autocomplete="email" dir="ltr" :readonly="existingAccount" required /></BsFloatingField>
-        <BsFloatingField v-if="!existingAccount" :label="t('auth.password')"><InputText id="signup-password" v-model="form.password" class="ls-input" type="password" autocomplete="new-password" dir="ltr" minlength="6" required /></BsFloatingField>
-      </div>
-      <div v-else class="space-y-4">
-        <BsFloatingField :label="copy.shopName"><InputText id="signup-shop" v-model="form.shopName" class="ls-input" minlength="2" maxlength="120" required /></BsFloatingField>
-        <fieldset class="grid gap-3 rounded-xl border border-border p-4 sm:grid-cols-2">
-          <legend class="px-1 text-sm font-bold">{{ copy.mainLocation }}</legend>
-          <BsFloatingField :label="copy.mainLocationName"><InputText id="signup-main-location" v-model="form.mainLocationName" class="ls-input" minlength="2" maxlength="120" required /></BsFloatingField>
-          <BsFloatingField :label="copy.mainLocationCode"><InputText id="signup-main-location-code" v-model="form.mainLocationCode" class="ls-input" maxlength="32" /></BsFloatingField>
-          <BsFloatingField :label="copy.mainLocationAddress"><InputText id="signup-main-location-address" v-model="form.mainLocationAddress" class="ls-input" maxlength="500" /></BsFloatingField>
-          <BsFloatingField :label="copy.mainLocationPhone"><InputText id="signup-main-location-phone" v-model="form.mainLocationPhone" class="ls-input" maxlength="80" dir="auto" /></BsFloatingField>
-        </fieldset>
-        <div class="rounded-xl border border-border bg-muted/40 p-3"><p class="text-sm font-bold">{{ copy.trial }}</p><p class="mt-1 text-xs text-fg-muted">{{ copy.trialHelp }}</p></div>
-        <fieldset class="space-y-2">
-          <legend class="text-sm font-bold">{{ copy.businessMode }}</legend>
-          <p class="text-xs text-fg-muted">{{ copy.businessModeHelp }}</p>
-          <label v-for="mode in modeOptions" :key="mode.value" class="flex cursor-pointer items-center gap-2 rounded-xl border border-border p-3">
-            <input v-model="form.businessMode" type="radio" name="signup-business-mode" :value="mode.value">
-            <span class="font-semibold">{{ mode.label }}</span>
-          </label>
-        </fieldset>
-      </div>
+      <BsStack v-if="step === 1">
+        <BsField :label="t('auth.displayName')" required>
+          <template #default="field">
+            <BsInput :id="field.id" v-model="form.displayName" autocomplete="name" required/>
+          </template>
+        </BsField>
+        <BsField :label="t('auth.email')" required>
+          <template #default="field">
+            <BsInput :id="field.id" v-model="form.email" type="email" autocomplete="email" dir="ltr" :readonly="existingAccount" required/>
+          </template>
+        </BsField>
+        <BsField v-if="!existingAccount" :label="t('auth.password')" required>
+          <template #default="field">
+            <BsInput :id="field.id" v-model="form.password" type="password" autocomplete="new-password" dir="ltr" :minlength="6" required/>
+          </template>
+        </BsField>
+      </BsStack>
+      <BsStack v-else>
+        <BsField :label="copy.shopName" required>
+          <template #default="field">
+            <BsInput :id="field.id" v-model="form.shopName" :minlength="2" :maxlength="120" required/>
+          </template>
+        </BsField>
+        <BsFieldGroup :legend="copy.mainLocation" layout="grid" :columns="2">
+          <BsField :label="copy.mainLocationName" required>
+            <template #default="field">
+              <BsInput :id="field.id" v-model="form.mainLocationName" :minlength="2" :maxlength="120" required/>
+            </template>
+          </BsField>
+          <BsField :label="copy.mainLocationCode">
+            <template #default="field">
+              <BsInput :id="field.id" v-model="form.mainLocationCode" :maxlength="32"/>
+            </template>
+          </BsField>
+          <BsField :label="copy.mainLocationAddress">
+            <template #default="field">
+              <BsInput :id="field.id" v-model="form.mainLocationAddress" :maxlength="500"/>
+            </template>
+          </BsField>
+          <BsField :label="copy.mainLocationPhone">
+            <template #default="field">
+              <BsInput :id="field.id" v-model="form.mainLocationPhone" :maxlength="80" dir="auto"/>
+            </template>
+          </BsField>
+        </BsFieldGroup>
+        <BsAlert tone="info" :title="copy.trial" :description="copy.trialHelp"/>
+        <BsChoiceGroup v-model="form.businessMode" type="radio" name="signup-business-mode" :legend="copy.businessMode" :description="copy.businessModeHelp" :options="modeOptions"/>
+      </BsStack>
     </BsSignupWizard>
-    <template #footer><NuxtLink to="/auth/login" class="underline">{{ copy.login }}</NuxtLink></template>
+    <template #footer>
+      <BsLink to="/auth/login">{{ copy.login }}</BsLink>
+    </template>
   </BsAuthForm>
   <BsVerificationForm
     v-else v-model="otp" :title="copy.verify" :description="copy.verifyBody" :email="form.email" :code-label="copy.code"
@@ -264,6 +290,6 @@ onMounted(async () => {
     :resend-disabled="verification.resendIn.value > 0" @submit="verify" @resend="resend"
   >
     <template #secondary><BsButton v-if="!existingAccount" variant="link" type="button" :disabled="pending" @click="startOver">{{ copy.changeEmail }} · {{ copy.startOver }}</BsButton></template>
-    <template #footer><NuxtLink to="/auth/login" class="font-bold underline" @click="clearDraft">{{ copy.signIn }}</NuxtLink> · <NuxtLink to="/auth/forgot-password" class="underline" @click="clearDraft">{{ copy.recover }}</NuxtLink></template>
+    <template #footer><BsLink to="/auth/login" variant="standalone" @click="clearDraft">{{ copy.signIn }}</BsLink> · <BsLink to="/auth/forgot-password" @click="clearDraft">{{ copy.recover }}</BsLink></template>
   </BsVerificationForm>
 </template>

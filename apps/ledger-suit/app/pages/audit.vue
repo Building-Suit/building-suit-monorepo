@@ -124,61 +124,68 @@ watch(currentId, () => fetchRows(), { immediate: true })
 </script>
 
 <template>
-  <div class="space-y-6">
-    <header>
-      <h1 class="text-h1 font-bold">{{ t('audit.title') }}</h1>
-      <p class="mt-1 text-sm text-fg-muted">{{ t('audit.subtitle') }}</p>
-    </header>
-
-    <section v-if="windowUnlimited || windowDays" class="ls-card space-y-1 p-4" role="status">
-      <p class="font-semibold">{{ windowUnlimited ? t('audit.windowUnlimited') : t('audit.window', { days: windowDays }) }}</p>
-      <p class="text-sm text-fg-muted">{{ t('audit.stored') }}</p>
-    </section>
-
-    <p v-if="errorMessage" class="ls-error" role="alert">{{ errorMessage }}</p>
+  <BsStack gap="lg">
+    <BsBox as="header">
+      <BsHeading :level="1" size="h1">{{ t('audit.title') }}</BsHeading>
+      <BsText size="sm" tone="muted">{{ t('audit.subtitle') }}</BsText>
+    </BsBox>
+    <BsCard v-if="windowUnlimited || windowDays" role="status" as="section" padding="md">
+      <BsStack gap="xs">
+        <BsText emphasis="semibold">{{ windowUnlimited ? t('audit.windowUnlimited') : t('audit.window', { days: windowDays }) }}</BsText>
+        <BsText size="sm" tone="muted">{{ t('audit.stored') }}</BsText>
+      </BsStack>
+    </BsCard>
+    <BsText v-if="errorMessage" role="alert" tone="danger">{{ errorMessage }}</BsText>
     <BsSectionSkeleton v-if="loading" variant="table" :rows="7" />
     <BsEmptyState v-else-if="!rows.length && !errorMessage" :title="t('audit.empty')" />
-
     <template v-else-if="rows.length">
-      <div class="ls-card overflow-x-auto">
-        <BsDataTable :value="rows" data-key="id">
-  <Column body-class="whitespace-nowrap">
-    <template #header>{{ t('audit.date') }}</template>
-    <template #body="{ data: row }">{{ formatTimestamp(row.created_at) }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('audit.actor') }}</template>
-    <template #body="{ data: row }"><div dir="ltr">{{ row.actor_email || t('audit.system') }}</div></template>
-  </Column>
-  <Column >
-    <template #header>{{ t('audit.activity') }}</template>
-    <template #body="{ data: row }"><p class="font-medium">{{ activityLabel(row) }}</p>
-                <p class="text-xs text-fg-muted" dir="ltr">{{ row.action }}</p></template>
-  </Column>
-  <Column >
-    <template #header>{{ t('audit.record') }}</template>
-    <template #body="{ data: row }"><p>{{ entityLabel(row.entity_type) }}</p>
-                <p v-if="row.entity_id" class="text-xs text-fg-muted" dir="ltr">{{ row.entity_id }}</p></template>
-  </Column>
-  <Column >
-    <template #header>{{ t('audit.changes') }}</template>
-    <template #body="{ data: row }"><details>
-                  <summary class="cursor-pointer text-link">{{ t('audit.viewChanges') }}</summary>
-                  <div class="mt-3 grid min-w-80 gap-3 text-xs">
-                    <div><p class="font-semibold">{{ t('audit.before') }}</p><pre class="mt-1 overflow-auto rounded-control bg-background p-2" dir="ltr">{{ jsonText(row.before_state) }}</pre></div>
-                    <div><p class="font-semibold">{{ t('audit.after') }}</p><pre class="mt-1 overflow-auto rounded-control bg-background p-2" dir="ltr">{{ jsonText(row.after_state) }}</pre></div>
-                    <div><p class="font-semibold">{{ t('audit.metadata') }}</p><pre class="mt-1 overflow-auto rounded-control bg-background p-2" dir="ltr">{{ jsonText(row.metadata) }}</pre></div>
-                  </div>
-                </details></template>
-  </Column>
-</BsDataTable>
-      </div>
-
-      <div v-if="hasMore" class="flex justify-center">
-        <BsButton type="button" class="ls-btn" :disabled="loadingMore" @click="fetchRows(true)">
-          {{ t('audit.loadMore') }}
-        </BsButton>
-      </div>
+      <BsCard as="div" padding="none">
+        <BsDataTable
+          :value="rows"
+          row-key="id"
+          :columns="[{ key: 'column1', header: (t('audit.date')) }, { key: 'column2', header: (t('audit.actor')) }, { key: 'column3', header: (t('audit.activity')) }, { key: 'column4', header: (t('audit.record')) }, { key: 'column5', header: (t('audit.changes')) }]"
+        >
+          <template #header-column1>{{ t('audit.date') }}</template>
+          <template #cell-column1="{ row }">{{ formatTimestamp(row.created_at) }}</template>
+          <template #header-column2>{{ t('audit.actor') }}</template>
+          <template #cell-column2="{ row }">
+            <BsBox dir="ltr">{{ row.actor_email || t('audit.system') }}</BsBox>
+          </template>
+          <template #header-column3>{{ t('audit.activity') }}</template>
+          <template #cell-column3="{ row }">
+            <BsText>{{ activityLabel(row) }}</BsText>
+            <BsText dir="ltr" size="xs" tone="muted">{{ row.action }}</BsText>
+          </template>
+          <template #header-column4>{{ t('audit.record') }}</template>
+          <template #cell-column4="{ row }">
+            <BsText>{{ entityLabel(row.entity_type) }}</BsText>
+            <BsText v-if="row.entity_id" dir="ltr" size="xs" tone="muted">{{ row.entity_id }}</BsText>
+          </template>
+          <template #header-column5>{{ t('audit.changes') }}</template>
+          <template #cell-column5="{ row }">
+            <BsDisclosure>
+              <template #summary>{{ t('audit.viewChanges') }}</template>
+              <BsGrid :columns="1" gap="md">
+                <BsBox>
+                  <BsText emphasis="semibold">{{ t('audit.before') }}</BsText>
+                  <BsCodeBlock dir="ltr">{{ jsonText(row.before_state) }}</BsCodeBlock>
+                </BsBox>
+                <BsBox>
+                  <BsText emphasis="semibold">{{ t('audit.after') }}</BsText>
+                  <BsCodeBlock dir="ltr">{{ jsonText(row.after_state) }}</BsCodeBlock>
+                </BsBox>
+                <BsBox>
+                  <BsText emphasis="semibold">{{ t('audit.metadata') }}</BsText>
+                  <BsCodeBlock dir="ltr">{{ jsonText(row.metadata) }}</BsCodeBlock>
+                </BsBox>
+              </BsGrid>
+            </BsDisclosure>
+          </template>
+        </BsDataTable>
+      </BsCard>
+      <BsInline v-if="hasMore" gap="none" :wrap="false" justify="center">
+        <BsButton type="button" :disabled="loadingMore" @click="fetchRows(true)">{{ t('audit.loadMore') }}</BsButton>
+      </BsInline>
     </template>
-  </div>
+  </BsStack>
 </template>

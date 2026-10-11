@@ -8,4 +8,6 @@ useHead(() => ({
 }))
 </script>
 
-<template><BsAppRoot toast-host /></template>
+<template>
+  <BsAppRoot toast-host />
+</template>
