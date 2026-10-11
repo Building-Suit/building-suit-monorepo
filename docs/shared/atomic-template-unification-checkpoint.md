@@ -8,6 +8,7 @@ Task: `atomic-template-unification` (interactive Codex owner).
 - Branch: `codex/shared/atomic-template-unification`.
 - Worktree: `.local/worktrees/shared-atomic-template-unification`.
 - Verified open parent: [Shared #238](https://github.com/Building-Suit/building-suit-monorepo/pull/238), `codex/shared/bs-sa-future-suit-001`, exact committed HEAD `089381052fccdd9768d20ad403037f12bd3fa0d9`.
+- Reconciled source checkpoint: `47a328de3dead28fd3576b6814e5caceec4cac68`; worktree clean after the merge commit. Parent, verified ancestor and accepted staging SHA are all ancestors of this checkpoint.
 - No child PR has been published. Its required target remains the parent branch above, never `stg`.
 - Parent discovery used live head/base relationships across the complete Shared chain. The primary checkout was 195 commits behind `origin/stg` and had unrelated control-plane edits; it was preserved.
 - The new child began at the exact parent SHA. It incorporated verified ancestor `cf5eb9cd6349f4517ca18beb6025d88167c3e279` through owned merge `d621de0`. The only first-merge conflict was the shared documentation index; both entries were retained.
@@ -47,7 +48,7 @@ Commands ran in the owned worktree. Initial failures were repaired; their passin
 | Command | Result |
 |---|---|
 | `pnpm agent:preflight` in primary checkout | Failed only for stale current upstream; live GitHub/worktree state obtained. Primary source unchanged. |
-| Second `pnpm agent:preflight` in owned child | Failed with `Preflight failed (1)` before producing the state report; direct fetch/live-PR fallback is pending. No publication attempted. |
+| Second `pnpm agent:preflight` in owned child | Failed with `Preflight failed (1)` before producing the state report; direct GitHub fallback also failed with `error connecting to api.github.com`; the fetch retry remained pending at checkpoint time. No publication attempted. |
 | `pnpm install --frozen-lockfile` | Passed; workspace prepare completed. |
 | `pnpm check` | Passed: canonical tokens, five discovered Suits, zero classified local components, 80 historical migrations unchanged. |
 | `pnpm --filter @building-suit/shop-suit typecheck` | Passed after union and restored member-table binding fixes. Missing local Supabase configuration warnings remain; no hosted configuration was read or changed. |
