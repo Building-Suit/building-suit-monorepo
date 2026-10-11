@@ -42,7 +42,7 @@ watch(() => route.fullPath, () => { mobileNavOpen.value = false })
         </nav>
 
         <div class="ms-auto flex items-center gap-2 xl:ms-3">
-          <SettingsMenu />
+          <BsSettingsMenu />
           <NuxtLink :to="signedIn ? dashboardPath : loginPath" class="ls-btn ls-btn-sm hidden xl:inline-flex">
             {{ signedIn ? labels.openApp : labels.signIn }}
           </NuxtLink>
@@ -57,7 +57,7 @@ watch(() => route.fullPath, () => { mobileNavOpen.value = false })
             aria-controls="marketing-mobile-navigation"
             @click="mobileNavOpen = !mobileNavOpen"
           >
-            <AppIcon :name="mobileNavOpen ? 'close' : 'menu'" />
+            <BsIcon :name="mobileNavOpen ? 'close' : 'menu'" />
           </button>
         </div>
       </div>
@@ -67,7 +67,7 @@ watch(() => route.fullPath, () => { mobileNavOpen.value = false })
           <div class="mx-auto max-w-[90rem] px-5 py-5 sm:px-8 lg:px-12">
             <nav class="grid text-sm" :aria-label="labels.navigation">
               <NuxtLink v-for="item in navigation" :key="`mobile-${item.to}`" :to="item.to" class="bs-marketing-mobile-link">
-                <span>{{ item.label }}</span><AppIcon name="arrowRight" directional />
+                <span>{{ item.label }}</span><BsIcon name="arrowRight" directional />
               </NuxtLink>
             </nav>
             <div class="mt-5 grid grid-cols-2 gap-2 border-t border-line pt-5">

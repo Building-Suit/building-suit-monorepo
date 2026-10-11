@@ -58,7 +58,7 @@ function date(value: string) { return new Intl.DateTimeFormat(locale.value, { da
               <input :key="selected.evidence_id ?? selected.id" type="file" accept="image/jpeg,image/png,application/pdf" class="ls-input" :disabled="pending" @change="chooseFile">
               <span class="block text-xs text-fg-muted">{{ t('billing.manual.fileHint') }}</span>
             </label>
-            <FloatingField :label="t('billing.manual.reason')"><textarea v-model="reason" class="ls-input" maxlength="1000" required :disabled="pending" /></FloatingField>
+            <BsFloatingField :label="t('billing.manual.reason')"><textarea v-model="reason" class="ls-input" maxlength="1000" required :disabled="pending" /></BsFloatingField>
             <div class="flex flex-wrap gap-2">
               <BsButton v-if="uploadAllowed" type="submit" class="ls-btn ls-btn-primary" :disabled="pending || !file || !reason.trim()">{{ t('billing.manual.submit') }}</BsButton>
               <BsButton type="button" class="ls-btn" :disabled="pending || !reason.trim()" @click="cancelRequest">{{ t('billing.manual.cancel') }}</BsButton>

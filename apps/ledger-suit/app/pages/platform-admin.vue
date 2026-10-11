@@ -124,9 +124,9 @@ function planName(key: unknown) {
       <p v-if="error" class="ls-error" role="alert">{{ error }}</p>
       <p v-if="success" role="status">{{ t('admin.saved') }}</p>
       <div class="flex flex-wrap items-end gap-3">
-        <FloatingField :label="t('admin.view')"><select v-model="resource" class="ls-input" :disabled="pending || denied" @change="changeResource"><option v-for="view in resources" :key="view" :value="view">{{ t(`admin.views.${view}`) }}</option></select></FloatingField>
-        <FloatingField v-if="resource !== 'status'" :label="t('admin.search')"><input v-model="search" class="ls-input" maxlength="100" :disabled="pending || denied" @keyup.enter="applyFilters"></FloatingField>
-        <FloatingField v-if="filterOptions[resource]?.length" :label="t('admin.filter')"><select v-model="status" class="ls-input" :disabled="pending || denied"><option value="">{{ t('admin.allStates') }}</option><option v-for="item in filterOptions[resource]" :key="item" :value="item">{{ t(`admin.states.${item}`, item) }}</option></select></FloatingField>
+        <BsFloatingField :label="t('admin.view')"><select v-model="resource" class="ls-input" :disabled="pending || denied" @change="changeResource"><option v-for="view in resources" :key="view" :value="view">{{ t(`admin.views.${view}`) }}</option></select></BsFloatingField>
+        <BsFloatingField v-if="resource !== 'status'" :label="t('admin.search')"><input v-model="search" class="ls-input" maxlength="100" :disabled="pending || denied" @keyup.enter="applyFilters"></BsFloatingField>
+        <BsFloatingField v-if="filterOptions[resource]?.length" :label="t('admin.filter')"><select v-model="status" class="ls-input" :disabled="pending || denied"><option value="">{{ t('admin.allStates') }}</option><option v-for="item in filterOptions[resource]" :key="item" :value="item">{{ t(`admin.states.${item}`, item) }}</option></select></BsFloatingField>
         <BsButton v-if="resource !== 'status'" type="button" class="ls-btn" :disabled="pending" @click="applyFilters">{{ t('admin.apply') }}</BsButton>
         <BsButton v-if="resource !== 'status' && (search || status || targetId)" type="button" class="ls-btn" :disabled="pending" @click="clearFilters">{{ t('admin.clear') }}</BsButton>
         <BsButton type="button" class="ls-btn" :disabled="pending" @click="refresh">{{ t('common.refresh') }}</BsButton>
@@ -156,17 +156,17 @@ function planName(key: unknown) {
         <template v-if="dialogMode === 'payment'">
           <BsButton type="button" class="ls-btn" :disabled="pending" @click="inspectReceipt">{{ t('admin.inspect') }}</BsButton>
           <a v-if="receiptUrl" :href="receiptUrl" target="_blank" rel="noopener noreferrer" class="block text-link">{{ t('admin.openReceipt') }}</a>
-          <FloatingField v-if="role === 'billing_operator' || isPlatformAdmin" :label="t('admin.action')"><select v-model="action" class="ls-input" :disabled="pending"><option v-for="state in ['under_review', 'approved', 'rejected']" :key="state" :value="state">{{ t(`billing.manual.states.${state}`) }}</option></select></FloatingField>
+          <BsFloatingField v-if="role === 'billing_operator' || isPlatformAdmin" :label="t('admin.action')"><select v-model="action" class="ls-input" :disabled="pending"><option v-for="state in ['under_review', 'approved', 'rejected']" :key="state" :value="state">{{ t(`billing.manual.states.${state}`) }}</option></select></BsFloatingField>
         </template>
-        <FloatingField v-else-if="dialogMode === 'access'" :label="t('admin.action')"><select v-model="action" class="ls-input" :disabled="pending"><option value="suspend">{{ t('admin.suspend') }}</option><option value="reactivate">{{ t('admin.reactivate') }}</option></select></FloatingField>
+        <BsFloatingField v-else-if="dialogMode === 'access'" :label="t('admin.action')"><select v-model="action" class="ls-input" :disabled="pending"><option value="suspend">{{ t('admin.suspend') }}</option><option value="reactivate">{{ t('admin.reactivate') }}</option></select></BsFloatingField>
         <template v-else-if="dialogMode === 'subscription'">
           <p v-if="planCatalogError" class="ls-error" role="alert">{{ t('billing.plans.loadFailed') }}</p>
-          <FloatingField :label="t('admin.targetPlan')"><select v-model="targetPlanKey" class="ls-input" :disabled="pending || planCatalogPending || !!planCatalogError"><option v-for="plan in purchasablePlans" :key="plan.plan_key" :value="plan.plan_key">{{ planName(plan.plan_key) }}</option></select></FloatingField>
+          <BsFloatingField :label="t('admin.targetPlan')"><select v-model="targetPlanKey" class="ls-input" :disabled="pending || planCatalogPending || !!planCatalogError"><option v-for="plan in purchasablePlans" :key="plan.plan_key" :value="plan.plan_key">{{ planName(plan.plan_key) }}</option></select></BsFloatingField>
         </template>
-        <FloatingField v-else :label="t('admin.action')"><select v-model="action" class="ls-input" :disabled="pending"><option v-for="item in ['start', 'wait_customer', 'resolve', 'close', 'reopen', 'remind']" :key="item" :value="item">{{ t(`admin.supportActions.${item}`) }}</option></select></FloatingField>
+        <BsFloatingField v-else :label="t('admin.action')"><select v-model="action" class="ls-input" :disabled="pending"><option v-for="item in ['start', 'wait_customer', 'resolve', 'close', 'reopen', 'remind']" :key="item" :value="item">{{ t(`admin.supportActions.${item}`) }}</option></select></BsFloatingField>
         <template v-if="dialogMode !== 'payment' || role === 'billing_operator' || isPlatformAdmin">
-          <FloatingField :label="t(dialogMode === 'payment' ? 'admin.paymentReason' : 'admin.reason')"><textarea v-model="reason" class="ls-input" required maxlength="1000" :disabled="pending" /></FloatingField>
-          <FloatingField :label="t('admin.context')"><textarea v-model="context" class="ls-input" required maxlength="1000" :disabled="pending" /></FloatingField>
+          <BsFloatingField :label="t(dialogMode === 'payment' ? 'admin.paymentReason' : 'admin.reason')"><textarea v-model="reason" class="ls-input" required maxlength="1000" :disabled="pending" /></BsFloatingField>
+          <BsFloatingField :label="t('admin.context')"><textarea v-model="context" class="ls-input" required maxlength="1000" :disabled="pending" /></BsFloatingField>
         </template>
         <template #actions="{ close: dismiss }">
           <BsButton type="button" :disabled="pending" @click="dismiss">{{ t('common.cancel') }}</BsButton>

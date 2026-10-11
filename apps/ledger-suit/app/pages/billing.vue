@@ -46,7 +46,7 @@ const currentPlanName = computed(() => {
           <p class="text-lg font-bold">{{ currentPlanName }}</p>
           <p class="text-sm text-fg-muted">{{ t(`billing.states.${accessState}`) }}</p>
         </div>
-        <StatusBadge :status="accessState" />
+        <BsStatusBadge :status="accessState" />
       </div>
 
       <dl class="grid gap-4 sm:grid-cols-2">

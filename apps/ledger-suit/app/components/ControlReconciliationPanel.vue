@@ -132,9 +132,9 @@ async function submitAdjustment() {
         <h2 id="control-reconciliation-heading" class="text-lg font-bold">{{ t('controls.reconciliation') }}</h2>
         <p class="mt-1 text-sm text-fg-muted">{{ t('controls.reconciliationHint') }}</p>
       </div>
-      <FloatingField :label="t('controls.asOfDate')">
+      <BsFloatingField :label="t('controls.asOfDate')">
         <input id="control-as-of-date" v-model="asOfDate" type="date" class="ls-input">
-      </FloatingField>
+      </BsFloatingField>
     </div>
     <p v-if="loading" class="p-4 text-sm text-fg-muted" role="status">{{ t('accounts.loading') }}</p>
     <p v-else-if="loadError" class="ls-error m-4" role="alert">{{ loadError }}</p>
@@ -144,20 +144,20 @@ async function submitAdjustment() {
       <Column :header="t('controls.glBalance')" body-class="ls-num"><template #body="{ data }"><MoneyText :amount-minor="data.gl_balance_minor" /></template></Column>
       <Column :header="t('controls.subledgerBalance')" body-class="ls-num"><template #body="{ data }"><MoneyText v-if="data.subledger_balance_minor !== null" :amount-minor="data.subledger_balance_minor" /><span v-else>{{ t('controls.subledgerUnavailable') }}</span></template></Column>
       <Column :header="t('controls.variance')" body-class="ls-num"><template #body="{ data }"><MoneyText v-if="data.variance_minor !== null" :amount-minor="data.variance_minor" /><span v-else>{{ t('common.dash') }}</span></template></Column>
-      <Column :header="t('controls.status')"><template #body="{ data }"><StatusBadge :status="data.status" :label="t(`controls.statuses.${data.status}`)" :tone="data.status === 'reconciled' ? 'success' : data.status === 'unreconciled' ? 'danger' : 'warning'" /><p v-if="data.explanation_reason" class="mt-1 text-xs text-fg-muted">{{ data.explanation_reason }} · {{ data.explanation_reference }}</p></template></Column>
+      <Column :header="t('controls.status')"><template #body="{ data }"><BsStatusBadge :status="data.status" :label="t(`controls.statuses.${data.status}`)" :tone="data.status === 'reconciled' ? 'success' : data.status === 'unreconciled' ? 'danger' : 'warning'" /><p v-if="data.explanation_reason" class="mt-1 text-xs text-fg-muted">{{ data.explanation_reason }} · {{ data.explanation_reference }}</p></template></Column>
       <Column v-if="can('controls.adjust')" :header="t('accounts.actions')"><template #body="{ data }"><NuxtLink v-if="data.subledger_type === 'inventory' && can('inventory.read')" to="/inventory-accounting" class="text-link underline">{{ t('inventory.sourceLink') }}</NuxtLink><BsButton v-else-if="data.subledger_type !== 'inventory'" type="button" class="ls-btn ls-btn-sm" @click="openAdjustment(data.control_account_id)">{{ t('controls.adjust') }}</BsButton></template></Column>
     </BsDataTable>
   </section>
 
   <BsRecordActionDialog v-if="dialogOpen" :visible="true" :title="t('controls.adjust')" size="md" :dirty="dirty" :pending="submitting" :error="formError" :submit-label="t('common.save')" :cancel-label="t('common.cancel')" @update:visible="value => { if (!value) dialogOpen = false }" @submit="submitAdjustment">
         <p class="text-sm text-fg-muted">{{ selected?.name }} · {{ selected?.control_subledger_type ? t(`controls.subledgers.${selected.control_subledger_type}`) : '' }}</p>
-        <FloatingField :label="t('controls.asOfDate')"><input v-model="form.date" type="date" class="ls-input" required></FloatingField>
-        <FloatingField :label="t('controls.counterpartAccount')"><select v-model="form.counterpartAccountId" class="ls-input" required><option value="">{{ t('controls.choosePostingAccount') }}</option><option v-for="account in postingAccounts" :key="account.account_id" :value="account.account_id">{{ account.name }}</option></select></FloatingField>
-        <FloatingField :label="t('controls.controlSide')"><select v-model="form.controlSide" class="ls-input"><option value="debit">{{ t('accounts.sides.debit') }}</option><option value="credit">{{ t('accounts.sides.credit') }}</option></select></FloatingField>
-        <FloatingField :label="t('transactions.amount')"><input v-model="form.amount" inputmode="decimal" class="ls-input" required></FloatingField>
-        <FloatingField :label="t('transactions.description')"><input v-model="form.description" class="ls-input" required></FloatingField>
-        <FloatingField :label="t('controls.adjustmentReason')"><input v-model="form.reason" class="ls-input" required></FloatingField>
-        <FloatingField :label="t('controls.reconciliationReference')"><input v-model="form.reference" class="ls-input" required></FloatingField>
+        <BsFloatingField :label="t('controls.asOfDate')"><input v-model="form.date" type="date" class="ls-input" required></BsFloatingField>
+        <BsFloatingField :label="t('controls.counterpartAccount')"><select v-model="form.counterpartAccountId" class="ls-input" required><option value="">{{ t('controls.choosePostingAccount') }}</option><option v-for="account in postingAccounts" :key="account.account_id" :value="account.account_id">{{ account.name }}</option></select></BsFloatingField>
+        <BsFloatingField :label="t('controls.controlSide')"><select v-model="form.controlSide" class="ls-input"><option value="debit">{{ t('accounts.sides.debit') }}</option><option value="credit">{{ t('accounts.sides.credit') }}</option></select></BsFloatingField>
+        <BsFloatingField :label="t('transactions.amount')"><input v-model="form.amount" inputmode="decimal" class="ls-input" required></BsFloatingField>
+        <BsFloatingField :label="t('transactions.description')"><input v-model="form.description" class="ls-input" required></BsFloatingField>
+        <BsFloatingField :label="t('controls.adjustmentReason')"><input v-model="form.reason" class="ls-input" required></BsFloatingField>
+        <BsFloatingField :label="t('controls.reconciliationReference')"><input v-model="form.reference" class="ls-input" required></BsFloatingField>
         <p class="text-sm text-fg-muted">{{ t('controls.adjustmentWarning') }}</p>
   </BsRecordActionDialog>
 </template>

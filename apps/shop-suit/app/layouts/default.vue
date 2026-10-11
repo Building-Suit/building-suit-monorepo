@@ -62,7 +62,7 @@ async function logout() {
   signingOut.value = true
   signOutError.value = ''
   try {
-    const { error } = await supabase.auth.signOut()
+    const { error } = await supabase.auth.signOut({ scope: 'local' })
     if (error) throw error
     await nuxtApp.runWithContext(() => navigateTo('/auth/login'))
   } catch { signOutError.value = copy.value.signOutFailed }
@@ -103,7 +103,7 @@ async function logout() {
         </div>
         <slot v-else />
     <template #overlays>
-      <ToastHost />
+      <BsToastHost />
     </template>
   </BsAppShell>
 </template>

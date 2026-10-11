@@ -3,6 +3,7 @@
 Read the root rules and `docs/shared/design-system.md`, `interactions.md` and `data-table.md` before changing shared UI.
 
 - Keep atoms, molecules, organisms and templates under their corresponding `src` directories. Compose PrimeVue primitives; do not fork a vendor component or build another datagrid.
+- Every dynamically discovered Suit `app/**/*.vue` template may use only the non-rendering Vue `<template>` control tag and rendered components whose names begin with `Bs`. Native/Nuxt/vendor/non-`Bs`/product-local tags, template class or style escape hatches, `v-html`, local style blocks and direct UI-vendor imports are forbidden; migration mode permits only exact debt recorded in `docs/shared/suit-ui-boundary-debt.json`, and strict mode permits none. Suit `app/components` must contain zero Vue files at the final gate.
 - Search existing shared components before adding product presentation. Reusable presentation is implemented here first; reusable interaction policy/controllers belong in `packages/ux`. App-local components require an entry in `docs/shared/ui-ownership-manifest.json` and are limited to product/domain orchestration that composes shared UI.
 - Keep Atomic Design dependencies at the same level or downward (`templates` → `organisms` → `molecules` → `atoms`), never upward. Add, move and remove explicit package exports with their source files; wildcard exports are prohibited.
 - Components accept content, values, capabilities and callbacks. They do not query product databases, select tenants, calculate financial rules or import apps.

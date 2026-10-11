@@ -58,15 +58,15 @@ async function save() {
 <template>
   <BsRecordActionDialog :visible="true" :title="t('financialMapping.allocate')" size="md" :dirty="dirty" :pending="pending" :error="error" :submit-label="t('common.save')" :cancel-label="t('common.cancel')" :submit-disabled="!valid || loading" @update:visible="value => { if (!value) emit('close') }" @submit="save">
       <p>{{ accountName }}</p>
-      <SectionSkeleton v-if="loading" variant="table" :rows="3" />
+      <BsSectionSkeleton v-if="loading" variant="table" :rows="3" />
       <template v-else-if="context">
         <p>{{ t('financialMapping.sourceAmount') }}: <MoneyText :amount-minor="context.amount_minor" /></p>
         <div v-if="context.decision_id" class="text-sm text-fg-muted"><p>{{ t('financialMapping.previousAllocation') }}</p><p v-for="(value, section) in context.allocations" :key="section">{{ t(`financialMapping.lines.${section}`) }}: <MoneyText :amount-minor="value" /></p></div>
         <div class="space-y-3">
-          <FloatingField v-for="key in (['operating', 'investing', 'financing'] as const)" :key="key" :label="t(`financialMapping.lines.${key}`)">
+          <BsFloatingField v-for="key in (['operating', 'investing', 'financing'] as const)" :key="key" :label="t(`financialMapping.lines.${key}`)">
             <input v-model="amounts[key]" type="text" inputmode="decimal" class="ls-input" :disabled="pending">
-          </FloatingField>
-          <FloatingField :label="t('statementClassification.reason')"><textarea v-model="reason" class="ls-input" required maxlength="1000" :disabled="pending" /></FloatingField>
+          </BsFloatingField>
+          <BsFloatingField :label="t('statementClassification.reason')"><textarea v-model="reason" class="ls-input" required maxlength="1000" :disabled="pending" /></BsFloatingField>
           <p v-if="total !== BigInt(context.amount_minor)" role="alert" class="ls-error">{{ t('financialMapping.allocationMismatch') }}</p>
         </div>
       </template>

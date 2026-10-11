@@ -136,8 +136,8 @@ watch(currentId, () => fetchRows(), { immediate: true })
     </section>
 
     <p v-if="errorMessage" class="ls-error" role="alert">{{ errorMessage }}</p>
-    <SectionSkeleton v-if="loading" variant="table" :rows="7" />
-    <EmptyState v-else-if="!rows.length && !errorMessage" :title="t('audit.empty')" />
+    <BsSectionSkeleton v-if="loading" variant="table" :rows="7" />
+    <BsEmptyState v-else-if="!rows.length && !errorMessage" :title="t('audit.empty')" />
 
     <template v-else-if="rows.length">
       <div class="ls-card overflow-x-auto">

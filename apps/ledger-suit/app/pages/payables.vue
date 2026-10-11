@@ -111,13 +111,13 @@ async function save() {
     <p v-if="!can('ap.read')" role="status" class="ls-card p-5">{{ t('ap.denied') }}</p>
     <template v-else>
       <div class="ls-card grid items-end gap-4 p-5 sm:grid-cols-3">
-        <FloatingField :label="t('ap.from')"><input id="ap-from" v-model="from" class="ls-input" type="date" :max="asOf"></FloatingField>
-        <FloatingField :label="t('ap.asOf')"><input id="ap-asof" v-model="asOf" class="ls-input" type="date" :min="from"></FloatingField>
-        <FloatingField :label="t('ap.supplier')"><select id="ap-supplier-filter" v-model="supplier" class="ls-input"><option value="">{{ t('ap.allSuppliers') }}</option><option v-for="c in data?.suppliers ?? []" :key="c.id" :value="c.id">{{ c.name }}</option></select></FloatingField>
+        <BsFloatingField :label="t('ap.from')"><input id="ap-from" v-model="from" class="ls-input" type="date" :max="asOf"></BsFloatingField>
+        <BsFloatingField :label="t('ap.asOf')"><input id="ap-asof" v-model="asOf" class="ls-input" type="date" :min="from"></BsFloatingField>
+        <BsFloatingField :label="t('ap.supplier')"><select id="ap-supplier-filter" v-model="supplier" class="ls-input"><option value="">{{ t('ap.allSuppliers') }}</option><option v-for="c in data?.suppliers ?? []" :key="c.id" :value="c.id">{{ c.name }}</option></select></BsFloatingField>
         <AccountingTableDensity v-model="tableDensity" :disabled="!tablePreferenceHydrated" />
       </div>
       <p v-if="error" class="ls-error" role="alert">{{ t('ap.errors.load') }} <BsButton type="submit" class="ls-btn" @click="load">{{ t('ap.retry') }}</BsButton></p>
-      <SectionSkeleton v-else-if="pending" variant="table" :rows="5" />
+      <BsSectionSkeleton v-else-if="pending" variant="table" :rows="5" />
       <template v-else-if="data">
         <div class="flex flex-wrap gap-2"><template v-for="kind in kinds" :key="kind"><BsButton type="submit" v-if="can(capability[kind])" class="ls-btn" :disabled="readOnly || !controls.length || saving" @click="begin(kind)">{{ t(`ap.actions.${kind}`) }}</BsButton></template></div>
         <p v-if="!controls.length" role="status" class="ls-card p-5">{{ t('ap.setup') }} <NuxtLink to="/accounts" class="text-link underline">{{ t('nav.accounts') }}</NuxtLink></p>
@@ -166,17 +166,17 @@ async function save() {
     <BsRecordActionDialog v-model:visible="visible" :title="t(`ap.actions.${form.kind}`)" :pending="saving" :dirty="dirty" :error="formError" size="lg" :submit-label="t('common.save')" :cancel-label="t('common.cancel')" :submit-disabled="readOnly" @submit="save">
           <p v-if="form.kind === 'reversal'" class="text-fg-muted">{{ t('ap.reversalPolicy') }}</p>
           <template v-else>
-            <FloatingField :label="t('ap.supplier')"><select id="ap-form-supplier" v-model="form.supplier" class="ls-input" required><option value="" /><option v-for="c in data?.suppliers.filter(c => !c.archived) ?? []" :key="c.id" :value="c.id">{{ c.name }}</option></select></FloatingField>
-            <FloatingField :label="t('ap.control')"><select id="ap-control" v-model="form.control" class="ls-input" required><option v-for="a in controls" :key="a.id" :value="a.id">{{ a.name }}</option></select></FloatingField>
-            <FloatingField :label="t(form.kind === 'payment' ? 'ap.cash' : 'ap.expenseOrAsset')"><select id="ap-offset" v-model="form.offset" class="ls-input" required><option value="" /><option v-for="a in offsets" :key="a.id" :value="a.id">{{ a.name }}</option></select></FloatingField>
-            <FloatingField :label="t('ap.reference')"><input id="ap-reference" v-model="form.reference" class="ls-input" required></FloatingField>
-            <FloatingField :label="t('ap.amount')"><input id="ap-amount" v-model="form.amount" class="ls-input" inputmode="decimal" required :aria-invalid="Boolean(amountError)" :aria-describedby="amountError ? 'ap-amount-error' : undefined" @blur="amountMinor()"></FloatingField>
+            <BsFloatingField :label="t('ap.supplier')"><select id="ap-form-supplier" v-model="form.supplier" class="ls-input" required><option value="" /><option v-for="c in data?.suppliers.filter(c => !c.archived) ?? []" :key="c.id" :value="c.id">{{ c.name }}</option></select></BsFloatingField>
+            <BsFloatingField :label="t('ap.control')"><select id="ap-control" v-model="form.control" class="ls-input" required><option v-for="a in controls" :key="a.id" :value="a.id">{{ a.name }}</option></select></BsFloatingField>
+            <BsFloatingField :label="t(form.kind === 'payment' ? 'ap.cash' : 'ap.expenseOrAsset')"><select id="ap-offset" v-model="form.offset" class="ls-input" required><option value="" /><option v-for="a in offsets" :key="a.id" :value="a.id">{{ a.name }}</option></select></BsFloatingField>
+            <BsFloatingField :label="t('ap.reference')"><input id="ap-reference" v-model="form.reference" class="ls-input" required></BsFloatingField>
+            <BsFloatingField :label="t('ap.amount')"><input id="ap-amount" v-model="form.amount" class="ls-input" inputmode="decimal" required :aria-invalid="Boolean(amountError)" :aria-describedby="amountError ? 'ap-amount-error' : undefined" @blur="amountMinor()"></BsFloatingField>
             <p v-if="amountError" id="ap-amount-error" class="text-sm text-danger" role="alert">{{ amountError }}</p>
           </template>
-          <FloatingField :label="t('ap.date')"><input id="ap-date" v-model="form.date" class="ls-input" type="date" required></FloatingField>
-          <FloatingField v-if="form.kind === 'bill'" :label="t('ap.dueDate')"><input id="ap-due" v-model="form.due" class="ls-input" type="date" :min="form.date" required></FloatingField>
-          <FloatingField v-if="['credit', 'adjustment', 'reversal'].includes(form.kind)" :label="t('ap.reason')"><input id="ap-reason" v-model="form.reason" class="ls-input" required></FloatingField>
-          <fieldset v-if="isAllocation" class="space-y-3"><legend class="font-bold">{{ t('ap.allocations') }}</legend><p class="text-sm text-fg-muted">{{ t('ap.allocationPolicy') }}</p><p v-if="!allocationItems.length">{{ t('ap.noAllocationItems') }}</p><div v-for="item in allocationItems" :key="item.bill_id"><FloatingField :label="item.reference"><input :id="`ap-allocation-${item.bill_id}`" v-model="form.allocations[item.bill_id]" class="ls-input" inputmode="decimal"></FloatingField><p class="text-sm">{{ t('ap.outstanding') }}: <MoneyText :amount-minor="item.outstanding_minor" /></p></div></fieldset>
+          <BsFloatingField :label="t('ap.date')"><input id="ap-date" v-model="form.date" class="ls-input" type="date" required></BsFloatingField>
+          <BsFloatingField v-if="form.kind === 'bill'" :label="t('ap.dueDate')"><input id="ap-due" v-model="form.due" class="ls-input" type="date" :min="form.date" required></BsFloatingField>
+          <BsFloatingField v-if="['credit', 'adjustment', 'reversal'].includes(form.kind)" :label="t('ap.reason')"><input id="ap-reason" v-model="form.reason" class="ls-input" required></BsFloatingField>
+          <fieldset v-if="isAllocation" class="space-y-3"><legend class="font-bold">{{ t('ap.allocations') }}</legend><p class="text-sm text-fg-muted">{{ t('ap.allocationPolicy') }}</p><p v-if="!allocationItems.length">{{ t('ap.noAllocationItems') }}</p><div v-for="item in allocationItems" :key="item.bill_id"><BsFloatingField :label="item.reference"><input :id="`ap-allocation-${item.bill_id}`" v-model="form.allocations[item.bill_id]" class="ls-input" inputmode="decimal"></BsFloatingField><p class="text-sm">{{ t('ap.outstanding') }}: <MoneyText :amount-minor="item.outstanding_minor" /></p></div></fieldset>
     </BsRecordActionDialog>
   </div>
 </template>

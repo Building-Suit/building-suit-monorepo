@@ -108,16 +108,16 @@ const payableHint = computed(() =>
     <SetupChecklist />
 
     <div v-if="recentPending" class="space-y-6">
-      <SectionSkeleton variant="cards" />
+      <BsSectionSkeleton variant="cards" />
       <div class="grid gap-6 xl:grid-cols-3">
-        <SectionSkeleton class="xl:col-span-2" variant="chart" />
-        <SectionSkeleton variant="table" :rows="4" />
+        <BsSectionSkeleton class="xl:col-span-2" variant="chart" />
+        <BsSectionSkeleton variant="table" :rows="4" />
       </div>
     </div>
 
     <BsStateSurface v-else-if="recentError" state="error" :title="t('dashboard.recentLoadError')" :description="t('dashboard.loadErrorHint')" :action-label="t('common.retry')" @action="refreshRecent()" />
 
-    <EmptyState
+    <BsEmptyState
       v-else-if="!hasActivity"
       :title="t('dashboard.emptyTitle')"
       :description="t('dashboard.emptyHint')"
@@ -126,7 +126,7 @@ const payableHint = computed(() =>
     />
 
     <template v-else>
-      <SectionSkeleton v-if="summaryPending || commitmentsPending" variant="cards" />
+      <BsSectionSkeleton v-if="summaryPending || commitmentsPending" variant="cards" />
       <BsStateSurface v-else-if="summaryError" state="error" :title="t('dashboard.summaryLoadError')" :description="t('dashboard.loadErrorHint')" :action-label="t('common.retry')" @action="refreshSummary()" />
       <section v-else aria-labelledby="kpis" class="space-y-3">
         <h2 id="kpis" class="sr-only">{{ t('dashboard.kpis') }}</h2>
@@ -165,7 +165,7 @@ const payableHint = computed(() =>
       </section>
 
       <div class="grid gap-6 xl:grid-cols-3">
-        <SectionSkeleton v-if="seriesPending" class="xl:col-span-2" variant="chart" />
+        <BsSectionSkeleton v-if="seriesPending" class="xl:col-span-2" variant="chart" />
         <BsStateSurface v-else-if="seriesError" class="xl:col-span-2" state="error" :title="t('dashboard.seriesLoadError')" :description="t('dashboard.loadErrorHint')" :action-label="t('common.retry')" @action="refreshSeries()" />
         <section v-else class="ls-card min-w-0 p-6 xl:col-span-2" aria-labelledby="chart-heading">
           <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -183,11 +183,11 @@ const payableHint = computed(() =>
               <BsButton type="button" class="ls-btn ls-btn-sm" :class="{ 'ls-btn-primary': customRange }" @click="customRange = !customRange">{{ t('dashboard.custom') }}</BsButton>
             </div>
           </div>
-          <div v-if="customRange" class="mb-4 flex flex-wrap gap-2"><FloatingField class="w-auto" :label="t('reports.from')"><input v-model="customFrom" type="date" class="ls-input w-auto"></FloatingField><FloatingField class="w-auto" :label="t('reports.to')"><input v-model="customTo" type="date" class="ls-input w-auto"></FloatingField></div>
+          <div v-if="customRange" class="mb-4 flex flex-wrap gap-2"><BsFloatingField class="w-auto" :label="t('reports.from')"><input v-model="customFrom" type="date" class="ls-input w-auto"></BsFloatingField><BsFloatingField class="w-auto" :label="t('reports.to')"><input v-model="customTo" type="date" class="ls-input w-auto"></BsFloatingField></div>
           <RevenueExpenseChart :series="series ?? []" />
         </section>
 
-        <SectionSkeleton v-if="liquidPending" variant="table" :rows="4" />
+        <BsSectionSkeleton v-if="liquidPending" variant="table" :rows="4" />
         <section v-else-if="liquidError" class="ls-card space-y-3 p-6" role="alert" aria-labelledby="liquid-error-heading">
           <h2 id="liquid-error-heading" class="font-bold">{{ t('dashboard.liquidLoadError') }}</h2>
           <p class="text-sm text-fg-muted">{{ t('dashboard.loadErrorHint') }}</p>
@@ -207,7 +207,7 @@ const payableHint = computed(() =>
         </section>
       </div>
 
-      <SectionSkeleton v-if="can('commitments.read') && commitmentsPending" variant="table" :rows="4" />
+      <BsSectionSkeleton v-if="can('commitments.read') && commitmentsPending" variant="table" :rows="4" />
       <section v-else-if="can('commitments.read') && commitmentsError" class="ls-card space-y-3 p-6" role="alert" aria-labelledby="commitments-error-heading">
         <h2 id="commitments-error-heading" class="font-bold">{{ t('dashboard.commitmentsLoadError') }}</h2>
         <p class="text-sm text-fg-muted">{{ t('dashboard.loadErrorHint') }}</p>
@@ -223,7 +223,7 @@ const payableHint = computed(() =>
     <template #body="{ data: item }">{{ formatDate(item.due_date, locale) }}</template>
   </Column>
   <Column >
-    <template #body="{ data: item }"><StatusBadge :status="item.display_status ?? 'unknown'" /></template>
+    <template #body="{ data: item }"><BsStatusBadge :status="item.display_status ?? 'unknown'" /></template>
   </Column>
   <Column body-class="ls-num">
     <template #body="{ data: item }"><MoneyText :amount-minor="item.outstanding_minor ?? 0" :currency="item.currency_code ?? undefined" /></template>
@@ -232,7 +232,7 @@ const payableHint = computed(() =>
         <p v-else class="px-6 pb-6 text-sm text-fg-muted">{{ t('dashboard.noCommitments') }}</p>
       </section>
 
-      <SectionSkeleton v-if="recentPending" variant="table" :rows="8" />
+      <BsSectionSkeleton v-if="recentPending" variant="table" :rows="8" />
       <section v-else class="ls-card overflow-hidden" aria-labelledby="recent-heading">
         <div class="flex items-center justify-between px-6 py-4">
           <h2 id="recent-heading" class="text-base font-bold">{{ t('dashboard.recent') }}</h2>
@@ -256,11 +256,11 @@ const payableHint = computed(() =>
   </Column>
   <Column body-class="whitespace-nowrap text-fg-muted">
     <template #header>{{ t('transactions.account') }}</template>
-    <template #body="{ data: row }">{{ row.from_account_name }} <AppIcon name="arrowRight" :size="14" directional class="inline-block" /> {{ row.to_account_name }}</template>
+    <template #body="{ data: row }">{{ row.from_account_name }} <BsIcon name="arrowRight" :size="14" directional class="inline-block" /> {{ row.to_account_name }}</template>
   </Column>
   <Column >
     <template #header>{{ t('transactions.status') }}</template>
-    <template #body="{ data: row }"><StatusBadge :status="row.status" /></template>
+    <template #body="{ data: row }"><BsStatusBadge :status="row.status" /></template>
   </Column>
   <Column header-class="text-end" body-class="ls-num">
     <template #header>{{ t('transactions.amount') }}</template>

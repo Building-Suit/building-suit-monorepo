@@ -143,24 +143,24 @@ function isApplicable(key: string) {
     <template v-else>
       <section class="ls-card space-y-4 p-5" aria-labelledby="migration-projects">
         <div class="flex flex-wrap items-end justify-between gap-3">
-          <FloatingField class="min-w-64 flex-1" :label="t('migration.project')">
+          <BsFloatingField class="min-w-64 flex-1" :label="t('migration.project')">
             <BsSelect id="migration-project" v-model="selectedProjectId" :label="t('migration.project')" :placeholder="t('migration.chooseProject')" :options="projectOptions" option-label="label" option-value="id" />
-          </FloatingField>
+          </BsFloatingField>
           <BsButton v-if="can('migrations.manage')" type="button" variant="primary" @click="createError = ''; createOpen = true">{{ t('migration.newProject') }}</BsButton>
         </div>
       </section>
       <BsRecordActionDialog v-if="createOpen" v-model:visible="createOpen" :title="t('migration.newProject')" :dirty="createDirty" :pending="center.pending.value === 'create'" :error="createError" size="lg" :submit-label="t('migration.createProject')" :cancel-label="t('common.cancel')" @submit="createProject">
         <div class="grid gap-4 md:grid-cols-2">
-          <FloatingField :label="t('migration.projectName')"><input v-model="createForm.name" class="ls-input" required maxlength="160"></FloatingField>
-          <FloatingField :label="t('migration.sourceType')"><select v-model="createForm.sourceType" class="ls-input"><option value="excel_csv">{{ t('migration.sourceTypes.excel_csv') }}</option><option value="other_system_export">{{ t('migration.sourceTypes.other_system_export') }}</option><option value="accountant_paper_workbook">{{ t('migration.sourceTypes.accountant_paper_workbook') }}</option></select></FloatingField>
-          <FloatingField :label="t('migration.cutoverDate')"><input v-model="createForm.cutoverDate" class="ls-input" type="date" required></FloatingField>
-          <FloatingField :label="t('migration.depth')"><select v-model="createForm.depth" class="ls-input"><option value="fast_cutover">{{ t('migration.depths.fast_cutover') }}</option><option value="current_fiscal_year">{{ t('migration.depths.current_fiscal_year') }}</option><option value="full_history">{{ t('migration.depths.full_history') }}</option></select></FloatingField>
+          <BsFloatingField :label="t('migration.projectName')"><input v-model="createForm.name" class="ls-input" required maxlength="160"></BsFloatingField>
+          <BsFloatingField :label="t('migration.sourceType')"><select v-model="createForm.sourceType" class="ls-input"><option value="excel_csv">{{ t('migration.sourceTypes.excel_csv') }}</option><option value="other_system_export">{{ t('migration.sourceTypes.other_system_export') }}</option><option value="accountant_paper_workbook">{{ t('migration.sourceTypes.accountant_paper_workbook') }}</option></select></BsFloatingField>
+          <BsFloatingField :label="t('migration.cutoverDate')"><input v-model="createForm.cutoverDate" class="ls-input" type="date" required></BsFloatingField>
+          <BsFloatingField :label="t('migration.depth')"><select v-model="createForm.depth" class="ls-input"><option value="fast_cutover">{{ t('migration.depths.fast_cutover') }}</option><option value="current_fiscal_year">{{ t('migration.depths.current_fiscal_year') }}</option><option value="full_history">{{ t('migration.depths.full_history') }}</option></select></BsFloatingField>
           <p class="text-sm text-fg-muted md:col-span-2">{{ t('migration.fastCutoverPolicy') }}</p>
         </div>
       </BsRecordActionDialog>
 
       <p v-if="center.error.value" class="ls-error" role="alert">{{ t('migration.loadFailed') }}</p>
-      <SectionSkeleton v-else-if="center.pending.value === 'context'" variant="table" :rows="6" />
+      <BsSectionSkeleton v-else-if="center.pending.value === 'context'" variant="table" :rows="6" />
 
       <template v-else-if="center.context.value">
         <section class="ls-card p-5" aria-labelledby="migration-progress">
@@ -206,7 +206,7 @@ function isApplicable(key: string) {
             <Column field="source_name" :header="t('migration.sourceName')" />
             <Column :header="t('migration.ledgerTarget')"><template #body="{ data }"><select class="ls-input min-w-64" :value="mappingTarget(data)" @change="onMappingTarget(data, $event)"><option value="">{{ t('migration.chooseTarget') }}</option><option v-for="option in mappingOptions(data)" :key="option.id" :value="option.id">{{ option.label }}</option><option v-if="data.source_kind !== 'account'" value="__create__">{{ t('migration.reviewedCreation') }}</option></select></template></Column>
           </BsDataTable>
-          <FloatingField :label="t('migration.reviewNote')"><textarea v-model="reviewNote" class="ls-input min-h-24" minlength="8" maxlength="1000" /></FloatingField>
+          <BsFloatingField :label="t('migration.reviewNote')"><textarea v-model="reviewNote" class="ls-input min-h-24" minlength="8" maxlength="1000" /></BsFloatingField>
           <BsButton type="button" class="ls-btn ls-btn-primary" :disabled="!mappingReady || Boolean(center.pending.value)" @click="act(() => center.reviewMappings(mappingDecisions, reviewNote), 'migration.mappingSaved')">{{ center.pending.value === 'mapping' ? t('common.saving') : t('migration.validateMapping') }}</BsButton>
         </section>
 
@@ -223,7 +223,7 @@ function isApplicable(key: string) {
         <section class="ls-card space-y-4 p-5" aria-labelledby="migration-opening">
           <div><h2 id="migration-opening" class="text-h2 font-bold">{{ t('migration.sections.opening') }}</h2><p class="text-sm text-fg-muted">{{ t('migration.openingHint') }}</p></div>
           <div v-if="!center.context.value.project.opening_balance_batch_id" class="flex flex-wrap items-end gap-3">
-            <FloatingField class="min-w-72 flex-1" :label="t('migration.openingBatch')"><select v-model="selectedOpeningId" class="ls-input"><option value="">{{ t('migration.chooseOpening') }}</option><option v-for="batch in center.context.value.opening_candidates" :key="batch.id" :value="batch.id">{{ batch.source_filename }} · {{ t(`opening.status.${batch.status}`) }}</option></select></FloatingField>
+            <BsFloatingField class="min-w-72 flex-1" :label="t('migration.openingBatch')"><select v-model="selectedOpeningId" class="ls-input"><option value="">{{ t('migration.chooseOpening') }}</option><option v-for="batch in center.context.value.opening_candidates" :key="batch.id" :value="batch.id">{{ batch.source_filename }} · {{ t(`opening.status.${batch.status}`) }}</option></select></BsFloatingField>
             <BsButton type="button" class="ls-btn ls-btn-primary" :disabled="!selectedOpeningId || Boolean(center.pending.value)" @click="act(() => center.linkOpeningBalance(selectedOpeningId), 'migration.openingLinked')">{{ t('migration.linkOpening') }}</BsButton>
             <NuxtLink to="/opening-balances" class="ls-btn">{{ t('migration.prepareOpening') }}</NuxtLink>
           </div>

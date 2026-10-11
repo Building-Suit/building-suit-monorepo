@@ -10,10 +10,4 @@ useHead(() => ({
 }))
 </script>
 
-<template>
-  <NuxtLayout>
-    <NuxtPage />
-  </NuxtLayout>
-  <ToastHost />
-  <BsConfirmHost />
-</template>
+<template><BsAppRoot toast-host /></template>

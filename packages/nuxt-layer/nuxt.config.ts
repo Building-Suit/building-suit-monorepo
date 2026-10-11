@@ -7,7 +7,10 @@ export default defineNuxtConfig({
   nitro: { publicAssets: [{ dir: here('../brand/assets'), baseURL: '/brand' }] },
   css: [here('../ui/src/styles/base.css')],
   vite: { plugins: [tailwindcss()] },
-  components: [{ path: here('../ui/src'), pathPrefix: false }],
+  components: [
+    { path: here('./app/components'), pathPrefix: false },
+    { path: here('../ui/src'), pathPrefix: false },
+  ],
   imports: { dirs: [here('../ux/src/composables'), here('../auth/src/composables'), here('../data-access/src/composables')] },
   primevue: { options: { unstyled: true }, components: { include: ['InputText','InputNumber','Textarea','Select','MultiSelect','DatePicker','Checkbox','RadioButton','ToggleSwitch','FloatLabel','Dialog','Drawer','Popover','Menu','DataTable','Column','Paginator','FileUpload','Toast','ConfirmDialog','ProgressBar','Tag','Badge','Button','Tree','Accordion','ColumnGroup','Row'] } },
   i18n: { strategy: 'no_prefix', defaultLocale: 'en', detectBrowserLanguage: { useCookie: true, cookieKey: 'building-suit-locale', fallbackLocale: 'en' } },

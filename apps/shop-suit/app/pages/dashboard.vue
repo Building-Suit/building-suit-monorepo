@@ -260,7 +260,7 @@ async function createShop() {
     <section v-if="!current" class="mx-auto max-w-3xl pt-6 lg:pt-12">
       <div class="overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
         <div class="border-b border-border bg-[var(--bs-deep-structure-navy)] p-6 text-white sm:p-8">
-          <div class="mb-5 grid size-12 place-items-center rounded-2xl border border-[var(--bs-accent)]/30 bg-[var(--bs-primary)]"><AppIcon name="store" class="size-6 text-[var(--bs-highlight-gold)]" /></div>
+          <div class="mb-5 grid size-12 place-items-center rounded-2xl border border-[var(--bs-accent)]/30 bg-[var(--bs-primary)]"><BsIcon name="store" class="size-6 text-[var(--bs-highlight-gold)]" /></div>
           <h1 class="text-2xl font-extrabold sm:text-3xl">{{ copy.setupTitle }}</h1>
           <p class="mt-2 max-w-xl text-sm leading-6 text-white/60">{{ copy.setupBody }}</p>
         </div>

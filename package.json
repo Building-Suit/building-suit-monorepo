@@ -39,9 +39,11 @@
     "agent:pr-check": "node tooling/git/check-pr.mjs",
     "automation": "node tooling/control-plane/automation.mjs",
     "automation:n8n:export": "node tooling/control-plane/n8n/export.mjs",
-    "automation:resilience": "node tooling/control-plane/resilience/run-acceptance.mjs --check"
+    "automation:resilience": "node tooling/control-plane/resilience/run-acceptance.mjs --check",
+    "test:built-assets": "node --test apps/shop-suit/tests/integration/ss-launch-brand-production.test.mjs"
   },
   "devDependencies": {
+    "@vue/compiler-sfc": "3.5.43",
     "nuxt": "4.5.2",
     "vue": "3.5.42",
     "vue-router": "5.3.0",

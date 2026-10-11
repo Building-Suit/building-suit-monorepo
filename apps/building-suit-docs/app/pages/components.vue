@@ -15,9 +15,16 @@ const formPending = ref(false)
 const formValue = ref('')
 const notes = ref('')
 const tab = ref('overview')
+const segment = ref('summary')
 const page = ref(1)
 const notificationChoices = ref<string[]>(['email'])
 const planChoice = ref<string | string[]>('standard')
+const consent = ref(false)
+const notificationsEnabled = ref(true)
+const searchValue = ref('')
+const rangeFrom = ref('2026-10-01')
+const rangeTo = ref('2026-10-31')
+const selectedFile = ref<File | null>(null)
 const catalogueOtp = ref('123456')
 const tableState = ref<'data' | 'loading' | 'empty' | 'error'>('data')
 const density = ref<'compact' | 'comfortable'>('comfortable')
@@ -73,15 +80,52 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
       :context="[{ label: isArabic ? 'الاتجاه' : 'Direction', value: isArabic ? 'RTL' : 'LTR' }, { label: isArabic ? 'المصدر' : 'Owner', value: 'packages/ui' }]"
     />
 
+    <BsContentSection
+      :title="isArabic ? 'الدلالات والتخطيط' : 'Semantic content and layout'"
+      :description="isArabic ? 'تتكيف العقود نفسها مع العرض الضيق والاتجاه من اليمين إلى اليسار والسمة النشطة.' : 'The same contracts adapt to narrow screens, RTL, and the active theme.'"
+    >
+      <BsStack gap="lg">
+        <BsSegmentedControl
+          v-model="segment"
+          :label="isArabic ? 'عرض المحتوى' : 'Content view'"
+          :options="[{ value: 'summary', label: isArabic ? 'ملخص' : 'Summary' }, { value: 'details', label: isArabic ? 'تفاصيل' : 'Details' }]"
+        />
+        <BsGrid columns="auto" min-item-width="md" gap="md">
+          <BsSurface variant="muted" padding="lg">
+            <BsStack gap="sm">
+              <BsBadge tone="featured">{{ isArabic ? 'جديد' : 'New' }}</BsBadge>
+              <BsHeading :level="3">{{ isArabic ? 'محتوى دلالي' : 'Semantic content' }}</BsHeading>
+              <BsText tone="muted">{{ isArabic ? 'لا يحتاج المستهلك إلى فئات عرض.' : 'Consumers do not need presentation classes.' }}</BsText>
+              <BsInline justify="between"><BsLink to="/components" variant="standalone">{{ isArabic ? 'رابط داخلي' : 'Internal link' }}</BsLink><BsText as="time" size="sm" tone="muted" datetime="2026-10-03">2026-10-03</BsText></BsInline>
+            </BsStack>
+          </BsSurface>
+          <BsInteractiveCard
+            :title="isArabic ? 'بطاقة تفاعلية' : 'Interactive card'"
+            :description="isArabic ? 'تركيز واضح بدون مظهر زر عادي.' : 'Clear focus without ordinary button chrome.'"
+            @click="segment = segment === 'summary' ? 'details' : 'summary'"
+          />
+          <BsAlert tone="permission" :title="isArabic ? 'وصول مقيّد' : 'Restricted access'" :description="isArabic ? 'تظل الصلاحيات مسؤولية الخادم.' : 'Authorization remains a server responsibility.'" />
+        </BsGrid>
+        <BsDescriptionList :columns="2" divided>
+          <BsDescriptionItem :term="isArabic ? 'الاتجاه' : 'Direction'">{{ isArabic ? 'من اليمين إلى اليسار' : 'Left to right' }}</BsDescriptionItem>
+          <BsDescriptionItem :term="isArabic ? 'السمة' : 'Theme'">{{ isArabic ? 'تتبع الإعداد النشط' : 'Uses the active setting' }}</BsDescriptionItem>
+        </BsDescriptionList>
+        <BsDisclosure :summary="isArabic ? 'تفاصيل العقد' : 'Contract details'" variant="surface">
+          <BsList marker="check" spacing="compact"><BsListItem>{{ isArabic ? 'مسافات دلالية' : 'Semantic spacing' }}</BsListItem><BsListItem>{{ isArabic ? 'تخطيط متجاوب' : 'Responsive layout' }}</BsListItem></BsList>
+        </BsDisclosure>
+        <BsCodeBlock language="vue" :label="isArabic ? 'مثال' : 'Example'" code="&lt;BsStack gap=&quot;md&quot;&gt;…&lt;/BsStack&gt;" />
+      </BsStack>
+    </BsContentSection>
+
     <BsContentSection :title="isArabic ? 'الهوية والإجراءات' : 'Brand and actions'" :description="isArabic ? 'تستخدم الإجراءات الحالات والأحجام المشتركة.' : 'Actions use shared variants, sizes and pending guards.'">
-      <div class="flex flex-wrap items-center gap-3"><BsBuildingLogo /><AppIcon v-for="icon in ['dashboard', 'ledger', 'invoice', 'team', 'wallet', 'reports']" :key="icon" :name="icon" :size="28" /></div>
+      <div class="flex flex-wrap items-center gap-3"><BsBuildingLogo /><BsIcon v-for="icon in ['dashboard', 'ledger', 'invoice', 'team', 'wallet', 'reports']" :key="icon" :name="icon" :size="28" /></div>
       <div class="mt-5 flex flex-wrap items-start gap-4"><BsUserIdentity name="Building Suit User" email="user@example.com" /><BsUserMenu name="Building Suit User" email="user@example.com" :account-label="isArabic ? 'قائمة الحساب' : 'Account menu'" :sign-out-label="isArabic ? 'تسجيل الخروج' : 'Sign out'" /></div>
       <div class="ls-card-flat mt-5 flex flex-wrap items-center gap-3 p-5">
         <BsButton variant="primary">{{ ui('save') }}</BsButton><BsButton variant="secondary">{{ isArabic ? 'مراجعة' : 'Review' }}</BsButton><BsButton>{{ ui('cancel') }}</BsButton><BsButton variant="danger">{{ isArabic ? 'حذف' : 'Delete' }}</BsButton>
       </div>
       <div class="mt-5 flex flex-wrap items-center gap-3" role="group" :aria-label="isArabic ? 'إجراءات دلالية' : 'Semantic actions'">
         <BsButton variant="link">{{ isArabic ? 'إجراء رابط' : 'Link action' }}</BsButton>
-        <BsButton variant="icon" :aria-label="ui('close')"><AppIcon name="close" /></BsButton>
+        <BsButton variant="icon" :aria-label="ui('close')"><BsIcon name="close" /></BsButton>
         <BsButton variant="tab" role="tab" aria-selected="true">{{ isArabic ? 'تبويب' : 'Tab' }}</BsButton>
         <BsButton variant="chip" aria-pressed="true">{{ isArabic ? 'خيار' : 'Chip' }}</BsButton>
         <BsButton variant="tile" class="max-w-48">{{ isArabic ? 'بطاقة تفاعلية' : 'Interactive tile' }}</BsButton>
@@ -99,7 +143,7 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
     <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-label="Status and KPI examples">
       <BsKpiCard :title="isArabic ? 'السجلات' : 'Records'" change-label="+12%" tone="success">{{ rows.length }}</BsKpiCard>
       <BsKpiCard :title="isArabic ? 'قيد المراجعة' : 'In review'" :hint="isArabic ? 'بيانات تجريبية' : 'Example data'">1</BsKpiCard>
-      <BsCard :title="isArabic ? 'الحالات' : 'Statuses'" padding="lg"><div class="flex flex-wrap gap-2"><StatusBadge status="active" /><StatusBadge status="pending" /><StatusBadge status="failed" /></div></BsCard>
+      <BsCard :title="isArabic ? 'الحالات' : 'Statuses'" padding="lg"><div class="flex flex-wrap gap-2"><BsStatusBadge status="active" /><BsStatusBadge status="pending" /><BsStatusBadge status="failed" /></div></BsCard>
       <BsCard :title="isArabic ? 'سطح متداخل' : 'Nested surface'" variant="flat" padding="lg"><p class="text-sm text-fg-muted">{{ isArabic ? 'بدون ظل إضافي.' : 'No competing elevation.' }}</p></BsCard>
     </section>
 
@@ -126,20 +170,30 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
         <Column selection-mode="multiple" header-style="width: 3rem" />
         <Column field="name" :header="isArabic ? 'الاسم' : 'Name'" sortable />
         <Column field="category" :header="isArabic ? 'التصنيف' : 'Category'" sortable />
-        <Column field="status" :header="isArabic ? 'الحالة' : 'Status'"><template #body="{ data: row }"><StatusBadge :status="row.status" /></template></Column>
+        <Column field="status" :header="isArabic ? 'الحالة' : 'Status'"><template #body="{ data: row }"><BsStatusBadge :status="row.status" /></template></Column>
         <Column field="amount" :header="isArabic ? 'القيمة' : 'Value'" sortable body-class="ls-num" />
       </BsDataTable>
     </section>
 
     <BsCard :title="isArabic ? 'النماذج والاختيار' : 'Forms and selection'" data-testid="foundation-patterns">
-      <div class="space-y-4">
+      <div class="space-y-5">
+        <BsFilterBar :label="isArabic ? 'مرشحات السجلات' : 'Record filters'">
+          <template #search><BsSearchField v-model="searchValue" :label="isArabic ? 'البحث' : 'Search'" :placeholder="isArabic ? 'ابحث بالاسم' : 'Search by name'" :clear-label="ui('close')" /></template>
+          <template #filters><BsDateRangeFilter v-model:from="rangeFrom" v-model:to="rangeTo" :legend="isArabic ? 'نطاق التاريخ' : 'Date range'" :from-label="isArabic ? 'من' : 'From'" :to-label="isArabic ? 'إلى' : 'To'" /></template>
+          <template #actions><BsButton>{{ isArabic ? 'تطبيق' : 'Apply' }}</BsButton></template>
+        </BsFilterBar>
         <BsSelect v-model="choice" :label="isArabic ? 'الصنف' : 'Item'" :options="choices" option-label="name" option-value="id" filter virtual />
-        <BsForm :pending="formPending" :error="formError" class="space-y-4" @submit="verifyForm">
-          <BsField v-slot="field" :label="isArabic ? 'القيمة' : 'Value'" for="catalogue-value" :hint="isArabic ? 'حقل نصي مشترك' : 'Shared text field'" required><BsInput id="catalogue-value" v-model="formValue" required :aria-describedby="field.describedby" :invalid="field.invalid" /></BsField>
+        <BsForm :pending="formPending" :error="formError" layout="grid" :columns="2" @submit="verifyForm">
+          <BsField v-slot="field" :label="isArabic ? 'القيمة' : 'Value'" for="catalogue-value" :description="isArabic ? 'وصف الحقل' : 'Field description'" :hint="isArabic ? 'حقل نصي مشترك' : 'Shared text field'" required><BsInput id="catalogue-value" v-model="formValue" required :aria-describedby="field.describedby" :invalid="field.invalid" /></BsField>
           <BsField v-slot="field" :label="isArabic ? 'ملاحظات' : 'Notes'" for="catalogue-notes"><BsTextarea id="catalogue-notes" v-model="notes" :aria-describedby="field.describedby" /></BsField>
+          <BsFormSection :title="isArabic ? 'خيارات السجل' : 'Record options'" :description="isArabic ? 'عناصر تحكم دلالية مشتركة.' : 'Shared semantic controls.'" :columns="2">
+            <BsCheckbox v-model="consent" :label="isArabic ? 'أوافق على الشروط' : 'I agree to the terms'" required />
+            <BsSwitch v-model="notificationsEnabled" :label="isArabic ? 'تفعيل الإشعارات' : 'Enable notifications'" />
+            <BsFileInput v-model="selectedFile" :label="isArabic ? 'اختر ملف CSV' : 'Choose CSV file'" accept=".csv,text/csv" :empty-label="isArabic ? 'لم يتم اختيار ملف' : 'No file selected'" />
+          </BsFormSection>
           <BsChoiceGroup v-model="notificationChoices" :legend="isArabic ? 'الإشعارات' : 'Notifications'" :options="[{ value: 'email', label: isArabic ? 'البريد' : 'Email' }, { value: 'app', label: isArabic ? 'داخل التطبيق' : 'In app' }]" inline />
           <BsChoiceGroup v-model="planChoice" type="radio" :legend="isArabic ? 'الخطة' : 'Plan'" :options="[{ value: 'standard', label: isArabic ? 'قياسية' : 'Standard' }, { value: 'advanced', label: isArabic ? 'متقدمة' : 'Advanced' }]" inline />
-          <BsButton type="submit" variant="primary">{{ ui('save') }}</BsButton>
+          <BsFormActions><BsButton type="button">{{ ui('cancel') }}</BsButton><BsButton type="submit" variant="primary">{{ ui('save') }}</BsButton></BsFormActions>
         </BsForm>
         <div class="flex flex-wrap gap-2"><BsButton variant="chip" :aria-pressed="formPending" @click="formPending = !formPending">{{ ui('loading') }}</BsButton><BsButton @click="toastSuccess(isArabic ? 'تم الحفظ' : 'Saved')">{{ isArabic ? 'إظهار إشعار' : 'Show notification' }}</BsButton></div>
       </div>
@@ -175,7 +229,7 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
           :description="isArabic ? 'مثال على غلاف المصادقة المشترك.' : 'An example of the shared authentication shell.'"
           :submit-label="isArabic ? 'متابعة' : 'Continue'" submit-disabled @submit="() => {}"
         >
-          <FloatingField :label="isArabic ? 'البريد الإلكتروني' : 'Email'"><BsInput type="email" value="demo@example.com" readonly dir="ltr" /></FloatingField>
+          <BsFloatingField :label="isArabic ? 'البريد الإلكتروني' : 'Email'"><BsInput type="email" value="demo@example.com" readonly dir="ltr" /></BsFloatingField>
         </BsAuthForm>
         <BsVerificationForm
           v-model="catalogueOtp" :title="isArabic ? 'تحقق من بريدك' : 'Verify your email'"
@@ -197,13 +251,13 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
       <div class="mt-5"><BsButton variant="danger" @click="confirmExample">{{ isArabic ? 'إزالة سجل' : 'Remove record' }}</BsButton><p class="mt-3" role="status">{{ confirmationResult }}</p></div>
     </BsCard>
 
-    <ToastHost />
+    <BsToastHost />
     <BsRecordActionDialog
       v-model:visible="visible"
       :title="mode === 'edit' ? (isArabic ? 'تعديل السجل' : 'Edit record') : (isArabic ? 'إضافة سجل' : 'Add record')"
       :dirty="dirty" :pending="pending" :error="actionError" @submit="save"
     >
-      <FloatingField :label="isArabic ? 'الاسم' : 'Name'"><InputText id="catalogue-record-name" v-model="name" class="ls-input" required /></FloatingField>
+      <BsField v-slot="field" :label="isArabic ? 'الاسم' : 'Name'" for="catalogue-record-name" required><BsInput id="catalogue-record-name" v-model="name" required :aria-describedby="field.describedby" /></BsField>
     </BsRecordActionDialog>
   </div>
 </template>

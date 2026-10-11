@@ -78,7 +78,7 @@ const completed = computed(() => data.value?.filter(item => item.state === 'comp
 
     <div class="mt-4 border-t border-line pt-4">
       <p class="text-sm text-fg-muted">{{ t('setupChecklist.hint') }}</p>
-      <SectionSkeleton v-if="pending" class="mt-4" variant="table" :rows="3" />
+      <BsSectionSkeleton v-if="pending" class="mt-4" variant="table" :rows="3" />
       <div v-else-if="error" class="ls-error mt-4" role="alert">
         <p>{{ t('setupChecklist.loadFailed') }}</p>
         <BsButton type="button" class="ls-btn ls-btn-sm mt-2" @click="refresh()">{{ t('common.retry') }}</BsButton>
@@ -90,7 +90,7 @@ const completed = computed(() => data.value?.filter(item => item.state === 'comp
               <p class="font-semibold">{{ t(`setupChecklist.items.${item.key}.title`) }}</p>
               <p class="mt-1 text-sm text-fg-muted">{{ t(`setupChecklist.items.${item.key}.${item.state}`, { count: item.count ?? 0, mapped: item.mappedCount ?? 0 }) }}</p>
             </div>
-            <StatusBadge :status="item.state" :label="t(`setupChecklist.states.${item.state}`)" :tone="item.state === 'complete' ? 'success' : 'neutral'" />
+            <BsStatusBadge :status="item.state" :label="t(`setupChecklist.states.${item.state}`)" :tone="item.state === 'complete' ? 'success' : 'neutral'" />
           </div>
           <NuxtLink v-if="item.key !== 'organization'" :to="item.route" class="mt-3 inline-block text-sm font-semibold text-link hover:underline">
             {{ t(`setupChecklist.items.${item.key}.action`) }}

@@ -114,7 +114,7 @@ async function page(offset: number) {
 <template>
   <BsDialog :visible="true" :title="title" size="lg" @update:visible="value => { if (!value) emit('close') }">
     <div ref="content" class="min-w-0 space-y-5">
-      <BsButton v-if="views.length > 1" type="button" class="ls-btn ls-btn-sm" @click="back"><span class="rotate-180"><AppIcon name="arrowRight" directional :size="16" /></span>{{ t('accountActivity.back') }}</BsButton>
+      <BsButton v-if="views.length > 1" type="button" class="ls-btn ls-btn-sm" @click="back"><span class="rotate-180"><BsIcon name="arrowRight" directional :size="16" /></span>{{ t('accountActivity.back') }}</BsButton>
       <h2 ref="heading" tabindex="-1" class="break-words text-xl font-bold outline-none">{{ activity?.account.name || journal?.description || title }}</h2>
       <template v-if="current.kind === 'account'">
         <div v-if="activity" class="flex flex-wrap items-center gap-2 text-sm text-fg-muted">
@@ -124,13 +124,13 @@ async function page(offset: number) {
           <span>{{ t('accountActivity.baseCurrency', { currency: activity.currency }) }}</span>
         </div>
         <BsForm class="grid grid-cols-2 items-end gap-3 sm:flex sm:flex-wrap" @submit.prevent="applyPeriod">
-          <FloatingField class="min-w-0" :label="t('reports.from')"><input id="activity-from" v-model="current.from" type="date" class="ls-input" required :disabled="loading"></FloatingField>
-          <FloatingField class="min-w-0" :label="t('reports.to')"><input id="activity-to" v-model="current.to" type="date" class="ls-input" required :min="current.from" :disabled="loading"></FloatingField>
+          <BsFloatingField class="min-w-0" :label="t('reports.from')"><input id="activity-from" v-model="current.from" type="date" class="ls-input" required :disabled="loading"></BsFloatingField>
+          <BsFloatingField class="min-w-0" :label="t('reports.to')"><input id="activity-to" v-model="current.to" type="date" class="ls-input" required :min="current.from" :disabled="loading"></BsFloatingField>
           <BsButton class="ls-btn ls-btn-primary col-span-2" type="submit" :disabled="loading || periodInvalid">{{ t('accountActivity.apply') }}</BsButton>
         </BsForm>
       </template>
       <p v-if="error" role="alert" class="ls-error">{{ error }} <BsButton type="button" class="ls-btn ls-btn-sm" @click="load(true)">{{ t('accounts.retry') }}</BsButton></p>
-      <SectionSkeleton v-if="loading" variant="table" :rows="5" />
+      <BsSectionSkeleton v-if="loading" variant="table" :rows="5" />
       <template v-else-if="!error && activity">
         <p class="text-sm text-fg-muted">{{ t('accountActivity.period', { from: formatDate(activity.from_date, locale), to: formatDate(activity.to_date, locale) }) }}</p>
         <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
