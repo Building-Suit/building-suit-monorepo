@@ -104,7 +104,7 @@ test('Shop CRUD tables use shared capabilities, toolbar controls, pagination, an
   const customers = presentationFor('pages/customers/index.vue')
   assert.match(customers, /:capabilities="\{ insert: canManage \}"/)
   assert.match(customers, /@create=/)
-  const settings = sources.find(item => item.file === 'pages/settings.vue')?.source || ''
+  const settings = presentationFor('pages/settings.vue')
   assert.match(settings, /<BsDataTable[\s\S]+copy\.locationsTitle/)
   assert.match(settings, /<BsRecordActionDialog v-model:visible="locationDialogOpen"/)
   assert.doesNotMatch(settings, /<BsForm v-if="canManage && \(editingLocationId/)
@@ -146,7 +146,7 @@ test('remaining authenticated root mutations use shared action dialogs', () => {
   for (const file of ['pages/settings.vue', 'pages/billing.vue', 'pages/dashboard.vue', 'pages/platform-admin.vue']) {
     const source = sources.find(item => item.file === file)?.source || ''
     assert.doesNotMatch(source, /<BsForm\b/, `${file} retains a root mutation form`)
-    assert.match(source, /<BsRecordActionDialog\b/)
+    assert.match(presentationFor(file), /<BsRecordActionDialog\b/)
     assert.match(source, /useRecordAction\(/)
   }
 })

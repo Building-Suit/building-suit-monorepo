@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { BsCashShiftActiveView, BsCashShiftHistoryRow, BsCashShiftAmountForm, BsCashShiftMovementForm } from '@building-suit/ui/types/cashShiftPresentation'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 
 definePageMeta({ layout: 'default', middleware: 'auth' })
@@ -133,122 +134,20 @@ async function closeShift() {
 }
 
 useShopRealtime('cash-shifts', () => openDirty.value || movementDirty.value || closeDirty.value)
-</script>
 
+const activeView = computed<BsCashShiftActiveView | null>(() => {
+  const active = dashboard.value.active
+  if (!active) return null
+  const metrics: [string, number][] = [ [copy.value.openingCash, active.openingAmount], [copy.value.cashSales, active.cashSales], [copy.value.cashRefunds, -active.cashRefunds], [copy.value.payIns, active.payIns], [copy.value.payOuts, -active.payOuts], [copy.value.nonCash, active.nonCashTotal], [copy.value.expected, active.expectedCash] ]
+  return { cashier: active.cashierName, opened: date(active.openedAt), metrics: metrics.map(([label, amount]) => ({ label, value: money(amount) })), events: (active.events ?? []).map(event => ({ id: event.id, date: date(event.occurredAt), label: eventLabel(event.kind), detail: event.reason || event.reference || '—', actor: event.actorName, amount: money(event.amount) })) }
+})
+const historyRows = computed<BsCashShiftHistoryRow[]>(() => dashboard.value.items.map(shift => ({ id: shift.id, cashierName: shift.cashierName, opened: date(shift.openedAt), expected: money(shift.expectedCash), counted: money(shift.countedCash), variance: money(shift.variance), nonCash: money(shift.nonCashTotal) })))
+const canClose = computed(() => Boolean(dashboard.value.active && (dashboard.value.canManage || dashboard.value.active.cashierMembershipId === dashboard.value.currentMembershipId)))
+const openModel = computed<BsCashShiftAmountForm>({ get: () => ({ ...openForm }), set: value => Object.assign(openForm, value) })
+const closeModel = computed<BsCashShiftAmountForm>({ get: () => ({ ...closeForm }), set: value => Object.assign(closeForm, value) })
+const movementModel = computed<BsCashShiftMovementForm>({ get: () => ({ ...movementForm }), set: value => { Object.assign(movementForm, { ...value, kind: value.kind === 'pay_out' ? 'pay_out' : 'pay_in' }) } })
+const movementOptions = computed(() => [{ value: 'pay_in', label: copy.value.payIn }, { value: 'pay_out', label: copy.value.payOut }])
+</script>
 <template>
-  <BsStack>
-    <BsPageHeader  :title="copy.title" :subtitle="copy.subtitle">
-      <template #actions>
-        <BsText v-if="currentLocation" as="p" size="sm">
-          <BsText as="strong">{{ copy.branch }}:</BsText> {{ currentLocation.name }}</BsText>
-      </template>
-    </BsPageHeader>
-    <BsText v-if="!current && !shopLoading" as="p" size="sm">{{ copy.noShop }}</BsText>
-    <BsText v-else-if="!currentLocation && !shopLoading" as="p" size="sm">{{ copy.noLocation }}</BsText>
-    <BsStack v-else-if="current">
-      <BsBox v-if="error" role="alert" padding="md">
-        <BsText as="p">{{ copy.loadError }}</BsText>
-        <BsButton severity="secondary" @click="refresh()">{{ copy.retry }}</BsButton>
-      </BsBox>
-      <BsGrid v-else-if="pending" :aria-label="copy.loading" role="status" :columns="4">
-        <BsSkeleton v-for="index in 4" :key="index"/>
-      </BsGrid>
-      <template v-else>
-        <BsPanel aria-labelledby="active-shift-heading" padding="md">
-          <BsInline justify="between">
-            <BsBox>
-              <BsHeading id="active-shift-heading" :level="2">{{ copy.active }}</BsHeading>
-              <BsText v-if="dashboard.active" as="p" size="sm" tone="muted">{{ dashboard.active.cashierName }} · {{ date(dashboard.active.openedAt) }}</BsText>
-            </BsBox>
-            <BsInline>
-              <BsButton v-if="!dashboard.active" @click="startOpen">{{ copy.open }}</BsButton>
-              <BsButton v-if="dashboard.active && dashboard.canAdjust" severity="secondary" @click="startMovement">{{ copy.movement }}</BsButton>
-              <BsButton v-if="dashboard.active && (dashboard.canManage || dashboard.active.cashierMembershipId === dashboard.currentMembershipId)" @click="startClose">{{ copy.close }}</BsButton>
-            </BsInline>
-          </BsInline>
-          <BsText v-if="!dashboard.active" as="p" size="sm" tone="muted">{{ copy.noActive }}</BsText>
-          <template v-else>
-            <BsDescriptionList>
-              <BsDescriptionItem
-                v-for="item in [
-                  [copy.openingCash, dashboard.active.openingAmount], [copy.cashSales, dashboard.active.cashSales], [copy.cashRefunds, -dashboard.active.cashRefunds], [copy.payIns, dashboard.active.payIns], [copy.payOuts, -dashboard.active.payOuts], [copy.nonCash, dashboard.active.nonCashTotal], [copy.expected, dashboard.active.expectedCash]
-                ]" :key="String(item[0])" :term="(item[0])">
-                <BsText as="span" size="lg" emphasis="semibold">{{ money(item[1] as number) }}</BsText>
-              </BsDescriptionItem>
-            </BsDescriptionList>
-            <BsBox scroll="x">
-              <BsHeading :level="3">{{ copy.eventHistory }}</BsHeading>
-              <BsDataTable :value="dashboard.active.events ?? []" data-key="id" :label="copy.eventHistory" :columns="[{ key: 'column0', header: (copy.date) }, { key: 'column1', header: (copy.event) }, { key: 'column2', header: (copy.actor) }, { key: 'column3', header: (copy.amount), align: 'end' }]">
-                <template #cell-column0="{ row: event }">{{ date(event.occurredAt) }}</template>
-                <template #cell-column1="{ row: event }">
-                  <BsText as="p" emphasis="semibold">{{ eventLabel(event.kind) }}</BsText>
-                  <BsText as="p" size="xs" tone="muted">{{ event.reason || event.reference || '—' }}</BsText>
-                </template>
-                <template #cell-column2="{ row: event }">{{ event.actorName }}</template>
-                <template #cell-column3="{ row: event }">
-                  <BsText as="strong">{{ money(event.amount) }}</BsText>
-                </template>
-                <template #empty>
-                  <BsText as="p" size="sm" tone="muted">{{ copy.empty }}</BsText>
-                </template>
-              </BsDataTable>
-            </BsBox>
-          </template>
-        </BsPanel>
-        <BsPanel padding="md">
-          <BsInline justify="between">
-            <BsHeading :level="2">{{ copy.history }}</BsHeading>
-            <BsSelect v-if="dashboard.canManage" v-model="cashierId" :label="copy.cashier" :options="[{ id: null, name: copy.allCashiers }, ...dashboard.cashiers]" option-label="name" option-value="id"/>
-          </BsInline>
-          <BsBox scroll="x">
-            <BsDataTable :value="dashboard.items" data-key="id" :label="copy.history" lazy paginator :rows="pageSize" :first="(page - 1) * pageSize" :total-records="dashboard.total" :always-show-paginator="false" :columns="[{ key: 'cashierName', header: (copy.cashier), field: 'cashierName' }, { key: 'column1', header: (copy.opened) }, { key: 'column2', header: (copy.expected), align: 'end' }, { key: 'column3', header: (copy.counted), align: 'end' }, { key: 'column4', header: (copy.variance), align: 'end' }, { key: 'column5', header: (copy.nonCash), align: 'end' }]" @page="page = $event.page + 1">
-              <template #cell-column1="{ row: shift }">{{ date(shift.openedAt) }}</template>
-              <template #cell-column2="{ row: shift }">{{ money(shift.expectedCash) }}</template>
-              <template #cell-column3="{ row: shift }">{{ money(shift.countedCash) }}</template>
-              <template #cell-column4="{ row: shift }">
-                <BsText as="strong">{{ money(shift.variance) }}</BsText>
-              </template>
-              <template #cell-column5="{ row: shift }">{{ money(shift.nonCashTotal) }}</template>
-              <template #empty>
-                <BsText as="p" size="sm" tone="muted">{{ copy.empty }}</BsText>
-              </template>
-            </BsDataTable>
-          </BsBox>
-        </BsPanel>
-      </template>
-    </BsStack>
-    <BsRecordActionDialog v-model:visible="showOpen" :title="copy.open" :dirty="openDirty" :pending="opening" :error="actionError" :submit-label="copy.openAction" :cancel-label="copy.cancel" @submit="openShift">
-      <BsField v-slot="field" :label="copy.openingCash">
-        <BsInput :id="field.id" v-model.number="openForm.amount" :aria-describedby="field.describedby" type="number" :min="0" :step="0.01" required/>
-      </BsField>
-      <BsField v-slot="field" :label="copy.openingNotes">
-        <BsTextarea :id="field.id" v-model="openForm.notes" :aria-describedby="field.describedby" :maxlength="1000" :rows="3"/>
-      </BsField>
-    </BsRecordActionDialog>
-    <BsRecordActionDialog v-model:visible="showMovement" :title="copy.movement" :dirty="movementDirty" :pending="moving" :error="actionError" :submit-label="copy.record" :cancel-label="copy.cancel" @submit="recordMovement">
-      <BsFieldGroup :legend="(copy.event)">
-        <BsRadio  v-model="movementForm.kind" value="pay_in" :label="copy.payIn" />
-        <BsRadio  v-model="movementForm.kind" value="pay_out" :label="copy.payOut" />
-      </BsFieldGroup>
-      <BsField v-slot="field" :label="copy.amount">
-        <BsInput :id="field.id" v-model.number="movementForm.amount" :aria-describedby="field.describedby" type="number" :min="0.01" :step="0.01" required/>
-      </BsField>
-      <BsField v-slot="field" :label="copy.reason">
-        <BsTextarea :id="field.id" v-model="movementForm.reason" :aria-describedby="field.describedby" :minlength="2" :maxlength="1000" required :rows="3"/>
-      </BsField>
-      <BsField v-slot="field" :label="copy.reference">
-        <BsInput :id="field.id" v-model="movementForm.reference" :aria-describedby="field.describedby" :maxlength="200" required/>
-      </BsField>
-    </BsRecordActionDialog>
-    <BsRecordActionDialog v-model:visible="showClose" :title="copy.close" :dirty="closeDirty" :pending="closing" :error="actionError" :submit-label="copy.closeAction" :cancel-label="copy.cancel" @submit="closeShift">
-      <BsText as="p" size="sm">{{ copy.expected }}: <BsText as="strong">{{ money(dashboard.active?.expectedCash) }}</BsText>
-      </BsText>
-      <BsField v-slot="field" :label="copy.counted">
-        <BsInput :id="field.id" v-model.number="closeForm.amount" :aria-describedby="field.describedby" type="number" :min="0" :step="0.01" required/>
-      </BsField>
-      <BsField v-slot="field" :label="copy.closeNotes">
-        <BsTextarea :id="field.id" v-model="closeForm.notes" :aria-describedby="field.describedby" :minlength="2" :maxlength="1000" :rows="3"/>
-      </BsField>
-    </BsRecordActionDialog>
-  </BsStack>
+  <BsCashShiftsPage v-model:cashier="cashierId" v-model:open-form="openModel" v-model:movement-form="movementModel" v-model:close-form="closeModel" v-model:open-visible="showOpen" v-model:movement-visible="showMovement" v-model:close-visible="showClose" :copy="copy" :context-available="Boolean(current)" :shop-loading="shopLoading" :location-name="currentLocation?.name ?? null" :pending="pending" :error="Boolean(error)" :active="activeView" :can-adjust="Boolean(dashboard.active && dashboard.canAdjust)" :can-close="canClose" :can-manage="dashboard.canManage" :history-rows="historyRows" :cashier-options="dashboard.cashiers" :page="page" :page-size="pageSize" :total="dashboard.total" :action-error="actionError" :expected-cash="money(dashboard.active?.expectedCash)" :open-editor="{ dirty: openDirty, pending: opening }" :movement-editor="{ dirty: movementDirty, pending: moving }" :close-editor="{ dirty: closeDirty, pending: closing }" :movement-options="movementOptions" @retry="refresh()" @open="startOpen" @movement="startMovement" @close="startClose" @save-open="openShift" @save-movement="recordMovement" @save-close="closeShift" @page="page = $event"/>
 </template>

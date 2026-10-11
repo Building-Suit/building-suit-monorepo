@@ -40,7 +40,11 @@
     "BsCustomerDirectoryPage": "packages/ui/src/templates/BsCustomerDirectoryPage.vue",
     "BsStarterWorkflowPage": "packages/ui/src/templates/BsStarterWorkflowPage.vue",
     "BsReceiptPage": "packages/ui/src/templates/BsReceiptPage.vue",
-    "BsCustomerProfilePage": "packages/ui/src/templates/BsCustomerProfilePage.vue"
+    "BsCustomerProfilePage": "packages/ui/src/templates/BsCustomerProfilePage.vue",
+    "BsBusinessSettingsPage": "packages/ui/src/templates/BsBusinessSettingsPage.vue",
+    "BsCashShiftsPage": "packages/ui/src/templates/BsCashShiftsPage.vue",
+    "BsSalesDirectoryPage": "packages/ui/src/templates/BsSalesDirectoryPage.vue",
+    "BsPurchasingPage": "packages/ui/src/templates/BsPurchasingPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -1809,36 +1813,20 @@
     {
       "source": "apps/shop-suit/app/pages/cash-shifts.vue",
       "kind": "route",
-      "currentSharedTemplates": [],
-      "renderedBsComponents": [
-        "BsBox",
-        "BsButton",
-        "BsDataTable",
-        "BsDescriptionItem",
-        "BsDescriptionList",
-        "BsField",
-        "BsFieldGroup",
-        "BsGrid",
-        "BsHeading",
-        "BsInline",
-        "BsInput",
-        "BsPageHeader",
-        "BsPanel",
-        "BsRadio",
-        "BsRecordActionDialog",
-        "BsSelect",
-        "BsSkeleton",
-        "BsStack",
-        "BsText",
-        "BsTextarea"
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsCashShiftsPage.vue"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "renderedBsComponents": [
+        "BsCashShiftsPage"
+      ],
+      "destination": "packages/ui/src/templates/BsCashShiftsPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/shop-suit/app/pages/cash-shifts.vue",
       "dependencies": [
         "~/types/shopCrmRpc"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "cash-shift-management"
     },
     {
       "source": "apps/shop-suit/app/pages/catalog-import.vue",
@@ -1904,7 +1892,8 @@
         "~/utils/receiptAllocations",
         "~/types/shopCrmRpc"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "customer-profile"
     },
     {
       "source": "apps/shop-suit/app/pages/customers/index.vue",
@@ -1921,7 +1910,8 @@
       "dependencies": [
         "~/types/shopCrmRpc"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "customer-directory"
     },
     {
       "source": "apps/shop-suit/app/pages/dashboard.vue",
@@ -2222,35 +2212,20 @@
     {
       "source": "apps/shop-suit/app/pages/purchases/index.vue",
       "kind": "route",
-      "currentSharedTemplates": [],
-      "renderedBsComponents": [
-        "BsBox",
-        "BsButton",
-        "BsCheckbox",
-        "BsDataTable",
-        "BsEntityPicker",
-        "BsField",
-        "BsFieldGroup",
-        "BsGrid",
-        "BsHeading",
-        "BsInline",
-        "BsInput",
-        "BsLink",
-        "BsPageHeader",
-        "BsPanel",
-        "BsRecordActionDialog",
-        "BsSelect",
-        "BsStack",
-        "BsText",
-        "BsTextarea"
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsPurchasingPage.vue"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "renderedBsComponents": [
+        "BsPurchasingPage"
+      ],
+      "destination": "packages/ui/src/templates/BsPurchasingPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/shop-suit/app/pages/purchases/index.vue",
       "dependencies": [
         "~/types/shopCrmRpc"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "purchase-directory"
     },
     {
       "source": "apps/shop-suit/app/pages/refund-cancellation.vue",
@@ -2353,39 +2328,28 @@
         "~/types/receipt",
         "~/utils/receipt"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "sale-receipt"
     },
     {
       "source": "apps/shop-suit/app/pages/sales/index.vue",
       "kind": "route",
-      "currentSharedTemplates": [],
-      "renderedBsComponents": [
-        "BsBox",
-        "BsButton",
-        "BsDataTable",
-        "BsField",
-        "BsFieldGroup",
-        "BsGrid",
-        "BsHeading",
-        "BsInline",
-        "BsInput",
-        "BsLink",
-        "BsPageHeader",
-        "BsPanel",
-        "BsRecordActionDialog",
-        "BsSelect",
-        "BsStack",
-        "BsText"
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsSalesDirectoryPage.vue"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "renderedBsComponents": [
+        "BsSalesDirectoryPage"
+      ],
+      "destination": "packages/ui/src/templates/BsSalesDirectoryPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/shop-suit/app/pages/sales/index.vue",
       "dependencies": [
         "~/utils/shopCommandErrorMessage",
         "~/utils/saleCopy",
         "~/types/shopCrmRpc"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "sales-directory"
     },
     {
       "source": "apps/shop-suit/app/pages/services/index.vue",
@@ -2421,33 +2385,14 @@
     {
       "source": "apps/shop-suit/app/pages/settings.vue",
       "kind": "route",
-      "currentSharedTemplates": [],
-      "renderedBsComponents": [
-        "BsBox",
-        "BsButton",
-        "BsCheckbox",
-        "BsChoiceGroup",
-        "BsContentSection",
-        "BsDataTable",
-        "BsDescriptionItem",
-        "BsDescriptionList",
-        "BsField",
-        "BsFieldGroup",
-        "BsForm",
-        "BsGrid",
-        "BsHeading",
-        "BsInput",
-        "BsLink",
-        "BsPanel",
-        "BsRadio",
-        "BsRecordActionDialog",
-        "BsStack",
-        "BsStatusBadge",
-        "BsText",
-        "BsTextarea"
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsBusinessSettingsPage.vue"
       ],
-      "destination": null,
-      "status": "pending-complete-composition-review",
+      "renderedBsComponents": [
+        "BsBusinessSettingsPage"
+      ],
+      "destination": "packages/ui/src/templates/BsBusinessSettingsPage.vue",
+      "status": "implemented; browser and visual acceptance pending",
       "domainAdapter": "apps/shop-suit/app/pages/settings.vue",
       "dependencies": [
         "~/types/shopCrmRpc",
@@ -2457,7 +2402,8 @@
         "~/composables/useShop",
         "~/utils/businessMode"
       ],
-      "verification": "not-yet-accepted"
+      "verification": "not-yet-accepted",
+      "purpose": "business-settings"
     },
     {
       "source": "apps/shop-suit/app/pages/team.vue",
@@ -2628,6 +2574,10 @@
     "BsCustomerDirectoryPage",
     "BsStarterWorkflowPage",
     "BsReceiptPage",
-    "BsCustomerProfilePage"
+    "BsCustomerProfilePage",
+    "BsBusinessSettingsPage",
+    "BsCashShiftsPage",
+    "BsSalesDirectoryPage",
+    "BsPurchasingPage"
   ]
 }
