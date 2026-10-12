@@ -22,7 +22,7 @@ Read STATUS.md, INDEX.md and tasks/01 first. Do not infer completion from scaffo
 | SHOP-UI-01 | shell-sidebar-profile | None | PR opened | Working — local checks passed; final acceptance pending | [Draft PR #250](https://github.com/Building-Suit/building-suit-monorepo/pull/250) · `codex/shop-suit/ui-pro-redesign` |
 | SHOP-UI-02 | dashboard | 01 | PR opened | Working — local checks passed; final acceptance pending | [Draft PR #251](https://github.com/Building-Suit/building-suit-monorepo/pull/251) · `codex/shop-suit/ui-pro-dashboard` |
 | SHOP-UI-03 | pos-media | 01 | PR opened | Blocked — DB version/application/test; local checks pass | [Draft PR #252](https://github.com/Building-Suit/building-suit-monorepo/pull/252) · `codex/shop-suit/ui-pro-pos-media` |
-| SHOP-UI-04 | appointments-calendar | 01 | Working — implemented, publication pending | Working — local checks passed; final acceptance pending | `codex/shop-suit/ui-pro-appointments`, PR pending |
+| SHOP-UI-04 | appointments-calendar | 01 | PR opened | Working — local checks passed; final acceptance pending | [Draft PR #253](https://github.com/Building-Suit/building-suit-monorepo/pull/253) · `codex/shop-suit/ui-pro-appointments` |
 | SHOP-UI-05 | pricing-billing | 01 | Working | Unverified | Preserved partial edits on task 01 branch; no PR |
 | SHOP-UI-06 | settings-notice | 01 | Not started | Not started | No branch/PR |
 | SHOP-UI-07 | shop-consistency | 02–06 | Not started | Not started | No branch/PR |
@@ -135,8 +135,8 @@ One bounded turn; preserve other task edits; one stacked draft PR. Update status
 # SHOP-UI-04 — appointments-calendar
 
 Depends on: 01
-Implementation: Not started
-Verification: Not started
+Implementation: PR opened (#253)
+Verification: Working — local checks passed; consolidated acceptance pending
 Original mapping: UI PRO 003/008
 
 Reference 4: actual navigable calendar with existing reserved appointments, appropriate day/week/month views, readable time/status/resource and existing create/edit flows. Preserve permissions/timezone/conflict/business rules, staff/location filters and history; no public self-booking. Unwired shared calendar scaffold exists; its presence is not implemented functionality.
@@ -257,7 +257,7 @@ Task-03 publication policy: `node tooling/git/check-pr.mjs 252` passed. No CI po
 
 # Current task-04 receipt
 
-Implementation: Working — appointments/calendar implemented, publication pending. Verification: task-local checks passed; full rendered/build/typecheck/final CI remains task 08.
+Implementation: PR opened — [draft PR #253](https://github.com/Building-Suit/building-suit-monorepo/pull/253), stacked on PR #252. Implementation commit `6915409`; tracker update follows in a documentation commit. Verification: task-local checks passed; full rendered/build/typecheck/final CI remains task 08.
 
 Worktree `/workspace/shop-ui-04`; branch `codex/shop-suit/ui-pro-appointments`; parent `ba1d883f74649befcfcf117395bc134196560f9d` on PR #252 (`codex/shop-suit/ui-pro-pos-media`). Current stg observed `630031447d11ed738bbfb9018283040d475425bb`; the parent may advance stg during independent Super Admin consolidation. Do not retarget or merge that work into this bounded Shop task. Final integration must refresh/reconcile the staging base once appropriate.
 
@@ -270,3 +270,5 @@ Checks: four Vue script/template/style compilations and TypeScript syntax transp
 Carry-forward prerequisite: task-03 image persistence is NOT complete. Its SQL is still an unversioned/unapplied draft due the CLI read-only config issue; actual migration/database/media round-trip verification remains outstanding. Resolve supported writable CLI config at task 08 if possible without hosted application.
 
 Next task: SHOP-UI-05 pricing/billing. Create `codex/shop-suit/ui-pro-pricing-billing` from task-04 final published HEAD, targeting `codex/shop-suit/ui-pro-appointments`, in a clean worktree. Keep earlier preserved sketches untouched; use current complete shared templates and actual commercial catalog.
+
+Task-04 publication policy: `node tooling/git/check-pr.mjs 253` passed. No CI polling, merge, deployment or staging reconciliation performed.
