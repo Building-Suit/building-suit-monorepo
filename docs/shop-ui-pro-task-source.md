@@ -23,7 +23,7 @@ Read STATUS.md, INDEX.md and tasks/01 first. Do not infer completion from scaffo
 | SHOP-UI-02 | dashboard | 01 | PR opened | Working — local checks passed; final acceptance pending | [Draft PR #251](https://github.com/Building-Suit/building-suit-monorepo/pull/251) · `codex/shop-suit/ui-pro-dashboard` |
 | SHOP-UI-03 | pos-media | 01 | PR opened | Blocked — DB version/application/test; local checks pass | [Draft PR #252](https://github.com/Building-Suit/building-suit-monorepo/pull/252) · `codex/shop-suit/ui-pro-pos-media` |
 | SHOP-UI-04 | appointments-calendar | 01 | PR opened | Working — local checks passed; final acceptance pending | [Draft PR #253](https://github.com/Building-Suit/building-suit-monorepo/pull/253) · `codex/shop-suit/ui-pro-appointments` |
-| SHOP-UI-05 | pricing-billing | 01 | Working | Unverified | Preserved partial edits on task 01 branch; no PR |
+| SHOP-UI-05 | pricing-billing | 01 | Working — implemented, publication pending | Working — local checks passed; final acceptance pending | `codex/shop-suit/ui-pro-pricing-billing`, PR pending |
 | SHOP-UI-06 | settings-notice | 01 | Not started | Not started | No branch/PR |
 | SHOP-UI-07 | shop-consistency | 02–06 | Not started | Not started | No branch/PR |
 | SHOP-UI-08 | final-integration | 01–07 | Not started | Not started | No branch/PR |
@@ -72,7 +72,7 @@ All eight original PNG bytes are unchanged. Checksums are in reference-checksums
 | 7 | image(20261012-171705).png | libfile_6e4b39b2b5ec81918b40e86c8bbcb265 | Sidebar plan/profile |
 | 8 | image(20261012-171706).png | libfile_ea10a2f796cc8191a5766ebd5883af69 | Sidebar/profile light/dark |
 
-Image 2 displays sandbox/operator payment copy starting «بيئة الاختبار: الطلبات الاصطناعية لا تمثل أموالًا مستلمة», mentioning building-suit@instapay and warning attachments alone do not prove payment. On current stg, Billing no longer renders instructionsEn/instructionsAr; test apps/shop-suit/tests/e2e/plan-owner.spec.ts lines 281–306 asserts synthetic copy absent while continuing receipt upload. Retain the remaining payment instructions and business flow.
+Image 2 displays sandbox/operator payment copy starting «بيئة الاختبار: الطلبات الاصطناعية لا تمثل أموالًا مستلمة», mentioning building-suit@instapay and warning attachments alone do not prove payment. The early preparation observation was from the stale staging ref. Current shared Billing can render operator instructions; task 05 now filters only this exact legacy sandbox paragraph and its existing English equivalent. The plan-owner.spec.ts regression still expects synthetic copy absent while retaining receipt upload. Retain the remaining payment instructions and business flow.
 
 | Original UI PRO | Shop adaptation |
 |---|---|
@@ -272,3 +272,22 @@ Carry-forward prerequisite: task-03 image persistence is NOT complete. Its SQL i
 Next task: SHOP-UI-05 pricing/billing. Create `codex/shop-suit/ui-pro-pricing-billing` from task-04 final published HEAD, targeting `codex/shop-suit/ui-pro-appointments`, in a clean worktree. Keep earlier preserved sketches untouched; use current complete shared templates and actual commercial catalog.
 
 Task-04 publication policy: `node tooling/git/check-pr.mjs 253` passed. No CI polling, merge, deployment or staging reconciliation performed.
+
+
+# Current task-05 receipt
+
+Implementation: Working — pricing/billing implemented, publication pending. Verification: focused local checks passed; final build/types/rendered acceptance and CI remain task 08.
+
+Worktree `/workspace/shop-ui-05`; branch `codex/shop-suit/ui-pro-pricing-billing`; parent `17d7c0059926325b9a9fcce340a9762f5ed78435` on PR #253. The observed stg ref is still `630031447d11ed738bbfb9018283040d475425bb`; independent Super Admin consolidation is not incorporated or retargeted here.
+
+Reference 5: existing shared pricing atoms/organisms and complete landing/billing templates now accept Shop appearance. Flat plan cards, Navy/Gold emphasized selected/current card (center fallback makes no recommendation/popularity claim), clearer prices/actions/feature lists and compact period/member controls. Existing actual catalog/prices/currency/terms, annual-discount calculations, trial rules, Solo 1/2 and Multi variants, entitlements and blockers are unchanged. No invented commercial data. Default consumers preserve original action ordering and presentation; no app-local pricing Vue was introduced.
+
+Billing has anchored current-plan, usage, plan-options, payment/proof and history sections. Existing selected/private-offer quote, redemption, manual InstaPay instructions, notice confirmation, receipt upload/review/status/history, permission/readonly states and dialogs remain. Private-offer entry is available in a native accessible disclosure rather than occupying the main comparison/payment reading path. Payment status/instructions/notice/proof are grouped responsively. No business command, API, financial rule, schema or provider change.
+
+Image 2 correction: current strict shared Billing can render dynamic operator text; earlier absent-copy observation came from the stale ref. The new Shop helper suppresses only the paragraph beginning «بيئة الاختبار: الطلبات الاصطناعية لا تمثل أموالًا مستلمة» and its existing English fixture equivalent, «Synthetic submissions do not represent received funds». Normal operator paragraphs, recipient/link/QR, manual review explanation and proof flows remain. Dedicated tests verify exact suppression and preservation of ordinary instructions. Task 06 should confirm this remains absent, not delete payment policy/business flow.
+
+Checks: 9 changed Vue script/template/style syntax compilations (8 with TS syntax transpilation, plus docs catalogue); scoped UI/type/test, Shop adapters and docs lint; 19 focused pricing/card/notice/billing/plan/private-offer tests; whitespace; preflight errors=[]. Reused pinned installed compiler link was added only to ignored local dependencies to repair an incomplete test setup; no dependency/lockfile change. Nuxt preparation succeeded with missing local backend config warnings. No hosted SQL, full browser matrix/build/typecheck or CI polling.
+
+Carry forward: task-03 image persistence remains incomplete until versioned migration/database/media round-trip verification; its SQL is still an unapplied draft. Task 08 should resolve supported writable CLI config if possible without hosted application.
+
+Next task: SHOP-UI-06 settings/notice. Create `codex/shop-suit/ui-pro-settings` from task-05 final published HEAD, targeting `codex/shop-suit/ui-pro-pricing-billing`, in a clean worktree. Preserve all actual settings functions and the narrow image-2 removal now implemented.
