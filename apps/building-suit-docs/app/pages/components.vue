@@ -134,6 +134,11 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
       :context="[{ label: isArabic ? 'الاتجاه' : 'Direction', value: isArabic ? 'RTL' : 'LTR' }, { label: isArabic ? 'المصدر' : 'Owner', value: 'packages/ui' }]"
     />
 
+    <BsContentSection :title="isArabic ? 'تقويم المواعيد' : 'Appointment calendar'">
+      <BsText size="sm" tone="muted">{{ isArabic ? 'مثال توضيحي على خلية فارغة وحالة اليوم.' : 'Illustrative empty calendar cell and today marker.' }}</BsText>
+      <BsAppointmentCalendar view="day" :transitioning="false" :copy="{ title: isArabic ? 'تقويم المواعيد' : 'Appointment calendar', empty: isArabic ? 'لا توجد مواعيد' : 'No appointments', edit: isArabic ? 'تعديل' : 'Edit', reschedule: isArabic ? 'تعديل الموعد' : 'Reschedule', saving: isArabic ? 'جارٍ الحفظ' : 'Saving', history: isArabic ? 'السجل' : 'History' }" :days="[{ id: '2026-10-12', label: isArabic ? 'الاثنين ١٢ أكتوبر' : 'Monday 12 October', today: true, appointments: [] }]" />
+    </BsContentSection>
+
     <BsContentSection :title="isArabic ? 'بطاقات كتالوج نقطة البيع' : 'POS catalog image cards'">
       <BsGrid :columns="3"><BsCatalogTile :name="isArabic ? 'مثال منتج بدون صورة' : 'Example product without image'" price="30" :detail="isArabic ? 'بيانات توضيحية' : 'Illustrative data'" :image-label="isArabic ? 'بدون صورة' : 'No image'" /><BsCatalogTile :name="isArabic ? 'مثال خدمة بدون صورة' : 'Example service without image'" price="10" :detail="isArabic ? 'بيانات توضيحية' : 'Illustrative data'" :image-label="isArabic ? 'بدون صورة' : 'No image'" /></BsGrid>
     </BsContentSection>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { BsAppointmentsCopy, BsAppointmentsView, BsAppointmentChoices, BsAppointmentForm, BsAppointmentScheduleForm } from '../types/appointmentsPresentation'
-defineProps<{ copy: BsAppointmentsCopy; presentation: BsAppointmentsView; choices: BsAppointmentChoices }>()
+defineProps<{ selectedDate?: string; copy: BsAppointmentsCopy; presentation: BsAppointmentsView; choices: BsAppointmentChoices }>()
 const view = defineModel<string>('view', { required: true })
 const staffId = defineModel<string | null>('staffId', { required: true })
 const showForm = defineModel<boolean>('showForm', { required: true })
@@ -8,7 +8,7 @@ const showSchedule = defineModel<boolean>('showSchedule', { required: true })
 const form = defineModel<BsAppointmentForm>('form', { required: true })
 const scheduleForm = defineModel<BsAppointmentScheduleForm>('scheduleForm', { required: true })
 const scheduleMemberId = defineModel<string>('scheduleMemberId', { required: true })
-const emit = defineEmits<{ create: [walkIn: boolean]; edit: [id: string]; transition: [id: string, status: string]; move: [amount: number]; today: []; retry: []; location: [id: string]; save: []; openSchedule: []; scheduleMember: []; saveSchedule: []; addBlock: []; removeBlock: [index: number] }>()
+const emit = defineEmits<{ date: [value: string]; create: [walkIn: boolean]; edit: [id: string]; transition: [id: string, status: string]; move: [amount: number]; today: []; retry: []; location: [id: string]; save: []; openSchedule: []; scheduleMember: []; saveSchedule: []; addBlock: []; removeBlock: [index: number] }>()
 function updateForm(key: keyof BsAppointmentForm, value: string | number | boolean | null | undefined) { form.value = { ...form.value, [key]: String(value ?? '') } }
 function updateSchedule(key: Exclude<keyof BsAppointmentScheduleForm, 'weekdays'>, value: string | number | boolean | null | undefined) { scheduleForm.value = { ...scheduleForm.value, [key]: String(value ?? '') } }
 function updateDay(weekday: number, key: 'enabled' | 'startsLocal' | 'endsLocal', value: string | number | boolean | null | undefined) { scheduleForm.value = { ...scheduleForm.value, weekdays: scheduleForm.value.weekdays.map(day => day.weekday === weekday ? { ...day, [key]: key === 'enabled' ? Boolean(value) : String(value ?? '') } : day) } }
@@ -38,6 +38,7 @@ function updateDay(weekday: number, key: 'enabled' | 'startsLocal' | 'endsLocal'
         <BsField v-slot="field" :label="copy.barber">
           <BsSelect v-model="staffId" :input-id="field.id" :aria-describedby="field.describedby" :label="copy.barber" :options="choices.staff" option-label="label" option-value="value" option-disabled="disabled"/>
         </BsField>
+        <BsField v-if="selectedDate !== undefined" v-slot="field" :label="copy.date || copy.start"><BsInput :id="field.id" :model-value="selectedDate" type="date" :aria-describedby="field.describedby" @update:model-value="emit('date', String($event ?? ''))" /></BsField>
         <BsInline>
           <BsButton severity="secondary" :aria-label="copy.previous" @click="emit('move', -1)">
             <BsText aria-hidden="true" as="span">{{ presentation.previousSymbol }}</BsText>
@@ -48,41 +49,21 @@ function updateDay(weekday: number, key: 'enabled' | 'startsLocal' | 'endsLocal'
           </BsButton>
         </BsInline>
         <BsInline>
-          <BsInline role="group">
+          <BsInline role="group" :aria-label="copy.title">
             <BsButton variant="chip" type="button" :aria-pressed="view === 'day'" @click="view = 'day'">{{ copy.day }}</BsButton>
             <BsButton variant="chip" type="button" :aria-pressed="view === 'week'" @click="view = 'week'">{{ copy.week }}</BsButton>
+            <BsButton v-if="copy.month" variant="chip" :aria-pressed="view === 'month'" @click="view = 'month'">{{ copy.month }}</BsButton>
           </BsInline>
         </BsInline>
       </BsFilterBar>
+      <BsInline v-if="presentation.rangeLabel" justify="between"><BsHeading :level="2">{{ presentation.rangeLabel }}</BsHeading><BsText v-if="presentation.timezone" size="xs" tone="muted">{{ presentation.timezone }}</BsText></BsInline>
       <BsText v-if="presentation.loading" role="status" as="p" size="sm" tone="muted">{{ copy.loading }}</BsText>
       <BsPanel v-else-if="presentation.failed" role="alert" padding="md">
         <BsText as="p">{{ presentation.failureMessage }}</BsText>
         <BsButton severity="secondary" @click="emit('retry')">{{ copy.retry }}</BsButton>
       </BsPanel>
       <BsText v-else-if="!presentation.locationId" as="p" size="sm">{{ copy.noLocation }}</BsText>
-      <BsGrid v-else :columns="view === 'week' ? 7 : 1">
-        <BsPanel v-for="day in presentation.days" :key="day.id" padding="md">
-          <BsHeading :level="2">{{ day.label }}</BsHeading>
-          <BsText v-if="!day.appointments.length" as="p" size="xs" tone="muted">{{ copy.empty }}</BsText>
-          <BsList v-else ordered>
-            <BsListItem v-for="appointment in day.appointments" :key="appointment.id">
-              <BsInline justify="between">
-                <BsText as="strong">{{ appointment.time }}</BsText>
-                <BsStatusBadge :status="appointment.status" :label="appointment.statusLabel" :tone="appointment.tone" />
-              </BsInline>
-              <BsText as="p" emphasis="semibold">{{ appointment.customerName }}</BsText>
-              <BsText as="p" size="xs" tone="muted">{{ appointment.detail }}</BsText>
-              <BsInline v-if="appointment.canEdit || appointment.actions.length" :aria-busy="appointment.pending">
-                <BsButton v-if="appointment.canEdit" variant="link" :disabled="presentation.transitioning" @click="emit('edit', appointment.id)">{{ copy.reschedule }}</BsButton>
-                <BsButton v-for="action in appointment.actions" :key="action.id" :variant="action.text ? 'text' : 'link'" :disabled="presentation.transitioning" @click="emit('transition', appointment.id, action.id)">{{ action.label }}</BsButton>
-                <BsText v-if="appointment.pending" role="status" as="span" size="xs">{{ copy.saving }}</BsText>
-              </BsInline>
-              <BsDisclosure v-if="appointment.history.length" :summary="copy.history"><BsList ordered><BsListItem v-for="event in appointment.history" :key="event.id">{{ event.label }}</BsListItem></BsList></BsDisclosure>
-              <BsLink v-if="appointment.link" :to="appointment.link.to">{{ appointment.link.label }}</BsLink>
-            </BsListItem>
-          </BsList>
-        </BsPanel>
-      </BsGrid>
+      <BsAppointmentCalendar v-else :days="presentation.days" :view="view" :copy="copy" :transitioning="presentation.transitioning" @edit="emit('edit', $event)" @transition="(id, status) => emit('transition', id, status)" @day="date => { emit('date', date); view = 'day' }" />
       <BsText v-if="presentation.noStaff" role="status" as="p" size="sm">{{ copy.noStaff }}</BsText>
       <BsPanel v-if="!presentation.loading && !presentation.failed && presentation.locationId" padding="md">
         <BsHeading :level="2">{{ copy.queue }}</BsHeading>

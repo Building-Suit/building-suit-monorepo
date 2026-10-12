@@ -22,7 +22,7 @@ Read STATUS.md, INDEX.md and tasks/01 first. Do not infer completion from scaffo
 | SHOP-UI-01 | shell-sidebar-profile | None | PR opened | Working — local checks passed; final acceptance pending | [Draft PR #250](https://github.com/Building-Suit/building-suit-monorepo/pull/250) · `codex/shop-suit/ui-pro-redesign` |
 | SHOP-UI-02 | dashboard | 01 | PR opened | Working — local checks passed; final acceptance pending | [Draft PR #251](https://github.com/Building-Suit/building-suit-monorepo/pull/251) · `codex/shop-suit/ui-pro-dashboard` |
 | SHOP-UI-03 | pos-media | 01 | PR opened | Blocked — DB version/application/test; local checks pass | [Draft PR #252](https://github.com/Building-Suit/building-suit-monorepo/pull/252) · `codex/shop-suit/ui-pro-pos-media` |
-| SHOP-UI-04 | appointments-calendar | 01 | Not started | Not started | No branch/PR |
+| SHOP-UI-04 | appointments-calendar | 01 | Working — implemented, publication pending | Working — local checks passed; final acceptance pending | `codex/shop-suit/ui-pro-appointments`, PR pending |
 | SHOP-UI-05 | pricing-billing | 01 | Working | Unverified | Preserved partial edits on task 01 branch; no PR |
 | SHOP-UI-06 | settings-notice | 01 | Not started | Not started | No branch/PR |
 | SHOP-UI-07 | shop-consistency | 02–06 | Not started | Not started | No branch/PR |
@@ -253,3 +253,20 @@ Checks passed: 8 changed/new Vue files parse and compile scripts/templates/style
 Next task: SHOP-UI-04 appointments/calendar. Create `codex/shop-suit/ui-pro-appointments` from this task's final published HEAD, targeting `codex/shop-suit/ui-pro-pos-media`, in a clean worktree. Keep the media SQL/application blocker visible in final integration; do not let it block independent calendar presentation.
 
 Task-03 publication policy: `node tooling/git/check-pr.mjs 252` passed. No CI polling or merge occurred. Library task source retains the same identity; SQL remains a reviewable unversioned draft until the CLI path is usable.
+
+
+# Current task-04 receipt
+
+Implementation: Working — appointments/calendar implemented, publication pending. Verification: task-local checks passed; full rendered/build/typecheck/final CI remains task 08.
+
+Worktree `/workspace/shop-ui-04`; branch `codex/shop-suit/ui-pro-appointments`; parent `ba1d883f74649befcfcf117395bc134196560f9d` on PR #252 (`codex/shop-suit/ui-pro-pos-media`). Current stg observed `630031447d11ed738bbfb9018283040d475425bb`; the parent may advance stg during independent Super Admin consolidation. Do not retarget or merge that work into this bounded Shop task. Final integration must refresh/reconcile the staging base once appropriate.
+
+Reference 4: existing complete BsAppointmentsPage now has a shared reserved-appointment calendar, day/week/month controls, manual date picker, previous/next/today navigation, clear period/timezone, today/outside-month markers, compact status/time/customer/service/staff events, and mobile month agenda. Existing location/staff filters and create/edit/transition/queue/history/sale/schedule flows remain. Month action/history controls use accessible disclosure to preserve readable event cards. Generic date-navigation state belongs to packages/ux; Shop supplies typed business data/commands.
+
+Backend policy is unchanged: appointment_calendar retains its <=8-day read limit. Month windows use 4–6 concurrent bounded week requests, merge only authorized returned records and deduplicate appointments/hours/blocks. A denied/failed chunk fails the whole calendar; no partial-success metrics are shown. Overnight reservations appear on each day they overlap, excluding the day after an exact midnight end. Existing browser-local input/timezone behavior and Cairo scheduling commands remain unchanged, with displayed local timezone explicitly labeled. No public booking, new domain policy, schema or hosted change.
+
+Checks: four Vue script/template/style compilations and TypeScript syntax transpilation; calendar export resolution; scoped shared UI/UX and Shop/docs lint; 8 focused navigation/calendar/service-contract tests including leap days, month-end navigation, bounded requests/deduplication, denial and overnight/midnight boundaries (no hosted SQL execution); whitespace; preflight errors=[]. Nuxt preparation succeeded with missing local Supabase URL/key warnings. Full browser/theme/RTL matrix, builds/types and final CI remain unrun until task 08.
+
+Carry-forward prerequisite: task-03 image persistence is NOT complete. Its SQL is still an unversioned/unapplied draft due the CLI read-only config issue; actual migration/database/media round-trip verification remains outstanding. Resolve supported writable CLI config at task 08 if possible without hosted application.
+
+Next task: SHOP-UI-05 pricing/billing. Create `codex/shop-suit/ui-pro-pricing-billing` from task-04 final published HEAD, targeting `codex/shop-suit/ui-pro-appointments`, in a clean worktree. Keep earlier preserved sketches untouched; use current complete shared templates and actual commercial catalog.

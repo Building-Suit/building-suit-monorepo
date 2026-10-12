@@ -218,3 +218,6 @@ export { replaceDraftRow, appendDraftRow, removeDraftRow } from './utils/draftCo
 export { useCollapsibleNavigation } from './composables/useCollapsibleNavigation.ts'
 
 export { useOptionalImage } from './composables/useOptionalImage.ts'
+
+export { useCalendarNavigation, calendarDateKey, calendarAddDays, calendarLocalDate, calendarWindow, validCalendarDate } from './composables/useCalendarNavigation.ts'
+export type { CalendarView } from './composables/useCalendarNavigation.ts'
