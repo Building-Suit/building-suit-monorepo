@@ -28,6 +28,22 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
     expect(geometry.radius).toBeGreaterThan(0)
     expect(geometry.start).toBe(geometry.end)
     expect(geometry.gap).toBeGreaterThan(0)
+    const activePeriod = page.getByRole('button', { name: locale === 'ar' ? 'يوم' : 'Day', exact: true })
+    await expect(activePeriod).toHaveAttribute('aria-pressed', 'true')
+    await activePeriod.hover()
+    const contrast = await activePeriod.evaluate(element => {
+      const style = getComputedStyle(element)
+      const luminance = (color: string) => {
+        const values = color.match(/[\d.]+/g)!.slice(0, 3).map(Number).map(value => {
+          const channel = value / 255
+          return channel <= .04045 ? channel / 12.92 : ((channel + .055) / 1.055) ** 2.4
+        })
+        return values[0]! * .2126 + values[1]! * .7152 + values[2]! * .0722
+      }
+      const foreground = luminance(style.color), background = luminance(style.backgroundColor)
+      return (Math.max(foreground, background) + .05) / (Math.min(foreground, background) + .05)
+    })
+    expect(contrast).toBeGreaterThanOrEqual(4.5)
     await expectNoPageOverflow(page)
     await page.screenshot({ path: test.info().outputPath('shared-dashboard.png'), fullPage: true })
   })
