@@ -24,7 +24,7 @@ Read STATUS.md, INDEX.md and tasks/01 first. Do not infer completion from scaffo
 | SHOP-UI-03 | pos-media | 01 | PR opened | Blocked — DB version/application/test; local checks pass | [Draft PR #252](https://github.com/Building-Suit/building-suit-monorepo/pull/252) · `codex/shop-suit/ui-pro-pos-media` |
 | SHOP-UI-04 | appointments-calendar | 01 | PR opened | Working — local checks passed; final acceptance pending | [Draft PR #253](https://github.com/Building-Suit/building-suit-monorepo/pull/253) · `codex/shop-suit/ui-pro-appointments` |
 | SHOP-UI-05 | pricing-billing | 01 | PR opened | Working — local checks passed; final acceptance pending | [Draft PR #255](https://github.com/Building-Suit/building-suit-monorepo/pull/255) · `codex/shop-suit/ui-pro-pricing-billing` |
-| SHOP-UI-06 | settings-notice | 01 | Working — implemented, publication pending | Working — local checks passed; final acceptance pending | `codex/shop-suit/ui-pro-settings`, PR pending |
+| SHOP-UI-06 | settings-notice | 01 | PR opened | Working — local checks passed; final acceptance pending | [Draft PR #256](https://github.com/Building-Suit/building-suit-monorepo/pull/256) · `codex/shop-suit/ui-pro-settings` |
 | SHOP-UI-07 | shop-consistency | 02–06 | Not started | Not started | No branch/PR |
 | SHOP-UI-08 | final-integration | 01–07 | Not started | Not started | No branch/PR |
 
@@ -163,8 +163,8 @@ One bounded turn; preserve other task edits; one stacked draft PR. Update status
 # SHOP-UI-06 — settings-notice
 
 Depends on: 01
-Implementation: Not started
-Verification: Not started
+Implementation: PR opened (#256)
+Verification: Working — local checks passed; consolidated acceptance pending
 Original mapping: UI PRO 003/005/008
 
 Simplify Settings into coherent sections with consistent shared templates while preserving all functions, permissions and payment policies. Image 2 exact removal target is the sandbox payment instructions notice beginning «بيئة الاختبار: الطلبات الاصطناعية لا تمثل أموالًا مستلمة». Task 05 now filters this exact paragraph in the current shared-template adapter, which retains the E2E regression expecting synthetic instructions absent. Preserve this behavior and payment/proof/manual review; do not delete an unrelated business flow. Unwired shared settings scaffold exists; not completed.
@@ -297,7 +297,7 @@ Task-05 publication policy: `node tooling/git/check-pr.mjs 255` passed. No CI po
 
 # Current task-06 receipt
 
-Implementation: Working — settings simplification implemented, publication pending. Verification: task-local checks passed; consolidated acceptance remains task 08.
+Implementation: PR opened — [draft PR #256](https://github.com/Building-Suit/building-suit-monorepo/pull/256), stacked on PR #255. Implementation commit `e33978f`; tracker update follows in a documentation commit. Verification: task-local checks passed; consolidated acceptance remains task 08.
 
 Worktree `/workspace/shop-ui-06`; branch `codex/shop-suit/ui-pro-settings`; parent `25dabcfa990d3d8ef81c269e69e1673e5c5f8efd` on PR #255. Observed stg remains `630031447d11ed738bbfb9018283040d475425bb`; parallel Super Admin consolidation is not incorporated/retargeted here.
 
@@ -310,3 +310,5 @@ Checks: five Vue script/template/style compilations with TypeScript syntax trans
 No new schema/provider/secret/Storage/hosted changes. Task-03 image persistence prerequisite remains incomplete: unversioned/unapplied SQL draft and missing real database/media round-trip verification. Task 08 should resolve supported writable CLI config if possible without hosted application.
 
 Next: SHOP-UI-07 remaining Shop consistency. Create `codex/shop-suit/ui-pro-consistency` from task-06 final published HEAD, targeting `codex/shop-suit/ui-pro-settings`, in a clean worktree. Stay within remaining Shop presentation consistency and necessary shared compatibility.
+
+Task-06 publication policy: `node tooling/git/check-pr.mjs 256` passed. No CI polling, merge, deployment, hosted application or staging reconciliation performed.
