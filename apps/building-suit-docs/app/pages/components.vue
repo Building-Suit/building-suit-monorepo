@@ -134,6 +134,10 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
       :context="[{ label: isArabic ? 'الاتجاه' : 'Direction', value: isArabic ? 'RTL' : 'LTR' }, { label: isArabic ? 'المصدر' : 'Owner', value: 'packages/ui' }]"
     />
 
+    <BsContentSection :title="isArabic ? 'بطاقات كتالوج نقطة البيع' : 'POS catalog image cards'">
+      <BsGrid :columns="3"><BsCatalogTile :name="isArabic ? 'مثال منتج بدون صورة' : 'Example product without image'" price="30" :detail="isArabic ? 'بيانات توضيحية' : 'Illustrative data'" :image-label="isArabic ? 'بدون صورة' : 'No image'" /><BsCatalogTile :name="isArabic ? 'مثال خدمة بدون صورة' : 'Example service without image'" price="10" :detail="isArabic ? 'بيانات توضيحية' : 'Illustrative data'" :image-label="isArabic ? 'بدون صورة' : 'No image'" /></BsGrid>
+    </BsContentSection>
+
     <BsContentSection :title="isArabic ? 'مثال رسوم مزيج المبيعات' : 'Sales mix chart example'">
       <BsGrid :columns="2"><BsMetricChart :title="isArabic ? 'بيانات توضيحية' : 'Illustrative data'" :empty-label="isArabic ? 'لا توجد بيانات' : 'No data'" kind="donut" :items="[{ id: 'products', label: isArabic ? 'منتجات' : 'Products', hint: '', value: 30, formatted: '30' }, { id: 'services', label: isArabic ? 'خدمات' : 'Services', hint: '', value: 10, formatted: '10' }]" /><BsMetricChart :title="isArabic ? 'بيانات توضيحية' : 'Illustrative data'" :empty-label="isArabic ? 'لا توجد بيانات' : 'No data'" :items="[{ id: 'cash', label: isArabic ? 'نقدي' : 'Cash', hint: '', value: 30, formatted: '30' }, { id: 'card', label: isArabic ? 'بطاقة' : 'Card', hint: '', value: 10, formatted: '10' }]" /></BsGrid>
     </BsContentSection>

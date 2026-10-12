@@ -10,7 +10,7 @@ const props = defineProps<{
   rows: BsCatalogueItemView[]
   categories: { value: string; label: string }[]
   table: { loading: boolean; error: string | null; canManage: boolean; archivePendingId: string | null; pageSize: number; page: number; total: number; filtered: boolean }
-  editor: { editing: boolean; dirty: boolean; pending: boolean; error: string; priceMax?: number }
+  editor: { mediaSupported?: boolean; editing: boolean; dirty: boolean; pending: boolean; error: string; priceMax?: number }
   scheduling?: { loading: boolean; error: string | null; locations: { value: string; label: string }[]; staff: { value: string; label: string }[] }
   discounts?: { value: string; label: string }[]
 }>()
@@ -44,6 +44,7 @@ const columns = computed(() => [
           <BsField v-slot="field" :label="copy.discountType ?? ''"><BsSelect :model-value="form.discount.type" :input-id="field.id" :aria-describedby="field.describedby" :label="copy.discountType ?? ''" :options="discounts" option-label="label" option-value="value" @update:model-value="discount('type', String($event))" /></BsField>
           <BsField v-slot="field" :label="copy.discountValue ?? ''"><BsInput :id="field.id" :model-value="form.discount.value" :aria-describedby="field.describedby" type="number" :min="0" :step="0.01" required @update:model-value="discount('value', Number($event))" /></BsField>
         </template>
+        <BsField v-if="copy.imageLabel" v-slot="field" :label="copy.imageLabel" :hint="editor.mediaSupported ? copy.imageHelp : copy.imageUnavailable"><BsInput :id="field.id" :model-value="form.imageUrl || ''" :aria-describedby="field.describedby" type="url" :maxlength="2000" :disabled="!editor.mediaSupported" @update:model-value="change('imageUrl', String($event ?? ''))" /><BsCatalogImage v-if="form.imageUrl" :src="form.imageUrl" :name="form.name" :placeholder="copy.imagePlaceholder || ''" class="bs-catalog-editor-image" /></BsField>
         <BsField v-slot="field" :label="copy.category"><BsSelect :model-value="form.category" :input-id="field.id" :aria-describedby="field.describedby" :label="copy.category" :options="categories" option-label="label" option-value="value" @update:model-value="change('category', String($event))" /></BsField>
         <BsFieldGroup v-if="kind === 'service'" legend="">
           <BsCheckbox :model-value="form.schedule.enabled" :label="copy.scheduling ?? ''" @update:model-value="schedule('enabled', Boolean($event))" /><BsText as="p" size="sm" tone="muted">{{ copy.schedulingHelp }}</BsText>
@@ -66,3 +67,7 @@ const columns = computed(() => [
     </template>
   </BsStack>
 </template>
+
+<style scoped>
+.bs-catalog-editor-image { max-inline-size: 12rem; border-radius: var(--bs-radius-card); }
+</style>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { BsPointOfSaleCopy, BsPointOfSaleView, BsPointOfSaleChoice, BsPointOfSaleCatalogItem, BsPointOfSaleCartLine, BsPointOfSaleCustomer, BsPointOfSalePaymentForm } from '../types/pointOfSalePresentation'
-const props = defineProps<{ copy: BsPointOfSaleCopy; view: BsPointOfSaleView; itemTypeOptions: BsPointOfSaleChoice[]; categoryOptions: BsPointOfSaleChoice[]; appointmentOptions: BsPointOfSaleChoice[]; staffOptions: BsPointOfSaleChoice[]; paymentOptions: BsPointOfSaleChoice[]; catalogItems: BsPointOfSaleCatalogItem[]; cartLines: BsPointOfSaleCartLine[]; customerOptions: BsPointOfSaleCustomer[]; staffId: string; appointmentId: string; customerId: string }>()
+const props = withDefaults(defineProps<{ variant?: 'default' | 'shop'; copy: BsPointOfSaleCopy; view: BsPointOfSaleView; itemTypeOptions: BsPointOfSaleChoice[]; categoryOptions: BsPointOfSaleChoice[]; appointmentOptions: BsPointOfSaleChoice[]; staffOptions: BsPointOfSaleChoice[]; paymentOptions: BsPointOfSaleChoice[]; catalogItems: BsPointOfSaleCatalogItem[]; cartLines: BsPointOfSaleCartLine[]; customerOptions: BsPointOfSaleCustomer[]; staffId: string; appointmentId: string; customerId: string }>(), { variant: 'default' })
 const catalogSearch = defineModel<string>('catalogSearch', { required: true })
 const categoryFilter = defineModel<string>('categoryFilter', { required: true })
 const itemType = defineModel<string>('itemType', { required: true })
@@ -35,7 +35,7 @@ defineExpose({ focusCatalog: navigation.focusCatalog })
       <BsVisuallyHidden aria-live="polite">{{ view.scanMessage }}</BsVisuallyHidden>
       <BsText v-if="view.checkingOut" role="status" as="p" size="sm" emphasis="semibold">{{ copy.paying }}</BsText>
       <BsFieldGroup :disabled="view.checkingOut" :inert="view.checkingOut" :aria-busy="view.checkingOut" :legend="''">
-        <BsGrid :columns="2">
+        <BsGrid :columns="2" :class="{ 'bs-pos-workspace': variant === 'shop' }">
           <BsPanel aria-labelledby="pos-catalog-title" padding="md">
             <BsHeading id="pos-catalog-title" tabindex="-1" :level="2">{{ copy.catalog }}</BsHeading>
             <BsFilterBar :label="copy.catalog">
@@ -52,9 +52,10 @@ defineExpose({ focusCatalog: navigation.focusCatalog })
               <BsButton severity="secondary" @click="emit('retryCatalog')">{{ copy.retry }}</BsButton>
             </BsBox>
             <BsText v-else-if="!catalogItems.length" as="p" size="sm" tone="muted">{{ copy.noResults }}</BsText>
-            <BsList v-else :aria-label="copy.catalog">
+            <BsList v-else :class="{ 'bs-pos-catalog-grid': variant === 'shop' }" :aria-label="copy.catalog">
               <BsListItem v-for="item in catalogItems" :key="item.key">
-                <BsActionTile type="button" :disabled="view.locationChanged || view.checkingOut" @click="emit('add', item.key)">
+                <BsCatalogTile v-if="variant === 'shop'" :name="item.name" :price="item.price" :detail="item.description" :stock="item.stock" :image-url="item.imageUrl" :image-label="copy.imagePlaceholder || ''" :disabled="view.locationChanged || view.checkingOut" @select="emit('add', item.key)" />
+                <BsActionTile v-else type="button" :disabled="view.locationChanged || view.checkingOut" @click="emit('add', item.key)">
                   <BsText as="strong">{{ item.name }}</BsText>
                   <BsText as="span" size="xs" tone="muted">
                     <BsText as="span">{{ item.description }}</BsText>
@@ -74,7 +75,7 @@ defineExpose({ focusCatalog: navigation.focusCatalog })
               </BsButton>
             </BsInline>
           </BsPanel>
-          <BsPanel aria-labelledby="pos-cart-title" padding="md">
+          <BsPanel aria-labelledby="pos-cart-title" padding="md" :class="{ 'bs-pos-order-panel': variant === 'shop' }">
             <BsHeading id="pos-cart-title" tabindex="-1" :level="2">{{ copy.cart }}</BsHeading>
             <BsText v-if="view.contextLoading" role="status" as="p" size="sm">{{ copy.loading }}</BsText>
             <BsText v-else-if="view.contextError" role="alert" as="p" size="sm" tone="danger">{{ view.contextError }} <BsButton variant="link" type="button" @click="emit('retryContext')">{{ copy.retry }}</BsButton>
@@ -143,3 +144,13 @@ defineExpose({ focusCatalog: navigation.focusCatalog })
     </template>
   </BsStack>
 </template>
+
+<style scoped>
+.bs-pos-workspace { align-items: start; grid-template-columns: minmax(0, 1fr) minmax(20rem, 24rem); }
+.bs-pos-catalog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 9rem), 1fr)); gap: .75rem; list-style: none; padding: 0; }
+.bs-pos-catalog-grid :deep(.bs-list-item) { min-inline-size: 0; padding: 0; }
+.bs-pos-order-panel { position: sticky; inset-block-start: 5rem; min-inline-size: 0; max-block-size: calc(100dvh - 6rem); overflow-y: auto; }
+@media (min-width: 1600px) { .bs-pos-workspace { grid-template-columns: minmax(0, 1fr) 26rem; } }
+@media (max-width: 1199px) { .bs-pos-workspace { grid-template-columns: minmax(0, 1fr); } .bs-pos-order-panel { position: static; max-block-size: none; overflow-y: visible; } }
+@media (max-width: 639px) { .bs-pos-catalog-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; } }
+</style>

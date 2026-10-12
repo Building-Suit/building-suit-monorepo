@@ -21,7 +21,7 @@ Read STATUS.md, INDEX.md and tasks/01 first. Do not infer completion from scaffo
 |---|---|---|---|---|---|
 | SHOP-UI-01 | shell-sidebar-profile | None | PR opened | Working — local checks passed; final acceptance pending | [Draft PR #250](https://github.com/Building-Suit/building-suit-monorepo/pull/250) · `codex/shop-suit/ui-pro-redesign` |
 | SHOP-UI-02 | dashboard | 01 | PR opened | Working — local checks passed; final acceptance pending | [Draft PR #251](https://github.com/Building-Suit/building-suit-monorepo/pull/251) · `codex/shop-suit/ui-pro-dashboard` |
-| SHOP-UI-03 | pos-media | 01 | Working | Unverified | Preserved partial edits on task 01 branch; no PR |
+| SHOP-UI-03 | pos-media | 01 | Working — UI/adapters implemented | Blocked — DB version/application/test; local checks pass | `codex/shop-suit/ui-pro-pos-media`, PR pending |
 | SHOP-UI-04 | appointments-calendar | 01 | Not started | Not started | No branch/PR |
 | SHOP-UI-05 | pricing-billing | 01 | Working | Unverified | Preserved partial edits on task 01 branch; no PR |
 | SHOP-UI-06 | settings-notice | 01 | Not started | Not started | No branch/PR |
@@ -232,3 +232,22 @@ Checks passed: script/template/style compilation and TypeScript syntax transpila
 Next bounded task: SHOP-UI-03 POS/media. Create `codex/shop-suit/ui-pro-pos-media` from final published dashboard HEAD, targeting `codex/shop-suit/ui-pro-dashboard`. Use a clean worktree; preserve the old preparation worktree. Investigate image schema/contracts on current stg before porting old sketches; never restore obsolete app-local presentation.
 
 Task-02 publication policy: `node tooling/git/check-pr.mjs 251` passed. No CI polling or merge occurred. Library tracking identity remains `libfile_1bef65e59b448191a8ff9d6bb6e6dd2e`.
+
+
+# Current task-03 receipt
+
+Implementation: Working — compact POS/media UI and typed adapters implemented, publication pending. Verification: task-local checks pass; database execution blocked and full acceptance remains task 08.
+
+Worktree `/workspace/shop-ui-03`; branch `codex/shop-suit/ui-pro-pos-media`; parent `cf137b2c9c9467962372cac5a3e3190a5e7979d7` on PR #251. Parent review branch is `codex/shop-suit/ui-pro-dashboard`.
+
+Reference 3 implemented inside the existing complete BsPointOfSalePage: compact responsive product/service image tiles with one neutral missing/broken-image fallback, large semantic button targets, wider catalog and sticky scrollable desktop order panel. Existing barcode/search/keyboard, customer/staff/appointment selection, quantity, payment and confirmation controls are retained. All financial, stock, tax/discount, draft/payment/idempotency logic is unchanged. Existing complete BsCataloguePage has optional HTTPS image URL editing/preview/removal for both product and service editors; reusable image state lives in packages/ux. Other consumers retain default presentation.
+
+Schema implications: `docs/shop-optional-catalog-media.sql` is a reviewable forward SQL draft, NOT an applied or CLI-versioned migration. It adds nullable `public.products.image_url` and `public.services.image_url`, HTTPS/2000-character constraints and one new typed `public.shop_catalog_media` RPC delegating to an authenticated private helper. Reads enrich only existing authorized/paginated rows. Saves delegate existing authorized category/product/service commands and update the URL in that same transaction. Existing signatures, RLS, financial writes and historical migration files remain intact. No Storage buckets, policies, provider config, credentials, hosted application or uploads were added. Owner-supplied image URLs are rendered with no-referrer; placeholders are local icons.
+
+Old-schema safety: absent media RPC errors fall back to legacy catalog reads and media-free saves. Image controls remain disabled with a clear unavailable state until the new read contract advertises support. Image additions or removals are refused rather than silently lost if that API disappears. Permission/network/validation failures never trigger downgrade retries. Actual media persistence becomes available only after migration versioning, review, database tests and separately authorized application.
+
+Blocker: installed pinned Supabase CLI fails with `EROFS: read-only file system, mkdir '/home/agent/.supabase'` even for migration help/new; narrow additional filesystem permission did not resolve the read-only mount. The Supabase skill explicitly requires “always create it with supabase migration new <name> first” (source `skill://plugin_asdk_app_69d3e5ee6a708191baa733f7b8931995/supabase/SKILL.md`), so no timestamp filename was fabricated. Docker is accessible but has no running containers/cached images, and psql is absent; local database tests/type regeneration were not run. No automatic approval rejection occurred. Continue independent task work; do not use hosted DB as a substitute.
+
+Checks passed: 8 changed/new Vue files parse and compile scripts/templates/styles with TypeScript syntax transpilation; both new shared exports resolve; scoped shared UI/UX and Shop/docs lint; 12 focused tests for media fallback and validation, unsafe/broken image recovery, unchanged barcode/cart decimal behavior and shortcut/focus ownership; diff whitespace; current preflight errors=[]. Tests do NOT prove database persistence. Nuxt preparation completed with expected missing local Supabase URL/key warnings. Builds/types/rendered matrix and exact final-head CI remain task 08. Cloud executor is healthy.
+
+Next task: SHOP-UI-04 appointments/calendar. Create `codex/shop-suit/ui-pro-appointments` from this task's final published HEAD, targeting `codex/shop-suit/ui-pro-pos-media`, in a clean worktree. Keep the media SQL/application blocker visible in final integration; do not let it block independent calendar presentation.

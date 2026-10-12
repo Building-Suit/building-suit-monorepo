@@ -216,3 +216,5 @@ export { useOverlayState } from './composables/useOverlayState.ts'
 export { replaceDraftRow, appendDraftRow, removeDraftRow } from './utils/draftCollection.ts'
 
 export { useCollapsibleNavigation } from './composables/useCollapsibleNavigation.ts'
+
+export { useOptionalImage } from './composables/useOptionalImage.ts'

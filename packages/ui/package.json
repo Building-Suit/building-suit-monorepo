@@ -311,7 +311,9 @@
     "./organisms/BsChangelogTimeline": "./src/organisms/BsChangelogTimeline.vue",
     "./molecules/BsPlanSummary": "./src/molecules/BsPlanSummary.vue",
     "./organisms/BsSidebarAccount": "./src/organisms/BsSidebarAccount.vue",
-    "./organisms/BsMetricChart": "./src/organisms/BsMetricChart.vue"
+    "./organisms/BsMetricChart": "./src/organisms/BsMetricChart.vue",
+    "./molecules/BsCatalogImage": "./src/molecules/BsCatalogImage.vue",
+    "./molecules/BsCatalogTile": "./src/molecules/BsCatalogTile.vue"
   },
   "dependencies": {
     "primevue": "4.5.5",
