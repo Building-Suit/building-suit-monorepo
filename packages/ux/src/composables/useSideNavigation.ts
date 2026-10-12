@@ -6,7 +6,7 @@ export function useSideNavigation(open: () => boolean, path: () => string, close
     if (!open()) return
     if (event.key === 'Escape') { event.preventDefault(); close(); return }
     if (event.key !== 'Tab') return
-    const focusable = [...(panel.value?.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])') ?? [])].filter(element => !element.hasAttribute('hidden'))
+    const focusable = [...(panel.value?.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])') ?? [])].filter(element => !element.hasAttribute('hidden') && element.getClientRects().length > 0)
     const first = focusable[0], last = focusable.at(-1)
     if (!first || !last) return
     if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus() }

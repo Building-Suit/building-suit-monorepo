@@ -152,6 +152,10 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
       </BsAdministrationShell>
     </BsContentSection>
 
+    <BsContentSection :title="isArabic ? 'حساب الشريط الجانبي' : 'Sidebar account and plan'">
+      <div class="max-w-xs"><BsSidebarAccount :name="isArabic ? 'مالك المتجر' : 'Shop owner'" email="owner@example.test" :account-label="isArabic ? 'الحساب' : 'Account'" :sign-out-label="isArabic ? 'تسجيل الخروج' : 'Sign out'" :plan="{ name: 'Solo', status: isArabic ? 'مثال توضيحي' : 'Catalogue example', detail: '', actionLabel: isArabic ? 'الاشتراك' : 'Subscription', to: '#pricing' }" /></div>
+    </BsContentSection>
+
     <BsContentSection
       :title="isArabic ? 'الدلالات والتخطيط' : 'Semantic content and layout'"
       :description="isArabic ? 'تتكيف العقود نفسها مع العرض الضيق والاتجاه من اليمين إلى اليسار والسمة النشطة.' : 'The same contracts adapt to narrow screens, RTL, and the active theme.'"

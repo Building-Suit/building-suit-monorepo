@@ -1,21 +1,24 @@
 <script setup lang="ts">
 import type { NavigationGroup, NavigationLink } from '@building-suit/contracts'
-withDefaults(defineProps<{ homePath?: string; floatingActions?: boolean; productName: string; groups: NavigationGroup[]; mobileLinks?: NavigationLink[]; labels: { close: string; open: string; navigation: string; dashboard: string } }>(), { homePath: '/dashboard', floatingActions: false, mobileLinks: () => [] })
+withDefaults(defineProps<{ variant?: 'default' | 'shop'; floatingActions?: boolean; homePath?: string; productName: string; groups: NavigationGroup[]; mobileLinks?: NavigationLink[]; labels: { collapse?: string; close: string; open: string; navigation: string; dashboard: string } }>(), { variant: 'default', floatingActions: false, homePath: '/dashboard', mobileLinks: () => [] })
+const { collapsed, toggle: toggleSidebar } = useCollapsibleNavigation()
 const { mobileNavOpen, topHeader, closeMobileNav, isActive } = useWorkspaceNavigation()
 </script>
 <template>
-  <div class="min-h-dvh bg-background lg:grid lg:grid-cols-[17rem_1fr] lg:gap-4 lg:p-4">
-    <BsSideMenu :open="mobileNavOpen" :home-path="homePath" :product-name="productName" :groups="groups" :labels="labels" @close="closeMobileNav">
+  <div class="min-h-dvh bg-background lg:grid" :class="variant === 'shop' ? ['bs-shop-shell', { 'bs-shop-shell--collapsed': collapsed }] : 'lg:grid-cols-[17rem_1fr] lg:gap-4 lg:p-4'">
+    <BsSideMenu :open="mobileNavOpen" :variant="variant" :collapsed="variant === 'shop' && collapsed" :home-path="homePath" :product-name="productName" :groups="groups" :labels="labels" @close="closeMobileNav">
       <template #logo><slot name="logo" /></template>
+      <template #mark><slot name="mark" /></template>
       <template #context><slot name="context" /></template>
+      <template #footer="scope"><slot name="sidebar-footer" v-bind="scope" /></template>
     </BsSideMenu>
 
     <div class="flex min-w-0 flex-col">
-      <BsTopHeader ref="topHeader" :navigation-open="mobileNavOpen" :open-navigation-label="labels.open" @open-navigation="mobileNavOpen = true">
+      <BsTopHeader ref="topHeader" :variant="variant" :navigation-open="mobileNavOpen" :collapsed="collapsed" :open-navigation-label="labels.open" :collapse-navigation-label="labels.collapse" @open-navigation="mobileNavOpen = true" @toggle-sidebar="toggleSidebar">
         <slot name="header" />
       </BsTopHeader>
 
-      <main class="mx-auto w-full max-w-[1440px] min-w-0 flex-1 px-4 py-6 lg:px-8" :class="floatingActions ? 'pb-40 lg:pb-24' : 'pb-24 lg:pb-6'">
+      <main class="mx-auto w-full min-w-0 flex-1" :class="[variant === 'shop' ? 'px-4 py-5 lg:px-6 2xl:px-8' : 'max-w-[1440px] px-4 py-6 lg:px-8', floatingActions ? 'pb-40 lg:pb-24' : 'pb-24 lg:pb-6']">
         <slot />
       </main>
     </div>
@@ -37,3 +40,10 @@ const { mobileNavOpen, topHeader, closeMobileNav, isActive } = useWorkspaceNavig
     <slot name="overlays" />
   </div>
 </template>
+
+<style scoped>
+@media (min-width: 1024px) {
+  .bs-shop-shell { grid-template-columns: 15.5rem minmax(0, 1fr); }
+  .bs-shop-shell--collapsed { grid-template-columns: 4.5rem minmax(0, 1fr); }
+}
+</style>

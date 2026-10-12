@@ -214,3 +214,5 @@ export { useTreeExpansion } from './composables/useTreeExpansion.ts'
 export { useOverlayState } from './composables/useOverlayState.ts'
 
 export { replaceDraftRow, appendDraftRow, removeDraftRow } from './utils/draftCollection.ts'
+
+export { useCollapsibleNavigation } from './composables/useCollapsibleNavigation.ts'
