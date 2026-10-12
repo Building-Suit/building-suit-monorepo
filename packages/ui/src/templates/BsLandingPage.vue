@@ -15,7 +15,7 @@ useLandingMotion(landingRoot)
       <header class="bs-product-feature-preview__header"><BsText emphasis="semibold">{{ content.eyebrow }}</BsText><BsIcon name="user" :size="16"/></header>
       <div class="bs-product-feature-preview__body">
         <aside class="bs-product-feature-preview__navigation" aria-hidden="true"><BsInline v-for="feature in content.features" :key="feature.title" :wrap="false"><BsIcon :name="feature.icon" :size="16"/><BsText size="xs">{{ feature.title }}</BsText></BsInline></aside>
-        <BsStack padding="md"><BsHeading :level="2" size="body">{{ content.featuresTitle }}</BsHeading><BsGrid :columns="2"><BsCard v-for="feature in content.features" :key="feature.title" padding="sm"><BsStack gap="sm"><BsIcon :name="feature.icon" :size="20"/><BsText size="xs" emphasis="semibold">{{ feature.title }}</BsText></BsStack></BsCard></BsGrid><BsText size="xs" tone="muted">{{ content.workflow[2]?.title }}</BsText></BsStack>
+        <BsStack padding="md"><BsHeading :level="2" size="body">{{ content.featuresTitle }}</BsHeading><BsGrid :columns="2"><BsCard v-for="feature in content.features" :key="feature.title" variant="flat" padding="sm"><BsStack gap="sm"><BsIcon :name="feature.icon" :size="20"/><BsText size="xs" emphasis="semibold">{{ feature.title }}</BsText></BsStack></BsCard></BsGrid><BsText size="xs" tone="muted">{{ content.workflow[2]?.title }}</BsText></BsStack>
       </div>
     </div></BsProductPreview></BsLandingHero>
     <BsLandingSection id="features" :eyebrow="content.featuresEyebrow" :title="content.featuresTitle" :body="content.featuresBody"><BsFeatureGrid :features="content.features" /></BsLandingSection>
