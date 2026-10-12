@@ -1,0 +1,29 @@
+{
+  "sas": {
+    "status": "running",
+    "max_tasks": 7,
+    "completed_tasks": 6,
+    "current_task_id": "SAS-M1-GATE-001"
+  },
+  "counts": {
+    "runs": 91,
+    "credits": 38,
+    "executions": 329,
+    "task_events": 2742,
+    "gate_resolutions": 10
+  },
+  "activation": {
+    "outcome": "activated",
+    "release_id": "f9ebf54c9405c4c47ea7ea1609f758b09666c715ce80a88a0a38c8f0db98c9a0",
+    "recorded_at": "2026-10-11T18:11:27.9438+00:00",
+    "observed_pointer": "/home/tareq/.local/lib/building-suit-control-plane/releases/f9ebf54c9405c4c47ea7ea1609f758b09666c715ce80a88a0a38c8f0db98c9a0"
+  },
+  "observed_at": "2026-10-12T09:57:21.352195+00:00",
+  "execution345": {
+    "status": "running",
+    "attempt": 1,
+    "task_id": "SAS-M1-GATE-001"
+  },
+  "tasks_unchanged": true,
+  "history_counts_unchanged": true
+}

@@ -16,8 +16,8 @@ Use these workflows to navigate, maintain and extend the repository. Select only
 Apply workflow 1 first. Every new feature stacks on the latest verified active worktree for its own app/shared stack. Parallel features use separate worktrees; publish a same-stack parent checkpoint and its PR before the child PR. Different stacks may have independent roots targeting `stg`, but one stack may not have sibling roots or parent a feature on another stack. Existing-feature fixes stay on that feature's branch.
 
 1. Locate the owning product's pages, composables, requirements and tests.
-2. Use shared shell or marketing/auth templates, with product navigation, content, permissions and translations supplied through configuration.
-3. Compose forms/pages from shared UI, `BsDataTable` and record-action controllers.
+2. Read `packages/ui/AGENTS.md`. Select a registered complete page template and supply typed product content, values, permissions and semantic commands.
+3. Refine forms/pages and product-specific presentation in `packages/ui`; reusable record-action and interaction controllers belong in `packages/ux`. Suit routes must not compose child UI.
 4. Put product validation, orchestration and repository/RPC adapters in the feature. Keep business rules out of generic UI.
 5. Use tenant-scoped queries and authorized atomic commands with correct cache keys, pending/error handling and invalidation.
 6. Verify the user journey, permissions/subscriptions, refresh/deep links, failure recovery and relevant invariants. Update the appropriate product/shared documentation.
@@ -35,11 +35,11 @@ Apply workflow 1 first. Every new feature stacks on the latest verified active w
 2. Extend the existing typed interface/configuration/slots where appropriate; avoid per-product forks.
 3. Change tokens at their source and regenerate outputs when visual foundations change.
 4. Implement common presentation in `packages/ui`, interaction logic in `packages/ux` and framework integration in the shared Nuxt layer.
-5. Keep Atomic Design dependencies at the same layer or downward. Update explicit package exports, the component catalogue, contracts, affected consumers and the canonical ownership/migration manifests together. Every `apps/*-suit/app/**/*.vue` template may render only `Bs`-prefixed components; Vue's non-rendering `<template>` control tag is the sole exception. Do not add native/Nuxt/vendor/non-`Bs`/product-local tags, template class/style or passthrough styling props, `v-html`, local style blocks or direct UI-vendor imports. Remove the matching exact debt entry whenever a violation is migrated; strict mode requires empty debt and no app-local Vue components.
+5. Keep Atomic Design dependencies at the same layer or downward. Update explicit package exports, the component catalogue, contracts, affected consumers and the canonical ownership/migration manifests together. Every `apps/*-suit/app/**/*.vue` template may render only `Bs`-prefixed components; Vue's non-rendering `<template>` control tag is the sole exception. Do not add native/Nuxt/vendor/non-`Bs`/product-local tags, template class/style or passthrough styling props, `v-html`, local style blocks or direct UI-vendor imports. Maintain strict mode with empty debt and zero app-local Vue components. Each route consumes one registered complete page template with no child composition, slots or render factories.
 6. Verify relevant language/direction/theme, mobile/desktop, keyboard/focus and loading/error/empty/success/permission states in every affected product.
 7. Run affected component/browser checks and `pnpm check`; the workspace check dynamically discovers every `apps/*-suit` application and rejects unclassified local components and shared UI bypasses. Stop when the requested change's acceptance criteria pass.
 
-For final zero-native acceptance, run `node tooling/checks/suit-template-boundaries.mjs --require-strict`. This requires a strict, empty debt manifest as well as zero actual violations; `--strict` is the manifest-free check for disposable generator fixtures. Normal `pnpm check` honors the manifest's mode. Passing migration mode does not close the foundation gate. Record actual inventory and verification limitations in `docs/shared/zero-native-ui-convergence-report.md` before claiming acceptance.
+For final zero-native acceptance, run `node tooling/checks/suit-template-boundaries.mjs --require-strict`. This requires a strict, empty debt manifest as well as zero actual violations; `--strict` is the manifest-free check for disposable generator fixtures. Normal `pnpm check` requires strict mode; downgrading the manifest to migration mode fails even with empty debt. Record actual inventory and verification limitations in `docs/shared/zero-native-ui-convergence-report.md` before claiming acceptance.
 
 ## 4. Fix a bug
 
@@ -84,7 +84,7 @@ For final zero-native acceptance, run `node tooling/checks/suit-template-boundar
 1. Confirm the requested scope, content, domain ownership and existing shared capabilities.
 2. Run `pnpm new:platform <slug> "Product name" --dry-run` to inspect the maintained template, then run without `--dry-run` and use `pnpm install` and `pnpm run setup` to register/prepare the app.
 3. Configure brand assets/content, navigation, translations, tenant/profile adapter and onboarding requirements.
-4. Reuse shared templates, PrimeVue components, table and UX controllers. Add shared capabilities only for concrete requirements.
+4. Read `packages/ui/AGENTS.md` and reuse registered complete page templates and UX controllers. Add shared capabilities only for concrete requirements.
 5. Define product contracts and an app-owned Supabase CLI root through the database workflow. Configure its own organization and production/staging pair, `public` business schema and independent Auth. Verify current provider quota/role constraints before provisioning.
 6. Add scoped agent guidance, tests, environment configuration and build/deploy integration within the requested scope.
 7. Verify the new app and affected existing consumers. Scaffolding alone does not authorize paid resources or publication.

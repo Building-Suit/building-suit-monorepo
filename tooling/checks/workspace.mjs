@@ -10,7 +10,7 @@ const failures = []
 const atomicLayers = ['atoms', 'molecules', 'organisms', 'templates']
 const ownershipManifestPath = 'docs/shared/ui-ownership-manifest.json'
 
-const suitBoundary = await validateSuitTemplateBoundaries({ root })
+const suitBoundary = await validateSuitTemplateBoundaries({ root, requireStrict: true })
 failures.push(...suitBoundary.failures)
 const atomicArchitecture = await validateAtomicTemplateArchitecture({ root })
 failures.push(...atomicArchitecture.failures)

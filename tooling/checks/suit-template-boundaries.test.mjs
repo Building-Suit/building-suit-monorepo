@@ -22,6 +22,25 @@ async function fixture(source, manifestViolations) {
   return { root, audit }
 }
 
+test('normal workspace enforcement rejects an empty migration-mode downgrade', async (t) => {
+  const { root } = await fixture('<template><BsCard /></template>', [])
+  t.after(() => rm(root, { recursive: true, force: true }))
+  const result = await validateSuitTemplateBoundaries({ root, manifestPath: 'debt.json', requireStrict: true })
+  assert.ok(result.failures.some(failure => failure.includes('strict mode is required')))
+  const workspace = await readFile(new URL('./workspace.mjs', import.meta.url), 'utf8')
+  assert.match(workspace, /validateSuitTemplateBoundaries\(\{ root, requireStrict: true \}\)/)
+  const pkg = JSON.parse(await readFile(new URL('../../package.json', import.meta.url), 'utf8'))
+  assert.ok(pkg.scripts.test.includes('tooling/checks/*.test.mjs'))
+})
+
+test('exact recorded native debt cannot reopen the normal strict boundary', async (t) => {
+  const { root } = await fixture('<template><input /></template>')
+  t.after(() => rm(root, { recursive: true, force: true }))
+  const result = await validateSuitTemplateBoundaries({ root, manifestPath: 'debt.json', requireStrict: true })
+  assert.ok(result.failures.some(failure => failure.includes('strict mode is required')))
+  assert.ok(result.failures.length > 1)
+})
+
 test('AST audit rejects native, vendor, non-Bs, styling, raw HTML, style blocks, imports, and local Vue components', async (t) => {
   const source = `<script setup lang="ts">import Button from 'primevue/button'</script>
 <template><div class="x"><Button :pt="{}"/><LegacyThing v-html="raw"/><LocalPanel /></div></template>

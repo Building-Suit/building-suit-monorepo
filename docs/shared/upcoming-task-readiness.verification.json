@@ -1,0 +1,67 @@
+{
+  "repository_base": "3c16c81c3f65d25bcfa82794441b0ee7d2a21588",
+  "live_metadata_applied": false,
+  "runs_created": 0,
+  "product_attempts_consumed": 0,
+  "full_test_file_set": {
+    "passed": 1215,
+    "failed": 0,
+    "skipped": 22,
+    "browser": "existing /usr/bin/chromium 154.0.8037.57 via temporary Playwright executablePath adapter",
+    "pinned_playwright_browser_available": false,
+    "postgres_integration_skips_are_not_passes": true
+  },
+  "targeted_regressions": {
+    "architecture_and_reconciliation": 67,
+    "git_policy_and_pagination": 25,
+    "publication_crash_replay": 3,
+    "failed": 0
+  },
+  "passed_checks": [
+    "strict workspace architecture/boundaries",
+    "canonical design token outputs",
+    "explicit require-strict boundary",
+    "changed tooling ESLint",
+    "docs generation",
+    "docs typecheck",
+    "docs production build",
+    "live GitHub preflight with errors=[]",
+    "artifact regeneration --check",
+    "git diff --check"
+  ],
+  "not_claimed": [
+    "hosted launcher readiness",
+    "live metadata application",
+    "product gates approved",
+    "six consumer builds/typechecks",
+    "disposable PostgreSQL integration suite",
+    "normal pinned pnpm/browser environment readiness"
+  ],
+  "evidence_directory": ".local/upcoming-task-readiness-evidence",
+  "logs": {
+    "readiness-system-all-tests-final.log": {
+      "sha256": "fc1177387375e73f7abf23ef40ab8f2116e4a4cac6feb9cb76afd72b478dbb83",
+      "bytes": 163080
+    },
+    "readiness-targeted-final.log": {
+      "sha256": "76b955d2ba587efe0d2f51002e8270fa6c22242e22b5d335601553240bcc3e11",
+      "bytes": 7474
+    },
+    "readiness-docs-typecheck-final.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "readiness-docs-build-final.log": {
+      "sha256": "bd8e57503670a001da5b5fbdbec588506a30eecb11fe7462947c596a5047a5b4",
+      "bytes": 60057
+    },
+    "readiness-preflight-complete.json": {
+      "sha256": "b94863b1a44c119fde0ebdf20b452b3309b1d91aec3d4252d352d525f2457720",
+      "bytes": 11448
+    },
+    "readiness-publisher-regressions.log": {
+      "sha256": "d743f6626dc0abb290513d096e06c53ecd3018d10052d81f35c6c311abe48771",
+      "bytes": 389
+    }
+  }
+}

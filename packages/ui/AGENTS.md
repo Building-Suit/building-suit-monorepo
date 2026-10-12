@@ -9,7 +9,7 @@ Read the root rules and `docs/shared/design-system.md`, `interactions.md` and `d
 - Components accept typed content, values, capabilities and operation state, and emit semantic actions. They do not query product databases, select tenants, calculate financial rules or import apps.
 - Tokens come from `packages/design-tokens`. Brand assets come from `packages/brand`. Fonts, icons and framework integration come from the shared Nuxt layer.
 - Put behavior shared across components in `packages/ux`; preserve focus, keyboard support, pending state and dirty-form protection.
-- Keep the documentation app's `/components` route representative of changed capabilities. Include both product consumers in verification for shared changes.
+- Keep the documentation app's `/components` route representative of changed capabilities. Include all affected consumers in verification for shared changes.
 - Forward native PrimeVue props, events, model updates and slots deliberately. Avoid attribute order that silently overrides controlled wrapper behavior.
 
 Atomic template ownership: each Suit route renders exactly one complete, explicitly exported page-level template from `packages/ui`, using typed neutral view models, controlled form values, content and semantic commands. Shared UI owns all presentation, including unique product-specific compositions. Suit scripts retain business rules, authorized data access and configuration. Shared interaction controllers live in `packages/ux`. Suit routes cannot supply child composition, scoped slots, component/render factories, VNodes or untyped state bags. Layout adapters supply only typed shell configuration and one direct unscoped route outlet. Do not add app-local Vue components or migration debt allowances.

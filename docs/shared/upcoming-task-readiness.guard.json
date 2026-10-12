@@ -1,0 +1,42 @@
+{
+  "counts": {
+    "runs": 91,
+    "credits": 38,
+    "executions": 329,
+    "task_events": 2742,
+    "gate_resolutions": 10
+  },
+  "functions": [
+    {
+      "args": "p_actor uuid, p_run uuid, p_gate text, p_response text",
+      "name": "resolve_authenticated_operator_gate_before_sas_final_gate_docs"
+    },
+    {
+      "args": "p_actor uuid, p_run uuid, p_gate text, p_response text",
+      "name": "resolve_authenticated_operator_gate"
+    },
+    {
+      "args": "p_actor uuid, p_run uuid, p_gate text, p_response text",
+      "name": "resolve_authenticated_operator_gate_before_sas_single_review"
+    },
+    {
+      "args": "p_actor uuid, p_run uuid, p_gate text, p_response text",
+      "name": "resolve_authenticated_operator_gate_before_task_shared_scope"
+    },
+    {
+      "args": "p_actor uuid, p_run uuid, p_gate text, p_response text",
+      "name": "resolve_authenticated_operator_gate_before_unattended_queue"
+    }
+  ],
+  "active_runs": [
+    {
+      "run_id": "2518c051-fb28-4641-ae03-c046d7c30807",
+      "status": "running",
+      "max_tasks": 7,
+      "suit_slug": "super-admin-suit",
+      "completed_tasks": 6
+    }
+  ],
+  "observed_at": "2026-10-12T09:51:56.096797+00:00",
+  "target_executions": 0
+}
