@@ -23,7 +23,7 @@ Read STATUS.md, INDEX.md and tasks/01 first. Do not infer completion from scaffo
 | SHOP-UI-02 | dashboard | 01 | PR opened | Working — local checks passed; final acceptance pending | [Draft PR #251](https://github.com/Building-Suit/building-suit-monorepo/pull/251) · `codex/shop-suit/ui-pro-dashboard` |
 | SHOP-UI-03 | pos-media | 01 | PR opened | Blocked — DB version/application/test; local checks pass | [Draft PR #252](https://github.com/Building-Suit/building-suit-monorepo/pull/252) · `codex/shop-suit/ui-pro-pos-media` |
 | SHOP-UI-04 | appointments-calendar | 01 | PR opened | Working — local checks passed; final acceptance pending | [Draft PR #253](https://github.com/Building-Suit/building-suit-monorepo/pull/253) · `codex/shop-suit/ui-pro-appointments` |
-| SHOP-UI-05 | pricing-billing | 01 | Working — implemented, publication pending | Working — local checks passed; final acceptance pending | `codex/shop-suit/ui-pro-pricing-billing`, PR pending |
+| SHOP-UI-05 | pricing-billing | 01 | PR opened | Working — local checks passed; final acceptance pending | [Draft PR #255](https://github.com/Building-Suit/building-suit-monorepo/pull/255) · `codex/shop-suit/ui-pro-pricing-billing` |
 | SHOP-UI-06 | settings-notice | 01 | Not started | Not started | No branch/PR |
 | SHOP-UI-07 | shop-consistency | 02–06 | Not started | Not started | No branch/PR |
 | SHOP-UI-08 | final-integration | 01–07 | Not started | Not started | No branch/PR |
@@ -149,8 +149,8 @@ One bounded turn; preserve other task edits; one stacked draft PR. Update status
 # SHOP-UI-05 — pricing-billing
 
 Depends on: 01
-Implementation: Working
-Verification: Unverified
+Implementation: PR opened (#255)
+Verification: Working — local checks passed; consolidated acceptance pending
 Original mapping: UI PRO 003/008
 
 Reference 5: polished shared plan cards, period selector and highlighted plan using existing actual catalogue/prices/currency/periods/entitlements/trial rules, including Solo 1/2 member options. No invented discounts or copied prices/palette/brands. Simplify Billing into coherent clear sections, preserving payment proof, private offers, manual InstaPay and permissions. Partial Shop pricing styling exists; Billing reorganization is not started.
@@ -167,7 +167,7 @@ Implementation: Not started
 Verification: Not started
 Original mapping: UI PRO 003/005/008
 
-Simplify Settings into coherent sections with consistent shared templates while preserving all functions, permissions and payment policies. Image 2 exact removal target is the sandbox payment instructions notice beginning «بيئة الاختبار: الطلبات الاصطناعية لا تمثل أموالًا مستلمة». It is already absent on fetched stg, which has an E2E regression expecting synthetic instructions absent. Preserve this behavior and payment/proof/manual review; do not delete an unrelated business flow. Unwired shared settings scaffold exists; not completed.
+Simplify Settings into coherent sections with consistent shared templates while preserving all functions, permissions and payment policies. Image 2 exact removal target is the sandbox payment instructions notice beginning «بيئة الاختبار: الطلبات الاصطناعية لا تمثل أموالًا مستلمة». Task 05 now filters this exact paragraph in the current shared-template adapter, which retains the E2E regression expecting synthetic instructions absent. Preserve this behavior and payment/proof/manual review; do not delete an unrelated business flow. Unwired shared settings scaffold exists; not completed.
 
 One bounded turn; preserve other task edits; one stacked draft PR. Update status/PR/evidence on handoff. No merge or deploy.
 
@@ -276,7 +276,7 @@ Task-04 publication policy: `node tooling/git/check-pr.mjs 253` passed. No CI po
 
 # Current task-05 receipt
 
-Implementation: Working — pricing/billing implemented, publication pending. Verification: focused local checks passed; final build/types/rendered acceptance and CI remain task 08.
+Implementation: PR opened — [draft PR #255](https://github.com/Building-Suit/building-suit-monorepo/pull/255), stacked on PR #253. Implementation commit `bd2c0de`; tracker update follows in a documentation commit. Verification: focused local checks passed; final build/types/rendered acceptance and CI remain task 08.
 
 Worktree `/workspace/shop-ui-05`; branch `codex/shop-suit/ui-pro-pricing-billing`; parent `17d7c0059926325b9a9fcce340a9762f5ed78435` on PR #253. The observed stg ref is still `630031447d11ed738bbfb9018283040d475425bb`; independent Super Admin consolidation is not incorporated or retargeted here.
 
@@ -291,3 +291,5 @@ Checks: 9 changed Vue script/template/style syntax compilations (8 with TS synta
 Carry forward: task-03 image persistence remains incomplete until versioned migration/database/media round-trip verification; its SQL is still an unapplied draft. Task 08 should resolve supported writable CLI config if possible without hosted application.
 
 Next task: SHOP-UI-06 settings/notice. Create `codex/shop-suit/ui-pro-settings` from task-05 final published HEAD, targeting `codex/shop-suit/ui-pro-pricing-billing`, in a clean worktree. Preserve all actual settings functions and the narrow image-2 removal now implemented.
+
+Task-05 publication policy: `node tooling/git/check-pr.mjs 255` passed. No CI polling, merge, deployment, hosted application or staging reconciliation performed.
