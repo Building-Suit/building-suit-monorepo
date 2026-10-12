@@ -51,3 +51,5 @@ Desktop chambers scroll independently. Below 64rem the rail scrolls horizontally
 Future Suit administration extensions use the [typed registration contract](future-suit-administration.md). `administrationShellRegistration` maps identity and capability-gated context data to the existing shell inputs; descriptors and product adapters register support without changing shared shell conditionals.
 
 Workspace panels use the canonical card surface, border, radius, elevation and padding scale. `BsAccessTabs` delegates to `BsTabs`, including counts and keyboard navigation, so access-management tabs use the same horizontal presentation as other workspaces. Product adapters explicitly provide home destinations when their dashboard differs from `/dashboard`.
+
+`BsCard` supports the same responsive `span` contract as shared layout primitives. Dashboard charts and onboarding cards use it to occupy their intended grid tracks; the span resets on narrow screens.

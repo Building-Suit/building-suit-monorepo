@@ -217,7 +217,7 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
       <BsKpiCard :title="isArabic ? 'قيد المراجعة' : 'In review'" :hint="isArabic ? 'بيانات تجريبية' : 'Example data'">1</BsKpiCard>
       <BsCard :title="isArabic ? 'الحالات' : 'Statuses'" padding="lg"><div class="flex flex-wrap gap-2"><BsStatusBadge status="active" /><BsStatusBadge status="pending" /><BsStatusBadge status="failed" /></div></BsCard>
       <BsPanel><BsHeading :level="3">{{ isArabic ? 'لوحة مشتركة' : 'Shared panel' }}</BsHeading><BsText tone="muted">{{ isArabic ? 'نفس حدود البطاقات وانحناءاتها ومسافاتها في كل المنتجات.' : 'The same card borders, corners and spacing across products.' }}</BsText></BsPanel>
-      <BsCard :title="isArabic ? 'سطح متداخل' : 'Nested surface'" variant="flat" padding="lg"><p class="text-sm text-fg-muted">{{ isArabic ? 'بدون ظل إضافي.' : 'No competing elevation.' }}</p></BsCard>
+      <BsCard :title="isArabic ? 'سطح متداخل' : 'Nested surface'" variant="flat" padding="lg" :span="2"><p class="text-sm text-fg-muted">{{ isArabic ? 'بدون ظل إضافي.' : 'No competing elevation.' }}</p></BsCard>
     </section>
 
     <section class="ls-card overflow-hidden">

@@ -23,6 +23,15 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
     await expect(page.getByRole('row').filter({ hasText: 'Fixture bank' })).toContainText(/125|١٢٥/)
     await page.getByRole('button', { name: copy.dashboard.months.replace('{count}', '3'), exact: true }).click()
     await expect.poll(() => calls.filter(call => call.name === 'report_monthly_series').at(-1)?.args.p_months).toBe(3)
+    const chart = page.locator('.ls-card').filter({ has: page.getByRole('heading', { name: copy.dashboard.revenueVsExpenses, exact: true }) })
+    await expect(chart).toHaveAttribute('data-bs-span', '2')
+    if (width >= 768) {
+      const cash = page.locator('.ls-card').filter({ has: page.getByRole('heading', { name: copy.dashboard.cashPosition, exact: true }) })
+      const chartBounds = await chart.boundingBox(), cashBounds = await cash.boundingBox()
+      expect(chartBounds).not.toBeNull()
+      expect(cashBounds).not.toBeNull()
+      expect(chartBounds!.width / cashBounds!.width).toBeGreaterThan(1.75)
+    }
     await expectNoPageOverflow(page)
    await recordShellGeometry(page)
     await page.screenshot({ path: `.local/atomic-template-evidence/screenshots/dashboard-ledger-${locale}-${theme}-${width}.png`, fullPage: true, animations: 'disabled' })
