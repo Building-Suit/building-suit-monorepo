@@ -78,7 +78,7 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
     })
     const ar = locale === 'ar'
     await fixtureGoto(page, '/settings')
-    await page.getByRole('button', { name: ar ? 'حفظ ملف المتجر' : 'Save Shop profile', exact: true }).click()
+    await page.getByRole('button', { name: ar ? 'تعديل ملف المتجر' : 'Edit shop profile', exact: true }).click()
     let dialog = page.getByRole('dialog')
     const profileName = dialog.getByLabel(ar ? 'اسم المتجر' : 'Shop display name', { exact: true })
     await expect(profileName).toHaveValue('Fixture shop')
@@ -93,7 +93,7 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
     await expect(dialog).toHaveCount(0)
     const location = calls.find(call => call.name === 'save_shop_location')!
     expect(location.args.p_shop_id).toBe('shop-1'); expect(location.args.p_location_id).toBeNull(); expect(location.args.p_name).toBe('New location')
-    await page.getByRole('button', { name: ar ? 'حفظ إعدادات الإيصال' : 'Save receipt settings', exact: true }).click()
+    await page.getByRole('button', { name: ar ? 'تعديل إعدادات الإيصال' : 'Edit receipt settings', exact: true }).click()
     dialog = page.getByRole('dialog')
     await dialog.getByLabel(ar ? 'رسالة أسفل الإيصال' : 'Receipt footer message', { exact: true }).fill('New footer')
     await dialog.getByRole('radio', { name: 'A4 / PDF', exact: true }).check()

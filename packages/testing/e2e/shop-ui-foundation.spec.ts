@@ -203,7 +203,7 @@ test('Shop virtualized sale picker, receipt allocations across pages, settings s
   expect(receipt.args.p_amount).toBe(30)
   expect(receipt.args.p_allocations).toEqual([{ invoice_id: 'invoice-1', amount: 10 }, { invoice_id: 'invoice-2', amount: 20 }])
   await page.locator('a[href="/settings"]').first().click()
-  await page.getByRole('button', { name: 'Save operation mode', exact: true }).click()
+  await page.getByRole('button', { name: 'Change business mode', exact: true }).click()
   const modeDialog = page.getByRole('dialog', { name: 'Business operation mode', exact: true })
   await modeDialog.getByRole('radio', { name: /Services only/ }).check()
   await modeDialog.getByRole('button', { name: 'Save operation mode', exact: true }).click()

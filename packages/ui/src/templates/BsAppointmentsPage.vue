@@ -32,6 +32,7 @@ function updateDay(weekday: number, key: 'enabled' | 'startsLocal' | 'endsLocal'
       </BsToolbar>
       <BsText v-if="presentation.error && !showForm && !showSchedule" role="alert" as="p" size="sm" tone="danger">{{ presentation.error }}</BsText>
       <BsFilterBar :label="copy.title">
+        <BsGrid :columns="3">
         <BsField v-slot="field" :label="copy.branch">
           <BsSelect :input-id="field.id" :aria-describedby="field.describedby" :model-value="presentation.locationId ?? ''" :label="copy.branch" :options="choices.locations" option-label="label" option-value="value" option-disabled="disabled" @update:model-value="value => emit('location', String(value ?? ''))"/>
         </BsField>
@@ -39,7 +40,8 @@ function updateDay(weekday: number, key: 'enabled' | 'startsLocal' | 'endsLocal'
           <BsSelect v-model="staffId" :input-id="field.id" :aria-describedby="field.describedby" :label="copy.barber" :options="choices.staff" option-label="label" option-value="value" option-disabled="disabled"/>
         </BsField>
         <BsField v-if="selectedDate !== undefined" v-slot="field" :label="copy.date || copy.start"><BsInput :id="field.id" :model-value="selectedDate" type="date" :aria-describedby="field.describedby" @update:model-value="emit('date', String($event ?? ''))" /></BsField>
-        <BsInline>
+        </BsGrid>
+        <template #actions><BsInline>
           <BsButton severity="secondary" :aria-label="copy.previous" @click="emit('move', -1)">
             <BsText aria-hidden="true" as="span">{{ presentation.previousSymbol }}</BsText>
           </BsButton>
@@ -55,6 +57,7 @@ function updateDay(weekday: number, key: 'enabled' | 'startsLocal' | 'endsLocal'
             <BsButton v-if="copy.month" variant="chip" :aria-pressed="view === 'month'" @click="view = 'month'">{{ copy.month }}</BsButton>
           </BsInline>
         </BsInline>
+        </template>
       </BsFilterBar>
       <BsInline v-if="presentation.rangeLabel" justify="between"><BsHeading :level="2">{{ presentation.rangeLabel }}</BsHeading><BsText v-if="presentation.timezone" size="xs" tone="muted">{{ presentation.timezone }}</BsText></BsInline>
       <BsText v-if="presentation.loading" role="status" as="p" size="sm" tone="muted">{{ copy.loading }}</BsText>

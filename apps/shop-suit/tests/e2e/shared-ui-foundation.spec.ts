@@ -226,7 +226,7 @@ test('Shop settings keeps profile edits in a shared modal with validation and fo
   })
   await expect(page).toHaveURL(/\/settings(?:[?#]|$)/)
   await expect(page.getByRole('main').locator('form')).toHaveCount(0)
-  const trigger = page.getByRole('button', { name: 'Save Shop profile', exact: true })
+  const trigger = page.getByRole('button', { name: 'Edit shop profile', exact: true })
   await trigger.click()
   const dialog = page.getByRole('dialog', { name: 'Shop profile', exact: true })
   await expect(dialog).toBeVisible()

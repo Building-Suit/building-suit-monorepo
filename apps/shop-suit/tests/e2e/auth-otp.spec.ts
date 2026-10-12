@@ -177,7 +177,7 @@ test('signup main location, selected mode, editing, restore, and capacity persis
 
   await expect(page.getByRole('heading', { name: 'Shop profile' })).toBeVisible()
   await page.getByLabel('Shop display name', { exact: true }).fill('OTP flagship Shop')
-  await page.getByRole('button', { name: 'Save Shop profile', exact: true }).click()
+  await page.getByRole('button', { name: 'Edit shop profile', exact: true }).click()
   await expect(page.getByRole('status').filter({ hasText: 'Shop profile updated.' }).first()).toBeVisible()
   await expect(page.getByRole('banner').getByRole('combobox', { name: 'Shop', exact: true })).toContainText('OTP flagship Shop')
   await page.reload()

@@ -14,12 +14,12 @@ const { isOwner, currentMembership } = useShop()
 const isArabic = computed(() => locale.value === 'ar')
 const billingRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
 const { data: sidebarSnapshot } = useAsyncData('shop-data:sidebar-subscription', async () => {
-  if (!currentId.value || !isOwner.value || !currentMembership.value) return null
+  if (loading.value || !currentId.value || !isOwner.value || !currentMembership.value) return null
   const shopId = currentId.value, profileId = currentMembership.value.profile_id
   const { data, error } = await billingRpc.rpc('shop_billing_read', { p_shop_id: shopId })
   if (error) throw error
   return { shopId, profileId, subscription: (data as ShopBilling | null)?.subscription ?? null }
-}, { watch: [currentId, isOwner, () => currentMembership.value?.profile_id, () => route.path], default: () => null })
+}, { watch: [currentId, loading, isOwner, () => currentMembership.value?.profile_id, () => route.path], default: () => null })
 const sidebarSubscription = computed(() => isOwner.value && sidebarSnapshot.value?.shopId === currentId.value && sidebarSnapshot.value?.profileId === currentMembership.value?.profile_id ? sidebarSnapshot.value.subscription : null)
 const planStatus = computed(() => {
   const status = sidebarSubscription.value?.accessState
