@@ -73,6 +73,7 @@ test('scope proposals grant no authority, evidence-only gate stays docs-only and
   assert.deepEqual(final.metadata.allowed_paths, ['apps/building-suit-docs/', 'docs/shared/'])
   const cas = after.find(t => t.task_id === 'SHOP-CAS-M1-INT-001')
   assert.ok(cas.metadata.source_allowed_paths.includes('apps/shop-suit/**'))
+  assert.ok(cas.metadata.source_allowed_paths.includes('apps/shop-suit/supabase/**'), 'preserve the unresolved protected database scope')
   assert.deepEqual(cas.metadata.publication_resolved_scopes, snapshot.tasks.find(t => t.task_id === cas.task_id).metadata.publication_resolved_scopes)
   for (const w of config.workstreams) {
     const updated = proposal.workstreams.find(p => p.slug === w.slug)
@@ -82,4 +83,15 @@ test('scope proposals grant no authority, evidence-only gate stays docs-only and
   }
   const all = proposal.workstreams[0].verification_config.commands.find(c => c.name === 'readiness-all-consumer-quality')
   assert.deepEqual(all.args, ['exec', 'turbo', 'run', 'typecheck', 'lint', 'build'])
+})
+
+test('applied status requires exact audited readback and still denies execution/publication authority', () => {
+  const applied = read('applied')
+  const actual = buildReconciliation(snapshot,config,{applied})
+  assert.equal(actual.status,'APPLIED_METADATA_ONLY')
+  assert.equal(actual.applied_receipt.audit_id,10148)
+  const stale = structuredClone(applied);stale.tasks[0].description+=' tampered'
+  assert.throws(()=>buildReconciliation(snapshot,config,{applied:stale}),/readback_mismatch/)
+  const granted = structuredClone(applied);granted.contracts[0].authority_current=true
+  assert.throws(()=>buildReconciliation(snapshot,config,{applied:granted}),/readback_mismatch/)
 })

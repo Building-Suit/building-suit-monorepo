@@ -1,6 +1,14 @@
 {
   "version": 1,
-  "status": "PROPOSAL_NOT_APPLIED",
+  "status": "APPLIED_METADATA_ONLY",
+  "applied_receipt": {
+    "audit_id": 10148,
+    "payload_fingerprint": "781661ee59df11c5fe848a4098c728ca901f4946dafe1b94749fec3491a4cc3e",
+    "observed_at": "2026-10-12T10:21:01.953883+00:00",
+    "contracts_current": 24,
+    "executable_admissions": 0,
+    "authority_grants": 0
+  },
   "base_sha": "3c16c81c3f65d25bcfa82794441b0ee7d2a21588",
   "source_snapshot_fingerprint": "afce5aa702a346b0575f16a419ee51bdb0607b51c907f373e6f07f1b12f69e88",
   "changes": [
@@ -64,7 +72,7 @@
     {
       "task_id": "SHOP-CAS-M1-INT-001",
       "before_fingerprint": "62ed24be5c3f8991eb35544f5c436749066c4549ad38b786058bc588b9e63aee",
-      "after_fingerprint": "28e517f463e9150750533e99c2e08066e3f8eddc4810666ef1b0db6631283d74",
+      "after_fingerprint": "34d0d0b1edbcc6ebc0e8225c65769b239c8d182ea17ecd2f5def35033289dde3",
       "patch": {
         "description": "Inside the registered Shop Suit workstream, preserve the Customer Acquisition Suit acquisition reference through customer-controlled signup, record customer policy acceptance evidence as required, and emit the authoritative versioned lifecycle/payment events consumed by Customer Acquisition Suit. Preserve existing Shop Suit behavior and payment integrity.\n\nRead root/scoped AGENTS.md, packages/ui/AGENTS.md, docs/shared/ui-ownership.md and docs/shared/atomic-template-route-inventory.json. All presentation, including product-specific screens, belongs in packages/ui; reusable interaction controllers belong in packages/ux. Suits retain business/data/permission logic, typed content/props and semantic commands. Consume one registered complete page template; do not compose local UI. Preserve Solo catalogue/pricing periods, dashboard navigation, shared tabs/card spans and responsive behavior from PR #248.",
         "metadata": {
@@ -94,6 +102,7 @@
           "verification_mode": "milestone",
           "registered_project": "building-suit",
           "source_allowed_paths": [
+            "apps/shop-suit/supabase/**",
             "apps/shop-suit/**",
             "packages/ui/src/templates/",
             "packages/ui/src/types/",
@@ -15763,8 +15772,7 @@
     "human/visual/product approvals"
   ],
   "blockers": [
-    "No supported pre-run audited task-amendment operation exposed; no live metadata applied.",
-    "Exact shared/protected scope authority remains required; proposed paths grant no publication authority.",
+    "Exact shared/protected scope authority remains required; declared paths grant no publication authority.",
     "Fresh start-time input snapshots and frozen plans must be prepared by the existing runtime without creating a run in this repair.",
     "Unresolved operator/product/external evidence gates remain blocking."
   ]

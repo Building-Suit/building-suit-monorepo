@@ -75,7 +75,7 @@ function classify(entry, task, index, commands) {
   return { version: 2, kind: 'planned_test', description, commands: [stem], required: true, expected_outputs: [output, ...(browser ? [`apps/shop-suit/tests/e2e/${stem}.config.ts`] : [])] }
 }
 
-export function buildReconciliation(snapshot, configuration) {
+export function buildReconciliation(snapshot, configuration, { applied = null } = {}) {
   assertAcyclic(snapshot.dependencies)
   const commands = [
     { name: 'bs-sa-future-suit-m4-validation-001-unit', program: 'node', args: ['--test', 'packages/contracts/tests/bs-sa-future-suit-m4-validation-001.test.mjs'], required: true, capabilities: ['unit'] },
@@ -94,7 +94,7 @@ export function buildReconciliation(snapshot, configuration) {
     if (task.task_id === 'SHOP-CAS-M1-INT-001') {
       patch.priority = 900
       // Align source scope with signup app code, retaining a separate database gate.
-      metadata.source_allowed_paths = [...metadata.allowed_paths]
+      metadata.source_allowed_paths = [...new Set([...(metadata.source_allowed_paths ?? []), ...metadata.allowed_paths])]
       metadata.readiness_reconciliation.pending_protected_scopes = ['apps/shop-suit/supabase/**']
     }
     if (task.task_id === 'SS-APPT-002') { patch.priority = 901; patch.description += '\nPublic-site V1 prohibits self-booking. Defer this phase until an explicit product decision approves booking and the reminder channel. No new booking policy is approved by this reconciliation.' }
@@ -132,5 +132,12 @@ export function buildReconciliation(snapshot, configuration) {
     plan.configuration_refs = { project_id: task.project_id, workstream_slug: task.workstream_slug }
     plan.inputs = { verification_plan: plan.inputs.verification_plan }
   }
-  return { version: 1, status: 'PROPOSAL_NOT_APPLIED', base_sha: BASE_SHA, source_snapshot_fingerprint: fingerprint(snapshot), changes, workstreams, plans, first_n_before: { shared: firstN(snapshot.tasks, 'shared', 5).map(t => t.task_id), shop: firstN(snapshot.tasks, 'shop-suit', 1).map(t => t.task_id) }, first_n_after: { shared: firstN(after, 'shared', 5).map(t => t.task_id), shop: firstN(after, 'shop-suit', 1).map(t => t.task_id) }, dependencies: snapshot.dependencies, preservation: ['task IDs', 'status', 'acceptance criteria', 'hard dependencies', 'completed/cancelled history', 'retry/model policy', 'runs/executions/credits', 'human/visual/product approvals'], blockers: ['No supported pre-run audited task-amendment operation exposed; no live metadata applied.', 'Exact shared/protected scope authority remains required; proposed paths grant no publication authority.', 'Fresh start-time input snapshots and frozen plans must be prepared by the existing runtime without creating a run in this repair.', 'Unresolved operator/product/external evidence gates remain blocking.'] }
+  if (applied) {
+    const withoutUpdateTime = value => { const copy = { ...value }; delete copy.updated_at; return copy }
+    if (applied.receipt?.new_value?.tasks_amended !== 24 || applied.receipt.new_value.registries_amended !== 2
+      || after.some(task => fingerprint(withoutUpdateTime(task)) !== fingerprint(withoutUpdateTime(applied.tasks.find(actual => actual.task_id === task.task_id))))
+      || workstreams.some(w => fingerprint(w.verification_config) !== fingerprint(applied.workstreams.find(actual => actual.slug === w.slug)?.verification_config))
+      || applied.contracts.length !== 24 || applied.contracts.some(c => !c.current || c.authority_current || c.admission.ready)) throw new Error('applied_receipt_or_readback_mismatch')
+  }
+  return { version: 1, status: applied ? 'APPLIED_METADATA_ONLY' : 'PROPOSAL_NOT_APPLIED', ...(applied ? { applied_receipt: { audit_id: applied.receipt.audit_id, payload_fingerprint: applied.receipt.new_value.payload_fingerprint, observed_at: applied.observed_at, contracts_current: 24, executable_admissions: 0, authority_grants: 0 } } : {}), base_sha: BASE_SHA, source_snapshot_fingerprint: fingerprint(snapshot), changes, workstreams, plans, first_n_before: { shared: firstN(snapshot.tasks, 'shared', 5).map(t => t.task_id), shop: firstN(snapshot.tasks, 'shop-suit', 1).map(t => t.task_id) }, first_n_after: { shared: firstN(after, 'shared', 5).map(t => t.task_id), shop: firstN(after, 'shop-suit', 1).map(t => t.task_id) }, dependencies: snapshot.dependencies, preservation: ['task IDs', 'status', 'acceptance criteria', 'hard dependencies', 'completed/cancelled history', 'retry/model policy', 'runs/executions/credits', 'human/visual/product approvals'], blockers: [...(applied ? [] : ['Metadata amendment not yet applied.']), 'Exact shared/protected scope authority remains required; declared paths grant no publication authority.', 'Fresh start-time input snapshots and frozen plans must be prepared by the existing runtime without creating a run in this repair.', 'Unresolved operator/product/external evidence gates remain blocking.'] }
 }

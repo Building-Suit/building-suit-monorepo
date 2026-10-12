@@ -1,10 +1,10 @@
 {
   "repository_base": "3c16c81c3f65d25bcfa82794441b0ee7d2a21588",
-  "live_metadata_applied": false,
+  "live_metadata_applied": true,
   "runs_created": 0,
   "product_attempts_consumed": 0,
   "full_test_file_set": {
-    "passed": 1215,
+    "passed": 1218,
     "failed": 0,
     "skipped": 22,
     "browser": "existing /usr/bin/chromium 154.0.8037.57 via temporary Playwright executablePath adapter",
@@ -15,7 +15,9 @@
     "architecture_and_reconciliation": 67,
     "git_policy_and_pagination": 25,
     "publication_crash_replay": 3,
-    "failed": 0
+    "failed": 0,
+    "guarded_metadata_and_applied_readback": 3,
+    "total_architecture_registry_git": 95
   },
   "passed_checks": [
     "strict workspace architecture/boundaries",
@@ -31,7 +33,6 @@
   ],
   "not_claimed": [
     "hosted launcher readiness",
-    "live metadata application",
     "product gates approved",
     "six consumer builds/typechecks",
     "disposable PostgreSQL integration suite",
@@ -62,6 +63,56 @@
     "readiness-publisher-regressions.log": {
       "sha256": "d743f6626dc0abb290513d096e06c53ecd3018d10052d81f35c6c311abe48771",
       "bytes": 389
+    },
+    "readiness-after-amendment-all-tests.log": {
+      "sha256": "6d6cab2983a82899ca07c4794202e02106b87535ed37c3017f702f52db60e1b1",
+      "bytes": 163438
+    },
+    "readiness-live-targeted-final.log": {
+      "sha256": "e89e814ba15d1ff09bf718013616ef8e026503e26c5ca3128878e65ce2bdfa43",
+      "bytes": 7823
+    },
+    "readiness-after-amendment-docs-typecheck.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "readiness-after-amendment-docs-build.log": {
+      "sha256": "4266f728230301eebd541a44f00440c953a6aa48b5334c6daa8c0fc91ad4caa4",
+      "bytes": 59291
+    },
+    "readiness-guarded-amendment-tests.log": {
+      "sha256": "294ad6a1f9b91c598897f1d9ab4bbd59c5fd92082dad05e344c3efc57ece37c5",
+      "bytes": 991
+    }
+  },
+  "amendment": {
+    "audit_receipt": 10148,
+    "task_audits": {
+      "first": 10124,
+      "last": 10147,
+      "count": 24
+    },
+    "registry_audits": [
+      10122,
+      10123
+    ],
+    "audit_rows": 27,
+    "tasks_amended": 24,
+    "registries_amended": 2,
+    "contracts_current": 24,
+    "admissions_ready": 0,
+    "publication_authorities_current": 0,
+    "live_rollback_rehearsal": "PASS",
+    "negative_task_snapshot": "REJECTED_AS_EXPECTED",
+    "negative_registry_snapshot": "REJECTED_AS_EXPECTED",
+    "idempotent_replay": "PASS_NO_ADDITIONAL_MUTATION",
+    "preserved_counts": {
+      "runs": 91,
+      "executions": 329,
+      "credits": 38,
+      "gate_resolutions": 10,
+      "task_events": 2742,
+      "target_executions": 0
     }
   }
 }
