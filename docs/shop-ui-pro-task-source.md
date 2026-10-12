@@ -25,7 +25,7 @@ Read STATUS.md, INDEX.md and tasks/01 first. Do not infer completion from scaffo
 | SHOP-UI-04 | appointments-calendar | 01 | PR opened | Working — local checks passed; final acceptance pending | [Draft PR #253](https://github.com/Building-Suit/building-suit-monorepo/pull/253) · `codex/shop-suit/ui-pro-appointments` |
 | SHOP-UI-05 | pricing-billing | 01 | PR opened | Working — local checks passed; final acceptance pending | [Draft PR #255](https://github.com/Building-Suit/building-suit-monorepo/pull/255) · `codex/shop-suit/ui-pro-pricing-billing` |
 | SHOP-UI-06 | settings-notice | 01 | PR opened | Working — local checks passed; final acceptance pending | [Draft PR #256](https://github.com/Building-Suit/building-suit-monorepo/pull/256) · `codex/shop-suit/ui-pro-settings` |
-| SHOP-UI-07 | shop-consistency | 02–06 | Working — implemented, publication pending | Working — local checks passed; final acceptance pending | `codex/shop-suit/ui-pro-consistency`, PR pending |
+| SHOP-UI-07 | shop-consistency | 02–06 | PR opened | Working — local checks passed; final acceptance pending | [Draft PR #257](https://github.com/Building-Suit/building-suit-monorepo/pull/257) · `codex/shop-suit/ui-pro-consistency` |
 | SHOP-UI-08 | final-integration | 01–07 | Not started | Not started | No branch/PR |
 
 Task-01 change-local verification passes (see current receipt below); consolidated verification has not run. Calendar/Settings scaffolds are unwired and do not count as completed tasks. No hosted schema/provider/secret/n8n work occurred.
@@ -177,8 +177,8 @@ One bounded turn; preserve other task edits; one stacked draft PR. Update status
 # SHOP-UI-07 — shop-consistency
 
 Depends on: 02–06
-Implementation: Not started
-Verification: Not started
+Implementation: PR opened (#257)
+Verification: Working — local checks passed; consolidated acceptance pending
 Original mapping: UI PRO 003/004/005/008
 
 Review remaining Shop workflow presentation for viewport use, gutters, density, tables/forms and responsive no-horizontal-overflow. Reuse/refine complete packages/ui templates and packages/ux controllers, leaving Shop business/data/permissions/typed props/events in Shop. Necessary shared component ripple changes are allowed; preserve other consumers’ functionality, branding and contracts. No unrelated Ledger/Inventory redesign.
@@ -316,7 +316,7 @@ Task-06 publication policy: `node tooling/git/check-pr.mjs 256` passed. No CI po
 
 # Current task-07 receipt
 
-Implementation: Working — remaining Shop consistency fixes implemented, publication pending. Verification: focused local checks passed; final consolidated acceptance remains task 08.
+Implementation: PR opened — [draft PR #257](https://github.com/Building-Suit/building-suit-monorepo/pull/257), stacked on PR #256. Implementation commit `fc4ad68`; tracker update follows in a documentation commit. Verification: focused local checks passed; final consolidated acceptance remains task 08.
 
 Worktree `/workspace/shop-ui-07`; branch `codex/shop-suit/ui-pro-consistency`; parent `b7494396009e2581fe892de77723972607cb581e` on PR #256. Observed stg is `630031447d11ed738bbfb9018283040d475425bb`; parent’s independent staging work remains separate.
 
@@ -329,3 +329,5 @@ Checks: 11 Vue script/template/style compilations with TS syntax transpilation; 
 Remaining requirements not complete/verified: optional product/service image persistence still needs CLI-versioned migration, local database/media round-trip verification and separately authorized application; current SQL remains an unapplied draft. Dashboard top-item ranking is unavailable from the existing operating-report contract and was not fabricated. The implemented reference-driven surfaces still need the consolidated rendered visual/interaction acceptance matrix. No hosted/state/provider/secret/storage changes.
 
 Next: SHOP-UI-08 final integration/acceptance. Create `codex/shop-suit/ui-pro-integration` from task-07 final published HEAD, targeting `codex/shop-suit/ui-pro-consistency`. Consolidate the stack for final review as directed by the parent, refresh staging base including separately completed Super Admin work, and resolve real failures only. First address supported writable CLI config/versioned media migration and disposable local database verification if possible; never apply hosted SQL without specific approval. Update the existing Library task source and ZIP identities with final truthful status/evidence and unchanged original references.
+
+Task-07 publication policy: `node tooling/git/check-pr.mjs 257` passed. No CI polling, merge, deployment, hosted application or staging reconciliation performed.
