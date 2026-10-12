@@ -16,7 +16,7 @@ function updateReceipt(key: 'date' | 'method' | 'reference' | 'notes', value: st
 function updateAllocation(id: string, value: string | number) { receiptForm.value = { ...receiptForm.value, allocations: { ...receiptForm.value.allocations, [id]: Number(value) } } }
 </script>
 <template>
-  <BsStack>
+  <BsStack gap="lg">
     <BsLink to="/customers">{{ copy.customers_back }}</BsLink>
     <BsStack v-if="pending">
       <BsSkeleton/>
@@ -28,19 +28,7 @@ function updateAllocation(id: string, value: string | number) { receiptForm.valu
     </BsBox>
     <BsPanel v-else-if="!customer" padding="md">{{ copy.customers_notFound }}</BsPanel>
     <template v-else>
-      <BsInline justify="between">
-        <BsBox>
-          <BsInline>
-            <BsHeading :level="1">{{ customer.name }}</BsHeading>
-            <BsText as="span">{{ customer.status }}</BsText>
-          </BsInline>
-          <BsText as="p" size="sm" tone="muted">{{ copy.customers_details }}</BsText>
-        </BsBox>
-        <BsInline v-if="customer.canEdit">
-          <BsButton type="button" @click="emit('edit')">{{ copy.customers_edit }}</BsButton>
-          <BsButton type="button" :disabled="archiving" @click="emit('archive')">{{ copy.customers_archive }}</BsButton>
-        </BsInline>
-      </BsInline>
+      <BsPageHeader :title="customer.name" :subtitle="copy.customers_details"><template #actions><BsStatusBadge :status="customer.status" :label="customer.status" tone="neutral" /><BsInline v-if="customer.canEdit"><BsButton variant="secondary" type="button" @click="emit('edit')">{{ copy.customers_edit }}</BsButton><BsButton variant="danger" type="button" :pending="archiving" :disabled="archiving" @click="emit('archive')">{{ copy.customers_archive }}</BsButton></BsInline></template></BsPageHeader>
       <BsText v-if="actionError && !visible" role="alert" as="p" size="sm" tone="danger">{{ actionError }}</BsText>
       <BsText v-if="!customer.canManage" as="p" size="sm">{{ copy.customers_manageDenied }}</BsText>
       <BsGrid :columns="2">

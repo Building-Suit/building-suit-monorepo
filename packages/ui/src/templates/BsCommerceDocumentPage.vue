@@ -10,7 +10,7 @@ function updateForm<K extends keyof BsCommerceDocumentForm>(key: K, value: BsCom
 function updateCorrection<K extends keyof BsCommerceCorrectionForm>(key: K, value: BsCommerceCorrectionForm[K]) { correctionForm.value = { ...correctionForm.value, [key]: value } }
 </script>
 <template>
-  <BsStack>
+  <BsStack gap="lg">
     <BsLink :to="backTo">{{ copy.back }}</BsLink>
     <BsText v-if="view.loading" role="status" as="p" size="sm" tone="muted">{{ copy.loading }}</BsText>
     <BsBox v-else-if="view.error" role="alert" padding="md"><BsText as="p">{{ copy.loadError }}</BsText><BsButton @click="emit('retry')">{{ copy.retry }}</BsButton></BsBox>
@@ -43,7 +43,7 @@ function updateCorrection<K extends keyof BsCommerceCorrectionForm>(key: K, valu
         <BsText v-else as="p" size="sm" tone="muted">{{ view.correction.notice }}</BsText><BsText as="p" size="sm" tone="muted">{{ view.correction.fullOnly }}</BsText>
       </BsPanel>
       <BsGrid :columns="2">
-        <BsPanel padding="md"><BsHeading :level="2">{{ copy.party }}</BsHeading><BsStack v-if="view.party.name">
+        <BsPanel padding="md"><BsHeading :level="2">{{ copy.party }}</BsHeading><BsStack v-if="view.party.name" gap="xs">
           <BsText as="p" emphasis="semibold"><BsLink v-if="view.party.to" :to="view.party.to">{{ view.party.name }}</BsLink><template v-else>{{ view.party.name }}</template></BsText>
           <BsText v-if="view.party.phone" as="p">{{ view.party.phone }}</BsText><BsText v-if="view.party.email" as="p">{{ view.party.email }}</BsText><BsText v-if="view.party.address" as="p">{{ view.party.address }}</BsText>
         </BsStack><BsText v-else as="p" size="sm" tone="muted">{{ copy.noParty }}</BsText></BsPanel>
@@ -60,7 +60,7 @@ function updateCorrection<K extends keyof BsCommerceCorrectionForm>(key: K, valu
         </BsDescriptionList></BsPanel>
       </BsGrid>
       <BsPanel padding="md"><BsHeading :level="2">{{ copy.lines }}</BsHeading>
-        <BsDataTable :value="view.lines" data-key="id" :columns="[{ key: 'name', field: 'name', header: copy.item }, { key: 'quantity', field: 'quantity', header: copy.quantity, align: 'end' }, ...(view.showAvailable ? [{ key: 'available', field: 'available', header: copy.available, align: 'end' as const }] : []), { key: 'price', field: 'price', header: copy.price, align: 'end' }, ...(view.showDiscount ? [{ key: 'discount', field: 'discount', header: copy.discount, align: 'end' as const }] : []), { key: 'total', field: 'total', header: copy.total, align: 'end' }]">
+        <BsDataTable density="compact" :value="view.lines" data-key="id" :columns="[{ key: 'name', field: 'name', header: copy.item }, { key: 'quantity', field: 'quantity', header: copy.quantity, align: 'end' }, ...(view.showAvailable ? [{ key: 'available', field: 'available', header: copy.available, align: 'end' as const }] : []), { key: 'price', field: 'price', header: copy.price, align: 'end' }, ...(view.showDiscount ? [{ key: 'discount', field: 'discount', header: copy.discount, align: 'end' as const }] : []), { key: 'total', field: 'total', header: copy.total, align: 'end' }]">
           <template #cell-name="{ row }"><BsText as="p" emphasis="semibold">{{ row.name }}</BsText><BsText v-if="row.description" as="p" size="xs" tone="muted">{{ row.description }}</BsText></template>
         </BsDataTable>
       </BsPanel>

@@ -20,7 +20,7 @@ function updateClose(key: keyof BsCashShiftAmountForm, value: string | number) {
 function updateMovement(key: keyof BsCashShiftMovementForm, value: string | number | boolean) { movementForm.value = { ...movementForm.value, [key]: key === 'amount' ? Number(value) : String(value) } }
 </script>
 <template>
-  <BsStack>
+  <BsStack gap="lg">
     <BsPageHeader  :title="copy.title" :subtitle="copy.subtitle">
       <template #actions>
         <BsText v-if="locationName" as="p" size="sm">
@@ -57,7 +57,7 @@ function updateMovement(key: keyof BsCashShiftMovementForm, value: string | numb
             </BsDescriptionList>
             <BsBox scroll="x">
               <BsHeading :level="3">{{ copy.eventHistory }}</BsHeading>
-              <BsDataTable :value="active.events" data-key="id" :label="copy.eventHistory" :columns="[{ key: 'column0', header: (copy.date) }, { key: 'column1', header: (copy.event) }, { key: 'column2', header: (copy.actor) }, { key: 'column3', header: (copy.amount), align: 'end' }]">
+              <BsDataTable density="compact" :value="active.events" data-key="id" :label="copy.eventHistory" :columns="[{ key: 'column0', header: (copy.date) }, { key: 'column1', header: (copy.event) }, { key: 'column2', header: (copy.actor) }, { key: 'column3', header: (copy.amount), align: 'end' }]">
                 <template #cell-column0="{ row: event }">{{ event.date }}</template>
                 <template #cell-column1="{ row: event }">
                   <BsText as="p" emphasis="semibold">{{ event.label }}</BsText>
@@ -80,7 +80,7 @@ function updateMovement(key: keyof BsCashShiftMovementForm, value: string | numb
             <BsSelect v-if="canManage" v-model="cashierId" :label="copy.cashier" :options="[{ id: null, name: copy.allCashiers }, ...cashierOptions]" option-label="name" option-value="id"/>
           </BsInline>
           <BsBox scroll="x">
-            <BsDataTable :value="historyRows" data-key="id" :label="copy.history" lazy paginator :rows="pageSize" :first="(page - 1) * pageSize" :total-records="total" :always-show-paginator="false" :columns="[{ key: 'cashierName', header: (copy.cashier), field: 'cashierName' }, { key: 'column1', header: (copy.opened) }, { key: 'column2', header: (copy.expected), align: 'end' }, { key: 'column3', header: (copy.counted), align: 'end' }, { key: 'column4', header: (copy.variance), align: 'end' }, { key: 'column5', header: (copy.nonCash), align: 'end' }]" @page="emit('page', $event.page + 1)">
+            <BsDataTable density="compact" :value="historyRows" data-key="id" :label="copy.history" lazy paginator :rows="pageSize" :first="(page - 1) * pageSize" :total-records="total" :always-show-paginator="false" :columns="[{ key: 'cashierName', header: (copy.cashier), field: 'cashierName' }, { key: 'column1', header: (copy.opened) }, { key: 'column2', header: (copy.expected), align: 'end' }, { key: 'column3', header: (copy.counted), align: 'end' }, { key: 'column4', header: (copy.variance), align: 'end' }, { key: 'column5', header: (copy.nonCash), align: 'end' }]" @page="emit('page', $event.page + 1)">
               <template #cell-column1="{ row: shift }">{{ shift.opened }}</template>
               <template #cell-column2="{ row: shift }">{{ shift.expected }}</template>
               <template #cell-column3="{ row: shift }">{{ shift.counted }}</template>

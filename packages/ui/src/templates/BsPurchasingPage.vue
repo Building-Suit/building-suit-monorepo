@@ -17,12 +17,12 @@ function updatePurchase(value: Partial<BsPurchaseForm>) { purchaseForm.value = {
 function updateLine(index: number, value: Partial<BsPurchaseLineForm>) { updatePurchase({ lines: purchaseForm.value.lines.map((line, i) => i === index ? { ...line, ...value } : line) }) }
 </script>
 <template>
-  <BsStack>
+  <BsStack gap="lg">
     <BsPageHeader  :title="copy.title" :subtitle="copy.subtitle">
       <template #actions>
         <BsInline v-if="view.available">
-          <BsButton v-if="view.canCreateSupplier" type="button" @click="emit('createSupplier')">{{ copy.addSupplier }}</BsButton>
-          <BsButton v-if="view.canCreatePurchase" type="button" :disabled="view.createPurchaseDisabled" @click="emit('createPurchase')">{{ copy.newPurchase }}</BsButton>
+          <BsButton v-if="view.canCreateSupplier" variant="secondary" type="button" @click="emit('createSupplier')">{{ copy.addSupplier }}</BsButton>
+          <BsButton v-if="view.canCreatePurchase" variant="primary" type="button" :disabled="view.createPurchaseDisabled" @click="emit('createPurchase')">{{ copy.newPurchase }}</BsButton>
         </BsInline>
       </template>
     </BsPageHeader>
@@ -127,7 +127,7 @@ function updateLine(index: number, value: Partial<BsPurchaseLineForm>) { updateP
             <BsHeading :level="2">{{ copy.recent }}</BsHeading>
             <BsInput v-model="search" :aria-label="copy.search" type="search" :placeholder="copy.search"/>
           </BsInline>
-          <BsGrid :columns="2">
+          <BsGrid columns="auto" min-item-width="sm">
             <BsEntityPicker :model-value="filters.vendor" :label="copy.supplier" show-clear :options="filterChoices" option-label="name" option-value="id" :loading="supplierPicker.loading" :error="supplierPicker.error" :has-more="supplierPicker.hasMore" :load-more-label="supplierPicker.moreLabel" :retry-label="supplierPicker.retryLabel" @retry="emit('supplierRetry')" @search="emit('supplierSearch', $event)" @load-more="emit('supplierMore')" @update:model-value="emit('filterSupplier', String($event ?? ''))" />
             <BsSelect :model-value="filters.status" :label="copy.status" :options="[{ value: '', label: (copy.all) + ' — ' + (copy.status), disabled: false }, { value: 'posted', label: (copy.posted), disabled: false }, { value: 'void', label: (copy.voided), disabled: false }]" option-label="label" option-value="value" option-disabled="disabled" @update:model-value="filters = { ...filters, status: String($event ?? '') }"/>
             <BsSelect :model-value="filters.settlement" :label="copy.settlement" :options="[{ value: '', label: (copy.all) + ' — ' + (copy.settlement), disabled: false }, { value: 'unpaid', label: (copy.unpaid), disabled: false }, { value: 'partial', label: (copy.partial), disabled: false }, { value: 'paid', label: (copy.paid), disabled: false }]" option-label="label" option-value="value" option-disabled="disabled" @update:model-value="filters = { ...filters, settlement: String($event ?? '') }"/>

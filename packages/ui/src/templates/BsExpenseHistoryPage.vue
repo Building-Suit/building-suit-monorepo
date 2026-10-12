@@ -11,7 +11,7 @@ const voidReason = defineModel<string>('voidReason', { required: true })
 const emit = defineEmits<{ create: []; save: []; void: []; retry: []; correct: [id: string]; openVoid: [id: string] }>()
 </script>
 <template>
-  <BsStack>
+  <BsStack gap="lg">
     <BsPageHeader  :title="copy.title" :subtitle="copy.subtitle">
       <template #actions>
         <BsButton v-if="view.available && view.hasLocation && view.canManage" type="button" @click="emit('create')">{{ copy.add }}</BsButton>
@@ -54,7 +54,7 @@ const emit = defineEmits<{ create: []; save: []; void: []; retry: []; correct: [
         </BsField>
       </BsRecordActionDialog>
       <BsPanel v-if="view.hasLocation" padding="md">
-        <BsGrid :columns="2">
+        <BsGrid columns="auto" min-item-width="sm">
           <BsInput v-model="search" type="search" :placeholder="copy.search" :aria-label="copy.search"/>
           <BsSelect :model-value="filters.status" :label="copy.status" :options="[{ value: 'all', label: (copy.allStatuses), disabled: false }, { value: 'paid', label: (copy.paid), disabled: false }, { value: 'void', label: (copy.voided), disabled: false }]" option-label="label" option-value="value" option-disabled="disabled" @update:model-value="filters = { ...filters, status: String($event ?? '') }"/>
           <BsSelect :model-value="filters.category" :label="copy.category" :options="categoryOptions" option-label="label" option-value="value" option-disabled="disabled" @update:model-value="filters = { ...filters, category: String($event ?? '') }"/>

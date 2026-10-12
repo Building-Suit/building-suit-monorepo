@@ -27,7 +27,7 @@ const columns = computed(() => [
 ])
 </script>
 <template>
-  <BsStack>
+  <BsStack gap="lg">
     <BsPageHeader :title="copy.title" :subtitle="copy.subtitle"/>
     <BsPanel v-if="!contextAvailable && !contextLoading" padding="md">
       <BsText as="p">{{ copy.noShop }}</BsText>
@@ -44,9 +44,9 @@ const columns = computed(() => [
         <BsDataTable :value="rows" :loading="loading" :error="error" :label="copy.title" :capabilities="{ insert: canManage }" :action-labels="{ insert: copy.add }" searchable :search-label="copy.search" data-key="id" lazy paginator :rows="pageSize" :first="(page - 1) * pageSize" :total-records="total" :always-show-paginator="false" :columns="columns" @search="emit('search', $event)" @page="emit('page', $event)" @retry="emit('retry')" @create="emit('create')">
           <template #cell-name="{ row }"><BsLink :to="row.href">{{ row.name }}</BsLink></template>
           <template #cell-contact="{ row }">
-            <BsStack><BsText as="p">{{ row.phone }}</BsText><BsText as="p" size="xs" tone="muted">{{ row.email }}</BsText></BsStack>
+            <BsStack gap="xs"><BsText as="p">{{ row.phone }}</BsText><BsText as="p" size="xs" tone="muted">{{ row.email }}</BsText></BsStack>
           </template>
-          <template #cell-status="{ row }"><BsText as="span">{{ row.status }}</BsText></template>
+          <template #cell-status="{ row }"><BsStatusBadge :status="row.status" :label="row.status" tone="neutral" /></template>
           <template #cell-updated="{ row }">{{ row.updated }}</template>
           <template #filters><BsSelect v-model="status" :label="copy.status" :options="statusOptions" option-label="label" option-value="value"/></template>
           <template #empty><BsText as="p" size="sm" tone="muted">{{ copy.noCustomers }}</BsText></template>

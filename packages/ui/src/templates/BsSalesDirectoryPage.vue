@@ -13,7 +13,7 @@ function updateForm(values: Partial<BsSalesDraftForm>) { form.value = { ...form.
 function updateLine(index: number, values: Partial<BsSalesDraftLine>) { updateForm({ lines: form.value.lines.map((line, i) => i === index ? { ...line, ...values } : line) }) }
 </script>
 <template>
-  <BsStack>
+  <BsStack gap="lg">
     <BsPageHeader  :title="copy.title" :subtitle="copy.subtitle">
       <template #actions>
         <BsButton v-if="view.available && view.canManage" type="button" :disabled="view.catalogLoading" @click="emit('create')">{{ copy.newSale }}</BsButton>
@@ -25,9 +25,9 @@ function updateLine(index: number, values: Partial<BsSalesDraftLine>) { updateFo
       <BsText v-else-if="!view.canManage" as="p" size="sm">{{ copy.manageDenied }}</BsText>
       <BsText as="p" size="sm">{{ copy.paymentBoundary }}</BsText>
       <BsPanel v-if="!view.denied" padding="md">
-        <BsGrid :columns="2">
-          <BsInput v-model="search" type="search" :placeholder="copy.search" :aria-label="copy.search"/>
-          <BsSelect v-model="status" :label="copy.status" :options="statusOptions" option-label="label" option-value="value" option-disabled="disabled"/>
+        <BsGrid :columns="4">
+          <BsField v-slot="field" :label="copy.search"><BsInput :id="field.id" v-model="search" type="search" :placeholder="copy.search" :aria-describedby="field.describedby" /></BsField>
+          <BsField v-slot="field" :label="copy.status"><BsSelect v-model="status" :input-id="field.id" :aria-describedby="field.describedby" :label="copy.status" :options="statusOptions" option-label="label" option-value="value" option-disabled="disabled" /></BsField>
           <BsField v-slot="field" :label="(copy.from)">
             <BsInput :id="field.id" v-model="fromDate" :aria-describedby="field.describedby" type="date"/>
           </BsField>

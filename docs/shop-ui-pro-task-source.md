@@ -25,7 +25,7 @@ Read STATUS.md, INDEX.md and tasks/01 first. Do not infer completion from scaffo
 | SHOP-UI-04 | appointments-calendar | 01 | PR opened | Working — local checks passed; final acceptance pending | [Draft PR #253](https://github.com/Building-Suit/building-suit-monorepo/pull/253) · `codex/shop-suit/ui-pro-appointments` |
 | SHOP-UI-05 | pricing-billing | 01 | PR opened | Working — local checks passed; final acceptance pending | [Draft PR #255](https://github.com/Building-Suit/building-suit-monorepo/pull/255) · `codex/shop-suit/ui-pro-pricing-billing` |
 | SHOP-UI-06 | settings-notice | 01 | PR opened | Working — local checks passed; final acceptance pending | [Draft PR #256](https://github.com/Building-Suit/building-suit-monorepo/pull/256) · `codex/shop-suit/ui-pro-settings` |
-| SHOP-UI-07 | shop-consistency | 02–06 | Not started | Not started | No branch/PR |
+| SHOP-UI-07 | shop-consistency | 02–06 | Working — implemented, publication pending | Working — local checks passed; final acceptance pending | `codex/shop-suit/ui-pro-consistency`, PR pending |
 | SHOP-UI-08 | final-integration | 01–07 | Not started | Not started | No branch/PR |
 
 Task-01 change-local verification passes (see current receipt below); consolidated verification has not run. Calendar/Settings scaffolds are unwired and do not count as completed tasks. No hosted schema/provider/secret/n8n work occurred.
@@ -312,3 +312,20 @@ No new schema/provider/secret/Storage/hosted changes. Task-03 image persistence 
 Next: SHOP-UI-07 remaining Shop consistency. Create `codex/shop-suit/ui-pro-consistency` from task-06 final published HEAD, targeting `codex/shop-suit/ui-pro-settings`, in a clean worktree. Stay within remaining Shop presentation consistency and necessary shared compatibility.
 
 Task-06 publication policy: `node tooling/git/check-pr.mjs 256` passed. No CI polling, merge, deployment, hosted application or staging reconciliation performed.
+
+
+# Current task-07 receipt
+
+Implementation: Working — remaining Shop consistency fixes implemented, publication pending. Verification: focused local checks passed; final consolidated acceptance remains task 08.
+
+Worktree `/workspace/shop-ui-07`; branch `codex/shop-suit/ui-pro-consistency`; parent `b7494396009e2581fe892de77723972607cb581e` on PR #256. Observed stg is `630031447d11ed738bbfb9018283040d475425bb`; parent’s independent staging work remains separate.
+
+Reviewed Shop reports, cash shifts, purchasing/suppliers, inventory, expenses, sales/detail and customer directory/profile templates. Changes are bounded presentation corrections: canonical page rhythm; canonical inventory/customer profile headers; wrapped long heading/subtitle text; reduced contact-cell/party spacing; readable neutral customer status badges; adaptive wide purchasing/expense filters and one-row desktop sales filters with explicit labels; clearer new-purchase and archive actions. Read-only cash audit and commerce item tables use existing compact density, while mutation-heavy operational tables, statement links, form controls and touch targets remain comfortable. Report filters already fill the available width and were not structurally rewritten. Distinct operational editors/history/layouts remain intact.
+
+All changes are in packages/ui and docs catalogue; Shop business/data scripts, queries, permissions, calculations, models and event contracts are unchanged. No new app-local components, rendered composition or style bypasses. BsPageHeader’s long-identifier wrap fix is the only broadly shared primitive ripple; task 08 must include other Suit header compatibility. No unrelated product redesign or new architecture/controller.
+
+Checks: 11 Vue script/template/style compilations with TS syntax transpilation; scoped shared UI/docs lint; 26 focused expense/cash/report contracts, purchase entity picker concurrency and sale-copy tests; whitespace; preflight errors=[]. Tests include source-contract assertions, not hosted SQL. Nuxt preparation reused installed dependencies with missing local Supabase URL/key warnings. Full builds/types/browser/accessibility/RTL/theme matrix/final exact-head CI remain task 08; no CI polling.
+
+Remaining requirements not complete/verified: optional product/service image persistence still needs CLI-versioned migration, local database/media round-trip verification and separately authorized application; current SQL remains an unapplied draft. Dashboard top-item ranking is unavailable from the existing operating-report contract and was not fabricated. The implemented reference-driven surfaces still need the consolidated rendered visual/interaction acceptance matrix. No hosted/state/provider/secret/storage changes.
+
+Next: SHOP-UI-08 final integration/acceptance. Create `codex/shop-suit/ui-pro-integration` from task-07 final published HEAD, targeting `codex/shop-suit/ui-pro-consistency`. Consolidate the stack for final review as directed by the parent, refresh staging base including separately completed Super Admin work, and resolve real failures only. First address supported writable CLI config/versioned media migration and disposable local database verification if possible; never apply hosted SQL without specific approval. Update the existing Library task source and ZIP identities with final truthful status/evidence and unchanged original references.

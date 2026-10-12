@@ -134,6 +134,10 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
       :context="[{ label: isArabic ? 'الاتجاه' : 'Direction', value: isArabic ? 'RTL' : 'LTR' }, { label: isArabic ? 'المصدر' : 'Owner', value: 'packages/ui' }]"
     />
 
+    <BsContentSection :title="isArabic ? 'عنوان طويل وعرض ضيق' : 'Long heading at narrow widths'">
+      <BsPageHeader :title="isArabic ? 'اسممتجرطويلبدونمسافاتلاختبارالتفافالعنوانداخلعرضالصفحة' : 'ExampleShopIdentifierWithoutSpacesForTestingHeadingWrappingWithinTheViewport'" :subtitle="isArabic ? 'مثال توضيحي لاختبار العرض والاستجابة.' : 'Illustrative heading for responsive layout inspection.'" />
+    </BsContentSection>
+
     <BsContentSection :title="isArabic ? 'التنقل بين أقسام الصفحة' : 'Page section navigation'">
       <BsSectionNavigation :label="isArabic ? 'أقسام المكتبة' : 'Catalogue sections'" :sections="[{ id: 'forms', label: isArabic ? 'النماذج' : 'Forms' }, { id: 'pricing', label: isArabic ? 'الخطط' : 'Plans' }]" />
     </BsContentSection>

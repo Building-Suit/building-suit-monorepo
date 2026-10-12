@@ -14,11 +14,8 @@ const countsPage = defineModel<number>('countsPage', { required: true })
 const emit = defineEmits<{ retryAccess: []; retry: []; retryHistory: []; saveAdjustment: []; saveCount: []; saveThreshold: []; count: [id: string]; threshold: [id: string]; adjust: [mode: 'receive' | 'writeoff'] }>()
 </script>
 <template>
-  <BsStack>
-    <BsBox as="header">
-      <BsHeading :level="1">{{ text.title }}</BsHeading>
-      <BsText as="p" size="sm" tone="muted">{{ text.subtitle }}</BsText>
-    </BsBox>
+  <BsStack gap="lg">
+    <BsPageHeader :title="text.title" :subtitle="text.subtitle" />
     <BsPanel v-if="!view.available && !view.loadingContext" padding="md">
       <BsText as="p">{{ text.noShop }}</BsText>
       <BsLink to="/dashboard">{{ text.dashboard }}</BsLink>
