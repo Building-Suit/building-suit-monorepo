@@ -494,6 +494,7 @@ test('Super Admin preserves the database-driven administration shell through a s
   const shell = readFileSync(new URL('../src/templates/BsControlPlaneShell.vue', import.meta.url), 'utf8')
   assert.match(adapter, /<BsControlPlaneShell\b/)
   assert.match(shell, /<BsAdministrationShell\b/)
+  assert.match(shell, /<BsWorkspaceShell v-if="!suits\.length"/ )
   assert.match(shell, /:suits="suits"/)
   assert.match(shell, /:groups="groups"/)
   assert.match(shell, /<slot \/>/)
