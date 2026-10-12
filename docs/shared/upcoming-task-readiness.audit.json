@@ -1,0 +1,570 @@
+{
+  "ready": [
+    "SS-APPT-002",
+    "SS-SERV-002",
+    "SS-OFFLINE-001",
+    "SS-SALE-002"
+  ],
+  "contracts": [
+    {
+      "id": "SS-BARBER-COMP-001",
+      "current": false,
+      "unresolved": []
+    },
+    {
+      "id": "BS-UI-PRO-001",
+      "current": false,
+      "unresolved": []
+    },
+    {
+      "id": "BS-UI-PRO-010",
+      "current": false,
+      "unresolved": []
+    },
+    {
+      "id": "BS-UI-PRO-008",
+      "current": false,
+      "unresolved": []
+    },
+    {
+      "id": "BS-UI-PRO-006",
+      "current": false,
+      "unresolved": []
+    },
+    {
+      "id": "BS-UI-PRO-005",
+      "current": false,
+      "unresolved": []
+    },
+    {
+      "id": "BS-UI-PRO-004",
+      "current": false,
+      "unresolved": []
+    },
+    {
+      "id": "BS-UI-PRO-003",
+      "current": false,
+      "unresolved": []
+    },
+    {
+      "id": "BS-UI-PRO-002",
+      "current": false,
+      "unresolved": []
+    },
+    {
+      "id": "SS-APPT-002",
+      "current": false,
+      "unresolved": []
+    },
+    {
+      "id": "BS-SA-FUTURE-SUIT-M4-VALIDATION-001",
+      "current": false,
+      "unresolved": null
+    },
+    {
+      "id": "SS-SERV-002",
+      "current": false,
+      "unresolved": []
+    },
+    {
+      "id": "SS-EGY-ETA-001",
+      "current": false,
+      "unresolved": []
+    },
+    {
+      "id": "SS-OFFLINE-001",
+      "current": false,
+      "unresolved": []
+    },
+    {
+      "id": "SS-SALE-002",
+      "current": false,
+      "unresolved": []
+    },
+    {
+      "id": "SS-SET-001",
+      "current": false,
+      "unresolved": []
+    },
+    {
+      "id": "SS-WEB-APPT-ACCESS-001",
+      "current": false,
+      "unresolved": []
+    },
+    {
+      "id": "SS-WEB-CATALOG-001",
+      "current": false,
+      "unresolved": []
+    },
+    {
+      "id": "SS-WEB-CUSTOMER-PORTAL-001",
+      "current": false,
+      "unresolved": []
+    },
+    {
+      "id": "SS-WEB-LAUNCH-001",
+      "current": false,
+      "unresolved": []
+    },
+    {
+      "id": "SS-WEB-PROFILE-001",
+      "current": false,
+      "unresolved": []
+    },
+    {
+      "id": "SS-WEB-PUBLIC-001",
+      "current": false,
+      "unresolved": []
+    },
+    {
+      "id": "SS-WEB-SLUG-001",
+      "current": false,
+      "unresolved": []
+    },
+    {
+      "id": "SHOP-CAS-M1-INT-001",
+      "current": true,
+      "unresolved": [
+        "apps/shop-suit/supabase/**"
+      ]
+    }
+  ],
+  "decisions": [
+    {
+      "title": "UI PRO execution readiness",
+      "source": "Operator readiness gate",
+      "status": "open",
+      "metadata": {
+        "purpose": "defer UI PRO behind current queue",
+        "initiative": "building-suit-ui-professionalization",
+        "selling_blocker": false
+      },
+      "suit_slug": "inventory-suit",
+      "created_at": "2026-10-06T07:10:05.996155+00:00",
+      "decided_at": null,
+      "updated_at": "2026-10-06T07:31:34.660404+00:00",
+      "decision_id": "BS-UI-READY-001",
+      "decision_text": "Keep UI PRO dormant until the operator confirms the current non-UI backlog is finished/superseded, the building-suit-ui worker skill is available, and rendered browser verification can be performed."
+    },
+    {
+      "title": "Shop UI PRO pilot visual approval",
+      "source": "Operator visual-acceptance gate",
+      "status": "open",
+      "metadata": {
+        "after_task": "BS-UI-PRO-006",
+        "initiative": "building-suit-ui-professionalization",
+        "required_before": [
+          "BS-UI-PRO-007",
+          "BS-UI-PRO-008",
+          "BS-UI-PRO-009",
+          "BS-UI-PRO-010"
+        ]
+      },
+      "suit_slug": "shared",
+      "created_at": "2026-10-06T07:31:34.660404+00:00",
+      "decided_at": null,
+      "updated_at": "2026-10-06T07:31:34.660404+00:00",
+      "decision_id": "BS-UI-PILOT-001",
+      "decision_text": "Operator must review BS-UI-PRO-006 rendered evidence and approve the Shop Dashboard pilot before broad Ledger, Shop and Inventory propagation."
+    },
+    {
+      "title": "Start only after prior Shop queue is reconciled",
+      "source": "operator-approved-2026-09-30",
+      "status": "open",
+      "metadata": {
+        "payload_sha256": "7af0f8ab35e328d660370915a707ed97bb86afeba1522b0b5db529c025ebf94d"
+      },
+      "suit_slug": "shop-suit",
+      "created_at": "2026-09-30T22:41:15.786877+00:00",
+      "decided_at": null,
+      "updated_at": "2026-09-30T22:41:15.786877+00:00",
+      "decision_id": "WEB-TAIL-D01",
+      "decision_text": "This task stack is appended after all Shop tasks already present at import. Keep it blocked until the operator confirms all previously queued Shop work is complete, cancelled or explicitly reconciled."
+    },
+    {
+      "title": "UI PRO execution readiness",
+      "source": "Operator readiness gate",
+      "status": "open",
+      "metadata": {
+        "purpose": "defer UI PRO behind current queue",
+        "initiative": "building-suit-ui-professionalization",
+        "selling_blocker": false
+      },
+      "suit_slug": "shared",
+      "created_at": "2026-10-06T07:31:34.660404+00:00",
+      "decided_at": null,
+      "updated_at": "2026-10-06T07:31:34.660404+00:00",
+      "decision_id": "BS-UI-READY-001",
+      "decision_text": "Keep UI PRO dormant until the operator confirms the current non-UI backlog is finished/superseded, the building-suit-ui worker skill is available, and rendered browser verification can be performed."
+    },
+    {
+      "title": "UI PRO execution readiness",
+      "source": "Operator readiness gate",
+      "status": "open",
+      "metadata": {
+        "purpose": "defer UI PRO behind current queue",
+        "initiative": "building-suit-ui-professionalization",
+        "selling_blocker": false
+      },
+      "suit_slug": "ledger-suit",
+      "created_at": "2026-10-06T07:10:05.996155+00:00",
+      "decided_at": null,
+      "updated_at": "2026-10-06T07:31:34.660404+00:00",
+      "decision_id": "BS-UI-READY-001",
+      "decision_text": "Keep UI PRO dormant until the operator confirms the current non-UI backlog is finished/superseded, the building-suit-ui worker skill is available, and rendered browser verification can be performed."
+    },
+    {
+      "title": "UI PRO execution readiness",
+      "source": "Operator readiness gate",
+      "status": "open",
+      "metadata": {
+        "purpose": "defer UI PRO behind current queue",
+        "initiative": "building-suit-ui-professionalization",
+        "selling_blocker": false
+      },
+      "suit_slug": "shop-suit",
+      "created_at": "2026-10-06T07:10:05.996155+00:00",
+      "decided_at": null,
+      "updated_at": "2026-10-06T07:31:34.660404+00:00",
+      "decision_id": "BS-UI-READY-001",
+      "decision_text": "Keep UI PRO dormant until the operator confirms the current non-UI backlog is finished/superseded, the building-suit-ui worker skill is available, and rendered browser verification can be performed."
+    },
+    {
+      "title": "BARBER-D01",
+      "source": "shop-suit-roadmap-v5",
+      "status": "open",
+      "metadata": {
+        "source_status": "open",
+        "roadmap_import": "2026-09-28",
+        "normalized_status": "open",
+        "source_roadmap_sha256": "04a70896b14e04caf1926de0d2702d6e8eb3426ea4466dff232ae5af4c027790"
+      },
+      "suit_slug": "shop-suit",
+      "created_at": "2026-09-28T06:22:16.534089+00:00",
+      "decided_at": null,
+      "updated_at": "2026-09-28T06:22:16.534089+00:00",
+      "decision_id": "BARBER-D01",
+      "decision_text": "If commission tracking is requested by the first barber customer, approve commission basis and hierarchy: service/product, fixed/percent, pre/post-discount, and per-staff override."
+    },
+    {
+      "title": "TAX-D01",
+      "source": "shop-suit-roadmap-v5",
+      "status": "open",
+      "metadata": {
+        "source_status": "open",
+        "roadmap_import": "2026-09-28",
+        "normalized_status": "open",
+        "source_roadmap_sha256": "04a70896b14e04caf1926de0d2702d6e8eb3426ea4466dff232ae5af4c027790"
+      },
+      "suit_slug": "shop-suit",
+      "created_at": "2026-09-28T06:22:16.534089+00:00",
+      "decided_at": null,
+      "updated_at": "2026-09-28T06:22:16.534089+00:00",
+      "decision_id": "TAX-D01",
+      "decision_text": "Approve formal Shop Suit tax/VAT scope before claiming tax compliance. ETA e-Receipt integration is a separate Egypt launch capability."
+    },
+    {
+      "title": "Shop UI PRO pilot visual approval",
+      "source": "Operator visual-acceptance gate",
+      "status": "open",
+      "metadata": {
+        "after_task": "BS-UI-PRO-006",
+        "initiative": "building-suit-ui-professionalization",
+        "required_before": [
+          "BS-UI-PRO-007",
+          "BS-UI-PRO-008",
+          "BS-UI-PRO-009",
+          "BS-UI-PRO-010"
+        ]
+      },
+      "suit_slug": "ledger-suit",
+      "created_at": "2026-10-06T07:10:05.996155+00:00",
+      "decided_at": null,
+      "updated_at": "2026-10-06T07:31:34.660404+00:00",
+      "decision_id": "BS-UI-PILOT-001",
+      "decision_text": "Operator must review BS-UI-PRO-006 rendered evidence and approve the Shop Dashboard pilot before broad Ledger, Shop and Inventory propagation."
+    },
+    {
+      "title": "Shop UI PRO pilot visual approval",
+      "source": "Operator visual-acceptance gate",
+      "status": "open",
+      "metadata": {
+        "after_task": "BS-UI-PRO-006",
+        "initiative": "building-suit-ui-professionalization",
+        "required_before": [
+          "BS-UI-PRO-007",
+          "BS-UI-PRO-008",
+          "BS-UI-PRO-009",
+          "BS-UI-PRO-010"
+        ]
+      },
+      "suit_slug": "shop-suit",
+      "created_at": "2026-10-06T07:10:05.996155+00:00",
+      "decided_at": null,
+      "updated_at": "2026-10-06T07:31:34.660404+00:00",
+      "decision_id": "BS-UI-PILOT-001",
+      "decision_text": "Operator must review BS-UI-PRO-006 rendered evidence and approve the Shop Dashboard pilot before broad Ledger, Shop and Inventory propagation."
+    },
+    {
+      "title": "Shop UI PRO pilot visual approval",
+      "source": "Operator visual-acceptance gate",
+      "status": "open",
+      "metadata": {
+        "after_task": "BS-UI-PRO-006",
+        "initiative": "building-suit-ui-professionalization",
+        "required_before": [
+          "BS-UI-PRO-007",
+          "BS-UI-PRO-008",
+          "BS-UI-PRO-009",
+          "BS-UI-PRO-010"
+        ]
+      },
+      "suit_slug": "inventory-suit",
+      "created_at": "2026-10-06T07:10:05.996155+00:00",
+      "decided_at": null,
+      "updated_at": "2026-10-06T07:31:34.660404+00:00",
+      "decision_id": "BS-UI-PILOT-001",
+      "decision_text": "Operator must review BS-UI-PRO-006 rendered evidence and approve the Shop Dashboard pilot before broad Ledger, Shop and Inventory propagation."
+    }
+  ],
+  "extra_tasks": [
+    {
+      "title": "Migrate Ledger to the approved professional UI language",
+      "status": "planned",
+      "task_id": "BS-UI-PRO-007",
+      "metadata": {
+        "initiative": "building-suit-ui-professionalization",
+        "preparation": {
+          "required_reads": [
+            "AGENTS.md",
+            "docs/shared/ui-pro-task-guide.md",
+            "docs/shared/design-system.md",
+            "docs/shared/ui-ownership.md",
+            "docs/shared/interactions.md",
+            "docs/shared/data-table.md",
+            "packages/ui/AGENTS.md",
+            "packages/design-tokens/tokens.json"
+          ],
+          "pilot_before_propagation": true,
+          "rendered_visual_review_required": true
+        },
+        "queue_anchor": {
+          "assigned_priority": 340,
+          "first_ui_sequence": 2610,
+          "previous_max_priority": 240,
+          "previous_max_sequence": 2600
+        },
+        "queue_policy": "last-after-existing-tasks-at-registration",
+        "allowed_paths": [
+          "apps/ledger-suit/app/",
+          "apps/ledger-suit/i18n/",
+          "packages/ui/",
+          "packages/ux/",
+          "packages/testing/",
+          "docs/shared/"
+        ],
+        "required_skill": "building-suit-ui",
+        "selling_blocker": false,
+        "business_priority": "deferred",
+        "verification_mode": "milestone",
+        "source_allowed_paths": [
+          "apps/ledger-suit/app/",
+          "apps/ledger-suit/i18n/",
+          "packages/ui/",
+          "packages/ux/",
+          "packages/testing/",
+          "docs/shared/"
+        ],
+        "brand_identity_locked": true,
+        "methodology_guide_path": "docs/shared/ui-pro-task-guide.md",
+        "publication_exact_paths": [],
+        "reference_research_fields": [
+          "reference product",
+          "screen/workflow",
+          "usability problem",
+          "observed pattern",
+          "why it works",
+          "Building Suit applicability",
+          "required adaptation",
+          "adopt/adapt/reject",
+          "affected scope",
+          "evidence limit"
+        ],
+        "reference_research_required": true,
+        "framework_migration_authorized": false,
+        "rendered_visual_review_required": true
+      },
+      "priority": 340,
+      "sequence": 2670,
+      "suit_slug": "ledger-suit",
+      "task_type": "feature",
+      "created_at": "2026-10-06T07:10:05.996155+00:00",
+      "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+      "risk_level": "normal",
+      "updated_at": "2026-10-06T07:31:34.660404+00:00",
+      "description": "OBJECTIVE: Apply the operator-approved pilot language to Ledger while retaining accounting-specific density, traceability and workflows.\n\nUSER / PROBLEM: Ledger contains equal-weight KPI grids and card-wrapped analytical sections that can obscure financial hierarchy even though accounting workflows must remain precise.\n\nCURRENT-STATE EVIDENCE: Inspect dashboard and representative worklists/reports/forms/details plus accounting-specific states and tests. Preserve all accounting behavior, numbers, report semantics, posting/reconciliation logic and permissions.\n\nREFERENCE-PATTERN EVIDENCE: Use accounting-specific research centered on user financial questions, report selection, summary-to-ledger/source drill-through, table density and traceability.\n\nBUILDING SUIT ADAPTATION: Use approved shared patterns but keep Ledger analytical/dense where appropriate. Do not clone Shop information architecture.",
+      "engine_stage": "pending",
+      "model_profile": "deep",
+      "retry_policy_id": "deep-only",
+      "workstream_slug": "ledger-suit",
+      "verification_plan": [
+        "Require BS-UI-PILOT-001 approval before execution.",
+        "Record accounting-reference evidence and adopted/rejected patterns.",
+        "Compare before/after on the same accounting fixture and verify values unchanged.",
+        "Run Ledger browser/review checks, app/shared checks and git diff --check."
+      ],
+      "acceptance_criteria": [
+        "Ledger Dashboard and representative working pages use approved hierarchy/shared patterns.",
+        "Ledger retains accounting-appropriate density and question → summary → source traceability.",
+        "Accounting values, posting, reconciliation, reports, permissions, routes and domain behavior are unchanged.",
+        "Shop-specific IA is not copied where it does not fit.",
+        "Representative rendered Ledger states pass responsive/theme/RTL/accessibility review."
+      ]
+    },
+    {
+      "title": "Adopt approved UI PRO patterns in Inventory Suit",
+      "status": "planned",
+      "task_id": "BS-UI-PRO-009",
+      "metadata": {
+        "initiative": "building-suit-ui-professionalization",
+        "preparation": {
+          "required_reads": [
+            "AGENTS.md",
+            "docs/shared/ui-pro-task-guide.md",
+            "docs/shared/design-system.md",
+            "docs/shared/ui-ownership.md",
+            "docs/shared/interactions.md",
+            "docs/shared/data-table.md",
+            "packages/ui/AGENTS.md",
+            "packages/design-tokens/tokens.json"
+          ],
+          "pilot_before_propagation": true,
+          "rendered_visual_review_required": true
+        },
+        "queue_anchor": {
+          "assigned_priority": 340,
+          "first_ui_sequence": 2610,
+          "previous_max_priority": 240,
+          "previous_max_sequence": 2600
+        },
+        "queue_policy": "last-after-existing-tasks-at-registration",
+        "allowed_paths": [
+          "apps/inventory-suit/app/",
+          "apps/inventory-suit/i18n/",
+          "packages/ui/",
+          "packages/ux/",
+          "packages/testing/",
+          "docs/shared/"
+        ],
+        "required_skill": "building-suit-ui",
+        "selling_blocker": false,
+        "business_priority": "deferred",
+        "verification_mode": "milestone",
+        "source_allowed_paths": [
+          "apps/inventory-suit/app/",
+          "apps/inventory-suit/i18n/",
+          "packages/ui/",
+          "packages/ux/",
+          "packages/testing/",
+          "docs/shared/"
+        ],
+        "brand_identity_locked": true,
+        "methodology_guide_path": "docs/shared/ui-pro-task-guide.md",
+        "publication_exact_paths": [],
+        "reference_research_fields": [
+          "reference product",
+          "screen/workflow",
+          "usability problem",
+          "observed pattern",
+          "why it works",
+          "Building Suit applicability",
+          "required adaptation",
+          "adopt/adapt/reject",
+          "affected scope",
+          "evidence limit"
+        ],
+        "reference_research_required": true,
+        "framework_migration_authorized": false,
+        "rendered_visual_review_required": true
+      },
+      "priority": 340,
+      "sequence": 2690,
+      "suit_slug": "inventory-suit",
+      "task_type": "feature",
+      "created_at": "2026-10-06T07:10:05.996155+00:00",
+      "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+      "risk_level": "normal",
+      "updated_at": "2026-10-06T07:31:34.660404+00:00",
+      "description": "OBJECTIVE: Apply the approved UI PRO methodology to Inventory capability that actually exists at execution time without inventing features for visual completeness.\n\nUSER / PROBLEM: Inventory needs to join the Building Suit family without inheriting fake dashboard metrics or another Suit's domain information architecture.\n\nCURRENT-STATE EVIDENCE: Inspect execution-time Inventory requirements, implemented routes/features, shared-shell usage and actual domain capabilities. Identify planned-but-not-implemented features.\n\nREFERENCE-PATTERN EVIDENCE: Use inventory/scanning/replenishment references only for capabilities that are approved and implemented/in scope. Extract action-centric quantity/movement/location/exception patterns where relevant.\n\nBUILDING SUIT ADAPTATION: Use shared shell/archetypes/components while preserving Inventory isolation and domain-specific hierarchy. No speculative UI/backend behavior.",
+      "engine_stage": "pending",
+      "model_profile": "deep",
+      "retry_policy_id": "deep-only",
+      "workstream_slug": "inventory-suit",
+      "verification_plan": [
+        "Require BS-UI-PILOT-001 approval before execution.",
+        "Inspect actual implementation state and record unavailable/planned capability separately.",
+        "Render materially changed available screens with representative states.",
+        "Run Inventory/shared checks and git diff --check."
+      ],
+      "acceptance_criteria": [
+        "Implemented Inventory screens use approved Building Suit UI language and domain-appropriate hierarchy.",
+        "No fake metrics, mock workflows or unapproved capabilities are added.",
+        "Inventory auth/data isolation, routes and domain behavior remain unchanged.",
+        "Reusable presentation remains shared rather than creating a local visual fork.",
+        "All materially changed available screens pass responsive/theme/RTL/state review."
+      ]
+    },
+    {
+      "title": "Add a bilingual Shop Suit Changelog / What's New page",
+      "status": "cancelled",
+      "task_id": "SS-WEB-CHANGELOG-001",
+      "metadata": {
+        "reason": "Cross-Suit versioned changelog/timeline approved for first launch",
+        "queue_group": "public_web_customer_portal_changelog_tail",
+        "allowed_paths": [
+          "apps/shop-suit/**"
+        ],
+        "queue_ordinal": 7,
+        "superseded_at": "2026-10-06T12:25:21.43796+00:00",
+        "superseded_by": "BS-CHANGELOG-VERSION-001",
+        "payload_sha256": "7af0f8ab35e328d660370915a707ed97bb86afeba1522b0b5db529c025ebf94d",
+        "tail_priority_base": 160,
+        "tail_sequence_base": 1010,
+        "max_implementation_attempts": 3
+      },
+      "priority": 230,
+      "sequence": 1080,
+      "suit_slug": "shop-suit",
+      "task_type": "feature",
+      "created_at": "2026-09-30T22:41:15.786877+00:00",
+      "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+      "risk_level": "normal",
+      "updated_at": "2026-10-06T12:25:21.43796+00:00",
+      "description": "Add a customer-facing Changelog / What's New page so users know what changed in each user-visible release. Use a curated versioned source in the Shop repository rather than raw git history. Link it from appropriate app/public navigation. Entries are bilingual, newest-first and safe for customers.",
+      "engine_stage": "cancelled",
+      "model_profile": "standard",
+      "retry_policy_id": "standard-five",
+      "workstream_slug": "shop-suit",
+      "verification_plan": [
+        "Schema/unit tests for unique IDs, ordering and required EN/AR content.",
+        "Route/link/meta and EN/AR responsive browser checks.",
+        "Content-safety review and release-checklist verification."
+      ],
+      "acceptance_criteria": [
+        "Shop Suit has a canonical /changelog (or equivalent) page with no tenant-private data.",
+        "Authenticated app includes a clear What's New/Changelog link; marketing/public navigation may link to the same product changelog.",
+        "Each entry has stable release/version ID, release date, EN/AR title, summary and user-facing bullets/categories.",
+        "Entries are human-curated; raw commit messages, internal task IDs, credentials/security-sensitive details and unreleased work are not automatically published.",
+        "Newest releases render first and releases are deep-linkable.",
+        "Release checklist requires a changelog entry for user-visible production changes; internal-only maintenance may explicitly skip with rationale.",
+        "Validation/tests prevent shipping an entry with only one locale.",
+        "Initial backfill uses repository-supported shipped capabilities without inventing unsupported dates/claims."
+      ]
+    }
+  ],
+  "execution345": {
+    "status": "running",
+    "attempt": 1,
+    "task_id": "SAS-M1-GATE-001"
+  }
+}

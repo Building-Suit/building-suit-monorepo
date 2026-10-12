@@ -1,8 +1,8 @@
 # Product development
 
-Root `AGENTS.md` and `docs/agent-workflows.md` apply. Routes live in `app/pages`; reusable product orchestration belongs in `app/composables`, product-only components in `app/components`, and pure helpers in `app/utils` when needed.
+Root `AGENTS.md` and `docs/agent-workflows.md` apply. Routes live in `app/pages`; reusable product orchestration belongs in `app/composables`, all presentation in `packages/ui`, and pure helpers in `app/utils` when needed.
 
-Use the shared Nuxt layer, templates, PrimeVue components, `BsDataTable`, dialogs and UX controllers. Supply product content and validation through configuration. Keep business rules and tenant/permission adapters product-owned. For backend features, own a Supabase CLI root at `apps/<slug>/supabase` and register its organization, production/staging pair and local ports in the environment map. Use the shared root product selector for authorized changes, `public` for business objects and independent Auth sessions. Verify relevant English/Arabic, themes, accessibility and backend authorization.
+Read `packages/ui/AGENTS.md` before presentation changes. Use the shared Nuxt layer, registered complete page templates, `BsDataTable`, dialogs and UX controllers. Supply product content and validation through configuration. Keep business rules and tenant/permission adapters product-owned. For backend features, own a Supabase CLI root at `apps/<slug>/supabase` and register its organization, production/staging pair and local ports in the environment map. Use the shared root product selector for authorized changes, `public` for business objects and independent Auth sessions. Verify relevant English/Arabic, themes, accessibility and backend authorization.
 
 Super Admin runtime configuration is database-owned. Never encode Suit registries, operational navigation, capabilities, environment bindings, project refs, endpoints, owner IDs, integration/provider settings, payment instructions, prices or quotas in application source. Follow `docs/architecture/super-admin-trust-adapter-contract.md`; do not import another app or access a target Suit database directly.
 

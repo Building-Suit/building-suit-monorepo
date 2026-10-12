@@ -8,7 +8,16 @@ export function git(args, cwd) { return run('git', args, cwd) }
 export function repository() { return repositoryFromRemote(git(['remote', 'get-url', 'origin'])) }
 export function api(path) { return JSON.parse(run('gh', ['api', path])) }
 export function openPullRequests(repo) {
-  return JSON.parse(run('gh', ['api', '--paginate', '--slurp', `repos/${repo}/pulls?state=open&per_page=100`])).flat()
+  // Emit one JSON object per line across pages; works with older gh versions
+  // that support pagination but not --slurp. Never truncate to the first page.
+  return parsePullRequestLines(run('gh', ['api', '--paginate', `repos/${repo}/pulls?state=open&per_page=100`, '--jq', '.[] | @json']))
+}
+export function parsePullRequestLines(output) {
+  return output.split(/\r?\n/).filter(line => line.trim()).map(line => {
+    const pr = JSON.parse(line)
+    if (!Number.isInteger(pr?.number) || !pr.head?.ref || !pr.base?.ref) throw new Error('invalid_paginated_pull_request')
+    return pr
+  })
 }
 export function latestBranchPr(repo, branch) {
   const owner = repo.split('/')[0]
