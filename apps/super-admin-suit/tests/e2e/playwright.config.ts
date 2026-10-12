@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test'
 import { fileURLToPath } from 'node:url'
 export default defineConfig({
-  testDir: fileURLToPath(new URL('./', import.meta.url)), testMatch: 'auth.spec.ts', workers: 1, retries: 0,
+  testDir: fileURLToPath(new URL('./', import.meta.url)), testMatch: '*.spec.ts', workers: 1, retries: 0,
   outputDir: fileURLToPath(new URL('../../.playwright-results/', import.meta.url)),
   use: { ...devices['Desktop Chrome'], baseURL: 'http://127.0.0.1:4324', screenshot: 'only-on-failure' },
   webServer: {

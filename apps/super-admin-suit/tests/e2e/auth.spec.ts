@@ -10,6 +10,7 @@ for (const locale of ['en', 'ar']) {
       await page.addInitScript(theme => localStorage.setItem('building-suit.theme', theme), mobile ? 'dark' : 'light')
       let code = 401
       let delayResponse = false
+      await page.route('**/api/registry', route => route.fulfill({ status: 200, contentType: 'application/json', body: '{"suits":[]}' }))
       await page.route('**/api/session', async route => {
         if (delayResponse) await new Promise(resolve => setTimeout(resolve, 500))
         await route.fulfill({ status: code, contentType: 'application/json', body: JSON.stringify(code === 200 ? { userId: 'fixture', role: 'owner', authorityEnvironmentId: 'fixture-env' } : { statusCode: code }) })
