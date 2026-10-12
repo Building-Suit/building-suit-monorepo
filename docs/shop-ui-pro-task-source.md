@@ -21,7 +21,7 @@ Read STATUS.md, INDEX.md and tasks/01 first. Do not infer completion from scaffo
 |---|---|---|---|---|---|
 | SHOP-UI-01 | shell-sidebar-profile | None | PR opened | Working — local checks passed; final acceptance pending | [Draft PR #250](https://github.com/Building-Suit/building-suit-monorepo/pull/250) · `codex/shop-suit/ui-pro-redesign` |
 | SHOP-UI-02 | dashboard | 01 | PR opened | Working — local checks passed; final acceptance pending | [Draft PR #251](https://github.com/Building-Suit/building-suit-monorepo/pull/251) · `codex/shop-suit/ui-pro-dashboard` |
-| SHOP-UI-03 | pos-media | 01 | Working — UI/adapters implemented | Blocked — DB version/application/test; local checks pass | `codex/shop-suit/ui-pro-pos-media`, PR pending |
+| SHOP-UI-03 | pos-media | 01 | PR opened | Blocked — DB version/application/test; local checks pass | [Draft PR #252](https://github.com/Building-Suit/building-suit-monorepo/pull/252) · `codex/shop-suit/ui-pro-pos-media` |
 | SHOP-UI-04 | appointments-calendar | 01 | Not started | Not started | No branch/PR |
 | SHOP-UI-05 | pricing-billing | 01 | Working | Unverified | Preserved partial edits on task 01 branch; no PR |
 | SHOP-UI-06 | settings-notice | 01 | Not started | Not started | No branch/PR |
@@ -121,8 +121,8 @@ One bounded turn; preserve other task edits; one stacked draft PR. Update status
 # SHOP-UI-03 — pos-media
 
 Depends on: 01
-Implementation: Working
-Verification: Unverified
+Implementation: PR opened (#252)
+Verification: Blocked — DB application/test; local checks pass; final acceptance pending
 Original mapping: UI PRO 005/008
 
 Reference 3: compact image product/service grid with touchscreen targets, efficient cart/order panel and neutral missing/broken-image placeholders for both item types. Preserve barcode/keyboard/accessibility, stock/pricing/tax/discount/payment/idempotency. Prefer existing image fields. Current search found no product/service image field; investigate authoritative contracts, and if essential prepare a new forward migration and typed adapters, never apply hosted DB. Partial tiles/workspace exist but image persistence is not implemented.
@@ -236,7 +236,7 @@ Task-02 publication policy: `node tooling/git/check-pr.mjs 251` passed. No CI po
 
 # Current task-03 receipt
 
-Implementation: Working — compact POS/media UI and typed adapters implemented, publication pending. Verification: task-local checks pass; database execution blocked and full acceptance remains task 08.
+Implementation: PR opened — [draft PR #252](https://github.com/Building-Suit/building-suit-monorepo/pull/252), stacked on PR #251. Implementation commit `0758697`; tracker update follows in a documentation commit. Verification: task-local checks pass; database execution blocked and full acceptance remains task 08.
 
 Worktree `/workspace/shop-ui-03`; branch `codex/shop-suit/ui-pro-pos-media`; parent `cf137b2c9c9467962372cac5a3e3190a5e7979d7` on PR #251. Parent review branch is `codex/shop-suit/ui-pro-dashboard`.
 
@@ -251,3 +251,5 @@ Blocker: installed pinned Supabase CLI fails with `EROFS: read-only file system,
 Checks passed: 8 changed/new Vue files parse and compile scripts/templates/styles with TypeScript syntax transpilation; both new shared exports resolve; scoped shared UI/UX and Shop/docs lint; 12 focused tests for media fallback and validation, unsafe/broken image recovery, unchanged barcode/cart decimal behavior and shortcut/focus ownership; diff whitespace; current preflight errors=[]. Tests do NOT prove database persistence. Nuxt preparation completed with expected missing local Supabase URL/key warnings. Builds/types/rendered matrix and exact final-head CI remain task 08. Cloud executor is healthy.
 
 Next task: SHOP-UI-04 appointments/calendar. Create `codex/shop-suit/ui-pro-appointments` from this task's final published HEAD, targeting `codex/shop-suit/ui-pro-pos-media`, in a clean worktree. Keep the media SQL/application blocker visible in final integration; do not let it block independent calendar presentation.
+
+Task-03 publication policy: `node tooling/git/check-pr.mjs 252` passed. No CI polling or merge occurred. Library task source retains the same identity; SQL remains a reviewable unversioned draft until the CLI path is usable.
