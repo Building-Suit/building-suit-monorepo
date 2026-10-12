@@ -314,7 +314,8 @@
     "./organisms/BsMetricChart": "./src/organisms/BsMetricChart.vue",
     "./molecules/BsCatalogImage": "./src/molecules/BsCatalogImage.vue",
     "./molecules/BsCatalogTile": "./src/molecules/BsCatalogTile.vue",
-    "./organisms/BsAppointmentCalendar": "./src/organisms/BsAppointmentCalendar.vue"
+    "./organisms/BsAppointmentCalendar": "./src/organisms/BsAppointmentCalendar.vue",
+    "./molecules/BsSectionNavigation": "./src/molecules/BsSectionNavigation.vue"
   },
   "dependencies": {
     "primevue": "4.5.5",

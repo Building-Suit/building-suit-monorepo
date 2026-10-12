@@ -351,6 +351,9 @@ const receiptAction = useRecordAction(() => receiptForm)
 const { visible: receiptActionOpen, dirty: receiptActionDirty } = receiptAction
 
 const settingsCopy = computed<BsBusinessSettingsCopy>(() => ({ ...copy.value,
+  editProfile: isArabic.value ? 'تعديل ملف المتجر' : 'Edit shop profile',
+  editMode: isArabic.value ? 'تغيير طريقة التشغيل' : 'Change business mode',
+  editReceipt: isArabic.value ? 'تعديل إعدادات الإيصال' : 'Edit receipt settings',
   loading: ui('loading'), retry: ui('retry'), empty: ui('empty'),
   cashTitle: isArabic.value ? 'سياسة ورديات الخزنة' : 'Cashier shift policy',
   cashHelp: isArabic.value ? 'عند التفعيل، إصدار المبيعات والدفع يتطلبان وردية مفتوحة للخزنة الرئيسية في الفرع المحدد، حتى للدفع غير النقدي. حفظ المسودات يظل متاحًا. التغييرات مسجلة في سجل المراجعة.' : 'When enabled, issuing sales and taking payment require an open main cashier shift at the selected location, including non-cash payments. Draft saving remains available. Changes are audited.',

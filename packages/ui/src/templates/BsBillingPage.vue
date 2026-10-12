@@ -13,7 +13,7 @@ function field(key: keyof BsBillingForm, value: string | number | null | undefin
     <BsSectionSkeleton v-else-if="view.loading" variant="cards"/>
     <BsStateSurface v-else-if="view.failed" state="error" :title="copy.failed" :action-label="copy.retry" @action="emit('retry')"/>
     <template v-else-if="view.available">
-      <nav v-if="variant === 'shop'" class="bs-billing-navigation" :aria-label="copy.title"><a href="#current-plan">{{ copy.current || copy.title }}</a><a href="#usage">{{ copy.usage }}</a><a href="#plans">{{ copy.compare }}</a><a v-if="view.instructions || view.transfer || view.showEvidence" href="#payment">{{ copy.payment || copy.instructions }}</a><a v-if="view.showHistory" href="#history">{{ copy.history }}</a></nav>
+      <BsSectionNavigation v-if="variant === 'shop'" :label="copy.title" :sections="[{ id: 'current-plan', label: copy.current || copy.title }, { id: 'usage', label: copy.usage }, { id: 'plans', label: copy.compare }, ...(view.instructions || view.transfer || view.showEvidence ? [{ id: 'payment', label: copy.payment || copy.instructions }] : []), ...(view.showHistory ? [{ id: 'history', label: copy.history }] : [])]" />
       <BsContentSection v-if="variant === 'shop'" id="current-plan" :title="copy.current || copy.title">
       <BsGrid :columns="4"><BsKpiCard v-for="metric in view.summary" :key="metric.id" :title="metric.label"><BsStatusBadge v-if="metric.status" :status="metric.status"/><BsText size="lg" emphasis="semibold">{{ metric.value }}</BsText><BsText v-if="metric.note" size="xs" tone="muted">{{ metric.note }}</BsText></BsKpiCard></BsGrid>
       </BsContentSection>
@@ -53,9 +53,6 @@ function field(key: keyof BsBillingForm, value: string | number | null | undefin
 </template>
 
 <style scoped>
-.bs-billing-navigation { display: flex; flex-wrap: wrap; gap: .5rem; padding-block-end: 1rem; border-block-end: 1px solid var(--bs-border); }
-.bs-billing-navigation a { display: inline-flex; align-items: center; min-block-size: 2.75rem; padding-inline: 1rem; border: 1px solid var(--bs-border); border-radius: var(--bs-radius-control); background: var(--bs-surface); font-size: .875rem; font-weight: 600; }
-.bs-billing-navigation a:hover { background: var(--bs-surface-muted); }
 .bs-billing-page--shop :deep(section[id]) { scroll-margin-block-start: 6rem; }
 .bs-billing-payment { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 1rem; }
 .bs-billing-payment__status { grid-column: 1 / -1; }

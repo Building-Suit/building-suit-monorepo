@@ -7,6 +7,9 @@ export interface BsBusinessLocationsView { rows: BsBusinessLocationRow[]; pendin
 export interface BsBusinessCashPolicyView { loading: boolean; loadError: boolean; pending: boolean; error: string; success: string; disabled: boolean; submitDisabled: boolean }
 export interface BsBusinessReceiptSummary { displayName: string; address: string; phone: string; footer: string; paperLabel: string }
 export interface BsBusinessSettingsCopy {
+  editProfile?: string
+  editMode?: string
+  editReceipt?: string
   title: string
   subtitle: string
   loading: string

@@ -134,6 +134,10 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
       :context="[{ label: isArabic ? 'الاتجاه' : 'Direction', value: isArabic ? 'RTL' : 'LTR' }, { label: isArabic ? 'المصدر' : 'Owner', value: 'packages/ui' }]"
     />
 
+    <BsContentSection :title="isArabic ? 'التنقل بين أقسام الصفحة' : 'Page section navigation'">
+      <BsSectionNavigation :label="isArabic ? 'أقسام المكتبة' : 'Catalogue sections'" :sections="[{ id: 'forms', label: isArabic ? 'النماذج' : 'Forms' }, { id: 'pricing', label: isArabic ? 'الخطط' : 'Plans' }]" />
+    </BsContentSection>
+
     <BsContentSection :title="isArabic ? 'تقويم المواعيد' : 'Appointment calendar'">
       <BsText size="sm" tone="muted">{{ isArabic ? 'مثال توضيحي على خلية فارغة وحالة اليوم.' : 'Illustrative empty calendar cell and today marker.' }}</BsText>
       <BsAppointmentCalendar view="day" :transitioning="false" :copy="{ title: isArabic ? 'تقويم المواعيد' : 'Appointment calendar', empty: isArabic ? 'لا توجد مواعيد' : 'No appointments', edit: isArabic ? 'تعديل' : 'Edit', reschedule: isArabic ? 'تعديل الموعد' : 'Reschedule', saving: isArabic ? 'جارٍ الحفظ' : 'Saving', history: isArabic ? 'السجل' : 'History' }" :days="[{ id: '2026-10-12', label: isArabic ? 'الاثنين ١٢ أكتوبر' : 'Monday 12 October', today: true, appointments: [] }]" />
@@ -262,7 +266,7 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
       </BsDataTable>
     </section>
 
-    <BsCard :title="isArabic ? 'النماذج والاختيار' : 'Forms and selection'" data-testid="foundation-patterns">
+    <BsCard id="forms" :title="isArabic ? 'النماذج والاختيار' : 'Forms and selection'" data-testid="foundation-patterns">
       <div class="space-y-5">
         <BsFilterBar :label="isArabic ? 'مرشحات السجلات' : 'Record filters'">
           <template #search><BsSearchField v-model="searchValue" :label="isArabic ? 'البحث' : 'Search'" :placeholder="isArabic ? 'ابحث بالاسم' : 'Search by name'" :clear-label="ui('close')" /></template>
@@ -315,7 +319,7 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
       </BsStack>
     </BsContentSection>
 
-    <BsContentSection :title="isArabic ? 'خطط التسويق' : 'Marketing plans'" :description="isArabic ? 'البطاقات ودورة الفوترة والإجراءات تأتي من مكوّن مشترك.' : 'Cards, billing-cycle controls, states, and actions come from one shared organism.'">
+    <BsContentSection id="pricing" :title="isArabic ? 'خطط التسويق' : 'Marketing plans'" :description="isArabic ? 'البطاقات ودورة الفوترة والإجراءات تأتي من مكوّن مشترك.' : 'Cards, billing-cycle controls, states, and actions come from one shared organism.'">
       <BsMarketingPricing
         variant="shop"
         :interval="pricingInterval"

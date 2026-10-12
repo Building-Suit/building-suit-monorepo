@@ -24,7 +24,7 @@ Read STATUS.md, INDEX.md and tasks/01 first. Do not infer completion from scaffo
 | SHOP-UI-03 | pos-media | 01 | PR opened | Blocked — DB version/application/test; local checks pass | [Draft PR #252](https://github.com/Building-Suit/building-suit-monorepo/pull/252) · `codex/shop-suit/ui-pro-pos-media` |
 | SHOP-UI-04 | appointments-calendar | 01 | PR opened | Working — local checks passed; final acceptance pending | [Draft PR #253](https://github.com/Building-Suit/building-suit-monorepo/pull/253) · `codex/shop-suit/ui-pro-appointments` |
 | SHOP-UI-05 | pricing-billing | 01 | PR opened | Working — local checks passed; final acceptance pending | [Draft PR #255](https://github.com/Building-Suit/building-suit-monorepo/pull/255) · `codex/shop-suit/ui-pro-pricing-billing` |
-| SHOP-UI-06 | settings-notice | 01 | Not started | Not started | No branch/PR |
+| SHOP-UI-06 | settings-notice | 01 | Working — implemented, publication pending | Working — local checks passed; final acceptance pending | `codex/shop-suit/ui-pro-settings`, PR pending |
 | SHOP-UI-07 | shop-consistency | 02–06 | Not started | Not started | No branch/PR |
 | SHOP-UI-08 | final-integration | 01–07 | Not started | Not started | No branch/PR |
 
@@ -293,3 +293,20 @@ Carry forward: task-03 image persistence remains incomplete until versioned migr
 Next task: SHOP-UI-06 settings/notice. Create `codex/shop-suit/ui-pro-settings` from task-05 final published HEAD, targeting `codex/shop-suit/ui-pro-pricing-billing`, in a clean worktree. Preserve all actual settings functions and the narrow image-2 removal now implemented.
 
 Task-05 publication policy: `node tooling/git/check-pr.mjs 255` passed. No CI polling, merge, deployment, hosted application or staging reconciliation performed.
+
+
+# Current task-06 receipt
+
+Implementation: Working — settings simplification implemented, publication pending. Verification: task-local checks passed; consolidated acceptance remains task 08.
+
+Worktree `/workspace/shop-ui-06`; branch `codex/shop-suit/ui-pro-settings`; parent `25dabcfa990d3d8ef81c269e69e1673e5c5f8efd` on PR #255. Observed stg remains `630031447d11ed738bbfb9018283040d475425bb`; parallel Super Admin consolidation is not incorporated/retargeted here.
+
+Settings uses its existing complete shared BsBusinessSettingsPage with clear section anchors, canonical page header, paired profile/business-mode summaries, full-width location table and paired receipt/cashier policy sections. The opening actions now read Edit/Change while dialog submits retain Save labels and all original pending/dirty/disabled/error semantics. No form fields, permission notices, quota guards, archive/restore actions, receipt snapshots or cashier policy rules were removed. Only localized action labels were added to the Shop adapter; business RPCs and validation are unchanged.
+
+The exported shared BsSectionNavigation molecule serves both Settings and Shop Billing, keeping keyboard/focus, touch targets, wrapping and theme styling consistent. Billing only replaces task-05's equivalent navigation markup; payment instructions, proof/manual review and the exact sandbox-paragraph filter are unchanged. No redundant notice-removal implementation. Docs examples have valid section anchors.
+
+Checks: five Vue script/template/style compilations with TypeScript syntax transpilation; new molecule export resolution; scoped shared/Shop/docs lint; 13 focused profile/location/receipt contract/snapshot and inherited exact-notice tests; whitespace; preflight errors=[]. These are local contract/source/render-snapshot checks, not hosted SQL/browser verification. Nuxt preparation succeeded with expected absent local backend config warnings. Full build/typecheck/browser matrix/final CI remains task 08; no CI polling.
+
+No new schema/provider/secret/Storage/hosted changes. Task-03 image persistence prerequisite remains incomplete: unversioned/unapplied SQL draft and missing real database/media round-trip verification. Task 08 should resolve supported writable CLI config if possible without hosted application.
+
+Next: SHOP-UI-07 remaining Shop consistency. Create `codex/shop-suit/ui-pro-consistency` from task-06 final published HEAD, targeting `codex/shop-suit/ui-pro-settings`, in a clean worktree. Stay within remaining Shop presentation consistency and necessary shared compatibility.
