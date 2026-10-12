@@ -49,3 +49,7 @@ The remaining workflow families are documented in [workflow presentation](workfl
 Desktop chambers scroll independently. Below 64rem the rail scrolls horizontally and context navigation becomes an in-flow disclosure. Ordinary Tab/Shift+Tab order is retained; Escape closes the disclosure and returns focus to its trigger. Context activation closes it and restores focus; changes to the selected Suit close it without moving focus. No modal focus trap is required. Header, working content and overlays are slots. The catalogue provides normal, loading, empty and long/overflow examples in both locale directions and themes. Current tokens and existing `BsAppShell` consumers are unchanged.
 
 Future Suit administration extensions use the [typed registration contract](future-suit-administration.md). `administrationShellRegistration` maps identity and capability-gated context data to the existing shell inputs; descriptors and product adapters register support without changing shared shell conditionals.
+
+Workspace panels use the canonical card surface, border, radius, elevation and padding scale. `BsAccessTabs` delegates to `BsTabs`, including counts and keyboard navigation, so access-management tabs use the same horizontal presentation as other workspaces. Product adapters explicitly provide home destinations when their dashboard differs from `/dashboard`.
+
+`BsCard` supports the same responsive `span` contract as shared layout primitives. Dashboard charts and onboarding cards use it to occupy their intended grid tracks; the span resets on narrow screens.
