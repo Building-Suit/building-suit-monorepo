@@ -205,7 +205,7 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
     </BsContentSection>
 
     <BsContentSection :title="isArabic ? 'التنقل والأدوات' : 'Navigation and tools'" :description="isArabic ? 'تبويبات وشريط أدوات وقائمة مشتركة.' : 'Shared tabs, toolbar and menu geometry.'">
-      <BsTabs v-model="tab" :label="isArabic ? 'أقسام المثال' : 'Example sections'" :tabs="[{ value: 'overview', label: isArabic ? 'نظرة عامة' : 'Overview' }, { value: 'activity', label: isArabic ? 'النشاط' : 'Activity' }]" />
+      <BsTabs v-model="tab" :label="isArabic ? 'أقسام المثال' : 'Example sections'" :tabs="[{ value: 'overview', label: isArabic ? 'نظرة عامة' : 'Overview', count: 3 }, { value: 'activity', label: isArabic ? 'النشاط' : 'Activity' }]" />
       <BsToolbar class="mt-4" :label="isArabic ? 'أدوات الصفحة' : 'Page tools'">
         <BsInput :model-value="''" type="search" :placeholder="isArabic ? 'بحث' : 'Search'" :aria-label="isArabic ? 'بحث' : 'Search'" />
         <template #actions><BsButton variant="primary">{{ isArabic ? 'إضافة' : 'Add' }}</BsButton><BsMenu :label="isArabic ? 'المزيد' : 'More'"><BsButton variant="text" role="menuitem">{{ isArabic ? 'تصدير' : 'Export' }}</BsButton></BsMenu></template>
@@ -216,6 +216,7 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
       <BsKpiCard :title="isArabic ? 'السجلات' : 'Records'" change-label="+12%" tone="success">{{ rows.length }}</BsKpiCard>
       <BsKpiCard :title="isArabic ? 'قيد المراجعة' : 'In review'" :hint="isArabic ? 'بيانات تجريبية' : 'Example data'">1</BsKpiCard>
       <BsCard :title="isArabic ? 'الحالات' : 'Statuses'" padding="lg"><div class="flex flex-wrap gap-2"><BsStatusBadge status="active" /><BsStatusBadge status="pending" /><BsStatusBadge status="failed" /></div></BsCard>
+      <BsPanel><BsHeading :level="3">{{ isArabic ? 'لوحة مشتركة' : 'Shared panel' }}</BsHeading><BsText tone="muted">{{ isArabic ? 'نفس حدود البطاقات وانحناءاتها ومسافاتها في كل المنتجات.' : 'The same card borders, corners and spacing across products.' }}</BsText></BsPanel>
       <BsCard :title="isArabic ? 'سطح متداخل' : 'Nested surface'" variant="flat" padding="lg"><p class="text-sm text-fg-muted">{{ isArabic ? 'بدون ظل إضافي.' : 'No competing elevation.' }}</p></BsCard>
     </section>
 

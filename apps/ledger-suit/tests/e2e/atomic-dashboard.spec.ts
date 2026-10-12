@@ -16,6 +16,8 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
       return undefined
     })
     await goto('/dashboard')
+    const dashboardLink = page.locator('#bs-primary-navigation nav').getByRole('link', { name: copy.nav.dashboard, exact: true, includeHidden: true })
+    await expect(dashboardLink).toHaveAttribute('href', '/dashboard')
     await expect(page.getByRole('heading', { level: 1, name: copy.dashboard.title })).toBeVisible()
     await expect(page.getByRole('row').filter({ hasText: 'Fixture posted expense' })).toContainText(/125|١٢٥/)
     await expect(page.getByRole('row').filter({ hasText: 'Fixture bank' })).toContainText(/125|١٢٥/)

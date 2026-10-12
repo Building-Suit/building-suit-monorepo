@@ -20,6 +20,19 @@ export function landingBrowserMatrix(config: { login: string; backend: number; r
       await expect(pricing).toContainText(config.annualPrice)
       await expect(page.locator('html')).toHaveAttribute('dir', locale === 'ar' ? 'rtl' : 'ltr')
       await expectNoPageOverflow(page)
+      await page.evaluate(() => document.fonts.ready)
+      const heroTitle = page.locator('.ls-landing-hero-title')
+      await expect(heroTitle).toBeVisible()
+      if (locale === 'ar') expect(await heroTitle.evaluate(element => getComputedStyle(element).letterSpacing)).toBe('normal')
+      if (width >= 1024) {
+        const titleBounds = await heroTitle.boundingBox()
+        const previewBounds = await page.locator('[data-landing-preview]').boundingBox()
+        expect(titleBounds).not.toBeNull()
+        expect(previewBounds).not.toBeNull()
+        const separated = titleBounds!.x + titleBounds!.width <= previewBounds!.x || previewBounds!.x + previewBounds!.width <= titleBounds!.x
+        expect(separated).toBe(true)
+      }
+
       await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }))
       await page.screenshot({ path: `.local/atomic-template-evidence/screenshots/landing-${config.backend}-${locale}-${theme}-${width}.png`, fullPage: true, animations: 'disabled' })
       const action = pricing.locator(`a[href="${config.signup}"]`).first()
