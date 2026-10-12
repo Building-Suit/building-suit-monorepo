@@ -20,7 +20,7 @@ Read STATUS.md, INDEX.md and tasks/01 first. Do not infer completion from scaffo
 | Task | Scope | Depends on | Implementation | Verification | Branch / PR |
 |---|---|---|---|---|---|
 | SHOP-UI-01 | shell-sidebar-profile | None | PR opened | Working — local checks passed; final acceptance pending | [Draft PR #250](https://github.com/Building-Suit/building-suit-monorepo/pull/250) · `codex/shop-suit/ui-pro-redesign` |
-| SHOP-UI-02 | dashboard | 01 | Working | Unverified | Preserved partial edits on task 01 branch; no PR |
+| SHOP-UI-02 | dashboard | 01 | Working — implemented, publication pending | Working — local checks passed; final acceptance pending | `codex/shop-suit/ui-pro-dashboard` in `/workspace/shop-ui-02`; PR pending |
 | SHOP-UI-03 | pos-media | 01 | Working | Unverified | Preserved partial edits on task 01 branch; no PR |
 | SHOP-UI-04 | appointments-calendar | 01 | Not started | Not started | No branch/PR |
 | SHOP-UI-05 | pricing-billing | 01 | Working | Unverified | Preserved partial edits on task 01 branch; no PR |
@@ -215,3 +215,18 @@ Current preflight source on stg supports the installed gh without --slurp. No to
 Next task: SHOP-UI-02 dashboard. Create codex/shop-suit/ui-pro-dashboard from task-01 published HEAD and target its open draft PR branch. Use a clean worktree. Preserve the earlier dirty preparation worktree; port useful changes selectively into current shared complete templates.
 
 PR policy: `node tooling/git/check-pr.mjs 250` passed. Task 02 branch/base: create `codex/shop-suit/ui-pro-dashboard` from the final published HEAD of `codex/shop-suit/ui-pro-redesign`, targeting that branch (PR #250), in a clean worktree.
+
+
+# Current task-02 receipt
+
+Implementation: Working — dashboard implementation complete, publication pending. Verification: essential local checks passed; full browser/build/typecheck/final CI remains task 08.
+
+Worktree `/workspace/shop-ui-02`; branch `codex/shop-suit/ui-pro-dashboard`; parent `f71d1293a8eeac345979bfc6c499ad51de3b5f6c` on PR #250 (`codex/shop-suit/ui-pro-redesign`). Current stg remains `630031447d11ed738bbfb9018283040d475425bb`.
+
+Reference 1 composition implemented in existing complete BsDashboardPage, selected by a Shop variant. Four actual primary KPIs (sales, collections, sale count, outstanding customer count) lead the page; real sales/payment mixes have donut/bar charts; branch sales/collections have a wide comparison with an accessible data table. Existing appointments, cash, cost-permission-gated financial/stock highlights and drilldown tables remain. Plan/setup panels remain functional below the report. Chart colors use canonical Navy/Gold with readable theme variants. Zero/negative values retain written amounts and finite geometry; no invented percentages/trends/top-item data.
+
+Dashboard links carry active branch and actual date bounds to the existing reports screen, which now initializes those controlled filters from validated query values. Existing server authorization, decimal amount formatting, timezone calculation, RPCs and financial calculations are unchanged. No new backend or schema work.
+
+Checks passed: script/template/style compilation and TypeScript syntax transpilation for 5 changed/new Vue components; shared chart export resolution; scoped ESLint for UI/type/test files, Shop dashboard/reports adapters and docs catalogue; 9 tests (3 chart rendering cases and 6 existing report contract/source assertions, not hosted SQL execution); diff whitespace; preflight errors=[]. Nuxt preparation reused installed dependencies with current local workspace links, with expected absent local Supabase URL/key warnings. Full browser matrix, builds/types and CI verification remain deliberately unrun.
+
+Next bounded task: SHOP-UI-03 POS/media. Create `codex/shop-suit/ui-pro-pos-media` from final published dashboard HEAD, targeting `codex/shop-suit/ui-pro-dashboard`. Use a clean worktree; preserve the old preparation worktree. Investigate image schema/contracts on current stg before porting old sketches; never restore obsolete app-local presentation.

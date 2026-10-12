@@ -310,7 +310,8 @@
     "./molecules/BsChangelogCard": "./src/molecules/BsChangelogCard.vue",
     "./organisms/BsChangelogTimeline": "./src/organisms/BsChangelogTimeline.vue",
     "./molecules/BsPlanSummary": "./src/molecules/BsPlanSummary.vue",
-    "./organisms/BsSidebarAccount": "./src/organisms/BsSidebarAccount.vue"
+    "./organisms/BsSidebarAccount": "./src/organisms/BsSidebarAccount.vue",
+    "./organisms/BsMetricChart": "./src/organisms/BsMetricChart.vue"
   },
   "dependencies": {
     "primevue": "4.5.5",

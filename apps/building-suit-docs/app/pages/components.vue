@@ -134,6 +134,10 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
       :context="[{ label: isArabic ? 'الاتجاه' : 'Direction', value: isArabic ? 'RTL' : 'LTR' }, { label: isArabic ? 'المصدر' : 'Owner', value: 'packages/ui' }]"
     />
 
+    <BsContentSection :title="isArabic ? 'مثال رسوم مزيج المبيعات' : 'Sales mix chart example'">
+      <BsGrid :columns="2"><BsMetricChart :title="isArabic ? 'بيانات توضيحية' : 'Illustrative data'" :empty-label="isArabic ? 'لا توجد بيانات' : 'No data'" kind="donut" :items="[{ id: 'products', label: isArabic ? 'منتجات' : 'Products', hint: '', value: 30, formatted: '30' }, { id: 'services', label: isArabic ? 'خدمات' : 'Services', hint: '', value: 10, formatted: '10' }]" /><BsMetricChart :title="isArabic ? 'بيانات توضيحية' : 'Illustrative data'" :empty-label="isArabic ? 'لا توجد بيانات' : 'No data'" :items="[{ id: 'cash', label: isArabic ? 'نقدي' : 'Cash', hint: '', value: 30, formatted: '30' }, { id: 'card', label: isArabic ? 'بطاقة' : 'Card', hint: '', value: 10, formatted: '10' }]" /></BsGrid>
+    </BsContentSection>
+
     <BsContentSection :title="isArabic ? 'قوالب الصفحات' : 'Page templates'"><BsLink to="/templates/access?suit=ledger">Ledger access template</BsLink><BsLink to="/templates/access?suit=shop">Shop access template</BsLink></BsContentSection>
     <BsContentSection id="changelog" :title="isArabic ? 'سجل التحديثات' : 'Changelog'">
       <BsInline><BsButton v-for="state in (['ready', 'loading', 'error', 'denied'] as const)" :key="state" :aria-pressed="changelogState === state" @click="changelogState = state">{{ state }}</BsButton></BsInline>

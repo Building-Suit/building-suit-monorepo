@@ -6,6 +6,7 @@ export interface BsDashboardTable { title: string; empty: string; rows: BsDashbo
 export interface BsDashboardFilters { period: string; date: string; location: string; months: number; custom: boolean; from: string; to: string }
 export interface BsDashboardSetupForm { name: string; mode: string }
 export interface BsDashboardView {
+  periodLabel?: string
   title: string; subtitle: string; workspace: string; role: string; notice: string; available: boolean; loading: boolean; error: string; denied: string; empty: string; emptyDescription: string; canStart: boolean; errorDescription: string
   checklist: { visible: boolean; title: string; description: string; progress: string; steps: BsSetupStepData[]; loading: boolean; error: string | null; empty: string }
   setup: { title: string; description: string; trial: string; modeHelp: string; dirty: boolean; pending: boolean; error: string }
@@ -14,8 +15,8 @@ export interface BsDashboardView {
   reportLink: { visible: boolean; title: string; description: string; to: string }
   chart: { visible: boolean; loading: boolean; error: string; title: string; pointLabel: string; tableLabel: string; empty: string; points: BsChartPoint[]; series: BsChartSeries[]; tableSeries: BsChartSeries[] }
   cashPosition: BsDashboardTable | null; commitments: BsDashboardTable | null; recent: BsDashboardTable | null
-  salesMix: { visible: boolean; title: string; empty: string; rows: { id: string; name: string; hint: string; amount: string }[] }
-  paymentMix: { visible: boolean; title: string; empty: string; rows: { id: string; name: string; hint: string; amount: string }[] }
+  salesMix: { visible: boolean; title: string; empty: string; action?: { label: string; to: string }; rows: { id: string; name: string; hint: string; amount: string; value?: number }[] }
+  paymentMix: { visible: boolean; title: string; empty: string; action?: { label: string; to: string }; rows: { id: string; name: string; hint: string; amount: string; value?: number }[] }
   appointments: { visible: boolean; title: string; empty: string; source: { location: string; path: string } | null; metrics: { title: string; value: string }[]; busiestTitle: string; busiest: { id: string; label: string }[] }
   cash: { visible: boolean; title: string; source: { location: string; path: string } | null; metrics: { title: string; value: string }[] }
   customers: BsDashboardTable | null; staff: BsDashboardTable | null; locations: BsDashboardTable | null

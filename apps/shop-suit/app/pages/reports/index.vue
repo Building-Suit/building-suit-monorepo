@@ -18,9 +18,9 @@ const reportKinds: OperationalReportKind[] = ['sales', 'collections', 'receivabl
 const requestedReport = typeof route.query.report === 'string' && reportKinds.includes(route.query.report as OperationalReportKind)
   ? route.query.report as OperationalReportKind : 'sales'
 const report = ref<OperationalReportKind>(requestedReport)
-const locationId = ref('all')
-const fromDate = ref('')
-const toDate = ref('')
+const locationId = ref(typeof route.query.location === 'string' && activeLocations.value.some(location => location.id === route.query.location) ? route.query.location : 'all')
+const fromDate = ref(typeof route.query.from === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(route.query.from) ? route.query.from : '')
+const toDate = ref(typeof route.query.to === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(route.query.to) ? route.query.to : '')
 const page = ref(1)
 const pageSize = 20
 const exporting = ref(false)
