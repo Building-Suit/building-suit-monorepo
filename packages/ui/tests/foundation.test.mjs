@@ -484,9 +484,19 @@ test('Automation and Inventory delegate presentation to shared page and shell te
   assert.doesNotMatch(dashboard, /automationStatusTone|useFetch|\$fetch|useRuntimeConfig/)
   assert.match(readFileSync(path.join(workspaceRoot, 'apps/inventory-suit/app/pages/index.vue'), 'utf8'), /<BsWelcomePage\b/)
   assert.match(readFileSync(new URL('../src/templates/BsWelcomePage.vue', import.meta.url), 'utf8'), /<BsCard\b/)
-  for (const suit of ['automation', 'inventory', 'super-admin']) {
+  for (const suit of ['automation', 'inventory']) {
     assert.match(readFileSync(path.join(workspaceRoot, `apps/${suit}-suit/app/layouts/default.vue`), 'utf8'), /<BsWorkspaceShell\b/)
   }
+})
+
+test('Super Admin preserves the database-driven administration shell through a shared layout adapter', () => {
+  const adapter = readFileSync(path.join(workspaceRoot, 'apps/super-admin-suit/app/layouts/default.vue'), 'utf8')
+  const shell = readFileSync(new URL('../src/templates/BsControlPlaneShell.vue', import.meta.url), 'utf8')
+  assert.match(adapter, /<BsControlPlaneShell\b/)
+  assert.match(shell, /<BsAdministrationShell\b/)
+  assert.match(shell, /:suits="suits"/)
+  assert.match(shell, /:groups="groups"/)
+  assert.match(shell, /<slot \/>/)
 })
 
 test('shared UI exports are explicit and cover every governed source', () => {

@@ -2386,16 +2386,16 @@
       "source": "apps/super-admin-suit/app/layouts/default.vue",
       "kind": "layout",
       "currentSharedTemplates": [
-        "packages/ui/src/templates/BsAppShell.vue"
+        "packages/ui/src/templates/BsControlPlaneShell.vue"
       ],
       "renderedBsComponents": [
-        "BsWorkspaceShell"
+        "BsControlPlaneShell"
       ],
-      "destination": "packages/ui/src/templates/BsWorkspaceShell.vue",
+      "destination": "packages/ui/src/templates/BsControlPlaneShell.vue",
       "status": "verified-local",
       "domainAdapter": "apps/super-admin-suit/app/layouts/default.vue",
       "dependencies": [],
-      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "verification": "Super Admin stack consolidation: preserves rail/context navigation with a direct route outlet",
       "reconciledRenderedBsComponents": [
         "BsAppShell",
         "BsProductLogo",
