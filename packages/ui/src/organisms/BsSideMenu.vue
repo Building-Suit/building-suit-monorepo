@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useSideNavigation } from '@building-suit/ux'
 import type { NavigationGroup } from '@building-suit/contracts'
 
 const props = withDefaults(defineProps<{
@@ -14,45 +15,7 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits<{ close: [restoreFocus?: boolean] }>()
 const route = useRoute()
-const panel = ref<HTMLElement | null>(null)
-
-function isActive(to: string) {
-  return route.path === to || route.path.startsWith(`${to}/`)
-}
-
-function focusableElements() {
-  if (!panel.value) return []
-  return [...panel.value.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])')]
-    .filter(element => !element.hasAttribute('hidden'))
-}
-
-function onKeydown(event: KeyboardEvent) {
-  if (!props.open) return
-  if (event.key === 'Escape') {
-    event.preventDefault()
-    emit('close', true)
-    return
-  }
-  if (event.key !== 'Tab') return
-  const focusable = focusableElements()
-  const first = focusable[0]
-  const last = focusable.at(-1)
-  if (!first || !last) return
-  if (event.shiftKey && document.activeElement === first) {
-    event.preventDefault()
-    last.focus()
-  }
-  else if (!event.shiftKey && document.activeElement === last) {
-    event.preventDefault()
-    first.focus()
-  }
-}
-
-watch(() => props.open, async (open) => {
-  if (!open) return
-  await nextTick()
-  panel.value?.querySelector<HTMLButtonElement>('[data-side-menu-close]')?.focus()
-})
+const { panel, isActive, onKeydown } = useSideNavigation(() => props.open, () => route.path, () => emit('close', true))
 </script>
 
 <template>

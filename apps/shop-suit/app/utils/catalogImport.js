@@ -1,3 +1,5 @@
+import { downloadText } from '@building-suit/ux/downloadText'
+
 const MAX_IMPORT_BYTES = 5 * 1024 * 1024
 const MAX_IMPORT_ROWS = 1000
 
@@ -70,10 +72,5 @@ export function validateImportHeaders(kind, rows) {
 }
 
 export function downloadCsv(filename, csv) {
-  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
-  const link = document.createElement('a')
-  link.href = url
-  link.download = filename
-  link.click()
-  URL.revokeObjectURL(url)
+  downloadText(filename, csv, 'text/csv;charset=utf-8')
 }

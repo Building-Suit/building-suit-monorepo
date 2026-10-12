@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 
-definePageMeta({ layout: 'auth' })
+definePageMeta({ layout: false })
 const route = useRoute()
-const { locale } = useI18n()
+const { locale, t } = useI18n()
 const supabase = useSupabaseClient()
 const rpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
 const user = useSupabaseUser()
@@ -91,19 +91,17 @@ async function resend() {
   } catch { error.value = copy.value.failed }
   finally { pending.value = false }
 }
-</script>
 
+const identityForm = computed({
+  get: () => ({ email: form.email, password: form.password, confirmation: '', name: '', phone: '', jobTitle: '' }),
+  set: (value: import('@building-suit/ui/types/invitationPresentation').BsInvitationIdentityForm) => { form.email = value.email; form.password = value.password },
+})
+const pageCopy = computed(() => ({
+  eyebrow: 'Shop Suit', title: copy.value.title, description: copy.value.help, submit: user.value ? copy.value.accept : copy.value.create, pending: user.value ? copy.value.accept : copy.value.create, invalid: copy.value.invalid, email: copy.value.email, password: copy.value.password, switchAccount: copy.value.switchAccount, login: copy.value.login, recover: copy.value.recover,
+  verification: { title: copy.value.title, description: copy.value.help, code: copy.value.otp, submit: copy.value.verify, pending: copy.value.verify, resend: timer.resendIn.value > 0 ? `${copy.value.wait} ${timer.format(timer.resendIn.value)}` : copy.value.resend, expired: copy.value.failed, expiry: `${copy.value.expires} ${timer.format(timer.expiresIn.value)}` },
+}))
+const pageStage = computed(() => verifying.value && !user.value ? 'verification' : user.value ? 'accept' : code.value ? 'signup' : 'unavailable')
+</script>
 <template>
-  <BsVerificationForm v-if="verifying && !user" v-model="form.otp" :email="form.email" :code-label="copy.otp" :title="copy.title" :description="copy.help" :pending="pending" :error="error" :notice="notice" :submit-label="copy.verify" :pending-label="copy.verify" :resend-label="timer.resendIn.value > 0 ? `${copy.wait} ${timer.format(timer.resendIn.value)}` : copy.resend" :resend-disabled="timer.resendIn.value > 0" :expired="timer.expired.value" :expiry-label="`${copy.expires} ${timer.format(timer.expiresIn.value)}`" :expired-label="copy.failed" @submit="verify" @resend="resend">
-    <template #secondary><NuxtLink :to="{ path: '/auth/login', query: { invite: code } }" class="underline">{{ copy.login }}</NuxtLink></template>
-  </BsVerificationForm>
-  <BsAuthForm v-else eyebrow="Shop Suit" :title="copy.title" :description="copy.help" :pending="pending" :error="code ? error : copy.invalid" :submit-disabled="!code" :submit-label="user ? copy.accept : copy.create" :pending-label="user ? copy.accept : copy.create" @submit="submit">
-    <template v-if="!user && code">
-      <label class="grid gap-2">{{ copy.email }}<input v-model="form.email" class="ls-input" type="email" autocomplete="email" required maxlength="254"></label>
-      <label class="grid gap-2">{{ copy.password }}<input v-model="form.password" class="ls-input" type="password" autocomplete="new-password" required minlength="8"></label>
-    </template>
-    <p v-if="user" class="text-sm">{{ user.email }}</p>
-    <BsButton v-if="user" variant="secondary" :disabled="pending" @click="switchAccount">{{ copy.switchAccount }}</BsButton>
-    <template #footer><div class="grid gap-3"><NuxtLink :to="{ path: '/auth/login', query: { invite: code } }" class="underline">{{ copy.login }}</NuxtLink><NuxtLink to="/auth/forgot-password" class="underline">{{ copy.recover }}</NuxtLink></div></template>
-  </BsAuthForm>
+  <BsInvitationAcceptancePage v-model:form="identityForm" v-model:code="form.otp" :product="{ name: 'Shop Suit', assetPrefix: '/brand/shop-suit', homeLabel: locale === 'ar' ? 'الرئيسية' : 'Home', title: `${t('hero.title')} ${t('hero.subtitle')}`, description: t('hero.description') }" :stage="pageStage" :copy="pageCopy" :email="user?.email ?? form.email" :pending="pending" :error="code ? error : copy.invalid" :submit-disabled="!code" :email-max-length="254" :login-to="{ path: '/auth/login', query: { invite: code } }" recover-to="/auth/forgot-password" :verification="{ resendDisabled: timer.resendIn.value > 0, expired: timer.expired.value, notice }" @submit="submit" @verify="verify" @resend="resend" @switch-account="switchAccount" />
 </template>

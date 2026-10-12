@@ -40,7 +40,8 @@
     "automation": "node tooling/control-plane/automation.mjs",
     "automation:n8n:export": "node tooling/control-plane/n8n/export.mjs",
     "automation:resilience": "node tooling/control-plane/resilience/run-acceptance.mjs --check",
-    "test:built-assets": "node --test apps/shop-suit/tests/integration/ss-launch-brand-production.test.mjs"
+    "test:built-assets": "node --test apps/shop-suit/tests/integration/ss-launch-brand-production.test.mjs",
+    "check:atomic-template": "node tooling/checks/atomic-template-architecture.mjs"
   },
   "devDependencies": {
     "@vue/compiler-sfc": "3.5.43",

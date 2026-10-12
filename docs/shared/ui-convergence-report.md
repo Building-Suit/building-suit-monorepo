@@ -1,5 +1,7 @@
 # Shared UI convergence report
 
+Historical foundation audit. Its former local-wrapper allowances and component counts are superseded by [strict complete template ownership](ui-ownership.md) and [atomic-template acceptance](atomic-template-unification-acceptance.md). The content below preserves the original audit evidence.
+
 Task `BS-UI-CONVERGENCE-001` closes the cross-product foundation audit for Automation Suit, Inventory Suit, Ledger Suit, and Shop Suit. The audit is bounded to reusable presentation and interaction ownership; it does not change product business rules or the owner-locked Design System values.
 
 ## Final shared inventory

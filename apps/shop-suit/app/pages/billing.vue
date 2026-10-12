@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { BsBillingCopy, BsBillingView, BsBillingForm } from '@building-suit/ui/types/billingPresentation'
 import type { BillingPlanOption, BillingSubmission, PrivateOfferPreview, ShopBilling } from '~/types/billing'
 import type { PlanResourceKey, PlanUsageResource, ShopPlanInterval, ShopPlanOffer } from '~/types/plans'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
@@ -14,7 +15,8 @@ const ui = useUiCopy()
 const { current, currentId, isOwner } = useShop()
 const { push: pushToast } = useToasts()
 const confirmation = useConfirmation()
-const { data: publicPlans, isLoading: catalogPending, error: catalogError, refresh: refreshCatalog } = usePlans()
+const { data: publicPlans, isLoading: catalogPending, error: catalogError, refresh: refreshCatalog, ready: catalogReady } = usePlans()
+await catalogReady
 const isArabic = computed(() => locale.value === 'ar')
 const copy = computed(() => isArabic.value ? ar : en)
 const form = reactive({ catalogTermsId: '', paidAmount: 0, transferDate: '', transferReference: '' })
@@ -232,7 +234,7 @@ function choosePlan(plan: ShopPlanOffer) {
 async function submitNotice() {
   if (!currentId.value || !isOwner.value || submitPending.value) return
   submitError.value = ''
-  const plan = noticeQuote.value
+  const plan = selectedPlan.value
   const entry = privateEntry.value
   const shopId = currentId.value
   const generation = privateGeneration
@@ -265,6 +267,7 @@ async function submitNotice() {
     submitRequestId.value = null
     Object.assign(form, { paidAmount: plan.effectivePriceAmount, transferDate: '', transferReference: '' })
     await refresh()
+    noticeAction.complete()
     pushToast({ tone: 'success', title: copy.value.submitted })
   }
   catch {
@@ -318,84 +321,53 @@ const ar = {
   resources: { active_locations: 'الفروع النشطة', active_members: 'أعضاء الفريق', active_products: 'المنتجات النشطة', active_services: 'الخدمات النشطة', active_customers: 'العملاء النشطون', active_suppliers: 'الموردون النشطون' },
   intervals: { monthly: 'شهريًا', quarterly: 'كل ثلاثة أشهر', annual: 'سنويًا' },
 }
+const planPresentation = reactive(useShopPlanPresentation({ get offers() { return purchasablePlans.value }, get selectedCatalogTermsId() { return form.catalogTermsId }, get currentCatalogTermsId() { return currentCatalogTermsId.value }, action: 'select' }, choosePlan))
+const usagePresentation = useShopUsagePresentation()
+
+const noticeAction = useRecordAction(() => form)
+const { visible: noticeActionOpen, dirty: noticeActionDirty } = noticeAction
 
 useShopRealtime('billing', () => submitPending.value || privatePending.value || !!privateLink.value || !!privatePreview.value || !!form.transferReference || !!form.transferDate || form.paidAmount > 0)
+
+const billingForm = computed<BsBillingForm>({ get: () => ({ paidAmount: form.paidAmount, transferDate: form.transferDate, transferReference: form.transferReference, privateLink: privateLink.value, reason: '' }), set: value => { form.paidAmount = value.paidAmount; form.transferDate = value.transferDate; form.transferReference = value.transferReference; privateLink.value = value.privateLink } })
+const billingCopy = computed<BsBillingCopy>(() => ({
+  title: copy.value.title, subtitle: copy.value.subtitle, loading: ui('loading'), retry: copy.value.retry, cancel: ui('cancel'), denied: copy.value.ownerOnly, failed: copy.value.loadFailed, unavailable: copy.value.noBilling,
+  usage: copy.value.usage, usageHelp: copy.value.usageHelp, usageLoading: ui('loading'), usageError: copy.value.loadFailed, compare: copy.value.compare, compareHelp: copy.value.compareHelp,
+  instructions: copy.value.instructions, instructionsHelp: copy.value.instructionsHelp, manual: copy.value.manual, recipient: copy.value.recipient, paymentLink: copy.value.paymentLink, qr: copy.value.qr, instructionsUnavailable: copy.value.unavailable,
+  privateTitle: copy.value.privateTitle, privateHelp: copy.value.privateHelp, privateLink: copy.value.privateLink, privatePreview: copy.value.privatePreview, privateClear: copy.value.privateClear,
+  notice: copy.value.notice, noticeHelp: copy.value.noticeHelp, submit: copy.value.submit, requestedPlan: copy.value.requestedPlan, expected: copy.value.expected, interval: copy.value.interval, paid: copy.value.paid, transferDate: copy.value.transferDate, reference: copy.value.reference,
+  policyPrefix: copy.value.policyPrefix, terms: copy.value.terms, privacy: copy.value.privacy, refund: copy.value.refund, noPurchasable: copy.value.noPurchasable,
+  evidenceTitle: copy.value.evidenceTitle, evidenceHelp: copy.value.evidenceHelp, evidenceSelect: copy.value.evidenceSelect, evidenceUpload: copy.value.evidenceUpload, evidenceUploading: copy.value.evidenceUploading, evidenceFirst: copy.value.evidenceFirst, evidenceSaved: copy.value.evidenceSaved, evidenceAttached: copy.value.evidenceAttached,
+  history: copy.value.history, empty: copy.value.empty, access: copy.value.access, reviewReason: copy.value.reviewReason, reason: copy.value.reviewReason, refresh: copy.value.retry, requests: copy.value.history, inspect: copy.value.evidenceAttached, openSubscription: copy.value.title, cancelRequest: ui('cancel'),
+}))
+const billingView = computed<BsBillingView>(() => {
+  const value = billing.value
+  const sub = value?.subscription
+  const quote = noticeQuote.value
+  const preview = privatePreview.value
+  const latest = latestSubmission.value
+  return {
+    workspace: current.value?.name ?? '', loading: pending.value, failed: !!error.value, denied: !isOwner.value, available: !!value,
+    summary: sub ? [
+      { id: 'plan', label: copy.value.plan, value: sub.planName },
+      { id: 'access', label: copy.value.access, value: statusLabel(sub.accessState), status: sub.accessState },
+      { id: 'ends', label: sub.accessState === 'trialing' ? copy.value.trialEnd : copy.value.periodEnd, value: date(sub.accessState === 'trialing' ? sub.trialEndAt : sub.periodEnd), note: sub.accessState === 'trialing' ? `${sub.trialDaysRemaining} ${copy.value.days}` : '' },
+      { id: 'price', label: copy.value.currentPrice, value: money(sub.effectivePriceAmount ?? sub.priceAmount, sub.currency), note: [sub.priceSource === 'override' ? copy.value.negotiated : '', sub.listPriceAmount !== sub.effectivePriceAmount ? `${copy.value.listPrice}: ${money(sub.listPriceAmount, sub.currency)}` : ''].filter(Boolean).join(' · ') },
+    ] : [],
+    notice: sub && ['read_only', 'suspended'].includes(sub.accessState) ? copy.value.readOnly : '', details: [], providerNotice: '',
+    latest: latest ? { title: copy.value.latest, status: latest.status, statusLabel: statusLabel(latest.status), summary: `${latest.requestedPlanName} · ${money(latest.effectivePriceAmount, latest.currency)}`, message: submissionMessage(latest), reason: latest.reviewReason ?? '' } : null,
+    usage: { items: usageResources.value.map(usagePresentation), loading: false, failed: false },
+    pricing: { interval: planPresentation.interval, plans: planPresentation.pricingPlans, intervalOptions: [{ value: 'monthly', label: planPresentation.copy.monthly }, { value: 'annual', label: planPresentation.copy.yearly }], copy: { cycleLabel: planPresentation.copy.cycle, loading: planPresentation.copy.loading, empty: copy.value.noPurchasable, retry: planPresentation.copy.retry, included: planPresentation.copy.included, notIncluded: planPresentation.copy.notIncluded }, annualSaving: planPresentation.annualDiscount === null ? null : planPresentation.copy.annualSaving(planPresentation.annualDiscount), columns: 3, loading: catalogPending.value, error: catalogError.value ? copy.value.catalogFailed : null, testId: 'shop-plan-cards' },
+    instructions: value ? { recipient: value.instructions.recipientAlias ?? '', link: value.instructions.paymentLink ?? '', qr: value.instructions.qrImageUrl ?? '', text: (isArabic.value ? value.instructions.instructionsAr : value.instructions.instructionsEn) ?? '' } : null,
+    privateOffer: { pending: privatePending.value, error: privateError.value, title: preview?.displayName ?? '', summary: preview ? `${money(preview.priceAmount, preview.currency)} · ${intervalLabel(preview.billingInterval)} · ${date(preview.expiresAt)}` : '', limits: preview ? Object.entries(preview.resourceLimits).map(([key, limit]) => ({ key, label: copy.value.resources[key as PlanResourceKey], value: limit == null ? '∞' : String(limit) })) : [], notice: preview?.blockers.length ? copy.value.preservation : '', redeemed: preview?.submissionId ? copy.value.privateRedeemed : '' },
+    transfer: { visible: noticeActionOpen.value, dirty: noticeActionDirty.value, pending: submitPending.value, error: submitError.value, disabled: !quote || hasOpenRequest.value || !!preview?.submissionId, quote: quote ? `${copy.value.requestedPlan}: ${quote.planName} · ${copy.value.expected}: ${money(quote.effectivePriceAmount, quote.currency)} · ${copy.value.interval}: ${intervalLabel(quote.billingInterval)}` : '', quoteNotice: quote ? [quote.priceSource === 'override' ? copy.value.negotiated : '', quote.blockers.length ? copy.value.preservation : ''].filter(Boolean).join(' · ') : '', maximumDate: new Date().toISOString().slice(0, 10) },
+    evidence: evidenceSubmission.value ? { reference: evidenceSubmission.value.transferReference, pending: evidencePending.value, error: evidenceError.value, saved: evidenceSaved.value, inputVersion: evidenceInputVersion.value, filenames: evidenceFiles.value.map(file => file.originalFileName) } : null,
+    showEvidence: true, showHistory: true, history: (value?.submissions ?? []).map(item => ({ id: item.id, status: item.status, statusLabel: statusLabel(item.status), plan: item.requestedPlanName, expected: money(item.effectivePriceAmount, item.currency), paid: money(item.paidAmount, item.currency), reference: item.transferReference, date: date(item.transferDate), reason: item.reviewReason ?? '' })),
+    trial: null, policy: null, paymentNotice: '', paymentRequired: '', compatibilityNotice: '', pricingError: '', canRequests: false,
+  }
+})
+function chooseBillingInterval(value: string) { if (value === 'monthly' || value === 'annual') planPresentation.interval = value }
 </script>
-
 <template>
-  <div class="mx-auto max-w-6xl space-y-6">
-    <header><p class="text-xs font-bold uppercase tracking-[0.16em] text-[var(--bs-link)]">{{ current?.name }}</p><h1 class="mt-1 text-3xl font-extrabold tracking-tight">{{ copy.title }}</h1><p class="mt-2 text-sm text-muted-foreground">{{ copy.subtitle }}</p></header>
-    <p v-if="!isOwner" role="alert" class="rounded-2xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-5">{{ copy.ownerOnly }}</p>
-    <div v-else-if="pending" role="status" :aria-label="ui('loading')" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><div v-for="item in 4" :key="item" class="h-28 animate-pulse rounded-2xl bg-muted" /></div>
-    <div v-else-if="error" role="alert" class="ls-error"><p>{{ copy.loadFailed }}</p><BsButton class="mt-3" @click="refresh()">{{ copy.retry }}</BsButton></div>
-    <template v-else-if="billing">
-      <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Current subscription">
-        <BsKpiCard :title="copy.plan"><span class="text-xl font-extrabold">{{ billing.subscription.planName }}</span></BsKpiCard>
-        <BsKpiCard :title="copy.access"><BsStatusBadge :status="billing.subscription.accessState" /> <span class="ms-2 text-sm font-bold">{{ statusLabel(billing.subscription.accessState) }}</span></BsKpiCard>
-        <BsKpiCard :title="billing.subscription.accessState === 'trialing' ? copy.trialEnd : copy.periodEnd"><span class="text-sm font-bold">{{ date(billing.subscription.accessState === 'trialing' ? billing.subscription.trialEndAt : billing.subscription.periodEnd) }}</span><p v-if="billing.subscription.accessState === 'trialing'" class="mt-1 text-xs text-muted-foreground">{{ billing.subscription.trialDaysRemaining }} {{ copy.days }}</p></BsKpiCard>
-        <BsKpiCard :title="copy.currentPrice"><span class="text-lg font-extrabold">{{ money(billing.subscription.effectivePriceAmount ?? billing.subscription.priceAmount, billing.subscription.currency) }}</span><p v-if="billing.subscription.priceSource === 'override'" class="mt-1 text-xs font-bold text-[var(--bs-link)]">{{ copy.negotiated }}</p><p v-if="billing.subscription.listPriceAmount !== billing.subscription.effectivePriceAmount" class="mt-1 text-xs text-muted-foreground">{{ copy.listPrice }}: {{ money(billing.subscription.listPriceAmount, billing.subscription.currency) }}</p></BsKpiCard>
-      </section>
-
-      <p v-if="['read_only', 'suspended'].includes(billing.subscription.accessState)" role="status" class="rounded-2xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-4 text-sm">{{ copy.readOnly }}</p>
-
-      <section v-if="latestSubmission" class="ls-card p-5" aria-live="polite">
-        <div class="flex flex-wrap items-center gap-3"><h2 class="font-extrabold">{{ copy.latest }}</h2><BsStatusBadge :status="latestSubmission.status" /><strong class="text-sm">{{ statusLabel(latestSubmission.status) }}</strong><span class="text-sm text-muted-foreground">{{ latestSubmission.requestedPlanName }} · {{ money(latestSubmission.effectivePriceAmount, latestSubmission.currency) }}</span></div>
-        <p class="mt-2 text-sm leading-6">{{ submissionMessage(latestSubmission) }}</p><p v-if="latestSubmission.reviewReason" class="mt-2 text-sm text-muted-foreground">{{ copy.reviewReason }}: {{ latestSubmission.reviewReason }}</p>
-      </section>
-
-      <section class="ls-card p-5 sm:p-6"><h2 class="text-lg font-extrabold">{{ copy.usage }}</h2><p class="mt-1 text-sm text-muted-foreground">{{ copy.usageHelp }}</p><div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3"><PlanUsageMeter v-for="resource in usageResources" :key="resource.resource" :usage="resource" /></div></section>
-
-      <section class="ls-card p-5 sm:p-6">
-        <h2 class="text-lg font-extrabold">{{ copy.compare }}</h2><p class="mt-1 text-sm text-muted-foreground">{{ copy.compareHelp }}</p>
-        <div v-if="catalogPending" role="status" class="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3"><div v-for="item in 3" :key="item" class="h-72 animate-pulse rounded-2xl bg-muted" /></div>
-        <div v-else-if="catalogError" role="alert" class="ls-error mt-5"><p>{{ copy.catalogFailed }}</p><BsButton class="mt-3" severity="secondary" @click="refreshCatalog()">{{ copy.retry }}</BsButton></div>
-        <p v-else-if="!purchasablePlans.length" role="status" class="mt-5 rounded-xl border border-border p-4 text-sm">{{ copy.noPurchasable }}</p>
-        <ShopPlanCards v-else class="mt-5" :offers="purchasablePlans" :selected-catalog-terms-id="form.catalogTermsId" :current-catalog-terms-id="currentCatalogTermsId" action="select" @select="choosePlan" />
-      </section>
-
-      <section class="ls-card p-5 sm:p-6"><div class="flex flex-wrap items-start justify-between gap-3"><div><h2 class="text-lg font-extrabold">{{ copy.instructions }}</h2><p class="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{{ copy.instructionsHelp }}</p></div><span class="rounded-full bg-muted px-3 py-1 text-xs font-bold">{{ copy.manual }}</span></div>
-        <div v-if="billing.instructions.recipientAlias || billing.instructions.paymentLink || billing.instructions.qrImageUrl" class="mt-5 grid gap-4 md:grid-cols-2"><p v-if="billing.instructions.recipientAlias" class="rounded-xl border border-border p-4"><span class="block text-xs text-muted-foreground">{{ copy.recipient }}</span><strong dir="ltr" class="break-all">{{ billing.instructions.recipientAlias }}</strong></p><p v-if="billing.instructions.paymentLink" class="rounded-xl border border-border p-4"><span class="block text-xs text-muted-foreground">{{ copy.paymentLink }}</span><a class="break-all font-bold text-[var(--bs-link)] underline" :href="billing.instructions.paymentLink" target="_blank" rel="noopener noreferrer">{{ billing.instructions.paymentLink }}</a></p><div v-if="billing.instructions.qrImageUrl" class="rounded-xl border border-border p-4"><span class="mb-3 block text-xs text-muted-foreground">{{ copy.qr }}</span><img :src="billing.instructions.qrImageUrl" :alt="copy.qr" class="h-40 w-40 rounded-lg object-contain"></div></div><p v-else class="mt-5 text-sm text-muted-foreground">{{ copy.unavailable }}</p>
-      </section>
-
-      <BsContentSection data-private-offer>
-        <BsSectionHeader :title="copy.privateTitle" :description="copy.privateHelp" />
-        <BsForm class="mt-4 flex flex-wrap items-end gap-3" :pending="privatePending" :error="privateError" @submit="previewPrivateOffer">
-          <BsField for="private-offer-link" :label="copy.privateLink" class="min-w-0 flex-1"><BsInput id="private-offer-link" v-model="privateLink" type="password" autocomplete="off" :maxlength="2048" /></BsField>
-          <BsButton type="submit" :pending="privatePending" :disabled="!privateLink">{{ copy.privatePreview }}</BsButton>
-        </BsForm>
-        <div v-if="privatePreview" class="mt-4 space-y-2" data-private-offer-preview>
-          <h3 class="font-semibold">{{ privatePreview.displayName }}</h3>
-          <p>{{ money(privatePreview.priceAmount, privatePreview.currency) }} · {{ intervalLabel(privatePreview.billingInterval) }} · {{ date(privatePreview.expiresAt) }}</p>
-          <dl class="grid gap-2 sm:grid-cols-2"><template v-for="(value, key) in privatePreview.resourceLimits" :key="key"><dt>{{ copy.resources[key as PlanResourceKey] }}</dt><dd>{{ value == null ? '∞' : value }}</dd></template></dl>
-          <p v-if="privatePreview.blockers.length" role="status">{{ copy.preservation }}</p>
-          <p v-if="privatePreview.submissionId" role="status">{{ copy.privateRedeemed }}</p>
-          <BsButton variant="text" @click="clearPrivateOffer">{{ copy.privateClear }}</BsButton>
-        </div>
-      </BsContentSection>
-
-      <section class="ls-card p-5 sm:p-6"><h2 class="text-lg font-extrabold">{{ copy.notice }}</h2><p class="mt-1 text-sm text-muted-foreground">{{ copy.noticeHelp }}</p>
-        <BsForm class="mt-5 grid gap-4 sm:grid-cols-2" :pending="submitPending" :error="submitError" @submit="submitNotice"><div v-if="noticeQuote" class="rounded-xl border border-border p-4 text-sm sm:col-span-2"><p>{{ copy.requestedPlan }}: <strong>{{ noticeQuote.planName }}</strong> · {{ copy.expected }}: <strong>{{ money(noticeQuote.effectivePriceAmount, noticeQuote.currency) }}</strong> · {{ copy.interval }}: <strong>{{ intervalLabel(noticeQuote.billingInterval) }}</strong></p><p v-if="noticeQuote.priceSource === 'override'" class="mt-2 font-bold text-[var(--bs-link)]">{{ copy.negotiated }}</p><p v-if="noticeQuote.blockers.length" class="mt-3 rounded-lg bg-[var(--bs-status-warning-bg)] p-3 font-semibold leading-5">{{ copy.preservation }}</p></div><p v-else role="status" class="rounded-xl border border-border p-4 text-sm sm:col-span-2">{{ copy.noPurchasable }}</p><label class="grid gap-2 text-sm font-bold">{{ copy.paid }}<input v-model.number="form.paidAmount" class="ls-input min-h-11 min-w-0" type="number" min="0.01" step="0.01" :disabled="!noticeQuote" required></label><label class="grid gap-2 text-sm font-bold">{{ copy.transferDate }}<input v-model="form.transferDate" class="ls-input min-h-11 min-w-0" type="date" :max="new Date().toISOString().slice(0, 10)" :disabled="!noticeQuote" required></label><label class="grid gap-2 text-sm font-bold sm:col-span-2">{{ copy.reference }}<input v-model="form.transferReference" class="ls-input min-h-11 min-w-0" dir="ltr" minlength="2" maxlength="200" :disabled="!noticeQuote" required></label><p class="text-sm leading-6 text-muted-foreground sm:col-span-2">{{ copy.policyPrefix }} <NuxtLink class="font-bold text-[var(--bs-link)] underline" to="/terms">{{ copy.terms }}</NuxtLink> · <NuxtLink class="font-bold text-[var(--bs-link)] underline" to="/privacy">{{ copy.privacy }}</NuxtLink> · <NuxtLink class="font-bold text-[var(--bs-link)] underline" to="/refund-cancellation">{{ copy.refund }}</NuxtLink>.</p><div class="sm:col-span-2"><BsButton type="submit" variant="primary" :pending="submitPending" :disabled="!noticeQuote || hasOpenRequest || !!privatePreview?.submissionId">{{ submitPending ? copy.submitting : copy.submit }}</BsButton></div></BsForm>
-      </section>
-
-      <BsContentSection data-payment-evidence :title="copy.evidenceTitle" :description="copy.evidenceHelp">
-        <BsStack v-if="evidenceSubmission">
-          <BsText size="sm">{{ copy.reference }}: <BsText as="span" dir="ltr">{{ evidenceSubmission.transferReference }}</BsText></BsText>
-          <BsForm :pending="evidencePending" :error="evidenceError" @submit="uploadEvidence">
-            <BsStack>
-              <BsField for="payment-receipt" :label="copy.evidenceSelect">
-                <BsFileInput :key="evidenceInputVersion" input-id="payment-receipt" :model-value="evidenceFile" :label="copy.evidenceSelect" accept="image/jpeg,image/png,image/webp" required @change="selectEvidence" />
-              </BsField>
-              <BsButton type="submit" :pending="evidencePending" :disabled="!evidenceFile">{{ evidencePending ? copy.evidenceUploading : copy.evidenceUpload }}</BsButton>
-            </BsStack>
-          </BsForm>
-          <BsText v-if="evidenceSaved" role="status" size="sm">{{ copy.evidenceSaved }}</BsText>
-          <BsStack v-if="evidenceFiles.length" gap="sm"><BsText size="sm" emphasis="semibold">{{ copy.evidenceAttached }}</BsText><BsList><BsListItem v-for="file in evidenceFiles" :key="file.evidenceId"><BsText size="sm">{{ file.originalFileName }}</BsText></BsListItem></BsList></BsStack>
-        </BsStack>
-        <BsText v-else role="status" size="sm" tone="muted">{{ copy.evidenceFirst }}</BsText>
-      </BsContentSection>
-
-      <section class="overflow-hidden ls-card"><div class="p-5"><h2 class="text-lg font-extrabold">{{ copy.history }}</h2></div><div class="overflow-x-auto"><BsDataTable :value="billing.submissions" data-key="id" :label="copy.history"><Column field="status"><template #header>{{ copy.access }}</template><template #body="{ data: item }"><BsStatusBadge :status="item.status" /> <span class="ms-2 text-sm">{{ statusLabel(item.status) }}</span></template></Column><Column field="requestedPlanName"><template #header>{{ copy.requestedPlan }}</template></Column><Column><template #header>{{ copy.expected }}</template><template #body="{ data: item }">{{ money(item.effectivePriceAmount, item.currency) }}</template></Column><Column><template #header>{{ copy.paid }}</template><template #body="{ data: item }">{{ money(item.paidAmount, item.currency) }}</template></Column><Column field="transferReference"><template #header>{{ copy.reference }}</template></Column><Column><template #header>{{ copy.transferDate }}</template><template #body="{ data: item }">{{ date(item.transferDate) }}</template></Column><Column field="reviewReason"><template #header>{{ copy.reviewReason }}</template></Column><template #empty><p class="p-6 text-center text-sm text-muted-foreground">{{ copy.empty }}</p></template></BsDataTable></div></section>
-    </template>
-    <p v-else role="status" class="rounded-xl border border-border p-5 text-sm">{{ copy.noBilling }}</p>
-  </div>
+  <BsBillingPage v-model:form="billingForm" v-model:evidence-file="evidenceFile" :copy="billingCopy" :view="billingView" @retry="refresh()" @usage-retry="refresh()" @pricing-retry="refreshCatalog()" @interval="chooseBillingInterval" @variant="planPresentation.chooseVariant" @plan="planPresentation.choose" @private-preview="previewPrivateOffer" @private-clear="clearPrivateOffer" @transfer-open="noticeAction.edit()" @transfer-close="noticeActionOpen = false" @transfer-submit="submitNotice" @evidence-select="selectEvidence" @evidence-upload="uploadEvidence"/>
 </template>

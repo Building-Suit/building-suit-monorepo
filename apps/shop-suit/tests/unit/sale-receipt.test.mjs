@@ -3,9 +3,12 @@ import { readFile } from 'node:fs/promises'
 import test from 'node:test'
 import { buildReceiptShareText } from '../../app/utils/receipt.ts'
 
+const sharedPrintStyles = await readFile(new URL('../../../../packages/ui/src/styles/base.css', import.meta.url), 'utf8')
 const migration = await readFile(new URL('../../supabase/migrations/20260928233000_immutable_sale_receipts.sql', import.meta.url), 'utf8')
 const databaseTest = await readFile(new URL('../../supabase/tests/shop_sale_receipts.sql', import.meta.url), 'utf8')
 const receiptPage = await readFile(new URL('../../app/pages/sales/[id]/receipt.vue', import.meta.url), 'utf8')
+const receiptTemplate = await readFile(new URL('../../../../packages/ui/src/templates/BsReceiptPage.vue', import.meta.url), 'utf8')
+const printController = await readFile(new URL('../../../../packages/ux/src/composables/useDocumentPrint.ts', import.meta.url), 'utf8')
 const salePage = await readFile(new URL('../../app/pages/sales/[id]/index.vue', import.meta.url), 'utf8')
 const posPage = await readFile(new URL('../../app/pages/pos.vue', import.meta.url), 'utf8')
 const settingsPage = await readFile(new URL('../../app/pages/settings.vue', import.meta.url), 'utf8')
@@ -102,10 +105,11 @@ test('receipt storage is immutable, tenant-scoped, and captures only fully-paid 
 })
 
 test('thermal/A4 print and share actions are connected from POS completion and sale detail', () => {
-  assert.match(receiptPage, /@page receipt-thermal \{ size: 80mm auto/)
-  assert.match(receiptPage, /@page receipt-a4 \{ size: A4/)
-  assert.match(receiptPage, /dir="receiptLanguage === 'ar' \? 'rtl' : 'ltr'"/)
-  assert.match(receiptPage, /window\.print\(\)/)
+  assert.match(sharedPrintStyles, /@page bs-receipt \{ size: 80mm auto/)
+  assert.match(sharedPrintStyles, /@page bs-a4 \{ size: A4/)
+  assert.match(receiptTemplate, /dir="language === 'ar' \? 'rtl' : 'ltr'"/)
+  assert.match(printController, /window\.print\(\)/)
+  assert.match(receiptPage, /<BsReceiptPage\b/)
   assert.match(receiptPage, /shareReceipt/)
   assert.match(receiptPage, /reprintLabel/)
   assert.match(posPage, /sales\/\$\{completedId\}\/receipt/)

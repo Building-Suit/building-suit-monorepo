@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs'
 import * as vue from 'vue'
 import ts from 'typescript'
 import { csvCell, recordSnapshot } from '../src/index.ts'
+import { useNavigationDisclosure } from '../src/composables/useNavigationDisclosure.ts'
 
 test('CSV export neutralizes formula text and retains numeric values', () => {
   for (const value of ['=SUM(A1)', '+cmd', '-cmd', '@formula', '  =SUM(A1)']) assert.equal(csvCell(value), `'${value}`)
@@ -111,4 +112,27 @@ test('signup wizard supports variable steps, validation, bounds, and advance con
   assert.equal(wizard.step.value, 2)
   wizard.reset()
   assert.equal(wizard.step.value, 1)
+})
+
+
+test('navigation disclosure restores focus only for an explicit close and handles Escape', async () => {
+  const disclosure = useNavigationDisclosure()
+  let focusCount = 0
+  disclosure.trigger.value = { focus: () => { focusCount++ } }
+  disclosure.open.value = true
+  await disclosure.close()
+  assert.equal(disclosure.open.value, false)
+  assert.equal(focusCount, 0)
+  let prevented = false
+  disclosure.open.value = true
+  disclosure.onKeydown({ key: 'Tab', preventDefault: () => { prevented = true } })
+  assert.equal(disclosure.open.value, true)
+  assert.equal(prevented, false)
+  disclosure.onKeydown({ key: 'Escape', preventDefault: () => { prevented = true } })
+  await vue.nextTick()
+  assert.equal(disclosure.open.value, false)
+  assert.equal(prevented, true)
+  assert.equal(focusCount, 1)
+  await disclosure.close(true)
+  assert.equal(focusCount, 2)
 })

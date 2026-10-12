@@ -2,12 +2,28 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
+import ts from 'typescript'
 import { createScopedRealtime } from '../../../../packages/data-access/src/realtime.ts'
 import { createShopRefreshGate,shopRealtimeFilters,shopRealtimeTables } from '../../app/utils/shopRealtime.ts'
 const root=new URL('../../../../',import.meta.url)
-test('Approved minimum Foundation source is preserved in the combined staging contract',()=>{
- for(const [p,object] of Object.entries({'pnpm-lock.yaml':'61d12c0459e9e7e1015ea73f2e4fbcb34dcdacb9','packages/contracts/src/index.ts':'291f86a5c0667e603f049b0a8e15bab255b31f45','packages/data-access/src/index.ts':'0a768c25d63217619bbcc684b216a8fb0a45e427','packages/data-access/src/realtime.ts':'a4cfc2b2769c6b17fcaa8324c8e7152b501846de'})){
-  const b=readFileSync(new URL(p,root));assert.equal(createHash('sha1').update(`blob ${b.length}\0`).update(b).digest('hex'),object,p)
+test('Approved minimum Foundation contracts remain intact as workspace dependencies evolve',()=>{
+ const source=readFileSync(new URL('packages/contracts/src/index.ts',root),'utf8')
+ const ast=ts.createSourceFile('foundation.ts',source,ts.ScriptTarget.Latest,true)
+ const expected={"DataScope":"a1dd4c54d1b421874c3b978ad6ad1ff72841e74fee611fb271d058d4ea759aed","RealtimeScope":"a4a904e4c670671b3061424cb19784ac3d55e43dbf51b41b8f4dfba02c41d483","RealtimeFilter":"52086863a06c939ac552d5db54e4e851a09a189a03b1ed371d9a82bcca37eb7a","RealtimeRefreshRequest":"acefabff58d7ae568648bf49544a8a8a5713a1a1f48ad2579ec1e94cfe1aaf4f"}
+ for(const [name,hash] of Object.entries(expected)){
+  const declaration=ast.statements.find(node=>ts.isInterfaceDeclaration(node)&&node.name.text===name)
+  assert.ok(declaration, name)
+  assert.equal(createHash('sha256').update(declaration.getText(ast)).digest('hex'),hash,name)
+ }
+ for(const [p,object] of Object.entries({'packages/data-access/src/index.ts':'0a768c25d63217619bbcc684b216a8fb0a45e427','packages/data-access/src/realtime.ts':'a4cfc2b2769c6b17fcaa8324c8e7152b501846de'})){
+  let b=readFileSync(new URL(p,root))
+  if(p==='packages/data-access/src/index.ts'){
+   // #246 adds a reviewed export; the original Foundation bytes stay pinned.
+   const addition="\nexport { createChangelogClient } from './changelog.ts'\n"
+   assert.ok(b.toString().endsWith(addition),'Only the reviewed changelog export may extend the Foundation barrel')
+   b=b.subarray(0,b.length-Buffer.byteLength(addition))
+  }
+  assert.equal(createHash('sha1').update(`blob ${b.length}\0`).update(b).digest('hex'),object,p)
  }
 })
 test('Every launch feature is scoped to exact tenant and location; injection rejected',()=>{

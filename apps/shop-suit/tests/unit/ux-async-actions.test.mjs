@@ -29,7 +29,9 @@ async function pageScript(file, exports, rpc) {
   }
   const scope = vue.effectScope()
   const imported = { downloadCsv: (...args) => downloads.push(args), encodeCsv: (headers, rows) => ({ headers, rows }), importTemplates: { products: [] } }
-  const result = scope.run(() => new Function('require', 'exports', ...Object.keys(globals), code)(() => imported, {}, ...Object.values(globals)))
+  const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor
+  globals.watch = (...args) => scope.run(() => vue.watch(...args))
+  const result = await scope.run(() => new AsyncFunction('require', 'exports', ...Object.keys(globals), code)(() => imported, {}, ...Object.values(globals)))
   return { ...result, scope, downloads, context, currentId, toasts }
 }
 const deferred = () => {

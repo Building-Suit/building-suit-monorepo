@@ -2,12 +2,15 @@
 
 - [Git and staging workflow](git-workflow.md): preflight, short-lived features, stacked/parallel PRs, manual-merge recovery and deployment controls.
 - [Design system](design-system.md): tokens, branding, Atomic Design and shared templates.
-- [Shared UI ownership](ui-ownership.md): library-first ownership, migration inventory and mechanical enforcement for every Suit.
-- [Shared UI convergence report](ui-convergence-report.md): final component inventory, valid product wrappers, exception status and cross-Suit evidence.
+- [Shared UI ownership](ui-ownership.md): complete template ownership and strict zero-debt enforcement for every Suit.
+- [Shared UI convergence report](ui-convergence-report.md): historical component-convergence evidence, superseded by complete template ownership.
+- [Atomic template acceptance](atomic-template-unification-acceptance.md): all 76 route mappings, final local verification and publication prerequisites.
 - [Interaction policy](interactions.md): record actions, dialogs, signup and feedback.
 - [Database development](database.md): product-specific local commands, environment verification and hosted release procedure.
 - [Manual Supabase setup](supabase-manual-setup.md): organizations, project refs, frontend keys, deployment secrets and Auth configuration.
 - [Identity architecture](../architecture/identity.md): separate product Auth and session boundaries.
+- [Scoped Realtime refresh](realtime.md): explicit scopes/filters, subscription cleanup and bounded refresh lifecycle.
+- [Future Suit administration](future-suit-administration.md): typed identity, context navigation and versioned read/command registration.
 - [Super Admin trust and adapter contract](../architecture/super-admin-trust-adapter-contract.md): database-owned configuration, cross-Suit request authentication, capability discovery, idempotency and failure handling.
 - [Data table](data-table.md): PrimeVue integration and supported capabilities.
 
