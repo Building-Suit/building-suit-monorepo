@@ -333,12 +333,6 @@ body {
   .ls-action-icon,
   .ls-action-tab,
   .ls-action-chip,
-  .ls-action-chip[aria-selected="true"]:hover:not(:disabled),
-  .ls-action-chip[aria-pressed="true"]:hover:not(:disabled) {
-    background: var(--bs-primary-hover);
-    color: var(--bs-text-on-primary);
-  }
-
   .ls-action-tile {
     appearance: none;
     border: 0;
@@ -427,6 +421,12 @@ body {
   .ls-action-chip[aria-selected="true"],
   .ls-action-chip[aria-pressed="true"] {
     background: var(--bs-primary);
+    color: var(--bs-text-on-primary);
+  }
+
+  .ls-action-chip[aria-selected="true"]:hover:not(:disabled),
+  .ls-action-chip[aria-pressed="true"]:hover:not(:disabled) {
+    background: var(--bs-primary-hover);
     color: var(--bs-text-on-primary);
   }
 
