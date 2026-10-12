@@ -19,7 +19,7 @@ Read STATUS.md, INDEX.md and tasks/01 first. Do not infer completion from scaffo
 
 | Task | Scope | Depends on | Implementation | Verification | Branch / PR |
 |---|---|---|---|---|---|
-| SHOP-UI-01 | shell-sidebar-profile | None | Working | Unverified | `codex/shop-suit/ui-pro-redesign` (uncommitted); no PR |
+| SHOP-UI-01 | shell-sidebar-profile | None | PR opened | Working — local checks passed; final acceptance pending | [Draft PR #250](https://github.com/Building-Suit/building-suit-monorepo/pull/250) · `codex/shop-suit/ui-pro-redesign` |
 | SHOP-UI-02 | dashboard | 01 | Working | Unverified | Preserved partial edits on task 01 branch; no PR |
 | SHOP-UI-03 | pos-media | 01 | Working | Unverified | Preserved partial edits on task 01 branch; no PR |
 | SHOP-UI-04 | appointments-calendar | 01 | Not started | Not started | No branch/PR |
@@ -30,9 +30,9 @@ Read STATUS.md, INDEX.md and tasks/01 first. Do not infer completion from scaffo
 
 Task-01 change-local verification passes (see current receipt below); consolidated verification has not run. Calendar/Settings scaffolds are unwired and do not count as completed tasks. No hosted schema/provider/secret/n8n work occurred.
 
-Tooling: installed pnpm is 11.25.0 but repo pins 10.33.0. `COREPACK_HOME=/workspace/.cache/corepack corepack pnpm` successfully resolves 10.33.0. Preflight still exits 1 with generic GitHub/fetch-state failure; direct git fetch and gh open-PR/status reads succeed. Diagnose narrowly or use documented fallback observations before publication. No approval rejection occurred.
+Tooling: use `COREPACK_HOME=/workspace/.cache/corepack corepack pnpm` for pinned pnpm 10.33.0. The initial old-checkout preflight failure was caused by unsupported gh --slurp; current stg already fixes it. Current task worktree preflight passes, and PR #250 stack policy passes. No approval rejection occurred.
 
-First bounded implementation task: SHOP-UI-01 shell/sidebar/profile. Task 01 is implemented in its isolated worktree; commit/push/draft PR is underway. Parent launches task 02 separately after its published checkpoint. Later tasks stack in dependency order.
+Completed bounded implementation task: SHOP-UI-01 shell/sidebar/profile (PR opened; final verification pending). Task 01 is implemented and published as draft PR #250 in its isolated worktree. Parent launches task 02 separately after its published checkpoint. Later tasks stack in dependency order.
 
 Preserved source files (exact current git status):
 ```
@@ -93,8 +93,8 @@ Image 2 displays sandbox/operator payment copy starting «بيئة الاختب�
 # SHOP-UI-01 — shell-sidebar-profile
 
 Depends on: None
-Implementation: Working
-Verification: Unverified
+Implementation: PR opened (#250)
+Verification: Working — local checks passed; consolidated acceptance pending
 Original mapping: UI PRO 002/003
 
 References 6–8. Refine the existing shared authenticated shell into flat sidebar/top-header structure with desktop collapse, accessible mobile navigation and comfortable full-viewport gutters. Add accurate current plan/trial/status/expiry sidebar card and profile actions from authorized existing data. Keep official logos, AR/EN RTL/LTR, light/dark, tenant/branch switching, sign-out, keyboard/focus. Existing partial edits are preserved; finish/review only this scope first.
@@ -202,7 +202,7 @@ One bounded turn; preserve other task edits; one stacked draft PR. Update status
 
 # Current task-01 receipt
 
-Implementation: Working (implemented; publication pending). Verification: essential change-local checks passed; full acceptance remains unrun until task 08.
+Implementation: PR opened — [draft PR #250](https://github.com/Building-Suit/building-suit-monorepo/pull/250). Implementation commit: `2ba4f79`; tracking status is updated in the following documentation commit. Verification: essential change-local checks passed; full acceptance remains unrun until task 08.
 
 Worktree: `/workspace/shop-ui-01`; branch: `codex/shop-suit/ui-pro-redesign`; verified base: `630031447d11ed738bbfb9018283040d475425bb`. Original partial edits for later tasks are preserved in `/workspace/building-suit-monorepo`, branch `codex/shop-suit/ui-pro-preserved-edits`. Treat those old-base sketches as reference only; later tasks must implement current complete shared templates and must not restore obsolete app-local components/routes.
 
@@ -213,3 +213,5 @@ Checks passed: 10 modified/new Vue files parse, script compilation, template com
 Current preflight source on stg supports the installed gh without --slurp. No tooling or branch-policy change was needed. Fresh stg ref was fetched explicitly because saved remote refspec covers main only.
 
 Next task: SHOP-UI-02 dashboard. Create codex/shop-suit/ui-pro-dashboard from task-01 published HEAD and target its open draft PR branch. Use a clean worktree. Preserve the earlier dirty preparation worktree; port useful changes selectively into current shared complete templates.
+
+PR policy: `node tooling/git/check-pr.mjs 250` passed. Task 02 branch/base: create `codex/shop-suit/ui-pro-dashboard` from the final published HEAD of `codex/shop-suit/ui-pro-redesign`, targeting that branch (PR #250), in a clean worktree.
