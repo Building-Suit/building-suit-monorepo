@@ -8,7 +8,7 @@ defineEmits<{ submit: [event: Event] }>()
   <BsForm class="bs-support-request" :pending="pending" :error="error" novalidate @submit="$emit('submit', $event)">
     <header class="bs-support-request__header"><h2>{{ copy.title }}</h2><p>{{ copy.intro }}</p></header>
     <div class="bs-support-request__row">
-      <BsField :label="copy.category" required><template #default="field"><BsSelect v-model="model.category" :label="copy.category" :options="categories" option-label="label" option-value="value" :required="field.required" /></template></BsField>
+      <BsField :label="copy.category" required><template #default="field"><BsSelect v-model="model.category" :input-id="field.id" :aria-describedby="field.describedby" :label="copy.category" :options="categories" option-label="label" option-value="value" :required="field.required" /></template></BsField>
       <BsField :label="copy.replyEmail" required><template #default="field"><BsInput :id="field.id" v-model="model.email" type="email" required autocomplete="email" :aria-describedby="field.describedby" /></template></BsField>
     </div>
     <BsField :label="copy.subject" required><template #default="field"><BsInput :id="field.id" v-model="model.subject" :maxlength="200" required :aria-describedby="field.describedby" /></template></BsField>

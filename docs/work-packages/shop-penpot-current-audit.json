@@ -20,7 +20,20 @@
       "template": "BsPublicLegalPage",
       "mainBoardId": "9d8c9265-2366-809c-8008-c802038346e6",
       "auditClassification": "integrated-source-metadata-only",
-      "fullDesignMatrixComplete": false
+      "fullDesignMatrixComplete": false,
+      "implementedJourneys": [
+        "existing bilingual public route and metadata",
+        "shared readable public presentation"
+      ],
+      "testedJourneys": [
+        "EN/AR route heading/metadata/direction and footer policy links",
+        "existing legal content retained"
+      ],
+      "remainingFunctionalReview": [],
+      "missingVisualEvidence": [
+        "main and variant Penpot PNGs unavailable; full design matrix incomplete"
+      ],
+      "currentCheckpointBranch": "codex/shop-suit/penpot-public-states"
     },
     {
       "number": 3,
@@ -28,7 +41,22 @@
       "template": "BsContactPage",
       "mainBoardId": "9d8c9265-2366-809c-8008-c802cc216548",
       "auditClassification": "integrated-source-metadata-only",
-      "fullDesignMatrixComplete": false
+      "fullDesignMatrixComplete": false,
+      "implementedJourneys": [
+        "existing bilingual public route and metadata",
+        "shared readable public presentation",
+        "contact pending command guard and associated category label"
+      ],
+      "testedJourneys": [
+        "EN/AR route heading/metadata/direction and footer policy links",
+        "validation/consent/honeypot/pending/failure/rate-limit/retry/success/duplicate command",
+        "desktop/mobile no overflow and actual screenshots"
+      ],
+      "remainingFunctionalReview": [],
+      "missingVisualEvidence": [
+        "main and variant Penpot PNGs unavailable; full design matrix incomplete"
+      ],
+      "currentCheckpointBranch": "codex/shop-suit/penpot-public-states"
     },
     {
       "number": 4,
@@ -36,7 +64,20 @@
       "template": "BsPublicLegalPage",
       "mainBoardId": "9d8c9265-2366-809c-8008-c8022189c0cf",
       "auditClassification": "integrated-source-metadata-only",
-      "fullDesignMatrixComplete": false
+      "fullDesignMatrixComplete": false,
+      "implementedJourneys": [
+        "existing bilingual public route and metadata",
+        "shared readable public presentation"
+      ],
+      "testedJourneys": [
+        "EN/AR route heading/metadata/direction and footer policy links",
+        "existing legal content retained"
+      ],
+      "remainingFunctionalReview": [],
+      "missingVisualEvidence": [
+        "main and variant Penpot PNGs unavailable; full design matrix incomplete"
+      ],
+      "currentCheckpointBranch": "codex/shop-suit/penpot-public-states"
     },
     {
       "number": 5,
@@ -44,7 +85,20 @@
       "template": "BsPublicLegalPage",
       "mainBoardId": "9d8c9265-2366-809c-8008-c802504f804c",
       "auditClassification": "integrated-source-metadata-only",
-      "fullDesignMatrixComplete": false
+      "fullDesignMatrixComplete": false,
+      "implementedJourneys": [
+        "existing bilingual public route and metadata",
+        "shared readable public presentation"
+      ],
+      "testedJourneys": [
+        "EN/AR route heading/metadata/direction and footer policy links",
+        "existing legal content retained"
+      ],
+      "remainingFunctionalReview": [],
+      "missingVisualEvidence": [
+        "main and variant Penpot PNGs unavailable; full design matrix incomplete"
+      ],
+      "currentCheckpointBranch": "codex/shop-suit/penpot-public-states"
     },
     {
       "number": 6,
@@ -52,7 +106,20 @@
       "template": "BsPublicLegalPage",
       "mainBoardId": "9d8c9265-2366-809c-8008-c80281ddff77",
       "auditClassification": "integrated-source-metadata-only",
-      "fullDesignMatrixComplete": false
+      "fullDesignMatrixComplete": false,
+      "implementedJourneys": [
+        "existing bilingual public route and metadata",
+        "shared readable public presentation"
+      ],
+      "testedJourneys": [
+        "EN/AR route heading/metadata/direction and footer policy links",
+        "existing legal content retained"
+      ],
+      "remainingFunctionalReview": [],
+      "missingVisualEvidence": [
+        "main and variant Penpot PNGs unavailable; full design matrix incomplete"
+      ],
+      "currentCheckpointBranch": "codex/shop-suit/penpot-public-states"
     },
     {
       "number": 7,
@@ -60,7 +127,20 @@
       "template": "BsPublicLegalPage",
       "mainBoardId": "9d8c9265-2366-809c-8008-c8029df9b418",
       "auditClassification": "integrated-source-metadata-only",
-      "fullDesignMatrixComplete": false
+      "fullDesignMatrixComplete": false,
+      "implementedJourneys": [
+        "existing bilingual public route and metadata",
+        "shared readable public presentation"
+      ],
+      "testedJourneys": [
+        "EN/AR route heading/metadata/direction and footer policy links",
+        "existing legal content retained"
+      ],
+      "remainingFunctionalReview": [],
+      "missingVisualEvidence": [
+        "main and variant Penpot PNGs unavailable; full design matrix incomplete"
+      ],
+      "currentCheckpointBranch": "codex/shop-suit/penpot-public-states"
     },
     {
       "number": 8,

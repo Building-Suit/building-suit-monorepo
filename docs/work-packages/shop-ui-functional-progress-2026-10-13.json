@@ -73,14 +73,20 @@
     {
       "category": "Public non-landing",
       "implemented": true,
-      "tested": "inherited templates and smoke coverage; no new complete state assessment",
-      "remainingFunctionalReview": [
-        "route-specific saved contexts"
-      ],
-      "visualEvidence": "main/variant pixels unavailable"
+      "tested": "six routes EN/AR metadata/direction/links; contact validation/consent/honeypot/pending/duplicate-command/failure/rate-limit/retry/success; EN light desktop and AR dark mobile overflow/reading measure",
+      "remainingFunctionalReview": [],
+      "visualEvidence": "main/variant pixels unavailable",
+      "completedNamedJourneys": [
+        "about/contact/terms/privacy/delivery-shipping/refund-cancellation public routes",
+        "contact intake validation and consent",
+        "pending/inert/duplicate command suppression",
+        "bounded failure/rate-limit and retained-input retry",
+        "successful clearing and email retention",
+        "localized metadata/direction/policy links and readable responsive text"
+      ]
     }
   ],
-  "activeFunctionalReviewBuckets": 1,
+  "activeFunctionalReviewBuckets": 0,
   "reviewPolicy": "Retain previously verified named journeys; reopen only for new saved requirements, concrete defects or affected changes. Missing pixels do not imply missing code.",
   "hostedDataOrSettingsChanged": false,
   "designMatricesCompleted": 0,
@@ -93,7 +99,7 @@
       297,
       299
     ],
-    "publicNonLandingEdits": "ready for bounded implementation",
+    "publicNonLandingEdits": "applied before edits; local verification complete",
     "limitation": "Initial checkpoint changes preceded skill availability; no claim of visual parity for missing PNGs."
   }
 }
