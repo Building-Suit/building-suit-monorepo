@@ -11,7 +11,7 @@ type ReportColumn = { key: string; label: string | undefined; format: ColumnForm
 
 const rpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
 const route = useRoute()
-const { locale } = useI18n()
+const { locale, t } = useI18n()
 const { current, currentId, activeLocations } = useShop()
 const isArabic = computed(() => locale.value === 'ar')
 const reportKinds: OperationalReportKind[] = ['sales', 'collections', 'receivables', 'suppliers', 'expenses', 'inventory', 'margin', 'activity']
@@ -40,6 +40,7 @@ const copy = computed(() => isArabic.value ? {
   costDenied: 'محتاج صلاحية عرض التكلفة والربح عشان تشوف التقرير ده.', empty: 'مفيش نتايج للاختيارات دي.',
   previous: 'السابق', next: 'التالي', page: 'صفحة', of: 'من', records: 'سجل', open: 'فتح المصدر',
   true: 'نعم', false: 'لا', fifoNotice: 'الهامش بيظهر بس للمنتجات اللي كمياتها مطابقة تمامًا لحركات تكلفة FIFO (الأقدم يتباع الأول). الخدمات والبنود غير المتطابقة مش بتتحسب.',
+  posted: 'مرحّل', voided: 'ملغى',
 } : {
   title: 'Operational reports', subtitle: 'Full-history source-record reports with location/date filters and result-parity exports.',
   operational: 'These are operational reports—not a P&L, balance sheet, general ledger, journal, or double-entry accounting system.',
@@ -51,6 +52,7 @@ const copy = computed(() => isArabic.value ? {
   costDenied: 'Cost and profit permission is required for this report.', empty: 'No results match these filters.',
   previous: 'Previous', next: 'Next', page: 'Page', of: 'of', records: 'records', open: 'Open source',
   true: 'Yes', false: 'No', fifoNotice: 'Margin appears only for product lines whose sold quantity exactly reconciles to FIFO cost movements. Services and unreconciled lines are excluded.',
+  posted: 'Posted', voided: 'Void',
 })
 
 const reportOptions = computed<Array<{ value: OperationalReportKind; label: string }>>(() => [
@@ -169,13 +171,24 @@ const totalPages = computed(() => Math.max(1, Math.ceil(Number(result.value.tota
 function money(value: unknown) { return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { style: 'currency', currency: 'EGP', maximumFractionDigits: 2 }).format(Number(value ?? 0)) }
 function number(value: unknown) { return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { maximumFractionDigits: 3 }).format(Number(value ?? 0)) }
 function date(value: unknown) { return value ? new Intl.DateTimeFormat(isArabic.value ? 'ar-EG' : 'en-EG', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Africa/Cairo' }).format(new Date(String(value))) : '—' }
-function display(value: unknown, format: ColumnFormat) {
+function display(value: unknown, format: ColumnFormat, key?: string) {
   if (value === null || value === undefined || value === '') return '—'
   if (format === 'money') return money(value)
   if (format === 'number') return number(value)
   if (format === 'date') return date(value)
   if (format === 'percent') return `${number(value)}%`
   if (format === 'boolean') return value ? copy.value.true : copy.value.false
+  if (key === 'method' && ['cash', 'bank_transfer', 'card', 'wallet', 'cheque', 'other'].includes(String(value))) return t(`payments.methods.${value}`)
+  if (key === 'item_type' && ['product', 'service'].includes(String(value))) return t(`sales.${value}`)
+  if (key === 'direction' && ['in', 'out'].includes(String(value))) return (value === 'in' ? labels.value.collected : labels.value.refunded) ?? String(value)
+  if (key === 'event_type') {
+    if (value === 'sale' || value === 'customer_payment') return t(`payments.events.${value === 'sale' ? 'sale' : 'receipt'}`)
+    if (value === 'purchase' || value === 'expense') return labels.value[value === 'purchase' ? 'purchases' : 'expenses'] ?? String(value)
+  }
+  if (key === 'status') {
+    if (value === 'posted' || value === 'void') return value === 'posted' ? copy.value.posted : copy.value.voided
+    if (value === 'draft') return t('sales.draft')
+  }
   return String(value).replaceAll('_', ' ')
 }
 function summaryFormat(key: string): ColumnFormat {
@@ -189,13 +202,13 @@ function summaryPath(key: string) {
 function sourcePath(row: OperationalReportRow) { return typeof row.source_path === 'string' ? row.source_path : '' }
 
 async function exportReport() {
-  if (!currentId.value || exporting.value || !canView.value || costDenied.value) return
+  if (!currentId.value || exporting.value || accessPending.value || pending.value || accessError.value || error.value || !result.value.total || !canView.value || costDenied.value) return
   const inScope = captureScope()
   const version = exportVersion
   const stillCurrent = () => inScope() && version === exportVersion
   const args = queryArgs(1, 500)
   const headers = [...columns.value.map(column => column.key), 'source_path']
-  const filename = `shop-${report.value}-${fromDate.value || 'all'}-${toDate.value || 'all'}.csv`
+  const filename = `shop-${report.value}-${args.p_from || 'all'}-${args.p_to || 'all'}.csv`
   exporting.value = true; exportError.value = ''
   try {
     const rows: OperationalReportRow[] = []
@@ -218,7 +231,7 @@ async function exportReport() {
 }
 
 const reportFilters = computed<BsReportFilters>({ get: () => ({ report: report.value, location: locationId.value, from: fromDate.value, to: toDate.value }), set: value => { if (reportKinds.includes(value.report as OperationalReportKind)) report.value = value.report as OperationalReportKind; if (value.location === 'all' || activeLocations.value.some(item => item.id === value.location)) locationId.value = value.location; fromDate.value = value.from; toDate.value = value.to } })
-const reportView = computed<BsReportsView>(() => ({ workspace: current.value?.name ?? '', exporting: exporting.value, exportDisabled: accessPending.value || pending.value || Boolean(accessError.value || error.value) || !result.value.total || !canView.value || costDenied.value, exportLabel: exporting.value ? copy.value.exporting : copy.value.export, notice: copy.value.operational, detailNotice: report.value === 'margin' ? copy.value.fifoNotice : '', dateDisabled: ['inventory', 'receivables'].includes(report.value), failed: Boolean(accessError.value || error.value), exportError: exportError.value, loading: accessPending.value || pending.value, denied: !canView.value, restricted: costDenied.value, summary: Object.entries(result.value.summary).filter(([key]) => !['costBasis', 'snapshot'].includes(key)).map(([key, value]) => ({ id: key, label: labels.value[key] || key, value: display(value, summaryFormat(key)), to: summaryPath(key) })), columns: columns.value.map(column => ({ key: column.key, label: column.label ?? column.key, primary: Boolean(column.primary) })), rows: result.value.items.map((row, index) => ({ id: String(row.id ?? index), cells: Object.fromEntries(columns.value.map(column => [column.key, display(row[column.key], column.format)])), sourceTo: sourcePath(row) })), total: result.value.total, pagination: `${result.value.total} ${copy.value.records} · ${copy.value.page} ${page.value} ${copy.value.of} ${totalPages.value}`, previousDisabled: page.value <= 1, nextDisabled: page.value >= totalPages.value }))
+const reportView = computed<BsReportsView>(() => ({ workspace: current.value?.name ?? '', exporting: exporting.value, exportDisabled: accessPending.value || pending.value || Boolean(accessError.value || error.value) || !result.value.total || !canView.value || costDenied.value, exportLabel: exporting.value ? copy.value.exporting : copy.value.export, notice: copy.value.operational, detailNotice: report.value === 'margin' ? copy.value.fifoNotice : '', dateDisabled: ['inventory', 'receivables'].includes(report.value), failed: Boolean(accessError.value || error.value), exportError: exportError.value, loading: accessPending.value || pending.value, denied: !canView.value, restricted: costDenied.value, summary: Object.entries(result.value.summary).filter(([key]) => !['costBasis', 'snapshot'].includes(key)).map(([key, value]) => ({ id: key, label: labels.value[key] || key, value: display(value, summaryFormat(key)), to: summaryPath(key) })), columns: columns.value.map(column => ({ key: column.key, label: column.label ?? column.key, primary: Boolean(column.primary) })), rows: result.value.items.map((row, index) => ({ id: String(row.id ?? index), cells: Object.fromEntries(columns.value.map(column => [column.key, display(row[column.key], column.format, column.key)])), sourceTo: sourcePath(row) })), total: result.value.total, pagination: `${result.value.total} ${copy.value.records} · ${copy.value.page} ${page.value} ${copy.value.of} ${totalPages.value}`, previousDisabled: page.value <= 1, nextDisabled: page.value >= totalPages.value }))
 const reportChoices = computed<BsReportChoices>(() => ({ reports: reportOptions.value, locations: [{ value: 'all', label: copy.value.allLocations }, ...activeLocations.value.map(item => ({ value: item.id, label: item.name }))] }))
 async function retryReport() { await Promise.all([refreshAccess(), refresh()]) }
 function changeReportPage(direction: number) { page.value = Math.max(1, Math.min(totalPages.value, page.value + direction)) }

@@ -151,7 +151,10 @@
       "fullDesignMatrixComplete": false,
       "dialogCheckpointBranch": "codex/shop-suit/penpot-catalog-dialogs",
       "dialogPixelScope": "frozen product edit / service create crops; directory main pixels remain unavailable",
-      "dialogImplementation": "reference geometry and create-mode scheduling; typed product commands preserved"
+      "dialogImplementation": "reference geometry and create-mode scheduling; typed product commands preserved",
+      "currentFunctionalCheckpoints": [
+        286
+      ]
     },
     {
       "number": 19,
@@ -162,7 +165,10 @@
       "fullDesignMatrixComplete": false,
       "dialogCheckpointBranch": "codex/shop-suit/penpot-catalog-dialogs",
       "dialogPixelScope": "frozen product edit / service create crops; directory main pixels remain unavailable",
-      "dialogImplementation": "reference geometry and create-mode scheduling; typed product commands preserved"
+      "dialogImplementation": "reference geometry and create-mode scheduling; typed product commands preserved",
+      "currentFunctionalCheckpoints": [
+        286
+      ]
     },
     {
       "number": 20,
@@ -217,7 +223,10 @@
         "12 inherited allocation variants"
       ],
       "remainingFunctionalReview": [],
-      "missingVisualEvidence": "Customer profile main/receipt/lifecycle/feedback PNGs absent from frozen sources"
+      "missingVisualEvidence": "Customer profile main/receipt/lifecycle/feedback PNGs absent from frozen sources",
+      "currentFunctionalCheckpoints": [
+        295
+      ]
     },
     {
       "number": 25,
@@ -263,7 +272,10 @@
         "EN desktop / AR mobile zero-open/pay-out/error/idempotent retry/restricted cashier/no-context/filter/pagination"
       ],
       "missingVisualEvidence": "No cash main/state exports; closed reconciled history design explicitly unsaved",
-      "remainingFunctionalReview": []
+      "remainingFunctionalReview": [],
+      "currentFunctionalCheckpoints": [
+        293
+      ]
     },
     {
       "number": 27,
@@ -279,7 +291,23 @@
       "template": "BsReportsPage shop operational branch",
       "mainBoardId": "9d8c9265-2366-809c-8008-c7fc4239d1f1",
       "auditClassification": "integrated-source-metadata-only",
-      "fullDesignMatrixComplete": false
+      "fullDesignMatrixComplete": false,
+      "implementedJourneys": [
+        "localized report enum display",
+        "pending-only retry feedback",
+        "export read-readiness guard",
+        "snapshot query-bound CSV filenames"
+      ],
+      "testedJourneys": [
+        "all8 kinds EN desktop / AR mobile with source/filter/raw CSV parity",
+        "denied/all4 costly kinds restricted/empty",
+        "pending retry/export failure recovery",
+        "501-row multi-page CSV/filter-change cancellation",
+        "12 inherited report pagination/filter/CSV variants"
+      ],
+      "remainingFunctionalReview": [],
+      "missingVisualEvidence": "All report main/kind/feedback/native PNGs absent from frozen sources",
+      "currentCheckpointBranch": "codex/shop-suit/penpot-report-variants"
     },
     {
       "number": 29,
@@ -287,7 +315,11 @@
       "template": "BsCatalogImportPage",
       "mainBoardId": "9d8c9265-2366-809c-8008-c7fcdb94395d",
       "auditClassification": "integrated-source-metadata-only",
-      "fullDesignMatrixComplete": false
+      "fullDesignMatrixComplete": false,
+      "currentImplementationStatus": "catalog import loading/validation/error/retry journeys implemented and tested in #284; appearance references absent",
+      "currentFunctionalCheckpoints": [
+        284
+      ]
     },
     {
       "number": 30,
@@ -309,7 +341,11 @@
         "Member/audit surfaces not separately framed",
         "Create-role action incorrectly shares primary emphasis with invite"
       ],
-      "fullDesignMatrixComplete": false
+      "fullDesignMatrixComplete": false,
+      "currentImplementationStatus": "source-backed Team tab/action/panel/filter corrections implemented and tested in #283; full visual/native matrix incomplete",
+      "currentFunctionalCheckpoints": [
+        283
+      ]
     },
     {
       "number": 32,
@@ -329,5 +365,6 @@
     }
   ],
   "coverageSource": "shop-penpot-cloud-coverage.json",
-  "reconciledStagingBaseline": "73a884b3da407696b3522771c94edb6e32ea7be6"
+  "reconciledStagingBaseline": "73a884b3da407696b3522771c94edb6e32ea7be6",
+  "classificationScope": "auditClassification/auditFindings retain the initial staging-baseline assessment; currentImplementationStatus and journey fields track completed published checkpoints separately from missing visual evidence."
 }

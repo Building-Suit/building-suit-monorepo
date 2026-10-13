@@ -38,9 +38,9 @@ function updateFilter(key: keyof BsReportFilters, value: string | number | boole
       </BsGrid>
       <BsText as="p" size="xs" tone="muted">{{ copy.fullHistory }}</BsText>
     </BsFilterBar>
-    <BsText v-if="view.failed" role="alert" as="p" size="sm" tone="danger">{{ copy.failed }} <BsButton @click="emit('retry')">{{ copy.retry }}</BsButton>
+    <BsText v-if="!view.loading && view.failed" role="alert" as="p" size="sm" tone="danger">{{ copy.failed }} <BsButton @click="emit('retry')">{{ copy.retry }}</BsButton>
     </BsText>
-    <BsText v-else-if="view.exportError" role="alert" as="p" size="sm" tone="danger">{{ view.exportError }}</BsText>
+    <BsText v-else-if="!view.loading && view.exportError" role="alert" as="p" size="sm" tone="danger">{{ view.exportError }}</BsText>
     <BsText v-if="view.loading" role="status" as="p" size="sm" tone="muted">{{ copy.loading }}</BsText>
     <BsText v-else-if="view.denied && !view.failed" as="p" size="sm" tone="muted">{{ copy.denied }}</BsText>
     <BsText v-else-if="view.restricted && !view.failed" as="p" size="sm" tone="muted">{{ copy.costDenied }}</BsText>
