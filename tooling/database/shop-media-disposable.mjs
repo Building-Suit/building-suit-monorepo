@@ -41,9 +41,10 @@ async function run() {
   }
 
   async function request(path, token, body, method = 'POST', contentType = 'application/json') {
+    const multipart = body instanceof FormData
     return fetch(origin + path, {
-      method, headers: { apikey: token === admin ? admin : key, Authorization: `Bearer ${token}`, 'Content-Type': contentType, 'x-upsert': 'false' },
-      body: body === undefined ? undefined : contentType === 'application/json' ? JSON.stringify(body) : body,
+      method, headers: { apikey: token === admin ? admin : key, Authorization: `Bearer ${token}`, ...(!multipart ? { 'Content-Type': contentType } : {}), 'x-upsert': 'false' },
+      body: body === undefined ? undefined : multipart ? body : contentType === 'application/json' ? JSON.stringify(body) : body,
     })
   }
   async function success(response, label) {
@@ -77,7 +78,13 @@ async function run() {
   await success(await request('/rest/v1/rpc/create_owner_shop', outsider, { ...shopArgs, p_shop_name: 'Separate tenant' }), 'Create outsider shop')
   assert.match(shop, /^[0-9a-f-]{36}$/)
   const rpc = (token, action, payload) => request('/rest/v1/rpc/shop_catalog_media', token, { p_shop_id: shop, p_action: action, p_payload: payload })
-  const upload = (token, name, bytes = png, mime = 'image/png', method = 'POST') => request(`/storage/v1/object/${bucket}/${name}`, token, bytes, method, mime)
+  const upload = (token, name, bytes = png, mime = 'image/png', method = 'POST', multipart = false) => {
+    if (!multipart) return request(`/storage/v1/object/${bucket}/${name}`, token, bytes, method, mime)
+    const form = new FormData()
+    form.append('cacheControl', '3600')
+    form.append('', new Blob([bytes], { type: mime }), 'fixture.png')
+    return request(`/storage/v1/object/${bucket}/${name}`, token, form, method)
+  }
   const sign = (token, name) => request(`/storage/v1/object/sign/${bucket}/${name}`, token, { expiresIn: 60 })
 
   for (const kind of ['products', 'services']) {
@@ -88,6 +95,7 @@ async function run() {
     await denied(await upload(key, name), 'Anonymous upload')
     await denied(await upload(owner, name, Buffer.from('<svg/>'), 'image/svg+xml'), 'Active MIME upload')
     await denied(await upload(owner, name, Buffer.alloc(5242881)), 'Oversize upload')
+    await denied(await upload(owner, name, Buffer.alloc(5242881), 'image/png', 'POST', true), 'Oversize multipart upload')
     await denied(await rpc(owner, action, { ...payload, imageObjectName: name, imageUrl: null }), 'Missing object save')
     await success(await upload(owner, name), 'Owner upload')
     const id = await success(await rpc(owner, action, { ...payload, imageObjectName: name, imageUrl: null }), 'Save image reference')
@@ -105,7 +113,7 @@ async function run() {
     await denied(await rpc(outsider, action, { ...payload, [idKey]: id, imageObjectName: name }), 'Cross-tenant catalog save')
     await denied(await upload(owner, name, png, 'image/png', 'PUT'), 'Immutable object overwrite')
     const replacement = `${shop}/${kind}/${randomUUID()}.png`
-    await success(await upload(owner, replacement), 'Replacement upload')
+    await success(await upload(owner, replacement, png, 'image/png', 'POST', true), 'Multipart replacement upload')
     await success(await rpc(owner, action, { ...payload, [idKey]: id, imageObjectName: replacement, imageUrl: null }), 'Replacement save')
     const replaced = await success(await rpc(owner, kind, {}), 'Read replacement')
     assert.equal(replaced.items.find(item => item.id === id)?.imageObjectName, replacement)

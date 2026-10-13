@@ -14,6 +14,12 @@ begin
  foreach kind in array array['products','services'] loop
    n:=s::text||'/'||kind||'/'||gen_random_uuid()::text||'.png';
    if not shop_private.catalog_image_access(n,true,'{"size":12,"mimetype":"image/png"}') then raise exception 'Owner upload denied'; end if;
+   if not shop_private.catalog_image_upload_access(n,'{"contentLength":12,"mimetype":"image/png"}') then raise exception 'Binary preflight denied'; end if;
+   if not shop_private.catalog_image_upload_access(n,'{"mimetype":"image/png"}') then raise exception 'Multipart preflight denied'; end if;
+   if shop_private.catalog_image_upload_access(n,'{"contentLength":0,"mimetype":"image/png"}') then raise exception 'Empty preflight accepted'; end if;
+   if shop_private.catalog_image_upload_access(n,'{"mimetype":"image/svg+xml"}') then raise exception 'Active preflight MIME accepted'; end if;
+   if shop_private.catalog_image_upload_access(n,'{"size":5242881,"mimetype":"image/png"}') then raise exception 'Oversize completed metadata accepted'; end if;
+   if shop_private.catalog_image_access(n,true,'{"contentLength":12,"mimetype":"image/png"}') then raise exception 'Catalog save accepted incomplete metadata'; end if;
    if shop_private.catalog_image_access(n,true,'{"size":5242881,"mimetype":"image/png"}') then raise exception 'Oversize accepted'; end if;
    if shop_private.catalog_image_access(n,true,'{"size":12,"mimetype":"image/svg+xml"}') then raise exception 'Wrong MIME accepted'; end if;
    begin
@@ -44,6 +50,7 @@ do $$
 declare n text:=current_setting('upload.shop')||'/products/'||gen_random_uuid()::text||'.png';
 begin
  if shop_private.catalog_image_access(n,false) or shop_private.catalog_image_access(n,true,'{"size":12,"mimetype":"image/png"}') then raise exception 'Cross-tenant access'; end if;
+ if shop_private.catalog_image_upload_access(n,'{"contentLength":12,"mimetype":"image/png"}') then raise exception 'Cross-tenant preflight access'; end if;
  if exists(select 1 from storage.objects where bucket_id='shop-catalog-images') then raise exception 'Outsider can read images'; end if;
  begin
    insert into storage.objects(bucket_id,name,metadata) values ('shop-catalog-images',n,'{"size":12,"mimetype":"image/png"}');
