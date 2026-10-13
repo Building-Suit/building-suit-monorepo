@@ -22,14 +22,15 @@
       "pixelScope": "unavailable",
       "latestDeltaRecord": null,
       "cloudRelatedDraftPRs": [],
-      "cloudReview": "queued",
+      "cloudReview": "focused presentation/public/auth verification; native pixel/state matrix queued",
       "fullDesignMatrixComplete": false,
       "remainingDesignEvidence": [
         "Remaining language/theme/responsive variants and pixel QA",
         "Exact pricing catalog data",
         "Pricing states",
         "Hero and mobile QA"
-      ]
+      ],
+      "cloudBranch": "codex/shop-suit/cloud-public-auth"
     },
     {
       "number": 2,
@@ -43,11 +44,12 @@
       "pixelScope": "unavailable",
       "latestDeltaRecord": null,
       "cloudRelatedDraftPRs": [],
-      "cloudReview": "queued",
+      "cloudReview": "focused presentation/public/auth verification; native pixel/state matrix queued",
       "fullDesignMatrixComplete": false,
       "remainingDesignEvidence": [
         "Remaining language/theme/responsive variants and pixel QA"
-      ]
+      ],
+      "cloudBranch": "codex/shop-suit/cloud-public-auth"
     },
     {
       "number": 3,
@@ -61,12 +63,13 @@
       "pixelScope": "unavailable",
       "latestDeltaRecord": null,
       "cloudRelatedDraftPRs": [],
-      "cloudReview": "queued",
+      "cloudReview": "focused presentation/public/auth verification; native pixel/state matrix queued",
       "fullDesignMatrixComplete": false,
       "remainingDesignEvidence": [
         "Remaining language/theme/responsive variants and pixel QA",
         "Remaining form feedback and journey states"
-      ]
+      ],
+      "cloudBranch": "codex/shop-suit/cloud-public-auth"
     },
     {
       "number": 4,
@@ -80,11 +83,12 @@
       "pixelScope": "unavailable",
       "latestDeltaRecord": null,
       "cloudRelatedDraftPRs": [],
-      "cloudReview": "queued",
+      "cloudReview": "focused presentation/public/auth verification; native pixel/state matrix queued",
       "fullDesignMatrixComplete": false,
       "remainingDesignEvidence": [
         "Remaining language/theme/responsive variants and pixel QA"
-      ]
+      ],
+      "cloudBranch": "codex/shop-suit/cloud-public-auth"
     },
     {
       "number": 5,
@@ -98,11 +102,12 @@
       "pixelScope": "unavailable",
       "latestDeltaRecord": null,
       "cloudRelatedDraftPRs": [],
-      "cloudReview": "queued",
+      "cloudReview": "focused presentation/public/auth verification; native pixel/state matrix queued",
       "fullDesignMatrixComplete": false,
       "remainingDesignEvidence": [
         "Remaining language/theme/responsive variants and pixel QA"
-      ]
+      ],
+      "cloudBranch": "codex/shop-suit/cloud-public-auth"
     },
     {
       "number": 6,
@@ -116,11 +121,12 @@
       "pixelScope": "unavailable",
       "latestDeltaRecord": null,
       "cloudRelatedDraftPRs": [],
-      "cloudReview": "queued",
+      "cloudReview": "focused presentation/public/auth verification; native pixel/state matrix queued",
       "fullDesignMatrixComplete": false,
       "remainingDesignEvidence": [
         "Remaining language/theme/responsive variants and pixel QA"
-      ]
+      ],
+      "cloudBranch": "codex/shop-suit/cloud-public-auth"
     },
     {
       "number": 7,
@@ -134,11 +140,12 @@
       "pixelScope": "unavailable",
       "latestDeltaRecord": null,
       "cloudRelatedDraftPRs": [],
-      "cloudReview": "queued",
+      "cloudReview": "focused presentation/public/auth verification; native pixel/state matrix queued",
       "fullDesignMatrixComplete": false,
       "remainingDesignEvidence": [
         "Remaining language/theme/responsive variants and pixel QA"
-      ]
+      ],
+      "cloudBranch": "codex/shop-suit/cloud-public-auth"
     },
     {
       "number": 8,
@@ -181,12 +188,13 @@
         "other": []
       },
       "cloudRelatedDraftPRs": [],
-      "cloudReview": "queued",
+      "cloudReview": "focused presentation/public/auth verification; native pixel/state matrix queued",
       "fullDesignMatrixComplete": false,
       "remainingDesignEvidence": [
         "Remaining language/theme/responsive variants and pixel QA",
         "Remaining form feedback and journey states"
-      ]
+      ],
+      "cloudBranch": "codex/shop-suit/cloud-public-auth"
     },
     {
       "number": 9,
@@ -234,12 +242,13 @@
         ]
       },
       "cloudRelatedDraftPRs": [],
-      "cloudReview": "queued",
+      "cloudReview": "focused presentation/public/auth verification; native pixel/state matrix queued",
       "fullDesignMatrixComplete": false,
       "remainingDesignEvidence": [
         "Remaining language/theme/responsive variants and pixel QA",
         "Remaining form feedback and journey states"
-      ]
+      ],
+      "cloudBranch": "codex/shop-suit/cloud-public-auth"
     },
     {
       "number": 10,
@@ -270,12 +279,13 @@
         "other": []
       },
       "cloudRelatedDraftPRs": [],
-      "cloudReview": "queued",
+      "cloudReview": "focused presentation/public/auth verification; native pixel/state matrix queued",
       "fullDesignMatrixComplete": false,
       "remainingDesignEvidence": [
         "Remaining language/theme/responsive variants and pixel QA",
         "Remaining form feedback and journey states"
-      ]
+      ],
+      "cloudBranch": "codex/shop-suit/cloud-public-auth"
     },
     {
       "number": 11,
@@ -310,12 +320,13 @@
         "other": []
       },
       "cloudRelatedDraftPRs": [],
-      "cloudReview": "queued",
+      "cloudReview": "focused presentation/public/auth verification; native pixel/state matrix queued",
       "fullDesignMatrixComplete": false,
       "remainingDesignEvidence": [
         "Remaining language/theme/responsive variants and pixel QA",
         "Remaining form feedback and journey states"
-      ]
+      ],
+      "cloudBranch": "codex/shop-suit/cloud-public-auth"
     },
     {
       "number": 12,
@@ -346,12 +357,13 @@
         "other": []
       },
       "cloudRelatedDraftPRs": [],
-      "cloudReview": "queued",
+      "cloudReview": "focused presentation/public/auth verification; native pixel/state matrix queued",
       "fullDesignMatrixComplete": false,
       "remainingDesignEvidence": [
         "Remaining language/theme/responsive variants and pixel QA",
         "Remaining form feedback and journey states"
-      ]
+      ],
+      "cloudBranch": "codex/shop-suit/cloud-public-auth"
     },
     {
       "number": 13,
@@ -741,7 +753,9 @@
       "referencePixels": null,
       "pixelScope": "unavailable",
       "latestDeltaRecord": null,
-      "cloudRelatedDraftPRs": [],
+      "cloudRelatedDraftPRs": [
+        268
+      ],
       "cloudReview": "supported admin queue layout and existing billing/team/settings flow verification; native pixel matrix queued",
       "fullDesignMatrixComplete": false,
       "remainingDesignEvidence": [
@@ -762,7 +776,9 @@
       "referencePixels": null,
       "pixelScope": "unavailable",
       "latestDeltaRecord": null,
-      "cloudRelatedDraftPRs": [],
+      "cloudRelatedDraftPRs": [
+        268
+      ],
       "cloudReview": "supported admin queue layout and existing billing/team/settings flow verification; native pixel matrix queued",
       "fullDesignMatrixComplete": false,
       "remainingDesignEvidence": [
@@ -783,7 +799,9 @@
       "referencePixels": null,
       "pixelScope": "unavailable",
       "latestDeltaRecord": null,
-      "cloudRelatedDraftPRs": [],
+      "cloudRelatedDraftPRs": [
+        268
+      ],
       "cloudReview": "supported admin queue layout and existing billing/team/settings flow verification; native pixel matrix queued",
       "fullDesignMatrixComplete": false,
       "remainingDesignEvidence": [
@@ -891,7 +909,9 @@
           }
         ]
       },
-      "cloudRelatedDraftPRs": [],
+      "cloudRelatedDraftPRs": [
+        268
+      ],
       "cloudReview": "supported admin queue layout and existing billing/team/settings flow verification; native pixel matrix queued",
       "fullDesignMatrixComplete": false,
       "remainingDesignEvidence": [

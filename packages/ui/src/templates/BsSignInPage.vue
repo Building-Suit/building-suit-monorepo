@@ -2,7 +2,7 @@
 const email = defineModel<string>('email', { required: true })
 const password = defineModel<string>('password', { required: true })
 defineProps<{
-  product: { name: string; assetPrefix?: string; homeLabel: string; title: string; description: string }
+  product: { name: string; presentation?: 'default' | 'flat'; assetPrefix?: string; homeLabel: string; title: string; description: string }
   copy: { eyebrow?: string; title: string; description: string; email: string; password: string; submit: string; pending: string; accountPrompt?: string; signup?: string }
   signupTo?: string
   forgot?: { to: string; label: string }
@@ -15,7 +15,7 @@ defineProps<{
 const emit = defineEmits<{ submit: [] }>()
 </script>
 <template>
-  <BsAuthLayout :product-name="product.name" :home-label="product.homeLabel" :title="product.title" :description="product.description">
+  <BsAuthLayout :presentation="product.presentation" :product-name="product.name" :home-label="product.homeLabel" :title="product.title" :description="product.description">
     <template #logo="{ tone }"><BsProductLogo :name="product.name" :asset-prefix="product.assetPrefix" :tone="tone" size="auth" /></template>
     <BsAuthForm :eyebrow="copy.eyebrow" :title="copy.title" :description="copy.description" :pending="pending" :error="error" :submit-label="copy.submit" :pending-label="copy.pending" :data-hydrated="hydrated" :data-client-ready="hydrated ? 'true' : 'false'" @submit="emit('submit')">
       <BsField v-slot="field" :label="copy.email" required><BsInput :id="field.id" v-model="email" type="email" :autocomplete="emailAutocomplete ?? 'email'" required dir="ltr" /></BsField>

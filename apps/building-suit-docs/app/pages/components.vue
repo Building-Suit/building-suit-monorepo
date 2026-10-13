@@ -362,7 +362,7 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
 
     <BsContentSection
       :title="isArabic ? 'المصادقة والتحقق' : 'Authentication and verification'"
-      :description="isArabic ? 'هندسة مشتركة للنموذج وحالة التحقق مع محتوى يقدمه المنتج.' : 'Shared form geometry and verification states with product-supplied content.'"
+      :description="isArabic ? 'هندسة مشتركة للنموذج وحالة التحقق مع محتوى يقدمه المنتج. يمكن لغلاف المنتج اختيار presentation=flat للأسطح ومقاسات العناوين القياسية، مع الإبقاء على الوضع الافتراضي.' : 'Shared form geometry and verification states with product-supplied content. Product auth frames may opt into presentation=flat for canonical surfaces and heading tokens; the default remains available.'"
     >
       <div class="grid items-start gap-5 xl:grid-cols-2">
         <BsAuthForm
