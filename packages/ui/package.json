@@ -319,7 +319,9 @@
     "./control-plane-presentation": "./src/types/controlPlanePresentation.ts",
     "./BsControlPlaneShell": "./src/templates/BsControlPlaneShell.vue",
     "./molecules/BsCatalogImageUploader": "./src/molecules/BsCatalogImageUploader.vue",
-    "./molecules/BsDashboardMetric": "./src/molecules/BsDashboardMetric.vue"
+    "./molecules/BsDashboardMetric": "./src/molecules/BsDashboardMetric.vue",
+    "./molecules/BsQuantityStepper": "./src/molecules/BsQuantityStepper.vue",
+    "./organisms/BsPointOfSaleCart": "./src/organisms/BsPointOfSaleCart.vue"
   },
   "dependencies": {
     "primevue": "4.5.5",

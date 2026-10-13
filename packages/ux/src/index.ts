@@ -223,3 +223,9 @@ export { useCalendarNavigation, calendarDateKey, calendarAddDays, calendarLocalD
 export type { CalendarView } from './composables/useCalendarNavigation.ts'
 
 export { useFileUpload } from './composables/useFileUpload.ts'
+
+export { useViewportSpace } from './composables/useViewportSpace.ts'
+export { usePointOfSaleSections } from './composables/usePointOfSaleSections.ts'
+export { boundedQuantity, steppedQuantity, restoreQuantityInput } from './utils/quantity.ts'
+
+export { focusAfterRecordRemoval } from './utils/collectionFocus.ts'

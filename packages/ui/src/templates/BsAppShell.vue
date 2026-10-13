@@ -23,7 +23,7 @@ const { mobileNavOpen, topHeader, closeMobileNav, isActive } = useWorkspaceNavig
       </main>
     </div>
 
-    <nav v-if="mobileLinks.length" :style="{ gridTemplateColumns: `repeat(${mobileLinks.length}, minmax(0, 1fr))` }" class="fixed inset-x-0 bottom-0 z-30 grid border-t border-[var(--bs-border)] bg-surface px-2 pb-[env(safe-area-inset-bottom)] shadow-raised lg:hidden" :aria-label="labels.navigation">
+    <nav v-if="mobileLinks.length" data-viewport-bottom :style="{ gridTemplateColumns: `repeat(${mobileLinks.length}, minmax(0, 1fr))` }" class="fixed inset-x-0 bottom-0 z-30 grid border-t border-[var(--bs-border)] bg-surface px-2 pb-[env(safe-area-inset-bottom)] shadow-raised lg:hidden" :aria-label="labels.navigation">
       <NuxtLink
         v-for="item in mobileLinks"
         :key="`mobile-${item.to}`"

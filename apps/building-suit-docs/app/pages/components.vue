@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ChangelogFeed, ChangelogCopy } from '@building-suit/contracts'
+const exampleQuantity = ref(1)
 const changelogState = ref<'ready' | 'loading' | 'error' | 'denied'>('ready')
 const changelogFeed: ChangelogFeed = {
   serverNow: '2026-10-10T12:00:00Z',
@@ -146,6 +147,8 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
       <BsText size="sm" tone="muted">{{ isArabic ? 'مثال توضيحي على خلية فارغة وحالة اليوم.' : 'Illustrative empty calendar cell and today marker.' }}</BsText>
       <BsAppointmentCalendar view="day" :transitioning="false" :copy="{ title: isArabic ? 'تقويم المواعيد' : 'Appointment calendar', empty: isArabic ? 'لا توجد مواعيد' : 'No appointments', edit: isArabic ? 'تعديل' : 'Edit', reschedule: isArabic ? 'تعديل الموعد' : 'Reschedule', saving: isArabic ? 'جارٍ الحفظ' : 'Saving', history: isArabic ? 'السجل' : 'History' }" :days="[{ id: '2026-10-12', label: isArabic ? 'الاثنين ١٢ أكتوبر' : 'Monday 12 October', today: true, appointments: [] }]" />
     </BsContentSection>
+
+    <BsContentSection :title="isArabic ? 'الكمية' : 'Touch quantity controls'"><BsQuantityStepper v-model="exampleQuantity" :max="3" :label="isArabic ? 'الكمية' : 'Quantity'" :decrease-label="isArabic ? 'تقليل الكمية' : 'Decrease quantity'" :increase-label="isArabic ? 'زيادة الكمية' : 'Increase quantity'" /></BsContentSection>
 
     <BsContentSection :title="isArabic ? 'بطاقات كتالوج نقطة البيع' : 'POS catalog image cards'">
       <BsGrid :columns="3"><BsCatalogTile :name="isArabic ? 'مثال منتج بدون صورة' : 'Example product without image'" price="30" :detail="isArabic ? 'بيانات توضيحية' : 'Illustrative data'" :image-label="isArabic ? 'بدون صورة' : 'No image'" /><BsCatalogTile :name="isArabic ? 'مثال خدمة بدون صورة' : 'Example service without image'" price="10" :detail="isArabic ? 'بيانات توضيحية' : 'Illustrative data'" :image-label="isArabic ? 'بدون صورة' : 'No image'" /></BsGrid>

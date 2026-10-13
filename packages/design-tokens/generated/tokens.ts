@@ -476,6 +476,14 @@ export const tokens = {
     }
   },
   "component": {
+    "pointOfSale": {
+      "panelPadding": {
+        "value": "20px"
+      },
+      "catalogTileMinimumHeight": {
+        "value": "200px"
+      }
+    },
     "dashboardChart": {
       "barWidth": {
         "value": "44px"

@@ -7,7 +7,7 @@ const { image, broken, failed } = useOptionalImage(() => props.src, () => elemen
 <template>
   <div class="bs-catalog-image">
     <img v-if="image && !broken" ref="element" :src="image" :alt="name" loading="lazy" decoding="async" referrerpolicy="no-referrer" @error="failed">
-    <div v-else role="img" :aria-label="placeholder" class="bs-catalog-image__placeholder"><BsIcon name="ledger" :size="28" /><span>{{ placeholder }}</span></div>
+    <div v-else role="img" :aria-label="placeholder" class="bs-catalog-image__placeholder"><BsIcon name="image" :size="28" /><span class="sr-only">{{ placeholder }}</span></div>
   </div>
 </template>
 <style scoped>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { usePointOfSaleSections } from '@building-suit/ux'
 import type { BsPointOfSaleCopy, BsPointOfSaleView, BsPointOfSaleChoice, BsPointOfSaleCatalogItem, BsPointOfSaleCartLine, BsPointOfSaleCustomer, BsPointOfSalePaymentForm } from '../types/pointOfSalePresentation'
 const props = withDefaults(defineProps<{ variant?: 'default' | 'shop'; copy: BsPointOfSaleCopy; view: BsPointOfSaleView; itemTypeOptions: BsPointOfSaleChoice[]; categoryOptions: BsPointOfSaleChoice[]; appointmentOptions: BsPointOfSaleChoice[]; staffOptions: BsPointOfSaleChoice[]; paymentOptions: BsPointOfSaleChoice[]; catalogItems: BsPointOfSaleCatalogItem[]; cartLines: BsPointOfSaleCartLine[]; customerOptions: BsPointOfSaleCustomer[]; staffId: string; appointmentId: string; customerId: string }>(), { variant: 'default' })
 const catalogSearch = defineModel<string>('catalogSearch', { required: true })
@@ -7,27 +8,30 @@ const itemType = defineModel<string>('itemType', { required: true })
 const catalogPage = defineModel<number>('catalogPage', { required: true })
 const paymentForm = defineModel<BsPointOfSalePaymentForm>('paymentForm', { required: true })
 const emit = defineEmits<{ reset: []; checkout: []; retryCatalog: []; retryContext: []; add: [key: string]; remove: [id: string]; quantity: [id: string, value: number]; appointment: [id: string]; staff: [id: string]; customerSearch: [value: string]; resetCustomerSearch: []; customer: [value: string | number | null | undefined]; clearCustomer: []; dismissFeedback: []; barcode: [code: string] }>()
+const panels = usePointOfSaleSections()
+const shopCart = ref<{ focus: () => void; focusCustomer: () => void } | null>(null)
+const catalogHeading = ref<{ $el: HTMLElement } | null>(null)
 const catalogInput = ref<{ focus: () => void } | null>(null)
 const customerControl = ref<{ focus: () => void } | null>(null)
-const navigation = usePointOfSaleKeyboard({ blocked: () => props.view.shortcutBlocked, focusCatalog: () => catalogInput.value?.focus(), focusCustomer: () => customerControl.value?.focus(), checkout: () => emit('checkout'), dismissFeedback: () => emit('dismissFeedback'), barcode: code => emit('barcode', code) })
+const navigation = usePointOfSaleKeyboard({ blocked: () => props.view.shortcutBlocked, focusCatalog: () => panels.select('catalog', () => catalogInput.value?.focus()), focusCustomer: () => props.variant === 'shop' ? panels.select('cart', () => shopCart.value?.focusCustomer()) : customerControl.value?.focus(), checkout: () => emit('checkout'), dismissFeedback: () => emit('dismissFeedback'), barcode: code => emit('barcode', code) })
 defineExpose({ focusCatalog: navigation.focusCatalog })
 </script>
 <template>
-  <BsStack>
-    <BsPageHeader  :title="copy.title" :subtitle="copy.subtitle">
+  <BsStack :class="{ 'bs-pos-shop': variant === 'shop' }" :data-active-panel="panels.selected.value">
+    <BsPageHeader class="bs-pos-header" :title="copy.title" :subtitle="variant === 'shop' ? undefined : copy.subtitle">
       <template #actions>
-        <BsButton severity="secondary" :disabled="view.checkingOut || view.confirming" @click="emit('reset')">{{ copy.reset }}</BsButton>
+        <BsButton :variant="variant === 'shop' ? 'link' : 'default'" :disabled="view.checkingOut || view.confirming" @click="emit('reset')">{{ copy.reset }}</BsButton>
       </template>
     </BsPageHeader>
     <BsText v-if="!view.available && !view.loadingContext" as="p" size="sm">{{ copy.noShop }}</BsText>
     <template v-else-if="view.available">
-      <BsPanel :aria-label="copy.cart" padding="md">
-        <BsText as="p" size="sm">
+      <BsPanel :aria-label="copy.cart" padding="md" :class="{ 'bs-pos-summary': variant === 'shop' }">
+        <BsText as="p" size="md">
           <BsText as="strong">{{ copy.location }}:</BsText> {{ view.location }} · <BsText as="strong">{{ copy.staff }}:</BsText> {{ view.staff }}</BsText>
         <BsInline>
-          <BsLink to="#pos-catalog-title" external>{{ copy.catalog }}</BsLink>
-          <BsLink to="#pos-cart-title" external>{{ view.reviewLabel }} · {{ view.total }}</BsLink>
-          <BsLink to="/cash-shifts">{{ copy.closeShift }}</BsLink>
+          <BsButton v-if="variant === 'shop'" variant="link" :aria-pressed="panels.selected.value === 'catalog'" @click="panels.select('catalog', () => catalogHeading?.$el.focus())">{{ copy.catalog }}</BsButton><BsLink v-else to="#pos-catalog-title" external>{{ copy.catalog }}</BsLink>
+          <BsButton v-if="variant === 'shop'" variant="link" :aria-pressed="panels.selected.value === 'cart'" @click="panels.select('cart', () => shopCart?.focus())">{{ view.reviewLabel }} · {{ view.total }}</BsButton><BsLink v-else to="#pos-cart-title" external>{{ view.reviewLabel }} · {{ view.total }}</BsLink>
+          <BsLink class="bs-pos-shift-link" to="/cash-shifts">{{ copy.closeShift }}</BsLink><BsButton v-if="variant === 'shop'" class="bs-pos-mobile-reset" variant="link" :disabled="view.checkingOut || view.confirming" @click="emit('reset')">{{ copy.reset }}</BsButton>
         </BsInline>
       </BsPanel>
       <BsText v-if="view.locationChanged" role="alert" as="p" size="sm" tone="danger">{{ copy.locationChanged }}</BsText>
@@ -35,13 +39,13 @@ defineExpose({ focusCatalog: navigation.focusCatalog })
       <BsVisuallyHidden aria-live="polite">{{ view.scanMessage }}</BsVisuallyHidden>
       <BsText v-if="view.checkingOut" role="status" as="p" size="sm" emphasis="semibold">{{ copy.paying }}</BsText>
       <BsFieldGroup :disabled="view.checkingOut" :inert="view.checkingOut" :aria-busy="view.checkingOut" :legend="''">
-        <BsGrid :columns="2" :class="{ 'bs-pos-workspace': variant === 'shop' }">
-          <BsPanel aria-labelledby="pos-catalog-title" padding="md">
-            <BsHeading id="pos-catalog-title" tabindex="-1" :level="2">{{ copy.catalog }}</BsHeading>
-            <BsFilterBar :label="copy.catalog">
+        <BsGrid :columns="2" :class="{ 'bs-pos-workspace': variant === 'shop' }" :data-active-panel="panels.selected.value">
+          <BsPanel aria-labelledby="pos-catalog-title" padding="md" :class="{ 'bs-pos-catalog-panel': variant === 'shop' }">
+            <BsHeading id="pos-catalog-title" ref="catalogHeading" tabindex="-1" :level="2">{{ copy.catalog }}</BsHeading>
+            <BsFilterBar :label="copy.catalog" :variant="variant === 'shop' ? 'plain' : 'surface'" :class="{ 'bs-pos-catalog-filters': variant === 'shop' }">
               <BsInput id="pos-catalog-search" ref="catalogInput" v-model="catalogSearch" type="search" :placeholder="copy.search" :aria-label="copy.search"/>
               <BsSelect v-model="categoryFilter" :label="copy.category" :options="categoryOptions" option-label="label" option-value="value" option-disabled="disabled"/>
-              <BsInline :aria-label="copy.catalog" role="group">
+              <BsInline class="bs-pos-kind-filter" :aria-label="copy.catalog" role="group">
                 <BsButton v-for="kind in itemTypeOptions" :key="kind.value" variant="chip" type="button" :aria-pressed="itemType === kind.value" @click="itemType = kind.value">{{ kind.label }}</BsButton>
               </BsInline>
             </BsFilterBar>
@@ -54,7 +58,7 @@ defineExpose({ focusCatalog: navigation.focusCatalog })
             <BsText v-else-if="!catalogItems.length" as="p" size="sm" tone="muted">{{ copy.noResults }}</BsText>
             <BsList v-else :class="{ 'bs-pos-catalog-grid': variant === 'shop' }" :aria-label="copy.catalog">
               <BsListItem v-for="item in catalogItems" :key="item.key">
-                <BsCatalogTile v-if="variant === 'shop'" :name="item.name" :price="item.price" :detail="item.description" :stock="item.stock" :image-url="item.imageUrl" :image-label="copy.imagePlaceholder || ''" :disabled="view.locationChanged || view.checkingOut" @select="emit('add', item.key)" />
+                <BsCatalogTile v-if="variant === 'shop'" :name="item.name" :price="item.price" :detail="item.description" :stock="item.stock" :image-url="item.imageUrl" :image-label="copy.imagePlaceholder || ''" :disabled="item.disabled || view.locationChanged || view.checkingOut || view.confirming" @select="emit('add', item.key)" />
                 <BsActionTile v-else type="button" :disabled="view.locationChanged || view.checkingOut" @click="emit('add', item.key)">
                   <BsText as="strong">{{ item.name }}</BsText>
                   <BsText as="span" size="xs" tone="muted">
@@ -75,7 +79,8 @@ defineExpose({ focusCatalog: navigation.focusCatalog })
               </BsButton>
             </BsInline>
           </BsPanel>
-          <BsPanel aria-labelledby="pos-cart-title" padding="md" :class="{ 'bs-pos-order-panel': variant === 'shop' }">
+          <BsPointOfSaleCart v-if="variant === 'shop'" ref="shopCart" v-model:payment-form="paymentForm" :copy="copy" :view="view" :cart-lines="cartLines" :appointment-options="appointmentOptions" :staff-options="staffOptions" :customer-options="customerOptions" :payment-options="paymentOptions" :appointment-id="appointmentId" :staff-id="staffId" :customer-id="customerId" @checkout="emit('checkout')" @retry-context="emit('retryContext')" @remove="emit('remove', $event)" @quantity="(id, value) => emit('quantity', id, value)" @appointment="emit('appointment', $event)" @staff="emit('staff', $event)" @customer-search="emit('customerSearch', $event)" @reset-customer-search="emit('resetCustomerSearch')" @customer="emit('customer', $event)" @clear-customer="emit('clearCustomer')" />
+          <BsPanel v-else aria-labelledby="pos-cart-title" padding="md">
             <BsHeading id="pos-cart-title" tabindex="-1" :level="2">{{ copy.cart }}</BsHeading>
             <BsText v-if="view.contextLoading" role="status" as="p" size="sm">{{ copy.loading }}</BsText>
             <BsText v-else-if="view.contextError" role="alert" as="p" size="sm" tone="danger">{{ view.contextError }} <BsButton variant="link" type="button" @click="emit('retryContext')">{{ copy.retry }}</BsButton>
@@ -146,11 +151,27 @@ defineExpose({ focusCatalog: navigation.focusCatalog })
 </template>
 
 <style scoped>
-.bs-pos-workspace { align-items: start; grid-template-columns: minmax(0, 1fr) minmax(20rem, 24rem); }
+.bs-pos-workspace { gap: var(--bs-space-5); align-items: start; grid-template-columns: minmax(0, 1fr) minmax(20rem, 24rem); }
 .bs-pos-catalog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 9rem), 1fr)); gap: .75rem; list-style: none; padding: 0; }
 .bs-pos-catalog-grid :deep(.bs-list-item) { min-inline-size: 0; padding: 0; }
 .bs-pos-order-panel { position: sticky; inset-block-start: 5rem; min-inline-size: 0; max-block-size: calc(100dvh - 6rem); overflow-y: auto; }
 @media (min-width: 1600px) { .bs-pos-workspace { grid-template-columns: minmax(0, 1fr) 26rem; } }
-@media (max-width: 1199px) { .bs-pos-workspace { grid-template-columns: minmax(0, 1fr); } .bs-pos-order-panel { position: static; max-block-size: none; overflow-y: visible; } }
+@media (max-width: 1023px) { .bs-pos-workspace { grid-template-columns: minmax(0, 1fr); } .bs-pos-order-panel { position: static; max-block-size: none; overflow-y: visible; } }
 @media (max-width: 639px) { .bs-pos-catalog-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; } }
+.bs-pos-summary { flex-direction: row; justify-content: space-between; align-items: center; padding: var(--bs-space-3) var(--bs-space-5); }
+.bs-pos-shop :deep(.bs-field-group__content) { margin-block-start: 0; }
+@media (max-width: 1023px) {
+  .bs-pos-summary { flex-wrap: wrap; }
+  .bs-pos-workspace[data-active-panel='catalog'] > :deep(.bs-pos-cart), .bs-pos-workspace[data-active-panel='cart'] > .bs-pos-catalog-panel { display: none; }
+}
+.bs-pos-catalog-panel { padding: var(--bs-component-point-of-sale-panel-padding); }
+.bs-pos-catalog-filters :deep(.ls-toolbar__main) { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: var(--bs-space-4); }
+.bs-pos-catalog-filters :deep(.ls-toolbar__main > :first-child) { grid-column: 1 / -1; }
+.bs-pos-kind-filter { justify-content: space-between; }
+.bs-pos-shop { gap: var(--bs-space-4); }
+.bs-pos-mobile-reset { display: none; }
+@media (max-width: 1023px) {
+  .bs-pos-shop[data-active-panel='cart'] > .bs-pos-header, .bs-pos-shop[data-active-panel='cart'] .bs-pos-summary > p, .bs-pos-shop[data-active-panel='cart'] .bs-pos-shift-link { display: none; }
+  .bs-pos-shop[data-active-panel='cart'] .bs-pos-mobile-reset { display: inline-flex; }
+}
 </style>

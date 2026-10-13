@@ -1,10 +1,10 @@
 export interface BsPointOfSaleChoice { value: string; label: string }
-export interface BsPointOfSaleCatalogItem { imageUrl?: string | null; id: string; key: string; name: string; description: string; price: string; stock: string }
-export interface BsPointOfSaleCartLine { id: string; name: string; quantity: number; total: string }
+export interface BsPointOfSaleCatalogItem { disabled?: boolean; imageUrl?: string | null; id: string; key: string; name: string; description: string; price: string; stock: string }
+export interface BsPointOfSaleCartLine { id: string; name: string; quantity: number; maximumQuantity?: number | null; total: string }
 export interface BsPointOfSaleCustomer { id: string; identity: string; name: string; phone: string | null }
 export interface BsPointOfSalePaymentForm { method: string; reference: string; notes: string }
-export interface BsPointOfSaleView { available: boolean; loadingContext: boolean; location: string; staff: string; locationChanged: boolean; error: string; scanMessage: string; checkingOut: boolean; confirming: boolean; shortcutBlocked: boolean; catalogLoading: boolean; catalogError: string; catalogTotal: number; catalogPageSize: number; contextLoading: boolean; contextError: string; appointmentLocked: boolean; customerDisabled: boolean; customerBusy: boolean; customerDisplay: string; customerEmpty: string; customerEmptyFilter: string; hasCustomer: boolean; checkoutDisabled: boolean; total: string; reviewLabel: string; payLabel: string }
-export interface BsPointOfSaleCopy { imagePlaceholder?: string;
+export interface BsPointOfSaleView { cartCount?: string; available: boolean; loadingContext: boolean; location: string; staff: string; locationChanged: boolean; error: string; scanMessage: string; checkingOut: boolean; confirming: boolean; shortcutBlocked: boolean; catalogLoading: boolean; catalogError: string; catalogTotal: number; catalogPageSize: number; contextLoading: boolean; contextError: string; appointmentLocked: boolean; customerDisabled: boolean; customerBusy: boolean; customerDisplay: string; customerEmpty: string; customerEmptyFilter: string; hasCustomer: boolean; checkoutDisabled: boolean; total: string; reviewLabel: string; payLabel: string }
+export interface BsPointOfSaleCopy { decrease?: string; increase?: string; imagePlaceholder?: string;
   appointment: string
   cart: string
   catalog: string

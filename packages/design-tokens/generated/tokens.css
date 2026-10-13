@@ -131,6 +131,8 @@
   --bs-shadow-elevation1-dark: 0 1px 2px rgba(0, 0, 0, 0.28);
   --bs-shadow-elevation2-dark: 0 10px 28px rgba(0, 0, 0, 0.36);
   --bs-shadow-elevation3-dark: 0 24px 64px rgba(0, 0, 0, 0.52);
+  --bs-component-point-of-sale-panel-padding: 20px;
+  --bs-component-point-of-sale-catalog-tile-minimum-height: 200px;
   --bs-component-dashboard-chart-bar-width: 44px;
   --bs-component-dashboard-chart-plot-maximum-width: 680px;
   --bs-component-dashboard-metric-minimum-height: 144px;

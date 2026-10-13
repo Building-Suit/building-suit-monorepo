@@ -310,6 +310,19 @@
         "apps/shop-suit/app/pages/dashboard.vue"
       ],
       "migrationStatus": "shared metric molecule; bounded Penpot alignment in progress"
+    },
+    {
+      "family": "pos-cart",
+      "owner": "packages/ui",
+      "components": [
+        "BsPointOfSaleCart",
+        "BsQuantityStepper"
+      ],
+      "adapterBoundary": "typed catalog/cart/customer projections, product-owned quantity limits and existing checkout commands; shared UX owns viewport, section, stepping and focus lifecycle",
+      "auditSources": [
+        "apps/shop-suit/app/pages/pos.vue"
+      ],
+      "migrationStatus": "bounded POS reference alignment in progress"
     }
   ]
 }
