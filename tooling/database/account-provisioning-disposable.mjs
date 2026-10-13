@@ -51,6 +51,12 @@ async function run() {
   const sourceSession=await call(sasOrigin,sas.ANON_KEY,sas.ANON_KEY,'/auth/v1/token?grant_type=password',{email:sourceEmail,password:sourcePassword})
   await assert.rejects(call(sasOrigin,sas.ANON_KEY,sas.ANON_KEY,'/auth/v1/signup',{email:`outsider-${randomUUID()}@example.test`,password:`Fixture-${randomUUID()}!`}), 'Public SAS signup must remain closed')
   const actor={...rpc(sasOrigin,sas.ANON_KEY,sourceSession.access_token),auth:{getUser:async()=>{try{return {data:{user:await call(sasOrigin,sas.ANON_KEY,sourceSession.access_token,'/auth/v1/user',undefined,'GET')},error:null}}catch(error){return {data:{user:null},error}}}}}
+  // Empty disposable projects need explicit synthetic catalog rows; never manufacture app runtime defaults.
+  sql('shop',`insert into public.plans(portal_id,name,slug,price_amount,currency,billing_interval,trial_days,is_active,is_public,is_purchasable,is_coming_soon,resource_limits)
+    select id,'Team fixture','team',699,'EGP','monthly',7,true,true,true,false,'{"active_locations":1,"active_members":8,"active_products":500,"active_services":100,"active_customers":2000,"active_suppliers":150}'::jsonb from public.portals where key='shop-crm' on conflict(portal_id,slug) do nothing;
+    insert into public.plans(portal_id,name,slug,price_amount,currency,billing_interval,trial_days,is_active,is_public,is_purchasable,is_coming_soon,resource_limits)
+    select id,'Internal trial fixture','full-product-trial',0,'EGP','monthly',7,true,false,false,false,'{"active_locations":null,"active_members":null,"active_products":null,"active_services":null,"active_customers":null,"active_suppliers":null}'::jsonb from public.portals where key='shop-crm' on conflict(portal_id,slug) do nothing;
+    select shop_private.reconcile_plan_catalog();`)
   const ids={source:randomUUID(),target:randomUUID(),binding:randomUUID(),principal:randomUUID(),targetBinding:randomUUID(),suit:randomUUID(),adapter:randomUUID(),provider:randomUUID()}
   const keyId='disposable-account-v1', key=crypto.getRandomValues(new Uint8Array(32)), encoded=Buffer.from(key).toString('base64url')
   const operations=['adapter.capabilities.read','shop.platform.query','shop.plan.query','shop.plan.command','shop.account.query','shop.account.command']
