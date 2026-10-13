@@ -5,7 +5,7 @@ import { isIP } from 'node:net'
 export interface RpcClient {
   rpc(name: string, args?: Record<string, unknown>): PromiseLike<{ data: unknown; error: unknown }>
 }
-export interface SignedAttempt {
+export interface AccountSignedAttempt {
   attemptId: string
   url: string
   allowedHosts: string[]
@@ -17,7 +17,7 @@ export interface SignedAttempt {
 export interface TargetResponse { status: number; headers: Record<string, string>; body: string }
 
 /** Reject private, loopback, link-local, multicast and reserved ranges before connecting. */
-export function isPublicAddress(address: string): boolean {
+export function isPublicAccountAddress(address: string): boolean {
   if (isIP(address) === 4) {
     const octets = address.split('.').map(Number)
     const a = octets[0]!, b = octets[1]!, c = octets[2]!
@@ -33,7 +33,7 @@ export function isPublicAddress(address: string): boolean {
     && !/^(?:2001|2002|3fff):/i.test(address)
 }
 
-export async function resolveAttempt(attempt: SignedAttempt, resolve = lookup) {
+export async function resolveAttempt(attempt: AccountSignedAttempt, resolve = lookup) {
   const url = new URL(attempt.url)
   if (url.protocol !== 'https:' || url.port || url.username || url.password || url.search || url.hash
     || url.pathname !== '/functions/v1/shop-super-admin-bridge/v1/invoke'
@@ -43,12 +43,12 @@ export async function resolveAttempt(attempt: SignedAttempt, resolve = lookup) {
     || !Number.isInteger(attempt.maxResponseBytes) || attempt.maxResponseBytes < 1 || attempt.maxResponseBytes > 1048576
     || typeof attempt.body !== 'string' || Buffer.byteLength(attempt.body) > 65536) throw new Error('Adapter egress denied')
   const addresses = await resolve(url.hostname, { all: true, verbatim: true })
-  if (!addresses.length || addresses.some(item => !isPublicAddress(item.address))) throw new Error('Adapter egress denied')
+  if (!addresses.length || addresses.some(item => !isPublicAccountAddress(item.address))) throw new Error('Adapter egress denied')
   return { url, address: addresses[0]! }
 }
 
 /** DNS is resolved once and pinned in the socket lookup. TLS still verifies the configured hostname. */
-export async function sendSignedAttempt(attempt: SignedAttempt): Promise<TargetResponse> {
+export async function sendAccountSignedAttempt(attempt: AccountSignedAttempt): Promise<TargetResponse> {
   const startedAt = Date.now()
   let dnsTimer: ReturnType<typeof setTimeout> | undefined
   const resolved = await Promise.race([
@@ -97,13 +97,13 @@ export async function sendSignedAttempt(attempt: SignedAttempt): Promise<TargetR
 }
 
 /** The database verifies signatures, response binding and digest before any success is exposed. */
-export async function dispatchRequest(actor: RpcClient, worker: RpcClient, command: Record<string, unknown>, send = sendSignedAttempt) {
+export async function dispatchRequest(actor: RpcClient, worker: RpcClient, command: Record<string, unknown>, send = sendAccountSignedAttempt) {
   const enqueued = await actor.rpc('super_admin_adapter_enqueue', { p_input: command })
   if (enqueued.error || typeof enqueued.data !== 'string') throw new Error('Adapter request unavailable')
   const requestId = command.requestId as string
   const claimed = await worker.rpc('super_admin_adapter_claim', { p_dispatch_id: enqueued.data })
   if (claimed.error || !claimed.data || typeof claimed.data !== 'object') return { state: 'outcome_unknown' as const, requestId }
-  const attempt = claimed.data as SignedAttempt
+  const attempt = claimed.data as AccountSignedAttempt
   let response: Record<string, unknown> | null = null
   try {
     const received = await send(attempt)

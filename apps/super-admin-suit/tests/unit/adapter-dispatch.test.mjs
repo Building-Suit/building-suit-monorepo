@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { randomUUID } from 'node:crypto'
-import { isPublicAddress, resolveAttempt, dispatchRequest } from '../../server/utils/adapter-dispatch.ts'
+import { isPublicAccountAddress, resolveAttempt, dispatchRequest } from '../../server/utils/adapter-dispatch.ts'
 import { accountQuery, activateAccount } from '../../server/utils/account-workflow.ts'
 
 const bindingId = randomUUID(), userId = randomUUID(), environment = randomUUID()
@@ -28,8 +28,8 @@ function runtime({ modules = [{ module: 'accounts', bindingId, label: { en: 'Acc
 const response = async () => ({ status: 200, headers: {}, body: JSON.stringify({ data: 'unverified HTTP data' }) })
 
 test('private/reserved addresses and transition IPv6 cannot be used for adapter egress', () => {
-  for (const address of ['127.0.0.1', '10.0.0.1', '0.0.0.0', '100.64.0.1', '169.254.1.1', '172.16.0.1', '192.168.0.1', '192.0.2.1', '198.18.0.1', '198.51.100.1', '203.0.113.1', '224.0.0.1', '::1', '::ffff:127.0.0.1', 'fc00::1', 'fe80::1', '2001::1', '2002:7f00:1::', '3fff::1', 'garbage']) assert.equal(isPublicAddress(address), false, address)
-  for (const address of ['8.8.8.8', '1.1.1.1', '2606:4700:4700::1111']) assert.equal(isPublicAddress(address), true, address)
+  for (const address of ['127.0.0.1', '10.0.0.1', '0.0.0.0', '100.64.0.1', '169.254.1.1', '172.16.0.1', '192.168.0.1', '192.0.2.1', '198.18.0.1', '198.51.100.1', '203.0.113.1', '224.0.0.1', '::1', '::ffff:127.0.0.1', 'fc00::1', 'fe80::1', '2001::1', '2002:7f00:1::', '3fff::1', 'garbage']) assert.equal(isPublicAccountAddress(address), false, address)
+  for (const address of ['8.8.8.8', '1.1.1.1', '2606:4700:4700::1111']) assert.equal(isPublicAccountAddress(address), true, address)
 })
 test('claimed host, HTTPS path and public DNS answers are enforced before transport', async () => {
   let resolves = 0

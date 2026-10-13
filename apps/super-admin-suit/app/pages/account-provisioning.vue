@@ -127,5 +127,5 @@ const pageView=computed(()=>({state:state.value,loading:loading.value,failed:fai
 </script>
 
 <template>
-  <BsAccountProvisioningPage :copy="pageCopy" :view="pageView" v-model:form="pageForm" v-model:visible="visible" v-model:acknowledged="acknowledged" v-model:resend-reason="resendReason" @existing="navigateTo({path:'/accounts',query:{bindingId}})" @retry="initialize" @refresh="refreshStatus()" @retry-attempt="resend=attempt?.kind==='resend';action.open('edit')" @resend="openResend" @create="openCreate" @submit="submit" />
+  <BsAccountProvisioningPage v-model:form="pageForm" v-model:visible="visible" v-model:acknowledged="acknowledged" v-model:resend-reason="resendReason" :copy="pageCopy" :view="pageView" @existing="navigateTo({path:'/accounts',query:{bindingId}})" @retry="initialize" @refresh="refreshStatus()" @retry-attempt="resend=attempt?.kind==='resend';action.open('edit')" @resend="openResend" @create="openCreate" @submit="submit" />
 </template>

@@ -97,8 +97,6 @@ const presentation = computed(() => ({
 </script>
 <template>
   <BsAdministrationEntryPage
-    :account-links="accountLinks"
-    @select-account="id=>navigateTo({path:'/accounts',query:{bindingId:id}})"
     v-model:email="email"
     v-model:password="password"
     v-model:draft="draft"
@@ -112,7 +110,9 @@ const presentation = computed(() => ({
     v-model:billing-page="billingPage"
     v-model:review-draft="reviewDraft"
     v-model:billing-visible="billingVisible"
+    :account-links="accountLinks"
     v-bind="presentation" :copy="copy" :locale="locale"
+    @select-account="id=>navigateTo({path:'/accounts',query:{bindingId:id}})"
     @sign-in="submit" @sign-out="signOut" @retry="recheck" @refresh-registry="registry.refresh()"
     @reload-billing="billing.load()" @review-payment="id => { const row = queue?.items.find(item => item.id === id); if (row) billing.review(row) }" @save-payment="billing.save()" @open-evidence="billing.openEvidence"
     @apply-activity="activity.apply()" @reload-activity="activity.load()" @retrieve-activity="(id, stream) => { const source = activitySources.find(item => item.bindingId === id && item.stream === stream); if (source) activity.retrieve(source) }" @activity-page="(page, size) => { activityQuery.page = page; activityQuery.pageSize = size; activity.load() }" @activity-sort="order => { activityQuery.order = order; activity.load() }"

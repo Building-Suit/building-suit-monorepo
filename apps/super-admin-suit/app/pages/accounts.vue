@@ -142,5 +142,5 @@ const pageView = computed(() => ({
 </script>
 
 <template>
-  <BsAccountActivationPage :copy="pageCopy" :view="pageView" v-model:shop-id="shopId" v-model:plan-id="planId" v-model:reason="reason" v-model:visible="visible" @home="navigateTo('/')" @create="navigateTo({path:'/account-provisioning',query:{bindingId}})" @retry="initialize" @open="action.open('edit')" @previous="page--;loadRows()" @next="page++;loadRows()" @submit="submit" />
+  <BsAccountActivationPage v-model:shop-id="shopId" v-model:plan-id="planId" v-model:reason="reason" v-model:visible="visible" :copy="pageCopy" :view="pageView" @home="navigateTo('/')" @create="navigateTo({path:'/account-provisioning',query:{bindingId}})" @retry="initialize" @open="action.open('edit')" @previous="page--;loadRows()" @next="page++;loadRows()" @submit="submit" />
 </template>

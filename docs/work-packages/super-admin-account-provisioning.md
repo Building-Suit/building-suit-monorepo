@@ -51,6 +51,15 @@ metadata declares staged request idempotency: body/actor reuse is exact, Auth an
 domain mutations are once, completed results are immutable, and unfinished stages
 can evolve through audited reconciliation. There is no generic pass-through.
 
+The feature child incorporates current staging `266d91dc11cbc07b5e9f3b6d37dd53e541fb70e1`.
+Existing payment-review, activity, custom-offer and authentication controls remain
+in `BsAdministrationEntryPage`; it receives only projected account links and a
+semantic selection event. Each of the three new routes renders one explicitly
+exported complete shared page template. The current atomic architecture gate
+passes with 79 routes and zero debt. New route inventory entries and the docs
+catalogue/design guide are updated. App scripts retain authorization, durable
+requests, domain state and controlled fields.
+
 Integration-sensitive interfaces:
 
 - Shop private owner-bootstrap helper and wrapper; retain its seven-day policy.
@@ -59,6 +68,8 @@ Integration-sensitive interfaces:
   when consolidating any later function definitions.
 - Shop Auth invite template/config and EN/AR `ownerInvite` namespace.
 - SAS registry/capability configuration and EN/AR `provision` namespace.
+- Shared administration entry adds optional account links; three new page
+  exports/inventory entries own activation, provisioning and owner-claim composition.
 
 XPay customer payments are a separate task. This workflow stays an audited admin
 operator override and creates no new InstaPay/proof-upload dependency, charge,
@@ -97,6 +108,13 @@ completed replay, changed-input source denial, lost-response recovery, duplicate
 email and active-period protection. Its SQL fixture failed on an ambiguous test
 variable; that fixture is corrected in `9ca9655`. Generated schema artifacts are
 committed, and the next run also executes the required full `pnpm db:test:shop`.
+The focused trial-activation and signed-bridge SQL suites pass. Full Shop SQL
+stops at the inherited `shop_crm_owner_bootstrap` fixture with `PLAN_UNAVAILABLE`;
+this gate remains a failure, while subsequent source SQL/real owner-claim checks
+are collected independently. On reconciled staging, 138 unit checks pass with
+one inherited backend-dependent skip, current atomic boundaries pass, and
+SAS/Shop/docs lint/typechecks pass (Shop retains baseline warnings). Final browser,
+source SQL and owner-claim evidence are pending the final-head run.
 Until that run and final CI pass, real database/Auth readiness is pending. Hosted
 release remains separately gated by environment verification, provider policy,
 configuration records and migration/template deployment; no production readiness

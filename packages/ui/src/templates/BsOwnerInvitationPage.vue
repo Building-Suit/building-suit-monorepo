@@ -1,7 +1,7 @@
 <script setup lang="ts">
 interface View { phase:'loading'|'ready'|'error'|'done';pending:boolean;failed:boolean }
 const props = defineProps<{ copy: Record<'ownerInvite.askAdmin' | 'ownerInvite.confirm' | 'ownerInvite.description' | 'ownerInvite.done' | 'ownerInvite.home' | 'ownerInvite.invalid' | 'ownerInvite.loading' | 'ownerInvite.login' | 'ownerInvite.open' | 'ownerInvite.password' | 'ownerInvite.passwordError' | 'ownerInvite.passwordTitle' | 'ownerInvite.save' | 'ownerInvite.title' | 'ownerInvite.verified', string>; view: View }>()
-const { copy, view } = toRefs(props)
+const { copy } = toRefs(props)
 const password=defineModel<string>('password',{required:true})
 const confirmation=defineModel<string>('confirmation',{required:true})
 const emit=defineEmits<{login:[];open:[];submit:[]}>()

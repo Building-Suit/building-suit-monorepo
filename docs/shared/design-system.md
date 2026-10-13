@@ -53,3 +53,18 @@ Future Suit administration extensions use the [typed registration contract](futu
 Workspace panels use the canonical card surface, border, radius, elevation and padding scale. `BsAccessTabs` delegates to `BsTabs`, including counts and keyboard navigation, so access-management tabs use the same horizontal presentation as other workspaces. Product adapters explicitly provide home destinations when their dashboard differs from `/dashboard`.
 
 `BsCard` supports the same responsive `span` contract as shared layout primitives. Dashboard charts and onboarding cards use it to occupy their intended grid tracks; the span resets on narrow screens.
+
+
+### Account lifecycle page templates
+
+`BsAccountActivationPage`, `BsAccountProvisioningPage` and `BsOwnerInvitationPage`
+are explicitly exported complete page templates. Their finite content maps and
+named typed view models contain only projected labels, state and capabilities.
+Controlled field models and semantic events return changes to the owning app;
+the templates do not call Auth, select tenants or calculate plan entitlements.
+The activation page shows original trial history and actual grant/audit dates.
+Provisioning distinguishes active access, invitation acceptance and owner email
+verification; a separate resend requires acknowledgment. The owner template
+shows password fields only after the app verifies target ownership.
+The documentation `/components` page includes their contracts and an inert
+unavailable-invitation preview.
