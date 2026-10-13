@@ -1,4 +1,4 @@
-import { checkoutBody, createProviderSession, paidSessionEvent, retrieveSession, validateSession, verifyXPayEvent, verifyMerchantReadiness } from './xpay.mjs'
+import { checkoutBody, createProviderSession, paidSessionEvent, paymentIntentId, retrieveSession, validateSession, verifyXPayEvent, verifyMerchantReadiness } from './xpay.mjs'
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const textEncoder = new TextEncoder()
@@ -50,7 +50,7 @@ const publicOrder = order => ({ orderId: order.id, state: order.state, sessionId
 const databaseSession = session => ({
   id: session.id, object: session.object, merchantId: session.merchantId, livemode: session.livemode,
   currency: session.currency, amountTotal: session.amountTotal, status: session.status, paymentStatus: session.paymentStatus,
-  paymentIntentId: session.paymentIntentId, metadata: { orderId: session.metadata?.orderId },
+  paymentIntentId: paymentIntentId(session), metadata: { orderId: session.metadata?.orderId },
   url: session.url, expiresAt: session.expiresAt, isExpired: session.isExpired,
 })
 function canRetryCreation(order) {

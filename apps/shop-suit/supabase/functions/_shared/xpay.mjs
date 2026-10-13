@@ -47,6 +47,18 @@ function validKey(secretKey, mode) {
     || !secretKey.startsWith(`sk_${mode}_`)) throw new Error('xpay_not_configured')
 }
 
+// API 1.0 permits a nullable flat ID and an expanded PaymentIntent. IDs are
+// opaque pi_* values; environment authority comes from authenticated livemode.
+export function paymentIntentId(session) {
+  const flat = session.paymentIntentId
+  const nested = session.paymentIntent?.id
+  const present = value => value !== undefined && value !== null
+  const valid = value => typeof value === 'string' && value.length <= 255 && /^pi_[A-Za-z0-9_]+$/.test(value)
+  if ((present(flat) && !valid(flat)) || (present(nested) && !valid(nested))
+    || (present(flat) && present(nested) && flat !== nested)) throw new Error('xpay_payment_not_verified')
+  return flat ?? nested ?? null
+}
+
 export function validateSession(session, order, mode, { paid = false } = {}) {
   if (!order || typeof order.id !== 'string' || !order.id
     || typeof order.merchantId !== 'string' || !order.merchantId
@@ -57,8 +69,9 @@ export function validateSession(session, order, mode, { paid = false } = {}) {
     || session.metadata?.orderId !== order.id || session.currency !== order.currency
     || session.amountTotal !== order.amountMinor || !Number.isSafeInteger(session.amountTotal)
     || (order.sessionId && session.id !== order.sessionId)) throw new Error('xpay_session_mismatch')
+  const intentId = paymentIntentId(session)
   if (paid && (session.status !== 'complete' || session.paymentStatus !== 'paid'
-    || typeof session.paymentIntentId !== 'string' || !session.paymentIntentId.startsWith(`pi_${mode}_`))) {
+    || intentId === null)) {
     throw new Error('xpay_payment_not_verified')
   }
   return session
