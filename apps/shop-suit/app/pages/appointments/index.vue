@@ -191,6 +191,10 @@ function readableError(message?: string) {
   if (message?.includes('INVALID_')) return copy.value.invalid
   return copy.value.writeError
 }
+function commandErrorMessage(caught: unknown) {
+  return typeof caught === 'object' && caught !== null && 'message' in caught && typeof caught.message === 'string'
+    ? caught.message : undefined
+}
 async function save() {
   if (!currentId.value || !locationId.value || !options.value.canManage || saving.value) return
   actionError.value = ''
@@ -214,14 +218,20 @@ async function save() {
     })
     if (writeError) throw writeError
     showForm.value = false; await refresh(); pushToast({ tone: 'success', title: copy.value.saved })
-  } catch (caught) { actionError.value = readableError(caught instanceof Error ? caught.message : undefined) }
+  } catch (caught) { actionError.value = readableError(commandErrorMessage(caught)) }
   finally { saving.value = false }
 }
 
 async function transition(appointment: Appointment, status: Exclude<AppointmentStatus, 'booked'>) {
   if (!currentId.value || transitionId.value || !options.value.canManage) return
-  if (status === 'cancelled' && !await confirmation.ask(copy.value.cancelConfirm)) return
-  if (status === 'no_show' && !await confirmation.ask(copy.value.noShowConfirm)) return
+  if (status === 'cancelled' || status === 'no_show') {
+    const label = status === 'cancelled' ? copy.value.cancelAppointment : copy.value.noShow
+    if (!await confirmation.ask({
+      title: label,
+      message: `${appointment.customerName} · ${appointment.serviceName} · ${formatDay(new Date(appointment.startsAt))} · ${formatTime(appointment.startsAt)}\n${status === 'cancelled' ? copy.value.cancelConfirm : copy.value.noShowConfirm}`,
+      confirmLabel: label, cancelLabel: copy.value.cancel, tone: 'danger',
+    })) return
+  }
   transitionId.value = appointment.id; actionError.value = ''
   try {
     const { error: statusError } = await shopRpc.rpc('transition_appointment', {
@@ -274,7 +284,7 @@ async function saveSchedule() {
     })
     if (writeError) throw writeError
     showSchedule.value = false; await refresh(); pushToast({ tone: 'success', title: copy.value.scheduleSaved })
-  } catch (caught) { actionError.value = readableError(caught instanceof Error ? caught.message : undefined) }
+  } catch (caught) { actionError.value = readableError(commandErrorMessage(caught)) }
   finally { scheduleSaving.value = false }
 }
 watch([currentId, currentLocationId], () => {
