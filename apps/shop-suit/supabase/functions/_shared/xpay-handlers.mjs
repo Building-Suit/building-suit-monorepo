@@ -4,23 +4,33 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-
 const textEncoder = new TextEncoder()
 const sessionEvent = type => ['checkout.session.completed', 'checkout.session.async_payment_succeeded', 'checkout.session.async_payment_failed', 'checkout.session.expired'].includes(type)
 
-function config(env) {
-  const mode = env('XPAY_MODE')
-  const secretKey = env('XPAY_SECRET_KEY')
-  const merchantId = env('XPAY_MERCHANT_ID')
-  const origin = new URL(env('SHOP_BILLING_RETURN_ORIGIN') || 'https://invalid.example')
-  if (env('XPAY_ENABLED') !== 'true' || env('XPAY_API_VERSION') !== '1.0'
-    || !['test', 'live'].includes(mode) || !secretKey?.startsWith(`sk_${mode}_`) || !merchantId
-    || !env('SHOP_BILLING_RETURN_ORIGIN') || origin.protocol !== 'https:' || origin.username || origin.password
-    || origin.pathname !== '/' || origin.search || origin.hash) throw new Error('xpay_not_configured')
-  // Production must never grant real access from test-mode provider results.
+function checkoutOrigin(env, requireReturnOrigin = false) {
   const targets = {
     'https://stg.shop.building-suit.com': { url: 'https://jvvelvftpfnlogalgxgv.supabase.co', mode: 'test' },
     'https://shop.building-suit.com': { url: 'https://fgdzjnsbcxfbiuogbmom.supabase.co', mode: 'live' },
   }
+  // Preflight/error responses can use only the existing canonical origin pinned
+  // to this server's project. This never enables checkout or reflects input.
+  const configured = env('SHOP_BILLING_RETURN_ORIGIN')
+  if (requireReturnOrigin && !configured) throw new Error('xpay_not_configured')
+  const canonical = Object.keys(targets).find(origin => targets[origin].url === env('SUPABASE_URL'))
+  const origin = new URL(configured || canonical || 'https://invalid.example')
   const target = targets[origin.origin]
-  if (!target || target.url !== env('SUPABASE_URL') || target.mode !== mode) throw new Error('xpay_environment_mismatch')
-  return { mode, secretKey, merchantId, origin: origin.origin }
+  if (origin.protocol !== 'https:' || origin.username || origin.password
+    || origin.pathname !== '/' || origin.search || origin.hash || !target || target.url !== env('SUPABASE_URL')) throw new Error('xpay_environment_mismatch')
+  return { origin: origin.origin, mode: target.mode }
+}
+function config(env) {
+  const mode = env('XPAY_MODE')
+  const secretKey = env('XPAY_SECRET_KEY')
+  const merchantId = env('XPAY_MERCHANT_ID')
+  const target = checkoutOrigin(env, true)
+  if (env('XPAY_ENABLED') !== 'true' || env('XPAY_API_VERSION') !== '1.0'
+    || !['test', 'live'].includes(mode) || !secretKey?.startsWith(`sk_${mode}_`) || !merchantId
+    ) throw new Error('xpay_not_configured')
+  // Production must never grant real access from test-mode provider results.
+  if (target.mode !== mode) throw new Error('xpay_environment_mismatch')
+  return { mode, secretKey, merchantId, origin: target.origin }
 }
 
 function response(data, status = 200, origin) {
@@ -77,11 +87,13 @@ async function reconcileOrder(order, settings, rpc, fetchImpl, locale = 'en') {
 // Dependencies are injected so contract tests never need credentials or network.
 export function createXPayCheckout({ env, rpc, authenticate, fetchImpl = fetch }) {
   return async request => {
-    let settings
-    try { settings = config(env) } catch { return response({ error: 'checkout_unavailable' }, 503) }
+    let allowedOrigin
+    try { allowedOrigin = checkoutOrigin(env).origin } catch { return response({ error: 'checkout_unavailable' }, 503) }
     const requestOrigin = request.headers.get('origin')
-    if (requestOrigin && requestOrigin !== settings.origin) return response({ error: 'origin_denied' }, 403)
-    if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: { 'access-control-allow-origin': settings.origin, 'access-control-allow-headers': 'authorization, apikey, content-type, x-client-info', 'access-control-allow-methods': 'POST, OPTIONS', vary: 'Origin' } })
+    if (requestOrigin && requestOrigin !== allowedOrigin) return response({ error: 'origin_denied' }, 403)
+    if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: { 'access-control-allow-origin': allowedOrigin, 'access-control-allow-headers': 'authorization, apikey, content-type, x-client-info', 'access-control-allow-methods': 'POST, OPTIONS', vary: 'Origin' } })
+    let settings
+    try { settings = config(env) } catch { return response({ error: 'checkout_unavailable' }, 503, allowedOrigin) }
     if (request.method !== 'POST') return response({ error: 'method_not_allowed' }, 405, settings.origin)
     const token = request.headers.get('authorization')
     try {
