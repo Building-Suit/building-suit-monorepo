@@ -26,7 +26,7 @@ const emit = defineEmits<{ create: []; save: []; void: []; retry: []; correct: [
       <BsText v-if="!view.hasLocation" role="alert" as="p" size="sm" tone="warning">{{ copy.noLocation }}</BsText>
       <BsText v-else-if="!view.loading && !view.error && !view.canManage" as="p" size="sm">{{ copy.readOnly }}</BsText>
       <BsText v-if="view.actionError && !showForm && !voidOpen" role="alert" as="p">{{ view.actionError }}</BsText>
-      <BsRecordActionDialog v-model:visible="showForm" :title="view.editing ? copy.correct : copy.add" :dirty="view.dirty" :pending="view.saving" :error="view.actionError" :submit-label="view.editing ? copy.saveCorrection : copy.save" :cancel-label="copy.cancel" @submit="emit('save')">
+      <BsRecordActionDialog v-model:visible="showForm" pinned-actions :title="view.editing ? copy.correct : copy.add" :dirty="view.dirty" :pending="view.saving" :error="view.actionError" :submit-label="view.editing ? copy.saveCorrection : copy.save" :cancel-label="copy.cancel" @submit="emit('save')">
         <BsText v-if="view.editing" as="p" size="sm">{{ copy.correctionHelp }}</BsText>
         <BsField v-slot="field" :label="copy.name">
           <BsInput :id="field.id" :model-value="form.title" :aria-describedby="field.describedby" type="text" :minlength="2" :maxlength="160" required @update:model-value="form = { ...form, title: String($event) }"/>
@@ -47,7 +47,7 @@ const emit = defineEmits<{ create: []; save: []; void: []; retry: []; correct: [
           <BsTextarea :id="field.id" :model-value="form.correctionReason" :aria-describedby="field.describedby" :rows="2" :minlength="2" :maxlength="500" required @update:model-value="form = { ...form, correctionReason: String($event) }"/>
         </BsField>
       </BsRecordActionDialog>
-      <BsRecordActionDialog v-model:visible="voidOpen" :title="copy.voidTitle" :dirty="view.voidDirty" :pending="view.voidPending" :error="view.actionError" :submit-label="copy.void" :cancel-label="copy.cancel" submit-tone="danger" size="sm" @submit="emit('void')">
+      <BsRecordActionDialog v-model:visible="voidOpen" pinned-actions :title="copy.voidTitle" :dirty="view.voidDirty" :pending="view.voidPending" :error="view.actionError" :submit-label="copy.void" :cancel-label="copy.cancel" submit-tone="danger" size="sm" @submit="emit('void')">
         <BsText as="p" size="sm" tone="muted">{{ copy.voidHelp }}</BsText>
         <BsField v-slot="field" :label="copy.voidReason">
           <BsTextarea :id="field.id" v-model="voidReason" :aria-describedby="field.describedby" :rows="3" :minlength="2" :maxlength="500" required/>

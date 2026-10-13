@@ -42,9 +42,9 @@ function updateFilter(key: keyof BsReportFilters, value: string | number | boole
     </BsText>
     <BsText v-else-if="view.exportError" role="alert" as="p" size="sm" tone="danger">{{ view.exportError }}</BsText>
     <BsText v-if="view.loading" role="status" as="p" size="sm" tone="muted">{{ copy.loading }}</BsText>
-    <BsText v-else-if="view.denied" as="p" size="sm" tone="muted">{{ copy.denied }}</BsText>
-    <BsText v-else-if="view.restricted" as="p" size="sm" tone="muted">{{ copy.costDenied }}</BsText>
-    <template v-else>
+    <BsText v-else-if="view.denied && !view.failed" as="p" size="sm" tone="muted">{{ copy.denied }}</BsText>
+    <BsText v-else-if="view.restricted && !view.failed" as="p" size="sm" tone="muted">{{ copy.costDenied }}</BsText>
+    <template v-else-if="!view.failed">
       <BsGrid :columns="4">
         <BsActionTile v-for="metric in view.summary" :key="metric.id" :to="metric.to">
           <BsText as="p" size="xs" tone="muted" emphasis="semibold">{{ metric.label }}</BsText>

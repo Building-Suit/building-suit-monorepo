@@ -83,7 +83,7 @@ function updateDay(weekday: number, key: 'enabled' | 'startsLocal' | 'endsLocal'
         </BsList>
       </BsPanel>
     </template>
-    <BsRecordActionDialog v-model:visible="showForm" :title="presentation.formTitle" :dirty="presentation.formDirty" :pending="presentation.saving" :error="presentation.error" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="emit('save')">
+    <BsRecordActionDialog v-model:visible="showForm" pinned-actions :title="presentation.formTitle" :dirty="presentation.formDirty" :pending="presentation.saving" :error="presentation.error" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="emit('save')">
       <BsField v-slot="field" :label="copy.service">
         <BsSelect :model-value="form.serviceId" :input-id="field.id" :aria-describedby="field.describedby" :label="copy.service" :options="choices.services" option-label="label" option-value="value" filter virtual :aria-required="true" @update:model-value="updateForm('serviceId', $event)"/>
       </BsField>
@@ -114,50 +114,42 @@ function updateDay(weekday: number, key: 'enabled' | 'startsLocal' | 'endsLocal'
         <BsTextarea :id="field.id" :model-value="form.notes" :aria-describedby="field.describedby" :maxlength="presentation.constraints.notesMax" :rows="2" @update:model-value="updateForm('notes', $event)"/>
       </BsField>
     </BsRecordActionDialog>
-    <BsDialog v-model:visible="showSchedule" :title="copy.scheduleTitle" size="lg" :dirty="presentation.scheduleDirty" :pending="presentation.scheduleSaving">
-      <template #default="{ close }">
-        <BsForm :pending="presentation.scheduleSaving" :error="presentation.error" @submit="emit('saveSchedule')">
-          <BsField v-slot="field" :label="copy.barber">
-            <BsSelect v-model="scheduleMemberId" :input-id="field.id" :aria-describedby="field.describedby" required :label="copy.barber" :options="choices.scheduleStaff" option-label="label" option-value="value" option-disabled="disabled" @change="emit('scheduleMember')"/>
+    <BsRecordActionDialog v-model:visible="showSchedule" pinned-actions :title="copy.scheduleTitle" size="lg" :dirty="presentation.scheduleDirty" :pending="presentation.scheduleSaving" :error="presentation.error" :submit-label="copy.saveSchedule" :cancel-label="copy.cancel" @submit="emit('saveSchedule')">
+      <BsField v-slot="field" :label="copy.barber">
+        <BsSelect v-model="scheduleMemberId" :input-id="field.id" :aria-describedby="field.describedby" required :label="copy.barber" :options="choices.scheduleStaff" option-label="label" option-value="value" option-disabled="disabled" @change="emit('scheduleMember')"/>
+      </BsField>
+      <BsFieldGroup :legend="(copy.workDays)">
+        <BsStack>
+          <BsGrid v-for="day in scheduleForm.weekdays" :key="day.weekday" :columns="2">
+            <BsCheckbox  :model-value="day.enabled" :label="presentation.weekdayNames[day.weekday] ?? String(day.weekday)" @update:model-value="updateDay(day.weekday, 'enabled', Boolean($event))" />
+            <BsInput :model-value="day.startsLocal" type="time" :aria-label="`${presentation.weekdayNames[day.weekday]} · ${copy.from}`" :disabled="!day.enabled" @update:model-value="updateDay(day.weekday, 'startsLocal', $event)"/>
+            <BsInput :model-value="day.endsLocal" type="time" :aria-label="`${presentation.weekdayNames[day.weekday]} · ${copy.to}`" :disabled="!day.enabled" @update:model-value="updateDay(day.weekday, 'endsLocal', $event)"/>
+          </BsGrid>
+        </BsStack>
+      </BsFieldGroup>
+      <BsFieldGroup :legend="(copy.break) + ' / ' + (copy.timeOff)">
+        <BsGrid :columns="2">
+          <BsField v-slot="field" :label="copy.blockKind">
+            <BsSelect :model-value="scheduleForm.blockKind" :input-id="field.id" :aria-describedby="field.describedby" :label="copy.blockKind" :options="[{ value: 'break', label: (copy.break), disabled: false }, { value: 'time_off', label: (copy.timeOff), disabled: false }]" option-label="label" option-value="value" option-disabled="disabled" @update:model-value="updateSchedule('blockKind', $event)"/>
           </BsField>
-          <BsFieldGroup :legend="(copy.workDays)">
-            <BsStack>
-              <BsGrid v-for="day in scheduleForm.weekdays" :key="day.weekday" :columns="2">
-                <BsCheckbox  :model-value="day.enabled" :label="presentation.weekdayNames[day.weekday] ?? String(day.weekday)" @update:model-value="updateDay(day.weekday, 'enabled', Boolean($event))" />
-                <BsInput :model-value="day.startsLocal" type="time" :aria-label="`${presentation.weekdayNames[day.weekday]} · ${copy.from}`" :disabled="!day.enabled" @update:model-value="updateDay(day.weekday, 'startsLocal', $event)"/>
-                <BsInput :model-value="day.endsLocal" type="time" :aria-label="`${presentation.weekdayNames[day.weekday]} · ${copy.to}`" :disabled="!day.enabled" @update:model-value="updateDay(day.weekday, 'endsLocal', $event)"/>
-              </BsGrid>
-            </BsStack>
-          </BsFieldGroup>
-          <BsFieldGroup :legend="(copy.break) + ' / ' + (copy.timeOff)">
-            <BsGrid :columns="2">
-              <BsField v-slot="field" :label="copy.blockKind">
-                <BsSelect :model-value="scheduleForm.blockKind" :input-id="field.id" :aria-describedby="field.describedby" :label="copy.blockKind" :options="[{ value: 'break', label: (copy.break), disabled: false }, { value: 'time_off', label: (copy.timeOff), disabled: false }]" option-label="label" option-value="value" option-disabled="disabled" @update:model-value="updateSchedule('blockKind', $event)"/>
-              </BsField>
-              <BsField v-slot="field" :label="copy.blockNote">
-                <BsInput :id="field.id" :model-value="scheduleForm.blockNote" :aria-describedby="field.describedby" :maxlength="presentation.constraints.blockNoteMax" @update:model-value="updateSchedule('blockNote', $event)"/>
-              </BsField>
-              <BsField v-slot="field" :label="copy.blockStart">
-                <BsInput :id="field.id" :model-value="scheduleForm.blockStarts" :aria-describedby="field.describedby" type="datetime-local" @update:model-value="updateSchedule('blockStarts', $event)"/>
-              </BsField>
-              <BsField v-slot="field" :label="copy.blockEnd">
-                <BsInput :id="field.id" :model-value="scheduleForm.blockEnds" :aria-describedby="field.describedby" type="datetime-local" @update:model-value="updateSchedule('blockEnds', $event)"/>
-              </BsField>
-              <BsButton severity="secondary" @click="emit('addBlock')">{{ copy.addBlock }}</BsButton>
-            </BsGrid>
-            <BsList>
-              <BsListItem v-for="block in presentation.blocks" :key="block.id">
-                <BsText as="span">{{ block.label }}</BsText>
-                <BsButton variant="text" type="button" @click="emit('removeBlock', block.index)">{{ copy.remove }}</BsButton>
-              </BsListItem>
-            </BsList>
-          </BsFieldGroup>
-          <BsInline>
-            <BsButton type="submit" :pending="presentation.scheduleSaving">{{ copy.saveSchedule }}</BsButton>
-            <BsButton severity="secondary" :disabled="presentation.scheduleSaving" @click="close">{{ copy.cancel }}</BsButton>
-          </BsInline>
-        </BsForm>
-      </template>
-    </BsDialog>
+          <BsField v-slot="field" :label="copy.blockNote">
+            <BsInput :id="field.id" :model-value="scheduleForm.blockNote" :aria-describedby="field.describedby" :maxlength="presentation.constraints.blockNoteMax" @update:model-value="updateSchedule('blockNote', $event)"/>
+          </BsField>
+          <BsField v-slot="field" :label="copy.blockStart">
+            <BsInput :id="field.id" :model-value="scheduleForm.blockStarts" :aria-describedby="field.describedby" type="datetime-local" @update:model-value="updateSchedule('blockStarts', $event)"/>
+          </BsField>
+          <BsField v-slot="field" :label="copy.blockEnd">
+            <BsInput :id="field.id" :model-value="scheduleForm.blockEnds" :aria-describedby="field.describedby" type="datetime-local" @update:model-value="updateSchedule('blockEnds', $event)"/>
+          </BsField>
+          <BsButton severity="secondary" @click="emit('addBlock')">{{ copy.addBlock }}</BsButton>
+        </BsGrid>
+        <BsList>
+          <BsListItem v-for="block in presentation.blocks" :key="block.id">
+            <BsText as="span">{{ block.label }}</BsText>
+            <BsButton variant="text" type="button" @click="emit('removeBlock', block.index)">{{ copy.remove }}</BsButton>
+          </BsListItem>
+        </BsList>
+      </BsFieldGroup>
+    </BsRecordActionDialog>
   </BsStack>
 </template>

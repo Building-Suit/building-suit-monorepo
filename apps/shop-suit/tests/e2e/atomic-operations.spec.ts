@@ -25,6 +25,7 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
     }
     await page.getByRole('button', { name: ar ? 'فتح وردية' : 'Open shift', exact: true }).click()
     let dialog = page.getByRole('dialog')
+    await expect(dialog.locator('[data-pc-section=footer]')).toBeVisible()
     await dialog.getByLabel(ar ? 'النقدية الافتتاحية' : 'Opening cash', { exact: true }).fill('100')
     await dialog.getByRole('button', { name: ar ? 'فتح الخزنة' : 'Open drawer', exact: true }).click()
     await confirm()
@@ -37,6 +38,7 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
     await confirm()
     await page.getByRole('button', { name: ar ? 'إغلاق الوردية' : 'Close shift', exact: true }).click()
     dialog = page.getByRole('dialog')
+    await expect(dialog.locator('[data-pc-section=footer]')).toBeVisible()
     await expect(dialog.getByLabel(ar ? 'النقدية المعدودة' : 'Counted cash', { exact: true })).toHaveValue('120')
     await dialog.getByLabel(ar ? 'النقدية المعدودة' : 'Counted cash', { exact: true }).fill('115')
     await expectNoPageOverflow(page)

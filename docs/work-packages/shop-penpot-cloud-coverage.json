@@ -538,7 +538,9 @@
       "referencePixels": null,
       "pixelScope": "unavailable",
       "latestDeltaRecord": null,
-      "cloudRelatedDraftPRs": [],
+      "cloudRelatedDraftPRs": [
+        266
+      ],
       "cloudReview": "focused verified state/editor changes; visual matrix queued",
       "fullDesignMatrixComplete": false,
       "remainingDesignEvidence": [
@@ -579,7 +581,9 @@
       "referencePixels": null,
       "pixelScope": "unavailable",
       "latestDeltaRecord": null,
-      "cloudRelatedDraftPRs": [],
+      "cloudRelatedDraftPRs": [
+        266
+      ],
       "cloudReview": "focused verified state/editor changes; visual matrix queued",
       "fullDesignMatrixComplete": false,
       "remainingDesignEvidence": [
@@ -599,7 +603,9 @@
       "referencePixels": null,
       "pixelScope": "unavailable",
       "latestDeltaRecord": null,
-      "cloudRelatedDraftPRs": [],
+      "cloudRelatedDraftPRs": [
+        266
+      ],
       "cloudReview": "focused verified state/editor changes; visual matrix queued",
       "fullDesignMatrixComplete": false,
       "remainingDesignEvidence": [
@@ -622,11 +628,12 @@
       "pixelScope": "unavailable",
       "latestDeltaRecord": null,
       "cloudRelatedDraftPRs": [],
-      "cloudReview": "queued",
+      "cloudReview": "focused verified state/editor changes; visual matrix queued",
       "fullDesignMatrixComplete": false,
       "remainingDesignEvidence": [
         "Week/month, edit/reschedule, expanded actions, confirmations, feedback/context states, theme/language/responsive variants, dialog QA"
-      ]
+      ],
+      "cloudBranch": "codex/shop-suit/cloud-daily-operations"
     },
     {
       "number": 26,
@@ -640,13 +647,14 @@
       "pixelScope": "unavailable",
       "latestDeltaRecord": null,
       "cloudRelatedDraftPRs": [],
-      "cloudReview": "queued",
+      "cloudReview": "focused verified state/editor changes; visual matrix queued",
       "fullDesignMatrixComplete": false,
       "remainingDesignEvidence": [
         "Context/access/loading/error/empty/validation/pending/success states",
         "Arabic/dark/responsive variants",
         "Pixel QA"
-      ]
+      ],
+      "cloudBranch": "codex/shop-suit/cloud-daily-operations"
     },
     {
       "number": 27,
@@ -660,13 +668,14 @@
       "pixelScope": "unavailable",
       "latestDeltaRecord": null,
       "cloudRelatedDraftPRs": [],
-      "cloudReview": "queued",
+      "cloudReview": "focused verified state/editor changes; visual matrix queued",
       "fullDesignMatrixComplete": false,
       "remainingDesignEvidence": [
         "Context/access/loading/error/empty/validation/pending/success states",
         "Arabic/dark/responsive variants",
         "Pixel QA"
-      ]
+      ],
+      "cloudBranch": "codex/shop-suit/cloud-daily-operations"
     },
     {
       "number": 28,
@@ -680,13 +689,14 @@
       "pixelScope": "unavailable",
       "latestDeltaRecord": null,
       "cloudRelatedDraftPRs": [],
-      "cloudReview": "queued",
+      "cloudReview": "focused verified state/editor changes; visual matrix queued",
       "fullDesignMatrixComplete": false,
       "remainingDesignEvidence": [
         "Remaining report/import types and feedback states",
         "Arabic/dark/responsive variants",
         "Pixel QA"
-      ]
+      ],
+      "cloudBranch": "codex/shop-suit/cloud-daily-operations"
     },
     {
       "number": 29,

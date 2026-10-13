@@ -27,6 +27,7 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
     await fixtureGoto(page, '/expenses')
     await page.getByRole('button', { name: ar ? 'تسجيل مصروف' : 'Record expense', exact: true }).click()
     let editor = page.getByRole('dialog')
+    await expect(editor.locator('[data-pc-section=footer]')).toBeVisible()
     await editor.getByLabel(ar ? 'عنوان المصروف' : 'Expense title', { exact: true }).fill('Fixture utilities')
     await editor.getByLabel(ar ? 'المبلغ' : 'Amount', { exact: true }).fill('100')
     await editor.getByLabel(ar ? 'التصنيف' : 'Category', { exact: true }).fill('Utilities')

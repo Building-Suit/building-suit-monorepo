@@ -96,7 +96,7 @@ function updateMovement(key: keyof BsCashShiftMovementForm, value: string | numb
         </BsPanel>
       </template>
     </BsStack>
-    <BsRecordActionDialog v-model:visible="showOpen" :title="copy.open" :dirty="openEditor.dirty" :pending="openEditor.pending" :error="actionError" :submit-label="copy.openAction" :cancel-label="copy.cancel" @submit="emit('saveOpen')">
+    <BsRecordActionDialog v-model:visible="showOpen" pinned-actions :title="copy.open" :dirty="openEditor.dirty" :pending="openEditor.pending" :error="actionError" :submit-label="copy.openAction" :cancel-label="copy.cancel" @submit="emit('saveOpen')">
       <BsField v-slot="field" :label="copy.openingCash">
         <BsInput :id="field.id" :model-value="openForm.amount" :aria-describedby="field.describedby" type="number" :min="0" :step="0.01" required @update:model-value="updateOpen('amount', $event)"/>
       </BsField>
@@ -104,7 +104,7 @@ function updateMovement(key: keyof BsCashShiftMovementForm, value: string | numb
         <BsTextarea :id="field.id" :model-value="openForm.notes" :aria-describedby="field.describedby" :maxlength="1000" :rows="3" @update:model-value="updateOpen('notes', $event)"/>
       </BsField>
     </BsRecordActionDialog>
-    <BsRecordActionDialog v-model:visible="showMovement" :title="copy.movement" :dirty="movementEditor.dirty" :pending="movementEditor.pending" :error="actionError" :submit-label="copy.record" :cancel-label="copy.cancel" @submit="emit('saveMovement')">
+    <BsRecordActionDialog v-model:visible="showMovement" pinned-actions :title="copy.movement" :dirty="movementEditor.dirty" :pending="movementEditor.pending" :error="actionError" :submit-label="copy.record" :cancel-label="copy.cancel" @submit="emit('saveMovement')">
       <BsFieldGroup :legend="(copy.event)">
         <BsRadio v-for="option in movementOptions" :key="option.value" :model-value="movementForm.kind" :value="option.value" :label="option.label" @update:model-value="updateMovement('kind', $event)"/>
       </BsFieldGroup>
@@ -118,7 +118,7 @@ function updateMovement(key: keyof BsCashShiftMovementForm, value: string | numb
         <BsInput :id="field.id" :model-value="movementForm.reference" :aria-describedby="field.describedby" :maxlength="200" required @update:model-value="updateMovement('reference', $event)"/>
       </BsField>
     </BsRecordActionDialog>
-    <BsRecordActionDialog v-model:visible="showClose" :title="copy.close" :dirty="closeEditor.dirty" :pending="closeEditor.pending" :error="actionError" :submit-label="copy.closeAction" :cancel-label="copy.cancel" @submit="emit('saveClose')">
+    <BsRecordActionDialog v-model:visible="showClose" pinned-actions :title="copy.close" :dirty="closeEditor.dirty" :pending="closeEditor.pending" :error="actionError" :submit-label="copy.closeAction" :cancel-label="copy.cancel" @submit="emit('saveClose')">
       <BsText as="p" size="sm">{{ copy.expected }}: <BsText as="strong">{{ expectedCash }}</BsText>
       </BsText>
       <BsField v-slot="field" :label="copy.counted">
