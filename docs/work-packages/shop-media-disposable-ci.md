@@ -1,0 +1,13 @@
+# Disposable Shop media validation
+
+The `Disposable Shop media validation` workflow uses only the existing GitHub-hosted `ubuntu-latest` runner class. Runner evidence from review run 38368368561 identifies the GitHub Actions group; there are no self-hosted labels. Both workflow and script reject self-hosted execution. No hosted Supabase ref, persistent key, paid project or user PC is used.
+
+A fresh runner starts the pinned workspace Supabase CLI and Shop migration/seed chain. Only its `building-suit-shop` containers and volumes are removed at cleanup. Optional presentation/analytics/realtime services are excluded; Auth, REST, Storage and local email services remain. CLI startup/status credentials are not printed or uploaded. The script reads local keys into memory and permits only `http://127.0.0.1:61321`.
+
+Two transactional media SQL authorization/validation suites run and roll back. The real HTTP journey bootstraps two confirmed disposable Auth fixtures using the local administrator key, then signs in using actual password grants. Every catalog and Storage operation uses user tokens. It covers both products and services: valid upload, save, reload, signed image bytes, replacement, reference removal; missing objects, active MIME, oversize files, anonymous and cross-tenant reads/writes, and immutable overwrite denial. This tests actual backend transport; it does not claim hosted readiness, browser screenshot fidelity, email delivery, or SAS provisioning validation.
+
+No local Docker pull is retried. Local guard unit tests, source lint and boundary checks run in cloud before publication; actual backend results must come from the new CI job and be recorded separately. Existing mocked browser upload tests remain complementary UI evidence.
+
+Staging read-only inspection found both `20261012184657_optional_catalog_media` and `20261013022326_catalog_image_upload` unapplied, with no media RPC/bucket. Legacy catalog commands exist and compatibility tests preserve media-free operation; actual upload will remain unavailable until explicit migration authorization and validation. Latest Shop Vercel deployment came from Git `stg` at 266d91dc11cbc07b5e9f3b6d37dd53e541fb70e1. Supabase staging's only listed default branch maps to stg; automatic migration integration status is still unverified. Do not assume a stg merge is free of provider side effects.
+
+The open-PR inventory is in `shop-open-pr-integration-inventory.json`. Shop ancestors are already incorporated; PR250 adds a small review-document checkpoint to preserve deliberately. Separate SAS and XPay completion must precede final integration. PR215 promotes stg to main and is outside current staging-only merge authorization.
