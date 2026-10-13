@@ -516,8 +516,10 @@
       "referencePixels": null,
       "pixelScope": "unavailable",
       "latestDeltaRecord": null,
-      "cloudRelatedDraftPRs": [],
-      "cloudReview": "in progress",
+      "cloudRelatedDraftPRs": [
+        265
+      ],
+      "cloudReview": "focused verified state correctness; visual review queued",
       "fullDesignMatrixComplete": false,
       "remainingDesignEvidence": [
         "AR and tightened-mobile export QA",
