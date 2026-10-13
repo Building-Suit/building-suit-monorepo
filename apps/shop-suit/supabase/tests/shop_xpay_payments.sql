@@ -72,6 +72,9 @@ begin
  begin perform public.shop_xpay_bind_session(f.order_id,f.session||'{"amountTotal":1}');raise exception 'price mismatch accepted';exception when sqlstate '22023' then null;end;
  begin perform public.shop_xpay_bind_session(f.order_id,f.session-'livemode');raise exception 'missing mode accepted';exception when sqlstate '22023' then null;end;
  begin perform public.shop_xpay_bind_session(f.order_id,f.session||'{"merchantId":"other"}');raise exception 'merchant mismatch accepted';exception when sqlstate '22023' then null;end;
+ result:=public.shop_xpay_apply_session(f.session);
+ if result->>'url' is distinct from f.session->>'url' or result->>'expiresAt' is null then
+ raise exception 'lost-bind recovery omitted hosted URL or expiry';end if;
  perform public.shop_xpay_bind_session(f.order_id,f.session);
  perform public.shop_xpay_inbox_receive('evt_sql_pending','checkout.session.completed','cs_test_SQLfixture','merchant-fixture','test',repeat('a',64));
  result:=public.shop_xpay_apply_session(f.session||'{"status":"complete"}','evt_sql_pending');

@@ -238,6 +238,14 @@ begin
  end if;
  -- Recover a lost session-bind response from the authenticated provider lookup.
  if o.session_id is null then update public.shop_xpay_orders set session_id=p_session->>'id' where id=o.id returning * into o; end if;
+ if p_session->>'status'='open' and p_session->>'paymentStatus'='unpaid' and o.checkout_url is null then
+ if p_session->>'url' is distinct from ('https://checkout.xpay.app/c/'||(p_session->>'id'))
+ or (p_session->>'isExpired')::boolean is distinct from false or p_session->>'expiresAt' is null
+ or not isfinite((p_session->>'expiresAt')::timestamptz) or (p_session->>'expiresAt')::timestamptz<=clock_timestamp() then
+ raise exception 'XPAY_SESSION_UNAVAILABLE' using errcode='22023'; end if;
+ update public.shop_xpay_orders set checkout_url=p_session->>'url',expires_at=(p_session->>'expiresAt')::timestamptz,
+ updated_at=clock_timestamp() where id=o.id returning * into o;
+ end if;
  if p_session->>'paymentStatus'='paid' then
  if p_session->>'status' is distinct from 'complete' or p_session->>'paymentIntentId' is null
  or p_session->>'paymentIntentId' !~ ('^pi_'||o.mode||'_[A-Za-z0-9]+$') then
