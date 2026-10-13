@@ -143,7 +143,7 @@ for (const locale of ['en', 'ar']) {
     await expect(solo).toContainText(locale === 'ar' ? '٤٬٠٧١٫٨٤' : '4,071.84')
     const checkout = page.getByTestId('hosted-checkout')
     await expect(checkout).toContainText(locale === 'ar' ? '٤٬٠٧١٫٨٤' : '4,071.84')
-    await expect(checkout.getByRole('button')).toBeDisabled()
+    await expect(checkout.getByRole('button').first()).toBeDisabled()
     expect(calls.filter(call => call.name === 'submit_shop_billing_notice')).toEqual([])
 
   })

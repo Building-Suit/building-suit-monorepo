@@ -34,7 +34,7 @@ for (const locale of ['en', 'ar']) for (const mobile of [false, true]) {
     const checkout = page.getByTestId('hosted-checkout')
     await expect(checkout).toContainText('Synthetic frozen private terms')
     await expect(checkout).toContainText(/123[.,٫]45|١٢٣٫٤٥/)
-    await expect(checkout.getByRole('button')).toBeDisabled()
+    await expect(checkout.getByRole('button').first()).toBeDisabled()
     expect(calls.filter(call => call.name === 'redeem_shop_private_offer')).toHaveLength(0)
     expect(calls.filter(call => call.name === 'submit_shop_billing_notice')).toHaveLength(0)
 

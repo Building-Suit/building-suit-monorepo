@@ -33,6 +33,8 @@ do $$
 declare f xpay_fixture; result jsonb; again jsonb;
 begin
  select * into f from xpay_fixture;
+ if public.shop_xpay_checkout_status(f.shop_id)->>'enabled'<>'true' then raise exception 'owner readiness unreadable';end if;
+ begin perform public.shop_xpay_schedule_reconciliation(true,'jvvelvftpfnlogalgxgv');raise exception 'owner scheduled server task';exception when insufficient_privilege then null;end;
  result:=public.shop_xpay_order_create(f.owner_id,f.shop_id,f.terms_id);
  again:=public.shop_xpay_order_create(f.owner_id,f.shop_id,f.terms_id);
  if result<>again or result->>'state'<>'creating' or (result->>'amountMinor')::bigint<=0 then raise exception 'quote replay failure'; end if;
@@ -56,6 +58,7 @@ end $$;
 select set_config('request.jwt.claim.sub',other_id::text,true) from xpay_fixture;
 set local role authenticated;
 do $$declare f xpay_fixture;begin select * into f from xpay_fixture;
+ begin perform public.shop_xpay_checkout_status(f.shop_id);raise exception 'cross-tenant capability accepted';exception when insufficient_privilege then null;end;
  begin perform public.shop_xpay_order_read(f.shop_id);raise exception 'cross-tenant read accepted';exception when insufficient_privilege then null;end;
  begin perform public.shop_xpay_order_create(gen_random_uuid(),f.shop_id,f.terms_id);raise exception 'cross-tenant quote accepted';exception when insufficient_privilege then null;end;
 end $$;
@@ -130,3 +133,31 @@ do $$declare f xpay_fixture;begin
  then raise exception 'held payment fabricated grant or lost actual payment observation';end if;
  if (select count(*) from public.subscription_commercial_periods where xpay_order_id is not null)<>1 then raise exception 'held payment extended access';end if;
 end $$;
+
+-- Scheduler is opt-in: migrations must not create jobs or secrets.
+select set_config('request.jwt.claim.role','service_role',true),set_config('request.jwt.claim.sub','',true);
+set local role service_role;
+do $$begin
+ begin perform public.shop_xpay_schedule_reconciliation(true,'jvvelvftpfnlogalgxgv');raise exception 'schedule accepted without secure setup';exception when sqlstate '55000' then null;end;
+ begin perform public.shop_xpay_schedule_reconciliation(true,'other-project');raise exception 'unregistered environment accepted';exception when sqlstate '22023' then null;end;
+ perform public.shop_xpay_schedule_reconciliation(false,'jvvelvftpfnlogalgxgv');
+end $$;
+reset role;
+do $$begin
+ if exists(select 1 from cron.job where jobname='shop-xpay-reconcile') then raise exception 'migration enabled a network job';end if;
+end $$;
+-- Synthetic Vault values validate job registration inside this rollback-only
+-- transaction. The job cannot run before commit; no HTTP helper is invoked.
+select vault.create_secret('https://jvvelvftpfnlogalgxgv.supabase.co','shop_xpay_project_url');
+select vault.create_secret('disposable-placeholder-never-a-real-key','shop_xpay_server_key');
+select set_config('request.jwt.claim.role','service_role',true);
+set local role service_role;
+select public.shop_xpay_schedule_reconciliation(true,'jvvelvftpfnlogalgxgv');
+reset role;
+do $$begin
+ if not exists(select 1 from cron.job where jobname='shop-xpay-reconcile' and schedule='*/5 * * * *' and command='select shop_private.xpay_scheduled_request();') then raise exception 'supported scheduler command missing';end if;
+ if has_function_privilege('authenticated','shop_private.xpay_scheduled_request()','execute') then raise exception 'owner can access Vault transport';end if;
+end $$;
+set local role service_role;
+select public.shop_xpay_schedule_reconciliation(false,'jvvelvftpfnlogalgxgv');
+reset role;

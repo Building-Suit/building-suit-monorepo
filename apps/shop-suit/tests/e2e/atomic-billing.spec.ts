@@ -23,7 +23,7 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
     const checkout = page.getByTestId('hosted-checkout')
     await expect(checkout).toContainText(plan.planName)
     await expect(checkout).toContainText(/349|٣٤٩/)
-    await expect(checkout.getByRole('button')).toBeDisabled()
+    await expect(checkout.getByRole('button').first()).toBeDisabled()
     await expect(checkout).toContainText(arabic ? 'غير متاح بعد' : 'not available yet')
     await expect(page.getByRole('dialog')).toHaveCount(0)
     await expect(page.locator('input[type="file"], input[type="date"], input[type="number"]')).toHaveCount(0)

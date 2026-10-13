@@ -14,7 +14,8 @@ export interface BsBillingCopy {
 }
 export interface BsBillingHistoryRow { id: string; status: string; statusLabel: string; plan: string; expected: string; paid: string; reference: string; date: string; reason: string }
 export interface BsBillingView {
-  checkout?: { title: string; description: string; logoLight: string; logoDark: string; logoAlt: string; quote: string; notice: string; unavailable: string; action: string; pending: boolean; disabled: boolean; error: string }
+  checkout?: { title: string; description: string; logoLight: string; logoDark: string; logoAlt: string; quote: string; notice: string; unavailable: string; action: string; pending: boolean; disabled: boolean; error: string; statusMessage?: string; refreshLabel?: string; refreshDisabled?: boolean }
+  checkoutHistory?: { title: string; status: string; plan: string; amount: string; date: string; empty: string; rows: { id: string; status: string; plan: string; amount: string; date: string }[] }
   workspace: string; loading: boolean; failed: boolean; denied: boolean; available: boolean
   summary: { id: string; label: string; value: string; note?: string; status?: string }[]
   notice: string; details: { label: string; value: string }[]; providerNotice: string

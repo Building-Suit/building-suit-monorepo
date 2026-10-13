@@ -1,4 +1,4 @@
-import { checkoutBody, createProviderSession, paidSessionEvent, retrieveSession, validateSession, verifyXPayEvent } from './xpay.mjs'
+import { checkoutBody, createProviderSession, paidSessionEvent, retrieveSession, validateSession, verifyXPayEvent, verifyMerchantReadiness } from './xpay.mjs'
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const textEncoder = new TextEncoder()
@@ -13,6 +13,13 @@ function config(env) {
     || !['test', 'live'].includes(mode) || !secretKey?.startsWith(`sk_${mode}_`) || !merchantId
     || !env('SHOP_BILLING_RETURN_ORIGIN') || origin.protocol !== 'https:' || origin.username || origin.password
     || origin.pathname !== '/' || origin.search || origin.hash) throw new Error('xpay_not_configured')
+  // Production must never grant real access from test-mode provider results.
+  const targets = {
+    'https://stg.shop.building-suit.com': { url: 'https://jvvelvftpfnlogalgxgv.supabase.co', mode: 'test' },
+    'https://shop.building-suit.com': { url: 'https://fgdzjnsbcxfbiuogbmom.supabase.co', mode: 'live' },
+  }
+  const target = targets[origin.origin]
+  if (!target || target.url !== env('SUPABASE_URL') || target.mode !== mode) throw new Error('xpay_environment_mismatch')
   return { mode, secretKey, merchantId, origin: origin.origin }
 }
 
@@ -28,7 +35,8 @@ async function json(request) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('xpay_invalid_request')
   return value
 }
-const publicOrder = order => ({ orderId: order.id, state: order.state, sessionId: order.sessionId, url: order.state === 'open' ? order.url : null, expiresAt: order.expiresAt })
+const publicOrder = order => ({ orderId: order.id, state: order.state, sessionId: order.sessionId, url: order.state === 'open' ? order.url : null, expiresAt: order.expiresAt,
+  amountMinor: order.amountMinor, currency: order.currency, planName: order.description, createdAt: order.createdAt })
 const databaseSession = session => ({
   id: session.id, object: session.object, merchantId: session.merchantId, livemode: session.livemode,
   currency: session.currency, amountTotal: session.amountTotal, status: session.status, paymentStatus: session.paymentStatus,
@@ -50,12 +58,14 @@ async function providerOrder(sessionId, settings, rpc, fetchImpl) {
   return { session, order }
 }
 
-async function reconcileOrder(order, settings, rpc, fetchImpl) {
+async function reconcileOrder(order, settings, rpc, fetchImpl, locale = 'en') {
   if (order.merchantId !== settings.merchantId || order.mode !== settings.mode) throw new Error('xpay_session_mismatch')
   if (!order.sessionId) {
     // Provider request dedup expires after 24h. Never create blindly after it.
-    if (!order.sessionRequest) throw new Error('xpay_reconciliation_required')
     canRetryCreation(order)
+    await verifyMerchantReadiness({ ...settings, fetchImpl })
+    const body = order.sessionRequest ?? checkoutBody(order, { returnUrl: `${settings.origin}/billing?xpayOrder=${order.id}`, cancelUrl: `${settings.origin}/billing?xpayOrder=${order.id}&cancelled=1`, locale })
+    order = await rpc('shop_xpay_prepare_session', { p_order_id: order.id, p_body: body })
     const created = await createProviderSession({ order, ...settings, fetchImpl })
     order = { ...order, sessionId: created.id }
   }
@@ -77,16 +87,27 @@ export function createXPayCheckout({ env, rpc, authenticate, fetchImpl = fetch }
     try {
       if (!await authenticate(token)) return response({ error: 'sign_in_required' }, 401, settings.origin)
       const body = await json(request)
-      if (Object.keys(body).some(key => !['requestId', 'shopId', 'catalogTermsId', 'privateOffer', 'locale', 'orderId'].includes(key))
+      if (Object.keys(body).some(key => !['action', 'requestId', 'shopId', 'catalogTermsId', 'privateOffer', 'locale', 'orderId'].includes(key))
         || !UUID.test(body.shopId || '') || !['en', 'ar'].includes(body.locale)) throw new Error('xpay_invalid_request')
+      if (body.action === 'status') {
+        const capability = await rpc('shop_xpay_checkout_status', { p_shop_id: body.shopId }, token)
+        if (!capability.enabled || capability.merchantId !== settings.merchantId || capability.mode !== settings.mode) return response({ ready: false, orders: [] }, 200, settings.origin)
+        const verified = await verifyMerchantReadiness({ ...settings, fetchImpl })
+        const orders = await rpc('shop_xpay_order_read', { p_shop_id: body.shopId, p_order_id: null }, token)
+        return response({ ...verified, orders: orders.map(publicOrder) }, 200, settings.origin)
+      }
+      if (body.action != null) throw new Error('xpay_invalid_request')
       if (body.orderId) {
         if (!UUID.test(body.orderId)) throw new Error('xpay_invalid_request')
         const orders = await rpc('shop_xpay_order_read', { p_shop_id: body.shopId, p_order_id: body.orderId }, token)
         if (orders.length !== 1) return response({ error: 'order_unavailable' }, 404, settings.origin)
-        const order = await reconcileOrder(orders[0], settings, rpc, fetchImpl)
+        const order = await reconcileOrder(orders[0], settings, rpc, fetchImpl, body.locale)
         return response(publicOrder(order), 200, settings.origin)
       }
       if (!UUID.test(body.requestId || '') || (body.catalogTermsId != null && !UUID.test(body.catalogTermsId))) throw new Error('xpay_invalid_request')
+      const capability = await rpc('shop_xpay_checkout_status', { p_shop_id: body.shopId }, token)
+      if (!capability.enabled || capability.merchantId !== settings.merchantId || capability.mode !== settings.mode) throw new Error('xpay_not_configured')
+      await verifyMerchantReadiness({ ...settings, fetchImpl })
       let order = await rpc('shop_xpay_order_create', { p_request_id: body.requestId, p_shop_id: body.shopId, p_catalog_terms_id: body.catalogTermsId ?? null, p_private_offer: body.privateOffer ?? null }, token)
       if (order.merchantId !== settings.merchantId || order.mode !== settings.mode) throw new Error('xpay_session_mismatch')
       if (order.sessionId) {

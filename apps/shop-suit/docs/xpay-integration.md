@@ -1,12 +1,10 @@
 # X-Pay subscription checkout
 
-Status: provider contract plus customer UI/policy preparation; **not connected or
-live**. The customer manual payment/evidence form and its upload/submission
-orchestration are removed. The new hosted checkout section displays the official
-logo, selected quote, day-one policy and an explicitly unavailable disabled action.
-Historical request status/history and the existing operator review/signing backend
-remain. Backend manual-write RPC retirement has not landed; this UI change alone
-is not a server access boundary. Do not consolidate it as the finished feature.
+Status: customer checkout, verified server payment fulfillment, reconciliation and
+opt-in scheduling are implemented in the XPay stack. **Not configured or live.**
+Without verified merchant/account capabilities, the customer action fails closed.
+New customer subscription transfers and receipt uploads are retired; historical
+InstaPay records/evidence and separately audited operator actions remain.
 
 ## Verified provider sources (2026-10-13)
 
@@ -220,9 +218,69 @@ provisioning functions are untouched. Its migrations precede this one; the XPay
 subscription trigger still retains its bridge principal authority checks. The
 integration owner must run the combined-head SAS and XPay fixtures together.
 
-Remaining gates: merchant setup clarification/compatibility, actual provider
-sandbox/webhook verification, private-offer end-to-end verification, scheduling
-and monitoring configuration, and connecting the prepared customer checkout to
-the verified server capability with unavailable/pending/failure/review states.
-The current customer action remains disabled. This checkpoint is not the finished
-live integration and must not be represented as such.
+The customer capability and scheduling implementation below supersedes the
+backend checkpoint's remaining code work. Merchant setup, real provider sandbox
+verification, monitoring and combined SAS/XPay verification remain gates.
+
+
+## Customer checkout and scheduling checkpoint
+
+Branch `codex/shop-suit/xpay-customer-checkout`, parent #279 at
+`6f26f4b91f37f528389d9c00f2a4a3adfb27a4ac`. Product orchestration is in Shop's
+billing page and validated DTO/storage helpers; shared presentation remains in
+`packages/ui`.
+
+Owners can pay immediately during trial. The API freezes the authoritative quote
+before the browser confirms the exact server amount/plan and opens the validated
+provider URL. A redirect, cancellation query or browser flag never grants access.
+Saved orders survive missing responses; retries reuse an owner/shop/selection
+request ID. Private redemption tokens remain in transient memory, never storage.
+Pending/review orders block another charge, and checkout history preserves the
+actual server amount. Bounded 15-second polling (at most 20 attempts) and manual
+status refresh stop when the owner context changes. Test checkout is visibly
+labelled. Only server paid fulfillment refreshes the subscription; its historical
+trial dates remain intact.
+
+Availability uses documented [GET /account](https://docs.xpay.app/openapi.json):
+merchant ID, mode, key type/read+write permissions, EGP minor units, supported
+payment methods and live payment activation all must match. Both database and
+Edge configuration must be enabled. Exact project/origin/mode mappings are
+mandatory: `jvvelvftpfnlogalgxgv` + `https://stg.shop.building-suit.com` + test;
+`fgdzjnsbcxfbiuogbmom` + `https://shop.building-suit.com` + live. Production
+cannot grant access from test payments. No new application secret is required.
+
+Migration `20261013115916_xpay_checkout_readiness_scheduler.sql` installs the
+supported [Supabase Cron/pg_net/Vault pattern](https://supabase.com/docs/guides/functions/schedule-functions).
+It registers no job, stores no secret and sends no HTTP request on deployment.
+Secure deployment steps, outside this task's authorization:
+
+1. Apply migrations and deploy the three Edge Functions to the intended project.
+2. User/operator securely configures the existing documented XPay environment
+   variables, merchant database configuration and provider webhook endpoint.
+   Do not put credentials in chat, browser, repository or plaintext job commands.
+3. In that project's Vault, securely create `shop_xpay_project_url` containing its
+   registered Supabase HTTPS URL and `shop_xpay_server_key` containing the same
+   existing `SUPABASE_SERVICE_ROLE_KEY` used by the Edge runtime. The key is
+   needed only for the existing server-authorized reconciliation endpoint.
+4. Through a securely authenticated operator/service action, call
+   `shop_xpay_schedule_reconciliation(true, '<registered-project-ref>')` to
+   register the five-minute job. Calling it with `false` pauses that same job.
+   Registration rejects missing Vault configuration or a mismatched project URL;
+   the job body contains only `select shop_private.xpay_scheduled_request();`.
+5. Complete real provider sandbox checkout and signed-webhook verification,
+   duplicate delivery, pending/expiry and uncertain-create reconciliation. Enable
+   live mode only in the production mapping after actual provider activation.
+   Configure operator monitoring for failed jobs/inbox and `requires_review`.
+
+The current automatic customer flow stays as requested. The later ambiguous
+"manual by hand" instruction has not been treated as authorization to restore
+manual customer transfer or receipt approval; merchant setup interpretation still
+needs parent/user clarification. No hosted migration, secret, job registration,
+provider account change or real payment was performed here.
+
+Validation for this checkpoint: 51 focused unit/contract tests, Shop typecheck,
+lint and production build, strict workspace boundaries and all three Deno Edge
+entry-point checks passed. Browser and disposable SQL results are recorded in
+the PR after completion. The private-offer SQL fulfillment contract inherits
+#279 but a full signed-bridge/private-offer payment scenario remains unrun; the
+integration owner must run combined SAS/XPay checks before staging merge.

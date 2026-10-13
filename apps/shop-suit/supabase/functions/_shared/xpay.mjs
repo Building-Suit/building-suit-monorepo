@@ -97,6 +97,21 @@ export async function retrieveSession({ sessionId, secretKey, mode, fetchImpl = 
   return response.json()
 }
 
+// Official API 1.0 AccountResponse: mode, activation, key permissions and actual
+// chargeable currency/method capabilities. No key/customer fields reach clients.
+export async function verifyMerchantReadiness({ secretKey, mode, merchantId, fetchImpl = fetch }) {
+  validKey(secretKey, mode)
+  const response = await fetchImpl(`${API}/account`, { redirect: 'error', signal: AbortSignal.timeout(10000), headers: { authorization: `Bearer ${secretKey}` } })
+  if (!response.ok) throw new Error('xpay_account_unavailable')
+  const account = await response.json()
+  const currency = account.supportedCurrencies?.find(value => value.code === 'EGP')
+  if (account.id !== merchantId || account.livemode !== (mode === 'live') || account.apiKey?.mode !== mode || !['SECRET', 'RESTRICTED'].includes(account.apiKey?.type)
+    || (mode === 'live' && account.livePaymentsEnabled !== true) || currency?.decimals !== 2 || !Array.isArray(currency.paymentMethodTypes)
+    || !currency.paymentMethodTypes.some(method => ['card', 'fawry', 'valu', 'apple_pay'].includes(method))
+    || !['CHECKOUT_SESSIONS_READ', 'CHECKOUT_SESSIONS_WRITE'].every(permission => account.apiKey?.permissions?.includes(permission))) throw new Error('xpay_account_not_ready')
+  return { ready: true, mode }
+}
+
 // Contract: https://docs.xpay.app/en/integrate/webhooks/verifying-signatures
 export async function verifyXPayEvent(rawBody, header, secret, nowSeconds = Math.floor(Date.now() / 1000)) {
   if (typeof rawBody !== 'string' || encoder.encode(rawBody).length > 262144

@@ -5,7 +5,7 @@ import { createXPayCheckout, createXPayWebhook, createXPayReconciliation } from 
 const id = '11111111-1111-4111-8111-111111111111'
 const shop = '22222222-2222-4222-8222-222222222222'
 const terms = '33333333-3333-4333-8333-333333333333'
-const vars = { XPAY_ENABLED: 'true', XPAY_API_VERSION: '1.0', XPAY_MODE: 'test', XPAY_SECRET_KEY: 'sk_test_fixture', XPAY_MERCHANT_ID: 'merchant-fixture', XPAY_WEBHOOK_SECRET: 'whsec_fixture', SHOP_BILLING_RETURN_ORIGIN: 'https://shop.example' }
+const vars = { XPAY_ENABLED: 'true', XPAY_API_VERSION: '1.0', XPAY_MODE: 'test', XPAY_SECRET_KEY: 'sk_test_fixture', XPAY_MERCHANT_ID: 'merchant-fixture', XPAY_WEBHOOK_SECRET: 'whsec_fixture', SHOP_BILLING_RETURN_ORIGIN: 'https://stg.shop.building-suit.com', SUPABASE_URL: 'https://jvvelvftpfnlogalgxgv.supabase.co' }
 const env = name => vars[name]
 const baseOrder = { id, idempotencyKey: id, shopId: shop, merchantId: 'merchant-fixture', mode: 'test', currency: 'EGP', amountMinor: 34900, description: 'Solo', state: 'creating', sessionId: null, createdAt: new Date().toISOString() }
 const session = { id: 'cs_test_fixture', object: 'checkout.session', merchantId: 'merchant-fixture', livemode: false, metadata: { orderId: id }, currency: 'EGP', amountTotal: 34900, status: 'open', paymentStatus: 'unpaid', paymentIntentId: 'pi_test_fixture', isExpired: false, expiresAt: new Date(Date.now() + 1800000).toISOString(), url: 'https://checkout.xpay.app/c/cs_test_fixture', clientSecret: 'not-for-rpc', customer: { email: 'must-not-log@example.test' } }
@@ -17,6 +17,7 @@ function fixture({ providerSession = session, failedRpc, dedup = false } = {}) {
   const rpc = async (name, args, caller) => {
     calls.push({ name, args, caller })
     if (name === failedRpc) throw new Error('private SQL/provider body')
+    if (name === 'shop_xpay_checkout_status') return { enabled: true, mode: 'test', merchantId: 'merchant-fixture' }
     if (name === 'shop_xpay_order_create' || name === 'shop_xpay_server_order') return order
     if (name === 'shop_xpay_order_read') return [order]
     if (name === 'shop_xpay_prepare_session') { order = { ...order, sessionRequest: args.p_body }; return order }
@@ -26,7 +27,7 @@ function fixture({ providerSession = session, failedRpc, dedup = false } = {}) {
     if (name === 'shop_xpay_reconcile_candidates') return [order]
     throw new Error('unexpected rpc')
   }
-  const fetchImpl = async (url, options) => { providerCalls.push({ url, options }); return Response.json(providerSession) }
+  const fetchImpl = async (url, options) => { providerCalls.push({ url, options }); return Response.json(url.endsWith('/account') ? { id: 'merchant-fixture', livemode: false, livePaymentsEnabled: false, supportedCurrencies: [{ code: 'EGP', decimals: 2, paymentMethodTypes: ['card'] }], apiKey: { type: 'SECRET', mode: 'test', permissions: ['CHECKOUT_SESSIONS_READ', 'CHECKOUT_SESSIONS_WRITE'] } } : providerSession) }
   return { env, rpc, fetchImpl, authenticate: async () => true, authorizeServer: async () => true, calls, providerCalls }
 }
 function webhook(event = { id: 'evt_fixture', type: 'checkout.session.completed', data: { object: paid } }) {
@@ -60,7 +61,7 @@ test('checkout forwards user token to quote RPC, persists provider body and stri
   assert.equal('clientSecret' in bind.args.p_session, false)
   assert.equal('customer' in bind.args.p_session, false)
   assert.equal('clientSecret' in body, false)
-  assert.equal(f.providerCalls[0].options.headers['Idempotency-Key'], id)
+  assert.equal(f.providerCalls.find(c => c.options.method === 'POST').options.headers['Idempotency-Key'], id)
 })
 test('lost bind retries the persisted order key, not a second logical checkout', async () => {
   const f = fixture({ failedRpc: 'shop_xpay_bind_session' })
@@ -161,4 +162,39 @@ test('server-only dashboard session recovery uses authenticated provider GET and
   assert.equal(f.calls.find(call => call.name === 'shop_xpay_apply_session').args.p_session.paymentStatus, 'paid')
   const other = await createXPayReconciliation(f)(new Request('https://edge.example', { method: 'POST', body: JSON.stringify({ orderId: shop, sessionId: session.id }) }))
   assert.equal(other.status, 503)
+})
+
+test('availability verifies merchant capabilities without preparing or charging', async () => {
+ const f=fixture(), result=await createXPayCheckout(f)(checkoutRequest({action:'status'}))
+ assert.equal(result.status,200)
+ assert.equal((await result.json()).ready,true)
+ assert.deepEqual(f.providerCalls.map(c=>c.url),['https://api.xpay.app/account'])
+ assert.equal(f.calls.some(c=>/order_create|prepare|apply/.test(c.name)),false)
+})
+test('disabled database capability prevents provider I/O and creation', async () => {
+ const f=fixture(), rpc=async(name,...args)=>name==='shop_xpay_checkout_status'?{enabled:false}:f.rpc(name,...args)
+ assert.equal((await createXPayCheckout({...f,rpc})(checkoutRequest())).status,409)
+ assert.equal(f.providerCalls.length,0)
+ assert.equal(f.calls.length,0)
+})
+test('wrong merchant or unsupported currency/permissions fails before a quote or charge', async () => {
+ for(const account of [{id:'other'}, {id:'merchant-fixture',livemode:false,apiKey:{type:'SECRET',mode:'test',permissions:[]},supportedCurrencies:[{code:'EGP',decimals:2,paymentMethodTypes:['card']}]}]) {
+ const f=fixture(), result=await createXPayCheckout({...f,fetchImpl:async()=>Response.json(account)})(checkoutRequest())
+ assert.equal(result.status,409)
+ assert.equal(f.calls.some(c=>c.name==='shop_xpay_order_create'),false)
+ }
+})
+test('production origin cannot credit test-mode payments or cross-project results',async()=>{
+ const f=fixture()
+ for(const patch of [{SHOP_BILLING_RETURN_ORIGIN:'https://shop.building-suit.com'}, {SUPABASE_URL:'https://fgdzjnsbcxfbiuogbmom.supabase.co'}]) {
+ assert.equal((await createXPayCheckout({...f,env:name=>patch[name]??vars[name]})(checkoutRequest())).status,503)
+ }
+ assert.equal(f.calls.length+f.providerCalls.length,0)
+})
+test('reconciliation recovers a quote before dispatch died while keeping its original key',async()=>{
+ const f=fixture()
+ const result=await createXPayCheckout(f)(checkoutRequest({orderId:id}))
+ assert.equal(result.status,200)
+ assert.equal(f.calls.some(c=>c.name==='shop_xpay_prepare_session'),true)
+ assert.equal(f.providerCalls.find(c=>c.options.method==='POST').options.headers['Idempotency-Key'],id)
 })

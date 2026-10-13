@@ -196,7 +196,7 @@ for (const locale of ['en', 'ar']) for (const [slug, name, price] of [
     const checkout = page.getByTestId('hosted-checkout')
     await expect(checkout).toContainText(name)
     await expect(checkout).toContainText(new Intl.NumberFormat(locale === 'ar' ? 'ar-EG' : 'en-EG', { style: 'currency', currency: 'EGP' }).format(price))
-    await expect(checkout.getByRole('button')).toBeDisabled()
+    await expect(checkout.getByRole('button').first()).toBeDisabled()
     expect(calls.filter(call => call.name === 'submit_shop_billing_notice')).toEqual([])
   })
 }
@@ -211,7 +211,7 @@ test('owner selects exact Multi 3 annual quote for X-Pay', async ({ page }) => {
   await expect(page.getByTestId('hosted-checkout')).toContainText('Multi · 3 branches')
   await expect(page.getByTestId('hosted-checkout')).toContainText('9,783.84')
   await expect(page.getByTestId('hosted-checkout')).toContainText('Annual')
-  await expect(page.getByTestId('hosted-checkout').getByRole('button')).toBeDisabled()
+  await expect(page.getByTestId('hosted-checkout').getByRole('button').first()).toBeDisabled()
 })
 
 for (const locale of ['en', 'ar']) for (const status of ['submitted', 'under_review', 'approved', 'rejected'] as const) {
@@ -220,7 +220,7 @@ for (const locale of ['en', 'ar']) for (const status of ['submitted', 'under_rev
     await navigate(page, '/billing')
     await expect(page.getByRole('row').filter({ hasText: 'IPN-PLAN-001' })).toBeVisible()
     await expect(page.locator('#current-plan')).toContainText(locale === 'ar' ? 'فترة تجريبية' : 'Trialing')
-    await expect(page.getByTestId('hosted-checkout').getByRole('button')).toBeDisabled()
+    await expect(page.getByTestId('hosted-checkout').getByRole('button').first()).toBeDisabled()
     await expect(page.locator('input[type="file"], input[type="date"], input[type="number"]')).toHaveCount(0)
     expect(calls.filter(call => /submit_shop_billing_notice|reserve_shop_billing_payment_evidence/.test(call.name))).toEqual([])
   })

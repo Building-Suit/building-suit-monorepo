@@ -4,6 +4,9 @@ import type { BillingPlanOption, BillingSubmission, PrivateOfferPreview, ShopBil
 import type { PlanResourceKey, PlanUsageResource, ShopPlanInterval, ShopPlanOffer } from '~/types/plans'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import { parsePrivateOfferLink } from '~/utils/private-offer'
+import type { PrivateOfferEntry } from '~/utils/private-offer'
+import type { XPayOrder } from '~/utils/xpay-checkout.mjs'
+import { checkoutAttempt, checkoutAttemptKey, isXPayOrderId, parseXPayDatabaseOrders, parseXPayOrder, xpayHostedUrl } from '~/utils/xpay-checkout.mjs'
 
 definePageMeta({ layout: 'default', middleware: ['auth'] })
 
@@ -19,19 +22,20 @@ const copy = computed(() => isArabic.value ? ar : en)
 const form = reactive({ catalogTermsId: '', paidAmount: 0, transferDate: '', transferReference: '' })
 const privateLink = ref('')
 const privatePreview = shallowRef<PrivateOfferPreview | null>(null)
+const privateEntry = shallowRef<PrivateOfferEntry | null>(null)
 const privatePending = ref(false)
 const privateError = ref('')
 const user = useSupabaseUser()
 let privateGeneration = 0
 function clearPrivateOffer() {
   ++privateGeneration
-  privateLink.value = ''; privatePreview.value = null
+  privateLink.value = ''; privatePreview.value = null; privateEntry.value = null
   privatePending.value = false; privateError.value = ''
 }
 async function previewPrivateOffer() {
   if (!currentId.value || !isOwner.value || privatePending.value) return
   const generation = ++privateGeneration
-  privateError.value = ''; privatePreview.value = null
+  privateError.value = ''; privatePreview.value = null; privateEntry.value = null
   const value = privateLink.value
   privateLink.value = ''
   privatePending.value = true
@@ -49,6 +53,7 @@ async function previewPrivateOffer() {
     if (!offer || offer.offerId !== entry.offerId || offer.offerVersion !== entry.offerVersion || offer.shopId !== shopId
       || offer.targetBindingId !== entry.targetBindingId || offer.targetEnvironmentId !== entry.targetEnvironmentId) throw new Error('offer_response_mismatch')
     privatePreview.value = offer
+    privateEntry.value = entry
     form.paidAmount = offer.priceAmount
   } catch {
     if (generation === privateGeneration) privateError.value = copy.value.privateUnavailable
@@ -90,6 +95,113 @@ const currentCatalogTermsId = computed(() => purchasablePlans.value.find(plan =>
   && plan.planVariant === billing.value?.subscription.planVariant
   && plan.billingInterval === billing.value?.subscription.billingInterval)?.catalogTermsId ?? '')
 const latestSubmission = computed(() => billing.value?.submissions?.[0] ?? null)
+const checkoutReady = ref(false)
+const checkoutMode = ref<'test' | 'live' | null>(null)
+const checkoutChecking = ref(false)
+const checkoutPending = ref(false)
+const checkoutError = ref('')
+const checkoutOrders = shallowRef<XPayOrder[]>([])
+const checkoutCurrent = shallowRef<XPayOrder | null>(null)
+const confirmation = useConfirmation()
+let checkoutGeneration = 0
+let checkoutTimer: ReturnType<typeof setTimeout> | null = null
+let checkoutPolls = 0
+const openCheckout = computed(() => checkoutOrders.value.find(order => ['creating', 'open', 'pending', 'requires_review'].includes(order.state)) ?? null)
+const activeCheckout = computed(() => openCheckout.value?.orderId !== checkoutCurrent.value?.orderId && openCheckout.value ? openCheckout.value : checkoutCurrent.value ?? openCheckout.value)
+function clearCheckoutTimer() { if (checkoutTimer) clearTimeout(checkoutTimer); checkoutTimer = null }
+function scheduleCheckoutPoll() {
+  clearCheckoutTimer()
+  if (!checkoutReady.value || checkoutPolls >= 20 || !['creating', 'pending', 'open'].includes(activeCheckout.value?.state ?? '')) return
+  const context = checkoutContext()
+  checkoutTimer = setTimeout(() => { if (sameCheckoutContext(context)) { checkoutPolls++; void refreshCheckout() } }, 15000)
+}
+function checkoutContext() { return { generation: checkoutGeneration, shop: currentId.value, user: user.value?.id } }
+function sameCheckoutContext(value: ReturnType<typeof checkoutContext>) { return value.generation === checkoutGeneration && value.shop === currentId.value && value.user === user.value?.id && isOwner.value }
+async function loadCheckoutStatus() {
+  const context = checkoutContext()
+  if (!import.meta.client || !context.shop || !context.user || !isOwner.value || checkoutChecking.value) return
+  checkoutChecking.value = true
+  try {
+    // History remains readable even when the provider is unavailable/unconfigured.
+    const { data, error } = await rpc.rpc('shop_xpay_order_read', { p_shop_id: context.shop, p_order_id: null })
+    if (sameCheckoutContext(context) && !error) checkoutOrders.value = parseXPayDatabaseOrders(data)
+    const result = await client.functions.invoke('shop-xpay-checkout', { body: { action: 'status', shopId: context.shop, locale: isArabic.value ? 'ar' : 'en' } })
+    if (!sameCheckoutContext(context)) return
+    checkoutReady.value = !result.error && result.data?.ready === true && ['test', 'live'].includes(result.data?.mode)
+    checkoutMode.value = checkoutReady.value ? result.data.mode : null
+    if (checkoutReady.value && Array.isArray(result.data?.orders) && result.data.orders.length <= 20) checkoutOrders.value = result.data.orders.map(parseXPayOrder)
+  } catch {
+    if (sameCheckoutContext(context)) checkoutReady.value = false
+  } finally {
+    if (sameCheckoutContext(context)) { checkoutChecking.value = false; scheduleCheckoutPoll() }
+  }
+}
+async function refreshCheckout(orderId = activeCheckout.value?.orderId) {
+  const context = checkoutContext()
+  if (!context.shop || !context.user || !isOwner.value || checkoutPending.value) return
+  checkoutError.value = ''; checkoutPending.value = true
+  try {
+    if (orderId && checkoutReady.value) {
+      const result = await client.functions.invoke('shop-xpay-checkout', { body: { orderId, shopId: context.shop, locale: isArabic.value ? 'ar' : 'en' } })
+      if (result.error) throw result.error
+      if (!sameCheckoutContext(context)) return
+      checkoutCurrent.value = parseXPayOrder(result.data)
+      if (['expired', 'failed', 'paid'].includes(checkoutCurrent.value.state)) {
+        try { sessionStorage.removeItem(checkoutAttemptKey(context.user, context.shop)) } catch { /* No payment authority in storage. */ }
+        await refresh()
+      }
+    }
+    await loadCheckoutStatus()
+  } catch { if (sameCheckoutContext(context)) checkoutError.value = copy.value.checkoutFailed }
+  finally { if (sameCheckoutContext(context)) { checkoutPending.value = false; scheduleCheckoutPoll() } }
+}
+async function startCheckout() {
+  const context = checkoutContext(), quote = noticeQuote.value
+  if (!context.shop || !context.user || !isOwner.value || !checkoutReady.value || checkoutPending.value || checkoutChecking.value
+    || ['pending', 'requires_review'].includes(activeCheckout.value?.state ?? '')
+    || !quote || quote.blockers.length || billing.value?.subscription.accessState === 'suspended') return
+  checkoutPending.value = true; checkoutError.value = ''
+  try {
+    const existing = openCheckout.value
+    const entry = privateEntry.value
+    const selection = entry ? `offer:${entry.offerId}:${entry.offerVersion}` : `terms:${form.catalogTermsId}`
+    const requestId = checkoutAttempt(sessionStorage, checkoutAttemptKey(context.user, context.shop), selection, () => crypto.randomUUID())
+    const body = existing ? { orderId: existing.orderId, shopId: context.shop, locale: isArabic.value ? 'ar' : 'en' }
+      : { requestId, shopId: context.shop, locale: isArabic.value ? 'ar' : 'en', catalogTermsId: entry ? null : form.catalogTermsId,
+          privateOffer: entry ? { offerId: entry.offerId, offerVersion: entry.offerVersion, targetBindingId: entry.targetBindingId, targetEnvironmentId: entry.targetEnvironmentId, redemptionToken: entry.redemptionToken } : null }
+    const result = await client.functions.invoke('shop-xpay-checkout', { body })
+    if (result.error) throw result.error
+    if (!sameCheckoutContext(context)) return
+    const order = parseXPayOrder(result.data)
+    checkoutCurrent.value = order
+    if (order.state !== 'open' || !order.url) {
+      if (['expired', 'failed', 'paid'].includes(order.state)) { try { sessionStorage.removeItem(checkoutAttemptKey(context.user, context.shop)) } catch { /* No payment authority in storage. */ } }
+      await refresh(); await loadCheckoutStatus(); return
+    }
+    const approved = await confirmation.ask(copy.value.checkoutConfirm(order.planName, money(order.amountMinor / 100, order.currency)))
+    if (!approved || !sameCheckoutContext(context)) { await loadCheckoutStatus(); return }
+    window.location.assign(xpayHostedUrl(order.url, order.sessionId))
+  } catch { if (sameCheckoutContext(context)) checkoutError.value = copy.value.checkoutFailed }
+  finally { if (sameCheckoutContext(context)) { checkoutPending.value = false; scheduleCheckoutPoll() } }
+}
+watch([currentId, isOwner, () => user.value?.id], () => {
+  ++checkoutGeneration; clearCheckoutTimer(); checkoutReady.value = false; checkoutChecking.value = false
+  checkoutPending.value = false; checkoutError.value = ''; checkoutOrders.value = []; checkoutCurrent.value = null; checkoutMode.value = null; checkoutPolls = 0
+  if (import.meta.client) void loadCheckoutStatus()
+}, { flush: 'sync' })
+onMounted(async () => {
+  const params = new URLSearchParams(window.location.search)
+  const returned = params.get('xpayOrder')
+  params.delete('xpayOrder'); params.delete('cancelled')
+  window.history.replaceState(window.history.state, '', window.location.pathname + (params.size ? `?${params}` : '') + window.location.hash)
+  await loadCheckoutStatus()
+  if (isXPayOrderId(returned)) await refreshCheckout(returned)
+})
+watch(() => activeCheckout.value?.state, state => {
+  if (state !== 'pending' && state !== 'creating' && state !== 'open') clearCheckoutTimer()
+  else scheduleCheckoutPoll()
+})
+onBeforeUnmount(() => { ++checkoutGeneration; clearCheckoutTimer() })
 const usageResources = computed<PlanUsageResource[]>(() => {
   if (!billing.value) return []
   if (billing.value.usage.resources?.length) return billing.value.usage.resources
@@ -151,6 +263,10 @@ function choosePlan(plan: ShopPlanOffer) {
 }
 
 const en = {
+  checkoutChecking: 'Checking checkout availability…', checkoutResume: 'Resume checkout', checkoutCheck: 'Check payment status', checkoutFailed: 'Could not complete checkout or check payment. Check the saved status before starting another payment.',
+  checkoutConfirm: (plan: string, amount: string) => `Continue to X-Pay for ${plan} at ${amount}? Review the hosted checkout before paying.`,
+  checkoutHistory: 'X-Pay checkout history', checkoutEmpty: 'No X-Pay checkouts yet.', checkoutTest: 'Test checkout: no real funds are collected.',
+  checkoutStates: { creating: 'Checkout is being prepared. You can retry the saved checkout safely.', open: 'Checkout is open. Continue to X-Pay to complete payment.', pending: 'Payment is pending. Access stays unchanged until the server confirms payment.', paid: 'Payment verified. Your subscription summary shows your current access.', requires_review: 'Payment received; access needs review. Contact support before paying again.', expired: 'Checkout expired without confirmed payment. You may start a new checkout.', failed: 'Payment was not completed. You may retry with a new checkout.' },
   checkoutTitle: 'Pay with X-Pay', checkoutHelp: 'Use secure hosted checkout for your selected plan. Payment details stay with X-Pay; no receipt image is needed.',
   checkoutTrial: 'You may pay from day one of your trial. You do not need to wait seven days. Paid access starts after verified payment, with trial history preserved.',
   checkoutUnavailable: 'X-Pay checkout is not available yet. Contact support or check again later. Your current access remains unchanged.', checkoutAction: 'Continue to X-Pay',
@@ -172,6 +288,10 @@ const en = {
 }
 
 const ar = {
+  checkoutChecking: 'بنتحقق من إتاحة الدفع…', checkoutResume: 'استكمال الدفع', checkoutCheck: 'تحقق من حالة الدفع', checkoutFailed: 'مقدرناش نكمّل الدفع أو نتحقق من حالته. راجع الحالة المحفوظة قبل بدء دفع آخر.',
+  checkoutConfirm: (plan: string, amount: string) => `تتابع إلى X-Pay لخطة ${plan} بمبلغ ${amount}؟ راجع صفحة الدفع قبل السداد.`,
+  checkoutHistory: 'سجل الدفع عبر X-Pay', checkoutEmpty: 'لا توجد عمليات دفع عبر X-Pay بعد.', checkoutTest: 'دفع تجريبي: لا يتم تحصيل أموال حقيقية.',
+  checkoutStates: { creating: 'بنجهّز صفحة الدفع. تقدر تعيد المحاولة لنفس الطلب بأمان.', open: 'طلب الدفع مفتوح. تابع إلى X-Pay لإكمال الدفع.', pending: 'الدفع معلّق. سيظل الوصول دون تغيير حتى يؤكد الخادم الدفع.', paid: 'تم تأكيد الدفع. ملخص الاشتراك يعرض وصولك الحالي.', requires_review: 'تم استلام الدفع ويحتاج الوصول إلى مراجعة. تواصل مع الدعم قبل الدفع مرة أخرى.', expired: 'انتهت صلاحية الطلب دون دفع مؤكد. يمكنك بدء طلب جديد.', failed: 'لم يكتمل الدفع. يمكنك إعادة المحاولة بطلب جديد.' },
   checkoutTitle: 'الدفع بـ X-Pay', checkoutHelp: 'استخدم صفحة الدفع الآمنة للخطة المختارة. تظل بيانات الدفع لدى X-Pay ولا تحتاج إلى رفع صورة إيصال.',
   checkoutTrial: 'يمكنك الدفع من أول يوم في التجربة، ولا يلزم انتظار السبعة أيام. يبدأ الوصول المدفوع بعد تأكيد الدفع مع الاحتفاظ بسجل التجربة.',
   checkoutUnavailable: 'الدفع عبر X-Pay غير متاح بعد. تواصل مع الدعم أو حاول لاحقًا. سيظل وصولك الحالي دون تغيير.', checkoutAction: 'المتابعة إلى X-Pay',
@@ -214,6 +334,9 @@ const billingView = computed<BsBillingView>(() => {
   const quote = noticeQuote.value
   const preview = privatePreview.value
   const latest = latestSubmission.value
+  const payment = activeCheckout.value
+  const paymentHeld = payment?.state === 'requires_review' || payment?.state === 'pending'
+  const paymentMessage = checkoutChecking.value ? copy.value.checkoutChecking : payment ? copy.value.checkoutStates[payment.state] : ''
   return {
     workspace: current.value?.name ?? '', loading: pending.value, failed: !!error.value, denied: !isOwner.value, available: !!value,
     summary: sub ? [
@@ -229,9 +352,14 @@ const billingView = computed<BsBillingView>(() => {
     instructions: null,
     privateOffer: { pending: privatePending.value, error: privateError.value, title: preview?.displayName ?? '', summary: preview ? `${money(preview.priceAmount, preview.currency)} · ${intervalLabel(preview.billingInterval)} · ${date(preview.expiresAt)}` : '', limits: preview ? Object.entries(preview.resourceLimits).map(([key, limit]) => ({ key, label: copy.value.resources[key as PlanResourceKey], value: limit == null ? '∞' : String(limit) })) : [], notice: preview?.blockers.length ? copy.value.preservation : '', redeemed: preview?.submissionId ? copy.value.privateRedeemed : '' },
     checkout: { title: copy.value.checkoutTitle, description: copy.value.checkoutHelp, logoLight: '/payments/xpay-light.svg', logoDark: '/payments/xpay-dark.svg', logoAlt: 'X-Pay',
-      quote: quote ? `${quote.planName} · ${money(quote.effectivePriceAmount, quote.currency)} · ${intervalLabel(quote.billingInterval)}` : copy.value.noPurchasable,
-      notice: quote?.blockers.length ? copy.value.preservation : copy.value.checkoutTrial,
-      unavailable: copy.value.checkoutUnavailable, action: copy.value.checkoutAction, pending: false, disabled: true, error: '' },
+      quote: openCheckout.value ? `${openCheckout.value.planName} · ${money(openCheckout.value.amountMinor / 100, openCheckout.value.currency)}` : quote ? `${quote.planName} · ${money(quote.effectivePriceAmount, quote.currency)} · ${intervalLabel(quote.billingInterval)}` : copy.value.noPurchasable,
+      notice: [quote?.blockers.length ? copy.value.preservation : copy.value.checkoutTrial, checkoutMode.value === 'test' ? copy.value.checkoutTest : ''].filter(Boolean).join(' '),
+      unavailable: !checkoutReady.value && !checkoutChecking.value ? copy.value.checkoutUnavailable : '', action: openCheckout.value ? copy.value.checkoutResume : copy.value.checkoutAction,
+      pending: checkoutPending.value, disabled: !checkoutReady.value || checkoutChecking.value || checkoutPending.value || paymentHeld || !quote || !!quote.blockers.length
+        || !!privatePreview.value?.submissionId || !!privatePreview.value?.xpayOrderId || billing.value?.subscription.accessState === 'suspended', error: checkoutError.value,
+      statusMessage: paymentMessage, refreshLabel: copy.value.checkoutCheck, refreshDisabled: checkoutPending.value || checkoutChecking.value },
+    checkoutHistory: { title: copy.value.checkoutHistory, status: copy.value.access, plan: copy.value.requestedPlan, amount: copy.value.expected, date: copy.value.transferDate, empty: copy.value.checkoutEmpty,
+      rows: checkoutOrders.value.map(order => ({ id: order.orderId, status: copy.value.checkoutStates[order.state], plan: order.planName, amount: money(order.amountMinor / 100, order.currency), date: date(order.createdAt) })) },
     transfer: null, evidence: null, showEvidence: false, showHistory: true,
     history: (value?.submissions ?? []).map(item => ({ id: item.id, status: item.status, statusLabel: statusLabel(item.status), plan: item.requestedPlanName, expected: money(item.effectivePriceAmount, item.currency), paid: money(item.paidAmount, item.currency), reference: item.transferReference, date: date(item.transferDate), reason: item.reviewReason ?? '' })),
     trial: null, policy: null, paymentNotice: '', paymentRequired: '', compatibilityNotice: '', pricingError: '', canRequests: false,
@@ -240,5 +368,5 @@ const billingView = computed<BsBillingView>(() => {
 function chooseBillingInterval(value: string) { if (value === 'monthly' || value === 'annual') planPresentation.interval = value }
 </script>
 <template>
-  <BsBillingPage v-model:form="billingForm" variant="shop" :copy="billingCopy" :view="billingView" @retry="refresh()" @usage-retry="refresh()" @pricing-retry="refreshCatalog()" @interval="chooseBillingInterval" @variant="planPresentation.chooseVariant" @plan="planPresentation.choose" @private-preview="previewPrivateOffer" @private-clear="clearPrivateOffer"/>
+  <BsBillingPage v-model:form="billingForm" variant="shop" :copy="billingCopy" :view="billingView" @retry="refresh()" @usage-retry="refresh()" @pricing-retry="refreshCatalog()" @interval="chooseBillingInterval" @variant="planPresentation.chooseVariant" @plan="planPresentation.choose" @private-preview="previewPrivateOffer" @private-clear="clearPrivateOffer" @checkout="startCheckout" @checkout-refresh="refreshCheckout()"/>
 </template>
