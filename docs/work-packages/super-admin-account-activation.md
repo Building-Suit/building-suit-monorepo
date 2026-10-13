@@ -1,7 +1,9 @@
 # Super Admin account activation checkpoint
 
-Status: existing-account browser/dispatcher code implemented; real database validation
-and new-account provisioning/invitation remain **incomplete**.
+Status: checkpoint history for PRs #269/#271. Secure provisioning/invitation is
+implemented in stacked PR #276; current acceptance and release gates are recorded
+in [the provisioning checkpoint](super-admin-account-provisioning.md). Earlier
+blocked checks below describe the state of this initial checkpoint.
 
 Base: fresh `origin/stg` at `18dcf90f33335c06c74a2c9b98ce794b90991837`.
 Branch: `codex/super-admin-suit/account-activation`. This is independent of the

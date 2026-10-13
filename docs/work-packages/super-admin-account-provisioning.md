@@ -70,7 +70,16 @@ Local: 58 focused unit checks passed, including target identity reconciliation,
 pre-existing email conflict, forged metadata denial, uncertain invitation replay,
 owner claim and hosted-runner/loopback guards. SAS/Shop typecheck and lint passed
 (the Shop baseline has unrelated attribute-order warnings). Boundary check passed.
-Browser and final build results are recorded at the PR checkpoint.
+All 16 controlled browser scenarios passed (13 SAS, three Shop owner-claim),
+including English/Arabic mobile layouts, lost-response reconciliation and
+acknowledged resend. SAS, Shop, Ledger and Inventory production builds and
+typechecks passed. The shared auth wordmark receives only maximum-inline-size
+bounds to preserve its aspect ratio inside mobile containers.
+
+The Shop seed reuses PR #274's exact correction from fourteen to seven trial
+days. SAS keeps global public signup disabled while enabling the email provider
+required for provisioned users to log in; disposable acceptance asserts that
+public signup remains denied.
 
 Real SQL/Auth validation runs only through the secret-free
 `account-provisioning-disposable.yml` GitHub-hosted job. The script refuses local
@@ -82,7 +91,13 @@ The test-only in-process target transport preserves exact signed bytes; producti
 DNS/TLS/redirect guards remain independently covered by unit checks and are not
 relaxed for a local destination. No local Docker pulls are retried.
 
-Until that job and final CI pass, real database/Auth readiness is pending. Hosted
+The disposable run at schema head `1f3d0e520cb41a42d57dfb0abc0535884a211863`
+generated both schema contracts and passed real creation, grant, invitation,
+completed replay, changed-input source denial, lost-response recovery, duplicate
+email and active-period protection. Its SQL fixture failed on an ambiguous test
+variable; that fixture is corrected in `9ca9655`. Generated schema artifacts are
+committed, and the next run also executes the required full `pnpm db:test:shop`.
+Until that run and final CI pass, real database/Auth readiness is pending. Hosted
 release remains separately gated by environment verification, provider policy,
 configuration records and migration/template deployment; no production readiness
 is inferred from disposable fixtures.
