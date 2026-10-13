@@ -29,7 +29,7 @@ const initials = computed(() => {
       <img v-if="avatarUrl" :src="avatarUrl" alt="" class="size-full object-cover">
       <span v-else>{{ initials || '·' }}</span>
     </span>
-    <span v-if="!compact" class="min-w-0">
+    <span v-if="!compact" class="bs-user-identity__text min-w-0">
       <span v-if="name" class="block truncate font-semibold text-fg">{{ name }}</span>
       <span v-if="email" class="block truncate text-sm text-fg-muted">{{ email }}</span>
     </span>

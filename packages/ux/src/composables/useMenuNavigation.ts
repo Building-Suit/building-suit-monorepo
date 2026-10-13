@@ -17,7 +17,7 @@ export function useMenuNavigation(route: WatchSource<string>, triggerSelector: s
     panel.value?.querySelector<HTMLElement>('[role="menuitem"], [role="menuitemradio"]')?.focus()
   }
   function onKeydown(event: KeyboardEvent) {
-    if (event.key === 'Escape') { event.preventDefault(); close(true); return }
+    if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); close(true); return }
     if (event.key === 'Tab') { close(); return }
     if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return
     const items = [...(panel.value?.querySelectorAll<HTMLElement>('[role="menuitem"], [role="menuitemradio"]') ?? [])].filter(item => !item.hasAttribute('disabled'))

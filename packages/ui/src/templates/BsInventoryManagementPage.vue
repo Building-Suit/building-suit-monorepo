@@ -14,23 +14,19 @@ const countsPage = defineModel<number>('countsPage', { required: true })
 const emit = defineEmits<{ retryAccess: []; retry: []; retryHistory: []; saveAdjustment: []; saveCount: []; saveThreshold: []; count: [id: string]; threshold: [id: string]; adjust: [mode: 'receive' | 'writeoff'] }>()
 </script>
 <template>
-  <BsStack>
-    <BsBox as="header">
-      <BsHeading :level="1">{{ text.title }}</BsHeading>
-      <BsText as="p" size="sm" tone="muted">{{ text.subtitle }}</BsText>
-    </BsBox>
+  <BsStack gap="lg">
+    <BsPageHeader :title="text.title" :subtitle="text.subtitle" />
     <BsPanel v-if="!view.available && !view.loadingContext" padding="md">
       <BsText as="p">{{ text.noShop }}</BsText>
       <BsLink to="/dashboard">{{ text.dashboard }}</BsLink>
     </BsPanel>
     <template v-else-if="view.available">
-      <BsText v-if="view.accessError" role="alert" as="p" size="sm" tone="danger">{{ text.denied }} <BsButton variant="link" @click="emit('retryAccess')">{{ text.retry }}</BsButton>
-      </BsText>
-      <BsText v-else-if="view.accessLoading" role="status" as="p">{{ text.loading }}</BsText>
-      <BsText v-else-if="!view.canView" role="alert" as="p">{{ text.denied }}</BsText>
+      <BsStateSurface v-if="view.accessError" state="error" :title="text.loadError" :action-label="text.retry" @action="emit('retryAccess')" />
+      <BsStateSurface v-else-if="view.accessLoading" state="loading" :title="text.loading" />
+      <BsStateSurface v-else-if="!view.canView" state="denied" :title="text.denied" />
       <template v-else>
         <BsText v-if="view.planNotice" as="p" size="sm" tone="warning">{{ text.plan }}</BsText>
-        <BsGrid :columns="2">
+        <BsGrid v-if="!view.loading && !view.error" :columns="2">
           <BsPanel padding="md">
             <BsText as="p" size="sm" tone="muted">{{ text.totalValue }}</BsText>
             <BsText as="p" size="lg" emphasis="semibold">{{ view.valuation }}</BsText>
@@ -45,7 +41,7 @@ const emit = defineEmits<{ retryAccess: []; retry: []; retryHistory: []; saveAdj
             <BsButton variant="chip" :aria-pressed="!lowOnly" @click="lowOnly = false">{{ text.all }}</BsButton>
             <BsButton variant="chip" :aria-pressed="lowOnly" @click="lowOnly = true">{{ text.lowOnly }}</BsButton>
           </BsInline>
-          <BsInline v-if="view.canAdjust">
+          <BsInline v-if="view.canAdjust && !view.loading && !view.error">
             <BsButton @click="emit('adjust', 'receive')">{{ text.receive }}</BsButton>
             <BsButton @click="emit('adjust', 'writeoff')">{{ text.writeoff }}</BsButton>
           </BsInline>

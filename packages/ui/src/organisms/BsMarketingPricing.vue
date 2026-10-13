@@ -2,6 +2,7 @@
 import type { MarketingPricingCopy, MarketingPricingOption, MarketingPricingPlan } from '@building-suit/contracts'
 
 withDefaults(defineProps<{
+  variant?: 'default' | 'shop'
   plans: MarketingPricingPlan[]
   interval: string
   intervalOptions: MarketingPricingOption[]
@@ -13,6 +14,7 @@ withDefaults(defineProps<{
   columns?: 3 | 4
   testId?: string
 }>(), {
+  variant: 'default',
   annualSaving: null,
   intro: undefined,
   loading: false,
@@ -40,6 +42,6 @@ defineEmits<{
     <BsStateSurface v-else-if="error" class="mt-6" state="error" :title="error" :action-label="copy.retry" @action="$emit('retry')" />
     <BsStateSurface v-else-if="!plans.length" class="mt-6" state="empty" :title="copy.empty" />
 
-    <BsPlanGrid v-else :plans="plans" :copy="copy" :columns="columns" :test-id="testId" @update:variant="(planId, value) => $emit('update:variant', planId, value)" @action="$emit('action', $event)" @secondary-action="$emit('secondary-action', $event)" />
+    <BsPlanGrid v-else :variant="variant" :plans="plans" :copy="copy" :columns="columns" :test-id="testId" @update:variant="(planId, value) => $emit('update:variant', planId, value)" @action="$emit('action', $event)" @secondary-action="$emit('secondary-action', $event)" />
   </div>
 </template>

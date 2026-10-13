@@ -21,6 +21,7 @@ for (const locale of ['en', 'ar']) {
       })
       await fixtureGoto(page, '/pos')
       const picker = page.getByRole('combobox', { name: customerLabel, exact: true })
+      if (mobile) await page.keyboard.press('F4')
       await expect(picker).toBeVisible()
       await page.keyboard.press('F4')
       await expect(picker).toBeFocused()
@@ -59,7 +60,9 @@ for (const locale of ['en', 'ar']) {
       await expect(page.locator('html')).toHaveAttribute('data-theme', theme)
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
 
+      if (mobile) await page.keyboard.press('F2')
       await page.getByRole('button', { name: /Haircut/ }).click()
+      if (mobile) await page.keyboard.press('F4')
       await page.getByRole('button', { name: ar ? 'بدون عميل — بيع كاونتر مسدد بالكامل' : 'No customer — fully paid counter sale', exact: true }).click()
       await expect(page.getByRole('button', { name: ar ? /^حصّل / : /^Pay / })).toBeEnabled()
       await page.keyboard.press('F8')

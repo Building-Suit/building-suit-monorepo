@@ -19,9 +19,10 @@ const emit = defineEmits<{ print: []; share: []; retry: [] }>()
 </script>
 <template>
   <BsPage>
+    <BsPageHeader :title="documentCopy.title" :subtitle="receipt?.invoice" />
     <BsPrintActions :back-to="backTo" :back-label="copy.back" :print-label="copy.print" :disabled="!receipt" @print="emit('print')">
       <BsChoiceGroup v-model="language" type="radio" inline :legend="copy.language" :options="languageOptions"/>
-      <BsSelect v-model="paperSize" :label="copy.paperSize" :options="paperOptions" option-label="label" option-value="value"/>
+      <BsField v-slot="field" :label="copy.paperSize"><BsSelect v-model="paperSize" :input-id="field.id" :aria-describedby="field.describedby" :label="copy.paperSize" :options="paperOptions" option-label="label" option-value="value"/></BsField>
       <BsButton variant="secondary" :pending="sharing" :disabled="!receipt" @click="emit('share')">{{ copy.share }}</BsButton>
     </BsPrintActions>
     <BsAlert v-if="shareError" tone="error">{{ shareError }}</BsAlert>

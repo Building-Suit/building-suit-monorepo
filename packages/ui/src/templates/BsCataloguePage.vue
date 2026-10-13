@@ -10,11 +10,12 @@ const props = defineProps<{
   rows: BsCatalogueItemView[]
   categories: { value: string; label: string }[]
   table: { loading: boolean; error: string | null; canManage: boolean; archivePendingId: string | null; pageSize: number; page: number; total: number; filtered: boolean }
-  editor: { editing: boolean; dirty: boolean; pending: boolean; error: string; priceMax?: number }
+  editor: { uploadBlocked?: boolean; mediaSupported?: boolean; editing: boolean; dirty: boolean; pending: boolean; error: string; priceMax?: number }
+  upload?: { preview: string; status: 'idle' | 'uploading' | 'uploaded' | 'error' | 'invalid' }
   scheduling?: { loading: boolean; error: string | null; locations: { value: string; label: string }[]; staff: { value: string; label: string }[] }
   discounts?: { value: string; label: string }[]
 }>()
-const emit = defineEmits<{ search: [value: string]; page: [page: number]; retry: []; create: []; edit: [id: string]; archive: [id: string]; submit: [] }>()
+const emit = defineEmits<{ imageSelect: [file: File]; imageRemove: []; imageRetry: []; search: [value: string]; page: [page: number]; retry: []; create: []; edit: [id: string]; archive: [id: string]; submit: [] }>()
 function change<K extends keyof BsCatalogueForm>(key: K, value: BsCatalogueForm[K]) { form.value = { ...form.value, [key]: value } }
 function discount<K extends keyof BsCatalogueForm['discount']>(key: K, value: BsCatalogueForm['discount'][K]) { change('discount', { ...form.value.discount, [key]: value }) }
 function schedule<K extends keyof BsCatalogueForm['schedule']>(key: K, value: BsCatalogueForm['schedule'][K]) { change('schedule', { ...form.value.schedule, [key]: value }) }
@@ -32,7 +33,7 @@ const columns = computed(() => [
     <template v-else-if="context.available">
       <BsText v-if="copy.stockLater" as="p" size="sm">{{ copy.stockLater }}</BsText>
       <BsText v-if="editor.error && !visible" role="alert" as="p" size="sm" tone="danger">{{ editor.error }}</BsText>
-      <BsRecordActionDialog v-model:visible="visible" :title="editor.editing ? copy.edit : copy.add" :dirty="editor.dirty" :pending="editor.pending" :error="editor.error" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="emit('submit')">
+      <BsRecordActionDialog v-model:visible="visible" pinned-actions :title="editor.editing ? (copy.editTitle ?? copy.edit) : copy.add" :dirty="editor.dirty" :pending="editor.pending" :error="editor.error" :submit-disabled="editor.uploadBlocked" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="emit('submit')">
         <BsField v-slot="field" :label="copy.name"><BsInput :id="field.id" :model-value="form.name" :aria-describedby="field.describedby" type="text" :minlength="2" :maxlength="160" required @update:model-value="change('name', String($event))" /></BsField>
         <template v-if="kind === 'product'">
           <BsField v-slot="field" :label="copy.sku ?? ''"><BsInput :id="field.id" :model-value="form.sku" :aria-describedby="field.describedby" type="text" :maxlength="80" @update:model-value="change('sku', String($event))" /></BsField>
@@ -44,6 +45,7 @@ const columns = computed(() => [
           <BsField v-slot="field" :label="copy.discountType ?? ''"><BsSelect :model-value="form.discount.type" :input-id="field.id" :aria-describedby="field.describedby" :label="copy.discountType ?? ''" :options="discounts" option-label="label" option-value="value" @update:model-value="discount('type', String($event))" /></BsField>
           <BsField v-slot="field" :label="copy.discountValue ?? ''"><BsInput :id="field.id" :model-value="form.discount.value" :aria-describedby="field.describedby" type="number" :min="0" :step="0.01" required @update:model-value="discount('value', Number($event))" /></BsField>
         </template>
+        <BsField v-if="copy.imageLabel && copy.imageUpload && upload" v-slot="field" :label="copy.imageLabel" :hint="editor.mediaSupported ? '' : copy.imageUnavailable"><BsCatalogImageUploader :input-id="field.id" :describedby="field.describedby" :preview="upload.preview" :name="form.name" :status="upload.status" :copy="copy.imageUpload" :disabled="!editor.mediaSupported || editor.pending" @select="emit('imageSelect', $event)" @remove="emit('imageRemove')" @retry="emit('imageRetry')" /></BsField>
         <BsField v-slot="field" :label="copy.category"><BsSelect :model-value="form.category" :input-id="field.id" :aria-describedby="field.describedby" :label="copy.category" :options="categories" option-label="label" option-value="value" @update:model-value="change('category', String($event))" /></BsField>
         <BsFieldGroup v-if="kind === 'service'" legend="">
           <BsCheckbox :model-value="form.schedule.enabled" :label="copy.scheduling ?? ''" @update:model-value="schedule('enabled', Boolean($event))" /><BsText as="p" size="sm" tone="muted">{{ copy.schedulingHelp }}</BsText>

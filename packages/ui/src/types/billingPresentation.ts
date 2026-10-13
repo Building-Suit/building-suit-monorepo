@@ -2,6 +2,7 @@ import type { BsUsageItem } from '@building-suit/contracts'
 import type { BsLandingPricing } from './landingPresentation'
 export interface BsBillingForm { paidAmount: number; transferDate: string; transferReference: string; privateLink: string; reason: string }
 export interface BsBillingCopy {
+  current?: string; payment?: string
   title: string; subtitle: string; loading: string; retry: string; cancel: string; denied: string; failed: string; unavailable: string
   usage: string; usageHelp: string; usageLoading: string; usageError: string; compare: string; compareHelp: string
   instructions: string; instructionsHelp: string; manual: string; recipient: string; paymentLink: string; qr: string; instructionsUnavailable: string

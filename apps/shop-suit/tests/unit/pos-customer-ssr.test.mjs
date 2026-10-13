@@ -37,6 +37,7 @@ for (const customerId of ['customer-1', null]) test(`SSR locks appointment custo
     definePageMeta: () => {}, useRoute: () => ({ query: { appointment: 'appointment-1' } }),
     // Realtime registers only on the client; this fixture exercises initial SSR.
     useShopRealtime: () => {},
+    useCatalogMedia: () => ({ request: (_action, _args, fallback) => fallback() }),
     useI18n: () => ({ locale: vue.ref('en'), t: key => key }),
     useConfirmation: () => ({ current: vue.ref(null), ask: async () => false }), useToasts: () => ({ push: () => {} }),
     useShop: () => ({ current: vue.ref({ business_mode: 'service' }), currentId: vue.ref('shop-1'), currentLocationId: vue.ref('location-1'), currentLocation: vue.ref({ name: 'Main' }), currentMembership: vue.ref({ id: 'membership-1' }), loading: vue.ref(false) }),
@@ -56,7 +57,7 @@ for (const customerId of ['customer-1', null]) test(`SSR locks appointment custo
   app.component('BsButton', component(new URL('../../../../packages/ui/src/atoms/BsButton.vue', import.meta.url), globals))
   // Render the shared field and repeating-row owners so scoped slots receive
   // their real contract; unresolved custom elements cannot emulate that API.
-  for (const path of ['organisms/BsLineItemsEditor', 'molecules/BsLineItemRow', 'molecules/BsField', 'atoms/BsText']) {
+  for (const path of ['organisms/BsPointOfSaleCart', 'molecules/BsQuantityStepper', 'organisms/BsLineItemsEditor', 'molecules/BsLineItemRow', 'molecules/BsField', 'atoms/BsText']) {
     app.component(path.split('/')[1], component(new URL(`../../../../packages/ui/src/${path}.vue`, import.meta.url), globals))
   }
   app.component('BsSelect', { props: ['disabled'], setup: (props, { slots }) => () => vue.h('div', { role: 'combobox', 'aria-disabled': props.disabled }, slots.value?.()) })

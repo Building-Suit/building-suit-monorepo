@@ -9,6 +9,7 @@ export interface BsCatalogueItemView {
   schedule: string
 }
 export interface BsCatalogueForm {
+  imageUrl?: string
   name: string
   description: string
   sku: string
@@ -19,6 +20,11 @@ export interface BsCatalogueForm {
   schedule: { enabled: boolean; duration: number | null; cleanup: number; locations: string[]; staff: string[] }
 }
 export interface BsCatalogueCopy {
+  imageUpload?: { choose: string; replace: string; remove: string; retry: string; help: string; uploading: string; uploaded: string; error: string; invalid: string; placeholder: string }
+  imagePlaceholder?: string
+  imageLabel?: string
+  imageHelp?: string
+  imageUnavailable?: string
   title: string
   subtitle: string
   import: string
@@ -26,6 +32,7 @@ export interface BsCatalogueCopy {
   dashboard: string
   add: string
   edit: string
+  editTitle?: string
   archive: string
   save: string
   cancel: string

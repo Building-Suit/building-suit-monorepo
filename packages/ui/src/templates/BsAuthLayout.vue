@@ -1,10 +1,10 @@
 <script setup lang="ts">
-defineProps<{ wide?: boolean; productName: string; homeLabel: string; title: string; description: string }>()
+defineProps<{ wide?: boolean; presentation?: 'default' | 'flat'; productName: string; homeLabel: string; title: string; description: string }>()
 defineSlots<{ default(): unknown; logo(props: { tone: 'auto' | 'light' | 'dark' }): unknown; legal(): unknown }>()
 useTheme()
 </script>
 <template>
-  <main class="bs-auth-layout ls-auth-page" :data-wide="wide || undefined">
+  <main class="bs-auth-layout ls-auth-page" :data-presentation="presentation" :data-wide="wide || undefined">
     <section class="bs-auth-layout__panel ls-auth-panel">
       <div class="bs-auth-layout__form-shell ls-auth-form-shell" :class="wide ? 'bs-auth-layout__form-shell--wide' : ''">
         <NuxtLink to="/" class="bs-auth-layout__mobile-logo" :aria-label="homeLabel">
@@ -62,4 +62,8 @@ useTheme()
   .bs-auth-layout__panel { padding-inline: var(--bs-space-9); }
   .bs-auth-layout__mobile-logo { display: none; }
 }
+.bs-auth-layout[data-presentation='flat'] .bs-auth-layout__panel { background: var(--bs-bg); }
+.bs-auth-layout[data-presentation='flat'] .bs-auth-form { background: var(--bs-surface); border-color: var(--bs-border); border-radius: var(--bs-radius-card); box-shadow: none; }
+.bs-auth-layout[data-presentation='flat'] .bs-auth-form__title { font-size: var(--bs-type-h2-size); line-height: var(--bs-type-h2-lh); font-weight: var(--bs-weight-bold); letter-spacing: normal; }
+.bs-auth-layout[data-presentation='flat'] .ls-auth-showcase-content h2 { font-size: var(--bs-type-display-size); line-height: var(--bs-type-display-lh); font-weight: var(--bs-weight-extrabold); letter-spacing: normal; }
 </style>

@@ -9,7 +9,7 @@ import { useDocumentPrint } from '../src/composables/useDocumentPrint.ts'
 test('menu arrows wrap, Home/End choose edges, Escape restores trigger and route changes close', async () => {
   const previous = globalThis.document
   const scope = effectScope(), route = ref('/one')
-  let restored = 0
+  let restored = 0, stopped = 0
   const items = [0, 1, 2].map(id => ({ id, hasAttribute: () => false, focus() { globalThis.document.activeElement = this } }))
   globalThis.document = { activeElement: items[0] }
   try {
@@ -17,12 +17,13 @@ test('menu arrows wrap, Home/End choose edges, Escape restores trigger and route
     menu.root.value = { querySelector: () => ({ focus: () => { restored++ } }) }
     menu.panel.value = { querySelectorAll: () => items, querySelector: () => items[0] }
     await menu.toggle()
-    const press = key => menu.onKeydown({ key, preventDefault() {} })
+    const press = key => menu.onKeydown({ key, preventDefault() {}, stopPropagation() { stopped++ } })
     press('ArrowUp'); assert.equal(globalThis.document.activeElement.id, 2)
     press('ArrowDown'); assert.equal(globalThis.document.activeElement.id, 0)
     press('End'); assert.equal(globalThis.document.activeElement.id, 2)
     press('Home'); assert.equal(globalThis.document.activeElement.id, 0)
     press('Escape'); await nextTick()
+    assert.equal(stopped, 1)
     assert.equal(menu.open.value, false)
     assert.equal(restored, 1)
     await menu.toggle()
@@ -37,12 +38,12 @@ test('open side navigation traps Tab in both directions and ignores keys when cl
   const previous = globalThis.document
   const scope = effectScope(), open = ref(false)
   let closed = 0, prevented = 0
-  const first = { hasAttribute: () => false, focus() { globalThis.document.activeElement = this } }
-  const last = { hasAttribute: () => false, focus() { globalThis.document.activeElement = this } }
+  const first = { hasAttribute: () => false, getClientRects: () => [{}], focus() { globalThis.document.activeElement = this } }
+  const last = { hasAttribute: () => false, getClientRects: () => [{}], focus() { globalThis.document.activeElement = this } }
   globalThis.document = { activeElement: first }
   try {
     const menu = scope.run(() => useSideNavigation(() => open.value, () => '/customers/1', () => { closed++ }))
-    menu.panel.value = { querySelectorAll: () => [first, last], querySelector: () => first }
+    menu.panel.value = { querySelectorAll: () => [{ hasAttribute: () => false, getClientRects: () => [], focus() { throw new Error('hidden element received focus') } }, first, last], querySelector: () => first }
     assert.equal(menu.isActive('/customers'), true)
     menu.onKeydown({ key: 'Escape', preventDefault() { prevented++ } })
     assert.equal(closed, 0)

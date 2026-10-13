@@ -283,6 +283,46 @@
       "adapterBoundary": "Authorized, curated bilingual feed and authoritative serverNow; publishing and visibility authorization remain service-owned",
       "task": "BS-CHANGELOG-VERSION-001",
       "migrationStatus": "shared-owner-available"
+    },
+    {
+      "family": "catalog-images",
+      "owner": "packages/ui",
+      "components": [
+        "BsCatalogImage",
+        "BsCatalogImageUploader",
+        "BsCatalogTile"
+      ],
+      "adapterBoundary": "product-owned file validation, tenant-scoped Storage transport and catalog commands; packages/ux owns upload lifecycle",
+      "auditSources": [
+        "apps/shop-suit/app/pages/products/index.vue",
+        "apps/shop-suit/app/pages/services/index.vue"
+      ],
+      "migrationStatus": "canonical shared presentation; focused verification recorded in the task tracker"
+    },
+    {
+      "family": "dashboard-metrics",
+      "owner": "packages/ui",
+      "components": [
+        "BsDashboardMetric"
+      ],
+      "adapterBoundary": "formatted product-owned metric values, capabilities, financial notice and source navigation",
+      "auditSources": [
+        "apps/shop-suit/app/pages/dashboard.vue"
+      ],
+      "migrationStatus": "shared metric molecule; bounded Penpot alignment in progress"
+    },
+    {
+      "family": "pos-cart",
+      "owner": "packages/ui",
+      "components": [
+        "BsPointOfSaleCart",
+        "BsQuantityStepper"
+      ],
+      "adapterBoundary": "typed catalog/cart/customer projections, product-owned quantity limits and existing checkout commands; shared UX owns viewport, section, stepping and focus lifecycle",
+      "auditSources": [
+        "apps/shop-suit/app/pages/pos.vue"
+      ],
+      "migrationStatus": "bounded POS reference alignment in progress"
     }
   ]
 }

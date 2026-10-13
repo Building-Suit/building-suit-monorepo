@@ -88,6 +88,10 @@ export async function pilotFixture(page: Page, locale: string, role = 'owner', o
     }
     const overridden = await override?.(name, args)
     if (overridden !== undefined) { await route.fulfill({ json: overridden }); return }
+    if (name === 'shop_catalog_media') {
+      await route.fulfill({ status: 404, json: { code: 'PGRST202', message: 'Optional media migration is unavailable in the legacy fixture' } }); return
+    }
+
     let data: unknown = []
     switch (name) {
       case 'portals': data = { id: 'portal-1' }; break

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { HugeiconsIcon } from '@hugeicons/vue'
 import {
+  Image01Icon,
   ViewIcon,
   ViewOffSlashIcon,
   LockPasswordIcon,
@@ -47,6 +48,7 @@ const bsIcons = {
   dashboard: DashboardSquare01Icon,
   delete: Delete02Icon,
   invoice: Invoice01Icon,
+  image: Image01Icon,
   ledger: TransactionIcon,
   mail: Mail02Icon,
   menu: Menu01Icon,

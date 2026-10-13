@@ -214,3 +214,18 @@ export { useTreeExpansion } from './composables/useTreeExpansion.ts'
 export { useOverlayState } from './composables/useOverlayState.ts'
 
 export { replaceDraftRow, appendDraftRow, removeDraftRow } from './utils/draftCollection.ts'
+
+export { useCollapsibleNavigation } from './composables/useCollapsibleNavigation.ts'
+
+export { useOptionalImage } from './composables/useOptionalImage.ts'
+
+export { useCalendarNavigation, calendarDateKey, calendarAddDays, calendarLocalDate, calendarWindow, validCalendarDate } from './composables/useCalendarNavigation.ts'
+export type { CalendarView } from './composables/useCalendarNavigation.ts'
+
+export { useFileUpload } from './composables/useFileUpload.ts'
+
+export { useViewportSpace } from './composables/useViewportSpace.ts'
+export { usePointOfSaleSections } from './composables/usePointOfSaleSections.ts'
+export { boundedQuantity, steppedQuantity, restoreQuantityInput } from './utils/quantity.ts'
+
+export { focusAfterRecordRemoval } from './utils/collectionFocus.ts'

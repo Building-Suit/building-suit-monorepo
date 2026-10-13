@@ -2,6 +2,7 @@ import type { MarketingPricingCopy, MarketingPricingOption, MarketingPricingPlan
 
 export type BsLandingPreview = { kind: 'dashboard'; label: string; title: string; periodLabel: string; metrics: { label: string; value: string }[] } | { kind: 'features' }
 export interface BsLandingPricing {
+  variant?: 'default' | 'shop'
   plans: MarketingPricingPlan[]
   interval: string
   intervalOptions: MarketingPricingOption[]
