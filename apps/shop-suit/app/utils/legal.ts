@@ -75,7 +75,7 @@ export const legalDocuments: Record<
     en: {
       title: 'Privacy Policy',
       intro: 'This Privacy Policy explains how Shop Suit by Building Suit collects, uses, stores, and protects information when you use our website and software service.',
-      updated: '10 October 2026',
+      updated: '13 October 2026',
       sections: [
         {
           title: '1. Information we collect',
@@ -93,7 +93,7 @@ export const legalDocuments: Record<
             'To create and operate your Shop Suit account and shop workspace.',
             'To provide shop operations, reporting, collaboration, subscription, and support functionality.',
             'To manage authentication sessions and refresh authorized workspace data using shop/location-scoped change signals. Session identifiers and account/workspace context are used to scope subscriptions and clear local workspace state when the session ends.',
-            'To review payment notices, activate approved subscription access, and maintain billing records.',
+            'To verify subscription payments, review historical payment notices, activate confirmed access, and maintain billing records.',
             'To secure the service, prevent abuse, investigate incidents, and maintain auditability.',
             'To improve reliability, usability, and performance and comply with applicable obligations.',
           ],
@@ -101,8 +101,8 @@ export const legalDocuments: Record<
         {
           title: '3. Payments',
           paragraphs: [
-            'Shop Suit currently uses operator-configured InstaPay or instant bank transfer instructions. A transfer notice is reviewed manually by an authorized platform operator; submitting it does not automatically verify payment or activate access.',
-            'Shop Suit stores the billing and transfer-reference information needed to review and audit your subscription request. Shop Suit does not claim to provide automated card processing or automated bank verification.',
+            'New subscription payments use X-Pay hosted checkout when available. X-Pay collects payment details on its own page; Shop Suit does not collect card numbers or security codes. Checkout may remain unavailable while setup is completed.',
+            'Shop Suit retains plan, amount, currency, payment identifiers and status needed to confirm and audit subscriptions. Previous manual transfer notices and receipt evidence remain in billing history. A browser return page does not confirm payment; paid access requires a verified server-side paid result.',
           ],
         },
         {
@@ -131,7 +131,7 @@ export const legalDocuments: Record<
     ar: {
       title: 'سياسة الخصوصية',
       intro: 'توضح هذه السياسة كيفية جمع واستخدام وحفظ وحماية المعلومات عند استخدام موقع وخدمة Shop Suit by Building Suit.',
-      updated: '10 أكتوبر 2026',
+      updated: '13 أكتوبر 2026',
       sections: [
         {
           title: '1. المعلومات التي نجمعها',
@@ -149,7 +149,7 @@ export const legalDocuments: Record<
             'إنشاء وتشغيل حساب Shop Suit ومساحة عمل متجرك.',
             'تقديم وظائف تشغيل المتجر والتقارير والتعاون والاشتراكات والدعم.',
             'إدارة جلسات تسجيل الدخول وتحديث بيانات مساحة العمل المصرح بها باستخدام إشارات تغيير خاصة بالمتجر والفرع. تُستخدم معرّفات الجلسات وسياق الحساب ومساحة العمل لتحديد نطاق اشتراكات التحديث ومسح حالة مساحة العمل المحلية عند انتهاء الجلسة.',
-            'مراجعة إشعارات الدفع وتفعيل الوصول المعتمد والاحتفاظ بسجلات الفوترة.',
+            'تأكيد مدفوعات الاشتراك ومراجعة إشعارات الدفع السابقة وتفعيل الوصول المؤكد والاحتفاظ بسجلات الفوترة.',
             'حماية الخدمة ومنع إساءة الاستخدام والتحقيق في الحوادث والحفاظ على سجلات المراجعة.',
             'تحسين الاعتمادية وسهولة الاستخدام والأداء والوفاء بالالتزامات المطبقة.',
           ],
@@ -157,8 +157,8 @@ export const legalDocuments: Record<
         {
           title: '3. المدفوعات',
           paragraphs: [
-            'يستخدم Shop Suit حاليًا تعليمات InstaPay أو التحويل البنكي الفوري التي يضبطها مسؤول المنصة. يراجع مسؤول مخوّل إشعار التحويل يدويًا، ولا يؤدي إرساله إلى التحقق التلقائي من الدفع أو تفعيل الوصول.',
-            'يحتفظ Shop Suit ببيانات الفوترة ومرجع التحويل اللازمة لمراجعة طلب الاشتراك وتدقيقه، ولا يدّعي توفير معالجة آلية للبطاقات أو تحقق بنكي تلقائي.',
+            'تستخدم مدفوعات الاشتراك الجديدة صفحة الدفع المستضافة لدى X-Pay عند إتاحتها. يجمع X-Pay بيانات الدفع في صفحته، ولا يجمع Shop Suit أرقام البطاقات أو رموز الأمان. قد يظل الدفع غير متاح حتى اكتمال الإعداد.',
+            'يحتفظ Shop Suit بالخطة والمبلغ والعملة ومعرّفات الدفع وحالته لتأكيد الاشتراك ومراجعته. تظل إشعارات التحويل اليدوية السابقة وصور الإيصالات محفوظة في سجل الفوترة. الرجوع من صفحة الدفع ليس تأكيدًا؛ يتطلب الوصول المدفوع نتيجة دفع مؤكّدة من الخادم.',
           ],
         },
         { title: '4. مزودو الخدمة', paragraphs: ['يسجل نموذج التواصل طلبك قبل تسليم البريد. يستخدم إشعار الدعم Resend لإرسال بريد الرد والموضوع والرسالة والتصنيف والأولوية ومرجع الطلب إلى بريد الدعم. نحتفظ بمحتوى الإشعار ومعرّف الرسالة لدى المزود وحالة التسليم لمتابعة التسليم وإعادة المحاولة. لا يضمن تسجيل الطلب تسليم البريد أو مدة محددة للرد.', 'نستخدم مزودي خدمات للبنية التحتية وقواعد البيانات وتسجيل الدخول وإرسال البريد الإلكتروني والمراقبة. وتتم معالجة المعلومات بالقدر اللازم لتقديم تلك الخدمات ووفق التزامات الأمان والخصوصية الخاصة بهم.'] },
@@ -186,17 +186,17 @@ export const legalDocuments: Record<
     en: {
       title: 'Delivery & Shipping Policy',
       intro: 'Shop Suit is a digital software-as-a-service product. We do not sell or ship physical goods.',
-      updated: '30 September 2026',
+      updated: '13 October 2026',
       sections: [
         { title: 'Digital delivery', paragraphs: ['Shop Suit is delivered electronically through your online account and shop workspace. There is no courier, physical shipment, or shipping fee.'] },
         {
           title: 'When access is provided',
           paragraphs: [
             'Eligible new accounts receive the trial shown during signup.',
-            'For paid access, the Shop owner submits an InstaPay or instant-bank-transfer notice. Access changes only after an authorized operator reviews the transfer externally and approves the request. Submission alone is not payment confirmation.',
+            'For paid access, the Shop owner may use X-Pay hosted checkout when available, including from day one of the trial. There is no requirement to complete all seven trial days before paying. Paid access begins after a verified server-side paid result, and historical trial dates remain recorded. No transfer notice or receipt-image upload is required for new payments.',
           ],
         },
-        { title: 'Activation delays', paragraphs: ['Manual review, incomplete or unmatched transfer details, security checks, service interruption, or a technical error may delay activation. If you transferred funds but paid access is unavailable, contact support with the account email and transfer reference.'] },
+        { title: 'Activation delays', paragraphs: ['Provider payment confirmation, security checks, service interruption, or a technical error may delay activation. Historical manual transfers retain their original review process. If you paid but access is unavailable, contact support with the account email and payment reference.'] },
         { title: 'No physical delivery', paragraphs: ['Because Shop Suit is a digital service, there is no physical delivery location or shipping process. Online access remains subject to account eligibility, service availability, and applicable law.'] },
         { title: 'Support', paragraphs: [`For digital-delivery or activation questions, contact ${publicBusiness.supportEmail}.`] },
       ],
@@ -204,17 +204,17 @@ export const legalDocuments: Record<
     ar: {
       title: 'سياسة التسليم والشحن',
       intro: 'Shop Suit منتج برمجي رقمي بنظام البرمجيات كخدمة (SaaS)، ولا نبيع أو نشحن منتجات مادية.',
-      updated: '30 سبتمبر 2026',
+      updated: '13 أكتوبر 2026',
       sections: [
         { title: 'التسليم الرقمي', paragraphs: ['يتم تقديم Shop Suit إلكترونيًا من خلال حسابك ومساحة عمل متجرك، ولا يوجد شحن مادي أو شركة توصيل أو رسوم شحن.'] },
         {
           title: 'موعد تفعيل الوصول',
           paragraphs: [
             'تحصل الحسابات الجديدة المؤهلة على الفترة التجريبية الموضحة أثناء التسجيل.',
-            'للوصول المدفوع، يرسل مالك المتجر إشعار تحويل عبر InstaPay أو التحويل البنكي الفوري. لا يتغير الوصول إلا بعد مراجعة مسؤول مخوّل للتحويل خارجيًا واعتماد الطلب، ولا يُعد إرسال الإشعار وحده تأكيدًا للدفع.',
+            'للوصول المدفوع، يمكن لمالك المتجر استخدام صفحة الدفع لدى X-Pay عند إتاحتها، بما في ذلك من أول يوم في التجربة. لا يلزم إكمال السبعة أيام قبل الدفع. يبدأ الوصول المدفوع بعد نتيجة دفع مؤكّدة من الخادم، وتظل تواريخ التجربة محفوظة. لا تتطلب المدفوعات الجديدة إشعار تحويل أو رفع صورة إيصال.',
           ],
         },
-        { title: 'تأخر التفعيل', paragraphs: ['قد تتأخر عملية التفعيل بسبب المراجعة اليدوية أو نقص بيانات التحويل أو عدم تطابقها أو فحوص الأمان أو توقف الخدمة أو خطأ تقني. إذا حولت المبلغ ولم يتوفر الوصول المدفوع، فتواصل مع الدعم وأرفق بريد الحساب ومرجع التحويل.'] },
+        { title: 'تأخر التفعيل', paragraphs: ['قد يتأخر التفعيل بسبب تأكيد الدفع لدى المزود أو فحوص الأمان أو توقف الخدمة أو خطأ تقني. تظل التحويلات اليدوية السابقة خاضعة لمراجعتها الأصلية. إذا دفعت ولم يتوفر الوصول المدفوع، فتواصل مع الدعم وأرفق بريد الحساب ومرجع الدفع.'] },
         { title: 'لا يوجد تسليم مادي', paragraphs: ['لأن Shop Suit خدمة رقمية، فلا يوجد عنوان تسليم أو شحن مادي. يظل الوصول عبر الإنترنت خاضعًا لأهلية الحساب وتوفر الخدمة والقانون المطبق.'] },
         { title: 'الدعم', paragraphs: [`للاستفسار عن التسليم الرقمي أو التفعيل، تواصل معنا عبر ${publicBusiness.supportEmail}.`] },
       ],
@@ -223,16 +223,16 @@ export const legalDocuments: Record<
   refund: {
     en: {
       title: 'Refund & Cancellation Policy',
-      intro: 'This policy explains how cancellation and refund requests are handled for Shop Suit subscriptions paid through the current manual InstaPay or instant-transfer process.',
-      updated: '30 September 2026',
+      intro: 'This policy explains cancellation and refund requests for Shop Suit subscriptions paid through X-Pay and for historical manual payments.',
+      updated: '13 October 2026',
       sections: [
         { title: 'Cancellation', paragraphs: ['You may ask us to cancel future paid access by contacting support. Shop Suit does not claim an automated card-renewal or self-service payment cancellation flow. Cancellation does not delete your business records; access and retention remain subject to the Terms & Conditions.'] },
-        { title: 'Manual payment review', paragraphs: ['Submitting a payment notice does not activate a plan. An authorized operator must review the external InstaPay or instant-transfer record before approval. If the notice is rejected, your current access remains unchanged and the review reason may be shown in Shop Suit.'] },
+        { title: 'Payment confirmation', paragraphs: ['X-Pay payment is confirmed on the server before paid access begins. Pending, failed or cancelled checkout and browser redirects do not activate a plan. Historical manual notices remain subject to their original operator review; an unapproved notice does not change access.'] },
         {
           title: 'Refund requests',
           paragraphs: [
-            'Refund requests are reviewed by an operator against the transfer record, account history, service delivery, these terms, and applicable law. Sending a request does not guarantee eligibility or approval.',
-            'Do not submit a second transfer to correct an unmatched notice unless support asks you to do so. Contact support with the account email, transfer date, amount, and reference.',
+            'Refund requests are reviewed by an operator against the payment record, account history, service delivery, these terms, and applicable law. Sending a request does not guarantee eligibility or approval.',
+            'If payment status is uncertain, contact support before starting another payment. Provide the account email, payment date, amount and payment reference; never send card details or security codes.',
           ],
         },
         { title: 'Processing', paragraphs: ['Approved refunds are handled through an available method determined during the operator review. Timing can depend on the transfer channel and information required to complete the review; no automatic refund or fixed processing time is promised.'] },
@@ -241,16 +241,16 @@ export const legalDocuments: Record<
     },
     ar: {
       title: 'سياسة الاسترداد والإلغاء',
-      intro: 'توضح هذه السياسة كيفية التعامل مع طلبات إلغاء اشتراكات Shop Suit واسترداد المدفوعات المسددة من خلال عملية InstaPay أو التحويل الفوري اليدوية الحالية.',
-      updated: '30 سبتمبر 2026',
+      intro: 'توضح هذه السياسة طلبات إلغاء اشتراكات Shop Suit واسترداد المدفوعات عبر X-Pay والمدفوعات اليدوية السابقة.',
+      updated: '13 أكتوبر 2026',
       sections: [
         { title: 'الإلغاء', paragraphs: ['يمكنك طلب إلغاء الوصول المدفوع مستقبلًا بالتواصل مع الدعم. لا يدّعي Shop Suit وجود تجديد بطاقات آلي أو إلغاء دفع ذاتي. ولا يؤدي الإلغاء إلى حذف سجلات نشاطك؛ إذ يظل الوصول والاحتفاظ خاضعين للشروط والأحكام.'] },
-        { title: 'مراجعة الدفع اليدوية', paragraphs: ['لا يؤدي إرسال إشعار الدفع إلى تفعيل الخطة. يجب أن يراجع مسؤول مخوّل سجل InstaPay أو التحويل الفوري الخارجي قبل الاعتماد. إذا رُفض الإشعار، يظل وصولك الحالي دون تغيير وقد يظهر سبب المراجعة داخل Shop Suit.'] },
+        { title: 'تأكيد الدفع', paragraphs: ['يُؤكّد دفع X-Pay على الخادم قبل بدء الوصول المدفوع. الدفع المعلّق أو الفاشل أو الملغى والرجوع من صفحة الدفع لا يفعّل الخطة. تظل إشعارات الدفع اليدوية السابقة خاضعة لمراجعتها الأصلية، ولا يغيّر الإشعار غير المعتمد الوصول.'] },
         {
           title: 'طلبات الاسترداد',
           paragraphs: [
-            'يراجع المسؤول طلب الاسترداد بالرجوع إلى سجل التحويل وسجل الحساب وتقديم الخدمة وهذه الشروط والقانون المطبق. ولا يضمن إرسال الطلب استحقاق الاسترداد أو اعتماده.',
-            'لا ترسل تحويلًا ثانيًا لتصحيح إشعار غير مطابق إلا إذا طلب منك الدعم ذلك. تواصل مع الدعم وأرفق بريد الحساب وتاريخ التحويل والمبلغ والمرجع.',
+            'يراجع المسؤول طلب الاسترداد بالرجوع إلى سجل الدفع وسجل الحساب وتقديم الخدمة وهذه الشروط والقانون المطبق. ولا يضمن إرسال الطلب استحقاق الاسترداد أو اعتماده.',
+            'إذا كانت حالة الدفع غير مؤكدة، تواصل مع الدعم قبل بدء دفع آخر. قدّم بريد الحساب وتاريخ الدفع والمبلغ ومرجع الدفع، ولا ترسل بيانات البطاقة أو رموز الأمان.',
           ],
         },
         { title: 'المعالجة', paragraphs: ['تُنفذ المبالغ المستردة المعتمدة من خلال وسيلة متاحة تُحدد أثناء مراجعة المسؤول. وقد يعتمد الوقت على قناة التحويل والمعلومات المطلوبة لإكمال المراجعة؛ ولا نعد باسترداد تلقائي أو مدة معالجة ثابتة.'] },
@@ -262,7 +262,7 @@ export const legalDocuments: Record<
     en: {
       title: 'Terms & Conditions',
       intro: 'These Terms & Conditions govern access to and use of Shop Suit by Building Suit.',
-      updated: '10 October 2026',
+      updated: '13 October 2026',
       sections: [
         { title: '1. The service', paragraphs: ['Shop Suit is a hosted business-operations service. Features and limits depend on the active plan, account eligibility, and the capabilities made available in the product.'] },
         { title: '2. Accounts and authority', bullets: ['Provide accurate account and business information.', 'Protect credentials and use team permissions appropriately.', 'Only enter or manage information that you are authorized to use.', 'The Shop owner is responsible for authorized team access and activity in the workspace.', 'Team members use their own accounts and accept invitations. Team actions depend on assigned permissions and locations; delegated administrators cannot grant permissions they do not hold.', 'Each user account is intended for one active device/session at a time. Provider enforcement is not currently verified as enabled; where enabled, the newest sign-in takes precedence at session refresh, and already-issued access tokens may remain valid until expiry. This is not an instant-revocation or credential-sharing prevention guarantee. Normal logout ends only the current session.'] },
@@ -270,9 +270,9 @@ export const legalDocuments: Record<
         {
           title: '4. Trials, plans, and payment',
           paragraphs: [
-            'New eligible accounts receive the trial described at signup. Plan availability, limits, price, currency, and subscription interval are shown before a payment notice is submitted.',
+            'New eligible accounts receive the trial described at signup. Plan availability, limits, price, currency, and subscription interval are shown before checkout.',
             'Current public plans are Solo (1 or 2 members), Team (8 members), and Multi (16 members for 2 branches or 25 members for 3 branches). Member limits include the owner; unexpired pending invitations reserve capacity. The selected catalog terms govern the price, interval, and resource limits; existing subscriptions retain their agreed terms. Plan changes can be blocked by usage above the selected limits and do not automatically delete or archive business records.',
-            'Current payments use operator-configured InstaPay or instant-transfer instructions. A notice starts manual review only. Paid access begins or changes only after an authorized operator verifies the external transfer and approves the request.',
+            'New subscription payments use X-Pay hosted checkout when available. You may pay from day one of the trial without waiting seven days. The first paid term starts after verified payment, with historical trial dates preserved. Pending, failed or cancelled payments and browser redirects do not grant access. New payments do not require manual transfer notices or receipt-image uploads. Existing paid terms and historical payment records remain preserved.',
           ],
         },
         { title: '5. Acceptable use', bullets: ['Do not use the service unlawfully or to infringe another person’s rights.', 'Do not attempt unauthorized access, security testing, interference, or abusive automation.', 'Do not upload malicious code or content you are not authorized to process.', 'Do not misrepresent payment, identity, or business information.'] },
@@ -285,7 +285,7 @@ export const legalDocuments: Record<
     ar: {
       title: 'الشروط والأحكام',
       intro: 'تحكم هذه الشروط والأحكام الوصول إلى Shop Suit by Building Suit واستخدامه.',
-      updated: '10 أكتوبر 2026',
+      updated: '13 أكتوبر 2026',
       sections: [
         { title: '1. الخدمة', paragraphs: ['Shop Suit خدمة مستضافة لإدارة عمليات النشاط. تعتمد المميزات والحدود على الخطة النشطة وأهلية الحساب والقدرات المتاحة داخل المنتج.'] },
         { title: '2. الحسابات والصلاحيات', bullets: ['قدّم بيانات حساب ونشاط دقيقة.', 'احمِ بيانات الدخول واستخدم صلاحيات الفريق بطريقة مناسبة.', 'لا تدخل أو تدير إلا المعلومات المصرح لك باستخدامها.', 'يتحمل مالك المتجر مسؤولية وصول أعضاء الفريق المصرح لهم ونشاطهم داخل مساحة العمل.', 'يستخدم أعضاء الفريق حساباتهم الخاصة ويقبلون الدعوات. تعتمد إجراءات الفريق على الصلاحيات والفروع المسندة، ولا يمكن للمسؤول المفوّض منح صلاحيات لا يملكها.', 'كل حساب مستخدم مخصص لجهاز أو جلسة نشطة واحدة في الوقت نفسه. لم يتم التحقق حاليًا من تفعيل هذا القيد لدى مزود تسجيل الدخول؛ وعند تفعيله تكون الأولوية لأحدث تسجيل دخول عند تحديث الجلسة، وقد تظل رموز الوصول الصادرة صالحة حتى انتهاء مدتها. لا يعني ذلك ضمان الإلغاء الفوري أو منع مشاركة بيانات الدخول. ينهي تسجيل الخروج العادي الجلسة الحالية فقط.'] },
@@ -293,9 +293,9 @@ export const legalDocuments: Record<
         {
           title: '4. التجربة والخطط والدفع',
           paragraphs: [
-            'تحصل الحسابات الجديدة المؤهلة على الفترة التجريبية الموضحة أثناء التسجيل. وتظهر الخطط المتاحة وحدودها وسعرها وعملتها ومدة الاشتراك قبل إرسال إشعار الدفع.',
+            'تحصل الحسابات الجديدة المؤهلة على الفترة التجريبية الموضحة أثناء التسجيل. وتظهر الخطط المتاحة وحدودها وسعرها وعملتها ومدة الاشتراك قبل الدفع.',
             'الخطط العامة الحالية هي Solo (عضو واحد أو عضوان)، وTeam (8 أعضاء)، وMulti (16 عضوًا لفرعين أو 25 عضوًا لثلاثة فروع). تشمل حدود الأعضاء المالك، وتحجز الدعوات المعلقة غير المنتهية سعة ضمن الحد. تحكم شروط الكتالوج المختارة السعر والمدة وحدود الموارد، وتحتفظ الاشتراكات القائمة بشروطها المتفق عليها. قد يُمنع تغيير الخطة إذا تجاوز الاستخدام حدود الخطة المختارة، ولا يؤدي تغييرها إلى حذف سجلات النشاط أو أرشفتها تلقائيًا.',
-            'تستخدم المدفوعات الحالية تعليمات InstaPay أو التحويل الفوري التي يضبطها مسؤول المنصة. يبدأ الإشعار المراجعة اليدوية فقط، ولا يبدأ الوصول المدفوع أو يتغير إلا بعد تحقق مسؤول مخوّل من التحويل الخارجي واعتماد الطلب.',
+            'تستخدم مدفوعات الاشتراك الجديدة صفحة X-Pay المستضافة عند إتاحتها. يمكنك الدفع من أول يوم في التجربة دون انتظار السبعة أيام. تبدأ أول مدة مدفوعة بعد تأكيد الدفع مع الاحتفاظ بتواريخ التجربة السابقة. المدفوعات المعلّقة أو الفاشلة أو الملغاة والرجوع من صفحة الدفع لا تمنح الوصول. لا تتطلب المدفوعات الجديدة إشعار تحويل يدويًا أو رفع صورة إيصال. تظل شروط الاشتراكات المدفوعة القائمة وسجلات الدفع السابقة محفوظة.',
           ],
         },
         { title: '5. الاستخدام المقبول', bullets: ['لا تستخدم الخدمة بشكل غير قانوني أو لانتهاك حقوق الآخرين.', 'لا تحاول الوصول غير المصرح به أو اختبار الأمان أو تعطيل الخدمة أو تشغيل أدوات آلية مسيئة.', 'لا ترفع برمجيات ضارة أو محتوى غير مصرح لك بمعالجته.', 'لا تقدم معلومات مضللة عن الدفع أو الهوية أو النشاط.'] },

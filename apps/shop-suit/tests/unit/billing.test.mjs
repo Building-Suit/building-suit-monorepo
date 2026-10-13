@@ -49,7 +49,8 @@ test('notices freeze the requested plan, interval, and effective commercial quot
   assert.match(planBillingMigration, /list_price_amount/)
   assert.match(planBillingMigration, /BILLING_NOTICE_COMMERCIAL_TERMS_IMMUTABLE/)
   assert.match(databaseTest, /plan-change notice mutated access or lost its quote/)
-  assert.match(customerPage, /p_requested_plan_slug/)
+  assert.match(customerPage, /effectivePriceAmount/)
+  assert.doesNotMatch(customerPage, /submit_shop_billing_notice|redeem_shop_private_offer/)
 })
 
 test('renewals use catalog terms and downgrades fail while usage blockers remain', () => {
@@ -70,11 +71,11 @@ test('negotiated pricing and amount mismatches require append-only audit evidenc
   assert.match(adminPage, /amountOverrideReason/)
 })
 
-test('billing surfaces are bilingual and make manual verification explicit', () => {
-  assert.match(customerPage, /This is not automatic bank verification/)
-  assert.match(customerPage, /التحويل بيتراجع يدويًا، مش بيتطابق تلقائيًا/)
+test('billing retains historical operator review and offers truthful bilingual X-Pay setup state', () => {
+  assert.match(customerPage, /X-Pay checkout is not available yet/)
+  assert.match(customerPage, /الدفع عبر X-Pay غير متاح بعد/)
   assert.match(customerPage, /const ar = \{/)
   assert.match(adminPage, /platform_admin_billing_read/)
   assert.match(adminPage, /platform_admin_billing_command/)
-  assert.doesNotMatch(`${migration}\n${planBillingMigration}\n${customerPage}\n${adminPage}`, /paymob|webhook|automaticVerification[^\n]*true/i)
+  assert.doesNotMatch(customerPage, /reserve_shop_billing_payment_evidence|storage\.from/)
 })

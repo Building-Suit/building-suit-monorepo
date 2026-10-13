@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test'
-import { pilotFixture, fixtureRoute } from './pilot-fixture'
+import { pilotFixture } from './pilot-fixture'
 
 type RequestStatus = 'submitted' | 'under_review' | 'approved' | 'rejected' | null
 
@@ -160,25 +160,25 @@ for (const locale of ['en', 'ar']) for (const width of [360, 768, 1440]) {
     const main = page.getByRole('main')
     await expect(page.locator('html')).toHaveAttribute('dir', locale === 'ar' ? 'rtl' : 'ltr')
     await expect(main.getByRole('heading', { name: locale === 'ar' ? 'الاشتراك والدفع' : 'Subscription and billing' })).toBeVisible()
-    const currentSubscription = main.locator('section[aria-label="Current subscription"]')
-    await expect(currentSubscription.getByText(locale === 'ar' ? 'يُطبق سعر تفاوضي' : 'Negotiated price applies', { exact: true })).toBeVisible()
-    await expect(main.locator('[data-usage-state="over"]')).toHaveCount(4)
-    await expect(main.locator('[data-usage-state="near"]')).toHaveCount(1)
-    await expect(main.locator('[data-usage-state="available"]')).toHaveCount(1)
+    const currentSubscription = main.locator('#current-plan')
+    await expect(currentSubscription).toContainText(locale === 'ar' ? 'يُطبق سعر تفاوضي' : 'Negotiated price applies')
+    await expect(main.locator('#usage').getByText(locale === 'ar' ? 'أعلى من الحد' : 'Over limit', { exact: true })).toHaveCount(4)
+    await expect(main.locator('#usage').getByText(locale === 'ar' ? 'قريب من الحد' : 'Near limit', { exact: true })).toHaveCount(1)
+    await expect(main.locator('#usage').getByText(locale === 'ar' ? 'متاح' : 'Available', { exact: true })).toHaveCount(1)
     await expect(main.getByRole('heading', { name: 'Legacy founder' })).toHaveCount(0)
     const soloCard = main.locator('article').filter({ has: page.getByRole('heading', { name: 'Solo', exact: true }) })
     const soloChoice = soloCard.getByRole('button', { name: locale === 'ar' ? 'اختيار الخطة' : 'Choose plan' })
     await expect(soloChoice).toBeEnabled()
-    await expect(soloCard.getByRole('alert').getByRole('listitem')).toHaveCount(6)
+    await expect(soloCard.getByRole('status').getByRole('listitem')).toHaveCount(6)
     for (const label of locale === 'ar'
       ? ['فروع المتجر', 'أفراد فريقك', 'المنتجات النشطة', 'الخدمات النشطة', 'العملاء النشطون', 'الموردون النشطون']
       : ['Shop locations', 'People on your team', 'Active products', 'Active services', 'Active customers', 'Active suppliers']) {
-      await expect(soloCard.getByRole('alert')).toContainText(label)
+      await expect(soloCard.getByRole('status')).toContainText(label)
     }
-    await expect(soloCard.getByRole('alert')).toContainText(locale === 'ar'
+    await expect(soloCard.getByRole('status')).toContainText(locale === 'ar'
       ? 'لن يُحذف أو يُؤرشف أي شيء تلقائيًا'
       : 'Nothing is deleted or archived automatically')
-    await expect(soloCard.getByRole('alert')).toContainText(locale === 'ar'
+    await expect(soloCard.getByRole('status')).toContainText(locale === 'ar'
       ? 'حتى تخفّض الاستخدام أو ترقي الخطة'
       : 'until you reduce usage or upgrade the plan')
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
@@ -188,144 +188,40 @@ for (const locale of ['en', 'ar']) for (const width of [360, 768, 1440]) {
 for (const locale of ['en', 'ar']) for (const [slug, name, price] of [
   ['solo', 'Solo', 349], ['team', 'Team', 649], ['multi', 'Multi', 999],
 ] as const) {
-  test(`trial owner can submit a plan-aware ${name} request: ${locale}`, async ({ page }) => {
-    await page.setViewportSize({ width: 768, height: 900 })
-    const request = { status: null as RequestStatus }
-    const { calls } = await setup(page, locale, request)
+  test(`trial owner can review the exact ${name} X-Pay quote without a manual payment: ${locale}`, async ({ page }) => {
+    const { calls } = await setup(page, locale, { status: null })
     await navigate(page, '/billing')
-    const main = page.getByRole('main')
-    const planCard = main.getByTestId('shop-plan-cards').locator('article').filter({ has: page.getByRole('heading', { name, exact: true }) })
-    await planCard.getByRole('button').click()
-    await expect(main.getByText(new RegExp(`${locale === 'ar' ? 'الخطة المطلوبة' : 'Requested plan'}: ${name}`))).toBeVisible()
-    await main.getByRole('spinbutton', { name: locale === 'ar' ? 'المبلغ المحوّل' : 'Amount transferred' }).fill(String(price))
-    await main.getByLabel(locale === 'ar' ? 'تاريخ التحويل' : 'Transfer date').fill('2026-09-29')
-    await main.getByRole('textbox', { name: locale === 'ar' ? 'مرجع التحويل' : 'Transfer reference' }).fill(`IPN-${slug.toUpperCase()}-001`)
-    await main.getByRole('button', { name: locale === 'ar' ? 'ابعت للمراجعة' : 'Submit for review' }).click()
-    await page.getByRole('dialog').getByRole('button', { name: locale === 'ar' ? 'تأكيد' : 'Confirm', exact: true }).click()
-
-    await expect.poll(() => calls.filter(call => call.name === 'submit_shop_billing_notice').length).toBe(1)
-    const submission = calls.find(call => call.name === 'submit_shop_billing_notice')
-    expect(submission?.args.p_requested_plan_slug).toBe(slug)
-    expect(submission?.args.p_requested_catalog_terms_id).toBe(`terms-${slug}-${slug === 'multi' ? 'multi_2' : 'standard'}-monthly`)
-    expect(submission?.args.p_paid_amount).toBe(price)
+    const card = page.getByTestId('shop-plan-cards').locator(`[data-plan="${slug}"]`)
+    await card.getByRole('button').click()
+    const checkout = page.getByTestId('hosted-checkout')
+    await expect(checkout).toContainText(name)
+    await expect(checkout).toContainText(new Intl.NumberFormat(locale === 'ar' ? 'ar-EG' : 'en-EG', { style: 'currency', currency: 'EGP' }).format(price))
+    await expect(checkout.getByRole('button').first()).toBeDisabled()
+    expect(calls.filter(call => call.name === 'submit_shop_billing_notice')).toEqual([])
   })
 }
 
-test('owner can select the Multi 3 yearly quote before submitting an InstaPay notice', async ({ page }) => {
-  await page.setViewportSize({ width: 768, height: 900 })
-  const request = { status: null as RequestStatus }
-  const { calls } = await setup(page, 'en', request)
+test('owner selects exact Multi 3 annual quote for X-Pay', async ({ page }) => {
+  await setup(page, 'en', { status: null })
   await navigate(page, '/billing')
-  const main = page.getByRole('main')
-  const plans = main.getByTestId('shop-plan-cards')
+  const plans = page.getByTestId('shop-plan-cards')
   await plans.getByRole('radio', { name: 'Yearly' }).check()
   await plans.getByRole('radio', { name: '3 branches' }).check()
-  const multi = plans.locator('[data-plan="multi"]')
-  await expect(multi).toContainText('9,783.84')
-  await multi.getByRole('button', { name: 'Choose plan' }).click()
-  const quote = main.getByText(/Requested plan: Multi · 3 branches/)
-  await expect(quote).toContainText('9,783.84')
-  await expect(quote).toContainText('Annual')
-  await main.getByRole('spinbutton', { name: 'Amount transferred' }).fill('9783.84')
-  await main.getByLabel('Transfer date').fill('2026-09-29')
-  await main.getByRole('textbox', { name: 'Transfer reference' }).fill('IPN-MULTI3-YEARLY')
-  await main.getByRole('button', { name: 'Submit for review' }).click()
-  await page.getByRole('dialog').getByRole('button', { name: 'Confirm', exact: true }).click()
-  await expect.poll(() => calls.filter(call => call.name === 'submit_shop_billing_notice').length).toBe(1)
-  const submission = calls.find(call => call.name === 'submit_shop_billing_notice')
-  expect(submission?.args.p_requested_catalog_terms_id).toBe('terms-multi-multi_3-annual')
-  expect(submission?.args.p_paid_amount).toBe(9783.84)
+  await plans.locator('[data-plan="multi"]').getByRole('button', { name: 'Choose plan' }).click()
+  await expect(page.getByTestId('hosted-checkout')).toContainText('Multi · 3 branches')
+  await expect(page.getByTestId('hosted-checkout')).toContainText('9,783.84')
+  await expect(page.getByTestId('hosted-checkout')).toContainText('Annual')
+  await expect(page.getByTestId('hosted-checkout').getByRole('button').first()).toBeDisabled()
 })
 
-for (const locale of ['en', 'ar']) {
-  test(`manual request and review states do not imply activation: ${locale}`, async ({ page }) => {
-    await page.setViewportSize({ width: 360, height: 900 })
-    const request = { status: null as RequestStatus }
-    const { calls } = await setup(page, locale, request)
+for (const locale of ['en', 'ar']) for (const status of ['submitted', 'under_review', 'approved', 'rejected'] as const) {
+  test(`historical ${status} does not imply a new activation: ${locale}`, async ({ page }) => {
+    const { calls } = await setup(page, locale, { status })
     await navigate(page, '/billing')
-    const main = page.getByRole('main')
-    const choose = main.getByRole('button', { name: locale === 'ar' ? 'اختيار الخطة' : 'Choose plan' }).last()
-    await choose.focus()
-    await page.keyboard.press('Enter')
-    await main.getByRole('spinbutton', { name: locale === 'ar' ? 'المبلغ المحوّل' : 'Amount transferred' }).fill('999')
-    await main.getByLabel(locale === 'ar' ? 'تاريخ التحويل' : 'Transfer date').fill('2026-09-29')
-    await main.getByRole('textbox', { name: locale === 'ar' ? 'مرجع التحويل' : 'Transfer reference' }).fill('IPN-PLAN-001')
-    await main.getByRole('button', { name: locale === 'ar' ? 'ابعت للمراجعة' : 'Submit for review' }).click()
-    const dialog = page.getByRole('dialog')
-    await expect(dialog).toContainText(locale === 'ar' ? 'لن يتغير الوصول' : 'access will not change')
-    await dialog.getByRole('button', { name: locale === 'ar' ? 'تأكيد' : 'Confirm', exact: true }).click()
-    await expect(main.getByText(locale === 'ar' ? /تم الإرسال للمراجعة اليدوية/ : /Submitted for manual review/)).toBeVisible()
-    expect(calls.filter(call => call.name === 'submit_shop_billing_notice')).toHaveLength(1)
-
-    for (const [status, message] of locale === 'ar'
-      ? [['under_review', /يراجع مسؤول المنصة/], ['approved', /تم اعتماد هذا الطلب/], ['rejected', /تم رفض الطلب/]] as const
-      : [['under_review', /operator is reviewing/], ['approved', /request was approved/], ['rejected', /request was rejected/]] as const) {
-      request.status = status
-      await page.reload()
-
-      // A full reload starts with an empty client-side auth ref. The synthetic
-      // fixture therefore passes through /auth/login and restores the session
-      // on /dashboard. Wait for that restoration before using the SPA router,
-      // otherwise the auth redirect can overwrite the /billing navigation.
-      await expect(page.getByRole('main').getByRole('heading', {
-        name: locale === 'ar' ? 'لوحة التحكم' : 'Operating dashboard',
-        exact: true,
-      })).toBeVisible({ timeout: 20_000 })
-
-      await navigate(page, '/billing')
-      await expect(page.getByRole('main').getByText(message)).toBeVisible()
-    }
-  })
-}
-
-for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) {
-  test(`payment receipt upload retries one private reservation: ${locale}, ${theme}`, async ({ page }) => {
-    await page.setViewportSize({ width: locale === 'ar' ? 360 : 1440, height: 900 })
-    const files: Array<{ evidenceId: string; originalFileName: string; sha256: string }> = []
-    const { calls } = await pilotFixture(page, locale, 'owner', (name, args) => {
-      if (name === 'shop_public_plan_catalog') return catalog
-      if (name === 'shop_billing_read') {
-        const value = billing('submitted')
-        value.instructions.instructionsEn = 'Synthetic submissions do not represent received funds.'
-        value.instructions.instructionsAr = 'بيئة الاختبار: الطلبات الاصطناعية لا تمثل أموالًا مستلمة.'
-        return value
-      }
-      if (name === 'shop_billing_payment_evidence_read') return files
-      if (name === 'reserve_shop_billing_payment_evidence') return { evidenceId: 'evidence-1', bucket: 'shop-payment-evidence', objectName: 'shop-1/submission-1/evidence-1.png', mimeType: args.p_mime_type, sizeBytes: args.p_size_bytes }
-      return undefined
-    })
-    await page.evaluate(theme => { document.documentElement.classList.toggle('dark', theme === 'dark'); document.documentElement.dataset.theme = theme }, theme)
-    let uploads = 0
-    await fixtureRoute(page, /\/storage\/v1\/object\/shop-payment-evidence\//, async route => {
-      uploads++
-      if (uploads === 1) { await route.fulfill({ status: 503, json: { message: 'retry' } }); return }
-      files.push({ evidenceId: 'evidence-1', originalFileName: 'receipt.png', sha256: String(calls.find(call => call.name === 'reserve_shop_billing_payment_evidence')?.args.p_sha256) })
-      await route.fulfill({ json: { Key: 'shop-1/submission-1/evidence-1.png' } })
-    })
-    await navigate(page, '/billing')
-    await expect(page.getByText(/Synthetic submissions|الطلبات الاصطناعية/)).toHaveCount(0)
-    const evidence = page.locator('[data-payment-evidence]')
-    await evidence.scrollIntoViewIfNeeded()
-    const input = evidence.locator('input[type=file]')
-    await input.setInputFiles({ name: 'invalid.txt', mimeType: 'text/plain', buffer: Buffer.from('invalid') })
-    await expect(evidence.getByRole('alert')).toContainText('JPEG')
-    await input.setInputFiles({ name: 'large.png', mimeType: 'image/png', buffer: Buffer.alloc(5242881) })
-    await expect(evidence.getByRole('alert')).toContainText('JPEG')
-    const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/l1cAAAAASUVORK5CYII=', 'base64')
-    await input.setInputFiles({ name: 'receipt.png', mimeType: 'image/png', buffer: png })
-    const upload = evidence.getByRole('button', { name: locale === 'ar' ? 'ارفع الإيصال' : 'Upload receipt', exact: true })
-    await upload.focus()
-    await expect(upload).toBeFocused()
-    await page.keyboard.press('Enter')
-    await expect(evidence.getByRole('alert')).toContainText(locale === 'ar' ? 'حاول تاني' : 'Retry safely')
-    await upload.click()
-    await expect(evidence.getByRole('status')).toContainText(locale === 'ar' ? 'اتبعت صورة الإيصال' : 'Receipt image sent')
-    await expect(evidence.getByText('receipt.png', { exact: true })).toBeVisible()
-    expect(calls.filter(call => call.name === 'reserve_shop_billing_payment_evidence')).toHaveLength(1)
-    expect(calls.find(call => call.name === 'reserve_shop_billing_payment_evidence')?.args.p_sha256).toMatch(/^[a-f0-9]{64}$/)
-    expect(calls.filter(call => call.name === 'submit_shop_billing_notice')).toHaveLength(0)
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
-    await page.screenshot({ path: `test-results/receipt-${locale}-${theme}.png`, fullPage: true })
-    await evidence.screenshot({ path: `test-results/receipt-form-${locale}-${theme}.png` })
+    await expect(page.getByRole('row').filter({ hasText: 'IPN-PLAN-001' })).toBeVisible()
+    await expect(page.locator('#current-plan')).toContainText(locale === 'ar' ? 'فترة تجريبية' : 'Trialing')
+    await expect(page.getByTestId('hosted-checkout').getByRole('button').first()).toBeDisabled()
+    await expect(page.locator('input[type="file"], input[type="date"], input[type="number"]')).toHaveCount(0)
+    expect(calls.filter(call => /submit_shop_billing_notice|reserve_shop_billing_payment_evidence/.test(call.name))).toEqual([])
   })
 }

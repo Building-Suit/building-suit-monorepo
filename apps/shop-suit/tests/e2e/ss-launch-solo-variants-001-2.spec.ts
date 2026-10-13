@@ -132,7 +132,7 @@ for (const locale of ['en', 'ar']) for (const width of [360, 1440]) for (const t
 }
 
 for (const locale of ['en', 'ar']) {
-  test(`Solo yearly selection retains the exact term through manual submission: ${locale}`, async ({ page }) => {
+  test(`Solo yearly selection retains the exact term in unavailable X-Pay checkout: ${locale}`, async ({ page }) => {
     const { calls } = await setup(page, locale, { status: null })
     await navigate(page, '/billing')
     const cards = page.getByTestId('shop-plan-cards')
@@ -141,16 +141,10 @@ for (const locale of ['en', 'ar']) {
     await solo.getByRole('button', { name: locale === 'ar' ? 'اختيار الخطة' : 'Choose plan' }).click()
     await cards.getByRole('radio', { name: locale === 'ar' ? 'سنوي' : 'Yearly', exact: true }).check()
     await expect(solo).toContainText(locale === 'ar' ? '٤٬٠٧١٫٨٤' : '4,071.84')
-    await page.getByRole('main').getByRole('button', { name: locale === 'ar' ? 'ابعت للمراجعة' : 'Submit for review', exact: true }).click()
-    const notice = page.getByRole('dialog')
-    await notice.getByRole('spinbutton', { name: locale === 'ar' ? 'المبلغ المحوّل' : 'Amount transferred' }).fill('4071.84')
-    await notice.getByLabel(locale === 'ar' ? 'تاريخ التحويل' : 'Transfer date').fill('2026-09-29')
-    await notice.getByRole('textbox', { name: locale === 'ar' ? 'مرجع التحويل' : 'Transfer reference' }).fill('SOLO2-ANNUAL')
-    await notice.getByRole('button', { name: locale === 'ar' ? 'ابعت للمراجعة' : 'Submit for review' }).click()
-    await page.getByRole('dialog').getByRole('button', { name: locale === 'ar' ? 'تأكيد' : 'Confirm', exact: true }).click()
-    await expect.poll(() => calls.filter(call => call.name === 'submit_shop_billing_notice').length).toBe(1)
-    const submission = calls.find(call => call.name === 'submit_shop_billing_notice')
-    expect(submission?.args.p_requested_catalog_terms_id).toBe('terms-solo-solo_2-annual')
-    expect(submission?.args.p_paid_amount).toBe(4071.84)
+    const checkout = page.getByTestId('hosted-checkout')
+    await expect(checkout).toContainText(locale === 'ar' ? '٤٬٠٧١٫٨٤' : '4,071.84')
+    await expect(checkout.getByRole('button').first()).toBeDisabled()
+    expect(calls.filter(call => call.name === 'submit_shop_billing_notice')).toEqual([])
+
   })
 }

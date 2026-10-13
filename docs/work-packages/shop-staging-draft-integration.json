@@ -1,5 +1,5 @@
 {
-  "status": "DRAFT_NOT_READY_TO_MERGE",
+  "status": "DRAFT_CODE_ASSEMBLED_CHECKS_AND_DEPLOYMENT_AMBIGUITY_PENDING",
   "branch": "codex/shared/staging-integration",
   "baseBranch": "stg",
   "baseSha": "266d91dc11cbc07b5e9f3b6d37dd53e541fb70e1",
@@ -28,25 +28,19 @@
     270,
     271,
     272,
+    273,
     274,
-    276
+    275,
+    276,
+    279,
+    280
   ],
   "additionalPreservedCommit": {
     "pullRequest": 250,
     "sha": "a262ffdf9b18f9d9f83983545dfc8c0edbbfef4f",
     "change": "Three-line review checkpoint only; prior visual changes already ancestors"
   },
-  "pendingDependencies": [
-    {
-      "feature": "XPay",
-      "pullRequests": [
-        273,
-        275
-      ],
-      "observedHead": "f373c5460802cb7e2263acee04a049c29b60d462",
-      "status": "Await final completed parent-supplied head; not included"
-    }
-  ],
+  "pendingDependencies": [],
   "excludedPullRequests": [
     {
       "number": 215,
@@ -108,5 +102,14 @@
       "focusedTests": 32,
       "combinedCi": "pending on pushed merged head"
     }
+  },
+  "completedXpayHead": "9a4f830caf849f00b08499f8ade8fe133a161a18",
+  "xpayValidation": {
+    "sourceHead": "9a4f830caf849f00b08499f8ade8fe133a161a18",
+    "sourceCi": "payments/review/policy passed",
+    "textualConflicts": 0,
+    "combinedLocalFocusedUnits": 54,
+    "combinedCi": "pending on merged head",
+    "liveProviderValidation": false
   }
 }

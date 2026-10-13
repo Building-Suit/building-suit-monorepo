@@ -141,10 +141,17 @@ test('every Shop template conforms to the exhaustive zero-native contract', asyn
 })
 
 test('remaining authenticated root mutations use shared action dialogs', async () => {
-  for (const file of ['pages/settings.vue', 'pages/billing.vue', 'pages/dashboard.vue', 'pages/platform-admin.vue']) {
+  for (const file of ['pages/settings.vue', 'pages/dashboard.vue', 'pages/platform-admin.vue']) {
     const source = sources.find(item => item.file === file)?.source || ''
     assert.doesNotMatch(source, /<BsForm\b/, `${file} retains a root mutation form`)
     assert.match(await readPresentationTree(workspaceRoot, `apps/shop-suit/app/${file}`), /<BsRecordActionDialog\b/)
     assert.match(source, /useRecordAction\(/)
   }
+})
+
+test('Shop billing no longer exposes manual mutation or upload orchestration', () => {
+  const source = sources.find(item => item.file === 'pages/billing.vue')?.source || ''
+  assert.doesNotMatch(source, /submit_shop_billing_notice|redeem_shop_private_offer|reserve_shop_billing_payment_evidence|storage\.from/)
+  assert.match(source, /transfer: null, evidence: null, showEvidence: false/)
+  assert.match(source, /disabled: !checkoutReady\.value/)
 })

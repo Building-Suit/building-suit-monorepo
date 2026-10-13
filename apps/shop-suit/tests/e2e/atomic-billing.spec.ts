@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 import { pilotFixture, fixtureGoto } from './pilot-fixture'
 import { expectNoPageOverflow } from '../../../../packages/testing/browser-foundation'
 for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (const width of [390, 768, 1440]) {
-  test(`reviewed transfer notice preserves quote and idempotency: ${locale}, ${theme}, ${width}`, async ({ page }) => {
+  test(`X-Pay setup preserves the negotiated quote without manual writes: ${locale}, ${theme}, ${width}`, async ({ page }) => {
     const arabic = locale === 'ar'
     await page.setViewportSize({ width, height: 1000 })
     await page.addInitScript(value => localStorage.setItem('building-suit.theme', value), theme)
@@ -20,19 +20,14 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(arabic ? 'الاشتراك والدفع' : 'Subscription and billing')
     await expect(page.locator('#plans')).toContainText(/349|٣٤٩/)
     await page.locator('[data-plan="solo"]').getByRole('button').click()
-    await page.getByRole('button', { name: arabic ? 'ابعت للمراجعة' : 'Submit for review', exact: true }).click()
-    const dialog = page.getByRole('dialog')
-    await dialog.getByLabel(arabic ? 'المبلغ المحوّل' : 'Amount transferred', { exact: true }).fill('349')
-    await dialog.getByLabel(arabic ? 'تاريخ التحويل' : 'Transfer date', { exact: true }).fill('2026-10-01')
-    await dialog.getByLabel(arabic ? 'مرجع التحويل' : 'Transfer reference', { exact: true }).fill('Reviewed transfer reference')
-    await dialog.getByRole('button', { name: arabic ? 'ابعت للمراجعة' : 'Submit for review', exact: true }).click()
-    const confirm = page.getByRole('dialog').last()
-    await confirm.getByRole('button', { name: arabic ? 'تأكيد' : 'Confirm', exact: true }).click()
+    const checkout = page.getByTestId('hosted-checkout')
+    await expect(checkout).toContainText(plan.planName)
+    await expect(checkout).toContainText(/349|٣٤٩/)
+    await expect(checkout.getByRole('button').first()).toBeDisabled()
+    await expect(checkout).toContainText(arabic ? 'غير متاح بعد' : 'not available yet')
     await expect(page.getByRole('dialog')).toHaveCount(0)
-    const command = calls.find(call => call.name === 'submit_shop_billing_notice')
-    expect(command?.args).toMatchObject({ p_shop_id: 'shop-1', p_requested_plan_slug: 'solo', p_requested_catalog_terms_id: 'terms-1', p_paid_amount: 349, p_transfer_date: '2026-10-01', p_transfer_reference: 'Reviewed transfer reference' })
-    expect(command?.args.p_request_id).toMatch(/^[\da-f-]{36}$/)
-    await expect(page.getByRole('row').filter({ hasText: 'Reviewed transfer reference' })).toContainText(/349|٣٤٩/)
+    await expect(page.locator('input[type="file"], input[type="date"], input[type="number"]')).toHaveCount(0)
+    expect(calls.filter(call => /submit_shop_billing_notice|reserve_shop_billing_payment_evidence/.test(call.name))).toEqual([])
     await expectNoPageOverflow(page)
     const dismissals = page.locator('[role="status"][aria-live="polite"] button')
     while (await dismissals.count()) await dismissals.first().click()
