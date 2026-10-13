@@ -101,6 +101,9 @@ tests. `git diff --check`: passed. No runtime consumer exists yet; browser/full
 build/provider checks unrun. Real database tests unrun; no Docker pulls attempted.
 Root pnpm command initially failed (installed 11.25.0 vs pinned 10.33.0); current
 preflight succeeds through documented `node tooling/git/preflight.mjs` fallback.
+Design-token source check passed. Workspace boundary check could not start because
+this isolated checkout has no installed `typescript` package; it is **unrun**,
+not passed. Dependency installation/typecheck/lint/build remain for continuation.
 
 Continue on this branch/PR: database order/inbox/atomic fulfillment, secure
 dispatcher and webhook worker, reconciliation, shared presentation, customer
