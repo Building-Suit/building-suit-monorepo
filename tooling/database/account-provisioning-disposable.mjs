@@ -117,8 +117,7 @@ async function run() {
   assert.equal(sql('shop',`select count(*) from public.shop_account_provisions where email=${quote(input.email)};`),'1','One reserved identity')
   assert.equal(sql('shop',`select count(*) from public.shop_account_provision_events where action='account_activated' and job_id=${quote(created.data.provisioningId)};`),'1','One activation event')
   assert.equal(sql('shop',`select (select count(*) from public.shop_billing_submissions)||':'||(select count(*) from public.platform_billing_events);`),baseline,'No payment or receipt fabrication')
-  const changed=await provisionAccount(actor,worker,{...input,reason:'Different input under the same request id'},send)
-  assert.notEqual(changed.state,'success','Changed-input request replay rejected')
+  await assert.rejects(provisionAccount(actor,worker,{...input,reason:'Different input under the same request id'},send), /Adapter request unavailable/, 'Changed-input replay must be rejected by the source ledger')
   const lostInput={...input,email:`lost-${randomUUID()}@example.invalid`,shopName:'Lost response fixture',requestId:randomUUID(),correlationId:randomUUID()}
   const unknownFirst=await provisionAccount(actor,worker,lostInput,async attempt=>{await send(attempt);throw new Error('Lost reply')})
   assert.equal(unknownFirst.state,'outcome_unknown','A lost response is never reported as success')
