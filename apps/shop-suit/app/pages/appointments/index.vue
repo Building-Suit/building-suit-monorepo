@@ -31,6 +31,7 @@ const { locale } = useI18n()
 const { current, currentId, currentLocationId, selectLocation, loading: shopLoading } = useShop()
 const { push: pushToast } = useToasts()
 const confirmation = useConfirmation()
+const captureScope = useShopTaskScope()
 const isArabic = computed(() => locale.value === 'ar')
 const { selectedDate, view, days: visibleDays, range, move, selectDate, today: goToday } = useCalendarNavigation(typeof route.query.from === 'string' ? route.query.from : calendarDateKey(new Date()))
 const staffId = ref<string | null>(null)
@@ -53,8 +54,8 @@ const copy = computed(() => isArabic.value ? {
   writeError: 'مقدرناش نحفظ الموعد.', statusError: 'مقدرناش نحدّث الحالة.', sale: 'فتح البيعة المرتبطة',
   history: 'سجل الموعد',
   cancelConfirm: 'تلغي الموعد ده؟ هيفضل محفوظ في السجل.', noShowConfirm: 'تسجل إن العميل ماجاش؟',
-  scheduleTitle: 'جدول الموظف', workDays: 'أيام وساعات العمل', from: 'من', to: 'إلى',
-  invalidBlock: 'اختر بداية ونهاية لاحقة للاستراحة أو الإجازة.',
+  scheduleTitle: 'جدول الموظف', scheduleSwitchHint: 'احفظ التغييرات أو تجاهلها قبل اختيار موظف آخر.', workDays: 'أيام وساعات العمل', from: 'من', to: 'إلى',
+  invalidBlock: 'اختر بداية ونهاية لاحقة للاستراحة أو الإجازة.', blockDraft: 'أضف فترة التوقف قبل حفظ الجدول.',
   blockKind: 'نوع التوقف', break: 'استراحة', timeOff: 'إجازة', addBlock: 'إضافة توقف', remove: 'حذف',
   blockStart: 'بداية التوقف', blockEnd: 'نهاية التوقف', blockNote: 'ملاحظة', saveSchedule: 'حفظ الجدول', scheduleSaved: 'تم حفظ جدول الموظف.',
   noShop: 'اعمل متجر الأول من لوحة التحكم.', noLocation: 'اطلب من المالك يضيفك لفرع شغّال من إعدادات النشاط.', noStaff: 'اطلب من المالك يضيف الموظفين والخدمات للفرع قبل الحجز.',
@@ -74,8 +75,8 @@ const copy = computed(() => isArabic.value ? {
   writeError: 'Could not save the appointment.', statusError: 'Could not update the status.', sale: 'Open linked sale',
   history: 'Appointment history',
   cancelConfirm: 'Cancel this appointment? It will remain in the audit history.', noShowConfirm: 'Mark this customer as a no-show?',
-  scheduleTitle: 'Staff schedule', workDays: 'Working days and hours', from: 'From', to: 'To',
-  invalidBlock: 'Choose a start time and a later end time for the break or time off.',
+  scheduleTitle: 'Staff schedule', scheduleSwitchHint: 'Save or discard changes before switching staff.', workDays: 'Working days and hours', from: 'From', to: 'To',
+  invalidBlock: 'Choose a start time and a later end time for the break or time off.', blockDraft: 'Add this block before saving the schedule.',
   blockKind: 'Block type', break: 'Break', timeOff: 'Time off', addBlock: 'Add block', remove: 'Remove',
   blockStart: 'Block starts', blockEnd: 'Block ends', blockNote: 'Note', saveSchedule: 'Save schedule', scheduleSaved: 'Staff schedule saved.',
   noShop: 'Create a shop from the dashboard first.', noLocation: 'Ask the owner to add or assign an active location in Business settings.', noStaff: 'Ask the owner to assign staff and services to this location before booking.',
@@ -205,6 +206,7 @@ async function save() {
     actionError.value = copy.value.invalid; return
   }
   saving.value = true
+  const inScope = captureScope()
   try {
     const { error: writeError } = await shopRpc.rpc('save_appointment', {
       p_request_id: crypto.randomUUID(), p_shop_id: currentId.value,
@@ -216,14 +218,16 @@ async function save() {
       p_walk_in_phone: form.identityKind === 'walk_in' ? (form.walkInPhone.trim() || null) : null,
       p_notes: form.notes.trim() || null,
     })
+    if (!inScope()) return
     if (writeError) throw writeError
-    showForm.value = false; await refresh(); pushToast({ tone: 'success', title: copy.value.saved })
-  } catch (caught) { actionError.value = readableError(commandErrorMessage(caught)) }
+    showForm.value = false; await refresh(); if (inScope()) pushToast({ tone: 'success', title: copy.value.saved })
+  } catch (caught) { if (inScope()) actionError.value = readableError(commandErrorMessage(caught)) }
   finally { saving.value = false }
 }
 
 async function transition(appointment: Appointment, status: Exclude<AppointmentStatus, 'booked'>) {
   if (!currentId.value || transitionId.value || !options.value.canManage) return
+  const inScope = captureScope()
   if (status === 'cancelled' || status === 'no_show') {
     const label = status === 'cancelled' ? copy.value.cancelAppointment : copy.value.noShow
     if (!await confirmation.ask({
@@ -232,6 +236,7 @@ async function transition(appointment: Appointment, status: Exclude<AppointmentS
       confirmLabel: label, cancelLabel: copy.value.cancel, tone: 'danger',
     })) return
   }
+  if (!inScope()) return
   transitionId.value = appointment.id; actionError.value = ''
   try {
     const { error: statusError } = await shopRpc.rpc('transition_appointment', {
@@ -239,9 +244,10 @@ async function transition(appointment: Appointment, status: Exclude<AppointmentS
       p_appointment_id: appointment.id, p_status: status,
       p_reason: status === 'cancelled' ? 'Cancelled by staff' : null,
     })
+    if (!inScope()) return
     if (statusError) throw statusError
-    await refresh(); pushToast({ tone: 'success', title: copy.value.statusSaved })
-  } catch { actionError.value = copy.value.statusError }
+    await refresh(); if (inScope()) pushToast({ tone: 'success', title: copy.value.statusSaved })
+  } catch { if (inScope()) actionError.value = copy.value.statusError }
   finally { transitionId.value = null }
 }
 
@@ -250,7 +256,7 @@ const scheduleForm = reactive({
   weekdays: Array.from({ length: 7 }, (_, weekday) => ({ weekday, enabled: weekday > 0 && weekday < 6, startsLocal: '09:00', endsLocal: '18:00' })),
   blocks: [] as ScheduleBlock[], blockKind: 'break' as 'break' | 'time_off', blockStarts: '', blockEnds: '', blockNote: '',
 })
-const { visible: showSchedule, pending: scheduleSaving, dirty: scheduleDirty } = useRecordAction(() => scheduleForm)
+const { visible: showSchedule, pending: scheduleSaving, dirty: scheduleDirty, markSaved: markScheduleSaved } = useRecordAction(() => scheduleForm)
 function openSchedule() {
   actionError.value = ''
   scheduleMemberId.value = staffId.value ?? locationStaff.value[0]?.membershipId ?? ''
@@ -264,6 +270,7 @@ function loadScheduleMember() {
   })
   scheduleForm.blocks = calendar.value.blocks.filter(item => item.membershipId === scheduleMemberId.value).map(item => ({ ...item }))
   scheduleForm.blockStarts = ''; scheduleForm.blockEnds = ''; scheduleForm.blockNote = ''
+  markScheduleSaved()
 }
 function addBlock() {
   const starts = new Date(scheduleForm.blockStarts); const ends = new Date(scheduleForm.blockEnds)
@@ -273,7 +280,9 @@ function addBlock() {
   scheduleForm.blockStarts = ''; scheduleForm.blockEnds = ''; scheduleForm.blockNote = ''
 }
 async function saveSchedule() {
-  if (!currentId.value || !locationId.value || !scheduleMemberId.value || scheduleSaving.value) return
+  if (!currentId.value || !locationId.value || !scheduleMemberId.value || !options.value.canManageSchedule || scheduleSaving.value) return
+  if (scheduleForm.blockStarts || scheduleForm.blockEnds || scheduleForm.blockNote) { actionError.value = copy.value.blockDraft; return }
+  const inScope = captureScope()
   scheduleSaving.value = true; actionError.value = ''
   try {
     const { error: writeError } = await shopRpc.rpc('save_staff_schedule', {
@@ -282,9 +291,10 @@ async function saveSchedule() {
       p_working_hours: scheduleForm.weekdays.filter(day => day.enabled).map(day => ({ weekday: day.weekday, startsLocal: day.startsLocal, endsLocal: day.endsLocal })),
       p_blocks: scheduleForm.blocks.map(block => ({ kind: block.kind, startsAt: block.startsAt, endsAt: block.endsAt, note: block.note })),
     })
+    if (!inScope()) return
     if (writeError) throw writeError
-    showSchedule.value = false; await refresh(); pushToast({ tone: 'success', title: copy.value.scheduleSaved })
-  } catch (caught) { actionError.value = readableError(commandErrorMessage(caught)) }
+    showSchedule.value = false; await refresh(); if (inScope()) pushToast({ tone: 'success', title: copy.value.scheduleSaved })
+  } catch (caught) { if (inScope()) actionError.value = readableError(commandErrorMessage(caught)) }
   finally { scheduleSaving.value = false }
 }
 watch([currentId, currentLocationId], () => {

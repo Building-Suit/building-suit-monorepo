@@ -136,9 +136,10 @@ const ui = useUiCopy()
         <BsTextarea :id="field.id" :model-value="form.notes" :aria-describedby="field.describedby" :maxlength="presentation.constraints.notesMax" :rows="2" @update:model-value="updateForm('notes', $event)"/>
       </BsField>
     </BsRecordActionDialog>
-    <BsRecordActionDialog v-model:visible="showSchedule" pinned-actions :title="copy.scheduleTitle" size="lg" :dirty="presentation.scheduleDirty" :pending="presentation.scheduleSaving" :error="presentation.error" :submit-label="copy.saveSchedule" :cancel-label="copy.cancel" @submit="emit('saveSchedule')">
+    <BsRecordActionDialog v-model:visible="showSchedule" pinned-actions :title="copy.scheduleTitle" size="lg" :dirty="presentation.scheduleDirty" :pending="presentation.scheduleSaving" :error="presentation.error" :submit-label="copy.saveSchedule" :cancel-label="copy.cancel" :submit-disabled="Boolean(scheduleForm.blockStarts || scheduleForm.blockEnds || scheduleForm.blockNote)" @submit="emit('saveSchedule')">
       <BsField v-slot="field" :label="copy.barber">
-        <BsSelect v-model="scheduleMemberId" :input-id="field.id" :aria-describedby="field.describedby" required :label="copy.barber" :options="choices.scheduleStaff" option-label="label" option-value="value" option-disabled="disabled" @change="emit('scheduleMember')"/>
+        <BsSelect v-model="scheduleMemberId" :disabled="presentation.scheduleDirty || presentation.scheduleSaving" :input-id="field.id" :aria-describedby="field.describedby" required :label="copy.barber" :options="choices.scheduleStaff" option-label="label" option-value="value" option-disabled="disabled" @change="emit('scheduleMember')"/>
+        <BsText v-if="presentation.scheduleDirty && copy.scheduleSwitchHint" role="status" size="xs" tone="muted">{{ copy.scheduleSwitchHint }}</BsText>
       </BsField>
       <BsFieldGroup :legend="(copy.workDays)">
         <BsStack>
@@ -164,6 +165,7 @@ const ui = useUiCopy()
             <BsInput :id="field.id" :model-value="scheduleForm.blockEnds" :aria-describedby="field.describedby" type="datetime-local" @update:model-value="updateSchedule('blockEnds', $event)"/>
           </BsField>
           <BsButton severity="secondary" @click="emit('addBlock')">{{ copy.addBlock }}</BsButton>
+          <BsText v-if="(scheduleForm.blockStarts || scheduleForm.blockEnds || scheduleForm.blockNote) && copy.blockDraft" role="status" size="xs" tone="muted">{{ copy.blockDraft }}</BsText>
         </BsGrid>
         <BsList>
           <BsListItem v-for="block in presentation.blocks" :key="block.id">

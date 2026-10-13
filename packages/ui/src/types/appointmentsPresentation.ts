@@ -4,6 +4,7 @@ export interface BsAppointmentsCopy {
   allBarbers: string
   barber: string
   blockDetails?: string
+  blockDraft?: string
   blockEnd: string
   blockKind: string
   blockNote: string
@@ -49,6 +50,7 @@ export interface BsAppointmentsCopy {
   saving: string
   schedule: string
   scheduleTitle: string
+  scheduleSwitchHint?: string
   selectCustomer: string
   service: string
   start: string

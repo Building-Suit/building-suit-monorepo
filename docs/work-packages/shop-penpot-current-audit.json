@@ -242,17 +242,22 @@
       "implementedJourneys": [
         "calendar block tiles/read-only detail",
         "contextual cancel/no-show confirmations",
-        "structured appointment/schedule save guidance"
+        "structured appointment/schedule save guidance",
+        "schedule baseline/dirty staff preservation",
+        "unadded block staging guard",
+        "scope-safe asynchronous appointment feedback"
       ],
       "testedJourneys": [
         "EN desktop / AR mobile block day-week-month/filter/overlap/read states",
         "EN desktop / AR mobile edit/reschedule/errors/pending/discard/terminal transitions",
-        "inherited owner appointment/schedule commands"
+        "inherited owner appointment/schedule commands",
+        "schedule blocks/permission/pending/save payload",
+        "no-shop/no-location/no-staff/view-only/options retry/location scope",
+        "late schedule response after SPA navigation"
       ],
-      "remainingFunctionalReview": [
-        "broader schedule feedback and scope variants"
-      ],
-      "missingVisualEvidence": "No appointment main/state/form/native variant PNGs in frozen handoff"
+      "remainingFunctionalReview": [],
+      "missingVisualEvidence": "No appointment main/state/form/native variant PNGs in frozen handoff",
+      "currentCheckpointBranch": "codex/shop-suit/penpot-schedule-variants"
     },
     {
       "number": 26,

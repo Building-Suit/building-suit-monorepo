@@ -18,10 +18,8 @@
     {
       "category": "Appointments",
       "implemented": true,
-      "tested": "core calendar/block/edit/status/owner schedule journeys in #290/#291 and inherited tests",
-      "remainingFunctionalReview": [
-        "additional schedule feedback/scope combinations"
-      ],
+      "tested": "calendar/block/edit/status/owner schedule plus schedule baseline, dirty staging, read contexts, options retry/location and late-response variants verified",
+      "remainingFunctionalReview": [],
       "visualEvidence": "metadata only; all corresponding PNGs unavailable"
     },
     {
@@ -82,7 +80,7 @@
       "visualEvidence": "main/variant pixels unavailable"
     }
   ],
-  "activeFunctionalReviewBuckets": 3,
+  "activeFunctionalReviewBuckets": 2,
   "reviewPolicy": "Retain previously verified named journeys; reopen only for new saved requirements, concrete defects or affected changes. Missing pixels do not imply missing code.",
   "hostedDataOrSettingsChanged": false,
   "designMatricesCompleted": 0
