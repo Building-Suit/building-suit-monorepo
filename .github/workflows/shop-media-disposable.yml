@@ -17,10 +17,11 @@ jobs:
     timeout-minutes: 25
     env:
       SHOP_MEDIA_DISPOSABLE: '1'
-      SUPABASE_HOME: ${{ runner.temp }}/shop-media-supabase
     steps:
       - name: Require GitHub-hosted disposable runner
-        run: test "$RUNNER_ENVIRONMENT" = github-hosted
+        run: |
+          test "$RUNNER_ENVIRONMENT" = github-hosted
+          echo "SUPABASE_HOME=$RUNNER_TEMP/shop-media-supabase" >> "$GITHUB_ENV"
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
