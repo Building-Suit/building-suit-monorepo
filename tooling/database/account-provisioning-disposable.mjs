@@ -89,7 +89,12 @@ async function run() {
   const send=async attempt=>{
     assert.equal(new URL(attempt.url).origin,'https://shop-target.example','Fixture transport must use only the configured signed target')
     const response=await handler(new Request(attempt.url,{method:'POST',headers:attempt.headers,body:attempt.body}))
-    return {status:response.status,headers:Object.fromEntries(response.headers),body:await response.text()}
+    const responseBody=await response.text()
+    if(response.status>=400){
+      const code=JSON.parse(responseBody)?.error?.code
+      if(typeof code==='string'&&/^[a-z0-9_]+$/.test(code))console.error(`Disposable target rejection: ${code}`)
+    }
+    return {status:response.status,headers:Object.fromEntries(response.headers),body:responseBody}
   }
   const catalog=await provisionQuery(actor,worker,{bindingId:ids.binding},send)
   assert.equal(catalog.state,'success','Real signed catalog query')
