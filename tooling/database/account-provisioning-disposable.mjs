@@ -23,7 +23,7 @@ const json=value=>`${quote(JSON.stringify(value))}::jsonb`
 function command(program,args,input) {
   const result=spawnSync(program,args,{input,encoding:'utf8',timeout:180000})
   if(result.status!==0) {
-    const safe=((result.stderr||'')+'\n'+(result.stdout||'')).split('\n').filter(line=>line.startsWith('ERROR:')||/^shop_[a-z_]+: failed$/.test(line)||/^(not ok|# Failed test|Result: FAIL|Files=|Dubious|Test Summary Report)/.test(line.trim())).slice(-12).join(' ').replace(/[A-Za-z0-9_-]{40,}/g,'[redacted]').slice(0,900)
+    const safe=((result.stderr||'')+'\n'+(result.stdout||'')).split('\n').filter(line=>/\bERROR:/.test(line)||/^shop_[a-z_]+: failed$/.test(line)||/^(not ok|# Failed test|Result: FAIL|Files=|Dubious|Test Summary Report)/.test(line.trim())).slice(-12).join(' ').replace(/[A-Za-z0-9_-]{40,}/g,'[redacted]').slice(0,900)
     throw new Error(`${program} failed; exit ${result.status}; ${safe}`)
   }
   return result.stdout
@@ -144,7 +144,9 @@ async function run() {
   let shopRegressionFailure
   try { command('pnpm',['db:test:shop']) }
   catch(error) { shopRegressionFailure=error; console.error(`Full Shop regression gate remains failed: ${error.message}`) }
-  command('pnpm',['exec','supabase','--workdir','apps/super-admin-suit','test','db','--local'])
+  let sourceRegressionFailure
+  try { command('pnpm',['exec','supabase','--workdir','apps/super-admin-suit','test','db','--local']) }
+  catch(error) { sourceRegressionFailure=error; console.error(`Full SAS regression gate remains failed: ${error.message}`) }
   const mailbox=new URL(shop.INBUCKET_URL)
   assert.equal(mailbox.origin,'http://127.0.0.1:61324','Only the disposable local mailbox is allowed')
   let tokenHash
@@ -164,7 +166,7 @@ async function run() {
   const resend=await resendAccountInvitation(actor,worker,{bindingId:ids.binding,provisioningId:created.data.provisioningId,requestId:randomUUID(),correlationId:randomUUID(),reason:'Review already claimed owner invitation',acknowledgeUncertainSend:true},send)
   assert.equal(resend.state,'success');assert.equal(resend.data.invitationState,'claimed','Verified owners receive no duplicate invitation')
   console.log('Focused disposable SQL, real SAS signing/verification, target handler/Auth, immediate grant, local invitation and verified owner claim passed.')
-  if(shopRegressionFailure)throw shopRegressionFailure
+  if(shopRegressionFailure||sourceRegressionFailure)throw new Error([shopRegressionFailure?.message,sourceRegressionFailure?.message].filter(Boolean).join(' | '))
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href) {
   if(process.argv[2]==='--startup-errors') {
