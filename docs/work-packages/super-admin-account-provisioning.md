@@ -133,3 +133,11 @@ characters: Supabase Auth's `GenerateTokenHash` uses SHA-224, documented in the
 [provider source](https://github.com/supabase/auth/blob/master/internal/crypto/crypto.go).
 The claim guard and browser fixtures were corrected from the mistaken 64-character
 assumption. Final real verification/claim/password acceptance is rerunning.
+
+
+Final reconciliation diagnosis: PostgreSQL rejected the status/resend selector
+because its local `payload` variable conflicted with the job table's `payload`
+column. The unapplied facade migration now uses `v_payload` for the local input;
+immutable stored payload and all guards are unchanged. Rollback-only local
+diagnostics exposed the error without any Auth or durable mutation. Full
+real-flow verification is rerunning on this correction.

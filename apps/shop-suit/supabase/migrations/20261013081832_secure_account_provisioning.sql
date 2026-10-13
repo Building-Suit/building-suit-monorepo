@@ -133,14 +133,14 @@ $$;
 create function public.shop_super_admin_account_begin(p_principal_id uuid,p_nonce uuid,p_body_digest text,p_envelope jsonb)
 returns jsonb language plpgsql security definer set search_path='' as $$
 declare cfg public.shop_account_provisioning_settings; j public.shop_account_provisions; c public.shop_account_provision_commands;
- payload jsonb; action text; terms public.plan_catalog_terms; token uuid; logical_request uuid; read_event uuid; catalog jsonb;
+ v_payload jsonb; action text; terms public.plan_catalog_terms; token uuid; logical_request uuid; read_event uuid; catalog jsonb;
 begin
  perform shop_private.authorize_account_envelope(p_principal_id,p_nonce,p_body_digest,p_envelope);
  select * into cfg from public.shop_account_provisioning_settings where id and enabled and invitation_ready;
  if cfg.id is null then raise exception 'ACCOUNT_PROVISIONING_UNAVAILABLE'; end if;
- payload:=p_envelope->'payload'; logical_request:=(p_envelope->>'requestId')::uuid;
+ v_payload:=p_envelope->'payload'; logical_request:=(p_envelope->>'requestId')::uuid;
  if p_envelope->>'operation'='shop.account.query' then
-  if payload->>'resource'='catalog' and payload-'resource'='{}'::jsonb then
+  if v_payload->>'resource'='catalog' and v_payload-'resource'='{}'::jsonb then
    perform set_config('shop.super_admin_bridge_principal_id',p_principal_id::text,true);
    catalog:=public.platform_plan_read('catalog');
    insert into public.shop_account_provision_events(request_id,actor,reason,action,data)
@@ -148,14 +148,14 @@ begin
    return jsonb_build_object('done',true,'result',jsonb_build_object('data',jsonb_build_object('plans',catalog->'items','businessModes',to_jsonb(enum_range(null::public.business_mode))),
     'targetAuditId',read_event,'targetResultVersion',1,'replayed',false));
   end if;
-  if payload-array['resource','provisioningId']<>'{}'::jsonb or payload->>'resource' is distinct from 'status' then raise exception 'ACCOUNT_REQUEST_INVALID' using errcode='22023'; end if;
-  select * into j from public.shop_account_provisions where id=(payload->>'provisioningId')::uuid and principal_id=p_principal_id;
+  if v_payload-array['resource','provisioningId']<>'{}'::jsonb or v_payload->>'resource' is distinct from 'status' then raise exception 'ACCOUNT_REQUEST_INVALID' using errcode='22023'; end if;
+  select * into j from public.shop_account_provisions where id=(v_payload->>'provisioningId')::uuid and principal_id=p_principal_id;
   if j.id is null then raise exception 'ACCOUNT_REQUEST_NOT_FOUND' using errcode='42501'; end if;
   insert into public.shop_account_provision_events(job_id,request_id,actor,reason,action,data)
    values(j.id,logical_request,p_envelope->'actor','Account status read','status_read','{}') returning id into read_event;
   return jsonb_build_object('done',true,'result',shop_private.account_reply(j.id,j.latest_invitation_command_id)||jsonb_build_object('targetAuditId',read_event));
  end if;
- action:=payload->>'action';
+ action:=v_payload->>'action';
  if action not in ('create_and_activate','resend_invitation') or action is null then raise exception 'ACCOUNT_REQUEST_INVALID' using errcode='22023'; end if;
  perform pg_advisory_xact_lock(hashtextextended(p_principal_id::text||':'||logical_request::text,0));
  select * into c from public.shop_account_provision_commands where principal_id=p_principal_id and request_id=logical_request for update;
@@ -166,21 +166,21 @@ begin
   select * into j from public.shop_account_provisions where id=c.job_id for update;
  else
   if action='create_and_activate' then
-   if payload-array['action','email','displayName','shopName','businessMode','mainLocationName','planId','catalogTermsId']<>'{}'::jsonb
-    or jsonb_typeof(payload->'email') is distinct from 'string' or payload->>'email'<>lower(btrim(payload->>'email'))
-    or length(payload->>'email') not between 3 and 254 or payload->>'email' !~ '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$'
-    or jsonb_typeof(payload->'displayName') is distinct from 'string' or length(btrim(payload->>'displayName')) not between 2 and 120
-    or jsonb_typeof(payload->'shopName') is distinct from 'string' or length(btrim(payload->>'shopName')) not between 2 and 120
-    or jsonb_typeof(payload->'mainLocationName') is distinct from 'string' or length(btrim(payload->>'mainLocationName')) not between 2 and 120
-    or not (payload->>'businessMode'=any(enum_range(null::public.business_mode)::text[])) or payload->>'businessMode' is null then raise exception 'ACCOUNT_REQUEST_INVALID' using errcode='22023'; end if;
-   select * into terms from shop_private.current_plan_terms((payload->>'planId')::uuid);
-   if terms.id is distinct from (payload->>'catalogTermsId')::uuid or not exists(select 1 from public.plans where id=terms.plan_id and is_active and is_purchasable and not is_coming_soon) then
+   if v_payload-array['action','email','displayName','shopName','businessMode','mainLocationName','planId','catalogTermsId']<>'{}'::jsonb
+    or jsonb_typeof(v_payload->'email') is distinct from 'string' or v_payload->>'email'<>lower(btrim(v_payload->>'email'))
+    or length(v_payload->>'email') not between 3 and 254 or v_payload->>'email' !~ '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$'
+    or jsonb_typeof(v_payload->'displayName') is distinct from 'string' or length(btrim(v_payload->>'displayName')) not between 2 and 120
+    or jsonb_typeof(v_payload->'shopName') is distinct from 'string' or length(btrim(v_payload->>'shopName')) not between 2 and 120
+    or jsonb_typeof(v_payload->'mainLocationName') is distinct from 'string' or length(btrim(v_payload->>'mainLocationName')) not between 2 and 120
+    or not (v_payload->>'businessMode'=any(enum_range(null::public.business_mode)::text[])) or v_payload->>'businessMode' is null then raise exception 'ACCOUNT_REQUEST_INVALID' using errcode='22023'; end if;
+   select * into terms from shop_private.current_plan_terms((v_payload->>'planId')::uuid);
+   if terms.id is distinct from (v_payload->>'catalogTermsId')::uuid or not exists(select 1 from public.plans where id=terms.plan_id and is_active and is_purchasable and not is_coming_soon) then
     raise exception 'ACCOUNT_PLAN_CHANGED' using errcode='23514'; end if;
-   insert into public.shop_account_provisions(principal_id,email,payload) values(p_principal_id,payload->>'email',payload) returning * into j;
+   insert into public.shop_account_provisions(principal_id,email,payload) values(p_principal_id,v_payload->>'email',v_payload) returning * into j;
   else
-   if payload-array['action','provisioningId','acknowledgeUncertainSend']<>'{}'::jsonb or payload->'acknowledgeUncertainSend' is distinct from 'true'::jsonb then
+   if v_payload-array['action','provisioningId','acknowledgeUncertainSend']<>'{}'::jsonb or v_payload->'acknowledgeUncertainSend' is distinct from 'true'::jsonb then
     raise exception 'ACCOUNT_REQUEST_INVALID' using errcode='22023'; end if;
-   select * into j from public.shop_account_provisions where id=(payload->>'provisioningId')::uuid and principal_id=p_principal_id for update;
+   select * into j from public.shop_account_provisions where id=(v_payload->>'provisioningId')::uuid and principal_id=p_principal_id for update;
    if j.id is null or j.phase<>'active' then raise exception 'ACCOUNT_REQUEST_NOT_FOUND' using errcode='42501'; end if;
    if j.lease_until>clock_timestamp() then raise exception 'ACCOUNT_REQUEST_BUSY'; end if;
   end if;
