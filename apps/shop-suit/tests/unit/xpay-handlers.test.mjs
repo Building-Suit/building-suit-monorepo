@@ -198,3 +198,37 @@ test('reconciliation recovers a quote before dispatch died while keeping its ori
  assert.equal(f.calls.some(c=>c.name==='shop_xpay_prepare_session'),true)
  assert.equal(f.providerCalls.find(c=>c.options.method==='POST').options.headers['Idempotency-Key'],id)
 })
+
+test('unconfigured checkout preflight and POST preserve pinned CORS without enabling payment', async () => {
+  for (const missing of ['XPAY_SECRET_KEY', 'SHOP_BILLING_RETURN_ORIGIN']) {
+    const f = fixture()
+    const handler = createXPayCheckout({ ...f, env: name => name === missing ? undefined : vars[name] })
+    const preflight = await handler(new Request('https://edge.example/checkout', { method: 'OPTIONS', headers: { origin: vars.SHOP_BILLING_RETURN_ORIGIN, 'access-control-request-method': 'POST', 'access-control-request-headers': 'authorization,apikey,content-type,x-client-info' } }))
+    assert.equal(preflight.status, 204)
+    assert.equal(preflight.headers.get('access-control-allow-origin'), vars.SHOP_BILLING_RETURN_ORIGIN)
+    for (const header of ['authorization', 'apikey', 'content-type', 'x-client-info']) assert.ok(preflight.headers.get('access-control-allow-headers').includes(header))
+    const result = await handler(checkoutRequest({ action: 'status' }))
+    assert.equal(result.status, 503)
+    assert.equal(result.headers.get('access-control-allow-origin'), vars.SHOP_BILLING_RETURN_ORIGIN)
+    assert.equal(result.headers.get('cache-control'), 'no-store')
+    assert.deepEqual(await result.json(), { error: 'checkout_unavailable' })
+    assert.deepEqual(f.calls, [])
+    assert.deepEqual(f.providerCalls, [])
+  }
+})
+
+test('unconfigured CORS rejects foreign origins and mismatched project/origin pins', async () => {
+  const f = fixture()
+  const handler = createXPayCheckout({ ...f, env: name => name === 'XPAY_SECRET_KEY' ? undefined : vars[name] })
+  const denied = await handler(new Request('https://edge.example', { method: 'OPTIONS', headers: { origin: 'https://attacker.example' } }))
+  assert.equal(denied.status, 403)
+  assert.equal(denied.headers.get('access-control-allow-origin'), null)
+  for (const patch of [{ SUPABASE_URL: 'https://other-project.supabase.co' }, { SHOP_BILLING_RETURN_ORIGIN: 'https://shop.building-suit.com' }, { SHOP_BILLING_RETURN_ORIGIN: 'https://stg.shop.building-suit.com/unsafe' }]) {
+    const invalid = createXPayCheckout({ ...f, env: name => name in patch ? patch[name] : vars[name] })
+    const result = await invalid(new Request('https://edge.example', { method: 'OPTIONS', headers: { origin: vars.SHOP_BILLING_RETURN_ORIGIN } }))
+    assert.equal(result.status, 503)
+    assert.equal(result.headers.get('access-control-allow-origin'), null)
+  }
+  assert.deepEqual(f.calls, [])
+  assert.deepEqual(f.providerCalls, [])
+})

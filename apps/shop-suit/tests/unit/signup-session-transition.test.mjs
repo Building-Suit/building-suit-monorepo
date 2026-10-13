@@ -8,6 +8,7 @@ import { compileScript, parse } from 'vue/compiler-sfc'
 test('signup survives session establishment and provisioning while operational context changes still remount', async () => {
   const user = ref(null)
   const route = reactive({ path: '/auth/signup' })
+  const committedRoute = ref(null)
   const currentId = ref(null)
   const currentLocationId = ref(null)
   const toasts = ref([{ title: 'Old context' }])
@@ -17,6 +18,7 @@ test('signup survives session establishment and provisioning while operational c
   const env = {
     useSupabaseUser: () => user,
     useRoute: () => route,
+    useRouter: () => ({ currentRoute: { get value() { return committedRoute.value ?? route } } }),
     useShop: () => ({ currentId, currentLocationId, loadShops: async options => loads.push(options) }),
     useConfirmation: () => confirmation,
     useToasts: () => ({ toasts }),
@@ -112,5 +114,15 @@ test('signup survives session establishment and provisioning while operational c
     await nextTick()
     assert.equal(unmounts, 6, 'returning to a protected route must remove the public page')
     assert.equal(mounts, 6, 'public access must not allow an anonymous operational page')
+
+    // Nuxt defers useRoute until NuxtPage resolves. Logout must reopen the
+    // host using the committed destination even while useRoute is dashboard.
+    committedRoute.value = { path: '/auth/login' }
+    await nextTick()
+    assert.equal(route.path, '/dashboard')
+    assert.equal(mounts, 7, 'login must render without waiting for the hidden NuxtPage to resolve')
+    committedRoute.value = { path: '/dashboard' }
+    await nextTick()
+    assert.equal(unmounts, 7, 'an anonymous committed protected route must still hide its page')
   } finally { app.unmount() }
 })
