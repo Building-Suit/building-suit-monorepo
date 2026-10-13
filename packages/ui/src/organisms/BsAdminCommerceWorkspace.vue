@@ -22,7 +22,8 @@ const emit = defineEmits<{
 <template>
   <BsStack>
     <BsText v-if="view.role" role="status">{{ view.role }}</BsText><BsSectionSkeleton v-if="view.loading" :aria-label="copy.loading" variant="cards"/>
-    <BsStack v-else-if="view.denied"><BsStateSurface state="denied" :title="copy.denied" :description="copy.accessHint" :action-label="copy.retry" @action="emit('retry', 'session')"/><BsText v-if="view.error" size="xs">{{ view.error }}</BsText></BsStack>
+    <BsStateSurface v-else-if="view.error" state="error" :title="copy.loadFailed" :action-label="copy.retry" @action="emit('retry', 'session')" />
+    <BsStack v-else-if="view.denied"><BsStateSurface state="denied" :title="copy.denied" :description="copy.accessHint" :action-label="copy.retry" @action="emit('retry', 'session')"/></BsStack>
     <template v-else>
       <BsInline role="group" :aria-label="copy.overview"><BsButton v-for="tab in (['overview', 'plans', 'billing', 'audit'] as const)" :key="tab" variant="chip" :aria-pressed="view.selected === tab" @click="emit('select', tab)">{{ tab === 'billing' ? copy.billingQueue : copy[tab] }}</BsButton></BsInline>
       <template v-if="view.selected === 'overview'">
@@ -81,7 +82,8 @@ const emit = defineEmits<{
     </template>
     <BsAdminPlanDialogs v-model:terms="catalogTerms" v-model:availability="catalogAvailability" v-model:change="catalogChange" v-model:price="catalogPrice" :copy="planCopy" :view="view.plans.dialog" @close="emit('plan', 'catalog', 'close')" @publish-terms="emit('plan', 'catalog', 'publishTerms')" @availability="emit('plan', 'catalog', 'saveAvailability')" @change="emit('plan', 'catalog', 'saveChange')" @renew="emit('plan', 'catalog', 'renew')" @suspend="emit('plan', 'catalog', 'suspend')" @price="emit('plan', 'catalog', 'savePrice')" @remove-price="emit('plan', 'catalog', 'removePrice')"/>
     <BsDialog :visible="view.detail.visible" :title="view.detail.title" size="lg" :pending="view.detail.pending" @update:visible="value => { if (!value) emit('closeTenant') }">
-      <BsText v-if="view.detail.error" role="alert">{{ view.detail.error }} <BsButton variant="link" @click="emit('retry', 'detail')">{{ copy.retry }}</BsButton></BsText>
+      <BsSectionSkeleton v-if="view.detail.pending" :aria-label="copy.loading" :rows="3" />
+      <BsText v-else-if="view.detail.error" role="alert">{{ view.detail.error }} <BsButton variant="link" @click="emit('retry', 'detail')">{{ copy.retry }}</BsButton></BsText>
       <BsStack v-else-if="view.detail.available">
         <BsGrid :columns="4"><BsKpiCard v-for="metric in view.detail.metrics" :key="metric.label" :title="metric.label"><BsStatusBadge v-if="metric.status" :status="metric.status"/><template v-else>{{ metric.value }}</template></BsKpiCard></BsGrid>
         <BsBox as="section"><BsHeading :level="3">{{ copy.usage }}</BsHeading><BsText size="sm" tone="muted">{{ view.detail.trial }}</BsText><BsText size="sm" tone="muted">{{ view.detail.usage }}</BsText><BsCodeBlock>{{ view.detail.limits }}</BsCodeBlock></BsBox>

@@ -63,12 +63,12 @@
     {
       "category": "Settings/admin",
       "implemented": true,
-      "tested": "inherited profile/location/receipt/operator/observer commands",
-      "remainingFunctionalReview": [
-        "full settings matrix",
-        "remaining admin variants, excluding concurrent billing scope"
-      ],
-      "visualEvidence": "main/variant pixels unavailable"
+      "tested": "22 settings/nonbilling platform state/capability/support cases and12 inherited profile/location/receipt variants",
+      "remainingFunctionalReview": [],
+      "visualEvidence": "main/variant pixels unavailable",
+      "excludedConcurrentScope": [
+        "billing/subscription/trial-changing controls"
+      ]
     },
     {
       "category": "Public non-landing",
@@ -80,8 +80,14 @@
       "visualEvidence": "main/variant pixels unavailable"
     }
   ],
-  "activeFunctionalReviewBuckets": 2,
+  "activeFunctionalReviewBuckets": 1,
   "reviewPolicy": "Retain previously verified named journeys; reopen only for new saved requirements, concrete defects or affected changes. Missing pixels do not imply missing code.",
   "hostedDataOrSettingsChanged": false,
-  "designMatricesCompleted": 0
+  "designMatricesCompleted": 0,
+  "requiredFrontendSkillReview": {
+    "status": "blocked-source",
+    "searched": "executor/cloud complete catalogs; workspace/global skill paths; archived repository skill copies",
+    "needed": "exact production frontend/UI skill package or cloud-readable SKILL.md",
+    "publicNonLandingEdits": "held pending skill source"
+  }
 }

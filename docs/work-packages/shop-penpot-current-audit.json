@@ -358,7 +358,20 @@
       "template": "BsBusinessSettingsPage",
       "mainBoardId": "9d8c9265-2366-809c-8008-c7ff3fa96d80",
       "auditClassification": "integrated-source-metadata-only",
-      "fullDesignMatrixComplete": false
+      "fullDesignMatrixComplete": false,
+      "currentCheckpointBranch": "codex/shop-suit/penpot-settings-states",
+      "missingVisualEvidence": "Main/state/native PNGs absent from frozen sources",
+      "remainingFunctionalReview": [],
+      "requiredSkillReview": "Production frontend/UI skill source unavailable; exact cloud path/package requested",
+      "implementedJourneys": [
+        "settings permission read error/pending gating",
+        "all-panel read readiness",
+        "context/access retry and no-context guidance"
+      ],
+      "testedJourneys": [
+        "22 combined settings/nonbilling admin state cases",
+        "12 inherited profile/location/receipt setting variants"
+      ]
     },
     {
       "number": 33,
@@ -366,7 +379,23 @@
       "template": "BsPlatformAdministrationPage commerce branch",
       "mainBoardId": "9d8c9265-2366-809c-8008-c80005cf6a55",
       "auditClassification": "integrated-source-metadata-only",
-      "fullDesignMatrixComplete": false
+      "fullDesignMatrixComplete": false,
+      "currentCheckpointBranch": "codex/shop-suit/penpot-settings-states",
+      "missingVisualEvidence": "Main/state/native PNGs absent from frozen sources",
+      "remainingFunctionalReview": [],
+      "requiredSkillReview": "Production frontend/UI skill source unavailable; exact cloud path/package requested",
+      "implementedJourneys": [
+        "session lookup error distinct from confirmed denial",
+        "selected-ID and resolved-only tenant details",
+        "detail pending/error suppression"
+      ],
+      "testedJourneys": [
+        "operator/observer/denied/session failure and detail retry",
+        "support note/suspend/reactivate scoped commands with cancelled suspension no write"
+      ],
+      "excludedConcurrentScope": [
+        "billing/plan/payment-review/configuration/trial changes"
+      ]
     }
   ],
   "coverageSource": "shop-penpot-cloud-coverage.json",
