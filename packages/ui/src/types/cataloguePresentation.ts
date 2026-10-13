@@ -20,6 +20,7 @@ export interface BsCatalogueForm {
   schedule: { enabled: boolean; duration: number | null; cleanup: number; locations: string[]; staff: string[] }
 }
 export interface BsCatalogueCopy {
+  imageUpload?: { choose: string; replace: string; remove: string; retry: string; help: string; uploading: string; uploaded: string; error: string; invalid: string; placeholder: string }
   imagePlaceholder?: string
   imageLabel?: string
   imageHelp?: string

@@ -221,3 +221,5 @@ export { useOptionalImage } from './composables/useOptionalImage.ts'
 
 export { useCalendarNavigation, calendarDateKey, calendarAddDays, calendarLocalDate, calendarWindow, validCalendarDate } from './composables/useCalendarNavigation.ts'
 export type { CalendarView } from './composables/useCalendarNavigation.ts'
+
+export { useFileUpload } from './composables/useFileUpload.ts'

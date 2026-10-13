@@ -283,6 +283,21 @@
       "adapterBoundary": "Authorized, curated bilingual feed and authoritative serverNow; publishing and visibility authorization remain service-owned",
       "task": "BS-CHANGELOG-VERSION-001",
       "migrationStatus": "shared-owner-available"
+    },
+    {
+      "family": "catalog-images",
+      "owner": "packages/ui",
+      "components": [
+        "BsCatalogImage",
+        "BsCatalogImageUploader",
+        "BsCatalogTile"
+      ],
+      "adapterBoundary": "product-owned file validation, tenant-scoped Storage transport and catalog commands; packages/ux owns upload lifecycle",
+      "auditSources": [
+        "apps/shop-suit/app/pages/products/index.vue",
+        "apps/shop-suit/app/pages/services/index.vue"
+      ],
+      "migrationStatus": "canonical shared presentation; focused verification recorded in the task tracker"
     }
   ]
 }

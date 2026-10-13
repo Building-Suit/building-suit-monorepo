@@ -7,6 +7,7 @@ definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
 type Service = {
   id: string
   imageUrl?: string | null
+  imageObjectName?: string | null
   name: string
   description: string | null
   baseSalePrice: number
@@ -21,7 +22,7 @@ type Service = {
   categoryName: string | null
 }
 type Category = { id: string; name: string }
-type ServicePage = { supportsMedia?: boolean; items: Service[]; total: number; page: number; pageSize: number }
+type ServicePage = { supportsUploads?: boolean; supportsMedia?: boolean; items: Service[]; total: number; page: number; pageSize: number }
 type SchedulingOptions = {
   locations: Array<{ id: string; name: string }>
   staff: Array<{ membershipId: string; name: string; locationIds: string[] }>
@@ -42,16 +43,20 @@ const editingId = ref<string | null>(null)
 const archivingId = ref<string | null>(null)
 const actionError = ref('')
 const form = reactive({
-  imageUrl: '', name: '', description: '', price: 0,
+  imageObjectName: null as string | null, imageUrl: '', name: '', description: '', price: 0,
   discountType: 'amount' as 'amount' | 'percent', discountValue: 0,
   schedulingEnabled: false, durationMinutes: 30 as number | null, cleanupMinutes: 0,
   locationIds: [] as string[], staffMembershipIds: [] as string[],
   categoryId: '',
 })
-const { visible: showForm, pending: saving, dirty: formDirty } = useRecordAction(() => form)
+const upload = useCatalogImageUpload(currentId, 'services', objectName => { form.imageObjectName = objectName; form.imageUrl = '' })
+const { visible: showForm, pending: saving, dirty: formDirty } = useRecordAction(() => ({ ...form, imageSelection: upload.selectedName.value }))
+function removeImage() { upload.reset(); form.imageUrl = ''; form.imageObjectName = null }
+watch(showForm, visible => { if (!visible) upload.reset() })
 
 const copy = computed(() => isArabic.value ? {
-  imagePlaceholder: 'بدون صورة', imageLabel: 'رابط صورة HTTPS (اختياري)', imageHelp: 'أضف رابط الصورة أو اتركه فارغًا لإزالة الصورة.', imageUnavailable: 'تعديل الصور غير متاح لهذا الكتالوج بعد.', imageInvalid: 'أدخل رابط صورة HTTPS صالحًا.',
+  imageUpload: { choose: 'اختيار صورة', replace: 'استبدال الصورة', remove: 'إزالة', retry: 'إعادة المحاولة', help: 'اختر صورة JPEG أو PNG أو WebP، حتى ٥ ميجابايت و١٦ مليون بكسل.', uploading: 'جارٍ رفع الصورة…', uploaded: 'تم رفع الصورة', error: 'تعذّر رفع الصورة. أعد المحاولة أو اختر صورة أخرى.', invalid: 'اختر صورة JPEG أو PNG أو WebP صالحة، حتى ٥ ميجابايت و١٦ مليون بكسل.', placeholder: 'بدون صورة' },
+  imagePlaceholder: 'بدون صورة', imageLabel: 'الصورة (اختياري)', imageUnavailable: 'تعديل الصور غير متاح لهذا الكتالوج بعد.', imageInvalid: 'الصورة المحفوظة غير صالحة. أزلها أو استبدلها.',
   title: 'الخدمات', subtitle: 'ظبط الخدمات وأسعارها، وشغّل الحجز بس للخدمات اللي محتاجة مواعيد.',
   add: 'إضافة خدمة', edit: 'تعديل', archive: 'أرشفة', cancel: 'إلغاء', save: 'حفظ الخدمة', saving: 'بنحفظ…',
   saved: 'اتحفظت الخدمة.', archived: 'اتأرشفت الخدمة.', name: 'اسم الخدمة', description: 'وصف اختياري',
@@ -66,7 +71,8 @@ const copy = computed(() => isArabic.value ? {
   mismatch: 'يجب أن يكون كل موظف مؤهلًا للعمل في فرع واحد على الأقل من الفروع المختارة.',
   archiveConfirm: 'تأرشف الخدمة دي؟ المبيعات القديمة هتفضل محفوظة.',
 } : {
-  imagePlaceholder: 'No image', imageLabel: 'HTTPS image URL (optional)', imageHelp: 'Add an image URL, or leave it empty to remove the image.', imageUnavailable: 'Image editing is not available for this catalog yet.', imageInvalid: 'Enter a valid HTTPS image URL.',
+  imageUpload: { choose: 'Choose image', replace: 'Replace image', remove: 'Remove', retry: 'Retry', help: 'Choose JPEG, PNG or WebP, up to 5 MB and 16 million pixels.', uploading: 'Uploading image…', uploaded: 'Image uploaded', error: 'Image upload failed. Retry or choose another image.', invalid: 'Choose a valid JPEG, PNG or WebP image up to 5 MB and 16 million pixels.', placeholder: 'No image' },
+  imagePlaceholder: 'No image', imageLabel: 'Image (optional)', imageUnavailable: 'Image editing is not available for this catalog yet.', imageInvalid: 'The saved image is invalid. Remove or replace it.',
   title: 'Services', subtitle: 'Manage services and prices, and opt only appointment-based services into scheduling.',
   add: 'Add service', edit: 'Edit', archive: 'Archive', cancel: 'Cancel', save: 'Save service', saving: 'Saving…',
   saved: 'Service saved.', archived: 'Service archived.', name: 'Service name', description: 'Optional description',
@@ -137,6 +143,8 @@ function money(value: number) {
   return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { style: 'currency', currency: 'EGP', maximumFractionDigits: 2 }).format(value)
 }
 function resetForm() {
+  upload.reset()
+  form.imageObjectName = null
   editingId.value = null
   showForm.value = false
   actionError.value = ''
@@ -149,6 +157,8 @@ function openCreate() {
   showForm.value = true
 }
 function openEdit(service: Service) {
+  upload.reset(service.imageUrl ?? '')
+  form.imageObjectName = service.imageObjectName ?? null
   editingId.value = service.id
   Object.assign(form, { imageUrl: service.imageUrl ?? '', name: service.name, description: service.description ?? '', price: Number(service.baseSalePrice),
     discountType: service.defaultDiscountType, discountValue: Number(service.defaultDiscountValue),
@@ -177,13 +187,14 @@ function isFormValid() {
       && form.cleanupMinutes <= 240 && form.locationIds.length > 0 && form.staffMembershipIds.length > 0))
 }
 async function save() {
-  if (!currentId.value || saving.value || !canManage.value) return
+  if (!currentId.value || saving.value || ['uploading', 'error', 'invalid'].includes(upload.status.value) || !canManage.value) return
   actionError.value = ''
   if (!isFormValid()) { actionError.value = copy.value.invalid; return }
-  if (!validCatalogImage(form.imageUrl)) { actionError.value = copy.value.imageInvalid; return }
+  if (!form.imageObjectName && !validCatalogImage(form.imageUrl)) { actionError.value = copy.value.imageInvalid; return }
   saving.value = true
   try {
     const args = {
+      ...(servicesPage.value.supportsUploads ? { imageObjectName: form.imageObjectName } : {}),
       p_shop_id: currentId.value, p_service_id: editingId.value, p_name: form.name.trim(),
       p_description: form.description.trim() || null, p_base_sale_price: Number(form.price),
       p_discount_type: form.discountType, p_discount_value: Number(form.discountValue),
@@ -194,7 +205,7 @@ async function save() {
       p_staff_membership_ids: form.schedulingEnabled ? form.staffMembershipIds : [],
       p_category_id: form.categoryId || null,
     }
-    const { error: saveError } = await media.request('save_service', args, () => shopRpc.rpc('save_service_with_category', args), form.imageUrl.trim() ? new URL(form.imageUrl.trim()).href : null, servicesPage.value.supportsMedia === true)
+    const { error: saveError } = await media.request('save_service', args, () => shopRpc.rpc('save_service_with_category', args), !form.imageObjectName && form.imageUrl.trim() ? new URL(form.imageUrl.trim()).href : null, servicesPage.value.supportsMedia === true)
     if (saveError) throw new Error(saveError.message)
     resetForm(); await refresh(); pushToast({ tone: 'success', title: copy.value.saved })
   } catch (caught) { actionError.value = planQuotaMessage(caught, locale.value) ?? readableError(caught instanceof Error ? caught.message : undefined) }
@@ -224,5 +235,5 @@ function editById(id: string) { const row = services.value.find(service => servi
 function archiveById(id: string) { const row = services.value.find(service => service.id === id); if (row) return archive(row) }
 </script>
 <template>
-  <BsCataloguePage v-model:form="editorForm" v-model:visible="showForm" v-model:category="categoryFilter" kind="service" :copy="{ ...copy, tablePrice: copy.net }" :context="{ available: Boolean(current), loading: shopLoading, dashboardTo: '/dashboard', importTo: '/catalog-import' }" :rows="itemViews" :categories="categoryOptions" :table="{ loading: pending, error: error ? readErrorMessage : null, canManage, archivePendingId: archivingId, pageSize, page, total: servicesPage.total, filtered: Boolean(servicesPage.total) }" :editor="{ mediaSupported: servicesPage.supportsMedia === true, editing: Boolean(editingId), dirty: formDirty, pending: saving, error: actionError, priceMax: 999999999.99 }" :scheduling="schedulingView" :discounts="[{ value: 'amount', label: copy.amount }, { value: 'percent', label: copy.percent }]" @search="search = $event" @page="page = $event" @retry="refresh()" @create="openCreate" @edit="editById" @archive="archiveById" @submit="save" />
+  <BsCataloguePage v-model:form="editorForm" v-model:visible="showForm" v-model:category="categoryFilter" kind="service" :copy="{ ...copy, tablePrice: copy.net }" :context="{ available: Boolean(current), loading: shopLoading, dashboardTo: '/dashboard', importTo: '/catalog-import' }" :rows="itemViews" :categories="categoryOptions" :table="{ loading: pending, error: error ? readErrorMessage : null, canManage, archivePendingId: archivingId, pageSize, page, total: servicesPage.total, filtered: Boolean(servicesPage.total) }" :editor="{ uploadBlocked: ['uploading', 'error', 'invalid'].includes(upload.status.value), mediaSupported: servicesPage.supportsUploads === true, editing: Boolean(editingId), dirty: formDirty, pending: saving, error: actionError, priceMax: 999999999.99 }" :scheduling="schedulingView" :discounts="[{ value: 'amount', label: copy.amount }, { value: 'percent', label: copy.percent }]" :upload="{ preview: upload.preview.value, status: upload.status.value }" @image-select="upload.select($event)" @image-remove="removeImage" @image-retry="upload.retry()" @search="search = $event" @page="page = $event" @retry="refresh()" @create="openCreate" @edit="editById" @archive="archiveById" @submit="save" />
 </template>

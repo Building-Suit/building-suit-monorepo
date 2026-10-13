@@ -317,7 +317,8 @@
     "./organisms/BsAppointmentCalendar": "./src/organisms/BsAppointmentCalendar.vue",
     "./molecules/BsSectionNavigation": "./src/molecules/BsSectionNavigation.vue",
     "./control-plane-presentation": "./src/types/controlPlanePresentation.ts",
-    "./BsControlPlaneShell": "./src/templates/BsControlPlaneShell.vue"
+    "./BsControlPlaneShell": "./src/templates/BsControlPlaneShell.vue",
+    "./molecules/BsCatalogImageUploader": "./src/molecules/BsCatalogImageUploader.vue"
   },
   "dependencies": {
     "primevue": "4.5.5",
