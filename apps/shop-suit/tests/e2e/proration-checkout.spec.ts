@@ -35,7 +35,7 @@ for(const locale of ['en','ar']as const)for(const due of [23333,0])test(`frozen 
  await fixtureGoto(page,'/billing')
  await page.locator('[data-plan="team"]').getByRole('button').click()
  const dialog=page.getByRole('dialog').first()
- await dialog.getByRole('button',{name:locale==='en'?'Review frozen quote':'مراجعة عرض سعر ثابت',exact:true}).click()
+ await dialog.getByRole('button',{name:locale==='en'?'Review plan change':'مراجعة تغيير الخطة',exact:true}).click()
  const breakdown=page.getByTestId('proration-breakdown')
  await expect(breakdown).toContainText(locale==='en'?'3 branches':'٣ فروع')
  await expect(breakdown).toContainText(locale==='en'?'Plan rate discount':'خصم سعر الخطة')
