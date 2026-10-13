@@ -9,7 +9,9 @@ for (const app of [
     await context.addCookies([{ name: 'building-suit-locale', value: 'en', domain: '127.0.0.1', path: '/' }])
     await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'reduce' })
     await page.goto(`http://127.0.0.1:${app.port}${app.path}`)
-    const settings = page.getByRole('button', { name: 'Language · Theme' })
+    // Catalogue examples may include their own settings control. Exercise the
+    // Docs site's header control; standalone product auth pages have no banner.
+    const settings = (app.product ? page : page.getByRole('banner')).getByRole('button', { name: 'Language · Theme', exact: true })
     const primary = page.locator('.ls-btn-primary').first()
     const input = page.locator('.ls-input').first()
     await expect(primary).toBeVisible()
