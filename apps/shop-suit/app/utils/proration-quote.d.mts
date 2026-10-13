@@ -1,5 +1,6 @@
 export type ProrationQuote = {
   quoteId: string; shopId: string; catalogTermsId: string; privateOfferId: string | null; planName: string
+  details: { planVariant: string; billingInterval: 'monthly' | 'annual'; listPriceAmount: number; effectivePriceAmount: number; priceSource: 'catalog' | 'override' | 'private_offer'; resourceLimits: Record<'active_locations' | 'active_members' | 'active_products' | 'active_services' | 'active_customers' | 'active_suppliers', number | null>; entitlements: Partial<Record<'appointments' | 'reports', boolean>> } | null
   state: 'quoted' | 'checkout' | 'settled' | 'requires_review' | 'abandoned'; createdAt: string; expiresAt: string; xpayOrderId: string | null
   calculation: { currency: 'EGP'; mode: 'remaining_period' | 'new_interval' | 'trial_conversion' | 'full_term' | 'no_change'; amountDueMinor: number
     creditBeforeMinor: number; creditAfterMinor: number; newTermMinor: number; unusedPrepaidMinor: string; serviceValueMinor: string

@@ -22,7 +22,7 @@ if (migration.status !== 0) process.exit(migration.status ?? 1)
 
 const suites = ['shop_crm_owner_bootstrap', 'shop_crm_product_catalog', 'shop_crm_inventory_adjustments', 'shop_crm_service_catalog', 'shop_crm_expense_ledger', 'shop_crm_supplier_purchases', 'shop_business_mode', 'shop_trial_onboarding', 'shop_public_privileges', 'shop_safe_supported_commands', 'shop_stock_counts_corrections', 'shop_locations', 'shop_profile_settings', 'shop_platform_admin', 'shop_billing', 'shop_plan_catalog', 'shop_plan_catalog_v2', 'shop_plan_limits', 'shop_plan_admin', 'shop_subscription_lifecycle', 'shop_team_management', 'shop_barber_service_scheduling', 'shop_appointments', 'shop_pos_checkout', 'shop_cash_shifts', 'shop_sale_corrections', 'shop_catalog_import', 'shop_catalog_media', 'shop_catalog_image_upload', 'shop_support_submission', 'shop_orphan_fixture_cleanup_test']
 // Trial activation must prove target guards, history preservation and no false payment evidence.
-suites.push('shop_trial_admin_activation', 'shop_proration_quotes', 'shop_proration_settlement')
+suites.push('shop_trial_admin_activation', 'shop_proration_quotes', 'shop_proration_settlement', 'shop_proration_checkout_details')
 for (const suite of suites) {
   const sql = await readFile(new URL(`../../apps/shop-suit/supabase/tests/${suite}.sql`, import.meta.url), 'utf8')
   const isCleanupSuite = suite === 'shop_orphan_fixture_cleanup_test'

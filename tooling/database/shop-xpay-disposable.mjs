@@ -7,8 +7,9 @@ assert.equal(process.env.SHOP_XPAY_DISPOSABLE, '1', 'Explicit disposable payment
 const sql = await readFile(new URL('../../apps/shop-suit/supabase/tests/shop_xpay_payments.sql', import.meta.url), 'utf8')
 const proration = await readFile(new URL('../../apps/shop-suit/supabase/tests/shop_proration_quotes.sql', import.meta.url), 'utf8')
 const settlement = await readFile(new URL('../../apps/shop-suit/supabase/tests/shop_proration_settlement.sql', import.meta.url), 'utf8')
+const checkoutDetails = await readFile(new URL('../../apps/shop-suit/supabase/tests/shop_proration_checkout_details.sql', import.meta.url), 'utf8')
 const result = spawnSync('docker', ['exec', '-i', 'supabase_db_building-suit-shop', 'psql', '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1'], {
-  input: `BEGIN;\n${proration}\n${sql}\nROLLBACK;\nBEGIN;\n${settlement}\nROLLBACK;`, encoding: 'utf8', timeout: 120000,
+  input: `BEGIN;\n${proration}\n${sql}\nROLLBACK;\nBEGIN;\n${settlement}\n${checkoutDetails}\nROLLBACK;`, encoding: 'utf8', timeout: 120000,
 })
 if (result.status !== 0) {
   // This job has only synthetic records, but never print CLI status or credentials.

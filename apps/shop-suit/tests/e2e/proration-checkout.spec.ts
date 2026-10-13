@@ -5,6 +5,7 @@ const orderId='22222222-2222-4222-8222-222222222222'
 function quote(due:number,locale:string,state='quoted') {
  const at=new Date().toISOString(),expiresAt=new Date(Date.now()+900000).toISOString()
  return {quoteId,shopId:'shop-1',catalogTermsId:'terms-1',privateOfferId:null,planName:locale==='ar'?'خطة الفريق المعتمدة':'Approved Team',state,createdAt:at,expiresAt,xpayOrderId:null,
+ details:{planVariant:'multi_3',billingInterval:'monthly',listPriceAmount:799,effectivePriceAmount:699,priceSource:'override',resourceLimits:{active_locations:3,active_members:5,active_products:null,active_services:50,active_customers:500,active_suppliers:50},entitlements:{appointments:true}},
  calculation:{version:1,currency:'EGP',mode:'remaining_period',amountDueMinor:due,creditBeforeMinor:0,creditAfterMinor:due?0:23333,newTermMinor:69900,unusedPrepaidMinor:due?'23266.666666666667':'46600',serviceValueMinor:due?'46600':'23266.666666666667',newBillingInterval:'monthly',periodStart:at,periodEnd:new Date(Date.now()+20*86400000).toISOString(),periodMonths:1,periodStartPolicy:'frozen_quote',transition:due?'verified_xpay_payment':'explicit_credit_transition',quotedAt:at,expiresAt}}
 }
 async function setup(page:Parameters<typeof pilotFixture>[0],locale:'en'|'ar',due:number) {
@@ -36,6 +37,9 @@ for(const locale of ['en','ar']as const)for(const due of [23333,0])test(`frozen 
  const dialog=page.getByRole('dialog').first()
  await dialog.getByRole('button',{name:locale==='en'?'Review frozen quote':'مراجعة عرض سعر ثابت',exact:true}).click()
  const breakdown=page.getByTestId('proration-breakdown')
+ await expect(breakdown).toContainText(locale==='en'?'3 branches':'٣ فروع')
+ await expect(breakdown).toContainText(locale==='en'?'Plan rate discount':'خصم سعر الخطة')
+ await expect(breakdown).toContainText(locale==='en'?'Appointments':'المواعيد')
  await expect(breakdown).toContainText(locale==='en'?'Unused prepaid value':'القيمة المدفوعة غير المستخدمة')
  await expect(breakdown).toContainText(due?(locale==='en'?'233.33':'٢٣٣٫٣٣'):(locale==='en'?'0.00':'٠٫٠٠'))
  await page.screenshot({path:testInfo.outputPath('frozen-quote.png'),animations:'disabled'})

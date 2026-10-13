@@ -18,3 +18,15 @@ test('zero credit changes require the explicit transition; malformed amounts, cu
  for(const patch of [{amountDueMinor:-1},{amountDueMinor:1.5},{amountDueMinor:NaN},{currency:'USD'},{unusedPrepaidMinor:'Infinity'},{periodMonths:12},{expiresAt:'2026-10-15T12:15:00Z'},{mode:'activated'},{transition:'paid'}]) assert.throws(()=>parseProrationQuote({...fixture,calculation:{...fixture.calculation,...patch}}))
  assert.throws(()=>parseProrationQuote({...zero,calculation:{...zero.calculation,transition:'verified_xpay_payment'}}))
 })
+
+test('commercial projection retains frozen caps and known enabled flags, excluding private bindings',()=>{
+ const details={planVariant:'multi_3',billingInterval:'monthly',listPriceAmount:699,effectivePriceAmount:599,priceSource:'override',
+ resourceLimits:{active_locations:3,active_members:5,active_products:null,active_services:50,active_customers:500,active_suppliers:50},
+ entitlements:{appointments:true,reports:false,unknownFeature:true,redemptionToken:'secret'},offerBinding:{redemptionToken:'secret'}}
+ const q=parseProrationQuote({...fixture,details})
+ assert.equal(q.details.resourceLimits.active_products,null)
+ assert.deepEqual(q.details.entitlements,{appointments:true})
+ assert.equal('offerBinding'in q.details,false)
+ assert.throws(()=>parseProrationQuote({...fixture,details:{...details,billingInterval:'annual'}}))
+ assert.throws(()=>parseProrationQuote({...fixture,details:{...details,resourceLimits:{...details.resourceLimits,active_members:-1}}}))
+})

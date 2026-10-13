@@ -88,3 +88,19 @@ test('provider cadence comes only from the persisted quote, with one-time paymen
   }
   assert.throws(() => checkoutBody({ ...order, quote: { billingInterval: 'forged' } }, config))
 })
+
+test('hosted description projects frozen allowances, explicit features and rate discount without changing charge', () => {
+  const quote = { billingInterval:'annual',planVariant:'multi_3',resourceLimits:{active_locations:3,active_members:5,active_products:null},
+    entitlements:{appointments:true,reports:false,redemptionToken:'secret'},listPriceAmount:699,effectivePriceAmount:599 }
+  for (const locale of ['en','ar']) {
+    const body=checkoutBody({...order,quote},{...config,locale})
+    const product=body.lineItems[0].priceData.productData
+    assert.match(product.name,locale==='ar'?/٣ فروع/:/3 locations/)
+    assert.match(product.description,/∞/)
+    assert.match(product.description,locale==='ar'?/المواعيد/:/Appointments/)
+    assert.doesNotMatch(product.description,/secret|redemptionToken|Reports|التقارير/)
+    assert.equal(body.lineItems[0].priceData.unitAmount,order.amountMinor)
+    assert.match(product.description,locale==='ar'?/المطلوب الآن/:/Due now/)
+    assert.match(product.description,locale==='ar'?/خصم السعر/:/Rate discount/)
+  }
+})
