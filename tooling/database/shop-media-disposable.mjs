@@ -47,7 +47,13 @@ async function run() {
     })
   }
   async function success(response, label) {
-    assert.ok(response.ok, `${label}: HTTP ${response.status}`)
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}))
+      const detail = [error.code, error.error, error.message].filter(value => typeof value === 'string').join(' ').slice(0, 600)
+        .replace(/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/g, '[redacted token]')
+        .replace(/sb_(?:secret|publishable)_[A-Za-z0-9_-]+/g, '[redacted key]')
+      assert.fail(`${label}: HTTP ${response.status} ${detail}`)
+    }
     return response.json()
   }
   async function denied(response, label) {
