@@ -485,6 +485,14 @@ returns jsonb language sql stable security definer set search_path = '' as $$
   join public.plan_catalog_terms terms on terms.id = subscription.catalog_terms_id
   cross join lateral (select shop_private.subscription_effective_price(
     subscription.id, subscription.catalog_terms_id, clock_timestamp()) quote) price
+  left join lateral (
+    select payment.snapshot quote from public.shop_xpay_payments payment
+    join public.shop_xpay_orders o on o.id=payment.order_id
+    where o.subscription_id=subscription.id and o.catalog_terms_id=subscription.catalog_terms_id
+      and payment.period_start<=clock_timestamp() and payment.period_end>clock_timestamp()
+      and subscription.status='active'
+    order by payment.period_start desc limit 1
+  ) paid on true
   where shop.id = p_shop_id
   order by (membership.status = 'active') desc, membership.created_at, membership.id limit 1;
 $$;
@@ -505,3 +513,53 @@ begin
 end $$;
 revoke all on function public.shop_xpay_prepare_session(uuid,jsonb) from public,anon,authenticated;
 grant execute on function public.shop_xpay_prepare_session(uuid,jsonb) to service_role;
+
+-- Preserve paid private-offer preview/history without manufacturing a manual
+-- redemption or putting the bearer redemption token in an order snapshot.
+
+create or replace function public.shop_private_offer_read(p_shop_id uuid,p_offer_id uuid,p_offer_version integer,
+ p_target_binding_id uuid,p_target_environment_id uuid,p_redemption_token text)
+returns jsonb language plpgsql stable security definer set search_path='' as $$
+declare o public.shop_private_offers;s public.shop_private_offer_security;redeemed uuid; paid_order uuid;
+begin
+ if auth.role() is distinct from 'authenticated' or auth.uid() is null or not shop_private.is_owner(p_shop_id) then
+  raise exception 'SHOP_OWNER_REQUIRED' using errcode='42501';end if;
+ select * into o from public.shop_private_offers where id=p_offer_id;
+ if o.id is null or o.recipient_user_id<>auth.uid() or o.shop_id<>p_shop_id
+ or o.offer_version is distinct from p_offer_version or o.target_binding_id is distinct from p_target_binding_id
+ or o.target_environment_id is distinct from p_target_environment_id then
+  raise exception 'SHOP_PRIVATE_OFFER_RECIPIENT_MISMATCH' using errcode='42501';end if;
+ select * into s from public.shop_private_offer_security where offer_id=o.id;
+ if s.offer_id is null or p_redemption_token is null or p_redemption_token !~ '^[A-Za-z0-9_-]{43}$'
+ or encode(extensions.digest(p_redemption_token,'sha256'),'hex') is distinct from s.token_digest then
+  raise exception 'SHOP_PRIVATE_OFFER_TOKEN_INVALID' using errcode='42501';end if;
+ if exists(select 1 from public.shop_private_offer_revocations where offer_id=o.id) then
+  raise exception 'SHOP_PRIVATE_OFFER_REVOKED' using errcode='42501';end if;
+ select submission_id into redeemed from public.shop_private_offer_redemptions where offer_id=o.id;
+ select id into paid_order from public.shop_xpay_orders where private_offer_id=o.id and state='paid' order by created_at desc limit 1;
+ if redeemed is null and paid_order is null and o.expires_at<=statement_timestamp() then
+  raise exception 'SHOP_PRIVATE_OFFER_EXPIRED' using errcode='22023';end if;
+ return jsonb_build_object('offerId',o.id,'offerVersion',o.offer_version,'shopId',o.shop_id,
+ 'targetBindingId',o.target_binding_id,'targetEnvironmentId',o.target_environment_id,
+ 'displayName',o.display_name,'priceAmount',o.price_amount,'currency',o.currency,
+ 'billingInterval',o.billing_interval,'expiresAt',o.expires_at,'resourceLimits',o.resource_limits,
+ 'entitlements',s.entitlements,'submissionId',redeemed,'xpayOrderId',paid_order,
+ 'blockers',shop_private.plan_change_blockers(o.shop_id,o.resource_limits));
+end $$;
+create unique index shop_xpay_one_paid_private_offer on public.shop_xpay_orders(private_offer_id) where private_offer_id is not null and state='paid';
+create index shop_xpay_orders_subscription_history on public.shop_xpay_orders(subscription_id,created_at desc);
+create index shop_xpay_orders_actor on public.shop_xpay_orders(actor_user_id);
+
+create function shop_private.xpay_preserve_quote() returns trigger language plpgsql set search_path='' as $$
+begin
+ if (to_jsonb(new)-array['state','session_id','checkout_url','expires_at','updated_at','session_request'])
+ is distinct from (to_jsonb(old)-array['state','session_id','checkout_url','expires_at','updated_at','session_request'])
+ or (old.session_id is not null and new.session_id is distinct from old.session_id)
+ or (old.session_request is not null and new.session_request is distinct from old.session_request)
+ or (old.state='paid' and new.state<>'paid') then
+ raise exception 'XPAY_QUOTE_IMMUTABLE' using errcode='55000'; end if;
+ return new;
+end $$;
+revoke all on function shop_private.xpay_preserve_quote() from public,anon,authenticated,service_role;
+create trigger shop_xpay_orders_quote_immutable before update on public.shop_xpay_orders
+ for each row execute function shop_private.xpay_preserve_quote();
