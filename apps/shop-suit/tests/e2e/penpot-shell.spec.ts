@@ -15,6 +15,8 @@ for (const [locale, theme, width] of [['en', 'light', 1440], ['ar', 'dark', 390]
       return undefined
     })
     await fixtureGoto(page, '/products')
+    await page.evaluate(() => document.fonts.ready)
+    if (locale === 'en') expect(await page.evaluate(() => Array.from(document.fonts).some(face => face.family.replace(/['"]/g, '') === 'Manrope Variable' && face.status === 'loaded'))).toBe(true)
     const sidebar = page.locator('#bs-primary-navigation')
     const header = page.getByRole('banner')
     if (width >= 1024) {

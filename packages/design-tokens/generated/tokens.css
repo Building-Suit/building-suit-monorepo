@@ -92,7 +92,7 @@
   --bs-color-gray-800: #27272A;
   --bs-color-gray-900: #18181B;
   --bs-color-gray-950: #111113;
-  --bs-typography-font-family-latin: Manrope, Inter, system-ui, sans-serif;
+  --bs-typography-font-family-latin: 'Manrope Variable', Manrope, Inter, system-ui, sans-serif;
   --bs-typography-font-family-arabic: 'IBM Plex Sans Arabic', Cairo, Tajawal, sans-serif;
   --bs-typography-font-weight-regular: 400;
   --bs-typography-font-weight-medium: 500;

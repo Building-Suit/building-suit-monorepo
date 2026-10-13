@@ -309,7 +309,7 @@ export const tokens = {
   "typography": {
     "fontFamily": {
       "latin": {
-        "value": "Manrope, Inter, system-ui, sans-serif"
+        "value": "'Manrope Variable', Manrope, Inter, system-ui, sans-serif"
       },
       "arabic": {
         "value": "'IBM Plex Sans Arabic', Cairo, Tajawal, sans-serif"

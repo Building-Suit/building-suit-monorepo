@@ -7,7 +7,7 @@ Initial verified staging: `266d91dc11cbc07b5e9f3b6d37dd53e541fb70e1`. Existing o
 | Task | State |
 | --- | --- |
 | Optional product/service image upload | [Draft PR #259](https://github.com/Building-Suit/building-suit-monorepo/pull/259), `0e25d129be2d79e049752ad7a000aba6da7bfc2b`; parent #258; focused checks and child review CI pass |
-| Foundations/shell | `codex/shop-suit/penpot-shell`, parent #259; desktop context-gap, flat 64px header and 184px scope alignment complete; two browser scenarios, build, lint and `pnpm check` pass |
+| Foundations/shell | [Draft PR #260](https://github.com/Building-Suit/building-suit-monorepo/pull/260), parent #259; desktop context-gap, flat 64px header and 184px scope alignment complete; canonical Manrope face mismatch correction in progress; two browser scenarios, build, lint and `pnpm check` pass |
 | Approved dashboard | Pending pixel comparison; approved board remains locked |
 | POS/sales/receipts | Pending fixed cart, compact catalog and touch-control comparison |
 | Catalog/inventory | Pending route export inspection |
