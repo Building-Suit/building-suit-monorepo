@@ -7,18 +7,18 @@ export function accountId(value: unknown): string {
   if (typeof value !== 'string' || !uuid.test(value)) throw new Error('Invalid account selection')
   return value
 }
-export interface AccountModule { bindingId: string; label: Record<string, string>; suitLabel: Record<string, string> }
+export interface AccountModule { bindingId: string; label: Record<string, string>; suitLabel: Record<string, string>; provisioningAvailable: boolean }
 export type ActorClient = Parameters<typeof authorizeAdmin>[0] & RpcClient
 
 export async function accountContext(client: ActorClient) {
   const session = await authorizeAdmin(client)
   const registry = await client.rpc('super_admin_configuration_read', { p_resource: 'registry', p_id: null })
   if (registry.error) throw new Error('Account configuration unavailable')
-  const projection = registry.data as { suits?: { label: Record<string, string>; items: { module: string; bindingId: string; label: Record<string, string> }[] }[] } | null
+  const projection = registry.data as { suits?: { label: Record<string, string>; items: { module: string; bindingId: string; label: Record<string, string>; provisioningAvailable?: boolean }[] }[] } | null
   const modules: AccountModule[] = []
   for (const suit of projection?.suits ?? []) {
     for (const item of suit.items ?? []) {
-      if (item.module === 'accounts' && uuid.test(item.bindingId)) modules.push({ bindingId: item.bindingId, label: item.label, suitLabel: suit.label })
+      if (item.module === 'accounts' && uuid.test(item.bindingId)) modules.push({ bindingId: item.bindingId, label: item.label, suitLabel: suit.label, provisioningAvailable: item.provisioningAvailable === true })
     }
   }
   return { session, modules }

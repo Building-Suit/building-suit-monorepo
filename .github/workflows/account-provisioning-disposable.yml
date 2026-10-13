@@ -1,0 +1,46 @@
+name: Disposable account provisioning validation
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/account-provisioning-disposable.yml'
+      - 'tooling/database/account-provisioning-disposable.mjs'
+      - 'tooling/database/tests/account-provisioning-disposable.test.mjs'
+      - 'apps/super-admin-suit/**'
+      - 'apps/shop-suit/supabase/**'
+      - 'apps/shop-suit/app/utils/owner-invitation.ts'
+      - 'apps/shop-suit/app/pages/auth/owner-invitation.vue'
+permissions:
+  contents: read
+concurrency:
+  group: account-provisioning-disposable-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  accounts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      ACCOUNT_PROVISION_DISPOSABLE: '1'
+    steps:
+      - name: Require GitHub-hosted disposable runner
+        run: |
+          test "$RUNNER_ENVIRONMENT" = github-hosted
+          echo "SUPABASE_HOME=$RUNNER_TEMP/account-provisioning-supabase" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Start disposable Shop and SAS backends
+        run: |
+          pnpm exec supabase --workdir apps/shop-suit start --exclude studio,realtime,imgproxy,postgres-meta,edge-runtime,logflare,vector,supavisor > "$RUNNER_TEMP/accounts-shop-start.log" 2>&1
+          pnpm exec supabase --workdir apps/super-admin-suit start --exclude studio,realtime,storage-api,imgproxy,postgres-meta,edge-runtime,logflare,vector,supavisor > "$RUNNER_TEMP/accounts-sas-start.log" 2>&1
+      - name: Validate SQL, signed dispatch, real Auth and local invitation claim
+        run: node tooling/database/account-provisioning-disposable.mjs
+      - name: Stop only this job's disposable stacks
+        if: always() && runner.environment == 'github-hosted'
+        run: |
+          pnpm exec supabase --workdir apps/shop-suit stop --project-id building-suit-shop --no-backup
+          pnpm exec supabase --workdir apps/super-admin-suit stop --project-id building-suit-super-admin --no-backup
+          rm -f "$RUNNER_TEMP/accounts-shop-start.log" "$RUNNER_TEMP/accounts-sas-start.log"

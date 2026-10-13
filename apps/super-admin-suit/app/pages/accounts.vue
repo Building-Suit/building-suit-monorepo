@@ -20,6 +20,7 @@ const reason = ref('')
 const loading = ref(false)
 const failed = ref(false)
 const configured = ref(false)
+const provisioningAvailable = ref(false)
 const attempt = ref<ActivationAttempt | null>(null)
 const outcome = ref<AccountOutcome | null>(null)
 const storageFailed = ref(false)
@@ -68,14 +69,15 @@ async function loadRows() {
 async function initialize() {
   const epoch = ++generation
   rows.value = []; plans.value = []; subscription.value = null; outcome.value = null; attempt.value = null; configured.value = false
-  visible.value = false; failed.value = false; page.value = 1; shopId.value = null; planId.value = null; reason.value = ''
+  visible.value = false; failed.value = false; provisioningAvailable.value = false; page.value = 1; shopId.value = null; planId.value = null; reason.value = ''
   if (state.value !== 'success' || !scope.value) return
   const identity = attemptKey(scope.value)
   loading.value = true
   try {
-    const context = await requestFetch<{ modules: { bindingId: string }[] }>('/api/accounts/context')
+    const context = await requestFetch<{ modules: { bindingId: string; provisioningAvailable: boolean }[] }>('/api/accounts/context')
     if (epoch !== generation || !scope.value || identity !== attemptKey(scope.value)) return
     configured.value = context.modules.some(module => module.bindingId === bindingId.value)
+    provisioningAvailable.value = context.modules.some(module => module.bindingId === bindingId.value && module.provisioningAvailable)
     if (!configured.value) return
     if (import.meta.client) {
       try { attempt.value = restoreAttempt(sessionStorage.getItem(identity), scope.value) }
@@ -138,6 +140,7 @@ useHead({ title: () => t('accounts.title') })
         <BsStateSurface v-else-if="loading" state="loading" :title="t('accounts.loading')" />
         <BsStateSurface v-else-if="!configured" state="empty" :title="t('accounts.unconfigured')" />
         <BsStack v-else gap="lg">
+          <BsButton v-if="provisioningAvailable" :disabled="!!attempt" @click="navigateTo({ path: '/account-provisioning', query: { bindingId } })">{{ t('provision.create') }}</BsButton>
           <BsAlert v-if="outcome?.state === 'success'" tone="success" :title="t('accounts.activated')" :description="t('accounts.noPayment')" />
           <BsDescriptionList v-if="outcome?.state === 'success'" :columns="2">
             <BsDescriptionItem :term="t('accounts.start')">{{ date(subscription?.periodStart) }}</BsDescriptionItem>

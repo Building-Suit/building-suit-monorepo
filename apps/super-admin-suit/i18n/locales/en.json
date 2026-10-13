@@ -65,5 +65,51 @@
       "quarterly": "Three months",
       "annual": "One year"
     }
+  },
+  "provision": {
+    "title": "Create and activate an account",
+    "description": "Provision a new owner account, choose its plan and activate access now. Ownership is claimed separately by email.",
+    "create": "Create account and activate plan",
+    "existing": "Existing-account controls",
+    "unconfigured": "Secure provisioning is not configured for this environment.",
+    "email": "Owner email",
+    "ownerName": "Owner name",
+    "shopName": "Shop name",
+    "location": "Main location name",
+    "mode": "Business mode",
+    "confirm": "Confirm provisioning",
+    "startsNow": "The access period starts now",
+    "consequences": "This is an audited admin grant with no recorded payment. The owner receives an invitation and chooses their own password; email ownership is not confirmed by this action. Existing emails are not linked or overwritten.",
+    "resend": "Resend owner invitation",
+    "resendWarning": "Confirm a new invitation send",
+    "resendConsequences": "An earlier send may have succeeded. Sending again can duplicate the email and invalidate earlier links. The existing account and plan are preserved.",
+    "acknowledge": "I understand and want to send a new invitation.",
+    "unknown": "The provisioning outcome is uncertain. Retry the saved request to reconcile it.",
+    "invitation": "Invitation status",
+    "verification": "Owner verification",
+    "verified": "Email ownership verified",
+    "awaitingOwner": "Awaiting owner verification",
+    "record": "Provisioning record",
+    "refresh": "Refresh verified status",
+    "noActivation": "No plan activation has been confirmed for this account.",
+    "phases": {
+      "reserved": "Account creation is pending",
+      "active": "Account created and plan activated",
+      "conflict": "That email already has an account. Use existing-account controls or ask its owner to finish signup.",
+      "review_required": "Provisioning requires review. The reserved identity is retained; no plan activation is confirmed."
+    },
+    "invites": {
+      "pending": "Not sent yet",
+      "sending": "Send in progress",
+      "sent": "Accepted by the email service; delivery is not confirmed",
+      "claimed": "Owner email verified",
+      "unknown": "Send outcome uncertain; reconcile before resending",
+      "failed": "Invitation unavailable"
+    },
+    "modes": {
+      "goods": "Products",
+      "services": "Services",
+      "mixed": "Products and services"
+    }
   }
 }

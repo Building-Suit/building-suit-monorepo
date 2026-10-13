@@ -509,4 +509,21 @@ export default defineI18nLocale(async () => ({
     description:
       "Join hundreds of Egyptian shop owners who've simplified their operations with Shop CRM.",
   },
+  ownerInvite: {
+  "title": "Claim your Shop Suit account",
+  "description": "Verify ownership and choose your own password.",
+  "home": "Home",
+  "loading": "Verifying your invitation…",
+  "invalid": "This owner invitation is unavailable or expired.",
+  "askAdmin": "Ask the administrator to resend the invitation, or sign in if you have already claimed the account.",
+  "login": "Sign in",
+  "done": "Your account is ready",
+  "open": "Open Shop Suit",
+  "passwordTitle": "Choose your password",
+  "verified": "Your email and ownership have been verified. Your administrator has already selected the plan.",
+  "save": "Save password",
+  "password": "Password",
+  "confirm": "Confirm password",
+  "passwordError": "The password could not be saved. Check matching entries and the password policy."
+},
 }));

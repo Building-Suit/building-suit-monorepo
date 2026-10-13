@@ -4,6 +4,7 @@ import type { ActorClient } from './account-workflow'
 import type { RpcClient } from './adapter-dispatch'
 import { AdminAccessError, authorizeAdmin } from './authorize'
 import { ActivationInputError } from './trial-activation'
+import { ProvisioningInputError } from './account-provisioning'
 
 export function privateAccountResponse(event: H3Event) {
   setHeader(event, 'Cache-Control', 'private, no-store')
@@ -22,5 +23,6 @@ export async function accountClients(event: H3Event) {
 export function accountHttpError(error?: unknown) {
   if (error instanceof AdminAccessError) return createError({ statusCode: error.statusCode, statusMessage: error.message })
   if (error instanceof ActivationInputError) return createError({ statusCode: 400, statusMessage: 'Invalid activation request' })
+  if (error instanceof ProvisioningInputError) return createError({ statusCode: 400, statusMessage: 'Invalid provisioning request' })
   return createError({ statusCode: 503, statusMessage: 'Account operation unavailable' })
 }

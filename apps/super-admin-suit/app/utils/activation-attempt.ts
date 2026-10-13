@@ -18,6 +18,8 @@ export function restoreAttempt(value: string | null, scope: AccountScope): Activ
 export function clearActivationAttempts(storage: Pick<Storage, 'length' | 'key' | 'removeItem'>, keepUserId?: string) {
   for (let index = storage.length - 1; index >= 0; index--) {
     const key = storage.key(index)
-    if (key?.startsWith('sas-activation:') && (!keepUserId || !key.startsWith(`sas-activation:${keepUserId}:`))) storage.removeItem(key)
+    for (const prefix of ['sas-activation:', 'sas-provision:']) {
+      if (key?.startsWith(prefix) && (!keepUserId || !key.startsWith(`${prefix}${keepUserId}:`))) storage.removeItem(key)
+    }
   }
 }
