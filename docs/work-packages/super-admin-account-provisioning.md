@@ -119,3 +119,17 @@ Until that run and final CI pass, real database/Auth readiness is pending. Hoste
 release remains separately gated by environment verification, provider policy,
 configuration records and migration/template deployment; no production readiness
 is inferred from disposable fixtures.
+
+
+Backend checkpoint at `94ca6fd`: both full SQL suites now pass. Source pgTAP
+executes before integration fixtures because two baseline suites intentionally
+assume otherwise-empty global tables. Shop's disposable-only legacy catalog
+fixture runs before the historical forward catalog migrations, matching the
+upgrade contract; final permission fixtures are seeded afterward. No production
+seed or hosted data is changed by that runner setup.
+
+Real Mailpit confirms the owner invitation exists. Its hash is 56 hexadecimal
+characters: Supabase Auth's `GenerateTokenHash` uses SHA-224, documented in the
+[provider source](https://github.com/supabase/auth/blob/master/internal/crypto/crypto.go).
+The claim guard and browser fixtures were corrected from the mistaken 64-character
+assumption. Final real verification/claim/password acceptance is rerunning.

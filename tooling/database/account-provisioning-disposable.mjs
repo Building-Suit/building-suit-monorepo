@@ -55,7 +55,7 @@ async function run() {
   const seed=await readFile(new URL('../../apps/shop-suit/supabase/seed.sql',import.meta.url),'utf8')
   sql('shop',seed.slice(seed.indexOf('insert into public.permissions')))
   let sourceRegressionFailure
-  try { command('pnpm',['exec','supabase','--workdir','apps/super-admin-suit','test','db','--local']) }
+  try { command('pnpm',['exec','supabase','--workdir','apps/super-admin-suit','test','db','--local']); console.log('Full SAS SQL regressions passed.') }
   catch(error) { sourceRegressionFailure=error; console.error(`Full SAS regression gate remains failed: ${error.message}`) }
   const call=async(origin,key,token,path,body,method='POST')=>{
     const response=await fetch(origin+path,{method,redirect:'error',headers:{apikey:key,authorization:`Bearer ${token}`,'content-type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)})
@@ -156,7 +156,7 @@ async function run() {
     sql('shop',`BEGIN;\n${text}\nROLLBACK;`)
   }
   let shopRegressionFailure
-  try { command('pnpm',['db:test:shop']) }
+  try { command('pnpm',['db:test:shop']); console.log('Full Shop SQL regressions passed.') }
   catch(error) { shopRegressionFailure=error; console.error(`Full Shop regression gate remains failed: ${error.message}`) }
   const mailbox=new URL(shop.INBUCKET_URL)
   assert.equal(mailbox.origin,'http://127.0.0.1:61324','Only the disposable local mailbox is allowed')
@@ -166,7 +166,7 @@ async function run() {
     mailboxCount=messages.messages?.length??0
     const message=messages.messages?.find(item=>item.To?.some(to=>to.Address?.toLowerCase()===input.email))
     matchedMessage=!!message;messageKeys=Object.keys(messages)
-    if(message){const detail=await (await fetch(mailbox.origin+'/api/v1/message/'+message.ID)).json();htmlKeys=Object.keys(detail);tokenHash=(detail.HTML??detail.Text)?.match(/token_hash=([0-9a-f]{64})/i)?.[1]}
+    if(message){const detail=await (await fetch(mailbox.origin+'/api/v1/message/'+message.ID)).json();htmlKeys=Object.keys(detail);tokenHash=(detail.HTML??detail.Text)?.match(/token_hash=([0-9a-f]{56})/i)?.[1]}
     if(!tokenHash)await new Promise(resolve=>setTimeout(resolve,250))
   }
   if(!tokenHash)console.error(`Disposable mailbox shape: ${JSON.stringify({mailboxCount,matchedMessage,messageKeys,htmlKeys})}`)

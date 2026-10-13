@@ -6,7 +6,7 @@ for(const locale of ['en','ar']){
   test(`owner verifies invite and chooses their own password ${locale}`,async({page})=>{
     await page.setViewportSize({width:390,height:844})
     await page.context().addCookies([{name:'building-suit-locale',value:locale,url:'http://127.0.0.1:4325'}])
-    const id=randomUUID(), tokenHash='a'.repeat(64), now=Math.floor(Date.now()/1000)
+    const id=randomUUID(), tokenHash='a'.repeat(56), now=Math.floor(Date.now()/1000)
     const user={id,aud:'authenticated',role:'authenticated',email:'owner@example.invalid',email_confirmed_at:'2026-10-13T08:00:00Z',app_metadata:{provider:'email',bs_admin_provisioning_id:randomUUID()},user_metadata:{display_name:'Owner fixture'},identities:[],created_at:'2026-10-13T08:00:00Z'}
     const jwt=[Buffer.from(JSON.stringify({alg:'HS256',typ:'JWT'})).toString('base64url'),Buffer.from(JSON.stringify({sub:id,aud:'authenticated',role:'authenticated',email:user.email,iat:now,exp:now+3600})).toString('base64url'),'controlled-test-signature'].join('.')
     let verified:unknown, password:unknown

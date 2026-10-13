@@ -111,14 +111,14 @@ test('REST email_exists errors become safe conflicts without exposing provider m
 test('owner claim consumes only invite OTP, validates live identity and delegates membership authorization to SQL',async()=>{
   const calls=[]
   const client={auth:{verifyOtp:async input=>{calls.push(input);return {data:{user:{id:'owner'}},error:null}},getUser:async()=>({data:{user:{id:'owner'}},error:null})},rpc:async name=>{calls.push(name);return {data:{shopId:'owned-shop'},error:null}}}
-  assert.equal((await claimProvisionedOwner(client,'a'.repeat(64))).shopId,'owned-shop')
-  assert.deepEqual(calls,[{token_hash:'a'.repeat(64),type:'invite'},'shop_admin_provisioned_owner_claim'])
+  assert.equal((await claimProvisionedOwner(client,'a'.repeat(56))).shopId,'owned-shop')
+  assert.deepEqual(calls,[{token_hash:'a'.repeat(56),type:'invite'},'shop_admin_provisioned_owner_claim'])
 })
 test('invalid, cross-user and metadata-only owner claims cannot reach authorized ownership',async()=>{
   let queries=0
   const client={auth:{verifyOtp:async()=>({data:{user:{id:'invited'}},error:null}),getUser:async()=>({data:{user:{id:'other'}},error:null})},rpc:async()=>{queries++;return {data:null,error:{code:'42501'}}}}
   await assert.rejects(claimProvisionedOwner(client,'invalid'))
-  await assert.rejects(claimProvisionedOwner(client,'a'.repeat(64)))
+  await assert.rejects(claimProvisionedOwner(client,'a'.repeat(56)))
   assert.equal(queries,0)
   await assert.rejects(claimProvisionedOwner(client))
   assert.equal(queries,1)

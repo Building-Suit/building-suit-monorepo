@@ -8,7 +8,7 @@ interface OwnerClaimClient {
 export async function claimProvisionedOwner(client: OwnerClaimClient, tokenHash?: string) {
   let expectedId: string | undefined
   if (tokenHash !== undefined) {
-    if (!/^[0-9a-f]{64}$/i.test(tokenHash)) throw new Error('Owner invitation unavailable')
+    if (!/^[0-9a-f]{56}$/i.test(tokenHash)) throw new Error('Owner invitation unavailable')
     const verified = await client.auth.verifyOtp({ token_hash: tokenHash, type: 'invite' })
     if (verified.error || !verified.data.user) throw new Error('Owner invitation unavailable')
     expectedId = verified.data.user.id
