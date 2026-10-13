@@ -148,7 +148,10 @@
       "template": "BsCataloguePage kind=product",
       "mainBoardId": "9d8c9265-2366-809c-8008-c7eaaafbe13f",
       "auditClassification": "integrated-visual-parity-unverified",
-      "fullDesignMatrixComplete": false
+      "fullDesignMatrixComplete": false,
+      "dialogCheckpointBranch": "codex/shop-suit/penpot-catalog-dialogs",
+      "dialogPixelScope": "frozen product edit / service create crops; directory main pixels remain unavailable",
+      "dialogImplementation": "reference geometry and create-mode scheduling; typed product commands preserved"
     },
     {
       "number": 19,
@@ -156,7 +159,10 @@
       "template": "BsCataloguePage kind=service",
       "mainBoardId": "9d8c9265-2366-809c-8008-c7ebefd6982a",
       "auditClassification": "integrated-visual-parity-unverified",
-      "fullDesignMatrixComplete": false
+      "fullDesignMatrixComplete": false,
+      "dialogCheckpointBranch": "codex/shop-suit/penpot-catalog-dialogs",
+      "dialogPixelScope": "frozen product edit / service create crops; directory main pixels remain unavailable",
+      "dialogImplementation": "reference geometry and create-mode scheduling; typed product commands preserved"
     },
     {
       "number": 20,
@@ -277,5 +283,6 @@
       "fullDesignMatrixComplete": false
     }
   ],
-  "coverageSource": "shop-penpot-cloud-coverage.json"
+  "coverageSource": "shop-penpot-cloud-coverage.json",
+  "reconciledStagingBaseline": "73a884b3da407696b3522771c94edb6e32ea7be6"
 }
