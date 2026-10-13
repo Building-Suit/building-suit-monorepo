@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
-import { readFile } from 'node:fs/promises'
+import { readFile, writeFile } from 'node:fs/promises'
 import { spawnSync } from 'node:child_process'
 import { pathToFileURL } from 'node:url'
 import { requestSigningInput, signHmac, sha256Hex } from '../../apps/shop-suit/supabase/functions/_shared/super-admin-bridge.mjs'
@@ -32,11 +32,31 @@ function sql(product,statement) {
   const container=product==='shop'?'supabase_db_building-suit-shop':'supabase_db_building-suit-super-admin'
   return command('docker',['exec','-i',container,'psql','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1','-At'],statement).trim()
 }
+async function prepareLegacyBaseline() {
+  assertDisposable(process.env)
+  // Test-only upgrade baseline: legacy rows must exist when historical catalog
+  // migrations run. This temporary fixture is never committed or applied hosted.
+  const seed=await readFile(new URL('../../apps/shop-suit/supabase/seed.sql',import.meta.url),'utf8')
+  const prefix=seed.slice(0,seed.indexOf('select shop_private.reconcile_plan_catalog();'))
+  assert.ok(prefix.includes("'Basic', 'basic'")&&prefix.includes("'Pro', 'pro'"))
+  const historical=prefix.replaceAll("'EGP', 7,", "'EGP', 14,")
+  await writeFile(new URL('../../apps/shop-suit/supabase/migrations/20260929185959_disposable_legacy_catalog.sql',import.meta.url),historical,{flag:'wx'})
+  const configUrl=new URL('../../apps/shop-suit/supabase/config.toml',import.meta.url)
+  const config=await readFile(configUrl,'utf8')
+  const updated=config.replace(/(\[db\.seed\]\s*\n(?:#[^\n]*\n)*enabled\s*=\s*)true/, '$1false')
+  assert.notEqual(updated,config,'Disposable seed section must match the reviewed configuration')
+  await writeFile(configUrl,updated)
+}
 async function run() {
   assertDisposable(process.env)
   const status=product=>JSON.parse(command('pnpm',['exec','supabase','--workdir',`apps/${product==='shop'?'shop-suit':'super-admin-suit'}`,'status','-o','json']))
   const shop=status('shop'), sas=status('sas')
   const shopOrigin=localOrigin(shop.API_URL,'shop'), sasOrigin=localOrigin(sas.API_URL,'sas')
+  const seed=await readFile(new URL('../../apps/shop-suit/supabase/seed.sql',import.meta.url),'utf8')
+  sql('shop',seed.slice(seed.indexOf('insert into public.permissions')))
+  let sourceRegressionFailure
+  try { command('pnpm',['exec','supabase','--workdir','apps/super-admin-suit','test','db','--local']) }
+  catch(error) { sourceRegressionFailure=error; console.error(`Full SAS regression gate remains failed: ${error.message}`) }
   const call=async(origin,key,token,path,body,method='POST')=>{
     const response=await fetch(origin+path,{method,redirect:'error',headers:{apikey:key,authorization:`Bearer ${token}`,'content-type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)})
     const value=await response.json()
@@ -51,12 +71,6 @@ async function run() {
   const sourceSession=await call(sasOrigin,sas.ANON_KEY,sas.ANON_KEY,'/auth/v1/token?grant_type=password',{email:sourceEmail,password:sourcePassword})
   await assert.rejects(call(sasOrigin,sas.ANON_KEY,sas.ANON_KEY,'/auth/v1/signup',{email:`outsider-${randomUUID()}@example.test`,password:`Fixture-${randomUUID()}!`}), 'Public SAS signup must remain closed')
   const actor={...rpc(sasOrigin,sas.ANON_KEY,sourceSession.access_token),auth:{getUser:async()=>{try{return {data:{user:await call(sasOrigin,sas.ANON_KEY,sourceSession.access_token,'/auth/v1/user',undefined,'GET')},error:null}}catch(error){return {data:{user:null},error}}}}}
-  // Empty disposable projects need explicit synthetic catalog rows; never manufacture app runtime defaults.
-  sql('shop',`insert into public.plans(portal_id,name,slug,price_amount,currency,billing_interval,trial_days,is_active,is_public,is_purchasable,is_coming_soon,resource_limits)
-    select id,'Team fixture','team',699,'EGP','monthly',7,true,true,true,false,'{"active_locations":1,"active_members":8,"active_products":500,"active_services":100,"active_customers":2000,"active_suppliers":150}'::jsonb from public.portals where key='shop-crm' on conflict(portal_id,slug) do nothing;
-    insert into public.plans(portal_id,name,slug,price_amount,currency,billing_interval,trial_days,is_active,is_public,is_purchasable,is_coming_soon,resource_limits)
-    select id,'Internal trial fixture','full-product-trial',0,'EGP','monthly',7,true,false,false,false,'{"active_locations":null,"active_members":null,"active_products":null,"active_services":null,"active_customers":null,"active_suppliers":null}'::jsonb from public.portals where key='shop-crm' on conflict(portal_id,slug) do nothing;
-    select shop_private.reconcile_plan_catalog();`)
   const ids={source:randomUUID(),target:randomUUID(),binding:randomUUID(),principal:randomUUID(),targetBinding:randomUUID(),suit:randomUUID(),adapter:randomUUID(),provider:randomUUID()}
   const keyId='disposable-account-v1', key=crypto.getRandomValues(new Uint8Array(32)), encoded=Buffer.from(key).toString('base64url')
   const operations=['adapter.capabilities.read','shop.platform.query','shop.plan.query','shop.plan.command','shop.account.query','shop.account.command']
@@ -144,18 +158,18 @@ async function run() {
   let shopRegressionFailure
   try { command('pnpm',['db:test:shop']) }
   catch(error) { shopRegressionFailure=error; console.error(`Full Shop regression gate remains failed: ${error.message}`) }
-  let sourceRegressionFailure
-  try { command('pnpm',['exec','supabase','--workdir','apps/super-admin-suit','test','db','--local']) }
-  catch(error) { sourceRegressionFailure=error; console.error(`Full SAS regression gate remains failed: ${error.message}`) }
   const mailbox=new URL(shop.INBUCKET_URL)
   assert.equal(mailbox.origin,'http://127.0.0.1:61324','Only the disposable local mailbox is allowed')
-  let tokenHash
-  for(let index=0;index<20&&!tokenHash;index++){
+  let tokenHash, mailboxCount=0, matchedMessage=false, messageKeys=[], htmlKeys=[]
+  for(let index=0;index<60&&!tokenHash;index++){
     const messages=await (await fetch(mailbox.origin+'/api/v1/messages')).json()
-    const message=messages.messages?.find(item=>item.To?.some(to=>to.Address===input.email))
-    if(message){const detail=await (await fetch(mailbox.origin+'/api/v1/message/'+message.ID)).json();tokenHash=detail.HTML?.match(/token_hash=([0-9a-f]{64})/i)?.[1]}
+    mailboxCount=messages.messages?.length??0
+    const message=messages.messages?.find(item=>item.To?.some(to=>to.Address?.toLowerCase()===input.email))
+    matchedMessage=!!message;messageKeys=Object.keys(messages)
+    if(message){const detail=await (await fetch(mailbox.origin+'/api/v1/message/'+message.ID)).json();htmlKeys=Object.keys(detail);tokenHash=(detail.HTML??detail.Text)?.match(/token_hash=([0-9a-f]{64})/i)?.[1]}
     if(!tokenHash)await new Promise(resolve=>setTimeout(resolve,250))
   }
+  if(!tokenHash)console.error(`Disposable mailbox shape: ${JSON.stringify({mailboxCount,matchedMessage,messageKeys,htmlKeys})}`)
   assert.ok(tokenHash,'Owner invitation must contain a real one-time token hash')
   const ownerSession=await call(shopOrigin,shop.ANON_KEY,shop.ANON_KEY,'/auth/v1/verify',{token_hash:tokenHash,type:'invite'})
   const ownerClaim=await call(shopOrigin,shop.ANON_KEY,ownerSession.access_token,'/rest/v1/rpc/shop_admin_provisioned_owner_claim',{})
@@ -169,7 +183,8 @@ async function run() {
   if(shopRegressionFailure||sourceRegressionFailure)throw new Error([shopRegressionFailure?.message,sourceRegressionFailure?.message].filter(Boolean).join(' | '))
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href) {
-  if(process.argv[2]==='--startup-errors') {
+  if(process.argv[2]==='--prepare-baseline') { prepareLegacyBaseline().catch(error=>{console.error(error.message);process.exitCode=1}) }
+  else if(process.argv[2]==='--startup-errors') {
     assertDisposable(process.env)
     const content=await readFile(process.argv[3],'utf8')
     const errors=content.split('\n').filter(line=>/ERROR:|failed to|SQLSTATE/i.test(line)).slice(-10)

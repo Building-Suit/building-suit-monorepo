@@ -32,6 +32,8 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Prepare disposable legacy catalog upgrade fixture
+        run: node tooling/database/account-provisioning-disposable.mjs --prepare-baseline
       - name: Start disposable Shop and SAS backends
         run: |
           if ! pnpm exec supabase --workdir apps/shop-suit start --exclude studio,realtime,imgproxy,postgres-meta,edge-runtime,logflare,vector,supavisor > "$RUNNER_TEMP/accounts-shop-start.log" 2>&1; then
