@@ -9,7 +9,7 @@ from (select owner_id id from xpay_fixture union all select other_id from xpay_f
 insert into shop_private.xpay_configuration(singleton,enabled,merchant_id,mode) values(true,true,'merchant-fixture','test');
 select set_config('request.jwt.claim.sub',owner_id::text,true),set_config('request.jwt.claim.role','authenticated',true) from xpay_fixture;
 set local role authenticated;
-update xpay_fixture set shop_id=public.create_owner_shop('XPay disposable','mixed');
+update xpay_fixture set shop_id=public.create_owner_shop('XPay disposable','mixed'::public.business_mode,'Main fixture location',null,null,null);
 update xpay_fixture set terms_id=(select catalog_terms_id from public.shop_public_plan_catalog() where slug='solo' and billing_interval='monthly' order by price_amount limit 1);
 update xpay_fixture set trial_start=(public.shop_billing_read(shop_id)#>>'{subscription,trialStartAt}')::timestamptz,
  trial_end=(public.shop_billing_read(shop_id)#>>'{subscription,trialEndAt}')::timestamptz;

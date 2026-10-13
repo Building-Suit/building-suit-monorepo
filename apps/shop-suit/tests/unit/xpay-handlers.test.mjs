@@ -128,3 +128,18 @@ test('uncertain old creation is reported unresolved without a blind provider POS
   assert.deepEqual(await result.json(), { processed: 0, unresolved: 1 })
   assert.equal(f.providerCalls.length, 0)
 })
+
+test('other merchant-account checkouts without a Shop order are ignored after signature verification', async () => {
+  const f = fixture()
+  const event = { id: 'evt_other_product', type: 'checkout.session.completed', data: { object: { ...paid, metadata: {} } } }
+  assert.equal((await createXPayWebhook(f)(webhook(event))).status, 200)
+  assert.equal(f.calls.length + f.providerCalls.length, 0)
+})
+test('a held payment is reported unresolved by server reconciliation', async () => {
+  const f = fixture({ providerSession: paid })
+  const rpc = async (name, ...args) => name === 'shop_xpay_reconcile_candidates'
+    ? [{ ...baseOrder, sessionId: session.id }] : name === 'shop_xpay_apply_session' ? { ...baseOrder, state: 'requires_review' } : f.rpc(name, ...args)
+  const result = await createXPayReconciliation({ ...f, rpc })(new Request('https://edge.example', { method: 'POST' }))
+  assert.equal(result.status, 503)
+  assert.deepEqual(await result.json(), { processed: 0, unresolved: 1 })
+})

@@ -301,7 +301,10 @@ declare result jsonb;
 begin
  perform shop_private.xpay_server_required();
  select coalesce(jsonb_agg(shop_private.xpay_order_view(o)),'[]'::jsonb) into result from
- (select * from public.shop_xpay_orders where state in ('creating','open','pending','requires_review') order by updated_at limit 4) o;
+ (select orders.* from public.shop_xpay_orders orders join shop_private.xpay_configuration c
+ on c.singleton and c.merchant_id=orders.merchant_id and c.mode=orders.mode
+ where orders.state in ('creating','open','pending','requires_review')
+ order by (orders.session_id is not null) desc,orders.updated_at limit 4) o;
  return result;
 end $$;
 
