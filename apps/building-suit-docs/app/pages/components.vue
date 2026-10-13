@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ChangelogFeed, ChangelogCopy } from '@building-suit/contracts'
 const exampleQuantity = ref(1)
+const pinnedRecordActions = ref(false)
 const changelogState = ref<'ready' | 'loading' | 'error' | 'denied'>('ready')
 const changelogFeed: ChangelogFeed = {
   serverNow: '2026-10-10T12:00:00Z',
@@ -394,8 +395,9 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
     <WorkflowPatternCatalogue />
 
     <BsToastHost />
+    <BsSwitch v-model="pinnedRecordActions" :label="isArabic ? 'تثبيت إجراءات نافذة السجل' : 'Pin record dialog actions'" />
     <BsRecordActionDialog
-      v-model:visible="visible"
+      v-model:visible="visible" :pinned-actions="pinnedRecordActions"
       :title="mode === 'edit' ? (isArabic ? 'تعديل السجل' : 'Edit record') : (isArabic ? 'إضافة سجل' : 'Add record')"
       :dirty="dirty" :pending="pending" :error="actionError" @submit="save"
     >

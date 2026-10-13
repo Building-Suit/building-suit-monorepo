@@ -33,7 +33,7 @@ const columns = computed(() => [
     <template v-else-if="context.available">
       <BsText v-if="copy.stockLater" as="p" size="sm">{{ copy.stockLater }}</BsText>
       <BsText v-if="editor.error && !visible" role="alert" as="p" size="sm" tone="danger">{{ editor.error }}</BsText>
-      <BsRecordActionDialog v-model:visible="visible" :title="editor.editing ? copy.edit : copy.add" :dirty="editor.dirty" :pending="editor.pending" :error="editor.error" :submit-disabled="editor.uploadBlocked" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="emit('submit')">
+      <BsRecordActionDialog v-model:visible="visible" pinned-actions :title="editor.editing ? (copy.editTitle ?? copy.edit) : copy.add" :dirty="editor.dirty" :pending="editor.pending" :error="editor.error" :submit-disabled="editor.uploadBlocked" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="emit('submit')">
         <BsField v-slot="field" :label="copy.name"><BsInput :id="field.id" :model-value="form.name" :aria-describedby="field.describedby" type="text" :minlength="2" :maxlength="160" required @update:model-value="change('name', String($event))" /></BsField>
         <template v-if="kind === 'product'">
           <BsField v-slot="field" :label="copy.sku ?? ''"><BsInput :id="field.id" :model-value="form.sku" :aria-describedby="field.describedby" type="text" :maxlength="80" @update:model-value="change('sku', String($event))" /></BsField>

@@ -32,6 +32,7 @@ export interface BsCatalogueCopy {
   dashboard: string
   add: string
   edit: string
+  editTitle?: string
   archive: string
   save: string
   cancel: string

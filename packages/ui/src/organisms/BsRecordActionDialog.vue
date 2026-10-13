@@ -13,6 +13,7 @@ const props = withDefaults(defineProps<{
   formLayout?: 'stack' | 'grid'
   formColumns?: 1 | 2 | 3 | 4
   actionsLabel?: string
+  pinnedActions?: boolean
 }>(), {
   dirty: false,
   pending: false,
@@ -25,18 +26,20 @@ const props = withDefaults(defineProps<{
   formLayout: 'stack',
   formColumns: 1,
   actionsLabel: undefined,
+  pinnedActions: false,
 })
 
 const emit = defineEmits<{ submit: [event: Event] }>()
 const ui = useUiCopy()
+const formId = useId()
 </script>
 
 <template>
   <BsDialog v-model:visible="visible" :title="title" :dirty="dirty" :pending="pending" :size="size">
     <template #default="{ close }">
-      <BsForm :pending="pending" :error="error" :layout="formLayout" :columns="formColumns" @submit="emit('submit', $event)">
+      <BsForm :id="formId" :pending="pending" :error="error" :layout="formLayout" :columns="formColumns" @submit="emit('submit', $event)">
         <slot :close="close" />
-        <BsFormActions :label="actionsLabel">
+        <BsFormActions v-if="!pinnedActions" :label="actionsLabel">
           <slot name="actions" :close="close">
             <BsButton type="button" :disabled="pending" @click="close">{{ props.cancelLabel || ui('cancel') }}</BsButton>
             <BsButton type="submit" :variant="submitTone" :pending="pending" :disabled="submitDisabled">
@@ -45,6 +48,16 @@ const ui = useUiCopy()
           </slot>
         </BsFormActions>
       </BsForm>
+    </template>
+    <template v-if="pinnedActions" #footer="{ close }">
+      <BsFormActions :label="actionsLabel" align="between">
+        <slot name="actions" :close="close" :form-id="formId">
+          <BsButton type="button" :disabled="pending" @click="close">{{ props.cancelLabel || ui('cancel') }}</BsButton>
+          <BsButton type="submit" :form="formId" :variant="submitTone" :pending="pending" :disabled="pending || submitDisabled">
+            {{ props.submitLabel || ui('save') }}
+          </BsButton>
+        </slot>
+      </BsFormActions>
     </template>
   </BsDialog>
 </template>
