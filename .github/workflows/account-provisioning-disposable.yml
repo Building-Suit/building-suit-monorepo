@@ -42,6 +42,16 @@ jobs:
             node tooling/database/account-provisioning-disposable.mjs --startup-errors "$RUNNER_TEMP/accounts-sas-start.log"
             exit 1
           fi
+      - name: Generate schema contracts from disposable databases
+        run: |
+          mkdir -p "$RUNNER_TEMP/account-schema-contracts/shop" "$RUNNER_TEMP/account-schema-contracts/sas"
+          pnpm exec supabase --workdir apps/shop-suit gen types typescript --local > "$RUNNER_TEMP/account-schema-contracts/shop/database.types.ts"
+          pnpm exec supabase --workdir apps/super-admin-suit gen types typescript --local > "$RUNNER_TEMP/account-schema-contracts/sas/database.types.ts"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: account-schema-contracts
+          path: ${{ runner.temp }}/account-schema-contracts
+          retention-days: 7
       - name: Validate SQL, signed dispatch, real Auth and local invitation claim
         run: node tooling/database/account-provisioning-disposable.mjs
       - name: Stop only this job's disposable stacks
