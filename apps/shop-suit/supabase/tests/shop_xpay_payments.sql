@@ -1,5 +1,12 @@
 -- Disposable rollback-only payment contract tests. Provider results below are
 -- synthetic; this proves SQL authority/atomicity, not XPay sandbox compatibility.
+-- The minimal disposable seed contains Basic/Pro only; create a canonical
+-- purchasable fixture using current reconciliation, without hosted writes.
+insert into public.plans(portal_id,name,slug,price_amount,currency,billing_interval,trial_days,features,resource_limits,is_active,is_public,is_purchasable,is_coming_soon)
+select id,'Solo','solo',349,'EGP','monthly',7,'{}',
+ '{"active_locations":1,"active_members":1,"active_products":250,"active_services":50,"active_customers":500,"active_suppliers":50}'::jsonb,true,true,true,false
+from public.portals where key='shop-crm' on conflict(portal_id,slug) do nothing;
+select shop_private.reconcile_plan_catalog();
 create temporary table xpay_fixture(owner_id uuid default gen_random_uuid(),other_id uuid default gen_random_uuid(),shop_id uuid,terms_id uuid,order_id uuid,trial_start timestamptz,trial_end timestamptz,session jsonb);
 insert into xpay_fixture default values;
 grant all on xpay_fixture to authenticated,service_role;
@@ -16,6 +23,7 @@ update xpay_fixture set trial_start=(public.shop_billing_read(shop_id)#>>'{subsc
 reset role;
 do $$declare f xpay_fixture; legacy uuid; amount numeric;begin
  select * into f from xpay_fixture;
+ if f.terms_id is null then raise exception 'disposable public catalog fixture missing';end if;
  select price_amount into amount from public.plan_catalog_terms where id=f.terms_id;
  legacy:=public.submit_shop_billing_notice(gen_random_uuid(),f.shop_id,'solo',f.terms_id,amount,current_date,'IPN-HISTORICAL-XPAY');
  update public.shop_billing_submissions set status='rejected',review_reason='Historical fixture only' where id=legacy;
