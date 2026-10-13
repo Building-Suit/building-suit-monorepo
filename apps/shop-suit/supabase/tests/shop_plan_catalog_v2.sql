@@ -1,3 +1,4 @@
+-- Historical manual records are seeded by rolled-back pg_temp fixtures; current public writes stay retired.
 -- HOT-11: exact V2 offers, immutable historical terms, explicit variant/term
 -- changes, exact renewal, and manual approval snapshots.
 
@@ -160,7 +161,7 @@ declare
       and catalog.billing_interval = 'annual');
   v_notice uuid;
 begin
-  v_notice := public.submit_shop_billing_notice(
+  v_notice := pg_temp.seed_legacy_submit_shop_billing_notice(
     (select multi2_request from shop_plan_catalog_v2_fixture),
     current_setting('hot11.shop')::uuid, 'multi', v_terms,
     8151.84, current_date, 'HOT11-MULTI2-YEARLY'
@@ -224,7 +225,7 @@ set local role authenticated;
 do $$
 declare v_notice uuid;
 begin
-  v_notice := public.submit_shop_billing_notice(
+  v_notice := pg_temp.seed_legacy_submit_shop_billing_notice(
     (select renewal_request from shop_plan_catalog_v2_fixture),
     current_setting('hot11.shop')::uuid, 8151.84, current_date, 'HOT11-RENEW-SAME'
   );
@@ -270,7 +271,7 @@ declare
       and catalog.billing_interval = 'monthly');
   v_notice uuid;
 begin
-  v_notice := public.submit_shop_billing_notice(
+  v_notice := pg_temp.seed_legacy_submit_shop_billing_notice(
     (select multi3_request from shop_plan_catalog_v2_fixture),
     current_setting('hot11.shop')::uuid, 'multi', v_terms,
     1199, current_date, 'HOT11-MULTI3-MONTHLY'
@@ -307,7 +308,7 @@ select set_config('request.jwt.claim.sub', owner_id::text, true),
   set_config('request.jwt.claim.role', 'authenticated', true)
 from shop_plan_catalog_v2_fixture;
 set local role authenticated;
-select public.submit_shop_billing_notice(
+select pg_temp.seed_legacy_submit_shop_billing_notice(
   (select downgrade_request from shop_plan_catalog_v2_fixture),
   current_setting('hot11.shop')::uuid, 'multi',
   (select catalog.catalog_terms_id
@@ -428,7 +429,7 @@ declare
       and catalog.billing_interval = 'annual');
   v_notice uuid;
 begin
-  v_notice := public.submit_shop_billing_notice(
+  v_notice := pg_temp.seed_legacy_submit_shop_billing_notice(
     gen_random_uuid(), current_setting('hot11.shop')::uuid, 'multi', v_terms,
     9000, current_date, 'HOT11-NEGOTIATED-YEARLY'
   );

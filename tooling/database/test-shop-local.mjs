@@ -8,6 +8,7 @@ const args = psqlArgs('postgres')
 // not a superuser; keep application suites on it and use the local admin here.
 const cleanupArgs = psqlArgs('supabase_admin')
 const fixtureCleanup = await readFile(new URL('../../apps/shop-suit/supabase/tests/shop_orphan_fixture_cleanup.sql', import.meta.url), 'utf8')
+const legacyBillingFixture = await readFile(new URL('../../apps/shop-suit/supabase/tests/shop_legacy_billing_fixture.sql', import.meta.url), 'utf8')
 const cleanup = spawnSync('docker', cleanupArgs, {
   input: `BEGIN;\n${fixtureCleanup}\nSELECT pg_temp.cleanup_shop_orphan_fixtures();\nCOMMIT;`, encoding: 'utf8',
 })
@@ -25,7 +26,7 @@ suites.push('shop_trial_admin_activation')
 for (const suite of suites) {
   const sql = await readFile(new URL(`../../apps/shop-suit/supabase/tests/${suite}.sql`, import.meta.url), 'utf8')
   const isCleanupSuite = suite === 'shop_orphan_fixture_cleanup_test'
-  const setup = isCleanupSuite ? fixtureCleanup : ''
+  const setup = isCleanupSuite ? fixtureCleanup : ['shop_billing', 'shop_plan_catalog_v2', 'shop_subscription_lifecycle'].includes(suite) ? legacyBillingFixture : ''
   const result = spawnSync('docker', isCleanupSuite ? cleanupArgs : args, { input: `BEGIN;\n${setup}\n${sql.replace(/\bshop_crm\b/g, 'public')}\nROLLBACK;`, encoding: 'utf8' })
   if (result.status !== 0) { console.error(`${suite}: failed\n${result.stderr || result.error}`); process.exit(1) }
   console.log(`${suite}: passed; fixtures rolled back`)
