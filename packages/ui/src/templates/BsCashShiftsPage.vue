@@ -30,13 +30,13 @@ function updateMovement(key: keyof BsCashShiftMovementForm, value: string | numb
     <BsText v-if="!contextAvailable && !shopLoading" as="p" size="sm">{{ copy.noShop }}</BsText>
     <BsText v-else-if="!locationName && !shopLoading" as="p" size="sm">{{ copy.noLocation }}</BsText>
     <BsStack v-else-if="contextAvailable">
-      <BsBox v-if="error" role="alert" padding="md">
+      <BsGrid v-if="pending" :aria-label="copy.loading" role="status" :columns="4">
+        <BsSkeleton v-for="index in 4" :key="index"/>
+      </BsGrid>
+      <BsBox v-else-if="error" role="alert" padding="md">
         <BsText as="p">{{ copy.loadError }}</BsText>
         <BsButton severity="secondary" @click="emit('retry')">{{ copy.retry }}</BsButton>
       </BsBox>
-      <BsGrid v-else-if="pending" :aria-label="copy.loading" role="status" :columns="4">
-        <BsSkeleton v-for="index in 4" :key="index"/>
-      </BsGrid>
       <template v-else>
         <BsPanel aria-labelledby="active-shift-heading" padding="md">
           <BsInline justify="between">
@@ -77,7 +77,9 @@ function updateMovement(key: keyof BsCashShiftMovementForm, value: string | numb
         <BsPanel padding="md">
           <BsInline justify="between">
             <BsHeading :level="2">{{ copy.history }}</BsHeading>
-            <BsSelect v-if="canManage" v-model="cashierId" :label="copy.cashier" :options="[{ id: null, name: copy.allCashiers }, ...cashierOptions]" option-label="name" option-value="id"/>
+            <BsField v-if="canManage" v-slot="field" :label="copy.cashier">
+              <BsSelect v-model="cashierId" :input-id="field.id" :aria-describedby="field.describedby" :placeholder="copy.allCashiers" :label="copy.cashier" :options="[{ id: null, name: copy.allCashiers }, ...cashierOptions]" option-label="name" option-value="id"/>
+            </BsField>
           </BsInline>
           <BsBox scroll="x">
             <BsDataTable density="compact" :value="historyRows" data-key="id" :label="copy.history" lazy paginator :rows="pageSize" :first="(page - 1) * pageSize" :total-records="total" :always-show-paginator="false" :columns="[{ key: 'cashierName', header: (copy.cashier), field: 'cashierName' }, { key: 'column1', header: (copy.opened) }, { key: 'column2', header: (copy.expected), align: 'end' }, { key: 'column3', header: (copy.counted), align: 'end' }, { key: 'column4', header: (copy.variance), align: 'end' }, { key: 'column5', header: (copy.nonCash), align: 'end' }]" @page="emit('page', $event.page + 1)">

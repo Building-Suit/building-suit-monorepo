@@ -53,6 +53,7 @@ for (const [locale, theme, width] of [['en', 'light', 1440], ['ar', 'dark', 390]
       await expect(dialog.locator('.bs-catalog-uploader img')).toBeVisible()
       await expectNoPageOverflow(page)
       await page.screenshot({ path: test.info().outputPath(`${kind}-uploaded.png`), fullPage: true })
+      await dialog.screenshot({ path: test.info().outputPath(`${kind}-dialog.png`) })
       await input.setInputFiles({ name: 'replacement.png', mimeType: 'image/png', buffer: png })
       await expect(dialog.locator('.bs-catalog-uploader').getByRole('status')).toContainText(ar ? 'تم رفع الصورة' : 'Image uploaded')
       const save = kind === 'products' ? (ar ? 'حفظ المنتج' : 'Save product') : (ar ? 'حفظ الخدمة' : 'Save service')

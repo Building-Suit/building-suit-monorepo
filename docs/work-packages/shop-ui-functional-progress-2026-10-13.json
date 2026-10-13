@@ -1,0 +1,105 @@
+{
+  "snapshotDate": "2026-10-13",
+  "scope": "Named local UI journeys; not hosted or complete design matrices",
+  "sourceCounts": {
+    "mainBoards": 33,
+    "completeSourceMatrices": 0,
+    "inScopeRoutes": 26,
+    "missingInScopeMainPNGs": 23
+  },
+  "independentHotfix": {
+    "pr": 289,
+    "head": "713a204e83621df1f5e360c003bc5cdd0921aedf",
+    "ciRun": 38450748615,
+    "fullCI": "passed",
+    "merged": false
+  },
+  "categories": [
+    {
+      "category": "Appointments",
+      "implemented": true,
+      "tested": "calendar/block/edit/status/owner schedule plus schedule baseline, dirty staging, read contexts, options retry/location and late-response variants verified",
+      "remainingFunctionalReview": [],
+      "visualEvidence": "metadata only; all corresponding PNGs unavailable"
+    },
+    {
+      "category": "Cash shifts",
+      "implemented": true,
+      "tested": "named commands, read contexts, restricted cashier and history filter/pagination in this checkpoint; 12 inherited owner variants",
+      "remainingFunctionalReview": [],
+      "visualEvidence": "metadata only; cash closed-history design explicitly unsaved"
+    },
+    {
+      "category": "Inventory/purchasing",
+      "implemented": true,
+      "tested": "inherited count/threshold/error/retry and supplier/purchase/payment checkpoints; source shop-penpot-cloud-coverage.json rows20-22",
+      "remainingFunctionalReview": [],
+      "visualEvidence": "main/native pixels unavailable; full design matrix unverified"
+    },
+    {
+      "category": "Sales/receipts",
+      "implemented": true,
+      "tested": "inherited payment/correction and A4/thermal/print-isolation checkpoints; coverage rows15-17",
+      "remainingFunctionalReview": [],
+      "visualEvidence": "main/native pixels unavailable; physical print/hosted readiness separate"
+    },
+    {
+      "category": "Reports/customer profiles",
+      "implemented": true,
+      "tested": "customer-profile lifecycle/allocation/read feedback plus all8 operational report kinds, access/cost restrictions, read/export pending/error/retry and CSV parity verified",
+      "remainingFunctionalReview": [],
+      "visualEvidence": "main/variant pixels unavailable",
+      "completedNamedJourneys": [
+        "customer profile active/archived/view-only/not-found/denied/load-failed",
+        "receivables/statement pending/error/retry/empty",
+        "receipt allocation overpayment/recovery/pending",
+        "customer archive with cancelled confirmation/no write",
+        "all report kinds and source/filter/CSV display parity",
+        "denied/cost restricted/empty report states",
+        "pending/export failure/retry",
+        "multi-page CSV and stale-filter cancellation"
+      ]
+    },
+    {
+      "category": "Settings/admin",
+      "implemented": true,
+      "tested": "22 settings/nonbilling platform state/capability/support cases and12 inherited profile/location/receipt variants",
+      "remainingFunctionalReview": [],
+      "visualEvidence": "main/variant pixels unavailable",
+      "excludedConcurrentScope": [
+        "billing/subscription/trial-changing controls"
+      ]
+    },
+    {
+      "category": "Public non-landing",
+      "implemented": true,
+      "tested": "six routes EN/AR metadata/direction/links; contact validation/consent/honeypot/pending/duplicate-command/failure/rate-limit/retry/success; EN light desktop and AR dark mobile overflow/reading measure",
+      "remainingFunctionalReview": [],
+      "visualEvidence": "main/variant pixels unavailable",
+      "completedNamedJourneys": [
+        "about/contact/terms/privacy/delivery-shipping/refund-cancellation public routes",
+        "contact intake validation and consent",
+        "pending/inert/duplicate command suppression",
+        "bounded failure/rate-limit and retained-input retry",
+        "successful clearing and email retention",
+        "localized metadata/direction/policy links and readable responsive text"
+      ]
+    }
+  ],
+  "activeFunctionalReviewBuckets": 0,
+  "reviewPolicy": "Retain previously verified named journeys; reopen only for new saved requirements, concrete defects or affected changes. Missing pixels do not imply missing code.",
+  "hostedDataOrSettingsChanged": false,
+  "designMatricesCompleted": 0,
+  "requiredFrontendSkillReview": {
+    "status": "source-resolved-retrospective-review-complete",
+    "source": "https://github.com/anthropics/skills/blob/dbd4588f9e1033efb41dad4bef2f7947c8993d44/skills/frontend-design/SKILL.md",
+    "revision": "dbd4588f9e1033efb41dad4bef2f7947c8993d44",
+    "installation": "cloud-local text only; manually read; not executor-catalog registered",
+    "reviewedCheckpoints": [
+      297,
+      299
+    ],
+    "publicNonLandingEdits": "applied before edits; local verification complete",
+    "limitation": "Initial checkpoint changes preceded skill availability; no claim of visual parity for missing PNGs."
+  }
+}

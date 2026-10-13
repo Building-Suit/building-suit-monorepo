@@ -20,7 +20,20 @@
       "template": "BsPublicLegalPage",
       "mainBoardId": "9d8c9265-2366-809c-8008-c802038346e6",
       "auditClassification": "integrated-source-metadata-only",
-      "fullDesignMatrixComplete": false
+      "fullDesignMatrixComplete": false,
+      "implementedJourneys": [
+        "existing bilingual public route and metadata",
+        "shared readable public presentation"
+      ],
+      "testedJourneys": [
+        "EN/AR route heading/metadata/direction and footer policy links",
+        "existing legal content retained"
+      ],
+      "remainingFunctionalReview": [],
+      "missingVisualEvidence": [
+        "main and variant Penpot PNGs unavailable; full design matrix incomplete"
+      ],
+      "currentCheckpointBranch": "codex/shop-suit/penpot-public-states"
     },
     {
       "number": 3,
@@ -28,7 +41,22 @@
       "template": "BsContactPage",
       "mainBoardId": "9d8c9265-2366-809c-8008-c802cc216548",
       "auditClassification": "integrated-source-metadata-only",
-      "fullDesignMatrixComplete": false
+      "fullDesignMatrixComplete": false,
+      "implementedJourneys": [
+        "existing bilingual public route and metadata",
+        "shared readable public presentation",
+        "contact pending command guard and associated category label"
+      ],
+      "testedJourneys": [
+        "EN/AR route heading/metadata/direction and footer policy links",
+        "validation/consent/honeypot/pending/failure/rate-limit/retry/success/duplicate command",
+        "desktop/mobile no overflow and actual screenshots"
+      ],
+      "remainingFunctionalReview": [],
+      "missingVisualEvidence": [
+        "main and variant Penpot PNGs unavailable; full design matrix incomplete"
+      ],
+      "currentCheckpointBranch": "codex/shop-suit/penpot-public-states"
     },
     {
       "number": 4,
@@ -36,7 +64,20 @@
       "template": "BsPublicLegalPage",
       "mainBoardId": "9d8c9265-2366-809c-8008-c8022189c0cf",
       "auditClassification": "integrated-source-metadata-only",
-      "fullDesignMatrixComplete": false
+      "fullDesignMatrixComplete": false,
+      "implementedJourneys": [
+        "existing bilingual public route and metadata",
+        "shared readable public presentation"
+      ],
+      "testedJourneys": [
+        "EN/AR route heading/metadata/direction and footer policy links",
+        "existing legal content retained"
+      ],
+      "remainingFunctionalReview": [],
+      "missingVisualEvidence": [
+        "main and variant Penpot PNGs unavailable; full design matrix incomplete"
+      ],
+      "currentCheckpointBranch": "codex/shop-suit/penpot-public-states"
     },
     {
       "number": 5,
@@ -44,7 +85,20 @@
       "template": "BsPublicLegalPage",
       "mainBoardId": "9d8c9265-2366-809c-8008-c802504f804c",
       "auditClassification": "integrated-source-metadata-only",
-      "fullDesignMatrixComplete": false
+      "fullDesignMatrixComplete": false,
+      "implementedJourneys": [
+        "existing bilingual public route and metadata",
+        "shared readable public presentation"
+      ],
+      "testedJourneys": [
+        "EN/AR route heading/metadata/direction and footer policy links",
+        "existing legal content retained"
+      ],
+      "remainingFunctionalReview": [],
+      "missingVisualEvidence": [
+        "main and variant Penpot PNGs unavailable; full design matrix incomplete"
+      ],
+      "currentCheckpointBranch": "codex/shop-suit/penpot-public-states"
     },
     {
       "number": 6,
@@ -52,7 +106,20 @@
       "template": "BsPublicLegalPage",
       "mainBoardId": "9d8c9265-2366-809c-8008-c80281ddff77",
       "auditClassification": "integrated-source-metadata-only",
-      "fullDesignMatrixComplete": false
+      "fullDesignMatrixComplete": false,
+      "implementedJourneys": [
+        "existing bilingual public route and metadata",
+        "shared readable public presentation"
+      ],
+      "testedJourneys": [
+        "EN/AR route heading/metadata/direction and footer policy links",
+        "existing legal content retained"
+      ],
+      "remainingFunctionalReview": [],
+      "missingVisualEvidence": [
+        "main and variant Penpot PNGs unavailable; full design matrix incomplete"
+      ],
+      "currentCheckpointBranch": "codex/shop-suit/penpot-public-states"
     },
     {
       "number": 7,
@@ -60,7 +127,20 @@
       "template": "BsPublicLegalPage",
       "mainBoardId": "9d8c9265-2366-809c-8008-c8029df9b418",
       "auditClassification": "integrated-source-metadata-only",
-      "fullDesignMatrixComplete": false
+      "fullDesignMatrixComplete": false,
+      "implementedJourneys": [
+        "existing bilingual public route and metadata",
+        "shared readable public presentation"
+      ],
+      "testedJourneys": [
+        "EN/AR route heading/metadata/direction and footer policy links",
+        "existing legal content retained"
+      ],
+      "remainingFunctionalReview": [],
+      "missingVisualEvidence": [
+        "main and variant Penpot PNGs unavailable; full design matrix incomplete"
+      ],
+      "currentCheckpointBranch": "codex/shop-suit/penpot-public-states"
     },
     {
       "number": 8,
@@ -73,7 +153,7 @@
     {
       "number": 9,
       "route": "/auth/signup",
-      "template": "BsSignupPage \u2192 BsSignupEnrollment",
+      "template": "BsSignupPage → BsSignupEnrollment",
       "mainBoardId": "9d8c9265-2366-809c-8008-c80410fd3a98",
       "auditClassification": "concurrent-owner",
       "fullDesignMatrixComplete": false
@@ -96,7 +176,7 @@
     },
     {
       "number": 12,
-      "route": "/auth/team-invitation?invite=\u2026",
+      "route": "/auth/team-invitation?invite=…",
       "template": "BsInvitationAcceptancePage",
       "mainBoardId": "9d8c9265-2366-809c-8008-c804ae90151d",
       "auditClassification": "concurrent-owner",
@@ -148,7 +228,13 @@
       "template": "BsCataloguePage kind=product",
       "mainBoardId": "9d8c9265-2366-809c-8008-c7eaaafbe13f",
       "auditClassification": "integrated-visual-parity-unverified",
-      "fullDesignMatrixComplete": false
+      "fullDesignMatrixComplete": false,
+      "dialogCheckpointBranch": "codex/shop-suit/penpot-catalog-dialogs",
+      "dialogPixelScope": "frozen product edit / service create crops; directory main pixels remain unavailable",
+      "dialogImplementation": "reference geometry and create-mode scheduling; typed product commands preserved",
+      "currentFunctionalCheckpoints": [
+        286
+      ]
     },
     {
       "number": 19,
@@ -156,7 +242,13 @@
       "template": "BsCataloguePage kind=service",
       "mainBoardId": "9d8c9265-2366-809c-8008-c7ebefd6982a",
       "auditClassification": "integrated-visual-parity-unverified",
-      "fullDesignMatrixComplete": false
+      "fullDesignMatrixComplete": false,
+      "dialogCheckpointBranch": "codex/shop-suit/penpot-catalog-dialogs",
+      "dialogPixelScope": "frozen product edit / service create crops; directory main pixels remain unavailable",
+      "dialogImplementation": "reference geometry and create-mode scheduling; typed product commands preserved",
+      "currentFunctionalCheckpoints": [
+        286
+      ]
     },
     {
       "number": 20,
@@ -196,7 +288,25 @@
       "template": "BsCustomerProfilePage",
       "mainBoardId": "9d8c9265-2366-809c-8008-c7f7904d4866",
       "auditClassification": "integrated-source-metadata-only",
-      "fullDesignMatrixComplete": false
+      "fullDesignMatrixComplete": false,
+      "implementedJourneys": [
+        "resolved-only balance/overdue summaries",
+        "explicit receivables/statement pending retry",
+        "receipt action gating on current resolved invoices",
+        "structured overpayment/identity error guidance",
+        "customer-specific archive confirmation"
+      ],
+      "testedJourneys": [
+        "EN desktop / AR mobile allocation/error/pending/archive lifecycle",
+        "archived/view-only/not-found/denied/load-failed and independent read failures",
+        "confirmed empty accounts",
+        "12 inherited allocation variants"
+      ],
+      "remainingFunctionalReview": [],
+      "missingVisualEvidence": "Customer profile main/receipt/lifecycle/feedback PNGs absent from frozen sources",
+      "currentFunctionalCheckpoints": [
+        295
+      ]
     },
     {
       "number": 25,
@@ -204,7 +314,30 @@
       "template": "BsAppointmentsPage",
       "mainBoardId": "9d8c9265-2366-809c-8008-c7f8b667812f",
       "auditClassification": "integrated-source-metadata-only",
-      "fullDesignMatrixComplete": false
+      "fullDesignMatrixComplete": false,
+      "currentFunctionalCheckpoints": [
+        290,
+        291
+      ],
+      "implementedJourneys": [
+        "calendar block tiles/read-only detail",
+        "contextual cancel/no-show confirmations",
+        "structured appointment/schedule save guidance",
+        "schedule baseline/dirty staff preservation",
+        "unadded block staging guard",
+        "scope-safe asynchronous appointment feedback"
+      ],
+      "testedJourneys": [
+        "EN desktop / AR mobile block day-week-month/filter/overlap/read states",
+        "EN desktop / AR mobile edit/reschedule/errors/pending/discard/terminal transitions",
+        "inherited owner appointment/schedule commands",
+        "schedule blocks/permission/pending/save payload",
+        "no-shop/no-location/no-staff/view-only/options retry/location scope",
+        "late schedule response after SPA navigation"
+      ],
+      "remainingFunctionalReview": [],
+      "missingVisualEvidence": "No appointment main/state/form/native variant PNGs in frozen handoff",
+      "currentCheckpointBranch": "codex/shop-suit/penpot-schedule-variants"
     },
     {
       "number": 26,
@@ -212,7 +345,22 @@
       "template": "BsCashShiftsPage",
       "mainBoardId": "9d8c9265-2366-809c-8008-c7fabe2292bb",
       "auditClassification": "integrated-source-metadata-only",
-      "fullDesignMatrixComplete": false
+      "fullDesignMatrixComplete": false,
+      "implementedJourneys": [
+        "contextual drawer confirmations",
+        "structured command error guidance",
+        "pending retry feedback",
+        "labeled cashier history filter"
+      ],
+      "testedJourneys": [
+        "12 inherited owner open/pay-in/close variants",
+        "EN desktop / AR mobile zero-open/pay-out/error/idempotent retry/restricted cashier/no-context/filter/pagination"
+      ],
+      "missingVisualEvidence": "No cash main/state exports; closed reconciled history design explicitly unsaved",
+      "remainingFunctionalReview": [],
+      "currentFunctionalCheckpoints": [
+        293
+      ]
     },
     {
       "number": 27,
@@ -228,7 +376,23 @@
       "template": "BsReportsPage shop operational branch",
       "mainBoardId": "9d8c9265-2366-809c-8008-c7fc4239d1f1",
       "auditClassification": "integrated-source-metadata-only",
-      "fullDesignMatrixComplete": false
+      "fullDesignMatrixComplete": false,
+      "implementedJourneys": [
+        "localized report enum display",
+        "pending-only retry feedback",
+        "export read-readiness guard",
+        "snapshot query-bound CSV filenames"
+      ],
+      "testedJourneys": [
+        "all8 kinds EN desktop / AR mobile with source/filter/raw CSV parity",
+        "denied/all4 costly kinds restricted/empty",
+        "pending retry/export failure recovery",
+        "501-row multi-page CSV/filter-change cancellation",
+        "12 inherited report pagination/filter/CSV variants"
+      ],
+      "remainingFunctionalReview": [],
+      "missingVisualEvidence": "All report main/kind/feedback/native PNGs absent from frozen sources",
+      "currentCheckpointBranch": "codex/shop-suit/penpot-report-variants"
     },
     {
       "number": 29,
@@ -236,7 +400,11 @@
       "template": "BsCatalogImportPage",
       "mainBoardId": "9d8c9265-2366-809c-8008-c7fcdb94395d",
       "auditClassification": "integrated-source-metadata-only",
-      "fullDesignMatrixComplete": false
+      "fullDesignMatrixComplete": false,
+      "currentImplementationStatus": "catalog import loading/validation/error/retry journeys implemented and tested in #284; appearance references absent",
+      "currentFunctionalCheckpoints": [
+        284
+      ]
     },
     {
       "number": 30,
@@ -258,7 +426,11 @@
         "Member/audit surfaces not separately framed",
         "Create-role action incorrectly shares primary emphasis with invite"
       ],
-      "fullDesignMatrixComplete": false
+      "fullDesignMatrixComplete": false,
+      "currentImplementationStatus": "source-backed Team tab/action/panel/filter corrections implemented and tested in #283; full visual/native matrix incomplete",
+      "currentFunctionalCheckpoints": [
+        283
+      ]
     },
     {
       "number": 32,
@@ -266,7 +438,20 @@
       "template": "BsBusinessSettingsPage",
       "mainBoardId": "9d8c9265-2366-809c-8008-c7ff3fa96d80",
       "auditClassification": "integrated-source-metadata-only",
-      "fullDesignMatrixComplete": false
+      "fullDesignMatrixComplete": false,
+      "currentCheckpointBranch": "codex/shop-suit/penpot-settings-states",
+      "missingVisualEvidence": "Main/state/native PNGs absent from frozen sources",
+      "remainingFunctionalReview": [],
+      "requiredSkillReview": "Production frontend/UI skill source unavailable; exact cloud path/package requested",
+      "implementedJourneys": [
+        "settings permission read error/pending gating",
+        "all-panel read readiness",
+        "context/access retry and no-context guidance"
+      ],
+      "testedJourneys": [
+        "22 combined settings/nonbilling admin state cases",
+        "12 inherited profile/location/receipt setting variants"
+      ]
     },
     {
       "number": 33,
@@ -274,8 +459,26 @@
       "template": "BsPlatformAdministrationPage commerce branch",
       "mainBoardId": "9d8c9265-2366-809c-8008-c80005cf6a55",
       "auditClassification": "integrated-source-metadata-only",
-      "fullDesignMatrixComplete": false
+      "fullDesignMatrixComplete": false,
+      "currentCheckpointBranch": "codex/shop-suit/penpot-settings-states",
+      "missingVisualEvidence": "Main/state/native PNGs absent from frozen sources",
+      "remainingFunctionalReview": [],
+      "requiredSkillReview": "Production frontend/UI skill source unavailable; exact cloud path/package requested",
+      "implementedJourneys": [
+        "session lookup error distinct from confirmed denial",
+        "selected-ID and resolved-only tenant details",
+        "detail pending/error suppression"
+      ],
+      "testedJourneys": [
+        "operator/observer/denied/session failure and detail retry",
+        "support note/suspend/reactivate scoped commands with cancelled suspension no write"
+      ],
+      "excludedConcurrentScope": [
+        "billing/plan/payment-review/configuration/trial changes"
+      ]
     }
   ],
-  "coverageSource": "shop-penpot-cloud-coverage.json"
+  "coverageSource": "shop-penpot-cloud-coverage.json",
+  "reconciledStagingBaseline": "73a884b3da407696b3522771c94edb6e32ea7be6",
+  "classificationScope": "auditClassification/auditFindings retain the initial staging-baseline assessment; currentImplementationStatus and journey fields track completed published checkpoints separately from missing visual evidence."
 }

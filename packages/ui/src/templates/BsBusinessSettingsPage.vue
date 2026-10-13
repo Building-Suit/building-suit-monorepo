@@ -26,13 +26,13 @@ function updateReceipt(key: keyof BsBusinessReceiptForm, value: string | number 
 </script>
 <template>
   <BsStack gap="lg" class="bs-business-settings-page">
-    <BsPageHeader :title="copy.title" :subtitle="copy.subtitle"><template #actions><BsText v-if="context" size="xs" emphasis="semibold">{{ context.name }}</BsText></template></BsPageHeader>
+    <BsPageHeader :title="copy.title" :subtitle="copy.subtitle"><template #actions><BsText v-if="context && !loading && !shopError" size="xs" emphasis="semibold">{{ context.name }}</BsText></template></BsPageHeader>
     <BsText v-if="loading" role="status" as="p">{{ copy.loading }}</BsText>
     <BsBox v-else-if="shopError" role="alert">{{ copy.failed }} <BsButton @click="emit('retry')">{{ copy.retry }}</BsButton>
     </BsBox>
     <BsText v-else-if="!context" role="status" as="p">{{ copy.empty }}</BsText>
     <BsSectionNavigation v-if="context && !loading && !shopError" :label="copy.title" :sections="[{ id: 'shop-profile', label: copy.profileTitle }, { id: 'business-mode', label: copy.modeTitle }, { id: 'locations', label: copy.locationsTitle }, { id: 'receipt-settings', label: copy.receiptTitle }, { id: 'cash-policy', label: copy.cashTitle }]" />
-    <BsGrid v-if="context" :columns="2" gap="lg">
+    <BsGrid v-if="context && !loading && !shopError" :columns="2" gap="lg">
     <BsPanel v-if="context && !loading && !shopError" id="shop-profile" aria-labelledby="shop-profile-title" padding="md">
       <BsHeading id="shop-profile-title" :level="2">{{ copy.profileTitle }}</BsHeading>
       <BsText as="p" size="sm" tone="muted">{{ copy.profileHelp }}</BsText>
@@ -52,7 +52,7 @@ function updateReceipt(key: keyof BsBusinessReceiptForm, value: string | number 
         </BsRecordActionDialog>
       </BsStack>
     </BsPanel>
-    <BsPanel v-if="context" id="business-mode" padding="md">
+    <BsPanel v-if="context && !loading && !shopError" id="business-mode" padding="md">
       <BsHeading :level="2">{{ copy.modeTitle }}</BsHeading>
       <BsText as="p" size="sm" tone="muted">{{ copy.modeHelp }}</BsText>
       <BsText v-if="!canManage" role="status" as="p" size="sm" tone="warning">{{ copy.ownerOnly }}</BsText>
@@ -67,7 +67,7 @@ function updateReceipt(key: keyof BsBusinessReceiptForm, value: string | number 
       </BsStack>
     </BsPanel>
     </BsGrid>
-    <BsPanel v-if="context" id="locations" padding="md">
+    <BsPanel v-if="context && !loading && !shopError" id="locations" padding="md">
       <BsHeading :level="2">{{ copy.locationsTitle }}</BsHeading>
       <BsText as="p" size="sm" tone="muted">{{ copy.locationsHelp }}</BsText>
       <BsText v-if="locationsView.usageLabel" as="p" size="sm" tone="muted" emphasis="semibold">{{ locationsView.usageLabel }}</BsText>
@@ -100,8 +100,8 @@ function updateReceipt(key: keyof BsBusinessReceiptForm, value: string | number 
         </BsField>
       </BsRecordActionDialog>
     </BsPanel>
-    <BsGrid v-if="context" :columns="2" gap="lg">
-    <BsPanel v-if="context" id="receipt-settings" aria-labelledby="receipt-settings-title" padding="md">
+    <BsGrid v-if="context && !loading && !shopError" :columns="2" gap="lg">
+    <BsPanel v-if="context && !loading && !shopError" id="receipt-settings" aria-labelledby="receipt-settings-title" padding="md">
       <BsHeading id="receipt-settings-title" :level="2">{{ copy.receiptTitle }}</BsHeading>
       <BsText as="p" size="sm" tone="muted">{{ copy.receiptHelp }}</BsText>
       <BsText v-if="receiptEditor.loading" role="status" as="p">{{ copy.loading }}</BsText>
@@ -141,7 +141,7 @@ function updateReceipt(key: keyof BsBusinessReceiptForm, value: string | number 
         </BsStack>
       </template>
     </BsPanel>
-    <BsContentSection v-if="context" id="cash-policy" :title="copy.cashTitle" :aria-label="copy.cashTitle">
+    <BsContentSection v-if="context && !loading && !shopError" id="cash-policy" :title="copy.cashTitle" :aria-label="copy.cashTitle">
       <BsText id="cash-policy-help">{{ copy.cashHelp }}</BsText>
       <BsText v-if="cash.loading" role="status">{{ copy.loading }}</BsText>
       <BsText v-else-if="cash.loadError" role="alert">{{ copy.failed }} <BsButton @click="emit('retryCash')">{{ copy.retry }}</BsButton></BsText>
