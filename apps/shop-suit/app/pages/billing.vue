@@ -91,10 +91,11 @@ const purchasablePlans = computed(() => (billing.value?.availablePlans ?? [])
     && (plan.billingInterval === 'monthly' || plan.billingInterval === 'annual')))
 const selectedPlan = computed(() => purchasablePlans.value.find(plan => plan.catalogTermsId === form.catalogTermsId) ?? null)
 const noticeQuote = computed(() => privatePreview.value ? { planName: privatePreview.value.displayName, effectivePriceAmount: privatePreview.value.priceAmount, currency: privatePreview.value.currency, billingInterval: privatePreview.value.billingInterval, priceSource: 'private_offer', blockers: privatePreview.value.blockers } : selectedPlan.value)
-const currentCatalogTermsId = computed(() => purchasablePlans.value.find(plan => plan.planSlug === billing.value?.subscription.planSlug
+const currentCatalogTermsId = computed(() => billing.value?.subscription.accessState === 'active' ? purchasablePlans.value.find(plan => plan.planSlug === billing.value?.subscription.planSlug
   && plan.planVariant === billing.value?.subscription.planVariant
-  && plan.billingInterval === billing.value?.subscription.billingInterval)?.catalogTermsId ?? '')
+  && plan.billingInterval === billing.value?.subscription.billingInterval)?.catalogTermsId ?? '' : '')
 const latestSubmission = computed(() => billing.value?.submissions?.[0] ?? null)
+const checkoutVisible = ref(false)
 const checkoutReady = ref(false)
 const checkoutMode = ref<'test' | 'live' | null>(null)
 const checkoutChecking = ref(false)
@@ -185,6 +186,7 @@ async function startCheckout() {
   finally { if (sameCheckoutContext(context)) { checkoutPending.value = false; scheduleCheckoutPoll() } }
 }
 watch([currentId, isOwner, () => user.value?.id], () => {
+  checkoutVisible.value = false
   ++checkoutGeneration; clearCheckoutTimer(); checkoutReady.value = false; checkoutChecking.value = false
   checkoutPending.value = false; checkoutError.value = ''; checkoutOrders.value = []; checkoutCurrent.value = null; checkoutMode.value = null; checkoutPolls = 0
   if (import.meta.client) void loadCheckoutStatus()
@@ -195,7 +197,7 @@ onMounted(async () => {
   params.delete('xpayOrder'); params.delete('cancelled')
   window.history.replaceState(window.history.state, '', window.location.pathname + (params.size ? `?${params}` : '') + window.location.hash)
   await loadCheckoutStatus()
-  if (isXPayOrderId(returned)) await refreshCheckout(returned)
+  if (isXPayOrderId(returned)) { await refreshCheckout(returned); checkoutVisible.value = !!activeCheckout.value }
 })
 watch(() => activeCheckout.value?.state, state => {
   if (state !== 'pending' && state !== 'creating' && state !== 'open') clearCheckoutTimer()
@@ -257,9 +259,10 @@ function submissionMessage(submission: BillingSubmission) {
   return copy.value.submissionMessages[submission.status]
 }
 
-function choosePlan(plan: ShopPlanOffer) {
+function choosePlan(plan: ShopPlanOffer, intent: 'choose' | 'preview') {
   clearPrivateOffer()
   form.catalogTermsId = plan.catalogTermsId
+  if (intent === 'choose') checkoutVisible.value = true
 }
 
 const en = {
@@ -268,6 +271,8 @@ const en = {
   checkoutHistory: 'X-Pay checkout history', checkoutEmpty: 'No X-Pay checkouts yet.', checkoutTest: 'Test checkout: no real funds are collected.',
   checkoutStates: { creating: 'Checkout is being prepared. You can retry the saved checkout safely.', open: 'Checkout is open. Continue to X-Pay to complete payment.', pending: 'Payment is pending. Access stays unchanged until the server confirms payment.', paid: 'Payment verified. Your subscription summary shows your current access.', requires_review: 'Payment received; access needs review. Contact support before paying again.', expired: 'Checkout expired without confirmed payment. You may start a new checkout.', failed: 'Payment was not completed. You may retry with a new checkout.' },
   checkoutTitle: 'Pay with X-Pay', checkoutHelp: 'Use secure hosted checkout for your selected plan. Payment details stay with X-Pay; no receipt image is needed.',
+  checkoutConsequences: 'Your current access stays unchanged until payment is verified. The chosen plan’s limits apply after activation; your saved data is preserved.',
+  checkoutSavedOrder: 'A saved checkout is already open. This payment resumes that saved order and its quoted amount, rather than creating another charge for the newly chosen card.',
   checkoutTrial: 'You may pay from day one of your trial. You do not need to wait seven days. Paid access starts after verified payment, with trial history preserved.',
   checkoutUnavailable: 'X-Pay checkout is not available yet. Contact support or check again later. Your current access remains unchanged.', checkoutAction: 'Continue to X-Pay',
   privateTitle: 'Private offer', privateHelp: 'Sign in to the intended owner account, then open or paste the private offer link to review its terms. Previewing does not activate access.', privateLink: 'Private offer link', privatePreview: 'Review private terms', privateUnavailable: 'This offer is unavailable for this owner or shop. Check the link, expiry and recipient.', privateClear: 'Clear private offer', privateRedeemed: 'This offer already has a payment notice. Review its status below.',
@@ -293,6 +298,8 @@ const ar = {
   checkoutHistory: 'سجل الدفع عبر X-Pay', checkoutEmpty: 'لا توجد عمليات دفع عبر X-Pay بعد.', checkoutTest: 'دفع تجريبي: لا يتم تحصيل أموال حقيقية.',
   checkoutStates: { creating: 'بنجهّز صفحة الدفع. تقدر تعيد المحاولة لنفس الطلب بأمان.', open: 'طلب الدفع مفتوح. تابع إلى X-Pay لإكمال الدفع.', pending: 'الدفع معلّق. سيظل الوصول دون تغيير حتى يؤكد الخادم الدفع.', paid: 'تم تأكيد الدفع. ملخص الاشتراك يعرض وصولك الحالي.', requires_review: 'تم استلام الدفع ويحتاج الوصول إلى مراجعة. تواصل مع الدعم قبل الدفع مرة أخرى.', expired: 'انتهت صلاحية الطلب دون دفع مؤكد. يمكنك بدء طلب جديد.', failed: 'لم يكتمل الدفع. يمكنك إعادة المحاولة بطلب جديد.' },
   checkoutTitle: 'الدفع بـ X-Pay', checkoutHelp: 'استخدم صفحة الدفع الآمنة للخطة المختارة. تظل بيانات الدفع لدى X-Pay ولا تحتاج إلى رفع صورة إيصال.',
+  checkoutConsequences: 'يظل الوصول الحالي كما هو حتى تأكيد الدفع. تسري حدود الخطة المختارة بعد التفعيل مع الحفاظ على البيانات المحفوظة.',
+  checkoutSavedOrder: 'يوجد دفع محفوظ مفتوح بالفعل. ستستأنف هذه العملية الطلب المحفوظ ومبلغه المعروض دون إنشاء دفعة أخرى للخطة المختارة حديثًا.',
   checkoutTrial: 'يمكنك الدفع من أول يوم في التجربة، ولا يلزم انتظار السبعة أيام. يبدأ الوصول المدفوع بعد تأكيد الدفع مع الاحتفاظ بسجل التجربة.',
   checkoutUnavailable: 'الدفع عبر X-Pay غير متاح بعد. تواصل مع الدعم أو حاول لاحقًا. سيظل وصولك الحالي دون تغيير.', checkoutAction: 'المتابعة إلى X-Pay',
   privateTitle: 'عرض خاص', privateHelp: 'سجّل الدخول بحساب المالك المقصود، ثم افتح رابط العرض الخاص أو الصقه لمراجعة شروطه. المعاينة لا تفعّل الوصول.', privateLink: 'رابط العرض الخاص', privatePreview: 'مراجعة شروط العرض', privateUnavailable: 'هذا العرض غير متاح لهذا المالك أو المتجر. راجع الرابط والصلاحية والمستلم.', privateClear: 'مسح العرض الخاص', privateRedeemed: 'يوجد إشعار دفع لهذا العرض بالفعل. راجع حالته أدناه.',
@@ -348,11 +355,13 @@ const billingView = computed<BsBillingView>(() => {
     notice: sub && ['read_only', 'suspended'].includes(sub.accessState) ? copy.value.readOnly : '', details: [], providerNotice: '',
     latest: latest ? { title: copy.value.latest, status: latest.status, statusLabel: statusLabel(latest.status), summary: `${latest.requestedPlanName} · ${money(latest.effectivePriceAmount, latest.currency)}`, message: submissionMessage(latest), reason: latest.reviewReason ?? '' } : null,
     usage: { items: usageResources.value.map(usagePresentation), loading: false, failed: false },
-    pricing: { variant: 'shop', interval: planPresentation.interval, plans: planPresentation.pricingPlans, intervalOptions: [{ value: 'monthly', label: planPresentation.copy.monthly }, { value: 'annual', label: planPresentation.copy.yearly }], copy: { cycleLabel: planPresentation.copy.cycle, loading: planPresentation.copy.loading, empty: copy.value.noPurchasable, retry: planPresentation.copy.retry, included: planPresentation.copy.included, notIncluded: planPresentation.copy.notIncluded }, annualSaving: planPresentation.annualDiscount === null ? null : planPresentation.copy.annualSaving(planPresentation.annualDiscount), columns: 3, loading: catalogPending.value, error: catalogError.value ? copy.value.catalogFailed : null, testId: 'shop-plan-cards' },
+    pricing: { variant: 'shop', interval: planPresentation.interval, plans: planPresentation.pricingPlans.map(plan => ({ ...plan, notice: undefined })), intervalOptions: [{ value: 'monthly', label: planPresentation.copy.monthly }, { value: 'annual', label: planPresentation.copy.yearly }], copy: { cycleLabel: planPresentation.copy.cycle, loading: planPresentation.copy.loading, empty: copy.value.noPurchasable, retry: planPresentation.copy.retry, included: planPresentation.copy.included, notIncluded: planPresentation.copy.notIncluded }, annualSaving: planPresentation.annualDiscount === null ? null : planPresentation.copy.annualSaving(planPresentation.annualDiscount), columns: 3, loading: catalogPending.value, error: catalogError.value ? copy.value.catalogFailed : null, testId: 'shop-plan-cards' },
     instructions: null,
     privateOffer: { pending: privatePending.value, error: privateError.value, title: preview?.displayName ?? '', summary: preview ? `${money(preview.priceAmount, preview.currency)} · ${intervalLabel(preview.billingInterval)} · ${date(preview.expiresAt)}` : '', limits: preview ? Object.entries(preview.resourceLimits).map(([key, limit]) => ({ key, label: copy.value.resources[key as PlanResourceKey], value: limit == null ? '∞' : String(limit) })) : [], notice: preview?.blockers.length ? copy.value.preservation : '', redeemed: preview?.submissionId ? copy.value.privateRedeemed : '' },
     checkout: { title: copy.value.checkoutTitle, description: copy.value.checkoutHelp, logoLight: '/payments/xpay-light.svg', logoDark: '/payments/xpay-dark.svg', logoAlt: 'X-Pay',
       quote: openCheckout.value ? `${openCheckout.value.planName} · ${money(openCheckout.value.amountMinor / 100, openCheckout.value.currency)}` : quote ? `${quote.planName} · ${money(quote.effectivePriceAmount, quote.currency)} · ${intervalLabel(quote.billingInterval)}` : copy.value.noPurchasable,
+      restrictions: !preview ? planPresentation.pricingPlans.find(plan => plan.id === selectedPlan.value?.planSlug)?.notice : preview.blockers.length ? { title: planPresentation.copy.blocked, body: planPresentation.copy.blockers, items: preview.blockers.map(blocker => `${planPresentation.copy.resources[blocker.resource as PlanResourceKey]}: ${blocker.used} / ${blocker.limit}`), footer: copy.value.preservation } : undefined,
+      consequences: [copy.value.checkoutConsequences, ...(openCheckout.value ? [copy.value.checkoutSavedOrder] : [])],
       notice: [quote?.blockers.length ? copy.value.preservation : copy.value.checkoutTrial, checkoutMode.value === 'test' ? copy.value.checkoutTest : ''].filter(Boolean).join(' '),
       unavailable: !checkoutReady.value && !checkoutChecking.value ? copy.value.checkoutUnavailable : '', action: openCheckout.value ? copy.value.checkoutResume : copy.value.checkoutAction,
       pending: checkoutPending.value, disabled: !checkoutReady.value || checkoutChecking.value || checkoutPending.value || paymentHeld || !quote || !!quote.blockers.length
@@ -368,5 +377,5 @@ const billingView = computed<BsBillingView>(() => {
 function chooseBillingInterval(value: string) { if (value === 'monthly' || value === 'annual') planPresentation.interval = value }
 </script>
 <template>
-  <BsBillingPage v-model:form="billingForm" variant="shop" :copy="billingCopy" :view="billingView" @retry="refresh()" @usage-retry="refresh()" @pricing-retry="refreshCatalog()" @interval="chooseBillingInterval" @variant="planPresentation.chooseVariant" @plan="planPresentation.choose" @private-preview="previewPrivateOffer" @private-clear="clearPrivateOffer" @checkout="startCheckout" @checkout-refresh="refreshCheckout()"/>
+  <BsBillingPage v-model:checkout-visible="checkoutVisible" v-model:form="billingForm" variant="shop" :copy="billingCopy" :view="billingView" @retry="refresh()" @usage-retry="refresh()" @pricing-retry="refreshCatalog()" @interval="chooseBillingInterval" @variant="planPresentation.chooseVariant" @plan="planPresentation.choose" @private-preview="previewPrivateOffer" @private-clear="clearPrivateOffer" @checkout="startCheckout" @checkout-refresh="refreshCheckout()"/>
 </template>

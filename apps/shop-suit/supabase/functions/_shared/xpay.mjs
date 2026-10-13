@@ -28,6 +28,10 @@ export function checkoutBody(order, { returnUrl, cancelUrl, locale = 'en' }) {
   // order MUST be a persisted server-authorized quote, never browser JSON.
   if (!order || order.currency !== 'EGP' || !Number.isSafeInteger(order.amountMinor) || order.amountMinor <= 0
     || !['en', 'ar'].includes(locale)) throw new Error('xpay_invalid_quote')
+  const interval = order.quote?.billingInterval
+  if (interval != null && !['monthly', 'annual'].includes(interval)) throw new Error('xpay_invalid_quote')
+  const cadence = interval === 'annual' ? (locale === 'ar' ? 'سنوي' : 'Yearly') : interval === 'monthly' ? (locale === 'ar' ? 'شهري' : 'Monthly') : ''
+  const name = requiredText(`${requiredText(order.description)}${cadence ? ` · ${cadence}` : ''}`)
   return {
     mode: 'payment', uiMode: 'hosted', currency: 'EGP', locale,
     expiresAfterMinutes: 30,
@@ -35,8 +39,8 @@ export function checkoutBody(order, { returnUrl, cancelUrl, locale = 'en' }) {
     cancelUrl: secureReturnUrl(cancelUrl),
     allowPromotionCodes: false,
     lineItems: [{ priceData: { currency: 'EGP', unitAmount: order.amountMinor,
-      productData: { name: requiredText(order.description) } }, quantity: 1 }],
-    metadata: { orderId: requiredText(order.id) },
+      productData: { name } }, quantity: 1 }],
+    metadata: { orderId: requiredText(order.id), ...(interval ? { billingInterval: interval } : {}) },
     // Freeze the exact quote: account defaults must not add customer fees/VAT.
     feeConfig: { feesPassThrough: false, vatCollectionEnabled: false },
   }

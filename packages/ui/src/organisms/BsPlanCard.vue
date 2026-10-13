@@ -4,7 +4,7 @@ withDefaults(defineProps<{ variant?: 'default' | 'shop'; featured?: boolean; pla
 defineEmits<{ 'update:variant': [value: string]; action: []; 'secondary-action': [] }>()
 </script>
 <template>
-  <BsCard as="article" class="bs-plan-card relative flex min-w-0 flex-col text-start" :class="{ 'border-primary shadow-card': plan.promoted, 'ring-2 ring-primary/20': plan.selected, 'opacity-75': plan.unavailable }" :data-plan="plan.id" :data-featured="variant === 'shop' && featured || undefined" :data-shop-pricing="variant === 'shop' || undefined">
+  <BsCard as="article" class="bs-plan-card relative flex min-w-0 flex-col text-start" :class="{ 'border-primary shadow-card': plan.promoted, 'ring-2 ring-primary/20': variant !== 'shop' && plan.selected, 'opacity-75': plan.unavailable }" :data-plan="plan.id" :data-featured="variant === 'shop' && featured || undefined" :data-shop-pricing="variant === 'shop' || undefined">
     <div class="flex h-full flex-col">
       <span v-if="plan.badge" class="absolute end-4 top-4 rounded-full px-2.5 py-1 text-xs font-bold" :class="plan.badgeTone === 'featured' ? 'bg-brand-gold text-brand-navy-deep' : plan.badgeTone === 'current' ? 'bg-[var(--bs-status-info-bg)] text-[var(--bs-status-info)]' : 'bg-surface-muted text-fg'">{{ plan.badge }}</span>
       <h3 class="text-xl font-black" :class="plan.badge ? 'pe-24' : ''">{{ plan.name }}</h3><p v-if="plan.description" class="mt-2 min-h-12 text-sm text-fg-muted">{{ plan.description }}</p>
@@ -13,14 +13,14 @@ defineEmits<{ 'update:variant': [value: string]; action: []; 'secondary-action':
       <p v-else-if="plan.pricingUnavailable" class="mt-5 text-lg font-bold">{{ plan.pricingUnavailable }}</p>
       <template v-if="variant === 'shop'">
       <NuxtLink v-if="plan.action?.to && !plan.action.disabled" :to="plan.action.to" class="ls-btn mt-6 w-full text-center" :class="plan.action.variant === 'primary' ? 'ls-btn-primary' : ''">{{ plan.action.label }}</NuxtLink>
-      <BsButton v-else-if="plan.action" type="button" class="mt-6 w-full" :variant="plan.action.variant ?? 'default'" :disabled="plan.action.disabled" :pending="plan.action.pending" :aria-pressed="plan.action.pressed" @click="$emit('action')">{{ plan.action.label }}</BsButton>
+      <BsButton v-else-if="plan.action" type="button" class="mt-6 w-full" :data-current-plan="plan.action.disabled && plan.action.pressed || undefined" :variant="plan.action.variant ?? 'default'" :disabled="plan.action.disabled" :pending="plan.action.pending" :aria-pressed="plan.action.pressed" @click="$emit('action')">{{ plan.action.label }}</BsButton>
       <BsButton v-if="plan.secondaryAction" type="button" class="mt-2 w-full" :variant="plan.secondaryAction.variant ?? 'default'" :disabled="plan.secondaryAction.disabled" :pending="plan.secondaryAction.pending" @click="$emit('secondary-action')">{{ plan.secondaryAction.label }}</BsButton>
       </template>
       <BsPlanFeatureList :features="plan.features" :fallback="plan.featureFallback" :included-label="copy.included" :not-included-label="copy.notIncluded" />
       <BsPlanStatus v-if="plan.notice" :notice="plan.notice" />
       <template v-if="variant !== 'shop'">
       <NuxtLink v-if="plan.action?.to && !plan.action.disabled" :to="plan.action.to" class="ls-btn mt-6 w-full text-center" :class="plan.action.variant === 'primary' ? 'ls-btn-primary' : ''">{{ plan.action.label }}</NuxtLink>
-      <BsButton v-else-if="plan.action" type="button" class="mt-6 w-full" :variant="plan.action.variant ?? 'default'" :disabled="plan.action.disabled" :pending="plan.action.pending" :aria-pressed="plan.action.pressed" @click="$emit('action')">{{ plan.action.label }}</BsButton>
+      <BsButton v-else-if="plan.action" type="button" class="mt-6 w-full" :data-current-plan="plan.action.disabled && plan.action.pressed || undefined" :variant="plan.action.variant ?? 'default'" :disabled="plan.action.disabled" :pending="plan.action.pending" :aria-pressed="plan.action.pressed" @click="$emit('action')">{{ plan.action.label }}</BsButton>
       <BsButton v-if="plan.secondaryAction" type="button" class="mt-2 w-full" :variant="plan.secondaryAction.variant ?? 'default'" :disabled="plan.secondaryAction.disabled" :pending="plan.secondaryAction.pending" @click="$emit('secondary-action')">{{ plan.secondaryAction.label }}</BsButton>
       </template>
     </div>
@@ -40,4 +40,6 @@ defineEmits<{ 'update:variant': [value: string]; action: []; 'secondary-action':
 }
 .bs-plan-card[data-shop-pricing] :deep(.bs-plan-features) { padding-block-start: 1rem; border-block-start: 1px solid var(--bs-border); }
 .bs-plan-card__variant-spacer { min-block-size: 5.25rem; }
+.bs-plan-card[data-shop-pricing] :deep([data-current-plan]) { background: var(--bs-color-role-light-surface-muted); color: var(--bs-color-role-light-text-muted); border-color: var(--bs-color-role-light-border); opacity: 1; }
+:global(.dark) .bs-plan-card[data-shop-pricing] :deep([data-current-plan]) { background: var(--bs-color-role-dark-surface-muted); color: var(--bs-color-role-dark-text-muted); border-color: var(--bs-color-role-dark-border); }
 </style>
