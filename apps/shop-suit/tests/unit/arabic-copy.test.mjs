@@ -31,7 +31,7 @@ test('primary owner journeys keep natural Egyptian action and recovery copy', as
     dashboard: ['شوف المبيعات والتحصيلات والمواعيد', 'ده ملخص للشغل بس'],
     appointments: ['مفيش عملاء مستنيين', 'تسجل إن العميل ماجاش؟'],
     cashShifts: ['مقدرناش نحمّل ورديات الخزنة', 'تقفل الوردية'],
-    billing: ['ابعت إشعار الدفع', 'بنراجعها يدويًا', 'مقدرناش نبعت إشعار الدفع'],
+    billing: ['الدفع بـ X-Pay', 'المتابعة إلى X-Pay', 'غير متاح بعد'],
     team: ['ضيف الموظفين', 'مفيش أعضاء في الفريق لسه', 'مقدرناش نحمّل الفريق'],
     expenses: ['الفلوس اللي المتجر صرفها', 'الفترة المحاسبية دي مقفولة', 'مقدرناش نحفظ المصروف'],
     reports: ['دي تقارير للشغل بس', 'مبالغ مستحقة من العملاء', 'مقدرناش نحمّل التقرير'],
@@ -52,7 +52,7 @@ test('plain explanations retain operational and compliance precision', async () 
   assert.match(source.locale, /فترة محاسبية مقفولة/)
   assert.match(source.locale, /مش معناه إن فلوس هتخرج/)
   assert.match(source.locale, /ليس فاتورة ضريبية مصرية أو إيصالًا إلكترونيًا معتمدًا من مصلحة الضرائب/)
-  assert.match(source.billing, /لن يتغير الوصول إلا بعد اعتماد مسؤول المنصة/)
+  assert.match(source.billing, /يبدأ الوصول المدفوع بعد تأكيد الدفع/)
   assert.match(source.convention, /المعنى المرجعي|meaning reference/)
 })
 

@@ -1,6 +1,9 @@
 import { spawn } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
+import { readFile } from 'node:fs/promises'
 
+// Test-only historical setup; public manual RPCs stay retired after XPay.
+const legacyBillingFixture = await readFile(new URL('../../apps/shop-suit/supabase/tests/shop_legacy_billing_fixture.sql', import.meta.url), 'utf8')
 const container = 'supabase_db_building-suit-shop'
 const psqlArgs = ['exec', '-i', container, 'psql', '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-At']
 
@@ -61,8 +64,8 @@ try {
     ('${fixtureOperator}','${fixtureOperator}@plan-limit-race.invalid','x','authenticated','authenticated',now(),'{}','{}',now(),now());
     insert into public.platform_admins(user_id,role,display_name)
       values ('${fixtureOperator}','operator','Plan limit race operator');`)
-  const notice = lastLine((await runSql(authenticated(soloOwner,
-    `select public.submit_shop_billing_notice('${randomUUID()}','${soloShop}','solo',
+  const notice = lastLine((await runSql(legacyBillingFixture + authenticated(soloOwner,
+    `select pg_temp.seed_legacy_submit_shop_billing_notice('${randomUUID()}','${soloShop}','solo',
       (select catalog_terms_id from public.shop_public_plan_catalog()
         where plan_variant='solo_2' and billing_interval='monthly'),
       499,current_date,'SOLO2-RACE');`))).stdout)

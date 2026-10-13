@@ -13,6 +13,7 @@ interface LegalDocument {
 }
 
 defineProps<{
+  presentation?: 'default' | 'flat'
   document: LegalDocument
   eyebrow: string
   lastUpdatedLabel: string
@@ -20,7 +21,7 @@ defineProps<{
 </script>
 
 <template>
-  <main class="mx-auto max-w-5xl px-4 py-10 lg:px-8 lg:py-14">
+  <main :class="{ 'bs-public-legal-page--flat': presentation === 'flat' }" class="mx-auto max-w-5xl px-4 py-10 lg:px-8 lg:py-14">
     <article class="ls-card overflow-hidden">
       <div class="border-b border-[var(--bs-border)] bg-surface-muted px-6 py-8 sm:px-10">
         <p class="text-xs font-bold uppercase tracking-[.18em] text-brand-gold-highlight">{{ eyebrow }}</p>
@@ -42,3 +43,9 @@ defineProps<{
     </article>
   </main>
 </template>
+
+<style>
+.bs-public-legal-page--flat article { box-shadow: none; }
+.bs-public-legal-page--flat h1 { font-size: var(--bs-type-display-size); line-height: var(--bs-type-display-lh); font-weight: var(--bs-weight-extrabold); letter-spacing: normal; }
+.bs-public-legal-page--flat h2 { font-size: var(--bs-type-h2-size); line-height: var(--bs-type-h2-lh); font-weight: var(--bs-weight-bold); letter-spacing: normal; }
+</style>

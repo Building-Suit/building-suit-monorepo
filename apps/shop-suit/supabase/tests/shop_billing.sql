@@ -1,3 +1,4 @@
+-- Historical manual records are seeded by rolled-back pg_temp fixtures; current public writes stay retired.
 -- HOT-09: seven-day boundary, owner isolation, manual notice review,
 -- approval idempotency, read-only expiry, and immutable evidence.
 
@@ -33,7 +34,8 @@ begin
   loop
     if not function_row.prosecdef
       or function_row.proconfig is distinct from array['search_path=""']::text[]
-      or not has_function_privilege('authenticated', function_row.oid, 'execute')
+      or has_function_privilege('authenticated', function_row.oid, 'execute') is distinct from
+        (function_row.proname <> 'submit_shop_billing_notice' or to_regclass('public.shop_xpay_orders') is null)
       or has_function_privilege('anon', function_row.oid, 'execute') then
       raise exception 'unsafe billing wrapper: %', function_row.proname;
     end if;
@@ -81,10 +83,17 @@ begin
     raise exception 'new trial is not exactly 7 days';
   end if;
 
-  v_notice := public.submit_shop_billing_notice(
+  if to_regclass('public.shop_xpay_orders') is not null then
+    begin
+      perform public.submit_shop_billing_notice(gen_random_uuid(),v_shop,1199,current_date,'RETIRED');
+      raise exception 'new manual notice accepted after XPay retirement';
+    exception when insufficient_privilege then null; end;
+  end if;
+
+  v_notice := pg_temp.seed_legacy_submit_shop_billing_notice(
     (select notice_request_id from shop_billing_fixture), v_shop, 1199, current_date, 'IPN-SS-001'
   );
-  v_replay := public.submit_shop_billing_notice(
+  v_replay := pg_temp.seed_legacy_submit_shop_billing_notice(
     (select notice_request_id from shop_billing_fixture), v_shop, 1199, current_date, 'IPN-SS-001'
   );
   if v_notice <> v_replay
@@ -94,7 +103,7 @@ begin
   end if;
   perform set_config('ss_billing.notice', v_notice::text, true);
   begin
-    perform public.submit_shop_billing_notice(
+    perform pg_temp.seed_legacy_submit_shop_billing_notice(
       (select notice_request_id from shop_billing_fixture), v_shop, 1200, current_date, 'IPN-SS-001'
     );
     raise exception 'notice request key accepted different payload';
@@ -107,7 +116,7 @@ begin
     );
     raise exception 'owner self-activated billing';
   exception when insufficient_privilege then null; end;
-  v_notice := public.submit_shop_billing_notice(
+  v_notice := pg_temp.seed_legacy_submit_shop_billing_notice(
     gen_random_uuid(), v_shop, 1199, current_date, 'IPN-SS-REJECT'
   );
   perform set_config('ss_billing.reject_notice', v_notice::text, true);
@@ -133,7 +142,7 @@ declare v_shop uuid := current_setting('ss_billing.shop')::uuid;
 begin
   begin perform public.shop_billing_read(v_shop); raise exception 'employee read owner billing';
   exception when insufficient_privilege then null; end;
-  begin perform public.submit_shop_billing_notice(gen_random_uuid(), v_shop, 1, current_date, 'EMPLOYEE'); raise exception 'employee submitted billing';
+  begin perform pg_temp.seed_legacy_submit_shop_billing_notice(gen_random_uuid(), v_shop, 1, current_date, 'EMPLOYEE'); raise exception 'employee submitted billing';
   exception when insufficient_privilege then null; end;
 end;
 $$;
@@ -149,7 +158,7 @@ declare v_shop uuid := current_setting('ss_billing.shop')::uuid;
 begin
   begin perform public.shop_billing_read(v_shop); raise exception 'cross-shop billing read';
   exception when insufficient_privilege then null; end;
-  begin perform public.submit_shop_billing_notice(gen_random_uuid(), v_shop, 1, current_date, 'CROSS-SHOP'); raise exception 'cross-shop billing submission';
+  begin perform pg_temp.seed_legacy_submit_shop_billing_notice(gen_random_uuid(), v_shop, 1, current_date, 'CROSS-SHOP'); raise exception 'cross-shop billing submission';
   exception when insufficient_privilege then null; end;
 end;
 $$;
@@ -252,7 +261,7 @@ set local role authenticated;
 do $$
 declare v_shop uuid := current_setting('ss_billing.shop')::uuid; v_notice uuid; v_read jsonb;
 begin
-  v_notice := public.submit_shop_billing_notice(
+  v_notice := pg_temp.seed_legacy_submit_shop_billing_notice(
     gen_random_uuid(), v_shop, 'multi', 999, current_date, 'IPN-SS-UPGRADE'
   );
   v_read := public.shop_billing_read(v_shop);
@@ -349,7 +358,7 @@ set local role authenticated;
 do $$
 declare v_shop uuid := current_setting('ss_billing.shop')::uuid; v_notice uuid; v_item jsonb;
 begin
-  v_notice := public.submit_shop_billing_notice(
+  v_notice := pg_temp.seed_legacy_submit_shop_billing_notice(
     gen_random_uuid(), v_shop, 'multi', 499, current_date, 'IPN-SS-FOUNDER'
   );
   select item into v_item from jsonb_array_elements(public.shop_billing_read(v_shop) -> 'submissions') item
@@ -439,7 +448,7 @@ declare v_shop uuid; v_notice uuid;
 begin
   v_shop := public.create_owner_shop('Blocked downgrade shop', 'multi', 'mixed');
   perform public.save_shop_location(v_shop, null, 'Second branch', 'BR-2', null, null);
-  v_notice := public.submit_shop_billing_notice(
+  v_notice := pg_temp.seed_legacy_submit_shop_billing_notice(
     gen_random_uuid(), v_shop, 'solo', 349, current_date, 'IPN-SS-DOWNGRADE'
   );
   perform set_config('ss_billing.downgrade_shop', v_shop::text, true);
@@ -553,7 +562,7 @@ declare
   v_affected integer;
   v_immutable_object jsonb;
 begin
-  v_reserved := public.reserve_shop_billing_payment_evidence(
+  v_reserved := pg_temp.seed_legacy_reserve_shop_billing_payment_evidence(
     v_submission, 'transfer receipt.png', 'image/png', 1024, repeat('a', 64)
   );
   perform set_config('ss_billing.evidence_id', v_reserved ->> 'evidenceId', true);
@@ -583,26 +592,26 @@ begin
       v_reserved ->> 'objectName', '{"mimetype":"application/pdf","contentLength":1024}') then
     raise exception 'invalid Storage metadata bypassed immutable reservation';
   end if;
-  insert into storage.objects (bucket_id, name, metadata)
-  values ('shop-payment-evidence', v_reserved ->> 'objectName',
+  -- Seed an already-uploaded historical object; owner INSERT remains retired.
+  perform pg_temp.seed_legacy_payment_object(v_reserved ->> 'objectName',
     jsonb_build_object('mimetype', 'image/png', 'size', 1024));
   if jsonb_array_length(public.shop_billing_payment_evidence_read(v_submission)) <> 1 then
     raise exception 'uploaded owner evidence is not readable';
   end if;
   begin
-    perform public.reserve_shop_billing_payment_evidence(
+    perform pg_temp.seed_legacy_reserve_shop_billing_payment_evidence(
       v_submission, '../unsafe.exe', 'application/octet-stream', 1024, repeat('b', 64));
     raise exception 'unsafe payment evidence was reserved';
   exception when sqlstate '22023' then
     if sqlerrm <> 'BILLING_PAYMENT_EVIDENCE_INVALID' then raise; end if;
   end;
   for v_index in 2..5 loop
-    perform public.reserve_shop_billing_payment_evidence(
+    perform pg_temp.seed_legacy_reserve_shop_billing_payment_evidence(
       v_submission, 'receipt-' || v_index || '.pdf', 'application/pdf', 2048,
       repeat(v_index::text, 64));
   end loop;
   begin
-    perform public.reserve_shop_billing_payment_evidence(
+    perform pg_temp.seed_legacy_reserve_shop_billing_payment_evidence(
       v_submission, 'receipt-6.pdf', 'application/pdf', 2048, repeat('6', 64));
     raise exception 'payment evidence count limit was bypassed';
   exception when sqlstate '22023' then
@@ -649,7 +658,7 @@ begin
     raise exception 'other user listed payment evidence';
   end if;
   begin
-    perform public.reserve_shop_billing_payment_evidence(
+    perform pg_temp.seed_legacy_reserve_shop_billing_payment_evidence(
       current_setting('ss_billing.downgrade_notice')::uuid,
       'cross-shop.pdf', 'application/pdf', 1024, repeat('7', 64));
     raise exception 'non-requester reserved payment evidence';

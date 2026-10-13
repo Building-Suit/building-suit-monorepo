@@ -2,7 +2,7 @@
 
 `packages/design-tokens/tokens.json` is the editable token source. It combines Building Suit's brand foundations with the latest Ledger Suit application palette, promoted to the shared system by [ADR 0003](../architecture/decisions/0003-ledger-neutral-palette.md). `pnpm tokens:generate` produces CSS variables, TypeScript and Tailwind color references. `pnpm tokens:check` detects drift. The preserved original token files in the documentation archive describe provenance and are not runtime imports.
 
-All apps share Ledger's neutral surfaces: near-white/paper in light mode and ink/charcoal/graphite in dark mode. Building Navy and Premium Gold remain the brand/action colors; navy still appears in marketing and auth showcases. Hover, pressed, focus, text, border and overlay roles are canonical too, including the system-preference dark theme. These are shared tokens, not product CSS overrides. Semantic status colors, Manrope for Latin, IBM Plex Sans Arabic for Arabic and Hugeicons Stroke Rounded remain the shared foundations. Logos and app icons are served from `packages/brand/assets`; Ledger Suit and Shop Suit each provide canonical mark and wordmark assets in light and dark variants.
+All apps share Ledger's neutral surfaces: near-white/paper in light mode and ink/charcoal/graphite in dark mode. Building Navy and Premium Gold remain the brand/action colors; navy still appears in marketing and auth showcases. Hover, pressed, focus, text, border and overlay roles are canonical too, including the system-preference dark theme. These are shared tokens, not product CSS overrides. Semantic status colors, Manrope for Latin (the installed variable face is named `Manrope Variable`, which must lead the canonical font-family token), IBM Plex Sans Arabic for Arabic and Hugeicons Stroke Rounded remain the shared foundations. Logos and app icons are served from `packages/brand/assets`; Ledger Suit and Shop Suit each provide canonical mark and wordmark assets in light and dark variants.
 
 The application language uses 10px controls, 14px content containers and 20px overlays. Ordinary cards receive only a hairline border and near-flat elevation; menus, dialogs and other temporary surfaces own the stronger shadows. Nested content uses `ls-card-flat` so page composition does not become stacks of floating cards. Marketing may be more expressive, but product screens retain the same semantic roles and restrained gold accents.
 
@@ -53,3 +53,22 @@ Future Suit administration extensions use the [typed registration contract](futu
 Workspace panels use the canonical card surface, border, radius, elevation and padding scale. `BsAccessTabs` delegates to `BsTabs`, including counts and keyboard navigation, so access-management tabs use the same horizontal presentation as other workspaces. Product adapters explicitly provide home destinations when their dashboard differs from `/dashboard`.
 
 `BsCard` supports the same responsive `span` contract as shared layout primitives. Dashboard charts and onboarding cards use it to occupy their intended grid tracks; the span resets on narrow screens.
+
+`BsDashboardMetric` renders product-formatted KPI values with consistent title/value/hint structure and preserves source navigation as semantic events. Its 144px minimum height and 20px padding are canonical component tokens, matching the approved Shop dashboard specimen. Values use the existing h2 type scale; cards grow for translated or longer content. The complete financial notice remains product-owned and visible beside the metric grid.
+
+Shop public/auth frames explicitly opt into `presentation: flat` through product configuration. The shared `BsAuthLayout`/`BsProductAuthFrame`/`BsSignInPage` default remains unchanged for other Suits. Flat form surfaces use canonical background/border/card-radius, no elevation, and h2 heading tokens; showcase titles use the display tokens. `BsPublicLegalPage` supports the same optional flat presentation for canonical display/h2 headings and a flat content surface. Content, account/session behavior and legal policy remain product-owned. The component catalogue describes this opt-in; native variant and missing-reference comparisons remain separate acceptance work.
+
+
+### Account lifecycle page templates
+
+`BsAccountActivationPage`, `BsAccountProvisioningPage` and `BsOwnerInvitationPage`
+are explicitly exported complete page templates. Their finite content maps and
+named typed view models contain only projected labels, state and capabilities.
+Controlled field models and semantic events return changes to the owning app;
+the templates do not call Auth, select tenants or calculate plan entitlements.
+The activation page shows original trial history and actual grant/audit dates.
+Provisioning distinguishes active access, invitation acceptance and owner email
+verification; a separate resend requires acknowledgment. The owner template
+shows password fields only after the app verifies target ownership.
+The documentation `/components` page includes their contracts and an inert
+unavailable-invitation preview.

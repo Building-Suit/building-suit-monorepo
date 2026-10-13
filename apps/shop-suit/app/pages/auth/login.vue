@@ -100,7 +100,7 @@ watchEffect(async () => {
 <template>
   <BsSignInPage
     v-model:email="email" v-model:password="password"
-    :product="{ name: 'Shop Suit', assetPrefix: '/brand/shop-suit', homeLabel: locale === 'ar' ? 'الرئيسية' : 'Home', title: `${t('hero.title')} ${t('hero.subtitle')}`, description: t('hero.description') }"
+    :product="{ name: 'Shop Suit', presentation: 'flat', assetPrefix: '/brand/shop-suit', homeLabel: locale === 'ar' ? 'الرئيسية' : 'Home', title: `${t('hero.title')} ${t('hero.subtitle')}`, description: t('hero.description') }"
     :copy="{ eyebrow: 'Shop Suit', title: t('auth.loginTitle'), description: t('auth.loginSubtitle'), email: t('auth.email'), password: t('auth.password'), submit: t('auth.loginAction'), pending: t('auth.loginAction'), accountPrompt: t('auth.noAccount'), signup: t('auth.signupAction') }"
     signup-to="/auth/signup" :forgot="{ to: '/auth/forgot-password', label: t('auth.forgotPassword') }"
     :pending="pending" :error="errorMessage" :hydrated="clientReady" @submit="onSubmit"

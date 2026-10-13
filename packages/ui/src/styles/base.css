@@ -1604,23 +1604,31 @@ body {
 .bs-line-item__fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr)); gap: var(--bs-space-3); }
 .bs-line-item__error { color: var(--bs-text); border-inline-start: 2px solid var(--bs-status-error); padding-inline-start: var(--bs-space-2); }
 .bs-line-item fieldset > button { margin-block-start: var(--bs-space-2); }
-.bs-printable-document { max-width: 60rem; margin-inline: auto; }
+.bs-print-actions { align-items: end; padding: var(--bs-space-4); border: 1px solid var(--bs-border); border-radius: var(--bs-radius-card); background: var(--bs-surface); }
+.bs-print-actions > * { min-width: 0; max-width: 100%; }
+.bs-printable-document { width: 100%; min-width: 0; max-width: 60rem; margin-inline: auto; }
 .bs-printable-document__paper { background: var(--bs-surface); border: 1px solid var(--bs-border); padding: var(--bs-space-5); margin-block: var(--bs-space-4); }
 .bs-printable-document[data-format='receipt'] { max-width: 80mm; }
 .bs-document-header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--bs-space-4); margin-block-end: var(--bs-space-5); }
 .bs-document-header h1 { font-size: 1.25rem; font-weight: 600; }
 .bs-document-header p { overflow-wrap: anywhere; }
-.bs-document-lines { overflow-x: auto; }
+.bs-document-lines { min-width: 0; max-width: 100%; overflow-x: auto; }
 .bs-document-lines table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
 .bs-document-lines caption { text-align: start; color: var(--bs-text-muted); margin-block-end: var(--bs-space-2); }
 .bs-document-lines th, .bs-document-lines td { padding: var(--bs-space-2); text-align: end; border-block-end: 1px solid var(--bs-border); vertical-align: top; }
 .bs-document-lines th:first-child { text-align: start; }
 .bs-document-lines small { display: block; font-weight: 400; color: var(--bs-text-muted); }
+.bs-document-lines th:first-child { overflow-wrap: anywhere; }
+/* A4 previews fit narrow workspaces; physical page dimensions apply only in print. */
+.bs-printable-document[data-format='a4'] .bs-document-lines table { table-layout: fixed; }
+.bs-printable-document[data-format='a4'] .bs-document-lines th,
+.bs-printable-document[data-format='a4'] .bs-document-lines td { overflow-wrap: anywhere; }
+.bs-printable-document[data-format='a4'] .bs-document-lines th:first-child { width: 34%; }
 /* Thermal documents must fit all amounts on paper without a horizontal scroller. */
 .bs-printable-document[data-format='receipt'] .bs-document-lines table { table-layout: fixed; font-size: var(--bs-type-caption-size); }
 .bs-printable-document[data-format='receipt'] .bs-document-lines th,
 .bs-printable-document[data-format='receipt'] .bs-document-lines td { padding: var(--bs-space-1); overflow-wrap: normal; }
-.bs-printable-document[data-format='receipt'] .bs-document-lines th:first-child { width: 28%; }
+.bs-printable-document[data-format='receipt'] .bs-document-lines th:first-child { width: 28%; overflow-wrap: anywhere; }
 .bs-printable-document[data-format='receipt'] .bs-document-lines th:nth-child(2) { width: 8%; }
 .bs-printable-document[data-format='receipt'] .bs-document-lines th:nth-child(3),
 .bs-printable-document[data-format='receipt'] .bs-document-lines th:nth-child(4) { width: 32%; }

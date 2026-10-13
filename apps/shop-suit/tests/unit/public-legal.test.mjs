@@ -24,14 +24,18 @@ test('Shop legal routes retain product metadata through the shared legal templat
   assert.match(page, /lastUpdatedLabel/)
 })
 
-test('legal copy is bilingual and describes Shop manual digital delivery accurately', async () => {
+test('legal copy is bilingual and describes X-Pay digital delivery accurately', async () => {
   const legal = await read('app/utils/legal.ts')
   assert.match(legal, /support@building-suit\.com/)
   assert.match(legal, /\+201500240770/)
   assert.match(legal, /Cairo, Egypt/)
   assert.match(legal, /القاهرة، مصر/)
   assert.match(legal, /We do not sell or ship physical goods/)
-  assert.match(legal, /operator-configured InstaPay or instant bank transfer/)
+  assert.match(legal, /New subscription payments use X-Pay hosted checkout when available/)
+  assert.match(legal, /day one of the trial/)
+  assert.match(legal, /verified server-side paid result/)
+  assert.match(legal, /Previous manual transfer notices and receipt evidence remain/)
+  assert.doesNotMatch(legal, /InstaPay|إشعار تحويل عبر/)
   assert.match(legal, /no automatic refund or fixed processing time is promised/)
   assert.doesNotMatch(legal, /Paymob|card payments are processed|automatic bank verification or customer self-activation/)
   for (const key of ["about: {", "privacy: {", "delivery: {", "refund: {", "terms: {"]) assert.match(legal, new RegExp(key.replace('{', '\\{')))

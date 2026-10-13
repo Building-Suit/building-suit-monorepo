@@ -1,10 +1,13 @@
 <script setup lang="ts">
+import { validCatalogImage } from '~/utils/catalogMedia'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 
 definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
 
 type Service = {
   id: string
+  imageUrl?: string | null
+  imageObjectName?: string | null
   name: string
   description: string | null
   baseSalePrice: number
@@ -19,7 +22,7 @@ type Service = {
   categoryName: string | null
 }
 type Category = { id: string; name: string }
-type ServicePage = { items: Service[]; total: number; page: number; pageSize: number }
+type ServicePage = { supportsUploads?: boolean; supportsMedia?: boolean; items: Service[]; total: number; page: number; pageSize: number }
 type SchedulingOptions = {
   locations: Array<{ id: string; name: string }>
   staff: Array<{ membershipId: string; name: string; locationIds: string[] }>
@@ -28,6 +31,7 @@ type SchedulingOptions = {
 const confirmation = useConfirmation()
 const { push: pushToast } = useToasts()
 const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const media = useCatalogMedia()
 const { locale } = useI18n()
 const { current, currentId, loading: shopLoading } = useShop()
 const isArabic = computed(() => locale.value === 'ar')
@@ -39,17 +43,22 @@ const editingId = ref<string | null>(null)
 const archivingId = ref<string | null>(null)
 const actionError = ref('')
 const form = reactive({
-  name: '', description: '', price: 0,
+  imageObjectName: null as string | null, imageUrl: '', name: '', description: '', price: 0,
   discountType: 'amount' as 'amount' | 'percent', discountValue: 0,
   schedulingEnabled: false, durationMinutes: 30 as number | null, cleanupMinutes: 0,
   locationIds: [] as string[], staffMembershipIds: [] as string[],
   categoryId: '',
 })
-const { visible: showForm, pending: saving, dirty: formDirty } = useRecordAction(() => form)
+const upload = useCatalogImageUpload(currentId, 'services', objectName => { form.imageObjectName = objectName; form.imageUrl = '' })
+const { visible: showForm, pending: saving, dirty: formDirty } = useRecordAction(() => ({ ...form, imageSelection: upload.selectedName.value }))
+function removeImage() { upload.reset(); form.imageUrl = ''; form.imageObjectName = null }
+watch(showForm, visible => { if (!visible) upload.reset() })
 
 const copy = computed(() => isArabic.value ? {
+  imageUpload: { choose: 'اختيار صورة', replace: 'استبدال الصورة', remove: 'إزالة', retry: 'إعادة المحاولة', help: 'اختر صورة JPEG أو PNG أو WebP، حتى ٥ ميجابايت و١٦ مليون بكسل.', uploading: 'جارٍ رفع الصورة…', uploaded: 'تم رفع الصورة', error: 'تعذّر رفع الصورة. أعد المحاولة أو اختر صورة أخرى.', invalid: 'اختر صورة JPEG أو PNG أو WebP صالحة، حتى ٥ ميجابايت و١٦ مليون بكسل.', placeholder: 'بدون صورة' },
+  imagePlaceholder: 'بدون صورة', imageLabel: 'الصورة (اختياري)', imageUnavailable: 'تعديل الصور غير متاح لهذا الكتالوج بعد.', imageInvalid: 'الصورة المحفوظة غير صالحة. أزلها أو استبدلها.',
   title: 'الخدمات', subtitle: 'ظبط الخدمات وأسعارها، وشغّل الحجز بس للخدمات اللي محتاجة مواعيد.',
-  add: 'إضافة خدمة', edit: 'تعديل', archive: 'أرشفة', cancel: 'إلغاء', save: 'حفظ الخدمة', saving: 'بنحفظ…',
+  add: 'إضافة خدمة', edit: 'تعديل', editTitle: 'تعديل الخدمة', archive: 'أرشفة', cancel: 'إلغاء', save: 'حفظ الخدمة', saving: 'بنحفظ…',
   saved: 'اتحفظت الخدمة.', archived: 'اتأرشفت الخدمة.', name: 'اسم الخدمة', description: 'وصف اختياري',
   price: 'سعر البيع', discountType: 'نوع الخصم', discountValue: 'قيمة الخصم', amount: 'مبلغ', percent: 'نسبة مئوية', net: 'السعر بعد الخصم', category: 'التصنيف', allCategories: 'كل التصنيفات', import: 'الاستيراد والإعداد',
   scheduling: 'الحجز بالمواعيد', schedulingHelp: 'حدد مدة الخدمة والفروع والموظفين اللي يقدّموا الخدمة. باقي الخدمات هتفضل زي ما هي.',
@@ -62,8 +71,10 @@ const copy = computed(() => isArabic.value ? {
   mismatch: 'يجب أن يكون كل موظف مؤهلًا للعمل في فرع واحد على الأقل من الفروع المختارة.',
   archiveConfirm: 'تأرشف الخدمة دي؟ المبيعات القديمة هتفضل محفوظة.',
 } : {
+  imageUpload: { choose: 'Choose image', replace: 'Replace image', remove: 'Remove', retry: 'Retry', help: 'Choose JPEG, PNG or WebP, up to 5 MB and 16 million pixels.', uploading: 'Uploading image…', uploaded: 'Image uploaded', error: 'Image upload failed. Retry or choose another image.', invalid: 'Choose a valid JPEG, PNG or WebP image up to 5 MB and 16 million pixels.', placeholder: 'No image' },
+  imagePlaceholder: 'No image', imageLabel: 'Image (optional)', imageUnavailable: 'Image editing is not available for this catalog yet.', imageInvalid: 'The saved image is invalid. Remove or replace it.',
   title: 'Services', subtitle: 'Manage services and prices, and opt only appointment-based services into scheduling.',
-  add: 'Add service', edit: 'Edit', archive: 'Archive', cancel: 'Cancel', save: 'Save service', saving: 'Saving…',
+  add: 'Add service', edit: 'Edit', editTitle: 'Edit service', archive: 'Archive', cancel: 'Cancel', save: 'Save service', saving: 'Saving…',
   saved: 'Service saved.', archived: 'Service archived.', name: 'Service name', description: 'Optional description',
   price: 'Sale price', discountType: 'Discount type', discountValue: 'Discount value', amount: 'Amount', percent: 'Percent', net: 'Net price', category: 'Category', allCategories: 'All categories', import: 'Import & setup',
   scheduling: 'Appointment scheduling', schedulingHelp: 'Set service duration, available locations, and eligible staff. Other services remain unchanged.',
@@ -98,11 +109,12 @@ const emptyOptions = (): SchedulingOptions => ({ locations: [], staff: [] })
 const { data: servicesPage, pending, error, refresh } = useAsyncData(
   'shop-data:services', async (): Promise<ServicePage> => {
     if (!currentId.value) return emptyPage()
-    const { data, error: queryError } = await shopRpc.rpc('list_services_by_category', {
+    const args = {
       p_shop_id: currentId.value, p_search: search.value.trim() || null,
       p_category_id: categoryFilter.value || null,
       p_page: page.value, p_page_size: pageSize,
-    })
+    }
+    const { data, error: queryError } = await media.request('services', args, () => shopRpc.rpc('list_services_by_category', args))
     if (queryError) throw queryError
     return data as ServicePage
   }, { watch: [currentId, search, categoryFilter, page], default: emptyPage },
@@ -131,10 +143,12 @@ function money(value: number) {
   return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { style: 'currency', currency: 'EGP', maximumFractionDigits: 2 }).format(value)
 }
 function resetForm() {
+  upload.reset()
+  form.imageObjectName = null
   editingId.value = null
   showForm.value = false
   actionError.value = ''
-  Object.assign(form, { name: '', description: '', price: 0, discountType: 'amount', discountValue: 0,
+  Object.assign(form, { imageUrl: '', name: '', description: '', price: 0, discountType: 'amount', discountValue: 0,
     schedulingEnabled: false, durationMinutes: 30, cleanupMinutes: 0, locationIds: [], staffMembershipIds: [], categoryId: '' })
 }
 function openCreate() {
@@ -143,8 +157,10 @@ function openCreate() {
   showForm.value = true
 }
 function openEdit(service: Service) {
+  upload.reset(service.imageUrl ?? '')
+  form.imageObjectName = service.imageObjectName ?? null
   editingId.value = service.id
-  Object.assign(form, { name: service.name, description: service.description ?? '', price: Number(service.baseSalePrice),
+  Object.assign(form, { imageUrl: service.imageUrl ?? '', name: service.name, description: service.description ?? '', price: Number(service.baseSalePrice),
     discountType: service.defaultDiscountType, discountValue: Number(service.defaultDiscountValue),
     schedulingEnabled: service.schedulingEnabled, durationMinutes: service.durationMinutes ?? 30,
     cleanupMinutes: Number(service.cleanupMinutes), locationIds: [...service.locationIds], staffMembershipIds: [...service.staffMembershipIds], categoryId: service.categoryId ?? '' })
@@ -152,6 +168,8 @@ function openEdit(service: Service) {
   showForm.value = true
 }
 function readableError(message?: string) {
+  if (message === 'INVALID_CATALOG_IMAGE') return copy.value.imageInvalid
+  if (message === 'CATALOG_MEDIA_UNAVAILABLE') return copy.value.imageUnavailable
   const quotaMessage = planQuotaMessage(message, locale.value)
   if (quotaMessage) return quotaMessage
   if (message === 'SHOP_SUBSCRIPTION_INACTIVE' || message === 'SHOP_PERMISSION_DENIED') return copy.value.access
@@ -169,12 +187,14 @@ function isFormValid() {
       && form.cleanupMinutes <= 240 && form.locationIds.length > 0 && form.staffMembershipIds.length > 0))
 }
 async function save() {
-  if (!currentId.value || saving.value || !canManage.value) return
+  if (!currentId.value || saving.value || ['uploading', 'error', 'invalid'].includes(upload.status.value) || !canManage.value) return
   actionError.value = ''
   if (!isFormValid()) { actionError.value = copy.value.invalid; return }
+  if (!form.imageObjectName && !validCatalogImage(form.imageUrl)) { actionError.value = copy.value.imageInvalid; return }
   saving.value = true
   try {
-    const { error: saveError } = await shopRpc.rpc('save_service_with_category', {
+    const args = {
+      ...(servicesPage.value.supportsUploads ? { imageObjectName: form.imageObjectName } : {}),
       p_shop_id: currentId.value, p_service_id: editingId.value, p_name: form.name.trim(),
       p_description: form.description.trim() || null, p_base_sale_price: Number(form.price),
       p_discount_type: form.discountType, p_discount_value: Number(form.discountValue),
@@ -184,8 +204,9 @@ async function save() {
       p_location_ids: form.schedulingEnabled ? form.locationIds : [],
       p_staff_membership_ids: form.schedulingEnabled ? form.staffMembershipIds : [],
       p_category_id: form.categoryId || null,
-    })
-    if (saveError) throw saveError
+    }
+    const { error: saveError } = await media.request('save_service', args, () => shopRpc.rpc('save_service_with_category', args), !form.imageObjectName && form.imageUrl.trim() ? new URL(form.imageUrl.trim()).href : null, servicesPage.value.supportsMedia === true)
+    if (saveError) throw new Error(saveError.message)
     resetForm(); await refresh(); pushToast({ tone: 'success', title: copy.value.saved })
   } catch (caught) { actionError.value = planQuotaMessage(caught, locale.value) ?? readableError(caught instanceof Error ? caught.message : undefined) }
   finally { saving.value = false }
@@ -206,13 +227,13 @@ useShopRealtime('services', () => formDirty.value)
 const categoryOptions = computed(() => [{ value: '', label: copy.value.allCategories }, ...categories.value.map(category => ({ value: category.id, label: category.name }))])
 const itemViews = computed(() => services.value.map(service => ({ id: service.id, name: service.name, description: service.description ?? undefined, category: service.categoryName || '—', sku: '', barcode: '', price: money(netPrice(service)), schedule: service.schedulingEnabled ? `${service.durationMinutes} + ${service.cleanupMinutes} ${isArabic.value ? 'دقيقة' : 'min'}` : '—' })))
 const editorForm = computed({
-  get: () => ({ name: form.name, description: form.description, sku: '', barcode: '', price: form.price, category: form.categoryId, discount: { type: form.discountType, value: form.discountValue }, schedule: { enabled: form.schedulingEnabled, duration: form.durationMinutes, cleanup: form.cleanupMinutes, locations: [...form.locationIds], staff: [...form.staffMembershipIds] } }),
-  set: (value: import('@building-suit/ui/types/cataloguePresentation').BsCatalogueForm) => Object.assign(form, { name: value.name, description: value.description, price: value.price, categoryId: value.category, discountType: value.discount.type as 'amount' | 'percent', discountValue: value.discount.value, schedulingEnabled: value.schedule.enabled, durationMinutes: value.schedule.duration, cleanupMinutes: value.schedule.cleanup, locationIds: value.schedule.locations, staffMembershipIds: value.schedule.staff }),
+  get: () => ({ imageUrl: form.imageUrl, name: form.name, description: form.description, sku: '', barcode: '', price: form.price, category: form.categoryId, discount: { type: form.discountType, value: form.discountValue }, schedule: { enabled: form.schedulingEnabled, duration: form.durationMinutes, cleanup: form.cleanupMinutes, locations: [...form.locationIds], staff: [...form.staffMembershipIds] } }),
+  set: (value: import('@building-suit/ui/types/cataloguePresentation').BsCatalogueForm) => Object.assign(form, { imageUrl: value.imageUrl ?? '', name: value.name, description: value.description, price: value.price, categoryId: value.category, discountType: value.discount.type as 'amount' | 'percent', discountValue: value.discount.value, schedulingEnabled: value.schedule.enabled, durationMinutes: value.schedule.duration, cleanupMinutes: value.schedule.cleanup, locationIds: value.schedule.locations, staffMembershipIds: value.schedule.staff }),
 })
 const schedulingView = computed(() => ({ loading: schedulingOptionsPending.value, error: schedulingOptionsError.value ? readErrorMessage.value : null, locations: schedulingOptions.value.locations.map(location => ({ value: location.id, label: location.name })), staff: schedulingOptions.value.staff.map(member => ({ value: member.membershipId, label: member.name })) }))
 function editById(id: string) { const row = services.value.find(service => service.id === id); if (row) openEdit(row) }
 function archiveById(id: string) { const row = services.value.find(service => service.id === id); if (row) return archive(row) }
 </script>
 <template>
-  <BsCataloguePage v-model:form="editorForm" v-model:visible="showForm" v-model:category="categoryFilter" kind="service" :copy="{ ...copy, tablePrice: copy.net }" :context="{ available: Boolean(current), loading: shopLoading, dashboardTo: '/dashboard', importTo: '/catalog-import' }" :rows="itemViews" :categories="categoryOptions" :table="{ loading: pending, error: error ? readErrorMessage : null, canManage, archivePendingId: archivingId, pageSize, page, total: servicesPage.total, filtered: Boolean(servicesPage.total) }" :editor="{ editing: Boolean(editingId), dirty: formDirty, pending: saving, error: actionError, priceMax: 999999999.99 }" :scheduling="schedulingView" :discounts="[{ value: 'amount', label: copy.amount }, { value: 'percent', label: copy.percent }]" @search="search = $event" @page="page = $event" @retry="refresh()" @create="openCreate" @edit="editById" @archive="archiveById" @submit="save" />
+  <BsCataloguePage v-model:form="editorForm" v-model:visible="showForm" v-model:category="categoryFilter" kind="service" :copy="{ ...copy, tablePrice: copy.net }" :context="{ available: Boolean(current), loading: shopLoading, dashboardTo: '/dashboard', importTo: '/catalog-import' }" :rows="itemViews" :categories="categoryOptions" :table="{ loading: pending, error: error ? readErrorMessage : null, canManage, archivePendingId: archivingId, pageSize, page, total: servicesPage.total, filtered: Boolean(servicesPage.total) }" :editor="{ uploadBlocked: ['uploading', 'error', 'invalid'].includes(upload.status.value), mediaSupported: servicesPage.supportsUploads === true, editing: Boolean(editingId), dirty: formDirty, pending: saving, error: actionError, priceMax: 999999999.99 }" :scheduling="schedulingView" :discounts="[{ value: 'amount', label: copy.amount }, { value: 'percent', label: copy.percent }]" :upload="{ preview: upload.preview.value, status: upload.status.value }" @image-select="upload.select($event)" @image-remove="removeImage" @image-retry="upload.retry()" @search="search = $event" @page="page = $event" @retry="refresh()" @create="openCreate" @edit="editById" @archive="archiveById" @submit="save" />
 </template>

@@ -320,6 +320,7 @@ test('key configuration is explicit, server-only and capability surface is bound
   assert.deepEqual(SUPPORTED_OPERATIONS, [
     'adapter.capabilities.read', 'shop.platform.query', 'shop.platform.command',
     'shop.billing.query', 'shop.billing.command', 'shop.plan.query', 'shop.plan.command',
+    'shop.account.query', 'shop.account.command',
   ])
 
   const index = await readFile(new URL('../../supabase/functions/shop-super-admin-bridge/index.ts', import.meta.url), 'utf8')

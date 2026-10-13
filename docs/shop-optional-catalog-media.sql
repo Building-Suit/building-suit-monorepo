@@ -1,0 +1,3 @@
+-- Superseded by the official versioned migration:
+-- apps/shop-suit/supabase/migrations/20261012184657_optional_catalog_media.sql
+-- Do not apply this documentation pointer as a migration. Hosted application needs explicit approval.

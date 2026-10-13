@@ -15,6 +15,7 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
     })
     await fixtureGoto(page, '/dashboard')
     await expect(page.getByRole('heading', { level: 1, name: ar ? 'لوحة التحكم' : 'Operating dashboard' })).toBeVisible()
+    await expect(page.locator('.bs-plan-summary')).toContainText('Pilot plan')
     await expect(page.getByRole('link', { name: 'Fixture customer', exact: true })).toHaveAttribute('href', '/customers/customer-1')
     const staffRow = page.getByRole('row').filter({ hasText: 'Fixture staff' })
     await expect(staffRow).toContainText(/125|١٢٥/)

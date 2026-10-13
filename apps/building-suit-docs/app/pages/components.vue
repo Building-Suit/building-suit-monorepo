@@ -1,5 +1,25 @@
 <script setup lang="ts">
 import type { ChangelogFeed, ChangelogCopy } from '@building-suit/contracts'
+import type { BsBillingCopy, BsBillingForm, BsBillingView } from '@building-suit/ui/types/billingPresentation'
+const billingExampleForm = ref<BsBillingForm>({ paidAmount: 0, transferDate: '', transferReference: '', privateLink: '', reason: '' })
+const billingExampleCopy = computed<BsBillingCopy>(() => ({
+  title: isArabic.value ? 'مثال الدفع المستضاف' : 'Hosted checkout example', subtitle: '', loading: ui('loading'), retry: ui('retry'), cancel: ui('cancel'), denied: '', failed: '', unavailable: '',
+  usage: '', usageHelp: '', usageLoading: '', usageError: '', compare: '', compareHelp: '', instructions: '', instructionsHelp: '', manual: '', recipient: '', paymentLink: '', qr: '', instructionsUnavailable: '',
+  privateTitle: '', privateHelp: '', privateLink: '', privatePreview: '', privateClear: '', notice: '', noticeHelp: '', submit: '', requestedPlan: '', expected: '', interval: '', paid: '', transferDate: '', reference: '',
+  policyPrefix: isArabic.value ? 'راجع السياسات:' : 'Review policies:', terms: isArabic.value ? 'الشروط' : 'Terms', privacy: isArabic.value ? 'الخصوصية' : 'Privacy', refund: isArabic.value ? 'الاسترداد' : 'Refunds', noPurchasable: '',
+  evidenceTitle: '', evidenceHelp: '', evidenceSelect: '', evidenceUpload: '', evidenceUploading: '', evidenceFirst: '', evidenceSaved: '', evidenceAttached: '', history: '', empty: '', access: '', reviewReason: '', reason: '', refresh: '', requests: '', inspect: '', openSubscription: '', cancelRequest: '',
+}))
+const billingExampleView = computed<BsBillingView>(() => ({
+  workspace: '', loading: false, failed: false, denied: false, available: true, summary: [], notice: '', details: [], providerNotice: '', latest: null,
+  usage: { items: [], loading: false, failed: false }, pricing: { plans: [], interval: 'monthly', intervalOptions: [], copy: { cycleLabel: '', loading: '', empty: '', retry: '', included: '', notIncluded: '' }, loading: false, error: null, annualSaving: null, columns: 3, testId: 'catalogue-hosted-checkout-plans' },
+  instructions: null, privateOffer: null, transfer: null, evidence: null, showEvidence: false, history: [], showHistory: false, trial: null, policy: null,
+  paymentNotice: '', paymentRequired: '', compatibilityNotice: '', pricingError: '', canRequests: false,
+  checkout: { title: isArabic.value ? 'دفع مستضاف' : 'Hosted payment', description: isArabic.value ? 'المزود يستقبل بيانات الدفع في صفحته.' : 'The provider collects payment details on its page.',
+    logoLight: '/brand/shop-suit-wordmark-light.svg', logoDark: '/brand/shop-suit-wordmark-dark.svg', logoAlt: 'Example provider', quote: 'Example · 199.90 EGP', notice: '',
+    unavailable: isArabic.value ? 'مثال غير متصل بمزود دفع.' : 'Catalogue example; no payment provider is connected.', action: isArabic.value ? 'المتابعة للدفع' : 'Continue to payment', pending: false, disabled: true, error: '' },
+}))
+const exampleQuantity = ref(1)
+const pinnedRecordActions = ref(false)
 const changelogState = ref<'ready' | 'loading' | 'error' | 'denied'>('ready')
 const changelogFeed: ChangelogFeed = {
   serverNow: '2026-10-10T12:00:00Z',
@@ -123,6 +143,25 @@ const shellLabels = computed(() => ({
   emptyNavigation: isArabic.value ? 'لا توجد عناصر تنقل' : 'No navigation items',
 }))
 useHead({ title: 'Shared component catalogue · Building Suit' })
+
+const invitationPreviewPassword=ref(''), invitationPreviewConfirmation=ref('')
+const invitationPreviewCopy={
+  "ownerInvite.title": "Owner invitation",
+  "ownerInvite.description": "A complete shared claim page; ownership remains product-owned.",
+  "ownerInvite.home": "Home",
+  "ownerInvite.loading": "Loading",
+  "ownerInvite.invalid": "Invitation unavailable",
+  "ownerInvite.askAdmin": "Request an explicitly acknowledged resend.",
+  "ownerInvite.login": "Sign in",
+  "ownerInvite.done": "Done",
+  "ownerInvite.open": "Open",
+  "ownerInvite.passwordTitle": "Password title",
+  "ownerInvite.verified": "Verified",
+  "ownerInvite.save": "Save",
+  "ownerInvite.password": "Password",
+  "ownerInvite.confirm": "Confirm",
+  "ownerInvite.passwordError": "Passworderror"
+}
 </script>
 
 <template>
@@ -133,6 +172,37 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
       :context-label="isArabic ? 'سياق المعاينة' : 'Preview context'"
       :context="[{ label: isArabic ? 'الاتجاه' : 'Direction', value: isArabic ? 'RTL' : 'LTR' }, { label: isArabic ? 'المصدر' : 'Owner', value: 'packages/ui' }]"
     />
+
+    <BsContentSection :title="isArabic ? 'عنوان طويل وعرض ضيق' : 'Long heading at narrow widths'">
+      <BsPageHeader :title="isArabic ? 'اسممتجرطويلبدونمسافاتلاختبارالتفافالعنوانداخلعرضالصفحة' : 'ExampleShopIdentifierWithoutSpacesForTestingHeadingWrappingWithinTheViewport'" :subtitle="isArabic ? 'مثال توضيحي لاختبار العرض والاستجابة.' : 'Illustrative heading for responsive layout inspection.'" />
+    </BsContentSection>
+
+    <BsContentSection :title="isArabic ? 'التنقل بين أقسام الصفحة' : 'Page section navigation'">
+      <BsSectionNavigation :label="isArabic ? 'أقسام المكتبة' : 'Catalogue sections'" :sections="[{ id: 'forms', label: isArabic ? 'النماذج' : 'Forms' }, { id: 'pricing', label: isArabic ? 'الخطط' : 'Plans' }]" />
+    </BsContentSection>
+
+    <BsContentSection :title="isArabic ? 'تقويم المواعيد' : 'Appointment calendar'">
+      <BsText size="sm" tone="muted">{{ isArabic ? 'مثال توضيحي على خلية فارغة وحالة اليوم.' : 'Illustrative empty calendar cell and today marker.' }}</BsText>
+      <BsAppointmentCalendar view="day" :transitioning="false" :copy="{ title: isArabic ? 'تقويم المواعيد' : 'Appointment calendar', empty: isArabic ? 'لا توجد مواعيد' : 'No appointments', edit: isArabic ? 'تعديل' : 'Edit', reschedule: isArabic ? 'تعديل الموعد' : 'Reschedule', saving: isArabic ? 'جارٍ الحفظ' : 'Saving', history: isArabic ? 'السجل' : 'History' }" :days="[{ id: '2026-10-12', label: isArabic ? 'الاثنين ١٢ أكتوبر' : 'Monday 12 October', today: true, appointments: [] }]" />
+    </BsContentSection>
+
+    <BsContentSection :title="isArabic ? 'الكمية' : 'Touch quantity controls'"><BsQuantityStepper v-model="exampleQuantity" :max="3" :label="isArabic ? 'الكمية' : 'Quantity'" :decrease-label="isArabic ? 'تقليل الكمية' : 'Decrease quantity'" :increase-label="isArabic ? 'زيادة الكمية' : 'Increase quantity'" /></BsContentSection>
+
+    <BsContentSection :title="isArabic ? 'بطاقات كتالوج نقطة البيع' : 'POS catalog image cards'">
+      <BsGrid :columns="3"><BsCatalogTile :name="isArabic ? 'مثال منتج بدون صورة' : 'Example product without image'" price="30" :detail="isArabic ? 'بيانات توضيحية' : 'Illustrative data'" :image-label="isArabic ? 'بدون صورة' : 'No image'" /><BsCatalogTile :name="isArabic ? 'مثال خدمة بدون صورة' : 'Example service without image'" price="10" :detail="isArabic ? 'بيانات توضيحية' : 'Illustrative data'" :image-label="isArabic ? 'بدون صورة' : 'No image'" /></BsGrid>
+    </BsContentSection>
+
+    <BsContentSection :title="isArabic ? 'رفع صور الكتالوج' : 'Catalog image upload'">
+      <BsCatalogImageUploader input-id="catalog-image-example" preview="" name="" status="idle" :copy="{ choose: isArabic ? 'اختيار صورة' : 'Choose image', replace: isArabic ? 'استبدال الصورة' : 'Replace image', remove: isArabic ? 'إزالة' : 'Remove', retry: isArabic ? 'إعادة المحاولة' : 'Retry', help: isArabic ? 'عرض توضيحي فقط؛ لا يتم رفع الملفات.' : 'Presentation example only; files are not uploaded.', uploading: isArabic ? 'جارٍ الرفع…' : 'Uploading…', uploaded: isArabic ? 'تم رفع الصورة' : 'Image uploaded', error: isArabic ? 'تعذّر رفع الصورة' : 'Upload failed', invalid: isArabic ? 'صورة غير صالحة' : 'Invalid image', placeholder: isArabic ? 'بدون صورة' : 'No image' }" />
+    </BsContentSection>
+
+    <BsContentSection :title="isArabic ? 'مقاييس لوحة التحكم' : 'Dashboard metrics'">
+      <BsDashboardMetric :metric="{ id: 'example', title: isArabic ? 'بيانات توضيحية' : 'Illustrative data', value: 'EGP 120', hint: isArabic ? 'مثال للمكتبة فقط.' : 'Catalogue example only.', changeLabel: '', tone: 'neutral', to: '', source: null }" />
+    </BsContentSection>
+
+    <BsContentSection :title="isArabic ? 'مثال رسوم مزيج المبيعات' : 'Sales mix chart example'">
+      <BsGrid :columns="2"><BsMetricChart :title="isArabic ? 'بيانات توضيحية' : 'Illustrative data'" :empty-label="isArabic ? 'لا توجد بيانات' : 'No data'" kind="donut" :items="[{ id: 'products', label: isArabic ? 'منتجات' : 'Products', hint: '', value: 30, formatted: '30' }, { id: 'services', label: isArabic ? 'خدمات' : 'Services', hint: '', value: 10, formatted: '10' }]" /><BsMetricChart :title="isArabic ? 'بيانات توضيحية' : 'Illustrative data'" :empty-label="isArabic ? 'لا توجد بيانات' : 'No data'" :items="[{ id: 'cash', label: isArabic ? 'نقدي' : 'Cash', hint: '', value: 30, formatted: '30' }, { id: 'card', label: isArabic ? 'بطاقة' : 'Card', hint: '', value: 10, formatted: '10' }]" /></BsGrid>
+    </BsContentSection>
 
     <BsContentSection :title="isArabic ? 'قوالب الصفحات' : 'Page templates'"><BsLink to="/templates/access?suit=ledger">Ledger access template</BsLink><BsLink to="/templates/access?suit=shop">Shop access template</BsLink></BsContentSection>
     <BsContentSection id="changelog" :title="isArabic ? 'سجل التحديثات' : 'Changelog'">
@@ -150,6 +220,10 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
         <BsText>{{ isArabic ? 'يملك التطبيق البيانات والإجراءات والتفويض.' : 'The app owns data, actions and authorization.' }}</BsText>
         <BsButton>{{ isArabic ? 'إجراء تجريبي' : 'Example action' }}</BsButton>
       </BsAdministrationShell>
+    </BsContentSection>
+
+    <BsContentSection :title="isArabic ? 'حساب الشريط الجانبي' : 'Sidebar account and plan'">
+      <div class="max-w-xs"><BsSidebarAccount :name="isArabic ? 'مالك المتجر' : 'Shop owner'" email="owner@example.test" :account-label="isArabic ? 'الحساب' : 'Account'" :sign-out-label="isArabic ? 'تسجيل الخروج' : 'Sign out'" :plan="{ name: 'Solo', status: isArabic ? 'مثال توضيحي' : 'Catalogue example', detail: '', actionLabel: isArabic ? 'الاشتراك' : 'Subscription', to: '#pricing' }" /></div>
     </BsContentSection>
 
     <BsContentSection
@@ -245,7 +319,7 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
       </BsDataTable>
     </section>
 
-    <BsCard :title="isArabic ? 'النماذج والاختيار' : 'Forms and selection'" data-testid="foundation-patterns">
+    <BsCard id="forms" :title="isArabic ? 'النماذج والاختيار' : 'Forms and selection'" data-testid="foundation-patterns">
       <div class="space-y-5">
         <BsFilterBar :label="isArabic ? 'مرشحات السجلات' : 'Record filters'">
           <template #search><BsSearchField v-model="searchValue" :label="isArabic ? 'البحث' : 'Search'" :placeholder="isArabic ? 'ابحث بالاسم' : 'Search by name'" :clear-label="ui('close')" /></template>
@@ -298,8 +372,12 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
       </BsStack>
     </BsContentSection>
 
-    <BsContentSection :title="isArabic ? 'خطط التسويق' : 'Marketing plans'" :description="isArabic ? 'البطاقات ودورة الفوترة والإجراءات تأتي من مكوّن مشترك.' : 'Cards, billing-cycle controls, states, and actions come from one shared organism.'">
+    <BsContentSection id="hosted-checkout" :title="isArabic ? 'الدفع المستضاف' : 'Hosted checkout'">
+      <BsBillingPage v-model:form="billingExampleForm" variant="shop" :copy="billingExampleCopy" :view="billingExampleView" :show-header="false"/>
+    </BsContentSection>
+    <BsContentSection id="pricing" :title="isArabic ? 'خطط التسويق' : 'Marketing plans'" :description="isArabic ? 'البطاقات ودورة الفوترة والإجراءات تأتي من مكوّن مشترك.' : 'Cards, billing-cycle controls, states, and actions come from one shared organism.'">
       <BsMarketingPricing
+        variant="shop"
         :interval="pricingInterval"
         :interval-options="[{ value: 'monthly', label: isArabic ? 'شهري' : 'Monthly' }, { value: 'yearly', label: isArabic ? 'سنوي' : 'Yearly' }]"
         :copy="{ cycleLabel: isArabic ? 'دورة الفوترة' : 'Billing cycle', loading: ui('loading'), empty: ui('empty'), retry: isArabic ? 'إعادة المحاولة' : 'Retry', included: isArabic ? 'مشمول' : 'Included', notIncluded: isArabic ? 'غير مشمول' : 'Not included' }"
@@ -324,7 +402,7 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
 
     <BsContentSection
       :title="isArabic ? 'المصادقة والتحقق' : 'Authentication and verification'"
-      :description="isArabic ? 'هندسة مشتركة للنموذج وحالة التحقق مع محتوى يقدمه المنتج.' : 'Shared form geometry and verification states with product-supplied content.'"
+      :description="isArabic ? 'هندسة مشتركة للنموذج وحالة التحقق مع محتوى يقدمه المنتج. يمكن لغلاف المنتج اختيار presentation=flat للأسطح ومقاسات العناوين القياسية، مع الإبقاء على الوضع الافتراضي.' : 'Shared form geometry and verification states with product-supplied content. Product auth frames may opt into presentation=flat for canonical surfaces and heading tokens; the default remains available.'"
     >
       <div class="grid items-start gap-5 xl:grid-cols-2">
         <BsAuthForm
@@ -354,11 +432,21 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
       <div class="mt-5"><BsButton variant="danger" @click="confirmExample">{{ isArabic ? 'إزالة سجل' : 'Remove record' }}</BsButton><p class="mt-3" role="status">{{ confirmationResult }}</p></div>
     </BsCard>
 
+    <BsContentSection :title="isArabic ? 'قوالب دورة الحساب' : 'Account lifecycle templates'" :description="isArabic ? 'التطبيق يملك التفويض والبيانات؛ القالب يملك العرض فقط.' : 'The app owns authorization and data; each complete template owns presentation.'">
+      <BsDescriptionList>
+        <BsDescriptionItem term="BsAccountActivationPage">{{ isArabic ? 'تأكيد الباقة والتواريخ ونتيجة التدقيق مع إعادة الطلب نفسه.' : 'Plan confirmation, preserved trial dates, effective grant dates, audit result and exact-request retry.' }}</BsDescriptionItem>
+        <BsDescriptionItem term="BsAccountProvisioningPage">{{ isArabic ? 'إنشاء المالك والباقة؛ تحقق البريد وإعادة الدعوة منفصلان.' : 'Controlled account form, grant status, separate verification status and acknowledged invitation resend.' }}</BsDescriptionItem>
+        <BsDescriptionItem term="BsOwnerInvitationPage">{{ isArabic ? 'حالة الدعوة وكلمة مرور يختارها المالك بعد التحقق.' : 'Invitation states and owner-chosen password after target verification.' }}</BsDescriptionItem>
+      </BsDescriptionList>
+      <BsOwnerInvitationPage v-model:password="invitationPreviewPassword" v-model:confirmation="invitationPreviewConfirmation" :copy="invitationPreviewCopy" :view="{phase:'error',pending:false,failed:false}" />
+    </BsContentSection>
+
     <WorkflowPatternCatalogue />
 
     <BsToastHost />
+    <BsSwitch v-model="pinnedRecordActions" :label="isArabic ? 'تثبيت إجراءات نافذة السجل' : 'Pin record dialog actions'" />
     <BsRecordActionDialog
-      v-model:visible="visible"
+      v-model:visible="visible" :pinned-actions="pinnedRecordActions"
       :title="mode === 'edit' ? (isArabic ? 'تعديل السجل' : 'Edit record') : (isArabic ? 'إضافة سجل' : 'Add record')"
       :dirty="dirty" :pending="pending" :error="actionError" @submit="save"
     >

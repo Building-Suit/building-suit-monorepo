@@ -5,11 +5,11 @@ import { saleCopy } from '~/utils/saleCopy'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import { businessModeSupportsProducts, businessModeSupportsServices } from '~/utils/businessMode'
 import { posCustomerOptions } from '~/utils/posCustomer.js'
-import { addOrIncrementCartLine, cartTotal } from '~/utils/pos'
+import { addOrIncrementCartLine, cartTotal, nextCartQuantity, cartQuantityLimit } from '~/utils/pos'
 
 definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
 type PaymentMethod = 'cash' | 'bank_transfer' | 'card' | 'wallet' | 'cheque' | 'other'
-type CatalogItem = { id: string; itemType: 'product' | 'service'; name: string; sku: string | null; barcode: string | null; unitPrice: number; discount: number; stock: number | null }
+type CatalogItem = { id: string; itemType: 'product' | 'service'; name: string; imageUrl?: string | null; sku: string | null; barcode: string | null; unitPrice: number; discount: number; stock: number | null }
 type CartLine = CatalogItem & { key: string; sourceId: string; quantity: number }
 type Appointment = { id: string; staffId: string; customerId: string | null; customerName: string; startsAt: string; status: string; service: CatalogItem }
 type Customer = { id: string; name: string; phone: string | null }
@@ -18,6 +18,7 @@ type CatalogResult = { items: CatalogItem[]; total: number; page: number; pageSi
 type Category = { id: string; name: string }
 
 const rpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const media = useCatalogMedia()
 const route = useRoute()
 const { t, locale } = useI18n()
 const { current, currentId, currentLocationId, currentLocation, currentMembership, loading: shopLoading } = useShop()
@@ -78,7 +79,8 @@ const { data: categories } = useAsyncData(() => `shop-data:pos-categories:${curr
 const { data: catalog, pending: catalogPending, error: catalogError, refresh: refreshCatalog } = useAsyncData(
   () => `shop-data:pos-catalog:${currentId.value ?? 'none'}:${currentLocationId.value ?? 'none'}:${debouncedSearch.value}:${itemType.value}:${categoryFilter.value}:${catalogPage.value}`, async (): Promise<CatalogResult> => {
     if (!currentId.value || !currentLocationId.value) return { items: [], total: 0, page: 1, pageSize: 30, businessMode: 'mixed', ambiguousBarcode: false }
-    const { data, error } = await rpc.rpc('pos_catalog_search_by_category', { p_shop_id: currentId.value, p_location_id: currentLocationId.value, p_search: debouncedSearch.value || null, p_item_type: itemType.value === 'all' ? null : itemType.value, p_category_id: categoryFilter.value || null, p_page: catalogPage.value, p_page_size: 30 })
+    const args = { p_shop_id: currentId.value, p_location_id: currentLocationId.value, p_search: debouncedSearch.value || null, p_item_type: itemType.value === 'all' ? null : itemType.value, p_category_id: categoryFilter.value || null, p_page: catalogPage.value, p_page_size: 30 }
+    const { data, error } = await media.request('pos', args, () => rpc.rpc('pos_catalog_search_by_category', args))
     if (error) throw error
     return data as CatalogResult
   }, { watch: [currentId, currentLocationId, debouncedSearch, itemType, categoryFilter, catalogPage], default: () => ({ items: [], total: 0, page: 1, pageSize: 30, businessMode: 'mixed', ambiguousBarcode: false }) },
@@ -124,14 +126,20 @@ function invalidateRequests() {
   paymentRequestId.value = null; appointmentRequestId.value = null; checkoutPaidAt.value = null
 }
 function addItem(item: CatalogItem) {
-  if (checkingOut.value || locationChanged.value) return
+  if (checkingOut.value || confirmingCheckout.value || locationChanged.value) return
+  const existing = lines.value.find(line => line.itemType === item.itemType && line.sourceId === item.id)
+  const nextQuantity = nextCartQuantity(existing?.quantity ?? 0, item)
+  if (nextQuantity === null) { errorMessage.value = readableError('INSUFFICIENT_STOCK'); return }
   lockLocation(); lines.value = addOrIncrementCartLine(lines.value, item) as CartLine[]
+  const added = lines.value.find(line => line.itemType === item.itemType && line.sourceId === item.id)
+  if (added) added.quantity = nextQuantity
   errorMessage.value = ''; invalidateRequests(); scanMessage.value = t('pos.scanAdded', { name: item.name })
 }
 function setQuantity(line: CartLine, value: number) {
+  if (checkingOut.value || confirmingCheckout.value || locationChanged.value) return
   line.quantity = Math.max(0.001, Math.min(1000000, Number(value) || 1)); invalidateRequests()
 }
-function removeLine(index: number) { lines.value.splice(index, 1); invalidateRequests() }
+function removeLine(index: number) { if (checkingOut.value || confirmingCheckout.value || locationChanged.value) return; lines.value.splice(index, 1); invalidateRequests() }
 function chooseCustomer(customer: Customer) { lockLocation(); customerId.value = customer.id; customerName.value = customer.name; customerPhone.value = customer.phone; invalidateRequests() }
 function clearCustomer() {
   if (appointmentId.value || checkingOut.value || confirmingCheckout.value || locationChanged.value) return
@@ -217,15 +225,17 @@ useShopRealtime('pos', () => lines.value.length > 0 || checkingOut.value || conf
 
 const posPaymentForm = computed<BsPointOfSalePaymentForm>({ get: () => ({ method: paymentMethod.value, reference: paymentReference.value, notes: notes.value }), set: value => { if (['cash','bank_transfer','card','wallet','cheque','other'].includes(value.method)) paymentMethod.value = value.method as PaymentMethod; paymentReference.value = value.reference; notes.value = value.notes } })
 const posItemType = computed<string>({ get: () => itemType.value, set: value => { if (value === 'all' || value === 'product' || value === 'service') itemType.value = value } })
-const posCatalogItems = computed<BsPointOfSaleCatalogItem[]>(() => catalog.value.items.map(item => ({ id: item.id, key: `${item.itemType}:${item.id}`, name: item.name, description: item.sku || t(item.itemType === 'service' ? 'sales.service' : 'sales.product'), price: money(Math.max(0, item.unitPrice - item.discount)), stock: item.stock != null ? t('pos.stock', { count: item.stock }) : '' })))
-const posCartLines = computed<BsPointOfSaleCartLine[]>(() => lines.value.map(line => ({ id: line.key, name: line.name, quantity: line.quantity, total: money((line.unitPrice - line.discount) * line.quantity) })))
-const posView = computed<BsPointOfSaleView>(() => ({ available: !!current.value, loadingContext: shopLoading.value, location: transactionLocationName.value || currentLocation.value?.name || '—', staff: selectedStaff.value?.name || t('pos.selectStaff'), locationChanged: locationChanged.value, error: errorMessage.value, scanMessage: scanMessage.value, checkingOut: checkingOut.value, confirming: confirmingCheckout.value, shortcutBlocked: checkingOut.value || confirmingCheckout.value || !!confirmation.current.value, catalogLoading: catalogPending.value, catalogError: catalogError.value ? t(catalogError.value.message?.includes('SHOP_PERMISSION_DENIED') ? 'pos.permissionDenied' : 'pos.loadError') : '', catalogTotal: catalog.value.total, catalogPageSize: catalog.value.pageSize, contextLoading: contextPending.value, contextError: contextError.value ? t(contextError.value.message?.includes('SHOP_PERMISSION_DENIED') ? 'pos.permissionDenied' : 'pos.loadError') : '', appointmentLocked: !!appointmentId.value, customerDisabled: !!appointmentId.value || checkingOut.value || confirmingCheckout.value || locationChanged.value, customerBusy: customerBusy.value, customerDisplay: customerId.value ? [customerName.value, customerPhone.value].filter(Boolean).join(' · ') : (appointmentId.value ? customerName.value || t('pos.noCustomer') : t('pos.noCustomer')), customerEmpty: customerBusy.value ? t('pos.loading') : t('pos.customerSearch'), customerEmptyFilter: customerBusy.value ? t('pos.loading') : (customerSearch.value.trim().length < 2 ? t('pos.customerSearch') : t('pos.customerNoResults')), hasCustomer: !!customerId.value, checkoutDisabled: checkingOut.value || confirmingCheckout.value || contextPending.value || !!contextError.value || locationChanged.value || !lines.value.length || !staffId.value, total: money(total.value), reviewLabel: t('pos.reviewSale', { count: lines.value.length }), payLabel: t('pos.pay', { amount: money(total.value) }) }))
+const posCatalogItems = computed<BsPointOfSaleCatalogItem[]>(() => catalog.value.items.map(item => ({ id: item.id, key: `${item.itemType}:${item.id}`, name: item.name, disabled: item.itemType === 'product' && item.stock != null && item.stock <= 0, imageUrl: item.imageUrl, description: item.sku || t(item.itemType === 'service' ? 'sales.service' : 'sales.product'), price: money(Math.max(0, item.unitPrice - item.discount)), stock: item.stock != null ? t('pos.stock', { count: item.stock }) : '' })))
+const posCartLines = computed<BsPointOfSaleCartLine[]>(() => lines.value.map(line => ({ id: line.key, name: line.name, quantity: line.quantity, maximumQuantity: cartQuantityLimit(line), total: money((line.unitPrice - line.discount) * line.quantity) })))
+const posView = computed<BsPointOfSaleView>(() => ({ cartCount: locale.value === 'ar' ? `${lines.value.length} أصناف` : `${lines.value.length} ${lines.value.length === 1 ? 'item' : 'items'}`, available: !!current.value, loadingContext: shopLoading.value, location: transactionLocationName.value || currentLocation.value?.name || '—', staff: selectedStaff.value?.name || t('pos.selectStaff'), locationChanged: locationChanged.value, error: errorMessage.value, scanMessage: scanMessage.value, checkingOut: checkingOut.value, confirming: confirmingCheckout.value, shortcutBlocked: checkingOut.value || confirmingCheckout.value || !!confirmation.current.value, catalogLoading: catalogPending.value, catalogError: catalogError.value ? t(catalogError.value.message?.includes('SHOP_PERMISSION_DENIED') ? 'pos.permissionDenied' : 'pos.loadError') : '', catalogTotal: catalog.value.total, catalogPageSize: catalog.value.pageSize, contextLoading: contextPending.value, contextError: contextError.value ? t(contextError.value.message?.includes('SHOP_PERMISSION_DENIED') ? 'pos.permissionDenied' : 'pos.loadError') : '', appointmentLocked: !!appointmentId.value, customerDisabled: !!appointmentId.value || checkingOut.value || confirmingCheckout.value || locationChanged.value, customerBusy: customerBusy.value, customerDisplay: customerId.value ? [customerName.value, customerPhone.value].filter(Boolean).join(' · ') : (appointmentId.value ? customerName.value || t('pos.noCustomer') : t('pos.noCustomer')), customerEmpty: customerBusy.value ? t('pos.loading') : t('pos.customerSearch'), customerEmptyFilter: customerBusy.value ? t('pos.loading') : (customerSearch.value.trim().length < 2 ? t('pos.customerSearch') : t('pos.customerNoResults')), hasCustomer: !!customerId.value, checkoutDisabled: checkingOut.value || confirmingCheckout.value || contextPending.value || !!contextError.value || locationChanged.value || !lines.value.length || !staffId.value, total: money(total.value), reviewLabel: t('pos.reviewSale', { count: lines.value.length }), payLabel: t('pos.pay', { amount: money(total.value) }) }))
 function addPosItem(key: string) { const item = catalog.value.items.find(item => `${item.itemType}:${item.id}` === key); if (item) addItem(item) }
 function removePosLine(id: string) { const index = lines.value.findIndex(line => line.key === id); if (index >= 0) removeLine(index) }
 function setPosQuantity(id: string, value: number) { const line = lines.value.find(line => line.key === id); if (line) setQuantity(line, value) }
 function setPosStaff(id: string) { staffId.value = id; lockLocation(); invalidateRequests() }
 function dismissPosFeedback() { errorMessage.value = ''; scanMessage.value = '' }
 const posCopy = computed<BsPointOfSaleCopy>(() => ({
+  decrease: locale.value === 'ar' ? 'تقليل الكمية' : 'Decrease quantity', increase: locale.value === 'ar' ? 'زيادة الكمية' : 'Increase quantity',
+  imagePlaceholder: locale.value === 'ar' ? 'بدون صورة' : 'No image',
   appointment: t('pos.appointment'),
   cart: t('pos.cart'),
   catalog: t('pos.catalog'),
@@ -270,5 +280,5 @@ const posPaymentOptions = computed(() => ['cash','card','bank_transfer','wallet'
 </script>
 
 <template>
-  <BsPointOfSalePage ref="posPage" v-model:catalog-search="catalogSearch" v-model:category-filter="categoryFilter" v-model:item-type="posItemType" v-model:catalog-page="catalogPage" v-model:payment-form="posPaymentForm" :copy="posCopy" :view="posView" :catalog-items="posCatalogItems" :cart-lines="posCartLines" :customer-options="customerOptions" :staff-id="staffId" :appointment-id="appointmentId" :customer-id="customerId" :item-type-options="posTypeOptions" :category-options="posCategoryOptions" :appointment-options="posAppointmentOptions" :staff-options="posStaffOptions" :payment-options="posPaymentOptions" @reset="requestReset" @checkout="checkout" @retry-catalog="refreshCatalog" @retry-context="refreshContext" @add="addPosItem" @remove="removePosLine" @quantity="setPosQuantity" @appointment="chooseAppointment" @staff="setPosStaff" @customer-search="customerSearch = $event" @reset-customer-search="resetCustomerSearch" @customer="setCustomer" @clear-customer="clearCustomer" @dismiss-feedback="dismissPosFeedback" @barcode="scanBarcode" />
+  <BsPointOfSalePage ref="posPage" v-model:catalog-search="catalogSearch" v-model:category-filter="categoryFilter" v-model:item-type="posItemType" v-model:catalog-page="catalogPage" v-model:payment-form="posPaymentForm" variant="shop" :copy="posCopy" :view="posView" :catalog-items="posCatalogItems" :cart-lines="posCartLines" :customer-options="customerOptions" :staff-id="staffId" :appointment-id="appointmentId" :customer-id="customerId" :item-type-options="posTypeOptions" :category-options="posCategoryOptions" :appointment-options="posAppointmentOptions" :staff-options="posStaffOptions" :payment-options="posPaymentOptions" @reset="requestReset" @checkout="checkout" @retry-catalog="refreshCatalog" @retry-context="refreshContext" @add="addPosItem" @remove="removePosLine" @quantity="setPosQuantity" @appointment="chooseAppointment" @staff="setPosStaff" @customer-search="customerSearch = $event" @reset-customer-search="resetCustomerSearch" @customer="setCustomer" @clear-customer="clearCustomer" @dismiss-feedback="dismissPosFeedback" @barcode="scanBarcode" />
 </template>

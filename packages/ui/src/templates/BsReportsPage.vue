@@ -12,7 +12,7 @@ function updateFilter(key: keyof BsReportFilters, value: string | number | boole
 </script>
 <template>
   <BsStack v-if="financial"><BsFinancialReportsWorkspace v-model:filters="financialFilters" :copy="financial.copy" :view="financial.view" @export="emit('financialExport', $event)" @retry="emit('financialRetry')" @drilldown="(account, period) => emit('drilldown', account, period)" @allocate="emit('allocate', $event)"/><BsAccountActivityDialog v-if="activity" v-model:form="activityForm" :copy="activity.copy" :view="activity.view" @close="emit('closeActivity')" @back="emit('activityBack')" @apply="emit('activityApply')" @retry="emit('activityRetry')" @page="emit('activityPage', $event)" @journal="(id, entryId) => emit('activityJournal', id, entryId)" @account="(id, entryId) => emit('activityAccount', id, entryId)"/><BsCashAllocationDialog v-if="allocation" v-model:form="allocationForm" :copy="allocation.copy" :view="allocation.view" @close="emit('closeAllocation')" @save="emit('saveAllocation')"/></BsStack>
-  <BsStack v-else-if="copy && view && choices">
+  <BsStack v-else-if="copy && view && choices" gap="lg">
     <BsPageHeader  :title="copy.title" :subtitle="copy.subtitle">
       <template #actions>
         <BsText as="p" size="xs" emphasis="semibold">{{ view.workspace }}</BsText>
@@ -42,9 +42,9 @@ function updateFilter(key: keyof BsReportFilters, value: string | number | boole
     </BsText>
     <BsText v-else-if="view.exportError" role="alert" as="p" size="sm" tone="danger">{{ view.exportError }}</BsText>
     <BsText v-if="view.loading" role="status" as="p" size="sm" tone="muted">{{ copy.loading }}</BsText>
-    <BsText v-else-if="view.denied" as="p" size="sm" tone="muted">{{ copy.denied }}</BsText>
-    <BsText v-else-if="view.restricted" as="p" size="sm" tone="muted">{{ copy.costDenied }}</BsText>
-    <template v-else>
+    <BsText v-else-if="view.denied && !view.failed" as="p" size="sm" tone="muted">{{ copy.denied }}</BsText>
+    <BsText v-else-if="view.restricted && !view.failed" as="p" size="sm" tone="muted">{{ copy.costDenied }}</BsText>
+    <template v-else-if="!view.failed">
       <BsGrid :columns="4">
         <BsActionTile v-for="metric in view.summary" :key="metric.id" :to="metric.to">
           <BsText as="p" size="xs" tone="muted" emphasis="semibold">{{ metric.label }}</BsText>

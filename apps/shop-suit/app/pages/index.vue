@@ -35,7 +35,7 @@ const publicOffers = computed<ShopPlanOffer[]>(() => (plans.value ?? [])
 
 const publicPricing = reactive(useShopPlanPresentation({ get offers() { return publicOffers.value }, action: 'signup' }))
 const landingPricing = computed(() => ({
-  interval: publicPricing.interval, plans: publicPricing.pricingPlans,
+  variant: 'shop' as const, interval: publicPricing.interval, plans: publicPricing.pricingPlans,
   intervalOptions: [{ value: 'monthly', label: publicPricing.copy.monthly }, { value: 'annual', label: publicPricing.copy.yearly }],
   copy: { cycleLabel: publicPricing.copy.cycle, loading: publicPricing.copy.loading, empty: t('pricing.empty'), retry: publicPricing.copy.retry, included: publicPricing.copy.included, notIncluded: publicPricing.copy.notIncluded },
   annualSaving: publicPricing.annualDiscount === null ? null : publicPricing.copy.annualSaving(publicPricing.annualDiscount),

@@ -47,7 +47,7 @@ test('calendar exposes bilingual responsive day/week and pointer-free queue work
   assert.match(page, /transition_appointment/)
   assert.match(page, /save_staff_schedule/)
   assert.match(page, /walk_in/)
-  assert.match(template, /:columns="view === 'week' \? 7 : 1"/)
+  assert.match(template, /BsAppointmentCalendar/)
   assert.match(template, /role="status"/)
   assert.match(template, /role="alert"/)
   assert.doesNotMatch(page, /draggable|dragstart|drop=/)

@@ -17,8 +17,8 @@ const slots = useSlots()
 <template>
   <header class="flex min-w-0 flex-wrap items-start justify-between gap-4">
     <div class="min-w-0">
-      <h1 class="text-h1 font-bold">{{ title }}</h1>
-      <p v-if="subtitle" class="mt-1 text-sm text-fg-muted">{{ subtitle }}</p>
+      <h1 class="text-h1 break-words font-bold">{{ title }}</h1>
+      <p v-if="subtitle" class="bs-page-header__subtitle mt-1 break-words text-sm text-fg-muted">{{ subtitle }}</p>
       <dl v-if="context.length" class="mt-3 flex min-w-0 flex-wrap gap-x-4 gap-y-1 text-xs text-fg-muted" :aria-label="contextLabel">
         <div v-for="item in context" :key="`${item.label}:${item.value}`" class="flex min-w-0 items-center gap-1.5">
           <dt class="font-semibold">{{ item.label }}</dt>

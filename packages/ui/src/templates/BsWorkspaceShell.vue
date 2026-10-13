@@ -6,6 +6,8 @@ import type { BsJournalCreationForm, BsJournalCreationFlow } from '../types/jour
 import type { BsCommitmentDraft, BsRecurringDraft, BsCounterpartyDraft, BsTagDraft } from '../types/operationalCreationPresentation'
 import type { BsAccessIdentityForm } from '../types/accessPresentation'
 withDefaults(defineProps<{
+  variant?: 'default' | 'shop'
+  sidebarPlan?: { name: string; status: string; detail: string; actionLabel: string; to: string }
   ready?: boolean
   loadingLabel?: string
   bodyLayout?: 'stack' | 'page'
@@ -22,7 +24,7 @@ withDefaults(defineProps<{
   homePath?: string
   groups: NavigationGroup[]
   mobileLinks?: NavigationLink[]
-  labels: { close: string; open: string; navigation: string; dashboard: string }
+  labels: { collapse?: string; close: string; open: string; navigation: string; dashboard: string }
   context?: string
   account?: { name?: string; email?: string; label: string; signOut: string; pending?: boolean; error?: string; actions?: NavigationLink[] }
   workspace?: { value: string | null; label: string; placeholder: string; options: ScopeOption[]; createLabel?: string }
@@ -32,7 +34,7 @@ withDefaults(defineProps<{
   floatingActions?: boolean
   feedback?: boolean
   logo: { kind: 'text' | 'initials' | 'product'; initials?: string; assetPrefix?: string }
-}>(), { ready: true, loadingLabel: '', trial: undefined, notifications: undefined, readOnly: undefined, workspaceCreation: undefined, onboarding: undefined, financialMap: undefined, journalCreation: undefined, operationalCreation: undefined, invitation: undefined, bodyLayout: 'stack', context: undefined, workspace: undefined, account: undefined, contextScope: undefined, headerScopes: () => [], state: undefined, floatingActions: false, feedback: false, homePath: '/dashboard', mobileLinks: () => [] })
+}>(), { variant: 'default', sidebarPlan: undefined, ready: true, loadingLabel: '', trial: undefined, notifications: undefined, readOnly: undefined, workspaceCreation: undefined, onboarding: undefined, financialMap: undefined, journalCreation: undefined, operationalCreation: undefined, invitation: undefined, bodyLayout: 'stack', context: undefined, workspace: undefined, account: undefined, contextScope: undefined, headerScopes: () => [], state: undefined, floatingActions: false, feedback: false, homePath: '/dashboard', mobileLinks: () => [] })
 const emit = defineEmits<{ signOut: []; scope: [key: string, value: string | null]; retry: []; workspace: [id: string]; createWorkspace: []; closeWorkspaceCreation: []; submitWorkspaceCreation: []; createOrganization: []; acceptInvitation: []; demoReceipt: []; demoReset: []; notification: [id: string]; markAllNotifications: []; journalFlow: [value: BsJournalCreationFlow]; closeJournal: []; saveJournal: []; closeOperation: []; saveOperation: []; closeInvitation: []; submitInvitation: [] }>()
 const workspaceCreationForm = defineModel<BsWorkspaceCreationForm | undefined>('workspaceCreationForm', { default: undefined })
 const onboardingForm = defineModel<{ name: string; legalName: string; currency: string; invitationToken: string } | undefined>('onboardingForm', { default: undefined })
@@ -45,14 +47,16 @@ const invitationForm = defineModel<BsAccessIdentityForm | undefined>('invitation
 </script>
 <template>
   <BsStateSurface v-if="!ready" state="loading" :title="loadingLabel"/>
-  <BsAppShell v-else :home-path="homePath" :product-name="productName" :groups="groups" :mobile-links="mobileLinks" :labels="labels" :floating-actions="floatingActions">
+  <BsAppShell v-else :variant="variant" :home-path="homePath" :product-name="productName" :groups="groups" :mobile-links="mobileLinks" :labels="labels" :floating-actions="floatingActions">
     <template #logo>
       <BsProductLogo v-if="logo.kind === 'product'" :name="productName" :asset-prefix="logo.assetPrefix" />
       <BsInline v-else-if="logo.kind === 'initials'"><BsText as="span" size="sm">{{ logo.initials }}</BsText><BsText as="span">{{ productName }}</BsText></BsInline>
       <BsText v-else as="span">{{ productName }}</BsText>
     </template>
+    <template #mark><BsProductLogo v-if="logo.kind === 'product'" :name="productName" :asset-prefix="logo.assetPrefix" kind="mark" /></template>
+    <template #sidebar-footer="{ collapsed }"><BsSidebarAccount v-if="variant === 'shop' && account" :collapsed="collapsed" :name="account.name" :email="account.email" :actions="account.actions" :account-label="account.label" :sign-out-label="account.signOut" :sign-out-pending="account.pending" :error="account.error" :plan="sidebarPlan" @sign-out="emit('signOut')" /></template>
     <template #context><BsContextSwitcher v-if="workspace" :model-value="workspace.value" :label="workspace.label" :placeholder="workspace.placeholder" :options="workspace.options" :create-label="workspace.createLabel" @update:model-value="value => { if (value) emit('workspace', value) }" @create="emit('createWorkspace')"/><BsScopeSwitcher v-if="contextScope" :model-value="contextScope.value" :label="contextScope.label" :options="contextScope.options" visibility="mobile" @update:model-value="emit('scope', contextScope.key, $event)"/><BsText v-if="context" as="p" size="xs" tone="muted" emphasis="semibold">{{ context }}</BsText></template>
-    <template #header><BsTrialCountdown v-if="trial" :to="trial.to" :label="trial.label" :compact-label="trial.compactLabel"/><BsNotificationMenu v-if="notifications" :items="notifications.items" :label="notifications.label" :empty-label="notifications.emptyLabel" :mark-all-label="notifications.markAllLabel" :pending="notifications.pending" @select="emit('notification', $event)" @mark-all="emit('markAllNotifications')"/><BsScopeSwitcher v-for="scope in headerScopes" :key="scope.key" :model-value="scope.value" :label="scope.label" :options="scope.options" compact :visibility="scope.visibility" @update:model-value="emit('scope', scope.key, $event)"/><BsUserMenu v-if="account" :actions="account.actions" :name="account.name" :email="account.email" :sign-out-pending="account.pending" :error="account.error" :account-label="account.label" :sign-out-label="account.signOut" @sign-out="emit('signOut')" /><BsSettingsMenu v-else /></template>
+    <template #header><BsTrialCountdown v-if="trial" :to="trial.to" :label="trial.label" :compact-label="trial.compactLabel"/><BsNotificationMenu v-if="notifications" :items="notifications.items" :label="notifications.label" :empty-label="notifications.emptyLabel" :mark-all-label="notifications.markAllLabel" :pending="notifications.pending" @select="emit('notification', $event)" @mark-all="emit('markAllNotifications')"/><BsScopeSwitcher v-for="scope in headerScopes" :key="scope.key" :model-value="scope.value" :label="scope.label" :options="scope.options" compact :visibility="scope.visibility" @update:model-value="emit('scope', scope.key, $event)"/><BsUserMenu v-if="account && variant !== 'shop'" :actions="account.actions" :name="account.name" :email="account.email" :sign-out-pending="account.pending" :error="account.error" :account-label="account.label" :sign-out-label="account.signOut" @sign-out="emit('signOut')" /><BsSettingsMenu v-else-if="!account" /></template>
     <BsStateSurface v-if="state?.error" state="error" :title="state.title" :description="state.description" :action-label="state.retry" @action="emit('retry')"/><BsSectionSkeleton v-else-if="state?.loading" variant="cards"/><BsWorkspaceOnboarding v-else-if="onboarding && onboardingForm" v-model:form="onboardingForm" :pending="onboarding.pending" :error="onboarding.error" :copy="onboarding.copy" :accounts="onboarding.accounts" :revision="onboarding.revision" @create="emit('createOrganization')" @accept="emit('acceptInvitation')" @receipt="emit('demoReceipt')" @reset="emit('demoReset')"/><BsStack v-else gap="sm"><BsReadOnlyBanner v-if="readOnly" :title="readOnly.title" :description="readOnly.description" :action-label="readOnly.actionLabel" :action-to="readOnly.actionTo"/><BsPageBody v-if="bodyLayout === 'page'"><slot/></BsPageBody><slot v-else/></BsStack>
     <template #overlays>
       <BsWorkspaceCreationDialog v-if="workspaceCreation && workspaceCreationForm" v-model:form="workspaceCreationForm" :view="workspaceCreation" @close="emit('closeWorkspaceCreation')" @submit="emit('submitWorkspaceCreation')"/>

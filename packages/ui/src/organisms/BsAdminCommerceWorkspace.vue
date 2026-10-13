@@ -41,7 +41,41 @@ const emit = defineEmits<{
       <template v-else>
         <BsPanel padding="md"><BsHeading :level="2">{{ copy.configuration }}</BsHeading><BsText size="sm" tone="muted">{{ copy.configurationHelp }}</BsText><BsText v-if="view.configuration.loadError" role="alert">{{ view.configuration.loadError }} <BsButton @click="emit('retry', 'configuration')">{{ copy.retry }}</BsButton></BsText><BsButton v-else :disabled="!view.canMutate" @click="emit('configure')">{{ copy.save }}</BsButton></BsPanel>
         <BsPanel padding="md"><BsInline><BsHeading :level="2">{{ copy.billingQueue }}</BsHeading><BsSelect :model-value="view.billing.status" :label="copy.status" :options="view.billing.statusChoices" option-label="label" option-value="value" @update:model-value="emit('billingStatus', String($event))"/></BsInline>
-          <BsDataTable :value="view.billing.rows" :loading="view.billing.loading" :error="view.billing.error" :label="copy.billingQueue" data-key="id" lazy paginator :rows="25" :first="view.billing.first" :total-records="view.billing.total" :always-show-paginator="false" :columns="[{ key: 'tenant', field: 'tenant', header: copy.tenant }, { key: 'status', header: copy.status }, { key: 'currentPlan', field: 'currentPlan', header: copy.currentPlan }, { key: 'requestedPlan', field: 'requestedPlan', header: copy.requestedPlan }, { key: 'listPrice', field: 'listPrice', header: copy.listPrice }, { key: 'effectivePrice', header: copy.effectivePrice }, { key: 'paid', field: 'paid', header: copy.paid }, { key: 'blockers', field: 'blockers', header: copy.blockers }, { key: 'reference', field: 'reference', header: copy.reference }, { key: 'date', field: 'date', header: copy.date }, { key: 'review', header: copy.review, hidden: !view.canMutate }]" @page="emit('page', 'billing', $event)" @retry="emit('retry', 'billing')"><template #cell-status="{ row }"><BsStatusBadge :status="row.status"/></template><template #cell-effectivePrice="{ row }">{{ row.effectivePrice }}<BsText v-if="row.negotiated" as="span" size="xs" emphasis="semibold">{{ copy.negotiated }}</BsText></template><template #cell-review="{ row }"><BsInline><template v-if="row.canReview"><BsButton v-if="row.canStart" @click="emit('review', row.id, 'mark_under_review')">{{ copy.startReview }}</BsButton><BsButton :disabled="row.approveDisabled" @click="emit('review', row.id, 'approve')">{{ copy.approve }}</BsButton><BsButton @click="emit('review', row.id, 'reject')">{{ copy.reject }}</BsButton></template><BsButton @click="emit('price', row.id)">{{ copy.overridePrice }}</BsButton></BsInline></template><template #empty>{{ copy.emptyBilling }}</template></BsDataTable>
+          <BsDataTable density="compact" :value="view.billing.rows" :loading="view.billing.loading" :error="view.billing.error" :label="copy.billingQueue" data-key="id" lazy paginator :rows="25" :first="view.billing.first" :total-records="view.billing.total" :always-show-paginator="false" :columns="[{ key: 'tenant', header: copy.tenant, width: 'md' }, { key: 'terms', header: copy.requestedPlan, width: 'lg' }, { key: 'payment', header: copy.paid, width: 'sm' }, { key: 'review', header: copy.review, width: 'lg', hidden: !view.canMutate }]" @page="emit('page', 'billing', $event)" @retry="emit('retry', 'billing')">
+            <template #cell-tenant="{ row }">
+              <BsStack gap="xs">
+                <BsText emphasis="semibold">{{ row.tenant }}</BsText>
+                <BsStatusBadge :status="row.status" :label="view.billing.statusChoices.find(option => option.value === row.status)?.label" />
+                <BsText size="xs" tone="muted">{{ copy.date }}: {{ row.date }}</BsText>
+              </BsStack>
+            </template>
+            <template #cell-terms="{ row }">
+              <BsStack gap="xs">
+                <BsText emphasis="semibold">{{ row.requestedPlan }}</BsText>
+                <BsText size="xs" tone="muted">{{ copy.currentPlan }}: {{ row.currentPlan }}</BsText>
+                <BsText size="sm">{{ copy.listPrice }}: {{ row.listPrice }}</BsText>
+                <BsInline gap="xs" wrap><BsText size="sm" emphasis="semibold">{{ copy.effectivePrice }}: {{ row.effectivePrice }}</BsText><BsText v-if="row.negotiated" size="xs" emphasis="semibold">{{ copy.negotiated }}</BsText></BsInline>
+                <BsText size="xs" :tone="row.approveDisabled ? 'warning' : 'muted'">{{ copy.blockers }}: {{ row.blockers }}</BsText>
+              </BsStack>
+            </template>
+            <template #cell-payment="{ row }">
+              <BsStack gap="xs">
+                <BsText emphasis="semibold">{{ row.paid }}</BsText>
+                <BsText size="xs" tone="muted">{{ copy.reference }}: {{ row.reference }}</BsText>
+              </BsStack>
+            </template>
+            <template #cell-review="{ row }">
+              <BsStack gap="xs">
+                <template v-if="row.canReview">
+                  <BsButton v-if="row.canStart" variant="secondary" @click="emit('review', row.id, 'mark_under_review')">{{ copy.startReview }}</BsButton>
+                  <BsButton :disabled="row.approveDisabled" @click="emit('review', row.id, 'approve')">{{ copy.approve }}</BsButton>
+                  <BsButton variant="secondary" @click="emit('review', row.id, 'reject')">{{ copy.reject }}</BsButton>
+                </template>
+                <BsButton variant="link" @click="emit('price', row.id)">{{ copy.overridePrice }}</BsButton>
+              </BsStack>
+            </template>
+            <template #empty>{{ copy.emptyBilling }}</template>
+          </BsDataTable>
         </BsPanel><BsPanel padding="md"><BsHeading :level="2">{{ copy.billingQueue }} · {{ copy.audit }}</BsHeading><BsAdminAuditTable :title="copy.billingQueue + ' ' + copy.audit" :copy="copy" :view="view.billingAudit" @page="emit('page', 'billingAudit', $event)" @retry="emit('retry', 'billingAudit')"/></BsPanel>
       </template>
     </template>

@@ -6,5 +6,5 @@ const document = computed(() => legalDocuments.delivery[locale.value === 'ar' ? 
 useHead(() => ({ title: `${document.value.title} · Shop Suit`, meta: [{ name: 'description', content: document.value.intro }] }))
 </script>
 <template>
-  <BsPublicLegalPage :document="document" eyebrow="Shop Suit by Building Suit" :last-updated-label="t('marketing.lastUpdated')"/>
+  <BsPublicLegalPage presentation="flat" :document="document" eyebrow="Shop Suit by Building Suit" :last-updated-label="t('marketing.lastUpdated')"/>
 </template>

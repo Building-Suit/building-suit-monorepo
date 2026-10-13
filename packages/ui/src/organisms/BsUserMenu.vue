@@ -3,6 +3,8 @@ import { useMenuNavigation } from '@building-suit/ux'
 import type { NavigationLink } from '@building-suit/contracts'
 
 withDefaults(defineProps<{
+  compact?: boolean
+  placement?: 'below' | 'above'
   name?: string
   email?: string
   avatarUrl?: string
@@ -12,6 +14,8 @@ withDefaults(defineProps<{
   signOutPending?: boolean
   error?: string
 }>(), {
+  compact: true,
+  placement: 'below',
   name: '',
   email: '',
   avatarUrl: '',
@@ -29,19 +33,21 @@ const { open, root, panel, close, toggle, onKeydown } = useMenuNavigation(() => 
   <div ref="root" class="relative">
     <BsButton
       data-user-menu-trigger
-      variant="icon"
+      :variant="compact ? 'icon' : 'text'"
+      :class="compact ? '' : 'w-full justify-start px-2 text-start'"
       :aria-label="accountLabel"
       :aria-expanded="open"
       aria-haspopup="menu"
       @click="toggle"
     >
-      <BsUserIdentity :name="name" :email="email" :avatar-url="avatarUrl" compact />
+      <BsUserIdentity :name="name" :email="email" :avatar-url="avatarUrl" :compact="compact" />
     </BsButton>
 
     <div
       v-if="open"
       ref="panel"
-      class="ls-card absolute end-0 z-40 mt-1 max-h-[calc(100dvh-5rem)] w-[min(18rem,calc(100vw-2rem))] space-y-2 overflow-y-auto p-2 shadow-overlay"
+      :class="placement === 'above' ? 'bottom-full mb-2' : 'mt-1'"
+      class="ls-card absolute end-0 z-40 max-h-[calc(100dvh-5rem)] w-[min(18rem,calc(100vw-2rem))] space-y-2 overflow-y-auto p-2 shadow-overlay"
       role="menu"
       :aria-label="accountLabel"
       @keydown="onKeydown"
@@ -53,7 +59,7 @@ const { open, root, panel, close, toggle, onKeydown } = useMenuNavigation(() => 
         v-for="action in actions"
         :key="action.to"
         :to="action.to"
-        class="ls-nav-link"
+        class="ls-nav-link min-h-11"
         role="menuitem"
         @click="close()"
       >

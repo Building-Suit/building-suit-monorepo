@@ -129,7 +129,7 @@ test('Administration shell: controlled selection, disclosure, states, RTL and th
   expect(await rail.evaluate(element => element.scrollWidth > element.clientWidth)).toBe(true)
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   await shell.screenshot({ path: '.local/screenshots/administration-shell-mobile-en-light.png' })
-  await page.getByRole('button', { name: 'Language · Theme' }).click()
+  await page.getByRole('banner').getByRole('button', { name: 'Language · Theme', exact: true }).click()
   await page.getByRole('menuitemradio', { name: 'Dark', exact: true }).click()
   await page.getByRole('menuitemradio', { name: 'ar', exact: true }).click()
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')

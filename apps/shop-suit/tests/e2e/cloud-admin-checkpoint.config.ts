@@ -1,0 +1,3 @@
+import { defineConfig } from '@playwright/test'
+import atomicShop from '../../../../packages/testing/playwright.atomic-shop.config'
+export default defineConfig({ ...atomicShop, testMatch: ['atomic-platform-admin.spec.ts', 'atomic-billing.spec.ts', 'atomic-operations.spec.ts', 'team.spec.ts', 'cloud-admin-queue.spec.ts'], grep: /en, light, 1440|ar, dark, 390|Team controls en desktop light|Team controls ar mobile dark|billing load failure|billing denial|compact queue observer|compact queue blocked/, grepInvert: /cash shift adapter/, outputDir: '../../../../test-results/cloud-admin-checkpoint' })

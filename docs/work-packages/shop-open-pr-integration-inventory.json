@@ -1,0 +1,236 @@
+{
+  "observedShopHead": "fdd800883a186225fbbf7aeeaf183e898f9e38c4",
+  "note": "Read-only snapshot; refresh before integration. Await completed SAS and XPay. PR250 extra review document is not yet in this head. No PRs merged or closed.",
+  "pullRequests": [
+    {
+      "base": "codex/shop-suit/cloud-public-auth",
+      "draft": true,
+      "head": "codex/shop-suit/cloud-integration-validation",
+      "number": 272,
+      "sha": "fdd800883a186225fbbf7aeeaf183e898f9e38c4",
+      "title": "Shop cloud: verify aggregate stack and record 33-route gaps",
+      "classification": "contained ancestor of Shop checkpoint; do not replay or mass-merge",
+      "ancestorOfShopCheckpoint": true
+    },
+    {
+      "base": "codex/super-admin-suit/account-activation",
+      "draft": true,
+      "head": "codex/super-admin-suit/account-workflow",
+      "number": 271,
+      "sha": "198aa275df145f74c27e763808e1fbd9bb14d753",
+      "title": "feat(super-admin): add signed account activation workflow",
+      "classification": "separate SAS dependency; provisioning pending",
+      "ancestorOfShopCheckpoint": false
+    },
+    {
+      "base": "codex/shop-suit/cloud-admin-billing-team-settings",
+      "draft": true,
+      "head": "codex/shop-suit/cloud-public-auth",
+      "number": 270,
+      "sha": "30175c1340c85611e60e4635b25d3e519b955faa",
+      "title": "Shop cloud: apply canonical flat public and auth presentation",
+      "classification": "contained ancestor of Shop checkpoint; do not replay or mass-merge",
+      "ancestorOfShopCheckpoint": true
+    },
+    {
+      "base": "stg",
+      "draft": true,
+      "head": "codex/super-admin-suit/account-activation",
+      "number": 269,
+      "sha": "24dfc9e2e61b4d965569a2faa631ec8396f7b74d",
+      "title": "feat(super-admin): prepare guarded trial activation command",
+      "classification": "separate SAS dependency; provisioning pending",
+      "ancestorOfShopCheckpoint": false
+    },
+    {
+      "base": "codex/shop-suit/cloud-daily-operations",
+      "draft": true,
+      "head": "codex/shop-suit/cloud-admin-billing-team-settings",
+      "number": 268,
+      "sha": "90060ef50424dee974de1a8dd9147cf9c4f473e0",
+      "title": "Shop cloud: align admin billing queue with stacked review layout",
+      "classification": "contained ancestor of Shop checkpoint; do not replay or mass-merge",
+      "ancestorOfShopCheckpoint": true
+    },
+    {
+      "base": "codex/shop-suit/cloud-purchasing-customers",
+      "draft": true,
+      "head": "codex/shop-suit/cloud-daily-operations",
+      "number": 267,
+      "sha": "398e365fd9de2667c897a5447fa7ecea125a59bf",
+      "title": "Shop cloud: guard failed reports and pin daily editors",
+      "classification": "contained ancestor of Shop checkpoint; do not replay or mass-merge",
+      "ancestorOfShopCheckpoint": true
+    },
+    {
+      "base": "codex/shop-suit/cloud-inventory-states",
+      "draft": true,
+      "head": "codex/shop-suit/cloud-purchasing-customers",
+      "number": 266,
+      "sha": "5a9a10b044d298487c7cf83b32ebcac90c61fe9c",
+      "title": "Shop cloud: clarify purchasing customer failures and pin actions",
+      "classification": "contained ancestor of Shop checkpoint; do not replay or mass-merge",
+      "ancestorOfShopCheckpoint": true
+    },
+    {
+      "base": "codex/shop-suit/cloud-catalog-editors",
+      "draft": true,
+      "head": "codex/shop-suit/cloud-inventory-states",
+      "number": 265,
+      "sha": "ef2aa3fe586fcc412000666a4ebbd5b0ad0e3b20",
+      "title": "Shop cloud: distinguish inventory failures and verified summaries",
+      "classification": "contained ancestor of Shop checkpoint; do not replay or mass-merge",
+      "ancestorOfShopCheckpoint": true
+    },
+    {
+      "base": "codex/shop-suit/cloud-sales-receipts",
+      "draft": true,
+      "head": "codex/shop-suit/cloud-catalog-editors",
+      "number": 264,
+      "sha": "53caf83fb234af39474feb73ba23e2675ad261c8",
+      "title": "Shop cloud: keep catalog editor actions visible",
+      "classification": "contained ancestor of Shop checkpoint; do not replay or mass-merge",
+      "ancestorOfShopCheckpoint": true
+    },
+    {
+      "base": "codex/shop-suit/penpot-pos",
+      "draft": true,
+      "head": "codex/shop-suit/cloud-sales-receipts",
+      "number": 263,
+      "sha": "5f4977eac93c840dac389d7b6b1f859f4b2235b0",
+      "title": "Shop cloud: refine receipt controls and responsive print previews",
+      "classification": "contained ancestor of Shop checkpoint; do not replay or mass-merge",
+      "ancestorOfShopCheckpoint": true
+    },
+    {
+      "base": "codex/shop-suit/penpot-dashboard",
+      "draft": true,
+      "head": "codex/shop-suit/penpot-pos",
+      "number": 262,
+      "sha": "5d3493f5a25738456c4a632eecf68d2d347a1dc0",
+      "title": "Shop: align POS catalog and keep touch cart controls visible",
+      "classification": "contained ancestor of Shop checkpoint; do not replay or mass-merge",
+      "ancestorOfShopCheckpoint": true
+    },
+    {
+      "base": "codex/shop-suit/penpot-shell",
+      "draft": true,
+      "head": "codex/shop-suit/penpot-dashboard",
+      "number": 261,
+      "sha": "71fd032448060198be6549d4539a0fb9ac6c907e",
+      "title": "Shop: align dashboard with the approved Penpot specimen",
+      "classification": "contained ancestor of Shop checkpoint; do not replay or mass-merge",
+      "ancestorOfShopCheckpoint": true
+    },
+    {
+      "base": "codex/shop-suit/catalog-image-upload",
+      "draft": true,
+      "head": "codex/shop-suit/penpot-shell",
+      "number": 260,
+      "sha": "40ddbc093ebf01036a0f3204b2b9c0585fc600bd",
+      "title": "Shop foundations: render Manrope and align the flat shell",
+      "classification": "contained ancestor of Shop checkpoint; do not replay or mass-merge",
+      "ancestorOfShopCheckpoint": true
+    },
+    {
+      "base": "codex/shop-suit/ui-pro-integration",
+      "draft": true,
+      "head": "codex/shop-suit/catalog-image-upload",
+      "number": 259,
+      "sha": "0e25d129be2d79e049752ad7a000aba6da7bfc2b",
+      "title": "Shop: optional private product and service image uploads",
+      "classification": "contained ancestor of Shop checkpoint; do not replay or mass-merge",
+      "ancestorOfShopCheckpoint": true
+    },
+    {
+      "base": "stg",
+      "draft": true,
+      "head": "codex/shop-suit/ui-pro-integration",
+      "number": 258,
+      "sha": "fdd0e17973280d3ca8fd76985925a4e4619e0e52",
+      "title": "Shop UI PRO: consolidated reference-driven redesign",
+      "classification": "contained ancestor of Shop checkpoint; do not replay or mass-merge",
+      "ancestorOfShopCheckpoint": true
+    },
+    {
+      "base": "codex/shop-suit/ui-pro-settings",
+      "draft": true,
+      "head": "codex/shop-suit/ui-pro-consistency",
+      "number": 257,
+      "sha": "407b69a41e2576d30ed7e1e6bf3412188739b6de",
+      "title": "SHOP-UI-07: consistent worklist density and responsive headers",
+      "classification": "contained ancestor of Shop checkpoint; do not replay or mass-merge",
+      "ancestorOfShopCheckpoint": true
+    },
+    {
+      "base": "codex/shop-suit/ui-pro-pricing-billing",
+      "draft": true,
+      "head": "codex/shop-suit/ui-pro-settings",
+      "number": 256,
+      "sha": "b7494396009e2581fe892de77723972607cb581e",
+      "title": "SHOP-UI-06: clear business settings sections and actions",
+      "classification": "contained ancestor of Shop checkpoint; do not replay or mass-merge",
+      "ancestorOfShopCheckpoint": true
+    },
+    {
+      "base": "codex/shop-suit/ui-pro-appointments",
+      "draft": true,
+      "head": "codex/shop-suit/ui-pro-pricing-billing",
+      "number": 255,
+      "sha": "25dabcfa990d3d8ef81c269e69e1673e5c5f8efd",
+      "title": "SHOP-UI-05: polished pricing and clear subscription billing sections",
+      "classification": "contained ancestor of Shop checkpoint; do not replay or mass-merge",
+      "ancestorOfShopCheckpoint": true
+    },
+    {
+      "base": "codex/shop-suit/ui-pro-pos-media",
+      "draft": true,
+      "head": "codex/shop-suit/ui-pro-appointments",
+      "number": 253,
+      "sha": "17d7c0059926325b9a9fcce340a9762f5ed78435",
+      "title": "SHOP-UI-04: reserved appointment calendar with month navigation",
+      "classification": "contained ancestor of Shop checkpoint; do not replay or mass-merge",
+      "ancestorOfShopCheckpoint": true
+    },
+    {
+      "base": "codex/shop-suit/ui-pro-dashboard",
+      "draft": true,
+      "head": "codex/shop-suit/ui-pro-pos-media",
+      "number": 252,
+      "sha": "ba1d883f74649befcfcf117395bc134196560f9d",
+      "title": "SHOP-UI-03: compact POS image catalog and optional media editing",
+      "classification": "contained ancestor of Shop checkpoint; do not replay or mass-merge",
+      "ancestorOfShopCheckpoint": true
+    },
+    {
+      "base": "codex/shop-suit/ui-pro-redesign",
+      "draft": true,
+      "head": "codex/shop-suit/ui-pro-dashboard",
+      "number": 251,
+      "sha": "cf137b2c9c9467962372cac5a3e3190a5e7979d7",
+      "title": "SHOP-UI-02: actual dashboard metrics, charts and scoped drilldowns",
+      "classification": "contained ancestor of Shop checkpoint; do not replay or mass-merge",
+      "ancestorOfShopCheckpoint": true
+    },
+    {
+      "base": "codex/shop-suit/ui-pro-integration",
+      "draft": true,
+      "head": "codex/shop-suit/ui-pro-redesign",
+      "number": 250,
+      "sha": "a262ffdf9b18f9d9f83983545dfc8c0edbbfef4f",
+      "title": "SHOP-UI-01: flat collapsible shell, sidebar plan and profile",
+      "classification": "extra three-line review-document commit; visual ancestors already contained; preserve deliberately",
+      "ancestorOfShopCheckpoint": false
+    },
+    {
+      "base": "main",
+      "draft": false,
+      "head": "stg",
+      "number": 215,
+      "sha": "266d91dc11cbc07b5e9f3b6d37dd53e541fb70e1",
+      "title": "Stg",
+      "classification": "main promotion; do not merge under stg authorization",
+      "ancestorOfShopCheckpoint": true
+    }
+  ]
+}

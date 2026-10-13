@@ -20,7 +20,7 @@ function updateClose(key: keyof BsCashShiftAmountForm, value: string | number) {
 function updateMovement(key: keyof BsCashShiftMovementForm, value: string | number | boolean) { movementForm.value = { ...movementForm.value, [key]: key === 'amount' ? Number(value) : String(value) } }
 </script>
 <template>
-  <BsStack>
+  <BsStack gap="lg">
     <BsPageHeader  :title="copy.title" :subtitle="copy.subtitle">
       <template #actions>
         <BsText v-if="locationName" as="p" size="sm">
@@ -57,7 +57,7 @@ function updateMovement(key: keyof BsCashShiftMovementForm, value: string | numb
             </BsDescriptionList>
             <BsBox scroll="x">
               <BsHeading :level="3">{{ copy.eventHistory }}</BsHeading>
-              <BsDataTable :value="active.events" data-key="id" :label="copy.eventHistory" :columns="[{ key: 'column0', header: (copy.date) }, { key: 'column1', header: (copy.event) }, { key: 'column2', header: (copy.actor) }, { key: 'column3', header: (copy.amount), align: 'end' }]">
+              <BsDataTable density="compact" :value="active.events" data-key="id" :label="copy.eventHistory" :columns="[{ key: 'column0', header: (copy.date) }, { key: 'column1', header: (copy.event) }, { key: 'column2', header: (copy.actor) }, { key: 'column3', header: (copy.amount), align: 'end' }]">
                 <template #cell-column0="{ row: event }">{{ event.date }}</template>
                 <template #cell-column1="{ row: event }">
                   <BsText as="p" emphasis="semibold">{{ event.label }}</BsText>
@@ -80,7 +80,7 @@ function updateMovement(key: keyof BsCashShiftMovementForm, value: string | numb
             <BsSelect v-if="canManage" v-model="cashierId" :label="copy.cashier" :options="[{ id: null, name: copy.allCashiers }, ...cashierOptions]" option-label="name" option-value="id"/>
           </BsInline>
           <BsBox scroll="x">
-            <BsDataTable :value="historyRows" data-key="id" :label="copy.history" lazy paginator :rows="pageSize" :first="(page - 1) * pageSize" :total-records="total" :always-show-paginator="false" :columns="[{ key: 'cashierName', header: (copy.cashier), field: 'cashierName' }, { key: 'column1', header: (copy.opened) }, { key: 'column2', header: (copy.expected), align: 'end' }, { key: 'column3', header: (copy.counted), align: 'end' }, { key: 'column4', header: (copy.variance), align: 'end' }, { key: 'column5', header: (copy.nonCash), align: 'end' }]" @page="emit('page', $event.page + 1)">
+            <BsDataTable density="compact" :value="historyRows" data-key="id" :label="copy.history" lazy paginator :rows="pageSize" :first="(page - 1) * pageSize" :total-records="total" :always-show-paginator="false" :columns="[{ key: 'cashierName', header: (copy.cashier), field: 'cashierName' }, { key: 'column1', header: (copy.opened) }, { key: 'column2', header: (copy.expected), align: 'end' }, { key: 'column3', header: (copy.counted), align: 'end' }, { key: 'column4', header: (copy.variance), align: 'end' }, { key: 'column5', header: (copy.nonCash), align: 'end' }]" @page="emit('page', $event.page + 1)">
               <template #cell-column1="{ row: shift }">{{ shift.opened }}</template>
               <template #cell-column2="{ row: shift }">{{ shift.expected }}</template>
               <template #cell-column3="{ row: shift }">{{ shift.counted }}</template>
@@ -96,7 +96,7 @@ function updateMovement(key: keyof BsCashShiftMovementForm, value: string | numb
         </BsPanel>
       </template>
     </BsStack>
-    <BsRecordActionDialog v-model:visible="showOpen" :title="copy.open" :dirty="openEditor.dirty" :pending="openEditor.pending" :error="actionError" :submit-label="copy.openAction" :cancel-label="copy.cancel" @submit="emit('saveOpen')">
+    <BsRecordActionDialog v-model:visible="showOpen" pinned-actions :title="copy.open" :dirty="openEditor.dirty" :pending="openEditor.pending" :error="actionError" :submit-label="copy.openAction" :cancel-label="copy.cancel" @submit="emit('saveOpen')">
       <BsField v-slot="field" :label="copy.openingCash">
         <BsInput :id="field.id" :model-value="openForm.amount" :aria-describedby="field.describedby" type="number" :min="0" :step="0.01" required @update:model-value="updateOpen('amount', $event)"/>
       </BsField>
@@ -104,7 +104,7 @@ function updateMovement(key: keyof BsCashShiftMovementForm, value: string | numb
         <BsTextarea :id="field.id" :model-value="openForm.notes" :aria-describedby="field.describedby" :maxlength="1000" :rows="3" @update:model-value="updateOpen('notes', $event)"/>
       </BsField>
     </BsRecordActionDialog>
-    <BsRecordActionDialog v-model:visible="showMovement" :title="copy.movement" :dirty="movementEditor.dirty" :pending="movementEditor.pending" :error="actionError" :submit-label="copy.record" :cancel-label="copy.cancel" @submit="emit('saveMovement')">
+    <BsRecordActionDialog v-model:visible="showMovement" pinned-actions :title="copy.movement" :dirty="movementEditor.dirty" :pending="movementEditor.pending" :error="actionError" :submit-label="copy.record" :cancel-label="copy.cancel" @submit="emit('saveMovement')">
       <BsFieldGroup :legend="(copy.event)">
         <BsRadio v-for="option in movementOptions" :key="option.value" :model-value="movementForm.kind" :value="option.value" :label="option.label" @update:model-value="updateMovement('kind', $event)"/>
       </BsFieldGroup>
@@ -118,7 +118,7 @@ function updateMovement(key: keyof BsCashShiftMovementForm, value: string | numb
         <BsInput :id="field.id" :model-value="movementForm.reference" :aria-describedby="field.describedby" :maxlength="200" required @update:model-value="updateMovement('reference', $event)"/>
       </BsField>
     </BsRecordActionDialog>
-    <BsRecordActionDialog v-model:visible="showClose" :title="copy.close" :dirty="closeEditor.dirty" :pending="closeEditor.pending" :error="actionError" :submit-label="copy.closeAction" :cancel-label="copy.cancel" @submit="emit('saveClose')">
+    <BsRecordActionDialog v-model:visible="showClose" pinned-actions :title="copy.close" :dirty="closeEditor.dirty" :pending="closeEditor.pending" :error="actionError" :submit-label="copy.closeAction" :cancel-label="copy.cancel" @submit="emit('saveClose')">
       <BsText as="p" size="sm">{{ copy.expected }}: <BsText as="strong">{{ expectedCash }}</BsText>
       </BsText>
       <BsField v-slot="field" :label="copy.counted">

@@ -1,3 +1,4 @@
+-- Historical manual records are seeded by rolled-back pg_temp fixtures; current public writes stay retired.
 -- SS-SUB-001: integrated commercial lifecycle acceptance. The database runner
 -- wraps this suite in a transaction and rolls every synthetic customer back.
 
@@ -263,10 +264,10 @@ declare
   v_replay uuid;
   v_item jsonb;
 begin
-  v_notice := public.submit_shop_billing_notice(
+  v_notice := pg_temp.seed_legacy_submit_shop_billing_notice(
     v_request, v_shop, 'multi', 599, current_date, 'INSTAPAY-SS-SUB-UPGRADE'
   );
-  v_replay := public.submit_shop_billing_notice(
+  v_replay := pg_temp.seed_legacy_submit_shop_billing_notice(
     v_request, v_shop, 'multi', 599, current_date, 'INSTAPAY-SS-SUB-UPGRADE'
   );
   select item into v_item
@@ -359,7 +360,7 @@ set local role authenticated;
 do $$
 declare v_notice uuid; v_shop uuid := current_setting('ss_sub.shop')::uuid;
 begin
-  v_notice := public.submit_shop_billing_notice(
+  v_notice := pg_temp.seed_legacy_submit_shop_billing_notice(
     gen_random_uuid(), v_shop, 'multi', 599, current_date,
     'INSTAPAY-SS-SUB-RENEWAL'
   );
@@ -417,7 +418,7 @@ do $$
 declare v_shop uuid := current_setting('ss_sub.shop')::uuid; v_notice uuid;
 begin
   perform public.save_shop_location(v_shop, null, 'Second pilot branch', 'P2', null, null);
-  v_notice := public.submit_shop_billing_notice(
+  v_notice := pg_temp.seed_legacy_submit_shop_billing_notice(
     gen_random_uuid(), v_shop, 'solo',
     (select catalog_terms_id from public.shop_public_plan_catalog()
       where slug='solo' and plan_variant='solo_2' and billing_interval='monthly'),

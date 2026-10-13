@@ -4,6 +4,12 @@ export type ShopRpcDatabase = {
     Tables: Record<string, never>
     Views: Record<string, never>
     Functions: {
+      shop_xpay_order_read: { Args: { p_shop_id: string; p_order_id: string | null }; Returns: unknown }
+      shop_catalog_media: {
+        Args: { p_shop_id: string; p_action: 'products' | 'services' | 'pos' | 'save_product' | 'save_service'; p_payload: Record<string, string | number | boolean | string[] | null> }
+        Returns: unknown
+      }
+
       fast_pay_location_sale: {
         Args: {
           p_request_id: string
