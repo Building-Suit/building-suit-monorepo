@@ -34,8 +34,14 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Start disposable Shop and SAS backends
         run: |
-          pnpm exec supabase --workdir apps/shop-suit start --exclude studio,realtime,imgproxy,postgres-meta,edge-runtime,logflare,vector,supavisor > "$RUNNER_TEMP/accounts-shop-start.log" 2>&1
-          pnpm exec supabase --workdir apps/super-admin-suit start --exclude studio,realtime,storage-api,imgproxy,postgres-meta,edge-runtime,logflare,vector,supavisor > "$RUNNER_TEMP/accounts-sas-start.log" 2>&1
+          if ! pnpm exec supabase --workdir apps/shop-suit start --exclude studio,realtime,imgproxy,postgres-meta,edge-runtime,logflare,vector,supavisor > "$RUNNER_TEMP/accounts-shop-start.log" 2>&1; then
+            node tooling/database/account-provisioning-disposable.mjs --startup-errors "$RUNNER_TEMP/accounts-shop-start.log"
+            exit 1
+          fi
+          if ! pnpm exec supabase --workdir apps/super-admin-suit start --exclude studio,realtime,storage-api,imgproxy,postgres-meta,edge-runtime,logflare,vector,supavisor > "$RUNNER_TEMP/accounts-sas-start.log" 2>&1; then
+            node tooling/database/account-provisioning-disposable.mjs --startup-errors "$RUNNER_TEMP/accounts-sas-start.log"
+            exit 1
+          fi
       - name: Validate SQL, signed dispatch, real Auth and local invitation claim
         run: node tooling/database/account-provisioning-disposable.mjs
       - name: Stop only this job's disposable stacks

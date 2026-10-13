@@ -150,4 +150,12 @@ async function run() {
   assert.equal(resend.state,'success');assert.equal(resend.data.invitationState,'claimed','Verified owners receive no duplicate invitation')
   console.log('Disposable SQL, real SAS signing/verification, target handler/Auth, immediate grant, local invitation and verified owner claim passed.')
 }
-if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href)run().catch(error=>{console.error(error.message);process.exitCode=1})
+if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href) {
+  if(process.argv[2]==='--startup-errors') {
+    assertDisposable(process.env)
+    const content=await readFile(process.argv[3],'utf8')
+    const errors=content.split('\n').filter(line=>/ERROR:|failed to|SQLSTATE/i.test(line)).slice(-10)
+      .map(line=>line.replace(/[A-Za-z0-9_-]{40,}/g,'[redacted]').slice(0,500))
+    console.error(errors.join('\n')||'Disposable backend startup failed; no safe error line available')
+  } else run().catch(error=>{console.error(error.message);process.exitCode=1})
+}
