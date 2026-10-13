@@ -41,7 +41,10 @@ useTheme()
 .bs-auth-layout__panel { display: flex; align-items: center; justify-content: center; padding: var(--bs-space-9) var(--bs-space-5); background: radial-gradient(circle at 50% 18%, color-mix(in oklab, var(--bs-accent) 9%, transparent), transparent 25rem), var(--bs-bg); }
 .bs-auth-layout__form-shell { display: flex; width: 100%; max-width: 27rem; flex-direction: column; align-items: center; }
 .bs-auth-layout__form-shell--wide { max-width: 36rem; }
-.bs-auth-layout__mobile-logo { display: inline-flex; margin-bottom: var(--bs-space-9); }
+.bs-auth-layout__mobile-logo { display: inline-flex; max-inline-size: 100%; margin-bottom: var(--bs-space-9); }
+.bs-auth-layout .ls-auth-brand { max-inline-size: 100%; }
+.bs-auth-layout__mobile-logo .ls-logo,
+.bs-auth-layout .ls-auth-brand .ls-logo { min-inline-size: 0; max-inline-size: 100%; }
 .bs-auth-layout__settings { display: flex; justify-content: center; margin-top: var(--bs-space-5); }
 .ls-auth-showcase { isolation: isolate; color: var(--bs-pearl-white); background: linear-gradient(135deg, rgb(22 41 59 / .88), rgb(13 27 40 / .98)), var(--bs-gradient-navy); }
 /* .ls-auth-brand { top: 48px; left: 50%; transform: translateX(-50%); } */

@@ -57,3 +57,18 @@ Workspace panels use the canonical card surface, border, radius, elevation and p
 `BsDashboardMetric` renders product-formatted KPI values with consistent title/value/hint structure and preserves source navigation as semantic events. Its 144px minimum height and 20px padding are canonical component tokens, matching the approved Shop dashboard specimen. Values use the existing h2 type scale; cards grow for translated or longer content. The complete financial notice remains product-owned and visible beside the metric grid.
 
 Shop public/auth frames explicitly opt into `presentation: flat` through product configuration. The shared `BsAuthLayout`/`BsProductAuthFrame`/`BsSignInPage` default remains unchanged for other Suits. Flat form surfaces use canonical background/border/card-radius, no elevation, and h2 heading tokens; showcase titles use the display tokens. `BsPublicLegalPage` supports the same optional flat presentation for canonical display/h2 headings and a flat content surface. Content, account/session behavior and legal policy remain product-owned. The component catalogue describes this opt-in; native variant and missing-reference comparisons remain separate acceptance work.
+
+
+### Account lifecycle page templates
+
+`BsAccountActivationPage`, `BsAccountProvisioningPage` and `BsOwnerInvitationPage`
+are explicitly exported complete page templates. Their finite content maps and
+named typed view models contain only projected labels, state and capabilities.
+Controlled field models and semantic events return changes to the owning app;
+the templates do not call Auth, select tenants or calculate plan entitlements.
+The activation page shows original trial history and actual grant/audit dates.
+Provisioning distinguishes active access, invitation acceptance and owner email
+verification; a separate resend requires acknowledgment. The owner template
+shows password fields only after the app verifies target ownership.
+The documentation `/components` page includes their contracts and an inert
+unavailable-invitation preview.

@@ -256,6 +256,10 @@ otp_expiry = 3600
 subject = "{{ .Token }} is your Shop Suit verification code"
 content_path = "./supabase/templates/confirmation.html"
 
+[auth.email.template.invite]
+subject = "Claim your Shop Suit account | تأكيد ملكية حسابك"
+content_path = "./supabase/templates/invite.html"
+
 # Uncomment to customize notification email template
 # [auth.email.notification.password_changed]
 # enabled = true

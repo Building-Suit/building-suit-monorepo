@@ -321,7 +321,10 @@
     "./molecules/BsCatalogImageUploader": "./src/molecules/BsCatalogImageUploader.vue",
     "./molecules/BsDashboardMetric": "./src/molecules/BsDashboardMetric.vue",
     "./molecules/BsQuantityStepper": "./src/molecules/BsQuantityStepper.vue",
-    "./organisms/BsPointOfSaleCart": "./src/organisms/BsPointOfSaleCart.vue"
+    "./organisms/BsPointOfSaleCart": "./src/organisms/BsPointOfSaleCart.vue",
+    "./templates/BsAccountActivationPage": "./src/templates/BsAccountActivationPage.vue",
+    "./templates/BsAccountProvisioningPage": "./src/templates/BsAccountProvisioningPage.vue",
+    "./templates/BsOwnerInvitationPage": "./src/templates/BsOwnerInvitationPage.vue"
   },
   "dependencies": {
     "primevue": "4.5.5",

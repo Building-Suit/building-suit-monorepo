@@ -125,6 +125,25 @@ const shellLabels = computed(() => ({
   emptyNavigation: isArabic.value ? 'لا توجد عناصر تنقل' : 'No navigation items',
 }))
 useHead({ title: 'Shared component catalogue · Building Suit' })
+
+const invitationPreviewPassword=ref(''), invitationPreviewConfirmation=ref('')
+const invitationPreviewCopy={
+  "ownerInvite.title": "Owner invitation",
+  "ownerInvite.description": "A complete shared claim page; ownership remains product-owned.",
+  "ownerInvite.home": "Home",
+  "ownerInvite.loading": "Loading",
+  "ownerInvite.invalid": "Invitation unavailable",
+  "ownerInvite.askAdmin": "Request an explicitly acknowledged resend.",
+  "ownerInvite.login": "Sign in",
+  "ownerInvite.done": "Done",
+  "ownerInvite.open": "Open",
+  "ownerInvite.passwordTitle": "Password title",
+  "ownerInvite.verified": "Verified",
+  "ownerInvite.save": "Save",
+  "ownerInvite.password": "Password",
+  "ownerInvite.confirm": "Confirm",
+  "ownerInvite.passwordError": "Passworderror"
+}
 </script>
 
 <template>
@@ -391,6 +410,15 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
       </BsForm>
       <div class="mt-5"><BsButton variant="danger" @click="confirmExample">{{ isArabic ? 'إزالة سجل' : 'Remove record' }}</BsButton><p class="mt-3" role="status">{{ confirmationResult }}</p></div>
     </BsCard>
+
+    <BsContentSection :title="isArabic ? 'قوالب دورة الحساب' : 'Account lifecycle templates'" :description="isArabic ? 'التطبيق يملك التفويض والبيانات؛ القالب يملك العرض فقط.' : 'The app owns authorization and data; each complete template owns presentation.'">
+      <BsDescriptionList>
+        <BsDescriptionItem term="BsAccountActivationPage">{{ isArabic ? 'تأكيد الباقة والتواريخ ونتيجة التدقيق مع إعادة الطلب نفسه.' : 'Plan confirmation, preserved trial dates, effective grant dates, audit result and exact-request retry.' }}</BsDescriptionItem>
+        <BsDescriptionItem term="BsAccountProvisioningPage">{{ isArabic ? 'إنشاء المالك والباقة؛ تحقق البريد وإعادة الدعوة منفصلان.' : 'Controlled account form, grant status, separate verification status and acknowledged invitation resend.' }}</BsDescriptionItem>
+        <BsDescriptionItem term="BsOwnerInvitationPage">{{ isArabic ? 'حالة الدعوة وكلمة مرور يختارها المالك بعد التحقق.' : 'Invitation states and owner-chosen password after target verification.' }}</BsDescriptionItem>
+      </BsDescriptionList>
+      <BsOwnerInvitationPage v-model:password="invitationPreviewPassword" v-model:confirmation="invitationPreviewConfirmation" :copy="invitationPreviewCopy" :view="{phase:'error',pending:false,failed:false}" />
+    </BsContentSection>
 
     <WorkflowPatternCatalogue />
 

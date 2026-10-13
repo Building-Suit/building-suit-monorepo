@@ -2,7 +2,7 @@
 import Column from 'primevue/column'
 import type { BsDataTableQueryAdapter } from '@building-suit/ux'
 import type { BsControlPlaneView, TransferConfiguration, ActivityQuery, OfferDraft, ReviewDraft } from '../types/controlPlanePresentation'
-const props = defineProps<BsControlPlaneView & { copy: Record<string, string>; locale: string }>()
+const props = defineProps<BsControlPlaneView & { copy: Record<string, string>; locale: string; accountLinks?: {id:string;label:string}[] }>()
 const email = defineModel<string>('email', { required: true })
 const password = defineModel<string>('password', { required: true })
 const draft = defineModel<TransferConfiguration>('draft', { required: true })
@@ -16,7 +16,7 @@ const billingFilter = defineModel<string>('billingFilter', { required: true })
 const billingPage = defineModel<number>('billingPage', { required: true })
 const reviewDraft = defineModel<ReviewDraft>('reviewDraft', { required: true })
 const billingVisible = defineModel<boolean>('billingVisible', { required: true })
-const emit = defineEmits<{ signIn: []; signOut: []; retry: []; refreshRegistry: []; reloadBilling: []; reviewPayment: [id: string]; savePayment: []; openEvidence: [id: string]; applyActivity: []; reloadActivity: []; retrieveActivity: [bindingId: string, stream: 'platform' | 'billing' | 'plan']; activityPage: [page: number, pageSize: number]; activitySort: [order: 'asc' | 'desc']; reloadTransfer: []; editTransfer: []; saveTransfer: []; reloadOffers: []; editOffer: [id?: string]; revokeOffer: [id: string]; issueOffer: [id: string]; viewOfferLink: [id: string]; copyOfferLink: []; saveOffer: [] }>()
+const emit = defineEmits<{ selectAccount:[id:string]; signIn: []; signOut: []; retry: []; refreshRegistry: []; reloadBilling: []; reviewPayment: [id: string]; savePayment: []; openEvidence: [id: string]; applyActivity: []; reloadActivity: []; retrieveActivity: [bindingId: string, stream: 'platform' | 'billing' | 'plan']; activityPage: [page: number, pageSize: number]; activitySort: [order: 'asc' | 'desc']; reloadTransfer: []; editTransfer: []; saveTransfer: []; reloadOffers: []; editOffer: [id?: string]; revokeOffer: [id: string]; issueOffer: [id: string]; viewOfferLink: [id: string]; copyOfferLink: []; saveOffer: [] }>()
 const text = (key: string) => props.copy[key] || ''
 const paymentStatuses = ['submitted', 'under_review', 'approved', 'rejected'] as const
 const filterKeys = ['suit', 'environment', 'action', 'actor', 'target', 'from', 'to', 'requestId', 'correlationId'] as const
@@ -32,6 +32,7 @@ const amount = (value: number, currency: string) => new Intl.NumberFormat(props.
   <BsRouteLayout v-if="state === 'success'" name="default">
     <BsContentSection :title="text('welcome')" :description="text('description')" padding="lg">
       <BsStateSurface state="success" :title="text('auth.authorized')" />
+      <BsStack v-if="accountLinks?.length" gap="md"><BsButton v-for="item in accountLinks" :key="item.id" variant="primary" @click="emit('selectAccount',item.id)">{{ item.label }}</BsButton></BsStack>
       <BsStateSurface v-if="registryState !== 'success'" :state="registryState" :title="text(`registry.${registryState}`)" :action-label="registryState === 'loading' ? undefined : text('registry.retry')" @action="emit('refreshRegistry')" />
       <BsContentSection v-else :title="heading" :description="description">
         <div v-if="module === 'payment-review'" class="space-y-4 min-w-0" data-payment-review>

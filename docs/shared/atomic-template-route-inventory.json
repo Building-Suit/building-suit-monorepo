@@ -64,7 +64,10 @@
     "BsPlatformAdministrationPage": "packages/ui/src/templates/BsPlatformAdministrationPage.vue",
     "BsOperationalRecordsPage": "packages/ui/src/templates/BsOperationalRecordsPage.vue",
     "BsJournalWorkspacePage": "packages/ui/src/templates/BsJournalWorkspacePage.vue",
-    "BsFinancialAccountsPage": "packages/ui/src/templates/BsFinancialAccountsPage.vue"
+    "BsFinancialAccountsPage": "packages/ui/src/templates/BsFinancialAccountsPage.vue",
+    "BsAccountActivationPage": "packages/ui/src/templates/BsAccountActivationPage.vue",
+    "BsAccountProvisioningPage": "packages/ui/src/templates/BsAccountProvisioningPage.vue",
+    "BsOwnerInvitationPage": "packages/ui/src/templates/BsOwnerInvitationPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -2418,6 +2421,54 @@
       "dependencies": [],
       "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
       "purpose": "administration-entry"
+    },
+    {
+      "source": "apps/super-admin-suit/app/pages/accounts.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAccountActivationPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAccountActivationPage"
+      ],
+      "destination": "packages/ui/src/templates/BsAccountActivationPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/super-admin-suit/app/pages/accounts.vue",
+      "dependencies": [],
+      "verification": "super-admin-account-provisioning.md: focused browser and authorization gates",
+      "purpose": "account-activation"
+    },
+    {
+      "source": "apps/super-admin-suit/app/pages/account-provisioning.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAccountProvisioningPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAccountProvisioningPage"
+      ],
+      "destination": "packages/ui/src/templates/BsAccountProvisioningPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/super-admin-suit/app/pages/account-provisioning.vue",
+      "dependencies": [],
+      "verification": "super-admin-account-provisioning.md: focused browser and authorization gates",
+      "purpose": "account-provisioning"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/auth/owner-invitation.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsOwnerInvitationPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsOwnerInvitationPage"
+      ],
+      "destination": "packages/ui/src/templates/BsOwnerInvitationPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/auth/owner-invitation.vue",
+      "dependencies": [],
+      "verification": "super-admin-account-provisioning.md: focused browser and authorization gates",
+      "purpose": "provisioned-owner-claim"
     }
   ],
   "verifiedSharedHeads": [
@@ -2530,6 +2581,9 @@
     "BsTaskWorklistPage",
     "BsTaxWorkspacePage",
     "BsWelcomePage",
-    "BsFinancialAccountsPage"
+    "BsFinancialAccountsPage",
+    "BsAccountActivationPage",
+    "BsAccountProvisioningPage",
+    "BsOwnerInvitationPage"
   ]
 }

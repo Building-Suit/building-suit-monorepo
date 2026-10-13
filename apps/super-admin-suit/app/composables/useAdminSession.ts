@@ -1,4 +1,5 @@
 import type { Database } from '../types/database.types'
+import { clearActivationAttempts } from '../utils/activation-attempt'
 import type { AdminSession } from '../../server/utils/authorize'
 
 export function useAdminSession() {
@@ -46,6 +47,7 @@ export function useAdminSession() {
     pending.value = true
     action.value = 'sign-out'
     clear() // Remove sensitive state before waiting for network logout.
+    if (import.meta.client) { try { clearActivationAttempts(sessionStorage) } catch { /* Storage may be disabled. */ } }
     try {
       const { error } = await client.auth.signOut()
       if (error) actionError.value = true
@@ -56,7 +58,10 @@ export function useAdminSession() {
   onMounted(() => {
     // Do not await Supabase operations inside its auth notification lock.
     let timer: ReturnType<typeof setTimeout> | undefined
-    const { data: listener } = client.auth.onAuthStateChange(() => {
+    const { data: listener } = client.auth.onAuthStateChange((event, identity) => {
+      if (event === 'SIGNED_OUT' || identity?.user.id) {
+        try { clearActivationAttempts(sessionStorage, event === 'SIGNED_OUT' ? undefined : identity?.user.id) } catch { /* Storage may be disabled. */ }
+      }
       clear()
       clearTimeout(timer)
       timer = setTimeout(() => { void recheck() }, 0)

@@ -28,6 +28,23 @@ const { visible: offerVisible, pending: offerPending, dirty: offerDirty, error: 
 const billing = usePaymentReview(() => selection.value.item?.bindingId, () => state.value === 'success' && registryState.value === 'success' && selection.value.item?.module === 'payment-review')
 const { queue, status: billingStatus, filter: billingFilter, page: billingPage, selected: payment, draft: reviewDraft, command: reviewCommand, receipt, evidence, evidencePending, evidenceError, action: billingAction } = billing
 const { visible: billingVisible, pending: billingPending, dirty: billingDirty, error: billingError } = billingAction
+const accountModules = ref<{ bindingId: string; label: Record<string, string> }[]>([])
+const moduleError = ref(false)
+const requestFetch = useRequestFetch()
+let moduleGeneration = 0
+async function loadAccountModules() {
+  const epoch = ++moduleGeneration
+  accountModules.value = []; moduleError.value = false
+  if (state.value !== 'success') return
+  try {
+    const result = await requestFetch<{ modules: typeof accountModules.value }>('/api/accounts/context')
+    if (epoch === moduleGeneration && state.value === 'success') accountModules.value = result.modules
+  } catch { if (epoch === moduleGeneration) moduleError.value = true }
+}
+watch(state, loadAccountModules)
+onMounted(loadAccountModules)
+onScopeDispose(() => { moduleGeneration++; accountModules.value = [] })
+const accountLinks=computed(()=>accountModules.value.map(item=>({id:item.bindingId,label:item.label[locale.value]||item.label.en||item.label.ar||''})))
 const email = ref('')
 const password = ref('')
 useHead({ title: () => t('product.name') })
@@ -93,7 +110,9 @@ const presentation = computed(() => ({
     v-model:billing-page="billingPage"
     v-model:review-draft="reviewDraft"
     v-model:billing-visible="billingVisible"
+    :account-links="accountLinks"
     v-bind="presentation" :copy="copy" :locale="locale"
+    @select-account="id=>navigateTo({path:'/accounts',query:{bindingId:id}})"
     @sign-in="submit" @sign-out="signOut" @retry="recheck" @refresh-registry="registry.refresh()"
     @reload-billing="billing.load()" @review-payment="id => { const row = queue?.items.find(item => item.id === id); if (row) billing.review(row) }" @save-payment="billing.save()" @open-evidence="billing.openEvidence"
     @apply-activity="activity.apply()" @reload-activity="activity.load()" @retrieve-activity="(id, stream) => { const source = activitySources.find(item => item.bindingId === id && item.stream === stream); if (source) activity.retrieve(source) }" @activity-page="(page, size) => { activityQuery.page = page; activityQuery.pageSize = size; activity.load() }" @activity-sort="order => { activityQuery.order = order; activity.load() }"
