@@ -46,7 +46,11 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
     expect(contrast).toBeGreaterThanOrEqual(4.5)
     const inactivePeriod = page.getByRole('button', { name: locale === 'ar' ? 'شهر' : 'Month', exact: true })
     await expect(inactivePeriod).toHaveAttribute('aria-pressed', 'false')
-    await expect(inactivePeriod).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
+    // The approved Shop dashboard uses bordered surface buttons instead of
+    // transparent chips; the inactive control should match the card surface.
+    const surface = await panel.evaluate(element => getComputedStyle(element).backgroundColor)
+    await expect(inactivePeriod).toHaveCSS('background-color', surface)
+    expect(await activePeriod.evaluate(element => getComputedStyle(element).backgroundColor)).not.toBe(surface)
     await expectNoPageOverflow(page)
     await page.screenshot({ path: test.info().outputPath('shared-dashboard.png'), fullPage: true })
   })

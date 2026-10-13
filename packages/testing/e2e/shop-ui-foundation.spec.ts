@@ -217,7 +217,7 @@ test('Shop inventory distinguishes permission denial from empty data', async ({ 
   await shopFixture(page)
   await page.route('**/rest/v1/rpc/inventory_access', route => route.fulfill({ json: [{ can_view: false, can_manage: false, inventory_enabled: false }] }))
   await page.locator('a[href="/inventory"]').first().click()
-  await expect(page.getByRole('alert')).toHaveText('You do not have permission to view inventory.')
+  await expect(page.getByRole('status').filter({ hasText: 'You do not have permission to view inventory.' })).toHaveText('You do not have permission to view inventory.')
   await expect(page.getByRole('button', { name: 'Manual receipt', exact: true })).toHaveCount(0)
   await expect(page.getByText('No matching products.')).toHaveCount(0)
 })
