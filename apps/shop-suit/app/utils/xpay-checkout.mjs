@@ -10,15 +10,15 @@ export function xpayHostedUrl(value, sessionId) {
 export function parseXPayOrder(value) {
   if (!value || !isXPayOrderId(value.orderId) || !states.has(value.state) || value.currency !== 'EGP'
     || !Number.isSafeInteger(value.amountMinor) || value.amountMinor <= 0 || typeof value.planName !== 'string' || !value.planName
-    || typeof value.createdAt !== 'string' || !Number.isFinite(Date.parse(value.createdAt))) throw new Error('invalid_checkout_order')
+    || (value.quoteId != null && !isXPayOrderId(value.quoteId)) || typeof value.createdAt !== 'string' || !Number.isFinite(Date.parse(value.createdAt))) throw new Error('invalid_checkout_order')
   return { orderId: value.orderId, state: value.state, amountMinor: value.amountMinor, currency: value.currency, planName: value.planName,
     sessionId: value.sessionId ?? null, url: value.url == null ? null : xpayHostedUrl(value.url, value.sessionId),
-    expiresAt: typeof value.expiresAt === 'string' ? value.expiresAt : null, createdAt: value.createdAt }
+    expiresAt: typeof value.expiresAt === 'string' ? value.expiresAt : null, createdAt: value.createdAt, ...(value.quoteId ? { quoteId: value.quoteId } : {}) }
 }
 export function parseXPayDatabaseOrders(value) {
   if (!Array.isArray(value) || value.length > 20) throw new Error('invalid_checkout_history')
   return value.map(order => parseXPayOrder({ orderId: order.id, state: order.state, amountMinor: order.amountMinor, currency: order.currency,
-    planName: order.description, sessionId: order.sessionId, url: order.state === 'open' ? order.url : null, expiresAt: order.expiresAt, createdAt: order.createdAt }))
+    planName: order.description, sessionId: order.sessionId, url: order.state === 'open' ? order.url : null, expiresAt: order.expiresAt, createdAt: order.createdAt, quoteId: order.quote?.prorationQuoteId }))
 }
 export function checkoutAttemptKey(userId, shopId) { return `shop-xpay-attempt:${userId}:${shopId}` }
 export function checkoutAttempt(storage, key, selection, createId) {
@@ -36,5 +36,5 @@ export async function checkoutFailureCode(data, error) {
   if (error?.context instanceof Response) {
     try { payload = await error.context.clone().json() } catch { /* Generic safe fallback. */ }
   }
-  return payload?.error === 'checkout_historical_review_pending' ? 'checkout_historical_review_pending' : null
+  return ['checkout_historical_review_pending','checkout_quote_stale','checkout_quote_open','checkout_credit_confirmation_required','checkout_payment_unresolved','checkout_proration_unavailable','checkout_currency_unsupported','checkout_offer_expiring','checkout_plan_change_blocked','checkout_quote_required','checkout_payment_method_unsupported','checkout_period_unsupported'].includes(payload?.error) ? payload.error : null
 }
