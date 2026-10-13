@@ -108,11 +108,12 @@ async function run() {
       const code=JSON.parse(responseBody)?.error?.code
       if(typeof code==='string'&&/^[a-z0-9_]+$/.test(code))console.error(`Disposable target rejection: ${code}`)
       const packet=JSON.parse(attempt.body)
-      if(['shop.account.query','shop.account.command'].includes(packet.operation)) {
+      if(code==='target_request_rejected'&&['shop.account.query','shop.account.command'].includes(packet.operation)) {
         const nonce=Object.entries(attempt.headers).find(([name])=>name.toLowerCase()==='x-bs-nonce')?.[1]
         // Repeat only the facade BEGIN in a rollback-only disposable transaction;
         // no Auth call or durable mutation is performed by this diagnostic.
-        try { sql('shop',`BEGIN; select set_config('request.jwt.claims','{"role":"service_role"}',true); select public.shop_super_admin_account_begin(${quote(ids.principal)},${quote(nonce)},${quote(sha256Hex(attempt.body))},${json(packet)}); ROLLBACK;`) }
+        const digest=await sha256Hex(new TextEncoder().encode(attempt.body))
+        try { sql('shop',`BEGIN; select set_config('request.jwt.claims','{"role":"service_role"}',true); select set_config('request.jwt.claim.role','service_role',true); select public.shop_super_admin_account_begin(${quote(ids.principal)},${quote(nonce)},${quote(digest)},${json(packet)}); ROLLBACK;`) }
         catch(error) { console.error(`Disposable rollback-only target diagnostic: ${error.message}`) }
       }
     }
