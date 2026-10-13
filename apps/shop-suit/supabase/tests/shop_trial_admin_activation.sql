@@ -22,7 +22,7 @@ declare
   f trial_activation_fixture; shop uuid := current_setting('trial_activation.shop')::uuid;
   subscription public.subscriptions; after_value public.subscriptions;
   other_subscription public.subscriptions;
-  selected_plan uuid; request_id uuid; result_value jsonb; day_value integer;
+  selected_plan uuid; activation_request_id uuid; result_value jsonb; day_value integer;
   billing_count bigint; payment_count bigint; trial_start timestamptz; trial_end timestamptz;
 begin
   select * into f from trial_activation_fixture;
@@ -50,13 +50,13 @@ begin
     perform set_config('shop.billing_approval','approved',true);
     update public.subscriptions set status='trialing',trial_start_at=trial_start,trial_end_at=trial_end,
       current_period_start=null,current_period_end=null where id=subscription.id;
-    request_id := gen_random_uuid();
+    activation_request_id := gen_random_uuid();
     begin
       perform public.platform_plan_command(gen_random_uuid(),'activate_trial','Wrong tenant subscription selection',selected_plan,shop,
         jsonb_build_object('subscriptionId',other_subscription.id));
       raise exception 'mismatched subscription accepted';
     exception when invalid_parameter_value then null; end;
-    result_value := public.platform_plan_command(request_id,'activate_trial','Owner approved early activation',selected_plan,shop,
+    result_value := public.platform_plan_command(activation_request_id,'activate_trial','Owner approved early activation',selected_plan,shop,
       jsonb_build_object('subscriptionId',subscription.id));
     select * into after_value from public.subscriptions where id=subscription.id;
     if after_value.status<>'active' or after_value.plan_id<>selected_plan
@@ -65,12 +65,12 @@ begin
       or after_value.current_period_end <> after_value.current_period_start+interval '1 month' then
       raise exception 'day % activation changed history or incorrect entitlement/dates',day_value;
     end if;
-    if (public.platform_plan_command(request_id,'activate_trial','Owner approved early activation',selected_plan,shop,
+    if (public.platform_plan_command(activation_request_id,'activate_trial','Owner approved early activation',selected_plan,shop,
       jsonb_build_object('subscriptionId',subscription.id))->>'replayed')::boolean is distinct from true then
       raise exception 'exact retry failed';
     end if;
     begin
-      perform public.platform_plan_command(request_id,'activate_trial','Changed reason on reused key',selected_plan,shop,
+      perform public.platform_plan_command(activation_request_id,'activate_trial','Changed reason on reused key',selected_plan,shop,
         jsonb_build_object('subscriptionId',subscription.id));
       raise exception 'changed-input replay accepted';
     exception when invalid_parameter_value then null; end;
@@ -79,7 +79,7 @@ begin
         jsonb_build_object('subscriptionId',subscription.id));
       raise exception 'active subscription overwritten';
     exception when check_violation then null; end;
-    if (select count(*) from public.platform_plan_events e where e.request_id=request_id and e.action='activate_trial'
+    if (select count(*) from public.platform_plan_events e where e.request_id=activation_request_id and e.action='activate_trial'
       and e.actor_user_id=f.operator_id and e.reason='Owner approved early activation')<>1 then
       raise exception 'activation audit not exactly once';
     end if;
