@@ -1,0 +1,82 @@
+{
+  "snapshotDate": "2026-10-13",
+  "scope": "Named local UI journeys; not hosted or complete design matrices",
+  "sourceCounts": {
+    "mainBoards": 33,
+    "completeSourceMatrices": 0,
+    "inScopeRoutes": 26,
+    "missingInScopeMainPNGs": 23
+  },
+  "independentHotfix": {
+    "pr": 289,
+    "head": "713a204e83621df1f5e360c003bc5cdd0921aedf",
+    "ciRun": 38450748615,
+    "fullCI": "passed",
+    "merged": false
+  },
+  "categories": [
+    {
+      "category": "Appointments",
+      "implemented": true,
+      "tested": "core calendar/block/edit/status/owner schedule journeys in #290/#291 and inherited tests",
+      "remainingFunctionalReview": [
+        "additional schedule feedback/scope combinations"
+      ],
+      "visualEvidence": "metadata only; all corresponding PNGs unavailable"
+    },
+    {
+      "category": "Cash shifts",
+      "implemented": true,
+      "tested": "named commands, read contexts, restricted cashier and history filter/pagination in this checkpoint; 12 inherited owner variants",
+      "remainingFunctionalReview": [],
+      "visualEvidence": "metadata only; cash closed-history design explicitly unsaved"
+    },
+    {
+      "category": "Inventory/purchasing",
+      "implemented": true,
+      "tested": "inherited count/threshold/error/retry and supplier/purchase/payment checkpoints; source shop-penpot-cloud-coverage.json rows20-22",
+      "remainingFunctionalReview": [],
+      "visualEvidence": "main/native pixels unavailable; full design matrix unverified"
+    },
+    {
+      "category": "Sales/receipts",
+      "implemented": true,
+      "tested": "inherited payment/correction and A4/thermal/print-isolation checkpoints; coverage rows15-17",
+      "remainingFunctionalReview": [],
+      "visualEvidence": "main/native pixels unavailable; physical print/hosted readiness separate"
+    },
+    {
+      "category": "Reports/customer profiles",
+      "implemented": true,
+      "tested": "inherited report query/error/retry/export and allocation-editor checks",
+      "remainingFunctionalReview": [
+        "full customer-profile lifecycle",
+        "remaining report variants from cumulative delta"
+      ],
+      "visualEvidence": "main/variant pixels unavailable"
+    },
+    {
+      "category": "Settings/admin",
+      "implemented": true,
+      "tested": "inherited profile/location/receipt/operator/observer commands",
+      "remainingFunctionalReview": [
+        "full settings matrix",
+        "remaining admin variants, excluding concurrent billing scope"
+      ],
+      "visualEvidence": "main/variant pixels unavailable"
+    },
+    {
+      "category": "Public non-landing",
+      "implemented": true,
+      "tested": "inherited templates and smoke coverage; no new complete state assessment",
+      "remainingFunctionalReview": [
+        "route-specific saved contexts"
+      ],
+      "visualEvidence": "main/variant pixels unavailable"
+    }
+  ],
+  "activeFunctionalReviewBuckets": 4,
+  "reviewPolicy": "Retain previously verified named journeys; reopen only for new saved requirements, concrete defects or affected changes. Missing pixels do not imply missing code.",
+  "hostedDataOrSettingsChanged": false,
+  "designMatricesCompleted": 0
+}

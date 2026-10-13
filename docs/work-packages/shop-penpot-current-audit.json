@@ -73,7 +73,7 @@
     {
       "number": 9,
       "route": "/auth/signup",
-      "template": "BsSignupPage \u2192 BsSignupEnrollment",
+      "template": "BsSignupPage → BsSignupEnrollment",
       "mainBoardId": "9d8c9265-2366-809c-8008-c80410fd3a98",
       "auditClassification": "concurrent-owner",
       "fullDesignMatrixComplete": false
@@ -96,7 +96,7 @@
     },
     {
       "number": 12,
-      "route": "/auth/team-invitation?invite=\u2026",
+      "route": "/auth/team-invitation?invite=…",
       "template": "BsInvitationAcceptancePage",
       "mainBoardId": "9d8c9265-2366-809c-8008-c804ae90151d",
       "auditClassification": "concurrent-owner",
@@ -210,7 +210,25 @@
       "template": "BsAppointmentsPage",
       "mainBoardId": "9d8c9265-2366-809c-8008-c7f8b667812f",
       "auditClassification": "integrated-source-metadata-only",
-      "fullDesignMatrixComplete": false
+      "fullDesignMatrixComplete": false,
+      "currentFunctionalCheckpoints": [
+        290,
+        291
+      ],
+      "implementedJourneys": [
+        "calendar block tiles/read-only detail",
+        "contextual cancel/no-show confirmations",
+        "structured appointment/schedule save guidance"
+      ],
+      "testedJourneys": [
+        "EN desktop / AR mobile block day-week-month/filter/overlap/read states",
+        "EN desktop / AR mobile edit/reschedule/errors/pending/discard/terminal transitions",
+        "inherited owner appointment/schedule commands"
+      ],
+      "remainingFunctionalReview": [
+        "broader schedule feedback and scope variants"
+      ],
+      "missingVisualEvidence": "No appointment main/state/form/native variant PNGs in frozen handoff"
     },
     {
       "number": 26,
@@ -218,7 +236,19 @@
       "template": "BsCashShiftsPage",
       "mainBoardId": "9d8c9265-2366-809c-8008-c7fabe2292bb",
       "auditClassification": "integrated-source-metadata-only",
-      "fullDesignMatrixComplete": false
+      "fullDesignMatrixComplete": false,
+      "implementedJourneys": [
+        "contextual drawer confirmations",
+        "structured command error guidance",
+        "pending retry feedback",
+        "labeled cashier history filter"
+      ],
+      "testedJourneys": [
+        "12 inherited owner open/pay-in/close variants",
+        "EN desktop / AR mobile zero-open/pay-out/error/idempotent retry/restricted cashier/no-context/filter/pagination"
+      ],
+      "missingVisualEvidence": "No cash main/state exports; closed reconciled history design explicitly unsaved",
+      "remainingFunctionalReview": []
     },
     {
       "number": 27,
