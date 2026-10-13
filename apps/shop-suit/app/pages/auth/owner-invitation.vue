@@ -27,21 +27,11 @@ async function savePassword() {
   catch { failed.value = true }
   finally { pending.value = false }
 }
+
+const pageCopy = computed(() => ({'ownerInvite.askAdmin':t('ownerInvite.askAdmin'),'ownerInvite.confirm':t('ownerInvite.confirm'),'ownerInvite.description':t('ownerInvite.description'),'ownerInvite.done':t('ownerInvite.done'),'ownerInvite.home':t('ownerInvite.home'),'ownerInvite.invalid':t('ownerInvite.invalid'),'ownerInvite.loading':t('ownerInvite.loading'),'ownerInvite.login':t('ownerInvite.login'),'ownerInvite.open':t('ownerInvite.open'),'ownerInvite.password':t('ownerInvite.password'),'ownerInvite.passwordError':t('ownerInvite.passwordError'),'ownerInvite.passwordTitle':t('ownerInvite.passwordTitle'),'ownerInvite.save':t('ownerInvite.save'),'ownerInvite.title':t('ownerInvite.title'),'ownerInvite.verified':t('ownerInvite.verified')}))
+const pageView=computed(()=>({phase:phase.value,pending:pending.value,failed:failed.value}))
 </script>
 
 <template>
-  <BsAuthLayout product-name="Shop Suit" :home-label="t('ownerInvite.home')" :title="t('ownerInvite.title')" :description="t('ownerInvite.description')">
-    <template #logo="{ tone }"><BsProductLogo name="Shop Suit" asset-prefix="/brand/shop-suit" :tone="tone" /></template>
-    <BsStateSurface v-if="phase === 'loading'" state="loading" :title="t('ownerInvite.loading')" />
-    <BsStateSurface v-else-if="phase === 'error'" state="error" :title="t('ownerInvite.invalid')" :description="t('ownerInvite.askAdmin')" :action-label="t('ownerInvite.login')" @action="navigateTo('/auth/login')" />
-    <BsStateSurface v-else-if="phase === 'done'" state="success" :title="t('ownerInvite.done')" :action-label="t('ownerInvite.open')" @action="navigateTo('/dashboard')" />
-    <BsAuthForm v-else :title="t('ownerInvite.passwordTitle')" :description="t('ownerInvite.verified')" :error="failed ? t('ownerInvite.passwordError') : undefined" :pending="pending" :submit-label="t('ownerInvite.save')" @submit="savePassword">
-      <BsField :label="t('ownerInvite.password')" for="owner-password" required>
-        <BsInput id="owner-password" v-model="password" type="password" autocomplete="new-password" minlength="6" required />
-      </BsField>
-      <BsField :label="t('ownerInvite.confirm')" for="owner-confirm" required>
-        <BsInput id="owner-confirm" v-model="confirmation" type="password" autocomplete="new-password" minlength="6" required />
-      </BsField>
-    </BsAuthForm>
-  </BsAuthLayout>
+  <BsOwnerInvitationPage :copy="pageCopy" :view="pageView" v-model:password="password" v-model:confirmation="confirmation" @login="navigateTo('/auth/login')" @open="navigateTo('/dashboard')" @submit="savePassword" />
 </template>

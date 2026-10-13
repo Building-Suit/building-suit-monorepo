@@ -23,7 +23,7 @@ const json=value=>`${quote(JSON.stringify(value))}::jsonb`
 function command(program,args,input) {
   const result=spawnSync(program,args,{input,encoding:'utf8',timeout:180000})
   if(result.status!==0) {
-    const safe=(result.stderr||'').split('\n').filter(line=>line.startsWith('ERROR:')||/^shop_[a-z_]+: failed$/.test(line)).join(' ').replace(/[A-Za-z0-9_-]{40,}/g,'[redacted]').slice(0,400)
+    const safe=((result.stderr||'')+'\n'+(result.stdout||'')).split('\n').filter(line=>line.startsWith('ERROR:')||/^shop_[a-z_]+: failed$/.test(line)||/^(not ok|# Failed test|Result: FAIL|Files=|Dubious|Test Summary Report)/.test(line.trim())).slice(-12).join(' ').replace(/[A-Za-z0-9_-]{40,}/g,'[redacted]').slice(0,900)
     throw new Error(`${program} failed; exit ${result.status}; ${safe}`)
   }
   return result.stdout

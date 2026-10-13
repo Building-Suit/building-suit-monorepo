@@ -91,7 +91,11 @@
     "./templates/BsLandingPage": "./src/templates/BsLandingPage.vue",
     "./templates/BsMarketingLayout": "./src/templates/BsMarketingLayout.vue",
     "./templates/BsPublicLegalPage": "./src/templates/BsPublicLegalPage.vue",
-    "./styles/base.css": "./src/styles/base.css"
+    "./styles/base.css": "./src/styles/base.css",
+    "./templates/BsAccountActivationPage": "./src/templates/BsAccountActivationPage.vue",
+    "./templates/BsOwnerInvitationPage": "./src/templates/BsOwnerInvitationPage.vue",
+    "./templates/BsAccountProvisioningPage": "./src/templates/BsAccountProvisioningPage.vue",
+    "./templates/BsAccountAdminHomePage": "./src/templates/BsAccountAdminHomePage.vue"
   },
   "dependencies": {
     "primevue": "4.5.5",

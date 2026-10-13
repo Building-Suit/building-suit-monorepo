@@ -117,50 +117,15 @@ watch(()=>[state.value,bindingId.value,ready.data.value?.userId,ready.data.value
 onMounted(initialize)
 onScopeDispose(()=>{generation++;projection.value=null;attempt.value=null;plans.value=[]})
 useHead({title:()=>t('provision.title')})
+
+const pageCopy = computed(() => ({'accounts.close':t('accounts.close'),'accounts.end':t('accounts.end'),'accounts.keepRequest':t('accounts.keepRequest'),'accounts.loading':t('accounts.loading'),'accounts.noPayment':t('accounts.noPayment'),'accounts.none':t('accounts.none'),'accounts.open':t('accounts.open'),'accounts.plan':t('accounts.plan'),'accounts.reason':t('accounts.reason'),'accounts.request':t('accounts.request'),'accounts.retrySame':t('accounts.retrySame'),'accounts.start':t('accounts.start'),'accounts.unavailable':t('accounts.unavailable'),'auth.denied':t('auth.denied'),'auth.retry':t('auth.retry'),'product.name':t('product.name'),'provision.acknowledge':t('provision.acknowledge'),'provision.awaitingOwner':t('provision.awaitingOwner'),'provision.confirm':t('provision.confirm'),'provision.consequences':t('provision.consequences'),'provision.create':t('provision.create'),'provision.description':t('provision.description'),'provision.email':t('provision.email'),'provision.existing':t('provision.existing'),'provision.invitation':t('provision.invitation'),'provision.location':t('provision.location'),'provision.mode':t('provision.mode'),'provision.noActivation':t('provision.noActivation'),'provision.ownerName':t('provision.ownerName'),'provision.record':t('provision.record'),'provision.refresh':t('provision.refresh'),'provision.resend':t('provision.resend'),'provision.resendConsequences':t('provision.resendConsequences'),'provision.resendWarning':t('provision.resendWarning'),'provision.shopName':t('provision.shopName'),'provision.startsNow':t('provision.startsNow'),'provision.title':t('provision.title'),'provision.unconfigured':t('provision.unconfigured'),'provision.unknown':t('provision.unknown'),'provision.verification':t('provision.verification'),'provision.verified':t('provision.verified')}))
+const pageForm=computed({get:()=>({...form}),set:value=>Object.assign(form,value)})
+const pageView=computed(()=>({state:state.value,loading:loading.value,failed:failed.value,configured:configured.value,uncertain:uncertain.value,
+ projection:projection.value?{email:projection.value.email,provisioningId:projection.value.provisioningId,ownerVerified:projection.value.ownerVerified,phase:projection.value.phase,phaseLabel:t(`provision.phases.${projection.value.phase}`),invitationLabel:t(`provision.invites.${projection.value.invitationState}`),startLabel:date(projection.value.subscription?.periodStart),endLabel:date(projection.value.subscription?.periodEnd)}:null,
+ attempt:attempt.value?{kind:attempt.value.kind,input:{requestId:attempt.value.input.requestId}}:null,resend:resend.value,valid:valid.value,dirty:dirty.value,pending:pending.value,error:error.value,planOptions:planOptions.value,modeOptions:modeOptions.value,
+}))
 </script>
 
 <template>
-  <BsAppShell :product-name="t('product.name')" :groups="[]" home-path="/" :labels="{open:t('accounts.open'),close:t('accounts.close'),navigation:t('provision.title'),dashboard:t('provision.title')}">
-    <template #logo><BsProductLogo :name="t('product.name')" /></template><template #header><BsSettingsMenu /></template>
-    <BsContentSection :title="t('provision.title')" :description="t('provision.description')" padding="lg">
-      <BsStack gap="lg">
-        <BsButton @click="navigateTo({path:'/accounts',query:{bindingId}})">{{ t('provision.existing') }}</BsButton>
-        <BsStateSurface v-if="state!=='success'" state="permission" :title="t('auth.denied')" />
-        <BsStateSurface v-else-if="loading" state="loading" :title="t('accounts.loading')" />
-        <BsStateSurface v-else-if="failed" state="error" :title="t('accounts.unavailable')" :action-label="t('auth.retry')" @action="initialize" />
-        <BsStateSurface v-else-if="!configured" state="empty" :title="t('provision.unconfigured')" />
-        <BsStack v-else gap="lg">
-          <BsAlert v-if="projection" :tone="projection.phase==='active'?'success':projection.phase==='conflict'?'error':'warning'" :title="t(`provision.phases.${projection.phase}`)" :description="projection.phase==='active'?t('accounts.noPayment'):t('provision.noActivation')" />
-          <BsDescriptionList v-if="projection" :columns="2">
-            <BsDescriptionItem :term="t('provision.email')">{{ projection.email }}</BsDescriptionItem>
-            <BsDescriptionItem :term="t('provision.invitation')">{{ t(`provision.invites.${projection.invitationState}`) }}</BsDescriptionItem>
-            <BsDescriptionItem :term="t('provision.verification')">{{ projection.ownerVerified?t('provision.verified'):t('provision.awaitingOwner') }}</BsDescriptionItem>
-            <BsDescriptionItem :term="t('accounts.start')">{{ date(projection.subscription?.periodStart) }}</BsDescriptionItem>
-            <BsDescriptionItem :term="t('accounts.end')">{{ date(projection.subscription?.periodEnd) }}</BsDescriptionItem>
-            <BsDescriptionItem :term="t('provision.record')">{{ projection.provisioningId }}</BsDescriptionItem>
-          </BsDescriptionList>
-          <BsAlert v-if="uncertain" tone="warning" :title="t('provision.unknown')" :description="t('accounts.keepRequest')" />
-          <BsButton v-if="projection" @click="refreshStatus()">{{ t('provision.refresh') }}</BsButton>
-          <BsButton v-if="attempt" @click="resend=attempt.kind==='resend';action.open('edit')">{{ t('accounts.retrySame') }}</BsButton>
-          <BsButton v-if="projection?.phase==='active'&&!projection.ownerVerified&&attempt?.kind!=='resend'" :disabled="pending" @click="openResend">{{ t('provision.resend') }}</BsButton>
-          <BsForm v-if="!projection||projection.phase!=='active'" :disabled="!!attempt||pending||visible||projection?.phase==='conflict'" @submit="openCreate">
-            <BsField :label="t('provision.email')" for="provision-email" required><BsInput id="provision-email" v-model="form.email" type="email" autocomplete="email" maxlength="254" required /></BsField>
-            <BsField :label="t('provision.ownerName')" for="provision-owner" required><BsInput id="provision-owner" v-model="form.displayName" minlength="2" maxlength="120" required /></BsField>
-            <BsField :label="t('provision.shopName')" for="provision-shop" required><BsInput id="provision-shop" v-model="form.shopName" minlength="2" maxlength="120" required /></BsField>
-            <BsField :label="t('provision.location')" for="provision-location" required><BsInput id="provision-location" v-model="form.mainLocationName" minlength="2" maxlength="120" required /></BsField>
-            <BsField :label="t('provision.mode')" for="provision-mode" required><BsSelect id="provision-mode" v-model="form.businessMode" :label="t('provision.mode')" :options="modeOptions" option-label="label" option-value="value" required /></BsField>
-            <BsField :label="t('accounts.plan')" for="provision-plan" required><BsSelect id="provision-plan" v-model="form.planId" :label="t('accounts.plan')" :options="planOptions" option-label="label" option-value="value" required /></BsField>
-            <BsField :label="t('accounts.reason')" for="provision-reason" required><BsTextarea id="provision-reason" v-model="form.reason" minlength="8" maxlength="1000" required /></BsField>
-            <BsFormActions><BsButton type="submit" variant="primary" :disabled="!valid">{{ t('provision.create') }}</BsButton></BsFormActions>
-          </BsForm>
-        </BsStack>
-      </BsStack>
-    </BsContentSection>
-    <BsRecordActionDialog v-model:visible="visible" :title="resend?t('provision.resend'):t('provision.confirm')" :dirty="dirty" :pending="pending" :error="error" :submit-disabled="!valid" :submit-label="attempt&&(!resend||attempt.kind==='resend')?t('accounts.retrySame'):t('provision.confirm')" @submit="submit">
-      <BsAlert tone="warning" :title="resend?t('provision.resendWarning'):t('provision.startsNow')" :description="resend?t('provision.resendConsequences'):t('provision.consequences')" />
-      <BsDescriptionList><BsDescriptionItem :term="t('provision.email')">{{ projection?.email||form.email }}</BsDescriptionItem><BsDescriptionItem :term="t('accounts.request')">{{ attempt?.input.requestId||t('accounts.none') }}</BsDescriptionItem></BsDescriptionList>
-      <BsField v-if="resend" :label="t('accounts.reason')" for="resend-reason" required><BsTextarea id="resend-reason" v-model="resendReason" minlength="8" maxlength="1000" :disabled="attempt?.kind==='resend'" required /></BsField>
-      <BsCheckbox v-if="resend" v-model="acknowledged" :label="t('provision.acknowledge')" :disabled="attempt?.kind==='resend'" required />
-    </BsRecordActionDialog>
-  </BsAppShell>
+  <BsAccountProvisioningPage :copy="pageCopy" :view="pageView" v-model:form="pageForm" v-model:visible="visible" v-model:acknowledged="acknowledged" v-model:resend-reason="resendReason" @existing="navigateTo({path:'/accounts',query:{bindingId}})" @retry="initialize" @refresh="refreshStatus()" @retry-attempt="resend=attempt?.kind==='resend';action.open('edit')" @resend="openResend" @create="openCreate" @submit="submit" />
 </template>

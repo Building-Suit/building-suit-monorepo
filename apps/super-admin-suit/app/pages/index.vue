@@ -28,36 +28,11 @@ async function submit() {
   password.value = ''
   await signIn(email.value.trim(), credential)
 }
+
+const pageCopy = computed(() => ({'accounts.close':t('accounts.close'),'accounts.open':t('accounts.open'),'accounts.title':t('accounts.title'),'accounts.unavailable':t('accounts.unavailable'),'auth.actionError':t('auth.actionError'),'auth.authorized':t('auth.authorized'),'auth.deniedDescription':t('auth.deniedDescription'),'auth.description':t('auth.description'),'auth.email':t('auth.email'),'auth.empty':t('auth.empty'),'auth.password':t('auth.password'),'auth.pending':t('auth.pending'),'auth.retry':t('auth.retry'),'auth.signIn':t('auth.signIn'),'auth.signInError':t('auth.signInError'),'auth.signOut':t('auth.signOut'),'description':t('description'),'product.name':t('product.name'),'welcome':t('welcome')}))
+const pageView=computed(()=>({state:state.value,pending:pending.value,actionError:!!actionError.value,moduleError:moduleError.value,stateTitle:t(`auth.${state.value}`),modules:accountModules.value.map(item=>({id:item.bindingId,label:item.label[locale.value]||item.label.en||item.label.ar||''}))}))
 </script>
 
 <template>
-  <BsAppShell v-if="state === 'success'" :product-name="t('product.name')" home-path="/" :groups="[]" :labels="{ open: t('accounts.open'), close: t('accounts.close'), navigation: t('accounts.title'), dashboard: t('welcome') }">
-    <template #logo><BsProductLogo :name="t('product.name')" /></template>
-    <template #header><BsSettingsMenu /></template>
-    <BsContentSection :title="t('welcome')" :description="t('description')" padding="lg">
-      <BsStateSurface state="success" :title="t('auth.authorized')" />
-      <BsStack v-if="accountModules.length" gap="md">
-        <BsButton v-for="item in accountModules" :key="item.bindingId" variant="primary" @click="navigateTo({ path: '/accounts', query: { bindingId: item.bindingId } })">{{ item.label[locale] || item.label.en || item.label.ar }}</BsButton>
-      </BsStack>
-      <BsStateSurface v-else :state="moduleError ? 'error' : 'empty'" :title="moduleError ? t('accounts.unavailable') : t('auth.empty')" />
-      <BsButton :pending="pending" @click="signOut">{{ t('auth.signOut') }}</BsButton>
-      <BsStateSurface v-if="actionError" state="error" :title="t('auth.actionError')" />
-    </BsContentSection>
-  </BsAppShell>
-  <BsAuthLayout v-else :product-name="t('product.name')" :home-label="t('product.name')" :title="t('product.name')" :description="t('auth.description')">
-    <template #logo="{ tone }"><BsProductLogo :name="t('product.name')" :tone="tone" /></template>
-    <BsAuthForm v-if="state === 'signed-out'" :title="t('auth.signIn')" :description="t('auth.description')" :pending="pending" :error="actionError ? t('auth.signInError') : null" :submit-label="t('auth.signIn')" :pending-label="t('auth.pending')" @submit="submit">
-      <BsField for="admin-email" :label="t('auth.email')" required>
-        <BsInput id="admin-email" v-model="email" type="email" autocomplete="username" required />
-      </BsField>
-      <BsField for="admin-password" :label="t('auth.password')" required>
-        <BsInput id="admin-password" v-model="password" type="password" autocomplete="current-password" required />
-      </BsField>
-    </BsAuthForm>
-    <BsStack v-else gap="lg">
-      <BsStateSurface :state="state" :title="t(`auth.${state}`)" :description="state === 'denied' ? t('auth.deniedDescription') : undefined" :action-label="state === 'loading' ? undefined : t('auth.retry')" @action="recheck" />
-      <BsButton v-if="state !== 'loading'" :pending="pending" @click="signOut">{{ t('auth.signOut') }}</BsButton>
-      <BsStateSurface v-if="actionError" state="error" :title="t('auth.actionError')" />
-    </BsStack>
-  </BsAuthLayout>
+  <BsAccountAdminHomePage :copy="pageCopy" :view="pageView" v-model:email="email" v-model:password="password" @module="id=>navigateTo({path:'/accounts',query:{bindingId:id}})" @sign-out="signOut" @sign-in="submit" @retry="recheck" />
 </template>

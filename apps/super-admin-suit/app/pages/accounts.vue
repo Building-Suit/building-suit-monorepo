@@ -126,66 +126,21 @@ watch(shopId, () => { if (!attempt.value) void loadShop() })
 onMounted(initialize)
 onScopeDispose(() => { generation++; rows.value = []; plans.value = []; subscription.value = null; attempt.value = null })
 useHead({ title: () => t('accounts.title') })
+
+const pageCopy = computed(() => ({'accounts.account':t('accounts.account'),'accounts.activate':t('accounts.activate'),'accounts.activated':t('accounts.activated'),'accounts.audit':t('accounts.audit'),'accounts.choosePlan':t('accounts.choosePlan'),'accounts.close':t('accounts.close'),'accounts.confirm':t('accounts.confirm'),'accounts.consequences':t('accounts.consequences'),'accounts.description':t('accounts.description'),'accounts.empty':t('accounts.empty'),'accounts.end':t('accounts.end'),'accounts.home':t('accounts.home'),'accounts.keepRequest':t('accounts.keepRequest'),'accounts.loading':t('accounts.loading'),'accounts.next':t('accounts.next'),'accounts.noPayment':t('accounts.noPayment'),'accounts.none':t('accounts.none'),'accounts.notTrial':t('accounts.notTrial'),'accounts.open':t('accounts.open'),'accounts.owner':t('accounts.owner'),'accounts.plan':t('accounts.plan'),'accounts.previous':t('accounts.previous'),'accounts.quotaBlocked':t('accounts.quotaBlocked'),'accounts.reason':t('accounts.reason'),'accounts.request':t('accounts.request'),'accounts.retrySame':t('accounts.retrySame'),'accounts.start':t('accounts.start'),'accounts.startsNow':t('accounts.startsNow'),'accounts.status':t('accounts.status'),'accounts.storageUnavailable':t('accounts.storageUnavailable'),'accounts.term':t('accounts.term'),'accounts.title':t('accounts.title'),'accounts.trialEnd':t('accounts.trialEnd'),'accounts.trialStart':t('accounts.trialStart'),'accounts.unavailable':t('accounts.unavailable'),'accounts.unconfigured':t('accounts.unconfigured'),'accounts.unknown':t('accounts.unknown'),'auth.denied':t('auth.denied'),'auth.retry':t('auth.retry'),'product.name':t('product.name'),'provision.create':t('provision.create')}))
+const pageView = computed(() => ({
+ state:state.value,failed:failed.value,loading:loading.value,configured:configured.value,provisioningAvailable:provisioningAvailable.value,
+ outcomeSuccess:outcome.value?.state==='success',auditId:outcome.value?.state==='success'?outcome.value.auditId:null,storageFailed:storageFailed.value,hasRows:!!rows.value.length,blocked:blocked.value,canActivate:!!canActivate.value,
+ canChoosePlan:!!subscription.value&&subscription.value.status==='trialing'&&owner.value?.status==='active'&&!attempt.value,notTrial:!!subscription.value&&subscription.value.status!=='trialing',
+ previousDisabled:page.value<=1||!!attempt.value,nextDisabled:page.value*50>=total.value||!!attempt.value,
+ owner:owner.value?{name:owner.value.name,email:owner.value.ownerEmail||owner.value.ownerName,statusLabel:subscription.value?.status||owner.value.subscriptionStatus}:null,
+ attempt:attempt.value?{shopId:attempt.value.shopId,planId:attempt.value.planId,requestId:attempt.value.requestId}:null,
+ selectedPlan:selectedPlan.value?{planName:selectedPlan.value.planName,intervalLabel:t(`accounts.intervals.${selectedPlan.value.billingInterval}`)}:null,
+ dates:{start:date(subscription.value?.periodStart),end:date(subscription.value?.periodEnd),trialStart:date(subscription.value?.trialStartAt),trialEnd:date(subscription.value?.trialEndAt)},
+ rowOptions:rowOptions.value,planOptions:planOptions.value,dirty:dirty.value,pending:pending.value,error:error.value,
+}))
 </script>
 
 <template>
-  <BsAppShell :product-name="t('product.name')" :groups="[]" home-path="/" :labels="{ open: t('accounts.open'), close: t('accounts.close'), navigation: t('accounts.title'), dashboard: t('accounts.title') }">
-    <template #logo><BsProductLogo :name="t('product.name')" /></template>
-    <template #header><BsSettingsMenu /></template>
-    <BsContentSection :title="t('accounts.title')" :description="t('accounts.description')" padding="lg">
-      <BsStack gap="lg">
-        <BsButton @click="navigateTo('/')">{{ t('accounts.home') }}</BsButton>
-        <BsStateSurface v-if="state !== 'success'" :state="state === 'loading' ? 'loading' : 'permission'" :title="t('auth.denied')" />
-        <BsStateSurface v-else-if="failed" state="error" :title="t('accounts.unavailable')" :action-label="t('auth.retry')" @action="initialize" />
-        <BsStateSurface v-else-if="loading" state="loading" :title="t('accounts.loading')" />
-        <BsStateSurface v-else-if="!configured" state="empty" :title="t('accounts.unconfigured')" />
-        <BsStack v-else gap="lg">
-          <BsButton v-if="provisioningAvailable" :disabled="!!attempt" @click="navigateTo({ path: '/account-provisioning', query: { bindingId } })">{{ t('provision.create') }}</BsButton>
-          <BsAlert v-if="outcome?.state === 'success'" tone="success" :title="t('accounts.activated')" :description="t('accounts.noPayment')" />
-          <BsDescriptionList v-if="outcome?.state === 'success'" :columns="2">
-            <BsDescriptionItem :term="t('accounts.start')">{{ date(subscription?.periodStart) }}</BsDescriptionItem>
-            <BsDescriptionItem :term="t('accounts.end')">{{ date(subscription?.periodEnd) }}</BsDescriptionItem>
-            <BsDescriptionItem :term="t('accounts.audit')">{{ outcome.auditId }}</BsDescriptionItem>
-          </BsDescriptionList>
-          <BsAlert v-if="attempt" tone="warning" :title="t('accounts.unknown')" :description="t('accounts.keepRequest')" />
-          <BsButton v-if="attempt" @click="action.open('edit')">{{ t('accounts.retrySame') }}</BsButton>
-          <BsAlert v-if="storageFailed" tone="error" :title="t('accounts.storageUnavailable')" />
-          <BsStateSurface v-if="!rows.length" state="empty" :title="t('accounts.empty')" />
-          <BsForm v-else @submit="action.open('edit')">
-            <BsField :label="t('accounts.account')" for="sas-account">
-              <BsSelect id="sas-account" v-model="shopId" :label="t('accounts.account')" :options="rowOptions" option-label="label" option-value="value" filter :disabled="!!attempt || pending || loading" />
-            </BsField>
-            <BsDescriptionList v-if="owner" :columns="2">
-              <BsDescriptionItem :term="t('accounts.owner')">{{ owner.ownerEmail || owner.ownerName }}</BsDescriptionItem>
-              <BsDescriptionItem :term="t('accounts.status')">{{ subscription?.status || owner.subscriptionStatus }}</BsDescriptionItem>
-              <BsDescriptionItem :term="t('accounts.trialStart')">{{ date(subscription?.trialStartAt) }}</BsDescriptionItem>
-              <BsDescriptionItem :term="t('accounts.trialEnd')">{{ date(subscription?.trialEndAt) }}</BsDescriptionItem>
-            </BsDescriptionList>
-            <BsAlert v-if="subscription && subscription.status !== 'trialing'" tone="info" :title="t('accounts.notTrial')" />
-            <BsFormActions align="between">
-              <BsButton type="button" :disabled="page <= 1 || !!attempt" @click="page--; loadRows()">{{ t('accounts.previous') }}</BsButton>
-              <BsButton type="button" :disabled="page * 50 >= total || !!attempt" @click="page++; loadRows()">{{ t('accounts.next') }}</BsButton>
-              <BsButton type="submit" variant="primary" :disabled="!subscription || subscription.status !== 'trialing' || owner?.status !== 'active' || !!attempt">{{ t('accounts.choosePlan') }}</BsButton>
-            </BsFormActions>
-          </BsForm>
-        </BsStack>
-      </BsStack>
-    </BsContentSection>
-    <BsRecordActionDialog v-model:visible="visible" :title="t('accounts.confirm')" :dirty="dirty" :pending="pending" :error="error" :submit-disabled="!canActivate" :submit-label="attempt ? t('accounts.retrySame') : t('accounts.activate')" @submit="submit">
-      <BsField :label="t('accounts.plan')" for="sas-plan" required>
-        <BsSelect id="sas-plan" v-model="planId" :label="t('accounts.plan')" :options="planOptions" option-label="label" option-value="value" :disabled="!!attempt" required />
-      </BsField>
-      <BsField :label="t('accounts.reason')" for="sas-reason" required>
-        <BsTextarea id="sas-reason" v-model="reason" :disabled="!!attempt" minlength="8" maxlength="1000" required />
-      </BsField>
-      <BsAlert v-if="blocked && !attempt" tone="warning" :title="t('accounts.quotaBlocked')" />
-      <BsAlert tone="info" :title="t('accounts.startsNow')" :description="t('accounts.consequences')" />
-      <BsDescriptionList :columns="2">
-        <BsDescriptionItem :term="t('accounts.account')">{{ owner?.name || attempt?.shopId }}</BsDescriptionItem>
-        <BsDescriptionItem :term="t('accounts.plan')">{{ selectedPlan?.planName || attempt?.planId }}</BsDescriptionItem>
-        <BsDescriptionItem :term="t('accounts.term')">{{ selectedPlan ? t(`accounts.intervals.${selectedPlan.billingInterval}`) : t('accounts.none') }}</BsDescriptionItem>
-        <BsDescriptionItem :term="t('accounts.request')">{{ attempt?.requestId || t('accounts.none') }}</BsDescriptionItem>
-      </BsDescriptionList>
-    </BsRecordActionDialog>
-  </BsAppShell>
+  <BsAccountActivationPage :copy="pageCopy" :view="pageView" v-model:shop-id="shopId" v-model:plan-id="planId" v-model:reason="reason" v-model:visible="visible" @home="navigateTo('/')" @create="navigateTo({path:'/account-provisioning',query:{bindingId}})" @retry="initialize" @open="action.open('edit')" @previous="page--;loadRows()" @next="page++;loadRows()" @submit="submit" />
 </template>
