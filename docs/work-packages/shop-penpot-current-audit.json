@@ -1,0 +1,281 @@
+{
+  "baseline": "acec5545feaeaae8e7ab15cb970c6e48d72cca1b",
+  "publishedPR278Commits": 86,
+  "missingPR278Ancestors": 0,
+  "savedMainBoards": 33,
+  "completeDesignMatrices": 0,
+  "liveDeploymentVerified": false,
+  "routes": [
+    {
+      "number": 1,
+      "route": "/",
+      "template": "BsLandingPage",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c8019ffed05c",
+      "auditClassification": "excluded-landing",
+      "fullDesignMatrixComplete": false
+    },
+    {
+      "number": 2,
+      "route": "/about",
+      "template": "BsPublicLegalPage",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c802038346e6",
+      "auditClassification": "integrated-source-metadata-only",
+      "fullDesignMatrixComplete": false
+    },
+    {
+      "number": 3,
+      "route": "/contact",
+      "template": "BsContactPage",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c802cc216548",
+      "auditClassification": "integrated-source-metadata-only",
+      "fullDesignMatrixComplete": false
+    },
+    {
+      "number": 4,
+      "route": "/terms",
+      "template": "BsPublicLegalPage",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c8022189c0cf",
+      "auditClassification": "integrated-source-metadata-only",
+      "fullDesignMatrixComplete": false
+    },
+    {
+      "number": 5,
+      "route": "/privacy",
+      "template": "BsPublicLegalPage",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c802504f804c",
+      "auditClassification": "integrated-source-metadata-only",
+      "fullDesignMatrixComplete": false
+    },
+    {
+      "number": 6,
+      "route": "/delivery-shipping",
+      "template": "BsPublicLegalPage",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c80281ddff77",
+      "auditClassification": "integrated-source-metadata-only",
+      "fullDesignMatrixComplete": false
+    },
+    {
+      "number": 7,
+      "route": "/refund-cancellation",
+      "template": "BsPublicLegalPage",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c8029df9b418",
+      "auditClassification": "integrated-source-metadata-only",
+      "fullDesignMatrixComplete": false
+    },
+    {
+      "number": 8,
+      "route": "/auth/login",
+      "template": "BsSignInPage",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c803d0f303fa",
+      "auditClassification": "concurrent-owner",
+      "fullDesignMatrixComplete": false
+    },
+    {
+      "number": 9,
+      "route": "/auth/signup",
+      "template": "BsSignupPage \u2192 BsSignupEnrollment",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c80410fd3a98",
+      "auditClassification": "concurrent-owner",
+      "fullDesignMatrixComplete": false
+    },
+    {
+      "number": 10,
+      "route": "/auth/forgot-password",
+      "template": "BsPasswordRecoveryPage mode=request",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c8045f40a1e4",
+      "auditClassification": "concurrent-owner",
+      "fullDesignMatrixComplete": false
+    },
+    {
+      "number": 11,
+      "route": "/auth/reset-password",
+      "template": "BsPasswordRecoveryPage mode=reset",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c80481420df4",
+      "auditClassification": "concurrent-owner",
+      "fullDesignMatrixComplete": false
+    },
+    {
+      "number": 12,
+      "route": "/auth/team-invitation?invite=\u2026",
+      "template": "BsInvitationAcceptancePage",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c804ae90151d",
+      "auditClassification": "concurrent-owner",
+      "fullDesignMatrixComplete": false
+    },
+    {
+      "number": 13,
+      "route": "/dashboard",
+      "template": "BsDashboardPage variant=shop",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7d82686d944",
+      "auditClassification": "integrated-visual-parity-unverified",
+      "fullDesignMatrixComplete": false
+    },
+    {
+      "number": 14,
+      "route": "/pos",
+      "template": "BsPointOfSalePage variant=shop",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7dd7e740e48",
+      "auditClassification": "integrated-visual-parity-unverified",
+      "fullDesignMatrixComplete": false
+    },
+    {
+      "number": 15,
+      "route": "/sales",
+      "template": "BsSalesDirectoryPage",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7e44aa66408",
+      "auditClassification": "integrated-source-metadata-only",
+      "fullDesignMatrixComplete": false
+    },
+    {
+      "number": 16,
+      "route": "/sales/:id",
+      "template": "BsCommerceDocumentPage",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7e74d86396d",
+      "auditClassification": "integrated-source-metadata-only",
+      "fullDesignMatrixComplete": false
+    },
+    {
+      "number": 17,
+      "route": "/sales/:id/receipt",
+      "template": "BsReceiptPage",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7e895595cc4",
+      "auditClassification": "integrated-source-metadata-only",
+      "fullDesignMatrixComplete": false
+    },
+    {
+      "number": 18,
+      "route": "/products",
+      "template": "BsCataloguePage kind=product",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7eaaafbe13f",
+      "auditClassification": "integrated-visual-parity-unverified",
+      "fullDesignMatrixComplete": false
+    },
+    {
+      "number": 19,
+      "route": "/services",
+      "template": "BsCataloguePage kind=service",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7ebefd6982a",
+      "auditClassification": "integrated-visual-parity-unverified",
+      "fullDesignMatrixComplete": false
+    },
+    {
+      "number": 20,
+      "route": "/inventory",
+      "template": "BsInventoryManagementPage",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7ef929fbf4b",
+      "auditClassification": "integrated-source-metadata-only",
+      "fullDesignMatrixComplete": false
+    },
+    {
+      "number": 21,
+      "route": "/purchases",
+      "template": "BsPurchasingPage",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7f20beab1a1",
+      "auditClassification": "integrated-source-metadata-only",
+      "fullDesignMatrixComplete": false
+    },
+    {
+      "number": 22,
+      "route": "/purchases/:id",
+      "template": "BsCommerceDocumentPage",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7f43c49dcc0",
+      "auditClassification": "integrated-source-metadata-only",
+      "fullDesignMatrixComplete": false
+    },
+    {
+      "number": 23,
+      "route": "/customers",
+      "template": "BsCustomerDirectoryPage",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7f653e8e537",
+      "auditClassification": "integrated-source-metadata-only",
+      "fullDesignMatrixComplete": false
+    },
+    {
+      "number": 24,
+      "route": "/customers/:id",
+      "template": "BsCustomerProfilePage",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7f7904d4866",
+      "auditClassification": "integrated-source-metadata-only",
+      "fullDesignMatrixComplete": false
+    },
+    {
+      "number": 25,
+      "route": "/appointments",
+      "template": "BsAppointmentsPage",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7f8b667812f",
+      "auditClassification": "integrated-source-metadata-only",
+      "fullDesignMatrixComplete": false
+    },
+    {
+      "number": 26,
+      "route": "/cash-shifts",
+      "template": "BsCashShiftsPage",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7fabe2292bb",
+      "auditClassification": "integrated-source-metadata-only",
+      "fullDesignMatrixComplete": false
+    },
+    {
+      "number": 27,
+      "route": "/expenses",
+      "template": "BsExpenseHistoryPage",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7fb6f562e89",
+      "auditClassification": "integrated-source-metadata-only",
+      "fullDesignMatrixComplete": false
+    },
+    {
+      "number": 28,
+      "route": "/reports",
+      "template": "BsReportsPage shop operational branch",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7fc4239d1f1",
+      "auditClassification": "integrated-source-metadata-only",
+      "fullDesignMatrixComplete": false
+    },
+    {
+      "number": 29,
+      "route": "/catalog-import",
+      "template": "BsCatalogImportPage",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7fcdb94395d",
+      "auditClassification": "integrated-source-metadata-only",
+      "fullDesignMatrixComplete": false
+    },
+    {
+      "number": 30,
+      "route": "/billing",
+      "template": "BsBillingPage variant=shop",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7fdc89b09c0",
+      "auditClassification": "concurrent-owner",
+      "fullDesignMatrixComplete": false
+    },
+    {
+      "number": 31,
+      "route": "/team",
+      "template": "BsAccessManagementPage",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7fe7318b505",
+      "auditClassification": "verified-unimplemented-visual-differences",
+      "additionalPixelReference": "libfile_64978aa4df3881919eaa6410516e887e",
+      "auditFindings": [
+        "Tabs use underline presentation rather than outlined buttons",
+        "Member/audit surfaces not separately framed",
+        "Create-role action incorrectly shares primary emphasis with invite"
+      ],
+      "fullDesignMatrixComplete": false
+    },
+    {
+      "number": 32,
+      "route": "/settings",
+      "template": "BsBusinessSettingsPage",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7ff3fa96d80",
+      "auditClassification": "integrated-source-metadata-only",
+      "fullDesignMatrixComplete": false
+    },
+    {
+      "number": 33,
+      "route": "/platform-admin",
+      "template": "BsPlatformAdministrationPage commerce branch",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c80005cf6a55",
+      "auditClassification": "integrated-source-metadata-only",
+      "fullDesignMatrixComplete": false
+    }
+  ],
+  "coverageSource": "shop-penpot-cloud-coverage.json"
+}
