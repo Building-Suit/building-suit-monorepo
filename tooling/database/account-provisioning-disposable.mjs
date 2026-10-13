@@ -107,6 +107,14 @@ async function run() {
     if(response.status>=400){
       const code=JSON.parse(responseBody)?.error?.code
       if(typeof code==='string'&&/^[a-z0-9_]+$/.test(code))console.error(`Disposable target rejection: ${code}`)
+      const packet=JSON.parse(attempt.body)
+      if(['shop.account.query','shop.account.command'].includes(packet.operation)) {
+        const nonce=Object.entries(attempt.headers).find(([name])=>name.toLowerCase()==='x-bs-nonce')?.[1]
+        // Repeat only the facade BEGIN in a rollback-only disposable transaction;
+        // no Auth call or durable mutation is performed by this diagnostic.
+        try { sql('shop',`BEGIN; select set_config('request.jwt.claims','{"role":"service_role"}',true); select public.shop_super_admin_account_begin(${quote(ids.principal)},${quote(nonce)},${quote(sha256Hex(attempt.body))},${json(packet)}); ROLLBACK;`) }
+        catch(error) { console.error(`Disposable rollback-only target diagnostic: ${error.message}`) }
+      }
     }
     return {status:response.status,headers:Object.fromEntries(response.headers),body:responseBody}
   }
@@ -176,9 +184,9 @@ async function run() {
   assert.equal(ownerClaim.shopId,created.data.shopId,'Verified owner claims only their provisioned tenant')
   await call(shopOrigin,shop.ANON_KEY,ownerSession.access_token,'/auth/v1/user',{password:`Owner-${randomUUID()}!`},'PUT')
   const verified=await provisionQuery(actor,worker,{bindingId:ids.binding,provisioningId:created.data.provisioningId},send)
-  assert.equal(verified.state,'success');assert.equal(verified.data.ownerVerified,true)
+  assert.equal(verified.state,'success','Real verified owner status query');assert.equal(verified.data.ownerVerified,true)
   const resend=await resendAccountInvitation(actor,worker,{bindingId:ids.binding,provisioningId:created.data.provisioningId,requestId:randomUUID(),correlationId:randomUUID(),reason:'Review already claimed owner invitation',acknowledgeUncertainSend:true},send)
-  assert.equal(resend.state,'success');assert.equal(resend.data.invitationState,'claimed','Verified owners receive no duplicate invitation')
+  assert.equal(resend.state,'success','Verified owner resend reconciliation');assert.equal(resend.data.invitationState,'claimed','Verified owners receive no duplicate invitation')
   console.log('Focused disposable SQL, real SAS signing/verification, target handler/Auth, immediate grant, local invitation and verified owner claim passed.')
   if(shopRegressionFailure||sourceRegressionFailure)throw new Error([shopRegressionFailure?.message,sourceRegressionFailure?.message].filter(Boolean).join(' | '))
 }
