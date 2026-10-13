@@ -125,6 +125,9 @@ begin
         or (p_payload ->> 'subscriptionId')::uuid is distinct from v_subscription.id then
         raise exception 'TRIAL_ACTIVATION_TARGET_CHANGED' using errcode = '22023';
       end if;
+      if not exists(select 1 from public.shops where id=p_shop_id and status='active') then
+        raise exception 'TRIAL_ACTIVATION_SHOP_INACTIVE' using errcode = '23514';
+      end if;
       if v_subscription.status <> 'trialing' then
         raise exception 'TRIAL_ACTIVATION_REQUIRES_TRIAL' using errcode = '23514';
       end if;
@@ -225,7 +228,8 @@ begin
       select * into v_terms from shop_private.current_plan_terms(p_plan_id);
       select * into v_plan from public.plans plan where plan.id = p_plan_id
         and plan.is_active and not plan.is_coming_soon;
-      if v_terms.id is null or v_plan.id is null then
+      if v_terms.id is null or v_plan.id is null
+        or (p_action='activate_trial' and not v_plan.is_purchasable) then
         raise exception 'PLATFORM_ADMIN_PLAN_NOT_FOUND' using errcode = '22023';
       end if;
       v_blockers := shop_private.plan_change_blockers(p_shop_id, v_terms.resource_limits);
@@ -249,12 +253,12 @@ begin
         v_effective_at := clock_timestamp();
         v_end := case when v_subscription.status = 'active' and v_subscription.current_period_end > now()
           then v_subscription.current_period_end
-          else v_effective_at + case v_terms.billing_interval
+          else (case when p_action='activate_trial' then v_effective_at else clock_timestamp() end) + case v_terms.billing_interval
             when 'monthly' then interval '1 month' when 'quarterly' then interval '3 months'
             when 'annual' then interval '1 year' end end;
         update public.subscriptions set plan_id = p_plan_id, catalog_terms_id = v_terms.id,
           status = 'active', current_period_start = case
-            when status = 'active' and current_period_end > now() then current_period_start else v_effective_at end,
+            when status = 'active' and current_period_end > now() then current_period_start else case when p_action='activate_trial' then v_effective_at else now() end end,
           current_period_end = v_end, locked_at = null, updated_at = now()
         where id = v_subscription.id;
       end if;
@@ -472,36 +476,5 @@ exception
 end;
 $$;
 notify pgrst, 'reload schema';
-
--- Composite row projection follows the additive immutable snapshot column.
-create or replace function shop_private.current_plan_offers(
-  p_plan_id uuid, p_at timestamptz default clock_timestamp()
-) returns setof public.plan_catalog_terms
-language sql stable security definer set search_path = '' as $$
-  with effective as (
-    select terms.*,
-      max(terms.catalog_generation) over (partition by terms.plan_id) current_generation,
-      row_number() over (
-        partition by terms.plan_id, terms.catalog_generation,
-          terms.plan_variant, terms.billing_interval
-        order by terms.effective_from desc, terms.version desc, terms.id desc
-      ) offer_rank
-    from public.plan_catalog_terms terms
-    where terms.plan_id = p_plan_id and terms.effective_from <= p_at
-      and terms.private_offer_id is null
-  )
-  select effective.id, effective.plan_id, effective.version,
-    effective.display_name, effective.billing_interval, effective.currency,
-    effective.price_amount, effective.trial_days, effective.resource_limits,
-    effective.is_public, effective.is_purchasable, effective.effective_from,
-    effective.created_at, effective.catalog_generation,
-    effective.plan_variant, effective.variant_name, effective.private_offer_id, effective.offer_entitlements
-  from effective
-  where effective.catalog_generation = effective.current_generation
-    and effective.offer_rank = 1
-  order by case effective.plan_variant
-      when 'standard' then 1 when 'multi_2' then 2 when 'multi_3' then 3 else 9 end,
-    case effective.billing_interval when 'monthly' then 1 when 'annual' then 2 else 9 end;
-$$;
 
 notify pgrst, 'reload schema';

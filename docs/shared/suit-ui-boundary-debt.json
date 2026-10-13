@@ -113179,42 +113179,6 @@
       "target": "packages/ui/templates/Bs application-routing composition",
       "ownerTask": "BS-UI-ZN-CONTRACT-001",
       "status": "open"
-    },
-    {
-      "file": "apps/super-admin-suit/app/pages/index.vue",
-      "kind": "nuxt-or-vue-render-tag",
-      "evidence": "<NuxtLayout>",
-      "location": {
-        "line": 17,
-        "column": 3
-      },
-      "target": "packages/ui/templates/Bs application-routing composition",
-      "ownerTask": "BS-UI-ZN-CONTRACT-001",
-      "status": "open"
-    },
-    {
-      "file": "apps/super-admin-suit/app/pages/index.vue",
-      "kind": "native-tag",
-      "evidence": "<div>",
-      "location": {
-        "line": 35,
-        "column": 5
-      },
-      "target": "packages/ui/Bs semantic presentation primitive or composition",
-      "ownerTask": "BS-UI-ZN-CONTRACT-001",
-      "status": "open"
-    },
-    {
-      "file": "apps/super-admin-suit/app/pages/index.vue",
-      "kind": "presentation-attribute",
-      "evidence": "class=\"w-full space-y-5\"",
-      "location": {
-        "line": 35,
-        "column": 17
-      },
-      "target": "packages/ui semantic variant/tone/size/density/layout/spacing prop",
-      "ownerTask": "BS-UI-ZN-CONTRACT-001",
-      "status": "open"
     }
   ]
 }

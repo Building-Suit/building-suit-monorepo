@@ -1,6 +1,7 @@
 # Super Admin account activation checkpoint
 
-Status: backend draft; the requested browser/provisioning journey is **not complete**.
+Status: existing-account browser/dispatcher code implemented; real database validation
+and new-account provisioning/invitation remain **incomplete**.
 
 Base: fresh `origin/stg` at `18dcf90f33335c06c74a2c9b98ce794b90991837`.
 Branch: `codex/super-admin-suit/account-activation`. This is independent of the
@@ -25,7 +26,8 @@ older deadlines. Prepared SQL fixtures test seven-day day-1/day-6 accounts.
 The signed Shop manifest and invocation allowlist advertise the narrow action.
 The SAS helper verifies SAS Auth/database authority and submits an immutable
 `shop.plan.command` request through the existing enqueue RPC. Its result says
-`queued`, never `active`; it is not exposed as a browser endpoint yet.
+`queued`, never `active`; the follow-on workflow now exposes an authorized browser endpoint and synchronously
+dispatches the signed request, reporting only the verified target result.
 
 ## Validation and release gates
 
@@ -52,11 +54,14 @@ data; this task changes none of them. No customers were activated or invited.
 
 ## Remaining requested work
 
-1. Add the database-configured SAS account/plan selection module using shared UI,
-   signed target projections and a server dispatcher. Show account identity, plan,
-   effective dates, preserved trial history and explicit manual grant/payment state.
-   Keep one request ID on ambiguous retry and show activation only after a verified
-   target result. Existing SAS browser code currently contains only Auth/bootstrap.
+1. Implemented in the account-workflow follow-on branch: database-configured account
+   module; existing-account selection; signed account/plan projections; server
+   dispatcher with pinned public DNS, TLS, redirect/byte/deadline limits; JSON/Origin
+   write protection; shared UI confirmation with original trial dates and admin-grant
+   consequences; authoritative effective dates/audit after success. Same logical
+   request survives reload/unknown outcomes, including an already-active refreshed
+   account. Actor/environment/binding-scoped tab storage clears on account switch
+   or logout. Controlled browser responses do not prove real Auth/SQL.
 2. Add target-owned account provisioning by email, tenant/shop ownership creation
    and secure owner invitation/claim. The current signed Shop adapter has no such
    capability. Define a separately audited, idempotent provisioning state machine;
@@ -69,3 +74,51 @@ data; this task changes none of them. No customers were activated or invited.
    authorized in this task.
 
 The pending browser/provisioning scope can continue on this same open feature PR.
+
+## Account workflow checkpoint
+
+Branch: `codex/super-admin-suit/account-workflow`, based on PR #269 at
+`24dfc9e2e61b4d965569a2faa631ec8396f7b74d`. PR #269 final CI is green.
+
+The only shared-file edit removes the three now-resolved SAS index-page entries
+from `docs/shared/suit-ui-boundary-debt.json`. Preserve concurrent Shop entries
+when consolidating; no shared component or token implementation was changed.
+
+SAS entry is provisioned data: register an enabled navigation item under its Suit
+with `moduleKind: accounts`, an empty route descriptor, owner visibility, required
+capability `shop.plan.command` version `1.0`, and localized labels. Do this through
+the existing audited configuration command only after independent release approval.
+The binding helper requires all three account/plan query/command policies and a
+fresh verified manifest advertising `activate_trial`, plus the existing signer,
+exact environment and egress policy. Ambiguous bindings fail closed. No rows are
+seeded by this migration and an unconfigured/older target exposes no activation UI.
+
+The dispatcher uses the SAS project's own `NUXT_SUPABASE_SERVICE_KEY` through the
+maintained Nuxt server client; source templates contain a blank placeholder only.
+It never accepts a target endpoint/key or raw signed dispatch ID from the browser.
+Authorization is verified before resolving the privileged worker client. The target
+receives the existing signed envelope and validates its own integration principal.
+`super_admin_adapter_complete` remains the sole response signature/binding authority.
+
+Release order: validate the unapplied Shop activation migration and SAS navigation
+migration in disposable databases; deploy target SQL/bridge, pin the newly verified
+manifest, then deploy the SAS app and separately provision its approved module and
+server secret. Missing prerequisites stay unavailable. No provider state, secrets
+or hosted schema were changed by this task. The inherited unapplied Shop migration
+was tightened to reject inactive Shops and non-purchasable plans; an unrelated
+unchanged trailing helper was removed from its draft body.
+
+Next checkpoint remains secure new-account provisioning/invitation. The current
+UI intentionally exposes only existing-account activation; it does not advertise
+a nonfunctional creation action. Full acceptance cannot be claimed until the
+prepared SQL/conformance and real disposable Auth tests pass.
+
+Final workflow validation: 27 SAS unit checks, 13 Shop signed-bridge unit/conformance
+checks, 11 browser scenarios, SAS lint/typecheck/production build, workspace
+boundaries, diff check and live preflight passed. Browser journey responses were
+controlled; unauthenticated API/Origin denials exercised the actual built server.
+The signed bridge unit checks verify packet/environment/nonce binding and handler
+paths but do not replace database conformance. Mobile English/Arabic screenshots
+were captured; the English mobile dark screenshot was inspected. SQL suites and
+real disposable Auth/Storage remain unrun because the daemon's Postgres layer
+unpack failed; this follow-on performed no additional database download/start.
