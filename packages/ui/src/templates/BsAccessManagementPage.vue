@@ -84,7 +84,7 @@ const auditColumns = computed(() => props.copy.audit ? [
           <BsInline class="bs-access-page__filters" gap="md" justify="end" :wrap="true">
             <BsText v-if="copy.memberCount" size="sm" tone="muted">{{ copy.memberCount }}</BsText>
             <BsField v-if="copy.search" v-slot="field" :label="copy.search"><BsInput :id="field.id" type="search" :model-value="search" :placeholder="copy.search" @update:model-value="emit('update:search', String($event ?? ''))" /></BsField>
-            <BsField v-if="statusOptions" v-slot="field" :label="statusLabel"><BsSelect :input-id="field.id" :aria-describedby="field.describedby" :model-value="statusFilter" :options="statusOptions" :label="statusLabel" option-label="label" option-value="value" @update:model-value="emit('update:statusFilter', String($event ?? ''))" /></BsField>
+            <BsField v-if="statusOptions" v-slot="field" :label="statusLabel ?? ''"><BsSelect :input-id="field.id" :aria-describedby="field.describedby" :model-value="statusFilter" :options="statusOptions" :label="statusLabel" option-label="label" option-value="value" @update:model-value="emit('update:statusFilter', String($event ?? ''))" /></BsField>
           </BsInline>
           <BsAccessMemberTable :members="members" :label="copy.members" :empty-label="copy.noMembers" :labels="copy.memberColumns" :pending="pending" @action="(key, id) => emit('memberAction', key, id)" />
         </section>
