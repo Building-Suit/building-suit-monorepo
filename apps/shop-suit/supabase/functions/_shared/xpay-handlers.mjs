@@ -35,6 +35,11 @@ const databaseSession = session => ({
   paymentIntentId: session.paymentIntentId, metadata: { orderId: session.metadata?.orderId },
   url: session.url, expiresAt: session.expiresAt, isExpired: session.isExpired,
 })
+function canRetryCreation(order) {
+  const expiry = order.quote?.offerBinding?.expiresAt
+  if (expiry && Date.parse(expiry) < Date.now() + 31 * 60000) throw new Error('xpay_reconciliation_required')
+  if (Date.now() - Date.parse(order.createdAt) >= 23 * 3600000) throw new Error('xpay_reconciliation_required')
+}
 
 async function providerOrder(sessionId, settings, rpc, fetchImpl) {
   const session = await retrieveSession({ sessionId, ...settings, fetchImpl })
@@ -49,7 +54,8 @@ async function reconcileOrder(order, settings, rpc, fetchImpl) {
   if (order.merchantId !== settings.merchantId || order.mode !== settings.mode) throw new Error('xpay_session_mismatch')
   if (!order.sessionId) {
     // Provider request dedup expires after 24h. Never create blindly after it.
-    if (!order.sessionRequest || Date.now() - Date.parse(order.createdAt) >= 23 * 3600000) throw new Error('xpay_reconciliation_required')
+    if (!order.sessionRequest) throw new Error('xpay_reconciliation_required')
+    canRetryCreation(order)
     const created = await createProviderSession({ order, ...settings, fetchImpl })
     order = { ...order, sessionId: created.id }
   }
@@ -90,6 +96,7 @@ export function createXPayCheckout({ env, rpc, authenticate, fetchImpl = fetch }
       }
       const sessionRequest = checkoutBody(order, { returnUrl: `${settings.origin}/billing?xpayOrder=${order.id}`, cancelUrl: `${settings.origin}/billing?xpayOrder=${order.id}&cancelled=1`, locale: body.locale })
       order = await rpc('shop_xpay_prepare_session', { p_order_id: order.id, p_body: sessionRequest })
+      canRetryCreation(order)
       const created = await createProviderSession({ order, ...settings, fetchImpl })
       const session = await retrieveSession({ sessionId: created.id, ...settings, fetchImpl })
       validateSession(session, order, settings.mode)
@@ -137,6 +144,19 @@ export function createXPayReconciliation({ env, rpc, authorizeServer, fetchImpl 
     if (!await authorizeServer(request.headers.get('authorization'))) return response({ error: 'server_required' }, 403)
     try {
       const settings = config(env)
+      const input = await request.text()
+      if (textEncoder.encode(input).length > 8192) throw new Error('xpay_invalid_request')
+      if (input.trim()) {
+        const target = JSON.parse(input)
+        if (!target || Object.keys(target).some(key => !['orderId', 'sessionId'].includes(key)) || !UUID.test(target.orderId || '')) throw new Error('xpay_invalid_request')
+        // An operator may locate the original session in XPay's dashboard after
+        // an uncertain creation exceeds the request-key retention window.
+        // The supplied ID is only a lookup hint, never proof of received funds.
+        const { session, order } = await providerOrder(target.sessionId, settings, rpc, fetchImpl)
+        if (!order || order.id !== target.orderId) throw new Error('xpay_session_mismatch')
+        const result = await rpc('shop_xpay_apply_session', { p_session: databaseSession(session), p_event_id: null })
+        return response({ processed: result.state === 'requires_review' ? 0 : 1, unresolved: result.state === 'requires_review' ? 1 : 0 }, result.state === 'requires_review' ? 503 : 200)
+      }
       const orders = await rpc('shop_xpay_reconcile_candidates', {})
       let processed = 0, unresolved = 0
       // Bound work for Supabase's 150s free-plan lifetime, including retries.

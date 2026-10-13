@@ -143,3 +143,22 @@ test('a held payment is reported unresolved by server reconciliation', async () 
   assert.equal(result.status, 503)
   assert.deepEqual(await result.json(), { processed: 0, unresolved: 1 })
 })
+
+test('unknown private-offer creation near expiry never opens a late provider session', async () => {
+  const f = fixture()
+  const rpc = async (name, ...args) => name === 'shop_xpay_reconcile_candidates'
+    ? [{ ...baseOrder, sessionRequest: {}, quote: { offerBinding: { expiresAt: '2020-01-01' } } }] : f.rpc(name, ...args)
+  const result = await createXPayReconciliation({ ...f, rpc })(new Request('https://edge.example', { method: 'POST' }))
+  assert.equal(result.status, 503)
+  assert.equal(f.providerCalls.length, 0)
+})
+test('server-only dashboard session recovery uses authenticated provider GET and verifies order binding', async () => {
+  const f = fixture({ providerSession: paid })
+  const result = await createXPayReconciliation(f)(new Request('https://edge.example', { method: 'POST', body: JSON.stringify({ orderId: id, sessionId: session.id }) }))
+  assert.equal(result.status, 200)
+  assert.equal(f.providerCalls.length, 1)
+  assert.equal(f.providerCalls[0].options.method, undefined)
+  assert.equal(f.calls.find(call => call.name === 'shop_xpay_apply_session').args.p_session.paymentStatus, 'paid')
+  const other = await createXPayReconciliation(f)(new Request('https://edge.example', { method: 'POST', body: JSON.stringify({ orderId: shop, sessionId: session.id }) }))
+  assert.equal(other.status, 503)
+})
