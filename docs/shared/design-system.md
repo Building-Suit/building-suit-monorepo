@@ -53,3 +53,5 @@ Future Suit administration extensions use the [typed registration contract](futu
 Workspace panels use the canonical card surface, border, radius, elevation and padding scale. `BsAccessTabs` delegates to `BsTabs`, including counts and keyboard navigation, so access-management tabs use the same horizontal presentation as other workspaces. Product adapters explicitly provide home destinations when their dashboard differs from `/dashboard`.
 
 `BsCard` supports the same responsive `span` contract as shared layout primitives. Dashboard charts and onboarding cards use it to occupy their intended grid tracks; the span resets on narrow screens.
+
+`BsDashboardMetric` renders product-formatted KPI values with consistent title/value/hint structure and preserves source navigation as semantic events. Its 144px minimum height and 20px padding are canonical component tokens, matching the approved Shop dashboard specimen. Values use the existing h2 type scale; cards grow for translated or longer content. The complete financial notice remains product-owned and visible beside the metric grid.

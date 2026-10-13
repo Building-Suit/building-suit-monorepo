@@ -155,6 +155,10 @@ useHead({ title: 'Shared component catalogue · Building Suit' })
       <BsCatalogImageUploader input-id="catalog-image-example" preview="" name="" status="idle" :copy="{ choose: isArabic ? 'اختيار صورة' : 'Choose image', replace: isArabic ? 'استبدال الصورة' : 'Replace image', remove: isArabic ? 'إزالة' : 'Remove', retry: isArabic ? 'إعادة المحاولة' : 'Retry', help: isArabic ? 'عرض توضيحي فقط؛ لا يتم رفع الملفات.' : 'Presentation example only; files are not uploaded.', uploading: isArabic ? 'جارٍ الرفع…' : 'Uploading…', uploaded: isArabic ? 'تم رفع الصورة' : 'Image uploaded', error: isArabic ? 'تعذّر رفع الصورة' : 'Upload failed', invalid: isArabic ? 'صورة غير صالحة' : 'Invalid image', placeholder: isArabic ? 'بدون صورة' : 'No image' }" />
     </BsContentSection>
 
+    <BsContentSection :title="isArabic ? 'مقاييس لوحة التحكم' : 'Dashboard metrics'">
+      <BsDashboardMetric :metric="{ id: 'example', title: isArabic ? 'بيانات توضيحية' : 'Illustrative data', value: 'EGP 120', hint: isArabic ? 'مثال للمكتبة فقط.' : 'Catalogue example only.', changeLabel: '', tone: 'neutral', to: '', source: null }" />
+    </BsContentSection>
+
     <BsContentSection :title="isArabic ? 'مثال رسوم مزيج المبيعات' : 'Sales mix chart example'">
       <BsGrid :columns="2"><BsMetricChart :title="isArabic ? 'بيانات توضيحية' : 'Illustrative data'" :empty-label="isArabic ? 'لا توجد بيانات' : 'No data'" kind="donut" :items="[{ id: 'products', label: isArabic ? 'منتجات' : 'Products', hint: '', value: 30, formatted: '30' }, { id: 'services', label: isArabic ? 'خدمات' : 'Services', hint: '', value: 10, formatted: '10' }]" /><BsMetricChart :title="isArabic ? 'بيانات توضيحية' : 'Illustrative data'" :empty-label="isArabic ? 'لا توجد بيانات' : 'No data'" :items="[{ id: 'cash', label: isArabic ? 'نقدي' : 'Cash', hint: '', value: 30, formatted: '30' }, { id: 'card', label: isArabic ? 'بطاقة' : 'Card', hint: '', value: 10, formatted: '10' }]" /></BsGrid>
     </BsContentSection>

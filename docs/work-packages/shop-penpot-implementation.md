@@ -7,8 +7,8 @@ Initial verified staging: `266d91dc11cbc07b5e9f3b6d37dd53e541fb70e1`. Existing o
 | Task | State |
 | --- | --- |
 | Optional product/service image upload | [Draft PR #259](https://github.com/Building-Suit/building-suit-monorepo/pull/259), `0e25d129be2d79e049752ad7a000aba6da7bfc2b`; parent #258; focused checks and child review CI pass |
-| Foundations/shell | [Draft PR #260](https://github.com/Building-Suit/building-suit-monorepo/pull/260), parent #259; desktop context-gap, flat 64px header and 184px scope alignment complete; canonical Manrope face mismatch correction in progress; two browser scenarios, build, lint and `pnpm check` pass |
-| Approved dashboard | Pending pixel comparison; approved board remains locked |
+| Foundations/shell | [Draft PR #260](https://github.com/Building-Suit/building-suit-monorepo/pull/260), parent #259; desktop context-gap, flat 64px header and 184px scope alignment complete; canonical Manrope face mismatch corrected at `40ddbc093ebf01036a0f3204b2b9c0585fc600bd`; 3 token tests and loaded-face browser checks pass; two browser scenarios, build, lint and `pnpm check` pass |
+| Approved dashboard | `codex/shop-suit/penpot-dashboard`, parent #260 (`40ddbc0`); metrics/filter/chart alignment complete; 2 browser scenarios, typecheck, lint, Shop/docs builds and `pnpm check` pass; approved Penpot board remains unchanged |
 | POS/sales/receipts | Pending fixed cart, compact catalog and touch-control comparison |
 | Catalog/inventory | Pending route export inspection |
 | Purchasing/customers | Pending route export inspection |
@@ -23,3 +23,5 @@ Passing so far: 12 focused unit tests, mandatory `pnpm check`, focused package/s
 Reference materialization: `/tmp/shop-penpot-handoff/Shop-Suit-Penpot-Handoff-2026-10-13.zip`, Library version 0; extracted PNGs were visually inspected for product/service upload. These executor paths are evidence only, not repository dependencies. The live shell board export was inspected and matches the frozen PNG; read-only exports are now responding. No canvas mutation.
 
 Shell validation: EN/light/1440 and AR/dark/390; official SVG wordmark/mark selection and aspect ratio, 248/72px sidebar, 64px header, 184px selectors, collapse and mobile Escape/focus return, and no horizontal overflow. Source board `9d8c9265-2366-809c-8008-c7d70d192616`. Broader visual/state matrix remains pending.
+
+Dashboard evidence: frozen PNG and live file/board geometry verified (`fe2491ad-4519-810e-8008-962ecd861efe`, locked board `9d8c9265-2366-809c-8008-c7d82686d944`, 1440×2870). Matched specimen data exists only in synthetic browser fixtures. Production monetary formatting and full financial notice are retained, so text wrapping differs from the illustrative design. AR/dark/mobile has behavior coverage but no complete native variant reference; no pixel-perfect claim.

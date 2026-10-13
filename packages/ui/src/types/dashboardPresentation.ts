@@ -6,6 +6,7 @@ export interface BsDashboardTable { title: string; empty: string; rows: BsDashbo
 export interface BsDashboardFilters { period: string; date: string; location: string; months: number; custom: boolean; from: string; to: string }
 export interface BsDashboardSetupForm { name: string; mode: string }
 export interface BsDashboardView {
+  metricsNotice?: string
   periodLabel?: string
   title: string; subtitle: string; workspace: string; role: string; notice: string; available: boolean; loading: boolean; error: string; denied: string; empty: string; emptyDescription: string; canStart: boolean; errorDescription: string
   checklist: { visible: boolean; title: string; description: string; progress: string; steps: BsSetupStepData[]; loading: boolean; error: string | null; empty: string }

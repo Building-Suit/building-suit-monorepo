@@ -476,6 +476,25 @@ export const tokens = {
     }
   },
   "component": {
+    "dashboardChart": {
+      "barWidth": {
+        "value": "44px"
+      },
+      "plotMaximumWidth": {
+        "value": "680px"
+      }
+    },
+    "dashboardMetric": {
+      "minimumHeight": {
+        "value": "144px"
+      },
+      "valueGap": {
+        "value": "10px"
+      },
+      "padding": {
+        "value": "20px"
+      }
+    },
     "buttonPrimary": {
       "_note": "Primary action. Color flips by mode — Navy on light, Gold on dark.",
       "radius": {

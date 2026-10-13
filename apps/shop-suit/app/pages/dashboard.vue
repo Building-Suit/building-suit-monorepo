@@ -58,7 +58,7 @@ const copy = computed(() => isArabic.value ? {
   day: 'يوم', week: 'أسبوع', month: 'شهر', allLocations: 'كل الفروع', location: 'الفرع', reportDate: 'التاريخ',
   loadingReport: 'جاري تحميل تقرير التشغيل…', reportDenied: 'اطلب من المالك صلاحية التقارير. استخدم التقويم أو نقطة البيع لعملك اليومي.',
   sales: 'المبيعات', salesCount: 'عدد البيعات', averageTicket: 'متوسط الفاتورة', collections: 'التحصيلات',
-  expenses: 'مصروفات التشغيل', operatingBalance: 'المبيعات ناقص المصروفات', accountingNotice: 'ده ملخص للشغل بس، مش حساب للربح المحاسبي ومش قائمة مالية.',
+  expenses: 'مصروفات التشغيل', operatingBalance: 'المبيعات ناقص المصروفات', operatingBalanceHint: 'ملخص تشغيلي، وليس ربحًا محاسبيًا.', periodLabel: 'الفترة', accountingNotice: 'ده ملخص للشغل بس، مش حساب للربح المحاسبي ومش قائمة مالية.',
   salesMix: 'مزيج المبيعات', product: 'منتجات', service: 'خدمات', quantity: 'الكمية', paymentMix: 'مزيج طرق الدفع', collected: 'محصل', refunded: 'مرتجع', net: 'صافي التحصيل',
   outstanding: 'عملاء عليهم مستحقات', customer: 'العميل', noOutstanding: 'لا توجد مستحقات عملاء.',
   appointments: 'المواعيد', completed: 'مكتمل', cancelled: 'ملغي', noShow: 'لم يحضر', busiestTimes: 'أكثر الأوقات ازدحامًا', noAppointments: 'لا توجد بيانات مواعيد في الفترة.',
@@ -85,7 +85,7 @@ const copy = computed(() => isArabic.value ? {
   day: 'Day', week: 'Week', month: 'Month', allLocations: 'All locations', location: 'Location', reportDate: 'Date',
   loadingReport: 'Loading the operating report…', reportDenied: 'Ask the owner for report access. Use Calendar or Point of sale for your daily work.',
   sales: 'Sales', salesCount: 'Sales count', averageTicket: 'Average ticket', collections: 'Collections',
-  expenses: 'Operating expenses', operatingBalance: 'Sales less operating expenses', accountingNotice: 'Operational summary only; this is not accounting profit or a financial statement.',
+  expenses: 'Operating expenses', operatingBalance: 'Sales less operating expenses', operatingBalanceHint: 'Operational summary; not accounting profit', periodLabel: 'Period', accountingNotice: 'Operational summary only; this is not accounting profit or a financial statement.',
   salesMix: 'Sales mix', product: 'Products', service: 'Services', quantity: 'Quantity', paymentMix: 'Payment-method mix', collected: 'Collected', refunded: 'Refunded', net: 'Net collections',
   outstanding: 'Outstanding customers', customer: 'Customer', noOutstanding: 'No customer balances are outstanding.',
   appointments: 'Appointments', completed: 'Completed', cancelled: 'Cancelled', noShow: 'No-show', busiestTimes: 'Busiest times', noAppointments: 'No appointment data exists for this period.',
@@ -265,7 +265,7 @@ const dashboardSetupForm = computed<BsDashboardSetupForm>({ get: () => ({ name: 
 const dashboardFilters = computed<BsDashboardFilters>({ get: () => ({ period: reportPeriod.value, date: reportAnchor.value, location: reportLocationId.value, months: 6, custom: false, from: '', to: '' }), set: value => { if (periodOptions.includes(value.period as ReportPeriod)) reportPeriod.value = value.period as ReportPeriod; reportAnchor.value = value.date; if (value.location === 'all' || activeLocations.value.some(location => location.id === value.location)) reportLocationId.value = value.location } })
 const dashboardLocations = computed(() => [{ value: 'all', label: copy.value.allLocations }, ...activeLocations.value.map(location => ({ value: location.id, label: location.name }))])
 const dashboardPeriods = computed(() => periodOptions.map(value => ({ value, label: copy.value[value] })))
-const dashboardCopy = computed<BsDashboardCopy>(() => ({ retry: copy.value.retry, cancel: ui('cancel'), create: copy.value.createShop, name: copy.value.shopName, mode: copy.value.businessMode, plan: copy.value.planStatus, filters: isArabic.value ? 'مرشحات التقارير' : 'Report filters', location: copy.value.location, date: copy.value.reportDate, range: copy.value.date, custom: '', from: '', to: '', source: copy.value.openSource, manage: '', start: '' }))
+const dashboardCopy = computed<BsDashboardCopy>(() => ({ retry: copy.value.retry, cancel: ui('cancel'), create: copy.value.createShop, name: copy.value.shopName, mode: copy.value.businessMode, plan: copy.value.planStatus, filters: isArabic.value ? 'مرشحات التقارير' : 'Report filters', location: copy.value.location, date: copy.value.reportDate, range: copy.value.periodLabel, custom: '', from: '', to: '', source: copy.value.openSource, manage: '', start: '' }))
 function reportLink(kind = 'sales') {
  const dates = reportQuery()
  const query = new URLSearchParams({ report: kind, location: reportLocationId.value, ...(dates.from ? { from: dates.from, to: dates.to! } : {}) })
@@ -278,6 +278,7 @@ const dashboardView = computed<BsDashboardView>(() => {
  const row = (id: string, name: string, cells: Record<string, string>, to = '', intent: { location: string; path: string } | null = null): BsDashboardRow => ({ id, name, cells, to, source: intent, status: '' })
  const table = (title: string, empty: string, rows: BsDashboardRow[], columns: BsDashboardTable['columns']): BsDashboardTable => ({ title, empty, rows, columns, loading: false, error: '', to: '', action: false })
  return {
+  metricsNotice: value?.canViewCosts ? copy.value.accountingNotice : '',
   periodLabel: value ? `${formatDate(value.fromDate)} — ${formatDate(reportQuery().to)} · ${dashboardLocations.value.find(location => location.value === reportLocationId.value)?.label || ''}` : '',
   title: copy.value.title, subtitle: copy.value.subtitle, workspace: current.value?.name || '', role: isOwner.value ? copy.value.owner : copy.value.employee, notice: modeDisabledNotice.value ? copy.value.modeDisabled : '', available: Boolean(current.value), loading: reportAccessPending.value || reportPending.value, error: reportAccessError.value || reportError.value || highlightsError.value ? copy.value.loadFailed : '', denied: !reportAccessPending.value && !canViewReports.value ? copy.value.reportDenied : '', empty: '', emptyDescription: '', canStart: false, errorDescription: '',
   checklist: { visible: Boolean(isOwner.value && current.value?.business_mode !== 'product'), title: setupGuide.copy.title, description: setupGuide.copy.help, progress: setupGuide.copy.help, steps: setupGuide.steps, loading: false, error: null, empty: copy.value.noData },
@@ -290,7 +291,7 @@ const dashboardView = computed<BsDashboardView>(() => {
     metric('customers', copy.value.outstanding, whole(value.outstanding.customerCount), money(value.outstanding.amount), reportLink('receivables')),
   ] : [],
   highlightsLoading: highlightsPending.value, highlights: [
-    ...(value?.canViewCosts ? [metric('expenses', copy.value.expenses, money(value.expenses.amount), `${value.expenses.count} ${copy.value.openSource}`, reportLink('expenses')), metric('balance', copy.value.operatingBalance, money(value.expenses.operatingBalance), copy.value.accountingNotice)] : []),
+    ...(value?.canViewCosts ? [metric('expenses', copy.value.expenses, money(value.expenses.amount), `${value.expenses.count} ${copy.value.openSource}`, reportLink('expenses')), metric('balance', copy.value.operatingBalance, money(value.expenses.operatingBalance), copy.value.operatingBalanceHint)] : []),
     ...(reportHighlights.value ? [metric('payable', copy.value.supplierPayable, money(reportHighlights.value.payable), '', reportLink('suppliers')), metric('stock', copy.value.lowStock, String(reportHighlights.value.lowStockCount), '', reportLink('inventory')), metric('inventory', copy.value.inventoryValue, money(reportHighlights.value.inventoryValue), '', reportLink('inventory')), metric('margin', copy.value.fifoMargin, money(reportHighlights.value.margin), '', reportLink('margin'))] : []),
   ],
   reportLink: { visible: canViewReports.value, title: copy.value.fullReports, description: copy.value.fullReportsBody, to: reportLink() }, chart: { visible: Boolean(value), loading: false, error: '', title: copy.value.branchComparison, pointLabel: copy.value.location, tableLabel: copy.value.openSource, empty: copy.value.noData, points: (value?.locations || []).map(branch => ({ id: branch.locationId, label: branch.name, values: { sales: branch.sales, collections: branch.collections }, formattedValues: { sales: money(branch.sales), collections: money(branch.collections) } })), series: [{ id: 'sales', label: copy.value.sales, tone: 'neutral' }, { id: 'collections', label: copy.value.collections, tone: 'warning' }], tableSeries: [{ id: 'sales', label: copy.value.sales }, { id: 'collections', label: copy.value.collections }] }, cashPosition: null, commitments: null, recent: null,

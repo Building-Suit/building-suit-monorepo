@@ -298,6 +298,18 @@
         "apps/shop-suit/app/pages/services/index.vue"
       ],
       "migrationStatus": "canonical shared presentation; focused verification recorded in the task tracker"
+    },
+    {
+      "family": "dashboard-metrics",
+      "owner": "packages/ui",
+      "components": [
+        "BsDashboardMetric"
+      ],
+      "adapterBoundary": "formatted product-owned metric values, capabilities, financial notice and source navigation",
+      "auditSources": [
+        "apps/shop-suit/app/pages/dashboard.vue"
+      ],
+      "migrationStatus": "shared metric molecule; bounded Penpot alignment in progress"
     }
   ]
 }

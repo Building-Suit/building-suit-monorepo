@@ -318,7 +318,8 @@
     "./molecules/BsSectionNavigation": "./src/molecules/BsSectionNavigation.vue",
     "./control-plane-presentation": "./src/types/controlPlanePresentation.ts",
     "./BsControlPlaneShell": "./src/templates/BsControlPlaneShell.vue",
-    "./molecules/BsCatalogImageUploader": "./src/molecules/BsCatalogImageUploader.vue"
+    "./molecules/BsCatalogImageUploader": "./src/molecules/BsCatalogImageUploader.vue",
+    "./molecules/BsDashboardMetric": "./src/molecules/BsDashboardMetric.vue"
   },
   "dependencies": {
     "primevue": "4.5.5",
