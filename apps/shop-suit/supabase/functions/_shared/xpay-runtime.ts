@@ -23,7 +23,7 @@ export async function authenticate(caller?: string | null) {
   })
   if (!response.ok) return false
   const user = await response.json()
-  return typeof user.id === 'string' && !user.is_anonymous
+  return typeof user.id === 'string' && !user.is_anonymous && typeof user.email_confirmed_at === 'string'
 }
 export async function authorizeServer(caller?: string | null) {
   const key = env('SUPABASE_SERVICE_ROLE_KEY')

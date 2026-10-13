@@ -83,7 +83,7 @@ create function public.shop_xpay_order_read(p_shop_id uuid,p_order_id uuid defau
 language plpgsql stable security definer set search_path='' as $$
 declare result jsonb;
 begin
- if auth.uid() is null or not shop_private.is_owner(p_shop_id) then raise exception 'SHOP_OWNER_REQUIRED' using errcode='42501'; end if;
+ if auth.uid() is null or coalesce((auth.jwt()->>'is_anonymous')::boolean,false) or not shop_private.is_owner(p_shop_id) then raise exception 'SHOP_OWNER_REQUIRED' using errcode='42501'; end if;
  select coalesce(jsonb_agg(shop_private.xpay_order_view(o) order by o.created_at desc),'[]'::jsonb) into result
  from (select * from public.shop_xpay_orders where shop_id=p_shop_id and (p_order_id is null or id=p_order_id)
  order by created_at desc limit 20) o;
@@ -94,7 +94,8 @@ create function public.shop_xpay_order_create(p_request_id uuid,p_shop_id uuid,p
 declare s public.subscriptions; o public.shop_xpay_orders; c shop_private.xpay_configuration;
  t public.plan_catalog_terms; q jsonb; offer public.shop_private_offers; preview jsonb; amount numeric;
 begin
- if auth.role() is distinct from 'authenticated' or auth.uid() is null or not shop_private.is_owner(p_shop_id) then
+ if auth.role() is distinct from 'authenticated' or auth.uid() is null or coalesce((auth.jwt()->>'is_anonymous')::boolean,false)
+ or not exists(select 1 from auth.users where id=auth.uid() and email_confirmed_at is not null) or not shop_private.is_owner(p_shop_id) then
  raise exception 'SHOP_OWNER_REQUIRED' using errcode='42501'; end if;
  if p_request_id is null or (p_catalog_terms_id is null)=(p_private_offer is null) then raise exception 'XPAY_QUOTE_INVALID' using errcode='22023'; end if;
  perform shop_private.lock_all_plan_resources(p_shop_id);
@@ -540,7 +541,7 @@ create or replace function public.shop_private_offer_read(p_shop_id uuid,p_offer
 returns jsonb language plpgsql stable security definer set search_path='' as $$
 declare o public.shop_private_offers;s public.shop_private_offer_security;redeemed uuid; paid_order uuid;
 begin
- if auth.role() is distinct from 'authenticated' or auth.uid() is null or not shop_private.is_owner(p_shop_id) then
+ if auth.role() is distinct from 'authenticated' or auth.uid() is null or coalesce((auth.jwt()->>'is_anonymous')::boolean,false) or not shop_private.is_owner(p_shop_id) then
   raise exception 'SHOP_OWNER_REQUIRED' using errcode='42501';end if;
  select * into o from public.shop_private_offers where id=p_offer_id;
  if o.id is null or o.recipient_user_id<>auth.uid() or o.shop_id<>p_shop_id

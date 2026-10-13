@@ -10,8 +10,8 @@ select shop_private.reconcile_plan_catalog();
 create temporary table xpay_fixture(owner_id uuid default gen_random_uuid(),other_id uuid default gen_random_uuid(),shop_id uuid,terms_id uuid,order_id uuid,trial_start timestamptz,trial_end timestamptz,session jsonb);
 insert into xpay_fixture default values;
 grant all on xpay_fixture to authenticated,service_role;
-insert into auth.users(id,email,encrypted_password,aud,role,raw_app_meta_data,raw_user_meta_data,created_at,updated_at)
-select id,id::text||'@xpay-disposable.invalid','x','authenticated','authenticated','{}','{}',now(),now()
+insert into auth.users(id,email,encrypted_password,aud,role,email_confirmed_at,raw_app_meta_data,raw_user_meta_data,created_at,updated_at)
+select id,id::text||'@xpay-disposable.invalid','x','authenticated','authenticated',now(),'{}','{}',now(),now()
 from (select owner_id id from xpay_fixture union all select other_id from xpay_fixture) users;
 insert into shop_private.xpay_configuration(singleton,enabled,merchant_id,mode) values(true,true,'merchant-fixture','test');
 select set_config('request.jwt.claim.sub',owner_id::text,true),set_config('request.jwt.claim.role','authenticated',true) from xpay_fixture;
