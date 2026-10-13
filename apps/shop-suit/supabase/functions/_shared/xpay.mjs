@@ -30,6 +30,7 @@ export function checkoutBody(order, { returnUrl, cancelUrl, locale = 'en' }) {
     || !['en', 'ar'].includes(locale)) throw new Error('xpay_invalid_quote')
   return {
     mode: 'payment', uiMode: 'hosted', currency: 'EGP', locale,
+    expiresAfterMinutes: 30,
     afterCompletion: { type: 'redirect', redirect: { url: secureReturnUrl(returnUrl) } },
     cancelUrl: secureReturnUrl(cancelUrl),
     allowPromotionCodes: false,
@@ -63,16 +64,20 @@ export function validateSession(session, order, mode, { paid = false } = {}) {
   return session
 }
 
-export async function createCheckout({ order, secretKey, mode, returnUrl, cancelUrl, locale, fetchImpl = fetch }) {
+export async function createProviderSession({ order, secretKey, mode, returnUrl, cancelUrl, locale, fetchImpl = fetch }) {
   validKey(secretKey, mode)
-  const body = checkoutBody(order, { returnUrl, cancelUrl, locale })
+  const body = order.sessionRequest ?? checkoutBody(order, { returnUrl, cancelUrl, locale })
   const response = await fetchImpl(`${API}/checkout/sessions`, {
     method: 'POST', redirect: 'error', signal: AbortSignal.timeout(15000),
     headers: { authorization: `Bearer ${secretKey}`, 'content-type': 'application/json',
       'Idempotency-Key': requiredText(order.idempotencyKey) }, body: JSON.stringify(body),
   })
   if (!response.ok) throw new Error('xpay_session_create_failed')
-  const session = validateSession(await response.json(), order, mode)
+  return validateSession(await response.json(), order, mode)
+}
+
+export async function createCheckout(options) {
+  const session = await createProviderSession(options)
   const url = new URL(session.url)
   if (url.origin !== 'https://checkout.xpay.app' || url.username || url.password
     || url.pathname !== `/c/${session.id}` || session.status !== 'open' || session.isExpired !== false) {
