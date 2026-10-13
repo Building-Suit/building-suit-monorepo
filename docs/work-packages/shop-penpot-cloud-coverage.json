@@ -1,0 +1,787 @@
+{
+  "sourceLibraryFile": "libfile_9359e8a23ab88191b9b297257d196aec",
+  "supersedingDeltaLibraryFile": "libfile_1d906b5c37608191b8a5afc386cd70c1",
+  "cloudReferenceDirectory": "/workspace/shop-references",
+  "routeRecordCount": 33,
+  "designMainCounts": {
+    "saved": 33,
+    "notStarted": 0,
+    "fullMatrixComplete": 0
+  },
+  "note": "Design inventory describes source evidence, not implemented or verified code. Legacy 12/21 counts are stale. Every route already has inherited code; queued means the cloud fidelity/state review is unfinished. No live Penpot access is permitted.",
+  "routes": [
+    {
+      "number": 1,
+      "route": "/",
+      "template": "BsLandingPage",
+      "pageId": "9d8c9265-2366-809c-8008-c8012952a9a0",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c8019ffed05c",
+      "requiredStates": "Hero/features, public plan pricing, billing interval and plan variant selection; pricing loading/error/retry as supplied by pricing model",
+      "requiredDialogs": "No page-specific dialog",
+      "referencePixels": null,
+      "pixelScope": "unavailable",
+      "latestDeltaRecord": null,
+      "cloudRelatedDraftPRs": [],
+      "cloudReview": "queued",
+      "fullDesignMatrixComplete": false,
+      "remainingDesignEvidence": [
+        "Remaining language/theme/responsive variants and pixel QA",
+        "Exact pricing catalog data",
+        "Pricing states",
+        "Hero and mobile QA"
+      ]
+    },
+    {
+      "number": 2,
+      "route": "/about",
+      "template": "BsPublicLegalPage",
+      "pageId": "9d8c9265-2366-809c-8008-c8012952a9a0",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c802038346e6",
+      "requiredStates": "Static localized business identity copy",
+      "requiredDialogs": "None",
+      "referencePixels": null,
+      "pixelScope": "unavailable",
+      "latestDeltaRecord": null,
+      "cloudRelatedDraftPRs": [],
+      "cloudReview": "queued",
+      "fullDesignMatrixComplete": false,
+      "remainingDesignEvidence": [
+        "Remaining language/theme/responsive variants and pixel QA"
+      ]
+    },
+    {
+      "number": 3,
+      "route": "/contact",
+      "template": "BsContactPage",
+      "pageId": "9d8c9265-2366-809c-8008-c8012952a9a0",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c802cc216548",
+      "requiredStates": "Empty form, valid filled form, pending submit, failure, sent confirmation; category choice",
+      "requiredDialogs": "None",
+      "referencePixels": null,
+      "pixelScope": "unavailable",
+      "latestDeltaRecord": null,
+      "cloudRelatedDraftPRs": [],
+      "cloudReview": "queued",
+      "fullDesignMatrixComplete": false,
+      "remainingDesignEvidence": [
+        "Remaining language/theme/responsive variants and pixel QA",
+        "Remaining form feedback and journey states"
+      ]
+    },
+    {
+      "number": 4,
+      "route": "/terms",
+      "template": "BsPublicLegalPage",
+      "pageId": "9d8c9265-2366-809c-8008-c8012952a9a0",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c8022189c0cf",
+      "requiredStates": "Static localized legal content",
+      "requiredDialogs": "None",
+      "referencePixels": null,
+      "pixelScope": "unavailable",
+      "latestDeltaRecord": null,
+      "cloudRelatedDraftPRs": [],
+      "cloudReview": "queued",
+      "fullDesignMatrixComplete": false,
+      "remainingDesignEvidence": [
+        "Remaining language/theme/responsive variants and pixel QA"
+      ]
+    },
+    {
+      "number": 5,
+      "route": "/privacy",
+      "template": "BsPublicLegalPage",
+      "pageId": "9d8c9265-2366-809c-8008-c8012952a9a0",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c802504f804c",
+      "requiredStates": "Static localized legal content",
+      "requiredDialogs": "None",
+      "referencePixels": null,
+      "pixelScope": "unavailable",
+      "latestDeltaRecord": null,
+      "cloudRelatedDraftPRs": [],
+      "cloudReview": "queued",
+      "fullDesignMatrixComplete": false,
+      "remainingDesignEvidence": [
+        "Remaining language/theme/responsive variants and pixel QA"
+      ]
+    },
+    {
+      "number": 6,
+      "route": "/delivery-shipping",
+      "template": "BsPublicLegalPage",
+      "pageId": "9d8c9265-2366-809c-8008-c8012952a9a0",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c80281ddff77",
+      "requiredStates": "Static localized legal content",
+      "requiredDialogs": "None",
+      "referencePixels": null,
+      "pixelScope": "unavailable",
+      "latestDeltaRecord": null,
+      "cloudRelatedDraftPRs": [],
+      "cloudReview": "queued",
+      "fullDesignMatrixComplete": false,
+      "remainingDesignEvidence": [
+        "Remaining language/theme/responsive variants and pixel QA"
+      ]
+    },
+    {
+      "number": 7,
+      "route": "/refund-cancellation",
+      "template": "BsPublicLegalPage",
+      "pageId": "9d8c9265-2366-809c-8008-c8012952a9a0",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c8029df9b418",
+      "requiredStates": "Static localized legal content",
+      "requiredDialogs": "None",
+      "referencePixels": null,
+      "pixelScope": "unavailable",
+      "latestDeltaRecord": null,
+      "cloudRelatedDraftPRs": [],
+      "cloudReview": "queued",
+      "fullDesignMatrixComplete": false,
+      "remainingDesignEvidence": [
+        "Remaining language/theme/responsive variants and pixel QA"
+      ]
+    },
+    {
+      "number": 8,
+      "route": "/auth/login",
+      "template": "BsSignInPage",
+      "pageId": "9d8c9265-2366-809c-8008-c803d006e755",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c803d0f303fa",
+      "requiredStates": "Initial/unhydrated, email+password, required-input error, normalized auth error including unconfirmed email, pending sign-in; invitation-aware destination",
+      "requiredDialogs": "Password visibility control; no page modal",
+      "referencePixels": null,
+      "pixelScope": "unavailable",
+      "latestDeltaRecord": {
+        "number": 8,
+        "added": [
+          {
+            "id": "9d8c9265-2366-809c-8008-c807aa18091d",
+            "state": "Required fields"
+          },
+          {
+            "id": "9d8c9265-2366-809c-8008-c807ab829f0a",
+            "state": "Incorrect credentials"
+          },
+          {
+            "id": "9d8c9265-2366-809c-8008-c807acb0da9d",
+            "state": "Unconfirmed email"
+          },
+          {
+            "id": "9d8c9265-2366-809c-8008-c807ade91c15",
+            "state": "Rate limited"
+          },
+          {
+            "id": "9d8c9265-2366-809c-8008-c807af07aab7",
+            "state": "Submitting"
+          },
+          {
+            "id": "9d8c9265-2366-809c-8008-c807b04b06fa",
+            "state": "Initial client readiness"
+          }
+        ],
+        "other": []
+      },
+      "cloudRelatedDraftPRs": [],
+      "cloudReview": "queued",
+      "fullDesignMatrixComplete": false,
+      "remainingDesignEvidence": [
+        "Remaining language/theme/responsive variants and pixel QA",
+        "Remaining form feedback and journey states"
+      ]
+    },
+    {
+      "number": 9,
+      "route": "/auth/signup",
+      "template": "BsSignupPage → BsSignupEnrollment",
+      "pageId": "9d8c9265-2366-809c-8008-c803d006e755",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c80410fd3a98",
+      "requiredStates": "Account step; shop/main-location/business-mode step; OTP verification; pending/provisioning retry; invalid/expired code; resend cooldown; restored/stale draft; existing-account recovery; already-verified account retry",
+      "requiredDialogs": "No page modal",
+      "referencePixels": null,
+      "pixelScope": "unavailable",
+      "latestDeltaRecord": {
+        "number": 9,
+        "added": [
+          {
+            "id": "9d8c9265-2366-809c-8008-c808965b5996",
+            "state": "Invalid code"
+          },
+          {
+            "id": "9d8c9265-2366-809c-8008-c80897965e07",
+            "state": "Expired code"
+          },
+          {
+            "id": "9d8c9265-2366-809c-8008-c80898d5d9f6",
+            "state": "Verifying"
+          },
+          {
+            "id": "9d8c9265-2366-809c-8008-c80899ffea1c",
+            "state": "Resend failed"
+          },
+          {
+            "id": "9d8c9265-2366-809c-8008-c8089b1eec9d",
+            "state": "Already verified · provisioning failed"
+          }
+        ],
+        "other": [
+          {
+            "id": "9d8c9265-2366-809c-8008-c80848f35671",
+            "name": "Journey / Existing account recovery"
+          },
+          {
+            "id": "9d8c9265-2366-809c-8008-c8089bd084aa",
+            "name": "State / Stale signup draft"
+          }
+        ]
+      },
+      "cloudRelatedDraftPRs": [],
+      "cloudReview": "queued",
+      "fullDesignMatrixComplete": false,
+      "remainingDesignEvidence": [
+        "Remaining language/theme/responsive variants and pixel QA",
+        "Remaining form feedback and journey states"
+      ]
+    },
+    {
+      "number": 10,
+      "route": "/auth/forgot-password",
+      "template": "BsPasswordRecoveryPage mode=request",
+      "pageId": "9d8c9265-2366-809c-8008-c803d006e755",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c8045f40a1e4",
+      "requiredStates": "Email form, missing-email validation, sending, error, email-sent success",
+      "requiredDialogs": "None",
+      "referencePixels": null,
+      "pixelScope": "unavailable",
+      "latestDeltaRecord": {
+        "number": 10,
+        "added": [
+          {
+            "id": "9d8c9265-2366-809c-8008-c8080cc13476",
+            "state": "Missing email"
+          },
+          {
+            "id": "9d8c9265-2366-809c-8008-c8080dd3010c",
+            "state": "Sending"
+          },
+          {
+            "id": "9d8c9265-2366-809c-8008-c8080f039f3c",
+            "state": "Send failed"
+          }
+        ],
+        "other": []
+      },
+      "cloudRelatedDraftPRs": [],
+      "cloudReview": "queued",
+      "fullDesignMatrixComplete": false,
+      "remainingDesignEvidence": [
+        "Remaining language/theme/responsive variants and pixel QA",
+        "Remaining form feedback and journey states"
+      ]
+    },
+    {
+      "number": 11,
+      "route": "/auth/reset-password",
+      "template": "BsPasswordRecoveryPage mode=reset",
+      "pageId": "9d8c9265-2366-809c-8008-c803d006e755",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c80481420df4",
+      "requiredStates": "Valid session form; password below six characters; mismatch; pending; save error; complete success; invalid/expired recovery link",
+      "requiredDialogs": "Password visibility control",
+      "referencePixels": null,
+      "pixelScope": "unavailable",
+      "latestDeltaRecord": {
+        "number": 11,
+        "added": [
+          {
+            "id": "9d8c9265-2366-809c-8008-c80843196372",
+            "state": "Password too short"
+          },
+          {
+            "id": "9d8c9265-2366-809c-8008-c80844bb9bb6",
+            "state": "Confirmation mismatch"
+          },
+          {
+            "id": "9d8c9265-2366-809c-8008-c80846163264",
+            "state": "Saving"
+          },
+          {
+            "id": "9d8c9265-2366-809c-8008-c808476df691",
+            "state": "Save failed"
+          }
+        ],
+        "other": []
+      },
+      "cloudRelatedDraftPRs": [],
+      "cloudReview": "queued",
+      "fullDesignMatrixComplete": false,
+      "remainingDesignEvidence": [
+        "Remaining language/theme/responsive variants and pixel QA",
+        "Remaining form feedback and journey states"
+      ]
+    },
+    {
+      "number": 12,
+      "route": "/auth/team-invitation?invite=…",
+      "template": "BsInvitationAcceptancePage",
+      "pageId": "9d8c9265-2366-809c-8008-c803d006e755",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c804ae90151d",
+      "requiredStates": "Unavailable/invalid code; signed-out signup; OTP verification/resend/expiry; signed-in accept; switch-account; pending/error; successful redirect to team",
+      "requiredDialogs": "None",
+      "referencePixels": null,
+      "pixelScope": "unavailable",
+      "latestDeltaRecord": {
+        "number": 12,
+        "added": [
+          {
+            "id": "9d8c9265-2366-809c-8008-c808ebd56cda",
+            "state": "Signup failed"
+          },
+          {
+            "id": "9d8c9265-2366-809c-8008-c808ed77898d",
+            "state": "Accepting invitation"
+          },
+          {
+            "id": "9d8c9265-2366-809c-8008-c808ee654a13",
+            "state": "Acceptance failed"
+          }
+        ],
+        "other": []
+      },
+      "cloudRelatedDraftPRs": [],
+      "cloudReview": "queued",
+      "fullDesignMatrixComplete": false,
+      "remainingDesignEvidence": [
+        "Remaining language/theme/responsive variants and pixel QA",
+        "Remaining form feedback and journey states"
+      ]
+    },
+    {
+      "number": 13,
+      "route": "/dashboard",
+      "template": "BsDashboardPage variant=shop",
+      "pageId": "fe2491ad-4519-810e-8008-962ecd867f6b",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7d82686d944",
+      "requiredStates": "No shop; report access loading/denied; report/highlights load failure/retry; populated/section-level no data; owner vs employee; owner plan card/retry; disabled-business-area notice; period/date/location filters; service/mixed owner setup checklist",
+      "requiredDialogs": "Create-first-shop dialog: name + business mode, validation, pending, error",
+      "referencePixels": "02-approved-dashboard.png",
+      "pixelScope": "main",
+      "latestDeltaRecord": null,
+      "cloudRelatedDraftPRs": [
+        261
+      ],
+      "cloudReview": "focused verified changes",
+      "fullDesignMatrixComplete": false,
+      "remainingDesignEvidence": [
+        "Additional state UI and variant coverage; annotation cards do not count as complete UI"
+      ]
+    },
+    {
+      "number": 14,
+      "route": "/pos",
+      "template": "BsPointOfSalePage variant=shop",
+      "pageId": "9d8c9265-2366-809c-8008-c7dd51ac4971",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7dd7e740e48",
+      "requiredStates": "No shop; catalog/context loading/error/permission failure; filtered no-results; empty and filled cart; product/service item filters; barcode feedback; customer-search short-query/loading/no-result; appointment-linked customer lock; location-changed blocked checkout; missing staff/line disabled checkout; checkout pending/error",
+      "requiredDialogs": "Reset-cart confirmation; checkout confirmation",
+      "referencePixels": "03-pos-touch-cart.png",
+      "pixelScope": "main",
+      "latestDeltaRecord": null,
+      "cloudRelatedDraftPRs": [
+        262
+      ],
+      "cloudReview": "focused verified changes",
+      "fullDesignMatrixComplete": false,
+      "remainingDesignEvidence": [
+        "Additional state UI and variant coverage; annotation cards do not count as complete UI"
+      ]
+    },
+    {
+      "number": 15,
+      "route": "/sales",
+      "template": "BsSalesDirectoryPage",
+      "pageId": "9d8c9265-2366-809c-8008-c7dd51ac4971",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7e44aa66408",
+      "requiredStates": "No shop; view denied vs read-only/manage denied; list loading/error/empty/filtered; search/status/date/pagination; draft/issued rows; catalog loading/error; saving/issuing; fast-pay uncertain-response lock/retry",
+      "requiredDialogs": "Create/edit draft (customer or walk-in, product/service lines, due date/notes/payment); issue/checkout and fast-pay confirmations",
+      "referencePixels": null,
+      "pixelScope": "unavailable",
+      "latestDeltaRecord": null,
+      "cloudRelatedDraftPRs": [
+        263
+      ],
+      "cloudReview": "focused verified changes",
+      "fullDesignMatrixComplete": false,
+      "remainingDesignEvidence": [
+        "Edit dialog QA",
+        "Full draft validation, pending, failure and confirmation UI",
+        "Locale/theme/mobile variants"
+      ]
+    },
+    {
+      "number": 16,
+      "route": "/sales/:id",
+      "template": "BsCommerceDocumentPage",
+      "pageId": "9d8c9265-2366-809c-8008-c7dd51ac4971",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7e74d86396d",
+      "requiredStates": "Loading/error/retry/unavailable; draft vs issued; settlement and payment-event history; allowed vs restricted payment/correction actions; share pending/error; correction data loading/error; inline validation and action errors",
+      "requiredDialogs": "Record receipt; reverse receipt; refund; full-return/void correction; issue/correction/reversal/refund confirmations where requested in page",
+      "referencePixels": null,
+      "pixelScope": "unavailable",
+      "latestDeltaRecord": null,
+      "cloudRelatedDraftPRs": [],
+      "cloudReview": "queued",
+      "fullDesignMatrixComplete": false,
+      "remainingDesignEvidence": [
+        "Loading/error/unavailable/correction query/share states",
+        "Language/theme/mobile",
+        "Remaining dialog/state QA"
+      ]
+    },
+    {
+      "number": 17,
+      "route": "/sales/:id/receipt",
+      "template": "BsReceiptPage",
+      "pageId": "9d8c9265-2366-809c-8008-c7dd51ac4971",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7e895595cc4",
+      "requiredStates": "Loading/error/retry/unavailable; original POS receipt vs reprint label; sharing/error; Arabic/English; thermal 80 mm vs A4",
+      "requiredDialogs": "Browser print/share flow, not a custom page dialog",
+      "referencePixels": null,
+      "pixelScope": "unavailable",
+      "latestDeltaRecord": null,
+      "cloudRelatedDraftPRs": [
+        263
+      ],
+      "cloudReview": "focused verified changes",
+      "fullDesignMatrixComplete": false,
+      "remainingDesignEvidence": [
+        "Dark theme",
+        "Sharing pending",
+        "AR correction re-export",
+        "A4/mobile export QA",
+        "AR A4 representative if needed"
+      ]
+    },
+    {
+      "number": 18,
+      "route": "/products",
+      "template": "BsCataloguePage kind=product",
+      "pageId": "9d8c9265-2366-809c-8008-c7eaaa90ca46",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7eaaafbe13f",
+      "requiredStates": "No shop; catalog loading/error/retry/empty/no-results; search/category/page; manage permission; image supported/unsupported/invalid URL; form validation/quota/write error; saving; archiving",
+      "requiredDialogs": "Add/edit product; archive confirmation",
+      "referencePixels": "04-product-edit-upload.png",
+      "pixelScope": "cropped dialog",
+      "latestDeltaRecord": null,
+      "cloudRelatedDraftPRs": [
+        259,
+        264
+      ],
+      "cloudReview": "focused verified changes",
+      "fullDesignMatrixComplete": false,
+      "remainingDesignEvidence": [
+        "Mobile export QA",
+        "Archive pending/error",
+        "Remaining form/state QA"
+      ]
+    },
+    {
+      "number": 19,
+      "route": "/services",
+      "template": "BsCataloguePage kind=service",
+      "pageId": "9d8c9265-2366-809c-8008-c7eaaa90ca46",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7ebefd6982a",
+      "requiredStates": "No shop; loading/error/permission/no-results; search/category/page; form validation/quota/write error; amount/percent discount; net price; optional image capability; scheduling enabled/disabled; scheduling options loading/error",
+      "requiredDialogs": "Add/edit service; archive confirmation",
+      "referencePixels": "05-service-create-upload.png",
+      "pixelScope": "cropped dialog",
+      "latestDeltaRecord": null,
+      "cloudRelatedDraftPRs": [
+        259,
+        264
+      ],
+      "cloudReview": "focused verified changes",
+      "fullDesignMatrixComplete": false,
+      "remainingDesignEvidence": [
+        "Variant export QA",
+        "Read-only/access and pending/dirty-discard states",
+        "Remaining form/state QA"
+      ]
+    },
+    {
+      "number": 20,
+      "route": "/inventory",
+      "template": "BsInventoryManagementPage",
+      "pageId": "9d8c9265-2366-809c-8008-c7eaaa90ca46",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7ef929fbf4b",
+      "requiredStates": "No shop; permission load/error/denied; inventory-plan-disabled/read-only notice; all vs low-stock; populated/empty stock; archived/low-stock row markers; stock movement and count-history loading/error/empty; action validation/error/success",
+      "requiredDialogs": "Manual receive; write-off; stock count (positive/zero/negative variance; positive variance unit cost); reorder threshold; receive/write-off/count confirmations",
+      "referencePixels": null,
+      "pixelScope": "unavailable",
+      "latestDeltaRecord": null,
+      "cloudRelatedDraftPRs": [],
+      "cloudReview": "in progress",
+      "fullDesignMatrixComplete": false,
+      "remainingDesignEvidence": [
+        "AR and tightened-mobile export QA",
+        "Remaining dialog/state export QA",
+        "Dirty discard/success feedback"
+      ]
+    },
+    {
+      "number": 21,
+      "route": "/purchases",
+      "template": "BsPurchasingPage",
+      "pageId": "9d8c9265-2366-809c-8008-c7f20b5f2b72",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7f20beab1a1",
+      "requiredStates": "No shop; no products/no suppliers prerequisites; loading/error/permission denied; empty/no matching purchases; supplier active/archived; search/vendor/status/settlement/date filters; paginated lists; entity-picker loading/error/more; closed-period or expired-trial write failure",
+      "requiredDialogs": "Create/edit supplier; create purchase with line items; archive supplier confirmation; save purchase confirmation; void purchase confirmation",
+      "referencePixels": null,
+      "pixelScope": "unavailable",
+      "latestDeltaRecord": null,
+      "cloudRelatedDraftPRs": [],
+      "cloudReview": "queued",
+      "fullDesignMatrixComplete": false,
+      "remainingDesignEvidence": [
+        "Variant/dialog/state QA",
+        "No-shop, pagination, void failure and remaining exact feedback branches"
+      ]
+    },
+    {
+      "number": 22,
+      "route": "/purchases/:id",
+      "template": "BsCommerceDocumentPage",
+      "pageId": "9d8c9265-2366-809c-8008-c7f20b5f2b72",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7f43c49dcc0",
+      "requiredStates": "Loading/error/retry/unavailable; payable/settlement totals; payment/credit/return/reversal history; restricted actions; validation/pending/error/success",
+      "requiredDialogs": "Supplier payment; financial credit; product return with quantities; payment reversal; matching consequence confirmations",
+      "referencePixels": null,
+      "pixelScope": "unavailable",
+      "latestDeltaRecord": null,
+      "cloudRelatedDraftPRs": [],
+      "cloudReview": "queued",
+      "fullDesignMatrixComplete": false,
+      "remainingDesignEvidence": [
+        "Variant/dialog/state QA",
+        "No-return-stock and reversal-result state",
+        "Dirty-discard and other exact feedback branches",
+        "Compact mobile lines table"
+      ]
+    },
+    {
+      "number": 23,
+      "route": "/customers",
+      "template": "BsCustomerDirectoryPage",
+      "pageId": "9d8c9265-2366-809c-8008-c7f20b5f2b72",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7f653e8e537",
+      "requiredStates": "No shop; view denied/manage disabled; loading/error/retry; empty/search no results; active/archived/all; pagination; form validation/pending/error",
+      "requiredDialogs": "Add customer",
+      "referencePixels": null,
+      "pixelScope": "unavailable",
+      "latestDeltaRecord": null,
+      "cloudRelatedDraftPRs": [],
+      "cloudReview": "queued",
+      "fullDesignMatrixComplete": false,
+      "remainingDesignEvidence": [
+        "Pixel QA",
+        "Pagination and remaining exact states"
+      ]
+    },
+    {
+      "number": 24,
+      "route": "/customers/:id",
+      "template": "BsCustomerProfilePage",
+      "pageId": "9d8c9265-2366-809c-8008-c7f20b5f2b72",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7f7904d4866",
+      "requiredStates": "Loading/error/retry/not found; active/archived; view/manage/receive permissions; profile fields; outstanding-invoice and statement loading/error/empty/pagination; overdue count; receipt allocation validation/pending/error",
+      "requiredDialogs": "Edit customer; archive confirmation; record receipt allocated across selected outstanding invoices",
+      "referencePixels": null,
+      "pixelScope": "unavailable",
+      "latestDeltaRecord": null,
+      "cloudRelatedDraftPRs": [],
+      "cloudReview": "queued",
+      "fullDesignMatrixComplete": false,
+      "remainingDesignEvidence": [
+        "Receipt filled/error/pending/success",
+        "Profile/receivables/statement all state branches",
+        "Locale/theme/responsive",
+        "Pixel QA"
+      ]
+    },
+    {
+      "number": 25,
+      "route": "/appointments",
+      "template": "BsAppointmentsPage",
+      "pageId": "9d8c9265-2366-809c-8008-c7f8b605eb1c",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7f8b667812f",
+      "requiredStates": "No shop/no location/no staff; calendar/options loading/error/denied; empty range; day/week/month and selected date/staff/location; queue empty/populated; booked/arrived/waiting/in_service/completed/cancelled/no_show; transitioning/error; overlap conflict",
+      "requiredDialogs": "Create/edit/reschedule appointment (customer or walk-in identity); staff working-hours schedule with break/time-off blocks; cancel and no-show confirmations",
+      "referencePixels": null,
+      "pixelScope": "unavailable",
+      "latestDeltaRecord": null,
+      "cloudRelatedDraftPRs": [],
+      "cloudReview": "queued",
+      "fullDesignMatrixComplete": false,
+      "remainingDesignEvidence": [
+        "Week/month, edit/reschedule, expanded actions, confirmations, feedback/context states, theme/language/responsive variants, dialog QA"
+      ]
+    },
+    {
+      "number": 26,
+      "route": "/cash-shifts",
+      "template": "BsCashShiftsPage",
+      "pageId": "9d8c9265-2366-809c-8008-c7f8b605eb1c",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7fabe2292bb",
+      "requiredStates": "No shop/no location; loading/error/retry; no active shift vs active shift; expected cash/history; cashier filter/pagination; role-restricted adjustment/close; already-open conflict; invalid money/reason/reference; command pending/error/success",
+      "requiredDialogs": "Open shift; cash pay-in/pay-out movement; close shift with counted vs expected cash; each has consequence confirmation",
+      "referencePixels": null,
+      "pixelScope": "unavailable",
+      "latestDeltaRecord": null,
+      "cloudRelatedDraftPRs": [],
+      "cloudReview": "queued",
+      "fullDesignMatrixComplete": false,
+      "remainingDesignEvidence": [
+        "Context/access/loading/error/empty/validation/pending/success states",
+        "Arabic/dark/responsive variants",
+        "Pixel QA"
+      ]
+    },
+    {
+      "number": 27,
+      "route": "/expenses",
+      "template": "BsExpenseHistoryPage",
+      "pageId": "9d8c9265-2366-809c-8008-c7f8b605eb1c",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7fb6f562e89",
+      "requiredStates": "No shop/no location; read-only; loading/error/empty/filtered; search/category/status/date/page; paid/void plus original/correction/corrected/voided history; validation/pending/error/success",
+      "requiredDialogs": "Add paid expense; correct/replace expense with reason; void expense with reason; save/correction confirmation",
+      "referencePixels": null,
+      "pixelScope": "unavailable",
+      "latestDeltaRecord": null,
+      "cloudRelatedDraftPRs": [],
+      "cloudReview": "queued",
+      "fullDesignMatrixComplete": false,
+      "remainingDesignEvidence": [
+        "Context/access/loading/error/empty/validation/pending/success states",
+        "Arabic/dark/responsive variants",
+        "Pixel QA"
+      ]
+    },
+    {
+      "number": 28,
+      "route": "/reports",
+      "template": "BsReportsPage shop operational branch",
+      "pageId": "9d8c9265-2366-809c-8008-c7f8b605eb1c",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7fc4239d1f1",
+      "requiredStates": "Loading/access error/report error/retry; permission denied; cost/profit restricted; empty/results; report/location/date/page selection; exporting/export error",
+      "requiredDialogs": "No Shop-specific report dialog",
+      "referencePixels": null,
+      "pixelScope": "unavailable",
+      "latestDeltaRecord": null,
+      "cloudRelatedDraftPRs": [],
+      "cloudReview": "queued",
+      "fullDesignMatrixComplete": false,
+      "remainingDesignEvidence": [
+        "Remaining report/import types and feedback states",
+        "Arabic/dark/responsive variants",
+        "Pixel QA"
+      ]
+    },
+    {
+      "number": 29,
+      "route": "/catalog-import",
+      "template": "BsCatalogImportPage",
+      "pageId": "9d8c9265-2366-809c-8008-c7f8b605eb1c",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7fcdb94395d",
+      "requiredStates": "No shop; products/customers/suppliers import kind; no file/parsed filename+row count; parse error; validation/dry-run issues by row+field; pending; applied result counts; category/report filters; report loading/error; label export pending/error",
+      "requiredDialogs": "Add category; apply-import confirmation",
+      "referencePixels": null,
+      "pixelScope": "unavailable",
+      "latestDeltaRecord": null,
+      "cloudRelatedDraftPRs": [],
+      "cloudReview": "queued",
+      "fullDesignMatrixComplete": false,
+      "remainingDesignEvidence": [
+        "Remaining report/import types and feedback states",
+        "Arabic/dark/responsive variants",
+        "Pixel QA"
+      ]
+    },
+    {
+      "number": 30,
+      "route": "/billing",
+      "template": "BsBillingPage variant=shop",
+      "pageId": "9d8c9265-2366-809c-8008-c7fdc83cc3be",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7fdc89b09c0",
+      "requiredStates": "Owner-only denied; loading/error/unavailable; trialing/active/read_only/suspended; usage meters loading/error/limit; plan interval/variant selection; public pricing load error; private offer preview pending/unavailable; submitted/under_review/approved/rejected payment notices; evidence selected/invalid/uploading/failed/saved; history",
+      "requiredDialogs": "Manual transfer notice with chosen plan, amount/date/reference; submission consequence confirmation",
+      "referencePixels": null,
+      "pixelScope": "unavailable",
+      "latestDeltaRecord": null,
+      "cloudRelatedDraftPRs": [],
+      "cloudReview": "queued",
+      "fullDesignMatrixComplete": false,
+      "remainingDesignEvidence": [
+        "Remaining source-backed states, dialogs and tabs",
+        "Arabic/dark/responsive variants",
+        "Pixel QA"
+      ]
+    },
+    {
+      "number": 31,
+      "route": "/team",
+      "template": "BsAccessManagementPage",
+      "pageId": "9d8c9265-2366-809c-8008-c7fdc83cc3be",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7fe7318b505",
+      "requiredStates": "Loading/error/denied/no team; members/roles/invitations tabs; active/suspended/removed members; pending/accepted/expired/revoked invitations; role/location restrictions; audit visibility; invitation acceptance banner; quota/write validation/pending/error; generated invite link",
+      "requiredDialogs": "Invite member; edit member roles/locations; create/edit/archive role; transfer ownership with reason; suspend/remove/revoke/archive/transfer confirmations",
+      "referencePixels": null,
+      "pixelScope": "unavailable",
+      "latestDeltaRecord": null,
+      "cloudRelatedDraftPRs": [],
+      "cloudReview": "queued",
+      "fullDesignMatrixComplete": false,
+      "remainingDesignEvidence": [
+        "Remaining source-backed states, dialogs and tabs",
+        "Arabic/dark/responsive variants",
+        "Pixel QA"
+      ]
+    },
+    {
+      "number": 32,
+      "route": "/settings",
+      "template": "BsBusinessSettingsPage",
+      "pageId": "9d8c9265-2366-809c-8008-c7fdc83cc3be",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c7ff3fa96d80",
+      "requiredStates": "Loading/shop error/no context; owner/manage restriction; profile summary; product/service/mixed mode; active/default/archived locations with capacity notice; receipt load/error/save success; cash-policy load/error/save success",
+      "requiredDialogs": "Edit shop profile; change business mode; add/edit location; archive-location confirmation; edit receipt settings",
+      "referencePixels": null,
+      "pixelScope": "unavailable",
+      "latestDeltaRecord": null,
+      "cloudRelatedDraftPRs": [],
+      "cloudReview": "queued",
+      "fullDesignMatrixComplete": false,
+      "remainingDesignEvidence": [
+        "Remaining source-backed states, dialogs and tabs",
+        "Arabic/dark/responsive variants",
+        "Pixel QA"
+      ]
+    },
+    {
+      "number": 33,
+      "route": "/platform-admin",
+      "template": "BsPlatformAdministrationPage commerce branch",
+      "pageId": "9d8c9265-2366-809c-8008-c7fdc83cc3be",
+      "mainBoardId": "9d8c9265-2366-809c-8008-c80005cf6a55",
+      "requiredStates": "Session loading/denied; operator vs observer; overview/plans/billing/audit tabs; shop search/status/page; tenant detail loading/error; active/suspended/read_only; billing submitted/under_review/approved/rejected; empty/error/pagination; plan change blockers; validations/pending/error",
+      "requiredDialogs": "Tenant detail dialog; support actions (suspend/reactivate/extend/end trial/add note as exposed); payment review/approval/rejection; price override; payment configuration; catalog/tenant plan terms, availability, change/renew/suspend and price dialogs; destructive/approval confirmations",
+      "referencePixels": null,
+      "pixelScope": "unavailable",
+      "latestDeltaRecord": null,
+      "cloudRelatedDraftPRs": [],
+      "cloudReview": "queued",
+      "fullDesignMatrixComplete": false,
+      "remainingDesignEvidence": [
+        "Remaining source-backed states, dialogs and tabs",
+        "Arabic/dark/responsive variants",
+        "Pixel QA"
+      ]
+    }
+  ]
+}
