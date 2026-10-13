@@ -14,6 +14,7 @@ async function setup(page: Page, locale: string, mode = 'ready') {
     if (name === 'shop_cash_policy') return false
     if (name === 'receipt_settings') return { displayName: 'Fixture receipt', address: null, phone: null, footer: null, paperSize: 'thermal_80', canManage: mode !== 'read-only' }
     if (name === 'platform_admin_session') return mode === 'denied' ? null : { userId: 'synthetic-admin', role: mode === 'observer' ? 'observer' : 'operator', canMutate: mode !== 'observer', displayName: 'Synthetic operator' }
+    if (name === 'platform_plan_read') return args.p_resource === 'catalog' ? { items: [] } : { subscription: null, availablePlans: [] }
     if (name === 'platform_admin_read') {
       if (args.p_resource === 'dashboard') return { shops: 1, activeShops: 1, recentEvents: [] }
       if (args.p_resource === 'shops') return { items: [{ id: 'tenant-1', name: 'Synthetic tenant', ownerName: 'Synthetic owner', ownerEmail: 'owner@example.test', accessState: 'active', planSlug: 'fixture', memberCount: 1 }], total: 1 }
@@ -134,6 +135,9 @@ for (const locale of ['en', 'ar'] as const) {
   })
   test(`operator non-billing support controls ${locale}`, async ({ page }) => {
     test.setTimeout(60000)
+    const scriptErrors: string[] = []
+    page.on('pageerror', error => scriptErrors.push(error.message))
+    page.on('console', message => { if (message.type() === 'error' && /TypeError|ReferenceError/.test(message.text())) scriptErrors.push(message.text()) })
     const { calls } = await setup(page, locale)
     await fixtureGoto(page, '/platform-admin')
     await page.getByRole('button', { name: ar ? 'فتح عرض الدعم' : 'Open support view', exact: true }).first().click()
@@ -155,5 +159,6 @@ for (const locale of ['en', 'ar'] as const) {
       expect(calls.filter(call => call.name === 'platform_admin_command').at(-1)?.args).toMatchObject({ p_shop_id: 'tenant-1', p_action: key, p_reason: 'Fixture support action', p_payload: key === 'add_support_note' ? { note: 'Fixture support note' } : {} })
     }
     expect(calls.filter(call => call.name === 'platform_admin_billing_command' || call.name === 'platform_plan_command')).toHaveLength(0)
+    expect(scriptErrors).toEqual([])
   })
 }
