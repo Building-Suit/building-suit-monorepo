@@ -137,7 +137,8 @@ export function createXPayCheckout({ env, rpc, authenticate, fetchImpl = fetch }
         ? await rpc('shop_xpay_bind_session', { p_order_id: order.id, p_session: databaseSession(session) })
         : await rpc('shop_xpay_apply_session', { p_session: databaseSession(session), p_event_id: null })
       return response(publicOrder(order), 200, settings.origin)
-    } catch {
+    } catch (error) {
+      if (error?.checkoutCode === 'checkout_historical_review_pending') return response({ error: 'checkout_historical_review_pending', retrySafe: false }, 409, settings.origin)
       // No raw provider/SQL error, key, customer payload or clientSecret in logs.
       return response({ error: 'checkout_not_completed', retrySafe: true }, 409, settings.origin)
     }

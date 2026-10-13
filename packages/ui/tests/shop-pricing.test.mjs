@@ -19,12 +19,15 @@ async function grid(plans, variant = 'shop') {
   app.component('BsPlanCard', { props: ['plan', 'featured'], setup: props => () => h('article', { 'data-featured': String(props.featured) }, props.plan.name) })
   return renderToString(app)
 }
-test('Shop plan emphasis follows the selected card, then the current card, without inventing popularity', async () => {
-  const html = await grid([{ id: 'solo', name: 'Solo', selected: true }, { id: 'team', name: 'Team', badgeTone: 'current' }, { id: 'multi', name: 'Multi' }])
-  assert.match(html, /data-featured="true"[^>]*>Solo/); assert.match(html, /data-featured="false"[^>]*>Team/)
-  assert.doesNotMatch(html, /popular|discount|recommended/i)
-  const current = await grid([{ id: 'solo', name: 'Solo', badgeTone: 'current' }, { id: 'team', name: 'Team' }]); assert.match(current, /data-featured="true"[^>]*>Solo/)
-  const plain = await grid([{ id: 'solo', name: 'Solo' }, { id: 'team', name: 'Team' }], 'default'); assert.doesNotMatch(plain, /data-featured="true"/)
+test('Shop marketing emphasis stays on the promoted plan independently of current or chosen state', async () => {
+  const html = await grid([{ id: 'solo', name: 'Solo', selected: true }, { id: 'team', name: 'Team', promoted: true }, { id: 'multi', name: 'Multi', badgeTone: 'current' }])
+  assert.match(html, /data-featured="false"[^>]*>Solo/)
+  assert.match(html, /data-featured="true"[^>]*>Team/)
+  assert.match(html, /data-featured="false"[^>]*>Multi/)
+  const unpromoted = await grid([{ id: 'solo', name: 'Solo', selected: true }, { id: 'team', name: 'Team', badgeTone: 'current' }])
+  assert.doesNotMatch(unpromoted, /data-featured="true"/)
+  const plain = await grid([{ id: 'solo', name: 'Solo', promoted: true }, { id: 'team', name: 'Team' }], 'default')
+  assert.doesNotMatch(plain, /data-featured="true"/)
 })
 test('shared card keeps exact supplied price, entitlements, Solo options and action state', async () => {
   const plan = { id: 'solo', name: 'Solo', price: 'EGP 123', priceNote: 'Annual term', variant: { value: 'solo_2', legend: 'Members', options: [{ value: 'solo_1', label: '1 member' }, { value: 'solo_2', label: '2 members' }] }, features: [{ key: 'members', text: '2 members', included: true }], action: { label: 'Selected', pressed: true, disabled: true } }

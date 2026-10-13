@@ -30,3 +30,11 @@ export function checkoutAttempt(storage, key, selection, createId) {
   try { storage.setItem(key, JSON.stringify({ requestId, selection })) } catch { /* Safe server order recovery still works. */ }
   return requestId
 }
+
+export async function checkoutFailureCode(data, error) {
+  let payload = data
+  if (error?.context instanceof Response) {
+    try { payload = await error.context.clone().json() } catch { /* Generic safe fallback. */ }
+  }
+  return payload?.error === 'checkout_historical_review_pending' ? 'checkout_historical_review_pending' : null
+}
