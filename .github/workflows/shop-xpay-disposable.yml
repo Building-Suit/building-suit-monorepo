@@ -4,6 +4,7 @@ on:
     paths:
       - '.github/workflows/shop-xpay-disposable.yml'
       - 'tooling/database/shop-xpay-disposable.mjs'
+      - 'tooling/database/shop-proration-disposable.mjs'
       - 'apps/shop-suit/supabase/**'
       - 'apps/shop-suit/tests/unit/xpay*.test.mjs'
 permissions:
@@ -46,6 +47,10 @@ jobs:
         env:
           SHOP_XPAY_DISPOSABLE: '1'
         run: node tooling/database/shop-xpay-disposable.mjs
+      - name: Concurrent frozen quotes, real-paid replay and explicit zero-credit settlement
+        env:
+          SHOP_XPAY_DISPOSABLE: '1'
+        run: node tooling/database/shop-proration-disposable.mjs
       - name: Stop only this disposable Shop backend
         if: always() && runner.environment == 'github-hosted'
         run: |
