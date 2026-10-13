@@ -18,7 +18,7 @@ defineExpose({ focusNavigationTrigger })
 </script>
 
 <template>
-  <header ref="header" class="sticky top-0 z-20 flex min-h-16 min-w-0 items-center gap-2 border-b border-[var(--bs-border)] bg-surface/90 px-3 py-2 backdrop-blur sm:gap-3 sm:px-4 lg:px-6" :class="variant === 'shop' ? 'lg:top-0' : 'lg:top-4 lg:rounded-card lg:border lg:shadow-card'">
+  <header ref="header" class="sticky top-0 z-20 flex min-h-16 min-w-0 items-center gap-2 border-b border-[var(--bs-border)] bg-surface/90 px-3 py-2 backdrop-blur sm:gap-3 sm:px-4 lg:px-6" :class="variant === 'shop' ? 'bs-shop-header lg:top-0' : 'lg:top-4 lg:rounded-card lg:border lg:shadow-card'">
     <BsButton
       data-navigation-trigger
       variant="icon"
@@ -36,3 +36,10 @@ defineExpose({ focusNavigationTrigger })
     <div class="flex min-w-0 shrink-0 items-center gap-1 sm:gap-2"><slot /></div>
   </header>
 </template>
+
+<style scoped>
+.bs-shop-header { padding-block: 0; background: var(--bs-surface); backdrop-filter: none; }
+@media (min-width: 1024px) {
+  .bs-shop-header :deep(.bs-scope-switcher[data-compact]) { inline-size: 11.5rem; }
+}
+</style>

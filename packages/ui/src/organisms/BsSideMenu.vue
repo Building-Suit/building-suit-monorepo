@@ -47,8 +47,8 @@ const { panel, isActive, onKeydown } = useSideNavigation(() => props.open, () =>
         </BsButton>
       </div>
 
-      <div class="bs-navigation-context"><slot name="context" /></div>
-      <hr class="my-2 border-[var(--bs-border)]">
+      <div class="bs-navigation-context" :class="{ 'lg:hidden': variant === 'shop' }"><slot name="context" /></div>
+      <hr class="my-2 border-[var(--bs-border)]" :class="{ 'bs-shop-navigation__divider': variant === 'shop' }">
 
       <nav :aria-label="labels.navigation" class="min-h-0 flex-1 space-y-5 overflow-y-auto pe-1">
         <NuxtLink
@@ -96,6 +96,7 @@ const { panel, isActive, onKeydown } = useSideNavigation(() => props.open, () =>
 }
 .bs-navigation-mark { display: none; }
 .bs-navigation-mark :deep(.ls-logo) { inline-size: 2.5rem; }
+.bs-shop-navigation__divider { margin-block: 0; }
 .bs-shop-navigation nav { font-size: .875rem; }
 .bs-shop-navigation h2 { font-size: .625rem; color: var(--bs-text-muted); letter-spacing: .1em; }
 .bs-shop-navigation .ls-nav-link { min-block-size: 2.75rem; gap: .65rem; }

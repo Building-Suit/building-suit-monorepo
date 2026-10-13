@@ -6,8 +6,8 @@ Initial verified staging: `266d91dc11cbc07b5e9f3b6d37dd53e541fb70e1`. Existing o
 
 | Task | State |
 | --- | --- |
-| Optional product/service image upload | `codex/shop-suit/catalog-image-upload`, parent #258; implementation complete, final checks before draft publication |
-| Foundations/shell | Pending pixel comparison, then child draft PR |
+| Optional product/service image upload | [Draft PR #259](https://github.com/Building-Suit/building-suit-monorepo/pull/259), `0e25d129be2d79e049752ad7a000aba6da7bfc2b`; parent #258; focused checks and child review CI pass |
+| Foundations/shell | `codex/shop-suit/penpot-shell`, parent #259; desktop context-gap, flat 64px header and 184px scope alignment complete; two browser scenarios, build, lint and `pnpm check` pass |
 | Approved dashboard | Pending pixel comparison; approved board remains locked |
 | POS/sales/receipts | Pending fixed cart, compact catalog and touch-control comparison |
 | Catalog/inventory | Pending route export inspection |
@@ -20,4 +20,6 @@ Upload scope: shared molecule/template and UX upload lifecycle; Shop file valida
 
 Passing so far: 12 focused unit tests, mandatory `pnpm check`, focused package/scoped Shop lint, Shop typecheck and build. Two focused browser scenarios pass (EN/light/1440 and AR/dark/390), both covering product/service validation, failure/retry, preview, replacement, removal and save payloads. Screenshots inspected against the frozen uploader references; generic dialog titles and broader form spacing remain for the catalog fidelity task. SQL authorization fixtures are prepared but unrun because the local Supabase stacks are stopped and must not be restarted. No hosted migration, deployment, merge, provider/secret change or service restart.
 
-Reference materialization: `/tmp/shop-penpot-handoff/Shop-Suit-Penpot-Handoff-2026-10-13.zip`, Library version 0; extracted PNGs were visually inspected for product/service upload. These executor paths are evidence only, not repository dependencies. A read-only live Penpot inspection did not return and was stopped; no canvas mutation.
+Reference materialization: `/tmp/shop-penpot-handoff/Shop-Suit-Penpot-Handoff-2026-10-13.zip`, Library version 0; extracted PNGs were visually inspected for product/service upload. These executor paths are evidence only, not repository dependencies. The live shell board export was inspected and matches the frozen PNG; read-only exports are now responding. No canvas mutation.
+
+Shell validation: EN/light/1440 and AR/dark/390; official SVG wordmark/mark selection and aspect ratio, 248/72px sidebar, 64px header, 184px selectors, collapse and mobile Escape/focus return, and no horizontal overflow. Source board `9d8c9265-2366-809c-8008-c7d70d192616`. Broader visual/state matrix remains pending.
