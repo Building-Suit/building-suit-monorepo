@@ -113,7 +113,7 @@ function updateAllocation(id: string, value: string | number) { receiptForm.valu
           </BsDataTable>
         </BsBox>
       </BsPanel>
-      <BsRecordActionDialog v-model:visible="receiptOpen" :title="copy.payments_recordReceipt" :dirty="receiptEditor.dirty" :pending="receiptEditor.pending" :error="receiptEditor.error" :submit-label="copy.payments_save" :cancel-label="copy.customers_cancel" :submit-disabled="receiptEditor.submitDisabled" size="lg" @submit="emit('saveReceipt')">
+      <BsRecordActionDialog v-model:visible="receiptOpen" pinned-actions :title="copy.payments_recordReceipt" :dirty="receiptEditor.dirty" :pending="receiptEditor.pending" :error="receiptEditor.error" :submit-label="copy.payments_save" :cancel-label="copy.customers_cancel" :submit-disabled="receiptEditor.submitDisabled" size="lg" @submit="emit('saveReceipt')">
         <BsText as="p" size="sm" tone="muted">{{ copy.payments_allocateInvoices }}</BsText>
         <BsDataTable :value="outstanding.rows" :label="copy.customers_receivables" :loading="outstanding.loading" :error="outstanding.error ? copy.payments_loadError : null" lazy paginator :rows="outstanding.pageSize" :first="(outstanding.page - 1) * outstanding.pageSize" :total-records="outstanding.total" :columns="[{ key: 'column0', header: copy.sales_invoiceNumber }, { key: 'column1', header: copy.payments_amount }]" @page="emit('outstandingPage', $event.page + 1)" @retry="emit('retryOutstanding')">
           <template #cell-column0="{ row: invoice }">{{ invoice.number }}<BsText as="p">{{ copy.payments_outstanding }}: {{ invoice.amount }}</BsText>
@@ -138,7 +138,7 @@ function updateAllocation(id: string, value: string | number) { receiptForm.valu
           </BsField>
         </BsGrid>
       </BsRecordActionDialog>
-      <BsRecordActionDialog v-model:visible="visible" :title="copy.customers_editTitle" :dirty="editorDirty" :pending="saving" :error="actionError" :submit-label="copy.customers_save" :cancel-label="copy.customers_cancel" @submit="emit('save')">
+      <BsRecordActionDialog v-model:visible="visible" pinned-actions :title="copy.customers_editTitle" :dirty="editorDirty" :pending="saving" :error="actionError" :submit-label="copy.customers_save" :cancel-label="copy.customers_cancel" @submit="emit('save')">
         <BsCustomerIdentityFields v-model="form" :labels="{ name: copy.customers_name, phone: copy.customers_phone, email: copy.customers_email, address: copy.customers_address, notes: copy.customers_notes }"/>
       </BsRecordActionDialog>
     </template>

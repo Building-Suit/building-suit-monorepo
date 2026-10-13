@@ -36,8 +36,8 @@ const columns = computed(() => [
     <template v-else-if="contextAvailable">
       <BsText as="p" size="sm">{{ copy.historyNotice }}</BsText>
       <BsText v-if="permissionDenied" role="alert" as="p" size="sm" tone="warning">{{ copy.permissionDenied }}</BsText>
-      <BsText v-else-if="!canManage" as="p" size="sm">{{ copy.manageDenied }}</BsText>
-      <BsRecordActionDialog v-model:visible="visible" :title="copy.createTitle" :dirty="editorDirty" :pending="saving" :error="actionError" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="emit('save')">
+      <BsText v-else-if="!canManage && !loading && !error" as="p" size="sm">{{ copy.manageDenied }}</BsText>
+      <BsRecordActionDialog v-model:visible="visible" pinned-actions :title="copy.createTitle" :dirty="editorDirty" :pending="saving" :error="actionError" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="emit('save')">
         <BsCustomerIdentityFields v-model="form" :labels="copy"/>
       </BsRecordActionDialog>
       <BsPanel v-if="!permissionDenied" padding="md">

@@ -34,12 +34,12 @@ function updateLine(index: number, value: Partial<BsPurchaseLineForm>) { updateP
       <BsText as="p" size="sm">{{ copy.scope }}</BsText>
       <BsText v-if="view.success" role="status" as="p" size="sm">{{ view.success }}</BsText>
       <BsText v-if="view.actionError && !supplierOpen && !purchaseOpen" role="alert" as="p" size="sm" tone="danger">{{ view.actionError }}</BsText>
-      <BsPanel v-if="!view.hasProducts && !view.pending" padding="md">
+      <BsPanel v-if="!view.hasProducts && !view.pending && !view.error" padding="md">
         <BsText as="p">{{ copy.noProducts }}</BsText>
         <BsLink to="/products">{{ copy.products }}</BsLink>
       </BsPanel>
-      <BsText v-if="!view.hasSuppliers && !view.pending" as="p" size="sm">{{ copy.noSuppliers }}</BsText>
-      <BsPanel padding="md">
+      <BsText v-if="!view.hasSuppliers && !view.pending && !view.error" as="p" size="sm">{{ copy.noSuppliers }}</BsText>
+      <BsPanel v-if="!view.error" padding="md">
         <BsInline justify="between">
           <BsHeading :level="2">{{ copy.suppliers }}</BsHeading>
           <BsInline>
@@ -68,7 +68,7 @@ function updateLine(index: number, value: Partial<BsPurchaseLineForm>) { updateP
           </BsDataTable>
         </BsBox>
       </BsPanel>
-      <BsRecordActionDialog v-model:visible="supplierOpen" :title="view.editingSupplier ? copy.edit : copy.addSupplier" :dirty="view.supplierDirty" :pending="view.supplierSaving" :error="view.actionError" :submit-label="copy.saveSupplier" :cancel-label="copy.cancel" @submit="emit('saveSupplier')">
+      <BsRecordActionDialog v-model:visible="supplierOpen" pinned-actions :title="view.editingSupplier ? copy.edit : copy.addSupplier" :dirty="view.supplierDirty" :pending="view.supplierSaving" :error="view.actionError" :submit-label="copy.saveSupplier" :cancel-label="copy.cancel" @submit="emit('saveSupplier')">
         <BsField v-slot="field" :label="copy.supplierName">
           <BsInput :id="field.id" :model-value="supplierForm.name" :aria-describedby="field.describedby" type="text" :minlength="2" :maxlength="160" required @update:model-value="updateSupplier({ name: String($event) })"/>
         </BsField>
@@ -91,7 +91,7 @@ function updateLine(index: number, value: Partial<BsPurchaseLineForm>) { updateP
           <BsTextarea :id="field.id" :model-value="supplierForm.notes" :aria-describedby="field.describedby" :rows="2" :maxlength="1000" @update:model-value="updateSupplier({ notes: String($event) })"/>
         </BsField>
       </BsRecordActionDialog>
-      <BsRecordActionDialog v-model:visible="purchaseOpen" :title="copy.newPurchase" :dirty="view.purchaseDirty" :pending="view.purchaseSaving" :error="view.actionError" :submit-label="copy.savePurchase" :cancel-label="copy.cancel" size="lg" @submit="emit('savePurchase')">
+      <BsRecordActionDialog v-model:visible="purchaseOpen" pinned-actions :title="copy.newPurchase" :dirty="view.purchaseDirty" :pending="view.purchaseSaving" :error="view.actionError" :submit-label="copy.savePurchase" :cancel-label="copy.cancel" size="lg" @submit="emit('savePurchase')">
         <BsGrid :columns="2">
           <BsEntityPicker :model-value="purchaseForm.vendorId" :label="copy.supplier" :options="supplierChoices" option-label="name" option-value="id" :loading="supplierPicker.loading" :error="supplierPicker.error" :has-more="supplierPicker.hasMore" :load-more-label="supplierPicker.moreLabel" :retry-label="supplierPicker.retryLabel" @retry="emit('supplierRetry')" @search="emit('supplierSearch', $event)" @load-more="emit('supplierMore')" @update:model-value="emit('selectSupplier', String($event ?? ''))" />
           <BsField v-slot="field" :label="copy.date">

@@ -539,12 +539,13 @@
       "pixelScope": "unavailable",
       "latestDeltaRecord": null,
       "cloudRelatedDraftPRs": [],
-      "cloudReview": "queued",
+      "cloudReview": "focused verified state/editor changes; visual matrix queued",
       "fullDesignMatrixComplete": false,
       "remainingDesignEvidence": [
         "Variant/dialog/state QA",
         "No-shop, pagination, void failure and remaining exact feedback branches"
-      ]
+      ],
+      "cloudBranch": "codex/shop-suit/cloud-purchasing-customers"
     },
     {
       "number": 22,
@@ -579,12 +580,13 @@
       "pixelScope": "unavailable",
       "latestDeltaRecord": null,
       "cloudRelatedDraftPRs": [],
-      "cloudReview": "queued",
+      "cloudReview": "focused verified state/editor changes; visual matrix queued",
       "fullDesignMatrixComplete": false,
       "remainingDesignEvidence": [
         "Pixel QA",
         "Pagination and remaining exact states"
-      ]
+      ],
+      "cloudBranch": "codex/shop-suit/cloud-purchasing-customers"
     },
     {
       "number": 24,
@@ -598,14 +600,15 @@
       "pixelScope": "unavailable",
       "latestDeltaRecord": null,
       "cloudRelatedDraftPRs": [],
-      "cloudReview": "queued",
+      "cloudReview": "focused verified state/editor changes; visual matrix queued",
       "fullDesignMatrixComplete": false,
       "remainingDesignEvidence": [
         "Receipt filled/error/pending/success",
         "Profile/receivables/statement all state branches",
         "Locale/theme/responsive",
         "Pixel QA"
-      ]
+      ],
+      "cloudBranch": "codex/shop-suit/cloud-purchasing-customers"
     },
     {
       "number": 25,
