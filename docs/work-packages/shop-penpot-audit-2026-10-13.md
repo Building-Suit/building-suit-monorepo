@@ -39,3 +39,5 @@ Final rebuilt checks: two actual-route Team cases (EN/light/1440, AR/dark/390) a
 | ![Saved Team source](evidence/penpot-team/source-team.png) | ![Implemented Team](evidence/penpot-team/implemented-en-light.png) | ![Arabic dark mobile](evidence/penpot-team/implemented-ar-dark-mobile.png) |
 
 Publication parent is concurrent Shop logout #281 at `19eeff0ed62acd09c987c3a74a959ec7f036cc79`. Only its committed ancestry is inherited; no auth/logout file edits are included in the Team PR diff. No billing/subscription work copied.
+
+CI follow-up: the staging-root shared regression requires a single horizontal tab row at narrow widths. The initial outlined-tab mobile layout wrapped English labels and failed two cases. The owning Team template now keeps one scrollable row; all four EN/AR × light/dark 390px navigation/card regressions pass locally. Desktop reference geometry is unchanged. The earlier Arabic screenshot remains evidence of the initial checkpoint rather than the final horizontal-tab layout.
