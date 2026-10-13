@@ -11,11 +11,7 @@ watch(state, (value) => {
   if (value === 'success') void registry.refresh()
 })
 onMounted(() => {
-  // Periodically re-resolve configuration and manifest expiry without a rebuild.
-  const timer = setInterval(() => {
-    if (state.value === 'success' && !transferVisible.value && !offerVisible.value && !offerRequest.value && !billingVisible.value && !reviewCommand.value && document.visibilityState === 'visible') void registry.refresh()
-  }, 30_000)
-  onScopeDispose(() => { clearInterval(timer); registry.clear() })
+  onScopeDispose(() => { registry.clear() })
 })
 const transfer = useManualTransfer(() => selection.value.item?.bindingId, () => state.value === 'success' && registryState.value === 'success' && selection.value.item?.module === 'manual-transfer')
 const { configuration, draft, reason, status: transferStatus, command, action: transferAction } = transfer
@@ -28,6 +24,23 @@ const { visible: offerVisible, pending: offerPending, dirty: offerDirty, error: 
 const billing = usePaymentReview(() => selection.value.item?.bindingId, () => state.value === 'success' && registryState.value === 'success' && selection.value.item?.module === 'payment-review')
 const { queue, status: billingStatus, filter: billingFilter, page: billingPage, selected: payment, draft: reviewDraft, command: reviewCommand, receipt, evidence, evidencePending, evidenceError, action: billingAction } = billing
 const { visible: billingVisible, pending: billingPending, dirty: billingDirty, error: billingError } = billingAction
+useAdminLiveUpdates({
+  scope: () => state.value === 'success' && ready.data.value ? {
+    userId: ready.data.value.userId, authorityEnvironmentId: ready.data.value.authorityEnvironmentId,
+  } : null,
+  authorize: recheck,
+  paused: () => transferVisible.value || offerVisible.value || billingVisible.value
+    || !!command.value || !!offerRequest.value || !!reviewCommand.value,
+  async refresh(kinds, isCurrent) {
+    if (kinds.includes('registry')) await registry.refresh()
+    if (!isCurrent() || state.value !== 'success' || registryState.value !== 'success') return
+    const module = selection.value.item?.module
+    if (module === 'activity' && kinds.includes('activity')) await activity.refresh()
+    else if (module === 'payment-review' && kinds.includes('billing')) await billing.load(true)
+    else if (module === 'custom-offers' && kinds.includes('offers')) await offers.load()
+    else if (module === 'manual-transfer' && kinds.includes('configuration')) await transfer.load()
+  },
+})
 const accountModules = ref<{ bindingId: string; label: Record<string, string> }[]>([])
 const moduleError = ref(false)
 const requestFetch = useRequestFetch()

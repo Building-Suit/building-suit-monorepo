@@ -10,11 +10,13 @@ export function useAdminRegistry() {
   // The authorized endpoint resolves identity/environment on every request.
   // Its SSR data is request-scoped and cleared before session transitions.
   const registry = useAsyncData(cacheKey, async () => parseRegistry(await requestFetch('/api/registry')), { immediate: false, dedupe: 'cancel' })
-  const suits = computed(() => registry.status.value === 'success' ? registry.data.value?.suits || [] : [])
+  const suits = computed(() => registry.error.value ? [] : registry.data.value?.suits || [])
   const selection = computed(() => selectRegistry({ suits: suits.value }, route.query.suit, route.query.item))
   const state = computed<'loading' | 'success' | 'empty' | 'error' | 'denied'>(() => {
-    if (registry.status.value === 'pending' || registry.status.value === 'idle') return 'loading'
     if (registry.error.value) return registry.error.value.statusCode === 403 || registry.error.value.statusCode === 401 ? 'denied' : 'error'
+    // A background invalidation keeps the last authorized registry visible.
+    // Pending is not an identity/binding change and must not clear module state.
+    if (!registry.data.value && (registry.status.value === 'pending' || registry.status.value === 'idle')) return 'loading'
     if (selection.value.denied) return 'denied'
     if (!selection.value.suit || !selection.value.suit.items.length) return 'empty'
     return 'success'
