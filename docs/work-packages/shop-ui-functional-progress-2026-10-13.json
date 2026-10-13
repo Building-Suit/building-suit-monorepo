@@ -85,9 +85,15 @@
   "hostedDataOrSettingsChanged": false,
   "designMatricesCompleted": 0,
   "requiredFrontendSkillReview": {
-    "status": "blocked-source",
-    "searched": "executor/cloud complete catalogs; workspace/global skill paths; archived repository skill copies",
-    "needed": "exact production frontend/UI skill package or cloud-readable SKILL.md",
-    "publicNonLandingEdits": "held pending skill source"
+    "status": "source-resolved-retrospective-review-complete",
+    "source": "https://github.com/anthropics/skills/blob/dbd4588f9e1033efb41dad4bef2f7947c8993d44/skills/frontend-design/SKILL.md",
+    "revision": "dbd4588f9e1033efb41dad4bef2f7947c8993d44",
+    "installation": "cloud-local text only; manually read; not executor-catalog registered",
+    "reviewedCheckpoints": [
+      297,
+      299
+    ],
+    "publicNonLandingEdits": "ready for bounded implementation",
+    "limitation": "Initial checkpoint changes preceded skill availability; no claim of visual parity for missing PNGs."
   }
 }
