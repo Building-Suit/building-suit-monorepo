@@ -107,8 +107,8 @@
       "failed": "Invitation unavailable"
     },
     "modes": {
-      "goods": "Products",
-      "services": "Services",
+      "product": "Products",
+      "service": "Services",
       "mixed": "Products and services"
     }
   }

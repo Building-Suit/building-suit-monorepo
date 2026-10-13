@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto'
 import { provisionCommand,invitationCommand,provisionAccount } from '../../server/utils/account-provisioning.ts'
 import { restoreProvision,provisionKey } from '../../app/utils/provision-attempt.ts'
 
-const input=()=>({bindingId:randomUUID(),email:' New@example.invalid ',displayName:'New owner',shopName:'New shop',mainLocationName:'Main branch',businessMode:'goods',planId:randomUUID(),catalogTermsId:randomUUID(),requestId:randomUUID(),correlationId:randomUUID(),reason:'Operator approved immediate access'})
+const input=()=>({bindingId:randomUUID(),email:' New@example.invalid ',displayName:'New owner',shopName:'New shop',mainLocationName:'Main branch',businessMode:'product',planId:randomUUID(),catalogTermsId:randomUUID(),requestId:randomUUID(),correlationId:randomUUID(),reason:'Operator approved immediate access'})
 test('creation is a closed target-owned contract with no password, owner ID, confirmation or payment injection',()=>{
   const data=input();const command=provisionCommand(data)
   assert.equal(command.operation,'shop.account.command');assert.equal(command.payload.email,'new@example.invalid')

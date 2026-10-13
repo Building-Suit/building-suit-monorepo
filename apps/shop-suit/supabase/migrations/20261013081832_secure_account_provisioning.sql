@@ -172,7 +172,7 @@ begin
     or jsonb_typeof(payload->'displayName') is distinct from 'string' or length(btrim(payload->>'displayName')) not between 2 and 120
     or jsonb_typeof(payload->'shopName') is distinct from 'string' or length(btrim(payload->>'shopName')) not between 2 and 120
     or jsonb_typeof(payload->'mainLocationName') is distinct from 'string' or length(btrim(payload->>'mainLocationName')) not between 2 and 120
-    or payload->>'businessMode' not in ('goods','services','mixed') or payload->>'businessMode' is null then raise exception 'ACCOUNT_REQUEST_INVALID' using errcode='22023'; end if;
+    or not (payload->>'businessMode'=any(enum_range(null::public.business_mode)::text[])) or payload->>'businessMode' is null then raise exception 'ACCOUNT_REQUEST_INVALID' using errcode='22023'; end if;
    select * into terms from shop_private.current_plan_terms((payload->>'planId')::uuid);
    if terms.id is distinct from (payload->>'catalogTermsId')::uuid or not exists(select 1 from public.plans where id=terms.plan_id and is_active and is_purchasable and not is_coming_soon) then
     raise exception 'ACCOUNT_PLAN_CHANGED' using errcode='23514'; end if;
