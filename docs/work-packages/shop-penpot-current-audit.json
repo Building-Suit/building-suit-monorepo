@@ -202,7 +202,22 @@
       "template": "BsCustomerProfilePage",
       "mainBoardId": "9d8c9265-2366-809c-8008-c7f7904d4866",
       "auditClassification": "integrated-source-metadata-only",
-      "fullDesignMatrixComplete": false
+      "fullDesignMatrixComplete": false,
+      "implementedJourneys": [
+        "resolved-only balance/overdue summaries",
+        "explicit receivables/statement pending retry",
+        "receipt action gating on current resolved invoices",
+        "structured overpayment/identity error guidance",
+        "customer-specific archive confirmation"
+      ],
+      "testedJourneys": [
+        "EN desktop / AR mobile allocation/error/pending/archive lifecycle",
+        "archived/view-only/not-found/denied/load-failed and independent read failures",
+        "confirmed empty accounts",
+        "12 inherited allocation variants"
+      ],
+      "remainingFunctionalReview": [],
+      "missingVisualEvidence": "Customer profile main/receipt/lifecycle/feedback PNGs absent from frozen sources"
     },
     {
       "number": 25,

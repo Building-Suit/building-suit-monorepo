@@ -101,7 +101,7 @@ const { data: outstanding, pending: outstandingPending, error: outstandingError,
   }, { watch: [currentId, customerId, outstandingPage], default: () => ({ items: [], total: 0 }) },
 )
 
-const { data: overdue, refresh: refreshOverdue } = useAsyncData(
+const { data: overdue, pending: overduePending, error: overdueError, refresh: refreshOverdue } = useAsyncData(
   () => `shop-data:customer-overdue:${currentId.value ?? 'none'}:${customerId.value}`,
   async (): Promise<OutstandingPage> => {
     if (!currentId.value || !customerId.value) return { items: [], total: 0 }
@@ -110,6 +110,7 @@ const { data: overdue, refresh: refreshOverdue } = useAsyncData(
     return data as OutstandingPage
   }, { watch: [currentId, customerId], default: () => ({ items: [], total: 0 }) },
 )
+async function retryOutstanding() { await Promise.all([refreshOutstanding(), refreshOverdue()]) }
 
 watch([currentId, customerId], () => {
   receiptOpen.value = false; showForm.value = false
@@ -122,6 +123,7 @@ watch(outstanding, (value) => {
 })
 
 function openReceipt() {
+  if (!customer.value?.is_active || !paymentAccess.value?.can_receive || outstandingPending.value || outstandingError.value) return
   receiptInvoices.value = Object.fromEntries(outstanding.value.items.map(invoice => [invoice.id, invoice]))
   receiptError.value = ''
   receiptAllocations.value = {}
@@ -134,7 +136,7 @@ function openReceipt() {
 }
 
 async function saveReceipt() {
-  if (!currentId.value || !customer.value || receiptPending.value) return
+  if (!currentId.value || !customer.value?.is_active || !paymentAccess.value?.can_receive || receiptPending.value || outstandingPending.value || outstandingError.value) return
   const allocations = validateReceiptAllocations(receiptAllocations.value, receiptInvoices.value)
   if (!allocations) {
     receiptError.value = t('payments.invalidAllocation')
@@ -158,7 +160,7 @@ async function saveReceipt() {
     pushToast({ tone: 'success', title: t('payments.saved') })
   }
   catch (error) {
-    receiptError.value = error instanceof Error && error.message.includes('PAYMENT_OVERPAYMENT_REJECTED')
+    receiptError.value = commandErrorMessage(error)?.includes('PAYMENT_OVERPAYMENT_REJECTED')
       ? t('payments.overpayment') : t('customers.writeError')
   }
   finally { receiptPending.value = false }
@@ -180,6 +182,9 @@ function readableError(message?: string) {
   if (message === 'SHOP_SUBSCRIPTION_INACTIVE' || message === 'SHOP_PERMISSION_DENIED') return t('customers.manageDenied')
   if (message === 'CUSTOMER_NOT_FOUND') return t('customers.notFound')
   return t('customers.writeError')
+}
+function commandErrorMessage(caught: unknown) {
+  return typeof caught === 'object' && caught !== null && 'message' in caught && typeof caught.message === 'string' ? caught.message : undefined
 }
 
 async function save() {
@@ -210,7 +215,7 @@ async function save() {
     pushToast({ tone: 'success', title: t('customers.updatedSuccess') })
   }
   catch (saveError) {
-    actionError.value = readableError(saveError instanceof Error ? saveError.message : undefined)
+    actionError.value = readableError(commandErrorMessage(saveError))
   }
   finally {
     saving.value = false
@@ -219,7 +224,7 @@ async function save() {
 
 async function archive() {
   if (!currentId.value || !customer.value?.is_active || !customer.value.can_manage || archiving.value) return
-  if (!await confirmation.ask(t('customers.archiveConfirm'))) return
+  if (!await confirmation.ask({ title: t('customers.archive'), message: `${customer.value.name} · ${t('customers.archiveConfirm')}`, confirmLabel: t('customers.archive'), cancelLabel: t('customers.cancel'), tone: 'danger' })) return
   archiving.value = true
   actionError.value = ''
   try {
@@ -232,7 +237,7 @@ async function archive() {
     pushToast({ tone: 'success', title: t('customers.archivedSuccess') })
   }
   catch (archiveError) {
-    actionError.value = readableError(archiveError instanceof Error ? archiveError.message : undefined)
+    actionError.value = readableError(commandErrorMessage(archiveError))
   }
   finally {
     archiving.value = false
@@ -255,12 +260,13 @@ const customerView = computed<BsCustomerProfileView | null>(() => customer.value
   phone: customer.value.phone || '—', email: customer.value.email || '—', address: customer.value.address || '—', notes: customer.value.notes || '—',
   created: formatDate(customer.value.created_at), updated: formatDate(customer.value.updated_at), archived: customer.value.archived_at ? formatDate(customer.value.archived_at) : null,
   canManage: customer.value.can_manage, canEdit: customer.value.can_manage && customer.value.is_active,
-  canReceive: customer.value.is_active && Boolean(paymentAccess.value?.can_receive) && outstanding.value.total > 0,
+  canReceive: customer.value.is_active && Boolean(paymentAccess.value?.can_receive) && !outstandingPending.value && !outstandingError.value && outstanding.value.total > 0,
 }) : null)
 const outstandingView = computed<BsCustomerReceivablesView>(() => ({
   rows: outstanding.value.items.map(invoice => ({ id: invoice.id, number: invoice.invoice_number, href: `/sales/${invoice.id}`, settlement: t(`payments.settlement.${invoice.settlement_state}`), due: invoice.due_date || '—', amount: money(Number(invoice.outstanding)), amountLimit: invoice.outstanding })),
   page: outstandingPage.value, pageSize: outstandingPageSize, total: outstanding.value.total, loading: outstandingPending.value, error: outstandingError.value ? t('payments.loadError') : null,
-  balance: money(Number(statement.value.outstanding)), overdue: t('customers.overdueCount', { count: overdueCount.value }),
+  balance: statementPending.value || statementError.value ? '' : money(Number(statement.value.outstanding)),
+  overdue: overduePending.value || overdueError.value ? '' : t('customers.overdueCount', { count: overdueCount.value }),
 }))
 const statementView = computed<BsCustomerStatementView>(() => ({
   rows: statement.value.items.map(event => ({ id: event.event_id, date: formatDate(event.event_at), type: t(`payments.events.${event.event_type}`), href: `/sales/${event.invoice_id}`, document: event.document_number, debit: Number(event.debit) ? money(Number(event.debit)) : '—', credit: Number(event.credit) ? money(Number(event.credit)) : '—', balance: money(Number(event.running_balance)) })),
@@ -318,10 +324,10 @@ const receiptForm = computed<BsCustomerReceiptForm>({
     receiptReference.value = value.reference; receiptNotes.value = value.notes; receiptAllocations.value = { ...value.allocations }
   },
 })
-const receiptEditor = computed(() => ({ dirty: receiptDirty.value, pending: receiptPending.value, error: receiptError.value, amount: money(receiptAmount.value), submitDisabled: receiptAmount.value <= 0 }))
+const receiptEditor = computed(() => ({ dirty: receiptDirty.value, pending: receiptPending.value, error: receiptError.value, amount: money(receiptAmount.value), submitDisabled: receiptAmount.value <= 0 || outstandingPending.value || Boolean(outstandingError.value) || !customer.value?.is_active || !paymentAccess.value?.can_receive }))
 const methodOptions = computed(() => ['cash', 'bank_transfer', 'card', 'wallet', 'cheque', 'other'].map(value => ({ value, label: t(`payments.methods.${value}`), disabled: false })))
 const profileError = computed(() => error.value ? (error.value.message.includes('SHOP_PERMISSION_DENIED') ? t('customers.permissionDenied') : t('customers.detailError')) : null)
 </script>
 <template>
-  <BsCustomerProfilePage v-model:visible="showForm" v-model:receipt-open="receiptOpen" v-model:form="editorForm" v-model:receipt-form="receiptForm" :customer="customerView" :copy="profileCopy" :pending="pending" :error="profileError" :outstanding="outstandingView" :statement="statementView" :archiving="archiving" :action-error="actionError" :saving="saving" :editor-dirty="formDirty" :receipt-editor="receiptEditor" :method-options="methodOptions" @retry="refresh()" @retry-outstanding="refreshOutstanding()" @retry-statement="refreshStatement()" @edit="openEdit" @archive="archive" @receive="openReceipt" @save="save" @save-receipt="saveReceipt" @outstanding-page="outstandingPage = $event" @statement-page="statementPageNumber = $event"/>
+  <BsCustomerProfilePage v-model:visible="showForm" v-model:receipt-open="receiptOpen" v-model:form="editorForm" v-model:receipt-form="receiptForm" :customer="customerView" :copy="profileCopy" :pending="pending" :error="profileError" :outstanding="outstandingView" :statement="statementView" :archiving="archiving" :action-error="actionError" :saving="saving" :editor-dirty="formDirty" :receipt-editor="receiptEditor" :method-options="methodOptions" @retry="refresh()" @retry-outstanding="retryOutstanding" @retry-statement="refreshStatement()" @edit="openEdit" @archive="archive" @receive="openReceipt" @save="save" @save-receipt="saveReceipt" @outstanding-page="outstandingPage = $event" @statement-page="statementPageNumber = $event"/>
 </template>

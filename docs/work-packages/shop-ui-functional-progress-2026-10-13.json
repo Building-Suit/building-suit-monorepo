@@ -48,12 +48,17 @@
     {
       "category": "Reports/customer profiles",
       "implemented": true,
-      "tested": "inherited report query/error/retry/export and allocation-editor checks",
+      "tested": "customer profile lifecycle/read feedback/allocation verified in this checkpoint; inherited report query/error/retry/export checks retained",
       "remainingFunctionalReview": [
-        "full customer-profile lifecycle",
-        "remaining report variants from cumulative delta"
+        "remaining report kinds, access/cost-profit/export variants from cumulative delta"
       ],
-      "visualEvidence": "main/variant pixels unavailable"
+      "visualEvidence": "main/variant pixels unavailable",
+      "completedNamedJourneys": [
+        "customer profile active/archived/view-only/not-found/denied/load-failed",
+        "receivables/statement pending/error/retry/empty",
+        "receipt allocation overpayment/recovery/pending",
+        "customer archive with cancelled confirmation/no write"
+      ]
     },
     {
       "category": "Settings/admin",
