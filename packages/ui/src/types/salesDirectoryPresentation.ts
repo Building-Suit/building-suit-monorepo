@@ -1,5 +1,5 @@
 export interface BsSalesChoice { value: string; label: string }
-export interface BsSalesDirectoryRow { id: string; number: string; lineCount: string; customer: string; status: string; total: string; date: string; editable: boolean; href: string }
+export interface BsSalesDirectoryRow { id: string; number: string; lineCount: string; customer: string; status: string; statusTone?: 'neutral' | 'success' | 'info' | 'warning' | 'danger'; total: string; date: string; editable: boolean; href: string }
 export interface BsSalesDraftLine { key: string; itemType: string; sourceId: string; quantity: number }
 export interface BsSalesLineView { key: string; options: BsSalesChoice[]; total: string; discount: string }
 export interface BsSalesDraftForm { customerId: string; dueDate: string; notes: string; paymentMethod: string; paymentReference: string; lines: BsSalesDraftLine[] }

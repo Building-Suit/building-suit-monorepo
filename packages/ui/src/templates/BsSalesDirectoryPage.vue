@@ -42,7 +42,7 @@ function updateLine(index: number, values: Partial<BsSalesDraftLine>) { updateFo
           </template>
           <template #cell-column1="{ row: sale }">{{ sale.customer }}</template>
           <template #cell-column2="{ row: sale }">
-            <BsText as="span">{{ sale.status }}</BsText>
+            <BsStatusBadge :status="sale.status" :label="sale.status" :tone="sale.statusTone ?? 'neutral'" :icon="false" />
           </template>
           <template #cell-column3="{ row: sale }">{{ sale.total }}</template>
           <template #cell-column4="{ row: sale }">
