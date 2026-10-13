@@ -117,7 +117,7 @@ begin
  if o.shop_id<>p_shop_id or o.actor_user_id<>auth.uid()
  or (p_catalog_terms_id is not null and o.catalog_terms_id<>p_catalog_terms_id)
  or (p_private_offer is not null and (o.private_offer_id is distinct from (preview->>'offerId')::uuid
- or o.quote->'offerBinding' is distinct from preview-array['submissionId','blockers']))
+ or o.quote->'offerBinding' is distinct from preview-array['submissionId','blockers','xpayOrderId']))
  then raise exception 'XPAY_REQUEST_KEY_REUSED' using errcode='22023'; end if;
  -- Private offer token authority is rechecked below on new requests; replay must
  -- still require the same owner, and never change a persisted quote.
@@ -159,7 +159,7 @@ begin
  amount:=(q->>'effectivePriceAmount')::numeric;
  if t.currency<>'EGP' or amount<=0 or amount<>round(amount,2) then raise exception 'XPAY_QUOTE_INVALID' using errcode='22023'; end if;
  q:=q||jsonb_build_object('planId',t.plan_id,'planName',t.display_name,'planSlug',(select slug from public.plans where id=t.plan_id),
- 'catalogTermsId',t.id,'planVariant',t.plan_variant,'billingInterval',t.billing_interval,'resourceLimits',t.resource_limits,'entitlements',t.offer_entitlements,'offerBinding',preview-array['submissionId','blockers']);
+ 'catalogTermsId',t.id,'planVariant',t.plan_variant,'billingInterval',t.billing_interval,'resourceLimits',t.resource_limits,'entitlements',t.offer_entitlements,'offerBinding',preview-array['submissionId','blockers','xpayOrderId']);
  insert into public.shop_xpay_orders(request_id,shop_id,subscription_id,actor_user_id,merchant_id,mode,catalog_terms_id,private_offer_id,quote,subscription_before,amount_minor,currency)
  values(p_request_id,p_shop_id,s.id,auth.uid(),c.merchant_id,c.mode,t.id,offer.id,q,to_jsonb(s),(amount*100)::bigint,t.currency) returning * into o;
  return shop_private.xpay_order_view(o);

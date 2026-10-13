@@ -155,3 +155,74 @@ negotiated/annual prices, quota counts and all six blocker labels. No tests were
 skipped to remove the manual payment feature. A final built-head focused rerun
 covers the changed checkout, policies, negotiated quotes and quota comparison.
 These are synthetic transport/UI checks, not SQL or provider payment proof.
+
+## Payment backend checkpoint (#279)
+
+Branch `codex/shop-suit/xpay-payment-backend` starts at #275's published
+`f373c5460802cb7e2263acee04a049c29b60d462`. The CLI-created forward migration
+`20261013104931_xpay_payment_orders.sql` adds frozen owner-authorized orders,
+immutable verified-paid observations (including payments held for review), the
+webhook inbox, one-time commercial-period fulfillment and protected reconciliation
+RPCs. It revokes every new manual subscription notice/private redemption and
+proof reservation grant, and disables only the billing evidence INSERT policy.
+Historical notice review, evidence reads/signing and catalog/POS behavior remain.
+No hosted migration is applied.
+
+Three Edge Function entry points are implemented: `shop-xpay-checkout`,
+`shop-xpay-webhook`, `shop-xpay-reconcile`. Checkout has platform JWT verification
+plus an actual Auth lookup, confirmed-email/anonymous checks and the owner RPC.
+Webhook verifies raw bytes and then retrieves the session from XPay; it persists
+an inbox receipt before fulfillment and returns 503 on an incomplete worker so
+provider retry remains possible. It does not acknowledge a failed write as paid.
+Provider session projections sent to SQL omit customer details and client secrets.
+Reconciliation processes at most four orders with two workers and never retries an
+uncertain creation past 23 hours, inside XPay's 24-hour idempotency retention.
+Unresolved money/creation remains visible for operator review, never fabricated
+payment success or an automatic refund.
+
+The verified payment receipt gives a narrowly bound transaction authority to the
+existing subscription triggers. It retains the old bridge/admin approval path.
+The first paid term begins immediately after verified payment during a trial and
+preserves historical trial dates. Existing active renewals extend the agreed
+period. Subscription, ownership, usage or scheduled-plan changes after quoting
+hold the paid observation without overwriting access. A paid state cannot be
+rolled back by a late unpaid/expiry event.
+
+Configuration remains **not live**. In addition to the earlier server-only names,
+prepare `XPAY_ENABLED=false` and `XPAY_API_VERSION=1.0`; enabling the runtime and
+its private database configuration must be deliberate after merchant checks.
+The accepted dashboard account is known to the parent, but do not infer the API
+`merchantId`, chargeable methods, currency or fee/tax policy from the acceptance
+email alone. Only keys for the chosen mode belong in its secret store. No actual
+key is committed, read or created by this checkpoint.
+
+Before activation, the operator must verify API compatibility, install the scoped
+key/endpoint secret through the secure setup process, configure the exact private
+merchant/mode row, register the webhook after deployment, and schedule the server
+reconciliation endpoint using the existing Shop server credential. Configure
+monitoring for its unresolved count, including unknown creations beyond the
+provider retention window. Never clear a paid hold by editing financial history;
+review the provider transaction and competing access change before an audited
+operator decision. No live payment, refund, email or customer activation occurred.
+
+Validation: 24 provider/HTTP contract tests pass; Deno 2.9.6 checks all three entry
+points; Shop lint and workspace boundaries pass. Secret-free GitHub-hosted
+[SQL run 38390751728](https://github.com/Building-Suit/building-suit-monorepo/actions/runs/38390751728)
+passed all current rollback-only fixtures and a race between two independent
+PostgreSQL workers: one payment, one paid observation and one commercial period.
+[Review run 38390751695](https://github.com/Building-Suit/building-suit-monorepo/actions/runs/38390751695)
+passed. Earlier fixture failures were corrected; no failed check was waived.
+These use synthetic provider results, not a real merchant sandbox payment.
+
+SAS #276 at `9da7c4a6d65c50913e2428b0ad95763b9319bd9f` was inspected read-only.
+Its signed bridge, `platform_plan_command` trial activation and secure account
+provisioning functions are untouched. Its migrations precede this one; the XPay
+subscription trigger still retains its bridge principal authority checks. The
+integration owner must run the combined-head SAS and XPay fixtures together.
+
+Remaining gates: merchant setup clarification/compatibility, actual provider
+sandbox/webhook verification, private-offer end-to-end verification, scheduling
+and monitoring configuration, and connecting the prepared customer checkout to
+the verified server capability with unavailable/pending/failure/review states.
+The current customer action remains disabled. This checkpoint is not the finished
+live integration and must not be represented as such.
