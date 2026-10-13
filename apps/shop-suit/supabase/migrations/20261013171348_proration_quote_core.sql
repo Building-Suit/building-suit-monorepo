@@ -34,7 +34,7 @@ begin
  raise exception 'SHOP_PRORATION_PERIOD_INVALID' using errcode='22023'; end if;
  active_cycle:=p_status='active' and p_cycle_start is not null and p_cycle_end is not null
  and p_cycle_start<=p_as_of and p_as_of<p_cycle_end;
- if p_status='active' and ((p_cycle_start is null)<>(p_cycle_end is null)
+ if p_status='active' and (p_cycle_start is null or p_cycle_end is null
  or (p_cycle_start is not null and (p_cycle_start>=p_cycle_end or p_cycle_start>p_as_of))) then
  raise exception 'SHOP_PRORATION_PERIOD_INVALID' using errcode='22023'; end if;
  if active_cycle and p_old_interval is null then

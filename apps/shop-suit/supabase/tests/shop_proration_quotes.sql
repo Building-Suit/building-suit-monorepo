@@ -45,7 +45,7 @@ begin
  {"newMinor":0},{"balance":-1},{"newInterval":"weekly"},
  {"oldInterval":"weekly"},{"asOf":"infinity"},{"cycleStart":"2026-12-05"},
  {"fundingStart":"2026-11-15"},{"fundingStart":"2026-10-01"},
- {"same":true,"newInterval":"annual"}
+ {"same":true,"newInterval":"annual"},{"cycleStart":null}
  ]'::jsonb)
  loop
  x:=jsonb_build_object('status','active','source','paid','currency','EGP','prepaid','34900','newMinor',69900,'balance',0,'newInterval','monthly','oldInterval','monthly','asOf','2026-11-11','cycleStart','2026-11-01','fundingStart','2026-11-01','same',false)||patch;
@@ -55,5 +55,5 @@ begin
  exception when sqlstate '22023' then invalid:=invalid+1;
  end;
  end loop;
- if invalid<>15 then raise exception 'Missing invalid cases'; end if;
+ if invalid<>16 then raise exception 'Missing invalid cases'; end if;
 end $$;
