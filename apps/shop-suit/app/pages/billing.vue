@@ -94,6 +94,9 @@ const noticeQuote = computed(() => privatePreview.value ? { planName: privatePre
 const currentCatalogTermsId = computed(() => billing.value?.subscription.accessState === 'active' ? purchasablePlans.value.find(plan => plan.planSlug === billing.value?.subscription.planSlug
   && plan.planVariant === billing.value?.subscription.planVariant
   && plan.billingInterval === billing.value?.subscription.billingInterval)?.catalogTermsId ?? '' : '')
+const trialCatalogTermsId = computed(() => billing.value?.subscription.accessState === 'trialing' ? purchasablePlans.value.find(plan => plan.planSlug === billing.value?.subscription.planSlug
+  && plan.planVariant === billing.value?.subscription.planVariant
+  && plan.billingInterval === billing.value?.subscription.billingInterval)?.catalogTermsId ?? '' : '')
 const latestSubmission = computed(() => billing.value?.submissions?.[0] ?? null)
 const checkoutVisible = ref(false)
 const checkoutReady = ref(false)
@@ -318,7 +321,7 @@ const ar = {
   resources: { active_locations: 'الفروع النشطة', active_members: 'أعضاء الفريق', active_products: 'المنتجات النشطة', active_services: 'الخدمات النشطة', active_customers: 'العملاء النشطون', active_suppliers: 'الموردون النشطون' },
   intervals: { monthly: 'شهريًا', quarterly: 'كل ثلاثة أشهر', annual: 'سنويًا' },
 }
-const planPresentation = reactive(useShopPlanPresentation({ get offers() { return purchasablePlans.value }, get selectedCatalogTermsId() { return form.catalogTermsId }, get currentCatalogTermsId() { return currentCatalogTermsId.value }, action: 'select' }, choosePlan))
+const planPresentation = reactive(useShopPlanPresentation({ get offers() { return purchasablePlans.value }, get selectedCatalogTermsId() { return form.catalogTermsId }, get currentCatalogTermsId() { return currentCatalogTermsId.value }, get trialCatalogTermsId() { return trialCatalogTermsId.value }, action: 'select' }, choosePlan))
 const usagePresentation = useShopUsagePresentation()
 
 useShopRealtime('billing', () => privatePending.value || !!privateLink.value || !!privatePreview.value)

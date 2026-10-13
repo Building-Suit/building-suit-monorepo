@@ -146,3 +146,9 @@ Final merge remains held for code/check completion and the user-resolved actual 
 
 
 The 9ed6e38 combined account gate passed real SAS signing/Auth/grant/invitation/claim but found the remaining retired manual RPC calls in the separate Node plan-limit and billing concurrency fixture setup. Those two fixtures now use the same test-only historical seed helpers; authenticated concurrent legacy review, one-period/one-audit and quota serialization assertions are unchanged. No public grant or production policy is restored. The failure was a fixture transition mismatch, not evidence that the retired client operation should be re-enabled. Final combined CI reruns on the corrected head.
+
+## Billing checkout follow-up (cloud, pending draft validation)
+
+Billing screenshots were materialized through the current Library helper with identity metadata and inspected. Shared pricing now keeps Team Popular independent of current/chosen plan, fixes canonical352px card tracks, and presents plan choice in `BsHostedCheckoutDialog` with pinned actions, consequences and capacity restrictions. Active current paid plans are disabled Selected; matching trial terms expose Activate this plan and retain day-one payment gates. Quota restrictions and saved-order recovery remain enforced. XPay inline product names and metadata include persisted quote cadence; mode remains one-time payment and no remote products are provisioned. Proration is deliberately a separate backend change; this UX introduces no credits or changed amounts.
+
+Base reconciled with staging73a884b3 after independently approved hotfixes282/281. A concurrent Shop design stack283→284 appeared during work; this cross-package change uses the separate Shared stack to preserve its parentage and avoid a second Shop root. No other worker branch is incorporated. Full33route design matrices remain incomplete; billing screenshots identify reported issues rather than approved missing matrices.
