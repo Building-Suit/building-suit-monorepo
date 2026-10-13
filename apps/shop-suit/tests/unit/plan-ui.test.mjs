@@ -25,9 +25,9 @@ test('inventory and purchase access notices describe subscription access in both
 test('owner billing uses the canonical purchasable catalog and effective server quote', () => {
   assert.match(billing, /usePlans\(\)/)
   assert.match(billing, /publicCatalogTerms/)
-  assert.match(billing, /p_requested_catalog_terms_id: selectedPlan\.value!\.catalogTermsId/)
-  assert.match(billing, /!entry && !selectedPlan\.value/)
-  assert.match(billing, /p_requested_plan_slug: selectedPlan\.value!\.planSlug/)
+  assert.match(billing, /form\.catalogTermsId/)
+  assert.match(billing, /noticeQuote\.value/)
+  assert.doesNotMatch(billing, /submit_shop_billing_notice|redeem_shop_private_offer/)
   assert.match(billing, /effectivePriceAmount/)
   assert.match(billing, /priceSource === 'override'/)
   assert.doesNotMatch(billing, /349|699|1099/)
@@ -67,7 +67,7 @@ test('all six quota resources have concise comparison and usage states', () => {
   assert.match(awaitSharedUsage, /role="progressbar"/)
 })
 
-test('downgrades and manual payment requests communicate their safety boundary', () => {
+test('downgrades and X-Pay checkout communicate their safety boundary', () => {
   assert.match(cards, /offer\.blockers\.length/)
   assert.match(cards, /All data stays saved/)
   assert.match(cards, /cannot be used for new activity until you reduce usage or upgrade the plan/)
@@ -76,12 +76,12 @@ test('downgrades and manual payment requests communicate their safety boundary',
   assert.match(cards, /لن يُحذف أو يُؤرشف أي شيء تلقائيًا/)
   assert.doesNotMatch(billing, /:disabled="plan\.blockers\.length > 0"/)
   assert.doesNotMatch(billing, /!plan \|\| plan\.blockers\.length/)
-  assert.match(billing, /Your access will not change until an operator approves it/)
-  assert.match(billing, /confirmation\.ask/)
+  assert.match(billing, /Paid access starts after verified payment/)
+  assert.match(billing, /disabled: true/)
   assert.match(billing, /submitted: 'Submitted for manual review/)
   assert.match(billing, /under_review: 'An operator is reviewing/)
   assert.match(billing, /approved: 'This request was approved/)
-  assert.match(billing, /rejected: 'This request was rejected/)
+  assert.match(billing, /rejected: 'This historical request was rejected/)
 })
 
 test('quota errors identify the resource and safe owner actions', () => {

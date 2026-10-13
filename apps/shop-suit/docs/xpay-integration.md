@@ -1,8 +1,12 @@
 # X-Pay subscription checkout
 
-Status: provider-contract foundation only; **not connected or live**. Existing
-customer manual payment/evidence UI remains until the atomic replacement lands.
-Do not consolidate this checkpoint as the finished user feature.
+Status: provider contract plus customer UI/policy preparation; **not connected or
+live**. The customer manual payment/evidence form and its upload/submission
+orchestration are removed. The new hosted checkout section displays the official
+logo, selected quote, day-one policy and an explicitly unavailable disabled action.
+Historical request status/history and the existing operator review/signing backend
+remain. Backend manual-write RPC retirement has not landed; this UI change alone
+is not a server access boundary. Do not consolidate it as the finished feature.
 
 ## Verified provider sources (2026-10-13)
 
@@ -19,7 +23,11 @@ The modern public docs describe `sk_test_`/`sk_live_` keys, `cs_*` sessions and
 `whsec_*` secrets. Confirm that the accepted merchant is enabled for this API
 generation before wiring an account-specific deployment. Do not assume legacy
 community/API credentials are compatible. Public docs do not specify a required
-version header; do not invent one.
+version header; do not invent one. The published
+[OpenAPI](https://docs.xpay.app/openapi.json) identifies `XPay Merchant API`, version
+`1.0`, with server `https://api.xpay.app` (retrieved 2026-10-13, SHA-256
+`eceae8f13515655eef7b7697905dcd2baeb0d6c6ba285a5cf27e797c68eafc6f`). This
+specification version is not proof that the accepted merchant is enabled for it.
 
 ## Product implementation plan
 
@@ -83,6 +91,20 @@ no public Nuxt secret configuration. Allow only the configured HTTPS return orig
 in the dispatcher, never browser-selected return URLs. The provider adapter is
 server-only and expects that dispatcher authorization, not a public API itself.
 
+Registry-backed planned callback configuration (not registered or deployed):
+
+| Environment | Return/cancel page origin | Planned webhook URL |
+| --- | --- | --- |
+| Shop staging | `https://stg.shop.building-suit.com/billing` | `https://jvvelvftpfnlogalgxgv.supabase.co/functions/v1/shop-xpay-webhook` |
+| Shop production | `https://shop.building-suit.com/billing` | `https://fgdzjnsbcxfbiuogbmom.supabase.co/functions/v1/shop-xpay-webhook` |
+
+These domains/project refs come from `docs/architecture/environments.json`; runtime
+availability, provider approval and endpoint implementation remain verification
+gates. Do not register an endpoint until signature verification and durable inbox
+are deployed. Separate test/live endpoint secrets are required. Use no tunnel or
+PC network. The parent has identified draft #274's GitHub-hosted disposable backend
+runner as the next SQL/Auth test route; no local Docker pulls are required.
+
 Secure handoff must install the existing merchant's scoped key and endpoint
 signing secret in the target server secret store, configure the authorized HTTPS
 endpoint and register the paid/completed/asynchronous/failure/expiry events needed
@@ -105,7 +127,31 @@ Design-token source check passed. Workspace boundary check could not start becau
 this isolated checkout has no installed `typescript` package; it is **unrun**,
 not passed. Dependency installation/typecheck/lint/build remain for continuation.
 
-Continue on this branch/PR: database order/inbox/atomic fulfillment, secure
-dispatcher and webhook worker, reconciliation, shared presentation, customer
-manual-flow retirement, policy/copy and browser/SQL verification. Parent owns
+Customer preparation continues on `codex/shop-suit/xpay-billing-policy`, based on
+the published #273 head `a350b50ef8860cc7e1a1c2f024045490239ac210`. It excludes
+#274's separately published media/CI changes; incorporate that runner deliberately
+for database continuation. Shared collision: `BsBillingPage.vue`, its typed view,
+docs component catalogue, Shop billing/signup/legal content and their tests. No
+SAS files or admin override contracts are changed.
+
+Continue: database order/inbox/atomic fulfillment, secure dispatcher and webhook
+worker, reconciliation, server manual-write retirement and SQL/provider/browser
+payment verification. The prepared UI remains disabled until these gates pass.
+Changing it to enabled without a working authorized backend is forbidden. Parent owns
 final consolidation and `stg` merge after the complete feature passes its gates.
+
+Customer checkpoint checks: frozen-lockfile installation using pinned pnpm 10.33.0
+completed in cloud; no secret files were read. Shop and docs lint/build/typechecks
+passed; Ledger, Inventory and Super Admin typechecks passed. Workspace boundaries,
+canonical token check and diff whitespace check passed. Full workspace unit suite:
+1,338 passed, 23 existing backend-dependent skips, no failures. The first broad
+run lacked the configured browser-cache path; its two tooling browser failures
+passed after setting the cloud-only Playwright path. Shop unit subset: 237 passed.
+
+The five affected browser suites ran 61 cases: 55 passed initially; six old
+comparison assertions targeted retired DOM selectors and passed after switching
+to the maintained section IDs and accessible status text. Coverage retains exact
+negotiated/annual prices, quota counts and all six blocker labels. No tests were
+skipped to remove the manual payment feature. A final built-head focused rerun
+covers the changed checkout, policies, negotiated quotes and quota comparison.
+These are synthetic transport/UI checks, not SQL or provider payment proof.

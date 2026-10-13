@@ -20,8 +20,8 @@ test('all four policies have aligned EN/AR sections, metadata and revision dates
         for (const value of section[field] ?? []) assert.ok(value.trim())
       }
     })
-    assert.equal(en.updated, ['terms', 'privacy'].includes(key) ? '10 October 2026' : '30 September 2026')
-    assert.equal(ar.updated, ['terms', 'privacy'].includes(key) ? '10 أكتوبر 2026' : '30 سبتمبر 2026')
+    assert.equal(en.updated, '13 October 2026')
+    assert.equal(ar.updated, '13 أكتوبر 2026')
   }
 })
 
@@ -58,8 +58,8 @@ test('privacy discloses actual support payload and scoped realtime processing', 
   assert.match(body(legalDocuments.privacy.en), /Session identifiers.*clear local workspace state/)
 })
 
-test('delivery and refunds retain manual-review boundaries without new promises', () => {
-  assert.match(body(legalDocuments.delivery.en), /Submission alone is not payment confirmation/)
+test('delivery confirms X-Pay on server and refunds retain review boundaries', () => {
+  assert.match(body(legalDocuments.delivery.en), /verified server-side paid result/)
   assert.match(body(legalDocuments.refund.en), /no automatic refund or fixed processing time is promised/)
   assert.match(body(legalDocuments.terms.en), /responsible for their accuracy, legality/)
 })
