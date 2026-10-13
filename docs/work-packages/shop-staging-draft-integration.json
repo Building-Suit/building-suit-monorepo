@@ -1,6 +1,6 @@
 {
   "status": "DRAFT_NOT_READY_TO_MERGE",
-  "branch": "integration/shop-suit-release",
+  "branch": "codex/shared/staging-integration",
   "baseBranch": "stg",
   "baseSha": "266d91dc11cbc07b5e9f3b6d37dd53e541fb70e1",
   "completedShopHead": "fdd800883a186225fbbf7aeeaf183e898f9e38c4",
@@ -79,5 +79,6 @@
     "runner": "GitHub-hosted ubuntu-latest",
     "hostedReady": false
   },
-  "fullDesignMatrixComplete": false
+  "fullDesignMatrixComplete": false,
+  "stackPolicy": "Shared integration root targets stg; existing Shop/SAS roots and feature branches remain intact. GitHub rejected empty completed-ancestor retarget, so abandoned new PR277 was closed without merging."
 }
