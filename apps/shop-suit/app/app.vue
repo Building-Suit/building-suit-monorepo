@@ -27,6 +27,7 @@ const canRenderPage = computed(() => {
 // This selects presentation only; the visibility gate and middleware remain.
 const pageLayout = computed(() => {
   const path = router.currentRoute.value.path
+  if (['/auth/signup', '/auth/forgot-password', '/auth/reset-password'].includes(path)) return 'auth'
   if (path.startsWith('/auth/')) return false
   if (path === '/platform-admin') return 'platform-admin'
   return publicPaths.includes(path) ? 'landing' : 'default'

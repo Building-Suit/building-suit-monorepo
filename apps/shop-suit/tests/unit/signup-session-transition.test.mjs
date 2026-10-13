@@ -84,6 +84,7 @@ test('signup survives session establishment and provisioning while operational c
   } }))
   app.mount(node())
   try {
+    assert.equal(layoutNames.at(-1), 'auth', 'signup retains its registered authentication layout')
     user.value = { id: 'verified-owner' }
     await nextTick()
     currentId.value = 'owner-shop'
@@ -158,5 +159,10 @@ test('signup survives session establishment and provisioning while operational c
     committedRoute.value = { path: '/auth/login', meta: { layout: false } }
     await nextTick()
     assert.equal(layoutNames.at(-1), false, 'logout must not wrap public authentication in the deferred private shell')
+    for (const path of ['/auth/forgot-password', '/auth/reset-password', '/auth/signup']) {
+      committedRoute.value = { path, meta: { layout: false } }
+      await nextTick()
+      assert.equal(layoutNames.at(-1), 'auth', `${path} must retain its registered frame despite stale metadata`)
+    }
   } finally { app.unmount() }
 })

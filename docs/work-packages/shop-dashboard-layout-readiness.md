@@ -26,3 +26,7 @@ Synthetic browser evidence, inspected after capture:
 ![Arabic mobile absent subscription](evidence/shop-layout-hotfix/ar-no-subscription.png)
 
 The new browser cases have a 90-second cumulative timeout for repeated intentional provider delays; assertion timeouts are unchanged. Hosted staging has not been redeployed or verified by this work. CI remains the combined integration gate. Appointment design work remains parked in its separate unpublished worktree pending this checkpoint.
+
+CI follow-up: the first full run passed 110 browser cases but failed the existing Shop signup frame check. The initial explicit route mapping incorrectly treated signup/password recovery like the self-framed login and invitation pages. Those three routes now retain their registered `auth` layout; actual-SFC coverage asserts that mapping despite stale route metadata. No authentication command or middleware changes are included. The failed CI run is retained as evidence, and the existing frame test and dashboard/logout cases are rerun on the corrected production build before publication.
+
+Corrected-build results: existing Shop shared auth/public frame case passes (1), dashboard delayed/absent-subscription cases pass (2), and unchanged logout/history privacy case passes (1). All six consumer typechecks and 33 unit cases pass; Shop build passes. Public landing appears only in the unchanged frame regression, not as a design edit.

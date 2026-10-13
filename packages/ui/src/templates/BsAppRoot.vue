@@ -2,7 +2,7 @@
 import type { PageMeta } from '#app'
 const props = withDefaults(defineProps<{
   renderPage?: boolean
-  layout?: 'default' | 'landing' | 'platform-admin' | false
+  layout?: 'default' | 'landing' | 'platform-admin' | 'auth' | false
   layoutKey?: string
   pageKey?: string
   pageTransition?: false | { name?: string; mode?: 'in-out' | 'out-in' | 'default' }
