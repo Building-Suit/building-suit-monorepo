@@ -145,7 +145,8 @@ const auditColumns = computed(() => props.copy.audit ? [
 .bs-access-page__filters { margin-block-end: var(--bs-space-5); }
 .bs-access-page__filters :deep(.ls-field) { width: min(100%, 18.5rem); }
 @media (max-width: 639px) {
-  .bs-access-page :deep(.ls-action-tab) { flex: 1 1 auto; }
+  .bs-access-page :deep(.ls-tabs) { flex-wrap: nowrap; overflow-x: auto; max-inline-size: 100%; }
+  .bs-access-page :deep(.ls-action-tab) { flex: 0 0 auto; }
   .bs-access-page__members, .bs-access-page__audit { padding: var(--bs-space-3); }
 }
 </style>
