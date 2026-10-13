@@ -6,6 +6,7 @@ const props = withDefaults(defineProps<{
   headingLevel?: 2 | 3 | 4 | 5 | 6
   variant?: 'default' | 'flat'
   padding?: 'none' | 'sm' | 'md' | 'lg'
+  span?: 1 | 2 | 3 | 4 | 5
 }>(), {
   as: 'article',
   title: undefined,
@@ -13,6 +14,7 @@ const props = withDefaults(defineProps<{
   headingLevel: 2,
   variant: 'default',
   padding: 'md',
+  span: undefined,
 })
 
 const slots = useSlots()
@@ -22,6 +24,7 @@ const heading = computed(() => `h${props.headingLevel}` as const)
 <template>
   <component
     :is="as"
+    :data-bs-span="span"
     :class="[
       variant === 'flat' ? 'ls-card-flat' : 'ls-card',
       { 'p-3': padding === 'sm', 'p-5': padding === 'md', 'p-6': padding === 'lg' },

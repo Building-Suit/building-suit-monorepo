@@ -1,10 +1,13 @@
 <script setup lang="ts">
+import { useLedgerFxPresentation } from '~/composables/useLedgerFxPresentation'
+import { formatPresentationMoney } from '@building-suit/ui/utils/presentation'
+import type { BsSubledgerCopy, BsSubledgerForm, BsSubledgerFilters, BsSubledgerView, BsSubledgerChoices } from '@building-suit/ui/types/subledgerPresentation'
 import { useCustomerSubledger } from '~/composables/useCustomerSubledger'
 import type { ArKind, ArMovement } from '~/utils/customerSubledger'
 import { summarizeAging } from '~/utils/customerSubledger'
 
 definePageMeta({ layout: 'default' })
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const { currentId, can, baseCurrency } = useTenant()
 const user = useSupabaseUser()
 const { readOnly } = useBilling()
@@ -102,81 +105,27 @@ async function save() {
   catch (failure) { if (currentId.value === organizationId && user.value?.id === actor) formError.value = failureMessage(failure) }
   finally { saving.value = false }
 }
-</script>
+const ledgerPresentation = useLedgerPresentation()
 
+const fx = useLedgerFxPresentation('customer', asOf, readOnly)
+const subledgerMoney = (value: string, currency = baseCurrency.value) => formatPresentationMoney(value, { currency, locale: locale.value, unit: 'minor', numberingSystem: 'latn' })
+const subledgerFilters = computed<BsSubledgerFilters>({ get: () => ({ from: from.value, asOf: asOf.value, party: customer.value, density: tableDensity.value }), set: value => { from.value = value.from; asOf.value = value.asOf; customer.value = value.party; tableDensity.value = value.density } })
+const subledgerForm = computed<BsSubledgerForm>({ get: () => ({ party: form.customer, control: form.control, offset: form.offset, date: form.date, due: form.due, reference: form.reference, amount: form.amount, reason: form.reason, allocations: { ...form.allocations } }), set: value => { Object.assign(form, { customer: value.party, control: value.control, offset: value.offset, date: value.date, due: value.due, reference: value.reference, amount: value.amount, reason: value.reason, allocations: { ...value.allocations } }) } })
+const subledgerCopy = computed<BsSubledgerCopy>(() => ({ title: t('ar.title'), policy: t('ar.policy'), contextLabel: t('pageContext.label'), denied: t('ar.denied'), from: t('ar.from'), asOf: t('ar.asOf'), party: t('ar.customer'), allParties: t('ar.allCustomers'), density: t('accountingTable.density'), compact: t('accountingTable.compact'), comfortable: t('accountingTable.comfortable'), loadError: t('ar.errors.load'), retry: t('ar.retry'), setup: t('ar.setup'), accounts: t('nav.accounts'), openItems: t('ar.openItems'), reference: t('ar.reference'), issueDate: t('ar.issueDate'), dueDate: t('ar.dueDate'), original: t('ar.original'), outstanding: t('ar.outstanding'), aging: t('ar.aging'), empty: t('ar.empty'), agingPolicy: t('ar.agingPolicy'), statement: t('ar.statement'), chooseParty: t('ar.chooseCustomer'), date: t('ar.date'), kind: t('ar.kind'), movement: t('ar.movement'), balance: t('ar.balance'), reason: t('ar.reason'), history: t('ar.history'), journal: t('ar.journal'), reverses: t('ar.reverses'), reverse: t('ar.actions.reversal'), reconciliation: t('controls.reconciliation'), reconciliationPolicy: t('ar.reconciliationPolicy'), control: t('ar.control'), glBalance: t('controls.glBalance'), subledgerBalance: t('controls.subledgerBalance'), variance: t('controls.variance'), status: t('controls.status'), legacy: t('ar.legacy'), legacyPolicy: t('ar.legacyPolicy'), cashSettled: t('ar.cashSettled'), reversalPolicy: t('ar.reversalPolicy'), amount: t('ar.amount'), allocations: t('ar.allocations'), allocationPolicy: t('ar.allocationPolicy'), noAllocationItems: t('ar.noAllocationItems'), save: t('common.save'), cancel: t('common.cancel'), scroll: t('accountingTable.receivablesScroll') }))
+const subledgerChoices = computed<BsSubledgerChoices>(() => { const choices = (rows: { id: string; name: string }[]) => rows.map(row => ({ value: row.id, label: row.name })); return { parties: choices(data.value?.customers || []), activeParties: choices(data.value?.customers.filter(row => !row.archived) || []), controls: choices(controls.value), offsets: choices(offsets.value) } })
+const subledgerView = computed<BsSubledgerView>(() => ({
+ context: ledgerPresentation.context(from.value, asOf.value), allowed: can('ar.read'), loading: pending.value, error: Boolean(error.value), found: Boolean(data.value), preferenceReady: tablePreferenceHydrated.value, setupRequired: !controls.value.length, actions: kinds.filter(kind => can(capability[kind])).map(kind => ({ id: kind, label: t(`ar.actions.${kind}`), disabled: readOnly.value || !controls.value.length || saving.value })),
+ items: items.value.map(row => ({ id: row.invoice_id, name: row.customer_name, reference: row.reference, issueDate: row.issue_date, dueDate: row.due_date, original: subledgerMoney(row.original_minor), outstanding: subledgerMoney(row.outstanding_minor), aging: t(`ar.buckets.${row.aging_bucket}`) })),
+ aging: aging.value.map(bucket => ({ id: bucket.bucket, label: t(`ar.buckets.${bucket.bucket}`), value: subledgerMoney(bucket.amount) })), totals: data.value?.statement ? statementFields.map(field => ({ id: field, label: t(`ar.totals.${field}`), value: subledgerMoney(data.value!.statement![`${field}_minor`]) })) : [], statementAvailable: Boolean(data.value?.statement),
+ movements: (data.value?.statement?.movements || []).map(row => ({ id: row.id, date: row.date, reference: row.reference, kind: [t(`ar.kinds.${row.kind}`), row.reversed ? t('ar.reversed') : ''].filter(Boolean).join(' · '), movement: subledgerMoney(row.effect_minor), balance: subledgerMoney(row.balance_minor), reason: row.reason || '', journalTo: `/transactions?q=${encodeURIComponent(row.transaction_id)}`, reverses: row.reverses_document_id || '', canReverse: can('ar.reverse') && !row.reversed && row.kind !== 'reversal', disabled: readOnly.value || saving.value })),
+ showReconciliation: can('controls.reconcile'), reconciliation: (data.value?.reconciliation || []).map(row => ({ id: row.control_account_id, name: row.account_name, gl: subledgerMoney(row.gl_balance_minor), subledger: subledgerMoney(row.subledger_balance_minor), variance: subledgerMoney(row.variance_minor), status: t(`controls.statuses.${row.status}`), explanation: row.explanation_reason || '' })),
+ showLegacy: can('commitments.read'), legacy: (data.value?.legacy || []).map(row => ({ id: row.commitment_id, reference: row.reference, original: subledgerMoney(row.original_minor, row.currency_code), settled: subledgerMoney(row.cash_settled_minor, row.currency_code), outstanding: subledgerMoney(row.legacy_open_minor, row.currency_code) })),
+ dialog: { title: t(`ar.actions.${form.kind}`), dirty: dirty.value, pending: saving.value, error: formError.value, disabled: readOnly.value, reversal: form.kind === 'reversal', showDue: form.kind === 'invoice', showReason: ['credit', 'adjustment', 'reversal'].includes(form.kind), showAllocations: isAllocation.value, amountError: amountError.value, offsetLabel: t(form.kind === 'receipt' ? 'ar.cash' : form.kind === 'adjustment' ? 'ar.expense' : 'ar.revenue'), allocationItems: allocationItems.value.map(row => ({ id: row.invoice_id, reference: row.reference, outstanding: subledgerMoney(row.outstanding_minor) })) },
+ fx: { copy: fx.copy.value, view: fx.view.value, choices: fx.choices.value },
+}))
+function beginSubledgerAction(id: string) { if (kinds.includes(id as ArKind)) begin(id as ArKind) }
+function reverseSubledgerMovement(id: string) { const movement = data.value?.statement?.movements.find(row => row.id === id); if (movement) begin('reversal', movement) }
+</script>
 <template>
-  <div class="space-y-6">
-    <LedgerPageHeader :title="t('ar.title')" :subtitle="t('ar.policy')" :from="from" :to="asOf" />
-    <FxSubledgerPanel v-if="can('fx.read')" subledger="customer" :as-of="asOf" :read-only="readOnly" />
-    <p v-if="!can('ar.read')" role="status" class="ls-card p-5">{{ t('ar.denied') }}</p>
-    <template v-else>
-      <div class="ls-card grid items-end gap-4 p-5 sm:grid-cols-3">
-        <BsFloatingField :label="t('ar.from')"><input id="ar-from" v-model="from" class="ls-input" type="date" :max="asOf"></BsFloatingField>
-        <BsFloatingField :label="t('ar.asOf')"><input id="ar-asof" v-model="asOf" class="ls-input" type="date" :min="from"></BsFloatingField>
-        <BsFloatingField :label="t('ar.customer')"><select id="ar-customer-filter" v-model="customer" class="ls-input"><option value="">{{ t('ar.allCustomers') }}</option><option v-for="c in data?.customers ?? []" :key="c.id" :value="c.id">{{ c.name }}</option></select></BsFloatingField>
-        <AccountingTableDensity v-model="tableDensity" :disabled="!tablePreferenceHydrated" />
-      </div>
-      <p v-if="error" class="ls-error" role="alert">{{ t('ar.errors.load') }} <BsButton type="submit" class="ls-btn" @click="load">{{ t('ar.retry') }}</BsButton></p>
-      <BsSectionSkeleton v-else-if="pending" variant="table" :rows="5" />
-      <template v-else-if="data">
-        <div class="flex flex-wrap gap-2"><template v-for="kind in kinds" :key="kind"><BsButton type="submit" v-if="can(capability[kind])" class="ls-btn" :disabled="readOnly || !controls.length || saving" @click="begin(kind)">{{ t(`ar.actions.${kind}`) }}</BsButton></template></div>
-        <p v-if="!controls.length" role="status" class="ls-card p-5">{{ t('ar.setup') }} <NuxtLink to="/accounts" class="text-link underline">{{ t('nav.accounts') }}</NuxtLink></p>
-        <section class="ls-card overflow-hidden">
-          <h2 class="p-4 text-h2 font-bold">{{ t('ar.openItems') }}</h2>
-          <BsDataTable :value="items" data-key="invoice_id" :density="tableDensity" sticky-header max-height="32rem" :scroll-label="t('accountingTable.receivablesScroll')" :table-props="{ 'aria-label': t('ar.openItems') }">
-            <template #empty>{{ t('ar.empty') }}</template>
-            <Column header-class="ls-sticky-start" body-class="ls-sticky-start"><template #header>{{ t('ar.customer') }} / {{ t('ar.reference') }}</template><template #body="{ data: row }"><span class="block font-semibold">{{ row.customer_name }}</span><span class="block text-xs text-fg-muted" dir="ltr">{{ row.reference }}</span></template></Column>
-            <Column field="issue_date" :header="t('ar.issueDate')" /><Column field="due_date" :header="t('ar.dueDate')" />
-            <Column :header="t('ar.original')"><template #body="{ data: row }"><MoneyText :amount-minor="row.original_minor" /></template></Column>
-            <Column :header="t('ar.outstanding')"><template #body="{ data: row }"><MoneyText :amount-minor="row.outstanding_minor" /></template></Column>
-            <Column :header="t('ar.aging')"><template #body="{ data: row }">{{ t(`ar.buckets.${row.aging_bucket}`) }}</template></Column>
-          </BsDataTable>
-        </section>
-        <section class="ls-card p-4"><h2 class="text-h2 font-bold">{{ t('ar.aging') }}</h2><p class="my-2 text-sm text-fg-muted">{{ t('ar.agingPolicy') }}</p><dl class="grid gap-3 sm:grid-cols-5"><div v-for="bucket in aging" :key="bucket.bucket"><dt>{{ t(`ar.buckets.${bucket.bucket}`) }}</dt><dd><MoneyText :amount-minor="bucket.amount" /></dd></div></dl></section>
-        <section class="ls-card overflow-hidden">
-          <h2 class="p-4 text-h2 font-bold">{{ t('ar.statement') }}</h2>
-          <p v-if="!data.statement" class="p-4 text-fg-muted">{{ t('ar.chooseCustomer') }}</p>
-          <template v-else>
-            <dl class="grid gap-3 p-4 sm:grid-cols-5"><div v-for="field in statementFields" :key="field"><dt>{{ t(`ar.totals.${field}`) }}</dt><dd><MoneyText :amount-minor="data.statement[`${field}_minor`]" /></dd></div></dl>
-            <BsDataTable :value="data.statement.movements" data-key="id" :density="tableDensity" sticky-header max-height="32rem" :scroll-label="t('accountingTable.receivablesScroll')" :table-props="{ 'aria-label': t('ar.statement') }">
-              <template #empty>{{ t('ar.empty') }}</template>
-              <Column field="date" :header="t('ar.date')" /><Column field="reference" :header="t('ar.reference')" />
-              <Column :header="t('ar.kind')"><template #body="{ data: row }">{{ t(`ar.kinds.${row.kind}`) }}<span v-if="row.reversed"> · {{ t('ar.reversed') }}</span></template></Column>
-              <Column :header="t('ar.movement')"><template #body="{ data: row }"><MoneyText :amount-minor="row.effect_minor" /></template></Column>
-              <Column :header="t('ar.balance')"><template #body="{ data: row }"><MoneyText :amount-minor="row.balance_minor" /></template></Column>
-              <Column field="reason" :header="t('ar.reason')" />
-              <Column :header="t('ar.history')"><template #body="{ data: row }"><NuxtLink :to="{ path: '/transactions', query: { q: row.transaction_id } }" class="text-link underline">{{ t('ar.journal') }}</NuxtLink><p v-if="row.reverses_document_id" class="text-xs">{{ t('ar.reverses') }}: {{ row.reverses_document_id }}</p><BsButton type="submit" v-if="can('ar.reverse') && !row.reversed && row.kind !== 'reversal'" class="ls-btn ms-2" :disabled="readOnly || saving" @click="begin('reversal', row)">{{ t('ar.actions.reversal') }}</BsButton></template></Column>
-            </BsDataTable>
-          </template>
-        </section>
-        <section v-if="can('controls.reconcile')" class="ls-card overflow-hidden"><h2 class="p-4 text-h2 font-bold">{{ t('controls.reconciliation') }}</h2><p class="px-4 text-sm text-fg-muted">{{ t('ar.reconciliationPolicy') }}</p>
-          <BsDataTable :value="data.reconciliation" data-key="control_account_id" :density="tableDensity" :table-props="{ 'aria-label': t('controls.reconciliation') }">
-            <template #empty>{{ t('ar.empty') }}</template><Column field="account_name" :header="t('ar.control')" />
-            <Column :header="t('controls.glBalance')"><template #body="{ data: row }"><MoneyText :amount-minor="row.gl_balance_minor" /></template></Column>
-            <Column :header="t('controls.subledgerBalance')"><template #body="{ data: row }"><MoneyText :amount-minor="row.subledger_balance_minor" /></template></Column>
-            <Column :header="t('controls.variance')"><template #body="{ data: row }"><MoneyText :amount-minor="row.variance_minor" /></template></Column>
-            <Column :header="t('controls.status')"><template #body="{ data: row }">{{ t(`controls.statuses.${row.status}`) }}<p>{{ row.explanation_reason }}</p></template></Column>
-          </BsDataTable>
-        </section>
-        <details v-if="can('commitments.read')" class="ls-card p-4"><summary class="cursor-pointer font-bold">{{ t('ar.legacy') }}</summary><p class="my-3 text-sm text-fg-muted">{{ t('ar.legacyPolicy') }}</p>
-          <BsDataTable :value="data.legacy" data-key="commitment_id" :density="tableDensity" :table-props="{ 'aria-label': t('ar.legacy') }"><template #empty>{{ t('ar.empty') }}</template><Column field="reference" :header="t('ar.reference')" /><Column :header="t('ar.original')"><template #body="{ data: row }"><MoneyText :amount-minor="row.original_minor" :currency="row.currency_code" /></template></Column><Column :header="t('ar.cashSettled')"><template #body="{ data: row }"><MoneyText :amount-minor="row.cash_settled_minor" :currency="row.currency_code" /></template></Column><Column :header="t('ar.outstanding')"><template #body="{ data: row }"><MoneyText :amount-minor="row.legacy_open_minor" :currency="row.currency_code" /></template></Column></BsDataTable>
-        </details>
-      </template>
-    </template>
-    <BsRecordActionDialog v-model:visible="visible" :title="t(`ar.actions.${form.kind}`)" :pending="saving" :dirty="dirty" :error="formError" size="lg" :submit-label="t('common.save')" :cancel-label="t('common.cancel')" :submit-disabled="readOnly" @submit="save">
-          <p v-if="form.kind === 'reversal'" class="text-fg-muted">{{ t('ar.reversalPolicy') }}</p>
-          <template v-else>
-            <BsFloatingField :label="t('ar.customer')"><select id="ar-form-customer" v-model="form.customer" class="ls-input" required><option value="" /><option v-for="c in data?.customers.filter(c => !c.archived) ?? []" :key="c.id" :value="c.id">{{ c.name }}</option></select></BsFloatingField>
-            <BsFloatingField :label="t('ar.control')"><select id="ar-control" v-model="form.control" class="ls-input" required><option v-for="a in controls" :key="a.id" :value="a.id">{{ a.name }}</option></select></BsFloatingField>
-            <BsFloatingField :label="t(form.kind === 'receipt' ? 'ar.cash' : form.kind === 'adjustment' ? 'ar.expense' : 'ar.revenue')"><select id="ar-offset" v-model="form.offset" class="ls-input" required><option value="" /><option v-for="a in offsets" :key="a.id" :value="a.id">{{ a.name }}</option></select></BsFloatingField>
-            <BsFloatingField :label="t('ar.reference')"><input id="ar-reference" v-model="form.reference" class="ls-input" required></BsFloatingField>
-            <BsFloatingField :label="t('ar.amount')"><input id="ar-amount" v-model="form.amount" class="ls-input" inputmode="decimal" required :aria-invalid="Boolean(amountError)" :aria-describedby="amountError ? 'ar-amount-error' : undefined" @blur="amountMinor()"></BsFloatingField>
-            <p v-if="amountError" id="ar-amount-error" class="text-sm text-danger" role="alert">{{ amountError }}</p>
-          </template>
-          <BsFloatingField :label="t('ar.date')"><input id="ar-date" v-model="form.date" class="ls-input" type="date" required></BsFloatingField>
-          <BsFloatingField v-if="form.kind === 'invoice'" :label="t('ar.dueDate')"><input id="ar-due" v-model="form.due" class="ls-input" type="date" :min="form.date" required></BsFloatingField>
-          <BsFloatingField v-if="['credit', 'adjustment', 'reversal'].includes(form.kind)" :label="t('ar.reason')"><input id="ar-reason" v-model="form.reason" class="ls-input" required></BsFloatingField>
-          <fieldset v-if="isAllocation" class="space-y-3"><legend class="font-bold">{{ t('ar.allocations') }}</legend><p class="text-sm text-fg-muted">{{ t('ar.allocationPolicy') }}</p><p v-if="!allocationItems.length">{{ t('ar.noAllocationItems') }}</p><div v-for="item in allocationItems" :key="item.invoice_id"><BsFloatingField :label="item.reference"><input :id="`ar-allocation-${item.invoice_id}`" v-model="form.allocations[item.invoice_id]" class="ls-input" inputmode="decimal"></BsFloatingField><p class="text-sm">{{ t('ar.outstanding') }}: <MoneyText :amount-minor="item.outstanding_minor" /></p></div></fieldset>
-    </BsRecordActionDialog>
-  </div>
+  <BsSubledgerPage v-model:filters="subledgerFilters" v-model:form="subledgerForm" v-model:fx-form="fx.form.value" v-model:visible="visible" :copy="subledgerCopy" :view="subledgerView" :choices="subledgerChoices" accounts-to="/accounts" @retry="load" @action="beginSubledgerAction" @reverse="reverseSubledgerMovement" @submit="save" @validate-amount="amountMinor()" @retry-fx="fx.retry" @fx-mapping="fx.saveMapping" @fx-item="fx.saveItem" @fx-settlement="fx.saveSettlement" @fx-preview="fx.runPreview" @fx-confirm="fx.confirmRevaluation" @fx-reversal="fx.saveReversal"/>
 </template>

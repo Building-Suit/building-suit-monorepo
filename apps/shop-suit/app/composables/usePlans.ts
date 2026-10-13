@@ -21,7 +21,7 @@ export type PublicPlan = {
 
 export const usePlans = () => {
   const supabase = useSupabaseClient<ShopRpcDatabase>();
-  const { data, pending, error, refresh } = useAsyncData<PublicPlan[]>(
+  const request = useAsyncData<PublicPlan[]>(
     'shop-crm-public-plans',
     async () => {
       const { data: plans, error: queryError } = await supabase
@@ -34,5 +34,7 @@ export const usePlans = () => {
     { default: () => [] },
   );
 
-  return { data, isLoading: pending, error, refresh };
+  const { data, pending, error, refresh } = request;
+  // Form defaults must use the same settled catalogue during SSR and hydration.
+  return { data, isLoading: pending, error, refresh, ready: request.then(() => undefined) };
 };

@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import { formatPresentationMoney } from '@building-suit/ui/utils/presentation'
+import type { BsAssetRegisterCopy, BsAssetRegisterView, BsAssetRegisterForm, BsAssetRegisterChoices } from '@building-suit/ui/types/assetRegisterPresentation'
 import { assetTotals } from '~/utils/fixedAssets'
 import type { AssetEventRow, AssetScheduleRow, FixedAssetRow } from '~/utils/fixedAssets'
 import { minorUnitFor } from '~/utils/money'
 
 definePageMeta({ layout: 'default' })
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const { can, currentId } = useTenant()
 const user = useSupabaseUser()
 const { readOnly } = useBilling()
@@ -85,33 +87,80 @@ async function post(row: AssetScheduleRow) {
   try { await command('post_asset_depreciation', { p_schedule_id: row.id, p_idempotency_key: crypto.randomUUID() }); toasts.success(t('assets.depreciationPosted')) }
   catch (failure) { toasts.error(t('assets.errors.title'), errorMessage(failure)) }
 }
+const ledgerPresentation = useLedgerPresentation()
+
+const assetCopy = computed<BsAssetRegisterCopy>(() => ({
+  assets_account: t('assets.account'),
+  assets_accumulated: t('assets.accumulated'),
+  assets_accumulatedAccount: t('assets.accumulatedAccount'),
+  assets_acquisitionDate: t('assets.acquisitionDate'),
+  assets_acquisitionJournal: t('assets.acquisitionJournal'),
+  assets_actions: t('assets.actions'),
+  assets_asOf: t('assets.asOf'),
+  assets_changePolicy: t('assets.changePolicy'),
+  assets_closingNbv: t('assets.closingNbv'),
+  assets_code: t('assets.code'),
+  assets_cost: t('assets.cost'),
+  assets_costAccount: t('assets.costAccount'),
+  assets_date: t('assets.date'),
+  assets_denied: t('assets.denied'),
+  assets_depreciation: t('assets.depreciation'),
+  assets_dispose: t('assets.dispose'),
+  assets_effectiveDate: t('assets.effectiveDate'),
+  assets_empty: t('assets.empty'),
+  assets_emptyHint: t('assets.emptyHint'),
+  assets_errors_load: t('assets.errors.load'),
+  assets_expenseAccount: t('assets.expenseAccount'),
+  assets_gainLossAccount: t('assets.gainLossAccount'),
+  assets_glBalance: t('assets.glBalance'),
+  assets_history: t('assets.history'),
+  assets_impair: t('assets.impair'),
+  assets_impairmentAccount: t('assets.impairmentAccount'),
+  assets_impairmentAmount: t('assets.impairmentAmount'),
+  assets_journal: t('assets.journal'),
+  assets_life: t('assets.life'),
+  assets_method: t('assets.method'),
+  assets_methods_declining_balance: t('assets.methods.declining_balance'),
+  assets_methods_straight_line: t('assets.methods.straight_line'),
+  assets_name: t('assets.name'),
+  assets_nbv: t('assets.nbv'),
+  assets_noSchedule: t('assets.noSchedule'),
+  assets_periodEnd: t('assets.periodEnd'),
+  assets_periodStart: t('assets.periodStart'),
+  assets_policy: t('assets.policy'),
+  assets_post: t('assets.post'),
+  assets_proceeds: t('assets.proceeds'),
+  assets_proceedsAccount: t('assets.proceedsAccount'),
+  assets_rate: t('assets.rate'),
+  assets_reason: t('assets.reason'),
+  assets_reconciled: t('assets.reconciled'),
+  assets_reconciliation: t('assets.reconciliation'),
+  assets_register: t('assets.register'),
+  assets_registerBalance: t('assets.registerBalance'),
+  assets_registerReplacement: t('assets.registerReplacement'),
+  assets_registerTitle: t('assets.registerTitle'),
+  assets_residual: t('assets.residual'),
+  assets_retry: t('assets.retry'),
+  assets_reverse: t('assets.reverse'),
+  assets_review: t('assets.review'),
+  assets_schedule: t('assets.schedule'),
+  assets_serviceDate: t('assets.serviceDate'),
+  assets_statusLabel: t('assets.statusLabel'),
+  assets_title: t('assets.title'),
+  assets_variance: t('assets.variance'),
+  common_cancel: t('common.cancel'),
+  common_save: t('common.save'),
+  pageContext_label: t('pageContext.label'),
+}))
+
+const assetForm = computed<BsAssetRegisterForm>({ get: () => ({ code: form.code, name: form.name, description: form.description, journal: form.journal, acquisitionDate: form.acquisitionDate, serviceDate: form.serviceDate, cost: form.cost, residual: form.residual, life: form.life, method: form.method, rate: form.rate, costAccount: form.costAccount, accumulatedAccount: form.accumulatedAccount, expenseAccount: form.expenseAccount, impairmentAccount: form.impairmentAccount, gainLossAccount: form.gainLossAccount, date: form.date, proceeds: form.proceeds, proceedsAccount: form.proceedsAccount, reason: form.reason }), set: value => { const { method, ...fields } = value; Object.assign(form, fields); if (method === 'straight_line' || method === 'declining_balance') form.method = method } })
+const assetMoney = (value: string, currency?: string) => formatPresentationMoney(value, { currency: ledgerPresentation.currency(currency), locale: locale.value, unit: 'minor', numberingSystem: 'latn' })
+const assetView = computed<BsAssetRegisterView>(() => ({ context: ledgerPresentation.context(undefined, undefined, asOfDate.value), contextLabel: t('pageContext.label'), canRead: can('assets.read'), canRegister: can('assets.register'), registerDisabled: readOnly.value || !data.value?.acquisition_journals.length, pending: pending.value, failed: Boolean(error.value), available: Boolean(data.value), readOnly: readOnly.value, totals: { cost: assetMoney(totals.value.cost.toString()), accumulated: assetMoney(totals.value.accumulated.toString()), nbv: assetMoney(totals.value.nbv.toString()) }, assets: (data.value?.assets ?? []).map(row => ({ id: row.id, code: row.code, name: row.name, statusLabel: t(`assets.status.${row.status}`), cost: assetMoney(row.cost_minor, row.currency), accumulated: assetMoney(row.accumulated_minor, row.currency), nbv: assetMoney(row.nbv_minor, row.currency) })), selected: selected.value ? { id: selected.value.id, code: selected.value.code, name: selected.value.name, description: `${t(`assets.methods.${selected.value.method}`)} · ${t('assets.lifeValue', { months: selected.value.life_months })} · ${selected.value.in_service_date}`, journalTo: `/transactions?q=${encodeURIComponent(selected.value.acquisition_transaction_id)}`, actions: selected.value.status === 'active' ? [...(can('assets.adjust') ? [{ id: 'policy', label: t('assets.changePolicy'), primary: false, disabled: readOnly.value }, { id: 'impair', label: t('assets.impair'), primary: false, disabled: readOnly.value }] : []), ...(can('assets.dispose') ? [{ id: 'dispose', label: t('assets.dispose'), primary: false, disabled: readOnly.value }] : [])] : selected.value.status === 'corrected' && can('assets.register') ? [{ id: 'register', label: t('assets.registerReplacement'), primary: true, disabled: readOnly.value || !data.value?.acquisition_journals.length }] : [] } : null, schedule: schedule.value.map(row => ({ id: row.id, periodStart: row.period_start, periodEnd: row.period_end, amount: assetMoney(row.amount_minor, selected.value?.currency), closing: assetMoney(row.closing_nbv_minor, selected.value?.currency), statusLabel: t(`assets.scheduleStatus.${row.status}`), canPost: row.status === 'scheduled' && can('assets.depreciate') })), reconciliation: (data.value?.reconciliation ?? []).map(row => ({ id: row.account_id, account: data.value?.accounts.find(account => account.id === row.account_id)?.name ?? '', register: assetMoney(row.register_minor), gl: assetMoney(row.gl_minor), variance: assetMoney(row.variance_minor) })), reconciled: balanced.value, reconciliationLabel: t(balanced.value ? 'assets.reconciled' : 'assets.variance'), events: events.value.map(event => ({ id: event.id, date: event.date, kind: t(`assets.events.${event.kind}`), reason: event.reason ?? '', journalTo: event.transaction_id ? `/transactions?q=${encodeURIComponent(event.transaction_id)}` : '', canReverse: event.kind !== 'reversal' && !reversedEventIds.value.has(event.id) && can('assets.reverse') })), formTitle: t(`assets.dialogs.${form.mode}`), saving: saving.value, dirty: dirty.value, formError: formError.value, registerForm: form.mode === 'register', policyForm: form.mode === 'policy', depreciationForm: ['register','policy'].includes(form.mode), disposeForm: form.mode === 'dispose', impairmentForm: form.mode === 'impair', actionForm: form.mode !== 'register', rateField: form.method === 'declining_balance', actionDateLabel: t(form.mode === 'policy' ? 'assets.effectiveDate' : 'assets.date'), constraints: { lifeMin: 1, lifeMax: 1200, rateMin: 0.01, rateMax: 100, rateStep: 0.01 } }))
+const assetChoices = computed<BsAssetRegisterChoices>(() => ({ journals: (data.value?.acquisition_journals ?? []).map(journal => ({ value: journal.id, label: `${journal.date} · ${journal.reference || journal.description}` })), cost: costAccounts.value.map(account => ({ value: account.id, label: account.name })), accumulated: accumulatedAccounts.value.map(account => ({ value: account.id, label: account.name })), expense: expenseAccounts.value.map(account => ({ value: account.id, label: account.name })), gainLoss: gainLossAccounts.value.map(account => ({ value: account.id, label: account.name })), proceeds: proceedsAccounts.value.map(account => ({ value: account.id, label: account.name })), methods: ['straight_line','declining_balance'].map(value => ({ value, label: t(`assets.methods.${value}`) })) }))
+function beginAsset(mode: string, id: string) { if (!['register','dispose','impair','policy','reverse'].includes(mode)) return; const target = mode === 'reverse' ? events.value.find(row => row.id === id) : data.value?.assets.find(row => row.id === id); begin(mode as Mode, target) }
+function selectAsset(id: string) { selectedId.value = id }
+async function postAsset(id: string) { const row = schedule.value.find(row => row.id === id); if (row) await post(row) }
 </script>
-
 <template>
-  <div class="space-y-6">
-    <LedgerPageHeader :title="t('assets.title')" :subtitle="t('assets.policy')" :as-of="asOfDate"><template #actions><BsButton type="submit" v-if="can('assets.register')" class="ls-btn ls-btn-primary" :disabled="readOnly || !data?.acquisition_journals.length" @click="begin('register')">{{ t('assets.register') }}</BsButton></template></LedgerPageHeader>
-    <p v-if="!can('assets.read')" class="ls-card p-5" role="status">{{ t('assets.denied') }}</p>
-    <template v-else>
-      <div class="ls-card p-4"><BsFloatingField :label="t('assets.asOf')"><input id="assets-as-of" v-model="asOfDate" type="date" class="ls-input"></BsFloatingField></div>
-      <p v-if="error" class="ls-error" role="alert">{{ t('assets.errors.load') }} <BsButton type="submit" class="ls-btn" @click="load">{{ t('assets.retry') }}</BsButton></p>
-      <BsSectionSkeleton v-else-if="pending" variant="table" :rows="5" />
-      <BsEmptyState v-else-if="!data?.assets.length" :title="t('assets.empty')" :description="t('assets.emptyHint')" />
-      <template v-else-if="data">
-        <dl class="grid gap-4 sm:grid-cols-3"><div class="ls-card p-4"><dt>{{ t('assets.cost') }}</dt><dd class="text-h2 font-bold"><MoneyText :amount-minor="totals.cost.toString()" /></dd></div><div class="ls-card p-4"><dt>{{ t('assets.accumulated') }}</dt><dd class="text-h2 font-bold"><MoneyText :amount-minor="totals.accumulated.toString()" /></dd></div><div class="ls-card p-4"><dt>{{ t('assets.nbv') }}</dt><dd class="text-h2 font-bold" data-assets-nbv><MoneyText :amount-minor="totals.nbv.toString()" /></dd></div></dl>
-        <section class="ls-card overflow-hidden"><h2 class="p-4 text-h2 font-bold">{{ t('assets.registerTitle') }}</h2><BsDataTable :value="data.assets" data-key="id" :table-props="{ 'aria-label': t('assets.registerTitle') }"><Column field="code" :header="t('assets.code')" /><Column field="name" :header="t('assets.name')" /><Column :header="t('assets.statusLabel')"><template #body="{ data: row }">{{ t(`assets.status.${row.status}`) }}</template></Column><Column :header="t('assets.cost')"><template #body="{ data: row }"><MoneyText :amount-minor="row.cost_minor" :currency="row.currency" /></template></Column><Column :header="t('assets.accumulated')"><template #body="{ data: row }"><MoneyText :amount-minor="row.accumulated_minor" :currency="row.currency" /></template></Column><Column :header="t('assets.nbv')"><template #body="{ data: row }"><MoneyText :amount-minor="row.nbv_minor" :currency="row.currency" /></template></Column><Column :header="t('assets.actions')"><template #body="{ data: row }"><BsButton type="submit" class="ls-btn" @click="selectedId=row.id">{{ t('assets.review') }}</BsButton></template></Column></BsDataTable></section>
-        <section v-if="selected" class="ls-card p-5"><div class="flex flex-wrap items-start justify-between gap-3"><div><h2 class="text-h2 font-bold">{{ selected.code }} · {{ selected.name }}</h2><p>{{ t(`assets.methods.${selected.method}`) }} · {{ t('assets.lifeValue', { months: selected.life_months }) }} · {{ selected.in_service_date }}</p><NuxtLink class="text-link underline" :to="{ path: '/transactions', query: { q: selected.acquisition_transaction_id } }">{{ t('assets.acquisitionJournal') }}</NuxtLink></div><div class="flex flex-wrap gap-2"><template v-if="selected.status === 'active'"><BsButton type="submit" v-if="can('assets.adjust')" class="ls-btn" :disabled="readOnly" @click="begin('policy', selected)">{{ t('assets.changePolicy') }}</BsButton><BsButton type="submit" v-if="can('assets.adjust')" class="ls-btn" :disabled="readOnly" @click="begin('impair', selected)">{{ t('assets.impair') }}</BsButton><BsButton type="submit" v-if="can('assets.dispose')" class="ls-btn" :disabled="readOnly" @click="begin('dispose', selected)">{{ t('assets.dispose') }}</BsButton></template><BsButton type="submit" v-else-if="selected.status === 'corrected' && can('assets.register')" class="ls-btn ls-btn-primary" :disabled="readOnly || !data.acquisition_journals.length" @click="begin('register', selected)">{{ t('assets.registerReplacement') }}</BsButton></div></div></section>
-        <section v-if="selected" class="ls-card overflow-hidden"><h2 class="p-4 text-h2 font-bold">{{ t('assets.schedule') }}</h2><BsDataTable :value="schedule" data-key="id" :table-props="{ 'aria-label': t('assets.schedule') }"><template #empty>{{ t('assets.noSchedule') }}</template><Column field="period_start" :header="t('assets.periodStart')" /><Column field="period_end" :header="t('assets.periodEnd')" /><Column :header="t('assets.depreciation')"><template #body="{ data: row }"><MoneyText :amount-minor="row.amount_minor" :currency="selected.currency" /></template></Column><Column :header="t('assets.closingNbv')"><template #body="{ data: row }"><MoneyText :amount-minor="row.closing_nbv_minor" :currency="selected.currency" /></template></Column><Column :header="t('assets.statusLabel')"><template #body="{ data: row }">{{ t(`assets.scheduleStatus.${row.status}`) }}</template></Column><Column :header="t('assets.actions')"><template #body="{ data: row }"><BsButton type="submit" v-if="row.status === 'scheduled' && can('assets.depreciate')" class="ls-btn" :disabled="readOnly" @click="post(row)">{{ t('assets.post') }}</BsButton></template></Column></BsDataTable></section>
-        <section class="ls-card overflow-hidden"><div class="flex items-center justify-between p-4"><h2 class="text-h2 font-bold">{{ t('assets.reconciliation') }}</h2><span :data-assets-reconciled="balanced">{{ balanced ? t('assets.reconciled') : t('assets.variance') }}</span></div><BsDataTable :value="data.reconciliation" data-key="account_id" :table-props="{ 'aria-label': t('assets.reconciliation') }"><Column :header="t('assets.account')"><template #body="{ data: row }">{{ data.accounts.find(account => account.id === row.account_id)?.name }}</template></Column><Column :header="t('assets.registerBalance')"><template #body="{ data: row }"><MoneyText :amount-minor="row.register_minor" /></template></Column><Column :header="t('assets.glBalance')"><template #body="{ data: row }"><MoneyText :amount-minor="row.gl_minor" /></template></Column><Column :header="t('assets.variance')"><template #body="{ data: row }"><MoneyText :amount-minor="row.variance_minor" /></template></Column></BsDataTable></section>
-        <details v-if="selected" class="ls-card p-4"><summary class="cursor-pointer font-bold">{{ t('assets.history') }}</summary><ol class="mt-3 space-y-2"><li v-for="event in events" :key="event.id"><time>{{ event.date }}</time> · {{ t(`assets.events.${event.kind}`) }} · {{ event.reason }} <NuxtLink v-if="event.transaction_id" class="text-link underline" :to="{ path: '/transactions', query: { q: event.transaction_id } }">{{ t('assets.journal') }}</NuxtLink> <BsButton type="submit" v-if="event.kind !== 'reversal' && !reversedEventIds.has(event.id) && can('assets.reverse')" class="ls-btn ms-2" @click="begin('reverse', event)">{{ t('assets.reverse') }}</BsButton></li></ol></details>
-      </template>
-    </template>
-
-    <BsRecordActionDialog v-model:visible="visible" :title="t(`assets.dialogs.${form.mode}`)" :pending="saving" :dirty="dirty" :error="formError" size="lg" :submit-label="t('common.save')" :cancel-label="t('common.cancel')" :submit-disabled="readOnly" @submit="save">
-      <template v-if="form.mode === 'register'"><div class="grid gap-3 sm:grid-cols-2"><BsFloatingField :label="t('assets.code')"><input id="asset-code" v-model="form.code" class="ls-input" required></BsFloatingField><BsFloatingField :label="t('assets.name')"><input id="asset-name" v-model="form.name" class="ls-input" required></BsFloatingField></div><BsFloatingField :label="t('assets.acquisitionJournal')"><select id="asset-journal" v-model="form.journal" class="ls-input" required><option value="" /><option v-for="journal in data?.acquisition_journals" :key="journal.id" :value="journal.id">{{ journal.date }} · {{ journal.reference || journal.description }}</option></select></BsFloatingField><div class="grid gap-3 sm:grid-cols-2"><BsFloatingField :label="t('assets.acquisitionDate')"><input id="asset-acquisition-date" v-model="form.acquisitionDate" type="date" class="ls-input" required readonly></BsFloatingField><BsFloatingField :label="t('assets.serviceDate')"><input id="asset-service-date" v-model="form.serviceDate" type="date" class="ls-input" :min="form.acquisitionDate" required></BsFloatingField><BsFloatingField :label="t('assets.cost')"><input id="asset-cost" v-model="form.cost" inputmode="decimal" class="ls-input" required></BsFloatingField><BsFloatingField :label="t('assets.residual')"><input id="asset-residual" v-model="form.residual" inputmode="decimal" class="ls-input" required></BsFloatingField></div><BsFloatingField :label="t('assets.costAccount')"><select id="asset-cost-account" v-model="form.costAccount" class="ls-input" required><option value="" /><option v-for="account in costAccounts" :key="account.id" :value="account.id">{{ account.name }}</option></select></BsFloatingField><BsFloatingField :label="t('assets.accumulatedAccount')"><select id="asset-accumulated-account" v-model="form.accumulatedAccount" class="ls-input" required><option value="" /><option v-for="account in accumulatedAccounts" :key="account.id" :value="account.id">{{ account.name }}</option></select></BsFloatingField><BsFloatingField :label="t('assets.expenseAccount')"><select id="asset-expense-account" v-model="form.expenseAccount" class="ls-input" required><option value="" /><option v-for="account in expenseAccounts" :key="account.id" :value="account.id">{{ account.name }}</option></select></BsFloatingField><BsFloatingField :label="t('assets.impairmentAccount')"><select id="asset-impairment-account" v-model="form.impairmentAccount" class="ls-input" required><option value="" /><option v-for="account in expenseAccounts" :key="account.id" :value="account.id">{{ account.name }}</option></select></BsFloatingField><BsFloatingField :label="t('assets.gainLossAccount')"><select id="asset-gain-loss-account" v-model="form.gainLossAccount" class="ls-input" required><option value="" /><option v-for="account in gainLossAccounts" :key="account.id" :value="account.id">{{ account.name }}</option></select></BsFloatingField></template>
-      <template v-if="form.mode === 'register' || form.mode === 'policy'"><div class="grid gap-3 sm:grid-cols-2"><BsFloatingField :label="t('assets.life')"><input id="asset-life" v-model="form.life" type="number" min="1" max="1200" class="ls-input" required></BsFloatingField><BsFloatingField :label="t('assets.method')"><select id="asset-method" v-model="form.method" class="ls-input"><option value="straight_line">{{ t('assets.methods.straight_line') }}</option><option value="declining_balance">{{ t('assets.methods.declining_balance') }}</option></select></BsFloatingField><BsFloatingField v-if="form.method === 'declining_balance'" :label="t('assets.rate')"><input id="asset-rate" v-model="form.rate" type="number" min="0.01" max="100" step="0.01" class="ls-input" required></BsFloatingField><BsFloatingField v-if="form.mode === 'policy'" :label="t('assets.residual')"><input id="asset-policy-residual" v-model="form.residual" class="ls-input" required></BsFloatingField></div></template>
-      <template v-if="form.mode === 'dispose'"><BsFloatingField :label="t('assets.proceeds')"><input id="asset-proceeds" v-model="form.proceeds" class="ls-input" required></BsFloatingField><BsFloatingField :label="t('assets.proceedsAccount')"><select id="asset-proceeds-account" v-model="form.proceedsAccount" class="ls-input"><option value="" /><option v-for="account in proceedsAccounts" :key="account.id" :value="account.id">{{ account.name }}</option></select></BsFloatingField></template>
-      <BsFloatingField v-if="form.mode === 'impair'" :label="t('assets.impairmentAmount')"><input id="asset-impairment" v-model="form.cost" class="ls-input" required></BsFloatingField>
-      <template v-if="form.mode !== 'register'"><BsFloatingField :label="form.mode === 'policy' ? t('assets.effectiveDate') : t('assets.date')"><input id="asset-action-date" v-model="form.date" type="date" class="ls-input" required></BsFloatingField><BsFloatingField :label="t('assets.reason')"><input id="asset-reason" v-model="form.reason" class="ls-input" required></BsFloatingField></template>
-    </BsRecordActionDialog>
-  </div>
+  <BsAssetRegisterPage v-model:as-of-date="asOfDate" v-model:visible="visible" v-model:form="assetForm" :copy="assetCopy" :view="assetView" :choices="assetChoices" @reload="load" @begin="beginAsset" @select="selectAsset" @post="postAsset" @save="save" />
 </template>

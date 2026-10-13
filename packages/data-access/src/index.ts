@@ -8,3 +8,5 @@ export function scopedQueryKey(scope: DataScope, feature: string, parameters: un
 export interface QueryPage<T> { items: T[]; total: number; offset: number; limit: number }
 export interface PageRequest { offset: number; limit: number; search?: string; sort?: Array<{ field: string; direction: 'asc' | 'desc' }> }
 export interface QueryAdapter<T> { list(request: PageRequest, signal?: AbortSignal): Promise<QueryPage<T>> }
+
+export { createChangelogClient } from './changelog.ts'

@@ -57,6 +57,7 @@ defineSlots<{
 <style>
 .bs-auth-form {
   width: 100%;
+  min-width: 0;
   padding: var(--bs-space-6);
   border: 1px solid color-mix(in oklab, var(--bs-border) 88%, transparent);
   border-radius: 20px;
@@ -69,7 +70,7 @@ defineSlots<{
 .bs-auth-form__eyebrow { color: var(--bs-accent); font-size: 11px; font-weight: var(--bs-weight-bold); letter-spacing: .12em; }
 .bs-auth-form__title { margin-top: var(--bs-space-2); font-size: 1.25rem; font-weight: var(--bs-weight-extrabold); letter-spacing: -.03em; }
 .bs-auth-form__description { margin-top: var(--bs-space-2); color: var(--bs-text-muted); font-size: var(--bs-type-body-m-size); line-height: var(--bs-type-body-m-lh); }
-.bs-auth-form__body { display: grid; gap: var(--bs-space-5); }
+.bs-auth-form__body { display: grid; min-width: 0; grid-template-columns: minmax(0, 1fr); gap: var(--bs-space-5); }
 .bs-auth-form__actions { margin-top: var(--bs-space-6); }
 .bs-auth-form__footer { margin-top: var(--bs-space-5); color: var(--bs-text-muted); font-size: var(--bs-type-body-m-size); text-align: center; }
 @media (min-width: 640px) { .bs-auth-form { padding: var(--bs-space-8); } }

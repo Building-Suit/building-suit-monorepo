@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { BsDashboardCopy, BsDashboardFilters, BsDashboardSetupForm, BsDashboardView, BsDashboardTable, BsDashboardMetric, BsDashboardRow } from '@building-suit/ui/types/dashboardPresentation'
+
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import type { BusinessMode } from '~/utils/businessMode'
 import { BUSINESS_MODES } from '~/utils/businessMode'
@@ -111,7 +113,7 @@ const { data: subscription, error: subscriptionError, refresh: refreshSubscripti
   }, { watch: [currentId], default: () => null },
 )
 
-const { data: reportAccess, error: reportAccessError, pending: reportAccessPending, refresh: refreshReportAccess } = useAsyncData(
+const { data: reportAccess, error: reportAccessError, pending: reportAccessPending, refresh: refreshReportAccess } = await useAsyncData(
   'shop-data:dashboard-report-access', async () => {
     if (!currentId.value) return { 'reports.view': false, 'reports.cost_profit.view': false }
     const { data, error } = await shopRpc.rpc('shop_permission_access', {
@@ -246,108 +248,49 @@ async function createShop() {
     await reload()
     if (!currentId.value) throw new Error(copy.value.noShopAfterCreate)
     await Promise.all([refreshSubscription(), refreshReport()])
+    setupAction.complete()
   } catch (error) {
     setupError.value = setupErrorText(error instanceof Error ? error.message : undefined)
   } finally {
     setupPending.value = false
   }
 }
+const setupGuide = reactive(useShopSetupGuide())
+
+const setupAction = useRecordAction(() => ({ name: setupName.value, mode: setupMode.value }))
+const { visible: setupActionOpen, dirty: setupActionDirty } = setupAction
+const ui = useUiCopy()
+
+const dashboardSetupForm = computed<BsDashboardSetupForm>({ get: () => ({ name: setupName.value, mode: setupMode.value }), set: value => { setupName.value = value.name; if (BUSINESS_MODES.includes(value.mode as BusinessMode)) setupMode.value = value.mode as BusinessMode } })
+const dashboardFilters = computed<BsDashboardFilters>({ get: () => ({ period: reportPeriod.value, date: reportAnchor.value, location: reportLocationId.value, months: 6, custom: false, from: '', to: '' }), set: value => { if (periodOptions.includes(value.period as ReportPeriod)) reportPeriod.value = value.period as ReportPeriod; reportAnchor.value = value.date; if (value.location === 'all' || activeLocations.value.some(location => location.id === value.location)) reportLocationId.value = value.location } })
+const dashboardLocations = computed(() => [{ value: 'all', label: copy.value.allLocations }, ...activeLocations.value.map(location => ({ value: location.id, label: location.name }))])
+const dashboardPeriods = computed(() => periodOptions.map(value => ({ value, label: copy.value[value] })))
+const dashboardCopy = computed<BsDashboardCopy>(() => ({ retry: copy.value.retry, cancel: ui('cancel'), create: copy.value.createShop, name: copy.value.shopName, mode: copy.value.businessMode, plan: copy.value.planStatus, filters: isArabic.value ? 'مرشحات التقارير' : 'Report filters', location: copy.value.location, date: copy.value.reportDate, range: copy.value.date, custom: '', from: '', to: '', source: copy.value.openSource, manage: '', start: '' }))
+const dashboardView = computed<BsDashboardView>(() => {
+ const value = report.value
+ const source = (path: string) => value?.locationId ? { location: value.locationId, path } : null
+ const metric = (id: string, title: string, value: string, hint = '', to = '', intent: { location: string; path: string } | null = null): BsDashboardMetric => ({ id, title, value, hint, to, source: intent, changeLabel: '', tone: 'neutral' })
+ const row = (id: string, name: string, cells: Record<string, string>, to = '', intent: { location: string; path: string } | null = null): BsDashboardRow => ({ id, name, cells, to, source: intent, status: '' })
+ const table = (title: string, empty: string, rows: BsDashboardRow[], columns: BsDashboardTable['columns']): BsDashboardTable => ({ title, empty, rows, columns, loading: false, error: '', to: '', action: false })
+ return {
+  title: copy.value.title, subtitle: copy.value.subtitle, workspace: current.value?.name || '', role: isOwner.value ? copy.value.owner : copy.value.employee, notice: modeDisabledNotice.value ? copy.value.modeDisabled : '', available: Boolean(current.value), loading: reportAccessPending.value || reportPending.value, error: reportAccessError.value || reportError.value || highlightsError.value ? copy.value.loadFailed : '', denied: !reportAccessPending.value && !canViewReports.value ? copy.value.reportDenied : '', empty: '', emptyDescription: '', canStart: false, errorDescription: '',
+  checklist: { visible: Boolean(isOwner.value && current.value?.business_mode !== 'product'), title: setupGuide.copy.title, description: setupGuide.copy.help, progress: setupGuide.copy.help, steps: setupGuide.steps, loading: false, error: null, empty: copy.value.noData },
+  setup: { title: copy.value.setupTitle, description: copy.value.setupBody, trial: copy.value.fullTrial, modeHelp: copy.value.businessModeHelp, dirty: setupActionDirty.value, pending: setupPending.value, error: setupError.value },
+  plan: { visible: isOwner.value, error: subscriptionError.value ? copy.value.loadFailed : '', name: currentPlan.value?.name || (subscription.value?.status === 'trialing' ? copy.value.fullTrial : copy.value.plan), status: subscription.value?.status || '', dateLabel: subscription.value?.trial_end_at ? copy.value.trialEnds : copy.value.periodEnds, date: formatDate(subscription.value?.trial_end_at || subscription.value?.current_period_end) },
+  periodFilter: true, metricsLoading: false, metricsError: '', metricsTitle: '', metrics: value ? [metric('sales', copy.value.sales, money(value.sales), `${value.saleCount} ${copy.value.salesCount}`, '', source('/sales')), metric('collections', copy.value.collections, money(value.paymentsIn), `${copy.value.averageTicket}: ${money(value.averageTicket)}`), ...(value.canViewCosts ? [metric('expenses', copy.value.expenses, money(value.expenses.amount), `${value.expenses.count} ${copy.value.openSource}`, '/expenses'), metric('balance', copy.value.operatingBalance, money(value.expenses.operatingBalance), copy.value.accountingNotice)] : [])] : [],
+  highlightsLoading: highlightsPending.value, highlights: reportHighlights.value ? [metric('payable', copy.value.supplierPayable, money(reportHighlights.value.payable), '', '/reports?report=suppliers'), metric('stock', copy.value.lowStock, String(reportHighlights.value.lowStockCount), '', '/reports?report=inventory'), metric('inventory', copy.value.inventoryValue, money(reportHighlights.value.inventoryValue), '', '/reports?report=inventory'), metric('margin', copy.value.fifoMargin, money(reportHighlights.value.margin), '', '/reports?report=margin')] : [],
+  reportLink: { visible: canViewReports.value, title: copy.value.fullReports, description: copy.value.fullReportsBody, to: '/reports' }, chart: { visible: false, loading: false, error: '', title: '', pointLabel: '', tableLabel: '', empty: '', points: [], series: [], tableSeries: [] }, cashPosition: null, commitments: null, recent: null,
+  salesMix: { visible: Boolean(value), title: copy.value.salesMix, empty: copy.value.noData, rows: (value?.salesMix || []).map(item => ({ id: item.type, name: copy.value[item.type], hint: `${copy.value.quantity}: ${whole(item.quantity)}`, amount: money(item.amount) })) },
+  paymentMix: { visible: Boolean(value), title: copy.value.paymentMix, empty: copy.value.noData, rows: (value?.paymentMix || []).map(item => ({ id: item.method, name: methodLabel(item.method), hint: `${copy.value.collected} ${money(item.collected)} · ${copy.value.refunded} ${money(item.refunded)}`, amount: money(item.net) })) },
+  appointments: { visible: Boolean(value), title: copy.value.appointments, empty: copy.value.noAppointments, source: source('/appointments'), metrics: value?.appointments.total ? [{ title: copy.value.appointments, value: String(value.appointments.total) }, { title: copy.value.completed, value: String(value.appointments.completed) }, { title: copy.value.cancelled, value: String(value.appointments.cancelled) }, { title: copy.value.noShow, value: String(value.appointments.noShow) }] : [], busiestTitle: copy.value.busiestTimes, busiest: (value?.appointments.busiestTimes || []).map(time => ({ id: String(time.hour), label: `${hourLabel(time.hour)} · ${time.count}` })) },
+  cash: { visible: Boolean(value), title: copy.value.cashVariance, source: source('/cash-shifts'), metrics: value ? [{ title: copy.value.closedShifts, value: String(value.cash.closedShifts) }, { title: copy.value.cashVariance, value: money(value.cash.variance) }, { title: copy.value.expected, value: money(value.cash.expected) }, { title: copy.value.counted, value: money(value.cash.counted) }] : [] },
+  customers: value ? table(`${copy.value.outstanding} · ${money(value.outstanding.amount)}`, copy.value.noOutstanding, value.outstanding.customers.map(customer => row(customer.customerId, customer.name, { amount: money(customer.amount) }, `/customers/${customer.customerId}`)), [{ key: 'name', header: copy.value.customer }, { key: 'amount', header: copy.value.amount, align: 'end' }]) : null,
+  staff: value ? table(copy.value.staffPerformance, copy.value.noData, value.staff.map(member => row(member.membershipId, member.name, { sales: money(member.sales), saleCount: String(member.saleCount), serviceCount: whole(member.serviceCount) })), [{ key: 'name', header: copy.value.staffMember }, { key: 'sales', header: copy.value.sales, align: 'end' }, { key: 'saleCount', header: copy.value.salesCount, align: 'end' }, { key: 'serviceCount', header: copy.value.serviceCount, align: 'end' }]) : null,
+  locations: value ? table(copy.value.branchComparison, copy.value.noData, value.locations.map(branch => row(branch.locationId, branch.name, { sales: money(branch.sales), collections: money(branch.collections), expenses: money(branch.expenses), variance: money(branch.cashVariance) }, '', { location: branch.locationId, path: '/sales' })), [{ key: 'name', header: copy.value.location }, { key: 'sales', header: copy.value.sales, align: 'end' }, { key: 'collections', header: copy.value.collections, align: 'end' }, { key: 'expenses', header: copy.value.expenses, hidden: !value.canViewCosts, align: 'end' }, { key: 'variance', header: copy.value.cashVariance, align: 'end' }]) : null,
+ }
+})
+function retryDashboard() { return Promise.all([refreshReportAccess(), refreshReport(), refreshHighlights()]) }
 </script>
-
 <template>
-  <div class="space-y-8">
-    <p v-if="modeDisabledNotice" role="status" class="rounded-xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-4 text-sm text-[var(--bs-status-warning)]">{{ copy.modeDisabled }}</p>
-    <section v-if="!current" class="mx-auto max-w-3xl pt-6 lg:pt-12">
-      <div class="overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
-        <div class="border-b border-border bg-[var(--bs-deep-structure-navy)] p-6 text-white sm:p-8">
-          <div class="mb-5 grid size-12 place-items-center rounded-2xl border border-[var(--bs-accent)]/30 bg-[var(--bs-primary)]"><BsIcon name="store" class="size-6 text-[var(--bs-highlight-gold)]" /></div>
-          <h1 class="text-2xl font-extrabold sm:text-3xl">{{ copy.setupTitle }}</h1>
-          <p class="mt-2 max-w-xl text-sm leading-6 text-white/60">{{ copy.setupBody }}</p>
-        </div>
-        <BsForm class="space-y-6 p-6 sm:p-8" :pending="setupPending" :error="setupError" @submit="createShop">
-          <div class="space-y-2"><label for="shop-name" class="text-sm font-bold">{{ copy.shopName }}</label><input id="shop-name" v-model="setupName" type="text" minlength="2" maxlength="120" required class="ls-input"></div>
-          <fieldset class="space-y-3">
-            <legend class="text-sm font-bold">{{ copy.businessMode }}</legend>
-            <p class="text-sm text-muted-foreground">{{ copy.businessModeHelp }}</p>
-            <div class="grid gap-3 sm:grid-cols-3">
-              <label v-for="mode in modeOptions" :key="mode.value" class="cursor-pointer rounded-2xl border p-4" :class="setupMode === mode.value ? 'border-[var(--bs-accent)] ring-2 ring-[var(--bs-accent)]/15' : 'border-border'">
-                <input v-model="setupMode" type="radio" name="business-mode" :value="mode.value" class="me-2">
-                <span class="font-extrabold">{{ mode.label }}</span>
-                <span class="mt-2 block text-xs leading-5 text-muted-foreground">{{ mode.body }}</span>
-              </label>
-            </div>
-          </fieldset>
-          <div class="rounded-2xl border border-border bg-muted/40 p-4"><p class="font-extrabold">{{ copy.fullTrial }}</p><p class="mt-1 text-sm text-muted-foreground">{{ copy.setupBody }}</p></div>
-          <BsButton type="submit" variant="primary" class="w-full" :pending="setupPending">{{ setupPending ? copy.creating : copy.createShop }}</BsButton>
-        </BsForm>
-      </div>
-    </section>
-
-    <template v-else>
-      <header class="flex flex-wrap items-end justify-between gap-4">
-        <div><p class="mb-1 text-xs font-bold uppercase tracking-[0.16em] text-[var(--bs-link)]">{{ current.name }}</p><h1 class="text-3xl font-extrabold tracking-tight">{{ copy.title }}</h1><p class="mt-2 text-sm text-muted-foreground">{{ copy.subtitle }}</p></div>
-        <span class="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-bold">{{ isOwner ? copy.owner : copy.employee }}</span>
-      </header>
-
-      <BarberSetupGuide />
-
-      <section v-if="isOwner" class="ls-card p-4 sm:p-5">
-        <div class="flex flex-wrap items-center gap-x-8 gap-y-2 text-sm">
-          <h2 class="font-extrabold">{{ copy.planStatus }}</h2>
-          <p v-if="subscriptionError" role="alert" class="text-[var(--bs-status-error)]">{{ copy.loadFailed }} <BsButton variant="link" type="button" class="underline" @click="refreshSubscription()">{{ copy.retry }}</BsButton></p>
-          <template v-else-if="subscription"><p><span class="text-muted-foreground">{{ currentPlan?.name || (subscription.status === 'trialing' ? copy.fullTrial : copy.plan) }}:</span> <strong>{{ subscription.status }}</strong></p><p v-if="subscription.trial_end_at"><span class="text-muted-foreground">{{ copy.trialEnds }}:</span> {{ formatDate(subscription.trial_end_at) }}</p><p v-else-if="subscription.current_period_end"><span class="text-muted-foreground">{{ copy.periodEnds }}:</span> {{ formatDate(subscription.current_period_end) }}</p></template>
-        </div>
-      </section>
-
-      <section class="ls-card p-4 sm:p-5" :aria-label="isArabic ? 'مرشحات التقارير' : 'Report filters'">
-        <div class="grid gap-4 sm:grid-cols-3">
-          <label class="text-xs font-bold text-muted-foreground">{{ copy.location }}
-            <select v-model="reportLocationId" class="ls-select mt-1 w-full"><option value="all">{{ copy.allLocations }}</option><option v-for="location in activeLocations" :key="location.id" :value="location.id">{{ location.name }}</option></select>
-          </label>
-          <label class="text-xs font-bold text-muted-foreground">{{ copy.reportDate }}<input v-model="reportAnchor" type="date" class="ls-input mt-1 w-full"></label>
-          <fieldset><legend class="text-xs font-bold text-muted-foreground">{{ copy.date }}</legend><div class="mt-1 grid grid-cols-3 gap-1 rounded-xl bg-muted p-1"><BsButton variant="chip" v-for="value in periodOptions" :key="value" type="button" class="min-h-11 rounded-lg px-2 text-sm font-bold" :aria-pressed="reportPeriod === value" @click="reportPeriod = value">{{ copy[value] }}</BsButton></div></fieldset>
-        </div>
-      </section>
-
-      <NuxtLink v-if="canViewReports" to="/reports" class="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[var(--bs-accent)]/40 bg-[var(--bs-accent)]/5 p-5 transition hover:border-[var(--bs-accent)]">
-        <span><strong class="block">{{ copy.fullReports }}</strong><span class="mt-1 block text-sm text-muted-foreground">{{ copy.fullReportsBody }}</span></span><span class="font-bold text-[var(--bs-link)]">{{ copy.openSource }}</span>
-      </NuxtLink>
-
-      <p v-if="reportAccessError || reportError || highlightsError" role="alert" class="rounded-xl border border-[var(--bs-status-error)]/30 bg-[var(--bs-status-error-bg)] p-4 text-sm text-[var(--bs-status-error)]">{{ copy.loadFailed }} <BsButton variant="link" type="button" class="min-h-11 min-w-11 underline" @click="refreshReportAccess(); refreshReport(); refreshHighlights()">{{ copy.retry }}</BsButton></p>
-      <p v-else-if="reportAccessPending" role="status">{{ copy.loadingReport }}</p>
-      <p v-else-if="!canViewReports" role="status" class="ls-card-flat p-6 text-sm text-muted-foreground">{{ copy.reportDenied }}</p>
-      <div v-else-if="reportPending" class="space-y-4" aria-live="polite"><p class="text-sm text-muted-foreground">{{ copy.loadingReport }}</p><div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><div v-for="index in 8" :key="index" class="h-28 animate-pulse rounded-2xl bg-muted" /></div></div>
-
-      <template v-else-if="report">
-        <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <BsButton variant="tile" v-if="report.locationId" type="button" class="p-5" @click="openLocationSource(report.locationId, '/sales')"><p class="text-sm text-muted-foreground">{{ copy.sales }}</p><p class="mt-2 text-2xl font-extrabold">{{ money(report.sales) }}</p><p class="mt-1 text-xs text-[var(--bs-link)]">{{ report.saleCount }} {{ copy.salesCount }}</p></BsButton>
-          <article v-else class="ls-card p-5"><p class="text-sm text-muted-foreground">{{ copy.sales }}</p><p class="mt-2 text-2xl font-extrabold">{{ money(report.sales) }}</p><p class="mt-1 text-xs text-muted-foreground">{{ report.saleCount }} {{ copy.salesCount }}</p></article>
-          <article class="ls-card p-5"><p class="text-sm text-muted-foreground">{{ copy.collections }}</p><p class="mt-2 text-2xl font-extrabold">{{ money(report.paymentsIn) }}</p><p class="mt-1 text-xs text-muted-foreground">{{ copy.averageTicket }}: {{ money(report.averageTicket) }}</p></article>
-          <NuxtLink v-if="report.canViewCosts" to="/expenses" class="ls-card p-5 transition hover:border-[var(--bs-accent)]"><p class="text-sm text-muted-foreground">{{ copy.expenses }}</p><p class="mt-2 text-2xl font-extrabold">{{ money(report.expenses.amount) }}</p><p class="mt-1 text-xs text-[var(--bs-link)]">{{ report.expenses.count }} {{ copy.openSource }}</p></NuxtLink>
-          <article v-if="report.canViewCosts" class="ls-card p-5"><p class="text-sm text-muted-foreground">{{ copy.operatingBalance }}</p><p class="mt-2 text-2xl font-extrabold">{{ money(report.expenses.operatingBalance) }}</p><p class="mt-1 text-xs leading-5 text-muted-foreground">{{ copy.accountingNotice }}</p></article>
-        </section>
-
-        <section v-if="reportHighlights || highlightsPending" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <template v-if="reportHighlights"><NuxtLink to="/reports?report=suppliers" class="ls-card p-5"><p class="text-sm text-muted-foreground">{{ copy.supplierPayable }}</p><p class="mt-2 text-2xl font-extrabold">{{ money(reportHighlights.payable) }}</p></NuxtLink><NuxtLink to="/reports?report=inventory" class="ls-card p-5"><p class="text-sm text-muted-foreground">{{ copy.lowStock }}</p><p class="mt-2 text-2xl font-extrabold">{{ reportHighlights.lowStockCount }}</p></NuxtLink><NuxtLink to="/reports?report=inventory" class="ls-card p-5"><p class="text-sm text-muted-foreground">{{ copy.inventoryValue }}</p><p class="mt-2 text-2xl font-extrabold">{{ money(reportHighlights.inventoryValue) }}</p></NuxtLink><NuxtLink to="/reports?report=margin" class="ls-card p-5"><p class="text-sm text-muted-foreground">{{ copy.fifoMargin }}</p><p class="mt-2 text-2xl font-extrabold">{{ money(reportHighlights.margin) }}</p></NuxtLink></template>
-          <template v-else><div v-for="index in 4" :key="index" class="h-28 animate-pulse rounded-2xl bg-muted" /></template>
-        </section>
-
-        <section class="grid gap-4 lg:grid-cols-2">
-          <article class="ls-card p-5"><h2 class="font-extrabold">{{ copy.salesMix }}</h2><div v-if="report.salesMix.length" class="mt-4 space-y-3"><div v-for="item in report.salesMix" :key="item.type" class="flex items-center justify-between gap-4 rounded-xl bg-muted/60 p-3"><div><p class="font-bold">{{ copy[item.type] }}</p><p class="text-xs text-muted-foreground">{{ copy.quantity }}: {{ whole(item.quantity) }}</p></div><strong>{{ money(item.amount) }}</strong></div></div><p v-else class="mt-4 text-sm text-muted-foreground">{{ copy.noData }}</p></article>
-          <article class="ls-card p-5"><h2 class="font-extrabold">{{ copy.paymentMix }}</h2><div v-if="report.paymentMix.length" class="mt-4 space-y-3"><div v-for="item in report.paymentMix" :key="item.method" class="rounded-xl bg-muted/60 p-3"><div class="flex justify-between gap-4"><strong>{{ methodLabel(item.method) }}</strong><strong>{{ money(item.net) }}</strong></div><p class="mt-1 text-xs text-muted-foreground">{{ copy.collected }} {{ money(item.collected) }} · {{ copy.refunded }} {{ money(item.refunded) }}</p></div></div><p v-else class="mt-4 text-sm text-muted-foreground">{{ copy.noData }}</p></article>
-        </section>
-
-        <section class="grid gap-4 lg:grid-cols-2">
-          <article class="ls-card p-5"><div class="flex items-center justify-between gap-3"><h2 class="font-extrabold">{{ copy.appointments }}</h2><BsButton variant="link" v-if="report.locationId" type="button" class="text-sm font-bold text-[var(--bs-link)]" @click="openLocationSource(report.locationId, '/appointments')">{{ copy.openSource }}</BsButton></div><div v-if="report.appointments.total" class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4"><div class="rounded-xl bg-muted p-3"><p class="text-xs text-muted-foreground">{{ copy.appointments }}</p><strong class="text-xl">{{ report.appointments.total }}</strong></div><div class="rounded-xl bg-muted p-3"><p class="text-xs text-muted-foreground">{{ copy.completed }}</p><strong class="text-xl">{{ report.appointments.completed }}</strong></div><div class="rounded-xl bg-muted p-3"><p class="text-xs text-muted-foreground">{{ copy.cancelled }}</p><strong class="text-xl">{{ report.appointments.cancelled }}</strong></div><div class="rounded-xl bg-muted p-3"><p class="text-xs text-muted-foreground">{{ copy.noShow }}</p><strong class="text-xl">{{ report.appointments.noShow }}</strong></div></div><p v-else class="mt-4 text-sm text-muted-foreground">{{ copy.noAppointments }}</p><div v-if="report.appointments.busiestTimes.length" class="mt-4"><p class="text-xs font-bold text-muted-foreground">{{ copy.busiestTimes }}</p><div class="mt-2 flex flex-wrap gap-2"><span v-for="time in report.appointments.busiestTimes" :key="time.hour" class="rounded-full border border-border px-3 py-1 text-sm">{{ hourLabel(time.hour) }} · {{ time.count }}</span></div></div></article>
-          <article class="ls-card p-5"><div class="flex items-center justify-between gap-3"><h2 class="font-extrabold">{{ copy.cashVariance }}</h2><BsButton variant="link" v-if="report.locationId" type="button" class="text-sm font-bold text-[var(--bs-link)]" @click="openLocationSource(report.locationId, '/cash-shifts')">{{ copy.openSource }}</BsButton></div><div class="mt-4 grid grid-cols-2 gap-3"><div class="rounded-xl bg-muted p-3"><p class="text-xs text-muted-foreground">{{ copy.closedShifts }}</p><strong class="text-xl">{{ report.cash.closedShifts }}</strong></div><div class="rounded-xl bg-muted p-3"><p class="text-xs text-muted-foreground">{{ copy.cashVariance }}</p><strong class="text-xl" :class="Number(report.cash.variance) ? 'text-[var(--bs-status-warning)]' : ''">{{ money(report.cash.variance) }}</strong></div><div class="rounded-xl bg-muted p-3"><p class="text-xs text-muted-foreground">{{ copy.expected }}</p><strong>{{ money(report.cash.expected) }}</strong></div><div class="rounded-xl bg-muted p-3"><p class="text-xs text-muted-foreground">{{ copy.counted }}</p><strong>{{ money(report.cash.counted) }}</strong></div></div></article>
-        </section>
-
-        <section class="overflow-hidden ls-card"><div class="border-b border-border px-5 py-4"><h2 class="font-extrabold">{{ copy.outstanding }} · {{ money(report.outstanding.amount) }}</h2></div><div v-if="report.outstanding.customers.length" class="overflow-x-auto"><BsDataTable :value="report.outstanding.customers" data-key="customerId"><Column header-class="px-5 py-3 text-start" body-class="px-5 py-4 font-semibold"><template #header>{{ copy.customer }}</template><template #body="{ data: customer }"><NuxtLink :to="`/customers/${customer.customerId}`" class="text-[var(--bs-link)] hover:underline">{{ customer.name }}</NuxtLink></template></Column><Column header-class="px-5 py-3 text-end" body-class="px-5 py-4 text-end font-bold"><template #header>{{ copy.amount }}</template><template #body="{ data: customer }">{{ money(customer.amount) }}</template></Column></BsDataTable></div><p v-else class="p-6 text-sm text-muted-foreground">{{ copy.noOutstanding }}</p></section>
-
-        <section class="overflow-hidden ls-card"><div class="border-b border-border px-5 py-4"><h2 class="font-extrabold">{{ copy.staffPerformance }}</h2></div><div v-if="report.staff.length" class="overflow-x-auto"><BsDataTable :value="report.staff" data-key="membershipId"><Column header-class="px-5 py-3 text-start" body-class="px-5 py-4 font-semibold"><template #header>{{ copy.staffMember }}</template><template #body="{ data: member }">{{ member.name }}</template></Column><Column header-class="px-5 py-3 text-end" body-class="px-5 py-4 text-end"><template #header>{{ copy.sales }}</template><template #body="{ data: member }">{{ money(member.sales) }}</template></Column><Column header-class="px-5 py-3 text-end" body-class="px-5 py-4 text-end"><template #header>{{ copy.salesCount }}</template><template #body="{ data: member }">{{ member.saleCount }}</template></Column><Column header-class="px-5 py-3 text-end" body-class="px-5 py-4 text-end"><template #header>{{ copy.serviceCount }}</template><template #body="{ data: member }">{{ whole(member.serviceCount) }}</template></Column></BsDataTable></div><p v-else class="p-6 text-sm text-muted-foreground">{{ copy.noData }}</p></section>
-
-        <section class="overflow-hidden ls-card"><div class="border-b border-border px-5 py-4"><h2 class="font-extrabold">{{ copy.branchComparison }}</h2></div><div class="overflow-x-auto"><BsDataTable :value="report.locations" data-key="locationId"><Column header-class="px-5 py-3 text-start" body-class="px-5 py-4 font-semibold"><template #header>{{ copy.location }}</template><template #body="{ data: branch }"><BsButton variant="link" type="button" class="text-[var(--bs-link)] hover:underline" @click="openLocationSource(branch.locationId, '/sales')">{{ branch.name }}</BsButton></template></Column><Column header-class="px-5 py-3 text-end" body-class="px-5 py-4 text-end"><template #header>{{ copy.sales }}</template><template #body="{ data: branch }">{{ money(branch.sales) }}</template></Column><Column header-class="px-5 py-3 text-end" body-class="px-5 py-4 text-end"><template #header>{{ copy.collections }}</template><template #body="{ data: branch }">{{ money(branch.collections) }}</template></Column><Column v-if="report.canViewCosts" header-class="px-5 py-3 text-end" body-class="px-5 py-4 text-end"><template #header>{{ copy.expenses }}</template><template #body="{ data: branch }">{{ money(branch.expenses) }}</template></Column><Column header-class="px-5 py-3 text-end" body-class="px-5 py-4 text-end"><template #header>{{ copy.cashVariance }}</template><template #body="{ data: branch }">{{ money(branch.cashVariance) }}</template></Column></BsDataTable></div></section>
-      </template>
-    </template>
-  </div>
+  <BsDashboardPage v-model:filters="dashboardFilters" v-model:setup-form="dashboardSetupForm" v-model:setup-open="setupActionOpen" :copy="dashboardCopy" :view="dashboardView" :locations="dashboardLocations" :periods="dashboardPeriods" :month-options="[]" :modes="modeOptions" :constraints="{ nameMinimum: 2, nameMaximum: 120 }" @retry="retryDashboard" @retry-plan="refreshSubscription()" @source="openLocationSource" @setup="setupAction.edit()" @create="createShop"/>
 </template>

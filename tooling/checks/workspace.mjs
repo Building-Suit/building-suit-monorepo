@@ -1,15 +1,19 @@
 import { readdir, readFile } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import path from 'node:path'
+import ts from 'typescript'
 import { validateSuitTemplateBoundaries } from './suit-template-boundaries.mjs'
+import { validateAtomicTemplateArchitecture } from './atomic-template-architecture.mjs'
 
 const root = new URL('../../', import.meta.url).pathname
 const failures = []
 const atomicLayers = ['atoms', 'molecules', 'organisms', 'templates']
 const ownershipManifestPath = 'docs/shared/ui-ownership-manifest.json'
 
-const suitBoundary = await validateSuitTemplateBoundaries({ root })
+const suitBoundary = await validateSuitTemplateBoundaries({ root, requireStrict: true })
 failures.push(...suitBoundary.failures)
+const atomicArchitecture = await validateAtomicTemplateArchitecture({ root })
+failures.push(...atomicArchitecture.failures)
 
 async function exists(relative) {
   try { await readFile(path.join(root, relative)); return true }
@@ -156,7 +160,17 @@ const uiExports = uiPackage.exports || {}
 if (Object.keys(uiExports).some(key => key.includes('*')) || Object.values(uiExports).some(target => typeof target !== 'string' || target.includes('*'))) {
   failures.push('packages/ui/package.json: shared UI exports must be explicit')
 }
-const expectedUiTargets = [...uiFiles, 'packages/ui/src/styles/base.css'].map(file => `./${file.slice('packages/ui/'.length)}`).sort()
+const uiTypeFiles = (await walk('packages/ui/src/types')).filter(file => file.endsWith('.ts'))
+for (const file of uiTypeFiles) {
+  const source = ts.createSourceFile(file, await readFile(path.join(root, file), 'utf8'), ts.ScriptTarget.Latest, true)
+  for (const statement of source.statements) {
+    const allowed = ts.isInterfaceDeclaration(statement) || ts.isTypeAliasDeclaration(statement) || (ts.isImportDeclaration(statement) && statement.importClause?.isTypeOnly)
+    if (!allowed) failures.push(`${file}: presentation contracts must contain only type declarations and type-only imports`)
+  }
+}
+// Detached document renderers are presentation sources, governed by the same strict UI boundary.
+const uiPresentationFiles = (await walk('packages/ui/src/utils')).filter(file => file.endsWith('.ts'))
+const expectedUiTargets = [...uiFiles, ...uiTypeFiles, ...uiPresentationFiles, 'packages/ui/src/styles/base.css'].map(file => `./${file.slice('packages/ui/'.length)}`).sort()
 const actualUiTargets = Object.values(uiExports).sort()
 for (const target of expectedUiTargets) if (!actualUiTargets.includes(target)) failures.push(`packages/ui/package.json: missing explicit export for ${target}`)
 for (const target of actualUiTargets) if (!expectedUiTargets.includes(target)) failures.push(`packages/ui/package.json: export target is not a governed UI source ${target}`)
@@ -168,13 +182,13 @@ const scaffoldSources = {
   layout: await readFile(path.join(root, 'tooling/new-platform/templates/app/layouts/default.vue.template'), 'utf8'),
   page: await readFile(path.join(root, 'tooling/new-platform/templates/app/pages/index.vue.template'), 'utf8'),
 }
-for (const component of ['BsAppShell', 'BsProductLogo', 'BsSettingsMenu', 'BsSlot']) {
+for (const component of ['BsWorkspaceShell']) {
   if (!new RegExp(`<${component}\\b`).test(scaffoldSources.layout)) failures.push(`tooling/new-platform: default layout must compose ${component}`)
 }
-for (const component of ['BsAppRouter', 'BsToastHost', 'BsConfirmHost']) {
+for (const component of ['BsAppRoot']) {
   if (!new RegExp(`<${component}\\b`).test(scaffoldSources.app)) failures.push(`tooling/new-platform: app root must compose ${component}`)
 }
-if (!/<BsContentSection\b/.test(scaffoldSources.page)) failures.push('tooling/new-platform: starter page must use shared page composition')
+if (!/<BsStarterWorkflowPage\b/.test(scaffoldSources.page)) failures.push('tooling/new-platform: starter page must use its complete shared page template')
 if (/\bls-(?:card|btn|input|select)\b|<(?:button|form|section)\b[^>]*class=/.test(scaffoldSources.page)) {
   failures.push('tooling/new-platform: starter page recreates shared presentation')
 }
@@ -197,4 +211,4 @@ for (const directory of ['apps', 'packages']) for (const entry of await readdir(
 }
 
 if (failures.length) { console.error(failures.join('\n')); process.exitCode = 1 }
-else console.log(`Workspace boundaries pass for ${appDirectories.length} dynamically discovered Suits and ${localComponents.length} classified local components; ${migrations} historical migrations unchanged.`)
+else console.log(`Workspace boundaries pass for ${appDirectories.length} dynamically discovered Suits and ${localComponents.length} classified local components; ${migrations} historical migrations unchanged; ${atomicArchitecture.routes} full route templates with zero migration debt.`)

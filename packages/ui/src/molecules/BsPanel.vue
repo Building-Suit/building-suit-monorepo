@@ -4,4 +4,4 @@ withDefaults(defineProps<{ as?: 'section' | 'aside' | 'div'; tone?: 'default' | 
 })
 </script>
 
-<template><component :is="as" class="bs-panel" :class="[`bs-panel--${tone}`, `bs-panel--padding-${padding}`]" :aria-labelledby="labelledby"><slot /></component></template>
+<template><component :is="as" class="ls-card bs-panel" :class="[`bs-panel--${tone}`, `bs-panel--padding-${padding}`]" :aria-labelledby="labelledby"><slot /></component></template>

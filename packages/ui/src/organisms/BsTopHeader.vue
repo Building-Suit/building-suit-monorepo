@@ -15,7 +15,7 @@ defineExpose({ focusNavigationTrigger })
 </script>
 
 <template>
-  <header ref="header" class="sticky top-0 z-20 flex min-h-16 min-w-0 items-center gap-2 border-b border-[var(--bs-border)] bg-surface/90 px-3 py-2 backdrop-blur sm:gap-3 sm:px-4 lg:top-4 lg:rounded-card lg:border lg:px-6 lg:shadow-card">
+  <header ref="header" class="sticky top-0 z-20 flex h-16 min-w-0 items-center gap-2 border-b border-[var(--bs-border)] bg-surface/90 px-3 py-2 backdrop-blur sm:gap-3 sm:px-4 lg:top-4 lg:rounded-card lg:border lg:px-6 lg:shadow-card">
     <BsButton
       data-navigation-trigger
       variant="icon"

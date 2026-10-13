@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { BsSignupForm, BsSignupFeatures, BsSignupView, BsSignupCopy, BsSignupVerificationCopy, BsSignupProduct, BsSignupChoices, BsSignupLinks } from '@building-suit/ui/types/signupPresentation'
+
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import type { BusinessMode } from '~/utils/businessMode'
 import { BUSINESS_MODES } from '~/utils/businessMode'
@@ -212,58 +214,25 @@ onMounted(async () => {
   await loadShops({ force: true })
   if (currentId.value) await navigateTo('/dashboard')
 })
+
+const signupConsent = ref(false)
+const signupFeatures: BsSignupFeatures = { phone: false, jobTitle: false, organizationDetails: false, mainLocation: true, businessMode: true, passwordMinLength: 6, workspaceMinLength: 2, workspaceMaxLength: 120, locationMinLength: 2, locationMaxLength: 120, locationCodeMaxLength: 32, locationAddressMaxLength: 500, locationPhoneMaxLength: 80 }
+const signupProduct: BsSignupProduct = { framed: false, name: 'Shop Suit', assetPrefix: '/brand/shop-suit', homeLabel: '', title: '', description: '' }
+const signupForm = computed<BsSignupForm>({
+  get: () => ({ name: form.displayName, email: form.email, password: form.password, workspaceName: form.shopName, businessMode: form.businessMode, locationName: form.mainLocationName, locationCode: form.mainLocationCode, locationAddress: form.mainLocationAddress, locationPhone: form.mainLocationPhone, phone: '', jobTitle: '', legalName: '', businessType: '', country: '', currency: '', timezone: '', fiscalMonth: 1, taxIdentifier: '' }),
+  set: value => {
+    form.displayName = value.name; form.email = value.email; form.password = value.password; form.shopName = value.workspaceName
+    form.mainLocationName = value.locationName; form.mainLocationCode = value.locationCode; form.mainLocationAddress = value.locationAddress; form.mainLocationPhone = value.locationPhone
+    if (BUSINESS_MODES.includes(value.businessMode as BusinessMode)) form.businessMode = value.businessMode as BusinessMode
+  },
+})
+const signupView = computed<BsSignupView>(() => ({ stage: recovery.value ? 'recovery' : awaitingOtp.value ? 'verification' : step.value === 1 ? 'account' : 'workspace', step: step.value, pending: pending.value, error: errorMessage.value, notice: noticeMessage.value, existingAccount: existingAccount.value, hydrated: undefined, submitDisabled: false, submitLabel: step.value === 1 ? copy.value.next : copy.value.create, pendingLabel: copy.value.pending, expired: verification.expired.value, resendDisabled: verification.resendIn.value > 0, verified: existingAccount.value, canStartOver: !existingAccount.value }))
+const signupCopy = computed<BsSignupCopy>(() => ({ eyebrow: 'Shop Suit', title: t('auth.signupTitle'), description: t('auth.signupSubtitle'), name: t('auth.displayName'), email: t('auth.email'), password: t('auth.password'), passwordHint: '', workspaceName: copy.value.shopName, mainLocation: copy.value.mainLocation, locationName: copy.value.mainLocationName, locationCode: copy.value.mainLocationCode, locationAddress: copy.value.mainLocationAddress, locationPhone: copy.value.mainLocationPhone, businessMode: copy.value.businessMode, businessModeHelp: copy.value.businessModeHelp, trialTitle: copy.value.trial, trialBody: copy.value.trialHelp, back: copy.value.back, formFooter: '', signIn: copy.value.signIn, recoveryTitle: copy.value.recoveryTitle, recoveryBody: copy.value.existingPending, recover: copy.value.recover, startOver: `${copy.value.changeEmail} · ${copy.value.startOver}`, phone: '', jobTitle: '', legalName: '', businessType: '', country: '', currency: '', timezone: '', fiscalMonth: '', taxIdentifier: '', optional: '', steps: [{ id: 'account', title: copy.value.account, body: copy.value.accountBody }, { id: 'shop', title: copy.value.shop, body: copy.value.shopBody }] }))
+const signupVerificationCopy = computed<BsSignupVerificationCopy>(() => ({ title: copy.value.verify, description: copy.value.verifyBody, codeLabel: copy.value.code, expiryLabel: `${copy.value.expires} ${verification.format(verification.expiresIn.value)}`, expiredLabel: copy.value.expired, submitLabel: existingAccount.value ? copy.value.retry : copy.value.verify, pendingLabel: copy.value.pending, resendLabel: verification.resendIn.value > 0 ? `${copy.value.wait} ${verification.format(verification.resendIn.value)}` : copy.value.resend }))
+const signupChoices = computed<BsSignupChoices>(() => ({ businessTypes: [], countries: [], currencies: [], fiscalMonths: [], businessModes: modeOptions.value }))
+const signupLinks = computed<BsSignupLinks>(() => ({ signInTo: '/auth/login', recoveryTo: '/auth/forgot-password', formSignInLabel: copy.value.login, verificationFooter: true, legal: [] }))
+async function signInFromRecovery() { clearDraft(); await navigateTo('/auth/login') }
 </script>
 <template>
-  <BsAuthForm
-    v-if="recovery" eyebrow="Shop Suit" :title="copy.recoveryTitle" :description="copy.existingPending"
-    :pending="pending" :error="errorMessage" :submit-label="copy.signIn" @submit="clearDraft(); navigateTo('/auth/login')"
-  >
-    <NuxtLink to="/auth/forgot-password" class="font-bold underline" @click="clearDraft">{{ copy.recover }}</NuxtLink>
-    <BsButton type="button" variant="secondary" :disabled="pending || verification.resendIn.value > 0" @click="resend">{{ verification.resendIn.value > 0 ? `${copy.wait} ${verification.format(verification.resendIn.value)}` : copy.resend }}</BsButton>
-    <template #footer><BsButton type="button" variant="link" :disabled="pending" @click="startOver">{{ copy.changeEmail }} · {{ copy.startOver }}</BsButton></template>
-  </BsAuthForm>
-  <BsAuthForm v-else-if="!awaitingOtp" eyebrow="Shop Suit" :title="t('auth.signupTitle')" :description="t('auth.signupSubtitle')" :pending="pending" @submit="submit">
-    <BsSignupWizard
-      :step="step" :steps="[{ id: 'account', title: copy.account, body: copy.accountBody }, { id: 'shop', title: copy.shop, body: copy.shopBody }]"
-      :pending="pending" :error="errorMessage" :notice="noticeMessage" :back-label="copy.back"
-      :submit-label="step === 1 ? copy.next : copy.create" :pending-label="copy.pending" @back="back"
-    >
-      <div v-if="step === 1" class="space-y-4">
-        <BsFloatingField :label="t('auth.displayName')"><InputText id="signup-name" v-model="form.displayName" class="ls-input" autocomplete="name" required /></BsFloatingField>
-        <BsFloatingField :label="t('auth.email')"><InputText id="signup-email" v-model="form.email" class="ls-input" type="email" autocomplete="email" dir="ltr" :readonly="existingAccount" required /></BsFloatingField>
-        <BsFloatingField v-if="!existingAccount" :label="t('auth.password')"><InputText id="signup-password" v-model="form.password" class="ls-input" type="password" autocomplete="new-password" dir="ltr" minlength="6" required /></BsFloatingField>
-      </div>
-      <div v-else class="space-y-4">
-        <BsFloatingField :label="copy.shopName"><InputText id="signup-shop" v-model="form.shopName" class="ls-input" minlength="2" maxlength="120" required /></BsFloatingField>
-        <fieldset class="grid gap-3 rounded-xl border border-border p-4 sm:grid-cols-2">
-          <legend class="px-1 text-sm font-bold">{{ copy.mainLocation }}</legend>
-          <BsFloatingField :label="copy.mainLocationName"><InputText id="signup-main-location" v-model="form.mainLocationName" class="ls-input" minlength="2" maxlength="120" required /></BsFloatingField>
-          <BsFloatingField :label="copy.mainLocationCode"><InputText id="signup-main-location-code" v-model="form.mainLocationCode" class="ls-input" maxlength="32" /></BsFloatingField>
-          <BsFloatingField :label="copy.mainLocationAddress"><InputText id="signup-main-location-address" v-model="form.mainLocationAddress" class="ls-input" maxlength="500" /></BsFloatingField>
-          <BsFloatingField :label="copy.mainLocationPhone"><InputText id="signup-main-location-phone" v-model="form.mainLocationPhone" class="ls-input" maxlength="80" dir="auto" /></BsFloatingField>
-        </fieldset>
-        <div class="rounded-xl border border-border bg-muted/40 p-3"><p class="text-sm font-bold">{{ copy.trial }}</p><p class="mt-1 text-xs text-fg-muted">{{ copy.trialHelp }}</p></div>
-        <fieldset class="space-y-2">
-          <legend class="text-sm font-bold">{{ copy.businessMode }}</legend>
-          <p class="text-xs text-fg-muted">{{ copy.businessModeHelp }}</p>
-          <label v-for="mode in modeOptions" :key="mode.value" class="flex cursor-pointer items-center gap-2 rounded-xl border border-border p-3">
-            <input v-model="form.businessMode" type="radio" name="signup-business-mode" :value="mode.value">
-            <span class="font-semibold">{{ mode.label }}</span>
-          </label>
-        </fieldset>
-      </div>
-    </BsSignupWizard>
-    <template #footer><NuxtLink to="/auth/login" class="underline">{{ copy.login }}</NuxtLink></template>
-  </BsAuthForm>
-  <BsVerificationForm
-    v-else v-model="otp" :title="copy.verify" :description="copy.verifyBody" :email="form.email" :code-label="copy.code"
-    :pending="pending" :error="errorMessage" :notice="noticeMessage" :expired="verification.expired.value" :verified="existingAccount"
-    :expiry-label="`${copy.expires} ${verification.format(verification.expiresIn.value)}`" :expired-label="copy.expired"
-    :submit-label="existingAccount ? copy.retry : copy.verify" :pending-label="copy.pending"
-    :resend-label="verification.resendIn.value > 0 ? `${copy.wait} ${verification.format(verification.resendIn.value)}` : copy.resend"
-    :resend-disabled="verification.resendIn.value > 0" @submit="verify" @resend="resend"
-  >
-    <template #secondary><BsButton v-if="!existingAccount" variant="link" type="button" :disabled="pending" @click="startOver">{{ copy.changeEmail }} · {{ copy.startOver }}</BsButton></template>
-    <template #footer><NuxtLink to="/auth/login" class="font-bold underline" @click="clearDraft">{{ copy.signIn }}</NuxtLink> · <NuxtLink to="/auth/forgot-password" class="underline" @click="clearDraft">{{ copy.recover }}</NuxtLink></template>
-  </BsVerificationForm>
+  <BsSignupPage v-model:form="signupForm" v-model:otp="otp" v-model:consent="signupConsent" :product="signupProduct" :features="signupFeatures" :view="signupView" :copy="signupCopy" :verification-copy="signupVerificationCopy" :choices="signupChoices" :links="signupLinks" :legal-consent="null" @submit="submit" @back="back" @verify="verify" @resend="resend" @start-over="startOver" @sign-in="signInFromRecovery" @clear-draft="clearDraft" />
 </template>

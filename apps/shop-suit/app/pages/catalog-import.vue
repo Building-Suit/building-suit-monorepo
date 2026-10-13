@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { BsCatalogImportCopy, BsCatalogImportView, BsCatalogImportChoice } from '@building-suit/ui/types/catalogImportPresentation'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import { downloadCsv, encodeCsv, importTemplates, parseCsv, validateImportHeaders } from '~/utils/catalogImport'
 
@@ -80,9 +81,8 @@ const { data: salesReport, pending: reportPending, error: reportError, refresh: 
 watch([kind, currentId], () => resetImport())
 function resetImport() { fileVersion++; rows.value = []; filename.value = ''; requestId.value = ''; result.value = null; parsingError.value = '' }
 
-async function readFile(event: Event) {
+async function readFile(file: File | null) {
   resetImport()
-  const file = (event.target as HTMLInputElement).files?.[0]
   if (!file) return
   const version = fileVersion
   const inScope = captureScope()
@@ -164,42 +164,51 @@ async function exportLabels() {
 }
 
 function money(value: number) { return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { style: 'currency', currency: 'EGP' }).format(value) }
+
+const importCopy = computed<BsCatalogImportCopy>(() => ({
+  addCategory: copy.value.addCategory,
+  allCategories: copy.value.allCategories,
+  amount: copy.value.amount,
+  applied: copy.value.applied,
+  apply: copy.value.apply,
+  categories: copy.value.categories,
+  category: copy.value.category,
+  categoryName: copy.value.categoryName,
+  choose: copy.value.choose,
+  customers: copy.value.customers,
+  field: copy.value.field,
+  from: copy.value.from,
+  importTitle: copy.value.importTitle,
+  issue: copy.value.issue,
+  item: copy.value.item,
+  labels: copy.value.labels,
+  noData: copy.value.noData,
+  noShop: copy.value.noShop,
+  products: copy.value.products,
+  quantity: copy.value.quantity,
+  report: copy.value.report,
+  reportError: copy.value.reportError,
+  retry: copy.value.retry,
+  row: copy.value.row,
+  subtitle: copy.value.subtitle,
+  suppliers: copy.value.suppliers,
+  template: copy.value.template,
+  title: copy.value.title,
+  to: copy.value.to,
+  valid: copy.value.valid,
+  validate: copy.value.validate,
+  validating: copy.value.validating,
+}))
+const importView = computed<BsCatalogImportView>(() => ({
+  available: Boolean(current.value), contextLoading: shopLoading.value, categories: categories.value.map(row => ({ id: row.id, name: row.name })), categoryDirty: categoryDirty.value, categoryPending: categoryPending.value, categoryError: categoryError.value,
+  pending: pending.value, filename: filename.value, rowCount: rows.value.length, error: parsingError.value, canValidate: rows.value.length > 0 && !pending.value, canApply: Boolean(result.value?.valid && result.value.dryRun), resultLabel: result.value?.valid ? result.value.dryRun ? copy.value.valid : `${copy.value.applied} ${result.value.created} / ${result.value.updated} / ${result.value.openingStockPosted}` : '',
+  issues: (result.value?.errors ?? []).map(row => ({ row: row.row, field: row.field, code: row.code })), exporting: exporting.value, reportPending: reportPending.value, reportError: Boolean(reportError.value), reportRows: salesReport.value.items.map((row, index) => ({ id: String(index), name: row.name, category: row.category, quantity: String(row.quantity), amount: money(Number(row.amount)) })),
+}))
+const importKind = computed<string>({ get: () => kind.value, set: value => { if (value === 'products' || value === 'customers' || value === 'suppliers') kind.value = value } })
+const importKindChoices = computed<BsCatalogImportChoice[]>(() => [{ value: 'products', label: copy.value.products }, { value: 'customers', label: copy.value.customers }, { value: 'suppliers', label: copy.value.suppliers }])
+const importCategoryChoices = computed<BsCatalogImportChoice[]>(() => [{ value: '', label: copy.value.allCategories }, ...categories.value.map(row => ({ value: row.id, label: row.name }))])
+function openCategory() { categoryName.value = ''; categoryError.value = ''; categoryOpen.value = true }
 </script>
-
 <template>
-  <div class="space-y-6">
-    <header><h1 class="text-3xl font-extrabold tracking-tight">{{ copy.title }}</h1><p class="mt-2 text-sm text-muted-foreground">{{ copy.subtitle }}</p></header>
-    <p v-if="!current && !shopLoading" class="ls-card p-8 text-center text-sm">{{ copy.noShop }}</p>
-    <template v-else-if="current">
-      <section class="ls-card p-5">
-        <div class="flex flex-wrap items-center justify-between gap-3"><h2 class="text-lg font-extrabold">{{ copy.categories }}</h2><BsButton variant="primary" @click="categoryName = ''; categoryError = ''; categoryOpen = true">{{ copy.addCategory }}</BsButton></div>
-        <div class="mt-3 flex flex-wrap gap-2"><span v-for="category in categories" :key="category.id" class="ls-badge bg-muted">{{ category.name }}</span></div>
-      </section>
-
-      <BsRecordActionDialog v-model:visible="categoryOpen" :title="copy.addCategory" :dirty="categoryDirty" :pending="categoryPending" :error="categoryError" :submit-label="copy.addCategory" @submit="addCategory">
-        <BsField :label="copy.categoryName"><BsInput v-model="categoryName" minlength="2" maxlength="80" required /></BsField>
-      </BsRecordActionDialog>
-
-      <section class="ls-card p-5">
-        <div class="flex flex-wrap items-center justify-between gap-3"><h2 class="text-lg font-extrabold">{{ copy.importTitle }}</h2><BsButton severity="secondary" @click="template">{{ copy.template }}</BsButton></div>
-        <div class="mt-4 grid gap-4 md:grid-cols-2">
-          <label class="space-y-2 text-sm font-bold">{{ copy.importTitle }}<select v-model="kind" :disabled="pending" class="ls-select"><option value="products">{{ copy.products }}</option><option value="customers">{{ copy.customers }}</option><option value="suppliers">{{ copy.suppliers }}</option></select></label>
-          <label class="space-y-2 text-sm font-bold">{{ copy.choose }}<input type="file" :disabled="pending" accept=".csv,text/csv" class="ls-input" @change="readFile"></label>
-        </div>
-        <p v-if="filename" class="mt-3 text-sm">{{ filename }} · {{ rows.length }}</p>
-        <p v-if="parsingError" role="alert" class="mt-3 rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm text-[var(--bs-status-error)]">{{ parsingError }}</p>
-        <div class="mt-4 flex flex-wrap gap-2"><BsButton severity="secondary" :disabled="!rows.length || pending" @click="runImport(true)">{{ pending ? copy.validating : copy.validate }}</BsButton><BsButton :pending="pending" :disabled="!result?.valid || !result.dryRun" @click="runImport(false)">{{ copy.apply }}</BsButton></div>
-        <p v-if="result?.valid" role="status" class="mt-3 rounded-xl bg-[var(--bs-status-success-bg)] p-3 text-sm">{{ result.dryRun ? copy.valid : copy.applied }} <span v-if="!result.dryRun">{{ result.created }} / {{ result.updated }} / {{ result.openingStockPosted }}</span></p>
-        <div v-if="result?.errors.length" class="mt-4 overflow-x-auto"><BsDataTable :value="result.errors"><Column field="row" :header="copy.row"/><Column field="field" :header="copy.field"/><Column field="code" :header="copy.issue"/></BsDataTable></div>
-      </section>
-
-      <section class="ls-card p-5">
-        <div class="flex flex-wrap items-center justify-between gap-3"><h2 class="text-lg font-extrabold">{{ copy.report }}</h2><BsButton severity="secondary" :pending="exporting" @click="exportLabels">{{ copy.labels }}</BsButton></div>
-        <div class="mt-4 grid gap-3 sm:grid-cols-3"><label class="space-y-2 text-sm font-bold">{{ copy.category }}<select v-model="categoryFilter" class="ls-select"><option value="">{{ copy.allCategories }}</option><option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option></select></label><label class="space-y-2 text-sm font-bold">{{ copy.from }}<input v-model="reportFrom" type="date" class="ls-input"></label><label class="space-y-2 text-sm font-bold">{{ copy.to }}<input v-model="reportTo" type="date" class="ls-input"></label></div>
-        <p v-if="reportPending" role="status" class="p-5 text-sm text-muted-foreground">{{ copy.validating }}</p>
-        <div v-else-if="reportError" role="alert" class="mt-4">{{ copy.reportError }} <BsButton @click="refreshReport()">{{ copy.retry }}</BsButton></div>
-        <div v-else class="mt-4 overflow-x-auto"><BsDataTable :value="salesReport.items"><Column field="name" :header="copy.item"/><Column field="category" :header="copy.category"/><Column field="quantity" :header="copy.quantity"/><Column :header="copy.amount"><template #body="{ data }">{{ money(Number(data.amount)) }}</template></Column><template #empty><p class="p-6 text-center text-sm text-muted-foreground">{{ copy.noData }}</p></template></BsDataTable></div>
-      </section>
-    </template>
-  </div>
+  <BsCatalogImportPage v-model:kind="importKind" v-model:category-open="categoryOpen" v-model:category-name="categoryName" v-model:category-filter="categoryFilter" v-model:report-from="reportFrom" v-model:report-to="reportTo" :copy="importCopy" :view="importView" :kind-choices="importKindChoices" :category-choices="importCategoryChoices" @open-category="openCategory" @save-category="addCategory" @download-template="template" @file="readFile" @validate="runImport(true)" @apply="runImport(false)" @export-labels="exportLabels" @reload-report="refreshReport()" />
 </template>

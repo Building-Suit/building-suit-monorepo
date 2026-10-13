@@ -1,0 +1,141 @@
+{
+  "workstreams_unchanged": true,
+  "dependencies_unchanged": true,
+  "task_states_unchanged": true,
+  "projects_unchanged": true,
+  "operator_decisions": [
+    {
+      "title": "SALE-D01",
+      "source": "product-owner-chat-delegation",
+      "status": "approved",
+      "metadata": {
+        "original_text": "Define whether and how approved custom/manual sale lines are supported.",
+        "source_record": {
+          "status": "open",
+          "decision": "Define whether and how approved custom/manual sale lines are supported.",
+          "decision_id": "SALE-D01",
+          "blocking_tasks": [
+            "SS-SALE-002"
+          ]
+        },
+        "original_status": "open",
+        "resolution_basis": "product_owner_delegated_chatgpt_recommendation_2026-09-24"
+      },
+      "suit_slug": "shop-suit",
+      "created_at": "2026-09-24T19:24:44.116224+00:00",
+      "decided_at": "2026-09-24T19:25:16.191549+00:00",
+      "updated_at": "2026-09-24T19:25:16.191549+00:00",
+      "decision_id": "SALE-D01",
+      "decision_text": "Custom/manual sale lines are not part of Shop Suit V1. Sales may contain catalog products and services only. A future explicit decision may add non-catalog lines."
+    },
+    {
+      "title": "SALE-D02",
+      "source": "product-owner-chat-delegation",
+      "status": "approved",
+      "metadata": {
+        "original_text": "Define Shop Suit tax/VAT scope and any compliance claims. Existing tax-like fields are not approval.",
+        "source_record": {
+          "status": "open",
+          "decision": "Define Shop Suit tax/VAT scope and any compliance claims. Existing tax-like fields are not approval.",
+          "decision_id": "SALE-D02",
+          "blocking_tasks": [
+            "SS-SALE-002",
+            "SS-SET-001"
+          ]
+        },
+        "original_status": "open",
+        "resolution_basis": "product_owner_delegated_chatgpt_recommendation_2026-09-24"
+      },
+      "suit_slug": "shop-suit",
+      "created_at": "2026-09-24T19:24:44.116224+00:00",
+      "decided_at": "2026-09-24T19:25:16.191549+00:00",
+      "updated_at": "2026-09-24T19:25:16.191549+00:00",
+      "decision_id": "SALE-D02",
+      "decision_text": "Tax/VAT calculation and compliance are out of Shop Suit V1. Do not expose tax controls as authoritative, do not make compliance claims, and do not add business tax defaults. Preserve any historical tax-like fields only as legacy data until a separately researched and approved tax scope exists."
+    },
+    {
+      "title": "SERV-D01",
+      "source": "shop-suit-roadmap-v5",
+      "status": "approved",
+      "metadata": {
+        "original_text": "Decide whether configurable service material consumption is included in the V1 launch scope.",
+        "source_record": {
+          "status": "open",
+          "decision": "Decide whether configurable service material consumption is included in the V1 launch scope.",
+          "decision_id": "SERV-D01",
+          "blocking_tasks": [
+            "SS-SERV-002"
+          ]
+        },
+        "source_status": "open",
+        "roadmap_import": "2026-09-28",
+        "original_status": "open",
+        "resolution_basis": "product_owner_delegated_chatgpt_recommendation_2026-09-24",
+        "normalized_status": "open",
+        "source_roadmap_sha256": "04a70896b14e04caf1926de0d2702d6e8eb3426ea4466dff232ae5af4c027790"
+      },
+      "suit_slug": "shop-suit",
+      "created_at": "2026-09-24T19:24:44.116224+00:00",
+      "decided_at": "2026-09-24T19:25:16.191549+00:00",
+      "updated_at": "2026-09-28T06:22:16.534089+00:00",
+      "decision_id": "SERV-D01",
+      "decision_text": "Decide whether configurable service material consumption is part of the launch scope."
+    },
+    {
+      "title": "SERV-D02",
+      "source": "shop-suit-roadmap-v5",
+      "status": "approved",
+      "metadata": {
+        "original_text": "If service material consumption is approved, define units and rounding rules for consumed materials.",
+        "source_record": {
+          "status": "open",
+          "decision": "If service material consumption is approved, define units and rounding rules for consumed materials.",
+          "decision_id": "SERV-D02",
+          "blocking_tasks": [
+            "SS-SERV-002"
+          ]
+        },
+        "source_status": "open",
+        "roadmap_import": "2026-09-28",
+        "original_status": "open",
+        "resolution_basis": "product_owner_delegated_chatgpt_recommendation_2026-09-24",
+        "normalized_status": "open",
+        "source_roadmap_sha256": "04a70896b14e04caf1926de0d2702d6e8eb3426ea4466dff232ae5af4c027790"
+      },
+      "suit_slug": "shop-suit",
+      "created_at": "2026-09-24T19:24:44.116224+00:00",
+      "decided_at": "2026-09-24T19:25:16.191549+00:00",
+      "updated_at": "2026-09-28T06:22:16.534089+00:00",
+      "decision_id": "SERV-D02",
+      "decision_text": "If service material consumption is approved, define units and rounding."
+    },
+    {
+      "title": "SERV-D03",
+      "source": "shop-suit-roadmap-v5",
+      "status": "approved",
+      "metadata": {
+        "original_text": "If service material consumption is approved, define versioning/edit-effective-date behavior so recipe changes do not rewrite issued history.",
+        "source_record": {
+          "status": "open",
+          "decision": "If service material consumption is approved, define versioning/edit-effective-date behavior so recipe changes do not rewrite issued history.",
+          "decision_id": "SERV-D03",
+          "blocking_tasks": [
+            "SS-SERV-002"
+          ]
+        },
+        "source_status": "open",
+        "roadmap_import": "2026-09-28",
+        "original_status": "open",
+        "resolution_basis": "product_owner_delegated_chatgpt_recommendation_2026-09-24",
+        "normalized_status": "open",
+        "source_roadmap_sha256": "04a70896b14e04caf1926de0d2702d6e8eb3426ea4466dff232ae5af4c027790"
+      },
+      "suit_slug": "shop-suit",
+      "created_at": "2026-09-24T19:24:44.116224+00:00",
+      "decided_at": "2026-09-24T19:25:16.191549+00:00",
+      "updated_at": "2026-09-28T06:22:16.534089+00:00",
+      "decision_id": "SERV-D03",
+      "decision_text": "If service material consumption is approved, define version/effective-date behavior."
+    }
+  ]
+}

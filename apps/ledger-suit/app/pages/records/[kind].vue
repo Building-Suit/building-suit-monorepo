@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { formatPresentationMoney } from '@building-suit/ui/utils/presentation'
+import type { BsCommitmentActionForm, BsOperationalRecordsCopy, BsOperationalRecordsView } from '@building-suit/ui/types/operationalRecordsPresentation'
 import { scopedQueryKey } from '@building-suit/data-access'
 import type { Database } from '~~/types/database.types'
 
@@ -176,189 +178,31 @@ async function setRuleStatus(id: string, status: Database['public']['Enums']['re
 
 const value = (row: TransactionRow | GenericRow, key: string) => (row as GenericRow)[key]
 const text = (row: TransactionRow | GenericRow, key: string) => String(value(row, key) ?? t('common.dash'))
-const number = (row: TransactionRow | GenericRow, key: string) => Number(value(row, key) ?? 0)
 const date = (row: TransactionRow | GenericRow, key: string) => {
   const raw = value(row, key)
   return formatDate(typeof raw === 'string' ? raw.slice(0, 10) : null, locale.value)
 }
 const { dirty: overlayDirty0 } = useRecordAction(() => commitmentAction, computed(() => Boolean(commitmentAction.id)))
+
+const journalPresentation = useLedgerJournalDetailPresentation(reactive({ get transactionId() { return selectedId.value } }), { close: () => { selectedId.value = null }, changed: refresh, navigate: id => { selectedId.value = id } })
+const journalForm = journalPresentation.form
+const commitmentForm = computed<BsCommitmentActionForm>({ get: () => ({ amount: commitmentAction.amount, account: commitmentAction.paymentAccountId, date: commitmentAction.date }), set: value => Object.assign(commitmentAction, { amount: value.amount, paymentAccountId: value.account, date: value.date }) })
+const presentationCopy = computed<BsOperationalRecordsCopy>(() => ({
+  title: title.value, count: t('recordPages.count', rows.value.length), allJournals: t('recordPages.allTransactions'), create: kind.value === 'tags' ? t('recordPages.addTag') : t('recordPages.add', { item: title.value }), empty: kind.value === 'tags' ? t('tagsGuide.emptyTitle') : t('recordPages.empty', { item: title.value }), emptyHint: t(kind.value === 'tags' ? 'tagsGuide.emptyHint' : 'recordPages.emptyHint'), failed: t('transactionWorkspace.loadError'), retry: t('accounts.retry'), name: t('operations.name'), kind: t('recordPages.kind'), date: t(kind.value === 'commitments' ? 'add.dueDate' : 'transactions.date'), description: t('transactions.description'), category: t('transactions.category'), fromTo: t('transactions.fromTo'), status: t('transactions.status'), amount: t('transactions.amount'), actions: t('accounts.actions'), schedule: t('recordPages.schedule'), nextRun: t('recordPages.nextRun'), email: t('auth.email'), phone: t('operations.phone'), created: t('recordPages.created'), role: t('recordPages.role'), expires: t('recordPages.expires'), settle: t('operations.settle'), postpone: t('operations.postpone'), cancel: t('common.cancel'), pause: t('operations.pause'), resume: t('operations.resume'), viewJournals: t('tagsGuide.viewTransactions'), account: t('add.chooseAccount'), partialAmount: t('operations.fullOrPartialAmount'), actionDate: t('add.date'),
+}))
+const presentationView = computed<BsOperationalRecordsView>(() => ({
+  kind: isTransaction.value ? 'journals' : kind.value === 'counterparties' ? 'parties' : kind.value as 'commitments' | 'recurring' | 'tags' | 'invitations', journalDirectoryTo: '/transactions', canCreate: canCreate.value, loading: pending.value, failed: !!loadError.value, pending: actionBusy.value, error: actionError.value,
+  rows: rows.value.map(row => {
+    const status = kind.value === 'counterparties' ? value(row, 'is_archived') ? 'archived' : 'active' : text(row, 'status')
+    const commitmentMutable = kind.value === 'commitments' && !['paid', 'cancelled'].includes(status)
+    const currency = typeof value(row, 'currency_code') === 'string' ? String(value(row, 'currency_code')) : baseCurrency.value
+    const rawAmount = value(row, kind.value === 'commitments' ? 'outstanding_minor' : 'amount_minor')
+    return { id: text(row, 'id'), name: text(row, isTransaction.value ? 'description' : kind.value === 'commitments' ? 'title' : 'name'), kind: kind.value === 'recurring' ? t(`types.${text(row, 'transaction_type')}`) : kind.value === 'commitments' ? text(row, 'type').replaceAll('_', ' ') : text(row, 'type'), date: date(row, isTransaction.value ? 'transaction_date' : kind.value === 'commitments' ? 'due_date' : 'created_at'), status, amount: isTransaction.value || kind.value === 'commitments' ? formatPresentationMoney(typeof rawAmount === 'string' || typeof rawAmount === 'number' ? rawAmount : 0, { currency, locale: locale.value, unit: 'minor', numberingSystem: 'latn' }) : '', from: text(row, 'from_account_name'), to: text(row, 'to_account_name'), category: text(row, 'category_name'), schedule: `${text(row, 'interval_count')} × ${text(row, 'frequency')}`, nextRun: date(row, 'next_run_on'), email: text(row, 'email'), phone: text(row, 'phone'), color: text(row, 'color'), role: kind.value === 'invitations' ? roleLabel(text(row, 'role'), text(row, 'role_id')) : '', expires: date(row, 'expires_at'), toJournal: kind.value === 'tags' && can('transactions.read') ? `/transactions?tag=${encodeURIComponent(text(row, 'id'))}` : null, canSettle: commitmentMutable && can('commitments.settle'), canPostpone: commitmentMutable && can('commitments.update'), canCancel: commitmentMutable && can('commitments.update'), canPause: kind.value === 'recurring' && can('recurring.manage') && status === 'active', canResume: kind.value === 'recurring' && can('recurring.manage') && ['paused', 'failed'].includes(status) }
+  }),
+  guide: kind.value === 'tags' ? { title: t('tagsGuide.title'), body: t('tagsGuide.body'), steps: ['create', 'assign', 'find'].map(id => ({ id, title: t(`tagsGuide.steps.${id}.title`), body: t(`tagsGuide.steps.${id}.body`) })), example: t('tagsGuide.example'), link: can('transactions.read') ? '/transactions' : '', linkLabel: t('tagsGuide.openTransactions') } : null,
+  dialog: { visible: !!commitmentAction.id, title: t(commitmentAction.mode === 'settle' ? 'operations.settle' : 'operations.postpone'), dirty: overlayDirty0.value, pending: actionBusy.value, error: actionError.value, submit: t(commitmentAction.mode === 'settle' ? 'operations.convert' : 'operations.postpone'), settling: commitmentAction.mode === 'settle', accounts: paymentAccounts.value.map(account => ({ value: account.id, label: account.name })) }, journal: { copy: journalPresentation.copy.value, view: journalPresentation.view.value },
+}))
 </script>
-
 <template>
-  <div class="space-y-6">
-    <header class="flex flex-wrap items-start justify-between gap-3">
-      <div>
-        <NuxtLink v-if="isTransaction" to="/transactions" class="text-xs font-semibold text-link">{{ t('recordPages.allTransactions') }}</NuxtLink>
-        <h1 class="mt-1 text-h1 font-bold">{{ title }}</h1>
-        <p class="mt-1 text-sm text-fg-muted">{{ t('recordPages.count', rows.length) }}</p>
-      </div>
-      <BsButton v-if="canCreate" type="button" class="ls-btn ls-btn-primary" @click="addRecord">
-        {{ kind === 'tags' ? t('recordPages.addTag') : t('recordPages.add', { item: title }) }}
-      </BsButton>
-    </header>
-
-    <section v-if="kind === 'tags'" class="ls-card space-y-5 p-5 sm:p-6" aria-labelledby="tags-guide-title">
-      <div><h2 id="tags-guide-title" class="text-lg font-bold">{{ t('tagsGuide.title') }}</h2><p class="mt-2 max-w-3xl leading-relaxed text-fg-muted">{{ t('tagsGuide.body') }}</p></div>
-      <div class="grid gap-4 md:grid-cols-3">
-        <div v-for="step in ['create', 'assign', 'find']" :key="step" class="rounded-control bg-surface-muted p-4"><h3 class="font-semibold">{{ t(`tagsGuide.steps.${step}.title`) }}</h3><p class="mt-2 text-sm leading-relaxed text-fg-muted">{{ t(`tagsGuide.steps.${step}.body`) }}</p></div>
-      </div>
-      <p class="text-sm text-fg-muted">{{ t('tagsGuide.example') }}</p>
-      <NuxtLink v-if="can('transactions.read')" to="/transactions" class="ls-btn">{{ t('tagsGuide.openTransactions') }}<BsIcon name="arrowRight" directional :size="18" /></NuxtLink>
-    </section>
-
-    <div v-if="loadError" role="alert" class="ls-card p-5"><p>{{ t('transactionWorkspace.loadError') }}</p><BsButton type="button" class="ls-btn mt-3" @click="refresh()">{{ t('accounts.retry') }}</BsButton></div>
-    <BsSectionSkeleton v-else-if="pending" variant="table" :rows="8" />
-    <BsEmptyState v-else-if="rows.length === 0" :title="kind === 'tags' ? t('tagsGuide.emptyTitle') : t('recordPages.empty', { item: title })" :description="t(kind === 'tags' ? 'tagsGuide.emptyHint' : 'recordPages.emptyHint')" :action-label="canCreate ? (kind === 'tags' ? t('recordPages.addTag') : t('recordPages.add', { item: title })) : undefined" @action="addRecord" />
-
-    <div v-else class="ls-card overflow-x-auto">
-      <BsDataTable v-if="isTransaction" :value="rows" :label="title" :row-class="() => 'cursor-pointer hover:bg-surface-muted'" @row-click="event => selectedId = text(event.data, 'id')">
-  <Column body-class="whitespace-nowrap">
-    <template #header>{{ t('transactions.date') }}</template>
-    <template #body="{ data: row }">{{ date(row, 'transaction_date') }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('transactions.description') }}</template>
-    <template #body="{ data: row }">{{ text(row, 'description') }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('transactions.category') }}</template>
-    <template #body="{ data: row }">{{ text(row, 'category_name') }}</template>
-  </Column>
-  <Column body-class="whitespace-nowrap text-fg-muted">
-    <template #header>{{ t('transactions.fromTo') }}</template>
-    <template #body="{ data: row }">{{ text(row, 'from_account_name') }} <BsIcon name="arrowRight" :size="14" directional class="inline-block" /> {{ text(row, 'to_account_name') }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('transactions.status') }}</template>
-    <template #body="{ data: row }"><BsStatusBadge :status="text(row, 'status')" /></template>
-  </Column>
-  <Column header-class="text-end" body-class="ls-num font-semibold">
-    <template #header>{{ t('transactions.amount') }}</template>
-    <template #body="{ data: row }"><MoneyText :amount-minor="number(row, 'amount_minor')" :currency="text(row, 'currency_code')" /></template>
-  </Column>
-</BsDataTable>
-
-      <BsDataTable v-else-if="kind === 'commitments'" :value="rows">
-  <Column >
-    <template #header>{{ t('operations.name') }}</template>
-    <template #body="{ data: row }">{{ text(row, 'title') }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('recordPages.kind') }}</template>
-    <template #body="{ data: row }">{{ text(row, 'type').replaceAll('_', ' ') }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('add.dueDate') }}</template>
-    <template #body="{ data: row }">{{ date(row, 'due_date') }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('transactions.status') }}</template>
-    <template #body="{ data: row }"><BsStatusBadge :status="text(row, 'status')" /></template>
-  </Column>
-  <Column header-class="text-end" body-class="ls-num">
-    <template #header>{{ t('transactions.amount') }}</template>
-    <template #body="{ data: row }"><MoneyText :amount-minor="number(row, 'outstanding_minor')" :currency="text(row, 'currency_code')" /></template>
-  </Column>
-  <Column header-class="text-end" body-class="whitespace-nowrap text-end">
-    <template #header>{{ t('accounts.actions') }}</template>
-    <template #body="{ data: row }"><template v-if="!['paid','cancelled'].includes(text(row, 'status'))"><BsButton type="submit" v-if="can('commitments.settle')" class="ls-btn ls-btn-sm" @click="openCommitmentAction(text(row, 'id'), 'settle')">{{ t('operations.settle') }}</BsButton><BsButton type="submit" v-if="can('commitments.update')" class="ls-btn ls-btn-sm ms-1" @click="openCommitmentAction(text(row, 'id'), 'postpone')">{{ t('operations.postpone') }}</BsButton><BsButton type="submit" v-if="can('commitments.update')" class="ls-btn ls-btn-sm ms-1" :disabled="actionBusy" @click="cancelCommitment(text(row, 'id'))">{{ t('common.cancel') }}</BsButton></template></template>
-  </Column>
-</BsDataTable>
-
-      <BsDataTable v-else-if="kind === 'recurring'" :value="rows">
-  <Column >
-    <template #header>{{ t('operations.name') }}</template>
-    <template #body="{ data: row }">{{ text(row, 'name') }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('transactions.type') }}</template>
-    <template #body="{ data: row }">{{ t(`types.${text(row, 'transaction_type')}`) }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('recordPages.schedule') }}</template>
-    <template #body="{ data: row }">{{ text(row, 'interval_count') }} × {{ text(row, 'frequency') }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('recordPages.nextRun') }}</template>
-    <template #body="{ data: row }">{{ date(row, 'next_run_on') }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('transactions.status') }}</template>
-    <template #body="{ data: row }"><BsStatusBadge :status="text(row, 'status')" /></template>
-  </Column>
-  <Column header-class="text-end" body-class="text-end">
-    <template #header>{{ t('accounts.actions') }}</template>
-    <template #body="{ data: row }"><BsButton type="submit" v-if="can('recurring.manage') && text(row, 'status') === 'active'" class="ls-btn ls-btn-sm" :disabled="actionBusy" @click="setRuleStatus(text(row, 'id'), 'paused')">{{ t('operations.pause') }}</BsButton><BsButton type="submit" v-else-if="can('recurring.manage') && ['paused','failed'].includes(text(row, 'status'))" class="ls-btn ls-btn-sm" :disabled="actionBusy" @click="setRuleStatus(text(row, 'id'), 'active')">{{ t('operations.resume') }}</BsButton></template>
-  </Column>
-</BsDataTable>
-
-      <BsDataTable v-else-if="kind === 'counterparties'" :value="rows">
-  <Column >
-    <template #header>{{ t('operations.name') }}</template>
-    <template #body="{ data: row }">{{ text(row, 'name') }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('recordPages.kind') }}</template>
-    <template #body="{ data: row }">{{ text(row, 'type') }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('auth.email') }}</template>
-    <template #body="{ data: row }">{{ text(row, 'email') }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('operations.phone') }}</template>
-    <template #body="{ data: row }">{{ text(row, 'phone') }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('transactions.status') }}</template>
-    <template #body="{ data: row }"><BsStatusBadge :status="value(row, 'is_archived') ? 'archived' : 'active'" /></template>
-  </Column>
-</BsDataTable>
-
-      <BsDataTable v-else-if="kind === 'tags'" :value="rows" :label="t('operations.tabs.tags')">
-  <Column >
-    <template #header>{{ t('operations.name') }}</template>
-    <template #body="{ data: row }"><span class="inline-flex items-center gap-2 font-semibold"><span class="size-3 shrink-0 rounded-full" aria-hidden="true" :style="{ backgroundColor: text(row, 'color') }" />{{ text(row, 'name') }}</span></template>
-  </Column>
-  <Column >
-    <template #header>{{ t('recordPages.created') }}</template>
-    <template #body="{ data: row }">{{ date(row, 'created_at') }}</template>
-  </Column>
-  <Column v-if="can('transactions.read')" :header="t('accounts.actions')" body-class="text-end">
-    <template #body="{ data: row }"><NuxtLink :to="{ path: '/transactions', query: { tag: text(row, 'id') } }" class="ls-btn ls-btn-sm">{{ t('tagsGuide.viewTransactions') }}</NuxtLink></template>
-  </Column>
-</BsDataTable>
-
-      <BsDataTable v-else :value="rows">
-  <Column >
-    <template #header>{{ t('auth.email') }}</template>
-    <template #body="{ data: row }">{{ text(row, 'email') }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('recordPages.role') }}</template>
-    <template #body="{ data: row }">{{ roleLabel(text(row, 'role'), text(row, 'role_id')) }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('transactions.status') }}</template>
-    <template #body="{ data: row }"><BsStatusBadge :status="text(row, 'status')" /></template>
-  </Column>
-  <Column >
-    <template #header>{{ t('recordPages.created') }}</template>
-    <template #body="{ data: row }">{{ date(row, 'created_at') }}</template>
-  </Column>
-  <Column >
-    <template #header>{{ t('recordPages.expires') }}</template>
-    <template #body="{ data: row }">{{ date(row, 'expires_at') }}</template>
-  </Column>
-</BsDataTable>
-    </div>
-
-    <p v-if="actionError && !commitmentAction.id" class="ls-error" role="alert">{{ actionError }}</p>
-        <BsRecordActionDialog v-if="commitmentAction.id" :visible="true" :title="t(commitmentAction.mode === 'settle' ? 'operations.settle' : 'operations.postpone')" size="md" :dirty="overlayDirty0" :pending="actionBusy" :error="actionError" :submit-label="t(commitmentAction.mode === 'settle' ? 'operations.convert' : 'operations.postpone')" :cancel-label="t('common.cancel')" @update:visible="value => { if (!value) commitmentAction.id = '' }" @submit="submitCommitmentAction">
-            <template v-if="commitmentAction.mode === 'settle'"><BsFloatingField :label="t('add.chooseAccount')"><select v-model="commitmentAction.paymentAccountId" class="ls-input" required><option value="">{{ t('add.chooseAccount') }}</option><option v-for="account in paymentAccounts" :key="account.id" :value="account.id">{{ account.name }}</option></select></BsFloatingField><BsFloatingField :label="t('operations.fullOrPartialAmount')"><input v-model="commitmentAction.amount" class="ls-input" inputmode="decimal" :placeholder="t('operations.fullOrPartialAmount')"></BsFloatingField></template>
-            <BsFloatingField :label="t('add.date')"><input v-model="commitmentAction.date" type="date" class="ls-input" required></BsFloatingField>
-        </BsRecordActionDialog>
-
-    <TransactionDetailDialog v-if="selectedId" :transaction-id="selectedId" @changed="refresh" @close="selectedId = null" />
-  </div>
+  <BsOperationalRecordsPage v-model:commitment="commitmentForm" v-model:journal="journalForm" :copy="presentationCopy" :view="presentationView" @create="addRecord" @retry="refresh" @open-journal="selectedId = $event" @commitment="openCommitmentAction" @cancel-commitment="cancelCommitment" @rule-status="setRuleStatus" @close-commitment="commitmentAction.id = ''" @submit-commitment="submitCommitmentAction" @close-journal="selectedId = null" @retry-journal="journalPresentation.retry" @retry-tags="journalPresentation.retryTags" @assign-tag="journalPresentation.assignTag" @remove-tag="journalPresentation.removeTag" @upload="journalPresentation.upload" @download="journalPresentation.download" @delete-attachment="journalPresentation.deleteAttachment" @reverse="journalPresentation.reverse"/>
 </template>

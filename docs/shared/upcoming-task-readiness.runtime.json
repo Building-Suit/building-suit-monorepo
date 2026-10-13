@@ -1,0 +1,9 @@
+{
+  "release_id": "f9ebf54c9405c4c47ea7ea1609f758b09666c715ce80a88a0a38c8f0db98c9a0",
+  "source_commit": "8e61433138c0f27610d6a2d49f349e239550126f",
+  "schema_version": 120,
+  "activated_at": "2026-10-11T18:11:14.629086+00:00",
+  "state": "prepared",
+  "host_runtime_verified_by_this_repair": false,
+  "remaining_risk": "Separate SAS recovery owns migration121/runtime launcher JSON parsing failure. No installation, restart, resume or duplicate execution performed."
+}

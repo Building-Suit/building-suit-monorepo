@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { BsOpeningBalanceCopy, BsOpeningBalanceView } from '@building-suit/ui/types/openingBalancePresentation'
 import type { Database, Json } from '~~/types/database.types'
 import { downloadCsv } from '~/utils/csv'
 import { openingBalanceTemplate, parseOpeningBalanceCsv, type OpeningSourceRow } from '~/utils/openingBalanceCsv'
@@ -63,9 +64,8 @@ function labels() {
 }
 function downloadTemplate() { downloadCsv(`${t('opening.templateFilename')}.csv`, openingBalanceTemplate(labels())) }
 
-async function selectFile(event: Event) {
+async function selectFile(file: File | null) {
   if (busy.value) return
-  const file = (event.target as HTMLInputElement).files?.[0]
   if (!file || !currentId.value) return
   try {
     if (!file.name.toLowerCase().endsWith('.csv') || file.size > 5 * 1024 * 1024) throw new Error('OPENING_FILE_INVALID')
@@ -144,82 +144,79 @@ async function reverse(batch: Batch) {
   catch (failure) { toasts.error(t('opening.errorTitle'), describeError(failure)) }
   finally { busy.value = '' }
 }
+const ledgerPresentation = useLedgerPresentation()
+
+const openingCopy = computed<BsOpeningBalanceCopy>(() => ({
+  common_retry: t('common.retry'),
+  common_saving: t('common.saving'),
+  opening_approve: t('opening.approve'),
+  opening_approver: t('opening.approver'),
+  opening_archived: t('opening.archived'),
+  opening_blocked: t('opening.blocked'),
+  opening_chooseAccount: t('opening.chooseAccount'),
+  opening_chooseCsv: t('opening.chooseCsv'),
+  opening_correctionReason: t('opening.correctionReason'),
+  opening_creator: t('opening.creator'),
+  opening_credit: t('opening.credit'),
+  opening_creditTotal: t('opening.creditTotal'),
+  opening_cutoff: t('opening.cutoff'),
+  opening_cutoffHint: t('opening.cutoffHint'),
+  opening_debit: t('opening.debit'),
+  opening_debitTotal: t('opening.debitTotal'),
+  opening_difference: t('opening.difference'),
+  opening_downloadTemplate: t('opening.downloadTemplate'),
+  opening_empty: t('opening.empty'),
+  opening_emptyHint: t('opening.emptyHint'),
+  opening_guideChart: t('opening.guideChart'),
+  opening_guideHint: t('opening.guideHint'),
+  opening_guideMapping: t('opening.guideMapping'),
+  opening_guidePeriod: t('opening.guidePeriod'),
+  opening_guideTitle: t('opening.guideTitle'),
+  opening_history: t('opening.history'),
+  opening_ledgerAccount: t('opening.ledgerAccount'),
+  opening_loadFailed: t('opening.loadFailed'),
+  opening_mapping: t('opening.mapping'),
+  opening_mode: t('opening.mode'),
+  opening_modes_midyear: t('opening.modes.midyear'),
+  opening_modes_year_start: t('opening.modes.year_start'),
+  opening_noAccess: t('opening.noAccess'),
+  opening_openJournal: t('opening.openJournal'),
+  opening_postedLocked: t('opening.postedLocked'),
+  opening_preview: t('opening.preview'),
+  opening_previewHint: t('opening.previewHint', { date: cutoff.value }),
+  opening_reversal: t('opening.reversal'),
+  opening_reversalDate: t('opening.reversalDate'),
+  opening_reverse: t('opening.reverse'),
+  opening_reviewChart: t('opening.reviewChart'),
+  opening_reviewPeriods: t('opening.reviewPeriods'),
+  opening_rowCount: t('opening.rowCount', { count: rows.value.length }),
+  opening_setup: t('opening.setup'),
+  opening_sourceAccount: t('opening.sourceAccount'),
+  opening_subtitle: t('opening.subtitle'),
+  opening_title: t('opening.title'),
+  opening_upload: t('opening.upload'),
+  opening_valid: t('opening.valid'),
+  opening_validate: t('opening.validate'),
+  opening_validation: t('opening.validation'),
+  opening_validationErrors: t('opening.validationErrors'),
+  opening_validationPassed: t('opening.validationPassed'),
+}))
+const openingMode = computed<string>({ get: () => mode.value, set: value => { if (value === 'year_start' || value === 'midyear') mode.value = value } })
+function historyValidation(value: Json | null) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
+  return { rows: t('opening.rowCount', { count: Number(value.valid_row_count ?? 0) + Number(value.zero_row_count ?? 0) }), debit: amount(String(value.debit_total_minor ?? 0)), credit: amount(String(value.credit_total_minor ?? 0)) }
+}
+const openingView = computed<BsOpeningBalanceView>(() => ({
+  reviewChartTo: '/accounts?setup=templates', reviewPeriodsTo: '/periods', modes: [{ value: 'year_start', label: t('opening.modes.year_start') }, { value: 'midyear', label: t('opening.modes.midyear') }],
+  context: ledgerPresentation.context(undefined, undefined, cutoff.value), contextLabel: t('pageContext.label'), canRead: can('opening_balances.read'), canManage: can('opening_balances.manage'), pending: pending.value, loadError: Boolean(error.value),
+  posted: Boolean(postedTransactionId.value), filename: filename.value, fileDisabled: !cutoff.value || busy.value === 'upload', uploadFailed: uploadFailed.value, busy: Boolean(busy.value), retryLabel: busy.value === 'upload' ? t('common.saving') : t('common.retry'), validateLabel: busy.value === 'validate' ? t('common.saving') : t('opening.validate'), approveLabel: busy.value === 'approve' ? t('common.saving') : t('opening.approve'), canApprove: can('opening_balances.approve') && !postedTransactionId.value, approveDisabled: !validation.value?.valid || Boolean(busy.value), correctionDisabled: !correctionReason.value.trim() || Boolean(busy.value),
+  validation: validation.value ? { valid: validation.value.valid, debit: amount(validation.value.debit_total_minor), credit: amount(validation.value.credit_total_minor), difference: amount(validation.value.difference_minor), errors: validation.value.errors.map(validationLabel), preview: validation.value.preview.map(row => ({ id: row.row_id, account: `${row.account_code} · ${row.account_name}`, debit: amount(row.debit_minor), credit: amount(row.credit_minor) })) } : null,
+  rows: rows.value.map(row => ({ sourceRow: row.source_row, sourceCode: row.source_code, sourceName: row.source_name, debit: row.debit, credit: row.credit, accountId: row.account_id, errors: rowErrors(row.source_row).map(validationLabel) })), accounts: accounts.value.map(row => ({ value: row.id, label: `${row.code} · ${row.name} · ${t(`opening.roles.${row.account_role}`)}${row.is_archived ? ` · ${t('opening.archived')}` : ''}` })),
+  history: batches.value.map(batch => ({ id: batch.id, status: batch.status, title: `${t(`opening.modes.${batch.migration_mode}`)} · ${date(batch.cutoff_date)}`, subtitle: `${t('opening.revision', { revision: batch.revision })} · ${t(`opening.status.${batch.status}`)}`, journalTo: batch.posted_transaction_id ? `/transactions?q=${encodeURIComponent(batch.posted_transaction_id)}` : null, validation: historyValidation(batch.validation_result), creator: batch.created_by, approver: batch.approved_by, reversalTo: batch.reversal_transaction_id ? `/transactions?q=${encodeURIComponent(batch.reversal_transaction_id)}` : null, reversalId: batch.reversal_transaction_id ?? '', correctionReason: batch.correction_reason ?? '', canCorrect: batch.status === 'posted' && can('opening_balances.correct'), pending: busy.value === `reverse:${batch.id}`, reverseLabel: busy.value === `reverse:${batch.id}` ? t('common.saving') : t('opening.reverse') })), journalTo: postedTransactionId.value ? `/transactions?q=${encodeURIComponent(postedTransactionId.value)}` : '',
+}))
+function mapOpeningAccount(sourceRow: number, accountId: string | null) { const row = rows.value.find(row => row.source_row === sourceRow); if (row) row.account_id = accountId }
+async function reverseOpeningBatch(id: string) { const batch = batches.value.find(batch => batch.id === id); if (batch) await reverse(batch) }
 </script>
-
 <template>
-  <div class="space-y-6" data-opening-workflow>
-    <LedgerPageHeader :title="t('opening.title')" :subtitle="t('opening.subtitle')" :as-of="cutoff" />
-    <p v-if="!can('opening_balances.read')" class="ls-card p-6 text-fg-muted">{{ t('opening.noAccess') }}</p>
-    <p v-else-if="error" class="ls-error" role="alert">{{ t('opening.loadFailed') }}</p>
-    <BsSectionSkeleton v-else-if="pending" variant="table" :rows="5" />
-    <template v-else>
-      <section class="ls-card space-y-3 p-5" aria-labelledby="opening-readiness-guide" data-opening-readiness-guide>
-        <h2 id="opening-readiness-guide" class="text-h2 font-bold">{{ t('opening.guideTitle') }}</h2>
-        <p class="text-sm text-fg-muted">{{ t('opening.guideHint') }}</p>
-        <ul class="list-disc space-y-1 ps-5 text-sm">
-          <li>{{ t('opening.guideChart') }}</li>
-          <li>{{ t('opening.guidePeriod') }}</li>
-          <li>{{ t('opening.guideMapping') }}</li>
-        </ul>
-        <div class="flex flex-wrap gap-2">
-          <NuxtLink to="/accounts?setup=templates" class="ls-btn ls-btn-sm">{{ t('opening.reviewChart') }}</NuxtLink>
-          <NuxtLink to="/periods" class="ls-btn ls-btn-sm">{{ t('opening.reviewPeriods') }}</NuxtLink>
-        </div>
-      </section>
-      <section v-if="can('opening_balances.manage')" class="ls-card space-y-5 p-5" aria-labelledby="opening-setup">
-        <div><h2 id="opening-setup" class="text-h2 font-bold">1. {{ t('opening.setup') }}</h2><p class="text-sm text-fg-muted">{{ t('opening.cutoffHint') }}</p></div>
-        <div class="grid gap-4 sm:grid-cols-2">
-          <BsFloatingField :label="t('opening.mode')"><select id="opening-mode" v-model="mode" class="ls-input" :disabled="!!postedTransactionId"><option value="year_start">{{ t('opening.modes.year_start') }}</option><option value="midyear">{{ t('opening.modes.midyear') }}</option></select></BsFloatingField>
-          <BsFloatingField :label="t('opening.cutoff')"><input id="opening-cutoff" v-model="cutoff" class="ls-input" type="date" required :disabled="!!postedTransactionId"></BsFloatingField>
-        </div>
-        <div class="border-t border-line pt-4">
-          <h2 class="text-h2 font-bold">2. {{ t('opening.upload') }}</h2>
-          <div class="mt-3 flex flex-wrap gap-2"><label class="ls-btn ls-btn-primary cursor-pointer" for="opening-file">{{ t('opening.chooseCsv') }}</label><BsButton type="button" class="ls-btn" @click="downloadTemplate">{{ t('opening.downloadTemplate') }}</BsButton></div>
-          <input id="opening-file" class="sr-only" type="file" accept=".csv,text/csv" :disabled="!cutoff || busy==='upload'" @change="selectFile">
-          <p v-if="filename" class="mt-2 text-sm text-fg-muted">{{ filename }} · {{ t('opening.rowCount', { count: rows.length }) }}</p>
-          <BsButton v-if="uploadFailed" type="button" class="ls-btn mt-2" :disabled="Boolean(busy)" @click="uploadRows">{{ busy === 'upload' ? t('common.saving') : t('common.retry') }}</BsButton>
-        </div>
-      </section>
-
-      <section v-if="rows.length" class="ls-card space-y-4 overflow-x-auto p-5" aria-labelledby="opening-mapping">
-        <h2 id="opening-mapping" class="text-h2 font-bold">3. {{ t('opening.mapping') }}</h2>
-        <BsDataTable :value="rows" data-key="source_row" :label="t('opening.mapping')" :table-style="{ minWidth: '760px' }">
-          <Column field="source_row" header="#" />
-          <Column :header="t('opening.sourceAccount')"><template #body="{ data: row }"><strong>{{ row.source_code }}</strong><br><span class="text-fg-muted">{{ row.source_name }}</span></template></Column>
-          <Column :header="t('opening.debit')"><template #body="{ data: row }">{{ row.debit || '—' }}</template></Column>
-          <Column :header="t('opening.credit')"><template #body="{ data: row }">{{ row.credit || '—' }}</template></Column>
-          <Column :header="t('opening.ledgerAccount')"><template #body="{ data: row }"><select v-model="row.account_id" class="ls-input min-w-64" :aria-label="`${t('opening.ledgerAccount')} ${row.source_row}`"><option :value="null">{{ t('opening.chooseAccount') }}</option><option v-for="account in accounts" :key="account.id" :value="account.id">{{ account.code }} · {{ account.name }} · {{ t(`opening.roles.${account.account_role}`) }}<template v-if="account.is_archived"> · {{ t('opening.archived') }}</template></option></select></template></Column>
-          <Column :header="t('opening.validationErrors')"><template #body="{ data: row }"><ul v-if="rowErrors(row.source_row).length" class="text-danger"><li v-for="code in rowErrors(row.source_row)" :key="code">{{ validationLabel(code) }}</li></ul><span v-else-if="validation" class="text-success">{{ t('opening.valid') }}</span></template></Column>
-        </BsDataTable>
-        <BsButton type="button" class="ls-btn ls-btn-primary" :disabled="Boolean(busy)" @click="validateBatch">{{ busy === 'validate' ? t('common.saving') : t('opening.validate') }}</BsButton>
-      </section>
-
-      <section v-if="validation" class="ls-card space-y-4 p-5" aria-labelledby="opening-validation" :data-validation="validation.valid ? 'valid' : 'invalid'">
-        <h2 id="opening-validation" class="text-h2 font-bold">4. {{ t('opening.validation') }}</h2>
-        <div class="grid gap-3 sm:grid-cols-3"><p><span class="text-fg-muted">{{ t('opening.debitTotal') }}</span><br><strong>{{ amount(validation.debit_total_minor) }}</strong></p><p><span class="text-fg-muted">{{ t('opening.creditTotal') }}</span><br><strong>{{ amount(validation.credit_total_minor) }}</strong></p><p><span class="text-fg-muted">{{ t('opening.difference') }}</span><br><strong>{{ amount(validation.difference_minor) }}</strong></p></div>
-        <div v-if="validation.errors.length" class="ls-error" role="alert"><p class="font-semibold">{{ t('opening.blocked') }}</p><ul class="mt-2 list-disc ps-5"><li v-for="code in validation.errors" :key="code">{{ validationLabel(code) }}</li></ul></div>
-        <div v-else class="rounded-control bg-surface-muted p-3 text-success" role="status">{{ t('opening.validationPassed') }}</div>
-      </section>
-
-      <section v-if="validation?.preview.length" class="ls-card space-y-4 overflow-x-auto p-5" aria-labelledby="opening-preview">
-        <h2 id="opening-preview" class="text-h2 font-bold">5. {{ t('opening.preview') }}</h2><p class="text-sm text-fg-muted">{{ t('opening.previewHint', { date: cutoff }) }}</p>
-        <BsDataTable :value="validation.preview" data-key="row_id" :label="t('opening.preview')" :table-style="{ minWidth: '620px' }">
-          <Column :header="t('opening.ledgerAccount')"><template #body="{ data: line }">{{ line.account_code }} · {{ line.account_name }}</template></Column>
-          <Column :header="t('opening.debit')" header-class="text-end" body-class="text-end"><template #body="{ data: line }">{{ amount(line.debit_minor) }}</template></Column>
-          <Column :header="t('opening.credit')" header-class="text-end" body-class="text-end"><template #body="{ data: line }">{{ amount(line.credit_minor) }}</template></Column>
-        </BsDataTable>
-        <BsButton v-if="can('opening_balances.approve') && !postedTransactionId" type="button" class="ls-btn ls-btn-primary" :disabled="!validation.valid || Boolean(busy)" @click="approve">{{ busy === 'approve' ? t('common.saving') : t('opening.approve') }}</BsButton>
-        <div v-if="postedTransactionId" class="rounded-control bg-surface-muted p-4" data-opening-posted><strong>{{ t('opening.postedLocked') }}</strong><br><NuxtLink class="text-link underline" :to="{ path: '/transactions', query: { q: postedTransactionId } }">{{ t('opening.openJournal') }}</NuxtLink></div>
-      </section>
-
-      <section class="ls-card space-y-4 p-5" aria-labelledby="opening-history"><h2 id="opening-history" class="text-h2 font-bold">{{ t('opening.history') }}</h2><BsEmptyState v-if="!batches.length" :title="t('opening.empty')" :description="t('opening.emptyHint')" />
-        <article v-for="batch in batches" :key="batch.id" class="rounded-control border border-line p-4" :data-batch-status="batch.status"><div class="flex flex-wrap justify-between gap-3"><div><strong>{{ t(`opening.modes.${batch.migration_mode}`) }} · {{ date(batch.cutoff_date) }}</strong><p class="text-sm text-fg-muted">{{ t('opening.revision', { revision: batch.revision }) }} · {{ t(`opening.status.${batch.status}`) }}</p></div><NuxtLink v-if="batch.posted_transaction_id" class="text-link underline" :to="{ path: '/transactions', query: { q: batch.posted_transaction_id } }">{{ t('opening.openJournal') }}</NuxtLink></div>
-          <div v-if="batch.validation_result" class="mt-3 grid gap-2 text-sm sm:grid-cols-3"><span>{{ t('opening.rowCount', { count: (batch.validation_result as any).valid_row_count + (batch.validation_result as any).zero_row_count }) }}</span><span>{{ t('opening.debit') }}: {{ amount((batch.validation_result as any).debit_total_minor) }}</span><span>{{ t('opening.credit') }}: {{ amount((batch.validation_result as any).credit_total_minor) }}</span></div>
-          <p class="mt-2 break-all text-xs text-fg-muted">{{ t('opening.creator') }}: {{ batch.created_by }}<template v-if="batch.approved_by"> · {{ t('opening.approver') }}: {{ batch.approved_by }}</template></p>
-          <p v-if="batch.reversal_transaction_id" class="mt-2 text-sm">{{ t('opening.reversal') }}: <NuxtLink class="text-link underline" :to="{ path: '/transactions', query: { q: batch.reversal_transaction_id } }">{{ batch.reversal_transaction_id }}</NuxtLink> · {{ batch.correction_reason }}</p>
-          <BsForm v-if="batch.status==='posted' && can('opening_balances.correct')" class="mt-4 grid gap-2 border-t border-line pt-4 sm:grid-cols-[2fr_1fr_auto]" :aria-busy="busy===`reverse:${batch.id}`" @submit.prevent="reverse(batch)"><BsFloatingField :label="t('opening.correctionReason')"><input v-model="correctionReason" class="ls-input" required></BsFloatingField><BsFloatingField :label="t('opening.reversalDate')"><input v-model="correctionDate" class="ls-input" type="date"></BsFloatingField><BsButton type="submit" class="ls-btn self-end" :disabled="!correctionReason.trim() || Boolean(busy)">{{ busy===`reverse:${batch.id}` ? t('common.saving') : t('opening.reverse') }}</BsButton></BsForm>
-        </article>
-      </section>
-    </template>
-  </div>
+  <BsOpeningBalancesPage v-model:mode="openingMode" v-model:cutoff="cutoff" v-model:correction-reason="correctionReason" v-model:correction-date="correctionDate" :copy="openingCopy" :view="openingView" @download-template="downloadTemplate" @file="selectFile" @upload-rows="uploadRows" @validate-batch="validateBatch" @approve="approve" @reverse="reverseOpeningBatch" @map-account="mapOpeningAccount" />
 </template>

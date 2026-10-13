@@ -1,6 +1,16 @@
 <script setup lang="ts">
+import type { BsExecutionActivityItem } from '@building-suit/ui/activity-presentation'
+import { automationStatusTone } from '../utils/automationStatusTone'
 interface FailureRow { failure_id: number; task_id: string; stage: string; summary: string; raw_error: string | null; attempt: number | null; created_at: string; legal_actions: string[] }
 const { data, error } = await useFetch<{ failures: FailureRow[] }>('/api/errors')
-async function copy(value: unknown) { await navigator.clipboard.writeText(typeof value === 'string' ? value : JSON.stringify(value, null, 2)) }
+const { copyText } = useClipboard()
+async function copy(value: unknown) { await copyText(typeof value === 'string' ? value : JSON.stringify(value, null, 2)) }
+const activities = computed<BsExecutionActivityItem[]>(() => (data.value?.failures ?? []).map(failure => ({ id: String(failure.failure_id), title: `${failure.task_id} · ${failure.stage}`, status: 'failed', statusLabel: 'failed', statusTone: automationStatusTone('failed'), description: failure.summary, attempt: `Attempt ${failure.attempt ?? '—'}`, date: failure.created_at, guidance: `Legal actions: ${(failure.legal_actions || []).join(', ') || 'inspect'}`, taskLink: { to: `/tasks/${failure.task_id}`, label: 'Open task' }, actions: [{ key: 'copy-error', label: 'Copy Error' }, { key: 'copy-diagnostic', label: 'Copy Diagnostic Bundle' }] })))
+function activityAction(key: 'copy-error' | 'copy-diagnostic', id: string) {
+  const failure = data.value?.failures.find(row => String(row.failure_id) === id)
+  if (failure) void copy(key === 'copy-error' ? failure.raw_error || failure.summary : failure)
+}
 </script>
-<template><main class="space-y-5"><div><p class="text-xs font-bold uppercase tracking-widest text-fg-muted">Recovery</p><h1 class="mt-2 text-3xl font-black">Error center</h1></div><p v-if="error" class="text-danger">{{ error.message }}</p><BsCard v-if="!data?.failures.length" padding="lg"><p class="text-fg-muted">No unresolved structured failures.</p></BsCard><BsCard v-for="failure in data?.failures || []" :key="failure.failure_id" class="border-danger/30"><div class="flex flex-wrap justify-between gap-2"><div><DashboardStatusPill value="failed" /><h2 class="mt-2 font-black">{{ failure.task_id }} · {{ failure.stage }}</h2><p class="mt-1 text-sm text-fg-muted">{{ failure.summary }}</p></div><div class="text-end text-xs text-fg-muted"><p>Attempt {{ failure.attempt ?? '—' }}</p><p>{{ failure.created_at }}</p></div></div><div class="mt-4 flex flex-wrap gap-2"><BsButton size="sm" @click="copy(failure.raw_error || failure.summary)">Copy Error</BsButton><BsButton size="sm" @click="copy(failure)">Copy Diagnostic Bundle</BsButton><NuxtLink class="ls-btn ls-btn-sm text-link" :to="`/tasks/${failure.task_id}`">Open task</NuxtLink></div><p class="mt-3 text-xs text-fg-muted">Legal actions: {{ (failure.legal_actions || []).join(', ') || 'inspect' }}</p></BsCard></main></template>
+<template>
+  <BsExecutionActivityPage eyebrow="Recovery" title="Error center" :items="activities" :error="error?.message" empty-label="No unresolved structured failures." @action="activityAction" />
+</template>

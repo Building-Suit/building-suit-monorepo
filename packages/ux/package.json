@@ -4,11 +4,14 @@
   "version": "0.1.0",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./barcode": "./src/utils/barcode.js",
+    "./downloadText": "./src/utils/downloadText.js"
   },
   "dependencies": {
     "@building-suit/contracts": "workspace:*",
     "@building-suit/i18n": "workspace:*",
-    "gsap": "3.15.0"
+    "gsap": "3.15.0",
+    "vue": "3.5.42"
   }
 }

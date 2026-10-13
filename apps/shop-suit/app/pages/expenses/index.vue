@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { BsExpenseForm, BsExpenseFilters, BsExpenseView, BsExpenseRow } from '@building-suit/ui/types/expensePresentation'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 
 definePageMeta({ layout: 'default', middleware: ['auth'] })
@@ -42,7 +43,7 @@ const statusFilter = ref<'all' | ExpenseStatus>('all')
 const categoryFilter = ref('')
 const fromDate = ref('')
 const toDate = ref('')
-let searchTimer: ReturnType<typeof setTimeout> | undefined
+
 
 const editingId = ref<string | null>(null)
 const saveRequestId = ref<string | null>(null)
@@ -99,11 +100,7 @@ const copy = computed(() => isArabic.value ? {
   changed: 'This expense changed after you opened it. Refresh the list and try again.', filterInvalid: 'Review the search and date filters, then try again.', readOnly: 'You can view expenses only. Ask the owner for expense-management permission to record, correct, or void one.', confirmSave: 'Record this paid expense? It increases expense totals by the amount shown.', confirmCorrection: 'Replace this expense? The original is preserved as voided and totals use the new amount.', saved: 'Expense and trace history saved.', branch: 'Location',
 })
 
-watch(search, value => {
-  if (searchTimer) clearTimeout(searchTimer)
-  searchTimer = setTimeout(() => { debouncedSearch.value = value.trim(); page.value = 1 }, 300)
-})
-onBeforeUnmount(() => { if (searchTimer) clearTimeout(searchTimer) })
+useDebouncedChange(search, value => { debouncedSearch.value = value.trim(); page.value = 1 }, 300)
 watch([statusFilter, categoryFilter, fromDate, toDate], () => { page.value = 1 })
 
 const { data: categories } = useAsyncData(() => `shop-data:expense-categories:${currentId.value ?? 'none'}`, async () => {
@@ -231,57 +228,17 @@ async function submitVoid() {
     if (inScope()) actionError.value = readableError(voidError)
   } finally { voidPending.value = false }
 }
-function handlePage(event: { page: number }) { page.value = event.page + 1 }
+
+
+const expenseForm = computed<BsExpenseForm>({ get: () => ({ ...form }), set: value => Object.assign(form, value) })
+const expenseFilters = computed<BsExpenseFilters>({ get: () => ({ status: statusFilter.value, category: categoryFilter.value, from: fromDate.value, to: toDate.value }), set: value => { if (value.status === 'all' || value.status === 'paid' || value.status === 'void') statusFilter.value = value.status; categoryFilter.value = value.category; fromDate.value = value.from; toDate.value = value.to } })
+const expenseView = computed<BsExpenseView>(() => ({ available: !!current.value, loadingContext: shopLoading.value, hasLocation: !!currentLocationId.value, locationName: currentLocation.value?.name ?? '', canManage: canManage.value, loading: pending.value, error: error.value ? readErrorMessage.value : '', actionError: actionError.value, editing: !!editingId.value, dirty: formDirty.value, saving: saving.value, voidDirty: voidDirty.value, voidPending: voidPending.value, total: expensePage.value?.total ?? 0, pageSize }))
+const expenseRows = computed<BsExpenseRow[]>(() => (expensePage.value?.items ?? []).map(expense => ({ id: expense.id, title: expense.title, notes: expense.notes ?? '', reason: expense.change_reason ?? '', category: expense.category_name || '—', date: displayDate(expense.expense_date), history: historyLabel(expense.history_kind), actor: expense.created_by_name || '—', amount: money(expense.amount), status: expense.status === 'paid' ? copy.value.paid : copy.value.voided, editable: canManage.value && expense.status === 'paid' })))
+const expenseCategoryOptions = computed(() => [{ value: '', label: copy.value.allCategories }, ...categories.value.map(category => ({ value: category.id, label: category.name }))])
+function correctExpense(id: string) { const expense = expensePage.value?.items.find(item => item.id === id); if (expense) openCorrection(expense) }
+function voidExpense(id: string) { const expense = expensePage.value?.items.find(item => item.id === id); if (expense) openVoid(expense) }
 </script>
 
 <template>
-  <div class="space-y-6">
-    <header class="flex flex-wrap items-end justify-between gap-4">
-      <div><h1 class="text-3xl font-extrabold tracking-tight">{{ copy.title }}</h1><p class="mt-2 text-sm text-muted-foreground">{{ copy.subtitle }}</p></div>
-      <BsButton v-if="current && currentLocationId && canManage" type="button" class="ls-btn ls-btn-primary" @click="openCreate">{{ copy.add }}</BsButton>
-    </header>
-    <div v-if="!current && !shopLoading" class="ls-card p-8 text-center text-sm"><p>{{ copy.noShop }}</p><NuxtLink to="/dashboard" class="mt-3 inline-block font-bold text-[var(--bs-link)] underline">{{ copy.dashboard }}</NuxtLink></div>
-    <template v-else-if="current">
-      <p class="rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm">{{ copy.incomeBoundary }}</p>
-      <p v-if="!currentLocationId" role="alert" class="rounded-xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-4 text-sm">{{ copy.noLocation }}</p>
-      <p v-else-if="!pending && !error && !canManage" class="rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm">{{ copy.readOnly }}</p>
-      <p v-if="actionError && !showForm && !voidOpen" role="alert" class="ls-error">{{ actionError }}</p>
-
-      <BsRecordActionDialog v-model:visible="showForm" :title="editingId ? copy.correct : copy.add" :dirty="formDirty" :pending="saving" :error="actionError" :submit-label="editingId ? copy.saveCorrection : copy.save" :cancel-label="copy.cancel" @submit="save">
-
-          <p v-if="editingId" class="rounded-xl bg-muted p-3 text-sm sm:col-span-2">{{ copy.correctionHelp }}</p>
-          <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ copy.name }}<input v-model="form.title" type="text" minlength="2" maxlength="160" required class="ls-input"></label>
-          <label class="space-y-2 text-sm font-bold">{{ copy.amount }}<input v-model.number="form.amount" type="number" min="0.01" max="999999999.99" step="0.01" required class="ls-input"></label>
-          <label class="space-y-2 text-sm font-bold">{{ copy.date }}<input v-model="form.date" type="date" required class="ls-input"></label>
-          <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ copy.category }}<input v-model="form.category" type="text" list="shop-expense-categories" minlength="2" maxlength="80" required :placeholder="copy.categoryHint" class="ls-input"><datalist id="shop-expense-categories"><option v-for="category in categories" :key="category.id" :value="category.name" /></datalist></label>
-          <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ copy.notes }}<textarea v-model="form.notes" rows="2" maxlength="1000" class="ls-input" /></label>
-          <label v-if="editingId" class="space-y-2 text-sm font-bold sm:col-span-2">{{ copy.correctionReason }}<textarea v-model="form.correctionReason" rows="2" minlength="2" maxlength="500" required class="ls-input" /></label>
-      </BsRecordActionDialog>
-
-      <BsRecordActionDialog v-model:visible="voidOpen" :title="copy.voidTitle" :dirty="voidDirty" :pending="voidPending" :error="actionError" :submit-label="copy.void" :cancel-label="copy.cancel" submit-tone="danger" size="sm" @submit="submitVoid">
-        <p class="mb-4 text-sm text-muted-foreground">{{ copy.voidHelp }}</p>
-        <label class="space-y-2 text-sm font-bold">{{ copy.voidReason }}<textarea v-model="voidReason" rows="3" minlength="2" maxlength="500" required class="ls-input" /></label>
-      </BsRecordActionDialog>
-
-      <section v-if="currentLocationId" class="overflow-hidden ls-card">
-        <div class="grid gap-3 border-b border-border p-4 sm:grid-cols-2 xl:grid-cols-6">
-          <input v-model="search" type="search" :placeholder="copy.search" :aria-label="copy.search" class="ls-input xl:col-span-2">
-          <select v-model="statusFilter" :aria-label="copy.status" class="ls-select"><option value="all">{{ copy.allStatuses }}</option><option value="paid">{{ copy.paid }}</option><option value="void">{{ copy.voided }}</option></select>
-          <select v-model="categoryFilter" :aria-label="copy.category" class="ls-select"><option value="">{{ copy.allCategories }}</option><option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option></select>
-          <label class="text-xs font-bold text-muted-foreground">{{ copy.from }}<input v-model="fromDate" type="date" class="ls-input mt-1"></label>
-          <label class="text-xs font-bold text-muted-foreground">{{ copy.to }}<input v-model="toDate" type="date" class="ls-input mt-1"></label>
-        </div>
-        <div class="border-b border-border px-4 py-3 text-sm text-muted-foreground"><strong>{{ copy.branch }}:</strong> {{ currentLocation?.name }}</div>
-        <BsDataTable :value="expensePage?.items ?? []" :loading="pending" :error="error ? readErrorMessage : null" :label="copy.title" data-key="id" lazy paginator :rows="pageSize" :first="(page - 1) * pageSize" :total-records="expensePage?.total ?? 0" :always-show-paginator="false" :row-class="() => 'border-t border-border'" @page="handlePage" @retry="refresh()">
-          <Column header-class="px-4 py-3 text-start" body-class="px-4 py-3"><template #header>{{ copy.name }}</template><template #body="{ data: expense }"><p class="font-semibold">{{ expense.title }}</p><p v-if="expense.notes" class="text-xs text-muted-foreground">{{ expense.notes }}</p><p v-if="expense.change_reason" class="mt-1 text-xs text-muted-foreground">{{ expense.change_reason }}</p></template></Column>
-          <Column header-class="px-4 py-3 text-start" body-class="px-4 py-3"><template #header>{{ copy.category }}</template><template #body="{ data: expense }">{{ expense.category_name || '—' }}</template></Column>
-          <Column header-class="px-4 py-3 text-start" body-class="px-4 py-3"><template #header>{{ copy.date }}</template><template #body="{ data: expense }">{{ displayDate(expense.expense_date) }}</template></Column>
-          <Column header-class="px-4 py-3 text-start" body-class="px-4 py-3"><template #header>{{ copy.history }}</template><template #body="{ data: expense }"><span class="ls-badge bg-muted text-fg">{{ historyLabel(expense.history_kind) }}</span><p class="mt-1 text-xs text-muted-foreground">{{ expense.created_by_name || '—' }}</p></template></Column>
-          <Column header-class="px-4 py-3 text-end" body-class="px-4 py-3 text-end"><template #header>{{ copy.amount }}</template><template #body="{ data: expense }">{{ money(expense.amount) }}</template></Column>
-          <Column header-class="px-4 py-3 text-end" body-class="px-4 py-3 text-end"><template #header>{{ copy.status }}</template><template #body="{ data: expense }"><span class="ls-badge" :class="expense.status === 'paid' ? 'bg-[var(--bs-status-success-bg)] text-fg' : 'bg-muted text-muted-foreground'">{{ expense.status === 'paid' ? copy.paid : copy.voided }}</span><div v-if="canManage && expense.status === 'paid'" class="mt-2 flex justify-end gap-2"><BsButton variant="link" type="button" class="text-sm font-bold text-[var(--bs-link)]" @click="openCorrection(expense)">{{ copy.correct }}</BsButton><BsButton variant="text" type="button" class="text-sm font-bold text-[var(--bs-status-error)]" @click="openVoid(expense)">{{ copy.void }}</BsButton></div></template></Column>
-          <template #empty><p class="p-8 text-center text-sm text-muted-foreground">{{ copy.empty }}</p></template>
-        </BsDataTable>
-      </section>
-    </template>
-  </div>
+  <BsExpenseHistoryPage v-model:form="expenseForm" v-model:filters="expenseFilters" v-model:search="search" v-model:page="page" v-model:editor-open="showForm" v-model:void-open="voidOpen" v-model:void-reason="voidReason" :copy="copy" :view="expenseView" :rows="expenseRows" :category-options="expenseCategoryOptions" @create="openCreate" @save="save" @void="submitVoid" @retry="refresh" @correct="correctExpense" @open-void="voidExpense" />
 </template>

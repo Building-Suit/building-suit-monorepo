@@ -1,0 +1,17 @@
+{
+  "rollback_rehearsal_passed": true,
+  "concurrent_task_snapshot_rejected": true,
+  "concurrent_registry_snapshot_rejected": true,
+  "apply_confirmed": true,
+  "replay_confirmed": true,
+  "amendment_payload_fingerprint": "781661ee59df11c5fe848a4098c728ca901f4946dafe1b94749fec3491a4cc3e",
+  "replay_preservation": {
+    "runs": 91,
+    "credits": 38,
+    "executions": 329,
+    "task_events": 2742,
+    "receipt_count": 1,
+    "amendment_audits": 27,
+    "gate_resolutions": 10
+  }
+}

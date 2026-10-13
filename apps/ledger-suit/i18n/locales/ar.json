@@ -221,7 +221,8 @@
     "themeSystem": "حسب النظام",
     "back": "رجوع",
     "continue": "متابعة",
-    "retry": "إعادة المحاولة"
+    "retry": "إعادة المحاولة",
+    "refresh": "تحديث"
   },
   "accountingTable": {
     "density": "كثافة الجدول",

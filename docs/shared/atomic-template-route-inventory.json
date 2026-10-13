@@ -1,0 +1,2589 @@
+{
+  "schemaVersion": 1,
+  "task": "atomic-template-unification",
+  "parentPr": 238,
+  "parentSha": "089381052fccdd9768d20ad403037f12bd3fa0d9",
+  "sourceReconciliation": [
+    "cf5eb9cd6349f4517ca18beb6025d88167c3e279",
+    "18dcf90f33335c06c74a2c9b98ce794b90991837"
+  ],
+  "registeredTemplates": {
+    "BsPrintableDocument": "packages/ui/src/templates/BsPrintableDocument.vue",
+    "BsPublicLegalPage": "packages/ui/src/templates/BsPublicLegalPage.vue",
+    "BsLandingPage": "packages/ui/src/templates/BsLandingPage.vue",
+    "BsMarketingLayout": "packages/ui/src/templates/BsMarketingLayout.vue",
+    "BsContactPage": "packages/ui/src/templates/BsContactPage.vue",
+    "BsAppShell": "packages/ui/src/templates/BsAppShell.vue",
+    "BsAuthLayout": "packages/ui/src/templates/BsAuthLayout.vue",
+    "BsAppRoot": "packages/ui/src/templates/BsAppRoot.vue",
+    "BsAdministrationShell": "packages/ui/src/templates/BsAdministrationShell.vue",
+    "BsAccessManagementPage": "packages/ui/src/templates/BsAccessManagementPage.vue",
+    "BsWelcomePage": "packages/ui/src/templates/BsWelcomePage.vue",
+    "BsRedirectPage": "packages/ui/src/templates/BsRedirectPage.vue",
+    "BsSignInPage": "packages/ui/src/templates/BsSignInPage.vue",
+    "BsPasswordRecoveryPage": "packages/ui/src/templates/BsPasswordRecoveryPage.vue",
+    "BsAdministrationEntryPage": "packages/ui/src/templates/BsAdministrationEntryPage.vue",
+    "BsEmailVerificationPage": "packages/ui/src/templates/BsEmailVerificationPage.vue",
+    "BsExecutionActivityPage": "packages/ui/src/templates/BsExecutionActivityPage.vue",
+    "BsTaskWorklistPage": "packages/ui/src/templates/BsTaskWorklistPage.vue",
+    "BsAccountingDimensionsPage": "packages/ui/src/templates/BsAccountingDimensionsPage.vue",
+    "BsWorkspaceShell": "packages/ui/src/templates/BsWorkspaceShell.vue",
+    "BsRoutingPolicyPage": "packages/ui/src/templates/BsRoutingPolicyPage.vue",
+    "BsProjectRegistryPage": "packages/ui/src/templates/BsProjectRegistryPage.vue",
+    "BsTaskDetailPage": "packages/ui/src/templates/BsTaskDetailPage.vue",
+    "BsOperationsDashboardPage": "packages/ui/src/templates/BsOperationsDashboardPage.vue",
+    "BsCataloguePage": "packages/ui/src/templates/BsCataloguePage.vue",
+    "BsInvitationAcceptancePage": "packages/ui/src/templates/BsInvitationAcceptancePage.vue",
+    "BsAuditHistoryPage": "packages/ui/src/templates/BsAuditHistoryPage.vue",
+    "BsClientPortfolioPage": "packages/ui/src/templates/BsClientPortfolioPage.vue",
+    "BsProductAuthFrame": "packages/ui/src/templates/BsProductAuthFrame.vue",
+    "BsCustomerDirectoryPage": "packages/ui/src/templates/BsCustomerDirectoryPage.vue",
+    "BsStarterWorkflowPage": "packages/ui/src/templates/BsStarterWorkflowPage.vue",
+    "BsReceiptPage": "packages/ui/src/templates/BsReceiptPage.vue",
+    "BsCustomerProfilePage": "packages/ui/src/templates/BsCustomerProfilePage.vue",
+    "BsBusinessSettingsPage": "packages/ui/src/templates/BsBusinessSettingsPage.vue",
+    "BsCashShiftsPage": "packages/ui/src/templates/BsCashShiftsPage.vue",
+    "BsSalesDirectoryPage": "packages/ui/src/templates/BsSalesDirectoryPage.vue",
+    "BsPurchasingPage": "packages/ui/src/templates/BsPurchasingPage.vue",
+    "BsExpenseHistoryPage": "packages/ui/src/templates/BsExpenseHistoryPage.vue",
+    "BsInventoryManagementPage": "packages/ui/src/templates/BsInventoryManagementPage.vue",
+    "BsPointOfSalePage": "packages/ui/src/templates/BsPointOfSalePage.vue",
+    "BsSignupPage": "packages/ui/src/templates/BsSignupPage.vue",
+    "BsTaxWorkspacePage": "packages/ui/src/templates/BsTaxWorkspacePage.vue",
+    "BsCatalogImportPage": "packages/ui/src/templates/BsCatalogImportPage.vue",
+    "BsOpeningBalancesPage": "packages/ui/src/templates/BsOpeningBalancesPage.vue",
+    "BsAccountingPeriodsPage": "packages/ui/src/templates/BsAccountingPeriodsPage.vue",
+    "BsMigrationCenterPage": "packages/ui/src/templates/BsMigrationCenterPage.vue",
+    "BsAppointmentsPage": "packages/ui/src/templates/BsAppointmentsPage.vue",
+    "BsReportsPage": "packages/ui/src/templates/BsReportsPage.vue",
+    "BsInventoryAccountingPage": "packages/ui/src/templates/BsInventoryAccountingPage.vue",
+    "BsAssetRegisterPage": "packages/ui/src/templates/BsAssetRegisterPage.vue",
+    "BsBankReconciliationPage": "packages/ui/src/templates/BsBankReconciliationPage.vue",
+    "BsBillingPage": "packages/ui/src/templates/BsBillingPage.vue",
+    "BsSubscriptionCheckoutPage": "packages/ui/src/templates/BsSubscriptionCheckoutPage.vue",
+    "BsPlatformAdministrationPage": "packages/ui/src/templates/BsPlatformAdministrationPage.vue",
+    "BsOperationalRecordsPage": "packages/ui/src/templates/BsOperationalRecordsPage.vue",
+    "BsJournalWorkspacePage": "packages/ui/src/templates/BsJournalWorkspacePage.vue",
+    "BsFinancialAccountsPage": "packages/ui/src/templates/BsFinancialAccountsPage.vue",
+    "BsAccountActivationPage": "packages/ui/src/templates/BsAccountActivationPage.vue",
+    "BsAccountProvisioningPage": "packages/ui/src/templates/BsAccountProvisioningPage.vue",
+    "BsOwnerInvitationPage": "packages/ui/src/templates/BsOwnerInvitationPage.vue"
+  },
+  "originalInventory": {
+    "suitVueFiles": 86,
+    "localComponents": 0,
+    "routes": 74
+  },
+  "currentInventory": {
+    "suitVueFiles": 90,
+    "localComponents": 0,
+    "routes": 76,
+    "layouts": 9,
+    "roots": 5
+  },
+  "acceptance": "verified-local: all 76 routes, strict zero-debt architecture, cross-Suit parity and regressions; publication pending provider suppression verification",
+  "entries": [
+    {
+      "source": "apps/automation-suit/app/app.vue",
+      "kind": "root",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAppRoot.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAppRoot"
+      ],
+      "destination": "packages/ui/src/templates/BsAppRoot.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/automation-suit/app/app.vue",
+      "dependencies": [],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions"
+    },
+    {
+      "source": "apps/automation-suit/app/layouts/default.vue",
+      "kind": "layout",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAppShell.vue"
+      ],
+      "renderedBsComponents": [
+        "BsWorkspaceShell"
+      ],
+      "destination": "packages/ui/src/templates/BsWorkspaceShell.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/automation-suit/app/layouts/default.vue",
+      "dependencies": [],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "reconciledRenderedBsComponents": [
+        "BsAppShell",
+        "BsInline",
+        "BsSettingsMenu",
+        "BsSlot",
+        "BsStack",
+        "BsText"
+      ]
+    },
+    {
+      "source": "apps/automation-suit/app/pages/errors.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsExecutionActivityPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsExecutionActivityPage"
+      ],
+      "destination": "packages/ui/src/templates/BsExecutionActivityPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/automation-suit/app/pages/errors.vue",
+      "dependencies": [
+        "../utils/automationStatusTone",
+        "@building-suit/ui/activity-presentation"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "execution-activity",
+      "reconciledDependencies": [
+        "../utils/automationStatusTone"
+      ]
+    },
+    {
+      "source": "apps/automation-suit/app/pages/index.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsOperationsDashboardPage"
+      ],
+      "destination": "packages/ui/src/templates/BsOperationsDashboardPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/automation-suit/app/pages/index.vue",
+      "dependencies": [
+        "../../types/dashboard",
+        "../utils/automationStatusTone"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "operations-monitoring-dashboard",
+      "reconciledRenderedBsComponents": [
+        "BsAlert",
+        "BsButton",
+        "BsCard",
+        "BsCheckbox",
+        "BsCodeBlock",
+        "BsContentSection",
+        "BsDataTable",
+        "BsDescriptionItem",
+        "BsDescriptionList",
+        "BsDisclosure",
+        "BsGrid",
+        "BsHeading",
+        "BsInline",
+        "BsKpiCard",
+        "BsPage",
+        "BsSelect",
+        "BsStack",
+        "BsStatusBadge",
+        "BsText",
+        "BsUsageMeter"
+      ],
+      "reconciledDependencies": [
+        "../utils/automationStatusTone",
+        "#components",
+        "../../types/dashboard"
+      ]
+    },
+    {
+      "source": "apps/automation-suit/app/pages/n8n.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsExecutionActivityPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsExecutionActivityPage"
+      ],
+      "destination": "packages/ui/src/templates/BsExecutionActivityPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/automation-suit/app/pages/n8n.vue",
+      "dependencies": [
+        "../utils/automationStatusTone",
+        "@building-suit/ui/activity-presentation"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "execution-activity",
+      "reconciledDependencies": [
+        "../utils/automationStatusTone"
+      ]
+    },
+    {
+      "source": "apps/automation-suit/app/pages/policies.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsRoutingPolicyPage"
+      ],
+      "destination": "packages/ui/src/templates/BsRoutingPolicyPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/automation-suit/app/pages/policies.vue",
+      "dependencies": [
+        "../../types/operations",
+        "../utils/automationStatusTone"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "routing-policy-management",
+      "reconciledRenderedBsComponents": [
+        "BsAlert",
+        "BsButton",
+        "BsCard",
+        "BsCheckbox",
+        "BsField",
+        "BsGrid",
+        "BsHeading",
+        "BsInline",
+        "BsInput",
+        "BsList",
+        "BsListItem",
+        "BsPage",
+        "BsRecordActionDialog",
+        "BsStack",
+        "BsStatusBadge",
+        "BsText"
+      ],
+      "reconciledDependencies": [
+        "../utils/automationStatusTone",
+        "../../types/operations"
+      ]
+    },
+    {
+      "source": "apps/automation-suit/app/pages/projects.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsProjectRegistryPage"
+      ],
+      "destination": "packages/ui/src/templates/BsProjectRegistryPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/automation-suit/app/pages/projects.vue",
+      "dependencies": [
+        "../../types/operations",
+        "../utils/automationStatusTone"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "project-registration",
+      "reconciledRenderedBsComponents": [
+        "BsAlert",
+        "BsButton",
+        "BsCard",
+        "BsCheckbox",
+        "BsCodeBlock",
+        "BsDisclosure",
+        "BsField",
+        "BsGrid",
+        "BsHeading",
+        "BsInline",
+        "BsInput",
+        "BsPage",
+        "BsRecordActionDialog",
+        "BsSelect",
+        "BsStack",
+        "BsStatusBadge",
+        "BsText",
+        "BsTextarea"
+      ],
+      "reconciledDependencies": [
+        "../utils/automationStatusTone",
+        "../../types/operations"
+      ]
+    },
+    {
+      "source": "apps/automation-suit/app/pages/runs.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsExecutionActivityPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsExecutionActivityPage"
+      ],
+      "destination": "packages/ui/src/templates/BsExecutionActivityPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/automation-suit/app/pages/runs.vue",
+      "dependencies": [
+        "../../types/dashboard",
+        "../utils/automationStatusTone",
+        "@building-suit/ui/activity-presentation"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "execution-activity",
+      "reconciledDependencies": [
+        "../utils/automationStatusTone",
+        "../../types/dashboard"
+      ]
+    },
+    {
+      "source": "apps/automation-suit/app/pages/tasks/[id].vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsTaskDetailPage"
+      ],
+      "destination": "packages/ui/src/templates/BsTaskDetailPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/automation-suit/app/pages/tasks/[id].vue",
+      "dependencies": [
+        "../../utils/automationStatusTone"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "task-detail",
+      "reconciledRenderedBsComponents": [
+        "BsAlert",
+        "BsButton",
+        "BsCard",
+        "BsCodeBlock",
+        "BsDescriptionItem",
+        "BsDescriptionList",
+        "BsDisclosure",
+        "BsGrid",
+        "BsHeading",
+        "BsInline",
+        "BsKpiCard",
+        "BsPage",
+        "BsStack",
+        "BsStatusBadge",
+        "BsText"
+      ]
+    },
+    {
+      "source": "apps/automation-suit/app/pages/tasks/index.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsTaskWorklistPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsTaskWorklistPage"
+      ],
+      "destination": "packages/ui/src/templates/BsTaskWorklistPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/automation-suit/app/pages/tasks/index.vue",
+      "dependencies": [
+        "../../../types/dashboard",
+        "../../utils/automationStatusTone",
+        "@building-suit/ui/task-presentation"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "task-worklist",
+      "reconciledDependencies": [
+        "../../utils/automationStatusTone",
+        "#components",
+        "../../../types/dashboard"
+      ]
+    },
+    {
+      "source": "apps/inventory-suit/app/app.vue",
+      "kind": "root",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAppRoot.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAppRoot"
+      ],
+      "destination": "packages/ui/src/templates/BsAppRoot.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/inventory-suit/app/app.vue",
+      "dependencies": [],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions"
+    },
+    {
+      "source": "apps/inventory-suit/app/layouts/default.vue",
+      "kind": "layout",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAppShell.vue"
+      ],
+      "renderedBsComponents": [
+        "BsWorkspaceShell"
+      ],
+      "destination": "packages/ui/src/templates/BsWorkspaceShell.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/inventory-suit/app/layouts/default.vue",
+      "dependencies": [],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "reconciledRenderedBsComponents": [
+        "BsAppShell",
+        "BsSettingsMenu",
+        "BsSlot",
+        "BsText"
+      ]
+    },
+    {
+      "source": "apps/inventory-suit/app/pages/index.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsWelcomePage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsWelcomePage"
+      ],
+      "destination": "packages/ui/src/templates/BsWelcomePage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/inventory-suit/app/pages/index.vue",
+      "dependencies": [],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "welcome"
+    },
+    {
+      "source": "apps/ledger-suit/app/app.vue",
+      "kind": "root",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAppRoot.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAppRoot"
+      ],
+      "destination": "packages/ui/src/templates/BsAppRoot.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/ledger-suit/app/app.vue",
+      "dependencies": [],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions"
+    },
+    {
+      "source": "apps/ledger-suit/app/layouts/default.vue",
+      "kind": "layout",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAppShell.vue"
+      ],
+      "renderedBsComponents": [
+        "BsWorkspaceShell"
+      ],
+      "destination": "packages/ui/src/templates/BsWorkspaceShell.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/ledger-suit/app/layouts/default.vue",
+      "dependencies": [
+        "@building-suit/data-access",
+        "~/composables/useLedgerAddTransactionDialogView",
+        "~/composables/useLedgerOperationsCenterView",
+        "~/composables/useLedgerOrganizationSetupView",
+        "~/composables/useLedgerOrganizationSwitcherView",
+        "~/composables/useLedgerSyntheticDemoView",
+        "~/composables/useLedgerTeamMenuView",
+        "~~/types/database.types"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "reconciledRenderedBsComponents": [
+        "BsAlert",
+        "BsAppShell",
+        "BsBox",
+        "BsButton",
+        "BsCard",
+        "BsCheckbox",
+        "BsContextSwitcher",
+        "BsDataTable",
+        "BsDialog",
+        "BsField",
+        "BsFieldLabel",
+        "BsFloatingField",
+        "BsFlowBlock",
+        "BsForm",
+        "BsGrid",
+        "BsHeading",
+        "BsIcon",
+        "BsInline",
+        "BsInput",
+        "BsLink",
+        "BsMoneyText",
+        "BsNotificationMenu",
+        "BsPageBody",
+        "BsProductLogo",
+        "BsReadOnlyBanner",
+        "BsRecordActionDialog",
+        "BsSelect",
+        "BsSelectOption",
+        "BsSlot",
+        "BsStack",
+        "BsStateSurface",
+        "BsText",
+        "BsToastHost",
+        "BsTrialCountdown",
+        "BsUsageMeter",
+        "BsUserMenu",
+        "BsWorkflowScope"
+      ],
+      "reconciledDependencies": [
+        "~/composables/useLedgerAddTransactionDialogView",
+        "~/composables/useLedgerFinancialSystemMapView",
+        "~/composables/useLedgerOperationsCenterView",
+        "~/composables/useLedgerOrganizationSetupView",
+        "~/composables/useLedgerOrganizationSwitcherView",
+        "~/composables/useLedgerSyntheticDemoView",
+        "~/composables/useLedgerTeamMenuView",
+        "~~/types/database.types"
+      ]
+    },
+    {
+      "source": "apps/ledger-suit/app/layouts/marketing.vue",
+      "kind": "layout",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsMarketingLayout.vue"
+      ],
+      "renderedBsComponents": [
+        "BsMarketingLayout"
+      ],
+      "destination": "packages/ui/src/templates/BsMarketingLayout.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/ledger-suit/app/layouts/marketing.vue",
+      "dependencies": [],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "reconciledRenderedBsComponents": [
+        "BsMarketingLayout",
+        "BsProductLogo",
+        "BsSlot"
+      ]
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/about.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsPublicLegalPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsPublicLegalPage"
+      ],
+      "destination": "packages/ui/src/templates/BsPublicLegalPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/ledger-suit/app/pages/about.vue",
+      "dependencies": [
+        "~/utils/legal"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "public-document"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/accept-invitation.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAuthLayout.vue"
+      ],
+      "renderedBsComponents": [
+        "BsInvitationAcceptancePage"
+      ],
+      "destination": "packages/ui/src/templates/BsInvitationAcceptancePage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/ledger-suit/app/pages/accept-invitation.vue",
+      "dependencies": [
+        "~~/types/database.types"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "invitation-acceptance",
+      "reconciledRenderedBsComponents": [
+        "BsAlert",
+        "BsAuthForm",
+        "BsAuthLayout",
+        "BsField",
+        "BsInput",
+        "BsProductLogo",
+        "BsSectionSkeleton",
+        "BsStateSurface",
+        "BsVerificationForm"
+      ]
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/accounting-dimensions.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAccountingDimensionsPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAccountingDimensionsPage"
+      ],
+      "destination": "packages/ui/src/templates/BsAccountingDimensionsPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/ledger-suit/app/pages/accounting-dimensions.vue",
+      "dependencies": [
+        "@building-suit/ui/dimension-presentation",
+        "~/utils/accountingDimensions",
+        "~/utils/accountingDimensions"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "accounting-dimensions",
+      "reconciledDependencies": [
+        "~/utils/accountingDimensions",
+        "~/utils/accountingDimensions"
+      ]
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/accounts.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsFinancialAccountsPage"
+      ],
+      "destination": "packages/ui/src/templates/BsFinancialAccountsPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/ledger-suit/app/pages/accounts.vue",
+      "dependencies": [
+        "@building-suit/data-access",
+        "@building-suit/ui/types/financialAccountsPresentation",
+        "@building-suit/ui/utils/presentation",
+        "~/composables/useLedgerAccountTreeView",
+        "~/composables/useLedgerChartTemplateReviewView",
+        "~/utils/accountTree",
+        "~~/types/accounts-reports-rpc.types",
+        "~~/types/database.types"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "financial-accounts",
+      "reconciledRenderedBsComponents": [
+        "BsBadge",
+        "BsBox",
+        "BsButton",
+        "BsCard",
+        "BsCheckbox",
+        "BsDataTable",
+        "BsDialog",
+        "BsDisclosure",
+        "BsEmptyState",
+        "BsFieldLabel",
+        "BsFloatingField",
+        "BsForm",
+        "BsGrid",
+        "BsHeading",
+        "BsHierarchyBranch",
+        "BsHierarchyLeaf",
+        "BsIcon",
+        "BsInline",
+        "BsInput",
+        "BsLink",
+        "BsMoneyText",
+        "BsPageHeader",
+        "BsRecordActionDialog",
+        "BsSectionSkeleton",
+        "BsSelect",
+        "BsSelectOption",
+        "BsStack",
+        "BsStatusBadge",
+        "BsText",
+        "BsTextarea",
+        "BsUsageMeter",
+        "BsVisuallyHidden",
+        "BsWorkflowScope"
+      ],
+      "reconciledDependencies": [
+        "~/utils/templateElement",
+        "~/composables/useLedgerAccountActivityDialogView",
+        "~/composables/useLedgerAccountStatementClassificationDialogView",
+        "~/composables/useLedgerAccountTreeView",
+        "~/composables/useLedgerChartTemplateReviewView",
+        "~/composables/useLedgerControlReconciliationPanelView",
+        "@building-suit/data-access",
+        "~~/types/database.types",
+        "~~/types/accounts-reports-rpc.types",
+        "~/utils/accountTree"
+      ]
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/audit.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsAuditHistoryPage"
+      ],
+      "destination": "packages/ui/src/templates/BsAuditHistoryPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/ledger-suit/app/pages/audit.vue",
+      "dependencies": [
+        "~~/types/database.types"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "audit-history",
+      "reconciledRenderedBsComponents": [
+        "BsBox",
+        "BsButton",
+        "BsCard",
+        "BsCodeBlock",
+        "BsDataTable",
+        "BsDisclosure",
+        "BsEmptyState",
+        "BsGrid",
+        "BsHeading",
+        "BsInline",
+        "BsSectionSkeleton",
+        "BsStack",
+        "BsText"
+      ]
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/bank-reconciliation.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsBankReconciliationPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsBankReconciliationPage"
+      ],
+      "destination": "packages/ui/src/templates/BsBankReconciliationPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/ledger-suit/app/pages/bank-reconciliation.vue",
+      "dependencies": [
+        "@building-suit/ui/types/bankReconciliationPresentation",
+        "@building-suit/ui/utils/presentation",
+        "~/utils/bankReconciliation",
+        "~/utils/bankReconciliation"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "bank-reconciliation",
+      "reconciledDependencies": [
+        "~/utils/bankReconciliation",
+        "~/utils/bankReconciliation"
+      ]
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/billing.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsBillingPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsBillingPage"
+      ],
+      "destination": "packages/ui/src/templates/BsBillingPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/ledger-suit/app/pages/billing.vue",
+      "dependencies": [
+        "~/composables/useLedgerBillingPresentation"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "subscription-billing"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/clients.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsClientPortfolioPage"
+      ],
+      "destination": "packages/ui/src/templates/BsClientPortfolioPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/ledger-suit/app/pages/clients.vue",
+      "dependencies": [
+        "~/utils/clientHealth",
+        "~/utils/clientHealth"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "client-portfolio",
+      "reconciledRenderedBsComponents": [
+        "BsBox",
+        "BsButton",
+        "BsCard",
+        "BsDataTable",
+        "BsEmptyState",
+        "BsFloatingField",
+        "BsGrid",
+        "BsHeading",
+        "BsInput",
+        "BsKpiCard",
+        "BsPageHeader",
+        "BsSectionSkeleton",
+        "BsSelect",
+        "BsStack",
+        "BsStatusBadge",
+        "BsText",
+        "BsVisuallyHidden"
+      ]
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/contact.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsContactPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsContactPage"
+      ],
+      "destination": "packages/ui/src/templates/BsContactPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/ledger-suit/app/pages/contact.vue",
+      "dependencies": [
+        "../../types/support-rpc.types",
+        "~/utils/legal"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "contact-support"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/dashboard.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "BsDashboardPage"
+      ],
+      "renderedBsComponents": [
+        "BsDashboardPage"
+      ],
+      "destination": "packages/ui/src/templates/BsDashboardPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/ledger-suit/app/pages/dashboard.vue",
+      "dependencies": [
+        "@building-suit/ui/types/dashboardPresentation",
+        "~/composables/useLedgerPresentation",
+        "~~/types/dashboard-rpc.types",
+        "~~/types/database.types"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "workspace-dashboard",
+      "reconciledDependencies": [
+        "~~/types/database.types",
+        "~~/types/dashboard-rpc.types",
+        "~/composables/useLedgerPresentation"
+      ]
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/delivery-shipping.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsPublicLegalPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsPublicLegalPage"
+      ],
+      "destination": "packages/ui/src/templates/BsPublicLegalPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/ledger-suit/app/pages/delivery-shipping.vue",
+      "dependencies": [
+        "~/utils/legal"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "public-document"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/fixed-assets.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAssetRegisterPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAssetRegisterPage"
+      ],
+      "destination": "packages/ui/src/templates/BsAssetRegisterPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/ledger-suit/app/pages/fixed-assets.vue",
+      "dependencies": [
+        "@building-suit/ui/types/assetRegisterPresentation",
+        "@building-suit/ui/utils/presentation",
+        "~/utils/fixedAssets",
+        "~/utils/fixedAssets",
+        "~/utils/money"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "asset-register",
+      "reconciledDependencies": [
+        "~/utils/fixedAssets",
+        "~/utils/fixedAssets",
+        "~/utils/money"
+      ]
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/imports.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsRedirectPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsRedirectPage"
+      ],
+      "destination": "packages/ui/src/templates/BsRedirectPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/ledger-suit/app/pages/imports.vue",
+      "dependencies": [],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "redirect"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/index.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsLandingPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsLandingPage"
+      ],
+      "destination": "packages/ui/src/templates/BsLandingPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/ledger-suit/app/pages/index.vue",
+      "dependencies": [
+        "~/composables/useLedgerBillingCheckoutView"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "product-landing"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/inventory-accounting.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsInventoryAccountingPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsInventoryAccountingPage"
+      ],
+      "destination": "packages/ui/src/templates/BsInventoryAccountingPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/ledger-suit/app/pages/inventory-accounting.vue",
+      "dependencies": [
+        "@building-suit/ui/types/inventoryAccountingPresentation",
+        "@building-suit/ui/utils/presentation",
+        "~/utils/inventoryAccounting"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "inventory-accounting",
+      "reconciledDependencies": [
+        "~/utils/inventoryAccounting"
+      ]
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/login.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsSignInPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsSignInPage"
+      ],
+      "destination": "packages/ui/src/templates/BsSignInPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/ledger-suit/app/pages/login.vue",
+      "dependencies": [],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "sign-in"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/migration-center.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsMigrationCenterPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsMigrationCenterPage"
+      ],
+      "destination": "packages/ui/src/templates/BsMigrationCenterPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/ledger-suit/app/pages/migration-center.vue",
+      "dependencies": [
+        "@building-suit/ui/types/migrationCenterPresentation",
+        "~/composables/useMigrationCenter",
+        "~/utils/csv",
+        "~/utils/migrationCenter",
+        "~~/types/database.types",
+        "~~/types/migration-rpc.types"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "migration-center",
+      "reconciledDependencies": [
+        "~~/types/database.types",
+        "~~/types/migration-rpc.types",
+        "~/composables/useMigrationCenter",
+        "~/utils/csv",
+        "~/utils/migrationCenter"
+      ]
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/opening-balances.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsOpeningBalancesPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsOpeningBalancesPage"
+      ],
+      "destination": "packages/ui/src/templates/BsOpeningBalancesPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/ledger-suit/app/pages/opening-balances.vue",
+      "dependencies": [
+        "@building-suit/ui/types/openingBalancePresentation",
+        "~/utils/csv",
+        "~/utils/openingBalanceCsv",
+        "~~/types/database.types"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "opening-balances",
+      "reconciledDependencies": [
+        "~~/types/database.types",
+        "~/utils/csv",
+        "~/utils/openingBalanceCsv"
+      ]
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/payables.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "BsSubledgerPage"
+      ],
+      "renderedBsComponents": [
+        "BsSubledgerPage"
+      ],
+      "destination": "packages/ui/src/templates/BsSubledgerPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/ledger-suit/app/pages/payables.vue",
+      "dependencies": [
+        "@building-suit/ui/types/subledgerPresentation",
+        "@building-suit/ui/utils/presentation",
+        "~/composables/useLedgerFxPresentation",
+        "~/composables/useSupplierSubledger",
+        "~/utils/supplierSubledger",
+        "~/utils/supplierSubledger"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "party-subledger",
+      "reconciledDependencies": [
+        "~/composables/useLedgerFxSubledgerPanelView",
+        "~/composables/useSupplierSubledger",
+        "~/utils/supplierSubledger",
+        "~/utils/supplierSubledger"
+      ]
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/periods.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAccountingPeriodsPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAccountingPeriodsPage"
+      ],
+      "destination": "packages/ui/src/templates/BsAccountingPeriodsPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/ledger-suit/app/pages/periods.vue",
+      "dependencies": [
+        "@building-suit/ui/types/accountingPeriodPresentation",
+        "@building-suit/ui/utils/presentation",
+        "~~/types/database.types"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "accounting-periods",
+      "reconciledDependencies": [
+        "~~/types/database.types"
+      ]
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/platform-admin.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAppShell.vue"
+      ],
+      "renderedBsComponents": [
+        "BsPlatformAdministrationPage"
+      ],
+      "destination": "packages/ui/src/templates/BsPlatformAdministrationPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/ledger-suit/app/pages/platform-admin.vue",
+      "dependencies": [
+        "@building-suit/ui/types/platformAdministrationPresentation",
+        "~/composables/usePlatformAdmin",
+        "~~/types/database.types"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "platform-administration",
+      "reconciledRenderedBsComponents": [
+        "BsAppShell",
+        "BsButton",
+        "BsCodeBlock",
+        "BsDataTable",
+        "BsFloatingField",
+        "BsHeading",
+        "BsInline",
+        "BsInput",
+        "BsLink",
+        "BsProductLogo",
+        "BsRecordActionDialog",
+        "BsSelect",
+        "BsSelectOption",
+        "BsStack",
+        "BsText",
+        "BsTextarea",
+        "BsUserMenu"
+      ],
+      "reconciledDependencies": [
+        "~~/types/database.types",
+        "~/composables/usePlatformAdmin"
+      ]
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/privacy.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsPublicLegalPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsPublicLegalPage"
+      ],
+      "destination": "packages/ui/src/templates/BsPublicLegalPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/ledger-suit/app/pages/privacy.vue",
+      "dependencies": [
+        "~/utils/legal"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "public-document"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/receivables.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "BsSubledgerPage"
+      ],
+      "renderedBsComponents": [
+        "BsSubledgerPage"
+      ],
+      "destination": "packages/ui/src/templates/BsSubledgerPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/ledger-suit/app/pages/receivables.vue",
+      "dependencies": [
+        "@building-suit/ui/types/subledgerPresentation",
+        "@building-suit/ui/utils/presentation",
+        "~/composables/useCustomerSubledger",
+        "~/composables/useLedgerFxPresentation",
+        "~/utils/customerSubledger",
+        "~/utils/customerSubledger"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "party-subledger",
+      "reconciledDependencies": [
+        "~/composables/useLedgerFxSubledgerPanelView",
+        "~/composables/useCustomerSubledger",
+        "~/utils/customerSubledger",
+        "~/utils/customerSubledger"
+      ]
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/records/[kind].vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsOperationalRecordsPage"
+      ],
+      "destination": "packages/ui/src/templates/BsOperationalRecordsPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/ledger-suit/app/pages/records/[kind].vue",
+      "dependencies": [
+        "@building-suit/data-access",
+        "@building-suit/ui/types/operationalRecordsPresentation",
+        "@building-suit/ui/utils/presentation",
+        "~~/types/database.types"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "operational-record-register",
+      "reconciledRenderedBsComponents": [
+        "BsBox",
+        "BsButton",
+        "BsCard",
+        "BsColorSwatch",
+        "BsDataTable",
+        "BsDescriptionList",
+        "BsDescriptionTerm",
+        "BsDescriptionValue",
+        "BsDialog",
+        "BsEmptyState",
+        "BsFieldLabel",
+        "BsFileInput",
+        "BsFloatingField",
+        "BsGrid",
+        "BsHeading",
+        "BsIcon",
+        "BsInline",
+        "BsInput",
+        "BsLink",
+        "BsList",
+        "BsListItem",
+        "BsMoneyText",
+        "BsRecordActionDialog",
+        "BsSectionSkeleton",
+        "BsSelect",
+        "BsSelectOption",
+        "BsStack",
+        "BsStatusBadge",
+        "BsText",
+        "BsUsageMeter",
+        "BsWorkflowScope"
+      ],
+      "reconciledDependencies": [
+        "~/composables/useLedgerTransactionDetailDialogView",
+        "~/composables/useLedgerTransactionTagsView",
+        "@building-suit/data-access",
+        "~~/types/database.types"
+      ]
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/refund-cancellation.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsPublicLegalPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsPublicLegalPage"
+      ],
+      "destination": "packages/ui/src/templates/BsPublicLegalPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/ledger-suit/app/pages/refund-cancellation.vue",
+      "dependencies": [
+        "~/utils/legal"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "public-document"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/reports.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsReportsPage"
+      ],
+      "destination": "packages/ui/src/templates/BsReportsPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/ledger-suit/app/pages/reports.vue",
+      "dependencies": [
+        "../utils/reportFormats",
+        "@building-suit/data-access",
+        "@building-suit/ui/types/financialReportsPresentation",
+        "@building-suit/ui/utils/presentation",
+        "@building-suit/ui/utils/reportDocument",
+        "@building-suit/ux",
+        "~~/types/accounts-reports-rpc.types",
+        "~~/types/database.types"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "reports",
+      "reconciledRenderedBsComponents": [
+        "BsBadge",
+        "BsBox",
+        "BsButton",
+        "BsCard",
+        "BsDataTable",
+        "BsDescriptionList",
+        "BsDescriptionTerm",
+        "BsDescriptionValue",
+        "BsDialog",
+        "BsDisclosure",
+        "BsEmptyState",
+        "BsFloatingField",
+        "BsForm",
+        "BsGrid",
+        "BsHeading",
+        "BsIcon",
+        "BsInline",
+        "BsInput",
+        "BsKpiCard",
+        "BsMoneyText",
+        "BsPageHeader",
+        "BsRecordActionDialog",
+        "BsSectionSkeleton",
+        "BsSelect",
+        "BsSelectOption",
+        "BsStack",
+        "BsTableDensity",
+        "BsText",
+        "BsTextarea",
+        "BsWorkflowScope"
+      ],
+      "reconciledDependencies": [
+        "~/utils/templateElement",
+        "~/composables/useLedgerAccountActivityDialogView",
+        "~/composables/useLedgerCashFlowAllocationDialogView",
+        "@building-suit/data-access",
+        "~~/types/database.types",
+        "~~/types/accounts-reports-rpc.types",
+        "../utils/reportFormats"
+      ]
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/signup.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsSignupPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsSignupPage"
+      ],
+      "destination": "packages/ui/src/templates/BsSignupPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/ledger-suit/app/pages/signup.vue",
+      "dependencies": [
+        "@building-suit/ui/types/signupPresentation",
+        "~~/types/database.types"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "signup",
+      "reconciledDependencies": [
+        "~~/types/database.types"
+      ]
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/subscribe.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsSubscriptionCheckoutPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsSubscriptionCheckoutPage"
+      ],
+      "destination": "packages/ui/src/templates/BsSubscriptionCheckoutPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/ledger-suit/app/pages/subscribe.vue",
+      "dependencies": [
+        "@building-suit/ux",
+        "~/composables/useLedgerBillingPresentation",
+        "~/composables/useLedgerWorkspacePresentation"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "subscription-checkout",
+      "reconciledDependencies": [
+        "~/composables/useLedgerBillingPresentation",
+        "~/composables/useLedgerWorkspacePresentation",
+        "@building-suit/ux"
+      ]
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/tax-vat.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsTaxWorkspacePage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsTaxWorkspacePage"
+      ],
+      "destination": "packages/ui/src/templates/BsTaxWorkspacePage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/ledger-suit/app/pages/tax-vat.vue",
+      "dependencies": [
+        "@building-suit/ui/types/taxWorkspacePresentation",
+        "@building-suit/ui/utils/presentation",
+        "~/utils/egyptVat",
+        "~/utils/egyptVat"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "tax-workspace",
+      "reconciledDependencies": [
+        "~/utils/egyptVat",
+        "~/utils/egyptVat"
+      ]
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/team.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAccessManagementPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAccessManagementPage"
+      ],
+      "destination": "packages/ui/src/templates/BsAccessManagementPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/ledger-suit/app/pages/team.vue",
+      "dependencies": [
+        "@building-suit/ui/access-presentation",
+        "~/composables/useLedgerTeamMenuView",
+        "~~/types/database.types"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "access-management",
+      "reconciledDependencies": [
+        "~/composables/useLedgerTeamMenuView",
+        "~~/types/database.types"
+      ]
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/terms.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsPublicLegalPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsPublicLegalPage"
+      ],
+      "destination": "packages/ui/src/templates/BsPublicLegalPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/ledger-suit/app/pages/terms.vue",
+      "dependencies": [
+        "~/utils/legal"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "public-document"
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/transactions.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsJournalWorkspacePage"
+      ],
+      "destination": "packages/ui/src/templates/BsJournalWorkspacePage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/ledger-suit/app/pages/transactions.vue",
+      "dependencies": [
+        "@building-suit/ui/types/journalWorkspacePresentation",
+        "@building-suit/ui/utils/presentation"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "financial-journal-workspace",
+      "reconciledRenderedBsComponents": [
+        "BsBox",
+        "BsButton",
+        "BsCard",
+        "BsCheckbox",
+        "BsColorSwatch",
+        "BsDataTable",
+        "BsDescriptionList",
+        "BsDescriptionTerm",
+        "BsDescriptionValue",
+        "BsDialog",
+        "BsEmptyState",
+        "BsFieldLabel",
+        "BsFileInput",
+        "BsFloatingField",
+        "BsGrid",
+        "BsHeading",
+        "BsIcon",
+        "BsInline",
+        "BsInput",
+        "BsLink",
+        "BsList",
+        "BsListItem",
+        "BsMoneyText",
+        "BsPageHeader",
+        "BsSectionSkeleton",
+        "BsSelect",
+        "BsSelectOption",
+        "BsStack",
+        "BsStatusBadge",
+        "BsTableDensity",
+        "BsText",
+        "BsTextarea",
+        "BsUsageMeter",
+        "BsWorkflowScope"
+      ],
+      "reconciledDependencies": [
+        "~/utils/templateElement",
+        "~/composables/useLedgerCsvImportDialogView",
+        "~/composables/useLedgerDocumentExtractionReviewView",
+        "~/composables/useLedgerTransactionDetailDialogView",
+        "~/composables/useLedgerTransactionTagsView"
+      ]
+    },
+    {
+      "source": "apps/ledger-suit/app/pages/verify-email.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsEmailVerificationPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsEmailVerificationPage"
+      ],
+      "destination": "packages/ui/src/templates/BsEmailVerificationPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/ledger-suit/app/pages/verify-email.vue",
+      "dependencies": [
+        "~~/types/database.types"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "email-verification"
+    },
+    {
+      "source": "apps/shop-suit/app/app.vue",
+      "kind": "root",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAppRoot.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAppRoot"
+      ],
+      "destination": "packages/ui/src/templates/BsAppRoot.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/app.vue",
+      "dependencies": [],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions"
+    },
+    {
+      "source": "apps/shop-suit/app/layouts/auth.vue",
+      "kind": "layout",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAuthLayout.vue"
+      ],
+      "renderedBsComponents": [
+        "BsProductAuthFrame"
+      ],
+      "destination": "packages/ui/src/templates/BsProductAuthFrame.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/layouts/auth.vue",
+      "dependencies": [],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "reconciledRenderedBsComponents": [
+        "BsAuthLayout",
+        "BsProductLogo",
+        "BsSlot",
+        "BsStack"
+      ]
+    },
+    {
+      "source": "apps/shop-suit/app/layouts/default.vue",
+      "kind": "layout",
+      "currentSharedTemplates": [
+        "BsWorkspaceShell"
+      ],
+      "renderedBsComponents": [
+        "BsWorkspaceShell"
+      ],
+      "destination": "packages/ui/src/templates/BsWorkspaceShell.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/layouts/default.vue",
+      "dependencies": [
+        "~/utils/businessMode"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "authenticated-workspace-shell"
+    },
+    {
+      "source": "apps/shop-suit/app/layouts/landing.vue",
+      "kind": "layout",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsMarketingLayout.vue"
+      ],
+      "renderedBsComponents": [
+        "BsMarketingLayout"
+      ],
+      "destination": "packages/ui/src/templates/BsMarketingLayout.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/layouts/landing.vue",
+      "dependencies": [],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "reconciledRenderedBsComponents": [
+        "BsMarketingLayout",
+        "BsProductLogo",
+        "BsSlot"
+      ]
+    },
+    {
+      "source": "apps/shop-suit/app/layouts/platform-admin.vue",
+      "kind": "layout",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAppShell.vue"
+      ],
+      "renderedBsComponents": [
+        "BsWorkspaceShell"
+      ],
+      "destination": "packages/ui/src/templates/BsWorkspaceShell.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/layouts/platform-admin.vue",
+      "dependencies": [],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "reconciledRenderedBsComponents": [
+        "BsAppShell",
+        "BsConfirmHost",
+        "BsProductLogo",
+        "BsSlot",
+        "BsText",
+        "BsToastHost",
+        "BsUserMenu"
+      ]
+    },
+    {
+      "source": "apps/shop-suit/app/pages/about.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsPublicLegalPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsPublicLegalPage"
+      ],
+      "destination": "packages/ui/src/templates/BsPublicLegalPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/about.vue",
+      "dependencies": [
+        "~/utils/legal"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "public-document"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/appointments/index.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAppointmentsPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAppointmentsPage"
+      ],
+      "destination": "packages/ui/src/templates/BsAppointmentsPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/appointments/index.vue",
+      "dependencies": [
+        "@building-suit/ui/types/appointmentsPresentation",
+        "~/types/shopCrmRpc"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "appointments",
+      "reconciledDependencies": [
+        "~/types/shopCrmRpc"
+      ]
+    },
+    {
+      "source": "apps/shop-suit/app/pages/auth/forgot-password.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsPasswordRecoveryPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsPasswordRecoveryPage"
+      ],
+      "destination": "packages/ui/src/templates/BsPasswordRecoveryPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/auth/forgot-password.vue",
+      "dependencies": [],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "password-recovery"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/auth/login.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsSignInPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsSignInPage"
+      ],
+      "destination": "packages/ui/src/templates/BsSignInPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/auth/login.vue",
+      "dependencies": [],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "sign-in"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/auth/reset-password.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsPasswordRecoveryPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsPasswordRecoveryPage"
+      ],
+      "destination": "packages/ui/src/templates/BsPasswordRecoveryPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/auth/reset-password.vue",
+      "dependencies": [],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "password-recovery"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/auth/signup.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsSignupPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsSignupPage"
+      ],
+      "destination": "packages/ui/src/templates/BsSignupPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/auth/signup.vue",
+      "dependencies": [
+        "@building-suit/ui/types/signupPresentation",
+        "~/types/shopCrmRpc",
+        "~/utils/businessMode",
+        "~/utils/businessMode",
+        "~/utils/pendingOnboarding"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "signup",
+      "reconciledDependencies": [
+        "~/types/shopCrmRpc",
+        "~/utils/businessMode",
+        "~/utils/businessMode",
+        "~/utils/pendingOnboarding"
+      ]
+    },
+    {
+      "source": "apps/shop-suit/app/pages/auth/team-invitation.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsInvitationAcceptancePage"
+      ],
+      "destination": "packages/ui/src/templates/BsInvitationAcceptancePage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/auth/team-invitation.vue",
+      "dependencies": [
+        "~/types/shopCrmRpc"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "invitation-acceptance",
+      "reconciledRenderedBsComponents": [
+        "BsAuthForm",
+        "BsButton",
+        "BsField",
+        "BsInput",
+        "BsLink",
+        "BsStack",
+        "BsText",
+        "BsVerificationForm"
+      ]
+    },
+    {
+      "source": "apps/shop-suit/app/pages/billing.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsBillingPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsBillingPage"
+      ],
+      "destination": "packages/ui/src/templates/BsBillingPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/billing.vue",
+      "dependencies": [
+        "@building-suit/ui/types/billingPresentation",
+        "~/types/billing",
+        "~/types/plans",
+        "~/types/shopCrmRpc",
+        "~/utils/private-offer",
+        "~/utils/private-offer"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "subscription-billing",
+      "reconciledDependencies": [
+        "~/types/billing",
+        "~/types/plans",
+        "~/types/shopCrmRpc",
+        "~/utils/private-offer",
+        "~/utils/private-offer"
+      ]
+    },
+    {
+      "source": "apps/shop-suit/app/pages/cash-shifts.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsCashShiftsPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsCashShiftsPage"
+      ],
+      "destination": "packages/ui/src/templates/BsCashShiftsPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/cash-shifts.vue",
+      "dependencies": [
+        "@building-suit/ui/types/cashShiftPresentation",
+        "~/types/shopCrmRpc"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "cash-shift-management",
+      "reconciledDependencies": [
+        "~/types/shopCrmRpc"
+      ]
+    },
+    {
+      "source": "apps/shop-suit/app/pages/catalog-import.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsCatalogImportPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsCatalogImportPage"
+      ],
+      "destination": "packages/ui/src/templates/BsCatalogImportPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/catalog-import.vue",
+      "dependencies": [
+        "@building-suit/ui/types/catalogImportPresentation",
+        "~/types/shopCrmRpc",
+        "~/utils/catalogImport"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "catalog-import",
+      "reconciledDependencies": [
+        "~/types/shopCrmRpc",
+        "~/utils/catalogImport"
+      ]
+    },
+    {
+      "source": "apps/shop-suit/app/pages/contact.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsContactPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsContactPage"
+      ],
+      "destination": "packages/ui/src/templates/BsContactPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/contact.vue",
+      "dependencies": [
+        "~/types/supportRpc",
+        "~/utils/legal"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "contact-support"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/customers/[id].vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsCustomerProfilePage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsCustomerProfilePage"
+      ],
+      "destination": "packages/ui/src/templates/BsCustomerProfilePage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/customers/[id].vue",
+      "dependencies": [
+        "@building-suit/ui/types/customerDirectoryPresentation",
+        "@building-suit/ui/types/customerProfilePresentation",
+        "~/types/shopCrmRpc",
+        "~/utils/receiptAllocations"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "customer-profile",
+      "reconciledDependencies": [
+        "~/utils/receiptAllocations",
+        "~/types/shopCrmRpc"
+      ]
+    },
+    {
+      "source": "apps/shop-suit/app/pages/customers/index.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsCustomerDirectoryPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsCustomerDirectoryPage"
+      ],
+      "destination": "packages/ui/src/templates/BsCustomerDirectoryPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/customers/index.vue",
+      "dependencies": [
+        "@building-suit/ui/types/customerDirectoryPresentation",
+        "~/types/shopCrmRpc"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "customer-directory",
+      "reconciledDependencies": [
+        "~/types/shopCrmRpc"
+      ]
+    },
+    {
+      "source": "apps/shop-suit/app/pages/dashboard.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "BsDashboardPage"
+      ],
+      "renderedBsComponents": [
+        "BsDashboardPage"
+      ],
+      "destination": "packages/ui/src/templates/BsDashboardPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/dashboard.vue",
+      "dependencies": [
+        "@building-suit/ui/types/dashboardPresentation",
+        "~/types/shopCrmRpc",
+        "~/utils/businessMode",
+        "~/utils/businessMode"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "workspace-dashboard",
+      "reconciledDependencies": [
+        "~/types/shopCrmRpc",
+        "~/utils/businessMode",
+        "~/utils/businessMode"
+      ]
+    },
+    {
+      "source": "apps/shop-suit/app/pages/delivery-shipping.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsPublicLegalPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsPublicLegalPage"
+      ],
+      "destination": "packages/ui/src/templates/BsPublicLegalPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/delivery-shipping.vue",
+      "dependencies": [
+        "~/utils/legal"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "public-document"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/expenses/index.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsExpenseHistoryPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsExpenseHistoryPage"
+      ],
+      "destination": "packages/ui/src/templates/BsExpenseHistoryPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/expenses/index.vue",
+      "dependencies": [
+        "@building-suit/ui/types/expensePresentation",
+        "~/types/shopCrmRpc"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "expense-history",
+      "reconciledDependencies": [
+        "~/types/shopCrmRpc"
+      ]
+    },
+    {
+      "source": "apps/shop-suit/app/pages/index.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsLandingPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsLandingPage"
+      ],
+      "destination": "packages/ui/src/templates/BsLandingPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/index.vue",
+      "dependencies": [
+        "@building-suit/contracts",
+        "~/types/plans"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "product-landing"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/inventory/index.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsInventoryManagementPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsInventoryManagementPage"
+      ],
+      "destination": "packages/ui/src/templates/BsInventoryManagementPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/inventory/index.vue",
+      "dependencies": [
+        "@building-suit/ui/types/inventoryPresentation",
+        "~/types/shopCrmRpc"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "inventory-management",
+      "reconciledDependencies": [
+        "~/types/shopCrmRpc"
+      ]
+    },
+    {
+      "source": "apps/shop-suit/app/pages/platform-admin.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsPlatformAdministrationPage"
+      ],
+      "destination": "packages/ui/src/templates/BsPlatformAdministrationPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/platform-admin.vue",
+      "dependencies": [
+        "@building-suit/ui/types/platformAdministrationPresentation",
+        "~/types/billing",
+        "~/types/platformAdmin",
+        "~/types/shopCrmRpc"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "platform-administration",
+      "reconciledRenderedBsComponents": [
+        "BsBox",
+        "BsButton",
+        "BsCheckbox",
+        "BsCodeBlock",
+        "BsDataTable",
+        "BsDialog",
+        "BsField",
+        "BsFieldGroup",
+        "BsGrid",
+        "BsHeading",
+        "BsInline",
+        "BsInput",
+        "BsKpiCard",
+        "BsList",
+        "BsListItem",
+        "BsPageHeader",
+        "BsPanel",
+        "BsRecordActionDialog",
+        "BsSelect",
+        "BsSkeleton",
+        "BsStack",
+        "BsStatusBadge",
+        "BsText",
+        "BsTextarea"
+      ],
+      "reconciledDependencies": [
+        "~/types/shopCrmRpc",
+        "~/types/billing",
+        "~/types/platformAdmin"
+      ]
+    },
+    {
+      "source": "apps/shop-suit/app/pages/pos.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsPointOfSalePage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsPointOfSalePage"
+      ],
+      "destination": "packages/ui/src/templates/BsPointOfSalePage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/pos.vue",
+      "dependencies": [
+        "@building-suit/ui/types/pointOfSalePresentation",
+        "~/types/shopCrmRpc",
+        "~/utils/businessMode",
+        "~/utils/pos",
+        "~/utils/posCustomer.js",
+        "~/utils/saleCopy",
+        "~/utils/shopCommandErrorMessage"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "point-of-sale",
+      "reconciledDependencies": [
+        "~/utils/shopCommandErrorMessage",
+        "~/utils/saleCopy",
+        "~/types/shopCrmRpc",
+        "~/utils/businessMode",
+        "~/utils/posCustomer.js",
+        "~/utils/pos"
+      ]
+    },
+    {
+      "source": "apps/shop-suit/app/pages/privacy.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsPublicLegalPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsPublicLegalPage"
+      ],
+      "destination": "packages/ui/src/templates/BsPublicLegalPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/privacy.vue",
+      "dependencies": [
+        "~/utils/legal"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "public-document"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/products/index.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsCataloguePage"
+      ],
+      "destination": "packages/ui/src/templates/BsCataloguePage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/products/index.vue",
+      "dependencies": [
+        "~/types/shopCrmRpc"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "catalogue-management",
+      "reconciledRenderedBsComponents": [
+        "BsDataTable",
+        "BsField",
+        "BsInline",
+        "BsInput",
+        "BsLink",
+        "BsPageHeader",
+        "BsPanel",
+        "BsRecordActionDialog",
+        "BsSelect",
+        "BsStack",
+        "BsStateSurface",
+        "BsText"
+      ]
+    },
+    {
+      "source": "apps/shop-suit/app/pages/purchases/[id].vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "BsCommerceDocumentPage"
+      ],
+      "renderedBsComponents": [
+        "BsCommerceDocumentPage"
+      ],
+      "destination": "packages/ui/src/templates/BsCommerceDocumentPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/purchases/[id].vue",
+      "dependencies": [
+        "@building-suit/ui/types/commerceDocumentPresentation",
+        "~/types/shopCrmRpc"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "commerce-document-detail",
+      "reconciledDependencies": [
+        "~/types/shopCrmRpc"
+      ]
+    },
+    {
+      "source": "apps/shop-suit/app/pages/purchases/index.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsPurchasingPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsPurchasingPage"
+      ],
+      "destination": "packages/ui/src/templates/BsPurchasingPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/purchases/index.vue",
+      "dependencies": [
+        "@building-suit/ui/types/purchasingPresentation",
+        "~/types/shopCrmRpc"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "purchase-directory",
+      "reconciledDependencies": [
+        "~/types/shopCrmRpc"
+      ]
+    },
+    {
+      "source": "apps/shop-suit/app/pages/refund-cancellation.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsPublicLegalPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsPublicLegalPage"
+      ],
+      "destination": "packages/ui/src/templates/BsPublicLegalPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/refund-cancellation.vue",
+      "dependencies": [
+        "~/utils/legal"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "public-document"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/reports/index.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsReportsPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsReportsPage"
+      ],
+      "destination": "packages/ui/src/templates/BsReportsPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/reports/index.vue",
+      "dependencies": [
+        "@building-suit/ui/types/reportsPresentation",
+        "~/types/reporting",
+        "~/types/shopCrmRpc",
+        "~/utils/catalogImport"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "reports",
+      "reconciledDependencies": [
+        "~/types/shopCrmRpc",
+        "~/types/reporting",
+        "~/utils/catalogImport"
+      ]
+    },
+    {
+      "source": "apps/shop-suit/app/pages/sales/[id]/index.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "BsCommerceDocumentPage"
+      ],
+      "renderedBsComponents": [
+        "BsCommerceDocumentPage"
+      ],
+      "destination": "packages/ui/src/templates/BsCommerceDocumentPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/sales/[id]/index.vue",
+      "dependencies": [
+        "@building-suit/ui/types/commerceDocumentPresentation",
+        "~/types/receipt",
+        "~/types/shopCrmRpc",
+        "~/utils/saleCopy",
+        "~/utils/shopCommandErrorMessage"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "commerce-document-detail",
+      "reconciledDependencies": [
+        "~/utils/shopCommandErrorMessage",
+        "~/utils/saleCopy",
+        "~/types/shopCrmRpc",
+        "~/types/receipt"
+      ]
+    },
+    {
+      "source": "apps/shop-suit/app/pages/sales/[id]/receipt.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsReceiptPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsReceiptPage"
+      ],
+      "destination": "packages/ui/src/templates/BsReceiptPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/sales/[id]/receipt.vue",
+      "dependencies": [
+        "@building-suit/ui/types/receiptPresentation",
+        "~/types/receipt",
+        "~/types/shopCrmRpc",
+        "~/utils/receipt"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "sale-receipt",
+      "reconciledDependencies": [
+        "~/types/shopCrmRpc",
+        "~/types/receipt",
+        "~/utils/receipt"
+      ]
+    },
+    {
+      "source": "apps/shop-suit/app/pages/sales/index.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsSalesDirectoryPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsSalesDirectoryPage"
+      ],
+      "destination": "packages/ui/src/templates/BsSalesDirectoryPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/sales/index.vue",
+      "dependencies": [
+        "@building-suit/ui/types/salesDirectoryPresentation",
+        "~/types/shopCrmRpc",
+        "~/utils/saleCopy",
+        "~/utils/shopCommandErrorMessage"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "sales-directory",
+      "reconciledDependencies": [
+        "~/utils/shopCommandErrorMessage",
+        "~/utils/saleCopy",
+        "~/types/shopCrmRpc"
+      ]
+    },
+    {
+      "source": "apps/shop-suit/app/pages/services/index.vue",
+      "kind": "route",
+      "currentSharedTemplates": [],
+      "renderedBsComponents": [
+        "BsCataloguePage"
+      ],
+      "destination": "packages/ui/src/templates/BsCataloguePage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/services/index.vue",
+      "dependencies": [
+        "~/types/shopCrmRpc"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "catalogue-management",
+      "reconciledRenderedBsComponents": [
+        "BsCheckbox",
+        "BsDataTable",
+        "BsField",
+        "BsFieldGroup",
+        "BsGrid",
+        "BsInline",
+        "BsInput",
+        "BsLink",
+        "BsPageHeader",
+        "BsPanel",
+        "BsRecordActionDialog",
+        "BsSelect",
+        "BsStack",
+        "BsStateSurface",
+        "BsText",
+        "BsTextarea"
+      ]
+    },
+    {
+      "source": "apps/shop-suit/app/pages/settings.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsBusinessSettingsPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsBusinessSettingsPage"
+      ],
+      "destination": "packages/ui/src/templates/BsBusinessSettingsPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/settings.vue",
+      "dependencies": [
+        "@building-suit/ui/types/businessSettingsPresentation",
+        "~/composables/useShop",
+        "~/types/plans",
+        "~/types/receipt",
+        "~/types/shopCrmRpc",
+        "~/utils/businessMode",
+        "~/utils/businessMode"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "business-settings",
+      "reconciledDependencies": [
+        "~/types/shopCrmRpc",
+        "~/types/plans",
+        "~/types/receipt",
+        "~/utils/businessMode",
+        "~/composables/useShop",
+        "~/utils/businessMode"
+      ]
+    },
+    {
+      "source": "apps/shop-suit/app/pages/team.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAccessManagementPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAccessManagementPage"
+      ],
+      "destination": "packages/ui/src/templates/BsAccessManagementPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/team.vue",
+      "dependencies": [
+        "@building-suit/ui/access-presentation",
+        "~/types/shopCrmRpc",
+        "~/types/team"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "access-management",
+      "reconciledDependencies": [
+        "~/types/shopCrmRpc",
+        "~/types/team"
+      ]
+    },
+    {
+      "source": "apps/shop-suit/app/pages/terms.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsPublicLegalPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsPublicLegalPage"
+      ],
+      "destination": "packages/ui/src/templates/BsPublicLegalPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/terms.vue",
+      "dependencies": [
+        "~/utils/legal"
+      ],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "public-document"
+    },
+    {
+      "source": "apps/super-admin-suit/app/app.vue",
+      "kind": "root",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAppRoot.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAppRoot"
+      ],
+      "destination": "packages/ui/src/templates/BsAppRoot.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/super-admin-suit/app/app.vue",
+      "dependencies": [],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions"
+    },
+    {
+      "source": "apps/super-admin-suit/app/layouts/default.vue",
+      "kind": "layout",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsControlPlaneShell.vue"
+      ],
+      "renderedBsComponents": [
+        "BsControlPlaneShell"
+      ],
+      "destination": "packages/ui/src/templates/BsControlPlaneShell.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/super-admin-suit/app/layouts/default.vue",
+      "dependencies": [],
+      "verification": "Super Admin stack consolidation: preserves rail/context navigation with a direct route outlet",
+      "reconciledRenderedBsComponents": [
+        "BsAppShell",
+        "BsProductLogo",
+        "BsSettingsMenu",
+        "BsSlot"
+      ]
+    },
+    {
+      "source": "apps/super-admin-suit/app/pages/index.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAdministrationEntryPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAdministrationEntryPage"
+      ],
+      "destination": "packages/ui/src/templates/BsAdministrationEntryPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/super-admin-suit/app/pages/index.vue",
+      "dependencies": [],
+      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "purpose": "administration-entry"
+    },
+    {
+      "source": "apps/super-admin-suit/app/pages/accounts.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAccountActivationPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAccountActivationPage"
+      ],
+      "destination": "packages/ui/src/templates/BsAccountActivationPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/super-admin-suit/app/pages/accounts.vue",
+      "dependencies": [],
+      "verification": "super-admin-account-provisioning.md: focused browser and authorization gates",
+      "purpose": "account-activation"
+    },
+    {
+      "source": "apps/super-admin-suit/app/pages/account-provisioning.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAccountProvisioningPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAccountProvisioningPage"
+      ],
+      "destination": "packages/ui/src/templates/BsAccountProvisioningPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/super-admin-suit/app/pages/account-provisioning.vue",
+      "dependencies": [],
+      "verification": "super-admin-account-provisioning.md: focused browser and authorization gates",
+      "purpose": "account-provisioning"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/auth/owner-invitation.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsOwnerInvitationPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsOwnerInvitationPage"
+      ],
+      "destination": "packages/ui/src/templates/BsOwnerInvitationPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/auth/owner-invitation.vue",
+      "dependencies": [],
+      "verification": "super-admin-account-provisioning.md: focused browser and authorization gates",
+      "purpose": "provisioned-owner-claim"
+    }
+  ],
+  "verifiedSharedHeads": [
+    {
+      "branch": "codex/shared/bs-ui-zn-public-chrome-001",
+      "sha": "05cc2a52bb52f22ab009a5eca540a03b7ecc580a"
+    },
+    {
+      "branch": "codex/shared/bs-ui-zn-data-001",
+      "sha": "980d7cd76f36696abe4dd26f0641ad3cbfcf4dde"
+    },
+    {
+      "branch": "codex/shared/bs-ui-zn-patterns-001",
+      "sha": "a677a38c5af8444e44cf21cb1a2047c502869f75"
+    },
+    {
+      "branch": "codex/shared/bs-ui-zn-ledger-001",
+      "sha": "42c207c4dbed752c456b8e573e0b13c4fd9d81bd"
+    },
+    {
+      "branch": "codex/shared/bs-ui-zn-shop-001",
+      "sha": "9653677335702b5bb53f78577972434d6fc1e72e"
+    },
+    {
+      "branch": "codex/shared/bs-ui-zn-other-suits-001",
+      "sha": "0b1a3fc608b406ca6bcee98612ea969931f1dd3c"
+    },
+    {
+      "branch": "codex/shared/bs-ui-zn-generator-001",
+      "sha": "cb2e61ce031234d427bc1171bc1fc3e9bcc08cf9"
+    },
+    {
+      "branch": "codex/shared/bs-ui-zn-browser-001",
+      "sha": "ae596e2e714e7367fe954b40313679a99920ebb1"
+    },
+    {
+      "branch": "codex/shared/bs-ui-zn-final-001",
+      "sha": "54f4f1e310bb9bc705b0a8b3249ff0c98fccde1b"
+    },
+    {
+      "branch": "codex/shared/bs-sa-shell-001",
+      "sha": "db6672e3444ae431b856de86480facbe62db3fdb"
+    },
+    {
+      "branch": "codex/shared/bs-launch-access-ui-001",
+      "sha": "c0ee21f8feb12acbbe4d227cffa9b88488ee2517"
+    },
+    {
+      "branch": "codex/shared/bs-realtime-foundation-001",
+      "sha": "cf5eb9cd6349f4517ca18beb6025d88167c3e279"
+    },
+    {
+      "branch": "codex/shared/bs-realtime-adoption-001",
+      "sha": "38eb0147faa274ae8e64b30c4080465666c26441"
+    },
+    {
+      "branch": "codex/shared/bs-sa-future-suit-001",
+      "sha": "089381052fccdd9768d20ad403037f12bd3fa0d9"
+    }
+  ],
+  "pageTemplates": [
+    "BsAccessManagementPage",
+    "BsAccountingDimensionsPage",
+    "BsAccountingPeriodsPage",
+    "BsAdministrationEntryPage",
+    "BsAppointmentsPage",
+    "BsAssetRegisterPage",
+    "BsAuditHistoryPage",
+    "BsBankReconciliationPage",
+    "BsBillingPage",
+    "BsBusinessSettingsPage",
+    "BsCashShiftsPage",
+    "BsCatalogImportPage",
+    "BsCataloguePage",
+    "BsClientPortfolioPage",
+    "BsCommerceDocumentPage",
+    "BsContactPage",
+    "BsCustomerDirectoryPage",
+    "BsCustomerProfilePage",
+    "BsDashboardPage",
+    "BsEmailVerificationPage",
+    "BsExecutionActivityPage",
+    "BsExpenseHistoryPage",
+    "BsInventoryAccountingPage",
+    "BsInventoryManagementPage",
+    "BsInvitationAcceptancePage",
+    "BsJournalWorkspacePage",
+    "BsLandingPage",
+    "BsMigrationCenterPage",
+    "BsOpeningBalancesPage",
+    "BsOperationalRecordsPage",
+    "BsOperationsDashboardPage",
+    "BsPasswordRecoveryPage",
+    "BsPlatformAdministrationPage",
+    "BsPointOfSalePage",
+    "BsProjectRegistryPage",
+    "BsPublicLegalPage",
+    "BsPurchasingPage",
+    "BsReceiptPage",
+    "BsRedirectPage",
+    "BsReportsPage",
+    "BsRoutingPolicyPage",
+    "BsSalesDirectoryPage",
+    "BsSignInPage",
+    "BsSignupPage",
+    "BsStarterWorkflowPage",
+    "BsSubledgerPage",
+    "BsSubscriptionCheckoutPage",
+    "BsTaskDetailPage",
+    "BsTaskWorklistPage",
+    "BsTaxWorkspacePage",
+    "BsWelcomePage",
+    "BsFinancialAccountsPage",
+    "BsAccountActivationPage",
+    "BsAccountProvisioningPage",
+    "BsOwnerInvitationPage"
+  ]
+}

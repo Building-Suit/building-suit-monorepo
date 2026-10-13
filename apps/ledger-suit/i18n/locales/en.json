@@ -221,7 +221,8 @@
     "themeSystem": "System",
     "back": "Back",
     "continue": "Continue",
-    "retry": "Retry"
+    "retry": "Retry",
+    "refresh": "Refresh"
   },
   "accountingTable": {
     "density": "Table density",

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useMenuNavigation } from '@building-suit/ux'
 import type { NavigationLink } from '@building-suit/contracts'
 
 withDefaults(defineProps<{
@@ -21,59 +22,7 @@ withDefaults(defineProps<{
 
 const emit = defineEmits<{ signOut: [] }>()
 const route = useRoute()
-const open = ref(false)
-const root = ref<HTMLElement | null>(null)
-const panel = ref<HTMLElement | null>(null)
-
-function triggerElement() {
-  return root.value?.querySelector<HTMLButtonElement>('[data-user-menu-trigger]') ?? null
-}
-
-function close(restoreFocus = false) {
-  open.value = false
-  if (restoreFocus) nextTick(() => triggerElement()?.focus())
-}
-
-async function toggle() {
-  open.value = !open.value
-  if (!open.value) return
-  await nextTick()
-  panel.value?.querySelector<HTMLElement>('[role="menuitem"], [role="menuitemradio"]')?.focus()
-}
-
-function menuItems() {
-  if (!panel.value) return []
-  return [...panel.value.querySelectorAll<HTMLElement>('[role="menuitem"], [role="menuitemradio"]')]
-    .filter(item => !item.hasAttribute('disabled'))
-}
-
-function onKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape') {
-    event.preventDefault()
-    close(true)
-    return
-  }
-  if (event.key === 'Tab') {
-    close()
-    return
-  }
-  if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return
-  const items = menuItems()
-  if (!items.length) return
-  event.preventDefault()
-  const current = items.indexOf(document.activeElement as HTMLElement)
-  const target = event.key === 'Home'
-    ? items[0]
-    : event.key === 'End'
-      ? items.at(-1)
-      : event.key === 'ArrowDown'
-        ? items[(current + 1 + items.length) % items.length]
-        : items[(current - 1 + items.length) % items.length]
-  target?.focus()
-}
-
-useClickOutside(root, () => close())
-watch(() => route.fullPath, () => close())
+const { open, root, panel, close, toggle, onKeydown } = useMenuNavigation(() => route.fullPath, '[data-user-menu-trigger]')
 </script>
 
 <template>

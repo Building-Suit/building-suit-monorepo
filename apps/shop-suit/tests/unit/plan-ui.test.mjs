@@ -1,11 +1,16 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import test from 'node:test'
+import { fileURLToPath } from 'node:url'
+import { readPresentationTree } from '../../../../packages/testing/presentation-source.mjs'
 
 const billing = await readFile(new URL('../../app/pages/billing.vue', import.meta.url), 'utf8')
-const pricing = await readFile(new URL('../../app/components/ShopPricing.vue', import.meta.url), 'utf8')
-const cards = await readFile(new URL('../../app/components/ShopPlanCards.vue', import.meta.url), 'utf8')
-const usage = await readFile(new URL('../../app/components/PlanUsageMeter.vue', import.meta.url), 'utf8')
+const pricing = await readFile(new URL('../../app/pages/index.vue', import.meta.url), 'utf8')
+const billingTree = await readPresentationTree(fileURLToPath(new URL('../../../../', import.meta.url)), 'apps/shop-suit/app/pages/billing.vue')
+const pricingTree = await readPresentationTree(fileURLToPath(new URL('../../../../', import.meta.url)), 'apps/shop-suit/app/pages/index.vue')
+const cards = await readFile(new URL('../../app/composables/useShopPlanPresentation.ts', import.meta.url), 'utf8')
+const usage = await readFile(new URL('../../app/composables/useShopUsagePresentation.ts', import.meta.url), 'utf8')
+const awaitSharedUsage = await readFile(new URL('../../../../packages/ui/src/molecules/BsUsageMeter.vue', import.meta.url), 'utf8')
 const quota = await readFile(new URL('../../app/utils/planQuotaError.ts', import.meta.url), 'utf8')
 
 test('inventory and purchase access notices describe subscription access in both locales', async () => {
@@ -28,7 +33,7 @@ test('owner billing uses the canonical purchasable catalog and effective server 
   assert.doesNotMatch(billing, /349|699|1099/)
   assert.match(pricing, /usePlans\(\)/)
   assert.match(pricing, /plan\.is_purchasable && !plan\.is_coming_soon/)
-  assert.match(pricing, /<ShopPlanCards/)
+  assert.match(pricingTree, /<BsMarketingPricing/)
   assert.match(pricing, /pricing\.notes\.allPlansIncludeFreeTrial/)
   assert.doesNotMatch(pricing, /2847\.84|5703\.84|8151\.84|9783\.84/)
   assert.match(cards, /familyOrder = \['solo', 'team', 'multi'\]/)
@@ -39,11 +44,11 @@ test('owner billing uses the canonical purchasable catalog and effective server 
 })
 
 test('plan cards expose Ledger-style term and Multi variant controls accessibly', () => {
-  assert.match(cards, /<BsMarketingPricing/)
+  assert.match(billingTree, /<BsMarketingPricing/)
   assert.doesNotMatch(cards, /<article\b/)
   assert.doesNotMatch(cards, /<fieldset\b/)
-  assert.match(cards, /value: 'monthly'/)
-  assert.match(cards, /value: 'annual'/)
+  assert.match(billing, /value: 'monthly'/)
+  assert.match(billing, /value: 'annual'/)
   assert.match(cards, /multi_2/)
   assert.match(cards, /multi_3/)
   assert.match(cards, /yearlyOriginal/)
@@ -57,9 +62,9 @@ test('all six quota resources have concise comparison and usage states', () => {
     assert.match(cards, new RegExp(resource))
     assert.match(billing, new RegExp(resource))
   }
-  assert.match(usage, /ratio\.value >= 80/)
-  assert.match(usage, /data-usage-state/)
-  assert.match(usage, /role="progressbar"/)
+  assert.match(usage, /ratio >= 80/)
+  assert.match(usage, /valueLabel, status/)
+  assert.match(awaitSharedUsage, /role="progressbar"/)
 })
 
 test('downgrades and manual payment requests communicate their safety boundary', () => {

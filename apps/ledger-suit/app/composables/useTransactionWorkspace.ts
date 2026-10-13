@@ -36,7 +36,7 @@ export function useTransactionWorkspace() {
   const page = ref(1)
   const pageSize = 25
   const search = ref('')
-  let searchTimer: ReturnType<typeof setTimeout> | undefined
+  const searchInteraction = useDebouncedTask((value: string) => { page.value = 1; search.value = value }, 300)
   let readingRoute = false
   const fields = { search: 'q', from: 'from', to: 'to', status: 'status', type: 'type', source: 'source', categoryId: 'category', tagId: 'tag', accountId: 'account', minAmount: 'min', maxAmount: 'max' } as const
   const scope = computed(() => scopedQueryKey({ environment: String(config.public.supabase.url), portal: 'ledger-suit', userId: user.value?.id ?? '', tenantId: currentId.value ?? '' }, 'transactions'))
@@ -44,7 +44,7 @@ export function useTransactionWorkspace() {
 
   function readRoute() {
     readingRoute = true
-    clearTimeout(searchTimer)
+    searchInteraction.cancel()
     for (const [field, key] of Object.entries(fields)) Object.assign(filters, { [field]: scalar(route.query[key]) })
     if (!(TRANSACTION_STATUSES as readonly string[]).includes(filters.status)) filters.status = ''
     if (!(TRANSACTION_TYPES as readonly string[]).includes(filters.type)) filters.type = ''
@@ -63,16 +63,14 @@ export function useTransactionWorkspace() {
   })
   watch(() => filters.search, value => {
     if (readingRoute) return
-    clearTimeout(searchTimer)
-    searchTimer = setTimeout(() => { page.value = 1; search.value = value }, 300)
+    searchInteraction.schedule(value)
   }, { flush: 'sync' })
   watch(() => [filters.from, filters.to, filters.status, filters.type, filters.source, filters.categoryId, filters.tagId, filters.accountId, filters.minAmount, filters.maxAmount, sort.column, sort.direction], () => {
     if (!readingRoute) page.value = 1
   }, { flush: 'sync' })
-  onBeforeUnmount(() => clearTimeout(searchTimer))
 
   function clearFilters() {
-    clearTimeout(searchTimer)
+    searchInteraction.cancel()
     Object.assign(filters, { search: '', from: '', to: '', status: '', type: '', source: '', categoryId: '', tagId: '', accountId: '', minAmount: '', maxAmount: '' })
     search.value = ''
     page.value = 1

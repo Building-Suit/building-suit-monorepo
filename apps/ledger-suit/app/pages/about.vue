@@ -3,10 +3,11 @@ import { legalDocuments } from '~/utils/legal'
 
 definePageMeta({ layout: 'marketing' })
 
-const { locale } = useI18n()
+const { locale, t } = useI18n()
 const document = computed(() => legalDocuments.about[locale.value === 'ar' ? 'ar' : 'en'])
+useHead(() => ({ title: `${document.value.title} · Ledger Suit`, meta: [{ name: 'description', content: document.value.intro }] }))
 </script>
 
 <template>
-  <PublicLegalPage :document="document" />
+  <BsPublicLegalPage :document="document" eyebrow="Ledger Suit by Building Suit" :last-updated-label="t('marketing.lastUpdated')" />
 </template>
