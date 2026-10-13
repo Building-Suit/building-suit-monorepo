@@ -43,6 +43,16 @@ create table public.shop_xpay_inbox (
 create index shop_xpay_inbox_pending on public.shop_xpay_inbox(received_at) where state='pending';
 alter table public.shop_xpay_inbox enable row level security;
 revoke all on public.shop_xpay_inbox from public,anon,authenticated,service_role;
+create table public.shop_xpay_paid_observations (
+ order_id uuid primary key references public.shop_xpay_orders(id) on delete restrict,
+ session_id text not null unique, payment_intent_id text not null unique,
+ merchant_id text not null,mode text not null,amount_minor bigint not null,currency text not null,
+ verified_at timestamptz not null default clock_timestamp()
+);
+alter table public.shop_xpay_paid_observations enable row level security;
+revoke all on public.shop_xpay_paid_observations from public,anon,authenticated,service_role;
+create trigger shop_xpay_paid_observations_immutable before update or delete or truncate on public.shop_xpay_paid_observations
+ for each statement execute function shop_private.reject_commercial_snapshot_mutation();
 create table public.shop_xpay_payments (
  id uuid primary key default gen_random_uuid(),
  order_id uuid not null unique references public.shop_xpay_orders(id) on delete restrict,
@@ -199,7 +209,7 @@ end $$;
 create function public.shop_xpay_apply_session(p_session jsonb,p_event_id text default null) returns jsonb
 language plpgsql security definer set search_path='' as $$
 declare o public.shop_xpay_orders; s public.subscriptions; payment public.shop_xpay_payments;
- t public.plan_catalog_terms; start_at timestamptz; end_at timestamptz; review boolean; event public.shop_xpay_inbox;
+ observation public.shop_xpay_paid_observations; t public.plan_catalog_terms; start_at timestamptz; end_at timestamptz; review boolean; event public.shop_xpay_inbox;
 begin
  perform shop_private.xpay_server_required();
  if jsonb_typeof(p_session) is distinct from 'object' or p_session->>'object' is distinct from 'checkout.session'
@@ -231,6 +241,11 @@ begin
  if p_session->>'status' is distinct from 'complete' or p_session->>'paymentIntentId' is null
  or p_session->>'paymentIntentId' !~ ('^pi_'||o.mode||'_[A-Za-z0-9]+$') then
  raise exception 'XPAY_PAYMENT_NOT_VERIFIED' using errcode='22023'; end if;
+ insert into public.shop_xpay_paid_observations(order_id,session_id,payment_intent_id,merchant_id,mode,amount_minor,currency)
+ values(o.id,o.session_id,p_session->>'paymentIntentId',o.merchant_id,o.mode,o.amount_minor,o.currency) on conflict(order_id) do nothing;
+ select * into observation from public.shop_xpay_paid_observations where order_id=o.id;
+ if observation.payment_intent_id<>p_session->>'paymentIntentId' or observation.session_id<>o.session_id then
+ raise exception 'XPAY_PAYMENT_ALREADY_BOUND' using errcode='22023'; end if;
  select * into payment from public.shop_xpay_payments where order_id=o.id;
  if payment.id is not null then
  if payment.payment_intent_id<>p_session->>'paymentIntentId' then raise exception 'XPAY_PAYMENT_ALREADY_BOUND' using errcode='22023'; end if;
