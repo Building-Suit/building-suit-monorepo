@@ -1,6 +1,9 @@
 import { spawn } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
+import { readFile } from 'node:fs/promises'
 
+// Test-only historical setup; public manual RPCs stay retired after XPay.
+const legacyBillingFixture = await readFile(new URL('../../apps/shop-suit/supabase/tests/shop_legacy_billing_fixture.sql', import.meta.url), 'utf8')
 const container = 'supabase_db_building-suit-shop'
 const psqlArgs = ['exec', '-i', container, 'psql', '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-At']
 
@@ -43,8 +46,8 @@ try {
     values ('${operatorId}','operator','Plan billing race operator');`)
   shopId = lastLine((await runSql(authenticated(ownerId,
     "select public.create_owner_shop('Plan billing concurrency','team','mixed'::public.business_mode);"))).stdout)
-  const noticeId = lastLine((await runSql(authenticated(ownerId,
-    `select public.submit_shop_billing_notice('${randomUUID()}','${shopId}','team',699,current_date,'IPN-RACE-001');`))).stdout)
+  const noticeId = lastLine((await runSql(legacyBillingFixture + authenticated(ownerId,
+    `select pg_temp.seed_legacy_submit_shop_billing_notice('${randomUUID()}','${shopId}','team',699,current_date,'IPN-RACE-001');`))).stdout)
   const beforeEnd = lastLine((await runSql(`select subscription.current_period_end
     from public.subscriptions subscription join public.shop_memberships membership
       on membership.profile_id=subscription.profile_id
