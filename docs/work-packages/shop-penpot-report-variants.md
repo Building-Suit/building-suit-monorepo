@@ -36,3 +36,7 @@ Final validation: twelve new cases and twelve unchanged report regressions pass,
 Supported report kinds/access/read/export journeys join customer-profile lifecycle/allocation as functionally reviewed named flows. Retain them as complete within this recorded scope instead of reopening solely because exports are absent. Three functional review buckets remain: appointment scheduling variants, settings/admin completeness, and public non-landing contexts. Prior cash, inventory/purchasing and sales/receipt scopes are retained as verified.
 
 Appearance comparison remains a separate blocker: 23 in-scope main-page PNGs missing, all 26 in-scope design matrices incomplete, frozen source 33 main boards / zero complete matrices. No missing board is invented, including the explicitly unsaved cash closed-history design. Original gap matrix and functional progress record implemented/tested/missing-source independently.
+
+## CI harness correction
+
+The inherited async-export unit harness supplied the default empty report while expecting pagination/download. The new semantic readiness guard correctly rejects that state. The harness now supplies a resolved non-empty report before exercising unchanged pagination, filter-version cancellation and disposal assertions. No production guard was relaxed. The five async-action cases pass locally; full-suite results are tracked separately from focused browser evidence.
