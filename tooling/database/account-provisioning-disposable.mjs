@@ -141,6 +141,7 @@ async function run() {
     const text=await readFile(new URL(`../../apps/shop-suit/supabase/tests/${suite}.sql`,import.meta.url),'utf8')
     sql('shop',`BEGIN;\n${text}\nROLLBACK;`)
   }
+  command('pnpm',['db:test:shop'])
   command('pnpm',['exec','supabase','--workdir','apps/super-admin-suit','test','db','--local'])
   const mailbox=new URL(shop.INBUCKET_URL)
   assert.equal(mailbox.origin,'http://127.0.0.1:61324','Only the disposable local mailbox is allowed')
