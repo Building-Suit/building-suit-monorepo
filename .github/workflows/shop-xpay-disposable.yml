@@ -28,7 +28,20 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Start disposable Shop backend
-        run: pnpm exec supabase --workdir apps/shop-suit start --exclude studio,realtime,imgproxy,postgres-meta,edge-runtime,logflare,vector,supavisor > "$RUNNER_TEMP/shop-xpay-start.log" 2>&1
+        run: |
+          if ! pnpm exec supabase --workdir apps/shop-suit start --exclude studio,realtime,imgproxy,postgres-meta,edge-runtime,logflare,vector,supavisor > "$RUNNER_TEMP/shop-xpay-start.log" 2>&1; then
+            python - <<'PY'
+          import os,re
+          from pathlib import Path
+          lines=Path(os.environ['RUNNER_TEMP']+'/shop-xpay-start.log').read_text().splitlines()
+          for line in lines:
+              if re.search(r'^(ERROR:|error:|Error:|Applying migration|At statement|failed to|unexpected)',line):
+                  line=re.sub(r'eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+','[redacted]',line)
+                  line=re.sub(r'(postgres(?:ql)?://)\S+',r'\1[redacted]',line)
+                  print(line[:1000])
+          PY
+            exit 1
+          fi
       - name: SQL payment authority, trial, replay and history
         env:
           SHOP_XPAY_DISPOSABLE: '1'

@@ -424,7 +424,7 @@ enabled = true
 # Each handler performs its own authorization: actual Auth user lookup + owner
 # RPC, raw-body XPay signature, or exact server credential respectively.
 [functions.shop-xpay-checkout]
-verify_jwt = false
+verify_jwt = true
 [functions.shop-xpay-webhook]
 verify_jwt = false
 [functions.shop-xpay-reconcile]

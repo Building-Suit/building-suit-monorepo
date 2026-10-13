@@ -139,8 +139,13 @@ export function createXPayReconciliation({ env, rpc, authorizeServer, fetchImpl 
       const settings = config(env)
       const orders = await rpc('shop_xpay_reconcile_candidates', {})
       let processed = 0, unresolved = 0
-      for (const order of orders) {
-        try { const result = await reconcileOrder(order, settings, rpc, fetchImpl); if (result.state === 'requires_review') unresolved++; else processed++ } catch { unresolved++ }
+      // Bound work for Supabase's 150s free-plan lifetime, including retries.
+      for (let offset = 0; offset < orders.length; offset += 2) {
+        const results = await Promise.allSettled(orders.slice(offset, offset + 2).map(order => reconcileOrder(order, settings, rpc, fetchImpl)))
+        for (const result of results) {
+          if (result.status === 'rejected' || result.value.state === 'requires_review') unresolved++
+          else processed++
+        }
       }
       return response({ processed, unresolved }, unresolved ? 503 : 200)
     } catch { return response({ error: 'reconciliation_unavailable' }, 503) }

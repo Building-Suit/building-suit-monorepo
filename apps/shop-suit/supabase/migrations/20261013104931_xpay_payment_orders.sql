@@ -274,6 +274,7 @@ begin
  elsif o.state not in ('paid','requires_review') then
  update public.shop_xpay_orders set state=case
  when p_session->>'status'='expired' then 'expired'
+ when p_event_id is not null and event.event_type='checkout.session.async_payment_failed' and p_session->>'paymentStatus'='unpaid' then 'failed'
  when p_session->>'status'='complete' and p_session->>'paymentStatus'='unpaid' then 'pending'
  else 'open' end,updated_at=clock_timestamp() where id=o.id returning * into o;
  end if;
@@ -285,7 +286,7 @@ declare result jsonb;
 begin
  perform shop_private.xpay_server_required();
  select coalesce(jsonb_agg(shop_private.xpay_order_view(o)),'[]'::jsonb) into result from
- (select * from public.shop_xpay_orders where state in ('creating','open','pending','requires_review') order by updated_at limit 50) o;
+ (select * from public.shop_xpay_orders where state in ('creating','open','pending','requires_review') order by updated_at limit 4) o;
  return result;
 end $$;
 
