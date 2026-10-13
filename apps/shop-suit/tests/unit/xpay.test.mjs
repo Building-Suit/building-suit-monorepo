@@ -104,3 +104,19 @@ test('hosted description projects frozen allowances, explicit features and rate 
     assert.match(product.description,locale==='ar'?/خصم السعر/:/Rate discount/)
   }
 })
+
+test('documented opaque intent accepts flat, expanded, nullable and matching dual representations', () => {
+  for (const fields of [{ paymentIntentId: 'pi_ABC123' }, { paymentIntent: { id: 'pi_ABC123' } },
+    { paymentIntentId: null, paymentIntent: { id: 'pi_ABC123' } },
+    { paymentIntentId: 'pi_ABC123', paymentIntent: { id: 'pi_ABC123' } }]) {
+    validateSession({ ...session, status: 'complete', paymentStatus: 'paid', ...fields }, order, 'test', { paid: true })
+  }
+})
+test('ambiguous or absent payment proof fails closed; intent text never overrides mode', () => {
+  for (const fields of [{}, { paymentIntentId: null }, { paymentIntentId: 'pi_A', paymentIntent: { id: 'pi_B' } },
+    { paymentIntentId: 5 }, { paymentIntent: { id: 'pi_' } }, { paymentIntentId: 'pi_a/evil' },
+    { paymentIntentId: `pi_${'a'.repeat(256)}` }, { paymentIntentId: 'pi_test_valid', livemode: true },
+    { paymentIntentId: 'pi_valid', status: 'open' }]) {
+    assert.throws(() => validateSession({ ...session, status: 'complete', paymentStatus: 'paid', ...fields }, order, 'test', { paid: true }))
+  }
+})

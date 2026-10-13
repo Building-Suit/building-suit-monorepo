@@ -270,3 +270,25 @@ test('cash quote submission uses the persisted owner quote ID and exact order am
  assert.deepEqual(body.paymentMethodTypes,['card']);assert.equal(body.lineItems[0].priceData.unitAmount,34900)
  assert.equal(f.calls.some(call=>call.name==='shop_xpay_order_create'),false)
 })
+
+test('signed webhook retrieves expanded opaque intent and sends only normalized proof to SQL', async () => {
+  const documented = { ...paid, paymentIntentId: null, paymentIntent: { id: 'pi_ABC123', clientSecret: 'never-forward' } }
+  const f = fixture({ providerSession: documented })
+  assert.equal((await createXPayWebhook(f)(webhook({ id: 'evt_expanded', type: 'checkout.session.completed', data: { object: documented } }))).status, 200)
+  const proof = f.calls.find(c => c.name === 'shop_xpay_apply_session').args.p_session
+  assert.equal(proof.paymentIntentId, 'pi_ABC123')
+  assert.equal('paymentIntent' in proof, false)
+  assert.equal('customer' in proof, false)
+  assert.equal(f.providerCalls[0].options.headers.authorization, 'Bearer sk_test_fixture')
+})
+test('provider contradictory intent identifiers never reach fulfillment through any reconciliation entry', async () => {
+  const contradictory = { ...paid, paymentIntentId: 'pi_A', paymentIntent: { id: 'pi_B' } }
+  for (const entry of ['webhook', 'checkout', 'server']) {
+    const f = fixture({ providerSession: contradictory })
+    const response = entry === 'webhook' ? await createXPayWebhook(f)(webhook())
+      : entry === 'checkout' ? await createXPayCheckout(f)(checkoutRequest({ orderId: id }))
+        : await createXPayReconciliation(f)(new Request('https://edge.example', { method: 'POST', body: JSON.stringify({ orderId: id, sessionId: session.id }) }))
+    assert.equal(response.status, entry === 'checkout' ? 409 : 503)
+    assert.equal(f.calls.some(c => c.name === 'shop_xpay_apply_session'), false)
+  }
+})

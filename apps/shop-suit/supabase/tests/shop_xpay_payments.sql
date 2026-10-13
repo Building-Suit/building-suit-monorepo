@@ -69,7 +69,7 @@ update xpay_fixture set session=(select jsonb_build_object('id','cs_test_SQLfixt
  'metadata',jsonb_build_object('orderId',o->>'id'),'currency','EGP','amountTotal',(o->>'amountMinor')::bigint,
  'status','open','paymentStatus','unpaid','url','https://checkout.xpay.app/c/cs_test_SQLfixture','isExpired',false,'expiresAt',clock_timestamp()+interval '30 minutes')
  from (select public.shop_xpay_server_order(order_id) o from xpay_fixture) q);
-do $$declare f xpay_fixture; result jsonb; paid jsonb; before_end timestamptz;
+do $$declare f xpay_fixture; result jsonb; paid jsonb; invalid jsonb; patch jsonb; before_end timestamptz;
 begin
  select * into f from xpay_fixture;
  begin perform public.shop_xpay_bind_session(f.order_id,f.session||'{"amountTotal":1}');raise exception 'price mismatch accepted';exception when sqlstate '22023' then null;end;
@@ -82,14 +82,26 @@ begin
  perform public.shop_xpay_inbox_receive('evt_sql_pending','checkout.session.completed','cs_test_SQLfixture','merchant-fixture','test',repeat('a',64));
  result:=public.shop_xpay_apply_session(f.session||'{"status":"complete"}','evt_sql_pending');
  if result->>'state'<>'pending' then raise exception 'unpaid session treated as paid';end if;
- paid:=f.session||'{"status":"complete","paymentStatus":"paid","paymentIntentId":"pi_test_SQLfixture"}';
+ -- Documented expanded object with no mode encoded in the opaque ID.
+ paid:=f.session||'{"status":"complete","paymentStatus":"paid","paymentIntentId":null,"paymentIntent":{"id":"pi_SQLfixture"}}';
+ for patch in select value from jsonb_array_elements('[
+ {"paymentIntentId":"pi_other"}, {"paymentIntent":{"id":"pi_"}},
+ {"paymentIntent":{"id":123}}, {"paymentIntent":null}, {"status":"open"},
+ {"livemode":true}, {"merchantId":"other"}, {"currency":"USD"},
+ {"amountTotal":1}, {"id":"cs_test_other"}]'::jsonb) loop
+ invalid:=paid||patch;
+ begin perform public.shop_xpay_apply_session(invalid);raise exception 'invalid paid proof accepted';
+ exception when sqlstate '22023' then null;end;
+ end loop;
+ if public.shop_xpay_server_order(f.order_id)->>'state'<>'pending' then raise exception 'invalid proof advanced payment';end if;
  perform public.shop_xpay_inbox_receive('evt_sql_paid','checkout.session.async_payment_succeeded','cs_test_SQLfixture','merchant-fixture','test',repeat('b',64));
  result:=public.shop_xpay_apply_session(paid,'evt_sql_paid');
  if result->>'state'<>'paid' then raise exception 'verified result did not pay';end if;
  perform public.shop_xpay_apply_session(paid,'evt_sql_paid');
  -- Distinct events carrying the same paid result still grant exactly once.
  perform public.shop_xpay_inbox_receive('evt_sql_duplicate','checkout.session.completed','cs_test_SQLfixture','merchant-fixture','test',repeat('c',64));
- perform public.shop_xpay_apply_session(paid,'evt_sql_duplicate');
+ perform public.shop_xpay_apply_session((paid-'paymentIntent')||'{"paymentIntentId":"pi_SQLfixture"}','evt_sql_duplicate');
+ begin perform public.shop_xpay_apply_session((paid-'paymentIntent')||'{"paymentIntentId":"pi_other"}');raise exception 'replay rebound payment';exception when sqlstate '22023' then null;end;
  -- Old failure/expiry cannot roll back a paid order.
  perform public.shop_xpay_apply_session(f.session||'{"status":"expired"}');
  if public.shop_xpay_server_order(f.order_id)->>'state'<>'paid' then raise exception 'late expiry downgraded payment';end if;
