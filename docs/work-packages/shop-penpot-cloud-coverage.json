@@ -614,7 +614,8 @@
         "Locale/theme/responsive",
         "Pixel QA"
       ],
-      "cloudBranch": "codex/shop-suit/cloud-purchasing-customers"
+      "cloudBranch": "codex/shop-suit/cloud-purchasing-customers",
+      "latestDeltaSection": "customerProfile"
     },
     {
       "number": 25,
@@ -627,13 +628,16 @@
       "referencePixels": null,
       "pixelScope": "unavailable",
       "latestDeltaRecord": null,
-      "cloudRelatedDraftPRs": [],
+      "cloudRelatedDraftPRs": [
+        267
+      ],
       "cloudReview": "focused verified state/editor changes; visual matrix queued",
       "fullDesignMatrixComplete": false,
       "remainingDesignEvidence": [
         "Week/month, edit/reschedule, expanded actions, confirmations, feedback/context states, theme/language/responsive variants, dialog QA"
       ],
-      "cloudBranch": "codex/shop-suit/cloud-daily-operations"
+      "cloudBranch": "codex/shop-suit/cloud-daily-operations",
+      "latestDeltaSection": "appointments"
     },
     {
       "number": 26,
@@ -646,7 +650,9 @@
       "referencePixels": null,
       "pixelScope": "unavailable",
       "latestDeltaRecord": null,
-      "cloudRelatedDraftPRs": [],
+      "cloudRelatedDraftPRs": [
+        267
+      ],
       "cloudReview": "focused verified state/editor changes; visual matrix queued",
       "fullDesignMatrixComplete": false,
       "remainingDesignEvidence": [
@@ -654,7 +660,8 @@
         "Arabic/dark/responsive variants",
         "Pixel QA"
       ],
-      "cloudBranch": "codex/shop-suit/cloud-daily-operations"
+      "cloudBranch": "codex/shop-suit/cloud-daily-operations",
+      "latestDeltaSection": "cashShifts"
     },
     {
       "number": 27,
@@ -667,7 +674,9 @@
       "referencePixels": null,
       "pixelScope": "unavailable",
       "latestDeltaRecord": null,
-      "cloudRelatedDraftPRs": [],
+      "cloudRelatedDraftPRs": [
+        267
+      ],
       "cloudReview": "focused verified state/editor changes; visual matrix queued",
       "fullDesignMatrixComplete": false,
       "remainingDesignEvidence": [
@@ -688,7 +697,9 @@
       "referencePixels": null,
       "pixelScope": "unavailable",
       "latestDeltaRecord": null,
-      "cloudRelatedDraftPRs": [],
+      "cloudRelatedDraftPRs": [
+        267
+      ],
       "cloudReview": "focused verified state/editor changes; visual matrix queued",
       "fullDesignMatrixComplete": false,
       "remainingDesignEvidence": [
@@ -696,7 +707,8 @@
         "Arabic/dark/responsive variants",
         "Pixel QA"
       ],
-      "cloudBranch": "codex/shop-suit/cloud-daily-operations"
+      "cloudBranch": "codex/shop-suit/cloud-daily-operations",
+      "latestDeltaSection": "reports"
     },
     {
       "number": 29,
@@ -730,13 +742,14 @@
       "pixelScope": "unavailable",
       "latestDeltaRecord": null,
       "cloudRelatedDraftPRs": [],
-      "cloudReview": "queued",
+      "cloudReview": "supported admin queue layout and existing billing/team/settings flow verification; native pixel matrix queued",
       "fullDesignMatrixComplete": false,
       "remainingDesignEvidence": [
         "Remaining source-backed states, dialogs and tabs",
         "Arabic/dark/responsive variants",
         "Pixel QA"
-      ]
+      ],
+      "cloudBranch": "codex/shop-suit/cloud-admin-billing-team-settings"
     },
     {
       "number": 31,
@@ -750,13 +763,14 @@
       "pixelScope": "unavailable",
       "latestDeltaRecord": null,
       "cloudRelatedDraftPRs": [],
-      "cloudReview": "queued",
+      "cloudReview": "supported admin queue layout and existing billing/team/settings flow verification; native pixel matrix queued",
       "fullDesignMatrixComplete": false,
       "remainingDesignEvidence": [
         "Remaining source-backed states, dialogs and tabs",
         "Arabic/dark/responsive variants",
         "Pixel QA"
-      ]
+      ],
+      "cloudBranch": "codex/shop-suit/cloud-admin-billing-team-settings"
     },
     {
       "number": 32,
@@ -770,13 +784,14 @@
       "pixelScope": "unavailable",
       "latestDeltaRecord": null,
       "cloudRelatedDraftPRs": [],
-      "cloudReview": "queued",
+      "cloudReview": "supported admin queue layout and existing billing/team/settings flow verification; native pixel matrix queued",
       "fullDesignMatrixComplete": false,
       "remainingDesignEvidence": [
         "Remaining source-backed states, dialogs and tabs",
         "Arabic/dark/responsive variants",
         "Pixel QA"
-      ]
+      ],
+      "cloudBranch": "codex/shop-suit/cloud-admin-billing-team-settings"
     },
     {
       "number": 33,
@@ -788,15 +803,103 @@
       "requiredDialogs": "Tenant detail dialog; support actions (suspend/reactivate/extend/end trial/add note as exposed); payment review/approval/rejection; price override; payment configuration; catalog/tenant plan terms, availability, change/renew/suspend and price dialogs; destructive/approval confirmations",
       "referencePixels": null,
       "pixelScope": "unavailable",
-      "latestDeltaRecord": null,
+      "latestDeltaRecord": {
+        "pageId": "9d8c9265-2366-809c-8008-c7fdc83cc3be",
+        "route": 33,
+        "rendered": [
+          {
+            "id": "9d8c9265-2366-809c-8008-c80a103a925f",
+            "name": "Tab / Billing queue · operator"
+          },
+          {
+            "id": "9d8c9265-2366-809c-8008-c80b21f6e4d0",
+            "name": "Tab / Plans & subscriptions"
+          }
+        ],
+        "dialogs": [
+          {
+            "id": "9d8c9265-2366-809c-8008-c80a15b2b2b5",
+            "name": "Dialog / BsAdminCommerceDialogs · approve-payment · light"
+          },
+          {
+            "id": "9d8c9265-2366-809c-8008-c80a4c514e7c",
+            "name": "Dialog / Approval with amount mismatch"
+          },
+          {
+            "id": "9d8c9265-2366-809c-8008-c80a4f1ccf5e",
+            "name": "Confirmation / Activate one catalog term"
+          },
+          {
+            "id": "9d8c9265-2366-809c-8008-c80a4fc856f4",
+            "name": "Dialog / Set negotiated price"
+          },
+          {
+            "id": "9d8c9265-2366-809c-8008-c80a9ead3863",
+            "name": "Plan dialog / BsAdminPlanDialogs · terms · light"
+          },
+          {
+            "id": "9d8c9265-2366-809c-8008-c80aa4cf0a1a",
+            "name": "Plan dialog / BsAdminPlanDialogs · availability · light"
+          },
+          {
+            "id": "9d8c9265-2366-809c-8008-c80aa6bde116",
+            "name": "Plan dialog / BsAdminPlanDialogs · change · blocked · light"
+          },
+          {
+            "id": "9d8c9265-2366-809c-8008-c80b1e6b4cbe",
+            "name": "Dialog / BsAdminCommerceDialogs · payment-configuration · light"
+          },
+          {
+            "id": "9d8c9265-2366-809c-8008-c80a4a02325a",
+            "name": "Dialog / BsAdminCommerceDialogs · mark-under-review · light"
+          },
+          {
+            "id": "9d8c9265-2366-809c-8008-c80a4b37b8b9",
+            "name": "Dialog / BsAdminCommerceDialogs · reject-payment · light"
+          },
+          {
+            "id": "9d8c9265-2366-809c-8008-c80b5c3f2e95",
+            "name": "Support / BsAdminCommerceDialogs · Suspend Shop access · light"
+          },
+          {
+            "id": "9d8c9265-2366-809c-8008-c80b5d567c98",
+            "name": "Support / BsAdminCommerceDialogs · Reactivate Shop access · light"
+          },
+          {
+            "id": "9d8c9265-2366-809c-8008-c80b5e88a8d2",
+            "name": "Support / BsAdminCommerceDialogs · Extend trial · light"
+          },
+          {
+            "id": "9d8c9265-2366-809c-8008-c80b60364485",
+            "name": "Support / BsAdminCommerceDialogs · End trial · light"
+          },
+          {
+            "id": "9d8c9265-2366-809c-8008-c80b616af775",
+            "name": "Support / BsAdminCommerceDialogs · Correct billing metadata · light"
+          },
+          {
+            "id": "9d8c9265-2366-809c-8008-c80c0447b345",
+            "name": "Confirmation / Suspend Shop access?"
+          },
+          {
+            "id": "9d8c9265-2366-809c-8008-c80c0561cfb7",
+            "name": "Confirmation / End this trial now?"
+          },
+          {
+            "id": "9d8c9265-2366-809c-8008-c80c065e8380",
+            "name": "Confirmation / Suspend subscription?"
+          }
+        ]
+      },
       "cloudRelatedDraftPRs": [],
-      "cloudReview": "queued",
+      "cloudReview": "supported admin queue layout and existing billing/team/settings flow verification; native pixel matrix queued",
       "fullDesignMatrixComplete": false,
       "remainingDesignEvidence": [
         "Remaining source-backed states, dialogs and tabs",
         "Arabic/dark/responsive variants",
         "Pixel QA"
-      ]
+      ],
+      "cloudBranch": "codex/shop-suit/cloud-admin-billing-team-settings"
     }
   ]
 }
