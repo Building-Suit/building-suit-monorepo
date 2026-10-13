@@ -43,7 +43,7 @@ async function run() {
     if(!response.ok)throw Object.assign(new Error(`Local request rejected: ${path.split('?')[0]} HTTP ${response.status} ${typeof value.message==='string'?value.message.replace(/[A-Za-z0-9_-]{40,}/g,'[redacted]').slice(0,160):''}`),{code:typeof value.code==='string'?value.code:undefined})
     return value
   }
-  const admin=(product,path,body,method)=>call(product==='shop'?shopOrigin:sasOrigin,product==='shop'?shop.SERVICE_ROLE_KEY:sas.SERVICE_ROLE_KEY,product==='shop'?shop.SERVICE_ROLE_KEY:sas.SERVICE_ROLE_KEY,path,body,method)
+  const admin=async(product,path,body,method)=>{const value=await call(product==='shop'?shopOrigin:sasOrigin,product==='shop'?shop.SERVICE_ROLE_KEY:sas.SERVICE_ROLE_KEY,product==='shop'?shop.SERVICE_ROLE_KEY:sas.SERVICE_ROLE_KEY,path,body,method);return value.user??value}
   const rpc=(origin,key,token)=>({rpc:async(name,args)=>{try{return {data:await call(origin,key,token,`/rest/v1/rpc/${name}`,args),error:null}}catch(error){return {data:null,error}}}})
   const worker=rpc(sasOrigin,sas.SERVICE_ROLE_KEY,sas.SERVICE_ROLE_KEY)
   const sourceEmail=`sas-${randomUUID()}@example.invalid`, sourcePassword=`Fixture-${randomUUID()}!`
@@ -112,7 +112,8 @@ async function run() {
   assert.deepEqual(same.data,created.data,'Exact completed replay is frozen')
   const userId=sql('shop',`select auth_user_id from public.shop_account_provisions where id=${quote(created.data.provisioningId)};`)
   const user=await admin('shop',`/auth/v1/admin/users/${userId}`,undefined,'GET')
-  assert.equal(user.email_confirmed_at,null,'Unclaimed identity remains unconfirmed')
+  assert.equal(Boolean(user.email_confirmed_at),false,'Unclaimed identity remains unconfirmed')
+  assert.equal(sql('shop',`select email_confirmed_at is null from auth.users where id=${quote(userId)};`),'t','Provider-owned confirmation state remains null')
   assert.equal(sql('shop',`select count(*) from public.shop_account_provisions where email=${quote(input.email)};`),'1','One reserved identity')
   assert.equal(sql('shop',`select count(*) from public.shop_account_provision_events where action='account_activated' and job_id=${quote(created.data.provisioningId)};`),'1','One activation event')
   assert.equal(sql('shop',`select (select count(*) from public.shop_billing_submissions)||':'||(select count(*) from public.platform_billing_events);`),baseline,'No payment or receipt fabrication')
