@@ -29,7 +29,7 @@ select set_config('request.jwt.claim.role','service_role',true),set_config('requ
 set local role service_role;
 DO $$declare f proration_fixture;o jsonb;result jsonb;begin select * into f from proration_fixture;o:=public.shop_xpay_server_order(f.original_order);
  if (o->>'amountMinor')::bigint<>19990 then raise exception 'Earlier real discounted quote missing';end if;
- result:=public.shop_xpay_apply_session(jsonb_build_object('id','cs_test_Proriginal','object','checkout.session','merchantId',o->>'merchantId','livemode',false,'currency','EGP','amountTotal',(o->>'amountMinor')::bigint,'status','complete','paymentStatus','paid','paymentIntentId','pi_test_Proriginal','metadata',jsonb_build_object('orderId',f.original_order)));
+ result:=public.shop_xpay_apply_session(jsonb_build_object('id','cs_test_Proriginal','object','checkout.session','merchantId',o->>'merchantId','livemode',false,'currency','EGP','amountTotal',(o->>'amountMinor')::bigint,'status','complete','paymentStatus','paid','paymentIntentId',null,'paymentIntent',jsonb_build_object('id','pi_Proriginal'),'metadata',jsonb_build_object('orderId',f.original_order)));
  if result->>'state'<>'paid' then raise exception 'Initial paid fixture not active';end if;
 end $$;
 reset role;
@@ -75,7 +75,7 @@ reset role;
 select set_config('request.jwt.claim.role','service_role',true),set_config('request.jwt.claim.sub','',true);
 set local role service_role;
 DO $$declare f proration_fixture;o jsonb;session jsonb;result jsonb;begin select * into f from proration_fixture;o:=public.shop_xpay_server_order(f.order_id);
- session:=jsonb_build_object('id','cs_test_Prpaid','object','checkout.session','merchantId',o->>'merchantId','livemode',false,'currency','EGP','amountTotal',(o->>'amountMinor')::bigint,'status','complete','paymentStatus','paid','paymentIntentId','pi_test_Prpaid','metadata',jsonb_build_object('orderId',f.order_id));
+ session:=jsonb_build_object('id','cs_test_Prpaid','object','checkout.session','merchantId',o->>'merchantId','livemode',false,'currency','EGP','amountTotal',(o->>'amountMinor')::bigint,'status','complete','paymentStatus','paid','paymentIntentId',null,'paymentIntent',jsonb_build_object('id','pi_Prpaid'),'metadata',jsonb_build_object('orderId',f.order_id));
  result:=public.shop_xpay_apply_session(session);if result->>'state'<>'paid' then raise exception 'Prorated paid fulfillment failed';end if;
  perform public.shop_xpay_apply_session(session);
 end $$;
