@@ -6,3 +6,5 @@ export function parseXPayOrder(value: unknown): XPayOrder
 export function parseXPayDatabaseOrders(value: unknown): XPayOrder[]
 export function checkoutAttemptKey(userId: string, shopId: string): string
 export function checkoutAttempt(storage: Pick<Storage, 'getItem' | 'setItem'>, key: string, selection: string, createId: () => string): string
+
+export function checkoutFailureCode(data: unknown, error: unknown): Promise<'checkout_historical_review_pending' | null>

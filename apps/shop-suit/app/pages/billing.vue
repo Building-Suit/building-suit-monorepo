@@ -6,7 +6,7 @@ import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import { parsePrivateOfferLink } from '~/utils/private-offer'
 import type { PrivateOfferEntry } from '~/utils/private-offer'
 import type { XPayOrder } from '~/utils/xpay-checkout.mjs'
-import { checkoutAttempt, checkoutAttemptKey, isXPayOrderId, parseXPayDatabaseOrders, parseXPayOrder, xpayHostedUrl } from '~/utils/xpay-checkout.mjs'
+import { checkoutFailureCode, checkoutAttempt, checkoutAttemptKey, isXPayOrderId, parseXPayDatabaseOrders, parseXPayOrder, xpayHostedUrl } from '~/utils/xpay-checkout.mjs'
 
 definePageMeta({ layout: 'default', middleware: ['auth'] })
 
@@ -174,6 +174,8 @@ async function startCheckout() {
       : { requestId, shopId: context.shop, locale: isArabic.value ? 'ar' : 'en', catalogTermsId: entry ? null : form.catalogTermsId,
           privateOffer: entry ? { offerId: entry.offerId, offerVersion: entry.offerVersion, targetBindingId: entry.targetBindingId, targetEnvironmentId: entry.targetEnvironmentId, redemptionToken: entry.redemptionToken } : null }
     const result = await client.functions.invoke('shop-xpay-checkout', { body })
+    const failure = await checkoutFailureCode(result.data, result.error)
+    if (failure) throw Object.assign(new Error('checkout_failed'), { checkoutCode: failure })
     if (result.error) throw result.error
     if (!sameCheckoutContext(context)) return
     const order = parseXPayOrder(result.data)
@@ -185,7 +187,7 @@ async function startCheckout() {
     const approved = await confirmation.ask(copy.value.checkoutConfirm(order.planName, money(order.amountMinor / 100, order.currency)))
     if (!approved || !sameCheckoutContext(context)) { await loadCheckoutStatus(); return }
     window.location.assign(xpayHostedUrl(order.url, order.sessionId))
-  } catch { if (sameCheckoutContext(context)) checkoutError.value = copy.value.checkoutFailed }
+  } catch (error) { if (sameCheckoutContext(context)) checkoutError.value = typeof error === 'object' && error !== null && 'checkoutCode' in error && error.checkoutCode === 'checkout_historical_review_pending' ? copy.value.checkoutHistoricalReview : copy.value.checkoutFailed }
   finally { if (sameCheckoutContext(context)) { checkoutPending.value = false; scheduleCheckoutPoll() } }
 }
 watch([currentId, isOwner, () => user.value?.id], () => {
@@ -271,6 +273,7 @@ function choosePlan(plan: ShopPlanOffer, intent: 'choose' | 'preview') {
 const en = {
   checkoutChecking: 'Checking checkout availability…', checkoutResume: 'Resume checkout', checkoutCheck: 'Check payment status', checkoutFailed: 'Could not complete checkout or check payment. Check the saved status before starting another payment.',
   checkoutConfirm: (plan: string, amount: string) => `Continue to X-Pay for ${plan} at ${amount}? Review the hosted checkout before paying.`,
+  checkoutHistoricalReview: 'An earlier manual payment notice is still awaiting review. No new X-Pay checkout was created. Ask support to resolve that notice before paying again; do not send another payment while its status is unresolved.',
   checkoutHistory: 'X-Pay checkout history', checkoutEmpty: 'No X-Pay checkouts yet.', checkoutTest: 'Test checkout: no real funds are collected.',
   checkoutStates: { creating: 'Checkout is being prepared. You can retry the saved checkout safely.', open: 'Checkout is open. Continue to X-Pay to complete payment.', pending: 'Payment is pending. Access stays unchanged until the server confirms payment.', paid: 'Payment verified. Your subscription summary shows your current access.', requires_review: 'Payment received; access needs review. Contact support before paying again.', expired: 'Checkout expired without confirmed payment. You may start a new checkout.', failed: 'Payment was not completed. You may retry with a new checkout.' },
   checkoutTitle: 'Pay with X-Pay', checkoutHelp: 'Use secure hosted checkout for your selected plan. Payment details stay with X-Pay; no receipt image is needed.',
@@ -298,6 +301,7 @@ const en = {
 const ar = {
   checkoutChecking: 'بنتحقق من إتاحة الدفع…', checkoutResume: 'استكمال الدفع', checkoutCheck: 'تحقق من حالة الدفع', checkoutFailed: 'مقدرناش نكمّل الدفع أو نتحقق من حالته. راجع الحالة المحفوظة قبل بدء دفع آخر.',
   checkoutConfirm: (plan: string, amount: string) => `تتابع إلى X-Pay لخطة ${plan} بمبلغ ${amount}؟ راجع صفحة الدفع قبل السداد.`,
+  checkoutHistoricalReview: 'يوجد إشعار دفع يدوي سابق ما زال بانتظار المراجعة. لم يتم إنشاء دفع جديد عبر X-Pay. اطلب من الدعم معالجة الإشعار قبل الدفع مجددًا؛ لا ترسل دفعة أخرى حتى تتضح حالته.',
   checkoutHistory: 'سجل الدفع عبر X-Pay', checkoutEmpty: 'لا توجد عمليات دفع عبر X-Pay بعد.', checkoutTest: 'دفع تجريبي: لا يتم تحصيل أموال حقيقية.',
   checkoutStates: { creating: 'بنجهّز صفحة الدفع. تقدر تعيد المحاولة لنفس الطلب بأمان.', open: 'طلب الدفع مفتوح. تابع إلى X-Pay لإكمال الدفع.', pending: 'الدفع معلّق. سيظل الوصول دون تغيير حتى يؤكد الخادم الدفع.', paid: 'تم تأكيد الدفع. ملخص الاشتراك يعرض وصولك الحالي.', requires_review: 'تم استلام الدفع ويحتاج الوصول إلى مراجعة. تواصل مع الدعم قبل الدفع مرة أخرى.', expired: 'انتهت صلاحية الطلب دون دفع مؤكد. يمكنك بدء طلب جديد.', failed: 'لم يكتمل الدفع. يمكنك إعادة المحاولة بطلب جديد.' },
   checkoutTitle: 'الدفع بـ X-Pay', checkoutHelp: 'استخدم صفحة الدفع الآمنة للخطة المختارة. تظل بيانات الدفع لدى X-Pay ولا تحتاج إلى رفع صورة إيصال.',

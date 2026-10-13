@@ -59,9 +59,9 @@ for (const locale of ['en', 'ar'] as const) {
 
 const orderId = '11111111-1111-4111-8111-111111111111'
 const hostedOrder = { orderId, state: 'open', currency: 'EGP', amountMinor: 34900, planName: 'Server-approved Solo', createdAt: '2026-10-13T12:00:00Z', sessionId: 'cs_test_browser', url: 'https://checkout.xpay.app/c/cs_test_browser' }
-async function readyFixture(page: Parameters<typeof pilotFixture>[0], response: (args: Record<string, unknown>) => unknown, target: 'solo' | 'team' = 'solo') {
+async function readyFixture(page: Parameters<typeof pilotFixture>[0], response: (args: Record<string, unknown>) => unknown, target: 'solo' | 'team' = 'solo', locale: 'en' | 'ar' = 'en') {
   const limits = { active_locations: 1, active_members: 5, active_products: 250, active_services: 50, active_customers: 500, active_suppliers: 50 }
-  return pilotFixture(page, 'en', 'owner', (name, args) => {
+  return pilotFixture(page, locale, 'owner', (name, args) => {
     if (name === 'shop_public_plan_catalog') return [{ id: 'public-1', name: target === 'solo' ? 'Solo' : 'Team', slug: target, catalog_terms_id: 'terms-1', plan_variant: 'standard', variant_name: 'Standard', price_amount: 399, currency: 'EGP', billing_interval: 'monthly', trial_days: 7, features: {}, resource_limits: limits, is_purchasable: true, is_coming_soon: false }]
     if (name === 'shop_billing_read') return { subscription: { planName: 'Trial plan', planSlug: 'solo', planVariant: 'standard', billingInterval: 'monthly', accessState: 'trialing', status: 'trialing', currency: 'EGP', trialDaysRemaining: 7 }, availablePlans: [{ planId: 'public-1', planSlug: target, planName: target === 'solo' ? 'Solo' : 'Team', catalogTermsId: 'terms-1', planVariant: 'standard', variantName: 'Standard', billingInterval: 'monthly', currency: 'EGP', listPriceAmount: 399, effectivePriceAmount: 399, priceSource: 'catalog', resourceLimits: limits, blockers: [] }], usage: { resources: [], limits }, submissions: [] }
     if (name === 'shop-xpay-checkout') return args.action === 'status' ? { ready: true, mode: 'test', orders: [] } : response(args)
@@ -118,4 +118,16 @@ test('lost checkout response retries the same identity and preserves trial acces
   expect(calls).toHaveLength(2)
   expect(calls[0]?.args.requestId).toBe(calls[1]?.args.requestId)
   await expect(page.getByRole('main')).toContainText('Trial plan')
+})
+
+for (const locale of ['en', 'ar'] as const) test(`pending historical review explains why no new payment started: ${locale}`, async ({ page }) => {
+  await readyFixture(page, () => ({ error: 'checkout_historical_review_pending', retrySafe: false }), 'solo', locale)
+  await fixtureGoto(page, '/billing')
+  await page.locator('[data-plan="solo"]').getByRole('button').click()
+  const dialog = page.getByRole('dialog')
+  await dialog.getByRole('button', { name: locale === 'en' ? 'Continue to X-Pay' : 'المتابعة إلى X-Pay', exact: true }).click()
+  await expect(dialog).toContainText(locale === 'en' ? 'earlier manual payment notice is still awaiting review' : 'إشعار دفع يدوي سابق ما زال بانتظار المراجعة')
+  await expect(dialog).toContainText(locale === 'en' ? 'No new X-Pay checkout was created' : 'لم يتم إنشاء دفع جديد')
+  await expect(dialog).not.toContainText('XPAY_HISTORICAL_REVIEW_OPEN')
+  await expect(page).toHaveURL(/\/billing$/)
 })

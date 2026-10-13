@@ -232,3 +232,15 @@ test('unconfigured CORS rejects foreign origins and mismatched project/origin pi
   assert.deepEqual(f.calls, [])
   assert.deepEqual(f.providerCalls, [])
 })
+
+test('historical manual review returns actionable409without creating a provider session', async () => {
+  const f = fixture()
+  const rpc = async (...args) => {
+    if (args[0] === 'shop_xpay_order_create') throw Object.assign(new Error('xpay_rpc_failed'), { checkoutCode: 'checkout_historical_review_pending' })
+    return f.rpc(...args)
+  }
+  const response = await createXPayCheckout({ ...f, rpc })(checkoutRequest({ requestId: id, shopId: shop, catalogTermsId: terms, locale: 'en' }))
+  assert.equal(response.status, 409)
+  assert.deepEqual(await response.json(), { error: 'checkout_historical_review_pending', retrySafe: false })
+  assert.equal(f.providerCalls.some(call => call.url.includes('/checkout/sessions')), false)
+})
