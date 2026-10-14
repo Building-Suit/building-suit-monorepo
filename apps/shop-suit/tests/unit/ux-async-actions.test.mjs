@@ -23,7 +23,11 @@ async function pageScript(file, exports, rpc) {
     useConfirmation: () => ({ ask: async () => false }),
     useToasts: () => ({ push: toast => toasts.push(toast) }), refreshNuxtData: async () => {},
     useAsyncData: (key, handler, options) => ({
-      data: vue.ref(typeof key === 'function' && key().includes('report-access') ? { 'reports.view': true, 'reports.cost_profit.view': true } : options.default()),
+      data: vue.ref(typeof key === 'function' && key().includes('report-access')
+        ? { 'reports.view': true, 'reports.cost_profit.view': true }
+        : typeof key === 'function' && key().includes('operational-report')
+          ? { ...options.default(), total: 1, items: [{ amount: 10 }] }
+          : options.default()),
       pending: vue.ref(false), error: vue.ref(null), refresh: async () => {},
     }),
   }

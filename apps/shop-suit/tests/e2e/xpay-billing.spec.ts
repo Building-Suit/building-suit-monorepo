@@ -12,9 +12,10 @@ for (const locale of ['en', 'ar'] as const) {
       } : undefined)
       await fixtureGoto(page, '/billing')
       await page.evaluate(dark => document.documentElement.classList.toggle('dark', dark), dark)
+      await page.getByRole('button', { name: locale === 'en' ? 'Continue to X-Pay' : 'المتابعة إلى X-Pay', exact: true }).click()
       const checkout = page.getByTestId('hosted-checkout')
-      await expect(checkout.getByRole('heading', { name: locale === 'en' ? 'Pay with X-Pay' : 'الدفع بـ X-Pay' })).toBeVisible()
-      await expect(checkout.getByRole('button').first()).toBeDisabled()
+      await expect(page.getByRole('dialog', { name: locale === 'en' ? 'Pay with X-Pay' : 'الدفع بـ X-Pay' })).toBeVisible()
+      await expect(page.getByRole('dialog').locator('button[type="submit"]')).toBeDisabled()
       await expect(checkout.getByRole('status')).toContainText(locale === 'en' ? 'not available yet' : 'غير متاح بعد')
       await expect(checkout).toContainText(locale === 'en' ? 'day one' : 'أول يوم')
       const logo = checkout.getByRole('img', { name: 'X-Pay', exact: true })
@@ -58,24 +59,24 @@ for (const locale of ['en', 'ar'] as const) {
 
 const orderId = '11111111-1111-4111-8111-111111111111'
 const hostedOrder = { orderId, state: 'open', currency: 'EGP', amountMinor: 34900, planName: 'Server-approved Solo', createdAt: '2026-10-13T12:00:00Z', sessionId: 'cs_test_browser', url: 'https://checkout.xpay.app/c/cs_test_browser' }
-async function readyFixture(page: Parameters<typeof pilotFixture>[0], response: (args: Record<string, unknown>) => unknown) {
+async function readyFixture(page: Parameters<typeof pilotFixture>[0], response: (args: Record<string, unknown>) => unknown, target: 'solo' | 'team' = 'solo', locale: 'en' | 'ar' = 'en') {
   const limits = { active_locations: 1, active_members: 5, active_products: 250, active_services: 50, active_customers: 500, active_suppliers: 50 }
-  return pilotFixture(page, 'en', 'owner', (name, args) => {
-    if (name === 'shop_public_plan_catalog') return [{ id: 'public-1', name: 'Solo', slug: 'solo', catalog_terms_id: 'terms-1', plan_variant: 'standard', variant_name: 'Standard', price_amount: 399, currency: 'EGP', billing_interval: 'monthly', trial_days: 7, features: {}, resource_limits: limits, is_purchasable: true, is_coming_soon: false }]
-    if (name === 'shop_billing_read') return { subscription: { planName: 'Trial plan', accessState: 'trialing', status: 'trialing', currency: 'EGP', trialDaysRemaining: 7 }, availablePlans: [{ planId: 'public-1', planSlug: 'solo', planName: 'Solo', catalogTermsId: 'terms-1', planVariant: 'standard', variantName: 'Standard', billingInterval: 'monthly', currency: 'EGP', listPriceAmount: 399, effectivePriceAmount: 399, priceSource: 'catalog', resourceLimits: limits, blockers: [] }], usage: { resources: [], limits }, submissions: [] }
+  return pilotFixture(page, locale, 'owner', (name, args) => {
+    if (name === 'shop_public_plan_catalog') return [{ id: 'public-1', name: target === 'solo' ? 'Solo' : 'Team', slug: target, catalog_terms_id: 'terms-1', plan_variant: 'standard', variant_name: 'Standard', price_amount: 399, currency: 'EGP', billing_interval: 'monthly', trial_days: 7, features: {}, resource_limits: limits, is_purchasable: true, is_coming_soon: false }]
+    if (name === 'shop_billing_read') return { subscription: { planName: 'Trial plan', planSlug: 'solo', planVariant: 'standard', billingInterval: 'monthly', accessState: 'trialing', status: 'trialing', currency: 'EGP', trialDaysRemaining: 7 }, availablePlans: [{ planId: 'public-1', planSlug: target, planName: target === 'solo' ? 'Solo' : 'Team', catalogTermsId: 'terms-1', planVariant: 'standard', variantName: 'Standard', billingInterval: 'monthly', currency: 'EGP', listPriceAmount: 399, effectivePriceAmount: 399, priceSource: 'catalog', resourceLimits: limits, blockers: [] }], usage: { resources: [], limits }, submissions: [] }
     if (name === 'shop-xpay-checkout') return args.action === 'status' ? { ready: true, mode: 'test', orders: [] } : response(args)
     return undefined
   })
 }
-test('trial owner continues on day one using the server quote and exact hosted URL', async ({ page }) => {
-  const fixture = await readyFixture(page, () => hostedOrder)
+for (const target of ['solo', 'team'] as const) test(`trial owner buys ${target === 'solo' ? 'same' : 'different'} plan on day one using the server quote and exact hosted URL`, async ({ page }) => {
+  const fixture = await readyFixture(page, () => hostedOrder, target)
   await page.route(hostedOrder.url, route => route.fulfill({ contentType: 'text/html', body: '<p>Synthetic provider checkout</p>' }))
   await fixtureGoto(page, '/billing')
-  await page.locator('[data-plan="solo"]').getByRole('button').click()
+  await page.locator(`[data-plan="${target}"]`).getByRole('button', { name: target === 'solo' ? 'Activate this plan' : 'Choose plan', exact: true }).click()
   const checkout = page.getByTestId('hosted-checkout')
   await expect(checkout).toContainText('day one')
-  await expect(checkout).toContainText('no real funds')
-  await checkout.getByRole('button', { name: 'Continue to X-Pay', exact: true }).click()
+  await expect(checkout).not.toContainText('no real funds')
+  await page.getByRole('dialog').getByRole('button', { name: 'Continue to X-Pay', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: 'Confirm', exact: true })
   await expect(dialog).toContainText('Server-approved Solo')
   await expect(dialog).toContainText('349.00')
@@ -89,32 +90,46 @@ test('trial owner continues on day one using the server quote and exact hosted U
 test('pending return cannot claim activation or start another charge', async ({ page }) => {
   const fixture = await readyFixture(page, () => ({ ...hostedOrder, state: 'pending', url: null }))
   await fixtureGoto(page, `/billing?xpayOrder=${orderId}&cancelled=1`)
-  await expect(page.getByTestId('checkout-state')).toContainText('Payment is pending')
+  await expect(page.getByRole('dialog').first().getByTestId('checkout-state')).toContainText('Confirming your payment')
   await expect(page).not.toHaveURL(/xpayOrder|cancelled/)
   await expect(page.getByRole('main')).toContainText('Trial plan')
-  await expect(page.getByTestId('hosted-checkout').getByRole('button').first()).toBeDisabled()
+  await expect(page.getByRole('dialog').locator('button[type="submit"]')).toHaveCount(0)
   expect(fixture.calls.filter(call => call.name === 'shop-xpay-checkout' && call.args.requestId)).toEqual([])
 })
 test('a hostile provider URL is rejected without confirmation or navigation', async ({ page }) => {
   await readyFixture(page, () => ({ ...hostedOrder, url: 'https://evil.example/collect' }))
   await fixtureGoto(page, '/billing')
   await page.locator('[data-plan="solo"]').getByRole('button').click()
-  await page.getByTestId('hosted-checkout').getByRole('button', { name: 'Continue to X-Pay', exact: true }).click()
-  await expect(page.getByTestId('hosted-checkout')).toContainText('Could not complete checkout')
-  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await page.getByRole('dialog').getByRole('button', { name: 'Continue to X-Pay', exact: true }).click()
+  await expect(page.getByRole('dialog')).toContainText('Payment confirmation is taking longer')
+  await expect(page.getByRole('dialog', { name: 'Confirm', exact: true })).toHaveCount(0)
   await expect(page).toHaveURL(/\/billing$/)
 })
 test('lost checkout response retries the same identity and preserves trial access', async ({ page }) => {
   const fixture = await readyFixture(page, () => ({ error: 'checkout_not_completed', retrySafe: true }))
   await fixtureGoto(page, '/billing')
   await page.locator('[data-plan="solo"]').getByRole('button').click()
-  const action = page.getByTestId('hosted-checkout').getByRole('button', { name: 'Continue to X-Pay', exact: true })
+  const action = page.getByRole('dialog').getByRole('button', { name: 'Continue to X-Pay', exact: true })
   await action.click()
-  await expect(page.getByTestId('hosted-checkout')).toContainText('Could not complete checkout')
+  await expect(page.getByRole('dialog')).toContainText('Payment confirmation is taking longer')
+  await expect(action).toHaveCount(0)
+  await fixtureGoto(page, '/billing')
+  await page.locator('[data-plan="solo"]').getByRole('button').click()
   await action.click()
-  await expect(action).toBeEnabled()
   const calls = fixture.calls.filter(call => call.name === 'shop-xpay-checkout' && call.args.requestId)
   expect(calls).toHaveLength(2)
   expect(calls[0]?.args.requestId).toBe(calls[1]?.args.requestId)
   await expect(page.getByRole('main')).toContainText('Trial plan')
+})
+
+for (const locale of ['en', 'ar'] as const) test(`pending historical review explains why no new payment started: ${locale}`, async ({ page }) => {
+  await readyFixture(page, () => ({ error: 'checkout_historical_review_pending', retrySafe: false }), 'solo', locale)
+  await fixtureGoto(page, '/billing')
+  await page.locator('[data-plan="solo"]').getByRole('button').click()
+  const dialog = page.getByRole('dialog')
+  await dialog.getByRole('button', { name: locale === 'en' ? 'Continue to X-Pay' : 'المتابعة إلى X-Pay', exact: true }).click()
+  await expect(dialog).toContainText(locale === 'en' ? 'earlier manual payment notice is still awaiting review' : 'إشعار دفع يدوي سابق ما زال بانتظار المراجعة')
+  await expect(dialog).toContainText(locale === 'en' ? 'No new X-Pay checkout was created' : 'لم يتم إنشاء دفع جديد')
+  await expect(dialog).not.toContainText('XPAY_HISTORICAL_REVIEW_OPEN')
+  await expect(page).toHaveURL(/\/billing$/)
 })

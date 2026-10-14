@@ -72,3 +72,7 @@ verification; a separate resend requires acknowledgment. The owner template
 shows password fields only after the app verifies target ownership.
 The documentation `/components` page includes their contracts and an inert
 unavailable-invitation preview.
+
+Shop pricing cards share the canonical 352px maximum track in marketing and billing, shrinking to the available width on narrow screens. Only a product-designated promoted plan receives marketing emphasis; current/selected subscription state does not move it. Current paid plans expose a disabled Selected action. Capacity restrictions remain product-owned and appear in checkout rather than on each billing card.
+
+`BsHostedCheckoutDialog` composes the shared record-action dialog with pinned payment/cancel actions, provider branding, a typed quote, consequences, restrictions, status/recovery and policy links. It performs no payment arithmetic or provider calls. `BsBillingPage` exposes controlled `checkoutVisible`; products open it on an explicit plan choice, while interval preview changes preserve the current interaction. The catalogue provides an unavailable checkout example.

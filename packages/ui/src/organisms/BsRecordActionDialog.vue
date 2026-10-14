@@ -9,6 +9,7 @@ const props = withDefaults(defineProps<{
   submitLabel?: string
   cancelLabel?: string
   submitTone?: 'primary' | 'danger'
+  submitVisible?: boolean
   submitDisabled?: boolean
   formLayout?: 'stack' | 'grid'
   formColumns?: 1 | 2 | 3 | 4
@@ -22,6 +23,7 @@ const props = withDefaults(defineProps<{
   submitLabel: undefined,
   cancelLabel: undefined,
   submitTone: 'primary',
+  submitVisible: true,
   submitDisabled: false,
   formLayout: 'stack',
   formColumns: 1,
@@ -42,7 +44,7 @@ const formId = useId()
         <BsFormActions v-if="!pinnedActions" :label="actionsLabel">
           <slot name="actions" :close="close">
             <BsButton type="button" :disabled="pending" @click="close">{{ props.cancelLabel || ui('cancel') }}</BsButton>
-            <BsButton type="submit" :variant="submitTone" :pending="pending" :disabled="submitDisabled">
+            <BsButton v-if="submitVisible" type="submit" :variant="submitTone" :pending="pending" :disabled="submitDisabled">
               {{ props.submitLabel || ui('save') }}
             </BsButton>
           </slot>
@@ -53,7 +55,7 @@ const formId = useId()
       <BsFormActions :label="actionsLabel" align="between">
         <slot name="actions" :close="close" :form-id="formId">
           <BsButton type="button" :disabled="pending" @click="close">{{ props.cancelLabel || ui('cancel') }}</BsButton>
-          <BsButton type="submit" :form="formId" :variant="submitTone" :pending="pending" :disabled="pending || submitDisabled">
+          <BsButton v-if="submitVisible" type="submit" :form="formId" :variant="submitTone" :pending="pending" :disabled="pending || submitDisabled">
             {{ props.submitLabel || ui('save') }}
           </BsButton>
         </slot>

@@ -4,6 +4,12 @@ export type ShopRpcDatabase = {
     Tables: Record<string, never>
     Views: Record<string, never>
     Functions: {
+      shop_xpay_proration_quote: { Args: { p_request_id: string; p_shop_id: string; p_catalog_terms_id: string | null; p_private_offer?: Record<string, string | number> | null }; Returns: unknown }
+      shop_xpay_proration_read: { Args: { p_shop_id: string; p_quote_id: string }; Returns: unknown }
+      shop_xpay_proration_order: { Args: { p_shop_id: string; p_quote_id: string }; Returns: unknown }
+      shop_xpay_proration_credit_confirm: { Args: { p_shop_id: string; p_quote_id: string }; Returns: unknown }
+      shop_xpay_proration_abandon: { Args: { p_shop_id: string; p_quote_id: string }; Returns: unknown }
+      shop_xpay_proration_status: { Args: { p_shop_id: string }; Returns: unknown }
       shop_xpay_order_read: { Args: { p_shop_id: string; p_order_id: string | null }; Returns: unknown }
       shop_catalog_media: {
         Args: { p_shop_id: string; p_action: 'products' | 'services' | 'pos' | 'save_product' | 'save_service'; p_payload: Record<string, string | number | boolean | string[] | null> }

@@ -1,18 +1,23 @@
+import { checkoutRpcError } from './xpay-errors.mjs'
 export const env = (name: string) => Deno.env.get(name)
 function baseUrl() {
   const url = new URL(env('SUPABASE_URL') || '')
   if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.search || url.hash) throw new Error('xpay_runtime_invalid')
   return url.origin
 }
-export async function rpc(name: string, body: unknown, caller?: string) {
+export async function rpc(name: string, body: unknown, caller?: string, intent?: { purchaseIntent: string; priorPaidOrderId: string | null }) {
   const key = env('SUPABASE_SERVICE_ROLE_KEY') || ''
   if (!key || !/^shop_xpay_[a-z_]+$/.test(name)) throw new Error('xpay_runtime_invalid')
   const response = await fetch(`${baseUrl()}/rest/v1/rpc/${name}`, {
     method: 'POST', redirect: 'error', signal: AbortSignal.timeout(10000),
-    headers: { apikey: key, authorization: caller || `Bearer ${key}`, 'content-type': 'application/json' },
+    headers: { apikey: key, authorization: caller || `Bearer ${key}`, 'content-type': 'application/json', ...(name === 'shop_xpay_order_create' && intent ? { 'x-shop-payment-intent': intent.purchaseIntent, 'x-shop-prior-paid-order': intent.priorPaidOrderId ?? '' } : {}) },
     body: JSON.stringify(body),
   })
-  if (!response.ok) throw new Error('xpay_rpc_failed')
+  if (!response.ok) {
+    let payload: unknown
+    try { payload = await response.json() } catch { /* Never forward raw errors. */ }
+    throw checkoutRpcError(name, response.status, payload)
+  }
   return response.json()
 }
 export async function authenticate(caller?: string | null) {

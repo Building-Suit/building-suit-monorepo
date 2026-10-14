@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import type { BsAppointmentsCopy, BsAppointmentsView } from '../types/appointmentsPresentation'
 defineProps<{ days: BsAppointmentsView['days']; view: string; copy: Pick<BsAppointmentsCopy, 'title' | 'empty' | 'actions' | 'edit' | 'reschedule' | 'saving' | 'history'>; transitioning: boolean }>()
-const emit = defineEmits<{ edit: [id: string]; transition: [id: string, status: string]; day: [date: string] }>()
+const emit = defineEmits<{ edit: [id: string]; transition: [id: string, status: string]; day: [date: string]; block: [id: string] }>()
 </script>
 <template>
   <section class="bs-appointment-calendar" :class="[`bs-appointment-calendar--${view}`]" :aria-label="copy.title">
-    <p v-if="view === 'month' && !days.some(day => day.appointments.length)" class="bs-appointment-calendar__mobile-empty">{{ copy.empty }}</p>
-    <section v-for="day in days" :key="day.id" class="bs-appointment-calendar__day" :class="{ 'bs-appointment-calendar__day--empty': !day.appointments.length, 'bs-appointment-calendar__day--outside': day.outside }">
+    <p v-if="view === 'month' && !days.some(day => day.appointments.length || day.blocks?.length)" class="bs-appointment-calendar__mobile-empty">{{ copy.empty }}</p>
+    <section v-for="day in days" :key="day.id" class="bs-appointment-calendar__day" :class="{ 'bs-appointment-calendar__day--empty': !day.appointments.length && !day.blocks?.length, 'bs-appointment-calendar__day--outside': day.outside }">
       <h2 class="bs-appointment-calendar__heading"><BsButton variant="text" :aria-label="day.label" :aria-current="day.today ? 'date' : undefined" :class="{ 'bs-appointment-calendar__today': day.today }" @click="emit('day', day.id)">{{ day.label }}</BsButton></h2>
-      <p v-if="!day.appointments.length" class="bs-appointment-calendar__empty">{{ copy.empty }}</p>
-      <ol v-else class="bs-appointment-calendar__events">
+      <p v-if="!day.appointments.length && !day.blocks?.length" class="bs-appointment-calendar__empty">{{ copy.empty }}</p>
+      <ol v-if="day.appointments.length" class="bs-appointment-calendar__events">
         <li v-for="appointment in day.appointments" :key="appointment.id" class="bs-appointment-event" :data-tone="appointment.tone">
           <div class="bs-appointment-event__summary"><strong class="bs-appointment-event__time">{{ appointment.time }}</strong><BsStatusBadge :status="appointment.status" :label="appointment.statusLabel" :tone="appointment.tone" /></div>
           <p class="bs-appointment-event__name">{{ appointment.customerName }}</p><p class="bs-appointment-event__detail">{{ appointment.detail }}</p>
@@ -20,6 +20,11 @@ const emit = defineEmits<{ edit: [id: string]; transition: [id: string, status: 
           </BsDisclosure>
         </li>
       </ol>
+      <BsStack v-if="day.blocks?.length" gap="sm">
+        <BsButton v-for="block in day.blocks" :key="block.id" variant="tile" block align="start" :aria-label="`${block.kindLabel} · ${block.staff} · ${block.time}`" @click="emit('block', block.id)">
+          <span class="bs-appointment-calendar__block"><BsText as="span" size="sm" emphasis="semibold">{{ block.kindLabel }}</BsText><BsText as="span" size="xs">{{ block.staff }}</BsText><BsText as="span" size="xs" tone="muted">{{ block.time }}</BsText></span>
+        </BsButton>
+      </BsStack>
     </section>
   </section>
 </template>
@@ -33,6 +38,7 @@ const emit = defineEmits<{ edit: [id: string]; transition: [id: string, status: 
 .bs-appointment-calendar__heading :deep(button) { font-size: inherit; min-block-size: 2.75rem; text-align: start; }
 .bs-appointment-calendar__today { background: var(--bs-primary); color: var(--bs-text-on-primary); border-radius: var(--bs-radius-control); }
 .bs-appointment-calendar__empty { padding-block: 1.5rem; font-size: .75rem; color: var(--bs-text-muted); }
+.bs-appointment-calendar__block { display: grid; gap: var(--bs-space-1); }
 .bs-appointment-calendar__events { display: grid; gap: .75rem; list-style: none; padding: 0; }
 .bs-appointment-event { min-inline-size: 0; padding: .75rem; border: 1px solid var(--bs-border); border-inline-start-width: 3px; border-radius: var(--bs-radius-control); overflow-wrap: anywhere; }
 .bs-appointment-event[data-tone='success'] { border-inline-start-color: var(--bs-status-success); }

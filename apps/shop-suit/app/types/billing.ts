@@ -120,6 +120,6 @@ export type PlatformBillingConfiguration = {
 export type PrivateOfferPreview = {
   offerId: string; offerVersion: number; shopId: string; targetBindingId: string; targetEnvironmentId: string
   displayName: string; priceAmount: number; currency: string; billingInterval: 'monthly' | 'annual'; expiresAt: string
-  resourceLimits: PlanResourceLimits; entitlements: Record<string, unknown>; submissionId: string | null; xpayOrderId?: string | null
+  resourceLimits: PlanResourceLimits; entitlements: Record<string, unknown>; settledQuoteId?: string | null; submissionId: string | null; xpayOrderId?: string | null
   blockers: Array<{ resource: string; used: number; limit: number; excess: number }>
 }

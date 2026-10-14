@@ -153,5 +153,5 @@ test('Shop billing no longer exposes manual mutation or upload orchestration', (
   const source = sources.find(item => item.file === 'pages/billing.vue')?.source || ''
   assert.doesNotMatch(source, /submit_shop_billing_notice|redeem_shop_private_offer|reserve_shop_billing_payment_evidence|storage\.from/)
   assert.match(source, /transfer: null, evidence: null, showEvidence: false/)
-  assert.match(source, /disabled: !checkoutReady\.value/)
+  assert.match(source, /disabled:[^\n]*!checkoutReady\.value/)
 })

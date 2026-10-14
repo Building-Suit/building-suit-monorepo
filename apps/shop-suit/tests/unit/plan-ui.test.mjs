@@ -77,7 +77,7 @@ test('downgrades and X-Pay checkout communicate their safety boundary', () => {
   assert.doesNotMatch(billing, /:disabled="plan\.blockers\.length > 0"/)
   assert.doesNotMatch(billing, /!plan \|\| plan\.blockers\.length/)
   assert.match(billing, /Paid access starts after verified payment/)
-  assert.match(billing, /disabled: !checkoutReady\.value/)
+  assert.match(billing, /disabled:[^\n]*!checkoutReady\.value/)
   assert.match(billing, /submitted: 'Submitted for manual review/)
   assert.match(billing, /under_review: 'An operator is reviewing/)
   assert.match(billing, /approved: 'This request was approved/)

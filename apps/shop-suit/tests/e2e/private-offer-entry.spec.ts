@@ -31,10 +31,11 @@ for (const locale of ['en', 'ar']) for (const mobile of [false, true]) {
     await page.getByLabel(locale === 'en' ? 'Private offer link' : 'رابط العرض الخاص', { exact: true }).fill(link)
     await page.getByRole('button', { name: locale === 'en' ? 'Review private terms' : 'مراجعة شروط العرض', exact: true }).click()
     await expect(page.locator('[data-private-offer-preview]')).toBeVisible()
+    await page.locator('#payment').getByRole('button').first().click()
     const checkout = page.getByTestId('hosted-checkout')
     await expect(checkout).toContainText('Synthetic frozen private terms')
     await expect(checkout).toContainText(/123[.,٫]45|١٢٣٫٤٥/)
-    await expect(checkout.getByRole('button').first()).toBeDisabled()
+    await expect(page.getByRole('dialog').locator('button[type="submit"]')).toBeDisabled()
     expect(calls.filter(call => call.name === 'redeem_shop_private_offer')).toHaveLength(0)
     expect(calls.filter(call => call.name === 'submit_shop_billing_notice')).toHaveLength(0)
 

@@ -1,18 +1,36 @@
 import assert from 'node:assert/strict'
+import { parseProrationQuote } from '../../apps/shop-suit/app/utils/proration-quote.mjs'
 import { readFile } from 'node:fs/promises'
 import { spawnSync } from 'node:child_process'
 assert.equal(process.env.GITHUB_ACTIONS, 'true', 'Requires GitHub Actions')
 assert.equal(process.env.RUNNER_ENVIRONMENT, 'github-hosted', 'No self-hosted or customer environment')
 assert.equal(process.env.SHOP_XPAY_DISPOSABLE, '1', 'Explicit disposable payment job required')
 const sql = await readFile(new URL('../../apps/shop-suit/supabase/tests/shop_xpay_payments.sql', import.meta.url), 'utf8')
-const result = spawnSync('docker', ['exec', '-i', 'supabase_db_building-suit-shop', 'psql', '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1'], {
-  input: `BEGIN;\n${sql}\nROLLBACK;`, encoding: 'utf8', timeout: 120000,
+const proration = await readFile(new URL('../../apps/shop-suit/supabase/tests/shop_proration_quotes.sql', import.meta.url), 'utf8')
+const settlement = await readFile(new URL('../../apps/shop-suit/supabase/tests/shop_proration_settlement.sql', import.meta.url), 'utf8')
+const checkoutDetails = await readFile(new URL('../../apps/shop-suit/supabase/tests/shop_proration_checkout_details.sql', import.meta.url), 'utf8')
+const journeys = await readFile(new URL('../../apps/shop-suit/supabase/tests/shop_proration_journeys.sql', import.meta.url), 'utf8')
+const windows = await readFile(new URL('../../apps/shop-suit/supabase/tests/shop_proration_checkout_windows.sql', import.meta.url), 'utf8')
+const result = spawnSync('docker', ['exec', '-i', 'supabase_db_building-suit-shop', 'psql', '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-Atq'], {
+  input: `BEGIN;\n${proration}\n${sql}\nROLLBACK;\nBEGIN;\n${settlement}\n${checkoutDetails}\nROLLBACK;\nBEGIN;\n${journeys}\n${windows}\nROLLBACK;`, encoding: 'utf8', timeout: 120000,
 })
 if (result.status !== 0) {
   // This job has only synthetic records, but never print CLI status or credentials.
   console.error(result.stderr.slice(-6000))
   process.exitCode = 1
-} else console.log('Disposable XPay SQL authority, paid activation and replay fixtures passed and rolled back')
+} else {
+  const rows = result.stdout.split('\n').filter(line => line.trim().startsWith('{"prorationContract":')).map(line => JSON.parse(line).prorationContract)
+  assert.ok(rows.length >= 10, 'Expected real disposable quote projections across financial states')
+  for (const row of rows) {
+    const parsed = parseProrationQuote(row)
+    assert.equal(parsed.quoteId, row.quoteId)
+    assert.equal(parsed.calculation.amountDueMinor, row.calculation.amountDueMinor)
+    assert.equal(parsed.calculation.unusedPrepaidMinor, row.calculation.unusedPrepaidMinor)
+    assert.equal(parsed.calculation.serviceValueMinor, row.calculation.serviceValueMinor)
+    assert.equal('offerBinding' in parsed, false)
+  }
+  console.log(`Disposable SQL authority, settlement and ${rows.length} real SQL/client quote projections passed and rolled back`)
+}
 
 // Race two independent PostgreSQL connections at first fulfillment. All writes
 // remain in this throwaway runner; no hosted credentials or provider requests.
