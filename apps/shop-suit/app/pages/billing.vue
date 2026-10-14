@@ -154,6 +154,7 @@ function checkoutErrorMessage(error: unknown) {
 function recordCheckoutError(error: unknown) {
   checkoutErrorCode.value = typeof error === 'object' && error !== null && 'checkoutCode' in error ? String(error.checkoutCode) : ''
   checkoutError.value = checkoutErrorMessage(error)
+  if(checkoutErrorCode.value==='checkout_change_at_period_end')void scheduled.review()
 }
 async function restartCheckoutQuote() {
   const context = checkoutContext()

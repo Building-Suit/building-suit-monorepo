@@ -83,3 +83,13 @@ an expired owner with excess team/branch usage: payment quote denied; existing
 public suspend/archive commands preserve records, clear blockers and permit a
 manual next-term quote. Synthetic source aging/intent seeding occurs only inside
 the rolled-back disposable fixture, never through deployed product APIs.
+
+At final backend/UI SHA 1bdc103b832372732a2a641b243a865710d4fde7, native
+payments38547113750, accounts38547113710, media38547113693 and workspace
+review38547113670 passed, including expired quota resolution. Generated Shop
+public types came directly from that run's `account-schema-contracts` artifact
+11884853007, copied as a complete generated source (no manual patch). ZIP SHA256:
+ffff584817b2df8d18e6a1e62da376368aa3ae35ed6d868e3d41f7c3e78f240a.
+Direct gh artifact transfer returned Forbidden; the authorized GitHub connector
+provided readable bytes with the matching digest. Existing media/payment types
+also refresh from the current cumulative schema. No hosted introspection mutation.
