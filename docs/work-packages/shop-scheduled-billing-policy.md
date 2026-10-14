@@ -69,3 +69,10 @@ Those native changes require final-SHA CI; no hosted migration has been applied.
 Post-expiry quota-resolution, broader private-offer/second-upgrade negatives and
 combined-root full CI remain required before release. These browser mocks are
 workflow checks, not real hosted payment or full Penpot matrix validation.
+
+The b33a093 UI checkpoint subsequently passed native payments and the full
+account/provisioning SQL regression gate. Both stack branches now preserve staging
+547005b263e1a2eedaa6f09a3fc9837d059d6d05 / cache fix #306. Additional pending
+native fixtures cover a second same-interval upgrade funded exclusively by the
+existing allocation, gapped/custom segment rejection, private offer expiry before
+due, invalid version/bearer, token-free scheduling and revoked intent cancellation.

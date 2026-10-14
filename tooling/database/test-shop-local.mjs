@@ -31,12 +31,13 @@ const historicalQuote = priorQuoteMigration.slice(priorQuoteMigration.indexOf('c
   .replace('create or replace function public.shop_xpay_proration_quote(', 'create function pg_temp.historical_quote_create(')
 const journeys = await readFile(new URL('../../apps/shop-suit/supabase/tests/shop_proration_journeys.sql', import.meta.url), 'utf8')
 const journeySetup = journeys.slice(0, journeys.indexOf('\nDO $$'))
+const privateSetup = journeys.slice(journeys.indexOf('-- Issue secure terms'), journeys.indexOf('DO $$declare f journey_bridge;'))
 for (const suite of suites) {
   let sql = (await readFile(new URL(`../../apps/shop-suit/supabase/tests/${suite}.sql`, import.meta.url), 'utf8')).replaceAll('-- APPLY_REVIEWED_ACTIVATION_MIGRATION', activationMigration)
   const isHistoricalQuote = ['shop_proration_settlement', 'shop_proration_journeys'].includes(suite)
   if (isHistoricalQuote) sql = sql.replaceAll('public.shop_xpay_proration_quote(', 'pg_temp.historical_quote_create(')
   const isCleanupSuite = suite === 'shop_orphan_fixture_cleanup_test'
-  const setup = (isHistoricalQuote ? historicalQuote : '') + (suite === 'shop_scheduled_billing_policy' ? historicalOrder + journeySetup : ['shop_xpay_payments', 'shop_proration_journeys'].includes(suite) ? historicalOrder : isCleanupSuite ? fixtureCleanup : ['shop_billing', 'shop_plan_catalog_v2', 'shop_subscription_lifecycle'].includes(suite) ? legacyBillingFixture : '')
+  const setup = (isHistoricalQuote ? historicalQuote : '') + (suite === 'shop_scheduled_billing_policy' ? historicalOrder + journeySetup + privateSetup : ['shop_xpay_payments', 'shop_proration_journeys'].includes(suite) ? historicalOrder : isCleanupSuite ? fixtureCleanup : ['shop_billing', 'shop_plan_catalog_v2', 'shop_subscription_lifecycle'].includes(suite) ? legacyBillingFixture : '')
   const result = spawnSync('docker', isCleanupSuite ? cleanupArgs : args, { input: `BEGIN;\n${setup}\n${sql.replace(/\bshop_crm\b/g, 'public')}\nROLLBACK;`, encoding: 'utf8' })
   if (result.status !== 0) { console.error(`${suite}: failed\n${result.stderr || result.error}`); process.exit(1) }
   console.log(`${suite}: passed; fixtures rolled back`)

@@ -24,8 +24,9 @@ const historicalQuote = priorQuoteMigration.slice(priorQuoteMigration.indexOf('c
 const historical = value => value.replaceAll('public.shop_xpay_proration_quote(', 'pg_temp.historical_quote_create(')
 const policy = await readFile(new URL('../../apps/shop-suit/supabase/tests/shop_scheduled_billing_policy.sql', import.meta.url), 'utf8')
 const journeySetup = journeys.slice(0, journeys.indexOf('\nDO $$'))
+const privateSetup = journeys.slice(journeys.indexOf('-- Issue secure terms'), journeys.indexOf('DO $$declare f journey_bridge;'))
 const result = spawnSync('docker', ['exec', '-i', 'supabase_db_building-suit-shop', 'psql', '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-Atq'], {
-  input: `BEGIN;\n${activation}\nROLLBACK;\nBEGIN;\n${historicalOrder}\n${historicalQuote}\n${proration}\n${sql}\nROLLBACK;\nBEGIN;\n${historicalQuote}\n${historical(settlement)}\n${checkoutDetails}\nROLLBACK;\nBEGIN;\n${historicalOrder}\n${historicalQuote}\n${historical(journeys)}\n${windows}\nROLLBACK;\nBEGIN;\n${historicalOrder}\n${journeySetup}\n${policy}\nROLLBACK;`, encoding: 'utf8', timeout: 120000,
+  input: `BEGIN;\n${activation}\nROLLBACK;\nBEGIN;\n${historicalOrder}\n${historicalQuote}\n${proration}\n${sql}\nROLLBACK;\nBEGIN;\n${historicalQuote}\n${historical(settlement)}\n${checkoutDetails}\nROLLBACK;\nBEGIN;\n${historicalOrder}\n${historicalQuote}\n${historical(journeys)}\n${windows}\nROLLBACK;\nBEGIN;\n${historicalOrder}\n${journeySetup}\n${privateSetup}\n${policy}\nROLLBACK;`, encoding: 'utf8', timeout: 120000,
 })
 if (result.status !== 0) {
   // This job has only synthetic records, but never print CLI status or credentials.

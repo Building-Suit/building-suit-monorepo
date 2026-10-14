@@ -58,7 +58,7 @@ begin
 end $$;
 
 -- The exact grandfathered two-year case: both verified annual receipts survive.
-do $$declare shop uuid;low uuid;high uuid;monthly uuid;v_order uuid;sub public.subscriptions;q jsonb;funding jsonb;before_end timestamptz;
+do $$declare shop uuid;low uuid;high uuid;highest uuid;monthly uuid;v_order uuid;sub public.subscriptions;q jsonb;funding jsonb;invalid_funding jsonb;before_end timestamptz;
 begin
  shop:=pg_temp.journey_owner();
  select catalog_terms_id into low from public.shop_public_plan_catalog() where slug='journey-year-low' limit 1;
@@ -84,6 +84,54 @@ begin
  funding:=shop_private.proration_funding(sub,clock_timestamp());
  if jsonb_array_length(funding->'evidence')<>1 or jsonb_array_length(funding#>'{evidence,0,serviceSegments}')<>2 then raise exception 'Segmented allocation not retained for subsequent remaining-value credit';end if;
  insert into policy_quote_contracts values(public.shop_xpay_proration_read(shop,(q->>'quoteId')::uuid));
+ -- Further upgrade consumes only the allocation, never the old receipts again.
+ insert into public.plans(portal_id,name,slug,price_amount,currency,billing_interval,trial_days,features,resource_limits,is_active,is_public,is_purchasable,is_coming_soon)
+ select portal_id,'Journey annual highest','journey-year-highest',12588,'EGP','annual',7,features,resource_limits,true,true,true,false from public.plans where slug='journey-year-high';
+ perform shop_private.reconcile_plan_catalog();
+ select catalog_terms_id into highest from public.shop_public_plan_catalog() where slug='journey-year-highest' limit 1;
+ q:=public.shop_xpay_proration_quote(gen_random_uuid(),shop,highest);
+ if q#>>'{calculation,pricingBasis}'<>'verified_funded_term_segments' or (q#>>'{calculation,amountDueMinor}')::bigint not between 839998 and 840000
+ then raise exception 'Second upgrade double-counted receipts or lost funded term span';end if;
+ -- Malformed allocation evidence must not supply custom/gapped paid time.
+ invalid_funding:=jsonb_set(funding,'{evidence,0,serviceSegments,1,termStart}',to_jsonb((sub.current_period_start+interval '1 year 1 day')::text));
+ begin perform shop_private.proration_segmented_upgrade(sub,clock_timestamp(),1258800,invalid_funding,q->'calculation');raise exception 'Gapped paid segments accepted';exception when sqlstate '22023' then if sqlerrm<>'SHOP_PRORATION_PERIOD_UNSUPPORTED' then raise;end if;end;
+ invalid_funding:=jsonb_set(funding,'{evidence,0,serviceSegments,0,termEnd}',to_jsonb((sub.current_period_start+interval '1 year 1 day')::text));
+ begin perform shop_private.proration_segmented_upgrade(sub,clock_timestamp(),1258800,invalid_funding,q->'calculation');raise exception 'Custom paid segment accepted';exception when sqlstate '22023' then if sqlerrm<>'SHOP_PRORATION_PERIOD_UNSUPPORTED' then raise;end if;end;
+ v_order:=(public.shop_xpay_proration_order(shop,(q->>'quoteId')::uuid)->>'id')::uuid;perform pg_temp.journey_paid(v_order);perform pg_temp.journey_paid(v_order);
+ select * into sub from public.subscriptions where id=sub.id;
+ if sub.current_period_end<>before_end or (select count(*) from public.shop_xpay_payments p join public.shop_xpay_orders o on o.id=p.order_id where o.subscription_id=sub.id)<>4 then raise exception 'Second upgrade rewrote history/time or duplicated settlement';end if;
+ insert into policy_quote_contracts values(public.shop_xpay_proration_read(shop,(q->>'quoteId')::uuid));
+end $$;
+
+-- Private deferred intent validates recipient/version/token and future validity.
+do $$declare f journey_bridge;shop uuid;terms uuid;owner_id uuid;entry jsonb;payload jsonb;issued jsonb;scheduled jsonb;v_order uuid;offer uuid;duration interval;
+begin
+ select * into f from journey_bridge;shop:=pg_temp.journey_owner();owner_id:=auth.uid();
+ select catalog_terms_id into terms from public.shop_public_plan_catalog() where slug='journey-month-high' limit 1;
+ update shop_private.proration_configuration set enabled=false where singleton;
+ v_order:=(public.shop_xpay_order_create(gen_random_uuid(),shop,terms)->>'id')::uuid;perform pg_temp.journey_paid(v_order);
+ update shop_private.proration_configuration set enabled=true where singleton;
+ foreach duration in array array[interval '1 day',interval '40 days'] loop
+ offer:=gen_random_uuid();
+ payload:=jsonb_build_object('offerId',offer,'offerVersion',3,'shopId',shop,'recipientUserId',owner_id,'targetBindingId',f.binding_id,'targetEnvironmentId',f.environment_id,'suit','shop-suit',
+ 'expiresAt',clock_timestamp()+duration,'planId',(select plan.id from public.plans plan join public.portals portal on portal.id=plan.portal_id where portal.key='shop-crm' and plan.slug='solo'),'displayName','Private deferred terms','billingInterval','monthly','currency','EGP','priceAmount',123.45,
+ 'resourceLimits','{"active_locations":1,"active_members":2,"active_products":10,"active_services":10,"active_customers":10,"active_suppliers":10}'::jsonb,'entitlements','{"appointments":true,"reports":false}'::jsonb);
+ issued:=pg_temp.journey_dispatch('register_secure_private_offer',payload);
+ entry:=jsonb_build_object('offerId',offer,'offerVersion',3,'targetBindingId',f.binding_id,'targetEnvironmentId',f.environment_id,'redemptionToken',issued#>>'{data,redemptionToken}');
+ begin perform public.shop_billing_change_preview(shop,null,jsonb_set(entry,'{offerVersion}','99'));raise exception 'Wrong offer version accepted';exception when insufficient_privilege then if sqlerrm<>'SHOP_PRIVATE_OFFER_RECIPIENT_MISMATCH' then raise;end if;end;
+ begin perform public.shop_billing_change_preview(shop,null,jsonb_set(entry,'{redemptionToken}',to_jsonb(repeat('A',43))));raise exception 'Wrong bearer token accepted';exception when insufficient_privilege then if sqlerrm<>'SHOP_PRIVATE_OFFER_TOKEN_INVALID' then raise;end if;end;
+ if duration=interval '1 day' then
+ begin perform public.shop_billing_change_schedule(gen_random_uuid(),shop,null,entry);raise exception 'Offer expiring before due accepted';exception when sqlstate '22023' then if sqlerrm<>'XPAY_OFFER_EXPIRING' then raise;end if;end;
+ else
+ scheduled:=public.shop_billing_change_schedule(gen_random_uuid(),shop,null,entry);
+ if not (scheduled->>'needsOfferLink')::boolean or scheduled::text like '%'||(entry->>'redemptionToken')||'%'
+ or exists(select 1 from public.shop_scheduled_plan_changes where private_offer_id=offer and private_offer_parameters?'redemptionToken') then raise exception 'Deferred offer leaked bearer';end if;
+ perform pg_temp.journey_dispatch('revoke_secure_private_offer',entry-'redemptionToken');scheduled:=public.shop_billing_change_read(shop);
+ if (scheduled->>'available')::boolean or (scheduled->>'canPayNow')::boolean or not (scheduled->>'canCancel')::boolean then raise exception 'Revoked schedule remained payable or lost cancel';end if;
+ perform public.shop_billing_change_cancel(shop,(scheduled->>'id')::uuid);
+ end if;
+ end loop;
+ if (select count(*) from public.shop_xpay_orders where shop_id=shop)<>1 then raise exception 'Private scheduling created payment';end if;
 end $$;
 
 do $$begin
