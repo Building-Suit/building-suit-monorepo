@@ -39,8 +39,16 @@ jobs:
           fi
       - name: Verify SQL scope, send denial and deduplication
         run: docker exec -i supabase_db_building-suit-super-admin psql -U postgres -d postgres -v ON_ERROR_STOP=1 < apps/super-admin-suit/supabase/tests/private_invalidations.sql
+      - name: Verify real Auth and private-channel isolation
+        run: node tooling/database/sas-live-disposable.mjs
       - name: Generate updated schema contract
         run: |
+          # Same pinned Supabase image, with the publisher's Docker Hub mirror
+          # when the shared public ECR runner quota has been exhausted.
+          if ! docker pull public.ecr.aws/supabase/postgres-meta:v0.98.0 > /dev/null 2>&1; then
+            docker pull supabase/postgres-meta:v0.98.0
+            docker tag supabase/postgres-meta:v0.98.0 public.ecr.aws/supabase/postgres-meta:v0.98.0
+          fi
           mkdir -p "$RUNNER_TEMP/sas-live-contract"
           pnpm exec supabase --workdir apps/super-admin-suit gen types typescript --local --schema public > "$RUNNER_TEMP/sas-live-contract/database.types.ts"
       - uses: actions/upload-artifact@v4
@@ -48,8 +56,6 @@ jobs:
           name: sas-live-contract
           path: ${{ runner.temp }}/sas-live-contract
           retention-days: 7
-      - name: Verify real Auth and private-channel isolation
-        run: node tooling/database/sas-live-disposable.mjs
       - name: Stop only this disposable SAS stack
         if: always() && runner.environment == 'github-hosted'
         run: |
