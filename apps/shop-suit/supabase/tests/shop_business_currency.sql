@@ -158,6 +158,8 @@ do $$ declare fixture record; shop uuid; location uuid; product uuid; vendor uui
     shop := public.create_owner_shop('First monetary ' || fixture.kind,'team','mixed');
     perform public.save_business_currency(shop,'USD');
     select id into location from public.shop_locations where shop_id=shop and is_default;
+    -- Each loop emulates a separate scoped request, not a previous tenant's GUC.
+    perform set_config('shop.location_id',location::text,true);
     if fixture.kind='expense' then
       perform public.save_expense(gen_random_uuid(),shop,location,null,'Synthetic expense',10.23,'General','2026-10-14',null,null);
     elsif fixture.kind='cash' then
@@ -181,6 +183,7 @@ end; $$;
 reset role;
 
 -- Active staff without settings.manage cannot change even to the existing code.
+select set_config('request.jwt.claim.sub',owner_id::text,true) from shop_receipt_fixture;
 create temporary table currency_employee_fixture(user_id uuid,profile_id uuid);
 insert into currency_employee_fixture values(gen_random_uuid(),gen_random_uuid());
 grant select on currency_employee_fixture to authenticated;
