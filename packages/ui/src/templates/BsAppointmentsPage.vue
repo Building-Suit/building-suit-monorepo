@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { useOverlayState } from '@building-suit/ux'
 import type { BsAppointmentsCopy, BsAppointmentsView, BsAppointmentChoices, BsAppointmentForm, BsAppointmentScheduleForm } from '../types/appointmentsPresentation'
-defineProps<{ selectedDate?: string; copy: BsAppointmentsCopy; presentation: BsAppointmentsView; choices: BsAppointmentChoices }>()
+const props = defineProps<{ selectedDate?: string; copy: BsAppointmentsCopy; presentation: BsAppointmentsView; choices: BsAppointmentChoices }>()
 const view = defineModel<string>('view', { required: true })
 const staffId = defineModel<string | null>('staffId', { required: true })
 const showForm = defineModel<boolean>('showForm', { required: true })
@@ -12,6 +13,17 @@ const emit = defineEmits<{ date: [value: string]; create: [walkIn: boolean]; edi
 function updateForm(key: keyof BsAppointmentForm, value: string | number | boolean | null | undefined) { form.value = { ...form.value, [key]: String(value ?? '') } }
 function updateSchedule(key: Exclude<keyof BsAppointmentScheduleForm, 'weekdays'>, value: string | number | boolean | null | undefined) { scheduleForm.value = { ...scheduleForm.value, [key]: String(value ?? '') } }
 function updateDay(weekday: number, key: 'enabled' | 'startsLocal' | 'endsLocal', value: string | number | boolean | null | undefined) { scheduleForm.value = { ...scheduleForm.value, weekdays: scheduleForm.value.weekdays.map(day => day.weekday === weekday ? { ...day, [key]: key === 'enabled' ? Boolean(value) : String(value ?? '') } : day) } }
+const { open: blockOpen, show: openBlock, close: closeBlock } = useOverlayState()
+const blockId = ref<string | null>(null)
+const selectedBlock = computed(() => props.presentation.days.flatMap(day => day.blocks ?? []).find(block => block.id === blockId.value))
+function showBlock(id: string) {
+  if (props.presentation.loading || props.presentation.failed) return
+  blockId.value = id
+  if (selectedBlock.value) openBlock()
+}
+watch(() => [props.presentation.exists, props.presentation.locationId, props.presentation.loading, props.presentation.failed, props.selectedDate, staffId.value], () => { closeBlock(); blockId.value = null })
+watch(selectedBlock, value => { if (!value) closeBlock() })
+const ui = useUiCopy()
 </script>
 <template>
   <BsStack>
@@ -37,7 +49,7 @@ function updateDay(weekday: number, key: 'enabled' | 'startsLocal' | 'endsLocal'
           <BsSelect :input-id="field.id" :aria-describedby="field.describedby" :model-value="presentation.locationId ?? ''" :label="copy.branch" :options="choices.locations" option-label="label" option-value="value" option-disabled="disabled" @update:model-value="value => emit('location', String(value ?? ''))"/>
         </BsField>
         <BsField v-slot="field" :label="copy.barber">
-          <BsSelect v-model="staffId" :input-id="field.id" :aria-describedby="field.describedby" :label="copy.barber" :options="choices.staff" option-label="label" option-value="value" option-disabled="disabled"/>
+          <BsSelect v-model="staffId" :placeholder="copy.allBarbers" :input-id="field.id" :aria-describedby="field.describedby" :label="copy.barber" :options="choices.staff" option-label="label" option-value="value" option-disabled="disabled"/>
         </BsField>
         <BsField v-if="selectedDate !== undefined" v-slot="field" :label="copy.date || copy.start"><BsInput :id="field.id" :model-value="selectedDate" type="date" :aria-describedby="field.describedby" @update:model-value="emit('date', String($event ?? ''))" /></BsField>
         </BsGrid>
@@ -66,7 +78,7 @@ function updateDay(weekday: number, key: 'enabled' | 'startsLocal' | 'endsLocal'
         <BsButton severity="secondary" @click="emit('retry')">{{ copy.retry }}</BsButton>
       </BsPanel>
       <BsText v-else-if="!presentation.locationId" as="p" size="sm">{{ copy.noLocation }}</BsText>
-      <BsAppointmentCalendar v-else :days="presentation.days" :view="view" :copy="copy" :transitioning="presentation.transitioning" @edit="emit('edit', $event)" @transition="(id, status) => emit('transition', id, status)" @day="date => { emit('date', date); view = 'day' }" />
+      <BsAppointmentCalendar v-else :days="presentation.days" :view="view" :copy="copy" :transitioning="presentation.transitioning" @edit="emit('edit', $event)" @transition="(id, status) => emit('transition', id, status)" @block="showBlock" @day="date => { emit('date', date); view = 'day' }" />
       <BsText v-if="presentation.noStaff" role="status" as="p" size="sm">{{ copy.noStaff }}</BsText>
       <BsPanel v-if="!presentation.loading && !presentation.failed && presentation.locationId" padding="md">
         <BsHeading :level="2">{{ copy.queue }}</BsHeading>
@@ -83,6 +95,16 @@ function updateDay(weekday: number, key: 'enabled' | 'startsLocal' | 'endsLocal'
         </BsList>
       </BsPanel>
     </template>
+    <BsDialog v-if="selectedBlock" v-model:visible="blockOpen" :title="copy.blockDetails || copy.scheduleTitle">
+      <BsDescriptionList>
+        <BsDescriptionTerm>{{ copy.blockKind }}</BsDescriptionTerm><BsDescriptionValue>{{ selectedBlock.kindLabel }}</BsDescriptionValue>
+        <BsDescriptionTerm>{{ copy.barber }}</BsDescriptionTerm><BsDescriptionValue>{{ selectedBlock.staff }}</BsDescriptionValue>
+        <BsDescriptionTerm>{{ copy.blockStart }}</BsDescriptionTerm><BsDescriptionValue>{{ selectedBlock.starts }}</BsDescriptionValue>
+        <BsDescriptionTerm>{{ copy.blockEnd }}</BsDescriptionTerm><BsDescriptionValue>{{ selectedBlock.ends }}</BsDescriptionValue>
+        <BsDescriptionTerm>{{ copy.blockNote }}</BsDescriptionTerm><BsDescriptionValue>{{ selectedBlock.note || '—' }}</BsDescriptionValue>
+      </BsDescriptionList>
+      <template #footer><BsButton @click="closeBlock">{{ ui('close') }}</BsButton></template>
+    </BsDialog>
     <BsRecordActionDialog v-model:visible="showForm" pinned-actions :title="presentation.formTitle" :dirty="presentation.formDirty" :pending="presentation.saving" :error="presentation.error" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="emit('save')">
       <BsField v-slot="field" :label="copy.service">
         <BsSelect :model-value="form.serviceId" :input-id="field.id" :aria-describedby="field.describedby" :label="copy.service" :options="choices.services" option-label="label" option-value="value" filter virtual :aria-required="true" @update:model-value="updateForm('serviceId', $event)"/>
@@ -114,9 +136,10 @@ function updateDay(weekday: number, key: 'enabled' | 'startsLocal' | 'endsLocal'
         <BsTextarea :id="field.id" :model-value="form.notes" :aria-describedby="field.describedby" :maxlength="presentation.constraints.notesMax" :rows="2" @update:model-value="updateForm('notes', $event)"/>
       </BsField>
     </BsRecordActionDialog>
-    <BsRecordActionDialog v-model:visible="showSchedule" pinned-actions :title="copy.scheduleTitle" size="lg" :dirty="presentation.scheduleDirty" :pending="presentation.scheduleSaving" :error="presentation.error" :submit-label="copy.saveSchedule" :cancel-label="copy.cancel" @submit="emit('saveSchedule')">
+    <BsRecordActionDialog v-model:visible="showSchedule" pinned-actions :title="copy.scheduleTitle" size="lg" :dirty="presentation.scheduleDirty" :pending="presentation.scheduleSaving" :error="presentation.error" :submit-label="copy.saveSchedule" :cancel-label="copy.cancel" :submit-disabled="Boolean(scheduleForm.blockStarts || scheduleForm.blockEnds || scheduleForm.blockNote)" @submit="emit('saveSchedule')">
       <BsField v-slot="field" :label="copy.barber">
-        <BsSelect v-model="scheduleMemberId" :input-id="field.id" :aria-describedby="field.describedby" required :label="copy.barber" :options="choices.scheduleStaff" option-label="label" option-value="value" option-disabled="disabled" @change="emit('scheduleMember')"/>
+        <BsSelect v-model="scheduleMemberId" :disabled="presentation.scheduleDirty || presentation.scheduleSaving" :input-id="field.id" :aria-describedby="field.describedby" required :label="copy.barber" :options="choices.scheduleStaff" option-label="label" option-value="value" option-disabled="disabled" @change="emit('scheduleMember')"/>
+        <BsText v-if="presentation.scheduleDirty && copy.scheduleSwitchHint" role="status" size="xs" tone="muted">{{ copy.scheduleSwitchHint }}</BsText>
       </BsField>
       <BsFieldGroup :legend="(copy.workDays)">
         <BsStack>
@@ -142,6 +165,7 @@ function updateDay(weekday: number, key: 'enabled' | 'startsLocal' | 'endsLocal'
             <BsInput :id="field.id" :model-value="scheduleForm.blockEnds" :aria-describedby="field.describedby" type="datetime-local" @update:model-value="updateSchedule('blockEnds', $event)"/>
           </BsField>
           <BsButton severity="secondary" @click="emit('addBlock')">{{ copy.addBlock }}</BsButton>
+          <BsText v-if="(scheduleForm.blockStarts || scheduleForm.blockEnds || scheduleForm.blockNote) && copy.blockDraft" role="status" size="xs" tone="muted">{{ copy.blockDraft }}</BsText>
         </BsGrid>
         <BsList>
           <BsListItem v-for="block in presentation.blocks" :key="block.id">

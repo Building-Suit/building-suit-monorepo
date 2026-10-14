@@ -2,13 +2,13 @@ import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { stripTypeScriptTypes } from 'node:module'
 import test from 'node:test'
-import { createRenderer, defineComponent, h, nextTick, onMounted, onUnmounted, reactive, ref } from 'vue'
+import { createRenderer, defineComponent, h, nextTick, onMounted, onUnmounted, reactive, ref, shallowRef } from 'vue'
 import { compileScript, parse } from 'vue/compiler-sfc'
 
 test('signup survives session establishment and provisioning while operational context changes still remount', async () => {
   const user = ref(null)
-  const route = reactive({ path: '/auth/signup' })
-  const committedRoute = ref(null)
+  const route = reactive({ path: '/auth/signup', meta: { layout: false } })
+  const committedRoute = shallowRef(null)
   const currentId = ref(null)
   const currentLocationId = ref(null)
   const toasts = ref([{ title: 'Old context' }])
@@ -67,13 +67,24 @@ test('signup survives session establishment and provisioning while operational c
     .replace(/from (['"])vue\1/g, `from '${import.meta.resolve('vue')}'`)
   const { default: SharedAppRoot } = await import(`data:text/javascript;base64,${Buffer.from(appRootCode).toString('base64')}`)
   app.component('BsAppRoot', SharedAppRoot)
-  app.component('NuxtLayout', defineComponent({ props: ['name'], setup: (_, { slots }) => () => slots.default?.() }))
-  app.component('NuxtPage', Page)
+  const layoutNames = []
+  app.component('NuxtLayout', defineComponent({ props: ['name'], setup: (props, { slots }) => () => {
+    layoutNames.push(props.name ?? route.meta.layout)
+    return slots.default?.()
+  } }))
+  app.component('NuxtPage', defineComponent({ props: ['pageKey'], setup: (props) => () => h(Page, { key: typeof props.pageKey === 'function' ? props.pageKey(committedRoute.value ?? route) : props.pageKey }) }))
   app.component('NuxtRouteAnnouncer', defineComponent({ setup: () => () => null }))
   app.component('BsToastHost', defineComponent({ setup: () => () => null }))
   app.component('BsConfirmHost', defineComponent({ setup: () => () => null }))
+  let pendingVisible = 0
+  app.component('BsSectionSkeleton', defineComponent({ setup() {
+    onMounted(() => pendingVisible++)
+    onUnmounted(() => pendingVisible--)
+    return () => h('div', { role: 'status', 'aria-busy': true }, 'Loading')
+  } }))
   app.mount(node())
   try {
+    assert.equal(layoutNames.at(-1), 'auth', 'signup retains its registered authentication layout')
     user.value = { id: 'verified-owner' }
     await nextTick()
     currentId.value = 'owner-shop'
@@ -103,26 +114,55 @@ test('signup survives session establishment and provisioning while operational c
     await nextTick()
     assert.equal(unmounts, 5, 'session loss must remove the protected page and its drafts')
     assert.equal(mounts, 5, 'anonymous users must not mount an operational page')
+    assert.equal(pendingVisible, 1, 'blocked session transitions must provide pending feedback without protected content')
 
-    for (const path of ['/about', '/contact', '/terms', '/privacy', '/delivery-shipping', '/refund-cancellation']) {
+    for (const [index, path] of ['/about', '/contact', '/terms', '/privacy', '/delivery-shipping', '/refund-cancellation'].entries()) {
       route.path = path
       await nextTick()
-      assert.equal(mounts, 6, `anonymous visitors must render ${path}`)
-      assert.equal(unmounts, 5, 'public navigation must retain the anonymous layout')
+      assert.equal(mounts, 6 + index, `anonymous visitors must render a fresh page for ${path}`)
+      assert.equal(layoutNames.at(-1), 'landing', 'public navigation must retain the public frame')
     }
     route.path = '/dashboard'
     await nextTick()
-    assert.equal(unmounts, 6, 'returning to a protected route must remove the public page')
-    assert.equal(mounts, 6, 'public access must not allow an anonymous operational page')
+    assert.equal(unmounts, 11, 'returning to a protected route must remove the public page')
+    assert.equal(mounts, 11, 'public access must not allow an anonymous operational page')
 
     // Nuxt defers useRoute until NuxtPage resolves. Logout must reopen the
     // host using the committed destination even while useRoute is dashboard.
     committedRoute.value = { path: '/auth/login' }
     await nextTick()
     assert.equal(route.path, '/dashboard')
-    assert.equal(mounts, 7, 'login must render without waiting for the hidden NuxtPage to resolve')
+    assert.equal(mounts, 12, 'login must render without waiting for the hidden NuxtPage to resolve')
+    assert.equal(pendingVisible, 0, 'the committed public destination must replace the pending state')
     committedRoute.value = { path: '/dashboard' }
     await nextTick()
-    assert.equal(unmounts, 7, 'an anonymous committed protected route must still hide its page')
+    assert.equal(unmounts, 12, 'an anonymous committed protected route must still hide its page')
+
+    route.path = '/about'
+    route.meta.layout = 'landing'
+    committedRoute.value = { path: '/dashboard', meta: { layout: false } }
+    user.value = { id: 'signed-in-owner' }
+    await nextTick()
+    assert.equal(layoutNames.at(-1), 'default', 'a committed operational page must not inherit deferred or transient public layout metadata')
+    committedRoute.value.meta.layout = 'default'
+    await nextTick()
+    assert.equal(layoutNames.at(-1), 'default', 'lazy metadata mutation must not control the workspace layout')
+    currentId.value = 'loaded-shop'
+    currentLocationId.value = 'loaded-location'
+    await nextTick()
+    assert.equal(route.path, '/about', 'the regression deliberately retains stale Nuxt route metadata')
+    assert.equal(layoutNames.at(-1), 'default', 'async tenant remounts must retain the operational shell')
+
+    route.path = '/dashboard'
+    route.meta.layout = 'default'
+    user.value = null
+    committedRoute.value = { path: '/auth/login', meta: { layout: false } }
+    await nextTick()
+    assert.equal(layoutNames.at(-1), false, 'logout must not wrap public authentication in the deferred private shell')
+    for (const path of ['/auth/forgot-password', '/auth/reset-password', '/auth/signup']) {
+      committedRoute.value = { path, meta: { layout: false } }
+      await nextTick()
+      assert.equal(layoutNames.at(-1), 'auth', `${path} must retain its registered frame despite stale metadata`)
+    }
   } finally { app.unmount() }
 })

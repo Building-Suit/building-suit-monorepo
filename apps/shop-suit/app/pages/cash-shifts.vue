@@ -79,7 +79,9 @@ function validMoney(value: number, allowZero = false) { return Number.isFinite(v
 function money(value: number | string | undefined) { return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { style: 'currency', currency: 'EGP', maximumFractionDigits: 2 }).format(Number(value ?? 0)) }
 function date(value?: string) { return value ? new Intl.DateTimeFormat(isArabic.value ? 'ar-EG' : 'en-EG', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) : '—' }
 function eventLabel(kind: DrawerEvent['kind']) { return copy.value[kind] }
-function errorText(message?: string) {
+function errorText(caught: unknown) {
+  const message = typeof caught === 'string' ? caught
+    : typeof caught === 'object' && caught !== null && 'message' in caught && typeof caught.message === 'string' ? caught.message : undefined
   if (message?.includes('PERMISSION') || message?.includes('ACCESS_DENIED')) return copy.value.denied
   if (message?.includes('ALREADY_OPEN')) return copy.value.conflict
   if (message?.includes('INVALID_')) return copy.value.invalid
@@ -94,12 +96,12 @@ async function openShift() {
   const inScope = captureScope()
   opening.value = true; actionError.value = ''; openRequestId.value ??= crypto.randomUUID()
   try {
-    if (!await confirmation.ask(copy.value.openConfirm) || !inScope()) return
+    if (!await confirmation.ask(`${currentLocation.value?.name ?? ''} · ${copy.value.openingCash}: ${money(openForm.amount)}. ${copy.value.openConfirm}`) || !inScope()) return
     const { error } = await rpc.rpc('open_cash_shift', { p_request_id: openRequestId.value, p_shop_id: currentId.value, p_location_id: currentLocationId.value, p_register_key: 'main', p_opening_amount: openForm.amount, p_notes: openForm.notes.trim() || null })
     if (!inScope()) return
     if (error) throw error
     showOpen.value = false; await refresh(); if (inScope()) pushToast({ tone: 'success', title: copy.value.saved })
-  } catch (caught) { if (inScope()) actionError.value = errorText(caught instanceof Error ? caught.message : String(caught)) }
+  } catch (caught) { if (inScope()) actionError.value = errorText(caught) }
   finally { opening.value = false }
 }
 
@@ -109,12 +111,12 @@ async function recordMovement() {
   const inScope = captureScope()
   moving.value = true; actionError.value = ''; movementRequestId.value ??= crypto.randomUUID()
   try {
-    if (!await confirmation.ask(copy.value.movementConfirm) || !inScope()) return
+    if (!await confirmation.ask(`${currentLocation.value?.name ?? ''} · ${movementForm.kind === 'pay_out' ? copy.value.payOut : copy.value.payIn}: ${money(movementForm.amount)} · ${movementForm.reason.trim()} · ${movementForm.reference.trim()}. ${copy.value.movementConfirm}`) || !inScope()) return
     const { error } = await rpc.rpc('record_cash_movement', { p_request_id: movementRequestId.value, p_shop_id: currentId.value, p_session_id: active.id, p_kind: movementForm.kind, p_amount: movementForm.amount, p_reason: movementForm.reason.trim(), p_reference: movementForm.reference.trim() })
     if (!inScope()) return
     if (error) throw error
     showMovement.value = false; await refresh(); if (inScope()) pushToast({ tone: 'success', title: copy.value.saved })
-  } catch (caught) { if (inScope()) actionError.value = errorText(caught instanceof Error ? caught.message : String(caught)) }
+  } catch (caught) { if (inScope()) actionError.value = errorText(caught) }
   finally { moving.value = false }
 }
 
@@ -124,12 +126,12 @@ async function closeShift() {
   const inScope = captureScope()
   closing.value = true; actionError.value = ''; closeRequestId.value ??= crypto.randomUUID()
   try {
-    if (!await confirmation.ask(copy.value.closeConfirm) || !inScope()) return
+    if (!await confirmation.ask(`${currentLocation.value?.name ?? ''} · ${copy.value.expected}: ${money(active.expectedCash)} · ${copy.value.counted}: ${money(closeForm.amount)}. ${copy.value.closeConfirm}`) || !inScope()) return
     const { error } = await rpc.rpc('close_cash_shift', { p_request_id: closeRequestId.value, p_shop_id: currentId.value, p_session_id: active.id, p_counted_amount: closeForm.amount, p_notes: closeForm.notes.trim() || null })
     if (!inScope()) return
     if (error) throw error
     showClose.value = false; await refresh(); if (inScope()) pushToast({ tone: 'success', title: copy.value.saved })
-  } catch (caught) { if (inScope()) actionError.value = errorText(caught instanceof Error ? caught.message : String(caught)) }
+  } catch (caught) { if (inScope()) actionError.value = errorText(caught) }
   finally { closing.value = false }
 }
 

@@ -68,14 +68,15 @@ function updateAllocation(id: string, value: string | number) { receiptForm.valu
         <BsInline justify="between">
           <BsBox>
             <BsHeading :level="2">{{ copy.customers_receivables }}</BsHeading>
-            <BsText as="p" size="sm" tone="muted">{{ outstanding.overdue }}</BsText>
+            <BsText v-if="outstanding.overdue" as="p" size="sm" tone="muted">{{ outstanding.overdue }}</BsText>
           </BsBox>
           <BsInline>
-            <BsText as="p" size="lg" emphasis="semibold">{{ outstanding.balance }}</BsText>
+            <BsText v-if="outstanding.balance" as="p" size="lg" emphasis="semibold">{{ outstanding.balance }}</BsText>
             <BsButton v-if="customer.canReceive" type="button" @click="emit('receive')">{{ copy.payments_recordReceipt }}</BsButton>
           </BsInline>
         </BsInline>
-        <BsText v-if="outstanding.error" role="alert" as="p" size="sm">{{ copy.payments_loadError }} <BsButton variant="link" type="button" @click="emit('retryOutstanding')">{{ copy.common_retry }}</BsButton>
+        <BsBox v-if="outstanding.loading" role="status" :aria-label="copy.customers_receivables"><BsSectionSkeleton :rows="3" /></BsBox>
+        <BsText v-else-if="outstanding.error" role="alert" as="p" size="sm">{{ copy.payments_loadError }} <BsButton variant="link" type="button" @click="emit('retryOutstanding')">{{ copy.common_retry }}</BsButton>
         </BsText>
         <BsBox v-else scroll="x">
           <BsDataTable :value="outstanding.rows" :label="copy.customers_receivables" lazy paginator :rows="outstanding.pageSize" :first="(outstanding.page - 1) * outstanding.pageSize" :total-records="outstanding.total" :loading="outstanding.loading" data-key="id" :columns="[{ key: 'column0', header: (copy.sales_invoiceNumber) }, { key: 'column1', header: (copy.payments_settlementLabel) }, { key: 'column2', header: (copy.sales_dueDate) }, { key: 'column3', header: (copy.payments_outstanding), align: 'end' }]" @page="emit('outstandingPage', $event.page + 1)">
@@ -95,7 +96,8 @@ function updateAllocation(id: string, value: string | number) { receiptForm.valu
       </BsPanel>
       <BsPanel padding="md">
         <BsHeading :level="2">{{ copy.customers_statement }}</BsHeading>
-        <BsText v-if="statement.error" role="alert" as="p" size="sm">{{ copy.payments_loadError }} <BsButton variant="link" type="button" @click="emit('retryStatement')">{{ copy.common_retry }}</BsButton>
+        <BsBox v-if="statement.loading" role="status" :aria-label="copy.customers_statement"><BsSectionSkeleton :rows="3" /></BsBox>
+        <BsText v-else-if="statement.error" role="alert" as="p" size="sm">{{ copy.payments_loadError }} <BsButton variant="link" type="button" @click="emit('retryStatement')">{{ copy.common_retry }}</BsButton>
         </BsText>
         <BsBox v-else scroll="x">
           <BsDataTable :value="statement.rows" :label="copy.customers_statement" lazy paginator :rows="statement.pageSize" :first="(statement.page - 1) * statement.pageSize" :total-records="statement.total" :loading="statement.loading" data-key="id" :columns="[{ key: 'column0', header: (copy.sales_date) }, { key: 'column1', header: (copy.payments_event) }, { key: 'column2', header: (copy.payments_debit), align: 'end' }, { key: 'column3', header: (copy.payments_credit), align: 'end' }, { key: 'column4', header: (copy.payments_runningBalance), align: 'end' }]" @page="emit('statementPage', $event.page + 1)">
