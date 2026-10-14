@@ -5,6 +5,7 @@ import { shopCommandErrorMessage } from '~/utils/shopCommandErrorMessage'
 import { saleCopy } from '~/utils/saleCopy'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import type { SaleReceiptSnapshot } from '~/types/receipt'
+const { businessCurrency } = useShop()
 
 definePageMeta({
   layout: 'default',
@@ -49,6 +50,7 @@ type PaymentEvent = {
   remainingEffective: number
 }
 type SaleDetail = {
+  currency?: string
   id: string
   invoice_number: string | null
   status: 'draft' | 'issued'
@@ -341,7 +343,7 @@ async function issue() {
 }
 
 function money(value: number) {
-  return new Intl.NumberFormat(locale.value === 'ar' ? 'ar-EG' : 'en-EG', { style: 'currency', currency: 'EGP', maximumFractionDigits: 2 }).format(value)
+  return new Intl.NumberFormat(locale.value === 'ar' ? 'ar-EG' : 'en-EG', { style: 'currency', currency: sale.value?.status === 'draft' ? businessCurrency.value : sale.value?.currency || businessCurrency.value, maximumFractionDigits: 20 }).format(value)
 }
 function formatDate(value: string | null) {
   if (!value) return '—'

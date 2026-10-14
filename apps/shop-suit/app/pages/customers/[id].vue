@@ -3,6 +3,7 @@ import type { BsCustomerIdentityForm } from '@building-suit/ui/types/customerDir
 import type { BsCustomerProfileView, BsCustomerReceivablesView, BsCustomerStatementView, BsCustomerProfileCopy, BsCustomerReceiptForm } from '@building-suit/ui/types/customerProfilePresentation'
 import { receiptAllocations as validateReceiptAllocations } from '~/utils/receiptAllocations'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
+const { businessCurrency } = useShop()
 
 definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
 
@@ -249,7 +250,7 @@ function formatDate(value: string | null) {
   return new Intl.DateTimeFormat(locale.value === 'ar' ? 'ar-EG' : 'en-EG', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
 }
 function money(value: number) {
-  return new Intl.NumberFormat(locale.value === 'ar' ? 'ar-EG' : 'en-EG', { style: 'currency', currency: 'EGP', maximumFractionDigits: 2 }).format(value)
+  return new Intl.NumberFormat(locale.value === 'ar' ? 'ar-EG' : 'en-EG', { style: 'currency', currency: businessCurrency.value, maximumFractionDigits: 20 }).format(value)
 }
 const overdueCount = computed(() => overdue.value.total)
 

@@ -4,6 +4,7 @@ import type { BsDashboardCopy, BsDashboardFilters, BsDashboardSetupForm, BsDashb
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import type { BusinessMode } from '~/utils/businessMode'
 import { BUSINESS_MODES } from '~/utils/businessMode'
+const { businessCurrency } = useShop()
 
 definePageMeta({ layout: 'default', middleware: ['auth'] })
 
@@ -192,7 +193,7 @@ function localToday() {
 }
 
 function whole(value: number) {
-  return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { maximumFractionDigits: 2 }).format(Number(value))
+  return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { maximumFractionDigits: 20 }).format(Number(value))
 }
 
 function methodLabel(value: string) {
@@ -219,9 +220,9 @@ async function openLocationSource(locationId: string, path: string) {
   await navigateTo({ path, query: reportQuery() })
 }
 
-function money(value: number | null, currency = 'EGP') {
+function money(value: number | null, currency = businessCurrency.value) {
   return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', {
-    style: 'currency', currency, maximumFractionDigits: 2,
+    style: 'currency', currency, maximumFractionDigits: 20,
   }).format(Number(value ?? 0))
 }
 

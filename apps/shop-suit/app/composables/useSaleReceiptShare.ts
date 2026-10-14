@@ -7,15 +7,16 @@ export function useSaleReceiptShare() {
   const { sharing, share } = useBrowserShare()
   const shareError = ref('')
 
-  async function shareReceipt(receipt: SaleReceiptSnapshot) {
+  async function shareReceipt(receipt: SaleReceiptSnapshot, language = receipt.presentation?.language ?? locale.value) {
     if (sharing.value || !import.meta.client) return
     shareError.value = ''
+    const translate = (key: string) => t(key, {}, { locale: language })
     const text = buildReceiptShareText(receipt, {
-      invoice: t('receipt.invoice'), date: t('receipt.date'), location: t('receipt.location'),
-      staff: t('receipt.staff'), customer: t('receipt.customer'), items: t('receipt.items'),
-      payment: t('receipt.payment'), total: t('receipt.total'), quantity: t('receipt.quantity'),
-      compliance: t('receipt.compliance'), walkIn: t('receipt.walkIn'),
-    }, locale.value, method => t(`payments.methods.${method}`))
+      invoice: translate('receipt.invoice'), date: translate('receipt.date'), location: translate('receipt.location'),
+      staff: translate('receipt.staff'), customer: translate('receipt.customer'), items: translate('receipt.items'),
+      payment: translate('receipt.payment'), total: translate('receipt.total'), quantity: translate('receipt.quantity'),
+      compliance: translate('receipt.compliance'), walkIn: translate('receipt.walkIn'),
+    }, language, method => translate(`payments.methods.${method}`))
     const result = await share({ title: `${receipt.business.name} · ${receipt.invoiceNumber}`, text })
     if (result === 'copied') pushToast({ tone: 'success', title: t('receipt.copied') })
     if (result === 'error') shareError.value = t('receipt.shareError')

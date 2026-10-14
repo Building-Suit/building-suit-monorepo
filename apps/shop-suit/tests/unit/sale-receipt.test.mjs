@@ -133,7 +133,7 @@ test('receipt storage is immutable, tenant-scoped, and captures only fully-paid 
 test('thermal/A4 print and share actions are connected from POS completion and sale detail', () => {
   assert.match(sharedPrintStyles, /@page bs-receipt \{ size: 80mm auto/)
   assert.match(sharedPrintStyles, /@page bs-a4 \{ size: A4/)
-  assert.match(receiptTemplate, /dir="language === 'ar' \? 'rtl' : 'ltr'"/)
+  assert.match(receiptTemplate, /receipt\.direction \|\| \(language === 'ar' \? 'rtl' : 'ltr'\)/)
   assert.match(printController, /window\.print\(\)/)
   assert.match(receiptPage, /<BsReceiptPage\b/)
   assert.match(receiptPage, /shareReceipt/)
@@ -141,6 +141,19 @@ test('thermal/A4 print and share actions are connected from POS completion and s
   assert.match(posPage, /sales\/\$\{completedId\}\/receipt/)
   assert.match(salePage, /receipt\.reprint/)
   assert.match(salePage, /receipt\.share/)
-  assert.match(settingsPage, /save_receipt_settings/)
+  assert.match(settingsPage, /save_document_settings/)
   assert.match(settingsPage, /future receipt presentation/)
+})
+
+test('new presentation snapshots drive share label, notes and description visibility while legacy documents retain their behavior', () => {
+  const issued = structuredClone(receipt)
+  issued.lines[0].description = 'Description captured at issue'
+  issued.presentation = { documentLabel: 'Original proof of sale', language: 'en', direction: 'ltr', showDescriptions: false, notes: 'Original note', logoDataUrl: null }
+  let text = buildReceiptShareText(issued, englishCopy, 'en', () => 'Cash')
+  assert.ok(text.includes('Original proof of sale'))
+  assert.ok(text.includes('Original note'))
+  assert.ok(!text.includes('Description captured at issue'))
+  issued.presentation.showDescriptions = true
+  text = buildReceiptShareText(issued, englishCopy, 'en', () => 'Cash')
+  assert.ok(text.includes('Description captured at issue'))
 })

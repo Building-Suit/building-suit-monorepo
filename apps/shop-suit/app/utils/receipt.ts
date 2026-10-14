@@ -31,18 +31,20 @@ export function buildReceiptShareText(
   const money = (value: number) => formatReceiptMoney(value, receipt.currency, locale)
   const lines = [
     receipt.business.name,
-    `${copy.invoice}: ${receipt.invoiceNumber}`,
+    ...(receipt.presentation?.documentLabel ? [receipt.presentation.documentLabel] : []),
+    `${receipt.presentation?.referenceLabel || copy.invoice}: ${receipt.invoiceNumber}`,
     `${copy.date}: ${formatReceiptDate(receipt.issuedAt, locale)}`,
     `${copy.location}: ${receipt.location.name}`,
     `${copy.staff}: ${receipt.staffName ?? '—'}`,
     `${copy.customer}: ${receipt.customer.name ?? copy.walkIn}`,
     '',
     copy.items,
-    ...receipt.lines.map(line => `${line.name} — ${copy.quantity} ${line.quantity} — ${money(line.total)}`),
+    ...receipt.lines.map(line => `${line.name}${receipt.presentation?.showDescriptions !== false && line.description ? ` (${line.description})` : ''} — ${copy.quantity} ${line.quantity} — ${money(line.total)}`),
     '',
     ...receipt.payments.map(payment => `${copy.payment}: ${paymentLabel(payment.method)} — ${money(payment.amount)}`),
     `${copy.total}: ${money(receipt.total)}`,
     '',
+    receipt.presentation?.notes ?? '',
     receipt.footer ?? '',
     copy.compliance,
   ]
