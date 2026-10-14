@@ -1245,6 +1245,7 @@ export type Database = {
           corrects_expense_id: string | null
           created_at: string
           created_by_profile_id: string
+          currency: string
           expense_date: string
           id: string
           location_id: string
@@ -1267,6 +1268,7 @@ export type Database = {
           corrects_expense_id?: string | null
           created_at?: string
           created_by_profile_id: string
+          currency?: string
           expense_date?: string
           id?: string
           location_id: string
@@ -1289,6 +1291,7 @@ export type Database = {
           corrects_expense_id?: string | null
           created_at?: string
           created_by_profile_id?: string
+          currency?: string
           expense_date?: string
           id?: string
           location_id?: string
@@ -2043,6 +2046,7 @@ export type Database = {
           client_id: string | null
           created_at: string
           created_by_profile_id: string
+          currency: string
           customer_kind:
             | Database["public"]["Enums"]["customer_payment_kind"]
             | null
@@ -2069,6 +2073,7 @@ export type Database = {
           client_id?: string | null
           created_at?: string
           created_by_profile_id: string
+          currency?: string
           customer_kind?:
             | Database["public"]["Enums"]["customer_payment_kind"]
             | null
@@ -2095,6 +2100,7 @@ export type Database = {
           client_id?: string | null
           created_at?: string
           created_by_profile_id?: string
+          currency?: string
           customer_kind?:
             | Database["public"]["Enums"]["customer_payment_kind"]
             | null
@@ -4252,6 +4258,48 @@ export type Database = {
           },
         ]
       }
+      shop_currency_changes: {
+        Row: {
+          changed_at: string
+          changed_by_profile_id: string
+          id: string
+          new_currency: string
+          previous_currency: string
+          shop_id: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by_profile_id: string
+          id?: string
+          new_currency: string
+          previous_currency: string
+          shop_id: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by_profile_id?: string
+          id?: string
+          new_currency?: string
+          previous_currency?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_currency_changes_changed_by_profile_id_fkey"
+            columns: ["changed_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shop_currency_changes_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shop_locations: {
         Row: {
           address: string | null
@@ -5665,8 +5713,12 @@ export type Database = {
       }
       shops: {
         Row: {
+          business_currency: string
           business_mode: Database["public"]["Enums"]["business_mode"]
           created_at: string
+          currency_lock_record_id: string | null
+          currency_lock_source: string | null
+          currency_locked_at: string | null
           id: string
           name: string
           portal_id: string
@@ -5675,8 +5727,12 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          business_currency?: string
           business_mode?: Database["public"]["Enums"]["business_mode"]
           created_at?: string
+          currency_lock_record_id?: string | null
+          currency_lock_source?: string | null
+          currency_locked_at?: string | null
           id?: string
           name: string
           portal_id: string
@@ -5685,8 +5741,12 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          business_currency?: string
           business_mode?: Database["public"]["Enums"]["business_mode"]
           created_at?: string
+          currency_lock_record_id?: string | null
+          currency_lock_source?: string | null
+          currency_locked_at?: string | null
           id?: string
           name?: string
           portal_id?: string
@@ -6733,6 +6793,7 @@ export type Database = {
         Row: {
           created_at: string
           created_by_profile_id: string
+          currency: string
           id: string
           invoice_number: string | null
           issued_at: string | null
@@ -6750,6 +6811,7 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by_profile_id: string
+          currency?: string
           id?: string
           invoice_number?: string | null
           issued_at?: string | null
@@ -6767,6 +6829,7 @@ export type Database = {
         Update: {
           created_at?: string
           created_by_profile_id?: string
+          currency?: string
           id?: string
           invoice_number?: string | null
           issued_at?: string | null
@@ -7871,6 +7934,7 @@ export type Database = {
         }
         Returns: Json
       }
+      business_currency_settings: { Args: { p_shop_id: string }; Returns: Json }
       cash_shift_dashboard: {
         Args: {
           p_cashier_membership_id?: string
@@ -8676,6 +8740,10 @@ export type Database = {
           p_walk_in_phone: string
         }
         Returns: string
+      }
+      save_business_currency: {
+        Args: { p_currency: string; p_shop_id: string }
+        Returns: Json
       }
       save_catalog_category: {
         Args: { p_category_id: string; p_name: string; p_shop_id: string }

@@ -205,7 +205,6 @@ export function useShop() {
         .in('id', shopIds)
         .eq('status', 'active')
         .order('created_at', { ascending: true })
-        .overrideTypes<ShopSummary[], { merge: false }>()
       if (shopError) throw shopError
       if (version !== loadVersion.value || user.value?.id !== userId) return
 
