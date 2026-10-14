@@ -16,6 +16,8 @@ export interface ShopSummary {
   status: string
   business_mode: 'product' | 'service' | 'mixed'
   created_at: string
+  business_currency?: string
+  currency_locked_at?: string | null
 }
 
 export interface ShopMembership {
@@ -80,6 +82,7 @@ export function useShop() {
   const locationVersion = useState('shop:location-version', () => 0)
 
   const current = computed(() => shops.value.find(shop => shop.id === currentId.value) ?? null)
+  const businessCurrency = computed(() => current.value?.business_currency ?? 'EGP')
   const currentMembership = computed(() => memberships.value.find(member => member.shop_id === currentId.value) ?? null)
   const currentLocation = computed(() => locations.value.find(location => location.id === currentLocationId.value) ?? null)
   const activeLocations = computed(() => locations.value.filter(location => location.status === 'active'))
@@ -198,10 +201,11 @@ export function useShop() {
 
       const { data: shopRows, error: shopError } = await supabase
         .from('shops')
-        .select('id,name,status,business_mode,created_at')
+        .select('id,name,status,business_mode,created_at,business_currency,currency_locked_at')
         .in('id', shopIds)
         .eq('status', 'active')
         .order('created_at', { ascending: true })
+        .overrideTypes<ShopSummary[], { merge: false }>()
       if (shopError) throw shopError
       if (version !== loadVersion.value || user.value?.id !== userId) return
 
@@ -277,6 +281,7 @@ export function useShop() {
     locations,
     activeLocations,
     current,
+    businessCurrency,
     currentId,
     currentLocation,
     currentLocationId,
