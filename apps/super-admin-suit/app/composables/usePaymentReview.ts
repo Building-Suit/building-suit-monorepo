@@ -24,7 +24,7 @@ export function usePaymentReview(binding: () => string | undefined, active: () =
   async function load(preserveQueue = false) {
     const context = generation, read = ++readGeneration
     if (!preserveQueue) queue.value = null
-    status.value = 'loading'
+    if (!preserveQueue || !queue.value) status.value = 'loading'
     if (!active() || !binding()) return
     try {
       const result = await fetch<{ data: unknown }>('/api/adapters/shop', { method: 'POST', body: {

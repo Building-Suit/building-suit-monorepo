@@ -84,7 +84,7 @@
       }
     },
     "super-admin-suit": {
-      "organizationId": "",
+      "organizationId": "zqrauabsauonyyozqdlh",
       "ownerEmail": "",
       "managementRole": "Owner",
       "plan": "unrecorded",
@@ -103,9 +103,9 @@
         "status": "dedicated project exists; provider identifiers intentionally absent pending verification"
       },
       "staging": {
-        "projectRef": "",
-        "appUrl": "",
-        "status": "dedicated project exists; provider identifiers intentionally absent pending verification"
+        "projectRef": "lwecnmsosfwovlzxauml",
+        "appUrl": "https://stg.super-admin.building-suit.com",
+        "status": "verified 2026-10-14 through deployed staging configuration, management metadata and SAS schema"
       }
     }
   },

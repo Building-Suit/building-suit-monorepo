@@ -1,7 +1,22 @@
 import { mkdir } from 'node:fs/promises'
-import { test, expect } from '@playwright/test'
+import { test, expect, type Locator } from '@playwright/test'
 import { atomicAuthPorts, expectNoPageOverflow, trackRouteCoverage } from '../browser-foundation'
 const [ledgerPort, shopPort] = atomicAuthPorts()
+
+async function expectBorderToken(control: Locator, token: '--bs-border' | '--bs-focus-ring') {
+  const expected = await control.evaluate((element, property) => {
+    const probe = document.createElement('span')
+    probe.hidden = true
+    probe.style.color = getComputedStyle(element).getPropertyValue(property)
+    document.body.append(probe)
+    const color = getComputedStyle(probe).color
+    probe.remove()
+    return color
+  }, token)
+  // Reduced-motion transitions still take a render frame to finish. Compare
+  // the canonical state, rather than whichever blur-transition frame won.
+  await expect.poll(() => control.evaluate(element => getComputedStyle(element).borderColor)).toBe(expected)
+}
 
 for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (const width of [390, 768, 1440]) {
   test(`shared sign-in parity: ${locale}, ${theme}, ${width}`, async ({ browser }, testInfo) => {
@@ -30,8 +45,13 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
       await expect(password).toBeVisible()
       await expectNoPageOverflow(page)
       await email.focus()
+      await expect(email).toBeFocused()
+      await expectBorderToken(email, '--bs-focus-ring')
       await page.keyboard.press('Tab')
       await expect(password).toBeFocused()
+      await expect(email).not.toBeFocused()
+      await expectBorderToken(email, '--bs-border')
+      await expectBorderToken(password, '--bs-focus-ring')
       geometries.push(await email.evaluate(element => {
         const box = element.getBoundingClientRect()
         const style = getComputedStyle(element)
