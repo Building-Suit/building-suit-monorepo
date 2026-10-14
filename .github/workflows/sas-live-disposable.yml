@@ -51,6 +51,7 @@ jobs:
           fi
           mkdir -p "$RUNNER_TEMP/sas-live-contract"
           pnpm exec supabase --workdir apps/super-admin-suit gen types typescript --local --schema public > "$RUNNER_TEMP/sas-live-contract/database.types.ts"
+          diff -u apps/super-admin-suit/app/types/database.types.ts "$RUNNER_TEMP/sas-live-contract/database.types.ts"
       - uses: actions/upload-artifact@v4
         with:
           name: sas-live-contract
