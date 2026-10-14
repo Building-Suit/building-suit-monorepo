@@ -1,4 +1,9 @@
 const unresolved = new Set(['creating', 'open', 'pending', 'requires_review'])
+// Existing paid access is not confirmation of a newly selected plan.
+export function checkoutDialogPhase({ paymentPhase, newPlanReview, quoteState, blocked, pending }) {
+  if (!newPlanReview || quoteState === 'settled' || paymentPhase !== 'confirmed') return paymentPhase
+  return blocked ? 'held' : pending ? 'checking' : 'ready'
+}
 export function checkoutSnapshot({ orders, current, historyKnown, accessState, checking, error, periodEnd, now = Date.now() }) {
   const history = orders.find(order => order.orderId === current?.orderId)
   const terminal = new Set(['paid', 'requires_review', 'expired', 'failed'])

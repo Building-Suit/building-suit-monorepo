@@ -445,13 +445,13 @@ export default defineI18nLocale(async () => ({
     title: 'Simple, Transparent',
     subtitle: 'Pricing',
     description:
-      "Start free, upgrade when you're ready. No hidden fees, cancel anytime.",
+      "Start free. Review paid upgrades now or schedule a lower plan for your paid-term end. Renew manually without automatic card charges.",
     notes: {
       allPlansIncludeFreeTrial:
         'Start with full product access for 7 days. No plan or credit card required.',
       switchPlansAnytime: 'Switch plans anytime during your trial.',
       upgradeMidTrial:
-        "Need to upgrade mid-trial? You'll start paying immediately, but keep your data.",
+        "Need to upgrade mid-trial? paid access begins after verified payment, with your data preserved.",
     },
     comingSoon: 'Coming soon: Multi-shop support & more.',
 

@@ -166,7 +166,9 @@ DO $$declare f journey_bridge;v_shop uuid;owner_id uuid;low_plan uuid;high_terms
  end loop;
 end $$;
 
--- Current gate-off manual renewal and expired-owner access. Historical dates
+-- Active repurchases are denied; existing historical paid terms and expired-owner access.
+-- Historical admission helper is test-only; the public constructor is never replaced.
+-- Historical dates
 -- are set only in this disposable synthetic fixture, never in a hosted tenant.
 DO $$declare v_shop uuid;terms uuid;s public.subscriptions;renewed public.subscriptions;v_order uuid;result jsonb;at timestamptz;trial_before jsonb;q jsonb;begin
  v_shop:=pg_temp.journey_owner();select catalog_terms_id into terms from public.shop_public_plan_catalog() where slug='journey-month-low' limit 1;
@@ -174,9 +176,10 @@ DO $$declare v_shop uuid;terms uuid;s public.subscriptions;renewed public.subscr
  v_order:=(public.shop_xpay_order_create(gen_random_uuid(),v_shop,terms)->>'id')::uuid;perform pg_temp.journey_paid(v_order);
  select sub.* into s from public.subscriptions sub join public.shop_memberships m on m.profile_id=sub.profile_id where m.shop_id=v_shop and m.role='owner';
  perform set_config('request.headers',jsonb_build_object('x-shop-payment-intent','renew','x-shop-prior-paid-order',v_order)::text,true);
- v_order:=(public.shop_xpay_order_create(gen_random_uuid(),v_shop,terms)->>'id')::uuid;result:=pg_temp.journey_paid(v_order);
+ begin perform public.shop_xpay_order_create(gen_random_uuid(),v_shop,terms);raise exception 'New advance renewal accepted';exception when sqlstate '55000' then if sqlerrm<>'XPAY_ACTIVE_PERIOD_EXISTS' then raise;end if;end;
+ v_order:=(pg_temp.historical_order_create(gen_random_uuid(),v_shop,terms)->>'id')::uuid;result:=pg_temp.journey_paid(v_order);
  select * into renewed from public.subscriptions where id=s.id;
- if result->>'state'<>'paid' or renewed.current_period_start<>s.current_period_start or renewed.current_period_end<>s.current_period_end+interval '1 month' then raise exception 'Gate-off same-plan early renewal blocked or reset prepaid period';end if;
+ if result->>'state'<>'paid' or renewed.current_period_start<>s.current_period_start or renewed.current_period_end<>s.current_period_end+interval '1 month' then raise exception 'Already-legitimate historical renewal lost';end if;
  trial_before:=jsonb_build_object('start',s.trial_start_at,'end',s.trial_end_at,'consumed',s.trial_consumed);
  perform set_config('shop.billing_approval','approved',true);
  update public.subscriptions set current_period_start=clock_timestamp()-interval '2 months',current_period_end=clock_timestamp()-interval '1 month',updated_at=clock_timestamp() where id=s.id;
@@ -200,7 +203,9 @@ DO $$declare v_shop uuid;terms uuid;s public.subscriptions;renewed public.subscr
  if result->>'state'<>'paid' or renewed.current_period_start<at or renewed.current_period_end<>renewed.current_period_start+interval '1 month' then raise exception 'Expired gated renewal did not start at verified settlement';end if;
 end $$;
 
--- Two prepaid annual receipts include a fully future term. Interval switching
+-- Already-legitimate historical annual receipts include a fully future term.
+-- They are generated with the test-only former admission policy, never the new API.
+-- Interval switching
 -- carries actual remaining funded value once; same-interval composite pricing
 -- remains explicitly unsupported rather than treating two years as one rate.
 DO $$declare v_shop uuid;annual_terms uuid;monthly_terms uuid;annual_high uuid;s public.subscriptions;v_order uuid;q jsonb;funding jsonb;result jsonb;begin
@@ -211,9 +216,10 @@ DO $$declare v_shop uuid;annual_terms uuid;monthly_terms uuid;annual_high uuid;s
  update shop_private.proration_configuration set enabled=false where singleton;
  for count in 1..2 loop
   if count=2 then perform set_config('request.headers',jsonb_build_object('x-shop-payment-intent','renew','x-shop-prior-paid-order',v_order)::text,true);end if;
- v_order:=(public.shop_xpay_order_create(gen_random_uuid(),v_shop,annual_terms)->>'id')::uuid;perform pg_temp.journey_paid(v_order);end loop;
+ v_order:=(pg_temp.historical_order_create(gen_random_uuid(),v_shop,annual_terms)->>'id')::uuid;perform pg_temp.journey_paid(v_order);end loop;
  select sub.* into s from public.subscriptions sub join public.shop_memberships m on m.profile_id=sub.profile_id where m.shop_id=v_shop and m.role='owner';
  if s.current_period_end<>s.current_period_start+interval '2 years' then raise exception 'Two annual renewals not accumulated';end if;
+ begin perform public.shop_xpay_order_create(gen_random_uuid(),v_shop,annual_terms);raise exception 'Third prepaid term accepted';exception when sqlstate '55000' then if sqlerrm<>'XPAY_ACTIVE_PERIOD_EXISTS' then raise;end if;end;
  funding:=shop_private.proration_funding(s,clock_timestamp());
  if jsonb_array_length(funding->'evidence')<>2 or (funding->>'unusedMinor')::numeric not between 837599 and 837600 then raise exception 'Future funded annual receipt omitted or duplicated';end if;
  update shop_private.proration_configuration set enabled=true where singleton;

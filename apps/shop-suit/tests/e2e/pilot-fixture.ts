@@ -133,6 +133,8 @@ export async function pilotFixture(page: Page, locale: string, role = 'owner', o
         footer: null,
         paperSize: 'thermal_80',
       }; break
+      case 'shop_billing_change_preview': data = { timing: 'now', effectiveAt: null, scheduled: null }; break
+      case 'shop_billing_change_read': data = null; break
       case 'shop_billing_read': data = { subscription: { planName: 'Pilot plan', accessState: 'trialing', priceAmount: 100, currency: 'EGP', trialDaysRemaining: 7 }, instructions: { recipientAlias: 'pilot-billing-account-with-a-long-alias@example.test', instructionsEn: 'Review the reference before sending.', instructionsAr: 'راجع المرجع قبل الإرسال.' }, usage: { locations: 1, products: 0, services: 1, members: 2, limits: {}, resources: [] }, submissions: [] }; break
       case 'platform_admin_session': data = { userId: user.id, role: 'observer', canMutate: false }; break
       case 'platform_admin_read': data = args.p_resource === 'dashboard' ? { shops: 1, locations: 2, members: 2, recentEvents: [] } : { items: [], total: 0 }; break

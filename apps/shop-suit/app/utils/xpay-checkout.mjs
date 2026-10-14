@@ -36,5 +36,5 @@ export async function checkoutFailureCode(data, error) {
   if (error?.context instanceof Response) {
     try { payload = await error.context.clone().json() } catch { /* Generic safe fallback. */ }
   }
-  return ['checkout_historical_review_pending','checkout_quote_stale','checkout_quote_open','checkout_credit_confirmation_required','checkout_payment_unresolved','checkout_proration_unavailable','checkout_currency_unsupported','checkout_offer_expiring','checkout_plan_change_blocked','checkout_quote_required','checkout_payment_method_unsupported','checkout_period_unsupported'].includes(payload?.error) ? payload.error : null
+  return ['checkout_change_at_period_end', 'checkout_active_period_exists','checkout_historical_review_pending','checkout_quote_stale','checkout_quote_open','checkout_credit_confirmation_required','checkout_payment_unresolved','checkout_proration_unavailable','checkout_currency_unsupported','checkout_offer_expiring','checkout_plan_change_blocked','checkout_quote_required','checkout_payment_method_unsupported','checkout_period_unsupported'].includes(payload?.error) ? payload.error : null
 }

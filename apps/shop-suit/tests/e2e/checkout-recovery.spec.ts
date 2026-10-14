@@ -66,15 +66,12 @@ test('pending return confirms automatically from a late scoped version event, wi
   await expect(panel).toContainText('Your subscription is active')
   expect(fixture.calls.filter(call => call.name === 'shop-xpay-checkout' && call.args.requestId)).toHaveLength(0)
 })
-test('verified expired checkout can start again; renewal after success requires a separate explicit confirmation', async ({ page }) => {
+test('verified expired checkout can start again; active access never offers another prepaid renewal', async ({ page }) => {
   const fixture = await setup(page, 'en', 'expired')
   await fixtureGoto(page, `/billing?xpayOrder=${one}`)
   await expect(page.getByTestId('checkout-recovery').getByRole('button', { name: 'Continue to X-Pay', exact: true })).toBeEnabled()
   fixture.paid(); await fixtureGoto(page, '/billing')
-  await page.getByRole('button', { name: 'Renew this plan', exact: true }).click()
-  const dialog = page.getByRole('dialog', { name: 'Confirm', exact: true })
-  await expect(dialog).toContainText('This is another payment')
+  await expect(page.getByRole('button', { name: 'Renew this plan', exact: true })).toHaveCount(0)
   expect(fixture.calls.filter(call => call.name === 'shop-xpay-checkout' && call.args.requestId)).toHaveLength(0)
-  await dialog.getByRole('button', { name: 'Cancel', exact: true }).click()
   await expect(page.getByTestId('checkout-recovery')).toContainText('Your subscription is active')
 })

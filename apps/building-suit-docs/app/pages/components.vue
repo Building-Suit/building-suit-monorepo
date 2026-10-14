@@ -2,6 +2,8 @@
 import type { ChangelogFeed, ChangelogCopy } from '@building-suit/contracts'
 import type { BsBillingCopy, BsBillingForm, BsBillingView } from '@building-suit/ui/types/billingPresentation'
 const billingExampleForm = ref<BsBillingForm>({ paidAmount: 0, transferDate: '', transferReference: '', privateLink: '', reason: '' })
+const billingExampleBlocked = ref(false)
+const billingExampleDialogVisible = ref(false)
 const billingExampleCopy = computed<BsBillingCopy>(() => ({
   title: isArabic.value ? 'مثال الدفع المستضاف' : 'Hosted checkout example', subtitle: '', loading: ui('loading'), retry: ui('retry'), cancel: ui('cancel'), denied: '', failed: '', unavailable: '',
   usage: '', usageHelp: '', usageLoading: '', usageError: '', compare: '', compareHelp: '', instructions: '', instructionsHelp: '', manual: '', recipient: '', paymentLink: '', qr: '', instructionsUnavailable: '',
@@ -12,12 +14,15 @@ const billingExampleCopy = computed<BsBillingCopy>(() => ({
 const billingExampleView = computed<BsBillingView>(() => ({
   workspace: '', loading: false, failed: false, denied: false, available: true, summary: [], notice: '', details: [], providerNotice: '', latest: null,
   usage: { items: [], loading: false, failed: false }, pricing: { plans: [], interval: 'monthly', intervalOptions: [], copy: { cycleLabel: '', loading: '', empty: '', retry: '', included: '', notIncluded: '' }, loading: false, error: null, annualSaving: null, columns: 3, testId: 'catalogue-hosted-checkout-plans' },
+  pendingChange: { title: isArabic.value ? 'تغيير مجدول توضيحي' : 'Illustrative scheduled change', status: isArabic.value ? 'قيد الانتظار' : 'Pending', message: isArabic.value ? 'لا تُحصّل دفعة الآن. راجع الدفع يدويًا عند الاستحقاق.' : 'No payment now. Review payment manually when due.', details: [{label:isArabic.value?'التاريخ':'Date',value:'13 Oct 2028'}], blockers: [], links: [], pending: false, error: '', cancelLabel: ui('cancel'), payLabel: '', canCancel: true, canPay: false },
   instructions: null, privateOffer: null, transfer: null, evidence: null, showEvidence: false, history: [], showHistory: false, trial: null, policy: null,
   paymentNotice: '', paymentRequired: '', compatibilityNotice: '', pricingError: '', canRequests: false,
   checkout: { title: isArabic.value ? 'دفع مستضاف' : 'Hosted payment', description: isArabic.value ? 'المزود يستقبل بيانات الدفع في صفحته.' : 'The provider collects payment details on its page.',
     logoLight: '/brand/shop-suit-wordmark-light.svg', logoDark: '/brand/shop-suit-wordmark-dark.svg', logoAlt: 'Example provider', quote: 'Example · 199.90 EGP', notice: '', consequences: [isArabic.value ? 'لا يتغير الوصول حتى تأكيد الدفع.' : 'Access stays unchanged until payment is verified.'],
     breakdown: { title: isArabic.value ? 'عرض سعر توضيحي' : 'Illustrative quote', items: [{ label: isArabic.value ? 'المبلغ المطلوب' : 'Amount due', value: '199.90 EGP' }], policy: isArabic.value ? 'مثال بيانات فقط؛ لا ينفذ دفعًا.' : 'Example data only; no payment is performed.', expiry: '' },
-    unavailable: isArabic.value ? 'مثال غير متصل بمزود دفع.' : 'Catalogue example; no payment provider is connected.', action: isArabic.value ? 'المتابعة للدفع' : 'Continue to payment', pending: false, disabled: true, error: '' },
+    unavailable: isArabic.value ? 'مثال غير متصل بمزود دفع.' : 'Catalogue example; no payment provider is connected.', action: isArabic.value ? 'المتابعة للدفع' : 'Continue to payment', pending: false, disabled: true,
+    error: billingExampleBlocked.value ? (isArabic.value ? 'مثال على تغيير غير مدعوم. لم يتم قبول سعر أو دفع.' : 'Illustrative unsupported change. No price or payment was accepted.') : '',
+    actionVisible: !billingExampleBlocked.value, helpLabel: isArabic.value ? 'رابط دعم توضيحي' : 'Example support link', helpTo: '/components#hosted-checkout' },
 }))
 const exampleQuantity = ref(1)
 const pinnedRecordActions = ref(false)
@@ -375,7 +380,9 @@ const invitationPreviewCopy={
     </BsContentSection>
 
     <BsContentSection id="hosted-checkout" :title="isArabic ? 'الدفع المستضاف' : 'Hosted checkout'">
-      <BsBillingPage v-model:form="billingExampleForm" variant="shop" :copy="billingExampleCopy" :view="billingExampleView" :show-header="false"/>
+      <BsCheckboxField v-model="billingExampleBlocked" :label="isArabic ? 'إظهار خطأ مع رابط دعم' : 'Show error with support link'"/>
+      <BsButton variant="text" @click="billingExampleDialogVisible = true">{{ isArabic ? 'فتح مراجعة الدفع' : 'Open checkout review' }}</BsButton>
+      <BsBillingPage v-model:checkout-visible="billingExampleDialogVisible" v-model:form="billingExampleForm" variant="shop" :copy="billingExampleCopy" :view="billingExampleView" :show-header="false"/>
     </BsContentSection>
     <BsContentSection id="pricing" :title="isArabic ? 'خطط التسويق' : 'Marketing plans'" :description="isArabic ? 'البطاقات ودورة الفوترة والإجراءات تأتي من مكوّن مشترك.' : 'Cards, billing-cycle controls, states, and actions come from one shared organism.'">
       <BsMarketingPricing
