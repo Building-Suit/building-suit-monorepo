@@ -92,26 +92,26 @@ create trigger shop_schedule_version after insert or update on public.shop_sched
 
 create function shop_private.scheduled_change_view(r public.shop_scheduled_plan_changes,s public.subscriptions) returns jsonb
 language plpgsql stable security invoker set search_path='' as $$
-declare target jsonb;blockers jsonb;available boolean:=true;due_at timestamptz;o public.shop_private_offers;
+declare target jsonb;blockers jsonb;available boolean:=true;due_at timestamptz;v_offer public.shop_private_offers;
 begin
  if r.id is null then return null;end if;
  if r.private_offer_id is null then
  begin target:=shop_private.billing_public_target(s,r.catalog_terms_id);exception when invalid_parameter_value then available:=false;target:=r.target;end;
  else
  target:=r.target;
- select * into o from public.shop_private_offers where id=r.private_offer_id;
- available:=o.id is not null and o.shop_id=r.shop_id and o.recipient_user_id=auth.uid() and o.offer_version=(r.private_offer_parameters->>'offerVersion')::integer
- and o.expires_at>greatest(r.effective_at,s.current_period_end,clock_timestamp())+interval '31 minutes'
- and not exists(select 1 from public.shop_private_offer_revocations where offer_id=o.id)
- and not exists(select 1 from public.shop_private_offer_redemptions where offer_id=o.id);
+ select * into v_offer from public.shop_private_offers where id=r.private_offer_id;
+ available:=v_offer.id is not null and v_offer.shop_id=r.shop_id and v_offer.recipient_user_id=auth.uid() and v_offer.offer_version=(r.private_offer_parameters->>'offerVersion')::integer
+ and v_offer.expires_at>greatest(r.effective_at,s.current_period_end,clock_timestamp())+interval '31 minutes'
+ and not exists(select 1 from public.shop_private_offer_revocations where offer_id=v_offer.id)
+ and not exists(select 1 from public.shop_private_offer_redemptions where offer_id=v_offer.id);
  end if;
  blockers:=shop_private.plan_change_blockers(r.shop_id,target->'resourceLimits');
  due_at:=case when r.state='scheduled' then greatest(r.effective_at,s.current_period_end) else r.effective_at end;
  return jsonb_build_object('id',r.id,'state',r.state,'catalogTermsId',r.catalog_terms_id,'privateOfferId',r.private_offer_id,'needsOfferLink',r.private_offer_id is not null,'planName',target->>'planName','billingInterval',target->>'billingInterval',
  'currency',target->>'currency','indicativePriceAmount',target->'effectivePriceAmount','effectiveAt',due_at,'createdAt',r.created_at,'available',available,
  'blockers',blockers,'canPayNow',r.state='scheduled' and available and s.current_period_end<=clock_timestamp() and due_at<=clock_timestamp() and jsonb_array_length(blockers)=0,
- 'canCancel',r.state='scheduled' and not exists(select 1 from public.shop_proration_quotes q join public.shop_xpay_orders o on o.id=q.xpay_order_id
- where q.commerce->>'scheduledChangeId'=r.id::text and o.state in('creating','open','pending','requires_review')));
+ 'canCancel',r.state='scheduled' and not exists(select 1 from public.shop_proration_quotes q join public.shop_xpay_orders payment_order on payment_order.id=q.xpay_order_id
+ where q.commerce->>'scheduledChangeId'=r.id::text and payment_order.state in('creating','open','pending','requires_review')));
 end $$;
 revoke all on function shop_private.scheduled_change_view(public.shop_scheduled_plan_changes,public.subscriptions) from public,anon,authenticated,service_role;
 
@@ -216,7 +216,7 @@ begin
  if found then
  select q.calculation->'serviceSegments' into service_segments from public.shop_proration_quotes q where q.id=a.quote_id;
  if jsonb_typeof(service_segments)='array' then
- for segment in select value from jsonb_array_elements(service_segments) loop
+ for segment in select parts.value from jsonb_array_elements(service_segments) parts loop
  if (segment->>'end')::timestamptz>(segment->>'start')::timestamptz then
  value:=value+(segment->>'valueMinor')::numeric*greatest(0,extract(epoch from (segment->>'end')::timestamptz-greatest(p_as_of,(segment->>'start')::timestamptz)))/extract(epoch from (segment->>'end')::timestamptz-(segment->>'start')::timestamptz);
  end if;end loop;
