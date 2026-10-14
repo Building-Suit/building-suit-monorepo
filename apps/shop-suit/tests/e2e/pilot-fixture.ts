@@ -57,12 +57,12 @@ async function fixtureTransport(page: Page) {
 }
 
 // Synthetic responses only: this suite never connects to a database.
-export async function pilotFixture(page: Page, locale: string, role = 'owner', override?: (name: string, args: Record<string, unknown>) => unknown | Promise<unknown>) {
+export async function pilotFixture(page: Page, locale: string, role = 'owner', override?: (name: string, args: Record<string, unknown>) => unknown | Promise<unknown>, realtimeSessionId?: string) {
   const fixturePort = await fixtureTransport(page)
   const calls: Array<{ name: string; args: Record<string, unknown> }> = []
   const state = { calendarError: false, calendarDenied: false, delayCalendar: false, emptyCalendar: false, failAccess: false }
   const user = { id: '00000000-0000-4000-8000-000000000001', email: 'pilot@example.test', aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {} }
-  const jwt = `${Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url')}.${Buffer.from(JSON.stringify({ sub: user.id, exp: Math.floor(Date.now() / 1000) + 3600, role: 'authenticated', fixture_role: role, fixture_port: fixturePort, email: user.email })).toString('base64url')}.test`
+  const jwt = `${Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url')}.${Buffer.from(JSON.stringify({ sub: user.id, exp: Math.floor(Date.now() / 1000) + 3600, role: 'authenticated', fixture_role: role, fixture_port: fixturePort, email: user.email, ...(realtimeSessionId ? { session_id: realtimeSessionId } : {}) })).toString('base64url')}.test`
   const locations = ['First branch', 'Second branch'].map((name, index) => ({ id: `location-${index + 1}`, shop_id: 'shop-1', name, status: 'active', is_default: index === 0 }))
   const staff = { membershipId: 'membership-1', name: 'Pilot barber', locationIds: locations.map(item => item.id) }
   const service = { id: 'service-1', name: 'Haircut', itemType: 'service', unitPrice: 100, discount: 0, stock: null, sku: null, barcode: null }
