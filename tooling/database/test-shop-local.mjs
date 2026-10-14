@@ -22,12 +22,14 @@ if (migration.status !== 0) process.exit(migration.status ?? 1)
 
 const suites = ['shop_crm_owner_bootstrap', 'shop_crm_product_catalog', 'shop_crm_inventory_adjustments', 'shop_crm_service_catalog', 'shop_crm_expense_ledger', 'shop_crm_supplier_purchases', 'shop_business_mode', 'shop_trial_onboarding', 'shop_public_privileges', 'shop_safe_supported_commands', 'shop_stock_counts_corrections', 'shop_locations', 'shop_profile_settings', 'shop_platform_admin', 'shop_billing', 'shop_plan_catalog', 'shop_plan_catalog_v2', 'shop_plan_limits', 'shop_plan_admin', 'shop_subscription_lifecycle', 'shop_team_management', 'shop_barber_service_scheduling', 'shop_appointments', 'shop_pos_checkout', 'shop_cash_shifts', 'shop_sale_corrections', 'shop_catalog_import', 'shop_catalog_media', 'shop_catalog_image_upload', 'shop_support_submission', 'shop_orphan_fixture_cleanup_test']
 // Trial activation must prove target guards, history preservation and no false payment evidence.
-suites.push('shop_trial_admin_activation', 'shop_proration_quotes', 'shop_proration_settlement', 'shop_proration_checkout_details', 'shop_proration_journeys', 'shop_proration_checkout_windows', 'shop_proration_staging_activation')
+suites.push('shop_trial_admin_activation', 'shop_xpay_payments', 'shop_proration_quotes', 'shop_proration_settlement', 'shop_proration_checkout_details', 'shop_proration_journeys', 'shop_proration_checkout_windows', 'shop_proration_staging_activation')
 const activationMigration = await readFile(new URL('../../apps/shop-suit/supabase/migrations/20261014063640_staging_proration_activation.sql', import.meta.url), 'utf8')
+const historicalOrder = (await readFile(new URL('../../apps/shop-suit/supabase/migrations/20261014051811_checkout_recovery_proration_integration.sql', import.meta.url), 'utf8'))
+  .replace('create or replace function public.shop_xpay_order_create(', 'create function pg_temp.historical_order_create(')
 for (const suite of suites) {
   const sql = (await readFile(new URL(`../../apps/shop-suit/supabase/tests/${suite}.sql`, import.meta.url), 'utf8')).replaceAll('-- APPLY_REVIEWED_ACTIVATION_MIGRATION', activationMigration)
   const isCleanupSuite = suite === 'shop_orphan_fixture_cleanup_test'
-  const setup = isCleanupSuite ? fixtureCleanup : ['shop_billing', 'shop_plan_catalog_v2', 'shop_subscription_lifecycle'].includes(suite) ? legacyBillingFixture : ''
+  const setup = ['shop_xpay_payments', 'shop_proration_journeys'].includes(suite) ? historicalOrder : isCleanupSuite ? fixtureCleanup : ['shop_billing', 'shop_plan_catalog_v2', 'shop_subscription_lifecycle'].includes(suite) ? legacyBillingFixture : ''
   const result = spawnSync('docker', isCleanupSuite ? cleanupArgs : args, { input: `BEGIN;\n${setup}\n${sql.replace(/\bshop_crm\b/g, 'public')}\nROLLBACK;`, encoding: 'utf8' })
   if (result.status !== 0) { console.error(`${suite}: failed\n${result.stderr || result.error}`); process.exit(1) }
   console.log(`${suite}: passed; fixtures rolled back`)

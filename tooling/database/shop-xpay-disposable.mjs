@@ -14,8 +14,12 @@ const windows = await readFile(new URL('../../apps/shop-suit/supabase/tests/shop
 const activationMigration = await readFile(new URL('../../apps/shop-suit/supabase/migrations/20261014063640_staging_proration_activation.sql', import.meta.url), 'utf8')
 const activationFixture = await readFile(new URL('../../apps/shop-suit/supabase/tests/shop_proration_staging_activation.sql', import.meta.url), 'utf8')
 const activation = activationFixture.replaceAll('-- APPLY_REVIEWED_ACTIVATION_MIGRATION', activationMigration)
+// Test-only admission under the former policy constructs already-legitimate
+// historical receipts. The deployed public constructor remains guarded.
+const historicalOrder = (await readFile(new URL('../../apps/shop-suit/supabase/migrations/20261014051811_checkout_recovery_proration_integration.sql', import.meta.url), 'utf8'))
+  .replace('create or replace function public.shop_xpay_order_create(', 'create function pg_temp.historical_order_create(')
 const result = spawnSync('docker', ['exec', '-i', 'supabase_db_building-suit-shop', 'psql', '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-Atq'], {
-  input: `BEGIN;\n${activation}\nROLLBACK;\nBEGIN;\n${proration}\n${sql}\nROLLBACK;\nBEGIN;\n${settlement}\n${checkoutDetails}\nROLLBACK;\nBEGIN;\n${journeys}\n${windows}\nROLLBACK;`, encoding: 'utf8', timeout: 120000,
+  input: `BEGIN;\n${activation}\nROLLBACK;\nBEGIN;\n${historicalOrder}\n${proration}\n${sql}\nROLLBACK;\nBEGIN;\n${settlement}\n${checkoutDetails}\nROLLBACK;\nBEGIN;\n${historicalOrder}\n${journeys}\n${windows}\nROLLBACK;`, encoding: 'utf8', timeout: 120000,
 })
 if (result.status !== 0) {
   // This job has only synthetic records, but never print CLI status or credentials.
@@ -86,4 +90,21 @@ select public.shop_xpay_apply_session('${paid}'::jsonb,'${event}');commit;`)
 'periods',(select count(*) from public.subscription_commercial_periods where xpay_order_id='${order.id}'));`)
   assert.deepEqual(counts, { payments: 1, observations: 1, periods: 1 })
   console.log('Two concurrent PostgreSQL workers produced one payment, one observation and one commercial period')
+  const guardedEnd = execute(`select jsonb_build_object('end',current_period_end) from public.subscriptions where id=(select subscription_id from public.shop_xpay_orders where id='${order.id}');`)
+  async function deniedRepurchase(intent) {
+    return new Promise((resolve, reject) => {
+      const child = spawn('docker', ['exec', '-i', 'supabase_db_building-suit-shop', 'psql', '-Atq', '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1'], { stdio: ['pipe', 'pipe', 'pipe'] })
+      let errors = ''
+      child.stderr.on('data', chunk => { errors += chunk })
+      child.on('error', reject)
+      child.on('close', code => { if (code) reject(new Error(errors.slice(-3000))); else resolve() })
+      child.stdin.end(`begin;select set_config('request.jwt.claim.sub','${ownerId}',true),set_config('request.jwt.claim.role','authenticated',true),set_config('request.headers','${JSON.stringify({ 'x-shop-payment-intent': intent, 'x-shop-prior-paid-order': order.id })}',true);set local role authenticated;
+do $$begin perform public.shop_xpay_order_create('${randomUUID()}','${order.shopId}', '${order.quote.catalogTermsId}');raise exception 'Concurrent prepaid repurchase accepted';exception when sqlstate '55000' then if sqlerrm<>'XPAY_ACTIVE_PERIOD_EXISTS' then raise;end if;end $$;rollback;`)
+    })
+  }
+  await Promise.all([deniedRepurchase('renew'), deniedRepurchase('change')])
+  const guardedAfter = execute(`select jsonb_build_object('end',current_period_end) from public.subscriptions where id=(select subscription_id from public.shop_xpay_orders where id='${order.id}');`)
+  assert.deepEqual(guardedAfter, guardedEnd)
+  assert.equal(execute(`select jsonb_build_object('count',count(*)) from public.shop_xpay_orders where shop_id='${order.shopId}';`).count, 1)
+  console.log('Two independent concurrent active repurchases denied; existing paid end/order count unchanged')
 }

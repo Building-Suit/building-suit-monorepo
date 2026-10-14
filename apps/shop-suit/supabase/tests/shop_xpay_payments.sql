@@ -128,13 +128,21 @@ end $$;
 -- money observation is immutable even while access requires operator review.
 select set_config('request.jwt.claim.sub',owner_id::text,true),set_config('request.jwt.claim.role','authenticated',true) from xpay_fixture;
 set local role authenticated;
-do $$declare f xpay_fixture;begin select * into f from xpay_fixture;
- begin perform public.shop_xpay_order_create(gen_random_uuid(),f.shop_id,f.terms_id);raise exception 'accidental active repurchase accepted';exception when sqlstate '55000' then null;end;
- perform set_config('request.headers',jsonb_build_object('x-shop-payment-intent','renew','x-shop-prior-paid-order',gen_random_uuid())::text,true);
- begin perform public.shop_xpay_order_create(gen_random_uuid(),f.shop_id,f.terms_id);raise exception 'stale renewal accepted';exception when sqlstate '55000' then null;end;
+do $$declare f xpay_fixture;intent text;replay jsonb;before_end timestamptz;begin select * into f from xpay_fixture;
+ before_end:=(public.shop_billing_read(f.shop_id)#>>'{subscription,periodEnd}')::timestamptz;
+ foreach intent in array array['subscribe','renew','change'] loop
+ perform set_config('request.headers',jsonb_build_object('x-shop-payment-intent',intent,'x-shop-prior-paid-order',f.order_id)::text,true);
+ begin perform public.shop_xpay_order_create(gen_random_uuid(),f.shop_id,f.terms_id);raise exception 'active period repurchase accepted';
+ exception when sqlstate '55000' then if sqlerrm<>'XPAY_ACTIVE_PERIOD_EXISTS' then raise;end if;end;
+ end loop;
+ replay:=public.shop_xpay_order_create(f.owner_id,f.shop_id,f.terms_id);
+ if replay->>'state'<>'paid' or (replay->>'id')::uuid<>f.order_id then raise exception 'Completed request replay changed';end if;
+ if (public.shop_billing_read(f.shop_id)#>>'{subscription,periodEnd}')::timestamptz<>before_end then raise exception 'Blocked request changed paid access';end if;
  perform set_config('request.headers',jsonb_build_object('x-shop-payment-intent','renew','x-shop-prior-paid-order',f.order_id)::text,true);
 end $$;
-update xpay_fixture set order_id=(public.shop_xpay_order_create(gen_random_uuid(),shop_id,terms_id)->>'id')::uuid;
+-- A previously admitted order still uses paid-hold safeguards. It is not a new
+-- purchase admitted by the current constructor; this helper is temporary/CI only.
+update xpay_fixture set order_id=(pg_temp.historical_order_create(gen_random_uuid(),shop_id,terms_id)->>'id')::uuid;
 reset role;
 update public.subscriptions set updated_at=clock_timestamp()+interval '1 second'
 where id=(select subscription_id from public.shop_xpay_orders where id=(select order_id from xpay_fixture));

@@ -153,7 +153,7 @@ export function createXPayCheckout({ env, rpc, authenticate, fetchImpl = fetch }
         : await rpc('shop_xpay_apply_session', { p_session: databaseSession(session), p_event_id: null })
       return response(publicOrder(order), 200, settings.origin)
     } catch (error) {
-      if (['checkout_historical_review_pending', 'checkout_quote_stale', 'checkout_quote_open', 'checkout_credit_confirmation_required', 'checkout_payment_unresolved', 'checkout_proration_unavailable', 'checkout_currency_unsupported', 'checkout_offer_expiring', 'checkout_plan_change_blocked', 'checkout_quote_required', 'checkout_payment_method_unsupported', 'checkout_period_unsupported'].includes(error?.checkoutCode)) return response({ error: error.checkoutCode, retrySafe: false }, 409, settings.origin)
+      if (['checkout_active_period_exists', 'checkout_historical_review_pending', 'checkout_quote_stale', 'checkout_quote_open', 'checkout_credit_confirmation_required', 'checkout_payment_unresolved', 'checkout_proration_unavailable', 'checkout_currency_unsupported', 'checkout_offer_expiring', 'checkout_plan_change_blocked', 'checkout_quote_required', 'checkout_payment_method_unsupported', 'checkout_period_unsupported'].includes(error?.checkoutCode)) return response({ error: error.checkoutCode, retrySafe: false }, 409, settings.origin)
       // No raw provider/SQL error, key, customer payload or clientSecret in logs.
       return response({ error: 'checkout_not_completed', retrySafe: true }, 409, settings.origin)
     }

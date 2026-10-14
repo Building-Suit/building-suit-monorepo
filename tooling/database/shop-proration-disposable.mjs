@@ -25,7 +25,7 @@ export async function runProrationConcurrency(connection) {
       return { ok: true, rows: result.rows }
     } catch (error) {
       await c.query('ROLLBACK')
-      return { ok: false, code: error.code }
+      return { ok: false, code: error.code, message: error.message }
     } finally { await c.end() }
   }
   async function race(actor, statements) {
@@ -91,8 +91,13 @@ export async function runProrationConcurrency(connection) {
     const quoteRace = await race({ role: 'authenticated', id: quoteOwner }, [1, 2].map(() => ({ sql: 'select public.shop_xpay_proration_quote($1,$2,$3) value', params: [randomUUID(), quoteShop, high] })))
     assert.equal(quoteRace.filter(result => result.ok).length, 1)
     assert.equal(quoteRace.find(result => !result.ok)?.code, '55000')
-    assert.equal(clientCount, 6)
-    console.log('Six independent PostgreSQL workers: paid replay and zero-credit replay settle once; competing quotes admit one. Shared start barriers verified.')
+    const snapshotSql = `select jsonb_build_object('subscription',to_jsonb(s),'orders',(select count(*) from public.shop_xpay_orders where shop_id=$2)) value from public.subscriptions s where id=(select subscription_id from public.shop_proration_quotes where id=$1)`
+    const beforeRepurchase = (await admin.query(snapshotSql, [credit.quoteId, shop])).rows[0].value
+    const repurchases = await race({ role: 'authenticated', id: paidOwner }, [1, 2].map(() => ({ sql: 'select public.shop_xpay_order_create($1,$2,$3) value', params: [randomUUID(), shop, low] })))
+    assert.ok(repurchases.every(result => !result.ok && result.code === '55000' && result.message === 'XPAY_ACTIVE_PERIOD_EXISTS'))
+    assert.deepEqual((await admin.query(snapshotSql, [credit.quoteId, shop])).rows[0].value, beforeRepurchase)
+    assert.equal(clientCount, 8)
+    console.log('Eight independent PostgreSQL workers: paid/credit replays settle once, competing quotes admit one, active prepaid repurchases both deny. Shared start barriers verified.')
   } finally { await admin.end() }
 }
 
