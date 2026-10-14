@@ -1,13 +1,14 @@
 <script setup lang="ts">
+import type { BsOfflineCounterView } from '../types/offlineCounterPresentation'
 import { usePointOfSaleSections } from '@building-suit/ux'
 import type { BsPointOfSaleCopy, BsPointOfSaleView, BsPointOfSaleChoice, BsPointOfSaleCatalogItem, BsPointOfSaleCartLine, BsPointOfSaleCustomer, BsPointOfSalePaymentForm } from '../types/pointOfSalePresentation'
-const props = withDefaults(defineProps<{ variant?: 'default' | 'shop'; copy: BsPointOfSaleCopy; view: BsPointOfSaleView; itemTypeOptions: BsPointOfSaleChoice[]; categoryOptions: BsPointOfSaleChoice[]; appointmentOptions: BsPointOfSaleChoice[]; staffOptions: BsPointOfSaleChoice[]; paymentOptions: BsPointOfSaleChoice[]; catalogItems: BsPointOfSaleCatalogItem[]; cartLines: BsPointOfSaleCartLine[]; customerOptions: BsPointOfSaleCustomer[]; staffId: string; appointmentId: string; customerId: string }>(), { variant: 'default' })
+const props = withDefaults(defineProps<{ offline?: BsOfflineCounterView; variant?: 'default' | 'shop'; copy: BsPointOfSaleCopy; view: BsPointOfSaleView; itemTypeOptions: BsPointOfSaleChoice[]; categoryOptions: BsPointOfSaleChoice[]; appointmentOptions: BsPointOfSaleChoice[]; staffOptions: BsPointOfSaleChoice[]; paymentOptions: BsPointOfSaleChoice[]; catalogItems: BsPointOfSaleCatalogItem[]; cartLines: BsPointOfSaleCartLine[]; customerOptions: BsPointOfSaleCustomer[]; staffId: string; appointmentId: string; customerId: string }>(), { variant: 'default', offline: undefined })
 const catalogSearch = defineModel<string>('catalogSearch', { required: true })
 const categoryFilter = defineModel<string>('categoryFilter', { required: true })
 const itemType = defineModel<string>('itemType', { required: true })
 const catalogPage = defineModel<number>('catalogPage', { required: true })
 const paymentForm = defineModel<BsPointOfSalePaymentForm>('paymentForm', { required: true })
-const emit = defineEmits<{ reset: []; checkout: []; retryCatalog: []; retryContext: []; add: [key: string]; remove: [id: string]; quantity: [id: string, value: number]; appointment: [id: string]; staff: [id: string]; customerSearch: [value: string]; resetCustomerSearch: []; customer: [value: string | number | null | undefined]; clearCustomer: []; dismissFeedback: []; barcode: [code: string] }>()
+const emit = defineEmits<{ retryOffline: [id: string]; reset: []; checkout: []; retryCatalog: []; retryContext: []; add: [key: string]; remove: [id: string]; quantity: [id: string, value: number]; appointment: [id: string]; staff: [id: string]; customerSearch: [value: string]; resetCustomerSearch: []; customer: [value: string | number | null | undefined]; clearCustomer: []; dismissFeedback: []; barcode: [code: string] }>()
 const panels = usePointOfSaleSections()
 const shopCart = ref<{ focus: () => void; focusCustomer: () => void } | null>(null)
 const catalogHeading = ref<{ $el: HTMLElement } | null>(null)
@@ -23,6 +24,7 @@ defineExpose({ focusCatalog: navigation.focusCatalog })
         <BsButton :variant="variant === 'shop' ? 'link' : 'default'" :disabled="view.checkingOut || view.confirming" @click="emit('reset')">{{ copy.reset }}</BsButton>
       </template>
     </BsPageHeader>
+    <BsOfflineCounterStatus v-if="offline" :view="offline" @retry="emit('retryOffline', $event)" />
     <BsText v-if="!view.available && !view.loadingContext" as="p" size="sm">{{ copy.noShop }}</BsText>
     <template v-else-if="view.available">
       <BsPanel :aria-label="copy.cart" padding="md" :class="{ 'bs-pos-summary': variant === 'shop' }">

@@ -323,6 +323,14 @@
         "apps/shop-suit/app/pages/pos.vue"
       ],
       "migrationStatus": "bounded POS reference alignment in progress"
+    },
+    {
+      "family": "offline-counter-status",
+      "owner": "packages/ui",
+      "components": [
+        "BsOfflineCounterStatus"
+      ],
+      "adapterBoundary": "Product supplies localized queue states, recovery intent and server-confirmed receipt links; Shop owns encrypted persistence and replay commands. Connectivity lifecycle belongs in packages/ux."
     }
   ]
 }

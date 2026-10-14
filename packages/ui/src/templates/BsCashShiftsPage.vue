@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import type { BsOfflineCounterView } from '../types/offlineCounterPresentation'
 import type { BsCashShiftActiveView, BsCashShiftHistoryRow, BsCashShiftAmountForm, BsCashShiftMovementForm, BsCashShiftEditor, BsCashShiftCopy } from '../types/cashShiftPresentation'
-defineProps<{
+defineProps<{ offline?: BsOfflineCounterView;
   copy: BsCashShiftCopy; contextAvailable: boolean; shopLoading: boolean; locationName: string | null
   pending: boolean; error: boolean; active: BsCashShiftActiveView | null; canAdjust: boolean; canClose: boolean; canManage: boolean
   historyRows: BsCashShiftHistoryRow[]; cashierOptions: { id: string; name: string }[]; page: number; pageSize: number; total: number
@@ -14,7 +15,7 @@ const closeForm = defineModel<BsCashShiftAmountForm>('closeForm', { required: tr
 const showOpen = defineModel<boolean>('openVisible', { required: true })
 const showMovement = defineModel<boolean>('movementVisible', { required: true })
 const showClose = defineModel<boolean>('closeVisible', { required: true })
-const emit = defineEmits<{ retry: []; open: []; movement: []; close: []; saveOpen: []; saveMovement: []; saveClose: []; page: [page: number] }>()
+const emit = defineEmits<{ retryOffline: [id: string]; retry: []; open: []; movement: []; close: []; saveOpen: []; saveMovement: []; saveClose: []; page: [page: number] }>()
 function updateOpen(key: keyof BsCashShiftAmountForm, value: string | number) { openForm.value = { ...openForm.value, [key]: key === 'amount' ? Number(value) : String(value) } }
 function updateClose(key: keyof BsCashShiftAmountForm, value: string | number) { closeForm.value = { ...closeForm.value, [key]: key === 'amount' ? Number(value) : String(value) } }
 function updateMovement(key: keyof BsCashShiftMovementForm, value: string | number | boolean) { movementForm.value = { ...movementForm.value, [key]: key === 'amount' ? Number(value) : String(value) } }
@@ -27,6 +28,7 @@ function updateMovement(key: keyof BsCashShiftMovementForm, value: string | numb
           <BsText as="strong">{{ copy.branch }}:</BsText> {{ locationName }}</BsText>
       </template>
     </BsPageHeader>
+    <BsOfflineCounterStatus v-if="offline" :view="offline" @retry="emit('retryOffline', $event)" />
     <BsText v-if="!contextAvailable && !shopLoading" as="p" size="sm">{{ copy.noShop }}</BsText>
     <BsText v-else-if="!locationName && !shopLoading" as="p" size="sm">{{ copy.noLocation }}</BsText>
     <BsStack v-else-if="contextAvailable">

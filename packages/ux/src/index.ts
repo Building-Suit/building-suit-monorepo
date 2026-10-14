@@ -229,3 +229,4 @@ export { usePointOfSaleSections } from './composables/usePointOfSaleSections.ts'
 export { boundedQuantity, steppedQuantity, restoreQuantityInput } from './utils/quantity.ts'
 
 export { focusAfterRecordRemoval } from './utils/collectionFocus.ts'
+export { useConnectivity } from './composables/useConnectivity.ts'

@@ -175,6 +175,10 @@ const invitationPreviewCopy={
       :context="[{ label: isArabic ? 'الاتجاه' : 'Direction', value: isArabic ? 'RTL' : 'LTR' }, { label: isArabic ? 'المصدر' : 'Owner', value: 'packages/ui' }]"
     />
 
+    <BsContentSection :title="isArabic ? 'حالة العمليات المحلية' : 'Local transaction status'">
+      <BsOfflineCounterStatus :view="{ notice: isArabic ? 'مثال توضيحي لحالات المزامنة؛ لا ينفذ عمليات.' : 'Illustrative synchronization states; no transactions are executed.', retry: isArabic ? 'إعادة المحاولة' : 'Retry', records: ['unsynced','syncing','failed','synced'].map((state, index) => ({ id: String(index), label: isArabic ? 'عملية محلية' : 'Local transaction', state: state as 'unsynced' | 'syncing' | 'failed' | 'synced', status: state, detail: '', receipt: null })) }" />
+    </BsContentSection>
+
     <BsContentSection :title="isArabic ? 'عنوان طويل وعرض ضيق' : 'Long heading at narrow widths'">
       <BsPageHeader :title="isArabic ? 'اسممتجرطويلبدونمسافاتلاختبارالتفافالعنوانداخلعرضالصفحة' : 'ExampleShopIdentifierWithoutSpacesForTestingHeadingWrappingWithinTheViewport'" :subtitle="isArabic ? 'مثال توضيحي لاختبار العرض والاستجابة.' : 'Illustrative heading for responsive layout inspection.'" />
     </BsContentSection>
