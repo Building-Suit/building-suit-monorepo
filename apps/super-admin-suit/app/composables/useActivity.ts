@@ -13,9 +13,9 @@ export function useActivity(context: () => string, active: () => boolean) {
   const status = ref<'loading' | 'success' | 'empty' | 'error' | 'denied'>('loading')
   const retrieving = ref(false), remoteFailed = ref(false)
   let generation = 0
-  async function load() {
+  async function load(preserveRows = false) {
     const current = ++generation
-    rows.value = []; sources.value = []; total.value = 0; status.value = 'loading'
+    if (!preserveRows) { rows.value = []; sources.value = []; total.value = 0; status.value = 'loading' }
     if (!active()) return
     try {
       const result = await fetch<ActivityPage>('/api/activity', { query: Object.fromEntries(Object.entries(query).filter(([, value]) => value !== null && value !== '')) })
@@ -24,7 +24,9 @@ export function useActivity(context: () => string, active: () => boolean) {
       status.value = result.items.length ? 'success' : 'empty'
     } catch (cause) {
       if (current !== generation) return
-      status.value = [401, 403].includes((cause as { statusCode?: number }).statusCode || 0) ? 'denied' : 'error'
+      const denied = [401, 403].includes((cause as { statusCode?: number }).statusCode || 0)
+      if (denied) { rows.value = []; sources.value = []; total.value = 0 }
+      if (denied || !preserveRows) status.value = denied ? 'denied' : 'error'
     }
   }
   async function retrieve(source: ActivitySource) {
@@ -49,5 +51,5 @@ export function useActivity(context: () => string, active: () => boolean) {
     if (active()) void load()
   }, { immediate: true })
   onScopeDispose(() => { ++generation; rows.value = []; sources.value = [] })
-  return { query, rows, sources, total, status, retrieving, remoteFailed, load, apply, retrieve, queryAdapter }
+  return { query, rows, sources, total, status, retrieving, remoteFailed, load, refresh: () => load(true), apply, retrieve, queryAdapter }
 }

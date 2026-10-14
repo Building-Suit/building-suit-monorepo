@@ -7,31 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       activity_correlations: {
@@ -454,6 +429,51 @@ export type Database = {
           version?: number
         }
         Relationships: []
+      }
+      admin_live_invalidations: {
+        Row: {
+          authority_environment_id: string
+          binding_id: string | null
+          created_at: string
+          delivered_at: string | null
+          id: string
+          kinds: string[]
+          source_key: string
+        }
+        Insert: {
+          authority_environment_id: string
+          binding_id?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          id?: string
+          kinds: string[]
+          source_key: string
+        }
+        Update: {
+          authority_environment_id?: string
+          binding_id?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          id?: string
+          kinds?: string[]
+          source_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_live_invalidations_authority_environment_id_fkey"
+            columns: ["authority_environment_id"]
+            isOneToOne: false
+            referencedRelation: "admin_environments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_live_invalidations_binding_id_fkey"
+            columns: ["binding_id"]
+            isOneToOne: false
+            referencedRelation: "suit_environment_bindings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       configuration_revisions: {
         Row: {
@@ -1243,6 +1263,8 @@ export type Database = {
         Args: { p_binding_id: string }
         Returns: Json
       }
+      super_admin_live_flush: { Args: { p_limit?: number }; Returns: number }
+      super_admin_live_topic: { Args: never; Returns: string }
       super_admin_session: { Args: never; Returns: Json }
     }
     Enums: {
@@ -1372,9 +1394,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },
