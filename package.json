@@ -52,6 +52,7 @@
     "@nuxtjs/i18n": "10.6.0",
     "@nuxtjs/supabase": "1.6.2",
     "@primevue/nuxt-module": "4.5.5",
+    "pg": "8.16.3",
     "primevue": "4.5.5",
     "@tailwindcss/vite": "4.3.3",
     "tailwindcss": "4.3.3",

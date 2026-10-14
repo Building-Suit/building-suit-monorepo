@@ -15,11 +15,13 @@ const billingExampleView = computed<BsBillingView>(() => ({
   instructions: null, privateOffer: null, transfer: null, evidence: null, showEvidence: false, history: [], showHistory: false, trial: null, policy: null,
   paymentNotice: '', paymentRequired: '', compatibilityNotice: '', pricingError: '', canRequests: false,
   checkout: { title: isArabic.value ? 'دفع مستضاف' : 'Hosted payment', description: isArabic.value ? 'المزود يستقبل بيانات الدفع في صفحته.' : 'The provider collects payment details on its page.',
-    logoLight: '/brand/shop-suit-wordmark-light.svg', logoDark: '/brand/shop-suit-wordmark-dark.svg', logoAlt: 'Example provider', quote: 'Example · 199.90 EGP', notice: '',
+    logoLight: '/brand/shop-suit-wordmark-light.svg', logoDark: '/brand/shop-suit-wordmark-dark.svg', logoAlt: 'Example provider', quote: 'Example · 199.90 EGP', notice: '', consequences: [isArabic.value ? 'لا يتغير الوصول حتى تأكيد الدفع.' : 'Access stays unchanged until payment is verified.'],
+    breakdown: { title: isArabic.value ? 'عرض سعر توضيحي' : 'Illustrative quote', items: [{ label: isArabic.value ? 'المبلغ المطلوب' : 'Amount due', value: '199.90 EGP' }], policy: isArabic.value ? 'مثال بيانات فقط؛ لا ينفذ دفعًا.' : 'Example data only; no payment is performed.', expiry: '' },
     unavailable: isArabic.value ? 'مثال غير متصل بمزود دفع.' : 'Catalogue example; no payment provider is connected.', action: isArabic.value ? 'المتابعة للدفع' : 'Continue to payment', pending: false, disabled: true, error: '' },
 }))
 const exampleQuantity = ref(1)
 const pinnedRecordActions = ref(false)
+const recordSubmitVisible = ref(true)
 const changelogState = ref<'ready' | 'loading' | 'error' | 'denied'>('ready')
 const changelogFeed: ChangelogFeed = {
   serverNow: '2026-10-10T12:00:00Z',
@@ -445,8 +447,9 @@ const invitationPreviewCopy={
 
     <BsToastHost />
     <BsSwitch v-model="pinnedRecordActions" :label="isArabic ? 'تثبيت إجراءات نافذة السجل' : 'Pin record dialog actions'" />
+    <BsSwitch v-model="recordSubmitVisible" :label="isArabic ? 'إظهار إجراء التأكيد' : 'Show confirmation action'" />
     <BsRecordActionDialog
-      v-model:visible="visible" :pinned-actions="pinnedRecordActions"
+      v-model:visible="visible" :pinned-actions="pinnedRecordActions" :submit-visible="recordSubmitVisible"
       :title="mode === 'edit' ? (isArabic ? 'تعديل السجل' : 'Edit record') : (isArabic ? 'إضافة سجل' : 'Add record')"
       :dirty="dirty" :pending="pending" :error="actionError" @submit="save"
     >

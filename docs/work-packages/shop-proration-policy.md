@@ -1,0 +1,19 @@
+# Shop proration implementation — quote layer
+
+This is the first bounded implementation layer, stacked on billing UX #285. `shop_private.proration_quote_v1` is a dormant, immutable calculation primitive, callable only by its database owner. No client or service-role execute grant, public RPC, order mutation, payment receipt, credit issuance or subscription activation is added. Existing payment behavior stays unchanged until the subsequent settlement layer is complete. No hosted migration/configuration was applied.
+
+## Frozen calculation policy
+
+All inputs come from locked server records in the forthcoming wrapper. Amounts use minor units; intermediate costs/unused prepaid values use PostgreSQL numeric without component rounding. Only the final signed net is rounded to the nearest minor unit, with half ties away from zero. The snapshot records the unrounded values and rounding adjustment.
+
+A currently paid period credits unused actual funded value, not public list price. Its funding start may differ from the original billing-cycle start after an earlier plan change. The remaining fraction of the new same-interval term uses the actual original cycle timestamps and preserves its renewal end. For349→699 with20of30days remaining,466−232.666… gives233.33EGP due. Annual/leap-year periods use actual timestamp differences. Matching active terms produce no change and preserve carryforward credit.
+
+Changing monthly↔annual charges the full new term less unused old paid value and existing carryforward credit. Its new period starts only at verified settlement; the snapshot records1or12calendar months rather than inventing a fixed day count. Trial conversion charges the full new term, without treating trial/operator grants as prepaid cash. Expired periods contribute no unused value. Existing auditable carryforward credit can offset the result.
+
+A negative rounded net becomes the next carryforward balance; it never creates an automatic refund or negative charge. Zero net requires an explicit credit transition, never a fake XPay paid event. Positive net requires a verified real XPay payment. Quotes expire after15minutes or the active period end, whichever comes first. Currency is restricted to the existing EGP integration.
+
+## Actual validation and remaining work
+
+The migration was created with the pinned Supabase CLI. An isolated embedded PostgreSQL (PGlite0.5.9, installed only under/tmp) executed the exact migration and SQL fixture:16 economic cases, deterministic quote replay,16 invalid-input cases and anon/authenticated/service-role privilege denial passed. Cases include monthly/yearly/leap periods, interval switches, trial, unpaid operator grants, same-plan no-op, zero net, carryforward, repeated allocation and half-cent rounding. This is not full Supabase Auth/RLS/fulfillment validation. Both repository disposable database runners now execute the same fixture; GitHub-hosted native Supabase migration/SQL validation remains required.
+
+The next layer must derive prepaid provenance from immutable actual payment/settlement records; lock subscription/resources/credit balance in a consistent order; persist immutable owner-scoped quotes with request identity, source subscription/funding/credit versions and private-offer bindings; reject stale/tampered/concurrent state; reserve only one unresolved change; settle real paid amounts exactly once; and apply zero-amount changes through an explicit owner-authorized transition with an immutable credit/allocation ledger. Credit changes, access, entitlements and commercial history must commit atomically. Original trial history and SAS grants must stay intact. Private offers retain expiry/revocation/recipient/entitlement gates. Checkout must display the final frozen breakdown, including preserved renewal or new-period policy. Existing provider reconciliation and delayed-payment review must preserve real paid observations when access cannot safely apply.

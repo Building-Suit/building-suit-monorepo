@@ -46,7 +46,7 @@ async function json(request) {
   return value
 }
 const publicOrder = order => ({ orderId: order.id, state: order.state, sessionId: order.sessionId, url: order.state === 'open' ? order.url : null, expiresAt: order.expiresAt,
-  amountMinor: order.amountMinor, currency: order.currency, planName: order.description, createdAt: order.createdAt })
+  amountMinor: order.amountMinor, currency: order.currency, planName: order.description, createdAt: order.createdAt, ...(order.quote?.prorationQuoteId ? { quoteId: order.quote.prorationQuoteId, calculation: order.quote.proration } : {}) })
 const databaseSession = session => ({
   id: session.id, object: session.object, merchantId: session.merchantId, livemode: session.livemode,
   currency: session.currency, amountTotal: session.amountTotal, status: session.status, paymentStatus: session.paymentStatus,
@@ -54,6 +54,7 @@ const databaseSession = session => ({
   url: session.url, expiresAt: session.expiresAt, isExpired: session.isExpired,
 })
 function canRetryCreation(order) {
+  if (order.quote?.prorationQuoteId && Date.now() - Date.parse(order.createdAt) > 5 * 60000) throw Object.assign(new Error('xpay_reconciliation_required'), { checkoutCode: 'checkout_payment_unresolved' })
   const expiry = order.quote?.offerBinding?.expiresAt
   if (expiry && Date.parse(expiry) < Date.now() + 31 * 60000) throw new Error('xpay_reconciliation_required')
   if (Date.now() - Date.parse(order.createdAt) >= 23 * 3600000) throw new Error('xpay_reconciliation_required')
@@ -99,16 +100,29 @@ export function createXPayCheckout({ env, rpc, authenticate, fetchImpl = fetch }
     try {
       if (!await authenticate(token)) return response({ error: 'sign_in_required' }, 401, settings.origin)
       const body = await json(request)
-      if (Object.keys(body).some(key => !['action', 'requestId', 'shopId', 'catalogTermsId', 'privateOffer', 'locale', 'orderId', 'purchaseIntent', 'priorPaidOrderId'].includes(key))
+      if (Object.keys(body).some(key => !['action', 'requestId', 'shopId', 'catalogTermsId', 'privateOffer', 'locale', 'orderId', 'quoteId', 'purchaseIntent', 'priorPaidOrderId'].includes(key))
         || !UUID.test(body.shopId || '') || !['en', 'ar'].includes(body.locale)) throw new Error('xpay_invalid_request')
       if (body.action === 'status') {
         const capability = await rpc('shop_xpay_checkout_status', { p_shop_id: body.shopId }, token)
         if (!capability.enabled || capability.merchantId !== settings.merchantId || capability.mode !== settings.mode) return response({ ready: false, orders: [] }, 200, settings.origin)
         const verified = await verifyMerchantReadiness({ ...settings, fetchImpl })
         const orders = await rpc('shop_xpay_order_read', { p_shop_id: body.shopId, p_order_id: null }, token)
-        return response({ ...verified, orders: orders.map(publicOrder) }, 200, settings.origin)
+        const proration = await rpc('shop_xpay_proration_status', { p_shop_id: body.shopId }, token)
+        return response({ ...verified, prorationEnabled: proration.enabled === true, creditBalanceMinor: proration.creditBalanceMinor, orders: orders.map(publicOrder) }, 200, settings.origin)
       }
-      if (body.action != null) throw new Error('xpay_invalid_request')
+      if (body.action === 'quote') {
+        if (!UUID.test(body.requestId || '') || (body.catalogTermsId != null && !UUID.test(body.catalogTermsId)) || body.quoteId || body.orderId) throw new Error('xpay_invalid_request')
+        const quote = await rpc('shop_xpay_proration_quote', { p_request_id: body.requestId, p_shop_id: body.shopId, p_catalog_terms_id: body.catalogTermsId ?? null, p_private_offer: body.privateOffer ?? null }, token)
+        return response(quote, 200, settings.origin)
+      }
+      if (['read_quote', 'abandon_quote', 'apply_credit'].includes(body.action)) {
+        if (!UUID.test(body.quoteId || '') || body.orderId || body.privateOffer || body.catalogTermsId) throw new Error('xpay_invalid_request')
+        const name = body.action === 'read_quote' ? 'shop_xpay_proration_read' : body.action === 'abandon_quote' ? 'shop_xpay_proration_abandon' : 'shop_xpay_proration_credit_confirm'
+        return response(await rpc(name, { p_shop_id: body.shopId, p_quote_id: body.quoteId }, token), 200, settings.origin)
+      }
+      if (body.action != null && body.action !== 'pay_quote') throw new Error('xpay_invalid_request')
+      if (body.action === 'pay_quote' && (!UUID.test(body.quoteId || '') || body.orderId || body.privateOffer || body.catalogTermsId)) throw new Error('xpay_invalid_request')
+      if (body.action == null && body.quoteId) throw new Error('xpay_invalid_request')
       if (body.orderId) {
         if (!UUID.test(body.orderId)) throw new Error('xpay_invalid_request')
         const orders = await rpc('shop_xpay_order_read', { p_shop_id: body.shopId, p_order_id: body.orderId }, token)
@@ -117,11 +131,11 @@ export function createXPayCheckout({ env, rpc, authenticate, fetchImpl = fetch }
         return response(publicOrder(order), 200, settings.origin)
       }
       if (!['subscribe', 'renew', 'change'].includes(body.purchaseIntent ?? 'subscribe') || (body.priorPaidOrderId != null && !UUID.test(body.priorPaidOrderId))) throw new Error('xpay_invalid_request')
-      if (!UUID.test(body.requestId || '') || (body.catalogTermsId != null && !UUID.test(body.catalogTermsId))) throw new Error('xpay_invalid_request')
-      const capability = await rpc('shop_xpay_checkout_status', { p_shop_id: body.shopId }, token)
+      if (body.action !== 'pay_quote' && (!UUID.test(body.requestId || '') || (body.catalogTermsId != null && !UUID.test(body.catalogTermsId)))) throw new Error('xpay_invalid_request')
+      const capability = await rpc('shop_xpay_checkout_status', { p_shop_id: body.shopId }, token, { purchaseIntent: body.purchaseIntent ?? 'subscribe', priorPaidOrderId: body.priorPaidOrderId ?? null })
       if (!capability.enabled || capability.merchantId !== settings.merchantId || capability.mode !== settings.mode) throw new Error('xpay_not_configured')
-      await verifyMerchantReadiness({ ...settings, fetchImpl })
-      let order = await rpc('shop_xpay_order_create', { p_request_id: body.requestId, p_shop_id: body.shopId, p_catalog_terms_id: body.catalogTermsId ?? null, p_private_offer: body.privateOffer ?? null }, token, { purchaseIntent: body.purchaseIntent ?? 'subscribe', priorPaidOrderId: body.priorPaidOrderId ?? null })
+      await verifyMerchantReadiness({ ...settings, fetchImpl, requireCard: body.action === 'pay_quote' })
+      let order = body.action === 'pay_quote' ? await rpc('shop_xpay_proration_order', { p_shop_id: body.shopId, p_quote_id: body.quoteId }, token) : await rpc('shop_xpay_order_create', { p_request_id: body.requestId, p_shop_id: body.shopId, p_catalog_terms_id: body.catalogTermsId ?? null, p_private_offer: body.privateOffer ?? null }, token, { purchaseIntent: body.purchaseIntent ?? 'subscribe', priorPaidOrderId: body.priorPaidOrderId ?? null })
       if (order.merchantId !== settings.merchantId || order.mode !== settings.mode) throw new Error('xpay_session_mismatch')
       if (order.sessionId) {
         // Refresh authoritative state before returning a previously bound URL.
@@ -138,7 +152,8 @@ export function createXPayCheckout({ env, rpc, authenticate, fetchImpl = fetch }
         ? await rpc('shop_xpay_bind_session', { p_order_id: order.id, p_session: databaseSession(session) })
         : await rpc('shop_xpay_apply_session', { p_session: databaseSession(session), p_event_id: null })
       return response(publicOrder(order), 200, settings.origin)
-    } catch {
+    } catch (error) {
+      if (['checkout_historical_review_pending', 'checkout_quote_stale', 'checkout_quote_open', 'checkout_credit_confirmation_required', 'checkout_payment_unresolved', 'checkout_proration_unavailable', 'checkout_currency_unsupported', 'checkout_offer_expiring', 'checkout_plan_change_blocked', 'checkout_quote_required', 'checkout_payment_method_unsupported', 'checkout_period_unsupported'].includes(error?.checkoutCode)) return response({ error: error.checkoutCode, retrySafe: false }, 409, settings.origin)
       // No raw provider/SQL error, key, customer payload or clientSecret in logs.
       return response({ error: 'checkout_not_completed', retrySafe: true }, 409, settings.origin)
     }

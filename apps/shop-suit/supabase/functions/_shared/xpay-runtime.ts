@@ -1,3 +1,4 @@
+import { checkoutRpcError } from './xpay-errors.mjs'
 export const env = (name: string) => Deno.env.get(name)
 function baseUrl() {
   const url = new URL(env('SUPABASE_URL') || '')
@@ -12,7 +13,11 @@ export async function rpc(name: string, body: unknown, caller?: string, intent?:
     headers: { apikey: key, authorization: caller || `Bearer ${key}`, 'content-type': 'application/json', ...(name === 'shop_xpay_order_create' && intent ? { 'x-shop-payment-intent': intent.purchaseIntent, 'x-shop-prior-paid-order': intent.priorPaidOrderId ?? '' } : {}) },
     body: JSON.stringify(body),
   })
-  if (!response.ok) throw new Error('xpay_rpc_failed')
+  if (!response.ok) {
+    let payload: unknown
+    try { payload = await response.json() } catch { /* Never forward raw errors. */ }
+    throw checkoutRpcError(name, response.status, payload)
+  }
   return response.json()
 }
 export async function authenticate(caller?: string | null) {

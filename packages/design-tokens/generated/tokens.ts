@@ -476,6 +476,11 @@ export const tokens = {
     }
   },
   "component": {
+    "pricingCard": {
+      "width": {
+        "value": "352px"
+      }
+    },
     "pointOfSale": {
       "panelPadding": {
         "value": "20px"

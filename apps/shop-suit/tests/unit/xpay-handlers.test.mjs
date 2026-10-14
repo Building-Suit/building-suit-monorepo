@@ -17,6 +17,7 @@ function fixture({ providerSession = session, failedRpc, dedup = false } = {}) {
   const rpc = async (name, args, caller, intent) => {
     calls.push({ name, args, caller, intent })
     if (name === failedRpc) throw new Error('private SQL/provider body')
+    if (name === 'shop_xpay_proration_status') return { enabled: false, creditBalanceMinor: 0 }
     if (name === 'shop_xpay_checkout_status') return { enabled: true, mode: 'test', merchantId: 'merchant-fixture' }
     if (name === 'shop_xpay_order_create' || name === 'shop_xpay_server_order') return order
     if (name === 'shop_xpay_order_read') return [order]
@@ -231,6 +232,43 @@ test('unconfigured CORS rejects foreign origins and mismatched project/origin pi
   }
   assert.deepEqual(f.calls, [])
   assert.deepEqual(f.providerCalls, [])
+})
+
+test('historical manual review returns actionable409without creating a provider session', async () => {
+  const f = fixture()
+  const rpc = async (...args) => {
+    if (args[0] === 'shop_xpay_order_create') throw Object.assign(new Error('xpay_rpc_failed'), { checkoutCode: 'checkout_historical_review_pending' })
+    return f.rpc(...args)
+  }
+  const response = await createXPayCheckout({ ...f, rpc })(checkoutRequest({ requestId: id, shopId: shop, catalogTermsId: terms, locale: 'en' }))
+  assert.equal(response.status, 409)
+  assert.deepEqual(await response.json(), { error: 'checkout_historical_review_pending', retrySafe: false })
+  assert.equal(f.providerCalls.some(call => call.url.includes('/checkout/sessions')), false)
+})
+
+test('owner quote review and explicit credit confirmation never create a provider session',async()=>{
+ const f=fixture(),quote={quoteId:id,shopId:shop,state:'quoted',calculation:{amountDueMinor:0}}
+ const rpc=async(name,args,caller)=>{
+   if(name==='shop_xpay_proration_quote'||name==='shop_xpay_proration_credit_confirm'){assert.equal(caller,'Bearer user-token');return {...quote,state:name.endsWith('confirm')?'settled':'quoted'}}
+   return f.rpc(name,args,caller)
+ }
+ const handler=createXPayCheckout({...f,rpc})
+ const reviewed=await handler(checkoutRequest({action:'quote'}));assert.equal(reviewed.status,200)
+ const confirmed=await handler(new Request('https://edge.example/checkout',{method:'POST',headers:{origin:vars.SHOP_BILLING_RETURN_ORIGIN,authorization:'Bearer user-token','content-type':'application/json'},body:JSON.stringify({action:'apply_credit',quoteId:id,shopId:shop,locale:'en'})}))
+ assert.equal(confirmed.status,200);assert.equal((await confirmed.json()).state,'settled');assert.equal(f.providerCalls.length,0)
+ const forged=await handler(checkoutRequest({action:'quote',amountMinor:0}));assert.equal(forged.status,409)
+})
+test('cash quote submission uses the persisted owner quote ID and exact order amount',async()=>{
+ const f=fixture(),rpc=async(name,args,caller)=>{
+   if(name==='shop_xpay_proration_order'){assert.deepEqual(args,{p_shop_id:shop,p_quote_id:id});assert.equal(caller,'Bearer user-token');return {...baseOrder,quote:{prorationQuoteId:id,billingInterval:'monthly',proration:{amountDueMinor:34900}}}}
+   return f.rpc(name,args,caller)
+ }
+ const response=await createXPayCheckout({...f,rpc})(new Request('https://edge.example/checkout',{method:'POST',headers:{origin:vars.SHOP_BILLING_RETURN_ORIGIN,authorization:'Bearer user-token','content-type':'application/json'},body:JSON.stringify({action:'pay_quote',quoteId:id,shopId:shop,locale:'en'})}))
+ assert.equal(response.status,200)
+ const created=f.providerCalls.find(call=>call.url.endsWith('/checkout/sessions'))
+ const body=JSON.parse(created.options.body)
+ assert.deepEqual(body.paymentMethodTypes,['card']);assert.equal(body.lineItems[0].priceData.unitAmount,34900)
+ assert.equal(f.calls.some(call=>call.name==='shop_xpay_order_create'),false)
 })
 
 test('signed webhook retrieves expanded opaque intent and sends only normalized proof to SQL', async () => {

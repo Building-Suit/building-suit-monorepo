@@ -33,7 +33,7 @@ async function setup(page: Page, locale: 'en' | 'ar', initial: 'paid' | 'pending
 for (const locale of ['en', 'ar'] as const) test(`two paid terms: clear active state, no third payment CTA, return/reload/replay ${locale}`, async ({ page }) => {
   const fixture = await setup(page, locale, 'paid')
   await fixtureGoto(page, `/billing?xpayOrder=${one}`)
-  const panel = page.getByTestId('hosted-checkout')
+  const panel = page.getByTestId('checkout-recovery')
   await expect(panel).toContainText(locale === 'en' ? 'Your subscription is active' : 'اشتراكك فعّال')
   await expect(panel.getByRole('button', { name: locale === 'en' ? 'Continue to your shop' : 'المتابعة إلى متجرك', exact: true })).toBeVisible()
   await expect(panel.getByRole('link', { name: locale === 'en' ? 'Contact us' : 'تواصل معنا', exact: true })).toHaveAttribute('href', '/contact')
@@ -51,7 +51,7 @@ test('pending return confirms automatically from a late scoped version event, wi
   const sockets: { active?: WebSocketRoute; frame?: unknown[]; filters?: Record<string, unknown>[] } = {}
   const fixture = await setup(page, 'en', 'pending', sockets)
   await fixtureGoto(page, `/billing?xpayOrder=${one}`)
-  const panel = page.getByTestId('hosted-checkout')
+  const panel = page.getByTestId('checkout-recovery')
   await expect(panel).toContainText('Confirming your payment')
   await expect(panel.getByRole('button', { name: 'Continue to X-Pay', exact: true })).toHaveCount(0)
   await expect.poll(() => !!sockets.frame).toBe(true)
@@ -69,12 +69,12 @@ test('pending return confirms automatically from a late scoped version event, wi
 test('verified expired checkout can start again; renewal after success requires a separate explicit confirmation', async ({ page }) => {
   const fixture = await setup(page, 'en', 'expired')
   await fixtureGoto(page, `/billing?xpayOrder=${one}`)
-  await expect(page.getByTestId('hosted-checkout').getByRole('button', { name: 'Continue to X-Pay', exact: true })).toBeEnabled()
+  await expect(page.getByTestId('checkout-recovery').getByRole('button', { name: 'Continue to X-Pay', exact: true })).toBeEnabled()
   fixture.paid(); await fixtureGoto(page, '/billing')
   await page.getByRole('button', { name: 'Renew this plan', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: 'Confirm', exact: true })
   await expect(dialog).toContainText('This is another payment')
   expect(fixture.calls.filter(call => call.name === 'shop-xpay-checkout' && call.args.requestId)).toHaveLength(0)
   await dialog.getByRole('button', { name: 'Cancel', exact: true }).click()
-  await expect(page.getByTestId('hosted-checkout')).toContainText('Your subscription is active')
+  await expect(page.getByTestId('checkout-recovery')).toContainText('Your subscription is active')
 })

@@ -169,16 +169,19 @@ for (const locale of ['en', 'ar']) for (const width of [360, 768, 1440]) {
     const soloCard = main.locator('article').filter({ has: page.getByRole('heading', { name: 'Solo', exact: true }) })
     const soloChoice = soloCard.getByRole('button', { name: locale === 'ar' ? 'اختيار الخطة' : 'Choose plan' })
     await expect(soloChoice).toBeEnabled()
-    await expect(soloCard.getByRole('status').getByRole('listitem')).toHaveCount(6)
+    await expect(soloCard.getByRole('status')).toHaveCount(0)
+    await soloChoice.click()
+    const restrictions = page.getByRole('dialog').locator('.bs-plan-status')
+    await expect(restrictions.getByRole('listitem')).toHaveCount(6)
     for (const label of locale === 'ar'
       ? ['فروع المتجر', 'أفراد فريقك', 'المنتجات النشطة', 'الخدمات النشطة', 'العملاء النشطون', 'الموردون النشطون']
       : ['Shop locations', 'People on your team', 'Active products', 'Active services', 'Active customers', 'Active suppliers']) {
-      await expect(soloCard.getByRole('status')).toContainText(label)
+      await expect(restrictions).toContainText(label)
     }
-    await expect(soloCard.getByRole('status')).toContainText(locale === 'ar'
+    await expect(restrictions).toContainText(locale === 'ar'
       ? 'لن يُحذف أو يُؤرشف أي شيء تلقائيًا'
       : 'Nothing is deleted or archived automatically')
-    await expect(soloCard.getByRole('status')).toContainText(locale === 'ar'
+    await expect(restrictions).toContainText(locale === 'ar'
       ? 'حتى تخفّض الاستخدام أو ترقي الخطة'
       : 'until you reduce usage or upgrade the plan')
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
@@ -196,7 +199,7 @@ for (const locale of ['en', 'ar']) for (const [slug, name, price] of [
     const checkout = page.getByTestId('hosted-checkout')
     await expect(checkout).toContainText(name)
     await expect(checkout).toContainText(new Intl.NumberFormat(locale === 'ar' ? 'ar-EG' : 'en-EG', { style: 'currency', currency: 'EGP' }).format(price))
-    await expect(checkout.getByRole('button').first()).toBeDisabled()
+    await expect(page.getByRole('dialog').locator('button[type="submit"]')).toBeDisabled()
     expect(calls.filter(call => call.name === 'submit_shop_billing_notice')).toEqual([])
   })
 }
@@ -211,7 +214,7 @@ test('owner selects exact Multi 3 annual quote for X-Pay', async ({ page }) => {
   await expect(page.getByTestId('hosted-checkout')).toContainText('Multi · 3 branches')
   await expect(page.getByTestId('hosted-checkout')).toContainText('9,783.84')
   await expect(page.getByTestId('hosted-checkout')).toContainText('Annual')
-  await expect(page.getByTestId('hosted-checkout').getByRole('button').first()).toBeDisabled()
+  await expect(page.getByRole('dialog').locator('button[type="submit"]')).toBeDisabled()
 })
 
 for (const locale of ['en', 'ar']) for (const status of ['submitted', 'under_review', 'approved', 'rejected'] as const) {
@@ -220,8 +223,51 @@ for (const locale of ['en', 'ar']) for (const status of ['submitted', 'under_rev
     await navigate(page, '/billing')
     await expect(page.getByRole('row').filter({ hasText: 'IPN-PLAN-001' })).toBeVisible()
     await expect(page.locator('#current-plan')).toContainText(locale === 'ar' ? 'فترة تجريبية' : 'Trialing')
-    await expect(page.getByTestId('hosted-checkout').getByRole('button').first()).toBeDisabled()
+    await page.locator('#payment').getByRole('button').first().click()
+    await expect(page.getByRole('dialog').locator('button[type="submit"]')).toBeDisabled()
     await expect(page.locator('input[type="file"], input[type="date"], input[type="number"]')).toHaveCount(0)
     expect(calls.filter(call => /submit_shop_billing_notice|reserve_shop_billing_payment_evidence/.test(call.name))).toEqual([])
+  })
+}
+
+for (const [locale, width, dark] of [['en', 1440, false], ['ar', 390, true]] as const) {
+  test(`Popular remains Team and active plan is disabled; restrictions move into checkout: ${locale}`, async ({ page }, testInfo) => {
+    await page.setViewportSize({ width, height: 1000 })
+    await page.addInitScript(value => localStorage.setItem('building-suit.theme', value), dark ? 'dark' : 'light')
+    const snapshot = billing(null)
+    snapshot.subscription.accessState = 'active'
+    snapshot.subscription.status = 'active'
+    const fixture = await pilotFixture(page, locale, 'owner', name => {
+      if (name === 'shop_public_plan_catalog') return catalog
+      if (name === 'shop_billing_read') return snapshot
+      if (name === 'shop-xpay-checkout') return { ready: true, mode: 'test', orders: [] }
+      return undefined
+    })
+    await navigate(page, '/')
+    await page.locator('#pricing').scrollIntoViewIfNeeded()
+    const landingCard = page.locator('[data-plan="team"]')
+    const landingWidth = await landingCard.evaluate(node => node.getBoundingClientRect().width)
+    await expect(landingCard).toHaveAttribute('data-featured', 'true')
+    await navigate(page, '/billing')
+    const plans = page.getByTestId('shop-plan-cards')
+    const team = plans.locator('[data-plan="team"]')
+    await expect(team).toHaveAttribute('data-featured', 'true')
+    await expect(team.getByRole('button')).toHaveText(locale === 'en' ? 'Selected' : 'تم الاختيار')
+    await expect(team.getByRole('button')).toBeDisabled()
+    const cardWidth = await team.evaluate(node => node.getBoundingClientRect().width)
+    expect(cardWidth).toBeLessThanOrEqual(352)
+    if (width === 1440) expect(cardWidth).toBe(landingWidth)
+    await expect(plans.locator('.bs-plan-status')).toHaveCount(0)
+    await plans.locator('[data-plan="solo"]').getByRole('button').click()
+    const dialog = page.getByRole('dialog')
+    await expect(dialog).toBeVisible()
+    await expect(dialog.locator('.bs-plan-status')).toContainText(locale === 'en' ? 'Plan change blockers' : 'عوائق تغيير الخطة')
+    await expect(dialog.locator('button[type="submit"]')).toBeDisabled()
+    await expect(team).toHaveAttribute('data-featured', 'true')
+    await page.screenshot({ path: testInfo.outputPath('checkout-restrictions.png'), animations: 'disabled' })
+    await page.keyboard.press('Escape')
+    await expect(dialog).toBeHidden()
+    await expect(plans.locator('[data-plan="solo"]').getByRole('button')).toBeFocused()
+    expect(fixture.calls.filter(call => call.name === 'shop-xpay-checkout' && call.args.requestId)).toEqual([])
   })
 }

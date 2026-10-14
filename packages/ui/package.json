@@ -104,6 +104,7 @@
     "./organisms/BsMarketingPricing": "./src/organisms/BsMarketingPricing.vue",
     "./organisms/BsNotificationMenu": "./src/organisms/BsNotificationMenu.vue",
     "./organisms/BsPageHeader": "./src/organisms/BsPageHeader.vue",
+    "./organisms/BsHostedCheckoutDialog": "./src/organisms/BsHostedCheckoutDialog.vue",
     "./organisms/BsRecordActionDialog": "./src/organisms/BsRecordActionDialog.vue",
     "./organisms/BsPlanCard": "./src/organisms/BsPlanCard.vue",
     "./organisms/BsPlanGrid": "./src/organisms/BsPlanGrid.vue",

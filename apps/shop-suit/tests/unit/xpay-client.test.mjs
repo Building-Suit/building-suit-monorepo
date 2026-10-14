@@ -25,3 +25,11 @@ test('retries persist the same request identity, scoped to owner/shop and select
   assert.match(values.get(key), /requestId/)
   assert.doesNotMatch(values.get(key), /redemptionToken|secret|customer/)
 })
+
+test('safe historical-review code survives function HTTP errors without forwarding SQL details', async () => {
+  const { checkoutFailureCode } = await import('../../app/utils/xpay-checkout.mjs')
+  const context = Response.json({ error: 'checkout_historical_review_pending', details: 'must never display' }, { status: 409 })
+  assert.equal(await checkoutFailureCode(null, { context }), 'checkout_historical_review_pending')
+  assert.equal(await checkoutFailureCode({ error: 'XPAY_HISTORICAL_REVIEW_OPEN' }, null), null)
+  assert.equal(await checkoutFailureCode(null, { context: new Response('private SQL text', { status: 500 }) }), null)
+})

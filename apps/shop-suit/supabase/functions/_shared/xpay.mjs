@@ -24,19 +24,51 @@ function secureReturnUrl(value) {
   return value
 }
 
+const resources = {
+  active_locations: ['locations', 'فروع'], active_members: ['members', 'أعضاء'], active_products: ['products', 'منتجات'],
+  active_services: ['services', 'خدمات'], active_customers: ['customers', 'عملاء'], active_suppliers: ['suppliers', 'موردون'],
+}
+const features = { appointments: ['Appointments', 'المواعيد'], reports: ['Reports', 'التقارير'] }
+function productDescription(order, locale) {
+  const q = order.quote ?? {}, ar = locale === 'ar', parts = []
+  // Only persisted commercial fields: never tokens, bindings, browser copy or arbitrary feature keys.
+  for (const [key, labels] of Object.entries(resources)) {
+    const value = q.resourceLimits?.[key]
+    if (Object.hasOwn(q.resourceLimits ?? {}, key) && (value === null || (Number.isSafeInteger(value) && value >= 0))) {
+      parts.push(`${value === null ? '∞' : value} ${labels[ar ? 1 : 0]}`)
+    }
+  }
+  for (const [key, labels] of Object.entries(features)) if (q.entitlements?.[key] === true) parts.push(labels[ar ? 1 : 0])
+  const money = minor => new Intl.NumberFormat(ar ? 'ar-EG' : 'en-EG', { style: 'currency', currency: 'EGP' }).format(minor / 100)
+  if (q.listPriceAmount != null && q.effectivePriceAmount != null) {
+    const list = egpMinorUnits(q.listPriceAmount), effective = egpMinorUnits(q.effectivePriceAmount)
+    if (list > effective) parts.push(`${ar ? 'خصم السعر' : 'Rate discount'}: ${money(list - effective)}`)
+  }
+  parts.push(`${ar ? 'المطلوب الآن' : 'Due now'}: ${money(order.amountMinor)}`)
+  return parts.join(' · ')
+}
+
 export function checkoutBody(order, { returnUrl, cancelUrl, locale = 'en' }) {
   // order MUST be a persisted server-authorized quote, never browser JSON.
   if (!order || order.currency !== 'EGP' || !Number.isSafeInteger(order.amountMinor) || order.amountMinor <= 0
     || !['en', 'ar'].includes(locale)) throw new Error('xpay_invalid_quote')
+  const interval = order.quote?.billingInterval
+  if (interval != null && !['monthly', 'annual'].includes(interval)) throw new Error('xpay_invalid_quote')
+  const cadence = interval === 'annual' ? (locale === 'ar' ? 'سنوي' : 'Yearly') : interval === 'monthly' ? (locale === 'ar' ? 'شهري' : 'Monthly') : ''
+  const variant = order.quote?.planVariant
+  const variants = { solo_1: ['1 member','عضو واحد'], solo_2: ['2 members','عضوان'], multi_2: ['2 locations','فرعان'], multi_3: ['3 locations','٣ فروع'] }
+  const variantLabel = variants[variant]?.[locale === 'ar' ? 1 : 0] ?? ''
+  const name = requiredText([requiredText(order.description), variantLabel, cadence].filter(Boolean).join(' · '))
   return {
     mode: 'payment', uiMode: 'hosted', currency: 'EGP', locale,
     expiresAfterMinutes: 30,
     afterCompletion: { type: 'redirect', redirect: { url: secureReturnUrl(returnUrl) } },
     cancelUrl: secureReturnUrl(cancelUrl),
     allowPromotionCodes: false,
+    ...(order.quote?.prorationQuoteId ? { paymentMethodTypes: ['card'] } : {}),
     lineItems: [{ priceData: { currency: 'EGP', unitAmount: order.amountMinor,
-      productData: { name: requiredText(order.description) } }, quantity: 1 }],
-    metadata: { orderId: requiredText(order.id) },
+      productData: { name, description: productDescription(order, locale) } }, quantity: 1 }],
+    metadata: { orderId: requiredText(order.id), ...(interval ? { billingInterval: interval } : {}) },
     // Freeze the exact quote: account defaults must not add customer fees/VAT.
     feeConfig: { feesPassThrough: false, vatCollectionEnabled: false },
   }
@@ -112,7 +144,7 @@ export async function retrieveSession({ sessionId, secretKey, mode, fetchImpl = 
 
 // Official API 1.0 AccountResponse: mode, activation, key permissions and actual
 // chargeable currency/method capabilities. No key/customer fields reach clients.
-export async function verifyMerchantReadiness({ secretKey, mode, merchantId, fetchImpl = fetch }) {
+export async function verifyMerchantReadiness({ secretKey, mode, merchantId, fetchImpl = fetch, requireCard = false }) {
   validKey(secretKey, mode)
   const response = await fetchImpl(`${API}/account`, { redirect: 'error', signal: AbortSignal.timeout(10000), headers: { authorization: `Bearer ${secretKey}` } })
   if (!response.ok) throw new Error('xpay_account_unavailable')
@@ -122,6 +154,7 @@ export async function verifyMerchantReadiness({ secretKey, mode, merchantId, fet
     || (mode === 'live' && account.livePaymentsEnabled !== true) || currency?.decimals !== 2 || !Array.isArray(currency.paymentMethodTypes)
     || !currency.paymentMethodTypes.some(method => ['card', 'fawry', 'valu', 'apple_pay'].includes(method))
     || !['CHECKOUT_SESSIONS_READ', 'CHECKOUT_SESSIONS_WRITE'].every(permission => account.apiKey?.permissions?.includes(permission))) throw new Error('xpay_account_not_ready')
+  if (requireCard && !currency.paymentMethodTypes.includes('card')) throw Object.assign(new Error('xpay_payment_method_unsupported'), { checkoutCode: 'checkout_payment_method_unsupported' })
   return { ready: true, mode }
 }
 

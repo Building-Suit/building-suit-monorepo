@@ -1,7 +1,7 @@
 import type { MarketingPricingPlan } from '@building-suit/contracts'
 import type { PlanResourceKey, ShopPlanInterval, ShopPlanOffer, ShopPlanVariant } from '~/types/plans'
-type PlanPresentationInput = { offers: ShopPlanOffer[]; selectedCatalogTermsId?: string; currentCatalogTermsId?: string; action?: 'signup' | 'select' }
-export function useShopPlanPresentation(props: PlanPresentationInput, onSelect?: (offer: ShopPlanOffer) => void) {
+type PlanPresentationInput = { offers: ShopPlanOffer[]; selectedCatalogTermsId?: string; currentCatalogTermsId?: string; trialCatalogTermsId?: string; action?: 'signup' | 'select' }
+export function useShopPlanPresentation(props: PlanPresentationInput, onSelect?: (offer: ShopPlanOffer, intent: 'choose' | 'preview') => void) {
   const { locale } = useI18n()
   const isArabic = computed(() => locale.value === 'ar')
   const copy = computed(() => isArabic.value ? ar : en)
@@ -26,8 +26,9 @@ export function useShopPlanPresentation(props: PlanPresentationInput, onSelect?:
   const pricingPlans = computed<MarketingPricingPlan[]>(() => cards.value.map(offer => ({
     id: offer.planSlug,
     name: familyName(offer),
-    badge: isCurrent(offer) ? copy.value.current : undefined,
-    badgeTone: isCurrent(offer) ? 'current' : undefined,
+    promoted: offer.planSlug === 'team',
+    badge: offer.planSlug === 'team' ? copy.value.popular : isCurrent(offer) ? copy.value.current : undefined,
+    badgeTone: offer.planSlug === 'team' ? 'featured' : isCurrent(offer) ? 'current' : undefined,
     selected: isSelected(offer),
     originalPrice: interval.value === 'annual' ? money(yearlyOriginal(offer), offer.currency) : undefined,
     discount: interval.value === 'annual' ? copy.value.discount(yearlyDiscount(offer)) : undefined,
@@ -58,7 +59,7 @@ export function useShopPlanPresentation(props: PlanPresentationInput, onSelect?:
     } : undefined,
     action: props.action === 'signup'
       ? { label: copy.value.startTrial, to: '/auth/signup', variant: 'primary' }
-      : { label: isSelected(offer) ? copy.value.selected : copy.value.choose, pressed: isSelected(offer), variant: isSelected(offer) ? 'default' : 'primary' },
+      : { label: isCurrent(offer) ? copy.value.selected : offer.catalogTermsId === props.trialCatalogTermsId ? copy.value.activate : copy.value.choose, disabled: isCurrent(offer), pressed: isCurrent(offer), variant: isCurrent(offer) ? 'default' : 'primary' },
   })))
 
   watch(() => props.selectedCatalogTermsId, (catalogTermsId) => {
@@ -73,7 +74,7 @@ export function useShopPlanPresentation(props: PlanPresentationInput, onSelect?:
     if (props.action !== 'select' || !selectedOffer.value) return
     const selectedFamily = selectedOffer.value.planSlug
     const matching = cards.value.find(offer => offer.planSlug === selectedFamily)
-    if (matching && matching.catalogTermsId !== selectedOffer.value.catalogTermsId) onSelect?.(matching)
+    if (matching && matching.catalogTermsId !== selectedOffer.value.catalogTermsId) onSelect?.(matching, 'preview')
   })
 
   function familyName(offer: ShopPlanOffer) {
@@ -101,7 +102,7 @@ export function useShopPlanPresentation(props: PlanPresentationInput, onSelect?:
   }
   function choose(planId: string) {
     const offer = cards.value.find(candidate => candidate.planSlug === planId)
-    if (offer && props.action === 'select') onSelect?.(offer)
+    if (offer && props.action === 'select') onSelect?.(offer, 'choose')
   }
   function chooseVariant(planId: string, value: string) {
     if (planId === 'solo' && (value === 'solo_1' || value === 'solo_2')) soloVariant.value = value
@@ -112,8 +113,8 @@ export function useShopPlanPresentation(props: PlanPresentationInput, onSelect?:
     cycle: 'Billing cycle', monthly: 'Monthly', yearly: 'Yearly', annualSaving: (percent: number) => `Save ${percent}% with yearly billing`,
     soloVariants: 'Solo member allowance', oneMember: '1 member', twoMembers: '2 members',
     variants: 'Multi branch allowance', twoBranches: '2 branches', threeBranches: '3 branches', discount: (percent: number) => `${percent}% off`, perMonth: 'per month',
-    yearlyEquivalent: (monthly: string, yearly: string) => `${monthly}/month · billed ${yearly} per year`, negotiated: 'Founder / negotiated price', publicList: 'Public list price', current: 'Current',
-    choose: 'Choose plan', selected: 'Selected', startTrial: 'Start 7-day free trial', blocked: 'Plan change blockers', blockers: 'Resolve each excess resource below before checkout.',
+    yearlyEquivalent: (monthly: string, yearly: string) => `${monthly}/month · billed ${yearly} per year`, negotiated: 'Founder / negotiated price', publicList: 'Public list price', current: 'Current', popular: 'Popular',
+    choose: 'Choose plan', activate: 'Activate this plan', selected: 'Selected', startTrial: 'Start 7-day free trial', blocked: 'Plan change blockers', blockers: 'Resolve each excess resource below before checkout.',
     preservation: 'All data stays saved. Excess active resources cannot be used for new activity until you reduce usage or upgrade the plan. Nothing is deleted or archived automatically.',
     used: 'used', limit: 'limit', over: 'over', unlimited: 'Unlimited', loading: 'Loading plans', empty: 'No plans are available.', retry: 'Retry', included: 'Included', notIncluded: 'Not included',
     resources: { active_locations: 'Shop locations', active_members: 'People on your team', active_products: 'Active products', active_services: 'Active services', active_customers: 'Active customers', active_suppliers: 'Active suppliers' },
@@ -123,8 +124,8 @@ export function useShopPlanPresentation(props: PlanPresentationInput, onSelect?:
     cycle: 'دورة الفوترة', monthly: 'شهري', yearly: 'سنوي', annualSaving: (percent: number) => `وفّر ${new Intl.NumberFormat('ar-EG').format(percent)}٪ مع الدفع السنوي`,
     soloVariants: 'عدد الأعضاء في خطة سولو', oneMember: 'عضو واحد', twoMembers: 'عضوان',
     variants: 'عدد الفروع في خطة مالتي', twoBranches: 'فرعان', threeBranches: '٣ فروع', discount: (percent: number) => `خصم ${percent}٪`, perMonth: 'شهريًا',
-    yearlyEquivalent: (monthly: string, yearly: string) => `${monthly} شهريًا · تُدفع ${yearly} سنويًا`, negotiated: 'سعر مؤسس / تفاوضي', publicList: 'السعر المعلن للجمهور', current: 'الحالية',
-    choose: 'اختيار الخطة', selected: 'تم الاختيار', startTrial: 'ابدأ تجربة مجانية ٧ أيام', blocked: 'عوائق تغيير الخطة', blockers: 'عالج كل مورد زائد موضح أدناه قبل الدفع.',
+    yearlyEquivalent: (monthly: string, yearly: string) => `${monthly} شهريًا · تُدفع ${yearly} سنويًا`, negotiated: 'سعر مؤسس / تفاوضي', publicList: 'السعر المعلن للجمهور', current: 'الحالية', popular: 'الأكثر رواجًا',
+    choose: 'اختيار الخطة', activate: 'تفعيل هذه الخطة', selected: 'تم الاختيار', startTrial: 'ابدأ تجربة مجانية ٧ أيام', blocked: 'عوائق تغيير الخطة', blockers: 'عالج كل مورد زائد موضح أدناه قبل الدفع.',
     preservation: 'تظل كل البيانات محفوظة. لا يمكن استخدام الموارد النشطة الزائدة في نشاط جديد حتى تخفّض الاستخدام أو ترقي الخطة. لن يُحذف أو يُؤرشف أي شيء تلقائيًا.',
     used: 'مستخدم', limit: 'الحد', over: 'زائد', unlimited: 'غير محدود', loading: 'جارٍ تحميل الخطط', empty: 'لا توجد خطط متاحة.', retry: 'إعادة المحاولة', included: 'مشمول', notIncluded: 'غير مشمول',
     resources: { active_locations: 'فروع المتجر', active_members: 'أفراد فريقك', active_products: 'المنتجات النشطة', active_services: 'الخدمات النشطة', active_customers: 'العملاء النشطون', active_suppliers: 'الموردون النشطون' },
