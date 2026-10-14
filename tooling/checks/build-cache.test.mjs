@@ -18,7 +18,7 @@ test('Turbo restores Nuxt server and Vercel deployment artifacts without rebuild
   await mkdir(app, { recursive: true })
   const configuration = JSON.parse(await readFile(path.join(root, 'turbo.json'), 'utf8'))
   await writeFile(path.join(workspace, 'package.json'), JSON.stringify({ name: 'cache-fixture', private: true, packageManager: 'pnpm@10.33.0' }))
-  await writeFile(path.join(workspace, '.gitignore'), '.turbo/\n.output/\n.vercel/\n')
+  await writeFile(path.join(workspace, '.gitignore'), await readFile(path.join(root, '.gitignore')))
   await writeFile(path.join(workspace, 'pnpm-workspace.yaml'), "packages:\n  - 'apps/*'\n")
   await writeFile(path.join(workspace, 'pnpm-lock.yaml'), "lockfileVersion: '9.0'\nimporters:\n  .: {}\n  apps/fixture: {}\n")
   await writeFile(path.join(workspace, 'turbo.json'), JSON.stringify({ tasks: { build: { outputs: configuration.tasks.build.outputs } } }))
