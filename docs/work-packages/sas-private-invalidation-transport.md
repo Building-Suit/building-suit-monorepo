@@ -16,6 +16,8 @@ A Shop-originated change made outside that bridge (including a provider webhook)
 
 ## Hosted setup requiring action-specific approval
 
+Verified staging target: project `lwecnmsosfwovlzxauml`, organization `zqrauabsauonyyozqdlh`, served by `stg.super-admin.building-suit.com`. On 2026-10-14 the deployed public configuration identifies this ref, provider management metadata identifies the organization, and a read-only schema check confirms SAS tables, existing managed messages RLS, no Realtime policies and no invalidation outbox. This verification does not authorize applying the migration. Production identifiers remain unverified.
+
 1. Review and approve this child plus #294 and their combined CI. Confirm the intended SAS project/ref/organization against the maintained environment map and provider settings; never infer it from display names.
 2. Review existing `realtime.messages` policies/grants and managed Realtime configuration. Approve/apply the forward migration through the existing environment-bound GitHub deployer; do not install a competing migration deployer. The migration adds the outbox, guarded RPCs, source triggers and namespace policies only. It does not modify managed schemas, global RLS, Auth data or credentials.
 3. Separately approve disabling Realtime **Allow public access** in this SAS project if it is currently enabled. The client always requests a private channel. Do not enable target-project subscriptions or Automatic branching.
