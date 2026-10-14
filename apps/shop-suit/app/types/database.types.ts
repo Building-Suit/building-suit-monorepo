@@ -861,6 +861,327 @@ export type Database = {
           },
         ]
       }
+      commission_events: {
+        Row: {
+          actor_profile_id: string | null
+          amount: number
+          created_at: string
+          cumulative_fraction: number
+          event_key: string
+          id: string
+          kind: string
+          reason: string
+          snapshot_id: string
+        }
+        Insert: {
+          actor_profile_id?: string | null
+          amount: number
+          created_at?: string
+          cumulative_fraction?: number
+          event_key: string
+          id?: string
+          kind: string
+          reason: string
+          snapshot_id: string
+        }
+        Update: {
+          actor_profile_id?: string | null
+          amount?: number
+          created_at?: string
+          cumulative_fraction?: number
+          event_key?: string
+          id?: string
+          kind?: string
+          reason?: string
+          snapshot_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_events_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_events_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "commission_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commission_line_assignments: {
+        Row: {
+          actor_profile_id: string
+          appointment_id: string | null
+          created_at: string
+          line_id: string
+          membership_id: string
+          shop_id: string
+        }
+        Insert: {
+          actor_profile_id: string
+          appointment_id?: string | null
+          created_at?: string
+          line_id: string
+          membership_id: string
+          shop_id: string
+        }
+        Update: {
+          actor_profile_id?: string
+          appointment_id?: string | null
+          created_at?: string
+          line_id?: string
+          membership_id?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_line_assignments_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_line_assignments_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: true
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_line_assignments_appointment_id_shop_id_fkey"
+            columns: ["appointment_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "commission_line_assignments_line_id_fkey"
+            columns: ["line_id"]
+            isOneToOne: true
+            referencedRelation: "invoice_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_line_assignments_line_id_shop_id_fkey"
+            columns: ["line_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_items"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "commission_line_assignments_membership_id_shop_id_fkey"
+            columns: ["membership_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "shop_memberships"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "commission_line_assignments_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commission_policy_versions: {
+        Row: {
+          actor_profile_id: string
+          created_at: string
+          id: string
+          policy: Json
+          reason: string
+          request_id: string
+          shop_id: string
+        }
+        Insert: {
+          actor_profile_id: string
+          created_at?: string
+          id?: string
+          policy: Json
+          reason: string
+          request_id: string
+          shop_id: string
+        }
+        Update: {
+          actor_profile_id?: string
+          created_at?: string
+          id?: string
+          policy?: Json
+          reason?: string
+          request_id?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_policy_versions_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_policy_versions_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commission_snapshots: {
+        Row: {
+          appointment_id: string | null
+          created_at: string
+          currency: string
+          employee_name: string | null
+          employee_profile_id: string
+          id: string
+          invoice_id: string
+          item_type: string
+          line_id: string
+          membership_id: string
+          net_line_amount: number
+          original_commission: number
+          policy_version: string
+          policy_version_id: string
+          quantity: number
+          rate: number
+          rate_type: string
+          shop_id: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          created_at?: string
+          currency: string
+          employee_name?: string | null
+          employee_profile_id: string
+          id?: string
+          invoice_id: string
+          item_type: string
+          line_id: string
+          membership_id: string
+          net_line_amount: number
+          original_commission: number
+          policy_version?: string
+          policy_version_id: string
+          quantity: number
+          rate: number
+          rate_type: string
+          shop_id: string
+        }
+        Update: {
+          appointment_id?: string | null
+          created_at?: string
+          currency?: string
+          employee_name?: string | null
+          employee_profile_id?: string
+          id?: string
+          invoice_id?: string
+          item_type?: string
+          line_id?: string
+          membership_id?: string
+          net_line_amount?: number
+          original_commission?: number
+          policy_version?: string
+          policy_version_id?: string
+          quantity?: number
+          rate?: number
+          rate_type?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_snapshots_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_snapshots_appointment_id_shop_id_fkey"
+            columns: ["appointment_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "commission_snapshots_employee_profile_id_fkey"
+            columns: ["employee_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_snapshots_invoice_id_shop_id_fkey"
+            columns: ["invoice_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_balances"
+            referencedColumns: ["invoice_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "commission_snapshots_invoice_id_shop_id_fkey"
+            columns: ["invoice_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_gross_margin"
+            referencedColumns: ["invoice_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "commission_snapshots_invoice_id_shop_id_fkey"
+            columns: ["invoice_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "commission_snapshots_line_id_fkey"
+            columns: ["line_id"]
+            isOneToOne: true
+            referencedRelation: "invoice_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_snapshots_line_id_shop_id_invoice_id_fkey"
+            columns: ["line_id", "shop_id", "invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_items"
+            referencedColumns: ["id", "shop_id", "invoice_id"]
+          },
+          {
+            foreignKeyName: "commission_snapshots_membership_id_shop_id_fkey"
+            columns: ["membership_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "shop_memberships"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "commission_snapshots_policy_version_id_fkey"
+            columns: ["policy_version_id"]
+            isOneToOne: false
+            referencedRelation: "commission_policy_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_snapshots_policy_version_id_shop_id_fkey"
+            columns: ["policy_version_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "commission_policy_versions"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "commission_snapshots_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_payment_adjustments: {
         Row: {
           adjustment_group_id: string
@@ -7924,6 +8245,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      assign_sale_commission: {
+        Args: {
+          p_appointment_id?: string
+          p_line_id: string
+          p_membership_id: string
+          p_shop_id: string
+        }
+        Returns: undefined
+      }
       barcode_label_data: {
         Args: {
           p_category_id?: string
@@ -8015,6 +8345,14 @@ export type Database = {
           p_shop_id: string
         }
         Returns: string
+      }
+      commission_assignment_context: {
+        Args: { p_invoice_id: string; p_shop_id: string }
+        Returns: Json
+      }
+      commission_history: {
+        Args: { p_invoice_id?: string; p_offset?: number; p_shop_id: string }
+        Returns: Json
       }
       correct_location_sale: {
         Args: {
@@ -8525,6 +8863,27 @@ export type Database = {
         Returns: Json
       }
       receipt_settings: { Args: { p_shop_id: string }; Returns: Json }
+      reconcile_offline_cash_command: {
+        Args: {
+          p_args: Json
+          p_kind: string
+          p_reason: string
+          p_resolution_request_id: string
+          p_shop_id: string
+        }
+        Returns: Json
+      }
+      reconcile_offline_pos_sale: {
+        Args: {
+          p_location_id: string
+          p_original_args: Json
+          p_reason: string
+          p_request_id: string
+          p_resolution_request_id: string
+          p_shop_id: string
+        }
+        Returns: Json
+      }
       record_cash_movement: {
         Args: {
           p_amount: number
@@ -8536,6 +8895,17 @@ export type Database = {
           p_shop_id: string
         }
         Returns: string
+      }
+      record_commission_adjustment: {
+        Args: {
+          p_amount: number
+          p_kind: string
+          p_reason: string
+          p_request_id: string
+          p_shop_id: string
+          p_snapshot_id: string
+        }
+        Returns: undefined
       }
       record_customer_receipt: {
         Args: {
@@ -8661,6 +9031,32 @@ export type Database = {
         }
         Returns: string
       }
+      replay_offline_cash_command: {
+        Args: { p_args: Json; p_kind: string; p_shop_id: string }
+        Returns: string
+      }
+      replay_offline_pos_sale: {
+        Args: {
+          p_amount: number
+          p_appointment_id: string
+          p_appointment_request_id: string
+          p_customer_id: string
+          p_issue_request_id: string
+          p_lines: Json
+          p_location_id: string
+          p_method: Database["public"]["Enums"]["payment_method"]
+          p_notes: string
+          p_paid_at: string
+          p_payment_request_id: string
+          p_reference: string
+          p_request_id: string
+          p_save_request_id: string
+          p_shift_id: string
+          p_shop_id: string
+          p_staff_membership_id: string
+        }
+        Returns: string
+      }
       reserve_shop_billing_payment_evidence: {
         Args: {
           p_mime_type: string
@@ -8747,6 +9143,15 @@ export type Database = {
       }
       save_catalog_category: {
         Args: { p_category_id: string; p_name: string; p_shop_id: string }
+        Returns: string
+      }
+      save_commission_policy: {
+        Args: {
+          p_policy: Json
+          p_reason: string
+          p_request_id: string
+          p_shop_id: string
+        }
         Returns: string
       }
       save_customer: {

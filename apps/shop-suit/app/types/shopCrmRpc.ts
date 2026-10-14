@@ -4,6 +4,11 @@ export type ShopRpcDatabase = {
     Tables: Record<string, never>
     Views: Record<string, never>
     Functions: {
+      save_commission_policy: { Args: { p_request_id: string; p_shop_id: string; p_policy: import('./commission').CommissionPolicy; p_reason: string }; Returns: string }
+      commission_history: { Args: { p_shop_id: string; p_invoice_id?: string | null; p_offset?: number }; Returns: unknown }
+      assign_sale_commission: { Args: { p_shop_id: string; p_line_id: string; p_membership_id: string | null; p_appointment_id?: string | null }; Returns: undefined }
+      commission_assignment_context: { Args: { p_shop_id: string; p_invoice_id: string }; Returns: unknown }
+      record_commission_adjustment: { Args: { p_shop_id: string; p_snapshot_id: string; p_request_id: string; p_kind: 'correction' | 'exported'; p_amount: number; p_reason: string }; Returns: undefined }
       shop_billing_change_preview: { Args:{p_shop_id:string;p_catalog_terms_id:string|null;p_private_offer?:Record<string,string|number>|null};Returns:unknown }
       shop_billing_change_schedule: { Args:{p_request_id:string;p_shop_id:string;p_catalog_terms_id:string|null;p_private_offer?:Record<string,string|number>|null};Returns:unknown }
       shop_billing_change_read: { Args:{p_shop_id:string};Returns:unknown }

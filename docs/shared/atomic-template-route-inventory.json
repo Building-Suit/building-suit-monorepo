@@ -68,7 +68,8 @@
     "BsAccountActivationPage": "packages/ui/src/templates/BsAccountActivationPage.vue",
     "BsAccountProvisioningPage": "packages/ui/src/templates/BsAccountProvisioningPage.vue",
     "BsOwnerInvitationPage": "packages/ui/src/templates/BsOwnerInvitationPage.vue",
-    "BsOfflineCounterStatus": "packages/ui/src/templates/BsOfflineCounterStatus.vue"
+    "BsOfflineCounterStatus": "packages/ui/src/templates/BsOfflineCounterStatus.vue",
+    "BsCommissionPolicyPage": "packages/ui/src/templates/BsCommissionPolicyPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -2470,6 +2471,25 @@
       "dependencies": [],
       "verification": "super-admin-account-provisioning.md: focused browser and authorization gates",
       "purpose": "provisioned-owner-claim"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/commissions.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsCommissionPolicyPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsCommissionPolicyPage"
+      ],
+      "destination": "packages/ui/src/templates/BsCommissionPolicyPage.vue",
+      "status": "implemented",
+      "domainAdapter": "apps/shop-suit/app/pages/commissions.vue",
+      "dependencies": [
+        "@building-suit/ui/types/commissionPresentation",
+        "~/types/commission",
+        "~/types/shopCrmRpc"
+      ],
+      "purpose": "commission-policy-and-history"
     }
   ],
   "verifiedSharedHeads": [
@@ -2585,6 +2605,7 @@
     "BsFinancialAccountsPage",
     "BsAccountActivationPage",
     "BsAccountProvisioningPage",
-    "BsOwnerInvitationPage"
+    "BsOwnerInvitationPage",
+    "BsCommissionPolicyPage"
   ]
 }
