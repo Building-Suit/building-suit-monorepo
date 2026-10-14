@@ -103,6 +103,48 @@ begin
  insert into policy_quote_contracts values(public.shop_xpay_proration_read(shop,(q->>'quoteId')::uuid));
 end $$;
 
+-- Expired owners resolve excess quotas through existing suspend/archive commands.
+do $$declare shop uuid;other_shop uuid;owner_id uuid;staff_id uuid;staff_profile uuid;membership uuid;branch uuid;high uuid;low uuid;v_order uuid;s public.subscriptions;r jsonb;q jsonb;
+begin
+ insert into public.plans(portal_id,name,slug,price_amount,currency,billing_interval,trial_days,features,resource_limits,is_active,is_public,is_purchasable,is_coming_soon)
+ select id,'Quota source','journey-quota-source',699,'EGP','monthly',7,'{}','{"active_locations":2,"active_members":8,"active_products":250,"active_services":50,"active_customers":500,"active_suppliers":50}',true,true,true,false from public.portals where key='shop-crm';
+ perform shop_private.reconcile_plan_catalog();
+ select catalog_terms_id into high from public.shop_public_plan_catalog() where slug='journey-quota-source' limit 1;
+ select catalog_terms_id into low from public.shop_public_plan_catalog() where slug='journey-month-low' limit 1;
+ shop:=pg_temp.journey_owner();owner_id:=auth.uid();
+ update shop_private.proration_configuration set enabled=false where singleton;
+ v_order:=(public.shop_xpay_order_create(gen_random_uuid(),shop,high)->>'id')::uuid;perform pg_temp.journey_paid(v_order);
+ update shop_private.proration_configuration set enabled=true where singleton;
+ branch:=public.save_shop_location(shop,null,'Extra retained branch');
+ other_shop:=pg_temp.journey_owner();staff_id:=auth.uid();
+ select id into staff_profile from public.profiles where user_id=staff_id and portal_id=(select id from public.portals where key='shop-crm');
+ perform set_config('request.jwt.claim.sub',owner_id::text,true);
+ -- Synthetic member setup; all quota-resolution writes below use public RPCs.
+ insert into public.shop_memberships(shop_id,profile_id,role) values(shop,staff_profile,'employee') returning id into membership;
+ r:=public.shop_billing_change_schedule(gen_random_uuid(),shop,low);
+ if jsonb_array_length(r->'blockers')<>2 then raise exception 'Excess team/branches not reported before due';end if;
+ select subscription.* into s from public.subscriptions subscription join public.shop_memberships m on m.profile_id=subscription.profile_id where m.shop_id=shop and m.role='owner';
+ perform set_config('shop.billing_approval','approved',true);
+ update public.subscriptions set current_period_start=clock_timestamp()-interval '2 months',current_period_end=clock_timestamp()-interval '1 month',updated_at=clock_timestamp() where id=s.id;
+ -- Preserve the cancelled intent; seed a separate past-due intent only in
+ -- this disposable fixture, without rewriting its immutable schedule date.
+ perform public.shop_billing_change_cancel(shop,(r->>'id')::uuid);
+ select * into s from public.subscriptions where id=s.id;
+ insert into public.shop_scheduled_plan_changes(request_id,shop_id,subscription_id,actor_user_id,catalog_terms_id,target,subscription_before,effective_at)
+ values(gen_random_uuid(),shop,s.id,owner_id,low,shop_private.billing_public_target(s,low),to_jsonb(s),s.current_period_end);
+ r:=public.shop_billing_change_read(shop);
+ if (r->>'canPayNow')::boolean then raise exception 'Over-quota expired owner allowed payment';end if;
+ begin perform public.shop_xpay_proration_quote(gen_random_uuid(),shop,low);raise exception 'Over-quota quote accepted';exception when check_violation then if sqlerrm<>'PLAN_CHANGE_BLOCKED' then raise;end if;end;
+ perform public.manage_shop_member(gen_random_uuid(),shop,membership,'suspend');
+ perform public.archive_shop_location(shop,branch);
+ if not exists(select 1 from public.shop_memberships where id=membership and status='suspended' and removed_at is null)
+ or not exists(select 1 from public.shop_locations where id=branch and status='archived') then raise exception 'Quota resolution deleted records or failed after expiry';end if;
+ r:=public.shop_billing_change_read(shop);
+ if not (r->>'canPayNow')::boolean or jsonb_array_length(r->'blockers')<>0 then raise exception 'Suspended/archived resources still block next term';end if;
+ q:=public.shop_xpay_proration_quote(gen_random_uuid(),shop,low);
+ if q#>>'{calculation,mode}'<>'full_term' then raise exception 'Resolved expired owner missing manual next-term quote';end if;
+end $$;
+
 -- Private deferred intent validates recipient/version/token and future validity.
 do $$declare f journey_bridge;shop uuid;terms uuid;owner_id uuid;entry jsonb;payload jsonb;issued jsonb;scheduled jsonb;v_order uuid;offer uuid;duration interval;
 begin

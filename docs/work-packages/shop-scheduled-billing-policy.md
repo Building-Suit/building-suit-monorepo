@@ -76,3 +76,10 @@ account/provisioning SQL regression gate. Both stack branches now preserve stagi
 native fixtures cover a second same-interval upgrade funded exclusively by the
 existing allocation, gapped/custom segment rejection, private offer expiry before
 due, invalid version/bearer, token-free scheduling and revoked intent cancellation.
+
+Native payment validation passed the expanded second-upgrade/private negative
+fixtures at dfb96b51c3adc9b3b82b2b2af7c9c4a089336c72. The next fixture exercises
+an expired owner with excess team/branch usage: payment quote denied; existing
+public suspend/archive commands preserve records, clear blockers and permit a
+manual next-term quote. Synthetic source aging/intent seeding occurs only inside
+the rolled-back disposable fixture, never through deployed product APIs.
