@@ -3,7 +3,7 @@ import type { BsBillingCopy, BsBillingView, BsBillingForm, BsManualPaymentView, 
 withDefaults(defineProps<{ variant?: 'default' | 'shop'; copy: BsBillingCopy; view: BsBillingView; manual?: BsManualPaymentView; impact?: BsPlanImpactView; showHeader?: boolean }>(), { variant: 'default', showHeader: true, manual: undefined, impact: undefined })
 const form = defineModel<BsBillingForm>('form', { required: true })
 const evidenceFile = defineModel<File | null>('evidenceFile', { default: null })
-const emit = defineEmits<{ checkout: []; checkoutRefresh: []; retry: []; usageRetry: []; pricingRetry: []; interval: [value: string]; variant: [id: string, value: string]; plan: [id: string]; manualPlan: [id: string]; privatePreview: []; privateClear: []; transferOpen: []; transferClose: []; transferSubmit: []; evidenceSelect: [event: Event]; evidenceUpload: []; requests: []; manualClose: []; manualRefresh: []; manualSelect: [id: string]; manualFile: [event: Event]; manualSubmit: []; manualCancel: []; manualDownload: [id: string]; openSubscription: []; impactClose: [] }>()
+const emit = defineEmits<{ checkout: []; checkoutRefresh: []; checkoutContinue: []; checkoutRenew: []; retry: []; usageRetry: []; pricingRetry: []; interval: [value: string]; variant: [id: string, value: string]; plan: [id: string]; manualPlan: [id: string]; privatePreview: []; privateClear: []; transferOpen: []; transferClose: []; transferSubmit: []; evidenceSelect: [event: Event]; evidenceUpload: []; requests: []; manualClose: []; manualRefresh: []; manualSelect: [id: string]; manualFile: [event: Event]; manualSubmit: []; manualCancel: []; manualDownload: [id: string]; openSubscription: []; impactClose: [] }>()
 function field(key: keyof BsBillingForm, value: string | number | null | undefined) { form.value = { ...form.value, [key]: key === 'paidAmount' ? Number(value) : String(value ?? '') } }
 </script>
 <template>
@@ -40,8 +40,12 @@ function field(key: keyof BsBillingForm, value: string | number | null | undefin
         <BsText v-if="view.checkout.disabled && view.checkout.unavailable" role="status" tone="muted">{{ view.checkout.unavailable }}</BsText>
         <BsText v-if="view.checkout.error" role="alert" tone="danger">{{ view.checkout.error }}</BsText>
         <BsText v-if="view.checkout.statusMessage" data-testid="checkout-state" role="status">{{ view.checkout.statusMessage }}</BsText>
-        <BsButton :disabled="view.checkout.disabled" :pending="view.checkout.pending" @click="emit('checkout')">{{ view.checkout.action }}</BsButton>
-        <BsButton v-if="view.checkout.refreshLabel" variant="text" :disabled="view.checkout.refreshDisabled" @click="emit('checkoutRefresh')">{{ view.checkout.refreshLabel }}</BsButton>
+        <BsInline gap="sm">
+        <BsButton v-if="view.checkout.actionVisible !== false" :disabled="view.checkout.disabled" :pending="view.checkout.pending" @click="emit('checkout')">{{ view.checkout.action }}</BsButton>
+        <BsButton v-if="view.checkout.continueLabel" variant="primary" @click="emit('checkoutContinue')">{{ view.checkout.continueLabel }}</BsButton>
+        <BsLink v-if="view.checkout.helpLabel && view.checkout.helpTo" :to="view.checkout.helpTo">{{ view.checkout.helpLabel }}</BsLink>
+        <BsButton v-if="view.checkout.renewLabel" variant="text" :disabled="view.checkout.pending" @click="emit('checkoutRenew')">{{ view.checkout.renewLabel }}</BsButton>
+        </BsInline>
         <BsText size="sm" tone="muted">{{ copy.policyPrefix }} <BsLink to="/terms">{{ copy.terms }}</BsLink> · <BsLink to="/privacy">{{ copy.privacy }}</BsLink> · <BsLink to="/refund-cancellation">{{ copy.refund }}</BsLink>.</BsText>
       </BsContentSection>
       <BsContentSection v-if="view.latest" :title="view.latest.title" class="bs-billing-payment__status" aria-live="polite"><BsInline><BsStatusBadge :status="view.latest.status"/><BsText emphasis="semibold">{{ view.latest.statusLabel }}</BsText><BsText tone="muted">{{ view.latest.summary }}</BsText></BsInline><BsText>{{ view.latest.message }}</BsText><BsText v-if="view.latest.reason" tone="muted">{{ copy.reviewReason }}: {{ view.latest.reason }}</BsText></BsContentSection>
