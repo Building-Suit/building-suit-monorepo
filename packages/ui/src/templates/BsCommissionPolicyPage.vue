@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { BsCommissionForm, BsCommissionCopy, BsCommissionRow, BsCommissionAssignment } from '../types/commissionPresentation'
 import type { BsDataTableColumn } from '@building-suit/ux'
-const props = defineProps<{ copy: BsCommissionCopy; loading: boolean; error: boolean; pending: boolean; dirty: boolean; first: number; totalRecords: number; actionError: boolean; saved: boolean; records: BsCommissionRow[]; assignments: BsCommissionAssignment[] }>()
+const props = defineProps<{ copy: BsCommissionCopy; available: boolean; loading: boolean; error: boolean; pending: boolean; dirty: boolean; first: number; totalRecords: number; actionError: boolean; saved: boolean; records: BsCommissionRow[]; assignments: BsCommissionAssignment[] }>()
 const editor = defineModel<boolean>('editor', { required: true })
 const form = defineModel<BsCommissionForm>('form', { required: true })
 const emit = defineEmits<{ save: []; retry: []; page: [offset: number]; assign: [lineId: string, membershipId: string | null, appointmentId: string | null] }>()
@@ -17,15 +17,15 @@ const selected = reactive<Record<string, { member: string | number | null; appoi
 function selection(line: BsCommissionAssignment) { return selected[line.id] ??= { member: line.membershipId, appointment: line.appointmentId } }
 function assign(line: BsCommissionAssignment) {
  const value = selection(line)
- const appointment = line.appointments.find(item => item.id === value.appointment)
- emit('assign', line.id, line.itemType === 'service' ? appointment?.membershipId ?? null : value.member ? String(value.member) : null, line.itemType === 'service' && value.appointment ? String(value.appointment) : null)
+ emit('assign', line.id, value.member ? String(value.member) : null, value.appointment ? String(value.appointment) : null)
 }
 </script>
 <template>
  <BsStack gap="lg">
-  <BsPageHeader :title="copy.title" :subtitle="copy.help"><template #actions><BsButton v-if="!loading && !error" @click="editor = true">{{ copy.edit }}</BsButton></template></BsPageHeader>
+  <BsPageHeader :title="copy.title" :subtitle="copy.help"><template #actions><BsButton v-if="available && !loading && !error" @click="editor = true">{{ copy.edit }}</BsButton></template></BsPageHeader>
   <BsText v-if="loading" role="status">{{ copy.loading }}</BsText>
   <BsBox v-else-if="error" role="alert"><BsText>{{ copy.error }}</BsText><BsButton @click="emit('retry')">{{ copy.retry }}</BsButton></BsBox>
+  <BsText v-else-if="!available" role="status">{{ copy.noContext }}</BsText>
   <template v-else>
    <BsRecordActionDialog v-model:visible="editor" :title="copy.title" :dirty="dirty" :pending="pending" :error="actionError ? copy.error : undefined" :submit-label="copy.save" @submit="emit('save')">
     <BsCheckbox v-model="form.enabled" :label="copy.enabled" />

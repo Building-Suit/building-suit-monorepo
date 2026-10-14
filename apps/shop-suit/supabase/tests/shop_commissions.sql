@@ -38,6 +38,7 @@ begin
   perform set_config('request.jwt.claim.sub',(select other_owner from commission_fixture)::text,true);
   other_shop:=public.create_owner_shop('Other commission tenant','mixed'::public.business_mode);
   select id into other_member from public.shop_memberships where shop_id=other_shop and role='owner';
+  perform set_config('commission_test.other_shop',other_shop::text,true);
   perform set_config('request.jwt.claim.sub',(select owner from commission_fixture)::text,true);
   begin
    perform public.save_commission_policy(gen_random_uuid(),shop,jsonb_set(policy,'{employees,0,membershipId}',to_jsonb(other_member::text)),'Cross tenant employee');
@@ -158,6 +159,23 @@ begin
  begin perform public.commission_history(shop); raise exception 'Cross tenant history accepted'; exception when insufficient_privilege then null; end;
  begin perform public.save_commission_policy(gen_random_uuid(),shop,'{}','Unauthorized change'); raise exception 'Cross tenant config accepted'; exception when insufficient_privilege then null; end;
  begin perform public.record_commission_adjustment(shop,current_setting('commission_test.fixed_snapshot')::uuid,gen_random_uuid(),'correction',1,'Unauthorized correction'); raise exception 'Cross tenant correction accepted'; exception when insufficient_privilege then null; end;
+end; $$;
+reset role;
+do $$
+declare member uuid; manager uuid; shop uuid:=current_setting('commission_test.shop')::uuid;
+begin
+ select m.id into member from public.shop_memberships m join public.profiles p on p.id=m.profile_id join commission_fixture f on p.user_id=f.outsider where m.shop_id=shop;
+ select id into manager from public.roles where shop_id=shop and key='manager' and is_system;
+ delete from public.membership_roles where membership_id=member;
+ insert into public.membership_roles(membership_id,role_id) values(member,manager);
+end; $$;
+set local role authenticated;
+do $$
+declare shop uuid:=current_setting('commission_test.shop')::uuid;
+begin
+ perform public.save_commission_policy(gen_random_uuid(),shop,'{"enabled":false,"currency":"EGP","employees":[]}','Authorized manager opted out');
+ perform public.commission_history(shop);
+ begin perform public.commission_history(current_setting('commission_test.other_shop')::uuid); raise exception 'Manager read another tenant'; exception when insufficient_privilege then null; end;
 end; $$;
 reset role;
 \echo commission-regressions-passed
