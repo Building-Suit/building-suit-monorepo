@@ -1,0 +1,17 @@
+# Shop SET-001 business currency
+
+Status: implemented; native database and concurrent first-document validation pending in disposable GitHub CI.
+
+Branch `codex/shop-suit/set001-business-currency`, child of #309, after #308. Parent fixes are incorporated through a normal merge. Currency work was preserved through the routing pause at checkpoints9e3d273 and08c5661; the parent authorized resumption after confirming inspected CI runs on GitHub-hosted runners without home targets. No personal infrastructure is used.
+
+New businesses default to EGP. Supported configurable codes are EGP, USD, EUR, GBP, SAR and AED, compatible with the existing two-decimal financial contract. Other currency precisions are not newly enabled; historical receipts continue rendering their own recorded currency and precision. No FX operation or amount rewrite is performed. Legacy business monetary presentation retains its EGP basis; explicit invoice currencies and issued snapshots stay untouched. Subscription billing remains independently denominated in EGP.
+
+An authorized settings.manage command changes currency only before financial history. It takes the shop row lock, rechecks authority after waiting, returns idempotently for the same code and audits actual changes. Finalization hooks take that same lock for sales, supplier documents, completed/void payments, expenses, opening stock and cashier sessions. A permanent actor-independent history marker prevents later relabeling or unlock, including privileged direct updates. Draft currency refreshes at issuance; no bulk draft update introduces an inverse lock order. Existing monetary records receive compatible default currency metadata only.
+
+Shared UI exposes the selector, confirmation, permission/locked states, retry and success/error feedback. Shop refreshes currency/caches without unmounting the authenticated settings context. Business presentation reads the active code; finalized sale details/list rows and receipts retain their own document code. Stored amounts and catalog prices stay numerically unchanged.
+
+Validation before publication:315 Shop unit tests, Shop typecheck/lint/build, strict workspace boundaries, five currency browser cases (EN desktop, AR mobile, locked, unauthorized staff and concurrent-finalization denial) and the unchanged19 presentation/legacy receipt cases. Lint retains two prior unrelated warnings. A combined browser result is recorded in the PR.
+
+Native rollback coverage validates default/configuration, unsupported precision, idempotent audit, draft-to-issued currency, unchanged amounts/snapshots, permanent locks, outsider/staff denial and first expense/cash/stock/purchase/customer-credit boundaries. A fixed-local-target concurrency runner tests currency-first, issuance-first and simultaneous transactions against real Postgres; fixtures remain only in the disposable CI database for diagnosis. The existing GitHub-hosted account verifier runs both and emits actual generated schema contracts with digests. Local native execution remains blocked by Docker vfs layer registration exhausting its storage; no Docker pruning or destructive cleanup occurred.
+
+No staging merge, main/production write, hosted SQL, tax/ETA feature, billing/offline work, UI PRO redesign, Arch, n8n or home-service probe is included. Hosted migrations remain GitHub CI only after an authorized merge. Full non-tax SET-001 is not marked verified until the native currency/concurrency checks and regenerated schema contract pass.
