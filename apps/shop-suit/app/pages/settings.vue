@@ -33,7 +33,7 @@ const receiptPending = ref(false)
 const receiptError = ref('')
 const receiptSuccess = ref('')
 const isArabic = computed(() => locale.value === 'ar')
-const { data: permissionAccess } = useAsyncData('shop-data:settings-permissions', async () => {
+const { data: permissionAccess, pending: permissionPending, error: permissionError, refresh: refreshPermissions } = useAsyncData('shop-data:settings-permissions', async () => {
   if (!currentId.value) return { 'settings.manage': false }
   const { data, error } = await shopRpc.rpc('shop_permission_access', {
     p_shop_id: currentId.value, p_permission_keys: ['settings.manage'],
@@ -41,7 +41,8 @@ const { data: permissionAccess } = useAsyncData('shop-data:settings-permissions'
   if (error) throw error
   return data
 }, { watch: [currentId], default: () => ({ 'settings.manage': false }) })
-const canManage = computed(() => permissionAccess.value?.['settings.manage'] === true)
+const canManage = computed(() => !permissionPending.value && !permissionError.value && permissionAccess.value?.['settings.manage'] === true)
+async function retrySettings() { await Promise.all([reload(), refreshPermissions()]) }
 const { data: locationUsage, refresh: refreshLocationUsage } = useAsyncData(
   () => `shop-data:settings-location-usage:${currentId.value ?? 'none'}`,
   async (): Promise<PlanUsageResource | null> => {
@@ -354,7 +355,8 @@ const settingsCopy = computed<BsBusinessSettingsCopy>(() => ({ ...copy.value,
   editProfile: isArabic.value ? 'تعديل ملف المتجر' : 'Edit shop profile',
   editMode: isArabic.value ? 'تغيير طريقة التشغيل' : 'Change business mode',
   editReceipt: isArabic.value ? 'تعديل إعدادات الإيصال' : 'Edit receipt settings',
-  loading: ui('loading'), retry: ui('retry'), empty: ui('empty'),
+  loading: ui('loading'), retry: ui('retry'), empty: isArabic.value ? 'افتح لوحة التحكم لاختيار متجر أو إعداد متجرك.' : 'Open Dashboard to choose or set up your Shop.',
+  failed: isArabic.value ? 'مقدرناش نحمّل إعدادات النشاط. حاول تاني.' : 'Could not load business settings. Try again.',
   cashTitle: isArabic.value ? 'سياسة ورديات الخزنة' : 'Cashier shift policy',
   cashHelp: isArabic.value ? 'عند التفعيل، إصدار المبيعات والدفع يتطلبان وردية مفتوحة للخزنة الرئيسية في الفرع المحدد، حتى للدفع غير النقدي. حفظ المسودات يظل متاحًا. التغييرات مسجلة في سجل المراجعة.' : 'When enabled, issuing sales and taking payment require an open main cashier shift at the selected location, including non-cash payments. Draft saving remains available. Changes are audited.',
   cashRequired: isArabic.value ? 'اشتراط وردية خزنة مفتوحة للمبيعات' : 'Require an open cashier shift for sales',
@@ -377,5 +379,5 @@ const modeLabel = computed(() => modeOptions.value.find(mode => mode.value === c
 function editLocationById(id: string) { const location = locations.value.find(location => location.id === id); if (location) editLocation(location) }
 </script>
 <template>
-  <BsBusinessSettingsPage v-model:profile-form="profileModel" v-model:location-form="locationModel" v-model:receipt-form="receiptModel" v-model:mode="modeModel" v-model:cash-required="cashRequired" v-model:profile-open="profileActionOpen" v-model:mode-open="modeActionOpen" v-model:receipt-open="receiptActionOpen" v-model:location-open="locationDialogOpen" :context="current ? { name: current.name } : null" :loading="loading" :shop-error="Boolean(shopError)" :can-manage="canManage" :copy="settingsCopy" :cash="cashView" :profile-editor="profileEditor" :mode-editor="modeEditor" :receipt-editor="receiptEditor" :receipt-summary="receiptSummary" :locations-view="locationsView" :mode-options="modeOptions" :mode-label="modeLabel" @edit-profile="profileAction.edit()" @edit-mode="modeAction.edit()" @edit-receipt="receiptAction.edit()" @retry="reload()" @retry-cash="refreshCashPolicy()" @retry-receipt="refreshReceiptSettings()" @save-cash="saveCashPolicy" @save-profile="saveProfile" @save-mode="saveMode" @save-location="saveLocation" @save-receipt="saveReceiptSettings" @create-location="createLocation" @edit-location="editLocationById" @archive-location="archiveLocation" @restore-location="restoreLocation"/>
+  <BsBusinessSettingsPage v-model:profile-form="profileModel" v-model:location-form="locationModel" v-model:receipt-form="receiptModel" v-model:mode="modeModel" v-model:cash-required="cashRequired" v-model:profile-open="profileActionOpen" v-model:mode-open="modeActionOpen" v-model:receipt-open="receiptActionOpen" v-model:location-open="locationDialogOpen" :context="current ? { name: current.name } : null" :loading="loading || permissionPending" :shop-error="Boolean(shopError || permissionError)" :can-manage="canManage" :copy="settingsCopy" :cash="cashView" :profile-editor="profileEditor" :mode-editor="modeEditor" :receipt-editor="receiptEditor" :receipt-summary="receiptSummary" :locations-view="locationsView" :mode-options="modeOptions" :mode-label="modeLabel" @edit-profile="profileAction.edit()" @edit-mode="modeAction.edit()" @edit-receipt="receiptAction.edit()" @retry="retrySettings" @retry-cash="refreshCashPolicy()" @retry-receipt="refreshReceiptSettings()" @save-cash="saveCashPolicy" @save-profile="saveProfile" @save-mode="saveMode" @save-location="saveLocation" @save-receipt="saveReceiptSettings" @create-location="createLocation" @edit-location="editLocationById" @archive-location="archiveLocation" @restore-location="restoreLocation"/>
 </template>

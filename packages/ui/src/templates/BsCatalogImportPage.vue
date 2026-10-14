@@ -16,7 +16,8 @@ function selectFile(value: File | File[] | null) { emit('file', Array.isArray(va
       <BsHeading :level="1">{{ copy.title }}</BsHeading>
       <BsText as="p" size="sm" tone="muted">{{ copy.subtitle }}</BsText>
     </BsBox>
-    <BsText v-if="!view.available && !view.contextLoading" as="p" size="sm">{{ copy.noShop }}</BsText>
+    <BsSectionSkeleton v-if="view.contextLoading" variant="table" :rows="3" />
+    <BsText v-else-if="!view.available" as="p" size="sm">{{ copy.noShop }}</BsText>
     <template v-else-if="view.available">
       <BsPanel padding="md">
         <BsInline justify="between">
@@ -28,8 +29,8 @@ function selectFile(value: File | File[] | null) { emit('file', Array.isArray(va
         </BsInline>
       </BsPanel>
       <BsRecordActionDialog v-model:visible="categoryOpen" :title="copy.addCategory" :dirty="view.categoryDirty" :pending="view.categoryPending" :error="view.categoryError" :submit-label="copy.addCategory" @submit="emit('saveCategory')">
-        <BsField :label="copy.categoryName">
-          <BsInput v-model="categoryName" :minlength="2" :maxlength="80" required/>
+        <BsField v-slot="field" :label="copy.categoryName">
+          <BsInput :id="field.id" v-model="categoryName" :aria-describedby="field.describedby" :minlength="2" :maxlength="80" required/>
         </BsField>
       </BsRecordActionDialog>
       <BsPanel padding="md">
@@ -72,7 +73,7 @@ function selectFile(value: File | File[] | null) { emit('file', Array.isArray(va
             <BsInput :id="field.id" v-model="reportTo" :aria-describedby="field.describedby" type="date"/>
           </BsField>
         </BsGrid>
-        <BsText v-if="view.reportPending" role="status" as="p" size="sm" tone="muted">{{ copy.validating }}</BsText>
+        <BsSectionSkeleton v-if="view.reportPending" variant="table" :rows="3" />
         <BsBox v-else-if="view.reportError" role="alert">{{ copy.reportError }} <BsButton @click="emit('reloadReport')">{{ copy.retry }}</BsButton>
         </BsBox>
         <BsBox v-else scroll="x">

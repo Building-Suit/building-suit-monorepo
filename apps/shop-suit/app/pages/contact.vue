@@ -25,6 +25,7 @@ watch(user, (value) => {
 }, { immediate: true })
 
 async function submit() {
+  if (pending.value) return
   error.value = ''
   sent.value = false
   if (!form.subject.trim() || !form.message.trim() || !emailPattern.test(form.email.trim()) || !form.consent) {

@@ -64,12 +64,12 @@ const auditColumns = computed(() => props.copy.audit ? [
 ] : [])
 </script>
 <template>
-  <BsStack gap="lg">
+  <BsStack class="bs-access-page" gap="lg">
     <BsBox v-if="acceptance" as="section" padding="md"><BsHeading :level="1">{{ acceptance.title }}</BsHeading><BsText size="sm">{{ acceptance.help }}</BsText><BsAlert v-if="acceptance.error" tone="error">{{ acceptance.error }}</BsAlert><BsButton :pending="acceptance.pending" @click="emit('accept')">{{ acceptance.actionLabel }}</BsButton></BsBox>
     <BsPageHeader :title="copy.title" :subtitle="copy.subtitle">
       <template #actions>
         <BsButton v-if="canViewMatrix" @click="emit('matrix')">{{ copy.matrix }}</BsButton>
-        <BsButton v-if="canCreateRole" variant="primary" @click="emit('createRole')">{{ copy.newRole }}</BsButton>
+        <BsButton v-if="canCreateRole" variant="secondary" @click="emit('createRole')">{{ copy.newRole }}</BsButton>
         <BsButton v-if="canInvite" variant="primary" @click="emit('invite')">{{ copy.invite }}</BsButton>
       </template>
     </BsPageHeader>
@@ -80,13 +80,15 @@ const auditColumns = computed(() => props.copy.audit ? [
       <BsAlert v-if="actionError" tone="error">{{ actionError }}</BsAlert>
       <BsAccessTabs :model-value="activeTab" :tabs="tabs" :label="copy.title" @update:model-value="emit('update:activeTab', $event)" />
       <template v-if="activeTab === 'members'">
-        <BsInline gap="md" justify="between" :wrap="true">
-          <BsText v-if="copy.memberCount" size="sm" tone="muted">{{ copy.memberCount }}</BsText>
-          <BsField v-if="copy.search" v-slot="field" :label="copy.search"><BsInput :id="field.id" type="search" :model-value="search" :placeholder="copy.search" @update:model-value="emit('update:search', String($event ?? ''))" /></BsField>
-          <BsSelect v-if="statusOptions" :model-value="statusFilter" :options="statusOptions" :label="statusLabel" option-label="label" option-value="value" @update:model-value="emit('update:statusFilter', String($event ?? ''))" />
-        </BsInline>
-        <BsAccessMemberTable :members="members" :label="copy.members" :empty-label="copy.noMembers" :labels="copy.memberColumns" :pending="pending" @action="(key, id) => emit('memberAction', key, id)" />
-        <BsStack v-if="audit && copy.audit">
+        <section class="bs-access-page__members">
+          <BsInline class="bs-access-page__filters" gap="md" justify="end" :wrap="true">
+            <BsText v-if="copy.memberCount" size="sm" tone="muted">{{ copy.memberCount }}</BsText>
+            <BsField v-if="copy.search" v-slot="field" :label="copy.search"><BsInput :id="field.id" type="search" :model-value="search" :placeholder="copy.search" @update:model-value="emit('update:search', String($event ?? ''))" /></BsField>
+            <BsField v-if="statusOptions" v-slot="field" :label="statusLabel ?? ''"><BsSelect :input-id="field.id" :aria-describedby="field.describedby" :model-value="statusFilter" :options="statusOptions" :label="statusLabel" option-label="label" option-value="value" @update:model-value="emit('update:statusFilter', String($event ?? ''))" /></BsField>
+          </BsInline>
+          <BsAccessMemberTable :members="members" :label="copy.members" :empty-label="copy.noMembers" :labels="copy.memberColumns" :pending="pending" @action="(key, id) => emit('memberAction', key, id)" />
+        </section>
+        <BsStack v-if="audit && copy.audit" class="bs-access-page__audit">
           <BsHeading :level="2">{{ copy.audit.title }}</BsHeading>
           <BsDataTable :value="audit" :columns="auditColumns" row-key="id" :label="copy.audit.title"><template #empty><BsEmptyState :title="copy.audit.empty" /></template></BsDataTable>
         </BsStack>
@@ -115,3 +117,36 @@ const auditColumns = computed(() => props.copy.audit ? [
     <BsRecordActionDialog v-if="transferEditor?.state.visible" :visible="true" :title="transferEditor.state.title" :dirty="transferEditor.state.dirty" :pending="transferEditor.state.pending" :error="transferEditor.state.error" :submit-label="transferEditor.state.submitLabel" :cancel-label="transferEditor.state.cancelLabel" @update:visible="value => { if (!value) emit('closeTransfer') }" @submit="emit('submitTransfer')"><BsText size="sm">{{ transferEditor.help }}</BsText><BsField v-slot="field" :label="transferEditor.reasonLabel"><BsTextarea :id="field.id" v-model="transferReason" :aria-describedby="field.describedby" required :minlength="2" :maxlength="1000" :rows="3" /></BsField></BsRecordActionDialog>
   </BsStack>
 </template>
+
+<style scoped>
+.bs-access-page :deep(.ls-tabs) {
+  display: flex; flex-wrap: wrap; gap: var(--bs-space-3); border: 0;
+}
+.bs-access-page :deep(.ls-action-tab) {
+  flex: 0 1 12.5rem; justify-content: center;
+  min-height: var(--bs-tap-target-min);
+  border: 1px solid var(--bs-primary); border-radius: var(--bs-radius-input);
+  background: var(--bs-surface); color: var(--bs-text);
+}
+.bs-access-page :deep(.ls-action-tab[aria-selected='true']) {
+  background: var(--bs-primary); color: var(--bs-text-on-primary);
+}
+.bs-access-page__members, .bs-access-page__audit {
+  min-width: 0; padding: var(--bs-space-5);
+  border: 1px solid var(--bs-border); border-radius: var(--bs-radius-card);
+  background: var(--bs-surface);
+}
+.bs-access-page__members :deep(.ls-table th),
+.bs-access-page__audit :deep(.ls-table th) {
+  background: var(--bs-surface); text-transform: none; letter-spacing: normal;
+  font-weight: var(--bs-weight-regular);
+}
+.bs-access-page__members :deep(.ls-table td) { padding-block: var(--bs-space-5); }
+.bs-access-page__filters { margin-block-end: var(--bs-space-5); }
+.bs-access-page__filters :deep(.ls-field) { width: min(100%, 18.5rem); }
+@media (max-width: 639px) {
+  .bs-access-page :deep(.ls-tabs) { flex-wrap: nowrap; overflow-x: auto; max-inline-size: 100%; }
+  .bs-access-page :deep(.ls-action-tab) { flex: 0 0 auto; }
+  .bs-access-page__members, .bs-access-page__audit { padding: var(--bs-space-3); }
+}
+</style>

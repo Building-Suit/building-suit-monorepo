@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { BsAppointmentForm, BsAppointmentScheduleForm, BsAppointmentCard, BsAppointmentsView, BsAppointmentChoices } from '@building-suit/ui/types/appointmentsPresentation'
+import type { BsAppointmentForm, BsAppointmentScheduleForm, BsAppointmentCard, BsAppointmentsView, BsAppointmentChoices, BsAppointmentBlockView } from '@building-suit/ui/types/appointmentsPresentation'
 import { calendarDateKey, calendarAddDays, calendarLocalDate, useCalendarNavigation } from '@building-suit/ux'
 import { readAppointmentCalendar, appointmentsForCalendarDay } from '~/utils/appointmentCalendar'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
@@ -31,6 +31,7 @@ const { locale } = useI18n()
 const { current, currentId, currentLocationId, selectLocation, loading: shopLoading } = useShop()
 const { push: pushToast } = useToasts()
 const confirmation = useConfirmation()
+const captureScope = useShopTaskScope()
 const isArabic = computed(() => locale.value === 'ar')
 const { selectedDate, view, days: visibleDays, range, move, selectDate, today: goToday } = useCalendarNavigation(typeof route.query.from === 'string' ? route.query.from : calendarDateKey(new Date()))
 const staffId = ref<string | null>(null)
@@ -38,7 +39,7 @@ const actionError = ref('')
 const transitionId = ref<string | null>(null)
 
 const copy = computed(() => isArabic.value ? {
-  title: 'المواعيد', subtitle: 'تقويم الفريق وقائمة الانتظار والحضور بدون حجز.', add: 'موعد جديد',
+  blockDetails: 'تفاصيل فترة عدم التوفر', title: 'المواعيد', subtitle: 'تقويم الفريق وقائمة الانتظار والحضور بدون حجز.', add: 'موعد جديد',
   day: 'يوم', week: 'أسبوع', month: 'شهر', date: 'التاريخ', actions: 'إجراءات الموعد', today: 'اليوم', previous: 'السابق', next: 'التالي', allBarbers: 'كل الموظفين',
   barber: 'الموظف', branch: 'الفرع', loading: 'بنحمّل التقويم…', empty: 'مفيش مواعيد في الفترة دي.',
   loadError: 'مقدرناش نحمّل التقويم.', denied: 'اطلب من المالك صلاحية المواعيد وحاول تاني.', retry: 'حاول تاني',
@@ -53,13 +54,13 @@ const copy = computed(() => isArabic.value ? {
   writeError: 'مقدرناش نحفظ الموعد.', statusError: 'مقدرناش نحدّث الحالة.', sale: 'فتح البيعة المرتبطة',
   history: 'سجل الموعد',
   cancelConfirm: 'تلغي الموعد ده؟ هيفضل محفوظ في السجل.', noShowConfirm: 'تسجل إن العميل ماجاش؟',
-  scheduleTitle: 'جدول الموظف', workDays: 'أيام وساعات العمل', from: 'من', to: 'إلى',
-  invalidBlock: 'اختر بداية ونهاية لاحقة للاستراحة أو الإجازة.',
+  scheduleTitle: 'جدول الموظف', scheduleSwitchHint: 'احفظ التغييرات أو تجاهلها قبل اختيار موظف آخر.', workDays: 'أيام وساعات العمل', from: 'من', to: 'إلى',
+  invalidBlock: 'اختر بداية ونهاية لاحقة للاستراحة أو الإجازة.', blockDraft: 'أضف فترة التوقف قبل حفظ الجدول.',
   blockKind: 'نوع التوقف', break: 'استراحة', timeOff: 'إجازة', addBlock: 'إضافة توقف', remove: 'حذف',
   blockStart: 'بداية التوقف', blockEnd: 'نهاية التوقف', blockNote: 'ملاحظة', saveSchedule: 'حفظ الجدول', scheduleSaved: 'تم حفظ جدول الموظف.',
   noShop: 'اعمل متجر الأول من لوحة التحكم.', noLocation: 'اطلب من المالك يضيفك لفرع شغّال من إعدادات النشاط.', noStaff: 'اطلب من المالك يضيف الموظفين والخدمات للفرع قبل الحجز.',
 } : {
-  title: 'Appointments', subtitle: 'Team calendar, walk-ins, and the live service queue.', add: 'New appointment',
+  blockDetails: 'Schedule block details', title: 'Appointments', subtitle: 'Team calendar, walk-ins, and the live service queue.', add: 'New appointment',
   day: 'Day', week: 'Week', month: 'Month', date: 'Date', actions: 'Appointment actions', today: 'Today', previous: 'Previous', next: 'Next', allBarbers: 'All staff',
   barber: 'Staff member', branch: 'Location', loading: 'Loading calendar…', empty: 'No appointments in this period.',
   loadError: 'Could not load the calendar.', denied: 'Ask the owner for appointment access, then retry.', retry: 'Retry',
@@ -74,15 +75,16 @@ const copy = computed(() => isArabic.value ? {
   writeError: 'Could not save the appointment.', statusError: 'Could not update the status.', sale: 'Open linked sale',
   history: 'Appointment history',
   cancelConfirm: 'Cancel this appointment? It will remain in the audit history.', noShowConfirm: 'Mark this customer as a no-show?',
-  scheduleTitle: 'Staff schedule', workDays: 'Working days and hours', from: 'From', to: 'To',
-  invalidBlock: 'Choose a start time and a later end time for the break or time off.',
+  scheduleTitle: 'Staff schedule', scheduleSwitchHint: 'Save or discard changes before switching staff.', workDays: 'Working days and hours', from: 'From', to: 'To',
+  invalidBlock: 'Choose a start time and a later end time for the break or time off.', blockDraft: 'Add this block before saving the schedule.',
   blockKind: 'Block type', break: 'Break', timeOff: 'Time off', addBlock: 'Add block', remove: 'Remove',
   blockStart: 'Block starts', blockEnd: 'Block ends', blockNote: 'Note', saveSchedule: 'Save schedule', scheduleSaved: 'Staff schedule saved.',
   noShop: 'Create a shop from the dashboard first.', noLocation: 'Ask the owner to add or assign an active location in Business settings.', noStaff: 'Ask the owner to assign staff and services to this location before booking.',
 })
 
 const emptyOptions = (): Options => ({ canManage: false, canManageSchedule: false, locations: [], staff: [], services: [], customers: [] })
-const { data: options, pending: optionsPending, error: optionsError, refresh: refreshOptions } = useAsyncData(
+// Calendar reads depend on the authorized location options, including during SSR.
+const { data: options, pending: optionsPending, error: optionsError, refresh: refreshOptions } = await useAsyncData(
   'shop-data:appointment-options', async (): Promise<Options> => {
     if (!currentId.value) return emptyOptions()
     const { data, error } = await shopRpc.rpc('appointment_options', { p_shop_id: currentId.value })
@@ -190,6 +192,10 @@ function readableError(message?: string) {
   if (message?.includes('INVALID_')) return copy.value.invalid
   return copy.value.writeError
 }
+function commandErrorMessage(caught: unknown) {
+  return typeof caught === 'object' && caught !== null && 'message' in caught && typeof caught.message === 'string'
+    ? caught.message : undefined
+}
 async function save() {
   if (!currentId.value || !locationId.value || !options.value.canManage || saving.value) return
   actionError.value = ''
@@ -200,6 +206,7 @@ async function save() {
     actionError.value = copy.value.invalid; return
   }
   saving.value = true
+  const inScope = captureScope()
   try {
     const { error: writeError } = await shopRpc.rpc('save_appointment', {
       p_request_id: crypto.randomUUID(), p_shop_id: currentId.value,
@@ -211,16 +218,25 @@ async function save() {
       p_walk_in_phone: form.identityKind === 'walk_in' ? (form.walkInPhone.trim() || null) : null,
       p_notes: form.notes.trim() || null,
     })
+    if (!inScope()) return
     if (writeError) throw writeError
-    showForm.value = false; await refresh(); pushToast({ tone: 'success', title: copy.value.saved })
-  } catch (caught) { actionError.value = readableError(caught instanceof Error ? caught.message : undefined) }
+    showForm.value = false; await refresh(); if (inScope()) pushToast({ tone: 'success', title: copy.value.saved })
+  } catch (caught) { if (inScope()) actionError.value = readableError(commandErrorMessage(caught)) }
   finally { saving.value = false }
 }
 
 async function transition(appointment: Appointment, status: Exclude<AppointmentStatus, 'booked'>) {
   if (!currentId.value || transitionId.value || !options.value.canManage) return
-  if (status === 'cancelled' && !await confirmation.ask(copy.value.cancelConfirm)) return
-  if (status === 'no_show' && !await confirmation.ask(copy.value.noShowConfirm)) return
+  const inScope = captureScope()
+  if (status === 'cancelled' || status === 'no_show') {
+    const label = status === 'cancelled' ? copy.value.cancelAppointment : copy.value.noShow
+    if (!await confirmation.ask({
+      title: label,
+      message: `${appointment.customerName} · ${appointment.serviceName} · ${formatDay(new Date(appointment.startsAt))} · ${formatTime(appointment.startsAt)}\n${status === 'cancelled' ? copy.value.cancelConfirm : copy.value.noShowConfirm}`,
+      confirmLabel: label, cancelLabel: copy.value.cancel, tone: 'danger',
+    })) return
+  }
+  if (!inScope()) return
   transitionId.value = appointment.id; actionError.value = ''
   try {
     const { error: statusError } = await shopRpc.rpc('transition_appointment', {
@@ -228,9 +244,10 @@ async function transition(appointment: Appointment, status: Exclude<AppointmentS
       p_appointment_id: appointment.id, p_status: status,
       p_reason: status === 'cancelled' ? 'Cancelled by staff' : null,
     })
+    if (!inScope()) return
     if (statusError) throw statusError
-    await refresh(); pushToast({ tone: 'success', title: copy.value.statusSaved })
-  } catch { actionError.value = copy.value.statusError }
+    await refresh(); if (inScope()) pushToast({ tone: 'success', title: copy.value.statusSaved })
+  } catch { if (inScope()) actionError.value = copy.value.statusError }
   finally { transitionId.value = null }
 }
 
@@ -239,7 +256,7 @@ const scheduleForm = reactive({
   weekdays: Array.from({ length: 7 }, (_, weekday) => ({ weekday, enabled: weekday > 0 && weekday < 6, startsLocal: '09:00', endsLocal: '18:00' })),
   blocks: [] as ScheduleBlock[], blockKind: 'break' as 'break' | 'time_off', blockStarts: '', blockEnds: '', blockNote: '',
 })
-const { visible: showSchedule, pending: scheduleSaving, dirty: scheduleDirty } = useRecordAction(() => scheduleForm)
+const { visible: showSchedule, pending: scheduleSaving, dirty: scheduleDirty, markSaved: markScheduleSaved } = useRecordAction(() => scheduleForm)
 function openSchedule() {
   actionError.value = ''
   scheduleMemberId.value = staffId.value ?? locationStaff.value[0]?.membershipId ?? ''
@@ -253,6 +270,7 @@ function loadScheduleMember() {
   })
   scheduleForm.blocks = calendar.value.blocks.filter(item => item.membershipId === scheduleMemberId.value).map(item => ({ ...item }))
   scheduleForm.blockStarts = ''; scheduleForm.blockEnds = ''; scheduleForm.blockNote = ''
+  markScheduleSaved()
 }
 function addBlock() {
   const starts = new Date(scheduleForm.blockStarts); const ends = new Date(scheduleForm.blockEnds)
@@ -262,7 +280,9 @@ function addBlock() {
   scheduleForm.blockStarts = ''; scheduleForm.blockEnds = ''; scheduleForm.blockNote = ''
 }
 async function saveSchedule() {
-  if (!currentId.value || !locationId.value || !scheduleMemberId.value || scheduleSaving.value) return
+  if (!currentId.value || !locationId.value || !scheduleMemberId.value || !options.value.canManageSchedule || scheduleSaving.value) return
+  if (scheduleForm.blockStarts || scheduleForm.blockEnds || scheduleForm.blockNote) { actionError.value = copy.value.blockDraft; return }
+  const inScope = captureScope()
   scheduleSaving.value = true; actionError.value = ''
   try {
     const { error: writeError } = await shopRpc.rpc('save_staff_schedule', {
@@ -271,9 +291,10 @@ async function saveSchedule() {
       p_working_hours: scheduleForm.weekdays.filter(day => day.enabled).map(day => ({ weekday: day.weekday, startsLocal: day.startsLocal, endsLocal: day.endsLocal })),
       p_blocks: scheduleForm.blocks.map(block => ({ kind: block.kind, startsAt: block.startsAt, endsAt: block.endsAt, note: block.note })),
     })
+    if (!inScope()) return
     if (writeError) throw writeError
-    showSchedule.value = false; await refresh(); pushToast({ tone: 'success', title: copy.value.scheduleSaved })
-  } catch (caught) { actionError.value = readableError(caught instanceof Error ? caught.message : undefined) }
+    showSchedule.value = false; await refresh(); if (inScope()) pushToast({ tone: 'success', title: copy.value.scheduleSaved })
+  } catch (caught) { if (inScope()) actionError.value = readableError(commandErrorMessage(caught)) }
   finally { scheduleSaving.value = false }
 }
 watch([currentId, currentLocationId], () => {
@@ -300,8 +321,21 @@ function appointmentCard(item: Appointment): BsAppointmentCard {
   }
   return { id: item.id, time: `${formatTime(item.startsAt)}–${formatTime(item.endsAt)}`, queueTime: formatTime(item.startsAt), status: item.status, statusLabel: copy.value[item.status], tone: item.status === 'completed' ? 'success' : ['cancelled', 'no_show'].includes(item.status) ? 'danger' : item.status === 'in_service' ? 'info' : 'neutral', customerName: item.customerName, detail: `${item.serviceName} · ${item.staffName}`, queueDetail: `${view.value === 'day' ? '' : formatDay(new Date(item.startsAt)) + ' · '}${formatTime(item.startsAt)} · ${item.staffName}`, pending: transitionId.value === item.id, canEdit: options.value.canManage && ['booked', 'arrived', 'waiting'].includes(item.status), actions, queueAction: options.value.canManage ? { id: item.status === 'in_service' ? 'completed' : 'in_service', label: item.status === 'in_service' ? copy.value.complete : copy.value.startService } : null, history: (item.history ?? []).map(event => ({ id: `${event.occurredAt}-${event.action}`, label: `${new Date(event.occurredAt).toLocaleString(isArabic.value ? 'ar-EG' : 'en-EG')} · ${copy.value[event.status]}` })), link: item.saleId ? { to: `/sales/${item.saleId}`, label: copy.value.sale } : options.value.canManage && !['cancelled', 'no_show'].includes(item.status) ? { to: `/pos?appointment=${encodeURIComponent(item.id)}`, label: isArabic.value ? 'تحصيل الموعد' : 'Check out appointment' } : null }
 }
+function scheduleBlockCard(block: ScheduleBlock): BsAppointmentBlockView {
+  const localeName = isArabic.value ? 'ar-EG' : 'en-EG'
+  const full = new Intl.DateTimeFormat(localeName, { dateStyle: 'medium', timeStyle: 'short' })
+  const time = new Intl.DateTimeFormat(localeName, { hour: 'numeric', minute: '2-digit' })
+  return { id: block.id ?? `${block.membershipId}:${block.kind}:${block.startsAt}:${block.endsAt}`,
+    kindLabel: block.kind === 'break' ? copy.value.break : copy.value.timeOff,
+    staff: locationStaff.value.find(member => member.membershipId === block.membershipId)?.name || '—',
+    time: `${time.format(new Date(block.startsAt))} — ${time.format(new Date(block.endsAt))}`,
+    starts: full.format(new Date(block.startsAt)), ends: full.format(new Date(block.endsAt)), note: block.note }
+}
+function blocksForDay(day: Date) {
+  return appointmentsForCalendarDay(calendar.value.blocks.filter(block => !staffId.value || block.membershipId === staffId.value), day).map(scheduleBlockCard)
+}
 const appointmentPresentation = computed<BsAppointmentsView>(() => ({ exists: Boolean(current.value), shopLoading: shopLoading.value, canManage: options.value.canManage, canSchedule: options.value.canManageSchedule, scheduleDisabled: !locationId.value || !locationStaff.value.length || pending.value || optionsPending.value || Boolean(error.value || optionsError.value), canCreate: canCreate.value, locationId: locationId.value, locationName: options.value.locations.find(item => item.id === locationId.value)?.name || copy.value.noLocation, staffName: locationStaff.value.find(item => item.membershipId === staffId.value)?.name || copy.value.allBarbers, loading: optionsPending.value || pending.value, failed: Boolean(optionsError.value || error.value), failureMessage: (optionsError.value || error.value)?.message?.includes('SHOP_PERMISSION_DENIED') ? copy.value.denied : copy.value.loadError, noStaff: !optionsPending.value && !pending.value && !optionsError.value && !error.value && Boolean(locationId.value) && (!locationStaff.value.length || !eligibleServices.value.length), error: actionError.value, transitioning: Boolean(transitionId.value), formTitle: editingId.value ? copy.value.edit : copy.value.create, formDirty: formDirty.value, saving: saving.value, scheduleDirty: scheduleDirty.value, scheduleSaving: scheduleSaving.value, previousSymbol: isArabic.value ? '›' : '‹', nextSymbol: isArabic.value ? '‹' : '›', rangeLabel: view.value === 'month' ? new Intl.DateTimeFormat(isArabic.value ? 'ar-EG' : 'en-EG', { month: 'long', year: 'numeric' }).format(calendarLocalDate(selectedDate.value)) : visibleDays.value.length === 1 ? formatDay(visibleDays.value[0]!) : `${formatDay(visibleDays.value[0]!)} — ${formatDay(visibleDays.value[visibleDays.value.length - 1]!)}`, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
- days: visibleDays.value.map(day => ({ id: dateKey(day), today: dateKey(day) === dateKey(new Date()), outside: view.value === 'month' && day.getMonth() !== calendarLocalDate(selectedDate.value).getMonth(), label: formatDay(day), appointments: appointmentsForDay(day).map(appointmentCard) })), queue: queue.value.map(appointmentCard), weekdayNames: weekdayNames.value, blocks: scheduleForm.blocks.map((block, index) => ({ id: `${block.startsAt}-${index}`, index, label: `${block.kind === 'break' ? copy.value.break : copy.value.timeOff} · ${new Date(block.startsAt).toLocaleString(isArabic.value ? 'ar-EG' : 'en-EG')}–${new Date(block.endsAt).toLocaleString(isArabic.value ? 'ar-EG' : 'en-EG')}` })), constraints: { nameMin: 2, nameMax: 160, phoneMax: 40, notesMax: 1000, blockNoteMax: 500 } }))
+ days: visibleDays.value.map(day => ({ id: dateKey(day), today: dateKey(day) === dateKey(new Date()), outside: view.value === 'month' && day.getMonth() !== calendarLocalDate(selectedDate.value).getMonth(), label: formatDay(day), appointments: appointmentsForDay(day).map(appointmentCard), blocks: blocksForDay(day) })), queue: queue.value.map(appointmentCard), weekdayNames: weekdayNames.value, blocks: scheduleForm.blocks.map((block, index) => ({ id: `${block.startsAt}-${index}`, index, label: `${block.kind === 'break' ? copy.value.break : copy.value.timeOff} · ${new Date(block.startsAt).toLocaleString(isArabic.value ? 'ar-EG' : 'en-EG')}–${new Date(block.endsAt).toLocaleString(isArabic.value ? 'ar-EG' : 'en-EG')}` })), constraints: { nameMin: 2, nameMax: 160, phoneMax: 40, notesMax: 1000, blockNoteMax: 500 } }))
 const appointmentChoices = computed<BsAppointmentChoices>(() => ({ locations: options.value.locations.map(item => ({ value: item.id, label: item.name })), staff: [{ value: null, label: copy.value.allBarbers }, ...locationStaff.value.map(item => ({ value: item.membershipId, label: item.name }))], scheduleStaff: locationStaff.value.map(item => ({ value: item.membershipId, label: item.name })), services: eligibleServices.value.map(item => ({ value: item.id, label: item.name })), eligibleStaff: eligibleStaff.value.map(item => ({ value: item.membershipId, label: item.name })), customers: options.value.customers.map(item => ({ value: item.id, label: item.name })) }))
 function editAppointment(id: string) { const item = calendar.value.appointments.find(row => row.id === id); if (item) openEdit(item) }
 async function transitionAppointment(id: string, status: string) { const item = calendar.value.appointments.find(row => row.id === id); if (item && ['arrived','waiting','in_service','completed','cancelled','no_show'].includes(status)) await transition(item, status as Exclude<AppointmentStatus, 'booked'>) }
