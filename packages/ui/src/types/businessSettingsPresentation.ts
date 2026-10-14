@@ -71,3 +71,9 @@ export interface BsBusinessSettingsCopy {
   thermal80: string
   a4: string
 }
+
+export interface BsBusinessCurrencyView {
+  code: string; locked: boolean; loading: boolean; loadError: boolean; pending: boolean; error: string; success: string
+  title: string; help: string; lockedHelp: string; failed: string; retry: string; save: string
+  options: { value: string; label: string }[]
+}

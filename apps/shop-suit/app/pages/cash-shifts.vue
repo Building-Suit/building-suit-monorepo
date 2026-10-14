@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { BsCashShiftActiveView, BsCashShiftHistoryRow, BsCashShiftAmountForm, BsCashShiftMovementForm } from '@building-suit/ui/types/cashShiftPresentation'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
+const { businessCurrency } = useShop()
 
 definePageMeta({ layout: 'default', middleware: 'auth' })
 
@@ -76,7 +77,7 @@ const movementRequestId = ref<string | null>(null)
 const closeRequestId = ref<string | null>(null)
 
 function validMoney(value: number, allowZero = false) { return Number.isFinite(value) && (allowZero ? value >= 0 : value > 0) && Math.round(value * 100) === value * 100 }
-function money(value: number | string | undefined) { return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { style: 'currency', currency: 'EGP', maximumFractionDigits: 2 }).format(Number(value ?? 0)) }
+function money(value: number | string | undefined) { return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { style: 'currency', currency: businessCurrency.value, maximumFractionDigits: 20 }).format(Number(value ?? 0)) }
 function date(value?: string) { return value ? new Intl.DateTimeFormat(isArabic.value ? 'ar-EG' : 'en-EG', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) : '—' }
 function eventLabel(kind: DrawerEvent['kind']) { return copy.value[kind] }
 function errorText(caught: unknown) {

@@ -396,6 +396,8 @@ export type ShopRpcDatabase = {
         Returns: string
       }
       save_document_settings: { Args: { p_shop_id: string; p_settings: Record<string, unknown> }; Returns: unknown }
+      business_currency_settings: { Args: { p_shop_id: string }; Returns: unknown }
+      save_business_currency: { Args: { p_shop_id: string; p_currency: string }; Returns: unknown }
       receipt_settings: {
         Args: { p_shop_id: string }
         Returns: unknown

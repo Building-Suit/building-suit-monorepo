@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { readRasterImage } from '@building-suit/ux'
-import type { BsBusinessProfileForm, BsBusinessLocationForm, BsBusinessReceiptForm, BsBusinessLocationsView, BsBusinessCashPolicyView, BsBusinessReceiptSummary, BsBusinessSettingsCopy } from '@building-suit/ui/types/businessSettingsPresentation'
+import type { BsBusinessProfileForm, BsBusinessLocationForm, BsBusinessReceiptForm, BsBusinessLocationsView, BsBusinessCashPolicyView, BsBusinessReceiptSummary, BsBusinessSettingsCopy, BsBusinessCurrencyView } from '@building-suit/ui/types/businessSettingsPresentation'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import type { PlanUsageResource } from '~/types/plans'
 import type { ReceiptPaperSize } from '~/types/receipt'
@@ -13,7 +13,7 @@ definePageMeta({ layout: 'default', middleware: ['auth'] })
 const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
 const confirmation = useConfirmation()
 const { locale } = useI18n()
-const { current, currentId, locations, loading, loadError: shopError, reload, loadLocations } = useShop()
+const { current, currentId, locations, loading, loadError: shopError, reload, loadLocations, refreshBusinessCurrency } = useShop()
 const { success } = useToasts()
 const ui = useUiCopy()
 const profileForm = reactive({ displayName: '' })
@@ -30,6 +30,53 @@ const editingLocationId = ref<string | null>(null)
 const locationForm = reactive({ name: '', code: '', address: '', phone: '' })
 const { visible: locationDialogOpen, dirty: locationDirty } = useRecordAction(() => locationForm)
 const receiptForm = reactive({ displayName: '', address: '', phone: '', footer: '', paperSize: 'thermal_80' as ReceiptPaperSize, documentLabel: '', referenceLabel: '', documentLanguage: 'ar', documentDirection: 'auto', showDescriptions: true, notes: '', logoDataUrl: '' })
+type BusinessCurrencySettings = { currency: string; locked: boolean; supportedCurrencies: string[] }
+const currencySelection = ref<string | null>(null)
+const currencyPending = ref(false)
+const currencyError = ref('')
+const currencySuccess = ref('')
+const { data: currencySettings, pending: currencyLoading, error: currencyLoadError, refresh: refreshCurrencySettings } = useAsyncData(
+  () => `shop-data:business-currency:${currentId.value ?? 'none'}`,
+  async (): Promise<BusinessCurrencySettings | null> => {
+    if (!currentId.value) return null
+    const { data, error } = await shopRpc.rpc('business_currency_settings', { p_shop_id: currentId.value })
+    if (error) throw error
+    return data as BusinessCurrencySettings
+  }, { watch: [currentId], default: () => null },
+)
+const selectedBusinessCurrency = computed<string>({
+  get: () => currencySettings.value?.locked ? currencySettings.value.currency : currencySelection.value ?? currencySettings.value?.currency ?? current.value?.business_currency ?? 'EGP',
+  set: value => { currencySelection.value = value },
+})
+watch(currentId, () => { currencySelection.value = null; currencyError.value = ''; currencySuccess.value = '' })
+const currencyView = computed<BsBusinessCurrencyView>(() => ({
+  code: currencySettings.value?.currency ?? 'EGP', locked: currencySettings.value?.locked ?? true,
+  loading: currencyLoading.value, loadError: Boolean(currencyLoadError.value), pending: currencyPending.value, error: currencyError.value, success: currencySuccess.value,
+  title: isArabic.value ? 'عملة النشاط' : 'Business currency',
+  help: isArabic.value ? 'تتغير العملة قبل أول مستند مالي فقط. أسعار الكتالوج والمسودات تحتفظ بنفس الأرقام بدون تحويل. رسوم الاشتراك منفصلة وتظل بالجنيه المصري.' : 'Change currency before the first monetary document only. Catalog and draft prices keep their numeric values with no conversion. Subscription fees are separate and remain in EGP.',
+  lockedHelp: isArabic.value ? 'العملة ثابتة بعد وجود سجل مالي، بما فيه المبيعات والمشتريات والمصروفات والمدفوعات ورصيد المخزون ووردية الخزنة.' : 'Currency is fixed once financial history exists, including sales, purchases, expenses, payments, opening stock or a cashier shift.',
+  failed: isArabic.value ? 'مقدرناش نحمّل أو نحفظ العملة.' : 'Could not load or save business currency.', retry: isArabic.value ? 'حاول تاني' : 'Retry', save: isArabic.value ? 'حفظ العملة' : 'Save currency',
+  options: [...new Set([...(currencySettings.value?.supportedCurrencies ?? []), currencySettings.value?.currency ?? 'EGP'])].map(value => ({ value, label: value })),
+}))
+async function saveBusinessCurrency() {
+  const shopId = currentId.value
+  const code = selectedBusinessCurrency.value
+  if (!shopId || !canManage.value || currencyPending.value || !currencySettings.value || currencySettings.value.locked || code === currencySettings.value.currency) return
+  const accepted = await confirmation.ask(isArabic.value ? `تغيير عملة النشاط إلى ${code}؟ أسعار الكتالوج والمسودات تحتفظ بنفس الأرقام بدون تحويل العملة.` : `Change business currency to ${code}? Catalog and draft amounts keep their numeric values; no currency conversion occurs.`)
+  if (!accepted || currentId.value !== shopId || !canManage.value) return
+  currencyPending.value = true; currencyError.value = ''; currencySuccess.value = ''
+  try {
+    const { error } = await shopRpc.rpc('save_business_currency', { p_shop_id: shopId, p_currency: code })
+    if (error) throw error
+    await refreshBusinessCurrency(shopId)
+    await refreshCurrencySettings()
+    currencySelection.value = null
+    if (currentId.value === shopId) currencySuccess.value = isArabic.value ? 'اتحفظت عملة النشاط.' : 'Business currency saved.'
+  } catch {
+    await refreshCurrencySettings()
+    if (currentId.value === shopId) currencyError.value = currencyView.value.locked ? currencyView.value.lockedHelp : currencyView.value.failed
+  } finally { currencyPending.value = false }
+}
 const receiptPending = ref(false)
 const logoPending = ref(false)
 const receiptError = ref('')
@@ -404,5 +451,5 @@ async function selectDocumentLogo(selection: File | File[] | null) {
 }
 </script>
 <template>
-  <BsBusinessSettingsPage v-model:profile-form="profileModel" v-model:location-form="locationModel" v-model:receipt-form="receiptModel" v-model:mode="modeModel" v-model:cash-required="cashRequired" v-model:profile-open="profileActionOpen" v-model:mode-open="modeActionOpen" v-model:receipt-open="receiptActionOpen" v-model:location-open="locationDialogOpen" :context="current ? { name: current.name } : null" :loading="loading || permissionPending" :shop-error="Boolean(shopError || permissionError)" :can-manage="canManage" :copy="settingsCopy" :cash="cashView" :profile-editor="profileEditor" :mode-editor="modeEditor" :receipt-editor="receiptEditor" :receipt-summary="receiptSummary" :locations-view="locationsView" :mode-options="modeOptions" :mode-label="modeLabel" @select-logo="selectDocumentLogo" @edit-profile="profileAction.edit()" @edit-mode="modeAction.edit()" @edit-receipt="receiptAction.edit()" @retry="retrySettings" @retry-cash="refreshCashPolicy()" @retry-receipt="refreshReceiptSettings()" @save-cash="saveCashPolicy" @save-profile="saveProfile" @save-mode="saveMode" @save-location="saveLocation" @save-receipt="saveReceiptSettings" @create-location="createLocation" @edit-location="editLocationById" @archive-location="archiveLocation" @restore-location="restoreLocation"/>
+  <BsBusinessSettingsPage v-model:business-currency="selectedBusinessCurrency" v-model:profile-form="profileModel" v-model:location-form="locationModel" v-model:receipt-form="receiptModel" v-model:mode="modeModel" v-model:cash-required="cashRequired" v-model:profile-open="profileActionOpen" v-model:mode-open="modeActionOpen" v-model:receipt-open="receiptActionOpen" v-model:location-open="locationDialogOpen" :currency-view="currencyView" :context="current ? { name: current.name } : null" :loading="loading || permissionPending" :shop-error="Boolean(shopError || permissionError)" :can-manage="canManage" :copy="settingsCopy" :cash="cashView" :profile-editor="profileEditor" :mode-editor="modeEditor" :receipt-editor="receiptEditor" :receipt-summary="receiptSummary" :locations-view="locationsView" :mode-options="modeOptions" :mode-label="modeLabel" @save-currency="saveBusinessCurrency" @retry-currency="refreshCurrencySettings()" @select-logo="selectDocumentLogo" @edit-profile="profileAction.edit()" @edit-mode="modeAction.edit()" @edit-receipt="receiptAction.edit()" @retry="retrySettings" @retry-cash="refreshCashPolicy()" @retry-receipt="refreshReceiptSettings()" @save-cash="saveCashPolicy" @save-profile="saveProfile" @save-mode="saveMode" @save-location="saveLocation" @save-receipt="saveReceiptSettings" @create-location="createLocation" @edit-location="editLocationById" @archive-location="archiveLocation" @restore-location="restoreLocation"/>
 </template>

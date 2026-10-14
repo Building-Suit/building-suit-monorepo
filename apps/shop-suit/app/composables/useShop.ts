@@ -16,6 +16,8 @@ export interface ShopSummary {
   status: string
   business_mode: 'product' | 'service' | 'mixed'
   created_at: string
+  business_currency?: string
+  currency_locked_at?: string | null
 }
 
 export interface ShopMembership {
@@ -80,6 +82,7 @@ export function useShop() {
   const locationVersion = useState('shop:location-version', () => 0)
 
   const current = computed(() => shops.value.find(shop => shop.id === currentId.value) ?? null)
+  const businessCurrency = computed(() => current.value?.business_currency ?? 'EGP')
   const currentMembership = computed(() => memberships.value.find(member => member.shop_id === currentId.value) ?? null)
   const currentLocation = computed(() => locations.value.find(location => location.id === currentLocationId.value) ?? null)
   const activeLocations = computed(() => locations.value.filter(location => location.status === 'active'))
@@ -198,7 +201,7 @@ export function useShop() {
 
       const { data: shopRows, error: shopError } = await supabase
         .from('shops')
-        .select('id,name,status,business_mode,created_at')
+        .select('id,name,status,business_mode,created_at,business_currency,currency_locked_at')
         .in('id', shopIds)
         .eq('status', 'active')
         .order('created_at', { ascending: true })
@@ -264,6 +267,22 @@ export function useShop() {
     await nuxtApp.runWithContext(() => refreshNuxtData())
   }
 
+  async function refreshBusinessCurrency(shopId: string) {
+    const userId = user.value?.id
+    const version = loadVersion.value
+    if (!userId || currentId.value !== shopId) return
+    const { data, error } = await shopRpc.rpc('business_currency_settings', { p_shop_id: shopId })
+    if (error) throw error
+    const settings = data as { currency?: string; lockedAt?: string | null } | null
+    if (!settings?.currency || !/^[A-Z]{3}$/.test(settings.currency)) throw new Error('Invalid business currency response')
+    if (user.value?.id !== userId || currentId.value !== shopId || loadVersion.value !== version) return
+    // Refresh monetary presentation without clearing the authenticated context
+    // and unmounting the settings form while its success feedback is delivered.
+    shops.value = shops.value.map(shop => shop.id === shopId ? { ...shop, business_currency: settings.currency, currency_locked_at: settings.lockedAt ?? null } : shop)
+    clearShopScopedData()
+    await nuxtApp.runWithContext(() => refreshNuxtData())
+  }
+
   async function reload() {
     clearShopScopedData()
     loadedUserId.value = null
@@ -277,6 +296,8 @@ export function useShop() {
     locations,
     activeLocations,
     current,
+    businessCurrency,
+    refreshBusinessCurrency,
     currentId,
     currentLocation,
     currentLocationId,

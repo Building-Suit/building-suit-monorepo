@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { BsExpenseForm, BsExpenseFilters, BsExpenseView, BsExpenseRow } from '@building-suit/ui/types/expensePresentation'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
+const { businessCurrency } = useShop()
 
 definePageMeta({ layout: 'default', middleware: ['auth'] })
 
@@ -129,7 +130,7 @@ const { data: expensePage, pending, error, refresh } = useAsyncData(
 const canManage = computed(() => expensePage.value.canManage)
 
 function money(value: number) {
-  return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { style: 'currency', currency: 'EGP', maximumFractionDigits: 2 }).format(Number(value))
+  return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { style: 'currency', currency: businessCurrency.value, maximumFractionDigits: 20 }).format(Number(value))
 }
 function displayDate(value: string) {
   return new Intl.DateTimeFormat(isArabic.value ? 'ar-EG' : 'en-EG', { dateStyle: 'medium', timeZone: 'Africa/Cairo' }).format(new Date(value))

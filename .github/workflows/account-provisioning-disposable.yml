@@ -8,6 +8,7 @@ on:
       - 'apps/super-admin-suit/**'
       - 'apps/shop-suit/supabase/**'
       - 'tooling/database/test-shop-settings-local.mjs'
+      - 'tooling/database/test-shop-currency-concurrency.mjs'
       - 'tooling/database/schema-contract-evidence.mjs'
       - 'apps/shop-suit/app/utils/owner-invitation.ts'
       - 'apps/shop-suit/app/pages/auth/owner-invitation.vue'

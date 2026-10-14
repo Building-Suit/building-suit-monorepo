@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import type { BsBusinessProfileForm, BsBusinessLocationForm, BsBusinessReceiptForm, BsBusinessSettingsEditor, BsBusinessLocationsView, BsBusinessCashPolicyView, BsBusinessReceiptSummary, BsBusinessSettingsCopy } from '../types/businessSettingsPresentation'
+import type { BsBusinessProfileForm, BsBusinessLocationForm, BsBusinessReceiptForm, BsBusinessSettingsEditor, BsBusinessLocationsView, BsBusinessCashPolicyView, BsBusinessReceiptSummary, BsBusinessSettingsCopy, BsBusinessCurrencyView } from '../types/businessSettingsPresentation'
 defineProps<{
+  currencyView?: BsBusinessCurrencyView
   context: { name: string } | null; loading: boolean; shopError: boolean; canManage: boolean; copy: BsBusinessSettingsCopy
   cash: BsBusinessCashPolicyView; profileEditor: BsBusinessSettingsEditor; modeEditor: BsBusinessSettingsEditor
   receiptEditor: BsBusinessSettingsEditor & { loading: boolean; loadError: boolean }; receiptSummary: BsBusinessReceiptSummary | null
@@ -10,12 +11,14 @@ const profileForm = defineModel<BsBusinessProfileForm>('profileForm', { required
 const locationForm = defineModel<BsBusinessLocationForm>('locationForm', { required: true })
 const receiptForm = defineModel<BsBusinessReceiptForm>('receiptForm', { required: true })
 const selectedMode = defineModel<string>('mode', { required: true })
+const businessCurrency = defineModel<string>('businessCurrency', { default: 'EGP' })
 const cashRequired = defineModel<boolean>('cashRequired', { required: true })
 const profileActionOpen = defineModel<boolean>('profileOpen', { required: true })
 const modeActionOpen = defineModel<boolean>('modeOpen', { required: true })
 const receiptActionOpen = defineModel<boolean>('receiptOpen', { required: true })
 const locationDialogOpen = defineModel<boolean>('locationOpen', { required: true })
 const emit = defineEmits<{
+  saveCurrency: []; retryCurrency: [];
   editProfile: []; editMode: []; editReceipt: []; retry: []; retryCash: []; retryReceipt: []
   saveCash: []; saveProfile: []; saveMode: []; saveLocation: []; saveReceipt: []; createLocation: []
   editLocation: [id: string]; archiveLocation: [id: string]; restoreLocation: [id: string]; selectLogo: [file: File | File[] | null]
@@ -31,8 +34,21 @@ function updateReceipt(key: keyof BsBusinessReceiptForm, value: string | number 
     <BsBox v-else-if="shopError" role="alert">{{ copy.failed }} <BsButton @click="emit('retry')">{{ copy.retry }}</BsButton>
     </BsBox>
     <BsText v-else-if="!context" role="status" as="p">{{ copy.empty }}</BsText>
-    <BsSectionNavigation v-if="context && !loading && !shopError" :label="copy.title" :sections="[{ id: 'shop-profile', label: copy.profileTitle }, { id: 'business-mode', label: copy.modeTitle }, { id: 'locations', label: copy.locationsTitle }, { id: 'receipt-settings', label: copy.receiptTitle }, { id: 'cash-policy', label: copy.cashTitle }]" />
+    <BsSectionNavigation v-if="context && !loading && !shopError" :label="copy.title" :sections="[{ id: 'shop-profile', label: copy.profileTitle }, { id: 'business-mode', label: copy.modeTitle }, { id: 'locations', label: copy.locationsTitle }, { id: 'receipt-settings', label: copy.receiptTitle }, { id: 'cash-policy', label: copy.cashTitle }, ...(currencyView ? [{ id: 'currency-settings', label: currencyView.title }] : [])]" />
     <BsGrid v-if="context && !loading && !shopError" :columns="2" gap="lg">
+    <BsPanel v-if="currencyView" id="currency-settings" aria-labelledby="business-currency-title" padding="md">
+      <BsHeading id="business-currency-title" :level="2">{{ currencyView.title }}</BsHeading>
+      <BsText as="p" size="sm" tone="muted">{{ currencyView.help }}</BsText>
+      <BsText v-if="currencyView.loading" role="status">{{ copy.loading }}</BsText>
+      <BsAlert v-else-if="currencyView.loadError" tone="error">{{ currencyView.failed }} <BsButton @click="emit('retryCurrency')">{{ currencyView.retry }}</BsButton></BsAlert>
+      <BsForm v-else :pending="currencyView.pending" :error="currencyView.error" @submit="emit('saveCurrency')">
+        <BsText v-if="currencyView.locked" role="status">{{ currencyView.lockedHelp }}</BsText>
+        <BsText v-if="!canManage" role="status">{{ copy.ownerOnly }}</BsText>
+        <BsField v-slot="field" :label="currencyView.title"><BsSelect v-model="businessCurrency" :input-id="field.id" :label="currencyView.title" :aria-describedby="field.describedby" :options="currencyView.options" option-label="label" option-value="value" :disabled="currencyView.locked || !canManage || currencyView.pending" /></BsField>
+        <BsText v-if="currencyView.success" role="status">{{ currencyView.success }}</BsText>
+        <BsButton variant="primary" type="submit" :pending="currencyView.pending" :disabled="currencyView.locked || !canManage || businessCurrency === currencyView.code">{{ currencyView.save }}</BsButton>
+      </BsForm>
+    </BsPanel>
     <BsPanel v-if="context && !loading && !shopError" id="shop-profile" aria-labelledby="shop-profile-title" padding="md">
       <BsHeading id="shop-profile-title" :level="2">{{ copy.profileTitle }}</BsHeading>
       <BsText as="p" size="sm" tone="muted">{{ copy.profileHelp }}</BsText>
