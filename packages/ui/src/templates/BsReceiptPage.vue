@@ -29,8 +29,9 @@ const emit = defineEmits<{ print: []; share: []; retry: [] }>()
     <BsStateSurface v-if="loading" state="loading" :title="copy.loading"/>
     <BsStateSurface v-else-if="error" state="error" :title="copy.loadError" :action-label="copy.retry" @action="emit('retry')"/>
     <BsStateSurface v-else-if="!receipt" state="empty" :title="copy.unavailable"/>
-    <BsPrintableDocument v-else :format="paperSize === 'thermal_80' ? 'receipt' : 'a4'" :label="documentCopy.title" :dir="language === 'ar' ? 'rtl' : 'ltr'" :lang="language">
+    <BsPrintableDocument v-else :format="paperSize === 'thermal_80' ? 'receipt' : 'a4'" :label="documentCopy.title" :dir="receipt.direction || (language === 'ar' ? 'rtl' : 'ltr')" :lang="language">
       <template #header>
+        <BsImage v-if="receipt.logoDataUrl" :src="receipt.logoDataUrl" :alt="receipt.issuer" :width="96" :height="96" fit="contain" />
         <BsDocumentHeader :title="documentCopy.title" :issuer="receipt.issuer" :details="receipt.issuerDetails"><BsText v-if="printed" emphasis="bold">{{ documentCopy.reprintLabel }}</BsText></BsDocumentHeader>
       </template>
       <BsDescriptionList density="compact">
@@ -47,7 +48,7 @@ const emit = defineEmits<{ print: []; share: []; retry: [] }>()
       <BsContentSection :title="documentCopy.payment">
         <BsInline v-for="payment in receipt.payments" :key="payment.id" justify="between"><BsText>{{ payment.summary }}</BsText><BsText v-if="payment.reference" dir="ltr">{{ payment.reference }}</BsText></BsInline>
       </BsContentSection>
-      <template #footer><BsText v-if="receipt.footer" wrap="preserve">{{ receipt.footer }}</BsText><BsText size="xs">{{ documentCopy.compliance }}</BsText></template>
+      <template #footer><BsText v-if="receipt.notes" wrap="preserve">{{ receipt.notes }}</BsText><BsText v-if="receipt.footer" wrap="preserve">{{ receipt.footer }}</BsText><BsText size="xs">{{ documentCopy.compliance }}</BsText></template>
     </BsPrintableDocument>
   </BsPage>
 </template>

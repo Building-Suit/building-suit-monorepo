@@ -3,6 +3,7 @@ import type { BsReportsView, BsReportFilters, BsReportChoices } from '@building-
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import type { OperationalReportKind, OperationalReportPage, OperationalReportRow } from '~/types/reporting'
 import { downloadCsv, encodeCsv } from '~/utils/catalogImport'
+const { businessCurrency } = useShop()
 
 definePageMeta({ layout: 'default', middleware: ['auth'] })
 
@@ -168,7 +169,7 @@ const columns = computed<ReportColumn[]>(() => {
 
 const totalPages = computed(() => Math.max(1, Math.ceil(Number(result.value.total) / pageSize)))
 
-function money(value: unknown) { return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { style: 'currency', currency: 'EGP', maximumFractionDigits: 2 }).format(Number(value ?? 0)) }
+function money(value: unknown) { return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { style: 'currency', currency: businessCurrency.value, maximumFractionDigits: 20 }).format(Number(value ?? 0)) }
 function number(value: unknown) { return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { maximumFractionDigits: 3 }).format(Number(value ?? 0)) }
 function date(value: unknown) { return value ? new Intl.DateTimeFormat(isArabic.value ? 'ar-EG' : 'en-EG', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Africa/Cairo' }).format(new Date(String(value))) : '—' }
 function display(value: unknown, format: ColumnFormat, key?: string) {

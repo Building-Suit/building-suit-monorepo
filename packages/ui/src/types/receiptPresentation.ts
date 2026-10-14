@@ -1,4 +1,7 @@
 export interface BsReceiptView {
+  logoDataUrl?: string | null
+  notes?: string | null
+  direction?: 'ltr' | 'rtl'
   issuer: string
   issuerDetails: string[]
   invoice: string
