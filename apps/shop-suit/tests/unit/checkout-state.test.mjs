@@ -1,8 +1,18 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { checkoutSnapshot } from '../../app/utils/checkout-state.mjs'
+import { checkoutSnapshot, checkoutDialogPhase } from '../../app/utils/checkout-state.mjs'
 const order = (state, extra = {}) => ({ orderId: 'order-1', state, createdAt: '2026-10-13T18:44:00Z', sessionId: 'cs_test_saved', url: state === 'open' ? 'https://checkout.xpay.app/c/cs_test_saved' : null, ...extra })
 const state = (orders, extra = {}) => checkoutSnapshot({ orders, current: null, historyKnown: true, accessState: 'trialing', checking: false, error: false, ...extra })
+test('a new plan review cannot borrow confirmation from previous paid history', () => {
+  const input = { paymentPhase: 'confirmed', newPlanReview: true, blocked: false, pending: false }
+  assert.equal(checkoutDialogPhase(input), 'ready')
+  assert.equal(checkoutDialogPhase({ ...input, quoteState: 'quoted' }), 'ready')
+  assert.equal(checkoutDialogPhase({ ...input, blocked: true }), 'held')
+  assert.equal(checkoutDialogPhase({ ...input, pending: true }), 'checking')
+  assert.equal(checkoutDialogPhase({ ...input, quoteState: 'settled' }), 'confirmed')
+  assert.equal(checkoutDialogPhase({ ...input, newPlanReview: false }), 'confirmed')
+  assert.equal(checkoutDialogPhase({ ...input, paymentPhase: 'confirming' }), 'confirming')
+})
 test('two legitimately paid terms show active success and cannot create an accidental third purchase', () => {
   const result = state([order('paid', { orderId: 'order-2', createdAt: '2026-10-13T20:06:44Z' }), order('paid')], { accessState: 'active' })
   assert.equal(result.phase, 'confirmed'); assert.equal(result.canStart, false); assert.equal(result.latestPaid.orderId, 'order-2')

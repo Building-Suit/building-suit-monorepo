@@ -2,6 +2,7 @@
 import type { BsCommerceDocumentCopy, BsCommerceDocumentForm, BsCommerceCorrectionForm, BsCommerceDocumentView } from '@building-suit/ui/types/commerceDocumentPresentation'
 
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
+const { businessCurrency } = useShop()
 
 definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
 
@@ -94,7 +95,7 @@ const { data: purchase, pending, error, refresh } = useAsyncData(
 
 watch([paymentForm, creditForm, returnForm, reversalForm], () => { if (!pendingAction.value) requestId.value = null }, { deep: true })
 
-function money(value: number) { return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { style: 'currency', currency: 'EGP', maximumFractionDigits: 2 }).format(Number(value)) }
+function money(value: number) { return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { style: 'currency', currency: businessCurrency.value, maximumFractionDigits: 20 }).format(Number(value)) }
 function displayDate(value: string) { return new Intl.DateTimeFormat(isArabic.value ? 'ar-EG' : 'en-EG', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) }
 function eventLabel(event: PaymentEvent) { return event.eventType === 'payment' ? copy.value.payment : copy.value.reversal }
 function methodLabel(method: PaymentMethod) { return copy.value[method] }

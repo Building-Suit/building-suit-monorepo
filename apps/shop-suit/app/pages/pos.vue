@@ -6,6 +6,7 @@ import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import { businessModeSupportsProducts, businessModeSupportsServices } from '~/utils/businessMode'
 import { posCustomerOptions } from '~/utils/posCustomer.js'
 import { addOrIncrementCartLine, cartTotal, nextCartQuantity, cartQuantityLimit } from '~/utils/pos'
+const { businessCurrency } = useShop()
 
 definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
 type PaymentMethod = 'cash' | 'bank_transfer' | 'card' | 'wallet' | 'cheque' | 'other'
@@ -300,7 +301,7 @@ async function checkout() {
   finally { if (inScope()) checkingOut.value = false }
 }
 
-function money(value: number) { return new Intl.NumberFormat(locale.value === 'ar' ? 'ar-EG' : 'en-EG', { style: 'currency', currency: 'EGP', maximumFractionDigits: 2 }).format(value) }
+function money(value: number) { return new Intl.NumberFormat(locale.value === 'ar' ? 'ar-EG' : 'en-EG', { style: 'currency', currency: businessCurrency.value, maximumFractionDigits: 20 }).format(value) }
 function appointmentLabel(appointment: Appointment) { return `${new Intl.DateTimeFormat(locale.value === 'ar' ? 'ar-EG' : 'en-EG', { weekday: 'short', hour: 'numeric', minute: '2-digit' }).format(new Date(appointment.startsAt))} · ${appointment.customerName} · ${appointment.service.name}` }
 
 watch(context, value => {

@@ -1245,6 +1245,7 @@ export type Database = {
           corrects_expense_id: string | null
           created_at: string
           created_by_profile_id: string
+          currency: string
           expense_date: string
           id: string
           location_id: string
@@ -1267,6 +1268,7 @@ export type Database = {
           corrects_expense_id?: string | null
           created_at?: string
           created_by_profile_id: string
+          currency?: string
           expense_date?: string
           id?: string
           location_id: string
@@ -1289,6 +1291,7 @@ export type Database = {
           corrects_expense_id?: string | null
           created_at?: string
           created_by_profile_id?: string
+          currency?: string
           expense_date?: string
           id?: string
           location_id?: string
@@ -2043,6 +2046,7 @@ export type Database = {
           client_id: string | null
           created_at: string
           created_by_profile_id: string
+          currency: string
           customer_kind:
             | Database["public"]["Enums"]["customer_payment_kind"]
             | null
@@ -2069,6 +2073,7 @@ export type Database = {
           client_id?: string | null
           created_at?: string
           created_by_profile_id: string
+          currency?: string
           customer_kind?:
             | Database["public"]["Enums"]["customer_payment_kind"]
             | null
@@ -2095,6 +2100,7 @@ export type Database = {
           client_id?: string | null
           created_at?: string
           created_by_profile_id?: string
+          currency?: string
           customer_kind?:
             | Database["public"]["Enums"]["customer_payment_kind"]
             | null
@@ -2911,6 +2917,8 @@ export type Database = {
           created_at: string
           created_by_profile_id: string
           id: string
+          image_object_name: string | null
+          image_url: string | null
           is_active: boolean
           name: string
           reorder_threshold: number
@@ -2925,6 +2933,8 @@ export type Database = {
           created_at?: string
           created_by_profile_id: string
           id?: string
+          image_object_name?: string | null
+          image_url?: string | null
           is_active?: boolean
           name: string
           reorder_threshold?: number
@@ -2939,6 +2949,8 @@ export type Database = {
           created_at?: string
           created_by_profile_id?: string
           id?: string
+          image_object_name?: string | null
+          image_url?: string | null
           is_active?: boolean
           name?: string
           reorder_threshold?: number
@@ -3583,6 +3595,8 @@ export type Database = {
           description: string | null
           duration_minutes: number | null
           id: string
+          image_object_name: string | null
+          image_url: string | null
           is_active: boolean
           name: string
           scheduling_enabled: boolean
@@ -3600,6 +3614,8 @@ export type Database = {
           description?: string | null
           duration_minutes?: number | null
           id?: string
+          image_object_name?: string | null
+          image_url?: string | null
           is_active?: boolean
           name: string
           scheduling_enabled?: boolean
@@ -3617,6 +3633,8 @@ export type Database = {
           description?: string | null
           duration_minutes?: number | null
           id?: string
+          image_object_name?: string | null
+          image_url?: string | null
           is_active?: boolean
           name?: string
           scheduling_enabled?: boolean
@@ -4240,6 +4258,48 @@ export type Database = {
           },
         ]
       }
+      shop_currency_changes: {
+        Row: {
+          changed_at: string
+          changed_by_profile_id: string
+          id: string
+          new_currency: string
+          previous_currency: string
+          shop_id: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by_profile_id: string
+          id?: string
+          new_currency: string
+          previous_currency: string
+          shop_id: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by_profile_id?: string
+          id?: string
+          new_currency?: string
+          previous_currency?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_currency_changes_changed_by_profile_id_fkey"
+            columns: ["changed_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shop_currency_changes_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shop_locations: {
         Row: {
           address: string | null
@@ -4619,6 +4679,258 @@ export type Database = {
           },
         ]
       }
+      shop_proration_credit_accounts: {
+        Row: {
+          balance_minor: number
+          currency: string
+          subscription_id: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          balance_minor?: number
+          currency?: string
+          subscription_id: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          balance_minor?: number
+          currency?: string
+          subscription_id?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_proration_credit_accounts_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: true
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_proration_credit_ledger: {
+        Row: {
+          balance_after_minor: number
+          balance_before_minor: number
+          cash_minor: number
+          created_at: string
+          currency: string
+          delta_minor: number
+          quote_id: string
+          rounding_adjustment_minor: number
+          service_value_minor: number
+          subscription_id: string
+          unused_prepaid_minor: number
+          version_after: number
+          version_before: number
+        }
+        Insert: {
+          balance_after_minor: number
+          balance_before_minor: number
+          cash_minor: number
+          created_at?: string
+          currency: string
+          delta_minor: number
+          quote_id: string
+          rounding_adjustment_minor: number
+          service_value_minor: number
+          subscription_id: string
+          unused_prepaid_minor: number
+          version_after: number
+          version_before: number
+        }
+        Update: {
+          balance_after_minor?: number
+          balance_before_minor?: number
+          cash_minor?: number
+          created_at?: string
+          currency?: string
+          delta_minor?: number
+          quote_id?: string
+          rounding_adjustment_minor?: number
+          service_value_minor?: number
+          subscription_id?: string
+          unused_prepaid_minor?: number
+          version_after?: number
+          version_before?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_proration_credit_ledger_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: true
+            referencedRelation: "shop_proration_quotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shop_proration_credit_ledger_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_proration_quotes: {
+        Row: {
+          actor_user_id: string
+          calculation: Json
+          catalog_terms_id: string
+          commerce: Json
+          created_at: string
+          credit_version: number
+          expires_at: string
+          funding_evidence: Json
+          id: string
+          parameters: Json
+          private_offer_id: string | null
+          request_id: string
+          shop_id: string
+          state: string
+          subscription_before: Json
+          subscription_id: string
+          xpay_order_id: string | null
+        }
+        Insert: {
+          actor_user_id: string
+          calculation: Json
+          catalog_terms_id: string
+          commerce: Json
+          created_at?: string
+          credit_version: number
+          expires_at: string
+          funding_evidence: Json
+          id?: string
+          parameters: Json
+          private_offer_id?: string | null
+          request_id: string
+          shop_id: string
+          state?: string
+          subscription_before: Json
+          subscription_id: string
+          xpay_order_id?: string | null
+        }
+        Update: {
+          actor_user_id?: string
+          calculation?: Json
+          catalog_terms_id?: string
+          commerce?: Json
+          created_at?: string
+          credit_version?: number
+          expires_at?: string
+          funding_evidence?: Json
+          id?: string
+          parameters?: Json
+          private_offer_id?: string | null
+          request_id?: string
+          shop_id?: string
+          state?: string
+          subscription_before?: Json
+          subscription_id?: string
+          xpay_order_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_proration_quotes_catalog_terms_id_fkey"
+            columns: ["catalog_terms_id"]
+            isOneToOne: false
+            referencedRelation: "plan_catalog_terms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shop_proration_quotes_private_offer_id_fkey"
+            columns: ["private_offer_id"]
+            isOneToOne: false
+            referencedRelation: "shop_private_offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shop_proration_quotes_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shop_proration_quotes_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shop_proration_quotes_xpay_order_id_fkey"
+            columns: ["xpay_order_id"]
+            isOneToOne: true
+            referencedRelation: "shop_xpay_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_proration_settlements: {
+        Row: {
+          cash_minor: number
+          cycle_start: string
+          period_end: string
+          period_start: string
+          prepaid_value_minor: number
+          quote_id: string
+          settled_at: string
+          subscription_before: Json
+          subscription_id: string
+          xpay_order_id: string | null
+        }
+        Insert: {
+          cash_minor: number
+          cycle_start: string
+          period_end: string
+          period_start: string
+          prepaid_value_minor: number
+          quote_id: string
+          settled_at?: string
+          subscription_before: Json
+          subscription_id: string
+          xpay_order_id?: string | null
+        }
+        Update: {
+          cash_minor?: number
+          cycle_start?: string
+          period_end?: string
+          period_start?: string
+          prepaid_value_minor?: number
+          quote_id?: string
+          settled_at?: string
+          subscription_before?: Json
+          subscription_id?: string
+          xpay_order_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_proration_settlements_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: true
+            referencedRelation: "shop_proration_quotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shop_proration_settlements_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shop_proration_settlements_xpay_order_id_fkey"
+            columns: ["xpay_order_id"]
+            isOneToOne: true
+            referencedRelation: "shop_xpay_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shop_realtime_versions: {
         Row: {
           feature: string
@@ -4663,10 +4975,17 @@ export type Database = {
           address: string | null
           created_at: string
           display_name: string | null
+          document_direction: string
+          document_label: string | null
+          document_language: string
           footer: string | null
+          logo_data_url: string | null
+          notes: string | null
           paper_size: string
           phone: string | null
+          reference_label: string | null
           shop_id: string
+          show_descriptions: boolean
           updated_at: string
           updated_by_profile_id: string
         }
@@ -4674,10 +4993,17 @@ export type Database = {
           address?: string | null
           created_at?: string
           display_name?: string | null
+          document_direction?: string
+          document_label?: string | null
+          document_language?: string
           footer?: string | null
+          logo_data_url?: string | null
+          notes?: string | null
           paper_size?: string
           phone?: string | null
+          reference_label?: string | null
           shop_id: string
+          show_descriptions?: boolean
           updated_at?: string
           updated_by_profile_id: string
         }
@@ -4685,10 +5011,17 @@ export type Database = {
           address?: string | null
           created_at?: string
           display_name?: string | null
+          document_direction?: string
+          document_label?: string | null
+          document_language?: string
           footer?: string | null
+          logo_data_url?: string | null
+          notes?: string | null
           paper_size?: string
           phone?: string | null
+          reference_label?: string | null
           shop_id?: string
+          show_descriptions?: boolean
           updated_at?: string
           updated_by_profile_id?: string
         }
@@ -4705,6 +5038,102 @@ export type Database = {
             columns: ["updated_by_profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_scheduled_plan_changes: {
+        Row: {
+          actor_user_id: string
+          cancelled_at: string | null
+          catalog_terms_id: string | null
+          completed_at: string | null
+          completed_quote_id: string | null
+          created_at: string
+          effective_at: string
+          id: string
+          private_offer_id: string | null
+          private_offer_parameters: Json | null
+          request_id: string
+          shop_id: string
+          state: string
+          subscription_before: Json
+          subscription_id: string
+          target: Json
+          updated_at: string
+        }
+        Insert: {
+          actor_user_id: string
+          cancelled_at?: string | null
+          catalog_terms_id?: string | null
+          completed_at?: string | null
+          completed_quote_id?: string | null
+          created_at?: string
+          effective_at: string
+          id?: string
+          private_offer_id?: string | null
+          private_offer_parameters?: Json | null
+          request_id: string
+          shop_id: string
+          state?: string
+          subscription_before: Json
+          subscription_id: string
+          target: Json
+          updated_at?: string
+        }
+        Update: {
+          actor_user_id?: string
+          cancelled_at?: string | null
+          catalog_terms_id?: string | null
+          completed_at?: string | null
+          completed_quote_id?: string | null
+          created_at?: string
+          effective_at?: string
+          id?: string
+          private_offer_id?: string | null
+          private_offer_parameters?: Json | null
+          request_id?: string
+          shop_id?: string
+          state?: string
+          subscription_before?: Json
+          subscription_id?: string
+          target?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_scheduled_plan_changes_catalog_terms_id_fkey"
+            columns: ["catalog_terms_id"]
+            isOneToOne: false
+            referencedRelation: "plan_catalog_terms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shop_scheduled_plan_changes_completed_quote_id_fkey"
+            columns: ["completed_quote_id"]
+            isOneToOne: false
+            referencedRelation: "shop_proration_quotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shop_scheduled_plan_changes_private_offer_id_fkey"
+            columns: ["private_offer_id"]
+            isOneToOne: false
+            referencedRelation: "shop_private_offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shop_scheduled_plan_changes_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shop_scheduled_plan_changes_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
             referencedColumns: ["id"]
           },
         ]
@@ -5054,10 +5483,242 @@ export type Database = {
           },
         ]
       }
+      shop_xpay_inbox: {
+        Row: {
+          event_id: string
+          event_type: string
+          merchant_id: string
+          mode: string
+          payload_digest: string
+          processed_at: string | null
+          received_at: string
+          session_id: string
+          state: string
+        }
+        Insert: {
+          event_id: string
+          event_type: string
+          merchant_id: string
+          mode: string
+          payload_digest: string
+          processed_at?: string | null
+          received_at?: string
+          session_id: string
+          state?: string
+        }
+        Update: {
+          event_id?: string
+          event_type?: string
+          merchant_id?: string
+          mode?: string
+          payload_digest?: string
+          processed_at?: string | null
+          received_at?: string
+          session_id?: string
+          state?: string
+        }
+        Relationships: []
+      }
+      shop_xpay_orders: {
+        Row: {
+          actor_user_id: string
+          amount_minor: number
+          catalog_terms_id: string
+          checkout_url: string | null
+          created_at: string
+          currency: string
+          expires_at: string | null
+          id: string
+          merchant_id: string
+          mode: string
+          private_offer_id: string | null
+          quote: Json
+          request_id: string
+          session_id: string | null
+          session_request: Json | null
+          shop_id: string
+          state: string
+          subscription_before: Json
+          subscription_id: string
+          updated_at: string
+        }
+        Insert: {
+          actor_user_id: string
+          amount_minor: number
+          catalog_terms_id: string
+          checkout_url?: string | null
+          created_at?: string
+          currency: string
+          expires_at?: string | null
+          id?: string
+          merchant_id: string
+          mode: string
+          private_offer_id?: string | null
+          quote: Json
+          request_id: string
+          session_id?: string | null
+          session_request?: Json | null
+          shop_id: string
+          state?: string
+          subscription_before: Json
+          subscription_id: string
+          updated_at?: string
+        }
+        Update: {
+          actor_user_id?: string
+          amount_minor?: number
+          catalog_terms_id?: string
+          checkout_url?: string | null
+          created_at?: string
+          currency?: string
+          expires_at?: string | null
+          id?: string
+          merchant_id?: string
+          mode?: string
+          private_offer_id?: string | null
+          quote?: Json
+          request_id?: string
+          session_id?: string | null
+          session_request?: Json | null
+          shop_id?: string
+          state?: string
+          subscription_before?: Json
+          subscription_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_xpay_orders_catalog_terms_id_fkey"
+            columns: ["catalog_terms_id"]
+            isOneToOne: false
+            referencedRelation: "plan_catalog_terms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shop_xpay_orders_private_offer_id_fkey"
+            columns: ["private_offer_id"]
+            isOneToOne: false
+            referencedRelation: "shop_private_offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shop_xpay_orders_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shop_xpay_orders_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_xpay_paid_observations: {
+        Row: {
+          amount_minor: number
+          currency: string
+          merchant_id: string
+          mode: string
+          order_id: string
+          payment_intent_id: string
+          session_id: string
+          verified_at: string
+        }
+        Insert: {
+          amount_minor: number
+          currency: string
+          merchant_id: string
+          mode: string
+          order_id: string
+          payment_intent_id: string
+          session_id: string
+          verified_at?: string
+        }
+        Update: {
+          amount_minor?: number
+          currency?: string
+          merchant_id?: string
+          mode?: string
+          order_id?: string
+          payment_intent_id?: string
+          session_id?: string
+          verified_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_xpay_paid_observations_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "shop_xpay_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_xpay_payments: {
+        Row: {
+          amount_minor: number
+          currency: string
+          id: string
+          merchant_id: string
+          mode: string
+          order_id: string
+          payment_intent_id: string
+          period_end: string
+          period_start: string
+          session_id: string
+          snapshot: Json
+          verified_at: string
+        }
+        Insert: {
+          amount_minor: number
+          currency: string
+          id?: string
+          merchant_id: string
+          mode: string
+          order_id: string
+          payment_intent_id: string
+          period_end: string
+          period_start: string
+          session_id: string
+          snapshot: Json
+          verified_at?: string
+        }
+        Update: {
+          amount_minor?: number
+          currency?: string
+          id?: string
+          merchant_id?: string
+          mode?: string
+          order_id?: string
+          payment_intent_id?: string
+          period_end?: string
+          period_start?: string
+          session_id?: string
+          snapshot?: Json
+          verified_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_xpay_payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "shop_xpay_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shops: {
         Row: {
+          business_currency: string
           business_mode: Database["public"]["Enums"]["business_mode"]
           created_at: string
+          currency_lock_record_id: string | null
+          currency_lock_source: string | null
+          currency_locked_at: string | null
           id: string
           name: string
           portal_id: string
@@ -5066,8 +5727,12 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          business_currency?: string
           business_mode?: Database["public"]["Enums"]["business_mode"]
           created_at?: string
+          currency_lock_record_id?: string | null
+          currency_lock_source?: string | null
+          currency_locked_at?: string | null
           id?: string
           name: string
           portal_id: string
@@ -5076,8 +5741,12 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          business_currency?: string
           business_mode?: Database["public"]["Enums"]["business_mode"]
           created_at?: string
+          currency_lock_record_id?: string | null
+          currency_lock_source?: string | null
+          currency_locked_at?: string | null
           id?: string
           name?: string
           portal_id?: string
@@ -5297,8 +5966,10 @@ export type Database = {
           plan_variant: string | null
           price_amount: number
           price_override_id: string | null
+          proration_quote_id: string | null
           resource_limits: Json
           subscription_id: string
+          xpay_order_id: string | null
         }
         Insert: {
           approved_at: string
@@ -5317,8 +5988,10 @@ export type Database = {
           plan_variant?: string | null
           price_amount: number
           price_override_id?: string | null
+          proration_quote_id?: string | null
           resource_limits: Json
           subscription_id: string
+          xpay_order_id?: string | null
         }
         Update: {
           approved_at?: string
@@ -5337,8 +6010,10 @@ export type Database = {
           plan_variant?: string | null
           price_amount?: number
           price_override_id?: string | null
+          proration_quote_id?: string | null
           resource_limits?: Json
           subscription_id?: string
+          xpay_order_id?: string | null
         }
         Relationships: [
           {
@@ -5363,10 +6038,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "subscription_commercial_periods_proration_quote_id_fkey"
+            columns: ["proration_quote_id"]
+            isOneToOne: true
+            referencedRelation: "shop_proration_quotes"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "subscription_commercial_periods_subscription_id_fkey"
             columns: ["subscription_id"]
             isOneToOne: false
             referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_commercial_periods_xpay_order_id_fkey"
+            columns: ["xpay_order_id"]
+            isOneToOne: true
+            referencedRelation: "shop_xpay_orders"
             referencedColumns: ["id"]
           },
         ]
@@ -6104,6 +6793,7 @@ export type Database = {
         Row: {
           created_at: string
           created_by_profile_id: string
+          currency: string
           id: string
           invoice_number: string | null
           issued_at: string | null
@@ -6121,6 +6811,7 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by_profile_id: string
+          currency?: string
           id?: string
           invoice_number?: string | null
           issued_at?: string | null
@@ -6138,6 +6829,7 @@ export type Database = {
         Update: {
           created_at?: string
           created_by_profile_id?: string
+          currency?: string
           id?: string
           invoice_number?: string | null
           issued_at?: string | null
@@ -7242,6 +7934,7 @@ export type Database = {
         }
         Returns: Json
       }
+      business_currency_settings: { Args: { p_shop_id: string }; Returns: Json }
       cash_shift_dashboard: {
         Args: {
           p_cashier_membership_id?: string
@@ -8048,6 +8741,10 @@ export type Database = {
         }
         Returns: string
       }
+      save_business_currency: {
+        Args: { p_currency: string; p_shop_id: string }
+        Returns: Json
+      }
       save_catalog_category: {
         Args: { p_category_id: string; p_name: string; p_shop_id: string }
         Returns: string
@@ -8063,6 +8760,10 @@ export type Database = {
           p_shop_id: string
         }
         Returns: string
+      }
+      save_document_settings: {
+        Args: { p_settings: Json; p_shop_id: string }
+        Returns: Json
       }
       save_expense: {
         Args: {
@@ -8311,12 +9012,38 @@ export type Database = {
         Returns: boolean
       }
       shop_admin_provisioned_owner_claim: { Args: never; Returns: Json }
+      shop_billing_change_cancel: {
+        Args: { p_change_id: string; p_shop_id: string }
+        Returns: Json
+      }
+      shop_billing_change_preview: {
+        Args: {
+          p_catalog_terms_id: string
+          p_private_offer?: Json
+          p_shop_id: string
+        }
+        Returns: Json
+      }
+      shop_billing_change_read: { Args: { p_shop_id: string }; Returns: Json }
+      shop_billing_change_schedule: {
+        Args: {
+          p_catalog_terms_id: string
+          p_private_offer?: Json
+          p_request_id: string
+          p_shop_id: string
+        }
+        Returns: Json
+      }
       shop_billing_payment_evidence_read: {
         Args: { p_submission_id: string }
         Returns: Json
       }
       shop_billing_read: { Args: { p_shop_id: string }; Returns: Json }
       shop_cash_policy: { Args: { p_shop_id: string }; Returns: boolean }
+      shop_catalog_media: {
+        Args: { p_action: string; p_payload: Json; p_shop_id: string }
+        Returns: Json
+      }
       shop_has_active_subscription: {
         Args: { _shop_id: string }
         Returns: boolean
@@ -8443,6 +9170,75 @@ export type Database = {
         Returns: Json
       }
       shop_team_read: { Args: { p_shop_id: string }; Returns: Json }
+      shop_xpay_apply_session: {
+        Args: { p_event_id?: string; p_session: Json }
+        Returns: Json
+      }
+      shop_xpay_bind_session: {
+        Args: { p_order_id: string; p_session: Json }
+        Returns: Json
+      }
+      shop_xpay_checkout_status: { Args: { p_shop_id: string }; Returns: Json }
+      shop_xpay_inbox_receive: {
+        Args: {
+          p_digest: string
+          p_event_id: string
+          p_merchant_id: string
+          p_mode: string
+          p_session_id: string
+          p_type: string
+        }
+        Returns: Json
+      }
+      shop_xpay_order_create: {
+        Args: {
+          p_catalog_terms_id: string
+          p_private_offer?: Json
+          p_request_id: string
+          p_shop_id: string
+        }
+        Returns: Json
+      }
+      shop_xpay_order_read: {
+        Args: { p_order_id?: string; p_shop_id: string }
+        Returns: Json
+      }
+      shop_xpay_prepare_session: {
+        Args: { p_body: Json; p_order_id: string }
+        Returns: Json
+      }
+      shop_xpay_proration_abandon: {
+        Args: { p_quote_id: string; p_shop_id: string }
+        Returns: Json
+      }
+      shop_xpay_proration_credit_confirm: {
+        Args: { p_quote_id: string; p_shop_id: string }
+        Returns: Json
+      }
+      shop_xpay_proration_order: {
+        Args: { p_quote_id: string; p_shop_id: string }
+        Returns: Json
+      }
+      shop_xpay_proration_quote: {
+        Args: {
+          p_catalog_terms_id: string
+          p_private_offer?: Json
+          p_request_id: string
+          p_shop_id: string
+        }
+        Returns: Json
+      }
+      shop_xpay_proration_read: {
+        Args: { p_quote_id: string; p_shop_id: string }
+        Returns: Json
+      }
+      shop_xpay_proration_status: { Args: { p_shop_id: string }; Returns: Json }
+      shop_xpay_reconcile_candidates: { Args: never; Returns: Json }
+      shop_xpay_schedule_reconciliation: {
+        Args: { p_enabled: boolean; p_project_ref: string }
+        Returns: Json
+      }
+      shop_xpay_server_order: { Args: { p_order_id: string }; Returns: Json }
       submit_shop_billing_notice:
         | {
             Args: {

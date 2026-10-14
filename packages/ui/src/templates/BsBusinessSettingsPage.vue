@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import type { BsBusinessProfileForm, BsBusinessLocationForm, BsBusinessReceiptForm, BsBusinessSettingsEditor, BsBusinessLocationsView, BsBusinessCashPolicyView, BsBusinessReceiptSummary, BsBusinessSettingsCopy } from '../types/businessSettingsPresentation'
+import type { BsBusinessProfileForm, BsBusinessLocationForm, BsBusinessReceiptForm, BsBusinessSettingsEditor, BsBusinessLocationsView, BsBusinessCashPolicyView, BsBusinessReceiptSummary, BsBusinessSettingsCopy, BsBusinessCurrencyView } from '../types/businessSettingsPresentation'
 defineProps<{
+  currencyView?: BsBusinessCurrencyView
   context: { name: string } | null; loading: boolean; shopError: boolean; canManage: boolean; copy: BsBusinessSettingsCopy
   cash: BsBusinessCashPolicyView; profileEditor: BsBusinessSettingsEditor; modeEditor: BsBusinessSettingsEditor
   receiptEditor: BsBusinessSettingsEditor & { loading: boolean; loadError: boolean }; receiptSummary: BsBusinessReceiptSummary | null
@@ -10,19 +11,21 @@ const profileForm = defineModel<BsBusinessProfileForm>('profileForm', { required
 const locationForm = defineModel<BsBusinessLocationForm>('locationForm', { required: true })
 const receiptForm = defineModel<BsBusinessReceiptForm>('receiptForm', { required: true })
 const selectedMode = defineModel<string>('mode', { required: true })
+const businessCurrency = defineModel<string>('businessCurrency', { default: 'EGP' })
 const cashRequired = defineModel<boolean>('cashRequired', { required: true })
 const profileActionOpen = defineModel<boolean>('profileOpen', { required: true })
 const modeActionOpen = defineModel<boolean>('modeOpen', { required: true })
 const receiptActionOpen = defineModel<boolean>('receiptOpen', { required: true })
 const locationDialogOpen = defineModel<boolean>('locationOpen', { required: true })
 const emit = defineEmits<{
+  saveCurrency: []; retryCurrency: [];
   editProfile: []; editMode: []; editReceipt: []; retry: []; retryCash: []; retryReceipt: []
   saveCash: []; saveProfile: []; saveMode: []; saveLocation: []; saveReceipt: []; createLocation: []
-  editLocation: [id: string]; archiveLocation: [id: string]; restoreLocation: [id: string]
+  editLocation: [id: string]; archiveLocation: [id: string]; restoreLocation: [id: string]; selectLogo: [file: File | File[] | null]
 }>()
 function updateProfile(key: keyof BsBusinessProfileForm, value: string | number) { profileForm.value = { ...profileForm.value, [key]: String(value) } }
 function updateLocation(key: keyof BsBusinessLocationForm, value: string | number) { locationForm.value = { ...locationForm.value, [key]: String(value) } }
-function updateReceipt(key: keyof BsBusinessReceiptForm, value: string | number | boolean) { receiptForm.value = { ...receiptForm.value, [key]: String(value) } }
+function updateReceipt(key: keyof BsBusinessReceiptForm, value: string | number | boolean | (string | number)[] | null) { receiptForm.value = { ...receiptForm.value, [key]: key === 'showDescriptions' ? value === true : String(value ?? '') } }
 </script>
 <template>
   <BsStack gap="lg" class="bs-business-settings-page">
@@ -31,8 +34,21 @@ function updateReceipt(key: keyof BsBusinessReceiptForm, value: string | number 
     <BsBox v-else-if="shopError" role="alert">{{ copy.failed }} <BsButton @click="emit('retry')">{{ copy.retry }}</BsButton>
     </BsBox>
     <BsText v-else-if="!context" role="status" as="p">{{ copy.empty }}</BsText>
-    <BsSectionNavigation v-if="context && !loading && !shopError" :label="copy.title" :sections="[{ id: 'shop-profile', label: copy.profileTitle }, { id: 'business-mode', label: copy.modeTitle }, { id: 'locations', label: copy.locationsTitle }, { id: 'receipt-settings', label: copy.receiptTitle }, { id: 'cash-policy', label: copy.cashTitle }]" />
+    <BsSectionNavigation v-if="context && !loading && !shopError" :label="copy.title" :sections="[{ id: 'shop-profile', label: copy.profileTitle }, { id: 'business-mode', label: copy.modeTitle }, { id: 'locations', label: copy.locationsTitle }, { id: 'receipt-settings', label: copy.receiptTitle }, { id: 'cash-policy', label: copy.cashTitle }, ...(currencyView ? [{ id: 'currency-settings', label: currencyView.title }] : [])]" />
     <BsGrid v-if="context && !loading && !shopError" :columns="2" gap="lg">
+    <BsPanel v-if="currencyView" id="currency-settings" aria-labelledby="business-currency-title" padding="md">
+      <BsHeading id="business-currency-title" :level="2">{{ currencyView.title }}</BsHeading>
+      <BsText as="p" size="sm" tone="muted">{{ currencyView.help }}</BsText>
+      <BsText v-if="currencyView.loading" role="status">{{ copy.loading }}</BsText>
+      <BsAlert v-else-if="currencyView.loadError" tone="error">{{ currencyView.failed }} <BsButton @click="emit('retryCurrency')">{{ currencyView.retry }}</BsButton></BsAlert>
+      <BsForm v-else :pending="currencyView.pending" :error="currencyView.error" @submit="emit('saveCurrency')">
+        <BsText v-if="currencyView.locked" role="status">{{ currencyView.lockedHelp }}</BsText>
+        <BsText v-if="!canManage" role="status">{{ copy.ownerOnly }}</BsText>
+        <BsField v-slot="field" :label="currencyView.title"><BsSelect v-model="businessCurrency" :input-id="field.id" :label="currencyView.title" :aria-describedby="field.describedby" :options="currencyView.options" option-label="label" option-value="value" :disabled="currencyView.locked || !canManage || currencyView.pending" /></BsField>
+        <BsText v-if="currencyView.success" role="status">{{ currencyView.success }}</BsText>
+        <BsButton variant="primary" type="submit" :pending="currencyView.pending" :disabled="currencyView.locked || !canManage || businessCurrency === currencyView.code">{{ currencyView.save }}</BsButton>
+      </BsForm>
+    </BsPanel>
     <BsPanel v-if="context && !loading && !shopError" id="shop-profile" aria-labelledby="shop-profile-title" padding="md">
       <BsHeading id="shop-profile-title" :level="2">{{ copy.profileTitle }}</BsHeading>
       <BsText as="p" size="sm" tone="muted">{{ copy.profileHelp }}</BsText>
@@ -131,6 +147,17 @@ function updateReceipt(key: keyof BsBusinessReceiptForm, value: string | number 
             </BsField>
             <BsField v-slot="field" :label="copy.receiptFooter">
               <BsTextarea :id="field.id" :model-value="receiptForm.footer" :aria-describedby="field.describedby" :rows="3" :maxlength="500" :disabled="!canManage" @update:model-value="updateReceipt('footer', $event)"/>
+            </BsField>
+            <BsField v-if="copy.documentLabel" v-slot="field" :label="copy.documentLabel"><BsInput :id="field.id" :model-value="receiptForm.documentLabel || ''" :maxlength="80" :disabled="!canManage" @update:model-value="updateReceipt('documentLabel', $event)" /></BsField>
+            <BsField v-if="copy.referenceLabel" v-slot="field" :label="copy.referenceLabel"><BsInput :id="field.id" :model-value="receiptForm.referenceLabel || ''" :maxlength="80" :disabled="!canManage" @update:model-value="updateReceipt('referenceLabel', $event)" /></BsField>
+            <BsField v-if="copy.documentLanguage" v-slot="field" :label="copy.documentLanguage"><BsSelect :input-id="field.id" :model-value="receiptForm.documentLanguage" :label="copy.documentLanguage" :aria-describedby="field.describedby" :options="[{ value: 'ar', label: 'العربية' }, { value: 'en', label: 'English' }]" option-value="value" option-label="label" :disabled="!canManage" @update:model-value="updateReceipt('documentLanguage', $event)" /></BsField>
+            <BsField v-if="copy.documentDirection" v-slot="field" :label="copy.documentDirection"><BsSelect :input-id="field.id" :model-value="receiptForm.documentDirection" :label="copy.documentDirection" :aria-describedby="field.describedby" :options="[{ value: 'auto', label: copy.autoDirection || 'Auto' }, { value: 'rtl', label: 'RTL' }, { value: 'ltr', label: 'LTR' }]" option-value="value" option-label="label" :disabled="!canManage" @update:model-value="updateReceipt('documentDirection', $event)" /></BsField>
+            <BsCheckbox v-if="copy.showDescriptions" :model-value="receiptForm.showDescriptions ?? true" :label="copy.showDescriptions" :disabled="!canManage" @update:model-value="updateReceipt('showDescriptions', $event)" />
+            <BsField v-if="copy.documentNotes" v-slot="field" :label="copy.documentNotes"><BsTextarea :id="field.id" :model-value="receiptForm.notes || ''" :maxlength="1000" :disabled="!canManage" @update:model-value="updateReceipt('notes', $event)" /></BsField>
+            <BsField v-if="copy.documentLogo" v-slot="field" :label="copy.documentLogo" :hint="copy.logoHelp">
+              <BsImage v-if="receiptForm.logoDataUrl" :src="receiptForm.logoDataUrl" :alt="receiptForm.displayName" :width="96" :height="96" fit="contain" />
+              <BsFileInput :input-id="field.id" accept="image/png,image/jpeg" :describedby="field.describedby" :disabled="!canManage || receiptEditor.pending" :reset-after-select="true" :label="copy.documentLogo" @select="emit('selectLogo', $event)" />
+              <BsButton v-if="receiptForm.logoDataUrl" variant="secondary" :disabled="!canManage || receiptEditor.pending" @click="updateReceipt('logoDataUrl', '')">{{ copy.removeLogo }}</BsButton>
             </BsField>
             <BsFieldGroup :disabled="!canManage || receiptEditor.pending" :legend="(copy.receiptPaper)">
               <BsGrid :columns="2">

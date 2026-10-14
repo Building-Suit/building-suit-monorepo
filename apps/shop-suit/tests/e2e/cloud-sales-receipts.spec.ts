@@ -2,6 +2,36 @@ import { expect, test } from '@playwright/test'
 import { pilotFixture, fixtureGoto } from './pilot-fixture'
 import { expectNoPageOverflow } from '../../../../packages/testing/browser-foundation'
 
+for (const locale of ['en', 'ar']) {
+  test(`issued receipt preserves three-decimal currency through language and paper changes: ${locale}`, async ({ page }) => {
+    const ar = locale === 'ar'
+    await page.setViewportSize({ width: ar ? 390 : 1440, height: 900 })
+    await pilotFixture(page, locale, 'owner', name => name === 'get_location_sale_receipt' ? {
+      version: 1, invoiceId: 'sale-1', invoiceNumber: 'PRECISION-001', issuedAt: '2026-10-01T12:00:00Z', currency: 'KWD',
+      business: { name: 'Issued snapshot business', address: null, phone: null },
+      location: { name: 'Issued snapshot location', code: 'MAIN', address: null, phone: null },
+      staffName: null, customer: { name: null, phone: null },
+      lines: [{ id: 'line-1', itemType: 'service', name: 'Issued service', sku: null, quantity: 1, unitPrice: 1.234, discount: 0, total: 1.234 }],
+      payments: [{ id: 'payment-1', amount: 1.234, method: 'cash', reference: null, paidAt: '2026-10-01T12:00:00Z' }],
+      subtotal: 1.234, discount: 0, total: 1.234, footer: 'Issued snapshot footer', paperSize: 'thermal_80',
+    } : undefined)
+    await fixtureGoto(page, '/sales/sale-1/receipt')
+    const document = page.locator('.bs-printable-document')
+    await expect(document).toContainText(ar ? '١٫٢٣٤' : '1.234')
+    // Unit price, line total, subtotal, total and payment retain the issued amount.
+    expect((await document.innerText()).split(ar ? '١٫٢٣٤' : '1.234').length - 1).toBe(5)
+    await page.getByRole('radio', { name: ar ? 'English' : 'العربية', exact: true }).check()
+    await expect(document).toContainText(ar ? '1.234' : '١٫٢٣٤')
+    await expect(document).toContainText('Issued snapshot business')
+    await expect(document).toContainText('Issued snapshot footer')
+    await page.getByRole('combobox', { name: ar ? 'مقاس ورق الطباعة' : 'Print paper size', exact: true }).click()
+    await page.getByRole('option', { name: 'A4 / PDF', exact: true }).click()
+    await expect(document).toHaveAttribute('data-format', 'a4')
+    await expect(document).toContainText(ar ? '1.234' : '١٫٢٣٤')
+    await expectNoPageOverflow(page)
+  })
+}
+
 for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (const width of [390, 768, 1440]) {
   test(`receipt preview and print isolation: ${locale}/${theme}/${width}`, async ({ page }) => {
     const ar = locale === 'ar'

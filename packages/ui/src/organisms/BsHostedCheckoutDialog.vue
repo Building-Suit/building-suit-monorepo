@@ -20,6 +20,7 @@ defineEmits<{ submit: []; refresh: []; restart: [] }>()
       <BsPlanStatus v-if="checkout.restrictions" :notice="checkout.restrictions"/>
       <BsText v-if="checkout.disabled && checkout.unavailable" role="status" tone="muted">{{ checkout.unavailable }}</BsText>
       <BsText v-if="checkout.statusMessage" data-testid="checkout-state" role="status">{{ checkout.statusMessage }}</BsText>
+      <BsLink v-if="checkout.error && checkout.helpTo && checkout.helpLabel" :to="checkout.helpTo">{{ checkout.helpLabel }}</BsLink>
       <BsButton v-if="checkout.restartLabel" variant="text" :disabled="checkout.restartDisabled" @click="$emit('restart')">{{ checkout.restartLabel }}</BsButton>
       <BsText size="sm" tone="muted">{{ copy.policyPrefix }} <BsLink to="/terms">{{ copy.terms }}</BsLink> · <BsLink to="/privacy">{{ copy.privacy }}</BsLink> · <BsLink to="/refund-cancellation">{{ copy.refund }}</BsLink>.</BsText>
     </BsStack>

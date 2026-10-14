@@ -41,5 +41,5 @@ test('Business settings exposes a bilingual responsive Shop profile form and ref
   assert.match(page, /لا يغيّر اسم حسابك الشخصي أو بريدك الإلكتروني/)
   assert.match(page, /does not change your personal account name or email/)
   assert.match(template, /<BsPanel[\s\S]+padding="md"/)
-  assert.match(shopContext, /\.select\('id,name,status,business_mode,created_at'\)/)
+  assert.match(shopContext, /\.select\('id,name,status,business_mode,created_at,business_currency,currency_locked_at'\)/)
 })

@@ -2,6 +2,7 @@ export type ReceiptPaperSize = 'thermal_80' | 'a4'
 export type ReceiptPaymentMethod = 'cash' | 'bank_transfer' | 'card' | 'wallet' | 'cheque' | 'other'
 
 export interface SaleReceiptSnapshot {
+  presentation?: { documentLabel: string | null; referenceLabel?: string | null; language: 'en' | 'ar'; direction: 'auto' | 'ltr' | 'rtl'; showDescriptions: boolean; notes: string | null; logoDataUrl: string | null }
   version: 1
   invoiceId: string
   invoiceNumber: string
@@ -15,6 +16,7 @@ export interface SaleReceiptSnapshot {
     id: string
     itemType: 'product' | 'service'
     name: string
+    description?: string | null
     sku: string | null
     quantity: number
     unitPrice: number

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { validCatalogImage } from '~/utils/catalogMedia'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
+const { businessCurrency } = useShop()
 const confirmation = useConfirmation()
 
 definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
@@ -199,7 +200,7 @@ async function archive(product: Product) {
 
 function money(value: number) {
   return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', {
-    style: 'currency', currency: 'EGP', maximumFractionDigits: 2,
+    style: 'currency', currency: businessCurrency.value, maximumFractionDigits: 20,
   }).format(value)
 }
 

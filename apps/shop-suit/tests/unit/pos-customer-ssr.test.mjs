@@ -44,7 +44,7 @@ for (const customerId of ['customer-1', null]) test(`SSR locks appointment custo
     useCatalogMedia: () => ({ request: (_action, _args, fallback) => fallback() }),
     useI18n: () => ({ locale: vue.ref('en'), t: key => key }),
     useConfirmation: () => ({ current: vue.ref(null), ask: async () => false }), useToasts: () => ({ push: () => {} }),
-    useShop: () => ({ current: vue.ref({ business_mode: 'service' }), currentId: vue.ref('shop-1'), currentLocationId: vue.ref('location-1'), currentLocation: vue.ref({ name: 'Main' }), currentMembership: vue.ref({ id: 'membership-1' }), loading: vue.ref(false) }),
+    useShop: () => ({ businessCurrency: vue.ref('EGP'), current: vue.ref({ business_mode: 'service' }), currentId: vue.ref('shop-1'), currentLocationId: vue.ref('location-1'), currentLocation: vue.ref({ name: 'Main' }), currentMembership: vue.ref({ id: 'membership-1' }), loading: vue.ref(false) }),
     useSupabaseClient: () => ({ schema: () => ({ rpc: async name => ({ data: name === 'pos_checkout_context' ? context : name === 'list_catalog_categories' ? [] : { items: [service], total: 1, pageSize: 30 }, error: null }) }) }),
     // Match Nuxt's SSR contract: data starts at its default, is populated during
     // server prefetch, and the returned promise can be awaited by page setup.
