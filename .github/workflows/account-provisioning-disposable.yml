@@ -7,6 +7,7 @@ on:
       - 'tooling/database/tests/account-provisioning-disposable.test.mjs'
       - 'apps/super-admin-suit/**'
       - 'apps/shop-suit/supabase/**'
+      - 'tooling/database/test-shop-settings-local.mjs'
       - 'apps/shop-suit/app/utils/owner-invitation.ts'
       - 'apps/shop-suit/app/pages/auth/owner-invitation.vue'
 permissions:
@@ -44,6 +45,8 @@ jobs:
             node tooling/database/account-provisioning-disposable.mjs --startup-errors "$RUNNER_TEMP/accounts-sas-start.log"
             exit 1
           fi
+      - name: Verify Shop settings and issued snapshots in the disposable database
+        run: node tooling/database/test-shop-settings-local.mjs
       - name: Generate schema contracts from disposable databases
         run: |
           mkdir -p "$RUNNER_TEMP/account-schema-contracts/shop" "$RUNNER_TEMP/account-schema-contracts/sas"

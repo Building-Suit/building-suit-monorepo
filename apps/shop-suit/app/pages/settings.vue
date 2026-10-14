@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { readRasterImage } from '@building-suit/ux'
 import type { BsBusinessProfileForm, BsBusinessLocationForm, BsBusinessReceiptForm, BsBusinessLocationsView, BsBusinessCashPolicyView, BsBusinessReceiptSummary, BsBusinessSettingsCopy } from '@building-suit/ui/types/businessSettingsPresentation'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import type { PlanUsageResource } from '~/types/plans'
@@ -28,8 +29,9 @@ const locationError = ref('')
 const editingLocationId = ref<string | null>(null)
 const locationForm = reactive({ name: '', code: '', address: '', phone: '' })
 const { visible: locationDialogOpen, dirty: locationDirty } = useRecordAction(() => locationForm)
-const receiptForm = reactive({ displayName: '', address: '', phone: '', footer: '', paperSize: 'thermal_80' as ReceiptPaperSize })
+const receiptForm = reactive({ displayName: '', address: '', phone: '', footer: '', paperSize: 'thermal_80' as ReceiptPaperSize, documentLabel: '', referenceLabel: '', documentLanguage: 'ar', documentDirection: 'auto', showDescriptions: true, notes: '', logoDataUrl: '' })
 const receiptPending = ref(false)
+const logoPending = ref(false)
 const receiptError = ref('')
 const receiptSuccess = ref('')
 const isArabic = computed(() => locale.value === 'ar')
@@ -54,7 +56,7 @@ const { data: locationUsage, refresh: refreshLocationUsage } = useAsyncData(
   }, { watch: [currentId], default: () => null },
 )
 const locationCapacityFull = computed(() => locationUsage.value?.atLimit === true)
-type ReceiptSettings = { displayName: string; address: string | null; phone: string | null; footer: string | null; paperSize: ReceiptPaperSize; canManage: boolean }
+type ReceiptSettings = { documentLabel?: string | null; referenceLabel?: string | null; documentLanguage?: string; documentDirection?: string; showDescriptions?: boolean; notes?: string | null; logoDataUrl?: string | null; displayName: string; address: string | null; phone: string | null; footer: string | null; paperSize: ReceiptPaperSize; canManage: boolean }
 const { data: receiptSettings, pending: receiptLoading, error: receiptLoadError, refresh: refreshReceiptSettings } = useAsyncData(
   () => `shop-data:receipt-settings:${currentId.value ?? 'none'}`,
   async (): Promise<ReceiptSettings | null> => {
@@ -174,6 +176,11 @@ watch(selectedMode, () => {
   successMessage.value = ''
 })
 
+watch(currentId, () => {
+  Object.assign(receiptForm, { displayName: '', address: '', phone: '', footer: '', paperSize: 'thermal_80', documentLabel: '', referenceLabel: '', documentLanguage: 'ar', documentDirection: 'auto', showDescriptions: true, notes: '', logoDataUrl: '' })
+  receiptError.value = ''; receiptSuccess.value = ''
+})
+
 watch(receiptSettings, (settings) => {
   if (!settings) return
   Object.assign(receiptForm, {
@@ -182,6 +189,7 @@ watch(receiptSettings, (settings) => {
     phone: settings.phone ?? '',
     footer: settings.footer ?? '',
     paperSize: settings.paperSize,
+    documentLabel: settings.documentLabel ?? '', referenceLabel: settings.referenceLabel ?? '', documentLanguage: settings.documentLanguage ?? 'ar', documentDirection: settings.documentDirection ?? 'auto', showDescriptions: settings.showDescriptions ?? true, notes: settings.notes ?? '', logoDataUrl: settings.logoDataUrl ?? '',
   })
   receiptError.value = ''
   receiptSuccess.value = ''
@@ -319,19 +327,12 @@ async function restoreLocation(locationId: string) {
 }
 
 async function saveReceiptSettings() {
-  if (!currentId.value || !canManage.value || receiptPending.value || receiptForm.displayName.trim().length < 2) return
+  if (!currentId.value || !canManage.value || receiptPending.value || logoPending.value || receiptForm.displayName.trim().length < 2) return
   receiptPending.value = true
   receiptError.value = ''
   receiptSuccess.value = ''
   try {
-    const { error } = await shopRpc.rpc('save_receipt_settings', {
-      p_shop_id: currentId.value,
-      p_display_name: receiptForm.displayName.trim(),
-      p_address: receiptForm.address.trim() || null,
-      p_phone: receiptForm.phone.trim() || null,
-      p_footer: receiptForm.footer.trim() || null,
-      p_paper_size: receiptForm.paperSize,
-    })
+    const { error } = await shopRpc.rpc('save_document_settings', { p_shop_id: currentId.value, p_settings: { ...receiptForm } })
     if (error) throw error
     await refreshReceiptSettings()
     receiptSuccess.value = copy.value.receiptSaved
@@ -354,6 +355,16 @@ const { visible: receiptActionOpen, dirty: receiptActionDirty } = receiptAction
 const settingsCopy = computed<BsBusinessSettingsCopy>(() => ({ ...copy.value,
   editProfile: isArabic.value ? 'تعديل ملف المتجر' : 'Edit shop profile',
   editMode: isArabic.value ? 'تغيير طريقة التشغيل' : 'Change business mode',
+  documentLabel: isArabic.value ? 'عنوان المستند' : 'Document label',
+  referenceLabel: isArabic.value ? 'عنوان رقم المستند' : 'Document number label',
+  documentLanguage: isArabic.value ? 'لغة المستند الافتراضية' : 'Default document language',
+  documentDirection: isArabic.value ? 'اتجاه المستند' : 'Document direction',
+  autoDirection: isArabic.value ? 'حسب اللغة' : 'Follow language',
+  showDescriptions: isArabic.value ? 'إظهار وصف البنود' : 'Show line descriptions',
+  documentNotes: isArabic.value ? 'ملاحظات المستند' : 'Document notes',
+  documentLogo: isArabic.value ? 'شعار النشاط' : 'Business logo',
+  logoHelp: isArabic.value ? 'PNG أو JPEG حتى 128 كيلوبايت. تُحفظ الصورة داخل المستند عند الإصدار.' : 'PNG or JPEG, up to 128 KiB. Image bytes are captured inside the issued document.',
+  removeLogo: isArabic.value ? 'إزالة الشعار' : 'Remove logo',
   editReceipt: isArabic.value ? 'تعديل إعدادات الإيصال' : 'Edit receipt settings',
   loading: ui('loading'), retry: ui('retry'), empty: isArabic.value ? 'افتح لوحة التحكم لاختيار متجر أو إعداد متجرك.' : 'Open Dashboard to choose or set up your Shop.',
   failed: isArabic.value ? 'مقدرناش نحمّل إعدادات النشاط. حاول تاني.' : 'Could not load business settings. Try again.',
@@ -365,7 +376,7 @@ const settingsCopy = computed<BsBusinessSettingsCopy>(() => ({ ...copy.value,
 const cashView = computed<BsBusinessCashPolicyView>(() => ({ loading: cashLoading.value, loadError: Boolean(cashLoadError.value), pending: cashPending.value, error: cashError.value, success: cashSuccess.value, disabled: !canManage.value || cashPolicy.value === null, submitDisabled: cashPolicy.value === null || cashRequired.value === cashPolicy.value }))
 const profileEditor = computed(() => ({ pending: profilePending.value, error: profileError.value, success: profileSuccess.value, dirty: profileActionDirty.value, submitDisabled: !canManage.value || profileForm.displayName.trim().length < 2 || profileForm.displayName.trim() === current.value?.name }))
 const modeEditor = computed(() => ({ pending: pending.value, error: errorMessage.value, success: successMessage.value, dirty: modeActionDirty.value, submitDisabled: !canManage.value || !current.value || selectedMode.value === current.value.business_mode }))
-const receiptEditor = computed(() => ({ pending: receiptPending.value, error: receiptError.value, success: receiptSuccess.value, dirty: receiptActionDirty.value, loading: receiptLoading.value, loadError: Boolean(receiptLoadError.value), submitDisabled: !canManage.value || receiptForm.displayName.trim().length < 2 }))
+const receiptEditor = computed(() => ({ pending: receiptPending.value || logoPending.value, error: receiptError.value, success: receiptSuccess.value, dirty: receiptActionDirty.value, loading: receiptLoading.value, loadError: Boolean(receiptLoadError.value), submitDisabled: !canManage.value || receiptForm.displayName.trim().length < 2 }))
 const receiptSummary = computed<BsBusinessReceiptSummary | null>(() => receiptSettings.value ? ({ displayName: receiptSettings.value.displayName, address: receiptSettings.value.address || '—', phone: receiptSettings.value.phone || '—', footer: receiptSettings.value.footer || '—', paperLabel: receiptSettings.value.paperSize === 'thermal_80' ? copy.value.thermal80 : copy.value.a4 }) : null)
 const locationsView = computed<BsBusinessLocationsView>(() => ({
   rows: locations.value.map(location => ({ id: location.id, name: location.name, summary: location.code || location.address || '—', badge: location.is_default ? 'default' : location.status === 'archived' ? 'archived' : null, canArchive: !location.is_default && location.status === 'active', canRestore: canManage.value && location.status === 'archived' })),
@@ -377,7 +388,21 @@ const receiptModel = computed<BsBusinessReceiptForm>({ get: () => ({ ...receiptF
 const modeModel = computed<string>({ get: () => selectedMode.value, set: value => { if (BUSINESS_MODES.includes(value as BusinessMode)) selectedMode.value = value as BusinessMode } })
 const modeLabel = computed(() => modeOptions.value.find(mode => mode.value === current.value?.business_mode)?.label || '')
 function editLocationById(id: string) { const location = locations.value.find(location => location.id === id); if (location) editLocation(location) }
+let logoSelectionVersion = 0
+async function selectDocumentLogo(selection: File | File[] | null) {
+  const file = Array.isArray(selection) ? selection[0] : selection
+  if (!file || !canManage.value || receiptPending.value || logoPending.value) return
+  logoPending.value = true
+  const shopId = currentId.value
+  const version = ++logoSelectionVersion
+  try {
+    const dataUrl = await readRasterImage(file)
+    if (version === logoSelectionVersion && shopId === currentId.value && canManage.value) receiptForm.logoDataUrl = dataUrl
+  } catch {
+    if (shopId === currentId.value) receiptError.value = isArabic.value ? 'اختار صورة PNG أو JPEG صحيحة حتى 128 كيلوبايت.' : 'Choose a valid PNG or JPEG image up to 128 KiB.'
+  } finally { logoPending.value = false }
+}
 </script>
 <template>
-  <BsBusinessSettingsPage v-model:profile-form="profileModel" v-model:location-form="locationModel" v-model:receipt-form="receiptModel" v-model:mode="modeModel" v-model:cash-required="cashRequired" v-model:profile-open="profileActionOpen" v-model:mode-open="modeActionOpen" v-model:receipt-open="receiptActionOpen" v-model:location-open="locationDialogOpen" :context="current ? { name: current.name } : null" :loading="loading || permissionPending" :shop-error="Boolean(shopError || permissionError)" :can-manage="canManage" :copy="settingsCopy" :cash="cashView" :profile-editor="profileEditor" :mode-editor="modeEditor" :receipt-editor="receiptEditor" :receipt-summary="receiptSummary" :locations-view="locationsView" :mode-options="modeOptions" :mode-label="modeLabel" @edit-profile="profileAction.edit()" @edit-mode="modeAction.edit()" @edit-receipt="receiptAction.edit()" @retry="retrySettings" @retry-cash="refreshCashPolicy()" @retry-receipt="refreshReceiptSettings()" @save-cash="saveCashPolicy" @save-profile="saveProfile" @save-mode="saveMode" @save-location="saveLocation" @save-receipt="saveReceiptSettings" @create-location="createLocation" @edit-location="editLocationById" @archive-location="archiveLocation" @restore-location="restoreLocation"/>
+  <BsBusinessSettingsPage v-model:profile-form="profileModel" v-model:location-form="locationModel" v-model:receipt-form="receiptModel" v-model:mode="modeModel" v-model:cash-required="cashRequired" v-model:profile-open="profileActionOpen" v-model:mode-open="modeActionOpen" v-model:receipt-open="receiptActionOpen" v-model:location-open="locationDialogOpen" :context="current ? { name: current.name } : null" :loading="loading || permissionPending" :shop-error="Boolean(shopError || permissionError)" :can-manage="canManage" :copy="settingsCopy" :cash="cashView" :profile-editor="profileEditor" :mode-editor="modeEditor" :receipt-editor="receiptEditor" :receipt-summary="receiptSummary" :locations-view="locationsView" :mode-options="modeOptions" :mode-label="modeLabel" @select-logo="selectDocumentLogo" @edit-profile="profileAction.edit()" @edit-mode="modeAction.edit()" @edit-receipt="receiptAction.edit()" @retry="retrySettings" @retry-cash="refreshCashPolicy()" @retry-receipt="refreshReceiptSettings()" @save-cash="saveCashPolicy" @save-profile="saveProfile" @save-mode="saveMode" @save-location="saveLocation" @save-receipt="saveReceiptSettings" @create-location="createLocation" @edit-location="editLocationById" @archive-location="archiveLocation" @restore-location="restoreLocation"/>
 </template>
