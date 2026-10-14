@@ -1,6 +1,6 @@
 # SS-OFFLINE-001 acceptance tracker
 
-**Cloud implementation and verification complete. Physical-device qualification pending; publication blocked.** No push, PR, CI trigger, hosted migration or deployment occurred.
+**Offline cloud implementation and verification completed at `8a3af38`. Physical-device qualification remains pending for release/readiness. Draft review publication is now explicitly authorized; no merge, deployment or hosted database write is authorized.**
 
 Branch `codex/shop-suit/ss-offline-001`, worktree `/workspace/ss-offline-001`, base verified `stg` `547005b263e1a2eedaa6f09a3fc9837d059d6d05`. Initial checkpoint `21123c4` was resumed and its server/reconciliation gaps completed. Billing PRs #305/#307 and their branches were not modified or duplicated. Before eventual publication, recheck the live Shop stack target without modifying billing.
 
@@ -27,7 +27,7 @@ Branch `codex/shop-suit/ss-offline-001`, worktree `/workspace/ss-offline-001`, b
 - [x] All six consumers typecheck and build; lint zero errors with existing attribute-order warnings.
 - [x] Complete regression suite: **1,464 tests, 1,441 passed, 23 intentionally skipped, zero failures**.
 - [x] Workspace boundaries and whitespace checks; 80 historical migrations unchanged, zero route migration debt.
-- [ ] **Authenticated physical phone/tablet network-loss/replay**. Required before publication. Cloud browser/emulation/screenshots are not physical evidence. User devices/network must not be used.
+- [ ] **Authenticated physical phone/tablet network-loss/replay**. Required before release/readiness and merge. Cloud browser/emulation/screenshots are not physical evidence. User devices/network must not be used.
 
 Reproducible task-owned commands (pinned pnpm 10.33.0):
 
@@ -62,4 +62,10 @@ Requires a previously loaded authenticated POS, an unexpired cache and a saved o
 
 Local signatures protect integrity and ciphertext at rest, not malicious same-origin script or a compromised browser profile; they are not server-attested device signatures. Server auth/current permissions, atomic price/stock/period rules, complete request equality and captured drawer locks remain authoritative. Replay captures the original vault user's token to avoid cross-account SDK fetch races. Account/tenant changes clear sensitive cart/editor/cache state; location changes preserve the canonical locked-cart warning.
 
-Prepared forward migrations have been applied only to the disposable local backend. Hosted migrations must run via GitHub CI only. Do not publish a branch/PR or mark SS-OFFLINE-001 fully qualified until required physical phone/tablet evidence is independently supplied. No main/production deployment is authorized.
+Prepared forward migrations have been applied only to the disposable local backend. Hosted migrations must run via GitHub CI only. Draft branch/PR review is explicitly authorized while real phone/tablet evidence remains pending. Do not merge, release, or mark SS-OFFLINE-001 fully qualified until that evidence is independently supplied. No main/production deployment is authorized.
+
+## Draft review sequencing correction
+
+The earlier before-publication prohibition was an added parent-agent sequencing constraint, not an original user requirement. It has been explicitly corrected: the preserved branch may be pushed and a clearly labelled draft PR opened. The actual task requirement remains authenticated mobile/tablet manual verification; cloud evidence does not complete physical acceptance.
+
+Live observation for draft preparation: staging `f7a4bbfaf20b2e4c81322f693d5cb7de863fd553`; billing #305 merged. Current Shop stack #308 → #309. Verified #309 tip `693b9e6b11737eb3257677a43dcf577817ef7b90` was incorporated by history-preserving merge `dbee08f2`; draft targets `codex/shop-suit/set001-document-settings`. Existing parent changes are inherited, not duplicated in this PR. The recorded authenticated SQL/browser evidence belongs to the standalone offline candidate `8a3af38`; combined SET/settings stack acceptance must be revalidated before release, including currency/settings changes across pending offline transactions. No complete combined-stack acceptance is claimed.
