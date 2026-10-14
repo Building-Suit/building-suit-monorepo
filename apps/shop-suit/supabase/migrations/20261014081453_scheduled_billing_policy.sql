@@ -255,7 +255,7 @@ end $$;
 create or replace function public.shop_xpay_proration_quote(p_request_id uuid,p_shop_id uuid,p_catalog_terms_id uuid,p_private_offer jsonb default null)
 returns jsonb language plpgsql security definer set search_path='' as $$
 declare s public.subscriptions;q public.shop_proration_quotes;a public.shop_proration_credit_accounts;
- commerce jsonb;parameters jsonb;funding jsonb;calculation jsonb;old_interval text;old_currency text;at timestamptz;target uuid;offer uuid;scheduled_id uuid;
+ commerce jsonb;parameters jsonb;funding jsonb;calculation jsonb;old_interval text;old_currency text;at timestamptz;v_target_terms uuid;offer uuid;scheduled_id uuid;
 begin
  s:=shop_private.proration_owner_subscription(p_shop_id);perform shop_private.proration_enabled();
  if p_request_id is null or (p_catalog_terms_id is null)=(p_private_offer is null) then raise exception 'XPAY_QUOTE_INVALID' using errcode='22023';end if;
@@ -276,7 +276,7 @@ begin
  update public.shop_proration_quotes set state='abandoned' where subscription_id=s.id and state='quoted' and expires_at<=clock_timestamp();
  if exists(select 1 from public.shop_proration_quotes where subscription_id=s.id and state in ('quoted','checkout','requires_review')) then raise exception 'SHOP_PRORATION_QUOTE_OPEN' using errcode='55000';end if;
  commerce:=shop_private.proration_target(p_shop_id,s.id,p_catalog_terms_id,p_private_offer);
- target:=(commerce->>'catalogTermsId')::uuid;offer:=(p_private_offer->>'offerId')::uuid;
+ v_target_terms:=(commerce->>'catalogTermsId')::uuid;offer:=(p_private_offer->>'offerId')::uuid;
  insert into public.shop_proration_credit_accounts(subscription_id) values(s.id) on conflict(subscription_id) do nothing;
  select * into a from public.shop_proration_credit_accounts where subscription_id=s.id for update;
  select billing_interval,currency into old_interval,old_currency from public.plan_catalog_terms where id=s.catalog_terms_id;
@@ -285,17 +285,17 @@ begin
  at:=clock_timestamp();funding:=shop_private.proration_funding(s,at);
  calculation:=shop_private.proration_quote_v1(at,case when s.status='trialing' and s.trial_end_at<=at then 'expired' else s.status end,
  funding->>'source',s.current_period_start,s.current_period_end,at,(funding->>'unusedMinor')::numeric,
- old_interval,commerce->>'billingInterval',((commerce->>'effectivePriceAmount')::numeric*100)::bigint,a.balance_minor,s.catalog_terms_id=target);
- if s.status='active' and s.current_period_end>at and old_interval=commerce->>'billingInterval' and s.catalog_terms_id<>target
+ old_interval,commerce->>'billingInterval',((commerce->>'effectivePriceAmount')::numeric*100)::bigint,a.balance_minor,s.catalog_terms_id=v_target_terms);
+ if s.status='active' and s.current_period_end>at and old_interval=commerce->>'billingInterval' and s.catalog_terms_id<>v_target_terms
  and abs(extract(epoch from s.current_period_end-(s.current_period_start+case old_interval when 'monthly' then interval '1 month' when 'annual' then interval '1 year' end)))>1 then
  calculation:=shop_private.proration_segmented_upgrade(s,at,((commerce->>'effectivePriceAmount')::numeric*100)::bigint,funding,calculation);end if;
  calculation:=calculation||jsonb_build_object('billingPolicyVersion','single_period_deferred_v1');
  if calculation->>'mode'='full_term' then
- select id into scheduled_id from public.shop_scheduled_plan_changes where subscription_id=s.id and shop_id=p_shop_id and actor_user_id=auth.uid() and state='scheduled' and ((catalog_terms_id=target and private_offer_id is null) or(private_offer_id=offer and private_offer_parameters=p_private_offer-'redemptionToken')) and effective_at<=at;
+ select id into scheduled_id from public.shop_scheduled_plan_changes where subscription_id=s.id and shop_id=p_shop_id and actor_user_id=auth.uid() and state='scheduled' and ((catalog_terms_id=v_target_terms and private_offer_id is null) or(private_offer_id=offer and private_offer_parameters=p_private_offer-'redemptionToken')) and effective_at<=at;
  if scheduled_id is not null then commerce:=commerce||jsonb_build_object('scheduledChangeId',scheduled_id);end if;end if;
  parameters:=jsonb_build_object('catalogTermsId',p_catalog_terms_id,'privateOffer',p_private_offer-'redemptionToken');
  insert into public.shop_proration_quotes(request_id,shop_id,subscription_id,actor_user_id,catalog_terms_id,private_offer_id,parameters,subscription_before,credit_version,commerce,calculation,funding_evidence,expires_at)
- values(p_request_id,p_shop_id,s.id,auth.uid(),target,offer,parameters,to_jsonb(s),a.version,commerce,calculation,funding->'evidence',(calculation->>'expiresAt')::timestamptz) returning * into q;
+ values(p_request_id,p_shop_id,s.id,auth.uid(),v_target_terms,offer,parameters,to_jsonb(s),a.version,commerce,calculation,funding->'evidence',(calculation->>'expiresAt')::timestamptz) returning * into q;
  return shop_private.proration_quote_view(q);
 end $$;
 
