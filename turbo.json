@@ -19,7 +19,8 @@
         "^build"
       ],
       "outputs": [
-        ".output/**"
+        ".output/**",
+        ".vercel/output/**"
       ],
       "inputs": [
         "$TURBO_DEFAULT$",
