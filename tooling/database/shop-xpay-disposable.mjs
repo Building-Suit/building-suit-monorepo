@@ -11,8 +11,11 @@ const settlement = await readFile(new URL('../../apps/shop-suit/supabase/tests/s
 const checkoutDetails = await readFile(new URL('../../apps/shop-suit/supabase/tests/shop_proration_checkout_details.sql', import.meta.url), 'utf8')
 const journeys = await readFile(new URL('../../apps/shop-suit/supabase/tests/shop_proration_journeys.sql', import.meta.url), 'utf8')
 const windows = await readFile(new URL('../../apps/shop-suit/supabase/tests/shop_proration_checkout_windows.sql', import.meta.url), 'utf8')
+const activationMigration = await readFile(new URL('../../apps/shop-suit/supabase/migrations/20261014063640_staging_proration_activation.sql', import.meta.url), 'utf8')
+const activationFixture = await readFile(new URL('../../apps/shop-suit/supabase/tests/shop_proration_staging_activation.sql', import.meta.url), 'utf8')
+const activation = activationFixture.replaceAll('-- APPLY_REVIEWED_ACTIVATION_MIGRATION', activationMigration)
 const result = spawnSync('docker', ['exec', '-i', 'supabase_db_building-suit-shop', 'psql', '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-Atq'], {
-  input: `BEGIN;\n${proration}\n${sql}\nROLLBACK;\nBEGIN;\n${settlement}\n${checkoutDetails}\nROLLBACK;\nBEGIN;\n${journeys}\n${windows}\nROLLBACK;`, encoding: 'utf8', timeout: 120000,
+  input: `BEGIN;\n${activation}\nROLLBACK;\nBEGIN;\n${proration}\n${sql}\nROLLBACK;\nBEGIN;\n${settlement}\n${checkoutDetails}\nROLLBACK;\nBEGIN;\n${journeys}\n${windows}\nROLLBACK;`, encoding: 'utf8', timeout: 120000,
 })
 if (result.status !== 0) {
   // This job has only synthetic records, but never print CLI status or credentials.
@@ -29,7 +32,7 @@ if (result.status !== 0) {
     assert.equal(parsed.calculation.serviceValueMinor, row.calculation.serviceValueMinor)
     assert.equal('offerBinding' in parsed, false)
   }
-  console.log(`Disposable SQL authority, settlement and ${rows.length} real SQL/client quote projections passed and rolled back`)
+  console.log(`Disposable staging activation boundaries, SQL authority, settlement and ${rows.length} real SQL/client quote projections passed and rolled back`)
 }
 
 // Race two independent PostgreSQL connections at first fulfillment. All writes
