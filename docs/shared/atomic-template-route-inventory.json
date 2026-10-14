@@ -67,7 +67,8 @@
     "BsFinancialAccountsPage": "packages/ui/src/templates/BsFinancialAccountsPage.vue",
     "BsAccountActivationPage": "packages/ui/src/templates/BsAccountActivationPage.vue",
     "BsAccountProvisioningPage": "packages/ui/src/templates/BsAccountProvisioningPage.vue",
-    "BsOwnerInvitationPage": "packages/ui/src/templates/BsOwnerInvitationPage.vue"
+    "BsOwnerInvitationPage": "packages/ui/src/templates/BsOwnerInvitationPage.vue",
+    "BsOfflineCounterStatus": "packages/ui/src/templates/BsOfflineCounterStatus.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,

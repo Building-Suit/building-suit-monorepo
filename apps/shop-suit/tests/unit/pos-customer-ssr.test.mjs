@@ -15,7 +15,7 @@ const service = { id: 'service-1', name: 'Haircut', itemType: 'service', unitPri
 function component(file, globals) {
   const { descriptor } = parse(readFileSync(file, 'utf8'))
   const script = compileScript(descriptor, { id: file.pathname, inlineTemplate: true })
-  const code = ts.transpileModule(script.content, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText
+  const code = ts.transpileModule(script.content, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText.replaceAll('import.meta.client', 'false')
   const module = { exports: {} }
   const localRequire = name => {
     if (!name.startsWith('~/')) return require(name)
@@ -37,6 +37,10 @@ for (const customerId of ['customer-1', null]) test(`SSR locks appointment custo
     definePageMeta: () => {}, useRoute: () => ({ query: { appointment: 'appointment-1' } }),
     // Realtime registers only on the client; this fixture exercises initial SSR.
     useShopRealtime: () => {},
+    useShopTaskScope: () => () => () => true,
+    preloadRouteComponents: async () => {},
+    useOfflineCounter: () => ({ online: vue.ref(true), ready: vue.ref(false), scope: vue.ref(''), busy: vue.ref(false), records: vue.ref([]), shiftClosing: vue.ref(false), cached: async () => null, cache: async () => {}, retry: async () => {} }),
+    useOfflineCounterView: () => vue.ref(undefined),
     useCatalogMedia: () => ({ request: (_action, _args, fallback) => fallback() }),
     useI18n: () => ({ locale: vue.ref('en'), t: key => key }),
     useConfirmation: () => ({ current: vue.ref(null), ask: async () => false }), useToasts: () => ({ push: () => {} }),

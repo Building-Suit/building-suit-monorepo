@@ -602,6 +602,28 @@ export type ShopRpcDatabase = {
         }
         Returns: string
       }
+      replay_offline_cash_command: {
+        Args: { p_kind: 'movement' | 'close'; p_shop_id: string; p_args: Record<string, unknown> }
+        Returns: string
+      }
+      reconcile_offline_cash_command: {
+        Args: { p_kind: 'movement' | 'close'; p_shop_id: string; p_args: Record<string, unknown>; p_resolution_request_id: string; p_reason: string }
+        Returns: { state: 'synced'; resultId: string } | { state: 'cancelled'; resolutionRequestId: string }
+      }
+      reconcile_offline_pos_sale: {
+        Args: { p_request_id: string; p_shop_id: string; p_location_id: string; p_original_args: Record<string, unknown>; p_resolution_request_id: string; p_reason: string }
+        Returns: { state: 'synced'; invoiceId: string } | { state: 'cancelled'; resolutionRequestId: string }
+      }
+      replay_offline_pos_sale: {
+        Args: {
+          p_request_id: string; p_save_request_id: string; p_issue_request_id: string; p_payment_request_id: string
+          p_appointment_request_id: string | null; p_shop_id: string; p_location_id: string; p_shift_id: string
+          p_staff_membership_id: string; p_appointment_id: string | null; p_customer_id: string | null; p_notes: string | null
+          p_lines: Array<{ item_type: 'product' | 'service'; source_id: string; quantity: number }>
+          p_amount: number; p_paid_at: string; p_method: 'cash' | 'bank_transfer' | 'card' | 'wallet' | 'cheque' | 'other'; p_reference: string | null
+        }
+        Returns: string
+      }
       checkout_pos_sale: {
         Args: {
           p_request_id: string

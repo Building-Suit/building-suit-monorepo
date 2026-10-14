@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import type { BsOfflineCounterView } from '../types/offlineCounterPresentation'
 import type { BsCashShiftActiveView, BsCashShiftHistoryRow, BsCashShiftAmountForm, BsCashShiftMovementForm, BsCashShiftEditor, BsCashShiftCopy } from '../types/cashShiftPresentation'
-defineProps<{
+defineProps<{ canOpen?: boolean; historyAvailable?: boolean; offline?: BsOfflineCounterView;
   copy: BsCashShiftCopy; contextAvailable: boolean; shopLoading: boolean; locationName: string | null
   pending: boolean; error: boolean; active: BsCashShiftActiveView | null; canAdjust: boolean; canClose: boolean; canManage: boolean
   historyRows: BsCashShiftHistoryRow[]; cashierOptions: { id: string; name: string }[]; page: number; pageSize: number; total: number
@@ -14,7 +15,7 @@ const closeForm = defineModel<BsCashShiftAmountForm>('closeForm', { required: tr
 const showOpen = defineModel<boolean>('openVisible', { required: true })
 const showMovement = defineModel<boolean>('movementVisible', { required: true })
 const showClose = defineModel<boolean>('closeVisible', { required: true })
-const emit = defineEmits<{ retry: []; open: []; movement: []; close: []; saveOpen: []; saveMovement: []; saveClose: []; page: [page: number] }>()
+const emit = defineEmits<{ reconcileOffline: [id: string]; retryOffline: [id: string]; retry: []; open: []; movement: []; close: []; saveOpen: []; saveMovement: []; saveClose: []; page: [page: number] }>()
 function updateOpen(key: keyof BsCashShiftAmountForm, value: string | number) { openForm.value = { ...openForm.value, [key]: key === 'amount' ? Number(value) : String(value) } }
 function updateClose(key: keyof BsCashShiftAmountForm, value: string | number) { closeForm.value = { ...closeForm.value, [key]: key === 'amount' ? Number(value) : String(value) } }
 function updateMovement(key: keyof BsCashShiftMovementForm, value: string | number | boolean) { movementForm.value = { ...movementForm.value, [key]: key === 'amount' ? Number(value) : String(value) } }
@@ -27,6 +28,7 @@ function updateMovement(key: keyof BsCashShiftMovementForm, value: string | numb
           <BsText as="strong">{{ copy.branch }}:</BsText> {{ locationName }}</BsText>
       </template>
     </BsPageHeader>
+    <BsOfflineCounterStatus v-if="offline" :view="offline" @retry="emit('retryOffline', $event)" @reconcile="emit('reconcileOffline', $event)" />
     <BsText v-if="!contextAvailable && !shopLoading" as="p" size="sm">{{ copy.noShop }}</BsText>
     <BsText v-else-if="!locationName && !shopLoading" as="p" size="sm">{{ copy.noLocation }}</BsText>
     <BsStack v-else-if="contextAvailable">
@@ -45,7 +47,7 @@ function updateMovement(key: keyof BsCashShiftMovementForm, value: string | numb
               <BsText v-if="active" as="p" size="sm" tone="muted">{{ active.cashier }} · {{ active.opened }}</BsText>
             </BsBox>
             <BsInline>
-              <BsButton v-if="!active" @click="emit('open')">{{ copy.open }}</BsButton>
+              <BsButton v-if="!active && canOpen !== false" @click="emit('open')">{{ copy.open }}</BsButton>
               <BsButton v-if="canAdjust" severity="secondary" @click="emit('movement')">{{ copy.movement }}</BsButton>
               <BsButton v-if="canClose" @click="emit('close')">{{ copy.close }}</BsButton>
             </BsInline>
@@ -55,7 +57,8 @@ function updateMovement(key: keyof BsCashShiftMovementForm, value: string | numb
             <BsDescriptionList>
               <BsDescriptionItem v-for="metric in active.metrics" :key="metric.label" :term="metric.label"><BsText as="span" size="lg" emphasis="semibold">{{ metric.value }}</BsText></BsDescriptionItem>
             </BsDescriptionList>
-            <BsBox scroll="x">
+            <BsText v-if="historyAvailable === false" as="p" size="sm" tone="muted">{{ copy.historyOffline }}</BsText>
+            <BsBox v-else scroll="x">
               <BsHeading :level="3">{{ copy.eventHistory }}</BsHeading>
               <BsDataTable density="compact" :value="active.events" data-key="id" :label="copy.eventHistory" :columns="[{ key: 'column0', header: (copy.date) }, { key: 'column1', header: (copy.event) }, { key: 'column2', header: (copy.actor) }, { key: 'column3', header: (copy.amount), align: 'end' }]">
                 <template #cell-column0="{ row: event }">{{ event.date }}</template>
@@ -81,7 +84,8 @@ function updateMovement(key: keyof BsCashShiftMovementForm, value: string | numb
               <BsSelect v-model="cashierId" :input-id="field.id" :aria-describedby="field.describedby" :placeholder="copy.allCashiers" :label="copy.cashier" :options="[{ id: null, name: copy.allCashiers }, ...cashierOptions]" option-label="name" option-value="id"/>
             </BsField>
           </BsInline>
-          <BsBox scroll="x">
+          <BsText v-if="historyAvailable === false" as="p" size="sm" tone="muted">{{ copy.historyOffline }}</BsText>
+          <BsBox v-else scroll="x">
             <BsDataTable density="compact" :value="historyRows" data-key="id" :label="copy.history" lazy paginator :rows="pageSize" :first="(page - 1) * pageSize" :total-records="total" :always-show-paginator="false" :columns="[{ key: 'cashierName', header: (copy.cashier), field: 'cashierName' }, { key: 'column1', header: (copy.opened) }, { key: 'column2', header: (copy.expected), align: 'end' }, { key: 'column3', header: (copy.counted), align: 'end' }, { key: 'column4', header: (copy.variance), align: 'end' }, { key: 'column5', header: (copy.nonCash), align: 'end' }]" @page="emit('page', $event.page + 1)">
               <template #cell-column1="{ row: shift }">{{ shift.opened }}</template>
               <template #cell-column2="{ row: shift }">{{ shift.expected }}</template>
