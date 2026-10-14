@@ -144,7 +144,7 @@ begin
       'itemType', item.item_type,
       'name', item.item_name,
       'sku', item.product_sku_snapshot,
-      'description', coalesce((select product.description from public.products product where product.id = item.product_id and product.shop_id = new.shop_id), (select service.description from public.services service where service.id = item.service_id and service.shop_id = new.shop_id)),
+      'description', coalesce((select service.description from public.services service where service.id = item.service_id and service.shop_id = new.shop_id), item.product_sku_snapshot),
       'quantity', item.quantity,
       'unitPrice', item.unit_price,
       'discount', coalesce(item.discount_amount, 0),
