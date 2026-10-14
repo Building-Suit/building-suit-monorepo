@@ -48,7 +48,9 @@ this also captures pre-existing staging offline RPCs absent from the prior artif
 - Matching two-session concurrency runner: passed, concurrent duplicate receipt
   returned the same receipt and created exactly one 1.00 earning. Synthetic
   append-only fixtures remain in the disposable local database for inspection.
-- Broad `pnpm test`: 1,452 passed, 23 skipped; three failures were missing Chromium (two) and a type-file read racing generation (one). Focused reruns follow below.
+- Broad `pnpm test`: 1,452 passed, 23 skipped; three failures were missing Chromium (two) and a type-file read racing generation (one). All three passed in the focused 13-test rerun after Chromium installation and generation completion.
+- Focused previously failing tests: 13/13 passed.
+- `node tooling/git/check-pr.mjs 313`: passed; PR root into `stg` verified.
 - Full Supabase stack locally: not run successfully; its PostgreSQL image
   extraction exceeded disk capacity. The dedicated GitHub-hosted disposable job
   runs these tests against actual Supabase infrastructure, without stubs.
@@ -68,3 +70,7 @@ Existing fast pay without explicit attribution remains unaffected and earns zero
 No hosted DB writes, runtime/secrets configuration changes, promotion, materials,
 ETA, website work, manual testing, payroll or external payment execution occurred.
 Parent coordinates staging integration and merges; this task does not merge.
+
+PR: https://github.com/Building-Suit/building-suit-monorepo/pull/313
+Initial implementation head: `b269b4f140da169df855332431ab37c0c8380ba1`.
+Required GitHub CI is tracked on the PR; local checks do not substitute for it.

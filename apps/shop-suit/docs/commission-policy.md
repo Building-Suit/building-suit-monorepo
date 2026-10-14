@@ -25,7 +25,7 @@ an appointment for that same service, employee, shop, location and sale; one
 appointment represents one unit and may not commission multiple lines. Payment
 does not complete an appointment. The existing `in_service -> completed`
 transition is fulfillment evidence. Unscheduled services have no fulfillment
-evidence and remain estimates; this implementation does not invent completion.
+evidence and cannot be attributed for commission; this implementation does not invent completion.
 Product issuance is the existing atomic sale/stock-delivery finalization event.
 
 At issuance, snapshot employee identity, membership, appointment, rate/type,
