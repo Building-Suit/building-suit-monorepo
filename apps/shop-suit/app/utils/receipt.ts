@@ -8,7 +8,9 @@ export function formatReceiptMoney(value: number, currency: string, locale: stri
   return new Intl.NumberFormat(receiptLocale(locale), {
     style: 'currency',
     currency,
-    maximumFractionDigits: 2,
+    // Render the issued amount without rounding it to a different currency's
+    // precision. Intl still supplies the ISO currency's minimum fraction digits.
+    maximumFractionDigits: 20,
   }).format(Number(value))
 }
 

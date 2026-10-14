@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import test from 'node:test'
-import { buildReceiptShareText } from '../../app/utils/receipt.ts'
+import { buildReceiptShareText, formatReceiptMoney } from '../../app/utils/receipt.ts'
 
 const sharedPrintStyles = await readFile(new URL('../../../../packages/ui/src/styles/base.css', import.meta.url), 'utf8')
 const migration = await readFile(new URL('../../supabase/migrations/20260928233000_immutable_sale_receipts.sql', import.meta.url), 'utf8')
@@ -44,6 +44,32 @@ const arabicCopy = {
   quantity: 'الكمية', compliance: 'إثبات بيع فقط — ليس فاتورة ضريبية مصرية أو إيصالًا إلكترونيًا معتمدًا من مصلحة الضرائب.',
   walkIn: 'عميل مباشر',
 }
+
+test('issued currency amounts retain their precision without conversion in English and Arabic', () => {
+  for (const [currency, amount, english, arabic] of [
+    ['EGP', 70, '70.00', '٧٠٫٠٠'],
+    ['KWD', 1.234, '1.234', '١٫٢٣٤'],
+    ['BHD', 5.678, '5.678', '٥٫٦٧٨'],
+    ['JPY', 123.45, '123.45', '١٢٣٫٤٥'],
+    ['EGP', 1.2345, '1.2345', '١٫٢٣٤٥'],
+  ]) {
+    assert.ok(formatReceiptMoney(amount, currency, 'en').includes(english))
+    assert.ok(formatReceiptMoney(amount, currency, 'ar').includes(arabic))
+  }
+})
+
+test('sharing uses the issued currency for line, payment and total amounts without mutating the snapshot', () => {
+  const issued = structuredClone(receipt)
+  issued.currency = 'KWD'
+  issued.lines[0].total = 1.234
+  issued.payments[0].amount = 1.234
+  issued.total = 1.234
+  const before = structuredClone(issued)
+  const text = buildReceiptShareText(issued, englishCopy, 'en', () => 'Cash')
+  assert.equal(text.match(/KWD\u00a01\.234/g)?.length, 3)
+  assert.ok(!text.includes('EGP'))
+  assert.deepEqual(issued, before)
+})
 
 test('English share receipt matches the complete proof-of-sale snapshot', () => {
   assert.equal(buildReceiptShareText(receipt, englishCopy, 'en', () => 'Cash'), [

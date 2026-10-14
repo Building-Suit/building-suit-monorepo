@@ -552,6 +552,7 @@ Before the later named packages:
 
 ### SS-SET-001 — Business, document and operational settings
 
+- Current source audit and bounded receipt-precision correction: [residual audit](../../../../docs/work-packages/shop-set001-residual-audit.md). Profile/location/basic receipt and operational-mode/cash-policy settings already exist; the historical SET rows above must not be used to infer that these workflows are absent. Full non-tax SET-001 remains incomplete, particularly business-currency configuration/history locking and the remaining SET-D02 presentation controls.
 - Requirements: SET-01..05.
 - Prerequisites: sales/receipt document contract.
 - Capability: authorized profile/document/currency/default settings with immutable historical snapshots.
