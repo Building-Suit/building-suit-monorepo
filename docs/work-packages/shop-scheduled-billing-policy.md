@@ -93,3 +93,10 @@ ffff584817b2df8d18e6a1e62da376368aa3ae35ed6d868e3d41f7c3e78f240a.
 Direct gh artifact transfer returned Forbidden; the authorized GitHub connector
 provided readable bytes with the matching digest. Existing media/payment types
 also refresh from the current cumulative schema. No hosted introspection mutation.
+
+Final scheduling browser run225230b passed12/12 with updated date/zero-due
+breakdown and settled-dialog screenshot capture. Final review found a lost-response
+request cache could replay a cancelled intent. Explicit cancel clears only this
+owner/shop's scheduling attempts; terminal replay never reports a new intent as
+saved and clears its old request key. Two deterministic regression tests pass
+(seven scheduling context tests total). No automatic extra payment/retry introduced.

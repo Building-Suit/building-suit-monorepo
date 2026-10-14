@@ -30,14 +30,15 @@ export function useShopScheduledBilling(input:{context:()=>Context;sameContext:(
       const result=await input.invoke('schedule',{p_request_id:request,p_shop_id:context.shop,p_catalog_terms_id:target.catalogTermsId,p_private_offer:target.privateOffer})
       if(!input.sameContext(context))return
       if(result.error)throw result.error
-      ++recordGeneration;current.value=parseScheduledChange(result.data);sessionStorage.removeItem(key);if(input.target().selection===target.selection)return current.value
+      ++recordGeneration;current.value=parseScheduledChange(result.data);sessionStorage.removeItem(key);if(current.value?.state!=='scheduled'){error.value='unavailable';return}if(input.target().selection===target.selection)return current.value
     }catch{if(input.sameContext(context))error.value='unavailable'}finally{if(input.sameContext(context))pending.value=false}
   }
+  function forgetAttempts(context:Context){const prefix=`shop-schedule:${context.user}:${context.shop}:`;for(let index=sessionStorage.length-1;index>=0;--index){const key=sessionStorage.key(index);if(key?.startsWith(prefix))sessionStorage.removeItem(key)}}
   async function cancel(){const context=input.context(),id=current.value?.id;if(!context.shop||!id||!current.value?.canCancel||pending.value)return
     pending.value=true;error.value='';++recordGeneration
     try{const result=await input.invoke('cancel',{p_shop_id:context.shop,p_change_id:id});if(!input.sameContext(context))return
       if(result.error)throw result.error
-      ++recordGeneration;current.value=parseScheduledChange(result.data);await review()
+      ++recordGeneration;current.value=parseScheduledChange(result.data);forgetAttempts(context);await review()
     }catch{if(input.sameContext(context))error.value='unavailable'}finally{if(input.sameContext(context))pending.value=false}
   }
   return {current,preview,checking,pending,error,reset,read,review,schedule,cancel}
