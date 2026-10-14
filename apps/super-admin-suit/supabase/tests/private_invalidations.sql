@@ -1,5 +1,6 @@
 -- Rollback-only SQL contract; real Auth/socket checks use sas-live-disposable.mjs.
 begin;
+select plan(1);
 create temporary table live_fixture(owner_id uuid default gen_random_uuid(),other_id uuid default gen_random_uuid(),environment_id uuid default gen_random_uuid(),other_environment uuid default gen_random_uuid(),session_id uuid default gen_random_uuid());
 insert into live_fixture default values;
 grant select on live_fixture to authenticated,anon;
@@ -61,4 +62,6 @@ update public.platform_admins set enabled=false,disabled_at=clock_timestamp() wh
 set local role authenticated;
 do $$begin begin perform public.super_admin_live_topic();raise exception 'revoked owner got topic';exception when insufficient_privilege then null;end;end $$;
 reset role;
+select pass('private invalidation scope, send denial, revocation and replay assertions completed');
+select * from finish();
 rollback;
