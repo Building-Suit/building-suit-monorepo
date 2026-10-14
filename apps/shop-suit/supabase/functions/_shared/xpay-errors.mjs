@@ -6,6 +6,7 @@ export function checkoutRpcError(name, status, payload) {
     error.checkoutCode = 'checkout_historical_review_pending'
   }
   const codes = {
+    SHOP_CHANGE_AT_PERIOD_END: 'checkout_change_at_period_end',
     XPAY_ACTIVE_PERIOD_EXISTS: 'checkout_active_period_exists',
     SHOP_PRORATION_QUOTE_STALE: 'checkout_quote_stale', SHOP_PRORATION_QUOTE_OPEN: 'checkout_quote_open',
     SHOP_PRORATION_PERIOD_UNSUPPORTED: 'checkout_period_unsupported', XPAY_CURRENCY_UNSUPPORTED: 'checkout_currency_unsupported',

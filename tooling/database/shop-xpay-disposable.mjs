@@ -18,8 +18,15 @@ const activation = activationFixture.replaceAll('-- APPLY_REVIEWED_ACTIVATION_MI
 // historical receipts. The deployed public constructor remains guarded.
 const historicalOrder = (await readFile(new URL('../../apps/shop-suit/supabase/migrations/20261014051811_checkout_recovery_proration_integration.sql', import.meta.url), 'utf8'))
   .replace('create or replace function public.shop_xpay_order_create(', 'create function pg_temp.historical_order_create(')
+const priorQuoteMigration = await readFile(new URL('../../apps/shop-suit/supabase/migrations/20261013190345_proration_checkout_windows.sql', import.meta.url), 'utf8')
+const historicalQuote = priorQuoteMigration.slice(priorQuoteMigration.indexOf('create or replace function public.shop_xpay_proration_quote('), priorQuoteMigration.indexOf('create or replace function public.shop_xpay_proration_order('))
+  .replace('create or replace function public.shop_xpay_proration_quote(', 'create function pg_temp.historical_quote_create(')
+const historical = value => value.replaceAll('public.shop_xpay_proration_quote(', 'pg_temp.historical_quote_create(')
+const policy = await readFile(new URL('../../apps/shop-suit/supabase/tests/shop_scheduled_billing_policy.sql', import.meta.url), 'utf8')
+const journeySetup = journeys.slice(0, journeys.indexOf('\nDO $$'))
+const privateSetup = journeys.slice(journeys.indexOf('-- Issue secure terms'), journeys.indexOf('DO $$declare f journey_bridge;'))
 const result = spawnSync('docker', ['exec', '-i', 'supabase_db_building-suit-shop', 'psql', '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-Atq'], {
-  input: `BEGIN;\n${activation}\nROLLBACK;\nBEGIN;\n${historicalOrder}\n${proration}\n${sql}\nROLLBACK;\nBEGIN;\n${settlement}\n${checkoutDetails}\nROLLBACK;\nBEGIN;\n${historicalOrder}\n${journeys}\n${windows}\nROLLBACK;`, encoding: 'utf8', timeout: 120000,
+  input: `BEGIN;\n${activation}\nROLLBACK;\nBEGIN;\n${historicalOrder}\n${historicalQuote}\n${proration}\n${sql}\nROLLBACK;\nBEGIN;\n${historicalQuote}\n${historical(settlement)}\n${checkoutDetails}\nROLLBACK;\nBEGIN;\n${historicalOrder}\n${historicalQuote}\n${historical(journeys)}\n${windows}\nROLLBACK;\nBEGIN;\n${historicalOrder}\n${journeySetup}\n${privateSetup}\n${policy}\nROLLBACK;`, encoding: 'utf8', timeout: 120000,
 })
 if (result.status !== 0) {
   // This job has only synthetic records, but never print CLI status or credentials.

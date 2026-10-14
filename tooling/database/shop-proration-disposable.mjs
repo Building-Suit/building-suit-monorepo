@@ -3,12 +3,17 @@ import { randomInt, randomUUID } from 'node:crypto'
 import { pathToFileURL } from 'node:url'
 import { setTimeout as delay } from 'node:timers/promises'
 import pg from 'pg'
+import { readFile } from 'node:fs/promises'
 
 export async function runProrationConcurrency(connection) {
   assert.ok(connection.host === '127.0.0.1' || connection.host?.startsWith('/tmp/'), 'Local disposable PostgreSQL only')
   assert.ok(connection.database?.startsWith('shop_proration_test_') || (process.env.GITHUB_ACTIONS === 'true' && process.env.RUNNER_ENVIRONMENT === 'github-hosted' && connection.database === 'postgres'), 'Verified disposable fixture database required')
   const admin = new pg.Client(connection)
   await admin.connect()
+  // Synthetic pre-policy accepted credit quote, never an exposed runtime API.
+  const prior = await readFile(new URL('../../apps/shop-suit/supabase/migrations/20261013190345_proration_checkout_windows.sql', import.meta.url), 'utf8')
+  await admin.query(prior.slice(prior.indexOf('create or replace function public.shop_xpay_proration_quote('), prior.indexOf('create or replace function public.shop_xpay_proration_order('))
+    .replace('create or replace function public.shop_xpay_proration_quote(', 'create function pg_temp.historical_quote_create('))
   const paidOwner = randomUUID(), quoteOwner = randomUUID()
   let clientCount = 0
   async function concurrent(actor, sql, params, key) {
@@ -77,7 +82,7 @@ export async function runProrationConcurrency(connection) {
       'payments',(select count(*) from public.shop_xpay_payments where order_id=$1),'settlements',(select count(*) from public.shop_proration_settlements where quote_id=$2),
       'ledger',(select count(*) from public.shop_proration_credit_ledger where quote_id=$2),'periods',(select count(*) from public.subscription_commercial_periods where proration_quote_id=$2)) value`, [order.id, quote.quoteId])).rows[0].value
     assert.deepEqual(paidCounts, { observations: 1, payments: 1, settlements: 1, ledger: 1, periods: 1 })
-    const credit = (await owner(paidOwner, 'select public.shop_xpay_proration_quote($1,$2,$3) value', [randomUUID(), shop, low])).rows[0].value
+    const credit = (await owner(paidOwner, 'select pg_temp.historical_quote_create($1,$2,$3) value', [randomUUID(), shop, low])).rows[0].value
     assert.equal(credit.calculation.amountDueMinor, 0)
     const creditRace = await race({ role: 'authenticated', id: paidOwner }, [1, 2].map(() => ({ sql: 'select public.shop_xpay_proration_credit_confirm($1,$2) value', params: [shop, credit.quoteId] })))
     assert.deepEqual(creditRace.map(result => result.ok), [true, true])
