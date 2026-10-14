@@ -268,6 +268,22 @@ export function useShop() {
     await nuxtApp.runWithContext(() => refreshNuxtData())
   }
 
+  async function refreshBusinessCurrency(shopId: string) {
+    const userId = user.value?.id
+    const version = loadVersion.value
+    if (!userId || currentId.value !== shopId) return
+    const { data, error } = await shopRpc.rpc('business_currency_settings', { p_shop_id: shopId })
+    if (error) throw error
+    const settings = data as { currency?: string; lockedAt?: string | null } | null
+    if (!settings?.currency || !/^[A-Z]{3}$/.test(settings.currency)) throw new Error('Invalid business currency response')
+    if (user.value?.id !== userId || currentId.value !== shopId || loadVersion.value !== version) return
+    // Refresh monetary presentation without clearing the authenticated context
+    // and unmounting the settings form while its success feedback is delivered.
+    shops.value = shops.value.map(shop => shop.id === shopId ? { ...shop, business_currency: settings.currency, currency_locked_at: settings.lockedAt ?? null } : shop)
+    clearShopScopedData()
+    await nuxtApp.runWithContext(() => refreshNuxtData())
+  }
+
   async function reload() {
     clearShopScopedData()
     loadedUserId.value = null
@@ -282,6 +298,7 @@ export function useShop() {
     activeLocations,
     current,
     businessCurrency,
+    refreshBusinessCurrency,
     currentId,
     currentLocation,
     currentLocationId,

@@ -13,7 +13,7 @@ definePageMeta({ layout: 'default', middleware: ['auth'] })
 const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
 const confirmation = useConfirmation()
 const { locale } = useI18n()
-const { current, currentId, locations, loading, loadError: shopError, reload, loadLocations } = useShop()
+const { current, currentId, locations, loading, loadError: shopError, reload, loadLocations, refreshBusinessCurrency } = useShop()
 const { success } = useToasts()
 const ui = useUiCopy()
 const profileForm = reactive({ displayName: '' })
@@ -68,7 +68,7 @@ async function saveBusinessCurrency() {
   try {
     const { error } = await shopRpc.rpc('save_business_currency', { p_shop_id: shopId, p_currency: code })
     if (error) throw error
-    await reload()
+    await refreshBusinessCurrency(shopId)
     await refreshCurrencySettings()
     currencySelection.value = null
     if (currentId.value === shopId) currencySuccess.value = isArabic.value ? 'اتحفظت عملة النشاط.' : 'Business currency saved.'

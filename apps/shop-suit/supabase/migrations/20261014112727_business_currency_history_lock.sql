@@ -92,6 +92,8 @@ begin
   v_actor := shop_private.assert_shop_write_access(p_shop_id,'settings.manage');
   -- This is the same row lock taken by every finalization trigger below.
   select business_currency,currency_locked_at into v_previous,v_locked from public.shops where id=p_shop_id for update;
+  -- Recheck authority after any wait for another finalization/settings command.
+  v_actor := shop_private.assert_shop_write_access(p_shop_id,'settings.manage');
   if v_code = v_previous then return public.business_currency_settings(p_shop_id); end if;
   if v_locked is not null then raise exception 'SHOP_CURRENCY_LOCKED' using errcode='55000'; end if;
   if v_code is null or v_code not in ('EGP','USD','EUR','GBP','SAR','AED') then
