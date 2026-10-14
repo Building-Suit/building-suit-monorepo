@@ -99,7 +99,7 @@ export function createXPayCheckout({ env, rpc, authenticate, fetchImpl = fetch }
     try {
       if (!await authenticate(token)) return response({ error: 'sign_in_required' }, 401, settings.origin)
       const body = await json(request)
-      if (Object.keys(body).some(key => !['action', 'requestId', 'shopId', 'catalogTermsId', 'privateOffer', 'locale', 'orderId'].includes(key))
+      if (Object.keys(body).some(key => !['action', 'requestId', 'shopId', 'catalogTermsId', 'privateOffer', 'locale', 'orderId', 'purchaseIntent', 'priorPaidOrderId'].includes(key))
         || !UUID.test(body.shopId || '') || !['en', 'ar'].includes(body.locale)) throw new Error('xpay_invalid_request')
       if (body.action === 'status') {
         const capability = await rpc('shop_xpay_checkout_status', { p_shop_id: body.shopId }, token)
@@ -116,11 +116,12 @@ export function createXPayCheckout({ env, rpc, authenticate, fetchImpl = fetch }
         const order = await reconcileOrder(orders[0], settings, rpc, fetchImpl, body.locale)
         return response(publicOrder(order), 200, settings.origin)
       }
+      if (!['subscribe', 'renew', 'change'].includes(body.purchaseIntent ?? 'subscribe') || (body.priorPaidOrderId != null && !UUID.test(body.priorPaidOrderId))) throw new Error('xpay_invalid_request')
       if (!UUID.test(body.requestId || '') || (body.catalogTermsId != null && !UUID.test(body.catalogTermsId))) throw new Error('xpay_invalid_request')
       const capability = await rpc('shop_xpay_checkout_status', { p_shop_id: body.shopId }, token)
       if (!capability.enabled || capability.merchantId !== settings.merchantId || capability.mode !== settings.mode) throw new Error('xpay_not_configured')
       await verifyMerchantReadiness({ ...settings, fetchImpl })
-      let order = await rpc('shop_xpay_order_create', { p_request_id: body.requestId, p_shop_id: body.shopId, p_catalog_terms_id: body.catalogTermsId ?? null, p_private_offer: body.privateOffer ?? null }, token)
+      let order = await rpc('shop_xpay_order_create', { p_request_id: body.requestId, p_shop_id: body.shopId, p_catalog_terms_id: body.catalogTermsId ?? null, p_private_offer: body.privateOffer ?? null }, token, { purchaseIntent: body.purchaseIntent ?? 'subscribe', priorPaidOrderId: body.priorPaidOrderId ?? null })
       if (order.merchantId !== settings.merchantId || order.mode !== settings.mode) throw new Error('xpay_session_mismatch')
       if (order.sessionId) {
         // Refresh authoritative state before returning a previously bound URL.
