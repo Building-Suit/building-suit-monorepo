@@ -4927,10 +4927,17 @@ export type Database = {
           address: string | null
           created_at: string
           display_name: string | null
+          document_direction: string
+          document_label: string | null
+          document_language: string
           footer: string | null
+          logo_data_url: string | null
+          notes: string | null
           paper_size: string
           phone: string | null
+          reference_label: string | null
           shop_id: string
+          show_descriptions: boolean
           updated_at: string
           updated_by_profile_id: string
         }
@@ -4938,10 +4945,17 @@ export type Database = {
           address?: string | null
           created_at?: string
           display_name?: string | null
+          document_direction?: string
+          document_label?: string | null
+          document_language?: string
           footer?: string | null
+          logo_data_url?: string | null
+          notes?: string | null
           paper_size?: string
           phone?: string | null
+          reference_label?: string | null
           shop_id: string
+          show_descriptions?: boolean
           updated_at?: string
           updated_by_profile_id: string
         }
@@ -4949,10 +4963,17 @@ export type Database = {
           address?: string | null
           created_at?: string
           display_name?: string | null
+          document_direction?: string
+          document_label?: string | null
+          document_language?: string
           footer?: string | null
+          logo_data_url?: string | null
+          notes?: string | null
           paper_size?: string
           phone?: string | null
+          reference_label?: string | null
           shop_id?: string
+          show_descriptions?: boolean
           updated_at?: string
           updated_by_profile_id?: string
         }
@@ -8671,6 +8692,10 @@ export type Database = {
           p_shop_id: string
         }
         Returns: string
+      }
+      save_document_settings: {
+        Args: { p_settings: Json; p_shop_id: string }
+        Returns: Json
       }
       save_expense: {
         Args: {

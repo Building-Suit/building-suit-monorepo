@@ -9,6 +9,7 @@ on:
       - 'apps/shop-suit/supabase/**'
       - 'tooling/database/test-shop-settings-local.mjs'
       - 'tooling/database/test-shop-currency-concurrency.mjs'
+      - 'tooling/database/schema-contract-evidence.mjs'
       - 'apps/shop-suit/app/utils/owner-invitation.ts'
       - 'apps/shop-suit/app/pages/auth/owner-invitation.vue'
 permissions:
@@ -53,6 +54,8 @@ jobs:
           mkdir -p "$RUNNER_TEMP/account-schema-contracts/shop" "$RUNNER_TEMP/account-schema-contracts/sas"
           pnpm exec supabase --workdir apps/shop-suit gen types typescript --local > "$RUNNER_TEMP/account-schema-contracts/shop/database.types.ts"
           pnpm exec supabase --workdir apps/super-admin-suit gen types typescript --local > "$RUNNER_TEMP/account-schema-contracts/sas/database.types.ts"
+      - name: Record generated Shop schema delta and digests
+        run: node tooling/database/schema-contract-evidence.mjs apps/shop-suit/app/types/database.types.ts "$RUNNER_TEMP/account-schema-contracts/shop/database.types.ts"
       - uses: actions/upload-artifact@v4
         with:
           name: account-schema-contracts
