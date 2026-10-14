@@ -454,6 +454,9 @@ const invitationPreviewCopy={
       <BsOwnerInvitationPage v-model:password="invitationPreviewPassword" v-model:confirmation="invitationPreviewConfirmation" :copy="invitationPreviewCopy" :view="{phase:'error',pending:false,failed:false}" />
     </BsContentSection>
 
+    <BsContentSection :title="isArabic ? 'عمولات اختيارية' : 'Optional commissions'">
+      <BsDescriptionList><BsDescriptionItem term="BsCommissionPolicyPage">{{ isArabic ? 'تفعيل النشاط والموظف، ونسب أو مبالغ ثابتة، وإسناد المسودات، وفصل التقديرات والمكتسبات والتعديلات بعد التصدير.' : 'Shop and employee opt-in, percentage or fixed unit rates, draft attribution, and separate estimates, earnings and post-export adjustments. Shop owns authorized commands and financial values.' }}</BsDescriptionItem></BsDescriptionList>
+    </BsContentSection>
     <WorkflowPatternCatalogue />
 
     <BsToastHost />

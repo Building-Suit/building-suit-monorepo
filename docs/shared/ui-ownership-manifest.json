@@ -331,6 +331,16 @@
         "BsOfflineCounterStatus"
       ],
       "adapterBoundary": "Product supplies localized queue states, recovery intent and server-confirmed receipt links; Shop owns encrypted persistence and replay commands. Connectivity lifecycle belongs in packages/ux."
+    },
+    {
+      "family": "commission-policy",
+      "owner": "packages/ui",
+      "components": [
+        "BsCommissionPolicyPage"
+      ],
+      "adapterBoundary": "typed policy forms, staff and draft assignment projections, formatted earning rows, translated copy and authorized semantic commands",
+      "task": "SS-BARBER-COMP-001",
+      "migrationStatus": "implemented; verification recorded in product task evidence"
     }
   ]
 }

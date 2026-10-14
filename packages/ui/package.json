@@ -327,7 +327,9 @@
     "./templates/BsAccountProvisioningPage": "./src/templates/BsAccountProvisioningPage.vue",
     "./templates/BsOwnerInvitationPage": "./src/templates/BsOwnerInvitationPage.vue",
     "./types/offlineCounterPresentation": "./src/types/offlineCounterPresentation.ts",
-    "./templates/BsOfflineCounterStatus": "./src/templates/BsOfflineCounterStatus.vue"
+    "./templates/BsOfflineCounterStatus": "./src/templates/BsOfflineCounterStatus.vue",
+    "./types/commissionPresentation": "./src/types/commissionPresentation.ts",
+    "./templates/BsCommissionPolicyPage": "./src/templates/BsCommissionPolicyPage.vue"
   },
   "dependencies": {
     "primevue": "4.5.5",

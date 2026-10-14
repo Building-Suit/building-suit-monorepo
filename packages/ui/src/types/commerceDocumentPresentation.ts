@@ -4,6 +4,7 @@ export interface BsCommerceDocumentLine { id: string; name: string; description:
 export interface BsCommerceDocumentEvent { id: string; title: string; description: string; reason: string; canReverse: boolean; canRefund: boolean }
 export interface BsCommerceDocumentMovement { id: string; date: string; name: string; quantity: string; cost: string; batch: string; to: string }
 export interface BsCommerceDocumentView {
+  relatedAction?: { label: string; to: string }
   loading: boolean; error: boolean; found: boolean; title: string; subtitle: string; status: string; actionError: string; success: string; notice: string
   party: { name: string; to: string; phone: string; email: string; address: string }
   detail: { date: string; created: string; notes: string; total: string; balance: string; discount: string; paid: string; due: string; settlement: string }
