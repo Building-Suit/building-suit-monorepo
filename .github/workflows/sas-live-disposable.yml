@@ -38,7 +38,7 @@ jobs:
             exit 1
           fi
       - name: Verify SQL scope, send denial and deduplication
-        run: docker exec -i supabase_db_building-suit-super-admin psql -U postgres -d postgres -v ON_ERROR_STOP=1 < apps/super-admin-suit/supabase/tests/private_invalidations.sql
+        run: pnpm exec supabase --workdir apps/super-admin-suit test db --local
       - name: Verify real Auth and private-channel isolation
         run: node tooling/database/sas-live-disposable.mjs
       - name: Generate updated schema contract
