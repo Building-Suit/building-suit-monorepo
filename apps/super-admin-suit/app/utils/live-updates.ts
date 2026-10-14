@@ -1,6 +1,6 @@
 export const adminUpdateKinds = ['registry', 'activity', 'billing', 'offers', 'configuration'] as const
 export type AdminUpdateKind = typeof adminUpdateKinds[number]
-export interface AdminLiveScope { userId: string; authorityEnvironmentId: string }
+export interface AdminLiveScope { userId: string; authorityEnvironmentId: string; topic?: string }
 export interface AdminLiveChannel {
   onInvalidate(callback: (payload: unknown) => void): void
   subscribe(callback: (status: string) => void): void
@@ -59,7 +59,7 @@ export function createAdminLiveUpdates(options: {
   }
   function update(next: AdminLiveScope | null) {
     if (disposed) return setup
-    if (next?.userId === scope?.userId && next?.authorityEnvironmentId === scope?.authorityEnvironmentId) return setup
+    if (next?.userId === scope?.userId && next?.authorityEnvironmentId === scope?.authorityEnvironmentId && next?.topic === scope?.topic) return setup
     scope = next ? { ...next } : null
     const expected = ++revision, previous = channel
     channel = null; connected = false; running = false

@@ -12,7 +12,7 @@ async function notifications(page: Page) {
       if (event === 'phx_join') {
         expect(payload.config.private).toBe(true)
         expect(payload.config.postgres_changes).toEqual([])
-        expect(channel).toBe(`realtime:sas:${environment}`)
+        expect(channel).toBe(`realtime:sas:${environment}:${owner}:66666666-6666-4666-8666-666666666666`)
         topic = channel; join = joinRef
       }
       socket.send(JSON.stringify([joinRef, ref, channel, 'phx_reply', { status: 'ok', response: {} }]))
@@ -28,6 +28,7 @@ async function notifications(page: Page) {
 async function session(page: Page) {
   let allowed = true, checks = 0, registries = 0, held: Promise<void> | null = null
   await page.route('**/api/session', route => { checks++; return route.fulfill({ status: allowed ? 200 : 403, json: allowed ? { userId: owner, role: 'owner', authorityEnvironmentId: environment } : { statusCode: 403 } }) })
+  await page.route('**/api/live', route => route.fulfill({ json: { userId: owner, authorityEnvironmentId: environment, topic: `sas:${environment}:${owner}:66666666-6666-4666-8666-666666666666` } }))
   await page.route('**/api/accounts/context', route => route.fulfill({ json: { modules: [] } }))
   await page.route('**/api/registry', async route => {
     registries++; if (held) await held
