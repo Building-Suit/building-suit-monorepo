@@ -6,7 +6,7 @@ import { chromium } from '@playwright/test'
 import { makeFixture, localApi, localAnonKey, sql, actorSql } from './helpers/offline-fixture.mjs'
 const root = new URL('../../../../',import.meta.url).pathname
 const origin = 'http://127.0.0.1:4331'
-const fixture = makeFixture()
+const fixture = makeFixture({ currency: 'USD' })
 const child = spawn(process.execPath,['apps/shop-suit/.output/server/index.mjs'],{ cwd:root,env:{...process.env,PORT:'4331',HOST:'127.0.0.1',APP_ENV:'local',NUXT_PUBLIC_SUPABASE_URL:localApi,NUXT_PUBLIC_SUPABASE_KEY:localAnonKey},stdio:['ignore','pipe','pipe'] })
 let serverFailed = false
 child.on('exit',code => { if(code) serverFailed=true })
@@ -54,6 +54,7 @@ try {
   }
   const queued=(await page.evaluate(()=>window.counterProbe.list()))[0]
   assert.equal(queued.state,'unsynced')
+  await page.getByText(/Local sale.*\$20\.00/).waitFor()
   assert.equal(sql(`select count(*) from public.invoices where shop_id='${fixture.shopId}';`),'0')
   await mkdir(`${root}.local/ss-offline`,{recursive:true})
   await page.screenshot({path:`${root}.local/ss-offline/authenticated-offline.png`,fullPage:true})

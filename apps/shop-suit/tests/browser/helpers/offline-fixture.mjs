@@ -10,7 +10,7 @@ export function sql(statement) {
   return result.stdout.trim().split('\n').filter(Boolean).at(-1)
 }
 export function actorSql(userId, statement) { return sql(`select set_config('request.jwt.claim.sub','${userId}',false); set role authenticated; ${statement}`) }
-export function makeFixture() {
+export function makeFixture({ currency = 'EGP' } = {}) {
   const userId = randomUUID(); const email = `${userId}@offline-counter.invalid`
   const password = 'Local-offline-fixture-2026!'
   // Synthetic confirmed fixture only, consistent with existing disposable SQL suites. No mail is sent.
@@ -19,6 +19,8 @@ export function makeFixture() {
     insert into auth.identities(id,user_id,provider,provider_id,identity_data,created_at,updated_at)
     values(gen_random_uuid(),'${userId}','email','${userId}',jsonb_build_object('sub','${userId}','email','${email}','email_verified',true),now(),now());`)
   const shopId = actorSql(userId, "select public.create_owner_shop('Offline cloud counter','product'::public.business_mode);")
+  if (!['EGP','USD','EUR','GBP','SAR','AED'].includes(currency)) throw new Error('Unsupported disposable fixture currency')
+  actorSql(userId, `select public.save_business_currency('${shopId}','${currency}');`)
   const locationId = sql(`select id from public.shop_locations where shop_id='${shopId}' and is_default;`)
   const staffId = sql(`select id from public.shop_memberships where shop_id='${shopId}' and role='owner';`)
   const productId = actorSql(userId, `select public.save_product('${shopId}',null,'Offline cloud product','OFF-CLOUD',null,20);`)
