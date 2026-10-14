@@ -152,7 +152,7 @@ grant select on currency_first_money_fixture to authenticated;
 insert into auth.users(id,email,encrypted_password,aud,role,email_confirmed_at,raw_app_meta_data,raw_user_meta_data,created_at,updated_at)
 select owner_id,owner_id::text || '@first-currency.invalid','x','authenticated','authenticated',now(),'{}','{}',now(),now() from currency_first_money_fixture;
 set local role authenticated;
-do $$ declare fixture record; shop uuid; location uuid; product uuid; vendor uuid; customer uuid; begin
+do $$ declare fixture record; shop uuid; location uuid; product uuid; vendor uuid; customer uuid; service uuid; staff uuid; invoice uuid; begin
   for fixture in select * from currency_first_money_fixture loop
     perform set_config('request.jwt.claim.sub',fixture.owner_id::text,true);
     shop := public.create_owner_shop('First monetary ' || fixture.kind,'team','mixed');
@@ -166,7 +166,11 @@ do $$ declare fixture record; shop uuid; location uuid; product uuid; vendor uui
       perform public.open_cash_shift(gen_random_uuid(),shop,location,'main',10.23,'Synthetic opening');
     elsif fixture.kind='payment' then
       customer := public.save_customer(shop,null,'Synthetic credit customer',null,null,null,null);
-      perform public.record_location_customer_receipt(gen_random_uuid(),shop,location,customer,10.23,clock_timestamp(),'cash','Synthetic credit',null,'[]'::jsonb);
+      service := public.save_service(shop,null,'Synthetic receipt service',null,10.23,'amount',0);
+      select id into staff from public.shop_memberships where shop_id=shop and role='owner';
+      invoice := public.save_pos_sale_draft(gen_random_uuid(),shop,location,null,staff,null,customer,null,jsonb_build_array(jsonb_build_object('item_type','service','source_id',service,'quantity',1)));
+      perform public.issue_location_sale(gen_random_uuid(),shop,location,invoice);
+      perform public.record_location_customer_receipt(gen_random_uuid(),shop,location,customer,10.23,clock_timestamp(),'cash','Synthetic allocated receipt',null,jsonb_build_array(jsonb_build_object('invoice_id',invoice,'amount',10.23)));
     else
       product := public.save_product(shop,null,'Synthetic product','CUR-' || fixture.kind,null,20);
       if fixture.kind='stock' then
