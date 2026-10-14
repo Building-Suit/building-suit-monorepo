@@ -2,8 +2,11 @@
 import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
 import { spawnSync } from 'node:child_process'
+import { createRequire } from 'node:module'
 import { setTimeout as delay } from 'node:timers/promises'
 assert.equal(process.env.SAS_LIVE_DISPOSABLE, '1', 'Explicit disposable validation required')
+// Reuse the application integration's locked SDK, including its binary codec.
+const { createClient } = createRequire(import.meta.resolve('@nuxtjs/supabase'))('@supabase/supabase-js')
 const container = 'supabase_db_building-suit-super-admin'
 const origin = 'http://127.0.0.1:64321'
 function command(program, args, input) {
@@ -33,22 +36,19 @@ async function user() {
  const token = login.data.access_token, claims = JSON.parse(Buffer.from(token.split('.')[1], 'base64url'))
  return { id: login.data.user.id, token, session: claims.session_id }
 }
-function connect(token, topic) {
- const socket = new WebSocket(`ws://127.0.0.1:64321/realtime/v1/websocket?apikey=${encodeURIComponent(apiKey)}&vsn=2.0.0`)
- const messages = []
+async function connect(token, topic) {
+ const client = createClient(origin, apiKey, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } })
+ await client.realtime.setAuth(token)
+ const channel = client.channel(topic, { config: { private: true } }), messages = []
+ channel.on('broadcast', { event: 'invalidate' }, event => messages.push(event.payload))
  const joined = new Promise((resolve, reject) => {
   const timeout = setTimeout(() => reject(new Error('Realtime join timeout')), 10000)
-  socket.addEventListener('open', () => socket.send(JSON.stringify(['1', '1', `realtime:${topic}`, 'phx_join', {
-   config: { private: true, broadcast: { ack: false, self: false }, presence: { enabled: false }, postgres_changes: [] }, access_token: token,
-  }])))
-  socket.addEventListener('error', () => { clearTimeout(timeout); reject(new Error('Realtime connection failed')) })
-  socket.addEventListener('message', event => {
-   const frame = JSON.parse(event.data)
-   if (frame[3] === 'phx_reply' && frame[1] === '1') { clearTimeout(timeout); resolve(frame[4].status === 'ok') }
-   if (frame[3] === 'broadcast') messages.push(frame[4].payload)
+  channel.subscribe(state => {
+   if (state === 'SUBSCRIBED') { clearTimeout(timeout); resolve(true) }
+   if (state === 'CHANNEL_ERROR' || state === 'TIMED_OUT') { clearTimeout(timeout); resolve(false) }
   })
  })
- return { socket, joined, messages, close() { socket.close() } }
+ return { channel, joined, messages, async close() { await client.removeChannel(channel); client.realtime.disconnect() } }
 }
 async function until(check) { for (let n = 0; n < 50; n++) { if (check()) return; await delay(100) }; throw new Error('Expected private invalidation not delivered') }
 const peers = []
@@ -72,14 +72,14 @@ try {
  }
  const ownerTopic = await topic(owner), colleagueTopic = await topic(colleague), foreignTopic = await topic(foreign)
  assert.equal(ownerTopic, `sas:${environment}:${owner.id}:${owner.session}`)
- const a = connect(owner.token, ownerTopic), b = connect(owner.token, ownerTopic), c = connect(colleague.token, colleagueTopic), f = connect(foreign.token, foreignTopic)
+ const a = await connect(owner.token, ownerTopic), b = await connect(owner.token, ownerTopic), c = await connect(colleague.token, colleagueTopic), f = await connect(foreign.token, foreignTopic)
  peers.push(a, b, c, f); assert.deepEqual(await Promise.all(peers.map(peer => peer.joined)), [true, true, true, true])
  for (const [token, wrong] of [[apiKey, ownerTopic], [stranger.token, ownerTopic], [colleague.token, ownerTopic], [owner.token, foreignTopic]]) {
-  const denied = connect(token, wrong); peers.push(denied); assert.equal(await denied.joined, false); denied.close()
+  const denied = await connect(token, wrong); peers.push(denied); assert.equal(await denied.joined, false); await denied.close()
  }
- const sender = connect(owner.token, ownerTopic); peers.push(sender); assert.equal(await sender.joined, true)
- sender.socket.send(JSON.stringify(['1', '2', `realtime:${ownerTopic}`, 'broadcast', { type: 'broadcast', event: 'invalidate', payload: { forged: true } }]))
- await delay(400); assert.equal(b.messages.length, 0); sender.close()
+ const sender = await connect(owner.token, ownerTopic); peers.push(sender); assert.equal(await sender.joined, true)
+ await sender.channel.send({ type: 'broadcast', event: 'invalidate', payload: { forged: true } })
+ await delay(400); assert.equal(b.messages.length, 0); await sender.close()
  assert.equal((await request('/rest/v1/admin_live_invalidations?select=*', owner.token)).code, 403)
  const eventKey = `fixture:${randomUUID()}`
  const enqueue = key => sql(`select super_admin_private.live_enqueue(${quote(key)},${quote(environment)},${quote(binding)},array['activity','billing']);`)
@@ -98,7 +98,7 @@ try {
  // Existing cached socket gets only a revocation hint; new joins/HTTP reject.
  sql(`update public.platform_admins set enabled=false,disabled_at=clock_timestamp() where user_id=${quote(colleague.id)};`)
  await until(() => c.messages.length === 3)
- const revoked = connect(colleague.token, colleagueTopic); peers.push(revoked); assert.equal(await revoked.joined, false)
+ const revoked = await connect(colleague.token, colleagueTopic); peers.push(revoked); assert.equal(await revoked.joined, false)
  assert.equal((await request('/rest/v1/rpc/super_admin_live_topic', colleague.token, {})).code, 403)
  enqueue(`after-revoke:${randomUUID()}`); await until(() => a.messages.length === 3); await delay(400); assert.equal(c.messages.length, 3)
  // Supported Auth logout removes the session; still-valid JWT no longer receives.
@@ -130,4 +130,4 @@ try {
  assert.equal(receipt('shop.billing.query'), '0', 'Queries must not cause feedback invalidations')
  assert.equal(receipt('shop.billing.command'), '1', 'Trusted command receipt must invalidate its bound authority')
  console.log('PASS real Auth/private Realtime: two tabs, operator/environment/session denial, minimized events, dedup, binding isolation, revocation/logout, bounded replay')
-} finally { peers.forEach(peer => peer.close()) }
+} finally { await Promise.all(peers.map(peer => peer.close())) }
