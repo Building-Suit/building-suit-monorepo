@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { BsCashShiftActiveView, BsCashShiftHistoryRow, BsCashShiftAmountForm, BsCashShiftMovementForm } from '@building-suit/ui/types/cashShiftPresentation'
+import { projectOfflineCash, isCounterCashAmount } from '~/utils/offlineCashProjection.js'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 
 definePageMeta({ layout: 'default', middleware: 'auth' })
@@ -23,6 +24,7 @@ const cashierId = ref<string | null>(null)
 const actionError = ref('')
 
 const copy = computed(() => isArabic.value ? {
+  historyOffline: 'سجل الورديات والحركات الكامل متاح عند الاتصال.',
   title: 'ورديات الخزنة', subtitle: 'افتح خزنة كل فرع، سجّل الحركات، وطابق النقدية عند الإغلاق.', branch: 'الفرع',
   noShop: 'اعمل متجر الأول من لوحة التحكم.', loading: 'بنحمّل الورديات…', noLocation: 'مفيش فرع متاح.', loadError: 'مقدرناش نحمّل ورديات الخزنة.', retry: 'حاول تاني',
   active: 'الوردية المفتوحة', noActive: 'لا توجد وردية نقدية مفتوحة لهذا الفرع.', open: 'فتح وردية', openingCash: 'النقدية الافتتاحية', openingNotes: 'ملاحظة الافتتاح (اختيارية)', openAction: 'فتح الخزنة',
@@ -36,6 +38,7 @@ const copy = computed(() => isArabic.value ? {
   closeConfirm: 'تقفل الوردية على المبلغ اللي عدّيته؟ هنحفظ المبلغ المتوقع والفرق من غير ما نغيّر أي عملية قديمة.',
   saved: 'اتحدّثت وردية الخزنة.', invalid: 'راجع المبلغ والسبب والمرجع.', denied: 'معندكش صلاحية للفرع أو الإجراء ده.', conflict: 'فيه وردية مفتوحة للخزنة دي بالفعل.', writeError: 'مقدرناش نحفظ العملية. راجع البيانات وحاول تاني.', cancel: 'إلغاء',
 } : {
+  historyOffline: 'Full shift and movement history is available online.',
   title: 'Cashier shifts', subtitle: 'Open each location drawer, record movements, and reconcile counted cash at close.', branch: 'Location',
   noShop: 'Create a shop from the dashboard first.', loading: 'Loading shifts…', noLocation: 'No location is available.', loadError: 'Could not load cashier shifts.', retry: 'Retry',
   active: 'Open shift', noActive: 'No cash shift is open for this location.', open: 'Open shift', openingCash: 'Opening cash', openingNotes: 'Opening note (optional)', openAction: 'Open drawer',
@@ -87,11 +90,16 @@ const closeForm = reactive({ amount: 0, notes: '' })
 const { visible: showOpen, pending: opening, dirty: openDirty } = useRecordAction(() => openForm)
 const { visible: showMovement, pending: moving, dirty: movementDirty } = useRecordAction(() => movementForm)
 const { visible: showClose, pending: closing, dirty: closeDirty } = useRecordAction(() => closeForm)
+watch(counter.scope, () => {
+  showOpen.value = false; showMovement.value = false; showClose.value = false
+  Object.assign(openForm, { amount: 0, notes: '' }); Object.assign(movementForm, { kind: 'pay_in', amount: 0, reason: '', reference: '' }); Object.assign(closeForm, { amount: 0, notes: '' })
+  actionError.value = ''
+})
 const openRequestId = ref<string | null>(null)
 const movementRequestId = ref<string | null>(null)
 const closeRequestId = ref<string | null>(null)
 
-function validMoney(value: number, allowZero = false) { return Number.isFinite(value) && (allowZero ? value >= 0 : value > 0) && Math.round(value * 100) === value * 100 }
+const validMoney = isCounterCashAmount
 function money(value: number | string | undefined) { return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { style: 'currency', currency: 'EGP', maximumFractionDigits: 2 }).format(Number(value ?? 0)) }
 function date(value?: string) { return value ? new Intl.DateTimeFormat(isArabic.value ? 'ar-EG' : 'en-EG', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) : '—' }
 function eventLabel(kind: DrawerEvent['kind']) { return copy.value[kind] }
@@ -146,13 +154,13 @@ async function closeShift() {
   const inScope = captureScope()
   closing.value = true; actionError.value = ''; closeRequestId.value ??= crypto.randomUUID()
   try {
-    if (!await confirmation.ask(`${currentLocation.value?.name ?? ''} · ${copy.value.expected}: ${money(active.expectedCash)} · ${copy.value.counted}: ${money(closeForm.amount)}. ${copy.value.closeConfirm}`) || !inScope()) return
+    if (!await confirmation.ask(`${currentLocation.value?.name ?? ''} · ${copy.value.expected}: ${money(projectedExpectedCash.value)} · ${copy.value.counted}: ${money(closeForm.amount)}. ${copy.value.closeConfirm}`) || !inScope()) return
     if (!counter.online.value) {
       if (counter.shiftClosing.value) throw new Error('OFFLINE_CLOSE_PENDING')
       await counter.enqueue({ kind: 'close', args: { p_request_id: closeRequestId.value, p_shop_id: currentId.value, p_session_id: active.id, p_counted_amount: closeForm.amount, p_notes: closeForm.notes.trim() || null } }, closeRequestId.value)
       showClose.value = false; return
     }
-    if (counter.records.value.some(record => record.state !== 'synced')) throw new Error('OFFLINE_REPLAY_PENDING')
+    if (counter.records.value.some(record => record.state !== 'synced' && record.resolution?.phase !== 'reconciled')) throw new Error('OFFLINE_REPLAY_PENDING')
     const { error } = await rpc.rpc('close_cash_shift', { p_request_id: closeRequestId.value, p_shop_id: currentId.value, p_session_id: active.id, p_counted_amount: closeForm.amount, p_notes: closeForm.notes.trim() || null })
     if (!inScope()) return
     if (error) throw error
@@ -163,16 +171,7 @@ async function closeShift() {
 
 useShopRealtime('cash-shifts', () => openDirty.value || movementDirty.value || closeDirty.value)
 
-const projectedExpectedCash = computed(() => {
-  const active = dashboard.value.active
-  if (!active) return 0
-  return counter.records.value.filter(record => record.state !== 'synced').reduce((amount, record) => {
-    const command = record.envelope.command
-    if (command.kind === 'sale' && command.args.p_shift_id === active.id && command.args.p_method === 'cash') return amount + Number(command.args.p_amount)
-    if (command.kind === 'movement' && command.args.p_session_id === active.id) return amount + Number(command.args.p_amount) * (command.args.p_kind === 'pay_out' ? -1 : 1)
-    return amount
-  }, Number(active.expectedCash))
-})
+const projectedExpectedCash = computed(() => projectOfflineCash(dashboard.value.active, counter.records.value))
 watch(counter.busy, value => { if (!value && counter.online.value) void refresh() })
 
 const activeView = computed<BsCashShiftActiveView | null>(() => {
@@ -189,5 +188,5 @@ const movementModel = computed<BsCashShiftMovementForm>({ get: () => ({ ...movem
 const movementOptions = computed(() => [{ value: 'pay_in', label: copy.value.payIn }, { value: 'pay_out', label: copy.value.payOut }])
 </script>
 <template>
-  <BsCashShiftsPage v-model:cashier="cashierId" v-model:open-form="openModel" v-model:movement-form="movementModel" v-model:close-form="closeModel" v-model:open-visible="showOpen" v-model:movement-visible="showMovement" v-model:close-visible="showClose" :offline="offlineView" :copy="copy" :context-available="Boolean(current)" :shop-loading="shopLoading" :location-name="currentLocation?.name ?? null" :pending="pending" :error="Boolean(error)" :active="activeView" :can-adjust="Boolean(dashboard.active && dashboard.canAdjust && !counter.shiftClosing.value)" :can-close="canClose && !counter.shiftClosing.value" :can-manage="dashboard.canManage && counter.online.value" :history-rows="historyRows" :cashier-options="dashboard.cashiers" :page="page" :page-size="pageSize" :total="dashboard.total" :action-error="actionError" :expected-cash="money(projectedExpectedCash)" :open-editor="{ dirty: openDirty, pending: opening }" :movement-editor="{ dirty: movementDirty, pending: moving }" :close-editor="{ dirty: closeDirty, pending: closing }" :movement-options="movementOptions" @retry-offline="counter.retry($event)" @retry="refresh()" @open="startOpen" @movement="startMovement" @close="startClose" @save-open="openShift" @save-movement="recordMovement" @save-close="closeShift" @page="page = $event"/>
+  <BsCashShiftsPage v-model:cashier="cashierId" v-model:open-form="openModel" v-model:movement-form="movementModel" v-model:close-form="closeModel" v-model:open-visible="showOpen" v-model:movement-visible="showMovement" v-model:close-visible="showClose" :offline="offlineView" :can-open="counter.online.value" :history-available="counter.online.value" :copy="copy" :context-available="Boolean(current)" :shop-loading="shopLoading" :location-name="currentLocation?.name ?? null" :pending="pending" :error="Boolean(error)" :active="activeView" :can-adjust="Boolean(dashboard.active && dashboard.canAdjust && !counter.shiftClosing.value && !counter.busy.value)" :can-close="canClose && !counter.shiftClosing.value && !counter.busy.value" :can-manage="dashboard.canManage && counter.online.value" :history-rows="historyRows" :cashier-options="dashboard.cashiers" :page="page" :page-size="pageSize" :total="dashboard.total" :action-error="actionError" :expected-cash="money(projectedExpectedCash)" :open-editor="{ dirty: openDirty, pending: opening }" :movement-editor="{ dirty: movementDirty, pending: moving }" :close-editor="{ dirty: closeDirty, pending: closing }" :movement-options="movementOptions" @retry-offline="counter.retry($event)" @reconcile-offline="counter.reconcile($event)" @retry="refresh()" @open="startOpen" @movement="startMovement" @close="startClose" @save-open="openShift" @save-movement="recordMovement" @save-close="closeShift" @page="page = $event"/>
 </template>

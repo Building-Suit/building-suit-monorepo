@@ -1,5 +1,6 @@
 export interface BsOfflineCounterView {
   notice: string
   retry: string
-  records: { id: string; label: string; state: 'unsynced' | 'syncing' | 'failed' | 'synced'; status: string; detail: string; receipt: string | null }[]
+  reconcile?: string
+  records: { id: string; isResolved?: boolean; canRetry?: boolean; canReconcile?: boolean; label: string; state: 'unsynced' | 'syncing' | 'failed' | 'synced'; status: string; detail: string; receipt: string | null }[]
 }

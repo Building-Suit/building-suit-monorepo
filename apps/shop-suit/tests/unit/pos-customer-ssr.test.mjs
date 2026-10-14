@@ -37,6 +37,8 @@ for (const customerId of ['customer-1', null]) test(`SSR locks appointment custo
     definePageMeta: () => {}, useRoute: () => ({ query: { appointment: 'appointment-1' } }),
     // Realtime registers only on the client; this fixture exercises initial SSR.
     useShopRealtime: () => {},
+    useShopTaskScope: () => () => () => true,
+    preloadRouteComponents: async () => {},
     useOfflineCounter: () => ({ online: vue.ref(true), ready: vue.ref(false), scope: vue.ref(''), busy: vue.ref(false), records: vue.ref([]), shiftClosing: vue.ref(false), cached: async () => null, cache: async () => {}, retry: async () => {} }),
     useOfflineCounterView: () => vue.ref(undefined),
     useCatalogMedia: () => ({ request: (_action, _args, fallback) => fallback() }),

@@ -1,63 +1,65 @@
 # SS-OFFLINE-001 acceptance tracker
 
-Status: local implementation checkpoint; cloud infrastructure stopped server verification; **publication blocked** until authenticated real phone/tablet network-loss and replay evidence exists. No PR, hosted migration, deployment or task completion claimed.
+**Cloud implementation and verification complete. Physical-device qualification pending; publication blocked.** No push, PR, CI trigger, hosted migration or deployment occurred.
 
-Branch: `codex/shop-suit/ss-offline-001`; worktree: `/workspace/ss-offline-001`. Base: verified live `stg` `547005b263e1a2eedaa6f09a3fc9837d059d6d05`, explicitly requested by the user. Billing PRs #305/#307 are owned separately and untouched. Before future publication, refresh live Shop stack topology and reconcile a review target without modifying billing. UI PRO tasks, home devices/network, tunnels, Penpot and n8n are excluded.
+Branch `codex/shop-suit/ss-offline-001`, worktree `/workspace/ss-offline-001`, base verified `stg` `547005b263e1a2eedaa6f09a3fc9837d059d6d05`. Initial checkpoint `21123c4` was resumed and its server/reconciliation gaps completed. Billing PRs #305/#307 and their branches were not modified or duplicated. Before eventual publication, recheck the live Shop stack target without modifying billing.
 
-## Acceptance and implementation
+## Exact acceptance
 
-| Original acceptance | Implemented cloud behavior | Verification status |
+| Original acceptance | Cloud implementation and evidence | Remaining |
 | --- | --- | --- |
-| POS records allowed sales/payments and manages an open cash shift during an outage | Loaded authenticated POS uses bounded cached catalog/staff/active drawer; encrypted sale/payment envelopes; cash movements and close queued against the existing drawer; opening a new shift stays online | Browser queue mechanics pass; authenticated product flow pending |
-| Stable local/request IDs; visible unsynced/syncing/failed/synced states | UUID envelope/request IDs persist before cart reset; shared status/retry/receipt presentation; crash resumes identical envelope | Chromium queue/reload/lost-response tests pass; full product UI pending |
-| Reconnect through existing server idempotency; no duplicate invoice/payment/stock effects | Atomic wrapper composes existing save/checkout requests, locks captured drawer, persists full payload and actor, returns committed replay even after drawer close | SQL replay/financial-effect tests blocked by local backend startup/disk exhaustion |
-| Visible recoverable conflicts/rejections; nothing silently dropped | Rejection retained with same signed payload; localized recovery instructions/retry; failed record blocks FIFO including close; no automatic discard or rewritten request IDs | Chromium conflict barrier/retry passes; server recovery pending |
-| Minimize/protect sensitive local data | AES-GCM encrypted IndexedDB; non-extractable local AES/HMAC keys; HMAC envelope verification; environment/user/shop/location scope; no cached customer contacts, appointment lists, media, auth tokens or history; 12-hour cache expiry; cache cleared on identity/scope change; up to 3,000 viewed items and 200 pending transactions | Chromium isolation/encryption/key/expiry tests pass; physical browser storage behavior pending |
-| Back-office purchases/reports/settings may stay online | Only POS and existing cash-shift commands use the queue | Code boundaries inspected; workspace check passes |
+| POS records allowed sales/payments and manages an open cash shift during an outage | Authenticated loaded POS persists signed/encrypted sales; cached open drawer supports queued movements/close and provisional cash totals in cents. Actual browser outage, movement and close passed, expected/count cash 125 with zero variance | Physical phone/tablet qualification |
+| Stable local/request IDs and visible unsynced/syncing/failed/synced states | Vault commits before cart reset and before the first network attempt for eligible counter sales. UUIDs persist across lost responses/replay; shared status and recovery UI; authenticated screenshots and queue browser tests | Physical storage/lifecycle behavior |
+| Reconnect uses existing server idempotency without duplicate invoice/payment/stock effects | Atomic wrapper uses existing draft/checkout commands, captures/locks drawer identity, compares full payload/actor, returns committed results after close. Real authenticated lost-response replay had exactly one invoice/payment/stock/drawer effect; two-session duplicate replay and races passed | Physical network-loss/replay evidence |
+| Conflicts/rejections visible and recoverable, nothing silently dropped | Failed command is a FIFO barrier. Server cancellation tombstone permanently blocks late wrapper/legacy posting; already committed requests return their original result. Operator explicitly acknowledges customer/payment or cash/count reconciliation. Original transaction/cancellation and signed acknowledgement retained; no automatic repricing/refund/history rewriting | Physical operator flow |
+| Sensitive local data minimized/protected | AES-GCM IndexedDB, non-extractable AES/HMAC keys, envelope verification, environment/user/shop/location namespace. No cached customer contacts/appointments/media/auth tokens/history. Expiring 12-hour snapshots, at most 3,000 viewed catalog items and 200 pending commands. Confirmed terminal commands become minimal signed receipt summaries; full immutable commands remain server-side. Recent 200 terminal summaries shown; unresolved records always shown and retained | Physical browser quota/eviction/crypto interoperability |
+| Purchases/reports/settings may remain online-only | Queue covers only counter sale/payment, cash movement and close. Customer/appointment search, full drawer history, new shift opening and back office remain online-only | None in cloud |
 
-## Required verification
+## Verification results
 
-- [x] Cloud Chromium offline/online transitions for local queue mechanics.
-- [x] Cloud Chromium durable reload and ambiguous-response replay with identical IDs.
-- [x] Cloud Chromium failure barrier/recovery, real two-tab Web Lock serialization, scope isolation, ID reuse rejection, encryption and cache expiry.
-- [x] Existing SSR appointment/customer lock regression and report-format regression (6 tests).
-- [x] Workspace ownership/boundaries; `git diff --check`.
-- [ ] Authenticated disposable SQL duplicate/price/shift conflict tests.
-- [ ] Authenticated loaded POS and drawer outage/replay in cloud browser.
-- [ ] Independent server-session/device duplicate replay and concurrent shift-close safety.
-- [x] All six consumers typecheck, lint and build. Serial build retry passed after internal Rolldown failure. Lint has zero errors and two pre-existing owner-invitation ordering warnings.
-- [x] Complete regression suite: 1,461 tests, 1,438 passed, 23 intentionally skipped, zero failures (with installed Playwright binaries).
-- [ ] **Authenticated physical phone/tablet network-loss and replay evidence**: external mandatory publication gate. Cloud emulation is not this evidence. User devices must not be used.
+- [x] Actual Chromium IndexedDB/WebCrypto/Web Locks: outage transitions, online reload persistence, lost-response replay, ID reuse rejection, cache expiry, encryption/key protection and user/tenant isolation.
+- [x] Real two-tab replay serialization; stable cancellation IDs after lost response; immutable pending command; acknowledgement barrier; already-issued outcome recovery.
+- [x] Authenticated disposable SQL: one invoice/payment/stock/drawer effect, changed payload denial, price rollback with no partial invoice, completed replay after close and old drawer rejection.
+- [x] Server cancellation/reconciliation: repeated resolution, changed body/reason denial, committed legacy outcomes after close, late direct movement/close blocked, closed drawer history preserved.
+- [x] Two independent real Auth sessions: duplicate replay once, anonymous/outsider denial, cancellation-vs-sale and close-vs-sale races with exact cash/stock effects. Three additional consecutive race runs passed.
+- [x] Authenticated production-build browser: offline sale, repeated lost server response, identical request IDs, changed-price rejection and actual two-stage reconciliation UI, first entry to preloaded cash route during outage, offline movement/close, final expected/count 125 and variance zero.
+- [x] POS, cash, sale-correction and launch cash-policy SQL prerequisite suites. Old fixtures reference unavailable `pro/team/multi` plan selectors; task-owned regression runner uses the current default trial overload while preserving business mode/assertions. Original billing/source fixtures remain unchanged. An unadapted legacy fixture produced `PLAN_UNAVAILABLE`; no claim it passed unchanged.
+- [x] All six consumers typecheck and build; lint zero errors with existing attribute-order warnings.
+- [x] Complete regression suite: **1,464 tests, 1,441 passed, 23 intentionally skipped, zero failures**.
+- [x] Workspace boundaries and whitespace checks; 80 historical migrations unchanged, zero route migration debt.
+- [ ] **Authenticated physical phone/tablet network-loss/replay**. Required before publication. Cloud browser/emulation/screenshots are not physical evidence. User devices/network must not be used.
 
-## Evidence and limitations
-
-Task-owned reproducible commands:
+Reproducible task-owned commands (pinned pnpm 10.33.0):
 
 ```sh
 node apps/shop-suit/tests/browser/offline-counter.mjs
 node apps/shop-suit/tests/browser/offline-counter-db.mjs
-node --test apps/shop-suit/tests/unit/pos-customer-ssr.test.mjs apps/ledger-suit/tests/unit/report-formats.test.mjs
+node apps/shop-suit/tests/browser/offline-regression-db.mjs
+node apps/shop-suit/tests/browser/offline-concurrency.mjs
+node apps/shop-suit/tests/browser/offline-authenticated-pos.mjs
 pnpm exec turbo run typecheck --concurrency=1
-pnpm exec turbo run build --concurrency=2
+pnpm exec turbo run build --concurrency=1
 pnpm lint
 pnpm test
 pnpm check
 ```
 
-Use the pinned pnpm 10.33.0. Browser harness defaults to `/usr/bin/chromium`; `CHROMIUM_PATH` can select an installed browser. It uses real browser IndexedDB/WebCrypto/Web Locks, but an isolated test document and simulated server outcome, **not authenticated product/server evidence**. The database runner is fixed to the disposable `supabase_db_building-suit-shop` container and rolls back synthetic fixtures.
+The DB runners are fixed to cloud-local `supabase_db_building-suit-shop`, never a hosted URL/ref. SQL suites roll back synthetic fixtures. Authenticated HTTP/browser/concurrency fixtures are retained, not deleted. Browser test uses only `127.0.0.1:4331` and the public local key already in repository tests; screenshots/credential-free JSON are in `.local/ss-offline/`. No raw auth trace is captured. [Durable cloud evidence](SS-OFFLINE-001-cloud-evidence.json) explicitly says physical evidence is false.
 
-Offline availability requires a previously loaded authenticated counter and unexpired local cache. Only previously viewed catalog items are available. Customer/appointment search, media and new shift opening stay online. Fresh navigation from a closed browser or a hard reload while disconnected is unsupported; persisted transactions resume after authenticated online reload. Browser eviction/private-mode storage loss cannot be made durable by JavaScript. Storage/Web Locks failure blocks local recording; queued transactions are never automatically dropped. A successful local record is provisional, not a server-issued receipt.
+## Cloud disk and routing evidence
 
-Local signatures detect accidental payload alteration and AES-GCM protects plaintext at rest. Keys remain available to this origin for authorized replay; this is not protection against malicious same-origin script, a compromised browser profile or a server-attested device signature. Server auth, permissions, payload equality, stock/price rules and drawer locks remain authoritative.
+Initial root filesystem was 32 GB and filled during the official Postgres image pull. Docker uses `vfs`: each layer deep-copies preceding layers ([Docker documentation](https://docs.docker.com/engine/storage/drivers/vfs-driver/)). The 29-layer image is only 370 MB compressed/about 1.25 GB unpacked, but repeated VFS copies exceeded capacity. A verified OCI copy was unpacked with checksum-verified umoci and imported as one disposable layer with original runtime configuration. Original manifest/config/history retained in `/tmp/ss-offline-postgres-oci`; no shared daemon configuration or business data changed.
 
-Recovery currently retries an immutable rejected envelope after an operator resolves its stock/permissions/drawer condition. Price or irrecoverably closed-shift conflicts require a documented operator reconciliation path before qualification; there is no automatic repricing, discard or reassignment to another drawer.
+Original amd64 OCI digest `sha256:fc542c31f334749adbbd3c9e16b6be90f17d0fe6460d5196066d73f2723c9ecf`; local flat image `sha256:2cc0481c10ee5b2da79238a2220c933c34ee2662943a4290a883f9542b83c9de`, Postgres tag `17.6.1.165`. Final observed root: **32 GB total, 23 GB used, 7.3 GB free**; `/tmp`: **8.8 GB total, 2.9 GB used, 6.0 GB free**. Active DB/Auth/REST/gateway/mail containers and volumes remain intact. No blind prune, data reset or history/worktree deletion.
 
-A new forward migration is prepared locally. Hosted application must use the repository's GitHub CI workflow only; no direct hosted SQL or production/main deployment is authorized. Physical qualification and unresolved cloud checks prevent publication, including a draft PR.
+Task-local backend profile `/tmp/ss-offline-backend` uses canonical app-owned migrations/seed, original project ID/ports and confirmed synthetic users; custom email templates were omitted for diagnosis. Docker's GoTrue `wget` readiness probe inherited the cloud HTTP proxy and received 403; local `/health` with proxy excluded returns 200/version `v2.196.0`, and real password authentication/authorized RPCs pass. The diagnostic startup used `--ignore-health-check`; this is a documented test-environment probe discrepancy, not a physical-device acceptance pass or a production health claim.
 
-## Cloud checkpoint results (2026-10-14)
+Routing audit: Docker endpoint `default unix:///var/run/docker.sock`, cloud `dockerd` PID 199; no SSH/tunnel processes used. Git remote is HTTPS GitHub. Tests use cloud-local containers/localhost only. External reads were public GitHub/docs, npm/Playwright and official container registries. No SSH, tunnels, home-service probes, self-hosted runner trigger, push, CI trigger or deployment. Supabase broad `status` JSON read was **denied by automatic approval review** for excess secret exposure; it was not retried or executed indirectly. Tests succeeded with the existing public fixture key and scoped end-user password sessions.
 
-Passing: queue Chromium harness; focused six SSR/report-format regressions; complete regression suite (1,438 passes, 23 skips); all six consumers typecheck/lint/build; ownership checker and whitespace checks. Full build completed with `--concurrency=1` after the parallel retry failed inside Rolldown. Original full regression failures from missing browser binaries were resolved by installing Playwright Chromium in `/tmp/ss-offline-browsers`; no source workaround was used for those checks.
+## Qualification limits and publication
 
-**Blocked action:** start the disposable Shop Supabase backend and run `shop_offline_counter.sql` plus authenticated loaded-POS outage/replay. **Target:** local `building-suit-shop` only. **Reason:** image pulls encountered registry throttling; required `supabase/postgres:17.6.1.165` download/startup filled the 32 GB root filesystem before any backend container became available. Sandbox commands then failed with `No space left on device`. Startup processes were stopped, and only unused service images downloaded by this task were removed. No containers, volumes, product data, source or branches were deleted. Disk recovered to 24 GB free; no local backend is running. **Outcome:** startup not completed; server tests unrun, not denied or passed. Retrying the same oversized startup is deferred to an adequately provisioned disposable backend.
+Requires a previously loaded authenticated POS, an unexpired cache and a saved open drawer. Only previously viewed catalog items are available. POS preloads the critical cash route. Fresh hard reload/launch while disconnected is unsupported; durable transactions resume after authenticated online reload. Editing a pre-existing server draft remains online-only. Storage failure/quota blocks recording without discarding the cart/queue. Browser eviction/private-profile deletion requires physical qualification; no JavaScript durability guarantee beyond supported browser storage is claimed.
 
-Publication remains **pending and blocked**, not denied: required physical phone/tablet evidence has not been supplied. No cloud simulation or queue fixture substitutes for it. Cloud financial-effect and authenticated product verification must also pass before claiming PR readiness. Irrecoverable price/closed-drawer rejection reconciliation remains an explicit acceptance gap; current retry does not reassign a sale to another drawer or discard it.
+Local signatures protect integrity and ciphertext at rest, not malicious same-origin script or a compromised browser profile; they are not server-attested device signatures. Server auth/current permissions, atomic price/stock/period rules, complete request equality and captured drawer locks remain authoritative. Replay captures the original vault user's token to avoid cross-account SDK fetch races. Account/tenant changes clear sensitive cart/editor/cache state; location changes preserve the canonical locked-cart warning.
+
+Prepared forward migrations have been applied only to the disposable local backend. Hosted migrations must run via GitHub CI only. Do not publish a branch/PR or mark SS-OFFLINE-001 fully qualified until required physical phone/tablet evidence is independently supplied. No main/production deployment is authorized.

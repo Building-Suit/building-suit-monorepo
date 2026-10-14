@@ -8,7 +8,7 @@ const categoryFilter = defineModel<string>('categoryFilter', { required: true })
 const itemType = defineModel<string>('itemType', { required: true })
 const catalogPage = defineModel<number>('catalogPage', { required: true })
 const paymentForm = defineModel<BsPointOfSalePaymentForm>('paymentForm', { required: true })
-const emit = defineEmits<{ retryOffline: [id: string]; reset: []; checkout: []; retryCatalog: []; retryContext: []; add: [key: string]; remove: [id: string]; quantity: [id: string, value: number]; appointment: [id: string]; staff: [id: string]; customerSearch: [value: string]; resetCustomerSearch: []; customer: [value: string | number | null | undefined]; clearCustomer: []; dismissFeedback: []; barcode: [code: string] }>()
+const emit = defineEmits<{ reconcileOffline: [id: string]; retryOffline: [id: string]; reset: []; checkout: []; retryCatalog: []; retryContext: []; add: [key: string]; remove: [id: string]; quantity: [id: string, value: number]; appointment: [id: string]; staff: [id: string]; customerSearch: [value: string]; resetCustomerSearch: []; customer: [value: string | number | null | undefined]; clearCustomer: []; dismissFeedback: []; barcode: [code: string] }>()
 const panels = usePointOfSaleSections()
 const shopCart = ref<{ focus: () => void; focusCustomer: () => void } | null>(null)
 const catalogHeading = ref<{ $el: HTMLElement } | null>(null)
@@ -24,7 +24,7 @@ defineExpose({ focusCatalog: navigation.focusCatalog })
         <BsButton :variant="variant === 'shop' ? 'link' : 'default'" :disabled="view.checkingOut || view.confirming" @click="emit('reset')">{{ copy.reset }}</BsButton>
       </template>
     </BsPageHeader>
-    <BsOfflineCounterStatus v-if="offline" :view="offline" @retry="emit('retryOffline', $event)" />
+    <BsOfflineCounterStatus v-if="offline" :view="offline" @retry="emit('retryOffline', $event)" @reconcile="emit('reconcileOffline', $event)" />
     <BsText v-if="!view.available && !view.loadingContext" as="p" size="sm">{{ copy.noShop }}</BsText>
     <template v-else-if="view.available">
       <BsPanel :aria-label="copy.cart" padding="md" :class="{ 'bs-pos-summary': variant === 'shop' }">

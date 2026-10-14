@@ -1,0 +1,23 @@
+{
+  "mode": "cloud Chromium network emulation",
+  "physicalDeviceEvidence": false,
+  "authenticated": true,
+  "queuedState": "unsynced",
+  "finalState": "synced",
+  "stableRequestIds": true,
+  "lostResponseReplayed": true,
+  "rejectionReconciled": true,
+  "offlineCashMovementAndClose": true,
+  "drawer": {
+    "status": "closed",
+    "expected": 125,
+    "counted": 125,
+    "variance": 0
+  },
+  "effects": {
+    "invoices": 1,
+    "payments": 1,
+    "stockEffects": 1,
+    "drawerEffects": 1
+  }
+}

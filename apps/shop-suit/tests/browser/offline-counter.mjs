@@ -94,5 +94,30 @@ try {
     try { await window.store.enqueue({ kind: 'sale', args: { request: 'changed' } }, 'local-1'); return false } catch (error) { return error.message }
   })
   assert.equal(sameId, 'OFFLINE_ID_REUSED')
-  console.log('PASS: browser offline transition; reload persistence; lost-response stable-ID replay; conflict barrier/recovery; concurrent tabs; tenant/user isolation; encryption/non-extractable keys; cache expiry; ID reuse rejection.')
+  const reconciliation = await page.evaluate(async () => {
+    await window.store.enqueue({ kind: 'sale', args: { request: 'rejected' } }, 'rejected')
+    await window.store.enqueue({ kind: 'sale', args: { request: 'following' } }, 'following')
+    await window.store.sync(async () => { throw Object.assign(new Error('drawer closed'), { code: 'OFFLINE_SHIFT_CONFLICT' }) })
+    let requestId; let lost = true
+    const cancel = async (_command, resolution) => {
+      requestId ??= resolution.requestId
+      if (requestId !== resolution.requestId) throw new Error('resolution ID changed')
+      if (lost) { lost = false; throw new Error('lost cancellation response') }
+      return { state: 'cancelled', resolutionRequestId: requestId }
+    }
+    try { await window.store.reconcile('rejected', cancel) } catch { /* simulate a lost cancellation response */ }
+    await window.store.reconcile('rejected', cancel)
+    let callsBeforeAcknowledgement = 0
+    await window.store.sync(async () => { callsBeforeAcknowledgement++; return 'unexpected' })
+    const envelopeBefore = JSON.stringify((await window.store.list()).find(record => record.envelope.localId === 'rejected').envelope)
+    await window.store.acknowledge('rejected')
+    const calls = []
+    await window.store.sync(async command => { calls.push(command.args.request); return command.args.request })
+    const rejected = (await window.store.list()).find(record => record.envelope.localId === 'rejected')
+    await window.store.enqueue({ kind: 'sale', args: { request: 'already-issued' } }, 'already-issued')
+    const issued = await window.store.reconcile('already-issued', async () => ({ state: 'synced', invoiceId: 'existing-receipt' }))
+    return { callsBeforeAcknowledgement, calls, unchanged: JSON.stringify(rejected.envelope) === envelopeBefore, state: rejected.state, resolution: rejected.resolution.phase, issuedState: issued.state, issuedReceipt: issued.result }
+  })
+  assert.deepEqual(reconciliation, { callsBeforeAcknowledgement: 0, calls: ['following'], unchanged: true, state: 'failed', resolution: 'reconciled', issuedState: 'synced', issuedReceipt: 'existing-receipt' })
+  console.log('PASS: browser offline transition; reload persistence; lost-response stable-ID replay; conflict barrier/recovery; concurrent tabs; tenant/user isolation; encryption/non-extractable keys; cache expiry; ID reuse rejection; stable cancellation replay; explicit reconciliation barrier; already-issued resolution.')
 } finally { await browser.close(); await new Promise(resolve => server.close(resolve)) }

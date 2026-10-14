@@ -595,6 +595,18 @@ export type ShopRpcDatabase = {
         }
         Returns: string
       }
+      replay_offline_cash_command: {
+        Args: { p_kind: 'movement' | 'close'; p_shop_id: string; p_args: Record<string, unknown> }
+        Returns: string
+      }
+      reconcile_offline_cash_command: {
+        Args: { p_kind: 'movement' | 'close'; p_shop_id: string; p_args: Record<string, unknown>; p_resolution_request_id: string; p_reason: string }
+        Returns: { state: 'synced'; resultId: string } | { state: 'cancelled'; resolutionRequestId: string }
+      }
+      reconcile_offline_pos_sale: {
+        Args: { p_request_id: string; p_shop_id: string; p_location_id: string; p_original_args: Record<string, unknown>; p_resolution_request_id: string; p_reason: string }
+        Returns: { state: 'synced'; invoiceId: string } | { state: 'cancelled'; resolutionRequestId: string }
+      }
       replay_offline_pos_sale: {
         Args: {
           p_request_id: string; p_save_request_id: string; p_issue_request_id: string; p_payment_request_id: string
