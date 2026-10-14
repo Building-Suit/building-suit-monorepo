@@ -38,3 +38,34 @@ matrix or bilingual policy text. Those remain required in the approved stack bef
 the final reviewed staging release. Never claim scheduling or prices are validated
 from SQL grammar parsing alone. No automatic debit/refund/data deletion or waiver
 of applicable legal rights is authorized.
+
+## 14 October cloud UI and validation checkpoint
+
+The shared billing template now accepts a typed pending-change projection and
+emits owner commands for cancel/manual next-term review. Shop supplies server
+preview timing, an explicit no-charge schedule confirmation, paid-term date,
+zero due now, refreshed indicative price, blockers and management links. Deferred
+scheduling is independent of provider checkout readiness and can preserve an
+intent while excess usage is resolved. Actual activation still uses existing
+server quota checks. Private offer tokens stay out of the projection/storage.
+EN/AR billing, marketing, terms and refund policies describe manual renewal,
+no future prepaid stacking, preserved paid history, same-interval upgrade value,
+term-end reductions and statutory rights. The Docs catalogue includes the shared
+projection. Context/read-generation tests reject late tenant and cancelled reads.
+
+Native payment CI passed at ca29d09657e3204d9cdb88f4f590e08b53065960.
+Local Shop build/typecheck, strict workspace boundary check and 310 unit tests
+passed. Ten existing proration/recovery browser cases passed. Two new scheduling
+cases passed at English desktop/light and Arabic mobile/dark; a test initially
+expected Latin digits in Arabic dates and was corrected to assert Arabic digits.
+Updated screenshot capture waits for the scheduling dialog to close.
+
+Account CI first hit Docker Hub throttling, then identified that the full local
+SQL runner still sent historical downgrade fixtures to the new policy constructor.
+That runner now installs pg_temp historical quote helpers for accepted pre-policy
+fixtures without replacing public RPCs, and also includes the new policy suite.
+The pending update adds direct cross-tenant read/preview/replay/cancel denials.
+Those native changes require final-SHA CI; no hosted migration has been applied.
+Post-expiry quota-resolution, broader private-offer/second-upgrade negatives and
+combined-root full CI remain required before release. These browser mocks are
+workflow checks, not real hosted payment or full Penpot matrix validation.

@@ -2,7 +2,7 @@
 -- The runner prepends journey plan/owner/payment helpers, never hosted fixtures.
 create temporary table policy_quote_contracts(value jsonb);
 do $$declare shop uuid;high_terms uuid;low_terms uuid;annual_low uuid;annual_high uuid;v_order uuid;sub public.subscriptions;
- before_sub jsonb;preview jsonb;scheduled jsonb;again jsonb;request uuid:=gen_random_uuid();q jsonb;result jsonb;
+ before_sub jsonb;preview jsonb;scheduled jsonb;again jsonb;request uuid:=gen_random_uuid();q jsonb;result jsonb;owner_claim text;
 begin
  shop:=pg_temp.journey_owner();
  select catalog_terms_id into high_terms from public.shop_public_plan_catalog() where slug='journey-month-high' limit 1;
@@ -25,6 +25,12 @@ begin
  or exists(select 1 from public.shop_proration_credit_ledger where subscription_id=sub.id) then raise exception 'Schedule charged or changed existing access/credit';end if;
  begin perform public.shop_billing_change_schedule(gen_random_uuid(),shop,low_terms);raise exception 'Second pending schedule accepted';
  exception when sqlstate '55000' then if sqlerrm<>'SHOP_CHANGE_ALREADY_SCHEDULED' then raise;end if;end;
+ owner_claim:=current_setting('request.jwt.claim.sub');perform pg_temp.journey_owner();
+ begin perform public.shop_billing_change_read(shop);raise exception 'Other tenant read schedule';exception when insufficient_privilege then if sqlerrm<>'SHOP_OWNER_REQUIRED' then raise;end if;end;
+ begin perform public.shop_billing_change_preview(shop,low_terms);raise exception 'Other tenant previewed change';exception when insufficient_privilege then if sqlerrm<>'SHOP_OWNER_REQUIRED' then raise;end if;end;
+ begin perform public.shop_billing_change_schedule(request,shop,low_terms);raise exception 'Other tenant replayed schedule';exception when insufficient_privilege then if sqlerrm<>'SHOP_OWNER_REQUIRED' then raise;end if;end;
+ begin perform public.shop_billing_change_cancel(shop,(scheduled->>'id')::uuid);raise exception 'Other tenant cancelled schedule';exception when insufficient_privilege then if sqlerrm<>'SHOP_OWNER_REQUIRED' then raise;end if;end;
+ perform set_config('request.jwt.claim.sub',owner_claim,true);
  scheduled:=public.shop_billing_change_cancel(shop,(scheduled->>'id')::uuid);
  if scheduled->>'state'<>'cancelled' or public.shop_billing_change_cancel(shop,(scheduled->>'id')::uuid)->>'state'<>'cancelled' then raise exception 'Cancel not idempotent';end if;
  if (select count(*) from public.shop_scheduled_plan_changes where subscription_id=sub.id)<>1 then raise exception 'Cancelled history deleted';end if;

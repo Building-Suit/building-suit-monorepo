@@ -14,6 +14,7 @@ const billingExampleCopy = computed<BsBillingCopy>(() => ({
 const billingExampleView = computed<BsBillingView>(() => ({
   workspace: '', loading: false, failed: false, denied: false, available: true, summary: [], notice: '', details: [], providerNotice: '', latest: null,
   usage: { items: [], loading: false, failed: false }, pricing: { plans: [], interval: 'monthly', intervalOptions: [], copy: { cycleLabel: '', loading: '', empty: '', retry: '', included: '', notIncluded: '' }, loading: false, error: null, annualSaving: null, columns: 3, testId: 'catalogue-hosted-checkout-plans' },
+  pendingChange: { title: isArabic.value ? 'تغيير مجدول توضيحي' : 'Illustrative scheduled change', status: isArabic.value ? 'قيد الانتظار' : 'Pending', message: isArabic.value ? 'لا تُحصّل دفعة الآن. راجع الدفع يدويًا عند الاستحقاق.' : 'No payment now. Review payment manually when due.', details: [{label:isArabic.value?'التاريخ':'Date',value:'13 Oct 2028'}], blockers: [], links: [], pending: false, error: '', cancelLabel: ui('cancel'), payLabel: '', canCancel: true, canPay: false },
   instructions: null, privateOffer: null, transfer: null, evidence: null, showEvidence: false, history: [], showHistory: false, trial: null, policy: null,
   paymentNotice: '', paymentRequired: '', compatibilityNotice: '', pricingError: '', canRequests: false,
   checkout: { title: isArabic.value ? 'دفع مستضاف' : 'Hosted payment', description: isArabic.value ? 'المزود يستقبل بيانات الدفع في صفحته.' : 'The provider collects payment details on its page.',
