@@ -126,6 +126,8 @@ begin
  select * into line from public.invoice_items where id=p_line_id and shop_id=p_shop_id;
  if not found then raise exception 'COMMISSION_LINE_NOT_FOUND' using errcode='P0002'; end if;
  select * into sale from public.invoices where id=line.invoice_id and shop_id=p_shop_id for update;
+ if not found then raise exception 'COMMISSION_LINE_NOT_FOUND' using errcode='P0002'; end if;
+ perform shop_private.assert_location_access(p_shop_id,sale.location_id,true);
  if sale.status<>'draft' then raise exception 'COMMISSION_ASSIGNMENT_FINALIZED' using errcode='55000'; end if;
  if p_membership_id is null then delete from public.commission_line_assignments where line_id=p_line_id; return; end if;
  if not exists(select 1 from public.shop_memberships m join public.profiles p on p.id=m.profile_id
@@ -153,6 +155,7 @@ grant execute on function public.assign_sale_commission(uuid,uuid,uuid,uuid) to 
 create function shop_private.adjust_commission_return(p_snapshot_id uuid,p_event_key text,p_net_returned numeric,p_quantity_returned numeric,p_reason text)
 returns void language plpgsql security definer set search_path='' as $$
 declare s public.commission_snapshots%rowtype; fraction numeric; prior numeric; delta numeric; payable numeric; invoice_refunds numeric;
+ correction public.sale_corrections%rowtype;
 begin
  select * into s from public.commission_snapshots where id=p_snapshot_id;
  if not found then raise exception 'COMMISSION_SNAPSHOT_NOT_FOUND'; end if;
@@ -161,9 +164,13 @@ begin
   or p_quantity_returned<0 or p_quantity_returned>s.quantity or length(btrim(coalesce(p_reason,''))) not between 2 and 1000 then
   raise exception 'INVALID_COMMISSION_RETURN' using errcode='22023'; end if;
  select i.total_amount into payable from public.invoices i where i.id=s.invoice_id;
+ select * into correction from public.sale_corrections c where c.invoice_id=s.invoice_id;
  select coalesce(sum(a.amount),0) into invoice_refunds from public.customer_payment_adjustments a
  join public.customer_payment_allocations alloc on alloc.id=a.original_allocation_id where alloc.invoice_id=s.invoice_id;
- fraction:=greatest(case when s.net_line_amount>0 then p_net_returned/s.net_line_amount else 0 end,
+ -- A full sale correction closes the sale, even when it refunds no money or
+ -- only the paid portion. It always reverses the entire original earning.
+ fraction:=greatest(case when correction.id is not null then 1 else 0 end,
+ case when s.net_line_amount>0 then p_net_returned/s.net_line_amount else 0 end,
  p_quantity_returned/s.quantity,case when payable>0 then least(1,invoice_refunds/payable) else 0 end);
  if not exists(select 1 from public.commission_events where snapshot_id=s.id and kind='earned') then return; end if;
  select coalesce(max(cumulative_fraction),0),coalesce(-sum(amount),0) into prior,delta
@@ -171,17 +178,22 @@ begin
  if fraction<prior then raise exception 'COMMISSION_RETURN_NOT_CUMULATIVE' using errcode='22023'; end if;
  delta:=case when fraction=1 then s.original_commission else round(s.original_commission*fraction,2) end-delta;
  if fraction=prior then return; end if;
- insert into public.commission_events(snapshot_id,kind,event_key,amount,cumulative_fraction,reason)
- values(s.id,'return','return:'||p_event_key,-delta,fraction,btrim(p_reason));
+ insert into public.commission_events(snapshot_id,kind,event_key,amount,cumulative_fraction,reason,actor_profile_id)
+ values(s.id,'return','return:'||p_event_key,-delta,fraction,btrim(p_reason),correction.created_by_profile_id);
 end; $$;
 revoke all on function shop_private.adjust_commission_return(uuid,text,numeric,numeric,text) from public,anon,authenticated,service_role;
 
 create function shop_private.reconcile_commission(p_invoice_id uuid) returns void
 language plpgsql security definer set search_path='' as $$
 declare s public.commission_snapshots%rowtype; paid boolean; refunded numeric; payable numeric;
+ correction public.sale_corrections%rowtype;
 begin
  perform 1 from public.invoices where id=p_invoice_id for update;
- select shop_private.invoice_outstanding(p_invoice_id)=0,total_amount into paid,payable from public.invoices where id=p_invoice_id and status='issued';
+ select * into correction from public.sale_corrections c where c.invoice_id=p_invoice_id;
+ -- invoice_outstanding also returns zero for a void/return. Closure is not
+ -- proof of payment, and a corrected sale can never create a new earning.
+ select correction.id is null and shop_private.invoice_outstanding(p_invoice_id)=0,total_amount
+ into paid,payable from public.invoices where id=p_invoice_id and status='issued';
  for s in select * from public.commission_snapshots where invoice_id=p_invoice_id order by id loop
   if paid and (s.item_type='product' or exists(select 1 from public.appointments a where a.id=s.appointment_id
    and a.shop_id=s.shop_id and a.sale_id=s.invoice_id and a.assigned_membership_id=s.membership_id and a.status='completed')) then
@@ -190,7 +202,10 @@ begin
   end if;
   select coalesce(sum(a.amount),0) into refunded from public.customer_payment_adjustments a
    join public.customer_payment_allocations alloc on alloc.id=a.original_allocation_id where alloc.invoice_id=p_invoice_id;
-  if refunded>0 then
+  if correction.id is not null then
+   perform shop_private.adjust_commission_return(s.id,'sale-correction:'||correction.id::text,
+    s.net_line_amount,s.quantity,correction.reason);
+  elsif refunded>0 then
    -- The helper also considers payment adjustments; zero inputs here preserve
    -- the common cumulative money/quantity contract without changing refunds.
    perform shop_private.adjust_commission_return(s.id,'financial:'||refunded::text,0,0,'Customer payment refund or reversal');
@@ -233,8 +248,9 @@ create trigger zz_commission_capture after update of status on public.invoices f
 create function shop_private.commission_notification() returns trigger language plpgsql security definer set search_path='' as $$
 declare sale uuid;
 begin
- if tg_table_name='appointments' then
-  sale:=new.sale_id;
+ if tg_table_name in ('appointments','sale_corrections') then
+  sale:=case when tg_table_name='appointments' then (to_jsonb(new)->>'sale_id')::uuid
+   else (to_jsonb(new)->>'invoice_id')::uuid end;
  elsif tg_table_name='customer_payment_allocations' then sale:=new.invoice_id;
  else select invoice_id into sale from public.customer_payment_allocations where id=new.original_allocation_id;
  end if;
@@ -244,6 +260,7 @@ end; $$;
 revoke all on function shop_private.commission_notification() from public,anon,authenticated,service_role;
 create trigger commission_payment_notification after insert on public.customer_payment_allocations for each row execute function shop_private.commission_notification();
 create trigger commission_refund_notification after insert on public.customer_payment_adjustments for each row execute function shop_private.commission_notification();
+create trigger commission_sale_correction_notification after insert on public.sale_corrections for each row execute function shop_private.commission_notification();
 create trigger commission_fulfillment_notification after update of status,sale_id on public.appointments for each row execute function shop_private.commission_notification();
 
 create function public.commission_history(p_shop_id uuid,p_invoice_id uuid default null,p_offset integer default 0) returns jsonb
@@ -295,10 +312,13 @@ grant execute on function public.record_commission_adjustment(uuid,uuid,uuid,tex
 
 create function public.commission_assignment_context(p_shop_id uuid,p_invoice_id uuid) returns jsonb
 language plpgsql security definer set search_path='' as $$
+declare location uuid;
 begin
  perform shop_private.assert_shop_write_access(p_shop_id,'sales.manage');
- if not exists(select 1 from public.invoices where id=p_invoice_id and shop_id=p_shop_id and status='draft') then
+ select i.location_id into location from public.invoices i where i.id=p_invoice_id and i.shop_id=p_shop_id and i.status='draft';
+ if not found then
   raise exception 'COMMISSION_DRAFT_NOT_FOUND' using errcode='P0002'; end if;
+ perform shop_private.assert_location_access(p_shop_id,location,true);
  return jsonb_build_object('lines',coalesce((select jsonb_agg(jsonb_build_object('id',i.id,'name',i.item_name,'itemType',i.item_type,
   'membershipId',a.membership_id,'appointmentId',a.appointment_id,'appointments',coalesce((select jsonb_agg(jsonb_build_object('id',ap.id,
   'membershipId',ap.assigned_membership_id,'label',coalesce(p.display_name,p.email_snapshot)||' · '||ap.starts_at::text) order by ap.starts_at,ap.id)

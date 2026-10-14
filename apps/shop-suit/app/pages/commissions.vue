@@ -28,7 +28,7 @@ const { data, pending: loading, error, refresh } = useAsyncData(
   if (result.error) throw result.error
   let assignments: BsCommissionAssignment[] = []
   if (invoiceId.value) {
-   const context = await rpc.rpc('commission_assignment_context', { p_shop_id: currentId.value, p_invoice_id: invoiceId.value, p_offset: offset.value })
+   const context = await rpc.rpc('commission_assignment_context', { p_shop_id: currentId.value, p_invoice_id: invoiceId.value })
    if (!context.error) assignments = (context.data as { lines: BsCommissionAssignment[] }).lines
   }
   return { history: result.data as CommissionHistory, assignments }

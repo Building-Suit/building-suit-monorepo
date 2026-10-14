@@ -15,17 +15,22 @@ Only an active owner or system manager with `team.manage` can configure or expor
 The percentage basis is the finalized net line amount after line and allocated
 order discounts, before tax. Tips, fees and material-cost deductions are excluded.
 This is Shop Suit policy, not a claim about another provider's default behavior.
-The present sale contract has line discounts only, no tax/order discount/tip/fee
-fields. Its `invoice_items.total_amount` is therefore the finalized net basis.
-Future tax/order-discount work must preserve this boundary rather than including
-tax in that field or subtracting an order discount twice.
+At this branch's current base there are no configured tax/order-discount fields.
+Tax integration is pending the tax worker's committed snapshot contract. The
+confirmed configured-tax contract makes `invoice_items.total_amount` tax-inclusive;
+commission must instead consume its immutable pre-tax `base`/`basePayable` value.
+Do not treat the current untaxed fallback as the tax-enabled integration contract,
+or deduct an allocated order discount twice.
 
 Employee attribution is optional and explicit on a draft line. A service requires
 an appointment for that same service, employee, shop, location and sale; one
 appointment represents one unit and may not commission multiple lines. Payment
 does not complete an appointment. The existing `in_service -> completed`
-transition is fulfillment evidence. Unscheduled services have no fulfillment
-evidence and cannot be attributed for commission; this implementation does not invent completion.
+transition is fulfillment evidence. The current adapter supports linked,
+single-unit appointments only. Materials owns the shared explicit service-line
+and quantity completion contract; commission must consume that committed contract
+before the combined lifecycle is released. This is a pending integration, not a
+permanent exclusion of ordinary walk-in barber sales.
 Product issuance is the existing atomic sale/stock-delivery finalization event.
 
 At issuance, snapshot employee identity, membership, appointment, rate/type,
@@ -45,6 +50,17 @@ the original commission. When the same return is represented in both money and
 quantity, use the larger cumulative fraction, avoiding double reversal.
 For example, an original 0.05 commission over three units reverses 0.02, then
 0.01, then 0.02 for cumulative returns of one, two and three units.
+
+A full sale correction (void or full return) never creates a new earning, even
+though closing a receivable reports zero outstanding. It reverses the entire
+original earning, independent of the amount refunded, including zero-money voids.
+Correction insertion notifies reconciliation so unpaid voids cannot earn on a
+later service completion. Prior events remain unchanged and reversals absorb any
+rounding or prior proportional adjustment.
+
+Draft attribution context, assignment and unassignment all require active access
+to the actual invoice location; selecting an employee with access does not grant
+the acting user that access.
 
 Existing payment refund/reversal commands and stock behavior are unchanged. Their
 immutable payment adjustments notify commission reconciliation only. The private
@@ -89,7 +105,7 @@ or payout endpoint.
 Migration `20261014181109_optional_staff_commissions.sql` adds four RLS-enabled
 tables (`commission_policy_versions`, `commission_line_assignments`,
 `commission_snapshots`, `commission_events`), five RPCs, protected helpers, and
-four notification/capture triggers on existing lifecycle tables. It modifies no
+five notification/capture triggers on existing lifecycle tables. It modifies no
 existing financial rows, catalog rates, applied migrations or stock routines.
 Rollback is forward-only: opt out to stop future snapshots; retain all history.
 Apply only through the normal repository/GitHub staging integration.

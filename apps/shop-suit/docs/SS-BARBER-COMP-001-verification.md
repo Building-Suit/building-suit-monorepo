@@ -74,3 +74,28 @@ Parent coordinates staging integration and merges; this task does not merge.
 PR: https://github.com/Building-Suit/building-suit-monorepo/pull/313
 Initial implementation head: `b269b4f140da169df855332431ab37c0c8380ba1`.
 Required GitHub CI is tracked on the PR; local checks do not substitute for it.
+
+## Recovery follow-up — corrected-sale and location boundaries
+
+The original Cloud executor disconnected and remains unavailable. The user
+explicitly authorized bounded fixes on this same GitHub branch with expected-head
+SHA guards and GitHub-hosted verification. No local/home executor is used.
+
+This revision removes the extra pagination argument from the draft context RPC,
+adds an actual page-loader regression against its two-argument PostgREST contract,
+requires invoice-location access before context/assign/unassign, and prevents a
+corrected sale's closed receivable from counting as full payment. A new correction
+notification reverses the full original earning regardless of money refunded.
+No existing receipt, refund, correction, FIFO or financial-history row is rewritten.
+
+The added SQL suite covers the 100 sale / 50 receipt / 10% cancellation example,
+an unpaid void followed by explicit service completion, a zero-money void with a
+prior fixed earning/export acknowledgment, full correction after a partial
+percentage refund, and location-A-only staff denied location-B read/assign/clear
+while retaining positive access to A. The SQL runner executes both suites in
+separate rolled-back transactions. These new tests require fresh CI results;
+earlier green checks do not establish that these regressions pass.
+
+Tax integration remains blocked on the tax worker's committed immutable pre-tax
+snapshot. General unscheduled line/quantity fulfillment belongs to materials;
+commission will consume that committed API rather than create a competing schema.
