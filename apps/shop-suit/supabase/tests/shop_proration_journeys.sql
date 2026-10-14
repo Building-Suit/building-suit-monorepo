@@ -11,6 +11,7 @@ declare owner_id uuid:=gen_random_uuid();shop_id uuid;begin
  insert into auth.users(id,email,encrypted_password,aud,role,email_confirmed_at,raw_app_meta_data,raw_user_meta_data,created_at,updated_at)
  values(owner_id,owner_id::text||'@journey.invalid','x','authenticated','authenticated',now(),'{}','{}',now(),now());
  perform set_config('request.jwt.claim.sub',owner_id::text,true);perform set_config('request.jwt.claim.role','authenticated',true);
+ perform set_config('request.headers','{}',true);
  shop_id:=public.create_owner_shop('Proration journey','mixed'::public.business_mode,'Main',null,null,null);
  return shop_id;
 end $$;
@@ -172,6 +173,7 @@ DO $$declare v_shop uuid;terms uuid;s public.subscriptions;renewed public.subscr
  update shop_private.proration_configuration set enabled=false where singleton;
  v_order:=(public.shop_xpay_order_create(gen_random_uuid(),v_shop,terms)->>'id')::uuid;perform pg_temp.journey_paid(v_order);
  select sub.* into s from public.subscriptions sub join public.shop_memberships m on m.profile_id=sub.profile_id where m.shop_id=v_shop and m.role='owner';
+ perform set_config('request.headers',jsonb_build_object('x-shop-payment-intent','renew','x-shop-prior-paid-order',v_order)::text,true);
  v_order:=(public.shop_xpay_order_create(gen_random_uuid(),v_shop,terms)->>'id')::uuid;result:=pg_temp.journey_paid(v_order);
  select * into renewed from public.subscriptions where id=s.id;
  if result->>'state'<>'paid' or renewed.current_period_start<>s.current_period_start or renewed.current_period_end<>s.current_period_end+interval '1 month' then raise exception 'Gate-off same-plan early renewal blocked or reset prepaid period';end if;
@@ -180,6 +182,7 @@ DO $$declare v_shop uuid;terms uuid;s public.subscriptions;renewed public.subscr
  update public.subscriptions set current_period_start=clock_timestamp()-interval '2 months',current_period_end=clock_timestamp()-interval '1 month',updated_at=clock_timestamp() where id=s.id;
  if public.shop_billing_read(v_shop)#>>'{subscription,accessState}'<>'read_only' then raise exception 'Expired owner cannot read billing or wrong access state';end if;
  begin perform shop_private.assert_shop_write_access(v_shop,'services.manage');raise exception 'Expired writes allowed';exception when insufficient_privilege then if sqlerrm<>'SHOP_SUBSCRIPTION_INACTIVE' then raise;end if;end;
+ perform set_config('request.headers','{}',true);
  v_order:=(public.shop_xpay_order_create(gen_random_uuid(),v_shop,terms)->>'id')::uuid;
  at:=clock_timestamp();result:=pg_temp.journey_paid(v_order);select * into renewed from public.subscriptions where id=s.id;
  if result->>'state'<>'paid' or renewed.current_period_start<at or renewed.current_period_end<>renewed.current_period_start+interval '1 month'
@@ -206,7 +209,9 @@ DO $$declare v_shop uuid;annual_terms uuid;monthly_terms uuid;annual_high uuid;s
  select catalog_terms_id into annual_high from public.shop_public_plan_catalog() where slug='journey-year-high' limit 1;
  select catalog_terms_id into monthly_terms from public.shop_public_plan_catalog() where slug='journey-month-low' limit 1;
  update shop_private.proration_configuration set enabled=false where singleton;
- for count in 1..2 loop v_order:=(public.shop_xpay_order_create(gen_random_uuid(),v_shop,annual_terms)->>'id')::uuid;perform pg_temp.journey_paid(v_order);end loop;
+ for count in 1..2 loop
+  if count=2 then perform set_config('request.headers',jsonb_build_object('x-shop-payment-intent','renew','x-shop-prior-paid-order',v_order)::text,true);end if;
+ v_order:=(public.shop_xpay_order_create(gen_random_uuid(),v_shop,annual_terms)->>'id')::uuid;perform pg_temp.journey_paid(v_order);end loop;
  select sub.* into s from public.subscriptions sub join public.shop_memberships m on m.profile_id=sub.profile_id where m.shop_id=v_shop and m.role='owner';
  if s.current_period_end<>s.current_period_start+interval '2 years' then raise exception 'Two annual renewals not accumulated';end if;
  funding:=shop_private.proration_funding(s,clock_timestamp());

@@ -299,7 +299,7 @@ test('canonical record actions compose dialog, form, guarded buttons, and shared
   assert.match(source, /<BsForm[^>]+:pending="pending"[^>]+:error="error"/s)
   assert.match(source, /<slot :close="close"/)
   assert.match(source, /<BsFormActions/)
-  assert.match(source, /<BsButton type="submit"[^>]+:pending="pending"/s)
+  assert.match(source, /<BsButton[^>]*type="submit"[^>]+:pending="pending"/s)
   const confirmHost = readFileSync(new URL('../src/organisms/BsConfirmHost.vue', import.meta.url), 'utf8')
   assert.match(confirmHost, /autofocus/)
   assert.match(confirmHost, /current\.tone === 'danger'/)

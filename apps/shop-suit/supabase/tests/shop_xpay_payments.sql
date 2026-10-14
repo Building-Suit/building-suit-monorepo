@@ -7,6 +7,8 @@ select id,'Solo','solo',349,'EGP','monthly',7,'{}',
  '{"active_locations":1,"active_members":1,"active_products":250,"active_services":50,"active_customers":500,"active_suppliers":50}'::jsonb,true,true,true,false
 from public.portals where key='shop-crm' on conflict(portal_id,slug) do nothing;
 select shop_private.reconcile_plan_catalog();
+create function pg_temp.xpay_test_revision(p_shop uuid) returns bigint language sql security definer set search_path='' as $$select revision from public.shop_realtime_versions where scope_key=p_shop::text||':all:billing'$$;
+grant execute on function pg_temp.xpay_test_revision(uuid) to service_role;
 create temporary table xpay_fixture(owner_id uuid default gen_random_uuid(),other_id uuid default gen_random_uuid(),shop_id uuid,terms_id uuid,order_id uuid,trial_start timestamptz,trial_end timestamptz,session jsonb);
 insert into xpay_fixture default values;
 grant all on xpay_fixture to authenticated,service_role;
@@ -69,7 +71,7 @@ update xpay_fixture set session=(select jsonb_build_object('id','cs_test_SQLfixt
  'metadata',jsonb_build_object('orderId',o->>'id'),'currency','EGP','amountTotal',(o->>'amountMinor')::bigint,
  'status','open','paymentStatus','unpaid','url','https://checkout.xpay.app/c/cs_test_SQLfixture','isExpired',false,'expiresAt',clock_timestamp()+interval '30 minutes')
  from (select public.shop_xpay_server_order(order_id) o from xpay_fixture) q);
-do $$declare f xpay_fixture; result jsonb; paid jsonb; invalid jsonb; patch jsonb; before_end timestamptz;
+do $$declare f xpay_fixture; result jsonb; paid jsonb; invalid jsonb; patch jsonb; before_end timestamptz; revision_before bigint;
 begin
  select * into f from xpay_fixture;
  begin perform public.shop_xpay_bind_session(f.order_id,f.session||'{"amountTotal":1}');raise exception 'price mismatch accepted';exception when sqlstate '22023' then null;end;
@@ -82,6 +84,9 @@ begin
  perform public.shop_xpay_inbox_receive('evt_sql_pending','checkout.session.completed','cs_test_SQLfixture','merchant-fixture','test',repeat('a',64));
  result:=public.shop_xpay_apply_session(f.session||'{"status":"complete"}','evt_sql_pending');
  if result->>'state'<>'pending' then raise exception 'unpaid session treated as paid';end if;
+ revision_before:=pg_temp.xpay_test_revision(f.shop_id);
+ perform public.shop_xpay_apply_session(f.session||'{"status":"complete"}');
+ if pg_temp.xpay_test_revision(f.shop_id) is distinct from revision_before then raise exception 'verification read created realtime feedback';end if;
  -- Documented expanded object with no mode encoded in the opaque ID.
  paid:=f.session||'{"status":"complete","paymentStatus":"paid","paymentIntentId":null,"paymentIntent":{"id":"pi_SQLfixture"}}';
  for patch in select value from jsonb_array_elements('[
@@ -123,6 +128,12 @@ end $$;
 -- money observation is immutable even while access requires operator review.
 select set_config('request.jwt.claim.sub',owner_id::text,true),set_config('request.jwt.claim.role','authenticated',true) from xpay_fixture;
 set local role authenticated;
+do $$declare f xpay_fixture;begin select * into f from xpay_fixture;
+ begin perform public.shop_xpay_order_create(gen_random_uuid(),f.shop_id,f.terms_id);raise exception 'accidental active repurchase accepted';exception when sqlstate '55000' then null;end;
+ perform set_config('request.headers',jsonb_build_object('x-shop-payment-intent','renew','x-shop-prior-paid-order',gen_random_uuid())::text,true);
+ begin perform public.shop_xpay_order_create(gen_random_uuid(),f.shop_id,f.terms_id);raise exception 'stale renewal accepted';exception when sqlstate '55000' then null;end;
+ perform set_config('request.headers',jsonb_build_object('x-shop-payment-intent','renew','x-shop-prior-paid-order',f.order_id)::text,true);
+end $$;
 update xpay_fixture set order_id=(public.shop_xpay_order_create(gen_random_uuid(),shop_id,terms_id)->>'id')::uuid;
 reset role;
 update public.subscriptions set updated_at=clock_timestamp()+interval '1 second'

@@ -14,8 +14,8 @@ const checkoutRequest = patch => new Request('https://edge.example/checkout', { 
 function fixture({ providerSession = session, failedRpc, dedup = false } = {}) {
   const calls = [], providerCalls = []
   let order = { ...baseOrder }
-  const rpc = async (name, args, caller) => {
-    calls.push({ name, args, caller })
+  const rpc = async (name, args, caller, intent) => {
+    calls.push({ name, args, caller, intent })
     if (name === failedRpc) throw new Error('private SQL/provider body')
     if (name === 'shop_xpay_proration_status') return { enabled: false, creditBalanceMinor: 0 }
     if (name === 'shop_xpay_checkout_status') return { enabled: true, mode: 'test', merchantId: 'merchant-fixture' }
@@ -290,5 +290,21 @@ test('provider contradictory intent identifiers never reach fulfillment through 
         : await createXPayReconciliation(f)(new Request('https://edge.example', { method: 'POST', body: JSON.stringify({ orderId: id, sessionId: session.id }) }))
     assert.equal(response.status, entry === 'checkout' ? 409 : 503)
     assert.equal(f.calls.some(c => c.name === 'shop_xpay_apply_session'), false)
+  }
+})
+
+test('explicit renewal uses allowlisted intent metadata without changing quote inputs or owner token', async () => {
+  const f = fixture()
+  assert.equal((await createXPayCheckout(f)(checkoutRequest({ purchaseIntent: 'renew', priorPaidOrderId: shop }))).status, 200)
+  const create = f.calls.find(c => c.name === 'shop_xpay_order_create')
+  assert.deepEqual(create.intent, { purchaseIntent: 'renew', priorPaidOrderId: shop })
+  assert.equal(create.caller, 'Bearer user-token')
+  assert.deepEqual(Object.keys(create.args).sort(), ['p_catalog_terms_id', 'p_private_offer', 'p_request_id', 'p_shop_id'])
+})
+test('invalid purchase intent and prior-paid identifiers fail before quote or provider calls', async () => {
+  for (const patch of [{ purchaseIntent: 'paid' }, { purchaseIntent: 'renew', priorPaidOrderId: 'not-an-order' }]) {
+    const f = fixture()
+    assert.equal((await createXPayCheckout(f)(checkoutRequest(patch))).status, 409)
+    assert.equal(f.calls.length + f.providerCalls.length, 0)
   }
 })

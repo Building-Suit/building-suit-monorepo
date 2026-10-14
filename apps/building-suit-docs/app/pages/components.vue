@@ -21,6 +21,7 @@ const billingExampleView = computed<BsBillingView>(() => ({
 }))
 const exampleQuantity = ref(1)
 const pinnedRecordActions = ref(false)
+const recordSubmitVisible = ref(true)
 const changelogState = ref<'ready' | 'loading' | 'error' | 'denied'>('ready')
 const changelogFeed: ChangelogFeed = {
   serverNow: '2026-10-10T12:00:00Z',
@@ -446,8 +447,9 @@ const invitationPreviewCopy={
 
     <BsToastHost />
     <BsSwitch v-model="pinnedRecordActions" :label="isArabic ? 'تثبيت إجراءات نافذة السجل' : 'Pin record dialog actions'" />
+    <BsSwitch v-model="recordSubmitVisible" :label="isArabic ? 'إظهار إجراء التأكيد' : 'Show confirmation action'" />
     <BsRecordActionDialog
-      v-model:visible="visible" :pinned-actions="pinnedRecordActions"
+      v-model:visible="visible" :pinned-actions="pinnedRecordActions" :submit-visible="recordSubmitVisible"
       :title="mode === 'edit' ? (isArabic ? 'تعديل السجل' : 'Edit record') : (isArabic ? 'إضافة سجل' : 'Add record')"
       :dirty="dirty" :pending="pending" :error="actionError" @submit="save"
     >
