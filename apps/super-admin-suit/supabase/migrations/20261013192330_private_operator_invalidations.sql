@@ -45,7 +45,7 @@ declare topic_name text:='sas:'||p_environment::text||':'||p_user::text||':'||p_
 begin
  perform realtime.send(jsonb_build_object('id',p_id,'authorityEnvironmentId',p_environment,'kinds',p_kinds),'invalidate',topic_name,true);
  if not exists(select 1 from realtime.messages m where m.topic=topic_name and m.event='invalidate' and m.extension='broadcast'
-   and m.private and m.payload->>'id'=p_id::text and m.created_at>=transaction_timestamp()) then
+   and m.private and m.payload->>'id'=p_id::text and m.inserted_at>=(transaction_timestamp() at time zone 'UTC')) then
   raise exception 'LIVE_PUBLICATION_NOT_ACCEPTED' using errcode='55000';
  end if;
 end $$;
